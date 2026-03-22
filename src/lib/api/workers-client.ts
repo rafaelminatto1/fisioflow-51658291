@@ -89,21 +89,9 @@ export async function requestPublic<T>(
 	return res.json() as Promise<T>;
 }
 
-function withQuery(
-	path: string,
-	params?: Record<string, string | number | boolean | null | undefined>,
-): string {
-	const qs = new URLSearchParams(
-		Object.entries(params ?? {})
-			.filter(([, value]) => value != null && String(value) !== "")
-			.map(([key, value]) => [key, String(value)]),
-	).toString();
-
-	return qs ? `${path}?${qs}` : path;
-}
-
 // Proxies for the new modularized APIs
 export { financialApi, recibosApi } from "@/api/v2/financial";
+export { commissionsApi, nfseApi } from "@/api/v2/billing";
 export {
 	examsApi,
 	medicalRequestsApi,
@@ -125,6 +113,7 @@ export {
 	whatsappApi,
 	crmApi,
 } from "@/api/v2/communications";
+export { satisfactionSurveysApi } from "@/api/v2/feedback";
 export {
 	evaluationFormsApi,
 	mediaApi,
@@ -189,6 +178,13 @@ export {
 } from "@/api/v2/events";
 export { tarefasApi, boardsApi } from "@/api/v2/boards";
 export {
+	sessionAttachmentsApi,
+	sessionTemplatesApi,
+	goalProfilesApi,
+	doctorsApi,
+	feriadosApi,
+} from "@/api/v2/admin";
+export {
 	timeEntriesApi,
 	treatmentCyclesApi,
 	wearablesApi,
@@ -207,196 +203,6 @@ export {
 	type WaitlistEntry,
 	type RecurringSeries,
 } from "@/api/v2/scheduling";
-
-// Remaining APIs still in this file (to be modularized)
-import type {
-	SessionAttachment,
-	SessionTemplate,
-	GoalProfileRow,
-	DoctorRecord,
-	FeriadoRow,
-	AutomationLogEntry,
-	PushSubscription,
-	WhatsAppMessage,
-	PendingConfirmation,
-	WhatsAppTemplateRecord,
-	WhatsAppWebhookLog,
-	Lead,
-	LeadHistorico,
-	CrmTarefa,
-	CrmCampanha,
-} from "@/types/workers";
-
-export const sessionAttachmentsApi = {
-	list: (sessionId: string) =>
-		request<{ data: SessionAttachment[] }>(
-			`/api/sessions/${sessionId}/attachments`,
-		),
-
-	create: (
-		sessionId: string,
-		data: Omit<
-			SessionAttachment,
-			"id" | "session_id" | "patient_id" | "uploaded_by" | "uploaded_at"
-		>,
-	) =>
-		request<{ data: SessionAttachment }>(
-			`/api/sessions/${sessionId}/attachments`,
-			{
-				method: "POST",
-				body: JSON.stringify(data),
-			},
-		),
-
-	delete: (sessionId: string, attachmentId: string) =>
-		request<{ ok: boolean }>(
-			`/api/sessions/${sessionId}/attachments/${attachmentId}`,
-			{ method: "DELETE" },
-		),
-};
-
-export const sessionTemplatesApi = {
-	list: () => request<{ data: SessionTemplate[] }>("/api/sessions/templates"),
-
-	create: (data: Partial<SessionTemplate>) =>
-		request<{ data: SessionTemplate }>("/api/sessions/templates", {
-			method: "POST",
-			body: JSON.stringify(data),
-		}),
-
-	update: (id: string, data: Partial<SessionTemplate>) =>
-		request<{ data: SessionTemplate }>(`/api/sessions/templates/${id}`, {
-			method: "PUT",
-			body: JSON.stringify(data),
-		}),
-
-	delete: (id: string) =>
-		request<{ ok: boolean }>(`/api/sessions/templates/${id}`, {
-			method: "DELETE",
-		}),
-};
-
-export const goalProfilesApi = {
-	list: () => request<{ data: GoalProfileRow[] }>("/api/goal-profiles"),
-
-	get: (id: string) =>
-		request<{ data: GoalProfileRow }>(`/api/goal-profiles/${id}`),
-
-	create: (data: Partial<GoalProfileRow> & { id: string; name: string }) =>
-		request<{ data: GoalProfileRow }>("/api/goal-profiles", {
-			method: "POST",
-			body: JSON.stringify(data),
-		}),
-
-	update: (id: string, updates: Partial<GoalProfileRow>) =>
-		request<{ data: GoalProfileRow }>(`/api/goal-profiles/${id}`, {
-			method: "PUT",
-			body: JSON.stringify(updates),
-		}),
-
-	publish: (id: string) =>
-		request<{ data: GoalProfileRow }>(`/api/goal-profiles/${id}/publish`, {
-			method: "POST",
-		}),
-
-	delete: (id: string) =>
-		request<{ ok: boolean }>(`/api/goal-profiles/${id}`, { method: "DELETE" }),
-};
-
-export const doctorsApi = {
-	list: (params?: { searchTerm?: string; limit?: number }) => {
-		const qs = new URLSearchParams(
-			Object.entries(params ?? {})
-				.filter(([, v]) => v != null && String(v) !== "")
-				.map(([k, v]) => [k === "searchTerm" ? "search" : k, String(v)]),
-		).toString();
-		return request<{ data: DoctorRecord[]; total?: number }>(
-			`/api/doctors${qs ? `?${qs}` : ""}`,
-		);
-	},
-	search: (params: { searchTerm: string; limit?: number }) =>
-		doctorsApi.list(params),
-	get: (id: string) =>
-		request<{ data: DoctorRecord }>(`/api/doctors/${encodeURIComponent(id)}`),
-	create: (data: Record<string, unknown>) =>
-		request<{ data: DoctorRecord }>("/api/doctors", {
-			method: "POST",
-			body: JSON.stringify(data),
-		}),
-	update: (id: string, data: Record<string, unknown>) =>
-		request<{ data: DoctorRecord }>(`/api/doctors/${encodeURIComponent(id)}`, {
-			method: "PUT",
-			body: JSON.stringify(data),
-		}),
-	delete: (id: string) =>
-		request<{ ok: boolean }>(`/api/doctors/${encodeURIComponent(id)}`, {
-			method: "DELETE",
-		}),
-};
-
-export const feriadosApi = {
-	list: (params?: { year?: number }) => {
-		const qs = new URLSearchParams(
-			Object.entries(params ?? {})
-				.filter(([, v]) => v != null)
-				.map(([k, v]) => [k, String(v)]),
-		).toString();
-		return request<{ data: FeriadoRow[] }>(
-			`/api/feriados${qs ? `?${qs}` : ""}`,
-		);
-	},
-	create: (data: Partial<FeriadoRow>) =>
-		request<{ data: FeriadoRow }>("/api/feriados", {
-			method: "POST",
-			body: JSON.stringify(data),
-		}),
-	update: (id: string, data: Partial<FeriadoRow>) =>
-		request<{ data: FeriadoRow }>(`/api/feriados/${id}`, {
-			method: "PUT",
-			body: JSON.stringify(data),
-		}),
-	delete: (id: string) =>
-		request<{ ok: boolean }>(`/api/feriados/${id}`, {
-			method: "DELETE",
-		}),
-};
-
-export const satisfactionSurveysApi = {
-	list: (params?: {
-		patientId?: string;
-		therapistId?: string;
-		startDate?: string;
-		endDate?: string;
-		responded?: boolean;
-	}) =>
-		request<{ data: Array<Record<string, unknown>> }>(
-			withQuery("/api/satisfaction-surveys", params),
-		),
-	stats: () =>
-		request<{ data: Record<string, unknown> }>(
-			"/api/satisfaction-surveys/stats",
-		),
-	create: (data: Record<string, unknown>) =>
-		request<{ data: Record<string, unknown> }>("/api/satisfaction-surveys", {
-			method: "POST",
-			body: JSON.stringify(data),
-		}),
-	update: (id: string, data: Record<string, unknown>) =>
-		request<{ data: Record<string, unknown> }>(
-			`/api/satisfaction-surveys/${encodeURIComponent(id)}`,
-			{
-				method: "PATCH",
-				body: JSON.stringify(data),
-			},
-		),
-	delete: (id: string) =>
-		request<{ ok: boolean }>(
-			`/api/satisfaction-surveys/${encodeURIComponent(id)}`,
-			{
-				method: "DELETE",
-			},
-		),
-};
 
 export type {
 	PatientLifecycleEvent,
@@ -427,71 +233,3 @@ export type {
 	PopularAchievement,
 	QuestDefinitionRow,
 } from "@/types/workers";
-
-export const commissionsApi = {
-	summary: (month: string) =>
-		request<{ data: unknown[]; period: { start: string; end: string } }>(
-			`/api/commissions/summary?month=${month}`,
-		),
-
-	config: (therapistId?: string) =>
-		request<{ data: unknown[] }>(
-			`/api/commissions/config${therapistId ? `?therapistId=${therapistId}` : ""}`,
-		),
-
-	therapistHistory: (therapistId: string) =>
-		request<{ data: unknown[] }>(`/api/commissions/therapist/${therapistId}`),
-
-	setRate: (data: {
-		therapist_id: string;
-		commission_rate: number;
-		notes?: string;
-	}) =>
-		request<{ data: unknown }>("/api/commissions/config", {
-			method: "POST",
-			body: JSON.stringify(data),
-		}),
-
-	payout: (data: Record<string, unknown>) =>
-		request<{ data: unknown }>("/api/commissions/payout", {
-			method: "POST",
-			body: JSON.stringify(data),
-		}),
-};
-
-export const nfseApi = {
-	list: (params?: { patientId?: string; month?: string; status?: string }) => {
-		const qs = new URLSearchParams(
-			Object.entries(params ?? {}).filter(([, v]) => v != null) as [
-				string,
-				string,
-			][],
-		).toString();
-		return request<{ data: unknown[] }>(`/api/nfse${qs ? `?${qs}` : ""}`);
-	},
-
-	get: (id: string) => request<{ data: unknown }>(`/api/nfse/${id}`),
-
-	config: () => request<{ data: unknown }>("/api/nfse/config"),
-
-	saveConfig: (data: Record<string, unknown>) =>
-		request<{ data: unknown }>("/api/nfse/config", {
-			method: "PUT",
-			body: JSON.stringify(data),
-		}),
-
-	generate: (data: Record<string, unknown>) =>
-		request<{ data: unknown }>("/api/nfse/generate", {
-			method: "POST",
-			body: JSON.stringify(data),
-		}),
-
-	send: (id: string) =>
-		request<{ data: unknown }>(`/api/nfse/send/${id}`, {
-			method: "POST",
-			body: JSON.stringify({}),
-		}),
-
-	cancel: (id: string) =>
-		request<{ data: unknown }>(`/api/nfse/${id}`, { method: "DELETE" }),
-};

@@ -73,7 +73,7 @@ Data: 2026-03-21
 - `src/lib/sentry/config.ts` agora expoe a instancia do SDK no `window`, permitindo captura sem reintroduzir dependencia estatica no shell.
 - `src/components/app/AuthenticatedAppShell.tsx` passou a concentrar `RealtimeProvider`, `TourProvider`, `GamificationFeedbackProvider` e `MobileSheetProvider` fora das rotas publicas.
 - `src/lib/api/workers-client.ts` comecou a ser modularizado de forma progressiva sem quebrar imports legados.
-- os dominios `scheduling`, `imaging`, `events`, `boards`, `tracking`, `communications`, `rehab`, `operations`, `clinicalApi` e `clinicalPublicApi` foram movidos para `src/api/v2/*`, mantendo `workers-client.ts` como fachada de compatibilidade.
+- os dominios `scheduling`, `imaging`, `events`, `boards`, `tracking`, `communications`, `rehab`, `operations`, `clinicalApi`, `clinicalPublicApi`, `admin`, `feedback` e `billing` foram movidos para `src/api/v2/*`, mantendo `workers-client.ts` como fachada de compatibilidade.
 
 ## Decisoes de arquitetura que mudam o plano
 
@@ -113,7 +113,7 @@ Data: 2026-03-21
 - Arquivos grandes demais:
   - `src/components/wiki/WikiEditor.tsx` com 2886 linhas
   - `src/pages/relatorios/RelatorioMedicoPage.tsx` continua grande, mas sem a camada de PDF embutida
-  - `src/lib/api/workers-client.ts` com 497 linhas, ainda relevante mas ja bastante reduzido a partir de 2027
+  - `src/lib/api/workers-client.ts` com 235 linhas, agora principalmente como fachada de compatibilidade e helpers base
   - `apps/api/src/routes/patients.ts` com 1833 linhas
   - `src/routes.tsx` deixou de ser o gargalo principal apos a agregacao por dominio
 - Ainda existe acoplamento estrutural entre web, mobile e servicos compartilhados, mas o boundary inicial de plataforma ja foi criado.
@@ -230,8 +230,8 @@ Data: 2026-03-21
 
 Status parcial:
 - `src/lib/api/workers-client.ts` ja perdeu os blocos de `scheduling`, `imaging`, `events`, `boards`, `tracking`, `clinicalApi` e `clinicalPublicApi`.
-- `src/lib/api/workers-client.ts` ja perdeu tambem `communications`, `rehab` e `operations`, inclusive `crm`, `notifications`, `reports`, `publicBooking`, `telemedicine` e `exercisePlans`.
-- O proximo corte natural passa a ser dominios como `satisfactionSurveys`, `commissions`, `nfse`, `sessionTemplates`, `goalProfiles`, `doctors` ou `feriados`.
+- `src/lib/api/workers-client.ts` ja perdeu tambem `communications`, `rehab`, `operations`, `admin`, `feedback` e `billing`, inclusive `crm`, `notifications`, `reports`, `publicBooking`, `telemedicine`, `exercisePlans`, `satisfactionSurveys`, `commissions` e `nfse`.
+- O proximo corte natural deixa de ser dominio funcional e passa a ser uma decisao de compatibilidade: manter ou aposentar a fachada `workers-client.ts`.
 
 2. Contratos compartilhados
 - Mover tipos e contratos repetidos para `packages`.
@@ -312,7 +312,7 @@ Status parcial:
 ## Proxima execucao recomendada
 
 1. Atacar `computeWorker`, `dicom-vendor`, `excel-vendor` e CSS global.
-2. Fechar os ultimos dominios remanescentes de `src/lib/api/workers-client.ts`, agora ja abaixo de 500 linhas.
+2. Decidir o futuro da fachada `src/lib/api/workers-client.ts`, agora reduzida a 235 linhas.
 3. Revisar telas grandes que ainda importam `@react-pdf/renderer` diretamente, como `RelatorioMedicoPage`, `RelatorioConvenioPage` e `NFSePage`.
 4. Consolidar imports nativos remanescentes no boundary de plataforma.
 

@@ -88,7 +88,7 @@ Entregas:
 - `src/routes/enterprise.tsx` alinhado ao fluxo real de boards
 - componentes de PDF desacoplados em arquivos próprios
 - início de modularização progressiva do cliente web por domínio já aproveitado no bundle
-- `src/lib/api/workers-client.ts` foi reduzido com extrações de `scheduling`, `imaging`, `events`, `boards`, `tracking`, `communications`, `rehab`, `operations`, `clinicalApi` e `clinicalPublicApi` para `src/api/v2/*`
+- `src/lib/api/workers-client.ts` foi reduzido com extrações de `scheduling`, `imaging`, `events`, `boards`, `tracking`, `communications`, `rehab`, `operations`, `clinicalApi`, `clinicalPublicApi`, `admin`, `feedback` e `billing` para `src/api/v2/*`
 
 Critérios de aceite:
 - rota principal deixa de ser arquivo monolítico
@@ -105,7 +105,7 @@ Estes itens não estão bloqueando o projeto, mas ainda merecem acompanhamento:
 - `dicom-vendor` continua em ~1.47 MB, também isolado em fluxos específicos.
 - `computeWorker` continua em ~1.22 MB e foi confirmado como worker especializado do ecossistema Cornerstone/VTK, não carga indevida do shell.
 - CSS global caiu para ~436 KB.
-- `workers-client.ts` caiu de 2027 para 497 linhas, mas ainda segue na watchlist para cortes finais por domínio.
+- `workers-client.ts` caiu de 2027 para 235 linhas e hoje atua basicamente como fachada de compatibilidade e helpers base.
 - `posthog` ficou em chunk próprio de ~176 KB, fora do bundle principal.
 - há peers externos ainda defasados para o ecossistema Vite 8 em algumas bibliotecas secundárias.
 
@@ -120,5 +120,5 @@ Comandos executados com sucesso:
 Se houver uma próxima rodada, ela já não é mais “fechamento de base”. O próximo ciclo seria otimização avançada:
 - reduzir CSS global
 - revisar chunking de DICOM e worker pesado
-- continuar a extrair sobras do `workers-client.ts` como `satisfactionSurveys`, `commissions`, `nfse`, `sessionTemplates` e `goalProfiles`
+- decidir se `request` e `requestPublic` permanecem em `workers-client.ts` por compatibilidade ou se migram para um ponto único de `src/api/v2/base.ts`
 - abrir branch separada para upgrades mobile maiores
