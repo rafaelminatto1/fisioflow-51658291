@@ -74,6 +74,7 @@ Resultados observados:
 - CSS morto de `notion-v3-block` e presets antigos de fonte do editor foi removido do global/editor
 - arquivos órfãos `src/App.css` e `src/components/ui/theme/theme.css` foram removidos para reduzir ruído de manutenção
 - utilitários visuais premium e mobile/touch começaram a sair de `src/index.css` para arquivos dedicados em `src/styles/*`, preparando extração futura por domínio
+- os hooks `useExcelExport` e `useFinancialExport` deixaram de importar skills pesadas de XLSX/PDF no topo e passaram a carregar essas integrações apenas no clique de exportação
 
 Critérios de aceite:
 - build web verde
