@@ -26,7 +26,6 @@ import {
 } from "lucide-react";
 import { useDropzone } from "react-dropzone";
 import { useImportLeads } from "@/hooks/useCRM";
-import XLSX from "@/lib/export/exceljsWrapper";
 import { fisioLogger as logger } from "@/lib/errors/logger";
 
 interface LeadPreview {
@@ -51,39 +50,45 @@ export function LeadImport() {
 		const reader = new FileReader();
 
 		reader.onload = (e) => {
-			try {
-				const data = e.target?.result;
-				const workbook = XLSX.read(data, { type: "binary" });
-				const sheetName = workbook.SheetNames[0];
-				const worksheet = workbook.Sheets[sheetName];
-				const json = XLSX.utils.sheet_to_json(worksheet) as Record<
-					string,
-					unknown
-				>[];
+			void (async () => {
+				try {
+					const data = e.target?.result;
+					const XLSX = (await import("@/lib/export/exceljsWrapper")).default;
+					const workbook = await XLSX.read(data ?? "", { type: "binary" });
+					const sheetName = workbook.SheetNames[0];
+					const worksheet = workbook.Sheets[sheetName];
+					const json = XLSX.utils.sheet_to_json(worksheet) as Record<
+						string,
+						unknown
+					>[];
 
-				const previews: LeadPreview[] = json.map((row) => {
-					const errors: string[] = [];
-					const nome = row.nome || row.name || row.Nome || row.Name || "";
+					const previews: LeadPreview[] = json.map((row) => {
+						const errors: string[] = [];
+						const nome = String(
+							row.nome ?? row.name ?? row.Nome ?? row.Name ?? "",
+						);
 
-					if (!nome) errors.push("Nome é obrigatório");
+						if (!nome) errors.push("Nome é obrigatório");
 
-					return {
-						nome,
-						telefone:
-							row.telefone || row.phone || row.Telefone || row.Phone || "",
-						email: row.email || row.Email || "",
-						origem: row.origem || row.Origem || "Importação",
-						interesse: row.interesse || row.Interesse || "",
-						valid: errors.length === 0,
-						errors,
-					};
-				});
+						return {
+							nome,
+							telefone: String(
+								row.telefone ?? row.phone ?? row.Telefone ?? row.Phone ?? "",
+							),
+							email: String(row.email ?? row.Email ?? ""),
+							origem: String(row.origem ?? row.Origem ?? "Importação"),
+							interesse: String(row.interesse ?? row.Interesse ?? ""),
+							valid: errors.length === 0,
+							errors,
+						};
+					});
 
-				setPreviewData(previews);
-				setIsDialogOpen(true);
-			} catch (error) {
-				logger.error("Error processing file", error, "LeadImport");
-			}
+					setPreviewData(previews);
+					setIsDialogOpen(true);
+				} catch (error) {
+					logger.error("Error processing file", error, "LeadImport");
+				}
+			})();
 		};
 
 		reader.readAsBinaryString(file);

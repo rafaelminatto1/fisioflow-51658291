@@ -80,11 +80,8 @@ describe("PaymentRegistrationModal", () => {
 		);
 
 		expect(screen.getByText("Registrar Pagamento")).toBeInTheDocument();
-		expect(
-			screen.getByText(
-				"Confirme os detalhes do pagamento para este atendimento.",
-			),
-		).toBeInTheDocument();
+		expect(screen.getByText("Paciente")).toBeInTheDocument();
+		expect(screen.getByText("John Doe")).toBeInTheDocument();
 		expect(screen.getByLabelText(/Valor/i)).toHaveValue(150);
 	});
 

@@ -79,7 +79,10 @@ export const DroppableTimeSlot = ({
 	const showPreview = isTargetActive && draggedAppointment;
 	const previewCards = useMemo(() => {
 		if (!showPreview) return [];
-		return [...targetAppointments, draggedAppointment];
+		return [
+			...targetAppointments.filter((apt) => apt.id !== draggedAppointment?.id),
+			draggedAppointment,
+		];
 	}, [showPreview, targetAppointments, draggedAppointment]);
 
 	const totalCards = previewCards.length;
@@ -166,6 +169,34 @@ export const DroppableTimeSlot = ({
 
 			{/* Custom content (e.g., existing appointments) */}
 			{children}
+
+			{/* Preview cards during drag and drop */}
+			{showPreview &&
+				previewCards.map((appointment, index) => {
+					const isDraggedCard = appointment.id === draggedAppointment?.id;
+					const cardWidthPercent = calculateCardWidthPercent(totalCards);
+					const leftOffset = calculateCardOffsetPercent(index, totalCards);
+					const showText = shouldShowText(totalCards);
+
+					return (
+						<DropTargetPreviewCard
+							key={`${appointment.id}-${index}`}
+							appointment={appointment}
+							isDraggedCard={isDraggedCard}
+							cardWidthPercent={cardWidthPercent}
+							leftOffset={leftOffset}
+							showText={showText}
+							variant="week"
+							slotHeight={slotHeight}
+						/>
+					);
+				})}
+
+			{showPreview && totalCards > MAX_CARDS_WITHOUT_BADGE && (
+				<div className="absolute bottom-1 right-1 z-20 rounded-full bg-slate-900/85 px-1.5 py-0.5 text-[10px] font-semibold text-white shadow-sm">
+					+{totalCards - MAX_CARDS_WITHOUT_BADGE}
+				</div>
+			)}
 
 			{/* Botão + no hover - só quando não está em drag e slot disponível */}
 			{!isBlocked &&

@@ -45,7 +45,7 @@ const transactionSchema = z.object({
 	descricao: z.string().min(3, "Descrição deve ter pelo menos 3 caracteres"),
 	valor: z.number().positive("Valor deve ser positivo"),
 	status: z.enum(["pendente", "concluido", "cancelado"]).default("pendente"),
-	metadata: z.record<string, unknown>().optional(),
+	metadata: z.record(z.unknown()).optional(),
 });
 
 type TransactionFormData = z.infer<typeof transactionSchema>;

@@ -8,7 +8,6 @@ import { usePatients } from "@/hooks/usePatients";
 import { Button } from "@/components/ui/button";
 import { ArrowLeft, FileDown, Printer, Activity, Sparkles } from "lucide-react";
 import { LoadingSkeleton, EmptyState } from "@/components/ui";
-import { generateEvolutionPDF } from "@/lib/export/evolutionPdfExport";
 import { toast } from "sonner";
 import { PatientHelpers } from "@/types";
 import { fisioLogger as logger } from "@/lib/errors/logger";
@@ -52,7 +51,7 @@ const PatientEvolutionReport = () => {
 		window.print();
 	};
 
-	const handleExport = () => {
+	const handleExport = async () => {
 		if (!patient || !evolutionData) {
 			toast.error("Dados insuficientes para gerar PDF");
 			return;
@@ -60,6 +59,9 @@ const PatientEvolutionReport = () => {
 
 		const patientName = PatientHelpers.getName(patient);
 		try {
+			const { generateEvolutionPDF } = await import(
+				"@/lib/export/evolutionPdfExport"
+			);
 			const pdf = generateEvolutionPDF(
 				{
 					name: patientName,

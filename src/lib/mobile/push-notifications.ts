@@ -2,17 +2,23 @@
  * Serviço para gerenciar Push Notifications no iOS
  */
 
-import {
-	PushNotifications,
-	PushNotificationSchema,
-	Token,
-	ActionPerformed,
-} from "@capacitor/push-notifications";
-import { LocalNotifications } from "@capacitor/local-notifications";
-import { Capacitor } from "@capacitor/core";
 import { pushSubscriptionsApi } from "@/lib/api/workers-client";
 import { authClient } from "@/lib/auth/neon-token";
 import { fisioLogger as logger } from "@/lib/errors/logger";
+import {
+	addPushActionListener,
+	addPushReceivedListener,
+	addPushRegistrationErrorListener,
+	addPushRegistrationListener,
+	getNativePlatform,
+	isNativePlatform,
+	registerForPushNotifications,
+	requestPushPermission,
+	scheduleLocalNotification,
+	type NativePushActionPerformed,
+	type NativePushNotification,
+	type NativePushToken,
+} from "@/lib/platform/native";
 
 export interface PushNotificationData {
 	title: string;
@@ -30,7 +36,7 @@ export async function initPushNotifications(
 	navigate?: (path: string) => void,
 ): Promise<void> {
 	// Verificar se está em plataforma nativa
-	if (!Capacitor.isNativePlatform()) {
+	if (!isNativePlatform()) {
 		logger.info(
 			"Push notifications não disponíveis na web",
 			undefined,
@@ -41,10 +47,10 @@ export async function initPushNotifications(
 
 	try {
 		// Solicitar permissão
-		const result = await PushNotifications.requestPermissions();
+		const permission = await requestPushPermission();
 
-		if (result.receive === "granted") {
-			await PushNotifications.register();
+		if (permission === "granted") {
+			await registerForPushNotifications();
 			logger.info(
 				"Push notifications registradas com sucesso",
 				undefined,
@@ -60,9 +66,7 @@ export async function initPushNotifications(
 		}
 
 		// Listener: Registro bem-sucedido
-		await PushNotifications.addListener(
-			"registration",
-			async (token: Token) => {
+		await addPushRegistrationListener(async (token: NativePushToken) => {
 				// Dado sensível removido: apenas primeiros 8 caracteres do token para debug (segurança)
 				const maskedToken = token.value.substring(0, 8) + "...";
 				logger.info(
@@ -71,52 +75,47 @@ export async function initPushNotifications(
 					"push-notifications",
 				);
 				await savePushTokenToDatabase(token.value);
-			},
-		);
+		});
 
 		// Listener: Erro no registro
-		await PushNotifications.addListener(
-			"registrationError",
-			(error: unknown) => {
-				logger.error(
-					"Erro no registro de push notification",
-					error,
-					"push-notifications",
-				);
-			},
-		);
+		await addPushRegistrationErrorListener((error: unknown) => {
+			logger.error(
+				"Erro no registro de push notification",
+				error,
+				"push-notifications",
+			);
+		});
 
 		// Listener: Notificação recebida (app em foreground)
-		await PushNotifications.addListener(
-			"pushNotificationReceived",
-			async (notification: PushNotificationSchema) => {
-				logger.info(
-					"Notificação recebida (app aberto)",
-					{ notification },
-					"push-notifications",
-				);
+		await addPushReceivedListener(async (notification: NativePushNotification) => {
+			logger.info(
+				"Notificação recebida (app aberto)",
+				{ notification },
+				"push-notifications",
+			);
 
-				// Mostrar notificação local também
-				await showLocalNotification({
-					title: notification.data?.title || "FisioFlow",
-					body: notification.data?.body || "",
-					id: Date.now(),
-				});
-			},
-		);
+			// Mostrar notificação local também
+			await showLocalNotification({
+				title: typeof notification.data?.title === "string"
+					? notification.data.title
+					: "FisioFlow",
+				body:
+					typeof notification.data?.body === "string"
+						? notification.data.body
+						: "",
+				id: Date.now(),
+			});
+		});
 
 		// Listener: Notificação clicada (app aberto pela notificação)
-		await PushNotifications.addListener(
-			"pushNotificationActionPerformed",
-			(notification: ActionPerformed) => {
-				logger.info(
-					"Notificação clicada",
-					{ notification },
-					"push-notifications",
-				);
-				handleNotificationAction(notification, navigate);
-			},
-		);
+		await addPushActionListener((notification: NativePushActionPerformed) => {
+			logger.info(
+				"Notificação clicada",
+				{ notification },
+				"push-notifications",
+			);
+			handleNotificationAction(notification, navigate);
+		});
 	} catch (error) {
 		logger.error(
 			"Erro ao inicializar push notifications",
@@ -139,7 +138,7 @@ async function savePushTokenToDatabase(token: string): Promise<void> {
 				endpoint: token,
 				userId: currentUser.id,
 				deviceInfo: {
-					platform: Capacitor.getPlatform(),
+					platform: getNativePlatform(),
 					updated_at: new Date().toISOString(),
 					last_used: new Date().toISOString(),
 					native: true,
@@ -172,26 +171,14 @@ async function showLocalNotification(notification: {
 	body: string;
 	id: number;
 }): Promise<void> {
-	await LocalNotifications.schedule({
-		notifications: [
-			{
-				title: notification.title,
-				body: notification.body,
-				id: notification.id,
-				schedule: { at: new Date() },
-				sound: "default",
-				smallIcon: "ic_stat_icon_config_sample",
-				iconColor: "#0EA5E9",
-			},
-		],
-	});
+	await scheduleLocalNotification(notification);
 }
 
 /**
  * Manipula clique na notificação
  */
 function handleNotificationAction(
-	notification: ActionPerformed,
+	notification: NativePushActionPerformed,
 	navigate?: (path: string) => void,
 ): void {
 	const type = notification.notification.data?.type;

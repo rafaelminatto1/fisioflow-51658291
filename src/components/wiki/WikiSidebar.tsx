@@ -23,6 +23,10 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import type { WikiPage, WikiCategory } from "@/types/wiki";
+import {
+	getEvidenceTree,
+	isEvidencePage,
+} from "@/features/wiki/utils/evidenceTrails";
 
 interface WikiSidebarProps {
 	pages: WikiPage[];
@@ -50,22 +54,31 @@ export function WikiSidebar({
 		Set<string>
 	>(new Set(categories.map((c) => c.id)));
 
+	const evidenceTree = useMemo(() => getEvidenceTree(pages), [pages]);
+	const generalPages = useMemo(
+		() => pages.filter((page) => !isEvidencePage(page)),
+		[pages],
+	);
+
 	// Pinned Pages
 	const pinned = useMemo(
-		() => pages.filter((p) => p.is_pinned).slice(0, 5),
-		[pages],
+		() => generalPages.filter((p) => p.is_pinned).slice(0, 5),
+		[generalPages],
 	);
 
 	// Favorites (based on view_count)
 	const favorites = useMemo(
-		() => pages.filter((p) => p.view_count > 10 && !p.is_pinned).slice(0, 5),
-		[pages],
+		() =>
+			generalPages
+				.filter((p) => p.view_count > 10 && !p.is_pinned)
+				.slice(0, 5),
+		[generalPages],
 	);
 
 	// Recents
 	const recents = useMemo(
 		() =>
-			[...pages]
+			[...generalPages]
 				.sort((a, b) => {
 					const dateA =
 						(a.updated_at as any)?.toDate?.() || new Date(a.updated_at as any);
@@ -74,25 +87,25 @@ export function WikiSidebar({
 					return dateB.getTime() - dateA.getTime();
 				})
 				.slice(0, 5),
-		[pages],
+		[generalPages],
 	);
 
 	// Tags mais usadas
 	const allTags = useMemo(() => {
 		const counts: Record<string, number> = {};
-		pages.forEach((p) =>
+		generalPages.forEach((p) =>
 			p.tags?.forEach((t) => (counts[t] = (counts[t] || 0) + 1)),
 		);
 		return Object.entries(counts)
 			.sort((a, b) => b[1] - a[1])
 			.slice(0, 10);
-	}, [pages]);
+	}, [generalPages]);
 
 	// Build tree structure
 	const pageTree = useMemo(() => {
 		// Group by category
 		const byCategory: Record<string, WikiPage[]> = {};
-		pages.forEach((page) => {
+		generalPages.forEach((page) => {
 			const cat = page.category || "uncategorized";
 			if (!byCategory[cat]) {
 				byCategory[cat] = [];
@@ -113,7 +126,7 @@ export function WikiSidebar({
 		}
 
 		return byCategory;
-	}, [pages, searchQuery]);
+	}, [generalPages, searchQuery]);
 
 	const toggleCategory = (categoryId: string) => {
 		setExpandedCategories((prev) => {
@@ -221,6 +234,46 @@ export function WikiSidebar({
 						</div>
 					)}
 
+					{evidenceTree.root && (
+						<div>
+							<div className="text-[10px] uppercase tracking-wider text-muted-foreground px-2 py-1 font-bold mb-1 flex items-center gap-1">
+								<Library className="w-3 h-3 text-emerald-600" />
+								Trilhas de Evidencia
+							</div>
+
+							<PageItem
+								page={evidenceTree.root}
+								isSelected={selectedPageId === evidenceTree.root.id}
+								onClick={() => onPageSelect(evidenceTree.root!)}
+							/>
+
+							<div className="ml-3 mt-1 border-l pl-2 space-y-1">
+								{evidenceTree.trails.map(({ trail, protocols }) => (
+									<div key={trail.id} className="space-y-1">
+										<PageItem
+											page={trail}
+											isSelected={selectedPageId === trail.id}
+											onClick={() => onPageSelect(trail)}
+										/>
+										{protocols.length > 0 && (
+											<div className="ml-3 border-l pl-2 space-y-1">
+												{protocols.map((page) => (
+													<PageItem
+														key={page.id}
+														page={page}
+														isSelected={selectedPageId === page.id}
+														onClick={() => onPageSelect(page)}
+														compact
+													/>
+												))}
+											</div>
+										)}
+									</div>
+								))}
+							</div>
+						</div>
+					)}
+
 					{/* Categories */}
 					<div>
 						<div className="text-[10px] uppercase tracking-wider text-muted-foreground px-2 py-1 font-bold mb-1">
@@ -322,14 +375,16 @@ interface PageItemProps {
 	page: WikiPage;
 	isSelected: boolean;
 	onClick: () => void;
+	compact?: boolean;
 }
 
-function PageItem({ page, isSelected, onClick }: PageItemProps) {
+function PageItem({ page, isSelected, onClick, compact = false }: PageItemProps) {
 	return (
 		<button
 			onClick={onClick}
 			className={cn(
-				"w-full flex items-center gap-2 px-2 py-1.5 rounded-md text-sm transition-all text-left group",
+				"w-full flex items-center gap-2 px-2 rounded-md text-sm transition-all text-left group",
+				compact ? "py-1" : "py-1.5",
 				isSelected
 					? "bg-primary/10 text-primary font-medium border border-primary/20"
 					: "hover:bg-muted text-muted-foreground hover:text-foreground",

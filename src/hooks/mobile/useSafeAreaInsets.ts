@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Capacitor } from "@capacitor/core";
+import { isNativePlatform } from "@/lib/platform/native";
 
 /**
  * Hook para obter as dimensões do safe area
@@ -15,7 +15,7 @@ export function useSafeAreaInsets() {
 
 	useEffect(() => {
 		// Em nativo, podemos obter os valores reais
-		if (Capacitor.isNativePlatform()) {
+		if (isNativePlatform()) {
 			// TODO: Implementar com plugin capacitor-safe-area
 			// Por enquanto, usar valores padrão
 			setInsets({

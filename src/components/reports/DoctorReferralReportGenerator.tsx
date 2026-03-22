@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { lazy, Suspense, useState } from "react";
 import {
 	Card,
 	CardContent,
@@ -7,8 +7,6 @@ import {
 	CardTitle,
 } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { PDFDownloadLink } from "@react-pdf/renderer";
-import { DoctorReferralPDF } from "./DoctorReferralPDF";
 import {
 	FileDown,
 	FileText,
@@ -23,6 +21,17 @@ import { useSoapRecordsV2 } from "@/hooks/useSoapRecordsV2";
 import { format } from "date-fns";
 import { toast } from "sonner";
 import { aiApi } from "@/lib/api/workers-client";
+
+const PDFDownloadLink = lazy(() =>
+	import("@react-pdf/renderer").then((module) => ({
+		default: module.PDFDownloadLink,
+	})),
+);
+const DoctorReferralPDF = lazy(() =>
+	import("./DoctorReferralPDF").then((module) => ({
+		default: module.DoctorReferralPDF,
+	})),
+);
 
 interface DoctorReferralReportGeneratorProps {
 	patientId: string;
@@ -165,25 +174,37 @@ export function DoctorReferralReportGenerator({
 						</Button>
 					)}
 
-					<PDFDownloadLink
-						document={<DoctorReferralPDF {...reportData} />}
-						fileName={`Relatorio_${patientName.replace(/\s+/g, "_")}_${format(new Date(), "yyyyMMdd")}.pdf`}
-						className="w-full"
-					>
-						{({ loading }) => (
+					<Suspense
+						fallback={
 							<Button
-								disabled={loading || !aiSummary}
+								disabled
 								className="w-full gap-2 bg-indigo-600 hover:bg-indigo-700 shadow-md shadow-indigo-200 dark:shadow-none"
 							>
-								{loading ? (
-									<Loader2 className="w-4 h-4 animate-spin" />
-								) : (
-									<FileText className="w-4 h-4" />
-								)}
-								Baixar Relatório PDF
+								<Loader2 className="w-4 h-4 animate-spin" />
+								Preparando PDF
 							</Button>
-						)}
-					</PDFDownloadLink>
+						}
+					>
+						<PDFDownloadLink
+							document={<DoctorReferralPDF {...reportData} />}
+							fileName={`Relatorio_${patientName.replace(/\s+/g, "_")}_${format(new Date(), "yyyyMMdd")}.pdf`}
+							className="w-full"
+						>
+							{({ loading }) => (
+								<Button
+									disabled={loading || !aiSummary}
+									className="w-full gap-2 bg-indigo-600 hover:bg-indigo-700 shadow-md shadow-indigo-200 dark:shadow-none"
+								>
+									{loading ? (
+										<Loader2 className="w-4 h-4 animate-spin" />
+									) : (
+										<FileText className="w-4 h-4" />
+									)}
+									Baixar Relatório PDF
+								</Button>
+							)}
+						</PDFDownloadLink>
+					</Suspense>
 
 					<Button
 						variant="ghost"

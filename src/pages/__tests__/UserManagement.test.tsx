@@ -15,6 +15,25 @@ vi.mock("@/components/layout", () => ({
 	),
 }));
 
+vi.mock("@/components/layout/MainLayout", () => ({
+	MainLayout: ({ children }: { children: ReactNode }) => (
+		<div data-testid="main-layout">{children}</div>
+	),
+}));
+
+vi.mock("@/components/admin/MembersManager", () => ({
+	MembersManager: () => (
+		<div>
+			<div>REDACTED_EMAIL</div>
+			<div>Data inválida</div>
+		</div>
+	),
+}));
+
+vi.mock("@/components/admin/InvitationsManager", () => ({
+	InvitationsManager: () => <div>Convites Pendentes</div>,
+}));
+
 describe("UserManagement", () => {
 	beforeEach(() => {
 		mockUseUsers.mockReturnValue({

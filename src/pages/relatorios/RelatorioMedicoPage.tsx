@@ -50,110 +50,16 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
-import {
-	Document,
-	Page,
-	Text,
-	View,
-	StyleSheet,
-	PDFDownloadLink,
-} from "@react-pdf/renderer";
 import { useAuth } from "@/contexts/AuthContext";
 import { useOrganizations } from "@/hooks/useOrganizations";
 import { usePatients } from "@/hooks/usePatients";
 import { reportsApi, sessionsApi } from "@/lib/api/workers-client";
 import { Checkbox } from "@/components/ui/checkbox";
+import { LazyPdfDownloadButton } from "@/components/pdf/LazyPdfDownloadButton";
 import { Download, Info, Cloud } from "lucide-react";
 import { useGoogleDocs } from "@/hooks/useGoogleDocs";
 import { useGoogleOAuth } from "@/hooks/useGoogleOAuth";
 import { useUserProfile } from "@/hooks/useUserProfile";
-
-const styles = StyleSheet.create({
-	page: {
-		padding: 30,
-		fontSize: 10,
-		fontFamily: "Helvetica",
-	},
-	header: {
-		marginBottom: 20,
-		borderBottom: "2 solid #333",
-		paddingBottom: 15,
-	},
-	title: {
-		fontSize: 16,
-		fontWeight: "bold",
-		textAlign: "center",
-		marginBottom: 5,
-	},
-	subtitle: {
-		fontSize: 9,
-		textAlign: "center",
-		color: "#666",
-		marginBottom: 10,
-	},
-	section: {
-		marginBottom: 15,
-	},
-	sectionTitle: {
-		fontSize: 11,
-		fontWeight: "bold",
-		backgroundColor: "#f0f0f0",
-		padding: "6 10",
-		marginBottom: 10,
-		marginTop: 5,
-	},
-	row: {
-		flexDirection: "row" as const,
-		marginBottom: 5,
-	},
-	label: {
-		fontWeight: "bold",
-		width: "30%",
-	},
-	value: {
-		flex: 1,
-	},
-	table: {
-		width: "100%",
-		borderWidth: 1,
-		borderColor: "#000",
-		marginBottom: 10,
-	},
-	tableRow: {
-		flexDirection: "row" as const,
-		borderBottomWidth: 1,
-		borderBottomColor: "#000",
-		padding: 5,
-	},
-	tableCell: {
-		flex: 1,
-	},
-	tableHeader: {
-		backgroundColor: "#f0f0f0",
-		fontWeight: "bold",
-	},
-	signature: {
-		marginTop: 30,
-		flexDirection: "row" as const,
-		justifyContent: "space-between",
-	},
-	signatureLine: {
-		width: "45%",
-		borderTopWidth: 1,
-		borderTopColor: "#000",
-		paddingTop: 10,
-		textAlign: "center",
-	},
-	footer: {
-		marginTop: 20,
-		borderTopWidth: 1,
-		borderTopColor: "#ccc",
-		paddingTop: 10,
-		fontSize: 8,
-		textAlign: "center",
-		color: "#666",
-	},
-});
 
 const TEMPLATE_FIELD_OPTIONS = [
 	{ id: "queixa_principal", label: "Queixa principal" },
@@ -359,7 +265,7 @@ interface RelatorioTemplate {
 	updated_at: string;
 }
 
-interface RelatorioMedicoData {
+export interface RelatorioMedicoData {
 	id: string;
 	tipo_relatorio:
 		| "inicial"
@@ -392,394 +298,10 @@ interface RelatorioMedicoData {
 	relatorio_enviado?: boolean;
 }
 
-// Componente PDF do Relatório Médico
-function RelatorioMedicoPDF({ data }: { data: RelatorioMedicoData }) {
-	const getTipoLabel = () => {
-		switch (data.tipo_relatorio) {
-			case "inicial":
-				return "RELATÓRIO DE AVALIAÇÃO INICIAL";
-			case "evolucao":
-				return "RELATÓRIO DE EVOLUÇÃO";
-			case "alta":
-				return "RELATÓRIO DE ALTA FISIOTERAPÊUTICA";
-			case "interconsulta":
-				return "SOLICITAÇÃO DE INTERCONSULTA";
-			case "cirurgico":
-				return "RELATÓRIO PRÉ/PÓS-OPERATÓRIO";
-			default:
-				return "RELATÓRIO FISIOTERAPÊUTICO";
-		}
-	};
-
-	return (
-		<Document>
-			<Page size="A4" style={styles.page}>
-				{/* Header */}
-				<View style={styles.header}>
-					<Text style={styles.title}>{getTipoLabel()}</Text>
-					<Text style={styles.subtitle}>
-						Comunicação entre profissionais de saúde
-					</Text>
-					<Text style={styles.subtitle}>
-						Data de emissão:{" "}
-						{format(new Date(data.data_emissao), "dd/MM/yyyy", {
-							locale: ptBR,
-						})}
-						{data.urgencia && ` - Urgência: ${data.urgencia.toUpperCase()}`}
-					</Text>
-				</View>
-
-				{/* Dados da Clínica */}
-				<View style={styles.section}>
-					<Text style={styles.sectionTitle}>CLÍNICA DE ORIGEM</Text>
-					<View style={styles.row}>
-						<Text style={styles.label}>Nome:</Text>
-						<Text style={styles.value}>{data.clinica.nome}</Text>
-					</View>
-					{data.clinica.endereco && (
-						<View style={styles.row}>
-							<Text style={styles.label}>Endereço:</Text>
-							<Text style={styles.value}>{data.clinica.endereco}</Text>
-						</View>
-					)}
-					{data.clinica.telefone && (
-						<View style={styles.row}>
-							<Text style={styles.label}>Telefone:</Text>
-							<Text style={styles.value}>{data.clinica.telefone}</Text>
-						</View>
-					)}
-				</View>
-
-				{/* Profissional Emissor */}
-				<View style={styles.section}>
-					<Text style={styles.sectionTitle}>PROFISSIONAL EMISSOR</Text>
-					<View style={styles.row}>
-						<Text style={styles.label}>Nome:</Text>
-						<Text style={styles.value}>{data.profissional_emissor.nome}</Text>
-					</View>
-					<View style={styles.row}>
-						<Text style={styles.label}>Registro:</Text>
-						<Text style={styles.value}>
-							{data.profissional_emissor.registro}
-							{data.profissional_emissor.uf_registro &&
-								`/${data.profissional_emissor.uf_registro}`}
-						</Text>
-					</View>
-					<View style={styles.row}>
-						<Text style={styles.label}>Especialidade:</Text>
-						<Text style={styles.value}>
-							{data.profissional_emissor.especialidade}
-						</Text>
-					</View>
-				</View>
-
-				{/* Profissional Destino */}
-				{data.profissional_destino?.nome && (
-					<View style={styles.section}>
-						<Text style={styles.sectionTitle}>PROFISSIONAL DESTINATÁRIO</Text>
-						<View style={styles.row}>
-							<Text style={styles.label}>Nome:</Text>
-							<Text style={styles.value}>{data.profissional_destino.nome}</Text>
-						</View>
-						{data.profissional_destino.especialidade && (
-							<View style={styles.row}>
-								<Text style={styles.label}>Especialidade:</Text>
-								<Text style={styles.value}>
-									{data.profissional_destino.especialidade}
-								</Text>
-							</View>
-						)}
-						{data.profissional_destino.instituicao && (
-							<View style={styles.row}>
-								<Text style={styles.label}>Instituição:</Text>
-								<Text style={styles.value}>
-									{data.profissional_destino.instituicao}
-								</Text>
-							</View>
-						)}
-						{data.profissional_destino.telefone && (
-							<View style={styles.row}>
-								<Text style={styles.label}>Telefone:</Text>
-								<Text style={styles.value}>
-									{data.profissional_destino.telefone}
-								</Text>
-							</View>
-						)}
-					</View>
-				)}
-
-				{/* Dados do Paciente */}
-				<View style={styles.section}>
-					<Text style={styles.sectionTitle}>DADOS DO PACIENTE</Text>
-					<View style={styles.row}>
-						<Text style={styles.label}>Nome Completo:</Text>
-						<Text style={styles.value}>{data.paciente.nome}</Text>
-					</View>
-					{data.paciente.cpf && (
-						<View style={styles.row}>
-							<Text style={styles.label}>CPF:</Text>
-							<Text style={styles.value}>{data.paciente.cpf}</Text>
-						</View>
-					)}
-					{data.paciente.data_nascimento && (
-						<View style={styles.row}>
-							<Text style={styles.label}>Data Nasc.:</Text>
-							<Text style={styles.value}>
-								{format(new Date(data.paciente.data_nascimento), "dd/MM/yyyy", {
-									locale: ptBR,
-								})}
-								{data.paciente.idade && ` (${data.paciente.idade})`}
-							</Text>
-						</View>
-					)}
-					{data.paciente.telefone && (
-						<View style={styles.row}>
-							<Text style={styles.label}>Telefone:</Text>
-							<Text style={styles.value}>{data.paciente.telefone}</Text>
-						</View>
-					)}
-				</View>
-
-				{/* Histórico Clínico */}
-				{data.historico_clinico && (
-					<View style={styles.section}>
-						<Text style={styles.sectionTitle}>HISTÓRICO CLÍNICO</Text>
-						{data.historico_clinico.queixa_principal && (
-							<View style={styles.row}>
-								<Text style={styles.label}>Queixa Principal:</Text>
-								<Text style={styles.value}>
-									{data.historico_clinico.queixa_principal}
-								</Text>
-							</View>
-						)}
-						{data.historico_clinico.historico_doencas_atuais && (
-							<View style={styles.row}>
-								<Text style={styles.label}>Doenças Atuais:</Text>
-								<Text style={styles.value}>
-									{data.historico_clinico.historico_doencas_atuais}
-								</Text>
-							</View>
-						)}
-						{data.historico_clinico.medicamentos_em_uso && (
-							<View style={styles.row}>
-								<Text style={styles.label}>Medicamentos:</Text>
-								<Text style={styles.value}>
-									{data.historico_clinico.medicamentos_em_uso}
-								</Text>
-							</View>
-						)}
-						{data.historico_clinico.alergias && (
-							<View style={styles.row}>
-								<Text style={styles.label}>Alergias:</Text>
-								<Text style={styles.value}>
-									{data.historico_clinico.alergias}
-								</Text>
-							</View>
-						)}
-						{data.historico_clinico.cirurgias_previas && (
-							<View style={styles.row}>
-								<Text style={styles.label}>Cirurgias Prévias:</Text>
-								<Text style={styles.value}>
-									{data.historico_clinico.cirurgias_previas}
-								</Text>
-							</View>
-						)}
-					</View>
-				)}
-
-				{/* Avaliação Fisioterapêutica */}
-				{data.avaliacao && (
-					<View style={styles.section}>
-						<Text style={styles.sectionTitle}>AVALIAÇÃO FISIOTERAPÊUTICA</Text>
-						<View style={styles.row}>
-							<Text style={styles.label}>Data:</Text>
-							<Text style={styles.value}>
-								{format(new Date(data.avaliacao.data_avaliacao), "dd/MM/yyyy", {
-									locale: ptBR,
-								})}
-							</Text>
-						</View>
-						{data.avaliacao.inspecao_visual && (
-							<View style={styles.row}>
-								<Text style={styles.label}>Inspeção Visual:</Text>
-								<Text style={styles.value}>
-									{data.avaliacao.inspecao_visual}
-								</Text>
-							</View>
-						)}
-						{data.avaliacao.palpacao && (
-							<View style={styles.row}>
-								<Text style={styles.label}>Palpação:</Text>
-								<Text style={styles.value}>{data.avaliacao.palpacao}</Text>
-							</View>
-						)}
-						{data.avaliacao.goniometria && (
-							<View style={styles.row}>
-								<Text style={styles.label}>Goniometria:</Text>
-								<Text style={styles.value}>{data.avaliacao.goniometria}</Text>
-							</View>
-						)}
-						{data.avaliacao.forca_muscular && (
-							<View style={styles.row}>
-								<Text style={styles.label}>Força Muscular:</Text>
-								<Text style={styles.value}>
-									{data.avaliacao.forca_muscular}
-								</Text>
-							</View>
-						)}
-						{data.avaliacao.teste_funcional && (
-							<View style={styles.row}>
-								<Text style={styles.label}>Teste Funcional:</Text>
-								<Text style={styles.value}>
-									{data.avaliacao.teste_funcional}
-								</Text>
-							</View>
-						)}
-						{data.avaliacao.diagnostico_fisioterapeutico && (
-							<View style={styles.row}>
-								<Text style={styles.label}>Diagnóstico Fisioterapêutico:</Text>
-								<Text style={styles.value}>
-									{data.avaliacao.diagnostico_fisioterapeutico}
-								</Text>
-							</View>
-						)}
-						{data.avaliacao.codigos_cid &&
-							data.avaliacao.codigos_cid.length > 0 && (
-								<View style={styles.row}>
-									<Text style={styles.label}>CIDs:</Text>
-									<Text style={styles.value}>
-										{data.avaliacao.codigos_cid.join(", ")}
-									</Text>
-								</View>
-							)}
-					</View>
-				)}
-
-				{/* Plano de Tratamento */}
-				{data.plano_tratamento && (
-					<View style={styles.section}>
-						<Text style={styles.sectionTitle}>PLANO DE TRATAMENTO</Text>
-						{data.plano_tratamento.objetivos && (
-							<View style={styles.row}>
-								<Text style={styles.label}>Objetivos:</Text>
-								<Text style={styles.value}>
-									{data.plano_tratamento.objetivos}
-								</Text>
-							</View>
-						)}
-						{data.plano_tratamento.procedimentos &&
-							data.plano_tratamento.procedimentos.length > 0 && (
-								<View style={styles.row}>
-									<Text style={styles.label}>Procedimentos:</Text>
-									<Text style={styles.value}>
-										{data.plano_tratamento.procedimentos.join(", ")}
-									</Text>
-								</View>
-							)}
-						{data.plano_tratamento.frequencia && (
-							<View style={styles.row}>
-								<Text style={styles.label}>Frequência:</Text>
-								<Text style={styles.value}>
-									{data.plano_tratamento.frequencia}
-								</Text>
-							</View>
-						)}
-						{data.plano_tratamento.duracao_prevista && (
-							<View style={styles.row}>
-								<Text style={styles.label}>Duração Prevista:</Text>
-								<Text style={styles.value}>
-									{data.plano_tratamento.duracao_prevista}
-								</Text>
-							</View>
-						)}
-					</View>
-				)}
-
-				{/* Evoluções */}
-				{data.evolucoes && data.evolucoes.length > 0 && (
-					<View style={styles.section}>
-						<Text style={styles.sectionTitle}>EVOLUÇÕES</Text>
-						<View style={styles.table}>
-							<View style={[styles.tableRow, styles.tableHeader]}>
-								<Text style={styles.tableCell}>Sessão</Text>
-								<Text style={styles.tableCell}>Data</Text>
-								<Text style={styles.tableCell}>Descrição</Text>
-							</View>
-							{data.evolucoes.map((evolucao, index) => (
-								<View key={index} style={styles.tableRow}>
-									<Text style={styles.tableCell}>{evolucao.sessao}</Text>
-									<Text style={styles.tableCell}>
-										{format(new Date(evolucao.data), "dd/MM/yyyy", {
-											locale: ptBR,
-										})}
-									</Text>
-									<Text style={styles.tableCell}>{evolucao.descricao}</Text>
-								</View>
-							))}
-						</View>
-					</View>
-				)}
-
-				{/* Resumo do Tratamento */}
-				{data.resumo_tratamento && (
-					<View style={styles.section}>
-						<Text style={styles.sectionTitle}>RESUMO DO TRATAMENTO</Text>
-						<Text style={{ fontSize: 9, lineHeight: 1.4 }}>
-							{data.resumo_tratamento}
-						</Text>
-					</View>
-				)}
-
-				{/* Conduta Sugerida */}
-				{data.conduta_sugerida && (
-					<View style={styles.section}>
-						<Text style={styles.sectionTitle}>CONDUTA SUGERIDA</Text>
-						<Text style={{ fontSize: 9, lineHeight: 1.4 }}>
-							{data.conduta_sugerida}
-						</Text>
-					</View>
-				)}
-
-				{/* Recomendações */}
-				{data.recomendacoes && (
-					<View style={styles.section}>
-						<Text style={styles.sectionTitle}>RECOMENDAÇÕES</Text>
-						<Text style={{ fontSize: 9, lineHeight: 1.4 }}>
-							{data.recomendacoes}
-						</Text>
-					</View>
-				)}
-
-				{/* Assinatura */}
-				<View style={styles.signature}>
-					<View style={styles.signatureLine}>
-						<Text>_________________________________________</Text>
-						<Text style={{ fontSize: 8 }}>Assinatura do Fisioterapeuta</Text>
-						<Text style={{ fontSize: 8 }}>
-							{data.profissional_emissor.nome}
-						</Text>
-					</View>
-					<View style={styles.signatureLine}>
-						<Text>_________________________________________</Text>
-						<Text style={{ fontSize: 8 }}>Carimbo</Text>
-					</View>
-				</View>
-
-				{/* Footer */}
-				<View style={styles.footer}>
-					<Text>
-						Documento gerado em{" "}
-						{format(new Date(), "dd/MM/yyyy 'às' HH:mm", { locale: ptBR })}
-					</Text>
-					<Text>
-						Este relatório contém informações confidenciais protegidas por
-						sigilo profissional.
-					</Text>
-				</View>
-			</Page>
-		</Document>
-	);
-}
+const loadRelatorioMedicoPdf = () =>
+	import("./RelatorioMedicoPDF").then((module) => ({
+		default: module.RelatorioMedicoPDF,
+	}));
 
 // Componente de Editor do Relatório
 function RelatorioMedicoEditor({
@@ -2288,17 +1810,14 @@ export default function RelatorioMedicoPage() {
 														<Cloud className="h-4 w-4 mr-1 text-blue-500" />
 														Google Docs
 													</Button>
-													<PDFDownloadLink
-														document={<RelatorioMedicoPDF data={relatorio} />}
+													<LazyPdfDownloadButton
+														loadDocument={loadRelatorioMedicoPdf}
+														documentProps={{ data: relatorio }}
 														fileName={`relatorio-medico-${relatorio.paciente?.nome?.replace(/\s+/g, "-")}-${format(new Date(relatorio.data_emissao), "dd-MM-yyyy")}.pdf`}
-													>
-														{({ loading }) => (
-															<Button size="sm" disabled={loading}>
-																<Download className="h-4 w-4 mr-1" />
-																{loading ? "Gerando..." : "PDF"}
-															</Button>
-														)}
-													</PDFDownloadLink>
+														label="PDF"
+														icon={<Download className="mr-1 h-4 w-4" />}
+														buttonProps={{ size: "sm" }}
+													/>
 												</div>
 											</div>
 										))}
@@ -2389,17 +1908,13 @@ export default function RelatorioMedicoPage() {
 										<Edit className="h-4 w-4 mr-2" />
 										Editar
 									</Button>
-									<PDFDownloadLink
-										document={<RelatorioMedicoPDF data={previewRelatorio} />}
+									<LazyPdfDownloadButton
+										loadDocument={loadRelatorioMedicoPdf}
+										documentProps={{ data: previewRelatorio }}
 										fileName={`relatorio-medico-${previewRelatorio.paciente?.nome?.replace(/\s+/g, "-")}-${format(new Date(previewRelatorio.data_emissao), "dd-MM-yyyy")}.pdf`}
-									>
-										{({ loading }) => (
-											<Button disabled={loading}>
-												<Download className="h-4 w-4 mr-2" />
-												{loading ? "Gerando..." : "Baixar PDF"}
-											</Button>
-										)}
-									</PDFDownloadLink>
+										label="Baixar PDF"
+										icon={<Download className="mr-2 h-4 w-4" />}
+									/>
 								</div>
 							</div>
 						</DialogContent>
@@ -2575,5 +2090,3 @@ export default function RelatorioMedicoPage() {
 		</MainLayout>
 	);
 }
-
-export { RelatorioMedicoPDF };

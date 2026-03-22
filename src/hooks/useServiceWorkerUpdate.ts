@@ -14,6 +14,7 @@ import { useEffect, useState, useRef } from "react";
 import { toast } from "sonner";
 import { Workbox } from "workbox-window";
 import { fisioLogger as logger } from "@/lib/errors/logger";
+import { canUseServiceWorker } from "@/lib/pwa/serviceWorker";
 
 interface UpdateState {
 	hasUpdate: boolean;
@@ -36,11 +37,7 @@ export function useServiceWorkerUpdate() {
 
 	useEffect(() => {
 		// Apenas executar em produção com SW suportado
-		if (
-			typeof window === "undefined" ||
-			import.meta.env.DEV ||
-			!("serviceWorker" in navigator)
-		) {
+		if (!canUseServiceWorker()) {
 			return;
 		}
 
