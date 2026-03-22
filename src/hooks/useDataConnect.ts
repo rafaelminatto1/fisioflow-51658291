@@ -3,7 +3,7 @@
  */
 
 import { useQuery } from "@tanstack/react-query";
-import { patientsApi, clinicalApi } from "@/lib/api/workers-client";
+import { patientsApi, clinicalApi } from "@/api/v2";
 
 const isUUID = (id: string | undefined): id is string =>
 	!!id &&

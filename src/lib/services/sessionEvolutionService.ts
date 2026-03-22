@@ -1,4 +1,4 @@
-import { evolutionApi, sessionsApi } from "@/lib/api/workers-client";
+import { evolutionApi, sessionsApi } from "@/api/v2";
 import type {
 	SessionEvolution,
 	SessionEvolutionFormData,

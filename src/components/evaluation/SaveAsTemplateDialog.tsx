@@ -23,7 +23,7 @@ import { Save, Loader2, FileText } from "lucide-react";
 import { toast } from "sonner";
 import type { TemplateField } from "./EvaluationTemplateSelector";
 import { fisioLogger as logger } from "@/lib/errors/logger";
-import { evaluationFormsApi } from "@/lib/api/workers-client";
+import { evaluationFormsApi } from "@/api/v2";
 
 interface SaveAsTemplateDialogProps {
 	open: boolean;

@@ -11,7 +11,7 @@ import GamificationHeader from "@/components/gamification/GamificationHeader";
 import { useQuery } from "@tanstack/react-query";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Skeleton } from "@/components/ui/skeleton";
-import { gamificationApi } from "@/lib/api/workers-client";
+import { gamificationApi } from "@/api/v2";
 
 interface LeaderboardEntry {
 	patient_id: string;

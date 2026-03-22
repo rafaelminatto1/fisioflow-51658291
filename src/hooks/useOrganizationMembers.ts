@@ -8,7 +8,7 @@ import { toast } from "sonner";
 import {
 	organizationMembersApi,
 	type OrganizationMember,
-} from "@/lib/api/workers-client";
+} from "@/api/v2";
 
 export const useOrganizationMembers = (organizationId?: string) => {
 	const queryClient = useQueryClient();

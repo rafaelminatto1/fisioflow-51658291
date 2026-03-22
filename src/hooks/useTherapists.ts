@@ -4,7 +4,7 @@
  */
 
 import { useQuery } from "@tanstack/react-query";
-import { profileApi } from "@/lib/api/workers-client";
+import { profileApi } from "@/api/v2";
 
 export interface TherapistOption {
 	id: string;

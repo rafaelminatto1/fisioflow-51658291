@@ -12,7 +12,7 @@ import {
 	type PatientPhysicalExamination,
 	type PatientTreatmentPlan,
 	type SessionRecord,
-} from "@/lib/api/workers-client";
+} from "@/api/v2";
 import { fisioLogger as logger } from "@/lib/errors/logger";
 
 export interface MedicalRecord {

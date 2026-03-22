@@ -14,7 +14,7 @@ import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "@/hooks/use-toast";
-import { aiApi } from "@/lib/api/workers-client";
+import { aiApi } from "@/api/v2";
 import {
 	Brain,
 	TrendingUp,

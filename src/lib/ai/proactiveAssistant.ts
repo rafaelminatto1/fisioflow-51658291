@@ -4,7 +4,7 @@ import {
 	appointmentsApi,
 	financialApi,
 	patientsApi,
-} from "@/lib/api/workers-client";
+} from "@/api/v2";
 
 export interface ProactiveSuggestion {
 	id: string;

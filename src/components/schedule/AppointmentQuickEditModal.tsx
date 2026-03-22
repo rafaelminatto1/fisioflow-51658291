@@ -71,7 +71,7 @@ import type {
 	AppointmentStatus,
 	AppointmentBase,
 } from "@/types/appointment";
-import { appointmentsApi } from "@/lib/api/workers-client";
+import { appointmentsApi } from "@/api/v2";
 import {
 	useTherapists,
 	formatTherapistLabel,

@@ -51,7 +51,7 @@ import {
 	financialApi,
 	reportsApi,
 	patientsApi,
-} from "@/lib/api/workers-client";
+} from "@/api/v2";
 
 interface DadosPaciente {
 	nome: string;

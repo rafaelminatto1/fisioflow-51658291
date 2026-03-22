@@ -7,7 +7,7 @@ import { useWaitlistMatch } from "@/hooks/useWaitlistMatch";
 import { usePatientPackages } from "@/hooks/usePackages";
 import { useUpdateAppointment } from "@/hooks/useAppointments";
 import { prefetchRoute, RouteKeys } from "@/lib/routing/routePrefetch";
-import { appointmentsApi } from "@/lib/api/workers-client";
+import { appointmentsApi } from "@/api/v2";
 import { normalizeStatus } from "../shared/appointment-status";
 import { type Appointment, type AppointmentStatus } from "@/types/appointment";
 

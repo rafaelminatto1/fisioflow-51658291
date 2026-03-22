@@ -15,7 +15,7 @@ import {
 	eventosApi,
 	participantesApi,
 	contratadosApi,
-} from "@/lib/api/workers-client";
+} from "@/api/v2";
 
 interface EventoRecord {
 	id: string;

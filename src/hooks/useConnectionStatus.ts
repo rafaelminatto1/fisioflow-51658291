@@ -4,7 +4,7 @@
 
 import { useState, useEffect, useCallback, useRef } from "react";
 import { fisioLogger as logger } from "@/lib/errors/logger";
-import { healthApi } from "@/lib/api/workers-client";
+import { healthApi } from "@/api/v2";
 
 export type ConnectionState =
 	| "online"

@@ -4,7 +4,7 @@
 
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
-import { crmApi, Lead, LeadHistorico } from "@/lib/api/workers-client";
+import { crmApi, Lead, LeadHistorico } from "@/api/v2";
 
 export type { Lead, LeadHistorico };
 

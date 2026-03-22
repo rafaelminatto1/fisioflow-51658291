@@ -15,7 +15,7 @@ import {
 } from "recharts";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
-import { patientsApi, type PatientRow } from "@/lib/api/workers-client";
+import { patientsApi, type PatientRow } from "@/api/v2";
 import { MainLayout } from "@/components/layout/MainLayout";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";

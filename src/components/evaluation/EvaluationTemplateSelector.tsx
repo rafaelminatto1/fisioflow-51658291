@@ -1,6 +1,6 @@
 import React, { useState, useMemo, useCallback } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { evaluationFormsApi } from "@/lib/api/workers-client";
+import { evaluationFormsApi } from "@/api/v2";
 import {
 	Check,
 	ChevronsUpDown,

@@ -47,7 +47,7 @@ import {
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { PatientHelpers } from "@/types";
-import { patientsApi } from "@/lib/api/workers-client";
+import { patientsApi } from "@/api/v2";
 
 interface PatientListItem {
 	id: string;

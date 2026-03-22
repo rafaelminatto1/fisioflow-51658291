@@ -2,7 +2,7 @@
  * Clinical Analysis Service - Migrated to Workers/Neon
  */
 
-import { aiApi, type AIClinicalReport } from "@/lib/api/workers-client";
+import { aiApi, type AIClinicalReport } from "@/api/v2";
 import { fisioLogger as logger } from "@/lib/errors/logger";
 
 export type AIAnalysisResult = AIClinicalReport;

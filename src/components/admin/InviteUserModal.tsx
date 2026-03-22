@@ -19,7 +19,7 @@ import {
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Loader2, Copy, Check, UserPlus, Mail, Shield } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
-import { invitationsApi } from "@/lib/api/workers-client";
+import { invitationsApi } from "@/api/v2";
 import { emailSchema } from "@/lib/validations/auth";
 import { fisioLogger as logger } from "@/lib/errors/logger";
 import { useIsMobile } from "@/hooks/use-mobile";

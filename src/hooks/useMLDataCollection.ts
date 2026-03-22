@@ -4,7 +4,7 @@
 
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
-import { analyticsApi } from "@/lib/api/workers-client";
+import { analyticsApi } from "@/api/v2";
 import type { MLTrainingData } from "@/types/patientAnalytics";
 
 export async function collectPatientTrainingData(patientId: string) {

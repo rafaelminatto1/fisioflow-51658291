@@ -13,7 +13,7 @@
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useMemo, useCallback, useRef, useEffect } from "react";
 import { startOfDay, endOfDay, addDays, subDays, format } from "date-fns";
-import { appointmentsApi, type AppointmentRow } from "@/lib/api/workers-client";
+import { appointmentsApi, type AppointmentRow } from "@/api/v2";
 
 // Tipos
 export type ScheduleView = "day" | "week" | "month" | "list";

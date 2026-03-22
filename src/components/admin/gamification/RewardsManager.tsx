@@ -29,7 +29,7 @@ import {
 } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
 import { useToast } from "@/hooks/use-toast";
-import { gamificationApi, type ShopItemRow } from "@/lib/api/workers-client";
+import { gamificationApi, type ShopItemRow } from "@/api/v2";
 
 type Reward = ShopItemRow;
 const CATEGORIES = [

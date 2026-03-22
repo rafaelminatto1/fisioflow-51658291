@@ -7,7 +7,7 @@ import { toast } from "sonner";
 import {
 	gamificationNotificationsApi,
 	type GamificationNotification,
-} from "@/lib/api/workers-client";
+} from "@/api/v2";
 
 export interface UseGamificationNotificationsResult {
 	notifications: GamificationNotification[];

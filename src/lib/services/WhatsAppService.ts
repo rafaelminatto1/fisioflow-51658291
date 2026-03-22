@@ -2,7 +2,7 @@ import {
 	whatsappApi,
 	type WhatsAppMessage as WhatsAppLogRecord,
 	type WhatsAppTemplateRecord,
-} from "@/lib/api/workers-client";
+} from "@/api/v2";
 import { fisioLogger as logger } from "@/lib/errors/logger";
 
 export interface WhatsAppMessage {
