@@ -7,7 +7,7 @@ import {
 	documentTemplatesApi,
 	type AtestadoTemplateRecord,
 	type ContratoTemplateRecord,
-} from "@/lib/api/workers-client";
+} from "@/api/v2";
 import { toast } from "sonner";
 
 export type AtestadoTemplate = AtestadoTemplateRecord;

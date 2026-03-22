@@ -8,7 +8,7 @@ import {
 	precadastroApi,
 	type Precadastro,
 	type PrecadastroToken,
-} from "@/lib/api/workers-client";
+} from "@/api/v2";
 
 export type { Precadastro, PrecadastroToken };
 

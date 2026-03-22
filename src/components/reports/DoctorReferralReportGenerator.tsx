@@ -20,7 +20,7 @@ import { useGamification } from "@/hooks/useGamification";
 import { useSoapRecordsV2 } from "@/hooks/useSoapRecordsV2";
 import { format } from "date-fns";
 import { toast } from "sonner";
-import { aiApi } from "@/lib/api/workers-client";
+import { aiApi } from "@/api/v2";
 
 const PDFDownloadLink = lazy(() =>
 	import("@react-pdf/renderer").then((module) => ({

@@ -54,7 +54,7 @@ import {
 	Trash2,
 } from "lucide-react";
 import { uploadToR2 } from "@/lib/storage/r2-storage";
-import { aiApi, examsApi } from "@/lib/api/workers-client";
+import { aiApi, examsApi } from "@/api/v2";
 import { useToast } from "@/hooks/use-toast";
 import { useUserProfile } from "@/hooks/useUserProfile";
 import { usePatientsPostgres } from "@/hooks/useDataConnect";

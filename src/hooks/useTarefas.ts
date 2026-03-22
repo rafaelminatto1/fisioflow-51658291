@@ -4,7 +4,7 @@
 
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
-import { tarefasApi } from "@/lib/api/workers-client";
+import { tarefasApi } from "@/api/v2";
 
 // Re-export types from centralized types file
 export type {

@@ -4,7 +4,7 @@
 
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useToast } from "@/hooks/use-toast";
-import { documentSignaturesApi } from "@/lib/api/workers-client";
+import { documentSignaturesApi } from "@/api/v2";
 
 export interface DocumentSignature {
 	id: string;

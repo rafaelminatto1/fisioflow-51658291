@@ -15,7 +15,7 @@ import {
 	type AppointmentRow,
 	type PatientPackageRow,
 	type PatientRow,
-} from "@/lib/api/workers-client";
+} from "@/api/v2";
 import {
 	Users,
 	UserMinus,

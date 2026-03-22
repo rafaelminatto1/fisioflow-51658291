@@ -18,7 +18,7 @@ import { fisioLogger as logger } from "@/lib/errors/logger";
 import {
 	notificationsApi,
 	type Notification as NotificationRecord,
-} from "@/lib/api/workers-client";
+} from "@/api/v2";
 
 interface Notification extends NotificationRecord {
 	read_at?: string;

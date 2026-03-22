@@ -5,7 +5,7 @@ import type {
 import { TestEvolutionService } from "./testEvolutionService";
 import { PathologyService } from "./pathologyService";
 import { fisioLogger as logger } from "@/lib/errors/logger";
-import { auditApi } from "@/lib/api/workers-client";
+import { auditApi } from "@/api/v2";
 
 export interface AlertCheckResult {
 	canSave: boolean;

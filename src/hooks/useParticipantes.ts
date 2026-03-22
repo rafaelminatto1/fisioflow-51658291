@@ -4,7 +4,7 @@
 
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
-import { participantesApi, type Participante } from "@/lib/api/workers-client";
+import { participantesApi, type Participante } from "@/api/v2";
 import {
 	ParticipanteCreate,
 	ParticipanteUpdate,

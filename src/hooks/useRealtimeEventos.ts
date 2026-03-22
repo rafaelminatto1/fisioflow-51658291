@@ -6,7 +6,7 @@ import { useEffect } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { useToast } from "@/hooks/use-toast";
 import { fisioLogger as logger } from "@/lib/errors/logger";
-import { eventosApi, type Evento } from "@/lib/api/workers-client";
+import { eventosApi, type Evento } from "@/api/v2";
 
 export function useRealtimeEventos() {
 	const queryClient = useQueryClient();

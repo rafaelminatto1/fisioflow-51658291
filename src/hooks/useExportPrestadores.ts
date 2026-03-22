@@ -4,7 +4,7 @@
 
 import { useMutation } from "@tanstack/react-query";
 import { toast } from "sonner";
-import { prestadoresApi, type Prestador } from "@/lib/api/workers-client";
+import { prestadoresApi, type Prestador } from "@/api/v2";
 
 export function useExportPrestadores() {
 	return useMutation({

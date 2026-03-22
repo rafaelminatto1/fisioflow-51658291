@@ -9,7 +9,7 @@
  */
 
 import { fisioLogger as logger } from "@/lib/errors/logger";
-import { whatsappApi } from "@/lib/api/workers-client";
+import { whatsappApi } from "@/api/v2";
 
 export class AppointmentNotificationService {
 	/**

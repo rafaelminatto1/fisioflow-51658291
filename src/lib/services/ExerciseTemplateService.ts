@@ -1,4 +1,4 @@
-import { exerciseTemplatesApi } from "@/lib/api/workers-client";
+import { exerciseTemplatesApi } from "@/api/v2";
 import type { ExerciseV2Item } from "@/components/evolution/v2/types";
 
 export interface ExerciseTemplate {

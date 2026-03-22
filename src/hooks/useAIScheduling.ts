@@ -11,7 +11,7 @@
 import { useState, useCallback } from "react";
 import { toast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/useAuth";
-import { aiApi } from "@/lib/api/workers-client";
+import { aiApi } from "@/api/v2";
 
 interface SuggestOptimalSlotParams {
 	patientId: string;

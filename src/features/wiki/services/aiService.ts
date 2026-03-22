@@ -1,4 +1,4 @@
-import { knowledgeApi } from "@/lib/api/workers-client";
+import { knowledgeApi } from "@/api/v2";
 
 export const aiService = {
 	/**

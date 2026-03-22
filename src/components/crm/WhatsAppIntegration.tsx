@@ -42,7 +42,7 @@ import { toast } from "sonner";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { useWhatsAppIntegration } from "./hooks/useWhatsAppIntegration";
-import { whatsappApi } from "@/lib/api/workers-client";
+import { whatsappApi } from "@/api/v2";
 
 interface WhatsAppConfig {
 	api_key?: string;

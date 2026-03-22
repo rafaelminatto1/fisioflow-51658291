@@ -9,7 +9,7 @@ import {
 	gamificationApi,
 	type WeeklyChallengeRow,
 	type PatientChallengeRow,
-} from "@/lib/api/workers-client";
+} from "@/api/v2";
 
 type WeeklyChallenge = WeeklyChallengeRow;
 type PatientChallenge = PatientChallengeRow;

@@ -9,7 +9,7 @@ import {
 	eventosApi,
 	type EventoContratado,
 	type Evento,
-} from "@/lib/api/workers-client";
+} from "@/api/v2";
 import {
 	EventoContratadoCreate,
 	EventoContratadoUpdate,

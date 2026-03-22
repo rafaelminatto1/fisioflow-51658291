@@ -1,4 +1,4 @@
-import { activityLabApi } from "@/lib/api/workers-client";
+import { activityLabApi } from "@/api/v2";
 import type {
 	ActivityLabClinic,
 	ActivityLabPatient,

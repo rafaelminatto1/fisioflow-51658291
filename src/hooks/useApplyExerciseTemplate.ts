@@ -3,7 +3,7 @@
  */
 
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { templatesApi, exercisePlansApi } from "@/lib/api/workers-client";
+import { templatesApi, exercisePlansApi } from "@/api/v2";
 import { toast } from "sonner";
 import { useAuth } from "./useAuth";
 
