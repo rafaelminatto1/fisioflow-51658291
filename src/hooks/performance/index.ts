@@ -7,14 +7,7 @@
 // Lazy loading de bibliotecas pesadas
 export {
 	useLazyLibrary,
-	useCornerstone,
-	useMediaPipePose,
 	useMediaPipeVision,
-	useKonva,
-	useReactPDF,
-	useJsPDF,
-	useXLSX,
-	useExcelJS,
 } from "./useLazyLibrary";
 
 // Debounce - adia execução até parar de receber eventos
