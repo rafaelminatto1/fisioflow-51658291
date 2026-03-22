@@ -133,28 +133,6 @@ export function useLazyLibrary<T>({
 }
 
 /**
- * Hook específico para Cornerstone.js
- */
-export function useCornerstone() {
-	return useLazyLibrary({
-		importFn: () => import("@cornerstonejs/core"),
-		moduleName: "Cornerstone Core",
-		timeout: 15000,
-	});
-}
-
-/**
- * Hook específico para MediaPipe Pose
- */
-export function useMediaPipePose() {
-	return useLazyLibrary({
-		importFn: () => import("@mediapipe/pose"),
-		moduleName: "MediaPipe Pose",
-		timeout: 20000,
-	});
-}
-
-/**
  * Hook específico para MediaPipe Tasks Vision
  */
 export function useMediaPipeVision() {
@@ -162,60 +140,5 @@ export function useMediaPipeVision() {
 		importFn: () => import("@mediapipe/tasks-vision"),
 		moduleName: "MediaPipe Vision",
 		timeout: 20000,
-	});
-}
-
-/**
- * Hook específico para Konva
- */
-export function useKonva() {
-	return useLazyLibrary({
-		importFn: () => import("konva"),
-		moduleName: "Konva",
-		timeout: 10000,
-	});
-}
-
-/**
- * Hook específico para React PDF
- */
-export function useReactPDF() {
-	return useLazyLibrary({
-		importFn: () => import("@react-pdf/renderer"),
-		moduleName: "React PDF",
-		timeout: 10000,
-	});
-}
-
-/**
- * Hook específico para jspdf
- */
-export function useJsPDF() {
-	return useLazyLibrary({
-		importFn: () => import("jspdf"),
-		moduleName: "jsPDF",
-		timeout: 10000,
-	});
-}
-
-/**
- * Hook específico para XLSX
- */
-export function useXLSX() {
-	return useLazyLibrary({
-		importFn: () => import("xlsx"),
-		moduleName: "XLSX",
-		timeout: 10000,
-	});
-}
-
-/**
- * Hook específico para ExcelJS
- */
-export function useExcelJS() {
-	return useLazyLibrary({
-		importFn: () => import("exceljs"),
-		moduleName: "ExcelJS",
-		timeout: 10000,
 	});
 }
