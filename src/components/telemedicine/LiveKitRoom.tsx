@@ -22,7 +22,7 @@ import {
 	AlertCircle,
 	CheckCircle,
 } from "lucide-react";
-import { request } from "@/lib/api/workers-client";
+import { request } from "@/api/v2";
 import { toast } from "sonner";
 
 interface LiveKitTokenResponse {

@@ -1,5 +1,5 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { clinicalApi, type PrescribedExercise } from "@/lib/api/workers-client";
+import { clinicalApi, type PrescribedExercise } from "@/api/v2";
 import { useToast } from "@/hooks/use-toast";
 
 export type { PrescribedExercise };

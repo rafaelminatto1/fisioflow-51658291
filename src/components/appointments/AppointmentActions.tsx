@@ -21,7 +21,7 @@ import { useNavigate } from "react-router-dom";
 import { useToast } from "@/hooks/use-toast";
 import { prefetchRoute, RouteKeys } from "@/lib/routing/routePrefetch";
 import { useQueryClient } from "@tanstack/react-query";
-import { appointmentsApi } from "@/lib/api/workers-client";
+import { appointmentsApi } from "@/api/v2";
 
 interface AppointmentActionsProps {
 	appointment: AppointmentBase;

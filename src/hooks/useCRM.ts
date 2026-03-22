@@ -7,7 +7,7 @@
 
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
-import { crmApi, CrmTarefa } from "@/lib/api/workers-client";
+import { crmApi, CrmTarefa } from "@/api/v2";
 
 export type { CrmTarefa };
 

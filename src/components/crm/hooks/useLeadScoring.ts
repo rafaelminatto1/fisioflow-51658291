@@ -4,7 +4,7 @@
 
 import { useMutation } from "@tanstack/react-query";
 import { toast } from "sonner";
-import { crmApi, type Lead } from "@/lib/api/workers-client";
+import { crmApi, type Lead } from "@/api/v2";
 
 interface ScoreFactor {
 	type: string;

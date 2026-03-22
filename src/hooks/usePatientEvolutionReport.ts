@@ -10,7 +10,7 @@ import {
 	sessionsApi,
 	type PainMap,
 	type SessionRecord,
-} from "@/lib/api/workers-client";
+} from "@/api/v2";
 
 const fetchEvolutionMeasurements = async (patientId: string) => {
 	const res = await evolutionApi.measurements.list(patientId);

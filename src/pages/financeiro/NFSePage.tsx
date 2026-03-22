@@ -57,7 +57,7 @@ import {
 	financialApi,
 	type NFSeConfigRecord,
 	type NFSeRecord,
-} from "@/lib/api/workers-client";
+} from "@/api/v2";
 import { MainLayout } from "@/components/layout/MainLayout";
 
 export interface NFSe extends NFSeRecord {

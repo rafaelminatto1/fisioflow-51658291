@@ -36,7 +36,7 @@ import {
 	SelectValue,
 } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
-import { gamificationApi, type AchievementRow } from "@/lib/api/workers-client";
+import { gamificationApi, type AchievementRow } from "@/api/v2";
 
 type Achievement = AchievementRow & {
 	icon: string | null;

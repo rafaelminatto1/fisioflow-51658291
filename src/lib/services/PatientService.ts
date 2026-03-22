@@ -3,7 +3,7 @@ import {
 	patientsApi,
 	clinicalApi as workersClinicalApi,
 	exerciseSessionsApi,
-} from "@/lib/api/workers-client";
+} from "@/api/v2";
 
 interface PatientApiData {
 	id: string;

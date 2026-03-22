@@ -9,7 +9,7 @@ import {
 	type ScheduleCancellationRule,
 	type ScheduleNotificationSetting,
 	type ScheduleBlockedTime,
-} from "@/lib/api/workers-client";
+} from "@/api/v2";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "./useAuth";
 

@@ -9,7 +9,7 @@ import {
 	UserPlus,
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
-import { patientsApi } from "@/lib/api/workers-client";
+import { patientsApi } from "@/api/v2";
 import { cn } from "@/lib/utils";
 import { AnimatePresence, motion } from "framer-motion";
 import { fisioLogger as logger } from "@/lib/errors/logger";

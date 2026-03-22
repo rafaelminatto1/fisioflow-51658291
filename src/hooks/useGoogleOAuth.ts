@@ -1,6 +1,6 @@
 import { useState, useCallback } from "react";
 import { toast } from "sonner";
-import { integrationsApi } from "@/lib/api/workers-client";
+import { integrationsApi } from "@/api/v2";
 
 function buildLocalGoogleAuthUrl(state?: string): string {
 	const clientId = import.meta.env.VITE_GOOGLE_CLIENT_ID;

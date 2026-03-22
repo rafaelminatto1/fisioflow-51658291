@@ -6,7 +6,7 @@ import { useQuery } from "@tanstack/react-query";
 import {
 	automationApi,
 	type AutomationLogEntry as AutomationLogEntryType,
-} from "@/lib/api/workers-client";
+} from "@/api/v2";
 
 export type AutomationLogEntry = AutomationLogEntryType;
 

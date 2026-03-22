@@ -4,7 +4,7 @@
 
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "@/hooks/use-toast";
-import { invitationsApi } from "@/lib/api/workers-client";
+import { invitationsApi } from "@/api/v2";
 
 export type AppRole = "admin" | "fisioterapeuta" | "estagiario" | "paciente";
 

@@ -7,7 +7,7 @@ import {
   Bot, AlertCircle, MessageSquare, CheckCircle2, 
   Settings2, Send, XCircle, RefreshCcw, Zap
 } from 'lucide-react';
-import { aiApi } from '@/lib/api/workers-client';
+import { aiApi } from '@/api/v2';
 import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
 

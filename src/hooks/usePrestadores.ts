@@ -5,7 +5,7 @@
 import { useEffect, useRef } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
-import { prestadoresApi, type Prestador } from "@/lib/api/workers-client";
+import { prestadoresApi, type Prestador } from "@/api/v2";
 import { PrestadorCreate, PrestadorUpdate } from "@/lib/validations/prestador";
 import { fisioLogger as logger } from "@/lib/errors/logger";
 

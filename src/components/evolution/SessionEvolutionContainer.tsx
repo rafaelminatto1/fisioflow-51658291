@@ -73,7 +73,7 @@ import {
 	goalsApi,
 	patientsApi,
 	sessionsApi,
-} from "@/lib/api/workers-client";
+} from "@/api/v2";
 import { Settings } from "lucide-react";
 
 interface SessionEvolutionContainerProps {

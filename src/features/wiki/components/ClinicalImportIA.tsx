@@ -7,7 +7,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Brain, Upload, FileText, Loader2, Sparkles, CheckCircle2 } from "lucide-react";
 import { toast } from "sonner";
-import { aiApi } from "@/lib/api/workers-client";
+import { aiApi } from "@/api/v2";
 
 const SPECIALTIES = [
   "Traumato-ortopedia",

@@ -12,7 +12,7 @@ import {
 	type GamificationProfileRow,
 	type ShopItemRow,
 	type UserInventoryRow,
-} from "@/lib/api/workers-client";
+} from "@/api/v2";
 import type {
 	DailyQuestItem,
 	GamificationProfile,

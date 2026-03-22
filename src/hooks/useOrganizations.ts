@@ -10,7 +10,7 @@ import {
 	organizationMembersApi,
 	organizationsApi,
 	profileApi,
-} from "@/lib/api/workers-client";
+} from "@/api/v2";
 
 export interface Organization {
 	id: string;

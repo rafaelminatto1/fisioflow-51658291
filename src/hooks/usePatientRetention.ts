@@ -14,7 +14,7 @@ import {
 	crmApi,
 	financialApi,
 	patientsApi,
-} from "@/lib/api/workers-client";
+} from "@/api/v2";
 
 const RETENTION_KEYS = {
 	all: ["retention"] as const,

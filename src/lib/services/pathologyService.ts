@@ -1,4 +1,4 @@
-import { patientsApi, type PatientPathology } from "@/lib/api/workers-client";
+import { patientsApi, type PatientPathology } from "@/api/v2";
 import type { Pathology, PathologyFormData } from "@/types/evolution";
 
 const mapStatus = (value?: string | null): Pathology["status"] => {

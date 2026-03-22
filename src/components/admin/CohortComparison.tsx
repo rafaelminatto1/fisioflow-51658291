@@ -56,7 +56,7 @@ import {
 	patientsApi,
 	type AppointmentRow,
 	type PatientRow,
-} from "@/lib/api/workers-client";
+} from "@/api/v2";
 
 // ============================================================================
 // TYPES & INTERFACES

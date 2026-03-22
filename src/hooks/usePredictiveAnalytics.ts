@@ -16,7 +16,7 @@ import {
 	PredictionInput,
 } from "@/lib/ai/predictive-analytics";
 import type { PatientPrediction, RiskLevel } from "@/types/patientAnalytics";
-import { analyticsApi } from "@/lib/api/workers-client";
+import { analyticsApi } from "@/api/v2";
 
 // ============================================================================
 // QUERY KEYS
