@@ -36,7 +36,7 @@ import {
 	ChevronRight,
 } from "lucide-react";
 import { toast } from "sonner";
-import { marketingApi } from "@/lib/api/workers-client";
+import { marketingApi } from "@/api/v2";
 import {
 	format,
 	addDays,

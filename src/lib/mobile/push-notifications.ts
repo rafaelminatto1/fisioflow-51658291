@@ -2,7 +2,7 @@
  * Serviço para gerenciar Push Notifications no iOS
  */
 
-import { pushSubscriptionsApi } from "@/lib/api/workers-client";
+import { pushSubscriptionsApi } from "@/api/v2";
 import { authClient } from "@/lib/auth/neon-token";
 import { fisioLogger as logger } from "@/lib/errors/logger";
 import {

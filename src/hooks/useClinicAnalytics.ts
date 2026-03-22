@@ -23,7 +23,7 @@ import {
 	patientsApi,
 	profileApi,
 	financialApi,
-} from "@/lib/api/workers-client";
+} from "@/api/v2";
 
 // =====================================================================
 // CONFIG

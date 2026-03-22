@@ -89,6 +89,7 @@ Entregas:
 - componentes de PDF desacoplados em arquivos próprios
 - início de modularização progressiva do cliente web por domínio já aproveitado no bundle
 - `src/lib/api/workers-client.ts` foi reduzido com extrações de `scheduling`, `imaging`, `events`, `boards`, `tracking`, `communications`, `rehab`, `operations`, `clinicalApi`, `clinicalPublicApi`, `admin`, `feedback` e `billing` para `src/api/v2/*`
+- `src/api/v2/index.ts` passou a ser o barrel oficial para consumo do app, e os imports internos deixaram de apontar para `@/lib/api/workers-client`
 
 Critérios de aceite:
 - rota principal deixa de ser arquivo monolítico
@@ -106,6 +107,7 @@ Estes itens não estão bloqueando o projeto, mas ainda merecem acompanhamento:
 - `computeWorker` continua em ~1.22 MB e foi confirmado como worker especializado do ecossistema Cornerstone/VTK, não carga indevida do shell.
 - CSS global caiu para ~436 KB.
 - `workers-client.ts` caiu de 2027 para 235 linhas e hoje atua basicamente como fachada de compatibilidade e helpers base.
+- o app web ficou com `0` imports restantes apontando para `@/lib/api/workers-client`.
 - `posthog` ficou em chunk próprio de ~176 KB, fora do bundle principal.
 - há peers externos ainda defasados para o ecossistema Vite 8 em algumas bibliotecas secundárias.
 
@@ -120,5 +122,5 @@ Comandos executados com sucesso:
 Se houver uma próxima rodada, ela já não é mais “fechamento de base”. O próximo ciclo seria otimização avançada:
 - reduzir CSS global
 - revisar chunking de DICOM e worker pesado
-- decidir se `request` e `requestPublic` permanecem em `workers-client.ts` por compatibilidade ou se migram para um ponto único de `src/api/v2/base.ts`
+- decidir se `workers-client.ts` continua temporariamente como camada de compatibilidade externa ou se pode ser aposentado de vez
 - abrir branch separada para upgrades mobile maiores

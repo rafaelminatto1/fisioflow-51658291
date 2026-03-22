@@ -1,7 +1,7 @@
 /**
  * Helpers para operações relacionadas ao usuário e organização
  */
-import { profileApi } from "@/lib/api/workers-client";
+import { profileApi } from "@/api/v2";
 import { fisioLogger as logger } from "@/lib/errors/logger";
 
 export async function getUserOrganizationId(): Promise<string | null> {

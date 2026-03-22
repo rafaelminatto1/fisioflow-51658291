@@ -25,7 +25,7 @@ import { ClinicalFieldType, EvaluationForm } from "@/types/clinical-forms";
 import { Switch } from "@/components/ui/switch";
 import { useToast } from "@/hooks/use-toast";
 import { fisioLogger as logger } from "@/lib/errors/logger";
-import { evaluationFormsApi } from "@/lib/api/workers-client";
+import { evaluationFormsApi } from "@/api/v2";
 
 interface FormBuilderProps {
 	formId?: string;

@@ -29,7 +29,7 @@ import {
 	Calendar,
 } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
-import { crmApi } from "@/lib/api/workers-client";
+import { crmApi } from "@/api/v2";
 import {
 	fetchCalculatedLeadScores,
 	useLeadScoring,

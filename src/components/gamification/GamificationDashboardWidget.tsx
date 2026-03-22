@@ -10,7 +10,7 @@ import {
 	type LevelCalculationResult,
 } from "@/lib/services/gamificationTriggers";
 import { fisioLogger as logger } from "@/lib/errors/logger";
-import { gamificationApi } from "@/lib/api/workers-client";
+import { gamificationApi } from "@/api/v2";
 
 interface GamificationDashboardWidgetProps {
 	patientId: string;

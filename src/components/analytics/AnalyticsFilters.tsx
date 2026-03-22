@@ -10,7 +10,7 @@ import {
 } from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
 import { useQuery } from "@tanstack/react-query";
-import { profileApi } from "@/lib/api/workers-client";
+import { profileApi } from "@/api/v2";
 import { Calendar, Users, Filter } from "lucide-react";
 
 export function AnalyticsFilters() {

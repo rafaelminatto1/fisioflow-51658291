@@ -27,7 +27,7 @@ import { useToast } from "@/hooks/use-toast";
 import {
 	gamificationApi,
 	type WeeklyChallengeRow,
-} from "@/lib/api/workers-client";
+} from "@/api/v2";
 
 type WeeklyChallenge = WeeklyChallengeRow;
 const TARGET_TYPES = [

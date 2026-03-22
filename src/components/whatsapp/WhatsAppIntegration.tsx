@@ -27,7 +27,7 @@ import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { useEffect } from "react";
 import { fisioLogger as logger } from "@/lib/errors/logger";
-import { whatsappApi } from "@/lib/api/workers-client";
+import { whatsappApi } from "@/api/v2";
 
 interface WhatsAppIntegrationProps {
 	patientId: string;

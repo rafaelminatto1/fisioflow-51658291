@@ -18,7 +18,7 @@ import {
 	sessionsApi,
 	sessionAttachmentsApi,
 	sessionTemplatesApi,
-} from "@/lib/api/workers-client";
+} from "@/api/v2";
 
 // ===== TYPES =====
 

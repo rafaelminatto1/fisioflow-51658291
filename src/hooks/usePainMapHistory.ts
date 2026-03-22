@@ -7,7 +7,7 @@ import type {
 	PainType,
 } from "@/types/painMap";
 import { PainMapService } from "@/lib/services/painMapService";
-import { clinicalApi } from "@/lib/api/workers-client";
+import { clinicalApi } from "@/api/v2";
 
 export interface PainMapInsight {
 	type: "improvement" | "stable" | "worsening";

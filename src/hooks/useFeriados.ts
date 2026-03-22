@@ -5,7 +5,7 @@
 
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
-import { feriadosApi, type FeriadoRow } from "@/lib/api/workers-client";
+import { feriadosApi, type FeriadoRow } from "@/api/v2";
 
 export type Feriado = FeriadoRow;
 export type FeriadoFormData = Omit<Feriado, "id" | "created_at" | "updated_at">;

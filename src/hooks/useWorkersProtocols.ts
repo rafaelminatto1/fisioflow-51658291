@@ -2,7 +2,7 @@
  * Hooks TanStack Query para Protocolos via Cloudflare Workers API
  */
 import { useQuery } from "@tanstack/react-query";
-import { protocolsApi } from "@/lib/api/workers-client";
+import { protocolsApi } from "@/api/v2";
 
 const KEYS = {
 	list: (params?: object) => ["workers", "protocols", "list", params] as const,

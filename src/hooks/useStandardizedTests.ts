@@ -1,7 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { fisioLogger as logger } from "@/lib/errors/logger";
-import { request } from "@/lib/api/workers-client";
+import { request } from "@/api/v2";
 
 export interface StandardizedTestResult {
 	id: string;

@@ -4,7 +4,7 @@ import {
 	goalsApi,
 	patientsApi,
 	sessionsApi,
-} from "@/lib/api/workers-client";
+} from "@/api/v2";
 import { soapKeys } from "@/hooks/useSoapRecords";
 import { normalizeGoalRows } from "@/lib/clinical/goalNormalization";
 

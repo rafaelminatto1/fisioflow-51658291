@@ -3,7 +3,7 @@
  */
 
 import { useQuery } from "@tanstack/react-query";
-import { financialApi, type Transacao } from "@/lib/api/workers-client";
+import { financialApi, type Transacao } from "@/api/v2";
 import {
 	formatDateToLocalISO,
 	parseResponseDateOrNull,

@@ -4,7 +4,7 @@
  * Serviço para geração automática de templates de marketing usando IA
  * Usa a API Gemini gratuita (100 requisições/dia)
  */
-import { aiApi } from "@/lib/api/workers-client";
+import { aiApi } from "@/api/v2";
 
 // ============================================================================
 // TYPES

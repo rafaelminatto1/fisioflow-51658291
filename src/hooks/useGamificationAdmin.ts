@@ -13,7 +13,7 @@ import {
 	LevelReward,
 	ProgressionType,
 } from "@/types/gamification";
-import { gamificationApi } from "@/lib/api/workers-client";
+import { gamificationApi } from "@/api/v2";
 
 export interface UseGamificationAdminResult {
 	stats: GamificationStats | undefined;

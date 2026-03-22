@@ -3,7 +3,7 @@
  */
 
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { salasApi, type Sala } from "@/lib/api/workers-client";
+import { salasApi, type Sala } from "@/api/v2";
 import { toast } from "sonner";
 
 export type { Sala };

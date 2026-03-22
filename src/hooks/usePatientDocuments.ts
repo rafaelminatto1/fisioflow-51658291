@@ -4,7 +4,7 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useToast } from "@/hooks/use-toast";
 import { uploadToR2, deleteFromR2 } from "@/lib/storage/r2-storage";
-import { documentsApi, type PatientDocument } from "@/lib/api/workers-client";
+import { documentsApi, type PatientDocument } from "@/api/v2";
 
 export type { PatientDocument };
 

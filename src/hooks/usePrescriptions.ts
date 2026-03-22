@@ -7,7 +7,7 @@ import {
 	clinicalApi,
 	clinicalPublicApi,
 	type ExercisePrescription,
-} from "@/lib/api/workers-client";
+} from "@/api/v2";
 import { toast } from "sonner";
 import { addDays, format } from "date-fns";
 

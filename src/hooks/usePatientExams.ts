@@ -8,7 +8,7 @@ import {
 	examsApi,
 	type PatientExam,
 	type PatientExamFile,
-} from "@/lib/api/workers-client";
+} from "@/api/v2";
 import { useAuth } from "@/contexts/AuthContext";
 
 export type { PatientExam, PatientExamFile as ExamFile };

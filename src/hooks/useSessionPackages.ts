@@ -3,7 +3,7 @@
  */
 
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { financialApi, type PatientPackageRow } from "@/lib/api/workers-client";
+import { financialApi, type PatientPackageRow } from "@/api/v2";
 import { useToast } from "@/hooks/use-toast";
 
 export interface SessionPackage {

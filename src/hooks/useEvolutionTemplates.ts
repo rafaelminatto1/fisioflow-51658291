@@ -3,7 +3,7 @@
  */
 
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { clinicalApi, type EvolutionTemplate } from "@/lib/api/workers-client";
+import { clinicalApi, type EvolutionTemplate } from "@/api/v2";
 import { toast } from "sonner";
 
 export type { EvolutionTemplate };

@@ -1,7 +1,7 @@
 import React, { useEffect, useState, useCallback, useRef } from "react";
 import { authClient } from "@/integrations/neon/auth";
 import { fisioLogger as logger } from "@/lib/errors/logger";
-import { auditApi } from "@/lib/api/workers-client";
+import { auditApi } from "@/api/v2";
 import {
 	getNeonAccessToken,
 	invalidateNeonTokenCache,

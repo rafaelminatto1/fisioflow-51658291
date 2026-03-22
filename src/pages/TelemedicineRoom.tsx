@@ -7,7 +7,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import {
 	telemedicineApi,
 	type TelemedicineRoomRecord,
-} from "@/lib/api/workers-client";
+} from "@/api/v2";
 import { Video, Copy, ExternalLink, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 

@@ -9,7 +9,7 @@ import {
 	whatsappApi,
 	type WhatsAppMessage,
 	type PendingConfirmation,
-} from "@/lib/api/workers-client";
+} from "@/api/v2";
 
 export type WhatsAppMessageType =
 	| "reminder_24h"

@@ -8,7 +8,7 @@ import {
 	templatesApi,
 	type ExerciseTemplate as WorkersTemplate,
 	type ExerciseTemplateItem as WorkersTemplateItem,
-} from "@/lib/api/workers-client";
+} from "@/api/v2";
 import { toast } from "sonner";
 
 export interface ExerciseTemplate {

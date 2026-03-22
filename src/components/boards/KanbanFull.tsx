@@ -35,7 +35,7 @@ import {
 	useDeleteBoardColumn,
 	useReorderBoardColumns,
 } from "@/hooks/useBoardColumns";
-import { tarefasApi } from "@/lib/api/workers-client";
+import { tarefasApi } from "@/api/v2";
 import { useQueryClient } from "@tanstack/react-query";
 
 interface KanbanFullProps {

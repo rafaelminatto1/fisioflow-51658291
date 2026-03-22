@@ -40,7 +40,7 @@ import { useToast } from "@/hooks/use-toast";
 import {
 	gamificationApi,
 	type QuestDefinitionRow,
-} from "@/lib/api/workers-client";
+} from "@/api/v2";
 
 type QuestDefinition = QuestDefinitionRow;
 

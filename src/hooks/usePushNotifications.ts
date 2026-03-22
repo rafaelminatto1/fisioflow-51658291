@@ -7,7 +7,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { fisioLogger as logger } from "@/lib/errors/logger";
 import { useAuth } from "@/contexts/AuthContext";
-import { pushSubscriptionsApi } from "@/lib/api/workers-client";
+import { pushSubscriptionsApi } from "@/api/v2";
 
 type PushSubscriptionJSON = {
 	endpoint?: string;
