@@ -5,27 +5,13 @@
  */
 
 import React, { useEffect, useRef, useState } from "react";
-import {
-	RenderingEngine,
-	Enums,
-	StackViewport,
-	getRenderingEngine,
-} from "@cornerstonejs/core";
-import {
-	ToolGroupManager,
-	PanTool,
-	ZoomTool,
-	LengthTool,
-	ProbeTool,
-	addTool,
-	Enums as ToolEnums,
-} from "@cornerstonejs/tools";
-import initCornerstone from "./initCornerstone";
+import type { RenderingEngine, StackViewport } from "@cornerstonejs/core";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Ruler, MousePointer2, ZoomIn, Move } from "lucide-react";
 import { fisioLogger as logger } from "@/lib/errors/logger";
 import { dicomWebClient } from "@/services/dicom/dicomWebClient";
+import { loadCornerstoneRuntime } from "./cornerstoneRuntime";
 
 interface DicomViewerProps {
 	file?: File;
@@ -37,6 +23,8 @@ interface DicomViewerProps {
 const VIEWPORT_ID = "DICOM_VIEWPORT_ID";
 const TOOL_GROUP_ID = "DICOM_TOOL_GROUP_ID";
 const RENDERING_ENGINE_ID = "DICOM_RENDERING_ENGINE_ID";
+
+type CornerstoneRuntime = Awaited<ReturnType<typeof loadCornerstoneRuntime>>;
 
 /**
  * Componente interno do DicomViewer
@@ -51,6 +39,7 @@ export const DicomViewerInner: React.FC<DicomViewerProps> = ({
 }) => {
 	const elementRef = useRef<HTMLDivElement>(null);
 	const engineRef = useRef<RenderingEngine | null>(null);
+	const runtimeRef = useRef<CornerstoneRuntime | null>(null);
 	const [activeTool, setActiveTool] = useState<string>("Length");
 	const [isCornerstoneInitialized, setIsCornerstoneInitialized] =
 		useState(false);
@@ -58,13 +47,16 @@ export const DicomViewerInner: React.FC<DicomViewerProps> = ({
 	// Initialize Cornerstone and Tools
 	useEffect(() => {
 		const setup = async () => {
-			await initCornerstone();
+			const runtime = await loadCornerstoneRuntime();
+			runtimeRef.current = runtime;
+			await runtime.initCornerstone();
+			const { tools } = runtime;
 
 			try {
-				addTool(PanTool);
-				addTool(ZoomTool);
-				addTool(LengthTool);
-				addTool(ProbeTool);
+				tools.addTool(tools.PanTool);
+				tools.addTool(tools.ZoomTool);
+				tools.addTool(tools.LengthTool);
+				tools.addTool(tools.ProbeTool);
 			} catch {
 				// Tools might be already added
 			}
@@ -82,45 +74,46 @@ export const DicomViewerInner: React.FC<DicomViewerProps> = ({
 		let renderingEngine: RenderingEngine | null = null;
 
 		const setupViewer = async () => {
-			if (!elementRef.current) return;
+			if (!elementRef.current || !runtimeRef.current) return;
+			const { core, tools } = runtimeRef.current;
 
-			const existingEngine = getRenderingEngine(RENDERING_ENGINE_ID);
+			const existingEngine = core.getRenderingEngine(RENDERING_ENGINE_ID);
 			if (existingEngine) {
 				existingEngine.destroy();
 			}
 
-			renderingEngine = new RenderingEngine(RENDERING_ENGINE_ID);
+			renderingEngine = new core.RenderingEngine(RENDERING_ENGINE_ID);
 			engineRef.current = renderingEngine;
 
 			const viewportInput = {
 				viewportId: VIEWPORT_ID,
 				element: elementRef.current,
-				type: Enums.ViewportType.STACK,
+				type: core.Enums.ViewportType.STACK,
 			};
 
 			renderingEngine.enableElement(viewportInput);
 
 			// Setup ToolGroup
-			let toolGroup = ToolGroupManager.getToolGroup(TOOL_GROUP_ID);
+			let toolGroup = tools.ToolGroupManager.getToolGroup(TOOL_GROUP_ID);
 			if (toolGroup) {
-				ToolGroupManager.destroyToolGroup(TOOL_GROUP_ID);
+				tools.ToolGroupManager.destroyToolGroup(TOOL_GROUP_ID);
 			}
-			toolGroup = ToolGroupManager.createToolGroup(TOOL_GROUP_ID);
+			toolGroup = tools.ToolGroupManager.createToolGroup(TOOL_GROUP_ID);
 
 			if (toolGroup) {
-				toolGroup.addTool(PanTool.toolName);
-				toolGroup.addTool(ZoomTool.toolName);
-				toolGroup.addTool(LengthTool.toolName);
-				toolGroup.addTool(ProbeTool.toolName);
+				toolGroup.addTool(tools.PanTool.toolName);
+				toolGroup.addTool(tools.ZoomTool.toolName);
+				toolGroup.addTool(tools.LengthTool.toolName);
+				toolGroup.addTool(tools.ProbeTool.toolName);
 
-				toolGroup.setToolActive(LengthTool.toolName, {
-					bindings: [{ mouseButton: ToolEnums.MouseBindings.Primary }],
+				toolGroup.setToolActive(tools.LengthTool.toolName, {
+					bindings: [{ mouseButton: tools.Enums.MouseBindings.Primary }],
 				});
-				toolGroup.setToolActive(PanTool.toolName, {
-					bindings: [{ mouseButton: ToolEnums.MouseBindings.Auxiliary }],
+				toolGroup.setToolActive(tools.PanTool.toolName, {
+					bindings: [{ mouseButton: tools.Enums.MouseBindings.Auxiliary }],
 				});
-				toolGroup.setToolActive(ZoomTool.toolName, {
-					bindings: [{ mouseButton: ToolEnums.MouseBindings.Secondary }],
+				toolGroup.setToolActive(tools.ZoomTool.toolName, {
+					bindings: [{ mouseButton: tools.Enums.MouseBindings.Secondary }],
 				});
 
 				toolGroup.addViewport(VIEWPORT_ID, RENDERING_ENGINE_ID);
@@ -171,9 +164,13 @@ export const DicomViewerInner: React.FC<DicomViewerProps> = ({
 				if (engineRef.current) {
 					engineRef.current.destroy();
 				}
-				const tg = ToolGroupManager.getToolGroup(TOOL_GROUP_ID);
+				const tg = runtimeRef.current?.tools.ToolGroupManager.getToolGroup(
+					TOOL_GROUP_ID,
+				);
 				if (tg) {
-					ToolGroupManager.destroyToolGroup(TOOL_GROUP_ID);
+					runtimeRef.current?.tools.ToolGroupManager.destroyToolGroup(
+						TOOL_GROUP_ID,
+					);
 				}
 			} catch {
 				/* ignore cleanup errors */
@@ -189,17 +186,22 @@ export const DicomViewerInner: React.FC<DicomViewerProps> = ({
 
 	// Activate tool helper
 	const activateTool = (toolName: string) => {
-		const toolGroup = ToolGroupManager.getToolGroup(TOOL_GROUP_ID);
+		const runtime = runtimeRef.current;
+		if (!runtime) return;
+		const toolGroup = runtime.tools.ToolGroupManager.getToolGroup(TOOL_GROUP_ID);
 		if (!toolGroup) return;
 
-		const primaryTools = [LengthTool.toolName, ProbeTool.toolName];
+		const primaryTools = [
+			runtime.tools.LengthTool.toolName,
+			runtime.tools.ProbeTool.toolName,
+		];
 
 		primaryTools.forEach((t) => {
 			toolGroup.setToolPassive(t);
 		});
 
 		toolGroup.setToolActive(toolName, {
-			bindings: [{ mouseButton: ToolEnums.MouseBindings.Primary }],
+			bindings: [{ mouseButton: runtime.tools.Enums.MouseBindings.Primary }],
 		});
 		setActiveTool(toolName);
 	};
@@ -208,16 +210,30 @@ export const DicomViewerInner: React.FC<DicomViewerProps> = ({
 		<Card className="flex flex-col w-full h-full bg-black">
 			<div className="flex gap-2 p-2 bg-slate-800 border-b border-slate-700">
 				<Button
-					variant={activeTool === LengthTool.toolName ? "default" : "ghost"}
+					variant={
+						activeTool === runtimeRef.current?.tools.LengthTool.toolName
+							? "default"
+							: "ghost"
+					}
 					size="sm"
-					onClick={() => activateTool(LengthTool.toolName)}
+					onClick={() =>
+						runtimeRef.current &&
+						activateTool(runtimeRef.current.tools.LengthTool.toolName)
+					}
 				>
 					<Ruler className="w-4 h-4 mr-2" /> Medir
 				</Button>
 				<Button
-					variant={activeTool === ProbeTool.toolName ? "default" : "ghost"}
+					variant={
+						activeTool === runtimeRef.current?.tools.ProbeTool.toolName
+							? "default"
+							: "ghost"
+					}
 					size="sm"
-					onClick={() => activateTool(ProbeTool.toolName)}
+					onClick={() =>
+						runtimeRef.current &&
+						activateTool(runtimeRef.current.tools.ProbeTool.toolName)
+					}
 				>
 					<MousePointer2 className="w-4 h-4 mr-2" /> Probe
 				</Button>
