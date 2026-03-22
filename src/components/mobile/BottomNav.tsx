@@ -7,6 +7,7 @@
  */
 
 import React, { useState, useCallback } from "react";
+import "@/styles/mobile-utilities.css";
 import { useLocation, useNavigate } from "react-router-dom";
 import {
 	Home,
