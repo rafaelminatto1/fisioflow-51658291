@@ -1,4 +1,4 @@
-import { request } from "./base";
+import { request, requestPublic } from "./base";
 import type {
 	PatientExam,
 	PatientExamFile,
@@ -9,6 +9,13 @@ import type {
 	TreatmentSessionRecord,
 	ClinicalTestTemplateRecord,
 	SessionRecord,
+	PainMap,
+	PainMapPoint,
+	EvolutionTemplate,
+	ConductLibraryRecord,
+	ExercisePrescription,
+	PrescribedExercise,
+	StandardizedTestResultRow,
 } from "@/types/workers";
 
 const clin = (path: string, opts?: RequestInit) =>
@@ -349,4 +356,164 @@ export const sessionsApi = {
 				body: JSON.stringify(data),
 			},
 		),
+};
+
+const clinPublic = (path: string, opts?: RequestInit) =>
+	requestPublic<any>(`/api/clinical${path}`, opts);
+
+export const clinicalApi = {
+	painMaps: {
+		list: (p?: { patientId?: string; evolutionId?: string }) =>
+			clin(
+				`/pain-maps?${new URLSearchParams(
+					Object.fromEntries(
+						Object.entries(p ?? {})
+							.filter(([, v]) => v != null)
+							.map(([k, v]) => [k, String(v)]),
+					),
+				)}`,
+			),
+		get: (id: string) => clin(`/pain-maps/${id}`),
+		create: (d: Partial<PainMap>) =>
+			clin("/pain-maps", { method: "POST", body: JSON.stringify(d) }),
+		update: (id: string, d: Partial<PainMap>) =>
+			clin(`/pain-maps/${id}`, { method: "PUT", body: JSON.stringify(d) }),
+		delete: (id: string) => clin(`/pain-maps/${id}`, { method: "DELETE" }),
+		addPoint: (mapId: string, pt: Partial<PainMapPoint>) =>
+			clin(`/pain-maps/${mapId}/points`, {
+				method: "POST",
+				body: JSON.stringify(pt),
+			}),
+		deletePoint: (mapId: string, ptId: string) =>
+			clin(`/pain-maps/${mapId}/points/${ptId}`, { method: "DELETE" }),
+	},
+	evolutionTemplates: {
+		list: (p?: { ativo?: boolean }) =>
+			clin(
+				`/evolution-templates${p?.ativo != null ? `?ativo=${p.ativo}` : ""}`,
+			),
+		get: (id: string) => clin(`/evolution-templates/${id}`),
+		create: (d: Partial<EvolutionTemplate>) =>
+			clin("/evolution-templates", { method: "POST", body: JSON.stringify(d) }),
+		update: (id: string, d: Partial<EvolutionTemplate>) =>
+			clin(`/evolution-templates/${id}`, {
+				method: "PUT",
+				body: JSON.stringify(d),
+			}),
+		delete: (id: string) =>
+			clin(`/evolution-templates/${id}`, { method: "DELETE" }),
+	},
+	conductLibrary: {
+		list: (p?: { category?: string }) => {
+			const qs = new URLSearchParams(
+				Object.fromEntries(
+					Object.entries(p ?? {})
+						.filter(([, v]) => v != null)
+						.map(([k, v]) => [k, String(v)]),
+				),
+			).toString();
+			return clin(`/conduct-library${qs ? `?${qs}` : ""}`);
+		},
+		get: (id: string) => clin(`/conduct-library/${id}`),
+		create: (d: Partial<ConductLibraryRecord>) =>
+			clin("/conduct-library", { method: "POST", body: JSON.stringify(d) }),
+		update: (id: string, d: Partial<ConductLibraryRecord>) =>
+			clin(`/conduct-library/${id}`, {
+				method: "PUT",
+				body: JSON.stringify(d),
+			}),
+		delete: (id: string) =>
+			clin(`/conduct-library/${id}`, { method: "DELETE" }),
+	},
+	prescriptions: {
+		list: (p?: { patientId?: string; status?: string }) =>
+			clin(
+				`/prescriptions?${new URLSearchParams(
+					Object.fromEntries(
+						Object.entries(p ?? {})
+							.filter(([, v]) => v != null)
+							.map(([k, v]) => [k, String(v)]),
+					),
+				)}`,
+			),
+		get: (id: string) => clin(`/prescriptions/${id}`),
+		getByQr: (qr: string) => clin(`/prescriptions/qr/${qr}`),
+		create: (d: Partial<ExercisePrescription>) =>
+			clin("/prescriptions", { method: "POST", body: JSON.stringify(d) }),
+		update: (id: string, d: Partial<ExercisePrescription>) =>
+			clin(`/prescriptions/${id}`, { method: "PUT", body: JSON.stringify(d) }),
+		delete: (id: string) => clin(`/prescriptions/${id}`, { method: "DELETE" }),
+	},
+	prescribedExercises: {
+		list: (params?: { patientId?: string; active?: boolean }) =>
+			clin(
+				`/prescribed-exercises?${new URLSearchParams(
+					Object.fromEntries(
+						Object.entries(params ?? {})
+							.filter(([, v]) => v != null)
+							.map(([k, v]) => [k, String(v)]),
+					),
+				)}`,
+			),
+		create: (data: Partial<PrescribedExercise>) =>
+			clin("/prescribed-exercises", {
+				method: "POST",
+				body: JSON.stringify(data),
+			}),
+		update: (id: string, data: Partial<PrescribedExercise>) =>
+			clin(`/prescribed-exercises/${id}`, {
+				method: "PUT",
+				body: JSON.stringify(data),
+			}),
+		delete: (id: string) =>
+			clin(`/prescribed-exercises/${id}`, { method: "DELETE" }),
+	},
+	patientObjectives: {
+		list: () => clin("/patient-objectives"),
+		create: (data: Record<string, unknown>) =>
+			clin("/patient-objectives", {
+				method: "POST",
+				body: JSON.stringify(data),
+			}),
+		update: (id: string, data: Record<string, unknown>) =>
+			clin(`/patient-objectives/${id}`, {
+				method: "PUT",
+				body: JSON.stringify(data),
+			}),
+		delete: (id: string) =>
+			clin(`/patient-objectives/${id}`, { method: "DELETE" }),
+	},
+	patientObjectiveAssignments: {
+		list: (patientId: string) =>
+			clin(
+				`/patient-objective-assignments?patientId=${encodeURIComponent(patientId)}`,
+			),
+		create: (data: Record<string, unknown>) =>
+			clin("/patient-objective-assignments", {
+				method: "POST",
+				body: JSON.stringify(data),
+			}),
+		delete: (id: string) =>
+			clin(`/patient-objective-assignments/${id}`, { method: "DELETE" }),
+	},
+	standardizedTests: {
+		list: (patientId: string) =>
+			clin(`/standardized-tests?patientId=${encodeURIComponent(patientId)}`),
+		create: (data: Partial<StandardizedTestResultRow>) =>
+			clin("/standardized-tests", {
+				method: "POST",
+				body: JSON.stringify(data),
+			}),
+	},
+};
+
+export const clinicalPublicApi = {
+	prescriptions: {
+		getByQr: (qr: string) => clinPublic(`/prescriptions/qr/${qr}`),
+		updateByQr: (qr: string, data: Partial<ExercisePrescription>) =>
+			clinPublic(`/prescriptions/qr/${qr}`, {
+				method: "PUT",
+				body: JSON.stringify(data),
+			}),
+	},
 };
