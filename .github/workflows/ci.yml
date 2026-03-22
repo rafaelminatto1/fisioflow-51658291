@@ -82,7 +82,9 @@ jobs:
         uses: actions/upload-artifact@4cea5370acc3ee29d59090c00808c440df702c2e # v4.4.3
         with:
           name: coverage-report
-          path: coverage/
+          path: |
+            coverage/
+            apps/web/coverage/
           retention-days: 7
 
   # =====================================================================
@@ -145,14 +147,14 @@ jobs:
         uses: actions/download-artifact@fa0a91b85d4f404e444e00e005971372dc801d1c # v4.1.8
         with:
           name: dist
-          path: dist
+          path: .
 
       - name: Install Playwright Browsers
         run: pnpm exec playwright install --with-deps chromium
 
       - name: Start Preview Server
         run: |
-          npx -y http-server dist -p 4173 &
+          npx -y http-server apps/web/dist -p 4173 &
           sleep 5
           curl -s http://localhost:4173 > /dev/null
 
@@ -258,7 +260,7 @@ jobs:
         uses: actions/download-artifact@fa0a91b85d4f404e444e00e005971372dc801d1c # v4.1.8
         with:
           name: dist
-          path: dist
+          path: .
 
       - name: Run Lighthouse
         uses: treosh/lighthouse-ci-action@f62744655513d6a4c281358913b434458f338d38 # v12.1.0
@@ -269,4 +271,4 @@ jobs:
           temporaryPublicStorage: true
           configPath: './.lighthouserc.json'
           serverBaseUrl: http://localhost:4173
-          collectStartServerCommand: npx -y http-server dist -p 4173
+          collectStartServerCommand: npx -y http-server apps/web/dist -p 4173

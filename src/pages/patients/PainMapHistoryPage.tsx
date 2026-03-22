@@ -15,8 +15,6 @@ import {
 } from "recharts";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
-import { jsPDF } from "jspdf";
-import autoTable from "jspdf-autotable";
 import { patientsApi, type PatientRow } from "@/lib/api/workers-client";
 import { MainLayout } from "@/components/layout/MainLayout";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -43,8 +41,7 @@ import { PainMapService } from "@/lib/services/painMapService";
 import type { PainMapPoint, BodyRegion } from "@/types/painMap";
 import { PatientHelpers } from "@/types";
 
-// Type extension for jsPDF with autoTable plugin
-interface jsPDFWithAutoTable extends jsPDF {
+interface PdfWithAutoTable {
 	lastAutoTable?: {
 		finalY: number;
 	};
@@ -137,9 +134,13 @@ export default function PainMapHistoryPage() {
 
 	const isLoading = patientLoading || historyLoading;
 
-	const exportPDF = () => {
+	const exportPDF = async () => {
 		if (!historyData || !patient) return;
 
+		const [{ jsPDF }, { default: autoTable }] = await Promise.all([
+			import("jspdf"),
+			import("jspdf-autotable"),
+		]);
 		const doc = new jsPDF();
 		const pageWidth = doc.internal.pageSize.getWidth();
 
@@ -185,8 +186,8 @@ export default function PainMapHistoryPage() {
 		});
 
 		// Insights
-		const insightY = (doc as jsPDFWithAutoTable).lastAutoTable?.finalY
-			? (doc as jsPDFWithAutoTable).lastAutoTable.finalY + 15
+		const insightY = (doc as PdfWithAutoTable).lastAutoTable?.finalY
+			? (doc as PdfWithAutoTable).lastAutoTable.finalY + 15
 			: 80;
 		doc.setFontSize(14);
 		doc.text("Insights", 14, insightY);
@@ -200,8 +201,8 @@ export default function PainMapHistoryPage() {
 		});
 
 		// Region ranking
-		const regionY = (doc as jsPDFWithAutoTable).lastAutoTable?.finalY
-			? (doc as jsPDFWithAutoTable).lastAutoTable.finalY + 15
+		const regionY = (doc as PdfWithAutoTable).lastAutoTable?.finalY
+			? (doc as PdfWithAutoTable).lastAutoTable.finalY + 15
 			: 140;
 		doc.setFontSize(14);
 		doc.text("Ranking de Regiões Mais Afetadas", 14, regionY);

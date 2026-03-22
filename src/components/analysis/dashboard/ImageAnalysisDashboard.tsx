@@ -16,11 +16,13 @@ import {
 import { MainLayout } from "@/components/layout/MainLayout";
 import { GaitMetrics } from "@/types/analysis/schemas";
 import { fisioLogger as logger } from "@/lib/errors/logger";
-import ClinicalPostureAnalysis from "../posture/ClinicalPostureAnalysis";
 
 const DicomViewer = lazy(() => import("../dicom/DicomViewer"));
 const PoseAnalyzer = lazy(() => import("../posture/PoseAnalyzer"));
 const AssetViewer = lazy(() => import("../viewer/AssetViewer"));
+const ClinicalPostureAnalysis = lazy(
+	() => import("../posture/ClinicalPostureAnalysis"),
+);
 const DynamicAnalysisViewer = lazy(
 	() => import("../dynamic/DynamicAnalysisViewer"),
 );
@@ -242,9 +244,11 @@ const ImageAnalysisDashboard = () => {
 				)}
 
 				{mode === "clinical_posture" && (
-					<div className="flex-1 overflow-hidden border rounded-lg bg-white">
-						<ClinicalPostureAnalysis />
-					</div>
+					<Suspense fallback={<LoadingFallback />}>
+						<div className="flex-1 overflow-hidden border rounded-lg bg-white">
+							<ClinicalPostureAnalysis />
+						</div>
+					</Suspense>
 				)}
 
 				{mode === "dynamic_demo" && (

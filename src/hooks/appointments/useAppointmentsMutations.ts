@@ -44,11 +44,10 @@ export function useCreateAppointment() {
 			);
 		},
 		onMutate: async (variables) => {
-			await queryClient.cancelQueries({
-				queryKey: appointmentKeys.list(profile?.organization_id),
-			});
+			const organizationId = profile?.organization_id;
+			const queryKey = appointmentKeys.list(organizationId);
 			const previousData = queryClient.getQueryData<AppointmentsQueryResult>(
-				appointmentKeys.list(profile?.organization_id),
+				queryKey,
 			);
 
 			const tempId = `temp-${Date.now()}`;
@@ -70,13 +69,12 @@ export function useCreateAppointment() {
 				payment_status: variables.payment_status || "pending",
 			};
 
-			queryClient.setQueryData(
-				appointmentKeys.list(profile?.organization_id),
-				(old: AppointmentsQueryResult | undefined) => ({
-					...old,
-					data: [...(old?.data || []), optimisticAppointment],
-				}),
-			);
+			queryClient.setQueryData(queryKey, (old: AppointmentsQueryResult | undefined) => ({
+				...old,
+				data: [...(old?.data || []), optimisticAppointment],
+			}));
+
+			await queryClient.cancelQueries({ queryKey });
 
 			return { previousData, tempId };
 		},
@@ -92,9 +90,6 @@ export function useCreateAppointment() {
 				}),
 			);
 
-			await queryClient.invalidateQueries({
-				queryKey: appointmentPeriodKeys.all,
-			});
 			await queryClient.invalidateQueries({
 				queryKey: appointmentPeriodKeys.all,
 			});

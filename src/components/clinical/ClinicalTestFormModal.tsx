@@ -115,7 +115,7 @@ export function ClinicalTestFormModal({
 	const [isUploading, setIsUploading] = useState(false);
 
 	useEffect(() => {
-		if (test && mode === "edit") {
+		if (test) {
 			setFormData({
 				...test,
 				fields_definition: Array.isArray(test.fields_definition)
@@ -218,7 +218,11 @@ export function ClinicalTestFormModal({
 					) : (
 						<Settings className="h-5 w-5 text-teal-600" />
 					)}
-					{mode === "create" ? "Novo Teste Clínico" : "Editar Teste Clínico"}
+					{mode === "create"
+						? test
+							? "Duplicar Teste Clínico"
+							: "Novo Teste Clínico"
+						: "Editar Teste Clínico"}
 				</CustomModalTitle>
 			</CustomModalHeader>
 

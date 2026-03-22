@@ -5,6 +5,7 @@
 import React, { useState, useEffect, memo, useCallback, useRef } from "react";
 import { Layout } from "react-grid-layout";
 import "react-grid-layout/css/styles.css";
+import "./grid-layout.css";
 import { cn } from "@/lib/utils";
 import { ResponsiveReactGridLayout as Responsive } from "react-grid-layout/dist/legacy";
 
