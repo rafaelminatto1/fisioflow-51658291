@@ -18,7 +18,7 @@ try {
   }
 
   // Instalar dependências se node_modules não existir
-  const appDir = path.join(__dirname, '..', 'professional-app');
+  const appDir = path.join(__dirname, '..', 'apps', 'professional-app');
   const nodeModulesDir = path.join(appDir, '..', 'node_modules');
 
   if (!fs.existsSync(nodeModulesDir)) {

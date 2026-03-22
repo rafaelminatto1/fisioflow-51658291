@@ -70,7 +70,7 @@ vi.mock("@/utils/userHelpers", () => ({
 }));
 
 vi.mock("@/lib/services/AppointmentNotificationService", () => ({
-	AppointmentNotificationService: { scheduleReminder: vi.fn() },
+	AppointmentNotificationService: { scheduleNotification: vi.fn() },
 }));
 
 vi.mock("../appointmentOptimistic", () => ({

@@ -349,12 +349,15 @@ export const useOfflineQueue = () => {
 export const registerSyncServiceWorker = async () => {
 	if ("serviceWorker" in navigator) {
 		try {
-			const registration = await navigator.serviceWorker.register("/sw.js");
-			console.log("Service Worker registered:", registration);
+			const registration =
+				(await navigator.serviceWorker.getRegistration("/sw.js")) ||
+				(await navigator.serviceWorker.getRegistration());
+			console.log("Service Worker ready:", registration);
 
-			// Solicitar permissão para notificações
-			if ("Notification" in window && Notification.permission === "default") {
-				await Notification.requestPermission();
+			if (!registration) {
+				console.warn(
+					"Service Worker não encontrado. O fluxo principal deve registrá-lo no bootstrap da aplicação.",
+				);
 			}
 
 			return registration;

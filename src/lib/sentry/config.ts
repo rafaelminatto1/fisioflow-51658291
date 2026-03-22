@@ -51,6 +51,14 @@ export function initSentry() {
 			return event;
 		},
 	});
+
+	if (typeof window !== "undefined") {
+		(
+			window as Window & {
+				Sentry?: typeof Sentry;
+			}
+		).Sentry = Sentry;
+	}
 }
 
 export { Sentry };

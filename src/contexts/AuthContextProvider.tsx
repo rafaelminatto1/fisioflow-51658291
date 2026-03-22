@@ -13,7 +13,6 @@ import {
 	AuthError,
 	AuthUser,
 } from "./AuthContext";
-import { identifyUser as posthogIdentify } from "@/lib/analytics/posthog";
 import { Profile, RegisterFormData, UserRole } from "@/types/auth";
 import { useQueryClient } from "@tanstack/react-query";
 import { AppointmentService } from "@/services/appointmentService";
@@ -209,7 +208,17 @@ export const AuthContextProvider: React.FC<{ children: React.ReactNode }> = ({
 
 			if (data?.user) {
 				await loadUserAndProfile(adaptNeonUser(data.user));
-				posthogIdentify(data.user.id, data.user.email, data.user.name);
+				void import("@/lib/analytics/posthog")
+					.then(({ identifyUser }) =>
+						identifyUser(data.user.id, data.user.email, data.user.name),
+					)
+					.catch((error) => {
+						logger.warn(
+							"Falha ao carregar identificação do PostHog",
+							error,
+							"AuthContext",
+						);
+					});
 
 				// Log de sucesso de login
 				try {

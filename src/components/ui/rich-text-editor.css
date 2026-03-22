@@ -439,11 +439,6 @@ body.high-contrast .rich-text-editor .ProseMirror mark {
 	border: 2px solid white;
 }
 
-body.high-contrast .notion-v3-block {
-	background-color: white !important;
-	border-width: 2px;
-}
-
 body.high-contrast button {
 	border-width: 2px;
 	text-shadow: none;
@@ -451,7 +446,6 @@ body.high-contrast button {
 
 /* Remove gradients in high contrast mode */
 body.high-contrast .rich-text-toolbar,
-body.high-contrast .notion-v3-block,
 body.high-contrast .rich-text-toolbar-btn {
 	background: solid !important;
 	background-image: none !important;
@@ -461,15 +455,6 @@ body.high-contrast .rich-text-toolbar-btn {
 body.high-contrast *:focus-visible {
 	outline: 3px solid black;
 	outline-offset: 2px;
-}
-
-/* Increased font sizes */
-body.font-size-125 {
-	font-size: 125%;
-}
-
-body.font-size-150 {
-	font-size: 150%;
 }
 
 /* ============================

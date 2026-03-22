@@ -13,7 +13,6 @@ import { Textarea } from "@/components/ui/textarea";
 import { FileText, Download } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
-import { ReportGeneratorService } from "@/lib/services/ReportGeneratorService";
 import { usePainEvolution, usePainStatistics } from "@/hooks/usePainMaps";
 import {
 	usePatientSurgeries,
@@ -56,6 +55,9 @@ export function ReportGeneratorDialog({
 		setIsGenerating(true);
 
 		try {
+			const { ReportGeneratorService } = await import(
+				"@/lib/services/ReportGeneratorService"
+			);
 			const therapistName = profile?.full_name || "Fisioterapeuta";
 			const reportDate = new Date().toLocaleDateString("pt-BR");
 

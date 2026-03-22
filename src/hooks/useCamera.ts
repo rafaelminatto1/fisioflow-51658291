@@ -1,11 +1,6 @@
-import {
-	Camera,
-	CameraResultType,
-	CameraSource,
-	Photo,
-} from "@capacitor/camera";
 import { useCallback, useMemo, useState } from "react";
 import { fisioLogger as logger } from "@/lib/errors/logger";
+import { getCameraPhoto, type CameraPhoto } from "@/lib/platform/native";
 
 export interface CameraOptions {
 	quality?: number;
@@ -19,7 +14,7 @@ export interface CameraOptions {
  * @returns Estado e funções para capturar e selecionar fotos
  */
 export function useCamera(options: CameraOptions = {}) {
-	const [photo, setPhoto] = useState<Photo | null>(null);
+	const [photo, setPhoto] = useState<CameraPhoto | null>(null);
 	const [isLoading, setIsLoading] = useState(false);
 
 	const defaultOptions: CameraOptions = useMemo(
@@ -41,12 +36,12 @@ export function useCamera(options: CameraOptions = {}) {
 		setIsLoading(true);
 
 		try {
-			const image = await Camera.getPhoto({
+			const image = await getCameraPhoto({
 				quality: defaultOptions.quality,
 				allowEditing: defaultOptions.allowEditing,
 				correctOrientation: defaultOptions.correctOrientation,
-				resultType: CameraResultType.Uri,
-				source: CameraSource.Camera,
+				saveToGallery: defaultOptions.saveToGallery,
+				source: "camera",
 			});
 
 			setPhoto(image);
@@ -68,11 +63,11 @@ export function useCamera(options: CameraOptions = {}) {
 		setIsLoading(true);
 
 		try {
-			const image = await Camera.getPhoto({
+			const image = await getCameraPhoto({
 				quality: defaultOptions.quality,
 				allowEditing: defaultOptions.allowEditing,
-				resultType: CameraResultType.Uri,
-				source: CameraSource.Photos,
+				saveToGallery: defaultOptions.saveToGallery,
+				source: "photos",
 			});
 
 			setPhoto(image);

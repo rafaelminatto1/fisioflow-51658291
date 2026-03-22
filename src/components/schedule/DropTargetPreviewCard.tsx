@@ -43,6 +43,7 @@ export const DropTargetPreviewCard = memo(
 
 		return (
 			<div
+				data-testid={`preview-card-${appointment.id}`}
 				className={cn(
 					"absolute rounded-lg border-2 border-dashed",
 					"flex flex-col overflow-hidden",
