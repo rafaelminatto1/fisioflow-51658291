@@ -1,43 +1,20 @@
-import React, { Suspense, lazy, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import {
-	PanelLeft,
-	PanelRight,
 	ArrowLeft,
 	Bot,
 	Highlighter,
 	FileText,
-	ChevronDown,
-	MessageSquare,
 	ChevronLeft,
 	ChevronRight,
 	ZoomIn,
 	ZoomOut,
+	ExternalLink,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Separator } from "@/components/ui/separator";
-import {
-	Tooltip,
-	TooltipContent,
-	TooltipProvider,
-	TooltipTrigger,
-} from "@/components/ui/tooltip";
-import { useAuth } from "@/contexts/AuthContext";
-import { knowledgeService } from "@/features/wiki/services/knowledgeService";
 import type { KnowledgeArtifact } from "@/features/wiki/types/knowledge";
 import { aiService } from "@/features/wiki/services/aiService";
-
-const ReactPdfDocument = lazy(() =>
-	import("@/components/pdf/ReactPdfViewer").then((module) => ({
-		default: module.ReactPdfDocument,
-	})),
-);
-const ReactPdfPage = lazy(() =>
-	import("@/components/pdf/ReactPdfViewer").then((module) => ({
-		default: module.ReactPdfPage,
-	})),
-);
 
 interface StudyModeProps {
 	artifact: KnowledgeArtifact | null;
@@ -59,15 +36,23 @@ export function StudyMode({ artifact, onClose }: StudyModeProps) {
 	const [isProcessing, setIsProcessing] = useState(false);
 
 	// PDF State
-	const [numPages, setNumPages] = useState<number>(0);
 	const [pageNumber, setPageNumber] = useState<number>(1);
 	const [scale, setScale] = useState<number>(1.2);
 
-	if (!artifact) return null;
+	useEffect(() => {
+		if (!artifact) return;
+		setPageNumber(1);
+		setScale(1.2);
+	}, [artifact]);
 
-	function onDocumentLoadSuccess({ numPages }: { numPages: number }) {
-		setNumPages(numPages);
-	}
+	const browserPdfUrl = useMemo(() => {
+		if (!artifact?.url) return "";
+		const hash = `page=${pageNumber}&zoom=${Math.round(scale * 100)}`;
+		const baseUrl = artifact.url.split("#")[0];
+		return `${baseUrl}#${hash}`;
+	}, [artifact, pageNumber, scale]);
+
+	if (!artifact) return null;
 
 	const handleSendMessage = async () => {
 		if (!query.trim()) return;
@@ -157,17 +142,14 @@ export function StudyMode({ artifact, onClose }: StudyModeProps) {
 							>
 								<ChevronLeft className="h-4 w-4" />
 							</Button>
-							<span className="text-xs font-medium w-16 text-center">
-								{pageNumber} / {numPages || "-"}
+							<span className="text-xs font-medium min-w-20 text-center px-2">
+								Pág. {pageNumber}
 							</span>
 							<Button
 								variant="ghost"
 								size="icon"
 								className="h-7 w-7"
-								onClick={() =>
-									setPageNumber((prev) => Math.min(prev + 1, numPages))
-								}
-								disabled={pageNumber >= numPages}
+								onClick={() => setPageNumber((prev) => prev + 1)}
 							>
 								<ChevronRight className="h-4 w-4" />
 							</Button>
@@ -193,57 +175,34 @@ export function StudyMode({ artifact, onClose }: StudyModeProps) {
 								<ZoomIn className="h-4 w-4" />
 							</Button>
 						</div>
+						<Button
+							variant="outline"
+							size="sm"
+							asChild
+							className="h-7 px-2 text-xs"
+						>
+							<a
+								href={artifact.url}
+								target="_blank"
+								rel="noreferrer"
+							>
+								<ExternalLink className="mr-1 h-3.5 w-3.5" />
+								Abrir
+							</a>
+						</Button>
 					</div>
 
 					{/* PDF Canvas */}
 					<div className="flex-1 overflow-auto bg-slate-200/50 p-8 flex justify-center">
 						{artifact.url ? (
-							<Suspense
-								fallback={
-									<div className="flex flex-col items-center justify-center h-full space-y-4">
-										<div className="animate-spin rounded-full h-8 w-8 border-b-2 border-emerald-600"></div>
-										<p className="text-sm text-muted-foreground">
-											Carregando documento...
-										</p>
-									</div>
-								}
-							>
-								<ReactPdfDocument
-									file={artifact.url}
-									onLoadSuccess={onDocumentLoadSuccess}
-									loading={
-										<div className="flex flex-col items-center justify-center h-full space-y-4">
-											<div className="animate-spin rounded-full h-8 w-8 border-b-2 border-emerald-600"></div>
-											<p className="text-sm text-muted-foreground">
-												Carregando documento...
-											</p>
-										</div>
-									}
-									error={
-										<div className="flex flex-col items-center justify-center h-full p-8 text-center">
-											<FileText className="h-12 w-12 text-red-400 mb-4" />
-											<p className="text-red-500 font-medium">
-												Erro ao carregar PDF
-											</p>
-											<p className="text-sm text-muted-foreground mt-2">
-												Verifique se o arquivo existe ou se você tem permissão de
-												acesso.
-											</p>
-											<p className="text-xs text-slate-400 mt-4 break-all max-w-md">
-												{artifact.url}
-											</p>
-										</div>
-									}
-								>
-									<ReactPdfPage
-										pageNumber={pageNumber}
-										scale={scale}
-										className="shadow-lg mb-4"
-										renderTextLayer={true}
-										renderAnnotationLayer={true}
-									/>
-								</ReactPdfDocument>
-							</Suspense>
+							<div className="w-full max-w-5xl h-full min-h-[70vh] bg-white rounded-lg shadow-lg overflow-hidden border">
+								<iframe
+									key={browserPdfUrl}
+									src={browserPdfUrl}
+									title={artifact.title}
+									className="h-full w-full"
+								/>
+							</div>
 						) : (
 							<div className="flex flex-col items-center justify-center h-full text-center text-slate-400">
 								<FileText className="h-16 w-16 mb-4 opacity-20" />
