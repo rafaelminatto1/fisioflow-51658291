@@ -6,7 +6,7 @@
 // Definição das fichas padrão
 
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { evaluationFormsApi } from "@/lib/api/workers-client";
+import { evaluationFormsApi } from "@/api/v2";
 import { toast } from "sonner";
 export const STANDARD_FORMS = {
 	ANAMNESE: {

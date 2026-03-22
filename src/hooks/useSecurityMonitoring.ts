@@ -2,7 +2,7 @@ import { useQuery } from "@tanstack/react-query";
 import {
 	auditApi,
 	type AuditLog as WorkerAuditLog,
-} from "@/lib/api/workers-client";
+} from "@/api/v2";
 
 interface LoginAttempt {
 	id: string;

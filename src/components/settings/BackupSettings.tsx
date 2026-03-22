@@ -14,7 +14,7 @@ import {
 	appointmentsApi,
 	financialApi,
 	patientsApi,
-} from "@/lib/api/workers-client";
+} from "@/api/v2";
 import { fisioLogger as logger } from "@/lib/errors/logger";
 
 export function BackupSettings() {

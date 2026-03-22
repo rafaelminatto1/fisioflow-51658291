@@ -6,7 +6,7 @@
 import { google } from "googleapis";
 
 import { OAuth2Client } from "google-auth-library";
-import { appointmentsApi } from "@/lib/api/workers-client";
+import { appointmentsApi } from "@/api/v2";
 
 import CryptoJS from "crypto-js";
 

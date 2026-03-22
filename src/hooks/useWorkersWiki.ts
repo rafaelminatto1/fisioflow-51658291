@@ -1,5 +1,5 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { wikiApi } from "@/lib/api/workers-client";
+import { wikiApi } from "@/api/v2";
 import { toast } from "sonner";
 
 const KEYS = {

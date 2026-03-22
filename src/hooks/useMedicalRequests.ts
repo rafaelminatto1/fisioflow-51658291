@@ -8,7 +8,7 @@ import {
 	medicalRequestsApi,
 	type MedicalRequest,
 	type MedicalRequestFile,
-} from "@/lib/api/workers-client";
+} from "@/api/v2";
 import { useAuth } from "@/contexts/AuthContext";
 
 export type { MedicalRequest, MedicalRequestFile };

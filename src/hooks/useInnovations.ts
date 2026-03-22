@@ -14,7 +14,7 @@ import {
 	type StaffPerformanceRow,
 	type WhatsAppExerciseQueueRow,
 	type PatientSelfAssessmentRow,
-} from "@/lib/api/workers-client";
+} from "@/api/v2";
 import { toast } from "sonner";
 
 export interface PatientLevel {

@@ -4,7 +4,7 @@
 
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "@/hooks/use-toast";
-import { financialApi, type FormaPagamento } from "@/lib/api/workers-client";
+import { financialApi, type FormaPagamento } from "@/api/v2";
 
 export type { FormaPagamento };
 export type FormaPagamentoFormData = Pick<

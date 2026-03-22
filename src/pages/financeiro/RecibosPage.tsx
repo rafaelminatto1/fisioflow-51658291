@@ -55,7 +55,7 @@ import {
 } from "@/hooks/useRecibos";
 import { useOrganizations } from "@/hooks/useOrganizations";
 import { useAuth } from "@/contexts/AuthContext";
-import { patientsApi, profileApi } from "@/lib/api/workers-client";
+import { patientsApi, profileApi } from "@/api/v2";
 import { OptimizedImage } from "@/components/ui/OptimizedImage";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { ScrollArea } from "@/components/ui/scroll-area";

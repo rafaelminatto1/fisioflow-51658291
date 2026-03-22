@@ -8,7 +8,7 @@ import {
 	financialApi,
 	type PatientPackageRow,
 	type SessionPackageTemplateRow,
-} from "@/lib/api/workers-client";
+} from "@/api/v2";
 
 export interface SessionPackage {
 	id: string;

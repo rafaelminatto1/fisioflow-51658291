@@ -1,4 +1,4 @@
-import { doctorsApi } from "@/lib/api/workers-client";
+import { doctorsApi } from "@/api/v2";
 import type { Doctor, DoctorFormData } from "@/types/doctor";
 
 export class DoctorService {

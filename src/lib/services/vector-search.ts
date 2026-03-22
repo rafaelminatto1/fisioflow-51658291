@@ -13,7 +13,7 @@ import {
 } from "@/lib/ai/embeddings";
 import { withPerformanceTrace } from "@/lib/monitoring/performance";
 import type { Evolution } from "@/types/clinical";
-import { sessionsApi } from "@/lib/api/workers-client";
+import { sessionsApi } from "@/api/v2";
 
 export interface VectorSearchResult {
 	evolution: Evolution;

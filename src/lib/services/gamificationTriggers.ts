@@ -4,7 +4,7 @@
  */
 
 import { fisioLogger as logger } from "@/lib/errors/logger";
-import { gamificationApi } from "@/lib/api/workers-client";
+import { gamificationApi } from "@/api/v2";
 
 export const XP_REWARDS = {
 	SESSION_COMPLETION: 50,

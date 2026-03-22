@@ -3,7 +3,7 @@
  */
 
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { checklistApi, type ChecklistItem } from "@/lib/api/workers-client";
+import { checklistApi, type ChecklistItem } from "@/api/v2";
 import { useToast } from "@/hooks/use-toast";
 import {
 	ChecklistItemCreate,

@@ -48,7 +48,7 @@ import {
 } from "@/data/protocols";
 import { fisioLogger as logger } from "@/lib/errors/logger";
 import { generateProtocolPdf } from "@/utils/generateProtocolPdf";
-import { clinicalTestsApi } from "@/lib/api/workers-client";
+import { clinicalTestsApi } from "@/api/v2";
 import { ApplyProtocolModal } from "./ApplyProtocolModal";
 
 interface ProtocolDetailViewProps {

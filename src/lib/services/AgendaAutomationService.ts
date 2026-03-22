@@ -1,7 +1,7 @@
 import { WhatsAppService } from "./WhatsAppService";
 import { fisioLogger as logger } from "@/lib/errors/logger";
 import { notificationManager } from "./NotificationManager";
-import { appointmentsApi } from "@/lib/api/workers-client";
+import { appointmentsApi } from "@/api/v2";
 
 export interface AgendaGap {
 	date: string;

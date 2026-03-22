@@ -4,7 +4,7 @@ import { fisioLogger as logger } from "@/lib/errors/logger";
 import {
 	organizationMembersApi,
 	type OrganizationMember,
-} from "@/lib/api/workers-client";
+} from "@/api/v2";
 import { UserRole } from "@/types/auth";
 
 interface UserRow {

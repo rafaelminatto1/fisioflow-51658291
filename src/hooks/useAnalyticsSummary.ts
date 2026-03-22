@@ -15,7 +15,7 @@ import { formatDateToLocalISO } from "@/utils/dateUtils";
 import { queryConfigs } from "@/lib/queryConfig";
 import { fisioLogger as logger } from "@/lib/errors/logger";
 import { useAuth } from "@/contexts/AuthContext";
-import { appointmentsApi, type AppointmentRow } from "@/lib/api/workers-client";
+import { appointmentsApi, type AppointmentRow } from "@/api/v2";
 import { useAnalyticsFilters } from "@/contexts/AnalyticsFiltersContext";
 
 interface AnalyticsSummary {

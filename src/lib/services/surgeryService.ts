@@ -3,7 +3,7 @@ import {
 	differenceInMonths,
 	differenceInYears,
 } from "date-fns";
-import { patientsApi, type PatientSurgery } from "@/lib/api/workers-client";
+import { patientsApi, type PatientSurgery } from "@/api/v2";
 import type { Surgery, SurgeryFormData } from "@/types/evolution";
 
 const serializeSurgery = (row: PatientSurgery): Surgery => ({

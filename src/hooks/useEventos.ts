@@ -3,7 +3,7 @@
  */
 
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { eventosApi, type Evento } from "@/lib/api/workers-client";
+import { eventosApi, type Evento } from "@/api/v2";
 import { toast } from "sonner";
 
 export type { Evento };

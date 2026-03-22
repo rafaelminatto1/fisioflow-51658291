@@ -3,7 +3,7 @@
  */
 
 import { getDB, type FisioFlowDB } from "@/hooks/useOfflineStorage";
-import { appointmentsApi, exercisesApi } from "@/lib/api/workers-client";
+import { appointmentsApi, exercisesApi } from "@/api/v2";
 import { toast } from "sonner";
 import type { IDBPDatabase } from "idb";
 import { fisioLogger as logger } from "@/lib/errors/logger";
