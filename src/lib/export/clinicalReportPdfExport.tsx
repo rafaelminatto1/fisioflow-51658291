@@ -1,18 +1,21 @@
 import React from "react";
-import { pdf } from "@react-pdf/renderer";
-import { ClinicalReportPDFDocument } from "@/components/patients/pdf/ClinicalReportPDFDocument";
-import { ClinicalReportInput } from "@/services/ai/geminiAiService";
+import type { ClinicalReportInput } from "@/services/ai/geminiAiService";
 
 export const exportClinicalReportToPDF = async (
 	patientName: string,
 	reportText: string,
 	reportInput: ClinicalReportInput,
 ) => {
+	const [{ pdf }, { ClinicalReportPDFDocument }] = await Promise.all([
+		import("@react-pdf/renderer"),
+		import("@/components/patients/pdf/ClinicalReportPDFDocument"),
+	]);
+
 	const blob = await pdf(
-		<ClinicalReportPDFDocument
-			reportText={reportText}
-			reportInput={reportInput}
-		/>,
+		React.createElement(ClinicalReportPDFDocument, {
+			reportText,
+			reportInput,
+		}),
 	).toBlob();
 
 	const url = URL.createObjectURL(blob);

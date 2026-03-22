@@ -62,6 +62,7 @@ Data: 2026-03-21
 - CSS morto de `notion-v3-block` e presets antigos de fonte do editor foi removido do global/editor.
 - arquivos órfãos `src/App.css` e `src/components/ui/theme/theme.css` foram removidos do repositório.
 - CSS global caiu para ~`436 KB`.
+- utilitários premium e mobile/touch começaram a ser separados de `src/index.css` para `src/styles/premium-utilities.css` e `src/styles/mobile-utilities.css`, preparando uma próxima extração real por shell/rota.
 
 ### Rodada avancada aplicada depois do baseline inicial
 
@@ -108,6 +109,7 @@ Data: 2026-03-21
   - `excel-vendor` ~930 KB
   - `knowledge` ~363 KB
 - CSS global do app web perto de `436 KB` bruto.
+- o viewer DICOM atual é stack-only no uso (`ViewportType.STACK`), mas a implementação baseada em `@cornerstonejs/core` e `@cornerstonejs/tools` continua puxando `vtk.js` como dependência efetiva da stack atual.
 
 ### Gargalos de manutencao confirmados
 
@@ -213,6 +215,9 @@ Data: 2026-03-21
 - Lazy load agressivo para PDF, DICOM, Excel e knowledge.
 - Tirar providers pesados do shell inicial.
 - Manter `computeWorker` fora do caminho inicial e só revisitar se houver mudança arquitetural no stack DICOM.
+- Em DICOM, considerar explicitamente duas alternativas:
+  - manter Cornerstone atual e aceitar `vtk.js` como custo do viewer especializado
+  - trocar/isolar o viewer para um fluxo 2D mais leve, se o produto não precisar de capacidades 3D/MPR da stack atual
 
 2. Reduzir CSS global
 - Auditar o que esta entrando por Tailwind/global CSS.

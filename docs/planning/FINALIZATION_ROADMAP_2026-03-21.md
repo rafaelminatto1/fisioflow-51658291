@@ -73,6 +73,7 @@ Resultados observados:
 - o vendor único de PDF foi quebrado em `react-pdf-vendor`, `jspdf-vendor` e `html2canvas-vendor`
 - CSS morto de `notion-v3-block` e presets antigos de fonte do editor foi removido do global/editor
 - arquivos órfãos `src/App.css` e `src/components/ui/theme/theme.css` foram removidos para reduzir ruído de manutenção
+- utilitários visuais premium e mobile/touch começaram a sair de `src/index.css` para arquivos dedicados em `src/styles/*`, preparando extração futura por domínio
 
 Critérios de aceite:
 - build web verde
@@ -107,6 +108,7 @@ Estes itens não estão bloqueando o projeto, mas ainda merecem acompanhamento:
 - `jspdf-vendor` ficou em ~431 KB.
 - `html2canvas-vendor` ficou em ~200 KB.
 - `dicom-vendor` continua em ~1.47 MB, também isolado em fluxos específicos.
+- o viewer DICOM atual usa `ViewportType.STACK`, mas a linha atual de `@cornerstonejs/core`/`@cornerstonejs/tools` ainda mantém dependência efetiva de `@kitware/vtk.js`; o próximo grande corte aí é arquitetural, não apenas de chunking.
 - `computeWorker` continua em ~1.22 MB e foi confirmado como worker especializado do ecossistema Cornerstone/VTK, não carga indevida do shell.
 - CSS global caiu para ~436 KB.
 - `workers-client.ts` caiu de 2027 para 7 linhas e hoje atua apenas como shim de compatibilidade sobre `@/api/v2`.
@@ -127,7 +129,7 @@ Comandos executados com sucesso:
 
 Se houver uma próxima rodada, ela já não é mais “fechamento de base”. O próximo ciclo seria otimização avançada:
 - reduzir CSS global
-- revisar chunking de DICOM e worker pesado
+- revisar se vale manter a stack atual de DICOM ou isolar/substituir o viewer para eliminar `vtk.js`
 - decidir, em uma etapa futura, se `workers-client.ts` pode ser removido de vez ou se vale mantê-lo como alias público estável
 - continuar a decomposição das rotas grandes restantes da API, se ainda houver ganho real por domínio
 - abrir branch separada para upgrades mobile maiores
