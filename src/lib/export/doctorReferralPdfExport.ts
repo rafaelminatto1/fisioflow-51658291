@@ -114,19 +114,21 @@ export async function exportDoctorReferralPdf(
 	});
 	doc.setFont("helvetica", "normal");
 	y += 5;
-	doc.text(`Fisioterapeuta • CRF: ${data.clinic.crf}`, pageWidth - margin - 10, y, {
-		align: "right",
-	});
+	doc.text(
+		`Fisioterapeuta • CRF: ${data.clinic.crf}`,
+		pageWidth - margin - 10,
+		y,
+		{
+			align: "right",
+		},
+	);
 
 	y = doc.internal.pageSize.getHeight() - 18;
 	doc.setFontSize(8);
 	doc.setTextColor(148, 163, 184);
-	doc.text(
-		`${data.clinic.address} • ${data.clinic.phone}`,
-		pageWidth / 2,
-		y,
-		{ align: "center" },
-	);
+	doc.text(`${data.clinic.address} • ${data.clinic.phone}`, pageWidth / 2, y, {
+		align: "center",
+	});
 	doc.text(
 		"Documento gerado eletronicamente por FisioFlow AI Platform",
 		pageWidth / 2,

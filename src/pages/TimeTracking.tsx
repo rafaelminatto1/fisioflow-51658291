@@ -185,169 +185,198 @@ export default function TimeTrackingPage() {
 							<Clock className="h-4 w-4 text-primary" />
 						</div>
 						<div className="min-w-0">
-							<h1 className="text-base sm:text-lg font-semibold leading-tight">Time Tracking</h1>
+							<h1 className="text-base sm:text-lg font-semibold leading-tight">
+								Time Tracking
+							</h1>
 							<div className="flex items-center gap-2 text-xs text-muted-foreground flex-wrap mt-0.5">
-								<span><span className="font-medium text-foreground">{formatHoursDecimal(periodMetrics.totalSeconds)}</span> horas</span>
+								<span>
+									<span className="font-medium text-foreground">
+										{formatHoursDecimal(periodMetrics.totalSeconds)}
+									</span>{" "}
+									horas
+								</span>
 								<span className="text-border">·</span>
-								<span><span className="font-medium text-emerald-600">{formatHoursDecimal(periodMetrics.billableSeconds)}</span> faturável</span>
+								<span>
+									<span className="font-medium text-emerald-600">
+										{formatHoursDecimal(periodMetrics.billableSeconds)}
+									</span>{" "}
+									faturável
+								</span>
 								<span className="text-border hidden sm:inline">·</span>
-								<span className="hidden sm:inline"><span className="font-medium text-amber-600">{periodMetrics.utilizationRate.toFixed(0)}%</span> utilização</span>
+								<span className="hidden sm:inline">
+									<span className="font-medium text-amber-600">
+										{periodMetrics.utilizationRate.toFixed(0)}%
+									</span>{" "}
+									utilização
+								</span>
 								<span className="text-border hidden sm:inline">·</span>
-								<span className="hidden sm:inline"><span className="font-medium text-primary">R$ {periodMetrics.totalValue.toFixed(2)}</span> valor</span>
+								<span className="hidden sm:inline">
+									<span className="font-medium text-primary">
+										R$ {periodMetrics.totalValue.toFixed(2)}
+									</span>{" "}
+									valor
+								</span>
 							</div>
 						</div>
 					</div>
 					<div className="flex items-center gap-2 flex-shrink-0">
-						<Button variant="outline" size="sm" className="gap-1.5" onClick={() => navigate("/timetracking/reports")}>
+						<Button
+							variant="outline"
+							size="sm"
+							className="gap-1.5"
+							onClick={() => navigate("/timetracking/reports")}
+						>
 							<TrendingUp className="w-4 h-4" />
 							Relatórios
 						</Button>
-						<Button size="sm" className="gap-1.5" onClick={() => setShowEntryModal(true)}>
+						<Button
+							size="sm"
+							className="gap-1.5"
+							onClick={() => setShowEntryModal(true)}
+						>
 							<Plus className="w-4 h-4" />
 							Nova Entrada
 						</Button>
 					</div>
 				</div>
 
-					{/* Timer Rápido */}
-					{activeTimer && (
-						<Card className="border-primary/50 bg-primary/5">
-							<CardContent className="p-4">
-								<div className="flex items-center justify-between">
-									<div className="flex items-center gap-4">
-										<div className="w-3 h-3 bg-green-500 rounded-full animate-pulse" />
-										<div>
-											<p className="font-medium">{activeTimer.description}</p>
-											<p className="text-sm text-muted-foreground">
-												Iniciado às{" "}
-												{new Date(activeTimer.start_time).toLocaleTimeString(
-													"pt-BR",
-													{
-														hour: "2-digit",
-														minute: "2-digit",
-													},
-												)}
-											</p>
-										</div>
-									</div>
-									<div className="flex items-center gap-4">
-										<div className="font-mono text-2xl font-bold">
-											{formatDuration(currentDuration)}
-										</div>
-										<div className="flex items-center gap-2">
-											<Button variant="outline" size="sm" onClick={pauseTimer}>
-												<Pause className="w-4 h-4" />
-											</Button>
-											<Button
-												variant="destructive"
-												size="sm"
-												onClick={handleStopTimer}
-											>
-												<Square className="w-4 h-4 mr-2" />
-												Parar
-											</Button>
-										</div>
+				{/* Timer Rápido */}
+				{activeTimer && (
+					<Card className="border-primary/50 bg-primary/5">
+						<CardContent className="p-4">
+							<div className="flex items-center justify-between">
+								<div className="flex items-center gap-4">
+									<div className="w-3 h-3 bg-green-500 rounded-full animate-pulse" />
+									<div>
+										<p className="font-medium">{activeTimer.description}</p>
+										<p className="text-sm text-muted-foreground">
+											Iniciado às{" "}
+											{new Date(activeTimer.start_time).toLocaleTimeString(
+												"pt-BR",
+												{
+													hour: "2-digit",
+													minute: "2-digit",
+												},
+											)}
+										</p>
 									</div>
 								</div>
-							</CardContent>
-						</Card>
-					)}
-
-
-
-					{/* Utilização Bar */}
-					<Card>
-						<CardHeader>
-							<CardTitle className="text-sm">Taxa de Utilização</CardTitle>
-						</CardHeader>
-						<CardContent>
-							<Progress value={periodMetrics.utilizationRate} className="h-2" />
-							<div className="flex justify-between mt-2 text-xs text-muted-foreground">
-								<span>
-									Não faturável:{" "}
-									{formatDuration(periodMetrics.nonBillableSeconds)}
-								</span>
-								<span>
-									Faturável: {formatDuration(periodMetrics.billableSeconds)}
-								</span>
+								<div className="flex items-center gap-4">
+									<div className="font-mono text-2xl font-bold">
+										{formatDuration(currentDuration)}
+									</div>
+									<div className="flex items-center gap-2">
+										<Button variant="outline" size="sm" onClick={pauseTimer}>
+											<Pause className="w-4 h-4" />
+										</Button>
+										<Button
+											variant="destructive"
+											size="sm"
+											onClick={handleStopTimer}
+										>
+											<Square className="w-4 h-4 mr-2" />
+											Parar
+										</Button>
+									</div>
+								</div>
 							</div>
 						</CardContent>
 					</Card>
+				)}
 
-					{/* Main Content */}
-					<Tabs
-						defaultValue="timesheet"
-						value={view}
-						onValueChange={(v) => setView(v as TimeSheetView)}
-					>
-						<div className="flex items-center justify-between">
-							<TabsList>
-								<TabsTrigger value="daily">Diário</TabsTrigger>
-								<TabsTrigger value="weekly">Semanal</TabsTrigger>
-								<TabsTrigger value="calendar">Calendário</TabsTrigger>
-							</TabsList>
+				{/* Utilização Bar */}
+				<Card>
+					<CardHeader>
+						<CardTitle className="text-sm">Taxa de Utilização</CardTitle>
+					</CardHeader>
+					<CardContent>
+						<Progress value={periodMetrics.utilizationRate} className="h-2" />
+						<div className="flex justify-between mt-2 text-xs text-muted-foreground">
+							<span>
+								Não faturável:{" "}
+								{formatDuration(periodMetrics.nonBillableSeconds)}
+							</span>
+							<span>
+								Faturável: {formatDuration(periodMetrics.billableSeconds)}
+							</span>
+						</div>
+					</CardContent>
+				</Card>
 
-							{/* Period Filter */}
-							<div className="flex items-center gap-2">
-								<select
-									value={period}
-									onChange={(e) => setPeriod(e.target.value as ReportPeriod)}
-									className="rounded-md border border-input bg-background px-3 py-1.5 text-sm"
-									aria-label="Selecionar período do relatório"
-								>
-									<option value="today">Hoje</option>
-									<option value="yesterday">Ontem</option>
-									<option value="this_week">Esta Semana</option>
-									<option value="last_week">Semana Passada</option>
-									<option value="this_month">Este Mês</option>
-									<option value="last_month">Mês Passado</option>
-									<option value="all_time">Todo o Período</option>
-								</select>
-								<Button variant="outline" size="icon" title="Baixar relatório">
-									<Download className="w-4 h-4" />
+				{/* Main Content */}
+				<Tabs
+					defaultValue="timesheet"
+					value={view}
+					onValueChange={(v) => setView(v as TimeSheetView)}
+				>
+					<div className="flex items-center justify-between">
+						<TabsList>
+							<TabsTrigger value="daily">Diário</TabsTrigger>
+							<TabsTrigger value="weekly">Semanal</TabsTrigger>
+							<TabsTrigger value="calendar">Calendário</TabsTrigger>
+						</TabsList>
+
+						{/* Period Filter */}
+						<div className="flex items-center gap-2">
+							<select
+								value={period}
+								onChange={(e) => setPeriod(e.target.value as ReportPeriod)}
+								className="rounded-md border border-input bg-background px-3 py-1.5 text-sm"
+								aria-label="Selecionar período do relatório"
+							>
+								<option value="today">Hoje</option>
+								<option value="yesterday">Ontem</option>
+								<option value="this_week">Esta Semana</option>
+								<option value="last_week">Semana Passada</option>
+								<option value="this_month">Este Mês</option>
+								<option value="last_month">Mês Passado</option>
+								<option value="all_time">Todo o Período</option>
+							</select>
+							<Button variant="outline" size="icon" title="Baixar relatório">
+								<Download className="w-4 h-4" />
+							</Button>
+						</div>
+					</div>
+
+					<TabsContent value="daily" className="mt-4">
+						<TimeSheet
+							entries={filteredEntries}
+							onUpdate={updateEntry}
+							onDelete={deleteEntry}
+							isLoading={isLoading}
+						/>
+					</TabsContent>
+
+					<TabsContent value="weekly" className="mt-4">
+						<WeeklySummary
+							entries={filteredEntries}
+							onUpdate={updateEntry}
+							onDelete={deleteEntry}
+						/>
+					</TabsContent>
+
+					<TabsContent value="calendar" className="mt-4">
+						<TimeTrackingCalendarView entries={filteredEntries} />
+					</TabsContent>
+				</Tabs>
+
+				{/* Quick Start (quando não há timer ativo) */}
+				{!activeTimer && (
+					<Card className="border-dashed">
+						<CardContent className="p-6">
+							<div className="text-center">
+								<Play className="w-8 h-8 mx-auto mb-2 text-muted-foreground" />
+								<p className="text-sm text-muted-foreground mb-3">
+									Nenhum timer ativo. Inicie uma tarefa agora.
+								</p>
+								<Button onClick={handleQuickStart} variant="outline">
+									<Play className="w-4 h-4 mr-2" />
+									Iniciar Timer
 								</Button>
 							</div>
-						</div>
-
-						<TabsContent value="daily" className="mt-4">
-							<TimeSheet
-								entries={filteredEntries}
-								onUpdate={updateEntry}
-								onDelete={deleteEntry}
-								isLoading={isLoading}
-							/>
-						</TabsContent>
-
-						<TabsContent value="weekly" className="mt-4">
-							<WeeklySummary
-								entries={filteredEntries}
-								onUpdate={updateEntry}
-								onDelete={deleteEntry}
-							/>
-						</TabsContent>
-
-						<TabsContent value="calendar" className="mt-4">
-							<TimeTrackingCalendarView entries={filteredEntries} />
-						</TabsContent>
-					</Tabs>
-
-					{/* Quick Start (quando não há timer ativo) */}
-					{!activeTimer && (
-						<Card className="border-dashed">
-							<CardContent className="p-6">
-								<div className="text-center">
-									<Play className="w-8 h-8 mx-auto mb-2 text-muted-foreground" />
-									<p className="text-sm text-muted-foreground mb-3">
-										Nenhum timer ativo. Inicie uma tarefa agora.
-									</p>
-									<Button onClick={handleQuickStart} variant="outline">
-										<Play className="w-4 h-4 mr-2" />
-										Iniciar Timer
-									</Button>
-								</div>
-							</CardContent>
-						</Card>
-					)}
+						</CardContent>
+					</Card>
+				)}
 			</div>
 
 			{/* Modal de Nova Entrada */}

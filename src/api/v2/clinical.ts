@@ -99,9 +99,9 @@ export const medicalRequestsApi = {
 
 export const pathologiesApi = {
 	listOptions: () =>
-		request<{ data: Array<{ value: string; label: string; category: string }> }>(
-			"/api/clinical/pathologies/options",
-		),
+		request<{
+			data: Array<{ value: string; label: string; category: string }>;
+		}>("/api/clinical/pathologies/options"),
 };
 
 export const goalsApi = {

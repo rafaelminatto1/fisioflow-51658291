@@ -5,7 +5,8 @@
 
 import { useState, useCallback } from "react";
 
-type XlsxIntegrationModule = typeof import("../lib/skills/fase2-documentos/xlsx-integration");
+type XlsxIntegrationModule =
+	typeof import("../lib/skills/fase2-documentos/xlsx-integration");
 
 interface UseExcelExportOptions {
 	onError?: (error: Error) => void;

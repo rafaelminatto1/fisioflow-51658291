@@ -18,10 +18,7 @@ import {
 	PopoverTrigger,
 } from "@/components/ui/popover";
 import { useQuery } from "@tanstack/react-query";
-import {
-	clinicalTestsApi,
-	type ClinicalTestTemplateRecord,
-} from "@/api/v2";
+import { clinicalTestsApi, type ClinicalTestTemplateRecord } from "@/api/v2";
 import {
 	Tooltip,
 	TooltipContent,

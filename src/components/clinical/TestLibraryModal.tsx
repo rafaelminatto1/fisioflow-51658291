@@ -6,10 +6,7 @@ import React, {
 	useRef,
 } from "react";
 import { useQuery } from "@tanstack/react-query";
-import {
-	clinicalTestsApi,
-	type ClinicalTestTemplateRecord,
-} from "@/api/v2";
+import { clinicalTestsApi, type ClinicalTestTemplateRecord } from "@/api/v2";
 import {
 	CustomModal,
 	CustomModalHeader,

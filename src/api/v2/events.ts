@@ -46,8 +46,7 @@ export const eventosApi = {
 		categoria?: string;
 		limit?: number;
 		offset?: number;
-	}) =>
-		request<{ data: Evento[] }>(withQuery("/api/activities", p)),
+	}) => request<{ data: Evento[] }>(withQuery("/api/activities", p)),
 	get: (id: string) => request<{ data: Evento }>(`/api/activities/${id}`),
 	create: (d: Partial<Evento>) =>
 		request<{ data: Evento }>("/api/activities", {

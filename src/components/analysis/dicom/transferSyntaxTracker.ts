@@ -104,7 +104,8 @@ function normalizeLegacyStorage(
 						{
 							count: Math.max(1, Number(typedRecord.count) || 1),
 							firstSeenAt: typedRecord.firstSeenAt || now,
-							lastSeenAt: typedRecord.lastSeenAt || typedRecord.firstSeenAt || now,
+							lastSeenAt:
+								typedRecord.lastSeenAt || typedRecord.firstSeenAt || now,
 						},
 					],
 				];

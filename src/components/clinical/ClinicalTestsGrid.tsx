@@ -1,4 +1,10 @@
-import { ArrowRight, FileText, Image as ImageIcon, Search, Sparkles } from "lucide-react";
+import {
+	ArrowRight,
+	FileText,
+	Image as ImageIcon,
+	Search,
+	Sparkles,
+} from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -63,7 +69,8 @@ export function ClinicalTestsGrid({
 					Nenhum teste encontrado
 				</h3>
 				<p className="mt-2 max-w-md text-sm leading-6 text-slate-500">
-					Não houve correspondência com o termo ou filtro atual. Limpe a busca para voltar ao acervo completo.
+					Não houve correspondência com o termo ou filtro atual. Limpe a busca
+					para voltar ao acervo completo.
 				</p>
 				<Button
 					variant="outline"
@@ -136,7 +143,9 @@ export function ClinicalTestsGrid({
 									{test.name}
 								</h3>
 								{test.name_en ? (
-									<p className="mt-1 text-sm italic text-slate-400">{test.name_en}</p>
+									<p className="mt-1 text-sm italic text-slate-400">
+										{test.name_en}
+									</p>
 								) : null}
 							</div>
 

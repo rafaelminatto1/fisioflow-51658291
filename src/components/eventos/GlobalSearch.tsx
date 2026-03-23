@@ -11,11 +11,7 @@ import {
 import { Search, Calendar, Users, Briefcase } from "lucide-react";
 import { useDebounce } from "@/hooks/performance/useDebounce";
 import { fisioLogger as logger } from "@/lib/errors/logger";
-import {
-	eventosApi,
-	participantesApi,
-	contratadosApi,
-} from "@/api/v2";
+import { eventosApi, participantesApi, contratadosApi } from "@/api/v2";
 
 interface EventoRecord {
 	id: string;

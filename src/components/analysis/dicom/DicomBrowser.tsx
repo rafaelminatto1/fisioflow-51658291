@@ -92,8 +92,11 @@ const DicomBrowser: React.FC<DicomBrowserProps> = ({ onSelectSeries }) => {
 		setSelectedSeriesUid(seriesUid);
 		if (selectedStudy && onSelectSeries) {
 			const selectedSeries = series.find(
-				(item) => getTagValue(item as Record<string, { Value?: unknown[] }>, "0020000E") ===
-					seriesUid,
+				(item) =>
+					getTagValue(
+						item as Record<string, { Value?: unknown[] }>,
+						"0020000E",
+					) === seriesUid,
 			);
 			onSelectSeries({
 				studyInstanceUid: getTagValue(selectedStudy, "0020000D"),
