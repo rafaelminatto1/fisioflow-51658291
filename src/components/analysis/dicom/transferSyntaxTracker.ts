@@ -61,6 +61,15 @@ interface CodecRecommendation {
 	reason: string;
 }
 
+export interface TrackedCodecSummary {
+	codec: Exclude<CodecFamily, "unknown">;
+	status: "keep" | "candidate";
+	totalHits: number;
+	syntaxCount: number;
+	lastSeenAt: string | null;
+	reason: string;
+}
+
 function isBrowser() {
 	return typeof window !== "undefined";
 }
@@ -197,4 +206,39 @@ export function getCodecRecommendations(): CodecRecommendation[] {
 				: "Nenhum HTJ2K visto neste navegador ate agora.",
 		},
 	];
+}
+
+export function getTrackedCodecSummaries(): TrackedCodecSummary[] {
+	const details = getTrackedTransferSyntaxDetails();
+	const recommendations = new Map(
+		getCodecRecommendations().map((item) => [item.codec, item]),
+	);
+
+	return ["native", "charls", "openjpeg", "openjph"].map((codec) => {
+		const related = details.filter((item) => item.codec === codec);
+		const totalHits = related.reduce((sum, item) => sum + item.count, 0);
+		const lastSeenAt =
+			related
+				.map((item) => item.lastSeenAt)
+				.sort((left, right) => right.localeCompare(left))[0] ?? null;
+		const recommendation = recommendations.get(
+			codec as Exclude<CodecFamily, "unknown">,
+		);
+
+		return {
+			codec: codec as Exclude<CodecFamily, "unknown">,
+			status: recommendation?.status ?? "candidate",
+			totalHits,
+			syntaxCount: related.length,
+			lastSeenAt,
+			reason: recommendation?.reason ?? "Sem dados locais para este codec.",
+		};
+	});
+}
+
+export function clearTrackedTransferSyntaxes() {
+	Object.keys(cache).forEach((key) => {
+		delete cache[key];
+	});
+	persist(cache);
 }
