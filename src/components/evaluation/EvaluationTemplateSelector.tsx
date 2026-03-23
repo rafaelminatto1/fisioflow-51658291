@@ -53,6 +53,8 @@ export interface TemplateField {
 	max?: number;
 	unit?: string;
 	description?: string | null;
+	dependsOnFieldId?: string;
+	dependsOnValue?: unknown;
 }
 
 interface EvaluationTemplateSelectorProps {
@@ -360,6 +362,5 @@ export function EvaluationTemplateSelector({
 	);
 }
 
-export default EvaluationTemplateSelector;
-export default EvaluationTemplateSelector;
+
 export default EvaluationTemplateSelector;
