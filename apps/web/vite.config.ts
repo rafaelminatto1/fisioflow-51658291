@@ -50,6 +50,32 @@ function mockMobileModules() {
   };
 }
 
+function lazyCornerstoneCharls() {
+  const lazyDecoderPath = path.resolve(
+    repoRoot,
+    'src/components/analysis/dicom/decoders/lazyDecodeJPEGLS.ts'
+  );
+
+  return {
+    name: 'lazy-cornerstone-charls',
+    enforce: 'pre' as const,
+    resolveId(source: string, importer?: string) {
+      if (!importer || !importer.includes('@cornerstonejs/dicom-image-loader')) {
+        return null;
+      }
+
+      if (
+        source === './decodeJPEGLS' ||
+        source === './shared/decoders/decodeJPEGLS'
+      ) {
+        return lazyDecoderPath;
+      }
+
+      return null;
+    },
+  };
+}
+
 export default defineConfig(({ mode }) => {
   const isProduction = mode === 'production';
   const isAnalyze = process.env.ANALYZE === 'true';
@@ -65,6 +91,7 @@ export default defineConfig(({ mode }) => {
     plugins: [
       react(),
       mockMobileModules(),
+      lazyCornerstoneCharls(),
       htmlPlugin(appVersion, buildTime),
       isAnalyze && visualizer({
         filename: 'stats.html',
@@ -87,6 +114,14 @@ export default defineConfig(({ mode }) => {
         "lodash": "lodash-es",
         "@fisioflow/ui": path.resolve(repoRoot, 'packages/ui/src'),
         "@fisioflow/core": path.resolve(repoRoot, 'packages/core/src'),
+        "@fisioflow/codec-charls-real": path.resolve(
+          repoRoot,
+          'node_modules/.pnpm/@cornerstonejs+codec-charls@1.2.3/node_modules/@cornerstonejs/codec-charls/dist/charlswasm_decode.js'
+        ),
+        "@fisioflow/codec-charls-wasm": path.resolve(
+          repoRoot,
+          'node_modules/.pnpm/@cornerstonejs+codec-charls@1.2.3/node_modules/@cornerstonejs/codec-charls/dist/charlswasm_decode.wasm'
+        ),
         "@fisioflow/skills": path.resolve(repoRoot, 'src/lib/skills'),
         "react-grid-layout/dist/legacy": path.resolve(repoRoot, 'node_modules/react-grid-layout/dist/legacy.mjs'),
         "globalthis": path.resolve(repoRoot, 'src/lib/globalthis-shim.ts'),
@@ -141,6 +176,11 @@ export default defineConfig(({ mode }) => {
                 name: 'excel-vendor',
                 test: /[\\/]node_modules[\\/]exceljs[\\/]/,
                 priority: 25,
+              },
+              {
+                name: 'charls-vendor',
+                test: /[\\/]node_modules[\\/]@cornerstonejs[\\/]codec-charls[\\/]/,
+                priority: 27,
               },
               {
                 name: 'vtk-vendor',
