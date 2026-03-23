@@ -467,23 +467,24 @@ export default function WikiPage() {
 							/>
 						</div>
 					) : (
-						<div className="p-4 md:p-8 space-y-10 animate-in fade-in duration-500">
-							{/* Dashboard Header */}
-							<div className="flex items-center justify-between">
-								<div>
-									<h1 className="text-3xl font-bold tracking-tight">
-										Wiki & Documentação
-									</h1>
-									<p className="text-muted-foreground">
-										Central de conhecimento e triagem de documentação clínica.
-									</p>
+						<div className="p-4 sm:p-6 space-y-6 animate-in fade-in duration-500">
+													{/* Compact header */}
+							<div className="flex items-center justify-between gap-3">
+								<div className="flex items-center gap-3 min-w-0">
+									<div className="h-9 w-9 rounded-xl bg-primary/10 flex items-center justify-center flex-shrink-0">
+										<Library className="h-4 w-4 text-primary" />
+									</div>
+									<div className="min-w-0">
+										<h1 className="text-base sm:text-lg font-semibold leading-tight">
+											Wiki & Documentação
+										</h1>
+										<p className="text-xs text-muted-foreground mt-0.5">
+											Central de conhecimento e triagem de documentação clínica.
+										</p>
+									</div>
 								</div>
-								<Button
-									onClick={handleCreatePage}
-									size="lg"
-									className="shadow-md"
-								>
-									<Plus className="mr-2 h-5 w-5" /> Nova Página
+								<Button onClick={handleCreatePage} size="sm" className="gap-1.5 flex-shrink-0">
+									<Plus className="h-4 w-4" /> Nova Página
 								</Button>
 							</div>
 

@@ -1,12 +1,8 @@
 import { MainLayout } from "@/components/layout/MainLayout";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Skeleton } from "@/components/ui/skeleton";
 import {
 	BarChart3,
-	Users,
-	Calendar,
-	DollarSign,
-	Activity,
 	LayoutDashboard,
 	Sparkles,
 } from "lucide-react";
@@ -23,142 +19,126 @@ function AdvancedAnalyticsContent() {
 	const { summary, isLoading } = useAnalyticsSummary();
 
 	return (
-		<div className="px-6 py-8 space-y-8 animate-fade-in">
-			<div className="flex flex-col md:flex-row md:items-end justify-between gap-4">
-				<div>
-					<h1 className="text-3xl font-bold flex items-center gap-3">
-						<div className="p-2 bg-primary/10 rounded-lg">
-							<BarChart3 className="h-8 w-8 text-primary" />
+		<div className="px-4 sm:px-8 py-6 space-y-8 animate-fade-in max-w-[1600px] mx-auto">
+			{/* Enhanced header */}
+			<div className="flex flex-col lg:flex-row lg:items-end justify-between gap-6">
+				<div className="space-y-4">
+					<div className="flex items-center gap-4">
+						<div className="h-12 w-12 rounded-2xl bg-primary/10 flex items-center justify-center flex-shrink-0 shadow-sm ring-1 ring-primary/20">
+							<BarChart3 className="h-6 w-6 text-primary" />
 						</div>
-						Advanced Analytics & IA
-					</h1>
-					<p className="text-muted-foreground mt-2 max-w-2xl">
-						Insights inteligentes e previsões baseadas em inteligência
-						artificial para otimizar o desempenho da sua clínica e antecipar
-						tendências.
-					</p>
+						<div>
+							<div className="flex items-center gap-3">
+								<h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-foreground">
+									Advanced Analytics <span className="text-primary">& IA</span>
+								</h1>
+								<div className="hidden sm:flex items-center gap-2 px-3 py-1 bg-emerald-500/10 border border-emerald-500/20 rounded-full text-[10px] font-bold text-emerald-600 uppercase tracking-wider">
+									<div className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse" />
+									Real-time Active
+								</div>
+							</div>
+							<p className="text-sm text-muted-foreground font-medium mt-1 max-w-2xl">
+								Insights inteligentes e previsões baseadas em inteligência artificial para otimizar o desempenho da sua clínica.
+							</p>
+						</div>
+					</div>
+
+					{isLoading ? (
+						<Skeleton className="h-8 w-full max-w-md rounded-xl" />
+					) : (
+						<div className="flex flex-wrap items-center gap-x-6 gap-y-3 pt-1">
+							<div className="flex items-center gap-2">
+								<div className="h-2 w-2 rounded-full bg-primary" />
+								<span className="text-xs font-bold text-muted-foreground uppercase tracking-tight">
+									<span className="text-foreground text-sm mr-1">
+										{summary?.totalAppointments ?? 0}
+									</span>{" "}
+									Agendamentos
+								</span>
+							</div>
+							<div className="flex items-center gap-2">
+								<div className="h-2 w-2 rounded-full bg-emerald-500" />
+								<span className="text-xs font-bold text-muted-foreground uppercase tracking-tight">
+									<span className="text-foreground text-sm mr-1">
+										{summary?.activePatients ?? 0}
+									</span>{" "}
+									Ativos
+								</span>
+							</div>
+							<div className="flex items-center gap-2">
+								<div className="h-2 w-2 rounded-full bg-amber-500" />
+								<span className="text-xs font-bold text-muted-foreground uppercase tracking-tight">
+									<span className="text-foreground text-sm mr-1">
+										R${" "}
+										{(summary?.monthlyRevenue ?? 0).toLocaleString("pt-BR", {
+											minimumFractionDigits: 2,
+										})}
+									</span>{" "}
+									Receita
+								</span>
+							</div>
+							<div className="flex items-center gap-2">
+								<div className="h-2 w-2 rounded-full bg-blue-500" />
+								<span className="text-xs font-bold text-muted-foreground uppercase tracking-tight">
+									<span className="text-foreground text-sm mr-1">
+										{summary?.occupancyRate ?? 0}%
+									</span>{" "}
+									Ocupação
+								</span>
+							</div>
+						</div>
+					)}
 				</div>
-				<div className="hidden md:flex items-center gap-2 px-4 py-2 bg-primary/5 border border-primary/10 rounded-full text-xs font-semibold text-primary">
-					<Sparkles className="h-3 w-3" />
+				<div className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-primary/10 to-primary/5 border border-primary/20 rounded-2xl text-xs font-bold text-primary shadow-sm hover:shadow-md transition-all cursor-default group shrink-0">
+					<Sparkles className="h-4 w-4 group-hover:rotate-12 transition-transform" />
 					Powered by Gemini AI
 				</div>
 			</div>
 
 			{/* Filtros Globais */}
-			<AnalyticsFilters />
-
-			{/* Cards de Resumo */}
-			<div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-				<Card className="border-none shadow-sm ring-1 ring-gray-200/50 dark:ring-gray-800/50 hover:ring-primary/30 transition-all duration-300">
-					<CardHeader className="pb-3">
-						<CardTitle className="text-sm font-medium flex items-center gap-2">
-							<Calendar className="h-4 w-4 text-primary" />
-							Agendamentos
-						</CardTitle>
-					</CardHeader>
-					<CardContent>
-						<div className="text-2xl font-bold">
-							{isLoading ? "..." : summary?.totalAppointments || 0}
-						</div>
-						<p className="text-xs text-muted-foreground mt-1">
-							{isLoading ? "..." : `${summary?.appointmentGrowth || 0}%`} vs.
-							período anterior
-						</p>
-					</CardContent>
-				</Card>
-
-				<Card className="border-none shadow-sm ring-1 ring-gray-200/50 dark:ring-gray-800/50 hover:ring-primary/30 transition-all duration-300">
-					<CardHeader className="pb-3">
-						<CardTitle className="text-sm font-medium flex items-center gap-2">
-							<Users className="h-4 w-4 text-primary" />
-							Pacientes Ativos
-						</CardTitle>
-					</CardHeader>
-					<CardContent>
-						<div className="text-2xl font-bold">
-							{isLoading ? "..." : summary?.activePatients || 0}
-						</div>
-						<p className="text-xs text-muted-foreground mt-1">
-							{isLoading ? "..." : `${summary?.patientGrowth || 0}%`} vs.
-							período anterior
-						</p>
-					</CardContent>
-				</Card>
-
-				<Card className="border-none shadow-sm ring-1 ring-gray-200/50 dark:ring-gray-800/50 hover:ring-primary/30 transition-all duration-300">
-					<CardHeader className="pb-3">
-						<CardTitle className="text-sm font-medium flex items-center gap-2">
-							<DollarSign className="h-4 w-4 text-primary" />
-							Receita Mensal
-						</CardTitle>
-					</CardHeader>
-					<CardContent>
-						<div className="text-2xl font-bold text-primary">
-							{isLoading
-								? "..."
-								: `R$ ${(summary?.monthlyRevenue || 0).toLocaleString("pt-BR", { minimumFractionDigits: 2 })}`}
-						</div>
-						<p className="text-xs text-muted-foreground mt-1">
-							{isLoading ? "..." : `${summary?.revenueGrowth || 0}%`} vs.
-							período anterior
-						</p>
-					</CardContent>
-				</Card>
-
-				<Card className="border-none shadow-sm ring-1 ring-gray-200/50 dark:ring-gray-800/50 hover:ring-primary/30 transition-all duration-300">
-					<CardHeader className="pb-3">
-						<CardTitle className="text-sm font-medium flex items-center gap-2">
-							<Activity className="h-4 w-4 text-primary" />
-							Taxa de Ocupação
-						</CardTitle>
-					</CardHeader>
-					<CardContent>
-						<div className="text-2xl font-bold">
-							{isLoading ? "..." : `${summary?.occupancyRate || 0}%`}
-						</div>
-						<p className="text-xs text-muted-foreground mt-1">
-							Capacidade utilizada
-						</p>
-					</CardContent>
-				</Card>
+			<div className="relative">
+				<div className="absolute -inset-1 bg-gradient-to-r from-primary/5 to-transparent rounded-[2rem] blur-2xl opacity-50" />
+				<AnalyticsFilters />
 			</div>
 
 			{/* Tabs de Analytics */}
 			<Tabs defaultValue="dashboard" className="space-y-6">
-				<TabsList className="grid w-full grid-cols-2 md:grid-cols-5 p-1 bg-muted/50 rounded-xl">
-					<TabsTrigger
-						value="dashboard"
-						className="rounded-lg data-[state=active]:bg-background data-[state=active]:shadow-sm"
-					>
-						<LayoutDashboard className="h-4 w-4 mr-2" />
-						Dashboard
-					</TabsTrigger>
-					<TabsTrigger
-						value="appointments"
-						className="rounded-lg data-[state=active]:bg-background data-[state=active]:shadow-sm"
-					>
-						Agendamentos
-					</TabsTrigger>
-					<TabsTrigger
-						value="patients"
-						className="rounded-lg data-[state=active]:bg-background data-[state=active]:shadow-sm"
-					>
-						Pacientes
-					</TabsTrigger>
-					<TabsTrigger
-						value="financial"
-						className="rounded-lg data-[state=active]:bg-background data-[state=active]:shadow-sm"
-					>
-						Financeiro
-					</TabsTrigger>
-					<TabsTrigger
-						value="predictive"
-						className="rounded-lg data-[state=active]:bg-background data-[state=active]:shadow-sm"
-					>
-						<Sparkles className="h-3 w-3 mr-2" />
-						Preditivo
-					</TabsTrigger>
-				</TabsList>
+				<div className="flex items-center justify-between overflow-x-auto pb-2 -mx-1 px-1 no-scrollbar">
+					<TabsList className="h-12 inline-flex items-center justify-start p-1.5 bg-muted/50 rounded-2xl border border-border/50 backdrop-blur-sm">
+						<TabsTrigger
+							value="dashboard"
+							className="h-9 px-4 rounded-xl data-[state=active]:bg-background data-[state=active]:shadow-md data-[state=active]:text-primary transition-all text-xs font-bold gap-2"
+						>
+							<LayoutDashboard className="h-3.5 w-3.5" />
+							Dashboard
+						</TabsTrigger>
+						<TabsTrigger
+							value="appointments"
+							className="h-9 px-4 rounded-xl data-[state=active]:bg-background data-[state=active]:shadow-md data-[state=active]:text-primary transition-all text-xs font-bold gap-2"
+						>
+							Agendamentos
+						</TabsTrigger>
+						<TabsTrigger
+							value="patients"
+							className="h-9 px-4 rounded-xl data-[state=active]:bg-background data-[state=active]:shadow-md data-[state=active]:text-primary transition-all text-xs font-bold gap-2"
+						>
+							Pacientes
+						</TabsTrigger>
+						<TabsTrigger
+							value="financial"
+							className="h-9 px-4 rounded-xl data-[state=active]:bg-background data-[state=active]:shadow-md data-[state=active]:text-primary transition-all text-xs font-bold gap-2"
+						>
+							Financeiro
+						</TabsTrigger>
+						<TabsTrigger
+							value="predictive"
+							className="h-9 px-4 rounded-xl data-[state=active]:bg-background data-[state=active]:shadow-md data-[state=active]:text-primary transition-all text-xs font-bold gap-2"
+						>
+							<Sparkles className="h-3.5 w-3.5" />
+							Preditivo
+						</TabsTrigger>
+					</TabsList>
+				</div>
 
 				<TabsContent
 					value="dashboard"
