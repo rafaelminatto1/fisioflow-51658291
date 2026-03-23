@@ -10,7 +10,7 @@ import type {
 	PatientGoalTracking,
 } from "@/types/patientAnalytics";
 
-type ExcelApi = (typeof import("@/lib/export/exceljsWrapper"))["default"];
+type ExcelApi = typeof import("@/lib/export/exceljsWrapper")["default"];
 
 export type ExportFormat = "pdf" | "csv" | "json" | "excel";
 
@@ -476,7 +476,10 @@ function getImprovementLabel(value: number): string {
 	return "Baixo";
 }
 
-function createTrendsSheet(data: AnalyticsExportData, XLSX: ExcelApi): WorkSheet {
+function createTrendsSheet(
+	data: AnalyticsExportData,
+	XLSX: ExcelApi,
+): WorkSheet {
 	const trendsData = [
 		["Dados de Evolução"],
 		[""],
@@ -560,7 +563,10 @@ function getRiskInterpretation(
 	return "Excelente prognóstico";
 }
 
-function createGoalsSheet(data: AnalyticsExportData, XLSX: ExcelApi): WorkSheet {
+function createGoalsSheet(
+	data: AnalyticsExportData,
+	XLSX: ExcelApi,
+): WorkSheet {
 	const goalsData = [
 		["Objetivos de Tratamento"],
 		[""],

@@ -235,8 +235,7 @@ export const knowledgeBase: KnowledgeArticle[] = [
 	},
 	{
 		id: "ortho-glenohumeral-oa-cpg-2023",
-		title:
-			"Physical Therapist Management of Glenohumeral Joint Osteoarthritis",
+		title: "Physical Therapist Management of Glenohumeral Joint Osteoarthritis",
 		group: "Ortopedia",
 		subgroup: "Ombro",
 		focus: ["Osteoartrose", "Exercicio", "Manejo"],
@@ -254,7 +253,9 @@ export const knowledgeBase: KnowledgeArticle[] = [
 		observations: [
 			"Boa base para protocolos de dor e funcao em ombro degenerativo.",
 		],
-		keyQuestions: ["Quais pacientes devem seguir manejo conservador versus encaminhamento?"],
+		keyQuestions: [
+			"Quais pacientes devem seguir manejo conservador versus encaminhamento?",
+		],
 	},
 	{
 		id: "ortho-hip-oa",
@@ -326,7 +327,9 @@ export const knowledgeBase: KnowledgeArticle[] = [
 		observations: [
 			"Usar como referencia-base para paginas de fraturas e para identificar lacunas de conteudo.",
 		],
-		keyQuestions: ["Quais fraturas ainda carecem de protocolo interno robusto?"],
+		keyQuestions: [
+			"Quais fraturas ainda carecem de protocolo interno robusto?",
+		],
 	},
 	{
 		id: "ortho-tka-cpg-2020",
@@ -348,7 +351,9 @@ export const knowledgeBase: KnowledgeArticle[] = [
 		observations: [
 			"Boa referencia para padronizar bundles de pos-operatorio e alta funcional.",
 		],
-		keyQuestions: ["Quais componentes devem ser obrigatorios no protocolo pos-TKA?"],
+		keyQuestions: [
+			"Quais componentes devem ser obrigatorios no protocolo pos-TKA?",
+		],
 	},
 	{
 		id: "ortho-tka-rehab-2023",
@@ -370,7 +375,9 @@ export const knowledgeBase: KnowledgeArticle[] = [
 		observations: [
 			"Complementa a CPG com panorama comparativo das estrategias de reabilitacao.",
 		],
-		keyQuestions: ["Quais componentes do protocolo geram maior impacto funcional?"],
+		keyQuestions: [
+			"Quais componentes do protocolo geram maior impacto funcional?",
+		],
 		metadata: {
 			attachments: [
 				{
@@ -467,7 +474,9 @@ export const knowledgeBase: KnowledgeArticle[] = [
 		observations: [
 			"Priorizar em pacientes com boa tolerancia a treino e perda funcional pre-op.",
 		],
-		keyQuestions: ["Quem mais se beneficia de prehab de alta intensidade antes da TKA?"],
+		keyQuestions: [
+			"Quem mais se beneficia de prehab de alta intensidade antes da TKA?",
+		],
 	},
 	{
 		id: "ortho-hip-fracture-exercise-2023",
@@ -490,7 +499,9 @@ export const knowledgeBase: KnowledgeArticle[] = [
 		observations: [
 			"Valioso para protocolos de fratura de quadril com foco em mobilizacao precoce.",
 		],
-		keyQuestions: ["Como aumentar intensidade sem comprometer seguranca em idosos?"],
+		keyQuestions: [
+			"Como aumentar intensidade sem comprometer seguranca em idosos?",
+		],
 	},
 	{
 		id: "ortho-neck-pain",
@@ -634,7 +645,8 @@ export const knowledgeBase: KnowledgeArticle[] = [
 	},
 	{
 		id: "sport-acl-prevention-cpg-2023",
-		title: "Exercise-Based Knee and Anterior Cruciate Ligament Injury Prevention",
+		title:
+			"Exercise-Based Knee and Anterior Cruciate Ligament Injury Prevention",
 		group: "Esportiva",
 		subgroup: "Joelho",
 		focus: ["Prevencao", "ACL", "Treino neuromuscular"],
@@ -652,7 +664,9 @@ export const knowledgeBase: KnowledgeArticle[] = [
 		observations: [
 			"Importante para trilhas esportivas de prevencao, aquecimento e retorno gradual.",
 		],
-		keyQuestions: ["Como integrar programas preventivos de LCA na rotina da equipe?"],
+		keyQuestions: [
+			"Como integrar programas preventivos de LCA na rotina da equipe?",
+		],
 	},
 	{
 		id: "sport-doha-groin-2015",
@@ -939,7 +953,9 @@ export const knowledgeBase: KnowledgeArticle[] = [
 		observations: [
 			"Bom artigo para construir protocolo interno mais criterial do que a literatura media.",
 		],
-		keyQuestions: ["Quais criterios objetivos devem complementar o criterio temporal apos reparo meniscal?"],
+		keyQuestions: [
+			"Quais criterios objetivos devem complementar o criterio temporal apos reparo meniscal?",
+		],
 	},
 	{
 		id: "postop-acl-meniscus",
@@ -975,7 +991,9 @@ export const knowledgeBase: KnowledgeArticle[] = [
 		observations: [
 			"Usar para calibrar sling, progressao de movimento e expectativas por fase.",
 		],
-		keyQuestions: ["Qual timing ideal para progredir de movimento passivo para ativo?"],
+		keyQuestions: [
+			"Qual timing ideal para progredir de movimento passivo para ativo?",
+		],
 		metadata: {
 			attachments: [
 				{
@@ -988,7 +1006,8 @@ export const knowledgeBase: KnowledgeArticle[] = [
 	},
 	{
 		id: "postop-shoulder-instability",
-		title: "Return to sport after surgical treatment for posterior shoulder instability",
+		title:
+			"Return to sport after surgical treatment for posterior shoulder instability",
 		group: "Pos-operatorio esportivo",
 		subgroup: "Ombro",
 		focus: ["Estabilidade", "RTS"],
@@ -1006,7 +1025,9 @@ export const knowledgeBase: KnowledgeArticle[] = [
 		observations: [
 			"Util para calibrar expectativa de retorno e progressao funcional apos estabilizacao.",
 		],
-		keyQuestions: ["Quais testes e marcos clinicos devem liberar retorno overhead ou de contato?"],
+		keyQuestions: [
+			"Quais testes e marcos clinicos devem liberar retorno overhead ou de contato?",
+		],
 	},
 	{
 		id: "postop-hip-arthroscopy",
@@ -1029,7 +1050,9 @@ export const knowledgeBase: KnowledgeArticle[] = [
 		observations: [
 			"Serve de base para um protocolo interno com mais testes objetivos de forca e controle de carga.",
 		],
-		keyQuestions: ["Quais testes devem ser exigidos antes do retorno a mudancas de direcao e impacto?"],
+		keyQuestions: [
+			"Quais testes devem ser exigidos antes do retorno a mudancas de direcao e impacto?",
+		],
 	},
 	{
 		id: "postop-ucl",
@@ -1065,7 +1088,9 @@ export const knowledgeBase: KnowledgeArticle[] = [
 		observations: [
 			"Incluir componente psicologico e esporte-especifico no protocolo de alta apos MPFLR.",
 		],
-		keyQuestions: ["Como incorporar prontidao psicologica ao retorno apos MPFLR?"],
+		keyQuestions: [
+			"Como incorporar prontidao psicologica ao retorno apos MPFLR?",
+		],
 	},
 	{
 		id: "postop-patellar-tendon",
@@ -1101,7 +1126,9 @@ export const knowledgeBase: KnowledgeArticle[] = [
 		observations: [
 			"Boa referencia para fases tardias, pliometria e expectativa de retorno ao esporte.",
 		],
-		keyQuestions: ["Quais marcadores de forca plantarflexora devem anteceder corrida e salto?"],
+		keyQuestions: [
+			"Quais marcadores de forca plantarflexora devem anteceder corrida e salto?",
+		],
 	},
 	{
 		id: "postop-cartilage-repair",
@@ -1124,7 +1151,9 @@ export const knowledgeBase: KnowledgeArticle[] = [
 		observations: [
 			"Importante para modular prognostico esportivo conforme a tecnica cartilaginosa utilizada.",
 		],
-		keyQuestions: ["Como modular impacto e expectativa conforme a tecnica de restauracao cartilaginosa?"],
+		keyQuestions: [
+			"Como modular impacto e expectativa conforme a tecnica de restauracao cartilaginosa?",
+		],
 	},
 	{
 		id: "postop-ankle",
@@ -1147,7 +1176,9 @@ export const knowledgeBase: KnowledgeArticle[] = [
 		observations: [
 			"Valioso para definir janelas de retorno e aconselhamento de risco apos cirurgia ligamentar lateral.",
 		],
-		keyQuestions: ["Quais testes funcionais devem anteceder retorno a saltos e mudancas de direcao?"],
+		keyQuestions: [
+			"Quais testes funcionais devem anteceder retorno a saltos e mudancas de direcao?",
+		],
 	},
 	{
 		id: "postop-shoulder-labral",

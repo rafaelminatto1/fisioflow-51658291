@@ -66,6 +66,7 @@ import {
 	type MessageTemplate,
 } from "@/components/communications/MessageTemplates";
 import { useWhatsAppTemplates } from "@/hooks/useWhatsAppTemplates";
+import { useSuggestReply } from "@/hooks/ai";
 import { Badge } from "@/components/ui/badge";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -80,16 +81,19 @@ export const PatientMessages = () => {
 	const [sendChannel, setSendChannel] = useState<"email" | "whatsapp" | "sms">(
 		"email",
 	);
-	const [selectedPatient, setSelectedPatient] = useState<{
-		id: string;
-		name: string;
-		email?: string | null;
-		phone?: string | null;
-	} | null>(null);
+	const [selectedPatients, setSelectedPatients] = useState<
+		Array<{
+			id: string;
+			name: string;
+			email?: string | null;
+			phone?: string | null;
+		}>
+	>([]);
 	const [patientSearch, setPatientSearch] = useState("");
 	const [patientPopoverOpen, setPatientPopoverOpen] = useState(false);
 	const [subject, setSubject] = useState("");
 	const [message, setMessage] = useState("");
+	const [isBulkMode, setIsBulkMode] = useState(false);
 
 	const { data: patients = [] } = useActivePatients();
 	const { data: communications = [], isLoading } = useCommunications({
@@ -99,14 +103,13 @@ export const PatientMessages = () => {
 	const sendCommunication = useSendCommunication();
 	const deleteCommunication = useDeleteCommunication();
 	const resendCommunication = useResendCommunication();
+	const suggestReply = useSuggestReply();
 
 	const filteredPatients = useMemo(() => {
-		if (!patientSearch) return patients.slice(0, 10);
+		const search = patientSearch.toLowerCase();
 		return patients
-			.filter((p) =>
-				(p.name || "").toLowerCase().includes(patientSearch.toLowerCase()),
-			)
-			.slice(0, 10);
+			.filter((p) => (p.name || "").toLowerCase().includes(search))
+			.slice(0, 20);
 	}, [patients, patientSearch]);
 
 	const filteredCommunications = useMemo(() => {
@@ -119,70 +122,52 @@ export const PatientMessages = () => {
 		);
 	}, [communications, searchTerm]);
 
-	const getStatusIcon = (status: string) => {
-		switch (status) {
-			case "enviado":
-				return <CheckCircle className="w-4 h-4 text-green-500" />;
-			case "entregue":
-				return <CheckCircle className="w-4 h-4 text-blue-500" />;
-			case "pendente":
-				return <Clock className="w-4 h-4 text-yellow-500" />;
-			case "falha":
-				return <AlertCircle className="w-4 h-4 text-red-500" />;
-			case "lido":
-				return <CheckCircle className="w-4 h-4 text-primary" />;
-			default:
-				return <Clock className="w-4 h-4 text-muted-foreground" />;
-		}
-	};
+	const togglePatientSelection = (patient: any) => {
+		const patientName = PatientHelpers.getName(patient);
+		const patientData = {
+			id: patient.id,
+			name: patientName,
+			email: patient.email,
+			phone: patient.phone,
+		};
 
-	const getStatusColor = (status: string) => {
-		switch (status) {
-			case "enviado":
-				return "bg-green-500/10 text-green-700 dark:text-green-400";
-			case "entregue":
-				return "bg-blue-500/10 text-blue-700 dark:text-blue-400";
-			case "pendente":
-				return "bg-yellow-500/10 text-yellow-700 dark:text-yellow-400";
-			case "falha":
-				return "bg-red-500/10 text-red-700 dark:text-red-400";
-			case "lido":
-				return "bg-primary/10 text-primary";
-			default:
-				return "bg-muted text-muted-foreground";
-		}
-	};
-
-	const getChannelIcon = (type: string) => {
-		switch (type) {
-			case "email":
-				return <Mail className="w-4 h-4" />;
-			case "whatsapp":
-				return <MessageSquareIcon className="w-4 h-4" />;
-			case "sms":
-				return <Phone className="w-4 h-4" />;
-			default:
-				return <Mail className="w-4 h-4" />;
+		if (isBulkMode) {
+			setSelectedPatients((prev) => {
+				const isSelected = prev.some((p) => p.id === patient.id);
+				if (isSelected) {
+					return prev.filter((p) => p.id !== patient.id);
+				}
+				return [...prev, patientData];
+			});
+		} else {
+			setSelectedPatients([patientData]);
+			setPatientPopoverOpen(false);
 		}
 	};
 
 	const handleSendCommunication = async () => {
-		if (!selectedPatient) return;
+		if (selectedPatients.length === 0) return;
 
-		const recipient =
-			sendChannel === "email"
-				? selectedPatient.email || ""
-				: selectedPatient.phone || "";
-
-		await sendCommunication.mutateAsync({
+		const data: any = {
 			type: sendChannel,
-			patient_id: selectedPatient.id,
-			recipient,
 			subject: subject || undefined,
 			body: message,
-		});
+		};
 
-		setSelectedPatient(null);
+		if (isBulkMode) {
+			data.patient_ids = selectedPatients.map((p) => p.id);
+			data.recipients = selectedPatients.map((p) =>
+				sendChannel === "email" ? p.email || "" : p.phone || "",
+			);
+		} else {
+			const p = selectedPatients[0];
+			data.patient_id = p.id;
+			data.recipient = sendChannel === "email" ? p.email || "" : p.phone || "";
+		}
+
+		await sendCommunication.mutateAsync(data);
+
+		setSelectedPatients([]);
 		setSubject("");
 		setMessage("");
 	};
@@ -240,6 +225,22 @@ export const PatientMessages = () => {
 							</div>
 						</div>
 					</div>
+					<div className="flex items-center gap-2">
+						<label className="text-xs font-bold uppercase tracking-widest text-muted-foreground flex items-center gap-2 cursor-pointer bg-muted/50 px-3 py-2 rounded-xl border border-border/40 transition-all hover:bg-muted">
+							<input
+								type="checkbox"
+								className="rounded border-border/40 text-primary focus:ring-primary/20"
+								checked={isBulkMode}
+								onChange={(e) => {
+									setIsBulkMode(e.target.checked);
+									if (!e.target.checked && selectedPatients.length > 1) {
+										setSelectedPatients(selectedPatients.slice(0, 1));
+									}
+								}}
+							/>
+							Envio em Massa
+						</label>
+					</div>
 				</div>
 
 				{/* Filtros */}
@@ -250,7 +251,7 @@ export const PatientMessages = () => {
 							placeholder="Buscar comunicações..."
 							value={searchTerm}
 							onChange={(e) => setSearchTerm(e.target.value)}
-							className="pl-10"
+							className="pl-10 h-11 rounded-2xl border-border/40 shadow-premium-sm"
 						/>
 					</div>
 					<div className="flex gap-2 overflow-x-auto pb-2 sm:pb-0">
@@ -260,24 +261,24 @@ export const PatientMessages = () => {
 								variant={selectedChannel === channel ? "default" : "outline"}
 								size="sm"
 								onClick={() => setSelectedChannel(channel)}
-								className="whitespace-nowrap"
+								className="whitespace-nowrap h-11 px-5 rounded-2xl font-bold uppercase text-[10px] tracking-widest"
 							>
 								{channel === "all" && "Todos"}
 								{channel === "email" && (
 									<>
-										<Mail className="w-4 h-4 mr-1" />
+										<Mail className="w-4 h-4 mr-2" />
 										Email
 									</>
 								)}
 								{channel === "whatsapp" && (
 									<>
-										<MessageSquareIcon className="w-4 h-4 mr-1" />
+										<MessageSquareIcon className="w-4 h-4 mr-2" />
 										WhatsApp
 									</>
 								)}
 								{channel === "sms" && (
 									<>
-										<Phone className="w-4 h-4 mr-1" />
+										<Phone className="w-4 h-4 mr-2" />
 										SMS
 									</>
 								)}
@@ -290,19 +291,21 @@ export const PatientMessages = () => {
 				<div className="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-6">
 					{/* Lista */}
 					<div className="lg:col-span-2">
-						<Card>
-							<CardHeader className="border-b">
-								<CardTitle>Histórico de Comunicações</CardTitle>
+						<Card className="rounded-3xl border-border/40 shadow-premium-sm overflow-hidden h-full">
+							<CardHeader className="border-b bg-muted/10">
+								<CardTitle className="text-sm font-black uppercase tracking-widest text-muted-foreground">
+									Histórico de Comunicações
+								</CardTitle>
 							</CardHeader>
 							<CardContent className="p-0">
 								{isLoading ? (
 									<div className="p-4 space-y-3">
 										{[1, 2, 3, 4, 5].map((i) => (
-											<Skeleton key={i} className="h-20 w-full" />
+											<Skeleton key={i} className="h-20 w-full rounded-2xl" />
 										))}
 									</div>
 								) : filteredCommunications.length === 0 ? (
-									<div className="p-6">
+									<div className="p-12">
 										<EmptyState
 											icon={MessageSquareIcon}
 											title="Nenhuma comunicação"
@@ -310,104 +313,118 @@ export const PatientMessages = () => {
 										/>
 									</div>
 								) : (
-									<div className="divide-y">
-										{filteredCommunications.map((comm) => (
-											<div
-												key={comm.id}
-												className="p-4 hover:bg-accent/50 transition-colors"
-											>
-												<div className="flex items-start justify-between gap-3">
-													<div className="flex items-start gap-3 flex-1 min-w-0">
-														<div className="mt-1 p-2 rounded-lg bg-muted">
-															{getChannelIcon(comm.type)}
-														</div>
-														<div className="flex-1 min-w-0">
-															<div className="flex items-center gap-2 flex-wrap">
-																<p className="font-medium truncate">
-																	{comm.patient?.name || comm.recipient}
-																</p>
-																<Badge
-																	className={cn(
-																		"text-xs",
-																		getStatusColor(comm.status),
-																	)}
-																>
-																	{getStatusLabel(comm.status)}
-																</Badge>
+									<ScrollArea className="h-[600px]">
+										<div className="divide-y divide-border/40">
+											{filteredCommunications.map((comm) => (
+												<div
+													key={comm.id}
+													className="p-4 hover:bg-accent/30 transition-all group"
+												>
+													<div className="flex items-start justify-between gap-3">
+														<div className="flex items-start gap-4 flex-1 min-w-0">
+															<div className="mt-1 p-2.5 rounded-xl bg-background border border-border/40 shadow-sm group-hover:scale-110 transition-transform">
+																{getChannelIcon(comm.type)}
 															</div>
-															{comm.subject && (
-																<p className="text-sm text-muted-foreground truncate mt-0.5">
-																	{comm.subject}
-																</p>
-															)}
-															<p className="text-sm text-muted-foreground line-clamp-1 mt-1">
-																{comm.body}
-															</p>
-															<div className="flex items-center gap-3 mt-2 text-xs text-muted-foreground">
-																<span>{getTypeLabel(comm.type)}</span>
-																<span>
-																	{format(
-																		new Date(comm.created_at),
-																		"dd/MM/yyyy HH:mm",
-																		{ locale: ptBR },
-																	)}
-																</span>
-															</div>
-														</div>
-													</div>
-													<div className="flex items-center gap-2">
-														{getStatusIcon(comm.status)}
-														<DropdownMenu>
-															<DropdownMenuTrigger asChild>
-																<Button
-																	variant="ghost"
-																	size="icon"
-																	className="h-8 w-8"
-																>
-																	<MoreVertical className="h-4 w-4" />
-																</Button>
-															</DropdownMenuTrigger>
-															<DropdownMenuContent align="end">
-																{comm.status === "falha" && (
-																	<DropdownMenuItem
-																		onClick={() =>
-																			resendCommunication.mutate(comm.id)
-																		}
+															<div className="flex-1 min-w-0">
+																<div className="flex items-center gap-2 flex-wrap mb-1">
+																	<p className="font-bold text-sm truncate tracking-tight">
+																		{comm.patient?.name || comm.recipient}
+																	</p>
+																	<Badge
+																		className={cn(
+																			"text-[9px] font-black uppercase tracking-widest px-2 py-0.5",
+																			getStatusColor(comm.status),
+																		)}
 																	>
-																		<RefreshCw className="h-4 w-4 mr-2" />
-																		Reenviar
-																	</DropdownMenuItem>
+																		{getStatusLabel(comm.status)}
+																	</Badge>
+																</div>
+																{comm.subject && (
+																	<p className="text-xs font-bold text-foreground/80 truncate">
+																		{comm.subject}
+																	</p>
 																)}
-																<DropdownMenuSeparator />
-																<DropdownMenuItem
-																	className="text-destructive focus:text-destructive"
-																	onClick={() => setDeleteId(comm.id)}
+																<p className="text-xs text-muted-foreground line-clamp-2 leading-relaxed mt-1">
+																	{comm.body}
+																</p>
+																<div className="flex items-center gap-3 mt-3 text-[10px] font-bold text-muted-foreground uppercase tracking-tighter">
+																	<span className="flex items-center gap-1">
+																		<div className="w-1 h-1 rounded-full bg-border" />
+																		{getTypeLabel(comm.type)}
+																	</span>
+																	<span className="flex items-center gap-1">
+																		<div className="w-1 h-1 rounded-full bg-border" />
+																		{format(
+																			new Date(comm.created_at),
+																			"dd MMM yyyy · HH:mm",
+																			{ locale: ptBR },
+																		)}
+																	</span>
+																</div>
+															</div>
+														</div>
+														<div className="flex items-center gap-2">
+															<div className="opacity-0 group-hover:opacity-100 transition-opacity">
+																{getStatusIcon(comm.status)}
+															</div>
+															<DropdownMenu>
+																<DropdownMenuTrigger asChild>
+																	<Button
+																		variant="ghost"
+																		size="icon"
+																		className="h-8 w-8 rounded-full"
+																	>
+																		<MoreVertical className="h-4 w-4" />
+																	</Button>
+																</DropdownMenuTrigger>
+																<DropdownMenuContent
+																	align="end"
+																	className="rounded-2xl border-border/40 shadow-premium-lg"
 																>
-																	<Trash2 className="h-4 w-4 mr-2" />
-																	Excluir
-																</DropdownMenuItem>
-															</DropdownMenuContent>
-														</DropdownMenu>
+																	{comm.status === "falha" && (
+																		<DropdownMenuItem
+																			className="rounded-xl font-bold text-xs"
+																			onClick={() =>
+																				resendCommunication.mutate(comm.id)
+																			}
+																		>
+																			<RefreshCw className="h-3.5 w-3.5 mr-2" />
+																			Reenviar
+																		</DropdownMenuItem>
+																	)}
+																	<DropdownMenuSeparator />
+																	<DropdownMenuItem
+																		className="text-destructive focus:text-destructive rounded-xl font-bold text-xs"
+																		onClick={() => setDeleteId(comm.id)}
+																	>
+																		<Trash2 className="h-3.5 w-3.5 mr-2" />
+																		Excluir Registro
+																	</DropdownMenuItem>
+																</DropdownMenuContent>
+															</DropdownMenu>
+														</div>
 													</div>
 												</div>
-											</div>
-										))}
-									</div>
+											))}
+										</div>
+									</ScrollArea>
 								)}
 							</CardContent>
 						</Card>
 					</div>
 
 					{/* Painel de envio */}
-					<div>
-						<Card>
-							<CardHeader className="border-b">
-								<CardTitle>Enviar Comunicação</CardTitle>
+					<div className="h-full">
+						<Card className="rounded-3xl border-border/40 shadow-premium-sm sticky top-6">
+							<CardHeader className="border-b bg-muted/10">
+								<CardTitle className="text-sm font-black uppercase tracking-widest text-muted-foreground">
+									Enviar Comunicação
+								</CardTitle>
 							</CardHeader>
-							<CardContent className="p-4 space-y-4">
+							<CardContent className="p-5 space-y-5">
 								<div>
-									<label className="text-sm font-medium mb-2 block">
-										Canal
+									<label className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground mb-3 block">
+										Canal de Envio
 									</label>
 									<div className="grid grid-cols-3 gap-2">
 										{(["email", "whatsapp", "sms"] as const).map((channel) => (
@@ -417,28 +434,49 @@ export const PatientMessages = () => {
 													sendChannel === channel ? "default" : "outline"
 												}
 												size="sm"
-												className="flex-col p-3 h-auto"
+												className={cn(
+													"flex-col p-3 h-auto rounded-2xl transition-all",
+													sendChannel === channel
+														? "shadow-md scale-105"
+														: "hover:bg-accent/50",
+												)}
 												onClick={() => setSendChannel(channel)}
 											>
 												{channel === "email" && (
-													<Mail className="w-4 h-4 mb-1" />
+													<Mail className="w-4 h-4 mb-1.5" />
 												)}
 												{channel === "whatsapp" && (
-													<MessageSquareIcon className="w-4 h-4 mb-1" />
+													<MessageSquareIcon className="w-4 h-4 mb-1.5" />
 												)}
 												{channel === "sms" && (
-													<Phone className="w-4 h-4 mb-1" />
+													<Phone className="w-4 h-4 mb-1.5" />
 												)}
-												<span className="text-xs capitalize">{channel}</span>
+												<span className="text-[9px] font-black uppercase tracking-widest">
+													{channel}
+												</span>
 											</Button>
 										))}
 									</div>
 								</div>
 
 								<div>
-									<label className="text-sm font-medium mb-2 block">
-										Destinatário
-									</label>
+									<div className="flex items-center justify-between mb-2">
+										<label className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground">
+											{isBulkMode
+												? `Destinatários (${selectedPatients.length})`
+												: "Destinatário"}
+										</label>
+										{selectedPatients.length > 0 && (
+											<Button
+												variant="ghost"
+												size="sm"
+												className="h-6 text-[9px] font-bold text-destructive hover:text-destructive hover:bg-destructive/10 px-2 rounded-lg"
+												onClick={() => setSelectedPatients([])}
+											>
+												Limpar
+											</Button>
+										)}
+									</div>
 									<Popover
 										open={patientPopoverOpen}
 										onOpenChange={setPatientPopoverOpen}
@@ -446,44 +484,61 @@ export const PatientMessages = () => {
 										<PopoverTrigger asChild>
 											<Button
 												variant="outline"
-												className="w-full justify-start font-normal"
+												className="w-full justify-start font-bold text-xs h-11 rounded-2xl border-border/40 shadow-inner bg-background/50"
 											>
-												{selectedPatient
-													? selectedPatient.name
-													: "Buscar paciente..."}
+												{selectedPatients.length > 0
+													? isBulkMode
+														? `${selectedPatients.length} pacientes selecionados`
+														: selectedPatients[0].name
+													: "Clique para buscar..."}
 											</Button>
 										</PopoverTrigger>
-										<PopoverContent className="w-[300px] p-0" align="start">
-											<Command>
+										<PopoverContent
+											className="w-[320px] p-0 rounded-2xl border-border/40 shadow-premium-lg"
+											align="start"
+										>
+											<Command className="rounded-2xl">
 												<CommandInput
-													placeholder="Digite o nome..."
+													placeholder="Nome do paciente..."
 													value={patientSearch}
 													onValueChange={setPatientSearch}
+													className="h-11 border-0 focus:ring-0"
 												/>
-												<CommandList>
-													<CommandEmpty>
+												<CommandList className="max-h-[300px]">
+													<CommandEmpty className="p-4 text-center text-xs font-bold text-muted-foreground uppercase">
 														Nenhum paciente encontrado.
 													</CommandEmpty>
 													<CommandGroup>
 														{filteredPatients.map((patient) => {
 															const patientName =
 																PatientHelpers.getName(patient);
+															const isSelected = selectedPatients.some(
+																(p) => p.id === patient.id,
+															);
 															return (
 																<CommandItem
 																	key={patient.id}
 																	value={patientName}
-																	onSelect={() => {
-																		setSelectedPatient({
-																			id: patient.id,
-																			name: patientName,
-																			email: patient.email,
-																			phone: patient.phone,
-																		});
-																		setPatientPopoverOpen(false);
-																		setPatientSearch("");
-																	}}
+																	onSelect={() =>
+																		togglePatientSelection(patient)
+																	}
+																	className="rounded-xl mx-1 my-0.5 cursor-pointer"
 																>
-																	{patientName}
+																	<div className="flex items-center justify-between w-full">
+																		<span
+																			className={cn(
+																				"text-xs font-bold transition-colors",
+																				isSelected
+																					? "text-primary"
+																					: "text-foreground",
+																			)}
+																		>
+																			{patientName}
+																		</span>
+																		{isSelected && (
+																			<CheckCircle className="h-3.5 w-3.5 text-primary animate-in zoom-in-50 duration-200" />
+																		)}
+																	</div>
 																</CommandItem>
 															);
 														})}
@@ -492,91 +547,157 @@ export const PatientMessages = () => {
 											</Command>
 										</PopoverContent>
 									</Popover>
+									{isBulkMode && selectedPatients.length > 0 && (
+										<div className="flex flex-wrap gap-1.5 mt-3">
+											{selectedPatients.map((p) => (
+												<Badge
+													key={p.id}
+													variant="secondary"
+													className="text-[9px] font-black uppercase tracking-tighter rounded-lg pl-2 pr-1 py-0.5 bg-primary/5 text-primary/80 border-primary/10"
+												>
+													{p.name}
+													<button
+														onClick={(e) => {
+															e.stopPropagation();
+															setSelectedPatients((prev) =>
+																prev.filter((x) => x.id !== p.id),
+															);
+														}}
+														className="ml-1.5 hover:text-destructive transition-colors"
+													>
+														<Trash2 className="h-2.5 w-2.5" />
+													</button>
+												</Badge>
+											))}
+										</div>
+									)}
 								</div>
 
 								{sendChannel === "email" && (
 									<div>
-										<label className="text-sm font-medium mb-2 block">
+										<label className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground mb-2 block">
 											Assunto
 										</label>
 										<Input
-											placeholder="Assunto da mensagem..."
+											placeholder="Ex: Confirmação de Agendamento..."
 											value={subject}
 											onChange={(e) => setSubject(e.target.value)}
+											className="h-11 rounded-2xl border-border/40 focus:ring-primary/20 font-bold text-xs"
 										/>
 									</div>
 								)}
 
-								<div>
-									<div className="flex items-center justify-between mb-2">
-										<label className="text-sm font-medium">Mensagem</label>
-										<Popover>
-											<PopoverTrigger asChild>
-												<Button
-													variant="ghost"
-													size="sm"
-													className="h-7 text-xs gap-1"
+								<div className="space-y-2">
+									<div className="flex items-center justify-between">
+										<label className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground">
+											Corpo da Mensagem
+										</label>
+										<div className="flex gap-1.5">
+											<Button
+												variant="ghost"
+												size="sm"
+												className="h-7 text-[10px] font-black uppercase tracking-widest gap-1.5 rounded-xl hover:bg-primary/5 text-primary transition-all border border-primary/10"
+												onClick={async () => {
+													if (selectedPatients.length === 0) {
+														toast.error("Selecione um paciente primeiro");
+														return;
+													}
+													const suggestion = await suggestReply.mutateAsync({
+														patientName: selectedPatients[0].name,
+														context:
+															"Acompanhamento clínico e engajamento no tratamento.",
+													});
+													setMessage(suggestion);
+												}}
+												disabled={
+													suggestReply.isPending ||
+													selectedPatients.length === 0
+												}
+											>
+												{suggestReply.isPending ? (
+													<RefreshCw className="w-3.5 h-3.5 animate-spin" />
+												) : (
+													<Sparkles className="w-3.5 h-3.5" />
+												)}
+												IA Sugerir
+											</Button>
+											<Popover>
+												<PopoverTrigger asChild>
+													<Button
+														variant="ghost"
+														size="sm"
+														className="h-7 text-[10px] font-black uppercase tracking-widest gap-1.5 rounded-xl hover:bg-primary/5 text-primary transition-all"
+													>
+														<FileText className="w-3.5 h-3.5" />
+														Templates
+													</Button>
+												</PopoverTrigger>
+												<PopoverContent
+													className="w-[400px] p-0 rounded-3xl border-border/40 shadow-premium-lg"
+													align="end"
 												>
-													<Sparkles className="w-3 h-3 text-primary" />
-													Templates
-												</Button>
-											</PopoverTrigger>
-											<PopoverContent className="w-[400px] p-0" align="end">
-												<div className="p-3 border-b bg-muted/50">
-													<h4 className="font-semibold text-sm">
-														Templates de Mensagem
-													</h4>
-													<p className="text-[10px] text-muted-foreground uppercase tracking-wider">
-														Selecione para preencher automaticamente
-													</p>
-												</div>
-												<ScrollArea className="h-[350px] p-4">
-													<MessageTemplates
-														onSelectTemplate={(template) => {
-															let body = template.body;
-															if (selectedPatient) {
-																body = body.replace(
-																	/{nome}/g,
-																	selectedPatient.name,
-																);
-															}
-															setMessage(body);
-															if (template.subject)
-																setSubject(template.subject);
-														}}
-													/>
-												</ScrollArea>
-											</PopoverContent>
-										</Popover>
+													<div className="p-4 border-b bg-muted/20">
+														<h4 className="font-black text-xs uppercase tracking-[0.1em]">
+															Templates Inteligentes
+														</h4>
+														<p className="text-[9px] text-muted-foreground uppercase font-bold tracking-widest mt-1">
+															Escolha um padrão para agilizar o envio
+														</p>
+													</div>
+													<ScrollArea className="h-[400px] p-4">
+														<MessageTemplates
+															onSelectTemplate={(template) => {
+																let body = template.body;
+																if (selectedPatients.length > 0) {
+																	const firstPatient = selectedPatients[0];
+																	body = body.replace(
+																		/{nome}/g,
+																		firstPatient.name,
+																	);
+																}
+																setMessage(body);
+																if (template.subject)
+																	setSubject(template.subject);
+															}}
+														/>
+													</ScrollArea>
+												</PopoverContent>
+											</Popover>
+										</div>
 									</div>
 									<Textarea
-										placeholder="Digite sua mensagem..."
-										rows={4}
-										className="resize-none"
+										placeholder="Escreva sua mensagem aqui. Use {nome} para personalizar..."
+										rows={6}
+										className="resize-none rounded-2xl border-border/40 focus:ring-primary/20 text-xs font-medium leading-relaxed"
 										value={message}
 										onChange={(e) => setMessage(e.target.value)}
 									/>
-									{selectedPatient && message.includes("{nome}") && (
-										<p className="text-[10px] text-primary font-medium mt-1">
-											Dica: O marcador {"{nome}"} será substituído por{" "}
-											{selectedPatient.name}
-										</p>
-									)}
+									{selectedPatients.length > 0 &&
+										message.includes("{nome}") && (
+											<p className="text-[10px] font-bold text-primary/80 flex items-center gap-1.5 bg-primary/5 p-2 rounded-xl border border-primary/10">
+												<Sparkles className="h-3 w-3" />O marcador {"{nome}"}{" "}
+												será personalizado automaticamente.
+											</p>
+										)}
 								</div>
 
 								<Button
-									className="w-full"
+									className="w-full h-12 rounded-2xl font-black uppercase text-xs tracking-[0.15em] shadow-premium-md hover:scale-[1.02] active:scale-95 transition-all"
 									onClick={handleSendCommunication}
 									disabled={
-										sendCommunication.isPending || !selectedPatient || !message
+										sendCommunication.isPending ||
+										selectedPatients.length === 0 ||
+										!message
 									}
 								>
 									{sendCommunication.isPending ? (
-										"Enviando..."
+										<RefreshCw className="h-4 w-4 animate-spin" />
 									) : (
 										<>
 											<Send className="w-4 h-4 mr-2" />
-											Enviar
+											{isBulkMode
+												? `Enviar para ${selectedPatients.length}`
+												: "Enviar Mensagem"}
 										</>
 									)}
 								</Button>
@@ -587,21 +708,25 @@ export const PatientMessages = () => {
 			</div>
 
 			<AlertDialog open={!!deleteId} onOpenChange={() => setDeleteId(null)}>
-				<AlertDialogContent>
+				<AlertDialogContent className="rounded-3xl border-border/40">
 					<AlertDialogHeader>
-						<AlertDialogTitle>Excluir Comunicação</AlertDialogTitle>
-						<AlertDialogDescription>
-							Tem certeza que deseja excluir esta comunicação? Esta ação não
-							pode ser desfeita.
+						<AlertDialogTitle className="font-black text-lg tracking-tight">
+							Excluir Comunicação?
+						</AlertDialogTitle>
+						<AlertDialogDescription className="font-medium text-xs uppercase tracking-widest text-muted-foreground/60 leading-relaxed">
+							Esta ação removerá o registro histórico. O paciente não será
+							afetado, mas você não verá mais esta mensagem aqui.
 						</AlertDialogDescription>
 					</AlertDialogHeader>
-					<AlertDialogFooter>
-						<AlertDialogCancel>Cancelar</AlertDialogCancel>
+					<AlertDialogFooter className="mt-4">
+						<AlertDialogCancel className="rounded-2xl font-bold uppercase text-[10px] tracking-widest">
+							Manter
+						</AlertDialogCancel>
 						<AlertDialogAction
 							onClick={handleDelete}
-							className="bg-destructive hover:bg-destructive/90"
+							className="bg-red-600 hover:bg-red-700 text-white rounded-2xl font-bold uppercase text-[10px] tracking-widest border-0"
 						>
-							Excluir
+							Sim, Excluir
 						</AlertDialogAction>
 					</AlertDialogFooter>
 				</AlertDialogContent>

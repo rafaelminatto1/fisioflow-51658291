@@ -18,7 +18,8 @@ const makeMapper =
 	(ex: WorkersExercise): Exercise => ({
 		id: ex.id,
 		name: ex.name,
-		category: categoryMap.get(ex.categoryId ?? "") ?? ex.categoryId ?? undefined,
+		category:
+			categoryMap.get(ex.categoryId ?? "") ?? ex.categoryId ?? undefined,
 		difficulty: ex.difficulty,
 		video_url: ex.videoUrl || undefined,
 		image_url: normalizePublicStorageUrl(ex.imageUrl) || undefined,

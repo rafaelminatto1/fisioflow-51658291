@@ -175,25 +175,25 @@ const adminSubmenu = [
 	{ icon: Trophy, label: "Gamificação", href: "/admin/gamification" },
 ];
 
-const SidebarSection = ({ 
-  label, 
-  collapsed, 
-  children 
-}: { 
-  label: string; 
-  collapsed: boolean; 
-  children: React.ReactNode 
+const SidebarSection = ({
+	label,
+	collapsed,
+	children,
+}: {
+	label: string;
+	collapsed: boolean;
+	children: React.ReactNode;
 }) => (
-  <div className="space-y-1">
-    {!collapsed && (
-      <div className="px-4 py-2 mt-4 first:mt-0">
-        <span className="text-[10px] font-black text-muted-foreground/40 uppercase tracking-[0.2em]">
-          {label}
-        </span>
-      </div>
-    )}
-    {children}
-  </div>
+	<div className="space-y-1">
+		{!collapsed && (
+			<div className="px-4 py-2 mt-4 first:mt-0">
+				<span className="text-[10px] font-black text-muted-foreground/40 uppercase tracking-[0.2em]">
+					{label}
+				</span>
+			</div>
+		)}
+		{children}
+	</div>
 );
 
 export function Sidebar() {
@@ -240,12 +240,16 @@ export function Sidebar() {
 				<Icon
 					className={cn(
 						"h-5 w-5 transition-all duration-500 flex-shrink-0",
-						isActive ? "scale-110" : "group-hover:scale-110 group-hover:text-primary",
+						isActive
+							? "scale-110"
+							: "group-hover:scale-110 group-hover:text-primary",
 					)}
 				/>
 				{!collapsed && (
 					<div className="flex items-center justify-between flex-1">
-						<span className="text-xs font-bold uppercase tracking-widest">{item.label}</span>
+						<span className="text-xs font-bold uppercase tracking-widest">
+							{item.label}
+						</span>
 						{item.badge && (
 							<Badge className="bg-primary/10 text-primary border-0 text-[9px] h-4 px-1.5 font-black uppercase">
 								{item.badge}
@@ -278,8 +282,12 @@ export function Sidebar() {
 							</div>
 							{!collapsed && (
 								<div className="flex flex-col animate-in fade-in slide-in-from-left-2">
-									<span className="text-xl font-black tracking-tighter text-foreground">FisioFlow</span>
-									<span className="text-[10px] font-bold text-primary/60 uppercase tracking-[0.2em] leading-none">Mooca Fisio</span>
+									<span className="text-xl font-black tracking-tighter text-foreground">
+										FisioFlow
+									</span>
+									<span className="text-[10px] font-bold text-primary/60 uppercase tracking-[0.2em] leading-none">
+										Mooca Fisio
+									</span>
 								</div>
 							)}
 						</Link>
@@ -309,15 +317,21 @@ export function Sidebar() {
 				{/* Quick Search Hint (UX Skill: Fast Access) */}
 				{!collapsed && (
 					<div className="px-4 mb-2">
-						<button 
-							onClick={() => document.dispatchEvent(new CustomEvent('open-command-palette'))}
+						<button
+							onClick={() =>
+								document.dispatchEvent(new CustomEvent("open-command-palette"))
+							}
 							className="w-full h-10 px-3 rounded-xl bg-muted/50 border border-border/50 flex items-center justify-between group hover:bg-primary/5 hover:border-primary/20 transition-all"
 						>
 							<div className="flex items-center gap-2 text-muted-foreground group-hover:text-primary/70 transition-colors">
 								<Search className="h-4 w-4" />
-								<span className="text-[11px] font-bold uppercase tracking-wider">Buscar paciente...</span>
+								<span className="text-[11px] font-bold uppercase tracking-wider">
+									Buscar paciente...
+								</span>
 							</div>
-							<kbd className="h-5 px-1.5 rounded bg-background border border-border text-[9px] font-black text-muted-foreground">⌘ K</kbd>
+							<kbd className="h-5 px-1.5 rounded bg-background border border-border text-[9px] font-black text-muted-foreground">
+								⌘ K
+							</kbd>
 						</button>
 					</div>
 				)}
@@ -344,15 +358,30 @@ export function Sidebar() {
 						<SidebarSection label="Configurações" collapsed={collapsed}>
 							<Collapsible open={adminOpen} onOpenChange={setAdminOpen}>
 								<CollapsibleTrigger asChild>
-									<button className={cn(
-										"flex items-center justify-between w-full px-4 py-3 rounded-2xl transition-all duration-500 group",
-										isAdminActive ? "bg-slate-50 dark:bg-slate-800/30 text-slate-900 dark:text-white font-black" : "text-slate-500"
-									)}>
+									<button
+										className={cn(
+											"flex items-center justify-between w-full px-4 py-3 rounded-2xl transition-all duration-500 group",
+											isAdminActive
+												? "bg-slate-50 dark:bg-slate-800/30 text-slate-900 dark:text-white font-black"
+												: "text-slate-500",
+										)}
+									>
 										<div className="flex items-center gap-3">
 											<Settings className="h-5 w-5" />
-											{!collapsed && <span className="text-xs font-bold uppercase tracking-widest">Painel Admin</span>}
+											{!collapsed && (
+												<span className="text-xs font-bold uppercase tracking-widest">
+													Painel Admin
+												</span>
+											)}
 										</div>
-										{!collapsed && <ChevronDown className={cn("h-3.5 w-3.5 transition-transform", adminOpen && "rotate-180")} />}
+										{!collapsed && (
+											<ChevronDown
+												className={cn(
+													"h-3.5 w-3.5 transition-transform",
+													adminOpen && "rotate-180",
+												)}
+											/>
+										)}
 									</button>
 								</CollapsibleTrigger>
 								<CollapsibleContent className="pl-9 space-y-1 mt-1 animate-in slide-in-from-top-2">
@@ -362,7 +391,9 @@ export function Sidebar() {
 											to={item.href}
 											className={cn(
 												"block px-3 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all",
-												location.pathname === item.href ? "text-primary bg-primary/5" : "text-muted-foreground hover:text-foreground hover:pl-4"
+												location.pathname === item.href
+													? "text-primary bg-primary/5"
+													: "text-muted-foreground hover:text-foreground hover:pl-4",
 											)}
 										>
 											{item.label}
@@ -386,7 +417,11 @@ export function Sidebar() {
 						)}
 					>
 						<LogOut className="h-5 w-5 group-hover:-translate-x-1 transition-transform" />
-						{!collapsed && <span className="text-xs font-black uppercase tracking-widest">Sair</span>}
+						{!collapsed && (
+							<span className="text-xs font-black uppercase tracking-widest">
+								Sair
+							</span>
+						)}
 					</Button>
 				</div>
 			</div>

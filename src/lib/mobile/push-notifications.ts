@@ -67,14 +67,14 @@ export async function initPushNotifications(
 
 		// Listener: Registro bem-sucedido
 		await addPushRegistrationListener(async (token: NativePushToken) => {
-				// Dado sensível removido: apenas primeiros 8 caracteres do token para debug (segurança)
-				const maskedToken = token.value.substring(0, 8) + "...";
-				logger.info(
-					"Push token registrado",
-					{ token: maskedToken },
-					"push-notifications",
-				);
-				await savePushTokenToDatabase(token.value);
+			// Dado sensível removido: apenas primeiros 8 caracteres do token para debug (segurança)
+			const maskedToken = token.value.substring(0, 8) + "...";
+			logger.info(
+				"Push token registrado",
+				{ token: maskedToken },
+				"push-notifications",
+			);
+			await savePushTokenToDatabase(token.value);
 		});
 
 		// Listener: Erro no registro
@@ -87,25 +87,28 @@ export async function initPushNotifications(
 		});
 
 		// Listener: Notificação recebida (app em foreground)
-		await addPushReceivedListener(async (notification: NativePushNotification) => {
-			logger.info(
-				"Notificação recebida (app aberto)",
-				{ notification },
-				"push-notifications",
-			);
+		await addPushReceivedListener(
+			async (notification: NativePushNotification) => {
+				logger.info(
+					"Notificação recebida (app aberto)",
+					{ notification },
+					"push-notifications",
+				);
 
-			// Mostrar notificação local também
-			await showLocalNotification({
-				title: typeof notification.data?.title === "string"
-					? notification.data.title
-					: "FisioFlow",
-				body:
-					typeof notification.data?.body === "string"
-						? notification.data.body
-						: "",
-				id: Date.now(),
-			});
-		});
+				// Mostrar notificação local também
+				await showLocalNotification({
+					title:
+						typeof notification.data?.title === "string"
+							? notification.data.title
+							: "FisioFlow",
+					body:
+						typeof notification.data?.body === "string"
+							? notification.data.body
+							: "",
+					id: Date.now(),
+				});
+			},
+		);
 
 		// Listener: Notificação clicada (app aberto pela notificação)
 		await addPushActionListener((notification: NativePushActionPerformed) => {

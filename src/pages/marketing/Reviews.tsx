@@ -29,10 +29,7 @@ import { ptBR } from "date-fns/locale";
 import { useToast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
 import { generateMarketingContent } from "@/services/ai/marketingAITemplateService";
-import {
-	integrationsApi,
-	type GoogleBusinessReviewRecord,
-} from "@/api/v2";
+import { integrationsApi, type GoogleBusinessReviewRecord } from "@/api/v2";
 
 type GoogleReview = GoogleBusinessReviewRecord;
 

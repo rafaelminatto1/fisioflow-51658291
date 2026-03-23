@@ -6,11 +6,7 @@ import {
 	CardTitle,
 } from "@/components/ui/card";
 import { useQuery } from "@tanstack/react-query";
-import {
-	analyticsApi,
-	financialApi,
-	type Pagamento,
-} from "@/api/v2";
+import { analyticsApi, financialApi, type Pagamento } from "@/api/v2";
 import {
 	XAxis,
 	YAxis,

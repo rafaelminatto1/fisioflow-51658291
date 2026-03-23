@@ -23,8 +23,12 @@ import {
 	type TrackedTransferSyntax,
 } from "@/components/analysis/dicom/transferSyntaxTracker";
 
-const DicomViewer = lazy(() => import("@/components/analysis/dicom/DicomViewer"));
-const DicomBrowser = lazy(() => import("@/components/analysis/dicom/DicomBrowser"));
+const DicomViewer = lazy(
+	() => import("@/components/analysis/dicom/DicomViewer"),
+);
+const DicomBrowser = lazy(
+	() => import("@/components/analysis/dicom/DicomBrowser"),
+);
 
 type WorkspaceMode = "browser" | "upload";
 
@@ -54,9 +58,9 @@ export default function DicomWorkspacePage() {
 	} | null>(null);
 	const [dicomRemoteEnabled, setDicomRemoteEnabled] = useState(false);
 	const [dicomConfigLoading, setDicomConfigLoading] = useState(true);
-	const [trackedSyntaxes, setTrackedSyntaxes] = useState<TrackedTransferSyntax[]>(
-		[],
-	);
+	const [trackedSyntaxes, setTrackedSyntaxes] = useState<
+		TrackedTransferSyntax[]
+	>([]);
 
 	const refreshAudit = () => {
 		setTrackedSyntaxes(getTrackedTransferSyntaxDetails());
@@ -148,11 +152,14 @@ export default function DicomWorkspacePage() {
 			<div className="space-y-6">
 				<div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
 					<div>
-						<h1 className="text-3xl font-bold tracking-tight">Workspace DICOM</h1>
+						<h1 className="text-3xl font-bold tracking-tight">
+							Workspace DICOM
+						</h1>
 						<p className="max-w-2xl text-sm text-muted-foreground">
-							Entrada dedicada para PACS, estudos remotos e arquivos DICOM locais.
-							Aqui fica a auditoria dos `Transfer Syntax UID` usados de verdade,
-							que é a base para cortar codecs sem quebrar estudos clínicos.
+							Entrada dedicada para PACS, estudos remotos e arquivos DICOM
+							locais. Aqui fica a auditoria dos `Transfer Syntax UID` usados de
+							verdade, que é a base para cortar codecs sem quebrar estudos
+							clínicos.
 						</p>
 					</div>
 					<div className="flex flex-wrap gap-2">
@@ -214,11 +221,13 @@ export default function DicomWorkspacePage() {
 														</div>
 														<div className="text-sm text-muted-foreground">
 															{selectedRemoteSeries.patientName} ·{" "}
-															{selectedRemoteSeries.studyDescription || "Estudo sem descrição"}
+															{selectedRemoteSeries.studyDescription ||
+																"Estudo sem descrição"}
 														</div>
 														<div className="text-xs text-muted-foreground">
 															{selectedRemoteSeries.modality || "Mod."} ·{" "}
-															{selectedRemoteSeries.seriesDescription || "Série sem descrição"}
+															{selectedRemoteSeries.seriesDescription ||
+																"Série sem descrição"}
 														</div>
 													</div>
 													<Button onClick={() => setOpenRemoteViewer(true)}>
@@ -232,8 +241,12 @@ export default function DicomWorkspacePage() {
 											<Suspense fallback={<LoadingFallback />}>
 												<div className="overflow-hidden rounded-xl border bg-black">
 													<DicomViewer
-														studyInstanceUid={selectedRemoteSeries.studyInstanceUid}
-														seriesInstanceUid={selectedRemoteSeries.seriesInstanceUid}
+														studyInstanceUid={
+															selectedRemoteSeries.studyInstanceUid
+														}
+														seriesInstanceUid={
+															selectedRemoteSeries.seriesInstanceUid
+														}
 														wadoUrl={dicomApi.getWadoUrl()}
 													/>
 												</div>
@@ -248,10 +261,10 @@ export default function DicomWorkspacePage() {
 												PACS remoto indisponível
 											</h2>
 											<p className="text-sm text-muted-foreground">
-												Neste ambiente o browser remoto de estudos DICOM não está
-												habilitado. O fluxo ativo no frontend é o upload local de
-												arquivos `.dcm`, que continua válido para testar viewer,
-												codecs e compatibilidade do exame.
+												Neste ambiente o browser remoto de estudos DICOM não
+												está habilitado. O fluxo ativo no frontend é o upload
+												local de arquivos `.dcm`, que continua válido para
+												testar viewer, codecs e compatibilidade do exame.
 											</p>
 											<Button onClick={() => setMode("upload")}>
 												<Upload className="mr-2 h-4 w-4" />
@@ -276,8 +289,9 @@ export default function DicomWorkspacePage() {
 											Envie um arquivo DICOM
 										</h2>
 										<p className="mt-2 text-sm text-muted-foreground">
-											Abra um `.dcm` local para validar estudos, testar compatibilidade
-											de codec e conferir se o viewer suporta o exame sem passar pelo PACS.
+											Abra um `.dcm` local para validar estudos, testar
+											compatibilidade de codec e conferir se o viewer suporta o
+											exame sem passar pelo PACS.
 										</p>
 									</div>
 
@@ -293,7 +307,8 @@ export default function DicomWorkspacePage() {
 															{file.name}
 														</div>
 														<div className="text-xs text-muted-foreground">
-															O viewer avançado só será carregado quando você abrir o exame.
+															O viewer avançado só será carregado quando você
+															abrir o exame.
 														</div>
 													</div>
 													<Button onClick={() => setOpenLocalViewer(true)}>
@@ -356,11 +371,20 @@ export default function DicomWorkspacePage() {
 								</div>
 								<div className="space-y-2">
 									{codecSummaries.map((item) => (
-										<div key={item.codec} className="rounded-lg border bg-slate-50 p-3">
+										<div
+											key={item.codec}
+											className="rounded-lg border bg-slate-50 p-3"
+										>
 											<div className="flex items-center justify-between gap-2">
-												<div className="text-sm font-medium capitalize">{item.codec}</div>
+												<div className="text-sm font-medium capitalize">
+													{item.codec}
+												</div>
 												<Badge
-													variant={item.status === "candidate" ? "outline" : "secondary"}
+													variant={
+														item.status === "candidate"
+															? "outline"
+															: "secondary"
+													}
 												>
 													{item.status === "candidate" ? "candidato" : "manter"}
 												</Badge>
@@ -419,16 +443,25 @@ export default function DicomWorkspacePage() {
 							</CardHeader>
 							<CardContent className="space-y-3 text-sm text-muted-foreground">
 								{codecRecommendations.map((item) => (
-									<div key={item.codec} className="rounded-lg border bg-slate-50 p-3">
+									<div
+										key={item.codec}
+										className="rounded-lg border bg-slate-50 p-3"
+									>
 										<div className="flex items-center justify-between gap-2">
-											<div className="font-medium text-slate-900">{item.codec}</div>
+											<div className="font-medium text-slate-900">
+												{item.codec}
+											</div>
 											<Badge
-												variant={item.status === "candidate" ? "outline" : "secondary"}
+												variant={
+													item.status === "candidate" ? "outline" : "secondary"
+												}
 											>
 												{item.status === "candidate" ? "candidato" : "manter"}
 											</Badge>
 										</div>
-										<p className="mt-2 text-xs text-muted-foreground">{item.reason}</p>
+										<p className="mt-2 text-xs text-muted-foreground">
+											{item.reason}
+										</p>
 									</div>
 								))}
 							</CardContent>

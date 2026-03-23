@@ -3,10 +3,7 @@
  */
 
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import {
-	schedulingApi,
-	type ScheduleCapacityConfig,
-} from "@/api/v2";
+import { schedulingApi, type ScheduleCapacityConfig } from "@/api/v2";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/contexts/AuthContext";
 import { z } from "zod";
