@@ -10,9 +10,14 @@
  * Baseado na claude-skills XLSX skill e bibliotecas ExcelJS
  */
 
-import ExcelJS from "exceljs";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
+
+type ExcelJSModule = typeof import("exceljs");
+
+async function loadExcelJS(): Promise<ExcelJSModule["default"]> {
+	return (await import("exceljs")).default;
+}
 
 // Configurações de estilo
 const STYLES = {
@@ -90,6 +95,7 @@ export async function exportPatientsToExcel(
 	}>,
 	clinicName: string,
 ): Promise<Buffer> {
+	const ExcelJS = await loadExcelJS();
 	const workbook = new ExcelJS.Workbook();
 	const worksheet = workbook.addWorksheet("Pacientes");
 
@@ -232,6 +238,7 @@ export async function exportFinancialReport(
 	},
 	clinicName: string,
 ): Promise<Buffer> {
+	const ExcelJS = await loadExcelJS();
 	const workbook = new ExcelJS.Workbook();
 
 	// Planilha de Receitas
@@ -429,6 +436,7 @@ export async function importPatientsFromExcel(buffer: Buffer): Promise<
 		};
 	}>
 > {
+	const ExcelJS = await loadExcelJS();
 	const workbook = new ExcelJS.Workbook();
 	await workbook.xlsx.load(buffer);
 
@@ -510,6 +518,7 @@ export async function exportAttendanceStats(
 	},
 	clinicName: string,
 ): Promise<Buffer> {
+	const ExcelJS = await loadExcelJS();
 	const workbook = new ExcelJS.Workbook();
 
 	// Por Profissional
@@ -612,6 +621,7 @@ export async function exportAttendanceStats(
  * Template de planilha para importação de pacientes
  */
 export async function generatePatientImportTemplate(): Promise<Buffer> {
+	const ExcelJS = await loadExcelJS();
 	const workbook = new ExcelJS.Workbook();
 	const worksheet = workbook.addWorksheet("Pacientes");
 
