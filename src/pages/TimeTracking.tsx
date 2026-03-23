@@ -177,36 +177,38 @@ export default function TimeTrackingPage() {
 
 	return (
 		<MainLayout>
-			<div className="min-h-screen bg-background/50">
-				{/* Header */}
-				<div className="border-b bg-background/95 backdrop-blur">
-					<div className="container mx-auto px-6 py-4">
-						<div className="flex items-center justify-between">
-							<div>
-								<h1 className="text-2xl font-bold">Time Tracking</h1>
-								<p className="text-sm text-muted-foreground">
-									Controle seu tempo e produtividade
-								</p>
-							</div>
-							<div className="flex items-center gap-3">
-								<Button
-									variant="outline"
-									size="sm"
-									onClick={() => navigate("/timetracking/reports")}
-								>
-									<TrendingUp className="w-4 h-4 mr-2" />
-									Relatórios
-								</Button>
-								<Button onClick={() => setShowEntryModal(true)}>
-									<Plus className="w-4 h-4 mr-2" />
-									Nova Entrada
-								</Button>
+			<div className="space-y-4 pb-20 md:pb-0 animate-fade-in">
+				{/* Compact header */}
+				<div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+					<div className="flex items-center gap-3 min-w-0">
+						<div className="h-9 w-9 rounded-xl bg-primary/10 flex items-center justify-center flex-shrink-0">
+							<Clock className="h-4 w-4 text-primary" />
+						</div>
+						<div className="min-w-0">
+							<h1 className="text-base sm:text-lg font-semibold leading-tight">Time Tracking</h1>
+							<div className="flex items-center gap-2 text-xs text-muted-foreground flex-wrap mt-0.5">
+								<span><span className="font-medium text-foreground">{formatHoursDecimal(periodMetrics.totalSeconds)}</span> horas</span>
+								<span className="text-border">·</span>
+								<span><span className="font-medium text-emerald-600">{formatHoursDecimal(periodMetrics.billableSeconds)}</span> faturável</span>
+								<span className="text-border hidden sm:inline">·</span>
+								<span className="hidden sm:inline"><span className="font-medium text-amber-600">{periodMetrics.utilizationRate.toFixed(0)}%</span> utilização</span>
+								<span className="text-border hidden sm:inline">·</span>
+								<span className="hidden sm:inline"><span className="font-medium text-primary">R$ {periodMetrics.totalValue.toFixed(2)}</span> valor</span>
 							</div>
 						</div>
 					</div>
+					<div className="flex items-center gap-2 flex-shrink-0">
+						<Button variant="outline" size="sm" className="gap-1.5" onClick={() => navigate("/timetracking/reports")}>
+							<TrendingUp className="w-4 h-4" />
+							Relatórios
+						</Button>
+						<Button size="sm" className="gap-1.5" onClick={() => setShowEntryModal(true)}>
+							<Plus className="w-4 h-4" />
+							Nova Entrada
+						</Button>
+					</div>
 				</div>
 
-				<div className="container mx-auto px-6 py-6 space-y-6">
 					{/* Timer Rápido */}
 					{activeTimer && (
 						<Card className="border-primary/50 bg-primary/5">
@@ -251,37 +253,7 @@ export default function TimeTrackingPage() {
 						</Card>
 					)}
 
-					{/* Stats Cards */}
-					<div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-						<StatCard
-							title="Total de Horas"
-							value={formatHoursDecimal(periodMetrics.totalSeconds)}
-							subtitle={`${filteredEntries.length} entradas`}
-							icon={Clock}
-							color="blue"
-						/>
-						<StatCard
-							title="Faturável"
-							value={formatHoursDecimal(periodMetrics.billableSeconds)}
-							subtitle={`${periodMetrics.utilizationRate.toFixed(0)}% do total`}
-							icon={DollarSign}
-							color="green"
-						/>
-						<StatCard
-							title="Taxa de Utilização"
-							value={`${periodMetrics.utilizationRate.toFixed(0)}%`}
-							subtitle="tempo faturável / total"
-							icon={TrendingUp}
-							color="blue"
-						/>
-						<StatCard
-							title="Valor Total"
-							value={`R$ ${periodMetrics.totalValue.toFixed(2)}`}
-							subtitle="do período selecionado"
-							icon={DollarSign}
-							color="yellow"
-						/>
-					</div>
+
 
 					{/* Utilização Bar */}
 					<Card>
@@ -376,7 +348,6 @@ export default function TimeTrackingPage() {
 							</CardContent>
 						</Card>
 					)}
-				</div>
 			</div>
 
 			{/* Modal de Nova Entrada */}
