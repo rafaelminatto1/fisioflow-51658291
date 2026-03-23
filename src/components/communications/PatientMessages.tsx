@@ -5,7 +5,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { EmptyState } from "@/components/ui/empty-state";
 import {
 	Mail,
-	MessageSquare,
+	MessageSquare as MessageSquareIcon,
 	Phone,
 	Send,
 	Search,
@@ -158,7 +158,7 @@ export const PatientMessages = () => {
 			case "email":
 				return <Mail className="w-4 h-4" />;
 			case "whatsapp":
-				return <MessageSquare className="w-4 h-4" />;
+				return <MessageSquareIcon className="w-4 h-4" />;
 			case "sms":
 				return <Phone className="w-4 h-4" />;
 			default:
@@ -201,7 +201,7 @@ export const PatientMessages = () => {
 				<div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
 					<div className="flex items-center gap-3 min-w-0">
 						<div className="h-9 w-9 rounded-xl bg-primary/10 flex items-center justify-center flex-shrink-0">
-							<MessageSquare className="h-4 w-4 text-primary" />
+							<MessageSquareIcon className="h-4 w-4 text-primary" />
 						</div>
 						<div className="min-w-0">
 							<h1 className="text-base sm:text-lg font-semibold leading-tight">
@@ -271,7 +271,7 @@ export const PatientMessages = () => {
 								)}
 								{channel === "whatsapp" && (
 									<>
-										<MessageSquare className="w-4 h-4 mr-1" />
+										<MessageSquareIcon className="w-4 h-4 mr-1" />
 										WhatsApp
 									</>
 								)}
@@ -304,7 +304,7 @@ export const PatientMessages = () => {
 								) : filteredCommunications.length === 0 ? (
 									<div className="p-6">
 										<EmptyState
-											icon={MessageSquare}
+											icon={MessageSquareIcon}
 											title="Nenhuma comunicação"
 											description="Envie sua primeira mensagem aos pacientes."
 										/>
@@ -424,7 +424,7 @@ export const PatientMessages = () => {
 													<Mail className="w-4 h-4 mb-1" />
 												)}
 												{channel === "whatsapp" && (
-													<MessageSquare className="w-4 h-4 mb-1" />
+													<MessageSquareIcon className="w-4 h-4 mb-1" />
 												)}
 												{channel === "sms" && (
 													<Phone className="w-4 h-4 mb-1" />
