@@ -103,7 +103,9 @@ function renderField(
 						className="w-32 bg-muted/30 border-transparent focus:bg-background focus:border-input transition-all"
 					/>
 					{field.unit && (
-						<span className="text-sm text-muted-foreground font-medium">{field.unit}</span>
+						<span className="text-sm text-muted-foreground font-medium">
+							{field.unit}
+						</span>
 					)}
 				</div>
 			);
@@ -129,7 +131,7 @@ function renderField(
 									scaleValue === num
 										? "bg-primary text-primary-foreground border-primary scale-110 shadow-md ring-2 ring-primary/20"
 										: "bg-background border-input hover:border-primary/50 hover:bg-primary/5",
-									readOnly && "opacity-50 cursor-not-allowed"
+									readOnly && "opacity-50 cursor-not-allowed",
 								)}
 							>
 								{num}
@@ -147,11 +149,16 @@ function renderField(
 							className={cn(
 								"flex-1",
 								(scaleValue ?? 0) <= 3 && "slider-green",
-								(scaleValue ?? 0) > 3 && (scaleValue ?? 0) <= 6 && "slider-yellow",
+								(scaleValue ?? 0) > 3 &&
+									(scaleValue ?? 0) <= 6 &&
+									"slider-yellow",
 								(scaleValue ?? 0) > 6 && "slider-red",
 							)}
 						/>
-						<Badge variant="outline" className="h-8 min-w-12 justify-center font-black text-lg bg-primary/5 border-primary/20 text-primary">
+						<Badge
+							variant="outline"
+							className="h-8 min-w-12 justify-center font-black text-lg bg-primary/5 border-primary/20 text-primary"
+						>
 							{scaleValue ?? "-"}
 						</Badge>
 					</div>
@@ -174,10 +181,15 @@ function renderField(
 					className="grid grid-cols-1 sm:grid-cols-2 gap-3"
 				>
 					{(field.opcoes || []).map((option, idx) => (
-						<div key={idx} className={cn(
-							"flex items-center space-x-3 p-3 rounded-lg border transition-all cursor-pointer hover:bg-muted/50",
-							(value as string) === option ? "bg-primary/5 border-primary/30 ring-1 ring-primary/10 font-bold" : "bg-background border-transparent shadow-sm"
-						)}>
+						<div
+							key={idx}
+							className={cn(
+								"flex items-center space-x-3 p-3 rounded-lg border transition-all cursor-pointer hover:bg-muted/50",
+								(value as string) === option
+									? "bg-primary/5 border-primary/30 ring-1 ring-primary/10 font-bold"
+									: "bg-background border-transparent shadow-sm",
+							)}
+						>
 							<RadioGroupItem value={option} id={`${field.id}-${idx}`} />
 							<Label
 								htmlFor={`${field.id}-${idx}`}
@@ -214,10 +226,14 @@ function renderField(
 		case "checkbox":
 		case "boolean":
 			return (
-				<div className={cn(
-					"flex items-center space-x-3 p-4 rounded-xl border transition-all",
-					(value as boolean) ? "bg-primary/5 border-primary/30 shadow-sm" : "bg-muted/20 border-transparent"
-				)}>
+				<div
+					className={cn(
+						"flex items-center space-x-3 p-4 rounded-xl border transition-all",
+						(value as boolean)
+							? "bg-primary/5 border-primary/30 shadow-sm"
+							: "bg-muted/20 border-transparent",
+					)}
+				>
 					<Checkbox
 						{...commonProps}
 						checked={(value as boolean) || false}
@@ -239,10 +255,15 @@ function renderField(
 			return (
 				<div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
 					{(field.opcoes || []).map((option, idx) => (
-						<div key={idx} className={cn(
-							"flex items-center space-x-3 p-2.5 rounded-lg border transition-all cursor-pointer",
-							selectedValues.includes(option) ? "bg-primary/5 border-primary/30 font-bold" : "bg-background border-transparent shadow-sm hover:bg-muted/50"
-						)}>
+						<div
+							key={idx}
+							className={cn(
+								"flex items-center space-x-3 p-2.5 rounded-lg border transition-all cursor-pointer",
+								selectedValues.includes(option)
+									? "bg-primary/5 border-primary/30 font-bold"
+									: "bg-background border-transparent shadow-sm hover:bg-muted/50",
+							)}
+						>
 							<Checkbox
 								id={`${field.id}-${idx}`}
 								checked={selectedValues.includes(option)}
@@ -334,7 +355,9 @@ export function DynamicFieldRenderer({
 					<div className="bg-muted/20 h-12 w-12 rounded-full flex items-center justify-center mx-auto mb-4">
 						<Info className="h-6 w-6 text-muted-foreground/40" />
 					</div>
-					<p className="text-muted-foreground font-medium">Nenhum campo configurado.</p>
+					<p className="text-muted-foreground font-medium">
+						Nenhum campo configurado.
+					</p>
 					<p className="text-xs text-muted-foreground/60 mt-1">
 						Selecione um template acima para começar.
 					</p>
@@ -346,7 +369,11 @@ export function DynamicFieldRenderer({
 	return (
 		<Accordion type="multiple" defaultValue={sections} className="space-y-4">
 			{Object.entries(groupedFields).map(([section, sectionFields]) => (
-				<AccordionItem key={section} value={section} className="border rounded-2xl bg-card/50 overflow-hidden shadow-sm">
+				<AccordionItem
+					key={section}
+					value={section}
+					className="border rounded-2xl bg-card/50 overflow-hidden shadow-sm"
+				>
 					<AccordionTrigger className="px-6 py-4 hover:no-underline hover:bg-muted/30 transition-all">
 						<div className="flex items-center gap-3">
 							<div className="h-8 w-8 rounded-lg bg-primary/10 flex items-center justify-center">
@@ -362,20 +389,23 @@ export function DynamicFieldRenderer({
 							{sectionFields.map((field) => (
 								<div key={field.id} className="group space-y-3">
 									<div className="flex items-center justify-between gap-4">
-										<Label htmlFor={field.id} className="text-sm font-bold text-foreground/80">
+										<Label
+											htmlFor={field.id}
+											className="text-sm font-bold text-foreground/80"
+										>
 											{field.label}
 											{field.obrigatorio && (
 												<span className="text-xs text-destructive ml-1">*</span>
 											)}
 										</Label>
 									</div>
-									
+
 									{field.description && (
 										<p className="text-xs text-muted-foreground leading-relaxed italic border-l-2 border-primary/20 pl-3">
 											{field.description}
 										</p>
 									)}
-									
+
 									<div className="animate-in fade-in slide-in-from-top-1 duration-300">
 										{renderField(
 											field,

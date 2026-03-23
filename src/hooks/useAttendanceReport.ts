@@ -19,11 +19,7 @@ import {
 	getDay,
 } from "date-fns";
 import { ptBR } from "date-fns/locale";
-import {
-	appointmentsApi,
-	profileApi,
-	type AppointmentRow,
-} from "@/api/v2";
+import { appointmentsApi, profileApi, type AppointmentRow } from "@/api/v2";
 
 export type PeriodFilter = "week" | "month" | "quarter" | "year" | "custom";
 export type StatusFilter =

@@ -338,12 +338,17 @@ export default function Exercises() {
 							</ComponentErrorBoundary>
 						</TabsContent>
 
-						<TabsContent value="videos" className="m-0 p-3 sm:p-4 md:p-6 space-y-4">
+						<TabsContent
+							value="videos"
+							className="m-0 p-3 sm:p-4 md:p-6 space-y-4"
+						>
 							{!isLoading && exercisesWithoutVideo.length > 0 && (
 								<div className="flex items-center gap-3 rounded-lg border border-orange-500/30 bg-orange-500/5 px-4 py-3">
 									<VideoOff className="h-4 w-4 text-orange-600 flex-shrink-0" />
 									<p className="text-sm text-orange-800 dark:text-orange-200 flex-1">
-										<span className="font-medium">{exercisesWithoutVideo.length} exercícios</span>{" "}
+										<span className="font-medium">
+											{exercisesWithoutVideo.length} exercícios
+										</span>{" "}
 										sem vídeo demonstrativo
 									</p>
 									<Button

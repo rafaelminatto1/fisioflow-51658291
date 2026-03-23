@@ -1,10 +1,5 @@
 import type { QueryClient } from "@tanstack/react-query";
-import {
-	evolutionApi,
-	goalsApi,
-	patientsApi,
-	sessionsApi,
-} from "@/api/v2";
+import { evolutionApi, goalsApi, patientsApi, sessionsApi } from "@/api/v2";
 import { soapKeys } from "@/hooks/useSoapRecords";
 import { normalizeGoalRows } from "@/lib/clinical/goalNormalization";
 

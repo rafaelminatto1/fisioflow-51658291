@@ -1,11 +1,7 @@
 import { MainLayout } from "@/components/layout/MainLayout";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Skeleton } from "@/components/ui/skeleton";
-import {
-	BarChart3,
-	LayoutDashboard,
-	Sparkles,
-} from "lucide-react";
+import { BarChart3, LayoutDashboard, Sparkles } from "lucide-react";
 import { AppointmentAnalytics } from "@/components/analytics/AppointmentAnalytics";
 import { PatientAnalytics } from "@/components/analytics/PatientAnalytics";
 import { FinancialAnalytics } from "@/components/analytics/FinancialAnalytics";
@@ -38,7 +34,8 @@ function AdvancedAnalyticsContent() {
 								</div>
 							</div>
 							<p className="text-sm text-muted-foreground font-medium mt-1 max-w-2xl">
-								Insights inteligentes e previsões baseadas em inteligência artificial para otimizar o desempenho da sua clínica.
+								Insights inteligentes e previsões baseadas em inteligência
+								artificial para otimizar o desempenho da sua clínica.
 							</p>
 						</div>
 					</div>
