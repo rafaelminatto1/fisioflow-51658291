@@ -11,6 +11,7 @@
  */
 
 import React, { useState, useEffect } from "react";
+import { Link } from "react-router-dom";
 import { MainLayout } from "@/components/layout/MainLayout";
 import { useActivePatients } from "@/hooks/usePatients";
 import { useOrganizations } from "@/hooks/useOrganizations";
@@ -38,6 +39,7 @@ import {
 	Volume2,
 	Calendar,
 	AlertTriangle,
+	Database,
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { ChatInterface } from "@/components/ai/ChatInterface";
@@ -207,6 +209,12 @@ export default function ClinicalAnalysisPage() {
 
 					{/* Opções */}
 					<div className="flex items-center gap-3">
+						<Button asChild variant="outline">
+							<Link to="/dashboard/imagens?mode=dicom_browser">
+								<Database className="mr-2 h-4 w-4" />
+								Abrir PACS / DICOM
+							</Link>
+						</Button>
 						<div className="flex items-center gap-2 px-3 py-2 bg-gray-100 rounded-lg">
 							<MessageCircle className="w-4 h-4 text-gray-600" />
 							<Switch
