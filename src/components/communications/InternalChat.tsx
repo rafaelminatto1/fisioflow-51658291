@@ -15,7 +15,7 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
-import { Send, Search, Check, CheckCheck, Plus, User } from "lucide-react";
+import { Send, Search, Check, CheckCheck, Plus, User, MessageSquare as MessageSquareIcon } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { cn } from "@/lib/utils";
 import { TeamSelector } from "./TeamSelector";
@@ -353,7 +353,7 @@ export const InternalChat = () => {
 					<div className="flex-1 flex items-center justify-center text-muted-foreground p-12">
 						<div className="text-center max-w-xs space-y-4">
 							<div className="w-20 h-20 bg-slate-100 dark:bg-slate-800 rounded-3xl flex items-center justify-center mx-auto shadow-inner rotate-3 transition-transform hover:rotate-0 duration-500">
-								<MessageSquare className="w-10 h-10 text-primary/40" />
+								<MessageSquareIcon className="w-10 h-10 text-primary/40" />
 							</div>
 							<div className="space-y-2">
 								<p className="text-lg font-black tracking-tight text-foreground uppercase">
