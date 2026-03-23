@@ -53,6 +53,12 @@ const ClinicalTestsLibrary = lazy(
 			/* webpackChunkName: "clinical-tests" */ "@/pages/ClinicalTestsLibrary"
 		),
 );
+const BiomechanicsAnalysisPage = lazy(
+	() =>
+		import(
+			/* webpackChunkName: "biomechanics" */ "@/pages/clinical/BiomechanicsAnalysisPage"
+		),
+);
 const TherapistOccupancy = lazy(
 	() =>
 		import(/* webpackChunkName: "occupancy" */ "@/pages/TherapistOccupancy"),
@@ -250,6 +256,14 @@ export const enterpriseRoutes = (
 			element={
 				<ProtectedRoute>
 					<ClinicalTestsLibrary />
+				</ProtectedRoute>
+			}
+		/>
+		<Route
+			path="/biomechanics"
+			element={
+				<ProtectedRoute>
+					<BiomechanicsAnalysisPage />
 				</ProtectedRoute>
 			}
 		/>

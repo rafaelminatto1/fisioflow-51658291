@@ -3,7 +3,11 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { PatientMessages } from "@/components/communications/PatientMessages";
 import { InternalChat } from "@/components/communications/InternalChat";
 import { TemplateManager } from "@/components/communications/TemplateManager";
-import { MessageSquare as MessageSquareIcon, Users, FileText } from "lucide-react";
+import {
+	MessageSquare as MessageSquareIcon,
+	Users,
+	FileText,
+} from "lucide-react";
 
 export default function CommunicationsPage() {
 	return (
