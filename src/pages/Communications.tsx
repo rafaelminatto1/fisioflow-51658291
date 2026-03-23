@@ -3,7 +3,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { PatientMessages } from "@/components/communications/PatientMessages";
 import { InternalChat } from "@/components/communications/InternalChat";
 import { TemplateManager } from "@/components/communications/TemplateManager";
-import { MessageSquare, Users, FileText } from "lucide-react";
+import { MessageSquare as MessageSquareIcon, Users, FileText } from "lucide-react";
 
 export default function CommunicationsPage() {
 	return (
@@ -12,7 +12,7 @@ export default function CommunicationsPage() {
 				<div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
 					<div className="flex items-center gap-3">
 						<div className="h-9 w-9 rounded-xl bg-primary/10 flex items-center justify-center">
-							<MessageSquare className="h-4 w-4 text-primary" />
+							<MessageSquareIcon className="h-4 w-4 text-primary" />
 						</div>
 						<div>
 							<h1 className="text-xl font-semibold">Central de Comunicação</h1>
@@ -29,7 +29,7 @@ export default function CommunicationsPage() {
 							value="patients"
 							className="data-[state=active]:border-b-2 data-[state=active]:border-primary rounded-none px-6 py-3 font-medium"
 						>
-							<MessageSquare className="w-4 h-4 mr-2" />
+							<MessageSquareIcon className="w-4 h-4 mr-2" />
 							Pacientes
 						</TabsTrigger>
 						<TabsTrigger
