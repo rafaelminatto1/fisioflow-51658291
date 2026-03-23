@@ -13,24 +13,37 @@ import { fisioLogger as logger } from "@/lib/errors/logger";
 
 export type { Exercise };
 
-/**
- * Mapeia o formato do Worker para o formato legado do App
- */
-const mapWorkerToAppExercise = (ex: WorkersExercise): Exercise => ({
-	id: ex.id,
-	name: ex.name,
-	category: ex.categoryId, // Idealmente aqui buscaríamos o nome da categoria se necessário
-	difficulty: ex.difficulty,
-	video_url: ex.videoUrl || undefined,
-	image_url: normalizePublicStorageUrl(ex.imageUrl) || undefined,
-	thumbnail_url:
-		normalizePublicStorageUrl(ex.thumbnailUrl || ex.imageUrl) || undefined,
-	description: ex.description || undefined,
-	targetMuscles: ex.musclesPrimary,
-	equipment: ex.equipment,
-	body_parts: ex.bodyParts,
-	duration: ex.durationSeconds || undefined,
-});
+const makeMapper =
+	(categoryMap: Map<string, string>) =>
+	(ex: WorkersExercise): Exercise => ({
+		id: ex.id,
+		name: ex.name,
+		category: categoryMap.get(ex.categoryId ?? "") ?? ex.categoryId ?? undefined,
+		difficulty: ex.difficulty,
+		video_url: ex.videoUrl || undefined,
+		image_url: normalizePublicStorageUrl(ex.imageUrl) || undefined,
+		thumbnail_url:
+			normalizePublicStorageUrl(ex.thumbnailUrl || ex.imageUrl) || undefined,
+		description: ex.description || undefined,
+		targetMuscles: ex.musclesPrimary,
+		equipment: ex.equipment,
+		body_parts: ex.bodyParts,
+		duration: ex.durationSeconds || undefined,
+	});
+
+export const useExerciseCategories = () => {
+	const { initialized, loading: authLoading, user } = useAuth();
+	const authReady = initialized && !authLoading && !!user;
+	const { data, isLoading } = useQuery({
+		queryKey: ["exercise-categories"],
+		queryFn: () => exercisesApi.categories(),
+		staleTime: 1000 * 60 * 30,
+		enabled: authReady,
+	});
+	const categories = data?.data ?? [];
+	const categoryMap = new Map(categories.map((c) => [c.id, c.name]));
+	return { categories, categoryMap, isLoading };
+};
 
 export const useWorkersExercises = (filters?: {
 	q?: string;
@@ -42,6 +55,8 @@ export const useWorkersExercises = (filters?: {
 	const { initialized, loading: authLoading, user } = useAuth();
 	const authReady = initialized && !authLoading && !!user;
 
+	const { categoryMap } = useExerciseCategories();
+
 	const { data, isLoading, error, refetch } = useQuery({
 		queryKey: ["workers-exercises", filters],
 		queryFn: () => exercisesApi.list(filters),
@@ -49,7 +64,7 @@ export const useWorkersExercises = (filters?: {
 		enabled: authReady,
 	});
 
-	const exercises = (data?.data ?? []).map(mapWorkerToAppExercise);
+	const exercises = (data?.data ?? []).map(makeMapper(categoryMap));
 
 	useEffect(() => {
 		if (!authReady) return;
@@ -148,7 +163,7 @@ export const useExercises = (filters?: ExerciseFilters) => {
 			mergeIds: string[];
 		}) => exerciseService.mergeExercises(keepId, mergeIds),
 		onSuccess: (data) => {
-			queryClient.invalidateQueries({ queryKey: ["exercises"] });
+			queryClient.invalidateQueries({ queryKey: ["workers-exercises"] });
 			toast.success(`${data.deletedCount} exercício(s) unido(s) com sucesso`);
 		},
 		onError: (error: Error) => {

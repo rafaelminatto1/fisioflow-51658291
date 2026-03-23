@@ -76,6 +76,7 @@ import {
 import { useAuth } from "@/contexts/AuthContext";
 import { useGamification } from "@/hooks/useGamification";
 import { Progress } from "@/components/ui/progress";
+import { Badge } from "@/components/ui/badge";
 import { GlobalCommandPalette } from "@/components/evolution/search/GlobalCommandPalette";
 import { ScrollArea } from "@/components/ui/scroll-area";
 

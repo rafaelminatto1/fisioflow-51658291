@@ -23,25 +23,7 @@ import {
 
 type ClinicalTest = ClinicalTestCatalogRecord;
 
-function StatCard({
-	label,
-	value,
-	description,
-}: {
-	label: string;
-	value: string;
-	description: string;
-}) {
-	return (
-		<div className="rounded-2xl border border-white/15 bg-white/10 p-4 text-white shadow-lg shadow-slate-950/5 backdrop-blur-sm">
-			<p className="text-xs font-semibold uppercase tracking-[0.2em] text-teal-50/80">
-				{label}
-			</p>
-			<p className="mt-3 text-3xl font-bold tracking-tight">{value}</p>
-			<p className="mt-2 text-sm text-teal-50/80">{description}</p>
-		</div>
-	);
-}
+
 
 export default function ClinicalTestsLibrary() {
 	const queryClient = useQueryClient();
@@ -190,62 +172,41 @@ export default function ClinicalTestsLibrary() {
 	return (
 		<MainLayout maxWidth="7xl" showBreadcrumbs={false}>
 			<div className="-mx-2 min-h-screen bg-slate-50 text-slate-800 xs:-mx-4 md:mx-0">
-				<main className="px-4 py-8 pb-24">
-					<div className="space-y-8">
-						<section className="overflow-hidden rounded-[32px] border border-slate-200 bg-gradient-to-br from-teal-700 via-teal-700 to-emerald-600 shadow-xl shadow-teal-950/10">
-							<div className="grid gap-8 px-6 py-7 lg:grid-cols-[minmax(0,1.3fr)_minmax(0,0.95fr)] lg:px-8">
-								<div className="space-y-5 text-white">
-									<div className="inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/10 px-3 py-1 text-xs font-semibold uppercase tracking-[0.2em] text-teal-50 backdrop-blur-sm">
-										<HeartPulse className="h-4 w-4" />
-										Testes clínicos
-									</div>
-									<div className="max-w-2xl space-y-3">
-										<h1 className="text-3xl font-bold tracking-tight text-white sm:text-4xl">
-											Biblioteca ortopédica, esportiva e pós-operatória com evidência pronta para consulta
-										</h1>
-										<p className="max-w-xl text-sm leading-6 text-teal-50/85 sm:text-base">
-											A tela agora combina testes da clínica com um acervo curado de manobras e testes funcionais, imagens próprias e PDFs científicos anexados onde há material íntegro disponível.
-										</p>
-									</div>
-
-									<div className="flex flex-wrap gap-3">
-										<Button
-											onClick={handleCreateNew}
-											className="h-11 rounded-xl bg-white px-5 font-semibold text-teal-700 hover:bg-teal-50"
-										>
-											<Plus className="mr-2 h-4 w-4" />
-											Novo teste
-										</Button>
-										<div className="inline-flex h-11 items-center rounded-xl border border-white/15 bg-white/10 px-4 text-sm font-medium text-teal-50 backdrop-blur-sm">
-											{libraryStats.pdfCount} PDFs anexados localmente
-										</div>
-									</div>
+				<main className="px-4 py-4 pb-24">
+					<div className="space-y-4">
+						{/* Compact header */}
+						<div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+							<div className="flex items-center gap-3 min-w-0">
+								<div className="h-9 w-9 rounded-xl bg-teal-500/10 flex items-center justify-center flex-shrink-0">
+									<HeartPulse className="h-4 w-4 text-teal-600" />
 								</div>
-
-								<div className="grid gap-3 sm:grid-cols-2">
-									<StatCard
-										label="Biblioteca"
-										value={String(libraryStats.total)}
-										description={`${libraryStats.builtin} curados + ${libraryStats.custom} personalizados`}
-									/>
-									<StatCard
-										label="Ortopedia"
-										value={String(libraryStats.ortho)}
-										description="Joelho, ombro, quadril, cervical e mais"
-									/>
-									<StatCard
-										label="Esportiva"
-										value={String(libraryStats.sports)}
-										description="Hop tests, equilíbrio e controle neuromuscular"
-									/>
-									<StatCard
-										label="Pós-op"
-										value={String(libraryStats.postOp)}
-										description="Mobilidade funcional, carga e marcha"
-									/>
+								<div className="min-w-0">
+									<h1 className="text-base sm:text-lg font-semibold leading-tight">
+										Biblioteca de Testes Clínicos
+									</h1>
+									<div className="flex items-center gap-2 text-xs text-muted-foreground flex-wrap mt-0.5">
+										<span><span className="font-medium text-foreground">{libraryStats.total}</span> testes</span>
+										<span className="text-border">·</span>
+										<span><span className="font-medium text-teal-600">{libraryStats.ortho}</span> ortopedia</span>
+										<span className="text-border hidden sm:inline">·</span>
+										<span className="hidden sm:inline"><span className="font-medium text-emerald-600">{libraryStats.sports}</span> esportiva</span>
+										<span className="text-border hidden sm:inline">·</span>
+										<span className="hidden sm:inline"><span className="font-medium text-blue-600">{libraryStats.postOp}</span> pós-op</span>
+										{libraryStats.pdfCount > 0 && (
+											<><span className="text-border">·</span><span>{libraryStats.pdfCount} PDFs</span></>
+										)}
+									</div>
 								</div>
 							</div>
-						</section>
+							<Button
+								onClick={handleCreateNew}
+								size="sm"
+								className="gap-1.5 flex-shrink-0"
+							>
+								<Plus className="h-4 w-4" />
+								Novo teste
+							</Button>
+						</div>
 
 						{isError ? (
 							<div className="flex items-start gap-4 rounded-[28px] border border-red-100 bg-white px-5 py-4 shadow-sm">
