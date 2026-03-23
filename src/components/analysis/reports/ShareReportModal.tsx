@@ -1,4 +1,4 @@
-import React, { useState, lazy, Suspense } from "react";
+import React, { useState } from "react";
 import {
 	Dialog,
 	DialogContent,
@@ -25,12 +25,7 @@ import {
 	logExportEvent,
 } from "@/services/report/reportExportService";
 import { AIAnalysisResult } from "@/services/ai/clinicalAnalysisService";
-
-// Lazy load heavy PDF components
-const PDFDownloadLink = lazy(() =>
-	import("@react-pdf/renderer").then((m) => ({ default: m.PDFDownloadLink })),
-);
-const ClinicalReportPDF = lazy(() => import("./ClinicalReportPDF"));
+import { downloadReactPdfDocument } from "@/lib/export/reactPdfDownload";
 
 interface ShareReportModalProps {
 	isOpen: boolean;
@@ -49,6 +44,7 @@ const ShareReportModal: React.FC<ShareReportModalProps> = ({
 }) => {
 	const { toast } = useToast();
 	const [copied, setCopied] = useState(false);
+	const [isGeneratingPdf, setIsGeneratingPdf] = useState(false);
 
 	// Generated Texts
 	const whatsappText = generateWhatsAppText(
@@ -87,6 +83,32 @@ const ShareReportModal: React.FC<ShareReportModalProps> = ({
 		setTimeout(onClose, 1000);
 	};
 
+	const handleDownloadPdf = async () => {
+		setIsGeneratingPdf(true);
+		try {
+			await downloadReactPdfDocument({
+				fileName: `Relatorio_Clinico_${patientName.replace(/\s+/g, "_")}.pdf`,
+				loadDocument: () =>
+					import("./ClinicalReportPDF").then((module) => module.default),
+				props: {
+					report,
+					patientName,
+					professionalName,
+					date: new Date().toLocaleDateString("pt-BR"),
+				},
+			});
+			handleDownloadAudit();
+		} catch (error) {
+			toast({
+				title: "Erro ao gerar PDF",
+				description: "Não foi possível montar o relatório clínico.",
+				variant: "destructive",
+			});
+		} finally {
+			setIsGeneratingPdf(false);
+		}
+	};
+
 	return (
 		<Dialog open={isOpen} onOpenChange={onClose}>
 			<DialogContent className="sm:max-w-2xl">
@@ -123,42 +145,22 @@ const ShareReportModal: React.FC<ShareReportModalProps> = ({
 							</p>
 						</div>
 						<div className="flex justify-end">
-							<Suspense
-								fallback={
-									<Button disabled className="gap-2">
-										<Loader2 className="w-4 h-4 animate-spin" /> Carregando
-										Gerador...
-									</Button>
-								}
+							<Button
+								disabled={isGeneratingPdf}
+								onClick={() => void handleDownloadPdf()}
+								className="gap-2"
 							>
-								<PDFDownloadLink
-									document={
-										<ClinicalReportPDF
-											report={report}
-											patientName={patientName}
-											professionalName={professionalName}
-											date={new Date().toLocaleDateString("pt-BR")}
-										/>
-									}
-									fileName={`Relatorio_Clinico_${patientName.replace(/\s+/g, "_")}.pdf`}
-								>
-									{({ loading }) => (
-										<Button
-											disabled={loading}
-											onClick={handleDownloadAudit}
-											className="gap-2"
-										>
-											{loading ? (
-												"Gerando PDF..."
-											) : (
-												<>
-													<Download className="w-4 h-4" /> Baixar PDF Completo
-												</>
-											)}
-										</Button>
-									)}
-								</PDFDownloadLink>
-							</Suspense>
+								{isGeneratingPdf ? (
+									<>
+										<Loader2 className="w-4 h-4 animate-spin" />
+										Gerando PDF...
+									</>
+								) : (
+									<>
+										<Download className="w-4 h-4" /> Baixar PDF Completo
+									</>
+								)}
+							</Button>
 						</div>
 					</TabsContent>
 
