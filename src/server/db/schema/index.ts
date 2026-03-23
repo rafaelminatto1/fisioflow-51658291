@@ -37,3 +37,6 @@ export * from "./tasks";
 
 // Financial & Billing
 export * from "./financial";
+
+// Corporate Announcements & Policies
+export * from "./announcements";

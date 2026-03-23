@@ -48,3 +48,4 @@ export type {
 	ClinicalRedFlag,
 	ClinicalAnalysisResult,
 } from "@/lib/ai";
+export { useSuggestReply } from "./useSuggestReply";

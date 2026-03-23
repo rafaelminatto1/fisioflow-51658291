@@ -70,7 +70,9 @@ export const dicomWebClient = {
 	): Promise<Array<Record<string, { Value?: string[] }>>> => {
 		try {
 			const { data } = await dicomApi.instances(studyUid, seriesUid);
-			const transfers = extractTransferSyntaxes(data as Array<Record<string, { Value?: string[] }>>);
+			const transfers = extractTransferSyntaxes(
+				data as Array<Record<string, { Value?: string[] }>>,
+			);
 			transfers.forEach((syntax) => trackTransferSyntax(syntax));
 			return data as Array<Record<string, { Value?: string[] }>>;
 		} catch (error) {

@@ -18,10 +18,7 @@ import { AlertCircle, Home, RefreshCw } from "lucide-react";
 
 type WindowWithOptionalSentry = Window & {
 	Sentry?: {
-		captureException: (
-			error: Error,
-			context?: Record<string, unknown>,
-		) => void;
+		captureException: (error: Error, context?: Record<string, unknown>) => void;
 	};
 };
 

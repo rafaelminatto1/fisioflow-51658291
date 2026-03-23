@@ -7,8 +7,10 @@ import { useState, useCallback } from "react";
 import type { FinancialReportData } from "../lib/skills/fase2-documentos/financial-reports";
 import { useToast } from "./use-toast";
 
-type FinancialReportsModule = typeof import("../lib/skills/fase2-documentos/financial-reports");
-type XlsxIntegrationModule = typeof import("../lib/skills/fase2-documentos/xlsx-integration");
+type FinancialReportsModule =
+	typeof import("../lib/skills/fase2-documentos/financial-reports");
+type XlsxIntegrationModule =
+	typeof import("../lib/skills/fase2-documentos/xlsx-integration");
 
 interface UseFinancialExportOptions {
 	clinicName?: string;

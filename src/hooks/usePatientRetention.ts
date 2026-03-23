@@ -9,12 +9,7 @@ import {
 } from "date-fns";
 import { CACHE_TIMES, STALE_TIMES } from "@/lib/queryConfig";
 import { PatientHelpers } from "@/types";
-import {
-	appointmentsApi,
-	crmApi,
-	financialApi,
-	patientsApi,
-} from "@/api/v2";
+import { appointmentsApi, crmApi, financialApi, patientsApi } from "@/api/v2";
 
 const RETENTION_KEYS = {
 	all: ["retention"] as const,

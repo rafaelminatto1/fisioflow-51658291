@@ -4,10 +4,7 @@
 
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
-import {
-	evaluationFormsApi,
-	type EvaluationFormRow,
-} from "@/api/v2";
+import { evaluationFormsApi, type EvaluationFormRow } from "@/api/v2";
 
 export function useToggleFavorite() {
 	const queryClient = useQueryClient();

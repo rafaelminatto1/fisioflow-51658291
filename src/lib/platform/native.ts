@@ -38,7 +38,11 @@ export interface NativePushActionPerformed {
 	notification: NativePushNotification;
 }
 
-export type PushPermissionState = "granted" | "denied" | "prompt" | "prompt-with-rationale";
+export type PushPermissionState =
+	| "granted"
+	| "denied"
+	| "prompt"
+	| "prompt-with-rationale";
 export type HapticImpactStyle = "light" | "medium" | "heavy";
 export type HapticNotificationType = "success" | "warning" | "error";
 

@@ -1,4 +1,11 @@
-import { ArrowUpRight, Clock3, LayoutGrid, MoreHorizontal, Star, Archive } from "lucide-react";
+import {
+	ArrowUpRight,
+	Clock3,
+	LayoutGrid,
+	MoreHorizontal,
+	Star,
+	Archive,
+} from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { formatDistanceToNow } from "date-fns";
 import { ptBR } from "date-fns/locale";
@@ -74,7 +81,9 @@ export function BoardCard({ board, onStar, onDelete }: BoardCardProps) {
 						<Button
 							variant="ghost"
 							size="icon"
-							className={cn("h-9 w-9 text-white rounded-full hover:bg-white/10")}
+							className={cn(
+								"h-9 w-9 text-white rounded-full hover:bg-white/10",
+							)}
 							onClick={() => onStar(board.id, !board.is_starred)}
 						>
 							<Star
@@ -123,7 +132,8 @@ export function BoardCard({ board, onStar, onDelete }: BoardCardProps) {
 				<div className="space-y-4">
 					<div className="flex items-center gap-2">
 						<div className="rounded-full border border-white/5 bg-white/10 px-3 py-1 text-[9px] font-black uppercase tracking-widest text-white/80 backdrop-blur-md">
-							{board.task_count ?? 0} tarefa{Number(board.task_count ?? 0) !== 1 ? "s" : ""}
+							{board.task_count ?? 0} tarefa
+							{Number(board.task_count ?? 0) !== 1 ? "s" : ""}
 						</div>
 						<div className="rounded-full border border-white/5 bg-white/10 px-3 py-1 text-[9px] font-black uppercase tracking-widest text-white/80 backdrop-blur-md">
 							{formatDistanceToNow(new Date(board.updated_at), {

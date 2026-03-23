@@ -22,7 +22,9 @@ describe("CalendarWeekViewHeader", () => {
 			/>,
 		);
 
-		expect(screen.getByRole("heading", { name: /março 2026/i })).toBeInTheDocument();
+		expect(
+			screen.getByRole("heading", { name: /março 2026/i }),
+		).toBeInTheDocument();
 		expect(screen.getByText(/sábado, 21 março 2026/i)).toBeInTheDocument();
 
 		const buttons = screen.getAllByRole("button");

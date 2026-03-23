@@ -69,9 +69,7 @@ export function WikiSidebar({
 	// Favorites (based on view_count)
 	const favorites = useMemo(
 		() =>
-			generalPages
-				.filter((p) => p.view_count > 10 && !p.is_pinned)
-				.slice(0, 5),
+			generalPages.filter((p) => p.view_count > 10 && !p.is_pinned).slice(0, 5),
 		[generalPages],
 	);
 
@@ -378,7 +376,12 @@ interface PageItemProps {
 	compact?: boolean;
 }
 
-function PageItem({ page, isSelected, onClick, compact = false }: PageItemProps) {
+function PageItem({
+	page,
+	isSelected,
+	onClick,
+	compact = false,
+}: PageItemProps) {
 	return (
 		<button
 			onClick={onClick}

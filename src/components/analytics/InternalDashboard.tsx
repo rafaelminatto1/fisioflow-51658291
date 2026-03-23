@@ -288,7 +288,10 @@ function InternalDashboardComponent() {
 							{totalPatients || 0}
 						</div>
 						<div className="flex items-center gap-1.5 mt-2">
-							<Badge variant="secondary" className="bg-primary/5 text-primary text-[10px] font-bold border-none">
+							<Badge
+								variant="secondary"
+								className="bg-primary/5 text-primary text-[10px] font-bold border-none"
+							>
 								Base total
 							</Badge>
 							<span className="text-[10px] text-muted-foreground font-medium">
@@ -318,7 +321,10 @@ function InternalDashboardComponent() {
 							{loadingActive ? "..." : activePatients}
 						</div>
 						<div className="flex items-center gap-1.5 mt-2">
-							<Badge variant="secondary" className="bg-emerald-500/5 text-emerald-600 text-[10px] font-bold border-none">
+							<Badge
+								variant="secondary"
+								className="bg-emerald-500/5 text-emerald-600 text-[10px] font-bold border-none"
+							>
 								Em atividade
 							</Badge>
 							<span className="text-[10px] text-muted-foreground font-medium">
@@ -348,7 +354,10 @@ function InternalDashboardComponent() {
 							{loadingInactive ? "..." : inactivePatients?.total || 0}
 						</div>
 						<div className="flex items-center gap-1.5 mt-2">
-							<Badge variant="secondary" className="bg-orange-500/5 text-orange-600 text-[10px] font-bold border-none">
+							<Badge
+								variant="secondary"
+								className="bg-orange-500/5 text-orange-600 text-[10px] font-bold border-none"
+							>
 								Risco de evasão
 							</Badge>
 							<span className="text-[10px] text-muted-foreground font-medium">
@@ -378,7 +387,10 @@ function InternalDashboardComponent() {
 							{loadingSessions ? "..." : patientsWithSessions?.length || 0}
 						</div>
 						<div className="flex items-center gap-1.5 mt-2">
-							<Badge variant="secondary" className="bg-blue-500/5 text-blue-600 text-[10px] font-bold border-none">
+							<Badge
+								variant="secondary"
+								className="bg-blue-500/5 text-blue-600 text-[10px] font-bold border-none"
+							>
 								Créditos ativos
 							</Badge>
 							<span className="text-[10px] text-muted-foreground font-medium">
@@ -428,13 +440,21 @@ function InternalDashboardComponent() {
 										dataKey="label"
 										axisLine={false}
 										tickLine={false}
-										tick={{ fill: "hsl(var(--muted-foreground))", fontSize: 10, fontWeight: 600 }}
+										tick={{
+											fill: "hsl(var(--muted-foreground))",
+											fontSize: 10,
+											fontWeight: 600,
+										}}
 										dy={15}
 									/>
 									<YAxis
 										axisLine={false}
 										tickLine={false}
-										tick={{ fill: "hsl(var(--muted-foreground))", fontSize: 10, fontWeight: 600 }}
+										tick={{
+											fill: "hsl(var(--muted-foreground))",
+											fontSize: 10,
+											fontWeight: 600,
+										}}
 									/>
 									<Tooltip
 										contentStyle={{
@@ -442,7 +462,7 @@ function InternalDashboardComponent() {
 											border: "1px solid hsl(var(--border))",
 											boxShadow: "0 10px 15px -3px rgba(0,0,0,0.1)",
 											fontSize: "12px",
-											fontWeight: "bold"
+											fontWeight: "bold",
 										}}
 									/>
 									<Line
@@ -494,8 +514,12 @@ function InternalDashboardComponent() {
 								<Table>
 									<TableHeader className="bg-muted/30">
 										<TableRow className="hover:bg-transparent border-none">
-											<TableHead className="text-[10px] font-bold uppercase h-9">Paciente</TableHead>
-											<TableHead className="text-right text-[10px] font-bold uppercase h-9 px-6">Saldo</TableHead>
+											<TableHead className="text-[10px] font-bold uppercase h-9">
+												Paciente
+											</TableHead>
+											<TableHead className="text-right text-[10px] font-bold uppercase h-9 px-6">
+												Saldo
+											</TableHead>
 										</TableRow>
 									</TableHeader>
 									<TableBody>
@@ -505,7 +529,10 @@ function InternalDashboardComponent() {
 													{item.patientName}
 												</TableCell>
 												<TableCell className="text-right py-3 px-6">
-													<Badge variant="outline" className="bg-blue-500/5 text-blue-600 border-blue-500/20 font-bold">
+													<Badge
+														variant="outline"
+														className="bg-blue-500/5 text-blue-600 border-blue-500/20 font-bold"
+													>
 														{item.remainingSessions} / {item.totalSessions}
 													</Badge>
 												</TableCell>
@@ -532,7 +559,10 @@ function InternalDashboardComponent() {
 								Pacientes sem consulta há mais de 30 dias
 							</CardDescription>
 						</div>
-						<Badge variant="outline" className="border-orange-500/30 text-orange-600 bg-orange-500/5">
+						<Badge
+							variant="outline"
+							className="border-orange-500/30 text-orange-600 bg-orange-500/5"
+						>
 							Ação Necessária
 						</Badge>
 					</div>
@@ -551,15 +581,26 @@ function InternalDashboardComponent() {
 							<Table>
 								<TableHeader className="bg-muted/30">
 									<TableRow className="hover:bg-transparent border-none">
-										<TableHead className="text-[10px] font-bold uppercase h-10 px-6">Nome do Paciente</TableHead>
-										<TableHead className="text-[10px] font-bold uppercase h-10">Contato</TableHead>
-										<TableHead className="text-[10px] font-bold uppercase h-10">Última Visita</TableHead>
-										<TableHead className="text-[10px] font-bold uppercase h-10 text-right px-6">Status</TableHead>
+										<TableHead className="text-[10px] font-bold uppercase h-10 px-6">
+											Nome do Paciente
+										</TableHead>
+										<TableHead className="text-[10px] font-bold uppercase h-10">
+											Contato
+										</TableHead>
+										<TableHead className="text-[10px] font-bold uppercase h-10">
+											Última Visita
+										</TableHead>
+										<TableHead className="text-[10px] font-bold uppercase h-10 text-right px-6">
+											Status
+										</TableHead>
 									</TableRow>
 								</TableHeader>
 								<TableBody>
 									{inactivePatients?.list?.map((patient: any) => (
-										<TableRow key={patient.id} className="border-border/40 hover:bg-muted/10 transition-colors">
+										<TableRow
+											key={patient.id}
+											className="border-border/40 hover:bg-muted/10 transition-colors"
+										>
 											<TableCell className="font-bold text-sm py-4 px-6">
 												{PatientHelpers.getName(patient)}
 											</TableCell>

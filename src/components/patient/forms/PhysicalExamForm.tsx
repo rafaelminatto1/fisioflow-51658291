@@ -111,7 +111,11 @@ export const PhysicalExamForm = ({
 				.toLowerCase()
 				.normalize("NFD")
 				.replace(/[\u0300-\u036f]/g, "");
-			return catName.includes(normalized) || normalized.includes(catName) || catNameEn.includes(normalized);
+			return (
+				catName.includes(normalized) ||
+				normalized.includes(catName) ||
+				catNameEn.includes(normalized)
+			);
 		});
 	};
 
@@ -145,7 +149,9 @@ export const PhysicalExamForm = ({
 					<CardContent className="space-y-4">
 						<div className="grid grid-cols-1 md:grid-cols-2 gap-4">
 							<div className="space-y-2">
-								<Label className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Inspeção Visual</Label>
+								<Label className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
+									Inspeção Visual
+								</Label>
 								<Textarea
 									placeholder="Observações visuais (edema, coloração, cicatrizes...)"
 									value={data.inspection || ""}
@@ -156,7 +162,9 @@ export const PhysicalExamForm = ({
 								/>
 							</div>
 							<div className="space-y-2">
-								<Label className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Palpação</Label>
+								<Label className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
+									Palpação
+								</Label>
 								<Textarea
 									placeholder="Dor, tensão muscular, temperatura..."
 									value={data.palpation || ""}
@@ -169,7 +177,9 @@ export const PhysicalExamForm = ({
 						</div>
 
 						<div className="space-y-2">
-							<Label className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Postura e Marcha</Label>
+							<Label className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
+								Postura e Marcha
+							</Label>
 							<Textarea
 								placeholder="Análise postural e padrão de marcha..."
 								value={data.posture || ""}
@@ -192,14 +202,19 @@ export const PhysicalExamForm = ({
 							<div className="flex gap-2">
 								<Dialog open={isCatalogOpen} onOpenChange={setIsCatalogOpen}>
 									<DialogTrigger asChild>
-										<Button variant="outline" size="sm" className="bg-background">
+										<Button
+											variant="outline"
+											size="sm"
+											className="bg-background"
+										>
 											<Search className="w-4 h-4 mr-2" /> Explorar Catálogo
 										</Button>
 									</DialogTrigger>
 									<DialogContent className="max-w-2xl max-h-[80vh] flex flex-col">
 										<DialogHeader>
 											<DialogTitle className="flex items-center gap-2">
-												<BookOpen className="h-5 w-5 text-primary" /> Catálogo de Evidência Clínica
+												<BookOpen className="h-5 w-5 text-primary" /> Catálogo
+												de Evidência Clínica
 											</DialogTitle>
 										</DialogHeader>
 										<div className="relative my-4">
@@ -223,7 +238,10 @@ export const PhysicalExamForm = ({
 															<h4 className="font-bold text-sm group-hover:text-primary transition-colors">
 																{test.name}
 															</h4>
-															<Badge variant="secondary" className="text-[10px] uppercase">
+															<Badge
+																variant="secondary"
+																className="text-[10px] uppercase"
+															>
 																{test.target_joint}
 															</Badge>
 														</div>
@@ -231,7 +249,9 @@ export const PhysicalExamForm = ({
 															{test.purpose}
 														</p>
 														<div className="mt-2 flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
-															<span className="text-[10px] font-bold text-primary uppercase">Clique para selecionar</span>
+															<span className="text-[10px] font-bold text-primary uppercase">
+																Clique para selecionar
+															</span>
 														</div>
 													</div>
 												))}
@@ -244,7 +264,12 @@ export const PhysicalExamForm = ({
 										</ScrollArea>
 									</DialogContent>
 								</Dialog>
-								<Button onClick={() => addSpecialTest()} variant="default" size="sm" className="shadow-sm">
+								<Button
+									onClick={() => addSpecialTest()}
+									variant="default"
+									size="sm"
+									className="shadow-sm"
+								>
 									<Plus className="w-4 h-4 mr-2" /> Novo Teste
 								</Button>
 							</div>
@@ -261,7 +286,9 @@ export const PhysicalExamForm = ({
 									>
 										<div className="flex flex-col md:flex-row gap-4 items-start">
 											<div className="flex-1 space-y-2 w-full relative">
-												<Label className="text-[10px] font-bold uppercase text-muted-foreground ml-1">Nome do Teste</Label>
+												<Label className="text-[10px] font-bold uppercase text-muted-foreground ml-1">
+													Nome do Teste
+												</Label>
 												<div className="relative">
 													<Input
 														placeholder="Ex: Lachman, Hawkins..."
@@ -270,7 +297,11 @@ export const PhysicalExamForm = ({
 															updateSpecialTest(i, "name", e.target.value)
 														}
 														readOnly={readOnly}
-														className={evidence ? "pr-8 font-medium border-primary/20 bg-primary/5" : "bg-muted/30 border-transparent focus:bg-background focus:border-input"}
+														className={
+															evidence
+																? "pr-8 font-medium border-primary/20 bg-primary/5"
+																: "bg-muted/30 border-transparent focus:bg-background focus:border-input"
+														}
 													/>
 													{evidence && (
 														<div className="absolute right-2 top-1/2 -translate-y-1/2">
@@ -280,14 +311,18 @@ export const PhysicalExamForm = ({
 																</TooltipTrigger>
 																<TooltipContent className="max-w-[300px] p-4 space-y-2">
 																	<p className="font-bold text-sm flex items-center gap-1.5 text-primary">
-																		<BookOpen className="h-3.5 w-3.5" /> Referência Científica
+																		<BookOpen className="h-3.5 w-3.5" />{" "}
+																		Referência Científica
 																	</p>
 																	<p className="text-xs italic leading-relaxed">
 																		"{evidence.reference}"
 																	</p>
 																	{evidence.sensitivity_specificity && (
 																		<div className="text-[10px] bg-muted p-1.5 rounded-sm">
-																			<span className="font-bold">Acurácia:</span> {evidence.sensitivity_specificity}
+																			<span className="font-bold">
+																				Acurácia:
+																			</span>{" "}
+																			{evidence.sensitivity_specificity}
 																		</div>
 																	)}
 																</TooltipContent>
@@ -297,15 +332,20 @@ export const PhysicalExamForm = ({
 												</div>
 											</div>
 											<div className="w-full md:w-40 flex flex-col space-y-2">
-												<Label className="text-[10px] font-bold uppercase text-muted-foreground ml-1">Resultado</Label>
+												<Label className="text-[10px] font-bold uppercase text-muted-foreground ml-1">
+													Resultado
+												</Label>
 												{readOnly ? (
 													<Badge
 														variant={
-															test.result === "positive" ? "destructive" : "default"
+															test.result === "positive"
+																? "destructive"
+																: "default"
 														}
 														className={cn(
 															"h-10 justify-center gap-2",
-															test.result === "negative" && "bg-green-500 hover:bg-green-600"
+															test.result === "negative" &&
+																"bg-green-500 hover:bg-green-600",
 														)}
 													>
 														{test.result === "positive" ? (
@@ -325,7 +365,9 @@ export const PhysicalExamForm = ({
 															updateSpecialTest(
 																i,
 																"result",
-																test.result === "positive" ? "negative" : "positive",
+																test.result === "positive"
+																	? "negative"
+																	: "positive",
 															)
 														}
 														className="focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 rounded-md h-10"
@@ -333,13 +375,15 @@ export const PhysicalExamForm = ({
 													>
 														<Badge
 															variant={
-																test.result === "positive" ? "destructive" : "default"
+																test.result === "positive"
+																	? "destructive"
+																	: "default"
 															}
 															className={cn(
 																"cursor-pointer transition-all hover:opacity-80 py-2 px-4 h-full w-full justify-center gap-2 text-sm",
 																test.result === "negative"
 																	? "bg-green-500 hover:bg-green-600 font-bold"
-																	: "font-bold"
+																	: "font-bold",
 															)}
 														>
 															{test.result === "positive" ? (
@@ -348,7 +392,8 @@ export const PhysicalExamForm = ({
 																</>
 															) : (
 																<>
-																	<CheckCircle2 className="w-4 h-4" /> Negativo (-)
+																	<CheckCircle2 className="w-4 h-4" /> Negativo
+																	(-)
 																</>
 															)}
 														</Badge>
@@ -356,7 +401,9 @@ export const PhysicalExamForm = ({
 												)}
 											</div>
 											<div className="flex-[1.5] w-full space-y-2">
-												<Label className="text-[10px] font-bold uppercase text-muted-foreground ml-1">Observações</Label>
+												<Label className="text-[10px] font-bold uppercase text-muted-foreground ml-1">
+													Observações
+												</Label>
 												<Input
 													placeholder="Ex: Reprodução da dor habitual..."
 													value={test.notes || ""}
@@ -380,7 +427,7 @@ export const PhysicalExamForm = ({
 												</div>
 											)}
 										</div>
-										
+
 										{/* Expanded Evidence Box */}
 										{evidence && (
 											<div className="mt-2 text-[11px] bg-primary/5 border border-primary/10 rounded-xl p-3 animate-in slide-in-from-top-1 duration-200">
@@ -394,7 +441,10 @@ export const PhysicalExamForm = ({
 																Evidência Científica Reconhecida
 															</p>
 															{evidence.sensitivity_specificity && (
-																<Badge variant="outline" className="text-[9px] py-0 h-4 bg-background border-primary/20 text-primary/80">
+																<Badge
+																	variant="outline"
+																	className="text-[9px] py-0 h-4 bg-background border-primary/20 text-primary/80"
+																>
 																	Acurácia Validada
 																</Badge>
 															)}
@@ -402,21 +452,25 @@ export const PhysicalExamForm = ({
 														<p className="text-foreground/80 leading-relaxed italic pr-4">
 															"{evidence.reference}"
 														</p>
-														{evidence.evidence_resources && evidence.evidence_resources.length > 0 && (
-															<div className="flex gap-3 mt-2">
-																{evidence.evidence_resources.map((res, idx) => (
-																	<a 
-																		key={idx} 
-																		href={res.url} 
-																		target="_blank" 
-																		rel="noopener noreferrer"
-																		className="flex items-center gap-1.5 text-primary hover:underline font-bold text-[10px] bg-background px-2 py-1 rounded-md border border-primary/10 shadow-sm"
-																	>
-																		<ExternalLink className="h-3 w-3" /> {res.title}
-																	</a>
-																))}
-															</div>
-														)}
+														{evidence.evidence_resources &&
+															evidence.evidence_resources.length > 0 && (
+																<div className="flex gap-3 mt-2">
+																	{evidence.evidence_resources.map(
+																		(res, idx) => (
+																			<a
+																				key={idx}
+																				href={res.url}
+																				target="_blank"
+																				rel="noopener noreferrer"
+																				className="flex items-center gap-1.5 text-primary hover:underline font-bold text-[10px] bg-background px-2 py-1 rounded-md border border-primary/10 shadow-sm"
+																			>
+																				<ExternalLink className="h-3 w-3" />{" "}
+																				{res.title}
+																			</a>
+																		),
+																	)}
+																</div>
+															)}
 													</div>
 												</div>
 											</div>
@@ -449,7 +503,9 @@ export const PhysicalExamForm = ({
 					<CardContent>
 						<div className="grid grid-cols-1 md:grid-cols-2 gap-6">
 							<div className="space-y-2">
-								<Label className="text-xs font-bold uppercase tracking-wider text-muted-foreground">ADM (Graus)</Label>
+								<Label className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
+									ADM (Graus)
+								</Label>
 								<Textarea
 									placeholder="Ex: Flexão Joelho D: 120º, E: 135º..."
 									value={
@@ -457,7 +513,9 @@ export const PhysicalExamForm = ({
 											? data.rangeOfMotion
 											: ""
 									}
-									onChange={(e) => handleChange("rangeOfMotion", e.target.value)}
+									onChange={(e) =>
+										handleChange("rangeOfMotion", e.target.value)
+									}
 									readOnly={readOnly}
 									className="resize-none focus-visible:ring-primary/20 min-h-[100px]"
 								/>
@@ -466,7 +524,9 @@ export const PhysicalExamForm = ({
 								</p>
 							</div>
 							<div className="space-y-2">
-								<Label className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Força Muscular (Escala de Oxford 0-5)</Label>
+								<Label className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
+									Força Muscular (Escala de Oxford 0-5)
+								</Label>
 								<Textarea
 									placeholder="Ex: Quadríceps D: 4, E: 5..."
 									value={
@@ -474,7 +534,9 @@ export const PhysicalExamForm = ({
 											? data.muscleStrength
 											: ""
 									}
-									onChange={(e) => handleChange("muscleStrength", e.target.value)}
+									onChange={(e) =>
+										handleChange("muscleStrength", e.target.value)
+									}
 									readOnly={readOnly}
 									className="resize-none focus-visible:ring-primary/20 min-h-[100px]"
 								/>

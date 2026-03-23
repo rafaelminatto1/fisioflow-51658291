@@ -266,8 +266,8 @@ export function KanbanFull({
 								Arraste, priorize e avance o fluxo.
 							</h2>
 							<p className="text-sm text-muted-foreground">
-								Use a busca para reduzir o ruído e mantenha o board focado no que
-								precisa acontecer agora.
+								Use a busca para reduzir o ruído e mantenha o board focado no
+								que precisa acontecer agora.
 							</p>
 						</div>
 					</div>

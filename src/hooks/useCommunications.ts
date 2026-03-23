@@ -67,8 +67,10 @@ export function useCommunicationStats() {
 
 interface SendCommunicationData {
 	type: CommunicationType;
-	patient_id: string;
-	recipient: string;
+	patient_id?: string;
+	patient_ids?: string[];
+	recipient?: string;
+	recipients?: string[];
 	subject?: string;
 	body: string;
 }
@@ -87,14 +89,19 @@ export function useSendCommunication() {
 			});
 			return res.data;
 		},
-		onSuccess: () => {
+		onSuccess: (_, variables) => {
 			queryClient.invalidateQueries({
 				queryKey: ["communications", organizationId],
 			});
 			queryClient.invalidateQueries({
 				queryKey: ["communication-stats", organizationId],
 			});
-			toast.success("Comunicação enviada com sucesso");
+			const count = variables.patient_ids?.length || 1;
+			toast.success(
+				count > 1
+					? `${count} comunicações enviadas com sucesso`
+					: "Comunicação enviada com sucesso",
+			);
 		},
 		onError: (error: Error) => {
 			toast.error("Erro ao enviar comunicação: " + error.message);
