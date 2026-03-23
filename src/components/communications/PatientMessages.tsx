@@ -67,6 +67,7 @@ import {
 } from "@/components/communications/MessageTemplates";
 import { useWhatsAppTemplates } from "@/hooks/useWhatsAppTemplates";
 import { Badge } from "@/components/ui/badge";
+import { ScrollArea } from "@/components/ui/scroll-area";
 import { Skeleton } from "@/components/ui/skeleton";
 import { cn } from "@/lib/utils";
 
