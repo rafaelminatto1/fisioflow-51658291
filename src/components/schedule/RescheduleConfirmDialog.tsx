@@ -58,17 +58,18 @@ export const RescheduleConfirmDialog: React.FC<
 
 	return (
 		<AlertDialog open={open} onOpenChange={onOpenChange}>
-			<AlertDialogContent className="max-w-lg p-0 gap-0">
-				<AlertDialogHeader className="px-6 py-5 border-b">
-					<div className="flex items-center gap-3">
-						<div className="p-2 bg-primary/10 rounded-lg">
-							<Calendar className="h-5 w-5 text-primary" />
+			<AlertDialogContent className="max-w-xl p-0 gap-0 border-none shadow-premium-xl rounded-[2rem] overflow-hidden bg-white/95 dark:bg-slate-950/95 backdrop-blur-xl">
+				<AlertDialogHeader className="px-8 py-8 relative overflow-hidden">
+					<div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-primary via-blue-400 to-primary" />
+					<div className="flex items-center gap-4 relative z-10">
+						<div className="p-3.5 bg-primary/10 rounded-2xl shadow-premium-sm ring-1 ring-primary/20 animate-in zoom-in-50 duration-500">
+							<Calendar className="h-6 w-6 text-primary" />
 						</div>
-						<div>
-							<AlertDialogTitle className="text-lg">
+						<div className="space-y-1">
+							<AlertDialogTitle className="text-2xl font-black tracking-tight text-slate-900 dark:text-white">
 								Confirmar Reagendamento
 							</AlertDialogTitle>
-							<p className="text-sm text-muted-foreground mt-0.5">
+							<p className="text-sm font-bold text-primary/60 uppercase tracking-[0.2em] leading-none">
 								{appointment.patientName}
 							</p>
 						</div>
@@ -80,57 +81,80 @@ export const RescheduleConfirmDialog: React.FC<
 					{appointment.patientName}.
 				</AlertDialogDescription>
 
-				<div className="px-6 py-5">
-					<div className="flex items-center gap-4 sm:gap-6">
+				<div className="px-8 py-2">
+					<div className="flex flex-col sm:flex-row items-center gap-6 py-6 relative">
 						{/* Card DE - Horário atual */}
-						<div className="flex-1 min-w-0">
-							<div className="text-xs font-medium text-muted-foreground uppercase tracking-wide mb-2">
-								De
+						<div className="flex-1 w-full space-y-3 group">
+							<div className="flex items-center gap-2 px-1">
+								<span className="text-[10px] font-black text-slate-400 uppercase tracking-[0.3em]">
+									De
+								</span>
+								<div className="h-px flex-1 bg-slate-100 dark:bg-slate-800" />
 							</div>
-							<div className="bg-muted/50 rounded-xl p-4 border border-border">
-								<div className="flex items-center gap-2 mb-2">
-									<Calendar className="h-4 w-4 text-muted-foreground" />
-									<span className="font-semibold text-sm">
-										{safeFormat(oldDate, "dd 'de' MMMM")}
-									</span>
-									<span className="text-muted-foreground text-xs">
-										{safeFormat(oldDate, "yyyy")}
-									</span>
+							<div className="bg-slate-50/50 dark:bg-slate-900/50 rounded-3xl p-5 border border-slate-200/60 dark:border-slate-800/60 transition-all duration-500 group-hover:bg-white dark:group-hover:bg-slate-900 group-hover:shadow-premium-md group-hover:border-slate-200">
+								<div className="flex items-center gap-3 mb-3">
+									<div className="p-2 bg-slate-200/50 dark:bg-slate-800/50 rounded-xl">
+										<Calendar className="h-4 w-4 text-slate-500" />
+									</div>
+									<div className="flex flex-col">
+										<span className="font-black text-slate-900 dark:text-white text-sm">
+											{safeFormat(oldDate, "dd 'de' MMMM")}
+										</span>
+										<span className="text-slate-400 text-[10px] font-bold uppercase tracking-wider">
+											{safeFormat(oldDate, "yyyy")}
+										</span>
+									</div>
 								</div>
-								<div className="flex items-center gap-2">
-									<Clock className="h-4 w-4 text-muted-foreground" />
-									<span className="font-semibold text-sm">
+								<div className="flex items-center gap-3">
+									<div className="p-2 bg-slate-200/50 dark:bg-slate-800/50 rounded-xl">
+										<Clock className="h-4 w-4 text-slate-500" />
+									</div>
+									<span className="font-black text-slate-700 dark:text-slate-300 text-sm">
 										{appointment.time}
 									</span>
 								</div>
 							</div>
 						</div>
 
-						{/* Seta */}
-						<div className="flex items-center justify-center">
-							<div className="p-2 bg-primary/10 rounded-full">
-								<ArrowRight className="h-5 w-5 text-primary" />
+						{/* Fluxo Visual / Seta */}
+						<div className="relative flex items-center justify-center sm:pt-6">
+							<div className="absolute inset-0 flex items-center justify-center sm:hidden">
+								<div className="w-px h-full bg-gradient-to-b from-transparent via-primary/20 to-transparent" />
+							</div>
+							<div className="p-3 bg-white dark:bg-slate-900 rounded-full shadow-premium-lg border border-primary/10 relative z-10 group cursor-default">
+								<div className="bg-primary rounded-full p-2 text-white shadow-lg shadow-primary/30 group-hover:scale-110 transition-transform duration-500">
+									<ArrowRight className="h-5 w-5 rotate-90 sm:rotate-0" />
+								</div>
 							</div>
 						</div>
 
 						{/* Card PARA - Novo horário */}
-						<div className="flex-1 min-w-0">
-							<div className="text-xs font-medium text-primary uppercase tracking-wide mb-2">
-								Para
+						<div className="flex-1 w-full space-y-3 group">
+							<div className="flex items-center gap-2 px-1">
+								<span className="text-[10px] font-black text-primary uppercase tracking-[0.3em]">
+									Para
+								</span>
+								<div className="h-px flex-1 bg-primary/10" />
 							</div>
-							<div className="bg-primary/5 rounded-xl p-4 border border-primary/20">
-								<div className="flex items-center gap-2 mb-2">
-									<Calendar className="h-4 w-4 text-primary" />
-									<span className="font-semibold text-sm text-primary">
-										{safeFormat(newDate, "dd 'de' MMMM")}
-									</span>
-									<span className="text-primary/70 text-xs">
-										{safeFormat(newDate, "yyyy")}
-									</span>
+							<div className="bg-primary/[0.03] dark:bg-primary/[0.02] rounded-3xl p-5 border border-primary/20 transition-all duration-500 group-hover:bg-primary/[0.05] group-hover:shadow-premium-md group-hover:border-primary/30">
+								<div className="flex items-center gap-3 mb-3">
+									<div className="p-2 bg-primary/10 rounded-xl">
+										<Calendar className="h-4 w-4 text-primary" />
+									</div>
+									<div className="flex flex-col">
+										<span className="font-black text-primary text-sm">
+											{safeFormat(newDate, "dd 'de' MMMM")}
+										</span>
+										<span className="text-primary/50 text-[10px] font-bold uppercase tracking-wider">
+											{safeFormat(newDate, "yyyy")}
+										</span>
+									</div>
 								</div>
-								<div className="flex items-center gap-2">
-									<Clock className="h-4 w-4 text-primary" />
-									<span className="font-semibold text-sm text-primary">
+								<div className="flex items-center gap-3">
+									<div className="p-2 bg-primary/10 rounded-xl">
+										<Clock className="h-4 w-4 text-primary" />
+									</div>
+									<span className="font-black text-primary text-sm">
 										{newTime}
 									</span>
 								</div>
@@ -139,49 +163,28 @@ export const RescheduleConfirmDialog: React.FC<
 					</div>
 				</div>
 
-				<AlertDialogFooter className="px-6 py-4 border-t bg-muted/30 gap-3">
+				<AlertDialogFooter className="px-8 py-8 gap-4 sm:gap-2">
 					<AlertDialogCancel
 						disabled={isPending}
 						onClick={() => onOpenChange(false)}
-						className="flex-1 sm:flex-none"
+						className="flex-1 sm:flex-none h-14 rounded-2xl border-slate-200 dark:border-slate-800 text-slate-500 font-bold uppercase tracking-widest text-[10px] hover:bg-slate-50 dark:hover:bg-slate-900 transition-all duration-300"
 					>
-						Cancelar
+						Cancelar Operação
 					</AlertDialogCancel>
 					<AlertDialogAction
 						onClick={onConfirm}
 						disabled={isPending}
-						className="flex-1 sm:flex-none bg-primary hover:bg-primary/90"
+						className="flex-1 sm:flex-none h-14 px-8 rounded-2xl bg-slate-900 dark:bg-white text-white dark:text-slate-900 font-black uppercase tracking-[0.15em] text-[10px] shadow-premium-lg hover:translate-y-[-2px] active:translate-y-0 transition-all duration-300 disabled:opacity-50"
 					>
 						{isPending ? (
-							<span className="flex items-center gap-2">
-								<svg
-									className="animate-spin h-4 w-4"
-									xmlns="http://www.w3.org/2000/svg"
-									fill="none"
-									viewBox="0 0 24 24"
-									aria-hidden="true"
-								>
-									<title>Carregando...</title>
-									<circle
-										className="opacity-25"
-										cx="12"
-										cy="12"
-										r="10"
-										stroke="currentColor"
-										strokeWidth="4"
-									></circle>
-									<path
-										className="opacity-75"
-										fill="currentColor"
-										d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-									></path>
-								</svg>
-								Reagendando...
+							<span className="flex items-center gap-3">
+								<div className="h-4 w-4 border-2 border-current border-t-transparent rounded-full animate-spin" />
+								Processando...
 							</span>
 						) : (
-							<span className="flex items-center gap-2">
-								<Calendar className="h-4 w-4" />
-								Confirmar Reagendamento
+							<span className="flex items-center gap-3">
+								<CheckCircle2 className="h-4 w-4" />
+								Confirmar Alteração
 							</span>
 						)}
 					</AlertDialogAction>

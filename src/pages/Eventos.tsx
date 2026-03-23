@@ -176,41 +176,34 @@ export default function Eventos() {
 				</AlertDialogContent>
 			</AlertDialog>
 
-			<div className="space-y-8 animate-fade-in pb-20 md:pb-0">
-				{/* Header Compacto e Moderno */}
-				<div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
-					<div className="space-y-1">
-						<div className="flex items-center gap-2 text-primary font-black uppercase tracking-[0.2em] text-[10px] mb-2">
-							<CalendarDays className="w-3 h-3" />
-							Gestão de Operações
+			<div className="space-y-4 animate-fade-in pb-20 md:pb-0">
+				{/* Compact header */}
+				<div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+					<div className="flex items-center gap-3 min-w-0">
+						<div className="h-9 w-9 rounded-xl bg-primary/10 flex items-center justify-center flex-shrink-0">
+							<CalendarDays className="h-4 w-4 text-primary" />
 						</div>
-						<h1 className="text-4xl md:text-5xl font-black tracking-tighter bg-gradient-to-r from-slate-900 via-slate-800 to-slate-900 dark:from-white dark:to-slate-400 bg-clip-text text-transparent">
+						<h1 className="text-base sm:text-lg font-semibold leading-tight">
 							Eventos
 						</h1>
-						<p className="text-slate-500 font-medium max-w-lg">
-							Centralize a logística, equipe e materiais de suas ativações
-							externas em um único lugar.
-						</p>
 					</div>
-
-					<div className="flex items-center gap-3">
+					<div className="flex items-center gap-2 flex-shrink-0">
 						<Button
 							variant="outline"
-							size="lg"
-							className="rounded-2xl border-border/60 font-bold hover:bg-slate-100 transition-all dark:hover:bg-slate-800"
+							size="sm"
+							className="gap-1.5"
 							onClick={() => navigate("/eventos/analytics")}
 						>
-							<TrendingUp className="w-4 h-4 mr-2 text-primary" />
+							<TrendingUp className="w-4 h-4" />
 							Analytics
 						</Button>
-
 						{canWrite("eventos") && (
 							<Button
-								size="lg"
-								className="gap-2 shadow-premium hover:shadow-premium-lg transition-all duration-300 rounded-2xl font-black bg-primary hover:bg-primary/90 px-6"
+								size="sm"
+								className="gap-1.5"
 								onClick={() => setNewEventoOpen(true)}
 							>
-								<Plus className="w-5 h-5" />
+								<Plus className="w-4 h-4" />
 								Novo Evento
 							</Button>
 						)}

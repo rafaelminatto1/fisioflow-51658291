@@ -29,6 +29,7 @@ import {
 	SelectValue,
 } from "@/components/ui/select";
 import { Input } from "@/components/ui/input";
+import { Separator } from "@/components/ui/separator";
 
 import {
 	useAuditLogs,
@@ -178,6 +179,20 @@ export default function AuditLogs() {
 	};
 
 	const { mutate: exportLogs, isPending: isExporting } = useExportAuditLogs();
+	const {
+		logs,
+		stats,
+		isLoading,
+		refetch,
+		uniqueActions,
+		uniqueTables,
+	} = useAuditLogs({
+		action: actionFilter === "all" ? undefined : actionFilter,
+		tableName: tableFilter === "all" ? undefined : tableFilter,
+		searchTerm: searchTerm,
+		startDate: startDate ? new Date(startDate) : undefined,
+		endDate: endDate ? new Date(endDate) : undefined,
+	});
 	const {
 		backups,
 		isLoading: backupsLoading,

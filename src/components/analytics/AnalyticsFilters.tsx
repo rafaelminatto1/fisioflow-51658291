@@ -34,61 +34,82 @@ export function AnalyticsFilters() {
 	];
 
 	return (
-		<div className="flex flex-col space-y-4 p-4 bg-card rounded-xl border shadow-sm animate-in fade-in slide-in-from-top-4 duration-500">
-			<div className="flex items-center gap-2 text-sm font-medium text-muted-foreground mb-1">
-				<Filter className="h-4 w-4" />
-				Filtros de Análise
-			</div>
-
-			<div className="flex flex-wrap gap-4 items-end">
-				<div className="flex-1 min-w-[300px] space-y-2">
-					<div className="flex items-center justify-between">
-						<label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground flex items-center gap-2">
-							<Calendar className="h-3 w-3" />
-							Período
-						</label>
-						<div className="flex gap-1">
-							{presets.map((preset) => (
-								<Button
-									key={preset.days}
-									variant="ghost"
-									size="sm"
-									onClick={() => applyPreset(preset.days)}
-									className="h-7 px-2 text-[10px] font-bold hover:bg-primary/10 hover:text-primary transition-colors"
-								>
-									{preset.label}
-								</Button>
-							))}
+		<div className="p-4 sm:p-6 bg-card rounded-2xl border shadow-sm ring-1 ring-black/[0.02] dark:ring-white/[0.02] animate-in fade-in slide-in-from-top-4 duration-500">
+			<div className="flex flex-col gap-6">
+				<div className="flex items-center justify-between">
+					<div className="flex items-center gap-2.5">
+						<div className="p-2 bg-primary/10 rounded-lg">
+							<Filter className="h-4 w-4 text-primary" />
+						</div>
+						<div>
+							<h3 className="text-sm font-bold text-foreground tracking-tight">
+								Parâmetros de Análise
+							</h3>
+							<p className="text-[11px] text-muted-foreground font-medium">
+								Configure o intervalo e escopo dos dados
+							</p>
 						</div>
 					</div>
-					<DateRangePicker
-						date={filters.dateRange}
-						setDate={setDateRange}
-						className="w-full"
-					/>
 				</div>
 
-				<div className="w-full md:w-[250px] space-y-2">
-					<label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground flex items-center gap-2">
-						<Users className="h-3 w-3" />
-						Profissional
-					</label>
-					<Select
-						value={filters.professionalId}
-						onValueChange={setProfessionalId}
-					>
-						<SelectTrigger className="w-full bg-background border-muted-foreground/20 focus:ring-primary/20">
-							<SelectValue placeholder="Todos os profissionais" />
-						</SelectTrigger>
-						<SelectContent>
-							<SelectItem value="all">Todos os profissionais</SelectItem>
-							{professionals.map((p) => (
-								<SelectItem key={p.id} value={p.id}>
-									{p.name}
+				<div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+					{/* Período */}
+					<div className="lg:col-span-7 space-y-3">
+						<div className="flex items-center justify-between">
+							<label className="text-[11px] font-bold uppercase tracking-[0.1em] text-muted-foreground/80 flex items-center gap-1.5">
+								<Calendar className="h-3 w-3" />
+								Intervalo de Tempo
+							</label>
+							<div className="flex items-center gap-1 p-0.5 bg-muted/40 rounded-lg border border-border/50">
+								{presets.map((preset) => (
+									<Button
+										key={preset.days}
+										variant="ghost"
+										size="sm"
+										onClick={() => applyPreset(preset.days)}
+										className="h-6 px-2 text-[10px] font-bold hover:bg-background hover:shadow-sm transition-all rounded-md"
+									>
+										{preset.label}
+									</Button>
+								))}
+							</div>
+						</div>
+						<div className="relative">
+							<DateRangePicker
+								date={filters.dateRange}
+								setDate={setDateRange}
+								className="w-full bg-background/50 hover:bg-background transition-colors border-muted-foreground/20 rounded-xl"
+							/>
+						</div>
+					</div>
+
+					{/* Profissional */}
+					<div className="lg:col-span-5 space-y-3">
+						<label className="text-[11px] font-bold uppercase tracking-[0.1em] text-muted-foreground/80 flex items-center gap-1.5">
+							<Users className="h-3 w-3" />
+							Escopo de Profissional
+						</label>
+						<Select
+							value={filters.professionalId}
+							onValueChange={setProfessionalId}
+						>
+							<SelectTrigger className="w-full h-10 bg-background/50 hover:bg-background transition-colors border-muted-foreground/20 rounded-xl focus:ring-primary/20">
+								<div className="flex items-center gap-2">
+									<SelectValue placeholder="Todos os profissionais" />
+								</div>
+							</SelectTrigger>
+							<SelectContent className="rounded-xl border-border/50">
+								<SelectItem value="all" className="rounded-lg">
+									Todos os profissionais (Geral)
 								</SelectItem>
-							))}
-						</SelectContent>
-					</Select>
+								{professionals.map((p) => (
+									<SelectItem key={p.id} value={p.id} className="rounded-lg">
+										{p.name}
+									</SelectItem>
+								))}
+							</SelectContent>
+						</Select>
+					</div>
 				</div>
 			</div>
 		</div>
