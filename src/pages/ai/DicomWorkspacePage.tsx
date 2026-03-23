@@ -58,7 +58,11 @@ export default function DicomWorkspacePage() {
 			try {
 				const response = await dicomApi.config();
 				if (mounted) {
-					setDicomRemoteEnabled(Boolean(response.data?.enabled));
+					const enabled = Boolean(response.data?.enabled);
+					setDicomRemoteEnabled(enabled);
+					if (!enabled) {
+						setMode("upload");
+					}
 				}
 			} catch (error) {
 				logger.warn(
@@ -68,6 +72,7 @@ export default function DicomWorkspacePage() {
 				);
 				if (mounted) {
 					setDicomRemoteEnabled(false);
+					setMode("upload");
 				}
 			} finally {
 				if (mounted) {
@@ -163,11 +168,32 @@ export default function DicomWorkspacePage() {
 					<Card className="min-h-[620px]">
 						<CardContent className="p-4">
 							{mode === "browser" ? (
-								<Suspense fallback={<LoadingFallback />}>
-									<div className="h-[580px] overflow-hidden rounded-xl border bg-white">
-										<DicomBrowser />
+								dicomRemoteEnabled ? (
+									<Suspense fallback={<LoadingFallback />}>
+										<div className="h-[580px] overflow-hidden rounded-xl border bg-white">
+											<DicomBrowser />
+										</div>
+									</Suspense>
+								) : (
+									<div className="flex h-[580px] items-center justify-center rounded-xl border bg-slate-50 p-8 text-center">
+										<div className="max-w-md space-y-3">
+											<Database className="mx-auto h-10 w-10 text-slate-400" />
+											<h2 className="text-lg font-semibold text-slate-900">
+												PACS remoto indisponível
+											</h2>
+											<p className="text-sm text-muted-foreground">
+												Neste ambiente o browser remoto de estudos DICOM não está
+												habilitado. O fluxo ativo no frontend é o upload local de
+												arquivos `.dcm`, que continua válido para testar viewer,
+												codecs e compatibilidade do exame.
+											</p>
+											<Button onClick={() => setMode("upload")}>
+												<Upload className="mr-2 h-4 w-4" />
+												Usar arquivo local
+											</Button>
+										</div>
 									</div>
-								</Suspense>
+								)
 							) : (
 								<div className="space-y-4">
 									<div
