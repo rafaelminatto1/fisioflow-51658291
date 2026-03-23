@@ -12,6 +12,47 @@ function getUrl(env: Env): string {
 }
 
 /**
+ * Helper para executar queries com cache no Cloudflare D1.
+ * Ideal para dados que mudam pouco (configurações, listas fixas).
+ */
+export async function queryWithCache<T>(
+  env: Env,
+  cacheKey: string,
+  ttlSeconds: number,
+  neonQuery: () => Promise<T>
+): Promise<T> {
+  if (!env.DB) return await neonQuery();
+
+  try {
+    // 1. Tenta buscar no D1
+    const cached = await env.DB.prepare(
+      'SELECT value, expires_at FROM query_cache WHERE id = ?'
+    ).bind(cacheKey).first<{ value: string; expires_at: number }>();
+
+    if (cached && cached.expires_at > Date.now()) {
+      return JSON.parse(cached.value) as T;
+    }
+
+    // 2. Se não estiver no cache ou expirado, busca no Neon
+    const result = await neonQuery();
+
+    // 3. Salva no D1 para a próxima vez
+    await env.DB.prepare(
+      'INSERT OR REPLACE INTO query_cache (id, value, expires_at) VALUES (?, ?, ?)'
+    ).bind(
+      cacheKey,
+      JSON.stringify(result),
+      Date.now() + ttlSeconds * 1000
+    ).run();
+
+    return result;
+  } catch (error) {
+    console.error(`[D1 Cache Error]: ${cacheKey}`, error);
+    return await neonQuery(); // Fallback para o Neon se o D1 falhar
+  }
+}
+
+/**
  * Cria uma instância do Drizzle ORM via Neon HTTP driver.
  * Neon HTTP é o driver recomendado para Cloudflare Workers.
  */

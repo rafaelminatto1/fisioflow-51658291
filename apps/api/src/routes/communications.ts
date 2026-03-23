@@ -7,94 +7,101 @@ import { sendTestEmail } from '../lib/email';
 const app = new Hono<{ Bindings: Env; Variables: AuthVariables }>();
 
 app.get('/', requireAuth, async (c) => {
-  const user = c.get('user');
-  const pool = await createPool(c.env);
-  const { channel, status, limit = '100' } = c.req.query();
+  try {
+    const user = c.get('user');
+    const pool = await createPool(c.env);
+    const { channel, status, limit = '100' } = c.req.query();
 
-  const conditions = ['cl.organization_id = $1'];
-  const params: unknown[] = [user.organizationId];
+    const conditions = ['cl.organization_id = $1'];
+    const params: unknown[] = [user.organizationId];
 
-  if (channel && channel !== 'all') {
-    params.push(channel);
-    conditions.push(`cl.type = $${params.length}`);
+    if (channel && channel !== 'all') {
+      params.push(channel);
+      conditions.push(`cl.type = $${params.length}`);
+    }
+
+    if (status && status !== 'all') {
+      params.push(status);
+      conditions.push(`cl.status = $${params.length}`);
+    }
+
+    params.push(Number(limit));
+const query = `
+  SELECT
+    cl.*,
+    p.full_name AS patient_full_name,
+    p.email AS patient_email,
+    p.phone AS patient_phone
+  FROM communication_logs cl
+  LEFT JOIN patients p ON p.id = cl.patient_id
+  WHERE ${conditions.join(' AND ')}
+  ORDER BY cl.created_at DESC
+  LIMIT $${params.length}
+`;
+
+const result = await pool.query(query, params);
+
+const data = result.rows.map((row) => ({
+  ...row,
+  patient: row.patient_id
+    ? {
+        id: row.patient_id,
+        full_name: row.patient_full_name ?? null,
+        name: row.patient_full_name ?? null,
+        email: row.patient_email ?? null,
+        phone: row.patient_phone ?? null,
+      }
+    : null,
+}));
+
+    return c.json({ data });
+  } catch (error: any) {
+    console.error('[Communications] Error fetching communications:', error);
+    return c.json({ error: error.message, stack: error.stack }, 500);
   }
-
-  if (status && status !== 'all') {
-    params.push(status);
-    conditions.push(`cl.status = $${params.length}`);
-  }
-
-  params.push(Number(limit));
-
-  const result = await pool.query(
-    `
-      SELECT
-        cl.*,
-        p.full_name AS patient_full_name,
-        p.name AS patient_name,
-        p.email AS patient_email,
-        p.phone AS patient_phone
-      FROM communication_logs cl
-      LEFT JOIN patients p ON p.id = cl.patient_id
-      WHERE ${conditions.join(' AND ')}
-      ORDER BY cl.created_at DESC
-      LIMIT $${params.length}
-    `,
-    params,
-  );
-
-  const data = result.rows.map((row) => ({
-    ...row,
-    patient: row.patient_id
-      ? {
-          id: row.patient_id,
-          full_name: row.patient_full_name ?? row.patient_name ?? null,
-          name: row.patient_full_name ?? row.patient_name ?? null,
-          email: row.patient_email ?? null,
-          phone: row.patient_phone ?? null,
-        }
-      : null,
-  }));
-
-  return c.json({ data });
 });
 
 app.get('/stats', requireAuth, async (c) => {
-  const user = c.get('user');
-  const pool = await createPool(c.env);
+  try {
+    const user = c.get('user');
+    const pool = await createPool(c.env);
 
-  const result = await pool.query(
-    `
-      SELECT
-        COUNT(*)::int AS total,
-        COUNT(*) FILTER (WHERE status = 'enviado')::int AS sent,
-        COUNT(*) FILTER (WHERE status = 'entregue')::int AS delivered,
-        COUNT(*) FILTER (WHERE status = 'falha')::int AS failed,
-        COUNT(*) FILTER (WHERE status = 'pendente')::int AS pending,
-        COUNT(*) FILTER (WHERE type = 'email')::int AS email,
-        COUNT(*) FILTER (WHERE type = 'whatsapp')::int AS whatsapp,
-        COUNT(*) FILTER (WHERE type = 'sms')::int AS sms
-      FROM communication_logs
-      WHERE organization_id = $1
-    `,
-    [user.organizationId],
-  );
+    const result = await pool.query(
+      `
+        SELECT
+          COUNT(*)::int AS total,
+          COUNT(*) FILTER (WHERE status = 'enviado')::int AS sent,
+          COUNT(*) FILTER (WHERE status = 'entregue')::int AS delivered,
+          COUNT(*) FILTER (WHERE status = 'falha')::int AS failed,
+          COUNT(*) FILTER (WHERE status = 'pendente')::int AS pending,
+          COUNT(*) FILTER (WHERE type = 'email')::int AS email,
+          COUNT(*) FILTER (WHERE type = 'whatsapp')::int AS whatsapp,
+          COUNT(*) FILTER (WHERE type = 'sms')::int AS sms
+        FROM communication_logs
+        WHERE organization_id = $1
+      `,
+      [user.organizationId],
+    );
 
-  const row = result.rows[0] ?? {};
-  return c.json({
-    data: {
-      total: Number(row.total ?? 0),
-      sent: Number(row.sent ?? 0),
-      delivered: Number(row.delivered ?? 0),
-      failed: Number(row.failed ?? 0),
-      pending: Number(row.pending ?? 0),
-      byChannel: {
-        email: Number(row.email ?? 0),
-        whatsapp: Number(row.whatsapp ?? 0),
-        sms: Number(row.sms ?? 0),
+    const row = result.rows[0] ?? {};
+    return c.json({
+      data: {
+        total: Number(row.total ?? 0),
+        sent: Number(row.sent ?? 0),
+        delivered: Number(row.delivered ?? 0),
+        failed: Number(row.failed ?? 0),
+        pending: Number(row.pending ?? 0),
+        byChannel: {
+          email: Number(row.email ?? 0),
+          whatsapp: Number(row.whatsapp ?? 0),
+          sms: Number(row.sms ?? 0),
+        },
       },
-    },
-  });
+    });
+  } catch (error: any) {
+    console.error('[Communications] Error fetching stats:', error);
+    return c.json({ error: error.message, stack: error.stack }, 500);
+  }
 });
 
 app.post('/', requireAuth, async (c) => {

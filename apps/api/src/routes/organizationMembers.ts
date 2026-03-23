@@ -8,15 +8,24 @@ const app = new Hono<{ Bindings: Env; Variables: AuthVariables }>();
 app.get('/', requireAuth, async (c) => {
   const user = c.get('user');
   const pool = await createPool(c.env);
+  const organizationId = c.req.query('organizationId') || user.organizationId;
   
   const fallback = [{
     id: 'om-default',
-    organization_id: user.organizationId,
+    organization_id: organizationId,
     user_id: user.uid,
     role: 'admin',
     active: true,
-    profiles: { full_name: 'Rafael Minatto', email: 'rafael.minatto@yahoo.com.br' }
+    profiles: { 
+      full_name: user.email?.split('@')[0] || 'Profissional', 
+      email: user.email || 'contato@fisioflow.com.br' 
+    }
   }];
+
+  // Para clínica única, se for o ID padrão, retornamos o fallback imediatamente
+  if (organizationId === '00000000-0000-0000-0000-000000000001') {
+    return c.json({ data: fallback, total: 1 });
+  }
 
   try {
     const result = await pool.query(
@@ -24,9 +33,14 @@ app.get('/', requireAuth, async (c) => {
        FROM organization_members om
        LEFT JOIN profiles p ON p.user_id = om.user_id
        WHERE om.organization_id = $1 AND om.active = true`,
-      [user.organizationId]
+      [organizationId]
     );
-    return c.json({ data: result.rows.length ? result.rows : fallback, total: result.rows.length || 1 });
+    
+    if (!result.rows.length) {
+      return c.json({ data: fallback, total: 1 });
+    }
+    
+    return c.json({ data: result.rows, total: result.rows.length });
   } catch (error) {
     console.error('[OrganizationMembers] Database error:', error);
     return c.json({ data: fallback, total: 1 });
