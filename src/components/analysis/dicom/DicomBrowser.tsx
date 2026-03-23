@@ -20,10 +20,14 @@ import DicomViewer from "./DicomViewer";
 import { fisioLogger as logger } from "@/lib/errors/logger";
 
 interface DicomBrowserProps {
-	onSelectSeries?: (
-		studyInstanceUid: string,
-		seriesInstanceUid: string,
-	) => void;
+	onSelectSeries?: (selection: {
+		studyInstanceUid: string;
+		seriesInstanceUid: string;
+		patientName: string;
+		studyDescription: string;
+		modality: string;
+		seriesDescription: string;
+	}) => void;
 }
 
 // Helper to safely extract DICOM tag values
@@ -38,7 +42,7 @@ const getTagValue = (
 	return String(val || "");
 };
 
-const DicomBrowser: React.FC<DicomBrowserProps> = (_props) => {
+const DicomBrowser: React.FC<DicomBrowserProps> = ({ onSelectSeries }) => {
 	const [view, setView] = useState<"studies" | "series" | "viewer">("studies");
 	const [studies, setStudies] = useState<DicomStudy[]>([]);
 	const [selectedStudy, setSelectedStudy] = useState<DicomStudy | null>(null);
@@ -86,6 +90,31 @@ const DicomBrowser: React.FC<DicomBrowserProps> = (_props) => {
 
 	const handleSelectSeries = (seriesUid: string) => {
 		setSelectedSeriesUid(seriesUid);
+		if (selectedStudy && onSelectSeries) {
+			const selectedSeries = series.find(
+				(item) => getTagValue(item as Record<string, { Value?: unknown[] }>, "0020000E") ===
+					seriesUid,
+			);
+			onSelectSeries({
+				studyInstanceUid: getTagValue(selectedStudy, "0020000D"),
+				seriesInstanceUid: seriesUid,
+				patientName: getTagValue(selectedStudy, "00100010"),
+				studyDescription: getTagValue(selectedStudy, "00081030"),
+				modality: selectedSeries
+					? getTagValue(
+							selectedSeries as Record<string, { Value?: unknown[] }>,
+							"00080060",
+						)
+					: "",
+				seriesDescription: selectedSeries
+					? getTagValue(
+							selectedSeries as Record<string, { Value?: unknown[] }>,
+							"0008103E",
+						)
+					: "",
+			});
+			return;
+		}
 		setView("viewer");
 	};
 
@@ -193,7 +222,11 @@ const DicomBrowser: React.FC<DicomBrowserProps> = (_props) => {
 						return (
 							<Card
 								key={i}
-								className="cursor-pointer hover:border-blue-500 transition-colors"
+								className={`cursor-pointer transition-colors ${
+									selectedSeriesUid === uid
+										? "border-blue-500 ring-2 ring-blue-100"
+										: "hover:border-blue-500"
+								}`}
 								onClick={() => handleSelectSeries(uid)}
 							>
 								<CardContent className="p-4 flex flex-col items-center text-center gap-2">
