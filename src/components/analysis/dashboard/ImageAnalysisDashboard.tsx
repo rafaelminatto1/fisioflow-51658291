@@ -1,6 +1,6 @@
 // Lazy-loaded heavy components for code-splitting
 
-import React, { useState, useCallback, lazy, Suspense } from "react";
+import React, { useEffect, useState, useCallback, lazy, Suspense } from "react";
 import { useSearchParams } from "react-router-dom";
 import { useDropzone } from "react-dropzone";
 import { Card } from "@/components/ui/card";
@@ -13,11 +13,16 @@ import {
 	RotateCcw,
 	Loader2,
 	Database,
+	HardDriveDownload,
 } from "lucide-react";
 import { MainLayout } from "@/components/layout/MainLayout";
 import { GaitMetrics } from "@/types/analysis/schemas";
 import { fisioLogger as logger } from "@/lib/errors/logger";
 import { dicomApi } from "@/api/v2";
+import {
+	getTrackedTransferSyntaxDetails,
+	type TrackedTransferSyntax,
+} from "@/components/analysis/dicom/transferSyntaxTracker";
 
 const DicomViewer = lazy(() => import("../dicom/DicomViewer"));
 const DicomBrowser = lazy(() => import("../dicom/DicomBrowser"));
@@ -108,8 +113,11 @@ const ImageAnalysisDashboard = () => {
 	const [file, setFile] = useState<File | null>(null);
 	const [dicomRemoteEnabled, setDicomRemoteEnabled] = useState(false);
 	const [dicomConfigLoading, setDicomConfigLoading] = useState(true);
+	const [trackedSyntaxes, setTrackedSyntaxes] = useState<TrackedTransferSyntax[]>(
+		[],
+	);
 
-	React.useEffect(() => {
+	useEffect(() => {
 		let isMounted = true;
 
 		const loadDicomConfig = async () => {
@@ -140,6 +148,10 @@ const ImageAnalysisDashboard = () => {
 			isMounted = false;
 		};
 	}, []);
+
+	useEffect(() => {
+		setTrackedSyntaxes(getTrackedTransferSyntaxDetails());
+	}, [mode]);
 
 	const mode: ViewerMode =
 		(file ? getModeFromFile(file) : null) ?? urlMode ?? "upload";
@@ -174,6 +186,10 @@ const ImageAnalysisDashboard = () => {
 		setFile(null);
 		handleModeChange("upload");
 	};
+
+	const trackedFamilies = Array.from(
+		new Set(trackedSyntaxes.map((item) => item.codec)),
+	).filter((item) => item !== "native" && item !== "unknown");
 
 	return (
 		<MainLayout>
@@ -264,6 +280,40 @@ const ImageAnalysisDashboard = () => {
 									>
 										Comparativo de Vídeo (Antes x Depois)
 									</Button>
+								</div>
+
+								<div className="mt-6 w-full max-w-md rounded-xl border bg-slate-50 p-4 text-left">
+									<div className="flex items-center gap-2 text-sm font-medium text-slate-700">
+										<HardDriveDownload className="h-4 w-4" />
+										Auditoria DICOM local
+									</div>
+									<p className="mt-2 text-xs text-slate-500">
+										Os studies abertos salvam os `Transfer Syntax UID` usados no navegador.
+										Isso mostra quais codecs realmente importam antes de cortar `openjpeg`
+										ou `openjph` do bundle.
+									</p>
+									<div className="mt-3 flex flex-wrap gap-2">
+										{trackedSyntaxes.length > 0 ? (
+											trackedSyntaxes.map((item) => (
+												<div
+													key={item.syntax}
+													className="rounded-full border bg-white px-3 py-1 text-[11px] text-slate-600"
+													title={item.syntax}
+												>
+													{item.label} · {item.codec}
+												</div>
+											))
+										) : (
+											<div className="text-xs text-slate-500">
+												Ainda sem dados coletados nesta máquina.
+											</div>
+										)}
+									</div>
+									{trackedFamilies.length > 0 && (
+										<p className="mt-3 text-xs text-amber-700">
+											Codecs especializados detectados: {trackedFamilies.join(", ")}.
+										</p>
+									)}
 								</div>
 							</div>
 						</Card>
