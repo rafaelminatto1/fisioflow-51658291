@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { cn } from "@/lib/utils";
 import {
 	useWhatsAppTemplates,
 	useUpdateWhatsAppTemplate,
@@ -182,4 +183,3 @@ export function TemplateManager() {
 	);
 }
 
-import { cn } from "@/lib/utils";
