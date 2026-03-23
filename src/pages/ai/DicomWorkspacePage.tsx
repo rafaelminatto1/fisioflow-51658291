@@ -42,6 +42,16 @@ const LoadingFallback = () => (
 export default function DicomWorkspacePage() {
 	const [mode, setMode] = useState<WorkspaceMode>("browser");
 	const [file, setFile] = useState<File | null>(null);
+	const [openLocalViewer, setOpenLocalViewer] = useState(false);
+	const [openRemoteViewer, setOpenRemoteViewer] = useState(false);
+	const [selectedRemoteSeries, setSelectedRemoteSeries] = useState<{
+		studyInstanceUid: string;
+		seriesInstanceUid: string;
+		patientName: string;
+		studyDescription: string;
+		modality: string;
+		seriesDescription: string;
+	} | null>(null);
 	const [dicomRemoteEnabled, setDicomRemoteEnabled] = useState(false);
 	const [dicomConfigLoading, setDicomConfigLoading] = useState(true);
 	const [trackedSyntaxes, setTrackedSyntaxes] = useState<TrackedTransferSyntax[]>(
@@ -104,6 +114,7 @@ export default function DicomWorkspacePage() {
 		const selected = acceptedFiles[0];
 		if (!selected) return;
 		setFile(selected);
+		setOpenLocalViewer(false);
 		setMode("upload");
 	};
 
@@ -147,7 +158,10 @@ export default function DicomWorkspacePage() {
 					<div className="flex flex-wrap gap-2">
 						<Button
 							variant={mode === "browser" ? "default" : "outline"}
-							onClick={() => setMode("browser")}
+							onClick={() => {
+								setMode("browser");
+								setOpenLocalViewer(false);
+							}}
 							disabled={!dicomRemoteEnabled || dicomConfigLoading}
 						>
 							<Database className="mr-2 h-4 w-4" />
@@ -159,7 +173,10 @@ export default function DicomWorkspacePage() {
 						</Button>
 						<Button
 							variant={mode === "upload" ? "default" : "outline"}
-							onClick={() => setMode("upload")}
+							onClick={() => {
+								setMode("upload");
+								setOpenRemoteViewer(false);
+							}}
 						>
 							<Upload className="mr-2 h-4 w-4" />
 							Arquivo local
@@ -172,11 +189,57 @@ export default function DicomWorkspacePage() {
 						<CardContent className="p-4">
 							{mode === "browser" ? (
 								dicomRemoteEnabled ? (
-									<Suspense fallback={<LoadingFallback />}>
-										<div className="h-[580px] overflow-hidden rounded-xl border bg-white">
-											<DicomBrowser />
-										</div>
-									</Suspense>
+									<div className="space-y-4">
+										<Suspense fallback={<LoadingFallback />}>
+											<div
+												className={`overflow-hidden rounded-xl border bg-white ${
+													openRemoteViewer ? "h-[320px]" : "h-[580px]"
+												}`}
+											>
+												<DicomBrowser
+													onSelectSeries={(selection) => {
+														setSelectedRemoteSeries(selection);
+														setOpenRemoteViewer(false);
+													}}
+												/>
+											</div>
+										</Suspense>
+
+										{selectedRemoteSeries && (
+											<Card>
+												<CardContent className="space-y-4 p-4">
+													<div className="space-y-1">
+														<div className="text-sm font-semibold">
+															Série selecionada
+														</div>
+														<div className="text-sm text-muted-foreground">
+															{selectedRemoteSeries.patientName} ·{" "}
+															{selectedRemoteSeries.studyDescription || "Estudo sem descrição"}
+														</div>
+														<div className="text-xs text-muted-foreground">
+															{selectedRemoteSeries.modality || "Mod."} ·{" "}
+															{selectedRemoteSeries.seriesDescription || "Série sem descrição"}
+														</div>
+													</div>
+													<Button onClick={() => setOpenRemoteViewer(true)}>
+														Abrir viewer avançado
+													</Button>
+												</CardContent>
+											</Card>
+										)}
+
+										{selectedRemoteSeries && openRemoteViewer && (
+											<Suspense fallback={<LoadingFallback />}>
+												<div className="overflow-hidden rounded-xl border bg-black">
+													<DicomViewer
+														studyInstanceUid={selectedRemoteSeries.studyInstanceUid}
+														seriesInstanceUid={selectedRemoteSeries.seriesInstanceUid}
+														wadoUrl={dicomApi.getWadoUrl()}
+													/>
+												</div>
+											</Suspense>
+										)}
+									</div>
 								) : (
 									<div className="flex h-[580px] items-center justify-center rounded-xl border bg-slate-50 p-8 text-center">
 										<div className="max-w-md space-y-3">
@@ -219,11 +282,33 @@ export default function DicomWorkspacePage() {
 									</div>
 
 									{file ? (
-										<Suspense fallback={<LoadingFallback />}>
-											<div className="overflow-hidden rounded-xl border bg-black">
-												<DicomViewer file={file} />
-											</div>
-										</Suspense>
+										<div className="space-y-4">
+											<Card>
+												<CardContent className="space-y-4 p-4">
+													<div className="space-y-1">
+														<div className="text-sm font-semibold">
+															Arquivo pronto para análise
+														</div>
+														<div className="text-sm text-muted-foreground">
+															{file.name}
+														</div>
+														<div className="text-xs text-muted-foreground">
+															O viewer avançado só será carregado quando você abrir o exame.
+														</div>
+													</div>
+													<Button onClick={() => setOpenLocalViewer(true)}>
+														Abrir viewer avançado
+													</Button>
+												</CardContent>
+											</Card>
+											{openLocalViewer && (
+												<Suspense fallback={<LoadingFallback />}>
+													<div className="overflow-hidden rounded-xl border bg-black">
+														<DicomViewer file={file} />
+													</div>
+												</Suspense>
+											)}
+										</div>
 									) : (
 										<div className="rounded-xl border bg-slate-50 p-6 text-sm text-muted-foreground">
 											Nenhum arquivo selecionado ainda.
