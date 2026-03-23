@@ -210,7 +210,7 @@ export default function ClinicalAnalysisPage() {
 					{/* Opções */}
 					<div className="flex items-center gap-3">
 						<Button asChild variant="outline">
-							<Link to="/dashboard/imagens?mode=dicom_browser">
+							<Link to="/ai/dicom">
 								<Database className="mr-2 h-4 w-4" />
 								Abrir PACS / DICOM
 							</Link>
