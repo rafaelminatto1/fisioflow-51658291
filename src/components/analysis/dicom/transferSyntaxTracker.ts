@@ -1,4 +1,5 @@
 const STORAGE_KEY = "dicom_transfer_syntaxes";
+const EVENT_NAME = "dicom-transfer-syntaxes-updated";
 
 type CodecFamily = "native" | "charls" | "openjpeg" | "openjph" | "unknown";
 
@@ -21,7 +22,7 @@ const TRANSFER_SYNTAX_LABELS: Record<string, string> = {
 	"1.2.840.10008.1.2.4.81": "JPEG-LS Near Lossless",
 	"1.2.840.10008.1.2.4.90": "JPEG 2000 Lossless",
 	"1.2.840.10008.1.2.4.91": "JPEG 2000",
-	"3.2.840.10008.1.2.4.96": "HTJ2K",
+	"1.2.840.10008.1.2.4.96": "HTJ2K",
 	"1.2.840.10008.1.2.4.201": "HTJ2K RPCL",
 	"1.2.840.10008.1.2.4.202": "HTJ2K Lossless RPCL",
 	"1.2.840.10008.1.2.4.203": "HTJ2K Lossless",
@@ -40,7 +41,7 @@ const TRANSFER_SYNTAX_CODEC: Record<string, CodecFamily> = {
 	"1.2.840.10008.1.2.4.81": "charls",
 	"1.2.840.10008.1.2.4.90": "openjpeg",
 	"1.2.840.10008.1.2.4.91": "openjpeg",
-	"3.2.840.10008.1.2.4.96": "openjph",
+	"1.2.840.10008.1.2.4.96": "openjph",
 	"1.2.840.10008.1.2.4.201": "openjph",
 	"1.2.840.10008.1.2.4.202": "openjph",
 	"1.2.840.10008.1.2.4.203": "openjph",
@@ -129,6 +130,7 @@ function persist(records: Record<string, StoredTransferSyntaxRecord>) {
 	if (!isBrowser()) return;
 	try {
 		window.localStorage.setItem(STORAGE_KEY, JSON.stringify(records));
+		window.dispatchEvent(new CustomEvent(EVENT_NAME));
 	} catch {
 		/* ignore */
 	}
@@ -241,4 +243,14 @@ export function clearTrackedTransferSyntaxes() {
 		delete cache[key];
 	});
 	persist(cache);
+}
+
+export function subscribeToTrackedTransferSyntaxes(callback: () => void) {
+	if (!isBrowser()) {
+		return () => undefined;
+	}
+
+	const handler = () => callback();
+	window.addEventListener(EVENT_NAME, handler);
+	return () => window.removeEventListener(EVENT_NAME, handler);
 }
