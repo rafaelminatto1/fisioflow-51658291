@@ -1,4 +1,4 @@
-import React, { Suspense, lazy, useState, useRef, useEffect } from "react";
+import React, { useState, useRef, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Slider } from "@/components/ui/slider";
 import { Card } from "@/components/ui/card";
@@ -17,17 +17,6 @@ import {
 } from "lucide-react";
 import AnnotationLayer from "./AnnotationLayer";
 import { useAssetAnnotations } from "@/hooks/useAssetAnnotations";
-
-const ReactPdfDocument = lazy(() =>
-	import("@/components/pdf/ReactPdfViewer").then((module) => ({
-		default: module.ReactPdfDocument,
-	})),
-);
-const ReactPdfPage = lazy(() =>
-	import("@/components/pdf/ReactPdfViewer").then((module) => ({
-		default: module.ReactPdfPage,
-	})),
-);
 
 interface AssetViewerProps {
 	file?: File;
@@ -49,8 +38,6 @@ const AssetViewer: React.FC<AssetViewerProps> = ({
 	const [contrast, setContrast] = useState(100);
 	const [activeTool, setActiveTool] = useState<Tool>("select");
 	const [isPDF, setIsPDF] = useState(false);
-	const [numPages, setNumPages] = useState<number | null>(null);
-	const [pageNumber, setPageNumber] = useState(1);
 	const [dimensions, setDimensions] = useState({ width: 800, height: 600 });
 	const containerRef = useRef<HTMLDivElement>(null);
 
@@ -217,28 +204,17 @@ const AssetViewer: React.FC<AssetViewerProps> = ({
 							style={{ width: dimensions.width, height: dimensions.height }}
 						>
 							{isPDF ? (
-								<Suspense
-									fallback={
-										<div className="flex h-full items-center justify-center text-sm text-slate-400">
-											Carregando PDF...
-										</div>
-									}
-								>
-									<ReactPdfDocument
-										file={url}
-										onLoadSuccess={({ numPages }) => setNumPages(numPages)}
-									>
-										<ReactPdfPage
-											pageNumber={pageNumber}
-											width={dimensions.width}
-											onLoadSuccess={(p) =>
-												setDimensions({ width: p.width, height: p.height })
-											}
-											renderAnnotationLayer={false}
-											renderTextLayer={false}
-										/>
-									</ReactPdfDocument>
-								</Suspense>
+								<div className="flex h-full min-h-[640px] w-[900px] flex-col overflow-hidden rounded-lg bg-white">
+									<div className="border-b bg-slate-50 px-4 py-2 text-xs text-slate-500">
+										Visualização nativa do navegador. Para PDFs, as anotações
+										ficam desabilitadas nesta tela.
+									</div>
+									<iframe
+										src={url}
+										title="PDF"
+										className="h-full w-full flex-1 border-0"
+									/>
+								</div>
 							) : (
 								<img
 									src={url}
@@ -251,44 +227,19 @@ const AssetViewer: React.FC<AssetViewerProps> = ({
 									}}
 								/>
 							)}
-
-							{/* Annotation Layer Overlay */}
-							<AnnotationLayer
-								width={dimensions.width}
-								height={dimensions.height}
-								scale={1} // The Layer itself is scaled by the parent container CSS
-								annotations={annotations}
-								onAnnotationsChange={setAnnotations}
-								activeTool={activeTool}
-							/>
+							{!isPDF && (
+								<AnnotationLayer
+									width={dimensions.width}
+									height={dimensions.height}
+									scale={1}
+									annotations={annotations}
+									onAnnotationsChange={setAnnotations}
+									activeTool={activeTool}
+								/>
+							)}
 						</div>
 					)}
 				</div>
-
-				{/* PDF Pagination Overlay */}
-				{isPDF && numPages && (
-					<div className="absolute bottom-4 left-1/2 -translate-x-1/2 bg-slate-800 text-white px-4 py-2 rounded-full flex gap-4 items-center">
-						<Button
-							variant="ghost"
-							size="sm"
-							disabled={pageNumber <= 1}
-							onClick={() => setPageNumber((p) => p - 1)}
-						>
-							{"<"}
-						</Button>
-						<span>
-							Using Page {pageNumber} of {numPages}
-						</span>
-						<Button
-							variant="ghost"
-							size="sm"
-							disabled={pageNumber >= numPages}
-							onClick={() => setPageNumber((p) => p + 1)}
-						>
-							{">"}
-						</Button>
-					</div>
-				)}
 			</div>
 		</div>
 	);
