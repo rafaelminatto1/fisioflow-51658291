@@ -45,11 +45,7 @@ export function LazyPdfDownloadButton<TDocumentProps>({
 			>
 				{({ loading }) => (
 					<Button disabled={loading} {...buttonProps}>
-						{loading ? (
-							<Loader2 className="mr-2 h-4 w-4 animate-spin" />
-						) : (
-							icon
-						)}
+						{loading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : icon}
 						{loading ? loadingLabel : label}
 					</Button>
 				)}

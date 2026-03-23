@@ -4,10 +4,7 @@ import { MainLayout } from "@/components/layout/MainLayout";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import {
-	telemedicineApi,
-	type TelemedicineRoomRecord,
-} from "@/api/v2";
+import { telemedicineApi, type TelemedicineRoomRecord } from "@/api/v2";
 import { Video, Copy, ExternalLink, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 

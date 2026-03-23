@@ -1,12 +1,6 @@
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
-import {
-	Document,
-	Page,
-	StyleSheet,
-	Text,
-	View,
-} from "@react-pdf/renderer";
+import { Document, Page, StyleSheet, Text, View } from "@react-pdf/renderer";
 import type { RelatorioMedicoData } from "./RelatorioMedicoPage";
 
 const styles = StyleSheet.create({
@@ -199,7 +193,9 @@ export function RelatorioMedicoPDF({ data }: { data: RelatorioMedicoData }) {
 
 				{data.avaliacao?.diagnostico_fisioterapeutico && (
 					<View style={styles.section}>
-						<Text style={styles.sectionTitle}>DIAGNÓSTICO FISIOTERAPÊUTICO</Text>
+						<Text style={styles.sectionTitle}>
+							DIAGNÓSTICO FISIOTERAPÊUTICO
+						</Text>
 						<Text>{data.avaliacao.diagnostico_fisioterapeutico}</Text>
 					</View>
 				)}

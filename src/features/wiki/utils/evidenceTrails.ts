@@ -23,7 +23,9 @@ const EVIDENCE_PAGE_ORDER = [
 ];
 
 export function isEvidencePage(page: Pick<WikiPage, "slug">): boolean {
-	return EVIDENCE_PAGE_ORDER.includes(page.slug as (typeof EVIDENCE_PAGE_ORDER)[number]);
+	return EVIDENCE_PAGE_ORDER.includes(
+		page.slug as (typeof EVIDENCE_PAGE_ORDER)[number],
+	);
 }
 
 function getOrderIndex(slug: string): number {
@@ -33,7 +35,9 @@ function getOrderIndex(slug: string): number {
 	return index === -1 ? Number.MAX_SAFE_INTEGER : index;
 }
 
-export function sortEvidencePages<T extends Pick<WikiPage, "slug">>(pages: T[]): T[] {
+export function sortEvidencePages<T extends Pick<WikiPage, "slug">>(
+	pages: T[],
+): T[] {
 	return [...pages].sort((left, right) => {
 		return getOrderIndex(left.slug) - getOrderIndex(right.slug);
 	});
@@ -61,7 +65,9 @@ export function getEvidenceTree(pages: WikiPage[]): {
 	const trails = trailPages.map((trail) => ({
 		trail,
 		protocols: sortEvidencePages(
-			pages.filter((page) => page.parent_id === trail.id && isEvidencePage(page)),
+			pages.filter(
+				(page) => page.parent_id === trail.id && isEvidencePage(page),
+			),
 		),
 	}));
 

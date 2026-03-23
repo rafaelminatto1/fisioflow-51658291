@@ -138,7 +138,9 @@ const Financial = () => {
 
 		setIsExporting(true);
 		try {
-			const { exportFinancialReport } = await import("@/lib/export/excelExport");
+			const { exportFinancialReport } = await import(
+				"@/lib/export/excelExport"
+			);
 			await exportFinancialReport({
 				totalRevenue: safeStats.totalRevenue,
 				pendingPayments: safeStats.pendingPayments,

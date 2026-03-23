@@ -278,13 +278,15 @@ export const builtinClinicalTestsCatalog: ClinicalTestCatalogRecord[] = [
 				title: "Meta-análise de testes para LCA",
 				url: "https://journals.lww.com/md-journal/fulltext/2022/08050/value_of_clinical_tests_in_diagnosing_anterior.76.aspx",
 				kind: "link",
-				description: "Artigo aberto com valores combinados de Lachman, Pivot Shift e Lever Sign.",
+				description:
+					"Artigo aberto com valores combinados de Lachman, Pivot Shift e Lever Sign.",
 			},
 			{
 				title: "Revisão bivariada do Lachman e Pivot Shift",
 				url: "https://doi.org/10.1007/s00167-022-06898-4",
 				kind: "link",
-				description: "Atualiza a estimativa de sensibilidade e especificidade em LCA.",
+				description:
+					"Atualiza a estimativa de sensibilidade e especificidade em LCA.",
 			},
 		],
 	}),
@@ -317,13 +319,15 @@ export const builtinClinicalTestsCatalog: ClinicalTestCatalogRecord[] = [
 				title: "Meta-análise de testes para LCA",
 				url: "https://journals.lww.com/md-journal/fulltext/2022/08050/value_of_clinical_tests_in_diagnosing_anterior.76.aspx",
 				kind: "link",
-				description: "Comparação entre Lachman, anterior drawer, pivot shift e lever sign.",
+				description:
+					"Comparação entre Lachman, anterior drawer, pivot shift e lever sign.",
 			},
 			{
 				title: "Revisão bivariada do Pivot Shift",
 				url: "https://doi.org/10.1007/s00167-022-06898-4",
 				kind: "link",
-				description: "Mostra maior utilidade clínica do Pivot Shift para confirmação.",
+				description:
+					"Mostra maior utilidade clínica do Pivot Shift para confirmação.",
 			},
 		],
 	}),
@@ -356,7 +360,8 @@ export const builtinClinicalTestsCatalog: ClinicalTestCatalogRecord[] = [
 				title: "HTA menisco e Thessaly",
 				url: localPdf("thessaly-meniscal-hta-2015.pdf"),
 				kind: "pdf",
-				description: "PDF local com estudo pragmático sobre desempenho do Thessaly em contexto clínico real.",
+				description:
+					"PDF local com estudo pragmático sobre desempenho do Thessaly em contexto clínico real.",
 			},
 		],
 	}),
@@ -384,13 +389,15 @@ export const builtinClinicalTestsCatalog: ClinicalTestCatalogRecord[] = [
 		source_label: "Curadoria FisioFlow",
 		sort_order: 40,
 		illustration: "shoulder-impingement",
-		imageUrl: "https://media.moocafisio.com.br/illustrations/neer_test_shoulder_illustration.png",
+		imageUrl:
+			"https://media.moocafisio.com.br/illustrations/neer_test_shoulder_illustration.png",
 		evidence_resources: [
 			{
 				title: "Meta-análise de testes do ombro",
 				url: "https://link.springer.com/article/10.1186/s12891-017-1400-0",
 				kind: "link",
-				description: "Revisão aberta sobre desempenho de testes provocativos do ombro.",
+				description:
+					"Revisão aberta sobre desempenho de testes provocativos do ombro.",
 			},
 		],
 	}),
@@ -423,7 +430,8 @@ export const builtinClinicalTestsCatalog: ClinicalTestCatalogRecord[] = [
 				title: "Meta-análise de testes do ombro",
 				url: "https://link.springer.com/article/10.1186/s12891-017-1400-0",
 				kind: "link",
-				description: "Síntese aberta que contextualiza Hawkins, Neer e outros testes do ombro.",
+				description:
+					"Síntese aberta que contextualiza Hawkins, Neer e outros testes do ombro.",
 			},
 		],
 	}),
@@ -456,13 +464,15 @@ export const builtinClinicalTestsCatalog: ClinicalTestCatalogRecord[] = [
 				title: "Revisão sistemática de testes do quadril",
 				url: localPdf("hip-systematic-review-rahman-2013.pdf"),
 				kind: "pdf",
-				description: "PDF local com revisão diagnóstica ampla dos testes físicos do quadril.",
+				description:
+					"PDF local com revisão diagnóstica ampla dos testes físicos do quadril.",
 			},
 			{
 				title: "Meta-análise FAI/labral",
 				url: "https://doi.org/10.1136/bjsports-2014-094302",
 				kind: "link",
-				description: "Referência específica usada para a interpretação clínica do FADIR.",
+				description:
+					"Referência específica usada para a interpretação clínica do FADIR.",
 			},
 		],
 	}),
@@ -495,13 +505,15 @@ export const builtinClinicalTestsCatalog: ClinicalTestCatalogRecord[] = [
 				title: "Revisão sistemática de testes do quadril",
 				url: localPdf("hip-systematic-review-rahman-2013.pdf"),
 				kind: "pdf",
-				description: "PDF local com panorama dos testes ortopédicos do quadril.",
+				description:
+					"PDF local com panorama dos testes ortopédicos do quadril.",
 			},
 			{
 				title: "Revisão recente de patologia intra-articular",
 				url: "https://pubmed.ncbi.nlm.nih.gov/40692936/",
 				kind: "link",
-				description: "Atualização recente com dados de sensibilidade e especificidade para hip pathology.",
+				description:
+					"Atualização recente com dados de sensibilidade e especificidade para hip pathology.",
 			},
 		],
 	}),
@@ -534,13 +546,15 @@ export const builtinClinicalTestsCatalog: ClinicalTestCatalogRecord[] = [
 				title: "Meta-análise recente do Spurling",
 				url: "https://pubmed.ncbi.nlm.nih.gov/39938056/",
 				kind: "link",
-				description: "Síntese mais recente com pooled sensitivity e specificity.",
+				description:
+					"Síntese mais recente com pooled sensitivity e specificity.",
 			},
 			{
 				title: "Revisão clássica de testes provocativos cervicais",
 				url: "https://pmc.ncbi.nlm.nih.gov/articles/PMC2200707/",
 				kind: "link",
-				description: "PMC aberto com discussão clínica de Spurling, distração e ULTT.",
+				description:
+					"PMC aberto com discussão clínica de Spurling, distração e ULTT.",
 			},
 		],
 	}),
@@ -573,7 +587,8 @@ export const builtinClinicalTestsCatalog: ClinicalTestCatalogRecord[] = [
 				title: "Y-Balance Test Lower Quarter",
 				url: localPdf("y-balance-review-plisky-2021.pdf"),
 				kind: "pdf",
-				description: "PDF local da revisão sistemática com foco em confiabilidade e validade.",
+				description:
+					"PDF local da revisão sistemática com foco em confiabilidade e validade.",
 			},
 		],
 	}),
@@ -606,7 +621,8 @@ export const builtinClinicalTestsCatalog: ClinicalTestCatalogRecord[] = [
 				title: "Revisão crítica dos hop tests",
 				url: "https://pmc.ncbi.nlm.nih.gov/articles/PMC7018781/",
 				kind: "link",
-				description: "Revisão aberta destacando limites dos hop tests como decisão isolada de RTS.",
+				description:
+					"Revisão aberta destacando limites dos hop tests como decisão isolada de RTS.",
 			},
 		],
 	}),
@@ -639,7 +655,8 @@ export const builtinClinicalTestsCatalog: ClinicalTestCatalogRecord[] = [
 				title: "Revisão crítica dos hop tests",
 				url: "https://pmc.ncbi.nlm.nih.gov/articles/PMC7018781/",
 				kind: "link",
-				description: "Revisão aberta sobre uso racional de hop tests na decisão de retorno ao esporte.",
+				description:
+					"Revisão aberta sobre uso racional de hop tests na decisão de retorno ao esporte.",
 			},
 		],
 	}),
@@ -672,7 +689,8 @@ export const builtinClinicalTestsCatalog: ClinicalTestCatalogRecord[] = [
 				title: "Revisão crítica dos hop tests",
 				url: "https://pmc.ncbi.nlm.nih.gov/articles/PMC7018781/",
 				kind: "link",
-				description: "Revisão aberta recomendando leitura qualitativa além do desempenho bruto.",
+				description:
+					"Revisão aberta recomendando leitura qualitativa além do desempenho bruto.",
 			},
 		],
 	}),
@@ -705,7 +723,8 @@ export const builtinClinicalTestsCatalog: ClinicalTestCatalogRecord[] = [
 				title: "Performance tests após TKA",
 				url: localPdf("tka-balance-tests-sarac-2022.pdf"),
 				kind: "pdf",
-				description: "PDF local com validade e confiabilidade de TUG, SLS e 10MWT em artroplastia total de joelho.",
+				description:
+					"PDF local com validade e confiabilidade de TUG, SLS e 10MWT em artroplastia total de joelho.",
 			},
 		],
 	}),
@@ -738,13 +757,15 @@ export const builtinClinicalTestsCatalog: ClinicalTestCatalogRecord[] = [
 				title: "Performance tests após TKA",
 				url: localPdf("tka-balance-tests-sarac-2022.pdf"),
 				kind: "pdf",
-				description: "PDF local complementar para testes funcionais seriados no pós-operatório.",
+				description:
+					"PDF local complementar para testes funcionais seriados no pós-operatório.",
 			},
 			{
 				title: "Confiabilidade do 5xSTS em TKR",
 				url: "https://doi.org/10.1016/J.GAITPOST.2017.10.028",
 				kind: "link",
-				description: "Estudo-base citado para confiabilidade do Five Times Sit-to-Stand.",
+				description:
+					"Estudo-base citado para confiabilidade do Five Times Sit-to-Stand.",
 			},
 		],
 	}),
@@ -777,7 +798,8 @@ export const builtinClinicalTestsCatalog: ClinicalTestCatalogRecord[] = [
 				title: "Performance tests após TKA",
 				url: localPdf("tka-balance-tests-sarac-2022.pdf"),
 				kind: "pdf",
-				description: "PDF local com utilidade clínica do apoio unipodal após artroplastia total de joelho.",
+				description:
+					"PDF local com utilidade clínica do apoio unipodal após artroplastia total de joelho.",
 			},
 		],
 	}),
@@ -810,7 +832,8 @@ export const builtinClinicalTestsCatalog: ClinicalTestCatalogRecord[] = [
 				title: "Performance tests após TKA",
 				url: localPdf("tka-balance-tests-sarac-2022.pdf"),
 				kind: "pdf",
-				description: "PDF local com dados de validade para medidas de marcha e equilíbrio no pós-operatório.",
+				description:
+					"PDF local com dados de validade para medidas de marcha e equilíbrio no pós-operatório.",
 			},
 		],
 	}),
@@ -824,7 +847,8 @@ export const builtinClinicalTestsCatalog: ClinicalTestCatalogRecord[] = [
 		purpose: "Avaliar a integridade do ligamento cruzado anterior (LCA).",
 		execution:
 			"Com o paciente em decúbito dorsal e o joelho fletido a 90 graus, o examinador senta-se sobre o pé do paciente para estabilizá-lo. As mãos são colocadas ao redor da tíbia proximal e uma força anterior é aplicada.",
-		positive_sign: "Translação anterior excessiva da tíbia em relação ao fêmur.",
+		positive_sign:
+			"Translação anterior excessiva da tíbia em relação ao fêmur.",
 		reference: "Huang et al. 2022.",
 		tags: ["joelho", "lca", "instabilidade"],
 		evidence_label: "Revisão sistemática",
@@ -832,7 +856,8 @@ export const builtinClinicalTestsCatalog: ClinicalTestCatalogRecord[] = [
 		source_label: "Curadoria FisioFlow",
 		sort_order: 25,
 		illustration: "knee-stability",
-		imageUrl: "https://media.moocafisio.com.br/illustrations/anterior_drawer_test_knee.png",
+		imageUrl:
+			"https://media.moocafisio.com.br/illustrations/anterior_drawer_test_knee.png",
 	}),
 	createBuiltinTest({
 		id: "builtin-phalen-test",
@@ -848,11 +873,13 @@ export const builtinClinicalTestsCatalog: ClinicalTestCatalogRecord[] = [
 		reference: "Curadoria FisioFlow 2026.",
 		tags: ["punho", "tunel-do-carpo", "nervo-mediano"],
 		evidence_label: "Prática clínica",
-		evidence_summary: "Teste provocativo comum para síndrome do túnel do carpo.",
+		evidence_summary:
+			"Teste provocativo comum para síndrome do túnel do carpo.",
 		source_label: "Curadoria FisioFlow",
 		sort_order: 90,
 		illustration: "cervical-radicular",
-		imageUrl: "https://media.moocafisio.com.br/illustrations/phalen_test_illustration.png",
+		imageUrl:
+			"https://media.moocafisio.com.br/illustrations/phalen_test_illustration.png",
 	}),
 	createBuiltinTest({
 		id: "builtin-lasegue-test",
@@ -861,18 +888,21 @@ export const builtinClinicalTestsCatalog: ClinicalTestCatalogRecord[] = [
 		category: "Ortopedia",
 		target_joint: "Coluna",
 		type: "special_test",
-		purpose: "Avaliar tensão neural ou compressão de raiz nervosa lombar (L4-S1).",
+		purpose:
+			"Avaliar tensão neural ou compressão de raiz nervosa lombar (L4-S1).",
 		execution:
 			"Com o paciente em decúbito dorsal, o membro inferior é elevado passivamente com o joelho em extensão até a reprodução da dor radicular.",
 		positive_sign: "Dor radicular reproduzida entre 30 e 70 graus de elevação.",
 		reference: "Curadoria FisioFlow 2026.",
 		tags: ["coluna", "lombar", "radiculopatia", "nervo-isquiatico"],
 		evidence_label: "Prática clínica",
-		evidence_summary: "Teste de alta sensibilidade para compressão radicular lombar.",
+		evidence_summary:
+			"Teste de alta sensibilidade para compressão radicular lombar.",
 		source_label: "Curadoria FisioFlow",
 		sort_order: 100,
 		illustration: "cervical-radicular",
-		imageUrl: "https://media.moocafisio.com.br/illustrations/lasegue_test_spine_illustration.png",
+		imageUrl:
+			"https://media.moocafisio.com.br/illustrations/lasegue_test_spine_illustration.png",
 	}),
 	createBuiltinTest({
 		id: "builtin-jobe-test",
@@ -892,7 +922,8 @@ export const builtinClinicalTestsCatalog: ClinicalTestCatalogRecord[] = [
 		source_label: "Curadoria FisioFlow",
 		sort_order: 45,
 		illustration: "shoulder-impingement",
-		imageUrl: "https://media.moocafisio.com.br/illustrations/jobe_test_shoulder_illustration.png",
+		imageUrl:
+			"https://media.moocafisio.com.br/illustrations/jobe_test_shoulder_illustration.png",
 	}),
 ];
 
@@ -970,8 +1001,7 @@ export function mergeClinicalTestsCatalog(
 				(remoteTest as ClinicalTestCatalogRecord).layout_type ??
 				builtin?.layout_type ??
 				null,
-			is_custom:
-				(remoteTest as ClinicalTestCatalogRecord).is_custom ?? true,
+			is_custom: (remoteTest as ClinicalTestCatalogRecord).is_custom ?? true,
 			is_builtin: false,
 			evidence_label: builtin?.evidence_label ?? "Customizado",
 			evidence_summary:
@@ -990,8 +1020,9 @@ export function mergeClinicalTestsCatalog(
 		} as const;
 
 		const leftCategory =
-			categoryOrder[(left.category as keyof typeof categoryOrder) ?? "Ortopedia"] ??
-			99;
+			categoryOrder[
+				(left.category as keyof typeof categoryOrder) ?? "Ortopedia"
+			] ?? 99;
 		const rightCategory =
 			categoryOrder[
 				(right.category as keyof typeof categoryOrder) ?? "Ortopedia"

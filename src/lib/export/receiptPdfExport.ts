@@ -4,10 +4,7 @@ import { ptBR } from "date-fns/locale";
 import { valorPorExtenso } from "@/hooks/useRecibos";
 import type { ReciboData } from "@/components/financial/ReciboPDF";
 
-export async function exportReceiptPdf(
-	fileName: string,
-	data: ReciboData,
-) {
+export async function exportReceiptPdf(fileName: string, data: ReciboData) {
 	const doc = new jsPDF({
 		unit: "mm",
 		format: "a4",
@@ -129,7 +126,9 @@ export async function exportReceiptPdf(
 	doc.setTextColor(102, 102, 102);
 	doc.text(data.emitente.nome, margin + 35, y, { align: "center" });
 	if (data.pagador) {
-		doc.text(data.pagador.nome, pageWidth - margin - 35, y, { align: "center" });
+		doc.text(data.pagador.nome, pageWidth - margin - 35, y, {
+			align: "center",
+		});
 	}
 	y += 4;
 	doc.text("Assinatura do Emitente", margin + 35, y, { align: "center" });

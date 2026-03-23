@@ -1,4 +1,16 @@
-const LONG_VR = new Set(["OB", "OD", "OF", "OL", "OV", "OW", "SQ", "UC", "UR", "UT", "UN"]);
+const LONG_VR = new Set([
+	"OB",
+	"OD",
+	"OF",
+	"OL",
+	"OV",
+	"OW",
+	"SQ",
+	"UC",
+	"UR",
+	"UT",
+	"UN",
+]);
 
 function readAscii(bytes: Uint8Array, start: number, length: number) {
 	return new TextDecoder("ascii")

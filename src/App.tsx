@@ -341,10 +341,7 @@ const POSE_BOOT_PATH_PREFIXES = [
 ];
 
 function shouldPreloadPoseForPath(pathname: string): boolean {
-	if (
-		pathname.startsWith("/pacientes/") &&
-		pathname.includes("/imagens")
-	) {
+	if (pathname.startsWith("/pacientes/") && pathname.includes("/imagens")) {
 		return true;
 	}
 
@@ -363,7 +360,9 @@ const RouteAwareAppShell = ({ children }: { children: React.ReactNode }) => {
 
 	return (
 		<Suspense fallback={<AppLoadingSkeleton message="Carregando sistema..." />}>
-			<RouteAwareAuthenticatedAppShell>{children}</RouteAwareAuthenticatedAppShell>
+			<RouteAwareAuthenticatedAppShell>
+				{children}
+			</RouteAwareAuthenticatedAppShell>
 		</Suspense>
 	);
 };

@@ -2,10 +2,7 @@ import React, { useState, useEffect } from "react";
 import { Input } from "@/components/ui/input";
 import { useDebounce } from "@/hooks/useDebounce";
 import { Loader2, MapPin } from "lucide-react";
-import {
-	integrationsApi,
-	type GooglePlacePrediction,
-} from "@/api/v2";
+import { integrationsApi, type GooglePlacePrediction } from "@/api/v2";
 
 interface Props {
 	value: string;

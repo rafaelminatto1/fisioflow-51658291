@@ -2,7 +2,9 @@ import { Point3D, UnifiedLandmark, POSE_LANDMARKS } from "@/utils/geometry";
 import { resolveMediaPipeVisionFileset } from "@/lib/ai/mediapipe";
 
 type PoseLandmarkerType = Awaited<
-	ReturnType<(typeof import("@mediapipe/tasks-vision"))["PoseLandmarker"]["createFromOptions"]>
+	ReturnType<
+		typeof import("@mediapipe/tasks-vision")["PoseLandmarker"]["createFromOptions"]
+	>
 >;
 type PoseLandmarkerResultType =
 	import("@mediapipe/tasks-vision").PoseLandmarkerResult;

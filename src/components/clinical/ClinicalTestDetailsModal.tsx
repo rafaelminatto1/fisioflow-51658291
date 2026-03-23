@@ -116,8 +116,8 @@ export function ClinicalTestDetailsModal({
 						</span>
 						{test.regularity_sessions ? (
 							<span className="flex items-center gap-1 rounded-full border border-amber-100 bg-amber-50 px-2.5 py-1 text-[10px] font-medium text-amber-700">
-								<CalendarCheck className="h-3 w-3" />
-								A cada {test.regularity_sessions} sessões
+								<CalendarCheck className="h-3 w-3" />A cada{" "}
+								{test.regularity_sessions} sessões
 							</span>
 						) : null}
 					</div>
@@ -331,7 +331,9 @@ export function ClinicalTestDetailsModal({
 												className="flex items-start justify-between gap-3 rounded-2xl border border-slate-100 bg-white p-4 transition-colors hover:border-teal-200 hover:bg-teal-50/40"
 											>
 												<div className="min-w-0">
-													<p className="font-medium text-slate-900">{resource.title}</p>
+													<p className="font-medium text-slate-900">
+														{resource.title}
+													</p>
 													{resource.description ? (
 														<p className="mt-1 text-sm leading-6 text-slate-500">
 															{resource.description}
@@ -410,7 +412,9 @@ export function ClinicalTestDetailsModal({
 						onClick={(event) => event.stopPropagation()}
 					>
 						<div className="px-1">
-							<p className="text-sm font-semibold text-white">Imagem do teste</p>
+							<p className="text-sm font-semibold text-white">
+								Imagem do teste
+							</p>
 							<p className="text-sm text-slate-300">{test.name}</p>
 						</div>
 

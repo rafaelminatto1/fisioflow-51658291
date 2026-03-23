@@ -232,7 +232,10 @@ export function RelatorioConvenioPDF({
 							<Text style={styles.tableCell}>Sessão</Text>
 						</View>
 						{data.atendimentos.map((atendimento, index) => (
-							<View key={`${atendimento.data}-${index}`} style={styles.tableRow}>
+							<View
+								key={`${atendimento.data}-${index}`}
+								style={styles.tableRow}
+							>
 								<Text style={styles.tableCell}>
 									{format(new Date(atendimento.data), "dd/MM/yyyy", {
 										locale: ptBR,

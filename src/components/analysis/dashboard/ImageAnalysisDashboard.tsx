@@ -112,9 +112,9 @@ const ImageAnalysisDashboard = () => {
 	const [file, setFile] = useState<File | null>(null);
 	const [dicomRemoteEnabled, setDicomRemoteEnabled] = useState(false);
 	const [dicomConfigLoading, setDicomConfigLoading] = useState(true);
-	const [trackedSyntaxes, setTrackedSyntaxes] = useState<TrackedTransferSyntax[]>(
-		[],
-	);
+	const [trackedSyntaxes, setTrackedSyntaxes] = useState<
+		TrackedTransferSyntax[]
+	>([]);
 
 	useEffect(() => {
 		let isMounted = true;
@@ -261,11 +261,7 @@ const ImageAnalysisDashboard = () => {
 											</Link>
 										</Button>
 									) : (
-										<Button
-											variant="outline"
-											className="w-full"
-											disabled
-										>
+										<Button variant="outline" className="w-full" disabled>
 											<Database className="mr-2 h-4 w-4" />
 											{dicomConfigLoading
 												? "Verificando PACS DICOM..."
@@ -301,10 +297,10 @@ const ImageAnalysisDashboard = () => {
 										Auditoria DICOM local
 									</div>
 									<p className="mt-2 text-xs text-slate-500">
-										Studies remotos e arquivos `.dcm` locais salvam os `Transfer Syntax UID`
-										usados no navegador.
-										Isso mostra quais codecs realmente importam antes de cortar `openjpeg`
-										ou `openjph` do bundle.
+										Studies remotos e arquivos `.dcm` locais salvam os `Transfer
+										Syntax UID` usados no navegador. Isso mostra quais codecs
+										realmente importam antes de cortar `openjpeg` ou `openjph`
+										do bundle.
 									</p>
 									<div className="mt-3 flex flex-wrap gap-2">
 										{trackedSyntaxes.length > 0 ? (
@@ -325,7 +321,8 @@ const ImageAnalysisDashboard = () => {
 									</div>
 									{trackedFamilies.length > 0 && (
 										<p className="mt-3 text-xs text-amber-700">
-											Codecs especializados detectados: {trackedFamilies.join(", ")}.
+											Codecs especializados detectados:{" "}
+											{trackedFamilies.join(", ")}.
 										</p>
 									)}
 								</div>

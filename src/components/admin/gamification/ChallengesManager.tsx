@@ -24,10 +24,7 @@ import { Badge } from "@/components/ui/badge";
 import { format, parseISO, differenceInDays } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { useToast } from "@/hooks/use-toast";
-import {
-	gamificationApi,
-	type WeeklyChallengeRow,
-} from "@/api/v2";
+import { gamificationApi, type WeeklyChallengeRow } from "@/api/v2";
 
 type WeeklyChallenge = WeeklyChallengeRow;
 const TARGET_TYPES = [
