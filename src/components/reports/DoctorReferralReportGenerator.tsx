@@ -1,4 +1,4 @@
-import React, { lazy, Suspense, useState } from "react";
+import React, { useState } from "react";
 import {
 	Card,
 	CardContent,
@@ -21,17 +21,7 @@ import { useSoapRecordsV2 } from "@/hooks/useSoapRecordsV2";
 import { format } from "date-fns";
 import { toast } from "sonner";
 import { aiApi } from "@/api/v2";
-
-const PDFDownloadLink = lazy(() =>
-	import("@react-pdf/renderer").then((module) => ({
-		default: module.PDFDownloadLink,
-	})),
-);
-const DoctorReferralPDF = lazy(() =>
-	import("./DoctorReferralPDF").then((module) => ({
-		default: module.DoctorReferralPDF,
-	})),
-);
+import { downloadReactPdfDocument } from "@/lib/export/reactPdfDownload";
 
 interface DoctorReferralReportGeneratorProps {
 	patientId: string;
@@ -51,6 +41,7 @@ export function DoctorReferralReportGenerator({
 		useGamification(patientId);
 	const { data: records = [] } = useSoapRecordsV2(patientId);
 	const [generatingAI, setGeneratingAI] = useState(false);
+	const [generatingPdf, setGeneratingPdf] = useState(false);
 	const [aiSummary, setAiSummary] = useState<string | null>(null);
 
 	const generateAISummary = async () => {
@@ -116,6 +107,23 @@ export function DoctorReferralReportGenerator({
 		},
 	};
 
+	const handleDownloadPdf = async () => {
+		setGeneratingPdf(true);
+		try {
+			await downloadReactPdfDocument({
+				fileName: `Relatorio_${patientName.replace(/\s+/g, "_")}_${format(new Date(), "yyyyMMdd")}.pdf`,
+				loadDocument: () =>
+					import("./DoctorReferralPDF").then((module) => module.DoctorReferralPDF),
+				props: reportData,
+			});
+		} catch (error) {
+			console.error("Doctor referral PDF error:", error);
+			toast.error("Erro ao gerar PDF do relatório.");
+		} finally {
+			setGeneratingPdf(false);
+		}
+	};
+
 	return (
 		<Card className="border-indigo-100 bg-indigo-50/30 dark:bg-indigo-950/10">
 			<CardHeader>
@@ -174,37 +182,18 @@ export function DoctorReferralReportGenerator({
 						</Button>
 					)}
 
-					<Suspense
-						fallback={
-							<Button
-								disabled
-								className="w-full gap-2 bg-indigo-600 hover:bg-indigo-700 shadow-md shadow-indigo-200 dark:shadow-none"
-							>
-								<Loader2 className="w-4 h-4 animate-spin" />
-								Preparando PDF
-							</Button>
-						}
+					<Button
+						disabled={generatingPdf || !aiSummary}
+						onClick={() => void handleDownloadPdf()}
+						className="w-full gap-2 bg-indigo-600 hover:bg-indigo-700 shadow-md shadow-indigo-200 dark:shadow-none"
 					>
-						<PDFDownloadLink
-							document={<DoctorReferralPDF {...reportData} />}
-							fileName={`Relatorio_${patientName.replace(/\s+/g, "_")}_${format(new Date(), "yyyyMMdd")}.pdf`}
-							className="w-full"
-						>
-							{({ loading }) => (
-								<Button
-									disabled={loading || !aiSummary}
-									className="w-full gap-2 bg-indigo-600 hover:bg-indigo-700 shadow-md shadow-indigo-200 dark:shadow-none"
-								>
-									{loading ? (
-										<Loader2 className="w-4 h-4 animate-spin" />
-									) : (
-										<FileText className="w-4 h-4" />
-									)}
-									Baixar Relatório PDF
-								</Button>
-							)}
-						</PDFDownloadLink>
-					</Suspense>
+						{generatingPdf ? (
+							<Loader2 className="w-4 h-4 animate-spin" />
+						) : (
+							<FileText className="w-4 h-4" />
+						)}
+						{generatingPdf ? "Preparando PDF" : "Baixar Relatório PDF"}
+					</Button>
 
 					<Button
 						variant="ghost"
