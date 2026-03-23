@@ -16,7 +16,7 @@ interface UsePDFGeneratorOptions {
 }
 
 async function loadPDFGeneratorFactory() {
-	const module = await import("../lib/skills/fase2-documentos");
+	const module = await import("../lib/skills/fase2-documentos/pdf-generator");
 	return module.PDFGeneratorFactory;
 }
 
