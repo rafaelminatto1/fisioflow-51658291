@@ -22,6 +22,12 @@ const ClinicalAnalysisPage = lazy(
 			/* webpackChunkName: "ai-clinical" */ "@/pages/ai/ClinicalAnalysisPage"
 		),
 );
+const DicomWorkspacePage = lazy(
+	() =>
+		import(
+			/* webpackChunkName: "ai-dicom" */ "@/pages/ai/DicomWorkspacePage"
+		),
+);
 const MovementLabPage = lazy(
 	() =>
 		import(/* webpackChunkName: "ai-movement" */ "@/pages/ai/MovementLabPage"),
@@ -103,6 +109,14 @@ export const aiRoutes = (
 			element={
 				<ProtectedRoute>
 					<ClinicalAnalysisPage />
+				</ProtectedRoute>
+			}
+		/>
+		<Route
+			path="/ai/dicom"
+			element={
+				<ProtectedRoute>
+					<DicomWorkspacePage />
 				</ProtectedRoute>
 			}
 		/>
