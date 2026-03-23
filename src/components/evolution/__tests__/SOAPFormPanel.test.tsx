@@ -51,13 +51,8 @@ vi.mock("@/components/ai/SOAPAssistant", () => ({
 }));
 
 vi.mock("@/components/ui/dialog", () => ({
-	Dialog: ({
-		open,
-		children,
-	}: {
-		open: boolean;
-		children: React.ReactNode;
-	}) => (open ? <div data-testid="soap-assistant-dialog">{children}</div> : null),
+	Dialog: ({ open, children }: { open: boolean; children: React.ReactNode }) =>
+		open ? <div data-testid="soap-assistant-dialog">{children}</div> : null,
 	DialogContent: ({ children }: { children: React.ReactNode }) => (
 		<div>{children}</div>
 	),

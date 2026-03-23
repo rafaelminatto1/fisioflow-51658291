@@ -46,7 +46,8 @@ export default function BoardDetail() {
 	const [sidebarOpen, setSidebarOpen] = useState(false);
 
 	const { data: board, isLoading, error, refetch } = useBoard(boardId);
-	const { data: tarefasRaw, refetch: refetchTarefas } = useBoardTarefas(boardId);
+	const { data: tarefasRaw, refetch: refetchTarefas } =
+		useBoardTarefas(boardId);
 	const { data: teamMembers } = useTeamMembers();
 	const updateBoard = useUpdateBoard();
 	const deleteBoard = useDeleteBoard();
@@ -73,7 +74,10 @@ export default function BoardDetail() {
 	if (isLoading) {
 		return (
 			<div className="min-h-screen bg-background">
-				<LoadingSkeleton type="card" className="h-[220px] w-full rounded-none" />
+				<LoadingSkeleton
+					type="card"
+					className="h-[220px] w-full rounded-none"
+				/>
 				<div className="px-4 py-6 sm:px-6 lg:px-8">
 					<div className="grid gap-6 lg:grid-cols-[280px_minmax(0,1fr)]">
 						<LoadingSkeleton type="card" className="h-[640px] rounded-[28px]" />
@@ -173,7 +177,10 @@ export default function BoardDetail() {
 						)}
 
 						{view === "calendar" && (
-							<BoardCalendarView tarefas={tarefas} onViewTask={handleViewTask} />
+							<BoardCalendarView
+								tarefas={tarefas}
+								onViewTask={handleViewTask}
+							/>
 						)}
 					</div>
 				</div>

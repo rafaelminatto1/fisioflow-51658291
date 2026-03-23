@@ -1,4 +1,10 @@
-import { format, formatDistanceToNow, isAfter, isBefore, startOfToday } from "date-fns";
+import {
+	format,
+	formatDistanceToNow,
+	isAfter,
+	isBefore,
+	startOfToday,
+} from "date-fns";
 import { ptBR } from "date-fns/locale";
 import {
 	AlertTriangle,
@@ -96,9 +102,7 @@ export function BoardWorkspaceSidebar({
 		? Math.round((doneTasks.length / tarefas.length) * 100)
 		: 0;
 
-	const assigneeMap = new Map(
-		teamMembers.map((member) => [member.id, member]),
-	);
+	const assigneeMap = new Map(teamMembers.map((member) => [member.id, member]));
 
 	const activeAssigneeIds = Array.from(
 		new Set(
@@ -136,7 +140,9 @@ export function BoardWorkspaceSidebar({
 									<div
 										className={cn(
 											"mt-0.5 rounded-xl p-2",
-											isActive ? "bg-primary text-primary-foreground" : "bg-muted",
+											isActive
+												? "bg-primary text-primary-foreground"
+												: "bg-muted",
 										)}
 									>
 										<Icon className="h-4 w-4" />
@@ -155,39 +161,53 @@ export function BoardWorkspaceSidebar({
 
 				<Card className="border-border/60 bg-card/90 shadow-sm">
 					<CardHeader className="pb-3">
-						<CardTitle className="text-sm font-semibold">
-							Visão geral
-						</CardTitle>
+						<CardTitle className="text-sm font-semibold">Visão geral</CardTitle>
 					</CardHeader>
 					<CardContent className="space-y-4">
 						<div className="grid grid-cols-2 gap-3">
 							<div className="rounded-2xl border border-border/50 bg-background p-3">
 								<div className="flex items-center gap-2 text-muted-foreground">
 									<CircleDot className="h-4 w-4" />
-									<span className="text-xs uppercase tracking-wide">Tarefas</span>
+									<span className="text-xs uppercase tracking-wide">
+										Tarefas
+									</span>
 								</div>
-								<div className="mt-2 text-2xl font-semibold">{tarefas.length}</div>
+								<div className="mt-2 text-2xl font-semibold">
+									{tarefas.length}
+								</div>
 							</div>
 							<div className="rounded-2xl border border-border/50 bg-background p-3">
 								<div className="flex items-center gap-2 text-muted-foreground">
 									<Columns3 className="h-4 w-4" />
-									<span className="text-xs uppercase tracking-wide">Colunas</span>
+									<span className="text-xs uppercase tracking-wide">
+										Colunas
+									</span>
 								</div>
-								<div className="mt-2 text-2xl font-semibold">{columns.length}</div>
+								<div className="mt-2 text-2xl font-semibold">
+									{columns.length}
+								</div>
 							</div>
 							<div className="rounded-2xl border border-border/50 bg-background p-3">
 								<div className="flex items-center gap-2 text-muted-foreground">
 									<CheckCircle2 className="h-4 w-4" />
-									<span className="text-xs uppercase tracking-wide">Feitas</span>
+									<span className="text-xs uppercase tracking-wide">
+										Feitas
+									</span>
 								</div>
-								<div className="mt-2 text-2xl font-semibold">{doneTasks.length}</div>
+								<div className="mt-2 text-2xl font-semibold">
+									{doneTasks.length}
+								</div>
 							</div>
 							<div className="rounded-2xl border border-border/50 bg-background p-3">
 								<div className="flex items-center gap-2 text-muted-foreground">
 									<AlertTriangle className="h-4 w-4" />
-									<span className="text-xs uppercase tracking-wide">Atrasadas</span>
+									<span className="text-xs uppercase tracking-wide">
+										Atrasadas
+									</span>
 								</div>
-								<div className="mt-2 text-2xl font-semibold">{overdueTasks.length}</div>
+								<div className="mt-2 text-2xl font-semibold">
+									{overdueTasks.length}
+								</div>
 							</div>
 						</div>
 
@@ -224,9 +244,12 @@ export function BoardWorkspaceSidebar({
 							.slice()
 							.sort((a, b) => a.order_index - b.order_index)
 							.map((column) => {
-								const count = tarefas.filter((task) => task.column_id === column.id).length;
+								const count = tarefas.filter(
+									(task) => task.column_id === column.id,
+								).length;
 								const overLimit =
-									typeof column.wip_limit === "number" && count > column.wip_limit;
+									typeof column.wip_limit === "number" &&
+									count > column.wip_limit;
 								return (
 									<div
 										key={column.id}
@@ -258,7 +281,9 @@ export function BoardWorkspaceSidebar({
 
 				<Card className="border-border/60 bg-card/90 shadow-sm">
 					<CardHeader className="pb-3">
-						<CardTitle className="text-sm font-semibold">Próximos prazos</CardTitle>
+						<CardTitle className="text-sm font-semibold">
+							Próximos prazos
+						</CardTitle>
 					</CardHeader>
 					<CardContent className="space-y-3">
 						{upcomingTasks.length === 0 && (
@@ -292,7 +317,9 @@ export function BoardWorkspaceSidebar({
 
 				<Card className="border-border/60 bg-card/90 shadow-sm">
 					<CardHeader className="pb-3">
-						<CardTitle className="text-sm font-semibold">Pessoas ativas</CardTitle>
+						<CardTitle className="text-sm font-semibold">
+							Pessoas ativas
+						</CardTitle>
 					</CardHeader>
 					<CardContent className="space-y-3">
 						<div className="flex items-center gap-2 text-sm text-muted-foreground">
@@ -312,7 +339,10 @@ export function BoardWorkspaceSidebar({
 								return (
 									<div key={id} className="flex items-center gap-3">
 										<Avatar className="h-9 w-9 border">
-											<AvatarImage src={member.avatar_url} alt={member.full_name} />
+											<AvatarImage
+												src={member.avatar_url}
+												alt={member.full_name}
+											/>
 											<AvatarFallback>
 												{member.full_name
 													.split(" ")

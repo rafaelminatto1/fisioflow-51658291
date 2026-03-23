@@ -4,11 +4,7 @@
 import { useState, useEffect, useCallback } from "react";
 import { toast } from "sonner";
 import { uploadToR2, deleteFromR2 } from "@/lib/storage/r2-storage";
-import {
-	examsApi,
-	type PatientExam,
-	type PatientExamFile,
-} from "@/api/v2";
+import { examsApi, type PatientExam, type PatientExamFile } from "@/api/v2";
 import { useAuth } from "@/contexts/AuthContext";
 
 export type { PatientExam, PatientExamFile as ExamFile };

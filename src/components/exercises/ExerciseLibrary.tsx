@@ -759,8 +759,6 @@ export function ExerciseLibrary({
 
 	return (
 		<div className="flex flex-col space-y-4 w-full">
-
-
 			{/* Search and Filters */}
 			<div className="flex flex-col gap-4 flex-shrink-0">
 				<div className="flex items-center gap-4">

@@ -1,10 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "@/hooks/use-toast";
 import { fisioLogger as logger } from "@/lib/errors/logger";
-import {
-	organizationMembersApi,
-	type OrganizationMember,
-} from "@/api/v2";
+import { organizationMembersApi, type OrganizationMember } from "@/api/v2";
 import { UserRole } from "@/types/auth";
 
 interface UserRow {

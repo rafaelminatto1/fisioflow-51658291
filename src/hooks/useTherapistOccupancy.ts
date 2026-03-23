@@ -14,11 +14,7 @@ import {
 } from "date-fns";
 import { useAuth } from "@/contexts/AuthContext";
 import type { AvailableHours } from "@/types/auth";
-import {
-	appointmentsApi,
-	profileApi,
-	type AppointmentRow,
-} from "@/api/v2";
+import { appointmentsApi, profileApi, type AppointmentRow } from "@/api/v2";
 import { fisioLogger as logger } from "@/lib/errors/logger";
 
 export interface TherapistOccupancyData {

@@ -1,6 +1,12 @@
 import React, { useMemo, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { AlertCircle, BookOpenCheck, HeartPulse, Plus, ScrollText } from "lucide-react";
+import {
+	AlertCircle,
+	BookOpenCheck,
+	HeartPulse,
+	Plus,
+	ScrollText,
+} from "lucide-react";
 import { toast } from "sonner";
 
 import { ClinicalTestDeleteDialog } from "@/components/clinical/ClinicalTestDeleteDialog";
@@ -22,8 +28,6 @@ import {
 } from "@/data/clinicalTestsCatalog";
 
 type ClinicalTest = ClinicalTestCatalogRecord;
-
-
 
 export default function ClinicalTestsLibrary() {
 	const queryClient = useQueryClient();
@@ -137,7 +141,9 @@ export default function ClinicalTestsLibrary() {
 
 	const handleAddToProtocol = (test: ClinicalTest) => {
 		if (test.is_builtin) {
-			toast.info("Duplique o teste para personalizar antes de vinculá-lo a um protocolo.");
+			toast.info(
+				"Duplique o teste para personalizar antes de vinculá-lo a um protocolo.",
+			);
 			return;
 		}
 
@@ -185,15 +191,38 @@ export default function ClinicalTestsLibrary() {
 										Biblioteca de Testes Clínicos
 									</h1>
 									<div className="flex items-center gap-2 text-xs text-muted-foreground flex-wrap mt-0.5">
-										<span><span className="font-medium text-foreground">{libraryStats.total}</span> testes</span>
+										<span>
+											<span className="font-medium text-foreground">
+												{libraryStats.total}
+											</span>{" "}
+											testes
+										</span>
 										<span className="text-border">·</span>
-										<span><span className="font-medium text-teal-600">{libraryStats.ortho}</span> ortopedia</span>
+										<span>
+											<span className="font-medium text-teal-600">
+												{libraryStats.ortho}
+											</span>{" "}
+											ortopedia
+										</span>
 										<span className="text-border hidden sm:inline">·</span>
-										<span className="hidden sm:inline"><span className="font-medium text-emerald-600">{libraryStats.sports}</span> esportiva</span>
+										<span className="hidden sm:inline">
+											<span className="font-medium text-emerald-600">
+												{libraryStats.sports}
+											</span>{" "}
+											esportiva
+										</span>
 										<span className="text-border hidden sm:inline">·</span>
-										<span className="hidden sm:inline"><span className="font-medium text-blue-600">{libraryStats.postOp}</span> pós-op</span>
+										<span className="hidden sm:inline">
+											<span className="font-medium text-blue-600">
+												{libraryStats.postOp}
+											</span>{" "}
+											pós-op
+										</span>
 										{libraryStats.pdfCount > 0 && (
-											<><span className="text-border">·</span><span>{libraryStats.pdfCount} PDFs</span></>
+											<>
+												<span className="text-border">·</span>
+												<span>{libraryStats.pdfCount} PDFs</span>
+											</>
 										)}
 									</div>
 								</div>
@@ -218,7 +247,9 @@ export default function ClinicalTestsLibrary() {
 										Não foi possível sincronizar os testes salvos
 									</h2>
 									<p className="mt-1 text-sm leading-6 text-slate-500">
-										A biblioteca clínica curada segue disponível abaixo. Tente novamente para recuperar os testes personalizados da clínica.
+										A biblioteca clínica curada segue disponível abaixo. Tente
+										novamente para recuperar os testes personalizados da
+										clínica.
 									</p>
 								</div>
 								<Button
@@ -250,7 +281,9 @@ export default function ClinicalTestsLibrary() {
 										Curadoria clínica
 									</div>
 									<p className="text-sm text-slate-600">
-										Testes built-in exibem evidência, imagens e materiais de apoio. Testes personalizados continuam editáveis e podem ser vinculados aos protocolos.
+										Testes built-in exibem evidência, imagens e materiais de
+										apoio. Testes personalizados continuam editáveis e podem ser
+										vinculados aos protocolos.
 									</p>
 								</div>
 							</div>

@@ -51,6 +51,11 @@ export const aiApi = {
 			method: "POST",
 			body: JSON.stringify({ messages, context }),
 		}),
+	suggestReply: (params: { patientName: string; context: string }) =>
+		request<{ data: { suggestion: string } }>("/api/ai/suggest-reply", {
+			method: "POST",
+			body: JSON.stringify(params),
+		}),
 };
 
 export const analyticsApi = {

@@ -28,11 +28,7 @@ export async function ensureServiceWorkerRegistration(): Promise<ServiceWorkerRe
 		);
 		return registration;
 	} catch (error) {
-		logger.error(
-			"Falha ao registrar Service Worker",
-			error,
-			"serviceWorker",
-		);
+		logger.error("Falha ao registrar Service Worker", error, "serviceWorker");
 		return null;
 	}
 }

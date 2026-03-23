@@ -145,9 +145,10 @@ export function AIAssistantPanel({
 
 		// Busca vetorial nos documentos internos (Wiki/Protocolos)
 		const clinicalContext = await searchClinicalKnowledge(input);
-		const groundingText = clinicalContext.length > 0 
-			? `\n\n[CONTEXTO DA CLÍNICA]:\n${clinicalContext.map(c => `- ${c.metadata.text || c.id}`).join('\n')}`
-			: "";
+		const groundingText =
+			clinicalContext.length > 0
+				? `\n\n[CONTEXTO DA CLÍNICA]:\n${clinicalContext.map((c) => `- ${c.metadata.text || c.id}`).join("\n")}`
+				: "";
 
 		chat.append({ role: "user", content: `${input}${groundingText}` });
 		setInput("");

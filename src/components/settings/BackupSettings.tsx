@@ -10,11 +10,7 @@ import { Button } from "@/components/ui/button";
 import { Database, Download, Loader2 } from "lucide-react";
 import { format } from "date-fns";
 import { useToast } from "@/hooks/use-toast";
-import {
-	appointmentsApi,
-	financialApi,
-	patientsApi,
-} from "@/api/v2";
+import { appointmentsApi, financialApi, patientsApi } from "@/api/v2";
 import { fisioLogger as logger } from "@/lib/errors/logger";
 
 export function BackupSettings() {

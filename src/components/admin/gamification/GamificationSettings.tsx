@@ -13,10 +13,7 @@ import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
-import {
-	gamificationApi,
-	type GamificationSettingRow,
-} from "@/api/v2";
+import { gamificationApi, type GamificationSettingRow } from "@/api/v2";
 
 type GamificationSettingValue = string | number | boolean;
 

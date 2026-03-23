@@ -6,7 +6,10 @@ import { AppointmentService } from "@/services/appointmentService";
 import { ErrorHandler } from "@/lib/errors/ErrorHandler";
 import { appointmentPeriodKeys } from "./useAppointmentsByPeriod";
 import { AppointmentStatus } from "@/types/appointment";
-import { triggerHapticImpact, type HapticImpactStyle } from "@/lib/platform/native";
+import {
+	triggerHapticImpact,
+	type HapticImpactStyle,
+} from "@/lib/platform/native";
 
 const triggerHaptic = async (style: HapticImpactStyle = "light") => {
 	try {
