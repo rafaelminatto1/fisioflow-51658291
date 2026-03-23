@@ -8,6 +8,7 @@ import {
 	Search,
 	Loader2,
 	BookOpen,
+	Sparkles,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
@@ -25,6 +26,7 @@ import {
 } from "@/components/ui/popover";
 import { Badge } from "@/components/ui/badge";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { builtinEvaluationTemplates } from "@/data/defaultEvaluationTemplates";
 
 export interface EvaluationTemplate {
 	id: string;
@@ -34,6 +36,7 @@ export interface EvaluationTemplate {
 	referencias?: string | null;
 	category?: string;
 	fields?: TemplateField[];
+	isBuiltin?: boolean;
 }
 
 export interface TemplateField {
@@ -67,6 +70,7 @@ const CATEGORY_LABELS: Record<string, string> = {
 	respiratoria: "Fisioterapia Respiratória",
 	padrao: "Avaliação Padrão",
 	geral: "Avaliação Geral",
+	"pos-operatorio": "Pós-Operatório",
 };
 
 const CATEGORY_COLORS: Record<string, string> = {
@@ -80,6 +84,7 @@ const CATEGORY_COLORS: Record<string, string> = {
 		"bg-orange-100 text-orange-800 dark:bg-orange-900/30 dark:text-orange-400",
 	padrao: "bg-primary/10 text-primary",
 	geral: "bg-muted text-muted-foreground",
+	"pos-operatorio": "bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-400",
 };
 
 export function EvaluationTemplateSelector({
@@ -93,7 +98,7 @@ export function EvaluationTemplateSelector({
 	const [searchQuery, setSearchQuery] = useState("");
 
 	// Fetch all active templates with their fields
-	const { data: templates = [], isLoading } = useQuery({
+	const { data: remoteTemplates = [], isLoading } = useQuery({
 		queryKey: ["evaluation-templates-with-fields", category],
 		queryFn: async () => {
 			const formsResponse = await evaluationFormsApi.list({
@@ -139,6 +144,7 @@ export function EvaluationTemplateSelector({
 								: null,
 						category: String(detail.tipo ?? "geral"),
 						fields: fields.sort((a, b) => a.ordem - b.ordem),
+						isBuiltin: false,
 					} as EvaluationTemplate;
 				}),
 			);
@@ -146,6 +152,16 @@ export function EvaluationTemplateSelector({
 			return templatesWithFields;
 		},
 	});
+
+	// Merge builtin and remote templates
+	const templates = useMemo(() => {
+		// Filter built-in templates by category if needed
+		const filteredBuiltin = category 
+			? builtinEvaluationTemplates.filter(t => t.category === category || t.tipo === category)
+			: builtinEvaluationTemplates;
+			
+		return [...filteredBuiltin, ...remoteTemplates];
+	}, [remoteTemplates, category]);
 
 	// Auto-load default template on first render
 	React.useEffect(() => {
@@ -231,7 +247,14 @@ export function EvaluationTemplateSelector({
 						<FileText className="h-4 w-4 shrink-0 text-muted-foreground" />
 						{selectedTemplate ? (
 							<div className="flex flex-col gap-0.5">
-								<span className="font-medium">{selectedTemplate.nome}</span>
+								<div className="flex items-center gap-2">
+									<span className="font-medium">{selectedTemplate.nome}</span>
+									{selectedTemplate.isBuiltin !== false && (
+										<Badge variant="outline" className="text-[10px] h-4 bg-primary/5 text-primary border-primary/20 gap-1 px-1.5">
+											<Sparkles className="h-2.5 w-2.5" /> Gold Standard
+										</Badge>
+									)}
+								</div>
 								<span className="text-xs text-muted-foreground line-clamp-1">
 									{selectedTemplate.descricao}
 								</span>
@@ -307,9 +330,14 @@ export function EvaluationTemplateSelector({
 													)}
 												/>
 												<div className="flex flex-col flex-1 min-w-0">
-													<span className="font-medium truncate">
-														{template.nome}
-													</span>
+													<div className="flex items-center gap-2">
+														<span className="font-medium truncate">
+															{template.nome}
+														</span>
+														{template.isBuiltin !== false && (
+															<Sparkles className="h-3 w-3 text-primary shrink-0" />
+														)}
+													</div>
 													{template.descricao && (
 														<span className="text-xs text-muted-foreground truncate">
 															{template.descricao}
@@ -332,4 +360,6 @@ export function EvaluationTemplateSelector({
 	);
 }
 
+export default EvaluationTemplateSelector;
+export default EvaluationTemplateSelector;
 export default EvaluationTemplateSelector;
