@@ -67,6 +67,7 @@ import {
 	CheckCircle2,
 	Film,
 	Search,
+	Camera,
 } from "lucide-react";
 import {
 	Collapsible,
@@ -148,6 +149,7 @@ const clinicaMenuItems = [
 	{ icon: Activity, label: "Exercícios", href: "/exercises" },
 	{ icon: Target, label: "Protocolos e Fases", href: "/protocols" },
 	{ icon: ClipboardList, label: "Avaliações", href: "/clinical-tests" },
+	{ icon: Camera, label: "Biomecânica", href: "/biomechanics" },
 ];
 
 const inteligenciaMenuItems = [

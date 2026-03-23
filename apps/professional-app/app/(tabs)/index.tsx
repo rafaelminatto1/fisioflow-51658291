@@ -96,6 +96,23 @@ export default function DashboardScreen() {
               ))}
             </View>
 
+            <View style={styles.quickActions}>
+              <TouchableOpacity 
+                style={[styles.quickActionCard, { backgroundColor: colors.primary }]} 
+                onPress={() => router.push('/(app)/biomechanics')}
+                activeOpacity={0.8}
+              >
+                <View style={styles.quickActionIcon}>
+                  <Ionicons name="film" size={28} color="#fff" />
+                </View>
+                <View>
+                  <Text style={styles.quickActionTitle}>Laboratório Biomecânico</Text>
+                  <Text style={styles.quickActionSub}>Análise Kinovea & Tracking AI</Text>
+                </View>
+                <Ionicons name="chevron-forward" size={20} color="rgba(255,255,255,0.6)" style={{ marginLeft: 'auto' }} />
+              </TouchableOpacity>
+            </View>
+
             <View style={styles.sectionHeader}>
               <Text style={[styles.sectionTitle, { color: colors.text }]}>Próximas Consultas</Text>
               <TouchableOpacity onPress={() => router.push('/(tabs)/agenda')} style={styles.seeAllBtn}>
@@ -210,4 +227,9 @@ const styles = StyleSheet.create({
   patientNameList: { fontSize: 16, fontWeight: '600', marginBottom: 4 },
   patientCondition: { fontSize: 13 },
   actionArrow: { width: 32, height: 32, borderRadius: 16, alignItems: 'center', justifyContent: 'center', backgroundColor: 'rgba(0,0,0,0.02)' },
+  quickActions: { marginBottom: 24 },
+  quickActionCard: { flexDirection: 'row', alignItems: 'center', padding: 20, borderRadius: 24, shadowColor: '#000', shadowOffset: { width: 0, height: 10 }, shadowOpacity: 0.1, shadowRadius: 20, elevation: 5 },
+  quickActionIcon: { width: 56, height: 56, borderRadius: 20, backgroundColor: 'rgba(255,255,255,0.2)', alignItems: 'center', justifyContent: 'center', marginRight: 16 },
+  quickActionTitle: { color: '#fff', fontSize: 18, fontWeight: '800', letterSpacing: -0.5 },
+  quickActionSub: { color: 'rgba(255,255,255,0.8)', fontSize: 13, fontWeight: '600' },
 });
