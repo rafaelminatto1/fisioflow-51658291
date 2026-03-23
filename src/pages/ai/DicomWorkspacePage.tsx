@@ -19,6 +19,7 @@ import {
 	getTrackedCodecSummaries,
 	getTrackedTransferSyntaxDetails,
 	getCodecRecommendations,
+	subscribeToTrackedTransferSyntaxes,
 	type TrackedTransferSyntax,
 } from "@/components/analysis/dicom/transferSyntaxTracker";
 
@@ -91,6 +92,8 @@ export default function DicomWorkspacePage() {
 	useEffect(() => {
 		refreshAudit();
 	}, [mode, file]);
+
+	useEffect(() => subscribeToTrackedTransferSyntaxes(refreshAudit), []);
 
 	const resetAudit = () => {
 		clearTrackedTransferSyntaxes();
@@ -251,8 +254,9 @@ export default function DicomWorkspacePage() {
 							</CardHeader>
 							<CardContent className="space-y-3">
 								<p className="text-sm text-muted-foreground">
-									Esta máquina salva os `Transfer Syntax UID` vistos em estudos reais.
-									Use essa leitura antes de remover `openjpeg` ou `openjph`.
+									Esta máquina salva os `Transfer Syntax UID` vistos em estudos
+									remotos e arquivos `.dcm` locais. Use essa leitura antes de
+									remover `openjpeg` ou `openjph`.
 								</p>
 								<div className="flex flex-wrap gap-2">
 									{trackedFamilies.length > 0 ? (

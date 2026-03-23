@@ -12,6 +12,7 @@ import { Ruler, MousePointer2, ZoomIn, Move } from "lucide-react";
 import { fisioLogger as logger } from "@/lib/errors/logger";
 import { dicomWebClient } from "@/services/dicom/dicomWebClient";
 import { loadCornerstoneRuntime } from "./cornerstoneRuntime";
+import { trackTransferSyntax } from "./transferSyntaxTracker";
 
 interface DicomViewerProps {
 	file?: File;
@@ -128,6 +129,19 @@ export const DicomViewerInner: React.FC<DicomViewerProps> = ({
 			let imageIds: string[] = [];
 
 			if (file) {
+				try {
+					const { extractTransferSyntaxFromFile } = await import(
+						"./extractTransferSyntax"
+					);
+					const syntax = await extractTransferSyntaxFromFile(file);
+					trackTransferSyntax(syntax);
+				} catch (error) {
+					logger.warn(
+						"Falha ao extrair Transfer Syntax do arquivo DICOM local",
+						error,
+						"DicomViewerInner",
+					);
+				}
 				const imageId = runtimeRef.current.dicomImageLoader.wadouri.fileManager.add(
 					file,
 				);
