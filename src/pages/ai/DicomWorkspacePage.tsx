@@ -16,6 +16,7 @@ import { dicomApi } from "@/api/v2";
 import { fisioLogger as logger } from "@/lib/errors/logger";
 import {
 	getTrackedTransferSyntaxDetails,
+	getCodecRecommendations,
 	type TrackedTransferSyntax,
 } from "@/components/analysis/dicom/transferSyntaxTracker";
 
@@ -101,6 +102,10 @@ export default function DicomWorkspacePage() {
 			Array.from(new Set(trackedSyntaxes.map((item) => item.codec))).filter(
 				(item) => item !== "native" && item !== "unknown",
 			),
+		[trackedSyntaxes],
+	);
+	const codecRecommendations = useMemo(
+		() => getCodecRecommendations(),
 		[trackedSyntaxes],
 	);
 
@@ -223,6 +228,13 @@ export default function DicomWorkspacePage() {
 												<div className="mt-2 text-xs uppercase tracking-wide text-slate-600">
 													Codec: {item.codec}
 												</div>
+												<div className="mt-1 text-xs text-muted-foreground">
+													Ocorrencias: {item.count}
+												</div>
+												<div className="mt-1 text-xs text-muted-foreground">
+													Ultimo uso:{" "}
+													{new Date(item.lastSeenAt).toLocaleString("pt-BR")}
+												</div>
 											</div>
 										))
 									) : (
@@ -238,18 +250,23 @@ export default function DicomWorkspacePage() {
 							<CardHeader className="pb-3">
 								<CardTitle className="flex items-center gap-2 text-base">
 									<RefreshCw className="h-4 w-4" />
-									Leitura técnica
+									Recomendacao de corte
 								</CardTitle>
 							</CardHeader>
-							<CardContent className="space-y-2 text-sm text-muted-foreground">
-								<p>
-									Se aparecer apenas `native` e `charls`, o melhor corte candidato
-									passa a ser `openjph`.
-								</p>
-								<p>
-									Se `openjpeg` não aparecer depois de alguns estudos reais, ele vira o
-									próximo candidato a lazy-load agressivo ou remoção.
-								</p>
+							<CardContent className="space-y-3 text-sm text-muted-foreground">
+								{codecRecommendations.map((item) => (
+									<div key={item.codec} className="rounded-lg border bg-slate-50 p-3">
+										<div className="flex items-center justify-between gap-2">
+											<div className="font-medium text-slate-900">{item.codec}</div>
+											<Badge
+												variant={item.status === "candidate" ? "outline" : "secondary"}
+											>
+												{item.status === "candidate" ? "candidato" : "manter"}
+											</Badge>
+										</div>
+										<p className="mt-2 text-xs text-muted-foreground">{item.reason}</p>
+									</div>
+								))}
 							</CardContent>
 						</Card>
 					</div>
