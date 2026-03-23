@@ -26,7 +26,6 @@ import {
 } from "@/components/analysis/dicom/transferSyntaxTracker";
 
 const DicomViewer = lazy(() => import("../dicom/DicomViewer"));
-const DicomBrowser = lazy(() => import("../dicom/DicomBrowser"));
 const PoseAnalyzer = lazy(() => import("../posture/PoseAnalyzer"));
 const AssetViewer = lazy(() => import("../viewer/AssetViewer"));
 const ClinicalPostureAnalysis = lazy(
@@ -88,7 +87,6 @@ const MOCK_GAIT_DATA: GaitMetrics = {
 
 type ViewerMode =
 	| "upload"
-	| "dicom_browser"
 	| "dicom"
 	| "pose"
 	| "image"
@@ -340,14 +338,6 @@ const ImageAnalysisDashboard = () => {
 					<Suspense fallback={<LoadingFallback />}>
 						<div className="flex-1 overflow-hidden border rounded-lg bg-black">
 							<DicomViewer file={file} />
-						</div>
-					</Suspense>
-				)}
-
-				{mode === "dicom_browser" && (
-					<Suspense fallback={<LoadingFallback />}>
-						<div className="flex-1 overflow-hidden border rounded-lg bg-white">
-							<DicomBrowser />
 						</div>
 					</Suspense>
 				)}
