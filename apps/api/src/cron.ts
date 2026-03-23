@@ -13,7 +13,20 @@ export async function handleScheduled(event: ScheduledEvent, env: Env, ctx: Exec
   console.log(`[Cron] Executing job: ${cron} at ${new Date().toISOString()}`);
 
   try {
+    const now = new Date();
+    const day = now.getUTCDay(); // 0-6 (Sunday is 0)
+    const hour = now.getUTCHours() - 3; // Ajuste para Horário de Brasília (BRT)
+
+    // Business Hours check: Monday to Friday, 7 AM to 8 PM (20h)
+    const isBusinessHours = day >= 1 && day <= 5 && hour >= 7 && hour < 20;
+
     switch (cron) {
+      case "0 * * * *": // Every hour
+        if (isBusinessHours) {
+          await smartWarmup(pool);
+        }
+        break;
+
       case "0 9 * * *": // Daily at 9:00 AM
         await sendAppointmentReminders(pool, env, ctx);
         await processBirthdays(pool, env, ctx);
@@ -148,5 +161,20 @@ async function generateDailyReports(pool: any, env: Env) {
     console.log('[Cron] Daily report generated successfully.');
   } catch (error) {
     console.error('[Cron] Daily report generation failed:', error);
+  }
+}
+
+async function smartWarmup(pool: any) {
+  console.log('[Cron] Smart warmup: keeping Neon active during business hours...');
+  try {
+    // Queries ultra-leves apenas para manter a instância "awake"
+    await pool.query(`
+      SELECT 
+        (SELECT COUNT(*) FROM patients WHERE is_active = true) as total_patients,
+        (SELECT COUNT(*) FROM appointments WHERE date = CURRENT_DATE) as today_appointments,
+        (SELECT NOW()) as server_time
+    `);
+  } catch (error) {
+    console.warn('[Cron] Smart warmup failed:', error);
   }
 }

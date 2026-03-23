@@ -34,7 +34,6 @@ app.get('/conversations', async (c) => {
       cl.participant_id,
       cl.last_message_at,
       p.full_name as participant_name,
-      p.name as participant_short_name,
       p.role as participant_role,
       (SELECT content FROM messages 
        WHERE (sender_id = $1 AND recipient_id = cl.participant_id) 
@@ -48,17 +47,12 @@ app.get('/conversations', async (c) => {
   );
 
   const conversations = result.rows.map(row => ({
-    id: row.participant_id, // Simple conversation ID for 1:1 chats
-    participantIds: [user.uid, row.participant_id],
-    participantNames: {
-      [row.participant_id]: row.participant_name || row.participant_short_name || 'Usuário'
-    },
-    lastMessage: {
-      content: row.last_message_content || '',
-      senderId: row.participant_id, // This is a simplification
-      createdAt: row.last_message_at
-    },
-    unreadCount: { [user.uid]: 0 }, // We'll need a way to track this in the DB
+    id: row.participant_id,
+    participantId: row.participant_id,
+    participantName: row.participant_name || 'Colega de Equipe',
+    lastMessage: row.last_message_content || '',
+    lastMessageAt: row.last_message_at,
+    unreadCount: 0,
     updatedAt: row.last_message_at
   }));
 

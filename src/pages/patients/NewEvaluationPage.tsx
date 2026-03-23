@@ -1,4 +1,4 @@
-import { useState, useCallback, useEffect } from "react";
+import { useState, useCallback, useEffect, useMemo } from "react";
 import { useNavigate, useParams, useSearchParams } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import {
@@ -12,6 +12,7 @@ import {
 	Save,
 	Sparkles,
 	Camera,
+	Printer,
 } from "lucide-react";
 import { MainLayout } from "@/components/layout/MainLayout";
 import { PatientDashboard360 } from "@/components/patient/dashboard/PatientDashboard360";
@@ -230,9 +231,33 @@ export default function NewEvaluationPage() {
 	return (
 		<RichTextProvider>
 			<MainLayout>
-				<div className="min-h-screen bg-background/50 pb-20">
+				{/* Print-only Header */}
+				<div className="hidden print:block mb-8 border-b-2 border-primary pb-6">
+					<div className="flex justify-between items-start">
+						<div>
+							<h1 className="text-3xl font-black text-primary tracking-tighter">FISIOFLOW</h1>
+							<p className="text-xs font-bold uppercase tracking-widest text-muted-foreground">Centro de Reabilitação Avançada</p>
+						</div>
+						<div className="text-right">
+							<p className="text-sm font-bold">Data da Avaliação</p>
+							<p className="text-lg">{new Date().toLocaleDateString('pt-BR')}</p>
+						</div>
+					</div>
+					<div className="mt-8 grid grid-cols-2 gap-4 bg-muted/20 p-4 rounded-xl border">
+						<div>
+							<p className="text-[10px] font-bold uppercase text-muted-foreground">Paciente</p>
+							<p className="font-bold text-lg">{PatientHelpers.getName(patient)}</p>
+						</div>
+						<div>
+							<p className="text-[10px] font-bold uppercase text-muted-foreground">Avaliador</p>
+							<p className="font-bold text-lg">Dr. {patient.therapist_name || 'Fisioterapeuta'}</p>
+						</div>
+					</div>
+				</div>
+
+				<div className="min-h-screen bg-background/50 pb-20 print:bg-white print:pb-0">
 					{/* Header Actions */}
-					<div className="sticky top-0 z-30 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 border-b px-6 py-3 flex items-center justify-between">
+					<div className="sticky top-0 z-30 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 border-b px-6 py-3 flex items-center justify-between print:hidden">
 						<div className="flex items-center gap-4">
 							<Button
 								variant="ghost"
@@ -257,6 +282,14 @@ export default function NewEvaluationPage() {
 							>
 								Ver Histórico
 							</Button>
+							<Button
+								variant="outline"
+								onClick={() => window.print()}
+								className="gap-2"
+							>
+								<Printer className="h-4 w-4" />
+								Imprimir
+							</Button>
 							<Button onClick={handleSaveEvaluation} disabled={isSaving}>
 								<Save className="mr-2 h-4 w-4" />
 								{isSaving ? "Salvando..." : "Salvar Avaliação"}
@@ -264,14 +297,14 @@ export default function NewEvaluationPage() {
 						</div>
 					</div>
 
-					<div className="container max-w-7xl mx-auto pt-6 px-4 space-y-8">
+					<div className="container max-w-7xl mx-auto pt-6 px-4 space-y-8 print:pt-0">
 						{/* Tabs Navigation */}
 						<Tabs
 							value={activeTab}
 							onValueChange={setActiveTab}
 							className="w-full"
 						>
-							<TabsList className="grid w-full grid-cols-2 md:grid-cols-4 lg:grid-cols-5 p-1 bg-muted/50 rounded-xl mb-6">
+							<TabsList className="grid w-full grid-cols-2 md:grid-cols-4 lg:grid-cols-5 p-1 bg-muted/50 rounded-xl mb-6 print:hidden">
 								<TabsTrigger value="dashboard" className="gap-2">
 									<LayoutDashboard className="h-4 w-4" />
 									<span className="hidden sm:inline">Visão Geral</span>
@@ -294,8 +327,8 @@ export default function NewEvaluationPage() {
 								</TabsTrigger>
 							</TabsList>
 
-							<div className="mt-6 animate-in fade-in-50 duration-500">
-								<TabsContent value="dashboard" className="m-0">
+							<div className="mt-6 animate-in fade-in-50 duration-500 print:mt-0">
+								<TabsContent value="dashboard" className="m-0 print:hidden">
 									<PatientDashboard360
 										patient={patient}
 										appointments={patient.appointments}
@@ -318,9 +351,9 @@ export default function NewEvaluationPage() {
 								</TabsContent>
 
 								<TabsContent value="anamnesis" className="m-0">
-									<div className="max-w-4xl mx-auto space-y-6">
+									<div className="max-w-4xl mx-auto space-y-6 print:max-w-full">
 										{/* Header with Template Selector */}
-										<div className="flex flex-col md:flex-row md:items-start md:justify-between gap-4">
+										<div className="flex flex-col md:flex-row md:items-start md:justify-between gap-4 print:hidden">
 											<div>
 												<h2 className="text-2xl font-bold tracking-tight">
 													Anamnese Detalhada
@@ -351,7 +384,7 @@ export default function NewEvaluationPage() {
 										</div>
 
 										{/* Template Selector */}
-										<div className="space-y-3 bg-muted/30 p-4 rounded-xl border border-dashed">
+										<div className="space-y-3 bg-muted/30 p-4 rounded-xl border border-dashed print:hidden">
 											<div className="flex items-center justify-between">
 												<label className="text-xs font-bold uppercase tracking-widest text-muted-foreground">
 													Template de Avaliação
@@ -377,8 +410,8 @@ export default function NewEvaluationPage() {
 
 										{/* Content Area: Template Fields or Rich Text */}
 										{!selectedTemplate && customFields.length === 0 ? (
-											<div className="space-y-6 animate-in fade-in slide-in-from-bottom-2 duration-500">
-												<div className="flex items-center justify-between border-b pb-4">
+											<div className="space-y-6 animate-in fade-in slide-in-from-bottom-2 duration-500 print:space-y-4">
+												<div className="flex items-center justify-between border-b pb-4 print:hidden">
 													<div className="space-y-1">
 														<Badge variant="outline" className="gap-1.5 py-1 px-3 bg-primary/5 text-primary border-primary/20">
 															<Sparkles className="h-3.5 w-3.5" /> Quadro Branco (Livre)
@@ -393,26 +426,26 @@ export default function NewEvaluationPage() {
 														<span>Editor Rico</span>
 													</div>
 												</div>
-												<div className="border-2 border-muted/50 rounded-2xl bg-card shadow-[0_8px_30px_rgb(0,0,0,0.04)] overflow-hidden focus-within:ring-2 focus-within:ring-primary/20 focus-within:border-primary/30 transition-all">
-													<div className="bg-muted/30 border-b p-1">
+												<div className="border-2 border-muted/50 rounded-2xl bg-card shadow-[0_8px_30px_rgb(0,0,0,0.04)] overflow-hidden focus-within:ring-2 focus-within:ring-primary/20 focus-within:border-primary/30 transition-all print:border-none print:shadow-none">
+													<div className="bg-muted/30 border-b p-1 print:hidden">
 														<RichTextToolbar 
 															className="border-none shadow-none bg-transparent" 
 															imageUploadFolder={patientId ? `patients/${patientId}/evaluations/whiteboard` : undefined}
 														/>
 													</div>
-													<div className="p-8 min-h-[600px]">
+													<div className="p-8 min-h-[600px] print:p-0">
 														<RichTextEditor
 															placeholder="Comece a escrever sua anamnese livre... Use '/' para comandos como tabelas, listas e títulos."
 															value={richTextAnamnesis}
 															onValueChange={setRichTextAnamnesis}
 															accentColor="sky"
-															className="!border-0 !p-0 shadow-none min-h-[550px] [&_.ProseMirror]:text-lg [&_.ProseMirror]:leading-relaxed"
+															className="!border-0 !p-0 shadow-none min-h-[550px] [&_.ProseMirror]:text-lg [&_.ProseMirror]:leading-relaxed print:text-base"
 														/>
 													</div>
 												</div>
 											</div>
 										) : (
-											<div className="animate-in fade-in slide-in-from-bottom-2 duration-500 pt-4">
+											<div className="animate-in fade-in slide-in-from-bottom-2 duration-500 pt-4 print:pt-0">
 												<DynamicFieldRenderer
 													fields={allFields}
 													values={fieldValues}
@@ -423,7 +456,7 @@ export default function NewEvaluationPage() {
 
 										{/* Custom Fields Note */}
 										{customFields.length > 0 && (
-											<div className="text-sm text-muted-foreground text-center py-2">
+											<div className="text-sm text-muted-foreground text-center py-2 print:hidden">
 												{customFields.length} campo(s) personalizado(s)
 												adicionado(s)
 											</div>
@@ -432,12 +465,12 @@ export default function NewEvaluationPage() {
 								</TabsContent>
 
 								<TabsContent value="physical" className="m-0">
-									<div className="max-w-4xl mx-auto">
-										<div className="mb-6">
+									<div className="max-w-4xl mx-auto print:max-w-full">
+										<div className="mb-6 print:mb-4">
 											<h2 className="text-2xl font-bold tracking-tight">
 												Exame Físico
 											</h2>
-											<p className="text-muted-foreground">
+											<p className="text-muted-foreground print:hidden">
 												Registre os achados físicos, amplitude de movimento e
 												força.
 											</p>
@@ -449,38 +482,50 @@ export default function NewEvaluationPage() {
 									</div>
 								</TabsContent>
 
-								<TabsContent value="postural" className="m-0">
-									<div className="max-w-6xl mx-auto">
-										<div className="mb-6">
+								<TabsContent value="postural" className="m-0 print:break-before-page">
+									<div className="max-w-6xl mx-auto print:max-w-full">
+										<div className="mb-6 print:mb-4">
 											<h2 className="text-2xl font-bold tracking-tight">
 												Análise Postural AI
 											</h2>
-											<p className="text-muted-foreground">
+											<p className="text-muted-foreground print:hidden">
 												Use a câmera para identificar desvios posturais e calcular ângulos automaticamente.
 											</p>
 										</div>
-										<PosturalAnalysisTool 
-											patientName={patient ? PatientHelpers.getName(patient) : undefined}
-											onCapture={(img, analysis) => {
-												setPhysicalExamData((prev: any) => ({
-													...prev,
-													posturalAnalysis: [
-														...(prev.posturalAnalysis || []),
-														{ img, analysis, timestamp: new Date().toISOString() }
-													]
-												}));
-											}}
-										/>
+										<div className="print:hidden">
+											<PosturalAnalysisTool 
+												patientName={patient ? PatientHelpers.getName(patient) : undefined}
+												onCapture={(img, analysis) => {
+													setPhysicalExamData((prev: any) => ({
+														...prev,
+														posturalAnalysis: [
+															...(prev.posturalAnalysis || []),
+															{ img, analysis, timestamp: new Date().toISOString() }
+														]
+													}));
+												}}
+											/>
+										</div>
+										
+										{/* Print view for postural analysis */}
+										<div className="hidden print:grid grid-cols-2 gap-4">
+											{physicalExamData.posturalAnalysis?.map((item: any, idx: number) => (
+												<div key={idx} className="border rounded-xl p-2">
+													<img src={item.img} alt={`Análise ${idx}`} className="w-full h-auto rounded-lg" />
+													<p className="text-[10px] mt-1 font-bold uppercase text-center">{item.analysis?.type || 'Vista Postural'}</p>
+												</div>
+											))}
+										</div>
 									</div>
 								</TabsContent>
 
-								<TabsContent value="pain-map" className="m-0">
-									<div className="max-w-5xl mx-auto">
-										<div className="mb-6 hidden md:block">
+								<TabsContent value="pain-map" className="m-0 print:break-before-page">
+									<div className="max-w-5xl mx-auto print:max-w-full">
+										<div className="mb-6 hidden md:block print:block print:mb-4">
 											<h2 className="text-2xl font-bold tracking-tight">
 												Mapa de Dor Interativo
 											</h2>
-											<p className="text-muted-foreground">
+											<p className="text-muted-foreground print:hidden">
 												Marque as regiões dolorosas e a intensidade.
 											</p>
 										</div>

@@ -15,7 +15,15 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
-import { Send, Search, Check, CheckCheck, Plus, User, MessageSquare as MessageSquareIcon } from "lucide-react";
+import {
+	Send,
+	Search,
+	Check,
+	CheckCheck,
+	Plus,
+	User,
+	MessageSquare as MessageSquareIcon,
+} from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { cn } from "@/lib/utils";
 import { TeamSelector } from "./TeamSelector";

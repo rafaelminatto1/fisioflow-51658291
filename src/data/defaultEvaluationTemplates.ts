@@ -308,7 +308,7 @@ export const builtinEvaluationTemplates: EvaluationTemplate[] = [
 		category: "geral",
 		fields: [
 			{
-				id: uuidv4(),
+				id: "sf-objetivo",
 				label: "Objetivo do Paciente",
 				tipo_campo: "textarea",
 				placeholder: "O que o paciente busca alcançar com a fisioterapia?",
@@ -317,7 +317,7 @@ export const builtinEvaluationTemplates: EvaluationTemplate[] = [
 				section: "Expectativas",
 			},
 			{
-				id: uuidv4(),
+				id: "sf-atividades-sim-nao",
 				label: "Pratica Atividades Físicas?",
 				tipo_campo: "opcao_unica",
 				opcoes: ["Sim", "Não", "No Passado"],
@@ -326,16 +326,18 @@ export const builtinEvaluationTemplates: EvaluationTemplate[] = [
 				section: "Estilo de Vida",
 			},
 			{
-				id: uuidv4(),
+				id: "sf-atividades-quais",
 				label: "Quais atividades e frequência?",
 				tipo_campo: "texto_curto",
 				placeholder: "Ex: Musculação 3x/semana",
 				ordem: 3,
 				obrigatorio: false,
 				section: "Estilo de Vida",
+				dependsOnFieldId: "sf-atividades-sim-nao",
+				dependsOnValue: ["Sim", "No Passado"],
 			},
 			{
-				id: uuidv4(),
+				id: "sf-queixa",
 				label: "Queixa Principal",
 				tipo_campo: "textarea",
 				placeholder: "Relato livre da dor ou limitação atual.",
@@ -344,7 +346,7 @@ export const builtinEvaluationTemplates: EvaluationTemplate[] = [
 				section: "Anamnese",
 			},
 			{
-				id: uuidv4(),
+				id: "sf-hda",
 				label: "Histórico da Doença Atual (HDA)",
 				tipo_campo: "textarea",
 				placeholder: "Cronologia dos fatos, início dos sintomas e evolução.",
