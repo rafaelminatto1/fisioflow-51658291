@@ -1,7 +1,7 @@
 // Lazy-loaded heavy components for code-splitting
 
 import React, { useEffect, useState, useCallback, lazy, Suspense } from "react";
-import { useSearchParams } from "react-router-dom";
+import { Link, useSearchParams } from "react-router-dom";
 import { useDropzone } from "react-dropzone";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -246,19 +246,25 @@ const ImageAnalysisDashboard = () => {
 								</div>
 
 								<div className="mt-8 border-t pt-6 w-full max-w-md space-y-2">
-									<Button
-										variant="outline"
-										className="w-full"
-										onClick={() => handleModeChange("dicom_browser")}
-										disabled={!dicomRemoteEnabled || dicomConfigLoading}
-									>
-										<Database className="mr-2 h-4 w-4" />
-										{dicomConfigLoading
-											? "Verificando PACS DICOM..."
-											: dicomRemoteEnabled
-												? "Explorar estudos DICOM"
+									{dicomRemoteEnabled && !dicomConfigLoading ? (
+										<Button asChild variant="outline" className="w-full">
+											<Link to="/ai/dicom">
+												<Database className="mr-2 h-4 w-4" />
+												Explorar estudos DICOM
+											</Link>
+										</Button>
+									) : (
+										<Button
+											variant="outline"
+											className="w-full"
+											disabled
+										>
+											<Database className="mr-2 h-4 w-4" />
+											{dicomConfigLoading
+												? "Verificando PACS DICOM..."
 												: "PACS DICOM indisponível"}
-									</Button>
+										</Button>
+									)}
 									<Button
 										variant="secondary"
 										className="w-full"
