@@ -21,6 +21,7 @@ import { fisioLogger as logger } from "@/lib/errors/logger";
 import { dicomApi } from "@/api/v2";
 import {
 	getTrackedTransferSyntaxDetails,
+	subscribeToTrackedTransferSyntaxes,
 	type TrackedTransferSyntax,
 } from "@/components/analysis/dicom/transferSyntaxTracker";
 
@@ -152,6 +153,14 @@ const ImageAnalysisDashboard = () => {
 	useEffect(() => {
 		setTrackedSyntaxes(getTrackedTransferSyntaxDetails());
 	}, [mode]);
+
+	useEffect(
+		() =>
+			subscribeToTrackedTransferSyntaxes(() => {
+				setTrackedSyntaxes(getTrackedTransferSyntaxDetails());
+			}),
+		[],
+	);
 
 	const mode: ViewerMode =
 		(file ? getModeFromFile(file) : null) ?? urlMode ?? "upload";
@@ -294,7 +303,8 @@ const ImageAnalysisDashboard = () => {
 										Auditoria DICOM local
 									</div>
 									<p className="mt-2 text-xs text-slate-500">
-										Os studies abertos salvam os `Transfer Syntax UID` usados no navegador.
+										Studies remotos e arquivos `.dcm` locais salvam os `Transfer Syntax UID`
+										usados no navegador.
 										Isso mostra quais codecs realmente importam antes de cortar `openjpeg`
 										ou `openjph` do bundle.
 									</p>
