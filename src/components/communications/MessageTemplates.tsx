@@ -71,7 +71,7 @@ const MESSAGE_TEMPLATES: MessageTemplate[] = [
 		tags: ["aniversário", "comemoração"],
 	},
 	{
-		id: "reativacao",
+		id: "reactivacao",
 		category: "reactivacao",
 		title: "Reativação de Tratamento",
 		subject: "Sentimos sua falta - Volte quando precisar",

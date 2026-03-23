@@ -513,7 +513,7 @@ app.get('/exports', requireAuth, async (c) => {
 
   const result = await pool.query(
     `SELECT me.id, me.patient_id, me.organization_id, me.export_type, me.file_path, me.file_url,
-            me.is_anonymized, me.metrics_overlay, me.created_at, p.name AS patient_name
+            me.is_anonymized, me.metrics_overlay, me.created_at, p.full_name AS patient_name
        FROM marketing_exports me
        LEFT JOIN patients p ON p.id = me.patient_id
       WHERE me.organization_id = $1 AND me.deleted = false${patientClause}
