@@ -267,158 +267,189 @@ function InternalDashboardComponent() {
 
 	return (
 		<div className="space-y-8 animate-fade-in">
-			{/* Cards de Resumo */}
-			<div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
-				<Card className="relative overflow-hidden group hover:shadow-lg transition-all duration-300 border-none bg-gradient-to-br from-white to-gray-50/50 dark:from-gray-900 dark:to-gray-950 shadow-sm ring-1 ring-gray-200/50 dark:ring-gray-800/50">
-					<div className="absolute top-0 right-0 p-3 opacity-10 group-hover:scale-110 transition-transform duration-300">
-						<Users className="h-12 w-12 text-primary" />
+			{/* Cards de Resumo - Grid mais robusto */}
+			<div className="grid gap-4 sm:gap-6 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4">
+				<Card className="relative overflow-hidden group hover:shadow-xl transition-all duration-500 border-none bg-background shadow-sm ring-1 ring-border/50">
+					<div className="absolute top-0 right-0 p-4 opacity-5 group-hover:opacity-10 group-hover:scale-110 transition-all duration-500">
+						<Users className="h-16 w-16 text-primary" />
 					</div>
 					<CardHeader className="pb-2">
-						<CardTitle className="text-sm font-semibold flex items-center gap-2 text-muted-foreground">
-							<Users className="h-4 w-4 text-primary" />
-							Total de Pacientes
-						</CardTitle>
+						<div className="flex items-center gap-2.5">
+							<div className="p-2 bg-primary/10 rounded-lg">
+								<Users className="h-4 w-4 text-primary" />
+							</div>
+							<CardTitle className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground">
+								Total de Pacientes
+							</CardTitle>
+						</div>
 					</CardHeader>
-					<CardContent>
-						<div className="text-3xl font-bold tracking-tight">
+					<CardContent className="pt-2">
+						<div className="text-3xl font-black tracking-tighter text-foreground">
 							{totalPatients || 0}
 						</div>
-						<p className="text-xs text-muted-foreground mt-1 font-medium">
-							Cadastrados no sistema
-						</p>
+						<div className="flex items-center gap-1.5 mt-2">
+							<Badge variant="secondary" className="bg-primary/5 text-primary text-[10px] font-bold border-none">
+								Base total
+							</Badge>
+							<span className="text-[10px] text-muted-foreground font-medium">
+								Cadastrados no sistema
+							</span>
+						</div>
 					</CardContent>
+					<div className="absolute bottom-0 left-0 h-1 w-full bg-primary/20" />
 				</Card>
 
-				<Card className="relative overflow-hidden group hover:shadow-lg transition-all duration-300 border-none bg-gradient-to-br from-white to-green-50/30 dark:from-gray-900 dark:to-green-900/5 shadow-sm ring-1 ring-gray-200/50 dark:ring-gray-800/50">
-					<div className="absolute top-0 right-0 p-3 opacity-10 group-hover:scale-110 transition-transform duration-300">
-						<TrendingUp className="h-12 w-12 text-green-500" />
+				<Card className="relative overflow-hidden group hover:shadow-xl transition-all duration-500 border-none bg-background shadow-sm ring-1 ring-border/50">
+					<div className="absolute top-0 right-0 p-4 opacity-5 group-hover:opacity-10 group-hover:scale-110 transition-all duration-500">
+						<TrendingUp className="h-16 w-16 text-emerald-500" />
 					</div>
 					<CardHeader className="pb-2">
-						<CardTitle className="text-sm font-semibold flex items-center gap-2 text-muted-foreground">
-							<TrendingUp className="h-4 w-4 text-green-500" />
-							Pacientes Ativos
-						</CardTitle>
+						<div className="flex items-center gap-2.5">
+							<div className="p-2 bg-emerald-500/10 rounded-lg">
+								<TrendingUp className="h-4 w-4 text-emerald-500" />
+							</div>
+							<CardTitle className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground">
+								Pacientes Ativos
+							</CardTitle>
+						</div>
 					</CardHeader>
-					<CardContent>
-						<div className="text-3xl font-bold text-green-600 tracking-tight">
+					<CardContent className="pt-2">
+						<div className="text-3xl font-black tracking-tighter text-emerald-600">
 							{loadingActive ? "..." : activePatients}
 						</div>
-						<p className="text-xs text-muted-foreground mt-1 font-medium">
-							Consulta no período selecionado
-						</p>
+						<div className="flex items-center gap-1.5 mt-2">
+							<Badge variant="secondary" className="bg-emerald-500/5 text-emerald-600 text-[10px] font-bold border-none">
+								Em atividade
+							</Badge>
+							<span className="text-[10px] text-muted-foreground font-medium">
+								Consulta no período
+							</span>
+						</div>
 					</CardContent>
+					<div className="absolute bottom-0 left-0 h-1 w-full bg-emerald-500/20" />
 				</Card>
 
-				<Card className="relative overflow-hidden group hover:shadow-lg transition-all duration-300 border-none bg-gradient-to-br from-white to-orange-50/30 dark:from-gray-900 dark:to-orange-900/5 shadow-sm ring-1 ring-gray-200/50 dark:ring-gray-800/50">
-					<div className="absolute top-0 right-0 p-3 opacity-10 group-hover:scale-110 transition-transform duration-300">
-						<UserMinus className="h-12 w-12 text-orange-500" />
+				<Card className="relative overflow-hidden group hover:shadow-xl transition-all duration-500 border-none bg-background shadow-sm ring-1 ring-border/50">
+					<div className="absolute top-0 right-0 p-4 opacity-5 group-hover:opacity-10 group-hover:scale-110 transition-all duration-500">
+						<UserMinus className="h-16 w-16 text-orange-500" />
 					</div>
 					<CardHeader className="pb-2">
-						<CardTitle className="text-sm font-semibold flex items-center gap-2 text-muted-foreground">
-							<UserMinus className="h-4 w-4 text-orange-500" />
-							Pacientes Inativos
-						</CardTitle>
+						<div className="flex items-center gap-2.5">
+							<div className="p-2 bg-orange-500/10 rounded-lg">
+								<UserMinus className="h-4 w-4 text-orange-500" />
+							</div>
+							<CardTitle className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground">
+								Pacientes Inativos
+							</CardTitle>
+						</div>
 					</CardHeader>
-					<CardContent>
-						<div className="text-3xl font-bold text-orange-600 tracking-tight">
+					<CardContent className="pt-2">
+						<div className="text-3xl font-black tracking-tighter text-orange-600">
 							{loadingInactive ? "..." : inactivePatients?.total || 0}
 						</div>
-						<p className="text-xs text-muted-foreground mt-1 font-medium">
-							Sem consulta há +30 dias
-						</p>
+						<div className="flex items-center gap-1.5 mt-2">
+							<Badge variant="secondary" className="bg-orange-500/5 text-orange-600 text-[10px] font-bold border-none">
+								Risco de evasão
+							</Badge>
+							<span className="text-[10px] text-muted-foreground font-medium">
+								Sem consulta há +30 dias
+							</span>
+						</div>
 					</CardContent>
+					<div className="absolute bottom-0 left-0 h-1 w-full bg-orange-500/20" />
 				</Card>
 
-				<Card className="relative overflow-hidden group hover:shadow-lg transition-all duration-300 border-none bg-gradient-to-br from-white to-blue-50/30 dark:from-gray-900 dark:to-blue-900/5 shadow-sm ring-1 ring-gray-200/50 dark:ring-gray-800/50">
-					<div className="absolute top-0 right-0 p-3 opacity-10 group-hover:scale-110 transition-transform duration-300">
-						<CreditCard className="h-12 w-12 text-blue-500" />
+				<Card className="relative overflow-hidden group hover:shadow-xl transition-all duration-500 border-none bg-background shadow-sm ring-1 ring-border/50">
+					<div className="absolute top-0 right-0 p-4 opacity-5 group-hover:opacity-10 group-hover:scale-110 transition-all duration-500">
+						<CreditCard className="h-16 w-16 text-blue-500" />
 					</div>
 					<CardHeader className="pb-2">
-						<CardTitle className="text-sm font-semibold flex items-center gap-2 text-muted-foreground">
-							<CreditCard className="h-4 w-4 text-blue-500" />
-							Sessões Disponíveis
-						</CardTitle>
+						<div className="flex items-center gap-2.5">
+							<div className="p-2 bg-blue-500/10 rounded-lg">
+								<CreditCard className="h-4 w-4 text-blue-500" />
+							</div>
+							<CardTitle className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground">
+								Sessões em Aberto
+							</CardTitle>
+						</div>
 					</CardHeader>
-					<CardContent>
-						<div className="text-3xl font-bold text-blue-600 tracking-tight">
+					<CardContent className="pt-2">
+						<div className="text-3xl font-black tracking-tighter text-blue-600">
 							{loadingSessions ? "..." : patientsWithSessions?.length || 0}
 						</div>
-						<p className="text-xs text-muted-foreground mt-1 font-medium">
-							Pacotes ativos para uso
-						</p>
+						<div className="flex items-center gap-1.5 mt-2">
+							<Badge variant="secondary" className="bg-blue-500/5 text-blue-600 text-[10px] font-bold border-none">
+								Créditos ativos
+							</Badge>
+							<span className="text-[10px] text-muted-foreground font-medium">
+								Pacotes com saldo
+							</span>
+						</div>
 					</CardContent>
+					<div className="absolute bottom-0 left-0 h-1 w-full bg-blue-500/20" />
 				</Card>
 			</div>
 
-			{/* Novos Pacientes */}
-			<div className="grid gap-4 md:grid-cols-2">
-				<Card className="border-none shadow-sm ring-1 ring-gray-200/50 dark:ring-gray-800/50">
-					<CardHeader className="border-b border-gray-100/50 dark:border-gray-800/50 pb-4">
-						<CardTitle className="flex items-center gap-2 text-lg">
-							<UserPlus className="h-5 w-5 text-primary" />
-							Novos Pacientes no Período
-						</CardTitle>
-						<CardDescription>
-							Acompanhamento de novos cadastros no intervalo selecionado
-						</CardDescription>
-					</CardHeader>
-					<CardContent className="pt-6">
-						<div className="flex justify-center mb-8">
-							<div className="text-center p-6 rounded-2xl bg-primary/5 border border-primary/10 min-w-[200px]">
-								<div className="text-4xl font-bold text-primary">
+			{/* Novos Pacientes e Sessões - Grid equilibrado */}
+			<div className="grid gap-6 lg:grid-cols-5">
+				<Card className="lg:col-span-3 border-none shadow-sm ring-1 ring-border/50 bg-background overflow-hidden">
+					<CardHeader className="border-b border-border/40 pb-4 bg-muted/20">
+						<div className="flex items-center justify-between">
+							<div className="space-y-1">
+								<CardTitle className="flex items-center gap-2 text-lg font-bold">
+									<UserPlus className="h-5 w-5 text-primary" />
+									Novos Pacientes
+								</CardTitle>
+								<CardDescription className="text-xs font-medium">
+									Crescimento da base no período selecionado
+								</CardDescription>
+							</div>
+							<div className="text-right">
+								<div className="text-2xl font-black text-primary leading-tight">
 									{newPatientsData?.periodTotal || 0}
 								</div>
-								<p className="text-xs font-semibold text-primary/70 mt-1 uppercase tracking-wider">
+								<div className="text-[10px] font-bold text-muted-foreground uppercase">
 									Total Novos
-								</p>
+								</div>
 							</div>
 						</div>
-						<div className="h-[250px] w-full">
+					</CardHeader>
+					<CardContent className="pt-8">
+						<div className="h-[280px] w-full">
 							<ResponsiveContainer width="100%" height="100%">
 								<LineChart data={newPatientsData?.chartData || []}>
-									<defs>
-										<linearGradient id="colorCount" x1="0" y1="0" x2="0" y2="1">
-											<stop
-												offset="5%"
-												stopColor="hsl(var(--primary))"
-												stopOpacity={0.1}
-											/>
-											<stop
-												offset="95%"
-												stopColor="hsl(var(--primary))"
-												stopOpacity={0}
-											/>
-										</linearGradient>
-									</defs>
 									<CartesianGrid
 										strokeDasharray="3 3"
 										vertical={false}
-										stroke="#E2E8F0"
+										stroke="hsl(var(--border))"
+										strokeOpacity={0.5}
 									/>
 									<XAxis
 										dataKey="label"
 										axisLine={false}
 										tickLine={false}
-										tick={{ fill: "#64748B", fontSize: 12 }}
-										dy={10}
+										tick={{ fill: "hsl(var(--muted-foreground))", fontSize: 10, fontWeight: 600 }}
+										dy={15}
 									/>
 									<YAxis
 										axisLine={false}
 										tickLine={false}
-										tick={{ fill: "#64748B", fontSize: 12 }}
+										tick={{ fill: "hsl(var(--muted-foreground))", fontSize: 10, fontWeight: 600 }}
 									/>
 									<Tooltip
 										contentStyle={{
-											borderRadius: "12px",
-											border: "none",
-											boxShadow: "0 4px 12px -2px rgba(0,0,0,0.05)",
+											borderRadius: "16px",
+											border: "1px solid hsl(var(--border))",
+											boxShadow: "0 10px 15px -3px rgba(0,0,0,0.1)",
+											fontSize: "12px",
+											fontWeight: "bold"
 										}}
 									/>
 									<Line
 										type="monotone"
 										dataKey="count"
 										stroke="hsl(var(--primary))"
-										strokeWidth={3}
+										strokeWidth={4}
 										dot={{
 											fill: "hsl(var(--primary))",
 											strokeWidth: 2,
@@ -434,41 +465,48 @@ function InternalDashboardComponent() {
 					</CardContent>
 				</Card>
 
-				<Card className="border-none shadow-sm ring-1 ring-gray-200/50 dark:ring-gray-800/50">
-					<CardHeader className="border-b border-gray-100/50 dark:border-gray-800/50 pb-4">
-						<CardTitle className="flex items-center gap-2 text-lg">
+				<Card className="lg:col-span-2 border-none shadow-sm ring-1 ring-border/50 bg-background flex flex-col">
+					<CardHeader className="border-b border-border/40 pb-4 bg-muted/20">
+						<CardTitle className="flex items-center gap-2 text-lg font-bold">
 							<CreditCard className="h-5 w-5 text-blue-500" />
-							Sessões Reutilizáveis
+							Sessões Disponíveis
 						</CardTitle>
-						<CardDescription>
-							Pacotes ativos de sessões pré-pagas
+						<CardDescription className="text-xs font-medium">
+							Pacientes com saldo de sessões pré-pagas
 						</CardDescription>
 					</CardHeader>
-					<CardContent>
-						<ScrollArea className="h-[310px]">
+					<CardContent className="p-0 flex-1">
+						<ScrollArea className="h-[340px]">
 							{loadingSessions ? (
-								<p className="text-muted-foreground">Carregando...</p>
+								<div className="flex items-center justify-center h-full text-muted-foreground text-sm font-medium">
+									Carregando dados...
+								</div>
 							) : patientsWithSessions?.length === 0 ? (
-								<p className="text-muted-foreground text-center py-8">
-									Nenhum paciente com sessões disponíveis
-								</p>
+								<div className="flex flex-col items-center justify-center h-[340px] text-center px-6">
+									<div className="w-12 h-12 rounded-full bg-muted flex items-center justify-center mb-3">
+										<CreditCard className="h-6 w-6 text-muted-foreground/50" />
+									</div>
+									<p className="text-muted-foreground text-sm font-medium">
+										Nenhum paciente com saldo encontrado
+									</p>
+								</div>
 							) : (
 								<Table>
-									<TableHeader>
-										<TableRow>
-											<TableHead>Paciente</TableHead>
-											<TableHead className="text-right">Restantes</TableHead>
+									<TableHeader className="bg-muted/30">
+										<TableRow className="hover:bg-transparent border-none">
+											<TableHead className="text-[10px] font-bold uppercase h-9">Paciente</TableHead>
+											<TableHead className="text-right text-[10px] font-bold uppercase h-9 px-6">Saldo</TableHead>
 										</TableRow>
 									</TableHeader>
 									<TableBody>
 										{patientsWithSessions?.map((item) => (
-											<TableRow key={item.id}>
-												<TableCell className="font-medium">
+											<TableRow key={item.id} className="border-border/40">
+												<TableCell className="font-bold text-sm py-3 px-4">
 													{item.patientName}
 												</TableCell>
-												<TableCell className="text-right">
-													<Badge variant="secondary">
-														{item.remainingSessions} de {item.totalSessions}
+												<TableCell className="text-right py-3 px-6">
+													<Badge variant="outline" className="bg-blue-500/5 text-blue-600 border-blue-500/20 font-bold">
+														{item.remainingSessions} / {item.totalSessions}
 													</Badge>
 												</TableCell>
 											</TableRow>
@@ -481,56 +519,66 @@ function InternalDashboardComponent() {
 				</Card>
 			</div>
 
-			{/* Lista de Pacientes Inativos */}
-			<Card className="border-none shadow-sm ring-1 ring-gray-200/50 dark:ring-gray-800/50">
-				<CardHeader className="border-b border-gray-100/50 dark:border-gray-800/50 pb-4">
-					<CardTitle className="flex items-center gap-2 text-lg">
-						<Clock className="h-5 w-5 text-orange-500" />
-						Pacientes Inativos
-					</CardTitle>
-					<CardDescription>
-						Pacientes sem consulta há mais de 30 dias - considere uma estratégia
-						de reativação
-					</CardDescription>
+			{/* Lista de Pacientes Inativos - Layout Horizontal */}
+			<Card className="border-none shadow-sm ring-1 ring-border/50 bg-background">
+				<CardHeader className="border-b border-border/40 pb-4 bg-muted/20">
+					<div className="flex items-center justify-between">
+						<div className="space-y-1">
+							<CardTitle className="flex items-center gap-2 text-lg font-bold">
+								<Clock className="h-5 w-5 text-orange-500" />
+								Reativação de Pacientes
+							</CardTitle>
+							<CardDescription className="text-xs font-medium">
+								Pacientes sem consulta há mais de 30 dias
+							</CardDescription>
+						</div>
+						<Badge variant="outline" className="border-orange-500/30 text-orange-600 bg-orange-500/5">
+							Ação Necessária
+						</Badge>
+					</div>
 				</CardHeader>
-				<CardContent>
+				<CardContent className="p-0">
 					<ScrollArea className="h-[300px]">
 						{loadingInactive ? (
-							<p className="text-muted-foreground">Carregando...</p>
+							<div className="flex items-center justify-center h-[300px] text-muted-foreground text-sm font-medium">
+								Analisando base de dados...
+							</div>
 						) : inactivePatients?.list?.length === 0 ? (
-							<p className="text-muted-foreground text-center py-8">
-								Nenhum paciente inativo encontrado
-							</p>
+							<div className="flex items-center justify-center h-[300px] text-muted-foreground text-sm font-medium">
+								Excelente! Todos os seus pacientes estão ativos.
+							</div>
 						) : (
 							<Table>
-								<TableHeader>
-									<TableRow>
-										<TableHead>Nome</TableHead>
-										<TableHead>Telefone</TableHead>
-										<TableHead>Última Consulta</TableHead>
-										<TableHead>Status</TableHead>
+								<TableHeader className="bg-muted/30">
+									<TableRow className="hover:bg-transparent border-none">
+										<TableHead className="text-[10px] font-bold uppercase h-10 px-6">Nome do Paciente</TableHead>
+										<TableHead className="text-[10px] font-bold uppercase h-10">Contato</TableHead>
+										<TableHead className="text-[10px] font-bold uppercase h-10">Última Visita</TableHead>
+										<TableHead className="text-[10px] font-bold uppercase h-10 text-right px-6">Status</TableHead>
 									</TableRow>
 								</TableHeader>
 								<TableBody>
 									{inactivePatients?.list?.map((patient: any) => (
-										<TableRow key={patient.id}>
-											<TableCell className="font-medium">
+										<TableRow key={patient.id} className="border-border/40 hover:bg-muted/10 transition-colors">
+											<TableCell className="font-bold text-sm py-4 px-6">
 												{PatientHelpers.getName(patient)}
 											</TableCell>
-											<TableCell>{patient.phone || "-"}</TableCell>
-											<TableCell>
+											<TableCell className="text-muted-foreground text-sm font-medium">
+												{patient.phone || "-"}
+											</TableCell>
+											<TableCell className="text-sm font-semibold">
 												{patient.lastAppointment
 													? format(
 															new Date(patient.lastAppointment),
 															"dd/MM/yyyy",
 															{ locale: ptBR },
 														)
-													: "Nunca"}
+													: "Sem registro"}
 											</TableCell>
-											<TableCell>
+											<TableCell className="text-right px-6">
 												<Badge
 													variant="outline"
-													className="text-orange-600 border-orange-600"
+													className="bg-orange-500/5 text-orange-600 border-orange-500/20 font-bold"
 												>
 													Inativo
 												</Badge>
