@@ -5,10 +5,8 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { useOrganizations } from "@/hooks/useOrganizations";
-import {
-	communicationsApi,
-	type CommunicationLogRecord,
-} from "@/api/v2";
+import { communicationsApi } from "@/api/v2";
+import type { CommunicationLogRecord } from "@/types/workers";
 
 export type CommunicationType = "email" | "whatsapp" | "sms" | "push";
 export type CommunicationStatus =

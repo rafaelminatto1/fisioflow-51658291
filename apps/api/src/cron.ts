@@ -14,10 +14,6 @@ export async function handleScheduled(event: ScheduledEvent, env: Env, ctx: Exec
 
   try {
     switch (cron) {
-      case "*/10 * * * *": // Every 10 minutes
-        await warmupDatabase(pool);
-        break;
-
       case "0 9 * * *": // Daily at 9:00 AM
         await sendAppointmentReminders(pool, env, ctx);
         await processBirthdays(pool, env, ctx);
@@ -152,21 +148,5 @@ async function generateDailyReports(pool: any, env: Env) {
     console.log('[Cron] Daily report generated successfully.');
   } catch (error) {
     console.error('[Cron] Daily report generation failed:', error);
-  }
-}
-
-async function warmupDatabase(pool: any) {
-  console.log('[Cron] Warming up database queries...');
-  try {
-    // Warm up common dashboard queries to keep Neon DB active
-    await pool.query(`
-      SELECT 
-        (SELECT COUNT(*) FROM patients WHERE is_active = true) as total_patients,
-        (SELECT COALESCE(SUM(payment_amount), 0) FROM appointments WHERE payment_status = 'paid' AND date >= date_trunc('month', CURRENT_DATE)) as month_revenue,
-        (SELECT COUNT(*) FROM appointments WHERE date = CURRENT_DATE) as today_appointments
-    `);
-    console.log('[Cron] Database warmup successful.');
-  } catch (error) {
-    console.error('[Cron] Database warmup failed:', error);
   }
 }

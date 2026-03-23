@@ -82,30 +82,69 @@ export function PatientsPageHeader({
 	children,
 }: PatientsPageHeaderProps) {
 	return (
-		<header className="space-y-6" data-testid="patients-page-header">
-			{/* Top Row: Title + Primary Actions */}
-			<div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between bg-white dark:bg-slate-900 p-6 rounded-2xl shadow-premium-sm border border-slate-100 dark:border-slate-800/50">
-				<div className="space-y-1">
-					<h1
-						className="text-2xl font-black tracking-tighter text-slate-900 dark:text-white sm:text-3xl"
-						id="page-title"
-					>
-						Pacientes
-					</h1>
-					<p className="text-sm font-medium text-slate-500 dark:text-slate-400">
-						Gerenciamento completo da base de pacientes e prontuários
-					</p>
+		<header className="space-y-3" data-testid="patients-page-header">
+			{/* Compact title row */}
+			<div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+				<div className="flex items-center gap-3 min-w-0">
+					<div className="h-9 w-9 rounded-xl bg-primary/10 flex items-center justify-center flex-shrink-0">
+						<Users className="h-4 w-4 text-primary" />
+					</div>
+					<div className="min-w-0">
+						<h1
+							className="text-base sm:text-lg font-semibold leading-tight text-slate-900 dark:text-white"
+							id="page-title"
+						>
+							Pacientes
+						</h1>
+						<div className="flex items-center gap-2 text-xs text-muted-foreground flex-wrap mt-0.5">
+							<span>
+								<span className="font-medium text-foreground">
+									{stats.totalCount}
+								</span>{" "}
+								total
+							</span>
+							<span className="text-border">·</span>
+							<span>
+								<span className="font-medium text-emerald-600">
+									{stats.activeByClassification}
+								</span>{" "}
+								ativos
+							</span>
+							{stats.newPatients > 0 && (
+								<>
+									<span className="text-border">·</span>
+									<span>
+										<span className="font-medium text-blue-600">
+											{stats.newPatients}
+										</span>{" "}
+										novos
+									</span>
+								</>
+							)}
+							{stats.noShowRisk > 0 && (
+								<>
+									<span className="text-border hidden sm:inline">·</span>
+									<span className="hidden sm:inline">
+										<span className="font-medium text-red-600">
+											{stats.noShowRisk}
+										</span>{" "}
+										risco
+									</span>
+								</>
+							)}
+						</div>
+					</div>
 				</div>
 
-				<div className="flex items-center gap-2">
+				<div className="flex items-center gap-2 flex-shrink-0">
 					<Button
 						variant="outline"
 						size="icon"
 						onClick={onToggleAnalytics}
 						className={cn(
-							"h-10 w-10 rounded-xl border-slate-200 dark:border-slate-800 transition-all",
+							"h-8 w-8 rounded-lg border-slate-200 dark:border-slate-800 transition-all",
 							showAnalytics &&
-								"bg-primary text-white border-primary shadow-lg shadow-primary/20",
+								"bg-primary text-white border-primary shadow-sm shadow-primary/20",
 						)}
 						aria-pressed={showAnalytics}
 						title={showAnalytics ? "Ocultar análises" : "Ver análises"}
@@ -116,28 +155,29 @@ export function PatientsPageHeader({
 						variant="outline"
 						size="icon"
 						onClick={onExport}
-						className="h-10 w-10 rounded-xl border-slate-200 dark:border-slate-800"
+						className="h-8 w-8 rounded-lg border-slate-200 dark:border-slate-800"
 						title="Exportar pacientes"
 					>
 						<Download className="h-4 w-4" />
 					</Button>
+					{children}
 					<Button
 						size="sm"
 						onClick={onNewPatient}
 						data-testid="add-patient"
-						className="h-10 px-5 gap-2 bg-slate-900 dark:bg-white text-white dark:text-slate-900 rounded-xl shadow-lg shadow-slate-900/10 font-bold text-xs uppercase tracking-wider"
+						className="h-8 px-3 gap-1.5"
 					>
 						<Plus className="h-4 w-4" />
-						Novo Paciente
+						<span>Novo Paciente</span>
 					</Button>
 				</div>
 			</div>
 
-			{/* Unified Toolbar: Search + Inline Filters */}
-			<div className="flex flex-col gap-3 sm:flex-row sm:items-center">
+			{/* Search + Inline Filters */}
+			<div className="flex flex-col gap-2 sm:flex-row sm:items-center">
 				<div className="relative flex-1 group">
 					<Search
-						className="absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400 group-focus-within:text-primary transition-colors"
+						className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400 group-focus-within:text-primary transition-colors"
 						aria-hidden
 					/>
 					<input
@@ -145,14 +185,14 @@ export function PatientsPageHeader({
 						placeholder="Buscar por nome, condição ou telefone..."
 						value={searchTerm}
 						onChange={(e) => onSearchChange(e.target.value)}
-						className="h-12 w-full rounded-2xl border border-slate-200 dark:border-slate-800 bg-white/50 dark:bg-slate-900/50 pl-10 pr-4 text-sm font-medium ring-offset-background transition-all placeholder:text-slate-400 focus:outline-none focus:ring-4 focus:ring-primary/10 focus:border-primary/50"
+						className="h-9 w-full rounded-lg border border-slate-200 dark:border-slate-800 bg-white/50 dark:bg-slate-900/50 pl-9 pr-4 text-sm ring-offset-background transition-all placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary/50"
 						aria-label="Buscar pacientes"
 					/>
 				</div>
 
 				<div className="flex items-center gap-2">
 					<Select value={statusFilter} onValueChange={onStatusFilterChange}>
-						<SelectTrigger className="h-12 w-[150px] text-xs font-bold rounded-2xl border-slate-200 dark:border-slate-800 bg-white/50 dark:bg-slate-900/50">
+						<SelectTrigger className="h-9 w-[140px] text-xs rounded-lg border-slate-200 dark:border-slate-800 bg-white/50 dark:bg-slate-900/50">
 							<SelectValue placeholder="Status" />
 						</SelectTrigger>
 						<SelectContent className="rounded-xl border-slate-200 dark:border-slate-800 shadow-xl">
@@ -168,7 +208,7 @@ export function PatientsPageHeader({
 						value={conditionFilter}
 						onValueChange={onConditionFilterChange}
 					>
-						<SelectTrigger className="h-12 w-[170px] text-xs font-bold rounded-2xl border-slate-200 dark:border-slate-800 bg-white/50 dark:bg-slate-900/50">
+						<SelectTrigger className="h-9 w-[160px] text-xs rounded-lg border-slate-200 dark:border-slate-800 bg-white/50 dark:bg-slate-900/50">
 							<SelectValue placeholder="Condição" />
 						</SelectTrigger>
 						<SelectContent className="rounded-xl border-slate-200 dark:border-slate-800 shadow-xl">
@@ -183,13 +223,8 @@ export function PatientsPageHeader({
 				</div>
 			</div>
 
-			{/* Compact Classification Chips / KPIs */}
-			<div className="flex flex-wrap items-center gap-3 pb-2">
-				<div className="flex items-center gap-2 px-3 py-2 rounded-xl bg-slate-100 dark:bg-slate-800 text-[10px] font-black uppercase tracking-widest text-slate-500 shadow-inner-border">
-					<Users className="h-3.5 w-3.5" />
-					<span>{stats.totalCount} Pacientes</span>
-				</div>
-
+			{/* Classification chips */}
+			<div className="flex flex-wrap items-center gap-2">
 				<div className="flex flex-wrap items-center gap-2">
 					<StatChip
 						label="Ativos"
@@ -230,7 +265,7 @@ export function PatientsPageHeader({
 				</div>
 
 				{hasActiveFilters && (
-					<div className="ml-auto flex items-center gap-4 animate-in fade-in slide-in-from-right-2 bg-primary/5 px-4 py-2 rounded-2xl border border-primary/10">
+					<div className="ml-auto flex items-center gap-3 animate-in fade-in slide-in-from-right-2 bg-primary/5 px-3 py-1.5 rounded-xl border border-primary/10">
 						<span className="text-[10px] font-bold text-primary uppercase tracking-wider">
 							{totalFilteredLabel ?? "Filtrado"}
 						</span>
