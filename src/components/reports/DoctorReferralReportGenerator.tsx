@@ -21,7 +21,10 @@ import { useSoapRecordsV2 } from "@/hooks/useSoapRecordsV2";
 import { format } from "date-fns";
 import { toast } from "sonner";
 import { aiApi } from "@/api/v2";
-import { downloadReactPdfDocument } from "@/lib/export/reactPdfDownload";
+import {
+	exportDoctorReferralPdf,
+	type DoctorReferralPdfData,
+} from "@/lib/export/doctorReferralPdfExport";
 
 interface DoctorReferralReportGeneratorProps {
 	patientId: string;
@@ -74,7 +77,7 @@ export function DoctorReferralReportGenerator({
 		}
 	};
 
-	const reportData = {
+	const reportData: DoctorReferralPdfData = {
 		patient: {
 			name: patientName,
 			birthDate: birthDate ? format(new Date(birthDate), "dd/MM/yyyy") : "N/I",
@@ -110,12 +113,10 @@ export function DoctorReferralReportGenerator({
 	const handleDownloadPdf = async () => {
 		setGeneratingPdf(true);
 		try {
-			await downloadReactPdfDocument({
-				fileName: `Relatorio_${patientName.replace(/\s+/g, "_")}_${format(new Date(), "yyyyMMdd")}.pdf`,
-				loadDocument: () =>
-					import("./DoctorReferralPDF").then((module) => module.DoctorReferralPDF),
-				props: reportData,
-			});
+			await exportDoctorReferralPdf(
+				`Relatorio_${patientName.replace(/\s+/g, "_")}_${format(new Date(), "yyyyMMdd")}.pdf`,
+				reportData,
+			);
 		} catch (error) {
 			console.error("Doctor referral PDF error:", error);
 			toast.error("Erro ao gerar PDF do relatório.");
