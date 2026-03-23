@@ -4,6 +4,21 @@
 
 import { dicomApi, type DicomStudyRecord } from "@/api/v2";
 import { fisioLogger as logger } from "@/lib/errors/logger";
+import { trackTransferSyntax } from "@/components/analysis/dicom/transferSyntaxTracker";
+
+function extractTransferSyntaxes(
+	entries: Array<Record<string, { Value?: string[] }>>,
+): string[] {
+	if (!Array.isArray(entries)) return [];
+	const set = new Set<string>();
+	for (const entry of entries) {
+		const syntax = entry["00020010"]?.Value?.[0];
+		if (syntax) {
+			set.add(syntax);
+		}
+	}
+	return Array.from(set);
+}
 
 export interface DicomStudy extends DicomStudyRecord {
 	"0020000D"?: { Value: string[] };
@@ -55,6 +70,8 @@ export const dicomWebClient = {
 	): Promise<Array<Record<string, { Value?: string[] }>>> => {
 		try {
 			const { data } = await dicomApi.instances(studyUid, seriesUid);
+			const transfers = extractTransferSyntaxes(data as Array<Record<string, { Value?: string[] }>>);
+			transfers.forEach((syntax) => trackTransferSyntax(syntax));
 			return data as Array<Record<string, { Value?: string[] }>>;
 		} catch (error) {
 			logger.error(
