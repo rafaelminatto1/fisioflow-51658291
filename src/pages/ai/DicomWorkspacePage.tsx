@@ -15,6 +15,8 @@ import {
 import { dicomApi } from "@/api/v2";
 import { fisioLogger as logger } from "@/lib/errors/logger";
 import {
+	clearTrackedTransferSyntaxes,
+	getTrackedCodecSummaries,
 	getTrackedTransferSyntaxDetails,
 	getCodecRecommendations,
 	type TrackedTransferSyntax,
@@ -44,6 +46,10 @@ export default function DicomWorkspacePage() {
 	const [trackedSyntaxes, setTrackedSyntaxes] = useState<TrackedTransferSyntax[]>(
 		[],
 	);
+
+	const refreshAudit = () => {
+		setTrackedSyntaxes(getTrackedTransferSyntaxDetails());
+	};
 
 	useEffect(() => {
 		let mounted = true;
@@ -78,8 +84,13 @@ export default function DicomWorkspacePage() {
 	}, []);
 
 	useEffect(() => {
-		setTrackedSyntaxes(getTrackedTransferSyntaxDetails());
+		refreshAudit();
 	}, [mode, file]);
+
+	const resetAudit = () => {
+		clearTrackedTransferSyntaxes();
+		refreshAudit();
+	};
 
 	const onDrop = (acceptedFiles: File[]) => {
 		const selected = acceptedFiles[0];
@@ -106,6 +117,10 @@ export default function DicomWorkspacePage() {
 	);
 	const codecRecommendations = useMemo(
 		() => getCodecRecommendations(),
+		[trackedSyntaxes],
+	);
+	const codecSummaries = useMemo(
+		() => getTrackedCodecSummaries(),
 		[trackedSyntaxes],
 	);
 
@@ -193,10 +208,20 @@ export default function DicomWorkspacePage() {
 					<div className="space-y-4">
 						<Card>
 							<CardHeader className="pb-3">
-								<CardTitle className="flex items-center gap-2 text-base">
-									<HardDriveDownload className="h-4 w-4" />
-									Auditoria de codecs
-								</CardTitle>
+								<div className="flex items-center justify-between gap-3">
+									<CardTitle className="flex items-center gap-2 text-base">
+										<HardDriveDownload className="h-4 w-4" />
+										Auditoria de codecs
+									</CardTitle>
+									<Button
+										variant="ghost"
+										size="sm"
+										onClick={resetAudit}
+										disabled={trackedSyntaxes.length === 0}
+									>
+										Limpar auditoria
+									</Button>
+								</div>
 							</CardHeader>
 							<CardContent className="space-y-3">
 								<p className="text-sm text-muted-foreground">
@@ -213,6 +238,30 @@ export default function DicomWorkspacePage() {
 									) : (
 										<Badge variant="outline">sem codecs especializados</Badge>
 									)}
+								</div>
+								<div className="space-y-2">
+									{codecSummaries.map((item) => (
+										<div key={item.codec} className="rounded-lg border bg-slate-50 p-3">
+											<div className="flex items-center justify-between gap-2">
+												<div className="text-sm font-medium capitalize">{item.codec}</div>
+												<Badge
+													variant={item.status === "candidate" ? "outline" : "secondary"}
+												>
+													{item.status === "candidate" ? "candidato" : "manter"}
+												</Badge>
+											</div>
+											<div className="mt-2 grid gap-1 text-xs text-muted-foreground">
+												<div>Ocorrencias totais: {item.totalHits}</div>
+												<div>Sintaxes vistas: {item.syntaxCount}</div>
+												<div>
+													Ultimo uso:{" "}
+													{item.lastSeenAt
+														? new Date(item.lastSeenAt).toLocaleString("pt-BR")
+														: "nenhum registro"}
+												</div>
+											</div>
+										</div>
+									))}
 								</div>
 								<div className="space-y-2">
 									{trackedSyntaxes.length > 0 ? (
