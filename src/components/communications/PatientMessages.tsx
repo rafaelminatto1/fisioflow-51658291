@@ -16,6 +16,7 @@ import {
 	Clock,
 	Trash2,
 	Sparkles,
+	FileText,
 } from "lucide-react";
 import { useState, useMemo } from "react";
 import { useActivePatients } from "@/hooks/usePatients";
