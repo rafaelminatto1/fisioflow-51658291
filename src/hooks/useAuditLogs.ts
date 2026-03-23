@@ -3,10 +3,7 @@
  */
 
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import {
-	auditApi,
-	type AuditLog as WorkerAuditLog,
-} from "@/api/v2";
+import { auditApi, type AuditLog as WorkerAuditLog } from "@/api/v2";
 import { toast } from "sonner";
 
 export interface AuditLog {

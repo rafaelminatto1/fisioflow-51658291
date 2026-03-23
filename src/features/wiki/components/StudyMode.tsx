@@ -181,11 +181,7 @@ export function StudyMode({ artifact, onClose }: StudyModeProps) {
 							asChild
 							className="h-7 px-2 text-xs"
 						>
-							<a
-								href={artifact.url}
-								target="_blank"
-								rel="noreferrer"
-							>
+							<a href={artifact.url} target="_blank" rel="noreferrer">
 								<ExternalLink className="mr-1 h-3.5 w-3.5" />
 								Abrir
 							</a>

@@ -4,10 +4,7 @@
 
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { EvaluationForm } from "@/types/clinical-forms";
-import {
-	evaluationFormsApi,
-	type EvaluationFormRow,
-} from "@/api/v2";
+import { evaluationFormsApi, type EvaluationFormRow } from "@/api/v2";
 
 const toForm = (row: EvaluationFormRow): EvaluationForm => ({
 	id: row.id,

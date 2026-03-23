@@ -235,7 +235,8 @@ export default function WikiDashboard() {
 											Trilha
 										</Badge>
 										<Badge variant="secondary">
-											{protocols.length} protocolo{protocols.length === 1 ? "" : "s"}
+											{protocols.length} protocolo
+											{protocols.length === 1 ? "" : "s"}
 										</Badge>
 									</div>
 									<CardTitle className="text-base leading-snug">

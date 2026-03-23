@@ -1,4 +1,7 @@
-import type { EvaluationTemplate, TemplateField } from "@/components/evaluation";
+import type {
+	EvaluationTemplate,
+	TemplateField,
+} from "@/components/evaluation";
 
 const uuidv4 = (): string => crypto.randomUUID();
 
@@ -6,10 +9,12 @@ export const builtinEvaluationTemplates: EvaluationTemplate[] = [
 	{
 		id: "builtin-ortopedica-padrao",
 		nome: "Avaliação Ortopédica (Padrão Ouro)",
-		descricao: "Estrutura completa para diagnóstico cinético-funcional ortopédico com triagem de Red Flags.",
+		descricao:
+			"Estrutura completa para diagnóstico cinético-funcional ortopédico com triagem de Red Flags.",
 		tipo: "ortopedica",
 		category: "ortopedica",
-		referencias: "Cook & Hegedus (2017) - Orthopedic Physical Examination Tests; O'Sullivan (2025) - Evidence-Based Spine Care.",
+		referencias:
+			"Cook & Hegedus (2017) - Orthopedic Physical Examination Tests; O'Sullivan (2025) - Evidence-Based Spine Care.",
 		fields: [
 			{
 				id: uuidv4(),
@@ -22,9 +27,10 @@ export const builtinEvaluationTemplates: EvaluationTemplate[] = [
 					"Dor noturna não relacionada a movimento",
 					"Sintomas neurológicos progressivos (cauda equina)",
 					"Uso prolongado de corticosteroides",
-					"Nenhum sinal detectado"
+					"Nenhum sinal detectado",
 				],
-				description: "Triagem essencial para condições não-musculoesqueléticas.",
+				description:
+					"Triagem essencial para condições não-musculoesqueléticas.",
 				ordem: 0,
 				obrigatorio: true,
 				section: "Segurança e Triagem",
@@ -66,7 +72,7 @@ export const builtinEvaluationTemplates: EvaluationTemplate[] = [
 					"Expectativas irreais",
 					"Estresse ocupacional alto",
 					"Sintomas de ansiedade/depressão",
-					"Baixa auto-eficácia"
+					"Baixa auto-eficácia",
 				],
 				description: "Identifique barreiras para a recuperação a longo prazo.",
 				ordem: 4,
@@ -132,10 +138,12 @@ export const builtinEvaluationTemplates: EvaluationTemplate[] = [
 	{
 		id: "builtin-esportiva-performance",
 		nome: "Avaliação Fisioterapia Esportiva",
-		descricao: "Focada em Return-to-Sport (RTS), prontidão atlética e prevenção de relesão.",
+		descricao:
+			"Focada em Return-to-Sport (RTS), prontidão atlética e prevenção de relesão.",
 		tipo: "esportiva",
 		category: "esportiva",
-		referencias: "Ardern et al. (2025) - Consensus Statement on Return to Sport; JOSPT Sport-Specific Assessment Guidelines.",
+		referencias:
+			"Ardern et al. (2025) - Consensus Statement on Return to Sport; JOSPT Sport-Specific Assessment Guidelines.",
 		fields: [
 			{
 				id: uuidv4(),
@@ -204,7 +212,8 @@ export const builtinEvaluationTemplates: EvaluationTemplate[] = [
 				id: uuidv4(),
 				label: "Metas de Performance",
 				tipo_campo: "textarea",
-				placeholder: "Quais gestos esportivos específicos precisam ser restaurados?",
+				placeholder:
+					"Quais gestos esportivos específicos precisam ser restaurados?",
 				ordem: 8,
 				obrigatorio: true,
 				section: "Objetivos",
@@ -214,10 +223,12 @@ export const builtinEvaluationTemplates: EvaluationTemplate[] = [
 	{
 		id: "builtin-pos-operatorio-orto",
 		nome: "Avaliação Pós-Operatória Ortopédica",
-		descricao: "Protocolo de segurança, monitoramento cicatricial e progressão de carga.",
+		descricao:
+			"Protocolo de segurança, monitoramento cicatricial e progressão de carga.",
 		tipo: "ortopedica",
 		category: "pos-operatorio",
-		referencias: "Standard Rehabilitation Protocols (Orthopedic Trauma Association); Manske (2024) - Post-Surgical Rehabilitation.",
+		referencias:
+			"Standard Rehabilitation Protocols (Orthopedic Trauma Association); Manske (2024) - Post-Surgical Rehabilitation.",
 		fields: [
 			{
 				id: uuidv4(),
@@ -239,7 +250,8 @@ export const builtinEvaluationTemplates: EvaluationTemplate[] = [
 				id: uuidv4(),
 				label: "Procedimento Detalhado",
 				tipo_campo: "textarea",
-				placeholder: "Ex: Reconstrução de LCA (Tendão Patelar) + Meniscectomia Parcial.",
+				placeholder:
+					"Ex: Reconstrução de LCA (Tendão Patelar) + Meniscectomia Parcial.",
 				ordem: 3,
 				obrigatorio: true,
 				section: "Dados Cirúrgicos",
@@ -248,7 +260,8 @@ export const builtinEvaluationTemplates: EvaluationTemplate[] = [
 				id: uuidv4(),
 				label: "Protocolo Médico e Restrições",
 				tipo_campo: "textarea",
-				placeholder: "Carga permitida (NWB, PWB, FWB), limites de ADM, uso de órtese...",
+				placeholder:
+					"Carga permitida (NWB, PWB, FWB), limites de ADM, uso de órtese...",
 				ordem: 4,
 				obrigatorio: true,
 				section: "Protocolo de Reabilitação",
@@ -264,7 +277,7 @@ export const builtinEvaluationTemplates: EvaluationTemplate[] = [
 					"Deiscência de sutura",
 					"Drenagem purulenta",
 					"Dor não controlada por medicação",
-					"Nenhum sinal detectado"
+					"Nenhum sinal detectado",
 				],
 				ordem: 5,
 				obrigatorio: true,
@@ -293,7 +306,14 @@ export const builtinEvaluationTemplates: EvaluationTemplate[] = [
 				id: uuidv4(),
 				label: "Auxiliares de Marcha e Órteses",
 				tipo_campo: "lista",
-				opcoes: ["Bengala", "Muletas (Axilar)", "Muletas (Canadense)", "Andador", "Brace/Órtese", "Bota Imobilizadora"],
+				opcoes: [
+					"Bengala",
+					"Muletas (Axilar)",
+					"Muletas (Canadense)",
+					"Andador",
+					"Brace/Órtese",
+					"Bota Imobilizadora",
+				],
 				ordem: 8,
 				obrigatorio: false,
 				section: "Funcionalidade",
@@ -303,7 +323,8 @@ export const builtinEvaluationTemplates: EvaluationTemplate[] = [
 	{
 		id: "builtin-anamnese-soufisio",
 		nome: "Anamnese Padrão (Sou Fisio Style)",
-		descricao: "Estrutura lógica otimizada focada em objetivos e histórico cronológico.",
+		descricao:
+			"Estrutura lógica otimizada focada em objetivos e histórico cronológico.",
 		tipo: "geral",
 		category: "geral",
 		fields: [
@@ -359,7 +380,8 @@ export const builtinEvaluationTemplates: EvaluationTemplate[] = [
 	{
 		id: "builtin-pilates-powerhouse",
 		nome: "Evolução Pilates (Gold Standard)",
-		descricao: "Template focado em Pilates Clínico com análise de Power House e Checklist de Articulações.",
+		descricao:
+			"Template focado em Pilates Clínico com análise de Power House e Checklist de Articulações.",
 		tipo: "pilates",
 		category: "pilates",
 		referencias: "Joseph Pilates (1945); Sou Fisio Clinical Standards.",
@@ -452,7 +474,8 @@ export const builtinEvaluationTemplates: EvaluationTemplate[] = [
 	{
 		id: "builtin-soap-step-by-step",
 		nome: "Avaliação SOAP Passo-a-Passo (Effclin Style)",
-		descricao: "Avaliação guiada dividida por Subjetivo, Objetivo, Avaliação e Plano.",
+		descricao:
+			"Avaliação guiada dividida por Subjetivo, Objetivo, Avaliação e Plano.",
 		tipo: "geral",
 		category: "geral",
 		referencias: "Weed (1964) - Medical Records that Guide and Teach.",
@@ -479,7 +502,8 @@ export const builtinEvaluationTemplates: EvaluationTemplate[] = [
 				id: uuidv4(),
 				label: "Avaliação: Diagnóstico Fisioterapêutico",
 				tipo_campo: "textarea",
-				placeholder: "Sua interpretação clínica dos achados subjetivos e objetivos.",
+				placeholder:
+					"Sua interpretação clínica dos achados subjetivos e objetivos.",
 				ordem: 3,
 				obrigatorio: true,
 				section: "A - Avaliação",
@@ -488,7 +512,8 @@ export const builtinEvaluationTemplates: EvaluationTemplate[] = [
 				id: uuidv4(),
 				label: "Plano: Conduta e Metas",
 				tipo_campo: "textarea",
-				placeholder: "Frequência de sessões, técnicas a serem usadas e metas a curto/longo prazo.",
+				placeholder:
+					"Frequência de sessões, técnicas a serem usadas e metas a curto/longo prazo.",
 				ordem: 4,
 				obrigatorio: true,
 				section: "P - Plano",

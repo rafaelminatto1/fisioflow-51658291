@@ -58,7 +58,11 @@ const menuGroups = [
 	{
 		label: "Inteligência & IA",
 		items: [
-			{ icon: LayoutDashboard, label: "Smart Dashboard", href: "/smart-dashboard" },
+			{
+				icon: LayoutDashboard,
+				label: "Smart Dashboard",
+				href: "/smart-dashboard",
+			},
 			{ icon: Brain, label: "Assistente IA", href: "/smart-ai" },
 			{ icon: BarChart3, label: "Analytics Avançado", href: "/analytics" },
 		],

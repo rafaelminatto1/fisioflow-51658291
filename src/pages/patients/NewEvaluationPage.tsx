@@ -174,7 +174,10 @@ export default function NewEvaluationPage() {
 				if (!selectedTemplate.id.startsWith("builtin-")) {
 					await incrementTemplateUsage.mutateAsync(selectedTemplate.id);
 				}
-			} else if (richTextAnamnesis.trim() || Object.keys(physicalExamData).length > 0) {
+			} else if (
+				richTextAnamnesis.trim() ||
+				Object.keys(physicalExamData).length > 0
+			) {
 				// Save free-form evaluation (anamnesis + physical exam)
 				await evaluationFormsApi.responses.create("free-form", {
 					patient_id: patientId,
@@ -235,22 +238,36 @@ export default function NewEvaluationPage() {
 				<div className="hidden print:block mb-8 border-b-2 border-primary pb-6">
 					<div className="flex justify-between items-start">
 						<div>
-							<h1 className="text-3xl font-black text-primary tracking-tighter">FISIOFLOW</h1>
-							<p className="text-xs font-bold uppercase tracking-widest text-muted-foreground">Centro de Reabilitação Avançada</p>
+							<h1 className="text-3xl font-black text-primary tracking-tighter">
+								FISIOFLOW
+							</h1>
+							<p className="text-xs font-bold uppercase tracking-widest text-muted-foreground">
+								Centro de Reabilitação Avançada
+							</p>
 						</div>
 						<div className="text-right">
 							<p className="text-sm font-bold">Data da Avaliação</p>
-							<p className="text-lg">{new Date().toLocaleDateString('pt-BR')}</p>
+							<p className="text-lg">
+								{new Date().toLocaleDateString("pt-BR")}
+							</p>
 						</div>
 					</div>
 					<div className="mt-8 grid grid-cols-2 gap-4 bg-muted/20 p-4 rounded-xl border">
 						<div>
-							<p className="text-[10px] font-bold uppercase text-muted-foreground">Paciente</p>
-							<p className="font-bold text-lg">{PatientHelpers.getName(patient)}</p>
+							<p className="text-[10px] font-bold uppercase text-muted-foreground">
+								Paciente
+							</p>
+							<p className="font-bold text-lg">
+								{PatientHelpers.getName(patient)}
+							</p>
 						</div>
 						<div>
-							<p className="text-[10px] font-bold uppercase text-muted-foreground">Avaliador</p>
-							<p className="font-bold text-lg">Dr. {patient.therapist_name || 'Fisioterapeuta'}</p>
+							<p className="text-[10px] font-bold uppercase text-muted-foreground">
+								Avaliador
+							</p>
+							<p className="font-bold text-lg">
+								Dr. {patient.therapist_name || "Fisioterapeuta"}
+							</p>
 						</div>
 					</div>
 				</div>
@@ -390,9 +407,9 @@ export default function NewEvaluationPage() {
 													Template de Avaliação
 												</label>
 												{selectedTemplate && (
-													<Button 
-														variant="ghost" 
-														size="sm" 
+													<Button
+														variant="ghost"
+														size="sm"
 														onClick={() => handleTemplateSelect(null)}
 														className="h-7 text-[10px] uppercase font-bold text-destructive hover:text-destructive hover:bg-destructive/10"
 													>
@@ -413,11 +430,16 @@ export default function NewEvaluationPage() {
 											<div className="space-y-6 animate-in fade-in slide-in-from-bottom-2 duration-500 print:space-y-4">
 												<div className="flex items-center justify-between border-b pb-4 print:hidden">
 													<div className="space-y-1">
-														<Badge variant="outline" className="gap-1.5 py-1 px-3 bg-primary/5 text-primary border-primary/20">
-															<Sparkles className="h-3.5 w-3.5" /> Quadro Branco (Livre)
+														<Badge
+															variant="outline"
+															className="gap-1.5 py-1 px-3 bg-primary/5 text-primary border-primary/20"
+														>
+															<Sparkles className="h-3.5 w-3.5" /> Quadro Branco
+															(Livre)
 														</Badge>
 														<p className="text-xs text-muted-foreground ml-1">
-															Use este espaço para uma anamnese sem restrições de campos.
+															Use este espaço para uma anamnese sem restrições
+															de campos.
 														</p>
 													</div>
 													<div className="flex items-center gap-4 text-[10px] font-bold text-muted-foreground uppercase tracking-widest">
@@ -428,9 +450,13 @@ export default function NewEvaluationPage() {
 												</div>
 												<div className="border-2 border-muted/50 rounded-2xl bg-card shadow-[0_8px_30px_rgb(0,0,0,0.04)] overflow-hidden focus-within:ring-2 focus-within:ring-primary/20 focus-within:border-primary/30 transition-all print:border-none print:shadow-none">
 													<div className="bg-muted/30 border-b p-1 print:hidden">
-														<RichTextToolbar 
-															className="border-none shadow-none bg-transparent" 
-															imageUploadFolder={patientId ? `patients/${patientId}/evaluations/whiteboard` : undefined}
+														<RichTextToolbar
+															className="border-none shadow-none bg-transparent"
+															imageUploadFolder={
+																patientId
+																	? `patients/${patientId}/evaluations/whiteboard`
+																	: undefined
+															}
 														/>
 													</div>
 													<div className="p-8 min-h-[600px] print:p-0">
@@ -482,44 +508,65 @@ export default function NewEvaluationPage() {
 									</div>
 								</TabsContent>
 
-								<TabsContent value="postural" className="m-0 print:break-before-page">
+								<TabsContent
+									value="postural"
+									className="m-0 print:break-before-page"
+								>
 									<div className="max-w-6xl mx-auto print:max-w-full">
 										<div className="mb-6 print:mb-4">
 											<h2 className="text-2xl font-bold tracking-tight">
 												Análise Postural AI
 											</h2>
 											<p className="text-muted-foreground print:hidden">
-												Use a câmera para identificar desvios posturais e calcular ângulos automaticamente.
+												Use a câmera para identificar desvios posturais e
+												calcular ângulos automaticamente.
 											</p>
 										</div>
 										<div className="print:hidden">
-											<PosturalAnalysisTool 
-												patientName={patient ? PatientHelpers.getName(patient) : undefined}
+											<PosturalAnalysisTool
+												patientName={
+													patient ? PatientHelpers.getName(patient) : undefined
+												}
 												onCapture={(img, analysis) => {
 													setPhysicalExamData((prev: any) => ({
 														...prev,
 														posturalAnalysis: [
 															...(prev.posturalAnalysis || []),
-															{ img, analysis, timestamp: new Date().toISOString() }
-														]
+															{
+																img,
+																analysis,
+																timestamp: new Date().toISOString(),
+															},
+														],
 													}));
 												}}
 											/>
 										</div>
-										
+
 										{/* Print view for postural analysis */}
 										<div className="hidden print:grid grid-cols-2 gap-4">
-											{physicalExamData.posturalAnalysis?.map((item: any, idx: number) => (
-												<div key={idx} className="border rounded-xl p-2">
-													<img src={item.img} alt={`Análise ${idx}`} className="w-full h-auto rounded-lg" />
-													<p className="text-[10px] mt-1 font-bold uppercase text-center">{item.analysis?.type || 'Vista Postural'}</p>
-												</div>
-											))}
+											{physicalExamData.posturalAnalysis?.map(
+												(item: any, idx: number) => (
+													<div key={idx} className="border rounded-xl p-2">
+														<img
+															src={item.img}
+															alt={`Análise ${idx}`}
+															className="w-full h-auto rounded-lg"
+														/>
+														<p className="text-[10px] mt-1 font-bold uppercase text-center">
+															{item.analysis?.type || "Vista Postural"}
+														</p>
+													</div>
+												),
+											)}
 										</div>
 									</div>
 								</TabsContent>
 
-								<TabsContent value="pain-map" className="m-0 print:break-before-page">
+								<TabsContent
+									value="pain-map"
+									className="m-0 print:break-before-page"
+								>
 									<div className="max-w-5xl mx-auto print:max-w-full">
 										<div className="mb-6 hidden md:block print:block print:mb-4">
 											<h2 className="text-2xl font-bold tracking-tight">

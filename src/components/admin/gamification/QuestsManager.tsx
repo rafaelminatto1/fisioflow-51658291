@@ -37,10 +37,7 @@ import {
 } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
 import { useToast } from "@/hooks/use-toast";
-import {
-	gamificationApi,
-	type QuestDefinitionRow,
-} from "@/api/v2";
+import { gamificationApi, type QuestDefinitionRow } from "@/api/v2";
 
 type QuestDefinition = QuestDefinitionRow;
 

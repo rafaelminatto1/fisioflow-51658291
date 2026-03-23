@@ -14,6 +14,7 @@ import { LoadingSkeleton } from "@/components/ui/loading-skeleton";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
+import { PatientTimeline } from "@/components/patients/PatientTimeline";
 import {
 	ArrowLeft,
 	Edit,
@@ -34,6 +35,7 @@ import {
 	ClipboardList,
 	Sparkles,
 	Gift,
+	History,
 } from "lucide-react";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
@@ -1247,6 +1249,13 @@ export const PatientProfilePage = () => {
 								Visão Geral
 							</TabsTrigger>
 							<TabsTrigger
+								value="timeline"
+								className="data-[state=active]:border-blue-600 data-[state=active]:text-blue-600 rounded-none bg-transparent border-b-2 border-transparent px-0 py-2 text-sm font-semibold gap-2 transition-all"
+							>
+								<History className="h-4 w-4" />
+								Linha do Tempo
+							</TabsTrigger>
+							<TabsTrigger
 								value="analytics"
 								className="data-[state=active]:border-blue-600 data-[state=active]:text-blue-600 rounded-none bg-transparent border-b-2 border-transparent px-0 py-2 text-sm font-semibold gap-2 transition-all"
 							>
@@ -1303,6 +1312,19 @@ export const PatientProfilePage = () => {
 								upcomingAppointments={appointments}
 								invalidateTab={invalidateTab}
 							/>
+						</TabsContent>
+
+						<TabsContent
+							value="timeline"
+							className="mt-0 focus-visible:outline-none animate-in fade-in-50 duration-500 slide-in-from-bottom-2"
+						>
+							<div className="bg-white rounded-3xl p-8 border border-blue-100 shadow-premium-sm">
+								<h3 className="text-lg font-black uppercase tracking-tight mb-8 flex items-center gap-2">
+									<History className="h-5 w-5 text-blue-600" />
+									Linha do Tempo de Atividades
+								</h3>
+								<PatientTimeline patientId={id} />
+							</div>
 						</TabsContent>
 
 						<TabsContent

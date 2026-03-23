@@ -140,8 +140,8 @@ export default function BoardsHome() {
 								</h1>
 								<p className="max-w-3xl text-sm leading-7 text-white/72 sm:text-base">
 									Inspire o fluxo no que há de melhor em Trello, Monday e
-									ClickUp: clareza visual, contexto operacional e acesso rápido às
-									views mais usadas.
+									ClickUp: clareza visual, contexto operacional e acesso rápido
+									às views mais usadas.
 								</p>
 							</div>
 
@@ -150,7 +150,9 @@ export default function BoardsHome() {
 									<div className="text-xs uppercase tracking-[0.16em] text-white/62">
 										Boards
 									</div>
-									<div className="mt-2 text-3xl font-semibold">{allBoards.length}</div>
+									<div className="mt-2 text-3xl font-semibold">
+										{allBoards.length}
+									</div>
 								</div>
 								<div className="rounded-2xl border border-white/12 bg-white/10 p-4 backdrop-blur-sm">
 									<div className="text-xs uppercase tracking-[0.16em] text-white/62">
@@ -213,11 +215,13 @@ export default function BoardsHome() {
 							</div>
 
 							<div className="flex flex-wrap gap-2">
-								{([
-									["all", "Todos"],
-									["favorites", "Favoritos"],
-									["recent", "Recentes"],
-								] as const).map(([value, label]) => (
+								{(
+									[
+										["all", "Todos"],
+										["favorites", "Favoritos"],
+										["recent", "Recentes"],
+									] as const
+								).map(([value, label]) => (
 									<button
 										key={value}
 										type="button"
@@ -257,26 +261,28 @@ export default function BoardsHome() {
 									</CardTitle>
 								</CardHeader>
 								<CardContent className="space-y-2">
-									{([
-										{
-											value: "all",
-											label: "Todos os boards",
-											description: `${allBoards.length} disponíveis`,
-											icon: LayoutGrid,
-										},
-										{
-											value: "favorites",
-											label: "Favoritos",
-											description: `${starredBoards.length} destacados`,
-											icon: Star,
-										},
-										{
-											value: "recent",
-											label: "Atualizados há pouco",
-											description: `${recentBoards.length} em foco`,
-											icon: Clock3,
-										},
-									] as const).map((item) => {
+									{(
+										[
+											{
+												value: "all",
+												label: "Todos os boards",
+												description: `${allBoards.length} disponíveis`,
+												icon: LayoutGrid,
+											},
+											{
+												value: "favorites",
+												label: "Favoritos",
+												description: `${starredBoards.length} destacados`,
+												icon: Star,
+											},
+											{
+												value: "recent",
+												label: "Atualizados há pouco",
+												description: `${recentBoards.length} em foco`,
+												icon: Clock3,
+											},
+										] as const
+									).map((item) => {
 										const Icon = item.icon;
 										return (
 											<button
@@ -294,7 +300,9 @@ export default function BoardsHome() {
 													<Icon className="h-4 w-4" />
 												</div>
 												<div className="min-w-0">
-													<div className="text-sm font-medium">{item.label}</div>
+													<div className="text-sm font-medium">
+														{item.label}
+													</div>
 													<div className="text-xs text-muted-foreground">
 														{item.description}
 													</div>
@@ -452,7 +460,10 @@ export default function BoardsHome() {
 					isLoading={createBoard.isPending}
 				/>
 
-				<AlertDialog open={!!deletingId} onOpenChange={() => setDeletingId(null)}>
+				<AlertDialog
+					open={!!deletingId}
+					onOpenChange={() => setDeletingId(null)}
+				>
 					<AlertDialogContent>
 						<AlertDialogHeader>
 							<AlertDialogTitle>Arquivar board?</AlertDialogTitle>

@@ -39,6 +39,7 @@ import { toast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/contexts/AuthContext";
 import { motion, AnimatePresence } from "framer-motion";
+import { ComplianceBanner } from "@/components/communications/ComplianceBanner";
 
 interface MainLayoutProps {
 	children: React.ReactNode;
@@ -90,11 +91,13 @@ export const MainLayout: React.FC<MainLayoutProps> = ({
 
 	return (
 		<div
-			className="min-h-screen flex w-full bg-slate-50 dark:bg-slate-950"
+			className="min-h-screen flex flex-col w-full bg-slate-50 dark:bg-slate-950"
 			data-testid="main-layout"
 		>
-			{/* Skip Links for Accessibility */}
-			<SkipLinks />
+			<ComplianceBanner />
+			<div className="flex flex-1 w-full relative">
+				{/* Skip Links for Accessibility */}
+				<SkipLinks />
 
 			{/* Header Mobile */}
 			<MobileHeader />

@@ -152,9 +152,9 @@ export const PatientDashboard360: React.FC<PatientDashboard360Props> = ({
 			</Card>
 
 			{/* Cloudflare Autonomous Retention Agent */}
-			<PatientRetentionAgent 
-				patientId={patient.id} 
-				patientName={PatientHelpers.getName(patient)} 
+			<PatientRetentionAgent
+				patientId={patient.id}
+				patientName={PatientHelpers.getName(patient)}
 			/>
 
 			{/* Grid de Cards de Informação */}

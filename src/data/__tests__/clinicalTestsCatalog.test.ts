@@ -8,7 +8,9 @@ import {
 
 describe("clinicalTestsCatalog", () => {
 	it("normaliza nome removendo acentos e caixa", () => {
-		expect(normalizeClinicalTestName("  Pós-Operatório  ")).toBe("pos-operatorio");
+		expect(normalizeClinicalTestName("  Pós-Operatório  ")).toBe(
+			"pos-operatorio",
+		);
 	});
 
 	it("mantém catálogo built-in quando não há testes remotos", () => {

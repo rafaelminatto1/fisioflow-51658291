@@ -4,10 +4,7 @@
 
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useToast } from "@/hooks/use-toast";
-import {
-	gamificationApi,
-	type QuestDefinitionRow,
-} from "@/api/v2";
+import { gamificationApi, type QuestDefinitionRow } from "@/api/v2";
 
 export type QuestCategory = "daily" | "weekly" | "special";
 export type QuestStatus = "pending" | "in_progress" | "completed" | "expired";

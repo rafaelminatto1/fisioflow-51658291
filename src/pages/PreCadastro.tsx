@@ -17,10 +17,7 @@ import {
 	Info,
 } from "lucide-react";
 import { fisioLogger as logger } from "@/lib/errors/logger";
-import {
-	precadastroApi,
-	type PrecadastroToken,
-} from "@/api/v2";
+import { precadastroApi, type PrecadastroToken } from "@/api/v2";
 import { DatePicker } from "@/components/ui/date-picker";
 import { parseISO, format as formatDateFns, isValid } from "date-fns";
 import { cn } from "@/lib/utils";

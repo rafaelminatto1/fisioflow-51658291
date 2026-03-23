@@ -86,7 +86,8 @@ const CATEGORY_COLORS: Record<string, string> = {
 		"bg-orange-100 text-orange-800 dark:bg-orange-900/30 dark:text-orange-400",
 	padrao: "bg-primary/10 text-primary",
 	geral: "bg-muted text-muted-foreground",
-	"pos-operatorio": "bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-400",
+	"pos-operatorio":
+		"bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-400",
 };
 
 export function EvaluationTemplateSelector({
@@ -158,10 +159,12 @@ export function EvaluationTemplateSelector({
 	// Merge builtin and remote templates
 	const templates = useMemo(() => {
 		// Filter built-in templates by category if needed
-		const filteredBuiltin = category 
-			? builtinEvaluationTemplates.filter(t => t.category === category || t.tipo === category)
+		const filteredBuiltin = category
+			? builtinEvaluationTemplates.filter(
+					(t) => t.category === category || t.tipo === category,
+				)
 			: builtinEvaluationTemplates;
-			
+
 		return [...filteredBuiltin, ...remoteTemplates];
 	}, [remoteTemplates, category]);
 
@@ -252,7 +255,10 @@ export function EvaluationTemplateSelector({
 								<div className="flex items-center gap-2">
 									<span className="font-medium">{selectedTemplate.nome}</span>
 									{selectedTemplate.isBuiltin !== false && (
-										<Badge variant="outline" className="text-[10px] h-4 bg-primary/5 text-primary border-primary/20 gap-1 px-1.5">
+										<Badge
+											variant="outline"
+											className="text-[10px] h-4 bg-primary/5 text-primary border-primary/20 gap-1 px-1.5"
+										>
 											<Sparkles className="h-2.5 w-2.5" /> Gold Standard
 										</Badge>
 									)}
@@ -361,6 +367,5 @@ export function EvaluationTemplateSelector({
 		</Popover>
 	);
 }
-
 
 export default EvaluationTemplateSelector;

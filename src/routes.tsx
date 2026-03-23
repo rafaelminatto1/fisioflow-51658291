@@ -50,7 +50,10 @@ export function AppRoutes() {
 			/>
 			<Route path="/agendar/:slug" element={<BookingPage />} />
 			<Route path="/install" element={<Install />} />
-			<Route path="/admin" element={<Navigate to="/admin/analytics" replace />} />
+			<Route
+				path="/admin"
+				element={<Navigate to="/admin/analytics" replace />}
+			/>
 			<Route
 				path="/goals"
 				element={<Navigate to="/cadastros/objetivos" replace />}

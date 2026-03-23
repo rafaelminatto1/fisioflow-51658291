@@ -468,7 +468,7 @@ export default function WikiPage() {
 						</div>
 					) : (
 						<div className="p-4 sm:p-6 space-y-6 animate-in fade-in duration-500">
-													{/* Compact header */}
+							{/* Compact header */}
 							<div className="flex items-center justify-between gap-3">
 								<div className="flex items-center gap-3 min-w-0">
 									<div className="h-9 w-9 rounded-xl bg-primary/10 flex items-center justify-center flex-shrink-0">
@@ -483,7 +483,11 @@ export default function WikiPage() {
 										</p>
 									</div>
 								</div>
-								<Button onClick={handleCreatePage} size="sm" className="gap-1.5 flex-shrink-0">
+								<Button
+									onClick={handleCreatePage}
+									size="sm"
+									className="gap-1.5 flex-shrink-0"
+								>
 									<Plus className="h-4 w-4" /> Nova Página
 								</Button>
 							</div>
@@ -514,8 +518,8 @@ export default function WikiPage() {
 													</h3>
 													<p className="max-w-3xl text-sm text-slate-600">
 														Acesso rápido às páginas estratégicas de ortopedia,
-														esportiva e pós-operatório, com desdobramento prático
-														por protocolo.
+														esportiva e pós-operatório, com desdobramento
+														prático por protocolo.
 													</p>
 												</div>
 												<Button

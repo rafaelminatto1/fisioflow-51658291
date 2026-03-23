@@ -354,7 +354,7 @@ export async function findSimilarClinicalRecords(
  */
 export async function searchClinicalKnowledge(
 	query: string,
-	filter?: Record<string, any>
+	filter?: Record<string, any>,
 ): Promise<any[]> {
 	try {
 		const result = await callAIService<

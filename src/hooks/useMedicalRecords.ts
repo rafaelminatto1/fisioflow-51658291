@@ -1,8 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import {
-	patientsApi,
-	type PatientMedicalRecord,
-} from "@/api/v2";
+import { patientsApi, type PatientMedicalRecord } from "@/api/v2";
 import { useToast } from "@/hooks/use-toast";
 
 export type MedicalRecord = PatientMedicalRecord;

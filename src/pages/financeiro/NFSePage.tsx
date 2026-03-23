@@ -53,11 +53,7 @@ import { ptBR } from "date-fns/locale";
 import { useAuth } from "@/contexts/AuthContext";
 import { useOrganizations } from "@/hooks/useOrganizations";
 import { useUserProfile } from "@/hooks/useUserProfile";
-import {
-	financialApi,
-	type NFSeConfigRecord,
-	type NFSeRecord,
-} from "@/api/v2";
+import { financialApi, type NFSeConfigRecord, type NFSeRecord } from "@/api/v2";
 import { MainLayout } from "@/components/layout/MainLayout";
 
 export interface NFSe extends NFSeRecord {

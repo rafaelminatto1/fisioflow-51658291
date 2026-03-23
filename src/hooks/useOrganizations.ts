@@ -6,11 +6,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { fisioLogger as logger } from "@/lib/errors/logger";
 import { useAuth } from "@/contexts/AuthContext";
-import {
-	organizationMembersApi,
-	organizationsApi,
-	profileApi,
-} from "@/api/v2";
+import { organizationMembersApi, organizationsApi, profileApi } from "@/api/v2";
 
 export interface Organization {
 	id: string;

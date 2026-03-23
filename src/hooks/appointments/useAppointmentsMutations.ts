@@ -46,9 +46,8 @@ export function useCreateAppointment() {
 		onMutate: async (variables) => {
 			const organizationId = profile?.organization_id;
 			const queryKey = appointmentKeys.list(organizationId);
-			const previousData = queryClient.getQueryData<AppointmentsQueryResult>(
-				queryKey,
-			);
+			const previousData =
+				queryClient.getQueryData<AppointmentsQueryResult>(queryKey);
 
 			const tempId = `temp-${Date.now()}`;
 			const optimisticAppointment: AppointmentBase = {
@@ -69,10 +68,13 @@ export function useCreateAppointment() {
 				payment_status: variables.payment_status || "pending",
 			};
 
-			queryClient.setQueryData(queryKey, (old: AppointmentsQueryResult | undefined) => ({
-				...old,
-				data: [...(old?.data || []), optimisticAppointment],
-			}));
+			queryClient.setQueryData(
+				queryKey,
+				(old: AppointmentsQueryResult | undefined) => ({
+					...old,
+					data: [...(old?.data || []), optimisticAppointment],
+				}),
+			);
 
 			await queryClient.cancelQueries({ queryKey });
 

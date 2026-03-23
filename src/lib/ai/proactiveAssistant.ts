@@ -1,10 +1,6 @@
 import { differenceInDays, addDays, format, subDays } from "date-fns";
 import { ptBR } from "date-fns/locale";
-import {
-	appointmentsApi,
-	financialApi,
-	patientsApi,
-} from "@/api/v2";
+import { appointmentsApi, financialApi, patientsApi } from "@/api/v2";
 
 export interface ProactiveSuggestion {
 	id: string;

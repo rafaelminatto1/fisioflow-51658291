@@ -142,9 +142,8 @@ export const DicomViewerInner: React.FC<DicomViewerProps> = ({
 						"DicomViewerInner",
 					);
 				}
-				const imageId = runtimeRef.current.dicomImageLoader.wadouri.fileManager.add(
-					file,
-				);
+				const imageId =
+					runtimeRef.current.dicomImageLoader.wadouri.fileManager.add(file);
 				imageIds = [imageId];
 			} else if (studyInstanceUid && seriesInstanceUid && wadoUrl) {
 				try {
@@ -192,9 +191,10 @@ export const DicomViewerInner: React.FC<DicomViewerProps> = ({
 				if (engineRef.current) {
 					engineRef.current.destroy();
 				}
-				const tg = runtimeRef.current?.tools.ToolGroupManager.getToolGroup(
-					TOOL_GROUP_ID,
-				);
+				const tg =
+					runtimeRef.current?.tools.ToolGroupManager.getToolGroup(
+						TOOL_GROUP_ID,
+					);
 				if (tg) {
 					runtimeRef.current?.tools.ToolGroupManager.destroyToolGroup(
 						TOOL_GROUP_ID,
@@ -216,7 +216,8 @@ export const DicomViewerInner: React.FC<DicomViewerProps> = ({
 	const activateTool = (toolName: string) => {
 		const runtime = runtimeRef.current;
 		if (!runtime) return;
-		const toolGroup = runtime.tools.ToolGroupManager.getToolGroup(TOOL_GROUP_ID);
+		const toolGroup =
+			runtime.tools.ToolGroupManager.getToolGroup(TOOL_GROUP_ID);
 		if (!toolGroup) return;
 
 		const primaryTools = [

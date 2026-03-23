@@ -24,9 +24,7 @@ const ClinicalAnalysisPage = lazy(
 );
 const DicomWorkspacePage = lazy(
 	() =>
-		import(
-			/* webpackChunkName: "ai-dicom" */ "@/pages/ai/DicomWorkspacePage"
-		),
+		import(/* webpackChunkName: "ai-dicom" */ "@/pages/ai/DicomWorkspacePage"),
 );
 const MovementLabPage = lazy(
 	() =>

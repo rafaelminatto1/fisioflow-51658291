@@ -4,10 +4,7 @@
 
 import React, { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import {
-	publicBookingApi,
-	type PublicBookingProfile,
-} from "@/api/v2";
+import { publicBookingApi, type PublicBookingProfile } from "@/api/v2";
 import { Button } from "@/components/ui/button";
 import {
 	Card,

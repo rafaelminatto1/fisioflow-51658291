@@ -5,10 +5,7 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { useAuth } from "@/contexts/AuthContext";
-import {
-	telemedicineApi,
-	type TelemedicineRoomRecord,
-} from "@/api/v2";
+import { telemedicineApi, type TelemedicineRoomRecord } from "@/api/v2";
 
 export type TelemedicineRoom = TelemedicineRoomRecord;
 

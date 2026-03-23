@@ -23,7 +23,10 @@ export default function BiomechanicsAnalysisPage() {
 									<h1 className="text-xl font-bold text-foreground tracking-tight">
 										Laboratório de Biomecânica
 									</h1>
-									<Badge variant="outline" className="text-[10px] uppercase font-bold text-primary border-primary/20 bg-primary/5">
+									<Badge
+										variant="outline"
+										className="text-[10px] uppercase font-bold text-primary border-primary/20 bg-primary/5"
+									>
 										Kinovea Engine
 									</Badge>
 								</div>
@@ -78,9 +81,13 @@ export default function BiomechanicsAnalysisPage() {
 							<div className="h-16 w-16 rounded-full bg-primary/10 flex items-center justify-center mb-4">
 								<Video className="h-8 w-8 text-primary" />
 							</div>
-							<h3 className="text-xl font-bold mb-2">Importar Vídeo (120/240fps)</h3>
+							<h3 className="text-xl font-bold mb-2">
+								Importar Vídeo (120/240fps)
+							</h3>
 							<p className="text-sm text-muted-foreground max-w-md mb-6">
-								Faça upload de vídeos gravados com o aplicativo móvel para realizar análise de tracking ponto a ponto, medição de ângulos (ADM) e cinemática linear.
+								Faça upload de vídeos gravados com o aplicativo móvel para
+								realizar análise de tracking ponto a ponto, medição de ângulos
+								(ADM) e cinemática linear.
 							</p>
 							<Button size="lg" className="gap-2 shadow-lg">
 								<Camera className="h-5 w-5" />

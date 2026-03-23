@@ -6,12 +6,24 @@ interface BoardsEmptyStateProps {
 	onCreate: () => void;
 }
 
-function Badge({ children, className }: { children: React.ReactNode; className?: string; variant?: string }) {
-    return (
-        <div className={cn("inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-semibold transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2", className)}>
-            {children}
-        </div>
-    );
+function Badge({
+	children,
+	className,
+}: {
+	children: React.ReactNode;
+	className?: string;
+	variant?: string;
+}) {
+	return (
+		<div
+			className={cn(
+				"inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-semibold transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2",
+				className,
+			)}
+		>
+			{children}
+		</div>
+	);
 }
 
 export function BoardsEmptyState({ onCreate }: BoardsEmptyStateProps) {
@@ -32,8 +44,8 @@ export function BoardsEmptyState({ onCreate }: BoardsEmptyStateProps) {
 						</h3>
 						<p className="max-w-2xl text-sm leading-relaxed text-white/60 sm:text-base font-medium">
 							Estruture colunas, concentre prioridades e acompanhe o fluxo da
-							equipe com uma experiência mais próxima das melhores ferramentas de
-							produtividade do mercado.
+							equipe com uma experiência mais próxima das melhores ferramentas
+							de produtividade do mercado.
 						</p>
 					</div>
 					<div className="flex flex-wrap items-center gap-4 pt-2">
@@ -62,13 +74,17 @@ export function BoardsEmptyState({ onCreate }: BoardsEmptyStateProps) {
 					</div>
 					<div className="mt-6 space-y-4">
 						<div className="rounded-2xl bg-white/5 border border-white/5 p-4 hover:bg-white/10 transition-colors group">
-							<div className="text-xs font-black uppercase tracking-widest text-white/80">Planejamento visual</div>
+							<div className="text-xs font-black uppercase tracking-widest text-white/80">
+								Planejamento visual
+							</div>
 							<div className="mt-1 text-[10px] font-medium text-white/40 leading-relaxed">
 								Colunas com limites WIP e visão rápida de progresso.
 							</div>
 						</div>
 						<div className="rounded-2xl bg-white/5 border border-white/5 p-4 hover:bg-white/10 transition-colors group">
-							<div className="text-xs font-black uppercase tracking-widest text-white/80">Foco em execução</div>
+							<div className="text-xs font-black uppercase tracking-widest text-white/80">
+								Foco em execução
+							</div>
 							<div className="mt-1 text-[10px] font-medium text-white/40 leading-relaxed">
 								Cards, lista e calendário no mesmo espaço de trabalho.
 							</div>
