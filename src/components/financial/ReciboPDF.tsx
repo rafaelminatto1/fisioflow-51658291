@@ -1,18 +1,11 @@
-import React, { lazy, Suspense } from "react";
+import React, { useState } from "react";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { Download, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { OptimizedImage } from "@/components/ui/OptimizedImage";
 import { valorPorExtenso } from "@/hooks/useRecibos";
-
-// Lazy load heavy PDF components
-const PDFDownloadLink = lazy(() =>
-	import("@react-pdf/renderer").then((m) => ({ default: m.PDFDownloadLink })),
-);
-const ReciboPDFDocumentInternal = lazy(
-	() => import("./ReciboPDFDocumentInternal"),
-);
+import { downloadReactPdfDocument } from "@/lib/export/reactPdfDownload";
 
 export interface ReciboData {
 	numero: number;
@@ -44,33 +37,38 @@ export const ReciboPDF: React.FC<ReciboPDFProps> = ({
 	data,
 	fileName = `recibo-${data.numero}`,
 }) => {
+	const [isGenerating, setIsGenerating] = useState(false);
+
+	const handleDownload = async () => {
+		setIsGenerating(true);
+		try {
+			await downloadReactPdfDocument({
+				fileName: `${fileName}.pdf`,
+				loadDocument: () =>
+					import("./ReciboPDFDocumentInternal").then((module) => module.default),
+				props: { data },
+			});
+		} finally {
+			setIsGenerating(false);
+		}
+	};
+
 	return (
 		<div className="flex items-center gap-2">
-			<Suspense
-				fallback={
-					<Button variant="outline" size="sm" disabled className="gap-2">
-						<Loader2 className="h-4 w-4 animate-spin" />
-						Gerando...
-					</Button>
-				}
+			<Button
+				variant="outline"
+				size="sm"
+				disabled={isGenerating}
+				className="gap-2"
+				onClick={() => void handleDownload()}
 			>
-				<PDFDownloadLink
-					document={<ReciboPDFDocumentInternal data={data} />}
-					fileName={`${fileName}.pdf`}
-				>
-					{({ loading }) => (
-						<Button
-							variant="outline"
-							size="sm"
-							disabled={loading}
-							className="gap-2"
-						>
-							<Download className="h-4 w-4" />
-							{loading ? "Gerando..." : "Baixar PDF"}
-						</Button>
-					)}
-				</PDFDownloadLink>
-			</Suspense>
+				{isGenerating ? (
+					<Loader2 className="h-4 w-4 animate-spin" />
+				) : (
+					<Download className="h-4 w-4" />
+				)}
+				{isGenerating ? "Gerando..." : "Baixar PDF"}
+			</Button>
 		</div>
 	);
 };
