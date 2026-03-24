@@ -15,6 +15,7 @@ import { TrajectoryLines } from '../canvas/TrajectoryLines';
 import { PatientSetupPanel } from '../panels/PatientSetupPanel';
 import { JumpMetricsPanel } from '../panels/JumpMetricsPanel';
 import { TrajectoryPanel } from '../panels/TrajectoryPanel';
+import { PhastTestsPanel } from '../panels/PhastTestsPanel';
 
 export const JumpAnalysisStudio: React.FC = () => {
 	const webcamRef = useRef<Webcam>(null);
@@ -101,6 +102,7 @@ export const JumpAnalysisStudio: React.FC = () => {
 						currentFrame={currentFrame} jumpMetrics={jumpMetrics}
 						patientMass={patientMass}
 					/>
+					<PhastTestsPanel />
 					<TrajectoryPanel
 						trackedTrajs={trackedTrajs} aiEnabled={aiEnabled}
 						addTrajectory={addTrajectory} removeTrajectory={removeTrajectory}
