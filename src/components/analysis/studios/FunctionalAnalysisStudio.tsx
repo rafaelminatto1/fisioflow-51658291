@@ -13,6 +13,8 @@ import { GoniometerOverlay } from '../canvas/GoniometerOverlay';
 import { TrajectoryLines } from '../canvas/TrajectoryLines';
 
 import { TrajectoryPanel } from '../panels/TrajectoryPanel';
+import { InclinometerPanel } from '../panels/InclinometerPanel';
+import { GoniometerPanel } from '../panels/GoniometerPanel';
 
 export const FunctionalAnalysisStudio: React.FC = () => {
 	const webcamRef = useRef<Webcam>(null);
@@ -33,7 +35,7 @@ export const FunctionalAnalysisStudio: React.FC = () => {
 		clearTrajectories,
 	} = useTrajectory(poseKeypoints, aiEnabled, currentFrame, { width: 800, height: 600 });
 
-	const { points: goniometerPoints, updatePoint, currentAngle, clearGoniometer } = useGoniometer();
+	const { points: goniometerPoints, updatePoint, currentAngle, clearGoniometer, linkedKP, linkKeypoint, isRecording, toggleRecording, angleHistory } = useGoniometer(undefined, poseKeypoints, { width: 800, height: 600 });
 
 	return (
 		<div className="flex flex-col gap-6 h-full">
@@ -111,14 +113,18 @@ export const FunctionalAnalysisStudio: React.FC = () => {
 
 				{/* ── Metrics Sidebar ──────────────────────────────────── */}
 				<div className="space-y-4 overflow-y-auto max-h-[600px] pr-2">
-					<Card className="border-none shadow-sm bg-muted/5">
-						<CardContent className="p-4 space-y-3">
-							<h4 className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Goniômetro Livre</h4>
-							<Button size="sm" variant="outline" className="w-full text-xs font-bold" onClick={clearGoniometer}>
-								Resetar Goniômetro
-							</Button>
-						</CardContent>
-					</Card>
+					<InclinometerPanel />
+
+                    <GoniometerPanel
+                        currentAngle={currentAngle}
+                        angleHistory={angleHistory}
+                        isRecording={isRecording}
+                        linkedKP={linkedKP}
+                        toggleRecording={toggleRecording}
+                        clearGoniometer={clearGoniometer}
+                        linkKeypoint={linkKeypoint}
+                    />
+					
 					<TrajectoryPanel
 						trackedTrajs={trackedTrajs} aiEnabled={aiEnabled}
 						addTrajectory={addTrajectory} removeTrajectory={removeTrajectory}
