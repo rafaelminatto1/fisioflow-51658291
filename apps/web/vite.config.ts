@@ -206,6 +206,11 @@ export default defineConfig(({ mode }) => {
                 name: 'ui-vendor',
                 test: /[\\/]node_modules[\\/](@radix-ui|date-fns)[\\/]/,
                 priority: 15,
+              },
+              {
+                name: 'biomechanics-studios',
+                test: /[\\/]src[\\/]components[\\/]analysis[\\/](studios|panels|canvas)[\\/]|[\\/]src[\\/]hooks[\\/]biomechanics[\\/]/,
+                priority: 25,
               }
             ],
           },
