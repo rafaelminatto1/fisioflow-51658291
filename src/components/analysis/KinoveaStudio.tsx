@@ -17,7 +17,8 @@ import {
 	Ruler,
 	Grid,
 } from "lucide-react";
-import { Pose, POSE_CONNECTIONS } from "@mediapipe/pose";
+// Desativando temporariamente para corrigir erro de build no Cloudflare
+// import { Pose, POSE_CONNECTIONS } from "@mediapipe/pose";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -58,7 +59,8 @@ export const KinoveaStudio: React.FC<KinoveaStudioProps> = ({ onCapture, patient
 	const [gaitEvents, setGaitEvents] = useState<GaitEvent[]>([]);
 	const [jumpEvents, setJumpEvents] = useState<{takeoff?: number, landing?: number}>({});
 
-	// MediaPipe
+	// MediaPipe (Comentado para deploy)
+	/*
 	useEffect(() => {
 		const pose = new Pose({ locateFile: (file) => `https://cdn.jsdelivr.net/npm/@mediapipe/pose/${file}` });
 		pose.setOptions({ modelComplexity: 1, smoothLandmarks: true, minDetectionConfidence: 0.5 });
@@ -72,6 +74,7 @@ export const KinoveaStudio: React.FC<KinoveaStudioProps> = ({ onCapture, patient
 		process();
 		return () => { isRunning = false; };
 	}, []);
+	*/
 
 	// MyJump 3 Logic (Bosco Method)
 	const jumpMetrics = useMemo(() => {
@@ -120,7 +123,8 @@ export const KinoveaStudio: React.FC<KinoveaStudioProps> = ({ onCapture, patient
 							<Webcam ref={webcamRef} audio={false} className="absolute inset-0 w-full h-full object-cover opacity-60" />
 							<Stage width={800} height={600} className="absolute inset-0 z-10">
 								<Layer>
-									{/* AI Skeleton */}
+									{/* AI Skeleton (Desativado temporariamente para deploy) */}
+									{/*
 									{poseResults?.poseLandmarks && (
 										<Group opacity={0.5}>
 											{POSE_CONNECTIONS.map(([s, e], i) => (
@@ -128,6 +132,7 @@ export const KinoveaStudio: React.FC<KinoveaStudioProps> = ({ onCapture, patient
 											))}
 										</Group>
 									)}
+									*/}
 									{/* Goniometer */}
 									{activeTool === "goniometer" && (
 										<Group>
