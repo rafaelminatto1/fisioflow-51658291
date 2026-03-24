@@ -444,9 +444,25 @@ app.get('/leaderboard', requireAuth, async (c) => {
     data: result.rows.map((row, index) => ({
       rank: index + 1,
       ...row,
-      isCurrentUser: false,
+      isCurrentUser: row.user_id === user.uid,
     })),
   });
+});
+
+app.get('/badges/:patientId', requireAuth, async (c) => {
+  const pool = await createPool(c.env);
+  const { patientId } = c.req.param();
+
+  const result = await pool.query(
+    `SELECT a.icon, a.title, a.category, al.unlocked_at
+     FROM achievements_log al
+     JOIN achievements a ON a.id = al.achievement_id
+     WHERE al.patient_id = $1
+     ORDER BY al.unlocked_at DESC`,
+    [patientId]
+  );
+
+  return c.json({ data: result.rows });
 });
 
 // ─── GET /shop ────────────────────────────────────────────────────────────────

@@ -148,8 +148,14 @@ const mainMenuItems = [
 const clinicaMenuItems = [
 	{ icon: Activity, label: "Exercícios", href: "/exercises" },
 	{ icon: Target, label: "Protocolos e Fases", href: "/protocols" },
-	{ icon: ClipboardList, label: "Avaliações", href: "/clinical-tests" },
 	{ icon: Camera, label: "Biomecânica", href: "/biomechanics" },
+];
+
+const avaliacoesSubmenu = [
+	{ icon: ScanFace, label: "Avaliação Postural", href: "/dashboard/imagens?mode=clinical_posture" },
+	{ icon: ImageIcon, label: "Avaliação de Imagem", href: "/dashboard/imagens" },
+	{ icon: Footprints, label: "Avaliação de Marcha", href: "/dashboard/imagens?mode=dynamic_demo" },
+	{ icon: FlaskConical, label: "Testes Clínicos", href: "/clinical-tests" },
 ];
 
 const inteligenciaMenuItems = [
@@ -161,6 +167,8 @@ const inteligenciaMenuItems = [
 const operacionalMenuItems = [
 	{ icon: CalendarDays, label: "Eventos", href: "/eventos" },
 	{ icon: LayoutGrid, label: "Boards", href: "/boards" },
+	{ icon: FileText, label: "Cadastros", href: "/cadastros" },
+	{ icon: BookOpen, label: "Wiki Clínica", href: "/wiki" },
 	{ icon: Package, label: "Estoque", href: "/inventory" },
 	{ icon: Video, label: "Telemedicina", href: "/telemedicine" },
 	{ icon: MessageSquare, label: "Comunicação", href: "/communications" },
@@ -169,10 +177,25 @@ const operacionalMenuItems = [
 const adminSubmenu = [
 	{ icon: BarChart3, label: "Analytics", href: "/admin/analytics" },
 	{ icon: Users, label: "Usuários", href: "/admin/users" },
-	{ icon: Shield, label: "Auditoria & Segurança", href: "/admin/audit-logs" },
+	{ icon: Shield, label: "Segurança", href: "/admin/security" },
+	{ icon: FileText, label: "Logs de Auditoria", href: "/admin/audit-logs" },
 	{ icon: Mail, label: "Convites", href: "/admin/invitations" },
+	{ icon: Building2, label: "Organização", href: "/admin/organization" },
 	{ icon: Database, label: "CRUD Admin", href: "/admin/crud" },
+	{ icon: Users, label: "Cohorts", href: "/admin/cohorts" },
+	{ icon: Target, label: "Metas", href: "/admin/goals" },
 	{ icon: Trophy, label: "Gamificação", href: "/admin/gamification" },
+];
+
+const financeiroSubmenu = [
+	{ icon: DollarSign, label: "Financeiro Hub", href: "/financial" },
+	{ icon: Receipt, label: "Faturamento e Recibos", href: "/financeiro/recibos" },
+];
+
+const configuracoesSubmenu = [
+	{ icon: Settings, label: "Geral", href: "/settings" },
+	{ icon: CalendarDays, label: "Google Calendar", href: "/configuracoes/calendario" },
+	{ icon: LinkIcon, label: "Integrações Google", href: "/integrations" },
 ];
 
 const SidebarSection = ({
@@ -199,12 +222,25 @@ const SidebarSection = ({
 export function Sidebar() {
 	const [collapsed, setCollapsed] = useState(false);
 	const [adminOpen, setAdminOpen] = useState(false);
+	const [avaliacaoOpen, setAvaliacaoOpen] = useState(false);
+	const [financeiroOpen, setFinanceiroOpen] = useState(false);
+	const [configuracoesOpen, setConfiguracoesOpen] = useState(false);
 	const location = useLocation();
 	const { toast } = useToast();
 	const queryClient = useQueryClient();
 	const { preloadRoute } = useNavPreload();
 
 	const isAdminActive = location.pathname.startsWith("/admin");
+	const isAvaliacaoActive =
+		location.pathname.startsWith("/dashboard/imagens") ||
+		location.pathname === "/clinical-tests";
+	const isFinanceiroActive =
+		location.pathname.startsWith("/financial") ||
+		location.pathname.startsWith("/financeiro");
+	const isConfiguracoesActive =
+		location.pathname === "/settings" ||
+		location.pathname.startsWith("/configuracoes") ||
+		location.pathname === "/integrations";
 
 	const handleLogout = async () => {
 		const { signOut } = useAuth();
@@ -344,7 +380,62 @@ export function Sidebar() {
 						</SidebarSection>
 
 						<SidebarSection label="Clínica" collapsed={collapsed}>
-							{clinicaMenuItems.map(renderMenuItem)}
+							{clinicaMenuItems.slice(0, 2).map(renderMenuItem)}
+							<Collapsible
+								open={avaliacaoOpen || isAvaliacaoActive}
+								onOpenChange={setAvaliacaoOpen}
+							>
+								<CollapsibleTrigger asChild>
+									<button
+										className={cn(
+											"flex items-center justify-between w-full px-4 py-3 rounded-2xl transition-all duration-500 group",
+											isAvaliacaoActive
+												? "bg-slate-50 dark:bg-slate-800/30 text-slate-900 dark:text-white font-black"
+												: "text-slate-500",
+										)}
+									>
+										<div className="flex items-center gap-3">
+											<ClipboardList className="h-5 w-5" />
+											{!collapsed && (
+												<span className="text-xs font-bold uppercase tracking-widest">
+													Avaliações
+												</span>
+											)}
+										</div>
+										{!collapsed && (
+											<ChevronDown
+												className={cn(
+													"h-3.5 w-3.5 transition-transform",
+													(avaliacaoOpen || isAvaliacaoActive) && "rotate-180",
+												)}
+											/>
+										)}
+									</button>
+								</CollapsibleTrigger>
+								<CollapsibleContent className="pl-9 space-y-1 mt-1 animate-in slide-in-from-top-2">
+									{avaliacoesSubmenu.map((item) => {
+										const SubIcon = item.icon;
+										const isSubActive =
+											location.pathname + location.search === item.href;
+										return (
+											<Link
+												key={item.href}
+												to={item.href}
+												className={cn(
+													"flex items-center gap-2 px-3 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all",
+													isSubActive
+														? "text-primary bg-primary/5"
+														: "text-muted-foreground hover:text-foreground hover:pl-4",
+												)}
+											>
+												<SubIcon className="h-3.5 w-3.5 flex-shrink-0" />
+												{!collapsed && item.label}
+											</Link>
+										);
+									})}
+								</CollapsibleContent>
+							</Collapsible>
+							{clinicaMenuItems.slice(2).map(renderMenuItem)}
 						</SidebarSection>
 
 						<SidebarSection label="Inteligência & IA" collapsed={collapsed}>
@@ -353,9 +444,113 @@ export function Sidebar() {
 
 						<SidebarSection label="Gestão & Operação" collapsed={collapsed}>
 							{operacionalMenuItems.map(renderMenuItem)}
+							<Collapsible
+								open={financeiroOpen || isFinanceiroActive}
+								onOpenChange={setFinanceiroOpen}
+							>
+								<CollapsibleTrigger asChild>
+									<button
+										className={cn(
+											"flex items-center justify-between w-full px-4 py-3 rounded-2xl transition-all duration-500 group",
+											isFinanceiroActive
+												? "bg-slate-50 dark:bg-slate-800/30 text-slate-900 dark:text-white font-black"
+												: "text-slate-500",
+										)}
+									>
+										<div className="flex items-center gap-3">
+											<DollarSign className="h-5 w-5" />
+											{!collapsed && (
+												<span className="text-xs font-bold uppercase tracking-widest">
+													Financeiro
+												</span>
+											)}
+										</div>
+										{!collapsed && (
+											<ChevronDown
+												className={cn(
+													"h-3.5 w-3.5 transition-transform",
+													(financeiroOpen || isFinanceiroActive) && "rotate-180",
+												)}
+											/>
+										)}
+									</button>
+								</CollapsibleTrigger>
+								<CollapsibleContent className="pl-9 space-y-1 mt-1 animate-in slide-in-from-top-2">
+									{financeiroSubmenu.map((item) => {
+										const SubIcon = item.icon;
+										return (
+											<Link
+												key={item.href}
+												to={item.href}
+												className={cn(
+													"flex items-center gap-2 px-3 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all",
+													location.pathname === item.href
+														? "text-primary bg-primary/5"
+														: "text-muted-foreground hover:text-foreground hover:pl-4",
+												)}
+											>
+												<SubIcon className="h-3.5 w-3.5 flex-shrink-0" />
+												{!collapsed && item.label}
+											</Link>
+										);
+									})}
+								</CollapsibleContent>
+							</Collapsible>
 						</SidebarSection>
 
 						<SidebarSection label="Configurações" collapsed={collapsed}>
+							<Collapsible
+								open={configuracoesOpen || isConfiguracoesActive}
+								onOpenChange={setConfiguracoesOpen}
+							>
+								<CollapsibleTrigger asChild>
+									<button
+										className={cn(
+											"flex items-center justify-between w-full px-4 py-3 rounded-2xl transition-all duration-500 group",
+											isConfiguracoesActive
+												? "bg-slate-50 dark:bg-slate-800/30 text-slate-900 dark:text-white font-black"
+												: "text-slate-500",
+										)}
+									>
+										<div className="flex items-center gap-3">
+											<Settings className="h-5 w-5" />
+											{!collapsed && (
+												<span className="text-xs font-bold uppercase tracking-widest">
+													Configurações
+												</span>
+											)}
+										</div>
+										{!collapsed && (
+											<ChevronDown
+												className={cn(
+													"h-3.5 w-3.5 transition-transform",
+													(configuracoesOpen || isConfiguracoesActive) && "rotate-180",
+												)}
+											/>
+										)}
+									</button>
+								</CollapsibleTrigger>
+								<CollapsibleContent className="pl-9 space-y-1 mt-1 animate-in slide-in-from-top-2">
+									{configuracoesSubmenu.map((item) => {
+										const SubIcon = item.icon;
+										return (
+											<Link
+												key={item.href}
+												to={item.href}
+												className={cn(
+													"flex items-center gap-2 px-3 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all",
+													location.pathname === item.href
+														? "text-primary bg-primary/5"
+														: "text-muted-foreground hover:text-foreground hover:pl-4",
+												)}
+											>
+												<SubIcon className="h-3.5 w-3.5 flex-shrink-0" />
+												{!collapsed && item.label}
+											</Link>
+										);
+									})}
+								</CollapsibleContent>
+							</Collapsible>
 							<Collapsible open={adminOpen} onOpenChange={setAdminOpen}>
 								<CollapsibleTrigger asChild>
 									<button
