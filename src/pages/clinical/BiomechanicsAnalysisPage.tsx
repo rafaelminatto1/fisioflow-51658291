@@ -18,6 +18,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
 import { useNavigate } from "react-router-dom";
+import { motion } from "framer-motion";
 
 export default function BiomechanicsAnalysisPage() {
 	const [activeView, setActiveTab] = useState<"hub" | "instructions" | "library">("hub");
@@ -52,8 +53,8 @@ export default function BiomechanicsAnalysisPage() {
 			title: "Postura & Escoliose",
 			subtitle: "Adams & SAPO",
 			icon: User,
-			color: "text-purple-500",
-			bg: "bg-purple-500/10",
+			color: "text-slate-400",
+			bg: "bg-slate-500/10",
 			reference: "Karachalios (1999)",
 			description: "Avaliação fotogramétrica e ângulo de rotação de tronco (ATR).",
             route: "/clinical/biomechanics/posture"
@@ -115,42 +116,57 @@ export default function BiomechanicsAnalysisPage() {
 	};
 
 	const renderHub = () => (
-		<div className="space-y-8 animate-in fade-in duration-700">
-			<div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-				{categories.map((cat) => (
-					<Card 
-						key={cat.id} 
-						className="group cursor-pointer hover:border-primary/50 hover:shadow-xl transition-all duration-300 overflow-hidden border-2"
-						onClick={() => {
-							setSelectedTest(cat.id);
-							setActiveTab("instructions");
-						}}
-					>
-						<CardContent className="p-0">
-							<div className={`p-6 ${cat.bg} flex justify-between items-start`}>
-								<div className={`p-3 rounded-2xl bg-background shadow-sm ${cat.color}`}>
-									<cat.icon className="h-6 w-6" />
-								</div>
-								<Badge variant="secondary" className="text-[8px] font-black uppercase">
-									{cat.reference}
-								</Badge>
-							</div>
-							<div className="p-6 space-y-2">
-								<div>
-									<p className="text-[10px] font-black uppercase text-muted-foreground tracking-widest">{cat.subtitle}</p>
-									<h3 className="text-xl font-bold tracking-tighter">{cat.title}</h3>
-								</div>
-								<p className="text-xs text-muted-foreground leading-relaxed">
-									{cat.description}
-								</p>
-								<div className="pt-4 flex items-center text-xs font-bold text-primary opacity-0 group-hover:opacity-100 transition-opacity">
-									VER INSTRUÇÕES <PlayCircle className="ml-2 h-4 w-4" />
-								</div>
-							</div>
-						</CardContent>
-					</Card>
+		<div className="space-y-12">
+            <motion.div 
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6"
+            >
+				{categories.map((cat, idx) => (
+                    <motion.div
+                        key={cat.id}
+                        initial={{ opacity: 0, y: 20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ delay: idx * 0.1 }}
+                    >
+                        <Card 
+                            className="group cursor-pointer bg-slate-900/40 backdrop-blur-xl border-white/5 hover:border-primary/40 hover:shadow-[0_0_30px_rgba(249,115,22,0.15)] transition-all duration-500 overflow-hidden"
+                            onClick={() => {
+                                setSelectedTest(cat.id);
+                                setActiveTab("instructions");
+                            }}
+                        >
+                            <CardContent className="p-0">
+                                <div className={`p-8 ${cat.bg} relative overflow-hidden group-hover:scale-105 transition-transform duration-700`}>
+                                    <div className="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity">
+                                        <cat.icon className="h-24 w-24 -mr-8 -mt-8 rotate-12" />
+                                    </div>
+                                    <div className={`p-4 rounded-2xl bg-slate-950 shadow-2xl border border-white/10 ${cat.color} relative z-10`}>
+                                        <cat.icon className="h-7 w-7" />
+                                    </div>
+                                    <div className="mt-6 relative z-10">
+                                        <Badge variant="outline" className="text-[9px] font-black uppercase text-white/40 border-white/10 bg-black/20">
+                                            {cat.reference}
+                                        </Badge>
+                                    </div>
+                                </div>
+                                <div className="p-8 space-y-3 bg-gradient-to-b from-transparent to-slate-950/50">
+                                    <div>
+                                        <p className="text-[10px] font-black uppercase text-primary/60 tracking-[0.2em] mb-1">{cat.subtitle}</p>
+                                        <h3 className="text-2xl font-black tracking-tighter text-white">{cat.title}</h3>
+                                    </div>
+                                    <p className="text-sm text-slate-400 font-medium leading-relaxed">
+                                        {cat.description}
+                                    </p>
+                                    <div className="pt-4 flex items-center text-[10px] font-black text-primary tracking-widest uppercase opacity-0 group-hover:opacity-100 transform translate-y-2 group-hover:translate-y-0 transition-all duration-300">
+                                        INICIAR PROTOCOLO <PlayCircle className="ml-2 h-4 w-4" />
+                                    </div>
+                                </div>
+                            </CardContent>
+                        </Card>
+                    </motion.div>
 				))}
-			</div>
+            </motion.div>
 
 			<div className="space-y-4">
 				<div className="flex items-center justify-between">

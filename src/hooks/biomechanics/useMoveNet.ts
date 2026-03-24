@@ -15,8 +15,11 @@ export const useMoveNet = (videoRef: React.RefObject<HTMLVideoElement | null>) =
 
 	const detect = useCallback(async () => {
 		if (!isRunningRef.current) return;
-		const video = videoRef.current;
-		if (video && _detector && video.readyState === 4) {
+		
+		// Handle both react-webcam ref and standard HTMLVideoElement ref
+		const video = (videoRef.current as any)?.video || videoRef.current;
+		
+		if (video && _detector && video.readyState >= 2) { // 2 = HAVE_CURRENT_DATA
 			try {
 				const poses = await _detector.estimatePoses(video);
 				if (poses[0]?.keypoints) setPoseKeypoints(poses[0].keypoints);

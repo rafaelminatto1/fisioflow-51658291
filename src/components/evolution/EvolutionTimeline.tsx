@@ -12,10 +12,34 @@
  * - Indicadores visuais de progresso
  */
 
-import React, { useState, useMemo, useCallback } from "react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
+import { format, formatDistanceToNow, isValid } from "date-fns";
+import { ptBR } from "date-fns/locale";
+import {
+	Activity,
+	AlertCircle,
+	Bone,
+	Calendar,
+	Camera,
+	ChevronDown,
+	ChevronUp,
+	Clock,
+	Copy,
+	Download,
+	Dumbbell,
+	Eye,
+	FileText,
+	Filter,
+	Image as ImageIcon,
+	Maximize2,
+	Ruler,
+	Search,
+	Target,
+	Trophy,
+} from "lucide-react";
+import React, { useCallback, useMemo, useState } from "react";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import {
@@ -26,30 +50,6 @@ import {
 	SelectValue,
 } from "@/components/ui/select";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import {
-	FileText,
-	Activity,
-	Target,
-	AlertCircle,
-	Bone,
-	Image as ImageIcon,
-	Calendar,
-	Search,
-	Filter,
-	ChevronDown,
-	ChevronUp,
-	Clock,
-	Dumbbell,
-	Ruler,
-	Camera,
-	Copy,
-	Eye,
-	Maximize2,
-	Download,
-	Trophy,
-} from "lucide-react";
-import { format, formatDistanceToNow, isValid } from "date-fns";
-import { ptBR } from "date-fns/locale";
 
 // Helper seguro para formatação de data
 const safeFormat = (
@@ -72,17 +72,7 @@ const safeFormatDistance = (
 	if (!isValid(d)) return "Data inválida";
 	return formatDistanceToNow(d, options || { locale: ptBR, addSuffix: true });
 };
-import { useGamification } from "@/hooks/useGamification";
-import { useSoapRecords, type SoapRecord } from "@/hooks/useSoapRecords";
-import {
-	usePatientSurgeries,
-	usePatientGoals,
-	usePatientPathologies,
-	useEvolutionMeasurements,
-} from "@/hooks/usePatientEvolution";
-import { useSessionAttachments } from "@/hooks/useSoapRecords";
-import { cn } from "@/lib/utils";
-import { getAffectedSideAbbreviation } from "@/lib/constants/surgery";
+
 import {
 	Dialog,
 	DialogContent,
@@ -90,11 +80,25 @@ import {
 	DialogTitle,
 } from "@/components/ui/dialog";
 import { Skeleton } from "@/components/ui/skeleton";
+import { useGamification } from "@/hooks/useGamification";
+import {
+	useEvolutionMeasurements,
+	usePatientGoals,
+	usePatientPathologies,
+	usePatientSurgeries,
+} from "@/hooks/usePatientEvolution";
+import {
+	type SoapRecord,
+	useSessionAttachments,
+	useSoapRecords,
+} from "@/hooks/useSoapRecords";
+import { getAffectedSideAbbreviation } from "@/lib/constants/surgery";
+import { cn } from "@/lib/utils";
 import type {
-	TimelineEvent,
-	SessionExerciseData,
-	MeasurementData,
 	AttachmentData,
+	MeasurementData,
+	SessionExerciseData,
+	TimelineEvent,
 	TimelineEventType,
 } from "@/types/evolution";
 
@@ -297,7 +301,7 @@ ${
 
 	return (
 		<Dialog open={isOpen} onOpenChange={onClose}>
-			<DialogContent className="max-w-5xl max-h-[92vh] overflow-hidden p-0">
+			<DialogContent className="max-w-6xl max-h-[92vh] overflow-hidden p-0 w-[95vw]">
 				{/* Header com gradiente */}
 				<div className="bg-gradient-to-r from-blue-500/10 to-purple-500/10 border-b px-6 py-4">
 					<DialogHeader className="space-y-2">
@@ -479,71 +483,71 @@ ${
 												<FileText className="h-4 w-4" />
 												Resumo do Registro SOAP
 											</h3>
-											<div className="grid gap-3">
+											<div className="grid grid-cols-1 md:grid-cols-2 gap-3">
 												{session.subjective && (
-													<div className="bg-blue-50 dark:bg-blue-950/20 border border-blue-200 dark:border-blue-800 rounded-xl p-4">
-														<div className="flex items-center gap-2 mb-2">
-															<div className="w-6 h-6 rounded-full bg-blue-500 flex items-center justify-center">
+													<div className="bg-blue-50 dark:bg-blue-950/20 border border-blue-200 dark:border-blue-800 rounded-xl p-3">
+														<div className="flex items-center gap-2 mb-1.5">
+															<div className="w-5 h-5 rounded-full bg-blue-500 flex items-center justify-center">
 																<span className="text-[10px] font-bold text-white">
 																	S
 																</span>
 															</div>
-															<span className="font-semibold text-sm text-blue-700 dark:text-blue-300">
+															<span className="font-semibold text-xs text-blue-700 dark:text-blue-300">
 																Subjetivo
 															</span>
 														</div>
-														<p className="text-sm line-clamp-3">
+														<p className="text-xs line-clamp-3">
 															{session.subjective}
 														</p>
 													</div>
 												)}
 												{session.objective && (
-													<div className="bg-green-50 dark:bg-green-950/20 border border-green-200 dark:border-green-800 rounded-xl p-4">
-														<div className="flex items-center gap-2 mb-2">
-															<div className="w-6 h-6 rounded-full bg-green-500 flex items-center justify-center">
+													<div className="bg-green-50 dark:bg-green-950/20 border border-green-200 dark:border-green-800 rounded-xl p-3">
+														<div className="flex items-center gap-2 mb-1.5">
+															<div className="w-5 h-5 rounded-full bg-green-500 flex items-center justify-center">
 																<span className="text-[10px] font-bold text-white">
 																	O
 																</span>
 															</div>
-															<span className="font-semibold text-sm text-green-700 dark:text-green-300">
+															<span className="font-semibold text-xs text-green-700 dark:text-green-300">
 																Objetivo
 															</span>
 														</div>
-														<p className="text-sm line-clamp-3">
+														<p className="text-xs line-clamp-3">
 															{session.objective}
 														</p>
 													</div>
 												)}
 												{session.assessment && (
-													<div className="bg-purple-50 dark:bg-purple-950/20 border border-purple-200 dark:border-purple-800 rounded-xl p-4">
-														<div className="flex items-center gap-2 mb-2">
-															<div className="w-6 h-6 rounded-full bg-purple-500 flex items-center justify-center">
+													<div className="bg-purple-50 dark:bg-purple-950/20 border border-purple-200 dark:border-purple-800 rounded-xl p-3">
+														<div className="flex items-center gap-2 mb-1.5">
+															<div className="w-5 h-5 rounded-full bg-purple-500 flex items-center justify-center">
 																<span className="text-[10px] font-bold text-white">
 																	A
 																</span>
 															</div>
-															<span className="font-semibold text-sm text-purple-700 dark:text-purple-300">
+															<span className="font-semibold text-xs text-purple-700 dark:text-purple-300">
 																Avaliação
 															</span>
 														</div>
-														<p className="text-sm line-clamp-3">
+														<p className="text-xs line-clamp-3">
 															{session.assessment}
 														</p>
 													</div>
 												)}
 												{session.plan && (
-													<div className="bg-amber-50 dark:bg-amber-950/20 border border-amber-200 dark:border-amber-800 rounded-xl p-4">
-														<div className="flex items-center gap-2 mb-2">
-															<div className="w-6 h-6 rounded-full bg-amber-500 flex items-center justify-center">
+													<div className="bg-amber-50 dark:bg-amber-950/20 border border-amber-200 dark:border-amber-800 rounded-xl p-3">
+														<div className="flex items-center gap-2 mb-1.5">
+															<div className="w-5 h-5 rounded-full bg-amber-500 flex items-center justify-center">
 																<span className="text-[10px] font-bold text-white">
 																	P
 																</span>
 															</div>
-															<span className="font-semibold text-sm text-amber-700 dark:text-amber-300">
+															<span className="font-semibold text-xs text-amber-700 dark:text-amber-300">
 																Plano
 															</span>
 														</div>
-														<p className="text-sm line-clamp-3">
+														<p className="text-xs line-clamp-3">
 															{session.plan}
 														</p>
 													</div>
@@ -599,14 +603,14 @@ ${
 								{activeTab === "soap" && (
 									<div className="space-y-4">
 										{session.subjective && (
-											<div className="bg-blue-50 dark:bg-blue-950/20 border border-blue-200 dark:border-blue-800 rounded-2xl p-5">
-												<div className="flex items-center gap-2 mb-3">
-													<div className="w-8 h-8 rounded-full bg-blue-500 flex items-center justify-center">
-														<span className="text-sm font-bold text-white">
+											<div className="bg-blue-50 dark:bg-blue-950/20 border border-blue-200 dark:border-blue-800 rounded-2xl p-4">
+												<div className="flex items-center gap-2 mb-2">
+													<div className="w-7 h-7 rounded-full bg-blue-500 flex items-center justify-center">
+														<span className="text-xs font-bold text-white">
 															S
 														</span>
 													</div>
-													<span className="font-semibold text-blue-700 dark:text-blue-300">
+													<span className="font-semibold text-blue-700 dark:text-blue-300 text-sm">
 														Subjetivo
 													</span>
 												</div>
@@ -616,14 +620,14 @@ ${
 											</div>
 										)}
 										{session.objective && (
-											<div className="bg-green-50 dark:bg-green-950/20 border border-green-200 dark:border-green-800 rounded-2xl p-5">
-												<div className="flex items-center gap-2 mb-3">
-													<div className="w-8 h-8 rounded-full bg-green-500 flex items-center justify-center">
-														<span className="text-sm font-bold text-white">
+											<div className="bg-green-50 dark:bg-green-950/20 border border-green-200 dark:border-green-800 rounded-2xl p-4">
+												<div className="flex items-center gap-2 mb-2">
+													<div className="w-7 h-7 rounded-full bg-green-500 flex items-center justify-center">
+														<span className="text-xs font-bold text-white">
 															O
 														</span>
 													</div>
-													<span className="font-semibold text-green-700 dark:text-green-300">
+													<span className="font-semibold text-green-700 dark:text-green-300 text-sm">
 														Objetivo
 													</span>
 												</div>
@@ -633,14 +637,14 @@ ${
 											</div>
 										)}
 										{session.assessment && (
-											<div className="bg-purple-50 dark:bg-purple-950/20 border border-purple-200 dark:border-purple-800 rounded-2xl p-5">
-												<div className="flex items-center gap-2 mb-3">
-													<div className="w-8 h-8 rounded-full bg-purple-500 flex items-center justify-center">
-														<span className="text-sm font-bold text-white">
+											<div className="bg-purple-50 dark:bg-purple-950/20 border border-purple-200 dark:border-purple-800 rounded-2xl p-4">
+												<div className="flex items-center gap-2 mb-2">
+													<div className="w-7 h-7 rounded-full bg-purple-500 flex items-center justify-center">
+														<span className="text-xs font-bold text-white">
 															A
 														</span>
 													</div>
-													<span className="font-semibold text-purple-700 dark:text-purple-300">
+													<span className="font-semibold text-purple-700 dark:text-purple-300 text-sm">
 														Avaliação
 													</span>
 												</div>
@@ -650,14 +654,14 @@ ${
 											</div>
 										)}
 										{session.plan && (
-											<div className="bg-amber-50 dark:bg-amber-950/20 border border-amber-200 dark:border-amber-800 rounded-2xl p-5">
-												<div className="flex items-center gap-2 mb-3">
-													<div className="w-8 h-8 rounded-full bg-amber-500 flex items-center justify-center">
-														<span className="text-sm font-bold text-white">
+											<div className="bg-amber-50 dark:bg-amber-950/20 border border-amber-200 dark:border-amber-800 rounded-2xl p-4">
+												<div className="flex items-center gap-2 mb-2">
+													<div className="w-7 h-7 rounded-full bg-amber-500 flex items-center justify-center">
+														<span className="text-xs font-bold text-white">
 															P
 														</span>
 													</div>
-													<span className="font-semibold text-amber-700 dark:text-amber-300">
+													<span className="font-semibold text-amber-700 dark:text-amber-300 text-sm">
 														Plano
 													</span>
 												</div>
