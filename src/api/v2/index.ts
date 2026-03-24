@@ -21,6 +21,8 @@ export * from "./scheduling";
 export * from "./system";
 export * from "./tracking";
 
+export { biomechanicsApi, type BiomechanicsData } from "./clinical";
+
 export { appointmentsApi } from "./appointments";
 export {
 	exercisesApi,

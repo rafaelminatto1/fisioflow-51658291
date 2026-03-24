@@ -35,6 +35,13 @@ export const sessionStatusEnum = pgEnum("session_status", [
 	"cancelled", // Session cancelled
 ]);
 
+export const biomechanicsTypeEnum = pgEnum("biomechanics_type", [
+	"gait",
+	"jump",
+	"posture",
+	"functional",
+]);
+
 // ===== SESSIONS (SOAP) =====
 export const sessions = pgTable(
 	"sessions",
@@ -171,6 +178,20 @@ export const sessions = pgTable(
 		deviceBattery: integer("device_battery"),
 		sampleRate: integer("sample_rate"),
 		isSimulated: boolean("is_simulated"),
+
+		// ===== Biomechanics Analysis Data (Gait/Jump/Posture/Functional) =====
+		// Stores the full analysis result from BiomechanicsAnalysisPage, linked to the session
+		biomechanicsType: biomechanicsTypeEnum("biomechanics_type"),
+		biomechanicsData: jsonb("biomechanics_data").$type<{
+			type: "gait" | "jump" | "posture" | "functional";
+			metrics?: Record<string, number | string | null>;
+			asymmetry?: number | null; // % L vs R (Phast)
+			goniometerAngles?: Array<{ joint: string; angle: number; timestamp: number }>;
+			snapshots?: string[]; // Base64 or Cloudflare R2 URLs
+			analyzedAt: string; // ISO timestamp
+			fps?: number;
+			durationSeconds?: number;
+		}>(),
 		repetitions: integer("repetitions"),
 		side: text("side"),
 		deviceFirmware: text("device_firmware"),
