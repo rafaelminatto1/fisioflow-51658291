@@ -30,7 +30,7 @@ interface MobileSheetContextValue {
 	openSheet: (
 		id: string,
 		title: string,
-		description?: string,
+		description: string | undefined,
 		content: React.ReactNode,
 	) => void;
 	closeSheet: () => void;
@@ -68,7 +68,7 @@ export const MobileSheetProvider: React.FC<{ children: React.ReactNode }> = ({
 		(
 			id: string,
 			title: string,
-			description?: string,
+			description: string | undefined,
 			content: React.ReactNode,
 		) => {
 			setCurrentSheet({ id, title, description, content });

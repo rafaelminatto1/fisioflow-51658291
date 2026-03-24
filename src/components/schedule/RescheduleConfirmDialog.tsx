@@ -1,6 +1,7 @@
-import React from "react";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
+import { ArrowRight, Calendar, CheckCircle2, Clock } from "lucide-react";
+import type React from "react";
 import {
 	AlertDialog,
 	AlertDialogAction,
@@ -11,7 +12,6 @@ import {
 	AlertDialogHeader,
 	AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { Calendar, Clock, ArrowRight } from "lucide-react";
 import type { Appointment } from "@/types/appointment";
 
 interface RescheduleConfirmDialogProps {

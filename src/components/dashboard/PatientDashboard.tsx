@@ -14,8 +14,13 @@ import {
 	MessageSquare,
 	ShieldCheck,
 	TrendingUp,
+	Trophy,
+	Medal,
+	Star,
 } from "lucide-react";
 import { useRealtime } from "@/hooks/useRealtimeContext";
+import { useQuery } from "@tanstack/react-query";
+import { gamificationApi } from "@/api/v2/gamification";
 import { Profile } from "@/types/auth";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ChartWidget } from "./ChartWidget";
@@ -80,6 +85,22 @@ function SummaryCard({
 
 export function PatientDashboard({ profile }: PatientDashboardProps) {
 	const { appointments, lastUpdate, isSubscribed } = useRealtime();
+
+	const { data: gamification } = useQuery({
+		queryKey: ["gamification", "profile"],
+		queryFn: async () => {
+			const res = await (gamificationApi as any).getProfile();
+			return res.data;
+		}
+	});
+
+	const { data: badges = [] } = useQuery({
+		queryKey: ["gamification", "badges", profile.id],
+		queryFn: async () => {
+			const res = await (gamificationApi as any).getBadges(profile.id);
+			return res.data || [];
+		}
+	});
 
 	const dashboardData = useMemo(() => {
 		const today = startOfDay(new Date());
@@ -192,6 +213,67 @@ export function PatientDashboard({ profile }: PatientDashboardProps) {
 							<p className="mt-2 text-sm font-semibold text-foreground">
 								{format(new Date(lastUpdate), "HH:mm", { locale: ptBR })}
 							</p>
+						</div>
+					</div>
+				</CardContent>
+			</Card>
+
+			{/* ── Gamification Hero ── */}
+			<Card className="rounded-[2rem] border-none bg-gradient-to-br from-slate-900 via-slate-800 to-primary/20 text-white shadow-premium-lg overflow-hidden relative group">
+				<div className="absolute top-0 right-0 p-8 opacity-10 group-hover:scale-110 transition-transform duration-700">
+					<Trophy className="h-32 w-32" />
+				</div>
+				<CardContent className="p-8 relative z-10">
+					<div className="flex flex-col md:flex-row md:items-center justify-between gap-8">
+						<div className="space-y-4">
+							<div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/10 backdrop-blur-md border border-white/10">
+								<Star className="h-3 w-3 text-yellow-400 fill-yellow-400" />
+								<span className="text-[10px] font-black uppercase tracking-[0.2em]">Nível {gamification?.level || 1}</span>
+							</div>
+							<h3 className="text-3xl font-black tracking-tighter">Sua jornada de saúde</h3>
+							<div className="space-y-2 max-w-md">
+								<div className="flex justify-between text-[10px] font-bold uppercase tracking-widest opacity-70">
+									<span>XP: {gamification?.current_xp || 0}</span>
+									<span>Próximo nível</span>
+								</div>
+								<div className="h-2 w-full bg-white/10 rounded-full overflow-hidden border border-white/5 shadow-inner">
+									<motion.div 
+										initial={{ width: 0 }}
+										animate={{ width: `${Math.min(((gamification?.current_xp || 0) % 1000) / 10, 100)}%` }}
+										transition={{ duration: 1.5, ease: "easeOut" }}
+										className="h-full bg-gradient-to-r from-primary to-sky-400"
+									/>
+								</div>
+							</div>
+						</div>
+
+						<div className="flex items-center gap-4">
+							<div className="text-right hidden md:block">
+								<p className="text-[10px] font-black uppercase tracking-widest opacity-60 mb-2">Minhas Conquistas</p>
+								<div className="flex gap-2 justify-end">
+									{badges.length === 0 ? (
+										<div className="h-10 w-10 rounded-xl bg-white/5 border border-white/5 flex items-center justify-center grayscale opacity-50">
+											<Medal className="h-5 w-5" />
+										</div>
+									) : (
+										badges.slice(0, 3).map((badge: any, i: number) => (
+											<div key={i} title={badge.title} className="h-10 w-10 rounded-xl bg-white/10 border border-white/10 flex items-center justify-center hover:scale-110 transition-transform cursor-help">
+												<span className="text-lg">{badge.icon || "🏅"}</span>
+											</div>
+										))
+									)}
+								</div>
+							</div>
+							<div className="h-16 w-px bg-white/10 hidden md:block mx-2" />
+							<div className="flex items-center gap-4">
+								<div className="text-center">
+									<div className="text-2xl font-black">{gamification?.current_streak || 0}</div>
+									<p className="text-[9px] font-bold uppercase tracking-tighter opacity-60">Dias Seguida</p>
+								</div>
+								<div className="h-12 w-12 rounded-2xl bg-orange-500/20 border border-orange-500/20 flex items-center justify-center text-orange-400">
+									<TrendingUp className="h-6 w-6" />
+								</div>
+							</div>
 						</div>
 					</div>
 				</CardContent>

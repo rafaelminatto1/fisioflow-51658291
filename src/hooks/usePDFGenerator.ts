@@ -171,7 +171,7 @@ export function usePDFGenerator(options?: UsePDFGeneratorOptions) {
 				assessment: string;
 				plan: string;
 			}>,
-			summary?: string,
+			summary: string | undefined,
 			city: string,
 		): Promise<Blob | null> => {
 			setIsGenerating(true);
@@ -182,7 +182,7 @@ export function usePDFGenerator(options?: UsePDFGeneratorOptions) {
 				const generator = PDFGeneratorFactory.createEvolucao();
 				const blob = generator.generate(patient, professional, clinic, {
 					evaluations,
-					summary,
+					summary: summary || "",
 					city,
 				}) as Blob;
 
