@@ -75,6 +75,8 @@ import {
 	sessionsApi,
 } from "@/api/v2";
 import { Settings } from "lucide-react";
+import { BiomechanicsSessionTab } from "./BiomechanicsSessionTab";
+
 
 interface SessionEvolutionContainerProps {
 	appointmentId?: string;
@@ -1191,6 +1193,9 @@ export const SessionEvolutionContainer: React.FC<
 											<TabsTrigger value="insights" className="flex-1">
 												Insights
 											</TabsTrigger>
+											<TabsTrigger value="biomechanics" className="flex-1">
+												🦴 Biomec.
+											</TabsTrigger>
 										</TabsList>
 
 										<TabsContent value="exercises" className="mt-4">
@@ -1224,6 +1229,16 @@ export const SessionEvolutionContainer: React.FC<
 											{patientId && (
 												<MedicalReportSuggestions patientId={patientId} />
 											)}
+										</TabsContent>
+
+										<TabsContent value="biomechanics" className="mt-4">
+											<BiomechanicsSessionTab
+												sessionId={null}
+												appointmentId={appointmentId || null}
+												patientName={
+													patient ? PatientHelpers.getName(patient as any) : "Paciente"
+												}
+											/>
 										</TabsContent>
 									</Tabs>
 								</div>
