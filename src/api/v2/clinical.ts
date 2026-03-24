@@ -358,6 +358,63 @@ export const sessionsApi = {
 		),
 };
 
+// ===== Biomechanics API =====
+export interface BiomechanicsData {
+	type: "gait" | "jump" | "posture" | "functional";
+	metrics?: Record<string, number | string | null>;
+	asymmetry?: number | null;
+	goniometerAngles?: Array<{ joint: string; angle: number; timestamp: number }>;
+	snapshots?: string[];
+	analyzedAt: string;
+	fps?: number;
+	durationSeconds?: number;
+	assessment?: any;
+	autoAngles?: any[];
+}
+
+export const biomechanicsApi = {
+	/**
+	 * Save a biomechanics analysis result, linked to a specific session/appointment.
+	 * Uses PATCH to avoid overwriting the rest of the session record.
+	 */
+	saveToSession: (sessionId: string, data: BiomechanicsData) =>
+		request<{ data: SessionRecord }>(`/api/sessions/${sessionId}`, {
+			method: "PUT",
+			body: JSON.stringify({
+				biomechanics_type: data.type,
+				biomechanics_data: data,
+			}),
+		}),
+
+	/**
+	 * List all sessions that have biomechanics data for a patient.
+	 * Supports date range filtering for comparative reports.
+	 */
+	listByPatient: (params: {
+		patientId: string;
+		dateFrom?: string;
+		dateTo?: string;
+		type?: "gait" | "jump" | "posture" | "functional";
+		limit?: number;
+	}) => {
+		const qs = new URLSearchParams(
+			Object.fromEntries(
+				Object.entries({
+					patientId: params.patientId,
+					biomechanics_type: params.type,
+					dateFrom: params.dateFrom,
+					dateTo: params.dateTo,
+					hasBiomechanics: "true",
+					limit: params.limit?.toString(),
+				}).filter(([, v]) => v != null) as [string, string][],
+			),
+		).toString();
+		return request<{ data: (SessionRecord & { biomechanics_data?: BiomechanicsData })[]; total: number }>(
+			`/api/sessions${qs ? `?${qs}` : ""}`,
+		);
+	},
+};
+
 const clinPublic = (path: string, opts?: RequestInit) =>
 	requestPublic<any>(`/api/clinical${path}`, opts);
 

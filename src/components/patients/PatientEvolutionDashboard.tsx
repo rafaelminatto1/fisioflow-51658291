@@ -24,6 +24,7 @@ import {
 } from "recharts";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
+import { BiomechanicsEvolutionTab } from "@/components/evolution/BiomechanicsEvolutionTab";
 
 interface SessionRecord {
 	id: string;
@@ -196,9 +197,10 @@ export const PatientEvolutionDashboard = ({
 
 			{/* Charts */}
 			<Tabs defaultValue="pain" className="w-full">
-				<TabsList className="grid w-full grid-cols-2">
+				<TabsList className="grid w-full grid-cols-3">
 					<TabsTrigger value="pain">Evolução da Dor</TabsTrigger>
 					<TabsTrigger value="mobility">Mobilidade</TabsTrigger>
+					<TabsTrigger value="biomechanics">🦴 Biomecânica</TabsTrigger>
 				</TabsList>
 
 				<TabsContent value="pain">
@@ -300,6 +302,13 @@ export const PatientEvolutionDashboard = ({
 							</ResponsiveContainer>
 						</CardContent>
 					</Card>
+				</TabsContent>
+
+				<TabsContent value="biomechanics" className="mt-4">
+					<BiomechanicsEvolutionTab
+						patientId=""
+						patientName={patientName}
+					/>
 				</TabsContent>
 			</Tabs>
 
