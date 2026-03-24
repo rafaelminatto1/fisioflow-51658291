@@ -1,5 +1,5 @@
 import { useQuery } from "@tanstack/react-query";
-import { fisioFetch } from "@/lib/fetch";
+import { request } from "@/api/v2/base";
 import { useAuth } from "@/contexts/AuthContext";
 import { AlertCircle, ArrowRight } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
@@ -16,7 +16,7 @@ export function ComplianceBanner() {
 	const { data: policies = [] } = useQuery<any[]>({
 		queryKey: ["announcements", "policy", "pending"],
 		queryFn: async () => {
-			const res = await fisioFetch("/api/announcements?type=policy");
+			const res = await request("/api/announcements?type=policy");
 			return res.data || [];
 		},
 		// Atualiza a cada 5 minutos ou ao focar na aba
