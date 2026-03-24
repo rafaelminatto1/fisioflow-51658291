@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useAuth } from "@/contexts/AuthContext";
-import { fisioFetch } from "@/lib/fetch";
+import { request } from "@/api/v2/base";
 import {
 	Card,
 	CardContent,
@@ -80,7 +80,7 @@ export function PolicyCompliance() {
 	const { data: policies = [], isLoading } = useQuery<Policy[]>({
 		queryKey: ["announcements", "policy"],
 		queryFn: async () => {
-			const res = await fisioFetch("/api/announcements?type=policy");
+			const res = await request("/api/announcements?type=policy");
 			return res.data;
 		},
 	});
@@ -88,7 +88,7 @@ export function PolicyCompliance() {
 	const { data: stats = [] } = useQuery<ComplianceStat[]>({
 		queryKey: ["announcements", "compliance"],
 		queryFn: async () => {
-			const res = await fisioFetch("/api/announcements/compliance");
+			const res = await request("/api/announcements/compliance");
 			return res.data;
 		},
 		enabled: isAdmin,
@@ -96,7 +96,7 @@ export function PolicyCompliance() {
 
 	const createMutation = useMutation({
 		mutationFn: async (data: any) => {
-			const res = await fisioFetch("/api/announcements", {
+			const res = await request("/api/announcements", {
 				method: "POST",
 				body: JSON.stringify(data),
 			});
@@ -116,7 +116,7 @@ export function PolicyCompliance() {
 
 	const markReadMutation = useMutation({
 		mutationFn: async (id: string) => {
-			return await fisioFetch(`/api/announcements/${id}/read`, {
+			return await request(`/api/announcements/${id}/read`, {
 				method: "POST",
 			});
 		},
