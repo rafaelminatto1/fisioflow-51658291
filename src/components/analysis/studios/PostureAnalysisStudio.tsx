@@ -11,6 +11,7 @@ import { MoveNetSkeleton } from '../canvas/MoveNetSkeleton';
 import { GoniometerOverlay } from '../canvas/GoniometerOverlay';
 import { TrajectoryLines } from '../canvas/TrajectoryLines';
 import { TrajectoryPanel } from '../panels/TrajectoryPanel';
+import { InclinometerPanel } from '../panels/InclinometerPanel';
 
 export const PostureAnalysisStudio: React.FC = () => {
     const webcamRef = useRef<Webcam>(null);
@@ -114,6 +115,8 @@ export const PostureAnalysisStudio: React.FC = () => {
                             </div>
                         </CardContent>
                     </Card>
+
+                    <InclinometerPanel />
 
                     <TrajectoryPanel
                         trackedTrajs={trackedTrajs} aiEnabled={aiEnabled}
