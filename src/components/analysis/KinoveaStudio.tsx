@@ -102,6 +102,15 @@ export const KinoveaStudio: React.FC<KinoveaStudioProps> = ({ onCapture, patient
 		};
 	}, [gaitEvents, fps]);
 
+	const calculateAngle = (p1: Point, center: Point, p2: Point) => {
+		const angle1 = Math.atan2(p1.y - center.y, p1.x - center.x);
+		const angle2 = Math.atan2(p2.y - center.y, p2.x - center.x);
+		let angle = (angle1 - angle2) * (180 / Math.PI);
+		if (angle < 0) angle += 360;
+		if (angle > 180) angle = 360 - angle;
+		return angle.toFixed(1);
+	};
+
 	return (
 		<TooltipProvider>
 			<div className="flex flex-col gap-6 h-full">
@@ -117,7 +126,7 @@ export const KinoveaStudio: React.FC<KinoveaStudioProps> = ({ onCapture, patient
 											{POSE_CONNECTIONS.map(([s, e], i) => (
 												<Line key={i} points={[poseResults.poseLandmarks[s].x*800, poseResults.poseLandmarks[s].y*600, poseResults.poseLandmarks[e].x*800, poseResults.poseLandmarks[e].y*600]} stroke="#00ff00" strokeWidth={2} />
 											))}
-										</Layer>
+										</Group>
 									)}
 									{/* Goniometer */}
 									{activeTool === "goniometer" && (
