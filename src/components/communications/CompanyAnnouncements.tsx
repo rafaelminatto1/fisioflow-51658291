@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useAuth } from "@/contexts/AuthContext";
-import { fisioFetch } from "@/lib/fetch";
+import { request } from "@/api/v2/base";
 import {
 	Card,
 	CardContent,
@@ -66,14 +66,14 @@ export function CompanyAnnouncements() {
 	const { data: announcements = [], isLoading } = useQuery<Announcement[]>({
 		queryKey: ["announcements", "announcement"],
 		queryFn: async () => {
-			const res = await fisioFetch("/api/announcements?type=announcement");
+			const res = await request("/api/announcements?type=announcement");
 			return res.data;
 		},
 	});
 
 	const createMutation = useMutation({
 		mutationFn: async (data: any) => {
-			const res = await fisioFetch("/api/announcements", {
+			const res = await request("/api/announcements", {
 				method: "POST",
 				body: JSON.stringify(data),
 			});
@@ -93,7 +93,7 @@ export function CompanyAnnouncements() {
 
 	const markReadMutation = useMutation({
 		mutationFn: async (id: string) => {
-			return await fisioFetch(`/api/announcements/${id}/read`, {
+			return await request(`/api/announcements/${id}/read`, {
 				method: "POST",
 			});
 		},
