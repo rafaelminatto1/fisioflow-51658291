@@ -64,11 +64,7 @@ export const ServerSideVideoAnalyzer: React.FC<
 			setIsUploading(false);
 			setIsAnalyzing(true);
 
-			const response = await aiApi.movementVideo({
-				videoUrl: downloadURL,
-				exerciseName,
-			});
-
+			const response = await aiApi.movementVideo({ videoUrl: downloadURL, exerciseName });
 			const analysisData = response.data.analysis as AnalysisResult;
 			setResult(analysisData);
 

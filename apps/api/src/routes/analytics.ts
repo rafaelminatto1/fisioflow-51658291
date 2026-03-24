@@ -273,6 +273,73 @@ app.get('/pain-map', requireAuth, async (c) => {
 registerPatientAnalyticsRoutes(app);
 registerMlAnalyticsRoutes(app);
 
+app.get('/retention/risk', requireAuth, async (c) => {
+  const user = c.get('user');
+  const pool = await createPool(c.env);
+
+  try {
+    // Identify patients at risk: 
+    // 1. No appointments in the last 15 days
+    // 2. More than 2 missed sessions in the last month
+    // 3. Zero home exercise compliance
+    const result = await pool.query(
+      `
+      WITH patient_stats AS (
+        SELECT 
+          p.id,
+          p.full_name,
+          p.phone,
+          MAX(a.date) as last_appointment,
+          COUNT(*) FILTER (WHERE a.status = 'no_show' AND a.date > NOW() - INTERVAL '30 days') as missed_count,
+          (SELECT COUNT(*) FROM patient_exercise_logs pel WHERE pel.patient_id = p.id AND pel.created_at > NOW() - INTERVAL '7 days') as recent_exercises
+        FROM patients p
+        LEFT JOIN appointments a ON a.patient_id = p.id
+        WHERE p.organization_id = $1 AND p.is_active = true
+        GROUP BY p.id, p.full_name, p.phone
+      )
+      SELECT * FROM patient_stats
+      WHERE last_appointment < NOW() - INTERVAL '15 days'
+         OR missed_count >= 2
+         OR (last_appointment IS NOT NULL AND recent_exercises = 0)
+      ORDER BY last_appointment ASC NULLS LAST
+      LIMIT 10
+      `,
+      [user.organizationId]
+    );
+
+    return c.json({ data: result.rows });
+  } catch (error) {
+    console.error('[Analytics/Retention] Error:', error);
+    return c.json({ error: 'Erro ao calcular risco de retenção' }, 500);
+  }
+});
+
+app.get('/efficacy/pain-evolution', requireAuth, async (c) => {
+  const user = c.get('user');
+  const pool = await createPool(c.env);
+  const patientId = c.req.query('patientId');
+
+  try {
+    const query = patientId 
+      ? `SELECT session_date as date, pain_level_before as value 
+         FROM patient_session_metrics 
+         WHERE patient_id = $2 AND organization_id = $1 
+         ORDER BY session_date ASC LIMIT 20`
+      : `SELECT session_date as date, AVG(pain_level_before)::numeric(10,2) as value 
+         FROM patient_session_metrics 
+         WHERE organization_id = $1 
+         GROUP BY 1 ORDER BY 1 ASC LIMIT 30`;
+    
+    const params = patientId ? [user.organizationId, patientId] : [user.organizationId];
+    const result = await pool.query(query, params);
+
+    return c.json({ data: result.rows });
+  } catch (error) {
+    console.error('[Analytics/Efficacy] Error:', error);
+    return c.json({ error: 'Erro ao carregar evolução de dor' }, 500);
+  }
+});
+
 app.get('/weekly-activity', requireAuth, async (c) => {
   const user = c.get('user');
   const pool = await createPool(c.env);

@@ -32,6 +32,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { formatDateToLocalISO } from "@/utils/dateUtils";
 import { endOfWeek, startOfMonth, startOfWeek } from "date-fns";
 import { AIInsightsWidget } from "./AIInsightsWidget";
+import { ClinicalEfficacyDashboard } from "@/components/analytics/ClinicalEfficacyDashboard";
 import { EmptyStateEnhanced } from "@/components/ui/EmptyStateEnhanced";
 import { LazyWidget } from "./LazyWidget";
 import { EventosStatsWidget } from "@/components/eventos/EventosStatsWidget";
@@ -625,7 +626,12 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
 				</div>
 			</section>
 
-			{/* ── 4. AI Insights + Eventos ── */}
+			{/* ── 4. Clinical Efficacy ── */}
+			<section aria-label="Eficácia Clínica">
+				<ClinicalEfficacyDashboard />
+			</section>
+
+			{/* ── 5. AI Insights + Eventos ── */}
 			<section>
 				<div className="grid gap-5 xl:grid-cols-[minmax(0,1.3fr)_minmax(320px,0.7fr)]">
 					<AIInsightsWidget metrics={metrics} />
