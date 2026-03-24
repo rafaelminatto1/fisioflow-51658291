@@ -28,7 +28,7 @@ export {
 	type UseAIExercisesOptions,
 	type UseAIExercisesReturn,
 	type ExerciseSuggestionVariables,
-} from "./useAIExercises";
+} from "../useAIExercises";
 
 // ============================================================================
 // Re-exports from AI library (for convenience)
