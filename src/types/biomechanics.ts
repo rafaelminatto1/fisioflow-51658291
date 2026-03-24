@@ -51,3 +51,24 @@ export interface GaitMetrics {
 	tcMs: string;
 	tfMs: string;
 }
+
+export interface JointAngle {
+	name: string;
+	value: number;
+	label: string;
+	color: string;
+	p1: Point;
+	center: Point;
+	p2: Point;
+}
+
+export type FunctionalTestType = 'y-balance' | 'hop-test' | 'less' | 'squat' | 'lunge';
+
+export interface FunctionalAssessment {
+	type: FunctionalTestType;
+	status: 'not_started' | 'in_progress' | 'completed';
+	score: number | null;
+	asymmetry: number | null;
+	observations: string[];
+	metrics: Record<string, any>;
+}
