@@ -370,20 +370,35 @@ export default function ExerciseDetailScreen() {
 
       {/* Floating Action Button */}
       <View style={styles.fabContainer}>
-        <Button
-          title={completed ? '✓ Concluído' : 'Marcar como Concluído'}
-          onPress={handleToggleComplete}
-          loading={completing}
-          variant={completed ? 'primary' : 'primary'}
-          style={[
-            styles.completeButton,
-            completed && styles.completeButtonDone,
-          ]}
-          textStyle={[
-            styles.completeButtonText,
-            completed && { color: '#FFFFFF' },
-          ]}
-        />
+        <View style={{ gap: 10 }}>
+          <Button
+            title="Iniciar Biofeedback com Câmera"
+            onPress={() => {
+              Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+              Alert.alert('Motion Vision', 'O rastreamento de movimento por IA ajudará você a manter a forma correta durante este exercício.');
+              // This would navigate to a specialized Camera screen
+              // router.push(`/exercise/vision/${exerciseId}`);
+            }}
+            variant="outline"
+            style={{ borderColor: colors.primary, borderWidth: 2 }}
+            textStyle={{ color: colors.primary, fontWeight: '800' }}
+            icon={<Ionicons name="videocam" size={20} color={colors.primary} style={{ marginRight: 8 }} />}
+          />
+          <Button
+            title={completed ? '✓ Concluído' : 'Marcar como Concluído'}
+            onPress={handleToggleComplete}
+            loading={completing}
+            variant={completed ? 'primary' : 'primary'}
+            style={[
+              styles.completeButton,
+              completed && styles.completeButtonDone,
+            ]}
+            textStyle={[
+              styles.completeButtonText,
+              completed && { color: '#FFFFFF' },
+            ]}
+          />
+        </View>
       </View>
 
       {/* Video Modal */}

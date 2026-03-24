@@ -25,6 +25,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { ChartWidget } from "./ChartWidget";
+import { PredictiveRetentionWidget } from "@/components/analytics/PredictiveRetentionWidget";
 import { Profile } from "@/types/auth";
 import { useAppointments } from "@/hooks/useAppointments";
 import { useRenderTracking } from "@/hooks/useRenderTracking";
@@ -468,38 +469,7 @@ export function TherapistDashboard({
 						</CardContent>
 					</Card>
 
-					{stats.patientsAtRisk > 0 && (
-						<Card className="rounded-[2rem] border-border/60 bg-background/80 shadow-sm backdrop-blur-xl">
-							<CardHeader className="border-b border-border/60 pb-4">
-								<CardTitle className="flex items-center gap-2 text-lg font-semibold">
-									<AlertTriangle className="h-5 w-5 text-amber-500" />
-									Alertas clínicos
-								</CardTitle>
-							</CardHeader>
-							<CardContent className="p-5">
-								<Alert className="rounded-2xl border-amber-500/20 bg-amber-500/[0.06]">
-									<AlertTriangle className="h-4 w-4 text-amber-600" />
-									<AlertDescription className="text-amber-900 dark:text-amber-200">
-										<div className="space-y-2">
-											<p className="text-sm font-semibold">
-												{stats.patientsAtRisk} paciente
-												{stats.patientsAtRisk !== 1 ? "s" : ""} sem consulta há
-												mais de 30 dias
-											</p>
-											<Button
-												variant="outline"
-												size="sm"
-												className="rounded-xl border-amber-500/20 bg-background/70"
-												onClick={() => navigate("/patients")}
-											>
-												Ver pacientes
-											</Button>
-										</div>
-									</AlertDescription>
-								</Alert>
-							</CardContent>
-						</Card>
-					)}
+					<PredictiveRetentionWidget />
 
 					<Card className="rounded-[2rem] border-border/60 bg-background/80 shadow-sm backdrop-blur-xl">
 						<CardHeader className="border-b border-border/60 pb-4">

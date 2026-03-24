@@ -56,6 +56,11 @@ export const aiApi = {
 			method: "POST",
 			body: JSON.stringify(params),
 		}),
+	movementVideo: (params: { videoUrl: string; exerciseName: string }) =>
+		request<{ data: { analysis: { reps: number; score: number; errors: string[]; feedback: string; isValidExercise: boolean } } }>(
+			"/api/ai/movement-video",
+			{ method: "POST", body: JSON.stringify(params) },
+		),
 };
 
 export const analyticsApi = {
