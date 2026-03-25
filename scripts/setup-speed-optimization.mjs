@@ -1,22 +1,16 @@
 /**
- * Cloudflare Speed & Cache Optimization Setup
+ * Cloudflare Speed & Cache Optimization Setup - V3 (São Paulo, BR)
  * 
  * This script automates the configuration of Cloudflare Observatory and 
- * Tiered Cache as suggested in the dashboard.
- * 
- * Requirements:
- * - A Cloudflare API Token with the following permissions:
- *   - Zone.Read
- *   - Zone.Settings:Edit
- *   - Zone.Cache:Edit
- *   - Zone.Speed:Edit
+ * Tiered Cache, specifically triggering tests from São Paulo, Brazil.
  */
 
 import 'dotenv/config';
 
 const CF_ZONE_ID = "REDACTED"; // moocafisio.com.br
-const CF_API_TOKEN = process.env.CLOUDFLARE_API_TOKEN_ADMIN || process.env.CLOUDFLARE_API_TOKEN;
+const CF_API_TOKEN = process.env.CLOUDFLARE_API_TOKEN;
 const TARGET_URL = "https://moocafisio.com.br";
+const REGION = "south-america-east1"; // São Paulo, Brazil
 
 async function cfApi(endpoint, method = 'GET', body = null) {
   const url = `https://api.cloudflare.com/client/v4/zones/${CF_ZONE_ID}${endpoint}`;
@@ -29,50 +23,45 @@ async function cfApi(endpoint, method = 'GET', body = null) {
     body: body ? JSON.stringify(body) : null,
   });
 
-  const data = await response.json();
-  if (!data.success) {
-    console.error(`❌ Error in ${endpoint}:`, JSON.stringify(data.errors));
-    return null;
+  const text = await response.text();
+  try {
+    const data = JSON.parse(text);
+    if (!data.success) {
+      return { success: false, errors: data.errors };
+    }
+    return { success: true, result: data.result };
+  } catch (e) {
+    return { success: false, error: 'Non-JSON response' };
   }
-  return data.result;
 }
 
 async function main() {
-  console.log(`🚀 Starting optimization for ${TARGET_URL}...`);
+  console.log(`🚀 Triggering São Paulo test for ${TARGET_URL}...`);
 
   if (!CF_API_TOKEN) {
     console.error('❌ Error: CLOUDFLARE_API_TOKEN not found.');
     return;
   }
 
-  // 1. Enable Smart Tiered Cache
-  console.log('📦 Enabling Smart Tiered Cache...');
-  const tieredCache = await cfApi('/cache/tiered_cache_smart_topology_enable', 'PATCH', { value: 'on' });
-  if (tieredCache) console.log('✅ Smart Tiered Cache enabled!');
-
-  // 2. Enable Smart Shield (Origin Protection)
-  console.log('🛡️ Enabling Smart Shield...');
-  const smartShield = await cfApi('/smart_shield', 'PATCH', { enabled: true });
-  if (smartShield) console.log('✅ Smart Shield enabled!');
-
-  // 3. Create a Recurring Test in Observatory
-  console.log('📈 Creating recurring test in Observatory...');
-  // Note: URL must be double-percent encoded or just handled by the POST body
-  const observatoryTest = await cfApi('/speed_api/pages', 'POST', {
-    url: TARGET_URL,
-    frequency: 'WEEKLY' // Default for Free plan is once a week
+  const encodedUrl = encodeURIComponent(TARGET_URL);
+  
+  // Trigger a test run specifically in São Paulo
+  console.log(`🌍 Requesting test from region: ${REGION}...`);
+  const testRun = await cfApi(`/speed_api/pages/${encodedUrl}/tests`, 'POST', {
+    region: REGION
   });
-  if (observatoryTest) {
-    console.log('✅ Recurring test scheduled in Observatory!');
+
+  if (testRun.success) {
+    console.log('✅ Observatory test run triggered in São Paulo successfully!');
+    console.log(`📊 Test ID: ${testRun.result.id}`);
   } else {
-    // If it fails, maybe the page already exists, try to trigger a test run
-    console.log('ℹ️ Attempting to trigger a manual test run...');
-    const encodedUrl = encodeURIComponent(TARGET_URL);
-    const triggerTest = await cfApi(`/speed_api/pages/${encodedUrl}/tests`, 'POST');
-    if (triggerTest) console.log('✅ Manual test run triggered!');
+    console.error('❌ Error triggering test:', JSON.stringify(testRun.errors));
+    if (testRun.errors?.[0]?.code === 1002) {
+      console.log('ℹ️ Tip: Free plans might have limits on regional tests or frequency.');
+    }
   }
 
-  console.log('✨ Optimization complete!');
+  console.log('✨ Done!');
 }
 
 main().catch(console.error);
