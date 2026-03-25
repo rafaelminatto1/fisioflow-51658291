@@ -289,13 +289,26 @@ function appointmentCardAreEqual(
 	);
 }
 
-/* 
-// Memo disabled to ensure color updates on status change. 
-// Virtualization already handles performance for large datasets.
 export const CalendarAppointmentCard = memo(
 	CalendarAppointmentCardBase,
-	appointmentCardAreEqual,
+	(prev, next) => {
+		// Basicos
+		if (
+			prev.isDragging !== next.isDragging ||
+			prev.isDraggable !== next.isDraggable ||
+			prev.isSaving !== next.isSaving ||
+			prev.density !== next.density ||
+			prev.isSelected !== next.isSelected ||
+			prev.isPopoverOpen !== next.isPopoverOpen
+		) return false;
+
+		// Deep compare do agendamento (especialmente status para cores)
+		if (JSON.stringify(prev.appointment) !== JSON.stringify(next.appointment)) return false;
+
+		// Estilos da grade
+		if (JSON.stringify(prev.style) !== JSON.stringify(next.style)) return false;
+
+		return true;
+	}
 );
-*/
-export const CalendarAppointmentCard = CalendarAppointmentCardBase;
 CalendarAppointmentCard.displayName = "CalendarAppointmentCard";
