@@ -117,7 +117,7 @@ const parseAppointmentDate = (dateValue: Appointment["date"]): Date | null => {
 	return null;
 };
 
-export const CalendarView = ({
+const CalendarView = ({
 	appointments,
 	currentDate,
 	onDateChange,
