@@ -3,7 +3,7 @@ import { motion, HTMLMotionProps } from 'framer-motion';
 import { cn } from '../lib/utils';
 
 interface MotionCardProps extends HTMLMotionProps<'div'> {
-  variant?: 'glass' | 'glass-dark' | 'solid' | 'outlined';
+  variant?: 'glass' | 'glass-dark' | 'solid' | 'outlined' | 'none';
   hoverEffect?: boolean;
 }
 
@@ -14,7 +14,8 @@ export const MotionCard = React.forwardRef<HTMLDivElement, MotionCardProps>(
       glass: 'glass',
       'glass-dark': 'glass-dark text-white',
       solid: 'bg-card text-card-foreground shadow-sm border',
-      outlined: 'bg-transparent border shadow-none'
+      outlined: 'bg-transparent border shadow-none',
+      none: ''
     };
 
     const hoverClasses = hoverEffect ? 'hover-lift transition-all duration-300' : '';

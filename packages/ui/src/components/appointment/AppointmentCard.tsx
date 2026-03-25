@@ -44,7 +44,7 @@ export const AppointmentCard = React.forwardRef<HTMLDivElement, AppointmentCardP
     return (
       <MotionCard
         ref={ref}
-        variant="glass"
+        variant={className?.includes('calendar-card-') ? 'none' : "glass"}
         onClick={onClick}
         className={cn(
           "relative overflow-hidden cursor-pointer flex flex-col justify-center",
