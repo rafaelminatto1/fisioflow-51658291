@@ -847,6 +847,7 @@ export function PatientAnalyticsDashboard({
 												labelFormatter={(v) =>
 													format(new Date(v as string), "dd/MM/yyyy")
 												}
+												// @ts-expect-error -- recharts v3 formatter type
 												formatter={(value: number) => [value, "Nível de Dor"]}
 											/>
 											<Line
@@ -907,6 +908,7 @@ export function PatientAnalyticsDashboard({
 												labelFormatter={(v) =>
 													format(new Date(v as string), "dd/MM/yyyy")
 												}
+												// @ts-expect-error -- recharts v3 formatter type
 												formatter={(value: number) => [
 													value,
 													"Score Funcional",

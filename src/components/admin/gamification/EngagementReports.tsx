@@ -19,7 +19,7 @@ import {
 	Tooltip,
 	ResponsiveContainer,
 	Cell,
-	TooltipProps,
+	TooltipContentProps,
 } from "recharts";
 import {
 	TrendingUp,
@@ -45,7 +45,7 @@ interface ChartEntry {
 
 // Custom Tooltip
 const CustomChartTooltip = React.memo(
-	({ active, payload, label }: TooltipProps<number, string>) => {
+	({ active, payload, label }: TooltipContentProps<number, string>) => {
 		if (active && payload && payload.length) {
 			return (
 				<div className="rounded-lg border border-border bg-card p-3 shadow-md">

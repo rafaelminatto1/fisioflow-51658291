@@ -106,7 +106,7 @@ export const GoniometerPanel: React.FC<DynamicGoniometerProps> = ({
                                     <ResponsiveContainer width="100%" height="100%">
                                         <LineChart 
                                             data={angleHistory}
-                                            onClick={(data) => {
+                                            onClick={(data: any) => {
                                                 if (data && data.activePayload && onPointClick) {
                                                     onPointClick(data.activePayload[0].payload.frame);
                                                 }

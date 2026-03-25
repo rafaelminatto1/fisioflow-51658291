@@ -40,6 +40,11 @@ import {
 } from "@/components/ui/alert-dialog";
 import { useToast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
+import { useLoaderData, useSearchParams, useSubmit, useNavigation } from "react-router";
+import { financialApi } from "@/api/v2/financial";
+// import type { Route } from "./+types/Financial";
+type Route = any; // Fallback until typegen is fixed
+
 
 const PackagesManager = lazy(() =>
 	import("@/components/financial/PackagesManager").then((m) => ({
@@ -72,7 +77,86 @@ const FinancialAIAdvisor = lazy(() =>
 	})),
 );
 
+export async function loader({ request }: { request: any }) {
+	const url = new URL(request.url);
+	const period = (url.searchParams.get("period") || "monthly") as "daily" | "weekly" | "monthly" | "all";
+	
+	const res = await financialApi.transacoes.list({ limit: 300 });
+	const rawTransactions = (res?.data ?? res ?? []) as Transaction[];
+
+	// Calculate filter
+	const now = new Date();
+	const start = new Date();
+	start.setHours(0, 0, 0, 0);
+
+	if (period === "weekly") start.setDate(now.getDate() - 7);
+	else if (period === "monthly") start.setDate(now.getDate() - 30);
+
+	const transactions = period === "all" 
+		? rawTransactions 
+		: rawTransactions.filter((t: Transaction) => t.created_at && new Date(t.created_at) >= start);
+
+	const revenue = transactions
+		.filter((t: Transaction) => t.tipo === "receita")
+		.reduce((s: number, t: Transaction) => s + Number(t.valor), 0);
+	const expenses = transactions
+		.filter((t: Transaction) => t.tipo === "despesa")
+		.reduce((s: number, t: Transaction) => s + Number(t.valor), 0);
+	const pending = transactions
+		.filter((t: Transaction) => t.status === "pendente")
+		.reduce((s: number, t: Transaction) => s + Number(t.valor), 0);
+
+	return {
+		transactions,
+		stats: {
+			totalRevenue: revenue,
+			totalExpenses: expenses,
+			netProfit: revenue - expenses,
+			pendingAmount: pending,
+			monthlyGrowth: 0,
+			paidCount: transactions.filter(t => t.status === "concluido").length,
+			totalCount: transactions.length,
+			averageTicket: transactions.length > 0 ? revenue / transactions.length : 0
+		},
+		period
+	};
+}
+
+export async function action({ request }: { request: any }) {
+	const formData = await request.formData();
+	const intent = formData.get("intent");
+	const id = formData.get("id") as string;
+	const dataStr = formData.get("data") as string;
+	const data = dataStr ? JSON.parse(dataStr) : {};
+
+	try {
+		if (intent === "create") {
+			await financialApi.transacoes.create(data);
+			return { success: true, message: "Transação criada com sucesso" };
+		}
+		if (intent === "update") {
+			await financialApi.transacoes.update(id, data);
+			return { success: true, message: "Transação atualizada com sucesso" };
+		}
+		if (intent === "delete") {
+			await financialApi.transacoes.delete(id);
+			return { success: true, message: "Transação excluída com sucesso" };
+		}
+		if (intent === "markAsPaid") {
+			await financialApi.transacoes.update(id, { status: "concluido" });
+			return { success: true, message: "Pagamento confirmado" };
+		}
+		return { success: false, error: "Operação não identificada" };
+	} catch (error) {
+		console.error("Action error:", error);
+		return { success: false, error: "Erro ao processar operação financeira" };
+	}
+}
+
 const Financial = () => {
+	const { transactions, stats, period } = useLoaderData() as any; // Temporary cast until typegen
+	const [_searchParams, setSearchParams] = useSearchParams();
+	
 	const [activeTab, setActiveTab] = useState("overview");
 	const [isModalOpen, setIsModalOpen] = useState(false);
 	const [editingTransaction, setEditingTransaction] =
@@ -82,28 +166,23 @@ const Financial = () => {
 
 	const { toast } = useToast();
 
+	const submit = useSubmit();
+	const navigation = useNavigation();
+	const isSubmitting = navigation.state !== "idle";
+
+	// We still keep useFinancial for some utility methods if needed, 
+	// but we'll migrate the main actions to useSubmit
 	const {
-		transactions,
-		stats,
-		period,
-		setPeriod,
-		loading,
-		createTransaction,
-		updateTransaction,
-		deleteTransaction,
-		markAsPaid,
-		isCreating,
-		isUpdating,
-		_isDeleting,
+		markAsPaid: _oldMarkAsPaid, // We'll use action instead
 	} = useFinancial();
 
 	const safeStats = {
 		totalRevenue: stats?.totalRevenue ?? 0,
 		monthlyGrowth: stats?.monthlyGrowth ?? 0,
 		pendingPayments: stats?.pendingAmount ?? 0,
-		paidCount: (stats as any)?.paidCount ?? 0,
-		totalCount: (stats as any)?.totalCount ?? 0,
-		averageTicket: (stats as any)?.averageTicket ?? 0,
+		paidCount: stats?.paidCount ?? 0,
+		totalCount: stats?.totalCount ?? 0,
+		averageTicket: stats?.averageTicket ?? 0,
 	};
 
 	const handleNewTransaction = () => {
@@ -119,16 +198,22 @@ const Financial = () => {
 	const handleSubmit = (
 		data: Omit<Transaction, "id" | "created_at" | "updated_at">,
 	) => {
-		if (editingTransaction) {
-			updateTransaction({ id: editingTransaction.id, ...data });
-		} else {
-			createTransaction(data);
-		}
+		const intent = editingTransaction ? "update" : "create";
+		const id = editingTransaction?.id;
+		
+		submit(
+			{ intent, id: id || "", data: JSON.stringify(data) },
+			{ method: "post" }
+		);
+		setIsModalOpen(false);
 	};
 
 	const handleDelete = () => {
 		if (deleteId) {
-			deleteTransaction(deleteId);
+			submit(
+				{ intent: "delete", id: deleteId },
+				{ method: "post" }
+			);
 			setDeleteId(null);
 		}
 	};
@@ -147,7 +232,7 @@ const Financial = () => {
 				paidCount: safeStats.paidCount,
 				totalCount: safeStats.totalCount,
 				averageTicket: safeStats.averageTicket,
-				transactions: transactions.map((t) => ({
+				transactions: transactions.map((t: Transaction) => ({
 					id: t.id,
 					tipo: t.tipo,
 					descricao: t.descricao || "",
@@ -260,7 +345,7 @@ const Financial = () => {
 								R$ {safeStats.pendingPayments.toLocaleString("pt-BR")}
 							</p>
 							<p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mt-2">
-								{transactions.filter((t) => t.status === "pendente").length} em
+								{transactions.filter((t: Transaction) => t.status === "pendente").length} em
 								aberto
 							</p>
 						</CardContent>
@@ -368,8 +453,8 @@ const Financial = () => {
 							<Select
 								value={period}
 								onValueChange={(
-									value: "daily" | "weekly" | "monthly" | "all",
-								) => setPeriod(value)}
+									value: string
+								) => setSearchParams({ period: value })}
 							>
 								<SelectTrigger className="w-[180px] h-10 rounded-xl border-slate-200 dark:border-slate-800 font-bold text-xs">
 									<Filter className="h-3.5 w-3.5 mr-2 text-primary" />
@@ -384,9 +469,7 @@ const Financial = () => {
 							</Select>
 						</div>
 
-						{loading ? (
-							<LoadingSkeleton type="list" rows={5} />
-						) : transactions.length === 0 ? (
+						{transactions.length === 0 ? (
 							<EmptyState
 								icon={DollarSign}
 								title="Sem transações"
@@ -412,7 +495,7 @@ const Financial = () => {
 											</tr>
 										</thead>
 										<tbody className="divide-y divide-slate-50 dark:divide-slate-800/50">
-											{transactions.map((t) => (
+											{transactions.map((t: Transaction) => (
 												<tr
 													key={t.id}
 													className="hover:bg-slate-50 dark:hover:bg-slate-800/30 transition-all group"
@@ -435,9 +518,12 @@ const Financial = () => {
 													<td className="px-6 py-5">
 														<Badge
 															variant={
-																t.status === "concluido" ? "success" : "warning"
+																t.status === "concluido" ? "secondary" : "outline"
 															}
-															className="rounded-lg px-2.5 py-0.5 text-[9px] font-black uppercase tracking-widest border-none shadow-sm"
+															className={cn(
+																"rounded-lg px-2.5 py-0.5 text-[9px] font-black uppercase tracking-widest border-none shadow-sm",
+																t.status === "concluido" ? "bg-emerald-500/10 text-emerald-600" : "bg-amber-500/10 text-amber-600"
+															)}
 														>
 															{t.status === "concluido" ? "Pago" : "Pendente"}
 														</Badge>
@@ -459,7 +545,12 @@ const Financial = () => {
 																<Button
 																	variant="ghost"
 																	size="icon"
-																	onClick={() => markAsPaid(t.id)}
+																	onClick={() =>
+														submit(
+															{ intent: "markAsPaid", id: t.id },
+															{ method: "post" },
+														)
+													}
 																	className="h-8 w-8 rounded-lg text-emerald-600 hover:bg-emerald-50 dark:hover:bg-emerald-900/20"
 																>
 																	<Check className="h-4 w-4" />
@@ -536,7 +627,7 @@ const Financial = () => {
 				onOpenChange={setIsModalOpen}
 				onSubmit={handleSubmit}
 				transaction={editingTransaction}
-				isLoading={isCreating || isUpdating}
+				isLoading={isSubmitting}
 			/>
 
 			<AlertDialog

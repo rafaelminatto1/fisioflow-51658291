@@ -1,24 +1,9 @@
-/**
- * Rotas: Sessões Clínicas (SOAP Records)
- *
- * GET    /api/sessions?patientId=&status=&appointmentId=&limit=&offset=
- * GET    /api/sessions/:id
- * POST   /api/sessions/autosave   — upsert por recordId ou appointmentId (antes de /:id)
- * POST   /api/sessions            — criar sessão
- * PUT    /api/sessions/:id        — atualizar sessão
- * POST   /api/sessions/:id/finalize — finalizar/assinar
- * DELETE /api/sessions/:id        — excluir (apenas drafts)
- *
- * Mapeamento de campos:
- *   SoapRecord.subjective/objective/assessment/plan → sessions.subjective/... (JSONB {text:"..."})
- *   SoapRecord.pain_level/location/character       → sessions.required_tests (JSONB {pain_level,...})
- *   SoapRecord.record_date                         → sessions.date (timestamp, só data)
- *   SoapRecord.created_by                          → sessions.therapist_id (uid do JWT)
- */
 import { Hono } from 'hono';
-import { createPool } from '../lib/db';
+import { createDb } from '../lib/db';
 import { requireAuth, type AuthVariables } from '../lib/auth';
 import type { Env } from '../types/env';
+import { sessions, sessionAttachments, sessionTemplates } from '@fisioflow/db';
+import { eq, and, desc, count, sql, or, ilike } from 'drizzle-orm';
 
 const app = new Hono<{ Bindings: Env; Variables: AuthVariables }>();
 
@@ -26,13 +11,14 @@ const app = new Hono<{ Bindings: Env; Variables: AuthVariables }>();
 
 /** Verifica se uma string é um UUID válido */
 function isValidUuid(val: string): boolean {
+  if (!val) return false;
   return /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(val);
 }
 
 /** Serializa um texto para JSONB no formato { text: "..." } */
-function textToJsonb(val: unknown): string | null {
+function textToJsonb(val: unknown): { text: string } | null {
   if (val == null || val === '') return null;
-  return JSON.stringify({ text: String(val) });
+  return { text: String(val) };
 }
 
 /** Extrai texto de um valor JSONB (suporta { text: "..." }, string JSON ou null) */
@@ -47,44 +33,41 @@ function jsonbToText(val: unknown): string | undefined {
   return undefined;
 }
 
-/** Mapeia linha do PostgreSQL para o formato SoapRecord do frontend */
-function rowToRecord(row: Record<string, unknown>) {
-  const pain =
-    typeof row.required_tests === 'object' && row.required_tests !== null
-      ? (row.required_tests as Record<string, unknown>)
-      : {};
+/** Mapeia linha do Drizzle (camelCase) para o formato SoapRecord do frontend (snake_case) */
+function rowToRecord(row: any) {
+  const subj = (row.subjective as any) || {};
 
   return {
     id: row.id,
-    patient_id: row.patient_id,
-    appointment_id: row.appointment_id ?? undefined,
-    session_number: row.session_number != null ? Number(row.session_number) : undefined,
+    patient_id: row.patientId,
+    appointment_id: row.appointmentId ?? undefined,
+    session_number: row.sessionNumber != null ? Number(row.sessionNumber) : undefined,
     subjective: jsonbToText(row.subjective),
     objective: jsonbToText(row.objective),
     assessment: jsonbToText(row.assessment),
     plan: jsonbToText(row.plan),
     status: (row.status as string) ?? 'draft',
-    pain_level: pain.pain_level != null ? Number(pain.pain_level) : undefined,
-    pain_location: typeof pain.pain_location === 'string' ? pain.pain_location : undefined,
-    pain_character: typeof pain.pain_character === 'string' ? pain.pain_character : undefined,
-    duration_minutes: row.duration_minutes != null ? Number(row.duration_minutes) : undefined,
-    last_auto_save_at: row.last_auto_save_at ? String(row.last_auto_save_at) : undefined,
-    finalized_at: row.finalized_at ? String(row.finalized_at) : undefined,
-    finalized_by: row.finalized_by ? String(row.finalized_by) : undefined,
+    pain_level: subj.painScale ?? undefined,
+    pain_location: subj.painLocation ?? undefined,
+    pain_character: subj.painCharacter ?? undefined,
+    duration_minutes: row.duration ?? undefined,
+    last_auto_save_at: row.lastAutoSaveAt ? new Date(row.lastAutoSaveAt).toISOString() : undefined,
+    finalized_at: row.finalizedAt ? new Date(row.finalizedAt).toISOString() : undefined,
+    finalized_by: row.finalizedBy ? String(row.finalizedBy) : undefined,
     record_date: row.date
-      ? new Date(String(row.date)).toISOString().split('T')[0]
+      ? new Date(row.date).toISOString().split('T')[0]
       : new Date().toISOString().split('T')[0],
-    created_by: row.therapist_id ? String(row.therapist_id) : undefined,
-    created_at: String(row.created_at),
-    updated_at: String(row.updated_at),
-    signed_at: row.finalized_at ? String(row.finalized_at) : undefined,
+    created_by: row.therapistId ? String(row.therapistId) : undefined,
+    created_at: new Date(row.createdAt).toISOString(),
+    updated_at: new Date(row.updatedAt).toISOString(),
+    signed_at: row.finalizedAt ? new Date(row.finalizedAt).toISOString() : undefined,
   };
 }
 
 // ===== LISTA =====
 app.get('/', requireAuth, async (c) => {
   const user = c.get('user');
-  const pool = await createPool(c.env);
+  const db = createDb(c.env);
   const { patientId, status, appointmentId, limit = '20', offset = '0' } = c.req.query();
 
   if (!patientId) return c.json({ error: 'patientId é obrigatório' }, 400);
@@ -92,480 +75,449 @@ app.get('/', requireAuth, async (c) => {
   const limitNum = Math.min(200, Math.max(1, parseInt(limit) || 20));
   const offsetNum = Math.max(0, parseInt(offset) || 0);
 
-  const params: Array<string | number> = [patientId, user.organizationId];
-  let where = 'WHERE patient_id = $1 AND organization_id = $2';
+  try {
+    const conditions = [
+      eq(sessions.patientId, patientId),
+      eq(sessions.organizationId, user.organizationId)
+    ];
 
-  if (status) {
-    params.push(status);
-    where += ` AND status = $${params.length}`;
+    if (status) {
+      conditions.push(eq(sessions.status, status as any));
+    }
+    if (appointmentId) {
+      conditions.push(eq(sessions.appointmentId, appointmentId));
+    }
+
+    const whereClause = and(...conditions);
+
+    const [dataRes, countRes] = await Promise.all([
+      db.select()
+        .from(sessions)
+        .where(whereClause)
+        .orderBy(desc(sessions.date))
+        .limit(limitNum)
+        .offset(offsetNum),
+      db.select({ total: count() })
+        .from(sessions)
+        .where(whereClause)
+    ]);
+
+    return c.json({
+      data: dataRes.map(rowToRecord),
+      total: countRes[0]?.total ?? 0,
+    });
+  } catch (error: any) {
+    return c.json({ error: 'Erro ao listar sessões', details: error.message }, 500);
   }
-  if (appointmentId) {
-    params.push(appointmentId);
-    where += ` AND appointment_id = $${params.length}`;
-  }
-
-  params.push(limitNum, offsetNum);
-
-  const [dataRes, countRes] = await Promise.all([
-    pool.query(
-      `SELECT * FROM sessions ${where} ORDER BY date DESC LIMIT $${params.length - 1} OFFSET $${params.length}`,
-      params,
-    ),
-    pool.query(
-      `SELECT COUNT(*)::int AS total FROM sessions ${where}`,
-      params.slice(0, params.length - 2),
-    ),
-  ]);
-
-  return c.json({
-    data: dataRes.rows.map(rowToRecord),
-    total: countRes.rows[0]?.total ?? 0,
-  });
 });
 
-// ===== AUTOSAVE (declarado antes de /:id para evitar conflito de rota) =====
+// ===== AUTOSAVE =====
 app.post('/autosave', requireAuth, async (c) => {
   const user = c.get('user');
-  const pool = await createPool(c.env);
-  const body = (await c.req.json()) as Record<string, unknown>;
+  const db = createDb(c.env);
+  const body = (await c.req.json()) as Record<string, any>;
 
   const patientId = String(body.patient_id ?? '').trim();
   if (!patientId) return c.json({ error: 'patient_id é obrigatório' }, 400);
 
-  const pain = JSON.stringify({
-    pain_level: body.pain_level ?? null,
-    pain_location: body.pain_location ?? null,
-    pain_character: body.pain_character ?? null,
-  });
+  const subjData = body.subjective != null ? textToJsonb(body.subjective) : undefined;
+  if (subjData && (body.pain_level != null || body.pain_location || body.pain_character)) {
+    (subjData as any).painScale = body.pain_level ?? null;
+    (subjData as any).painLocation = body.pain_location ?? null;
+    (subjData as any).painCharacter = body.pain_character ?? null;
+  }
 
-  const subjJsonb = body.subjective != null ? textToJsonb(body.subjective) : null;
-  const objJsonb = body.objective != null ? textToJsonb(body.objective) : null;
-  const assJsonb = body.assessment != null ? textToJsonb(body.assessment) : null;
-  const planJsonb = body.plan != null ? textToJsonb(body.plan) : null;
-  const durationNum = body.duration_minutes != null ? Number(body.duration_minutes) : null;
+  const objData = body.objective != null ? textToJsonb(body.objective) : undefined;
+  const assData = body.assessment != null ? textToJsonb(body.assessment) : undefined;
+  const planData = body.plan != null ? textToJsonb(body.plan) : undefined;
+  const durationNum = body.duration_minutes != null ? Number(body.duration_minutes) : undefined;
 
-  const buildUpdateQuery = (id: string) =>
-    pool.query(
-      `UPDATE sessions SET
-        subjective        = COALESCE($1::jsonb, subjective),
-        objective         = COALESCE($2::jsonb, objective),
-        assessment        = COALESCE($3::jsonb, assessment),
-        plan              = COALESCE($4::jsonb, plan),
-        duration_minutes  = COALESCE($5, duration_minutes),
-        required_tests    = $6::jsonb,
-        last_auto_save_at = NOW(),
-        updated_at        = NOW()
-      WHERE id = $7 AND organization_id = $8
-      RETURNING *`,
-      [subjJsonb, objJsonb, assJsonb, planJsonb, durationNum, pain, id, user.organizationId],
-    );
+  const buildUpdatePayload = () => {
+    const payload: any = {
+      lastAutoSaveAt: new Date(),
+      updatedAt: new Date(),
+    };
+    if (subjData !== undefined) payload.subjective = subjData;
+    if (objData !== undefined) payload.objective = objData;
+    if (assData !== undefined) payload.assessment = assData;
+    if (planData !== undefined) payload.plan = planData;
+    if (durationNum !== undefined) payload.duration = durationNum;
+    return payload;
+  };
 
-  // 1. Se tem recordId, atualiza diretamente
-  if (body.recordId || body.id) {
-    const id = String(body.recordId ?? body.id);
-    const res = await buildUpdateQuery(id);
-    if (res.rows.length) {
-      return c.json({ data: { ...rowToRecord(res.rows[0]), isNew: false } });
+  const idToUpdate = body.recordId || body.id;
+  if (idToUpdate) {
+    const res = await db.update(sessions)
+      .set(buildUpdatePayload())
+      .where(and(eq(sessions.id, idToUpdate), eq(sessions.organizationId, user.organizationId)))
+      .returning();
+    
+    if (res.length) {
+      return c.json({ data: { ...rowToRecord(res[0]), isNew: false } });
     }
   }
 
-  // 2. Se tem appointment_id, busca draft existente
   if (body.appointment_id) {
-    const appointmentId = String(body.appointment_id);
-    const existing = await pool.query(
-      `SELECT id FROM sessions WHERE appointment_id = $1 AND organization_id = $2 AND status = 'draft' LIMIT 1`,
-      [appointmentId, user.organizationId],
-    );
-    if (existing.rows.length) {
-      const res = await buildUpdateQuery(existing.rows[0].id);
-      if (res.rows.length) {
-        return c.json({ data: { ...rowToRecord(res.rows[0]), isNew: false } });
+    const existing = await db.select({ id: sessions.id })
+      .from(sessions)
+      .where(and(
+        eq(sessions.appointmentId, body.appointment_id),
+        eq(sessions.organizationId, user.organizationId),
+        eq(sessions.status, 'draft')
+      ))
+      .limit(1);
+
+    if (existing.length) {
+      const res = await db.update(sessions)
+        .set(buildUpdatePayload())
+        .where(eq(sessions.id, existing[0].id))
+        .returning();
+      
+      if (res.length) {
+        return c.json({ data: { ...rowToRecord(res[0]), isNew: false } });
       }
     }
   }
 
-  // 3. Cria novo registro
-  const recordDate = body.record_date
-    ? String(body.record_date)
-    : new Date().toISOString().split('T')[0];
+  const recordDate = body.record_date ? new Date(String(body.record_date)) : new Date();
 
-  const createRes = await pool.query(
-    `INSERT INTO sessions (
-      patient_id, appointment_id, therapist_id, organization_id,
-      date, duration_minutes,
-      subjective, objective, assessment, plan,
-      status, required_tests,
-      last_auto_save_at, created_at, updated_at
-    ) VALUES (
-      $1, $2, $3, $4,
-      $5, $6,
-      $7::jsonb, $8::jsonb, $9::jsonb, $10::jsonb,
-      'draft', $11::jsonb,
-      NOW(), NOW(), NOW()
-    ) RETURNING *`,
-    [
-      patientId,
-      body.appointment_id ? String(body.appointment_id) : null,
-      isValidUuid(user.uid) ? user.uid : null,
-      user.organizationId,
-      recordDate,
-      durationNum,
-      subjJsonb,
-      objJsonb,
-      assJsonb,
-      planJsonb,
-      pain,
-    ],
-  );
+  const insertValues: any = {
+    patientId,
+    appointmentId: body.appointment_id || null,
+    therapistId: isValidUuid(user.uid) ? user.uid : (null as any),
+    organizationId: user.organizationId,
+    date: recordDate,
+    duration: durationNum || null,
+    subjective: subjData || null,
+    objective: objData || null,
+    assessment: assData || null,
+    plan: planData || null,
+    status: 'draft',
+    lastAutoSaveAt: new Date(),
+  };
 
-  return c.json({ data: { ...rowToRecord(createRes.rows[0]), isNew: true } }, 201);
+  const [newSession] = await db.insert(sessions)
+    .values(insertValues)
+    .returning();
+
+  return c.json({ data: { ...rowToRecord(newSession), isNew: true } }, 201);
 });
 
 // ===== DETALHE =====
 app.get('/:id', requireAuth, async (c) => {
   const user = c.get('user');
-  const pool = await createPool(c.env);
-  const { id } = c.req.param();
+  const db = createDb(c.env);
+  const id = c.req.param('id');
+  if (!id) return c.json({ error: 'ID é obrigatório' }, 400);
 
-  const result = await pool.query(
-    'SELECT * FROM sessions WHERE id = $1 AND organization_id = $2 LIMIT 1',
-    [id, user.organizationId],
-  );
+  const [row] = await db.select()
+    .from(sessions)
+    .where(and(eq(sessions.id, id), eq(sessions.organizationId, user.organizationId)))
+    .limit(1);
 
-  if (!result.rows.length) return c.json({ error: 'Sessão não encontrada' }, 404);
-  return c.json({ data: rowToRecord(result.rows[0]) });
+  if (!row) return c.json({ error: 'Sessão não encontrada' }, 404);
+  return c.json({ data: rowToRecord(row) });
 });
 
-// ===== FINALIZAR / ASSINAR =====
+// ===== FINALIZAR =====
 app.post('/:id/finalize', requireAuth, async (c) => {
   const user = c.get('user');
-  const pool = await createPool(c.env);
-  const { id } = c.req.param();
+  const db = createDb(c.env);
+  const id = c.req.param('id');
+  if (!id) return c.json({ error: 'ID é obrigatório' }, 400);
 
-  const result = await pool.query(
-    `UPDATE sessions SET
-      status       = 'finalized',
-      finalized_at = NOW(),
-      finalized_by = $1,
-      updated_at   = NOW()
-    WHERE id = $2 AND organization_id = $3 AND status != 'finalized'
-    RETURNING *`,
-    [user.uid, id, user.organizationId],
-  );
+  const [row] = await db.update(sessions)
+    .set({
+      status: 'finalized',
+      finalizedAt: new Date(),
+      finalizedBy: user.uid as any,
+      updatedAt: new Date()
+    })
+    .where(and(
+      eq(sessions.id, id),
+      eq(sessions.organizationId, user.organizationId),
+      sql`${sessions.status} != 'finalized'`
+    ))
+    .returning();
 
-  if (!result.rows.length) return c.json({ error: 'Sessão não encontrada ou já finalizada' }, 404);
-  return c.json({ data: rowToRecord(result.rows[0]) });
+  if (!row) return c.json({ error: 'Sessão não encontrada ou já finalizada' }, 404);
+  return c.json({ data: rowToRecord(row) });
 });
 
 // ===== CRIAR =====
 app.post('/', requireAuth, async (c) => {
   const user = c.get('user');
-  const pool = await createPool(c.env);
-  const body = (await c.req.json()) as Record<string, unknown>;
+  const db = createDb(c.env);
+  const body = (await c.req.json()) as Record<string, any>;
 
   const patientId = String(body.patient_id ?? '').trim();
   if (!patientId) return c.json({ error: 'patient_id é obrigatório' }, 400);
 
-  const recordDate = body.record_date
-    ? String(body.record_date)
-    : new Date().toISOString().split('T')[0];
+  const recordDate = body.record_date ? new Date(String(body.record_date)) : new Date();
 
-  const pain = JSON.stringify({
-    pain_level: body.pain_level ?? null,
-    pain_location: body.pain_location ?? null,
-    pain_character: body.pain_character ?? null,
-  });
+  const insertValues: any = {
+    patientId,
+    appointmentId: body.appointment_id || null,
+    therapistId: isValidUuid(user.uid) ? user.uid : (null as any),
+    organizationId: user.organizationId,
+    date: recordDate,
+    duration: body.duration_minutes != null ? Number(body.duration_minutes) : null,
+    subjective: textToJsonb(body.subjective),
+    objective: textToJsonb(body.objective),
+    assessment: textToJsonb(body.assessment),
+    plan: textToJsonb(body.plan),
+    status: (body.status as any) ?? 'draft',
+  };
 
-  const result = await pool.query(
-    `INSERT INTO sessions (
-      patient_id, appointment_id, therapist_id, organization_id,
-      date, duration_minutes,
-      subjective, objective, assessment, plan,
-      status, required_tests,
-      created_at, updated_at
-    ) VALUES (
-      $1, $2, $3, $4,
-      $5, $6,
-      $7::jsonb, $8::jsonb, $9::jsonb, $10::jsonb,
-      $11, $12::jsonb,
-      NOW(), NOW()
-    ) RETURNING *`,
-    [
-      patientId,
-      body.appointment_id ? String(body.appointment_id) : null,
-      isValidUuid(user.uid) ? user.uid : null,
-      user.organizationId,
-      recordDate,
-      body.duration_minutes != null ? Number(body.duration_minutes) : null,
-      textToJsonb(body.subjective),
-      textToJsonb(body.objective),
-      textToJsonb(body.assessment),
-      textToJsonb(body.plan),
-      body.status ?? 'draft',
-      pain,
-    ],
-  );
+  const [newSession] = await db.insert(sessions)
+    .values(insertValues)
+    .returning();
 
-  return c.json({ data: rowToRecord(result.rows[0]) }, 201);
+  return c.json({ data: rowToRecord(newSession) }, 201);
 });
 
 // ===== ATUALIZAR =====
 app.put('/:id', requireAuth, async (c) => {
   const user = c.get('user');
-  const pool = await createPool(c.env);
-  const { id } = c.req.param();
-  const body = (await c.req.json()) as Record<string, unknown>;
+  const db = createDb(c.env);
+  const id = c.req.param('id');
+  if (!id) return c.json({ error: 'ID é obrigatório' }, 400);
 
-  const sets: string[] = ['updated_at = NOW()'];
-  const params: Array<string | number | null> = [];
+  const body = (await c.req.json()) as Record<string, any>;
 
-  if ('subjective' in body) {
-    params.push(textToJsonb(body.subjective));
-    sets.push(`subjective = $${params.length}::jsonb`);
-  }
-  if ('objective' in body) {
-    params.push(textToJsonb(body.objective));
-    sets.push(`objective = $${params.length}::jsonb`);
-  }
-  if ('assessment' in body) {
-    params.push(textToJsonb(body.assessment));
-    sets.push(`assessment = $${params.length}::jsonb`);
-  }
-  if ('plan' in body) {
-    params.push(textToJsonb(body.plan));
-    sets.push(`plan = $${params.length}::jsonb`);
-  }
-  if (body.duration_minutes != null) {
-    params.push(Number(body.duration_minutes));
-    sets.push(`duration_minutes = $${params.length}`);
-  }
-  if (body.status) {
-    params.push(String(body.status));
-    sets.push(`status = $${params.length}`);
-  }
-  if (body.pain_level != null || body.pain_location != null || body.pain_character != null) {
-    params.push(
-      JSON.stringify({
-        pain_level: body.pain_level ?? null,
-        pain_location: body.pain_location ?? null,
-        pain_character: body.pain_character ?? null,
-      }),
-    );
-    sets.push(`required_tests = $${params.length}::jsonb`);
-  }
+  const updatePayload: any = {
+    updatedAt: new Date()
+  };
 
-  params.push(id, user.organizationId);
+  if ('subjective' in body) updatePayload.subjective = textToJsonb(body.subjective);
+  if ('objective' in body) updatePayload.objective = textToJsonb(body.objective);
+  if ('assessment' in body) updatePayload.assessment = textToJsonb(body.assessment);
+  if ('plan' in body) updatePayload.plan = textToJsonb(body.plan);
+  if (body.duration_minutes != null) updatePayload.duration = Number(body.duration_minutes);
+  if (body.status) updatePayload.status = body.status as any;
 
-  const result = await pool.query(
-    `UPDATE sessions SET ${sets.join(', ')}
-     WHERE id = $${params.length - 1} AND organization_id = $${params.length}
-     RETURNING *`,
-    params,
-  );
+  const [updated] = await db.update(sessions)
+    .set(updatePayload)
+    .where(and(eq(sessions.id, id), eq(sessions.organizationId, user.organizationId)))
+    .returning();
 
-  if (!result.rows.length) return c.json({ error: 'Sessão não encontrada' }, 404);
-  return c.json({ data: rowToRecord(result.rows[0]) });
+  if (!updated) return c.json({ error: 'Sessão não encontrada' }, 404);
+  return c.json({ data: rowToRecord(updated) });
 });
 
-// ===== EXCLUIR (apenas drafts) =====
+// ===== EXCLUIR =====
 app.delete('/:id', requireAuth, async (c) => {
   const user = c.get('user');
-  const pool = await createPool(c.env);
-  const { id } = c.req.param();
+  const db = createDb(c.env);
+  const id = c.req.param('id');
+  if (!id) return c.json({ error: 'ID é obrigatório' }, 400);
 
-  const check = await pool.query(
-    'SELECT status FROM sessions WHERE id = $1 AND organization_id = $2 LIMIT 1',
-    [id, user.organizationId],
-  );
+  const [existing] = await db.select({ status: sessions.status })
+    .from(sessions)
+    .where(and(eq(sessions.id, id), eq(sessions.organizationId, user.organizationId)))
+    .limit(1);
 
-  if (!check.rows.length) return c.json({ error: 'Sessão não encontrada' }, 404);
-  if (check.rows[0].status === 'finalized') {
+  if (!existing) return c.json({ error: 'Sessão não encontrada' }, 404);
+  if (existing.status === 'finalized') {
     return c.json({ error: 'Não é possível excluir uma evolução finalizada' }, 409);
   }
 
-  await pool.query('DELETE FROM sessions WHERE id = $1 AND organization_id = $2', [
-    id,
-    user.organizationId,
-  ]);
+  await db.delete(sessions)
+    .where(and(eq(sessions.id, id), eq(sessions.organizationId, user.organizationId)));
 
-  return c.json({ ok: true });
+  return c.json({ success: true });
 });
 
-// ===== SESSION ATTACHMENTS =====
-
-app.get('/:id/attachments', requireAuth, async (c) => {
+// ===== TEMPLATES =====
+app.get('/templates', requireAuth, async (c) => {
   const user = c.get('user');
-  const pool = await createPool(c.env);
-  const { id } = c.req.param();
+  const db = createDb(c.env);
+  const { search } = c.req.query();
 
-  const result = await pool.query(
-    `SELECT * FROM session_attachments
-     WHERE session_id = $1 AND patient_id IN (
-       SELECT patient_id FROM sessions WHERE id = $1 AND organization_id = $2
-     )
-     ORDER BY uploaded_at DESC`,
-    [id, user.organizationId],
-  );
-  try { return c.json({ data: result.rows || result }); } catch(e) { return c.json({ data: [] }); }
+  const conditions = [
+    or(
+      eq(sessionTemplates.organizationId, user.organizationId),
+      eq(sessionTemplates.isGlobal, true)
+    )
+  ];
+
+  if (search) {
+    conditions.push(
+      or(
+        ilike(sessionTemplates.name, `%${search}%`),
+        ilike(sessionTemplates.description, `%${search}%`)
+      )
+    );
+  }
+
+  const results = await db.select()
+    .from(sessionTemplates)
+    .where(and(...conditions))
+    .orderBy(desc(sessionTemplates.createdAt));
+
+  return c.json({
+    data: results.map(t => ({
+      id: t.id,
+      name: t.name,
+      description: t.description,
+      subjective: jsonbToText(t.subjective),
+      objective: jsonbToText(t.objective),
+      assessment: jsonbToText(t.assessment),
+      plan: jsonbToText(t.plan),
+      is_global: t.isGlobal,
+      created_at: t.createdAt,
+      updated_at: t.updatedAt
+    }))
+  });
+});
+
+app.post('/templates', requireAuth, async (c) => {
+  const user = c.get('user');
+  const db = createDb(c.env);
+  const body = (await c.req.json()) as any;
+
+  if (!body.name) return c.json({ error: 'Nome é obrigatório' }, 400);
+
+  const insertValues: any = {
+    organizationId: user.organizationId,
+    therapistId: user.uid as any,
+    name: body.name,
+    description: body.description || null,
+    subjective: textToJsonb(body.subjective),
+    objective: textToJsonb(body.objective),
+    assessment: textToJsonb(body.assessment),
+    plan: textToJsonb(body.plan),
+    isGlobal: body.is_global ?? false,
+  };
+
+  const [newTemplate] = await db.insert(sessionTemplates)
+    .values(insertValues)
+    .returning();
+
+  return c.json({ data: newTemplate }, 201);
+});
+
+app.put('/templates/:templateId', requireAuth, async (c) => {
+  const user = c.get('user');
+  const db = createDb(c.env);
+  const { templateId } = c.req.param();
+  const body = (await c.req.json()) as any;
+
+  const updatePayload: any = {
+    updatedAt: new Date()
+  };
+
+  if (body.name !== undefined) updatePayload.name = body.name;
+  if (body.description !== undefined) updatePayload.description = body.description;
+  if (body.subjective !== undefined) updatePayload.subjective = textToJsonb(body.subjective);
+  if (body.objective !== undefined) updatePayload.objective = textToJsonb(body.objective);
+  if (body.assessment !== undefined) updatePayload.assessment = textToJsonb(body.assessment);
+  if (body.plan !== undefined) updatePayload.plan = textToJsonb(body.plan);
+  if (body.is_global !== undefined) updatePayload.isGlobal = body.is_global;
+
+  const [updated] = await db.update(sessionTemplates)
+    .set(updatePayload)
+    .where(and(eq(sessionTemplates.id, templateId), eq(sessionTemplates.organizationId, user.organizationId)))
+    .returning();
+
+  if (!updated) return c.json({ error: 'Template não encontrado' }, 404);
+  return c.json({ data: updated });
+});
+
+app.delete('/templates/:templateId', requireAuth, async (c) => {
+  const user = c.get('user');
+  const db = createDb(c.env);
+  const { templateId } = c.req.param();
+
+  const [deleted] = await db.delete(sessionTemplates)
+    .where(and(eq(sessionTemplates.id, templateId), eq(sessionTemplates.organizationId, user.organizationId)))
+    .returning();
+
+  if (!deleted) return c.json({ error: 'Template não encontrado' }, 404);
+  return c.json({ success: true });
+});
+
+// ===== ANEXOS =====
+app.get('/:id/attachments', requireAuth, async (c) => {
+  const db = createDb(c.env);
+  const id = c.req.param('id');
+
+  const results = await db.select()
+    .from(sessionAttachments)
+    .where(eq(sessionAttachments.sessionId, id))
+    .orderBy(desc(sessionAttachments.uploadedAt));
+
+  return c.json({
+    data: results.map(a => ({
+      id: a.id,
+      file_name: a.fileName,
+      original_name: a.originalName,
+      file_url: a.fileUrl,
+      thumbnail_url: a.thumbnailUrl,
+      file_type: a.fileType,
+      mime_type: a.mimeType,
+      category: a.category,
+      size_bytes: a.sizeBytes,
+      description: a.description,
+      uploaded_at: a.uploadedAt
+    }))
+  });
 });
 
 app.post('/:id/attachments', requireAuth, async (c) => {
   const user = c.get('user');
-  const pool = await createPool(c.env);
-  const { id } = c.req.param();
-  const body = (await c.req.json()) as Record<string, unknown>;
+  const db = createDb(c.env);
+  const id = c.req.param('id');
+  const body = (await c.req.json()) as any;
 
-  const session = await pool.query(
-    'SELECT patient_id FROM sessions WHERE id = $1 AND organization_id = $2',
-    [id, user.organizationId],
-  );
-  if (!session.rows.length) return c.json({ error: 'Sessão não encontrada' }, 404);
+  if (!body.file_url) return c.json({ error: 'file_url é obrigatório' }, 400);
+
+  const [session] = await db.select({ patientId: sessions.patientId })
+    .from(sessions)
+    .where(and(eq(sessions.id, id), eq(sessions.organizationId, user.organizationId)))
+    .limit(1);
+
+  if (!session) return c.json({ error: 'Sessão não encontrada' }, 404);
 
   const fileTypeMap: Record<string, string> = {
     'image/jpeg': 'image', 'image/png': 'image', 'image/gif': 'image', 'image/webp': 'image',
     'application/pdf': 'pdf', 'video/mp4': 'video', 'video/webm': 'video',
   };
   const mime = String(body.mime_type ?? '');
-  const fileType = fileTypeMap[mime] ?? 'other';
+  const fileType = (fileTypeMap[mime] ?? 'other') as any;
 
-  const result = await pool.query(
-    `INSERT INTO session_attachments
-       (session_id, patient_id, file_name, original_name, file_url, thumbnail_url,
-        file_type, mime_type, category, size_bytes, description, uploaded_by, uploaded_at)
-     VALUES ($1, $2, $3, $4, $5, $6, $7::session_attachment_type, $8, $9::session_attachment_category, $10, $11, $12, NOW())
-     RETURNING *`,
-    [
-      id,
-      session.rows[0].patient_id,
-      String(body.file_name ?? ''),
-      body.original_name ?? body.file_name ?? null,
-      String(body.file_url ?? ''),
-      body.thumbnail_url ?? null,
-      fileType,
-      mime || null,
-      body.category ?? 'outros',
-      body.size_bytes != null ? Number(body.size_bytes) : null,
-      body.description ?? null,
-      user.uid,
-    ],
-  );
-  return c.json({ data: result.rows[0] }, 201);
+  const insertValues: any = {
+    sessionId: id,
+    patientId: session.patientId,
+    fileName: body.file_name || 'unnamed',
+    originalName: body.original_name || body.file_name || null,
+    fileUrl: body.file_url,
+    thumbnailUrl: body.thumbnail_url || null,
+    fileType: fileType,
+    mimeType: mime || null,
+    category: body.category || 'other',
+    sizeBytes: body.size_bytes != null ? Number(body.size_bytes) : null,
+    description: body.description || null,
+    uploadedBy: user.uid as any
+  };
+
+  const [newAttachment] = await db.insert(sessionAttachments)
+    .values(insertValues)
+    .returning();
+
+  return c.json({ data: newAttachment }, 201);
 });
 
 app.delete('/:id/attachments/:attachmentId', requireAuth, async (c) => {
-  const user = c.get('user');
-  const pool = await createPool(c.env);
-  const { id, attachmentId } = c.req.param();
+  const db = createDb(c.env);
+  const attachmentId = c.req.param('attachmentId');
 
-  const check = await pool.query(
-    `SELECT a.file_url FROM session_attachments a
-     JOIN sessions s ON s.id = a.session_id
-     WHERE a.id = $1 AND a.session_id = $2 AND organization_id = $3`,
-    [attachmentId, id, user.organizationId],
-  );
-  if (!check.rows.length) return c.json({ error: 'Anexo não encontrado' }, 404);
+  const [deleted] = await db.delete(sessionAttachments)
+    .where(eq(sessionAttachments.id, attachmentId))
+    .returning();
 
-  await pool.query('DELETE FROM session_attachments WHERE id = $1', [attachmentId]);
-  return c.json({ ok: true, file_url: check.rows[0].file_url });
-});
-
-// ===== SESSION TEMPLATES =====
-
-app.get('/templates', requireAuth, async (c) => {
-  const user = c.get('user');
-  const pool = await createPool(c.env);
-
-  const result = await pool.query(
-    `SELECT * FROM session_templates
-     WHERE organization_id = $1 OR is_global = true
-     ORDER BY created_at DESC`,
-    [user.organizationId],
-  );
-  try { return c.json({ data: result.rows || result }); } catch(e) { return c.json({ data: [] }); }
-});
-
-app.post('/templates', requireAuth, async (c) => {
-  const user = c.get('user');
-  const pool = await createPool(c.env);
-  const body = (await c.req.json()) as Record<string, unknown>;
-
-  const toJsonb = (v: unknown) => (v != null ? JSON.stringify({ text: String(v) }) : null);
-
-  const result = await pool.query(
-    `INSERT INTO session_templates
-       (organization_id, therapist_id, name, description,
-        subjective, objective, assessment, plan, is_global, created_at, updated_at)
-     VALUES ($1, $2, $3, $4, $5::jsonb, $6::jsonb, $7::jsonb, $8::jsonb, $9, NOW(), NOW())
-     RETURNING *`,
-    [
-      user.organizationId,
-      user.uid,
-      String(body.name ?? '').trim() || 'Template sem nome',
-      body.description ?? null,
-      toJsonb(body.subjective),
-      toJsonb(body.objective),
-      toJsonb(body.assessment),
-      toJsonb(body.plan),
-      body.is_global ?? false,
-    ],
-  );
-  return c.json({ data: result.rows[0] }, 201);
-});
-
-app.put('/templates/:templateId', requireAuth, async (c) => {
-  const user = c.get('user');
-  const pool = await createPool(c.env);
-  const { templateId } = c.req.param();
-  const body = (await c.req.json()) as Record<string, unknown>;
-
-  const check = await pool.query(
-    'SELECT id FROM session_templates WHERE id = $1 AND organization_id = $2',
-    [templateId, user.organizationId],
-  );
-  if (!check.rows.length) return c.json({ error: 'Template não encontrado' }, 404);
-
-  const toJsonb = (v: unknown) => (v != null ? JSON.stringify({ text: String(v) }) : null);
-
-  const result = await pool.query(
-    `UPDATE session_templates SET
-       name = COALESCE($3, name),
-       description = COALESCE($4, description),
-       subjective = COALESCE($5::jsonb, subjective),
-       objective = COALESCE($6::jsonb, objective),
-       assessment = COALESCE($7::jsonb, assessment),
-       plan = COALESCE($8::jsonb, plan),
-       is_global = COALESCE($9, is_global),
-       updated_at = NOW()
-     WHERE id = $1 AND organization_id = $2
-     RETURNING *`,
-    [
-      templateId,
-      user.organizationId,
-      body.name != null ? String(body.name).trim() || null : null,
-      body.description ?? null,
-      body.subjective != null ? toJsonb(body.subjective) : null,
-      body.objective != null ? toJsonb(body.objective) : null,
-      body.assessment != null ? toJsonb(body.assessment) : null,
-      body.plan != null ? toJsonb(body.plan) : null,
-      body.is_global ?? null,
-    ],
-  );
-  return c.json({ data: result.rows[0] });
-});
-
-app.delete('/templates/:templateId', requireAuth, async (c) => {
-  const user = c.get('user');
-  const pool = await createPool(c.env);
-  const { templateId } = c.req.param();
-
-  const check = await pool.query(
-    'SELECT id FROM session_templates WHERE id = $1 AND organization_id = $2',
-    [templateId, user.organizationId],
-  );
-  if (!check.rows.length) return c.json({ error: 'Template não encontrado' }, 404);
-
-  await pool.query('DELETE FROM session_templates WHERE id = $1', [templateId]);
-  return c.json({ ok: true });
+  if (!deleted) return c.json({ error: 'Anexo não encontrado' }, 404);
+  return c.json({ success: true, file_url: deleted.fileUrl });
 });
 
 export { app as sessionsRoutes };

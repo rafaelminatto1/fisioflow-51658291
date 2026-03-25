@@ -38,5 +38,11 @@ export * from "./tasks";
 // Financial & Billing
 export * from "./financial";
 
+// Clinical Resources & Patient Details
+export * from "./clinical";
+
+// Exercise Templates & Item Packages
+export * from "./templates";
+
 // Corporate Announcements & Policies
 export * from "./announcements";
