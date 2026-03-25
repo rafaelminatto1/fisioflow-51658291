@@ -225,7 +225,7 @@ export default function CalendarView({
 		handleDragStart: handleDragStartDndKit, handleDragOver: handleDragOverDndKit, handleDragEnd: handleDragEndDndKit,
 		handleConfirmReschedule: handleConfirmDndKit, handleCancelReschedule: handleCancelDndKit,
 		showOverCapacityDialog: showOverCapacityDndKit, pendingOverCapacity: pendingOverCapacityDndKit,
-		handleConfirmOverCapacity: handleConfirmOverCapacityDndKit, handleCancelOverCapacity: handleCancelDndKit,
+		handleConfirmOverCapacity: handleConfirmOverCapacityDndKit, handleCancelOverCapacity: handleCancelOverCapacityDndKit,
 	} = useCalendarDragDndKit({
 		onAppointmentReschedule, onOptimisticUpdate: handleOptimisticUpdate,
 		onRevertUpdate: handleRevertUpdate, getAppointmentsForSlot, getMinCapacityForInterval,
