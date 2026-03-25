@@ -3,7 +3,7 @@
  */
 
 import React from "react";
-const { useState, useMemo, useEffect, useCallback, useRef, memo } = React;
+import { useState, useMemo, useEffect, useCallback, useRef, memo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
 	format,
