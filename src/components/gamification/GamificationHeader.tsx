@@ -37,7 +37,7 @@ export default function GamificationHeader({
 					<div className="relative group">
 						<div className="absolute inset-0 rounded-full bg-white/20 blur-md transform group-hover:scale-110 transition-transform duration-500" />
 						<div className="relative h-24 w-24 rounded-full p-1 bg-white/10 backdrop-blur-sm ring-1 ring-white/30">
-							<svg className="w-full h-full transform -rotate-90">
+							<svg className="w-full h-full -rotate-90">
 								<circle
 									cx="50%"
 									cy="50%"

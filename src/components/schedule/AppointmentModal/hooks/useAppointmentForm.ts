@@ -11,15 +11,11 @@ import {
 	isAfter,
 } from "date-fns";
 import { useQueryClient } from "@tanstack/react-query";
-import { useNavigate } from "react-router-dom";
-import { toast } from "sonner";
+import { useNavigate, useSubmit, useNavigation } from "react-router-dom";
+import { toast } from "@/hooks/use-toast";
+import { useOrganizations } from "@/hooks/useOrganizations";
 
 import { useAuth } from "@/contexts/AuthContext";
-import {
-	useCreateAppointment,
-	useUpdateAppointment,
-	useDeleteAppointment,
-} from "@/hooks/useAppointments";
 import { useUsePackageSession } from "@/hooks/usePackages";
 import {
 	type AppointmentBase,
@@ -35,7 +31,7 @@ import {
 } from "@/utils/appointmentErrors";
 import { checkAppointmentConflict } from "@/utils/appointmentValidation";
 import { useScheduleCapacity } from "@/hooks/useScheduleCapacity";
-import { type DuplicateConfig } from "../DuplicateAppointmentDialog";
+import type { DuplicateConfig } from "../DuplicateAppointmentDialog";
 
 interface UseAppointmentFormProps {
 	appointment?: AppointmentBase | null;
@@ -83,13 +79,14 @@ export const useAppointmentForm = ({
 	effectiveTherapistId,
 }: UseAppointmentFormProps) => {
 	const navigate = useNavigate();
+	const submit = useSubmit();
+	const navigation = useNavigation();
 	const queryClient = useQueryClient();
-	const { mutateAsync: createAppointmentAsync, isPending: isCreating } =
-		useCreateAppointment();
-	const { mutateAsync: updateAppointmentAsync, isPending: isUpdating } =
-		useUpdateAppointment();
-	const { mutate: deleteAppointmentMutation } = useDeleteAppointment();
+	const { currentOrganization } = useOrganizations();
 	const { mutateAsync: consumeSession } = useUsePackageSession();
+
+	const isCreating = navigation.formData?.get("intent") === "create";
+	const isUpdating = navigation.formData?.get("intent") === "update";
 	const { getMinCapacityForInterval } = useScheduleCapacity();
 	const scheduleOnlyRef = useRef(false);
 	const appointmentsRef = useRef(appointments);
@@ -265,63 +262,71 @@ export const useAppointmentForm = ({
 			const occurrences = buildRecurringDates(startDate, recurringConfig);
 
 			if (occurrences.length === 0) {
-				toast.error(
-					"Nenhuma data gerada para a recorrência. Verifique os dias selecionados.",
-				);
+				toast({
+					variant: "destructive",
+					description: "Nenhuma data gerada para a recorrência. Verifique os dias selecionados.",
+				});
 				return;
 			}
 
-			toast.loading(`Criando ${occurrences.length} agendamentos...`, {
-				id: "recurring-create",
+			toast({
+				title: "Agendamentos recorrentes",
+				description: `Criando ${occurrences.length} agendamentos...`,
 			});
+
 			let created = 0;
-			let firstId: string | undefined;
 			for (const occ of occurrences) {
 				const occEndTime = new Date(
 					new Date(`${format(occ.date, "yyyy-MM-dd")}T${occ.time}`).getTime() +
 						appointmentData.duration * 60000,
 				);
-				try {
-					const result = await createAppointmentAsync({
-						...formattedData,
-						date: format(occ.date, "yyyy-MM-dd"),
-						start_time: occ.time,
-						end_time: format(occEndTime, "HH:mm"),
-						ignoreCapacity,
-					} as unknown as AppointmentFormData);
-					if (!firstId) firstId = (result as { id?: string })?.id;
-					created++;
-				} catch (err) {
-					logger.error(
-						"Erro ao criar agendamento recorrente",
-						err,
-						"useAppointmentForm",
-					);
-				}
+				
+				const occData = {
+					...formattedData,
+					date: format(occ.date, "yyyy-MM-dd"),
+					start_time: occ.time,
+					end_time: format(occEndTime, "HH:mm"),
+					ignoreCapacity,
+				};
+
+				submit(
+					{
+						intent: "create",
+						organizationId: currentOrganization?.id || "",
+						data: JSON.stringify(occData),
+					},
+					{ method: "post" }
+				);
+				created++;
 			}
-			toast.dismiss("recurring-create");
-			toast.success(
-				`${created} de ${occurrences.length} agendamentos criados com sucesso!`,
-			);
+			
 			scheduleOnlyRef.current = false;
 			onClose();
 			return;
 		}
 
 		if (appointmentId) {
-			await updateAppointmentAsync({
-				appointmentId: appointmentId,
-				updates: formattedData,
-				ignoreCapacity,
-			});
+			submit(
+				{
+					intent: "update",
+					id: appointmentId,
+					organizationId: currentOrganization?.id || "",
+					data: JSON.stringify({ ...formattedData, ignoreCapacity }),
+				},
+				{ method: "post" }
+			);
 		} else {
-			const newAppointment = await createAppointmentAsync({
-				...formattedData,
-				ignoreCapacity,
-			} as unknown as AppointmentFormData);
-			appointmentId = (newAppointment as { id?: string })?.id;
+			submit(
+				{
+					intent: "create",
+					organizationId: currentOrganization?.id || "",
+					data: JSON.stringify({ ...formattedData, ignoreCapacity }),
+				},
+				{ method: "post" }
+			);
 		}
 
+		// Handle package session debit (this still uses a hook as it's a separate domain logic)
 		if (
 			appointmentData.session_package_id &&
 			appointmentData.payment_status === "paid_package" &&
@@ -336,7 +341,10 @@ export const useAppointmentForm = ({
 				}
 			} catch (err) {
 				logger.error("Error consuming session", err, "useAppointmentForm");
-				toast.error("Erro ao debitar sessão do pacote. Verifique o saldo.");
+				toast({
+					variant: "destructive",
+					description: "Erro ao debitar sessão do pacote. Verifique o saldo.",
+				});
 			}
 		}
 
@@ -362,24 +370,27 @@ export const useAppointmentForm = ({
 			type: "Fisioterapia",
 		};
 
-		if (
-			!normalizedData.appointment_time ||
-			normalizedData.appointment_time === ""
-		) {
-			toast.error("Horário do agendamento é obrigatório");
+		if (!normalizedData.appointment_time) {
+			toast({
+				variant: "destructive",
+				description: "Horário do agendamento é obrigatório",
+			});
 			return;
 		}
 
-		if (!normalizedData.patient_id || normalizedData.patient_id === "") {
-			toast.error("ID do paciente é obrigatório");
+		if (!normalizedData.patient_id) {
+			toast({
+				variant: "destructive",
+				description: "ID do paciente é obrigatório",
+			});
 			return;
 		}
 
-		if (
-			!normalizedData.appointment_date ||
-			normalizedData.appointment_date === ""
-		) {
-			toast.error("Data do agendamento é obrigatória");
+		if (!normalizedData.appointment_date) {
+			toast({
+				variant: "destructive",
+				description: "Data do agendamento é obrigatória",
+			});
 			return;
 		}
 
@@ -424,23 +435,20 @@ export const useAppointmentForm = ({
 
 	const handleDelete = () => {
 		if (appointment?.id) {
-			deleteAppointmentMutation(appointment.id, {
-				onSuccess: () => {
-					toast.success("Agendamento excluído com sucesso");
-					onClose();
+			submit(
+				{
+					intent: "delete",
+					id: appointment.id,
+					organizationId: currentOrganization?.id || "",
 				},
-				onError: () => {
-					toast.error("Erro ao excluir agendamento");
-				},
-			});
+				{ method: "post" }
+			);
+			onClose();
 		}
 	};
 
 	const handleDuplicate = async (config: DuplicateConfig) => {
 		if (appointment && config.dates.length > 0) {
-			let successCount = 0;
-			let errorCount = 0;
-
 			config.dates.forEach((date) => {
 				const newTime = config.newTime || appointment.time;
 				const newDate = format(date, "yyyy-MM-dd");
@@ -450,47 +458,34 @@ export const useAppointmentForm = ({
 				);
 				const endTimeString = format(endTime, "HH:mm");
 
-				createAppointmentAsync(
+				const duplicateData = {
+					patient_id: appointment.patientId,
+					therapist_id: appointment.therapistId || null,
+					date: newDate,
+					start_time: newTime,
+					end_time: endTimeString,
+					status: appointment.status,
+					payment_status: appointment.payment_status || "pending",
+					notes: appointment.notes || "",
+					session_type: (appointment.type === "Fisioterapia"
+						? "individual"
+						: "group") as "individual" | "group",
+				};
+
+				submit(
 					{
-						patient_id: appointment.patientId,
-						therapist_id: appointment.therapistId || null,
-						date: newDate,
-						start_time: newTime,
-						end_time: endTimeString,
-						status: appointment.status,
-						payment_status: appointment.payment_status || "pending",
-						notes: appointment.notes || "",
-						session_type: (appointment.type === "Fisioterapia"
-							? "individual"
-							: "group") as "individual" | "group",
-					} as unknown as AppointmentFormData,
-					{
-						onSuccess: () => {
-							successCount++;
-							if (successCount + errorCount === config.dates.length) {
-								if (errorCount === 0)
-									toast.success(
-										`${successCount} agendamentos duplicados com sucesso!`,
-									);
-								else
-									toast.warning(
-										`${successCount} duplicados, ${errorCount} falharam.`,
-									);
-							}
-						},
-						onError: () => {
-							errorCount++;
-							if (successCount + errorCount === config.dates.length) {
-								toast.warning(
-									`${successCount} duplicados, ${errorCount} falharam.`,
-								);
-							}
-						},
+						intent: "create",
+						organizationId: currentOrganization?.id || "",
+						data: JSON.stringify(duplicateData),
 					},
+					{ method: "post" }
 				);
 			});
 
-			toast.info("Iniciando duplicação de agendamentos...");
+			toast({
+				title: "Duplicando agendamentos",
+				description: `Iniciando duplicação de ${config.dates.length} agendamentos...`,
+			});
 		}
 	};
 

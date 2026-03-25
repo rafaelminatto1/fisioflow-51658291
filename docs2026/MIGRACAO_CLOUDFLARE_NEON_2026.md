@@ -107,3 +107,35 @@ Assim que a suite `migration:verify` passar 100% em produção por 7 dias seguid
 - **Verificação rápida:** `pnpm migration:verify`
 - **Build & Deploy:** `pnpm build && pnpm workers:deploy`
 - **Auditoria:** `python .agent/scripts/checklist.py .`
+
+---
+
+## Major Version Upgrades (Março 2026)
+
+Em Março de 2026, o FisioFlow passou por uma série de atualizações de dependências major, modernizando o stack e alinhando o projeto com as versões mais recentes das principais bibliotecas e frameworks.
+
+| Pacote                 | Versão Antiga | Versão Nova   | Mudança Principal                                       |
+| ---------------------- | ------------- | ------------- | ------------------------------------------------------- |
+| **Tailwind CSS**       | v3            | v4            | `@tailwindcss/vite`, CSS-first com `@theme`, sem config |
+| **lucide-react**       | v0.x          | v1            | Remoção de brand icons (Instagram, Facebook, etc.)      |
+| **react-resizable-panels** | v3            | v4            | `PanelGroup` → `Group`, `PanelResizeHandle` → `Separator` |
+| **Zod**                | v3            | v4            | `.errors` → `.issues`, `invalid_type_error` → `error`     |
+| **Recharts**           | v2            | v3            | Tipos de `Formatter` e `TooltipProps` alterados         |
+| **React Router**       | v6            | v7            | Uso de **Library Mode** (`createBrowserRouter`)         |
+| **Vite**               | v7            | v8            | Adoção do **Rolldown** como bundler                     |
+
+### Resumo das Mudanças Técnicas
+
+-   **Tailwind CSS v4:** A configuração agora é CSS-first, definida em `src/index.css` com um bloco `@theme`. O plugin `@tailwindcss/vite` substituiu a configuração via PostCSS, e arquivos CSS secundários agora usam `@reference` para importar o tema.
+
+-   **Lucide React v1:** Todos os ícones de marcas foram removidos. O projeto adotou substituições internas (ex: `Instagram` → `Camera`).
+
+-   **React Resizable Panels v4:** Os componentes foram renomeados para maior clareza (`PanelGroup` para `Group`, `PanelResizeHandle` para `Separator`).
+
+-   **Zod v4:** A API de erros foi atualizada, com `ZodError.errors` se tornando `ZodError.issues` para maior consistência.
+
+-   **Recharts v3:** Foram introduzidas quebras de tipo no `Formatter` e `TooltipProps`, exigindo workarounds como `@ts-expect-error` para manter a compatibilidade.
+
+-   **React Router v7:** O projeto utiliza o "library mode" para roteamento, configurado programaticamente com `createBrowserRouter`. O "framework mode" (file-based routing) **não é** utilizado.
+
+-   **Vite 8 + Rolldown:** O bundler foi atualizado para Rolldown, a alternativa em Rust para o Rollup, visando melhor performance de build. A configuração de code-splitting foi migrada para `rolldownOptions`.

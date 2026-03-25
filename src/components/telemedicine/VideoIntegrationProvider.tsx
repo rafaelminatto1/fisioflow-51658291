@@ -269,7 +269,7 @@ export function VideoCall({
 											el.srcObject = localStream;
 										}
 									}}
-									className="w-full h-full object-cover transform scale-x-[-1]"
+									className="w-full h-full object-cover scale-x-[-1]"
 								/>
 							</div>
 						)}

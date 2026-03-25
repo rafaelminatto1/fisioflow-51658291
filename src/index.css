@@ -1,8 +1,7 @@
-@import 'tailwindcss';
-
+@import "tailwindcss";
+@plugin "tailwindcss-animate";
 @theme {
   --font-sans: 'Inter', ui-sans-serif, system-ui, sans-serif;
-
   /* Breakpoints */
   --breakpoint-xs: 480px;
   --breakpoint-sm: 640px;
@@ -14,44 +13,33 @@
   --breakpoint-ipad-pro: 1024px;
   --breakpoint-iphone: 390px;
   --breakpoint-iphone-max: 430px;
-
   /* Colors */
   --color-border: hsl(var(--border));
   --color-input: hsl(var(--input));
   --color-ring: hsl(var(--ring));
   --color-background: hsl(var(--background));
   --color-foreground: hsl(var(--foreground));
-
   --color-primary: hsl(var(--primary));
   --color-primary-foreground: hsl(var(--primary-foreground));
   --color-primary-glow: hsl(var(--primary-glow));
   --color-primary-dark: hsl(var(--primary-dark));
-
   --color-secondary: hsl(var(--secondary));
   --color-secondary-foreground: hsl(var(--secondary-foreground));
   --color-secondary-light: hsl(var(--secondary-light));
-
   --color-success: hsl(var(--success));
   --color-success-foreground: hsl(var(--success-foreground));
-
   --color-warning: hsl(var(--warning));
   --color-warning-foreground: hsl(var(--warning-foreground));
-
   --color-destructive: hsl(var(--destructive));
   --color-destructive-foreground: hsl(var(--destructive-foreground));
-
   --color-muted: hsl(var(--muted));
   --color-muted-foreground: hsl(var(--muted-foreground));
-
   --color-accent: hsl(var(--accent));
   --color-accent-foreground: hsl(var(--accent-foreground));
-
   --color-popover: hsl(var(--popover));
   --color-popover-foreground: hsl(var(--popover-foreground));
-
   --color-card: hsl(var(--card));
   --color-card-foreground: hsl(var(--card-foreground));
-
   --color-sidebar-background: hsl(var(--sidebar-background));
   --color-sidebar-foreground: hsl(var(--sidebar-foreground));
   --color-sidebar-primary: hsl(var(--sidebar-primary));
@@ -60,7 +48,6 @@
   --color-sidebar-accent-foreground: hsl(var(--sidebar-accent-foreground));
   --color-sidebar-border: hsl(var(--sidebar-border));
   --color-sidebar-ring: hsl(var(--sidebar-ring));
-
   /* Pain Map / EVA Scale Colors */
   --color-pain-0: #9ca3af;
   --color-pain-1: #bef264;
@@ -77,12 +64,10 @@
   --color-pain-gauge-med: #eab308;
   --color-pain-gauge-high: #ef4444;
   --color-pain-gauge-severe: #7f1d1d;
-
   /* Border Radius */
   --radius-lg: var(--radius);
   --radius-md: calc(var(--radius) - 2px);
   --radius-sm: calc(var(--radius) - 4px);
-
   /* Shadow */
   --shadow-medical: var(--shadow-medical);
   --shadow-card: var(--shadow-card);
@@ -91,7 +76,6 @@
   --shadow-premium-md: var(--shadow-premium-md);
   --shadow-premium-lg: var(--shadow-premium-lg);
   --shadow-inner-border: var(--shadow-inner-border);
-
   /* Animations & Keyframes */
   @keyframes accordion-down {
     from { height: 0; }
@@ -128,7 +112,6 @@
     0% { opacity: 0; transform: rotate(-8deg) scale(0.95); }
     100% { opacity: 1; transform: rotate(0) scale(1); }
   }
-
   --animate-accordion-down: accordion-down 0.2s ease-out;
   --animate-accordion-up: accordion-up 0.2s ease-out;
   --animate-pulse-glow: pulse-glow 2s ease-in-out infinite;
@@ -144,32 +127,22 @@
   --animate-bounce-subtle: bounce-subtle 2s ease-in-out infinite;
   --animate-rotate-in: rotate-in 0.3s ease-out;
 }
-
-/*
-  The default border color has changed to `currentcolor` in Tailwind CSS v4,
-  so we've added these compatibility styles to make sure everything still
-  looks the same as it did with Tailwind CSS v3.
-*/
-  If we ever want to remove these styles, we need to add an explicit border
-  color utility to any element that depends on these defaults.
-*/
+/* Tailwind CSS v4 Compatibility: The default border color changed to currentcolor. These compatibility styles maintain visual consistency with Tailwind v3. To remove, add explicit border color utilities to affected elements. */
 @layer base {
-  *,
-  ::after,
-  ::before,
-  ::backdrop,
-  ::file-selector-button {
-    border-color: var(--color-gray-200, currentcolor);
-  }
+	*,
+	::after,
+	::before,
+	::backdrop,
+	::file-selector-button {
+		border-color: var(--color-gray-200, currentcolor);
+	}
 }
-
 @utility hover-scale {
   transition: transform 0.2s ease-out;
   &:hover {
     transform: scale(1.02);
   }
 }
-
 @utility hover-lift {
   transition: all 0.3s ease-out;
   &:hover {
@@ -177,7 +150,6 @@
     box-shadow: var(--shadow-hover);
   }
 }
-
 @utility scrollbar-hide {
   -ms-overflow-style: none;
   scrollbar-width: none;
@@ -185,37 +157,30 @@
     display: none;
   }
 }
-
 @utility touch-target {
   min-height: 44px;
   min-width: 44px;
 }
-
 @utility pt-safe {
   padding-top: env(safe-area-inset-top);
 }
-
 @utility pb-safe {
   padding-bottom: env(safe-area-inset-bottom);
 }
-
 @utility px-safe {
   padding-left: env(safe-area-inset-left);
   padding-right: env(safe-area-inset-right);
 }
-
 @utility py-safe {
   padding-top: env(safe-area-inset-top);
   padding-bottom: env(safe-area-inset-bottom);
 }
-
 @utility p-safe {
   padding-top: env(safe-area-inset-top);
   padding-bottom: env(safe-area-inset-bottom);
   padding-left: env(safe-area-inset-left);
   padding-right: env(safe-area-inset-right);
 }
-
 @utility animate-delay-0 { animation-delay: 0ms; }
 @utility animate-delay-1 { animation-delay: 50ms; }
 @utility animate-delay-2 { animation-delay: 100ms; }
@@ -227,7 +192,6 @@
 @utility animate-delay-8 { animation-delay: 400ms; }
 @utility animate-delay-9 { animation-delay: 450ms; }
 @utility animate-delay-10 { animation-delay: 500ms; }
-
 @utility card-hover {
   transition: all 0.2s ease-out;
   &:hover {
@@ -235,7 +199,6 @@
     box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1);
   }
 }
-
 @utility glass {
   background: rgba(255, 255, 255, 0.7);
   backdrop-filter: blur(12px);
@@ -243,7 +206,6 @@
   border: 1px solid rgba(255, 255, 255, 0.3);
   box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
 }
-
 @utility glass-hover {
   transition: all 0.3s ease;
   &:hover {
@@ -252,7 +214,6 @@
     transform: translateY(-1px);
   }
 }
-
 @utility glass-dark {
   background: rgba(17, 24, 39, 0.7);
   backdrop-filter: blur(12px);
@@ -260,94 +221,58 @@
   border: 1px solid rgba(255, 255, 255, 0.05);
   box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.3), 0 2px 4px -1px rgba(0, 0, 0, 0.1);
 }
-
 @utility animate-fade-in {
   /* Animações personalizadas */
   animation: fade-in 0.6s cubic-bezier(0.4, 0, 0.2, 1);
-
   /* Reduced motion for users who prefer it */
-
   /* High contrast mode support */
-
   /* Schedule-specific styling moved to src/styles/schedule.css */
-
   /* Grid/widget styling moved to src/components/ui/grid-layout.css */
 }
-
 @utility animate-slide-up {
   animation: slide-up 0.5s cubic-bezier(0.4, 0, 0.2, 1);
-
   /* Reduced motion for users who prefer it */
-
   /* High contrast mode support */
-
   /* Schedule-specific styling moved to src/styles/schedule.css */
-
   /* Grid/widget styling moved to src/components/ui/grid-layout.css */
 }
-
 @utility animate-scale-in {
   animation: scale-in 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-
   /* Reduced motion for users who prefer it */
-
   /* High contrast mode support */
-
   /* Schedule-specific styling moved to src/styles/schedule.css */
-
   /* Grid/widget styling moved to src/components/ui/grid-layout.css */
 }
-
 @utility animate-bounce-in {
   animation: bounce-in var(--bounce-duration)
     cubic-bezier(0.68, -0.55, 0.265, 1.55);
-
   /* Reduced motion for users who prefer it */
-
   /* High contrast mode support */
-
   /* Schedule-specific styling moved to src/styles/schedule.css */
-
   /* Grid/widget styling moved to src/components/ui/grid-layout.css */
 }
-
 @utility animate-slide-up-fade {
   animation: slide-up-fade 0.4s ease-out;
-
   /* Reduced motion for users who prefer it */
-
   /* High contrast mode support */
-
   /* Schedule-specific styling moved to src/styles/schedule.css */
-
   /* Grid/widget styling moved to src/components/ui/grid-layout.css */
 }
-
 @utility animate-pulse-glow {
   animation: pulse-glow 2s ease-in-out infinite;
-
   /* Reduced motion for users who prefer it */
-
   /* High contrast mode support */
-
   /* Schedule-specific styling moved to src/styles/schedule.css */
-
   /* Grid/widget styling moved to src/components/ui/grid-layout.css */
 }
-
 @utility btn {
   -webkit-user-select: none;
   user-select: none;
-
   /* Reduced motion for users who prefer it */
-
   /* High contrast mode support */
-
   /* Schedule-specific styling moved to src/styles/schedule.css */
-
   /* Grid/widget styling moved to src/components/ui/grid-layout.css */
 }
-
 @utility group {
   @media (hover: none) and (pointer: coarse) {
     /* Disable hover effects on touch devices */
@@ -361,51 +286,37 @@
       opacity: 1;
     }
   }
-
   /* Reduced motion for users who prefer it */
-
   /* High contrast mode support */
-
   /* Schedule-specific styling moved to src/styles/schedule.css */
-
   /* Grid/widget styling moved to src/components/ui/grid-layout.css */
 }
-
-
 @utility is-using-keyboard {
   /* Class for keyboard navigation detection */
   &body *:focus-visible {
     outline: 2px solid hsl(var(--ring));
     outline-offset: 2px;
   }
-
   &body button:focus-visible {
     box-shadow:
       0 0 0 2px hsl(var(--background)),
       0 0 0 4px hsl(var(--ring));
   }
-
   & body a:focus-visible {
     box-shadow:
       0 0 0 2px hsl(var(--background)),
       0 0 0 4px hsl(var(--ring));
   }
-
   & body [role='button']:focus-visible {
     box-shadow:
       0 0 0 2px hsl(var(--background)),
       0 0 0 4px hsl(var(--ring));
   }
-
   /* Reduced motion for users who prefer it */
-
   /* High contrast mode support */
-
   /* Schedule-specific styling moved to src/styles/schedule.css */
-
   /* Grid/widget styling moved to src/components/ui/grid-layout.css */
 }
-
 @utility skip-to-content {
   /* Skip to content link for keyboard users */
   position: absolute;
@@ -415,7 +326,6 @@
   height: 1px;
   overflow: hidden;
   z-index: -999;
-
   &:focus {
     position: fixed;
     left: 0;
@@ -429,16 +339,11 @@
     border-radius: 0 0 0.5rem 0;
     font-weight: 600;
   }
-
   /* Reduced motion for users who prefer it */
-
   /* High contrast mode support */
-
   /* Schedule-specific styling moved to src/styles/schedule.css */
-
   /* Grid/widget styling moved to src/components/ui/grid-layout.css */
 }
-
 @utility sr-only {
   /* Visually hidden but accessible to screen readers */
   position: absolute;
@@ -450,16 +355,11 @@
   clip: rect(0, 0, 0, 0);
   white-space: nowrap;
   border-width: 0;
-
   /* Reduced motion for users who prefer it */
-
   /* High contrast mode support */
-
   /* Schedule-specific styling moved to src/styles/schedule.css */
-
   /* Grid/widget styling moved to src/components/ui/grid-layout.css */
 }
-
 @utility sr-only-focusable {
   /* Make element visible on focus */
   &:focus {
@@ -472,491 +372,421 @@
     clip: auto;
     white-space: normal;
   }
-
   /* Reduced motion for users who prefer it */
-
   /* High contrast mode support */
-
   /* Schedule-specific styling moved to src/styles/schedule.css */
-
   /* Grid/widget styling moved to src/components/ui/grid-layout.css */
 }
-
 @utility focus-trap {
   /* Focus trap utilities for modals */
   isolation: isolate;
-
   /* Reduced motion for users who prefer it */
-
   /* High contrast mode support */
-
   /* Schedule-specific styling moved to src/styles/schedule.css */
-
   /* Grid/widget styling moved to src/components/ui/grid-layout.css */
 }
-
 @utility appointment-card {
   /* Reduced motion for users who prefer it */
-
   /* High contrast mode support */
   @media (prefers-contrast: high) {
     border-width: 2px;
   }
-
   /* Schedule-specific styling moved to src/styles/schedule.css */
-
   /* Grid/widget styling moved to src/components/ui/grid-layout.css */
 }
-
 /* Definition of the design system. All colors, gradients, fonts, etc should be defined here. 
 All colors MUST be HSL.
 */
-
 @layer base {
-  :root {
-    /* Base colors - Professional and clean */
-    --background: 210 20% 98%;
-    --foreground: 224 71.4% 4.1%;
-
-    --card: 0 0% 100%;
-    --card-foreground: 224 71.4% 4.1%;
-
-    --popover: 0 0% 100%;
-    --popover-foreground: 224 71.4% 4.1%;
-
-    /* Primary - Refined depth */
-    --primary: 211 100% 50%;
-    --primary-foreground: 210 20% 98%;
-    --primary-hover: 211 100% 45%;
-    --primary-glow: 211 100% 60% / 0.15;
-
-    /* Secondary - Warmer grays */
-    --secondary: 220 14.3% 95.9%;
-    --secondary-foreground: 220.9 39.3% 11%;
-
-    /* Success - Emerald depth */
-    --success: 158 64% 52%;
-    --success-foreground: 0 0% 100%;
-
-    /* Warning - Amber depth */
-    --warning: 38 92% 50%;
-    --warning-foreground: 0 0% 100%;
-
-    /* Muted - Softened */
-    --muted: 220 14.3% 95.9%;
-    --muted-foreground: 220 8.9% 46.1%;
-
-    /* Accent - Refined interactives */
-    --accent: 158 64% 52%;
-    --accent-foreground: 220.9 39.3% 11%;
-
-    /* Destructive */
-    --destructive: 0 84.2% 60.2%;
-    --destructive-foreground: 210 20% 98%;
-
-    /* Borders & Inputs */
-    --border: 220 13% 91%;
-    --input: 220 13% 91%;
-    --ring: 211 100% 50%;
-
-    /* Premium shadows - Avoid generic looks */
-    --shadow-premium-sm: 0 2px 4px rgba(0, 0, 0, 0.02), 0 1px 2px rgba(0, 0, 0, 0.02);
-    --shadow-premium-md: 0 12px 24px -10px rgba(0, 0, 0, 0.1), 0 4px 8px -4px rgba(0, 0, 0, 0.05);
-    --shadow-premium-lg: 0 32px 64px -16px rgba(0, 0, 0, 0.12), 0 16px 32px -8px rgba(0, 0, 0, 0.08);
-    --shadow-premium-xl: 0 48px 96px -24px rgba(0, 0, 0, 0.15), 0 32px 64px -12px rgba(0, 0, 0, 0.1);
-
-    /* Visual Layering Shadows */
-    --shadow-inner-border: inset 0 0 0 1px rgba(0, 0, 0, 0.05), 0 4px 12px -2px rgba(0, 0, 0, 0.08);
-
-    --radius: 1rem;
-    /* Slightly more rounded for premium feel */
-
-    /* Sidebar - Clean and professional */
-    --sidebar-background: 0 0% 100%;
-    --sidebar-foreground: 222.2 47.4% 11.2%;
-    --sidebar-primary: 210 90% 51%;
-    --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 220 13% 95%;
-    --sidebar-accent-foreground: 222.2 47.4% 11.2%;
-    --sidebar-border: 220 13% 91%;
-    --sidebar-ring: 210 90% 51%;
-
-    /* Appointment Status Colors */
-    --apt-confirmed: 142 71% 45%;
-    --apt-scheduled: 217 91% 60%;
-    --apt-pending: 38 92% 50%;
-    --apt-inprogress: 189 94% 43%;
-    --apt-waiting: 239 84% 67%;
-    --apt-late: 48 96% 53%;
-    --apt-completed: 271 81% 56%;
-    --apt-rescheduled: 25 95% 53%;
-    --apt-cancelled: 0 84% 60%;
-    --apt-noshow: 350 89% 60%;
-
-    /* Appointment Shadows */
-    --shadow-apt: 0 4px 12px -2px;
-    --shadow-apt-hover: 0 8px 20px -4px;
-
-    /* Premium Accents */
-    --accent-teal: 170 85% 50%; /* #13ecc8 */
-    --accent-teal-glow: 170 85% 50% / 0.3;
-  }
-
-  .dark {
-    /* Base colors - Dark mode */
-    --background: 222.2 47.4% 11.2%;
-    --foreground: 210 40% 98%;
-
-    --card: 222.2 47.4% 11.2%;
-    --card-foreground: 210 40% 98%;
-
-    --popover: 222.2 47.4% 11.2%;
-    --popover-foreground: 210 40% 98%;
-
-    /* Primary - Slightly brighter in dark mode (WCAG AA compliant - 4.5:1 contrast) */
-    --primary: 210 95% 38%;
-    --primary-foreground: 0 0% 100%;
-    --primary-hover: 210 95% 33%;
-    --primary-glow: 210 95% 43%;
-
-    /* Secondary - Dark grays */
-    --secondary: 217.2 32.6% 17.5%;
-    --secondary-foreground: 210 40% 98%;
-
-    /* Success */
-    --success: 158 64% 52%;
-    --success-foreground: 222.2 47.4% 11.2%;
-
-    /* Warning */
-    --warning: 43 96% 56%;
-    --warning-foreground: 215 30% 8%;
-
-    /* Muted */
-
-    /* Muted - Dark backgrounds */
-    --muted: 217.2 32.6% 17.5%;
-    --muted-foreground: 215 20.2% 65.1%;
-
-    /* Accent */
-    --accent: 158 64% 52%;
-    --accent-foreground: 222.2 47.4% 11.2%;
-
-    /* Destructive */
-    --destructive: 0 84% 60%;
-    --destructive-foreground: 210 40% 98%;
-
-    /* Borders & Inputs */
-    --border: 217.2 32.6% 17.5%;
-    --input: 217.2 32.6% 17.5%;
-    --ring: 210 90% 55%;
-
-    /* Dark mode gradients */
-    --gradient-primary: linear-gradient(135deg, hsl(210 90% 55%), hsl(210 95% 65%));
-    --gradient-success: linear-gradient(135deg, hsl(158 64% 52%), hsl(158 74% 62%));
-    --gradient-card: linear-gradient(145deg, hsl(222.2 47.4% 11.2%), hsl(217.2 32.6% 14%));
-    --gradient-background: linear-gradient(180deg, hsl(222.2 47.4% 11.2%), hsl(217.2 32.6% 13%));
-
-    /* Dark mode shadows */
-    --shadow-sm: 0 1px 2px 0 hsl(0 0% 0% / 0.5);
-    --shadow-md: 0 4px 6px -1px hsl(0 0% 0% / 0.3);
-    --shadow-lg: 0 10px 15px -3px hsl(0 0% 0% / 0.2);
-    --shadow-card: 0 2px 8px -2px hsl(0 0% 0% / 0.3);
-    --shadow-hover: 0 8px 24px -8px hsl(210 90% 55% / 0.3);
-
-    /* Sidebar dark */
-    --sidebar-background: 222.2 47.4% 11.2%;
-    --sidebar-foreground: 210 40% 98%;
-    --sidebar-primary: 210 90% 55%;
-    --sidebar-primary-foreground: 222.2 47.4% 11.2%;
-    --sidebar-accent: 217.2 32.6% 17.5%;
-    --sidebar-accent-foreground: 210 40% 98%;
-    --sidebar-border: 217.2 32.6% 17.5%;
-    --sidebar-ring: 210 90% 55%;
-  }
+	:root {
+		/* Base colors - Professional and clean */
+		--background: 210 20% 98%;
+		--foreground: 224 71.4% 4.1%;
+		--card: 0 0% 100%;
+		--card-foreground: 224 71.4% 4.1%;
+		--popover: 0 0% 100%;
+		--popover-foreground: 224 71.4% 4.1%;
+		/* Primary - Refined depth */
+		--primary: 211 100% 50%;
+		--primary-foreground: 210 20% 98%;
+		--primary-hover: 211 100% 45%;
+		--primary-glow: 211 100% 60% / 0.15;
+		/* Secondary - Warmer grays */
+		--secondary: 220 14.3% 95.9%;
+		--secondary-foreground: 220.9 39.3% 11%;
+		/* Success - Emerald depth */
+		--success: 158 64% 52%;
+		--success-foreground: 0 0% 100%;
+		/* Warning - Amber depth */
+		--warning: 38 92% 50%;
+		--warning-foreground: 0 0% 100%;
+		/* Muted - Softened */
+		--muted: 220 14.3% 95.9%;
+		--muted-foreground: 220 8.9% 46.1%;
+		/* Accent - Refined interactives */
+		--accent: 158 64% 52%;
+		--accent-foreground: 220.9 39.3% 11%;
+		/* Destructive */
+		--destructive: 0 84.2% 60.2%;
+		--destructive-foreground: 210 20% 98%;
+		/* Borders & Inputs */
+		--border: 220 13% 91%;
+		--input: 220 13% 91%;
+		--ring: 211 100% 50%;
+		/* Premium shadows - Avoid generic looks */
+		--shadow-premium-sm:
+			0 2px 4px rgba(0, 0, 0, 0.02), 0 1px 2px rgba(0, 0, 0, 0.02);
+		--shadow-premium-md:
+			0 12px 24px -10px rgba(0, 0, 0, 0.1), 0 4px 8px -4px rgba(0, 0, 0, 0.05);
+		--shadow-premium-lg:
+			0 32px 64px -16px rgba(0, 0, 0, 0.12),
+			0 16px 32px -8px rgba(0, 0, 0, 0.08);
+		--shadow-premium-xl:
+			0 48px 96px -24px rgba(0, 0, 0, 0.15),
+			0 32px 64px -12px rgba(0, 0, 0, 0.1);
+		/* Visual Layering Shadows */
+		--shadow-inner-border:
+			inset 0 0 0 1px rgba(0, 0, 0, 0.05), 0 4px 12px -2px rgba(0, 0, 0, 0.08);
+		--radius: 1rem;
+		/* Slightly more rounded for premium feel */
+		/* Sidebar - Clean and professional */
+		--sidebar-background: 0 0% 100%;
+		--sidebar-foreground: 222.2 47.4% 11.2%;
+		--sidebar-primary: 210 90% 51%;
+		--sidebar-primary-foreground: 0 0% 100%;
+		--sidebar-accent: 220 13% 95%;
+		--sidebar-accent-foreground: 222.2 47.4% 11.2%;
+		--sidebar-border: 220 13% 91%;
+		--sidebar-ring: 210 90% 51%;
+		/* Appointment Status Colors */
+		--apt-confirmed: 142 71% 45%;
+		--apt-scheduled: 217 91% 60%;
+		--apt-pending: 38 92% 50%;
+		--apt-inprogress: 189 94% 43%;
+		--apt-waiting: 239 84% 67%;
+		--apt-late: 48 96% 53%;
+		--apt-completed: 271 81% 56%;
+		--apt-rescheduled: 25 95% 53%;
+		--apt-cancelled: 0 84% 60%;
+		--apt-noshow: 350 89% 60%;
+		/* Appointment Shadows */
+		--shadow-apt: 0 4px 12px -2px;
+		--shadow-apt-hover: 0 8px 20px -4px;
+		/* Premium Accents */
+		--accent-teal: 170 85% 50%; /* #13ecc8 */
+		--accent-teal-glow: 170 85% 50% / 0.3;
+	}
+	.dark {
+		/* Base colors - Dark mode */
+		--background: 222.2 47.4% 11.2%;
+		--foreground: 210 40% 98%;
+		--card: 222.2 47.4% 11.2%;
+		--card-foreground: 210 40% 98%;
+		--popover: 222.2 47.4% 11.2%;
+		--popover-foreground: 210 40% 98%;
+		/* Primary - Slightly brighter in dark mode (WCAG AA compliant - 4.5:1 contrast) */
+		--primary: 210 95% 38%;
+		--primary-foreground: 0 0% 100%;
+		--primary-hover: 210 95% 33%;
+		--primary-glow: 210 95% 43%;
+		/* Secondary - Dark grays */
+		--secondary: 217.2 32.6% 17.5%;
+		--secondary-foreground: 210 40% 98%;
+		/* Success */
+		--success: 158 64% 52%;
+		--success-foreground: 222.2 47.4% 11.2%;
+		/* Warning */
+		--warning: 43 96% 56%;
+		--warning-foreground: 215 30% 8%;
+		/* Muted */
+		/* Muted - Dark backgrounds */
+		--muted: 217.2 32.6% 17.5%;
+		--muted-foreground: 215 20.2% 65.1%;
+		/* Accent */
+		--accent: 158 64% 52%;
+		--accent-foreground: 222.2 47.4% 11.2%;
+		/* Destructive */
+		--destructive: 0 84% 60%;
+		--destructive-foreground: 210 40% 98%;
+		/* Borders & Inputs */
+		--border: 217.2 32.6% 17.5%;
+		--input: 217.2 32.6% 17.5%;
+		--ring: 210 90% 55%;
+		/* Dark mode gradients */
+		--gradient-primary: linear-gradient(
+			135deg,
+			hsl(210 90% 55%),
+			hsl(210 95% 65%)
+		);
+		--gradient-success: linear-gradient(
+			135deg,
+			hsl(158 64% 52%),
+			hsl(158 74% 62%)
+		);
+		--gradient-card: linear-gradient(
+			145deg,
+			hsl(222.2 47.4% 11.2%),
+			hsl(217.2 32.6% 14%)
+		);
+		--gradient-background: linear-gradient(
+			180deg,
+			hsl(222.2 47.4% 11.2%),
+			hsl(217.2 32.6% 13%)
+		);
+		/* Dark mode shadows */
+		--shadow-sm: 0 1px 2px 0 hsl(0 0% 0% / 0.5);
+		--shadow-md: 0 4px 6px -1px hsl(0 0% 0% / 0.3);
+		--shadow-lg: 0 10px 15px -3px hsl(0 0% 0% / 0.2);
+		--shadow-card: 0 2px 8px -2px hsl(0 0% 0% / 0.3);
+		--shadow-hover: 0 8px 24px -8px hsl(210 90% 55% / 0.3);
+		/* Sidebar dark */
+		--sidebar-background: 222.2 47.4% 11.2%;
+		--sidebar-foreground: 210 40% 98%;
+		--sidebar-primary: 210 90% 55%;
+		--sidebar-primary-foreground: 222.2 47.4% 11.2%;
+		--sidebar-accent: 217.2 32.6% 17.5%;
+		--sidebar-accent-foreground: 210 40% 98%;
+		--sidebar-border: 217.2 32.6% 17.5%;
+		--sidebar-ring: 210 90% 55%;
+	}
 }
-
 @layer base {
-  * {
-    @apply border-border;
-  }
-
-  body {
-    @apply bg-background text-foreground antialiased;
-    font-family: 'Inter', sans-serif;
-    font-feature-settings: 'rlig' 1, 'calt' 1;
-  }
-
-  /* Scrollbar styling */
-  ::-webkit-scrollbar {
-    width: 8px;
-    height: 8px;
-  }
-
-  ::-webkit-scrollbar-track {
-    @apply bg-muted/30;
-  }
-
-  ::-webkit-scrollbar-thumb {
-    @apply bg-muted-foreground/30 rounded-lg;
-  }
-
-  ::-webkit-scrollbar-thumb:hover {
-    @apply bg-muted-foreground/50;
-  }
-
-  /* Login page gradient background */
-  .gradient-background-login {
-    background: linear-gradient(135deg, #e0f2fe 0%, #bbdefb 100%);
-  }
-
-  .dark .gradient-background-login {
-    background: linear-gradient(135deg, #1f3d53 0%, #1a2c3a 100%);
-  }
+	* {
+		@apply border-border;
+	}
+	body {
+		@apply bg-background text-foreground antialiased;
+		font-family: "Inter", sans-serif;
+		font-feature-settings:
+			"rlig" 1,
+			"calt" 1;
+	}
+	/* Scrollbar styling */
+	::-webkit-scrollbar {
+		width: 8px;
+		height: 8px;
+	}
+	::-webkit-scrollbar-track {
+		@apply bg-muted/30;
+	}
+	::-webkit-scrollbar-thumb {
+		@apply bg-muted-foreground/30 rounded-lg;
+	}
+	::-webkit-scrollbar-thumb:hover {
+		@apply bg-muted-foreground/50;
+	}
+	/* Login page gradient background */
+	.gradient-background-login {
+		background: linear-gradient(135deg, #e0f2fe 0%, #bbdefb 100%);
+	}
+	.dark .gradient-background-login {
+		background: linear-gradient(135deg, #1f3d53 0%, #1a2c3a 100%);
+	}
 }
-
 @layer utilities {
-  @keyframes fade-in {
-    from {
-      opacity: 0;
-      transform: translateY(10px);
-    }
-
-    to {
-      opacity: 1;
-      transform: translateY(0);
-    }
-  }
-
-  @keyframes slide-up {
-    from {
-      opacity: 0;
-      transform: translateY(20px);
-    }
-
-    to {
-      opacity: 1;
-      transform: translateY(0);
-    }
-  }
-
-  @keyframes scale-in {
-    from {
-      opacity: 0;
-      transform: scale(0.95);
-    }
-
-    to {
-      opacity: 1;
-      transform: scale(1);
-    }
-  }
-
-  @keyframes bounce-in {
-    0% {
-      transform: scale(0.95);
-      opacity: 0;
-    }
-
-    50% {
-      transform: scale(1.02);
-    }
-
-    100% {
-      transform: scale(1);
-      opacity: 1;
-    }
-  }
-
-  @keyframes slide-up-fade {
-    0% {
-      transform: translateY(var(--slide-distance));
-      opacity: 0;
-    }
-
-    100% {
-      transform: translateY(0);
-      opacity: 1;
-    }
-  }
-
-  @keyframes pulse-glow {
-
-    0%,
-    100% {
-      box-shadow: 0 0 0 0 hsl(var(--primary) / 0.4);
-    }
-
-    50% {
-      box-shadow: 0 0 20px 5px hsl(var(--primary) / 0.2);
-    }
-  }
-
-  @keyframes shimmer-background {
-    0% {
-      background-position: -1000px 0;
-    }
-
-    100% {
-      background-position: 1000px 0;
-    }
-  }
-
-  @keyframes shimmer-slide {
-    0% {
-      transform: translateX(-100%);
-    }
-
-    100% {
-      transform: translateX(100%);
-    }
-  }
-
-  /* iPad optimizations */
-  @media screen and (min-width: 768px) and (max-width: 1024px) {
-    :root {
-      font-size: 16px;
-    }
-  }
-
-  /* Disable tap highlight on iOS */
-  * {
-    -webkit-tap-highlight-color: transparent;
-  }
-
-  /* Smooth scrolling */
-  html {
-    -webkit-overflow-scrolling: touch;
-    scroll-behavior: smooth;
-  }
-
-  /* Better button press feedback on iOS */
-
-  /* Fix hover states interfering with touch on iOS */
-  @media (hover: none) and (pointer: coarse) {
-
-    /* Always show elements that are normally only visible on hover */
-    [class*="group-hover:opacity-0"] {
-      opacity: 1 !important;
-    }
-  }
-
-  /* ========================================
+	@keyframes fade-in {
+		from {
+			opacity: 0;
+			transform: translateY(10px);
+		}
+		to {
+			opacity: 1;
+			transform: translateY(0);
+		}
+	}
+	@keyframes slide-up {
+		from {
+			opacity: 0;
+			transform: translateY(20px);
+		}
+		to {
+			opacity: 1;
+			transform: translateY(0);
+		}
+	}
+	@keyframes scale-in {
+		from {
+			opacity: 0;
+			transform: scale(0.95);
+		}
+		to {
+			opacity: 1;
+			transform: scale(1);
+		}
+	}
+	@keyframes bounce-in {
+		0% {
+			transform: scale(0.95);
+			opacity: 0;
+		}
+		50% {
+			transform: scale(1.02);
+		}
+		100% {
+			transform: scale(1);
+			opacity: 1;
+		}
+	}
+	@keyframes slide-up-fade {
+		0% {
+			transform: translateY(var(--slide-distance));
+			opacity: 0;
+		}
+		100% {
+			transform: translateY(0);
+			opacity: 1;
+		}
+	}
+	@keyframes pulse-glow {
+		0%,
+		100% {
+			box-shadow: 0 0 0 0 hsl(var(--primary) / 0.4);
+		}
+		50% {
+			box-shadow: 0 0 20px 5px hsl(var(--primary) / 0.2);
+		}
+	}
+	@keyframes shimmer-background {
+		0% {
+			background-position: -1000px 0;
+		}
+		100% {
+			background-position: 1000px 0;
+		}
+	}
+	@keyframes shimmer-slide {
+		0% {
+			transform: translateX(-100%);
+		}
+		100% {
+			transform: translateX(100%);
+		}
+	}
+	/* iPad optimizations */
+	@media screen and (min-width: 768px) and (max-width: 1024px) {
+		:root {
+			font-size: 16px;
+		}
+	}
+	/* Disable tap highlight on iOS */
+	* {
+		-webkit-tap-highlight-color: transparent;
+	}
+	/* Smooth scrolling */
+	html {
+		-webkit-overflow-scrolling: touch;
+		scroll-behavior: smooth;
+	}
+	/* Better button press feedback on iOS */
+	/* Fix hover states interfering with touch on iOS */
+	@media (hover: none) and (pointer: coarse) {
+		/* Always show elements that are normally only visible on hover */
+		[class*="group-hover:opacity-0"] {
+			opacity: 1 !important;
+		}
+	}
+	/* ========================================
      ACCESSIBILITY UTILITIES
      ======================================== */
-
-  /* Focus visible styles - better keyboard navigation */
-  /* This implementation preserves accessibility while providing a cleaner visual experience:
+	/* Focus visible styles - better keyboard navigation */
+	/* This implementation preserves accessibility while providing a cleaner visual experience:
    * - :focus-visible shows outline for keyboard navigation (WCAG 2.4.7)
    * - :focus:not(:focus-visible) hides outline for mouse/touch users
    * - Screen readers still announce focus state regardless of visual outline
    * - This follows WCAG's "Focus Visible" understanding document guidelines
    */
-  :focus-visible {
-    outline: 2px solid hsl(var(--ring));
-    outline-offset: 2px;
-  }
-
-  /* Hide focus outline when using mouse/touch */
-  :focus:not(:focus-visible) {
-    outline: none;
-  }
-  @media (prefers-reduced-motion: reduce) {
-
-    *,
-    *::before,
-    *::after {
-      animation-duration: 0.01ms !important;
-      animation-iteration-count: 1 !important;
-      transition-duration: 0.01ms !important;
-      scroll-behavior: auto !important;
-    }
-  }
-  @media (prefers-contrast: high) {
-    :root {
-      --border: 220 13% 40%;
-      --muted-foreground: 220 9% 20%;
-    }
-  }
+	:focus-visible {
+		outline: 2px solid hsl(var(--ring));
+		outline-offset: 2px;
+	}
+	/* Hide focus outline when using mouse/touch */
+	:focus:not(:focus-visible) {
+		outline: none;
+	}
+	@media (prefers-reduced-motion: reduce) {
+		*,
+		*::before,
+		*::after {
+			animation-duration: 0.01ms !important;
+			animation-iteration-count: 1 !important;
+			transition-duration: 0.01ms !important;
+			scroll-behavior: auto !important;
+		}
+	}
+	@media (prefers-contrast: high) {
+		:root {
+			--border: 220 13% 40%;
+			--muted-foreground: 220 9% 20%;
+		}
+	}
 }
-
 /* ========================================================================
    ACCESSIBILITY SETTINGS - User-controlled overrides
    ======================================================================== */
-
 /* High Contrast Mode */
 .high-contrast {
-  --background: 0 0% 0%;
-  --foreground: 0 0% 100%;
-  --card: 0 0% 10%;
-  --card-foreground: 0 0% 100%;
-  --popover: 0 0% 10%;
-  --popover-foreground: 0 0% 100%;
-  --primary: 210 100% 50%;
-  --primary-foreground: 0 0% 100%;
-  --secondary: 0 0% 20%;
-  --secondary-foreground: 0 0% 100%;
-  --muted: 0 0% 20%;
-  --muted-foreground: 0 0% 80%;
-  --accent: 210 100% 30%;
-  --accent-foreground: 0 0% 100%;
-  --destructive: 0 100% 50%;
-  --destructive-foreground: 0 0% 100%;
-  --border: 0 0% 50%;
-  --input: 0 0% 20%;
-  --ring: 210 100% 50%;
+	--background: 0 0% 0%;
+	--foreground: 0 0% 100%;
+	--card: 0 0% 10%;
+	--card-foreground: 0 0% 100%;
+	--popover: 0 0% 10%;
+	--popover-foreground: 0 0% 100%;
+	--primary: 210 100% 50%;
+	--primary-foreground: 0 0% 100%;
+	--secondary: 0 0% 20%;
+	--secondary-foreground: 0 0% 100%;
+	--muted: 0 0% 20%;
+	--muted-foreground: 0 0% 80%;
+	--accent: 210 100% 30%;
+	--accent-foreground: 0 0% 100%;
+	--destructive: 0 100% 50%;
+	--destructive-foreground: 0 0% 100%;
+	--border: 0 0% 50%;
+	--input: 0 0% 20%;
+	--ring: 210 100% 50%;
 }
-
 .high-contrast * {
-  border-width: 2px !important;
+	border-width: 2px !important;
 }
-
 .high-contrast button,
 .high-contrast a,
 .high-contrast [role="button"] {
-  outline: 2px solid currentColor;
-  outline-offset: 2px;
+	outline: 2px solid currentColor;
+	outline-offset: 2px;
 }
-
 /* Reduced Motion (manual override) */
 .reduced-motion *,
 .reduced-motion *::before,
 .reduced-motion *::after {
-  animation-duration: 0.01ms !important;
-  animation-iteration-count: 1 !important;
-  transition-duration: 0.01ms !important;
-  scroll-behavior: auto !important;
+	animation-duration: 0.01ms !important;
+	animation-iteration-count: 1 !important;
+	transition-duration: 0.01ms !important;
+	scroll-behavior: auto !important;
 }
-
 /* Font Size Adjustments */
 html.text-small {
-  font-size: 14px;
+	font-size: 14px;
 }
-
 html.text-medium {
-  font-size: 16px;
+	font-size: 16px;
 }
-
 html.text-large {
-  font-size: 20px;
+	font-size: 20px;
 }
-
 /* Ensure text respects user font size settings */
 @media (min-width: 640px) {
-  html.text-small {
-    font-size: 14px;
-  }
-
-  html.text-medium {
-    font-size: 16px;
-  }
-
-  html.text-large {
-    font-size: 22px;
-  }
+	html.text-small {
+		font-size: 14px;
+	}
+	html.text-medium {
+		font-size: 16px;
+	}
+	html.text-large {
+		font-size: 22px;
+	}
 }
-
 /* Focus visible for keyboard navigation */
 html.using-keyboard *:focus-visible {
-  outline: 2px solid var(--ring);
-  outline-offset: 2px;
+	outline: 2px solid var(--ring);
+	outline-offset: 2px;
 }

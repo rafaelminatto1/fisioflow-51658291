@@ -446,7 +446,7 @@ const Reports = () => {
 								<CardTitle className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
 									<span>Relatórios Recentes</span>
 									<div className="relative w-full sm:w-auto">
-										<Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground w-4 h-4" />
+										<Search className="absolute left-3 top-1/2 -translate-y-1/2text-muted-foreground w-4 h-4" />
 										<Input
 											placeholder="Buscar relatórios..."
 											className="pl-10 w-full sm:w-64"
