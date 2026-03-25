@@ -247,10 +247,10 @@ export const PainScaleInput = React.memo(function PainScaleInput({
 
 							{/* Indicador visual */}
 							<div
-								className="absolute top-0 h-full w-1 bg-white shadow-lg transform -translate-x-1/2 pointer-events-none transition-all duration-150"
+								className="absolute top-0 h-full w-1 bg-white shadow-lg -translate-x-1/2pointer-events-none transition-all duration-150"
 								style={{ left: sliderPosition }}
 							>
-								<div className="absolute -top-1 left-1/2 transform -translate-x-1/2 w-4 h-4 bg-white rounded-full shadow-md border-2 border-border" />
+								<div className="absolute -top-1 left-1/2 -translate-x-1/2w-4 h-4 bg-white rounded-full shadow-md border-2 border-border" />
 							</div>
 
 							{/* Marcas numéricas */}

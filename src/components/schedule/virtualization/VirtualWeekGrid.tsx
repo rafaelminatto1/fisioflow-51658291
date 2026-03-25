@@ -8,15 +8,15 @@
 // TYPES
 // =====================================================================
 
-import React, { memo, useMemo, useRef, useCallback } from "react";
-import * as ReactWindow from "react-window";
-const List = (ReactWindow as any).FixedSizeList || ReactWindow.FixedSizeList;
+import React, { memo, useMemo, useRef, useCallback, useState, useEffect } from "react";
+import { List } from "react-window";
 import { format, isSameDay } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { Appointment } from "@/types/appointment";
 import type { CardSize } from "@/types/agenda";
 import { cn } from "@/lib/utils";
 import { parseAppointmentDate, normalizeTime } from "@/lib/calendar/utils";
+import { BUSINESS_HOURS } from "@/lib/calendar/constants";
 import { CalendarAppointmentCard } from "../CalendarAppointmentCard";
 import { TimeSlotCell } from "../TimeSlotCell";
 import { useCardSize } from "@/hooks/useCardSize";
@@ -111,9 +111,10 @@ interface ItemData {
 // TIME SLOT ROW COMPONENT
 // =====================================================================
 
-const TimeSlotRow: React.FC<ListChildComponentProps<ItemData>> = memo(
-	({ index, style, data }) => {
-		const { weekDays, timeSlots, appointmentsByTimeSlot, ...props } = data;
+type TimeSlotRowProps = ItemData & { index: number; style: React.CSSProperties };
+
+const TimeSlotRow: React.FC<TimeSlotRowProps> = memo(
+	({ index, style, weekDays, timeSlots, appointmentsByTimeSlot, ...props }) => {
 		const time = timeSlots[index];
 
 		if (!time) return null;
@@ -267,7 +268,7 @@ TimeSlotRow.displayName = "TimeSlotRow";
 		selectedIds = new Set(),
 		onToggleSelection,
 	}) => {
-		const listRef = useRef<List>(null);
+		const listRef = useRef<any>(null);
 		const { cardSize, heightScale } = useCardSize();
 		const slotHeight = calculateSlotHeightFromCardSize(cardSize, heightScale);
 
@@ -385,7 +386,7 @@ TimeSlotRow.displayName = "TimeSlotRow";
 				totalMinutesFromStart / BUSINESS_HOURS.DEFAULT_SLOT_DURATION,
 			);
 
-			listRef.current?.scrollToItem(rowIndex, "start");
+			listRef.current?.scrollToRow?.(rowIndex, "start") ?? listRef.current?.scrollToItem?.(rowIndex, "start");
 		}, []);
 
 		// Auto-scroll na montagem
@@ -447,16 +448,15 @@ TimeSlotRow.displayName = "TimeSlotRow";
 
 				{/* Virtual Grid */}
 				<List
-					ref={listRef}
+					listRef={listRef}
 					height={containerHeight}
-					itemCount={timeSlots.length}
-					itemSize={slotHeight}
-					width="100%"
-					itemData={itemData}
-					overscanCount={3} // Render more slots for smoother scrolling
-				>
-					{TimeSlotRow}
-				</List>
+					rowCount={timeSlots.length}
+					rowHeight={slotHeight}
+					style={{ width: "100%" }}
+					rowProps={itemData}
+					rowComponent={TimeSlotRow}
+					overscanCount={3}
+				/>
 			</div>
 		);
 	},

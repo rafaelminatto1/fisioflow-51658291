@@ -8,12 +8,9 @@ import {
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Edit, Loader2 } from "lucide-react";
 import { PatientForm } from "./PatientForm";
-import {
-	useUpdatePatient,
-	usePatient,
-	type PatientUpdateInput,
-} from "@/hooks/usePatientCrud";
+import { usePatient } from "@/hooks/usePatientCrud";
 import { useOrganizations } from "@/hooks/useOrganizations";
+import { useNavigation } from "react-router";
 
 interface PatientEditModalProps {
 	open: boolean;
@@ -27,22 +24,16 @@ export const PatientEditModal: React.FC<PatientEditModalProps> = ({
 	patientId,
 }) => {
 	const { currentOrganization } = useOrganizations();
-	const { data: patient, isLoading } = usePatient(patientId);
-	const updateMutation = useUpdatePatient();
+	const { data: patient, isLoading: isPatientLoading } = usePatient(patientId);
+	const navigation = useNavigation();
 
-	const handleSubmit = async (data: PatientUpdateInput) => {
-		if (!currentOrganization?.id) {
-			throw new Error("Organização não encontrada");
-		}
-		await updateMutation.mutateAsync({
-			id: patientId,
-			data,
-		});
-		onOpenChange(false);
-	};
+	const isSubmitting =
+		navigation.state === "submitting" &&
+		navigation.formData?.get("intent") === "update" &&
+		navigation.formData?.get("id") === patientId;
 
 	// Close modal if no organization
-	if (!currentOrganization?.id && !isLoading) {
+	if (!currentOrganization?.id && !isPatientLoading) {
 		onOpenChange(false);
 		return null;
 	}
@@ -62,7 +53,7 @@ export const PatientEditModal: React.FC<PatientEditModalProps> = ({
 				</DialogHeader>
 
 				<ScrollArea className="px-6 pb-6 max-h-[calc(85vh-120px)]">
-					{isLoading ? (
+					{isPatientLoading ? (
 						<div className="flex items-center justify-center py-12">
 							<div className="text-center space-y-2">
 								<Loader2 className="h-8 w-8 animate-spin text-primary mx-auto" />
@@ -75,9 +66,10 @@ export const PatientEditModal: React.FC<PatientEditModalProps> = ({
 						<PatientForm
 							patient={patient}
 							organizationId={currentOrganization.id}
-							onSubmit={handleSubmit}
-							isLoading={updateMutation.isPending}
+							isLoading={isSubmitting}
 							submitLabel="Salvar Alterações"
+							intent="update"
+							onCancel={() => onOpenChange(false)}
 						/>
 					) : (
 						<div className="flex items-center justify-center py-12">

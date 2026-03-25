@@ -207,11 +207,16 @@
       </div>
     </div>
   </div>
-  <!-- Expor versão globalmente para cache busting -->
-  <script>
-    window.__APP_VERSION__ = "%APP_VERSION%";
-    window.__BUILD_TIME__ = "%BUILD_TIME%";
-    window.__CACHE_BUSTER__ = window.__BUILD_TIME__ || Date.now().toString();
+   <!-- Expor versão globalmente para cache busting -->
+   <script>
+     // Polyfill para __DEFINES__ (usado por algumas bibliotecas de terceiros)
+     if (typeof window.__DEFINES__ === 'undefined') {
+       window.__DEFINES__ = {};
+     }
+
+     window.__APP_VERSION__ = "%APP_VERSION%";
+     window.__BUILD_TIME__ = "%BUILD_TIME%";
+     window.__CACHE_BUSTER__ = window.__BUILD_TIME__ || Date.now().toString();
 
     const jokes = [
       "Carregando... alongando a verdade um pouquinho.",

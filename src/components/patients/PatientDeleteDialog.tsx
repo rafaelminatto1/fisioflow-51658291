@@ -9,31 +9,34 @@ import {
 	AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { AlertTriangle, Loader2 } from "lucide-react";
-import { useDeletePatient, usePatient } from "@/hooks/usePatientCrud";
-import { PatientHelpers } from "@/types";
+import { useSubmit, useNavigation } from "react-router";
 
 interface PatientDeleteDialogProps {
 	open: boolean;
 	onOpenChange: (open: boolean) => void;
 	patientId: string;
+	patientName: string;
 }
 
 export const PatientDeleteDialog: React.FC<PatientDeleteDialogProps> = ({
 	open,
 	onOpenChange,
 	patientId,
+	patientName,
 }) => {
-	const { data: patient } = usePatient(patientId);
-	const deleteMutation = useDeletePatient();
+	const submit = useSubmit();
+	const navigation = useNavigation();
 
-	const handleDelete = async () => {
-		await deleteMutation.mutateAsync(patientId);
+	const isDeleting =
+		navigation.state === "submitting" &&
+		navigation.formData?.get("intent") === "delete" &&
+		navigation.formData?.get("patientId") === patientId;
+
+	const handleDelete = () => {
+		submit({ intent: "delete", patientId }, { method: "post" });
+		// Dialog usually closes on deletion as the item will be gone from the list
 		onOpenChange(false);
 	};
-
-	const patientName = patient
-		? PatientHelpers.getName(patient)
-		: "este paciente";
 
 	return (
 		<AlertDialog open={open} onOpenChange={onOpenChange}>
@@ -69,17 +72,15 @@ export const PatientDeleteDialog: React.FC<PatientDeleteDialogProps> = ({
 				</AlertDialogDescription>
 
 				<AlertDialogFooter className="gap-2">
-					<AlertDialogCancel disabled={deleteMutation.isPending}>
-						Cancelar
-					</AlertDialogCancel>
+					<AlertDialogCancel disabled={isDeleting}>Cancelar</AlertDialogCancel>
 					<AlertDialogAction
 						onClick={handleDelete}
-						disabled={deleteMutation.isPending}
+						disabled={isDeleting}
 						className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
 						data-testid={`patient-delete-confirm-${patientId}`}
 						data-patient-id={patientId}
 					>
-						{deleteMutation.isPending ? (
+						{isDeleting ? (
 							<>
 								<Loader2 className="mr-2 h-4 w-4 animate-spin" />
 								Excluindo...
