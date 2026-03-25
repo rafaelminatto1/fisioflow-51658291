@@ -45,7 +45,7 @@ describe("TransactionModal", () => {
 		expect(screen.getByDisplayValue("Compra de materiais")).toBeInTheDocument();
 		expect(screen.getByDisplayValue("150")).toBeInTheDocument();
 
-		const saveButton = screen.getByRole("button", { name: /Salvar/i });
+		const saveButton = screen.getByRole("button", { name: /Atualizar/i });
 		await user.click(saveButton);
 
 		await waitFor(() => {
