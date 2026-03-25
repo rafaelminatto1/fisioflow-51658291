@@ -166,7 +166,12 @@
 			"autoApprove": []
 		},
 		"websets": {
-			"url": "https://websetsmcp.exa.ai/mcp?exaApiKey=d12af1da-4c1d-4665-a952-2bdfa6283d11"
+			"command": "npx",
+			"args": [
+				"-y",
+				"mcp-remote",
+				"https://websetsmcp.exa.ai/mcp?exaApiKey=d12af1da-4c1d-4665-a952-2bdfa6283d11"
+			]
 		}
 	}
 }
