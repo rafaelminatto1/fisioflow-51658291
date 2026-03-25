@@ -268,21 +268,13 @@ function appointmentCardAreEqual(
 	)
 		return false;
 
+	// Deep compare appointment object to ensure status and other changes trigger re-render
 	const prevApp = prev.appointment;
 	const nextApp = next.appointment;
 
-	if (
-		prevApp.id !== nextApp.id ||
-		prevApp.status !== nextApp.status ||
-		prevApp.time !== nextApp.time ||
-		prevApp.patientName !== nextApp.patientName ||
-		prevApp.type !== nextApp.type ||
-		prevApp.duration !== nextApp.duration ||
-		prevApp.date !== nextApp.date ||
-		prevApp.notes !== nextApp.notes ||
-		prevApp.isOverbooked !== nextApp.isOverbooked
-	)
+	if (JSON.stringify(prevApp) !== JSON.stringify(nextApp)) {
 		return false;
+	}
 
 	const prevStyle = prev.style;
 	const nextStyle = next.style;
