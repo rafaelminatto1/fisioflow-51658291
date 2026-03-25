@@ -33,7 +33,7 @@ import {
 	YAxis,
 	Tooltip,
 	ResponsiveContainer,
-	TooltipProps,
+	TooltipContentProps,
 	AreaChart,
 	Area,
 } from "recharts";
@@ -43,7 +43,7 @@ import { cn } from "@/lib/utils";
 
 // Custom Tooltip Component
 const CustomChartTooltip = React.memo(
-	({ active, payload, label }: TooltipProps<unknown, unknown>) => {
+	({ active, payload, label }: TooltipContentProps) => {
 		if (active && payload && payload.length) {
 			return (
 				<div className="rounded-lg border border-border bg-card p-3 shadow-md animate-in fade-in-0 zoom-in-95 duration-200">

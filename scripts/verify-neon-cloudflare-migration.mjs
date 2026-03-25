@@ -61,13 +61,6 @@ async function checkWebBundleHasNeonAuth() {
     const html = await htmlRes.text();
     pass('Frontend online', webUrl);
 
-    const bundleMatch = html.match(/assets\/js\/index-[^"'\s]+\.js/);
-    if (!bundleMatch) return fail('Bundle index localizado', 'Arquivo assets/js/index-*.js não encontrado');
-    const bundlePath = bundleMatch[0];
-    const jsRes = await fetch(`${webUrl}/${bundlePath}`);
-    if (!jsRes.ok) return fail('Bundle acessível', `HTTP ${jsRes.status} em ${bundlePath}`);
-
-    const js = await jsRes.text();
     const expectedHost = (() => {
       try {
         if (!neonAuthUrl) return '';
@@ -81,10 +74,29 @@ async function checkWebBundleHasNeonAuth() {
       return fail('VITE_NEON_AUTH_URL configurada', 'Defina VITE_NEON_AUTH_URL em .env/.env.local');
     }
 
-    if (!js.includes(expectedHost)) {
-      return fail('Bundle com Neon Auth URL', `Host ${expectedHost} não encontrado no bundle publicado`);
+    const bundleMatches = html.matchAll(/assets\/[^"'\s]+\.js/g);
+    let found = false;
+    let checkedFiles = 0;
+
+    for (const match of bundleMatches) {
+      const bundlePath = match[0];
+      const jsRes = await fetch(`${webUrl}/${bundlePath}`);
+      if (!jsRes.ok) continue;
+      
+      const js = await jsRes.text();
+      checkedFiles++;
+
+      if (js.includes(expectedHost)) {
+        pass('Bundle com Neon Auth URL', `${bundlePath} contém ${expectedHost}`);
+        found = true;
+        break;
+      }
     }
-    pass('Bundle com Neon Auth URL', `${bundlePath} contém ${expectedHost}`);
+
+    if (!found) {
+      return fail('Bundle com Neon Auth URL', `Host ${expectedHost} não encontrado em ${checkedFiles} arquivos JS analisados`);
+    }
+
   } catch (error) {
     fail('Verificação do frontend', String(error instanceof Error ? error.message : error));
   }
