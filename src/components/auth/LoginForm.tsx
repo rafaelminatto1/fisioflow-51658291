@@ -7,11 +7,12 @@
  * @module components/auth/LoginForm
  */
 
-import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
+import { Loader2 } from "lucide-react";
+import { useForm } from "react-hook-form";
 import { z } from "zod";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import {
 	Form,
 	FormControl,
@@ -20,8 +21,7 @@ import {
 	FormLabel,
 	FormMessage,
 } from "@/components/ui/form";
-import { Alert, AlertDescription } from "@/components/ui/alert";
-import { Loader2 } from "lucide-react";
+import { Input } from "@/components/ui/input";
 import { fisioLogger as logger } from "@/lib/errors/logger";
 
 /**
@@ -135,6 +135,8 @@ export function LoginForm({
 								<FormControl>
 									<Input
 										id="login-email"
+										name="email"
+										data-testid="auth-email-input"
 										type="email"
 										placeholder="nome@exemplo.com"
 										autoComplete="email"
@@ -180,8 +182,10 @@ export function LoginForm({
 								<FormControl>
 									<Input
 										id="login-password"
+										name="password"
+										data-testid="auth-password-input"
 										type="password"
-										placeholder="••••••••"
+										placeholder="•••••••"
 										autoComplete="current-password"
 										className="h-12 bg-white/50 dark:bg-slate-900/50 border-slate-200 dark:border-slate-800 focus:ring-primary/20 transition-all duration-200"
 										tabIndex={activeTab === "login" ? 2 : -1}
@@ -211,6 +215,7 @@ export function LoginForm({
 				{/* Submit Button */}
 				<Button
 					type="submit"
+					data-testid="auth-submit-button"
 					className="w-full h-12 text-sm font-bold bg-gradient-to-r from-primary to-blue-600 hover:from-primary/90 hover:to-blue-700 shadow-lg shadow-primary/25 transition-all duration-200 active:scale-[0.98] rounded-xl"
 					disabled={loading}
 					tabIndex={activeTab === "login" ? 3 : -1}
