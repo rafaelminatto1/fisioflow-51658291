@@ -250,45 +250,6 @@ const CalendarAppointmentCardBase = forwardRef<
 	},
 );
 
-function appointmentCardAreEqual(
-	prev: CalendarAppointmentCardProps,
-	next: CalendarAppointmentCardProps,
-) {
-	if (
-		prev.isDragging !== next.isDragging ||
-		prev.isDraggable !== next.isDraggable ||
-		prev.isSaving !== next.isSaving ||
-		prev.isDropTarget !== next.isDropTarget ||
-		prev.hideGhostWhenSiblings !== next.hideGhostWhenSiblings ||
-		prev.selectionMode !== next.selectionMode ||
-		prev.isSelected !== next.isSelected ||
-		prev.isPopoverOpen !== next.isPopoverOpen ||
-		prev.dragHandleOnly !== next.dragHandleOnly ||
-		prev.density !== next.density
-	)
-		return false;
-
-	// Deep compare appointment object to ensure status and other changes trigger re-render
-	const prevApp = prev.appointment;
-	const nextApp = next.appointment;
-
-	if (JSON.stringify(prevApp) !== JSON.stringify(nextApp)) {
-		return false;
-	}
-
-	const prevStyle = prev.style;
-	const nextStyle = next.style;
-	return (
-		prevStyle.height === nextStyle.height &&
-		prevStyle.width === nextStyle.width &&
-		prevStyle.top === nextStyle.top &&
-		prevStyle.left === nextStyle.left &&
-		prevStyle.gridColumn === nextStyle.gridColumn &&
-		prevStyle.gridRow === nextStyle.gridRow &&
-		prevStyle.zIndex === nextStyle.zIndex
-	);
-}
-
 export const CalendarAppointmentCard = memo(
 	CalendarAppointmentCardBase,
 	(prev, next) => {
@@ -299,14 +260,25 @@ export const CalendarAppointmentCard = memo(
 			prev.isSaving !== next.isSaving ||
 			prev.density !== next.density ||
 			prev.isSelected !== next.isSelected ||
-			prev.isPopoverOpen !== next.isPopoverOpen
+			prev.isPopoverOpen !== next.isPopoverOpen ||
+			prev.hideGhostWhenSiblings !== next.hideGhostWhenSiblings ||
+			prev.selectionMode !== next.selectionMode ||
+			prev.isDropTarget !== next.isDropTarget
 		) return false;
 
 		// Deep compare do agendamento (especialmente status para cores)
 		if (JSON.stringify(prev.appointment) !== JSON.stringify(next.appointment)) return false;
 
-		// Estilos da grade
-		if (JSON.stringify(prev.style) !== JSON.stringify(next.style)) return false;
+		// Estilos da grade (posicionamento)
+		if (
+			prev.style?.height !== next.style?.height ||
+			prev.style?.width !== next.style?.width ||
+			prev.style?.top !== next.style?.top ||
+			prev.style?.left !== next.style?.left ||
+			prev.style?.gridColumn !== next.style?.gridColumn ||
+			prev.style?.gridRow !== next.style?.gridRow ||
+			prev.style?.zIndex !== next.style?.zIndex
+		) return false;
 
 		return true;
 	}
