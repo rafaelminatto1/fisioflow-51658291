@@ -136,7 +136,7 @@ const ChatBubble: React.FC<ChatBubbleProps> = ({
 									(suggestion: string, index: number) => (
 										<div
 											key={index}
-											className="text-xs bg-white bg-opacity-20 rounded px-2 py-1"
+											className="text-xs bg-white/20 rounded px-2 py-1"
 										>
 											{suggestion}
 										</div>
@@ -254,7 +254,7 @@ const ChatHeader: React.FC<ChatHeaderProps> = ({
 	return (
 		<div className="bg-blue-500 text-white p-4 rounded-t-lg flex items-center justify-between">
 			<div className="flex items-center space-x-3">
-				<div className="w-10 h-10 bg-white bg-opacity-20 rounded-full flex items-center justify-center">
+				<div className="w-10 h-10 bg-white/20 rounded-full flex items-center justify-center">
 					<Activity className="w-5 h-5" />
 				</div>
 				<div>
@@ -280,7 +280,7 @@ const ChatHeader: React.FC<ChatHeaderProps> = ({
 				{!humanHandoffRequested && (
 					<button
 						onClick={onRequestHuman}
-						className="p-2 hover:bg-white hover:bg-opacity-20 rounded-full transition-colors"
+						className="p-2 hover:bg-white/20 rounded-full transition-colors"
 						title="Falar com especialista"
 					>
 						<Phone className="w-4 h-4" />
@@ -289,7 +289,7 @@ const ChatHeader: React.FC<ChatHeaderProps> = ({
 
 				<button
 					onClick={onMinimize}
-					className="p-2 hover:bg-white hover:bg-opacity-20 rounded-full transition-colors"
+					className="p-2 hover:bg-white/20 rounded-full transition-colors"
 					title={isMinimized ? "Maximizar" : "Minimizar"}
 				>
 					{isMinimized ? (
@@ -302,7 +302,7 @@ const ChatHeader: React.FC<ChatHeaderProps> = ({
 				{onClose && (
 					<button
 						onClick={onClose}
-						className="p-2 hover:bg-white hover:bg-opacity-20 rounded-full transition-colors"
+						className="p-2 hover:bg-white/20 rounded-full transition-colors"
 						title="Fechar"
 					>
 						<X className="w-4 h-4" />
