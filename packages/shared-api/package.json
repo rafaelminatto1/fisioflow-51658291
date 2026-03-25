@@ -9,6 +9,7 @@
     "type-check": "tsc --noEmit"
   },
   "dependencies": {
-    "@fisioflow/db": "workspace:*"
+    "@fisioflow/db": "workspace:*",
+    "recharts": "^2.15.4"
   }
 }
