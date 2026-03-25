@@ -1,7 +1,5 @@
 import { sentryVitePlugin } from "@sentry/vite-plugin";
 import tailwindcss from "@tailwindcss/vite";
-// Plugin oficial do React. Em Vite 8 + Rolldown, ele já usa o caminho Oxc por padrão.
-import react from "@vitejs/plugin-react";
 import path from "path";
 import { visualizer } from "rollup-plugin-visualizer";
 import { defineConfig } from "vite";
@@ -97,7 +95,6 @@ export default defineConfig(({ mode }) => {
 		},
 		plugins: [
 			tailwindcss(),
-			react(),
 			mockMobileModules(),
 			lazyCornerstoneCharls(),
 			htmlPlugin(appVersion, buildTime),
