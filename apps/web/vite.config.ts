@@ -125,6 +125,11 @@ export default defineConfig(({ mode }) => {
         "@fisioflow/skills": path.resolve(repoRoot, 'src/lib/skills'),
         "react-grid-layout/dist/legacy": path.resolve(repoRoot, 'node_modules/react-grid-layout/dist/legacy.mjs'),
         "globalthis": path.resolve(repoRoot, 'src/lib/globalthis-shim.ts'),
+        "fs": path.resolve(repoRoot, 'src/lib/node-stub.ts'),
+        "path": path.resolve(repoRoot, 'src/lib/node-stub.ts'),
+        "crypto": path.resolve(repoRoot, 'src/lib/node-stub.ts'),
+        "stream": path.resolve(repoRoot, 'src/lib/node-stub.ts'),
+        "util": path.resolve(repoRoot, 'src/lib/node-stub.ts'),
       },
     },
     build: {
@@ -132,89 +137,21 @@ export default defineConfig(({ mode }) => {
       target: 'es2020',
       cssTarget: 'es2020',
       sourcemap: true,
-      // Rolldown nativo do Vite 8 com code splitting agressivo para reduzir LCP
-      rolldownOptions: {
+      // Standard Vite 7 options
+      rollupOptions: {
+        external: ['fs', 'path', 'crypto', 'stream', 'util'],
         output: {
-          codeSplitting: {
-            groups: [
-              {
-                name: 'react-vendor',
-                test: /[\\/]node_modules[\\/](react|react-dom|scheduler|react-router|react-router-dom|framer-motion)[\\/]/,
-                priority: 30,
-              },
-              {
-                name: 'react-pdf-vendor',
-                test: /[\\/]node_modules[\\/]@react-pdf[\\/]/,
-                priority: 25,
-              },
-              {
-                name: 'jspdf-vendor',
-                test: /[\\/]node_modules[\\/](jspdf|jspdf-autotable)[\\/]/,
-                priority: 25,
-              },
-              {
-                name: 'html2canvas-vendor',
-                test: /[\\/]node_modules[\\/]html2canvas[\\/]/,
-                priority: 25,
-              },
-              {
-                name: 'query-vendor',
-                test: /[\\/]node_modules[\\/](?:@tanstack[\\/](?:react-query|query-core|query-persist-client|query-async-storage-persister)|idb-keyval)[\\/]/,
-                priority: 24,
-              },
-              {
-                name: 'observability-vendor',
-                test: /[\\/]node_modules[\\/](?:@sentry|posthog-js)[\\/]/,
-                priority: 24,
-              },
-              {
-                name: 'charts-vendor',
-                test: /[\\/]node_modules[\\/]recharts[\\/]/,
-                priority: 22,
-              },
-              {
-                name: 'excel-vendor',
-                test: /[\\/]node_modules[\\/]exceljs[\\/]/,
-                priority: 25,
-              },
-              {
-                name: 'charls-vendor',
-                test: /[\\/]node_modules[\\/]@cornerstonejs[\\/]codec-charls[\\/]/,
-                priority: 27,
-              },
-              {
-                name: 'vtk-vendor',
-                test: /[\\/]node_modules[\\/]@kitware[\\/]vtk\.js[\\/]/,
-                priority: 26,
-              },
-              {
-                name: 'cornerstone-vendor',
-                test: /[\\/]node_modules[\\/]@cornerstonejs[\\/]/,
-                priority: 25,
-              },
-              {
-                name: 'dicom-parser-vendor',
-                test: /[\\/]node_modules[\\/]dicom-parser[\\/]/,
-                priority: 25,
-              },
-              {
-                name: 'canvas-vendor',
-                test: /[\\/]node_modules[\\/](react-konva|konva)[\\/]/,
-                priority: 20,
-              },
-              {
-                name: 'ui-vendor',
-                test: /[\\/]node_modules[\\/](@radix-ui|date-fns)[\\/]/,
-                priority: 15,
-              },
-              {
-                name: 'biomechanics-studios',
-                test: /[\\/]src[\\/]components[\\/]analysis[\\/](studios|panels|canvas)[\\/]|[\\/]src[\\/]hooks[\\/]biomechanics[\\/]/,
-                priority: 25,
-              }
-            ],
-          },
-        },
+          manualChunks: (id) => {
+            if (id.includes('node_modules')) {
+              if (id.includes('react') || id.includes('framer-motion')) return 'vendor-react';
+              if (id.includes('@react-pdf')) return 'vendor-pdf';
+              if (id.includes('jspdf')) return 'vendor-jspdf';
+              if (id.includes('recharts')) return 'vendor-charts';
+              if (id.includes('@cornerstonejs')) return 'vendor-cornerstone';
+              return 'vendor';
+            }
+          }
+        }
       }
     },
     optimizeDeps: {
