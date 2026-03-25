@@ -2,7 +2,7 @@
  * Schedule Page - Migrated to Neon/Cloudflare
  */
 
-import { useEffect, lazy, Suspense } from "react";
+import { useState, useEffect, lazy, Suspense } from "react";
 import { CalendarViewType } from "@/components/schedule/CalendarView";
 import { BulkActionsBar } from "@/components/schedule/BulkActionsBar";
 import { usePrefetchAdjacentPeriods } from "@/hooks/usePrefetchAdjacentPeriods";
@@ -23,7 +23,7 @@ import { useBirthdayNotification } from "@/hooks/useBirthdayNotification";
 import { usePatientReengagement } from "@/hooks/usePatientReengagement";
 import { Cake, Sparkles, MessageCircle, AlertTriangle } from "lucide-react";
 import { ScheduleModals } from "@/components/schedule/ScheduleModals";
-import CalendarView from "@/components/schedule/CalendarView";
+const CalendarView = lazy(() => import("@/components/schedule/CalendarView"));
 import "@/styles/schedule.css";
 
 const KEYBOARD_SHORTCUTS = {
