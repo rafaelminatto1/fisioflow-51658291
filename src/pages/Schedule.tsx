@@ -52,7 +52,7 @@ const lazyRetry = (importFn: () => Promise<any>, maxRetries = 3) => {
 
 const CalendarView = lazy(() =>
 	lazyRetry(() => import("@/components/schedule/CalendarView")).then((mod) => ({
-		default: mod.CalendarView,
+		default: mod.default,
 	})),
 );
 
