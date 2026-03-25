@@ -128,7 +128,7 @@ export const commonSchemas = {
 			"SERVICE_UNAVAILABLE",
 		]),
 		message: z.string(),
-		details: z.record(z.unknown()).optional(),
+		details: z.record(z.string(), z.unknown()).optional(),
 		stack: z.string().optional(),
 		timestamp: z.string(),
 		requestId: z.string().optional(),
@@ -494,9 +494,9 @@ export const soapSchemas = {
 		appointmentId: commonSchemas.entityId.optional(),
 		sessionNumber: z.number().int().positive(),
 		subjective: z.string().optional(),
-		objective: z.record(z.unknown()).optional(),
+		objective: z.record(z.string(), z.unknown()).optional(),
 		assessment: z.string().optional(),
-		plan: z.record(z.unknown()).optional(),
+		plan: z.record(z.string(), z.unknown()).optional(),
 		vitalSigns: z
 			.object({
 				blood_pressure: z
@@ -511,7 +511,7 @@ export const soapSchemas = {
 				oxygen_saturation: z.number().int().min(0).max(100).optional(),
 			})
 			.optional(),
-		functionalTests: z.record(z.unknown()).optional(),
+		functionalTests: z.record(z.string(), z.unknown()).optional(),
 		createdBy: commonSchemas.entityId,
 		createdAt: commonSchemas.isoDate,
 		updatedAt: commonSchemas.isoDate,
