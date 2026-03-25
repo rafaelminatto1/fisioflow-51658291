@@ -13,10 +13,10 @@ import {
 	Copy,
 	Download,
 	Sparkles,
-	Instagram,
-	Facebook,
-	Linkedin,
-	Twitter,
+	Camera,
+	Users,
+	Briefcase,
+	MessageCircle,
 	FileText,
 	Image as ImageIcon,
 	Hash,
@@ -32,7 +32,7 @@ const PLATFORMS = [
 	{
 		id: "instagram",
 		name: "Instagram",
-		icon: Instagram,
+		icon: Camera,
 		color: "bg-gradient-to-br from-purple-500 to-pink-500",
 		hashtags: [
 			"#fisioterapia",
@@ -46,7 +46,7 @@ const PLATFORMS = [
 	{
 		id: "facebook",
 		name: "Facebook",
-		icon: Facebook,
+		icon: Users,
 		color: "bg-blue-600",
 		hashtags: ["#fisioterapia", "#saúde", "#bemestar", "#movimento"],
 		maxLength: 63206,
@@ -54,7 +54,7 @@ const PLATFORMS = [
 	{
 		id: "linkedin",
 		name: "LinkedIn",
-		icon: Linkedin,
+		icon: Briefcase,
 		color: "bg-blue-700",
 		hashtags: [
 			"#Fisioterapia",
@@ -68,7 +68,7 @@ const PLATFORMS = [
 	{
 		id: "twitter",
 		name: "Twitter/X",
-		icon: Twitter,
+		icon: MessageCircle,
 		color: "bg-black dark:bg-white",
 		hashtags: ["#fisioterapia", "#saude", "#bemestar"],
 		maxLength: 280,
