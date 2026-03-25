@@ -133,6 +133,8 @@ export default defineConfig(({ mode }) => {
         "crypto": path.resolve(repoRoot, 'src/lib/node-stub.ts'),
         "stream": path.resolve(repoRoot, 'src/lib/node-stub.ts'),
         "util": path.resolve(repoRoot, 'src/lib/node-stub.ts'),
+        "@mediapipe/pose": path.resolve(repoRoot, 'src/lib/mediapipe-pose-stub.ts'),
+        "@mediapipe/drawing_utils": path.resolve(repoRoot, 'src/lib/mediapipe-drawing-utils-stub.ts'),
       },
     },
     build: {
@@ -142,16 +144,8 @@ export default defineConfig(({ mode }) => {
       sourcemap: !isProduction,
       // Standard Vite 7 options
       rollupOptions: {
-        external: [
-          'fs', 'path', 'crypto', 'stream', 'util',
-          '@mediapipe/pose',
-          '@mediapipe/drawing_utils'
-        ],
+        external: ['fs', 'path', 'crypto', 'stream', 'util'],
         output: {
-          globals: {
-            '@mediapipe/pose': 'Pose',
-            '@mediapipe/drawing_utils': 'drawing_utils'
-          },
           manualChunks: (id) => {
             if (id.includes('node_modules')) {
               if (id.includes('react') || id.includes('framer-motion')) return 'vendor-react';
