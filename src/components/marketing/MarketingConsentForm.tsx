@@ -28,7 +28,7 @@ import {
 import {
 	FileSignature,
 	Shield,
-	Instagram,
+	Camera as Instagram,
 	Globe,
 	GraduationCap,
 	AlertTriangle,
