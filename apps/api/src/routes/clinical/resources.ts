@@ -423,7 +423,7 @@ export function registerClinicalResourceRoutes(app: ClinicalRouteApp) {
           painMapId: painMap.id,
           xCoordinate: String(p.x || p.x_coordinate),
           yCoordinate: String(p.y || p.y_coordinate),
-          intensity: Number(p.intensity),
+          intensity: String(p.intensity),
           painType: p.pain_type || p.painType || null,
           description: p.description ?? null,
         }));

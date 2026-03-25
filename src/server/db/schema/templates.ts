@@ -13,12 +13,9 @@ import {
 	boolean,
 	timestamp,
 	integer,
-	pgEnum,
 } from "drizzle-orm/pg-core";
 import { relations } from "drizzle-orm";
-
-// ===== ENUMS =====
-export const evidenceLevelEnum = pgEnum("evidence_level", ["A", "B", "C", "D"]);
+import { evidenceLevelEnum } from "./protocols";
 
 // ===== EXERCISE TEMPLATES =====
 export const exerciseTemplates = pgTable("exercise_templates", {
