@@ -39,6 +39,7 @@
         "backgroundColor": "#0D9488"
       },
       "package": "com.fisioflow.patient",
+      "edgeToEdgeEnabled": true,
       "permissions": [
         "android.permission.READ_CALENDAR",
         "android.permission.WRITE_CALENDAR"
