@@ -16,7 +16,7 @@ import {
 	Copy,
 	ImagePlus,
 	Video,
-	Youtube,
+	Share2 as Youtube,
 	Globe,
 	UploadCloud,
 	ExternalLink,

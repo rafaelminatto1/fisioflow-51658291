@@ -19,7 +19,7 @@ import {
 	AlignJustify,
 	Plus,
 	Image,
-	Youtube,
+	Share2 as Youtube,
 	Link,
 	Table as TableIcon,
 	Code,
