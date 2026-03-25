@@ -378,12 +378,17 @@ export interface PatientRow {
 	email: string | null;
 	phone: string | null;
 	cpf: string | null;
+	birth_date: string | null;
 	date_of_birth: string | null;
 	gender: string | null;
 	address: string | null;
 	status: string;
+	main_condition: string | null;
+	is_active: boolean;
+	progress: number | null;
 	notes: string | null;
 	avatar_url: string | null;
+	medical_return_date?: string | null;
 	created_at: string;
 	updated_at: string;
 }
@@ -442,6 +447,82 @@ export interface PatientSurgery {
 	notes: string | null;
 }
 
+export interface TherapistSummary {
+	id: string;
+	full_name: string;
+	specialty: string | null;
+	avatar_url: string | null;
+}
+
+export interface FinancialMetric {
+	total: number;
+	paid: number;
+	pending: number;
+	overdue: number;
+}
+
+export interface Transacao {
+	id: string;
+	organization_id: string;
+	tipo: "receita" | "despesa";
+	valor: number;
+	data_transacao: string;
+	descricao: string | null;
+	status: "concluido" | "pendente" | "cancelado";
+	created_at?: string;
+	updated_at?: string;
+}
+
+export interface ContaFinanceira {
+	id: string;
+	valor: number;
+	data_vencimento: string;
+	pago_em?: string | null;
+	tipo: "receita" | "despesa";
+	status: "pendente" | "pago" | "atrasado";
+}
+
+export interface Pagamento {
+	id: string;
+	appointment_id?: string;
+	valor: number;
+	data_pagamento: string;
+	metodo_pagamento: string | null;
+	status?: string;
+}
+
+export interface CentroCusto {
+	id: string;
+	nome: string;
+	ativo: boolean;
+}
+
+export interface Convenio {
+	id: string;
+	nome: string;
+	ativo: boolean;
+}
+
+export interface EmpresaParceira {
+	id: string;
+	nome: string;
+	ativo: boolean;
+}
+
+export interface Fornecedor {
+	id: string;
+	nome: string;
+	ativo: boolean;
+}
+
+export interface FormaPagamento {
+	id: string;
+	nome: string;
+	ativo: boolean;
+}
+
+export type AppointmentPaymentStatus = "pending" | "paid" | "partial" | "refunded";
+
 export interface AppointmentRow {
 	id: string;
 	patient_id: string;
@@ -451,6 +532,7 @@ export interface AppointmentRow {
 	end_time: string;
 	status: string;
 	notes: string | null;
+	payment_status: AppointmentPaymentStatus | null;
 	organization_id: string;
 	created_at: string;
 	updated_at: string;

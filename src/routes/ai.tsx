@@ -5,8 +5,9 @@
 
 import { lazy } from "react";
 import { Route } from "react-router-dom";
-import { ProtectedRoute } from "@/components/ProtectedRoute";
+import { RouteErrorBoundary } from "@/components/error";
 import { MainLayout } from "@/components/layout/MainLayout";
+import { ProtectedRoute } from "@/components/ProtectedRoute";
 
 // Lazy loads - AI Features
 const SmartDashboard = lazy(
@@ -87,9 +88,11 @@ export const aiRoutes = (
 		<Route
 			path="/smart-dashboard"
 			element={
-				<ProtectedRoute>
-					<SmartDashboard />
-				</ProtectedRoute>
+				<RouteErrorBoundary routeName="SmartDashboard">
+					<ProtectedRoute>
+						<SmartDashboard />
+					</ProtectedRoute>
+				</RouteErrorBoundary>
 			}
 		/>
 		<Route

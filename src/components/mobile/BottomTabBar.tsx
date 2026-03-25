@@ -84,7 +84,7 @@ export function BottomTabBar() {
 
 								{/* Indicator para tab ativa */}
 								{isActive && (
-									<span className="absolute -bottom-1 left-1/2 transform -translate-x-1/2 w-1 h-1 bg-blue-500 rounded-full" />
+									<span className="absolute -bottom-1 left-1/2 -translate-x-1/2 w-1 h-1 bg-blue-500 rounded-full" />
 								)}
 							</div>
 

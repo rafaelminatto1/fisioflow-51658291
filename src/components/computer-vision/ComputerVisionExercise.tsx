@@ -145,7 +145,7 @@ const CalibrationModal: React.FC<{
 	};
 
 	return (
-		<div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+		<div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
 			<div className="bg-white rounded-lg p-6 max-w-md w-full mx-4">
 				<h3 className="text-lg font-semibold mb-4">Calibração do Sistema</h3>
 
@@ -255,7 +255,7 @@ const SettingsPanel: React.FC<{
 	if (!isOpen) return null;
 
 	return (
-		<div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+		<div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
 			<div className="bg-white rounded-lg p-6 max-w-md w-full mx-4 max-h-[80vh] overflow-y-auto">
 				<h3 className="text-lg font-semibold mb-4">Configurações</h3>
 
@@ -610,7 +610,7 @@ const ComputerVisionExercise: React.FC<ComputerVisionExerciseProps> = ({
 									</div>
 								)}
 
-								<div className="bg-black bg-opacity-50 text-white px-3 py-1 rounded text-sm">
+								<div className="bg-black/50 text-white px-3 py-1 rounded text-sm">
 									FPS: {processingStats.fps} | Latência:{" "}
 									{processingStats.latency}ms
 								</div>

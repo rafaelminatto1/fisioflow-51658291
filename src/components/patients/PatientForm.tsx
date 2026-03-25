@@ -62,13 +62,15 @@ import { SmartDatePicker } from "@/components/ui/smart-date-picker";
 
 interface PatientFormProps {
 	patient?: Patient;
-	onSubmit: (
+	onSubmit?: (
 		data: PatientCreateInput | PatientUpdateInput,
 	) => void | Promise<void>;
 	isLoading?: boolean;
 	submitLabel?: string;
 	organizationId: string;
 	hideActions?: boolean;
+	onCancel?: () => void;
+	intent?: "create" | "update";
 }
 
 export const PatientForm = forwardRef<HTMLFormElement, PatientFormProps>(
@@ -80,6 +82,8 @@ export const PatientForm = forwardRef<HTMLFormElement, PatientFormProps>(
 			submitLabel = "Salvar",
 			organizationId,
 			hideActions = false,
+			intent = "create",
+			onCancel,
 		},
 		ref,
 	) => {
@@ -119,7 +123,7 @@ export const PatientForm = forwardRef<HTMLFormElement, PatientFormProps>(
 				health_insurance: patient?.health_insurance || "",
 				insurance_number: patient?.insurance_number || "",
 				observations: patient?.observations || "",
-				status: patient?.status || "Inicial",
+				status: (patient?.status as any) || "Inicial",
 			},
 		});
 
@@ -170,7 +174,7 @@ export const PatientForm = forwardRef<HTMLFormElement, PatientFormProps>(
 			try {
 				const submitData: PatientCreateInput | PatientUpdateInput = {
 					...data,
-					status: data.status,
+					status: (data.status as any) || (patient?.status as any) || "Inicial",
 					organization_id: organizationId,
 				};
 
@@ -180,7 +184,29 @@ export const PatientForm = forwardRef<HTMLFormElement, PatientFormProps>(
 					organization_id: submitData.organization_id,
 				});
 
-				await onSubmit(submitData);
+				// Remove organization_id if it exists since it might not be in the update type
+				if ("organization_id" in submitData) {
+					delete (submitData as any).organization_id;
+				}
+
+				if (onSubmit) {
+					await onSubmit(submitData as any);
+				} else {
+					// Native submission logic for React Router actions
+					const formData = new FormData();
+					formData.append("intent", intent);
+					if (patient?.id) formData.append("id", patient.id);
+					formData.append("data", JSON.stringify(submitData));
+					
+					// This relies on the parent component triggering requestSubmit() 
+					// which is already handled via handleExternalSubmit in Modals
+					// and for direct form submission we need to ensure the values are in the form
+					
+					const dataInput = (ref as any)?.current?.querySelector('input[name="data"]');
+					if (dataInput) {
+						dataInput.value = JSON.stringify(submitData);
+					}
+				}
 			} catch (error) {
 				console.error("[PatientForm] Submit Error:", error);
 				toast.error("Erro ao salvar paciente. Tente novamente.");
@@ -211,10 +237,14 @@ export const PatientForm = forwardRef<HTMLFormElement, PatientFormProps>(
 		return (
 			<form
 				ref={ref}
+				method="post"
 				onSubmit={handleSubmit(onFormSubmit, onFormInvalid)}
 				className="space-y-6"
 				data-testid="patient-form"
 			>
+				<input type="hidden" name="intent" value={intent} />
+				{patient?.id && <input type="hidden" name="id" value={patient.id} />}
+				<input type="hidden" name="data" />
 				<Tabs
 					value={activeTab}
 					onValueChange={(value) => setActiveTab(value as typeof activeTab)}
@@ -482,8 +512,7 @@ export const PatientForm = forwardRef<HTMLFormElement, PatientFormProps>(
 											id="medical_history"
 											placeholder="Descreva o histórico de saúde, cirurgias anteriores, etc."
 											value={watch("medical_history") || ""}
-											onChange={(val) => setValue("medical_history", val)}
-											minHeight={100}
+											onValueChange={(val: string) => setValue("medical_history", val)}
 										/>
 									</div>
 
@@ -716,8 +745,7 @@ export const PatientForm = forwardRef<HTMLFormElement, PatientFormProps>(
 										id="observations"
 										placeholder="Anotações importantes sobre o paciente, preferências, etc."
 										value={watch("observations") || ""}
-										onChange={(val) => setValue("observations", val)}
-										minHeight={100}
+										onValueChange={(val: string) => setValue("observations", val)}
 									/>
 								</div>
 							</CardContent>

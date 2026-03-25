@@ -2,10 +2,12 @@ import React, { useMemo } from "react";
 import { FormProvider } from "react-hook-form";
 import { useQueryClient } from "@tanstack/react-query";
 import { parseISO } from "date-fns";
+import { toast } from "@/hooks/use-toast";
+import { logger } from "@/lib/errors/logger";
 import { Calendar as CalendarIcon, SlidersHorizontal } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { CustomModal } from "@/components/ui/custom-modal";
-import { useTherapists } from "@/hooks/useTherapists";
+import { useTherapists, type TherapistOption } from "@/hooks/useTherapists";
 import { useAuth } from "@/contexts/AuthContext";
 import { useOrganizations } from "@/hooks/useOrganizations";
 import { useActivePatients } from "@/hooks/usePatients";
@@ -36,6 +38,8 @@ export interface AppointmentModalProps {
 	defaultTime?: string;
 	defaultPatientId?: string;
 	mode?: "create" | "edit" | "view";
+	therapists?: TherapistOption[];
+	patients?: Patient[];
 }
 
 const getAppointmentPatientName = (appointment?: any) =>
@@ -53,17 +57,24 @@ export const AppointmentModal: React.FC<AppointmentModalProps> = ({
 	defaultTime,
 	defaultPatientId,
 	mode: initialMode = "create",
+	therapists: externalTherapists = [],
+	patients: externalPatients = [],
 }) => {
 	const isMobile = useIsMobile();
 	const queryClient = useQueryClient();
 	const { user } = useAuth();
 	const { currentOrganization } = useOrganizations();
-	const { therapists, isLoading: therapistsLoading } = useTherapists();
-	const { data: activePatients, isLoading: patientsLoading } =
+	
+	// Use external props if available, otherwise fallback to hooks (for backward compatibility if needed)
+	const { therapists: hookTherapists = [], isLoading: therapistsLoading } = useTherapists();
+	const therapists = externalTherapists.length > 0 ? externalTherapists : hookTherapists;
+
+	const { data: hookPatients, isLoading: patientsLoading } =
 		useActivePatients({
-			enabled: isOpen,
+			enabled: isOpen && externalPatients.length === 0,
 			organizationId: currentOrganization?.id,
 		}) as { data: Patient[] | undefined; isLoading: boolean };
+	const activePatients = externalPatients.length > 0 ? externalPatients : (hookPatients || []);
 	const { data: appointments = [] } = useAppointments({
 		enabled: isOpen,
 		enableRealtime: false,
@@ -199,9 +210,11 @@ export const AppointmentModal: React.FC<AppointmentModalProps> = ({
 									(data) => handleSave(data, recurringConfig),
 									(errors) => {
 										console.error("Form validation errors", errors);
-										toast.error(
-											"Verifique os campos obrigatórios do formulário",
-										);
+										toast({
+											variant: "destructive",
+											title: "Erro no formulário",
+											description: "Verifique os campos obrigatórios do formulário",
+										});
 									},
 								)(e);
 							}}
@@ -303,8 +316,8 @@ export const AppointmentModal: React.FC<AppointmentModalProps> = ({
 						watchedDate && watch("appointment_time")
 							? getMinCapacityForInterval(
 									watchedDate.getDay(),
-									watch("appointment_time"),
-									watch("duration"),
+									watch("appointment_time") || "08:00",
+									watch("duration") || 60,
 								)
 							: 1
 					}
@@ -333,8 +346,8 @@ export const AppointmentModal: React.FC<AppointmentModalProps> = ({
 								? parseISO(pendingFormData.appointment_date)
 								: new Date()
 						}
-						time={pendingFormData.appointment_time}
-						defaultPatientId={pendingFormData.patient_id}
+						time={pendingFormData.appointment_time || "08:00"}
+						defaultPatientId={pendingFormData.patient_id || ""}
 					/>
 				)}
 			</CustomModal>

@@ -1,10 +1,6 @@
 import React from "react";
 import { UserPlus, Loader2, BadgeCheck } from "lucide-react";
 import { PatientForm } from "./PatientForm";
-import {
-	useCreatePatient,
-	type PatientCreateInput,
-} from "@/hooks/usePatientCrud";
 import { useOrganizations } from "@/hooks/useOrganizations";
 import {
 	CustomModal,
@@ -15,6 +11,7 @@ import {
 } from "@/components/ui/custom-modal";
 import { Button } from "@/components/ui/button";
 import { useIsMobile } from "@/hooks/use-mobile";
+import { useNavigation } from "react-router";
 
 interface PatientCreateModalProps {
 	open: boolean;
@@ -28,20 +25,14 @@ export const PatientCreateModal: React.FC<PatientCreateModalProps> = ({
 	const isMobile = useIsMobile();
 	const { currentOrganization, isCurrentOrgLoading, currentOrgError } =
 		useOrganizations();
-	const createMutation = useCreatePatient();
+	const navigation = useNavigation();
 	const formRef = React.useRef<HTMLFormElement>(null);
 
-	const handleSubmit = async (data: PatientCreateInput) => {
-		if (!currentOrganization?.id) {
-			console.error("[PatientCreateModal] Missing organization on submit");
-			throw new Error("Organização não encontrada");
-		}
+	const isSubmitting =
+		navigation.state === "submitting" &&
+		navigation.formData?.get("intent") === "create";
 
-		await createMutation.mutateAsync(data);
-		onOpenChange(false);
-	};
-
-	const isLoading = createMutation.isPending;
+	const isLoading = isSubmitting;
 
 	const handleExternalSubmit = () => {
 		if (formRef.current) {
@@ -90,9 +81,10 @@ export const PatientCreateModal: React.FC<PatientCreateModalProps> = ({
 						<PatientForm
 							ref={formRef}
 							organizationId={currentOrganization.id}
-							onSubmit={handleSubmit}
 							isLoading={isLoading}
 							hideActions={true}
+							intent="create"
+							onCancel={() => onOpenChange(false)}
 						/>
 					)}
 				</div>

@@ -17,12 +17,11 @@ import {
 	Mail,
 	UserCheck,
 } from "lucide-react";
-import { useNavigate } from "react-router-dom";
+import { useSubmit, useNavigate } from "react-router";
 import { PatientEditModal } from "./PatientEditModal";
 import { PatientDeleteDialog } from "./PatientDeleteDialog";
-import { useUpdatePatientStatus } from "@/hooks/usePatientCrud";
 import { toast } from "@/hooks/use-toast";
-import type { Patient } from "@/hooks/usePatientCrud";
+import type { PatientRow as Patient } from "@/types/workers";
 
 interface PatientActionsProps {
 	patient: Patient;
@@ -41,7 +40,7 @@ export const PatientActions: React.FC<PatientActionsProps> = ({ patient }) => {
 	const [editModalOpen, setEditModalOpen] = useState(false);
 	const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
 
-	const updateStatusMutation = useUpdatePatientStatus();
+	const submit = useSubmit();
 
 	const handleQuickCall = () => {
 		if (patient.phone) {
@@ -75,13 +74,13 @@ export const PatientActions: React.FC<PatientActionsProps> = ({ patient }) => {
 		navigate(`/patients/${patient.id}?tab=clinical`);
 	};
 
-	const handleStatusChange = async (
+	const handleStatusChange = (
 		status: "Inicial" | "Em Tratamento" | "Recuperação" | "Concluído",
 	) => {
-		await updateStatusMutation.mutateAsync({
-			id: patient.id,
-			status,
-		});
+		submit(
+			{ intent: "updateStatus", id: patient.id, status },
+			{ method: "post" }
+		);
 	};
 
 	const currentStatus = statusOptions.find((s) => s.value === patient.status);
@@ -150,7 +149,6 @@ export const PatientActions: React.FC<PatientActionsProps> = ({ patient }) => {
 							<DropdownMenuItem
 								key={option.value}
 								onClick={() => handleStatusChange(option.value)}
-								disabled={updateStatusMutation.isPending}
 							>
 								<UserCheck className="mr-2 h-4 w-4" />
 								Mudar para {option.icon} {option.label}
@@ -190,6 +188,7 @@ export const PatientActions: React.FC<PatientActionsProps> = ({ patient }) => {
 				open={deleteDialogOpen}
 				onOpenChange={setDeleteDialogOpen}
 				patientId={patient.id}
+				patientName={patient.full_name}
 			/>
 		</>
 	);

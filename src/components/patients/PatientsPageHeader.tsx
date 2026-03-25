@@ -321,7 +321,7 @@ function StatChip({
 	const baseClasses = cn(
 		"flex items-center gap-1.5 rounded-full border px-2.5 py-1 transition-all",
 		variantClasses[variant],
-		onClick && "cursor-pointer hover:bg-opacity-80 active:scale-[0.98]",
+		onClick && "cursor-pointer hover:opacity-80 active:scale-[0.98]",
 		isSelected &&
 			"ring-1 ring-primary ring-offset-1 ring-offset-background font-medium",
 	);
