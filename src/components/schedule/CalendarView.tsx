@@ -1,31 +1,8 @@
-/**
- * CalendarView - Main calendar component for appointment scheduling
- */
-
-import React, { useState, useMemo, useEffect, useCallback, useRef, memo } from "react";
+import React from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import {
-	format,
-	startOfWeek,
-	addDays,
-	addWeeks,
-	addMonths,
-	subDays,
-	subWeeks,
-	subMonths,
-	isSameDay
-} from "date-fns";
+import { format, startOfWeek, addDays, subDays, subWeeks, subMonths, isSameDay } from "date-fns";
 import { ptBR } from "date-fns/locale";
-import {
-	ChevronLeft,
-	ChevronRight,
-	Plus,
-	CheckSquare,
-	Settings as SettingsIcon,
-	Sparkles,
-	Search,
-	X,
-} from "lucide-react";
+import { ChevronLeft, ChevronRight, Plus, CheckSquare, Settings as SettingsIcon, Sparkles, Search, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Appointment } from "@/types/appointment";
@@ -45,14 +22,10 @@ import { Link } from "react-router-dom";
 import { toast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
 import { WaitlistIndicator } from "./WaitlistIndicator";
-import {
-	applyOptimisticAppointmentOverlay,
-	hasOptimisticUpdateSynced,
-	type PendingOptimisticUpdate,
-} from "./calendarOptimistic";
+import { applyOptimisticAppointmentOverlay, hasOptimisticUpdateSynced, type PendingOptimisticUpdate } from "./calendarOptimistic";
 import { NON_CAPACITY_STATUSES, isMarkedOverbooked } from "./shared/capacity";
 import { useCardSize } from "@/hooks/useCardSize";
-import { BUSINESS_HOURS, calculateSlotHeightFromCardSize } from "@/lib/config/agenda";
+import { BUSINESS_HOURS } from "@/lib/config/agenda";
 
 export type CalendarViewType = "day" | "week" | "month";
 
@@ -63,12 +36,7 @@ interface CalendarViewProps {
 	viewType: CalendarViewType;
 	onViewTypeChange: (type: CalendarViewType) => void;
 	onTimeSlotClick: (date: Date, time: string) => void;
-	onAppointmentReschedule?: (
-		appointment: Appointment,
-		newDate: Date,
-		newTime: string,
-		ignoreCapacity?: boolean,
-	) => Promise<void>;
+	onAppointmentReschedule?: (appointment: Appointment, newDate: Date, newTime: string, ignoreCapacity?: boolean) => Promise<void>;
 	onEditAppointment?: (appointment: Appointment) => void;
 	onDeleteAppointment?: (appointment: Appointment) => void;
 	onDuplicateAppointment?: (appointment: Appointment) => void;
@@ -82,11 +50,7 @@ interface CalendarViewProps {
 	onToggleSelectionMode?: () => void;
 	onCancelAllToday?: () => void;
 	filters?: { status: string[]; types: string[]; therapists: string[] };
-	onFiltersChange?: (filters: {
-		status: string[];
-		types: string[];
-		therapists: string[];
-	}) => void;
+	onFiltersChange?: (filters: { status: string[]; types: string[]; therapists: string[] }) => void;
 	onClearFilters?: () => void;
 	totalAppointmentsCount?: number;
 	patientFilter?: string | null;
@@ -118,57 +82,36 @@ const parseAppointmentDate = (dateValue: Appointment["date"]): Date | null => {
 	return null;
 };
 
-const CalendarView = ({
-	appointments,
-	currentDate,
-	onDateChange,
-	viewType,
-	onViewTypeChange,
-	onTimeSlotClick,
-	onAppointmentReschedule,
-	onEditAppointment,
-	onDeleteAppointment,
-	onDuplicateAppointment,
-	onStatusChange,
-	selectionMode = false,
-	selectedIds = new Set(),
-	onToggleSelection,
-	rescheduleSuccessMessage = null,
-	onCreateAppointment,
-	onToggleSelectionMode,
-	onCancelAllToday,
-	filters,
-	onFiltersChange,
-	onClearFilters,
-	totalAppointmentsCount,
-	patientFilter,
-	onPatientFilterChange,
-}: CalendarViewProps) => {
-	const [patientSearchQuery, setPatientSearchQuery] = useState("");
-	const [patientSearchOpen, setPatientSearchOpen] = useState(false);
-	const patientSearchRef = useRef<HTMLDivElement>(null);
+export default function CalendarView({
+	appointments, currentDate, onDateChange, viewType, onViewTypeChange,
+	onTimeSlotClick, onAppointmentReschedule, onEditAppointment,
+	onDeleteAppointment, onDuplicateAppointment, onStatusChange,
+	selectionMode = false, selectedIds = new Set(), onToggleSelection,
+	rescheduleSuccessMessage = null, onCreateAppointment, onToggleSelectionMode,
+	onCancelAllToday, filters, onFiltersChange, onClearFilters,
+	totalAppointmentsCount, patientFilter, onPatientFilterChange,
+}: CalendarViewProps) {
+	const [patientSearchQuery, setPatientSearchQuery] = React.useState("");
+	const [patientSearchOpen, setPatientSearchOpen] = React.useState(false);
+	const patientSearchRef = React.useRef<HTMLDivElement>(null);
 
-	const uniquePatients = useMemo(() => {
+	const uniquePatients = React.useMemo(() => {
 		const map = new Map<string, string>();
 		for (const apt of appointments) {
-			if (apt.patientName && apt.patientId) {
-				map.set(apt.patientId, apt.patientName);
-			}
+			if (apt.patientName && apt.patientId) map.set(apt.patientId, apt.patientName);
 		}
 		return Array.from(map.entries()).map(([id, name]) => ({ id, name }));
 	}, [appointments]);
 
-	const patientSuggestions = useMemo(() => {
+	const patientSuggestions = React.useMemo(() => {
 		if (!patientSearchQuery.trim()) return uniquePatients;
 		const q = patientSearchQuery.toLowerCase().trim();
 		return uniquePatients.filter((p) => p.name.toLowerCase().includes(q));
 	}, [uniquePatients, patientSearchQuery]);
 
-	useEffect(() => {
+	React.useEffect(() => {
 		const handleClickOutside = (e: MouseEvent) => {
-			if (patientSearchRef.current && !patientSearchRef.current.contains(e.target as Node)) {
-				setPatientSearchOpen(false);
-			}
+			if (patientSearchRef.current && !patientSearchRef.current.contains(e.target as Node)) setPatientSearchOpen(false);
 		};
 		if (patientSearchOpen) {
 			document.addEventListener("mousedown", handleClickOutside);
@@ -176,19 +119,18 @@ const CalendarView = ({
 		}
 	}, [patientSearchOpen]);
 
-	const [openPopoverId, setOpenPopoverId] = useState<string | null>(null);
-	const [currentTime, setCurrentTime] = useState(new Date());
+	const [openPopoverId, setOpenPopoverId] = React.useState<string | null>(null);
+	const [currentTime, setCurrentTime] = React.useState(new Date());
 	const { getMinCapacityForInterval } = useScheduleCapacity();
 	const { cardSize, heightScale } = useCardSize();
+	const [pendingOptimisticUpdate, setPendingOptimisticUpdate] = React.useState<PendingOptimisticUpdate | null>(null);
 
-	const [pendingOptimisticUpdate, setPendingOptimisticUpdate] = useState<PendingOptimisticUpdate | null>(null);
-
-	const baseDisplayAppointments = useMemo(() => {
+	const baseDisplayAppointments = React.useMemo(() => {
 		const base = applyOptimisticAppointmentOverlay(appointments, pendingOptimisticUpdate);
 		return (base || []).filter((a): a is Appointment => a != null && typeof (a as Appointment).id === "string");
 	}, [appointments, pendingOptimisticUpdate]);
 
-	const overbookedAppointmentIds = useMemo(() => {
+	const overbookedAppointmentIds = React.useMemo(() => {
 		const groupedByDate = new Map<string, Appointment[]>();
 		for (const apt of baseDisplayAppointments) {
 			const aptDate = parseAppointmentDate(apt.date);
@@ -209,11 +151,10 @@ const CalendarView = ({
 				const startMinutes = timeToMinutes(apt.time);
 				const durationMinutes = Math.max(1, apt.duration || 60);
 				const endMinutes = startMinutes + durationMinutes;
-				const normalizedTime = normalizeSlotTime(apt.time);
 				for (let i = activeIntervals.length - 1; i >= 0; i--) {
 					if (activeIntervals[i].end <= startMinutes) activeIntervals.splice(i, 1);
 				}
-				const capacityForInterval = getMinCapacityForInterval(aptDate.getDay(), normalizedTime, durationMinutes);
+				const capacityForInterval = getMinCapacityForInterval(aptDate.getDay(), normalizeSlotTime(apt.time), durationMinutes);
 				if (isMarkedOverbooked(apt.notes) || activeIntervals.length + 1 > capacityForInterval) result.add(apt.id);
 				activeIntervals.push({ id: apt.id, end: endMinutes });
 			}
@@ -221,18 +162,14 @@ const CalendarView = ({
 		return result;
 	}, [baseDisplayAppointments, getMinCapacityForInterval]);
 
-	const displayAppointments = useMemo(() => {
-		return baseDisplayAppointments.map((apt) => {
-			const isOverbooked = overbookedAppointmentIds.has(apt.id);
-			if (apt.isOverbooked === isOverbooked) return apt;
-			return { ...apt, isOverbooked };
-		});
-	}, [baseDisplayAppointments, overbookedAppointmentIds]);
+	const displayAppointments = React.useMemo(() => baseDisplayAppointments.map((apt) => {
+		const isOverbooked = overbookedAppointmentIds.has(apt.id);
+		return apt.isOverbooked === isOverbooked ? apt : { ...apt, isOverbooked };
+	}), [baseDisplayAppointments, overbookedAppointmentIds]);
 
-	const appointmentsByDate = useMemo(() => {
+	const appointmentsByDate = React.useMemo(() => {
 		const map = new Map<string, Appointment[]>();
 		(displayAppointments || []).forEach((apt) => {
-			if (!apt || !apt.date) return;
 			const aptDate = parseAppointmentDate(apt.date);
 			if (!aptDate) return;
 			const dateKey = format(aptDate, "yyyy-MM-dd");
@@ -242,12 +179,9 @@ const CalendarView = ({
 		return map;
 	}, [displayAppointments]);
 
-	const getAppointmentsForDate = useCallback((date: Date) => {
-		const dateKey = format(date, "yyyy-MM-dd");
-		return appointmentsByDate.get(dateKey) || [];
-	}, [appointmentsByDate]);
+	const getAppointmentsForDate = React.useCallback((date: Date) => appointmentsByDate.get(format(date, "yyyy-MM-dd")) || [], [appointmentsByDate]);
 
-	const getAppointmentsForSlot = useCallback((date: Date, time: string) => {
+	const getAppointmentsForSlot = React.useCallback((date: Date, time: string) => {
 		const dateAppointments = getAppointmentsForDate(date);
 		const normalizedTime = time.substring(0, 5);
 		const [targetHour, targetMin] = normalizedTime.split(":").map(Number);
@@ -261,20 +195,16 @@ const CalendarView = ({
 		});
 	}, [getAppointmentsForDate]);
 
-	const handleOptimisticUpdate = useCallback((appointmentId: string, newDate: Date, newTime: string) => {
-		const safeAppointments = (appointments || []).filter((a): a is Appointment => a != null && typeof (a as Appointment).id === "string");
-		const appointment = safeAppointments.find((a) => a.id === appointmentId);
+	const handleOptimisticUpdate = React.useCallback((appointmentId: string, newDate: Date, newTime: string) => {
+		const appointment = appointments.find((a) => a?.id === appointmentId);
 		if (!appointment) return;
 		setPendingOptimisticUpdate({
-			id: appointmentId,
-			originalDate: appointment.date,
-			originalTime: appointment.time,
-			targetDate: formatDateToLocalISO(newDate) as Appointment["date"],
-			targetTime: newTime,
+			id: appointmentId, originalDate: appointment.date, originalTime: appointment.time,
+			targetDate: formatDateToLocalISO(newDate) as Appointment["date"], targetTime: newTime,
 		});
 	}, [appointments]);
 
-	const handleRevertUpdate = useCallback(() => setPendingOptimisticUpdate(null), []);
+	const handleRevertUpdate = React.useCallback(() => setPendingOptimisticUpdate(null), []);
 
 	const {
 		dragState: dragStateNative, dropTarget: dropTargetNative, showConfirmDialog: showConfirmNative,
@@ -311,18 +241,18 @@ const CalendarView = ({
 	const handleConfirmOverCapacity = showOverCapacityNative ? handleConfirmOverCapacityNative : handleConfirmOverCapacityDndKit;
 	const handleCancelOverCapacity = showOverCapacityNative ? handleCancelOverCapacityNative : handleCancelOverCapacityDndKit;
 
-	useEffect(() => {
+	React.useEffect(() => {
 		const timer = setInterval(() => setCurrentTime(new Date()), 60000);
 		return () => clearInterval(timer);
 	}, []);
 
-	useEffect(() => {
+	React.useEffect(() => {
 		if (pendingOptimisticUpdate && !(dragState.savingAppointmentId || dragStateNative.savingAppointmentId) && hasOptimisticUpdateSynced(appointments, pendingOptimisticUpdate)) {
 			setPendingOptimisticUpdate(null);
 		}
 	}, [dragState.savingAppointmentId, dragStateNative.savingAppointmentId, appointments, pendingOptimisticUpdate]);
 
-	const navigateCalendar = useCallback((direction: "prev" | "next") => {
+	const navigateCalendar = React.useCallback((direction: "prev" | "next") => {
 		switch (viewType) {
 			case "day": onDateChange(direction === "prev" ? subDays(currentDate, 1) : addDays(currentDate, 1)); break;
 			case "week": onDateChange(direction === "prev" ? subWeeks(currentDate, 1) : addWeeks(currentDate, 1)); break;
@@ -330,7 +260,7 @@ const CalendarView = ({
 		}
 	}, [viewType, currentDate, onDateChange]);
 
-	const getHeaderTitle = useCallback(() => {
+	const getHeaderTitle = React.useCallback(() => {
 		switch (viewType) {
 			case "day": return format(currentDate, "d 'de' MMMM", { locale: ptBR });
 			case "week": {
@@ -345,7 +275,7 @@ const CalendarView = ({
 		}
 	}, [viewType, currentDate]);
 
-	const getStatusColor = useCallback((status: string, isOverCapacity = false) => {
+	const getStatusColor = React.useCallback((status: string, isOverCapacity = false) => {
 		if (isOverCapacity) return "bg-gradient-to-br from-red-600 to-rose-700 border-red-400 shadow-red-500/40 ring-2 ring-red-400/50 ring-offset-1";
 		const s = status.toLowerCase();
 		switch (s) {
@@ -364,14 +294,14 @@ const CalendarView = ({
 		}
 	}, []);
 
-	const getDaySchedule = useCallback((date: Date) => {
+	const getDaySchedule = React.useCallback((date: Date) => {
 		const dayOfWeek = date.getDay();
 		if (dayOfWeek === 0) return null;
 		const config = BUSINESS_HOURS.DEFAULT_SCHEDULE[dayOfWeek as keyof typeof BUSINESS_HOURS.DEFAULT_SCHEDULE];
 		return { open: config.START, close: config.END };
 	}, []);
 
-	const checkTimeBlocked = useCallback((date: Date, time: string) => {
+	const checkTimeBlocked = React.useCallback((date: Date, time: string) => {
 		const schedule = getDaySchedule(date);
 		if (!schedule) return { blocked: true, reason: "Fora do horário" };
 		const t = timeToMinutes(time);
@@ -379,61 +309,51 @@ const CalendarView = ({
 		return { blocked: false };
 	}, [getDaySchedule]);
 
-	const isDayClosedForDate = useCallback((date: Date) => getDaySchedule(date) === null, [getDaySchedule]);
+	const isDayClosedForDate = React.useCallback((date: Date) => getDaySchedule(date) === null, [getDaySchedule]);
 
-	const memoizedTimeSlots = useMemo(() => generateTimeSlots(currentDate), [currentDate]);
-	const weekTimeSlots = useMemo(() => generateTimeSlots(currentDate), [currentDate]);
+	const memoizedTimeSlots = React.useMemo(() => generateTimeSlots(currentDate), [currentDate]);
+	const weekTimeSlots = React.useMemo(() => generateTimeSlots(currentDate), [currentDate]);
 
-	const liveAnnouncement = rescheduleSuccessMessage ?? "";
-
-	const currentTimePosition = useMemo(() => {
+	const currentTimePosition = React.useMemo(() => {
 		const hours = currentTime.getHours();
 		const minutes = currentTime.getMinutes();
-		const totalMinutesFromStart = hours * 60 + minutes - 7 * 60; // Start from 7am
-		const totalDayMinutes = 17 * 60; // 7am to 12am = 17 hours
-		return (totalMinutesFromStart / totalDayMinutes) * 100;
+		const totalMinutesFromStart = hours * 60 + minutes - 7 * 60;
+		return (totalMinutesFromStart / (17 * 60)) * 100;
 	}, [currentTime]);
 
 	return (
 		<>
-			{liveAnnouncement && <div className="sr-only" role="status" aria-live="polite" aria-atomic="true">{liveAnnouncement}</div>}
-			<Card className="flex flex-col border-none shadow-premium-lg h-full flex-1 min-h-0 bg-slate-50 dark:bg-slate-950/20" role="region" aria-label="Calendário">
+			{rescheduleSuccessMessage && <div className="sr-only" role="status" aria-live="polite">{rescheduleSuccessMessage}</div>}
+			<Card className="flex flex-col border-none shadow-premium-lg h-full flex-1 min-h-0 bg-slate-50 dark:bg-slate-950/20" role="region">
 				<CardContent className="p-0 flex flex-col h-full">
-					<div className="z-[45] flex-shrink-0 sticky top-0 px-4 py-3 bg-white/70 dark:bg-slate-900/70 backdrop-blur-xl border-b border-slate-200/50 dark:border-slate-800/50 shadow-premium-sm transition-all duration-300">
+					<div className="z-[45] flex-shrink-0 sticky top-0 px-4 py-3 bg-white/70 dark:bg-slate-900/70 backdrop-blur-xl border-b border-slate-200/50 shadow-premium-sm transition-all duration-300">
 						<div className="flex flex-wrap items-center justify-between gap-4 max-w-[1800px] mx-auto">
 							<div className="flex items-center gap-4">
-								<div className="flex bg-slate-100/50 dark:bg-slate-800/50 p-1 rounded-xl border border-slate-200/30 shadow-inner">
+								<div className="flex bg-slate-100/50 p-1 rounded-xl border border-slate-200/30 shadow-inner">
 									<Button variant="ghost" size="icon" onClick={() => navigateCalendar("prev")} className="h-8 w-8 rounded-lg hover:bg-white shadow-none p-0"><ChevronLeft className="h-4 w-4" /></Button>
 									<Button variant="ghost" size="icon" onClick={() => navigateCalendar("next")} className="h-8 w-8 rounded-lg hover:bg-white shadow-none p-0"><ChevronRight className="h-4 w-4" /></Button>
 								</div>
 								<Button variant="outline" size="sm" onClick={() => onDateChange(new Date())} className="h-9 px-4 rounded-xl font-black text-[10px] uppercase tracking-[0.2em] border-blue-100 bg-white/50 hover:bg-blue-50 shadow-sm">Hoje</Button>
 								<h2 className="font-serif text-xl md:text-2xl text-blue-950 dark:text-blue-50 tracking-tight capitalize">{getHeaderTitle()}</h2>
-								{totalAppointmentsCount !== undefined && (
-									<div className="hidden sm:flex items-center gap-1.5 px-3 py-1 bg-blue-500/10 dark:bg-blue-500/20 rounded-full border border-blue-200/50 dark:border-blue-800/50">
-										<Sparkles className="w-3.5 h-3.5 text-blue-600 dark:text-blue-400" />
-										<span className="text-[11px] font-black text-blue-700 dark:text-blue-300 uppercase tracking-widest">{totalAppointmentsCount} Atendimentos</span>
-									</div>
-								)}
 							</div>
 							<div className="flex items-center gap-3">
 								<div className="relative group" ref={patientSearchRef}>
 									{patientFilter ? (
-										<Button variant="outline" size="sm" onClick={() => { onPatientFilterChange?.(null); setPatientSearchQuery(""); }} className="h-9 px-3 rounded-xl gap-2 border-blue-200 bg-blue-50 text-blue-700"><Search className="w-3.5 h-3.5" /><span className="text-xs font-bold truncate max-w-[120px]">{patientFilter}</span><X className="w-3.5 h-3.5 p-0.5 rounded-full bg-blue-200" /></Button>
+										<Button variant="outline" size="sm" onClick={() => onPatientFilterChange?.(null)} className="h-9 px-3 rounded-xl gap-2 border-blue-200 bg-blue-50 text-blue-700"><Search className="w-3.5 h-3.5" /><span className="text-xs font-bold truncate max-w-[120px]">{patientFilter}</span><X className="w-3.5 h-3.5 p-0.5 rounded-full bg-blue-200" /></Button>
 									) : (
 										<div className="relative">
 											<Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
-											<input type="text" placeholder="Pesquisar paciente..." value={patientSearchQuery} onChange={(e) => { setPatientSearchQuery(e.target.value); setPatientSearchOpen(true); }} onFocus={() => setPatientSearchOpen(true)} className="h-9 w-[200px] lg:w-[240px] pl-10 pr-4 text-xs font-medium rounded-xl border border-slate-200 bg-slate-50 focus:bg-white outline-none transition-all shadow-inner" />
+											<input type="text" placeholder="Pesquisar paciente..." value={patientSearchQuery} onChange={(e) => { setPatientSearchQuery(e.target.value); setPatientSearchOpen(true); }} onFocus={() => setPatientSearchOpen(true)} className="h-9 w-[200px] lg:w-[240px] pl-10 pr-4 text-xs font-medium rounded-xl border border-slate-200 bg-slate-50 focus:bg-white outline-none shadow-inner" />
 										</div>
 									)}
 									<AnimatePresence>
 										{patientSearchOpen && !patientFilter && (
-											<motion.div initial={{ opacity: 0, y: 10, scale: 0.95 }} animate={{ opacity: 1, y: 0, scale: 1 }} exit={{ opacity: 0, scale: 0.95 }} className="absolute top-full right-0 mt-2 w-[320px] max-h-[400px] overflow-hidden bg-white/95 dark:bg-slate-900/95 backdrop-blur-xl border border-blue-100/50 rounded-2xl shadow-premium-xl z-[60]">
-												<div className="px-4 py-3 border-b border-slate-100 bg-slate-50/50"><span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Sugestões</span></div>
+											<motion.div initial={{ opacity: 0, y: 10, scale: 0.95 }} animate={{ opacity: 1, y: 0, scale: 1 }} exit={{ opacity: 0, scale: 0.95 }} className="absolute top-full right-0 mt-2 w-[320px] max-h-[400px] overflow-hidden bg-white/95 backdrop-blur-xl border border-blue-100/50 rounded-2xl shadow-premium-xl z-[60]">
 												<div className="overflow-y-auto max-h-[340px]">
-													{patientSuggestions.length === 0 ? <div className="px-4 py-10 text-center"><p className="text-sm text-slate-400">Nenhum encontrado</p></div> : patientSuggestions.map((p) => (
+													{patientSuggestions.map((p) => (
 														<button key={p.id} onClick={() => { onPatientFilterChange?.(p.name); setPatientSearchQuery(""); setPatientSearchOpen(false); }} className="w-full text-left px-4 py-3 hover:bg-blue-50 transition-all flex items-center gap-3 border-b border-slate-100 last:border-0 group/item">
 															<div className="w-9 h-9 rounded-xl bg-blue-100 flex items-center justify-center shrink-0"><span className="text-xs font-black text-blue-700">{p.name.charAt(0).toUpperCase()}</span></div>
-															<div className="flex flex-col min-w-0"><span className="text-sm font-bold text-slate-900 truncate group-hover/item:text-blue-600">{p.name}</span><span className="text-[10px] text-slate-400 uppercase">Paciente Ativo</span></div>
+															<span className="text-sm font-bold text-slate-900 truncate group-hover/item:text-blue-600">{p.name}</span>
 														</button>
 													))}
 												</div>
@@ -441,11 +361,7 @@ const CalendarView = ({
 										)}
 									</AnimatePresence>
 								</div>
-								<div className="flex items-center bg-slate-100/50 dark:bg-slate-800/50 p-1 rounded-xl border border-slate-200/30 shadow-inner">
-									<Link to="/agenda/settings"><Button variant="ghost" size="icon" className="h-8 w-8 rounded-lg transition-all"><SettingsIcon className="w-4 h-4 text-slate-500" /></Button></Link>
-									{onToggleSelectionMode && <Button variant="ghost" size="icon" className={cn("h-8 w-8 rounded-lg transition-all", selectionMode ? "bg-blue-600 text-white shadow-md shadow-blue-500/20" : "text-slate-500 hover:bg-white")} onClick={onToggleSelectionMode} title="Modo Seleção"><CheckSquare className="h-4 w-4" /></Button>}
-								</div>
-								<div className="flex bg-slate-100/80 dark:bg-slate-800/80 p-1 rounded-xl border border-slate-200/30">
+								<div className="flex bg-slate-100/80 p-1 rounded-xl border border-slate-200/30">
 									{(["day", "week", "month"] as CalendarViewType[]).map((type) => (
 										<button key={type} onClick={() => onViewTypeChange(type)} className={cn("px-4 py-1.5 text-[10px] font-black uppercase tracking-widest rounded-lg transition-all duration-300", viewType === type ? "bg-white text-blue-600 shadow-premium-sm" : "text-slate-500 hover:text-slate-900")}>{type === "day" ? "Dia" : type === "week" ? "Semana" : "Mês"}</button>
 									))}
@@ -514,6 +430,4 @@ const CalendarView = ({
 			<RescheduleCapacityDialog open={isOverCapacityDialogOpen} onOpenChange={(open) => !open && handleCancelOverCapacity()} appointment={activePendingOverCapacity?.appointment || null} newDate={activePendingOverCapacity?.newDate || null} newTime={activePendingOverCapacity?.newTime || null} currentCount={activePendingOverCapacity?.currentCount || 0} maxCapacity={activePendingOverCapacity?.maxCapacity || 0} onConfirm={handleConfirmOverCapacity} onCancel={handleCancelOverCapacity} />
 		</>
 	);
-};
-
-export default CalendarView;
+}
