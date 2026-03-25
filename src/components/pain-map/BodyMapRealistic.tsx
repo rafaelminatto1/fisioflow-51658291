@@ -727,7 +727,7 @@ export function BodyMapRealistic({
 								<div
 									key={point.id}
 									className={cn(
-										"absolute transform -translate-x-1/2 -translate-y-1/2 transition-all duration-500",
+										"absolute -translate-x-1/2 -translate-y-1/2 transition-all duration-500",
 										"group cursor-pointer",
 									)}
 									style={{ left: `${point.x}%`, top: `${point.y}%` }}

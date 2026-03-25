@@ -1,5 +1,6 @@
 import { sentryVitePlugin } from "@sentry/vite-plugin";
 import tailwindcss from "@tailwindcss/vite";
+import react from "@vitejs/plugin-react";
 import path from "path";
 import { visualizer } from "rollup-plugin-visualizer";
 import { defineConfig } from "vite";
@@ -95,6 +96,7 @@ export default defineConfig(({ mode }) => {
 		},
 		plugins: [
 			tailwindcss(),
+			react(),
 			mockMobileModules(),
 			lazyCornerstoneCharls(),
 			htmlPlugin(appVersion, buildTime),
@@ -159,7 +161,7 @@ export default defineConfig(({ mode }) => {
 			target: "es2020",
 			cssTarget: "es2020",
 			sourcemap: !isProduction,
-			// Standard Vite 7 options
+			minify: isProduction ? "esbuild" : false,
 			rollupOptions: {
 				external: ["fs", "path", "crypto", "stream", "util"],
 				output: {

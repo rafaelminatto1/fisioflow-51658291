@@ -158,7 +158,7 @@ export default function BiomechanicsAnalysisPage() {
                                     <p className="text-sm text-slate-400 font-medium leading-relaxed">
                                         {cat.description}
                                     </p>
-                                    <div className="pt-4 flex items-center text-[10px] font-black text-primary tracking-widest uppercase opacity-0 group-hover:opacity-100 transform translate-y-2 group-hover:translate-y-0 transition-all duration-300">
+                                    <div className="pt-4 flex items-center text-[10px] font-black text-primary tracking-widest uppercase opacity-0 group-hover:opacity-100 translate-y-2group-hover:translate-y-0 transition-all duration-300">
                                         INICIAR PROTOCOLO <PlayCircle className="ml-2 h-4 w-4" />
                                     </div>
                                 </div>

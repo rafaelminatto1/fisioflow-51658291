@@ -165,7 +165,7 @@ function RiskGauge({ score, label }: RiskGaugeProps) {
 		<div className="flex flex-col items-center gap-2">
 			<div className="relative w-24 h-24">
 				<svg
-					className="w-full h-full transform -rotate-90"
+					className="w-full h-full -rotate-90"
 					viewBox="0 0 100 100"
 				>
 					<circle

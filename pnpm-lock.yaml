@@ -531,12 +531,6 @@ importers:
       react-resizable-panels:
         specifier: ^4.7.6
         version: 4.7.6(react-dom@19.1.0(react@19.1.0))(react@19.1.0)
-      react-router:
-        specifier: ^7.13.2
-        version: 7.13.2(react-dom@19.1.0(react@19.1.0))(react@19.1.0)
-      react-router-dom:
-        specifier: ^7.13.2
-        version: 7.13.2(react-dom@19.1.0(react@19.1.0))(react@19.1.0)
       react-virtualized:
         specifier: ^9.22.6
         version: 9.22.6(react-dom@19.1.0(react@19.1.0))(react@19.1.0)
@@ -766,6 +760,12 @@ importers:
       puppeteer:
         specifier: ^24.36.1
         version: 24.37.5(typescript@6.0.2)
+      react-router:
+        specifier: ^7.13.2
+        version: 7.13.2(react-dom@19.1.0(react@19.1.0))(react@19.1.0)
+      react-router-dom:
+        specifier: ^7.13.2
+        version: 7.13.2(react-dom@19.1.0(react@19.1.0))(react@19.1.0)
       rollup-plugin-visualizer:
         specifier: ^7.0.1
         version: 7.0.1(rolldown@1.0.0-rc.11)(rollup@4.58.0)

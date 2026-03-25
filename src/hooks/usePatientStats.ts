@@ -206,7 +206,7 @@ function isAppointmentUnpaid(appointment: Appointment): boolean {
 }
 
 function isAppointmentUpcoming(appointment: Appointment): boolean {
-	const appointmentDate = new Date(appointment.appointment_date);
+	const appointmentDate = new Date(appointment.date);
 	const today = new Date();
 	today.setHours(0, 0, 0, 0);
 	return appointmentDate >= today && isAppointmentScheduled(appointment);
@@ -241,12 +241,12 @@ function determineFirstEvaluationDate(
 
 	return (
 		firstSoap?.created_at ||
-		firstAppointment?.appointment_date ||
-		lastAppointment?.appointment_date
+		firstAppointment?.date ||
+		lastAppointment?.date
 	);
 }
 
-function calculatePatientStats(
+export function calculatePatientStats(
 	input: PatientStatsInput,
 ): Omit<PatientStats, "classification"> {
 	const { appointments, soapRecords } = input;
@@ -259,7 +259,7 @@ function calculatePatientStats(
 		appointments,
 	);
 	const lastAppointment = appointments[0];
-	const lastAppointmentDate = lastAppointment?.appointment_date;
+	const lastAppointmentDate = lastAppointment?.date;
 
 	const daysSinceLastAppointment = lastAppointmentDate
 		? calculateDaysSince(lastAppointmentDate)
@@ -292,7 +292,7 @@ function calculatePatientStats(
 	};
 }
 
-function classifyPatient(stats: ClassificationStats): PatientClassification {
+export function classifyPatient(stats: ClassificationStats): PatientClassification {
 	// If has unpaid sessions and no-shows
 	if (stats.unpaidSessionsCount > 0 && stats.noShowCount > 0) {
 		return "has_unpaid";
@@ -335,8 +335,8 @@ const sessionToSOAPRecord = (session: SessionRecord): SOAPRecord => ({
 
 const sortAppointmentsDesc = (appointments: Appointment[]) =>
 	[...appointments].sort((a, b) => {
-		const dateA = new Date(a.appointment_date).getTime();
-		const dateB = new Date(b.appointment_date).getTime();
+		const dateA = new Date(a.date).getTime();
+		const dateB = new Date(b.date).getTime();
 		return dateB - dateA;
 	});
 
@@ -346,7 +346,7 @@ const sortSoapRecordsDesc = (records: SOAPRecord[]) =>
 			new Date(b.record_date).getTime() - new Date(a.record_date).getTime(),
 	);
 
-const fetchAllAppointments = async (
+export const fetchAllAppointments = async (
 	patientId: string,
 ): Promise<Appointment[]> => {
 	const pageSize = 1000;
@@ -368,7 +368,7 @@ const fetchAllAppointments = async (
 	return sortAppointmentsDesc(appointments);
 };
 
-const fetchFinalizedSessions = async (
+export const fetchFinalizedSessions = async (
 	patientId: string,
 ): Promise<SOAPRecord[]> => {
 	const pageSize = 200;

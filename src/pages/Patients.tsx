@@ -1,5 +1,6 @@
-import { useState, useMemo, useEffect, useCallback } from "react";
-import { useNavigate } from "react-router-dom";
+import { useState, useEffect, useMemo } from "react";
+import { useLoaderData, useActionData, useNavigation, useSearchParams, useNavigate } from "react-router";
+import type { Route } from "./+types/Patients";
 import { useDebounce } from "@/hooks/performance/useDebounce";
 import { MainLayout } from "@/components/layout/MainLayout";
 import { EmptyState } from "@/components/ui";
@@ -31,11 +32,14 @@ import {
 	type PatientFilters,
 } from "@/components/patients";
 import { PatientCard } from "@fisioflow/ui";
-import { usePatientsPaginated } from "@/hooks/usePatientCrud";
-import { useMultiplePatientStats } from "@/hooks/usePatientStats";
+import { patientsApi } from "@/api/v2/patients";
+import { 
+	calculatePatientStats, 
+	classifyPatient, 
+	fetchAllAppointments, 
+	fetchFinalizedSessions 
+} from "@/hooks/usePatientStats";
 import { PatientHelpers } from "@/types";
-import { useAuth } from "@/contexts/AuthContext";
-import { useOrganizations } from "@/hooks/useOrganizations";
 import { Users, Filter, Cake } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
@@ -47,6 +51,131 @@ import {
 
 import { calculateAge, exportToCSV } from "@/lib/utils";
 import { toast } from "@/hooks/use-toast";
+
+// ============================================================================================
+// LOADER & ACTION
+// ============================================================================================
+
+export async function loader({ request }: Route.LoaderArgs) {
+	const url = new URL(request.url);
+	const search = url.searchParams.get("q") || "";
+	const status = url.searchParams.get("status") || "all";
+	const condition = url.searchParams.get("condition") || "all";
+	const classification = url.searchParams.get("classification") || "all";
+	const page = parseInt(url.searchParams.get("page") || "1", 10);
+	const pageSize = 20;
+
+	// 1. Fetch patients list with filters
+	const response = await patientsApi.list({
+		status: status === "all" ? undefined : status,
+		search: search || undefined,
+		limit: pageSize,
+		offset: (page - 1) * pageSize,
+	});
+
+	const patients = response.data || [];
+	const totalCount = response.total || 0;
+
+	// 2. Fetch stats and classifications for the visible patients (Single Fetch Pattern)
+	const statsMap: Record<string, any> = {};
+	
+	// We do this in parallel to optimize
+	await Promise.all(
+		patients.map(async (patient) => {
+			const [appointments, soapRecords] = await Promise.all([
+				fetchAllAppointments(patient.id),
+				fetchFinalizedSessions(patient.id),
+			]);
+
+			const stats = calculatePatientStats({
+				appointments,
+				soapRecords,
+			});
+
+			const patientClassification = classifyPatient(stats);
+			statsMap[patient.id] = { ...stats, classification: patientClassification };
+		})
+	);
+
+	// 3. Extract unique conditions for the filter
+	// Note: Ideally this would be a separate API call or aggregated on server
+	const uniqueConditions = [...new Set(patients.map(p => p.main_condition).filter((c): c is string => typeof c === 'string' && !!c))].sort() as string[];
+
+	return {
+		patients,
+		totalCount,
+		statsMap,
+		uniqueConditions,
+		pagination: {
+			currentPage: page,
+			totalPages: Math.ceil(totalCount / pageSize),
+			pageSize,
+		},
+		filters: {
+			search,
+			status,
+			condition,
+			classification,
+		}
+	};
+}
+
+export async function action({ request }: Route.ActionArgs) {
+	const formData = await request.formData();
+	const intent = formData.get("intent");
+
+	if (intent === "update") {
+		const id = formData.get("id") as string;
+		const dataRaw = formData.get("data") as string;
+		try {
+			const data = JSON.parse(dataRaw);
+			await patientsApi.update(id, data);
+			return { success: true, message: "Paciente atualizado com sucesso!" };
+		} catch (error: any) {
+			return { success: false, message: error.message || "Erro ao atualizar paciente." };
+		}
+	}
+
+	if (intent === "create") {
+		const dataRaw = formData.get("data") as string;
+		try {
+			const data = JSON.parse(dataRaw);
+			await patientsApi.create(data);
+			return { success: true, message: "Paciente criado com sucesso!" };
+		} catch (error: any) {
+			return { success: false, message: error.message || "Erro ao criar paciente." };
+		}
+	}
+
+	if (intent === "updateStatus") {
+		const id = formData.get("id") as string;
+		const status = formData.get("status") as string;
+
+		try {
+			await patientsApi.update(id, { status } as any);
+			return { success: true, message: "Status atualizado com sucesso!" };
+		} catch (error: any) {
+			return { success: false, message: error.message || "Erro ao atualizar status." };
+		}
+	}
+
+	if (intent === "delete") {
+		const id = formData.get("id") as string;
+
+		try {
+			await patientsApi.delete(id);
+			return { success: true, message: "Paciente removido com sucesso!" };
+		} catch (error: any) {
+			return { success: false, message: error.message || "Erro ao remover paciente." };
+		}
+	}
+
+	return null;
+}
+
+// ============================================================================================
+// COMPONENTS
+// ============================================================================================
 
 const PatientListItem = ({
 	patient,
@@ -93,75 +222,57 @@ const PatientListItem = ({
 };
 
 const Patients = () => {
-	const { profile } = useAuth();
-	const { currentOrganization } = useOrganizations();
-	const organizationId = currentOrganization?.id || profile?.organization_id;
-
-	const [searchTerm, setSearchTerm] = useState("");
-	const [statusFilter, setStatusFilter] = useState<string>("all");
-	const [conditionFilter, setConditionFilter] = useState<string>("all");
-	const [isNewPatientModalOpen, setIsNewPatientModalOpen] = useState(false);
-	const [advancedFilters, setAdvancedFilters] = useState<PatientFilters>({});
-	const [showAnalytics, setShowAnalytics] = useState(false);
-	const [activeTab, setActiveTab] = useState("list");
-	const debouncedSearch = useDebounce(searchTerm, 300);
-	const pageSize = 20;
-
 	const {
-		data: patients = [],
+		patients,
 		totalCount,
-		currentPage,
-		totalPages,
-		hasNextPage,
-		hasPreviousPage,
-		nextPage,
-		previousPage,
-		goToPage,
-		isLoading: loading,
-	} = usePatientsPaginated({
-		organizationId,
-		status: statusFilter,
-		searchTerm: debouncedSearch,
-		pageSize: 20,
-	});
-
-	const patientIds = useMemo(() => patients.map((p) => p.id), [patients]);
-	const { data: statsMap = {} } = useMultiplePatientStats(patientIds);
-
+		statsMap,
+		uniqueConditions,
+		pagination,
+		filters,
+	} = useLoaderData<typeof loader>();
+	
+	const actionData = useActionData<typeof action>();
+	const navigation = useNavigation();
+	const [searchParams, setSearchParams] = useSearchParams();
 	const navigate = useNavigate();
 
+	const [searchTerm, setSearchTerm] = useState(filters.search);
+	const debouncedSearch = useDebounce(searchTerm, 300);
+
+	const isNewPatientModalOpen = searchParams.get("modal") === "create";
+	const showAnalytics = searchParams.get("analytics") === "true";
+	const activeTab = (searchParams.get("tab") as "list" | "birthdays") || "list";
+
+	// Sync debounced search to URL
 	useEffect(() => {
-		goToPage(1);
-	}, [
-		statusFilter,
-		debouncedSearch,
-		conditionFilter,
-		advancedFilters.classification,
-	]);
+		const params = new URLSearchParams(searchParams);
+		if (debouncedSearch) {
+			params.set("q", debouncedSearch);
+		} else {
+			params.delete("q");
+		}
+		if (debouncedSearch !== filters.search) {
+			params.set("page", "1"); // Reset page on search change
+			setSearchParams(params, { replace: true });
+		}
+	}, [debouncedSearch, filters.search, setSearchParams, searchParams]);
 
-	const uniqueConditions = useMemo(() => {
-		const conditions = [
-			...new Set(
-				patients.map((p) => p.main_condition).filter((c): c is string => !!c),
-			),
-		];
-		return conditions.sort();
-	}, [patients]);
+	useEffect(() => {
+		if (actionData?.success) {
+			toast({ title: actionData.message });
+			if (isNewPatientModalOpen) {
+				setSearchParams(params => {
+					params.delete("modal");
+					return params;
+				});
+			}
+		} else if (actionData?.success === false) {
+			toast({ title: actionData.message, variant: "destructive" });
+		}
+	}, [actionData, isNewPatientModalOpen, setSearchParams]);
 
-	const filteredPatients = useMemo(() => {
-		return patients.filter((patient) => {
-			const matchesCondition =
-				conditionFilter === "all" || patient.main_condition === conditionFilter;
-			const matchesAdvancedFilters = matchesFilters(
-				patient.id,
-				advancedFilters,
-				statsMap,
-			);
-			return matchesCondition && matchesAdvancedFilters;
-		});
-	}, [patients, conditionFilter, advancedFilters, statsMap]);
-
-	const activeAdvancedFiltersCount = countActiveFilters(advancedFilters);
+	const { currentPage, totalPages, pageSize } = pagination;
+	const loading = navigation.state === "loading";
 
 	const filteredStats = useMemo(() => {
 		const stats = {
@@ -176,10 +287,10 @@ const Patients = () => {
 			completed: 0,
 		};
 
-		filteredPatients.forEach((p) => {
-			const patientStats = statsMap[p.id];
-			if (!patientStats) return;
-
+		// Note: The loader already filtered 'patients' but 'totalCount' is for the whole filtered set.
+		// For accurate global stats across all pages, we might need another loader fetch or server-side aggregation.
+		// Here we approximate or use the data we have.
+		Object.values(statsMap).forEach((patientStats: any) => {
 			switch (patientStats.classification) {
 				case "active":
 					stats.active++;
@@ -203,33 +314,40 @@ const Patients = () => {
 					stats.newPatients++;
 					break;
 			}
+		});
+		
+		patients.forEach(p => {
 			if (p.status === "Concluído") stats.completed++;
 		});
 
 		return stats;
-	}, [filteredPatients, statsMap, totalCount]);
+	}, [patients, statsMap, totalCount]);
 
-	const handleFilterChange = (filters: PatientFilters) =>
-		setAdvancedFilters(filters);
-	const handleClearFilters = () => setAdvancedFilters({});
-	const handleClearAllFilters = () => {
-		setSearchTerm("");
-		setStatusFilter("all");
-		setConditionFilter("all");
-		setAdvancedFilters({});
+	const updateSearchParams = (updates: Record<string, string | undefined>) => {
+		const params = new URLSearchParams(searchParams);
+		Object.entries(updates).forEach(([key, value]) => {
+			if (value === undefined || value === "all") {
+				params.delete(key);
+			} else {
+				params.set(key, value);
+			}
+		});
+		
+		// Reset page when filtering, unless explicitly setting page
+		if (updates.page === undefined && !updates.q) {
+			params.set("page", "1");
+		}
+		
+		setSearchParams(params);
 	};
 
-	const handleClassificationFilterChange = (
-		classification: PatientFilters["classification"],
-	) => {
-		setAdvancedFilters((prev) => ({
-			...prev,
-			classification: classification === "all" ? undefined : classification,
-		}));
+	const handleClearAllFilters = () => {
+		setSearchTerm("");
+		setSearchParams(new URLSearchParams());
 	};
 
 	const exportPatients = () => {
-		const data = filteredPatients.map((patient) => {
+		const data = patients.map((patient) => {
 			const patientName = PatientHelpers.getName(patient);
 			const patientStats = statsMap[patient.id];
 			return {
@@ -274,7 +392,7 @@ const Patients = () => {
 		}
 	};
 
-	if (loading) {
+	if (loading && navigation.location?.pathname === "/patients") {
 		return (
 			<MainLayout>
 				<LoadingSkeleton type="card" rows={4} />
@@ -282,13 +400,17 @@ const Patients = () => {
 		);
 	}
 
+	const activeAdvancedFiltersCount = countActiveFilters({
+		classification: filters.classification !== "all" ? (filters.classification as any) : undefined,
+	});
+
 	const headerStats = {
 		totalCount,
 		currentPage,
 		totalPages,
-		activeCount: patients.filter((p) => p.status === "Em Tratamento").length,
-		newCount: patients.filter((p) => p.status === "Inicial").length,
-		completedCount: patients.filter((p) => p.status === "Concluído").length,
+		activeCount: filteredStats.active,
+		newCount: filteredStats.newPatients,
+		completedCount: filteredStats.completed,
 		activeByClassification: filteredStats.active,
 		inactive7: filteredStats.inactive7,
 		inactive30: filteredStats.inactive30,
@@ -298,6 +420,12 @@ const Patients = () => {
 		newPatients: filteredStats.newPatients,
 	};
 
+	const hasActiveFilters = 
+		filters.status !== "all" || 
+		filters.condition !== "all" || 
+		filters.classification !== "all" || 
+		!!filters.search;
+
 	return (
 		<MainLayout>
 			<div
@@ -306,37 +434,27 @@ const Patients = () => {
 			>
 				<PatientsPageHeader
 					stats={headerStats}
-					onNewPatient={() => setIsNewPatientModalOpen(true)}
+					onNewPatient={() => updateSearchParams({ modal: "create" })}
 					onExport={exportPatients}
-					onToggleAnalytics={() => setShowAnalytics(!showAnalytics)}
+					onToggleAnalytics={() => updateSearchParams({ analytics: showAnalytics ? undefined : "true" })}
 					showAnalytics={showAnalytics}
 					searchTerm={searchTerm}
 					onSearchChange={setSearchTerm}
-					statusFilter={statusFilter}
-					onStatusFilterChange={setStatusFilter}
-					conditionFilter={conditionFilter}
-					onConditionFilterChange={setConditionFilter}
+					statusFilter={filters.status}
+					onStatusFilterChange={(s) => updateSearchParams({ status: s })}
+					conditionFilter={filters.condition}
+					onConditionFilterChange={(c) => updateSearchParams({ condition: c })}
 					uniqueConditions={uniqueConditions}
 					activeAdvancedFiltersCount={activeAdvancedFiltersCount}
 					totalFilteredLabel={
-						statusFilter !== "all" ||
-						conditionFilter !== "all" ||
-						searchTerm ||
-						activeAdvancedFiltersCount > 0
-							? advancedFilters.classification
-								? `${filteredPatients.length} nesta página (filtro: classificação)`
-								: `${totalCount} encontrado(s)`
+						hasActiveFilters
+							? `${totalCount} encontrado(s)`
 							: undefined
 					}
 					onClearAllFilters={handleClearAllFilters}
-					hasActiveFilters={
-						statusFilter !== "all" ||
-						conditionFilter !== "all" ||
-						!!searchTerm ||
-						activeAdvancedFiltersCount > 0
-					}
-					classificationFilter={advancedFilters.classification ?? "all"}
-					onClassificationFilterChange={handleClassificationFilterChange}
+					hasActiveFilters={hasActiveFilters}
+					classificationFilter={filters.classification as any}
+					onClassificationFilterChange={(c) => updateSearchParams({ classification: c })}
 				>
 					<Popover>
 						<PopoverTrigger asChild>
@@ -362,15 +480,19 @@ const Patients = () => {
 						</PopoverTrigger>
 						<PopoverContent className="w-[320px] p-4" align="end">
 							<PatientAdvancedFilters
-								onFilterChange={handleFilterChange}
+								onFilterChange={(f) => updateSearchParams(f as any)}
 								activeFiltersCount={activeAdvancedFiltersCount}
-								onClearFilters={handleClearFilters}
+								onClearFilters={() => updateSearchParams({ classification: undefined })}
 							/>
 						</PopoverContent>
 					</Popover>
 				</PatientsPageHeader>
 
-				<Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+				<Tabs 
+					value={activeTab} 
+					onValueChange={(v) => updateSearchParams({ tab: v })} 
+					className="w-full"
+				>
 					<TabsList className="bg-slate-100 dark:bg-slate-800 p-1 rounded-xl mb-4">
 						<TabsTrigger
 							value="list"
@@ -394,49 +516,44 @@ const Patients = () => {
 						<IncompleteRegistrationAlert />
 
 						<PatientPageInsights
-							totalPatients={filteredPatients.length}
+							totalPatients={patients.length}
 							classificationStats={filteredStats}
 						/>
 
 						{/* Analytics Dashboard */}
 						{showAnalytics && (
-							<PatientAnalytics
-								totalPatients={patients.length}
-								classificationStats={filteredStats}
-							/>
+							<LazyComponent
+								placeholder={<div className="h-[300px] w-full bg-muted/50 rounded-xl animate-pulse" />}
+							>
+								<PatientAnalytics
+									totalPatients={totalCount}
+									classificationStats={filteredStats}
+								/>
+							</LazyComponent>
 						)}
 
-						{filteredPatients.length === 0 ? (
+						{patients.length === 0 ? (
 							<EmptyState
 								icon={Users}
 								title={
-									searchTerm ||
-									statusFilter !== "all" ||
-									conditionFilter !== "all" ||
-									activeAdvancedFiltersCount > 0
+									hasActiveFilters
 										? "Nenhum paciente encontrado"
 										: "Nenhum paciente cadastrado"
 								}
 								description={
-									searchTerm ||
-									statusFilter !== "all" ||
-									conditionFilter !== "all" ||
-									activeAdvancedFiltersCount > 0
+									hasActiveFilters
 										? "Nenhum paciente corresponde aos filtros aplicados. Tente ajustar ou limpar os filtros."
 										: "Comece adicionando seu primeiro paciente."
 								}
 								action={
-									searchTerm ||
-									statusFilter !== "all" ||
-									conditionFilter !== "all" ||
-									activeAdvancedFiltersCount > 0
+									hasActiveFilters
 										? {
 												label: "Limpar filtros",
 												onClick: handleClearAllFilters,
 											}
 										: {
 												label: "Novo Paciente",
-												onClick: () => setIsNewPatientModalOpen(true),
+												onClick: () => updateSearchParams({ modal: "create" }),
 											}
 								}
 							/>
@@ -446,7 +563,7 @@ const Patients = () => {
 									className="grid grid-cols-1 md:grid-cols-2 gap-4 animate-fade-in"
 									data-testid="patient-list"
 								>
-									{filteredPatients.map((patient) => {
+									{patients.map((patient) => {
 										const patientStats = statsMap[patient.id];
 										return (
 											<LazyComponent
@@ -477,9 +594,9 @@ const Patients = () => {
 											<PaginationContent>
 												<PaginationItem>
 													<PaginationPrevious
-														onClick={() => previousPage()}
+														onClick={() => updateSearchParams({ page: String(currentPage - 1) })}
 														className={
-															!hasPreviousPage
+															currentPage <= 1
 																? "pointer-events-none opacity-50"
 																: "cursor-pointer"
 														}
@@ -499,7 +616,7 @@ const Patients = () => {
 														return (
 															<PaginationItem key={pageNum}>
 																<PaginationLink
-																	onClick={() => goToPage(pageNum)}
+																	onClick={() => updateSearchParams({ page: String(pageNum) })}
 																	isActive={currentPage === pageNum}
 																	className="cursor-pointer"
 																>
@@ -511,9 +628,9 @@ const Patients = () => {
 												)}
 												<PaginationItem>
 													<PaginationNext
-														onClick={() => nextPage()}
+														onClick={() => updateSearchParams({ page: String(currentPage + 1) })}
 														className={
-															!hasNextPage
+															currentPage >= totalPages
 																? "pointer-events-none opacity-50"
 																: "cursor-pointer"
 														}
@@ -537,7 +654,7 @@ const Patients = () => {
 			</div>
 			<PatientCreateModal
 				open={isNewPatientModalOpen}
-				onOpenChange={setIsNewPatientModalOpen}
+				onOpenChange={(open) => updateSearchParams({ modal: open ? "create" : undefined })}
 			/>
 		</MainLayout>
 	);

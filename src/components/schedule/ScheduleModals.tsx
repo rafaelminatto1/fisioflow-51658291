@@ -10,7 +10,7 @@ import {
 	AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { formatDateToBrazilian } from "@/utils/dateUtils";
-import { AppointmentModalRefactored } from "@/components/schedule/AppointmentModalRefactored";
+import { AppointmentModal } from "@/components/schedule/AppointmentModal";
 import { DuplicateAppointmentDialog } from "@/components/schedule/DuplicateAppointmentDialog";
 import { ScheduleModalsState, ScheduleActions } from "@/types/schedule-hooks";
 
@@ -29,12 +29,16 @@ interface ScheduleModalsProps {
 	currentDate: Date;
 	modals: ScheduleModalsState;
 	actions: ScheduleActions;
+	therapists?: any[];
+	patients?: any[];
 }
 
 export const ScheduleModals: React.FC<ScheduleModalsProps> = ({
 	currentDate,
 	modals,
 	actions,
+	therapists,
+	patients,
 }) => {
 	return (
 		<>
@@ -52,7 +56,7 @@ export const ScheduleModals: React.FC<ScheduleModalsProps> = ({
 			)}
 
 			{modals.isModalOpen && (
-				<AppointmentModalRefactored
+				<AppointmentModal
 					isOpen={modals.isModalOpen}
 					onClose={() => {
 						actions.handleModalClose();
@@ -62,6 +66,8 @@ export const ScheduleModals: React.FC<ScheduleModalsProps> = ({
 					defaultTime={modals.modalDefaultTime}
 					defaultPatientId={modals.scheduleFromWaitlist?.patientId}
 					mode={modals.selectedAppointment ? "edit" : "create"}
+					therapists={therapists}
+					patients={patients}
 				/>
 			)}
 
