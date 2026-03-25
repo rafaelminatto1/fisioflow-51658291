@@ -2,7 +2,7 @@
  * CalendarView - Main calendar component for appointment scheduling
  */
 
-import { useState, useMemo, useEffect, useCallback, useRef } from "react";
+import React, { useState, useMemo, useEffect, useCallback, useRef, memo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
 	format,
