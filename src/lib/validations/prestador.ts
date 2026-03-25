@@ -47,7 +47,7 @@ export const prestadorCreateSchema = z.object({
 		),
 	valor_acordado: z
 		.number({
-			invalid_type_error: "Valor deve ser um número",
+			error: "Valor deve ser um número",
 		})
 		.nonnegative("Valor não pode ser negativo")
 		.max(999999.99, "Valor muito alto")

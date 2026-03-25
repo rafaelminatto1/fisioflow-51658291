@@ -616,7 +616,7 @@ export function validatePathologyData(data: unknown): CreatePathologyData {
 export function formatZodError(error: z.ZodError): Record<string, string> {
 	const errors: Record<string, string> = {};
 
-	error.errors.forEach((err) => {
+	error.issues.forEach((err) => {
 		const path = err.path.join(".") || "form";
 		errors[path] = err.message;
 	});

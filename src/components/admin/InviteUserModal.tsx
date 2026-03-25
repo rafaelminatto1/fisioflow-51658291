@@ -50,7 +50,7 @@ export function InviteUserModal({ open, onOpenChange }: InviteUserModalProps) {
 			// Validar email
 			const emailResult = emailSchema.safeParse(email);
 			if (!emailResult.success) {
-				setError(emailResult.error.errors[0].message);
+				setError(emailResult.error.issues[0].message);
 				setLoading(false);
 				return;
 			}

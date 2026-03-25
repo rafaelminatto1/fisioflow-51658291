@@ -53,7 +53,7 @@ import {
 	Pie,
 	Cell,
 	Legend,
-	TooltipProps,
+	TooltipContentProps,
 } from "recharts";
 import { useBatchAnalyticsExport } from "@/hooks/useAnalyticsExport";
 import {
@@ -126,9 +126,10 @@ const COLORS = {
 // CHART UTILITIES
 // ============================================================================
 
-const CustomTooltip: React.FC<
-	TooltipProps<number, string> & { active?: boolean; payload?: unknown }
-> = ({ active, payload }) => {
+const CustomTooltip: React.FC<TooltipContentProps<number, string>> = ({
+	active,
+	payload,
+}) => {
 	if (!active || !payload) return null;
 	return (
 		<div className="bg-background border rounded-lg shadow-lg p-2">
