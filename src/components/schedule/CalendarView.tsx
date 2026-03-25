@@ -1293,5 +1293,5 @@ function calendarViewAreEqual(
 	);
 }
 
-export default memo(CalendarView, calendarViewAreEqual);
+export const CalendarView = memo(CalendarViewBase, calendarViewAreEqual);
 CalendarView.displayName = "CalendarView";
