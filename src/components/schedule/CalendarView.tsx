@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState, useMemo, useEffect, useCallback, useRef, memo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { format, startOfWeek, addDays, subDays, subWeeks, subMonths, isSameDay } from "date-fns";
 import { ptBR } from "date-fns/locale";
@@ -82,7 +82,7 @@ const parseAppointmentDate = (dateValue: Appointment["date"]): Date | null => {
 	return null;
 };
 
-export function CalendarView({
+export default function CalendarView({
 	appointments, currentDate, onDateChange, viewType, onViewTypeChange,
 	onTimeSlotClick, onAppointmentReschedule, onEditAppointment,
 	onDeleteAppointment, onDuplicateAppointment, onStatusChange,
@@ -91,11 +91,11 @@ export function CalendarView({
 	onCancelAllToday, filters, onFiltersChange, onClearFilters,
 	totalAppointmentsCount, patientFilter, onPatientFilterChange,
 }: CalendarViewProps) {
-	const [patientSearchQuery, setPatientSearchQuery] = React.useState("");
-	const [patientSearchOpen, setPatientSearchOpen] = React.useState(false);
-	const patientSearchRef = React.useRef<HTMLDivElement>(null);
+	const [patientSearchQuery, setPatientSearchQuery] = useState("");
+	const [patientSearchOpen, setPatientSearchOpen] = useState(false);
+	const patientSearchRef = useRef<HTMLDivElement>(null);
 
-	const uniquePatients = React.useMemo(() => {
+	const uniquePatients = useMemo(() => {
 		const map = new Map<string, string>();
 		for (const apt of appointments) {
 			if (apt.patientName && apt.patientId) map.set(apt.patientId, apt.patientName);
@@ -103,13 +103,13 @@ export function CalendarView({
 		return Array.from(map.entries()).map(([id, name]) => ({ id, name }));
 	}, [appointments]);
 
-	const patientSuggestions = React.useMemo(() => {
+	const patientSuggestions = useMemo(() => {
 		if (!patientSearchQuery.trim()) return uniquePatients;
 		const q = patientSearchQuery.toLowerCase().trim();
 		return uniquePatients.filter((p) => p.name.toLowerCase().includes(q));
 	}, [uniquePatients, patientSearchQuery]);
 
-	React.useEffect(() => {
+	useEffect(() => {
 		const handleClickOutside = (e: MouseEvent) => {
 			if (patientSearchRef.current && !patientSearchRef.current.contains(e.target as Node)) setPatientSearchOpen(false);
 		};
@@ -119,18 +119,18 @@ export function CalendarView({
 		}
 	}, [patientSearchOpen]);
 
-	const [openPopoverId, setOpenPopoverId] = React.useState<string | null>(null);
-	const [currentTime, setCurrentTime] = React.useState(new Date());
+	const [openPopoverId, setOpenPopoverId] = useState<string | null>(null);
+	const [currentTime, setCurrentTime] = useState(new Date());
 	const { getMinCapacityForInterval } = useScheduleCapacity();
 	const { cardSize, heightScale } = useCardSize();
-	const [pendingOptimisticUpdate, setPendingOptimisticUpdate] = React.useState<PendingOptimisticUpdate | null>(null);
+	const [pendingOptimisticUpdate, setPendingOptimisticUpdate] = useState<PendingOptimisticUpdate | null>(null);
 
-	const baseDisplayAppointments = React.useMemo(() => {
+	const baseDisplayAppointments = useMemo(() => {
 		const base = applyOptimisticAppointmentOverlay(appointments, pendingOptimisticUpdate);
 		return (base || []).filter((a): a is Appointment => a != null && typeof (a as Appointment).id === "string");
 	}, [appointments, pendingOptimisticUpdate]);
 
-	const overbookedAppointmentIds = React.useMemo(() => {
+	const overbookedAppointmentIds = useMemo(() => {
 		const groupedByDate = new Map<string, Appointment[]>();
 		for (const apt of baseDisplayAppointments) {
 			const aptDate = parseAppointmentDate(apt.date);
@@ -162,12 +162,12 @@ export function CalendarView({
 		return result;
 	}, [baseDisplayAppointments, getMinCapacityForInterval]);
 
-	const displayAppointments = React.useMemo(() => baseDisplayAppointments.map((apt) => {
+	const displayAppointments = useMemo(() => baseDisplayAppointments.map((apt) => {
 		const isOverbooked = overbookedAppointmentIds.has(apt.id);
 		return apt.isOverbooked === isOverbooked ? apt : { ...apt, isOverbooked };
 	}), [baseDisplayAppointments, overbookedAppointmentIds]);
 
-	const appointmentsByDate = React.useMemo(() => {
+	const appointmentsByDate = useMemo(() => {
 		const map = new Map<string, Appointment[]>();
 		(displayAppointments || []).forEach((apt) => {
 			const aptDate = parseAppointmentDate(apt.date);
@@ -179,9 +179,9 @@ export function CalendarView({
 		return map;
 	}, [displayAppointments]);
 
-	const getAppointmentsForDate = React.useCallback((date: Date) => appointmentsByDate.get(format(date, "yyyy-MM-dd")) || [], [appointmentsByDate]);
+	const getAppointmentsForDate = useCallback((date: Date) => appointmentsByDate.get(format(date, "yyyy-MM-dd")) || [], [appointmentsByDate]);
 
-	const getAppointmentsForSlot = React.useCallback((date: Date, time: string) => {
+	const getAppointmentsForSlot = useCallback((date: Date, time: string) => {
 		const dateAppointments = getAppointmentsForDate(date);
 		const normalizedTime = time.substring(0, 5);
 		const [targetHour, targetMin] = normalizedTime.split(":").map(Number);
@@ -195,7 +195,7 @@ export function CalendarView({
 		});
 	}, [getAppointmentsForDate]);
 
-	const handleOptimisticUpdate = React.useCallback((appointmentId: string, newDate: Date, newTime: string) => {
+	const handleOptimisticUpdate = useCallback((appointmentId: string, newDate: Date, newTime: string) => {
 		const appointment = appointments.find((a) => a?.id === appointmentId);
 		if (!appointment) return;
 		setPendingOptimisticUpdate({
@@ -204,7 +204,7 @@ export function CalendarView({
 		});
 	}, [appointments]);
 
-	const handleRevertUpdate = React.useCallback(() => setPendingOptimisticUpdate(null), []);
+	const handleRevertUpdate = useCallback(() => setPendingOptimisticUpdate(null), []);
 
 	const {
 		dragState: dragStateNative, dropTarget: dropTargetNative, showConfirmDialog: showConfirmNative,
@@ -241,18 +241,18 @@ export function CalendarView({
 	const handleConfirmOverCapacity = showOverCapacityNative ? handleConfirmOverCapacityNative : handleConfirmOverCapacityDndKit;
 	const handleCancelOverCapacity = showOverCapacityNative ? handleCancelOverCapacityNative : handleCancelOverCapacityDndKit;
 
-	React.useEffect(() => {
+	useEffect(() => {
 		const timer = setInterval(() => setCurrentTime(new Date()), 60000);
 		return () => clearInterval(timer);
 	}, []);
 
-	React.useEffect(() => {
+	useEffect(() => {
 		if (pendingOptimisticUpdate && !(dragState.savingAppointmentId || dragStateNative.savingAppointmentId) && hasOptimisticUpdateSynced(appointments, pendingOptimisticUpdate)) {
 			setPendingOptimisticUpdate(null);
 		}
 	}, [dragState.savingAppointmentId, dragStateNative.savingAppointmentId, appointments, pendingOptimisticUpdate]);
 
-	const navigateCalendar = React.useCallback((direction: "prev" | "next") => {
+	const navigateCalendar = useCallback((direction: "prev" | "next") => {
 		switch (viewType) {
 			case "day": onDateChange(direction === "prev" ? subDays(currentDate, 1) : addDays(currentDate, 1)); break;
 			case "week": onDateChange(direction === "prev" ? subWeeks(currentDate, 1) : addWeeks(currentDate, 1)); break;
@@ -260,7 +260,7 @@ export function CalendarView({
 		}
 	}, [viewType, currentDate, onDateChange]);
 
-	const getHeaderTitle = React.useCallback(() => {
+	const getHeaderTitle = useCallback(() => {
 		switch (viewType) {
 			case "day": return format(currentDate, "d 'de' MMMM", { locale: ptBR });
 			case "week": {
@@ -275,7 +275,7 @@ export function CalendarView({
 		}
 	}, [viewType, currentDate]);
 
-	const getStatusColor = React.useCallback((status: string, isOverCapacity = false) => {
+	const getStatusColor = useCallback((status: string, isOverCapacity = false) => {
 		if (isOverCapacity) return "bg-gradient-to-br from-red-600 to-rose-700 border-red-400 shadow-red-500/40 ring-2 ring-red-400/50 ring-offset-1";
 		const s = status.toLowerCase();
 		switch (s) {
@@ -294,14 +294,14 @@ export function CalendarView({
 		}
 	}, []);
 
-	const getDaySchedule = React.useCallback((date: Date) => {
+	const getDaySchedule = useCallback((date: Date) => {
 		const dayOfWeek = date.getDay();
 		if (dayOfWeek === 0) return null;
 		const config = BUSINESS_HOURS.DEFAULT_SCHEDULE[dayOfWeek as keyof typeof BUSINESS_HOURS.DEFAULT_SCHEDULE];
 		return { open: config.START, close: config.END };
 	}, []);
 
-	const checkTimeBlocked = React.useCallback((date: Date, time: string) => {
+	const checkTimeBlocked = useCallback((date: Date, time: string) => {
 		const schedule = getDaySchedule(date);
 		if (!schedule) return { blocked: true, reason: "Fora do horário" };
 		const t = timeToMinutes(time);
@@ -309,12 +309,12 @@ export function CalendarView({
 		return { blocked: false };
 	}, [getDaySchedule]);
 
-	const isDayClosedForDate = React.useCallback((date: Date) => getDaySchedule(date) === null, [getDaySchedule]);
+	const isDayClosedForDate = useCallback((date: Date) => getDaySchedule(date) === null, [getDaySchedule]);
 
-	const memoizedTimeSlots = React.useMemo(() => generateTimeSlots(currentDate), [currentDate]);
-	const weekTimeSlots = React.useMemo(() => generateTimeSlots(currentDate), [currentDate]);
+	const memoizedTimeSlots = useMemo(() => generateTimeSlots(currentDate), [currentDate]);
+	const weekTimeSlots = useMemo(() => generateTimeSlots(currentDate), [currentDate]);
 
-	const currentTimePosition = React.useMemo(() => {
+	const currentTimePosition = useMemo(() => {
 		const hours = currentTime.getHours();
 		const minutes = currentTime.getMinutes();
 		const totalMinutesFromStart = hours * 60 + minutes - 7 * 60;
