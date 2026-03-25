@@ -8,7 +8,7 @@ export const pagamentoCreateSchema = z.object({
 	descricao: z.string().min(2, "Descrição é obrigatória"),
 	valor: z.number().positive("Valor deve ser maior que zero"),
 	pago_em: z.date({
-		required_error: "Data de pagamento é obrigatória",
+		error: "Data de pagamento é obrigatória",
 	}),
 	comprovante_url: z.string().url().optional().or(z.literal("")),
 });

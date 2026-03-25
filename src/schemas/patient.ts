@@ -146,7 +146,7 @@ export const PatientFormSchema = z.object({
 			{ message: "Data de nascimento inválida" },
 		),
 	gender: z.enum(["masculino", "feminino", "outro"], {
-		required_error: "Selecione o gênero",
+		error: "Selecione o gênero",
 	}),
 
 	// Endereço
