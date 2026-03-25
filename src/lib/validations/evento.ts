@@ -28,12 +28,10 @@ const eventoBaseSchema = z.object({
 		.max(200, "Local não pode ter mais de 200 caracteres")
 		.transform(sanitizeString),
 	data_inicio: z.date({
-		required_error: "Data de início é obrigatória",
-		invalid_type_error: "Data de início inválida",
+		error: "Data de início inválida",
 	}),
 	data_fim: z.date({
-		required_error: "Data de fim é obrigatória",
-		invalid_type_error: "Data de fim inválida",
+		error: "Data de fim inválida",
 	}),
 	hora_inicio: z
 		.string()
@@ -60,7 +58,7 @@ const eventoBaseSchema = z.object({
 		),
 	valor_padrao_prestador: z
 		.number({
-			invalid_type_error: "Valor deve ser um número",
+			error: "Valor deve ser um número",
 		})
 		.nonnegative("Valor não pode ser negativo")
 		.max(999999.99, "Valor muito alto")

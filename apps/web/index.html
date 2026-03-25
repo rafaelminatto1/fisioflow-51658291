@@ -208,15 +208,159 @@
     </div>
   </div>
    <!-- Expor versão globalmente para cache busting -->
-   <script>
-     // Polyfill para __DEFINES__ (usado por algumas bibliotecas de terceiros)
-     if (typeof window.__DEFINES__ === 'undefined') {
-       window.__DEFINES__ = {};
-     }
+    <script>
+       /**
+        * Polyfill Completo para Constantes Globais (Vite/HMR/Babel/SystemJS)
+        *
+        * Este script inicializa todas as constantes globais que bibliotecas de terceiros
+        * no vendor bundle esperam que existam no window.
+        */
+       (() => {
+         'use strict';
 
-     window.__APP_VERSION__ = "%APP_VERSION%";
-     window.__BUILD_TIME__ = "%BUILD_TIME%";
-     window.__CACHE_BUSTER__ = window.__BUILD_TIME__ || Date.now().toString();
+         // ============ HMR CONSTANTS (Vite) ============
+         if (typeof window.__HMR_BASE__ === 'undefined') {
+           window.__HMR_BASE__ = '';
+         }
+         if (typeof window.__HMR_CONFIG_NAME__ === 'undefined') {
+           window.__HMR_CONFIG_NAME__ = '';
+         }
+         if (typeof window.__HMR_DIRECT_TARGET__ === 'undefined') {
+           window.__HMR_DIRECT_TARGET__ = '';
+         }
+         if (typeof window.__HMR_ENABLE_OVERLAY__ === 'undefined') {
+           window.__HMR_ENABLE_OVERLAY__ = false;
+         }
+         if (typeof window.__HMR_HOSTNAME__ === 'undefined') {
+           window.__HMR_HOSTNAME__ = 'localhost';
+         }
+         if (typeof window.__HMR_PORT__ === 'undefined') {
+           window.__HMR_PORT__ = '5173';
+         }
+         if (typeof window.__HMR_PROTOCOL__ === 'undefined') {
+           window.__HMR_PROTOCOL__ = 'ws:';
+         }
+         if (typeof window.__HMR_TIMEOUT__ === 'undefined') {
+           window.__HMR_TIMEOUT__ = '60000';
+         }
+         if (typeof window.__WS_TOKEN__ === 'undefined') {
+           window.__WS_TOKEN__ = '';
+         }
+
+         // ============ BUILD CONSTANTS ============
+         if (typeof window.__DEFINES__ === 'undefined') {
+           window.__DEFINES__ = {};
+         }
+         if (typeof window.__BASE__ === 'undefined') {
+           window.__BASE__ = '/';
+         }
+         if (typeof window.__BUNDLED_DEV__ === 'undefined') {
+           window.__BUNDLED_DEV__ = false;
+         }
+         if (typeof window.__CLASS__ === 'undefined') {
+           window.__CLASS__ = '';
+         }
+         if (typeof window.__COMPILER_HALT_OFFSET__ === 'undefined') {
+           window.__COMPILER_HALT_OFFSET__ = '';
+         }
+         if (typeof window.__DATA__ === 'undefined') {
+           window.__DATA__ = '';
+         }
+         if (typeof window.__DIR__ === 'undefined') {
+           window.__DIR__ = '';
+         }
+         if (typeof window.__ENCODING__ === 'undefined') {
+           window.__ENCODING__ = 'utf8';
+         }
+         if (typeof window.__END__ === 'undefined') {
+           window.__END__ = '';
+         }
+         if (typeof window.__FILE__ === 'undefined') {
+           window.__FILE__ = '';
+         }
+         if (typeof window.__FUNCTION__ === 'undefined') {
+           window.__FUNCTION__ = '';
+         }
+         if (typeof window.__LINE__ === 'undefined') {
+           window.__LINE__ = '';
+         }
+         if (typeof window.__METHOD__ === 'undefined') {
+           window.__METHOD__ = '';
+         }
+         if (typeof window.__NAMESPACE__ === 'undefined') {
+           window.__NAMESPACE__ = '';
+         }
+         if (typeof window.__NEXT_DATA__ === 'undefined') {
+           window.__NEXT_DATA__ = {};
+         }
+
+         // ============ SERVER CONSTANTS ============
+         if (typeof window.__SERVER_HOST__ === 'undefined') {
+           window.__SERVER_HOST__ = 'localhost:5173';
+         }
+         if (typeof window.__SERVER_FORWARD_CONSOLE__ === 'undefined') {
+           window.__SERVER_FORWARD_CONSOLE__ = 'true';
+         }
+
+         // ============ SENTRY CONSTANTS ============
+         if (typeof window.__SENTRY__ === 'undefined') {
+           window.__SENTRY__ = {};
+         }
+         if (typeof window.__SENTRY_BROWSER_BUNDLE__ === 'undefined') {
+           window.__SENTRY_BROWSER_BUNDLE__ = true;
+         }
+         if (typeof window.__SENTRY_DEBUG__ === 'undefined') {
+           window.__SENTRY_DEBUG__ = false;
+         }
+         if (typeof window.__SENTRY_EXCLUDE_REPLAY_WORKER__ === 'undefined') {
+           window.__SENTRY_EXCLUDE_REPLAY_WORKER__ = false;
+         }
+         if (typeof window.__SENTRY_INSTRUMENTED__ === 'undefined') {
+           window.__SENTRY_INSTRUMENTED__ = false;
+         }
+         if (typeof window.__SENTRY_RELEASE__ === 'undefined') {
+           window.__SENTRY_RELEASE__ = '';
+         }
+         if (typeof window.__SENTRY_SAFE_RANDOM_ID_WRAPPER__ === 'undefined') {
+           window.__SENTRY_SAFE_RANDOM_ID_WRAPPER__ = false;
+         }
+         if (typeof window.__SENTRY_SUPPRESS_TRACING__ === 'undefined') {
+           window.__SENTRY_SUPPRESS_TRACING__ = false;
+         }
+         if (typeof window.__SENTRY_TRACING__ === 'undefined') {
+           window.__SENTRY_TRACING__ = false;
+         }
+
+         // ============ REACT DEVTOOLS ============
+         if (typeof window.__REACT_DEVTOOLS_GLOBAL_HOOK__ === 'undefined') {
+           window.__REACT_DEVTOOLS_GLOBAL_HOOK__ = false;
+         }
+
+         // ============ THIRD-PARTY CONSTANTS ============
+         if (typeof window.__POSTHOG_TOOLBAR__ === 'undefined') {
+           window.__POSTHOG_TOOLBAR__ = false;
+         }
+         if (typeof window.__RRWEB_EXCLUDE_IFRAME__ === 'undefined') {
+           window.__RRWEB_EXCLUDE_IFRAME__ = false;
+         }
+         if (typeof window.__RRWEB_EXCLUDE_SHADOW_DOM__ === 'undefined') {
+           window.__RRWEB_EXCLUDE_SHADOW_DOM__ = false;
+         }
+
+         // ============ SPECIAL CONSTANTS ============
+         if (typeof window.__CANCEL__ === 'undefined') {
+           window.__CANCEL__ = null;
+         }
+         if (typeof window.__PRETTY_FUNCTION__ === 'undefined') {
+           window.__PRETTY_FUNCTION__ = false;
+         }
+
+         console.log('[GlobalConstants] Todos os polyfills de constantes globais foram inicializados');
+       })();
+
+       window.__APP_VERSION__ = "%APP_VERSION%";
+       window.__BUILD_TIME__ = "%BUILD_TIME%";
+       window.__CACHE_BUSTER__ = window.__BUILD_TIME__ || Date.now().toString();
 
     const jokes = [
       "Carregando... alongando a verdade um pouquinho.",
