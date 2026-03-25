@@ -72,6 +72,8 @@ import {
 	type PendingOptimisticUpdate,
 } from "./calendarOptimistic";
 import { NON_CAPACITY_STATUSES, isMarkedOverbooked } from "./shared/capacity";
+import { useCardSize } from "@/hooks/useCardSize";
+import { BUSINESS_HOURS, calculateSlotHeightFromCardSize } from "@/lib/config/agenda";
 
 export type CalendarViewType = "day" | "week" | "month";
 
@@ -148,8 +150,7 @@ const parseAppointmentDate = (dateValue: Appointment["date"]): Date | null => {
 	return null;
 };
 
-export const CalendarView = memo(
-	({
+const CalendarViewBase = ({
 		appointments,
 		currentDate,
 		onDateChange,
@@ -221,6 +222,7 @@ export const CalendarView = memo(
 		// Current time indicator
 		const [currentTime, setCurrentTime] = useState(new Date());
 		const { getMinCapacityForInterval } = useScheduleCapacity();
+		const { cardSize, heightScale } = useCardSize();
 
 		// Optimistic updates state - maintains a local copy of appointments with pending changes
 		const [pendingOptimisticUpdate, setPendingOptimisticUpdate] =
@@ -1238,8 +1240,7 @@ export const CalendarView = memo(
 				/>
 			</>
 		);
-	},
-);
+	};
 
 // Custom comparison function for memo optimization
 function calendarViewAreEqual(
@@ -1265,11 +1266,7 @@ function calendarViewAreEqual(
 	}
 
 	// Deep compare appointments only if length matches
-	// Use reference comparison first (optimistic updates will create new refs)
 	if (prev.appointments !== next.appointments) {
-		// If refs are different, we need to check if content actually changed
-		// For simplicity and performance, we'll assume ref change means content change
-		// This is correct because we only create new arrays when data changes
 		return false;
 	}
 
@@ -1282,7 +1279,7 @@ function calendarViewAreEqual(
 		return false;
 	}
 
-	// Compare function references (should be stable)
+	// Compare function references
 	return (
 		prev.onDateChange === next.onDateChange &&
 		prev.onViewTypeChange === next.onViewTypeChange &&
