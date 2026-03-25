@@ -50,6 +50,13 @@ const STATUS_COLORS = {
 	on_hold: "bg-amber-500",
 };
 
+const STATUS_BG_TINT_COLORS = {
+	active: "bg-green-500/20",
+	completed: "bg-blue-500/20",
+	archived: "bg-slate-500/20",
+	on_hold: "bg-amber-500/20",
+};
+
 const STATUS_LABELS = {
 	active: "Ativo",
 	completed: "Concluído",
@@ -190,7 +197,7 @@ export default function ProjectsPage() {
 									<CardHeader className="pb-3">
 										<div className="flex justify-between items-start">
 											<div
-												className={`p-2 rounded-lg ${STATUS_COLORS[project.status as keyof typeof STATUS_COLORS] || "bg-slate-500"} bg-opacity-20`}
+												className={`p-2 rounded-lg ${STATUS_BG_TINT_COLORS[project.status as keyof typeof STATUS_BG_TINT_COLORS] || "bg-slate-500/20"}`}
 											>
 												<FolderKanban
 													className={`h-5 w-5 ${STATUS_COLORS[project.status as keyof typeof STATUS_COLORS]?.replace("bg-", "text-") || "text-slate-500"}`}
