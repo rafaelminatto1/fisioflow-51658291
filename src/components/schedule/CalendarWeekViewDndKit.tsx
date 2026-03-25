@@ -25,8 +25,8 @@ import VirtualizedCalendarGrid from "./virtualization/VirtualWeekGrid";
 import { useCardSize } from "@/hooks/useCardSize";
 import {
 	BUSINESS_HOURS,
-	calculateSlotHeightFromCardSize,
 } from "@/lib/config/agenda";
+import { calculateSlotHeightFromCardSize } from "@/lib/calendar/cardHeightCalculator";
 import { normalizeTime, parseAppointmentDate } from "./shared/utils";
 import { useRenderTracking } from "@/hooks/useRenderTracking";
 
