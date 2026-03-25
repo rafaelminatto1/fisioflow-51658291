@@ -1,4 +1,5 @@
-import { fireEvent, render, screen, waitFor } from "@testing-library/react";
+import { render, screen, waitFor } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import type { Transaction } from "@/hooks/useFinancial";
 import { TransactionModal } from "../TransactionModal";
@@ -27,7 +28,9 @@ describe("TransactionModal", () => {
 		onSubmit.mockClear();
 	});
 
-	it("renders existing transaction data and submits the form", async () => {
+	it("renders existing transaction data and submits form", async () => {
+		const user = userEvent.setup();
+
 		render(
 			<TransactionModal
 				open
@@ -42,7 +45,8 @@ describe("TransactionModal", () => {
 		expect(screen.getByDisplayValue("Compra de materiais")).toBeInTheDocument();
 		expect(screen.getByDisplayValue("150")).toBeInTheDocument();
 
-		fireEvent.submit(document.getElementById("transaction-form")!);
+		const saveButton = screen.getByRole("button", { name: /Salvar/i });
+		await user.click(saveButton);
 
 		await waitFor(() => {
 			expect(onSubmit).toHaveBeenCalledWith({
@@ -56,12 +60,15 @@ describe("TransactionModal", () => {
 		expect(onOpenChange).toHaveBeenCalledWith(false);
 	});
 
-	it("closes the modal from the cancel action", () => {
+	it("closes modal from cancel action", async () => {
+		const user = userEvent.setup();
+
 		render(
 			<TransactionModal open onOpenChange={onOpenChange} onSubmit={onSubmit} />,
 		);
 
-		fireEvent.click(screen.getByRole("button", { name: "Cancelar" }));
+		const cancelButton = screen.getByRole("button", { name: "Cancelar" });
+		await user.click(cancelButton);
 		expect(onOpenChange).toHaveBeenCalledWith(false);
 	});
 });
