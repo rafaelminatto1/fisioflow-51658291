@@ -50,7 +50,11 @@ const lazyRetry = (importFn: () => Promise<any>, maxRetries = 3) => {
 	});
 };
 
-const CalendarView = lazy(() => import("@/components/schedule/CalendarView"));
+const CalendarView = lazy(() =>
+	import("@/components/schedule/CalendarView").then((mod) => ({
+		default: mod.CalendarView,
+	})),
+);
 
 const KEYBOARD_SHORTCUTS = {
 	NEW_APPOINTMENT: "n",
