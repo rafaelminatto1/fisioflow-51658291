@@ -4,10 +4,10 @@
  */
 
 import { lazy } from "react";
-import { Route, Routes, Navigate } from "react-router-dom";
-import { ProtectedRoute } from "@/components/ProtectedRoute";
+import { Navigate, Route, Routes } from "react-router-dom";
 import { MainLayout } from "@/components/layout/MainLayout";
-import { WikiLayout, WikiDashboard } from "@/features/wiki";
+import { ProtectedRoute } from "@/components/ProtectedRoute";
+import { WikiDashboard, WikiLayout } from "@/features/wiki";
 
 // Lazy loads - Enterprise Features
 const TimeTracking = lazy(
@@ -57,6 +57,30 @@ const BiomechanicsAnalysisPage = lazy(
 	() =>
 		import(
 			/* webpackChunkName: "biomechanics" */ "@/pages/clinical/BiomechanicsAnalysisPage"
+		),
+);
+const JumpAnalysisPage = lazy(
+	() =>
+		import(
+			/* webpackChunkName: "jump-analysis" */ "@/pages/clinical/jump/JumpAnalysisPage"
+		),
+);
+const GaitAnalysisPage = lazy(
+	() =>
+		import(
+			/* webpackChunkName: "gait-analysis" */ "@/pages/clinical/gait/GaitAnalysisPage"
+		),
+);
+const PostureAnalysisPage = lazy(
+	() =>
+		import(
+			/* webpackChunkName: "posture-analysis" */ "@/pages/clinical/posture/PostureAnalysisPage"
+		),
+);
+const FunctionalAnalysisPage = lazy(
+	() =>
+		import(
+			/* webpackChunkName: "functional-analysis" */ "@/pages/clinical/functional/FunctionalAnalysisPage"
 		),
 );
 const TherapistOccupancy = lazy(
@@ -264,6 +288,38 @@ export const enterpriseRoutes = (
 			element={
 				<ProtectedRoute>
 					<BiomechanicsAnalysisPage />
+				</ProtectedRoute>
+			}
+		/>
+		<Route
+			path="/clinical/biomechanics/jump"
+			element={
+				<ProtectedRoute>
+					<JumpAnalysisPage />
+				</ProtectedRoute>
+			}
+		/>
+		<Route
+			path="/clinical/biomechanics/gait"
+			element={
+				<ProtectedRoute>
+					<GaitAnalysisPage />
+				</ProtectedRoute>
+			}
+		/>
+		<Route
+			path="/clinical/biomechanics/posture"
+			element={
+				<ProtectedRoute>
+					<PostureAnalysisPage />
+				</ProtectedRoute>
+			}
+		/>
+		<Route
+			path="/clinical/biomechanics/functional"
+			element={
+				<ProtectedRoute>
+					<FunctionalAnalysisPage />
 				</ProtectedRoute>
 			}
 		/>
