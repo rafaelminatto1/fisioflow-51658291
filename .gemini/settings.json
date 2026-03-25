@@ -6,7 +6,7 @@
       "description": "Local Playwright MCP server for browser automation"
     },
     "cloudflare-api": {
-      "httpUrl": "https://mcp.cloudflare.com/mcp",
+      "httpUrl": "https://mcp.cloudflare.com",
       "description": "Cloudflare managed MCP server for the Cloudflare API",
       "timeout": 600000
     },
