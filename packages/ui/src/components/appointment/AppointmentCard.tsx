@@ -46,6 +46,11 @@ export const AppointmentCard = React.forwardRef<HTMLDivElement, AppointmentCardP
         ref={ref}
         variant={className?.includes('calendar-card-') ? 'none' : "glass"}
         onClick={onClick}
+        style={{
+          ...style,
+          background: className?.includes('calendar-card-') ? undefined : style?.background,
+          backgroundColor: className?.includes('calendar-card-') ? 'transparent' : style?.backgroundColor,
+        }}
         className={cn(
           "relative overflow-hidden cursor-pointer flex flex-col justify-center",
           "transition-all duration-200",
