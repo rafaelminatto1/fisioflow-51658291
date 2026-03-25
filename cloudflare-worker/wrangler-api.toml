@@ -19,7 +19,7 @@ name = "ORGANIZATION_STATE"
 class_name = "OrganizationState"
 
 [[migrations]]
-tag = "v1"
+tag = "v3"
 new_classes = ["OrganizationState"]
 
 # Secrets (set via: wrangler secret put JWT_SECRET)
