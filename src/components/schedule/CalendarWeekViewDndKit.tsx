@@ -142,7 +142,7 @@ const parseSlotDroppableId = (
 // MAIN COMPONENT
 // =====================================================================
 
-export const CalendarWeekViewDndKit = ({
+export const CalendarWeekViewDndKit = memo(({
 	currentDate,
 	appointments,
 	savingAppointmentId,
@@ -1025,6 +1025,6 @@ export const CalendarWeekViewDndKit = ({
 				</DndContext>
 			</TooltipProvider>
 		);
-};
+});
 
 CalendarWeekViewDndKit.displayName = "CalendarWeekViewDndKit";
