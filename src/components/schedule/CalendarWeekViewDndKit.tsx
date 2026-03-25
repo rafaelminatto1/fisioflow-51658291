@@ -142,31 +142,30 @@ const parseSlotDroppableId = (
 // MAIN COMPONENT
 // =====================================================================
 
-export const CalendarWeekViewDndKit = memo(
-	({
-		currentDate,
-		appointments,
-		savingAppointmentId,
-		timeSlots: timeSlotsProp,
-		onTimeSlotClick,
-		onEditAppointment,
-		onDeleteAppointment,
-		onDuplicateAppointment,
-		onStatusChange,
-		onAppointmentReschedule,
-		checkTimeBlocked,
-		isDayClosedForDate,
-		openPopoverId,
-		setOpenPopoverId,
-		dragState,
-		dropTarget: _dropTarget,
-		handleDragStart: handleDragStartHook,
-		handleDragOver: handleDragOverHook,
-		handleDragEnd: handleDragEndHook,
-		selectionMode = false,
-		selectedIds = new Set(),
-		onToggleSelection,
-	}: CalendarWeekViewDndKitProps) => {
+export const CalendarWeekViewDndKit = ({
+	currentDate,
+	appointments,
+	savingAppointmentId,
+	timeSlots: timeSlotsProp,
+	onTimeSlotClick,
+	onEditAppointment,
+	onDeleteAppointment,
+	onDuplicateAppointment,
+	onStatusChange,
+	onAppointmentReschedule,
+	checkTimeBlocked,
+	isDayClosedForDate,
+	openPopoverId,
+	setOpenPopoverId,
+	dragState,
+	dropTarget: _dropTarget,
+	handleDragStart: handleDragStartHook,
+	handleDragOver: handleDragOverHook,
+	handleDragEnd: handleDragEndHook,
+	selectionMode = false,
+	selectedIds = new Set(),
+	onToggleSelection,
+}: CalendarWeekViewDndKitProps) => {
 		useRenderTracking("CalendarWeekViewDndKit", {
 			appointmentsCount: appointments?.length,
 		});
@@ -1026,7 +1025,6 @@ export const CalendarWeekViewDndKit = memo(
 				</DndContext>
 			</TooltipProvider>
 		);
-	},
-);
+};
 
 CalendarWeekViewDndKit.displayName = "CalendarWeekViewDndKit";
