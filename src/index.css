@@ -1,6 +1,271 @@
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
+@import 'tailwindcss';
+
+@config '../apps/web/tailwind.config.ts';
+
+/*
+  The default border color has changed to `currentcolor` in Tailwind CSS v4,
+  so we've added these compatibility styles to make sure everything still
+  looks the same as it did with Tailwind CSS v3.
+
+  If we ever want to remove these styles, we need to add an explicit border
+  color utility to any element that depends on these defaults.
+*/
+@layer base {
+  *,
+  ::after,
+  ::before,
+  ::backdrop,
+  ::file-selector-button {
+    border-color: var(--color-gray-200, currentcolor);
+  }
+}
+
+@utility animate-fade-in {
+  /* Animações personalizadas */
+  animation: fade-in 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+
+  /* Reduced motion for users who prefer it */
+
+  /* High contrast mode support */
+
+  /* Schedule-specific styling moved to src/styles/schedule.css */
+
+  /* Grid/widget styling moved to src/components/ui/grid-layout.css */
+}
+
+@utility animate-slide-up {
+  animation: slide-up 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+
+  /* Reduced motion for users who prefer it */
+
+  /* High contrast mode support */
+
+  /* Schedule-specific styling moved to src/styles/schedule.css */
+
+  /* Grid/widget styling moved to src/components/ui/grid-layout.css */
+}
+
+@utility animate-scale-in {
+  animation: scale-in 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+
+  /* Reduced motion for users who prefer it */
+
+  /* High contrast mode support */
+
+  /* Schedule-specific styling moved to src/styles/schedule.css */
+
+  /* Grid/widget styling moved to src/components/ui/grid-layout.css */
+}
+
+@utility animate-bounce-in {
+  animation: bounce-in var(--bounce-duration)
+    cubic-bezier(0.68, -0.55, 0.265, 1.55);
+
+  /* Reduced motion for users who prefer it */
+
+  /* High contrast mode support */
+
+  /* Schedule-specific styling moved to src/styles/schedule.css */
+
+  /* Grid/widget styling moved to src/components/ui/grid-layout.css */
+}
+
+@utility animate-slide-up-fade {
+  animation: slide-up-fade 0.4s ease-out;
+
+  /* Reduced motion for users who prefer it */
+
+  /* High contrast mode support */
+
+  /* Schedule-specific styling moved to src/styles/schedule.css */
+
+  /* Grid/widget styling moved to src/components/ui/grid-layout.css */
+}
+
+@utility animate-pulse-glow {
+  animation: pulse-glow 2s ease-in-out infinite;
+
+  /* Reduced motion for users who prefer it */
+
+  /* High contrast mode support */
+
+  /* Schedule-specific styling moved to src/styles/schedule.css */
+
+  /* Grid/widget styling moved to src/components/ui/grid-layout.css */
+}
+
+@utility btn {
+  -webkit-user-select: none;
+  user-select: none;
+
+  /* Reduced motion for users who prefer it */
+
+  /* High contrast mode support */
+
+  /* Schedule-specific styling moved to src/styles/schedule.css */
+
+  /* Grid/widget styling moved to src/components/ui/grid-layout.css */
+}
+
+@utility group {
+  @media (hover: none) and (pointer: coarse) {
+    /* Disable hover effects on touch devices */
+    &:hover .group-hover\:opacity-100 {
+      opacity: 1;
+    }
+    &:hover .group-hover\:block {
+      opacity: 1;
+    }
+    &:hover .group-hover\:flex {
+      opacity: 1;
+    }
+  }
+
+  /* Reduced motion for users who prefer it */
+
+  /* High contrast mode support */
+
+  /* Schedule-specific styling moved to src/styles/schedule.css */
+
+  /* Grid/widget styling moved to src/components/ui/grid-layout.css */
+}
+
+
+@utility is-using-keyboard {
+  /* Class for keyboard navigation detection */
+  &body *:focus-visible {
+    outline: 2px solid hsl(var(--ring));
+    outline-offset: 2px;
+  }
+
+  &body button:focus-visible {
+    box-shadow:
+      0 0 0 2px hsl(var(--background)),
+      0 0 0 4px hsl(var(--ring));
+  }
+
+  & body a:focus-visible {
+    box-shadow:
+      0 0 0 2px hsl(var(--background)),
+      0 0 0 4px hsl(var(--ring));
+  }
+
+  & body [role='button']:focus-visible {
+    box-shadow:
+      0 0 0 2px hsl(var(--background)),
+      0 0 0 4px hsl(var(--ring));
+  }
+
+  /* Reduced motion for users who prefer it */
+
+  /* High contrast mode support */
+
+  /* Schedule-specific styling moved to src/styles/schedule.css */
+
+  /* Grid/widget styling moved to src/components/ui/grid-layout.css */
+}
+
+@utility skip-to-content {
+  /* Skip to content link for keyboard users */
+  position: absolute;
+  left: -10000px;
+  top: auto;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  z-index: -999;
+
+  &:focus {
+    position: fixed;
+    left: 0;
+    top: 0;
+    width: auto;
+    height: auto;
+    padding: 1rem 2rem;
+    background: hsl(var(--primary));
+    color: hsl(var(--primary-foreground));
+    z-index: 9999;
+    border-radius: 0 0 0.5rem 0;
+    font-weight: 600;
+  }
+
+  /* Reduced motion for users who prefer it */
+
+  /* High contrast mode support */
+
+  /* Schedule-specific styling moved to src/styles/schedule.css */
+
+  /* Grid/widget styling moved to src/components/ui/grid-layout.css */
+}
+
+@utility sr-only {
+  /* Visually hidden but accessible to screen readers */
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border-width: 0;
+
+  /* Reduced motion for users who prefer it */
+
+  /* High contrast mode support */
+
+  /* Schedule-specific styling moved to src/styles/schedule.css */
+
+  /* Grid/widget styling moved to src/components/ui/grid-layout.css */
+}
+
+@utility sr-only-focusable {
+  /* Make element visible on focus */
+  &:focus {
+    position: static;
+    width: auto;
+    height: auto;
+    padding: inherit;
+    margin: inherit;
+    overflow: visible;
+    clip: auto;
+    white-space: normal;
+  }
+
+  /* Reduced motion for users who prefer it */
+
+  /* High contrast mode support */
+
+  /* Schedule-specific styling moved to src/styles/schedule.css */
+
+  /* Grid/widget styling moved to src/components/ui/grid-layout.css */
+}
+
+@utility focus-trap {
+  /* Focus trap utilities for modals */
+  isolation: isolate;
+
+  /* Reduced motion for users who prefer it */
+
+  /* High contrast mode support */
+
+  /* Schedule-specific styling moved to src/styles/schedule.css */
+
+  /* Grid/widget styling moved to src/components/ui/grid-layout.css */
+}
+
+@utility appointment-card {
+  /* Reduced motion for users who prefer it */
+
+  /* High contrast mode support */
+  @media (prefers-contrast: high) {
+    border-width: 2px;
+  }
+
+  /* Schedule-specific styling moved to src/styles/schedule.css */
+
+  /* Grid/widget styling moved to src/components/ui/grid-layout.css */
+}
 
 /* Definition of the design system. All colors, gradients, fonts, etc should be defined here. 
 All colors MUST be HSL.
@@ -209,8 +474,6 @@ All colors MUST be HSL.
 }
 
 @layer utilities {
-
-  /* Animações personalizadas */
   @keyframes fade-in {
     from {
       opacity: 0;
@@ -297,30 +560,6 @@ All colors MUST be HSL.
     }
   }
 
-  .animate-fade-in {
-    animation: fade-in 0.6s cubic-bezier(0.4, 0, 0.2, 1);
-  }
-
-  .animate-slide-up {
-    animation: slide-up 0.5s cubic-bezier(0.4, 0, 0.2, 1);
-  }
-
-  .animate-scale-in {
-    animation: scale-in 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-  }
-
-  .animate-bounce-in {
-    animation: bounce-in var(--bounce-duration) cubic-bezier(0.68, -0.55, 0.265, 1.55);
-  }
-
-  .animate-slide-up-fade {
-    animation: slide-up-fade 0.4s ease-out;
-  }
-
-  .animate-pulse-glow {
-    animation: pulse-glow 2s ease-in-out infinite;
-  }
-
   @keyframes shimmer-slide {
     0% {
       transform: translateX(-100%);
@@ -350,21 +589,9 @@ All colors MUST be HSL.
   }
 
   /* Better button press feedback on iOS */
-  button,
-  .btn {
-    -webkit-user-select: none;
-    user-select: none;
-  }
 
   /* Fix hover states interfering with touch on iOS */
   @media (hover: none) and (pointer: coarse) {
-
-    /* Disable hover effects on touch devices */
-    .group:hover .group-hover\:opacity-100,
-    .group:hover .group-hover\:block,
-    .group:hover .group-hover\:flex {
-      opacity: 1;
-    }
 
     /* Always show elements that are normally only visible on hover */
     [class*="group-hover:opacity-0"] {
@@ -392,75 +619,6 @@ All colors MUST be HSL.
   :focus:not(:focus-visible) {
     outline: none;
   }
-
-  /* Class for keyboard navigation detection */
-  body.is-using-keyboard *:focus-visible {
-    outline: 2px solid hsl(var(--ring));
-    outline-offset: 2px;
-  }
-
-  body.is-using-keyboard button:focus-visible,
-  body.is-using-keyboard a:focus-visible,
-  body.is-using-keyboard [role="button"]:focus-visible {
-    box-shadow: 0 0 0 2px hsl(var(--background)), 0 0 0 4px hsl(var(--ring));
-  }
-
-  /* Skip to content link for keyboard users */
-  .skip-to-content {
-    position: absolute;
-    left: -10000px;
-    top: auto;
-    width: 1px;
-    height: 1px;
-    overflow: hidden;
-    z-index: -999;
-  }
-
-  .skip-to-content:focus {
-    position: fixed;
-    left: 0;
-    top: 0;
-    width: auto;
-    height: auto;
-    padding: 1rem 2rem;
-    background: hsl(var(--primary));
-    color: hsl(var(--primary-foreground));
-    z-index: 9999;
-    border-radius: 0 0 0.5rem 0;
-    font-weight: 600;
-  }
-
-  /* Visually hidden but accessible to screen readers */
-  .sr-only {
-    position: absolute;
-    width: 1px;
-    height: 1px;
-    padding: 0;
-    margin: -1px;
-    overflow: hidden;
-    clip: rect(0, 0, 0, 0);
-    white-space: nowrap;
-    border-width: 0;
-  }
-
-  /* Make element visible on focus */
-  .sr-only-focusable:focus {
-    position: static;
-    width: auto;
-    height: auto;
-    padding: inherit;
-    margin: inherit;
-    overflow: visible;
-    clip: auto;
-    white-space: normal;
-  }
-
-  /* Focus trap utilities for modals */
-  .focus-trap {
-    isolation: isolate;
-  }
-
-  /* Reduced motion for users who prefer it */
   @media (prefers-reduced-motion: reduce) {
 
     *,
@@ -472,22 +630,12 @@ All colors MUST be HSL.
       scroll-behavior: auto !important;
     }
   }
-
-  /* High contrast mode support */
   @media (prefers-contrast: high) {
     :root {
       --border: 220 13% 40%;
       --muted-foreground: 220 9% 20%;
     }
-
-    .appointment-card {
-      border-width: 2px;
-    }
   }
-
-  /* Schedule-specific styling moved to src/styles/schedule.css */
-
-  /* Grid/widget styling moved to src/components/ui/grid-layout.css */
 }
 
 /* ========================================================================

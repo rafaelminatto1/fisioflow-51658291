@@ -35,6 +35,9 @@ export interface Env {
   R2_SECRET_ACCESS_KEY: string;
   R2_PUBLIC_URL: string;
 
+  // Cloudflare D1 (cache opcional)
+  DB?: D1Database;
+
   // Durable Objects
   ORGANIZATION_STATE: DurableObjectNamespace;
   FISIOFLOW_CONFIG?: KVNamespace;

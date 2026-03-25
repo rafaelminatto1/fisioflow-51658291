@@ -132,7 +132,7 @@ app.post("/messages", async (c) => {
 
 	// Trigger Push Notification asynchronously
 	c.executionCtx.waitUntil(
-		notifyUser(c.env, pool, recipient_id, {
+		notifyUser(c.env, pool, recipientId, {
 			title: "Nova mensagem de equipe",
 			body: content.length > 50 ? `${content.substring(0, 50)}...` : content,
 			data: {
