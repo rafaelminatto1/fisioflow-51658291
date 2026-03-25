@@ -1,16 +1,15 @@
-import { Suspense, lazy, useEffect, useMemo } from "react";
+import { useEffect, useMemo } from "react";
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient } from "@tanstack/react-query";
-import { BrowserRouter, useLocation, useNavigate } from "react-router-dom";
+import { RouterProvider } from "react-router-dom";
 import { AuthContextProvider } from "@/contexts/AuthContextProvider";
 import { HighContrastProvider } from "@/contexts/HighContrastContext";
 import { useAuth } from "@/contexts/AuthContext";
 import { ErrorBoundary } from "@/components/error/ErrorBoundary";
 import { GlobalErrorBoundary } from "@/components/error/GlobalErrorBoundary";
 import { fisioLogger as logger } from "@/lib/errors/logger";
-import { AppLoadingSkeleton } from "@/components/ui/AppLoadingSkeleton";
 
 let _loggedAppInit = false;
 let _loggedNotificationsInit = false;
@@ -18,14 +17,13 @@ import { notificationManager } from "@/lib/services/NotificationManager";
 import { PersistQueryClientProvider } from "@tanstack/react-query-persist-client";
 import { createAsyncStoragePersister } from "@tanstack/query-async-storage-persister";
 import { get, set, del } from "idb-keyval";
-import { AppRoutes } from "./routes";
+import { router } from "./routes/router";
+
 // ============================================================================
 // NOVO: TEMA PROVIDER
 // ============================================================================
 import { ThemeProvider } from "@/components/ui/theme";
-
 import { PremiumThemeToggle } from "@/components/ui/PremiumThemeToggle";
-
 import { FeatureFlagProvider } from "@/lib/featureFlags/hooks";
 import { useServiceWorkerUpdate } from "@/hooks/useServiceWorkerUpdate";
 import { SkipLink, FocusVisibleHandler } from "@/components/accessibility";
@@ -99,73 +97,6 @@ const StatsigProviderWrapper = ({
 		<FeatureFlagProvider user={statsigUser}>{children}</FeatureFlagProvider>
 	);
 };
-
-// Component to initialize push notifications with navigation support
-const NotificationInitializer = () => {
-	const navigate = useNavigate();
-
-	useEffect(() => {
-		let isMounted = true;
-
-		void import("@/lib/mobile/push-notifications")
-			.then(({ initPushNotifications }) => {
-				if (isMounted) {
-					return initPushNotifications(navigate);
-				}
-
-				return undefined;
-			})
-			.catch((error) => {
-				logger.error(
-					"Falha ao carregar inicialização de push notifications",
-					error,
-					"App",
-				);
-			});
-
-		return () => {
-			isMounted = false;
-		};
-	}, [navigate]);
-
-	return null;
-};
-
-const RouteAwareNetworkStatus = lazy(() =>
-	import("@/components/ui/network-status").then((module) => ({
-		default: module.NetworkStatus,
-	})),
-);
-const RouteAwareSyncManager = lazy(() =>
-	import("@/components/sync/SyncManager").then((module) => ({
-		default: module.SyncManager,
-	})),
-);
-const RouteAwareTourGuide = lazy(() =>
-	import("@/components/system/TourGuide").then((module) => ({
-		default: module.TourGuide,
-	})),
-);
-const RouteAwareVersionManager = lazy(() =>
-	import("@/components/system/VersionManager").then((module) => ({
-		default: module.VersionManager,
-	})),
-);
-const RouteAwareWebVitalsIndicator = lazy(() =>
-	import("@/lib/monitoring/web-vitals").then((module) => ({
-		default: module.WebVitalsIndicator,
-	})),
-);
-const RouteAwarePosePreloadManager = lazy(() =>
-	import("@/components/ai/PosePreloadManager").then((module) => ({
-		default: module.PosePreloadManager,
-	})),
-);
-const RouteAwareAuthenticatedAppShell = lazy(() =>
-	import("@/components/app/AuthenticatedAppShell").then((module) => ({
-		default: module.AuthenticatedAppShell,
-	})),
-);
 
 // Grouped providers for cleaner structure and better performance
 const AppProviders = ({ children }: { children: React.ReactNode }) => {
@@ -300,107 +231,8 @@ const App = () => {
 			<PremiumThemeToggle />
 			<Toaster />
 			<Sonner />
-			<BrowserRouter>
-				<RouteAwareInfrastructure />
-				<RouteAwareAppShell>
-					<Suspense
-						fallback={<AppLoadingSkeleton message="Carregando sistema..." />}
-					>
-						<AppRoutes />
-					</Suspense>
-				</RouteAwareAppShell>
-			</BrowserRouter>
+			<RouterProvider router={router} />
 		</AppProviders>
-	);
-};
-
-const PUBLIC_BOOT_PATH_PREFIXES = [
-	"/auth",
-	"/welcome",
-	"/pre-cadastro",
-	"/prescricoes/publica",
-	"/agendar",
-];
-
-function isPublicBootPath(pathname: string): boolean {
-	return PUBLIC_BOOT_PATH_PREFIXES.some(
-		(prefix) => pathname === prefix || pathname.startsWith(`${prefix}/`),
-	);
-}
-
-const POSE_BOOT_PATH_PREFIXES = [
-	"/ai/movement",
-	"/computer-vision",
-	"/augmented-reality",
-	"/dashboard/imagens",
-];
-
-function shouldPreloadPoseForPath(pathname: string): boolean {
-	if (pathname.startsWith("/pacientes/") && pathname.includes("/imagens")) {
-		return true;
-	}
-
-	return POSE_BOOT_PATH_PREFIXES.some(
-		(prefix) => pathname === prefix || pathname.startsWith(`${prefix}/`),
-	);
-}
-
-const RouteAwareAppShell = ({ children }: { children: React.ReactNode }) => {
-	const location = useLocation();
-	const isPublicRoute = isPublicBootPath(location.pathname);
-
-	if (isPublicRoute) {
-		return <>{children}</>;
-	}
-
-	return (
-		<Suspense fallback={<AppLoadingSkeleton message="Carregando sistema..." />}>
-			<RouteAwareAuthenticatedAppShell>
-				{children}
-			</RouteAwareAuthenticatedAppShell>
-		</Suspense>
-	);
-};
-
-const RouteAwareInfrastructure = () => {
-	const location = useLocation();
-	const isPublicRoute = isPublicBootPath(location.pathname);
-	const shouldPreloadPose = shouldPreloadPoseForPath(location.pathname);
-
-	return (
-		<>
-			<Suspense fallback={null}>
-				<RouteAwareNetworkStatus />
-			</Suspense>
-			{!isPublicRoute && (
-				<Suspense fallback={null}>
-					<RouteAwareSyncManager />
-				</Suspense>
-			)}
-			{!isPublicRoute && (
-				<Suspense fallback={null}>
-					<RouteAwareTourGuide />
-				</Suspense>
-			)}
-			{!isPublicRoute && <NotificationInitializer />}
-			{!isPublicRoute && (
-				<Suspense fallback={null}>
-					<RouteAwareVersionManager />
-				</Suspense>
-			)}
-			{!isPublicRoute && shouldPreloadPose && (
-				<Suspense fallback={null}>
-					<RouteAwarePosePreloadManager />
-				</Suspense>
-			)}
-			{!isPublicRoute &&
-				import.meta.env.DEV &&
-				!window.location.search.includes("e2e=true") && (
-					<Suspense fallback={null}>
-						<RouteAwareWebVitalsIndicator />
-					</Suspense>
-				)}
-		</>
 	);
 };
 

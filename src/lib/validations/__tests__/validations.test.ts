@@ -86,7 +86,7 @@ describe("Validações de CPF", () => {
 			const result = cpfSchema.safeParse("123");
 			expect(result.success).toBe(false);
 			if (!result.success) {
-				expect(result.error.errors[0].message).toContain("11 dígitos");
+				expect(result.error.issues[0].message).toContain("11 dígitos");
 			}
 		});
 	});

@@ -122,7 +122,7 @@ export function InvitationsManager() {
 	const parseEmail = (email: string): string => {
 		const result = emailSchema.safeParse(email.trim());
 		if (!result.success) {
-			throw new Error(result.error.errors[0]?.message || "Email inválido");
+			throw new Error(result.error.issues[0]?.message || "Email inválido");
 		}
 		return result.data.toLowerCase();
 	};

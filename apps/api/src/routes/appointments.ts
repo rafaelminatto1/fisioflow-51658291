@@ -2,56 +2,87 @@ import { Hono } from 'hono';
 import type { MiddlewareHandler } from 'hono';
 import type { Env } from '../types/env';
 import { requireAuth, type AuthVariables } from '../lib/auth';
-import { createPool } from '../lib/db';
-import { isUuid } from '../lib/validators';
-import { triggerInngestEvent } from '../lib/inngest-client';
-import { broadcastToOrg } from '../lib/realtime';
+import { eq, and, or, sql, desc, asc, lte, gte, ne } from 'drizzle-orm';
+import { appointments, patients } from '@fisioflow/db';
 import {
   normalizeStatus,
   calculateEndTime,
-  sanitizeAppointmentRow,
   isConflictError,
   countsTowardCapacity,
 } from './appointmentHelpers';
+import { createDb } from '../lib/db';
+import { isUuid } from '../lib/validators';
+import { triggerInngestEvent } from '../lib/inngest-client';
+import { broadcastToOrg } from '../lib/realtime';
+
+
 
 const app = new Hono<{ Bindings: Env; Variables: AuthVariables }>();
 
+function normalizeAppointmentRow(row: any) {
+  return {
+    ...row,
+    id: String(row.id),
+    patient_id: row.patientId,
+    therapist_id: row.therapistId,
+    organization_id: row.organizationId,
+    start_time: row.startTime ? String(row.startTime).substring(0, 5) : null,
+    end_time: row.endTime ? String(row.endTime).substring(0, 5) : null,
+    duration_minutes: row.durationMinutes,
+    payment_status: row.paymentStatus,
+    payment_amount: row.paymentAmount,
+    patient_name: row.patient?.fullName ?? row.patient_name ?? null,
+    patient_phone: row.patient?.phone ?? row.patient_phone ?? null,
+    created_at: row.createdAt ? String(row.createdAt) : null,
+    updated_at: row.updatedAt ? String(row.updatedAt) : null,
+  };
+}
+
+
 app.get('/', requireAuth, async (c) => {
   const user = c.get('user');
-  const db = await createPool(c.env);
+  const db = createDb(c.env);
   try {
     const { dateFrom, dateTo, therapistId, patientId, status, limit = '100' } = c.req.query();
-    const params: any[] = [user.organizationId];
-    let idx = 2;
-    let where = `WHERE a.organization_id = $1`;
+    
+    let conditions = eq(appointments.organizationId, user.organizationId);
 
-    if (dateFrom) { params.push(dateFrom); where += ` AND a.date >= $${idx++}`; }
-    if (dateTo)   { params.push(dateTo);   where += ` AND a.date <= $${idx++}`; }
-    if (therapistId) { params.push(therapistId); where += ` AND a.therapist_id = $${idx++}`; }
-    if (patientId)   { params.push(patientId);   where += ` AND a.patient_id = $${idx++}`; }
-    if (status)      { params.push(status);      where += ` AND a.status = $${idx++}`; }
+    if (dateFrom) conditions = and(conditions, gte(appointments.date, dateFrom))!;
+    if (dateTo)   conditions = and(conditions, lte(appointments.date, dateTo))!;
+    if (therapistId) conditions = and(conditions, eq(appointments.therapistId, therapistId))!;
+    if (patientId)   conditions = and(conditions, eq(appointments.patientId, patientId))!;
+    if (status)      conditions = and(conditions, eq(appointments.status, status as any))!;
 
     const limitNum = Math.min(1000, Math.max(1, parseInt(limit) || 100));
-    params.push(limitNum);
 
-    const result = await db.query(
-      `SELECT 
-        a.id, a.patient_id, a.therapist_id, a.date, a.start_time, a.end_time, 
-        a.status, a.type, a.notes, a.payment_status, a.payment_amount,
-        p.full_name AS patient_name, p.phone AS patient_phone
-       FROM appointments a
-       LEFT JOIN patients p ON p.id = a.patient_id
-       ${where} ORDER BY a.date DESC, a.start_time DESC LIMIT $${idx}`,
-      params,
-    );
+    const result = await db
+      .select({
+        id: appointments.id,
+        patientId: appointments.patientId,
+        therapistId: appointments.therapistId,
+        date: appointments.date,
+        startTime: appointments.startTime,
+        endTime: appointments.endTime,
+        status: appointments.status,
+        type: appointments.type,
+        notes: appointments.notes,
+        paymentStatus: appointments.paymentStatus,
+        paymentAmount: appointments.paymentAmount,
+        createdAt: appointments.createdAt,
+        updatedAt: appointments.updatedAt,
+        patient_name: patients.fullName,
+        patient_phone: patients.phone,
+      })
+      .from(appointments)
+      .leftJoin(patients, eq(patients.id, appointments.patientId))
+      .where(conditions)
+      .orderBy(desc(appointments.date), desc(appointments.startTime))
+      .limit(limitNum);
+
     
-    const rows = (result.rows || result) as any[];
-    const sanitizedRows = rows.map(sanitizeAppointmentRow);
+    const sanitizedRows = result.map(normalizeAppointmentRow);
 
-    // Dados de agendamento são autenticados e mudam com frequência — não cachear no HTTP layer.
-    // A invalidação de cache é gerenciada pelo TanStack Query no cliente.
     c.header('Cache-Control', 'no-store');
-    
     return c.json({ data: sanitizedRows });
   } catch (error: any) {
     console.error('[Appointments/List] Error:', error.message);
@@ -60,28 +91,29 @@ app.get('/', requireAuth, async (c) => {
 });
 
 
+
 async function getIntervalCapacity(
-  db: ReturnType<typeof createPool>,
+  db: any,
   organizationId: string,
   date: string,
   startTime: string,
   endTime: string,
 ): Promise<number> {
   try {
-    const result = await db.query(
-      `SELECT MIN(max_patients)::int AS capacity
-       FROM schedule_capacity
-       WHERE organization_id = $1
-         AND day_of_week = EXTRACT(DOW FROM $2::date)
-         AND start_time < $4::time
-         AND end_time > $3::time`,
-      [organizationId, date, startTime, endTime],
-    );
+    // schedule_capacity table might not be in schema, use sql fallback
+    const result = await db.execute(sql`
+      SELECT MIN(max_patients)::int AS capacity
+      FROM schedule_capacity
+      WHERE organization_id = ${organizationId}::uuid
+        AND day_of_week = EXTRACT(DOW FROM ${date}::date)
+        AND start_time < ${endTime}::time
+        AND end_time > ${startTime}::time
+    `);
 
-    const capacity = Number(result.rows?.[0]?.capacity ?? (result as any)?.[0]?.capacity ?? 1);
+    const capacity = Number(result.rows?.[0]?.capacity ?? 1);
     return Number.isFinite(capacity) && capacity > 0 ? capacity : 1;
   } catch (error: any) {
-    if (error?.code === '42P01') {
+    if (error?.message?.includes('does not exist')) {
       return 1;
     }
     throw error;
@@ -89,35 +121,42 @@ async function getIntervalCapacity(
 }
 
 async function getOverlappingAppointments(
-  db: ReturnType<typeof createPool>,
+  db: any,
   organizationId: string,
   date: string,
   startTime: string,
   endTime: string,
   excludeAppointmentId?: string,
-): Promise<Array<{ id: string; patient_id: string; start_time: string; date: string }>> {
-  const params: any[] = [organizationId, date, startTime, endTime];
-  let sql = `SELECT id, patient_id, start_time, date
-             FROM appointments
-             WHERE organization_id = $1
-               AND date = $2
-               AND status NOT IN ('cancelled', 'no_show', 'rescheduled')
-               AND start_time < $4::time
-               AND end_time > $3::time`;
+): Promise<Array<{ id: string; patientId: string; startTime: string; date: string }>> {
+  let conditions = and(
+    eq(appointments.organizationId, organizationId),
+    eq(appointments.date, date),
+    sql`${appointments.status} NOT IN ('cancelled', 'no_show', 'rescheduled')`,
+    sql`${appointments.startTime} < ${endTime}::time`,
+    sql`${appointments.endTime} > ${startTime}::time`,
+  );
 
   if (excludeAppointmentId) {
-    params.push(excludeAppointmentId);
-    sql += ` AND id <> $5`;
+    conditions = and(conditions, ne(appointments.id, excludeAppointmentId))!;
   }
 
-  sql += ` ORDER BY start_time ASC, created_at ASC`;
+  const result = await db
+    .select({
+      id: appointments.id,
+      patientId: appointments.patientId,
+      startTime: appointments.startTime,
+      date: appointments.date,
+    })
+    .from(appointments)
+    .where(conditions)
+    .orderBy(asc(appointments.startTime), asc(appointments.createdAt));
 
-  const result = await db.query(sql, params);
-  return (result.rows || result || []) as Array<{ id: string; patient_id: string; start_time: string; date: string }>;
+  return result;
 }
 
+
 async function enforceCapacity(
-  db: ReturnType<typeof createPool>,
+  db: any,
   organizationId: string,
   payload: {
     date: string;
@@ -128,6 +167,7 @@ async function enforceCapacity(
     excludeAppointmentId?: string;
   },
 ) {
+
   if (payload.ignoreCapacity || !countsTowardCapacity(payload.status)) {
     return null;
   }
@@ -157,7 +197,8 @@ async function enforceCapacity(
 
 app.post('/', requireAuth, async (c) => {
   const user = c.get('user');
-  const db = await createPool(c.env);
+  const db = createDb(c.env);
+
   try {
     const body = await c.req.json();
     // Accept both camelCase and snake_case
@@ -188,12 +229,21 @@ app.post('/', requireAuth, async (c) => {
       return c.json(capacityError, 409);
     }
 
-    const result = await db.query(
-      `INSERT INTO appointments (patient_id, therapist_id, date, start_time, end_time, organization_id, status, notes, created_at, updated_at)
-       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, NOW(), NOW()) RETURNING *`,
-      [patientId, therapistId, date, startTime, endTime, user.organizationId, status, notes],
-    );
-    const row = (result.rows?.[0] || (result as any)[0]) as any;
+    const insertValues: any = {
+      patientId,
+      therapistId,
+      date,
+      startTime,
+      endTime,
+      organizationId: user.organizationId,
+      status,
+      notes,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    };
+
+    const result = await db.insert(appointments).values(insertValues).returning();
+    const row = result[0];
     
     // Real-time Broadcast
     await broadcastToOrg(c.env, user.organizationId, {
@@ -202,24 +252,26 @@ app.post('/', requireAuth, async (c) => {
     });
     
     // Busca dados do paciente para o lembrete
-    const patientResult = await db.query('SELECT full_name, phone FROM patients WHERE id = $1', [patientId]);
-    const patient = (patientResult.rows?.[0] || (patientResult as any)[0]) as any;
+    const patientRow = await db.select({
+      fullName: patients.fullName,
+      phone: patients.phone
+    }).from(patients).where(eq(patients.id, patientId)).limit(1).then(res => res[0]);
 
     try {
       triggerInngestEvent(c.env, c.executionCtx, 'appointment.created', {
         appointmentId: row.id,
-        patientId: row.patient_id,
-        name: patient?.full_name,
-        phone: patient?.phone,
+        patientId: row.patientId,
+        name: patientRow?.fullName,
+        phone: patientRow?.phone,
         date: row.date,
-        startTime: row.start_time,
+        startTime: row.startTime,
         status: row.status,
       }, { id: user.uid });
     } catch (eventError: any) {
       console.error('[Appointments/Create] Failed to trigger event:', eventError?.message ?? eventError);
     }
 
-    return c.json({ data: row }, 201);
+    return c.json({ data: normalizeAppointmentRow(row) }, 201);
   } catch (error: any) {
     if (isConflictError(error)) {
       return c.json({ error: 'Conflito de horário: o terapeuta já possui um agendamento neste período.' }, 409);
@@ -231,18 +283,38 @@ app.post('/', requireAuth, async (c) => {
 
 app.get('/:id', requireAuth, async (c) => {
   const user = c.get('user');
-  const db = await createPool(c.env);
-  const { id } = c.req.param();
+  const db = createDb(c.env);
+  const id = c.req.param('id');
+  if (!id) return c.json({ error: 'ID é obrigatório' }, 400);
   try {
-    const result = await db.query(
-      `SELECT a.*, p.full_name AS patient_name FROM appointments a
-       LEFT JOIN patients p ON p.id = a.patient_id
-       WHERE a.id = $1 AND a.organization_id = $2 LIMIT 1`,
-      [id, user.organizationId],
-    );
-    const row = result.rows?.[0] || (result as any)[0];
+    const result = await db
+      .select({
+        id: appointments.id,
+        patientId: appointments.patientId,
+        therapistId: appointments.therapistId,
+        date: appointments.date,
+        startTime: appointments.startTime,
+        endTime: appointments.endTime,
+        status: appointments.status,
+        type: appointments.type,
+        notes: appointments.notes,
+        paymentStatus: appointments.paymentStatus,
+        paymentAmount: appointments.paymentAmount,
+        createdAt: appointments.createdAt,
+        updatedAt: appointments.updatedAt,
+        patient_name: patients.fullName,
+      })
+      .from(appointments)
+      .leftJoin(patients, eq(patients.id, appointments.patientId))
+      .where(
+        and(eq(appointments.id, id as string), eq(appointments.organizationId, user.organizationId))
+      )
+      .limit(1);
+
+    const row = result[0];
     if (!row) return c.json({ error: 'Agendamento não encontrado' }, 404);
-    return c.json({ data: row });
+    return c.json({ data: normalizeAppointmentRow(row) });
+
   } catch (error: any) {
     return c.json({ error: 'Erro ao buscar agendamento', details: error.message }, 500);
   }
@@ -250,31 +322,38 @@ app.get('/:id', requireAuth, async (c) => {
 
 const updateAppointmentHandler: MiddlewareHandler<{ Bindings: Env; Variables: AuthVariables }> = async (c) => {
   const user = c.get('user');
-  const db = await createPool(c.env);
+  const db = createDb(c.env);
   const id = c.req.param('id');
+  if (!id) return c.json({ error: 'ID é obrigatório' }, 400);
   try {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const body = await c.req.json() as Record<string, any>;
-    const currentResult = await db.query(
-      `SELECT id, date, start_time, end_time, duration_minutes, status
-       FROM appointments
-       WHERE id = $1 AND organization_id = $2
-       LIMIT 1`,
-      [id, user.organizationId],
-    );
-    const current = (currentResult.rows?.[0] || (currentResult as any)[0]) as any;
-    if (!current) return c.json({ error: 'Agendamento não encontrado' }, 404);
+    const currentResult = await db
+      .select({
+        id: appointments.id,
+        patientId: appointments.patientId, // needed for events
+        date: appointments.date,
+        startTime: appointments.startTime,
+        endTime: appointments.endTime,
+        durationMinutes: appointments.durationMinutes,
+        status: appointments.status,
+      })
+      .from(appointments)
+      .where(
+        and(eq(appointments.id, id as string), eq(appointments.organizationId, user.organizationId))
+      )
+      .limit(1);
 
-    const fields: string[] = [];
-    const params: any[] = [];
-    let idx = 1;
+    const current = currentResult[0];
+
+    if (!current) return c.json({ error: 'Agendamento não encontrado' }, 404);
 
     const date = body.date ?? body.appointment_date;
     const startTime = body.startTime ?? body.start_time ?? body.appointment_time;
     const explicitEndTime = body.endTime ?? body.end_time;
     const status = body.status;
     const notes = body.notes;
-    const therapistId = body.therapist_id ?? body.therapistId;
+    const therapistIdInput = body.therapist_id ?? body.therapistId;
     const rawDuration = body.duration ?? body.duration_minutes;
     const type = body.type;
     const room = body.room ?? body.room_id;
@@ -283,22 +362,20 @@ const updateAppointmentHandler: MiddlewareHandler<{ Bindings: Env; Variables: Au
     const ignoreCapacity = body.ignoreCapacity === true;
 
     const parsedDuration = rawDuration !== undefined ? parseInt(String(rawDuration), 10) : undefined;
-    const normalizedStatus = status !== undefined ? normalizeStatus(status) : String(current.status ?? 'scheduled');
+    const normalizedStatus = status !== undefined ? normalizeStatus(status) : String(current.status ?? 'agendado');
 
     if (parsedDuration !== undefined && (!Number.isFinite(parsedDuration) || parsedDuration <= 0)) {
       return c.json({ error: 'duration inválida' }, 400);
     }
 
     const effectiveDate = date ?? current.date;
-    const effectiveStartTime = startTime ?? current.start_time;
-    const effectiveDuration = parsedDuration ?? Number(current.duration_minutes ?? 60);
-    const endTime = explicitEndTime ?? (
-      (startTime !== undefined || parsedDuration !== undefined)
+    const effectiveStartTime = startTime ?? current.startTime;
+    const effectiveDuration = parsedDuration ?? Number(current.durationMinutes ?? 60);
+    const calculatedEndTime = (startTime !== undefined || parsedDuration !== undefined)
         ? calculateEndTime(effectiveStartTime, effectiveDuration)
-        : undefined
-    );
+        : undefined;
 
-    const effectiveEndTime = endTime ?? current.end_time;
+    const finalEndTime = explicitEndTime ?? calculatedEndTime ?? current.endTime;
     const shouldRecheckCapacity =
       !ignoreCapacity &&
       (
@@ -313,45 +390,46 @@ const updateAppointmentHandler: MiddlewareHandler<{ Bindings: Env; Variables: Au
       const capacityError = await enforceCapacity(db, user.organizationId, {
         date: effectiveDate,
         startTime: effectiveStartTime,
-        endTime: effectiveEndTime,
+        endTime: finalEndTime,
         status: normalizedStatus,
         ignoreCapacity,
-        excludeAppointmentId: id,
+        excludeAppointmentId: id as string,
       });
       if (capacityError) {
         return c.json(capacityError, 409);
       }
     }
 
-    if (date !== undefined)        { fields.push(`date = $${idx++}`);       params.push(date); }
-    if (startTime !== undefined)   { fields.push(`start_time = $${idx++}`); params.push(startTime); }
-    if (endTime !== undefined)     { fields.push(`end_time = $${idx++}`);   params.push(endTime); }
-    if (status !== undefined)      { fields.push(`status = $${idx++}`);     params.push(normalizedStatus); }
-    if (notes !== undefined)       { fields.push(`notes = $${idx++}`);      params.push(notes); }
-    
-    if (therapistId !== undefined) { 
-      if (therapistId && !isUuid(therapistId)) {
-        return c.json({ error: 'therapist_id inválido' }, 400);
-      }
-      fields.push(`therapist_id = $${idx++}`); 
-      params.push(therapistId || null); 
-    }
-    
-    if (parsedDuration !== undefined) { fields.push(`duration_minutes = $${idx++}`); params.push(parsedDuration); }
-    if (type !== undefined)        { fields.push(`type = $${idx++}`);       params.push(type); }
-    if (room !== undefined)        { fields.push(`room_id = $${idx++}`);    params.push(isUuid(room) ? room : null); }
-    if (paymentStatus !== undefined) { fields.push(`payment_status = $${idx++}`); params.push(paymentStatus); }
-    if (paymentAmount !== undefined) { fields.push(`payment_amount = $${idx++}`); params.push(paymentAmount); }
+    const updatePayload: any = {
+      updatedAt: new Date(),
+    };
 
-    if (!fields.length) return c.json({ error: 'Nenhum campo para atualizar' }, 400);
-    fields.push(`updated_at = NOW()`);
-    params.push(id, user.organizationId);
-    
-    const result = await db.query(
-      `UPDATE appointments SET ${fields.join(', ')} WHERE id = $${idx++} AND organization_id = $${idx++} RETURNING *`,
-      params,
-    );
-    const row = (result.rows?.[0] || (result as any)[0]) as any;
+    if (date !== undefined) updatePayload.date = date;
+    if (startTime !== undefined) updatePayload.startTime = startTime;
+    if (finalEndTime !== undefined) updatePayload.endTime = finalEndTime;
+    if (status !== undefined) updatePayload.status = normalizedStatus;
+    if (notes !== undefined) updatePayload.notes = notes;
+    if (therapistIdInput !== undefined) updatePayload.therapistId = therapistIdInput || null;
+    if (parsedDuration !== undefined) updatePayload.durationMinutes = parsedDuration;
+    if (type !== undefined) updatePayload.type = type;
+    if (room !== undefined) updatePayload.roomId = isUuid(room) ? room : null;
+    if (paymentStatus !== undefined) updatePayload.paymentStatus = paymentStatus;
+    if (paymentAmount !== undefined) updatePayload.paymentAmount = paymentAmount;
+
+    if (Object.keys(updatePayload).length === 1) { // only updatedAt
+        return c.json({ error: 'Nenhum campo para atualizar' }, 400);
+    }
+
+    const result = await db
+      .update(appointments)
+      .set(updatePayload)
+      .where(
+        and(eq(appointments.id, id as string), eq(appointments.organizationId, user.organizationId))
+      )
+      .returning();
+
+    const row = result[0];
+
     if (!row) return c.json({ error: 'Agendamento não encontrado' }, 404);
 
     // Real-time Broadcast
@@ -362,23 +440,24 @@ const updateAppointmentHandler: MiddlewareHandler<{ Bindings: Env; Variables: Au
 
     // Eventos Inngest baseados em mudança de status
     try {
-      if (row.status === 'completed') {
-        // Busca dados do paciente para o feedback
-        const pRes = await db.query('SELECT full_name, phone FROM patients WHERE id = $1', [row.patient_id]);
-        const p = (pRes.rows?.[0] || (pRes as any)[0]) as any;
+      if (row.status === 'atendido') {
+        const patientRow = await db.select({
+            fullName: patients.fullName,
+            phone: patients.phone
+        }).from(patients).where(eq(patients.id, row.patientId)).limit(1).then(res => res[0]);
 
         triggerInngestEvent(c.env, c.executionCtx, 'appointment.completed', {
           appointmentId: row.id,
-          patientId: row.patient_id,
-          name: p?.full_name,
-          phone: p?.phone
+          patientId: row.patientId,
+          name: patientRow?.fullName,
+          phone: patientRow?.phone
         }, { id: user.uid });
       } else {
         triggerInngestEvent(c.env, c.executionCtx, 'appointment.updated', {
           appointmentId: row.id,
-          patientId: row.patient_id,
+          patientId: row.patientId,
           date: row.date,
-          startTime: row.start_time,
+          startTime: row.startTime,
           status: row.status,
         }, { id: user.uid });
       }
@@ -386,7 +465,7 @@ const updateAppointmentHandler: MiddlewareHandler<{ Bindings: Env; Variables: Au
       console.error('[Appointments/Update] Failed to trigger event:', eventError?.message ?? eventError);
     }
 
-    return c.json({ data: row });
+    return c.json({ data: normalizeAppointmentRow(row) });
   } catch (error: any) {
     console.error('[Appointments/Update] Critical Error:', error.message, error.stack);
     if (isConflictError(error)) {
@@ -401,16 +480,27 @@ app.put('/:id', requireAuth, updateAppointmentHandler);
 
 app.post('/:id/cancel', requireAuth, async (c) => {
   const user = c.get('user');
-  const db = await createPool(c.env);
-  const { id } = c.req.param();
+  const db = createDb(c.env);
+  const id = c.req.param('id');
+  if (!id) return c.json({ error: 'ID é obrigatório' }, 400);
+
   try {
     const body = await c.req.json().catch(() => ({}));
-    const result = await db.query(
-      `UPDATE appointments SET status = 'cancelled', cancellation_reason = $1, cancelled_at = NOW(), updated_at = NOW()
-       WHERE id = $2 AND organization_id = $3 RETURNING id`,
-      [body.reason ?? null, id, user.organizationId],
-    );
-    const row = result.rows?.[0] || (result as any)[0];
+    const result = await db
+      .update(appointments)
+      .set({
+        status: 'cancelado',
+        cancellationReason: body.reason ?? null,
+        cancelledAt: new Date(),
+        updatedAt: new Date(),
+      })
+      .where(
+        and(eq(appointments.id, id), eq(appointments.organizationId, user.organizationId))
+      )
+      .returning({ id: appointments.id });
+
+    const row = result[0];
+
     if (!row) return c.json({ error: 'Agendamento não encontrado' }, 404);
 
     // Real-time Broadcast
@@ -427,14 +517,20 @@ app.post('/:id/cancel', requireAuth, async (c) => {
 
 app.delete('/:id', requireAuth, async (c) => {
   const user = c.get('user');
-  const db = await createPool(c.env);
-  const { id } = c.req.param();
+  const db = createDb(c.env);
+  const id = c.req.param('id');
+  if (!id) return c.json({ error: 'ID é obrigatório' }, 400);
+
   try {
-    const result = await db.query(
-      `DELETE FROM appointments WHERE id = $1 AND organization_id = $2 RETURNING id`,
-      [id, user.organizationId],
-    );
-    const row = result.rows?.[0] || (result as any)[0];
+    const result = await db
+      .delete(appointments)
+      .where(
+        and(eq(appointments.id, id), eq(appointments.organizationId, user.organizationId))
+      )
+      .returning({ id: appointments.id });
+
+    const row = result[0];
+
     if (!row) return c.json({ error: 'Agendamento não encontrado' }, 404);
 
     // Real-time Broadcast

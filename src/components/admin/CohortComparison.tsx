@@ -1006,7 +1006,7 @@ export function CohortComparison({
 								<YAxis className="text-xs" />
 								<Tooltip
 									content={<CustomTooltip />}
-									formatter={(value: number) => [value, "Sessões"]}
+									formatter={((value: number) => [value, "Sessões"]) as any}
 								/>
 								<Bar dataKey="avgSessions" radius={[4, 4, 0, 0]}>
 									{filteredCohorts.map((entry, index) => (
@@ -1041,7 +1041,7 @@ export function CohortComparison({
 								<YAxis className="text-xs" />
 								<Tooltip
 									content={<CustomTooltip />}
-									formatter={(value: number) => [`${value}%`, "Progresso"]}
+									formatter={((value: number) => [`${value}%`, "Progresso"]) as any}
 								/>
 								<Bar dataKey="avgProgress" radius={[4, 4, 0, 0]}>
 									{filteredCohorts.map((entry, index) => (
@@ -1076,7 +1076,7 @@ export function CohortComparison({
 								<YAxis domain={[0, 100]} className="text-xs" />
 								<Tooltip
 									content={<CustomTooltip />}
-									formatter={(value: number) => [`${value}%`, ""]}
+									formatter={((value: number) => [`${value}%`, ""]) as any}
 								/>
 								<Legend />
 								<Line
