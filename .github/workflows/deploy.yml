@@ -2,8 +2,8 @@ name: Deploy
 
 on:
   push:
-    branches:
-      - main
+    branches: [main]
+  workflow_dispatch:
 
 permissions:
   contents: read
@@ -19,36 +19,15 @@ env:
 
 jobs:
   # =====================================================================
-  # PRODUCTION DATABASE MIGRATIONS
+  # DEPLOY API — Cloudflare Workers (apps/api)
   # =====================================================================
-  migrate-db:
-    name: Database Migrations
+  deploy-api:
+    name: Deploy API (Workers)
     runs-on: ubuntu-latest
+    timeout-minutes: 15
     steps:
       - name: Checkout
-        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
-
-      - name: Setup
-        uses: ./.github/actions/setup
-        with:
-          node-version: ${{ env.NODE_VERSION }}
-          pnpm-version: ${{ env.PNPM_VERSION }}
-
-      - name: Run Migrations
-        run: pnpm db:migrate
-        env:
-          DATABASE_URL: ${{ secrets.DATABASE_URL }}
-
-  # =====================================================================
-  # DEPLOY WORKERS
-  # =====================================================================
-  deploy-workers:
-    name: Deploy Cloudflare Workers
-    needs: migrate-db
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout
-        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        uses: actions/checkout@v4
 
       - name: Setup
         uses: ./.github/actions/setup
@@ -57,23 +36,23 @@ jobs:
           pnpm-version: ${{ env.PNPM_VERSION }}
 
       - name: Deploy Workers
-        uses: cloudflare/wrangler-action@39209594f86d8a7c06283b27b3706093d56715b5 # v3.14.0
+        uses: cloudflare/wrangler-action@v3
         with:
           apiToken: ${{ secrets.CF_API_TOKEN }}
           accountId: ${{ secrets.CF_ACCOUNT_ID }}
           workingDirectory: apps/api
-          command: deploy
+          command: deploy --env production
 
   # =====================================================================
-  # DEPLOY PAGES
+  # DEPLOY WEB — Build + Cloudflare Worker com Assets (root wrangler.toml)
   # =====================================================================
-  deploy-pages:
-    name: Deploy Cloudflare Pages
-    needs: migrate-db
+  deploy-web:
+    name: Deploy Web (fisioflow-web)
     runs-on: ubuntu-latest
+    timeout-minutes: 20
     steps:
       - name: Checkout
-        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        uses: actions/checkout@v4
 
       - name: Setup
         uses: ./.github/actions/setup
@@ -81,16 +60,21 @@ jobs:
           node-version: ${{ env.NODE_VERSION }}
           pnpm-version: ${{ env.PNPM_VERSION }}
 
-      - name: Build Frontend
-        run: pnpm turbo run build --filter="fisioflow-web"
+      - name: Build web
+        run: pnpm --filter fisioflow-web build
         env:
           NODE_OPTIONS: --max-old-space-size=4096
           VITE_APP_ENV: production
-          VITE_API_BASE_URL: https://fisioflow-api.workers.dev/api
+          VITE_API_BASE_URL: https://api-pro.moocafisio.com.br/api
+          VITE_WORKERS_API_URL: https://api-pro.moocafisio.com.br
+          VITE_NEON_AUTH_URL: ${{ vars.VITE_NEON_AUTH_URL || 'https://ep-wandering-bonus-acj4zwvo.neonauth.sa-east-1.aws.neon.tech/neondb/auth' }}
+          VITE_NEON_DATA_API_URL: ${{ vars.VITE_NEON_DATA_API_URL }}
+          VITE_GOOGLE_AI_API_KEY: ${{ secrets.VITE_GOOGLE_AI_API_KEY }}
+          VITE_GEMINI_API_KEY: ${{ secrets.VITE_GOOGLE_AI_API_KEY }}
 
-      - name: Deploy to Cloudflare Pages
-        uses: cloudflare/wrangler-action@39209594f86d8a7c06283b27b3706093d56715b5 # v3.14.0
+      - name: Deploy Web Worker
+        uses: cloudflare/wrangler-action@v3
         with:
           apiToken: ${{ secrets.CF_API_TOKEN }}
           accountId: ${{ secrets.CF_ACCOUNT_ID }}
-          command: pages deploy apps/web/dist --project-name=fisioflow --commit-dirty=true
+          command: deploy
