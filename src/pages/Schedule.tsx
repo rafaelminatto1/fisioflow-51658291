@@ -23,34 +23,8 @@ import { useBirthdayNotification } from "@/hooks/useBirthdayNotification";
 import { usePatientReengagement } from "@/hooks/usePatientReengagement";
 import { Cake, Sparkles, MessageCircle, AlertTriangle } from "lucide-react";
 import { ScheduleModals } from "@/components/schedule/ScheduleModals";
+import CalendarView from "@/components/schedule/CalendarView";
 import "@/styles/schedule.css";
-
-// Kick off the CalendarView chunk download immediately at module evaluation
-// so it runs in parallel with Schedule's own execution (eliminates waterfall).
-const lazyRetry = (importFn: () => Promise<any>, maxRetries = 3) => {
-	return new Promise<any>((resolve, reject) => {
-		let retries = 0;
-		const attempt = () => {
-			importFn()
-				.then(resolve)
-				.catch((error) => {
-					retries++;
-					if (retries <= maxRetries) {
-						console.warn(
-							`[LazyRetry] Falha ao carregar componente da agenda. Tentativa ${retries}/${maxRetries}...`,
-							error,
-						);
-						setTimeout(attempt, 1500 * retries); // Backoff progressivo
-					} else {
-						reject(error);
-					}
-				});
-		};
-		attempt();
-	});
-};
-
-const CalendarView = lazy(() => import("@/components/schedule/CalendarView"));
 
 const KEYBOARD_SHORTCUTS = {
 	NEW_APPOINTMENT: "n",
