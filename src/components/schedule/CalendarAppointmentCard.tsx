@@ -15,7 +15,7 @@ import { AppointmentCard } from "@fisioflow/ui";
 
 interface CalendarAppointmentCardProps {
 	appointment: Appointment;
-	style: React.CSSProperties;
+	style?: React.CSSProperties;
 	isDraggable: boolean;
 	isDragging: boolean;
 	isSaving: boolean;
@@ -46,7 +46,7 @@ const CalendarAppointmentCardBase = forwardRef<
 	(
 		{
 			appointment,
-			style,
+			style = {},
 			isDraggable,
 			isDragging,
 			isSaving,

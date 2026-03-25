@@ -32,6 +32,8 @@ interface VirtualWeekGridProps {
 	timeSlots: string[];
 	/** Agendamentos para exibir */
 	appointments: Appointment[];
+	/** ID do agendamento sendo salvo */
+	savingAppointmentId?: string | null;
 	/** Callback ao clicar em um slot */
 	onTimeSlotClick?: (date: Date, time: string) => void;
 	/** Callback de edição */
@@ -73,6 +75,7 @@ interface VirtualWeekGridProps {
 interface ItemData {
 	weekDays: Date[];
 	appointments: Appointment[];
+	savingAppointmentId?: string | null;
 	timeSlots: string[];
 	appointmentsByTimeSlot: Record<string, Appointment[]>;
 	cardSize: string;
@@ -205,6 +208,7 @@ const TimeSlotRow: React.FC<ListChildComponentProps<ItemData>> = memo(
 					const isDraggingThis =
 						props.dragState?.isDragging &&
 						props.dragState.appointment?.id === apt.id;
+					const isSaving = data.savingAppointmentId === apt.id;
 
 					return (
 						<div key={apt.id} style={appointmentStyle} className="absolute">
@@ -213,6 +217,7 @@ const TimeSlotRow: React.FC<ListChildComponentProps<ItemData>> = memo(
 								style={appointmentStyle}
 								isDraggable={isDraggable}
 								isDragging={isDraggingThis}
+								isSaving={isSaving}
 								onDragStart={props.handleDragStart}
 								onDragEnd={props.handleDragEnd}
 								onEditAppointment={props.onEditAppointment}
@@ -237,11 +242,12 @@ TimeSlotRow.displayName = "TimeSlotRow";
 // MAIN COMPONENT
 // =====================================================================
 
-export const VirtualWeekGrid: React.FC<VirtualWeekGridProps> = memo(
+	export const VirtualWeekGrid: React.FC<VirtualWeekGridProps> = memo(
 	({
 		weekDays,
 		timeSlots,
 		appointments,
+		savingAppointmentId,
 		onTimeSlotClick,
 		onEditAppointment,
 		onDeleteAppointment,
@@ -309,6 +315,7 @@ export const VirtualWeekGrid: React.FC<VirtualWeekGridProps> = memo(
 				timeSlots,
 				appointments,
 				appointmentsByTimeSlot,
+				savingAppointmentId,
 				cardSize,
 				heightScale,
 				onTimeSlotClick,
@@ -335,6 +342,7 @@ export const VirtualWeekGrid: React.FC<VirtualWeekGridProps> = memo(
 				timeSlots,
 				appointments,
 				appointmentsByTimeSlot,
+				savingAppointmentId,
 				cardSize,
 				heightScale,
 				onTimeSlotClick,
