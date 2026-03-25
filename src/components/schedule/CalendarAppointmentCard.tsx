@@ -268,14 +268,19 @@ function appointmentCardAreEqual(
 	)
 		return false;
 
+	const prevApp = prev.appointment;
+	const nextApp = next.appointment;
+
 	if (
-		prev.appointment.id !== next.appointment.id ||
-		prev.appointment.status !== next.appointment.status ||
-		prev.appointment.time !== next.appointment.time ||
-		prev.appointment.patientName !== next.appointment.patientName ||
-		prev.appointment.type !== next.appointment.type ||
-		prev.appointment.duration !== next.appointment.duration ||
-		prev.appointment.date !== next.appointment.date
+		prevApp.id !== nextApp.id ||
+		prevApp.status !== nextApp.status ||
+		prevApp.time !== nextApp.time ||
+		prevApp.patientName !== nextApp.patientName ||
+		prevApp.type !== nextApp.type ||
+		prevApp.duration !== nextApp.duration ||
+		prevApp.date !== nextApp.date ||
+		prevApp.notes !== nextApp.notes ||
+		prevApp.isOverbooked !== nextApp.isOverbooked
 	)
 		return false;
 
