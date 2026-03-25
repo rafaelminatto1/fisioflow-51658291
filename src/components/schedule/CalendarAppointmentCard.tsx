@@ -251,37 +251,5 @@ const CalendarAppointmentCardBase = forwardRef<
 	},
 );
 
-export const CalendarAppointmentCard = memo(
-	CalendarAppointmentCardBase,
-	(prev, next) => {
-		// Basicos
-		if (
-			prev.isDragging !== next.isDragging ||
-			prev.isDraggable !== next.isDraggable ||
-			prev.isSaving !== next.isSaving ||
-			prev.density !== next.density ||
-			prev.isSelected !== next.isSelected ||
-			prev.isPopoverOpen !== next.isPopoverOpen ||
-			prev.hideGhostWhenSiblings !== next.hideGhostWhenSiblings ||
-			prev.selectionMode !== next.selectionMode ||
-			prev.isDropTarget !== next.isDropTarget
-		) return false;
-
-		// Deep compare do agendamento (especialmente status para cores)
-		if (JSON.stringify(prev.appointment) !== JSON.stringify(next.appointment)) return false;
-
-		// Estilos da grade (posicionamento)
-		if (
-			prev.style?.height !== next.style?.height ||
-			prev.style?.width !== next.style?.width ||
-			prev.style?.top !== next.style?.top ||
-			prev.style?.left !== next.style?.left ||
-			prev.style?.gridColumn !== next.style?.gridColumn ||
-			prev.style?.gridRow !== next.style?.gridRow ||
-			prev.style?.zIndex !== next.style?.zIndex
-		) return false;
-
-		return true;
-	}
-);
+export const CalendarAppointmentCard = CalendarAppointmentCardBase;
 CalendarAppointmentCard.displayName = "CalendarAppointmentCard";
