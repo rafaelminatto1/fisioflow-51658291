@@ -161,20 +161,29 @@ export default defineConfig(({ mode }) => {
 			target: "es2020",
 			cssTarget: "es2020",
 			sourcemap: !isProduction,
-			minify: isProduction ? "esbuild" : false,
-			rollupOptions: {
+			rolldownOptions: {
 				external: ["fs", "path", "crypto", "stream", "util"],
+				// experimental: {
+				//   minify: true, // Rolldown built-in minifier — habilitar quando Vite 8.1 estabilizar
+				//                 // substitui esbuild minify, ~2x mais rápido
+				// },
 				output: {
-					manualChunks: (id) => {
-						if (id.includes("node_modules")) {
-							if (id.includes("react") || id.includes("framer-motion"))
-								return "vendor-react";
-							if (id.includes("@react-pdf")) return "vendor-pdf";
-							if (id.includes("jspdf")) return "vendor-jspdf";
-							if (id.includes("recharts")) return "vendor-charts";
-							if (id.includes("@cornerstonejs")) return "vendor-cornerstone";
-							return "vendor";
-						}
+					codeSplitting: {
+						minSize: 20000,
+						maxSize: 244000,
+						groups: [
+							{
+								name: "vendor-react",
+								test: /node_modules\/(react|framer-motion)/,
+							},
+							{ name: "vendor-pdf", test: /node_modules\/@react-pdf/ },
+							{ name: "vendor-jspdf", test: /node_modules\/jspdf/ },
+							{ name: "vendor-charts", test: /node_modules\/recharts/ },
+							{
+								name: "vendor-cornerstone",
+								test: /node_modules\/@cornerstonejs/,
+							},
+						],
 					},
 				},
 			},

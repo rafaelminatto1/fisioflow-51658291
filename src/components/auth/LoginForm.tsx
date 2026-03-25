@@ -30,8 +30,7 @@ import { fisioLogger as logger } from "@/lib/errors/logger";
 const loginSchema = z.object({
 	email: z
 		.string({
-			required_error: "Email é obrigatório",
-			invalid_type_error: "Email deve ser uma string",
+			error: "Email deve ser uma string",
 		})
 		.min(1, "Email é obrigatório")
 		.email("Email inválido")
@@ -40,8 +39,7 @@ const loginSchema = z.object({
 		.toLowerCase(),
 	password: z
 		.string({
-			required_error: "Senha é obrigatória",
-			invalid_type_error: "Senha deve ser uma string",
+			error: "Senha deve ser uma string",
 		})
 		.min(1, "Senha é obrigatória")
 		.min(6, "Senha deve ter no mínimo 6 caracteres")
