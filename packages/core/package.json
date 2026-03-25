@@ -10,7 +10,8 @@
     "test:unit": "echo \"no unit tests\""
   },
   "dependencies": {
-    "zod": "^3.25.76",
-    "date-fns": "^3.6.0"
+    "date-fns": "^3.6.0",
+    "recharts": "^2.15.4",
+    "zod": "^3.25.76"
   }
 }
