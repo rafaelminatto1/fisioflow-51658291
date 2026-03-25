@@ -9,13 +9,13 @@
 // =====================================================================
 
 import React, { memo, useMemo, useRef, useCallback } from "react";
-import { FixedSizeList as List, ListChildComponentProps } from "react-window";
+import { FixedSizeList, ListChildComponentProps } from "react-window";
+const List = FixedSizeList;
 import { format, isSameDay } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { Appointment } from "@/types/appointment";
 import type { CardSize } from "@/types/agenda";
 import { cn } from "@/lib/utils";
-import { BUSINESS_HOURS } from "@/lib/calendar/constants";
 import { parseAppointmentDate, normalizeTime } from "@/lib/calendar/utils";
 import { CalendarAppointmentCard } from "../CalendarAppointmentCard";
 import { TimeSlotCell } from "../TimeSlotCell";
