@@ -1,4 +1,4 @@
-import React, { useState, useMemo, useEffect, useCallback, useRef } from "react";
+import React from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { format, startOfWeek, addDays, subDays, subWeeks, subMonths, isSameDay } from "date-fns";
 import { ptBR } from "date-fns/locale";
@@ -225,7 +225,7 @@ export default function CalendarView({
 		handleDragStart: handleDragStartDndKit, handleDragOver: handleDragOverDndKit, handleDragEnd: handleDragEndDndKit,
 		handleConfirmReschedule: handleConfirmDndKit, handleCancelReschedule: handleCancelDndKit,
 		showOverCapacityDialog: showOverCapacityDndKit, pendingOverCapacity: pendingOverCapacityDndKit,
-		handleConfirmOverCapacity: handleConfirmOverCapacityDndKit, handleCancelOverCapacity: handleCancelOverCapacityDndKit,
+		handleConfirmOverCapacity: handleConfirmOverCapacityDndKit, handleCancelOverCapacity: handleCancelOverCapacityDndKitFinal,
 	} = useCalendarDragDndKit({
 		onAppointmentReschedule, onOptimisticUpdate: handleOptimisticUpdate,
 		onRevertUpdate: handleRevertUpdate, getAppointmentsForSlot, getMinCapacityForInterval,
@@ -239,7 +239,7 @@ export default function CalendarView({
 	const handleConfirmReschedule = showConfirmNative ? handleConfirmNative : handleConfirmDndKit;
 	const handleCancelReschedule = showConfirmNative ? handleCancelNative : handleCancelDndKit;
 	const handleConfirmOverCapacity = showOverCapacityNative ? handleConfirmOverCapacityNative : handleConfirmOverCapacityDndKit;
-	const handleCancelOverCapacity = showOverCapacityNative ? handleCancelOverCapacityNative : handleCancelOverCapacityDndKit;
+	const handleCancelOverCapacity = showOverCapacityNative ? handleCancelOverCapacityNative : handleCancelOverCapacityDndKitFinal;
 
 	React.useEffect(() => {
 		const timer = setInterval(() => setCurrentTime(new Date()), 60000);
