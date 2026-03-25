@@ -23,7 +23,7 @@ import { useBirthdayNotification } from "@/hooks/useBirthdayNotification";
 import { usePatientReengagement } from "@/hooks/usePatientReengagement";
 import { Cake, Sparkles, MessageCircle, AlertTriangle } from "lucide-react";
 import { ScheduleModals } from "@/components/schedule/ScheduleModals";
-import CalendarView from "@/components/schedule/CalendarView";
+import { CalendarView } from "@/components/schedule/CalendarView";
 import "@/styles/schedule.css";
 
 const KEYBOARD_SHORTCUTS = {
