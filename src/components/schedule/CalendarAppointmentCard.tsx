@@ -46,7 +46,7 @@ const CalendarAppointmentCardBase = forwardRef<
 	(
 		{
 			appointment,
-			style = {},
+			style: styleProp,
 			isDraggable,
 			isDragging,
 			isSaving,
@@ -71,6 +71,7 @@ const CalendarAppointmentCardBase = forwardRef<
 		},
 		ref,
 	) => {
+		const style = styleProp || {};
 		const isMobile = useIsMobile();
 		const isTouch = useIsTouch();
 		const reducedMotion = useReducedMotion();
