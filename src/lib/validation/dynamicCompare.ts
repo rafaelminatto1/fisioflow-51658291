@@ -15,7 +15,7 @@ export const parseDynamicCompare = (data: unknown): DynamicCompareMetrics => {
 
 	if (!zodResult.success) {
 		throw new Error(
-			`Zod Validation Failed:\n${zodResult.error.errors.map((e) => e.message).join("\n")}`,
+			`Zod Validation Failed:\n${zodResult.error.issues.map((e) => e.message).join("\n")}`,
 		);
 	}
 

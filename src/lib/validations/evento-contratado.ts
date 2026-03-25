@@ -11,7 +11,7 @@ export const eventoContratadoCreateSchema = z.object({
 		.optional()
 		.or(z.literal("")),
 	valor_acordado: z
-		.number({ invalid_type_error: "Valor deve ser um número" })
+		.number({ error: "Valor deve ser um número" })
 		.nonnegative("Valor não pode ser negativo")
 		.max(999999.99, "Valor muito alto")
 		.default(0),
