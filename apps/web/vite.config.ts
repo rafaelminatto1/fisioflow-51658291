@@ -2,10 +2,9 @@ import { sentryVitePlugin } from '@sentry/vite-plugin';
 import { defineConfig } from 'vite';
 // Plugin oficial do React. Em Vite 8 + Rolldown, ele já usa o caminho Oxc por padrão.
 import react from '@vitejs/plugin-react';
-import autoprefixer from 'autoprefixer';
 import path from 'path';
 import { visualizer } from 'rollup-plugin-visualizer';
-import tailwindcss from 'tailwindcss';
+import tailwindcss from '@tailwindcss/vite';
 
 const repoRoot = path.resolve(__dirname, '../..');
 
@@ -89,6 +88,7 @@ export default defineConfig(({ mode }) => {
       __BUILD_TIME__: JSON.stringify(buildTime),
     },
     plugins: [
+      tailwindcss(),
       react(),
       mockMobileModules(),
       lazyCornerstoneCharls(),
@@ -106,6 +106,9 @@ export default defineConfig(({ mode }) => {
         authToken: process.env.SENTRY_AUTH_TOKEN,
       }),
     ].filter(Boolean),
+    worker: {
+      format: 'es',
+    },
     resolve: {
       tsconfigPaths: true,
       dedupe: ['react', 'react-dom', 'framer-motion'],
@@ -124,7 +127,7 @@ export default defineConfig(({ mode }) => {
         ),
         "@fisioflow/skills": path.resolve(repoRoot, 'src/lib/skills'),
         "react-grid-layout/dist/legacy": path.resolve(repoRoot, 'node_modules/react-grid-layout/dist/legacy.mjs'),
-        "globalthis": path.resolve(repoRoot, 'src/lib/globalthis-shim.ts'),
+        "globalthis": "globalthis",
         "fs": path.resolve(repoRoot, 'src/lib/node-stub.ts'),
         "path": path.resolve(repoRoot, 'src/lib/node-stub.ts'),
         "crypto": path.resolve(repoRoot, 'src/lib/node-stub.ts'),
@@ -136,11 +139,19 @@ export default defineConfig(({ mode }) => {
       outDir: path.resolve(__dirname, 'dist'),
       target: 'es2020',
       cssTarget: 'es2020',
-      sourcemap: true,
+      sourcemap: !isProduction,
       // Standard Vite 7 options
       rollupOptions: {
-        external: ['fs', 'path', 'crypto', 'stream', 'util'],
+        external: [
+          'fs', 'path', 'crypto', 'stream', 'util',
+          '@mediapipe/pose',
+          '@mediapipe/drawing_utils'
+        ],
         output: {
+          globals: {
+            '@mediapipe/pose': 'Pose',
+            '@mediapipe/drawing_utils': 'drawing_utils'
+          },
           manualChunks: (id) => {
             if (id.includes('node_modules')) {
               if (id.includes('react') || id.includes('framer-motion')) return 'vendor-react';
@@ -171,14 +182,6 @@ export default defineConfig(({ mode }) => {
         '@mediapipe/drawing_utils',
         '@mediapipe/pose',
       ],
-    },
-    css: {
-      postcss: {
-        plugins: [
-          tailwindcss({ config: path.resolve(__dirname, 'tailwind.config.ts') }),
-          autoprefixer(),
-        ],
-      },
     },
     server: {
       forwardConsole: process.env.VITE_FORWARD_CONSOLE === 'true',
