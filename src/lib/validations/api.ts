@@ -549,9 +549,9 @@ export async function parseApiResponse<T>(
 		return schema.parse(rawData);
 	} catch (error) {
 		if (error instanceof z.ZodError) {
-			logger.error("[Zod Validation Error]", error.errors, "api-validations");
+			logger.error("[Zod Validation Error]", error.issues, "api-validations");
 			throw new Error(
-				`API response validation failed: ${error.errors.map((e) => `${e.path.join(".")}: ${e.message}`).join(", ")}`,
+				`API response validation failed: ${error.issues.map((e) => `${e.path.join(".")}: ${e.message}`).join(", ")}`,
 			);
 		}
 		throw error;
@@ -594,7 +594,7 @@ export function validateWithLogging<T>(
 	if (!result.success) {
 		logger.error(
 			`[Validation Error - ${context}]`,
-			result.error.errors,
+			result.error.issues,
 			"api-validations",
 		);
 		return null;

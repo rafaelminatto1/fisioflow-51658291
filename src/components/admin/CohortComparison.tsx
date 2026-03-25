@@ -34,7 +34,7 @@ import {
 	Legend,
 	ResponsiveContainer,
 	Cell,
-	TooltipProps,
+	TooltipContentProps,
 } from "recharts";
 import {
 	Search,
@@ -368,10 +368,8 @@ function calculateWeightedAverage(
 /**
  * Custom tooltip for cohort charts
  */
-interface CustomTooltipProps extends TooltipProps<number, string> {
-	active?: boolean;
+interface CustomTooltipProps extends TooltipContentProps<number, string> {
 	payload?: { name: string; value: number; color: string }[];
-	label?: string;
 }
 
 const CustomTooltip: React.FC<CustomTooltipProps> = ({

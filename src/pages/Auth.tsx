@@ -301,13 +301,13 @@ export default function Auth() {
 			const errors: Record<string, string> = {};
 
 			if (!fullNameResult.success) {
-				errors.fullName = fullNameResult.error.errors[0].message;
+				errors.fullName = fullNameResult.error.issues[0].message;
 			}
 			if (!emailResult.success) {
-				errors.email = emailResult.error.errors[0].message;
+				errors.email = emailResult.error.issues[0].message;
 			}
 			if (!passwordResult.success) {
-				errors.password = passwordResult.error.errors[0].message;
+				errors.password = passwordResult.error.issues[0].message;
 			}
 			if (password !== confirmPassword) {
 				errors.confirmPassword = "As senhas não coincidem";
