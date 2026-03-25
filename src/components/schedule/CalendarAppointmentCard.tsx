@@ -289,8 +289,13 @@ function appointmentCardAreEqual(
 	);
 }
 
+/* 
+// Memo disabled to ensure color updates on status change. 
+// Virtualization already handles performance for large datasets.
 export const CalendarAppointmentCard = memo(
 	CalendarAppointmentCardBase,
 	appointmentCardAreEqual,
 );
+*/
+export const CalendarAppointmentCard = CalendarAppointmentCardBase;
 CalendarAppointmentCard.displayName = "CalendarAppointmentCard";
