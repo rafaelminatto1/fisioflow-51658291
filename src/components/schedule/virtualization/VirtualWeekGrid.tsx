@@ -9,8 +9,8 @@
 // =====================================================================
 
 import React, { memo, useMemo, useRef, useCallback } from "react";
-import { FixedSizeList, ListChildComponentProps } from "react-window";
-const List = FixedSizeList;
+import * as ReactWindow from "react-window";
+const List = (ReactWindow as any).FixedSizeList || ReactWindow.FixedSizeList;
 import { format, isSameDay } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { Appointment } from "@/types/appointment";
