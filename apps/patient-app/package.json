@@ -24,13 +24,13 @@
     "lint:fix": "oxlint . --fix"
   },
   "dependencies": {
-    "@expo/vector-icons": "^15.0.3",
+    "@expo/vector-icons": "^15.1.1",
     "@neondatabase/neon-js": "0.2.0-beta.1",
     "@react-native-async-storage/async-storage": "2.2.0",
     "@react-native-community/netinfo": "11.4.1",
     "@sentry/react-native": "^8.1.0",
     "@tanstack/react-query": "^5.60.0",
-    "better-auth": "^1.5.3",
+    "better-auth": "^1.5.6",
     "date-fns": "^3.6.0",
     "expo": "~54.0.33",
     "expo-audio": "~1.1.1",
@@ -61,12 +61,12 @@
     "react-native-svg": "15.12.1",
     "react-native-web": "^0.21.2",
     "react-native-worklets": "^0.5.1",
-    "recharts": "^2.15.4",
-    "zustand": "^5.0.0"
+    "recharts": "^3.8.0",
+    "zustand": "^5.0.12"
   },
   "devDependencies": {
     "@babel/core": "^7.25.2",
-    "@babel/preset-env": "^7.28.6",
+    "@babel/preset-env": "^7.29.2",
     "@babel/preset-react": "^7.28.5",
     "@babel/preset-typescript": "^7.28.5",
     "@playwright/test": "^1.50.0",
@@ -83,6 +83,6 @@
     "playwright": "^1.50.0",
     "react-test-renderer": "19.1.0",
     "ts-jest": "^29.4.6",
-    "typescript": "~5.9.2"
+    "typescript": "^6.0.2"
   }
 }
