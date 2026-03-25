@@ -1,23 +1,23 @@
-import React from "react";
+import { Activity as ActivityIcon, Download } from "lucide-react";
+import type React from "react";
 import {
-	LineChart,
+	CartesianGrid,
 	Line,
+	LineChart,
+	ReferenceLine,
+	ResponsiveContainer,
+	Tooltip,
 	XAxis,
 	YAxis,
-	CartesianGrid,
-	Tooltip,
-	ResponsiveContainer,
-	ReferenceLine,
 } from "recharts";
+import { Button } from "@/components/ui/button";
 import {
 	Card,
 	CardContent,
+	CardDescription,
 	CardHeader,
 	CardTitle,
-	CardDescription,
 } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Download, Activity as ActivityIcon } from "lucide-react";
 import { cn } from "@/lib/utils";
 import type {
 	ActivityLabSession,
@@ -148,13 +148,10 @@ export const ActivityLabChart: React.FC<ActivityLabChartProps> = ({
 									textTransform: "uppercase",
 									letterSpacing: "0.05em",
 								}}
-								formatter={(value: number) => [
-									`${value.toFixed(2)} kg`,
-									"Força",
-								]}
-								labelFormatter={(label: number) =>
-									`Tempo: ${label.toFixed(2)} s`
-								}
+								// @ts-expect-error -- recharts v3 formatter type
+								formatter={(value: number) => [`${value.toFixed(2)} kg`, "Força"]}
+								// @ts-expect-error -- recharts v3 labelFormatter type
+								labelFormatter={(label: number) => `Tempo: ${label.toFixed(2)} s`}
 							/>
 							<ReferenceLine
 								y={peakPoint.force}

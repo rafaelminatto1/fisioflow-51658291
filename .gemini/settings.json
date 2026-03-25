@@ -2,7 +2,10 @@
   "mcpServers": {
     "playwright": {
       "command": "npx",
-      "args": ["-y", "@playwright/mcp@latest"],
+      "args": [
+        "-y",
+        "@playwright/mcp@latest"
+      ],
       "description": "Local Playwright MCP server for browser automation"
     },
     "cloudflare-api": {
@@ -14,6 +17,10 @@
       "httpUrl": "https://mcp.expo.dev/mcp",
       "description": "Expo hosted MCP server for Expo and EAS workflows",
       "timeout": 600000
+    },
+    "neon": {
+      "type": "http",
+      "url": "https://mcp.neon.tech/mcp"
     }
   }
 }

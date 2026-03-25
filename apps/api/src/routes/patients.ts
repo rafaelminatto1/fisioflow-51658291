@@ -19,50 +19,7 @@ import {
 
 const app = new Hono<{ Bindings: Env; Variables: AuthVariables }>();
 
-const tableColumnsCache = new Map<string, Promise<Set<string>>>();
-
-function cacheKey(table: string) {
-	return `public.${table}`;
-}
-
-async function getTableColumns(
-	pool: DbPool,
-	table: string,
-): Promise<Set<string>> {
-	const key = cacheKey(table);
-	const cached = tableColumnsCache.get(key);
-	if (cached) return cached;
-
-	const pending = pool
-		.query(
-			`
-        SELECT column_name
-        FROM information_schema.columns
-        WHERE table_schema = 'public'
-          AND table_name = $1
-      `,
-			[table],
-		)
-		.then(
-			(result) =>
-				new Set(result.rows.map((row) => String((row as DbRow).column_name))),
-		);
-
-	tableColumnsCache.set(key, pending);
-	return pending;
-}
-
-async function hasColumn(
-	pool: DbPool,
-	table: string,
-	column: string,
-): Promise<boolean> {
-	return (await getTableColumns(pool, table)).has(column);
-}
-
-async function hasTable(pool: DbPool, table: string): Promise<boolean> {
-	return (await getTableColumns(pool, table)).size > 0;
-}
+// Removed tableColumnsCache and helpers as we shift to Drizzle ORM
 
 function normalizeGenderToDb(value: unknown): string | null {
 	const normalized = trimmedString(value)?.toLowerCase();
@@ -291,46 +248,43 @@ function normalizePatientRow(row: DbRow) {
 
 function buildPatientWritePayload(
 	body: PatientPayload,
-	availableColumns: Set<string>,
 	organizationId: string,
 	isCreate: boolean,
-): Record<string, unknown> {
-	const payload: Record<string, unknown> = {};
+): Partial<typeof patients.$inferInsert> {
+	const payload: any = {};
 
-	if (isCreate && availableColumns.has("organization_id")) {
-		payload.organization_id = organizationId;
+	if (isCreate) {
+		payload.organizationId = organizationId;
 	}
 
 	if (body.full_name !== undefined || body.name !== undefined) {
-		payload.full_name = trimmedString(body.full_name ?? body.name) ?? "";
+		payload.fullName = trimmedString(body.full_name ?? body.name) ?? "";
 	}
 
-	if (availableColumns.has("email") && body.email !== undefined) {
+	if (body.email !== undefined) {
 		payload.email = nullableString(body.email);
 	}
-	if (availableColumns.has("phone") && (body.phone !== undefined || isCreate)) {
+	if (body.phone !== undefined || isCreate) {
 		payload.phone = nullableString(body.phone) ?? (isCreate ? "" : null);
 	}
-	if (
-		availableColumns.has("phone_secondary") &&
-		body.phone_secondary !== undefined
-	) {
-		payload.phone_secondary = nullableString(body.phone_secondary);
+	if (body.phone_secondary !== undefined) {
+		payload.phoneSecondary = nullableString(body.phone_secondary);
 	}
-	if (availableColumns.has("cpf") && body.cpf !== undefined) {
+	if (body.cpf !== undefined) {
 		payload.cpf = nullableString(body.cpf);
 	}
-	if (availableColumns.has("rg") && body.rg !== undefined) {
+	if (body.rg !== undefined) {
 		payload.rg = nullableString(body.rg);
 	}
-	if (availableColumns.has("birth_date") && body.birth_date !== undefined) {
-		payload.birth_date = nullableString(body.birth_date);
+	if (body.birth_date !== undefined) {
+		payload.birthDate = nullableString(body.birth_date);
 	}
-	if (availableColumns.has("gender") && body.gender !== undefined) {
-		payload.gender = normalizeGenderToDb(body.gender);
+	if (body.gender !== undefined) {
+		payload.gender = normalizeGenderToDb(body.gender) as any;
 	}
+
+	// Address, Emergency Contact, Insurance are stored as JSONB in Drizzle/Postgres
 	if (
-		availableColumns.has("address") &&
 		["address", "city", "state", "zip_code"].some(
 			(key) => body[key] !== undefined,
 		)
@@ -338,17 +292,15 @@ function buildPatientWritePayload(
 		payload.address = buildAddressPayload(body);
 	}
 	if (
-		availableColumns.has("emergency_contact") &&
 		[
 			"emergency_contact",
 			"emergency_phone",
 			"emergency_contact_relationship",
 		].some((key) => body[key] !== undefined)
 	) {
-		payload.emergency_contact = buildEmergencyContactPayload(body);
+		payload.emergencyContact = buildEmergencyContactPayload(body);
 	}
 	if (
-		availableColumns.has("insurance") &&
 		[
 			"health_insurance",
 			"insurance_plan",
@@ -358,154 +310,75 @@ function buildPatientWritePayload(
 	) {
 		payload.insurance = buildInsurancePayload(body);
 	}
-	if (
-		availableColumns.has("main_condition") &&
-		body.main_condition !== undefined
-	) {
-		payload.main_condition = nullableString(body.main_condition);
+
+	if (body.main_condition !== undefined) {
+		payload.mainCondition = nullableString(body.main_condition);
 	}
-	if (availableColumns.has("profession") && body.profession !== undefined) {
+	if (body.profession !== undefined) {
 		payload.profession = nullableString(body.profession);
 	}
-	if (availableColumns.has("observations") && body.observations !== undefined) {
+	if (body.observations !== undefined) {
 		payload.observations = nullableString(body.observations);
-	}
-	if (availableColumns.has("notes") && body.observations !== undefined) {
 		payload.notes = nullableString(body.observations);
 	}
-	if (
-		availableColumns.has("status") &&
-		(body.status !== undefined || isCreate)
-	) {
+
+	if (body.status !== undefined || isCreate) {
 		payload.status = normalizePatientStatus(body.status);
 	}
-	if (
-		availableColumns.has("is_active") &&
-		(body.is_active !== undefined || body.status !== undefined || isCreate)
-	) {
-		payload.is_active = deriveIsActive(body);
+	if (body.is_active !== undefined || body.status !== undefined || isCreate) {
+		payload.isActive = deriveIsActive(body);
 	}
-	if (
-		availableColumns.has("progress") &&
-		(body.progress !== undefined || isCreate)
-	) {
+	if (body.progress !== undefined || isCreate) {
 		payload.progress = nullableNumber(body.progress) ?? 0;
 	}
-	if (availableColumns.has("blood_type") && body.blood_type !== undefined) {
-		payload.blood_type = nullableString(body.blood_type);
+
+	if (body.blood_type !== undefined) {
+		payload.bloodType = nullableString(body.blood_type);
 	}
-	if (availableColumns.has("weight_kg") && body.weight_kg !== undefined) {
-		payload.weight_kg = nullableNumber(body.weight_kg);
+	if (body.weight_kg !== undefined) {
+		payload.weightKg = nullableNumber(body.weight_kg)?.toString(); // numeric in drizzle is often string
 	}
-	if (availableColumns.has("height_cm") && body.height_cm !== undefined) {
-		payload.height_cm = nullableNumber(body.height_cm);
+	if (body.height_cm !== undefined) {
+		payload.heightCm = nullableNumber(body.height_cm)?.toString();
 	}
-	if (
-		availableColumns.has("marital_status") &&
-		body.marital_status !== undefined
-	) {
-		payload.marital_status = nullableString(body.marital_status);
+	if (body.marital_status !== undefined) {
+		payload.maritalStatus = nullableString(body.marital_status);
 	}
-	if (
-		availableColumns.has("education_level") &&
-		body.education_level !== undefined
-	) {
-		payload.education_level = nullableString(body.education_level);
+	if (body.education_level !== undefined) {
+		payload.educationLevel = nullableString(body.education_level);
 	}
-	if (availableColumns.has("consent_data") && body.consent_data !== undefined) {
-		payload.consent_data = nullableBoolean(body.consent_data);
+	if (body.consent_data !== undefined) {
+		payload.consentData = nullableBoolean(body.consent_data);
 	}
-	if (
-		availableColumns.has("consent_image") &&
-		body.consent_image !== undefined
-	) {
-		payload.consent_image = nullableBoolean(body.consent_image);
+	if (body.consent_image !== undefined) {
+		payload.consentImage = nullableBoolean(body.consent_image);
 	}
-	if (
-		availableColumns.has("incomplete_registration") &&
-		body.incomplete_registration !== undefined
-	) {
-		payload.incomplete_registration = nullableBoolean(
-			body.incomplete_registration,
-		);
+	if (body.incomplete_registration !== undefined) {
+		payload.incompleteRegistration = nullableBoolean(body.incomplete_registration);
 	}
-	if (availableColumns.has("origin") && body.origin !== undefined) {
+
+	if (body.origin !== undefined) {
 		payload.origin = nullableString(body.origin);
 	}
-	if (availableColumns.has("referred_by") && body.referred_by !== undefined) {
-		payload.referred_by = nullableString(body.referred_by);
+	if (body.referred_by !== undefined) {
+		payload.referredBy = nullableString(body.referred_by);
 	}
-	if (availableColumns.has("photo_url") && body.photo_url !== undefined) {
-		payload.photo_url = nullableString(body.photo_url);
+	if (body.photo_url !== undefined) {
+		payload.photoUrl = nullableString(body.photo_url);
 	}
-	if (
-		availableColumns.has("session_value") &&
-		body.session_value !== undefined
-	) {
-		payload.session_value = nullableNumber(body.session_value);
-	}
-	if (availableColumns.has("updated_at")) {
-		payload.updated_at = new Date().toISOString();
-	}
-	if (isCreate && availableColumns.has("created_at")) {
-		payload.created_at = new Date().toISOString();
+	if (body.session_value !== undefined) {
+		payload.sessionValue = nullableNumber(body.session_value)?.toString();
 	}
 
-	return Object.fromEntries(
-		Object.entries(payload).filter(([, value]) => value !== undefined),
-	);
+	payload.updatedAt = new Date();
+	if (isCreate) {
+		payload.createdAt = new Date();
+	}
+
+	return payload;
 }
 
-function buildInsertStatement(table: string, values: Record<string, unknown>) {
-	const entries = Object.entries(values);
-	const columns = entries.map(([column]) => column);
-	const placeholders = entries.map((_, index) => `$${index + 1}`);
-	const params = entries.map(([, value]) => {
-		if (value && typeof value === "object" && !Array.isArray(value)) {
-			return JSON.stringify(value);
-		}
-		if (Array.isArray(value)) {
-			return JSON.stringify(value);
-		}
-		return value;
-	});
-
-	return {
-		sql: `INSERT INTO ${table} (${columns.join(", ")}) VALUES (${placeholders.join(", ")}) RETURNING *`,
-		params,
-	};
-}
-
-function buildUpdateStatement(
-	table: string,
-	idColumn: string,
-	idValue: string,
-	organizationId: string,
-	values: Record<string, unknown>,
-) {
-	const entries = Object.entries(values);
-	const sets = entries.map(([column], index) => `${column} = $${index + 1}`);
-	const params = entries.map(([, value]) => {
-		if (value && typeof value === "object" && !Array.isArray(value)) {
-			return JSON.stringify(value);
-		}
-		if (Array.isArray(value)) {
-			return JSON.stringify(value);
-		}
-		return value;
-	});
-
-	params.push(idValue, organizationId);
-
-	return {
-		sql: `UPDATE ${table}
-          SET ${sets.join(", ")}
-          WHERE ${idColumn} = $${params.length - 1}::uuid
-            AND organization_id = $${params.length}::uuid
-          RETURNING *`,
-		params,
-	};
-}
+// Removed buildInsertStatement and buildUpdateStatement as we shift to Drizzle ORM
 
 function getPatientOrderClause(sortBy: string | undefined): string {
 	switch (sortBy) {
@@ -523,7 +396,7 @@ app.use("*", requireAuth);
 
 app.get("/", async (c) => {
 	const user = c.get("user");
-	const db = await createPool(c.env);
+	const db = createDb(c.env);
 
 	const search = trimmedString(c.req.query("search"));
 	const requestedStatus = trimmedString(c.req.query("status"));
@@ -538,50 +411,55 @@ app.get("/", async (c) => {
 	);
 
 	try {
-		const params: any[] = [user.organizationId];
-		let where = `WHERE organization_id = $1::uuid`;
-		let idx = 2;
+		let conditions = eq(patients.organizationId, user.organizationId);
 
 		const normalizedStatus = requestedStatus?.toLowerCase();
 		if (normalizedStatus) {
 			if (["active", "ativo"].includes(normalizedStatus)) {
-				where += ` AND is_active = true`;
+				conditions = and(conditions, eq(patients.isActive, true))!;
 			} else if (["inactive", "inativo"].includes(normalizedStatus)) {
-				where += ` AND is_active = false`;
+				conditions = and(conditions, eq(patients.isActive, false))!;
 			}
 		} else {
-			where += ` AND is_active = true`;
+			conditions = and(conditions, eq(patients.isActive, true))!;
 		}
 
 		if (search) {
 			const searchPattern = `%${search}%`;
-			params.push(searchPattern);
-			where += ` AND (full_name ILIKE $${idx} OR email ILIKE $${idx} OR cpf ILIKE $${idx} OR phone ILIKE $${idx})`;
-			idx++;
+			conditions = and(
+				conditions,
+				or(
+					ilike(patients.fullName, searchPattern),
+					ilike(patients.email, searchPattern),
+					ilike(patients.cpf, searchPattern),
+					ilike(patients.phone, searchPattern),
+				),
+			)!;
 		}
 
 		// Count total
-		const totalResult = await db.query(
-			`SELECT COUNT(*) as count FROM patients ${where}`,
-			params,
-		);
-		const total = Number(totalResult.rows[0]?.count ?? 0);
+		const totalResult = await db
+			.select({ count: count() })
+			.from(patients)
+			.where(conditions);
+		const total = Number(totalResult[0]?.count ?? 0);
 
 		// Order by
-		let orderBy = "full_name ASC, created_at DESC";
-		if (sortBy === "created_at_asc") orderBy = "created_at ASC, full_name ASC";
-		if (sortBy === "created_at_desc")
-			orderBy = "created_at DESC, full_name ASC";
+		let orderBy: any = desc(patients.createdAt);
+		if (sortBy === "created_at_asc") orderBy = asc(patients.createdAt);
+		if (sortBy === "name_asc") orderBy = asc(patients.fullName);
 
 		// Data query
-		const finalParams = [...params, limit, offset];
-		const dataResult = await db.query(
-			`SELECT * FROM patients ${where} ORDER BY ${orderBy} LIMIT $${idx} OFFSET $${idx + 1}`,
-			finalParams,
-		);
+		const data = await db
+			.select()
+			.from(patients)
+			.where(conditions)
+			.orderBy(orderBy)
+			.limit(limit)
+			.offset(offset);
 
 		return c.json({
-			data: dataResult.rows.map((row) => normalizePatientRow(row as DbRow)),
+			data: data.map((row) => normalizePatientRow(row as DbRow)),
 			total,
 			page: Math.floor(offset / limit) + 1,
 			perPage: limit,
@@ -602,60 +480,53 @@ app.get("/", async (c) => {
 
 app.get("/last-updated", async (c) => {
 	const user = c.get("user");
-	const db = await createPool(c.env);
+	const db = createDb(c.env);
 
-	if (!(await hasColumn(db, "patients", "updated_at"))) {
+	try {
+		const result = await db
+			.select({ last_updated_at: sql<string>`MAX(${patients.updatedAt})` })
+			.from(patients)
+			.where(eq(patients.organizationId, user.organizationId));
+
+		const lastUpdated = result[0]?.last_updated_at;
+		return c.json({
+			data: { last_updated_at: lastUpdated ? String(lastUpdated) : null },
+		});
+	} catch (error) {
+		console.error("[Patients/LastUpdated] Error:", error);
 		return c.json({ data: { last_updated_at: null } });
 	}
-
-	const result = await db.query(
-		`
-      SELECT MAX(updated_at) AS last_updated_at
-      FROM patients
-      WHERE organization_id = $1::uuid
-    `,
-		[user.organizationId],
-	);
-
-	const lastUpdated = (result.rows[0] as DbRow | undefined)?.last_updated_at;
-	return c.json({
-		data: { last_updated_at: lastUpdated ? String(lastUpdated) : null },
-	});
 });
 
 app.get("/by-profile/:profileId", async (c) => {
 	const user = c.get("user");
-	const db = await createPool(c.env);
+	const db = createDb(c.env);
 	const { profileId } = c.req.param();
 
-	if (!(await hasColumn(db, "patients", "profile_id"))) {
+	try {
+		const result = await db
+			.select()
+			.from(patients)
+			.where(
+				and(
+					eq(patients.profileId, profileId),
+					eq(patients.organizationId, user.organizationId),
+				),
+			)
+			.limit(1);
+
+		const row = result[0];
+		return c.json({ data: row ? normalizePatientRow(row as DbRow) : null });
+	} catch (error) {
+		console.error("[Patients/ByProfile] Error:", error);
 		return c.json({ data: null });
 	}
-
-	const result = await db.query(
-		`
-      SELECT *
-      FROM patients
-      WHERE profile_id = $1::uuid
-        AND organization_id = $2::uuid
-      LIMIT 1
-    `,
-		[profileId, user.organizationId],
-	);
-
-	const row = result.rows[0] as DbRow | undefined;
-	return c.json({ data: row ? normalizePatientRow(row) : null });
 });
 
 app.post("/", async (c) => {
 	const user = c.get("user");
-	const db = await createPool(c.env);
+	const db = createDb(c.env);
 	const body = (await c.req.json()) as PatientPayload;
-	const columns = await getTableColumns(db, "patients");
-
-	if (columns.size === 0) {
-		return c.json({ error: "Tabela patients não encontrada no Neon DB" }, 500);
-	}
 
 	const fullName = trimmedString(body.full_name ?? body.name);
 	if (!fullName) return c.json({ error: "Nome é obrigatório" }, 400);
@@ -663,21 +534,22 @@ app.post("/", async (c) => {
 	try {
 		const insertValues = buildPatientWritePayload(
 			body,
-			columns,
 			user.organizationId,
 			true,
 		);
-		insertValues.full_name = fullName;
+		insertValues.fullName = fullName;
 
-		const { sql, params } = buildInsertStatement("patients", insertValues);
-		const result = await db.query(sql, params);
-		const row = result.rows[0] as DbRow | undefined;
+		const result = await db
+			.insert(patients)
+			.values(insertValues as any)
+			.returning();
+		const row = result[0];
 
 		if (!row) {
 			return c.json({ error: "Falha ao criar paciente" }, 500);
 		}
 
-		const patient = normalizePatientRow(row);
+		const patient = normalizePatientRow(row as DbRow);
 
 		// Inngest Event: Patient Created (Sequência de Boas-vindas)
 		triggerInngestEvent(
@@ -708,106 +580,98 @@ app.post("/", async (c) => {
 
 app.get("/:id/stats", async (c) => {
 	const user = c.get("user");
-	const db = await createPool(c.env, 15000); // 15s timeout for complex stats query
+	const db = createDb(c.env);
 	const { id } = c.req.param();
 
-	if (!(await hasTable(db, "appointments"))) {
+	try {
+		// Drizzle approach for stats: using sql template literal for complex aggregation
+		// or multiple queries if needed. Here we stick to a custom select.
+		const result = await db
+			.select({
+				total_sessions: sql<number>`count(*) filter (where status = 'completed')`,
+				upcoming_appointments: sql<number>`count(*) filter (where date >= current_date and (status not in ('cancelled', 'completed') or status is null))`,
+				last_visit: sql<string>`max(date) filter (where date <= current_date)`,
+			})
+			.from(sql`appointments`) // Fallback to raw table name if not in schema yet
+			.where(
+				and(
+					sql`patient_id = ${id}::uuid`,
+					sql`organization_id = ${user.organizationId}::uuid`,
+				),
+			);
+
+		const stats = result[0] ?? {
+			total_sessions: 0,
+			upcoming_appointments: 0,
+			last_visit: null,
+		};
+
+		return c.json({
+			data: {
+				totalSessions: Number(stats.total_sessions || 0),
+				upcomingAppointments: Number(stats.upcoming_appointments || 0),
+				lastVisit: stats.last_visit ? String(stats.last_visit) : null,
+			},
+		});
+	} catch (error) {
+		console.error("[Patients/Stats] Error:", error);
 		return c.json({
 			data: { totalSessions: 0, upcomingAppointments: 0, lastVisit: null },
 		});
 	}
-
-	const result = await db.query(
-		`
-      SELECT
-        COUNT(*) FILTER (
-          WHERE status = 'completed'
-        )::int AS total_sessions,
-        COUNT(*) FILTER (
-          WHERE date >= CURRENT_DATE
-            AND (status NOT IN ('cancelled', 'completed') OR status IS NULL)
-        )::int AS upcoming_appointments,
-        MAX(date) FILTER (WHERE date <= CURRENT_DATE) AS last_visit
-      FROM appointments
-      WHERE patient_id = $1::uuid
-        AND organization_id = $2::uuid
-    `,
-		[id, user.organizationId],
-	);
-
-	const row = (result.rows[0] as DbRow | undefined) ?? {};
-
-	return c.json({
-		data: {
-			totalSessions: Number(row.total_sessions ?? 0),
-			upcomingAppointments: Number(row.upcoming_appointments ?? 0),
-			lastVisit: row.last_visit ? String(row.last_visit) : null,
-		},
-	});
 });
 
 app.get("/:id", async (c) => {
 	const user = c.get("user");
-	const db = await createPool(c.env);
+	const db = createDb(c.env);
 	const { id } = c.req.param();
 
 	try {
-		const result = await db.query(
-			`
-        SELECT *
-        FROM patients
-        WHERE id = $1::uuid
-          AND organization_id = $2::uuid
-        LIMIT 1
-      `,
-			[id, user.organizationId],
-		);
+		const result = await db
+			.select()
+			.from(patients)
+			.where(
+				and(eq(patients.id, id), eq(patients.organizationId, user.organizationId)),
+			)
+			.limit(1);
 
-		const row = result.rows[0] as DbRow | undefined;
+		const row = result[0];
 		if (!row) return c.json({ error: "Paciente não encontrado" }, 404);
-		return c.json({ data: normalizePatientRow(row) });
+
+		return c.json({ data: normalizePatientRow(row as DbRow) });
 	} catch (error) {
-		return c.json(
-			{
-				error: "Erro ao buscar paciente",
-				details: error instanceof Error ? error.message : "Erro desconhecido",
-			},
-			500,
-		);
+		console.error("[Patients/Get] Error:", error);
+		return c.json({ error: "Erro ao buscar paciente" }, 500);
 	}
 });
 
+
 const updatePatientHandler = async (c: any) => {
 	const user = c.get("user");
-	const db = await createPool(c.env);
+	const db = createDb(c.env);
 	const { id } = c.req.param();
 	const body = (await c.req.json()) as PatientPayload;
-	const columns = await getTableColumns(db, "patients");
 
 	try {
-		const updateValues = buildPatientWritePayload(
-			body,
-			columns,
-			user.organizationId,
-			false,
-		);
+		const updateValues = buildPatientWritePayload(body, user.organizationId, false);
 		if (Object.keys(updateValues).length === 0) {
 			return c.json({ error: "Nenhum campo para atualizar" }, 400);
 		}
 
-		const { sql, params } = buildUpdateStatement(
-			"patients",
-			"id",
-			id,
-			user.organizationId,
-			updateValues,
-		);
-		const result = await db.query(sql, params);
-		const row = result.rows[0] as DbRow | undefined;
+		const result = await db
+			.update(patients)
+			.set(updateValues as any)
+			.where(
+				and(eq(patients.id, id), eq(patients.organizationId, user.organizationId)),
+			)
+			.returning();
 
+		const row = result[0];
 		if (!row) return c.json({ error: "Paciente não encontrado" }, 404);
-		return c.json({ data: normalizePatientRow(row) });
+
+		return c.json({ data: normalizePatientRow(row as DbRow) });
 	} catch (error) {
+		console.error("[Patients/Update] Error:", error);
 		return c.json(
 			{
 				error: "Erro ao atualizar paciente",
@@ -823,44 +687,24 @@ app.patch("/:id", updatePatientHandler);
 
 app.delete("/:id", async (c) => {
 	const user = c.get("user");
-	const db = await createPool(c.env);
+	const db = createDb(c.env);
 	const { id } = c.req.param();
-	const columns = await getTableColumns(db, "patients");
 
 	try {
-		// Usa archived se disponível, senão usa is_active, senão faz hard delete
-		let sql: string;
-		if (columns.has("archived")) {
-			sql = `
-        UPDATE patients
-        SET archived = true, updated_at = NOW()
-        WHERE id = $1::uuid
-          AND organization_id = $2::uuid
-        RETURNING id
-      `;
-		} else if (columns.has("is_active")) {
-			sql = `
-        UPDATE patients
-        SET is_active = false, updated_at = NOW()
-        WHERE id = $1::uuid
-          AND organization_id = $2::uuid
-        RETURNING id
-      `;
-		} else {
-			sql = `
-        DELETE FROM patients
-        WHERE id = $1::uuid
-          AND organization_id = $2::uuid
-        RETURNING id
-      `;
-		}
+		// Logically delete by setting isActive = false
+		const result = await db
+			.update(patients)
+			.set({ isActive: false, updatedAt: new Date() })
+			.where(
+				and(eq(patients.id, id), eq(patients.organizationId, user.organizationId)),
+			)
+			.returning({ id: patients.id });
 
-		const result = await db.query(sql, [id, user.organizationId]);
-
-		const row = result.rows[0] as DbRow | undefined;
+		const row = result[0];
 		if (!row) return c.json({ error: "Paciente não encontrado" }, 404);
 		return c.json({ success: true });
 	} catch (error) {
+		console.error("[Patients/Delete] Error:", error);
 		return c.json(
 			{
 				error: "Erro ao excluir paciente",
@@ -871,59 +715,92 @@ app.delete("/:id", async (c) => {
 	}
 });
 
+
 app.get("/:id/timeline", async (c) => {
 	const user = c.get("user");
-	const db = await createPool(c.env);
+	const db = createDb(c.env);
 	const { id } = c.req.param();
 
 	try {
+		// Drizzle approach for timeline: using multiple queries for different tables
+		// In a real refactor, we would use Drizzle's `union` if tables are compatible, 
+		// but since they have different structures, we keep separate queries.
+
 		// 1. Fetch Communication Logs
-		const commsResult = await db.query(
-			`SELECT id, type as entry_type, 'communication' as category, subject, body, status, created_at
-       FROM communication_logs 
-       WHERE patient_id = $1::uuid AND organization_id = $2::uuid`,
-			[id, user.organizationId],
-		);
+		const comms = await db
+			.select({
+				id: sql`id`,
+				entry_type: sql`type`,
+				category: sql`'communication'`,
+				subject: sql`subject`,
+				body: sql`body`,
+				status: sql`status`,
+				created_at: sql`created_at`,
+			})
+			.from(sql`communication_logs`)
+			.where(
+				and(
+					sql`patient_id = ${id}::uuid`,
+					sql`organization_id = ${user.organizationId}::uuid`,
+				),
+			);
 
 		// 2. Fetch Appointments
-		const appointmentsResult = await db.query(
-			`SELECT id, 'appointment' as entry_type, 'clinical' as category, status, date as created_at, start_time, end_time
-       FROM appointments 
-       WHERE patient_id = $1::uuid AND organization_id = $2::uuid`,
-			[id, user.organizationId],
-		);
+		const appointments = await db
+			.select({
+				id: sql`id`,
+				entry_type: sql`'appointment'`,
+				category: sql`'clinical'`,
+				status: sql`status`,
+				created_at: sql`date`,
+				start_time: sql`start_time`,
+				end_time: sql`end_time`,
+			})
+			.from(sql`appointments`)
+			.where(
+				and(
+					sql`patient_id = ${id}::uuid`,
+					sql`organization_id = ${user.organizationId}::uuid`,
+				),
+			);
 
 		// 3. Fetch Evolutions (SOAP)
-		let evolutions: any[] = [];
-		if (await hasTable(db, "evolution_index")) {
-			const evolResult = await db.query(
-				`SELECT id, 'evolution' as entry_type, 'clinical' as category, preview_text as body, created_at
-         FROM evolution_index 
-         WHERE patient_id = $1::uuid AND organization_id = $2::uuid`,
-				[id, user.organizationId],
-			);
-			evolutions = evolResult.rows;
-		}
+		const evolutions = await db
+			.select({
+				id: sql`id`,
+				entry_type: sql`'evolution'`,
+				category: sql`'clinical'`,
+				body: sql`preview_text`,
+				created_at: sql`created_at`,
+			})
+			.from(sql`evolution_index`)
+			.where(
+				and(
+					sql`patient_id = ${id}::uuid`,
+					sql`organization_id = ${user.organizationId}::uuid`,
+				),
+			)
+			.catch(() => []); // If table doesn't exist yet, return empty
 
 		// Combine and Sort
-		const timeline = [
-			...commsResult.rows,
-			...appointmentsResult.rows,
-			...evolutions,
-		].sort(
-			(a, b) =>
+		const timeline = [...comms, ...appointments, ...evolutions].sort(
+			(a: any, b: any) =>
 				new Date(b.created_at).getTime() - new Date(a.created_at).getTime(),
 		);
 
 		return c.json({ data: timeline });
-	} catch (error: any) {
+	} catch (error) {
 		console.error("[Patients/Timeline] Error:", error);
 		return c.json(
-			{ error: "Erro ao carregar linha do tempo", details: error.message },
+			{
+				error: "Erro ao carregar linha do tempo",
+				details: error instanceof Error ? error.message : "Erro desconhecido",
+			},
 			500,
 		);
 	}
 });
+
 
 registerPatientClinicalDetailRoutes(app);
 

@@ -30,6 +30,7 @@ import {
 import { relations } from "drizzle-orm";
 import { appointments } from "./appointments";
 import { sessions } from "./sessions";
+import { patientPackages } from "./financial";
 
 export const genderEnum = pgEnum("gender", ["M", "F", "O"]);
 export const pathologyStatusEnum = pgEnum("pathology_status", [
@@ -352,47 +353,5 @@ export const goalsRelations = relations(goals, ({ one }) => ({
 	}),
 }));
 
-// ===== PATIENT PACKAGES (Session Credits) =====
-export const packageStatusEnum = pgEnum("package_status", [
-	"active",
-	"expired",
-	"used",
-	"cancelled",
-]);
+// Moved to financial.ts to centralize financial entities
 
-export const patientPackages = pgTable(
-	"patient_packages",
-	{
-		id: uuid("id").primaryKey().defaultRandom(),
-		patientId: uuid("patient_id")
-			.notNull()
-			.references(() => patients.id, { onDelete: "cascade" }),
-
-		name: varchar("name", { length: 100 }).notNull(), // e.g., "Pacote 10 Sessões"
-		totalSessions: integer("total_sessions").notNull(),
-		usedSessions: integer("used_sessions").default(0).notNull(),
-		remainingSessions: integer("remaining_sessions").notNull(),
-
-		price: numeric("price", { precision: 10, scale: 2 }),
-		status: packageStatusEnum("status").default("active"),
-
-		purchasedAt: timestamp("purchased_at").defaultNow().notNull(),
-		expiresAt: timestamp("expires_at"),
-
-		createdAt: timestamp("created_at").defaultNow().notNull(),
-	},
-	(table) => ({
-		patientIdIdx: index("idx_patient_packages_patient_id").on(table.patientId),
-		statusIdx: index("idx_patient_packages_status").on(table.status),
-	}),
-);
-
-export const patientPackagesRelations = relations(
-	patientPackages,
-	({ one }) => ({
-		patient: one(patients, {
-			fields: [patientPackages.patientId],
-			references: [patients.id],
-		}),
-	}),
-);

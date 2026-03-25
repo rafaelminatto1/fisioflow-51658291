@@ -150,6 +150,7 @@ const OverviewTab = ({
 											border: "1px solid var(--border)",
 										}}
 										labelStyle={{ display: "none" }}
+										// @ts-expect-error -- recharts v3 formatter type
 										formatter={(value: number) => [
 											`${value.toFixed(0)}ms`,
 											"Time",
