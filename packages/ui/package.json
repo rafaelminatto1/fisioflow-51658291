@@ -29,6 +29,7 @@
     "clsx": "^2.1.1",
     "lucide-react": "^0.462.0",
     "motion-utils": "^12.29.2",
+    "recharts": "^2.15.4",
     "tailwind-merge": "^2.6.0"
   },
   "peerDependencies": {

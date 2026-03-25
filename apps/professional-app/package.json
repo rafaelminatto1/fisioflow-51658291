@@ -59,6 +59,7 @@
     "react-native-view-shot": "^4.0.3",
     "react-native-vision-camera": "^4.7.3",
     "react-native-worklets-core": "^1.6.2",
+    "recharts": "^2.15.4",
     "zod": "^3.25.76",
     "zustand": "^4.5.5"
   },
