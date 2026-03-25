@@ -49,7 +49,7 @@ const schema = z
 		startDate: z.string().min(1, "Data de início é obrigatória"),
 		endDate: z.string().min(1, "Data de término é obrigatória"),
 		sessionsCount: z
-			.number({ invalid_type_error: "Informe um número" })
+			.number({ error: "Informe um número" })
 			.int()
 			.min(1, "Mínimo 1 sessão")
 			.max(200),

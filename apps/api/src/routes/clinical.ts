@@ -9,11 +9,16 @@
  * GET/POST /api/clinical/standardized-tests
  */
 import { Hono } from 'hono';
-import { createPool } from '../lib/db';
+import { createDb } from '../lib/db';
 import { requireAuth, type AuthVariables } from '../lib/auth';
 import type { Env } from '../types/env';
 import { registerClinicalResourceRoutes } from './clinical/resources';
-import { getColumns, hasTable } from './clinical/shared';
+import { 
+  patientGoals, 
+  patientPathologies, 
+  patientSessionMetrics 
+} from '@fisioflow/db';
+import { eq, sql, desc } from 'drizzle-orm';
 
 const app = new Hono<{ Bindings: Env; Variables: AuthVariables }>();
 
@@ -25,126 +30,88 @@ app.get('/pathologies/options', async (c) => {
     }
   }
   
-  // Fallback para lista básica caso o KV falhe (vazia ou erro)
   return c.json({ data: [], error: 'Cache not found' });
 });
 
 app.get('/insights', requireAuth, async (c) => {
   const user = c.get('user');
-  const pool = await createPool(c.env);
+  const db = createDb(c.env);
 
-  const [hasGoals, hasPathologies, hasMetrics] = await Promise.all([
-    hasTable(pool, 'patient_goals'),
-    hasTable(pool, 'patient_pathologies'),
-    hasTable(pool, 'patient_session_metrics'),
-  ]);
+  // 1. Goals Insights
+  const goalsData = await db
+    .select({
+      status: sql<string>`COALESCE(${patientGoals.status}, 'sem_status')`,
+      count: sql<string>`COUNT(*)::text`,
+      avg_days_to_achieve: sql<number | null>`ROUND(
+        AVG(
+          CASE
+            WHEN ${patientGoals.achievedAt} IS NOT NULL AND ${patientGoals.createdAt} IS NOT NULL
+              THEN EXTRACT(EPOCH FROM (${patientGoals.achievedAt} - ${patientGoals.createdAt})) / 86400.0
+            ELSE NULL
+          END
+        )::numeric,
+        1
+      )`,
+    })
+    .from(patientGoals)
+    .where(eq(patientGoals.organizationId, user.organizationId))
+    .groupBy(sql`1`)
+    .orderBy(desc(sql`COUNT(*)`));
 
-  const goals = hasGoals
-    ? await pool.query(
-        `
-          SELECT
-            COALESCE(status, 'sem_status') AS status,
-            COUNT(*)::text AS count,
-            ROUND(
-              AVG(
-                CASE
-                  WHEN achieved_at IS NOT NULL AND created_at IS NOT NULL
-                    THEN EXTRACT(EPOCH FROM (achieved_at - created_at)) / 86400.0
-                  ELSE NULL
-                END
-              )::numeric,
-              1
-            ) AS avg_days_to_achieve
-          FROM patient_goals
-          WHERE organization_id = $1
-          GROUP BY 1
-          ORDER BY COUNT(*) DESC
-        `,
-        [user.organizationId],
-      )
-    : { rows: [] };
+  // 2. Pathologies Insights
+  const pathologiesData = await db
+    .select({
+      name: patientPathologies.name,
+      patient_count: sql<string>`COUNT(*)::text`,
+    })
+    .from(patientPathologies)
+    .where(eq(patientPathologies.organizationId, user.organizationId))
+    .groupBy(patientPathologies.name)
+    .orderBy(desc(sql`COUNT(*)`), patientPathologies.name)
+    .limit(10);
 
-  const pathologyColumns = hasPathologies ? await getColumns(pool, 'patient_pathologies') : new Set<string>();
-  const pathologyNameColumn = pathologyColumns.has('pathology_name')
-    ? 'pathology_name'
-    : pathologyColumns.has('name')
-      ? 'name'
-      : null;
-  const painColumn = hasMetrics
-    ? await getColumns(pool, 'patient_session_metrics').then((columns) =>
-        columns.has('pain_level_after')
-          ? 'pain_level_after'
-          : columns.has('pain_level_before')
-            ? 'pain_level_before'
-            : null,
-      )
-    : null;
-
-  const pathologies = pathologyNameColumn
-    ? await pool.query(
-        `
-          SELECT
-            ${pathologyNameColumn} AS name,
-            COUNT(*)::text AS patient_count
-          FROM patient_pathologies
-          WHERE organization_id = $1
-          GROUP BY 1
-          ORDER BY COUNT(*) DESC, ${pathologyNameColumn} ASC
-          LIMIT 10
-        `,
-        [user.organizationId],
-      )
-    : { rows: [] };
-
-  const painTrend = pathologyNameColumn && painColumn
-    ? await pool.query(
-        `
-          WITH ranked_pathologies AS (
-            SELECT
-              patient_id,
-              ${pathologyNameColumn} AS pathology,
-              ROW_NUMBER() OVER (
-                PARTITION BY patient_id
-                ORDER BY
-                  CASE WHEN status = 'ativo' THEN 0 ELSE 1 END,
-                  created_at DESC
-              ) AS row_rank
-            FROM patient_pathologies
-            WHERE organization_id = $1
-          )
-          SELECT
-            COALESCE(ranked_pathologies.pathology, 'Sem classificacao') AS pathology,
-            ROUND(AVG(psm.${painColumn})::numeric, 1) AS avg_pain_level,
-            COUNT(*)::text AS record_count
-          FROM patient_session_metrics psm
-          LEFT JOIN ranked_pathologies
-            ON ranked_pathologies.patient_id = psm.patient_id
-           AND ranked_pathologies.row_rank = 1
-          WHERE psm.organization_id = $1
-            AND psm.${painColumn} IS NOT NULL
-          GROUP BY 1
-          ORDER BY AVG(psm.${painColumn}) DESC NULLS LAST, COUNT(*) DESC
-          LIMIT 8
-        `,
-        [user.organizationId],
-      )
-    : { rows: [] };
+  // 3. Pain Trend Insights
+  const painTrendData = await db.execute(sql`
+    WITH ranked_pathologies AS (
+      SELECT
+        patient_id,
+        name AS pathology,
+        ROW_NUMBER() OVER (
+          PARTITION BY patient_id
+          ORDER BY
+            CASE WHEN status = 'ativo' THEN 0 ELSE 1 END,
+            created_at DESC
+        ) AS row_rank
+      FROM patient_pathologies
+      WHERE organization_id = ${user.organizationId}
+    )
+    SELECT
+      COALESCE(ranked_pathologies.pathology, 'Sem classificacao') AS pathology,
+      ROUND(AVG(psm.pain_level_after)::numeric, 1) AS avg_pain_level,
+      COUNT(*)::text AS record_count
+    FROM patient_session_metrics psm
+    LEFT JOIN ranked_pathologies
+      ON ranked_pathologies.patient_id = psm.patient_id
+     AND ranked_pathologies.row_rank = 1
+    WHERE psm.organization_id = ${user.organizationId}
+      AND psm.pain_level_after IS NOT NULL
+    GROUP BY 1
+    ORDER BY AVG(psm.pain_level_after) DESC NULLS LAST, COUNT(*) DESC
+    LIMIT 8
+  `);
 
   return c.json({
     data: {
-      goals: goals.rows.map((row) => ({
-        status: String(row.status ?? 'sem_status'),
-        count: String(row.count ?? '0'),
-        avg_days_to_achieve:
-          row.avg_days_to_achieve !== null && row.avg_days_to_achieve !== undefined
-            ? Number(row.avg_days_to_achieve)
-            : null,
+      goals: goalsData.map((row) => ({
+        status: String(row.status),
+        count: String(row.count),
+        avg_days_to_achieve: row.avg_days_to_achieve ? Number(row.avg_days_to_achieve) : null,
       })),
-      pathologies: pathologies.rows.map((row) => ({
+      pathologies: pathologiesData.map((row) => ({
         name: String(row.name ?? 'Sem classificacao'),
-        patient_count: String(row.patient_count ?? '0'),
+        patient_count: String(row.patient_count),
       })),
-      painTrend: painTrend.rows.map((row) => ({
+      painTrend: (painTrendData.rows as Record<string, unknown>[]).map((row) => ({
         pathology: String(row.pathology ?? 'Sem classificacao'),
         avg_pain_level: Number(row.avg_pain_level ?? 0),
         record_count: String(row.record_count ?? '0'),

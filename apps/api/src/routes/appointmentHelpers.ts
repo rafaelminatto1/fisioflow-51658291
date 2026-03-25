@@ -4,35 +4,46 @@
  */
 
 export const STATUS_MAP: Record<string, string> = {
-  agendado: 'scheduled',
-  confirmado: 'confirmed',
-  em_andamento: 'in_progress',
-  concluido: 'completed',
-  cancelado: 'cancelled',
-  avaliacao: 'scheduled',
-  atendido: 'completed',
-  falta: 'no_show',
-  faltou: 'no_show',
-  remarcado: 'rescheduled',
-  reagendado: 'rescheduled',
-  aguardando_confirmacao: 'scheduled',
+  scheduled: 'agendado',
+  confirmed: 'presenca_confirmada',
+  in_progress: 'atendido',
+  completed: 'atendido',
+  cancelled: 'cancelado',
+  no_show: 'faltou',
+  rescheduled: 'remarcar',
+  agendado: 'agendado',
+  confirmado: 'presenca_confirmada',
+  em_andamento: 'atendido',
+  concluido: 'atendido',
+  cancelado: 'cancelado',
+  avaliacao: 'avaliacao',
+  atendido: 'atendido',
+  falta: 'faltou',
+  faltou: 'faltou',
+  remarcado: 'remarcar',
+  reagendado: 'remarcar',
+  aguardando_confirmacao: 'agendado',
 };
 
 const VALID_STATUSES = new Set([
-  'scheduled',
-  'confirmed',
-  'in_progress',
-  'completed',
-  'cancelled',
-  'no_show',
-  'rescheduled',
+  'agendado',
+  'atendido',
+  'avaliacao',
+  'cancelado',
+  'faltou',
+  'faltou_com_aviso',
+  'faltou_sem_aviso',
+  'nao_atendido',
+  'nao_atendido_sem_cobranca',
+  'presenca_confirmada',
+  'remarcar',
 ]);
 
-export function normalizeStatus(raw: string | undefined): string {
-  if (!raw) return 'scheduled';
+export function normalizeStatus(raw: string | undefined): any {
+  if (!raw) return 'agendado';
   const normalized = raw.toLowerCase().trim();
   if (VALID_STATUSES.has(normalized)) return normalized;
-  return STATUS_MAP[normalized] ?? 'scheduled';
+  return STATUS_MAP[normalized] ?? 'agendado';
 }
 
 export function calculateEndTime(startTime: string, durationMinutes: number): string {
@@ -71,5 +82,5 @@ export function isConflictError(err: { code?: string; message?: string }): boole
 }
 
 export function countsTowardCapacity(status: string): boolean {
-  return !['cancelled', 'no_show', 'rescheduled'].includes(status);
+  return !['cancelado', 'faltou', 'remarcar'].includes(status);
 }

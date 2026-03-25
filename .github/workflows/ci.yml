@@ -126,7 +126,7 @@ jobs:
   # =====================================================================
   test-e2e:
     name: E2E Tests
-    needs: build
+    needs: [build, neon-preview]
     runs-on: ubuntu-latest
     timeout-minutes: 30
     strategy:
@@ -162,6 +162,7 @@ jobs:
         run: pnpm exec playwright test --shard=${{ matrix.shard }}/${{ strategy.job-total }} --blob-report
         env:
           BASE_URL: http://localhost:4173
+          DATABASE_URL: ${{ needs.neon-preview.outputs.db_url }}
 
       - name: Upload blob report
         if: always()
@@ -212,11 +213,14 @@ jobs:
   # =====================================================================
   neon-preview:
     name: Neon DB Preview
-    if: false && github.event_name == 'pull_request'
+    if: github.event_name == 'pull_request'
     runs-on: ubuntu-latest
     permissions:
       pull-requests: write
+    outputs:
+      db_url: ${{ steps.create-branch.outputs.db_url_with_pooler }}
     steps:
+
       - name: Checkout
         uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
 
@@ -235,7 +239,7 @@ jobs:
           pnpm-version: ${{ env.PNPM_VERSION }}
 
       - name: Run Migrations
-        run: pnpm db:push
+        run: pnpm db:push --force
         env:
           DATABASE_URL: ${{ steps.create-branch.outputs.db_url_with_pooler }}
 

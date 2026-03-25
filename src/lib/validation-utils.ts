@@ -30,7 +30,7 @@ export function validateOrNull<T>(
 		if (context) {
 			logger.warn(
 				`Validation failed in ${context}`,
-				{ errors: result.error.errors },
+				{ errors: result.error.issues },
 				"Validation",
 			);
 		}
@@ -60,7 +60,7 @@ export function validateOrDefault<T>(
 		if (context) {
 			logger.warn(
 				`Validation failed in ${context}, using default`,
-				{ errors: result.error.errors },
+				{ errors: result.error.issues },
 				"Validation",
 			);
 		}
@@ -90,7 +90,7 @@ export function validateOrThrow<T>(
 	if (!result.success) {
 		const message =
 			errorMessage ||
-			`Validation failed: ${result.error.errors.map((e) => e.message).join(", ")}`;
+			`Validation failed: ${result.error.issues.map((e) => e.message).join(", ")}`;
 		throw new Error(message);
 	}
 	return result.data;
@@ -152,11 +152,11 @@ export async function validateApiResponse<T>(
 			: "Invalid API response";
 		logger.error(
 			message,
-			{ errors: result.error.errors, rawData },
+			{ errors: result.error.issues, rawData },
 			"Validation",
 		);
 		throw new Error(
-			`${message}: ${result.error.errors.map((e) => e.message).join(", ")}`,
+			`${message}: ${result.error.issues.map((e) => e.message).join(", ")}`,
 		);
 	}
 
@@ -188,7 +188,7 @@ export function validateWithErrors<T>(
 		return { data: result.data, errors: [] };
 	}
 
-	const errors = result.error.errors.map(
+	const errors = result.error.issues.map(
 		(e) => `${e.path.join(".")}: ${e.message}`,
 	);
 	return { data: null, errors };
@@ -262,7 +262,7 @@ export function validateFormField<T>(
 	}
 
 	// Filter errors to only those related to this field
-	const fieldErrors = result.error.errors
+	const fieldErrors = result.error.issues
 		.filter((e) => e.path.length > 0 && e.path[0] === field)
 		.map((e) => e.message);
 
@@ -298,7 +298,7 @@ export function createDebouncedValidator<T>(
 				} else {
 					resolve({
 						valid: false,
-						errors: result.error.errors.map((e) => e.message),
+						errors: result.error.issues.map((e) => e.message),
 					});
 				}
 			}, delay);
@@ -316,12 +316,12 @@ export function validateEnvVars<T extends Record<string, unknown>>(
 	const result = schema.safeParse(env);
 
 	if (!result.success) {
-		const _missingVars = result.error.errors
+		const _missingVars = result.error.issues
 			.filter((e) => e.code === "invalid_type")
 			.map((e) => e.path.join("."));
 
 		throw new Error(
-			`Invalid environment variables:\n${result.error.errors.map((e) => `  - ${e.path.join(".")}: ${e.message}`).join("\n")}`,
+			`Invalid environment variables:\n${result.error.issues.map((e) => `  - ${e.path.join(".")}: ${e.message}`).join("\n")}`,
 		);
 	}
 

@@ -870,6 +870,7 @@ export function PatientRetention() {
 												border: "1px solid hsl(var(--border))",
 												borderRadius: "8px",
 											}}
+											// @ts-expect-error -- recharts v3 formatter type
 											formatter={(value: number) => [
 												`${value}%`,
 												"Taxa de Churn",

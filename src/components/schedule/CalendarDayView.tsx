@@ -1,32 +1,32 @@
-import React, { memo } from "react";
 import { format, isSameDay } from "date-fns";
 import { ptBR } from "date-fns/locale";
-import { Clock, Ban, Calendar, Calendar as CalendarIcon } from "lucide-react";
-import { cn } from "@/lib/utils";
-import { Appointment } from "@/types/appointment";
+import { Ban, Calendar, Calendar as CalendarIcon, Clock } from "lucide-react";
+import React, { memo, useState } from "react";
 import {
 	Tooltip,
 	TooltipContent,
 	TooltipProvider,
 	TooltipTrigger,
 } from "@/components/ui/tooltip";
-import { CalendarAppointmentCard } from "./CalendarAppointmentCard";
-import { DropTargetPreviewCard } from "./DropTargetPreviewCard";
 import { useCardSize } from "@/hooks/useCardSize";
+import {
+	DEFAULT_APPOINTMENT_DURATION_MINUTES,
+	getOverlapStackPosition,
+} from "@/lib/calendar";
 import {
 	calculateAppointmentCardHeight,
 	calculateSlotHeightFromCardSize,
 } from "@/lib/calendar/cardHeightCalculator";
 import {
-	getOverlapStackPosition,
-	DEFAULT_APPOINTMENT_DURATION_MINUTES,
-} from "@/lib/calendar";
-import {
-	calculateCardWidthPercent,
 	calculateCardOffsetPercent,
-	shouldShowText,
+	calculateCardWidthPercent,
 	MAX_CARDS_WITHOUT_BADGE,
+	shouldShowText,
 } from "@/lib/calendar/dragPreview";
+import { cn } from "@/lib/utils";
+import type { Appointment } from "@/types/appointment";
+import { CalendarAppointmentCard } from "./CalendarAppointmentCard";
+import { DropTargetPreviewCard } from "./DropTargetPreviewCard";
 import { VirtualizedCalendarGrid } from "./virtualized/VirtualizedCalendarGrid";
 
 interface CalendarDayViewProps {

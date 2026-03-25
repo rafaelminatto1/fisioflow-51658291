@@ -1,12 +1,155 @@
 @import 'tailwindcss';
 
-@config '../apps/web/tailwind.config.ts';
+@theme {
+  --font-sans: 'Inter', ui-sans-serif, system-ui, sans-serif;
+
+  /* Breakpoints */
+  --breakpoint-xs: 480px;
+  --breakpoint-sm: 640px;
+  --breakpoint-md: 768px;
+  --breakpoint-lg: 1024px;
+  --breakpoint-xl: 1280px;
+  --breakpoint-2xl: 1536px;
+  --breakpoint-ipad: 834px;
+  --breakpoint-ipad-pro: 1024px;
+  --breakpoint-iphone: 390px;
+  --breakpoint-iphone-max: 430px;
+
+  /* Colors */
+  --color-border: hsl(var(--border));
+  --color-input: hsl(var(--input));
+  --color-ring: hsl(var(--ring));
+  --color-background: hsl(var(--background));
+  --color-foreground: hsl(var(--foreground));
+
+  --color-primary: hsl(var(--primary));
+  --color-primary-foreground: hsl(var(--primary-foreground));
+  --color-primary-glow: hsl(var(--primary-glow));
+  --color-primary-dark: hsl(var(--primary-dark));
+
+  --color-secondary: hsl(var(--secondary));
+  --color-secondary-foreground: hsl(var(--secondary-foreground));
+  --color-secondary-light: hsl(var(--secondary-light));
+
+  --color-success: hsl(var(--success));
+  --color-success-foreground: hsl(var(--success-foreground));
+
+  --color-warning: hsl(var(--warning));
+  --color-warning-foreground: hsl(var(--warning-foreground));
+
+  --color-destructive: hsl(var(--destructive));
+  --color-destructive-foreground: hsl(var(--destructive-foreground));
+
+  --color-muted: hsl(var(--muted));
+  --color-muted-foreground: hsl(var(--muted-foreground));
+
+  --color-accent: hsl(var(--accent));
+  --color-accent-foreground: hsl(var(--accent-foreground));
+
+  --color-popover: hsl(var(--popover));
+  --color-popover-foreground: hsl(var(--popover-foreground));
+
+  --color-card: hsl(var(--card));
+  --color-card-foreground: hsl(var(--card-foreground));
+
+  --color-sidebar-background: hsl(var(--sidebar-background));
+  --color-sidebar-foreground: hsl(var(--sidebar-foreground));
+  --color-sidebar-primary: hsl(var(--sidebar-primary));
+  --color-sidebar-primary-foreground: hsl(var(--sidebar-primary-foreground));
+  --color-sidebar-accent: hsl(var(--sidebar-accent));
+  --color-sidebar-accent-foreground: hsl(var(--sidebar-accent-foreground));
+  --color-sidebar-border: hsl(var(--sidebar-border));
+  --color-sidebar-ring: hsl(var(--sidebar-ring));
+
+  /* Pain Map / EVA Scale Colors */
+  --color-pain-0: #9ca3af;
+  --color-pain-1: #bef264;
+  --color-pain-2: #84cc16;
+  --color-pain-3: #fde047;
+  --color-pain-4: #facc15;
+  --color-pain-5: #fdba74;
+  --color-pain-6: #fb923c;
+  --color-pain-7: #f87171;
+  --color-pain-8: #ef4444;
+  --color-pain-9: #b91c1c;
+  --color-pain-10: #7f1d1d;
+  --color-pain-gauge-low: #22c55e;
+  --color-pain-gauge-med: #eab308;
+  --color-pain-gauge-high: #ef4444;
+  --color-pain-gauge-severe: #7f1d1d;
+
+  /* Border Radius */
+  --radius-lg: var(--radius);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-sm: calc(var(--radius) - 4px);
+
+  /* Shadow */
+  --shadow-medical: var(--shadow-medical);
+  --shadow-card: var(--shadow-card);
+  --shadow-hover: var(--shadow-hover);
+  --shadow-premium-sm: var(--shadow-premium-sm);
+  --shadow-premium-md: var(--shadow-premium-md);
+  --shadow-premium-lg: var(--shadow-premium-lg);
+  --shadow-inner-border: var(--shadow-inner-border);
+
+  /* Animations & Keyframes */
+  @keyframes accordion-down {
+    from { height: 0; }
+    to { height: var(--radix-accordion-content-height); }
+  }
+  @keyframes accordion-up {
+    from { height: var(--radix-accordion-content-height); }
+    to { height: 0; }
+  }
+  @keyframes wiggle {
+    0%, 100% { transform: rotate(0deg); }
+    15% { transform: rotate(15deg); }
+    30% { transform: rotate(-10deg); }
+    45% { transform: rotate(5deg); }
+    60% { transform: rotate(-5deg); }
+  }
+  @keyframes pulse-ring {
+    0% { transform: scale(0.8); opacity: 0.5; }
+    100% { transform: scale(2.0); opacity: 0; }
+  }
+  @keyframes gauge-rotate {
+    0% { transform: rotate(-90deg); }
+    100% { transform: rotate(90deg); }
+  }
+  @keyframes stagger-in {
+    0% { opacity: 0; transform: translateY(20px); }
+    100% { opacity: 1; transform: translateY(0); }
+  }
+  @keyframes bounce-subtle {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-4px); }
+  }
+  @keyframes rotate-in {
+    0% { opacity: 0; transform: rotate(-8deg) scale(0.95); }
+    100% { opacity: 1; transform: rotate(0) scale(1); }
+  }
+
+  --animate-accordion-down: accordion-down 0.2s ease-out;
+  --animate-accordion-up: accordion-up 0.2s ease-out;
+  --animate-pulse-glow: pulse-glow 2s ease-in-out infinite;
+  --animate-slide-in: slide-in 0.5s ease-out;
+  --animate-fade-in: fade-in 0.3s ease-out;
+  --animate-scale-in: scale-in 0.3s ease-out;
+  --animate-slide-up: slide-up 0.4s ease-out;
+  --animate-wiggle: wiggle 0.5s ease-in-out;
+  --animate-pulse-ring: pulse-ring 1.5s cubic-bezier(0.215, 0.61, 0.355, 1) infinite;
+  --animate-gauge-rotate: gauge-rotate 0.5s ease-out;
+  --animate-stagger-in: stagger-in 0.4s ease-out;
+  --animate-shimmer: shimmer 2s linear infinite;
+  --animate-bounce-subtle: bounce-subtle 2s ease-in-out infinite;
+  --animate-rotate-in: rotate-in 0.3s ease-out;
+}
 
 /*
   The default border color has changed to `currentcolor` in Tailwind CSS v4,
   so we've added these compatibility styles to make sure everything still
   looks the same as it did with Tailwind CSS v3.
-
+*/
   If we ever want to remove these styles, we need to add an explicit border
   color utility to any element that depends on these defaults.
 */
@@ -18,6 +161,104 @@
   ::file-selector-button {
     border-color: var(--color-gray-200, currentcolor);
   }
+}
+
+@utility hover-scale {
+  transition: transform 0.2s ease-out;
+  &:hover {
+    transform: scale(1.02);
+  }
+}
+
+@utility hover-lift {
+  transition: all 0.3s ease-out;
+  &:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-hover);
+  }
+}
+
+@utility scrollbar-hide {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+  &::-webkit-scrollbar {
+    display: none;
+  }
+}
+
+@utility touch-target {
+  min-height: 44px;
+  min-width: 44px;
+}
+
+@utility pt-safe {
+  padding-top: env(safe-area-inset-top);
+}
+
+@utility pb-safe {
+  padding-bottom: env(safe-area-inset-bottom);
+}
+
+@utility px-safe {
+  padding-left: env(safe-area-inset-left);
+  padding-right: env(safe-area-inset-right);
+}
+
+@utility py-safe {
+  padding-top: env(safe-area-inset-top);
+  padding-bottom: env(safe-area-inset-bottom);
+}
+
+@utility p-safe {
+  padding-top: env(safe-area-inset-top);
+  padding-bottom: env(safe-area-inset-bottom);
+  padding-left: env(safe-area-inset-left);
+  padding-right: env(safe-area-inset-right);
+}
+
+@utility animate-delay-0 { animation-delay: 0ms; }
+@utility animate-delay-1 { animation-delay: 50ms; }
+@utility animate-delay-2 { animation-delay: 100ms; }
+@utility animate-delay-3 { animation-delay: 150ms; }
+@utility animate-delay-4 { animation-delay: 200ms; }
+@utility animate-delay-5 { animation-delay: 250ms; }
+@utility animate-delay-6 { animation-delay: 300ms; }
+@utility animate-delay-7 { animation-delay: 350ms; }
+@utility animate-delay-8 { animation-delay: 400ms; }
+@utility animate-delay-9 { animation-delay: 450ms; }
+@utility animate-delay-10 { animation-delay: 500ms; }
+
+@utility card-hover {
+  transition: all 0.2s ease-out;
+  &:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1);
+  }
+}
+
+@utility glass {
+  background: rgba(255, 255, 255, 0.7);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+}
+
+@utility glass-hover {
+  transition: all 0.3s ease;
+  &:hover {
+    background: rgba(255, 255, 255, 0.8);
+    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+    transform: translateY(-1px);
+  }
+}
+
+@utility glass-dark {
+  background: rgba(17, 24, 39, 0.7);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.3), 0 2px 4px -1px rgba(0, 0, 0, 0.1);
 }
 
 @utility animate-fade-in {

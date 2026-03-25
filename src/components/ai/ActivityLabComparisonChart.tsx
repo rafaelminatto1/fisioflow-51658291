@@ -121,6 +121,7 @@ export const ActivityLabComparisonChart: React.FC<
 									padding: "12px",
 								}}
 								itemStyle={{ fontSize: "12px", fontWeight: "bold" }}
+								// @ts-expect-error -- recharts v3 formatter type
 								formatter={(value: number) => [`${value.toFixed(2)} kg`]}
 							/>
 							<Legend verticalAlign="top" height={36} />

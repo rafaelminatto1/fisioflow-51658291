@@ -5,22 +5,8 @@
     {
       "idx": 0,
       "version": "7",
-      "when": 1773537784114,
-      "tag": "0000_nebulous_ironclad",
-      "breakpoints": true
-    },
-    {
-      "idx": 1,
-      "version": "7",
-      "when": 1773697166972,
-      "tag": "0001_numerous_bastion",
-      "breakpoints": true
-    },
-    {
-      "idx": 2,
-      "version": "7",
-      "when": 1773717334268,
-      "tag": "9999_add_accountability_to_tarefas",
+      "when": 1774462264737,
+      "tag": "0000_overjoyed_gorgon",
       "breakpoints": true
     }
   ]

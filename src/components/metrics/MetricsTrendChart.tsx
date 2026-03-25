@@ -101,6 +101,7 @@ const MetricsTrendChart: React.FC<MetricsTrendChartProps> = ({
 								labelFormatter={(label, payload) =>
 									payload[0]?.payload.fullDate || label
 								}
+								// @ts-expect-error -- recharts v3 formatter type
 								formatter={(value: number) => [
 									value.toFixed(2),
 									selectedMetricInfo?.label,
