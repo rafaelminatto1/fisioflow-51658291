@@ -12,6 +12,7 @@
     "test:unit": "echo \"no unit tests\""
   },
   "dependencies": {
-    "drizzle-orm": "^0.45.1"
+    "drizzle-orm": "^0.45.1",
+    "recharts": "^2.15.4"
   }
 }
