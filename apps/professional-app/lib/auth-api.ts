@@ -1,5 +1,4 @@
 import { fetchApi } from './api';
-import * as SecureStore from 'expo-secure-store';
 import { getToken, setToken, clearToken } from './token-storage';
 
 export interface AuthResponse {

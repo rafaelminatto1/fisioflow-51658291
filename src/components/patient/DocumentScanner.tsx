@@ -52,7 +52,7 @@ export const DocumentScanner = ({
 
 			onScanComplete(text);
 			setPreview(null);
-		} catch (_err) {
+		} catch  {
 			toast({
 				title: "Erro no Scanner",
 				description: "Não foi possível ler o documento.",

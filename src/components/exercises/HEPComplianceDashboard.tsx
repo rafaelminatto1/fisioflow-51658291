@@ -66,12 +66,7 @@ function PlanComplianceCard({ planId }: { planId: string }) {
 	if (isLoading) return <Skeleton className="h-32 w-full" />;
 	if (!data) return null;
 
-	const rateColor =
-		data.rate >= 70
-			? "text-green-600"
-			: data.rate >= 40
-				? "text-yellow-600"
-				: "text-red-600";
+	
 
 	return (
 		<Card>

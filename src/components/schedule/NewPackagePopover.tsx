@@ -63,8 +63,7 @@ export function NewPackagePopover({
 		data: templates,
 		isLoading: isLoadingTemplates,
 		isError,
-		error,
-	} = useSessionPackages();
+		} = useSessionPackages();
 	const { mutateAsync: purchasePackage, isPending: isPurchasing } =
 		usePurchasePackage();
 	const isPresetMode = Boolean(presetPackage);

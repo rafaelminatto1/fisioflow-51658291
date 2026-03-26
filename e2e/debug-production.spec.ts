@@ -1,4 +1,4 @@
-import { test, expect } from '@playwright/test';
+import { test } from '@playwright/test';
 import { testUsers } from './fixtures/test-data';
 
 test.describe('Debug Produção - moocafisio.com.br', () => {

@@ -1,4 +1,4 @@
-import { Agent, routeAgentRequest, callable } from "agents";
+import { Agent, callable } from "agents";
 import type { Env } from "../types/env";
 import { callGemini } from "../lib/ai-gemini";
 
@@ -104,7 +104,7 @@ export class PatientAgent extends Agent<Env, RetentionState> {
         draftMessage: message,
         suggestedAction: "Rascunho pronto para revisão.",
       });
-    } catch (e) {
+    } catch  {
       this.setState({
         ...this.state,
         suggestedAction: "Erro ao gerar rascunho via IA.",

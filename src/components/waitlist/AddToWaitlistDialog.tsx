@@ -98,7 +98,7 @@ export function AddToWaitlistDialog({
 			setSelectedPeriods([]);
 			setPriority("normal");
 			setNotes("");
-		} catch (error) {
+		} catch  {
 			// Error handled by mutation
 		}
 	};

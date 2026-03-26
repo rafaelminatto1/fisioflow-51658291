@@ -157,7 +157,7 @@ export default function GamificationShopPage() {
 
 			// Refresh the gamification data
 			// The actual implementation would update the database
-		} catch (_error) {
+		} catch  {
 			toast({
 				title: "Erro na compra",
 				description: "Não foi possível completar a compra. Tente novamente.",

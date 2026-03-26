@@ -33,7 +33,7 @@ app.get('/categories', async (c) => {
 // ===== LISTA DE EXERCÍCIOS =====
 app.get('/', async (c) => {
   const db = await createDb(c.env);
-  const { q, category, difficulty, bodyPart, page = '1', limit = '20' } = c.req.query();
+  const { q, category, difficulty, page = '1', limit = '20' } = c.req.query();
 
   const pageNum = Math.max(1, parseInt(page));
   const limitNum = Math.min(500, Math.max(1, parseInt(limit)));

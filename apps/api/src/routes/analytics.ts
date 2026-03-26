@@ -27,7 +27,7 @@ type PainRegionRow = {
 app.get('/dashboard', requireAuth, async (c) => {
   const user = c.get('user');
   const pool = await createPool(c.env);
-  const period = c.req.query('period') || 'month';
+  
   const endDate = parseDate(c.req.query('endDate')) ?? new Date().toISOString().split('T')[0];
   const startDate = parseDate(c.req.query('startDate')) ?? (() => {
     const now = new Date();

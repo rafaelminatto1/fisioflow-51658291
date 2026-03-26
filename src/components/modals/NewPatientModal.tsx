@@ -186,8 +186,7 @@ export const NewPatientModal: React.FC<NewPatientModalProps> = ({
 		setValue,
 		formState: { errors, isSubmitting, isValid, isDirty },
 		reset,
-		trigger,
-	} = form;
+		} = form;
 
 	const watchedBirthDate = watch("birth_date");
 	const watchedPhone = watch("phone");

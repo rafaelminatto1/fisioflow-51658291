@@ -9,7 +9,6 @@ import {
 	jsonb,
 	pgEnum,
 } from "drizzle-orm/pg-core";
-import { relations } from "drizzle-orm";
 
 export const taskPriorityEnum = pgEnum("task_priority", [
 	"low",

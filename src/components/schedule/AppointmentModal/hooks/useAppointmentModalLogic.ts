@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useCallback, useRef } from "react";
 import { UseFormReturn } from "react-hook-form";
-import { parseISO, format } from "date-fns";
+import { parseISO } from "date-fns";
 import { toast } from "sonner";
 import { SimpleCache } from "@/lib/utils";
 import { useAvailableTimeSlots } from "@/hooks/useAvailableTimeSlots";
@@ -282,7 +282,7 @@ export const useAppointmentModalLogic = ({
 			toast.warning("Agendamento confirmado acima da capacidade configurada.");
 			setCapacityDialogOpen(false);
 			setPendingFormData(null);
-		} catch (error: any) {
+		} catch  {
 			toast.error("Erro ao confirmar agendamento.");
 		}
 	};

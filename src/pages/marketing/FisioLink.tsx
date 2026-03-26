@@ -117,7 +117,7 @@ export default function FisioLinkPage() {
 			} else {
 				throw new Error(result.error || "Falha ao gerar");
 			}
-		} catch (error) {
+		} catch  {
 			toast.error("Erro ao gerar bio com IA");
 		} finally {
 			setIsGeneratingAI(false);
@@ -133,7 +133,7 @@ export default function FisioLinkPage() {
 			});
 			setSlug(newSlug);
 			toast.success("FisioLink configurado com sucesso");
-		} catch (_error) {
+		} catch  {
 			toast.error("Erro ao salvar configuração");
 		} finally {
 			setSaving(false);

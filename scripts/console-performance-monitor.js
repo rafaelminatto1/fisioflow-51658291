@@ -16,12 +16,7 @@
   console.log('');
 
   // Armazenar métricas
-  const metrics = {
-    renders: new Map(),
-    queries: [],
-    navigation: [],
-    interactions: []
-  };
+  
 
   // 1. Monitor de Core Web Vitals
   console.log('%c📊 Core Web Vitals Monitor', 'font-size: 16px; font-weight: bold; color: #2196F3;');
@@ -38,7 +33,7 @@
         console.log(`${status} LCP: ${lcp.toFixed(0)}ms ${lcp < 2500 ? '(Excelente!)' : lcp < 4000 ? '(Bom)' : '(Precisa melhorar)'}`);
       });
       lcpObserver.observe({ entryTypes: ['largest-contentful-paint'] });
-    } catch (e) {
+    } catch  {
       console.log('⚠️ LCP observer não disponível');
     }
 
@@ -53,7 +48,7 @@
         });
       });
       fidObserver.observe({ entryTypes: ['first-input'] });
-    } catch (e) {
+    } catch  {
       console.log('⚠️ FID observer não disponível');
     }
 
@@ -70,7 +65,7 @@
         console.log(`${status} CLS: ${clsValue.toFixed(3)} ${clsValue < 0.1 ? '(Excelente!)' : clsValue < 0.25 ? '(Bom)' : '(Precisa melhorar)'}`);
       });
       clsObserver.observe({ entryTypes: ['layout-shift'] });
-    } catch (e) {
+    } catch  {
       console.log('⚠️ CLS observer não disponível');
     }
   }

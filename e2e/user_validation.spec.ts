@@ -113,7 +113,7 @@ test.describe('Validação de Usuário e Fluxo de Paciente', () => {
           console.log('Aviso de capacidade atingida detectado. Confirmando agendamento extra...');
           const confirmBtn = page.locator('button:has-text("Agendar Mesmo Assim")').or(page.locator('button:has-text("Confirmar")'));
           await confirmBtn.first().click();
-      } catch (e) {
+      } catch  {
           // Dialog didn't appear, which is fine
       }
       

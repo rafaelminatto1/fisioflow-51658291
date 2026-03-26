@@ -38,7 +38,7 @@ test.describe('Production Validation - FisioFlow (Official Domain)', () => {
     try {
       await page.waitForURL('**/dashboard', { timeout: 15000 });
       console.log('Successfully navigated to dashboard');
-    } catch (e) {
+    } catch  {
       console.log('Navigation to dashboard timed out, but continuing check...');
     }
 

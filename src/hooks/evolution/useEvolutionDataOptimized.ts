@@ -162,7 +162,6 @@ export const evolutionKeys = {
 export function useEvolutionDataOptimized(options: EvolutionDataOptions) {
 	const {
 		patientId,
-		appointmentId,
 		activeTab,
 		loadStrategy = "tab-based", // Default to tab-based loading
 		loadHistoricalData = false,

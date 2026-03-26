@@ -53,7 +53,7 @@ export const BulkOperations: React.FC<BulkOperationsProps> = ({
 }) => {
 	const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
 	const [isAllSelected, setIsAllSelected] = useState(false);
-	const [showActions, setShowActions] = useState(false);
+	const [,setShowActions] = useState(false);
 	const [actionInProgress, setActionInProgress] = useState<BulkAction | null>(
 		null,
 	);
@@ -62,23 +62,7 @@ export const BulkOperations: React.FC<BulkOperationsProps> = ({
 	const totalCount = appointments.length;
 
 	// Toggle seleção individual
-	const toggleSelection = useCallback(
-		(id: string) => {
-			setSelectedIds((prev) => {
-				const next = new Set(prev);
-				if (next.has(id)) {
-					next.delete(id);
-				} else {
-					next.add(id);
-				}
-				setIsAllSelected(
-					next.size === appointments.length - 1 && !next.has(id),
-				);
-				return next;
-			});
-		},
-		[appointments.length],
-	);
+	
 
 	// Toggle seleção de todos
 	const toggleSelectAll = useCallback(() => {
@@ -183,12 +167,7 @@ export const BulkOperations: React.FC<BulkOperationsProps> = ({
 		return appointments.filter((a) => selectedIds.has(a.id || ""));
 	}, [appointments, selectedIds]);
 
-	const commonStatus = useMemo(() => {
-		const statuses = new Set(
-			selectedAppointments.map((a) => a.status).filter(Boolean),
-		);
-		return statuses.size === 1 ? Array.from(statuss)[0] : null;
-	}, [selectedAppointments]);
+	
 
 	return (
 		<div className={cn("space-y-4", className)}>

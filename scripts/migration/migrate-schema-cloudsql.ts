@@ -4,8 +4,6 @@
  */
 
 import { Pool } from 'pg';
-import * as fs from 'fs';
-import * as path from 'path';
 
 const CLOUD_SQL_CONNECTION_STRING = process.env.CLOUD_SQL_CONNECTION_STRING;
 

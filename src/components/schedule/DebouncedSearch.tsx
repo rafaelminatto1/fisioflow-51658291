@@ -302,7 +302,6 @@ export const DebouncedSearchAdvanced = memo(
 		const {
 			suggestions = [],
 			onSuggestionClick,
-			showSuggestions = true,
 			...searchProps
 		} = props;
 

@@ -146,7 +146,7 @@ export const ExerciseExecutionScreen: React.FC<
 				// Enviar para o hook de execução
 				onPoseFrame(pose);
 			}
-		} catch (err) {
+		} catch  {
 			// Ignorar erros ocasionais de frame
 		}
 

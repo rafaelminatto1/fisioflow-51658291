@@ -59,7 +59,7 @@ export default function ProfileEditScreen() {
   const { light, medium, success, error } = useHaptics();
   const queryClient = useQueryClient();
 
-  const [isLoading, setIsLoading] = useState(false);
+  const [,setIsLoading] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [avatarUri, setAvatarUri] = useState<string | null>(null);
 
@@ -191,14 +191,14 @@ export default function ProfileEditScreen() {
           await updateMutation.mutateAsync({ avatarUrl: downloadUrl } as any);
           success();
           Alert.alert('Sucesso', 'Foto atualizada!');
-        } catch (uploadErr) {
+        } catch  {
           error();
           Alert.alert('Erro', 'Não foi possível salvar a imagem no servidor.');
         } finally {
           setIsSaving(false);
         }
       }
-    } catch (err) {
+    } catch  {
       error();
       Alert.alert('Erro', 'Não foi possível selecionar a imagem.');
     }

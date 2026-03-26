@@ -1,6 +1,5 @@
 import { Card, CardContent } from "@/components/ui/card";
 import { Link2, Clock, CheckCircle, Users, Activity } from "lucide-react";
-import type { Precadastro, PrecadastroToken } from "@/api/v2";
 
 interface StatsProps {
 	tokens: PreCadastroToken[];

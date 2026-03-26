@@ -230,30 +230,12 @@ export default function AtestadosPage() {
 				toast({ title: "PDF gerado com sucesso!" });
 				setIsPDFDialogOpen(false);
 			}
-		} catch (error) {
+		} catch  {
 			toast({ title: "Erro ao gerar PDF.", variant: "destructive" });
 		}
 	};
 
-	const processTemplateContent = (
-		content: string,
-		patient:
-			| { name?: string; cpf?: string; phone?: string; email?: string }
-			| undefined,
-	): string => {
-		const now = new Date();
-		return content
-			.replace(/#cliente-nome/g, patient?.name || "")
-			.replace(/#cliente-cpf/g, patient?.cpf || "")
-			.replace(/#data-hoje/g, now.toLocaleDateString("pt-BR"))
-			.replace(
-				/#hora-atual/g,
-				now.toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" }),
-			)
-			.replace(/#clinica-cidade/g, user?.clinic?.city || "")
-			.replace(/#profissional-nome/g, user?.professional?.name || "")
-			.replace(/#profissional-registro/g, user?.professional?.crf || "");
-	};
+	
 
 	return (
 		<MainLayout>

@@ -11,8 +11,6 @@ import {
 	Plus,
 	FileText,
 	Star,
-	Clock,
-	Sparkles,
 	History,
 	Library,
 } from "lucide-react";
@@ -126,7 +124,6 @@ export default function WikiPage() {
 		pages,
 		categories,
 		favorites,
-		recentPages,
 		isLoading,
 		savePage,
 		deletePage,
@@ -138,8 +135,7 @@ export default function WikiPage() {
 		handleTriageDragEnd,
 		handleQuickStatusChange,
 		hasActiveTriageFilters,
-		triagePages,
-	} = useWikiTriage(pages, currentOrganizationId, currentUserId);
+		} = useWikiTriage(pages, currentOrganizationId, currentUserId);
 
 	const {
 		knowledgeStats,
@@ -323,20 +319,12 @@ export default function WikiPage() {
 				setActiveView("page");
 				navigate(`/wiki/${page.slug}`);
 			}
-		} catch (err) {
+		} catch  {
 			// Toast já exibido no hook
 		}
 	};
 
-	const openAnnotationDialog = (article: KnowledgeArticle) => {
-		setActiveArticle(article);
-		setAnnotationScope("organization");
-		setAnnotationStatus(
-			(curationMap.get(article.id)?.status as KnowledgeCurationStatus) ||
-				"pending",
-		);
-		setAnnotationNotes(curationMap.get(article.id)?.notes || "");
-	};
+	
 
 	const onSaveAnnotation = async () => {
 		if (!activeArticle) return;
@@ -350,7 +338,7 @@ export default function WikiPage() {
 				notes: annotationNotes,
 			});
 			setActiveArticle(null);
-		} catch (err) {
+		} catch  {
 			// Erro já tratado no hook
 		}
 	};

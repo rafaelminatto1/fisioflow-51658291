@@ -280,7 +280,7 @@ export const RichTextToolbar: React.FC<RichTextToolbarProps> = ({
 		try {
 			await navigator.clipboard.writeText(editor.getText());
 			toast.success("Texto copiado.");
-		} catch (error) {
+		} catch  {
 			toast.error("Não foi possível copiar o texto.");
 		}
 	};
@@ -449,7 +449,7 @@ export const RichTextToolbar: React.FC<RichTextToolbarProps> = ({
 		let processedFile: File;
 		try {
 			processedFile = await resizeAndCompressImage(pendingImageFile);
-		} catch (error) {
+		} catch  {
 			toast.error("Não foi possível processar a imagem.");
 			setIsUploading(false);
 			return;
@@ -463,7 +463,7 @@ export const RichTextToolbar: React.FC<RichTextToolbarProps> = ({
 			editor.chain().focus().setImage({ src: result.url }).run();
 			toast.success("Imagem inserida.");
 			handleClosePreview();
-		} catch (error) {
+		} catch  {
 			toast.error("Erro ao enviar imagem.");
 			setIsUploading(false);
 		}

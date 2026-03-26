@@ -1,7 +1,6 @@
 import React, { useState, useEffect, useRef } from "react";
 import { Input } from "@/components/ui/input";
-import { Button } from "@/components/ui/button";
-import { Check, Stethoscope, Plus, Search, Loader2 } from "lucide-react";
+import { Check, Plus, Search, Loader2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useSearchDoctors } from "@/hooks/useDoctors";
 import type { Doctor } from "@/types/doctor";
@@ -25,7 +24,7 @@ export function DoctorAutocomplete({
 }: DoctorAutocompleteProps) {
 	const [open, setOpen] = useState(false);
 	const [searchTerm, setSearchTerm] = useState(value);
-	const [isFocused, setIsFocused] = useState(false);
+	const [,setIsFocused] = useState(false);
 	const containerRef = useRef<HTMLDivElement>(null);
 
 	const { data: doctors = [], isLoading } = useSearchDoctors(

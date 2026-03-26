@@ -110,7 +110,7 @@ export const SessionEvolutionContainer: React.FC<
 	const [patient, setPatient] = useState<Record<string, unknown> | null>(null);
 
 	const [, setAppointment] = useState<Record<string, unknown> | null>(null);
-	const [appointmentLoadedFromApi, setAppointmentLoadedFromApi] =
+	const [,setAppointmentLoadedFromApi] =
 		useState(false);
 	const [activeTab, setActiveTab] = useState("evolution");
 	const [viewVersion, setViewVersion] = useState<
@@ -363,7 +363,7 @@ export const SessionEvolutionContainer: React.FC<
 		} finally {
 			setIsLoading(false);
 		}
-		// eslint-disable-next-line react-hooks/exhaustive-deps
+		 
 	}, [appointmentId, propPatientId, testsCompleted, toast, user]);
 
 	useEffect(() => {
@@ -583,7 +583,7 @@ export const SessionEvolutionContainer: React.FC<
 							timestamp: new Date().toISOString(),
 						},
 					});
-				} catch (e) {
+				} catch  {
 					/* silent fail */
 				}
 			} else {
@@ -606,7 +606,7 @@ export const SessionEvolutionContainer: React.FC<
 							timestamp: new Date().toISOString(),
 						},
 					});
-				} catch (e) {
+				} catch  {
 					/* silent fail */
 				}
 			}

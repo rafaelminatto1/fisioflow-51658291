@@ -3,7 +3,7 @@
  * URL: https://moocafisio.com.br
  * Usa storageState do global-setup (já autenticado via Neon Auth HTTP)
  */
-import { test, expect, type Page } from '@playwright/test';
+import { test, expect } from '@playwright/test';
 
 const BASE_URL = 'https://moocafisio.com.br';
 

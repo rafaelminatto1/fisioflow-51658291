@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useTransition, memo } from "react";
+import React, { useEffect, useTransition, memo } from "react";
 import {
 	CustomModal,
 	CustomModalHeader,

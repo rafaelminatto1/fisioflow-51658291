@@ -311,7 +311,7 @@ export const VoiceAppointmentAssistant: React.FC<
 	});
 
 	const [showSettings, setShowSettings] = useState(false);
-	const [availableLanguages, setAvailableLanguages] = useState<string[]>([]);
+	const [,setAvailableLanguages] = useState<string[]>([]);
 
 	const recognitionRef = useRef<any>(null);
 	const parserRef = useRef<VoiceCommandParser | null>(null);

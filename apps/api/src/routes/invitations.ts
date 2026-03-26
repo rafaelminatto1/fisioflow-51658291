@@ -12,7 +12,7 @@ app.get('/', requireAuth, async (c) => {
     `SELECT * FROM user_invitations WHERE organization_id = $1 ORDER BY created_at DESC`,
     [user.organizationId]
   );
-  try { return c.json({ data: result.rows || result }); } catch(e) { return c.json({ data: [] }); }
+  try { return c.json({ data: result.rows || result }); } catch { return c.json({ data: [] }); }
 });
 
 app.post('/', requireAuth, async (c) => {
