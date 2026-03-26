@@ -122,25 +122,47 @@ jobs:
           cp "$PROFILE_PATH" ~/Library/MobileDevice/Provisioning\ Profiles/
 
       # ── 7. xcodebuild archive ─────────────────────────────────────────────
+      - name: Detectar workspace e schemes disponíveis
+        working-directory: apps/${{ inputs.app }}/ios
+        run: |
+          echo "=== Estrutura do diretório iOS ==="
+          ls -la
+          echo ""
+          echo "=== .xcworkspace encontrados ==="
+          ls -d *.xcworkspace 2>/dev/null || echo "NENHUM .xcworkspace encontrado!"
+          echo ""
+          # Detecta workspace (usa -d para listar o dir, não o conteúdo)
+          WORKSPACE=$(ls -d *.xcworkspace 2>/dev/null | head -1)
+          if [ -z "$WORKSPACE" ]; then
+            echo "ERRO: Nenhum .xcworkspace no diretório iOS"
+            exit 1
+          fi
+          SCHEME=$(echo "$WORKSPACE" | sed 's/\.xcworkspace//')
+          echo "=== Workspace: $WORKSPACE | Scheme: $SCHEME ==="
+          echo "=== Schemes disponíveis ==="
+          xcodebuild -workspace "$WORKSPACE" -list 2>&1 | grep -A20 "Schemes:" || true
+
       - name: Build & Archive
         working-directory: apps/${{ inputs.app }}/ios
         env:
           APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
           PROFILE_NAME: ${{ inputs.app == 'patient-app' && secrets.APPLE_PROVISIONING_PROFILE_PACIENTES_NAME || secrets.APPLE_PROVISIONING_PROFILE_PROFISSIONAIS_NAME }}
         run: |
-          SCHEME=$(ls *.xcworkspace | head -1 | sed 's/.xcworkspace//')
-          echo "Scheme detectado: $SCHEME"
+          # -d para pegar o diretório .xcworkspace, não seu conteúdo
+          WORKSPACE=$(ls -d *.xcworkspace | head -1)
+          SCHEME=$(echo "$WORKSPACE" | sed 's/\.xcworkspace//')
+          echo "Workspace: $WORKSPACE"
+          echo "Scheme: $SCHEME"
 
           xcodebuild \
-            -workspace "$SCHEME.xcworkspace" \
+            -workspace "$WORKSPACE" \
             -scheme "$SCHEME" \
             -configuration Release \
             -archivePath "$RUNNER_TEMP/app.xcarchive" \
             archive \
             CODE_SIGN_STYLE=Manual \
             DEVELOPMENT_TEAM="$APPLE_TEAM_ID" \
-            PROVISIONING_PROFILE_SPECIFIER="$PROFILE_NAME" \
-            | xcpretty --color || true
+            PROVISIONING_PROFILE_SPECIFIER="$PROFILE_NAME"
 
       # ── 8. Exportar IPA ───────────────────────────────────────────────────
       - name: Exportar IPA (ad-hoc)
