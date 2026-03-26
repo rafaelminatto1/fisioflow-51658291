@@ -26,25 +26,15 @@ export function useProtocolFilters(protocols: ExerciseProtocol[]) {
 						if (p.protocol_type !== "pos_operatorio") return false;
 						break;
 					case "Tratamento Conservador":
-						if (p.protocol_type !== "patologia") return false;
+						if (p.protocol_type !== "conservador" && p.protocol_type !== "patologia")
+							return false;
 						break;
-					case "Reabilitação Esportiva": {
-						const isSports =
-							includesTerm(p.condition_name, "esport") ||
-							includesTerm(p.name, "esport") ||
-							includesTerm(p.name, "atleta");
-						if (!isSports) return false;
+					case "Reabilitação Esportiva":
+						if (p.protocol_type !== "esportivo") return false;
 						break;
-					}
-					case "Idosos e Geriatria": {
-						const isElderly =
-							includesTerm(p.condition_name, "idoso") ||
-							includesTerm(p.name, "idoso") ||
-							includesTerm(p.condition_name, "geriatria") ||
-							includesTerm(p.name, "geriatria");
-						if (!isElderly) return false;
+					case "Idosos e Geriatria":
+						if (p.protocol_type !== "geriatria") return false;
 						break;
-					}
 				}
 			}
 
