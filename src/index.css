@@ -1,4 +1,6 @@
 @import "tailwindcss";
+@source "./**/*.{ts,tsx,js,jsx}";
+@source "../packages/**/*.{ts,tsx,js,jsx}";
 @plugin "tailwindcss-animate";
 @theme {
   --font-sans: 'Inter', ui-sans-serif, system-ui, sans-serif;
@@ -193,11 +195,13 @@
 @utility animate-delay-9 { animation-delay: 450ms; }
 @utility animate-delay-10 { animation-delay: 500ms; }
 @utility card-hover {
-  transition: all 0.2s ease-out;
+  transition: all var(--duration-base) var(--ease-in-out-quart);
   &:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1);
+    transform: translateY(-4px) scale(1.02);
+    box-shadow: var(--shadow-premium-xl);
+    border-color: hsl(var(--primary) / 0.3);
   }
+}
 }
 @utility glass {
   background: rgba(255, 255, 255, 0.7);
