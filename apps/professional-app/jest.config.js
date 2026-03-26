@@ -12,7 +12,7 @@ module.exports = {
   transformIgnorePatterns: [
     'node_modules/(?!(@react-native|react-native|expo|@expo|react-native-reanimated|react-native-gesture-handler|expo-router|@react-native-async-storage|@react-native-community|@tanstack|date-fns|zustand|@shopify|@testing-library)/)',
   ],
-  setupFilesAfterFramework: ['@testing-library/react-native/extend-expect'],
+  setupFilesAfterEnv: ['@testing-library/react-native/extend-expect'],
   moduleFileExtensions: ['ts', 'tsx', 'js', 'jsx', 'json'],
   collectCoverageFrom: [
     'app/**/*.{ts,tsx}',

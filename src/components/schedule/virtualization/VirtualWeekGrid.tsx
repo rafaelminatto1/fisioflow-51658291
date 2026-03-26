@@ -386,7 +386,13 @@ TimeSlotRow.displayName = "TimeSlotRow";
 				totalMinutesFromStart / BUSINESS_HOURS.DEFAULT_SLOT_DURATION,
 			);
 
-			listRef.current?.scrollToRow?.(rowIndex, "start") ?? listRef.current?.scrollToItem?.(rowIndex, "start");
+			if (typeof rowIndex === "number" && isFinite(rowIndex) && rowIndex >= 0) {
+				if (listRef.current?.scrollToRow) {
+					listRef.current.scrollToRow({ rowIndex, align: "start" });
+				} else {
+					listRef.current?.scrollToItem?.(rowIndex, "start");
+				}
+			}
 		}, []);
 
 		// Auto-scroll na montagem

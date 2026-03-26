@@ -167,25 +167,6 @@ export default defineConfig(({ mode }) => {
 				//   minify: true, // Rolldown built-in minifier — habilitar quando Vite 8.1 estabilizar
 				//                 // substitui esbuild minify, ~2x mais rápido
 				// },
-				output: {
-					codeSplitting: {
-						minSize: 20000,
-						maxSize: 244000,
-						groups: [
-							{
-								name: "vendor-react",
-								test: /node_modules\/(react|framer-motion)/,
-							},
-							{ name: "vendor-pdf", test: /node_modules\/@react-pdf/ },
-							{ name: "vendor-jspdf", test: /node_modules\/jspdf/ },
-							{ name: "vendor-charts", test: /node_modules\/recharts/ },
-							{
-								name: "vendor-cornerstone",
-								test: /node_modules\/@cornerstonejs/,
-							},
-						],
-					},
-				},
 			},
 		},
 		optimizeDeps: {

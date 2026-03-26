@@ -1239,6 +1239,43 @@ export interface GamificationProfileRow {
 	updated_at: string;
 }
 
+export interface StaffPerformanceMetric {
+	id: string;
+	organization_id: string;
+	therapist_id: string;
+	therapist_name?: string;
+	total_appointments: number;
+	rebook_rate: number;
+	metric_date: string;
+}
+
+export interface PatientPrediction {
+	id: string;
+	patient_id: string;
+	no_show_probability: number;
+	risk_factors: string[];
+	recommended_actions: string[] | null;
+	prediction_date: string;
+	created_at: string;
+}
+
+export interface RevenueForecast {
+	id: string;
+	forecast_date: string;
+	predicted_revenue: number;
+	actual_revenue?: number;
+}
+
+export interface PatientSelfAssessment {
+	id: string;
+	patient_id: string;
+	pain_level: number;
+	mobility_score: number;
+	recovery_perception: number;
+	notes?: string;
+	created_at: string;
+}
+
 export interface DailyQuestRow {
 	id: string;
 	patient_id: string;
