@@ -19,7 +19,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import React, { useEffect, useCallback } from "react";
 import { QueryKeys } from "@/hooks/queryKeys";
 import { PatientService } from "@/services/patientService";
-import { soapRecordService } from "@/services/soapRecordService"; // Presumindo que exista
+// Presumindo que exista
 
 export function usePrefetchOnHover<T>(
 	queryKey: unknown[],

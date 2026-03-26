@@ -13,7 +13,7 @@
  * - Revalidate: Atualiza em background
  */
 
-const CACHE_NAME = "fisioflow-schedule-cache";
+
 const CACHE_VERSION = 1;
 const CACHE_DB_NAME = "fisioflow-db";
 const CACHE_STORE_NAME = "schedule-cache";

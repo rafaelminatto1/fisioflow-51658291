@@ -7,7 +7,6 @@ import {
 	beforeEach,
 	afterEach,
 	beforeAll,
-	afterAll,
 	expect,
 	it,
 	vi,
@@ -22,9 +21,7 @@ import {
 	clearCache,
 	clearByTags,
 	setMultipleCache,
-	getCacheSize,
 	getCacheStats,
-	CACHE_TAGS,
 	getCacheWithFallback,
 	prefetchCache,
 } from "../IndexedDBCache";

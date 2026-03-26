@@ -2,13 +2,8 @@ import React, { memo, useCallback } from "react";
 import { cn } from "@/lib/utils";
 import { Calendar, Ban } from "lucide-react";
 import { Appointment } from "@/types/appointment";
-import {
-	calculateCardWidthPercent,
-	calculateCardOffsetPercent,
-	shouldShowText,
-	MAX_CARDS_WITHOUT_BADGE,
-} from "@/lib/calendar/dragPreview";
-import { DropTargetPreviewCard } from "./DropTargetPreviewCard";
+
+
 
 interface TimeSlotCellProps {
 	day: Date;

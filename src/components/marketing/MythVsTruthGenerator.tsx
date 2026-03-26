@@ -125,7 +125,7 @@ export function MythVsTruthGenerator() {
 			} else {
 				throw new Error(result.error || "Erro na geração");
 			}
-		} catch (error) {
+		} catch  {
 			toast.error("Não foi possível gerar com IA no momento");
 		} finally {
 			setIsGeneratingAI(false);

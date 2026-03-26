@@ -1,5 +1,5 @@
 import { useDroppable } from "@dnd-kit/core";
-import { memo, useMemo } from "react";
+import { useMemo } from "react";
 import { cn } from "@/lib/utils";
 import { Calendar, Ban } from "lucide-react";
 import { Appointment } from "@/types/appointment";

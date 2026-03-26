@@ -10,7 +10,7 @@
  */
 
 import { execSync } from 'child_process';
-import { readFileSync, writeFileSync, copyFileSync, unlinkSync, existsSync } from 'fs';
+import { writeFileSync, unlinkSync, existsSync } from 'fs';
 import { fileURLToPath } from 'url';
 import { dirname, join } from 'path';
 
@@ -18,7 +18,7 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 const rootDir = join(__dirname, '..');
 const hookPath = join(rootDir, '.git', 'hooks', 'pre-commit');
-const hookSourcePath = join(__dirname, 'pre-commit.mjs');
+
 
 const args = process.argv.slice(2);
 

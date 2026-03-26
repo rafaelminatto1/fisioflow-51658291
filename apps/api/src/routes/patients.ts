@@ -3,11 +3,10 @@ import { eq, and, or, ilike, count, sql, desc, asc } from "drizzle-orm";
 import { patients } from "@fisioflow/db";
 import type { Env } from "../types/env";
 import { requireAuth, type AuthVariables } from "../lib/auth";
-import { createDb, createPool } from "../lib/db";
+import { createDb } from "../lib/db";
 import { triggerInngestEvent } from "../lib/inngest-client";
 import { registerPatientClinicalDetailRoutes } from "./patients/clinical-details";
 import {
-	type DbPool,
 	type DbRow,
 	type PatientPayload,
 	trimmedString,

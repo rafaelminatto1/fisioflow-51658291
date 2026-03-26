@@ -20,11 +20,11 @@ export default function ProtocolDetailScreen() {
   const colors = useColors();
   const router = useRouter();
   const params = useLocalSearchParams();
-  const { light, medium, success, error: hapticError } = useHaptics();
+  const { medium, success, error: hapticError } = useHaptics();
 
   const protocolId = params.protocolId as string;
   const { protocol, isLoading } = useProtocol(protocolId);
-  const { delete: deleteProtocol, duplicate: duplicateProtocol, isDeleting, isDuplicating } = useProtocols();
+  const { delete: deleteProtocol, duplicate: duplicateProtocol, isDeleting, } = useProtocols();
 
   const handleEdit = () => {
     medium();

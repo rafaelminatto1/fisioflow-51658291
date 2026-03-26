@@ -330,7 +330,7 @@ interface LazyWrapperProps {
  */
 export const LazyWrapper = memo(
 	({ children, fallback, delay = 200 }: LazyWrapperProps) => {
-		const [showFallback, setShowFallback] = useState(false);
+		const [,setShowFallback] = useState(false);
 
 		useEffect(() => {
 			const timer = setTimeout(() => setShowFallback(true), delay);

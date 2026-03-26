@@ -61,7 +61,7 @@ async function autoScreenshot() {
                     await page.waitForTimeout(1000);
                     break;
                 }
-            } catch (e) {
+            } catch  {
                 // Try next selector
             }
         }

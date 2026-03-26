@@ -206,7 +206,7 @@ app.get('/recall-campaigns', requireAuth, async (c) => {
     [user.organizationId],
   );
 
-  try { return c.json({ data: result.rows || result }); } catch(e) { return c.json({ data: [] }); }
+  try { return c.json({ data: result.rows || result }); } catch { return c.json({ data: [] }); }
 });
 
 app.post('/recall-campaigns', requireAuth, async (c) => {
@@ -521,7 +521,7 @@ app.get('/exports', requireAuth, async (c) => {
     params,
   );
 
-  try { return c.json({ data: result.rows || result }); } catch(e) { return c.json({ data: [] }); }
+  try { return c.json({ data: result.rows || result }); } catch { return c.json({ data: [] }); }
 });
 
 app.get('/content-calendar', requireAuth, async (c) => {
@@ -536,7 +536,7 @@ app.get('/content-calendar', requireAuth, async (c) => {
     [user.organizationId],
   );
 
-  try { return c.json({ data: result.rows || result }); } catch(e) { return c.json({ data: [] }); }
+  try { return c.json({ data: result.rows || result }); } catch { return c.json({ data: [] }); }
 });
 
 app.post('/content-calendar', requireAuth, async (c) => {

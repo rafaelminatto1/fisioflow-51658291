@@ -450,8 +450,12 @@ export interface PatientSurgery {
 export interface TherapistSummary {
 	id: string;
 	full_name: string;
+	name?: string;
+	role?: string;
 	specialty: string | null;
 	avatar_url: string | null;
+	birth_date?: string | null;
+	active?: boolean;
 }
 
 export interface FinancialMetric {
@@ -1398,13 +1402,18 @@ export interface GamificationStats {
 export interface AtRiskPatient {
 	patient_id: string;
 	patient_name?: string;
+	name?: string; // Alias
 	full_name?: string | null;
 	email?: string | null;
-	level: number;
+	level?: number;
 	lastActivity?: string;
 	last_activity_date?: string | null;
 	daysInactive?: number;
 	days_inactive?: number;
+	days_since_last?: number; // Alias
+	risk_score?: number;
+	avg_frequency?: number;
+	status?: string;
 }
 
 export interface PopularAchievement {
@@ -1456,4 +1465,41 @@ export interface PatientChallengeRow {
 	completed_at?: string | null;
 	created_at?: string;
 	updated_at?: string;
+}
+
+export interface DashboardResponse {
+	data: {
+		appointmentsToday: number;
+		pendingEvolutions: number;
+		whatsappConfirmationsPending: number;
+		financialToday: {
+			received: number;
+			projected: number;
+		};
+		revenueChart: Array<{
+			date: string;
+			revenue: number;
+		}>;
+		engagementScore: number;
+		noShowRate: number;
+		activePatients?: number;
+		monthlyRevenue?: number;
+		patientsAtRisk?: number;
+	};
+}
+
+export interface FinancialReportResponse {
+	data: {
+		summary: {
+			totalRevenue: number;
+			totalExpenses: number;
+			netProfit: number;
+			pendingPayments: number;
+		};
+		details: Array<{
+			category: string;
+			amount: number;
+			percentage: number;
+		}>;
+	};
 }

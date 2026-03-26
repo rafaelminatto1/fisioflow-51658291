@@ -6,9 +6,6 @@
 import { useAppointmentsData } from "./useAppointmentsData";
 import {
 	useUpdateAppointment,
-	useCreateAppointment,
-	useDeleteAppointment,
-	useUpdateAppointmentStatus,
 } from "./useAppointmentsMutations";
 
 export { appointmentKeys } from "./useAppointmentsData";

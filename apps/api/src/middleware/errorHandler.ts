@@ -1,7 +1,5 @@
-import type { Context } from 'hono';
 import { logToAxiom } from '../lib/axiom';
 import { QueryTimeoutError, DatabaseError } from '../lib/dbWrapper';
-import type { Env } from '../types/env';
 import type { CustomContext } from './requestId';
 
 export enum ErrorType {

@@ -15,8 +15,7 @@ import type { Env } from '../types/env';
 import { registerClinicalResourceRoutes } from './clinical/resources';
 import { 
   patientGoals, 
-  patientPathologies, 
-  patientSessionMetrics 
+  patientPathologies 
 } from '@fisioflow/db';
 import { eq, sql, desc } from 'drizzle-orm';
 

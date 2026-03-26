@@ -15,14 +15,8 @@ import {
 	ArrowDown,
 	Activity,
 	BarChart3,
-	Calendar,
-	ExternalLink,
-	Search,
-	Calculator,
 	Target,
 	Sparkles,
-	Share2,
-	MapPin,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import {
@@ -54,7 +48,7 @@ interface MarketingMetrics {
 export default function MarketingDashboard() {
 	const [metrics, setMetrics] = useState<MarketingMetrics | null>(null);
 	const [loading, setLoading] = useState(true);
-	const [error, setError] = useState<string | null>(null);
+	const [,setError] = useState<string | null>(null);
 
 	useEffect(() => {
 		const fetchMetrics = async () => {

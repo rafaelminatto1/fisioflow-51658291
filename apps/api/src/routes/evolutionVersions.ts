@@ -16,7 +16,7 @@ app.get('/', requireAuth, async (c) => {
     `SELECT * FROM evolution_versions WHERE soap_record_id = $1 ORDER BY saved_at DESC LIMIT $2`,
     [soapRecordId, MAX_VERSIONS]
   );
-  try { return c.json({ data: result.rows || result }); } catch(e) { return c.json({ data: [] }); }
+  try { return c.json({ data: result.rows || result }); } catch { return c.json({ data: [] }); }
 });
 
 app.post('/', requireAuth, async (c) => {

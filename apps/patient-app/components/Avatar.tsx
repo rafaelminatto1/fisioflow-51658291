@@ -50,7 +50,7 @@ export function Avatar({
   style,
   onPress,
 }: AvatarProps) {
-  const colors = useColors();
+  
   const avatarSize = SIZE_MAP[size];
   const fontSize = FONT_SIZE_MAP[size];
   const borderRadius = BORDER_RADIUS_MAP[variant];

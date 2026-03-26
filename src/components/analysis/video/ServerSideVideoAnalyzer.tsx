@@ -33,7 +33,7 @@ export const ServerSideVideoAnalyzer: React.FC<
 	const [videoUrl, setVideoUrl] = useState<string | null>(null);
 	const [isUploading, setIsUploading] = useState(false);
 	const [isAnalyzing, setIsAnalyzing] = useState(false);
-	const [uploadProgress, setUploadProgress] = useState(0);
+	const [,setUploadProgress] = useState(0);
 	const [result, setResult] = useState<AnalysisResult | null>(null);
 	const fileInputRef = useRef<HTMLInputElement>(null);
 

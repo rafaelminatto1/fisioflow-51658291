@@ -172,7 +172,7 @@ export class AnalysisEngine {
 
 		// Calcular largura dos ombros vs largura quadril
 		const shoulderWidth = Math.abs(leftShoulder.x - rightShoulder.x);
-		const hipWidth = Math.abs(leftHip.x - rightHip.x);
+		
 
 		// Se a largura dos ombros for muito pequena em relação à altura, está de lado
 		// Altura do tronco (aproximada)
@@ -216,7 +216,7 @@ export class AnalysisEngine {
 		const smoothedLandmarks = this.smoothLandmarks(poseDetection.landmarks);
 
 		// Detectar orientação
-		const orientation = this.detectOrientation(smoothedLandmarks);
+		
 
 		// Calcular ângulos de articulações
 		const jointAngles = this.calculateJointAngles(smoothedLandmarks);
@@ -367,7 +367,7 @@ export class AnalysisEngine {
 		const leftHip = landmarks[23];
 		const rightHip = landmarks[24];
 		const leftEar = landmarks[7];
-		const rightEar = landmarks[8];
+		
 
 		// Verificar alinhamento de cabeça
 		if (nose && leftShoulder && rightShoulder) {
@@ -489,7 +489,7 @@ export class AnalysisEngine {
 		if (current >= min && current <= max) {
 			return 0;
 		}
-		const range = max - min;
+		
 		const deviationFromMin = Math.max(0, min - current);
 		const deviationFromMax = Math.max(0, current - max);
 		return deviationFromMin + deviationFromMax;
@@ -778,7 +778,7 @@ export function calculateAngleDeviation(
 	if (current >= targetMin && current <= targetMax) {
 		return 0;
 	}
-	const range = targetMax - targetMin;
+	
 	const deviationFromMin = Math.max(0, targetMin - current);
 	const deviationFromMax = Math.max(0, current - targetMax);
 	return deviationFromMin + deviationFromMax;

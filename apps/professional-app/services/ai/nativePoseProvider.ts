@@ -23,7 +23,7 @@ const NativePoseModule: any = null;
 try {
   // Exemplo de importação dinâmica segura
   // NativePoseModule = require('my-native-pose-library');
-} catch (e) {
+} catch  {
   console.warn('[NativePoseProvider] Módulo nativo não encontrado. A IA rodará em modo simulado ou Webview.');
 }
 

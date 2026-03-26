@@ -52,7 +52,7 @@ const DEFAULT_OPTIONS: Required<SyncManagerOptions> = {
 export function SyncManager(userOptions: SyncManagerOptions = {}) {
 	const options = { ...DEFAULT_OPTIONS, ...userOptions };
 
-	const { stats, syncNow, isOnline, cacheCriticalData, startSync, stopSync } =
+	const { stats, syncNow, isOnline, cacheCriticalData, } =
 		useOfflineSync({
 			syncInterval: options.syncInterval,
 			showNotifications: options.showNotifications,

@@ -26,7 +26,7 @@ import { logger } from "@/lib/logging/logger";
 export function SemanticSearchPage() {
 	const navigate = useNavigate();
 	const [isEnabled, setIsEnabled] = useState<boolean | null>(null);
-	const [selectedEvolution, setSelectedEvolution] = useState<string | null>(
+	const [,setSelectedEvolution] = useState<string | null>(
 		null,
 	);
 

@@ -81,7 +81,7 @@ export class AnalysisEngine {
     const formScore = this.calculateFormScore(jointAnglesMap, postureIssues);
 
     // Detectar orientação
-    const orientation = this.detectOrientation(smoothedLandmarks);
+    
 
     // Calcular estabilidade
     const stabilityScore = this.calculateStability(jointAnglesMap);

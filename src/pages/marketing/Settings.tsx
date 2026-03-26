@@ -118,7 +118,7 @@ export default function MarketingSettingsPage() {
 		try {
 			await updateReviewAutomationConfig(organizationId, reviewConfig);
 			toast.success("Configuração de reviews salva com sucesso");
-		} catch (_error) {
+		} catch  {
 			toast.error("Erro ao salvar configuração de reviews");
 		} finally {
 			setSavingReview(false);
@@ -130,7 +130,7 @@ export default function MarketingSettingsPage() {
 		try {
 			await updateBirthdayAutomationConfig(organizationId, birthdayConfig);
 			toast.success("Configuração de aniversários salva com sucesso");
-		} catch (_error) {
+		} catch  {
 			toast.error("Erro ao salvar configuração de aniversários");
 		} finally {
 			setSavingBirthday(false);
@@ -271,7 +271,7 @@ export default function MarketingSettingsPage() {
 				days_without_visit: 180,
 				message_template: "",
 			});
-		} catch (_error) {
+		} catch  {
 			toast.error("Erro ao criar campanha de recall");
 		}
 	};

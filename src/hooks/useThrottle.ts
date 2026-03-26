@@ -21,7 +21,7 @@ interface ThrottleOptions {
  */
 export const useThrottle = <T>(value: T, delay: number): T => {
 	const [throttledValue, setThrottledValue] = useState(value);
-	const lastRan = useRef(Date.now());
+	
 
 	useEffect(() => {
 		const handler = setTimeout(() => {

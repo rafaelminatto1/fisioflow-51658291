@@ -22,7 +22,7 @@ import { Appointment } from '@/types/api';
 
 export default function AppointmentsScreen() {
   const colors = useColors();
-  const { user } = useAuthStore();
+  
   const [selectedTab, setSelectedTab] = useState<'upcoming' | 'past'>('upcoming');
 
   const { data: appointments = [], isLoading, isRefetching, refetch } = useAppointments();

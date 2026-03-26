@@ -120,7 +120,7 @@ export async function verifyToken<E extends { Bindings: Env }>(c: Context<E>, en
     const jwks = getJwks(jwksUrl);
     
     // Validacao Robusta:
-    const decoded = decodeJwt(token);
+    
     
     const verifyOptions: Parameters<typeof jwtVerify>[2] = {
       clockTolerance: '10m',

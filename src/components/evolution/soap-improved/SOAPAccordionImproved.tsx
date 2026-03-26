@@ -256,7 +256,7 @@ export const SOAPAccordionImproved: React.FC<SOAPAccordionImprovedProps> = ({
 				{/* SOAP Sections */}
 				<div className="p-4 space-y-3">
 					{SOAP_SECTIONS.map((section) => {
-						const Icon = section.icon;
+						
 						const wordCount = getWordCount(data[section.key]);
 						const isComplete = wordCount >= 10;
 						const isExpanded = expandedSections.includes(section.key);

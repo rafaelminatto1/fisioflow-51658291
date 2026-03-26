@@ -10,7 +10,7 @@ async function testFetch() {
         console.log('Auth success:', cred.user.uid);
 
         // Test AppointmentService.fetchAppointments
-        const testOrgId = '75815a4c-5af6-4bb6-b184-2a2ec962d3a3'; // Need to specify org ID or fetch it... let's just get the user's profile first
+         // Need to specify org ID or fetch it... let's just get the user's profile first
 
         // Actually we can just call appointmentsApi.list directly
         console.log('2. Chamando appointmentsApi.list()...');

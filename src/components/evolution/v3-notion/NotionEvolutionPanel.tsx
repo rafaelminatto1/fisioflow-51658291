@@ -24,8 +24,6 @@ import React, {
 	useState,
 } from "react";
 import {
-	FileText,
-	Save,
 	Loader2,
 	CheckCircle2,
 	CheckSquare,
@@ -34,7 +32,6 @@ import {
 	Paperclip,
 	ScanLine,
 	Mic,
-	MicOff,
 	RadioTower,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -277,7 +274,7 @@ const NotionEvolutionPanel: React.FC<NotionEvolutionPanelProps> = ({
 			if (Array.isArray(parsed) && parsed.length > 0) {
 				setChecklist(parsed);
 			}
-		} catch (error) {
+		} catch  {
 			// ignore
 		}
 	}, [checklistKey]);
@@ -404,7 +401,7 @@ const NotionEvolutionPanel: React.FC<NotionEvolutionPanelProps> = ({
 				activeEditor?.chain().focus().insertContent(linkHtml).run();
 			}
 			toast.success("Arquivo inserido.", { id: loadingToast });
-		} catch (error) {
+		} catch  {
 			toast.error("Erro ao enviar arquivo.", { id: loadingToast });
 		}
 	};

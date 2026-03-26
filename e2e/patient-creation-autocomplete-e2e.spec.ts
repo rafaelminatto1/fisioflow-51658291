@@ -126,7 +126,7 @@ test('fluxo completo: criar paciente e verificar autocomplete', async ({ page })
         // Tentar clique normal ou forçado
         try {
           await submitButton.click({ timeout: 5000, force: !isEnabled });
-        } catch (e) {
+        } catch  {
           console.log('⚠️  Clique normal falhou, tentando JavaScript...');
           await submitButton.evaluate((btn: any) => btn.click());
         }

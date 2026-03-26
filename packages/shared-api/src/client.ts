@@ -3,7 +3,7 @@
  * Unified, Type-safe API Client for FisioFlow
  */
 
-import { ApiResponse, ApiError } from './index';
+import { ApiError } from './index';
 
 export interface ClientConfig {
   baseUrl: string;

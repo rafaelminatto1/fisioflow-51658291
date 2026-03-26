@@ -117,7 +117,7 @@ interface LazyImageProps extends UseLazyImageOptions {
 }
 
 export const LazyImage: React.FC<LazyImageProps> = ({ alt, ...props }) => {
-	const { imgRef, isVisible, isLoaded, isError, imageProps } = useLazyImage({
+	const { imgRef, isLoaded, isError, imageProps } = useLazyImage({
 		alt,
 		...props,
 	});

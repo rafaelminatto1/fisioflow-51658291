@@ -14,7 +14,7 @@
 
   try {
     // Importar Firebase dinamicamente
-    const { getFirestore, collection, getDocs, doc, getDoc, query, where, limit } = await import('https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js');
+    const { doc, getDoc } = await import('https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js');
 
     // Obter instância do Firestore do window (se disponível) ou criar uma nova
     let db;

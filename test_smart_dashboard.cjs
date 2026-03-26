@@ -36,7 +36,7 @@ async function testSmartDashboard() {
           console.log(`✅ Campo de email encontrado com seletor: ${selector}`);
           break;
         }
-      } catch (e) {
+      } catch  {
         // Continuar para próximo seletor
       }
     }
@@ -69,7 +69,7 @@ async function testSmartDashboard() {
             console.log(`✅ Campo de senha encontrado com seletor: ${selector}`);
             break;
           }
-        } catch (e) {
+        } catch  {
           // Continuar para próximo seletor
         }
       }
@@ -101,7 +101,7 @@ async function testSmartDashboard() {
               console.log(`✅ Botão de login encontrado com seletor: ${selector}`);
               break;
             }
-          } catch (e) {
+          } catch  {
             // Continuar para próximo seletor
           }
         }

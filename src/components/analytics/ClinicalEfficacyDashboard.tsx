@@ -2,8 +2,6 @@ import React, { useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { analyticsApi } from "@/api/v2/insights";
 import { 
-	LineChart, 
-	Line, 
 	XAxis, 
 	YAxis, 
 	CartesianGrid, 
@@ -15,8 +13,7 @@ import {
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
-import { TrendingDown, Users, CheckCircle2, AlertCircle } from "lucide-react";
-import { cn } from "@/lib/utils";
+import { TrendingDown, Users, CheckCircle2 } from "lucide-react";
 
 export function ClinicalEfficacyDashboard() {
 	const { data: painData = [], isLoading: isLoadingPain } = useQuery({

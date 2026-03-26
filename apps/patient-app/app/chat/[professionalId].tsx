@@ -47,7 +47,7 @@ export default function ChatScreen() {
   const [sending, setSending] = useState(false);
   const [loading, setLoading] = useState(true);
   const [conversationId, setConversationId] = useState<string | null>(null);
-  const [professionalName, setProfessionalName] = useState('Profissional');
+  const [professionalName] = useState('Profissional');
   const chatAvailable = manager.isAvailable();
 
   const flatListRef = useRef<FlatList>(null);

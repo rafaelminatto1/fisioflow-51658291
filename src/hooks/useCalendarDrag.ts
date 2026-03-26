@@ -4,8 +4,6 @@ import { Appointment } from "@/types/appointment";
 import { fisioLogger as logger } from "@/lib/errors/logger";
 import { toast } from "sonner";
 import {
-	APPOINTMENT_CONFLICT_MESSAGE,
-	isAppointmentConflictError,
 	getAppointmentConflictUserMessage,
 } from "@/utils/appointmentErrors";
 import { createSimpleDragPreview } from "@/lib/calendar/dragPreview";

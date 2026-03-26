@@ -1,8 +1,8 @@
-import { useState, useMemo } from "react";
+import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { organizationMembersApi } from "@/api/v2/system";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
-import { Search, User } from "lucide-react";
+import { Search } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
 

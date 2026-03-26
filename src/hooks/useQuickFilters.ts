@@ -38,7 +38,7 @@ export function useQuickFilters({
 		}
 
 		const now = new Date();
-		const today = startOfDay(now);
+		
 		const tomorrow = startOfDay(new Date(now.getTime() + 24 * 60 * 60 * 1000));
 		const weekStart = startOfWeek(now, { weekStartsOn: 1 });
 		const weekEnd = endOfWeek(now, { weekStartsOn: 1 });

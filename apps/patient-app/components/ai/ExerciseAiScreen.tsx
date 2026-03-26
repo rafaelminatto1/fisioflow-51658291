@@ -18,8 +18,8 @@ const { width, height } = Dimensions.get('window');
 export const ExerciseAiScreen = ({ exerciseType, onComplete }: { exerciseType: ExerciseType, onComplete: (res: any) => void }) => {
   const [permission, requestPermission] = useCameraPermissions();
   const [isRecording, setIsRecording] = useState(false);
-  const [result, setResult] = useState<AnalysisResult | null>(null);
-  const engine = useRef(new AnalysisEngine(exerciseType));
+  const [result] = useState<AnalysisResult | null>(null);
+  
 
   useEffect(() => {
     requestPermission();

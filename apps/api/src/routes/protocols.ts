@@ -213,7 +213,7 @@ app.post('/', requireAuth, async (c) => {
 
 // ===== ATUALIZAR PROTOCOLO (AUTH) =====
 app.put('/:id', requireAuth, async (c) => {
-  const user = c.get('user');
+  
   const db = await createDb(c.env);
   const { id } = c.req.param();
   const body = await c.req.json();
@@ -258,7 +258,7 @@ app.put('/:id', requireAuth, async (c) => {
 
 // ===== EXCLUIR PROTOCOLO (AUTH, soft-delete) =====
 app.delete('/:id', requireAuth, async (c) => {
-  const user = c.get('user');
+  
   const db = await createDb(c.env);
   const { id } = c.req.param();
 
