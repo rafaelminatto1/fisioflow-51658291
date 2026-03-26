@@ -1,5 +1,7 @@
 import {
 	addDays,
+	addMonths,
+	addWeeks,
 	format,
 	isSameDay,
 	startOfWeek,
@@ -476,12 +478,9 @@ export default function CalendarView({
 
 	const getDaySchedule = React.useCallback((date: Date) => {
 		const dayOfWeek = date.getDay();
-		if (dayOfWeek === 0) return null;
-		const config =
-			BUSINESS_HOURS.DEFAULT_SCHEDULE[
-				dayOfWeek as keyof typeof BUSINESS_HOURS.DEFAULT_SCHEDULE
-			];
-		return { open: config.START, close: config.END };
+		if (dayOfWeek === 0) return null; // Domingo fechado
+		if (dayOfWeek === 6) return { open: 7, close: 13 }; // Sábado 7h-13h
+		return { open: 7, close: 21 }; // Seg-Sex 7h-21h
 	}, []);
 
 	const checkTimeBlocked = React.useCallback(
@@ -499,6 +498,21 @@ export default function CalendarView({
 	const isDayClosedForDate = React.useCallback(
 		(date: Date) => getDaySchedule(date) === null,
 		[getDaySchedule],
+	);
+
+	const isTimeBlocked = React.useCallback(
+		(time: string) => checkTimeBlocked(currentDate, time).blocked,
+		[checkTimeBlocked, currentDate],
+	);
+
+	const getBlockReason = React.useCallback(
+		(time: string) => checkTimeBlocked(currentDate, time).reason,
+		[checkTimeBlocked, currentDate],
+	);
+
+	const isOverCapacity = React.useCallback(
+		(apt: { id: string }) => overbookedAppointmentIds.has(apt.id),
+		[overbookedAppointmentIds],
 	);
 
 	const memoizedTimeSlots = React.useMemo(
@@ -682,7 +696,7 @@ export default function CalendarView({
 										getAppointmentsForDate={getAppointmentsForDate}
 										savingAppointmentId={dragStateNative.savingAppointmentId}
 										timeSlots={memoizedTimeSlots}
-										isDayClosed={isDayClosed}
+										isDayClosed={isDayClosedForDate(currentDate)}
 										onTimeSlotClick={onTimeSlotClick}
 										onEditAppointment={onEditAppointment}
 										onDeleteAppointment={onDeleteAppointment}

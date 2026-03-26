@@ -196,7 +196,7 @@ app.route('/api/evolution-versions', evolutionVersionsRoutes);
 app.route('/api/exercise-plans', exercisePlansRoutes);
 app.route('/api/activity-lab', activityLabRoutes);
 app.route('/api/patient-portal', patientPortalRoutes);
-app.route('/api/audit', auditRoutes);
+app.route('/api/audit-logs', auditRoutes);
 app.route('/api/analytics', analyticsRoutes);
 app.route('/api', eventosRoutes);
 app.route('/api/innovations', innovationsRoutes);

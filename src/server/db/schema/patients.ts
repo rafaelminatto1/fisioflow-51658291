@@ -55,7 +55,6 @@ export const patients = pgTable(
 		fullName: varchar("full_name", { length: 150 }).notNull(),
 		cpf: varchar("cpf", { length: 14 }).unique(), // With mask: 000.000.000-00
 		rg: varchar("rg", { length: 20 }),
-		birthDate: date("birth_date"),
 		gender: genderEnum("gender"),
 
 		// Contact
