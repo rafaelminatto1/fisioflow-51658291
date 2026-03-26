@@ -41,7 +41,7 @@ const contatoValidation = z
 
 // Schema para criar participante com validações robustas
 export const participanteCreateSchema = z.object({
-	// IDs de evento vêm do Firestore (não necessariamente UUID)
+	// IDs de evento vêm do Neon (não necessariamente UUID)
 	evento_id: z.string().min(1, "ID do evento inválido"),
 	nome: z
 		.string()

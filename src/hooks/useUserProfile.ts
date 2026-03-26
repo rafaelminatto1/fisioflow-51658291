@@ -1,6 +1,6 @@
 /**
  * useUserProfile - wrapper over AuthContext
- * Avoids duplicated auth listeners and duplicated Firestore profile fetches.
+ * Avoids duplicated auth listeners and duplicated profile fetches from database (Neon DB).
  */
 
 import { useCallback } from "react";

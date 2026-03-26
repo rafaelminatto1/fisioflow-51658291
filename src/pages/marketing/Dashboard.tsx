@@ -1,33 +1,34 @@
-import React, { useState, useEffect } from "react";
-import { Link } from "react-router-dom";
-import { MainLayout } from "@/components/layout/MainLayout";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
+	Activity,
+	ArrowDown,
+	ArrowUpRight,
+	BarChart3,
+	Link2,
+	Mail,
+	MessageSquare,
+	Sparkles,
 	Star,
+	Target,
 	TrendingUp,
 	Video,
-	Link2,
-	MessageSquare,
-	Mail,
-	ArrowUpRight,
-	ArrowDown,
-	Activity,
-	BarChart3,
-	Target,
-	Sparkles,
 } from "lucide-react";
-import { cn } from "@/lib/utils";
+import type React from "react";
+import { useEffect, useState } from "react";
+import { Link } from "react-router-dom";
 import {
 	crmApi,
+	type GoogleBusinessReviewRecord,
 	integrationsApi,
 	marketingApi,
-	type GoogleBusinessReviewRecord,
 } from "@/api/v2";
+import { MainLayout } from "@/components/layout/MainLayout";
+import { LocalSEOTracker } from "@/components/marketing/LocalSEOTracker";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { cn } from "@/lib/utils";
 import { ReviewsContent } from "./Reviews";
 import { ROICalculatorContent } from "./ROI";
-import { LocalSEOTracker } from "@/components/marketing/LocalSEOTracker";
 
 type GoogleReview = GoogleBusinessReviewRecord;
 
@@ -48,7 +49,7 @@ interface MarketingMetrics {
 export default function MarketingDashboard() {
 	const [metrics, setMetrics] = useState<MarketingMetrics | null>(null);
 	const [loading, setLoading] = useState(true);
-	const [,setError] = useState<string | null>(null);
+	const [, setError] = useState<string | null>(null);
 
 	useEffect(() => {
 		const fetchMetrics = async () => {
@@ -153,9 +154,17 @@ export default function MarketingDashboard() {
 		href?: string;
 		color?: "blue" | "green" | "purple" | "amber" | "emerald";
 	}) => {
+		const gradientClasses = {
+			blue: "gradient-brand-light",
+			green: "gradient-success-light",
+			purple: "gradient-accent-teal-light",
+			amber: "gradient-warm-light",
+			emerald: "gradient-success-light",
+		};
+
 		const colorClasses = {
 			blue: "bg-blue-500/10 text-blue-600 dark:text-blue-400",
-			green: "bg-green-500/10 text-green-600 dark:text-green-400",
+			green: "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400",
 			purple: "bg-purple-500/10 text-purple-600 dark:text-purple-400",
 			amber: "bg-amber-500/10 text-amber-600 dark:text-amber-400",
 			emerald: "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400",
@@ -164,12 +173,13 @@ export default function MarketingDashboard() {
 		const cardContent = (
 			<Card
 				className={cn(
-					"hover:shadow-lg transition-all duration-300",
+					"card-premium-hover border border-border/40 shadow-premium-sm",
 					href && "cursor-pointer group",
+					gradientClasses[color],
 				)}
 			>
 				<CardHeader className="flex flex-row items-center justify-between pb-2">
-					<CardTitle className="text-sm font-medium text-muted-foreground">
+					<CardTitle className="text-sm font-medium text-muted-foreground font-display">
 						{title}
 					</CardTitle>
 					<div className={cn("p-2 rounded-lg", colorClasses[color])}>
@@ -178,7 +188,9 @@ export default function MarketingDashboard() {
 				</CardHeader>
 				<CardContent>
 					<div className="flex items-baseline justify-between">
-						<div className="text-2xl font-bold">{value}</div>
+						<div className="text-2xl font-black font-display tracking-tighter">
+							{value}
+						</div>
 						{trend && (
 							<div
 								className={cn(
@@ -222,55 +234,71 @@ export default function MarketingDashboard() {
 	return (
 		<MainLayout>
 			<div className="p-6 max-w-7xl mx-auto space-y-6">
-				<div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-					<div>
-						<h1 className="text-3xl font-bold tracking-tight">Marketing Hub</h1>
-						<p className="text-muted-foreground mt-1">
-							Gestão centralizada de crescimento, autoridade e ROI
-						</p>
-					</div>
-					<div className="flex items-center gap-2">
-						<Button variant="outline" size="sm" asChild>
-							<Link to="/marketing/fisiolink">
-								<Link2 className="h-4 w-4 mr-2" />
-								Meu FisioLink
-							</Link>
-						</Button>
-						<Button size="sm" asChild>
-							<Link to="/marketing/content-generator">
-								<Sparkles className="h-4 w-4 mr-2" />
-								Gerar Conteúdo
-							</Link>
-						</Button>
+				<div className="gradient-brand-light rounded-3xl p-8 border border-primary/20 card-premium-hover">
+					<div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+						<div>
+							<h1 className="font-display text-4xl font-black tracking-tighter mb-2 text-primary">
+								Marketing Hub
+							</h1>
+							<p className="text-muted-foreground mt-1 font-medium text-lg">
+								Gestão centralizada de crescimento, autoridade e ROI
+							</p>
+						</div>
+						<div className="flex items-center gap-2">
+							<Button
+								variant="outline"
+								size="sm"
+								className="magnetic-button glow-on-hover font-display"
+								asChild
+							>
+								<Link to="/marketing/fisolink">
+									<Link2 className="h-4 w-4 mr-2" />
+									Meu FisioLink
+								</Link>
+							</Button>
+							<Button
+								size="sm"
+								className="magnetic-button glow-on-hover font-display"
+								asChild
+							>
+								<Link to="/marketing/content-generator">
+									<Sparkles className="h-4 w-4 mr-2" />
+									Gerar Conteúdo
+								</Link>
+							</Button>
+						</div>
 					</div>
 				</div>
 
 				<Tabs defaultValue="overview" className="w-full">
 					<TabsList className="grid w-full grid-cols-2 md:grid-cols-5 h-auto p-1 bg-muted/50 rounded-xl">
-						<TabsTrigger value="overview" className="rounded-lg py-2.5">
+						<TabsTrigger
+							value="overview"
+							className="magnetic-button rounded-lg py-2.5 font-display"
+						>
 							Visão Geral
 						</TabsTrigger>
 						<TabsTrigger
 							value="reviews"
-							className="rounded-lg py-2.5 text-amber-600"
+							className="magnetic-button rounded-lg py-2.5 text-amber-600"
 						>
 							Avaliações
 						</TabsTrigger>
 						<TabsTrigger
 							value="seo"
-							className="rounded-lg py-2.5 text-emerald-600"
+							className="magnetic-button rounded-lg py-2.5 text-emerald-600"
 						>
 							SEO Local
 						</TabsTrigger>
 						<TabsTrigger
 							value="roi"
-							className="rounded-lg py-2.5 text-blue-600"
+							className="magnetic-button rounded-lg py-2.5 text-blue-600"
 						>
 							Calculadora ROI
 						</TabsTrigger>
 						<TabsTrigger
 							value="strategy"
-							className="rounded-lg py-2.5 text-purple-600"
+							className="magnetic-button rounded-lg py-2.5 text-purple-600"
 						>
 							Estratégia
 						</TabsTrigger>

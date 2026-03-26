@@ -9,17 +9,18 @@
  * - Categorias de templates
  */
 
-import React, { useState, useMemo, useCallback } from "react";
 import {
-	FileText,
-	Plus,
-	Edit,
-	Trash2,
-	Copy,
 	Check,
-	X,
+	Copy,
+	Edit,
+	FileText,
 	LayoutTemplate,
+	Plus,
+	Trash2,
+	X,
 } from "lucide-react";
+import type React from "react";
+import { useCallback, useMemo, useState } from "react";
 import { cn } from "@/lib/utils";
 
 export interface AppointmentTemplateVariable {
@@ -162,7 +163,7 @@ export const AppointmentTemplates: React.FC<AppointmentTemplatesProps> = ({
 				service: template.service,
 				duration: template.duration,
 				notes: template.notes,
-				color: template.color || "#6366f1",
+				color: template.color || "#2563eb",
 				variables: template.variables || {},
 				isDefault: false,
 				createdAt: new Date(),
@@ -205,7 +206,6 @@ export const AppointmentTemplates: React.FC<AppointmentTemplatesProps> = ({
 	);
 
 	// Duplicar template
-	
 
 	return (
 		<div className={cn("space-y-4", className)}>
@@ -420,7 +420,7 @@ const TemplateEditor: React.FC<TemplateEditorProps> = ({
 	const [service, setService] = useState(template?.service || "");
 	const [duration, setDuration] = useState(template?.duration || 60);
 	const [notes, setNotes] = useState(template?.notes || "");
-	const [color, setColor] = useState(template?.color || "#6366f1");
+	const [color, setColor] = useState(template?.color || "#2563eb");
 
 	const handleSubmit = (e: React.FormEvent) => {
 		e.preventDefault();

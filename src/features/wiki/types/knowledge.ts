@@ -58,8 +58,8 @@ export interface KnowledgeArtifact {
 	viewCount: number;
 	citationCount?: number; // Internal or external citations
 
-	createdAt: any; // Firestore Timestamp
-	updatedAt: any; // Firestore Timestamp
+	createdAt: any; // Database Timestamp
+	updatedAt: any; // Database Timestamp
 	createdBy: string;
 }
 

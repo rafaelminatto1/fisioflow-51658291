@@ -99,7 +99,7 @@ export const ExercisePlayer: React.FC<ExercisePlayerProps> = ({
 					onBack={() => setIsExecutingIA(false)}
 					onComplete={(session) => {
 						console.log("Sessão completada:", session);
-						// Aqui poderíamos salvar no Firestore
+						// Aqui poderíamos salvar no Neon
 					}}
 				/>
 			</Card>

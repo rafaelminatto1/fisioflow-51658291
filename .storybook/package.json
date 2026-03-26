@@ -1,0 +1,18 @@
+{
+  "name": "@fisioflow/storybook",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "storybook": "storybook dev -p 6006 --config .storybook/vite.config.ts",
+  },
+  "dependencies": {
+    "@storybook/addon-essentials": "^8.0.0",
+    "@storybook/addon-interactions": "^8.0.0",
+    "@storybook/addon-a11y": "^8.0.0",
+    "@storybook/addon-themes": "^8.0.0",
+    "@storybook/react": "^8.0.0",
+    "@storybook/react-vite": "^8.0.0",
+    "react": "^18.0.0",
+    "react-dom": "^18.0.0"
+  }
+}

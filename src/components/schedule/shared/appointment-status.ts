@@ -320,6 +320,7 @@ export function normalizeStatus(status: string): string {
 		return "remarcar";
 	if (
 		s === "in_progress" ||
+		s === "completed" ||
 		s === "em_atendimento" ||
 		s === "atendido" ||
 		s === "concluido" ||

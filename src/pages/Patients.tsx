@@ -7,22 +7,21 @@
  * @version 2.0.0 - Library Mode
  */
 
-import { PatientCard } from "@fisioflow/ui";
 import { Cake, Filter, Users } from "lucide-react";
-import { useEffect, useMemo, useState } from "react";
-import { useNavigate, useSearchParams } from "react-router-dom";
+import { useMemo } from "react";
+import { useNavigate } from "react-router-dom";
 import { LazyComponent } from "@/components/common/LazyComponent";
 import { IncompleteRegistrationAlert } from "@/components/dashboard/IncompleteRegistrationAlert";
 import { MainLayout } from "@/components/layout/MainLayout";
 import {
 	countActiveFilters,
-	PatientActions,
 	PatientAdvancedFilters,
 	PatientAnalytics,
 	PatientCreateModal,
 	PatientPageInsights,
 	PatientsPageHeader,
 } from "@/components/patients";
+import { PatientListItem } from "@/components/patients/PatientListItem";
 import { EmptyState } from "@/components/ui";
 import { Button } from "@/components/ui/button";
 import { LoadingSkeleton } from "@/components/ui/loading-skeleton";
@@ -40,105 +39,41 @@ import {
 	PopoverTrigger,
 } from "@/components/ui/popover";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { usePrefetchPatientOnHover } from "@/hooks/performance";
-import { useDebounce } from "@/hooks/performance/useDebounce";
-import { toast } from "@/hooks/use-toast";
-import { useNavPreload } from "@/hooks/useIntelligentPreload";
-import {
-	type PatientsFilters,
-	usePatientsPageData,
-} from "@/hooks/usePatientsPage";
-import { calculateAge, cn, exportToCSV } from "@/lib/utils";
-import { PatientHelpers } from "@/types";
+import { usePatientsPageData } from "@/hooks/usePatientsPage";
+import { cn } from "@/lib/utils";
 import { AniversariantesContent } from "./relatorios/AniversariantesPage";
 
-// ============================================================================================
-// COMPONENTS
-// ============================================================================================
-
-const PatientListItem = ({
-	patient,
-	stats,
-	onClick,
-}: {
-	patient: any;
-	stats: any;
-	onClick: () => void;
-}) => {
-	const { prefetch } = usePrefetchPatientOnHover(patient.id);
-	const { preloadRoute } = useNavPreload();
-
-	const handleMouseEnter = () => {
-		prefetch();
-		preloadRoute(`/patients/${patient.id}`);
-	};
-
-	const patientName = PatientHelpers.getName(patient);
-
-	return (
-		<button
-			type="button"
-			onMouseEnter={handleMouseEnter}
-			data-testid={`patient-card-${patient.id}`}
-			data-patient-id={patient.id}
-			className="h-full"
-		>
-			<PatientCard
-				name={patientName || "Sem Nome"}
-				condition={patient.main_condition}
-				status={patient.status}
-				stats={{
-					sessionsCompleted: stats?.sessionsCompleted || 0,
-					nextAppointment: stats?.nextAppointmentDate
-						? new Date(stats.nextAppointmentDate).toLocaleDateString("pt-BR")
-						: undefined,
-				}}
-				onClick={onClick}
-				actions={<PatientActions patient={patient} />}
-				className="h-full"
-			/>
-		</button>
-	);
-};
+// Refactored hooks
+import { usePatientsExport } from "./patients/usePatientsExport";
+import { usePatientsStats } from "./patients/usePatientsStats";
+import { usePatientsUrlState } from "./patients/usePatientsUrlState";
 
 const Patients = () => {
-	const [searchParams, setSearchParams] = useSearchParams();
 	const navigate = useNavigate();
 
-	const searchParam = searchParams.get("q") || "";
-	const statusParam = searchParams.get("status") || "all";
-	const conditionParam = searchParams.get("condition") || "all";
-	const classificationParam = searchParams.get("classification") || "all";
-	const pageParam = parseInt(searchParams.get("page") || "1", 10);
+	// Custom hook for URL state and filters
+	const {
+		filters,
+		filtersState,
+		searchTerm,
+		setSearchTerm,
+		updateSearchParams,
+		handleClearAllFilters,
+		isNewPatientModalOpen,
+		showAnalytics,
+		activeTab,
+		pageParam,
+	} = usePatientsUrlState();
 
-	const [searchTerm, setSearchTerm] = useState(searchParam);
-	const debouncedSearch = useDebounce(searchTerm, 300);
-
-	const isNewPatientModalOpen = searchParams.get("modal") === "create";
-	const showAnalytics = searchParams.get("analytics") === "true";
-	const activeTab = (searchParams.get("tab") as "list" | "birthdays") || "list";
-
-	const filters: PatientsFilters = useMemo(
-		() => ({
-			search: debouncedSearch,
-			status: statusParam,
-			condition: conditionParam,
-			classification: classificationParam,
-			page: pageParam,
-			pageSize: 20,
-		}),
-		[
-			debouncedSearch,
-			statusParam,
-			conditionParam,
-			classificationParam,
-			pageParam,
-		],
-	);
-
+	// Data fetching
 	const { data, isLoading } = usePatientsPageData(filters);
-
 	const { patients, totalCount, statsMap, uniqueConditions } = data;
+
+	// Export logic
+	const { exportPatients } = usePatientsExport();
+
+	// Calculate stats
+	const filteredStats = usePatientsStats(patients, statsMap, totalCount);
 
 	const pagination = useMemo(
 		() => ({
@@ -149,152 +84,7 @@ const Patients = () => {
 		[pageParam, totalCount],
 	);
 
-	const filtersState = useMemo(
-		() => ({
-			search: searchParam,
-			status: statusParam,
-			condition: conditionParam,
-			classification: classificationParam,
-		}),
-		[searchParam, statusParam, conditionParam, classificationParam],
-	);
-
-	// Sync debounced search to URL
-	useEffect(() => {
-		const params = new URLSearchParams(searchParams);
-		if (debouncedSearch) {
-			params.set("q", debouncedSearch);
-		} else {
-			params.delete("q");
-		}
-		if (debouncedSearch !== searchParam) {
-			params.set("page", "1"); // Reset page on search change
-			setSearchParams(params, { replace: true });
-		}
-	}, [debouncedSearch, searchParam, setSearchParams, searchParams]);
-
-	useEffect(() => {
-		if (isNewPatientModalOpen) {
-			// Close modal after successful creation (handled by mutation toast)
-		}
-	}, [isNewPatientModalOpen]);
-
 	const { currentPage, totalPages, pageSize } = pagination;
-
-	const filteredStats = useMemo(() => {
-		const stats = {
-			total: totalCount,
-			active: 0,
-			inactive7: 0,
-			inactive30: 0,
-			inactive60: 0,
-			noShowRisk: 0,
-			hasUnpaid: 0,
-			newPatients: 0,
-			completed: 0,
-		};
-
-		Object.values(statsMap).forEach((patientStats: any) => {
-			switch (patientStats.classification) {
-				case "active":
-					stats.active++;
-					break;
-				case "inactive_7":
-					stats.inactive7++;
-					break;
-				case "inactive_30":
-					stats.inactive30++;
-					break;
-				case "inactive_custom":
-					stats.inactive60++;
-					break;
-				case "no_show_risk":
-					stats.noShowRisk++;
-					break;
-				case "has_unpaid":
-					stats.hasUnpaid++;
-					break;
-				case "new_patient":
-					stats.newPatients++;
-					break;
-			}
-		});
-
-		patients.forEach((p) => {
-			if (p.status === "Concluído") stats.completed++;
-		});
-
-		return stats;
-	}, [patients, statsMap, totalCount]);
-
-	const updateSearchParams = (updates: Record<string, string | undefined>) => {
-		const params = new URLSearchParams(searchParams);
-		Object.entries(updates).forEach(([key, value]) => {
-			if (value === undefined || value === "all") {
-				params.delete(key);
-			} else {
-				params.set(key, value);
-			}
-		});
-
-		// Reset page when filtering, unless explicitly setting page
-		if (updates.page === undefined && !updates.q) {
-			params.set("page", "1");
-		}
-
-		setSearchParams(params);
-	};
-
-	const handleClearAllFilters = () => {
-		setSearchTerm("");
-		setSearchParams(new URLSearchParams());
-	};
-
-	const exportPatients = () => {
-		const data = patients.map((patient) => {
-			const patientName = PatientHelpers.getName(patient);
-			const patientStats = statsMap[patient.id];
-			return {
-				name: patientName || "Sem nome",
-				email: patient.email || "",
-				phone: patient.phone || "",
-				age: calculateAge(patient.birth_date),
-				gender: patient.gender || "",
-				condition: patient.main_condition || "",
-				status: patient.status || "",
-				progress: patient.progress || 0,
-				sessions: patientStats?.sessionsCompleted || 0,
-				firstEvaluation: patientStats?.firstEvaluationDate || "",
-			};
-		});
-
-		const headers = [
-			"Nome",
-			"Email",
-			"Telefone",
-			"Idade",
-			"Gênero",
-			"Condição Principal",
-			"Status",
-			"Progresso",
-			"Sessões",
-			"Primeira Avaliação",
-		];
-		const success = exportToCSV(data, "pacientes.csv", headers);
-
-		if (success) {
-			toast({
-				title: "Exportação concluída!",
-				description: "Lista de pacientes exportada com sucesso.",
-			});
-		} else {
-			toast({
-				title: "Erro na exportação",
-				description: "Não foi possível exportar a lista de pacientes.",
-				variant: "destructive",
-			});
-		}
-	};
 
 	if (isLoading && patients.length === 0) {
 		return (
@@ -342,7 +132,7 @@ const Patients = () => {
 				<PatientsPageHeader
 					stats={headerStats}
 					onNewPatient={() => updateSearchParams({ modal: "create" })}
-					onExport={exportPatients}
+					onExport={() => exportPatients(patients, statsMap)}
 					onToggleAnalytics={() =>
 						updateSearchParams({
 							analytics: showAnalytics ? undefined : "true",
@@ -475,7 +265,7 @@ const Patients = () => {
 						) : (
 							<>
 								<div
-									className="grid grid-cols-1 md:grid-cols-2 gap-4 animate-fade-in"
+									className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 animate-fade-in"
 									data-testid="patient-list"
 								>
 									{patients.map((patient) => {
@@ -487,6 +277,7 @@ const Patients = () => {
 													<div className="h-[140px] w-full bg-muted/50 rounded-xl animate-pulse" />
 												}
 												rootMargin="200px"
+												className="h-full"
 											>
 												<PatientListItem
 													patient={patient}

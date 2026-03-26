@@ -1,4 +1,4 @@
-# FisioFlow Web - Frontend Static Assets Worker
+# FisioFlow Web - Frontend Assets Worker
 name = "fisioflow-web"
 compatibility_date = "2026-03-25"
 assets = { directory = "./apps/web/dist", not_found_handling = "single-page-application" }
@@ -8,3 +8,8 @@ enabled = true
 
 [observability]
 enabled = true
+
+# Staging Environment
+[env.staging]
+name = "fisioflow-web-staging"
+assets = { directory = "./apps/web/dist", not_found_handling = "single-page-application" }

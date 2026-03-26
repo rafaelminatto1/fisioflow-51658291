@@ -1,7 +1,7 @@
 /**
  * Hooks TanStack Query para Exercícios via Cloudflare Workers API
  *
- * Substitui chamadas Firestore por chamadas HTTP ao Worker (Neon PostgreSQL).
+ * Faz chamadas HTTP ao Worker (Neon PostgreSQL).
  */
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { exercisesApi } from "@/api/v2";

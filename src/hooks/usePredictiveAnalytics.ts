@@ -51,8 +51,8 @@ export interface ChartDataPoint {
 	label?: string;
 }
 
-// Firestore milestone record structure
-interface FirestoreMilestone {
+// Neon milestone record structure
+interface NeonMilestone {
 	name: string;
 	description?: string;
 	expectedDate: string;
@@ -129,7 +129,7 @@ const mapPredictionToRecoveryPrediction = (
 			upperDays: interval.upperDays,
 		},
 		confidenceScore: prediction.confidence_score ?? 0,
-		milestones: ensureArray<FirestoreMilestone>(rawMilestones),
+		milestones: ensureArray<MilestoneRecord>(rawMilestones),
 		riskFactors: ensureArray<RiskFactorEntry>(rawRiskFactors),
 		treatmentRecommendations: {
 			optimalFrequency:

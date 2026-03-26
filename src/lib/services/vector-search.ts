@@ -1,5 +1,5 @@
 /**
- * Busca vetorial compatível sem Firestore.
+ * Busca vetorial usando Neon DB (pgvector).
  *
  * Usa embeddings locais e dados de sessões via Workers quando houver contexto
  * de paciente. Para escopos globais, retorna vazio de forma explícita.

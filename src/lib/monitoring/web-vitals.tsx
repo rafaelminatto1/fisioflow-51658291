@@ -1,7 +1,7 @@
 /**
  * Core Web Vitals Monitor
  * Monitora as métricas de performance do Web Vitals em produção
- * Envia dados para analytics (Vercel Analytics, Sentry, etc.)
+ * Envia dados para analytics (Sentry, etc.)
  *
  * Métricas monitoradas:
  * - FCP (First Contentful Paint): Tempo até o primeiro conteúdo ser pintado

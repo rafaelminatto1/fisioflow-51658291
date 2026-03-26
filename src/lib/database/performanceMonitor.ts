@@ -213,7 +213,7 @@ export async function preloadCache(): Promise<void> {
 }
 
 // ============================================================================
-// FIRESTORE-SPECIFIC PERFORMANCE HELPERS
+// DATABASE PERFORMANCE HELPERS (Neon DB)
 // ============================================================================
 
 export function optimizedQuery(
@@ -228,7 +228,7 @@ export function optimizedQuery(
 		limit?: number;
 	},
 ) {
-	// This is a placeholder - in a real implementation, you'd build the Firestore query here
+	// This is a placeholder - in a real implementation, you'd build the query here
 	// For now, it returns metadata about the query
 	return {
 		collectionPath,

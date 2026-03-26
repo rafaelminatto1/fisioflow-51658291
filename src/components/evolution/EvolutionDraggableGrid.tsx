@@ -1030,7 +1030,7 @@ export const EvolutionDraggableGrid: React.FC<EvolutionDraggableGridProps> = ({
 			...item.defaultLayout,
 		}));
 
-		// Use stored layout when available (localStorage or Firestore), otherwise default
+		// Use stored layout when available (localStorage or Neon), otherwise default
 		const desktopLayout =
 			storedLayouts?.lg && storedLayouts.lg.length > 0
 				? normalizeLayout(storedLayouts.lg)

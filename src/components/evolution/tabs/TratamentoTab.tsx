@@ -4,7 +4,7 @@
  * Extracted from PatientEvolution for better code splitting and performance
  * Requirements: 4.1, 4.4 - Component-level code splitting
  *
- * @version 3.0.0 - TreatmentCycles connected to Firestore via useTreatmentCycles
+ * @version 3.0.0 - TreatmentCycles connected to Neon via useTreatmentCycles
  */
 
 import { lazy, Suspense, useState } from "react";

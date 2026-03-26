@@ -1,6 +1,6 @@
 /**
- * useTimeTracker - Hook para gerenciamento de Time Tracking com Firestore
- * Gerencia timer ativo, persistência e sync com Firestore
+ * useTimeTracker - Hook para gerenciamento de Time Tracking
+ * Gerencia timer ativo, persistência e sync com API
  */
 
 import { useState, useEffect, useCallback, useRef } from "react";
@@ -95,7 +95,7 @@ export function useTimeTracker(
 
 	const loadActiveTimer = useCallback(async () => {
 		try {
-			// Tenta carregar do Firestore primeiro
+			// Tenta carregar rascunho ativo da API
 			const draftTimer = await getActiveTimerDraft(userId);
 
 			if (draftTimer) {

@@ -14,7 +14,7 @@ export type { TimeSlotInfo };
 export function useAvailableTimeSlots(date: Date | null) {
 	const { user } = useAuth();
 
-	// Get organization ID from profiles in Firestore
+	// Get organization ID from profiles in database (Neon DB)
 	const { data: profile } = useQuery({
 		queryKey: ["profile-org", user?.uid],
 		queryFn: async () => {

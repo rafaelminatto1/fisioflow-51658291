@@ -674,4 +674,3 @@ export default function ContentCalendarPage() {
 
 import { cn } from "@/lib/utils";
 import { Label } from "@/components/ui/label";
-const normalizeFirestoreData = (d: any) => d;

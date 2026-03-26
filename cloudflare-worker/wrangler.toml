@@ -2,6 +2,7 @@ name = "r2-presigned-url-worker"
 main = "r2-presigned-url-worker.ts"
 compatibility_date = "2026-03-25"
 
+# Default (Production)
 [[r2_buckets]]
 binding = "R2_BUCKET"
 bucket_name = "fisioflow-exams"
@@ -12,5 +13,23 @@ database_name = "fisioflow-db"
 database_id = "bf781be2-527d-471d-9cf2-dd18f8e6c2b2"
 
 [vars]
+ENVIRONMENT = "production"
 AUTH_TOKEN = "FISIOFLOW_SECRET_TOKEN_2026"
-R2_PUBLIC_URL = "https://r2-worker.rafalegollas.workers.dev"
+R2_PUBLIC_URL = "https://r2-worker.moocafisio.com.br"
+
+# Staging Environment
+[env.staging]
+name = "r2-presigned-url-worker-staging"
+
+[[env.staging.r2_buckets]]
+binding = "R2_BUCKET"
+bucket_name = "fisioflow-exams-staging" # Ou use o mesmo se preferir
+
+[[env.staging.d1_databases]]
+binding = "DB"
+database_name = "fisioflow-db"
+database_id = "bf781be2-527d-471d-9cf2-dd18f8e6c2b2"
+
+[env.staging.vars]
+ENVIRONMENT = "staging"
+R2_PUBLIC_URL = "https://r2-staging.rafalegollas.workers.dev"

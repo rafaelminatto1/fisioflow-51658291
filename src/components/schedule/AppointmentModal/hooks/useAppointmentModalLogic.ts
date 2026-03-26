@@ -142,7 +142,7 @@ export const useAppointmentModalLogic = ({
 		reset(formData);
 		setCurrentMode(appointment ? "edit" : initialMode);
 		setActiveTab("info");
-		setIsNotesExpanded(Boolean(formData.notes?.trim()));
+		setIsNotesExpanded(true);
 
 		const apptDate =
 			defaultDate ||

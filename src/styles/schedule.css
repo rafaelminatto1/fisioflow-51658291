@@ -61,8 +61,8 @@
 
 .calendar-appointment-card {
 	@apply relative rounded-xl overflow-hidden;
-	@apply shadow-md hover:shadow-xl hover:scale-[1.02] hover:-translate-y-0.5;
-	@apply transition-all duration-200 ease-out cursor-pointer;
+	@apply shadow-md hover:shadow-xl;
+	@apply transition-shadow duration-200 ease-out cursor-pointer;
 	@apply border border-white/20 dark:border-white/10;
 	animation: fade-in-up 0.3s ease-out;
 }

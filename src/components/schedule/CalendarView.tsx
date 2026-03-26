@@ -22,7 +22,6 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { useCalendarDrag } from "@/hooks/useCalendarDrag";
 import { useCalendarDragDndKit } from "@/hooks/useCalendarDragDndKit";
-import { useCardSize } from "@/hooks/useCardSize";
 import { useScheduleCapacity } from "@/hooks/useScheduleCapacity";
 import { generateTimeSlots } from "@/lib/config/agenda";
 import { cn } from "@/lib/utils";
@@ -122,10 +121,6 @@ export default function CalendarView({
 	onToggleSelection,
 	rescheduleSuccessMessage = null,
 	onCreateAppointment,
-	onToggleSelectionMode,
-	onCancelAllToday,
-	filters,
-	onFiltersChange,
 	patientFilter,
 	onPatientFilterChange,
 }: CalendarViewProps) {
