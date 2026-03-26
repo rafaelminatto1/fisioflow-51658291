@@ -119,19 +119,24 @@ const TimeSlotRow: React.FC<TimeSlotRowProps> = memo(
 		if (!time) return null;
 
 		const isHour = time.endsWith(":00");
+		const numDays = weekDays.length;
 
 		return (
 			<div
-				style={style}
-				className="relative flex w-full border-b border-slate-100 dark:border-slate-800/50"
+				style={{
+					...style,
+					display: "grid",
+					gridTemplateColumns: `60px repeat(${numDays}, 1fr)`,
+				}}
+				className="relative border-b border-slate-100 dark:border-slate-800/50"
 			>
 				{/* Time Label */}
 				<div
 					className={cn(
-						"w-[60px] flex-shrink-0 border-r border-slate-100 dark:border-slate-800 text-[11px] font-medium flex justify-end pr-2 pt-2 bg-white dark:bg-slate-950 sticky left-0 z-10",
+						"border-r border-slate-100 dark:border-slate-800 text-[11px] font-medium flex items-start justify-end pr-2 pt-1 bg-white dark:bg-slate-950 sticky left-0 z-10",
 						isHour
-							? "text-slate-900 dark:text-slate-200 -mt-2.5"
-							: "text-slate-300 dark:text-slate-600 hidden",
+							? "text-slate-500 dark:text-slate-400 -translate-y-2"
+							: "invisible",
 					)}
 				>
 					{isHour ? time : ""}
@@ -155,7 +160,7 @@ const TimeSlotRow: React.FC<TimeSlotRowProps> = memo(
 							time={time}
 							rowIndex={index}
 							colIndex={colIndex}
-							isClosed={isClosed}
+							isClosed={!!isClosed}
 							isBlocked={blocked}
 							isDropTarget={!!isDropTarget}
 							onTimeSlotClick={props.onTimeSlotClick}
@@ -174,41 +179,38 @@ const TimeSlotRow: React.FC<TimeSlotRowProps> = memo(
 					const dayIndex = weekDays.findIndex((d) => isSameDay(d, aptDate));
 					if (dayIndex === -1) return null;
 
-					// Duration-based height calculation
 					const duration = apt.duration || 60;
 					const height = calculateAppointmentCardHeight(
-						data.cardSize as CardSize,
+						props.cardSize as CardSize,
 						duration,
-						data.heightScale,
+						props.heightScale,
 					);
 
-					// Calcular posicionamento
 					const sameTimeAppointments = appointmentsByTimeSlot[time] || [];
 					const aptIndex = sameTimeAppointments.findIndex(
 						(a) => a.id === apt.id,
 					);
 					const count = sameTimeAppointments.length;
-
-					const outerMargin = 4;
 					const gap = 4;
+					const outerMargin = 4;
 
-					const appointmentStyle = {
-						position: "absolute" as const,
-						gridColumn: `${dayIndex + 2} / span 1`,
-						gridRow: index + 1,
+					// Posição dentro da coluna do dia correto
+					const appointmentStyle: React.CSSProperties = {
+						position: "absolute",
 						height: `${height}px`,
-						width: `calc((100% - ${(count + 1) * 4}px) / ${count})`,
-						left: `calc(${outerMargin}px + ${aptIndex} * ((100% - ${(count + 1) * 4}px) / ${count} + ${gap}px))`,
+						// Largura: fração da coluna do dia dividida por nº de sobreposições
+						width: `calc(((100% - 60px) / ${numDays} - ${(count + 1) * gap}px) / ${count})`,
+						// Left: início da coluna do dia + margem + offset por sobreposição
+						left: `calc(60px + ${dayIndex} * (100% - 60px) / ${numDays} + ${outerMargin}px + ${aptIndex} * (((100% - 60px) / ${numDays} - ${(count + 1) * gap}px) / ${count} + ${gap}px))`,
 						top: "0px",
 						zIndex: 10 + aptIndex,
-						marginLeft: "60px", // Compensar coluna de tempo
 					};
 
 					const isDraggable = !!props.onAppointmentReschedule;
 					const isDraggingThis =
 						props.dragState?.isDragging &&
 						props.dragState.appointment?.id === apt.id;
-					const isSaving = data.savingAppointmentId === apt.id;
+					const isSaving = props.savingAppointmentId === apt.id;
 
 					return (
 						<div key={apt.id} style={appointmentStyle} className="absolute">
