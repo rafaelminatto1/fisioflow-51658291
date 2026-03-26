@@ -17,7 +17,9 @@ import {
 	Mail,
 	UserCheck,
 } from "lucide-react";
-import { useSubmit, useNavigate } from "react-router";
+import { useNavigate } from "react-router";
+import { useQueryClient } from "@tanstack/react-query";
+import { patientsApi } from "@/api/v2";
 import { PatientEditModal } from "./PatientEditModal";
 import { PatientDeleteDialog } from "./PatientDeleteDialog";
 import { toast } from "@/hooks/use-toast";
@@ -36,11 +38,10 @@ const statusOptions = [
 
 export const PatientActions: React.FC<PatientActionsProps> = ({ patient }) => {
 	const navigate = useNavigate();
+	const queryClient = useQueryClient();
 
 	const [editModalOpen, setEditModalOpen] = useState(false);
 	const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
-
-	const submit = useSubmit();
 
 	const handleQuickCall = () => {
 		if (patient.phone) {
@@ -74,13 +75,17 @@ export const PatientActions: React.FC<PatientActionsProps> = ({ patient }) => {
 		navigate(`/patients/${patient.id}?tab=clinical`);
 	};
 
-	const handleStatusChange = (
+	const handleStatusChange = async (
 		status: "Inicial" | "Em Tratamento" | "Recuperação" | "Concluído",
 	) => {
-		submit(
-			{ intent: "updateStatus", id: patient.id, status },
-			{ method: "post" }
-		);
+		try {
+			await patientsApi.update(patient.id, { status });
+			queryClient.invalidateQueries({ queryKey: ["patients"] });
+			toast({ description: `Status atualizado para "${status}".` });
+		} catch (err: unknown) {
+			const msg = err instanceof Error ? err.message : "Erro ao atualizar status";
+			toast({ variant: "destructive", description: msg });
+		}
 	};
 
 	const currentStatus = statusOptions.find((s) => s.value === patient.status);

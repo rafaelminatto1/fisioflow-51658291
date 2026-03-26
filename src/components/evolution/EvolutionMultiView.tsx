@@ -8,27 +8,27 @@
  * - Grafo: placeholder para grafo de conhecimento
  */
 
-import React, { useState, useMemo, useCallback } from "react";
-import { motion, AnimatePresence } from "framer-motion";
+import { AnimatePresence, motion } from "framer-motion";
+import type React from "react";
+import { useCallback, useMemo, useState } from "react";
 import { DayPicker } from "react-day-picker";
 import "react-day-picker/dist/style.css";
-import { format, parseISO, isValid } from "date-fns";
+import { format, isValid, parseISO } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import {
-	Clock,
 	Calendar as CalendarIcon,
-	Image,
-	GitBranch,
 	Camera,
+	Clock,
+	GitBranch,
+	Image,
 	ZoomIn,
 } from "lucide-react";
-
-import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
 import { EvolutionTimeline } from "@/components/evolution/EvolutionTimeline";
 import { PatientKnowledgeGraph } from "@/components/evolution/PatientKnowledgeGraph";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { cn } from "@/lib/utils";
 
 // ---------------------------------------------------------------------------
@@ -185,7 +185,7 @@ const CalendarView: React.FC<CalendarViewProps> = ({ evolutions }) => {
               width: 5px;
               height: 5px;
               border-radius: 50%;
-              background: #6366f1;
+              background: #2563eb;
             }
           `}</style>
 

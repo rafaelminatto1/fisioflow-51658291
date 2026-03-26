@@ -9,7 +9,10 @@ import {
 	AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { AlertTriangle, Loader2 } from "lucide-react";
-import { useSubmit, useNavigation } from "react-router";
+import { useState } from "react";
+import { useQueryClient } from "@tanstack/react-query";
+import { toast } from "sonner";
+import { patientsApi } from "@/api/v2";
 
 interface PatientDeleteDialogProps {
 	open: boolean;
@@ -24,18 +27,22 @@ export const PatientDeleteDialog: React.FC<PatientDeleteDialogProps> = ({
 	patientId,
 	patientName,
 }) => {
-	const submit = useSubmit();
-	const navigation = useNavigation();
+	const [isDeleting, setIsDeleting] = useState(false);
+	const queryClient = useQueryClient();
 
-	const isDeleting =
-		navigation.state === "submitting" &&
-		navigation.formData?.get("intent") === "delete" &&
-		navigation.formData?.get("patientId") === patientId;
-
-	const handleDelete = () => {
-		submit({ intent: "delete", patientId }, { method: "post" });
-		// Dialog usually closes on deletion as the item will be gone from the list
-		onOpenChange(false);
+	const handleDelete = async () => {
+		setIsDeleting(true);
+		try {
+			await patientsApi.delete(patientId);
+			queryClient.invalidateQueries({ queryKey: ["patients"] });
+			toast.success(`Paciente "${patientName}" excluído com sucesso.`);
+			onOpenChange(false);
+		} catch (err: unknown) {
+			const msg = err instanceof Error ? err.message : "Erro ao excluir paciente";
+			toast.error(msg);
+		} finally {
+			setIsDeleting(false);
+		}
 	};
 
 	return (

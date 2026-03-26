@@ -252,10 +252,10 @@ export class PoseAnalytics {
 		bestScore: number;
 		totalSessions: number;
 	}> {
-		// Nota: Isso requer acesso ao Firestore
+		// Nota: Isso requer acesso ao banco de dados (Neon DB)
 		// Implementação básica que pode ser expandida
 		try {
-			// Em produção, buscar dados do Firestore
+			// Em produção, buscar dados do Neon DB
 			// Por enquanto, retornar valores padrão
 			return {
 				avgScore: 75,
@@ -283,7 +283,7 @@ export class PoseAnalytics {
 		currentStreak: number;
 		longestStreak: number;
 	}> {
-		// Nota: Requer acesso ao Firestore
+		// Nota: Requer acesso ao banco de dados (Neon DB)
 		return {
 			currentStreak: 3,
 			longestStreak: 7,

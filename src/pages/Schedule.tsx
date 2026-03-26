@@ -31,7 +31,6 @@ import "@/styles/schedule.css";
 
 export default function Schedule() {
 	const [searchParams, setSearchParams] = useSearchParams();
-	
 
 	const dateParam =
 		searchParams.get("date") || format(new Date(), "yyyy-MM-dd");
@@ -60,7 +59,7 @@ export default function Schedule() {
 		patients,
 		birthdaysToday,
 		staffBirthdaysToday,
-		} = data;
+	} = data;
 
 	const currentDate = useMemo(() => new Date(dateParam), [dateParam]);
 	const viewType = viewParam;
@@ -229,13 +228,13 @@ export default function Schedule() {
 					{(birthdaysToday.length > 0 ||
 						staffBirthdaysToday.length > 0 ||
 						totalToReengage > 0) && (
-						<div className="bg-gradient-to-r from-blue-500/10 via-pink-500/5 to-amber-500/10 px-6 py-2 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between">
+						<div className="gradient-brand-light px-6 py-3 border-b border-primary/20 flex items-center justify-between">
 							<div className="flex items-center gap-6">
 								{(birthdaysToday.length > 0 ||
 									staffBirthdaysToday.length > 0) && (
 									<div className="flex items-center gap-2">
 										<Cake className="h-4 w-4 text-pink-600 dark:text-pink-400" />
-										<p className="text-[11px] font-bold text-slate-700 dark:text-slate-300">
+										<p className="text-[11px] font-bold text-slate-700 dark:text-slate-300 font-display">
 											<span className="text-pink-600">Aniversários:</span>{" "}
 											{[
 												...birthdaysToday.map((p) => p.full_name),
@@ -247,7 +246,7 @@ export default function Schedule() {
 								{totalToReengage > 0 && (
 									<div className="flex items-center gap-2 border-l border-slate-200 pl-6">
 										<AlertTriangle className="h-4 w-4 text-amber-600" />
-										<p className="text-[11px] font-bold text-slate-700 dark:text-slate-300">
+										<p className="text-[11px] font-bold text-slate-700 dark:text-slate-300 font-display">
 											<span className="text-amber-600">
 												{totalToReengage} pacientes
 											</span>{" "}
@@ -260,8 +259,8 @@ export default function Schedule() {
 								{birthdaysToday.length > 0 && (
 									<Button
 										size="sm"
-										variant="ghost"
-										className="h-8 text-[10px] font-black uppercase text-pink-600 hover:bg-pink-50"
+										variant="brand"
+										className="h-8 text-[10px] font-black uppercase magnetic-button glow-on-hover font-display"
 										onClick={() =>
 											birthdaysToday.forEach((p) => {
 												sendBirthdayMessage(p.id, p.phone || "");
@@ -276,8 +275,8 @@ export default function Schedule() {
 								{totalToReengage > 0 && (
 									<Button
 										size="sm"
-										variant="ghost"
-										className="h-8 text-[10px] font-black uppercase text-amber-600 hover:bg-amber-50"
+										variant="warm"
+										className="h-8 text-[10px] font-black uppercase magnetic-button glow-on-hover font-display"
 										asChild
 									>
 										<Link to="/marketing/dashboard">

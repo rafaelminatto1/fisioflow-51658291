@@ -251,7 +251,7 @@ export function SOAPAssistant({
 
 				setProgress(50);
 
-				// Firebase - transcrever áudio
+				// Gemini - transcrever áudio
 				const { transcribeAudioBlob } = await import(
 					"@/services/ai/geminiAiService"
 				);

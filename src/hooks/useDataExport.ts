@@ -2,7 +2,7 @@
  * useDataExport - Migrated to Neon/Workers API
  *
  * Fetches all patient-related data via the Workers clients, then serializes a
- * JSON snapshot for download. This avoids any Firestore dependency inside the hook.
+ * JSON snapshot for download.
  */
 
 import { useState } from "react";

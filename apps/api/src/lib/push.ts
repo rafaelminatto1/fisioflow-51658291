@@ -7,7 +7,7 @@ interface PushPayload {
 }
 
 /**
- * Envia notificação push para múltiplos tokens via Firebase Cloud Messaging (FCM) v1 API
+ * Envia notificação push para múltiplos tokens via Neon Cloud Messaging (FCM) v1 API
  * Nota: Requer SERVICE_ACCOUNT_KEY nas variáveis de ambiente do Cloudflare
  */
 export async function sendPushBatch(
@@ -17,7 +17,7 @@ export async function sendPushBatch(
 ) {
 	if (!tokens || tokens.length === 0) return;
 
-	// Em um ambiente Cloudflare Worker, o envio de push geralmente é feito via fetch para a API do Google/Firebase
+	// Em um ambiente Cloudflare Worker, o envio de push geralmente é feito via fetch para a API do Google/Neon
 	// ou através de um webhook/serviço externo para evitar limites de execução.
 	// Como estamos refinando, vamos estruturar o loop de disparos.
 
@@ -31,7 +31,7 @@ export async function sendPushBatch(
 	const results = await Promise.allSettled(
 		tokens.map(async (token) => {
 			// Exemplo de chamada FCM v1 (necessita token de acesso OAuth2)
-			// return fetch(`https://fcm.googleapis.com/v1/projects/${env.FIREBASE_PROJECT_ID}/messages:send`, { ... });
+			// return fetch(`https://fcm.googleapis.com/v1/projects/${env.Neon_PROJECT_ID}/messages:send`, { ... });
 			return { success: true, token };
 		}),
 	);

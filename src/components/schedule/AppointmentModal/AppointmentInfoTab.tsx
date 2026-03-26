@@ -89,11 +89,11 @@ export const AppointmentInfoTab: React.FC<AppointmentInfoTabProps> = ({
 	const watchPaymentAmount = watch("payment_amount");
 
 	return (
-		<div className="grid grid-cols-1 md:grid-cols-12 gap-4">
+		<div className="grid grid-cols-1 md:grid-cols-12 gap-3">
 			{/* Bloco 1: Paciente (Bento High-End) */}
-			<div className="md:col-span-12 lg:col-span-7 rounded-2xl border border-blue-100 bg-white/50 backdrop-blur-sm p-5 shadow-premium-sm hover:shadow-premium-md transition-all duration-300">
-				<h4 className="text-xs font-black text-slate-400 uppercase tracking-widest mb-4 flex items-center gap-2">
-					<span className="w-1.5 h-5 bg-blue-500 rounded-full" />
+			<div className="md:col-span-12 lg:col-span-6 rounded-xl border border-blue-100 bg-white/50 backdrop-blur-sm p-4 shadow-premium-sm hover:shadow-premium-md transition-all duration-300">
+				<h4 className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3 flex items-center gap-2">
+					<span className="w-1 h-4 bg-blue-500 rounded-full" />
 					Informações do Paciente
 				</h4>
 				<PatientSelectionSection
@@ -122,9 +122,9 @@ export const AppointmentInfoTab: React.FC<AppointmentInfoTabProps> = ({
 			</div>
 
 			{/* Bloco 2: Data e Hora */}
-			<div className="md:col-span-6 lg:col-span-5 rounded-2xl border border-blue-100 bg-white/50 backdrop-blur-sm p-5 shadow-premium-sm hover:shadow-premium-md transition-all duration-300">
-				<h4 className="text-xs font-black text-slate-400 uppercase tracking-widest mb-4 flex items-center gap-2">
-					<span className="w-1.5 h-5 bg-emerald-500 rounded-full" />
+			<div className="md:col-span-6 lg:col-span-6 rounded-xl border border-blue-100 bg-white/50 backdrop-blur-sm p-4 shadow-premium-sm hover:shadow-premium-md transition-all duration-300">
+				<h4 className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3 flex items-center gap-2">
+					<span className="w-1 h-4 bg-emerald-500 rounded-full" />
 					Horário da Sessão
 				</h4>
 				<DateTimeSection
@@ -142,16 +142,16 @@ export const AppointmentInfoTab: React.FC<AppointmentInfoTabProps> = ({
 			</div>
 
 			{/* Bloco 3: Profissional e Status */}
-			<div className="md:col-span-6 lg:col-span-5 rounded-2xl border border-blue-100 bg-white/50 backdrop-blur-sm p-5 shadow-premium-sm hover:shadow-premium-md transition-all duration-300 space-y-4">
-				<h4 className="text-xs font-black text-slate-400 uppercase tracking-widest mb-4 flex items-center gap-2">
-					<span className="w-1.5 h-5 bg-violet-500 rounded-full" />
+			<div className="md:col-span-6 lg:col-span-6 rounded-xl border border-blue-100 bg-white/50 backdrop-blur-sm p-4 shadow-premium-sm hover:shadow-premium-md transition-all duration-300 space-y-3">
+				<h4 className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3 flex items-center gap-2">
+					<span className="w-1 h-4 bg-violet-500 rounded-full" />
 					Atendimento
 				</h4>
-				<div className="space-y-4">
-					<div className="space-y-1.5">
-						<Label className="text-xs font-black text-slate-400 uppercase tracking-widest flex items-center gap-1.5">
-							<UserCog className="h-3.5 w-3.5" />
-							Fisioterapeuta Responsável
+				<div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+					<div className="space-y-1">
+						<Label className="text-[10px] font-black text-slate-400 uppercase tracking-widest flex items-center gap-1.5">
+							<UserCog className="h-3 w-3" />
+							Profissional
 						</Label>
 						<Select
 							value={watch("therapist_id") || THERAPIST_SELECT_NONE}
@@ -163,7 +163,7 @@ export const AppointmentInfoTab: React.FC<AppointmentInfoTabProps> = ({
 							}
 							disabled={currentMode === "view" || therapistsLoading}
 						>
-							<SelectTrigger className="h-11 rounded-xl border-blue-100 bg-white shadow-sm ring-offset-background focus:ring-2 focus:ring-blue-500/20">
+							<SelectTrigger className="h-9 rounded-lg border-blue-100 bg-white shadow-sm ring-offset-background focus:ring-2 focus:ring-blue-500/20 text-xs">
 								<SelectValue
 									placeholder={
 										therapistsLoading ? "Carregando..." : THERAPIST_PLACEHOLDER
@@ -175,7 +175,7 @@ export const AppointmentInfoTab: React.FC<AppointmentInfoTabProps> = ({
 									{THERAPIST_PLACEHOLDER}
 								</SelectItem>
 								{therapists.map((t) => (
-									<SelectItem key={t.id} value={t.id}>
+									<SelectItem key={t.id} value={t.id} className="text-xs">
 										{formatTherapistLabel(t)}
 									</SelectItem>
 								))}
@@ -183,10 +183,10 @@ export const AppointmentInfoTab: React.FC<AppointmentInfoTabProps> = ({
 						</Select>
 					</div>
 
-					<div className="space-y-1.5">
-						<Label className="text-xs font-black text-slate-400 uppercase tracking-widest flex items-center gap-1.5">
-							<Check className="h-3.5 w-3.5" />
-							Status Atual
+					<div className="space-y-1">
+						<Label className="text-[10px] font-black text-slate-400 uppercase tracking-widest flex items-center gap-1.5">
+							<Check className="h-3 w-3" />
+							Status
 						</Label>
 						<Select
 							value={watch("status") || "agendado"}
@@ -195,13 +195,13 @@ export const AppointmentInfoTab: React.FC<AppointmentInfoTabProps> = ({
 							}
 							disabled={currentMode === "view"}
 						>
-							<SelectTrigger className="h-11 rounded-xl border-blue-100 bg-white shadow-sm ring-offset-background focus:ring-2 focus:ring-blue-500/20">
+							<SelectTrigger className="h-9 rounded-lg border-blue-100 bg-white shadow-sm ring-offset-background focus:ring-2 focus:ring-blue-500/20 text-xs">
 								<SelectValue />
 							</SelectTrigger>
 							<SelectContent className="rounded-xl border-blue-100">
 								{Object.entries(APPOINTMENT_STATUS_CONFIG).map(
 									([key, config]) => (
-										<SelectItem key={key} value={key}>
+										<SelectItem key={key} value={key} className="text-xs">
 											<span className="flex items-center gap-2">
 												<span
 													className={cn(
@@ -221,9 +221,9 @@ export const AppointmentInfoTab: React.FC<AppointmentInfoTabProps> = ({
 			</div>
 
 			{/* Bloco 4: Financeiro */}
-			<div className="md:col-span-12 lg:col-span-7 rounded-2xl border border-blue-100 bg-white/50 backdrop-blur-sm p-5 shadow-premium-sm hover:shadow-premium-md transition-all duration-300">
-				<h4 className="text-xs font-black text-slate-400 uppercase tracking-widest mb-4 flex items-center gap-2">
-					<span className="w-1.5 h-5 bg-emerald-600 rounded-full" />
+			<div className="md:col-span-12 lg:col-span-6 rounded-xl border border-blue-100 bg-white/50 backdrop-blur-sm p-4 shadow-premium-sm hover:shadow-premium-md transition-all duration-300">
+				<h4 className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3 flex items-center gap-2">
+					<span className="w-1 h-4 bg-emerald-600 rounded-full" />
 					Financeiro
 				</h4>
 				<PaymentTab
@@ -237,30 +237,30 @@ export const AppointmentInfoTab: React.FC<AppointmentInfoTabProps> = ({
 			</div>
 
 			{/* Bloco 5: Observações */}
-			<div className="md:col-span-12 rounded-2xl border border-blue-100 bg-white/50 backdrop-blur-sm p-5 shadow-premium-sm hover:shadow-premium-md transition-all duration-300">
+			<div className="md:col-span-12 rounded-xl border border-blue-100 bg-white/50 backdrop-blur-sm p-4 shadow-premium-sm hover:shadow-premium-md transition-all duration-300">
 				<Collapsible open={isNotesExpanded} onOpenChange={setIsNotesExpanded}>
-					<div className="space-y-4">
+					<div className="space-y-3">
 						<CollapsibleTrigger asChild>
 							<div className="flex items-center justify-between cursor-pointer group">
-								<h4 className="text-xs font-black text-slate-400 uppercase tracking-widest flex items-center gap-2">
-									<span className="w-1.5 h-6 bg-amber-400 rounded-full" />
+								<h4 className="text-[10px] font-black text-slate-400 uppercase tracking-widest flex items-center gap-2">
+									<span className="w-1 h-5 bg-amber-400 rounded-full" />
 									Observações e Notas
 								</h4>
 								{isNotesExpanded ? (
-									<ChevronUp className="h-5 w-5 text-blue-400" />
+									<ChevronUp className="h-4 w-4 text-blue-400" />
 								) : (
-									<ChevronDown className="h-5 w-5 text-blue-400" />
+									<ChevronDown className="h-4 w-4 text-blue-400" />
 								)}
 							</div>
 						</CollapsibleTrigger>
 
-						<CollapsibleContent className="pt-2">
+						<CollapsibleContent className="pt-1">
 							<Textarea
 								{...register("notes")}
 								placeholder="Informações importantes sobre o atendimento..."
-								rows={3}
+								rows={2}
 								disabled={currentMode === "view"}
-								className="resize-none text-sm min-h-[100px] border-blue-100 focus-visible:ring-blue-500/20 rounded-xl bg-white shadow-inner"
+								className="resize-none text-xs min-h-[60px] border-blue-100 focus-visible:ring-blue-500/20 rounded-lg bg-white shadow-inner"
 							/>
 						</CollapsibleContent>
 					</div>

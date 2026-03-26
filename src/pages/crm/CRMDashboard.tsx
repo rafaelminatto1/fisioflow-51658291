@@ -1,24 +1,24 @@
 // Lazy load LeadImport (contém exceljs - ~946KB) - só carrega quando a tab é acessada
 
-import { useState, lazy, Suspense } from "react";
+import {
+	BarChart3,
+	Bot,
+	CheckSquare,
+	Loader2,
+	Send,
+	Upload,
+	Users,
+	Zap,
+} from "lucide-react";
+import { lazy, Suspense, useState } from "react";
+import { CRMAnalytics } from "@/components/crm/CRMAnalytics";
+import { CRMAutomacoes } from "@/components/crm/CRMAutomacoes";
+import { CRMAutomationDashboard } from "@/components/crm/CRMAutomationDashboard";
+import { CRMCampanhas } from "@/components/crm/CRMCampanhas";
+import { CRMTarefas } from "@/components/crm/CRMTarefas";
+import { LeadsContent } from "@/components/crm/LeadsContent";
 import { MainLayout } from "@/components/layout/MainLayout";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import {
-	Users,
-	CheckSquare,
-	Send,
-	Zap,
-	BarChart3,
-	Upload,
-	Loader2,
-	Bot,
-} from "lucide-react";
-import { LeadsContent } from "@/components/crm/LeadsContent";
-import { CRMTarefas } from "@/components/crm/CRMTarefas";
-import { CRMCampanhas } from "@/components/crm/CRMCampanhas";
-import { CRMAutomacoes } from "@/components/crm/CRMAutomacoes";
-import { CRMAnalytics } from "@/components/crm/CRMAnalytics";
-import { CRMAutomationDashboard } from "@/components/crm/CRMAutomationDashboard";
 
 const LeadImport = lazy(() =>
 	import("@/components/crm/LeadImport").then((m) => ({
@@ -32,9 +32,11 @@ export default function CRMDashboard() {
 	return (
 		<MainLayout>
 			<div className="space-y-6">
-				<div>
-					<h1 className="text-3xl font-bold">CRM & Automações</h1>
-					<p className="text-muted-foreground mt-1">
+				<div className="gradient-brand-light rounded-3xl p-8 border border-primary/20 card-premium-hover">
+					<h1 className="font-display text-4xl font-black tracking-tighter mb-2 text-primary">
+						CRM & Automações
+					</h1>
+					<p className="text-muted-foreground mt-1 font-medium text-lg">
 						Gerencie pacientes em potencial, campanhas, tarefas e os robôs do
 						FisioFlow
 					</p>
@@ -44,49 +46,49 @@ export default function CRMDashboard() {
 					<TabsList className="flex flex-wrap gap-2 bg-transparent h-auto p-0 justify-start w-full">
 						<TabsTrigger
 							value="leads"
-							className="gap-2 data-[state=active]:bg-primary/10 data-[state=active]:text-primary border border-transparent data-[state=active]:border-primary/20 rounded-xl px-4 py-2"
+							className="magnetic-button gap-2 data-[state=active]:bg-primary/10 data-[state=active]:text-primary border border-transparent data-[state=active]:border-primary/20 rounded-xl px-4 py-2"
 						>
 							<Users className="h-4 w-4" />
 							<span>Leads</span>
 						</TabsTrigger>
 						<TabsTrigger
 							value="campanhas"
-							className="gap-2 data-[state=active]:bg-primary/10 data-[state=active]:text-primary border border-transparent data-[state=active]:border-primary/20 rounded-xl px-4 py-2"
+							className="magnetic-button gap-2 data-[state=active]:bg-primary/10 data-[state=active]:text-primary border border-transparent data-[state=active]:border-primary/20 rounded-xl px-4 py-2"
 						>
 							<Send className="h-4 w-4" />
 							<span>Campanhas Manuais</span>
 						</TabsTrigger>
 						<TabsTrigger
-							value="regras_automacao"
-							className="gap-2 data-[state=active]:bg-primary/10 data-[state=active]:text-primary border border-transparent data-[state=active]:border-primary/20 rounded-xl px-4 py-2"
+							value="regresos_automacao"
+							className="magnetic-button gap-2 data-[state=active]:bg-primary/10 data-[state=active]:text-primary border border-transparent data-[state=active]:border-primary/20 rounded-xl px-4 py-2"
 						>
 							<Zap className="h-4 w-4" />
-							<span>Regras de Automação</span>
+							<span>Regas de Automação</span>
 						</TabsTrigger>
 						<TabsTrigger
 							value="monitor_robo"
-							className="gap-2 data-[state=active]:bg-emerald-500/10 data-[state=active]:text-emerald-600 border border-transparent data-[state=active]:border-emerald-500/20 rounded-xl px-4 py-2"
+							className="magnetic-button gap-2 data-[state=active]:bg-emerald-500/10 data-[state=active]:text-emerald-600 border border-transparent data-[state=active]:border-emerald-500/20 rounded-xl px-4 py-2"
 						>
 							<Bot className="h-4 w-4" />
 							<span>Monitor do Robô (Ao vivo)</span>
 						</TabsTrigger>
 						<TabsTrigger
 							value="tarefas"
-							className="gap-2 data-[state=active]:bg-primary/10 data-[state=active]:text-primary border border-transparent data-[state=active]:border-primary/20 rounded-xl px-4 py-2"
+							className="magnetic-button gap-2 data-[state=active]:bg-primary/10 data-[state=active]:text-primary border border-transparent data-[state=active]:border-primary/20 rounded-xl px-4 py-2"
 						>
 							<CheckSquare className="h-4 w-4" />
 							<span>Tarefas</span>
 						</TabsTrigger>
 						<TabsTrigger
 							value="analytics"
-							className="gap-2 data-[state=active]:bg-primary/10 data-[state=active]:text-primary border border-transparent data-[state=active]:border-primary/20 rounded-xl px-4 py-2"
+							className="magnetic-button gap-2 data-[state=active]:bg-primary/10 data-[state=active]:text-primary border border-transparent data-[state=active]:border-primary/20 rounded-xl px-4 py-2"
 						>
 							<BarChart3 className="h-4 w-4" />
 							<span>Analytics</span>
 						</TabsTrigger>
 						<TabsTrigger
 							value="importar"
-							className="gap-2 data-[state=active]:bg-primary/10 data-[state=active]:text-primary border border-transparent data-[state=active]:border-primary/20 rounded-xl px-4 py-2"
+							className="magnetic-button gap-2 data-[state=active]:bg-primary/10 data-[state=active]:text-primary border border-transparent data-[state=active]:border-primary/20 rounded-xl px-4 py-2"
 						>
 							<Upload className="h-4 w-4" />
 							<span>Importar</span>

@@ -131,7 +131,7 @@ const isCancelledStatus = (status: string | undefined) => {
 // TYPES
 // ============================================================================
 
-interface _FirestoreDoc {
+interface _DatabaseDoc {
 	id: string;
 	[key: string]: unknown;
 }
