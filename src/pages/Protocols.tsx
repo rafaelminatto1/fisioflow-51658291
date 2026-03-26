@@ -1,30 +1,18 @@
-import { useState } from "react";
-import MainLayout from "@/components/layout/MainLayout";
-import { Card } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import {
-	Search,
-	SortAsc,
+	Download,
+	Filter,
 	Grid3X3,
 	List,
-	Filter,
-	Download,
 	PlusCircle,
+	Search,
+	SortAsc,
 	Target,
 } from "lucide-react";
-import {
-	useExerciseProtocols,
-	type ExerciseProtocol,
-} from "@/hooks/useExerciseProtocols";
-import { useProtocolFilters } from "@/hooks/useProtocolFilters";
-import { Skeleton } from "@/components/ui/skeleton";
-import {
-	DropdownMenu,
-	DropdownMenuContent,
-	DropdownMenuItem,
-	DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
+import { useState } from "react";
+import MainLayout from "@/components/layout/MainLayout";
+import { NewProtocolModal } from "@/components/modals/NewProtocolModal";
+import { ProtocolCardEnhanced } from "@/components/protocols/ProtocolCardEnhanced";
+import { ProtocolDetailView } from "@/components/protocols/ProtocolDetailView";
 import {
 	AlertDialog,
 	AlertDialogAction,
@@ -35,16 +23,29 @@ import {
 	AlertDialogHeader,
 	AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { NewProtocolModal } from "@/components/modals/NewProtocolModal";
+import { Button } from "@/components/ui/button";
+import { Card } from "@/components/ui/card";
 import {
-	PROTOCOL_CATEGORIES,
+	DropdownMenu,
+	DropdownMenuContent,
+	DropdownMenuItem,
+	DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { Input } from "@/components/ui/input";
+import { Skeleton } from "@/components/ui/skeleton";
+import {
+	getQuickTemplateCounts,
 	MUSCULATURE_FILTERS,
+	PROTOCOL_CATEGORIES,
 	QUICK_TEMPLATES,
 	SEED_PROTOCOLS_DATA,
 } from "@/data/protocols";
-import { ProtocolCardEnhanced } from "@/components/protocols/ProtocolCardEnhanced";
-import { ProtocolDetailView } from "@/components/protocols/ProtocolDetailView";
 import { useToast } from "@/hooks/use-toast";
+import {
+	type ExerciseProtocol,
+	useExerciseProtocols,
+} from "@/hooks/useExerciseProtocols";
+import { useProtocolFilters } from "@/hooks/useProtocolFilters";
 import { cn } from "@/lib/utils";
 
 export default function Protocols() {
@@ -60,6 +61,8 @@ export default function Protocols() {
 		isUpdating,
 		isDeleting,
 	} = useExerciseProtocols();
+
+	const quickTemplateCounts = getQuickTemplateCounts(protocols);
 	const { toast } = useToast();
 	const [isSeeding, setIsSeeding] = useState(false);
 
@@ -280,11 +283,11 @@ export default function Protocols() {
 
 					{/* Moved Quick Templates Cards */}
 					<div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-						{QUICK_TEMPLATES.map((template, i) => {
+						{quickTemplateCounts.map((template) => {
 							const isActive = activeTemplate === template.name;
 							return (
 								<Card
-									key={i}
+									key={template.name}
 									className={cn(
 										"p-4 hover:shadow-md transition-all cursor-pointer group border-l-4 overflow-hidden relative",
 										isActive ? "ring-2 ring-primary ring-offset-2" : "",

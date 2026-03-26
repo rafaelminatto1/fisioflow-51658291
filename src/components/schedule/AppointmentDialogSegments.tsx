@@ -161,7 +161,7 @@ export const DateTimeSection = ({
 		setValue,
 		formState: { errors },
 	} = useFormContext<AppointmentFormData>();
-	// Use props if provided, otherwise watch (for backwards compatibility)
+	
 	const _watchedDateStr = watchedDateStr ?? watch("appointment_date");
 	const _watchedTime = watchedTime ?? watch("appointment_time");
 	const _watchedDuration = watchedDuration ?? watch("duration");
@@ -184,228 +184,224 @@ export const DateTimeSection = ({
 	const exceedsCapacity = conflictCount >= maxCapacity;
 
 	return (
-		<div className="space-y-3">
-			{/* Data — linha própria para não truncar */}
+		<div className="space-y-4">
+			{/* Seção Data — Card Minimalista Premium */}
 			<div className="space-y-2">
-				<Label
-					id="date-label"
-					className="text-xs sm:text-sm font-medium flex items-center gap-1.5"
-				>
-					<CalendarIcon className="h-3.5 w-3.5 text-primary" />
-					Data *
-				</Label>
+				<div className="flex items-center justify-between">
+					<Label
+						id="date-label"
+						className="text-[10px] font-black text-slate-400 uppercase tracking-widest flex items-center gap-1.5"
+					>
+						<CalendarIcon className="h-3 w-3 text-blue-500" />
+						Data do Atendimento *
+					</Label>
+				</div>
+				
 				<Popover open={isCalendarOpen} onOpenChange={setIsCalendarOpen}>
 					<PopoverTrigger asChild>
 						<Button
 							type="button"
 							variant="outline"
 							className={cn(
-								premiumFieldClass,
-								"w-full justify-start font-normal",
-								!watchedDate && "text-muted-foreground",
-								errors.appointment_date &&
-									"border-destructive text-destructive shadow-[0_0_0_4px_hsl(var(--destructive)/0.08)]",
+								"h-12 w-full justify-between items-center rounded-2xl border border-blue-100 bg-white px-4 text-left shadow-premium-sm transition-all hover:border-blue-200 hover:bg-blue-50/30 focus:ring-2 focus:ring-blue-100",
+								!watchedDate && "text-slate-400",
+								errors.appointment_date && "border-red-200 bg-red-50/10 text-red-600",
 							)}
 							disabled={disabled}
-							aria-labelledby="date-label"
-							aria-required="true"
-							aria-invalid={!!errors.appointment_date}
-							aria-describedby={
-								errors.appointment_date ? "date-error" : undefined
-							}
 						>
-							<CalendarIcon className="mr-2 h-4 w-4 shrink-0 text-primary/80" />
-							<span className="truncate">
-								{watchedDate
-									? format(watchedDate, "dd 'de' MMMM", { locale: ptBR })
-									: "Selecionar data"}
-							</span>
+							<div className="flex items-center gap-3">
+								<div className="p-2 rounded-xl bg-blue-50 text-blue-600 group-hover:bg-blue-100 transition-colors">
+									<CalendarIcon className="h-4 w-4" />
+								</div>
+								<div className="flex flex-col items-start leading-tight">
+									<span className="text-sm font-bold text-slate-700">
+										{watchedDate
+											? format(watchedDate, "dd 'de' MMMM, yyyy", { locale: ptBR })
+											: "Selecionar data"}
+									</span>
+									<span className="text-[10px] text-slate-400 font-medium tracking-tight">
+										{watchedDate ? format(watchedDate, "EEEE", { locale: ptBR }) : "Próximo dia disponível"}
+									</span>
+								</div>
+							</div>
+							<ChevronDown className="h-4 w-4 text-slate-300 group-hover:text-blue-400 transition-colors" />
 						</Button>
 					</PopoverTrigger>
 					<PopoverContent
-						className="w-auto rounded-[22px] border border-border/70 bg-background/95 p-0 shadow-[0_24px_80px_-28px_rgba(15,23,42,0.45)] backdrop-blur-xl"
+						className="w-auto p-0 border border-blue-50 shadow-premium-lg rounded-[2.5rem] overflow-hidden"
 						align="start"
 					>
-						<div className="p-3 border-b border-border/50 flex items-center gap-2">
-							<Button
-								variant="ghost"
-								size="sm"
-								className="h-7 text-[10px] font-bold uppercase tracking-wider hover:bg-primary/10 hover:text-primary"
-								onClick={() => {
-									setValue(
-										"appointment_date",
-										format(new Date(), "yyyy-MM-dd"),
-									);
-									setIsCalendarOpen(false);
-								}}
-							>
-								Hoje
-							</Button>
-							<Button
-								variant="ghost"
-								size="sm"
-								className="h-7 text-[10px] font-bold uppercase tracking-wider hover:bg-primary/10 hover:text-primary"
-								onClick={() => {
-									setValue(
-										"appointment_date",
-										format(addDays(new Date(), 1), "yyyy-MM-dd"),
-									);
-									setIsCalendarOpen(false);
-								}}
-							>
-								Amanhã
-							</Button>
+						<div className="p-4 bg-gradient-to-br from-blue-50/50 to-white/90 backdrop-blur-md border-b border-blue-50 flex items-center justify-between gap-2">
+							<span className="text-[11px] font-black uppercase tracking-wider text-blue-600/70">Calendário Clínico</span>
+							<div className="flex gap-2">
+								<Button
+									variant="ghost"
+									size="sm"
+									className="h-7 px-3 text-[10px] font-bold uppercase tracking-wider hover:bg-blue-50 text-blue-600 hover:text-blue-700 rounded-full"
+									onClick={() => {
+										setValue("appointment_date", format(new Date(), "yyyy-MM-dd"));
+										setIsCalendarOpen(false);
+									}}
+								>
+									Hoje
+								</Button>
+								<Button
+									variant="ghost"
+									size="sm"
+									className="h-7 px-3 text-[10px] font-bold uppercase tracking-wider hover:bg-blue-50 text-blue-600 hover:text-blue-700 rounded-full"
+									onClick={() => {
+										setValue("appointment_date", format(addDays(new Date(), 1), "yyyy-MM-dd"));
+										setIsCalendarOpen(false);
+									}}
+								>
+									Amanhã
+								</Button>
+							</div>
 						</div>
-						<Calendar
-							mode="single"
-							selected={watchedDate || undefined}
-							onSelect={(date) => {
-								if (date) {
-									setValue("appointment_date", format(date, "yyyy-MM-dd"));
-								}
-								setIsCalendarOpen(false);
-							}}
-							locale={ptBR}
-							initialFocus
-						/>
+						<div className="p-2 bg-white">
+							<Calendar
+								mode="single"
+								selected={watchedDate || undefined}
+								onSelect={(date) => {
+									if (date) {
+										setValue("appointment_date", format(date, "yyyy-MM-dd"));
+									}
+									setIsCalendarOpen(false);
+								}}
+								locale={ptBR}
+								initialFocus
+								className="rounded-3xl border-0"
+							/>
+						</div>
 					</PopoverContent>
 				</Popover>
 				{errors.appointment_date && (
-					<p id="date-error" className="text-xs text-destructive font-medium">
+					<p id="date-error" className="text-[10px] text-red-500 font-bold uppercase tracking-tight flex items-center gap-1">
+						<AlertTriangle className="h-3 w-3" />
 						{(errors.appointment_date as { message?: string })?.message}
 					</p>
 				)}
 			</div>
 
-			{/* Horário + Duração — dois campos lado a lado */}
-			<div className="grid grid-cols-2 gap-3">
-				<div className="space-y-2 relative">
-					<div className="flex items-center justify-between">
-						<Label
-							id="time-label"
-							className="text-xs sm:text-sm font-medium flex items-center gap-1.5"
-						>
-							<Clock className="h-3.5 w-3.5 text-primary" />
-							Horário *
+			{/* Grid: Horário e Duração — Impacto Visual */}
+			<div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+				<div className="space-y-2 group">
+					<div className="flex items-center justify-between min-h-[16px]">
+						<Label className="text-[10px] font-black text-slate-400 uppercase tracking-widest flex items-center gap-1.5">
+							<Clock className="h-3 w-3 text-blue-500" />
+							Hora de Início
 						</Label>
 						{onAutoSchedule && !disabled && (
-							<Button
+							<button
 								type="button"
-								variant="ghost"
-								size="icon"
-								className="h-6 w-6 -mt-1 -mr-1 text-primary hover:text-primary hover:bg-primary/10"
+								className="flex items-center gap-1 text-[9px] font-bold text-blue-600 uppercase tracking-wider bg-blue-50 hover:bg-blue-100 px-2 py-0.5 rounded-full transition-colors"
 								onClick={onAutoSchedule}
-								title="Sugerir melhor horário"
-								aria-label="Sugerir melhor horário"
 							>
-								<Wand2 className="h-3.5 w-3.5" />
-							</Button>
+								<Wand2 className="h-2.5 w-2.5" />
+								Sugerir
+							</button>
 						)}
 					</div>
 					<Select
-						value={watchedTime}
+						value={_watchedTime}
 						onValueChange={(value) => setValue("appointment_time", value)}
 						disabled={disabled}
 					>
-						<SelectTrigger
-							className={cn(
-								premiumFieldClass,
-								errors.appointment_time &&
-									"border-destructive text-destructive shadow-[0_0_0_4px_hsl(var(--destructive)/0.08)]",
-							)}
-							aria-labelledby="time-label"
-							aria-required="true"
-							aria-invalid={!!errors.appointment_time}
-							aria-describedby={
-								errors.appointment_time ? "time-error" : undefined
-							}
-						>
-							<SelectValue placeholder="Hora" />
+						<SelectTrigger className="h-11 rounded-2xl border-blue-100 bg-white px-4 text-xs font-bold text-slate-700 shadow-premium-sm hover:border-blue-200 transition-all focus:ring-blue-100">
+							<SelectValue placeholder="Escolha um horário" />
 						</SelectTrigger>
-						<SelectContent
-							className={cn(premiumSelectContentClass, "max-h-60")}
-						>
+						<SelectContent className="rounded-2xl border-blue-50 shadow-premium-lg max-h-60 p-1">
 							{timeSlots.map((slot) => (
-								<SelectItem key={slot} value={slot}>
+								<SelectItem key={slot} value={slot} className="rounded-xl text-xs font-medium py-2.5 transition-colors focus:bg-blue-50 focus:text-blue-700">
 									{slot}
 								</SelectItem>
 							))}
 						</SelectContent>
 					</Select>
-					{errors.appointment_time && (
-						<p id="time-error" className="text-xs text-destructive font-medium">
-							{(errors.appointment_time as { message?: string })?.message}
-						</p>
-					)}
 				</div>
 
 				<div className="space-y-2">
-					<Label className="text-xs sm:text-sm font-medium flex items-center gap-1.5">
-						<Zap className="h-3.5 w-3.5 text-primary" />
-						Duração
+					<Label className="text-[10px] font-black text-slate-400 uppercase tracking-widest flex items-center gap-1.5">
+						<Zap className="h-3 w-3 text-amber-500" />
+						Duração da Sessão
 					</Label>
 					<Select
-						value={watchedDuration?.toString()}
+						value={_watchedDuration?.toString()}
 						onValueChange={(value) => setValue("duration", parseInt(value))}
 						disabled={disabled}
 					>
-						<SelectTrigger className={premiumFieldClass}>
+						<SelectTrigger className="h-11 rounded-2xl border-blue-100 bg-white px-4 text-xs font-bold text-slate-700 shadow-premium-sm hover:border-blue-200 transition-all focus:ring-blue-100">
 							<SelectValue />
 						</SelectTrigger>
-						<SelectContent className={premiumSelectContentClass}>
-							<SelectItem value="30">30 min</SelectItem>
-							<SelectItem value="45">45 min</SelectItem>
-							<SelectItem value="60">1 hora</SelectItem>
-							<SelectItem value="90">1h30</SelectItem>
-							<SelectItem value="120">2 horas</SelectItem>
+						<SelectContent className="rounded-2xl border-blue-50 shadow-premium-lg p-1">
+							<SelectItem value="30" className="rounded-xl py-2">30 min</SelectItem>
+							<SelectItem value="45" className="rounded-xl py-2">45 min</SelectItem>
+							<SelectItem value="60" className="rounded-xl py-2">1 hora</SelectItem>
+							<SelectItem value="90" className="rounded-xl py-2">1h 30m</SelectItem>
+							<SelectItem value="120" className="rounded-xl py-2">2 horas</SelectItem>
 						</SelectContent>
 					</Select>
 				</div>
 			</div>
 
-			{watchedDate && watchedTime && (
-				<div
+			{/* Status de Disponibilidade — Banner High-End */}
+			{watchedDate && _watchedTime && (
+				<div 
 					className={cn(
-						"flex items-center justify-between p-3 border rounded-lg text-sm transition-all",
-						exceedsCapacity
-							? "border-red-500/30 bg-red-500/5"
-							: conflictCount > 0
-								? "border-amber-500/30 bg-amber-500/5"
-								: "border-emerald-500/30 bg-emerald-500/5",
+						"relative overflow-hidden rounded-2xl border p-3 transition-all duration-500",
+						exceedsCapacity 
+							? "border-red-100 bg-red-50/30" 
+							: conflictCount > 0 
+								? "border-amber-100 bg-amber-50/30" 
+								: "border-emerald-100 bg-emerald-50/30"
 					)}
 				>
-					<div className="flex items-center gap-2">
-						{exceedsCapacity ? (
-							<AlertTriangle className="w-4 h-4 text-red-600" />
-						) : (
-							<Check className="w-4 h-4 text-emerald-600" />
-						)}
-						<span
-							className={cn(
-								"font-medium",
-								exceedsCapacity
-									? "text-red-700"
-									: conflictCount > 0
-										? "text-amber-700"
-										: "text-emerald-700",
-							)}
-						>
-							{exceedsCapacity
-								? "Horário lotado!"
-								: availableSlots === maxCapacity
-									? "Horário livre"
-									: `${availableSlots} ${availableSlots !== 1 ? "vagas disponíveis" : "vaga disponível"}`}
-						</span>
+					{/* Gradiente sutil de profundidade */}
+					<div className={cn(
+						"absolute inset-0 opacity-[0.03]",
+						exceedsCapacity ? "bg-red-600" : conflictCount > 0 ? "bg-amber-600" : "bg-emerald-600"
+					)} />
+					
+					<div className="flex items-center justify-between relative z-10">
+						<div className="flex items-center gap-3">
+							<div className={cn(
+								"p-1.5 rounded-lg",
+								exceedsCapacity ? "bg-red-100 text-red-600" : conflictCount > 0 ? "bg-amber-100 text-amber-600" : "bg-emerald-100 text-emerald-600"
+							)}>
+								{exceedsCapacity ? <AlertTriangle className="h-3.5 w-3.5" /> : <Check className="h-3.5 w-3.5" />}
+							</div>
+							<div className="flex flex-col">
+								<span className={cn(
+									"text-[11px] font-black uppercase tracking-widest",
+									exceedsCapacity ? "text-red-700" : conflictCount > 0 ? "text-amber-700" : "text-emerald-700"
+								)}>
+									{exceedsCapacity ? "Horário Indisponível" : "Horário Confirmado"}
+								</span>
+								<span className="text-[10px] font-medium text-slate-500">
+									{exceedsCapacity ? "Capacidade máxima atingida." : conflictCount > 0 ? "Há outros agendamentos, mas com vaga." : "Profissional disponível sem conflitos."}
+								</span>
+							</div>
+						</div>
+						
+						<div className="flex flex-col items-end gap-1">
+							<div className="flex -space-x-1.5">
+								{[...Array(maxCapacity)].map((_, i) => (
+									<div 
+										key={i} 
+										className={cn(
+											"h-1.5 w-4 rounded-full border border-white transition-all duration-700 shadow-sm",
+											i < conflictCount 
+												? (exceedsCapacity ? "bg-red-500" : "bg-amber-500") 
+												: "bg-slate-200"
+										)}
+									/>
+								))}
+							</div>
+							<span className="text-[9px] font-black text-slate-400">
+								{conflictCount} / {maxCapacity} OCUPADO
+							</span>
+						</div>
 					</div>
-					<Badge
-						variant="outline"
-						className={cn(
-							"text-xs h-6",
-							exceedsCapacity ? "border-red-500/50" : "border-muted",
-						)}
-					>
-						{conflictCount}/{maxCapacity}
-					</Badge>
 				</div>
 			)}
 		</div>

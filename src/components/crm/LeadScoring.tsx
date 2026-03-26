@@ -1,4 +1,4 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
@@ -74,7 +74,7 @@ interface LeadScoringProps {
 }
 
 export function LeadScoring({
-	_leadId,
+	leadId,
 	showSettings = false,
 }: LeadScoringProps) {
 	const [activeTab, setActiveTab] = useState<
@@ -88,53 +88,38 @@ export function LeadScoring({
 		}
 	}, [showSettings]);
 
+	const { calculateScores } = useLeadScoring();
+
 	// Buscar scores calculados
 	const { data: scores = [], isLoading } = useQuery({
-		queryKey: ["lead-scores", _leadId],
+		queryKey: ["lead-scores", leadId],
 		queryFn: async () => {
 			const [leadsResult, calculated] = await Promise.all([
 				crmApi.leads.list(),
-				fetchCalculatedLeadScores(_leadId),
+				fetchCalculatedLeadScores(leadId),
 			]);
 			const leadsById = new Map(
-				(leadsResult?.data ?? []).map((lead) => [lead.id, lead]),
+				(leadsResult?.data ?? []).map((lead: any) => [lead.id, lead]),
 			);
-			return calculated
-				.sort((a, b) => b.totalScore - a.totalScore)
-				.map((score) => ({
-					id: score.leadId,
-					lead_id: score.leadId,
-					total_score: score.totalScore,
-					engagement_score: score.engagementScore,
-					demographic_score: score.demographicScore,
-					behavioral_score: score.behavioralScore,
-					tier: score.category,
-					factors: score.factors.map((factor) => ({
-						name: factor.type,
-						points: factor.points,
-						description: factor.description,
-					})),
-					leads: leadsById.get(score.leadId)
-						? { name: leadsById.get(score.leadId)?.nome ?? "Lead" }
-						: null,
-				})) as LeadScoreData[];
+			return (calculated ?? []).map((score: any) => ({
+				id: score.leadId,
+				lead_id: score.leadId,
+				total_score: score.totalScore,
+				engagement_score: score.engagementScore,
+				demographic_score: score.demographicScore,
+				behavioral_score: score.behavioralScore,
+				tier: score.category,
+				factors: (score.factors ?? []).map((factor: any) => ({
+					name: factor.type,
+					points: factor.points,
+					description: factor.description,
+				})),
+				leads: leadsById.get(score.leadId)
+					? { name: (leadsById.get(score.leadId) as any)?.nome ?? "Lead" }
+					: null,
+			})) as LeadScoreData[];
 		},
 	});
-
-	// Buscar regras (unused but kept for future use)
-	// const { data: regras = [] } = useQuery({
-	//   queryKey: ['lead-scoring-regras'],
-	//   queryFn: async () => {
-	//     const { data, error } = await supabase
-	//       .from('lead_scoring_regras')
-	//       .select('*')
-	//       .order('points', { ascending: false });
-	//     if (error) throw error;
-	//     return data;
-	//   },
-	// });
-
-	const { calculateScores } = useLeadScoring();
 
 	// Estatísticas
 	const stats = useMemo(() => {
@@ -174,7 +159,7 @@ export function LeadScoring({
 						Pontuação automática de leads para priorizar atendimento
 					</p>
 				</div>
-				<Button onClick={() => calculateScores.mutate()}>
+				<Button onClick={() => calculateScores.mutate(undefined)}>
 					<Zap className="h-4 w-4 mr-2" />
 					Recalcular Scores
 				</Button>

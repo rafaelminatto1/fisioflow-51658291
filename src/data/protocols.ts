@@ -1,13 +1,13 @@
 import {
-	Grid3X3,
 	Activity,
+	Calendar,
+	Dumbbell,
+	Grid3X3,
 	Heart,
 	Layers,
-	Dumbbell,
 	Target,
-	Calendar,
-	Zap,
 	Users,
+	Zap,
 } from "lucide-react";
 
 // Dados clínicos detalhados dos protocolos
@@ -303,56 +303,56 @@ export const PROTOCOL_CATEGORIES = [
 		id: "all",
 		label: "Todos",
 		icon: Grid3X3,
-		color: "bg-primary",
+		color: "bg-[#6EC1E4]",
 		group: "Geral",
 	},
 	{
 		id: "ombro",
 		label: "Ombro",
 		icon: Heart,
-		color: "bg-rose-500",
+		color: "bg-[#6EC1E4]",
 		group: "Membros Superiores",
 	},
 	{
 		id: "cotovelo",
 		label: "Cotovelo",
 		icon: Activity,
-		color: "bg-orange-500",
+		color: "bg-[#6EC1E4]",
 		group: "Membros Superiores",
 	},
 	{
 		id: "punho_mao",
 		label: "Punho/Mão",
 		icon: Layers,
-		color: "bg-yellow-500",
+		color: "bg-[#6EC1E4]",
 		group: "Membros Superiores",
 	},
 	{
 		id: "coluna",
 		label: "Coluna",
 		icon: Layers,
-		color: "bg-purple-500",
+		color: "bg-[#0D9488]",
 		group: "Coluna",
 	},
 	{
 		id: "quadril",
 		label: "Quadril",
 		icon: Target,
-		color: "bg-amber-500",
+		color: "bg-[#6EC1E4]",
 		group: "Membros Inferiores",
 	},
 	{
 		id: "joelho",
 		label: "Joelho",
 		icon: Activity,
-		color: "bg-blue-500",
+		color: "bg-[#6EC1E4]",
 		group: "Membros Inferiores",
 	},
 	{
 		id: "tornozelo",
 		label: "Tornozelo/Pé",
 		icon: Dumbbell,
-		color: "bg-emerald-500",
+		color: "bg-[#6EC1E4]",
 		group: "Membros Inferiores",
 	},
 ];
@@ -420,31 +420,76 @@ export function getProtocolCategory(conditionName: string): string {
 	return "all";
 }
 
+// Função para calcular contagens dinâmicas dos templates baseadas nos protocolos reais
+export const getQuickTemplateCounts = (
+	protocols: Array<{ protocol_type: string }>,
+): typeof QUICK_TEMPLATES => {
+	const posOperatorioCount = protocols.filter(
+		(p) => p.protocol_type === "pos_operatorio",
+	).length;
+	const esportivoCount = protocols.filter(
+		(p) => p.protocol_type === "esportivo",
+	).length;
+	const conservadorCount = protocols.filter(
+		(p) => p.protocol_type === "patologia" || p.protocol_type === "conservador",
+	).length;
+	const geriatriaCount = protocols.filter(
+		(p) => p.protocol_type === "geriatria",
+	).length;
+
+	return [
+		{
+			name: "Pós-Cirúrgico Ortopédico",
+			icon: Calendar,
+			color: "from-[#6EC1E4] to-[#4CA6CC]",
+			count: posOperatorioCount,
+		},
+		{
+			name: "Reabilitação Esportiva",
+			icon: Zap,
+			color: "from-[#0D9488] to-[#0D9488]",
+			count: esportivoCount,
+		},
+		{
+			name: "Tratamento Conservador",
+			icon: Heart,
+			color: "from-[#6EC1E4] to-[#4CA6CC]",
+			count: conservadorCount,
+		},
+		{
+			name: "Idosos e Geriatria",
+			icon: Users,
+			color: "from-[#0D9488] to-[#0D9488]",
+			count: geriatriaCount,
+		},
+	];
+};
+
 // Templates rápidos (valores de count são estáticos; a contagem real vem dos protocolos carregados)
 export const QUICK_TEMPLATES = [
 	{
 		name: "Pós-Cirúrgico Ortopédico",
 		icon: Calendar,
-		color: "from-blue-500 to-cyan-500",
-		count: 8,
+		color: "from-[#6EC1E4] to-[#4CA6CC]",
+		count: 0,
 	},
 	{
 		name: "Reabilitação Esportiva",
 		icon: Zap,
-		color: "from-orange-500 to-amber-500",
-		count: 5,
+		color: "from-[#0D9488] to-[#0D9488]",
+		count: 0,
 	},
 	{
 		name: "Tratamento Conservador",
 		icon: Heart,
-		color: "from-rose-500 to-pink-500",
-		count: 12,
+		color: "from-[#6EC1E4] to-[#4CA6CC]",
+		count: 0,
 	},
 	{
 		name: "Idosos e Geriatria",
 		icon: Users,
-		color: "from-purple-500 to-violet-500",
-		count: 4,
+		color: "from-[#0D9488] to-[#0D9488]",
+		count: 0,
 	},
 ];
 
@@ -452,12 +497,18 @@ export const QUICK_TEMPLATES = [
 export const SEED_PROTOCOLS_DATA: Array<{
 	name: string;
 	condition_name: string;
-	protocol_type: "pos_operatorio" | "patologia";
+	protocol_type:
+		| "pos_operatorio"
+		| "patologia"
+		| "esportivo"
+		| "conservador"
+		| "geriatria";
 	weeks_total?: number;
 	milestones: unknown[];
 	restrictions: unknown[];
 	progression_criteria: Record<string, unknown>;
 }> = [
+	// Pós-Cirúrgico Ortopédico (8)
 	{
 		name: "Reconstrução do LCA",
 		condition_name: "Reconstrução do LCA",
@@ -468,10 +519,259 @@ export const SEED_PROTOCOLS_DATA: Array<{
 		progression_criteria: {},
 	},
 	{
+		name: "Prótese Total de Quadril (PTQ)",
+		condition_name: "Artroplastia de Quadril",
+		protocol_type: "pos_operatorio",
+		weeks_total: 12,
+		milestones: [],
+		restrictions: [],
+		progression_criteria: {},
+	},
+	{
+		name: "Prótese Total de Joelho (PTJ)",
+		condition_name: "Artroplastia de Joelho",
+		protocol_type: "pos_operatorio",
+		weeks_total: 12,
+		milestones: [],
+		restrictions: [],
+		progression_criteria: {},
+	},
+	{
+		name: "Reparo do Manguito Rotador (Cirúrgico)",
+		condition_name: "Pós-Op Manguito Rotador",
+		protocol_type: "pos_operatorio",
+		weeks_total: 20,
+		milestones: [],
+		restrictions: [],
+		progression_criteria: {},
+	},
+	{
+		name: "Osteossíntese de Rádio Distal",
+		condition_name: "Fratura de Rádio Distal",
+		protocol_type: "pos_operatorio",
+		weeks_total: 8,
+		milestones: [],
+		restrictions: [],
+		progression_criteria: {},
+	},
+	{
+		name: "Meniscectomia / Reparo Meniscal",
+		condition_name: "Lesão Meniscal",
+		protocol_type: "pos_operatorio",
+		weeks_total: 12,
+		milestones: [],
+		restrictions: [],
+		progression_criteria: {},
+	},
+	{
+		name: "Artroplastia de Ombro",
+		condition_name: "Prótese de Ombro",
+		protocol_type: "pos_operatorio",
+		weeks_total: 16,
+		milestones: [],
+		restrictions: [],
+		progression_criteria: {},
+	},
+	{
+		name: "Discectomia Lombar",
+		condition_name: "Pós-Op Hérnia de Disco",
+		protocol_type: "pos_operatorio",
+		weeks_total: 10,
+		milestones: [],
+		restrictions: [],
+		progression_criteria: {},
+	},
+
+	// Reabilitação Esportiva (5)
+	{
+		name: "Estresse Medial da Tíbia (Canelite)",
+		condition_name: "Canelite",
+		protocol_type: "esportivo",
+		weeks_total: 6,
+		milestones: [],
+		restrictions: [],
+		progression_criteria: {},
+	},
+	{
+		name: "Entorse de Tornozelo (Grau I/II)",
+		condition_name: "Entorse de Tornozelo",
+		protocol_type: "esportivo",
+		weeks_total: 4,
+		milestones: [],
+		restrictions: [],
+		progression_criteria: {},
+	},
+	{
+		name: "Estiramento de Isquiotibiais",
+		condition_name: "Lesão Muscular Isquiotibiais",
+		protocol_type: "esportivo",
+		weeks_total: 6,
+		milestones: [],
+		restrictions: [],
+		progression_criteria: {},
+	},
+	{
+		name: "Epicondilite Lateral (Esportista)",
+		condition_name: "Tennis Elbow",
+		protocol_type: "esportivo",
+		weeks_total: 12,
+		milestones: [],
+		restrictions: [],
+		progression_criteria: {},
+	},
+	{
+		name: "Pubalgia do Atleta",
+		condition_name: "Pubalgia",
+		protocol_type: "esportivo",
+		weeks_total: 12,
+		milestones: [],
+		restrictions: [],
+		progression_criteria: {},
+	},
+
+	// Tratamento Conservador (12)
+	{
 		name: "Tendinopatia do Manguito Rotador",
 		condition_name: "Tendinopatia do Manguito Rotador",
-		protocol_type: "patologia",
+		protocol_type: "conservador",
 		weeks_total: 12,
+		milestones: [],
+		restrictions: [],
+		progression_criteria: {},
+	},
+	{
+		name: "Hérnia de Disco Lombar (Conservador)",
+		condition_name: "Hérnia de Disco",
+		protocol_type: "conservador",
+		weeks_total: 12,
+		milestones: [],
+		restrictions: [],
+		progression_criteria: {},
+	},
+	{
+		name: "Osteoartrite de Joelho",
+		condition_name: "Artrose de Joelho",
+		protocol_type: "conservador",
+		weeks_total: 24,
+		milestones: [],
+		restrictions: [],
+		progression_criteria: {},
+	},
+	{
+		name: "Fascite Plantar",
+		condition_name: "Dor no Pé",
+		protocol_type: "conservador",
+		weeks_total: 8,
+		milestones: [],
+		restrictions: [],
+		progression_criteria: {},
+	},
+	{
+		name: "Dor Patelofemoral",
+		condition_name: "Condromalácia",
+		protocol_type: "conservador",
+		weeks_total: 12,
+		milestones: [],
+		restrictions: [],
+		progression_criteria: {},
+	},
+	{
+		name: "Cervicalgia Mecânica",
+		condition_name: "Dor no Pescoço",
+		protocol_type: "conservador",
+		weeks_total: 6,
+		milestones: [],
+		restrictions: [],
+		progression_criteria: {},
+	},
+	{
+		name: "Bursite Trocantérica",
+		condition_name: "Dor no Quadril",
+		protocol_type: "conservador",
+		weeks_total: 8,
+		milestones: [],
+		restrictions: [],
+		progression_criteria: {},
+	},
+	{
+		name: "Epicondilite Medial",
+		condition_name: "Golfers Elbow",
+		protocol_type: "conservador",
+		weeks_total: 12,
+		milestones: [],
+		restrictions: [],
+		progression_criteria: {},
+	},
+	{
+		name: "Síndrome do Túnel do Carpo",
+		condition_name: "Túnel do Carpo",
+		protocol_type: "conservador",
+		weeks_total: 12,
+		milestones: [],
+		restrictions: [],
+		progression_criteria: {},
+	},
+	{
+		name: "Escoliose Idiopática",
+		condition_name: "Escoliose",
+		protocol_type: "conservador",
+		weeks_total: 24,
+		milestones: [],
+		restrictions: [],
+		progression_criteria: {},
+	},
+	{
+		name: "Tendinopatia de Aquiles",
+		condition_name: "Tendinite de Calcâneo",
+		protocol_type: "conservador",
+		weeks_total: 12,
+		milestones: [],
+		restrictions: [],
+		progression_criteria: {},
+	},
+	{
+		name: "Capsulite Adesiva",
+		condition_name: "Ombro Congelado",
+		protocol_type: "conservador",
+		weeks_total: 24,
+		milestones: [],
+		restrictions: [],
+		progression_criteria: {},
+	},
+
+	// Idosos e Geriatria (4)
+	{
+		name: "Prevenção de Quedas",
+		condition_name: "Equilíbrio em Idosos",
+		protocol_type: "geriatria",
+		weeks_total: 24,
+		milestones: [],
+		restrictions: [],
+		progression_criteria: {},
+	},
+	{
+		name: "Pós-Fratura de Fêmur",
+		condition_name: "Reabilitação Fêmur Idoso",
+		protocol_type: "geriatria",
+		weeks_total: 16,
+		milestones: [],
+		restrictions: [],
+		progression_criteria: {},
+	},
+	{
+		name: "Treinamento de Marcha e Equilíbrio",
+		condition_name: "Instabilidade Postural",
+		protocol_type: "geriatria",
+		weeks_total: 12,
+		milestones: [],
+		restrictions: [],
+		progression_criteria: {},
+	},
+	{
+		name: "Osteoporose e Fortalecimento",
+		condition_name: "Osteoporose",
+		protocol_type: "geriatria",
+		weeks_total: 24,
 		milestones: [],
 		restrictions: [],
 		progression_criteria: {},

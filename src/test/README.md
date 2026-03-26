@@ -85,10 +85,9 @@ npm run test:ui
 
 ### Mock do Supabase
 O arquivo `setup.ts` configura mocks globais para:
-- `supabase.auth` - Autenticação
-- `supabase.from()` - Queries
-- `supabase.rpc()` - Stored procedures
-- `supabase.channel()` - Realtime
+- `neon.auth` - Autenticação (via SDK)
+- `api.v2` - Queries and Mutations (via Axios)
+- `neon.data` - Data access layer
 
 ### Helpers de Teste
 O arquivo `testHelpers.ts` fornece:

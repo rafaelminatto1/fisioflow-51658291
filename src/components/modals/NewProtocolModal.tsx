@@ -43,7 +43,12 @@ interface Restriction {
 
 interface ProtocolFormData {
 	name: string;
-	protocol_type: "patologia" | "pos_operatorio";
+	protocol_type:
+		| "pos_operatorio"
+		| "patologia"
+		| "esportivo"
+		| "conservador"
+		| "geriatria";
 	condition_name: string;
 	weeks_total: number;
 	milestones: Milestone[];
@@ -315,10 +320,19 @@ export const NewProtocolModal: React.FC<NewProtocolModalProps> = ({
 														<SelectValue placeholder="Selecione o tipo" />
 													</SelectTrigger>
 													<SelectContent>
-														<SelectItem value="patologia">Patologia</SelectItem>
 														<SelectItem value="pos_operatorio">
 															Pós-Operatório
 														</SelectItem>
+														<SelectItem value="esportivo">
+															Reabilitação Esportiva
+														</SelectItem>
+														<SelectItem value="conservador">
+															Tratamento Conservador
+														</SelectItem>
+														<SelectItem value="geriatria">
+															Idosos e Geriatria
+														</SelectItem>
+														<SelectItem value="patologia">Patologia</SelectItem>
 													</SelectContent>
 												</Select>
 											</div>
