@@ -4,11 +4,12 @@
  */
 
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import {
-	templatesApi,
-	type ExerciseTemplate as WorkersTemplate,
-	type ExerciseTemplateItem as WorkersTemplateItem,
-} from "@/api/v2";
+import { templatesApi } from "@/api/v2";
+import type {
+	ExerciseTemplate as WorkersTemplate,
+	ExerciseTemplateItem as WorkersTemplateItem,
+	PatientProfileCategory,
+} from "@/types/workers";
 import { toast } from "sonner";
 
 export interface ExerciseTemplate {
@@ -98,12 +99,25 @@ const mapWorkerToAppTemplateItem = (
 export const useWorkersTemplates = (filters?: {
 	q?: string;
 	category?: string;
+	patientProfile?: PatientProfileCategory | 'all';
+	templateType?: 'system' | 'custom';
+	isDraft?: boolean;
 	page?: number;
 	limit?: number;
 }) => {
+	const { patientProfile, templateType, q, ...rest } = filters ?? {};
+
+	// Normalize 'all' to undefined so it's not sent as a query param
+	const apiParams = {
+		...rest,
+		q,
+		patientProfile: patientProfile === 'all' ? undefined : patientProfile,
+		templateType,
+	};
+
 	const { data, isLoading, error, refetch } = useQuery({
-		queryKey: ["workers-templates", filters],
-		queryFn: () => templatesApi.list(filters),
+		queryKey: ["templates", { patientProfile, templateType, q }],
+		queryFn: () => templatesApi.list(apiParams),
 		staleTime: 1000 * 60 * 5,
 	});
 
@@ -118,15 +132,21 @@ export const useWorkersTemplates = (filters?: {
 	};
 };
 
-export const useExerciseTemplates = (category?: string) => {
+export const useExerciseTemplates = (filters?: {
+	category?: string;
+	patientProfile?: PatientProfileCategory | 'all';
+	templateType?: 'system' | 'custom';
+	isDraft?: boolean;
+	q?: string;
+}) => {
 	const queryClient = useQueryClient();
 
-	const { templates, loading, error } = useWorkersTemplates({ category });
+	const { templates, loading, error } = useWorkersTemplates(filters);
 
 	const createMutation = useMutation({
 		mutationFn: (template: any) => templatesApi.create(template),
 		onSuccess: () => {
-			queryClient.invalidateQueries({ queryKey: ["workers-templates"] });
+			queryClient.invalidateQueries({ queryKey: ["templates"] });
 			toast.success("Template criado com sucesso");
 		},
 		onError: (error: Error) => {
@@ -137,7 +157,7 @@ export const useExerciseTemplates = (category?: string) => {
 	const updateMutation = useMutation({
 		mutationFn: ({ id, ...template }: any) => templatesApi.update(id, template),
 		onSuccess: () => {
-			queryClient.invalidateQueries({ queryKey: ["workers-templates"] });
+			queryClient.invalidateQueries({ queryKey: ["templates"] });
 			toast.success("Template atualizado com sucesso");
 		},
 		onError: (error: Error) => {
@@ -148,7 +168,7 @@ export const useExerciseTemplates = (category?: string) => {
 	const deleteMutation = useMutation({
 		mutationFn: templatesApi.delete,
 		onSuccess: () => {
-			queryClient.invalidateQueries({ queryKey: ["workers-templates"] });
+			queryClient.invalidateQueries({ queryKey: ["templates"] });
 			toast.success("Template excluído com sucesso");
 		},
 		onError: (error: Error) => {
@@ -211,7 +231,7 @@ export const useTemplateItems = (templateId?: string) => {
 			queryClient.invalidateQueries({
 				queryKey: ["exercise-template-items", templateId],
 			});
-			queryClient.invalidateQueries({ queryKey: ["workers-templates"] });
+			queryClient.invalidateQueries({ queryKey: ["templates"] });
 			toast.success("Exercício adicionado ao template");
 		},
 		onError: (error: Error) => {
@@ -232,7 +252,7 @@ export const useTemplateItems = (templateId?: string) => {
 			queryClient.invalidateQueries({
 				queryKey: ["exercise-template-items", templateId],
 			});
-			queryClient.invalidateQueries({ queryKey: ["workers-templates"] });
+			queryClient.invalidateQueries({ queryKey: ["templates"] });
 			toast.success("Exercício removido do template");
 		},
 		onError: (error: Error) => {
@@ -271,4 +291,23 @@ export const useTemplateItems = (templateId?: string) => {
 		removeItem: removeItemMutation.mutate,
 		updateItem: updateItemMutation.mutate,
 	};
+};
+
+export interface TemplateCategory {
+	id: PatientProfileCategory;
+	label: string;
+	icon: string | null;
+	orderIndex: number;
+}
+
+export const useTemplateCategories = () => {
+	const { data, isLoading, error } = useQuery({
+		queryKey: ["template-categories"],
+		queryFn: () => templatesApi.categories(),
+		staleTime: 1000 * 60 * 30, // 30 minutes — static lookup data
+	});
+
+	const categories = (data?.data ?? []) as TemplateCategory[];
+
+	return { categories, loading: isLoading, error };
 };

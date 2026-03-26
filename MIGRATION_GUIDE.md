@@ -230,16 +230,12 @@ pnpm test             # Todos (ainda funciona)
 
 ### 1. GitHub Secrets (para CI/CD)
 
-Se você quer usar o staging environment:
+Já configurado para Neon e Cloudflare! Para ver a lista completa de segredos necessários, consulte [.github/SECRETS.md](.github/SECRETS.md).
 
 ```bash
-# No GitHub: Settings > Secrets > Actions
-
-STAGING_FIREBASE_API_KEY=...
-STAGING_FIREBASE_AUTH_DOMAIN=...
-STAGING_FIREBASE_PROJECT_ID=...
-FIREBASE_SERVICE_ACCOUNT_STAGING=...
-SLACK_WEBHOOK_URL=...
+# Principais segredos utilizados:
+# NEON_API_KEY, NEON_PROJECT_ID
+# CF_API_TOKEN, CF_ACCOUNT_ID
 ```
 
 ### 2. Sentry (para error tracking)
