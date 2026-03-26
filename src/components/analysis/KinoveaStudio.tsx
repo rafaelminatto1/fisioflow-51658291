@@ -2,15 +2,10 @@ import React, { useState, useRef, useEffect, useCallback, useMemo } from "react"
 import Webcam from "react-webcam";
 import { Stage, Layer, Line, Circle, Group, Text as KText } from "react-konva";
 import {
-	Camera,
 	Activity,
-	Zap,
-	Timer,
 	TrendingUp,
 	ChevronLeft,
 	ChevronRight,
-	Play,
-	Pause,
 	ArrowUp,
 	Ruler,
 	User2,
@@ -26,10 +21,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import {
-	Tooltip,
-	TooltipContent,
 	TooltipProvider,
-	TooltipTrigger,
 } from "@/components/ui/tooltip";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -92,10 +84,10 @@ export const KinoveaStudio: React.FC<KinoveaStudioProps> = ({ onCapture, patient
 
 	// Tool + display state
 	const [activeTool, setActiveTool] = useState<"none" | "goniometer" | "trajectory" | "jump">("none");
-	const [dimensions, setDimensions] = useState({ width: 800, height: 600 });
+	const [,setDimensions] = useState({ width: 800, height: 600 });
 	const [currentFrame, setCurrentFrame] = useState(0);
-	const [fps, setFps] = useState(240);
-	const [isPlaying, setIsPlaying] = useState(false);
+	const [fps] = useState(240);
+	const [,setIsPlaying] = useState(false);
 
 	// MoveNet state
 	const detectorRef = useRef<PoseDetector | null>(null);

@@ -24,9 +24,8 @@ import {
 	DropdownMenuSeparator,
 	DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { ChevronDown, User, Settings, LogOut, Bell, Search } from "lucide-react";
+import { ChevronDown, User, Settings, LogOut, Bell } from "lucide-react";
 import { Link, useLocation } from "react-router-dom";
-import fisioflowLogo from "@/assets/logo.avif";
 import { useNavigate } from "react-router-dom";
 import { toast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";

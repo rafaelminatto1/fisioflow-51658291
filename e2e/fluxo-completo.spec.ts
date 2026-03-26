@@ -64,7 +64,7 @@ test('fluxo completo: login -> agendamento (avaliação) -> evolução SOAP', as
     } else {
       console.log('ℹ️ Onboarding não apareceu');
     }
-  } catch (e) {
+  } catch  {
     console.log('ℹ️ Onboarding não detectado ou erro ao fechar');
   }
 
@@ -322,7 +322,7 @@ test('fluxo completo: login -> agendamento (avaliação) -> evolução SOAP', as
           await page.keyboard.press('Escape');
           await page.waitForTimeout(300);
         }
-      } catch (e) {
+      } catch  {
         // Continue to next select
       }
     }
@@ -361,7 +361,7 @@ test('fluxo completo: login -> agendamento (avaliação) -> evolução SOAP', as
           await page.keyboard.press('Escape');
         }
       }
-    } catch (e) {
+    } catch  {
       // Try next selector
     }
   }
@@ -375,7 +375,7 @@ test('fluxo completo: login -> agendamento (avaliação) -> evolução SOAP', as
         console.log('  ✓ Horário selecionado (slot button)');
         timeSelected = true;
       }
-    } catch (e) {
+    } catch  {
       // Ignore
     }
   }
@@ -389,7 +389,7 @@ test('fluxo completo: login -> agendamento (avaliação) -> evolução SOAP', as
         await timeInput.fill('09:00');
         console.log('  ✓ Horário preenchido manualmente: 09:00');
       }
-    } catch (e) {
+    } catch  {
       console.log('  ⚠️ Não foi possível preencher horário, tentando continuar mesmo assim');
     }
   }
@@ -417,7 +417,7 @@ test('fluxo completo: login -> agendamento (avaliação) -> evolução SOAP', as
         submitClicked = true;
         break;
       }
-    } catch (e) {
+    } catch  {
       // Try next selector
     }
   }

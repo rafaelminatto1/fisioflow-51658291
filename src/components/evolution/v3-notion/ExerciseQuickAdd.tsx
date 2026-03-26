@@ -300,21 +300,4 @@ export const ExerciseQuickAdd: React.FC<ExerciseQuickAddProps> = ({
 };
 
 // CSS for exercise quick add
-const EXERCISE_QUICK_ADD_STYLES = `
-  .exercise-quick-add {
-    display: inline-flex;
-    align-items: center;
-  }
 
-  .exercise-quick-add input[type="number"] {
-    -moz-appearance: textfield;
-    -webkit-appearance: textfield;
-  }
-
-  @media (hover: none) {
-    .exercise-quick-add button {
-      min-width: 44px;
-      min-height: 44px;
-    }
-  }
-`;

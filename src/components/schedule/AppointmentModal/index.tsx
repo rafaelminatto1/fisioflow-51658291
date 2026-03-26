@@ -1,9 +1,8 @@
-import React, { useMemo } from "react";
+import React from "react";
 import { FormProvider } from "react-hook-form";
 import { useQueryClient } from "@tanstack/react-query";
 import { parseISO } from "date-fns";
 import { toast } from "@/hooks/use-toast";
-import { logger } from "@/lib/errors/logger";
 import { Calendar as CalendarIcon, SlidersHorizontal } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { CustomModal } from "@/components/ui/custom-modal";

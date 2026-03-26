@@ -30,7 +30,7 @@ async function cfApi(endpoint, method = 'GET', body = null) {
       return { success: false, errors: data.errors };
     }
     return { success: true, result: data.result };
-  } catch (e) {
+  } catch  {
     return { success: false, error: 'Non-JSON response' };
   }
 }

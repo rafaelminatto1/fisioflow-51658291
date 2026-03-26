@@ -53,7 +53,7 @@ try {
 		"@radix-ui/react-slot": require.resolve("./stubs/radix-slot"),
 		...config.resolver.alias,
 	};
-} catch (e) {
+} catch  {
 	// Ignorar se o stub não existir
 }
 

@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import {
 	Card,
 	CardContent,
@@ -31,8 +31,6 @@ import {
 	Plus,
 	Edit2,
 	Trash2,
-	Check,
-	X,
 	FileJson,
 	Loader2,
 	Save,

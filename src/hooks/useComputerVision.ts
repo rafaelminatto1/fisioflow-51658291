@@ -231,7 +231,7 @@ export const useComputerVision = () => {
 
 		try {
 			result = landmarkerRef.current.detectForVideo(video, startTimeMs);
-		} catch (e) {
+		} catch  {
 			// Ignore frame errors
 			requestRef.current = requestAnimationFrame(processFrame);
 			return;

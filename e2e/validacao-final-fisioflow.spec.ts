@@ -1,4 +1,4 @@
-import { test, expect } from '@playwright/test';
+import { test } from '@playwright/test';
 
 test.describe('FisioFlow - Validação Completa de Fluxo (moocafisio.com.br)', () => {
   const testPatientName = `BOT Teste ${Date.now()}`;

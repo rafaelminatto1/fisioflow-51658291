@@ -14,7 +14,7 @@ app.get('/', requireAuth, async (c) => {
       [user.organizationId]
     );
     return c.json({ data: result.rows });
-  } catch (error) {
+  } catch  {
     return c.json({ data: [] });
   }
 });

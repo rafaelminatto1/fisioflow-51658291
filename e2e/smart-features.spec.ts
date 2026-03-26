@@ -61,7 +61,7 @@ test.describe('Smart Features - Agenda', () => {
     await expect(bulkBar).toContainText('1');
 
     // 4. Clear selection
-    const clearButton = page.locator('button:has-text("X")').or(page.locator('button > svg.lucide-x').locator('..')); 
+     
     // Specific selector for the clear button in BulkActionsBar might be tricky without test-id
     // Let's use the icon or position
     await page.click('button:has-text("X"), button:has(.lucide-x)'); 
@@ -92,7 +92,7 @@ test.describe('Smart Features - Agenda', () => {
     
     // Verify the select has a value (not empty)
     // The select trigger usually displays the selected value
-    const timeSelectValue = page.locator('button[role="combobox"]').filter({ hasText: /:/ }); 
+     
     // Or check the specific time select trigger
     // It's the second SelectTrigger in DateTimeSection typically.
     // Let's look for text matching a time pattern (HH:mm)

@@ -1,5 +1,5 @@
 const { drizzle } = require("drizzle-orm/neon-http");
-const { eq } = require("drizzle-orm");
+
 const fs = require("fs");
 const path = require("path");
 
@@ -13,7 +13,7 @@ if (!DATABASE_URL) {
 }
 
 const client = sql(DATABASE_URL);
-const db = drizzle(client);
+
 
 async function checkAndCreateAnnouncementsTables() {
 	try {

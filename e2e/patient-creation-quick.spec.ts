@@ -187,7 +187,7 @@ test('criação rápida de paciente e autocomplete no modal de agendamento', asy
 
   // O nome já deve vir preenchido ou precisamos preencher o resto
   // Verificar se o modal de cadastro rápido abriu
-  const quickModal = page.locator('text="Novo Paciente"').first(); // Ajustar se o título for diferente
+   // Ajustar se o título for diferente
 
   // Procurar campos do formulário de cadastro rápido
   // O input de nome pode já estar preenchido ou não, vamos garantir

@@ -10,7 +10,6 @@ import {
 	Pause,
 	Square,
 	TrendingUp,
-	DollarSign,
 	Download,
 	Plus,
 } from "lucide-react";
@@ -54,14 +53,11 @@ export default function TimeTrackingPage() {
 
 	const {
 		activeTimer,
-		isRunning,
 		currentDuration,
 		entries,
 		isLoading,
-		error,
 		startTimer,
 		pauseTimer,
-		resumeTimer,
 		stopTimer,
 		loadEntries,
 		createEntry,

@@ -493,7 +493,7 @@ export interface PatientEvolutionData {
 export function usePatientEvolutionData() {
 	const { appointmentId } = useParams<{ appointmentId: string }>();
 	const navigate = useNavigate();
-	const { user } = useAuth();
+	
 
 	// Data fetching
 	const {

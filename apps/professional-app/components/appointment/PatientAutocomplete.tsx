@@ -4,9 +4,7 @@ import {
   Text,
   StyleSheet,
   TouchableOpacity,
-  FlatList,
 } from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
 import { Input } from '@/components';
 import { useColors } from '@/hooks/useColorScheme';
 import { usePatients } from '@/hooks/usePatients';

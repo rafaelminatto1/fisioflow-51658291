@@ -1,6 +1,5 @@
 import { fetchApi } from '@/lib/api';
 import { fisioLogger } from '../errors/logger';
-import { auditLogger } from './auditLogger';
 
 export type ExportFormat = 'json' | 'pdf' | 'csv';
 

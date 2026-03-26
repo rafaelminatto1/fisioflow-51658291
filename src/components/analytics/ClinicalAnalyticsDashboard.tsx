@@ -41,7 +41,7 @@ import { Button } from "@/components/ui/button";
 const COLORS = ["#3b82f6", "#10b981", "#f59e0b", "#ef4444", "#8b5cf6"];
 
 export function ClinicalAnalyticsDashboard() {
-	const { dashboard, topExercises, painMap, isLoading, error, refetch } =
+	const { dashboard, topExercises, isLoading, error, refetch } =
 		useClinicalAnalytics();
 
 	if (isLoading) {

@@ -249,10 +249,10 @@ export class PatientCommunicationService {
 		phone: string;
 		clinicName: string;
 	}): Promise<void> {
-		const message = `Parabéns, ${patient.name}! 🎂🎉\n\n`;
-		message += `Que este novo ciclo traga muita saúde, paz e alegria! 🌟\n\n`;
-		message += `Muitos parabéns do time ${patient.clinicName}! 💪\n\n`;
-		message += `_Enviado pelo FisioFlow_`;
+		const message = `Parabéns, ${patient.name}! 🎂🎉\n\n` +
+			`Que este novo ciclo traga muita saúde, paz e alegria! 🌟\n\n` +
+			`Muitos parabéns do time ${patient.clinicName}! 💪\n\n` +
+			`_Enviado pelo FisioFlow_`;
 
 		await this.sendWhatsAppMessage({
 			to: patient.phone,
@@ -499,7 +499,7 @@ export class PatientCommunicationFactory {
 
 	static async createFromEnv(): Promise<PatientCommunicationService> {
 		const apiKey = process.env.WHATSAPP_API_KEY;
-		const baseUrl = process.env.WHATSAPP_API_URL || "";
+		
 
 		return new PatientCommunicationService(apiKey);
 	}

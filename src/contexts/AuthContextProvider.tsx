@@ -199,7 +199,7 @@ export const AuthContextProvider: React.FC<{ children: React.ReactNode }> = ({
 							timestamp: new Date().toISOString(),
 						},
 					});
-				} catch (e) {
+				} catch  {
 					/* silent fail for audit */
 				}
 
@@ -233,7 +233,7 @@ export const AuthContextProvider: React.FC<{ children: React.ReactNode }> = ({
 							timestamp: new Date().toISOString(),
 						},
 					});
-				} catch (e) {
+				} catch  {
 					/* silent fail for audit */
 				}
 			}

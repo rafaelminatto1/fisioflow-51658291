@@ -5,8 +5,6 @@ import {
 	Text,
 	View,
 	StyleSheet,
-	Font,
-	Image,
 } from "@react-pdf/renderer";
 import { ClinicalReportInput } from "@/services/ai/geminiAiService";
 

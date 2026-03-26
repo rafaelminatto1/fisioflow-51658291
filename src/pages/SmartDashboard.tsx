@@ -1,35 +1,29 @@
 import { format, parseISO } from "date-fns";
 import {
 	Activity,
-	AlertTriangle,
 	ArrowUpRight,
-	BarChart3,
 	Brain,
-	Cake,
 	Calendar,
 	CheckCircle,
 	ClipboardList,
 	DollarSign,
 	FileText,
 	LayoutDashboard,
-	MessageCircle,
 	MoreHorizontal,
 	Plus,
-	RotateCcw,
 	Save,
 	Send,
 	Sparkles,
 	Stethoscope,
 	Target,
 	Thermometer,
-	TrendingUp,
 	Users,
 	Wand2,
 	Zap,
 } from "lucide-react";
 import { lazy, Suspense, useMemo, useState } from "react";
 import type { Layout } from "react-grid-layout";
-import { Link, useNavigate, useSearchParams } from "react-router";
+import { useNavigate, useSearchParams } from "react-router";
 import {
 	Area,
 	AreaChart,
@@ -42,18 +36,15 @@ import {
 	YAxis,
 } from "recharts";
 import { toast } from "sonner";
-import { type Notification } from "@/api/v2/communications";
 import { MainLayout } from "@/components/layout/MainLayout";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { CardContent } from "@/components/ui/card";
 import type { GridItem } from "@/components/ui/DraggableGrid";
-import { EmptyState } from "@/components/ui/empty-state";
 import { GridWidget } from "@/components/ui/GridWidget";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { cn } from "@/lib/utils";
 import { useSmartDashboardData } from "@/hooks/useSmartDashboard";
-import type { AppointmentRow, PatientRow } from "@/types/workers";
+import { cn } from "@/lib/utils";
 
 // --- Types & Constants ---
 type ViewMode = "today" | "week" | "month" | "custom";
@@ -76,8 +67,6 @@ export default function SmartDashboard() {
 		staffPerformance,
 		selfAssessments,
 		notifications,
-		birthdaysToday,
-		staffBirthdaysToday,
 		patients,
 		appointmentsToday,
 	} = data;
@@ -148,7 +137,14 @@ export default function SmartDashboard() {
 		setIsEditable(false);
 	};
 
-	const SMART_DASHBOARD_GRID_COLS = { xl: 12, lg: 12, md: 12, sm: 6, xs: 4, xxs: 2 };
+	const SMART_DASHBOARD_GRID_COLS = {
+		xl: 12,
+		lg: 12,
+		md: 12,
+		sm: 6,
+		xs: 4,
+		xxs: 2,
+	};
 
 	const statsCards = [
 		{
@@ -161,9 +157,9 @@ export default function SmartDashboard() {
 					: metrics?.agendamentosSemana || 0,
 			subLabel: "vs. período anterior",
 			trend: "+12%",
-			gradient: "from-blue-600 to-indigo-600",
-			bgGradient: "from-blue-500/10 to-indigo-500/5",
-			borderColor: "border-blue-500/20",
+			gradient: "gradient-brand",
+			bgGradient: "gradient-brand-light",
+			borderColor: "border-primary/20",
 		},
 		{
 			id: "stat-revenue",
@@ -175,8 +171,8 @@ export default function SmartDashboard() {
 				metrics?.crescimentoMensal && metrics.crescimentoMensal > 0
 					? `+${metrics.crescimentoMensal}%`
 					: `${metrics?.crescimentoMensal || 0}%`,
-			gradient: "from-emerald-600 to-teal-600",
-			bgGradient: "from-emerald-500/10 to-teal-500/5",
+			gradient: "gradient-success",
+			bgGradient: "gradient-success-light",
 			borderColor: "border-emerald-500/20",
 		},
 		{
@@ -186,9 +182,9 @@ export default function SmartDashboard() {
 			value: metrics?.pacientesAtivos || 0,
 			subLabel: "em tratamento",
 			trend: "+5",
-			gradient: "from-violet-600 to-purple-600",
-			bgGradient: "from-violet-500/10 to-purple-500/5",
-			borderColor: "border-violet-500/20",
+			gradient: "gradient-accent-teal",
+			bgGradient: "gradient-accent-teal-light",
+			borderColor: "border-teal-500/20",
 		},
 		{
 			id: "stat-nps",
@@ -197,8 +193,8 @@ export default function SmartDashboard() {
 			value: `${Math.round((staffPerformance[0]?.rebook_rate || 0.85) * 100)}%`,
 			subLabel: "Taxa de re-agend.",
 			trend: "+2%",
-			gradient: "from-orange-600 to-amber-600",
-			bgGradient: "from-orange-500/10 to-amber-500/5",
+			gradient: "gradient-warm",
+			bgGradient: "gradient-warm-light",
 			borderColor: "border-orange-500/20",
 		},
 	];
@@ -216,7 +212,7 @@ export default function SmartDashboard() {
 					>
 						<div
 							className={cn(
-								"h-full relative overflow-hidden bg-gradient-to-br transition-all duration-500 group rounded-2xl border border-white/20 dark:border-white/5",
+								"h-full relative overflow-hidden bg-gradient-to-br transition-all duration-500 group rounded-2xl border border-white/20 dark:border-white/5 card-premium-hover",
 								stat.bgGradient,
 							)}
 						>
@@ -224,7 +220,7 @@ export default function SmartDashboard() {
 								<div className="flex items-center justify-between mb-1">
 									<div
 										className={cn(
-											"h-10 w-10 rounded-2xl bg-gradient-to-br flex items-center justify-center shadow-lg group-hover:scale-110transition-transform duration-300",
+											"h-10 w-10 rounded-2xl flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform duration-300",
 											stat.gradient,
 										)}
 									>
@@ -241,10 +237,10 @@ export default function SmartDashboard() {
 									</div>
 								</div>
 								<div>
-									<p className="text-xs font-semibold text-muted-foreground/80 uppercase tracking-wider">
+									<p className="text-xs font-semibold text-muted-foreground/80 uppercase tracking-wider font-display">
 										{stat.label}
 									</p>
-									<p className="text-2xl font-black tracking-tighter mt-1">
+									<p className="text-2xl font-black tracking-tighter mt-1 font-display">
 										{stat.value}
 									</p>
 									<p className="text-[10px] text-muted-foreground mt-0.5 flex items-center gap-1 font-medium">
@@ -268,7 +264,10 @@ export default function SmartDashboard() {
 						isDraggable={isEditable}
 						variant="glass"
 						headerActions={
-							<Badge variant="secondary" className="text-[10px] bg-primary/5">
+							<Badge
+								variant="secondary"
+								className="text-[10px] bg-primary/5 font-display"
+							>
 								Real-time Data
 							</Badge>
 						}
@@ -384,6 +383,7 @@ export default function SmartDashboard() {
 						icon={<DollarSign className="h-4 w-4" />}
 						isDraggable={isEditable}
 						variant="glass"
+						className="card-premium-hover"
 					>
 						<div className="h-full p-2">
 							<ResponsiveContainer width="100%" height="100%">
@@ -456,7 +456,7 @@ export default function SmartDashboard() {
 							<Button
 								variant="ghost"
 								size="icon"
-								className="h-7 w-7 rounded-full hover:bg-primary/10"
+								className="h-7 w-7 rounded-full hover:bg-primary/10 magnetic-button"
 								onClick={handleGenerateSummary}
 								disabled={isGeneratingSummary}
 							>
@@ -472,13 +472,13 @@ export default function SmartDashboard() {
 						<ScrollArea className="h-full pr-4">
 							<div className="space-y-4 pb-4">
 								{genkitSummary ? (
-									<div className="p-3.5 rounded-2xl bg-gradient-to-br from-primary/10 to-transparent border border-primary/20 animate-in fade-in zoom-in-95 duration-500">
+									<div className="p-3.5 rounded-2xl gradient-neon border border-primary/20 animate-in fade-in zoom-in-95 duration-500 card-premium-hover">
 										<div className="flex items-start gap-3">
 											<div className="h-8 w-8 rounded-xl bg-primary/20 flex items-center justify-center shrink-0">
 												<Brain className="h-4 w-4 text-primary" />
 											</div>
 											<div className="min-w-0">
-												<p className="text-sm font-bold text-primary tracking-tight">
+												<p className="text-sm font-bold text-primary tracking-tight font-display">
 													Análise Genkit AI
 												</p>
 												<p className="text-xs text-muted-foreground mt-1.5 leading-relaxed font-medium">
@@ -486,7 +486,7 @@ export default function SmartDashboard() {
 												</p>
 												{genkitSummary.clinicalAdvice && (
 													<div className="mt-3 p-2.5 rounded-xl bg-white/50 dark:bg-black/20 border border-primary/10">
-														<p className="text-[10px] font-bold text-primary/80 uppercase tracking-widest mb-1">
+														<p className="text-[10px] font-bold text-primary/80 uppercase tracking-widest mb-1 font-display">
 															Recomendação:
 														</p>
 														<p className="text-[11px] text-muted-foreground leading-snug">
@@ -499,11 +499,11 @@ export default function SmartDashboard() {
 									</div>
 								) : (
 									<div
-										className="p-4 rounded-2xl bg-muted/20 border border-dashed border-border/50 text-center group cursor-pointer hover:border-primary/30 transition-colors"
+										className="p-4 rounded-2xl bg-muted/20 border border-dashed border-border/50 text-center group cursor-pointer hover:border-primary/30 transition-colors card-premium-hover"
 										onClick={handleGenerateSummary}
 									>
 										<Zap className="h-5 w-5 text-muted-foreground/40 mx-auto mb-2 group-hover:text-primary/50 transition-colors" />
-										<p className="text-xs font-semibold text-muted-foreground/60">
+										<p className="text-xs font-semibold text-muted-foreground/60 font-display">
 											Gerar análise preditiva baseada nos dados atuais dos
 											pacientes.
 										</p>
@@ -511,7 +511,7 @@ export default function SmartDashboard() {
 								)}
 
 								<div className="space-y-2">
-									<p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest ml-1">
+									<p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest ml-1 font-display">
 										Risco de Abandono (No-Show)
 									</p>
 									{predictions.filter((p) => p.no_show_probability > 0.4)
@@ -563,6 +563,7 @@ export default function SmartDashboard() {
 						icon={<Users className="h-4 w-4" />}
 						isDraggable={isEditable}
 						variant="glass"
+						className="card-premium-hover"
 					>
 						<div className="h-full p-2 flex flex-col">
 							<ResponsiveContainer width="100%" height="60%">
@@ -635,38 +636,40 @@ export default function SmartDashboard() {
 						icon={<Zap className="h-4 w-4 text-primary" />}
 						isDraggable={isEditable}
 						variant="glass"
+						className="card-premium-hover"
 					>
 						<div className="grid grid-cols-2 gap-2 p-2 h-full">
 							{[
 								{
 									label: "Relatório Médico",
 									icon: FileText,
-									color: "bg-blue-500",
+									color: "gradient-brand",
 									path: "/relatorios/medico",
 								},
 								{
 									label: "Novo Agend.",
 									icon: Plus,
-									color: "bg-emerald-500",
+									color: "gradient-success",
 									path: "/agendamentos",
 								},
 								{
 									label: "Avaliação",
 									icon: ClipboardList,
-									color: "bg-violet-500",
+									color: "gradient-accent-teal",
 									path: "/pacientes",
 								},
 								{
 									label: "Enviar Whats",
 									icon: Send,
-									color: "bg-teal-500",
+									color: "gradient-accent",
 									path: "/marketing",
 								},
 							].map((action, i) => (
 								<button
 									key={i}
+									type="button"
 									onClick={() => navigate(action.path)}
-									className="flex flex-col items-center justify-center p-3 rounded-2xl border border-border/50 bg-muted/10 hover:bg-primary/5 hover:border-primary/20 transition-all group"
+									className="flex flex-col items-center justify-center p-3 rounded-2xl border border-border/50 bg-muted/10 hover:bg-primary/5 hover:border-primary/20 transition-all group magnetic-button glow-on-hover"
 								>
 									<div
 										className={cn(
@@ -676,7 +679,7 @@ export default function SmartDashboard() {
 									>
 										<action.icon className="h-4 w-4" />
 									</div>
-									<span className="text-[10px] font-bold text-muted-foreground group-hover:text-primary transition-colors">
+									<span className="text-[10px] font-bold text-muted-foreground group-hover:text-primary transition-colors font-display">
 										{action.label}
 									</span>
 								</button>
@@ -696,6 +699,7 @@ export default function SmartDashboard() {
 						icon={<Activity className="h-4 w-4" />}
 						isDraggable={isEditable}
 						variant="glass"
+						className="card-premium-hover"
 					>
 						<ScrollArea className="h-full">
 							<div className="space-y-3 p-3">
@@ -782,15 +786,15 @@ export default function SmartDashboard() {
 						<div>
 							<div className="flex items-center gap-2 mb-1">
 								<span className="h-1.5 w-1.5 rounded-full bg-emerald-500" />
-								<p className="text-[10px] font-black text-muted-foreground/60 uppercase tracking-[0.2em]">
+								<p className="text-[10px] font-black text-muted-foreground/60 uppercase tracking-[0.2em] font-display">
 									Inteligência Clínica Ativa
 								</p>
 							</div>
-							<h1 className="text-2xl md:text-3xl font-black tracking-tighter text-slate-900 dark:text-white flex items-center gap-3">
+							<h1 className="text-2xl md:text-3xl font-black tracking-tighter text-slate-900 dark:text-white flex items-center gap-3 font-display">
 								Smart Dashboard
 								<Badge
 									variant="outline"
-									className="text-[10px] font-black uppercase bg-primary/5 text-primary border-primary/20 tracking-widest px-2 py-0"
+									className="text-[10px] font-black uppercase bg-primary/5 text-primary border-primary/20 tracking-widest px-2 py-0 font-display"
 								>
 									v2.0 Beta
 								</Badge>
@@ -807,7 +811,7 @@ export default function SmartDashboard() {
 									size="sm"
 									onClick={() => handleViewModeChange(mode as ViewMode)}
 									className={cn(
-										"rounded-xl px-4 text-[10px] font-black uppercase tracking-widest h-8 transition-all duration-300",
+										"rounded-xl px-4 text-[10px] font-black uppercase tracking-widest h-8 transition-all duration-300 magnetic-button font-display",
 										viewMode === mode && "shadow-lg scale-105",
 									)}
 								>
@@ -822,7 +826,7 @@ export default function SmartDashboard() {
 						<Button
 							variant="outline"
 							size="icon"
-							className="h-10 w-10 rounded-2xl bg-background/50 border-border/50 hover:bg-primary/5 hover:border-primary/20"
+							className="h-10 w-10 rounded-2xl bg-background/50 border-border/50 hover:bg-primary/5 hover:border-primary/20 magnetic-button glow-on-hover"
 						>
 							<MoreHorizontal className="h-4 w-4" />
 						</Button>
@@ -832,16 +836,16 @@ export default function SmartDashboard() {
 				{/* Dynamic Alerts Section */}
 				{medicalReturnsUpcoming.length > 0 && (
 					<div
-						className="bg-gradient-to-r from-blue-600/10 via-primary/5 to-transparent border-l-4 border-l-primary rounded-r-2xl p-4 flex items-center gap-5 group cursor-pointer hover:bg-primary/10 transition-all duration-300"
+						className="bg-gradient-to-r from-blue-600/10 via-primary/5 to-transparent border-l-4 border-l-primary rounded-r-2xl p-4 flex items-center gap-5 group cursor-pointer hover:bg-primary/10 transition-all duration-300 card-premium-hover"
 						onClick={() => navigate("/relatorios/medico")}
 					>
 						<div className="h-10 w-10 rounded-xl bg-primary/20 flex items-center justify-center text-primary shrink-0 group-hover:scale-110 transition-transform">
 							<Stethoscope className="h-5 w-5" />
 						</div>
 						<div className="min-w-0 flex-1">
-							<h3 className="font-black text-sm text-foreground flex items-center gap-2">
+							<h3 className="font-black text-sm text-foreground flex items-center gap-2 font-display">
 								Preparar Relatórios Médicos
-								<Badge className="bg-primary text-white text-[10px] px-1.5 py-0 border-0">
+								<Badge className="bg-primary text-white text-[10px] px-1.5 py-0 border-0 font-display">
 									{medicalReturnsUpcoming.length}
 								</Badge>
 							</h3>
@@ -864,7 +868,7 @@ export default function SmartDashboard() {
 							<LayoutDashboard className="h-4 w-4 text-primary" />
 						</div>
 						<div>
-							<h2 className="text-sm font-black tracking-tight">
+							<h2 className="text-sm font-black tracking-tight font-display">
 								Personalização
 							</h2>
 							<p className="text-[10px] text-muted-foreground font-medium">
@@ -880,14 +884,14 @@ export default function SmartDashboard() {
 									variant="ghost"
 									onClick={() => setIsEditable(false)}
 									size="sm"
-									className="text-[10px] font-black uppercase tracking-widest rounded-xl px-4 h-9"
+									className="text-[10px] font-black uppercase tracking-widest rounded-xl px-4 h-9 magnetic-button font-display"
 								>
 									Cancelar
 								</Button>
 								<Button
 									onClick={() => handleSaveLayout(savedLayout)}
 									size="sm"
-									className="text-[10px] font-black uppercase tracking-widest gap-2 rounded-xl px-5 h-9 shadow-lg shadow-primary/20"
+									className="text-[10px] font-black uppercase tracking-widest gap-2 rounded-xl px-5 h-9 shadow-lg shadow-primary/20 magnetic-button glow-on-hover font-display"
 								>
 									<Save className="h-3.5 w-3.5" />
 									Salvar Layout
@@ -898,7 +902,7 @@ export default function SmartDashboard() {
 								variant="outline"
 								onClick={() => setIsEditable(true)}
 								size="sm"
-								className="text-[10px] font-black uppercase tracking-widest gap-2 rounded-xl px-4 h-9 border-border/50 hover:border-primary/30 transition-all"
+								className="text-[10px] font-black uppercase tracking-widest gap-2 rounded-xl px-4 h-9 border-border/50 hover:border-primary/30 transition-all magnetic-button glow-on-hover font-display"
 							>
 								<LayoutDashboard className="h-3.5 w-3.5" />
 								Editar Grid
@@ -925,14 +929,14 @@ export default function SmartDashboard() {
 						}}
 						layouts={
 							savedLayout.length > 0
-								? ({ 
-									xl: savedLayout, 
-									lg: savedLayout, 
-									md: savedLayout, 
-									sm: savedLayout, 
-									xs: savedLayout, 
-									xxs: savedLayout 
-								} as any)
+								? ({
+										xl: savedLayout,
+										lg: savedLayout,
+										md: savedLayout,
+										sm: savedLayout,
+										xs: savedLayout,
+										xxs: savedLayout,
+									} as any)
 								: undefined
 						}
 						isEditable={isEditable}

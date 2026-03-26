@@ -6,7 +6,6 @@
  */
 
 import sharp from 'sharp';
-import fs from 'fs';
 
 // SVG do ícone Patient App (Teal)
 const patientIconSvg = Buffer.from(`
@@ -57,12 +56,7 @@ const notificationIconSvg = Buffer.from(`
 `);
 
 // Favicon
-const faviconSvg = Buffer.from(`
-<svg width="48" height="48" viewBox="0 0 48 48" xmlns="http://www.w3.org/2000/svg">
-  <rect width="48" height="48" rx="10" fill="#0D9488"/>
-  <circle cx="24" cy="24" r="8" fill="#FFFFFF"/>
-</svg>
-`);
+
 
 // Adaptive icon foreground
 const adaptiveIconSvg = Buffer.from(`

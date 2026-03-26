@@ -6,7 +6,7 @@
 // Neon connection string parsed
 const NEON_HOST = 'ep-snowy-recipe-a1s4b5zy.us-east-1.aws.neon.tech';
 const NEON_DATABASE = 'neondb';
-const NEON_USER = 'neondb_owner';
+
 const NEON_PASSWORD = 'npg_9Y1Y3rBf1n3D';
 
 const migrationSQL = `

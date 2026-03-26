@@ -12,7 +12,6 @@ import {
 	Eye,
 	Download,
 	FileText,
-	X,
 	ChevronLeft,
 	ChevronRight,
 	Image as ImageIcon,

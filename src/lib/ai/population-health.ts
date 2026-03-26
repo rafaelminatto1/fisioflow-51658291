@@ -239,7 +239,7 @@ async function aggregatePopulationData(
 	appointments: Record<string, unknown>[];
 	totalRecords: number;
 }> {
-	const db = getAdminDb();
+	
 
 	try {
 		const startIso = startDate.toISOString().split("T")[0];

@@ -56,7 +56,7 @@ async function fetchJwtFromSdk(): Promise<string | null> {
 			const token = data?.token;
 			if (typeof token === "string" && looksLikeJwt(token)) return token;
 		}
-	} catch (err) {
+	} catch  {
 		// Silently continue to next fallback
 	}
 

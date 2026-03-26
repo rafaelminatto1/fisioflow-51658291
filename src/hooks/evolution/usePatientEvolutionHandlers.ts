@@ -1,7 +1,6 @@
 import { useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { format } from "date-fns";
-import { ptBR } from "date-fns/locale";
 import { useToast } from "@/hooks/use-toast";
 import { usePDFGenerator } from "@/hooks/usePDFGenerator";
 import { useExportPdf } from "@/hooks/useExportPdf";
@@ -13,10 +12,8 @@ import { evolutionApi } from "@/api/v2/clinical";
 import { fisioLogger as logger } from "@/lib/errors/logger";
 import { PatientHelpers } from "@/types";
 import type {
-	EvolutionVersion,
 	EvolutionV2Data,
 } from "@/components/evolution/v2/types";
-import type { PainScaleData } from "@/pages/PatientEvolution";
 
 export function usePatientEvolutionHandlers({
 	patientId,
@@ -42,10 +39,10 @@ export function usePatientEvolutionHandlers({
 }: any) {
 	const { toast } = useToast();
 	const navigate = useNavigate();
-	const { generateEvolucao, downloadPDF } = usePDFGenerator();
+	const { } = usePDFGenerator();
 	const { completeAppointment } = useAppointmentActions();
 	const { awardXp } = useGamification(patientId || "");
-	const { exportPdf, isGenerating: isExportingPdf } = useExportPdf();
+	const { exportPdf, } = useExportPdf();
 	const autoSaveMutation = useAutoSaveSoapRecord();
 	const { saveVersionForRecord } =
 		useEvolutionVersionHistory(currentSoapRecordId);

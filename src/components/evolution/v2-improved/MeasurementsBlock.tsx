@@ -126,27 +126,9 @@ export const MeasurementsBlock: React.FC<MeasurementsBlockProps> = ({
 	className,
 }) => {
 	const [expandedId, setExpandedId] = useState<string | null>(null);
-	const [showTemplates, setShowTemplates] = useState(false);
+	const [,setShowTemplates] = useState(false);
 
-	const handleAddMeasurement = useCallback(
-		(template?: Partial<MeasurementItem>) => {
-			const newMeasurement: MeasurementItem = {
-				id: generateId(),
-				measurement_type: template?.measurement_type || "",
-				measurement_name: template?.measurement_name || "",
-				value: template?.value || "",
-				unit: template?.unit || "",
-				notes: template?.notes || "",
-				custom_data: template?.custom_data || {},
-				selectedTestId: template?.selectedTestId,
-				selectedTest: template?.selectedTest,
-				completed: false,
-			};
-			onChange([...measurements, newMeasurement]);
-			setExpandedId(newMeasurement.id);
-		},
-		[measurements, onChange],
-	);
+	
 
 	const handleRemoveMeasurement = useCallback(
 		(id: string) => {
@@ -190,43 +172,9 @@ export const MeasurementsBlock: React.FC<MeasurementsBlockProps> = ({
 	const completedCount = measurements.filter((m) => m.completed).length;
 
 	// Quick templates
-	const quickTemplates = [
-		{
-			name: "Y-Balance Test",
-			type: "Teste Funcional",
-			measurement_name: "Y-Balance Test",
-			unit: "cm",
-		},
-		{
-			name: "Sinais Vitais",
-			type: "Sinais Vitais",
-			measurement_name: "Checkup Geral",
-			unit: "",
-		},
-		{
-			name: "Goniometria",
-			type: "Goniometria",
-			measurement_name: "ADM",
-			unit: "graus",
-		},
-		{
-			name: "Dor (EVA)",
-			type: "Dor (EVA)",
-			measurement_name: "EVA",
-			unit: "0-10",
-		},
-		{
-			name: "Força Muscular",
-			type: "Força Muscular",
-			measurement_name: "Força",
-			unit: "0-5",
-		},
-	];
+	
 
-	const isYBalanceTest = (m: MeasurementItem) =>
-		m.measurement_name?.toLowerCase().includes("y-balance") ||
-		m.measurement_name?.toLowerCase().includes("y test") ||
-		m.selectedTest?.layout_type === "y_balance";
+	
 
 	return (
 		<>

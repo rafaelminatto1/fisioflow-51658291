@@ -125,7 +125,7 @@ export function useMultiMemo<T>(
 ): T[] {
 	const flatDeps = useMemo(() => depsArrays.flat(), [depsArrays]);
 
-	// eslint-disable-next-line react-hooks/exhaustive-deps
+	 
 	return useMemo(
 		() => factories.map((factory) => factory()),
 		[factories, flatDeps],

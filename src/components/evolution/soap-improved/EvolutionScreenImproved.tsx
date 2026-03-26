@@ -22,7 +22,7 @@
  * - Photo attachments with preview
  */
 
-import React, { useState, useCallback, useRef, useEffect } from "react";
+import React, { useState } from "react";
 import {
 	View,
 	Text,
@@ -166,7 +166,7 @@ const SCREEN_WIDTH = Dimensions.get("window").width;
 export default function EvolutionScreenImproved() {
 	const router = useRouter();
 	const params = useLocalSearchParams();
-	const patientId = params.id as string;
+	
 	const patientName = (params.patientName as string) || "Paciente";
 
 	// Form state
@@ -229,7 +229,7 @@ export default function EvolutionScreenImproved() {
 				}));
 				setPhotos([...photos, ...newPhotos]);
 			}
-		} catch (err) {
+		} catch  {
 			Alert.alert("Erro", "Não foi possível adicionar fotos.");
 		}
 	};
@@ -258,7 +258,7 @@ export default function EvolutionScreenImproved() {
 				};
 				setPhotos([...photos, newPhoto]);
 			}
-		} catch (err) {
+		} catch  {
 			Alert.alert("Erro", "Não foi possível tirar foto.");
 		}
 	};
@@ -454,7 +454,7 @@ const PainLevelBlock: React.FC<{
 	onChange: (level: number) => void;
 	animation: Animated.Value;
 }> = ({ painLevel, painConfig, onChange, animation }) => {
-	const [sliderWidth, setSliderWidth] = useState(0);
+	const [,setSliderWidth] = useState(0);
 
 	const thumbPosition = animation.interpolate({
 		inputRange: [0, 1],

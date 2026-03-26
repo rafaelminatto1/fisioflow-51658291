@@ -1997,7 +1997,7 @@ export function WikiEditor({ page, draft, onCancel, onSave }: WikiEditorProps) {
 				setTitle(parsed.title);
 				setBlocks(parsed.blocks);
 				toast.info("Rascunho recuperado com sucesso!");
-			} catch (e) {
+			} catch  {
 				toast.error("Erro ao carregar rascunho salvo.");
 			}
 		} else {
@@ -2005,10 +2005,7 @@ export function WikiEditor({ page, draft, onCancel, onSave }: WikiEditorProps) {
 		}
 	};
 
-	const clearLocalDraft = () => {
-		const draftKey = `wiki_draft_${page?.id || "new"}`;
-		localStorage.removeItem(draftKey);
-	};
+	
 	const [title, setTitle] = useState(source?.title || "");
 	const [icon, setIcon] = useState(source?.icon || "");
 	const [category, setCategory] = useState(source?.category || "");
@@ -2192,7 +2189,7 @@ export function WikiEditor({ page, draft, onCancel, onSave }: WikiEditorProps) {
 			toast.success(
 				`${mediaType === "image" ? "Imagem" : "Vídeo"} enviado com sucesso.`,
 			);
-		} catch (_error) {
+		} catch  {
 			toast.error("Não foi possível enviar o arquivo.");
 		} finally {
 			setPendingUpload(null);
@@ -2586,7 +2583,7 @@ export function WikiPageViewer({
 	page: WikiPage;
 	onEdit: () => void;
 }) {
-	const { user, organizationId } = useAuth();
+	const { user, } = useAuth();
 	const queryClient = useQueryClient();
 
 	const blocks = useMemo(() => buildBlocksFromPage(page), [page]);

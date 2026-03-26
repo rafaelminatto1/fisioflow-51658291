@@ -34,7 +34,7 @@ export function PhotoGrid({
   editable = true,
 }: Props) {
   const colors = useColors();
-  const { pickFromGallery, takePhoto, isLoading } = useCamera();
+  const { pickFromGallery, takePhoto, } = useCamera();
   const [showPhotoModal, setShowPhotoModal] = React.useState(false);
   const [previewPhoto, setPreviewPhoto] = React.useState<string | null>(null);
 

@@ -1,4 +1,4 @@
-import React, { memo, useState, forwardRef } from "react";
+import React, { useState, forwardRef } from "react";
 import { Appointment } from "@/types/appointment";
 import { normalizeStatus, getStatusColor } from "./shared/appointment-status";
 import { cn } from "@/lib/utils";
@@ -90,9 +90,7 @@ const CalendarAppointmentCardBase = forwardRef<
 		const calendarClassName = isOverbooked
 			? "calendar-card-excedente"
 			: statusConfig.calendarClassName;
-		const calendarAccent = isOverbooked
-			? "bg-red-700"
-			: statusConfig.calendarAccent;
+		
 
 		const handleMouseEnter = () => setIsHovered(true);
 		const handleMouseLeave = () => setIsHovered(false);

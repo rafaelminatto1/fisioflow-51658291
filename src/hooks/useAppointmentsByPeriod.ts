@@ -11,7 +11,7 @@
  * - Compatible with existing appointment infrastructure
  */
 
-import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useQuery } from "@tanstack/react-query";
 import { AppointmentBase } from "@/types/appointment";
 import { fisioLogger as logger } from "@/lib/errors/logger";
 import { AppointmentService } from "@/services/appointmentService";

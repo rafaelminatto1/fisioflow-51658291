@@ -37,7 +37,7 @@ export function OrganizationTab() {
 	const { members, isLoading: membersLoading } = useOrganizationMembers(
 		currentOrganization?.id,
 	);
-	const { toast } = useToast();
+	
 
 	const [inviteModalOpen, setInviteModalOpen] = useState(false);
 	const [formData, setFormData] = useState({

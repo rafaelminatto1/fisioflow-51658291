@@ -4,16 +4,11 @@
 
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import {
-	Select,
-	SelectContent,
-	SelectItem,
-	SelectTrigger,
-	SelectValue,
-} from "@/components/ui/select";
+
+
 import {
 	Table,
 	TableBody,
@@ -27,29 +22,19 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
 	Dialog,
 	DialogContent,
-	DialogDescription,
 	DialogFooter,
 	DialogHeader,
 	DialogTitle,
 } from "@/components/ui/dialog";
-import { Switch } from "@/components/ui/switch";
-import { Separator } from "@/components/ui/separator";
-import { Textarea } from "@/components/ui/textarea";
 import {
 	FileText,
 	Plus,
 	Download,
-	CheckCircle2,
-	Settings,
 	Eye,
-	Edit,
-	Search,
 	Printer,
 } from "lucide-react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
-import { format } from "date-fns";
-import { ptBR } from "date-fns/locale";
 import { useAuth } from "@/contexts/AuthContext";
 import { useOrganizations } from "@/hooks/useOrganizations";
 import { useUserProfile } from "@/hooks/useUserProfile";
@@ -203,15 +188,15 @@ export function NFSePreview({
 export function NFSeContent() {
 	const { user } = useAuth();
 	const { currentOrganization: orgData } = useOrganizations();
-	const { profile } = useUserProfile();
+	
 	const organizationId = orgData?.id;
 	const queryClient = useQueryClient();
 	const [isDialogOpen, setIsDialogOpen] = useState(false);
 	const [activeTab, setActiveTab] = useState<"lista" | "config">("lista");
-	const [searchTerm, setSearchTerm] = useState("");
-	const [statusFilter, setStatusFilter] = useState<string>("todos");
+	const [,setSearchTerm] = useState("");
+	const [,setStatusFilter] = useState<string>("todos");
 
-	const [formData, setFormData] = useState({
+	const [formData] = useState({
 		tipo: "entrada" as "entrada" | "saida",
 		valor: "",
 		data_prestacao: new Date().toISOString().split("T")[0],
@@ -235,17 +220,7 @@ export function NFSeContent() {
 		enabled: !!organizationId,
 	});
 
-	const { data: config } = useQuery({
-		queryKey: ["nfse-config", organizationId],
-		queryFn: async () => {
-			if (!organizationId) return null;
-			const response = await financialApi.nfseConfig.get();
-			return response.data
-				? ({ ...DEFAULT_NFSE_CONFIG, ...response.data } as NFSConfig)
-				: DEFAULT_NFSE_CONFIG;
-		},
-		enabled: !!organizationId,
-	});
+	
 
 	const createNFSe = useMutation({
 		mutationFn: async (data: typeof formData) => {

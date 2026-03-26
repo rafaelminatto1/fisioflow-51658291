@@ -1,17 +1,16 @@
 import React, { useState, useRef, useEffect } from "react";
 import { View, StyleSheet, TouchableOpacity, Text, Dimensions, SafeAreaView, Alert } from "react-native";
-import { Stack, useRouter } from "expo-router";
+import { useRouter } from "expo-router";
 import { Camera, useCameraDevice, useCameraPermission, useCameraFormat } from "react-native-vision-camera";
-import { Ionicons } from "@expo/vector-icons";
 import { useTheme } from "tamagui";
 import { captureRef } from "react-native-view-shot";
 import { Accelerometer } from "expo-sensors";
 
-const { width, height } = Dimensions.get("window");
+const { } = Dimensions.get("window");
 
 export default function BiomechanicsScreen() {
-	const theme = useTheme();
-	const router = useRouter();
+	
+	
 	const device = useCameraDevice("back", {
 		physicalDevices: ['ultra-wide-angle-camera', 'wide-angle-camera']
 	});
@@ -24,8 +23,8 @@ export default function BiomechanicsScreen() {
 
 	const { hasPermission, requestPermission } = useCameraPermission();
 	const [isRecording, setIsRecording] = useState(false);
-	const [showGrid, setShowGrid] = useState(true);
-	const [plumbRotation, setPlumbRotation] = useState(0);
+	const [showGrid] = useState(true);
+	const [,setPlumbRotation] = useState(0);
 	const camera = useRef<Camera>(null);
 	const containerRef = useRef<View>(null);
 
@@ -35,7 +34,7 @@ export default function BiomechanicsScreen() {
 			Accelerometer.setUpdateInterval(50);
 			subscription = Accelerometer.addListener(({ x, y }) => {
 				// Calculate rotation angle based on gravity vector
-				let angle = Math.atan2(x, y) * (180 / Math.PI);
+				const angle = Math.atan2(x, y) * (180 / Math.PI);
 				setPlumbRotation(-angle + 180);
 			});
 		}
@@ -63,41 +62,11 @@ export default function BiomechanicsScreen() {
 		);
 	}
 
-	const toggleRecording = async () => {
-		if (!camera.current) return;
+	
 
-		if (isRecording) {
-			setIsRecording(false);
-			await camera.current.stopRecording();
-		} else {
-			setIsRecording(true);
-			camera.current.startRecording({
-				onRecordingFinished: (video) => {
-					Alert.alert("Vídeo Salvo", `Vídeo gravado em: ${video.path}`);
-				},
-				onRecordingError: (error) => {
-					console.error("Recording failed", error);
-					setIsRecording(false);
-				}
-			});
-		}
-	};
+	
 
-	const takeSnapshot = async () => {
-		try {
-			if (containerRef.current) {
-				const uri = await captureRef(containerRef, {
-					format: "jpg",
-					quality: 0.9,
-				});
-				Alert.alert("Captura de Tela", `Snapshot salvo em: ${uri}`);
-			}
-		} catch (error) {
-			console.error("Snapshot failed", error);
-		}
-	};
-
-	const [gaitEvents, setGaitEvents] = useState<{type: string, frame: number}[]>([]);
+	const [,setGaitEvents] = useState<{type: string, frame: number}[]>([]);
 	const [frameCounter, setFrameCounter] = useState(0);
 
 	// Mock frame increment while recording

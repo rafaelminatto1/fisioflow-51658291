@@ -13,7 +13,7 @@ try {
   try {
     execSync('which pnpm || npm install -g pnpm', { stdio: 'inherit' });
     console.log('✅ pnpm is available');
-  } catch (error) {
+  } catch  {
     console.log('⚠️ Could not ensure pnpm availability');
   }
 

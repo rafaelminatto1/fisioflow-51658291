@@ -18,12 +18,10 @@
 
 // Mock do hook useCardSize com diferentes tamanhos
 
-import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
-import { render, screen, fireEvent, waitFor } from "@testing-library/react";
+import { describe, it, expect, vi, beforeEach } from "vitest";
+import { render, screen, fireEvent } from "@testing-library/react";
 import {
 	DndContext,
-	DragEndEvent,
-	DragOverlay as DndDragOverlay,
 	useDraggable,
 } from "@dnd-kit/core";
 import { CalendarDragOverlay } from "../DragOverlay";
@@ -154,9 +152,7 @@ describe("CalendarDragOverlay", () => {
 			["concluido", "border-teal-500"],
 			["avaliacao", "border-violet-500"],
 		])("deve aplicar estilo correto para status %s", (status, expectedClass) => {
-			const appointment = createMockAppointment({
-				status: status as Appointment["status"],
-			});
+			
 			const { container } = render(
 				<div className={expectedClass}>Test {status}</div>,
 			);

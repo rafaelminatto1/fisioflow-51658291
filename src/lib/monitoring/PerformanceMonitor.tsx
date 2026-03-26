@@ -51,7 +51,7 @@ class PerformanceMonitor {
 			});
 			navObserver.observe({ entryTypes: ["navigation"] });
 			this.observers.push(navObserver);
-		} catch (_e) {
+		} catch  {
 			// Navigation timing might not be available
 		}
 
@@ -72,7 +72,7 @@ class PerformanceMonitor {
 			});
 			paintObserver.observe({ entryTypes: ["paint"] });
 			this.observers.push(paintObserver);
-		} catch (_e) {
+		} catch  {
 			// Paint timing might not be available
 		}
 
@@ -91,7 +91,7 @@ class PerformanceMonitor {
 			});
 			longTaskObserver.observe({ entryTypes: ["longtask"] });
 			this.observers.push(longTaskObserver);
-		} catch (_e) {
+		} catch  {
 			// Long task observer might not be available
 		}
 
@@ -146,7 +146,7 @@ class PerformanceMonitor {
 					);
 				}
 			}
-		} catch (_e) {
+		} catch  {
 			// Might fail if marks don't exist
 		}
 	}

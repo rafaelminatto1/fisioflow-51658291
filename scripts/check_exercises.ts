@@ -2,7 +2,6 @@ import { drizzle } from "drizzle-orm/neon-http";
 import { neon } from "@neondatabase/serverless";
 import * as dotenv from 'dotenv';
 import { exercises } from '../src/server/db/schema/exercises';
-import { isNull, or, eq } from 'drizzle-orm';
 
 dotenv.config({ path: '.env' });
 
