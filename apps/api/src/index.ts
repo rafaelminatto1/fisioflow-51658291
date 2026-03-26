@@ -79,6 +79,7 @@ import { standardizedTestsRoutes } from './routes/standardizedTests';
 import { commissionsRoutes } from './routes/commissions';
 import { nfseRoutes } from './routes/nfse';
 import { announcementsRoutes } from './routes/announcements';
+import { adminSeedTemplatesRoutes } from './routes/admin/seed-templates';
 import { verifyToken } from './lib/auth';
 import { getRawSql } from './lib/db';
 import { routeAgentRequest } from 'agents';
@@ -217,6 +218,7 @@ app.route('/api/standardized-tests', standardizedTestsRoutes);
 app.route('/api/commissions', commissionsRoutes);
 app.route('/api/nfse', nfseRoutes);
 app.route('/api/announcements', announcementsRoutes);
+app.route('/api/admin/seed-templates', adminSeedTemplatesRoutes);
 
 // REALTIME
 app.get('/api/realtime', async (c) => {

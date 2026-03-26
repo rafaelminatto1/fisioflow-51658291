@@ -32,6 +32,8 @@ export const protocolTypeEnum = pgEnum("protocol_type", [
 	"funcional",
 	"neurologico",
 	"respiratorio",
+	"conservador",
+	"geriatria",
 ]);
 
 export const evidenceLevelEnum = pgEnum("evidence_level", ["A", "B", "C", "D"]);

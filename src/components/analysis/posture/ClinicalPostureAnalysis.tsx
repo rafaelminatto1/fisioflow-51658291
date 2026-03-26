@@ -82,12 +82,6 @@ const ClinicalPostureAnalysis = () => {
 		setReport(rep);
 	};
 
-	// 4. Save
-	// const handleSave = async () => {
-	//     // Here we would call supabase to save 'analysis_runs'
-	//     toast({ title: 'Salvo com sucesso!', description: 'Relatório registrado no prontuário.' });
-	// };
-
 	return (
 		<div className="flex flex-col h-full gap-4 p-4">
 			{/* Header / Stepper */}

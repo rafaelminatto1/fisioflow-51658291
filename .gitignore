@@ -32,10 +32,8 @@ build
 workers/.dev.vars.local
 *.dev.vars.local
 
-# Supabase
-.supabase
-supabase/.temp
-supabase/functions/.vscode
+# Drizzle
+drizzle/.temp
 
 # Database
 *.db
@@ -225,3 +223,6 @@ functions/.env*claude-skills/repo
 *storybook.log
 storybook-static
 .sentryclirc
+# Dev vars (secrets)
+**/.dev.vars
+apps/jules-bot/.dev.vars

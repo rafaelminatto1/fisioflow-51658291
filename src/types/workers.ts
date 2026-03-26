@@ -78,6 +78,13 @@ export interface WikiPageFull extends WikiPage {
 	createdAt: string;
 }
 
+export type PatientProfileCategory =
+	| 'ortopedico'
+	| 'esportivo'
+	| 'pos_operatorio'
+	| 'prevencao'
+	| 'idosos';
+
 export interface ExerciseTemplate {
 	id: string;
 	name: string;
@@ -97,6 +104,11 @@ export interface ExerciseTemplate {
 	createdBy: string | null;
 	createdAt: string;
 	updatedAt: string;
+	templateType: 'system' | 'custom';
+	patientProfile: PatientProfileCategory | null;
+	sourceTemplateId: string | null;
+	isDraft: boolean;
+	exerciseCount: number;
 }
 
 export interface ExerciseTemplateItem {

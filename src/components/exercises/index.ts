@@ -15,3 +15,10 @@ export type {
 	ExerciseVideoCardProps,
 } from "./ExerciseVideoPlayerCard";
 export type { ExerciseVideoUploadProps } from "./ExerciseVideoUpload";
+
+// Template Components
+export { TemplateApplyFlow } from "./TemplateApplyFlow";
+export { TemplateCreateFlow } from "./TemplateCreateFlow";
+export { TemplateSidebar } from "./TemplateSidebar";
+export { TemplateDetailPanel } from "./TemplateDetailPanel";
+export { TemplateManager } from "./TemplateManager";

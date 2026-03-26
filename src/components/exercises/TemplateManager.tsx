@@ -1,358 +1,207 @@
-import { useState, useMemo, memo } from "react";
-import { toast } from "sonner";
-import { useExerciseTemplates } from "@/hooks/useExerciseTemplates";
-import { Card } from "@/components/ui/card";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { templatesApi } from "@/api/v2";
+import { useTemplateUIStore } from "@/stores/useTemplateUIStore";
+import { TemplateSidebar } from "./TemplateSidebar";
+import { TemplateDetailPanel } from "./TemplateDetailPanel";
+import { TemplateApplyFlow } from "./TemplateApplyFlow";
+import { TemplateCreateFlow } from "./TemplateCreateFlow";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Badge } from "@/components/ui/badge";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Plus, Edit, Trash2, FileText, Search, Sparkles } from "lucide-react";
-import { TemplateModal } from "./TemplateModal";
-import { TemplateDetailsModal } from "./TemplateDetailsModal";
-import type { ExerciseTemplate } from "@/hooks/useExerciseTemplates";
-import {
-	AlertDialog,
-	AlertDialogAction,
-	AlertDialogCancel,
-	AlertDialogContent,
-	AlertDialogDescription,
-	AlertDialogFooter,
-	AlertDialogHeader,
-	AlertDialogTitle,
-} from "@/components/ui/alert-dialog";
-import { fisioLogger as logger } from "@/lib/errors/logger";
+import { ChevronLeft, LayoutTemplate, Sparkles, Plus } from "lucide-react";
+import { toast } from "@/hooks/use-toast";
+import type { ExerciseTemplate } from "@/types/workers";
 
-// Memoized Template Card Component
-const TemplateCard = memo(
-	({
-		template,
-		onView,
-		onEdit,
-		onDelete,
-	}: {
-		template: ExerciseTemplate;
-		onView: (t: ExerciseTemplate) => void;
-		onEdit: (t: ExerciseTemplate) => void;
-		onDelete: (id: string) => void;
-	}) => (
-		<Card
-			className="p-4 hover:shadow-md transition-shadow cursor-pointer relative group"
-			onClick={() => onView(template)}
-		>
-			<div className="flex items-start justify-between mb-2">
-				<div className="flex-1">
-					<h4 className="font-medium">{template?.name ?? "Sem nome"}</h4>
-					{template.template_variant && (
-						<Badge variant="outline" className="mt-1">
-							{template.template_variant}
-						</Badge>
-					)}
-				</div>
-			</div>
+// ─── Empty state CTA (shown when org has no custom templates) ─────────────────
 
-			{template.description && (
-				<p className="text-sm text-muted-foreground mb-3 line-clamp-2">
-					{template.description}
-				</p>
-			)}
+interface EmptyStateCTAProps {
+  onExploreSystem: () => void;
+  onCreateFirst: () => void;
+}
 
-			<div className="flex gap-2">
-				<Button
-					variant="outline"
-					size="sm"
-					className="pointer-events-auto"
-					onClick={(e) => {
-						e.stopPropagation();
-						onView(template);
-					}}
-				>
-					<FileText className="h-3 w-3 mr-1" />
-					Ver
-				</Button>
-				<Button
-					variant="ghost"
-					size="sm"
-					className="pointer-events-auto"
-					onClick={(e) => {
-						e.stopPropagation();
-						onEdit(template);
-					}}
-				>
-					<Edit className="h-3 w-3" />
-				</Button>
-				<Button
-					variant="ghost"
-					size="sm"
-					className="pointer-events-auto hover:text-red-500 hover:bg-red-50"
-					onClick={(e) => {
-						e.stopPropagation();
-						onDelete(template.id);
-					}}
-				>
-					<Trash2 className="h-3 w-3" />
-				</Button>
-			</div>
-		</Card>
-	),
-);
+function EmptyStateCTA({ onExploreSystem, onCreateFirst }: EmptyStateCTAProps) {
+  return (
+    <div className="rounded-lg border border-dashed border-muted-foreground/30 bg-muted/20 p-6 mb-4">
+      <div className="flex flex-col items-center text-center gap-3">
+        <LayoutTemplate className="h-10 w-10 text-muted-foreground/50" />
+        <div>
+          <p className="text-sm font-semibold text-foreground">
+            Sua organização ainda não tem templates personalizados
+          </p>
+          <p className="text-xs text-muted-foreground mt-1 max-w-xs">
+            Explore os templates do sistema como ponto de partida ou crie o seu próprio protocolo clínico.
+          </p>
+        </div>
+        <div className="flex flex-wrap gap-2 justify-center">
+          <Button size="sm" variant="outline" onClick={onExploreSystem} className="gap-1.5">
+            <Sparkles className="h-3.5 w-3.5" />
+            Explorar Templates do Sistema
+          </Button>
+          <Button size="sm" onClick={onCreateFirst} className="gap-1.5">
+            <Plus className="h-3.5 w-3.5" />
+            Criar Meu Primeiro Template
+          </Button>
+        </div>
+      </div>
+    </div>
+  );
+}
 
-TemplateCard.displayName = "TemplateCard";
-
-// Memoized Category Group Component
-const TemplateCategoryGroup = memo(
-	({
-		condition,
-		templates,
-		onView,
-		onEdit,
-		onDelete,
-	}: {
-		condition: string;
-		templates: ExerciseTemplate[];
-		onView: (t: ExerciseTemplate) => void;
-		onEdit: (t: ExerciseTemplate) => void;
-		onDelete: (id: string) => void;
-	}) => (
-		<Card className="p-4">
-			<h3 className="text-lg font-semibold mb-3">{condition}</h3>
-			<div className="grid gap-3 md:grid-cols-2 lg:grid-cols-3">
-				{templates.map((template) => (
-					<TemplateCard
-						key={template.id}
-						template={template}
-						onView={onView}
-						onEdit={onEdit}
-						onDelete={onDelete}
-					/>
-				))}
-			</div>
-		</Card>
-	),
-);
-
-TemplateCategoryGroup.displayName = "TemplateCategoryGroup";
+// ─── TemplateManager ──────────────────────────────────────────────────────────
 
 export function TemplateManager() {
-	const [activeTab, setActiveTab] = useState<"patologia" | "pos_operatorio">(
-		"patologia",
-	);
-	const [search, setSearch] = useState("");
-	const [showNewModal, setShowNewModal] = useState(false);
-	const [editTemplate, setEditTemplate] = useState<ExerciseTemplate | null>(
-		null,
-	);
-	const [viewTemplate, setViewTemplate] = useState<ExerciseTemplate | null>(
-		null,
-	);
-	const [deleteId, setDeleteId] = useState<string | null>(null);
-	const [importing, setImporting] = useState(false);
+  const queryClient = useQueryClient();
+  const {
+    selectedTemplateId,
+    activeProfile,
+    searchQuery,
+    applyFlowOpen,
+    createFlowOpen,
+    createFlowSourceId,
+    setSelectedTemplate,
+    setActiveProfile,
+    setSearchQuery,
+    openCreateFlow,
+    openApplyFlow,
+    closeApplyFlow,
+    closeCreateFlow,
+  } = useTemplateUIStore();
 
-	const [_showImportModal, setShowImportModal] = useState(false);
+  // Fetch all templates (system + custom) without pre-filtering by profile/search
+  // so the sidebar can do client-side filtering and show counts per profile
+  const { data, isLoading: loading } = useQuery({
+    queryKey: ["templates", {}],
+    queryFn: () => templatesApi.list(),
+    staleTime: 1000 * 60 * 5,
+  });
+  const rawTemplates = data?.data ?? [];
+  const templates: ExerciseTemplate[] = rawTemplates;
 
-	// Fetch all templates and filter client-side to handle diverse categories
-	const { templates, loading, deleteTemplate, createTemplateAsync } =
-		useExerciseTemplates();
+  const selectedTemplate: ExerciseTemplate | null =
+    templates.find((t) => t.id === selectedTemplateId) ?? null;
 
-	const filteredTemplates = useMemo(() => {
-		return templates.filter((t) => {
-			// Basic search filtering
-			const matchesSearch =
-				t.name?.toLowerCase().includes(search.toLowerCase()) ||
-				t.condition_name?.toLowerCase().includes(search.toLowerCase()) ||
-				t.template_variant?.toLowerCase().includes(search.toLowerCase());
+  const hasCustomTemplates = templates.some((t) => t.templateType === "custom");
 
-			if (!matchesSearch) return false;
+  const handleApply = () => openApplyFlow();
+  const handleCustomize = () => {
+    if (selectedTemplate) openCreateFlow(selectedTemplate.id);
+  };
+  const handleEdit = () => {
+    // Requirement 5.5: block direct editing of system templates
+    if (selectedTemplate?.templateType === "system") {
+      toast({
+        title: "Templates do sistema não podem ser editados",
+        description:
+          "Templates do sistema não podem ser editados diretamente. Use 'Personalizar' para criar sua própria versão.",
+        variant: "default",
+      });
+      return;
+    }
+    // TODO: task 13 — open TemplateCreateFlow in edit mode
+  };
+  const handleDelete = () => {
+    // TODO: task 13 — open delete confirmation dialog
+  };
 
-			// Category filtering (Tab logic)
-			if (activeTab === "pos_operatorio") {
-				return (
-					t.category === "Pós-Operatório" || t.category === "pos_operatorio"
-				);
-			} else {
-				// 'patologia' tab shows everything else (Ortopedia, Neurologia, etc.)
-				return (
-					t.category !== "Pós-Operatório" && t.category !== "pos_operatorio"
-				);
-			}
-		});
-	}, [templates, search, activeTab]);
+  const handleExploreSystem = () => setActiveProfile("all");
+  const handleCreateFirst = () => openCreateFlow();
 
-	// Agrupar por condição
-	const groupedTemplates = useMemo(() => {
-		return filteredTemplates.reduce(
-			(acc, template) => {
-				const key = template.condition_name;
-				if (!acc[key]) {
-					acc[key] = [];
-				}
-				acc[key].push(template);
-				return acc;
-			},
-			{} as Record<string, ExerciseTemplate[]>,
-		);
-	}, [filteredTemplates]);
+  // Source template for TemplateCreateFlow (customize mode)
+  const createFlowSourceTemplate: ExerciseTemplate | undefined =
+    createFlowSourceId
+      ? (templates.find((t) => t.id === createFlowSourceId) ?? undefined)
+      : undefined;
 
-	const _importDefaultTemplates = async () => {
-		try {
-			setImporting(true);
-			const { defaultTemplates } = await import("@/lib/data/defaultTemplates");
+  // Mobile: show detail panel when a template is selected
+  const showDetailOnMobile = !!selectedTemplateId;
 
-			let count = 0;
-			for (const template of defaultTemplates) {
-				// Check if template with same name already exists to avoid duplicates
-				const exists = templates.some((t) => t.name === template.name);
-				if (!exists) {
-					// Create the template
-					await createTemplateAsync({
-						name: template.name,
-						description: template.description,
-						category: template.category,
-						condition_name: template.condition_name,
-						template_variant: template.template_variant,
-					});
-					count++;
-				}
-			}
+  return (
+    <div className="h-full flex flex-col">
+      {/* Empty state CTA — shown above the list when no custom templates exist */}
+      {!hasCustomTemplates && !loading && (
+        <EmptyStateCTA
+          onExploreSystem={handleExploreSystem}
+          onCreateFirst={handleCreateFirst}
+        />
+      )}
 
-			if (count > 0) {
-				toast.success(`${count} templates importados com sucesso!`);
-			} else {
-				toast.info("Todos os templates do sistema já foram importados.");
-			}
-			setShowImportModal(false);
-		} catch (error) {
-			logger.error("Erro ao importar templates", error, "TemplateManager");
-			toast.error("Erro ao importar templates.");
-		} finally {
-			setImporting(false);
-		}
-	};
+      {/* Split-view layout */}
+      <div className="flex-1 flex min-h-0 gap-0 overflow-hidden rounded-lg border bg-background">
+        {/* ── Sidebar (left) — hidden on mobile when detail is open ── */}
+        <div
+          className={`
+            flex flex-col border-r
+            w-full lg:w-[340px] xl:w-[380px] shrink-0
+            ${showDetailOnMobile ? "hidden lg:flex" : "flex"}
+          `}
+        >
+          <div className="flex-1 overflow-hidden p-4">
+            <TemplateSidebar
+              templates={templates}
+              selectedId={selectedTemplateId}
+              activeProfile={activeProfile}
+              searchQuery={searchQuery}
+              loading={loading}
+              onSelect={setSelectedTemplate}
+              onProfileChange={setActiveProfile}
+              onSearchChange={setSearchQuery}
+              onCreateClick={() => openCreateFlow()}
+            />
+          </div>
+        </div>
 
-	const handleDelete = () => {
-		if (deleteId) {
-			deleteTemplate(deleteId);
-			setDeleteId(null);
-		}
-	};
+        {/* ── Detail panel (right) — full width on mobile when open ── */}
+        <div
+          className={`
+            flex-1 flex flex-col min-w-0 overflow-hidden
+            ${showDetailOnMobile ? "flex" : "hidden lg:flex"}
+          `}
+        >
+          {/* Mobile back button */}
+          {showDetailOnMobile && (
+            <div className="flex items-center gap-2 px-4 py-2 border-b lg:hidden">
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => setSelectedTemplate(null)}
+                className="gap-1.5 -ml-2"
+              >
+                <ChevronLeft className="h-4 w-4" />
+                Voltar
+              </Button>
+            </div>
+          )}
 
-	return (
-		<>
-			<Card className="p-6">
-				<div className="flex items-center justify-between mb-6 flex-wrap gap-4">
-					<div>
-						<h2 className="text-2xl font-bold">Templates de Exercícios</h2>
-						<p className="text-muted-foreground">
-							Organize exercícios por patologia ou pós-operatório
-						</p>
-					</div>
-					<div className="flex gap-2">
-						<Button
-							variant="outline"
-							onClick={() => setShowImportModal(true)}
-							disabled={importing}
-						>
-							<Sparkles className="h-4 w-4 mr-2" />
-							Templates do Sistema
-						</Button>
-						<Button onClick={() => setShowNewModal(true)}>
-							<Plus className="h-4 w-4 mr-2" />
-							Novo Template
-						</Button>
-					</div>
-				</div>
+          <div className="flex-1 overflow-y-auto p-4">
+            <TemplateDetailPanel
+              template={selectedTemplate}
+              onApply={handleApply}
+              onCustomize={handleCustomize}
+              onEdit={handleEdit}
+              onDelete={handleDelete}
+            />
+          </div>
+        </div>
+      </div>
 
-				<Tabs
-					value={activeTab}
-					onValueChange={(v) =>
-						setActiveTab(v as "patologia" | "pos_operatorio")
-					}
-				>
-					<TabsList className="mb-4">
-						<TabsTrigger value="patologia" className="w-[120px]">
-							Patologias
-						</TabsTrigger>
-						<TabsTrigger value="pos_operatorio" className="w-[140px]">
-							Pós-Operatórios
-						</TabsTrigger>
-					</TabsList>
+      {/* ── Overlaid flows ── */}
+      {applyFlowOpen && selectedTemplate && (
+        <TemplateApplyFlow
+          template={selectedTemplate}
+          open={applyFlowOpen}
+          onOpenChange={(open) => { if (!open) closeApplyFlow(); }}
+          onSuccess={() => {
+            queryClient.invalidateQueries({ queryKey: ["exercise-plans"] });
+          }}
+        />
+      )}
 
-					<div className="mb-4">
-						<div className="relative max-w-md">
-							<Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-							<Input
-								placeholder="Buscar templates..."
-								value={search}
-								onChange={(e) => setSearch(e.target.value)}
-								className="pl-9"
-							/>
-						</div>
-					</div>
-
-					<TabsContent value={activeTab} className="space-y-6 mt-0">
-						{loading ? (
-							<div className="text-center py-8 text-muted-foreground">
-								Carregando...
-							</div>
-						) : Object.keys(groupedTemplates).length === 0 ? (
-							<div className="text-center py-8 text-muted-foreground">
-								{search
-									? "Nenhum template encontrado"
-									: "Nenhum template cadastrado"}
-							</div>
-						) : (
-							Object.entries(groupedTemplates).map(([condition, templates]) => (
-								<TemplateCategoryGroup
-									key={condition}
-									condition={condition}
-									templates={templates}
-									onView={setViewTemplate}
-									onEdit={setEditTemplate}
-									onDelete={setDeleteId}
-								/>
-							))
-						)}
-					</TabsContent>
-				</Tabs>
-			</Card>
-
-			<TemplateModal
-				open={showNewModal || !!editTemplate}
-				onOpenChange={(open) => {
-					if (!open) {
-						setShowNewModal(false);
-						setEditTemplate(null);
-					}
-				}}
-				template={editTemplate || undefined}
-				defaultCategory={activeTab}
-			/>
-
-			{viewTemplate && (
-				<TemplateDetailsModal
-					open={!!viewTemplate}
-					onOpenChange={(open) => !open && setViewTemplate(null)}
-					template={viewTemplate}
-					onEdit={setEditTemplate}
-				/>
-			)}
-
-			<AlertDialog open={!!deleteId} onOpenChange={() => setDeleteId(null)}>
-				<AlertDialogContent>
-					<AlertDialogHeader>
-						<AlertDialogTitle>Confirmar exclusão</AlertDialogTitle>
-						<AlertDialogDescription>
-							Tem certeza que deseja excluir este template? Todos os exercícios
-							associados serão removidos.
-						</AlertDialogDescription>
-					</AlertDialogHeader>
-					<AlertDialogFooter>
-						<AlertDialogCancel>Cancelar</AlertDialogCancel>
-						<AlertDialogAction onClick={handleDelete}>
-							Excluir
-						</AlertDialogAction>
-					</AlertDialogFooter>
-				</AlertDialogContent>
-			</AlertDialog>
-		</>
-	);
+      <TemplateCreateFlow
+        open={createFlowOpen}
+        onOpenChange={(open) => { if (!open) closeCreateFlow(); }}
+        sourceTemplate={createFlowSourceTemplate}
+        onSuccess={() => {
+          queryClient.invalidateQueries({ queryKey: ["templates"] });
+        }}
+      />
+    </div>
+  );
 }
