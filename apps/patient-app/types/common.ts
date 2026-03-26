@@ -18,7 +18,7 @@ export interface ValidationResult {
   errors: FormFieldError[];
 }
 
-export type FirestoreTimestamp = {
+export type NeonTimestamp = {
   seconds: number;
   nanoseconds: number;
   toDate(): Date;

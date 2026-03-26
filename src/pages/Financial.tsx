@@ -138,7 +138,7 @@ const Financial = () => {
 				await mutations.create(data);
 			}
 			setIsModalOpen(false);
-		} catch  {
+		} catch {
 			// Error handled by mutation
 		}
 	};
@@ -148,7 +148,7 @@ const Financial = () => {
 			try {
 				await mutations.delete(deleteId);
 				setDeleteId(null);
-			} catch  {
+			} catch {
 				// Error handled by mutation
 			}
 		}
@@ -157,7 +157,7 @@ const Financial = () => {
 	const handleMarkAsPaid = async (id: string) => {
 		try {
 			await mutations.markAsPaid(id);
-		} catch  {
+		} catch {
 			// Error handled by mutation
 		}
 	};
@@ -205,9 +205,9 @@ const Financial = () => {
 		<MainLayout>
 			<div className="container max-w-7xl mx-auto py-6 md:py-8 space-y-8 animate-fade-in pb-20 md:pb-0">
 				{/* Header - Design Moderno */}
-				<div className="flex flex-col md:flex-row md:items-center justify-between gap-6 bg-white dark:bg-slate-900 p-6 rounded-2xl shadow-premium-sm border border-slate-100 dark:border-slate-800/50">
+				<div className="flex flex-col md:flex-row md:items-center justify-between gap-6 gradient-brand-light p-6 rounded-2xl shadow-premium-sm border border-primary/20 card-premium-hover">
 					<div>
-						<h1 className="text-2xl sm:text-3xl font-black tracking-tighter text-slate-900 dark:text-white leading-none">
+						<h1 className="text-2xl sm:text-3xl font-black tracking-tighter text-slate-900 dark:text-white leading-none font-display">
 							Gestão Financeira
 						</h1>
 						<p className="text-sm font-medium text-slate-500 dark:text-slate-400 mt-2">
@@ -217,8 +217,8 @@ const Financial = () => {
 					<div className="flex items-center gap-3">
 						<Button
 							onClick={handleExport}
-							variant="outline"
-							className="rounded-xl h-11 border-slate-200 dark:border-slate-800 font-bold text-xs uppercase tracking-wider"
+							variant="brand"
+							className="rounded-xl h-11 font-bold text-xs uppercase tracking-wider magnetic-button glow-on-hover font-display"
 							disabled={isExporting}
 						>
 							<Download className="mr-2 h-4 w-4" />
@@ -226,7 +226,7 @@ const Financial = () => {
 						</Button>
 						<Button
 							onClick={handleNewTransaction}
-							className="rounded-xl bg-slate-900 dark:bg-white text-white dark:text-slate-900 shadow-lg shadow-slate-900/10 font-bold h-11 px-6 text-xs uppercase tracking-wider"
+							className="rounded-xl gradient-brand text-white dark:text-white shadow-lg shadow-primary/10 font-bold h-11 px-6 text-xs uppercase tracking-wider magnetic-button glow-on-hover font-display"
 						>
 							<Plus className="mr-2 h-5 w-5" />
 							Nova Transação
@@ -247,9 +247,9 @@ const Financial = () => {
 
 				{/* Stats Grid */}
 				<div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6">
-					<Card className="rounded-2xl border-none shadow-premium-sm hover-lift bg-white dark:bg-slate-900 overflow-hidden group">
+					<Card className="rounded-2xl border-none shadow-premium-sm card-premium-hover bg-white dark:bg-slate-900 overflow-hidden group gradient-success-light">
 						<CardHeader className="pb-2 pt-6 px-6">
-							<CardTitle className="text-[10px] font-black uppercase tracking-widest text-slate-400 flex items-center justify-between">
+							<CardTitle className="text-[10px] font-black uppercase tracking-widest text-slate-400 flex items-center justify-between font-display">
 								Receita Total
 								<div className="p-1.5 bg-emerald-500/10 rounded-lg group-hover:scale-110 transition-transform">
 									<DollarSign className="h-3.5 w-3.5 text-emerald-600" />
@@ -257,13 +257,13 @@ const Financial = () => {
 							</CardTitle>
 						</CardHeader>
 						<CardContent className="px-6 pb-6">
-							<p className="text-3xl font-black tracking-tighter text-slate-900 dark:text-white">
+							<p className="text-3xl font-black tracking-tighter text-slate-900 dark:text-white font-display">
 								R$ {safeStats.totalRevenue.toLocaleString("pt-BR")}
 							</p>
 							<div className="flex items-center mt-2">
 								<Badge
 									variant="secondary"
-									className="bg-emerald-500/10 text-emerald-600 border-none text-[10px] font-bold px-2 py-0"
+									className="bg-emerald-500/10 text-emerald-600 border-none text-[10px] font-bold px-2 py-0 font-display"
 								>
 									<TrendingUp className="h-3 w-3 mr-1" />+
 									{safeStats.monthlyGrowth.toFixed(1)}%
@@ -275,9 +275,9 @@ const Financial = () => {
 						</CardContent>
 					</Card>
 
-					<Card className="rounded-2xl border-none shadow-premium-sm hover-lift bg-white dark:bg-slate-900 overflow-hidden group">
+					<Card className="rounded-2xl border-none shadow-premium-sm card-premium-hover bg-white dark:bg-slate-900 overflow-hidden group gradient-warm-light">
 						<CardHeader className="pb-2 pt-6 px-6">
-							<CardTitle className="text-[10px] font-black uppercase tracking-widest text-slate-400 flex items-center justify-between">
+							<CardTitle className="text-[10px] font-black uppercase tracking-widest text-slate-400 flex items-center justify-between font-display">
 								Pendentes
 								<div className="p-1.5 bg-amber-500/10 rounded-lg group-hover:scale-110 transition-transform">
 									<Clock className="h-3.5 w-3.5 text-amber-600" />
@@ -285,7 +285,7 @@ const Financial = () => {
 							</CardTitle>
 						</CardHeader>
 						<CardContent className="px-6 pb-6">
-							<p className="text-3xl font-black tracking-tighter text-amber-600">
+							<p className="text-3xl font-black tracking-tighter text-amber-600 font-display">
 								R$ {safeStats.pendingPayments.toLocaleString("pt-BR")}
 							</p>
 							<p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mt-2">

@@ -588,7 +588,7 @@ export default function SmartDashboard() {
 									<Tooltip />
 									<Bar
 										dataKey="rebook"
-										fill="#6366f1"
+										fill="#2563eb"
 										radius={[4, 4, 0, 0]}
 										name="Re-agendamento %"
 									/>
@@ -776,7 +776,7 @@ export default function SmartDashboard() {
 				<div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-6 pt-4">
 					<div className="flex items-center gap-5">
 						<div className="relative">
-							<div className="h-14 w-14 rounded-2xl bg-slate-900 dark:bg-white/10 flex items-center justify-center shadow-2xl ring-1 ring-white/20">
+							<div className="h-14 w-14 rounded-2xl bg-primary flex items-center justify-center shadow-2xl ring-1 ring-white/20">
 								<Brain className="h-7 w-7 text-white" />
 							</div>
 							<div className="absolute -bottom-1 -right-1 h-5 w-5 rounded-full bg-emerald-500 flex items-center justify-center ring-4 ring-background animate-pulse">
@@ -790,7 +790,7 @@ export default function SmartDashboard() {
 									Inteligência Clínica Ativa
 								</p>
 							</div>
-							<h1 className="text-2xl md:text-3xl font-black tracking-tighter text-slate-900 dark:text-white flex items-center gap-3 font-display">
+							<h1 className="text-2xl md:text-3xl font-black tracking-tighter text-primary dark:text-primary flex items-center gap-3 font-display">
 								Smart Dashboard
 								<Badge
 									variant="outline"

@@ -4,14 +4,12 @@
  * Centralizes exports for all feature flag implementations:
  * - Remote Config Manager (primary, recommended)
  * - Statsig (fallback, unlimited free tier)
- * - Vercel Edge Config (legacy fallback)
  * - Environment Variables (ultimate fallback)
  *
  * Migration Path:
  * 1. Remote Config Manager (NEW - Primary)
  * 2. Statsig (Optional - secondary)
- * 3. Edge Config (Legacy - will be removed)
- * 4. Env Variables (Fallback)
+ * 3. Env Variables (Fallback)
  *
  * Usage:
  * ```tsx

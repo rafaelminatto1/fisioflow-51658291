@@ -2,7 +2,7 @@
  * Optimized Query Hook - runtime agnostic.
  *
  * Mantém cache/métricas para compatibilidade com o dashboard de performance,
- * sem acoplar a aplicação ao Firestore.
+ * sem acoplar a aplicação ao Neon.
  */
 
 import { useState, useEffect, useCallback, useRef } from "react";

@@ -21,7 +21,7 @@ export type GeneratedQuest = {
  * Gera missões personalizadas baseadas no estado atual do paciente.
  * Esta função deve ser chamada quando o usuário não tiver missões para o dia atual.
  *
- * @param patientId - Patient ID in Firestore
+ * @param patientId - Patient ID in Neon
  * @returns Array of generated quests
  */
 export async function generateSmartQuests(

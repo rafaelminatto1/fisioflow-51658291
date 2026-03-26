@@ -18,22 +18,14 @@ cd apps/patient-app
 npm install
 ```
 
-### 2. Configurar Firebase
+### 2. Configurar Neon Auth
 
 1. Copie o arquivo de exemplo:
 ```bash
 cp .env.example .env
 ```
 
-2. Preencha as variaveis com suas credenciais do Firebase Console:
-```env
-EXPO_PUBLIC_FIREBASE_API_KEY=sua_api_key
-EXPO_PUBLIC_FIREBASE_AUTH_DOMAIN=seu_projeto.firebaseapp.com
-EXPO_PUBLIC_FIREBASE_PROJECT_ID=seu_projeto
-EXPO_PUBLIC_FIREBASE_STORAGE_BUCKET=seu_projeto.appspot.com
-EXPO_PUBLIC_FIREBASE_MESSAGING_SENDER_ID=seu_sender_id
-EXPO_PUBLIC_FIREBASE_APP_ID=seu_app_id
-```
+2. Preencha as variaveis com suas credenciais do Neon Auth no .env.
 
 ### 3. Adicionar Icones
 
@@ -115,7 +107,7 @@ apps/patient-app/
 ├── components/            # Componentes reutilizaveis
 ├── constants/             # Constantes (cores, etc)
 ├── hooks/                 # Custom hooks
-├── lib/                   # Configuracoes (Firebase, etc)
+├── lib/                   # Configuracoes (Neon, etc)
 ├── store/                 # Estado global (Zustand)
 └── types/                 # Tipos TypeScript
 ```
@@ -135,9 +127,9 @@ apps/patient-app/
 
 ## Tecnologias
 
-- **Expo SDK 52** - Framework React Native
+- **Expo SDK 55** - Framework React Native
 - **Expo Router** - Navegacao baseada em arquivos
-- **Firebase** - Autenticacao e banco de dados
+- **Neon Auth / Cloudflare Workers API** - Backend
 - **Zustand** - Gerenciamento de estado
 - **TypeScript** - Tipagem estatica
 

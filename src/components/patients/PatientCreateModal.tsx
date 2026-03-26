@@ -11,7 +11,9 @@ import {
 } from "@/components/ui/custom-modal";
 import { Button } from "@/components/ui/button";
 import { useIsMobile } from "@/hooks/use-mobile";
-import { useNavigation } from "react-router";
+import { useQueryClient } from "@tanstack/react-query";
+import { toast } from "sonner";
+import { patientsApi } from "@/api/v2";
 
 interface PatientCreateModalProps {
 	open: boolean;
@@ -25,18 +27,30 @@ export const PatientCreateModal: React.FC<PatientCreateModalProps> = ({
 	const isMobile = useIsMobile();
 	const { currentOrganization, isCurrentOrgLoading, currentOrgError } =
 		useOrganizations();
-	const navigation = useNavigation();
+	const queryClient = useQueryClient();
 	const formRef = React.useRef<HTMLFormElement>(null);
-
-	const isSubmitting =
-		navigation.state === "submitting" &&
-		navigation.formData?.get("intent") === "create";
+	const [isSubmitting, setIsSubmitting] = React.useState(false);
 
 	const isLoading = isSubmitting;
 
 	const handleExternalSubmit = () => {
 		if (formRef.current) {
 			formRef.current.requestSubmit();
+		}
+	};
+
+	const handleSubmit = async (data: Parameters<typeof patientsApi.create>[0]) => {
+		setIsSubmitting(true);
+		try {
+			await patientsApi.create(data);
+			toast.success("Paciente cadastrado com sucesso!");
+			queryClient.invalidateQueries({ queryKey: ["patients"] });
+			onOpenChange(false);
+		} catch (err: unknown) {
+			const msg = err instanceof Error ? err.message : "Erro ao cadastrar paciente";
+			toast.error(msg);
+		} finally {
+			setIsSubmitting(false);
 		}
 	};
 
@@ -84,6 +98,7 @@ export const PatientCreateModal: React.FC<PatientCreateModalProps> = ({
 							isLoading={isLoading}
 							hideActions={true}
 							intent="create"
+							onSubmit={handleSubmit}
 							onCancel={() => onOpenChange(false)}
 						/>
 					)}
