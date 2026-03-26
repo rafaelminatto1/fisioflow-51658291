@@ -388,7 +388,7 @@ TimeSlotRow.displayName = "TimeSlotRow";
 
 			if (typeof rowIndex === "number" && isFinite(rowIndex) && rowIndex >= 0) {
 				if (listRef.current?.scrollToRow) {
-					listRef.current.scrollToRow({ rowIndex, align: "start" });
+					listRef.current.scrollToRow({ index: rowIndex, align: "start" });
 				} else {
 					listRef.current?.scrollToItem?.(rowIndex, "start");
 				}
