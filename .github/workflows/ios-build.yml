@@ -100,26 +100,42 @@ jobs:
             -k "$KEYCHAIN_PASSWORD" "$KEYCHAIN_PATH"
           security list-keychain -d user -s "$KEYCHAIN_PATH"
 
-      # ── 6. Importar Provisioning Profile (selecionado por app) ───────────────
-      - name: Importar provisioning profile (patient-app)
-        if: inputs.app == 'patient-app'
+      # ── 6. Importar Provisioning Profile — extrai UUID e copia com nome correto
+      - name: Importar provisioning profile
         env:
-          PROFILE_BASE64: ${{ secrets.APPLE_PROVISIONING_PROFILE_PACIENTES_BASE64 }}
+          PROFILE_BASE64_PACIENTES: ${{ secrets.APPLE_PROVISIONING_PROFILE_PACIENTES_BASE64 }}
+          PROFILE_BASE64_PROFISSIONAIS: ${{ secrets.APPLE_PROVISIONING_PROFILE_PROFISSIONAIS_BASE64 }}
         run: |
           PROFILE_PATH=$RUNNER_TEMP/profile.mobileprovision
-          echo -n "$PROFILE_BASE64" | base64 --decode -o "$PROFILE_PATH"
-          mkdir -p ~/Library/MobileDevice/Provisioning\ Profiles
-          cp "$PROFILE_PATH" ~/Library/MobileDevice/Provisioning\ Profiles/
 
-      - name: Importar provisioning profile (professional-app)
-        if: inputs.app == 'professional-app'
-        env:
-          PROFILE_BASE64: ${{ secrets.APPLE_PROVISIONING_PROFILE_PROFISSIONAIS_BASE64 }}
-        run: |
-          PROFILE_PATH=$RUNNER_TEMP/profile.mobileprovision
-          echo -n "$PROFILE_BASE64" | base64 --decode -o "$PROFILE_PATH"
+          # Seleciona o base64 correto para o app
+          if [ "${{ inputs.app }}" = "patient-app" ]; then
+            echo -n "$PROFILE_BASE64_PACIENTES" | base64 --decode -o "$PROFILE_PATH"
+          else
+            echo -n "$PROFILE_BASE64_PROFISSIONAIS" | base64 --decode -o "$PROFILE_PATH"
+          fi
+
+          # Extrai UUID do perfil (Xcode indexa por UUID, não por nome)
+          PROFILE_UUID=$(security cms -D -i "$PROFILE_PATH" 2>/dev/null \
+            | plutil -extract UUID raw - 2>/dev/null)
+
+          if [ -z "$PROFILE_UUID" ]; then
+            echo "ERRO: não foi possível extrair UUID do perfil"
+            security cms -D -i "$PROFILE_PATH" 2>&1 | head -30
+            exit 1
+          fi
+
+          echo "Profile UUID: $PROFILE_UUID"
+
+          # Copia com o nome {UUID}.mobileprovision (padrão do Xcode)
           mkdir -p ~/Library/MobileDevice/Provisioning\ Profiles
-          cp "$PROFILE_PATH" ~/Library/MobileDevice/Provisioning\ Profiles/
+          cp "$PROFILE_PATH" ~/Library/MobileDevice/Provisioning\ Profiles/"$PROFILE_UUID.mobileprovision"
+
+          echo "=== Perfis instalados ==="
+          ls ~/Library/MobileDevice/Provisioning\ Profiles/
+
+          # Salva UUID para o step de build
+          echo "PROFILE_UUID=$PROFILE_UUID" >> $GITHUB_ENV
 
       # ── 7. xcodebuild archive ─────────────────────────────────────────────
       - name: Detectar workspace e schemes disponíveis
@@ -127,18 +143,13 @@ jobs:
         run: |
           echo "=== Estrutura do diretório iOS ==="
           ls -la
-          echo ""
-          echo "=== .xcworkspace encontrados ==="
-          ls -d *.xcworkspace 2>/dev/null || echo "NENHUM .xcworkspace encontrado!"
-          echo ""
-          # Detecta workspace (usa -d para listar o dir, não o conteúdo)
           WORKSPACE=$(ls -d *.xcworkspace 2>/dev/null | head -1)
           if [ -z "$WORKSPACE" ]; then
             echo "ERRO: Nenhum .xcworkspace no diretório iOS"
             exit 1
           fi
           SCHEME=$(echo "$WORKSPACE" | sed 's/\.xcworkspace//')
-          echo "=== Workspace: $WORKSPACE | Scheme: $SCHEME ==="
+          echo "Workspace: $WORKSPACE | Scheme: $SCHEME"
           echo "=== Schemes disponíveis ==="
           xcodebuild -workspace "$WORKSPACE" -list 2>&1 | grep -A20 "Schemes:" || true
 
@@ -146,13 +157,10 @@ jobs:
         working-directory: apps/${{ inputs.app }}/ios
         env:
           APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
-          PROFILE_NAME: ${{ inputs.app == 'patient-app' && secrets.APPLE_PROVISIONING_PROFILE_PACIENTES_NAME || secrets.APPLE_PROVISIONING_PROFILE_PROFISSIONAIS_NAME }}
         run: |
-          # -d para pegar o diretório .xcworkspace, não seu conteúdo
           WORKSPACE=$(ls -d *.xcworkspace | head -1)
           SCHEME=$(echo "$WORKSPACE" | sed 's/\.xcworkspace//')
-          echo "Workspace: $WORKSPACE"
-          echo "Scheme: $SCHEME"
+          echo "Workspace: $WORKSPACE | Scheme: $SCHEME | UUID: $PROFILE_UUID"
 
           xcodebuild \
             -workspace "$WORKSPACE" \
@@ -162,7 +170,7 @@ jobs:
             archive \
             CODE_SIGN_STYLE=Manual \
             DEVELOPMENT_TEAM="$APPLE_TEAM_ID" \
-            PROVISIONING_PROFILE_SPECIFIER="$PROFILE_NAME"
+            PROVISIONING_PROFILE="$PROFILE_UUID"
 
       # ── 8. Exportar IPA ───────────────────────────────────────────────────
       - name: Exportar IPA (ad-hoc)
