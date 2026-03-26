@@ -10,8 +10,7 @@
 
 import React, { memo, useMemo, useRef, useCallback, useState, useEffect } from "react";
 import { List } from "react-window";
-import { format, isSameDay } from "date-fns";
-import { ptBR } from "date-fns/locale";
+import { isSameDay } from "date-fns";
 import { Appointment } from "@/types/appointment";
 import type { CardSize } from "@/types/agenda";
 import { cn } from "@/lib/utils";
@@ -402,56 +401,6 @@ TimeSlotRow.displayName = "TimeSlotRow";
 
 		return (
 			<div className="relative bg-white dark:bg-slate-950">
-				{/* Header Row */}
-				<div className="grid grid-cols-[60px_repeat(7,1fr)] bg-white dark:bg-slate-950 border-b border-slate-200 dark:border-slate-800 sticky top-0 z-30 shadow-sm">
-					{/* Time icon */}
-					<div className="h-14 border-r border-slate-200 dark:border-slate-800 flex items-center justify-center">
-						<div className="w-8 h-8 rounded-full bg-slate-100 dark:bg-slate-800 flex items-center justify-center text-slate-900 dark:text-slate-100 shadow-sm border border-slate-200/50 dark:border-slate-700/50">
-							<span className="text-[10px] font-bold">GMT-3</span>
-						</div>
-					</div>
-
-					{/* Days Headers */}
-					{weekDays.map((day, i) => {
-						const isTodayDate = isSameDay(day, new Date());
-						return (
-							<div
-								key={i}
-								className={cn(
-									"h-14 flex flex-col items-center justify-center border-r border-slate-100 dark:border-slate-800/50 relative group transition-colors",
-									isTodayDate
-										? "bg-blue-50/50 dark:bg-blue-900/10"
-										: "hover:bg-slate-50 dark:hover:bg-slate-900/40",
-								)}
-							>
-								{isTodayDate && (
-									<div className="absolute top-0 left-0 right-0 h-0.5 bg-blue-500" />
-								)}
-								<span
-									className={cn(
-										"text-[10px] font-medium uppercase tracking-wider mb-0.5",
-										isTodayDate
-											? "text-blue-600 dark:text-blue-400"
-											: "text-slate-500 dark:text-gray-500",
-									)}
-								>
-									{format(day, "EEE", { locale: ptBR }).replace(".", "")}
-								</span>
-								<div
-									className={cn(
-										"text-lg font-bold w-8 h-8 rounded-full flex items-center justify-center transition-all",
-										isTodayDate
-											? "bg-blue-600 text-white shadow-md shadow-blue-500/20"
-											: "text-slate-700 dark:text-slate-300 group-hover:bg-slate-200 dark:group-hover:bg-slate-700",
-									)}
-								>
-									{format(day, "d")}
-								</div>
-							</div>
-						);
-					})}
-				</div>
-
 				{/* Virtual Grid */}
 				<List
 					listRef={listRef}
