@@ -57,7 +57,6 @@ export default defineConfig({
       '.idea/',
       '.git/',
       '.cache/',
-      'supabase/functions/**',
       'functions/**',
       // Exclude workspace apps (they have their own test configs)
       'apps/professional-app/**',
@@ -102,15 +101,6 @@ export default defineConfig({
     // Watch mode
     watch: false,
 
-    // Mock configuration
-    mock: {
-      'web-push': {
-        setVapidDetails: true,
-        sendNotification: true,
-        generateVAPIDKeys: true,
-      },
-    },
-
     // Coverage configuration
     coverage: {
       provider: 'v8',
@@ -128,11 +118,7 @@ export default defineConfig({
         '**/*.test.{ts,tsx}',
         '**/*.spec.{ts,tsx}',
         '**/mockData/**',
-        'supabase/functions/**',
         'functions/**',
-        // Supabase/Neon integration clients
-        'src/integrations/supabase/client.ts',
-        'src/integrations/Neon/**/*.ts',
         // Entry points
         'src/main.tsx',
         'src/vite-env.d.ts',
@@ -145,13 +131,13 @@ export default defineConfig({
         lines: 60,
       },
     },
+  },
 
-    // Define test constants
-    define: {
-      __APP_VERSION__: '"test"',
-      __BUILD_TIME__: '"0"',
-      __CACHE_BUSTER__: '"test"',
-    },
+  // Define global constants
+  define: {
+    __APP_VERSION__: '"test"',
+    __BUILD_TIME__: '"0"',
+    __CACHE_BUSTER__: '"test"',
   },
 
   resolve: {

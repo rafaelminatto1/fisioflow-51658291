@@ -26,7 +26,12 @@ export interface ExerciseProtocol {
 	id: string;
 	name: string;
 	condition_name: string;
-	protocol_type: "pos_operatorio" | "patologia";
+	protocol_type:
+		| "pos_operatorio"
+		| "patologia"
+		| "esportivo"
+		| "conservador"
+		| "geriatria";
 	evidence_level?: string;
 	weeks_total?: number;
 	phases?: Array<{

@@ -1,7 +1,3 @@
-/**
- * Auth Page - Migrated to Neon/Cloudflare
- */
-
 // Demo credentials removed for security - no hardcoded credentials in production
 
 import { useState, useEffect, useCallback, useMemo } from "react";
@@ -26,7 +22,6 @@ import { fisioLogger as logger } from "@/lib/errors/logger";
 import { AuthLayout } from "@/components/auth/AuthLayout";
 import { LoginForm } from "@/components/auth/LoginForm";
 import { RegisterForm } from "@/components/auth/RegisterForm";
-import { OAuthButtons } from "@/components/auth/OAuthButtons";
 import { signInWithOAuth } from "@/integrations/neon/auth";
 
 export default function Auth() {
@@ -345,7 +340,7 @@ export default function Auth() {
 			});
 
 			if (signUpError) {
-				logger.error("Erro no cadastro do Supabase", signUpError, "Auth");
+				logger.error("Erro no cadastro", signUpError, "Auth");
 				let errorMessage = signUpError.message;
 
 				if (

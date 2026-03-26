@@ -94,6 +94,7 @@ export default defineConfig(({ mode }) => {
 		define: {
 			__APP_VERSION__: JSON.stringify(appVersion),
 			__BUILD_TIME__: JSON.stringify(buildTime),
+			__CACHE_BUSTER__: JSON.stringify(buildTime),
 		},
 		plugins: [
 			tailwindcss(),
@@ -159,14 +160,77 @@ export default defineConfig(({ mode }) => {
 		},
 		build: {
 			outDir: path.resolve(__dirname, "dist"),
-			target: "es2020",
+			target: "es2022",
 			cssTarget: "es2020",
 			sourcemap: !isProduction,
 			rolldownOptions: {
 				external: ["fs", "path", "crypto", "stream", "util"],
+				output: {
+					// Rolldown rc.12 codeSplitting — substitui rollupOptions.manualChunks
+					// que não funciona corretamente com Rolldown (quebra named exports).
+					// Priority: maior = avaliado primeiro (chunk mais específico vence).
+					codeSplitting: {
+						groups: [
+							// @cornerstonejs — viewer DICOM, ~2.8 MB total, muda raramente
+							{
+								name: "vendor-cornerstone",
+								test: /node_modules\/@cornerstonejs/,
+								priority: 30,
+							},
+							// react-pdf + pdfjs-dist — renderização PDF, ~1.5 MB
+							{
+								name: "vendor-react-pdf",
+								test: /node_modules\/(react-pdf|pdfjs-dist)/,
+								priority: 25,
+							},
+							// @tiptap + prosemirror + tippy.js — editor rico, ~424 KB
+							{
+								name: "vendor-tiptap",
+								test: /node_modules\/(@tiptap|prosemirror|tippy)/,
+								priority: 22,
+							},
+							// @tensorflow + pose-detection — IA/biomecânica, ~693 KB
+							{
+								name: "vendor-tensorflow",
+								test: /node_modules\/(@tensorflow|pose-detection)/,
+								priority: 20,
+							},
+							// exceljs — exportação planilhas, ~930 KB
+							{
+								name: "vendor-exceljs",
+								test: /node_modules\/exceljs/,
+								priority: 18,
+							},
+							// jspdf — geração PDF, ~400 KB
+							{
+								name: "vendor-jspdf",
+								test: /node_modules\/jspdf/,
+								priority: 17,
+							},
+							// @sentry/react — error tracking, ~441 KB
+							{
+								name: "vendor-sentry",
+								test: /node_modules\/@sentry/,
+								priority: 16,
+							},
+							// recharts — gráficos dashboard
+							{
+								name: "vendor-charts",
+								test: /node_modules\/recharts/,
+								priority: 15,
+							},
+							// react + framer-motion + motion-utils + @radix-ui — core UI, mais estável
+							{
+								name: "vendor-react",
+								test: /node_modules\/(react|react-dom|framer-motion|motion-utils|@motionone|@radix-ui)/,
+								priority: 10,
+							},
+						],
+					},
+				},
 				// experimental: {
 				//   minify: true, // Rolldown built-in minifier — habilitar quando Vite 8.1 estabilizar
-				//                 // substitui esbuild minify, ~2x mais rápido
+				//                 // substitui esbuild/oxc minify, ~2x mais rápido
 				// },
 			},
 		},

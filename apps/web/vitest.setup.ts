@@ -12,54 +12,11 @@ afterEach(() => {
   cleanup();
 });
 
-// Mock Supabase client
-vi.mock('@/integrations/supabase/client', () => ({
-  supabase: {
-    from: vi.fn(() => ({
-      select: vi.fn(() => ({
-        eq: vi.fn(() => ({
-          order: vi.fn(() => ({
-            data: [],
-            error: null,
-          })),
-          single: vi.fn(() => ({
-            data: null,
-            error: null,
-          })),
-          maybeSingle: vi.fn(() => ({
-            data: null,
-            error: null,
-          })),
-        })),
-        insert: vi.fn(() => ({
-          select: vi.fn(() => ({
-            single: vi.fn(() => ({
-              data: null,
-              error: null,
-            })),
-          })),
-        })),
-        update: vi.fn(() => ({
-          select: vi.fn(() => ({
-            single: vi.fn(() => ({
-              data: null,
-              error: null,
-            })),
-          })),
-        })),
-        delete: vi.fn(() => ({
-          error: null,
-        })),
-      })),
-    })),
-    channel: vi.fn(() => ({
-      on: vi.fn(() => ({
-        subscribe: vi.fn(() => ({
-          unsubscribe: vi.fn(),
-        })),
-      })),
-    })),
-  },
+// Mock Neon Auth
+vi.mock('@/integrations/neon/auth', () => ({
+  signInWithOAuth: vi.fn(),
+  signOut: vi.fn(),
+  getCurrentUser: vi.fn(),
 }));
 
 // Mock window.matchMedia
