@@ -24,9 +24,11 @@ export const NewPatientPage = () => {
 				return;
 			}
 			const result = await createMutation.mutateAsync(data);
+			// toast.success is already called in mutation onSuccess hook
 			navigate(`/patients/${result.id}`);
 		} catch (error) {
-			console.error("Erro ao criar paciente:", error);
+			console.error("[NewPatientPage] Erro ao criar paciente:", error);
+			// Error feedback is handled by mutation onError hook
 		}
 	};
 
