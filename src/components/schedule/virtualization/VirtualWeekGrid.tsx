@@ -19,10 +19,7 @@ import { BUSINESS_HOURS } from "@/lib/calendar/constants";
 import { CalendarAppointmentCard } from "../CalendarAppointmentCard";
 import { TimeSlotCell } from "../TimeSlotCell";
 import { useCardSize } from "@/hooks/useCardSize";
-import {
-	calculateAppointmentCardHeight,
-	calculateSlotHeightFromCardSize,
-} from "@/lib/calendar/cardHeightCalculator";
+import { calculateAppointmentCardHeight } from "@/lib/calendar/cardHeightCalculator";
 
 interface VirtualWeekGridProps {
 	/** Dias da semana para renderizar */
@@ -270,24 +267,25 @@ TimeSlotRow.displayName = "TimeSlotRow";
 		onToggleSelection,
 	}) => {
 		const listRef = useRef<any>(null);
+		const containerRef = useRef<HTMLDivElement>(null);
 		const { cardSize, heightScale } = useCardSize();
-		const slotHeight = calculateSlotHeightFromCardSize(cardSize, heightScale);
 
-		// Dynamic height calculation for virtual list
+		// Measure actual container height with ResizeObserver
 		const [containerHeight, setContainerHeight] = useState(600);
 
 		useEffect(() => {
-			const updateHeight = () => {
-				// Calculate available height: viewport - header - footer - padding
-				const headerHeight = 200; // Approximate header height
-				const newHeight = window.innerHeight - headerHeight;
-				setContainerHeight(Math.max(400, newHeight)); // Minimum 400px
-			};
-
-			updateHeight();
-			window.addEventListener("resize", updateHeight);
-			return () => window.removeEventListener("resize", updateHeight);
+			const el = containerRef.current;
+			if (!el) return;
+			const ro = new ResizeObserver((entries) => {
+				const h = entries[0]?.contentRect.height;
+				if (h && h > 0) setContainerHeight(h);
+			});
+			ro.observe(el);
+			return () => ro.disconnect();
 		}, []);
+
+		// Fit all slots into the visible height (min 18px so text stays readable)
+		const slotHeight = Math.max(18, Math.floor(containerHeight / timeSlots.length));
 
 		// Agrupar appointments por time slot
 		const appointmentsByTimeSlot = useMemo(() => {
@@ -402,7 +400,7 @@ TimeSlotRow.displayName = "TimeSlotRow";
 		}, [scrollToCurrentTime]);
 
 		return (
-			<div className="relative bg-white dark:bg-slate-950">
+			<div ref={containerRef} className="relative bg-white dark:bg-slate-950" style={{ flex: 1, minHeight: 0, height: "100%" }}>
 				{/* Virtual Grid */}
 				<List
 					listRef={listRef}
