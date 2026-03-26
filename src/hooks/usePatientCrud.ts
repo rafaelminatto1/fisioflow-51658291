@@ -426,8 +426,7 @@ export const useDeletePatient = () => {
 			logger.info("Paciente deletado com sucesso", { id }, "useDeletePatient");
 			queryClient.invalidateQueries({ queryKey: ["patients"] });
 			queryClient.invalidateQueries({ queryKey: ["patient", id] });
-			toast({
-				title: "Paciente excluído",
+			toast.success("Paciente excluído", {
 				description: "O paciente foi removido com sucesso.",
 			});
 		},

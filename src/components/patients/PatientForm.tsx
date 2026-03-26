@@ -177,7 +177,7 @@ export const PatientForm = forwardRef<HTMLFormElement, PatientFormProps>(
 				});
 
 				// Remove organization_id if it exists since it might not be in the update type
-				if ("organization_id" in submitData) {
+				if (intent === "update" && "organization_id" in submitData) {
 					delete (submitData as any).organization_id;
 				}
 
