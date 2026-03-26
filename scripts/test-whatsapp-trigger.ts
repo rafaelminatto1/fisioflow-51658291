@@ -4,7 +4,7 @@
 
 import { Inngest } from 'inngest';
 
-const inngest = new Inngest({ id: "fisioflow-notifications" });
+
 
 async function testWhatsApp() {
     console.log("🚀 Enviando evento de teste para o Inngest Dev Server...");

@@ -10,16 +10,13 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
-import { Separator } from "@/components/ui/separator";
 import {
 	Dialog,
 	DialogContent,
-	DialogDescription,
 	DialogFooter,
 	DialogHeader,
 	DialogTitle,
 } from "@/components/ui/dialog";
-import { Alert, AlertDescription } from "@/components/ui/alert";
 import {
 	Shield,
 	Bell,
@@ -27,14 +24,11 @@ import {
 	Users,
 	FileText,
 	Mail,
-	Info,
-	Check,
 	Eye,
 	EyeOff,
 	Loader2,
 } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
-import { cn } from "@/lib/utils";
 
 const BackupSettings = lazy(() =>
 	import("@/components/settings/BackupSettings").then((module) => ({

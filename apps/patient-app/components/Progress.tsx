@@ -98,7 +98,7 @@ export function CircularProgress({
   const sizeValue = getSize();
   const radius = (sizeValue - thickness) / 2;
   const circumference = 2 * Math.PI * radius;
-  const strokeDashoffset = circumference - progress * circumference;
+  
   const percentage = Math.round(progress * 100);
 
   return (

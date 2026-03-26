@@ -38,7 +38,7 @@ app.get('/annotations', requireAuth, async (c) => {
         [user.organizationId, assetId],
     );
 
-    try { return c.json({ data: result.rows || result }); } catch(e) { return c.json({ data: [] }); }
+    try { return c.json({ data: result.rows || result }); } catch { return c.json({ data: [] }); }
 });
 
 app.post('/annotations', requireAuth, async (c) => {
@@ -75,7 +75,7 @@ app.post('/annotations', requireAuth, async (c) => {
 app.post('/upload-url', requireAuth, async (c) => {
     try {
         const body = await c.req.json();
-        const { filename, contentType, folder = 'uploads' } = body;
+        const { contentType, folder = 'uploads' } = body;
 
         if (!contentType || !ALLOWED_TYPES[contentType]) {
             return c.json({

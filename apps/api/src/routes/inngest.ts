@@ -225,7 +225,7 @@ const app = new Hono<{ Bindings: Env }>();
 /**
  * Endpoint de Integração Inngest
  */
-app.use('/', async (c, next) => {
+app.use('/', async (c, _next) => {
   const handler = serve({
     client: inngest,
     functions: [

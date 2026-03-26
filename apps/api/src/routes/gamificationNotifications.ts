@@ -28,7 +28,7 @@ app.get('/', requireAuth, async (c) => {
     [patientId, Number(limit)],
   );
 
-  try { return c.json({ data: result.rows || result }); } catch(e) { return c.json({ data: [] }); }
+  try { return c.json({ data: result.rows || result }); } catch { return c.json({ data: [] }); }
 });
 
 app.put('/:id/read', requireAuth, async (c) => {

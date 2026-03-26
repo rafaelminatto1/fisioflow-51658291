@@ -52,7 +52,7 @@ export default function ProfileScreen() {
         return await fetchApi<any>('/api/satisfaction-surveys', {
           params: { limit: 100 }
         });
-      } catch (err) {
+      } catch  {
         return null;
       }
     },

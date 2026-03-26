@@ -29,7 +29,7 @@ const FULL_CARD_WIDTH = Dimensions.get('window').width - SCREEN_PADDING * 2;
 
 export default function ProgressScreen() {
   const colors = useColors();
-  const { user } = useAuthStore();
+  
   const { data: progressData, isLoading, isRefetching, refetch } = useProgress();
   const [selectedPeriod, setSelectedPeriod] = useState<'week' | 'month' | 'all'>('month');
 

@@ -152,7 +152,7 @@ export function ReviewAutomation({
 		try {
 			await updateReviewAutomationConfig(orgId, config);
 			toast.success("Configurações salvas com sucesso!");
-		} catch (_error) {
+		} catch  {
 			toast.error("Erro ao salvar configurações");
 		} finally {
 			setSaving(false);

@@ -14,7 +14,7 @@ import {
 const triggerHaptic = async (style: HapticImpactStyle = "light") => {
 	try {
 		await triggerHapticImpact(style);
-	} catch (e) {
+	} catch  {
 		// Ignore if not on device
 	}
 };

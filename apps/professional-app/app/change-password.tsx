@@ -7,7 +7,6 @@ import {
   TouchableOpacity,
   TextInput,
   Alert,
-  ActivityIndicator,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
@@ -21,8 +20,8 @@ import { fetchApi } from '@/lib/api';
 export default function ChangePasswordScreen() {
   const colors = useColors();
   const router = useRouter();
-  const { user } = useAuthStore();
-  const { light, medium, success, error } = useHaptics();
+  
+  const { medium, success, error } = useHaptics();
 
   const [currentPassword, setCurrentPassword] = useState('');
   const [newPassword, setNewPassword] = useState('');

@@ -52,7 +52,7 @@ test.describe('Validação de Dados de Protocolos', () => {
     await page.waitForSelector('text=Marcos do Protocolo', { timeout: 20000 });
     
     // Verificar se há itens de marcos na lista (estão formatados como "W1", "W2", etc)
-    const milestoneItems = page.locator('div:has-text("W")').filter({ has: page.locator('text=/^W\\d+$/') });
+    
     // Alternativa mais simples: procurar pelo padrão W followed by numbers
     const wText = page.locator('text=/W\\d+/');
     await expect(wText.first()).toBeVisible();

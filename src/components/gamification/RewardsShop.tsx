@@ -65,7 +65,7 @@ export function RewardsShop({ patientId }: RewardsShopProps) {
 			});
 			setIsConfirmOpen(false);
 			setSelectedItem(null);
-		} catch (_error) {
+		} catch  {
 			// Error handled in hook toast
 		}
 	};

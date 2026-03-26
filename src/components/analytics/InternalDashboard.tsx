@@ -29,7 +29,6 @@ import {
 	subDays,
 	subMonths,
 	startOfDay,
-	startOfWeek,
 	startOfMonth,
 	eachMonthOfInterval,
 	differenceInMonths,

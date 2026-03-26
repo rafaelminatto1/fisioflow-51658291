@@ -76,7 +76,7 @@ app.get('/', requireAuth, async (c) => {
       `,
       params,
     );
-    try { return c.json({ data: result.rows || result }); } catch (_error) { return c.json({ data: [] }); }
+    try { return c.json({ data: result.rows || result }); } catch  { return c.json({ data: [] }); }
   } catch (error) {
     console.error('[PushSubscriptions/List] Error:', error);
     return c.json({ data: [] });

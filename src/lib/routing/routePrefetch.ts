@@ -38,7 +38,7 @@ export async function prefetchRoute(
 	try {
 		const module = await componentLoader();
 		prefetchedCache.set(key, module.default);
-	} catch (_error) {
+	} catch  {
 		// Remove from attempts on failure so we can retry
 		prefetchAttempts.delete(key);
 	}

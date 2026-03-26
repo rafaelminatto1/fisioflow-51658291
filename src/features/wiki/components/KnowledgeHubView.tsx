@@ -17,8 +17,6 @@ import {
 } from "@/components/ui/select";
 import { ClinicalImportIA } from "./ClinicalImportIA";
 import {
-	Sparkles,
-	Target,
 	ShieldCheck,
 	LayoutGrid,
 	Share2,
@@ -71,12 +69,7 @@ function KnowledgeCard({
 	auditProfiles,
 	score,
 }: KnowledgeCardProps) {
-	const statusLabel: Record<string, string> = {
-		verified: "Verificado",
-		pending: "Pendente",
-		review: "Em revisão",
-		rejected: "Rejeitado",
-	};
+	
 
 	const curation = curationMap?.get(item.id);
 	const reviewerName = curation?.assigned_to

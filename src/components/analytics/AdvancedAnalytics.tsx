@@ -15,7 +15,6 @@ import {
 	financialApi,
 	patientsApi,
 	type AppointmentRow,
-	type Pagamento,
 	type Transacao,
 } from "@/api/v2";
 import {
@@ -44,11 +43,9 @@ import {
 } from "lucide-react";
 import { AIInsightsWidget } from "@/components/dashboard/AIInsightsWidget";
 import {
-	addMonths,
 	eachMonthOfInterval,
 	format,
 	startOfMonth,
-	subDays,
 	subMonths,
 } from "date-fns";
 const COLORS = [

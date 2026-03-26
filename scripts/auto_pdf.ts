@@ -31,7 +31,7 @@ async function autoLoginIfNeeded(page: Page) {
                 await page.waitForTimeout(5000);
             }
         }
-    } catch(e) {
+    } catch {
         console.log("No obvious login form to auto-fill.");
     }
 }

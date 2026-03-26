@@ -19,7 +19,7 @@ import { useHaptics } from '@/hooks/useHaptics';
 import type { Exercise } from '@/types';
 
 const CATEGORIES = ['Todos', 'Alongamento', 'Fortalecimento', 'Mobilidade', 'Equilíbrio', 'Respiração', 'Pós-operatório'];
-const DIFFICULTIES = ['Fácil', 'Médio', 'Difícil'];
+
 
 export default function ExercisesScreen() {
   const colors = useColors();
@@ -30,7 +30,7 @@ export default function ExercisesScreen() {
 
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('Todos');
-  const [selectedDifficulty, setSelectedDifficulty] = useState<string | null>(null);
+  const [,setSelectedDifficulty] = useState<string | null>(null);
   const [selectedExercise, setSelectedExercise] = useState<Exercise | null>(null);
   const [showAssignModal, setShowAssignModal] = useState(false);
   const [sets, setSets] = useState('3');
@@ -72,7 +72,7 @@ export default function ExercisesScreen() {
       setReps('10');
       setFrequency('Diário');
       Alert.alert('Sucesso', 'Exercício prescrito com sucesso!');
-    } catch (error) {
+    } catch  {
       Alert.alert('Erro', 'Não foi possível prescrever o exercício.');
     }
   };

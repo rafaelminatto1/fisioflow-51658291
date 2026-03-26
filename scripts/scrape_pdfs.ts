@@ -40,7 +40,7 @@ async function main() {
                window.location.href.includes('sciencedirect.com/science') ||
                document.title.includes('ScienceDirect');
     }, { timeout: 180000 });
-  } catch (e) {
+  } catch  {
     console.log("Timeout waiting for login. Will proceed anyway, maybe it's not strictly required or you are already logged in.");
   }
 

@@ -1,7 +1,7 @@
 /**
  * Debug do erro no componente Schedule em produção
  */
-import { test, expect } from '@playwright/test';
+import { test } from '@playwright/test';
 
 const BASE_URL = 'https://moocafisio.com.br';
 test.use({ storageState: 'playwright/.auth/user.json' });

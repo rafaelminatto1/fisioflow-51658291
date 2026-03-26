@@ -111,9 +111,6 @@ export function CacheTrackingExample() {
  */
 export function PerformanceHookExample() {
 	const {
-		dragFrameRateMonitor,
-		viewSwitchTimer,
-		cacheHitRateTracker,
 		initWebVitals,
 	} = useSchedulePerformance();
 
@@ -156,15 +153,7 @@ export function CompleteScheduleExample() {
 		dragFrameRateMonitor.stop();
 	};
 
-	const handleViewChange = (view: "day" | "week" | "month") => {
-		viewSwitchTimer.start(view);
-
-		// Perform view change...
-
-		requestAnimationFrame(() => {
-			viewSwitchTimer.end();
-		});
-	};
+	
 
 	return (
 		<div>

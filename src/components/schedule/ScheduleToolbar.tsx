@@ -5,7 +5,7 @@
  */
 
 import React from "react";
-import { format, startOfWeek, endOfWeek, addWeeks } from "date-fns";
+import { format, startOfWeek, endOfWeek } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
@@ -27,7 +27,6 @@ import {
 	DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { AdvancedFilters } from "./AdvancedFilters";
-import { toast } from "@/hooks/use-toast";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { cn } from "@/lib/utils";
 import { SmartDatePicker } from "@/components/ui/smart-date-picker";

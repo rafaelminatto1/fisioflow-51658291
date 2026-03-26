@@ -15,7 +15,7 @@ type SoundObject = any; // Fallback since expo-av/build/index typing is strict
 
 export function useAudioFeedback() {
   const soundRef = useRef<SoundObject | null>(null);
-  const [audioModule, setAudioModule] = useState<AudioModule | null>(null);
+  const [,setAudioModule] = useState<AudioModule | null>(null);
 
   const playSuccess = useCallback(async () => {
     try {

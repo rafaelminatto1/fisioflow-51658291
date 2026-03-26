@@ -1,9 +1,8 @@
-import React, { useMemo, useState, forwardRef } from "react";
+import React, { useState, forwardRef } from "react";
 import { useForm, Controller } from "react-hook-form";
 import type { FieldErrors } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { format } from "date-fns";
-import { ptBR } from "date-fns/locale";
 import {
 	Card,
 	CardContent,
@@ -21,15 +20,10 @@ import {
 	SelectTrigger,
 	SelectValue,
 } from "@/components/ui/select";
-import {
-	Popover,
-	PopoverContent,
-	PopoverTrigger,
-} from "@/components/ui/popover";
+
+
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
-import { Badge } from "@/components/ui/badge";
 import {
-	CalendarIcon,
 	User,
 	Phone,
 	Mail,
@@ -40,7 +34,6 @@ import {
 	Briefcase,
 	BadgeCheck,
 } from "lucide-react";
-import { cn } from "@/lib/utils";
 import { PatientFormSchema, type PatientFormData } from "@/schemas/patient";
 import { formatCPF, formatPhoneInput, formatCEP } from "@/utils/formatInputs";
 import type {
@@ -48,7 +41,6 @@ import type {
 	PatientCreateInput,
 	PatientUpdateInput,
 } from "@/hooks/usePatientCrud";
-import { AddressAutocomplete } from "@/components/forms/AddressAutocomplete";
 import { MagicTextarea } from "@/components/ai/MagicTextarea";
 import { BrasilService } from "@/services/brasilApi";
 import { toast } from "sonner";
@@ -91,7 +83,7 @@ export const PatientForm = forwardRef<HTMLFormElement, PatientFormProps>(
 			"basic" | "medical" | "address" | "additional"
 		>("basic");
 
-		const isEditing = !!patient;
+		
 
 		const form = useForm<PatientFormData>({
 			resolver: zodResolver(PatientFormSchema),
@@ -138,7 +130,7 @@ export const PatientForm = forwardRef<HTMLFormElement, PatientFormProps>(
 		const watchedBirthDate = watch("birth_date");
 		const watchedCpf = watch("cpf");
 		const watchedPhone = watch("phone");
-		const watchedEmail = watch("email");
+		
 		const watchedZipCode = watch("zip_code");
 
 		// handlers

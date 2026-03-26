@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 import { readdir, stat } from 'node:fs/promises';
-import { join, relative, dirname } from 'node:path';
+import { join, relative } from 'node:path';
 
 const root = join(process.cwd(), 'node_modules', '.pnpm');
 const wasmSuffix = '.wasm';

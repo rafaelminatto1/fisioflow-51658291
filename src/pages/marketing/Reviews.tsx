@@ -13,14 +13,9 @@ import {
 } from "@/components/ui/select";
 import {
 	Star,
-	MessageSquare,
 	Search,
 	ExternalLink,
-	ThumbsUp,
 	AlertCircle,
-	Share2,
-	ChevronLeft,
-	ChevronRight,
 	Sparkles,
 	Loader2,
 } from "lucide-react";
@@ -43,7 +38,7 @@ export function ReviewsContent() {
 	const [error, setError] = useState<string | null>(null);
 	const [searchTerm, setSearchTerm] = useState("");
 	const [filterRating, setFilterRating] = useState<FilterRating>("all");
-	const [sortBy, setSortBy] = useState<SortOption>("recent");
+	const [sortBy] = useState<SortOption>("recent");
 	const [currentPage, setCurrentPage] = useState(1);
 	const [isGeneratingReply, setIsGeneratingReply] = useState<string | null>(
 		null,
@@ -72,7 +67,7 @@ export function ReviewsContent() {
 					description: "A resposta foi copiada para sua área de transferência.",
 				});
 			}
-		} catch (error) {
+		} catch  {
 			toast({
 				variant: "destructive",
 				title: "Erro na IA",
@@ -165,7 +160,7 @@ export function ReviewsContent() {
 	}, [reviews, searchTerm, filterRating, sortBy]);
 
 	// Pagination
-	const totalPages = Math.ceil(filteredReviews.length / reviewsPerPage);
+	
 	const paginatedReviews = filteredReviews.slice(
 		(currentPage - 1) * reviewsPerPage,
 		currentPage * reviewsPerPage,
@@ -175,21 +170,7 @@ export function ReviewsContent() {
 		setCurrentPage(1);
 	}, [searchTerm, filterRating, sortBy]);
 
-	const handleShare = (review: GoogleReview) => {
-		const text = `⭐ ${review.rating}/5 - "${review.comment}" - ${review.author}`;
-		if (navigator.share) {
-			navigator.share({
-				title: "Avaliação Google",
-				text: text,
-			});
-		} else {
-			navigator.clipboard.writeText(text);
-			toast({
-				title: "Copiado!",
-				description: "Avaliação copiada para a área de transferência",
-			});
-		}
-	};
+	
 
 	const getRatingColor = (rating: number) => {
 		if (rating >= 4.5)

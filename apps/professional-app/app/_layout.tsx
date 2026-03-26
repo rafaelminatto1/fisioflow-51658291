@@ -1,7 +1,7 @@
 // Load polyfills first
 import '../lib/polyfills';
 
-import { useEffect, useCallback } from 'react';
+import { useEffect } from 'react';
 import { Stack } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { View, ActivityIndicator, StyleSheet } from 'react-native';

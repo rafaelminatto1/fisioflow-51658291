@@ -7,7 +7,6 @@ import {
 	DialogDescription,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 import { Settings, GripVertical, Eye, EyeOff, Save } from "lucide-react";
 import { EvolutionVersion } from "./v2-improved/types";

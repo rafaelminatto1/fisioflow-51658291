@@ -19,7 +19,7 @@ export function renderWithProviders(
     withNavigation?: boolean;
   }
 ): RenderAPI {
-  const { withTheme = true, withNavigation = true } = options || {};
+  const { } = options || {};
 
   // In a real app, you would wrap with theme provider, navigation provider, etc.
   // For now, we'll just do a basic render
@@ -55,7 +55,7 @@ export function waitForElement(
           clearInterval(checkInterval);
           reject(new Error(`Element not found after ${timeout}ms`));
         }
-      } catch (error) {
+      } catch  {
         clearInterval(checkInterval);
         resolve(null);
       }

@@ -165,7 +165,7 @@ export const TelehealthIntegration: React.FC = () => {
 					title: "Ativado!",
 					description: `${getProviderLabel(provider)} foi ativado com sucesso.`,
 				});
-			} catch (error) {
+			} catch  {
 				toast({
 					title: "Erro ao ativar",
 					description: `Não foi possível ativar ${getProviderLabel(provider)}.`,
@@ -212,7 +212,7 @@ export const TelehealthIntegration: React.FC = () => {
 					title: "Sala criada!",
 					description: "A sala de reunião foi criada com sucesso.",
 				});
-			} catch (error) {
+			} catch  {
 				toast({
 					title: "Erro ao criar sala",
 					description: `Não foi possível criar a sala em ${getProviderLabel(provider)}.`,
@@ -231,7 +231,7 @@ export const TelehealthIntegration: React.FC = () => {
 				title: "Copiado!",
 				description: "O link foi copiado para o clipboard.",
 			});
-		} catch (error) {
+		} catch  {
 			toast({
 				title: "Erro ao copiar",
 				description: "Não foi possível copiar o link.",
@@ -262,7 +262,7 @@ export const TelehealthIntegration: React.FC = () => {
 		[selectedRoom],
 	);
 
-	const activeProviders = configs.filter((c) => c.enabled);
+	
 
 	return (
 		<div className="space-y-6">
