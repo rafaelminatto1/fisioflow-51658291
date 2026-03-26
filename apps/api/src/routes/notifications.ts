@@ -110,7 +110,7 @@ app.post('/', requireAuth, async (c) => {
     });
 
     return c.json({ data: row }, 201);
-  } catch (_error) {
+  } catch  {
     return c.json({ error: 'Erro ao criar notificação' }, 500);
   }
 });

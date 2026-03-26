@@ -116,8 +116,93 @@
 }
 
 /* ============================
-   MOTION TOKENS
-   ============================ */
+    GRADIENT UTILITY CLASSES
+    ============================ */
+
+.gradient-brand {
+	background: var(--gradient-brand);
+}
+
+.gradient-secondary {
+	background: var(--gradient-secondary);
+}
+
+.gradient-accent {
+	background: var(--gradient-accent);
+}
+
+.gradient-accent-teal {
+	background: var(--gradient-cool);
+}
+
+.gradient-warm {
+	background: var(--gradient-warm);
+}
+
+.gradient-cool {
+	background: var(--gradient-cool);
+}
+
+.gradient-dark {
+	background: var(--gradient-dark);
+}
+
+.gradient-glass {
+	background: var(--gradient-glass);
+}
+
+.gradient-neon {
+	background: var(--gradient-neon);
+}
+
+.gradient-gold {
+	background: var(--gradient-gold);
+}
+
+.gradient-success {
+	background: var(--gradient-success);
+}
+
+/* Light variants for backgrounds */
+.gradient-brand-light {
+	background: var(--gradient-glass);
+}
+
+.gradient-success-light {
+	background: linear-gradient(
+		135deg,
+		hsla(158, 64%, 42%, 0.1) 0%,
+		hsla(158, 84%, 52%, 0.05) 100%
+	);
+}
+
+.gradient-warm-light {
+	background: linear-gradient(
+		135deg,
+		hsla(38, 92%, 50%, 0.1) 0%,
+		hsla(0, 84.2%, 60.2%, 0.05) 100%
+	);
+}
+
+.gradient-accent-teal-light {
+	background: linear-gradient(
+		135deg,
+		hsla(211, 100%, 50%, 0.1) 0%,
+		hsla(191, 100%, 50%, 0.05) 100%
+	);
+}
+
+.gradient-dark-light {
+	background: linear-gradient(
+		135deg,
+		hsla(222.2, 47.4%, 11.2%, 0.1) 0%,
+		hsla(217.2, 32.6%, 17.5%, 0.05) 100%
+	);
+}
+
+/* ============================
+    MOTION TOKENS
+    ============================ */
 
 @layer base {
 	:root {

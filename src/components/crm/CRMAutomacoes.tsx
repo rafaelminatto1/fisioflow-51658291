@@ -39,7 +39,6 @@ import {
 	Star,
 	MessageSquare,
 	Mail,
-	Smartphone,
 	Trash2,
 	Clock,
 } from "lucide-react";

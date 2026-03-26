@@ -1,7 +1,6 @@
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { TimelineEntry, usePatientTimeline } from "@/hooks/usePatientTimeline";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import {
@@ -10,9 +9,7 @@ import {
 	MessageSquare,
 	Phone,
 	Stethoscope,
-	CheckCircle2,
 	Clock,
-	AlertCircle,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 

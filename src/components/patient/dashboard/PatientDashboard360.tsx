@@ -1,23 +1,16 @@
 import React, { useMemo, useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { cn } from "@/lib/utils";
 import {
-	User,
-	MapPin,
-	Phone,
-	Mail,
-	AlertTriangle,
 	Activity,
 	Calendar,
 	Target,
 	DollarSign,
 	Sparkles,
 	Loader2,
-	Clock,
 	Trophy,
 	Flame,
 	Star,
@@ -110,7 +103,7 @@ export const PatientDashboard360 = ({
 	onAction = () => {},
 	currentAppointmentId,
 }: PatientDashboardProps) => {
-	const alerts = patient?.alerts || [];
+	
 	const patientId = patient?.id;
 	const { data: fetchedGoals = [] } = usePatientGoals(patientId || "");
 	const { data: fetchedPathologies = [] } = usePatientPathologies(
@@ -129,7 +122,7 @@ export const PatientDashboard360 = ({
 		useGamification(patientId || "");
 
 	// Memoized data processing
-	const { nextAppointment, currentSession, calculatedAge, patientName } =
+	const { nextAppointment, calculatedAge, patientName } =
 		useMemo(() => {
 			const name = PatientHelpers.getName(patient);
 			const birthDate = patient.birth_date || patient.birthDate;

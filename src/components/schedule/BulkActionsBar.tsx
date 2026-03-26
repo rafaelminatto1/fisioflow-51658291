@@ -5,9 +5,6 @@ import {
 	CheckCircle2,
 	X,
 	UserCheck,
-	AlertCircle,
-	Slash,
-	CalendarOff,
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import {

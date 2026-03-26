@@ -5,7 +5,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Cpu, ChevronLeft, ChevronRight, Ruler, TrendingUp, Upload, Play, Pause } from 'lucide-react';
 import { Badge } from "@/components/ui/badge";
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion } from 'framer-motion';
 
 import { useMoveNet, useTrajectory, useGoniometer, useOpticalFlow, useAutoAngles } from '@/hooks/biomechanics';
 import { generateBiomechanicsReport } from '@/utils/biomechanics-reports';
@@ -37,7 +37,7 @@ export const FunctionalAnalysisStudio: React.FC<FunctionalAnalysisStudioProps> =
 	const [videoSrc, setVideoSrc] = useState<string | null>(null);
 	const [isPlaying, setIsPlaying] = useState(false);
 	const [currentFrame, setCurrentFrame] = useState(0);
-	const [fps, setFps] = useState(30); // Default to 30, can be adjusted
+	const [fps] = useState(30); // Default to 30, can be adjusted
 	const [activeTool, setActiveTool] = useState<"none" | "goniometer" | "trajectory" | "tracking" | "auto_angles">("auto_angles");
 	const [snapshots, setSnapshots] = useState<string[]>([]);
 	const [activeTest, setActiveTest] = useState<FunctionalTestType | 'none'>('none');

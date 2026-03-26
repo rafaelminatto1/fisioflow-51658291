@@ -120,7 +120,6 @@ export function createLazyComponent<T = Record<string, unknown>>(
 ): ComponentType<T> & { preload: () => void } {
 	const {
 		importFn,
-		preloadTrigger = "viewport",
 		fallback,
 		displayName,
 	} = options;

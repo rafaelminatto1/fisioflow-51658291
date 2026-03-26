@@ -205,18 +205,7 @@ export const AppointmentTemplates: React.FC<AppointmentTemplatesProps> = ({
 	);
 
 	// Duplicar template
-	const handleDuplicate = useCallback((template: AppointmentTemplate) => {
-		const duplicate: AppointmentTemplate = {
-			...template,
-			id: `template-${Date.now()}`,
-			name: `${template.name} (Cópia)`,
-			isDefault: false,
-			createdAt: new Date(),
-			updatedAt: new Date(),
-		};
-
-		setTemplates((prev) => [...prev, duplicate]);
-	}, []);
+	
 
 	return (
 		<div className={cn("space-y-4", className)}>

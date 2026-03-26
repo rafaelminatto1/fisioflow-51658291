@@ -76,7 +76,7 @@ async function testGridLayout() {
             try {
                 const title = await widget.locator('h3, .card-title').first().textContent();
                 console.log(`   ${i + 1}. ${title || 'Untitled'}`);
-            } catch (e) {
+            } catch  {
                 console.log(`   ${i + 1}. (Could not get title)`);
             }
         }

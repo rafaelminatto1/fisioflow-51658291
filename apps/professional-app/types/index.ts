@@ -1,4 +1,3 @@
-import { User, UserRole } from './auth';
 
 export * from './auth';
 

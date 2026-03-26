@@ -88,7 +88,7 @@ app.get('/rooms', requireAuth, async (c) => {
       [user.organizationId],
     );
 
-    try { return c.json({ data: result.rows || result }); } catch (_error) { return c.json({ data: [] }); }
+    try { return c.json({ data: result.rows || result }); } catch  { return c.json({ data: [] }); }
   } catch (error) {
     console.error('[Telemedicine/List] Error:', error);
     return c.json({ data: [] });

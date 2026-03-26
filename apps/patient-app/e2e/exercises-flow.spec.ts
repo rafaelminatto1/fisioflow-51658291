@@ -46,7 +46,7 @@ test.describe('Fluxo de Exercícios - App Paciente', () => {
     test('deve mostrar estado vazio quando não há exercícios', async () => {
       await page.goto('/(tabs)/exercises');
 
-      const emptyState = page.locator('[data-testid="empty-exercises"]');
+      
 
       // Se não houver exercícios, mostrar estado vazio
       // await expect(emptyState).toBeVisible();

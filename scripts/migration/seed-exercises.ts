@@ -211,16 +211,7 @@ async function verifySeed(): Promise<void> {
 async function ensureCategoriesExist(): Promise<void> {
   console.log('🔧 Verificando categorias...');
 
-  const categories = [
-    'fortalecimento',
-    'alongamento',
-    'mobilidade',
-    'cardio',
-    'equilibrio',
-    'respiratorio',
-    'postura',
-    'coordenacao',
-  ];
+  
 
   // Categorias são apenas valores enum, não precisam de tabela separada
   // Mas poderíamos criar uma tabela de referência

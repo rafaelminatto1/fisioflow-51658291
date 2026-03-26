@@ -29,7 +29,6 @@ import {
 } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import {
-	DollarSign,
 	Plus,
 	ArrowUpCircle,
 	ArrowDownCircle,
@@ -58,14 +57,7 @@ const CATEGORIAS = [
 	"Marketing",
 	"Outros",
 ];
-const FORMAS_PAGAMENTO = [
-	"PIX",
-	"Dinheiro",
-	"Cartão Débito",
-	"Cartão Crédito",
-	"Boleto",
-	"Transferência",
-];
+
 
 export function ContasFinanceirasContent() {
 	const [tab, setTab] = useState<"receber" | "pagar">("receber");

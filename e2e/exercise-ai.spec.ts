@@ -13,7 +13,7 @@
  * @see src/lib/ai/exercises.ts
  */
 
-import { test, expect } from '@playwright/test';
+import { test } from '@playwright/test';
 import { testUsers } from './fixtures/test-data';
 
 const BASE_URL = 'http://localhost:8080';
@@ -26,41 +26,7 @@ test.setTimeout(180000);
 // TEST DATA
 // ========================================
 
-const MOCK_PATIENT_PROFILES = {
-  lombalgia: {
-    name: 'Paciente Teste Lombalgia',
-    age: 45,
-    gender: 'Masculino',
-    condition: 'Lombalgia crônica',
-    painMap: { 'lombar': 7, 'quadril direito': 4 },
-    goals: ['Reduzir dor lombar', 'Melhorar mobilidade', 'Voltar a caminhar 30min'],
-    equipment: ['Nenhum'],
-    sessionCount: 3,
-    treatmentPhase: 'initial',
-  },
-  ombro: {
-    name: 'Paciente Teste Ombro',
-    age: 32,
-    gender: 'Feminino',
-    condition: 'Síndrome do impacto do ombro',
-    painMap: { 'ombro direito': 8, 'pescoço': 3 },
-    goals: ['Elevar braço sem dor', 'Melhorar amplitude de movimento'],
-    equipment: ['TheraBand', 'Bola suíça'],
-    sessionCount: 8,
-    treatmentPhase: 'progressive',
-  },
-  pos_cirurgia: {
-    name: 'Paciente Teste Pós-Cirurgia',
-    age: 58,
-    gender: 'Masculino',
-    condition: 'Reabilitação pós-LCA',
-    painMap: { 'joelho esquerdo': 5 },
-    goals: ['Recuperar força muscular', 'Voltar a correr', 'Estabilidade do joelho'],
-    equipment: ['Bicicleta ergométrica', 'Elásticos', 'Step'],
-    sessionCount: 12,
-    treatmentPhase: 'advanced',
-  },
-};
+
 
 const MOCK_EXERCISE_RESPONSES = {
   lombalgia: {

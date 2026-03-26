@@ -56,7 +56,7 @@ export function KanbanFull({
 	onRefetch,
 }: KanbanFullProps) {
 	const queryClient = useQueryClient();
-	const updateTarefa = useUpdateTarefa();
+	
 	const deleteTarefa = useDeleteTarefa();
 	const bulkUpdate = useBulkUpdateTarefas();
 	const createColumn = useCreateBoardColumn(boardId);

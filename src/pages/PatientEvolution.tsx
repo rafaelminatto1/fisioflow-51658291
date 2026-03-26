@@ -3,13 +3,12 @@
  * Optimized with modular hooks and components for better maintainability.
  */
 
-import { lazy, Suspense, useMemo, useState, useEffect } from "react";
+import { lazy, Suspense, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
-import { AlertTriangle, ArrowLeft, RefreshCw, Edit } from "lucide-react";
+import { AlertTriangle } from "lucide-react";
 
 import { MainLayout } from "@/components/layout/MainLayout";
 import { Button } from "@/components/ui/button";
-import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Tabs, TabsContent } from "@/components/ui/tabs";
 import { LoadingSkeleton } from "@/components/ui/loading-skeleton";
 import { useCommandPalette } from "@/hooks/ui/useCommandPalette";
@@ -36,7 +35,6 @@ import { CardGrid } from "@/components/layout/ResponsiveGridLayout";
 import { EvolutionGridContainer } from "@/components/evolution/EvolutionResponsiveLayout";
 import { ComponentErrorBoundary } from "@/components/error";
 import { ApplyTemplateModal } from "@/components/exercises/ApplyTemplateModal";
-import { EvolutionDebugInfo } from "@/components/evolution/EvolutionDebugInfo";
 
 import type { EvolutionTab } from "@/hooks/evolution/useEvolutionDataOptimized";
 
@@ -100,50 +98,7 @@ export interface PainScaleData {
 	character?: string;
 }
 
-const TABS_CONFIG = [
-	{
-		value: "evolucao",
-		label: "Evolução",
-		shortLabel: "Evol",
-		icon: "FileText",
-		description: "SOAP + Dor",
-	},
-	{
-		value: "avaliacao",
-		label: "Avaliação",
-		shortLabel: "Aval",
-		icon: "BarChart3",
-		description: "Medições + Testes",
-	},
-	{
-		value: "tratamento",
-		label: "Tratamento",
-		shortLabel: "Trat",
-		icon: "Activity",
-		description: "Exercícios + Metas",
-	},
-	{
-		value: "historico",
-		label: "Histórico",
-		shortLabel: "Hist",
-		icon: "Clock",
-		description: "Timeline + Relatórios",
-	},
-	{
-		value: "assistente",
-		label: "Assistente",
-		shortLabel: "IA",
-		icon: "Sparkles",
-		description: "IA + WhatsApp",
-	},
-	{
-		value: "escalas",
-		label: "Escalas",
-		shortLabel: "PROMs",
-		icon: "ClipboardList",
-		description: "PROMs + Desfechos",
-	},
-] as any;
+
 
 const PatientEvolution = () => {
 	const navigate = useNavigate();

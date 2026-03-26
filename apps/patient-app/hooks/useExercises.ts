@@ -1,6 +1,5 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { patientApi } from '@/lib/api';
-import { ExerciseAssignment } from '@/types/api';
 
 export interface UseExercisesOptions {
   includeCompleted?: boolean;
@@ -25,7 +24,7 @@ export function useExercises(options: UseExercisesOptions = {}) {
       }
 
       if (!includeExpired) {
-        const now = new Date();
+        
         exercises = exercises.filter((exercise) => {
           if (!exercise.completedAt && !exercise.id) return true; // fallback
           if (!exercise.completedAt) return true;

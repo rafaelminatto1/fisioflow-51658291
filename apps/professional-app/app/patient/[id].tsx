@@ -44,7 +44,7 @@ export default function PatientDetailScreen() {
   const [refreshing, setRefreshing] = useState(false);
   const [selectedTab, setSelectedTab] = useState<'info' | 'financial' | 'evolutions' | 'biofeedback'>((tab as any) || 'info');
 
-  const { data: patient, isLoading: isLoadingPatient, refetch } = useQuery({
+  const { data: patient, refetch } = useQuery({
     queryKey: ['patient', id],
     queryFn: () => id ? getPatientByIdHook(id as string) : null,
     enabled: !!id,

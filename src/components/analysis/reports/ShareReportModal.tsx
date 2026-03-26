@@ -98,7 +98,7 @@ const ShareReportModal: React.FC<ShareReportModalProps> = ({
 				},
 			});
 			handleDownloadAudit();
-		} catch (error) {
+		} catch  {
 			toast({
 				title: "Erro ao gerar PDF",
 				description: "Não foi possível montar o relatório clínico.",

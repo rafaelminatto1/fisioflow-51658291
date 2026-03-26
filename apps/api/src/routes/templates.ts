@@ -13,7 +13,7 @@ import { pgTable, uuid, varchar, text, boolean, timestamp, integer, pgEnum } fro
 const app = new Hono<{ Bindings: Env; Variables: AuthVariables }>();
 
 // Runtime table definitions (schema not in shared package yet)
-const evidenceLevelEnum = pgEnum('evidence_level', ['A', 'B', 'C', 'D']);
+
 
 const exerciseTemplates = pgTable('exercise_templates', {
   id: uuid('id').primaryKey().defaultRandom(),

@@ -50,7 +50,7 @@ const consoleErrors = [];
     if ((await modal.count()) > 0) {
       try {
         modalVisible = await modal.isVisible();
-      } catch (_) {}
+      } catch  {}
     }
     if (!modalVisible) {
       const anyDialog = page.locator('[role="dialog"]').first();
@@ -87,7 +87,7 @@ const consoleErrors = [];
     let successToast = false;
     try {
       successToast = await page.locator('text=/sucesso|agendamento criado/i').first().isVisible();
-    } catch (_) {}
+    } catch  {}
     const modalClosed = (await page.locator('[role="dialog"]').count()) === 0;
 
     console.log('\n5. Resultado:');

@@ -11,7 +11,7 @@ export function useLocalStorage<T>(
   initialValue: T
 ): [T, (value: T | ((val: T) => T)) => void, () => void] {
   const [storedValue, setStoredValue] = useState<T>(initialValue);
-  const [isLoading, setIsLoading] = useState(true);
+  const [,setIsLoading] = useState(true);
 
   // Load from storage on mount
   useEffect(() => {

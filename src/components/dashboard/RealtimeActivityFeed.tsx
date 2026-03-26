@@ -115,18 +115,7 @@ export const RealtimeActivityFeed = memo(function RealtimeActivityFeed() {
 	/**
 	 * Memoizar função de cor para evitar recriações
 	 */
-	const getIconColor = useCallback((variant: string) => {
-		switch (variant) {
-			case "success":
-				return "text-green-500";
-			case "warning":
-				return "text-yellow-500";
-			case "destructive":
-				return "text-red-500";
-			default:
-				return "text-primary";
-		}
-	}, []);
+	
 
 	return (
 		<Card className="border-none shadow-premium-lg bg-white dark:bg-slate-900 overflow-hidden">

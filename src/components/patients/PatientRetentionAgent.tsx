@@ -11,16 +11,12 @@ import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import {
 	Bot,
-	AlertCircle,
-	MessageSquare,
 	CheckCircle2,
-	Settings2,
 	Send,
 	XCircle,
 	RefreshCcw,
 	Zap,
 } from "lucide-react";
-import { aiApi } from "@/api/v2";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 
@@ -87,7 +83,7 @@ export const PatientRetentionAgent: React.FC<PatientRetentionAgentProps> = ({
 				toast.success("Agente atualizado com sucesso!");
 				fetchAgentStatus();
 			}
-		} catch (e) {
+		} catch  {
 			toast.error("Erro ao comunicar com o agente.");
 		} finally {
 			setIsUpdating(false);
@@ -102,7 +98,7 @@ export const PatientRetentionAgent: React.FC<PatientRetentionAgentProps> = ({
 			);
 			toast.info("Ação arquivada pelo Agente.");
 			fetchAgentStatus();
-		} catch (e) {}
+		} catch  {}
 	};
 
 	if (isLoading)

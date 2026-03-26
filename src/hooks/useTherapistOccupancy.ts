@@ -46,7 +46,7 @@ interface UseTherapistOccupancyOptions {
 	endDate?: Date;
 }
 
-const THERAPIST_ROLES = new Set(["admin", "fisioterapeuta", "estagiario"]);
+
 const CANCELED_STATUSES = new Set([
 	"cancelado",
 	"cancelada",

@@ -185,7 +185,7 @@ export function useAIInsights(options: AIInsightOptions) {
 	const [isLoading, setIsLoading] = useState(false);
 	const [error, setError] = useState<Error | null>(null);
 
-	// eslint-disable-next-line react-hooks/exhaustive-deps
+	 
 	const prompt = useMemo(
 		() => buildClinicalInsightsPrompt(options),
 		[
@@ -245,7 +245,7 @@ export function useAITreatmentRecommendations(
 	const [isLoading, setIsLoading] = useState(false);
 	const [error, setError] = useState<Error | null>(null);
 
-	// eslint-disable-next-line react-hooks/exhaustive-deps
+	 
 	const prompt = useMemo(
 		() => buildTreatmentRecommendationsPrompt(options),
 		[

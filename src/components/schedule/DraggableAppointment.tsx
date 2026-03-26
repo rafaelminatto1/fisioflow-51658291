@@ -1,4 +1,4 @@
-import { useDraggable, UseDraggableArguments } from "@dnd-kit/core";
+import { useDraggable } from "@dnd-kit/core";
 import { memo, useMemo } from "react";
 import { cn } from "@/lib/utils";
 

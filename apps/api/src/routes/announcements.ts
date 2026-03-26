@@ -24,9 +24,9 @@ app.get('/', requireAuth, async (c) => {
     params.push(Number(limit));
 
     // Se o usuário não for admin, precisamos saber se ele já leu
-    const isAdmin = user.role === 'admin' || user.role === 'owner';
     
-    let query = `
+    
+    const query = `
       SELECT 
         a.*,
         EXISTS (

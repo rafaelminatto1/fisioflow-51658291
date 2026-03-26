@@ -18,7 +18,7 @@ app.get('/', requireAuth, async (c) => {
   sql += ` GROUP BY p.id ORDER BY p.created_at DESC`;
 
   const result = await db.query(sql, params);
-  try { return c.json({ data: result.rows || result }); } catch(e) { return c.json({ data: [] }); }
+  try { return c.json({ data: result.rows || result }); } catch { return c.json({ data: [] }); }
 });
 
 // Create plan

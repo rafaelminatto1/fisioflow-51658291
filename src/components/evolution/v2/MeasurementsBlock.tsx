@@ -259,10 +259,7 @@ export const MeasurementsBlock: React.FC<MeasurementsBlockProps> = ({
 		},
 	];
 
-	const isYBalanceTest = (m: MeasurementItem) =>
-		m.measurement_name?.toLowerCase().includes("y-balance") ||
-		m.measurement_name?.toLowerCase().includes("y test") ||
-		m.selectedTest?.layout_type === "y_balance";
+	
 
 	return (
 		<>

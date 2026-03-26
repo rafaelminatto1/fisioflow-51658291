@@ -75,7 +75,7 @@ export const MedicalReportSuggestions: React.FC<
 					.trim();
 				const parsed = JSON.parse(cleanedContent);
 				setInsights(parsed);
-			} catch (_e) {
+			} catch  {
 				// Fallback if AI doesn't return clean JSON
 				setInsights([
 					{

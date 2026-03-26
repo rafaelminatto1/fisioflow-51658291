@@ -138,7 +138,7 @@ const Financial = () => {
 				await mutations.create(data);
 			}
 			setIsModalOpen(false);
-		} catch (error) {
+		} catch  {
 			// Error handled by mutation
 		}
 	};
@@ -148,7 +148,7 @@ const Financial = () => {
 			try {
 				await mutations.delete(deleteId);
 				setDeleteId(null);
-			} catch (error) {
+			} catch  {
 				// Error handled by mutation
 			}
 		}
@@ -157,7 +157,7 @@ const Financial = () => {
 	const handleMarkAsPaid = async (id: string) => {
 		try {
 			await mutations.markAsPaid(id);
-		} catch (error) {
+		} catch  {
 			// Error handled by mutation
 		}
 	};

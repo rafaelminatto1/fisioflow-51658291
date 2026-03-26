@@ -16,12 +16,6 @@ import {
 	CheckCircle2,
 	Loader2,
 	FileText,
-	Image as ImageIcon,
-	Link as LinkIcon,
-	CheckSquare,
-	Paperclip,
-	ClipboardList,
-	Sparkles,
 	Search,
 } from "lucide-react";
 import { toast } from "sonner";
@@ -234,10 +228,7 @@ export const NotionEvolutionEditor: React.FC<NotionEvolutionEditorProps> = ({
 		return () => window.removeEventListener("tiptap-upload", handleUploadEvent);
 	}, [uploadToCloudflareR2]);
 
-	const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
-		const file = e.target.files?.[0];
-		if (file) uploadToCloudflareR2(file);
-	};
+	
 
 	const handleSave = async () => {
 		if (!editor) return;
@@ -274,9 +265,7 @@ export const NotionEvolutionEditor: React.FC<NotionEvolutionEditorProps> = ({
 		setSyncStatus("idle");
 	};
 
-	const insertTemplate = (templateHtml: string) => {
-		editor?.chain().focus().insertContent(templateHtml).run();
-	};
+	
 
 	return (
 		<div className="flex flex-col w-full max-w-5xl mx-auto bg-white dark:bg-slate-950 rounded-2xl shadow-premium-lg border border-slate-200 dark:border-slate-800 overflow-hidden transition-all duration-300">

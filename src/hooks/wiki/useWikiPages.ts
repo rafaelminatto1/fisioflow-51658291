@@ -43,7 +43,7 @@ export function useWikiPages(
 	currentUserId?: string | null,
 ) {
 	const queryClient = useQueryClient();
-	const navigate = useNavigate();
+	
 	const isE2E = isE2ERuntime();
 
 	// Query for wiki pages

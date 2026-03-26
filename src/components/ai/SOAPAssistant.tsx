@@ -286,7 +286,7 @@ export function SOAPAssistant({
 				setLoading(false);
 				setProgress(0);
 			}
-			// eslint-disable-next-line react-hooks/exhaustive-deps
+			 
 		},
 		[patient.id, language],
 	);
@@ -375,7 +375,7 @@ export function SOAPAssistant({
 				setLoading(false);
 				setProgress(0);
 			}
-			// eslint-disable-next-line react-hooks/exhaustive-deps
+			 
 		},
 		[
 			consultationText,

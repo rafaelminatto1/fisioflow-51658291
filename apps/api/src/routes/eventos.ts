@@ -46,7 +46,7 @@ app.get('/activities', requireAuth, async (c) => {
     `SELECT * FROM eventos WHERE ${conditions.join(' AND ')} ORDER BY data_inicio DESC LIMIT $${params.length - 1} OFFSET $${params.length}`,
     params,
   );
-  try { return c.json({ data: result.rows || result }); } catch(e) { return c.json({ data: [] }); }
+  try { return c.json({ data: result.rows || result }); } catch { return c.json({ data: [] }); }
 });
 
 app.get('/activities/:id', requireAuth, async (c) => {
@@ -109,7 +109,7 @@ app.get('/salas', requireAuth, async (c) => {
   const pool = await createPool(c.env);
   const result = await pool.query(
     'SELECT * FROM salas WHERE organization_id=$1 ORDER BY nome', [user.organizationId]);
-  try { return c.json({ data: result.rows || result }); } catch(e) { return c.json({ data: [] }); }
+  try { return c.json({ data: result.rows || result }); } catch { return c.json({ data: [] }); }
 });
 
 app.post('/salas', requireAuth, async (c) => {
@@ -152,7 +152,7 @@ app.get('/servicos', requireAuth, async (c) => {
   const pool = await createPool(c.env);
   const result = await pool.query(
     'SELECT * FROM servicos WHERE organization_id=$1 ORDER BY nome', [user.organizationId]);
-  try { return c.json({ data: result.rows || result }); } catch(e) { return c.json({ data: [] }); }
+  try { return c.json({ data: result.rows || result }); } catch { return c.json({ data: [] }); }
 });
 
 app.post('/servicos', requireAuth, async (c) => {
@@ -199,7 +199,7 @@ app.get('/contratados', requireAuth, async (c) => {
     ? await pool.query('SELECT * FROM contratados WHERE organization_id = $1 ORDER BY nome ASC', [user.organizationId])
     : await pool.query('SELECT * FROM contratados ORDER BY nome ASC');
 
-  try { return c.json({ data: result.rows || result }); } catch(e) { return c.json({ data: [] }); }
+  try { return c.json({ data: result.rows || result }); } catch { return c.json({ data: [] }); }
 });
 
 app.post('/contratados', requireAuth, async (c) => {
@@ -297,7 +297,7 @@ app.get('/checklist', requireAuth, async (c) => {
     [user.organizationId, eventoId],
   );
 
-  try { return c.json({ data: result.rows || result }); } catch(e) { return c.json({ data: [] }); }
+  try { return c.json({ data: result.rows || result }); } catch { return c.json({ data: [] }); }
 });
 
 app.post('/checklist', requireAuth, async (c) => {
@@ -404,7 +404,7 @@ app.get('/activity-contractors', requireAuth, async (c) => {
      ORDER BY ec.created_at DESC`,
     params,
   );
-  try { return c.json({ data: result.rows || result }); } catch(e) { return c.json({ data: [] }); }
+  try { return c.json({ data: result.rows || result }); } catch { return c.json({ data: [] }); }
 });
 
 app.post('/activity-contractors', requireAuth, async (c) => {
@@ -527,7 +527,7 @@ app.get('/participantes', requireAuth, async (c) => {
      LIMIT $${params.length - 1} OFFSET $${params.length}`,
     params,
   );
-  try { return c.json({ data: result.rows || result }); } catch(e) { return c.json({ data: [] }); }
+  try { return c.json({ data: result.rows || result }); } catch { return c.json({ data: [] }); }
 });
 
 app.post('/participantes', requireAuth, async (c) => {
@@ -641,7 +641,7 @@ app.get('/activity-templates', requireAuth, async (c) => {
     [user.organizationId],
   );
 
-  try { return c.json({ data: result.rows || result }); } catch(e) { return c.json({ data: [] }); }
+  try { return c.json({ data: result.rows || result }); } catch { return c.json({ data: [] }); }
 });
 
 app.get('/activity-templates/:id', requireAuth, async (c) => {

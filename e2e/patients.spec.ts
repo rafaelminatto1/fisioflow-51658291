@@ -2,7 +2,7 @@ import { test, expect, Page } from '@playwright/test';
 import { authenticateBrowserContext } from './helpers/neon-auth';
 
 const TEST_ORG_ID = '00000000-0000-0000-0000-000000000001';
-const baseURL = process.env.BASE_URL || 'http://localhost:5173';
+
 const neonAuthUrl = process.env.VITE_NEON_AUTH_URL || '';
 const loginEmail = process.env.E2E_LOGIN_EMAIL || 'REDACTED_EMAIL';
 const loginPassword = process.env.E2E_LOGIN_PASSWORD || 'REDACTED';

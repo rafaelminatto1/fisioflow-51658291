@@ -50,7 +50,7 @@ const DAYS_OF_WEEK = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb'];
 export default function SettingsScreen() {
   const colors = useColors();
   const { user, signOut } = useAuthStore();
-  const { isOnline, pendingOperations, getCachedData } = useOfflineSync();
+  const { isOnline, pendingOperations, } = useOfflineSync();
   const [settings, setSettings] = useState({
     notifications: true,
     exerciseReminders: true,
@@ -160,7 +160,7 @@ export default function SettingsScreen() {
               await AsyncStorage.clear();
               await loadSettings();
               Alert.alert('Sucesso', 'Cache limpo com sucesso!');
-            } catch (error) {
+            } catch  {
               Alert.alert('Erro', 'Não foi possível limpar o cache.');
             }
           },
@@ -211,7 +211,7 @@ export default function SettingsScreen() {
             try {
               await signOut();
               router.replace('/(auth)/login');
-            } catch (error) {
+            } catch  {
               Alert.alert('Erro', 'Não foi possível sair. Tente novamente.');
             }
           },

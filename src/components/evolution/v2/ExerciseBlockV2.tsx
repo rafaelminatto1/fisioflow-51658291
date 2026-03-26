@@ -116,7 +116,7 @@ export const ExerciseBlockV2: React.FC<ExerciseBlockV2Props> = ({
 					icon: <Sparkles className="h-4 w-4 text-blue-500" />,
 				},
 			);
-		} catch (error) {
+		} catch  {
 			toast.error("Falha ao carregar sugestões inteligentes.");
 		}
 	}, [exercises, onChange]);

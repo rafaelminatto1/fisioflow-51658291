@@ -20,7 +20,6 @@ import {
 	Image,
 	GitBranch,
 	Camera,
-	Brain,
 	ZoomIn,
 } from "lucide-react";
 
