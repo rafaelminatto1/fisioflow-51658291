@@ -40,6 +40,9 @@ import {
 	FlaskConical,
 	Search,
 	Camera,
+	User,
+	Zap,
+	Move,
 } from "lucide-react";
 import {
 	Collapsible,
@@ -120,14 +123,17 @@ const mainMenuItems = [
 const clinicaMenuItems = [
 	{ icon: Activity, label: "Exercícios", href: "/exercises" },
 	{ icon: Target, label: "Protocolos e Fases", href: "/protocols" },
-	{ icon: Camera, label: "Biomecânica", href: "/biomechanics" },
 ];
 
 const avaliacoesSubmenu = [
-	{ icon: ScanFace, label: "Avaliação Postural", href: "/dashboard/imagens?mode=clinical_posture" },
-	{ icon: ImageIcon, label: "Avaliação de Imagem", href: "/dashboard/imagens" },
-	{ icon: Footprints, label: "Avaliação de Marcha", href: "/dashboard/imagens?mode=dynamic_demo" },
 	{ icon: FlaskConical, label: "Testes Clínicos", href: "/clinical-tests" },
+];
+
+const biomecanicaSubmenu = [
+	{ icon: User, label: "Postura & Escoliose", href: "/clinical/biomechanics/posture" },
+	{ icon: Activity, label: "Corrida & Marcha", href: "/clinical/biomechanics/gait" },
+	{ icon: Zap, label: "Performance de Salto", href: "/clinical/biomechanics/jump" },
+	{ icon: Move, label: "Gesto Funcional", href: "/clinical/biomechanics/functional" },
 ];
 
 const inteligenciaMenuItems = [
@@ -195,6 +201,7 @@ export function Sidebar() {
 	const [collapsed, setCollapsed] = useState(false);
 	const [adminOpen, setAdminOpen] = useState(false);
 	const [avaliacaoOpen, setAvaliacaoOpen] = useState(false);
+	const [biomecanicaOpen, setBiomecanicaOpen] = useState(false);
 	const [financeiroOpen, setFinanceiroOpen] = useState(false);
 	const [configuracoesOpen, setConfiguracoesOpen] = useState(false);
 	const location = useLocation();
@@ -204,8 +211,10 @@ export function Sidebar() {
 
 	const isAdminActive = location.pathname.startsWith("/admin");
 	const isAvaliacaoActive =
-		location.pathname.startsWith("/dashboard/imagens") ||
 		location.pathname === "/clinical-tests";
+	const isBiomecanicaActive =
+		location.pathname.startsWith("/clinical/biomechanics") ||
+		location.pathname === "/biomechanics";
 	const isFinanceiroActive =
 		location.pathname.startsWith("/financial") ||
 		location.pathname.startsWith("/financeiro");
@@ -352,7 +361,7 @@ export function Sidebar() {
 						</SidebarSection>
 
 						<SidebarSection label="Clínica" collapsed={collapsed}>
-							{clinicaMenuItems.slice(0, 2).map(renderMenuItem)}
+							{clinicaMenuItems.map(renderMenuItem)}
 							<Collapsible
 								open={avaliacaoOpen || isAvaliacaoActive}
 								onOpenChange={setAvaliacaoOpen}
@@ -407,7 +416,73 @@ export function Sidebar() {
 									})}
 								</CollapsibleContent>
 							</Collapsible>
-							{clinicaMenuItems.slice(2).map(renderMenuItem)}
+
+							<Collapsible
+								open={biomecanicaOpen || isBiomecanicaActive}
+								onOpenChange={setBiomecanicaOpen}
+							>
+								<CollapsibleTrigger asChild>
+									<button
+										className={cn(
+											"flex items-center justify-between w-full px-4 py-3 rounded-2xl transition-all duration-500 group",
+											isBiomecanicaActive
+												? "bg-slate-50 dark:bg-slate-800/30 text-slate-900 dark:text-white font-black"
+												: "text-slate-500",
+										)}
+									>
+										<div className="flex items-center gap-3">
+											<Camera className="h-5 w-5" />
+											{!collapsed && (
+												<span className="text-xs font-bold uppercase tracking-widest">
+													Biomecânica
+												</span>
+											)}
+										</div>
+										{!collapsed && (
+											<ChevronDown
+												className={cn(
+													"h-3.5 w-3.5 transition-transform",
+													(biomecanicaOpen || isBiomecanicaActive) && "rotate-180",
+												)}
+											/>
+										)}
+									</button>
+								</CollapsibleTrigger>
+								<CollapsibleContent className="pl-9 space-y-1 mt-1 animate-in slide-in-from-top-2">
+									<Link
+										to="/biomechanics"
+										className={cn(
+											"flex items-center gap-2 px-3 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all",
+											location.pathname === "/biomechanics"
+												? "text-primary bg-primary/5 font-black"
+												: "text-muted-foreground hover:text-foreground hover:pl-4",
+										)}
+									>
+										<LayoutDashboard className="h-3.5 w-3.5 flex-shrink-0" />
+										{!collapsed && "Dashboard Lab"}
+									</Link>
+									{biomecanicaSubmenu.map((item) => {
+										const SubIcon = item.icon;
+										const isSubActive =
+											location.pathname + location.search === item.href;
+										return (
+											<Link
+												key={item.href}
+												to={item.href}
+												className={cn(
+													"flex items-center gap-2 px-3 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all",
+													isSubActive
+														? "text-primary bg-primary/5"
+														: "text-muted-foreground hover:text-foreground hover:pl-4",
+												)}
+											>
+												<SubIcon className="h-3.5 w-3.5 flex-shrink-0" />
+												{!collapsed && item.label}
+											</Link>
+										);
+									})}
+								</CollapsibleContent>
+							</Collapsible>
 						</SidebarSection>
 
 						<SidebarSection label="Inteligência & IA" collapsed={collapsed}>

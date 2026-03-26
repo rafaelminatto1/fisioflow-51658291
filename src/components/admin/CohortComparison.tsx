@@ -14,49 +14,49 @@
  * @module CohortComparison
  */
 
-import { useState, useMemo, useCallback } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { format, subMonths, differenceInYears } from "date-fns";
+import { differenceInYears, format, subMonths } from "date-fns";
 import {
-	BarChart,
-	Bar,
-	LineChart,
-	Line,
-	RadarChart,
-	PolarGrid,
-	PolarAngleAxis,
-	PolarRadiusAxis,
-	Radar,
-	XAxis,
-	YAxis,
-	CartesianGrid,
-	Tooltip,
-	Legend,
-	ResponsiveContainer,
-	Cell,
-	TooltipContentProps,
-} from "recharts";
-import {
-	Search,
-	Filter,
+	Activity,
+	Calendar,
+	ChevronDown,
 	Download,
+	Filter,
+	Search,
 	TrendingUp,
 	Users,
-	Calendar,
-	Activity,
-	ChevronDown,
 } from "lucide-react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
+import { useCallback, useMemo, useState } from "react";
+import {
+	Bar,
+	BarChart,
+	CartesianGrid,
+	Cell,
+	Legend,
+	Line,
+	LineChart,
+	PolarAngleAxis,
+	PolarGrid,
+	PolarRadiusAxis,
+	Radar,
+	RadarChart,
+	ResponsiveContainer,
+	Tooltip,
+	type TooltipContentProps,
+	XAxis,
+	YAxis,
+} from "recharts";
+import {
+	type AppointmentRow,
+	appointmentsApi,
+	type PatientRow,
+	patientsApi,
+} from "@/api/v2";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { cn } from "@/lib/utils";
-import {
-	appointmentsApi,
-	patientsApi,
-	type AppointmentRow,
-	type PatientRow,
-} from "@/api/v2";
 
 // ============================================================================
 // TYPES & INTERFACES
@@ -130,7 +130,7 @@ interface TimeRangeConfig {
  * Color palette for charts
  */
 const CHART_COLORS = [
-	"#6366f1", // Indigo
+	"#2563eb", // Blue
 	"#22c55e", // Green
 	"#eab308", // Yellow
 	"#f97316", // Orange
@@ -1039,7 +1039,9 @@ export function CohortComparison({
 								<YAxis className="text-xs" />
 								<Tooltip
 									content={<CustomTooltip />}
-									formatter={((value: number) => [`${value}%`, "Progresso"]) as any}
+									formatter={
+										((value: number) => [`${value}%`, "Progresso"]) as any
+									}
 								/>
 								<Bar dataKey="avgProgress" radius={[4, 4, 0, 0]}>
 									{filteredCohorts.map((entry, index) => (
@@ -1267,4 +1269,4 @@ export function CohortComparison({
 // ============================================================================
 
 export default CohortComparison;
-export type { PatientWithCohortData, TimeRangeConfig, CohortComparisonProps };
+export type { CohortComparisonProps, PatientWithCohortData, TimeRangeConfig };

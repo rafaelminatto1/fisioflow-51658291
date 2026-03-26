@@ -1,7 +1,7 @@
 /**
  * useExerciseProtocols - Leitura e mutations via Workers API (Neon PostgreSQL)
  *
- * Migrado: Firestore → Workers API (POST/PUT/DELETE /api/protocols)
+ * Migrado: Neon → Workers API (POST/PUT/DELETE /api/protocols)
  */
 
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";

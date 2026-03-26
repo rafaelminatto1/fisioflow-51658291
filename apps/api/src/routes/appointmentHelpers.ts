@@ -4,46 +4,48 @@
  */
 
 export const STATUS_MAP: Record<string, string> = {
-  scheduled: 'agendado',
-  confirmed: 'presenca_confirmada',
-  in_progress: 'atendido',
-  completed: 'atendido',
-  cancelled: 'cancelado',
-  no_show: 'faltou',
-  rescheduled: 'remarcar',
-  agendado: 'agendado',
-  confirmado: 'presenca_confirmada',
-  em_andamento: 'atendido',
-  concluido: 'atendido',
-  cancelado: 'cancelado',
-  avaliacao: 'avaliacao',
-  atendido: 'atendido',
-  falta: 'faltou',
-  faltou: 'faltou',
-  remarcado: 'remarcar',
-  reagendado: 'remarcar',
-  aguardando_confirmacao: 'agendado',
+  scheduled: 'scheduled',
+  confirmed: 'confirmed',
+  in_progress: 'in_progress',
+  completed: 'completed',
+  cancelled: 'cancelled',
+  no_show: 'no_show',
+  rescheduled: 'rescheduled',
+  agendado: 'scheduled',
+  confirmado: 'confirmed',
+  presenca_confirmada: 'confirmed',
+  em_andamento: 'in_progress',
+  atendido: 'completed',
+  concluido: 'completed',
+  cancelado: 'cancelled',
+  avaliacao: 'scheduled',
+  falta: 'no_show',
+  faltou: 'no_show',
+  faltou_com_aviso: 'no_show',
+  faltou_sem_aviso: 'no_show',
+  nao_atendido: 'no_show',
+  nao_atendido_sem_cobranca: 'no_show',
+  remarcado: 'rescheduled',
+  remarcar: 'rescheduled',
+  reagendado: 'rescheduled',
+  aguardando_confirmacao: 'scheduled',
 };
 
 const VALID_STATUSES = new Set([
-  'agendado',
-  'atendido',
-  'avaliacao',
-  'cancelado',
-  'faltou',
-  'faltou_com_aviso',
-  'faltou_sem_aviso',
-  'nao_atendido',
-  'nao_atendido_sem_cobranca',
-  'presenca_confirmada',
-  'remarcar',
+  'scheduled',
+  'confirmed',
+  'in_progress',
+  'completed',
+  'cancelled',
+  'no_show',
+  'rescheduled',
 ]);
 
 export function normalizeStatus(raw: string | undefined): any {
-  if (!raw) return 'agendado';
+  if (!raw) return 'scheduled';
   const normalized = raw.toLowerCase().trim();
   if (VALID_STATUSES.has(normalized)) return normalized;
-  return STATUS_MAP[normalized] ?? 'agendado';
+  return STATUS_MAP[normalized] ?? 'scheduled';
 }
 
 export function calculateEndTime(startTime: string, durationMinutes: number): string {
@@ -82,5 +84,5 @@ export function isConflictError(err: { code?: string; message?: string }): boole
 }
 
 export function countsTowardCapacity(status: string): boolean {
-  return !['cancelado', 'faltou', 'remarcar'].includes(status);
+  return !['cancelled', 'no_show', 'rescheduled'].includes(status);
 }

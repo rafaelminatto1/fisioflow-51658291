@@ -93,7 +93,7 @@ app.post('/', requireAuth, async (c) => {
     });
 
     // TODO: Implementar lógica de disparo Push em massa aqui
-    // Ex: buscar todos FCM Tokens da org e disparar payload via Firebase Admin/API
+    // Ex: buscar todos FCM Tokens da org e disparar payload via Neon Admin/API
 
     return c.json({ data: row }, 201);
   } catch (error) {

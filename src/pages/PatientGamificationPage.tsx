@@ -91,7 +91,7 @@ export default function PatientGamificationPage() {
 		}
 	}, [profile?.level, lastViewedLevel]);
 
-	// Fetch Leaderboard (optimized for Firestore)
+	// Fetch Leaderboard (optimized for Neon DB)
 	const { data: leaderboard = [], isLoading: isLoadingLeaderboard } = useQuery({
 		queryKey: ["gamification-leaderboard"],
 		queryFn: async () => {

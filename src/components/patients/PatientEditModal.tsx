@@ -1,3 +1,4 @@
+import React from "react";
 import {
 	Dialog,
 	DialogContent,
@@ -10,7 +11,9 @@ import { Edit, Loader2 } from "lucide-react";
 import { PatientForm } from "./PatientForm";
 import { usePatient } from "@/hooks/usePatientCrud";
 import { useOrganizations } from "@/hooks/useOrganizations";
-import { useNavigation } from "react-router";
+import { useQueryClient } from "@tanstack/react-query";
+import { toast } from "sonner";
+import { patientsApi } from "@/api/v2";
 
 interface PatientEditModalProps {
 	open: boolean;
@@ -25,12 +28,24 @@ export const PatientEditModal: React.FC<PatientEditModalProps> = ({
 }) => {
 	const { currentOrganization } = useOrganizations();
 	const { data: patient, isLoading: isPatientLoading } = usePatient(patientId);
-	const navigation = useNavigation();
+	const queryClient = useQueryClient();
+	const [isSubmitting, setIsSubmitting] = React.useState(false);
 
-	const isSubmitting =
-		navigation.state === "submitting" &&
-		navigation.formData?.get("intent") === "update" &&
-		navigation.formData?.get("id") === patientId;
+	const handleSubmit = async (data: Parameters<typeof patientsApi.update>[1]) => {
+		setIsSubmitting(true);
+		try {
+			await patientsApi.update(patientId, data);
+			toast.success("Paciente atualizado com sucesso!");
+			queryClient.invalidateQueries({ queryKey: ["patients"] });
+			queryClient.invalidateQueries({ queryKey: ["patient", patientId] });
+			onOpenChange(false);
+		} catch (err: unknown) {
+			const msg = err instanceof Error ? err.message : "Erro ao atualizar paciente";
+			toast.error(msg);
+		} finally {
+			setIsSubmitting(false);
+		}
+	};
 
 	// Close modal if no organization
 	if (!currentOrganization?.id && !isPatientLoading) {
@@ -69,6 +84,7 @@ export const PatientEditModal: React.FC<PatientEditModalProps> = ({
 							isLoading={isSubmitting}
 							submitLabel="Salvar Alterações"
 							intent="update"
+							onSubmit={handleSubmit}
 							onCancel={() => onOpenChange(false)}
 						/>
 					) : (

@@ -55,7 +55,7 @@ export function useLocalStorage<T>(
 }
 
 /**
- * Synced local storage - syncs with a remote source (like Firestore)
+ * Synced local storage - syncs with a remote source (like Neon)
  */
 export function useSyncedLocalStorage<T>(
   key: string,

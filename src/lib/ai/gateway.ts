@@ -4,19 +4,11 @@
  * Centralizes AI model routing through direct provider connections
  * Provides automatic fallback, rate limiting, and cost optimization
  *
- * This implementation connects directly to AI providers without
- * requiring Vercel AI Gateway. It supports:
+ * This implementation connects directly to AI providers. It supports:
  * - OpenAI (GPT-4, GPT-3.5)
  * - Google (Gemini 2.0 Flash, Gemini 1.5 Pro/Flash)
  * - Anthropic (Claude 3.5 Sonnet/Haiku)
  * - Grok (xAI)
- *
- * For Google Cloud AI Platform integration, consider using:
- * - Vertex AI API for enterprise-grade AI services
- * - Cloud Functions for AI-powered endpoints
- *
- * @see https://cloud.google.com/vertex-ai
- * @see https://sdk.vercel.ai/docs
  */
 
 // ============================================================================
@@ -41,7 +33,7 @@ export type AIModel =
 	| "gemini-2.0-flash-exp"
 	| "gemini-1.5-pro"
 	| "gemini-1.5-flash"
-	// Grok Models (via Vercel AI Gateway)
+	// Grok Models (via Cloudflare AI Gateway)
 	| "grok-2-1212"
 	| "grok-2-vision-1212"
 	| "grok-1"
@@ -89,7 +81,7 @@ export interface AIStreamOptions extends AIRequestOptions {
 
 /**
  * Provider configuration with base URLs and model mappings
- * Uses direct provider connections instead of Vercel AI Gateway
+ * Uses direct provider connections instead of Cloudflare AI Gateway
  */
 const PROVIDER_CONFIG = {
 	openai: {
@@ -177,7 +169,7 @@ const clients: Record<
 
 /**
  * Get or create AI client for a provider
- * Uses direct provider connections (not through Vercel AI Gateway)
+ * Uses direct provider connections (not through Cloudflare AI Gateway)
  */
 function getClient(provider: AIProvider) {
 	if (!clients[provider]) {

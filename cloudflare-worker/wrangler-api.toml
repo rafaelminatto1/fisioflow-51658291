@@ -3,25 +3,42 @@ name = "fisioflow-api"
 main = "fisioflow-api.ts"
 compatibility_date = "2024-03-06"
 
-# D1 Database (optional - for caching)
+# Default (Production) configuration
+[[kv_namespaces]]
+binding = "FISIOFLOW_CONFIG"
+id = "4284b33fa7ed40b6bc9c59b6041c03ed"
+
 [[d1_databases]]
 binding = "DB"
 database_name = "fisioflow-db"
 database_id = "bf781be2-527d-471d-9cf2-dd18f8e6c2b2"
 
-# Environment Variables (set via wrangler secret for sensitive data)
 [vars]
+ENVIRONMENT = "production"
 AUTH_TOKEN = "FISIOFLOW_SECRET_TOKEN_2026"
 
-# Durable Objects
 [[durable_objects.bindings]]
 name = "ORGANIZATION_STATE"
 class_name = "OrganizationState"
 
 [[migrations]]
-tag = "v3"
-new_classes = ["OrganizationState"]
+tag = "v9"
+deleted_classes = ["PatientAgent"]
 
-# Secrets (set via: wrangler secret put JWT_SECRET)
-# JWT_SECRET - Neon Auth JWT secret
-# DATABASE_URL - Neon connection string (use HTTP API instead)
+# Staging environment
+[env.staging]
+name = "fisioflow-api-staging"
+vars = { ENVIRONMENT = "staging", AUTH_TOKEN = "FISIOFLOW_SECRET_TOKEN_2026_STAGING" }
+
+[[env.staging.kv_namespaces]]
+binding = "FISIOFLOW_CONFIG"
+id = "4284b33fa7ed40b6bc9c59b6041c03ed"
+
+[[env.staging.d1_databases]]
+binding = "DB"
+database_name = "fisioflow-db"
+database_id = "bf781be2-527d-471d-9cf2-dd18f8e6c2b2"
+
+[[env.staging.durable_objects.bindings]]
+name = "ORGANIZATION_STATE"
+class_name = "OrganizationState"

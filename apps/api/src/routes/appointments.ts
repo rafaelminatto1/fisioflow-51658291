@@ -489,7 +489,7 @@ app.post('/:id/cancel', requireAuth, async (c) => {
     const result = await db
       .update(appointments)
       .set({
-        status: 'cancelado',
+        status: 'cancelled',
         cancellationReason: body.reason ?? null,
         cancelledAt: new Date(),
         updatedAt: new Date(),
@@ -546,3 +546,4 @@ app.delete('/:id', requireAuth, async (c) => {
 });
 
 export { app as appointmentsRoutes };
+
