@@ -1,0 +1,129 @@
+/* Custom Gradients Premium - Identidade Visual Forte */
+
+@layer base {
+	:root {
+		/* Gradient da Marca (FisioFlow - Sky Blue → Purple) */
+		--gradient-brand-primary: linear-gradient(
+			135deg,
+			hsl(var(--primary)) 0%,
+			hsl(219, 83%, 42%) 100%
+		);
+
+		/* Gradient Secundário (Cinza → Azul Escuro) */
+		--gradient-brand-secondary: linear-gradient(
+			135deg,
+			hsl(220, 14.3%, 95.9%) 0%,
+			hsl(222.2, 47.4%, 11.2%) 100%
+		);
+
+		/* Gradient Accent (Emerald → Teal) */
+		--gradient-accent-teal: linear-gradient(
+			135deg,
+			hsl(158, 64%, 52%) 0%,
+			hsl(173, 85%, 50%) 100%
+		);
+
+		/* Gradient Warm (Laranja → Vermelho) */
+		--gradient-warm: linear-gradient(
+			135deg,
+			hsl(38, 92%, 50%) 0%,
+			hsl(0, 84.2%, 60.2%) 100%
+		);
+
+		/* Gradient Cool (Azul → Cyan) */
+		--gradient-cool: linear-gradient(
+			135deg,
+			hsl(211, 100%, 50%) 0%,
+			hsl(191, 100%, 50%) 100%
+		);
+
+		/* Gradient Dark (Elevado) */
+		--gradient-elevated: linear-gradient(
+			135deg,
+			hsl(222.2, 47.4%, 11.2%) 0%,
+			hsl(217.2, 32.6%, 17.5%) 100%
+		);
+
+		/* Gradient Glass (Transparência) */
+		--gradient-glass: linear-gradient(
+			135deg,
+			hsla(211, 100%, 50%, 0.1) 0%,
+			hsla(211, 100%, 50%, 0.05) 100%
+		);
+
+		/* Gradient Neon (Efeito glow) */
+		--gradient-neon-primary: linear-gradient(
+			135deg,
+			hsl(211, 100%, 50%) 0%,
+			hsl(199, 89%, 48%) 100%
+		);
+	}
+
+	.dark {
+		/* Variante Dark Mode - Cores mais brilhantes */
+		--gradient-brand-primary: linear-gradient(
+			135deg,
+			hsl(210, 95%, 38%) 0%,
+			hsl(199, 89%, 48%) 100%
+		);
+
+		--gradient-accent-teal: linear-gradient(
+			135deg,
+			hsl(158, 64%, 62%) 0%,
+			hsl(173, 85%, 60%) 100%
+		);
+
+		--gradient-elevated: linear-gradient(
+			135deg,
+			hsl(217.2, 32.6%, 11.2%) 0%,
+			hsl(210, 20%, 20%) 100%
+		);
+
+		--gradient-neon-primary: linear-gradient(
+			135deg,
+			hsl(210, 95%, 43%) 0%,
+			hsl(199, 89%, 53%) 100%
+		);
+	}
+}
+
+@utility gradient-brand-primary {
+  background: var(--gradient-brand-primary);
+}
+
+@utility gradient-brand-secondary {
+  background: var(--gradient-brand-secondary);
+}
+
+@utility gradient-accent-teal {
+  background: var(--gradient-accent-teal);
+}
+
+@utility gradient-warm {
+  background: var(--gradient-warm);
+}
+
+@utility gradient-cool {
+  background: var(--gradient-cool);
+}
+
+@utility gradient-elevated {
+  background: var(--gradient-elevated);
+}
+
+@utility gradient-glass {
+  background: var(--gradient-glass);
+}
+
+@utility gradient-neon-primary {
+  background: var(--gradient-neon-primary);
+}
+
+/* Text Colors on Gradients */
+.text-on-gradient {
+	color: hsl(var(--primary-foreground));
+}
+
+.text-on-gradient-dark {
+	color: hsl(210, 40%, 98%);
+}
