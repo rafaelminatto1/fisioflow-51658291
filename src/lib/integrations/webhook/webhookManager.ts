@@ -257,7 +257,7 @@ export interface WebhookLog {
  * Salva log de tentativa de entrega
  */
 export async function logWebhookDelivery(
-	db: unknown, // Firestore instance
+	db: any, // Database instance
 	log: Omit<WebhookLog, "id" | "created_at">,
 ): Promise<string> {
 	const logRef = db.collection("webhook_logs").doc();
@@ -443,6 +443,11 @@ export function createWebhookMiddleware(
 		(req as unknown).webhook = {
 			verified: true,
 			integrationId,
+		};
+
+		next();
+	};
+}
 		};
 
 		next();

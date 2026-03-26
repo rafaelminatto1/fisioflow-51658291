@@ -90,7 +90,7 @@ git commit -m "fix(schedule): resolve conflict when booking overlapping appointm
 git commit -m "feat(api)!: change user response structure to include role field"
 
 # Documentação
-git commit -m "docs: update installation guide with new Firebase setup"
+git commit -m "docs: update installation guide with new Neon setup"
 ```
 
 ### Evitar

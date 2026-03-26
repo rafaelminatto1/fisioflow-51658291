@@ -48,11 +48,22 @@ class_name = "PatientAgent"
 
 
 [[migrations]]
-tag = "v1" # Initial migration for real-time state
-new_classes = ["OrganizationState"]
+tag = "v1" # Placeholder
 
 [[migrations]]
-tag = "v3" # Add Patient Retention Agent
+tag = "v2" # Placeholder
+
+[[migrations]]
+tag = "v3" # Placeholder
+
+[[migrations]]
+tag = "v4" # Placeholder
+
+[[migrations]]
+tag = "v5" # Placeholder to match remote state
+
+[[migrations]]
+tag = "v6" # New migration to add PatientAgent
 new_classes = ["PatientAgent"]
 
 # ===== AI & BROWSER RENDERING (Paid Plan) =====

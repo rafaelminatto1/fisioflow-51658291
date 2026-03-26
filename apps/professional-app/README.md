@@ -77,7 +77,7 @@ App mobile para profissionais de fisioterapia gerenciarem:
 ### ⚠️ Em Desenvolvimento
 
 - **Protocolos Backend** (60% → 95%)
-  - Integração Firestore
+  - Integração API
   - CRUD completo
   - Sincronização
 
@@ -164,7 +164,7 @@ apps/professional-app/
 ### Estado e Dados
 - **TanStack Query** - Cache e sincronização
 - **Zustand** - Estado global
-- **Firebase/Firestore** - Backend
+- **Neon (PostgreSQL) / Cloudflare API** - Backend
 
 ### UI/UX
 - **React Native Paper** - Componentes
@@ -269,7 +269,7 @@ eas update --branch production --message "Bug fixes"
 #### Curto Prazo (1-2 semanas)
 - [ ] Backend de Protocolos (4-6h)
 - [ ] Modo Offline Básico (8-10h)
-- [ ] Upload Firebase Storage (3-4h)
+- [ ] Upload Cloudflare R2 (3-4h)
 
 #### Médio Prazo (3-4 semanas)
 - [ ] Exercícios CRUD Completo (5-6h)
@@ -317,7 +317,7 @@ eas update --branch production --message "Bug fixes"
 #### Fixed 🐛
 - Agendamentos sobrepostos no calendário
 - Texto "grupo" nos cards
-- Erros de Firestore (índices e permissões)
+- Erros de Neon (índices e permissões)
 - Navegação entre páginas
 - TypeScript errors
 

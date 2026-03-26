@@ -10,13 +10,14 @@
  * - System preference detection
  */
 
-import React, {
+import type React from "react";
+import {
 	createContext,
-	useContext,
-	useState,
-	useEffect,
 	useCallback,
+	useContext,
+	useEffect,
 	useMemo,
+	useState,
 } from "react";
 
 // ============================================================================
@@ -63,8 +64,8 @@ const COLOR_SCHEMES: Record<
 	{ primary: string; secondary: string }
 > = {
 	default: {
-		primary: "#6366f1",
-		secondary: "#64748b",
+		primary: "#2563eb",
+		secondary: "#3b82f6",
 	},
 	blue: {
 		primary: "#2563eb",
@@ -350,7 +351,7 @@ export const ThemeProvider: React.FC<ThemeProviderProps> = ({
 // COMPONENTE DE CONTROLE DE TEMA
 // ============================================================================
 
-import { Settings, Sun, Moon, Contrast, Type, Zap } from "lucide-react";
+import { Contrast, Moon, Settings, Sun, Type, Zap } from "lucide-react";
 
 export const ThemeControls: React.FC = () => {
 	const {
@@ -428,7 +429,6 @@ export const ThemeControls: React.FC = () => {
 // ============================================================================
 
 import { Label } from "../label";
-import { Switch } from "../switch";
 import {
 	Select,
 	SelectContent,
@@ -436,6 +436,7 @@ import {
 	SelectTrigger,
 	SelectValue,
 } from "../select";
+import { Switch } from "../switch";
 
 export const ThemeSettings: React.FC = () => {
 	const { theme, setTheme, resetTheme } = useTheme();
