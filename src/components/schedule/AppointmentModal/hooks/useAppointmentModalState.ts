@@ -49,7 +49,7 @@ export const useAppointmentModalState = ({
 	const [pendingFormData, setPendingFormData] =
 		useState<AppointmentFormData | null>(null);
 	const [waitlistQuickAddOpen, setWaitlistQuickAddOpen] = useState(false);
-	const [isNotesExpanded, setIsNotesExpanded] = useState(false);
+	const [isNotesExpanded, setIsNotesExpanded] = useState(true);
 
 	return {
 		currentMode,

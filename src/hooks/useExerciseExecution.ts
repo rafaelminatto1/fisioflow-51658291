@@ -194,7 +194,7 @@ export function useExerciseExecution({
 		playSound("success");
 		speak(`Treino finalizado. Você completou ${repCount} repetições.`);
 
-		// Persistir no Firestore (Assíncrono)
+		// Persistir no Banco de Dados (Neon DB) (Assíncrono)
 		try {
 			await SessionService.saveSession(finalSession);
 		} catch (err) {

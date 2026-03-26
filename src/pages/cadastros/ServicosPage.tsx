@@ -1,12 +1,19 @@
+import { Clock, Edit, Plus, Search, Trash2 } from "lucide-react";
 import React, { useState } from "react";
+import { useForm } from "react-hook-form";
 import { MainLayout } from "@/components/layout/MainLayout";
-import { Card, CardContent, CardHeader } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader } from "@/components/ui/card";
+import {
+	Dialog,
+	DialogContent,
+	DialogFooter,
+	DialogHeader,
+	DialogTitle,
+} from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
-import { Badge } from "@/components/ui/badge";
-import { Switch } from "@/components/ui/switch";
 import {
 	Select,
 	SelectContent,
@@ -14,13 +21,7 @@ import {
 	SelectTrigger,
 	SelectValue,
 } from "@/components/ui/select";
-import {
-	Dialog,
-	DialogContent,
-	DialogHeader,
-	DialogTitle,
-	DialogFooter,
-} from "@/components/ui/dialog";
+import { Switch } from "@/components/ui/switch";
 import {
 	Table,
 	TableBody,
@@ -29,16 +30,15 @@ import {
 	TableHeader,
 	TableRow,
 } from "@/components/ui/table";
-import { Plus, Search, Edit, Trash2, Clock } from "lucide-react";
+import { Textarea } from "@/components/ui/textarea";
 import {
-	useServicos,
+	type Servico,
+	type ServicoFormData,
 	useCreateServico,
-	useUpdateServico,
 	useDeleteServico,
-	Servico,
-	ServicoFormData,
+	useServicos,
+	useUpdateServico,
 } from "@/hooks/useServicos";
-import { useForm } from "react-hook-form";
 import { cn } from "@/lib/utils";
 
 const tipoCobrancaLabels = {
@@ -57,7 +57,7 @@ const defaultColors = [
 	"#06b6d4",
 	"#84cc16",
 	"#f97316",
-	"#6366f1",
+	"#2563eb",
 ];
 
 export function ServicosContent() {

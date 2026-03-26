@@ -86,7 +86,7 @@ export default defineConfig({
       'accessibility-tests/**',
       'test-start-attendance.spec.ts',
       'src/lib/a11y/__tests__/index.test.ts',
-      'apps/professional-app/__tests__/firebase-security-rules.test.ts',
+      'apps/professional-app/__tests__/Neon-security-rules.test.ts',
     ],
 
     // Test timeouts
@@ -130,9 +130,9 @@ export default defineConfig({
         '**/mockData/**',
         'supabase/functions/**',
         'functions/**',
-        // Supabase/Firebase integration clients
+        // Supabase/Neon integration clients
         'src/integrations/supabase/client.ts',
-        'src/integrations/firebase/**/*.ts',
+        'src/integrations/Neon/**/*.ts',
         // Entry points
         'src/main.tsx',
         'src/vite-env.d.ts',

@@ -6,7 +6,7 @@
  * - Detect available biometric type (Face ID or Touch ID)
  * - Show setup flow with explanation of benefits
  * - Offer PIN fallback setup (6 digits minimum)
- * - Store BiometricConfig in Firestore collection `biometric_configs`
+ * - Store BiometricConfig via API
  * - Allow skip (can enable later in settings)
  * 
  * Requirements: 5.1, 5.2

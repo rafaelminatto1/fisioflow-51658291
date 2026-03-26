@@ -173,6 +173,7 @@ export const AppointmentModal: React.FC<AppointmentModalProps> = ({
 				open={isOpen}
 				onOpenChange={(open) => !open && onClose()}
 				isMobile={isMobile}
+				contentClassName="max-w-5xl"
 			>
 				<AppointmentModalHeader currentMode={currentMode} onClose={onClose} />
 

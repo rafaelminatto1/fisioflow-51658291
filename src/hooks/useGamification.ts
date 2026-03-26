@@ -1,7 +1,5 @@
 /**
  * useGamification — Cloudflare Workers + Neon PostgreSQL
- *
- * Migrado de Firestore para Workers API.
  */
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useToast } from "@/hooks/use-toast";

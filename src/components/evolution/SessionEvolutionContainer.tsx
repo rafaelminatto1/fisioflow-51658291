@@ -625,7 +625,7 @@ export const SessionEvolutionContainer: React.FC<
 				});
 			}
 
-			// Update appointment: mesma fonte em que foi carregado (API ou Firestore)
+			// Update appointment: mesma fonte em que foi carregado (API ou Neon)
 			if (appointmentId) {
 				const notesPayload = JSON.stringify({
 					soap: soapData,
