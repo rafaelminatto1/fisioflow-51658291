@@ -151,7 +151,7 @@ export const TimeSlotCell = memo(
 						"bg-red-100/80 dark:bg-red-900/30 ring-2 ring-inset ring-red-400/50",
 					showPreview && "z-40",
 				)}
-				style={{ gridRow: rowIndex + 1, gridColumn: colIndex + 2 }}
+				style={{ gridColumn: colIndex + 2 }}
 				onClick={handleClick}
 				onDragOver={handleDragOverWrapper}
 				onDragLeave={handleDragLeave}
