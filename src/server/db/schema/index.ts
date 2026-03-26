@@ -46,3 +46,6 @@ export * from "./templates";
 
 // Corporate Announcements & Policies
 export * from "./announcements";
+
+// Jules AI - PR Reviews & Learnings
+export * from "./jules";

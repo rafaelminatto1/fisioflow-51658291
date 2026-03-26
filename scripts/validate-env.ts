@@ -146,9 +146,9 @@ function checkBackendVars(): { missing: string[]; invalid: string[]; valid: stri
   const invalid: string[] = [];
   const valid: string[] = [];
 
-  console.log('\n🔧 Variáveis de Backend (Supabase):\n');
-  console.log('  ⚠️  Nota: Para validar variáveis do Supabase, execute:');
-  console.log('     supabase secrets list\n');
+  console.log('\n🔧 Variáveis de Backend (Cloudflare/Neon):\n');
+  console.log('  ⚠️  Nota: Para validar variáveis do Cloudflare, execute:');
+  console.log('     npx wrangler secret list\n');
 
   for (const envVar of BACKEND_VARS) {
     const value = process.env[envVar.name];

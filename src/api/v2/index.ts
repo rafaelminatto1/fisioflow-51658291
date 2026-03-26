@@ -66,5 +66,6 @@ export type {
 	AtRiskPatient,
 	PopularAchievement,
 	QuestDefinitionRow,
+	Protocol,
 } from "@/types/workers";
 export * from "./messaging";

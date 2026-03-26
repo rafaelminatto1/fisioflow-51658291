@@ -207,6 +207,9 @@ export const templatesApi = {
 	list: (params?: {
 		q?: string;
 		category?: string;
+		patientProfile?: string;
+		templateType?: 'system' | 'custom';
+		isDraft?: boolean;
 		page?: number;
 		limit?: number;
 	}) => {
@@ -249,4 +252,35 @@ export const templatesApi = {
 		request<{ ok: boolean }>(`/api/templates/${id}`, {
 			method: "DELETE",
 		}),
+
+	categories: () =>
+		request<{ data: Array<{ id: string; label: string; icon: string | null; orderIndex: number }> }>(
+			"/api/templates/categories",
+		),
+
+	apply: (
+		id: string,
+		data: {
+			patientId: string;
+			startDate: string;
+			surgeryId?: string;
+			notes?: string;
+		},
+	) =>
+		request<{ data: { planId: string; patientId: string; exerciseCount: number } }>(
+			`/api/templates/${encodeURIComponent(id)}/apply`,
+			{
+				method: "POST",
+				body: JSON.stringify(data),
+			},
+		),
+
+	customize: (id: string, data?: { name?: string }) =>
+		request<{ data: ExerciseTemplate }>(
+			`/api/templates/${encodeURIComponent(id)}/customize`,
+			{
+				method: "POST",
+				body: JSON.stringify(data ?? {}),
+			},
+		),
 };
