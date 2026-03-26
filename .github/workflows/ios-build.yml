@@ -50,6 +50,12 @@ jobs:
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
+      # ── 2b. Skia prebuilt binaries (professional-app only) ────────────────
+      - name: Download Skia binaries
+        if: inputs.app == 'professional-app'
+        working-directory: apps/professional-app
+        run: node node_modules/@shopify/react-native-skia/scripts/install-skia.mjs
+
       # ── 3. Expo Prebuild ───────────────────────────────────────────────────
       - name: Expo Prebuild (gera /ios nativa)
         working-directory: apps/${{ inputs.app }}
