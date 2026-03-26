@@ -26,8 +26,6 @@ import {
 	Tooltip,
 	ResponsiveContainer,
 	Legend,
-	LineChart,
-	Line,
 } from "recharts";
 import { MainLayout } from "@/components/layout/MainLayout";
 import { formatDateToLocalISO } from "@/utils/dateUtils";

@@ -160,7 +160,7 @@ export const CalendarSync: React.FC = () => {
 					title: "Conectado!",
 					description: `${getProviderLabel(provider)} foi conectado com sucesso.`,
 				});
-			} catch (error) {
+			} catch  {
 				toast({
 					title: "Erro ao conectar",
 					description: `Não foi possível conectar ao ${getProviderLabel(provider)}.`,
@@ -199,7 +199,7 @@ export const CalendarSync: React.FC = () => {
 					title: "Desconectado",
 					description: `${getProviderLabel(provider)} foi desconectado.`,
 				});
-			} catch (error) {
+			} catch  {
 				toast({
 					title: "Erro ao desconectar",
 					description: `Não foi possível desconectar do ${getProviderLabel(provider)}.`,
@@ -229,7 +229,7 @@ export const CalendarSync: React.FC = () => {
 					title: "Sincronizado!",
 					description: `${getProviderLabel(provider)} foi sincronizado.`,
 				});
-			} catch (error) {
+			} catch  {
 				toast({
 					title: "Erro na sincronização",
 					description: `Não foi possível sincronizar ${getProviderLabel(provider)}.`,

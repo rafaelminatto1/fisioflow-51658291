@@ -9,44 +9,21 @@ import { cn } from "@/lib/utils";
 import { RichTextEditor } from "@/components/ui/RichTextEditor";
 
 interface RichTextBlockProps {
-	icon: React.ReactNode;
-	iconBg: string;
-	title: string;
 	placeholder: string;
-	hint: string;
 	value: string;
 	onValueChange: (value: string) => void;
 	disabled?: boolean;
 	className?: string;
-	accentColor?: string;
 }
 
 export const RichTextBlock: React.FC<RichTextBlockProps> = ({
-	icon,
-	iconBg,
-	title,
 	placeholder,
-	hint,
 	value,
 	onValueChange,
 	disabled,
 	className,
-	accentColor = "primary",
 }) => {
 	const [isFocused, setIsFocused] = useState(false);
-
-	// Check if content is present (strip HTML tags for the check)
-	const stripHtml = (html: string) => html.replace(/<[^>]*>/g, "").trim();
-	const hasContent = value ? stripHtml(value).length > 0 : false;
-
-	const accentColors: Record<string, { from: string; to: string }> = {
-		primary: { from: "from-primary/60", to: "to-primary" },
-		sky: { from: "from-sky-500/60", to: "to-sky-500" },
-		violet: { from: "from-violet-500/60", to: "to-violet-500" },
-		amber: { from: "from-amber-500/60", to: "to-amber-500" },
-	};
-
-	const colors = accentColors[accentColor] || accentColors.primary;
 
 	return (
 		<div

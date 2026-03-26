@@ -37,7 +37,7 @@ export function useBiometricAuth(): BiometricAuthState {
 						reason: "Verificar tipo de biometria",
 						title: "Configuração Biométrica",
 					});
-				} catch (_error: unknown) {
+				} catch  {
 					// Se falhar, ainda pode estar disponível, só não autenticou ainda
 				}
 			} else {

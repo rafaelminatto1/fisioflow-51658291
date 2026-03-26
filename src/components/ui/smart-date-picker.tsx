@@ -5,14 +5,10 @@ import {
 	getMonth,
 	setYear,
 	setMonth,
-	parse,
-	isValid,
 } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import {
 	Calendar as CalendarIcon,
-	ChevronLeft,
-	ChevronRight,
 } from "lucide-react";
 
 import { cn } from "@/lib/utils";

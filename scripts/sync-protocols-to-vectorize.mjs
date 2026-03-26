@@ -49,7 +49,7 @@ async function main() {
 
     for (const protocol of protocols) {
       console.log(`🔹 Processando: ${protocol.name}`);
-      const textToEmbed = `Protocolo: ${protocol.name}. Patologia: ${protocol.pathology_name}. Região: ${protocol.category}. Descrição: ${protocol.description}`;
+      
       
       // Aqui você usaria o wrangler ou fetch direto para o Vectorize para inserir
       // npx wrangler vectorize insert clinical-knowledge --vectors='...'

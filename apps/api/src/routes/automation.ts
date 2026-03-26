@@ -22,7 +22,7 @@ app.get('/logs', requireAuth, async (c) => {
     [user.organizationId, limit],
   );
 
-  try { return c.json({ data: result.rows || result }); } catch(e) { return c.json({ data: [] }); }
+  try { return c.json({ data: result.rows || result }); } catch { return c.json({ data: [] }); }
 });
 
 export { app as automationRoutes };

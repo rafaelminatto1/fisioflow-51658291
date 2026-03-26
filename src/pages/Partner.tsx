@@ -123,7 +123,7 @@ const Partner = () => {
 			}
 
 			resetForm();
-		} catch (_error: unknown) {
+		} catch  {
 			// Error handled by mutation toast
 		}
 	};
@@ -145,7 +145,7 @@ const Partner = () => {
 	const handleDelete = async (id: string) => {
 		try {
 			await deleteEmpresa.mutateAsync(id);
-		} catch (_error: unknown) {
+		} catch  {
 			// Error handled by mutation toast
 		}
 	};

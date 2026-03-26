@@ -2,7 +2,6 @@ import React, { useEffect } from "react";
 import {
 	CustomModal,
 	CustomModalHeader,
-	CustomModalTitle,
 	CustomModalBody,
 	CustomModalFooter,
 } from "@/components/ui/custom-modal";

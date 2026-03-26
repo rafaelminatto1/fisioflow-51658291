@@ -14,7 +14,8 @@ function htmlPlugin(appVersion: string, buildTime: string): any {
 		transformIndexHtml(html: string) {
 			return html
 				.replace(/%APP_VERSION%/g, appVersion)
-				.replace(/%BUILD_TIME%/g, buildTime);
+				.replace(/%BUILD_TIME%/g, buildTime)
+				.replace(/%CACHE_BUSTER%/g, buildTime);
 		},
 	};
 }

@@ -2,7 +2,6 @@ import { useEventosStats } from "@/hooks/useEventosStats";
 import { Card, CardContent } from "@/components/ui/card";
 import {
 	Calendar,
-	TrendingUp,
 	DollarSign,
 	Users,
 	Target,

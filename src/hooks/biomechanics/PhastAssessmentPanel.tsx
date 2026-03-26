@@ -3,7 +3,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { FunctionalAssessment, JointAngle } from '../../../types/biomechanics';
-import { AlertCircle, CheckCircle2, TrendingUp, Info } from 'lucide-react';
+import { TrendingUp, Info } from 'lucide-react';
 
 interface PhastAssessmentPanelProps {
 	assessment: FunctionalAssessment;

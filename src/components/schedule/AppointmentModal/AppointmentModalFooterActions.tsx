@@ -1,5 +1,5 @@
 import React from "react";
-import { Check, X, Trash2, Play, FileText, Edit } from "lucide-react";
+import { Check, Trash2, Play, Edit } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { CustomModalFooter } from "@/components/ui/custom-modal";
 import { cn } from "@/lib/utils";

@@ -20,7 +20,6 @@ import {
 	PatientAdvancedFilters,
 	PatientAnalytics,
 	PatientCreateModal,
-	type PatientFilters,
 	PatientPageInsights,
 	PatientsPageHeader,
 } from "@/components/patients";
@@ -30,7 +29,6 @@ import { LoadingSkeleton } from "@/components/ui/loading-skeleton";
 import {
 	Pagination,
 	PaginationContent,
-	PaginationEllipsis,
 	PaginationItem,
 	PaginationLink,
 	PaginationNext,
@@ -138,7 +136,7 @@ const Patients = () => {
 		],
 	);
 
-	const { data, mutations, isLoading } = usePatientsPageData(filters);
+	const { data, isLoading } = usePatientsPageData(filters);
 
 	const { patients, totalCount, statsMap, uniqueConditions } = data;
 

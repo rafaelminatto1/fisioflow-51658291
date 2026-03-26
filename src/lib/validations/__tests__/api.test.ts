@@ -11,8 +11,6 @@ import {
 	commonSchemas,
 	patientSchemas,
 	appointmentSchemas,
-	exerciseSchemas,
-	financialSchemas,
 	userSchemas,
 	soapSchemas,
 } from "@/lib/validations/api";

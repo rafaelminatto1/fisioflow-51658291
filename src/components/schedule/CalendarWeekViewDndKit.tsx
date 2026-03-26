@@ -1,4 +1,4 @@
-import { memo, useMemo, useCallback, useEffect, useState } from "react";
+import { useMemo, useCallback } from "react";
 import {
 	DndContext,
 	closestCenter,
@@ -6,15 +6,9 @@ import {
 	PointerSensor,
 	useSensor,
 	useSensors,
-	DragStartEvent,
-	DragOverEvent,
-	DragEndEvent,
 } from "@dnd-kit/core";
 import {
-	arrayMove,
-	SortableContext,
 	sortableKeyboardCoordinates,
-	verticalListSortingStrategy,
 } from "@dnd-kit/sortable";
 import { format, isSameDay, startOfWeek, addDays } from "date-fns";
 import { ptBR } from "date-fns/locale";
@@ -27,7 +21,7 @@ import {
 	BUSINESS_HOURS,
 } from "@/lib/config/agenda";
 import { calculateSlotHeightFromCardSize } from "@/lib/calendar/cardHeightCalculator";
-import { normalizeTime, parseAppointmentDate } from "./shared/utils";
+import { normalizeTime } from "./shared/utils";
 import { useRenderTracking } from "@/hooks/useRenderTracking";
 
 interface CalendarWeekViewDndKitProps {

@@ -1080,7 +1080,7 @@ export default function RelatorioMedicoPage() {
 
 	const { data: pacientes = [] } = usePatients();
 	const { generateReport, isGenerating, listTemplates } = useGoogleDocs();
-	const { connect: connectGoogle, loading: isConnecting } = useGoogleOAuth();
+	const { connect: connectGoogle, } = useGoogleOAuth();
 	const [googleTemplates, setGoogleTemplates] = useState<any[]>([]);
 	const [isGoogleTemplateDialogOpen, setIsGoogleTemplateDialogOpen] =
 		useState(false);
@@ -1093,7 +1093,7 @@ export default function RelatorioMedicoPage() {
 			const templates = await listTemplates();
 			setGoogleTemplates(templates);
 			setIsGoogleTemplateDialogOpen(true);
-		} catch (err) {
+		} catch  {
 			toast.error("Conecte sua conta Google primeiro");
 			connectGoogle();
 		}

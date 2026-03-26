@@ -24,9 +24,7 @@ import {
 	Trash2,
 	Stethoscope,
 	Phone,
-	Mail,
 	MapPin,
-	FileText,
 	Filter,
 } from "lucide-react";
 import { useDoctors, useDeleteDoctor } from "@/hooks/useDoctors";
@@ -46,7 +44,7 @@ export function DoctorManagementContent() {
 	const deleteMutation = useDeleteDoctor();
 	const [searchTerm, setSearchTerm] = useState("");
 	const [specialtyFilter, setSpecialtyFilter] = useState("all");
-	const [contactFilter, setContactFilter] = useState("all");
+	const [contactFilter] = useState("all");
 	const [isFormOpen, setIsFormOpen] = useState(false);
 	const [selectedDoctor, setSelectedDoctor] = useState<Doctor | null>(null);
 

@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect } from 'react';
 import {
   View,
   Text,
@@ -17,9 +17,8 @@ import { Ionicons } from '@expo/vector-icons';
 import { Button, Input } from '@/components';
 import { useColors } from '@/hooks/useColorScheme';
 import { useAppointments, getAppointmentByIdHook } from '@/hooks/useAppointments';
-import { usePatients } from '@/hooks/usePatients';
 import { useHaptics } from '@/hooks/useHaptics';
-import { useCreateFinancialRecord, usePatientFinancialRecords, useMarkAsPaid } from '@/hooks/usePatientFinancial';
+import { useCreateFinancialRecord, useMarkAsPaid } from '@/hooks/usePatientFinancial';
 import type { AppointmentStatus } from '@/types';
 import { format } from 'date-fns';
 import { useForm, Controller } from 'react-hook-form';
@@ -70,7 +69,7 @@ export default function AppointmentFormScreen() {
   const [showPaymentModal, setShowPaymentModal] = useState(false);
   const [sessionValue, setSessionValue] = useState('');
   const [isPaid, setIsPaid] = useState(false);
-  const [financialRecordId, setFinancialRecordId] = useState<string | null>(null);
+  const [,setFinancialRecordId] = useState<string | null>(null);
 
   const { 
     createAsync, 
@@ -125,7 +124,7 @@ export default function AppointmentFormScreen() {
           notes: data.notes || '',
         });
       }
-    } catch (err) {
+    } catch  {
       Alert.alert('Erro', 'Não foi possível carregar os dados do agendamento.');
     } finally {
       setIsLoadingData(false);
@@ -201,7 +200,7 @@ export default function AppointmentFormScreen() {
               await deleteAsync(appointmentId!);
               success();
               router.back();
-            } catch (err) {
+            } catch  {
               hapticError();
               Alert.alert('Erro', 'Não foi possível excluir.');
             }
@@ -244,11 +243,7 @@ export default function AppointmentFormScreen() {
 
   const [selectedPaymentMethod, setSelectedPaymentMethod] = useState('pix');
 
-  const formatCurrency = (value: string) => {
-    const numericValue = value.replace(/\D/g, '');
-    const floatValue = parseFloat(numericValue) / 100;
-    return floatValue.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
-  };
+  
 
   const handleAmountChange = (text: string) => {
     const rawText = text.replace(/\D/g, '');

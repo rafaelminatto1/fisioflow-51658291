@@ -1,5 +1,4 @@
 import { Extension } from "@tiptap/core";
-import Mention from "@tiptap/extension-mention";
 import Suggestion from "@tiptap/suggestion";
 import { ReactRenderer } from "@tiptap/react";
 import { PluginKey } from "@tiptap/pm/state";

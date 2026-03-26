@@ -303,7 +303,7 @@ export class ExerciseReminders {
     try {
       const { status } = await Notifications.getPermissionsAsync();
       return status;
-    } catch (error) {
+    } catch  {
       return 'denied';
     }
   }

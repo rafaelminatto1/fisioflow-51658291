@@ -61,7 +61,11 @@ async function main() {
   // ── HEALTH ────────────────────────────────────────────
   info('Health Check');
   const health = await api('GET', '/api/health', token);
-  health.ok ? ok(`/api/health → ${health.status}`) : fail(`/api/health → ${health.status}: ${JSON.stringify(health.json)}`);
+  if (health.ok) {
+    ok(`/api/health → ${health.status}`);
+  } else {
+    fail(`/api/health → ${health.status}: ${JSON.stringify(health.json)}`);
+  }
 
   // ════════════════════════════════════════════════════
   // PACIENTES
@@ -70,9 +74,11 @@ async function main() {
 
   // LIST
   const list = await api('GET', '/api/patients', token);
-  list.ok
-    ? ok(`LIST → ${list.status} — ${list.json?.data?.length ?? 0} pacientes`)
-    : fail(`LIST → ${list.status}: ${JSON.stringify(list.json)}`);
+  if (list.ok) {
+    ok(`LIST → ${list.status} — ${list.json?.data?.length ?? 0} pacientes`);
+  } else {
+    fail(`LIST → ${list.status}: ${JSON.stringify(list.json)}`);
+  }
 
   // CREATE
   const ts = Date.now();
@@ -93,24 +99,30 @@ async function main() {
   if (patientId) {
     // READ
     const read = await api('GET', `/api/patients/${patientId}`, token);
-    read.ok
-      ? ok(`READ → ${read.status} — nome: ${read.json?.data?.name || read.json?.data?.full_name}`)
-      : fail(`READ → ${read.status}: ${JSON.stringify(read.json)}`);
+    if (read.ok) {
+      ok(`READ → ${read.status} — nome: ${read.json?.data?.name || read.json?.data?.full_name}`);
+    } else {
+      fail(`READ → ${read.status}: ${JSON.stringify(read.json)}`);
+    }
 
     // UPDATE
     const update = await api('PATCH', `/api/patients/${patientId}`, token, {
       full_name: `Playwright Teste ${ts} (Editado)`,
       status: 'Em tratamento',
     });
-    update.ok
-      ? ok(`UPDATE → ${update.status} — nome: ${update.json?.data?.name || update.json?.data?.full_name}`)
-      : fail(`UPDATE → ${update.status}: ${JSON.stringify(update.json)}`);
+    if (update.ok) {
+      ok(`UPDATE → ${update.status} — nome: ${update.json?.data?.name || update.json?.data?.full_name}`);
+    } else {
+      fail(`UPDATE → ${update.status}: ${JSON.stringify(update.json)}`);
+    }
 
     // DELETE (soft)
     const del = await api('DELETE', `/api/patients/${patientId}`, token);
-    del.ok
-      ? ok(`DELETE → ${del.status} — removido (soft-delete)`)
-      : fail(`DELETE → ${del.status}: ${JSON.stringify(del.json)}`);
+    if (del.ok) {
+      ok(`DELETE → ${del.status} — removido (soft-delete)`);
+    } else {
+      fail(`DELETE → ${del.status}: ${JSON.stringify(del.json)}`);
+    }
   }
 
   // ════════════════════════════════════════════════════
@@ -126,9 +138,11 @@ async function main() {
   } else {
     // LIST
     const aList = await api('GET', '/api/appointments', token);
-    aList.ok
-      ? ok(`LIST → ${aList.status} — ${aList.json?.data?.length ?? 0} agendamentos`)
-      : fail(`LIST → ${aList.status}: ${JSON.stringify(aList.json)}`);
+    if (aList.ok) {
+      ok(`LIST → ${aList.status} — ${aList.json?.data?.length ?? 0} agendamentos`);
+    } else {
+      fail(`LIST → ${aList.status}: ${JSON.stringify(aList.json)}`);
+    }
 
     // CREATE
     const aCreate = await api('POST', '/api/appointments', token, {
@@ -148,24 +162,30 @@ async function main() {
     if (appointmentId) {
       // READ
       const aRead = await api('GET', `/api/appointments/${appointmentId}`, token);
-      aRead.ok
-        ? ok(`READ → ${aRead.status} — data: ${aRead.json?.data?.date}`)
-        : fail(`READ → ${aRead.status}: ${JSON.stringify(aRead.json)}`);
+      if (aRead.ok) {
+        ok(`READ → ${aRead.status} — data: ${aRead.json?.data?.date}`);
+      } else {
+        fail(`READ → ${aRead.status}: ${JSON.stringify(aRead.json)}`);
+      }
 
       // UPDATE
       const aUpdate = await api('PATCH', `/api/appointments/${appointmentId}`, token, {
         status: 'confirmed',
         notes: 'Validado via script Playwright',
       });
-      aUpdate.ok
-        ? ok(`UPDATE → ${aUpdate.status} — status: ${aUpdate.json?.data?.status}`)
-        : fail(`UPDATE → ${aUpdate.status}: ${JSON.stringify(aUpdate.json)}`);
+      if (aUpdate.ok) {
+        ok(`UPDATE → ${aUpdate.status} — status: ${aUpdate.json?.data?.status}`);
+      } else {
+        fail(`UPDATE → ${aUpdate.status}: ${JSON.stringify(aUpdate.json)}`);
+      }
 
       // DELETE
       const aDel = await api('DELETE', `/api/appointments/${appointmentId}`, token);
-      aDel.ok
-        ? ok(`DELETE → ${aDel.status}`)
-        : fail(`DELETE → ${aDel.status}: ${JSON.stringify(aDel.json)}`);
+      if (aDel.ok) {
+        ok(`DELETE → ${aDel.status}`);
+      } else {
+        fail(`DELETE → ${aDel.status}: ${JSON.stringify(aDel.json)}`);
+      }
     }
   }
 

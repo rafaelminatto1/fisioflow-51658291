@@ -6,10 +6,8 @@ import tippy from "tippy.js";
 import {
 	ClipboardList,
 	CheckSquare,
-	Paperclip,
 	ImageIcon,
 	Sparkles,
-	Book,
 } from "lucide-react";
 import { getEvolutionSettings } from "../EvolutionSettingsModal";
 

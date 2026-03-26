@@ -18,8 +18,6 @@ import {
 } from "lucide-react";
 import { fisioLogger as logger } from "@/lib/errors/logger";
 import { precadastroApi, type PrecadastroToken } from "@/api/v2";
-import { DatePicker } from "@/components/ui/date-picker";
-import { parseISO, format as formatDateFns, isValid } from "date-fns";
 import { cn } from "@/lib/utils";
 
 const PreCadastro = () => {
@@ -68,14 +66,9 @@ const PreCadastro = () => {
 		void validateToken();
 	}, [token]);
 
-	const isFieldRequired = (field: string) =>
-		tokenData?.campos_obrigatorios?.includes(field) ?? false;
+	
 
-	const isFieldVisible = (field: string) => {
-		const required = tokenData?.campos_obrigatorios ?? [];
-		const optional = tokenData?.campos_opcionais ?? [];
-		return required.includes(field) || optional.includes(field);
-	};
+	
 
 	const handleSubmit = async (e: React.FormEvent) => {
 		e.preventDefault();

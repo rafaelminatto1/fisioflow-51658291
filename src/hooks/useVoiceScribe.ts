@@ -69,7 +69,7 @@ export function useVoiceScribe(): UseVoiceScribeResult {
 		try {
 			await startAudio();
 			setVoiceState("recording");
-		} catch (err) {
+		} catch  {
 			setError(
 				"Não foi possível acessar o microfone. Verifique as permissões.",
 			);

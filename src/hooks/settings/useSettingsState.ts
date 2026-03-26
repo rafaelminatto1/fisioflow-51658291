@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, useMemo } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useSearchParams, useNavigate } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import { mfaService } from "@/lib/auth/mfa";
@@ -189,7 +189,7 @@ export function useSettingsState() {
 					setMfaFactorId(result.factorId);
 					setShowMfaModal(true);
 				}
-			} catch (e) {
+			} catch  {
 				toast({ title: "Erro MFA", variant: "destructive" });
 			} finally {
 				setMfaLoading(false);

@@ -5,7 +5,7 @@ import type { Env } from './types/env';
  * Processa tarefas em segundo plano como envio de e-mails, WhatsApp,
  * processamento de imagens pesado ou sincronização de dados.
  */
-export async function handleQueue(batch: MessageBatch<any>, env: Env): Promise<void> {
+export async function handleQueue(batch: MessageBatch<any>, _env: Env): Promise<void> {
   for (const message of batch.messages) {
     const task = message.body;
     console.log(`[Queue] Processing task type: ${task.type}`, task.payload);

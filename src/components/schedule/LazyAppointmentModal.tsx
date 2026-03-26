@@ -75,7 +75,7 @@ export const LazyAppointmentModal = memo(
 		className,
 		preloadOnHover = true,
 	}: LazyAppointmentModalProps) => {
-		const [isLoaded, setIsLoaded] = useState(false);
+		const [,setIsLoaded] = useState(false);
 		const [shouldLoad, setShouldLoad] = useState(false);
 		const modalRef = useRef<HTMLDivElement>(null);
 		const preloadedRef = useRef(false);

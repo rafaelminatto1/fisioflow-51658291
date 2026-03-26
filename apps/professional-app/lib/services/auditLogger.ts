@@ -7,7 +7,7 @@ let Application: any = null;
 try {
   // eslint-disable-next-line @typescript-eslint/no-require-imports
   Application = require('expo-application');
-} catch (e) {
+} catch  {
   // expo-application não está instalado, usar fallback
 }
 

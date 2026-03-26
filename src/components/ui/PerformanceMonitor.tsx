@@ -98,54 +98,13 @@ export const PerformanceMonitor = ({
 		useState<PerformanceData | null>(null);
 
 	// Refs para medição
-	const renderStartTimeRef = useRef<number>(0);
+	
 	const metricsRef = useRef<Map<string, number[]>>(new Map());
 
-	const addMetric = useCallback((name: string, value: number) => {
-		metricsRef.current.set(name, [
-			...(metricsRef.current.get(name) || []),
-			value,
-		]);
-	}, []);
+	
 
 	// Coletar métricas
-	const collectMetrics = useCallback(() => {
-		const metricsMap = metricsRef.current;
-
-		const summary = {
-			avgLoadTime:
-				metricsMap.get("calendarLoad")?.reduce((a, b) => a + b, 0) /
-					(metricsMap.get("calendarLoad")?.length || 1) || 0,
-			avgRenderTime:
-				metricsMap.get("renderTime")?.reduce((a, b) => a + b, 0) /
-					(metricsMap.get("renderTime")?.length || 1) || 0,
-			cacheHitRate: 0, // Seria calculado na prática
-			cacheSize: 0, // Seria calculado na prática
-			issues: [] as string[],
-		};
-
-		const issues: string[] = [];
-
-		// Verificar problemas de performance
-		if (summary.avgLoadTime > PERFORMANCE_MARKERS.calendarLoad.threshold) {
-			issues.push(`Carregamento lento: ${Math.round(summary.avgLoadTime)}ms`);
-		}
-		if (summary.avgRenderTime > PERFORMANCE_MARKERS.renderTime.threshold) {
-			issues.push(`Renderização lenta: ${Math.round(summary.avgRenderTime)}ms`);
-		}
-
-		// Verificar tamanho do cache (simulado)
-		if (performanceData) {
-			const cacheSizeInMB = performanceData.summary.cacheSize / (1024 * 1024);
-			if (cacheSizeInMB > PERFORMANCE_MARKERS.cacheSize.threshold) {
-				issues.push(`Cache grande: ${cacheSizeInMB.toFixed(1)}MB`);
-			}
-		}
-
-		summary.issues = issues;
-
-		setPerformanceData({ metrics: [], summary });
-	}, []);
+	
 
 	const getStatusColor = (status: PerformanceMetric["status"]) => {
 		switch (status) {

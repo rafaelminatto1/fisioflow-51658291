@@ -47,7 +47,6 @@ import { format, differenceInDays } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import type {
 	GamificationProfile,
-	XpTransaction,
 	Achievement,
 } from "@/types/gamification";
 import { useToast } from "@/hooks/use-toast";

@@ -70,7 +70,7 @@ const premiumFieldBaseClass =
 	"w-full justify-between rounded-xl border border-blue-100 bg-white px-3 text-left shadow-sm transition-all hover:border-blue-200 hover:bg-blue-50/30 focus:ring-2 focus:ring-blue-100 focus:border-blue-300 data-[state=open]:border-blue-300 data-[state=open]:bg-blue-50/50";
 
 const premiumFieldClass = `${premiumFieldBaseClass} h-11 text-xs sm:text-sm`;
-const premiumCompactFieldClass = `${premiumFieldBaseClass} h-9 text-xs`;
+
 const premiumSelectContentClass =
 	"rounded-xl border border-blue-100 bg-white p-1 shadow-lg backdrop-blur-sm";
 

@@ -4,15 +4,11 @@ import {
 	Search,
 	FileText,
 	Calendar,
-	User,
-	Tag,
 	Loader2,
 	X,
-	Command as CommandIcon,
 	ArrowRight,
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
-import { cn } from "@/lib/utils";
 
 interface SearchResult {
 	id: string;

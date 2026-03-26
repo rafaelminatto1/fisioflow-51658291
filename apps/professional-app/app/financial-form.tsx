@@ -34,7 +34,7 @@ export default function FinancialFormScreen() {
   // Form State
   const [patientId, setPatientId] = useState(params.patientId as string || '');
   const [amount, setAmount] = useState(params.amount ? String(params.amount) : '');
-  const [date, setDate] = useState(params.date ? new Date(params.date as string) : new Date());
+  const [date] = useState(params.date ? new Date(params.date as string) : new Date());
   const [description, setDescription] = useState(params.description as string || '');
   const [paymentMethod, setPaymentMethod] = useState(params.paymentMethod as string || 'pix');
   const [status, setStatus] = useState<'pending' | 'paid'>(params.status as 'pending' | 'paid' || 'pending');
@@ -42,7 +42,7 @@ export default function FinancialFormScreen() {
   // Pickers State
   const [showPatientPicker, setShowPatientPicker] = useState(false);
   const [showPaymentPicker, setShowPaymentPicker] = useState(false);
-  const [showStatusPicker, setShowStatusPicker] = useState(false);
+  const [,setShowStatusPicker] = useState(false);
 
   // Hooks
   const { data: patients, isLoading: isLoadingPatients } = usePatients({ status: 'active' });
@@ -52,12 +52,7 @@ export default function FinancialFormScreen() {
   const isSubmitting = createMutation.isPending || updateMutation.isPending;
 
   // Helpers
-  const formatCurrency = (value: string) => {
-    // Remove non-numeric chars
-    const numericValue = value.replace(/\D/g, '');
-    const floatValue = parseFloat(numericValue) / 100;
-    return floatValue.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
-  };
+  
 
   const handleAmountChange = (text: string) => {
     // Keep only numbers for raw value, but display formatted

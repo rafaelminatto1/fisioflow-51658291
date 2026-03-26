@@ -29,7 +29,7 @@ function fetchPdfUrlFromUnpaywall(doi: string): Promise<string | null> {
                         } else {
                             resolve(null);
                         }
-                    } catch (e) {
+                    } catch  {
                         resolve(null);
                     }
                 } else {

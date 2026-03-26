@@ -200,7 +200,7 @@ export function getCoreWebVitals(): Promise<PerformanceMetrics> {
 				}
 			});
 			lcpObserver.observe({ entryTypes: ["largest-contentful-paint"] });
-		} catch (_e) {
+		} catch  {
 			// LCP não suportado
 		}
 
@@ -213,7 +213,7 @@ export function getCoreWebVitals(): Promise<PerformanceMetrics> {
 				});
 			});
 			fidObserver.observe({ entryTypes: ["first-input"] });
-		} catch (_e) {
+		} catch  {
 			// FID não suportado
 		}
 
@@ -230,7 +230,7 @@ export function getCoreWebVitals(): Promise<PerformanceMetrics> {
 				});
 			});
 			clsObserver.observe({ entryTypes: ["layout-shift"] });
-		} catch (_e) {
+		} catch  {
 			// CLS não suportado
 		}
 

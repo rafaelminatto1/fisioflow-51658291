@@ -26,9 +26,9 @@ export function CheckInButton({
   onCheckedIn,
 }: CheckInButtonProps) {
   const colors = useColors();
-  const { light, medium, success } = useHaptics();
+  const { medium, success } = useHaptics();
   const { user } = useAuthStore();
-  const { isCheckingIn, performCheckIn, lastCheckIn, error } = useCheckIn();
+  const { isCheckingIn, performCheckIn, lastCheckIn, } = useCheckIn();
 
   const [status, setStatus] = useState<CheckInStatus>({
     hasCheckedIn: false,
@@ -78,7 +78,7 @@ export function CheckInButton({
         });
         onCheckedIn?.(result);
       }
-    } catch (err) {
+    } catch  {
       // Error handled in hook
     }
   };

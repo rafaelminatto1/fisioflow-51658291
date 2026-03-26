@@ -7,7 +7,6 @@ import {
 	CardContent,
 	CardHeader,
 	CardTitle,
-	CardDescription,
 	CardFooter,
 } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -24,7 +23,6 @@ import {
 	Shield,
 } from "lucide-react";
 import { format } from "date-fns";
-import { ptBR } from "date-fns/locale";
 import { useToast } from "@/hooks/use-toast";
 import {
 	Dialog,

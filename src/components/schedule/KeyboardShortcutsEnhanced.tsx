@@ -15,14 +15,13 @@
  * - / ou ?: Abrir help de atalhos
  */
 
-import React, { memo, useEffect, useCallback } from "react";
+import React, { memo, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
 	Calendar,
 	Clock,
 	Plus,
 	Search,
-	Square,
 	CheckSquare,
 	ChevronLeft,
 	ChevronRight,

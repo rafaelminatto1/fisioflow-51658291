@@ -1,5 +1,4 @@
 import { Hono } from 'hono';
-import { eq, and, inArray } from 'drizzle-orm';
 import type { Env } from '../types/env';
 import { requireAuth, type AuthVariables } from '../lib/auth';
 import { createDb } from '../lib/db';

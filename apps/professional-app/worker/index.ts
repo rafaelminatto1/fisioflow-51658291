@@ -1,5 +1,4 @@
 import { Hono } from 'hono';
-import * as schema from '../db/schema';
 import { cors } from 'hono/cors';
 
 const app = new Hono();

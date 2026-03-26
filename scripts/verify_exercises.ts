@@ -30,7 +30,7 @@ async function verifyExercises() {
     try {
         await page.waitForSelector('[class*="exercise-card"], [class*="ExerciseCard"], .card', { timeout: 10000 });
         console.log('Exercise cards found!');
-    } catch (e) {
+    } catch  {
         console.log('Timeout waiting for cards, continuing anyway...');
     }
 

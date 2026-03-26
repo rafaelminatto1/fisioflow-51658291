@@ -137,27 +137,7 @@ const LEFT_SIDE_INDICES = [
 	33, // Corpo esquerdo
 ];
 
-const RIGHT_SIDE_INDICES = [
-	4,
-	5,
-	6,
-	7,
-	8,
-	9,
-	10, // Rosto
-	12,
-	14,
-	16,
-	18,
-	20,
-	22,
-	24,
-	26,
-	28,
-	30,
-	32,
-	34, // Corpo direito
-];
+
 
 // ============================================================================
 // COMPONENTE
@@ -381,7 +361,7 @@ export const PoseFeedbackOverlay: React.FC<PoseFeedbackOverlayProps> = ({
 			const angleData = angles[joint];
 			if (!angleData) continue;
 
-			const { current, target, inRange } = angleData;
+			const { current, inRange } = angleData;
 
 			if (typeof current !== "number") continue;
 
@@ -437,52 +417,7 @@ export const PoseFeedbackOverlay: React.FC<PoseFeedbackOverlayProps> = ({
 	/**
 	 * Desenhar zona de movimento (ROM)
 	 */
-	const drawMovementZone = (
-		ctx: CanvasRenderingContext2D,
-		w: number,
-		h: number,
-		joints: MainJoint[],
-	) => {
-		if (!showSkeleton || simpleMode) return;
-
-		ctx.save();
-		ctx.fillStyle = "rgba(59, 130, 246, 0.05)";
-		ctx.fillRect(0, 0, w, h);
-
-		// Desenhar linhas guia para zona de movimento
-		for (const joint of joints) {
-			const angleData = jointAngles[joint];
-			if (!angleData || typeof angleData.current !== "number") continue;
-
-			const triad = getAngleTriad(joint);
-			if (!triad) continue;
-
-			const pivotLm = landmarks[triad.pivot];
-			if (!pivotLm) continue;
-
-			const pivotX = pivotLm.x * w;
-			const pivotY = pivotLm.y * h;
-
-			// Desenhar círculo de referência
-			ctx.beginPath();
-			ctx.arc(pivotX, pivotY, 40, 0, 2 * Math.PI);
-			ctx.strokeStyle = "rgba(59, 130, 246, 0.2)";
-			ctx.lineWidth = 1;
-			ctx.setLineDash([5, 5]);
-			ctx.stroke();
-
-			// Desenhar posição alvo (ângulo 90°)
-			const targetX = pivotX + Math.cos(Math.PI / 4) * 35;
-			const targetY = pivotY + Math.sin(Math.PI / 4) * 35;
-
-			ctx.beginPath();
-			ctx.arc(targetX, targetY, 5, 0, 2 * Math.PI);
-			ctx.fillStyle = "rgba(59, 130, 246, 0.3)";
-			ctx.fill();
-		}
-
-		ctx.restore();
-	};
+	
 
 	return (
 		<Card className="overflow-hidden bg-transparent border-0 shadow-none">

@@ -48,7 +48,7 @@ export default function AgendaScreen() {
   const cached = appointmentsCache.get(cacheKey);
   const isCacheValid = cached && Date.now() - cached.timestamp < CACHE_TTL;
 
-  const { data: appointments, isLoading, refetch } = useAppointments({
+  const { data: appointments, isLoading, } = useAppointments({
     startDate,
     endDate,
     limit: 1000,

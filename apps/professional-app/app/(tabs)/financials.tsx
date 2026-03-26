@@ -29,7 +29,7 @@ export default function FinancialsScreen() {
   const { light, medium } = useHaptics();
   
   const [filter, setFilter] = useState<'all' | 'pending' | 'paid'>('all');
-  const [dateRange, setDateRange] = useState<{ startDate: Date, endDate: Date }>({
+  const [dateRange] = useState<{ startDate: Date, endDate: Date }>({
     startDate: subDays(new Date(), 30),
     endDate: new Date(),
   });

@@ -7,10 +7,8 @@ import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { request } from "@/api/v2";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
 	Plus,
 	TrendingUp,

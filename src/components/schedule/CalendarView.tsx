@@ -3,7 +3,6 @@ import {
 	addMonths,
 	addWeeks,
 	format,
-	isSameDay,
 	startOfWeek,
 	subDays,
 	subMonths,
@@ -12,30 +11,23 @@ import {
 import { ptBR } from "date-fns/locale";
 import { AnimatePresence, motion } from "framer-motion";
 import {
-	CheckSquare,
 	ChevronLeft,
 	ChevronRight,
 	Plus,
 	Search,
-	Settings as SettingsIcon,
-	Sparkles,
 	X,
 } from "lucide-react";
-import React, { useCallback, useEffect, useMemo, useRef } from "react";
-import { Link } from "react-router-dom";
+import React from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { toast } from "@/hooks/use-toast";
-import { useAvailableTimeSlots } from "@/hooks/useAvailableTimeSlots";
 import { useCalendarDrag } from "@/hooks/useCalendarDrag";
 import { useCalendarDragDndKit } from "@/hooks/useCalendarDragDndKit";
 import { useCardSize } from "@/hooks/useCardSize";
 import { useScheduleCapacity } from "@/hooks/useScheduleCapacity";
-import { BUSINESS_HOURS, generateTimeSlots } from "@/lib/config/agenda";
+import { generateTimeSlots } from "@/lib/config/agenda";
 import { cn } from "@/lib/utils";
 import { formatDateToLocalISO } from "@/lib/utils/dateFormat";
 import type { Appointment } from "@/types/appointment";
-import { AdvancedFilters } from "./AdvancedFilters";
 import { CalendarDayView } from "./CalendarDayView";
 import { CalendarMonthView } from "./CalendarMonthView";
 import { CalendarWeekViewDndKit } from "./CalendarWeekViewDndKit";
@@ -47,7 +39,6 @@ import {
 import { RescheduleCapacityDialog } from "./RescheduleCapacityDialog";
 import { RescheduleConfirmDialog } from "./RescheduleConfirmDialog";
 import { isMarkedOverbooked, NON_CAPACITY_STATUSES } from "./shared/capacity";
-import { WaitlistIndicator } from "./WaitlistIndicator";
 
 export type CalendarViewType = "day" | "week" | "month";
 
@@ -135,8 +126,6 @@ export default function CalendarView({
 	onCancelAllToday,
 	filters,
 	onFiltersChange,
-	onClearFilters,
-	totalAppointmentsCount,
 	patientFilter,
 	onPatientFilterChange,
 }: CalendarViewProps) {
@@ -177,7 +166,6 @@ export default function CalendarView({
 	const [openPopoverId, setOpenPopoverId] = React.useState<string | null>(null);
 	const [currentTime, setCurrentTime] = React.useState(new Date());
 	const { getMinCapacityForInterval } = useScheduleCapacity();
-	const { cardSize, heightScale } = useCardSize();
 	const [pendingOptimisticUpdate, setPendingOptimisticUpdate] =
 		React.useState<PendingOptimisticUpdate | null>(null);
 

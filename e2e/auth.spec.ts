@@ -7,7 +7,7 @@ const loginEmail = process.env.E2E_LOGIN_EMAIL || testUsers.admin.email;
 const loginPassword =
 	process.env.E2E_LOGIN_PASSWORD || testUsers.admin.password;
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
-const AUTH_STATE_PATH = path.join(__dirname, "../playwright/.auth/user.json");
+
 const TEST_ORG_ID = "00000000-0000-0000-0000-000000000001";
 
 async function mockOrganizationBootstrap(page: Page) {

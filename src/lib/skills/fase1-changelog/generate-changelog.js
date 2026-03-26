@@ -61,7 +61,7 @@ function exec(command, options = {}) {
 			stdio: "pipe",
 			...options,
 		}).trim();
-	} catch (error) {
+	} catch  {
 		return "";
 	}
 }

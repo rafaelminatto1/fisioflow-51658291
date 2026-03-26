@@ -12,7 +12,7 @@ import {
 import { Menu } from "lucide-react";
 import { NotificationBell } from "@/components/notifications/NotificationBell";
 import { OnlineUsersIndicator } from "./OnlineUsersIndicator";
-import { Link, useLocation, useNavigate } from "react-router-dom";
+import { Link, useLocation } from "react-router-dom";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/hooks/use-toast";
@@ -28,11 +28,8 @@ import {
 	Settings,
 	Brain,
 	MessageSquare,
-	ShoppingCart,
 	LogOut,
 	LayoutGrid,
-	Mail,
-	BookOpen,
 	FlaskConical,
 	Target,
 	CalendarDays,
@@ -82,7 +79,6 @@ const menuGroups = [
 
 export function MobileHeader() {
 	const location = useLocation();
-	const navigate = useNavigate();
 	const { toast } = useToast();
 
 	const { signOut: contextSignOut } = useAuth();

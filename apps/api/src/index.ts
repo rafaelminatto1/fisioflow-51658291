@@ -1,7 +1,6 @@
 import { Hono } from 'hono';
 import { logger } from 'hono/logger';
 import { secureHeaders } from 'hono/secure-headers';
-import { cors } from 'hono/cors';
 import type { Env } from './types/env';
 import type { CustomVariables } from './middleware/requestId';
 import { errorHandler } from './middleware/errorHandler';
@@ -83,10 +82,7 @@ import { announcementsRoutes } from './routes/announcements';
 import { verifyToken } from './lib/auth';
 import { getRawSql } from './lib/db';
 import { routeAgentRequest } from 'agents';
-import { PatientAgent } from './agents/PatientAgent';
 
-import { perf } from './lib/perf';
-import { logToAxiom } from './lib/axiom';
 
 const app = new Hono<{ Bindings: Env; Variables: CustomVariables }>();
 

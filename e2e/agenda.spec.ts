@@ -2,7 +2,7 @@ import { test, expect } from '@playwright/test';
 import { testUsers } from './fixtures/test-data';
 import type { Page } from '@playwright/test';
 import { authenticateBrowserContext } from './helpers/neon-auth';
-const baseURL = process.env.BASE_URL || 'http://localhost:5173';
+
 const neonAuthUrl = process.env.VITE_NEON_AUTH_URL || '';
 const EMAIL_INPUT_SELECTOR = 'input[name="email"], input[name="email"], #login-email';
 const PASSWORD_INPUT_SELECTOR = 'input[name="password"], input[name="password"], #login-password';

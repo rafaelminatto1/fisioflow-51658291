@@ -5,7 +5,6 @@ import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Cpu, ChevronLeft, ChevronRight, Upload, Play, Pause } from 'lucide-react';
 import { Badge } from "@/components/ui/badge";
-import { motion, AnimatePresence } from 'framer-motion';
 
 import { useMoveNet, useTrajectory } from '@/hooks/biomechanics';
 import { calcJumpMetrics } from '@/utils/biomechanics-formulas';
@@ -32,7 +31,7 @@ export const JumpAnalysisStudio: React.FC<JumpAnalysisStudioProps> = ({ onDataUp
 	const [videoSrc, setVideoSrc] = useState<string | null>(null);
 	const [isPlaying, setIsPlaying] = useState(false);
 	const [currentFrame, setCurrentFrame] = useState(0);
-	const [fps, setFps] = useState(30);
+	const [fps] = useState(30);
 	const [patientMass, setPatientMass] = useState<number | null>(null);
 
 	const [jumpEvents, setJumpEvents] = useState<{ takeoff?: number; landing?: number }>({});

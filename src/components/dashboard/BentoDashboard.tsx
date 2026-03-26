@@ -1,68 +1,43 @@
-import React, { useMemo } from "react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
+import {
+	Activity,
+	AlertCircle,
+	ArrowUpRight,
+	Bell,
+	Calendar,
+	ChevronRight,
+	ClipboardCheck,
+	Clock,
+	DollarSign,
+	MessageSquare,
+	Send,
+	Sparkles,
+	TrendingUp,
+} from "lucide-react";
+import type React from "react";
+import { useNavigate } from "react-router-dom";
+import {
+	Area,
+	AreaChart,
+	ResponsiveContainer,
+	Tooltip,
+} from "recharts";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import { Skeleton } from "@/components/ui/skeleton";
-import {
-	Calendar,
-	Users,
-	DollarSign,
-	Clock,
-	UserCheck,
-	AlertCircle,
-	TrendingUp,
-	Activity,
-	MessageSquare,
-	ArrowUpRight,
-	ArrowDownRight,
-	ClipboardCheck,
-	Bell,
-	ChevronRight,
-	Sparkles,
-	Send,
-} from "lucide-react";
-import { useQuery } from "@tanstack/react-query";
-import { analyticsApi } from "@/api/v2/insights";
-import { appointmentsApi } from "@/api/v2/appointments";
 import { useAuth } from "@/contexts/AuthContext";
-import { useNavigate } from "react-router-dom";
-import { format } from "date-fns";
-import { ptBR } from "date-fns/locale";
 import { cn } from "@/lib/utils";
-import {
-	AreaChart,
-	Area,
-	XAxis,
-	YAxis,
-	CartesianGrid,
-	Tooltip,
-	ResponsiveContainer,
-} from "recharts";
+import { useSmartDashboardData } from "@/hooks/useSmartDashboard";
 
 export const BentoDashboard: React.FC = () => {
 	const navigate = useNavigate();
 	const { profile } = useAuth();
-	const isTherapist = profile?.role === "fisioterapeuta";
+	
 
-	const { data: dashboardData, isLoading: metricsLoading } = useQuery({
-		queryKey: ["bento-dashboard-metrics"],
-		queryFn: () => analyticsApi.dashboard({ period: "month" }),
-		refetchInterval: 60000,
-	});
-
-	const { data: todayAppts, isLoading: appointmentsLoading } = useQuery({
-		queryKey: ["bento-dashboard-appointments-today"],
-		queryFn: () =>
-			appointmentsApi.list({
-				dateFrom: new Date().toISOString().split("T")[0],
-				dateTo: new Date().toISOString().split("T")[0],
-				limit: 10,
-			}),
-	});
-
-	const metrics = dashboardData?.data;
-	const appointments = todayAppts?.data ?? [];
+	const { data, isLoading: metricsLoading } = useSmartDashboardData("month");
+	const metrics = data?.metrics;
+	const appointments = data?.appointmentsToday || [];
 
 	if (metricsLoading) {
 		return (
@@ -78,19 +53,19 @@ export const BentoDashboard: React.FC = () => {
 		<div className="space-y-6 md:space-y-8 animate-fade-in pb-10 max-w-[1600px] mx-auto">
 			{/* Top command metrics - 4 priority cards */}
 			<div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-				{/* Atendimentos Hoje */}
+				{/* Atendimentos Hoje - Premium Brand Gradient */}
 				<Card
-					className="rounded-[2.5rem] border-none shadow-premium-sm bg-primary text-primary-foreground overflow-hidden relative group cursor-pointer hover:shadow-premium-lg transition-all duration-500"
+					className="rounded-[2.5rem] border-none shadow-premium-sm gradient-brand text-primary-foreground overflow-hidden relative group card-premium-hover"
 					onClick={() => navigate("/agenda")}
 				>
 					<div className="absolute top-0 right-0 p-6 opacity-20 group-hover:scale-110 transition-transform duration-500">
 						<Calendar className="w-20 h-20" />
 					</div>
 					<CardContent className="p-6 relative z-10">
-						<p className="text-[10px] font-black uppercase tracking-[0.2em] opacity-80 mb-1">
+						<p className="font-display text-[10px] font-semibold uppercase tracking-wider text-primary-foreground/90 mb-1">
 							Agenda de Hoje
 						</p>
-						<h3 className="text-4xl font-black tracking-tighter mb-2">
+						<h3 className="font-display text-4xl font-black tracking-tighter mb-2">
 							{metrics?.appointmentsToday || 0}
 						</h3>
 						<div className="flex items-center gap-2 text-[10px] font-bold bg-white/20 w-fit px-3 py-1 rounded-full">
@@ -145,25 +120,25 @@ export const BentoDashboard: React.FC = () => {
 					</CardContent>
 				</Card>
 
-				{/* Confirmações WhatsApp */}
+				{/* Confirmações WhatsApp - Premium Warm Gradient */}
 				<Card
-					className="rounded-[2.5rem] bg-emerald-500 text-white border-none shadow-premium-sm overflow-hidden relative group cursor-pointer hover:shadow-premium-lg transition-all duration-500"
+					className="rounded-[2.5rem] gradient-warm text-white border-none shadow-premium-sm overflow-hidden relative group card-premium-hover"
 					onClick={() => navigate("/comunicacoes")}
 				>
 					<div className="absolute top-0 right-0 p-6 opacity-20 group-hover:scale-110 transition-transform duration-500">
 						<MessageSquare className="w-20 h-20" />
 					</div>
 					<CardContent className="p-6 relative z-10">
-						<p className="text-[10px] font-black uppercase tracking-[0.2em] text-white/80 mb-1">
+						<p className="font-display text-[10px] font-bold uppercase tracking-wider text-white/90 mb-1">
 							Confirmações p/ Amanhã
 						</p>
-						<h3 className="text-4xl font-black tracking-tighter mb-2">
+						<h3 className="font-display text-4xl font-black tracking-tighter mb-2">
 							{metrics?.whatsappConfirmationsPending || 0}
 						</h3>
 						<Button
 							variant="ghost"
 							size="sm"
-							className="h-7 text-[10px] font-bold bg-white/20 hover:bg-white/30 text-white rounded-full px-3"
+							className="h-7 font-display text-[10px] font-bold bg-white/20 hover:bg-white/30 text-white rounded-full px-3"
 						>
 							<Send className="w-3 h-3 mr-1.5" /> Enviar Lembretes
 						</Button>
@@ -202,20 +177,20 @@ export const BentoDashboard: React.FC = () => {
 
 			{/* Bento Grid Main Layout */}
 			<div className="grid grid-cols-1 lg:grid-cols-12 gap-6 auto-rows-[240px]">
-				{/* Agenda do Dia - Large Block (6x2) */}
-				<Card className="lg:col-span-8 lg:row-span-2 rounded-[3rem] border-none shadow-premium-md overflow-hidden bg-white/40 dark:bg-slate-900/40 backdrop-blur-xl group">
+				{/* Agenda do Dia - Premium Glassmorphism */}
+				<Card className="lg:col-span-8 lg:row-span-2 rounded-[3rem] border-none shadow-premium-md glass-dark overflow-hidden group card-premium-hover">
 					<CardHeader className="px-8 pt-8 pb-4 flex flex-row items-center justify-between">
 						<div>
-							<p className="text-[10px] font-black uppercase tracking-[0.3em] text-primary mb-1">
+							<p className="font-display text-[10px] font-bold uppercase tracking-wider text-primary mb-1">
 								Próximos Pacientes
 							</p>
-							<CardTitle className="text-2xl font-black tracking-tighter">
+							<CardTitle className="font-display text-2xl font-black tracking-tighter">
 								Agenda Inteligente
 							</CardTitle>
 						</div>
 						<Button
 							variant="outline"
-							className="rounded-2xl border-primary/20 hover:bg-primary/5 text-primary font-black text-[10px] uppercase tracking-widest h-10"
+							className="rounded-2xl border-primary/20 hover:bg-primary/5 text-primary font-display font-black text-[10px] uppercase tracking-widest h-10"
 							onClick={() => navigate("/agenda")}
 						>
 							Ver Agenda Completa <ChevronRight className="w-3 h-3 ml-1" />
@@ -293,25 +268,25 @@ export const BentoDashboard: React.FC = () => {
 					</CardContent>
 				</Card>
 
-				{/* AI Insights - Vertical Block (4x2) */}
-				<Card className="lg:col-span-4 lg:row-span-2 rounded-[3rem] border-none shadow-premium-md bg-slate-900 text-white overflow-hidden relative group">
+				{/* AI Insights - Vertical Block (4x2) - Premium Gradient Neon */}
+				<Card className="lg:col-span-4 lg:row-span-2 rounded-[3rem] border-none shadow-premium-md gradient-neon text-white overflow-hidden relative group card-premium-hover">
 					<div className="absolute top-0 right-0 p-8 opacity-10">
-						<Sparkles className="w-32 h-32 text-primary animate-pulse" />
+						<Sparkles className="w-32 h-32 text-white/30 animate-pulse" />
 					</div>
 					<CardHeader className="p-8 pb-4">
-						<div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-primary/20 border border-primary/30 mb-4 w-fit">
-							<Sparkles className="w-3 h-3 text-primary" />
-							<span className="text-[9px] font-black text-primary uppercase tracking-[0.2em]">
+						<div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/20 border border-white/30 mb-4 w-fit">
+							<Sparkles className="w-3 h-3 text-white" />
+							<span className="font-display text-[9px] font-bold text-white/90 uppercase tracking-wider">
 								FisioAI Insights
 							</span>
 						</div>
-						<CardTitle className="text-2xl font-black tracking-tighter">
+						<CardTitle className="font-display text-2xl font-black tracking-tighter text-white">
 							Inteligência Clínica
 						</CardTitle>
 					</CardHeader>
 					<CardContent className="p-8 pt-0 space-y-6">
 						<div className="space-y-4">
-							<div className="p-5 rounded-[2rem] bg-white/5 border border-white/10 hover:bg-white/10 transition-colors cursor-pointer group/insight">
+							<div className="p-5 rounded-[2rem] bg-white/5 border border-white/10 hover:bg-white/10 transition-colors cursor-pointer group/insight" onClick={() => navigate("/pacientes")}>
 								<div className="flex items-center gap-3 mb-2">
 									<div className="p-2 bg-amber-500/20 rounded-xl">
 										<AlertCircle className="h-4 w-4 text-amber-500" />
@@ -321,16 +296,21 @@ export const BentoDashboard: React.FC = () => {
 									</span>
 								</div>
 								<p className="text-xs text-white/70 leading-relaxed font-medium">
-									O paciente{" "}
-									<span className="text-white font-bold">Marcos Silva</span> não
-									realiza agendamentos há 18 dias. Ele costumava vir 2x por
-									semana.
+									{data?.atRiskPatients && data.atRiskPatients.length > 0 ? (
+										<>
+											O paciente <span className="text-white font-bold">{data.atRiskPatients[0].name}</span> não
+											realiza agendamentos há {data.atRiskPatients[0].days_since_last} dias. 
+											{data.atRiskPatients[0].avg_frequency ? ` Ele costumava vir ${data.atRiskPatients[0].avg_frequency}x por semana.` : ""}
+										</>
+									) : (
+										"Nenhum paciente em risco de churn detectado no momento. Excelente retenção!"
+									)}
 								</p>
 								<Button
 									variant="link"
 									className="p-0 h-auto text-[10px] font-black uppercase text-primary mt-3 group-hover/insight:underline"
 								>
-									Recuperar Paciente →
+									{data?.atRiskPatients && data.atRiskPatients.length > 0 ? "Ver Detalhes do Risco →" : "Revisar Lista de Pacientes →"}
 								</Button>
 							</div>
 
@@ -366,20 +346,20 @@ export const BentoDashboard: React.FC = () => {
 					</CardContent>
 				</Card>
 
-				{/* Receita Semanal - 6x1 */}
-				<Card className="lg:col-span-6 rounded-[3rem] border-none shadow-premium-md bg-white dark:bg-slate-900 overflow-hidden group">
+				{/* Receita Semanal - 6x1 - Premium Success Gradient */}
+				<Card className="lg:col-span-6 rounded-[3rem] border-none shadow-premium-md gradient-success text-white overflow-hidden group card-premium-hover">
 					<CardHeader className="px-8 pt-8 pb-0 flex flex-row items-center justify-between">
 						<div>
-							<p className="text-[10px] font-black uppercase tracking-[0.3em] text-emerald-500 mb-1">
+							<p className="font-display text-[10px] font-bold uppercase tracking-wider text-white/90 mb-1">
 								Performance
 							</p>
-							<CardTitle className="text-xl font-black tracking-tighter">
+							<CardTitle className="font-display text-xl font-black tracking-tighter text-white">
 								Receita Realizada
 							</CardTitle>
 						</div>
-						<div className="flex items-center gap-2 text-emerald-500">
+						<div className="flex items-center gap-2 text-white">
 							<ArrowUpRight className="w-5 h-5" />
-							<span className="text-sm font-black">+14.2%</span>
+							<span className="font-black">+14.2%</span>
 						</div>
 					</CardHeader>
 					<CardContent className="p-0 h-full">
@@ -475,10 +455,10 @@ export const BentoDashboard: React.FC = () => {
 				</Card>
 			</div>
 
-			{/* Quick Actions Footer - Floating style */}
-			<div className="fixed bottom-8 left-1/2 -translate-x-1/2 z-50 bg-slate-900/90 dark:bg-white/90 backdrop-blur-xl p-2 rounded-[2.5rem] shadow-premium-2xl border border-white/10 flex items-center gap-2">
+			{/* Quick Actions Footer - Premium Glow */}
+			<div className="fixed bottom-8 left-1/2 -translate-x-1/2 z-50 gradient-neon p-2 rounded-[2.5rem] shadow-premium-2xl border border-white/10 flex items-center gap-2 glow-on-hover">
 				<Button
-					className="rounded-full bg-primary hover:bg-primary/90 text-white font-black text-[10px] uppercase tracking-widest px-6 h-12"
+					className="rounded-full bg-white hover:bg-white/90 text-primary magnetic-button font-display text-[10px] font-black uppercase tracking-widest px-6 h-12"
 					onClick={() => navigate("/pacientes/novo")}
 				>
 					<Plus className="w-4 h-4 mr-2" /> Novo Paciente
@@ -486,21 +466,21 @@ export const BentoDashboard: React.FC = () => {
 				<div className="w-px h-6 bg-white/20 mx-2" />
 				<Button
 					variant="ghost"
-					className="rounded-full text-white dark:text-slate-900 font-black text-[10px] uppercase tracking-widest px-4 h-12"
+					className="rounded-full text-white font-display text-[10px] font-black uppercase tracking-widest px-4 h-12"
 					onClick={() => navigate("/agenda")}
 				>
 					<Calendar className="w-4 h-4 mr-2" /> Agenda
 				</Button>
 				<Button
 					variant="ghost"
-					className="rounded-full text-white dark:text-slate-900 font-black text-[10px] uppercase tracking-widest px-4 h-12"
+					className="rounded-full text-white font-display text-[10px] font-black uppercase tracking-widest px-4 h-12"
 					onClick={() => navigate("/financeiro")}
 				>
 					<DollarSign className="w-4 h-4 mr-2" /> Financeiro
 				</Button>
 				<Button
 					variant="ghost"
-					className="rounded-full text-white dark:text-slate-900 font-black text-[10px] uppercase tracking-widest px-4 h-12"
+					className="rounded-full text-white font-display text-[10px] font-black uppercase tracking-widest px-4 h-12 relative"
 					onClick={() => navigate("/comunicacoes")}
 				>
 					<Bell className="w-4 h-4 mr-2" />{" "}

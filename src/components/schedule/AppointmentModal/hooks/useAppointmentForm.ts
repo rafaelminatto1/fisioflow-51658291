@@ -1,4 +1,4 @@
-import { useCallback, useRef, useMemo } from "react";
+import { useCallback, useRef } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import {
@@ -15,7 +15,6 @@ import { useNavigate, useSubmit, useNavigation } from "react-router-dom";
 import { toast } from "@/hooks/use-toast";
 import { useOrganizations } from "@/hooks/useOrganizations";
 
-import { useAuth } from "@/contexts/AuthContext";
 import { useUsePackageSession } from "@/hooks/usePackages";
 import {
 	type AppointmentBase,
@@ -27,7 +26,6 @@ import { fisioLogger as logger } from "@/lib/errors/logger";
 import { ErrorHandler } from "@/lib/errors/ErrorHandler";
 import {
 	isAppointmentConflictError,
-	getAppointmentConflictUserMessage,
 } from "@/utils/appointmentErrors";
 import { checkAppointmentConflict } from "@/utils/appointmentValidation";
 import { useScheduleCapacity } from "@/hooks/useScheduleCapacity";
@@ -81,7 +79,7 @@ export const useAppointmentForm = ({
 	const navigate = useNavigate();
 	const submit = useSubmit();
 	const navigation = useNavigation();
-	const queryClient = useQueryClient();
+	
 	const { currentOrganization } = useOrganizations();
 	const { mutateAsync: consumeSession } = useUsePackageSession();
 
@@ -251,7 +249,7 @@ export const useAppointmentForm = ({
 					: appointmentData.payment_method,
 		};
 
-		let appointmentId = appointment?.id;
+		const appointmentId = appointment?.id;
 
 		if (
 			appointmentData.is_recurring &&

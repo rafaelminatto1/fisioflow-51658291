@@ -1,9 +1,8 @@
-import { useMemo, useState, useEffect } from "react";
+import { useMemo, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { knowledgeBaseService } from "@/lib/services/knowledgeBaseService";
 import {
 	knowledgeBase,
-	knowledgeGroups,
 	type KnowledgeArticle,
 	type KnowledgeGroup,
 	type EvidenceTier,

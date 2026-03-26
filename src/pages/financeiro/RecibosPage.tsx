@@ -34,9 +34,6 @@ import {
 	Eye,
 	Settings,
 	Loader2,
-	Save,
-	Download,
-	X,
 	BadgeCheck,
 } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
@@ -56,11 +53,9 @@ import {
 import { useOrganizations } from "@/hooks/useOrganizations";
 import { useAuth } from "@/contexts/AuthContext";
 import { patientsApi, profileApi } from "@/api/v2";
-import { OptimizedImage } from "@/components/ui/OptimizedImage";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Badge } from "@/components/ui/badge";
-import { cn } from "@/lib/utils";
 import { MainLayout } from "@/components/layout/MainLayout";
 
 interface PatientSelect {

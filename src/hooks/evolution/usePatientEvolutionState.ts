@@ -1,7 +1,5 @@
-import { useState, useEffect, useMemo, useCallback } from "react";
+import { useState, useEffect } from "react";
 import { useParams, useLocation } from "react-router-dom";
-import { useQueryClient } from "@tanstack/react-query";
-import { startOfDay } from "date-fns";
 import { useAuth } from "@/hooks/useAuth";
 import { useTherapists } from "@/hooks/useTherapists";
 import { useEvolutionTemplates } from "@/hooks/useEvolutionTemplates";
@@ -104,7 +102,6 @@ export function usePatientEvolutionState() {
 		surgeries,
 		medicalReturns,
 		invalidateData,
-		isLoadingCritical,
 		isLoadingTabData,
 	} = useEvolutionDataOptimized({
 		patientId: patientId || "",

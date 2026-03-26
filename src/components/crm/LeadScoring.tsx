@@ -79,7 +79,14 @@ export function LeadScoring({
 }: LeadScoringProps) {
 	const [activeTab, setActiveTab] = useState<
 		"overview" | "leads" | "rules" | "settings"
-	>("overview");
+	>(showSettings ? "settings" : "overview");
+
+	// Update activeTab when showSettings changes
+	useEffect(() => {
+		if (showSettings) {
+			setActiveTab("settings");
+		}
+	}, [showSettings]);
 
 	// Buscar scores calculados
 	const { data: scores = [], isLoading } = useQuery({
@@ -153,10 +160,6 @@ export function LeadScoring({
 			<Badge className={`${config.color} text-white`}>{config.label}</Badge>
 		);
 	};
-
-	if (showSettings) {
-		activeTab = "settings";
-	}
 
 	return (
 		<div className="space-y-6">

@@ -20,7 +20,6 @@ import {
 	Loader2,
 	AlertCircle,
 	CheckCircle2,
-	XCircle,
 } from "lucide-react";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";

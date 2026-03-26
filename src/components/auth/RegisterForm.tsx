@@ -3,7 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { Loader2, Mail, CheckCircle } from "lucide-react";
+import { Loader2, CheckCircle } from "lucide-react";
 
 interface RegisterFormProps {
 	onSubmit: (e: React.FormEvent) => void;

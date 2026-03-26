@@ -91,7 +91,7 @@ export const BiomechanicsSessionTab: React.FC<BiomechanicsSessionTabProps> = ({
       const data: BiomechanicsData = {
         type: selectedStudio,
         analyzedAt: new Date().toISOString(),
-        ...(pendingData ?? {}),
+        ...pendingData,
       };
 
       if (sessionId) {
@@ -115,7 +115,7 @@ export const BiomechanicsSessionTab: React.FC<BiomechanicsSessionTabProps> = ({
         title: "✅ Análise salva na sessão",
         description: `${STUDIO_CONFIG[selectedStudio].label} vinculada ao atendimento de ${patientName}.`,
       });
-    } catch (err) {
+    } catch  {
       toast({
         title: "Erro ao salvar",
         description: "Não foi possível vincular a análise à sessão. Tente novamente.",
@@ -127,7 +127,7 @@ export const BiomechanicsSessionTab: React.FC<BiomechanicsSessionTabProps> = ({
   };
 
   const handleStudioData = (data: any) => {
-    setPendingData(prev => ({ ...(prev ?? {}), ...data }));
+    setPendingData(prev => ({ ...prev, ...data }));
   };
 
   const renderStudio = () => {

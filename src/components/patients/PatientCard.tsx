@@ -54,9 +54,7 @@ export const PatientCard = memo(
 			? `${stats.sessionsCompleted} sessão${stats.sessionsCompleted !== 1 ? "ões" : ""}`
 			: null;
 
-		const firstEvaluationInfo = stats?.firstEvaluationDate
-			? `Prim. aval.: ${formatFirstEvaluationDate(stats.firstEvaluationDate)}`
-			: null;
+		
 
 		const classificationInfo = stats
 			? PATIENT_CLASSIFICATIONS[stats.classification]

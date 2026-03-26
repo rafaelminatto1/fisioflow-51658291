@@ -21,19 +21,7 @@ import { fisioLogger as logger } from "@/lib/errors/logger";
 // CONFIGURAÇÕES
 // ============================================================================
 
-const REP_COUNTER_CONFIG = {
-	/** Tempo mínimo de permanência em uma fase para considerar válida */
-	minPhaseDuration: 200, // 200ms
 
-	/** Tempo máximo de permanência em uma fase antes de resetar */
-	maxPhaseDuration: 10000, // 10 segundos
-
-	/** Porcentagem do movimento que deve ser completada para contar */
-	phaseCompletionThreshold: 0.6, // 60% do movimento
-
-	/** Histerese para mudança de fase (evitar flutuação) */
-	hysteresisAmount: 5, // ±5 graus para ângulos
-} as const;
 
 // ============================================================================
 // TIPO DE EXERCÍCIO COM LÓGICA DE CONTAGEM
@@ -306,7 +294,7 @@ export class RepetitionCounter {
 		// Detectar se está "em cima" ou "em baixo"
 		// Para agachamento: y menor é "em cima" (quadril mais alto)
 		const isUpPhase = this.state.currentAngle > upThreshold;
-		const isDownPhase = this.state.currentAngle < downThreshold;
+		
 
 		const newPhase: MovementPhase = isUpPhase
 			? MovementPhase.UP
@@ -371,7 +359,7 @@ export class RepetitionCounter {
 
 		// Detectar se está "esquerda" ou "direita"
 		const isLeftPhase = this.state.currentAngle > upThreshold;
-		const isRightPhase = this.state.currentAngle < downThreshold;
+		
 
 		const newPhase: MovementPhase = isLeftPhase
 			? MovementPhase.LEFT
@@ -435,7 +423,7 @@ export class RepetitionCounter {
 
 		// Detectar flexão (ângulo menor) ou extensão (ângulo maior)
 		const isExtension = this.state.currentAngle > upThreshold;
-		const isFlexion = this.state.currentAngle < downThreshold;
+		
 
 		const newPhase: MovementPhase = isExtension
 			? MovementPhase.EXTENSION

@@ -1,17 +1,11 @@
 import { patientsApi } from "@/api/v2/patients";
 import { auditApi } from "@/api/v2";
-import { PatientSchema } from "@/schemas/patient";
 import { AppError } from "@/lib/errors/AppError";
 import { ErrorHandler } from "@/lib/errors/ErrorHandler";
-import { fisioLogger as logger } from "@/lib/errors/logger";
 import type { PatientRow } from "@/types/workers";
 import type { Patient } from "@/types";
-import {
-	isValidCPF,
-	isValidEmail,
-	isValidPhone,
-	stripNonDigits,
-} from "@/utils/validators";
+
+
 
 // Service result wrapper
 interface ServiceResult<T> {
@@ -204,7 +198,7 @@ export const PatientService = {
 						timestamp: new Date().toISOString(),
 					},
 				});
-			} catch (e) {
+			} catch  {
 				/* silent fail */
 			}
 
@@ -240,7 +234,7 @@ export const PatientService = {
 						timestamp: new Date().toISOString(),
 					},
 				});
-			} catch (e) {
+			} catch  {
 				/* silent fail */
 			}
 
@@ -275,7 +269,7 @@ export const PatientService = {
 						timestamp: new Date().toISOString(),
 					},
 				});
-			} catch (e) {
+			} catch  {
 				/* silent fail */
 			}
 

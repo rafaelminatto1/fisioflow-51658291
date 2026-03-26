@@ -10,10 +10,8 @@ import {
 	Send,
 	Search,
 	CheckCircle,
-	AlertCircle,
 	RefreshCw,
 	MoreVertical,
-	Clock,
 	Trash2,
 	Sparkles,
 	FileText,
@@ -64,9 +62,7 @@ import { ptBR } from "date-fns/locale";
 import { PatientHelpers } from "@/types";
 import {
 	MessageTemplates,
-	type MessageTemplate,
 } from "@/components/communications/MessageTemplates";
-import { useWhatsAppTemplates } from "@/hooks/useWhatsAppTemplates";
 import { useSuggestReply } from "@/hooks/ai";
 import { Badge } from "@/components/ui/badge";
 import { ScrollArea } from "@/components/ui/scroll-area";

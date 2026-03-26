@@ -212,7 +212,7 @@ export async function sendWebhookWithRetry(
 			if (response.status >= 400 && response.status < 500) {
 				return false;
 			}
-		} catch (_error) {
+		} catch  {
 			// Erro de rede - tentar novamente
 		}
 

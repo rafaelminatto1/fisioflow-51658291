@@ -5,7 +5,7 @@ import { Ruler, Play, Square, Link2, Activity, RotateCcw } from 'lucide-react';
 import { KP_NAMES } from '@/types/biomechanics';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
-  LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer, ReferenceLine, Cell
+  LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer
 } from 'recharts';
 
 interface DynamicGoniometerProps {

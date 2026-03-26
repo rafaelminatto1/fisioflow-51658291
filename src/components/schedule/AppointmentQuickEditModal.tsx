@@ -80,7 +80,6 @@ import {
 
 import {
 	APPOINTMENT_STATUS_CONFIG,
-	getStatusConfig,
 } from "./shared/appointment-status";
 
 interface AppointmentQuickEditModalProps {
@@ -127,7 +126,7 @@ export const AppointmentQuickEditModal: React.FC<
 	AppointmentQuickEditModalProps
 > = ({ appointment, open, onOpenChange, onDeleted: _onDeleted }) => {
 	const navigate = useNavigate();
-	const queryClient = useQueryClient();
+	
 	const { cancelAppointment, isCanceling } = useAppointmentActions();
 	const { cancellationRules } = useScheduleSettings();
 	const { mutateAsync: updateAppointment, isPending: isSaving } =
@@ -443,7 +442,7 @@ export const AppointmentQuickEditModal: React.FC<
 				},
 			});
 			setIsEditing(false);
-		} catch (_error) {
+		} catch  {
 			// Erro já tratado pelo hook useUpdateAppointment
 		}
 	}, [appointment, formData, conflictError, updateAppointment]);

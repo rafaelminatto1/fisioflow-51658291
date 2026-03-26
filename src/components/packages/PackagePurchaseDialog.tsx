@@ -65,7 +65,7 @@ export function PackagePurchaseDialog({
 			onSuccess?.();
 			onOpenChange(false);
 			setSelectedPackageId(null);
-		} catch (error) {
+		} catch  {
 			// Error handled by mutation
 		}
 	};

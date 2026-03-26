@@ -5,7 +5,6 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Cpu, Ruler, Upload, Play, Pause, ChevronLeft, ChevronRight } from 'lucide-react';
 import { Badge } from "@/components/ui/badge";
-import { motion, AnimatePresence } from 'framer-motion';
 
 import { useMoveNet, useGoniometer, useTrajectory } from '@/hooks/biomechanics';
 
@@ -29,7 +28,7 @@ export const PostureAnalysisStudio: React.FC<PostureAnalysisStudioProps> = ({ on
     const [videoSrc, setVideoSrc] = useState<string | null>(null);
     const [isPlaying, setIsPlaying] = useState(false);
     const [currentFrame, setCurrentFrame] = useState(0);
-    const [fps, setFps] = useState(30);
+    const [fps] = useState(30);
 
     // Plumb line (linha de prumo)
     const [showPlumbLine, setShowPlumbLine] = useState(true);

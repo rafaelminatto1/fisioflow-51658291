@@ -11,7 +11,7 @@ export const AutoAngleOverlay: React.FC<AutoAngleOverlayProps> = ({ angles }) =>
 		<Group>
 			{angles.map((angle, i) => {
 				const startAngle = Math.atan2(angle.p1.y - angle.center.y, angle.p1.x - angle.center.x) * (180 / Math.PI);
-				const endAngle = Math.atan2(angle.p2.y - angle.center.y, angle.p2.x - angle.center.x) * (180 / Math.PI);
+				
 
 				return (
 					<Group key={angle.name + i}>

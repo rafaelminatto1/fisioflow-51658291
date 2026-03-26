@@ -5,7 +5,7 @@
  * reduzindo o tamanho do bundle inicial e acelerando o download de atualizações.
  */
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useCallback } from 'react';
 
 // Cache para módulos carregados
 const moduleCache = new Map<string, any>();

@@ -49,8 +49,7 @@ export const useBackgroundSync = (options: BackgroundSyncOptions = {}) => {
 		retryDelay = 1000,
 		onSyncStart,
 		onSyncComplete,
-		onSyncError,
-	} = options;
+		} = options;
 
 	const [state, setState] = useState<BackgroundSyncState>({
 		isOnline: navigator.onLine,

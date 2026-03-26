@@ -1,6 +1,5 @@
 import { useState, useEffect, useRef } from "react";
 import { format } from "date-fns";
-import { ptBR } from "date-fns/locale";
 import {
 	useConversations,
 	useConversationMessages,
@@ -8,7 +7,6 @@ import {
 	useMarkAsRead,
 } from "@/hooks/useMessaging";
 import { useAuth } from "@/contexts/AuthContext";
-import { ApiConversation } from "@/api/v2/messaging";
 
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";

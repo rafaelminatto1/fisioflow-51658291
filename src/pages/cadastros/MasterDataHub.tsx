@@ -8,9 +8,7 @@ import {
 	Settings,
 	FileSignature,
 	ClipboardList,
-	Target,
 	CalendarOff,
-	FileCheck,
 } from "lucide-react";
 import { ServicosContent } from "./ServicosPage";
 import { DoctorManagementContent } from "../DoctorManagement";

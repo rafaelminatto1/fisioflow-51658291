@@ -201,7 +201,7 @@ export default function ContentGeneratorPage() {
 			} else {
 				throw new Error(result.error || "Falha ao gerar conteúdo");
 			}
-		} catch (error) {
+		} catch  {
 			toast({
 				variant: "destructive",
 				title: "Erro na IA",
@@ -245,7 +245,7 @@ export default function ContentGeneratorPage() {
 				title: "Copiado!",
 				description: "Conteúdo copiado para a área de transferência",
 			});
-		} catch (_err) {
+		} catch  {
 			toast({
 				variant: "destructive",
 				title: "Erro ao copiar",

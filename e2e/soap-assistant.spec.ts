@@ -15,7 +15,7 @@
  * @see src/lib/ai/soap-assistant.ts
  */
 
-import { test, expect } from '@playwright/test';
+import { test } from '@playwright/test';
 import { testUsers } from './fixtures/test-data';
 
 const BASE_URL = 'http://localhost:8080';

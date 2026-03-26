@@ -2,7 +2,6 @@
  * @fisioflow/shared-api — Shared types and API client
  */
 
-import type { InferSelectModel, InferInsertModel } from 'drizzle-orm';
 // We'll import from @fisioflow/db if it's set up correctly, 
 // but for now, we'll define some base types.
 

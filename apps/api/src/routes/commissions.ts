@@ -1,7 +1,6 @@
 import { Hono } from 'hono';
 import { createPool } from '../lib/db';
 import { requireAuth, type AuthVariables } from '../lib/auth';
-import { isUuid } from '../lib/validators';
 import type { Env } from '../types/env';
 
 const app = new Hono<{ Bindings: Env; Variables: AuthVariables }>();

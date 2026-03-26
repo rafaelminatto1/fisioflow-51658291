@@ -38,7 +38,6 @@ import {
 	CheckCircle2,
 	XCircle,
 } from "lucide-react";
-import { cn } from "@/lib/utils";
 
 const transactionSchema = z.object({
 	tipo: z.enum(["receita", "despesa", "pagamento", "recebimento"]),

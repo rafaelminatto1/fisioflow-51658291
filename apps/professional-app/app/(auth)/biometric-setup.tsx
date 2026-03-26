@@ -42,7 +42,7 @@ export default function BiometricSetupScreen() {
   const [isLoading, setIsLoading] = useState(false);
   const [pin, setPin] = useState('');
   const [confirmPin, setConfirmPin] = useState('');
-  const [showPinSetup, setShowPinSetup] = useState(false);
+  const [,setShowPinSetup] = useState(false);
 
   /**
    * Check biometric availability on mount

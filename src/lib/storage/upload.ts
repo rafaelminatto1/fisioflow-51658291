@@ -11,7 +11,6 @@ import {
 	deleteFromR2,
 	type R2UploadResult as UploadResult,
 } from "./r2-storage";
-import { fisioLogger as logger } from "@/lib/errors/logger";
 
 // Re-export types for backward compatibility
 export type { UploadResult };
