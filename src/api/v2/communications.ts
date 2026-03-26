@@ -15,6 +15,22 @@ import type {
 	WhatsAppWebhookLog,
 } from "@/types/workers";
 
+export type {
+	AutomationLogEntry,
+	CrmCampanha,
+	CrmTarefa,
+	GamificationNotification,
+	Lead,
+	LeadHistorico,
+	Notification,
+	NotificationPreferences,
+	PendingConfirmation,
+	PushSubscription,
+	WhatsAppMessage,
+	WhatsAppTemplateRecord,
+	WhatsAppWebhookLog,
+};
+
 function withQuery(
 	path: string,
 	params?: Record<string, string | number | boolean | null | undefined>,

@@ -197,7 +197,7 @@ function normalizePatientRow(row: DbRow) {
 		email: trimmedString(row.email) ?? null,
 		cpf: trimmedString(row.cpf) ?? null,
 		rg: trimmedString(row.rg) ?? null,
-		birth_date: row.birth_date ? String(row.birth_date) : null,
+		birth_date: row.birth_date ? String(row.birth_date) : (row.legacyDateOfBirth ? String(row.legacyDateOfBirth) : null),
 		gender: normalizeGenderFromDb(row.gender),
 		address: trimmedString(address?.street ?? row.address) ?? null,
 		city: trimmedString(address?.city ?? row.city) ?? null,

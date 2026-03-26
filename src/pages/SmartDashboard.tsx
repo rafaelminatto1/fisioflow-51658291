@@ -1,15 +1,4 @@
-import {
-	differenceInDays,
-	endOfWeek,
-	format,
-	isValid,
-	parseISO,
-	startOfDay,
-	startOfMonth,
-	startOfWeek,
-	subDays,
-	subMonths,
-} from "date-fns";
+import { format, parseISO } from "date-fns";
 import {
 	Activity,
 	AlertTriangle,
@@ -38,17 +27,9 @@ import {
 	Wand2,
 	Zap,
 } from "lucide-react";
-import { lazy, Suspense, useEffect, useMemo, useState } from "react";
+import { lazy, Suspense, useMemo, useState } from "react";
 import type { Layout } from "react-grid-layout";
-import {
-	Link,
-	useActionData,
-	useLoaderData,
-	useNavigate,
-	useNavigation,
-	useSearchParams,
-	useSubmit,
-} from "react-router";
+import { Link, useNavigate, useSearchParams } from "react-router";
 import {
 	Area,
 	AreaChart,
@@ -61,12 +42,7 @@ import {
 	YAxis,
 } from "recharts";
 import { toast } from "sonner";
-import { innovationsApi } from "@/api/v2";
-import { appointmentsApi } from "@/api/v2/appointments";
-import { type Notification, notificationsApi } from "@/api/v2/communications";
-import { financialApi } from "@/api/v2/financial";
-import { patientsApi } from "@/api/v2/patients";
-import { profileApi } from "@/api/v2/system";
+import { type Notification } from "@/api/v2/communications";
 import { MainLayout } from "@/components/layout/MainLayout";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -75,306 +51,23 @@ import type { GridItem } from "@/components/ui/DraggableGrid";
 import { EmptyState } from "@/components/ui/empty-state";
 import { GridWidget } from "@/components/ui/GridWidget";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { fisioLogger as logger } from "@/lib/errors/logger";
-import { generatePatientSummary } from "@/lib/genkit/patient-summary";
 import { cn } from "@/lib/utils";
-import type {
-	AppointmentRow,
-	ContaFinanceira,
-	Pagamento,
-	PatientRow,
-	TherapistSummary,
-} from "@/types/workers";
-import { formatDateToLocalISO } from "@/utils/dateUtils";
-import type { Route } from "./+types/SmartDashboard";
+import { useSmartDashboardData } from "@/hooks/useSmartDashboard";
+import type { AppointmentRow, PatientRow } from "@/types/workers";
 
 // --- Types & Constants ---
 type ViewMode = "today" | "week" | "month" | "custom";
-const DEFAULT_MEDICAL_RETURN_DAYS = 14;
 
 const DraggableGrid = lazy(() =>
 	import("@/components/ui/DraggableGrid").then((module) => ({
 		default: module.DraggableGrid,
 	})),
 );
-
-// Helper functions for metrics calculation (Extracted from hook logic)
-const isCompletedStatus = (status: unknown) =>
-	["atendido", "completed", "concluido", "realizado"].includes(
-		String(status ?? "").toLowerCase(),
-	);
-const isCancelledStatus = (status: unknown) =>
-	["cancelado", "cancelled", "remarcar"].includes(
-		String(status ?? "").toLowerCase(),
-	);
-const isNoShowStatus = (status: unknown) =>
-	[
-		"faltou",
-		"faltou_com_aviso",
-		"faltou_sem_aviso",
-		"nao_atendido",
-		"nao_atendido_sem_cobranca",
-		"no_show",
-		"falta",
-	].includes(String(status ?? "").toLowerCase());
-const toDate = (value: unknown) => {
-	if (!value) return null;
-	const date = new Date(value as string);
-	return isNaN(date.getTime()) ? null : date;
-};
-const sumRevenue = (rows: any[]) =>
-	rows.reduce((acc, row) => acc + Number(row.valor ?? 0), 0);
-
-// --- Loader ---
-export async function loader({ request }: Route.LoaderArgs) {
-	const url = new URL(request.url);
-	const viewMode = (url.searchParams.get("view") || "today") as ViewMode;
-
-	const now = new Date();
-	const todayStr = formatDateToLocalISO(now);
-	const startCurrentMonthDate = startOfMonth(now);
-	const startCurrentMonth = formatDateToLocalISO(startCurrentMonthDate);
-	const startLastMonthDate = startOfMonth(subMonths(now, 1));
-	const endLastMonthDate = subDays(startCurrentMonthDate, 1);
-	const thirtyDaysAgo = formatDateToLocalISO(subMonths(now, 1));
-	const weekStartDate = startOfWeek(now, { weekStartsOn: 1 });
-	const weekEndDate = endOfWeek(now, { weekStartsOn: 1 });
-	const weekStart = formatDateToLocalISO(weekStartDate);
-	const weekEnd = formatDateToLocalISO(weekEndDate);
-
-	const primaryDateFrom =
-		viewMode === "week"
-			? weekStart
-			: viewMode === "month"
-				? startCurrentMonth
-				: todayStr;
-	const primaryDateTo = viewMode === "week" ? weekEnd : todayStr;
-
-	try {
-		// Parallel fetching (Single Fetch)
-		const [
-			patientsRes,
-			appointmentsTodayRes,
-			appointments30dRes,
-			appointmentsWeekRes,
-			appointmentsMonthRes,
-			therapistsRes,
-			contasRes,
-			pagamentosRes,
-			predictionsRes,
-			forecastsRes,
-			staffPerformanceRes,
-			selfAssessmentsRes,
-			notificationsRes,
-		] = await Promise.all([
-			patientsApi.list({ limit: 1000 }),
-			appointmentsApi.list({
-				dateFrom: primaryDateFrom,
-				dateTo: primaryDateTo,
-				limit: 1000,
-			}),
-			appointmentsApi.list({
-				dateFrom: thirtyDaysAgo,
-				dateTo: todayStr,
-				limit: 1000,
-			}),
-			appointmentsApi.list({
-				dateFrom: weekStart,
-				dateTo: weekEnd,
-				limit: 1000,
-			}),
-			appointmentsApi.list({
-				dateFrom: startCurrentMonth,
-				dateTo: todayStr,
-				limit: 1000,
-			}),
-			profileApi.listTherapists().catch(() => ({ data: [] })),
-			financialApi.contas
-				.list({ tipo: "receita", status: "pago", limit: 1000 })
-				.catch(() => ({ data: [] })),
-			financialApi.pagamentos.list({ limit: 1000 }).catch(() => ({ data: [] })),
-			innovationsApi.appointmentPredictions
-				.list({ limit: 50 })
-				.catch(() => ({ data: [] })),
-			innovationsApi.revenueForecasts
-				.list({ limit: 90 })
-				.catch(() => ({ data: [] })),
-			innovationsApi.staffPerformance.list().catch(() => ({ data: [] })),
-			innovationsApi.patientSelfAssessments
-				.list({ limit: 100 })
-				.catch(() => ({ data: [] })),
-			notificationsApi.list().catch(() => ({ data: [] })),
-		]);
-
-		const patients = (patientsRes?.data ?? []) as PatientRow[];
-		const therapists = (therapistsRes?.data ?? []) as TherapistSummary[];
-		const appointmentsToday = (appointmentsTodayRes?.data ??
-			[]) as AppointmentRow[];
-		const appointments30d = (appointments30dRes?.data ??
-			[]) as AppointmentRow[];
-		const appointmentsWeek = (appointmentsWeekRes?.data ??
-			[]) as AppointmentRow[];
-		const appointmentsMonth = (appointmentsMonthRes?.data ??
-			[]) as AppointmentRow[];
-		const contas = (contasRes?.data ?? []) as ContaFinanceira[];
-		const pagamentos = (pagamentosRes?.data ?? []) as Pagamento[];
-
-		// 1. Calculate Birthdays
-		const todayMMDD = format(now, "MM-dd");
-		const birthdaysToday = patients.filter(
-			(p) => p.birth_date && p.birth_date.slice(5, 10) === todayMMDD,
-		);
-		const staffBirthdaysToday = therapists.filter(
-			(t) => t.birth_date && t.birth_date.slice(5, 10) === todayMMDD,
-		);
-
-		// 2. Calculate Medical Returns (Next 14 days)
-		const todayStart = startOfDay(now);
-		const medicalReturnsUpcoming = patients
-			.filter((p) => {
-				const rawDate = p.medical_return_date;
-				if (!rawDate) return false;
-				const date = parseISO(rawDate);
-				if (!isValid(date)) return false;
-				const days = differenceInDays(startOfDay(date), todayStart);
-				return days >= 0 && days <= DEFAULT_MEDICAL_RETURN_DAYS;
-			})
-			.sort(
-				(a, b) =>
-					new Date(a.medical_return_date!).getTime() -
-					new Date(b.medical_return_date!).getTime(),
-			);
-
-		// 3. Process Dashboard Metrics
-		const patientsAtivosCount = new Set(
-			appointments30d
-				.filter((a) => !isCancelledStatus(a.status))
-				.map((a) => a.patient_id),
-		).size;
-		const agendamentosHoje = appointmentsToday.filter(
-			(a) => !isCancelledStatus(a.status),
-		).length;
-		const agendamentosConcluidos = appointmentsToday.filter((a) =>
-			isCompletedStatus(a.status),
-		).length;
-		const totalAppointments30d = appointments30d.filter(
-			(a) => !isCancelledStatus(a.status),
-		).length;
-		const noShowCount = appointments30d.filter((a) =>
-			isNoShowStatus(a.status),
-		).length;
-
-		const isDateInRange = (val: any, from: Date, to: Date) => {
-			const d = toDate(val);
-			return d ? d >= from && d <= to : false;
-		};
-
-		const receitaMensal = sumRevenue(
-			contas.filter((r) =>
-				isDateInRange(
-					r.pago_em ?? r.data_vencimento,
-					startCurrentMonthDate,
-					now,
-				),
-			),
-		);
-		const receitaMesAnterior = sumRevenue(
-			contas.filter((r) =>
-				isDateInRange(
-					r.pago_em ?? r.data_vencimento,
-					startLastMonthDate,
-					endLastMonthDate,
-				),
-			),
-		);
-
-		// 4. Staff Performance
-		const weekDays = ["Seg", "Ter", "Qua", "Qui", "Sex", "Sáb", "Dom"];
-		const tendenciaSemanal = weekDays.map((dia, i) => {
-			const dayStr = formatDateToLocalISO(subDays(weekEndDate, 6 - i));
-			const dayApts = appointmentsWeek.filter((a) =>
-				(a.date as string).startsWith(dayStr),
-			);
-			return {
-				dia,
-				agendamentos: dayApts.length,
-				concluidos: dayApts.filter((a) => isCompletedStatus(a.status)).length,
-			};
-		});
-
-		return {
-			metrics: {
-				pacientesAtivos: patientsAtivosCount,
-				totalPacientes: patients.length,
-				pacientesNovos: patients.filter((p) => {
-					const created = toDate(p.created_at);
-					return created ? created >= startCurrentMonthDate : false;
-				}).length,
-				agendamentosHoje,
-				agendamentosConcluidos,
-				agendamentosRestantes: Math.max(
-					0,
-					agendamentosHoje - agendamentosConcluidos,
-				),
-				taxaNoShow:
-					totalAppointments30d > 0
-						? Math.round((noShowCount / totalAppointments30d) * 100)
-						: 0,
-				receitaMensal,
-				receitaMesAnterior,
-				crescimentoMensal:
-					receitaMesAnterior > 0
-						? Math.round(
-								((receitaMensal - receitaMesAnterior) / receitaMesAnterior) *
-									100,
-							)
-						: 0,
-				tendenciaSemanal,
-				fisioterapeutasAtivos: therapists.length,
-				agendamentosSemana: appointmentsWeek.length,
-			},
-			predictions: predictionsRes.data ?? [],
-			medicalReturnsUpcoming,
-			forecasts: forecastsRes.data ?? [],
-			staffPerformance: staffPerformanceRes.data ?? [],
-			selfAssessments: selfAssessmentsRes.data ?? [],
-			notifications: (notificationsRes.data ?? []) as Notification[],
-			birthdaysToday,
-			staffBirthdaysToday,
-			viewMode,
-			patients,
-			appointmentsToday,
-			appointmentsMonth,
-		};
-	} catch (error) {
-		logger.error(
-			"Error loading dashboard data",
-			{ error },
-			"SmartDashboardLoader",
-		);
-		throw error;
-	}
-}
-
-// --- Action ---
-export async function action({ request }: Route.ActionArgs) {
-	const formData = await request.formData();
-	const intent = formData.get("intent");
-
-	try {
-		if (intent === "generate-summary") {
-			const data = JSON.parse(formData.get("data") as string);
-			const summary = await generatePatientSummary(data);
-			return { summary };
-		}
-		return { error: "Intenção não reconhecida" };
-	} catch (error: any) {
-		logger.error("Error in dashboard action", { error }, "SmartAction");
-		return { error: error.message || "Erro ao processar ação" };
-	}
-}
-
 export default function SmartDashboard() {
+	const [searchParams, setSearchParams] = useSearchParams();
+	const viewMode = (searchParams.get("view") || "today") as ViewMode;
+
+	const { data, mutations } = useSmartDashboardData(viewMode);
 	const {
 		metrics,
 		predictions,
@@ -385,41 +78,25 @@ export default function SmartDashboard() {
 		notifications,
 		birthdaysToday,
 		staffBirthdaysToday,
-		viewMode,
 		patients,
 		appointmentsToday,
-		appointmentsMonth,
-	} = useLoaderData<typeof loader>();
+	} = data;
 
-	const actionData = useActionData() as { summary?: any; error?: string };
-	const submit = useSubmit();
-	const navigation = useNavigation();
 	const navigate = useNavigate();
 
 	const [isEditable, setIsEditable] = useState(false);
 	const [savedLayout, setSavedLayout] = useState<Layout[]>([]);
 	const [genkitSummary, setGenkitSummary] = useState<any>(null);
-	const isGeneratingSummary =
-		navigation.state === "submitting" &&
-		navigation.formData?.get("intent") === "generate-summary";
+	const [isGeneratingSummary, setIsGeneratingSummary] = useState(false);
+
 	const handleViewModeChange = (mode: ViewMode) => {
 		setSearchParams({ view: mode }, { replace: true });
 	};
 
-	// --- Genkit Summary Handling ---
-	useEffect(() => {
-		if (actionData?.summary) {
-			setGenkitSummary(actionData.summary);
-			toast.success("Insights gerados com sucesso!");
-		} else if (actionData?.error) {
-			toast.error(actionData.error);
-		}
-	}, [actionData]);
-
 	// --- Memoized Data for Charts ---
 	const performanceData = useMemo(
 		() =>
-			staffPerformance.map((s) => ({
+			staffPerformance.map((s: any) => ({
 				name: s.therapist_name?.split(" ")[0] || "Terapêuta",
 				rebook: Math.round((s.rebook_rate || 0) * 100),
 				appointments: s.total_appointments,
@@ -430,7 +107,7 @@ export default function SmartDashboard() {
 	const assessmentData = useMemo(
 		() =>
 			selfAssessments
-				.map((a) => ({
+				.map((a: any) => ({
 					date: format(parseISO(a.created_at), "dd/MM"),
 					pain: a.pain_level,
 					mobility: a.mobility_score,
@@ -441,7 +118,7 @@ export default function SmartDashboard() {
 
 	const revenueChartData = useMemo(
 		() =>
-			forecasts.map((f) => ({
+			forecasts.map((f: any) => ({
 				date: format(parseISO(f.date), "dd/MM"),
 				previsao: f.predicted_revenue,
 				real: f.actual_revenue,
@@ -449,14 +126,19 @@ export default function SmartDashboard() {
 		[forecasts],
 	);
 
-	const handleGenerateSummary = () => {
-		submit(
-			{
-				intent: "generate-summary",
-				data: JSON.stringify({ patients, appointmentsToday }),
-			},
-			{ method: "post" },
-		);
+	const handleGenerateSummary = async () => {
+		setIsGeneratingSummary(true);
+		try {
+			const summary = await mutations.generateSummary({
+				patients,
+				appointments: appointmentsToday,
+			});
+			setGenkitSummary(summary);
+		} catch {
+			// errors handled in hook (toast.error)
+		} finally {
+			setIsGeneratingSummary(false);
+		}
 	};
 
 	const handleSaveLayout = (layout: Layout[]) => {
@@ -466,7 +148,7 @@ export default function SmartDashboard() {
 		setIsEditable(false);
 	};
 
-	const SMART_DASHBOARD_GRID_COLS = { xl: 12, lg: 12, md: 12, sm: 6, xs: 4 };
+	const SMART_DASHBOARD_GRID_COLS = { xl: 12, lg: 12, md: 12, sm: 6, xs: 4, xxs: 2 };
 
 	const statsCards = [
 		{
@@ -1243,7 +925,14 @@ export default function SmartDashboard() {
 						}}
 						layouts={
 							savedLayout.length > 0
-								? { xl: savedLayout, lg: savedLayout, md: savedLayout }
+								? ({ 
+									xl: savedLayout, 
+									lg: savedLayout, 
+									md: savedLayout, 
+									sm: savedLayout, 
+									xs: savedLayout, 
+									xxs: savedLayout 
+								} as any)
 								: undefined
 						}
 						isEditable={isEditable}

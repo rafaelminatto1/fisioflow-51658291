@@ -1047,6 +1047,9 @@ importers:
       babel-jest:
         specifier: ^30.2.0
         version: 30.2.0(@babel/core@7.29.0)
+      babel-plugin-react-compiler:
+        specifier: ^1.0.0
+        version: 1.0.0
       expo-clipboard:
         specifier: ~55.0.9
         version: 55.0.9(expo@55.0.8)(react-native@0.83.2(@babel/core@7.29.0)(@types/react@19.2.14)(react@19.1.0))(react@19.1.0)
@@ -1246,6 +1249,9 @@ importers:
       babel-jest:
         specifier: ^30.2.0
         version: 30.2.0(@babel/core@7.29.0)
+      babel-plugin-react-compiler:
+        specifier: ^1.0.0
+        version: 1.0.0
       jest:
         specifier: ^29.7.0
         version: 29.7.0(@types/node@25.3.0)
