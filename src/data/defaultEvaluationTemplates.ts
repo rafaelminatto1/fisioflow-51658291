@@ -1,6 +1,5 @@
 import type {
 	EvaluationTemplate,
-	TemplateField,
 } from "@/components/evaluation";
 
 const uuidv4 = (): string => crypto.randomUUID();

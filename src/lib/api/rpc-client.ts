@@ -51,7 +51,7 @@ export const rpc = hc<AppType>(getBaseUrl(), {
 			headers: {
 				"Content-Type": "application/json",
 				...authHeaders,
-				...(init?.headers ?? {}),
+				...init?.headers,
 			},
 		});
 	},

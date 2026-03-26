@@ -50,7 +50,7 @@ app.get('/', requireAuth, async (c) => {
     `SELECT * FROM exercise_videos WHERE ${where.join(' AND ')} ORDER BY created_at DESC`,
     params,
   );
-  try { return c.json({ data: result.rows || result }); } catch(e) { return c.json({ data: [] }); }
+  try { return c.json({ data: result.rows || result }); } catch { return c.json({ data: [] }); }
 });
 
 // ─── GET /by-exercise/:exerciseId ─────────────────────────────────────────────
@@ -62,7 +62,7 @@ app.get('/by-exercise/:exerciseId', requireAuth, async (c) => {
     'SELECT * FROM exercise_videos WHERE exercise_id = $1 ORDER BY created_at DESC',
     [exerciseId],
   );
-  try { return c.json({ data: result.rows || result }); } catch(e) { return c.json({ data: [] }); }
+  try { return c.json({ data: result.rows || result }); } catch { return c.json({ data: [] }); }
 });
 
 // ─── GET /:id ──────────────────────────────────────────────────────────────────

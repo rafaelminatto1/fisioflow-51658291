@@ -66,7 +66,7 @@ export function ReceiptButton({
 				},
 				`recibo-${transaction.id}.pdf`,
 			);
-		} catch (error) {
+		} catch  {
 			// Error já tratado no hook
 		}
 	};

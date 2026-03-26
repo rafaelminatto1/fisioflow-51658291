@@ -154,7 +154,7 @@ export default function NotificationPreferencesPage() {
 			});
 			writeLocalPrefs(preferences);
 			toast.success("Preferências salvas com sucesso!");
-		} catch (_error) {
+		} catch  {
 			toast.error("Erro ao salvar preferências");
 		}
 	};

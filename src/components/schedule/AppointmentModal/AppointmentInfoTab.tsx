@@ -1,6 +1,6 @@
 import React from "react";
 import { UseFormReturn } from "react-hook-form";
-import { UserCog, Check, FileText, ChevronDown, ChevronUp } from "lucide-react";
+import { UserCog, Check, ChevronDown, ChevronUp } from "lucide-react";
 import { Label } from "@/components/ui/label";
 import {
 	Select,
@@ -9,7 +9,6 @@ import {
 	SelectTrigger,
 	SelectValue,
 } from "@/components/ui/select";
-import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import {
 	Collapsible,
@@ -84,7 +83,7 @@ export const AppointmentInfoTab: React.FC<AppointmentInfoTabProps> = ({
 	const watchedDateStr = watch("appointment_date");
 	const watchedTime = watch("appointment_time");
 	const watchedDuration = watch("duration");
-	const watchedNotes = watch("notes");
+	
 	const watchPaymentStatus = watch("payment_status");
 	const watchPaymentMethod = watch("payment_method");
 	const watchPaymentAmount = watch("payment_amount");

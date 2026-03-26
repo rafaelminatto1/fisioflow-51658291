@@ -23,7 +23,7 @@ interface Props {
 
 export function Modal({ visible, onClose, title, children, hideCloseButton }: Props) {
   const colors = useColors();
-  const [modalHeight, setModalHeight] = useState(SCREEN_HEIGHT * 0.7);
+  const [,setModalHeight] = useState(SCREEN_HEIGHT * 0.7);
 
   return (
     <RNModal

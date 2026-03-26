@@ -2,16 +2,9 @@ import { useState } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { useQueryClient } from "@tanstack/react-query";
 import { cn } from "@/lib/utils";
-import fisioflowLogo from "@/assets/logo.avif";
 import { Button } from "@/components/ui/button";
-import { OptimizedImage } from "@/components/ui/OptimizedImage";
 import { useNavPreload } from "@/hooks/useIntelligentPreload";
 import { useToast } from "@/hooks/use-toast";
-import { QueryKeys } from "@/hooks/queryKeys";
-import { fetchTarefas } from "@/hooks/useTarefas";
-import { PatientService } from "@/services/patientService";
-import { exerciseService } from "@/services/exercises";
-import { FinancialService } from "@/services/financialService";
 import {
 	LayoutDashboard,
 	Users,
@@ -23,49 +16,28 @@ import {
 	Settings,
 	ChevronLeft,
 	ChevronRight,
-	Stethoscope,
 	FileText,
 	MessageSquare,
-	Clock,
 	LogOut,
 	LayoutGrid,
 	ClipboardList,
 	ChevronDown,
 	Building2,
-	CalendarOff,
-	FileCheck,
-	FileSignature,
 	Target,
-	TrendingUp,
-	Sparkles,
 	Trophy,
 	ScanFace,
 	Footprints,
 	Image as ImageIcon,
 	Mail,
 	Database,
-	ShoppingCart,
 	Package,
 	Video,
-	Link2,
 	LinkIcon,
-	Layers,
 	Brain,
 	Shield,
-	Gift,
-	Flame,
 	Receipt,
 	BookOpen,
-	Zap,
-	Plug,
 	FlaskConical,
-	UserCircle,
-	UserCheck,
-	MoreHorizontal,
-	Star,
-	Calculator,
-	CheckCircle2,
-	Film,
 	Search,
 	Camera,
 } from "lucide-react";
@@ -227,7 +199,7 @@ export function Sidebar() {
 	const [configuracoesOpen, setConfiguracoesOpen] = useState(false);
 	const location = useLocation();
 	const { toast } = useToast();
-	const queryClient = useQueryClient();
+	
 	const { preloadRoute } = useNavPreload();
 
 	const isAdminActive = location.pathname.startsWith("/admin");

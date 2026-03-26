@@ -39,7 +39,7 @@ export default function MedicalRecord() {
 	const { profile } = useAuth();
 	const organizationId = profile?.organization_id ?? null;
 	const navigate = useNavigate();
-	const { isExporting, exportPatients } = useExcelExport();
+	const { exportPatients } = useExcelExport();
 
 	const [searchTerm, setSearchTerm] = useState("");
 	const [isExportingList, setIsExportingList] = useState(false);

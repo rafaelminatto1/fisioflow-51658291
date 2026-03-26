@@ -186,7 +186,7 @@ export const translations = {
 		"gamification.questProgress": "Progresso da Quest",
 
 		// Gamification - Títulos
-		"gamification.title": "Título",
+		"gamification.rankTitle": "Título",
 		"gamification.primaryTitle": "Título Principal",
 		"gamification.specialTitles": "Títulos Especiais",
 		"gamification.levelTitle": "Título de Nível",
@@ -376,7 +376,7 @@ export const translations = {
 		"gamification.questProgress": "Quest Progress",
 
 		// Gamification - Titles
-		"gamification.title": "Title",
+		"gamification.rankTitle": "Title",
 		"gamification.primaryTitle": "Primary Title",
 		"gamification.specialTitles": "Special Titles",
 		"gamification.levelTitle": "Level Title",

@@ -78,7 +78,7 @@ const CATEGORY_COLORS: Record<ProcedureCategory, string> = {
 export const ProcedureChecklistBlock: React.FC<
 	ProcedureChecklistBlockProps
 > = ({ procedures, onChange, disabled = false, className }) => {
-	const [showAutocomplete, setShowAutocomplete] = useState(false);
+	const [,setShowAutocomplete] = useState(false);
 	const [quickAddValue, setQuickAddValue] = useState("");
 	const quickAddRef = useRef<HTMLInputElement>(null);
 
@@ -153,23 +153,9 @@ export const ProcedureChecklistBlock: React.FC<
 		}
 	}, [newProcName, newProcCategory, handleAddProcedure]);
 
-	const groupedByCategory = useMemo(() => {
-		const grouped: Record<
-			string,
-			Array<{ name: string; category: ProcedureCategory }>
-		> = {};
-		COMMON_PROCEDURES.forEach((proc) => {
-			const label = PROCEDURE_CATEGORY_LABELS[proc.category];
-			if (!grouped[label]) grouped[label] = [];
-			grouped[label].push(proc);
-		});
-		return grouped;
-	}, []);
+	
 
-	const existingNames = useMemo(
-		() => new Set(procedures.map((p) => p.name.toLowerCase())),
-		[procedures],
-	);
+	
 
 	return (
 		<>

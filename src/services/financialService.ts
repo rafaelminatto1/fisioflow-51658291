@@ -156,7 +156,7 @@ export class FinancialService {
 						timestamp: new Date().toISOString(),
 					},
 				});
-			} catch (e) {
+			} catch  {
 				/* silent fail */
 			}
 
@@ -190,7 +190,7 @@ export class FinancialService {
 						timestamp: new Date().toISOString(),
 					},
 				});
-			} catch (e) {
+			} catch  {
 				/* silent fail */
 			}
 
@@ -215,7 +215,7 @@ export class FinancialService {
 					entity_id: id,
 					metadata: { timestamp: new Date().toISOString() },
 				});
-			} catch (e) {
+			} catch  {
 				/* silent fail */
 			}
 		} catch (error) {
@@ -245,7 +245,7 @@ export class FinancialService {
 						timestamp: new Date().toISOString(),
 					},
 				});
-			} catch (e) {
+			} catch  {
 				/* silent fail */
 			}
 

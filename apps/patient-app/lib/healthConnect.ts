@@ -86,7 +86,7 @@ export class HealthConnectManager {
 
       // Simulação
       return true;
-    } catch (error) {
+    } catch  {
       return false;
     }
   }

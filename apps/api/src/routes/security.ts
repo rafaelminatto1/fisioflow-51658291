@@ -137,7 +137,7 @@ app.get('/lgpd-consents', async (c) => {
     `,
     [user.uid],
   );
-  try { return c.json({ data: result.rows || result }); } catch(e) { return c.json({ data: [] }); }
+  try { return c.json({ data: result.rows || result }); } catch { return c.json({ data: [] }); }
 });
 
 app.put('/lgpd-consents/:consentType', async (c) => {
@@ -406,7 +406,7 @@ app.get('/mfa/factors', async (c) => {
     `,
     [user.uid],
   );
-  try { return c.json({ data: result.rows || result }); } catch(e) { return c.json({ data: [] }); }
+  try { return c.json({ data: result.rows || result }); } catch { return c.json({ data: [] }); }
 });
 
 app.delete('/mfa/factors/:factorId', async (c) => {

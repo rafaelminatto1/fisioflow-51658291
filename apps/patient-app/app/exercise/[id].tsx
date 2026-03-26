@@ -68,7 +68,7 @@ export default function ExerciseDetailScreen() {
   const [completed, setCompleted] = useState(false);
   const [completing, setCompleting] = useState(false);
   const [showVideo, setShowVideo] = useState(false);
-  const [history, setHistory] = useState<ExerciseHistory[]>([]);
+  const [history] = useState<ExerciseHistory[]>([]);
 
   useEffect(() => {
     if (exerciseId && user?.id) {

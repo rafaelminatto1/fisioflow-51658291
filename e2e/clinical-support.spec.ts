@@ -17,7 +17,7 @@
  * @see src/lib/ai/clinical-support.ts
  */
 
-import { test, expect } from '@playwright/test';
+import { test } from '@playwright/test';
 import { testUsers } from './fixtures/test-data';
 
 const BASE_URL = 'http://localhost:8080';
@@ -30,76 +30,7 @@ test.setTimeout(180000);
 // TEST DATA
 // ========================================
 
-const MOCK_CLINICAL_CASES = {
-  redFlags: {
-    patient: {
-      id: 'test-patient-1',
-      name: 'João Silva',
-      age: 52,
-      gender: 'Masculino',
-      mainCondition: 'Lombalgia',
-      medicalHistory: 'Hipertensão arterial, diabetes tipo 2',
-    },
-    currentSOAP: {
-      subjective: 'Paciente relata dor lombar intensa com irradiação para ambos os membros inferiores. Parestesia em região perineal. Disfunção esfincteriana (retenção urinária). Fraqueza progressiva em membros inferiores.',
-      objective: {
-        inspection: 'Marcha atáxica, dificuldade de deambulação',
-        palpation: 'Hipersensibilidade lombar difusa',
-        movement_tests: {
-          'Força MMII': '3/5 bilateral',
-          'Reflexos osteotendíneos': 'Hiporreflexia bilateral',
-          'Sensibilidade': 'Diminuída em dermátomos L4-S2',
-        },
-      },
-      assessment: 'Suspeita de Síndrome da Cauda Equina',
-      plan: 'Encaminhamento urgente para neurocirurgia',
-      vitalSigns: {
-        pressaoArterial: '160/95 mmHg',
-        frequenciaCardiaca: '88 bpm',
-        temperatura: '36.8°C',
-      },
-    },
-    previousSessions: [],
-    sessionNumber: 1,
-    treatmentDurationWeeks: 0,
-  },
 
-  standardCase: {
-    patient: {
-      id: 'test-patient-2',
-      name: 'Maria Santos',
-      age: 38,
-      gender: 'Feminino',
-      mainCondition: 'Tendinopatia do manguito rotador',
-      medicalHistory: 'Hipotireoidismo controlado',
-    },
-    currentSOAP: {
-      subjective: 'Paciente relata dolor em ombro direito há 4 meses. Piora progressiva com atividades acima da cabeça. Dor noturna ocasional. Sem trauma prévio.',
-      objective: {
-        inspection: 'Sem atrofia muscular aparente',
-        palpation: 'Dor à palpação de espaço subacromial',
-        movement_tests: {
-          'Abdução ativa': '120° com arco doloroso',
-          'Rotação lateral': 'Limitada',
-          'Neer sign': 'Positivo',
-          'Hawkins-Kennedy': 'Positivo',
-        },
-      },
-      assessment: 'Síndrome do impacto subacromial - Tendinopatia do supraespinhoso',
-      plan: 'Fisioterapia com fortalecimento de manguito rotador',
-    },
-    previousSessions: [
-      {
-        sessionNumber: 1,
-        subjective: 'Dor 7/10, limitação significativa',
-        assessment: 'Fase aguda inflamatória',
-        plan: 'Repouso relativo e crioterapia',
-      },
-    ],
-    sessionNumber: 3,
-    treatmentDurationWeeks: 2,
-  },
-};
 
 const MOCK_CLINICAL_ANALYSIS_RESPONSES = {
   redFlags: {

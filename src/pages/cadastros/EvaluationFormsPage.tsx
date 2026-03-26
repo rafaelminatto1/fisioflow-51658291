@@ -22,12 +22,8 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Textarea } from "@/components/ui/textarea";
-import {
-	Tooltip,
-	TooltipContent,
-	TooltipProvider,
-	TooltipTrigger,
-} from "@/components/ui/tooltip";
+
+
 import { Separator } from "@/components/ui/separator";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import {
@@ -43,17 +39,13 @@ import {
 	Pencil,
 	Trash2,
 	Eye,
-	Settings,
 	BookOpen,
 	Copy,
-	Download,
 	Upload,
 	Play,
 	Sparkles,
 	Loader2,
-	Save,
 	FileText,
-	CheckCircle2,
 	LayoutGrid,
 	List as ListIcon,
 	Star,
@@ -267,41 +259,7 @@ export default function EvaluationFormsPage() {
 		}
 	};
 
-	const handleExport = (form: EvaluationForm) => {
-		const exportData: EvaluationFormImportData = {
-			nome: form.nome,
-			descricao: form.descricao,
-			tipo: form.tipo,
-			referencias: form.referencias,
-			fields: (form.evaluation_form_fields || []).map(
-				(f: EvaluationFormField) => ({
-					tipo_campo: f.tipo_campo,
-					label: f.label,
-					placeholder: f.placeholder,
-					opcoes:
-						typeof f.opcoes === "string" ? JSON.parse(f.opcoes) : f.opcoes,
-					ordem: f.ordem,
-					obrigatorio: f.obrigatorio,
-					grupo: f.grupo,
-					descricao: f.descricao,
-					minimo: f.minimo,
-					maximo: f.maximo,
-				}),
-			),
-		};
-		const blob = new Blob([JSON.stringify(exportData, null, 2)], {
-			type: "application/json",
-		});
-		const url = URL.createObjectURL(blob);
-		const a = document.createElement("a");
-		a.href = url;
-		a.download = `${form.nome.toLowerCase().replace(/\s+/g, "_")}.json`;
-		document.body.appendChild(a);
-		a.click();
-		document.body.removeChild(a);
-		URL.revokeObjectURL(url);
-		toast.success("Template exportado com sucesso.");
-	};
+	
 
 	const handleImportFile = async (e: React.ChangeEvent<HTMLInputElement>) => {
 		const file = e.target.files?.[0];

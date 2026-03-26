@@ -133,7 +133,7 @@ function setupPerformanceMonitoring() {
 			});
 
 			resourceObserver.observe({ entryTypes: ["resource"] });
-		} catch (_error) {
+		} catch  {
 			logger.debug("PerformanceObserver não suportado");
 		}
 	}

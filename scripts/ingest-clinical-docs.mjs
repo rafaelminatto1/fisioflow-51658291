@@ -6,7 +6,6 @@
  */
 
 import { config } from 'dotenv';
-import { readFileSync, readdirSync } from 'node:fs';
 import { resolve } from 'node:path';
 
 config({ path: '.env.local', override: true });
@@ -37,7 +36,7 @@ async function generateEmbedding(text) {
 }
 
 async function main() {
-  const docsDir = resolve(process.cwd(), 'clinical_docs');
+  
   console.log("🧠 Iniciando ingestão de conhecimento clínico...");
 
   // Exemplo de como você usará no terminal:

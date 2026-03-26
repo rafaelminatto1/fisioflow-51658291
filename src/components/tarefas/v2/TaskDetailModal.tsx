@@ -61,7 +61,6 @@ import {
 	SelectTrigger,
 	SelectValue,
 } from "@/components/ui/select";
-import { Textarea } from "@/components/ui/textarea";
 import { RichTextEditor } from "@/components/ui/RichTextEditor";
 import { Badge } from "@/components/ui/badge";
 import { Label } from "@/components/ui/label";
@@ -171,7 +170,7 @@ export function TaskDetailModal({
 }: TaskDetailModalProps) {
 	const isMobile = useIsMobile();
 	const updateTarefa = useUpdateTarefa();
-	const { data: projects } = useProjects();
+	
 	const { data: _allTarefas } = useTarefas();
 
 	const [activeTab, setActiveTab] = useState("details");

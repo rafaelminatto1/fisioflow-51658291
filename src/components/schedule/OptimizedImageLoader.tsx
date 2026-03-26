@@ -163,9 +163,7 @@ export const OptimizedImageLoader = memo(
 		}, [onError]);
 
 		// Handle progress (para upload de imagens)
-		const handleProgress = useCallback((progress: number) => {
-			setState((prev) => ({ ...prev, progress }));
-		}, []);
+		
 
 		// Setup Intersection Observer para lazy loading
 		useEffect(() => {

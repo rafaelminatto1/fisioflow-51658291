@@ -308,7 +308,7 @@ export class AppointmentService {
 						timestamp: new Date().toISOString(),
 					},
 				});
-			} catch (e) {
+			} catch  {
 				/* silent fail */
 			}
 
@@ -482,7 +482,7 @@ export class AppointmentService {
 						timestamp: new Date().toISOString(),
 					},
 				});
-			} catch (e) {
+			} catch  {
 				/* silent fail */
 			}
 
@@ -548,7 +548,7 @@ export class AppointmentService {
 						r.patient_name || r.patient?.full_name || "Desconhecido";
 					updatedAppointment.phone = r.patient_phone || r.patient?.phone || "";
 				}
-			} catch (_e) {
+			} catch  {
 				// Ignore silent refresh error
 			}
 
@@ -601,7 +601,7 @@ export class AppointmentService {
 							timestamp: new Date().toISOString(),
 						},
 					});
-				} catch (e) {
+				} catch  {
 					/* silent fail */
 				}
 				return result;
@@ -615,7 +615,7 @@ export class AppointmentService {
 					entity_id: id,
 					metadata: { status, timestamp: new Date().toISOString() },
 				});
-			} catch (e) {
+			} catch  {
 				/* silent fail */
 			}
 			return result.data;
@@ -642,7 +642,7 @@ export class AppointmentService {
 						timestamp: new Date().toISOString(),
 					},
 				});
-			} catch (e) {
+			} catch  {
 				/* silent fail */
 			}
 			return result;
@@ -670,7 +670,7 @@ export class AppointmentService {
 						timestamp: new Date().toISOString(),
 					},
 				});
-			} catch (e) {
+			} catch  {
 				/* silent fail */
 			}
 		} catch (error) {

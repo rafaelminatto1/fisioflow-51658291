@@ -1,7 +1,7 @@
 import { format, isSameDay } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { Ban, Calendar, Calendar as CalendarIcon, Clock } from "lucide-react";
-import React, { memo, useState } from "react";
+import React, { memo } from "react";
 import {
 	Tooltip,
 	TooltipContent,
@@ -17,16 +17,11 @@ import {
 	calculateAppointmentCardHeight,
 	calculateSlotHeightFromCardSize,
 } from "@/lib/calendar/cardHeightCalculator";
-import {
-	calculateCardOffsetPercent,
-	calculateCardWidthPercent,
-	MAX_CARDS_WITHOUT_BADGE,
-	shouldShowText,
-} from "@/lib/calendar/dragPreview";
+
+
 import { cn } from "@/lib/utils";
 import type { Appointment } from "@/types/appointment";
 import { CalendarAppointmentCard } from "./CalendarAppointmentCard";
-import { DropTargetPreviewCard } from "./DropTargetPreviewCard";
 import { VirtualizedCalendarGrid } from "./virtualized/VirtualizedCalendarGrid";
 
 interface CalendarDayViewProps {

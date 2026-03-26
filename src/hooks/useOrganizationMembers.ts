@@ -5,7 +5,7 @@
 
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
-import { organizationMembersApi, type OrganizationMember } from "@/api/v2";
+import { organizationMembersApi } from "@/api/v2";
 
 export const useOrganizationMembers = (organizationId?: string) => {
 	const queryClient = useQueryClient();

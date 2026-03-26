@@ -56,7 +56,7 @@ export function ExerciseFeedbackModal({
   };
 
   const difficultyLabels = ['Muito Fácil', 'Fácil', 'Médio', 'Difícil', 'Muito Difícil'];
-  const painLabels = ['Sem dor', 'Muito Leve', 'Leve', 'Moderada', 'Forte', 'Muito Forte', 'Insuportável'];
+  
 
   return (
     <Modal

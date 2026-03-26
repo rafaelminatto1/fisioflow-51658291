@@ -22,7 +22,7 @@ app.get('/categories', requireAuth, async (c) => {
     `SELECT * FROM wiki_categories WHERE organization_id = $1 ORDER BY order_index ASC, name ASC`,
     [user.organizationId]
   );
-  try { return c.json({ data: result.rows || result }); } catch(e) { return c.json({ data: [] }); }
+  try { return c.json({ data: result.rows || result }); } catch { return c.json({ data: [] }); }
 });
 
 app.post('/categories', requireAuth, async (c) => {
@@ -172,7 +172,7 @@ app.get('/:slug/children', async (c) => {
 
 // ===== HISTÓRICO DE VERSÕES (auth obrigatório) =====
 app.get('/:slug/versions', requireAuth, async (c) => {
-  const user = c.get('user');
+  
   const db = await createDb(c.env);
   const { slug } = c.req.param();
 
@@ -223,7 +223,7 @@ app.get('/org/list', requireAuth, async (c) => {
 // ===== BUSCAR PÁGINA POR ID =====
 app.get('/by-id/:id', requireAuth, async (c) => {
   const { id } = c.req.param();
-  const user = c.get('user');
+  
   const db = await createDb(c.env);
 
   const rows = await db
@@ -377,7 +377,7 @@ app.get('/:pageId/comments', requireAuth, async (c) => {
     `SELECT * FROM wiki_comments WHERE page_id = $1 AND organization_id = $2 AND deleted_at IS NULL ORDER BY created_at ASC`,
     [c.req.param('pageId'), user.organizationId]
   );
-  try { return c.json({ data: result.rows || result }); } catch(e) { return c.json({ data: [] }); }
+  try { return c.json({ data: result.rows || result }); } catch { return c.json({ data: [] }); }
 });
 
 app.post('/:pageId/comments', requireAuth, async (c) => {

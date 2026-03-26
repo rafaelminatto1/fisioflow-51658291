@@ -1,7 +1,6 @@
 import React from 'react';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import { Card, CardContent } from "@/components/ui/card";
-import { JointAngle } from '../../../types/biomechanics';
 
 interface RealTimeMetricsChartProps {
     data: Array<{ frame: number } & Record<string, number>>;

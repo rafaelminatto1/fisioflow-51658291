@@ -60,7 +60,7 @@ export default {
         const response = new Response(imageRes.body, imageRes);
         response.headers.set('Cache-Control', 'public, max-age=31536000, immutable');
         return response;
-      } catch (e) {
+      } catch  {
         return new Response('Image optimization failed', { status: 500 });
       }
     }

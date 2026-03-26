@@ -31,7 +31,7 @@ import "@/styles/schedule.css";
 
 export default function Schedule() {
 	const [searchParams, setSearchParams] = useSearchParams();
-	const { organizationId: authOrgId } = useAuth();
+	
 
 	const dateParam =
 		searchParams.get("date") || format(new Date(), "yyyy-MM-dd");
@@ -44,7 +44,7 @@ export default function Schedule() {
 		searchParams.get("therapists")?.split(",").filter(Boolean) || [];
 	const patientParam = searchParams.get("patient") || undefined;
 
-	const { data, mutations, isLoading, refetch } = useSchedulePageData(
+	const { data, isLoading, refetch } = useSchedulePageData(
 		dateParam,
 		viewParam,
 		{
@@ -60,8 +60,7 @@ export default function Schedule() {
 		patients,
 		birthdaysToday,
 		staffBirthdaysToday,
-		organizationId,
-	} = data;
+		} = data;
 
 	const currentDate = useMemo(() => new Date(dateParam), [dateParam]);
 	const viewType = viewParam;

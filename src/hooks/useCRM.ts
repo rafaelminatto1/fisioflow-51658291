@@ -180,7 +180,7 @@ export function useCRMCampanhas() {
 }
 
 export function useCreateCampanha() {
-	const queryClient = useQueryClient();
+	
 	return useMutation({
 		mutationFn: async (_campanha: Partial<CRMCampanha>) => {
 			throw new Error("Campanhas ainda não disponíveis na API Workers");

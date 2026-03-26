@@ -71,10 +71,7 @@ export function FinancialAnalytics() {
 				return items;
 			} else {
 				// Mostrar por dia se o período for curto
-				const intervalDays = eachDayOfInterval({
-					start: dateRange.from,
-					end: dateRange.to,
-				});
+				
 
 				const response = await analyticsApi.financial({
 					startDate: format(dateRange.from, "yyyy-MM-dd"),

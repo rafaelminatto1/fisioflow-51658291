@@ -21,7 +21,7 @@ import { useBiometricAuth } from '@/hooks/useBiometricAuth';
 
 export default function LoginScreen() {
   const colors = useColors();
-  const { signIn, isLoading, error, clearError, user } = useAuthStore();
+  const { signIn, isLoading, error, clearError, } = useAuthStore();
   const {
     authenticate,
     enable,
@@ -73,7 +73,7 @@ export default function LoginScreen() {
         await enable();
       }
       router.replace('/(tabs)');
-    } catch (err: any) {
+    } catch  {
       // Error handled by store
     }
   };
@@ -96,7 +96,7 @@ export default function LoginScreen() {
         try {
           await signIn(storedEmail, storedPassword);
           router.replace('/(tabs)');
-        } catch (err: any) {
+        } catch  {
           setLocalError('Erro na autenticação. Tente login manual.');
         }
       } else {

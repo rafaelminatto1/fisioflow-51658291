@@ -246,7 +246,7 @@ export default function ContentCalendarPage() {
 				hashtags: "",
 			});
 			await loadContentItems();
-		} catch (_error) {
+		} catch  {
 			toast.error("Erro ao salvar conteúdo");
 		} finally {
 			setSaving(false);
@@ -260,7 +260,7 @@ export default function ContentCalendarPage() {
 			await marketingApi.contentCalendar.delete(id);
 			toast.success("Conteúdo excluído!");
 			await loadContentItems();
-		} catch (_error) {
+		} catch  {
 			toast.error("Erro ao excluir conteúdo");
 		}
 	};

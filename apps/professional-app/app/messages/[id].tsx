@@ -19,7 +19,6 @@ import { useAuthStore } from '@/store/auth';
 import { useHaptics } from '@/hooks/useHaptics';
 import { getConversationMessages, sendMessage, markAsRead, ApiMessage } from '@/lib/api';
 import { format } from 'date-fns';
-import { ptBR } from 'date-fns/locale';
 
 export default function ChatDetailScreen() {
   const colors = useColors();
@@ -32,7 +31,7 @@ export default function ChatDetailScreen() {
   const [inputText, setInputText] = useState('');
   const [isSending, setIsSending] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
-  const [participantName, setParticipantName] = useState('Paciente');
+  const [participantName] = useState('Paciente');
 
   const flatListRef = useRef<FlatList>(null);
 

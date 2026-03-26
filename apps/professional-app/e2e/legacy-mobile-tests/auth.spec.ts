@@ -1,4 +1,4 @@
-import { defineConfig, devices, test, expect } from '@playwright/test';
+import { defineConfig, test, expect } from '@playwright/test';
 
 /**
  * Playwright E2E Configuration for Fisioflow Native Apps

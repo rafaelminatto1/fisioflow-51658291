@@ -46,16 +46,12 @@ export function usePatients(options?: UsePatientsOptions) {
     queryFn: async () => {
       if (!user?.id) return [];
 
-      try {
-        const data = await getPatients(user.organizationId, {
-          status: options?.status === 'active' ? undefined : options?.status,
-          search: options?.search,
-          limit: options?.limit || 100,
-        });
-        return data.map(mapApiPatient);
-      } catch (error) {
-        throw error;
-      }
+      const data = await getPatients(user.organizationId, {
+        status: options?.status === 'active' ? undefined : options?.status,
+        search: options?.search,
+        limit: options?.limit || 100,
+      });
+      return data.map(mapApiPatient);
     },
     enabled: !!user,
     staleTime: 1000 * 60 * 5, // 5 minutes

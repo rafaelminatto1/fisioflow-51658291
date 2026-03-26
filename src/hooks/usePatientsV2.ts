@@ -1,6 +1,6 @@
 // Pagination types
 
-import { useEffect, useState, useMemo, useRef } from "react";
+import { useEffect, useMemo, useRef } from "react";
 import { useQuery, useQueryClient, useMutation } from "@tanstack/react-query";
 import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/hooks/use-toast";

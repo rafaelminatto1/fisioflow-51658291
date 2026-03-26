@@ -21,7 +21,6 @@ import {
 	SelectValue,
 } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
 	Plus,
 	Save,
@@ -32,7 +31,6 @@ import {
 	AlertCircle,
 	Loader2,
 	Target,
-	Activity,
 	BookOpen,
 	Settings,
 	ShieldCheck,
@@ -48,12 +46,8 @@ import {
 import { metricRegistry } from "@/lib/metrics/metricRegistry";
 import { GoalTarget, TargetMode } from "@/lib/goals/goalProfiles.seed";
 import { fisioLogger as logger } from "@/lib/errors/logger";
-import {
-	Tooltip,
-	TooltipContent,
-	TooltipProvider,
-	TooltipTrigger,
-} from "@/components/ui/tooltip";
+
+
 
 const METRIC_OPTIONS = Object.values(metricRegistry)
 	.filter((m) => m.key && m.label)

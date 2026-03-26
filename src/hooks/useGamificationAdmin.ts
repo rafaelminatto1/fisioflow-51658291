@@ -115,7 +115,7 @@ const buildEngagementData = (
 };
 
 export const useGamificationAdmin = (days = 30): UseGamificationAdminResult => {
-	const { toast } = useToast();
+	
 
 	const { data: stats, isLoading: statsLoading } = useQuery({
 		queryKey: ["gamification-admin-stats", days],

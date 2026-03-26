@@ -19,15 +19,11 @@ import {
 	RotateCcw,
 	Trash2,
 	Check,
-	X,
 	ChevronDown,
 	ChevronUp,
 	Pencil,
 	Info,
-	GripVertical,
 	Save,
-	Eye,
-	EyeOff,
 } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
 import { Alert, AlertDescription } from "@/components/ui/alert";
@@ -55,15 +51,8 @@ import {
 	DialogHeader,
 	DialogTitle,
 } from "@/components/ui/dialog";
-import {
-	Select,
-	SelectContent,
-	SelectItem,
-	SelectTrigger,
-	SelectValue,
-} from "@/components/ui/select";
-import { ScrollArea } from "@/components/ui/scroll-area";
-import { Separator } from "@/components/ui/separator";
+
+
 
 // Predefined vivid color palette (Monday.com inspired)
 const COLOR_PALETTE = [
@@ -859,11 +848,9 @@ export function StatusColorManager() {
 		deleteStatus,
 		resetToDefaults,
 		resetStatusColor,
-		isCustomStatus,
 		hasCustomColors,
 		customStatuses,
-		allStatuses,
-	} = useStatusConfig();
+		} = useStatusConfig();
 
 	const [showNewDialog, setShowNewDialog] = useState(false);
 	const [editingStatus, setEditingStatus] = useState<CustomStatusConfig | null>(

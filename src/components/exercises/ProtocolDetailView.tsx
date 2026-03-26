@@ -1,5 +1,5 @@
 import React from "react";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion } from "framer-motion";
 import {
 	X,
 	Calendar,
@@ -11,21 +11,13 @@ import {
 	Milestone,
 	BookOpen,
 	CheckCircle2,
-	Stethoscope,
-	ChevronDown,
 	Info,
 	Edit,
-	ArrowRight,
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Progress } from "@/components/ui/progress";
-import {
-	Accordion,
-	AccordionContent,
-	AccordionItem,
-	AccordionTrigger,
-} from "@/components/ui/accordion";
+
+
 import {
 	Tooltip,
 	TooltipContent,
@@ -52,7 +44,7 @@ const ProtocolDetailView: React.FC<ProtocolDetailViewProps> = ({
 		if (typeof field === "string") {
 			try {
 				return JSON.parse(field);
-			} catch (e) {
+			} catch  {
 				return [];
 			}
 		}
@@ -61,8 +53,8 @@ const ProtocolDetailView: React.FC<ProtocolDetailViewProps> = ({
 
 	const milestones = getArrayField(protocol.milestones);
 	const restrictions = getArrayField(protocol.restrictions);
-	const objectives = getArrayField((protocol as any).objectives); // Assuming it might exist based on description
-	const phases = getArrayField((protocol as any).phases); // Some protocols have phases
+	 // Assuming it might exist based on description
+	 // Some protocols have phases
 
 	const containerVariants = {
 		hidden: { opacity: 0, y: 20 },

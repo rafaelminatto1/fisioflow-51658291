@@ -4,7 +4,6 @@ import { useAuth } from "@/hooks/useAuth";
 import { toast } from "sonner";
 import {
 	clinicalTestsApi,
-	mediaApi,
 	type ClinicalTestTemplateRecord,
 } from "@/api/v2";
 import {
@@ -34,7 +33,6 @@ import {
 	BarChart3,
 	Video,
 	Image as ImageIcon,
-	UploadCloud,
 	Plus,
 } from "lucide-react";
 import {
@@ -112,7 +110,6 @@ export function ClinicalTestFormModal({
 	});
 
 	const [tagsInput, setTagsInput] = useState("");
-	const [isUploading, setIsUploading] = useState(false);
 
 	useEffect(() => {
 		if (test) {

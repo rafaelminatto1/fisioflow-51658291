@@ -128,7 +128,7 @@ app.get('/', requireAuth, async (c) => {
      ORDER BY nome ASC`,
     params,
   );
-  try { return c.json({ data: result.rows || result }); } catch(e) { return c.json({ data: [] }); }
+  try { return c.json({ data: result.rows || result }); } catch { return c.json({ data: [] }); }
 });
 
 app.get('/:id', requireAuth, async (c) => {
@@ -494,7 +494,7 @@ app.get('/:id/responses', requireAuth, async (c) => {
     params,
   );
 
-  try { return c.json({ data: result.rows || result }); } catch(e) { return c.json({ data: [] }); }
+  try { return c.json({ data: result.rows || result }); } catch { return c.json({ data: [] }); }
 });
 
 app.post('/:id/responses', requireAuth, async (c) => {

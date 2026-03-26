@@ -79,7 +79,7 @@ function parseAchievementRequirements(requirements) {
 		try {
 			var parsed = JSON.parse(requirements);
 			return exports.achievementRequirementSchema.parse(parsed);
-		} catch (_a) {
+		} catch  {
 			return { type: "custom", count: 0 };
 		}
 	}

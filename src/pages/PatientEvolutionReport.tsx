@@ -6,7 +6,7 @@ import { ProgressAnalysisCard } from "@/components/patients/ProgressAnalysisCard
 import { usePatientEvolutionReport } from "@/hooks/usePatientEvolutionReport";
 import { usePatients } from "@/hooks/usePatients";
 import { Button } from "@/components/ui/button";
-import { ArrowLeft, FileDown, Printer, Activity, Sparkles } from "lucide-react";
+import { ArrowLeft, FileDown, Printer, Activity } from "lucide-react";
 import { LoadingSkeleton, EmptyState } from "@/components/ui";
 import { toast } from "sonner";
 import { PatientHelpers } from "@/types";

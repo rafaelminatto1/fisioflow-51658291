@@ -69,7 +69,7 @@ export function StudyMode({ artifact, onClose }: StudyModeProps) {
 				...prev,
 				{ role: "assistant", content: response.answer },
 			]);
-		} catch (error) {
+		} catch  {
 			// Fallback for demo/offline
 			console.warn("Backend AI failed, using fallback mock for demo purposes.");
 

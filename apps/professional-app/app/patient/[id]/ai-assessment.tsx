@@ -49,17 +49,17 @@ const createSession = (id: string, patientId: string, exerciseType: ExerciseType
 });
 
 export default function AIAssessmentScreen() {
-  const { id, name } = useLocalSearchParams();
+  const { id, } = useLocalSearchParams();
   const colors = useColors();
   const router = useRouter();
   const { medium, success: hapticSuccess } = useHaptics();
-  const { playWarning } = useAudioFeedback();
+  
   const { saveSession } = useAIExercisePersistence();
   
   const [permission, requestPermission] = useCameraPermissions();
   const [isActive, setIsActive] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
-  const [exerciseType, setExerciseType] = useState<ExerciseType>(ExerciseType.SQUAT);
+  const [exerciseType] = useState<ExerciseType>(ExerciseType.SQUAT);
   
   // Refs
   const engineRef = useRef(new AnalysisEngine(ExerciseType.SQUAT));
@@ -90,27 +90,7 @@ export default function AIAssessmentScreen() {
     );
   }
 
-  const handleFrame = (frame: any) => {
-    // Nota: Em React Native real com Frame Processors (Vision Camera), 
-    // rodaríamos o engine aqui. No Expo Go, simulamos.
-    if (!isActive) return;
-    
-    // Simulação de detecção para demonstração
-    const mockPose = {
-      landmarks: [], // Pontos detectados
-      confidence: 0.9,
-      timestamp: Date.now(),
-      analysisType: 'form' as any
-    };
-    
-    const result = engineRef.current.processFrame(mockPose);
-    setLastAnalysis(result);
-    
-    // Exemplo de feedback sonoro
-    if (result.postureIssues.length > 0) {
-      // Evitar spam de som
-    }
-  };
+  
 
   const handleComplete = async () => {
     medium();
@@ -132,7 +112,7 @@ export default function AIAssessmentScreen() {
       hapticSuccess();
       Alert.alert('Sucesso', 'Avaliação salva no histórico do paciente!');
       router.back();
-    } catch (e) {
+    } catch  {
       Alert.alert('Erro', 'Falha ao salvar sessão.');
     } finally {
       setIsSaving(false);

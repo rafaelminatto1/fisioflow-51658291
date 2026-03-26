@@ -35,8 +35,6 @@ export default function WellnessScreen() {
   const {
     isAvailable: healthKitAvailable,
     isAuthorized: healthKitAuthorized,
-    healthData: healthKitData,
-    loading: healthKitLoading,
     initialize: initializeHealthKit,
     requestPermissions: requestHealthKitPermissions,
     getTodayData: getHealthKitTodayData,
@@ -47,8 +45,6 @@ export default function WellnessScreen() {
     isAvailable: healthConnectAvailable,
     isInstalled: healthConnectInstalled,
     isAuthorized: healthConnectAuthorized,
-    healthData: healthConnectData,
-    loading: healthConnectLoading,
     initialize: initializeHealthConnect,
     openInstallation: openHealthConnectInstallation,
     requestPermissions: requestHealthConnectPermissions,
@@ -353,7 +349,7 @@ export default function WellnessScreen() {
               // Mock data for weekly view
               const daySteps = Math.floor(Math.random() * 8000) + 4000;
               const percentage = Math.min((daySteps / 10000) * 100, 100);
-              const isToday = index === new Date().getDay();
+              
 
               return (
                 <View key={day} style={styles.dayColumn}>

@@ -14,13 +14,10 @@ import { useRealtimeEventos } from "@/hooks/useRealtimeEventos";
 import { usePermissions } from "@/hooks/usePermissions";
 import { EventosStatsWidget } from "@/components/eventos/EventosStatsWidget";
 import {
-	Calendar,
 	MapPin,
-	DollarSign,
 	Users,
 	Plus,
 	Search,
-	Filter,
 	MoreVertical,
 	Eye,
 	Edit,

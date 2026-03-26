@@ -112,7 +112,7 @@ export default function ReferralPage() {
 					toast.info(`Estratégia: ${result.suggestions[0]}`);
 				}
 			}
-		} catch (error) {
+		} catch  {
 			toast.error("Erro ao obter sugestão da IA.");
 		} finally {
 			setIsGeneratingAI(false);
@@ -149,7 +149,7 @@ export default function ReferralPage() {
 			toast.success("Código de indicação criado com sucesso");
 			setCreateMode(false);
 			loadReferralStats();
-		} catch (_error) {
+		} catch  {
 			toast.error("Erro ao criar código de indicação");
 		}
 	};

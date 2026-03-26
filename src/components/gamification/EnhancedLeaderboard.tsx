@@ -8,7 +8,6 @@ import {
 	Trophy,
 	Medal,
 	Crown,
-	User,
 	Loader2,
 	Search,
 	TrendingUp,

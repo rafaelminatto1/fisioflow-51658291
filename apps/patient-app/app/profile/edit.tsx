@@ -55,11 +55,7 @@ interface FormErrors {
   birthDate?: string;
 }
 
-const states = [
-  'AC', 'AL', 'AP', 'AM', 'BA', 'CE', 'DF', 'ES', 'GO', 'MA',
-  'MT', 'MS', 'MG', 'PA', 'PB', 'PR', 'PE', 'PI', 'RJ', 'RN',
-  'RS', 'RO', 'RR', 'SC', 'SP', 'SE', 'TO'
-];
+
 
 export default function ProfileEditScreen() {
   const colors = useColors();
@@ -281,7 +277,7 @@ export default function ProfileEditScreen() {
                 photo_url: null,
               });
               setAvatarUrl(null);
-            } catch (error) {
+            } catch  {
               Alert.alert('Erro', 'Não foi possível remover a foto.');
             }
           },

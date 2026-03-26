@@ -4,7 +4,7 @@ import { registerPushToken, clearPushToken, removeNotificationListeners } from '
 import { getOfflineManager, initializeOfflineManager } from '@/lib/offlineManager';
 import Constants from 'expo-constants';
 import { log } from '@/lib/logger';
-import { User, UserRole } from '@/types/auth';
+import { User } from '@/types/auth';
 import { Mappers } from './mappers';
 
 interface AuthState {

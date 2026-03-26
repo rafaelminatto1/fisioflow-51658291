@@ -33,13 +33,7 @@ import { common, createLowlight } from "lowlight";
 import {
 	Dumbbell,
 	Search,
-	Target,
-	Activity,
-	History,
 	ClipboardCheck,
-	Sparkles,
-	PenTool,
-	CheckCircle2,
 } from "lucide-react";
 
 import { cn } from "@/lib/utils";
@@ -56,7 +50,6 @@ import {
 	usePatientPathologies,
 } from "@/hooks/usePatientEvolution";
 import { useSoapRecords } from "@/hooks/useSoapRecords";
-import { useStandardizedTests } from "@/hooks/useStandardizedTests";
 import {
 	Dialog,
 	DialogContent,

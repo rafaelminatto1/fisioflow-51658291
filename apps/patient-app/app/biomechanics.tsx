@@ -22,7 +22,6 @@ import {
   StyleSheet,
   TouchableOpacity,
   ScrollView,
-  Alert,
   Dimensions,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -81,7 +80,7 @@ export default function BiomechanicsScreen() {
   const frameTimer = useRef<ReturnType<typeof setInterval> | null>(null);
 
   // Patient data
-  const [bodyMass, setBodyMass] = useState<number | null>(null);
+  const [bodyMass] = useState<number | null>(null);
 
   // Jump test
   const [takeoffFrame, setTakeoffFrame] = useState<number | null>(null);

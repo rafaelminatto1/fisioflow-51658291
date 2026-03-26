@@ -14,22 +14,12 @@ import {
 	Type,
 	Heading1,
 	Heading2,
-	Heading3,
-	List,
 	CheckSquare,
 	Search,
 	Stethoscope,
-	Table,
-	ListOrdered,
-	Code,
-	Minus,
-	Quote,
 	Info,
 	CheckCircle2,
 	AlertTriangle,
-	Image as ImageIcon,
-	Link2,
-	Video,
 	Target,
 	Activity,
 	History,
@@ -42,7 +32,7 @@ import {
 import { CommandList } from "./CommandList";
 import { withImageParams } from "@/lib/storageProxy";
 import { cn } from "@/lib/utils";
-import { uploadFile, STORAGE_FOLDERS } from "@/lib/storage/upload";
+import { uploadFile } from "@/lib/storage/upload";
 
 // ── Suggestion Logic ──────────────────────────────────
 
@@ -214,7 +204,7 @@ export const getSuggestionItems = ({
 	exercises?: any[];
 	options?: SuggestionRuntimeOptions;
 }) => {
-	const imageUploadFolder = options?.imageUploadFolder;
+	
 	const items: SlashSuggestionItem[] = [
 		// ── Formatação ──
 		{

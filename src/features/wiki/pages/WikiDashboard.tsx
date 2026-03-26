@@ -2,9 +2,7 @@ import React, { useState } from "react";
 import {
 	Search,
 	Sparkles,
-	BookOpen,
 	FileText,
-	TrendingUp,
 	Activity,
 	ShieldCheck,
 	Clock,

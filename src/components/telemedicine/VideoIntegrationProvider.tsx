@@ -139,7 +139,7 @@ export function VideoCall({
 					screenRef.current.srcObject = null;
 				}
 			};
-		} catch (_err) {
+		} catch  {
 			toast.error("Não foi possível compartilhar tela");
 		}
 	};

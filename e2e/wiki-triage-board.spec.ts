@@ -240,7 +240,7 @@ async function dragCardToColumn(
   destination: 'backlog' | 'in-progress' | 'done',
   capture: SaveCapture
 ) {
-  const sourceColumn = page.locator(`[data-testid="triage-column-${source}"]`);
+  
   const destinationColumn = page.locator(`[data-testid="triage-column-${destination}"]`);
 
   const card = await resolveCardLocatorInColumn(page, source, cardTitle, capture);

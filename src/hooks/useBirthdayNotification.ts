@@ -1,10 +1,10 @@
-import { useEffect, useMemo } from "react";
+import { useEffect } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { patientsApi, marketingApi, type PatientRow } from "@/api/v2";
 import { organizationMembersApi } from "@/api/v2/system";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
-import { Cake, Sparkles, UserCheck } from "lucide-react";
+import { Cake } from "lucide-react";
 import React from "react";
 
 /**

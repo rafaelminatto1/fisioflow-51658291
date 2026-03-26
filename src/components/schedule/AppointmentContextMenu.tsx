@@ -11,15 +11,9 @@ import {
 } from "@/components/ui/context-menu";
 import {
 	MessageSquare,
-	Check,
-	XCircle,
 	Clock,
 	Edit2,
 	Trash2,
-	AlertCircle,
-	CalendarOff,
-	UserCheck,
-	Slash,
 	Copy,
 	ArrowRight,
 } from "lucide-react";
@@ -120,7 +114,7 @@ export const AppointmentContextMenu = ({
 					<ContextMenuSubContent className="w-56 rounded-xl shadow-xl border-blue-100 bg-white/95 dark:bg-slate-900/95">
 						{APPOINTMENT_STATUS_OPTIONS.map((status) => {
 							const config = APPOINTMENT_STATUS_CONFIG[status];
-							const Icon = config.icon;
+							
 							return (
 								<ContextMenuItem
 									key={status}

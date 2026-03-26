@@ -100,7 +100,7 @@ export const ResponsiveContainer: React.FC<ResponsiveContainerProps> = ({
 	padding = { xs: "1rem", sm: "1.5rem", md: "2rem" },
 	gutters = { xs: true, sm: true, md: false },
 }) => {
-	const [containerWidth, setContainerWidth] = useState(0);
+	const [,setContainerWidth] = useState(0);
 	const containerRef = useRef<HTMLDivElement>(null);
 
 	const currentPadding = useBreakpointValue(padding, "1rem");

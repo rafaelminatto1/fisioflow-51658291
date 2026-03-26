@@ -132,7 +132,7 @@ test.describe('Fluxo de Pacientes', () => {
       // Limpar pacientes (implementação específica)
       // Aqui assumimos que estamos em um ambiente de teste limpo
 
-      const emptyState = page.locator('[data-testid="empty-patients"]');
+      
       // Se não houver pacientes, mostrar estado vazio
       // await expect(emptyState).toBeVisible();
     });
@@ -429,7 +429,7 @@ test.describe('Fluxo de Pacientes', () => {
       await page.click('[data-testid="delete-patient-button"]');
 
       // Deve mostrar aviso se houver dependências (agendamentos, evoluções, etc.)
-      const dependencyWarning = page.locator('[data-testid="dependency-warning"]');
+      
       // await expect(dependencyWarning).toBeVisible();
     });
   });

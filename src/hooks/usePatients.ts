@@ -12,7 +12,6 @@
 
 import { useEffect, useState } from "react";
 import { useQuery, useQueryClient, useMutation } from "@tanstack/react-query";
-import { patientsApi } from "@/api/v2";
 import { fisioLogger as logger } from "@/lib/errors/logger";
 import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/hooks/use-toast";

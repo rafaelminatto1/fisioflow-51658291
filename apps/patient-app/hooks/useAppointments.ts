@@ -1,6 +1,5 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { patientApi } from '@/lib/api';
-import { Appointment } from '@/types/api';
 
 export function useAppointments(upcoming?: boolean) {
   return useQuery({

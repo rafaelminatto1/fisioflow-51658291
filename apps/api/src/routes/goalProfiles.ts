@@ -25,7 +25,7 @@ app.get('/', requireAuth, async (c) => {
      ORDER BY status, name`,
     [user.organizationId],
   );
-  try { return c.json({ data: result.rows || result }); } catch(e) { return c.json({ data: [] }); }
+  try { return c.json({ data: result.rows || result }); } catch { return c.json({ data: [] }); }
 });
 
 app.get('/:id', requireAuth, async (c) => {

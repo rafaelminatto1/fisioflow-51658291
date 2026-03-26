@@ -29,7 +29,6 @@ import { Spacing } from '@/constants/spacing';
 import * as Notifications from 'expo-notifications';
 import { useExercises } from '@/hooks/useExercises';
 import { useAppointments } from '@/hooks/useAppointments';
-import { Appointment, ExerciseAssignment } from '@/types/api';
 
 const SCREEN_PADDING = Spacing.screen;
 const CARD_GAP = Spacing.gap;

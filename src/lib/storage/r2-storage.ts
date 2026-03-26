@@ -52,7 +52,7 @@ export async function uploadToR2(
 		try {
 			const errorData = await res.json();
 			errorMsg = errorData.error || errorMsg;
-		} catch (_e) {
+		} catch  {
 			// ignora
 		}
 		throw new Error(errorMsg);
@@ -127,7 +127,7 @@ export async function deleteFromR2(key: string): Promise<void> {
 		try {
 			const errorData = await res.json();
 			errorMsg = errorData.error || errorMsg;
-		} catch (_e) {
+		} catch  {
 			// ignora
 		}
 		throw new Error(errorMsg);

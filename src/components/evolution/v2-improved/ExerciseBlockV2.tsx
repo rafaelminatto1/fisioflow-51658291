@@ -56,25 +56,15 @@ export const ExerciseBlockV2: React.FC<ExerciseBlockV2Props> = ({
 	disabled = false,
 	className,
 }) => {
-	const [showAutocomplete, setShowAutocomplete] = useState(false);
+	const [,setShowAutocomplete] = useState(false);
 	const [quickAddValue, setQuickAddValue] = useState("");
 	const { exercises: libraryExercises } = useExercises();
 	const [searchValue, setSearchValue] = useState("");
 
 	const completedCount = exercises.filter((e) => e.completed).length;
-	const issueCount = exercises.filter(
-		(e) =>
-			e.patientFeedback?.pain ||
-			e.patientFeedback?.fatigue ||
-			e.patientFeedback?.difficultyPerforming,
-	).length;
+	
 
-	const filteredLibrary = useMemo(() => {
-		if (!searchValue) return libraryExercises.slice(0, 15);
-		return libraryExercises
-			.filter((ex) => ex.name.toLowerCase().includes(searchValue.toLowerCase()))
-			.slice(0, 15);
-	}, [libraryExercises, searchValue]);
+	
 
 	const handleAddFromLibrary = useCallback(
 		(exercise: Exercise) => {

@@ -20,7 +20,7 @@ import { useHaptics } from '@/hooks/useHaptics';
 import { useEvolutions, useEvolution } from '@/hooks';
 import { uploadFile } from '@/lib/storage';
 
-const { width: SCREEN_WIDTH } = Dimensions.get('window');
+
 
 interface Photo {
   uri: string;
@@ -134,7 +134,7 @@ export default function EvolutionScreen() {
   const params = useLocalSearchParams();
   const patientId = params.id as string;
   const evolutionId = params.evolutionId as string | undefined;
-  const patientName = params.patientName as string || 'Paciente';
+  
 
   const { medium, success, error: hapticError } = useHaptics();
   
@@ -144,8 +144,7 @@ export default function EvolutionScreen() {
     deleteAsync: deleteEvolutionAsync,
     isCreating,
     isUpdating,
-    isDeleting,
-  } = useEvolutions(patientId);
+    } = useEvolutions(patientId);
 
   // Form state
   const [subjective, setSubjective] = useState('');
@@ -161,7 +160,7 @@ export default function EvolutionScreen() {
   const isEditing = !!evolutionId;
 
   // Load existing evolution if editing
-  const { isLoading: isLoadingEvolution } = useEvolution(evolutionId);
+  
   const { data: evolutionData } = useEvolution(evolutionId);
 
   useEffect(() => {
@@ -278,7 +277,7 @@ export default function EvolutionScreen() {
         }));
         setPhotos([...photos, ...newPhotos]);
       }
-    } catch (err) {
+    } catch  {
       Alert.alert('Erro', 'Não foi possível selecionar a imagem.');
     }
   };
@@ -297,7 +296,7 @@ export default function EvolutionScreen() {
         };
         setPhotos([...photos, newPhoto]);
       }
-    } catch (err) {
+    } catch  {
       Alert.alert('Erro', 'Não foi possível tirar a foto.');
     }
   };

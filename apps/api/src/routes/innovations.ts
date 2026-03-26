@@ -28,7 +28,7 @@ app.get('/inventory', requireAuth, async (c) => {
     `SELECT * FROM clinic_inventory WHERE ${conditions.join(' AND ')} ORDER BY item_name ASC`,
     params,
   );
-  try { return c.json({ data: result.rows || result }); } catch(e) { return c.json({ data: [] }); }
+  try { return c.json({ data: result.rows || result }); } catch { return c.json({ data: [] }); }
 });
 
 app.post('/inventory', requireAuth, async (c) => {
@@ -121,7 +121,7 @@ app.get('/inventory-movements', requireAuth, async (c) => {
      LIMIT $${params.length}`,
     params,
   );
-  try { return c.json({ data: result.rows || result }); } catch(e) { return c.json({ data: [] }); }
+  try { return c.json({ data: result.rows || result }); } catch { return c.json({ data: [] }); }
 });
 
 app.post('/inventory-movements', requireAuth, async (c) => {
@@ -215,7 +215,7 @@ app.get('/staff-performance', requireAuth, async (c) => {
      ORDER BY metric_date DESC`,
     params,
   );
-  try { return c.json({ data: result.rows || result }); } catch(e) { return c.json({ data: [] }); }
+  try { return c.json({ data: result.rows || result }); } catch { return c.json({ data: [] }); }
 });
 
 app.get('/appointment-predictions', requireAuth, async (c) => {
@@ -268,7 +268,7 @@ app.get('/revenue-forecasts', requireAuth, async (c) => {
      LIMIT $2`,
     [user.organizationId, limit],
   );
-  try { return c.json({ data: result.rows || result }); } catch(e) { return c.json({ data: [] }); }
+  try { return c.json({ data: result.rows || result }); } catch { return c.json({ data: [] }); }
 });
 
 app.get('/whatsapp-exercise-queue', requireAuth, async (c) => {
@@ -285,7 +285,7 @@ app.get('/whatsapp-exercise-queue', requireAuth, async (c) => {
      LIMIT $2`,
     [user.organizationId, limit],
   );
-  try { return c.json({ data: result.rows || result }); } catch(e) { return c.json({ data: [] }); }
+  try { return c.json({ data: result.rows || result }); } catch { return c.json({ data: [] }); }
 });
 
 app.post('/whatsapp-exercise-queue', requireAuth, async (c) => {
@@ -343,7 +343,7 @@ app.get('/patient-self-assessments', requireAuth, async (c) => {
      LIMIT $${params.length}`,
     params,
   );
-  try { return c.json({ data: result.rows || result }); } catch(e) { return c.json({ data: [] }); }
+  try { return c.json({ data: result.rows || result }); } catch { return c.json({ data: [] }); }
 });
 
 export const innovationsRoutes = app;

@@ -7,7 +7,7 @@ try {
     if (typeof YTDefault.searchOne === 'function') {
         console.log('YTDefault.searchOne is a function');
     }
-} catch (e) {
+} catch  {
     console.log('Error checking YTDefault.searchOne');
 }
 
@@ -15,6 +15,6 @@ try {
     if (typeof YTAll.YouTube?.searchOne === 'function') {
         console.log('YTAll.YouTube.searchOne is a function');
     }
-} catch (e) {
+} catch  {
     console.log('Error checking YTAll.YouTube.searchOne');
 }

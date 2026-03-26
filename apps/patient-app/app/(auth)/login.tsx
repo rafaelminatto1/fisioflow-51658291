@@ -26,7 +26,7 @@ export default function LoginScreen() {
   const [password, setPassword] = useState('');
   const [emailError, setEmailError] = useState('');
   const [passwordError, setPasswordError] = useState('');
-  const [localError, setLocalError] = useState('');
+  const [localError] = useState('');
 
   const handleLogin = async () => {
     clearError();
@@ -47,12 +47,12 @@ export default function LoginScreen() {
     try {
       await signIn(email.trim().toLowerCase(), password);
       router.replace('/(tabs)');
-    } catch (err: any) {
+    } catch  {
       // Error is already handled by the store
     }
   };
 
-  const displayError = localError || error;
+  
 
   return (
     <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]}>

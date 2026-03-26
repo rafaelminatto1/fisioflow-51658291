@@ -4,13 +4,7 @@ import {
 	Camera,
 	RefreshCcw,
 	Grid,
-	Ruler,
-	Save,
-	Download,
-	Play,
-	Pause,
 	Maximize2,
-	Settings,
 	AlertCircle,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -53,7 +47,7 @@ export const PosturalAnalysisTool: React.FC<PosturalAnalysisToolProps> = ({
 	const [capturedImages, setCapturedImages] = useState<
 		{ url: string; type: string }[]
 	>([]);
-	const [isProcessing, setIsProcessing] = useState(false);
+	const [,setIsProcessing] = useState(false);
 	const [cameraError, setCameraError] = useState<string | null>(null);
 
 	// Animation frame for drawing

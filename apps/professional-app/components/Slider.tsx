@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { View, Text, StyleSheet, PanResponder, Dimensions } from 'react-native';
 import { useColors } from '@/hooks/useColorScheme';
 
-const SCREEN_WIDTH = Dimensions.get('window').width;
+
 
 interface Props {
   minValue?: number;

@@ -69,7 +69,7 @@ export default function ProfileScreen() {
             try {
               await signOut();
               router.replace('/(auth)/login');
-            } catch (error) {
+            } catch  {
               Alert.alert('Erro', 'Não foi possível sair. Tente novamente.');
             } finally {
               setIsLoggingOut(false);

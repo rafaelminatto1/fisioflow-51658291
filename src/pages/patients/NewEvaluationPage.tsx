@@ -1,4 +1,4 @@
-import { useState, useCallback, useEffect, useMemo } from "react";
+import { useState, useCallback, useEffect } from "react";
 import { useNavigate, useParams, useSearchParams } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import {
@@ -37,7 +37,6 @@ import { useToast } from "@/hooks/use-toast";
 import { PatientHelpers } from "@/types";
 import { fisioLogger as logger } from "@/lib/errors/logger";
 import { normalizeGoalRows } from "@/lib/clinical/goalNormalization";
-import { AppointmentService } from "@/services/appointmentService";
 import {
 	appointmentsApi,
 	evaluationFormsApi,

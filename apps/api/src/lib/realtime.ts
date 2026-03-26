@@ -15,7 +15,7 @@ export class OrganizationState implements DurableObject {
     // Endpoint para upgrade de WebSocket
     if (url.pathname === '/ws') {
       const [client, server] = Object.values(new WebSocketPair());
-      const userId = url.searchParams.get('userId') || 'unknown';
+      
 
       server.accept();
       this.sessions.add(server);
@@ -51,7 +51,7 @@ export class OrganizationState implements DurableObject {
     for (const ws of this.sessions) {
       try {
         ws.send(message);
-      } catch (e) {
+      } catch  {
         this.sessions.delete(ws);
       }
     }

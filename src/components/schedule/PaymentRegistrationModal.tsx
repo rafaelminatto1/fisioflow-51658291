@@ -108,7 +108,7 @@ export function PaymentRegistrationModal({
 	}, [open, appointment, reset]);
 
 	const date = watch("date");
-	const type = watch("type");
+	
 
 	const onSubmit = async (data: PaymentFormValues) => {
 		setIsSubmitting(true);
