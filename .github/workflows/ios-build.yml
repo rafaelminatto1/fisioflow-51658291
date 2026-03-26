@@ -94,10 +94,21 @@ jobs:
             -k "$KEYCHAIN_PASSWORD" "$KEYCHAIN_PATH"
           security list-keychain -d user -s "$KEYCHAIN_PATH"
 
-      # ── 6. Importar Provisioning Profile ──────────────────────────────────
-      - name: Importar provisioning profile
+      # ── 6. Importar Provisioning Profile (selecionado por app) ───────────────
+      - name: Importar provisioning profile (patient-app)
+        if: inputs.app == 'patient-app'
         env:
-          PROFILE_BASE64: ${{ secrets.APPLE_PROVISIONING_PROFILE_BASE64 }}
+          PROFILE_BASE64: ${{ secrets.APPLE_PROVISIONING_PROFILE_PACIENTES_BASE64 }}
+        run: |
+          PROFILE_PATH=$RUNNER_TEMP/profile.mobileprovision
+          echo -n "$PROFILE_BASE64" | base64 --decode -o "$PROFILE_PATH"
+          mkdir -p ~/Library/MobileDevice/Provisioning\ Profiles
+          cp "$PROFILE_PATH" ~/Library/MobileDevice/Provisioning\ Profiles/
+
+      - name: Importar provisioning profile (professional-app)
+        if: inputs.app == 'professional-app'
+        env:
+          PROFILE_BASE64: ${{ secrets.APPLE_PROVISIONING_PROFILE_PROFISSIONAIS_BASE64 }}
         run: |
           PROFILE_PATH=$RUNNER_TEMP/profile.mobileprovision
           echo -n "$PROFILE_BASE64" | base64 --decode -o "$PROFILE_PATH"
@@ -109,7 +120,7 @@ jobs:
         working-directory: apps/${{ inputs.app }}/ios
         env:
           APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
-          PROFILE_NAME: ${{ secrets.APPLE_PROVISIONING_PROFILE_NAME }}
+          PROFILE_NAME: ${{ inputs.app == 'patient-app' && secrets.APPLE_PROVISIONING_PROFILE_PACIENTES_NAME || secrets.APPLE_PROVISIONING_PROFILE_PROFISSIONAIS_NAME }}
         run: |
           SCHEME=$(ls *.xcworkspace | head -1 | sed 's/.xcworkspace//')
           echo "Scheme detectado: $SCHEME"

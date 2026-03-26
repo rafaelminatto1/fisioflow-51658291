@@ -20,7 +20,7 @@
     },
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "com.rafaelminatto.fisioflow",
+      "bundleIdentifier": "com.fisioflow.patients",
       "buildNumber": "1",
       "infoPlist": {
         "NSCameraUsageDescription": "Permitir acesso a camera para fotos de perfil e exercicios",
