@@ -44,7 +44,15 @@
       "expo-secure-store",
       "expo-notifications",
       "expo-font",
-      "@react-native-community/datetimepicker"
+      "@react-native-community/datetimepicker",
+      [
+        "react-native-vision-camera",
+        {
+          "cameraPermissionText": "O FisioFlow precisa acessar sua câmera para capturar fotos e vídeos de progresso dos pacientes.",
+          "enableMicrophonePermission": true,
+          "microphonePermissionText": "O FisioFlow precisa acessar seu microfone para gravar vídeos de exercícios."
+        }
+      ]
     ],
     "experiments": {
       "typedRoutes": true
