@@ -199,7 +199,7 @@ export const EMBEDDING_DIMENSIONS = 768; // text-embedding-004
 export const embeddingConfig = {
 	dimensions: EMBEDDING_DIMENSIONS,
 	distanceMeasure: "COSINE" as const,
-	// Para Firestore Vector Search
+	// Para Vector Search (Neon DB/pgvector)
 	// distance: 'EUCLIDEAN' | 'DOT_PRODUCT' | 'COSINE'
 };
 

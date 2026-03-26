@@ -15,7 +15,6 @@ export interface DeviceInfo {
 
 /**
  * Privacy Policy acceptance record
- * Stored in Firestore collection: privacy_acceptances
  */
 export interface PrivacyPolicyAcceptance {
   id: string;
@@ -28,7 +27,6 @@ export interface PrivacyPolicyAcceptance {
 
 /**
  * Terms of Service acceptance record
- * Stored in Firestore collection: terms_acceptances
  */
 export interface TermsOfServiceAcceptance {
   id: string;
@@ -41,7 +39,6 @@ export interface TermsOfServiceAcceptance {
 
 /**
  * Medical Disclaimer acknowledgment record
- * Stored in Firestore collection: medical_disclaimers
  */
 export interface MedicalDisclaimerAcknowledgment {
   id: string;

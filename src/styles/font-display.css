@@ -1,5 +1,6 @@
-/* Fonte Display Única - Outfit para branding */
+/* Fonte Display Única - Outfit para branding (Loaded from Google Fonts in index.html) */
 
+/*
 @font-face {
 	font-family: "Outfit";
 	src: url("/fonts/outfit-variable.woff2") format("woff2-variations");
@@ -23,6 +24,7 @@
 	font-feature-settings:
 		"cv01", "cv03", "cv04", "cv09", "ss01", "ss02", "calt", "zero";
 }
+*/
 
 /* Tokens de Fonte Display */
 :root {
@@ -96,7 +98,8 @@ button {
 	line-height: 1.6;
 }
 
-/* Optimização de Carregamento */
+/* Optimização de Carregamento - Managed by Google Fonts */
+/*
 @supports (font-display: swap) {
 	@font-face {
 		font-family: "Outfit";
@@ -110,3 +113,4 @@ button {
 		font-display: fallback;
 	}
 }
+*/

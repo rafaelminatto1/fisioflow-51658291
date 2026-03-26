@@ -26,41 +26,41 @@ describe('calculateEndTime', () => {
 });
 
 describe('normalizeStatus', () => {
-  it('retorna agendado para undefined', () => {
-    expect(normalizeStatus(undefined)).toBe('agendado');
+  it('retorna scheduled para undefined', () => {
+    expect(normalizeStatus(undefined)).toBe('scheduled');
   });
 
-  it('mantém status PT-BR canônicos como estão', () => {
-    expect(normalizeStatus('agendado')).toBe('agendado');
-    expect(normalizeStatus('cancelado')).toBe('cancelado');
-    expect(normalizeStatus('atendido')).toBe('atendido');
-    expect(normalizeStatus('faltou')).toBe('faltou');
-    expect(normalizeStatus('presenca_confirmada')).toBe('presenca_confirmada');
-    expect(normalizeStatus('remarcar')).toBe('remarcar');
+  it('mantém status EN DB como estão', () => {
+    expect(normalizeStatus('scheduled')).toBe('scheduled');
+    expect(normalizeStatus('cancelled')).toBe('cancelled');
+    expect(normalizeStatus('completed')).toBe('completed');
+    expect(normalizeStatus('no_show')).toBe('no_show');
+    expect(normalizeStatus('confirmed')).toBe('confirmed');
+    expect(normalizeStatus('rescheduled')).toBe('rescheduled');
   });
 
-  it('mapeia aliases EN para PT-BR canônicos', () => {
-    expect(normalizeStatus('scheduled')).toBe('agendado');
-    expect(normalizeStatus('cancelled')).toBe('cancelado');
-    expect(normalizeStatus('completed')).toBe('atendido');
-    expect(normalizeStatus('confirmed')).toBe('presenca_confirmada');
-    expect(normalizeStatus('rescheduled')).toBe('remarcar');
+  it('mapeia aliases PT-BR para EN DB', () => {
+    expect(normalizeStatus('agendado')).toBe('scheduled');
+    expect(normalizeStatus('cancelado')).toBe('cancelled');
+    expect(normalizeStatus('atendido')).toBe('completed');
+    expect(normalizeStatus('presenca_confirmada')).toBe('confirmed');
+    expect(normalizeStatus('remarcar')).toBe('rescheduled');
   });
 
-  it('mapeia aliases PT-BR variantes para canônicos', () => {
-    expect(normalizeStatus('concluido')).toBe('atendido');
-    expect(normalizeStatus('remarcado')).toBe('remarcar');
-    expect(normalizeStatus('reagendado')).toBe('remarcar');
-    expect(normalizeStatus('confirmado')).toBe('presenca_confirmada');
+  it('mapeia aliases PT-BR variantes para EN DB', () => {
+    expect(normalizeStatus('concluido')).toBe('completed');
+    expect(normalizeStatus('remarcado')).toBe('rescheduled');
+    expect(normalizeStatus('reagendado')).toBe('rescheduled');
+    expect(normalizeStatus('confirmado')).toBe('confirmed');
   });
 
-  it('retorna agendado para status desconhecido', () => {
-    expect(normalizeStatus('inexistente')).toBe('agendado');
+  it('retorna scheduled para status desconhecido', () => {
+    expect(normalizeStatus('inexistente')).toBe('scheduled');
   });
 
   it('ignora maiúsculas/minúsculas e espaços', () => {
-    expect(normalizeStatus('  AGENDADO  ')).toBe('agendado');
-    expect(normalizeStatus('CONFIRMADO')).toBe('presenca_confirmada');
+    expect(normalizeStatus('  AGENDADO  ')).toBe('scheduled');
+    expect(normalizeStatus('CONFIRMADO')).toBe('confirmed');
   });
 });
 
@@ -112,32 +112,32 @@ describe('isConflictError', () => {
 });
 
 describe('countsTowardCapacity', () => {
-  it('conta statuses ativos (PT-BR)', () => {
-    expect(countsTowardCapacity('agendado')).toBe(true);
-    expect(countsTowardCapacity('presenca_confirmada')).toBe(true);
-    expect(countsTowardCapacity('atendido')).toBe(true);
+  it('conta statuses ativos (EN DB)', () => {
+    expect(countsTowardCapacity('scheduled')).toBe(true);
+    expect(countsTowardCapacity('confirmed')).toBe(true);
+    expect(countsTowardCapacity('completed')).toBe(true);
   });
 
-  it('não conta statuses finais/cancelados (PT-BR)', () => {
-    expect(countsTowardCapacity('cancelado')).toBe(false);
-    expect(countsTowardCapacity('faltou')).toBe(false);
-    expect(countsTowardCapacity('remarcar')).toBe(false);
+  it('não conta statuses finais/cancelados (EN DB)', () => {
+    expect(countsTowardCapacity('cancelled')).toBe(false);
+    expect(countsTowardCapacity('no_show')).toBe(false);
+    expect(countsTowardCapacity('rescheduled')).toBe(false);
   });
 });
 
 describe('STATUS_MAP', () => {
-  it('contém mapeamentos PT-BR variantes para canônicos', () => {
-    expect(STATUS_MAP['agendado']).toBe('agendado');
-    expect(STATUS_MAP['cancelado']).toBe('cancelado');
-    expect(STATUS_MAP['concluido']).toBe('atendido');
-    expect(STATUS_MAP['falta']).toBe('faltou');
-    expect(STATUS_MAP['faltou']).toBe('faltou');
+  it('contém mapeamentos PT-BR variantes para EN DB', () => {
+    expect(STATUS_MAP['agendado']).toBe('scheduled');
+    expect(STATUS_MAP['cancelado']).toBe('cancelled');
+    expect(STATUS_MAP['concluido']).toBe('completed');
+    expect(STATUS_MAP['falta']).toBe('no_show');
+    expect(STATUS_MAP['faltou']).toBe('no_show');
   });
 
-  it('contém mapeamentos EN para PT-BR', () => {
-    expect(STATUS_MAP['scheduled']).toBe('agendado');
-    expect(STATUS_MAP['cancelled']).toBe('cancelado');
-    expect(STATUS_MAP['completed']).toBe('atendido');
-    expect(STATUS_MAP['confirmed']).toBe('presenca_confirmada');
+  it('contém mapeamentos EN para EN DB', () => {
+    expect(STATUS_MAP['scheduled']).toBe('scheduled');
+    expect(STATUS_MAP['cancelled']).toBe('cancelled');
+    expect(STATUS_MAP['completed']).toBe('completed');
+    expect(STATUS_MAP['confirmed']).toBe('confirmed');
   });
 });

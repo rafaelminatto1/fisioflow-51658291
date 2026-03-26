@@ -1,17 +1,18 @@
-import React, { memo, useMemo } from "react";
 import {
-	Calendar,
-	Clock,
-	User,
-	Phone,
-	FileText,
-	CheckCircle,
-	XCircle,
 	AlertCircle,
+	Calendar,
+	CheckCircle,
+	Clock,
+	FileText,
+	Phone,
+	User,
+	XCircle,
 } from "lucide-react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import type React from "react";
+import { memo, useMemo } from "react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { AppointmentCardSkeleton } from "@/components/ui/skeleton";
 import { fisioLogger as logger } from "@/lib/errors/logger";
 import type { Appointment } from "@/types/appointment";
@@ -144,7 +145,7 @@ const ScheduleGridComponent: React.FC<ScheduleGridProps> = ({
 
 				return (
 					<Card
-						className={`cursor-pointer transition-all duration-200 hover:shadow-lg hover:scale-[1.02] border-0 shadow-md ${statusConfig.bgColor}`}
+						className={`cursor-pointer transition-all duration-200 hover:shadow-lg border-0 shadow-md ${statusConfig.bgColor}`}
 						onClick={() => onAppointmentClick(appointment)}
 					>
 						<CardHeader className="pb-3">

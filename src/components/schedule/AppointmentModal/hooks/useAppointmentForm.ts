@@ -1,4 +1,4 @@
-import { useCallback, useRef } from "react";
+import { useCallback, useRef, useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import {
@@ -11,9 +11,10 @@ import {
 	isAfter,
 } from "date-fns";
 import { useQueryClient } from "@tanstack/react-query";
-import { useNavigate, useSubmit, useNavigation } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import { toast } from "@/hooks/use-toast";
 import { useOrganizations } from "@/hooks/useOrganizations";
+import { appointmentsApi } from "@/api/v2";
 
 import { useUsePackageSession } from "@/hooks/usePackages";
 import {
@@ -77,14 +78,13 @@ export const useAppointmentForm = ({
 	effectiveTherapistId,
 }: UseAppointmentFormProps) => {
 	const navigate = useNavigate();
-	const submit = useSubmit();
-	const navigation = useNavigation();
-	
+	const queryClient = useQueryClient();
+	const [isCreating, setIsCreating] = useState(false);
+	const [isUpdating, setIsUpdating] = useState(false);
+
 	const { currentOrganization } = useOrganizations();
 	const { mutateAsync: consumeSession } = useUsePackageSession();
 
-	const isCreating = navigation.formData?.get("intent") === "create";
-	const isUpdating = navigation.formData?.get("intent") === "update";
 	const { getMinCapacityForInterval } = useScheduleCapacity();
 	const scheduleOnlyRef = useRef(false);
 	const appointmentsRef = useRef(appointments);
@@ -272,56 +272,46 @@ export const useAppointmentForm = ({
 				description: `Criando ${occurrences.length} agendamentos...`,
 			});
 
-			let created = 0;
-			for (const occ of occurrences) {
-				const occEndTime = new Date(
-					new Date(`${format(occ.date, "yyyy-MM-dd")}T${occ.time}`).getTime() +
-						appointmentData.duration * 60000,
-				);
-				
-				const occData = {
-					...formattedData,
-					date: format(occ.date, "yyyy-MM-dd"),
-					start_time: occ.time,
-					end_time: format(occEndTime, "HH:mm"),
-					ignoreCapacity,
-				};
-
-				submit(
-					{
-						intent: "create",
-						organizationId: currentOrganization?.id || "",
-						data: JSON.stringify(occData),
-					},
-					{ method: "post" }
-				);
-				created++;
+			setIsCreating(true);
+			try {
+				for (const occ of occurrences) {
+					const occEndTime = new Date(
+						new Date(`${format(occ.date, "yyyy-MM-dd")}T${occ.time}`).getTime() +
+							appointmentData.duration * 60000,
+					);
+					await appointmentsApi.create({
+						...formattedData,
+						date: format(occ.date, "yyyy-MM-dd"),
+						start_time: occ.time,
+						end_time: format(occEndTime, "HH:mm"),
+						ignoreCapacity,
+					});
+				}
+				queryClient.invalidateQueries({ queryKey: ["appointments"] });
+			} finally {
+				setIsCreating(false);
 			}
-			
 			scheduleOnlyRef.current = false;
 			onClose();
 			return;
 		}
 
 		if (appointmentId) {
-			submit(
-				{
-					intent: "update",
-					id: appointmentId,
-					organizationId: currentOrganization?.id || "",
-					data: JSON.stringify({ ...formattedData, ignoreCapacity }),
-				},
-				{ method: "post" }
-			);
+			setIsUpdating(true);
+			try {
+				await appointmentsApi.update(appointmentId, { ...formattedData, ignoreCapacity } as any);
+				queryClient.invalidateQueries({ queryKey: ["appointments"] });
+			} finally {
+				setIsUpdating(false);
+			}
 		} else {
-			submit(
-				{
-					intent: "create",
-					organizationId: currentOrganization?.id || "",
-					data: JSON.stringify({ ...formattedData, ignoreCapacity }),
-				},
-				{ method: "post" }
-			);
+			setIsCreating(true);
+			try {
+				await appointmentsApi.create({ ...formattedData, ignoreCapacity });
+				queryClient.invalidateQueries({ queryKey: ["appointments"] });
+			} finally {
+				setIsCreating(false);
+			}
 		}
 
 		// Handle package session debit (this still uses a hook as it's a separate domain logic)
@@ -431,59 +421,60 @@ export const useAppointmentForm = ({
 		}
 	};
 
-	const handleDelete = () => {
+	const handleDelete = async () => {
 		if (appointment?.id) {
-			submit(
-				{
-					intent: "delete",
-					id: appointment.id,
-					organizationId: currentOrganization?.id || "",
-				},
-				{ method: "post" }
-			);
+			try {
+				await appointmentsApi.cancel(appointment.id);
+				queryClient.invalidateQueries({ queryKey: ["appointments"] });
+			} catch (err) {
+				logger.error("Error deleting appointment", err, "useAppointmentForm");
+				toast({ variant: "destructive", description: "Erro ao excluir agendamento." });
+			}
 			onClose();
 		}
 	};
 
 	const handleDuplicate = async (config: DuplicateConfig) => {
 		if (appointment && config.dates.length > 0) {
-			config.dates.forEach((date) => {
-				const newTime = config.newTime || appointment.time;
-				const newDate = format(date, "yyyy-MM-dd");
-				const duration = appointment.duration || 60;
-				const endTime = new Date(
-					new Date(`${newDate}T${newTime}`).getTime() + duration * 60000,
-				);
-				const endTimeString = format(endTime, "HH:mm");
+			try {
+				for (const date of config.dates) {
+					const newTime = config.newTime || appointment.time;
+					const newDate = format(date, "yyyy-MM-dd");
+					const duration = appointment.duration || 60;
+					const endTime = new Date(
+						new Date(`${newDate}T${newTime}`).getTime() + duration * 60000,
+					);
+					const endTimeString = format(endTime, "HH:mm");
 
-				const duplicateData = {
-					patient_id: appointment.patientId,
-					therapist_id: appointment.therapistId || null,
-					date: newDate,
-					start_time: newTime,
-					end_time: endTimeString,
-					status: appointment.status,
-					payment_status: appointment.payment_status || "pending",
-					notes: appointment.notes || "",
-					session_type: (appointment.type === "Fisioterapia"
-						? "individual"
-						: "group") as "individual" | "group",
-				};
+					const duplicateData = {
+						patient_id: appointment.patientId,
+						therapist_id: appointment.therapistId || null,
+						date: newDate,
+						start_time: newTime,
+						end_time: endTimeString,
+						status: appointment.status,
+						payment_status: appointment.payment_status || "pending",
+						notes: appointment.notes || "",
+						session_type: (appointment.type === "Fisioterapia"
+							? "individual"
+							: "group") as "individual" | "group",
+					};
 
-				submit(
-					{
-						intent: "create",
-						organizationId: currentOrganization?.id || "",
-						data: JSON.stringify(duplicateData),
-					},
-					{ method: "post" }
-				);
-			});
+					await appointmentsApi.create(duplicateData);
+				}
 
-			toast({
-				title: "Duplicando agendamentos",
-				description: `Iniciando duplicação de ${config.dates.length} agendamentos...`,
-			});
+				queryClient.invalidateQueries({ queryKey: ["appointments"] });
+				toast({
+					title: "Agendamentos duplicados",
+					description: `${config.dates.length} agendamento(s) duplicado(s) com sucesso.`,
+				});
+			} catch (err) {
+				logger.error("Error duplicating appointment", err, "useAppointmentForm");
+				toast({
+					variant: "destructive",
+					description: "Erro ao duplicar agendamento(s).",
+				});
+			}
 		}
 	};
 

@@ -2,7 +2,7 @@
  * useFinancial - Rewritten to use Workers API (financialApi.transacoes)
  *
  * Simplified: uses financialApi.transacoes for all financial operations.
- * The FinancialService / Firestore onSnapshot listener has been removed.
+ * The legacy onSnapshot listener has been removed.
  */
 
 import React, { useMemo } from "react";

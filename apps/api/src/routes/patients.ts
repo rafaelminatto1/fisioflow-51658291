@@ -20,6 +20,24 @@ const app = new Hono<{ Bindings: Env; Variables: AuthVariables }>();
 
 // Removed tableColumnsCache and helpers as we shift to Drizzle ORM
 
+/** Extracts a user-friendly message from Neon/Postgres DB errors. */
+function dbErrorResponse(error: unknown): { message: string; status: 409 | 500 } {
+	const err = error as any;
+	// NeonDbError exposes Postgres error code in `err.code`
+	if (err?.code === "23505") {
+		const constraint: string = err.constraint ?? "";
+		if (constraint.includes("email")) {
+			return { message: "Já existe um paciente com este e-mail nesta clínica.", status: 409 };
+		}
+		if (constraint.includes("cpf")) {
+			return { message: "Já existe um paciente com este CPF.", status: 409 };
+		}
+		return { message: "Registro duplicado: já existe um paciente com esses dados.", status: 409 };
+	}
+	const raw = err instanceof Error ? err.message : "Erro desconhecido";
+	return { message: raw, status: 500 };
+}
+
 function normalizeGenderToDb(value: unknown): string | null {
 	const normalized = trimmedString(value)?.toLowerCase();
 	if (!normalized) return null;
@@ -179,31 +197,65 @@ function buildInsurancePayload(
 }
 
 function normalizePatientRow(row: DbRow) {
+	// Drizzle ORM returns camelCase keys; raw SQL returns snake_case — support both
+	const fullName = row.full_name ?? row.fullName;
+	const orgId = row.organization_id ?? row.organizationId;
+	const phoneSecondary = row.phone_secondary ?? row.phoneSecondary;
+	const photoUrl = row.photo_url ?? row.photoUrl;
+	const profileId = row.profile_id ?? row.profileId;
+	const userId = row.user_id ?? row.userId;
+	const referredBy = row.referred_by ?? row.referredBy;
+	const professionalId = row.professional_id ?? row.professionalId;
+	const professionalName = row.professional_name ?? row.professionalName;
+	const isActive = row.is_active ?? row.isActive;
+	const mainCondition = row.main_condition ?? row.mainCondition;
+	const bloodType = row.blood_type ?? row.bloodType;
+	const weightKg = row.weight_kg ?? row.weightKg;
+	const heightCm = row.height_cm ?? row.heightCm;
+	const maritalStatus = row.marital_status ?? row.maritalStatus;
+	const educationLevel = row.education_level ?? row.educationLevel;
+	const sessionValue = row.session_value ?? row.sessionValue;
+	const consentData = row.consent_data ?? row.consentData;
+	const consentImage = row.consent_image ?? row.consentImage;
+	const incompleteReg = row.incomplete_registration ?? row.incompleteRegistration;
+	const birthDate = row.birth_date ?? row.legacyDateOfBirth ?? row.date_of_birth;
+	const createdAt = row.created_at ?? row.createdAt;
+	const updatedAt = row.updated_at ?? row.updatedAt;
+	const rawEmergencyContact = row.emergency_contact ?? row.emergencyContact;
+	const rawInsurance = row.insurance;
+
 	const address = parseJsonObject(row.address);
-	const emergencyContact = parseJsonObject(row.emergency_contact);
-	const insurance = parseJsonObject(row.insurance);
+	const emergencyContact = parseJsonObject(rawEmergencyContact);
+	const insurance = parseJsonObject(rawInsurance);
+
+	const name = trimmedString(fullName) ?? trimmedString(row.name) ?? "Sem nome";
 
 	return {
 		...row,
 		id: String(row.id),
-		name: trimmedString(row.full_name) ?? trimmedString(row.name) ?? "Sem nome",
-		full_name:
-			trimmedString(row.full_name) ?? trimmedString(row.name) ?? "Sem nome",
-		organization_id: trimmedString(row.organization_id) ?? "",
-		organizationId: trimmedString(row.organization_id) ?? "",
+		name,
+		full_name: name,
+		organization_id: trimmedString(orgId) ?? "",
+		organizationId: trimmedString(orgId) ?? "",
 		phone: trimmedString(row.phone) ?? null,
-		phone_secondary: trimmedString(row.phone_secondary) ?? null,
+		phone_secondary: trimmedString(phoneSecondary) ?? null,
 		email: trimmedString(row.email) ?? null,
 		cpf: trimmedString(row.cpf) ?? null,
 		rg: trimmedString(row.rg) ?? null,
-		birth_date: row.birth_date ? String(row.birth_date) : (row.legacyDateOfBirth ? String(row.legacyDateOfBirth) : null),
+		photo_url: trimmedString(photoUrl) ?? null,
+		profile_id: trimmedString(profileId) ?? null,
+		user_id: trimmedString(userId) ?? null,
+		referred_by: trimmedString(referredBy) ?? null,
+		professional_id: trimmedString(professionalId) ?? null,
+		professional_name: trimmedString(professionalName) ?? null,
+		birth_date: birthDate ? String(birthDate) : null,
 		gender: normalizeGenderFromDb(row.gender),
 		address: trimmedString(address?.street ?? row.address) ?? null,
 		city: trimmedString(address?.city ?? row.city) ?? null,
 		state: trimmedString(address?.state ?? row.state) ?? null,
 		zip_code: trimmedString(address?.cep ?? row.zip_code) ?? null,
 		emergency_contact:
-			trimmedString(emergencyContact?.name ?? row.emergency_contact) ?? null,
+			trimmedString(emergencyContact?.name ?? rawEmergencyContact) ?? null,
 		emergency_contact_relationship:
 			trimmedString(
 				emergencyContact?.relationship ?? row.emergency_contact_relationship,
@@ -214,34 +266,26 @@ function normalizePatientRow(row: DbRow) {
 			trimmedString(insurance?.provider ?? row.health_insurance) ?? null,
 		insurance_number:
 			trimmedString(insurance?.cardNumber ?? row.insurance_number) ?? null,
-		main_condition: trimmedString(row.main_condition) ?? null,
+		main_condition: trimmedString(mainCondition) ?? null,
 		profession: trimmedString(row.profession) ?? null,
 		observations: trimmedString(row.observations ?? row.notes) ?? null,
 		status: trimmedString(row.status) ?? "Inicial",
 		progress: nullableNumber(row.progress) ?? 0,
-		blood_type: trimmedString(row.blood_type) ?? null,
-		weight_kg: nullableNumber(row.weight_kg),
-		height_cm: nullableNumber(row.height_cm),
-		marital_status: trimmedString(row.marital_status) ?? null,
-		education_level: trimmedString(row.education_level) ?? null,
-		session_value: nullableNumber(row.session_value),
-		consent_data: row.consent_data !== false,
-		consent_image: Boolean(row.consent_image),
-		incomplete_registration: Boolean(row.incomplete_registration),
-		is_active: row.is_active !== false,
-		isActive: row.is_active !== false,
-		created_at: row.created_at
-			? String(row.created_at)
-			: new Date().toISOString(),
-		updated_at: row.updated_at
-			? String(row.updated_at)
-			: new Date().toISOString(),
-		createdAt: row.created_at
-			? String(row.created_at)
-			: new Date().toISOString(),
-		updatedAt: row.updated_at
-			? String(row.updated_at)
-			: new Date().toISOString(),
+		blood_type: trimmedString(bloodType) ?? null,
+		weight_kg: nullableNumber(weightKg),
+		height_cm: nullableNumber(heightCm),
+		marital_status: trimmedString(maritalStatus) ?? null,
+		education_level: trimmedString(educationLevel) ?? null,
+		session_value: nullableNumber(sessionValue),
+		consent_data: consentData !== false,
+		consent_image: Boolean(consentImage),
+		incomplete_registration: Boolean(incompleteReg),
+		is_active: isActive !== false,
+		isActive: isActive !== false,
+		created_at: createdAt ? String(createdAt) : new Date().toISOString(),
+		updated_at: updatedAt ? String(updatedAt) : new Date().toISOString(),
+		createdAt: createdAt ? String(createdAt) : new Date().toISOString(),
+		updatedAt: updatedAt ? String(updatedAt) : new Date().toISOString(),
 	};
 }
 
@@ -567,13 +611,8 @@ app.post("/", async (c) => {
 		return c.json({ data: patient }, 201);
 	} catch (error) {
 		console.error("[Patients/Create] Error:", error);
-		return c.json(
-			{
-				error: "Erro ao criar paciente",
-				details: error instanceof Error ? error.message : "Erro desconhecido",
-			},
-			500,
-		);
+		const { message, status } = dbErrorResponse(error);
+		return c.json({ error: status === 409 ? message : "Erro ao criar paciente", details: message }, status);
 	}
 });
 
@@ -671,12 +710,13 @@ const updatePatientHandler = async (c: any) => {
 		return c.json({ data: normalizePatientRow(row as DbRow) });
 	} catch (error) {
 		console.error("[Patients/Update] Error:", error);
+		const { message, status } = dbErrorResponse(error);
 		return c.json(
 			{
-				error: "Erro ao atualizar paciente",
-				details: error instanceof Error ? error.message : "Erro desconhecido",
+				error: status === 409 ? message : "Erro ao atualizar paciente",
+				details: message,
 			},
-			500,
+			status,
 		);
 	}
 };

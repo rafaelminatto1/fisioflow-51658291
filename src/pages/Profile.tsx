@@ -248,7 +248,7 @@ export const Profile = () => {
 										<div className="space-y-2">
 											<Label htmlFor="email">E-mail</Label>
 											<div className="relative">
-												<Mail className="absolute left-3 top-1/2 -translate-y-1/2text-muted-foreground w-4 h-4" />
+												<Mail className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground w-4 h-4" />
 												<Input
 													id="email"
 													value={profileData.email}
@@ -264,7 +264,7 @@ export const Profile = () => {
 										<div className="space-y-2">
 											<Label htmlFor="phone">Telefone</Label>
 											<div className="relative">
-												<Phone className="absolute left-3 top-1/2 -translate-y-1/2text-muted-foreground w-4 h-4" />
+												<Phone className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground w-4 h-4" />
 												<Input
 													id="phone"
 													value={profileData.phone}

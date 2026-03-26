@@ -1,7 +1,7 @@
 /**
  * useRecurringAppointments - Rewritten to use Workers API (schedulingApi.recurringSeries)
  *
- * The local occurrence generation helpers are preserved (pure logic, no Firestore).
+ * The local occurrence generation helpers are preserved.
  * Mutations now go through the Workers API.
  */
 
@@ -33,7 +33,7 @@ export const RECURRING_QUERY_KEYS = {
 };
 
 // =====================================================================
-// GENERATE OCCURRENCES (pure logic — no Firestore)
+// GENERATE OCCURRENCES (pure logic — no Neon)
 // =====================================================================
 
 export function generateOccurrencesPreview(
