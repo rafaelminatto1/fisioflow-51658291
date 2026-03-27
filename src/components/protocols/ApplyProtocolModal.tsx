@@ -9,7 +9,7 @@ import {
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { PatientCombobox } from "@/components/ui/patient-combobox";
-import { useActivePatients } from "@/hooks/usePatients";
+import { useActivePatients } from "@/hooks/patients/usePatients";
 import { ExerciseProtocol } from "@/hooks/useExerciseProtocols";
 import { goalsApi, patientsApi } from "@/api/v2";
 import { toast } from "sonner";
