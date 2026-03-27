@@ -448,8 +448,3 @@ export function createWebhookMiddleware(
 		next();
 	};
 }
-		};
-
-		next();
-	};
-}
