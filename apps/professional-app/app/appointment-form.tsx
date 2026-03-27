@@ -181,7 +181,19 @@ export default function AppointmentFormScreen() {
       }
     } catch (err: any) {
       hapticError();
-      Alert.alert('Erro', err?.message || 'Não foi possível salvar.');
+      // Mensagem de erro clara com detalhe técnico para debugging
+      const rawMsg: string = err?.message || String(err) || '';
+      let userMsg = isEditing ? 'Não foi possível atualizar o agendamento.' : 'Não foi possível criar o agendamento.';
+      if (rawMsg.includes('date') || rawMsg.includes('data')) userMsg = 'Data inválida. Verifique o campo Data.';
+      else if (rawMsg.includes('conflict') || rawMsg.includes('ocupado')) userMsg = 'Horário já ocupado. Escolha outro horário.';
+      else if (rawMsg.includes('patient') || rawMsg.includes('paciente')) userMsg = 'Paciente não encontrado. Selecione um paciente válido.';
+      else if (rawMsg.includes('401') || rawMsg.includes('auth')) userMsg = 'Sessão expirada. Saia e entre novamente.';
+      else if (rawMsg.includes('400') || rawMsg.includes('obrigatório')) userMsg = 'Campos obrigatórios ausentes. Verifique o formulário.';
+      else if (rawMsg.includes('500') || rawMsg.includes('SERVER')) userMsg = 'Erro interno do servidor. Tente novamente em instantes.';
+      Alert.alert(
+        isEditing ? 'Erro ao salvar agendamento' : 'Erro ao criar agendamento',
+        `${userMsg}\n\nDetalhe: ${rawMsg.substring(0, 120)}`,
+      );
     }
   };
 
