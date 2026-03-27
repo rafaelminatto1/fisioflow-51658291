@@ -14,7 +14,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Clock, Calendar, AlertCircle } from "lucide-react";
 import { useAddToWaitlist } from "@/hooks/useWaitlist";
-import { usePatients } from "@/hooks/usePatients";
+import { usePatients } from "@/hooks/patients/usePatients";
 import { toast } from "sonner";
 import { PatientCombobox } from "@/components/ui/patient-combobox";
 import { QuickPatientModal } from "@/components/modals/QuickPatientModal";
