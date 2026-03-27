@@ -47,5 +47,8 @@ export * from "./templates";
 // Corporate Announcements & Policies
 export * from "./announcements";
 
+// CRM & Marketing (RF05)
+export * from "./crm";
+
 // Jules AI - PR Reviews & Learnings
 export * from "./jules";

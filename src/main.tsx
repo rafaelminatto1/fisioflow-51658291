@@ -17,16 +17,19 @@ const initServices = async () => {
 			{ initPostHog },
 			{ initAppCheck },
 			{ initializeRemoteConfig },
+			{ initFaro },
 		] = await Promise.all([
 			import("@/lib/sentry/config"),
 			import("@/lib/analytics/posthog"),
 			import("@/lib/app-check"),
 			import("@/lib/remote-config-manager"),
+			import("@/lib/monitoring/faro"),
 		]);
 
 		initSentry();
 		initPostHog();
 		initAppCheck();
+		initFaro();
 
 		// Serviços que podem falhar sem quebrar a app (Remote Config, Analytics, etc)
 		const secondaryServices = [initializeRemoteConfig(3600000, 600000)];

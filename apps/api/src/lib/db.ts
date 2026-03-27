@@ -21,11 +21,11 @@ export async function queryWithCache<T>(
   ttlSeconds: number,
   neonQuery: () => Promise<T>
 ): Promise<T> {
-  if (!env.DB) return await neonQuery();
+  if (!env.D1_CACHE) return await neonQuery();
 
   try {
     // 1. Tenta buscar no D1
-    const cached = await env.DB.prepare(
+    const cached = await env.D1_CACHE.prepare(
       'SELECT value, expires_at FROM query_cache WHERE id = ?'
     ).bind(cacheKey).first<{ value: string; expires_at: number }>();
 
@@ -37,7 +37,7 @@ export async function queryWithCache<T>(
     const result = await neonQuery();
 
     // 3. Salva no D1 para a próxima vez
-    await env.DB.prepare(
+    await env.D1_CACHE.prepare(
       'INSERT OR REPLACE INTO query_cache (id, value, expires_at) VALUES (?, ?, ?)'
     ).bind(
       cacheKey,

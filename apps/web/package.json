@@ -81,6 +81,8 @@
     "@dnd-kit/utilities": "^3.2.2",
     "@fisioflow/config": "workspace:*",
     "@google/generative-ai": "^0.24.1",
+    "@grafana/faro-web-sdk": "^2.3.1",
+    "@grafana/faro-web-tracing": "^2.3.1",
     "@hello-pangea/dnd": "^18.0.1",
     "@hookform/resolvers": "^3.10.0",
     "@mediapipe/drawing_utils": "^0.3.1675466124",
