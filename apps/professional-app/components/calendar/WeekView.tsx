@@ -110,12 +110,19 @@ export const WeekView = ({
                                                     height,
                                                     backgroundColor: colors.primary,
                                                     borderRadius: 4,
-                                                    right: '10%', // Leave space on the right
+                                                    right: '10%',
                                                 }
                                             ]}
                                             onPress={() => router.push(`/appointment-form?id=${apt.id}` as any)}
                                         >
-                                            {/* Minimal content for week view due to narrow space */}
+                                            <Text style={styles.appointmentTime} numberOfLines={1}>
+                                                {apt.time ? apt.time.substring(0, 5) : `${String(hour).padStart(2,'0')}:${String(minutes).padStart(2,'0')}`}
+                                            </Text>
+                                            {apt.patientName ? (
+                                                <Text style={styles.appointmentName} numberOfLines={1}>
+                                                    {apt.patientName}
+                                                </Text>
+                                            ) : null}
                                         </TouchableOpacity>
                                     );
                                 })}
@@ -178,5 +185,16 @@ const styles = StyleSheet.create({
         right: 1,
         padding: 2,
         zIndex: 10,
+        overflow: 'hidden',
+    },
+    appointmentTime: {
+        color: '#fff',
+        fontSize: 9,
+        fontWeight: '700',
+    },
+    appointmentName: {
+        color: '#fff',
+        fontSize: 9,
+        opacity: 0.9,
     },
 });
