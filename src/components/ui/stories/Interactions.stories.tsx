@@ -154,14 +154,13 @@ export const Transitions: Story = {
 
       <div className="p-6 rounded-2xl border-border/40 mt-8">
         <h3 className="text-xl font-display text-foreground">Glow Pulse</h3>
-          <p className="text-sm text-muted-foreground mb-2">Pulsing glow effect</p>
-          <div className="mt-4 h-16 w-full bg-muted/20 rounded-lg overflow-hidden">
-            <div className="h-4 animate-premium-glow-pulse w-full bg-primary/20 rounded-lg" />
-          </div>
+        <p className="text-sm text-muted-foreground mb-2">Pulsing glow effect</p>
+        <div className="mt-4 h-16 w-full bg-muted/20 rounded-lg overflow-hidden">
+          <div className="h-4 animate-premium-glow-pulse w-full bg-primary/20 rounded-lg" />
         </div>
       </div>
     </div>
-),
+  ),
 }
 
 export const CombinedExample: Story = {
