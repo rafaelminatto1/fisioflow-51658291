@@ -125,11 +125,11 @@ export const TimeSlotCell = memo(
 				aria-selected={isDropTarget}
 				aria-dropeffect={!isBlocked && !isClosed ? "move" : "none"}
 				className={cn(
-					"border-r border-slate-100 dark:border-slate-800 relative",
+					"border-r border-slate-200 dark:border-slate-700 relative",
 					"transition-[background-color,box-shadow] duration-200 ease-out",
-					isHourStart && "border-t border-slate-100 dark:border-slate-800",
+					isHourStart && "border-t border-slate-200 dark:border-slate-700",
 					!isHourStart &&
-						"border-t border-dashed border-slate-50 dark:border-slate-900",
+						"border-t border-dashed border-slate-200 dark:border-slate-800/60",
 					colIndex === 6 && "border-r-0",
 					isClosed &&
 						"bg-slate-50/50 dark:bg-slate-900/20 pattern-diagonal-lines",
