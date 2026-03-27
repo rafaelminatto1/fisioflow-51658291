@@ -40,7 +40,7 @@ import type {
 	Patient,
 	PatientCreateInput,
 	PatientUpdateInput,
-} from "@/hooks/usePatientCrud";
+} from "@/hooks/patients/usePatientCrud";
 import { MagicTextarea } from "@/components/ai/MagicTextarea";
 import { BrasilService } from "@/services/brasilApi";
 import { toast } from "sonner";
