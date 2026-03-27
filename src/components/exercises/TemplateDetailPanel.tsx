@@ -353,7 +353,7 @@ export function TemplateDetailPanel({
 
           {/* Referências */}
           <TabsContent value="referencias" className="mt-0">
-            {template.bibliographicReferences.length > 0 ? (
+            {template.bibliographicReferences && template.bibliographicReferences.length > 0 ? (
               <ol className="space-y-2 list-decimal list-inside">
                 {template.bibliographicReferences.map((ref, i) => (
                   <li key={i} className="text-sm leading-relaxed text-muted-foreground">
