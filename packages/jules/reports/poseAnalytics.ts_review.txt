@@ -1,0 +1,190 @@
+npm warn Unknown project config "node-linker". This will stop working in the next major version of npm. See `npm help npmrc` for supported config options.
+🔍 Analyzing src/services/ai/poseAnalytics.ts...
+No unstaged changes found for src/services/ai/poseAnalytics.ts. Analyzing current content instead...
+[JulesAI] Sending request to models/gemini-2.5-flash...
+[JulesAI] Received response.
+
+--- Review ---
+This is a well-structured service for integrating exercise events with an analytics platform and logger. The use of constants for event names and a singleton pattern for the `PoseAnalytics` instance are good practices.
+
+Let's dive into some specific observations regarding bugs, performance, and readability, along with suggestions for improvement.
+
+---
+
+### 1. Bugs and Inconsistencies
+
+The primary area for improvement lies in the management of the `currentSession` state within the `PoseAnalytics` class, particularly how it interacts with the `completeSession`, `abandonSession`, and the convenience functions.
+
+**1.1. Core Session State Management Inconsistency**
+*   **Issue**: The `PoseAnalytics` class maintains `this.currentSession` and `this.sessionStartTime` as its internal state. However, `completeSession` and `abandonSession` methods *overwrite* `this.currentSession` with a *new* `ExerciseSession` object passed as an argument (`this.currentSession = session;`).
+    *   This can lead to data loss or inconsistencies. For example, the `session.id` established in `startSession` might be lost if the `session` object passed to `completeSession` doesn't include it or is a different instance.
+*   **Example Scenario**:
+    1.  `startSession` is called with `sessionA = { id: 'abc', exerciseId: 'ex1', ... }`. `this.currentSession` becomes `sessionA`.
+    2.  Later, `completeSession` is called with `sessionB = { exerciseId: 'ex1', totalScore: 90, ... }`. `this.currentSession` is now `sessionB`. If `sessionB` didn't have an `id` field, then `this.currentSession.id` would become `undefined` or derived from `sessionB`, not the original `abc`.
+*   **Suggestion**: The `PoseAnalytics` instance should be the single source of truth for the active session's state.
+    *   `startSession` initializes `this.currentSession`.
+    *   Subsequent methods like `completeSession` or `abandonSession` should operate *on* `this.currentSession` rather than overwriting it. They could take *only* the specific final metrics (e.g., `completeSession(finalScore: number, finalRomPercentage: number): void`) and update `this.currentSession` internally before logging.
+    *   Alternatively, if `ExerciseSession` is mutable and passed by reference, `this.currentSession` should just hold that reference, and other methods would update the referenced object.
+
+**1.2. Inconsistencies in Convenience Functions (`logExerciseStarted`, `logExerciseCompleted`, `logRepetitionCompleted`)**
+These convenience functions introduce several issues due to creating partial objects and passing unused parameters:
+
+*   **`logExerciseStarted`**:
+    *   **Issue**: The `userType` parameter is accepted but not used. `analytics.logEvent` inside `startSession` hardcodes `user_type: "patient"`.
+    *   **Suggestion**: Modify `startSession` to accept `userType` and remove the hardcoded value. Then, pass the `userType` parameter from `logExerciseStarted` to `startSession`.
+    *   **Issue**: Creates a temporary `session` object with `id: \`temp_${Date.now()}\`` and `repetitions: 0`, `metrics: { romPercentage: 0 }`. This temporary ID is likely lost later if `completeSession` is called with a new object.
+    *   **Suggestion**: The `startSession` method should ideally receive a fully formed `ExerciseSession` or at least enough data to correctly initialize `this.currentSession`.
+
+*   **`logExerciseCompleted`**:
+    *   **Issue**: The `duration` parameter is accepted but not used. `completeSession` calculates the duration internally using `this.sessionStartTime`. This parameter is redundant and misleading.
+    *   **Suggestion**: Remove the `duration` parameter from `logExerciseCompleted`.
+    *   **Issue**: Creates a partial `session` object with `metrics: { romPercentage: 0 }` hardcoded. This means the actual `romPercentage` from the completed session is not being logged.
+    *   **Suggestion**: If `romPercentage` is relevant for session completion, it should be passed as an argument to `logExerciseCompleted` and then to `completeSession`.
+
+*   **`logRepetitionCompleted`**:
+    *   **Issue**: Creates a `rep: any` object with `duration: 0` hardcoded. This means the actual duration of the repetition is not being logged, which is a key metric.
+    *   **Suggestion**: The `duration` of the repetition should be passed as an argument to `logRepetitionCompleted` and then used when constructing the `Repetition` object for `logRepetition`.
+    *   **Issue**: The `exerciseId` parameter is accepted but not used. `logRepetition` retrieves `exercise_id` from `this.currentSession`.
+    *   **Suggestion**: Remove the `exerciseId` parameter as it's not utilized.
+
+**1.3. Hardcoded `abandonment_reason`**
+*   **Issue**: `abandonment_reason: "user_aborted"` is hardcoded in `abandonSession`.
+*   **Suggestion**: Allow `abandonment_reason` to be passed as an optional argument to `abandonSession` to support different abandonment scenarios (e.g., technical error, instructor stop, etc.).
+
+---
+
+### 2. Performance Issues
+
+The current implementation doesn't have immediate performance bottlenecks within the provided diff, as most operations are local state management or logging to an external analytics service.
+
+**2.1. Placeholder Database Calls (`getUserMetrics`, `getExerciseStreak`)**
+*   **Issue**: These methods currently return hardcoded values, but comments indicate future integration with a database (`Neon DB`).
+*   **Potential Performance Risk (N+1)**: When these methods are implemented with actual database queries, there's a risk of N+1 queries if they are called inside a loop (e.g., fetching metrics for multiple exercises or streaks for multiple patients one by one).
+*   **Suggestion**: When implementing, ensure:
+    *   Queries are optimized (e.g., indexed fields, efficient joins).
+    *   Batching is considered if data for multiple entities needs to be fetched simultaneously.
+    *   Caching mechanisms are put in place if these metrics are frequently accessed but don't change often.
+
+---
+
+### 3. Readability Improvements
+
+**3.1. Type Safety in Convenience Functions**
+*   **Issue**: The convenience functions `logExerciseStarted`, `logExerciseCompleted`, and `logRepetitionCompleted` use `session: any` and `rep: any` when creating partial objects. This bypasses TypeScript's type safety.
+*   **Suggestion**:
+    *   Define explicit interfaces for these partial objects if they genuinely represent only a subset of the full `ExerciseSession` or `Repetition` types.
+    *   Even better, refactor these convenience functions to directly pass the required, specific fields to the underlying `PoseAnalytics` methods, rather than constructing generic `any` objects.
+
+**3.2. Clarify `ExerciseSession` Properties**
+*   **Issue**: In `startSession`, `target_repetitions: session.repetitions` is logged. It's good that it's `target_repetitions`, but it would be clearer if the `ExerciseSession` type or its documentation explicitly differentiated between "target" and "actual completed" repetitions.
+*   **Suggestion**: Add comments or refine the `ExerciseSession` interface properties to clearly state their intent.
+
+---
+
+### 4. Suggested Better Patterns
+
+**4.1. Centralized Session State Management (Reiteration)**
+*   **Pattern**: Make `PoseAnalytics` the authoritative manager of the `currentSession` object.
+*   **Implementation**:
+    ```typescript
+    export class PoseAnalytics {
+        private currentSession: ExerciseSession | null = null;
+        private sessionStartTime: number = 0;
+
+        startSession(session: ExerciseSession, userType: string = "patient"): void { // Added userType
+            this.currentSession = session;
+            this.sessionStartTime = Date.now();
+
+            analytics.logEvent(EXERCISE_EVENTS.SESSION_STARTED, {
+                exercise_id: session.exerciseId,
+                exercise_type: session.exerciseType,
+                user_type: userType, // Use dynamic userType
+                target_repetitions: session.repetitions,
+            });
+            logger.info("[PoseAnalytics] Sessão iniciada", { sessionId: session.id, exerciseType: session.exerciseType }, "PoseAnalytics");
+        }
+
+        // completeSession should update this.currentSession and log its state
+        completeSession(finalRepetitions: number, finalScore: number, finalRomPercentage: number): void {
+            if (!this.currentSession) {
+                logger.warn("[PoseAnalytics] Tentativa de completar sessão sem sessão ativa", {}, "PoseAnalytics");
+                return;
+            }
+
+            this.currentSession.repetitions = finalRepetitions;
+            this.currentSession.totalScore = finalScore;
+            this.currentSession.metrics.romPercentage = finalRomPercentage;
+
+            const endTime = Date.now();
+            const duration = (endTime - this.sessionStartTime) / 1000;
+
+            analytics.logEvent(EXERCISE_EVENTS.SESSION_COMPLETED, {
+                exercise_id: this.currentSession.exerciseId,
+                exercise_type: this.currentSession.exerciseType,
+                repetitions: finalRepetitions,
+                duration_seconds: duration,
+                form_score: finalScore,
+                rom_percentage: finalRomPercentage,
+            });
+            logger.info("[PoseAnalytics] Sessão completada", { sessionId: this.currentSession.id, duration, repetitions: finalRepetitions, score: finalScore }, "PoseAnalytics");
+            this.clearSession(); // Clear after completion
+        }
+
+        // abandonSession also takes only relevant updates and uses currentSession
+        abandonSession(reason: string = "user_aborted"): void { // Added reason
+            if (!this.currentSession) {
+                logger.warn("[PoseAnalytics] Tentativa de abandonar sessão sem sessão ativa", {}, "PoseAnalytics");
+                return;
+            }
+
+            const endTime = Date.now();
+            const duration = (endTime - this.sessionStartTime) / 1000;
+
+            analytics.logEvent(EXERCISE_EVENTS.SESSION_ABANDONED, {
+                exercise_id: this.currentSession.exerciseId,
+                exercise_type: this.currentSession.exerciseType,
+                duration_seconds: duration,
+                repetitions: this.currentSession.repetitions, // Use current state
+                abandonment_reason: reason,
+            });
+            logger.info("[PoseAnalytics] Sessão abandonada", { sessionId: this.currentSession.id, duration, reason }, "PoseAnalytics");
+            this.clearSession(); // Clear after abandonment
+        }
+
+        logRepetition(repetition: Repetition, index: number): void {
+            if (!this.currentSession) {
+                logger.warn("[PoseAnalytics] Tentativa de logar repetição sem sessão ativa", {}, "PoseAnalytics");
+                return;
+            }
+            // ... (rest of the method remains similar)
+        }
+        // ... (other methods)
+    }
+    ```
+
+**4.2. Refactor Convenience Functions to Be Truly Convenient**
+*   If the goal is to simplify external calls, the convenience functions should properly map and supply all necessary data to the underlying `PoseAnalytics` methods.
+*   **Example (after refactoring `PoseAnalytics` methods)**:
+    ```typescript
+    // Removed temporary ID generation, expects real ID
+    export function logExerciseStarted(session: ExerciseSession, userType: string = "patient"): void {
+        getPoseAnalytics().startSession(session, userType);
+    }
+
+    // Now it only needs the final metrics, as PoseAnalytics owns the session state
+    export function logExerciseCompleted(repetitions: number, score: number, romPercentage: number): void {
+        getPoseAnalytics().completeSession(repetitions, score, romPercentage);
+    }
+
+    // Now it uses the actual repetition data
+    export function logRepetitionCompleted(repetition: Repetition, repetitionNumber: number): void {
+        getPoseAnalytics().logRepetition(repetition, repetitionNumber - 1);
+    }
+    ```
+    This would imply that the external component calling these convenience functions has a well-formed `ExerciseSession` object and `Repetition` objects, or at least the necessary data points.
+
+---
+
+### Conclusion
+
+This file sets a good foundation for robust analytics tracking. Addressing the session state management inconsistencies and refining the convenience functions for better type safety and data integrity will significantly improve the reliability and maintainability of the `PoseAnalytics` service. The placeholder database methods are noted as future performance considerations. Keep up the great work!

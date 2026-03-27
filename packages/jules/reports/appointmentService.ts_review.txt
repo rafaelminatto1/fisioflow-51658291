@@ -1,0 +1,85 @@
+npm warn Unknown project config "node-linker". This will stop working in the next major version of npm. See `npm help npmrc` for supported config options.
+🔍 Analyzing src/services/appointmentService.ts...
+No unstaged changes found for src/services/appointmentService.ts. Analyzing current content instead...
+[JulesAI] Sending request to models/gemini-2.5-flash...
+[JulesAI] Received response.
+
+--- Review ---
+This is a comprehensive and well-structured service file, demonstrating good practices for API interaction, data validation, and error handling. The use of Zod for schema validation and a dedicated `AppError` class significantly improves robustness. The addition of `agentIngest` for debugging/telemetry is also a thoughtful touch.
+
+Here's a review of the changes, focusing on potential improvements:
+
+### 🐛 Bugs and Robustness
+
+1.  **`updateStatus` Inconsistent Return Type:**
+    *   **Observation:** The `updateStatus` method returns `result` when calling `appointmentsApi.cancel` and `result.data` when calling `appointmentsApi.update`. This inconsistency can be problematic for consumers of the method who expect a uniform return type.
+    *   **Suggestion:** Ensure both branches return a consistent shape. For example, if both APIs return a response object with a `data` property, always return `result.data`. If `cancel` returns `void` or a minimal confirmation, consider if the `update` should also return something similar or if a full `AppointmentBase` is expected.
+
+2.  **`AppointmentBase` Date Defaults (`createdAt`, `updatedAt`):**
+    *   **Observation:** In `fetchAppointments`, if `created_at` or `updated_at` are missing from `AppointmentApiItem`, they default to `new Date()`. While this satisfies the `Date` type requirement for `AppointmentBase`, it might mask data quality issues and misrepresent the actual creation/update time in cases where the API genuinely omits these fields.
+    *   **Suggestion:** If these fields are critical, ensure the backend always provides them. If they can be genuinely absent, consider making them `Date | null` or `Date | undefined` in `AppointmentBase` and handling `null`/`undefined` explicitly in the UI or downstream logic. Forcing `new Date()` is a practical workaround but hides potential data problems.
+
+3.  **Redundant API Fields in `AppointmentApiItem`:**
+    *   **Observation:** Fields like `date`/`appointment_date`, `start_time`/`appointment_time`, `duration`/`duration_minutes` suggest a backend API that might be evolving or has some inconsistencies in naming conventions. The current code handles this robustly by checking both, which is good.
+    *   **Suggestion:** This isn't a bug in the client, but it's worth communicating with the backend team to standardize these fields to reduce complexity and potential future confusion.
+
+### ⚡ Performance Considerations
+
+1.  **N+1 Query in `updateAppointment` for Patient Data Refresh:**
+    *   **Observation:** After updating an appointment via `appointmentsApi.update`, there's a subsequent `await appointmentsApi.get(id)` call to "refetch details to complete information" (specifically patient name and phone). This is an N+1-like issue if `updateAppointment` were ever called in a batch loop, or simply an extra network roundtrip.
+    *   **Suggestion:** Ideally, the `appointmentsApi.update` endpoint should return the complete updated appointment object, including denormalized patient details, to avoid this extra `GET` call. If the backend cannot provide this, the current robust fallback is acceptable, but be aware of the performance implication for individual updates. If many updates are processed in quick succession (e.g., in a bulk operation), this could lead to noticeable latency.
+
+2.  **N+1 Query in `cancelAllAppointmentsForDate`:**
+    *   **Observation:** This method first lists all appointments for a given date (`appointmentsApi.list`) and then iterates through them, calling `appointmentsApi.cancel(appt.id)` for each one. This results in `1 (list) + N (cancel)` API calls, which can be very inefficient if there are many appointments.
+    *   **Suggestion:** This is a classic N+1 scenario. A significant performance improvement could be achieved if the backend provided a **batch cancellation endpoint**, e.g., `appointmentsApi.cancelBatch({ ids: ['id1', 'id2', ...] })` or even `appointmentsApi.cancelByDate(date)`. If a batch endpoint is not available, the current approach is the only option, but its performance will degrade linearly with the number of appointments.
+
+3.  **Potential N+1 for `syncFinancialTransaction`:**
+    *   **Observation:** The `syncFinancialTransaction` method calls `FinancialService.findTransactionByAppointmentId` to check for existing transactions. While currently called for single appointments (after `create` or `update`), if this method were ever adapted for batch processing, this `find` call would become an N+1.
+    *   **Suggestion:** For current usage, it's fine. If batch financial syncing becomes a requirement, explore `FinancialService.findTransactionsByAppointmentIds(ids)` and batch update/create operations.
+
+### ✨ Readability and Maintainability
+
+1.  **Agent Logging Verbosity:**
+    *   **Observation:** The `logAgentEvent` calls are quite verbose and, while extremely useful for debugging, they add significant line count and visual noise to the core logic. The `#region` and `#endregion` comments are not standard TypeScript syntax and might confuse tools or future developers.
+    *   **Suggestion:**
+        *   Consider wrapping `logAgentEvent` calls in an `if (process.env.DEBUG_AGENT_ENABLED)` check to disable them in non-debug environments.
+        *   If the agent logging is intended for production telemetry, consider moving it to a centralized aspect-oriented logging system or using a decorator pattern to keep the core business logic cleaner.
+        *   Replace `#region`/`#endregion` with standard TypeScript comments or simply omit them.
+
+2.  **Logging Levels in `fetchAppointments`:**
+    *   **Observation:** There are many `logger.info` calls in `fetchAppointments`, providing detailed step-by-step logging.
+    *   **Suggestion:** While good for initial development and debugging, some of these might be more appropriate for `logger.debug` if they are not necessary for regular production monitoring. This can help keep production logs cleaner and easier to parse for critical information.
+
+3.  **Consistency in `updateData` Population:**
+    *   **Observation:** In `updateAppointment`, the `updateData` object is populated with individual `if (updates.field !== undefined)` checks. This is clear and explicit.
+    *   **Suggestion:** For a large number of fields, a helper function that filters `undefined` values from an object or a more declarative approach could make it slightly more concise, but for the current number of fields, this is perfectly readable.
+
+### 💡 Better Patterns and Good Practices
+
+1.  **Zod for Validation and Transformation:**
+    *   **Observation:** The use of `VerifiedAppointmentSchema.safeParse` (Zod) for robust validation and data transformation in `fetchAppointments`, `createAppointment`, and `updateAppointment` is an **excellent pattern**. It brings type safety and clarity to data integrity.
+    *   **Praise:** This is a highly recommended practice for handling external data.
+
+2.  **`AppError.from` for Consistent Error Handling:**
+    *   **Observation:** The consistent use of `AppError.from(error, "Context")` across all methods provides a standardized way to handle and categorize errors, which is crucial for maintainability and debugging.
+    *   **Praise:** This is a very strong pattern for a robust application.
+
+3.  **`parseResponseDate` Helper:**
+    *   **Observation:** The `parseResponseDate` helper addresses a common and critical issue with JavaScript's `Date` object and timezone handling for date-only strings. By parsing parts and setting local noon, it intelligently avoids off-by-one day errors.
+    *   **Praise:** This is a vital improvement for correct date representation and a great reusable utility.
+
+4.  **Audit Logging with Silent Failure:**
+    *   **Observation:** The pattern of calling `auditApi.create` within a `try...catch` block that explicitly includes a `/* silent fail */` comment is a good practice for non-critical side effects. It ensures that auditing failures do not block core business operations, while still acknowledging the possibility of a failure.
+    *   **Praise:** This balances robustness with dependency management.
+
+5.  **Defensive Programming:**
+    *   **Observation:** The code demonstrates strong defensive programming, with checks for `organizationId`, `data || []`, `response.data || []`, and explicit handling of `null`/`undefined` values and fallbacks (e.g., `patientName: "Desconhecido"`).
+    *   **Praise:** This makes the service highly resilient to incomplete or malformed API responses.
+
+6.  **Enforcing Business Rules:**
+    *   **Observation:** Explicitly blocking `patient_id` updates in `updateAppointment` and logging a warning is an excellent way to enforce business rules at the service layer.
+    *   **Praise:** This prevents invalid operations from reaching the backend.
+
+### Conclusion
+
+Overall, this `AppointmentService` is well-engineered and showcases a high level of thought regarding data integrity, error handling, and maintainability. The proactive measures like Zod validation and the `parseResponseDate` utility are particularly commendable. Addressing the identified performance considerations, especially the N+1 in `cancelAllAppointmentsForDate`, and the minor return type inconsistency in `updateStatus` would make this service even more robust and efficient. Keep up the great work!
