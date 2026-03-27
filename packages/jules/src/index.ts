@@ -35,7 +35,7 @@ export class JulesAI {
 
   constructor(apiKey: string) {
     this.genAI = new GoogleGenerativeAI(apiKey);
-    this.model = this.genAI.getGenerativeModel({ model: 'gemini-1.5-flash-latest' });
+    this.model = this.genAI.getGenerativeModel({ model: 'gemini-2.5-flash' });
   }
 
   async summarizeChanges(diff: string): Promise<string> {
@@ -64,7 +64,9 @@ Diff Content:
 ${content}`;
 
     try {
+      console.log(`[JulesAI] Sending request to ${this.model.model}...`);
       const result = await this.model.generateContent(prompt);
+      console.log(`[JulesAI] Received response.`);
       return result.response.text();
     } catch (e: any) {
       console.error(`[JulesAI Error]: ${e.message}`);
