@@ -27,7 +27,7 @@ env:
 jobs:
   build-ios:
     name: Build iOS — ${{ inputs.app }} (${{ inputs.profile }})
-    runs-on: macos-15
+    runs-on: macos-26
     timeout-minutes: 90
 
     steps:
@@ -68,8 +68,8 @@ jobs:
         uses: actions/cache@v4
         with:
           path: apps/${{ inputs.app }}/ios/Pods
-          key: pods-${{ inputs.app }}-${{ hashFiles(format('apps/{0}/ios/Podfile.lock', inputs.app)) }}
-          restore-keys: pods-${{ inputs.app }}-
+          key: pods-v3-${{ inputs.app }}-${{ hashFiles(format('apps/{0}/ios/Podfile.lock', inputs.app)) }}
+          restore-keys: pods-v3-${{ inputs.app }}-
 
       - name: Pod install
         working-directory: apps/${{ inputs.app }}/ios
