@@ -195,6 +195,7 @@ app.route('/api/activity-lab', activityLabRoutes);
 app.route('/api/patient-portal', patientPortalRoutes);
 app.route('/api/audit-logs', auditRoutes);
 app.route('/api/analytics', analyticsRoutes);
+app.route('/api/insights', analyticsRoutes);
 app.route('/api', eventosRoutes);
 app.route('/api/innovations', innovationsRoutes);
 app.route('/api/tarefas', tarefasRoutes);
