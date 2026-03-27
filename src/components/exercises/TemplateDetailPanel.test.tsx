@@ -6,8 +6,8 @@
  * Validates: Requirements 2.4, 3.4, 4.6
  */
 
-import { describe, it } from "vitest";
-import { render, within } from "@testing-library/react";
+import { describe, it, expect } from "vitest";
+import { render, within, fireEvent, waitFor } from "@testing-library/react";
 import * as fc from "fast-check";
 import { TemplateDetailPanel } from "./TemplateDetailPanel";
 import type { ExerciseTemplate, PatientProfileCategory } from "@/types/workers";
@@ -308,5 +308,23 @@ describe("TemplateDetailPanel — testes unitários", () => {
       />,
     );
     expect(queryByTestId("exercise-timeline")).toBeNull();
+  });
+
+  it("não deve quebrar quando bibliographicReferences for undefined (Regression test)", () => {
+    // @ts-ignore — simulate invalid runtime data
+    const template = makeTemplate({ bibliographicReferences: undefined });
+    
+    // This will throw if the component crashes during initial render
+    const { container } = render(
+      <TemplateDetailPanel
+        template={template}
+        onApply={noop}
+        onCustomize={noop}
+        onEdit={noop}
+        onDelete={noop}
+      />,
+    );
+    
+    expect(container).toBeTruthy();
   });
 });
