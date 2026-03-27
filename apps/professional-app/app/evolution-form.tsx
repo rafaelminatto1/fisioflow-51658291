@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import {
   View,
   Text,
@@ -31,7 +31,7 @@ export default function EvolutionFormScreen() {
   const patientName = params.patientName as string || 'Paciente';
   const appointmentId = params.appointmentId as string | undefined;
 
-  const { medium, success, error: hapticError } = useHaptics();
+  const { medium } = useHaptics();
 
   const {
     createAsync: createEvolutionAsync,
@@ -48,9 +48,52 @@ export default function EvolutionFormScreen() {
   const [painLevel, setPainLevel] = useState(0);
   const [photos, setPhotos] = useState<string[]>([]);
 
+  // Auto-save state
+  const [autoSaveStatus, setAutoSaveStatus] = useState<'idle' | 'saving' | 'saved' | 'error'>('idle');
+  const savedEvolutionId = useRef<string | null>(null);
+  const autoSaveTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+
   // AI Generation state
   const [generatingSOAP, setGeneratingSOAP] = useState(false);
   const [generatedSuggestions, setGeneratedSuggestions] = useState<string[]>([]);
+
+  // Auto-save debounced
+  const triggerAutoSave = useCallback(() => {
+    if (autoSaveTimer.current) clearTimeout(autoSaveTimer.current);
+    autoSaveTimer.current = setTimeout(async () => {
+      const hasContent = mode === 'SOAP'
+        ? (subjective.trim() || objective.trim() || assessment.trim() || plan.trim())
+        : freeContent.trim();
+      if (!hasContent || !patientId) return;
+
+      setAutoSaveStatus('saving');
+      try {
+        const payload = {
+          patientId,
+          appointmentId,
+          date: new Date(),
+          subjective: mode === 'SOAP' ? subjective.trim() : '',
+          objective: mode === 'SOAP' ? objective.trim() : '',
+          assessment: mode === 'SOAP' ? assessment.trim() : freeContent.trim(),
+          plan: mode === 'SOAP' ? plan.trim() : '',
+          painLevel,
+          attachments: photos,
+          metadata: { fillingMode: mode },
+        };
+
+        await createEvolutionAsync(payload as any);
+        setAutoSaveStatus('saved');
+      } catch {
+        setAutoSaveStatus('error');
+      }
+    }, 2000);
+  }, [mode, subjective, objective, assessment, plan, freeContent, patientId, appointmentId, painLevel, photos, createEvolutionAsync]);
+
+  // Trigger auto-save on content changes
+  useEffect(() => {
+    triggerAutoSave();
+    return () => { if (autoSaveTimer.current) clearTimeout(autoSaveTimer.current); };
+  }, [subjective, objective, assessment, plan, freeContent, painLevel]);
 
   // Generate SOAP with AI — calls real Workers AI endpoint
   const handleGenerateWithAI = async () => {
@@ -91,55 +134,11 @@ export default function EvolutionFormScreen() {
     }
   };
 
-  const handleSave = async () => {
-    medium();
-    
-    const hasContent = mode === 'SOAP' 
-      ? (subjective.trim() || objective.trim() || assessment.trim() || plan.trim())
-      : freeContent.trim();
 
-    if (!hasContent) {
-      Alert.alert('Atenção', 'Preencha o formulário antes de salvar.');
-      hapticError();
-      return;
-    }
-
-    try {
-      const evolutionPayload = {
-        patientId,
-        appointmentId,
-        date: new Date(),
-        // Map non-SOAP modes to assessment or combine them
-        subjective: mode === 'SOAP' ? subjective.trim() : '',
-        objective: mode === 'SOAP' ? objective.trim() : '',
-        assessment: mode === 'SOAP' ? assessment.trim() : freeContent.trim(),
-        plan: mode === 'SOAP' ? plan.trim() : '',
-        painLevel,
-        attachments: photos,
-        metadata: {
-          fillingMode: mode
-        }
-      };
-
-      await createEvolutionAsync(evolutionPayload as any);
-
-      success();
-      Alert.alert('Sucesso', 'Evolução registrada com sucesso!', [
-        {
-          text: 'OK',
-          onPress: () => router.back(),
-        },
-      ]);
-
-    } catch (err: any) {
-      hapticError();
-      Alert.alert('Erro', err.message || 'Não foi possível salvar a evolução.');
-    }
-  };
-
-  const canSave = mode === 'SOAP' 
-    ? (subjective.trim() || objective.trim() || assessment.trim() || plan.trim())
-    : freeContent.trim();
+  const autoSaveLabel =
+    autoSaveStatus === 'saving' ? 'Salvando...' :
+    autoSaveStatus === 'saved'  ? 'Salvo automaticamente' :
+    autoSaveStatus === 'error'  ? 'Erro ao salvar' : '';
 
   return (
     <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]} edges={['top']}>
@@ -243,24 +242,18 @@ export default function EvolutionFormScreen() {
           )}
         </View>
 
-        {/* Save Button */}
-        <TouchableOpacity
-          style={[
-            styles.saveButton,
-            { backgroundColor: canSave ? colors.primary : colors.border },
-          ]}
-          onPress={handleSave}
-          disabled={!canSave || isCreating}
-        >
-          {isCreating ? (
-            <ActivityIndicator color="#fff" />
-          ) : (
-            <>
-              <Ionicons name="checkmark-circle" size={20} color="#fff" />
-              <Text style={styles.saveButtonText}>Salvar Evolução</Text>
-            </>
-          )}
-        </TouchableOpacity>
+        {/* Auto-save status indicator */}
+        {autoSaveLabel ? (
+          <View style={styles.autoSaveRow}>
+            {autoSaveStatus === 'saving' && <ActivityIndicator size="small" color={colors.textSecondary} />}
+            {autoSaveStatus === 'saved' && <Ionicons name="checkmark-circle" size={16} color="#10B981" />}
+            {autoSaveStatus === 'error' && <Ionicons name="alert-circle" size={16} color={colors.error ?? '#EF4444'} />}
+            <Text style={[styles.autoSaveText, {
+              color: autoSaveStatus === 'error' ? (colors.error ?? '#EF4444') :
+                     autoSaveStatus === 'saved' ? '#10B981' : colors.textSecondary
+            }]}>{autoSaveLabel}</Text>
+          </View>
+        ) : null}
       </ScrollView>
     </SafeAreaView>
   );
@@ -304,19 +297,15 @@ const styles = StyleSheet.create({
     padding: 16,
     gap: 16,
   },
-  saveButton: {
+  autoSaveRow: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    padding: 16,
-    borderRadius: 12,
-    gap: 8,
-    marginTop: 8,
+    gap: 6,
+    paddingVertical: 12,
   },
-  saveButtonText: {
-    color: '#fff',
-    fontSize: 16,
-    fontWeight: '600',
+  autoSaveText: {
+    fontSize: 13,
   },
   aiButtonContainer: {
     alignItems: "center",
