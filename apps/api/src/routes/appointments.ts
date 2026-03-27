@@ -206,8 +206,8 @@ app.post('/', requireAuth, async (c) => {
     const date        = body.date        || body.appointment_date;
     const startTime   = body.startTime   || body.start_time;
     const endTime     = body.endTime     || body.end_time;
-    const rawTherapist = body.therapistId || body.therapist_id || user.uid;
-    const therapistId = isUuid(rawTherapist) ? rawTherapist : null;
+    // Sempre usa user.uid do JWT (confiável) como therapistId
+    const therapistId = user.uid;
     const notes       = body.notes ?? null;
     const type        = body.type ?? body.session_type ?? 'Fisioterapia';
     const status      = normalizeStatus(body.status);
@@ -217,7 +217,7 @@ app.post('/', requireAuth, async (c) => {
     if (!date)         return c.json({ error: 'date é obrigatório' }, 400);
     if (!startTime)    return c.json({ error: 'start_time é obrigatório' }, 400);
     if (!endTime)      return c.json({ error: 'end_time é obrigatório' }, 400);
-    if (!therapistId)  return c.json({ error: 'therapist_id inválido — user.uid não é UUID' }, 400);
+    if (!therapistId)  return c.json({ error: 'therapist_id não encontrado no token' }, 401);
 
     const capacityError = await enforceCapacity(db, user.organizationId, {
       date,
