@@ -52,7 +52,7 @@ import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { useAuth } from "@/contexts/AuthContext";
 import { useOrganizations } from "@/hooks/useOrganizations";
-import { usePatients } from "@/hooks/usePatients";
+import { usePatients } from "@/hooks/patients/usePatients";
 import { reportsApi, sessionsApi } from "@/api/v2";
 import { Checkbox } from "@/components/ui/checkbox";
 import { LazyPdfDownloadButton } from "@/components/pdf/LazyPdfDownloadButton";
