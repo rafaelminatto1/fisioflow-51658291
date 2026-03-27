@@ -3,7 +3,7 @@
  */
 
 import { useMemo } from "react";
-import { useActivePatients } from "@/hooks/usePatients";
+import { useActivePatients } from "@/hooks/patients/usePatients";
 import { startOfDay, differenceInDays, parseISO, isValid } from "date-fns";
 
 export interface PatientMedicalReturn {
