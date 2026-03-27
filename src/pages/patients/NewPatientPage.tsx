@@ -5,7 +5,7 @@ import { PatientForm } from "@/components/patients/PatientForm";
 import {
 	useCreatePatient,
 	type PatientCreateInput,
-} from "@/hooks/usePatientCrud";
+} from "@/hooks/patients/usePatientCrud";
 import { useOrganizations } from "@/hooks/useOrganizations";
 import { Button } from "@/components/ui/button";
 import { ArrowLeft, UserPlus, Loader2 } from "lucide-react";

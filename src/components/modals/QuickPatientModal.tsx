@@ -13,7 +13,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
-import { useCreatePatient } from "@/hooks/usePatientCrud";
+import { useCreatePatient } from "@/hooks/patients/usePatientCrud";
 import { useOrganizations } from "@/hooks/useOrganizations";
 import { toast } from "sonner";
 import {
