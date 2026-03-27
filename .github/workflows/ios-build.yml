@@ -180,11 +180,15 @@ jobs:
           <plist version="1.0">
           <dict>
             <key>method</key>
-            <string>ad-hoc</string>
+            <string>release-testing</string>
             <key>teamID</key>
             <string>$APPLE_TEAM_ID</string>
             <key>compileBitcode</key>
             <false/>
+            <key>signingStyle</key>
+            <string>manual</string>
+            <key>provisioningProfiles</key>
+            <dict/>
           </dict>
           </plist>
           EOF
