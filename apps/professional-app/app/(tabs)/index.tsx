@@ -96,21 +96,60 @@ export default function DashboardScreen() {
               ))}
             </View>
 
+            {/* Quick Actions Grid */}
             <View style={styles.quickActions}>
-              <TouchableOpacity 
-                style={[styles.quickActionCard, { backgroundColor: colors.primary }]} 
+              <TouchableOpacity
+                style={[styles.quickActionCard, { backgroundColor: colors.primary }]}
                 onPress={() => router.push('/(app)/biomechanics')}
                 activeOpacity={0.8}
               >
                 <View style={styles.quickActionIcon}>
                   <Ionicons name="film" size={28} color="#fff" />
                 </View>
-                <View>
-                  <Text style={styles.quickActionTitle}>Laboratório Biomecânico</Text>
-                  <Text style={styles.quickActionSub}>Análise Kinovea & Tracking AI</Text>
+                <View style={{ flex: 1 }}>
+                  <Text style={styles.quickActionTitle}>Lab. Biomecânico</Text>
+                  <Text style={styles.quickActionSub}>Análise & Tracking AI</Text>
                 </View>
-                <Ionicons name="chevron-forward" size={20} color="rgba(255,255,255,0.6)" style={{ marginLeft: 'auto' }} />
+                <Ionicons name="chevron-forward" size={20} color="rgba(255,255,255,0.6)" />
               </TouchableOpacity>
+
+              <View style={styles.quickActionsRow}>
+                <TouchableOpacity
+                  style={[styles.quickActionMini, { backgroundColor: colors.surface, borderColor: colors.border }]}
+                  onPress={() => router.push('/protocols' as any)}
+                  activeOpacity={0.8}
+                >
+                  <View style={[styles.miniIcon, { backgroundColor: '#6366F1' + '20' }]}>
+                    <Ionicons name="clipboard" size={22} color="#6366F1" />
+                  </View>
+                  <Text style={[styles.miniTitle, { color: colors.text }]}>Protocolos</Text>
+                  <Text style={[styles.miniSub, { color: colors.textSecondary }]}>119 disponíveis</Text>
+                </TouchableOpacity>
+
+                <TouchableOpacity
+                  style={[styles.quickActionMini, { backgroundColor: colors.surface, borderColor: colors.border }]}
+                  onPress={() => router.push('/exercises' as any)}
+                  activeOpacity={0.8}
+                >
+                  <View style={[styles.miniIcon, { backgroundColor: '#10B981' + '20' }]}>
+                    <Ionicons name="fitness" size={22} color="#10B981" />
+                  </View>
+                  <Text style={[styles.miniTitle, { color: colors.text }]}>Exercícios</Text>
+                  <Text style={[styles.miniSub, { color: colors.textSecondary }]}>248 exercícios</Text>
+                </TouchableOpacity>
+
+                <TouchableOpacity
+                  style={[styles.quickActionMini, { backgroundColor: colors.surface, borderColor: colors.border }]}
+                  onPress={() => router.push('/protocols?tab=tests' as any)}
+                  activeOpacity={0.8}
+                >
+                  <View style={[styles.miniIcon, { backgroundColor: '#F59E0B' + '20' }]}>
+                    <Ionicons name="analytics" size={22} color="#F59E0B" />
+                  </View>
+                  <Text style={[styles.miniTitle, { color: colors.text }]}>Testes</Text>
+                  <Text style={[styles.miniSub, { color: colors.textSecondary }]}>Escalas clínicas</Text>
+                </TouchableOpacity>
+              </View>
             </View>
 
             <View style={styles.sectionHeader}>
@@ -227,9 +266,14 @@ const styles = StyleSheet.create({
   patientNameList: { fontSize: 16, fontWeight: '600', marginBottom: 4 },
   patientCondition: { fontSize: 13 },
   actionArrow: { width: 32, height: 32, borderRadius: 16, alignItems: 'center', justifyContent: 'center', backgroundColor: 'rgba(0,0,0,0.02)' },
-  quickActions: { marginBottom: 24 },
-  quickActionCard: { flexDirection: 'row', alignItems: 'center', padding: 20, borderRadius: 24, shadowColor: '#000', shadowOffset: { width: 0, height: 10 }, shadowOpacity: 0.1, shadowRadius: 20, elevation: 5 },
-  quickActionIcon: { width: 56, height: 56, borderRadius: 20, backgroundColor: 'rgba(255,255,255,0.2)', alignItems: 'center', justifyContent: 'center', marginRight: 16 },
-  quickActionTitle: { color: '#fff', fontSize: 18, fontWeight: '800', letterSpacing: -0.5 },
-  quickActionSub: { color: 'rgba(255,255,255,0.8)', fontSize: 13, fontWeight: '600' },
+  quickActions: { marginBottom: 24, gap: 12 },
+  quickActionCard: { flexDirection: 'row', alignItems: 'center', padding: 18, borderRadius: 20, gap: 14, shadowColor: '#000', shadowOffset: { width: 0, height: 6 }, shadowOpacity: 0.08, shadowRadius: 12, elevation: 4 },
+  quickActionIcon: { width: 52, height: 52, borderRadius: 18, backgroundColor: 'rgba(255,255,255,0.2)', alignItems: 'center', justifyContent: 'center' },
+  quickActionTitle: { color: '#fff', fontSize: 16, fontWeight: '800', letterSpacing: -0.4 },
+  quickActionSub: { color: 'rgba(255,255,255,0.75)', fontSize: 12, fontWeight: '500', marginTop: 2 },
+  quickActionsRow: { flexDirection: 'row', gap: 10 },
+  quickActionMini: { flex: 1, alignItems: 'center', padding: 14, borderRadius: 16, borderWidth: 1, gap: 6 },
+  miniIcon: { width: 44, height: 44, borderRadius: 14, alignItems: 'center', justifyContent: 'center' },
+  miniTitle: { fontSize: 13, fontWeight: '700' },
+  miniSub: { fontSize: 11, textAlign: 'center' },
 });
