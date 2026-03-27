@@ -193,6 +193,7 @@ export const crmApi = {
 		update: (id: string, d: Partial<Lead>) =>
 			crm(`/leads/${id}`, { method: "PUT", body: JSON.stringify(d) }),
 		delete: (id: string) => crm(`/leads/${id}`),
+		scores: (p?: { leadId?: string }) => crm(withQuery("/leads/scores", p)),
 		historico: (id: string) => crm(`/leads/${id}/historico`),
 		addHistorico: (id: string, d: Partial<LeadHistorico>) =>
 			crm(`/leads/${id}/historico`, {
