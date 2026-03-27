@@ -87,7 +87,8 @@
         "react-native-chart-kit",
         "recharts",
         "@neondatabase/neon-js",
-        "better-auth"
+        "better-auth",
+        "@shopify/react-native-skia"
       ]
     }
   },
@@ -98,6 +99,5 @@
   },
   "keywords": [],
   "author": "",
-  "license": "ISC",
-  "type": "module"
+  "license": "ISC"
 }
