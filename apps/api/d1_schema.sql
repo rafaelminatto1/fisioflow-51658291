@@ -1,0 +1,5 @@
+CREATE TABLE IF NOT EXISTS query_cache (
+  id TEXT PRIMARY KEY,
+  value TEXT NOT NULL,
+  expires_at INTEGER NOT NULL
+);

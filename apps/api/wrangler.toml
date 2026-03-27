@@ -110,6 +110,10 @@ AXIOM_ORG_ID = "activity-dbyc"
 AXIOM_DATASET = "fisioflow-logs"
 # AXIOM_TOKEN deve ser setado via 'wrangler secret put AXIOM_TOKEN'
 
+# Grafana Cloud OTEL (Produção)
+GRAFANA_OTLP_URL = "https://otlp-gateway-prod-sa-east-1.grafana.net/otlp"
+# GRAFANA_OTLP_TOKEN deve ser setado via: wrangler secret put GRAFANA_OTLP_TOKEN
+
 # Cloudflare AI Gateway
 # Troque <ACCOUNT_ID> e <GATEWAY_NAME> pelos seus dados no painel da Cloudflare (AI > AI Gateway)
 FISIOFLOW_AI_GATEWAY_URL = "https://gateway.ai.cloudflare.com/v1/32156f9a72a32d1ece28ab74bcd398fb/fisioflow-gateway"
@@ -251,4 +255,4 @@ enabled = true
 [[d1_databases]]
 binding = "D1_CACHE"
 database_name = "fisioflow-edge-cache"
-database_id = "adicionar-id-aqui-apos-wrangler-d1-create"
+database_id = "9eba3eb7-5486-49d0-9684-c325f8b1ddc2"

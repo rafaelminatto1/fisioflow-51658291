@@ -22,83 +22,9 @@ export interface CalculatedLeadScore {
 	category: "hot" | "warm" | "cold";
 }
 
-function calculateLeadScore(lead: Lead): CalculatedLeadScore {
-	let totalScore = 0;
-	let engagementScore = 0;
-	let demographicScore = 0;
-	let behavioralScore = 0;
-	const factors: ScoreFactor[] = [];
-
-	if (lead.email) {
-		demographicScore += 10;
-		factors.push({ type: "email", description: "Possui email", points: 10 });
-	}
-
-	if (lead.telefone) {
-		demographicScore += 15;
-		factors.push({ type: "phone", description: "Possui telefone", points: 15 });
-	}
-
-	if (lead.origem === "indicacao") {
-		demographicScore += 20;
-		factors.push({
-			type: "source",
-			description: "Vindo de indicação",
-			points: 20,
-		});
-	}
-
-	if (lead.data_ultimo_contato) {
-		engagementScore += 15;
-		factors.push({
-			type: "engagement",
-			description: "Contato recente registrado",
-			points: 15,
-		});
-	}
-
-	if (lead.interesse) {
-		engagementScore += 10;
-		factors.push({
-			type: "interest",
-			description: "Interesse informado",
-			points: 10,
-		});
-	}
-
-	if (
-		lead.estagio === "avaliacao_agendada" ||
-		lead.estagio === "avaliacao_realizada"
-	) {
-		behavioralScore += 30;
-		factors.push({
-			type: "stage",
-			description: "Lead avançado no funil",
-			points: 30,
-		});
-	} else if (lead.estagio === "em_contato") {
-		behavioralScore += 15;
-		factors.push({ type: "stage", description: "Lead em contato", points: 15 });
-	}
-
-	totalScore = demographicScore + engagementScore + behavioralScore;
-
-	return {
-		leadId: lead.id,
-		totalScore,
-		engagementScore,
-		demographicScore,
-		behavioralScore,
-		factors,
-		category: totalScore >= 70 ? "hot" : totalScore >= 40 ? "warm" : "cold",
-	};
-}
-
 export async function fetchCalculatedLeadScores(leadId?: string) {
-	const result = await crmApi.leads.list();
-	const leads = result?.data ?? [];
-	const filtered = leadId ? leads.filter((lead) => lead.id === leadId) : leads;
-	return filtered.map(calculateLeadScore);
+	const res = await crmApi.leads.scores({ leadId });
+	return (res?.data ?? []) as CalculatedLeadScore[];
 }
 
 export function useLeadScoring() {

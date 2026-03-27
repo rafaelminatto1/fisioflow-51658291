@@ -1,3 +1,4 @@
+import { instrument, ResolveConfigFn } from '@microlabs/otel-cf-workers';
 import { Hono } from 'hono';
 import { logger } from 'hono/logger';
 import { secureHeaders } from 'hono/secure-headers';
@@ -270,7 +271,7 @@ async function handleRealtimeWS(request: Request, env: any): Promise<Response> {
   return obj.fetch(new Request(wsUrl.toString(), request));
 }
 
-export default {
+const workerHandler = {
   async fetch(request: Request, env: any, ctx: ExecutionContext): Promise<Response> {
     // 1. Roteamento de Agentes (Cloudflare Agents SDK) - Intercepta /agents/*
     const agentResponse = await routeAgentRequest(request, env);
@@ -285,3 +286,15 @@ export default {
   scheduled: handleScheduled,
   queue: handleQueue,
 };
+
+const otelConfig: ResolveConfigFn = (env: Env) => ({
+  exporter: {
+    url: env.GRAFANA_OTLP_URL ?? 'https://otlp-gateway-prod-sa-east-1.grafana.net/otlp',
+    headers: {
+      Authorization: `Basic ${btoa(`3071318:${env.GRAFANA_OTLP_TOKEN ?? ''}`)}`,
+    },
+  },
+  service: { name: 'fisioflow-api', version: '1.0.0' },
+});
+
+export default instrument(workerHandler, otelConfig);
