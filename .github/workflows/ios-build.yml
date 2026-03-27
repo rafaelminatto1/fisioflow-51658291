@@ -169,34 +169,29 @@ jobs:
             PROVISIONING_PROFILE="$PROFILE_UUID" \
             SKIP_INSTALL=NO
 
-      # ── 8. Exportar IPA ───────────────────────────────────────────────────
-      - name: Exportar IPA (ad-hoc)
-        env:
-          APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
+      # ── 8. Empacotar IPA manualmente ─────────────────────────────────────
+      # xcodebuild -exportArchive falha no Xcode 26 com "Unknown Distribution Error"
+      # para perfis ad-hoc. O .app já está assinado pelo archive — basta zipar.
+      - name: Empacotar IPA (Payload zip)
         run: |
-          cat > "$RUNNER_TEMP/ExportOptions.plist" << EOF
-          <?xml version="1.0" encoding="UTF-8"?>
-          <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
-          <plist version="1.0">
-          <dict>
-            <key>method</key>
-            <string>release-testing</string>
-            <key>teamID</key>
-            <string>$APPLE_TEAM_ID</string>
-            <key>compileBitcode</key>
-            <false/>
-            <key>signingStyle</key>
-            <string>manual</string>
-            <key>provisioningProfiles</key>
-            <dict/>
-          </dict>
-          </plist>
-          EOF
+          APP_PATH=$(find "$RUNNER_TEMP/app.xcarchive/Products" -name "*.app" -maxdepth 3 | head -1)
+          if [ -z "$APP_PATH" ]; then
+            echo "ERRO: Nenhum .app encontrado no archive"
+            find "$RUNNER_TEMP/app.xcarchive" -type d | head -20
+            exit 1
+          fi
+          APP_NAME=$(basename "$APP_PATH" .app)
+          echo "App encontrado: $APP_PATH"
 
-          xcodebuild -exportArchive \
-            -archivePath "$RUNNER_TEMP/app.xcarchive" \
-            -exportOptionsPlist "$RUNNER_TEMP/ExportOptions.plist" \
-            -exportPath "$RUNNER_TEMP/ipa"
+          IPA_STAGE="$RUNNER_TEMP/ipa-stage"
+          mkdir -p "$IPA_STAGE/Payload"
+          cp -r "$APP_PATH" "$IPA_STAGE/Payload/"
+
+          IPA_OUT="$RUNNER_TEMP/ipa"
+          mkdir -p "$IPA_OUT"
+          (cd "$IPA_STAGE" && zip -qr "$IPA_OUT/${APP_NAME}.ipa" Payload/)
+          echo "IPA gerado: $IPA_OUT/${APP_NAME}.ipa"
+          ls -lh "$IPA_OUT/"
 
       # ── 9. Upload do artefato ─────────────────────────────────────────────
       - name: Upload IPA
