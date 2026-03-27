@@ -151,6 +151,9 @@ jobs:
         working-directory: apps/${{ inputs.app }}/ios
         env:
           APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
+          # Desabilita upload automático do Sentry (sem credenciais configuradas no CI)
+          # Evita que collect-modules.sh falhe com exit 1 por source map ausente
+          SENTRY_DISABLE_AUTO_UPLOAD: "true"
         run: |
           WORKSPACE=$(ls -d *.xcworkspace | head -1)
           SCHEME=$(echo "$WORKSPACE" | sed 's/\.xcworkspace//')
