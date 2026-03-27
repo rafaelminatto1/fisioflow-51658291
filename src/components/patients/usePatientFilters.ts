@@ -1,7 +1,7 @@
 import { useState, useMemo, useCallback } from "react";
 import type { PatientFilters } from "./patientFiltersUtils";
 import { countActiveFilters } from "./patientFiltersUtils";
-import type { Patient } from "@/hooks/usePatientCrud";
+import type { Patient } from "@/hooks/patients/usePatientCrud";
 
 interface UsePatientFiltersOptions {
 	patients: Patient[];

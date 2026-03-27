@@ -4,7 +4,7 @@ import { MainLayout } from "@/components/layout/MainLayout";
 import { PatientEvolutionDashboard } from "@/components/patients/PatientEvolutionDashboard";
 import { ProgressAnalysisCard } from "@/components/patients/ProgressAnalysisCard";
 import { usePatientEvolutionReport } from "@/hooks/usePatientEvolutionReport";
-import { usePatients } from "@/hooks/usePatients";
+import { usePatients } from "@/hooks/patients/usePatients";
 import { Button } from "@/components/ui/button";
 import { ArrowLeft, FileDown, Printer, Activity } from "lucide-react";
 import { LoadingSkeleton, EmptyState } from "@/components/ui";

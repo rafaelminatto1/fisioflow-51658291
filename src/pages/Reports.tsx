@@ -46,7 +46,7 @@ import {
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { useAppointments } from "@/hooks/useAppointments";
-import { usePatients } from "@/hooks/usePatients";
+import { usePatients } from "@/hooks/patients/usePatients";
 import { useFinancial } from "@/hooks/useFinancial";
 
 const Reports = () => {
