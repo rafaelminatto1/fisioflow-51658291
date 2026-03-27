@@ -43,6 +43,7 @@
     "expo-image-picker": "~55.0.13",
     "expo-linking": "~55.0.8",
     "expo-localization": "~55.0.9",
+    "expo-modules-core": "^55.0.17",
     "expo-notifications": "~55.0.13",
     "expo-router": "~55.0.7",
     "expo-secure-store": "~55.0.9",
@@ -66,7 +67,6 @@
   },
   "devDependencies": {
     "@babel/core": "^7.25.2",
-    "babel-plugin-react-compiler": "^1.0.0",
     "@babel/preset-env": "^7.29.2",
     "@babel/preset-react": "^7.28.5",
     "@babel/preset-typescript": "^7.28.5",
@@ -75,6 +75,7 @@
     "@types/jest": "^29.5.14",
     "@types/react": "^19.1.17",
     "babel-jest": "^30.2.0",
+    "babel-plugin-react-compiler": "^1.0.0",
     "expo-clipboard": "~55.0.9",
     "expo-document-picker": "~55.0.9",
     "expo-sharing": "~55.0.14",
