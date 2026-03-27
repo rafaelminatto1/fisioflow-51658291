@@ -9,7 +9,7 @@ import { CustomModal } from "@/components/ui/custom-modal";
 import { useTherapists, type TherapistOption } from "@/hooks/useTherapists";
 import { useAuth } from "@/contexts/AuthContext";
 import { useOrganizations } from "@/hooks/useOrganizations";
-import { useActivePatients } from "@/hooks/usePatients";
+import { useActivePatients } from "@/hooks/patients/usePatients";
 import type { Patient } from "@/types";
 import { useAppointments } from "@/hooks/useAppointments";
 import { useScheduleCapacity } from "@/hooks/useScheduleCapacity";
