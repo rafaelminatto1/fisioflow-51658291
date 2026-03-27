@@ -71,13 +71,12 @@ jobs:
             content = File.read("Podfile")
             patch = "  installer.pods_project.targets.each do |t|\n" +
               "    t.build_configurations.each do |cfg|\n" +
-              "      cfg.build_settings[%q{SWIFT_VERSION}] = %q{5}\n" +
               "      cfg.build_settings[%q{SWIFT_STRICT_CONCURRENCY}] = %q{minimal}\n" +
               "    end\n  end\n"
             content.sub!(/post_install do \|installer\|/,
               "post_install do |installer|\n" + patch)
             File.write("Podfile", content)
-            puts "Podfile patched: SWIFT_VERSION=5 added to post_install"
+            puts "Podfile patched: SWIFT_STRICT_CONCURRENCY=minimal added to post_install"
           '
 
       # ── 4. Cache CocoaPods (economiza ~10 min) ────────────────────────────
