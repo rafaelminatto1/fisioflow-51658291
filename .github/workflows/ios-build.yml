@@ -67,19 +67,18 @@ jobs:
       - name: Patch Podfile (SWIFT_VERSION=5 em todos os pods)
         working-directory: apps/${{ inputs.app }}/ios
         run: |
-          cat >> Podfile << 'RUBY'
-
-# CI patch: force Swift 5 language mode in all pods to avoid Swift 6
-# strict concurrency errors in expo-modules-core with Xcode 16.4
-post_install do |installer|
-  installer.pods_project.targets.each do |target|
-    target.build_configurations.each do |config|
-      config.build_settings['SWIFT_VERSION'] = '5'
-      config.build_settings['SWIFT_STRICT_CONCURRENCY'] = 'minimal'
-    end
-  end
-end
-RUBY
+          {
+            echo ""
+            echo "# CI patch: force Swift 5 language mode in all pods (Xcode 16.4)"
+            echo "post_install do |installer|"
+            echo "  installer.pods_project.targets.each do |target|"
+            echo "    target.build_configurations.each do |config|"
+            echo "      config.build_settings['SWIFT_VERSION'] = '5'"
+            echo "      config.build_settings['SWIFT_STRICT_CONCURRENCY'] = 'minimal'"
+            echo "    end"
+            echo "  end"
+            echo "end"
+          } >> Podfile
 
       # ── 4. Cache CocoaPods (economiza ~10 min) ────────────────────────────
       - name: Cache CocoaPods
