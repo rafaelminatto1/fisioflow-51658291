@@ -3,7 +3,7 @@
  */
 
 import { getDB, type FisioFlowDB } from "@/hooks/useOfflineStorage";
-import { appointmentsApi, exercisesApi } from "@/api/v2";
+import { appointmentsApi, exercisesApi, evolutionApi, goalsApi, patientsApi } from "@/api/v2";
 import { toast } from "sonner";
 import type { IDBPDatabase } from "idb";
 import { fisioLogger as logger } from "@/lib/errors/logger";
@@ -366,18 +366,38 @@ class OfflineSyncService {
 				timestamp: Date.now(),
 				data: { actionId: action.id, actionType: action.action },
 			});
-		} catch (error) {
-			// Increment retry count
+		} catch (error: any) {
+			const status = error?.status;
+			const isTerminalError = status >= 400 && status < 500;
+			
+			// Increment retry count or handle as terminal
 			const maxRetries = this.config.maxRetries || DEFAULT_MAX_RETRIES;
 			const updatedAction = {
 				...action,
 				retryCount: action.retryCount + 1,
 			};
 
-			if (updatedAction.retryCount < maxRetries) {
+			if (isTerminalError) {
+				logger.error(
+					`Terminal sync error (${status}) for action ${action.id}. Removing from queue.`,
+					{ action: action.action, error },
+					"offlineSync",
+				);
+				await db.delete("offline_actions", action.id);
+			} else if (updatedAction.retryCount < maxRetries) {
+				logger.warn(
+					`Transient sync error for action ${action.id}. Retrying (${updatedAction.retryCount}/${maxRetries}).`,
+					{ action: action.action, error },
+					"offlineSync",
+				);
 				await db.put("offline_actions", updatedAction);
 			} else {
 				// Max retries reached - remove from queue
+				logger.error(
+					`Max retries reached for action ${action.id}. Removing from queue.`,
+					{ action: action.action, error },
+					"offlineSync",
+				);
 				await db.delete("offline_actions", action.id);
 			}
 
@@ -396,7 +416,7 @@ class OfflineSyncService {
 	}
 
 	/**
-	 * Executes an action (placeholder - replace with actual API calls)
+	 * Executes an action using production API clients
 	 * @param action - Action to execute
 	 */
 	private async executeAction(action: QueuedAction): Promise<void> {
@@ -404,82 +424,77 @@ class OfflineSyncService {
 
 		switch (actionType) {
 			case ACTION_TYPES.CREATE_SESSION_METRICS:
-				await this.apiPost("/api/patient-session-metrics", payload);
+				await evolutionApi.measurements.create(payload as any);
 				break;
 			case ACTION_TYPES.UPDATE_GOAL:
-				await this.apiPatch(
-					`/api/patient-goals/${String((payload as PayloadWithId).id)}`,
-					payload,
+				await goalsApi.update(
+					String((payload as PayloadWithId).id),
+					payload as any,
 				);
 				break;
 			case ACTION_TYPES.CREATE_EVOLUTION:
-				await this.apiPost("/api/patient-evolution", payload);
+				await evolutionApi.treatmentSessions.upsert(payload as any);
 				break;
 			case ACTION_TYPES.UPDATE_RISK_SCORE:
-				await this.apiPost("/api/patient-risk-scores", payload);
+				// Map to evolution measurements as a standardized clinical metric
+				await evolutionApi.measurements.create({
+					...(payload as any),
+					measurement_type: "risk_score",
+				});
 				break;
 			case ACTION_TYPES.UPDATE_PATIENT:
-				await this.apiPatch(
-					`/api/patients/${String((payload as PayloadWithId).id)}`,
-					payload,
+				await patientsApi.update(
+					String((payload as PayloadWithId).id),
+					payload as any,
 				);
 				break;
 			case ACTION_TYPES.CREATE_APPOINTMENT:
-				await this.apiPost("/api/appointments", payload);
+				await appointmentsApi.create(payload as any);
 				break;
 			case ACTION_TYPES.UPDATE_APPOINTMENT:
-				await this.apiPatch(
-					`/api/appointments/${String((payload as PayloadWithId).id)}`,
-					payload,
+				await appointmentsApi.update(
+					String((payload as PayloadWithId).id),
+					payload as any,
 				);
 				break;
 			case ACTION_TYPES.DELETE_APPOINTMENT:
-				await this.apiDelete(
-					`/api/appointments/${String((payload as PayloadWithId).id)}`,
-				);
+				await appointmentsApi.cancel(String((payload as PayloadWithId).id));
 				break;
 			default:
 				logger.warn("Unknown action type", { actionType }, "offlineSync");
 		}
-
-		// Simulate API call delay (remove in production)
-		await new Promise((resolve) => setTimeout(resolve, 50));
 	}
 
 	/**
-	 * API POST request wrapper
+	 * Generic API POST request wrapper (Maintained for backward compatibility or simple direct calls)
 	 */
 	private async apiPost(endpoint: string, payload: unknown): Promise<void> {
-		// Placeholder for actual API call
-		logger.debug(
-			"[OfflineSyncService] API POST",
-			{ endpoint, payload },
-			"offlineSync",
-		);
+		const { request } = await import("@/api/v2/base");
+		await request(endpoint, {
+			method: "POST",
+			body: JSON.stringify(payload),
+		});
 	}
 
 	/**
-	 * API PATCH request wrapper
+	 * Generic API PATCH request wrapper
 	 */
 	private async apiPatch(endpoint: string, payload: unknown): Promise<void> {
-		// Placeholder for actual API call
-		logger.debug(
-			"[OfflineSyncService] API PATCH",
-			{ endpoint, payload },
-			"offlineSync",
-		);
+		const { request } = await import("@/api/v2/base");
+		await request(endpoint, {
+			method: "PATCH",
+			body: JSON.stringify(payload),
+		});
 	}
 
 	/**
-	 * API DELETE request wrapper
+	 * Generic API DELETE request wrapper
 	 */
 	private async apiDelete(endpoint: string): Promise<void> {
-		// Placeholder for actual API call
-		logger.debug(
-			"[OfflineSyncService] API DELETE",
-			{ endpoint },
-			"offlineSync",
-		);
+		const { request } = await import("@/api/v2/base");
+		await request(endpoint, {
+			method: "DELETE",
+		});
 	}
 
 	// ========================================================================
@@ -522,7 +537,7 @@ class OfflineSyncService {
 			const todayStr = today.toISOString().split("T")[0];
 			const tomorrowStr = tomorrow.toISOString().split("T")[0];
 
-			let appointments;
+			let appointments: any[] = [];
 			let apptError: Error | null = null;
 
 			try {
@@ -578,7 +593,7 @@ class OfflineSyncService {
 			}
 
 			// 2. Cache all exercises via Workers API (Neon)
-			let exercises;
+			let exercises: any[] = [];
 			try {
 				const exercisesRes = await exercisesApi.list({ limit: 500 });
 				exercises = exercisesRes.data ?? [];
