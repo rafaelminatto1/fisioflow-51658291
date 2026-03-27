@@ -38,14 +38,6 @@ config.resolver.resolverMainFields = ["react-native", "browser", "main"];
 config.resolver.unstable_enablePackageExports = true;
 config.resolver.unstable_symlinks = true;
 
-// 4. Transformer e Minificação
-config.transformer.minifierPath = require.resolve("metro-minify-terser");
-config.transformer.minifierConfig = {
-	keep_fnames: true,
-	mangle: { keep_fnames: true },
-	output: { comments: false },
-};
-
 // 5. Aliases (Opcional, se necessário para stubs)
 try {
 	config.resolver.alias = {
