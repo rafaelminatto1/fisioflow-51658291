@@ -131,7 +131,7 @@ async function getOverlappingAppointments(
   let conditions = and(
     eq(appointments.organizationId, organizationId),
     eq(appointments.date, date),
-    sql`${appointments.status} NOT IN ('cancelled', 'no_show', 'rescheduled')`,
+    sql`${appointments.status} NOT IN ('cancelado', 'faltou', 'faltou_com_aviso', 'faltou_sem_aviso', 'remarcar')`,
     sql`${appointments.startTime} < ${endTime}::time`,
     sql`${appointments.endTime} > ${startTime}::time`,
   );
@@ -489,7 +489,7 @@ app.post('/:id/cancel', requireAuth, async (c) => {
     const result = await db
       .update(appointments)
       .set({
-        status: 'cancelled',
+        status: 'cancelado',
         cancellationReason: body.reason ?? null,
         cancelledAt: new Date(),
         updatedAt: new Date(),
