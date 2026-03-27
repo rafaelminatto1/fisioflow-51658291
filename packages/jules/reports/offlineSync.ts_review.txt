@@ -1,0 +1,253 @@
+npm warn Unknown project config "node-linker". This will stop working in the next major version of npm. See `npm help npmrc` for supported config options.
+🔍 Analyzing src/services/offlineSync.ts...
+No unstaged changes found for src/services/offlineSync.ts. Analyzing current content instead...
+[JulesAI] Sending request to models/gemini-2.5-flash...
+[JulesAI] Received response.
+
+--- Review ---
+This is an excellent initiative to build a robust offline sync service! The design incorporates several best practices, such as a singleton pattern, IndexedDB for persistent storage, event-based communication, and a React hook for easy consumption. The use of constants, types, and structured logging is also commendable.
+
+Let's review the changes and identify areas for improvement.
+
+---
+
+### Overall Impressions
+
+The service is well-structured and addresses key aspects of offline-first synchronization: queuing actions, retries, concurrency, and user feedback. The integration with Service Workers for background sync and a polling fallback is a robust approach. The React hook provides a convenient way to expose the service's state and actions to components.
+
+### Review of Changes & Suggestions
+
+Here's a breakdown of potential bugs, performance issues, readability improvements, and suggested patterns:
+
+#### 1. Bugs / Functional Issues
+
+*   **Critical: Unimplemented API Calls in `executeAction`:**
+    *   **Observation:** The `apiPost`, `apiPatch`, and `apiDelete` methods are currently placeholders, only logging to debug. They do not actually make network requests using the imported `appointmentsApi`, `exercisesApi`, or any other HTTP client.
+    *   **Impact:** Offline actions are queued and processed (retried or deleted), but never actually sent to the backend. This is a critical functional bug.
+    *   **Suggestion:** Implement these methods to perform actual API calls. You could introduce a generic `httpClient` or use the existing `appointmentsApi` and `exercisesApi` where applicable. Given the `/api/...` endpoints, a generic `httpClient` (e.g., Axios instance) would be most suitable.
+
+    ```typescript
+    // Example: Assuming a global httpClient is available or passed via DI
+    import { httpClient } from "@/api/httpClient"; // or similar generic client
+
+    // ... inside OfflineSyncService class ...
+
+    private async apiCall<T>(method: 'post' | 'patch' | 'delete', endpoint: string, payload?: unknown): Promise<T> {
+        logger.debug(`[OfflineSyncService] API ${method.toUpperCase()}`, { endpoint, payload }, "offlineSync");
+        try {
+            let response;
+            if (method === 'post') {
+                response = await httpClient.post<T>(endpoint, payload);
+            } else if (method === 'patch') {
+                response = await httpClient.patch<T>(endpoint, payload);
+            } else if (method === 'delete') {
+                response = await httpClient.delete<T>(endpoint);
+            } else {
+                throw new Error(`Unsupported API method: ${method}`);
+            }
+            return response.data; // Return data if needed, or just resolve on success
+        } catch (error) {
+            logger.error(`[OfflineSyncService] API ${method.toUpperCase()} failed`, { endpoint, error }, "offlineSync");
+            throw error; // Re-throw so processAction can handle retries
+        }
+    }
+
+    // Then, in executeAction:
+    switch (actionType) {
+        case ACTION_TYPES.CREATE_SESSION_METRICS:
+            await this.apiCall("post", "/api/patient-session-metrics", payload);
+            break;
+        // ... and so on for other actions
+    }
+    ```
+
+*   **`QueuedAction.synced` Property Logic & `getStats` Calculation:**
+    *   **Observation:** The `synced` property on `QueuedAction` is never set to `true`. When an action is successfully processed, it's deleted from IndexedDB. This means `index.getAll(false)` in `syncNow` will correctly get pending actions, but `if (action.synced)` in `getStats` will never be true, leading to `syncedActions` always being `0`.
+    *   **Impact:** The `syncedActions` statistic will be incorrect.
+    *   **Suggestion:**
+        *   **Option 1 (Recommended):** If successful actions are deleted, the `synced` property on `QueuedAction` is redundant. Remove it. In `getStats`, calculate `syncedActions` as `totalActions - pendingActions - failedActions`. This accurately reflects actions that *were* in the queue and are now successfully processed and removed.
+        *   **Option 2:** If you intend to keep a history of synced actions, then `processAction` should update `action.synced = true` and *not delete* the action from IndexedDB. You'd need a separate mechanism to clean up old synced actions.
+
+    ```typescript
+    // Proposed change for getStats (if successful actions are deleted):
+    public async getStats(): Promise<SyncStats> {
+        // ... (existing code to get allActions)
+        let total = allActions.length; // Total actions currently in DB
+        let pending = 0;
+        let failed = 0;
+
+        for (const action of allActions) {
+            if (action.retryCount >= (this.config.maxRetries || DEFAULT_MAX_RETRIES)) {
+                failed++;
+            } else {
+                pending++;
+            }
+        }
+        const synced = total - pending - failed; // Calculate synced actions by exclusion
+
+        return {
+            totalActions: total,
+            pendingActions: pending,
+            syncedActions: synced,
+            failedActions: failed,
+            lastSyncTime: this.lastSyncStats?.lastSyncTime,
+            lastSyncSuccess: this.lastSyncStats?.lastSyncSuccess,
+        };
+    }
+    ```
+
+#### 2. Performance Issues (N+1, etc.)
+
+*   **Redundant `startPeriodicSync` in `init()`:**
+    *   **Observation:** `this.startPeriodicSync()` is called even if `registerBackgroundSync()` (Service Worker) is successful. This means both the periodic polling and the Service Worker's background sync (when triggered) could be trying to process the same actions, leading to redundant work or race conditions.
+    *   **Impact:** Unnecessary resource consumption and potential for duplicate API calls if not carefully managed.
+    *   **Suggestion:** Only enable `startPeriodicSync` as a *fallback* if Service Worker background sync is not supported or registration fails. If SW sync is successfully registered, the main thread's role for processing actions should be minimal, relying on the SW for the actual heavy lifting.
+
+    ```typescript
+    // Refined init() logic:
+    private async init(): Promise<void> {
+        if (typeof window === "undefined" || !("serviceWorker" in navigator)) {
+            logger.debug("Service Worker not available, starting periodic sync.", undefined, "offlineSync");
+            this.startPeriodicSync(); // Fallback for no SW
+            return;
+        }
+
+        try {
+            this.swRegistration = await navigator.serviceWorker.ready;
+            const backgroundSyncRegistered = await this.registerBackgroundSync();
+
+            if (!backgroundSyncRegistered) {
+                logger.debug("Background Sync API not available or registration failed, falling back to periodic sync.", undefined, "offlineSync");
+                this.startPeriodicSync();
+            } else {
+                logger.debug("Service Worker background sync registered. Periodic sync will not start automatically unless explicitly enabled or SW sync fails frequently.", undefined, "offlineSync");
+                // If SW background sync is registered, the main thread usually *doesn't* need to poll.
+                // The SW handles processing and reports back.
+                // However, you might keep startPeriodicSync() here but with a much longer interval
+                // as an ultimate fallback, or enable it only if SW sync events are observed to fail.
+                // For now, let's assume SW sync is primary and main thread polling is secondary/manual.
+                // If you *still* want periodic sync alongside SW, that's fine, but clarify the intent.
+                // For a truly SW-first approach, you might remove startPeriodicSync() here.
+            }
+
+            // ... (message listeners, online event listener)
+            // Remove the initial sync_start emit here, it should happen in syncNow()
+            // this.emit({ type: "sync_start", timestamp: Date.now() });
+        } catch (error) {
+            logger.warn("Service Worker initialization failed, using polling fallback", error, "offlineSync");
+            this.startPeriodicSync();
+        }
+    }
+    ```
+
+*   **`cacheCriticalData` Pagination:**
+    *   **Observation:** The API calls `appointmentsApi.list({ limit: 500 })` and `exercisesApi.list({ limit: 500 })` fetch only the first 500 items.
+    *   **Impact:** If there are more than 500 appointments or exercises, not all critical data will be cached, leading to a potentially incomplete offline experience.
+    *   **Suggestion:** If the goal is to cache *all* data, implement pagination logic to fetch all available items. This usually involves checking if `data.hasMore` or `data.nextCursor` exists and making subsequent API calls until all data is retrieved.
+
+#### 3. Readability Improvements
+
+*   **Duplicate Service Worker `message` Listeners:**
+    *   **Observation:** Two `navigator.serviceWorker.addEventListener("message", ...)` calls exist, one for `SYNC_COMPLETE` and one for `SYNC_ERROR`.
+    *   **Suggestion:** Consolidate these into a single listener to handle different message types.
+
+    ```typescript
+    // In init()
+    navigator.serviceWorker.addEventListener("message", (event) => {
+        if (!event.data) return; // Basic check
+
+        if (event.data.type === "SYNC_COMPLETE") {
+            this.emit({
+                type: "sync_complete",
+                timestamp: Date.now(),
+                data: { stats: event.data.stats }, // Ensure stats are correctly passed from SW
+            });
+            // Consider if notifyListeners() is needed here, as emit already sends the event.
+            // If notifyListeners() just re-fetches stats and re-emits, it might be redundant.
+            // this.notifyListeners(); // Potentially remove or refine
+        } else if (event.data.type === "SYNC_ERROR") {
+            this.emit({
+                type: "sync_error",
+                timestamp: Date.now(),
+                data: { error: event.data.error },
+            });
+        }
+    });
+    ```
+
+*   **Redundant `sync_start` Event Emission:**
+    *   **Observation:** `init()` currently emits `sync_start`, and `syncNow()` also emits `sync_start`.
+    *   **Suggestion:** `sync_start` should ideally be emitted when an actual synchronization *process* begins. Remove the `emit` call from `init()` and keep it at the beginning of `syncNow()`. If `init` needs to signal completion, a `service_initialized` event could be used.
+
+*   **Redundant `notifyListeners()` Call in `syncNow()`:**
+    *   **Observation:** `syncNow()` first emits a `sync_complete` event with `this.lastSyncStats`, and then immediately calls `this.notifyListeners()`, which fetches stats again via `getStats()` and emits *another* `sync_complete` event.
+    *   **Impact:** Duplicate events and unnecessary `getStats()` calls.
+    *   **Suggestion:** Remove `this.notifyListeners()` from `syncNow()`. The `emit` call within `syncNow` already provides the `SyncStats` and is sufficient for listeners. The `notifyListeners` method itself could be removed or renamed if it has a specific purpose for *unsolicited* stat updates.
+
+    ```typescript
+    // In syncNow()
+    // ...
+    this.lastSyncStats = await this.getStats(); // Ensure stats are updated before emitting
+    // ... (toast notifications)
+    this.emit({
+        type: "sync_complete",
+        timestamp: Date.now(),
+        data: { stats: this.lastSyncStats },
+    });
+    // Remove: this.notifyListeners();
+    ```
+
+*   **Global Flags `_loggedOfflineSyncStart`, `_loggedOfflineSyncComplete`:**
+    *   **Observation:** These are global variables (`let` at the top level). While they might work with a singleton, instance properties are generally preferred for state specific to the service.
+    *   **Suggestion:** Move these flags to be private instance properties of `OfflineSyncService`.
+
+    ```typescript
+    class OfflineSyncService {
+        // ... existing properties ...
+        private _loggedOfflineSyncStart = false;
+        private _loggedOfflineSyncComplete = false;
+
+        // ... then use this._loggedOfflineSyncStart, etc.
+    }
+    ```
+
+*   **Placeholder API Calls in `executeAction`:**
+    *   **Observation:** The comment `// Simulate API call delay (remove in production)` is present, and the `apiPost`, `apiPatch`, `apiDelete` methods explicitly log that they are placeholders.
+    *   **Suggestion:** Once the actual API calls are implemented (see "Critical Bug" above), remove the `setTimeout` and the placeholder logging from `apiPost`, `apiPatch`, `apiDelete`.
+
+#### 4. Pattern Suggestions
+
+*   **Service Worker: Dedicated Processing:**
+    *   **Observation:** The `syncNow` method (which contains `processAction` and `executeAction`) resides on the main thread. While `registerBackgroundSync` is used, it primarily tells the SW to wake up, but the actual work stays in the main thread. For heavy processing, background sync is usually meant to *offload* work to the SW, preventing UI freezes.
+    *   **Suggestion:** Consider moving the core action processing logic (`processAction`, `executeAction`, and the API clients they depend on) into the Service Worker script. The main thread would then primarily queue actions to IndexedDB and instruct the SW (e.g., via `sync.register` or `postMessage`) to process them. The SW would then send messages back to the main thread (as you've started to implement) about completion/progress. This would make the architecture truly leverage SW capabilities for background processing.
+
+*   **Dependency Injection for Testability:**
+    *   **Observation:** The `OfflineSyncService` directly imports and uses `getDB`, `appointmentsApi`, `exercisesApi`, `toast`, and `logger`.
+    *   **Suggestion:** For improved testability and flexibility, consider injecting these dependencies into the `OfflineSyncService` constructor. This allows you to easily mock them in tests without affecting global imports.
+
+    ```typescript
+    // Example (simplified):
+    interface OfflineSyncDependencies {
+        getDbFn: typeof getDB;
+        appointmentsApi: typeof appointmentsApi;
+        exercisesApi: typeof exercisesApi;
+        logger: typeof logger;
+        toast: typeof toast;
+        httpClient: AxiosInstance; // if you create one
+    }
+
+    class OfflineSyncService {
+        // ...
+        constructor(config: SyncConfig = {}, private deps: OfflineSyncDependencies) {
+            this.config = { ...config, /* defaults */ };
+            this.init();
+        }
+        // ... then use this.deps.getDbFn(), this.deps.appointmentsApi, etc.
+    }
+    ```
+
+### Conclusion
+
+This is a well-thought-out foundation for an offline sync service. Addressing the critical bug of unimplemented API calls and refining the `synced` property logic are the top priorities to make the service fully functional. Subsequent improvements in performance (SW interaction, pagination) and readability will further enhance its robustness and maintainability.
+
+Keep up the great work!
