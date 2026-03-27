@@ -45,7 +45,7 @@ import {
 } from "@/types/recurring-appointment";
 import { fisioLogger as logger } from "@/lib/errors/logger";
 import { PatientCombobox } from "@/components/ui/patient-combobox";
-import { useActivePatients } from "@/hooks/usePatients";
+import { useActivePatients } from "@/hooks/patients/usePatients";
 
 interface RecurringAppointmentModalProps {
 	/** Indica se o modal está aberto */

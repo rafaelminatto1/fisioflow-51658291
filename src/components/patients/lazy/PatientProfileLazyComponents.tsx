@@ -7,11 +7,11 @@
 import { lazy } from "react";
 
 // Dashboard 360 - Componente principal do overview
-export const LazyPatientDashboard360 = lazy(() =>
-	import("@/components/patient/dashboard/PatientDashboard360").then((m) => ({
-		default: m.PatientDashboard360,
-	})),
-);
+//// export const LazyPatientDashboard360 = lazy(() =>
+//	import("@/components/patient/dashboard/PatientDashboard360").then((m) => ({
+//		default: m.PatientDashboard360,
+//	})),
+//);
 
 // Evolution Dashboard - Gráficos de evolução
 export const LazyPatientEvolutionDashboard = lazy(() =>

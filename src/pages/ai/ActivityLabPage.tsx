@@ -26,7 +26,7 @@ import {
 	useActivityLabSessions,
 	useActivityLabClinic,
 } from "@/hooks/useActivityLab";
-import { useActivePatients } from "@/hooks/usePatients";
+import { useActivePatients } from "@/hooks/patients/usePatients";
 import { ActivityLabChart } from "@/components/ai/ActivityLabChart";
 import { ActivityLabComparisonChart } from "@/components/ai/ActivityLabComparisonChart";
 import type {
