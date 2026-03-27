@@ -17,7 +17,7 @@ import {
 	FileText,
 } from "lucide-react";
 import { useState, useMemo } from "react";
-import { useActivePatients } from "@/hooks/usePatients";
+import { useActivePatients } from "@/hooks/patients/usePatients";
 import {
 	useCommunications,
 	useCommunicationStats,
