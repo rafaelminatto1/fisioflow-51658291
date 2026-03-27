@@ -67,5 +67,3 @@ fs.writeFileSync(
 
 console.log('✅ Storybook configuration generated successfully!')
 console.log('📁 Files created: .storybook/main.tsx, .storybook/preview.tsx')
-EOF
-node /home/rafael/Documents/fisioflow/fisioflow-51658291/.storybook/generate-storybook-config.js
