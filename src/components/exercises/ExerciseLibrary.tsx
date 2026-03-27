@@ -153,7 +153,16 @@ const ExerciseCard = React.memo(function ExerciseCard({
 	const thumbSrc = getBestImageUrl(exercise);
 
 	return (
-		<Card className="group overflow-hidden hover:shadow-xl transition-all duration-300 hover:border-primary/40 hover:-translate-y-1 will-change-transform touch-manipulation h-full flex flex-col">
+		<Card
+			className="group overflow-hidden hover:shadow-xl transition-all duration-300 hover:border-primary/40 hover:-translate-y-1 will-change-transform touch-manipulation h-full flex flex-col cursor-pointer"
+			onClick={() => {
+				if (selectionMode) {
+					if (!isAdded && onAdd) onAdd();
+				} else {
+					onView();
+				}
+			}}
+		>
 			{/* Image Section */}
 			<div className="relative h-44 bg-gradient-to-br from-muted to-muted/50 overflow-hidden flex-shrink-0">
 				{thumbSrc ? (
@@ -219,7 +228,10 @@ const ExerciseCard = React.memo(function ExerciseCard({
 				{/* Quick View on Hover - pointer-events-none on mobile to prevent blocking */}
 				<div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all pointer-events-none md:pointer-events-auto">
 					<Button
-						onClick={onView}
+						onClick={(e) => {
+							e.stopPropagation();
+							onView();
+						}}
 						size="lg"
 						className="shadow-2xl gap-2 bg-white/95 text-foreground hover:bg-white touch-manipulation"
 					>
@@ -231,7 +243,7 @@ const ExerciseCard = React.memo(function ExerciseCard({
 
 			{/* Content Section */}
 			<div className="p-4 space-y-3 flex-1 flex flex-col">
-				<div className="space-y-1 flex-1">
+				<div className="space-y-1">
 					<h3 className="font-semibold text-base line-clamp-1 group-hover:text-primary transition-colors">
 						{exercise.name ?? "Sem nome"}
 					</h3>
@@ -293,7 +305,7 @@ const ExerciseCard = React.memo(function ExerciseCard({
 				)}
 
 				{/* Actions */}
-				<div className="flex gap-2 pt-2">
+				<div className="flex gap-2 pt-2 mt-auto">
 					{selectionMode ? (
 						<Button
 							onClick={(e) => {
@@ -323,7 +335,10 @@ const ExerciseCard = React.memo(function ExerciseCard({
 						</Button>
 					) : (
 						<Button
-							onClick={onView}
+							onClick={(e) => {
+								e.stopPropagation();
+								onView();
+							}}
 							className="flex-1 gap-2 touch-manipulation"
 							size="sm"
 						>
@@ -337,17 +352,27 @@ const ExerciseCard = React.memo(function ExerciseCard({
 								variant="outline"
 								size="icon"
 								className="h-8 w-8 touch-manipulation"
+								onClick={(e) => e.stopPropagation()}
 							>
 								<MoreVertical className="h-4 w-4" />
 							</Button>
 						</DropdownMenuTrigger>
 						<DropdownMenuContent align="end">
-							<DropdownMenuItem onClick={onEdit} className="touch-manipulation">
+							<DropdownMenuItem
+								onClick={(e) => {
+									e.stopPropagation();
+									onEdit();
+								}}
+								className="touch-manipulation"
+							>
 								<Edit className="h-4 w-4 mr-2" />
 								Editar
 							</DropdownMenuItem>
 							<DropdownMenuItem
-								onClick={onToggleFavorite}
+								onClick={(e) => {
+									e.stopPropagation();
+									onToggleFavorite();
+								}}
 								className="touch-manipulation"
 							>
 								<Heart
@@ -360,7 +385,10 @@ const ExerciseCard = React.memo(function ExerciseCard({
 							</DropdownMenuItem>
 							<DropdownMenuSeparator />
 							<DropdownMenuItem
-								onClick={onDelete}
+								onClick={(e) => {
+									e.stopPropagation();
+									onDelete();
+								}}
 								className="text-destructive focus:text-destructive touch-manipulation"
 							>
 								<Trash2 className="h-4 w-4 mr-2" />
