@@ -427,7 +427,10 @@ const ExerciseListItem = React.memo(function ExerciseListItem({
 	const thumbSrc = getBestImageUrl(exercise);
 
 	return (
-		<Card className="p-4 hover:shadow-md transition-all hover:border-primary/30 group touch-manipulation">
+		<Card 
+			className="p-4 hover:shadow-md transition-all hover:border-primary/30 group touch-manipulation cursor-pointer"
+			onClick={onView}
+		>
 			<div className="flex items-center gap-4">
 				{/* Thumbnail */}
 				<div className="h-16 w-16 flex-shrink-0 rounded-xl overflow-hidden bg-gradient-to-br from-muted to-muted/50">
@@ -511,12 +514,18 @@ const ExerciseListItem = React.memo(function ExerciseListItem({
 							"h-9 w-9 touch-manipulation",
 							isFavorite && "text-rose-500",
 						)}
-						onClick={onToggleFavorite}
+						onClick={(e) => {
+							e.stopPropagation();
+							onToggleFavorite();
+						}}
 					>
 						<Heart className={cn("h-4 w-4", isFavorite && "fill-current")} />
 					</Button>
 					<Button
-						onClick={onView}
+						onClick={(e) => {
+							e.stopPropagation();
+							onView();
+						}}
 						size="sm"
 						className="gap-2 touch-manipulation"
 					>
@@ -524,7 +533,10 @@ const ExerciseListItem = React.memo(function ExerciseListItem({
 						Ver
 					</Button>
 					<Button
-						onClick={onEdit}
+						onClick={(e) => {
+							e.stopPropagation();
+							onEdit();
+						}}
 						variant="outline"
 						size="icon"
 						className="h-8 w-8 touch-manipulation"
@@ -532,7 +544,10 @@ const ExerciseListItem = React.memo(function ExerciseListItem({
 						<Edit className="h-4 w-4" />
 					</Button>
 					<Button
-						onClick={onDelete}
+						onClick={(e) => {
+							e.stopPropagation();
+							onDelete();
+						}}
 						variant="outline"
 						size="icon"
 						className="h-8 w-8 text-destructive hover:text-destructive touch-manipulation"
