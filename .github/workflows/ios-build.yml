@@ -50,12 +50,6 @@ jobs:
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
-      # ── 2b. Skia prebuilt binaries (professional-app only) ────────────────
-      - name: Download Skia binaries
-        if: inputs.app == 'professional-app'
-        working-directory: apps/professional-app
-        run: node node_modules/@shopify/react-native-skia/scripts/install-skia.mjs
-
       # ── 3. Expo Prebuild ───────────────────────────────────────────────────
       - name: Expo Prebuild (gera /ios nativa)
         working-directory: apps/${{ inputs.app }}
@@ -68,8 +62,8 @@ jobs:
         uses: actions/cache@v4
         with:
           path: apps/${{ inputs.app }}/ios/Pods
-          key: pods-v3-${{ inputs.app }}-${{ hashFiles(format('apps/{0}/ios/Podfile.lock', inputs.app)) }}
-          restore-keys: pods-v3-${{ inputs.app }}-
+          key: pods-v4-${{ inputs.app }}-${{ hashFiles(format('apps/{0}/ios/Podfile.lock', inputs.app)) }}
+          restore-keys: pods-v4-${{ inputs.app }}-
 
       - name: Pod install
         working-directory: apps/${{ inputs.app }}/ios
@@ -175,30 +169,29 @@ jobs:
             PROVISIONING_PROFILE="$PROFILE_UUID" \
             SKIP_INSTALL=NO
 
-      # ── 8. Exportar IPA ───────────────────────────────────────────────────
-      - name: Exportar IPA (ad-hoc)
-        env:
-          APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
+      # ── 8. Empacotar IPA manualmente ─────────────────────────────────────
+      # xcodebuild -exportArchive falha no Xcode 26 com "Unknown Distribution Error"
+      # para perfis ad-hoc. O .app já está assinado pelo archive — basta zipar.
+      - name: Empacotar IPA (Payload zip)
         run: |
-          cat > "$RUNNER_TEMP/ExportOptions.plist" << EOF
-          <?xml version="1.0" encoding="UTF-8"?>
-          <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
-          <plist version="1.0">
-          <dict>
-            <key>method</key>
-            <string>ad-hoc</string>
-            <key>teamID</key>
-            <string>$APPLE_TEAM_ID</string>
-            <key>compileBitcode</key>
-            <false/>
-          </dict>
-          </plist>
-          EOF
+          APP_PATH=$(find "$RUNNER_TEMP/app.xcarchive/Products" -name "*.app" -maxdepth 3 | head -1)
+          if [ -z "$APP_PATH" ]; then
+            echo "ERRO: Nenhum .app encontrado no archive"
+            find "$RUNNER_TEMP/app.xcarchive" -type d | head -20
+            exit 1
+          fi
+          APP_NAME=$(basename "$APP_PATH" .app)
+          echo "App encontrado: $APP_PATH"
 
-          xcodebuild -exportArchive \
-            -archivePath "$RUNNER_TEMP/app.xcarchive" \
-            -exportOptionsPlist "$RUNNER_TEMP/ExportOptions.plist" \
-            -exportPath "$RUNNER_TEMP/ipa"
+          IPA_STAGE="$RUNNER_TEMP/ipa-stage"
+          mkdir -p "$IPA_STAGE/Payload"
+          cp -r "$APP_PATH" "$IPA_STAGE/Payload/"
+
+          IPA_OUT="$RUNNER_TEMP/ipa"
+          mkdir -p "$IPA_OUT"
+          (cd "$IPA_STAGE" && zip -qr "$IPA_OUT/${APP_NAME}.ipa" Payload/)
+          echo "IPA gerado: $IPA_OUT/${APP_NAME}.ipa"
+          ls -lh "$IPA_OUT/"
 
       # ── 9. Upload do artefato ─────────────────────────────────────────────
       - name: Upload IPA
