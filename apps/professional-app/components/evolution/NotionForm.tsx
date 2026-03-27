@@ -1,11 +1,12 @@
 import React, { useState } from 'react';
-import { View, TextInput, StyleSheet, Text, TouchableOpacity } from 'react-native';
+import { View, TextInput, StyleSheet, Text, TouchableOpacity, ActivityIndicator } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { SlashMenu, SlashCommand } from './SlashMenu';
 import { ExerciseSelectorModal } from './ExerciseSelectorModal';
 import { ClinicalSelectorModal } from './ClinicalSelectorModal';
 import { PROCEDURES, CLINICAL_TESTS, ClinicalResource } from '@/constants/clinicalData';
 import type { Exercise } from '@/types';
+import { useVoiceScribe } from '@/hooks/useVoiceScribe';
 
 interface NotionFormProps {
   content: string;
@@ -15,6 +16,9 @@ interface NotionFormProps {
 
 export function NotionForm({ content, onChangeContent, colors }: NotionFormProps) {
   const [showMenu, setShowMenu] = useState(false);
+  const { state: voiceState, toggle: toggleVoice } = useVoiceScribe((text) => {
+    onChangeContent(content ? content + ' ' + text : text);
+  });
   const [showExercises, setShowExercises] = useState(false);
   const [showProcedures, setShowProcedures] = useState(false);
   const [showTests, setShowTests] = useState(false);
@@ -71,9 +75,29 @@ export function NotionForm({ content, onChangeContent, colors }: NotionFormProps
     <View style={[styles.container, { backgroundColor: colors.background }]}>
       <View style={styles.header}>
         <Text style={[styles.title, { color: colors.text }]}>Evolução Livre</Text>
-        <TouchableOpacity style={[styles.voiceButton, { backgroundColor: colors.primary + '20' }]}>
-          <Ionicons name="mic" size={20} color={colors.primary} />
-          <Text style={[styles.voiceText, { color: colors.primary }]}>Ditado</Text>
+        <TouchableOpacity
+          style={[
+            styles.voiceButton,
+            { backgroundColor: voiceState === 'recording' ? colors.primary : colors.primary + '20' }
+          ]}
+          onPress={toggleVoice}
+          disabled={voiceState === 'transcribing'}
+        >
+          {voiceState === 'transcribing' ? (
+            <ActivityIndicator size="small" color={colors.primary} />
+          ) : (
+            <Ionicons
+              name={voiceState === 'recording' ? 'stop-circle' : 'mic'}
+              size={20}
+              color={voiceState === 'recording' ? '#fff' : colors.primary}
+            />
+          )}
+          <Text style={[
+            styles.voiceText,
+            { color: voiceState === 'recording' ? '#fff' : colors.primary }
+          ]}>
+            {voiceState === 'recording' ? 'Parar' : voiceState === 'transcribing' ? 'Transcrevendo...' : 'Ditado'}
+          </Text>
         </TouchableOpacity>
       </View>
       
