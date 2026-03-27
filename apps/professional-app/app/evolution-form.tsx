@@ -35,7 +35,7 @@ export default function EvolutionFormScreen() {
 
   const {
     createAsync: createEvolutionAsync,
-    isCreating,
+    updateAsync: updateEvolutionAsync,
   } = useEvolutions(patientId);
 
   // Form state
@@ -57,7 +57,7 @@ export default function EvolutionFormScreen() {
   const [generatingSOAP, setGeneratingSOAP] = useState(false);
   const [generatedSuggestions, setGeneratedSuggestions] = useState<string[]>([]);
 
-  // Auto-save debounced
+  // Auto-save debounced — cria na primeira vez, atualiza nas seguintes
   const triggerAutoSave = useCallback(() => {
     if (autoSaveTimer.current) clearTimeout(autoSaveTimer.current);
     autoSaveTimer.current = setTimeout(async () => {
@@ -81,13 +81,21 @@ export default function EvolutionFormScreen() {
           metadata: { fillingMode: mode },
         };
 
-        await createEvolutionAsync(payload as any);
+        if (savedEvolutionId.current) {
+          // Já foi criado — só atualiza
+          await updateEvolutionAsync({ id: savedEvolutionId.current, data: payload as any });
+        } else {
+          // Primeira vez — cria e salva o ID
+          const created = await createEvolutionAsync(payload as any);
+          savedEvolutionId.current = created.id;
+        }
         setAutoSaveStatus('saved');
-      } catch {
+      } catch (err: any) {
         setAutoSaveStatus('error');
+        console.error('[AutoSave]', err?.message);
       }
     }, 2000);
-  }, [mode, subjective, objective, assessment, plan, freeContent, patientId, appointmentId, painLevel, photos, createEvolutionAsync]);
+  }, [mode, subjective, objective, assessment, plan, freeContent, patientId, appointmentId, painLevel, photos, createEvolutionAsync, updateEvolutionAsync]);
 
   // Trigger auto-save on content changes
   useEffect(() => {
