@@ -50,7 +50,7 @@ import {
 import { useToast } from "@/hooks/use-toast";
 import { usePDFGenerator } from "@/hooks/usePDFGenerator";
 import { useAuth } from "@/hooks/useAuth";
-import { usePatients } from "@/hooks/usePatients";
+import { usePatients } from "@/hooks/patients/usePatients";
 
 const VARIAVEIS_DISPONIVEIS = [
 	{ key: "#cliente-nome", description: "Nome completo do paciente" },

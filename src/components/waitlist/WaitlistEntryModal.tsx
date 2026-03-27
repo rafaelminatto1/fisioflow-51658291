@@ -17,7 +17,7 @@ import {
 	useUpdatePriority,
 	type WaitlistEntry,
 } from "@/hooks/useWaitlist";
-import { usePatients } from "@/hooks/usePatients";
+import { usePatients } from "@/hooks/patients/usePatients";
 import { PatientCombobox } from "@/components/ui/patient-combobox";
 import { Loader2, UserPlus, ClipboardList } from "lucide-react";
 import { useIsMobile } from "@/hooks/use-mobile";
