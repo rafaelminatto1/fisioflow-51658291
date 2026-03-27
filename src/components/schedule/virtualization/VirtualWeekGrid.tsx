@@ -160,10 +160,10 @@ const TimeSlotRow: React.FC<TimeSlotRowProps> = memo(
 							isClosed={!!isClosed}
 							isBlocked={blocked}
 							isDropTarget={!!isDropTarget}
-							onTimeSlotClick={props.onTimeSlotClick}
-							handleDragOver={props.handleDragOver}
-							handleDragLeave={props.handleDragLeave}
-							handleDrop={props.handleDrop}
+							onTimeSlotClick={props.onTimeSlotClick || (() => {})}
+							handleDragOver={props.handleDragOver || (() => {})}
+							handleDragLeave={props.handleDragLeave || (() => {})}
+							handleDrop={props.handleDrop || (() => {})}
 						/>
 					);
 				})}
@@ -207,7 +207,7 @@ const TimeSlotRow: React.FC<TimeSlotRowProps> = memo(
 					const isDraggingThis =
 						props.dragState?.isDragging &&
 						props.dragState.appointment?.id === apt.id;
-					const isSaving = props.savingAppointmentId === apt.id;
+					const isSaving = !!props.savingAppointmentId && props.savingAppointmentId === apt.id;
 
 					return (
 						<div key={apt.id} style={appointmentStyle} className="absolute">
@@ -217,13 +217,13 @@ const TimeSlotRow: React.FC<TimeSlotRowProps> = memo(
 								isDraggable={isDraggable}
 								isDragging={isDraggingThis}
 								isSaving={isSaving}
-								onDragStart={props.handleDragStart}
-								onDragEnd={props.handleDragEnd}
+								onDragStart={props.handleDragStart || (() => {})}
+								onDragEnd={props.handleDragEnd || (() => {})}
 								onEditAppointment={props.onEditAppointment}
 								onDeleteAppointment={props.onDeleteAppointment}
-								onOpenPopover={props.setOpenPopoverId}
+								onOpenPopover={props.setOpenPopoverId || (() => {})}
 								isPopoverOpen={props.openPopoverId === apt.id}
-								selectionMode={props.selectionMode}
+								selectionMode={!!props.selectionMode}
 								isSelected={props.selectedIds?.has(apt.id)}
 								onToggleSelection={props.onToggleSelection}
 							/>
