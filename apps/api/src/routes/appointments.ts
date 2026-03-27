@@ -209,6 +209,7 @@ app.post('/', requireAuth, async (c) => {
     const rawTherapist = body.therapistId || body.therapist_id || user.uid;
     const therapistId = isUuid(rawTherapist) ? rawTherapist : null;
     const notes       = body.notes ?? null;
+    const type        = body.type ?? body.session_type ?? 'Fisioterapia';
     const status      = normalizeStatus(body.status);
     const ignoreCapacity = body.ignoreCapacity === true;
 
@@ -237,6 +238,7 @@ app.post('/', requireAuth, async (c) => {
       endTime,
       organizationId: user.organizationId,
       status,
+      type,
       notes,
       createdAt: new Date(),
       updatedAt: new Date(),
