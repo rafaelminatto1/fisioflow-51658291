@@ -494,7 +494,18 @@ app.get("/", async (c) => {
 
 		// Data query
 		const data = await db
-			.select()
+			.select({
+				id: patients.id,
+				profileId: patients.profileId,
+				fullName: patients.fullName,
+				phone: patients.phone,
+				email: patients.email,
+				status: patients.status,
+				createdAt: patients.createdAt,
+				cpf: patients.cpf,
+				photoUrl: patients.photoUrl,
+				address: patients.address,
+			})
 			.from(patients)
 			.where(conditions)
 			.orderBy(orderBy)

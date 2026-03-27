@@ -76,4 +76,7 @@ export interface Env {
   // Resend (Email)
   RESEND_API_KEY?: string;
   RESEND_FROM_EMAIL?: string; // ex: "FisioFlow <noreply@moocafisio.com.br>"
+
+  // D1 (Edge Database for Caching and Metadata)
+  D1_CACHE?: D1Database;
 }
