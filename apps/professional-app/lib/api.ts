@@ -557,92 +557,53 @@ export async function createEvolution(data: Partial<ApiEvolution>): Promise<ApiE
     throw new Error('patient_id é obrigatório');
   }
 
-  if (data.appointment_id) {
-    const response = await fetchApi<ApiResponse<ApiEvolution>>('/api/evolution/treatment-sessions', {
-      method: 'POST',
+  // Sempre usa treatment-sessions — appointment_id é opcional no worker
+  const response = await fetchApi<ApiResponse<ApiEvolution>>('/api/evolution/treatment-sessions', {
+    method: 'POST',
+    data: {
+      patient_id: data.patient_id,
+      therapist_id: data.therapist_id,
+      appointment_id: data.appointment_id ?? null,
+      session_date: data.date,
+      subjective: data.subjective,
+      objective: data.objective,
+      assessment: data.assessment,
+      plan: data.plan,
+      exercises_performed: data.exercises_performed ?? [],
+      pain_level_before: data.pain_level ?? 0,
+      pain_level_after: data.pain_level ?? 0,
+    },
+  });
+
+  if (response.error) throw new Error(response.error);
+  const result = normalizeEvolution(response.data);
+  evolutionCache.set(result.id, result);
+  return result;
+}
+
+export async function updateEvolution(id: string, data: Partial<ApiEvolution>): Promise<ApiEvolution> {
+  // Usa PATCH /treatment-sessions/:id diretamente pelo ID
+  const response = await fetchApi<ApiResponse<ApiEvolution>>(
+    `/api/evolution/treatment-sessions/${encodeURIComponent(id)}`,
+    {
+      method: 'PATCH',
       data: {
-        patient_id: data.patient_id,
-        therapist_id: data.therapist_id,
-        appointment_id: data.appointment_id,
-        session_date: data.date,
         subjective: data.subjective,
         objective: data.objective,
         assessment: data.assessment,
         plan: data.plan,
-        exercises_performed: data.exercises_performed ?? [],
+        observations: data.observations,
         pain_level_before: data.pain_level,
         pain_level_after: data.pain_level,
-      },
-    });
-
-    if (response.error) throw new Error(response.error);
-    return normalizeEvolution(response.data);
-  }
-
-  const response = await fetchApi<ApiResponse<ApiEvolution>>(
-    `/api/patients/${encodeURIComponent(data.patient_id)}/medical-records`,
-    {
-      method: 'POST',
-      data: {
-        chief_complaint: data.subjective,
-        medical_history: data.assessment,
-        lifestyle_habits: data.plan,
-        record_date: data.date,
-        created_by: data.therapist_id,
+        session_date: data.date,
       },
     }
   );
 
   if (response.error) throw new Error(response.error);
-  return normalizeEvolution(response.data);
-}
-
-export async function updateEvolution(id: string, data: Partial<ApiEvolution>): Promise<ApiEvolution> {
-  const existing = evolutionCache.get(id);
-
-  if (existing?.appointment_id) {
-    const response = await fetchApi<ApiResponse<ApiEvolution>>('/api/evolution/treatment-sessions', {
-      method: 'POST',
-      data: {
-        patient_id: existing.patient_id,
-        therapist_id: data.therapist_id ?? existing.therapist_id,
-        appointment_id: existing.appointment_id,
-        session_date: data.date ?? existing.date,
-        subjective: data.subjective ?? existing.subjective,
-        objective: data.objective ?? existing.objective,
-        assessment: data.assessment ?? existing.assessment,
-        plan: data.plan ?? existing.plan,
-        exercises_performed: data.exercises_performed ?? existing.exercises_performed ?? [],
-        pain_level_before: data.pain_level ?? existing.pain_level ?? 0,
-        pain_level_after: data.pain_level ?? existing.pain_level ?? 0,
-      },
-    });
-
-    if (response.error) throw new Error(response.error);
-    return normalizeEvolution(response.data);
-  }
-
-  const patientId = data.patient_id ?? existing?.patient_id;
-  if (!patientId) {
-    throw new Error('Não foi possível localizar o paciente da evolução');
-  }
-
-  const response = await fetchApi<ApiResponse<ApiEvolution>>(
-    `/api/patients/${encodeURIComponent(patientId)}/medical-records/${encodeURIComponent(id)}`,
-    {
-      method: 'PUT',
-      data: {
-        chief_complaint: data.subjective ?? existing?.subjective,
-        medical_history: data.assessment ?? existing?.assessment,
-        lifestyle_habits: data.plan ?? existing?.plan,
-        record_date: data.date ?? existing?.date,
-        created_by: data.therapist_id ?? existing?.therapist_id,
-      },
-    }
-  );
-
-  if (response.error) throw new Error(response.error);
-  return normalizeEvolution(response.data);
+  const result = normalizeEvolution(response.data);
+  evolutionCache.set(id, result);
+  return result;
 }
 
 export async function deleteEvolution(id: string): Promise<{ ok: boolean }> {
