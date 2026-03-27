@@ -27,6 +27,7 @@ import {
 	DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { AdvancedFilters } from "./AdvancedFilters";
+import { ScheduleConfigIconButton } from "./ScheduleConfigButton";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { cn } from "@/lib/utils";
 import { SmartDatePicker } from "@/components/ui/smart-date-picker";
@@ -237,7 +238,7 @@ export const ScheduleToolbar: React.FC<ScheduleToolbarProps> = ({
 				<div className="flex items-center gap-1">
 					<AdvancedFilters
 						filters={filters}
-						onFiltersChange={onFiltersChange}
+						onChange={onFiltersChange}
 						onClear={onClearFilters}
 					/>
 
@@ -258,14 +259,7 @@ export const ScheduleToolbar: React.FC<ScheduleToolbarProps> = ({
 						<CheckSquare className="w-4 h-4" />
 					</Button>
 
-					<Button
-						variant="ghost"
-						size="icon"
-						className="h-10 w-10 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800"
-						title="Configurações da Agenda"
-					>
-						<SettingsIcon className="w-4 h-4" />
-					</Button>
+					<ScheduleConfigIconButton className="h-10 w-10 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800" />
 
 					<DropdownMenu>
 						<DropdownMenuTrigger asChild>
@@ -374,9 +368,10 @@ export const ScheduleToolbar: React.FC<ScheduleToolbarProps> = ({
 				<div className="ml-auto flex gap-2">
 					<AdvancedFilters
 						filters={filters}
-						onFiltersChange={onFiltersChange}
+						onChange={onFiltersChange}
 						onClear={onClearFilters}
 					/>
+					<ScheduleConfigIconButton className="h-10 w-10 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800" />
 				</div>
 			</div>
 		</div>
