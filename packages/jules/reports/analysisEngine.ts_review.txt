@@ -1,0 +1,148 @@
+npm warn Unknown project config "node-linker". This will stop working in the next major version of npm. See `npm help npmrc` for supported config options.
+🔍 Analyzing src/services/ai/analysisEngine.ts...
+No unstaged changes found for src/services/ai/analysisEngine.ts. Analyzing current content instead...
+[JulesAI] Sending request to models/gemini-2.5-flash...
+[JulesAI] Received response.
+
+--- Review ---
+Hello FisioFlow team,
+
+This is a comprehensive review of the changes in `src/services/ai/analysisEngine.ts`. The module is well-structured and demonstrates a good understanding of the biomechanical analysis requirements. I appreciate the clear comments and the use of a configuration object for thresholds, which enhances maintainability.
+
+Here's a breakdown of my observations and suggestions, categorized for clarity.
+
+---
+
+### Overall Impression
+
+The `AnalysisEngine` is a core component that handles complex logic for pose analysis. The current implementation provides a good foundation, encapsulating state and logic effectively. The use of `ExerciseTemplate` is a smart way to make the engine adaptable to different exercises.
+
+---
+
+### 1. Bugs and Potential Issues
+
+*   **`detectOrientation` default return:**
+    *   `if (!leftShoulder || !rightShoulder || !leftHip || !rightHip) return "FRONT";`
+    *   **Issue:** If critical landmarks are missing, it defaults to "FRONT". While this might be a safe fallback, it could lead to incorrect posture issue detection or angle calculations if the user is *actually* in a side or back view but those specific landmarks aren't visible.
+    *   **Suggestion:** Consider returning an `UNKNOWN` orientation or handling this case explicitly in subsequent logic, rather than assuming "FRONT". Perhaps a confidence score for orientation, or defaulting to an orientation that requires fewer landmarks if available.
+
+*   **`calculateJointAngles` - `any` Type in `angles` object:**
+    *   `const angles: Record<MainJoint, any> = {};`
+    *   **Issue:** Using `any` here reduces type safety for `jointAngles` throughout the class. While you cast it later (e.g., `angleData as { current: number; ... }`), it's better to define the structure upfront.
+    *   **Suggestion:** Define an interface for `JointAngleData` (e.g., `interface JointAngleData { current: number; min: number; max: number; average: number; target: { min: number; max: number }; inRange: boolean; pivotIndex: number; }`) and use `Record<MainJoint, JointAngleData>` instead of `any`. This will improve type safety and make the code easier to reason about.
+
+*   **`calculateRangeOfMotion` - Return Type Mismatch / Ambiguity:**
+    *   The `calculateRangeOfMotion` function *internally* builds an array of `RomData` objects (`romData: RomData[]`).
+    *   However, it *returns a single* `RomData` object, which is an *average* of the main joints, specifically assigning `MainJoint.LEFT_KNEE` as its joint type.
+    *   **Issue:** This is confusing. The `AnalysisResult` structure also expects a single `rangeOfMotion` and `romPercentage`. If the intent is to show ROM for *each* relevant joint, the `AnalysisResult` structure (and the return of this function) needs to reflect that, perhaps as `Map<MainJoint, RomData>` or `RomData[]`. If it's always just an average, then the `joint` property on the returned `RomData` is misleading.
+    *   **Suggestion:**
+        1.  **Option A (Single Average ROM):** If the intention is to only provide a single, average ROM for the entire exercise, rename `romData` inside the function to `individualJointRoms`, and explicitly state that the return is an overall average. The `joint: MainJoint.LEFT_KNEE` should be `joint: MainJoint.OVERALL_AVERAGE` (if such a joint type exists or is added) or simply `null` if the joint doesn't apply to an average.
+        2.  **Option B (Per-Joint ROM):** If you want to provide ROM for each primary joint, then modify `AnalysisResult` to hold `Map<MainJoint, RomData>` or `RomData[]` for `rangeOfMotion`, and have `calculateRangeOfMotion` return this collection. This seems more informative.
+    *   **Correction needed for `expected` type:** Inside `calculateRangeOfMotion`, `const expected = this.exerciseTemplate;` and then `const exp = expected as any; normalMin = exp.expectedRomMin || 0;`. `exerciseTemplate` already has properties like `expectedRomMin` defined, so the `any` cast is unnecessary and `expected.expectedRomMin` can be accessed directly.
+
+*   **`processFrame` - `analysisType: "form" as any`:**
+    *   **Issue:** `analysisType: "form" as any,` in `createEmptyAnalysisResult` and `processFrame`. This `as any` implies `analysisType` might not be robustly typed.
+    *   **Suggestion:** Ensure `AnalysisType` is an enum or union type that includes "form" to remove the need for `as any`.
+
+*   **`updateState` - Potential for `jointAngles` to be `null` or `undefined`:**
+    *   `if (angleData && typeof angleData === "object") { const data = angleData as { current: number }; ... }`
+    *   **Issue:** While `angleData` is checked, `angleData.current` is accessed without a full type guard or explicit non-null assertion if `angleData` could be missing `current`. This goes back to the `Record<MainJoint, any>` problem.
+    *   **Suggestion:** With `Record<MainJoint, JointAngleData>` (as suggested above), this would be much safer.
+
+*   **`notifyCallbacks` - `avgAngles` mapping:**
+    *   `Object.entries(data.jointAngles).map(([k, v]) => [k, v?.average]),`
+    *   **Issue:** `v?.average` correctly handles `v` possibly being undefined, but if `v` is an object, `average` might still be `undefined` if the joint wasn't calculated. The target type `Record<string, number>` implies all `average` values will be numbers.
+    *   **Suggestion:** Filter out entries where `v?.average` is not a number, or adjust the type to `Record<string, number | undefined>` if that's acceptable.
+
+*   **`detectOrientation` - Missing `nose.z` or `leftShoulder.z`:**
+    *   `if (nose && nose.z !== undefined && leftShoulder.z !== undefined)`
+    *   **Issue:** If `z` coordinates are not reliably provided by the pose detection model, this part of the logic might not execute, causing it to default to "FRONT" even if "BACK" is intended.
+    *   **Suggestion:** Acknowledge this limitation, perhaps with a comment, or ensure `z` data is always present (even if it's `0`) in the `PoseLandmark` interface if it's critical for "FRONT" vs "BACK" distinction.
+
+---
+
+### 2. Performance Issues
+
+*   **N+1 Queries / Large Rendering Loops:**
+    *   The core `processFrame` method iterates over `landmarks` and `angleTriads`. Given the typical number of landmarks (around 33) and angle triads (usually less than 10 per exercise), these loops are generally efficient.
+    *   `angleHistory`: The history is capped at 30 frames, which is good for memory management and prevents unbounded growth.
+    *   `movingAverages`: While declared, `this.state.movingAverages` is not currently used in the provided diff. If it were to be used for each landmark, it could become heavy. However, `smoothLandmarks` only uses `previousLandmarks`, which is efficient.
+    *   **Recommendation:** No immediate N+1 query or large rendering loop issues are evident. The performance will primarily depend on the `calculateAngle` utility and the underlying MediaPipe (or similar) pose detection library's efficiency.
+
+---
+
+### 3. Readability Improvements
+
+*   **Consistent Naming for Angle Data:**
+    *   You frequently use `angleData as { current: number; ... }`. This repetition can be a bit verbose.
+    *   **Suggestion:** Define a `JointAngleData` interface as mentioned in the "Bugs" section (e.g., `interface JointAngleData { current: number; min: number; max: number; average: number; target: { min: number; max: number }; inRange: boolean; pivotIndex: number; }`). Then, you can simply declare variables as `const angleData: JointAngleData = ...` or type cast once.
+
+*   **`on` method `any` types:**
+    *   `on(event: string, callback: (...args: any[]) => void): void { ... this.state.callbacks.onPoseDetected = callback as any; ... }`
+    *   **Suggestion:** TypeScript's function overloading is used correctly for the `on` method signatures. However, the implementation itself uses `any` casts. This can be made safer using type assertions for `callback` arguments within the `switch` statement, or by implementing a more generic event emitter pattern that guarantees type safety across the board. For example:
+        ```typescript
+        interface AnalysisCallbacks {
+            onPoseDetected?: (result: AnalysisResult) => void;
+            onRepCountChanged?: (count: number) => void;
+            onFormScoreChanged?: (score: number) => void;
+        }
+
+        // Inside AnalysisEngine
+        on<E extends keyof AnalysisCallbacks>(event: E, callback: AnalysisCallbacks[E]): void {
+            if (event === "poseDetected") {
+                this.state.callbacks.onPoseDetected = callback as AnalysisCallbacks["onPoseDetected"];
+            } // ... similar for other events
+        }
+        ```
+        This removes the need for `as any`.
+
+*   **Magic Numbers in `detectPostureIssues`:**
+    *   `if (headOffset > 0.08)`, `if (shoulderDiff > 0.05)`, `if (hipDiff > 0.05)`, `if (earOffset > 0.03)`
+    *   **Suggestion:** While `DEFAULT_CONFIG` exists, these specific thresholds for posture issues are currently hardcoded. Consider adding these to `DEFAULT_CONFIG` or a separate `POSTURE_THRESHOLDS` object to centralize and make them easily configurable.
+
+*   **Comments and Documentation:**
+    *   The JSDoc comments at the top and for the class/methods are excellent. This greatly aids understanding.
+    *   The use of `// ============================================================================` for sectioning is effective.
+
+*   **`RomData` type alias usage:**
+    *   `private calculateRangeOfMotion(jointAngles: Record<MainJoint, any>): RomData { ... return { ... }; }`
+    *   `private notifyCallbacks(data: { ..., romData: RomData; }): void { ... rangeOfMotion: data.romData.rom || 0, ... }`
+    *   **Issue:** `RomData` is an interface for a single joint's ROM data. `calculateRangeOfMotion` processes multiple joints and returns an *average* as a single `RomData` object. This could be clearer.
+    *   **Suggestion:** If `calculateRangeOfMotion` is truly returning an *average*, consider creating a `OverallRomMetrics` interface that contains `rom` and `percentageOfNormal` but doesn't have a `joint` property, or clarify that the `joint` property on the returned `RomData` signifies an aggregate.
+
+---
+
+### 4. Better Patterns
+
+*   **Strategy Pattern for `detectPostureIssues`:**
+    *   Currently, `detectPostureIssues` contains all the logic for various posture checks. As the number of exercises and potential issues grows, this method could become very large and difficult to manage.
+    *   **Suggestion:** Implement a Strategy pattern. You could have a `PostureIssueDetector` interface and concrete implementations for `HeadForwardDetector`, `ShoulderAsymmetryDetector`, etc. The `AnalysisEngine` would then iterate through an array of these detectors, delegating the specific issue detection. This makes it easier to add, remove, or modify detection logic without changing the core engine. The `exerciseTemplate` could specify which detectors are relevant.
+
+*   **`ExerciseTemplate` and Thresholds:**
+    *   The `exerciseTemplate.thresholds?.[triad.pivot as string]` currently stores `min` and `max` for angles.
+    *   **Suggestion:** If different exercises have different `PostureIssue` types, the `ExerciseTemplate` could also contain an array of `PostureIssueDetector` configurations or directly list the relevant `PostureIssue` checks. This would make the `detectPostureIssues` method more dynamic and template-driven, rather than having hardcoded checks.
+
+*   **State Management Encapsulation:**
+    *   The `AnalysisEngineState` interface is exposed via `export type { AnalysisEngineState };`.
+    *   **Suggestion:** Generally, internal state interfaces are not exported unless they are part of a public API for debugging or external monitoring. If it's purely internal, keep it unexported to enforce encapsulation.
+
+*   **Callback Mechanism Refinement:**
+    *   The current callback system is functional.
+    *   **Suggestion:** For more complex event scenarios, consider a dedicated event emitter library (e.g., `eventemitter3` or Node.js's `EventEmitter` if in a Node-like environment) which provides more robust event management, including `off` methods, once-listeners, etc. For this specific use case, the current implementation is likely sufficient, but the type safety could be improved as noted above.
+
+*   **`createEmptyAnalysisResult` Utility:**
+    *   This is a good pattern for providing a default or initial state, ensuring all properties are present and correctly typed. Keep using this.
+
+---
+
+### Summary of Key Recommendations:
+
+1.  **Strengthen Type Safety:** Define a `JointAngleData` interface and use it consistently, replacing `any` in `Record<MainJoint, any>`.
+2.  **Clarify ROM Data Structure:** Decide if `calculateRangeOfMotion` should return an average or per-joint data, and update its return type and the `AnalysisResult` accordingly to avoid ambiguity.
+3.  **Centralize Thresholds:** Move magic numbers from `detectPostureIssues` into `DEFAULT_CONFIG` or a dedicated `POSTURE_THRESHOLDS` object.
+4.  **Refactor Posture Detection:** Consider the Strategy pattern for `detectPostureIssues` to improve extensibility.
+5.  **Refine Callback Typing:** Improve the type safety of the `on` method's implementation.
+
+The project is off to a great start with a solid foundation. Addressing these points will enhance maintainability, robustness, and make the codebase even more professional and scalable.
+
+Keep up the excellent work!
