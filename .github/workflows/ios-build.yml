@@ -27,7 +27,7 @@ env:
 jobs:
   build-ios:
     name: Build iOS — ${{ inputs.app }} (${{ inputs.profile }})
-    runs-on: macos-15
+    runs-on: macos-26
     timeout-minutes: 90
 
     steps:
@@ -63,29 +63,13 @@ jobs:
         env:
           EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
 
-      # ── 3b. Patch Podfile — injeta SWIFT_VERSION=5 no post_install existente ─
-      - name: Patch Podfile (SWIFT_VERSION=5 em todos os pods)
-        working-directory: apps/${{ inputs.app }}/ios
-        run: |
-          ruby -e '
-            content = File.read("Podfile")
-            patch = "  installer.pods_project.targets.each do |t|\n" +
-              "    t.build_configurations.each do |cfg|\n" +
-              "      cfg.build_settings[%q{SWIFT_STRICT_CONCURRENCY}] = %q{minimal}\n" +
-              "    end\n  end\n"
-            content.sub!(/post_install do \|installer\|/,
-              "post_install do |installer|\n" + patch)
-            File.write("Podfile", content)
-            puts "Podfile patched: SWIFT_STRICT_CONCURRENCY=minimal added to post_install"
-          '
-
       # ── 4. Cache CocoaPods (economiza ~10 min) ────────────────────────────
       - name: Cache CocoaPods
         uses: actions/cache@v4
         with:
           path: apps/${{ inputs.app }}/ios/Pods
-          key: pods-${{ inputs.app }}-${{ hashFiles(format('apps/{0}/ios/Podfile.lock', inputs.app)) }}
-          restore-keys: pods-${{ inputs.app }}-
+          key: pods-v3-${{ inputs.app }}-${{ hashFiles(format('apps/{0}/ios/Podfile.lock', inputs.app)) }}
+          restore-keys: pods-v3-${{ inputs.app }}-
 
       - name: Pod install
         working-directory: apps/${{ inputs.app }}/ios
@@ -189,8 +173,7 @@ jobs:
             CODE_SIGN_IDENTITY="Apple Distribution" \
             DEVELOPMENT_TEAM="$APPLE_TEAM_ID" \
             PROVISIONING_PROFILE="$PROFILE_UUID" \
-            SKIP_INSTALL=NO \
-            SWIFT_STRICT_CONCURRENCY=minimal
+            SKIP_INSTALL=NO
 
       # ── 8. Exportar IPA ───────────────────────────────────────────────────
       - name: Exportar IPA (ad-hoc)
