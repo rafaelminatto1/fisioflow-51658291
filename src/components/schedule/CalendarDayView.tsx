@@ -205,14 +205,14 @@ const CalendarDayView = memo(
 					<div className="flex w-full" style={{ height: slotHeightMobile }}>
 						{/* Time column part */}
 						<div
-							className="w-16 md:w-24 border-r bg-muted/30 backdrop-blur-sm flex-shrink-0 border-b border-border/50 p-1 md:p-3 text-[11px] md:text-sm font-medium text-muted-foreground flex items-center justify-center md:justify-start"
+							className="w-16 md:w-24 border-r border-border bg-muted/30 backdrop-blur-sm flex-shrink-0 border-b p-1 md:p-3 text-[11px] md:text-sm font-medium text-muted-foreground flex items-center justify-center md:justify-start"
 							role="listitem"
 						>
 							{time}
 						</div>
 
 						{/* Day column part */}
-						<div className="flex-1 relative border-b border-border/50">
+						<div className="flex-1 relative border-b border-border">
 							<TooltipProvider>
 								<Tooltip>
 									<TooltipTrigger asChild>
