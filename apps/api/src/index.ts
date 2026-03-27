@@ -3,7 +3,7 @@ import { logger } from 'hono/logger';
 import { secureHeaders } from 'hono/secure-headers';
 import type { Env } from './types/env';
 import type { CustomVariables } from './middleware/requestId';
-import { errorHandler } from './middleware/errorHandler';
+import { globalErrorHandler as errorHandler } from './middleware/errorHandler';
 import { requestIdMiddleware } from './middleware/requestId';
 import { exercisesRoutes } from './routes/exercises';
 import { protocolsRoutes } from './routes/protocols';
