@@ -245,3 +245,10 @@ crons = [
 # ===== OBSERVABILIDADE =====
 [observability]
 enabled = true
+
+# Configuração Base do D1 (Cloudflare SQLite edge database)
+# Excelente para cache rápido e logging em borda sem onerar o Hyperdrive/Neon
+[[d1_databases]]
+binding = "D1_CACHE"
+database_name = "fisioflow-edge-cache"
+database_id = "adicionar-id-aqui-apos-wrangler-d1-create"
