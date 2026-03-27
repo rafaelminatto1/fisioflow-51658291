@@ -71,7 +71,7 @@ jobs:
             content = File.read("Podfile")
             patch = "  installer.pods_project.targets.each do |t|\n" +
               "    t.build_configurations.each do |cfg|\n" +
-              "      cfg.build_settings[%q{SWIFT_STRICT_CONCURRENCY}] = %q{minimal}\n" +
+              "      cfg.build_settings[%q{SWIFT_STRICT_CONCURRENCY}] = %q{minimal}\n      cfg.build_settings[%q{SWIFT_VERSION}] = %q{5}\n      cfg.build_settings[%q{SWIFT_OPTIMIZATION_LEVEL}] = %q{-Onone}\n      cfg.build_settings[%q{SWIFT_SUPPRESS_WARNINGS}] = %q{YES}\n" +
               "    end\n  end\n"
             content.sub!(/post_install do \|installer\|/,
               "post_install do |installer|\n" + patch)
