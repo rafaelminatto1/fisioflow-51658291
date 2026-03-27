@@ -74,72 +74,73 @@ const ProtocolDetailView: React.FC<ProtocolDetailViewProps> = ({
 	};
 
 	return (
-		<div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm overflow-hidden">
+		<div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-md overflow-hidden">
 			<motion.div
 				initial="hidden"
 				animate="visible"
 				variants={containerVariants}
-				className="relative w-full max-w-4xl max-h-[90vh] glass-card rounded-3xl overflow-hidden flex flex-col bg-[#0f172a]/95 border-white/10"
+				className="relative w-full max-w-4xl max-h-[90vh] bg-white rounded-3xl overflow-hidden flex flex-col shadow-premium-lg border border-border"
 			>
 				{/* Header Section */}
-				<div className="relative h-48 sm:h-56 bg-gradient-to-br from-[#13ecc8]/20 via-[#0f172a] to-[#0f172a] p-6 sm:p-8 flex flex-col justify-end border-b border-white/5">
+				<div className="relative h-48 sm:h-56 bg-gradient-to-br from-primary/10 via-white to-white p-6 sm:p-8 flex flex-col justify-end border-b border-border shadow-sm">
 					<button
 						onClick={onClose}
-						className="absolute top-6 right-6 p-2 rounded-full bg-white/5 hover:bg-white/10 text-white/60 hover:text-white transition-all z-10"
+						className="absolute top-6 right-6 p-2 rounded-full bg-secondary hover:bg-secondary/80 text-muted-foreground hover:text-foreground transition-all z-10"
 					>
 						<X className="w-5 h-5" />
 					</button>
 
 					<div className="space-y-3">
 						<div className="flex flex-wrap items-center gap-2">
-							<Badge className="bg-[#13ecc8] text-black hover:bg-[#11d8b7] font-bold">
+							<Badge className="bg-primary text-white hover:bg-primary/90 font-bold px-3 py-1 rounded-lg">
 								{protocol.protocol_type === "pos_operatorio"
 									? "Pós-Operatório"
 									: "Patologia"}
 							</Badge>
 							<Badge
 								variant="outline"
-								className="border-white/20 text-white/70 backdrop-blur-md"
+								className="border-primary/20 text-primary bg-primary/5 px-3 py-1 rounded-lg"
 							>
 								{protocol.condition_name}
 							</Badge>
 						</div>
 
-						<h1 className="text-3xl sm:text-4xl font-black text-white tracking-tight">
+						<h1 className="text-3xl sm:text-4xl font-black text-foreground tracking-tight">
 							{protocol.name}
 						</h1>
 
-						<div className="flex items-center gap-4 text-white/50 text-sm">
-							<span className="flex items-center gap-1.5">
-								<Clock className="w-4 h-4 text-[#13ecc8]" />
-								{protocol.weeks_total} semanas de duração
+						<div className="flex items-center gap-4 text-muted-foreground text-sm font-medium">
+							<span className="flex items-center gap-1.5 bg-secondary/50 px-2 py-1 rounded-md">
+								<Clock className="w-4 h-4 text-primary" />
+								{protocol.weeks_total} semanas
 							</span>
-							<span className="flex items-center gap-1.5">
-								<Activity className="w-4 h-4 text-[#13ecc8]" />
-								{milestones.length} marcos definidos
+							<span className="flex items-center gap-1.5 bg-secondary/50 px-2 py-1 rounded-md">
+								<Activity className="w-4 h-4 text-primary" />
+								{milestones.length} marcos
 							</span>
 						</div>
 					</div>
 
-					{/* Decorative glow */}
-					<div className="absolute top-0 left-0 w-64 h-64 bg-[#13ecc8]/10 rounded-full blur-[80px] -translate-x-1/2 -translate-y-1/2 pointer-events-none" />
+					{/* Decorative background glow */}
+					<div className="absolute top-0 left-0 w-64 h-64 bg-primary/5 rounded-full blur-3xl -translate-x-1/2 -translate-y-1/2 pointer-events-none" />
 				</div>
 
-				{/* Content Tabs/Scrollable Area */}
-				<div className="flex-1 overflow-y-auto p-6 sm:p-8 space-y-8 scrollbar-thin scrollbar-thumb-white/10 scrollbar-track-transparent">
+				{/* Content Area */}
+				<div className="flex-1 overflow-y-auto p-6 sm:p-8 space-y-8 scrollbar-thin scrollbar-thumb-muted scrollbar-track-transparent">
 					{/* Timeline Visualization */}
 					<section className="space-y-4">
-						<h3 className="text-sm font-bold uppercase tracking-widest text-[#13ecc8] flex items-center gap-2">
-							<Calendar className="w-4 h-4" /> Linha do Tempo de Recuperação
+						<h3 className="text-sm font-black uppercase tracking-widest text-primary flex items-center gap-3">
+							<div className="h-6 w-1 rounded-full bg-primary" />
+							<Calendar className="w-4 h-4" /> Linha do Tempo
 						</h3>
-						<div className="relative p-6 rounded-2xl bg-white/5 border border-white/10 overflow-hidden">
-							<div className="flex mt-2 mb-8 relative">
-								<div className="absolute top-3 left-0 right-0 h-1 bg-white/10 rounded-full overflow-hidden">
+						<div className="relative p-6 rounded-2xl bg-secondary/20 border border-border overflow-hidden shadow-inner-border">
+							<div className="flex mt-2 mb-10 relative">
+								<div className="absolute top-3.5 left-0 right-0 h-1 bg-border rounded-full overflow-hidden">
 									<motion.div
 										initial={{ width: 0 }}
 										animate={{ width: "100%" }}
 										transition={{ duration: 1.5, ease: "easeInOut" }}
-										className="h-full bg-gradient-to-r from-[#13ecc8] via-[#11d8b7] to-[#13ecc8]/30"
+										className="h-full bg-gradient-to-r from-primary to-primary/40"
 									/>
 								</div>
 
@@ -149,21 +150,21 @@ const ProtocolDetailView: React.FC<ProtocolDetailViewProps> = ({
 										<div key={percent} className="flex flex-col items-center">
 											<div
 												className={cn(
-													"w-7 h-7 rounded-full border-2 flex items-center justify-center transition-all duration-500",
+													"w-8 h-8 rounded-xl border-2 flex items-center justify-center transition-all duration-500",
 													percent <= 50
-														? "bg-black border-[#13ecc8] shadow-[0_0_10px_rgba(19,236,200,0.5)]"
-														: "bg-black border-white/20",
+														? "bg-white border-primary shadow-lg"
+														: "bg-white border-border",
 												)}
 											>
 												<div
 													className={cn(
 														"w-2 h-2 rounded-full",
-														percent <= 50 ? "bg-[#13ecc8]" : "bg-white/20",
+														percent <= 50 ? "bg-primary" : "bg-muted",
 													)}
 												/>
 											</div>
-											<span className="text-[10px] text-white/40 mt-2 font-bold uppercase tracking-tighter">
-												Semana{" "}
+											<span className="text-[10px] text-muted-foreground/60 mt-3 font-black uppercase tracking-widest">
+												Sem{" "}
 												{Math.round(
 													(percent / 100) * (protocol.weeks_total || 12),
 												)}
@@ -174,36 +175,36 @@ const ProtocolDetailView: React.FC<ProtocolDetailViewProps> = ({
 							</div>
 
 							<div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-								<div className="flex items-center gap-3 p-3 rounded-xl bg-white/[0.03] border border-white/5">
-									<div className="w-10 h-10 rounded-lg bg-[#13ecc8]/10 flex items-center justify-center">
+								<div className="flex items-center gap-3 p-4 rounded-xl bg-white border border-border shadow-sm">
+									<div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center">
 										<TooltipProvider>
 											<Tooltip>
 												<TooltipTrigger>
-													<Milestone className="w-5 h-5 text-[#13ecc8]" />
+													<Milestone className="w-5 h-5 text-primary" />
 												</TooltipTrigger>
 												<TooltipContent>Próximo Marco Crítico</TooltipContent>
 											</Tooltip>
 										</TooltipProvider>
 									</div>
 									<div>
-										<p className="text-[10px] text-white/40 font-bold uppercase">
+										<p className="text-[10px] text-muted-foreground font-black uppercase tracking-widest">
 											Status Atual
 										</p>
-										<p className="text-sm font-medium text-white">
+										<p className="text-sm font-bold text-foreground">
 											Início do Protocolo
 										</p>
 									</div>
 								</div>
-								<div className="flex items-center gap-3 p-3 rounded-xl bg-white/[0.03] border border-white/5">
+								<div className="flex items-center gap-3 p-4 rounded-xl bg-white border border-border shadow-sm">
 									<div className="w-10 h-10 rounded-lg bg-orange-500/10 flex items-center justify-center">
 										<Target className="w-5 h-5 text-orange-500" />
 									</div>
 									<div>
-										<p className="text-[10px] text-white/40 font-bold uppercase">
+										<p className="text-[10px] text-muted-foreground font-black uppercase tracking-widest">
 											Objetivo Final
 										</p>
-										<p className="text-sm font-medium text-white">
-											Retorno Total às Atividades
+										<p className="text-sm font-bold text-foreground">
+											Retorno Total
 										</p>
 									</div>
 								</div>
@@ -216,10 +217,10 @@ const ProtocolDetailView: React.FC<ProtocolDetailViewProps> = ({
 						<div className="lg:col-span-2 space-y-8">
 							{/* Description */}
 							<motion.div variants={itemVariants} className="space-y-3">
-								<h3 className="text-sm font-bold uppercase tracking-widest text-[#13ecc8]">
+								<h3 className="text-xs font-black uppercase tracking-widest text-primary">
 									Visão Geral
 								</h3>
-								<p className="text-white/70 leading-relaxed">
+								<p className="text-muted-foreground leading-relaxed text-base">
 									{(protocol as any).description ||
 										"Este protocolo estabelece diretrizes para a progressão segura baseada em marcos de recuperação, respeitando a biologia da cicatrização e buscando o retorno funcional otimizado."}
 								</p>
@@ -227,30 +228,31 @@ const ProtocolDetailView: React.FC<ProtocolDetailViewProps> = ({
 
 							{/* Milestones / Phases Detailed */}
 							<motion.div variants={itemVariants} className="space-y-4">
-								<h3 className="text-sm font-bold uppercase tracking-widest text-[#13ecc8] flex items-center gap-2">
-									<Target className="w-4 h-4" /> Marcos de Progressão
+								<h3 className="text-sm font-black uppercase tracking-widest text-primary flex items-center gap-3">
+									<div className="h-4 w-1 rounded-full bg-primary" />
+									Marcos de Progressão
 								</h3>
 
 								<div className="space-y-3">
 									{milestones.length === 0 ? (
-										<div className="p-8 text-center border-2 border-dashed border-white/5 rounded-2xl text-white/30">
+										<div className="p-8 text-center border border-dashed border-border rounded-2xl text-muted-foreground/30 font-bold bg-secondary/10">
 											Nenhum marco detalhado disponível.
 										</div>
 									) : (
 										milestones.map((m: any, idx: number) => (
 											<div
 												key={idx}
-												className="group flex gap-4 p-4 rounded-2xl bg-white/[0.03] border border-white/5 hover:bg-white/[0.05] hover:border-[#13ecc8]/30 transition-all cursor-default"
+												className="group flex gap-5 p-5 rounded-2xl bg-white border border-border hover:border-primary/30 hover:shadow-premium-md transition-all cursor-default"
 											>
-												<div className="flex-shrink-0 w-12 h-12 rounded-xl bg-[#13ecc8]/10 flex items-center justify-center text-[#13ecc8] font-black text-xl group-hover:scale-110 transition-transform">
+												<div className="flex-shrink-0 w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center text-primary font-black text-xl group-hover:scale-110 transition-transform">
 													{m.week}
 												</div>
 												<div className="space-y-1">
-													<h4 className="font-bold text-white group-hover:text-[#13ecc8] transition-colors flex items-center gap-2">
+													<h4 className="font-bold text-foreground group-hover:text-primary transition-colors flex items-center gap-2">
 														Semana {m.week}{" "}
-														<ChevronRight className="w-4 h-4 text-white/20" />
+														<ChevronRight className="w-4 h-4 text-muted-foreground/30" />
 													</h4>
-													<p className="text-sm text-white/60 leading-tight">
+													<p className="text-sm text-muted-foreground leading-relaxed">
 														{m.description}
 													</p>
 												</div>
@@ -265,30 +267,29 @@ const ProtocolDetailView: React.FC<ProtocolDetailViewProps> = ({
 						<div className="space-y-8">
 							{/* Restrictions */}
 							<motion.div variants={itemVariants} className="space-y-4">
-								<h3 className="text-sm font-bold uppercase tracking-widest text-red-400 flex items-center gap-2">
+								<h3 className="text-xs font-black uppercase tracking-widest text-destructive flex items-center gap-2">
 									<AlertTriangle className="w-4 h-4" /> Restrições Críticas
 								</h3>
 
 								<div className="space-y-3">
 									{restrictions.length === 0 ? (
-										<div className="p-4 bg-green-500/5 border border-green-500/10 rounded-xl text-green-500/70 text-xs flex items-center gap-2 font-medium">
-											<CheckCircle2 className="w-4 h-4" /> Nenhuma restrição
-											severa listada.
+										<div className="p-4 bg-success/5 border border-success/10 rounded-xl text-success/70 text-xs flex items-center gap-2 font-bold">
+											<CheckCircle2 className="w-4 h-4" /> Nenhuma restrição severa.
 										</div>
 									) : (
 										restrictions.map((r: any, idx: number) => (
 											<div
 												key={idx}
-												className="p-4 rounded-xl bg-red-500/5 border border-red-500/10 space-y-1"
+												className="p-4 rounded-xl bg-destructive/5 border border-destructive/10 space-y-2"
 											>
 												<div className="flex items-center justify-between">
-													<span className="text-[10px] font-black uppercase text-red-400 bg-red-400/10 px-2 py-0.5 rounded">
+													<span className="text-[10px] font-black uppercase text-destructive bg-destructive/10 px-2 py-0.5 rounded">
 														Semanas {r.week_start}{" "}
 														{r.week_end ? `- ${r.week_end}` : ""}
 													</span>
-													<AlertTriangle className="w-3 h-3 text-red-400" />
+													<AlertTriangle className="w-3 h-3 text-destructive" />
 												</div>
-												<p className="text-xs text-white/80 font-medium">
+												<p className="text-xs text-foreground font-bold">
 													{r.description}
 												</p>
 											</div>
@@ -300,21 +301,21 @@ const ProtocolDetailView: React.FC<ProtocolDetailViewProps> = ({
 							{/* Extra Info / Notes */}
 							<motion.div
 								variants={itemVariants}
-								className="p-5 rounded-2xl bg-blue-500/5 border border-blue-500/10 space-y-3"
+								className="p-6 rounded-2xl bg-primary/5 border border-primary/10 space-y-4"
 							>
-								<h4 className="text-xs font-bold uppercase tracking-wider text-blue-400 flex items-center gap-2">
+								<h4 className="text-xs font-black uppercase tracking-widest text-primary flex items-center gap-2">
 									<Info className="w-4 h-4" /> Notas Clínicas
 								</h4>
-								<div className="space-y-2">
-									<div className="flex gap-2 last:mb-0">
-										<div className="mt-1 w-1 h-1 rounded-full bg-blue-400 shrink-0" />
-										<p className="text-[11px] text-white/60 leading-tight italic">
+								<div className="space-y-3">
+									<div className="flex gap-3">
+										<div className="mt-1.5 w-1.5 h-1.5 rounded-full bg-primary/40 shrink-0" />
+										<p className="text-xs text-muted-foreground leading-relaxed italic">
 											Monitorar dor na Escala Visual Analógica (EVA).
 										</p>
 									</div>
-									<div className="flex gap-2 last:mb-0">
-										<div className="mt-1 w-1 h-1 rounded-full bg-blue-400 shrink-0" />
-										<p className="text-[11px] text-white/60 leading-tight italic">
+									<div className="flex gap-3">
+										<div className="mt-1.5 w-1.5 h-1.5 rounded-full bg-primary/40 shrink-0" />
+										<p className="text-xs text-muted-foreground leading-relaxed italic">
 											Respeitar fadiga muscular local.
 										</p>
 									</div>
@@ -323,14 +324,14 @@ const ProtocolDetailView: React.FC<ProtocolDetailViewProps> = ({
 
 							{/* References */}
 							<motion.div variants={itemVariants} className="space-y-3">
-								<h3 className="text-sm font-bold uppercase tracking-widest text-[#13ecc8]">
+								<h3 className="text-xs font-black uppercase tracking-widest text-primary">
 									Base de Evidência
 								</h3>
-								<div className="flex items-center gap-3 p-3 rounded-xl bg-white/[0.03] border border-white/5 hover:bg-white/[0.08] transition-colors cursor-pointer group">
-									<div className="w-8 h-8 rounded-lg bg-indigo-500/10 flex items-center justify-center text-indigo-400">
+								<div className="flex items-center gap-3 p-4 rounded-xl bg-white border border-border hover:border-primary/30 transition-all cursor-pointer group shadow-sm">
+									<div className="w-8 h-8 rounded-lg bg-indigo-500/10 flex items-center justify-center text-indigo-500">
 										<BookOpen className="w-4 h-4" />
 									</div>
-									<p className="text-[11px] text-white/50 font-medium group-hover:text-white transition-colors">
+									<p className="text-[11px] text-muted-foreground font-bold group-hover:text-primary transition-colors">
 										Clinical Practice Guidelines (2025)
 									</p>
 								</div>
@@ -340,16 +341,16 @@ const ProtocolDetailView: React.FC<ProtocolDetailViewProps> = ({
 				</div>
 
 				{/* Footer Actions */}
-				<div className="p-6 border-t border-white/10 bg-white/5 flex flex-col sm:flex-row items-center justify-between gap-4">
+				<div className="p-6 border-t border-border bg-secondary/20 flex flex-col sm:flex-row items-center justify-between gap-4">
 					<div className="flex items-center gap-3">
-						<div className="w-10 h-10 rounded-full border-2 border-[#13ecc8]/30 flex items-center justify-center bg-[#13ecc8]/10">
-							<Activity className="w-5 h-5 text-[#13ecc8]" />
+						<div className="w-10 h-10 rounded-xl border border-primary/20 flex items-center justify-center bg-white shadow-sm">
+							<Activity className="w-5 h-5 text-primary" />
 						</div>
 						<div>
-							<p className="text-xs text-white/40 font-bold uppercase">
+							<p className="text-[10px] text-muted-foreground/60 font-black uppercase tracking-widest leading-none">
 								Protocolo Adaptável
 							</p>
-							<p className="text-sm text-white font-medium">
+							<p className="text-sm text-foreground font-black">
 								FisioFlow Intelligence
 							</p>
 						</div>
@@ -358,16 +359,16 @@ const ProtocolDetailView: React.FC<ProtocolDetailViewProps> = ({
 					<div className="flex items-center gap-3 w-full sm:w-auto">
 						{onEdit && (
 							<Button
-								variant="ghost"
+								variant="outline"
 								onClick={() => onEdit(protocol)}
-								className="flex-1 sm:flex-none text-white/70 hover:text-white hover:bg-white/10"
+								className="flex-1 sm:flex-none h-11 px-6 rounded-xl border-border text-muted-foreground hover:text-primary hover:border-primary/20"
 							>
 								<Edit className="w-4 h-4 mr-2" /> Editar
 							</Button>
 						)}
 						<Button
 							onClick={onClose}
-							className="flex-1 sm:flex-none bg-[#13ecc8] hover:bg-[#11d8b7] text-black font-bold h-11 px-8 shadow-[0_0_20px_rgba(19,236,200,0.2)]"
+							className="flex-1 sm:flex-none bg-primary hover:bg-primary/90 text-white font-bold h-11 px-8 rounded-xl shadow-lg hover:shadow-primary/20"
 						>
 							Concluído <ChevronRight className="w-4 h-4 ml-2" />
 						</Button>
