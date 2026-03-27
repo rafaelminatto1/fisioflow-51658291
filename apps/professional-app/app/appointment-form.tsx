@@ -85,7 +85,7 @@ export default function AppointmentFormScreen() {
 
   const [isLoadingData, setIsLoadingData] = useState(!!appointmentId);
 
-  const { control, handleSubmit, setValue, reset, watch, formState: { errors } } = useForm<AppointmentFormData>({
+  const { control, handleSubmit, setValue, reset, watch, formState: { errors, isDirty } } = useForm<AppointmentFormData>({
     resolver: zodResolver(appointmentSchema),
     defaultValues: {
       patientId: params.patientId as string || '',
@@ -311,7 +311,23 @@ export default function AppointmentFormScreen() {
       <Stack.Screen options={{ headerShown: false }} />
       
       <View style={[styles.header, { borderBottomColor: colors.border }]}>
-        <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
+        <TouchableOpacity
+          onPress={() => {
+            if (isEditing && isDirty) {
+              Alert.alert(
+                'Salvar alterações?',
+                'Você fez alterações neste agendamento.',
+                [
+                  { text: 'Não', style: 'cancel', onPress: () => router.back() },
+                  { text: 'Sim', onPress: handleSubmit(onSave) },
+                ]
+              );
+            } else {
+              router.back();
+            }
+          }}
+          style={styles.backButton}
+        >
           <Ionicons name="arrow-back" size={24} color={colors.text} />
         </TouchableOpacity>
         <Text style={[styles.title, { color: colors.text }]}>
@@ -359,6 +375,7 @@ export default function AppointmentFormScreen() {
                     <DateTimePicker
                       value={parseDateString(value)}
                       mode="date"
+                      locale="pt-BR"
                       display={Platform.OS === 'ios' ? 'spinner' : 'default'}
                       onChange={(_e, date) => {
                         if (Platform.OS !== 'ios') setShowDatePicker(false);
@@ -400,6 +417,7 @@ export default function AppointmentFormScreen() {
                       value={parseTimeString(value)}
                       mode="time"
                       is24Hour={true}
+                      locale="pt-BR"
                       display={Platform.OS === 'ios' ? 'spinner' : 'default'}
                       onChange={(_e, date) => {
                         if (Platform.OS !== 'ios') setShowTimePicker(false);
@@ -532,12 +550,15 @@ export default function AppointmentFormScreen() {
           </View>
         )}
 
-        <Button
-          title={isEditing ? 'Salvar Alterações' : 'Agendar'}
-          onPress={handleSubmit(onSave)}
-          loading={isCreating || isUpdating}
-          style={styles.saveButton}
-        />
+        {/* Botão de criar — apenas para novo agendamento. Edição salva via prompt ao voltar. */}
+        {!isEditing && (
+          <Button
+            title="Agendar"
+            onPress={handleSubmit(onSave)}
+            loading={isCreating}
+            style={styles.saveButton}
+          />
+        )}
 
         {isEditing && watch('status') !== 'completed' && (
           <Button
