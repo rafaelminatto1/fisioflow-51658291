@@ -8,7 +8,7 @@
  */
 
 import { exerciseProtocols, protocolExercises } from "@fisioflow/db";
-import { and, eq, ilike, sql } from "drizzle-orm";
+import { and, eq, ilike, or, sql } from "drizzle-orm";
 import { Hono } from "hono";
 import { type AuthVariables, requireAuth } from "../lib/auth";
 import { createDb } from "../lib/db";
@@ -33,14 +33,18 @@ app.get("/", async (c) => {
 	const limitNum = Math.min(500, Math.max(1, parseInt(limit)));
 	const offset = (pageNum - 1) * limitNum;
 
+	// Sempre filtra isActive. Mostra protocolos públicos OU criados por este profissional.
+	const visibilityCondition = professionalId
+		? or(
+				eq(exerciseProtocols.isPublic, true),
+				eq(exerciseProtocols.createdBy, professionalId),
+			)
+		: eq(exerciseProtocols.isPublic, true);
+
 	const conditions = [
 		eq(exerciseProtocols.isActive, true),
-		eq(exerciseProtocols.isPublic, true),
+		visibilityCondition,
 	];
-
-	if (professionalId) {
-		conditions.push(eq(exerciseProtocols.createdBy, professionalId));
-	}
 
 	if (q) conditions.push(ilike(exerciseProtocols.name, `%${q}%`));
 	if (type) {
