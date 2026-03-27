@@ -13,7 +13,7 @@
 import React, { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { MainLayout } from "@/components/layout/MainLayout";
-import { useActivePatients } from "@/hooks/usePatients";
+import { useActivePatients } from "@/hooks/patients/usePatients";
 import { useOrganizations } from "@/hooks/useOrganizations";
 import {
 	Card,
