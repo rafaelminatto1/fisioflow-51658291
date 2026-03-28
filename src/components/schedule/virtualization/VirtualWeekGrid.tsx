@@ -12,14 +12,11 @@ import React, { memo, useMemo, useRef, useCallback, useState, useEffect } from "
 import { List } from "react-window";
 import { isSameDay } from "date-fns";
 import { Appointment } from "@/types/appointment";
-import type { CardSize } from "@/types/agenda";
 import { cn } from "@/lib/utils";
 import { parseAppointmentDate, normalizeTime } from "@/lib/calendar/utils";
 import { BUSINESS_HOURS } from "@/lib/calendar/constants";
 import { CalendarAppointmentCard } from "../CalendarAppointmentCard";
 import { TimeSlotCell } from "../TimeSlotCell";
-import { useCardSize } from "@/hooks/useCardSize";
-import { calculateAppointmentCardHeight } from "@/lib/calendar/cardHeightCalculator";
 
 interface VirtualWeekGridProps {
 	/** Dias da semana para renderizar */
@@ -73,10 +70,9 @@ interface ItemData {
 	appointments: Appointment[];
 	savingAppointmentId?: string | null;
 	timeSlots: string[];
+	slotHeight: number;
 	appointmentsByTimeSlot: Record<string, Appointment[]>;
 	appointmentsByDayAndTime: Record<string, Appointment[]>;
-	cardSize: string;
-	heightScale: number;
 	onTimeSlotClick?: (date: Date, time: string) => void;
 	onEditAppointment?: (appointment: Appointment) => void;
 	onDeleteAppointment?: (appointment: Appointment) => void;
@@ -116,6 +112,7 @@ const TimeSlotRow: React.FC<TimeSlotRowProps> = memo(
 		style,
 		weekDays,
 		timeSlots,
+		slotHeight,
 		appointmentsByTimeSlot,
 		appointmentsByDayAndTime,
 		...props
@@ -133,11 +130,11 @@ const TimeSlotRow: React.FC<TimeSlotRowProps> = memo(
 					...style,
 					display: "grid",
 					gridTemplateColumns: `60px repeat(${numDays}, 1fr)`,
+					zIndex: appointmentsByTimeSlot[time]?.length
+						? timeSlots.length - index
+						: 0,
 				}}
-				className={cn(
-					"relative border-b border-slate-200 dark:border-slate-800",
-					appointmentsByTimeSlot[time]?.length ? "z-20" : "z-0",
-				)}
+				className="relative border-b border-slate-200 dark:border-slate-800"
 			>
 				{/* Time Label */}
 				<div
@@ -189,10 +186,11 @@ const TimeSlotRow: React.FC<TimeSlotRowProps> = memo(
 					if (dayIndex === -1) return null;
 
 					const duration = apt.duration || 60;
-					const height = calculateAppointmentCardHeight(
-						props.cardSize as CardSize,
-						duration,
-						props.heightScale,
+					const slotCount = Math.max(1, Math.ceil(duration / 30));
+					const verticalInset = 2;
+					const height = Math.max(
+						slotHeight * slotCount - verticalInset * 2,
+						slotHeight - 6,
 					);
 
 					const sameDayTimeAppointments =
@@ -212,8 +210,8 @@ const TimeSlotRow: React.FC<TimeSlotRowProps> = memo(
 						width: `calc(((100% - 60px) / ${numDays} - ${(count + 1) * gap}px) / ${count})`,
 						// Left: início da coluna do dia + margem + offset por sobreposição
 						left: `calc(60px + ${dayIndex} * (100% - 60px) / ${numDays} + ${outerMargin}px + ${aptIndex} * (((100% - 60px) / ${numDays} - ${(count + 1) * gap}px) / ${count} + ${gap}px))`,
-						top: "0px",
-						zIndex: 10 + aptIndex,
+						top: `${verticalInset}px`,
+						zIndex: timeSlots.length - index + aptIndex + 1,
 					};
 
 					const isDraggable = !!props.onAppointmentReschedule;
@@ -275,13 +273,12 @@ TimeSlotRow.displayName = "TimeSlotRow";
 		isDayClosedForDate,
 		openPopoverId,
 		setOpenPopoverId,
-		selectionMode = false,
-		selectedIds = new Set(),
-		onToggleSelection,
-	}) => {
+	selectionMode = false,
+	selectedIds = new Set(),
+	onToggleSelection,
+}) => {
 		const listRef = useRef<any>(null);
 		const containerRef = useRef<HTMLDivElement>(null);
-		const { cardSize, heightScale } = useCardSize();
 
 		// Measure actual container height with ResizeObserver
 		const [containerHeight, setContainerHeight] = useState(600);
@@ -334,11 +331,10 @@ TimeSlotRow.displayName = "TimeSlotRow";
 				weekDays,
 				timeSlots,
 				appointments,
+				slotHeight,
 				appointmentsByTimeSlot,
 				appointmentsByDayAndTime,
 				savingAppointmentId,
-				cardSize,
-				heightScale,
 				onTimeSlotClick,
 				onEditAppointment,
 				onDeleteAppointment,
@@ -362,11 +358,10 @@ TimeSlotRow.displayName = "TimeSlotRow";
 				weekDays,
 				timeSlots,
 				appointments,
+				slotHeight,
 				appointmentsByTimeSlot,
 				appointmentsByDayAndTime,
 				savingAppointmentId,
-				cardSize,
-				heightScale,
 				onTimeSlotClick,
 				onEditAppointment,
 				onDeleteAppointment,
