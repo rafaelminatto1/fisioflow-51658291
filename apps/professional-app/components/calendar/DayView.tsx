@@ -1,16 +1,18 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity, useWindowDimensions } from 'react-native';
 import { useColors } from '@/hooks/useColorScheme';
 import { TimeGrid } from './TimeGrid';
 import { AppointmentBase } from '@/types';
 import { router } from 'expo-router';
 import { format } from 'date-fns';
+import { DraggableAptCard } from './DraggableAptCard';
 
 interface DayViewProps {
     date: Date;
     appointments: AppointmentBase[];
     startHour?: number;
     endHour?: number;
+    onReschedule?: (id: string, time: string) => void;
 }
 
 const HOUR_HEIGHT = 60; // Must match TimeGrid
@@ -19,10 +21,12 @@ export const DayView = ({
     date,
     appointments,
     startHour = 7,
-    endHour = 20
+    endHour = 20,
+    onReschedule,
 }: DayViewProps) => {
     const colors = useColors();
     const { width: windowWidth } = useWindowDimensions();
+    const [scrollEnabled, setScrollEnabled] = useState(true);
     
     // Calculate available width for appointments (total width - time label width)
     const TIME_LABEL_WIDTH = 50;
@@ -136,34 +140,23 @@ export const DayView = ({
             const pos = positioning.get(apt.id) || { left: 0, width: availableWidth };
 
             return (
-                <TouchableOpacity
+                <DraggableAptCard
                     key={apt.id}
-                    style={[
-                        styles.appointmentItem,
-                        {
-                            top: apt.top,
-                            height: apt.height,
-                            left: pos.left,
-                            width: pos.width,
-                            backgroundColor: colors.primary + '20', // transparent primary
-                            borderColor: colors.primary,
-                        }
-                    ]}
+                    apt={apt}
+                    pos={pos}
+                    startHour={startHour}
+                    endHour={endHour}
+                    onReschedule={onReschedule}
+                    onScrollEnable={setScrollEnabled}
+                    colors={{ primary: colors.primary, textSecondary: colors.textSecondary }}
                     onPress={() => router.push(`/appointment-form?id=${apt.id}` as any)}
-                >
-                    <Text style={[styles.aptTitle, { color: colors.primary }]} numberOfLines={1}>
-                        {apt.patientName || 'Paciente'}
-                    </Text>
-                    <Text style={[styles.aptTime, { color: colors.textSecondary }]}>
-                        {apt.time || format(new Date(apt.date), 'HH:mm')} - {apt.type}
-                    </Text>
-                </TouchableOpacity>
+                />
             );
         });
     };
 
     return (
-        <ScrollView style={styles.container} contentContainerStyle={styles.content}>
+        <ScrollView style={styles.container} contentContainerStyle={styles.content} scrollEnabled={scrollEnabled}>
             <View style={styles.gridContainer}>
                 {/* Render grid lines and labels */}
                 <TimeGrid startHour={startHour} endHour={endHour} rowHeight={HOUR_HEIGHT} />
