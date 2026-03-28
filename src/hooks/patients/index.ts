@@ -37,7 +37,7 @@ export { usePatients, useActivePatients } from "../usePatients";
 export { usePatientsV2 } from "../usePatientsV2";
 
 // Hook de CRUD de paciente
-export { usePatientCrud } from "../usePatientCrud";
+export * from "./usePatientCrud";
 
 // Hook de perfil de paciente otimizado
 export {

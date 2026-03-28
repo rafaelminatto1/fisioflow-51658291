@@ -1,8 +1,8 @@
 import { useState, useMemo } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { MainLayout } from "@/components/layout/MainLayout";
-import { PatientEvolutionDashboard } from "@/components/patients/PatientEvolutionDashboard";
-import { ProgressAnalysisCard } from "@/components/patients/ProgressAnalysisCard";
+import { PatientEvolutionDashboard } from "@/components/patient/PatientEvolutionDashboard";
+import { ProgressAnalysisCard } from "@/components/patient/ProgressAnalysisCard";
 import { usePatientEvolutionReport } from "@/hooks/usePatientEvolutionReport";
 import { usePatients } from "@/hooks/patients/usePatients";
 import { Button } from "@/components/ui/button";
@@ -11,7 +11,7 @@ import { LoadingSkeleton, EmptyState } from "@/components/ui";
 import { toast } from "sonner";
 import { PatientHelpers } from "@/types";
 import { fisioLogger as logger } from "@/lib/errors/logger";
-import { AIReportGeneratorModal } from "@/components/patients/AIReportGeneratorModal";
+import { AIReportGeneratorModal } from "@/components/patient/AIReportGeneratorModal";
 import { ClinicalReportInput } from "@/services/ai/geminiAiService";
 
 const PatientEvolutionReport = () => {
