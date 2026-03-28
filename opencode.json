@@ -3,7 +3,7 @@
   "mcp": {
     "neon": {
       "type": "remote",
-      "url": "https://mcp.neon.tech/mcp",
+      "url": "https://mcp.neon.tech",
       "enabled": true
     },
     "shadcn": {
