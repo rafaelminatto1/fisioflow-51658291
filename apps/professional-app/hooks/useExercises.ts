@@ -5,6 +5,7 @@ import type { Exercise, ExerciseAssignment } from '@/types';
 export interface UseExercisesLibraryOptions {
   category?: string;
   difficulty?: string;
+  search?: string;
   limit?: number;
 }
 
