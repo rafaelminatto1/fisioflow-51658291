@@ -281,13 +281,14 @@ export const useAppointmentForm = ({
 					);
 					await appointmentsApi.create({
 						...formattedData,
+						organizationId: currentOrganization?.id,
 						date: format(occ.date, "yyyy-MM-dd"),
 						start_time: occ.time,
 						end_time: format(occEndTime, "HH:mm"),
 						ignoreCapacity,
 					});
 				}
-				queryClient.invalidateQueries({ queryKey: ["appointments"] });
+				queryClient.invalidateQueries({ queryKey: ["schedule-appointments"] });
 			} finally {
 				setIsCreating(false);
 			}
@@ -299,16 +300,24 @@ export const useAppointmentForm = ({
 		if (appointmentId) {
 			setIsUpdating(true);
 			try {
-				await appointmentsApi.update(appointmentId, { ...formattedData, ignoreCapacity } as any);
-				queryClient.invalidateQueries({ queryKey: ["appointments"] });
+				await appointmentsApi.update(appointmentId, { 
+					...formattedData, 
+					organizationId: currentOrganization?.id,
+					ignoreCapacity 
+				} as any);
+				queryClient.invalidateQueries({ queryKey: ["schedule-appointments"] });
 			} finally {
 				setIsUpdating(false);
 			}
 		} else {
 			setIsCreating(true);
 			try {
-				await appointmentsApi.create({ ...formattedData, ignoreCapacity });
-				queryClient.invalidateQueries({ queryKey: ["appointments"] });
+				await appointmentsApi.create({ 
+					...formattedData, 
+					organizationId: currentOrganization?.id,
+					ignoreCapacity 
+				});
+				queryClient.invalidateQueries({ queryKey: ["schedule-appointments"] });
 			} finally {
 				setIsCreating(false);
 			}
