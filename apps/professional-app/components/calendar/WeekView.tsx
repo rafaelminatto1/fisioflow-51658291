@@ -1,16 +1,18 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity } from 'react-native';
 import { useColors } from '@/hooks/useColorScheme';
 import { TimeGrid } from './TimeGrid';
 import { AppointmentBase } from '@/types';
 import { router } from 'expo-router';
 import { format, startOfWeek, addDays, isSameDay } from 'date-fns';
+import { DraggableAptCard } from './DraggableAptCard';
 
 interface WeekViewProps {
     date: Date;
     appointments: AppointmentBase[];
     startHour?: number;
     endHour?: number;
+    onReschedule?: (id: string, time: string) => void;
 }
 
 const HOUR_HEIGHT = 60; // Must match TimeGrid
@@ -19,11 +21,14 @@ export const WeekView = ({
     date,
     appointments,
     startHour = 7,
-    endHour = 20
+    endHour = 20,
+    onReschedule,
 }: WeekViewProps) => {
     const colors = useColors();
     const weekStart = startOfWeek(date, { weekStartsOn: 0 });
     const weekDays = Array.from({ length: 7 }, (_, i) => addDays(weekStart, i));
+    const [scrollEnabled, setScrollEnabled] = useState(true);
+    const [columnWidth, setColumnWidth] = useState(0);
 
     const handleGridPress = (day: Date, hour: number) => {
         const dateStr = format(day, 'dd/MM/yyyy');
@@ -59,7 +64,7 @@ export const WeekView = ({
                 ))}
             </View>
 
-            <ScrollView contentContainerStyle={styles.scrollContent}>
+            <ScrollView contentContainerStyle={styles.scrollContent} scrollEnabled={scrollEnabled}>
                 <View style={styles.gridContainer}>
                     {/* Time Grid (Background) */}
                     <TimeGrid startHour={startHour} endHour={endHour} rowHeight={HOUR_HEIGHT} />
@@ -67,7 +72,11 @@ export const WeekView = ({
                     {/* Columns Overlay */}
                     <View style={styles.columnsContainer}>
                         {weekDays.map((day, dayIndex) => (
-                            <View key={day.toISOString()} style={styles.dayColumn}>
+                            <View
+                                key={day.toISOString()}
+                                style={styles.dayColumn}
+                                onLayout={dayIndex === 0 ? (e) => setColumnWidth(e.nativeEvent.layout.width) : undefined}
+                            >
                                 {/* Touchable slots for each hour */}
                                 {Array.from({ length: endHour - startHour + 1 }, (_, hourIndex) => {
                                     const hour = startHour + hourIndex;
@@ -99,31 +108,21 @@ export const WeekView = ({
 
                                     const top = (hour - startHour) * HOUR_HEIGHT + (minutes / 60) * HOUR_HEIGHT;
                                     const height = (apt.duration / 60) * HOUR_HEIGHT;
+                                    const aptWithPos = { ...apt, top, height };
+                                    const colW = columnWidth > 0 ? columnWidth : 50;
 
                                     return (
-                                        <TouchableOpacity
+                                        <DraggableAptCard
                                             key={apt.id}
-                                            style={[
-                                                styles.appointmentItem,
-                                                {
-                                                    top,
-                                                    height,
-                                                    backgroundColor: colors.primary,
-                                                    borderRadius: 4,
-                                                    right: '10%',
-                                                }
-                                            ]}
+                                            apt={aptWithPos}
+                                            pos={{ left: 1, width: colW - 2 }}
+                                            startHour={startHour}
+                                            endHour={endHour}
+                                            onReschedule={onReschedule}
+                                            onScrollEnable={setScrollEnabled}
+                                            colors={{ primary: colors.primary, textSecondary: colors.textSecondary }}
                                             onPress={() => router.push(`/appointment-form?id=${apt.id}` as any)}
-                                        >
-                                            <Text style={styles.appointmentTime} numberOfLines={1}>
-                                                {apt.time ? apt.time.substring(0, 5) : `${String(hour).padStart(2,'0')}:${String(minutes).padStart(2,'0')}`}
-                                            </Text>
-                                            {apt.patientName ? (
-                                                <Text style={styles.appointmentName} numberOfLines={1}>
-                                                    {apt.patientName}
-                                                </Text>
-                                            ) : null}
-                                        </TouchableOpacity>
+                                        />
                                     );
                                 })}
                             </View>
@@ -178,23 +177,5 @@ const styles = StyleSheet.create({
     dayColumn: {
         flex: 1,
         position: 'relative',
-    },
-    appointmentItem: {
-        position: 'absolute',
-        left: 1,
-        right: 1,
-        padding: 2,
-        zIndex: 10,
-        overflow: 'hidden',
-    },
-    appointmentTime: {
-        color: '#fff',
-        fontSize: 9,
-        fontWeight: '700',
-    },
-    appointmentName: {
-        color: '#fff',
-        fontSize: 9,
-        opacity: 0.9,
     },
 });
