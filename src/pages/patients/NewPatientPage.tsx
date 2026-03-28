@@ -1,11 +1,11 @@
 import React from "react";
 import { useNavigate } from "react-router-dom";
 import { MainLayout } from "@/components/layout/MainLayout";
-import { PatientForm } from "@/components/patients/PatientForm";
+import { PatientForm } from "@/components/patient/PatientForm";
 import {
 	useCreatePatient,
 	type PatientCreateInput,
-} from "@/hooks/patients/usePatientCrud";
+} from "@/hooks/patients/usePatientCrud/index";
 import { useOrganizations } from "@/hooks/useOrganizations";
 import { Button } from "@/components/ui/button";
 import { ArrowLeft, UserPlus, Loader2 } from "lucide-react";

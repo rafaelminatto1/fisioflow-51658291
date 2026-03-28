@@ -1,5 +1,5 @@
 import { PatientCard } from "@fisioflow/ui";
-import { PatientActions } from "@/components/patients/PatientActions";
+import { PatientActions } from "@/components/patient/PatientActions";
 import { usePrefetchPatientOnHover } from "@/hooks/performance";
 import { useNavPreload } from "@/hooks/useIntelligentPreload";
 import { PatientHelpers } from "@/types";
