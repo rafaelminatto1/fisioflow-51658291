@@ -25,6 +25,7 @@ import {
 	FileText,
 	Sparkles,
 	AlertCircle,
+	Lightbulb,
 } from "lucide-react";
 import {
 	knowledgeGroups,
