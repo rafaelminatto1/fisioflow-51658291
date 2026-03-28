@@ -99,7 +99,7 @@
 		},
 		"neon": {
 			"type": "http",
-			"url": "https://mcp.neon.tech/mcp",
+			"url": "https://mcp.neon.tech",
 			"headers": {
 				"Accept": "application/json",
 				"Authorization": "Bearer ${NEON_API_KEY}"
