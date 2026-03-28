@@ -50,6 +50,7 @@ export default function Schedule() {
 			status: statusParam,
 			types: typesParam,
 			therapists: therapistsParam,
+			patient: patientParam,
 		},
 	);
 
