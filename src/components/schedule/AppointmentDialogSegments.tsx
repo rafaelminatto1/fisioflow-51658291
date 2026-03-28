@@ -1,9 +1,41 @@
+import {
+	addDays,
+	addWeeks,
+	format,
+	isAfter,
+	isBefore,
+	parseISO,
+	startOfDay,
+} from "date-fns";
+import { ptBR } from "date-fns/locale";
+import {
+	AlertTriangle,
+	Bell,
+	CalendarIcon,
+	Check,
+	ChevronDown,
+	Clock,
+	Copy,
+	Package,
+	Repeat,
+	User,
+	Wand2,
+	Zap,
+} from "lucide-react";
 import { useEffect, useMemo } from "react";
 import { useFormContext } from "react-hook-form";
-import { Label } from "@/components/ui/label";
-import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Calendar } from "@/components/ui/calendar";
 import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { PatientCombobox } from "@/components/ui/patient-combobox";
+import {
+	Popover,
+	PopoverContent,
+	PopoverTrigger,
+} from "@/components/ui/popover";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import {
 	Select,
 	SelectContent,
@@ -11,60 +43,29 @@ import {
 	SelectTrigger,
 	SelectValue,
 } from "@/components/ui/select";
-import { PatientCombobox } from "@/components/ui/patient-combobox";
-import { Calendar } from "@/components/ui/calendar";
+import { Switch } from "@/components/ui/switch";
 import {
-	Popover,
-	PopoverContent,
-	PopoverTrigger,
-} from "@/components/ui/popover";
-import {
-	CalendarIcon,
-	User,
-	Package,
-	AlertTriangle,
-	Check,
-	Zap,
-	Repeat,
-	Bell,
-	Copy,
-	Wand2,
-	Clock,
-} from "lucide-react";
-import {
-	format,
-	parseISO,
-	addDays,
-	addWeeks,
-	startOfDay,
-	isBefore,
-	isAfter,
-} from "date-fns";
-import { ptBR } from "date-fns/locale";
-import { cn } from "@/lib/utils";
-import {
-	type AppointmentType,
-	type AppointmentStatus,
-	type AppointmentFormData,
-	type RecurringConfig,
-	type RecurringDayConfig,
-} from "@/types/appointment";
-import { type Patient } from "@/types";
-import {
-	APPOINTMENT_TYPES,
 	APPOINTMENT_STATUSES,
-	STATUS_LABELS,
+	APPOINTMENT_TYPES,
 	STATUS_COLORS,
+	STATUS_LABELS,
 } from "@/constants/appointments";
-import { EquipmentSelector, type SelectedEquipment } from "./EquipmentSelector";
+import { usePatientPackages } from "@/hooks/usePackages";
+import { cn } from "@/lib/utils";
+import type { Patient } from "@/types";
+import type {
+	AppointmentFormData,
+	AppointmentStatus,
+	AppointmentType,
+	RecurringConfig,
+	RecurringDayConfig,
+} from "@/types/appointment";
 import {
 	AppointmentReminder,
 	type AppointmentReminderData,
 } from "./AppointmentReminder";
-import { usePatientPackages } from "@/hooks/usePackages";
+import { EquipmentSelector, type SelectedEquipment } from "./EquipmentSelector";
 import { NewPackagePopover } from "./NewPackagePopover";
-import { Switch } from "@/components/ui/switch";
-import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 
 const premiumFieldBaseClass =
 	"w-full justify-between rounded-xl border border-blue-100 bg-white px-3 text-left shadow-sm transition-all hover:border-blue-200 hover:bg-blue-50/30 focus:ring-2 focus:ring-blue-100 focus:border-blue-300 data-[state=open]:border-blue-300 data-[state=open]:bg-blue-50/50";
@@ -161,7 +162,7 @@ export const DateTimeSection = ({
 		setValue,
 		formState: { errors },
 	} = useFormContext<AppointmentFormData>();
-	
+
 	const _watchedDateStr = watchedDateStr ?? watch("appointment_date");
 	const _watchedTime = watchedTime ?? watch("appointment_time");
 	const _watchedDuration = watchedDuration ?? watch("duration");
@@ -196,7 +197,7 @@ export const DateTimeSection = ({
 						Data do Atendimento *
 					</Label>
 				</div>
-				
+
 				<Popover open={isCalendarOpen} onOpenChange={setIsCalendarOpen}>
 					<PopoverTrigger asChild>
 						<Button
@@ -205,7 +206,8 @@ export const DateTimeSection = ({
 							className={cn(
 								"h-12 w-full justify-between items-center rounded-2xl border border-blue-100 bg-white px-4 text-left shadow-premium-sm transition-all hover:border-blue-200 hover:bg-blue-50/30 focus:ring-2 focus:ring-blue-100",
 								!watchedDate && "text-slate-400",
-								errors.appointment_date && "border-red-200 bg-red-50/10 text-red-600",
+								errors.appointment_date &&
+									"border-red-200 bg-red-50/10 text-red-600",
 							)}
 							disabled={disabled}
 						>
@@ -216,11 +218,15 @@ export const DateTimeSection = ({
 								<div className="flex flex-col items-start leading-tight">
 									<span className="text-sm font-bold text-slate-700">
 										{watchedDate
-											? format(watchedDate, "dd 'de' MMMM, yyyy", { locale: ptBR })
+											? format(watchedDate, "dd 'de' MMMM, yyyy", {
+													locale: ptBR,
+												})
 											: "Selecionar data"}
 									</span>
 									<span className="text-[10px] text-slate-400 font-medium tracking-tight">
-										{watchedDate ? format(watchedDate, "EEEE", { locale: ptBR }) : "Próximo dia disponível"}
+										{watchedDate
+											? format(watchedDate, "EEEE", { locale: ptBR })
+											: "Próximo dia disponível"}
 									</span>
 								</div>
 							</div>
@@ -232,14 +238,19 @@ export const DateTimeSection = ({
 						align="start"
 					>
 						<div className="p-4 bg-gradient-to-br from-blue-50/50 to-white/90 backdrop-blur-md border-b border-blue-50 flex items-center justify-between gap-2">
-							<span className="text-[11px] font-black uppercase tracking-wider text-blue-600/70">Calendário Clínico</span>
+							<span className="text-[11px] font-black uppercase tracking-wider text-blue-600/70">
+								Calendário Clínico
+							</span>
 							<div className="flex gap-2">
 								<Button
 									variant="ghost"
 									size="sm"
 									className="h-7 px-3 text-[10px] font-bold uppercase tracking-wider hover:bg-blue-50 text-blue-600 hover:text-blue-700 rounded-full"
 									onClick={() => {
-										setValue("appointment_date", format(new Date(), "yyyy-MM-dd"));
+										setValue(
+											"appointment_date",
+											format(new Date(), "yyyy-MM-dd"),
+										);
 										setIsCalendarOpen(false);
 									}}
 								>
@@ -250,7 +261,10 @@ export const DateTimeSection = ({
 									size="sm"
 									className="h-7 px-3 text-[10px] font-bold uppercase tracking-wider hover:bg-blue-50 text-blue-600 hover:text-blue-700 rounded-full"
 									onClick={() => {
-										setValue("appointment_date", format(addDays(new Date(), 1), "yyyy-MM-dd"));
+										setValue(
+											"appointment_date",
+											format(addDays(new Date(), 1), "yyyy-MM-dd"),
+										);
 										setIsCalendarOpen(false);
 									}}
 								>
@@ -276,7 +290,10 @@ export const DateTimeSection = ({
 					</PopoverContent>
 				</Popover>
 				{errors.appointment_date && (
-					<p id="date-error" className="text-[10px] text-red-500 font-bold uppercase tracking-tight flex items-center gap-1">
+					<p
+						id="date-error"
+						className="text-[10px] text-red-500 font-bold uppercase tracking-tight flex items-center gap-1"
+					>
 						<AlertTriangle className="h-3 w-3" />
 						{(errors.appointment_date as { message?: string })?.message}
 					</p>
@@ -312,7 +329,11 @@ export const DateTimeSection = ({
 						</SelectTrigger>
 						<SelectContent className="rounded-2xl border-blue-50 shadow-premium-lg max-h-60 p-1">
 							{timeSlots.map((slot) => (
-								<SelectItem key={slot} value={slot} className="rounded-xl text-xs font-medium py-2.5 transition-colors focus:bg-blue-50 focus:text-blue-700">
+								<SelectItem
+									key={slot}
+									value={slot}
+									className="rounded-xl text-xs font-medium py-2.5 transition-colors focus:bg-blue-50 focus:text-blue-700"
+								>
 									{slot}
 								</SelectItem>
 							))}
@@ -334,11 +355,21 @@ export const DateTimeSection = ({
 							<SelectValue />
 						</SelectTrigger>
 						<SelectContent className="rounded-2xl border-blue-50 shadow-premium-lg p-1">
-							<SelectItem value="30" className="rounded-xl py-2">30 min</SelectItem>
-							<SelectItem value="45" className="rounded-xl py-2">45 min</SelectItem>
-							<SelectItem value="60" className="rounded-xl py-2">1 hora</SelectItem>
-							<SelectItem value="90" className="rounded-xl py-2">1h 30m</SelectItem>
-							<SelectItem value="120" className="rounded-xl py-2">2 horas</SelectItem>
+							<SelectItem value="30" className="rounded-xl py-2">
+								30 min
+							</SelectItem>
+							<SelectItem value="45" className="rounded-xl py-2">
+								45 min
+							</SelectItem>
+							<SelectItem value="60" className="rounded-xl py-2">
+								1 hora
+							</SelectItem>
+							<SelectItem value="90" className="rounded-xl py-2">
+								1h 30m
+							</SelectItem>
+							<SelectItem value="120" className="rounded-xl py-2">
+								2 horas
+							</SelectItem>
 						</SelectContent>
 					</Select>
 				</div>
@@ -346,53 +377,83 @@ export const DateTimeSection = ({
 
 			{/* Status de Disponibilidade — Banner High-End */}
 			{watchedDate && _watchedTime && (
-				<div 
+				<div
 					className={cn(
 						"relative overflow-hidden rounded-2xl border p-3 transition-all duration-500",
-						exceedsCapacity 
-							? "border-red-100 bg-red-50/30" 
-							: conflictCount > 0 
-								? "border-amber-100 bg-amber-50/30" 
-								: "border-emerald-100 bg-emerald-50/30"
+						exceedsCapacity
+							? "border-red-100 bg-red-50/30"
+							: conflictCount > 0
+								? "border-amber-100 bg-amber-50/30"
+								: "border-emerald-100 bg-emerald-50/30",
 					)}
 				>
 					{/* Gradiente sutil de profundidade */}
-					<div className={cn(
-						"absolute inset-0 opacity-[0.03]",
-						exceedsCapacity ? "bg-red-600" : conflictCount > 0 ? "bg-amber-600" : "bg-emerald-600"
-					)} />
-					
+					<div
+						className={cn(
+							"absolute inset-0 opacity-[0.03]",
+							exceedsCapacity
+								? "bg-red-600"
+								: conflictCount > 0
+									? "bg-amber-600"
+									: "bg-emerald-600",
+						)}
+					/>
+
 					<div className="flex items-center justify-between relative z-10">
 						<div className="flex items-center gap-3">
-							<div className={cn(
-								"p-1.5 rounded-lg",
-								exceedsCapacity ? "bg-red-100 text-red-600" : conflictCount > 0 ? "bg-amber-100 text-amber-600" : "bg-emerald-100 text-emerald-600"
-							)}>
-								{exceedsCapacity ? <AlertTriangle className="h-3.5 w-3.5" /> : <Check className="h-3.5 w-3.5" />}
+							<div
+								className={cn(
+									"p-1.5 rounded-lg",
+									exceedsCapacity
+										? "bg-red-100 text-red-600"
+										: conflictCount > 0
+											? "bg-amber-100 text-amber-600"
+											: "bg-emerald-100 text-emerald-600",
+								)}
+							>
+								{exceedsCapacity ? (
+									<AlertTriangle className="h-3.5 w-3.5" />
+								) : (
+									<Check className="h-3.5 w-3.5" />
+								)}
 							</div>
 							<div className="flex flex-col">
-								<span className={cn(
-									"text-[11px] font-black uppercase tracking-widest",
-									exceedsCapacity ? "text-red-700" : conflictCount > 0 ? "text-amber-700" : "text-emerald-700"
-								)}>
-									{exceedsCapacity ? "Horário Indisponível" : "Horário Confirmado"}
+								<span
+									className={cn(
+										"text-[11px] font-black uppercase tracking-widest",
+										exceedsCapacity
+											? "text-red-700"
+											: conflictCount > 0
+												? "text-amber-700"
+												: "text-emerald-700",
+									)}
+								>
+									{exceedsCapacity
+										? "Horário Indisponível"
+										: "Horário Confirmado"}
 								</span>
 								<span className="text-[10px] font-medium text-slate-500">
-									{exceedsCapacity ? "Capacidade máxima atingida." : conflictCount > 0 ? "Há outros agendamentos, mas com vaga." : "Profissional disponível sem conflitos."}
+									{exceedsCapacity
+										? "Capacidade máxima atingida."
+										: conflictCount > 0
+											? "Há outros agendamentos, mas com vaga."
+											: "Profissional disponível sem conflitos."}
 								</span>
 							</div>
 						</div>
-						
+
 						<div className="flex flex-col items-end gap-1">
 							<div className="flex -space-x-1.5">
 								{[...Array(maxCapacity)].map((_, i) => (
-									<div 
-										key={i} 
+									<div
+										key={i}
 										className={cn(
 											"h-1.5 w-4 rounded-full border border-white transition-all duration-700 shadow-sm",
-											i < conflictCount 
-												? (exceedsCapacity ? "bg-red-500" : "bg-amber-500") 
-												: "bg-slate-200"
+											i < conflictCount
+												? exceedsCapacity
+													? "bg-red-500"
+													: "bg-amber-500"
+												: "bg-slate-200",
 										)}
 									/>
 								))}
