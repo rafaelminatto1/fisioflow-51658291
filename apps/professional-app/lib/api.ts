@@ -572,6 +572,7 @@ export async function createEvolution(data: Partial<ApiEvolution>): Promise<ApiE
       exercises_performed: data.exercises_performed ?? [],
       pain_level_before: data.pain_level ?? 0,
       pain_level_after: data.pain_level ?? 0,
+      attachments: data.attachments ?? [],
     },
   });
 
@@ -592,10 +593,11 @@ export async function updateEvolution(id: string, data: Partial<ApiEvolution>): 
         objective: data.objective,
         assessment: data.assessment,
         plan: data.plan,
-        observations: data.observations,
-        pain_level_before: data.pain_level,
-        pain_level_after: data.pain_level,
-        session_date: data.date,
+      observations: data.observations,
+      pain_level_before: data.pain_level,
+      pain_level_after: data.pain_level,
+      session_date: data.date,
+      attachments: data.attachments ?? [],
       },
     }
   );
