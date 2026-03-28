@@ -8,7 +8,7 @@ export const exportClinicalReportToPDF = async (
 ) => {
 	const [{ pdf }, { ClinicalReportPDFDocument }] = await Promise.all([
 		import("@react-pdf/renderer"),
-		import("@/components/patients/pdf/ClinicalReportPDFDocument"),
+		import("@/components/patient/pdf/ClinicalReportPDFDocument"),
 	]);
 
 	const blob = await pdf(
