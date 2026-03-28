@@ -35,6 +35,7 @@ export const AppointmentCard = React.forwardRef<HTMLDivElement, AppointmentCardP
     onClick,
     statusConfig,
     compact = false,
+    style,
     className,
     children,
     ...props
