@@ -134,12 +134,12 @@ function EmptyState({ hasSearch }: { hasSearch: boolean }) {
  * Search is case-insensitive and matches name, conditionName or templateVariant.
  */
 export function filterTemplates(
-  templates: ExerciseTemplate[],
-  profile: PatientProfileCategory | "all",
-  query: string,
+	templates: ExerciseTemplate[],
+	profile: PatientProfileCategory | "all",
+	query: string,
 ): ExerciseTemplate[] {
-  let result = templates;
-
+	if (!Array.isArray(templates)) return [];
+	let result = templates;
   if (profile !== "all") {
     result = result.filter((t) => t.patientProfile === profile);
   }
