@@ -41,6 +41,13 @@ export const AppointmentCard = React.forwardRef<HTMLDivElement, AppointmentCardP
     ...props
   }, ref) => {
     const StatusIcon = statusConfig?.icon || CheckCircle2;
+    const numericHeight =
+      typeof style?.height === 'number'
+        ? style.height
+        : typeof style?.height === 'string' && style.height.endsWith('px')
+          ? Number.parseFloat(style.height)
+          : undefined;
+    const isVeryCompact = compact && typeof numericHeight === 'number' && numericHeight <= 44;
 
     return (
       <MotionCard
@@ -53,13 +60,13 @@ export const AppointmentCard = React.forwardRef<HTMLDivElement, AppointmentCardP
           backgroundColor: className?.includes('calendar-card-') ? 'transparent' : style?.backgroundColor,
         }}
         className={cn(
-          "relative overflow-hidden cursor-pointer flex flex-col justify-center",
+          "relative overflow-hidden cursor-pointer flex flex-col",
           "transition-all duration-200",
           isDragging && "opacity-50 scale-95 z-50 ring-2 ring-primary/40 shadow-2xl",
           isSaving && "animate-pulse-twice ring-2 ring-amber-400/50 z-30",
           isDropTarget && "ring-2 ring-primary/60 shadow-2xl scale-105 z-25",
           isSelected && "ring-2 ring-primary shadow-xl z-40",
-          compact ? "p-1" : "p-2 pl-3.5",
+          compact ? "justify-start px-2 py-1 pl-3" : "justify-center p-2 pl-3.5",
           className
         )}
         {...(props as any)}
@@ -71,11 +78,11 @@ export const AppointmentCard = React.forwardRef<HTMLDivElement, AppointmentCardP
         />
 
         {/* Content */}
-        <div className="flex flex-col w-full min-w-0">
-          <div className="flex items-center justify-between gap-1 w-full mb-0.5">
+        <div className={cn("flex flex-col w-full min-w-0", compact ? "gap-0.5" : "")}>
+          <div className={cn("flex items-center justify-between gap-1 w-full", compact ? "mb-0" : "mb-0.5")}>
             <span className={cn(
-              "font-mono font-bold tracking-tight opacity-90",
-              compact ? "text-[10px]" : "text-xs"
+              "font-mono font-bold tracking-tight opacity-90 leading-none",
+              compact ? "text-[9px]" : "text-xs"
             )}>
               {time}
               {endTime && !compact && <span className="opacity-60 font-normal"> - {endTime}</span>}
@@ -89,8 +96,12 @@ export const AppointmentCard = React.forwardRef<HTMLDivElement, AppointmentCardP
           </div>
 
           <span className={cn(
-            "font-bold leading-tight truncate",
-            compact ? "text-[11px]" : "text-sm"
+            "font-bold min-w-0",
+            compact
+              ? isVeryCompact
+                ? "text-[10px] leading-none truncate"
+                : "text-[11px] leading-tight line-clamp-2"
+              : "text-sm leading-tight truncate"
           )}>
             {patientName}
           </span>

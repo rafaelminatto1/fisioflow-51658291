@@ -224,6 +224,7 @@ const TimeSlotRow: React.FC<TimeSlotRowProps> = memo(
 							key={apt.id}
 							appointment={apt}
 							style={appointmentStyle}
+							density="compact"
 							isDraggable={isDraggable}
 							isDragging={isDraggingThis}
 							isSaving={isSaving}
