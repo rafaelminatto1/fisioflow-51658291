@@ -1,55 +1,58 @@
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { useAuth } from "@/hooks/useAuth";
+/**
+ * useExerciseFavorites - Hook para gerenciar favoritos de exercícios
+ *
+ * MIGRAÇÃO: Sistema localStorage → API Backend (PostgreSQL)
+ * - Usa useMyFavoriteExercises() para carregar favoritos
+ * - Usa useFavoriteExercise() para mutations
+ * - Dados sincronizados entre dispositivos
+ */
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
+import { useAuth } from "@/hooks/useAuth";
+import {
+	useFavoriteExercise,
+	useMyFavoriteExercises,
+} from "./useWorkersExercises";
 
 export const useExerciseFavorites = () => {
 	const queryClient = useQueryClient();
 	const { user } = useAuth();
-	const storageKey = `exercise-favorites-${user?.id || "anonymous"}`;
 
-	const { data: favorites = [], isLoading } = useQuery({
-		queryKey: ["exercise-favorites", user?.id],
-		queryFn: async () => {
-			const stored = localStorage.getItem(storageKey);
-			return stored ? (JSON.parse(stored) as string[]) : [];
-		},
-	});
+	// Carregar favoritos do backend
+	const { data: favoriteExercises = [], isLoading } = useMyFavoriteExercises();
 
-	const addMutation = useMutation({
-		mutationFn: async (exerciseId: string) => {
-			const current = [...favorites];
-			if (!current.includes(exerciseId)) {
-				const updated = [...current, exerciseId];
-				localStorage.setItem(storageKey, JSON.stringify(updated));
-				return updated;
-			}
-			return current;
-		},
-		onSuccess: (data) => {
-			queryClient.setQueryData(["exercise-favorites", user?.id], data);
-			toast.success("Adicionado aos favoritos");
-		},
-	});
+	// Mutation para favoritar/desfavoritar
+	const favoriteMutation = useFavoriteExercise();
 
-	const removeMutation = useMutation({
-		mutationFn: async (exerciseId: string) => {
-			const updated = favorites.filter((id) => id !== exerciseId);
-			localStorage.setItem(storageKey, JSON.stringify(updated));
-			return updated;
-		},
-		onSuccess: (data) => {
-			queryClient.setQueryData(["exercise-favorites", user?.id], data);
-			toast.success("Removido dos favoritos");
-		},
-	});
+	// Extrair apenas IDs dos exercícios favoritos
+	const favorites = favoriteExercises.map((ex) => ex.id);
 
 	const isFavorite = (exerciseId: string) => favorites.includes(exerciseId);
 
 	const toggleFavorite = (exerciseId: string) => {
+		const currentlyFavorite = isFavorite(exerciseId);
+		favoriteMutation.mutate(
+			{ id: exerciseId, isFavorite: currentlyFavorite },
+			{
+				onSuccess: () => {
+					// Invalidar cache para garantir dados atualizados
+					queryClient.invalidateQueries({
+						queryKey: ["workers", "exercises", "favorites"],
+					});
+				},
+			},
+		);
+	};
+
+	const addToFavorites = (exerciseId: string) => {
+		if (!isFavorite(exerciseId)) {
+			toggleFavorite(exerciseId);
+		}
+	};
+
+	const removeFromFavorites = (exerciseId: string) => {
 		if (isFavorite(exerciseId)) {
-			removeMutation.mutate(exerciseId);
-		} else {
-			addMutation.mutate(exerciseId);
+			toggleFavorite(exerciseId);
 		}
 	};
 
@@ -57,10 +60,10 @@ export const useExerciseFavorites = () => {
 		favorites,
 		loading: isLoading,
 		error: null,
-		addToFavorites: addMutation.mutate,
-		removeFromFavorites: removeMutation.mutate,
+		addToFavorites,
+		removeFromFavorites,
 		isFavorite,
 		toggleFavorite,
-		isToggling: addMutation.isPending || removeMutation.isPending,
+		isToggling: favoriteMutation.isPending,
 	};
 };

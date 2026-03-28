@@ -296,7 +296,7 @@ export const FunctionalAnalysisStudio: React.FC<FunctionalAnalysisStudioProps> =
 				</Card>
 
 				{/* ── Metrics Sidebar ──────────────────────────────────── */}
-				<div className="space-y-4 overflow-y-auto max-h-[600px] pr-2">
+				<div className="space-y-4 overflow-y-auto max-h-[600px] pr-2 min-w-0">
 					{/* PHAST Test Selector */}
 					<Card className="border-none bg-indigo-600 shadow-xl shadow-indigo-500/20 overflow-hidden">
 						<CardContent className="p-5 space-y-4">
