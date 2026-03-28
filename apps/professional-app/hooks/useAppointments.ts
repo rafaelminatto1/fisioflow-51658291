@@ -14,6 +14,23 @@ export interface UseAppointmentsOptions {
 }
 
 // Map API appointment type to app Appointment type
+function mapAppointmentType(type?: string): string {
+  switch ((type || '').toLowerCase()) {
+    case 'evaluation':
+      return 'Avaliação Inicial';
+    case 'reassessment':
+      return 'Reavaliação';
+    case 'group':
+      return 'Grupo';
+    case 'return':
+      return 'Retorno';
+    case 'session':
+      return 'Fisioterapia';
+    default:
+      return type || 'Fisioterapia';
+  }
+}
+
 function mapApiAppointment(apiAppointment: ApiAppointment): Appointment {
   // Parse date (can be YYYY-MM-DD or ISO string)
   let appointmentDate: Date;
@@ -51,7 +68,7 @@ function mapApiAppointment(apiAppointment: ApiAppointment): Appointment {
       apiAppointment.startTime || apiAppointment.start_time || '00:00',
       apiAppointment.endTime || apiAppointment.end_time || '00:00'
     ),
-    type: apiAppointment.type || apiAppointment.session_type || 'Fisioterapia',
+    type: mapAppointmentType(apiAppointment.type || apiAppointment.session_type),
     status: mapAppointmentStatus(apiAppointment.status),
     notes: apiAppointment.notes,
     createdAt: apiAppointment.created_at || appointmentDate,

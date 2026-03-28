@@ -143,6 +143,10 @@ export interface TreatmentProtocol {
   professionalId: string;
   isTemplate: boolean;
   isActive: boolean;
+  duration?: string;
+  evidenceLevel?: string;
+  tags?: string[];
+  phases?: any[];
   createdAt: Date;
   updatedAt: Date;
 }

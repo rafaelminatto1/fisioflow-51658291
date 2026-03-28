@@ -23,18 +23,20 @@ export function useProtocols() {
 				params: { professionalId: user.id, limit: 500 },
 			});
 			// Mapeia campos da API (snake_case) para o tipo frontend
-			return ((response.data || []) as any[]).map((p: any): TreatmentProtocol => ({
-				id: p.id,
-				name: p.name || '',
-				description: p.description || '',
-				category: p.protocolType || p.category || 'Geral',
-				condition: p.conditionName || p.condition || '',
-				duration: p.weeksTotal ? `${p.weeksTotal} semanas` : '',
-				exercises: p.exercises || [],
-				isTemplate: p.isTemplate ?? false,
-				createdAt: p.createdAt || p.created_at || new Date().toISOString(),
-				updatedAt: p.updatedAt || p.updated_at || new Date().toISOString(),
-				tags: p.tags || [],
+				return ((response.data || []) as any[]).map((p: any): TreatmentProtocol => ({
+					id: p.id,
+					name: p.name || '',
+					description: p.description || '',
+					category: p.protocolType || p.category || 'Geral',
+					condition: p.conditionName || p.condition || '',
+					duration: p.weeksTotal ? `${p.weeksTotal} semanas` : '',
+					exercises: p.exercises || [],
+					professionalId: p.createdBy || user.id,
+					isTemplate: p.isTemplate ?? false,
+					isActive: p.isActive ?? true,
+					createdAt: p.createdAt || p.created_at || new Date().toISOString(),
+					updatedAt: p.updatedAt || p.updated_at || new Date().toISOString(),
+					tags: p.tags || [],
 				evidenceLevel: p.evidenceLevel || '',
 				phases: p.phases || [],
 			}));
