@@ -18,10 +18,11 @@ export * from "./marketing";
 export * from "./operations";
 export * from "./patients";
 export * from "./scheduling";
+export * from "./biomechanics";
 export * from "./system";
 export * from "./tracking";
 
-export { biomechanicsApi, type BiomechanicsData } from "./clinical";
+// export { biomechanicsApi, type BiomechanicsData } from "./clinical"; // Replaced by the module above
 
 export { appointmentsApi } from "./appointments";
 export {
