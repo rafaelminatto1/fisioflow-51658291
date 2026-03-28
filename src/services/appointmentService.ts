@@ -281,6 +281,7 @@ export class AppointmentService {
 			const payload = {
 				patientId: data.patient_id,
 				therapistId: data.therapist_id || "",
+				organizationId,
 				date: rawDate,
 				startTime: rawTime,
 				endTime,
