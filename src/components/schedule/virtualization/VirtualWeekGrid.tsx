@@ -134,7 +134,10 @@ const TimeSlotRow: React.FC<TimeSlotRowProps> = memo(
 					display: "grid",
 					gridTemplateColumns: `60px repeat(${numDays}, 1fr)`,
 				}}
-				className="relative border-b border-slate-200 dark:border-slate-800"
+				className={cn(
+					"relative border-b border-slate-200 dark:border-slate-800",
+					appointmentsByTimeSlot[time]?.length ? "z-20" : "z-0",
+				)}
 			>
 				{/* Time Label */}
 				<div
