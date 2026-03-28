@@ -66,6 +66,7 @@ export const AppointmentCard = React.forwardRef<HTMLDivElement, AppointmentCardP
           isSaving && "animate-pulse-twice ring-2 ring-amber-400/50 z-30",
           isDropTarget && "ring-2 ring-primary/60 shadow-2xl scale-105 z-25",
           isSelected && "ring-2 ring-primary shadow-xl z-40",
+          compact && "calendar-card-weekly",
           compact ? "justify-start px-2 py-1 pl-3" : "justify-center p-2 pl-3.5",
           className
         )}
@@ -73,7 +74,10 @@ export const AppointmentCard = React.forwardRef<HTMLDivElement, AppointmentCardP
       >
         {/* Status accent strip — color comes from statusConfig.color (hex) */}
         <div
-          className="absolute left-0 top-0 bottom-0 w-1 opacity-80"
+          className={cn(
+            "absolute left-0 top-0 bottom-0 opacity-80",
+            compact ? "w-[3px]" : "w-1"
+          )}
           style={statusConfig?.color ? { backgroundColor: statusConfig.color } : { backgroundColor: '#94a3b8' }}
         />
 
