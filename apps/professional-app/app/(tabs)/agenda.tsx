@@ -25,7 +25,7 @@ function getCacheKey(startDate: Date, endDate: Date): string {
 
 export default function AgendaScreen() {
   const colors = useColors();
-  const { light } = useHaptics();
+  const { light, success: hapticSuccess } = useHaptics();
 
   const [viewMode, setViewMode] = useState<ViewMode>('day');
   const [selectedDate, setSelectedDate] = useState(new Date());
@@ -48,7 +48,7 @@ export default function AgendaScreen() {
   const cached = appointmentsCache.get(cacheKey);
   const isCacheValid = cached && Date.now() - cached.timestamp < CACHE_TTL;
 
-  const { data: appointments, isLoading, } = useAppointments({
+  const { data: appointments, isLoading, updateAsync } = useAppointments({
     startDate,
     endDate,
     limit: 1000,
@@ -74,6 +74,17 @@ export default function AgendaScreen() {
     setViewMode(mode);
   }, [light]);
 
+  const handleReschedule = useCallback(async (id: string, newTime: string) => {
+    const apt = appointments?.find((a) => a.id === id);
+    if (!apt) return;
+    try {
+      await updateAsync({ id, data: { time: newTime, duration: apt.duration } });
+      hapticSuccess();
+    } catch {
+      // card returns to original position via withSpring(0) in DraggableAptCard
+    }
+  }, [appointments, updateAsync, hapticSuccess]);
+
   return (
     <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]} edges={['left', 'right']}>
       {showLoading ? (
@@ -88,6 +99,7 @@ export default function AgendaScreen() {
           onDateChange={handleDateChange}
           viewMode={viewMode}
           onViewModeChange={handleViewModeChange}
+          onReschedule={handleReschedule}
         />
       )}
 
