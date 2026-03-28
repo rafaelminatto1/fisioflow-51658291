@@ -6,6 +6,8 @@ import { eq, and, sql, desc, asc, lte, gte, ne } from 'drizzle-orm';
 import { appointments, patients } from '@fisioflow/db';
 import {
   normalizeStatus,
+  normalizeAppointmentType,
+  presentAppointmentType,
   calculateEndTime,
   isConflictError,
   countsTowardCapacity,
@@ -31,6 +33,7 @@ function normalizeAppointmentRow(row: any) {
     duration_minutes: row.durationMinutes,
     payment_status: row.paymentStatus,
     payment_amount: row.paymentAmount,
+    type: presentAppointmentType(row.type),
     patient_name: row.patient?.fullName ?? row.patient_name ?? null,
     patient_phone: row.patient?.phone ?? row.patient_phone ?? null,
     created_at: row.createdAt ? String(row.createdAt) : null,
@@ -104,7 +107,7 @@ async function getIntervalCapacity(
     const result = await db.execute(sql`
       SELECT MIN(max_patients)::int AS capacity
       FROM schedule_capacity
-      WHERE organization_id = ${organizationId}::uuid
+      WHERE organization_id = ${organizationId}
         AND day_of_week = EXTRACT(DOW FROM ${date}::date)
         AND start_time < ${endTime}::time
         AND end_time > ${startTime}::time
@@ -131,7 +134,7 @@ async function getOverlappingAppointments(
   let conditions = and(
     eq(appointments.organizationId, organizationId),
     eq(appointments.date, date),
-    sql`${appointments.status} NOT IN ('cancelado', 'faltou', 'faltou_com_aviso', 'faltou_sem_aviso', 'remarcar')`,
+    sql`${appointments.status} NOT IN ('cancelled', 'no_show', 'rescheduled')`,
     sql`${appointments.startTime} < ${endTime}::time`,
     sql`${appointments.endTime} > ${startTime}::time`,
   );
@@ -209,7 +212,7 @@ app.post('/', requireAuth, async (c) => {
     // Sempre usa user.uid do JWT (confiável) como therapistId
     const therapistId = user.uid;
     const notes       = body.notes ?? null;
-    const type        = body.type ?? body.session_type ?? 'Fisioterapia';
+    const type        = normalizeAppointmentType(body.type ?? body.session_type);
     const status      = normalizeStatus(body.status);
     const ignoreCapacity = body.ignoreCapacity === true;
 
@@ -357,7 +360,7 @@ const updateAppointmentHandler: MiddlewareHandler<{ Bindings: Env; Variables: Au
     const notes = body.notes;
     const therapistIdInput = body.therapist_id ?? body.therapistId;
     const rawDuration = body.duration ?? body.duration_minutes;
-    const type = body.type;
+    const type = body.type !== undefined ? normalizeAppointmentType(body.type) : undefined;
     const room = body.room ?? body.room_id;
     const paymentStatus = body.payment_status ?? body.paymentStatus;
     const paymentAmount = body.payment_amount ?? body.paymentAmount;
@@ -548,4 +551,3 @@ app.delete('/:id', requireAuth, async (c) => {
 });
 
 export { app as appointmentsRoutes };
-

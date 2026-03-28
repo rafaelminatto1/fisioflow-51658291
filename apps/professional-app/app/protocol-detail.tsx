@@ -8,7 +8,7 @@ import {
   ActivityIndicator,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { useRouter, useLocalSearchParams } from 'expo-router';
+import { Stack, useRouter, useLocalSearchParams } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { useColors } from '@/hooks/useColorScheme';
 import { useHaptics } from '@/hooks/useHaptics';
@@ -122,6 +122,7 @@ export default function ProtocolDetailScreen() {
 
   return (
     <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]} edges={['top']}>
+      <Stack.Screen options={{ headerShown: false }} />
       {/* Header */}
       <View style={[styles.header, { backgroundColor: colors.surface, borderBottomColor: colors.border }]}>
         <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
@@ -178,7 +179,7 @@ export default function ProtocolDetailScreen() {
           <View style={styles.exercisesList}>
             {protocol.exercises.map((exercise, index) => (
               <View
-                key={exercise.exerciseId}
+                key={`${exercise.exerciseId}-${index}`}
                 style={[styles.exerciseItem, { backgroundColor: colors.background, borderColor: colors.border }]}
               >
                 <View style={[styles.exerciseOrder, { backgroundColor: colors.primaryLight }]}>

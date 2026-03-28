@@ -4,52 +4,97 @@
  */
 
 export const STATUS_MAP: Record<string, string> = {
-  scheduled: 'agendado',
-  confirmed: 'presenca_confirmada',
-  in_progress: 'agendado',
-  completed: 'atendido',
-  cancelled: 'cancelado',
-  no_show: 'faltou',
-  rescheduled: 'remarcar',
-  agendado: 'agendado',
-  confirmado: 'presenca_confirmada',
-  presenca_confirmada: 'presenca_confirmada',
-  em_andamento: 'agendado',
-  atendido: 'atendido',
-  concluido: 'atendido',
-  cancelado: 'cancelado',
-  avaliacao: 'avaliacao',
-  falta: 'faltou',
-  faltou: 'faltou',
-  faltou_com_aviso: 'faltou_com_aviso',
-  faltou_sem_aviso: 'faltou_sem_aviso',
-  nao_atendido: 'nao_atendido',
-  nao_atendido_sem_cobranca: 'nao_atendido_sem_cobranca',
-  remarcado: 'remarcar',
-  remarcar: 'remarcar',
-  reagendado: 'remarcar',
-  aguardando_confirmacao: 'agendado',
+  scheduled: 'scheduled',
+  confirmed: 'confirmed',
+  in_progress: 'in_progress',
+  completed: 'completed',
+  cancelled: 'cancelled',
+  no_show: 'no_show',
+  rescheduled: 'rescheduled',
+  agendado: 'scheduled',
+  confirmado: 'confirmed',
+  presenca_confirmada: 'confirmed',
+  em_andamento: 'in_progress',
+  atendido: 'completed',
+  concluido: 'completed',
+  cancelado: 'cancelled',
+  avaliacao: 'scheduled',
+  falta: 'no_show',
+  faltou: 'no_show',
+  faltou_com_aviso: 'no_show',
+  faltou_sem_aviso: 'no_show',
+  nao_atendido: 'no_show',
+  nao_atendido_sem_cobranca: 'no_show',
+  remarcado: 'rescheduled',
+  remarcar: 'rescheduled',
+  reagendado: 'rescheduled',
+  aguardando_confirmacao: 'scheduled',
+};
+
+export const APPOINTMENT_TYPE_MAP: Record<string, string> = {
+  'avaliação inicial': 'evaluation',
+  'avaliacao inicial': 'evaluation',
+  avaliacao: 'evaluation',
+  evaluation: 'evaluation',
+  fisioterapia: 'session',
+  session: 'session',
+  sessão: 'session',
+  sessao: 'session',
+  osteopatia: 'session',
+  reabilitação: 'session',
+  reabilitacao: 'session',
+  drenagem: 'session',
+  drenagem_linfatica: 'session',
+  massagem: 'session',
+  rpg: 'session',
+  pilates: 'session',
+  reavaliação: 'reassessment',
+  reavaliacao: 'reassessment',
+  reassessment: 'reassessment',
+  grupo: 'group',
+  group: 'group',
+  retorno: 'return',
+  return: 'return',
+  outro: 'session',
 };
 
 const VALID_STATUSES = new Set([
-  'agendado',
-  'atendido',
-  'avaliacao',
-  'cancelado',
-  'faltou',
-  'faltou_com_aviso',
-  'faltou_sem_aviso',
-  'nao_atendido',
-  'nao_atendido_sem_cobranca',
-  'presenca_confirmada',
-  'remarcar',
+  'scheduled',
+  'confirmed',
+  'in_progress',
+  'completed',
+  'cancelled',
+  'no_show',
+  'rescheduled',
 ]);
 
-export function normalizeStatus(raw: string | undefined): any {
+export function normalizeStatus(raw: string | undefined): string {
   if (!raw) return 'scheduled';
   const normalized = raw.toLowerCase().trim();
   if (VALID_STATUSES.has(normalized)) return normalized;
   return STATUS_MAP[normalized] ?? 'scheduled';
+}
+
+export function normalizeAppointmentType(raw: string | undefined): string {
+  if (!raw) return 'session';
+  const normalized = raw.toLowerCase().trim();
+  return APPOINTMENT_TYPE_MAP[normalized] ?? 'session';
+}
+
+export function presentAppointmentType(raw: string | undefined): string {
+  switch (normalizeAppointmentType(raw)) {
+    case 'evaluation':
+      return 'Avaliação Inicial';
+    case 'reassessment':
+      return 'Reavaliação';
+    case 'group':
+      return 'Grupo';
+    case 'return':
+      return 'Retorno';
+    case 'session':
+    default:
+      return 'Fisioterapia';
+  }
 }
 
 export function calculateEndTime(startTime: string, durationMinutes: number): string {
@@ -88,5 +133,5 @@ export function isConflictError(err: { code?: string; message?: string }): boole
 }
 
 export function countsTowardCapacity(status: string): boolean {
-  return !['cancelado', 'faltou', 'faltou_com_aviso', 'faltou_sem_aviso', 'remarcar'].includes(status);
+  return !['cancelled', 'no_show', 'rescheduled'].includes(normalizeStatus(status));
 }
