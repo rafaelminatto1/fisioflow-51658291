@@ -17,6 +17,7 @@ import { profileApi } from "@/api/v2/system";
 import { useAuth } from "@/hooks/useAuth";
 import { fisioLogger as logger } from "@/lib/errors/logger";
 import { AppointmentService } from "@/services/appointmentService";
+import type { Appointment } from "@/types/appointment";
 import type {
 	AppointmentRow,
 	PatientRow,
@@ -33,7 +34,7 @@ export interface ScheduleFilters {
 }
 
 export interface SchedulePageData {
-	appointments: AppointmentRow[];
+	appointments: Appointment[];
 	therapists: TherapistProfileRow[];
 	patients: PatientRow[];
 	birthdaysToday: PatientRow[];
@@ -41,10 +42,102 @@ export interface SchedulePageData {
 	organizationId: string;
 }
 
+type ScheduleAppointmentRow = AppointmentRow & {
+	type?: string | null;
+	payment_amount?: number | string | null;
+	payment_method?: string | null;
+	room_id?: string | null;
+	session_package_id?: string | null;
+};
+
 const isBirthdayToday = (birthDate: string | null | undefined): boolean => {
 	if (!birthDate) return false;
 	const todayStr = format(new Date(), "MM-dd");
 	return birthDate.slice(5, 10) === todayStr;
+};
+
+const parseAppointmentDate = (date: string): Date => {
+	if (/^\d{4}-\d{2}-\d{2}$/.test(date)) {
+		const [year, month, day] = date.split("-").map(Number);
+		return new Date(year, month - 1, day, 12, 0, 0);
+	}
+	const parsed = new Date(date);
+	return Number.isNaN(parsed.getTime()) ? new Date() : parsed;
+};
+
+const calculateDurationMinutes = (
+	startTime?: string | null,
+	endTime?: string | null,
+): number => {
+	if (!startTime || !endTime) return 60;
+	const [startHour, startMinute] = startTime.slice(0, 5).split(":").map(Number);
+	const [endHour, endMinute] = endTime.slice(0, 5).split(":").map(Number);
+	const duration = endHour * 60 + endMinute - (startHour * 60 + startMinute);
+	return duration > 0 ? duration : 60;
+};
+
+const mapAppointmentRowToCalendarAppointment = (
+	row: ScheduleAppointmentRow,
+): Appointment => ({
+	id: row.id,
+	patientId: row.patient_id,
+	patientName: row.patient_name || "Paciente",
+	phone: undefined,
+	date: parseAppointmentDate(row.date),
+	time: row.start_time?.slice(0, 5) || "00:00",
+	duration: calculateDurationMinutes(row.start_time, row.end_time),
+	type: (row.type || "Fisioterapia") as Appointment["type"],
+	status: String(row.status || "agendado") as Appointment["status"],
+	notes: row.notes || "",
+	therapistId: row.therapist_id,
+	payment_status: row.payment_status || undefined,
+	payment_amount:
+		typeof row.payment_amount === "string"
+			? Number(row.payment_amount)
+			: row.payment_amount ?? undefined,
+	payment_method: row.payment_method || undefined,
+	room: row.room_id || undefined,
+	session_package_id: row.session_package_id || undefined,
+	createdAt: new Date(row.created_at),
+	updatedAt: new Date(row.updated_at),
+});
+
+const matchesScheduleFilters = (
+	appointment: Appointment,
+	filters?: ScheduleFilters,
+): boolean => {
+	if (!filters) return true;
+
+	if (
+		filters.status.length > 0 &&
+		!filters.status.includes(String(appointment.status))
+	) {
+		return false;
+	}
+
+	if (
+		filters.types.length > 0 &&
+		!filters.types.includes(String(appointment.type))
+	) {
+		return false;
+	}
+
+	if (
+		filters.therapists.length > 0 &&
+		(!appointment.therapistId ||
+			!filters.therapists.includes(String(appointment.therapistId)))
+	) {
+		return false;
+	}
+
+	if (filters.patient?.trim()) {
+		const patientQuery = filters.patient.trim().toLowerCase();
+		if (!appointment.patientName.toLowerCase().includes(patientQuery)) {
+			return false;
+		}
+	}
+
+	return true;
 };
 
 export function useSchedulePageData(
@@ -65,7 +158,9 @@ export function useSchedulePageData(
 			date,
 			view,
 			filters?.status,
+			filters?.types,
 			filters?.therapists,
+			filters?.patient,
 		],
 		queryFn: async () => {
 			try {
@@ -99,17 +194,17 @@ export function useSchedulePageData(
 				const res = await appointmentsApi.list({
 					dateFrom,
 					dateTo,
-					viewType: view,
-					status:
-						filters?.status && filters.status.length > 0
-							? filters.status.join(",")
-							: undefined,
-					therapistId:
-						filters?.therapists && filters.therapists.length > 0
-							? filters.therapists.join(",")
-							: undefined,
 				});
-				return res?.data ?? [];
+
+				return (res?.data ?? [])
+					.map((row) =>
+						mapAppointmentRowToCalendarAppointment(
+							row as ScheduleAppointmentRow,
+						),
+					)
+					.filter((appointment) =>
+						matchesScheduleFilters(appointment, filters),
+					);
 			} catch (error) {
 				logger.error(
 					"Error loading appointments",
