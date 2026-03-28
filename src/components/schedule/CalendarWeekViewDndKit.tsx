@@ -49,8 +49,10 @@ interface CalendarWeekViewDndKitProps {
 	dragState: any;
 	dropTarget: any;
 	handleDragStart: (e: any, appointment: Appointment) => void;
-	handleDragOver: (e: any) => void;
+	handleDragOver: (e: any, date: Date, time: string) => void;
 	handleDragEnd: () => void;
+	handleDragLeave?: () => void;
+	handleDrop?: (e: any, date: Date, time: string) => void;
 	selectionMode?: boolean;
 	selectedIds?: Set<string>;
 	onToggleSelection?: (id: string) => void;
@@ -76,6 +78,8 @@ export const CalendarWeekViewDndKit = ({
 	handleDragStart: handleDragStartHook,
 	handleDragOver: handleDragOverHook,
 	handleDragEnd: handleDragEndHook,
+	handleDragLeave,
+	handleDrop,
 	selectionMode = false,
 	selectedIds = new Set(),
 	onToggleSelection,
@@ -196,6 +200,9 @@ export const CalendarWeekViewDndKit = ({
 							dropTarget={_dropTarget}
 							handleDragStart={handleDragStartHook}
 							handleDragEnd={handleDragEndHook}
+							handleDragOver={handleDragOverHook}
+							handleDragLeave={handleDragLeave}
+							handleDrop={handleDrop}
 							checkTimeBlocked={checkTimeBlocked}
 							isDayClosedForDate={isDayClosedForDate}
 							openPopoverId={openPopoverId}

@@ -12,6 +12,7 @@ import React, { memo, useMemo, useRef, useCallback, useState, useEffect } from "
 import { List } from "react-window";
 import { isSameDay } from "date-fns";
 import { Appointment } from "@/types/appointment";
+import { appointmentsOverlap } from "@/lib/calendar";
 import { cn } from "@/lib/utils";
 import { parseAppointmentDate, normalizeTime } from "@/lib/calendar/utils";
 import { BUSINESS_HOURS } from "@/lib/calendar/constants";
@@ -72,7 +73,10 @@ interface ItemData {
 	timeSlots: string[];
 	slotHeight: number;
 	appointmentsByTimeSlot: Record<string, Appointment[]>;
-	appointmentsByDayAndTime: Record<string, Appointment[]>;
+	layoutByAppointmentId: Record<
+		string,
+		{ columnIndex: number; columnCount: number }
+	>;
 	onTimeSlotClick?: (date: Date, time: string) => void;
 	onEditAppointment?: (appointment: Appointment) => void;
 	onDeleteAppointment?: (appointment: Appointment) => void;
@@ -106,6 +110,66 @@ interface ItemData {
 
 type TimeSlotRowProps = ItemData & { index: number; style: React.CSSProperties };
 
+function buildDayOverlapLayout(dayAppointments: Appointment[]) {
+	const layoutByAppointmentId: Record<
+		string,
+		{ columnIndex: number; columnCount: number }
+	> = {};
+
+	const sortedAppointments = [...dayAppointments].sort((a, b) => {
+		const timeDiff = normalizeTime(a.time).localeCompare(normalizeTime(b.time));
+		if (timeDiff !== 0) return timeDiff;
+		return a.id.localeCompare(b.id);
+	});
+
+	let active: Array<{ appointment: Appointment; columnIndex: number }> = [];
+	let currentGroupIds: string[] = [];
+	let currentGroupMaxColumns = 1;
+
+	const finalizeGroup = () => {
+		if (currentGroupIds.length === 0) return;
+		for (const appointmentId of currentGroupIds) {
+			const existing = layoutByAppointmentId[appointmentId];
+			if (!existing) continue;
+			layoutByAppointmentId[appointmentId] = {
+				...existing,
+				columnCount: currentGroupMaxColumns,
+			};
+		}
+		currentGroupIds = [];
+		currentGroupMaxColumns = 1;
+	};
+
+	for (const appointment of sortedAppointments) {
+		active = active.filter(({ appointment: activeAppointment }) =>
+			appointmentsOverlap(activeAppointment, appointment),
+		);
+
+		if (active.length === 0) {
+			finalizeGroup();
+		}
+
+		const usedColumns = new Set(active.map((item) => item.columnIndex));
+		let columnIndex = 0;
+		while (usedColumns.has(columnIndex)) {
+			columnIndex += 1;
+		}
+
+		active.push({ appointment, columnIndex });
+		currentGroupIds.push(appointment.id);
+		currentGroupMaxColumns = Math.max(currentGroupMaxColumns, active.length);
+
+		layoutByAppointmentId[appointment.id] = {
+			columnIndex,
+			columnCount: currentGroupMaxColumns,
+		};
+	}
+
+	finalizeGroup();
+
+	return layoutByAppointmentId;
+}
+
 const TimeSlotRow: React.FC<TimeSlotRowProps> = memo(
 	({
 		index,
@@ -114,7 +178,7 @@ const TimeSlotRow: React.FC<TimeSlotRowProps> = memo(
 		timeSlots,
 		slotHeight,
 		appointmentsByTimeSlot,
-		appointmentsByDayAndTime,
+		layoutByAppointmentId,
 		...props
 	}) => {
 		const time = timeSlots[index];
@@ -193,12 +257,12 @@ const TimeSlotRow: React.FC<TimeSlotRowProps> = memo(
 						slotHeight - 6,
 					);
 
-					const sameDayTimeAppointments =
-						appointmentsByDayAndTime[`${dayIndex}-${time}`] || [];
-					const aptIndex = sameDayTimeAppointments.findIndex(
-						(a) => a.id === apt.id,
-					);
-					const count = Math.max(1, sameDayTimeAppointments.length);
+					const layout = layoutByAppointmentId[apt.id] || {
+						columnIndex: 0,
+						columnCount: 1,
+					};
+					const aptIndex = layout.columnIndex;
+					const count = Math.max(1, layout.columnCount);
 					const gap = 4;
 					const outerMargin = 4;
 
@@ -221,24 +285,39 @@ const TimeSlotRow: React.FC<TimeSlotRowProps> = memo(
 					const isSaving = !!props.savingAppointmentId && props.savingAppointmentId === apt.id;
 
 					return (
-						<CalendarAppointmentCard
+						<div
 							key={apt.id}
-							appointment={apt}
-							style={appointmentStyle}
-							density="compact"
-							isDraggable={isDraggable}
-							isDragging={isDraggingThis}
-							isSaving={isSaving}
-							onDragStart={props.handleDragStart || (() => {})}
+							draggable={isDraggable}
+							onDragStart={(e) =>
+								(props.handleDragStart || (() => {}))(e, apt)
+							}
 							onDragEnd={props.handleDragEnd || (() => {})}
-							onEditAppointment={props.onEditAppointment}
-							onDeleteAppointment={props.onDeleteAppointment}
-							onOpenPopover={props.setOpenPopoverId || (() => {})}
-							isPopoverOpen={props.openPopoverId === apt.id}
-							selectionMode={!!props.selectionMode}
-							isSelected={props.selectedIds?.has(apt.id)}
-							onToggleSelection={props.onToggleSelection}
-						/>
+							className="absolute"
+							style={appointmentStyle}
+						>
+							<CalendarAppointmentCard
+								appointment={apt}
+								style={{
+									position: "absolute",
+									inset: 0,
+									width: "100%",
+									height: "100%",
+								}}
+								density="compact"
+								isDraggable={isDraggable}
+								isDragging={isDraggingThis}
+								isSaving={isSaving}
+								onDragStart={props.handleDragStart || (() => {})}
+								onDragEnd={props.handleDragEnd || (() => {})}
+								onEditAppointment={props.onEditAppointment}
+								onDeleteAppointment={props.onDeleteAppointment}
+								onOpenPopover={props.setOpenPopoverId || (() => {})}
+								isPopoverOpen={props.openPopoverId === apt.id}
+								selectionMode={!!props.selectionMode}
+								isSelected={props.selectedIds?.has(apt.id)}
+								onToggleSelection={props.onToggleSelection}
+							/>
+						</div>
 					);
 				})}
 			</div>
@@ -297,10 +376,10 @@ TimeSlotRow.displayName = "TimeSlotRow";
 		// Fit all slots into the visible height (min 18px so text stays readable)
 		const slotHeight = Math.max(18, Math.floor(containerHeight / timeSlots.length));
 
-		// Agrupar appointments por time slot
-		const { appointmentsByTimeSlot, appointmentsByDayAndTime } = useMemo(() => {
+		// Agrupar appointments por time slot e calcular layout lateral por conflito real
+		const { appointmentsByTimeSlot, layoutByAppointmentId } = useMemo(() => {
 			const byTimeSlot: Record<string, Appointment[]> = {};
-			const byDayAndTime: Record<string, Appointment[]> = {};
+			const appointmentsByDay: Record<number, Appointment[]> = {};
 
 			appointments.forEach((apt) => {
 				const aptDate = parseAppointmentDate(apt.date);
@@ -310,18 +389,21 @@ TimeSlotRow.displayName = "TimeSlotRow";
 				if (dayIndex === -1) return;
 
 				const time = normalizeTime(apt.time);
-				const dayAndTimeKey = `${dayIndex}-${time}`;
 
 				if (!byTimeSlot[time]) byTimeSlot[time] = [];
 				byTimeSlot[time].push(apt);
 
-				if (!byDayAndTime[dayAndTimeKey]) byDayAndTime[dayAndTimeKey] = [];
-				byDayAndTime[dayAndTimeKey].push(apt);
+				if (!appointmentsByDay[dayIndex]) appointmentsByDay[dayIndex] = [];
+				appointmentsByDay[dayIndex].push(apt);
 			});
+
+			const layoutEntries = Object.values(appointmentsByDay).flatMap((dayApts) =>
+				Object.entries(buildDayOverlapLayout(dayApts)),
+			);
 
 			return {
 				appointmentsByTimeSlot: byTimeSlot,
-				appointmentsByDayAndTime: byDayAndTime,
+				layoutByAppointmentId: Object.fromEntries(layoutEntries),
 			};
 		}, [appointments, weekDays]);
 
@@ -333,7 +415,7 @@ TimeSlotRow.displayName = "TimeSlotRow";
 				appointments,
 				slotHeight,
 				appointmentsByTimeSlot,
-				appointmentsByDayAndTime,
+				layoutByAppointmentId,
 				savingAppointmentId,
 				onTimeSlotClick,
 				onEditAppointment,
@@ -360,7 +442,7 @@ TimeSlotRow.displayName = "TimeSlotRow";
 				appointments,
 				slotHeight,
 				appointmentsByTimeSlot,
-				appointmentsByDayAndTime,
+				layoutByAppointmentId,
 				savingAppointmentId,
 				onTimeSlotClick,
 				onEditAppointment,

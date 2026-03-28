@@ -717,7 +717,7 @@ export default function CalendarView({
 									<CalendarWeekViewDndKit
 										currentDate={currentDate}
 										appointments={displayAppointments}
-										savingAppointmentId={dragState.savingAppointmentId}
+										savingAppointmentId={dragStateNative.savingAppointmentId}
 										timeSlots={weekTimeSlots}
 										onTimeSlotClick={onTimeSlotClick}
 										onEditAppointment={onEditAppointment}
@@ -729,11 +729,13 @@ export default function CalendarView({
 										isDayClosedForDate={isDayClosedForDate}
 										openPopoverId={openPopoverId}
 										setOpenPopoverId={setOpenPopoverId}
-										dragState={dragState}
-										dropTarget={dropTarget}
-										handleDragStart={handleDragStartDndKit}
-										handleDragOver={handleDragOverDndKit}
-										handleDragEnd={handleDragEndDndKit}
+										dragState={dragStateNative}
+										dropTarget={dropTargetNative}
+										handleDragStart={handleDragStartNative}
+										handleDragOver={handleDragOverNative}
+										handleDragEnd={handleDragEndNative}
+										handleDragLeave={handleDragLeaveNative}
+										handleDrop={handleDropNative}
 										selectionMode={selectionMode}
 										selectedIds={selectedIds}
 										onToggleSelection={onToggleSelection}
