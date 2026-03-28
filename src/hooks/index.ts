@@ -51,21 +51,6 @@ export { useAIScheduling } from "./useAIScheduling";
 // ============================================================================
 
 export {
-	useOptimizedQuery,
-	useAppointmentsQuery,
-	usePatientsQuery,
-	useExercisesQuery,
-	useOptimizedMutation,
-	usePrefetchOnHover,
-	prefetchAppointments,
-	prefetchPatients,
-	prefetchExercises,
-	useCacheManagement,
-	useCacheStats,
-	CACHE_CONFIG,
-} from "./useReactQueryOptimization";
-
-export {
 	useThrottle,
 	useThrottleFn,
 	useThrottleCallback,
