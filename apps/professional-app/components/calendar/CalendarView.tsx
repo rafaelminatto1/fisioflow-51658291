@@ -17,6 +17,7 @@ interface CalendarViewProps {
     onDateChange: (date: Date) => void;
     viewMode: ViewMode;
     onViewModeChange: (mode: ViewMode) => void;
+    onReschedule?: (id: string, newTime: string) => void;
 }
 
 export const CalendarView = ({
@@ -24,7 +25,8 @@ export const CalendarView = ({
     date,
     onDateChange,
     viewMode,
-    onViewModeChange
+    onViewModeChange,
+    onReschedule,
 }: CalendarViewProps) => {
     const colors = useColors();
 
@@ -82,8 +84,8 @@ export const CalendarView = ({
         <View style={styles.container}>
             {renderHeader()}
             <View style={styles.content}>
-                {viewMode === 'day' && <DayView date={date} appointments={appointments} startHour={7} />}
-                {viewMode === 'week' && <WeekView date={date} appointments={appointments} startHour={7} />}
+                {viewMode === 'day' && <DayView date={date} appointments={appointments} startHour={7} onReschedule={onReschedule} />}
+                {viewMode === 'week' && <WeekView date={date} appointments={appointments} startHour={7} onReschedule={onReschedule} />}
                 {viewMode === 'month' && (
                     <MonthView
                         selectedDate={date}
