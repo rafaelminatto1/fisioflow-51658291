@@ -17,15 +17,7 @@ import {
   AnalysisType 
 } from '../../types/pose';
 import { Platform } from 'react-native';
-
-// Tenta importar o módulo nativo se disponível
-const NativePoseModule: any = null;
-try {
-  // Exemplo de importação dinâmica segura
-  // NativePoseModule = require('my-native-pose-library');
-} catch  {
-  console.warn('[NativePoseProvider] Módulo nativo não encontrado. A IA rodará em modo simulado ou Webview.');
-}
+import * as VisionPoseDetector from '../../modules/expo-vision-pose-detector';
 
 export class NativePoseProvider implements PoseProvider {
   private isLoaded: boolean = false;
@@ -36,30 +28,33 @@ export class NativePoseProvider implements PoseProvider {
       return;
     }
 
-    if (!NativePoseModule) {
-      console.log('[NativePoseProvider] Inicializando (Modo Mock/Dev)...');
-      this.isLoaded = true;
-      return;
-    }
-
-    try {
-      await NativePoseModule.initialize();
-      this.isLoaded = true;
-    } catch (e) {
-      console.error('[NativePoseProvider] Falha ao inicializar módulo nativo', e);
-      throw e;
-    }
+    // O módulo Expo não precisa de inicialização manual, ele é injetado pelo Expo Autolinking
+    this.isLoaded = true;
+    console.log('[NativePoseProvider] Inicializado com VisionPoseDetector (iOS Native)');
   }
 
   async detect(image: any): Promise<PoseDetection> {
     if (!this.isLoaded) throw new Error('Provider not initialized');
 
-    if (NativePoseModule) {
-      // Implementação real nativa
-      return NativePoseModule.detect(image);
+    if (Platform.OS === 'ios') {
+      try {
+        // Assume image is a local URI
+        const results = await VisionPoseDetector.detectPoseAsync(image);
+        if (results && results.length > 0) {
+          const mainPose = results[0];
+          return {
+            landmarks: mainPose.landmarks,
+            confidence: mainPose.confidence,
+            timestamp: Date.now(),
+            analysisType: AnalysisType.FORM
+          };
+        }
+      } catch (e) {
+        console.error('[NativePoseProvider] Erro na detecção nativa iOS:', e);
+      }
     }
 
-    // Fallback/Mock para desenvolvimento sem build nativo
+    // Fallback/Mock para desenvolvimento
     return {
       landmarks: [],
       confidence: 0,

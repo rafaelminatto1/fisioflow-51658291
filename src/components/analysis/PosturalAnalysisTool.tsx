@@ -1,4 +1,4 @@
-import React, { useRef, useEffect, useState, useCallback } from "react";
+import React, { useRef, useEffect, useState } from "react";
 import Webcam from "react-webcam";
 import {
 	Camera,
@@ -6,11 +6,13 @@ import {
 	Grid,
 	Maximize2,
 	AlertCircle,
+	Trash2,
+	User,
 } from "lucide-react";
+import { ScrollArea } from "@/components/ui/scroll-area";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Slider } from "@/components/ui/slider";
 import {
 	Tooltip,
 	TooltipContent,
@@ -20,15 +22,11 @@ import {
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 import { cn } from "@/lib/utils";
+import { usePoseDetection } from "@/hooks/biomechanics/usePoseDetection";
+import { BiomechanicsOverlay } from "./canvas/BiomechanicsOverlay";
+import { UnifiedLandmark } from "@/utils/geometry";
 
-// Mock MediaPipe for UI development if not installed
-// In a real scenario, we would use @mediapipe/pose
-interface Landmark {
-	x: number;
-	y: number;
-	z?: number;
-	visibility?: number;
-}
+type ViewType = "front" | "side" | "back";
 
 interface PosturalAnalysisToolProps {
 	onCapture?: (image: string, analysis: any) => void;
@@ -40,153 +38,57 @@ export const PosturalAnalysisTool: React.FC<PosturalAnalysisToolProps> = ({
 	patientName,
 }) => {
 	const webcamRef = useRef<Webcam>(null);
-	const canvasRef = useRef<HTMLCanvasElement>(null);
-	const [isAiActive, setIsAiActive] = useState(true);
 	const [showGrid, setShowGrid] = useState(true);
 	const [showAngles, setShowAngles] = useState(true);
+	const [showSilhouette, setShowSilhouette] = useState(true);
+	const [viewType, setViewType] = useState<ViewType>("front");
 	const [capturedImages, setCapturedImages] = useState<
-		{ url: string; type: string }[]
+		{ url: string; type: string; landmarks: any }[]
 	>([]);
-	const [,setIsProcessing] = useState(false);
 	const [cameraError, setCameraError] = useState<string | null>(null);
 
-	// Animation frame for drawing
-	const requestRef = useRef<number>();
+	const { detect, isReady, init } = usePoseDetection({ 
+		runningMode: "VIDEO" 
+	});
+	const [currentLandmarks, setCurrentLandmarks] = useState<UnifiedLandmark[]>([]);
 
-	const drawOverlay = useCallback(() => {
-		if (!canvasRef.current || !webcamRef.current) return;
-
-		const ctx = canvasRef.current.getContext("2d");
-		if (!ctx) return;
-
-		// Match canvas to webcam
-		const video = webcamRef.current.video;
-		if (video && video.readyState === 4) {
-			canvasRef.current.width = video.videoWidth;
-			canvasRef.current.height = video.videoHeight;
-
-			ctx.clearRect(0, 0, canvasRef.current.width, canvasRef.current.height);
-
-			// 1. Draw Grid
-			if (showGrid) {
-				ctx.strokeStyle = "rgba(255, 255, 255, 0.2)";
-				ctx.lineWidth = 1;
-				const spacing = 50;
-
-				for (let x = 0; x < canvasRef.current.width; x += spacing) {
-					ctx.beginPath();
-					ctx.moveTo(x, 0);
-					ctx.lineTo(x, canvasRef.current.height);
-					ctx.stroke();
-				}
-				for (let y = 0; y < canvasRef.current.height; y += spacing) {
-					ctx.beginPath();
-					ctx.moveTo(0, y);
-					ctx.lineTo(canvasRef.current.width, y);
-					ctx.stroke();
-				}
-
-				// Center line (Plumb Line)
-				ctx.strokeStyle = "rgba(0, 255, 0, 0.5)";
-				ctx.lineWidth = 2;
-				ctx.setLineDash([5, 5]);
-				ctx.beginPath();
-				ctx.moveTo(canvasRef.current.width / 2, 0);
-				ctx.lineTo(canvasRef.current.width / 2, canvasRef.current.height);
-				ctx.stroke();
-				ctx.setLineDash([]);
-			}
-
-			// 2. Draw Mock AI Landmarks (Simulating MediaPipe)
-			if (isAiActive) {
-				const w = canvasRef.current.width;
-				const h = canvasRef.current.height;
-
-				// Mock points
-				const mockLandmarks = {
-					head: { x: w * 0.5, y: h * 0.2 },
-					shoulders: [
-						{ x: w * 0.4, y: h * 0.35 },
-						{ x: w * 0.6, y: h * 0.35 },
-					],
-					hips: [
-						{ x: w * 0.42, y: h * 0.6 },
-						{ x: w * 0.58, y: h * 0.6 },
-					],
-					knees: [
-						{ x: w * 0.43, y: h * 0.8 },
-						{ x: w * 0.57, y: h * 0.8 },
-					],
-					ankles: [
-						{ x: w * 0.43, y: h * 0.95 },
-						{ x: w * 0.57, y: h * 0.95 },
-					],
-				};
-
-				ctx.fillStyle = "#00ff00";
-				ctx.strokeStyle = "#00ff00";
-				ctx.lineWidth = 3;
-
-				// Draw Skeleton Lines
-				ctx.beginPath();
-				ctx.moveTo(mockLandmarks.shoulders[0].x, mockLandmarks.shoulders[0].y);
-				ctx.lineTo(mockLandmarks.shoulders[1].x, mockLandmarks.shoulders[1].y);
-				ctx.stroke();
-
-				ctx.beginPath();
-				ctx.moveTo(mockLandmarks.hips[0].x, mockLandmarks.hips[0].y);
-				ctx.lineTo(mockLandmarks.hips[1].x, mockLandmarks.hips[1].y);
-				ctx.stroke();
-
-				// Draw Joints
-				[
-					mockLandmarks.head,
-					...mockLandmarks.shoulders,
-					...mockLandmarks.hips,
-					...mockLandmarks.knees,
-					...mockLandmarks.ankles,
-				].forEach((p) => {
-					ctx.beginPath();
-					ctx.arc(p.x, p.y, 6, 0, Math.PI * 2);
-					ctx.fill();
-					ctx.strokeStyle = "white";
-					ctx.stroke();
-				});
-
-				// 3. Draw Angles (Head tilt simulation)
-				if (showAngles) {
-					ctx.fillStyle = "white";
-					ctx.font = "bold 16px Inter";
-					ctx.fillText(
-						"Alinhamento: 98%",
-						mockLandmarks.head.x + 20,
-						mockLandmarks.head.y,
-					);
-					ctx.fillText(
-						"Nível: 0.5°",
-						mockLandmarks.shoulders[1].x + 10,
-						mockLandmarks.shoulders[1].y,
-					);
-				}
-			}
-		}
-
-		requestRef.current = requestAnimationFrame(drawOverlay);
-	}, [showGrid, isAiActive, showAngles]);
-
+	// Initialize Pose Detection
 	useEffect(() => {
-		requestRef.current = requestAnimationFrame(drawOverlay);
-		return () => {
-			if (requestRef.current) cancelAnimationFrame(requestRef.current);
+		init();
+	}, [init]);
+
+	// Process frame loop
+	useEffect(() => {
+		let requestRef: number;
+		
+		const processFrame = () => {
+			if (isReady && webcamRef.current?.video) {
+				const video = webcamRef.current.video;
+				if (video.readyState >= 2) {
+					const result = detect(video);
+					if (result?.landmarks?.length > 0) {
+						setCurrentLandmarks(result.landmarks[0]);
+					}
+				}
+			}
+			requestRef = requestAnimationFrame(processFrame);
 		};
-	}, [drawOverlay]);
+
+		requestRef = requestAnimationFrame(processFrame);
+		return () => cancelAnimationFrame(requestRef);
+	}, [isReady, detect]);
 
 	const captureSnapshot = (type: string) => {
 		if (webcamRef.current) {
 			const imageSrc = webcamRef.current.getScreenshot();
 			if (imageSrc) {
-				setCapturedImages((prev) => [{ url: imageSrc, type }, ...prev]);
-				if (onCapture) onCapture(imageSrc, { type, angles: {} });
+				const snapshot = { 
+					url: imageSrc, 
+					type, 
+					landmarks: [...currentLandmarks] 
+				};
+				setCapturedImages((prev) => [snapshot, ...prev]);
+				if (onCapture) onCapture(imageSrc, { type, landmarks: currentLandmarks });
 			}
 		}
 	};
@@ -228,16 +130,29 @@ export const PosturalAnalysisTool: React.FC<PosturalAnalysisToolProps> = ({
 									}
 									className="w-full h-full object-cover"
 								/>
-								<canvas
-									ref={canvasRef}
-									className="absolute inset-0 w-full h-full pointer-events-none"
+								
+								<BiomechanicsOverlay 
+									landmarks={currentLandmarks}
+									width={webcamRef.current?.video?.videoWidth || 1280}
+									height={webcamRef.current?.video?.videoHeight || 720}
+									showGrid={showGrid}
+									showAngles={showAngles}
+									showSilhouette={showSilhouette}
+									silhouetteType={viewType}
+									showPlumbLine={showGrid}
 								/>
 
 								{/* HUD Overlay */}
 								<div className="absolute top-4 left-4 flex flex-col gap-2">
-									<Badge className="bg-primary/80 backdrop-blur-md text-white border-none px-3 py-1 gap-2">
-										<span className="h-2 w-2 rounded-full bg-green-400 animate-pulse" />
-										AI Ativo: Pose Tracking
+									<Badge className={cn(
+										"backdrop-blur-md text-white border-none px-3 py-1 gap-2",
+										isReady ? "bg-green-500/80" : "bg-primary/80"
+									)}>
+										<span className={cn(
+											"h-2 w-2 rounded-full bg-white",
+											isReady ? "animate-pulse" : "opacity-50"
+										)} />
+										{isReady ? "AI Ativo: Biomechanics Lab" : "AI Carregando..."}
 									</Badge>
 									{patientName && (
 										<Badge
@@ -257,7 +172,7 @@ export const PosturalAnalysisTool: React.FC<PosturalAnalysisToolProps> = ({
 												size="icon"
 												variant={showGrid ? "default" : "ghost"}
 												onClick={() => setShowGrid(!showGrid)}
-												className="rounded-xl h-12 w-12"
+												className="rounded-xl h-12 w-12 text-white"
 											>
 												<Grid className="h-5 w-5" />
 											</Button>
@@ -265,13 +180,28 @@ export const PosturalAnalysisTool: React.FC<PosturalAnalysisToolProps> = ({
 										<TooltipContent>Grade Clínica</TooltipContent>
 									</Tooltip>
 
+									<Tooltip>
+										<TooltipTrigger asChild>
+											<Button
+												size="icon"
+												variant={showSilhouette ? "default" : "ghost"}
+												onClick={() => setShowSilhouette(!showSilhouette)}
+												className="rounded-xl h-12 w-12 text-white"
+											>
+												<User className="h-5 w-5" />
+											</Button>
+										</TooltipTrigger>
+										<TooltipContent>Guia de Silhueta</TooltipContent>
+									</Tooltip>
+
 									<div className="h-8 w-px bg-white/10 mx-1" />
 
 									<Button
-										onClick={() => captureSnapshot("Anterior")}
+										onClick={() => captureSnapshot(viewType.toUpperCase())}
+										disabled={!isReady}
 										className="h-14 px-8 rounded-xl bg-white text-black hover:bg-white/90 font-bold gap-2"
 									>
-										<Camera className="h-5 w-5" /> Capture Anterior
+										<Camera className="h-5 w-5" /> Capturar {viewType === "front" ? "Anterior" : viewType === "side" ? "Lateral" : "Posterior"}
 									</Button>
 
 									<div className="h-8 w-px bg-white/10 mx-1" />
@@ -280,16 +210,11 @@ export const PosturalAnalysisTool: React.FC<PosturalAnalysisToolProps> = ({
 										<TooltipTrigger asChild>
 											<Button
 												size="icon"
-												variant={isAiActive ? "default" : "ghost"}
-												onClick={() => setIsAiActive(!isAiActive)}
-												className="rounded-xl h-12 w-12"
+												variant="ghost"
+												onClick={() => init()}
+												className="rounded-xl h-12 w-12 text-white"
 											>
-												<RefreshCcw
-													className={cn(
-														"h-5 w-5",
-														isAiActive && "animate-spin-slow",
-													)}
-												/>
+												<RefreshCcw className="h-5 w-5" />
 											</Button>
 										</TooltipTrigger>
 										<TooltipContent>Recalibrar AI</TooltipContent>
@@ -305,45 +230,37 @@ export const PosturalAnalysisTool: React.FC<PosturalAnalysisToolProps> = ({
 							<CardContent className="p-6 space-y-6">
 								<div className="space-y-4">
 									<h4 className="text-xs font-bold uppercase tracking-widest text-muted-foreground">
-										Configurações AI
+										Modo de Avaliação
 									</h4>
-
-									<div className="flex items-center justify-between">
-										<Label htmlFor="ai-toggle" className="text-sm font-medium">
-											Tracking de Pontos
-										</Label>
-										<Switch
-											id="ai-toggle"
-											checked={isAiActive}
-											onCheckedChange={setIsAiActive}
-										/>
-									</div>
-
-									<div className="flex items-center justify-between">
-										<Label
-											htmlFor="angle-toggle"
-											className="text-sm font-medium"
+									
+									<div className="grid grid-cols-1 gap-2">
+										<Button 
+											variant={viewType === "front" ? "default" : "outline"}
+											size="sm"
+											onClick={() => setViewType("front")}
+											className="justify-start gap-2"
 										>
-											Cálculo de Ângulos
-										</Label>
-										<Switch
-											id="angle-toggle"
-											checked={showAngles}
-											onCheckedChange={setShowAngles}
-										/>
-									</div>
-
-									<div className="space-y-2 pt-2">
-										<div className="flex justify-between items-center">
-											<Label className="text-xs">Sensibilidade</Label>
-											<span className="text-[10px] font-mono">0.85</span>
-										</div>
-										<Slider
-											defaultValue={[85]}
-											max={100}
-											step={1}
-											className="py-2"
-										/>
+											<div className={cn("h-2 w-2 rounded-full", viewType === "front" ? "bg-white" : "bg-primary")} />
+											Vista Anterior (Frente)
+										</Button>
+										<Button 
+											variant={viewType === "side" ? "default" : "outline"}
+											size="sm"
+											onClick={() => setViewType("side")}
+											className="justify-start gap-2"
+										>
+											<div className={cn("h-2 w-2 rounded-full", viewType === "side" ? "bg-white" : "bg-primary")} />
+											Vista Lateral (Perfil)
+										</Button>
+										<Button 
+											variant={viewType === "back" ? "default" : "outline"}
+											size="sm"
+											onClick={() => setViewType("back")}
+											className="justify-start gap-2"
+										>
+											<div className={cn("h-2 w-2 rounded-full", viewType === "back" ? "bg-white" : "bg-primary")} />
+											Vista Posterior (Costas)
+										</Button>
 									</div>
 								</div>
 
@@ -351,41 +268,17 @@ export const PosturalAnalysisTool: React.FC<PosturalAnalysisToolProps> = ({
 
 								<div className="space-y-4">
 									<h4 className="text-xs font-bold uppercase tracking-widest text-muted-foreground">
-										Vistas Sugeridas
+										Visualização
 									</h4>
-									<div className="grid grid-cols-2 gap-2">
-										<Button
-											variant="outline"
-											size="sm"
-											className="text-[10px] h-8 uppercase"
-											onClick={() => captureSnapshot("Anterior")}
-										>
-											Anterior
-										</Button>
-										<Button
-											variant="outline"
-											size="sm"
-											className="text-[10px] h-8 uppercase"
-											onClick={() => captureSnapshot("Lateral D")}
-										>
-											Lateral D
-										</Button>
-										<Button
-											variant="outline"
-											size="sm"
-											className="text-[10px] h-8 uppercase"
-											onClick={() => captureSnapshot("Lateral E")}
-										>
-											Lateral E
-										</Button>
-										<Button
-											variant="outline"
-											size="sm"
-											className="text-[10px] h-8 uppercase"
-											onClick={() => captureSnapshot("Posterior")}
-										>
-											Posterior
-										</Button>
+
+									<div className="flex items-center justify-between">
+										<Label className="text-sm font-medium">Exibir Ângulos</Label>
+										<Switch checked={showAngles} onCheckedChange={setShowAngles} />
+									</div>
+
+									<div className="flex items-center justify-between">
+										<Label className="text-sm font-medium">Esqueleto 3D</Label>
+										<Switch defaultChecked />
 									</div>
 								</div>
 							</CardContent>
@@ -394,7 +287,7 @@ export const PosturalAnalysisTool: React.FC<PosturalAnalysisToolProps> = ({
 						{/* Gallery */}
 						<div className="flex-1 space-y-4 overflow-hidden flex flex-col">
 							<h4 className="text-xs font-bold uppercase tracking-widest text-muted-foreground px-1 flex justify-between">
-								Capturas <span>{capturedImages.length}</span>
+								Capturas Lab <span>{capturedImages.length}</span>
 							</h4>
 							<ScrollArea className="flex-1">
 								<div className="grid grid-cols-1 gap-3 pr-4">
@@ -430,7 +323,7 @@ export const PosturalAnalysisTool: React.FC<PosturalAnalysisToolProps> = ({
 												</Button>
 											</div>
 											<div className="absolute bottom-1 left-1">
-												<Badge className="bg-primary text-[10px] px-1.5 py-0 h-4">
+												<Badge className="bg-primary text-[10px] px-1.5 py-0 h-4 uppercase">
 													{img.type}
 												</Badge>
 											</div>
@@ -439,8 +332,8 @@ export const PosturalAnalysisTool: React.FC<PosturalAnalysisToolProps> = ({
 									{capturedImages.length === 0 && (
 										<div className="flex flex-col items-center justify-center py-12 border-2 border-dashed rounded-xl text-muted-foreground/40">
 											<Camera className="h-8 w-8 mb-2" />
-											<p className="text-[10px] uppercase font-bold">
-												Nenhuma captura
+											<p className="text-[10px] uppercase font-bold text-center px-4">
+												Aguardando capturas biomecânicas
 											</p>
 										</div>
 									)}
