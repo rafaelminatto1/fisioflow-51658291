@@ -23,7 +23,7 @@ import {
 	PaginationContent,
 	PaginationItem,
 } from "@/components/ui/pagination";
-import { usePatientsPaginated, type Patient } from "@/hooks/patients/usePatientCrud";
+import { usePatientsPaginated, type Patient } from "@/hooks/patients/usePatientCrud/index";
 import { useAuth } from "@/contexts/AuthContext";
 import { useExcelExport } from "@/hooks/useExcelExport";
 import {

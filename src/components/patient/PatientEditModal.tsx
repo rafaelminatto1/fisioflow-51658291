@@ -9,7 +9,7 @@ import {
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Edit, Loader2 } from "lucide-react";
 import { PatientForm } from "./PatientForm";
-import { usePatient } from "@/hooks/patients/usePatientCrud";
+import { usePatient } from "@/hooks/patients/usePatientCrud/index";
 import { useOrganizations } from "@/hooks/useOrganizations";
 import { useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
