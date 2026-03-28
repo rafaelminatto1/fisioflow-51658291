@@ -74,6 +74,7 @@ interface ItemData {
 	savingAppointmentId?: string | null;
 	timeSlots: string[];
 	appointmentsByTimeSlot: Record<string, Appointment[]>;
+	appointmentsByDayAndTime: Record<string, Appointment[]>;
 	cardSize: string;
 	heightScale: number;
 	onTimeSlotClick?: (date: Date, time: string) => void;
@@ -110,7 +111,15 @@ interface ItemData {
 type TimeSlotRowProps = ItemData & { index: number; style: React.CSSProperties };
 
 const TimeSlotRow: React.FC<TimeSlotRowProps> = memo(
-	({ index, style, weekDays, timeSlots, appointmentsByTimeSlot, ...props }) => {
+	({
+		index,
+		style,
+		weekDays,
+		timeSlots,
+		appointmentsByTimeSlot,
+		appointmentsByDayAndTime,
+		...props
+	}) => {
 		const time = timeSlots[index];
 
 		if (!time) return null;
@@ -183,11 +192,12 @@ const TimeSlotRow: React.FC<TimeSlotRowProps> = memo(
 						props.heightScale,
 					);
 
-					const sameTimeAppointments = appointmentsByTimeSlot[time] || [];
-					const aptIndex = sameTimeAppointments.findIndex(
+					const sameDayTimeAppointments =
+						appointmentsByDayAndTime[`${dayIndex}-${time}`] || [];
+					const aptIndex = sameDayTimeAppointments.findIndex(
 						(a) => a.id === apt.id,
 					);
-					const count = sameTimeAppointments.length;
+					const count = Math.max(1, sameDayTimeAppointments.length);
 					const gap = 4;
 					const outerMargin = 4;
 
@@ -210,24 +220,23 @@ const TimeSlotRow: React.FC<TimeSlotRowProps> = memo(
 					const isSaving = !!props.savingAppointmentId && props.savingAppointmentId === apt.id;
 
 					return (
-						<div key={apt.id} style={appointmentStyle} className="absolute">
-							<CalendarAppointmentCard
-								appointment={apt}
-								style={appointmentStyle}
-								isDraggable={isDraggable}
-								isDragging={isDraggingThis}
-								isSaving={isSaving}
-								onDragStart={props.handleDragStart || (() => {})}
-								onDragEnd={props.handleDragEnd || (() => {})}
-								onEditAppointment={props.onEditAppointment}
-								onDeleteAppointment={props.onDeleteAppointment}
-								onOpenPopover={props.setOpenPopoverId || (() => {})}
-								isPopoverOpen={props.openPopoverId === apt.id}
-								selectionMode={!!props.selectionMode}
-								isSelected={props.selectedIds?.has(apt.id)}
-								onToggleSelection={props.onToggleSelection}
-							/>
-						</div>
+						<CalendarAppointmentCard
+							key={apt.id}
+							appointment={apt}
+							style={appointmentStyle}
+							isDraggable={isDraggable}
+							isDragging={isDraggingThis}
+							isSaving={isSaving}
+							onDragStart={props.handleDragStart || (() => {})}
+							onDragEnd={props.handleDragEnd || (() => {})}
+							onEditAppointment={props.onEditAppointment}
+							onDeleteAppointment={props.onDeleteAppointment}
+							onOpenPopover={props.setOpenPopoverId || (() => {})}
+							isPopoverOpen={props.openPopoverId === apt.id}
+							selectionMode={!!props.selectionMode}
+							isSelected={props.selectedIds?.has(apt.id)}
+							onToggleSelection={props.onToggleSelection}
+						/>
 					);
 				})}
 			</div>
@@ -288,8 +297,9 @@ TimeSlotRow.displayName = "TimeSlotRow";
 		const slotHeight = Math.max(18, Math.floor(containerHeight / timeSlots.length));
 
 		// Agrupar appointments por time slot
-		const appointmentsByTimeSlot = useMemo(() => {
-			const result: Record<string, Appointment[]> = {};
+		const { appointmentsByTimeSlot, appointmentsByDayAndTime } = useMemo(() => {
+			const byTimeSlot: Record<string, Appointment[]> = {};
+			const byDayAndTime: Record<string, Appointment[]> = {};
 
 			appointments.forEach((apt) => {
 				const aptDate = parseAppointmentDate(apt.date);
@@ -299,13 +309,19 @@ TimeSlotRow.displayName = "TimeSlotRow";
 				if (dayIndex === -1) return;
 
 				const time = normalizeTime(apt.time);
-				const key = time;
+				const dayAndTimeKey = `${dayIndex}-${time}`;
 
-				if (!result[key]) result[key] = [];
-				result[key].push(apt);
+				if (!byTimeSlot[time]) byTimeSlot[time] = [];
+				byTimeSlot[time].push(apt);
+
+				if (!byDayAndTime[dayAndTimeKey]) byDayAndTime[dayAndTimeKey] = [];
+				byDayAndTime[dayAndTimeKey].push(apt);
 			});
 
-			return result;
+			return {
+				appointmentsByTimeSlot: byTimeSlot,
+				appointmentsByDayAndTime: byDayAndTime,
+			};
 		}, [appointments, weekDays]);
 
 		// Preparar item data para react-window
@@ -315,6 +331,7 @@ TimeSlotRow.displayName = "TimeSlotRow";
 				timeSlots,
 				appointments,
 				appointmentsByTimeSlot,
+				appointmentsByDayAndTime,
 				savingAppointmentId,
 				cardSize,
 				heightScale,
@@ -342,6 +359,7 @@ TimeSlotRow.displayName = "TimeSlotRow";
 				timeSlots,
 				appointments,
 				appointmentsByTimeSlot,
+				appointmentsByDayAndTime,
 				savingAppointmentId,
 				cardSize,
 				heightScale,
