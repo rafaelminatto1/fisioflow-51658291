@@ -49,3 +49,6 @@ export * from "./announcements";
 
 // Jules AI - PR Reviews & Learnings
 export * from "./jules";
+
+// Biomechanics & Gait Analysis (RF01.6)
+export * from "./biomechanics";
