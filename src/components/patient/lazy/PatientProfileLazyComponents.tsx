@@ -15,14 +15,14 @@ import { lazy } from "react";
 
 // Evolution Dashboard - Gráficos de evolução
 export const LazyPatientEvolutionDashboard = lazy(() =>
-	import("@/components/patients/PatientEvolutionDashboard").then((m) => ({
+	import("@/components/patient/PatientEvolutionDashboard").then((m) => ({
 		default: m.PatientEvolutionDashboard,
 	})),
 );
 
 // Analytics Dashboard - Análises pesadas
 export const LazyPatientAnalyticsDashboard = lazy(() =>
-	import("@/components/patients/analytics").then((m) => ({
+	import("@/components/patient/analytics").then((m) => ({
 		default: m.PatientAnalyticsDashboard,
 	})),
 );
@@ -63,14 +63,14 @@ export const LazySessionHistoryPanel = lazy(() =>
 
 // Lifecycle Chart - Gráfico complexo
 export const LazyPatientLifecycleChart = lazy(() =>
-	import("@/components/patients/analytics").then((m) => ({
+	import("@/components/patient/analytics").then((m) => ({
 		default: m.PatientLifecycleChart,
 	})),
 );
 
 // Insights Panel - Análise de IA
 export const LazyPatientInsightsPanel = lazy(() =>
-	import("@/components/patients/analytics").then((m) => ({
+	import("@/components/patient/analytics").then((m) => ({
 		default: m.PatientInsightsPanel,
 	})),
 );
