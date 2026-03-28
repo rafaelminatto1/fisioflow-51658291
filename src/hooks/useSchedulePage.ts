@@ -69,9 +69,36 @@ export function useSchedulePageData(
 		],
 		queryFn: async () => {
 			try {
+				let dateFrom = date;
+				let dateTo = date;
+
+				if (view === "week") {
+					const startOfWeek = new Date(date);
+					// Ajustar para o início da semana (segunda-feira como no componente)
+					const day = startOfWeek.getDay();
+					const diff = startOfWeek.getDate() - day + (day === 0 ? -6 : 1);
+					startOfWeek.setDate(diff);
+
+					const endOfWeek = new Date(startOfWeek);
+					endOfWeek.setDate(startOfWeek.getDate() + 6);
+
+					dateFrom = format(startOfWeek, "yyyy-MM-dd");
+					dateTo = format(endOfWeek, "yyyy-MM-dd");
+				} else if (view === "month") {
+					const startOfMonth = new Date(date);
+					startOfMonth.setDate(1);
+
+					const endOfMonth = new Date(date);
+					endOfMonth.setMonth(endOfMonth.getMonth() + 1);
+					endOfMonth.setDate(0);
+
+					dateFrom = format(startOfMonth, "yyyy-MM-dd");
+					dateTo = format(endOfMonth, "yyyy-MM-dd");
+				}
+
 				const res = await appointmentsApi.list({
-					dateFrom: date,
-					dateTo: date,
+					dateFrom,
+					dateTo,
 					viewType: view,
 					status:
 						filters?.status && filters.status.length > 0
