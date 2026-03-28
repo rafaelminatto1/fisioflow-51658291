@@ -102,6 +102,10 @@ export default function AppointmentFormScreen() {
   const selectedPatientId = watch('patientId');
   const isEditing = !!appointmentId;
 
+  const navigateToAgenda = () => {
+    router.replace('/(tabs)/agenda');
+  };
+
   useEffect(() => {
     if (appointmentId) {
       loadAppointmentData();
@@ -160,7 +164,7 @@ export default function AppointmentFormScreen() {
             'Consulta Concluída',
             'Deseja criar um registro financeiro para este atendimento agora?',
             [
-              { text: 'Não', onPress: () => router.back() },
+              { text: 'Não', onPress: navigateToAgenda },
               {
                 text: 'Sim, Criar',
                 onPress: () => {
@@ -171,7 +175,7 @@ export default function AppointmentFormScreen() {
           );
         } else {
           Alert.alert('Sucesso', 'Agendamento atualizado com sucesso');
-          router.back();
+          navigateToAgenda();
         }
       } else {
         await createAsync(appointmentData);
@@ -181,8 +185,8 @@ export default function AppointmentFormScreen() {
       }
     } catch (err: any) {
       hapticError();
-      // Mensagem de erro clara com detalhe técnico para debugging
       const rawMsg: string = err?.message || String(err) || '';
+      const normalizedRawMsg = rawMsg.trim();
       let userMsg = isEditing ? 'Não foi possível atualizar o agendamento.' : 'Não foi possível criar o agendamento.';
       if (rawMsg.includes('date') || rawMsg.includes('data')) userMsg = 'Data inválida. Verifique o campo Data.';
       else if (rawMsg.includes('conflict') || rawMsg.includes('ocupado')) userMsg = 'Horário já ocupado. Escolha outro horário.';
@@ -190,9 +194,16 @@ export default function AppointmentFormScreen() {
       else if (rawMsg.includes('401') || rawMsg.includes('auth')) userMsg = 'Sessão expirada. Saia e entre novamente.';
       else if (rawMsg.includes('400') || rawMsg.includes('obrigatório')) userMsg = 'Campos obrigatórios ausentes. Verifique o formulário.';
       else if (rawMsg.includes('500') || rawMsg.includes('SERVER')) userMsg = 'Erro interno do servidor. Tente novamente em instantes.';
+      const detailText =
+        !normalizedRawMsg ||
+        normalizedRawMsg === userMsg ||
+        normalizedRawMsg === 'Erro ao criar agendamento' ||
+        normalizedRawMsg === 'Erro ao atualizar agendamento'
+          ? null
+          : `\n\nDetalhe técnico: ${normalizedRawMsg.substring(0, 180)}`;
       Alert.alert(
         isEditing ? 'Erro ao salvar agendamento' : 'Erro ao criar agendamento',
-        `${userMsg}\n\nDetalhe: ${rawMsg.substring(0, 120)}`,
+        `${userMsg}${detailText ?? ''}`,
       );
     }
   };
@@ -211,7 +222,7 @@ export default function AppointmentFormScreen() {
             try {
               await deleteAsync(appointmentId!);
               success();
-              router.back();
+              navigateToAgenda();
             } catch  {
               hapticError();
               Alert.alert('Erro', 'Não foi possível excluir.');
@@ -330,12 +341,16 @@ export default function AppointmentFormScreen() {
                 'Salvar alterações?',
                 'Você fez alterações neste agendamento.',
                 [
-                  { text: 'Não', style: 'cancel', onPress: () => router.back() },
-                  { text: 'Sim', onPress: handleSubmit(onSave) },
+                  { text: 'Não', style: 'cancel', onPress: navigateToAgenda },
+                  { text: 'Sim', onPress: () => void handleSubmit(onSave)() },
                 ]
               );
             } else {
-              router.back();
+              if (isEditing) {
+                navigateToAgenda();
+              } else {
+                router.back();
+              }
             }
           }}
           style={styles.backButton}
@@ -860,4 +875,3 @@ const styles = StyleSheet.create({
     fontWeight: '600',
   },
 });
-
