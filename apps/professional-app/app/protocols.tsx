@@ -1,10 +1,10 @@
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import {
   View, Text, StyleSheet, ScrollView, TouchableOpacity,
   ActivityIndicator, RefreshControl, TextInput, FlatList,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { useRouter } from 'expo-router';
+import { Stack, useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { useColors } from '@/hooks/useColorScheme';
 import { useHaptics } from '@/hooks/useHaptics';
@@ -26,6 +26,16 @@ const TEST_SCALE_LABELS: Record<string, string> = {
   VAS: 'Dor (VAS)', PSFS: 'Func. Específica', DASH: 'DASH', OSWESTRY: 'Oswestry',
   NDI: 'Dor Cervical', LEFS: 'LEFS', BERG: 'Equilíbrio (Berg)',
 };
+
+const CLINICAL_TEST_CATALOG = [
+  { id: 'VAS', scale: 'VAS', title: 'Escala Visual Analógica', description: 'Intensidade da dor percebida pelo paciente.' },
+  { id: 'PSFS', scale: 'PSFS', title: 'Patient Specific Functional Scale', description: 'Atividades funcionais escolhidas pelo paciente.' },
+  { id: 'DASH', scale: 'DASH', title: 'Disabilities of the Arm, Shoulder and Hand', description: 'Função do membro superior e incapacidade percebida.' },
+  { id: 'OSWESTRY', scale: 'OSWESTRY', title: 'Oswestry Disability Index', description: 'Impacto da lombalgia nas atividades diárias.' },
+  { id: 'NDI', scale: 'NDI', title: 'Neck Disability Index', description: 'Limitação funcional relacionada à cervical.' },
+  { id: 'LEFS', scale: 'LEFS', title: 'Lower Extremity Functional Scale', description: 'Capacidade funcional de membros inferiores.' },
+  { id: 'BERG', scale: 'BERG', title: 'Berg Balance Scale', description: 'Equilíbrio funcional e risco de queda.' },
+];
 
 function useClinicalTests() {
   return useQuery({
@@ -49,6 +59,18 @@ export default function ProtocolsScreen() {
   const [refreshing, setRefreshing] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('all');
+
+  const availableCatalogTests = useMemo(() => {
+    const q = searchQuery.toLowerCase().trim();
+    return CLINICAL_TEST_CATALOG.filter((test) => {
+      if (!q) return true;
+      return (
+        test.scale.toLowerCase().includes(q) ||
+        test.title.toLowerCase().includes(q) ||
+        test.description.toLowerCase().includes(q)
+      );
+    });
+  }, [searchQuery]);
 
   const onRefresh = async () => {
     setRefreshing(true);
@@ -83,6 +105,7 @@ export default function ProtocolsScreen() {
 
   return (
     <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]} edges={['top']}>
+      <Stack.Screen options={{ headerShown: false }} />
       {/* Header */}
       <View style={[styles.header, { backgroundColor: colors.surface, borderBottomColor: colors.border }]}>
         <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
@@ -252,18 +275,32 @@ export default function ProtocolsScreen() {
             contentContainerStyle={styles.listContent}
             refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={colors.primary} />}
             ListHeaderComponent={
-              <View style={styles.scalesHeader}>
-                <Text style={[styles.scalesTitle, { color: colors.textSecondary }]}>
-                  Escalas disponíveis: VAS · PSFS · DASH · Oswestry · NDI · LEFS · Berg
-                </Text>
+              <View style={styles.testsHeader}>
+                <View style={styles.scalesHeader}>
+                  <Text style={[styles.scalesTitle, { color: colors.textSecondary }]}>
+                    Catálogo disponível e histórico aplicado do paciente
+                  </Text>
+                </View>
+                <View style={styles.catalogGrid}>
+                  {availableCatalogTests.map((test) => (
+                    <View key={test.id} style={[styles.catalogCard, { backgroundColor: colors.surface, borderColor: colors.border }]}>
+                      <View style={[styles.scaleTag, { backgroundColor: colors.primary + '15' }]}>
+                        <Text style={[styles.scaleTagText, { color: colors.primary }]}>{test.scale}</Text>
+                      </View>
+                      <Text style={[styles.catalogTitle, { color: colors.text }]}>{test.title}</Text>
+                      <Text style={[styles.catalogDescription, { color: colors.textSecondary }]}>{test.description}</Text>
+                    </View>
+                  ))}
+                </View>
+                <Text style={[styles.sectionLabel, { color: colors.textSecondary }]}>Testes já aplicados</Text>
               </View>
             }
             ListEmptyComponent={
               <View style={styles.emptyContainer}>
                 <Ionicons name="analytics-outline" size={56} color={colors.textMuted} />
-                <Text style={[styles.emptyText, { color: colors.text }]}>Nenhum teste aplicado</Text>
+                <Text style={[styles.emptyText, { color: colors.text }]}>Nenhum teste aplicado ainda</Text>
                 <Text style={[styles.emptySubtext, { color: colors.textSecondary }]}>
-                  Aplique escalas clínicas pela tela do paciente
+                  O catálogo acima continua disponível mesmo sem avaliações salvas.
                 </Text>
               </View>
             }
@@ -352,8 +389,14 @@ const styles = StyleSheet.create({
   applyButton: { flexDirection: 'row', alignItems: 'center', paddingHorizontal: 12, paddingVertical: 6, borderRadius: 8, gap: 5 },
   applyButtonText: { color: '#fff', fontSize: 13, fontWeight: '600' },
   // Test card
+  testsHeader: { gap: 12, marginBottom: 12 },
   scalesHeader: { marginBottom: 8 },
   scalesTitle: { fontSize: 12, textAlign: 'center', fontStyle: 'italic' },
+  catalogGrid: { gap: 10 },
+  catalogCard: { borderWidth: 1, borderRadius: 14, padding: 14, gap: 8 },
+  catalogTitle: { fontSize: 14, fontWeight: '700' },
+  catalogDescription: { fontSize: 13, lineHeight: 18 },
+  sectionLabel: { fontSize: 13, fontWeight: '600' },
   testCard: { padding: 14, gap: 8 },
   testHeader: { flexDirection: 'row', alignItems: 'center', gap: 8 },
   scaleTag: { paddingHorizontal: 10, paddingVertical: 4, borderRadius: 8 },

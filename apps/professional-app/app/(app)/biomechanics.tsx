@@ -1,14 +1,15 @@
 import React, { useState, useRef, useEffect, useCallback } from "react";
 import {
   View, StyleSheet, TouchableOpacity, Text, Dimensions,
-  SafeAreaView, Alert, ScrollView, Modal, FlatList,
-  Image, ActivityIndicator,
+  Alert, ScrollView, Modal, FlatList,
+  Image, ActivityIndicator, TextInput,
 } from "react-native";
-import { useRouter, useLocalSearchParams } from "expo-router";
+import { Stack, useRouter, useLocalSearchParams } from "expo-router";
 import { Camera, useCameraDevice, useCameraPermission, useCameraFormat } from "react-native-vision-camera";
 import { Ionicons } from "@expo/vector-icons";
 import * as ImagePicker from "expo-image-picker";
 import { Accelerometer } from "expo-sensors";
+import { SafeAreaView } from "react-native-safe-area-context";
 import { useColors } from "@/hooks/useColorScheme";
 import { usePatients } from "@/hooks/usePatients";
 import { fetchApi } from "@/lib/api";
@@ -59,7 +60,7 @@ export default function BiomechanicsScreen() {
   const fps = format?.maxFps ?? 60;
   const { hasPermission, requestPermission } = useCameraPermission();
 
-  const [screen, setScreen] = useState<"home" | "capture" | "analysis" | "report">("home");
+  const [screen, setScreen] = useState<"home" | "instructions" | "capture" | "analysis" | "report">("home");
   const [analysisMode, setAnalysisMode] = useState<AnalysisMode>("live");
   const [analysisType, setAnalysisType] = useState<AnalysisType>("postura");
   const [isRecording, setIsRecording] = useState(false);
@@ -72,10 +73,14 @@ export default function BiomechanicsScreen() {
   const [selectedPatientId, setSelectedPatientId] = useState<string>(params.patientId as string || "");
   const [selectedPatientName, setSelectedPatientName] = useState<string>(params.patientName as string || "");
   const [showPatientPicker, setShowPatientPicker] = useState(false);
+  const [patientSearch, setPatientSearch] = useState("");
   const [, setPlumbRotation] = useState(0);
   const camera = useRef<Camera>(null);
 
-  const { patients } = usePatients();
+  const { data: patients = [] } = usePatients({ status: "active", limit: 100 });
+  const filteredPatients = patients.filter((patient) =>
+    patient.name.toLowerCase().includes(patientSearch.trim().toLowerCase())
+  );
 
   // Frame counter during recording
   useEffect(() => {
@@ -147,6 +152,10 @@ export default function BiomechanicsScreen() {
   const stopAndAnalyze = useCallback(async () => {
     setIsRecording(false);
     setScreen("analysis");
+  }, []);
+
+  const startAnalysisFlow = useCallback(() => {
+    setScreen("instructions");
   }, []);
 
   const runAnalysis = useCallback(async () => {
@@ -234,7 +243,8 @@ export default function BiomechanicsScreen() {
   // HOME
   if (screen === "home") {
     return (
-      <SafeAreaView style={[styles.safe, { backgroundColor: colors.background }]}>
+      <SafeAreaView style={[styles.safe, { backgroundColor: colors.background }]} edges={["top", "left", "right", "bottom"]}>
+        <Stack.Screen options={{ headerShown: false }} />
         <View style={[styles.header, { borderBottomColor: colors.border }]}>
           <TouchableOpacity onPress={() => router.back()} style={styles.headerBack}>
             <Ionicons name="arrow-back" size={24} color={colors.text} />
@@ -305,11 +315,7 @@ export default function BiomechanicsScreen() {
           {/* CTA */}
           <TouchableOpacity
             style={[styles.startBtn, { backgroundColor: colors.primary }]}
-            onPress={() => {
-              if (analysisMode === "video") { pickVideo(); }
-              else if (analysisMode === "photo") { pickPhoto(); }
-              else { setScreen("capture"); }
-            }}
+            onPress={startAnalysisFlow}
           >
             <Ionicons name="play-circle" size={24} color="#fff" />
             <Text style={styles.startBtnText}>
@@ -320,20 +326,43 @@ export default function BiomechanicsScreen() {
 
         {/* Patient picker modal */}
         <Modal visible={showPatientPicker} animationType="slide" onRequestClose={() => setShowPatientPicker(false)}>
-          <SafeAreaView style={[styles.safe, { backgroundColor: colors.background }]}>
+          <SafeAreaView style={[styles.safe, { backgroundColor: colors.background }]} edges={["top", "left", "right", "bottom"]}>
             <View style={[styles.header, { borderBottomColor: colors.border }]}>
               <Text style={[styles.headerTitle, { color: colors.text }]}>Selecionar Paciente</Text>
               <TouchableOpacity onPress={() => setShowPatientPicker(false)}>
                 <Ionicons name="close" size={24} color={colors.text} />
               </TouchableOpacity>
             </View>
+            <View style={[styles.searchInputWrap, { borderColor: colors.border, backgroundColor: colors.surface }]}>
+              <Ionicons name="search" size={18} color={colors.textSecondary} />
+              <TextInput
+                style={[styles.searchInput, { color: colors.text }]}
+                placeholder="Buscar paciente..."
+                placeholderTextColor={colors.textSecondary}
+                value={patientSearch}
+                onChangeText={setPatientSearch}
+              />
+            </View>
             <FlatList
-              data={patients}
+              data={filteredPatients}
               keyExtractor={p => p.id}
+              ListEmptyComponent={
+                <View style={styles.emptyPatientContainer}>
+                  <Ionicons name="people-outline" size={42} color={colors.textSecondary} />
+                  <Text style={[styles.emptyPatientText, { color: colors.textSecondary }]}>
+                    Nenhum paciente encontrado
+                  </Text>
+                </View>
+              }
               renderItem={({ item: p }) => (
                 <TouchableOpacity
                   style={[styles.patientRow, { borderBottomColor: colors.border }]}
-                  onPress={() => { setSelectedPatientId(p.id); setSelectedPatientName(p.name); setShowPatientPicker(false); }}
+                  onPress={() => {
+                    setSelectedPatientId(p.id);
+                    setSelectedPatientName(p.name);
+                    setPatientSearch("");
+                    setShowPatientPicker(false);
+                  }}
                 >
                   <Ionicons name="person" size={20} color={colors.primary} />
                   <Text style={[styles.patientRowName, { color: colors.text }]}>{p.name}</Text>
@@ -342,6 +371,78 @@ export default function BiomechanicsScreen() {
             />
           </SafeAreaView>
         </Modal>
+      </SafeAreaView>
+    );
+  }
+
+  if (screen === "instructions") {
+    const typeInfo = ANALYSIS_TYPES.find((item) => item.id === analysisType);
+    const instructionsByType: Record<AnalysisType, string[]> = {
+      postura: [
+        "Posicione o paciente em pé, com o corpo inteiro visível.",
+        "Mantenha a câmera na altura da pelve e evite inclinação do aparelho.",
+        "Use boa iluminação e contraste entre paciente e fundo.",
+      ],
+      marcha: [
+        "Capte pelo menos dois ciclos completos de marcha ou corrida.",
+        "Prefira plano lateral para eventos e posterior para simetria.",
+        "Mantenha o corpo inteiro dentro do quadro durante a passada.",
+      ],
+      articulacao: [
+        "Centralize a articulação-alvo antes de iniciar a captura.",
+        "Garanta visualização do segmento proximal e distal.",
+        "Explique e demonstre o movimento antes de gravar.",
+      ],
+      plumb: [
+        "Posicione o paciente em ortostase relaxada.",
+        "Mantenha a câmera alinhada ao centro corporal e estável.",
+        "Use referência vertical clara para avaliar alinhamento.",
+      ],
+    };
+
+    return (
+      <SafeAreaView style={[styles.safe, { backgroundColor: colors.background }]} edges={["top", "left", "right", "bottom"]}>
+        <Stack.Screen options={{ headerShown: false }} />
+        <View style={[styles.header, { borderBottomColor: colors.border }]}>
+          <TouchableOpacity onPress={() => setScreen("home")} style={styles.headerBack}>
+            <Ionicons name="arrow-back" size={24} color={colors.text} />
+          </TouchableOpacity>
+          <Text style={[styles.headerTitle, { color: colors.text }]}>Preparar Análise</Text>
+          <View style={{ width: 40 }} />
+        </View>
+
+        <ScrollView contentContainerStyle={styles.instructionsContent}>
+          <View style={[styles.instructionsCard, { backgroundColor: colors.surface, borderColor: colors.border }]}>
+            <Text style={[styles.instructionsBadge, { color: colors.primary }]}>Paciente</Text>
+            <Text style={[styles.instructionsPatient, { color: colors.text }]}>
+              {selectedPatientName || "Sem paciente selecionado"}
+            </Text>
+            <Text style={[styles.instructionsTitle, { color: colors.text }]}>{typeInfo?.label}</Text>
+            <Text style={[styles.instructionsSubtitle, { color: colors.textSecondary }]}>{typeInfo?.description}</Text>
+          </View>
+
+          <View style={[styles.instructionsCard, { backgroundColor: colors.surface, borderColor: colors.border }]}>
+            <Text style={[styles.sectionTitle, { color: colors.text }]}>Como fazer a análise</Text>
+            {instructionsByType[analysisType].map((item, index) => (
+              <View key={`${analysisType}-${index}`} style={styles.instructionRow}>
+                <Ionicons name="checkmark-circle" size={18} color={colors.primary} />
+                <Text style={[styles.instructionText, { color: colors.textSecondary }]}>{item}</Text>
+              </View>
+            ))}
+          </View>
+
+          <TouchableOpacity
+            style={[styles.startBtn, { backgroundColor: colors.primary }]}
+            onPress={() => {
+              if (analysisMode === "video") pickVideo();
+              else if (analysisMode === "photo") pickPhoto();
+              else setScreen("capture");
+            }}
+          >
+            <Ionicons name="play-circle" size={24} color="#fff" />
+            <Text style={styles.startBtnText}>Iniciar captura</Text>
+          </TouchableOpacity>
+        </ScrollView>
       </SafeAreaView>
     );
   }
@@ -373,7 +474,7 @@ export default function BiomechanicsScreen() {
         />
 
         {/* Top bar */}
-        <SafeAreaView style={styles.captureTopBar}>
+        <SafeAreaView style={styles.captureTopBar} edges={["top", "left", "right"]}>
           <TouchableOpacity style={styles.captureBack} onPress={() => setScreen("home")}>
             <Ionicons name="arrow-back" size={24} color="#fff" />
           </TouchableOpacity>
@@ -422,7 +523,8 @@ export default function BiomechanicsScreen() {
   // ANALYSIS (processamento)
   if (screen === "analysis") {
     return (
-      <SafeAreaView style={[styles.safe, { backgroundColor: colors.background }]}>
+      <SafeAreaView style={[styles.safe, { backgroundColor: colors.background }]} edges={["top", "left", "right", "bottom"]}>
+        <Stack.Screen options={{ headerShown: false }} />
         <View style={[styles.header, { borderBottomColor: colors.border }]}>
           <TouchableOpacity onPress={() => setScreen("home")}>
             <Ionicons name="arrow-back" size={24} color={colors.text} />
@@ -471,7 +573,8 @@ export default function BiomechanicsScreen() {
   if (screen === "report" && result) {
     const typeInfo = ANALYSIS_TYPES.find(t => t.id === result.type);
     return (
-      <SafeAreaView style={[styles.safe, { backgroundColor: colors.background }]}>
+      <SafeAreaView style={[styles.safe, { backgroundColor: colors.background }]} edges={["top", "left", "right", "bottom"]}>
+        <Stack.Screen options={{ headerShown: false }} />
         <View style={[styles.header, { borderBottomColor: colors.border }]}>
           <TouchableOpacity onPress={() => setScreen("home")}>
             <Ionicons name="close" size={24} color={colors.text} />
@@ -585,6 +688,14 @@ function generateObservations(type: AnalysisType, angles: AnalysisResult["angles
 
 const styles = StyleSheet.create({
   safe: { flex: 1 },
+  instructionsContent: { padding: 16, gap: 16, paddingBottom: 40 },
+  instructionsCard: { borderWidth: 1, borderRadius: 18, padding: 16, gap: 10 },
+  instructionsBadge: { fontSize: 12, fontWeight: "700", textTransform: "uppercase" },
+  instructionsPatient: { fontSize: 18, fontWeight: "700" },
+  instructionsTitle: { fontSize: 20, fontWeight: "700" },
+  instructionsSubtitle: { fontSize: 14, lineHeight: 20 },
+  instructionRow: { flexDirection: "row", alignItems: "flex-start", gap: 10 },
+  instructionText: { flex: 1, fontSize: 14, lineHeight: 20 },
   permContainer: { flex: 1, alignItems: "center", justifyContent: "center", padding: 24, gap: 16 },
   permText: { fontSize: 16, textAlign: "center", color: "#fff" },
   header: { flexDirection: "row", alignItems: "center", justifyContent: "space-between", paddingHorizontal: 16, paddingVertical: 12, borderBottomWidth: 1 },
@@ -609,8 +720,12 @@ const styles = StyleSheet.create({
   btnText: { color: "#fff", fontWeight: "700", fontSize: 16 },
   backLink: { marginTop: 8 },
   backLinkText: { fontSize: 14 },
+  searchInputWrap: { flexDirection: "row", alignItems: "center", gap: 8, borderWidth: 1, borderRadius: 14, marginHorizontal: 16, marginTop: 16, marginBottom: 8, paddingHorizontal: 12, height: 48 },
+  searchInput: { flex: 1, fontSize: 15 },
   patientRow: { flexDirection: "row", alignItems: "center", gap: 12, paddingHorizontal: 16, paddingVertical: 14, borderBottomWidth: 1 },
   patientRowName: { fontSize: 15 },
+  emptyPatientContainer: { alignItems: "center", justifyContent: "center", paddingVertical: 48, gap: 8 },
+  emptyPatientText: { fontSize: 14 },
   // Capture
   captureTopBar: { flexDirection: "row", alignItems: "center", paddingHorizontal: 16, paddingTop: 8, justifyContent: "space-between" },
   captureBack: { backgroundColor: "rgba(0,0,0,0.5)", padding: 8, borderRadius: 8 },

@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import {
   View,
   Text,
@@ -18,7 +18,20 @@ import { useExercisesLibrary, usePatientExerciseAssignments } from '@/hooks';
 import { useHaptics } from '@/hooks/useHaptics';
 import type { Exercise } from '@/types';
 
-const CATEGORIES = ['Todos', 'Alongamento', 'Fortalecimento', 'Mobilidade', 'Equilíbrio', 'Respiração', 'Pós-operatório'];
+const DIFFICULTIES = [
+  { label: 'Todas', value: null },
+  { label: 'Fácil', value: 'easy' },
+  { label: 'Médio', value: 'medium' },
+  { label: 'Difícil', value: 'hard' },
+];
+
+function normalizeFilterValue(value: string) {
+  return value
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .trim()
+    .toLowerCase();
+}
 
 
 export default function ExercisesScreen() {
@@ -30,7 +43,7 @@ export default function ExercisesScreen() {
 
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('Todos');
-  const [,setSelectedDifficulty] = useState<string | null>(null);
+  const [selectedDifficulty, setSelectedDifficulty] = useState<string | null>(null);
   const [selectedExercise, setSelectedExercise] = useState<Exercise | null>(null);
   const [showAssignModal, setShowAssignModal] = useState(false);
   const [sets, setSets] = useState('3');
@@ -38,15 +51,44 @@ export default function ExercisesScreen() {
   const [frequency, setFrequency] = useState('Diário');
 
   const { data: exercises, isLoading } = useExercisesLibrary({
-    category: selectedCategory !== 'Todos' ? selectedCategory : undefined,
+    search: searchQuery.trim() || undefined,
+    limit: 200,
   });
+
+  const categoryOptions = useMemo(() => {
+    const uniqueCategories = Array.from(
+      new Set(
+        exercises
+          .map((exercise) => exercise.category?.trim())
+          .filter((category): category is string => Boolean(category))
+      )
+    ).sort((a, b) => a.localeCompare(b, 'pt-BR'));
+
+    return ['Todos', ...uniqueCategories];
+  }, [exercises]);
 
   const { assignExercise, isAssigning } = usePatientExerciseAssignments();
 
-  const filteredExercises = exercises.filter((ex) =>
-    ex.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    ex.description.toLowerCase().includes(searchQuery.toLowerCase())
-  );
+  const filteredExercises = useMemo(() => {
+    const normalizedSearch = normalizeFilterValue(searchQuery);
+    const normalizedCategory = normalizeFilterValue(selectedCategory);
+
+    return exercises.filter((exercise) => {
+      const matchesSearch = !normalizedSearch || (
+        normalizeFilterValue(exercise.name).includes(normalizedSearch) ||
+        normalizeFilterValue(exercise.description).includes(normalizedSearch)
+      );
+
+      const matchesCategory = selectedCategory === 'Todos' || (
+        normalizeFilterValue(exercise.category).includes(normalizedCategory) ||
+        normalizedCategory.includes(normalizeFilterValue(exercise.category))
+      );
+
+      const matchesDifficulty = !selectedDifficulty || exercise.difficulty === selectedDifficulty;
+
+      return matchesSearch && matchesCategory && matchesDifficulty;
+    });
+  }, [exercises, searchQuery, selectedCategory, selectedDifficulty]);
 
   const handleAssignExercise = async () => {
     if (!patientId || !selectedExercise) return;
@@ -127,7 +169,7 @@ export default function ExercisesScreen() {
         style={styles.categoriesScroll}
         contentContainerStyle={styles.categoriesContent}
       >
-        {CATEGORIES.map((category) => (
+        {categoryOptions.map((category) => (
           <TouchableOpacity
             key={category}
             style={[
@@ -146,6 +188,36 @@ export default function ExercisesScreen() {
               ]}
             >
               {category}
+            </Text>
+          </TouchableOpacity>
+        ))}
+      </ScrollView>
+
+      <ScrollView
+        horizontal
+        showsHorizontalScrollIndicator={false}
+        style={styles.difficultyScroll}
+        contentContainerStyle={styles.categoriesContent}
+      >
+        {DIFFICULTIES.map((difficulty) => (
+          <TouchableOpacity
+            key={difficulty.label}
+            style={[
+              styles.categoryChip,
+              selectedDifficulty === difficulty.value && { backgroundColor: colors.primary },
+            ]}
+            onPress={() => {
+              light();
+              setSelectedDifficulty(difficulty.value);
+            }}
+          >
+            <Text
+              style={[
+                styles.categoryText,
+                selectedDifficulty === difficulty.value ? { color: '#FFFFFF' } : { color: colors.textSecondary },
+              ]}
+            >
+              {difficulty.label}
             </Text>
           </TouchableOpacity>
         ))}
@@ -384,6 +456,9 @@ const styles = StyleSheet.create({
     fontSize: 16,
   },
   categoriesScroll: {
+    maxHeight: 50,
+  },
+  difficultyScroll: {
     maxHeight: 50,
   },
   categoriesContent: {

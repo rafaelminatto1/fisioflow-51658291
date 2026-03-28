@@ -139,7 +139,7 @@ export default function PatientDetailScreen() {
   const name = patient?.name || (patientName as string) || 'Paciente';
 
   return (
-    <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]} edges={['left', 'right', 'bottom']}>
+    <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]} edges={['top', 'left', 'right', 'bottom']}>
       <ScrollView
         contentContainerStyle={styles.scrollContent}
         refreshControl={

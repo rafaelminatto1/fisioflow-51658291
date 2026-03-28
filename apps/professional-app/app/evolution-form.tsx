@@ -31,7 +31,7 @@ export default function EvolutionFormScreen() {
   const patientName = params.patientName as string || 'Paciente';
   const appointmentId = params.appointmentId as string | undefined;
 
-  const { medium } = useHaptics();
+  const { medium, success, error: hapticError } = useHaptics();
 
   const {
     createAsync: createEvolutionAsync,
@@ -50,6 +50,7 @@ export default function EvolutionFormScreen() {
 
   // Auto-save state
   const [autoSaveStatus, setAutoSaveStatus] = useState<'idle' | 'saving' | 'saved' | 'error'>('idle');
+  const [autoSaveErrorDetail, setAutoSaveErrorDetail] = useState<string | null>(null);
   const savedEvolutionId = useRef<string | null>(null);
   const autoSaveTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
@@ -67,6 +68,7 @@ export default function EvolutionFormScreen() {
       if (!hasContent || !patientId) return;
 
       setAutoSaveStatus('saving');
+      setAutoSaveErrorDetail(null);
       try {
         const payload = {
           patientId,
@@ -87,12 +89,18 @@ export default function EvolutionFormScreen() {
         } else {
           // Primeira vez — cria e salva o ID
           const created = await createEvolutionAsync(payload as any);
-          savedEvolutionId.current = created.id;
+          savedEvolutionId.current = created.id ?? null;
         }
         setAutoSaveStatus('saved');
       } catch (err: any) {
         setAutoSaveStatus('error');
-        console.error('[AutoSave]', err?.message);
+        const technicalDetail = [
+          err?.message,
+          err?.status ? `status=${err.status}` : null,
+          err?.endpoint ? `endpoint=${err.endpoint}` : null,
+        ].filter(Boolean).join(' | ');
+        setAutoSaveErrorDetail(technicalDetail || null);
+        console.error('[AutoSave]', err);
       }
     }, 2000);
   }, [mode, subjective, objective, assessment, plan, freeContent, patientId, appointmentId, painLevel, photos, createEvolutionAsync, updateEvolutionAsync]);
@@ -101,7 +109,7 @@ export default function EvolutionFormScreen() {
   useEffect(() => {
     triggerAutoSave();
     return () => { if (autoSaveTimer.current) clearTimeout(autoSaveTimer.current); };
-  }, [subjective, objective, assessment, plan, freeContent, painLevel]);
+  }, [subjective, objective, assessment, plan, freeContent, painLevel, photos, mode, triggerAutoSave]);
 
   // Generate SOAP with AI — calls real Workers AI endpoint
   const handleGenerateWithAI = async () => {
@@ -136,6 +144,7 @@ export default function EvolutionFormScreen() {
       success();
       Alert.alert('Sucesso', 'Evolução gerada com IA!', [{ text: 'OK' }]);
     } catch (err: any) {
+      hapticError();
       Alert.alert('Erro', err.message || 'Não foi possível gerar com IA');
     } finally {
       setGeneratingSOAP(false);
@@ -252,14 +261,21 @@ export default function EvolutionFormScreen() {
 
         {/* Auto-save status indicator */}
         {autoSaveLabel ? (
-          <View style={styles.autoSaveRow}>
-            {autoSaveStatus === 'saving' && <ActivityIndicator size="small" color={colors.textSecondary} />}
-            {autoSaveStatus === 'saved' && <Ionicons name="checkmark-circle" size={16} color="#10B981" />}
-            {autoSaveStatus === 'error' && <Ionicons name="alert-circle" size={16} color={colors.error ?? '#EF4444'} />}
-            <Text style={[styles.autoSaveText, {
-              color: autoSaveStatus === 'error' ? (colors.error ?? '#EF4444') :
-                     autoSaveStatus === 'saved' ? '#10B981' : colors.textSecondary
-            }]}>{autoSaveLabel}</Text>
+          <View style={styles.autoSaveContainer}>
+            <View style={styles.autoSaveRow}>
+              {autoSaveStatus === 'saving' && <ActivityIndicator size="small" color={colors.textSecondary} />}
+              {autoSaveStatus === 'saved' && <Ionicons name="checkmark-circle" size={16} color="#10B981" />}
+              {autoSaveStatus === 'error' && <Ionicons name="alert-circle" size={16} color={colors.error ?? '#EF4444'} />}
+              <Text style={[styles.autoSaveText, {
+                color: autoSaveStatus === 'error' ? (colors.error ?? '#EF4444') :
+                       autoSaveStatus === 'saved' ? '#10B981' : colors.textSecondary
+              }]}>{autoSaveLabel}</Text>
+            </View>
+            {autoSaveStatus === 'error' && autoSaveErrorDetail ? (
+              <Text style={[styles.autoSaveErrorDetail, { color: colors.textSecondary }]}>
+                {autoSaveErrorDetail}
+              </Text>
+            ) : null}
           </View>
         ) : null}
       </ScrollView>
@@ -305,15 +321,24 @@ const styles = StyleSheet.create({
     padding: 16,
     gap: 16,
   },
+  autoSaveContainer: {
+    alignItems: 'center',
+    paddingVertical: 12,
+    gap: 4,
+  },
   autoSaveRow: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
     gap: 6,
-    paddingVertical: 12,
   },
   autoSaveText: {
     fontSize: 13,
+  },
+  autoSaveErrorDetail: {
+    fontSize: 12,
+    textAlign: 'center',
+    paddingHorizontal: 12,
   },
   aiButtonContainer: {
     alignItems: "center",
