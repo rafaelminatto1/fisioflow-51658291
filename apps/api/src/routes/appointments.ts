@@ -48,6 +48,15 @@ app.get('/', requireAuth, async (c) => {
   try {
     const { dateFrom, dateTo, therapistId, patientId, status, limit = '100' } = c.req.query();
     
+    console.log('[Appointments/List] Filters:', { 
+      orgId: user.organizationId, 
+      dateFrom, 
+      dateTo, 
+      therapistId, 
+      patientId, 
+      status 
+    });
+
     let conditions = eq(appointments.organizationId, user.organizationId);
 
     if (dateFrom) conditions = and(conditions, gte(appointments.date, dateFrom))!;
