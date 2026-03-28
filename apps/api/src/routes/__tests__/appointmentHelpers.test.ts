@@ -30,16 +30,16 @@ describe('normalizeStatus', () => {
     expect(normalizeStatus(undefined)).toBe('scheduled');
   });
 
-  it('mantém status EN DB como estão', () => {
+  it('mantém status EN do banco como estão', () => {
     expect(normalizeStatus('scheduled')).toBe('scheduled');
-    expect(normalizeStatus('cancelled')).toBe('cancelled');
-    expect(normalizeStatus('completed')).toBe('completed');
-    expect(normalizeStatus('no_show')).toBe('no_show');
     expect(normalizeStatus('confirmed')).toBe('confirmed');
+    expect(normalizeStatus('completed')).toBe('completed');
+    expect(normalizeStatus('cancelled')).toBe('cancelled');
+    expect(normalizeStatus('no_show')).toBe('no_show');
     expect(normalizeStatus('rescheduled')).toBe('rescheduled');
   });
 
-  it('mapeia aliases PT-BR para EN DB', () => {
+  it('mapeia aliases PT-BR para o enum EN do banco', () => {
     expect(normalizeStatus('agendado')).toBe('scheduled');
     expect(normalizeStatus('cancelado')).toBe('cancelled');
     expect(normalizeStatus('atendido')).toBe('completed');
@@ -47,7 +47,7 @@ describe('normalizeStatus', () => {
     expect(normalizeStatus('remarcar')).toBe('rescheduled');
   });
 
-  it('mapeia aliases PT-BR variantes para EN DB', () => {
+  it('mapeia aliases PT-BR variantes para o enum EN do banco', () => {
     expect(normalizeStatus('concluido')).toBe('completed');
     expect(normalizeStatus('remarcado')).toBe('rescheduled');
     expect(normalizeStatus('reagendado')).toBe('rescheduled');
@@ -112,13 +112,13 @@ describe('isConflictError', () => {
 });
 
 describe('countsTowardCapacity', () => {
-  it('conta statuses ativos (EN DB)', () => {
+  it('conta statuses ativos do enum do banco', () => {
     expect(countsTowardCapacity('scheduled')).toBe(true);
     expect(countsTowardCapacity('confirmed')).toBe(true);
     expect(countsTowardCapacity('completed')).toBe(true);
   });
 
-  it('não conta statuses finais/cancelados (EN DB)', () => {
+  it('não conta statuses finais/cancelados', () => {
     expect(countsTowardCapacity('cancelled')).toBe(false);
     expect(countsTowardCapacity('no_show')).toBe(false);
     expect(countsTowardCapacity('rescheduled')).toBe(false);
@@ -126,15 +126,13 @@ describe('countsTowardCapacity', () => {
 });
 
 describe('STATUS_MAP', () => {
-  it('contém mapeamentos PT-BR variantes para EN DB', () => {
-    expect(STATUS_MAP['agendado']).toBe('scheduled');
-    expect(STATUS_MAP['cancelado']).toBe('cancelled');
+  it('contém mapeamentos PT-BR variantes para o enum do banco', () => {
     expect(STATUS_MAP['concluido']).toBe('completed');
     expect(STATUS_MAP['falta']).toBe('no_show');
     expect(STATUS_MAP['faltou']).toBe('no_show');
   });
 
-  it('contém mapeamentos EN para EN DB', () => {
+  it('contém mapeamentos EN preservando o enum do banco', () => {
     expect(STATUS_MAP['scheduled']).toBe('scheduled');
     expect(STATUS_MAP['cancelled']).toBe('cancelled');
     expect(STATUS_MAP['completed']).toBe('completed');
