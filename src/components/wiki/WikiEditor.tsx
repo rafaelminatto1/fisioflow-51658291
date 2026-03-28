@@ -16,7 +16,7 @@ import {
 	Copy,
 	ImagePlus,
 	Video,
-	Share2 as Youtube,
+	Play as YoutubeIcon,
 	Globe,
 	UploadCloud,
 	ExternalLink,
@@ -30,7 +30,10 @@ import {
 	Database,
 	Type,
 	MessageSquare,
-	History,
+	History as HistoryIcon,
+	Edit as EditIcon,
+	Share2 as ShareIcon,
+	Clock as ClockIcon,
 } from "lucide-react";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
@@ -47,6 +50,34 @@ import { cn } from "@/lib/utils";
 import { toast } from "sonner";
 import { wikiService } from "@/lib/services/wikiService";
 import type { WikiComment, WikiPage, WikiPageVersion } from "@/types/wiki";
+
+const EVIDENCE_ROOT_SLUG = "trilhas-evidencia-fisioterapia";
+
+const EVIDENCE_TRAIL_ORDER = [
+	"trilha-lca-retorno-esporte",
+	"trilha-artroplastia-joelho-quadril",
+	"trilha-ombro-ortopedico-pos-operatorio",
+	"trilha-tornozelo-aquiles-instabilidade",
+] as const;
+
+const EVIDENCE_PROTOCOL_ORDER = [
+	"protocolo-lca-retorno-esporte",
+	"protocolo-artroplastia-joelho-quadril",
+	"protocolo-ombro-ortopedico-pos-operatorio",
+	"protocolo-tornozelo-aquiles-instabilidade",
+] as const;
+
+const EVIDENCE_PAGE_ORDER = [
+	EVIDENCE_ROOT_SLUG,
+	...EVIDENCE_TRAIL_ORDER,
+	...EVIDENCE_PROTOCOL_ORDER,
+];
+
+function isEvidencePage(page: Pick<WikiPage, "slug">): boolean {
+	return EVIDENCE_PAGE_ORDER.includes(
+		page.slug as (typeof EVIDENCE_PAGE_ORDER)[number],
+	);
+}
 
 interface WikiEditorProps {
 	page: WikiPage | null;
@@ -260,7 +291,7 @@ const SLASH_COMMANDS: SlashCommand[] = [
 		label: "YouTube",
 		description: "Embed de YouTube",
 		keywords: ["yt", "youtube", "embed"],
-		icon: Youtube,
+		icon: YoutubeIcon,
 	},
 	{
 		id: "embed",
@@ -1863,9 +1894,10 @@ function WikiHistoryDiff({
 	return (
 		<div className="space-y-3 rounded-xl border bg-muted/10 p-4">
 			<div className="flex flex-wrap items-center justify-between gap-2">
-				<h3 className="flex items-center gap-2 text-sm font-semibold">
-					<History className="h-4 w-4" /> Histórico e Diff Visual
+				<h3 className="flex items-center gap-2 text-lg font-semibold">
+					<HistoryIcon className="h-4 w-4" /> Histórico e Diff Visual
 				</h3>
+
 				<Badge variant="secondary">{versions.length} versões</Badge>
 			</div>
 
@@ -2295,23 +2327,24 @@ export function WikiEditor({ page, draft, onCancel, onSave }: WikiEditorProps) {
 						onClick={recoverLocalDraft}
 						title="Recuperar rascunho salvo localmente"
 					>
-						<Clock className="mr-2 h-4 w-4" />
+						<ClockIcon className="mr-2 h-4 w-4" />
 						Recuperar
-					</Button>
+						</Button>
 
-					<Button variant="outline" size="sm" onClick={onCancel}>
+						<Button variant="outline" size="sm" onClick={onCancel}>
 						<X className="mr-2 h-4 w-4" />
 						Cancelar
-					</Button>
+						</Button>
 
-					<Button size="sm" onClick={handleSave}>
+						<Button size="sm" onClick={handleSave}>
 						<Save className="mr-2 h-4 w-4" />
 						Salvar
-					</Button>
-				</div>
-			</div>
+						</Button>
+						</div>
+						</div>
 
-			<div className="flex min-h-0 flex-1">
+						<div className="flex min-h-0 flex-1">
+
 				<div
 					className={cn(
 						"min-h-0 flex-1",
@@ -2698,33 +2731,64 @@ export function WikiPageViewer({
 	};
 
 	return (
-		<div className="mx-auto max-w-5xl p-8">
-			<div className="mb-8">
-				<div className="flex items-start justify-between">
-					<div>
+		<div className="mx-auto max-w-5xl px-4 py-8 sm:px-8">
+			<div className="mb-10 flex flex-col md:flex-row md:items-end justify-between gap-6">
+				<div className="space-y-4">
+					<div className="flex items-center gap-4">
 						{page.icon && (
-							<span className="mb-4 block text-6xl">{page.icon}</span>
+							<div className="h-16 w-16 rounded-2xl bg-primary/10 flex items-center justify-center text-4xl shadow-sm">
+								{page.icon}
+							</div>
 						)}
-						<h1 className="mb-2 text-4xl font-bold">{page.title}</h1>
-						{page.category && (
-							<Badge variant="outline" className="mb-4">
-								{page.category}
-							</Badge>
+						<div>
+							<div className="flex items-center gap-2 mb-1">
+								{page.category && (
+									<Badge variant="secondary" className="px-2 py-0 h-5 text-[10px] uppercase font-bold tracking-wider">
+										{page.category}
+									</Badge>
+								)}
+								{isEvidencePage(page) && (
+									<Badge className="bg-emerald-600 px-2 py-0 h-5 text-[10px] uppercase font-bold tracking-wider">
+										Trilha Clínica
+									</Badge>
+								)}
+							</div>
+							<h1 className="text-3xl sm:text-4xl font-extrabold tracking-tight text-slate-900 dark:text-slate-50">
+								{page.title}
+							</h1>
+						</div>
+					</div>
+
+					<div className="flex flex-wrap items-center gap-4 text-xs font-medium text-muted-foreground">
+						<div className="flex items-center gap-1.5 bg-muted/50 px-2 py-1 rounded-md">
+							<ClockIcon className="h-3.5 w-3.5" />
+							Atualizado em {formatTimestamp(page.updated_at)}
+						</div>
+						<div className="flex items-center gap-1.5 bg-muted/50 px-2 py-1 rounded-md">
+							<Eye className="h-3.5 w-3.5" />
+							{page.view_count} visualizações
+						</div>
+						{page.version > 1 && (
+							<div className="flex items-center gap-1.5 bg-muted/50 px-2 py-1 rounded-md">
+								<HistoryIcon className="h-3.5 w-3.5" />
+								v{page.version}
+							</div>
 						)}
 					</div>
-					<Button variant="outline" onClick={onEdit}>
-						Editar
-					</Button>
 				</div>
 
-				<div className="flex items-center gap-4 text-sm text-muted-foreground">
-					<span>Última atualização: {formatTimestamp(page.updated_at)}</span>
-					<span>•</span>
-					<span>{page.view_count} visualizações</span>
+				<div className="flex items-center gap-2">
+					<Button variant="outline" size="sm" onClick={onEdit} className="shadow-sm gap-2">
+						<EditIcon className="h-4 w-4" />
+						Editar Página
+					</Button>
+					<Button variant="ghost" size="sm" className="shadow-sm">
+						<ShareIcon className="h-4 w-4" />
+					</Button>
 				</div>
 			</div>
 
-			<div className="space-y-4">
+			<div className="space-y-3">
 				{blocks.map((block) => {
 					const blockComments = commentsByBlock[block.id] || [];
 					const isCommenting = activeCommentBlockId === block.id;
@@ -2733,14 +2797,16 @@ export function WikiPageViewer({
 					return (
 						<div
 							key={block.id}
-							className="group rounded-xl border bg-background shadow-sm"
+							className="group relative rounded-xl border border-slate-200 bg-white shadow-sm transition-all hover:border-slate-300 dark:border-slate-800 dark:bg-slate-950"
 						>
-							<div className="flex items-center justify-between border-b px-3 py-2">
+							<div className="flex items-center justify-between border-b border-slate-100 px-4 py-1.5 bg-slate-50/50 dark:border-slate-800/50 dark:bg-slate-900/50 rounded-t-xl opacity-80 group-hover:opacity-100 transition-opacity">
 								<div className="flex items-center gap-2">
-									<Badge variant="outline">{getBlockLabel(block.type)}</Badge>
+									<span className="text-[10px] font-bold uppercase tracking-widest text-slate-500">
+										{getBlockLabel(block.type)}
+									</span>
 									{blockComments.length > 0 && (
-										<Badge variant="secondary" className="gap-1">
-											<MessageSquare className="h-3 w-3" />
+										<Badge variant="secondary" className="h-4 px-1 gap-1 text-[9px]">
+											<MessageSquare className="h-2.5 w-2.5" />
 											{blockComments.length}
 										</Badge>
 									)}
@@ -2748,15 +2814,15 @@ export function WikiPageViewer({
 
 								<Button
 									variant="ghost"
-									size="sm"
+									className="h-7 px-2 text-[10px] font-semibold text-slate-500 hover:text-primary transition-colors"
 									onClick={() =>
 										setActiveCommentBlockId((currentValue) =>
 											currentValue === block.id ? null : block.id,
 										)
 									}
 								>
-									<MessageSquare className="mr-2 h-4 w-4" />
-									Comentar trecho
+									<MessageSquare className="mr-1.5 h-3.5 w-3.5" />
+									Comentar
 								</Button>
 							</div>
 
@@ -2767,7 +2833,7 @@ export function WikiPageViewer({
 								onMouseUp={() => handleCaptureSelection(block.id)}
 								onTouchEnd={() => handleCaptureSelection(block.id)}
 								onKeyUp={() => handleCaptureSelection(block.id)}
-								className="p-4"
+								className="p-5 md:p-6"
 							>
 								<WikiBlockRenderer block={block} />
 							</div>

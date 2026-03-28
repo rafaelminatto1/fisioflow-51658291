@@ -5,7 +5,7 @@ import { Ruler, Play, Square, Link2, Activity, RotateCcw } from 'lucide-react';
 import { KP_NAMES } from '@/types/biomechanics';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
-  LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer
+  LineChart, Line, XAxis, YAxis, Tooltip
 } from 'recharts';
 
 interface DynamicGoniometerProps {
@@ -22,6 +22,37 @@ interface DynamicGoniometerProps {
 export const GoniometerPanel: React.FC<DynamicGoniometerProps> = ({
     currentAngle, angleHistory, isRecording, toggleRecording, clearGoniometer, linkedKP, linkKeypoint, onPointClick
 }) => {
+    const chartContainerRef = React.useRef<HTMLDivElement>(null);
+    const [chartSize, setChartSize] = React.useState({ width: 0, height: 0 });
+
+    React.useEffect(() => {
+        const element = chartContainerRef.current;
+        if (!element || typeof ResizeObserver === "undefined") return;
+
+        const updateSize = (width: number, height: number) => {
+            const nextWidth = Math.floor(width);
+            const nextHeight = Math.floor(height);
+
+            setChartSize((prev) =>
+                prev.width === nextWidth && prev.height === nextHeight
+                    ? prev
+                    : { width: nextWidth, height: nextHeight },
+            );
+        };
+
+        updateSize(element.clientWidth, element.clientHeight);
+
+        const observer = new ResizeObserver((entries) => {
+            const entry = entries[0];
+            if (!entry) return;
+            updateSize(entry.contentRect.width, entry.contentRect.height);
+        });
+
+        observer.observe(element);
+        return () => observer.disconnect();
+    }, []);
+
+    const canRenderChart = chartSize.width > 24 && chartSize.height > 24 && angleHistory.length > 0;
     
     // Simplistic UI to pick joints. In a full version this would be a dropdown.
     // For now we click to cycle through common lower body joints.
@@ -98,13 +129,15 @@ export const GoniometerPanel: React.FC<DynamicGoniometerProps> = ({
                                 exit={{ opacity: 0, height: 0 }}
                                 className="space-y-2"
                             >
-                                <div className="h-40 w-full mt-2 bg-slate-950/50 rounded-2xl border border-white/5 p-4 relative group/chart">
+                                <div ref={chartContainerRef} className="h-40 w-full mt-2 bg-slate-950/50 rounded-2xl border border-white/5 p-4 relative group/chart min-w-0">
                                     <div className="absolute top-2 left-3 flex items-center gap-2 pointer-events-none">
                                         <Activity className="h-3 w-3 text-orange-500" />
                                         <span className="text-[8px] font-black text-white/40 uppercase tracking-widest">Série Temporal (Frames)</span>
                                     </div>
-                                    <ResponsiveContainer width="100%" height="100%">
+                                    {canRenderChart ? (
                                         <LineChart 
+                                            width={chartSize.width}
+                                            height={chartSize.height}
                                             data={angleHistory}
                                             onClick={(data: any) => {
                                                 if (data && data.activePayload && onPointClick) {
@@ -137,7 +170,11 @@ export const GoniometerPanel: React.FC<DynamicGoniometerProps> = ({
                                                 animationDuration={1000}
                                             />
                                         </LineChart>
-                                    </ResponsiveContainer>
+                                    ) : (
+                                        <div className="flex h-full items-center justify-center rounded-xl border border-dashed border-white/10 text-[9px] font-bold uppercase tracking-widest text-white/30">
+                                            Aguardando medicao
+                                        </div>
+                                    )}
                                 </div>
                                 <p className="text-[8px] text-center text-muted-foreground/60 font-medium uppercase tracking-[0.2em]">
                                     Clique no gráfico para sincronizar timeline

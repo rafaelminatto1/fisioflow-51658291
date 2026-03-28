@@ -38,7 +38,7 @@ import {
 } from "@/components/ui/select";
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 
-import { WikiSidebar } from "@/components/wiki/WikiSidebar";
+import { WikiTopNav } from "@/components/wiki/WikiTopNav";
 import { WikiEditor, WikiPageViewer } from "@/components/wiki/WikiEditor";
 import { useAuth } from "@/contexts/AuthContext";
 import { wikiService } from "@/lib/services/wikiService";
@@ -410,8 +410,8 @@ export default function WikiPage() {
 	// Renderização Principal
 	return (
 		<MainLayout>
-			<div className="h-full flex overflow-hidden">
-				<WikiSidebar
+			<div className="h-full flex flex-col overflow-hidden">
+				<WikiTopNav
 					pages={pages}
 					categories={categories}
 					selectedPageId={selectedPage?.id}

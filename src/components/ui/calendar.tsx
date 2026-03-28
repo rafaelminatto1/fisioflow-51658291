@@ -1,9 +1,9 @@
-import * as React from "react";
-import { ChevronLeft, ChevronRight } from "lucide-react";
-import { DayPicker } from "react-day-picker";
 import { ptBR } from "date-fns/locale";
-import { cn } from "@/lib/utils";
+import { ChevronLeft, ChevronRight } from "lucide-react";
+import type * as React from "react";
+import { DayPicker } from "react-day-picker";
 import { buttonVariants } from "@/lib/ui-variants";
+import { cn } from "@/lib/utils";
 
 export type CalendarProps = React.ComponentProps<typeof DayPicker>;
 
@@ -43,7 +43,7 @@ function Calendar({
 				table: "w-full border-collapse space-y-1",
 				head_row: "flex",
 				head_cell:
-					"text-muted-foreground rounded-md w-8 font-normal text-[0.8rem]",
+					"text-muted-foreground rounded-md w-10 font-normal text-[0.8rem] whitespace-nowrap",
 				row: "flex w-full mt-2",
 				cell: cn(
 					"relative p-0 text-center text-sm focus-within:relative focus-within:z-20 [&:has([aria-selected])]:bg-accent [&:has([aria-selected].day-outside)]:bg-accent/50 [&:has([aria-selected].day-range-end)]:rounded-r-md",

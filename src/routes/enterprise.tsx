@@ -136,12 +136,6 @@ const TelemedicineRoom = lazy(
 			/* webpackChunkName: "telemedicine-room" */ "@/pages/TelemedicineRoom"
 		),
 );
-const ExerciseLibraryExpanded = lazy(
-	() =>
-		import(
-			/* webpackChunkName: "exercises-library" */ "@/pages/ExerciseLibraryExpanded"
-		),
-);
 // CRM
 const CRMDashboard = lazy(
 	() =>
@@ -427,15 +421,6 @@ export const enterpriseRoutes = (
 				</ProtectedRoute>
 			}
 		/>
-		<Route
-			path="/exercise-library"
-			element={
-				<ProtectedRoute>
-					<ExerciseLibraryExpanded />
-				</ProtectedRoute>
-			}
-		/>
-
 		{/* CRM */}
 		<Route
 			path="/crm"
