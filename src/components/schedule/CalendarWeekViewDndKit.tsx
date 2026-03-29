@@ -16,11 +16,6 @@ import { Appointment } from "@/types/appointment";
 import { cn } from "@/lib/utils";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import VirtualizedCalendarGrid from "./virtualization/VirtualWeekGrid";
-import { useCardSize } from "@/hooks/useCardSize";
-import {
-	BUSINESS_HOURS,
-} from "@/lib/config/agenda";
-import { calculateSlotHeightFromCardSize } from "@/lib/calendar/cardHeightCalculator";
 import { normalizeTime } from "./shared/utils";
 import { useRenderTracking } from "@/hooks/useRenderTracking";
 
@@ -87,8 +82,6 @@ export const CalendarWeekViewDndKit = ({
 	useRenderTracking("CalendarWeekViewDndKit", {
 		appointmentsCount: appointments?.length,
 	});
-
-	const { cardSize, heightScale } = useCardSize();
 
 	const sensors = useSensors(
 		useSensor(PointerSensor, {
@@ -215,28 +208,7 @@ export const CalendarWeekViewDndKit = ({
 							selectionMode={selectionMode}
 							selectedIds={selectedIds}
 							onToggleSelection={onToggleSelection}
-						>
-							{isSameDay(currentDate, new Date()) && (
-								<div
-									className="absolute left-0 right-0 z-20 pointer-events-none flex items-center"
-									style={{
-										top: `${
-											((new Date().getHours() - BUSINESS_HOURS.START) * 60 +
-												new Date().getMinutes()) *
-											(calculateSlotHeightFromCardSize(cardSize, heightScale) /
-												BUSINESS_HOURS.DEFAULT_SLOT_DURATION)
-										}px`,
-									}}
-								>
-									<div className="w-[60px] flex justify-end pr-2">
-										<span className="bg-red-500 text-white text-[9px] font-bold px-1 rounded shadow-sm">
-											{format(new Date(), "HH:mm")}
-										</span>
-									</div>
-									<div className="h-px bg-red-500 flex-1 shadow-sm"></div>
-								</div>
-							)}
-						</VirtualizedCalendarGrid>
+						/>
 					</div>
 				</div>
 			</DndContext>
