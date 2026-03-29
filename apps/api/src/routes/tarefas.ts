@@ -2,6 +2,7 @@ import { Hono } from 'hono';
 import { createPool } from '../lib/db';
 import { requireAuth, type AuthVariables } from '../lib/auth';
 import type { Env } from '../types/env';
+import { jsonSerialize } from '../lib/utils';
 
 const app = new Hono<{ Bindings: Env; Variables: AuthVariables }>();
 
@@ -61,12 +62,12 @@ app.post('/', requireAuth, async (c) => {
         body.status ?? 'A_FAZER', body.prioridade ?? 'MEDIA', body.tipo ?? 'TAREFA',
         body.data_vencimento ?? null, body.start_date ?? null, body.order_index ?? 0,
         body.tags ?? [],                                                        // text[]  — array JS direto
-        JSON.stringify(body.checklists ?? []),                                  // jsonb
-        JSON.stringify(body.attachments ?? []),                                 // jsonb
-        JSON.stringify(body.task_references ?? body.references ?? []),          // jsonb
-        JSON.stringify(body.dependencies ?? []),                                // jsonb
+        jsonSerialize(body.checklists ?? []),                                  // jsonb
+        jsonSerialize(body.attachments ?? []),                                 // jsonb
+        jsonSerialize(body.task_references ?? body.references ?? []),          // jsonb
+        jsonSerialize(body.dependencies ?? []),                                // jsonb
         body.requires_acknowledgment ?? false,                                  // boolean
-        JSON.stringify(body.acknowledgments ?? [])                              // jsonb
+        jsonSerialize(body.acknowledgments ?? [])                              // jsonb
       ]
     );
     return c.json({ data: result.rows[0] }, 201);
@@ -103,7 +104,7 @@ app.patch('/:id', requireAuth, async (c) => {
         const val = key === 'tags'
           ? (body[key] ?? [])
           : ['checklists', 'attachments', 'task_references', 'dependencies', 'acknowledgments'].includes(key)
-            ? JSON.stringify(body[key] ?? [])
+            ? jsonSerialize(body[key] ?? [])
             : body[key];
         sets.push(`${key} = $${idx++}`);
         params.push(val);

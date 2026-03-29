@@ -29,6 +29,7 @@ export default function FinancialsScreen() {
   const { light, medium } = useHaptics();
   
   const [filter, setFilter] = useState<'all' | 'pending' | 'paid'>('all');
+  const [activeTab, setActiveTab] = useState<'transactions' | 'receipts'>('transactions');
   const [dateRange] = useState<{ startDate: Date, endDate: Date }>({
     startDate: subDays(new Date(), 30),
     endDate: new Date(),
@@ -83,95 +84,128 @@ export default function FinancialsScreen() {
         <Text style={[styles.headerTitle, { color: colors.text }]}>Financeiro</Text>
       </View>
 
+      <View style={styles.tabContainer}>
+        <TouchableOpacity 
+          style={[styles.tab, activeTab === 'transactions' && { borderBottomColor: colors.primary, borderBottomWidth: 2 }]} 
+          onPress={() => { light(); setActiveTab('transactions'); }}
+        >
+          <Text style={[styles.tabText, { color: activeTab === 'transactions' ? colors.primary : colors.textSecondary }]}>Transações</Text>
+        </TouchableOpacity>
+        <TouchableOpacity 
+          style={[styles.tab, activeTab === 'receipts' && { borderBottomColor: colors.primary, borderBottomWidth: 2 }]} 
+          onPress={() => { light(); setActiveTab('receipts'); }}
+        >
+          <Text style={[styles.tabText, { color: activeTab === 'receipts' ? colors.primary : colors.textSecondary }]}>Recibos</Text>
+        </TouchableOpacity>
+      </View>
+
       <ScrollView 
         style={styles.scroll}
         refreshControl={<RefreshControl refreshing={isLoading} onRefresh={handleRefresh} tintColor={colors.primary} />}
       >
-        {/* Summary Cards */}
-        <View style={styles.summaryContainer}>
-            <Card style={styles.summaryCard}>
-                <View style={styles.iconContainer}>
-                    <Ionicons name="arrow-up-circle" size={24} color={colors.success} />
-                </View>
-                <Text style={[styles.summaryValue, {color: colors.success}]}>
-                    R$ {totalRevenue.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
-                </Text>
-                <Text style={[styles.summaryLabel, { color: colors.textSecondary }]}>Receita (30d)</Text>
-            </Card>
-            <Card style={styles.summaryCard}>
-                <View style={styles.iconContainer}>
-                    <Ionicons name="time" size={24} color={colors.warning} />
-                </View>
-                <Text style={[styles.summaryValue, {color: colors.warning}]}>
-                    R$ {totalPending.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
-                </Text>
-                <Text style={[styles.summaryLabel, { color: colors.textSecondary }]}>Pendente (30d)</Text>
-            </Card>
-        </View>
-
-        {/* Filters */}
-        <View style={styles.filterContainer}>
-            {(['all', 'pending', 'paid'] as const).map((f) => (
-                <TouchableOpacity
-                    key={f}
-                    style={[
-                        styles.filterChip, 
-                        { borderColor: colors.border, backgroundColor: filter === f ? colors.primary : 'transparent' }
-                    ]}
-                    onPress={() => { light(); setFilter(f); }}
-                >
-                    <Text style={[styles.filterText, { color: filter === f ? '#fff' : colors.text }]}>
-                        {f === 'all' ? 'Todos' : f === 'pending' ? 'Pendentes' : 'Pagos'}
+        {activeTab === 'transactions' ? (
+          <>
+            {/* Summary Cards */}
+            <View style={styles.summaryContainer}>
+                <Card style={styles.summaryCard}>
+                    <View style={styles.iconContainer}>
+                        <Ionicons name="arrow-up-circle" size={24} color={colors.success} />
+                    </View>
+                    <Text style={[styles.summaryValue, {color: colors.success}]}>
+                        R$ {totalRevenue.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
                     </Text>
-                </TouchableOpacity>
-            ))}
-        </View>
-
-        <Text style={[styles.listHeader, { color: colors.text }]}>Transações</Text>
-
-        {isLoading && !records ? (
-          <ActivityIndicator size="large" color={colors.primary} style={{ marginTop: 40 }}/>
-        ) : error ? (
-          <Text style={{ textAlign: 'center', color: colors.error, marginTop: 40 }}>Erro ao carregar dados.</Text>
-        ) : filteredRecords.length > 0 ? (
-          filteredRecords.map(record => (
-            <TouchableOpacity key={record.id} onPress={() => handleEdit(record)} activeOpacity={0.7}>
-                <Card style={styles.recordCard}>
-                    <View style={styles.cardHeader}>
-                        <View>
-                            <Text style={[styles.patientName, { color: colors.text }]}>{record.patient_name}</Text>
-                            <Text style={[styles.recordDate, { color: colors.textSecondary }]}>
-                                {format(new Date(record.session_date), 'dd/MM/yyyy')} • {formatPaymentMethod(record.payment_method)}
-                            </Text>
-                        </View>
-                        <View style={[
-                            styles.statusBadge, 
-                            { backgroundColor: record.payment_status === 'paid' ? colors.success + '20' : colors.warning + '20' }
-                        ]}>
-                            <Text style={[
-                                styles.statusText, 
-                                { color: record.payment_status === 'paid' ? colors.success : colors.warning }
-                            ]}>
-                                {record.payment_status === 'paid' ? 'Pago' : 'Pendente'}
-                            </Text>
-                        </View>
-                    </View>
-                    
-                    <View style={[styles.cardFooter, { borderTopColor: colors.border }]}>
-                        <Text style={[styles.recordValue, { color: colors.text }]}>
-                            R$ {record.final_value.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
-                        </Text>
-                        <Ionicons name="chevron-forward" size={20} color={colors.textMuted} />
-                    </View>
+                    <Text style={[styles.summaryLabel, { color: colors.textSecondary }]}>Receita (30d)</Text>
                 </Card>
-            </TouchableOpacity>
-          ))
+                <Card style={styles.summaryCard}>
+                    <View style={styles.iconContainer}>
+                        <Ionicons name="time" size={24} color={colors.warning} />
+                    </View>
+                    <Text style={[styles.summaryValue, {color: colors.warning}]}>
+                        R$ {totalPending.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+                    </Text>
+                    <Text style={[styles.summaryLabel, { color: colors.textSecondary }]}>Pendente (30d)</Text>
+                </Card>
+            </View>
+
+            {/* Filters */}
+            <View style={styles.filterContainer}>
+                {(['all', 'pending', 'paid'] as const).map((f) => (
+                    <TouchableOpacity
+                        key={f}
+                        style={[
+                            styles.filterChip, 
+                            { borderColor: colors.border, backgroundColor: filter === f ? colors.primary : 'transparent' }
+                        ]}
+                        onPress={() => { light(); setFilter(f); }}
+                    >
+                        <Text style={[styles.filterText, { color: filter === f ? '#fff' : colors.text }]}>
+                            {f === 'all' ? 'Todos' : f === 'pending' ? 'Pendentes' : 'Pagos'}
+                        </Text>
+                    </TouchableOpacity>
+                ))}
+            </View>
+
+            <Text style={[styles.listHeader, { color: colors.text }]}>Transações</Text>
+
+            {isLoading && !records ? (
+              <ActivityIndicator size="large" color={colors.primary} style={{ marginTop: 40 }}/>
+            ) : error ? (
+              <Text style={{ textAlign: 'center', color: colors.error, marginTop: 40 }}>Erro ao carregar dados.</Text>
+            ) : filteredRecords.length > 0 ? (
+              filteredRecords.map(record => (
+                <TouchableOpacity key={record.id} onPress={() => handleEdit(record)} activeOpacity={0.7}>
+                    <Card style={styles.recordCard}>
+                        <View style={styles.cardHeader}>
+                            <View>
+                                <Text style={[styles.patientName, { color: colors.text }]}>{record.patient_name}</Text>
+                                <Text style={[styles.recordDate, { color: colors.textSecondary }]}>
+                                    {format(new Date(record.session_date), 'dd/MM/yyyy')} • {formatPaymentMethod(record.payment_method)}
+                                </Text>
+                            </View>
+                            <View style={[
+                                styles.statusBadge, 
+                                { backgroundColor: record.payment_status === 'paid' ? colors.success + '20' : colors.warning + '20' }
+                            ]}>
+                                <Text style={[
+                                    styles.statusText, 
+                                    { color: record.payment_status === 'paid' ? colors.success : colors.warning }
+                                ]}>
+                                    {record.payment_status === 'paid' ? 'Pago' : 'Pendente'}
+                                </Text>
+                            </View>
+                        </View>
+                        
+                        <View style={[styles.cardFooter, { borderTopColor: colors.border }]}>
+                            <Text style={[styles.recordValue, { color: colors.text }]}>
+                                R$ {record.final_value.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+                            </Text>
+                            <View style={{ flexDirection: 'row', gap: 12 }}>
+                              {record.payment_status === 'paid' && (
+                                <TouchableOpacity onPress={() => light()}>
+                                  <Ionicons name="document-text-outline" size={20} color={colors.primary} />
+                                </TouchableOpacity>
+                              )}
+                              <Ionicons name="chevron-forward" size={20} color={colors.textMuted} />
+                            </View>
+                        </View>
+                    </Card>
+                </TouchableOpacity>
+              ))
+            ) : (
+              <View style={styles.emptyState}>
+                  <Ionicons name="wallet-outline" size={48} color={colors.textMuted} />
+                  <Text style={{ textAlign: 'center', color: colors.textSecondary, marginTop: 12 }}>
+                      Nenhum registro encontrado.
+                  </Text>
+              </View>
+            )}
+          </>
         ) : (
           <View style={styles.emptyState}>
-              <Ionicons name="wallet-outline" size={48} color={colors.textMuted} />
-              <Text style={{ textAlign: 'center', color: colors.textSecondary, marginTop: 12 }}>
-                  Nenhum registro encontrado.
-              </Text>
+            <Ionicons name="receipt-outline" size={48} color={colors.textMuted} />
+            <Text style={{ textAlign: 'center', color: colors.textSecondary, marginTop: 12 }}>
+              Histórico de recibos emitidos aparecerá aqui.
+            </Text>
           </View>
         )}
         <View style={{ height: 80 }} /> 
@@ -201,6 +235,20 @@ const styles = StyleSheet.create({
   },
   headerTitle: {
     fontSize: 18,
+    fontWeight: '600',
+  },
+  tabContainer: {
+    flexDirection: 'row',
+    paddingHorizontal: 16,
+    borderBottomWidth: 1,
+    borderBottomColor: 'rgba(0,0,0,0.05)',
+  },
+  tab: {
+    paddingVertical: 12,
+    marginRight: 24,
+  },
+  tabText: {
+    fontSize: 15,
     fontWeight: '600',
   },
   scroll: {
@@ -305,5 +353,11 @@ const styles = StyleSheet.create({
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.25,
     shadowRadius: 3.84,
+  },
+  actionButton: {
+    marginTop: 16,
+    paddingHorizontal: 20,
+    paddingVertical: 10,
+    borderRadius: 8,
   }
 });

@@ -122,6 +122,8 @@ export default function ProgressScreen() {
           />
         }
       >
+import { router } from 'expo-router';
+...
         {/* Period Selector */}
         <View style={[styles.periodSelector, { backgroundColor: colors.surface }]}>
           {(['week', 'month', 'all'] as const).map((period) => (
@@ -144,6 +146,25 @@ export default function ProgressScreen() {
             </TouchableOpacity>
           ))}
         </View>
+
+        {/* Gamification Card */}
+        <TouchableOpacity
+          activeOpacity={0.7}
+          onPress={() => router.push('/gamification')}
+          style={styles.gamificationWrapper}
+        >
+          <Card style={[styles.gamificationCard, { backgroundColor: colors.primary }]}>
+            <View style={styles.gamificationContent}>
+              <View style={styles.gamificationTextContainer}>
+                <Text style={styles.gamificationTitle}>Gamificação</Text>
+                <Text style={styles.gamificationSubtitle}>Nível, Conquistas e Recompensas</Text>
+              </View>
+              <View style={styles.gamificationIconContainer}>
+                <Ionicons name="trophy" size={32} color="#FFFFFF" />
+              </View>
+            </View>
+          </Card>
+        </TouchableOpacity>
 
         {/* Stats Cards */}
         <View style={styles.statsGrid}>
@@ -375,10 +396,46 @@ const styles = StyleSheet.create({
     borderRadius: 8,
   },
   periodButtonText: {
-    fontSize: 13,
+    fontSize: 14,
     fontWeight: '600',
   },
+  gamificationWrapper: {
+    paddingHorizontal: Spacing.screen,
+    marginBottom: Spacing.gap,
+  },
+  gamificationCard: {
+    padding: 16,
+    borderRadius: 16,
+  },
+  gamificationContent: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+  gamificationTextContainer: {
+    flex: 1,
+  },
+  gamificationTitle: {
+    color: '#FFFFFF',
+    fontSize: 18,
+    fontWeight: 'bold',
+    marginBottom: 4,
+  },
+  gamificationSubtitle: {
+    color: 'rgba(255, 255, 255, 0.8)',
+    fontSize: 14,
+  },
+  gamificationIconContainer: {
+    width: 56,
+    height: 56,
+    borderRadius: 28,
+    backgroundColor: 'rgba(255, 255, 255, 0.2)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginLeft: 16,
+  },
   statsGrid: {
+
     flexDirection: 'row',
     flexWrap: 'wrap',
     gap: Spacing.gap,

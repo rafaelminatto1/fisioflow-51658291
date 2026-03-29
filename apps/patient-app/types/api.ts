@@ -169,6 +169,36 @@ export interface Message {
   attachment_name?: string;
 }
 
+export interface Achievement {
+  id: string;
+  code: string;
+  title: string;
+  description: string;
+  xpReward: number;
+  icon: string;
+  category: string;
+  unlockedAt?: string | null;
+}
+
+export interface ShopItem {
+  id: string;
+  code: string;
+  name: string;
+  description: string;
+  cost: number;
+  type: string;
+  icon: string;
+  isUnlocked?: boolean;
+}
+
+export interface Quest {
+  id: string;
+  title: string;
+  description: string;
+  xpReward: number;
+  status: 'available' | 'completed' | 'claimed';
+}
+
 export interface ExerciseFeedback {
   exerciseId: string;
   difficulty: number; // 1-5

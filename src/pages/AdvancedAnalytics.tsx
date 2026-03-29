@@ -5,6 +5,7 @@ import { BarChart3, LayoutDashboard, Sparkles } from "lucide-react";
 import { AppointmentAnalytics } from "@/components/analytics/AppointmentAnalytics";
 import { PatientAnalytics } from "@/components/analytics/PatientAnalytics";
 import { FinancialAnalytics } from "@/components/analytics/FinancialAnalytics";
+import { TeamPerformance } from "@/components/analytics/TeamPerformance";
 import { PredictiveAnalytics } from "@/components/analytics/PredictiveAnalytics";
 import { InternalDashboard } from "@/components/analytics/InternalDashboard";
 import { useAnalyticsSummary } from "@/hooks/useAnalyticsSummary";
@@ -128,6 +129,12 @@ function AdvancedAnalyticsContent() {
 							Financeiro
 						</TabsTrigger>
 						<TabsTrigger
+							value="team"
+							className="h-9 px-4 rounded-xl data-[state=active]:bg-background data-[state=active]:shadow-md data-[state=active]:text-primary transition-all text-xs font-bold gap-2"
+						>
+							Equipe
+						</TabsTrigger>
+						<TabsTrigger
 							value="predictive"
 							className="h-9 px-4 rounded-xl data-[state=active]:bg-background data-[state=active]:shadow-md data-[state=active]:text-primary transition-all text-xs font-bold gap-2"
 						>
@@ -163,6 +170,13 @@ function AdvancedAnalyticsContent() {
 					className="space-y-4 animate-in fade-in slide-in-from-bottom-4 duration-500"
 				>
 					<FinancialAnalytics />
+				</TabsContent>
+
+				<TabsContent
+					value="team"
+					className="space-y-4 animate-in fade-in slide-in-from-bottom-4 duration-500"
+				>
+					<TeamPerformance />
 				</TabsContent>
 
 				<TabsContent

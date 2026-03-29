@@ -122,7 +122,7 @@ export default defineConfig(({ mode }) => {
 			format: "es",
 		},
 		resolve: {
-			tsconfigPaths: true,
+			// Manual aliases are used below for precise control over package versions and stubs.
 			dedupe: ["react", "react-dom", "framer-motion"],
 			alias: {
 				"@": path.resolve(repoRoot, "src"),
@@ -131,11 +131,11 @@ export default defineConfig(({ mode }) => {
 				"@fisioflow/core": path.resolve(repoRoot, "packages/core/src"),
 				"@fisioflow/codec-charls-real": path.resolve(
 					repoRoot,
-					"node_modules/.pnpm/@cornerstonejs+codec-charls@1.2.3/node_modules/@cornerstonejs/codec-charls/dist/charlswasm_decode.js",
+					"node_modules/@cornerstonejs/codec-charls/dist/charlswasm_decode.js",
 				),
 				"@fisioflow/codec-charls-wasm": path.resolve(
 					repoRoot,
-					"node_modules/.pnpm/@cornerstonejs+codec-charls@1.2.3/node_modules/@cornerstonejs/codec-charls/dist/charlswasm_decode.wasm",
+					"node_modules/@cornerstonejs/codec-charls/dist/charlswasm_decode.wasm",
 				),
 				"@fisioflow/skills": path.resolve(repoRoot, "src/lib/skills"),
 				"react-grid-layout/dist/legacy": path.resolve(
@@ -164,7 +164,7 @@ export default defineConfig(({ mode }) => {
 			cssTarget: "es2020",
 			sourcemap: !isProduction,
 			rolldownOptions: {
-				external: ["fs", "path", "crypto", "stream", "util"],
+				external: [],
 				output: {
 					// Rolldown rc.12 codeSplitting — substitui rollupOptions.manualChunks
 					// que não funciona corretamente com Rolldown (quebra named exports).

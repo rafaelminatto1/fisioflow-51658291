@@ -440,4 +440,101 @@ async function processWhatsAppWebhook(body: Record<string, unknown>, env: any): 
   }
 }
 
+app.post('/send-template', requireAuth, async (c) => {
+  const user = c.get('user');
+  const pool = await createPool(c.env);
+  const body = (await c.req.json()) as {
+    patient_id: string;
+    template_key: string;
+    variables: Record<string, string>;
+    appointment_id?: string;
+  };
+
+  const { patient_id, template_key, variables, appointment_id } = body;
+  if (!patient_id || !template_key) {
+    return c.json({ error: 'patient_id e template_key são obrigatórios' }, 400);
+  }
+
+  // 1. Buscar paciente para pegar o telefone
+  const patientRes = await pool.query('SELECT full_name, phone FROM patients WHERE id = $1 LIMIT 1', [patient_id]);
+  const patient = patientRes.rows[0];
+  if (!patient?.phone) {
+    return c.json({ error: 'Paciente não possui telefone cadastrado' }, 400);
+  }
+
+  // 2. Buscar template
+  const settings = await loadOrganizationSettings(pool, user.organizationId);
+  const templates = (settings.whatsapp_templates as any[]) ?? DEFAULT_TEMPLATES;
+  const template = templates.find((t: any) => t.template_key === template_key);
+  
+  if (!template) {
+    return c.json({ error: 'Template não encontrado' }, 404);
+  }
+
+  // 3. Processar variáveis no conteúdo
+  let content = template.content;
+  for (const [key, val] of Object.entries(variables)) {
+    content = content.replace(new RegExp(`{{${key}}}`, 'g'), val);
+  }
+
+  // 4. Enviar via Meta API (Simulado ou Real dependendo das envs)
+  const phoneId = c.env.WHATSAPP_PHONE_NUMBER_ID;
+  const token = c.env.WHATSAPP_ACCESS_TOKEN;
+
+  let status = 'sent';
+  let messageId = null;
+
+  if (phoneId && token) {
+    try {
+      const metaRes = await fetch(`https://graph.facebook.com/v19.0/${phoneId}/messages`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+        body: JSON.stringify({
+          messaging_product: 'whatsapp',
+          to: patient.phone.replace(/\D/g, ''),
+          type: 'template',
+          template: {
+            name: template_key,
+            language: { code: 'pt_BR' },
+            components: [
+              {
+                type: 'body',
+                parameters: template.variables.map((v: string) => ({
+                  type: 'text',
+                  text: variables[v] || '',
+                })),
+              },
+            ],
+          },
+        }),
+      });
+      const metaData = await metaRes.json() as any;
+      messageId = metaData.messages?.[0]?.id;
+    } catch (e) {
+      console.error('[WhatsApp] Error sending Meta template:', e);
+      status = 'failed';
+    }
+  }
+
+  // 5. Salvar na tabela de mensagens
+  await pool.query(
+    `INSERT INTO whatsapp_messages (
+      organization_id, patient_id, from_phone, to_phone, message, type, status, message_id, metadata, created_at, updated_at
+    ) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,NOW(),NOW())`,
+    [
+      user.organizationId,
+      patient_id,
+      'clinic',
+      patient.phone,
+      content,
+      'template',
+      status,
+      messageId,
+      JSON.stringify({ appointment_id, template_key, variables }),
+    ],
+  );
+
+  return c.json({ success: status === 'sent', content, messageId });
+});
+
 export { app as whatsappRoutes };
