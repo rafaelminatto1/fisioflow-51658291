@@ -2,6 +2,7 @@ import { Hono } from 'hono';
 import type { Env } from '../types/env';
 import { requireAuth, type AuthVariables } from '../lib/auth';
 import { createPool } from '../lib/db';
+import { jsonSerialize } from '../lib/utils';
 
 const app = new Hono<{ Bindings: Env; Variables: AuthVariables }>();
 
@@ -10,16 +11,6 @@ const parseIsoDate = (value: unknown): string | null => {
   const date = new Date(String(value));
   if (Number.isNaN(date.getTime())) return null;
   return date.toISOString().split('T')[0];
-};
-
-const jsonSerialize = (value: unknown): string | null => {
-  if (value == null) return null;
-  if (typeof value === 'string') return value;
-  try {
-    return JSON.stringify(value);
-  } catch {
-    return String(value);
-  }
 };
 
 const mapMeasurement = (row: Record<string, unknown>) => ({
@@ -299,8 +290,8 @@ app.post('/treatment-sessions', requireAuth, async (c) => {
         INSERT INTO treatment_sessions (
           patient_id, therapist_id, session_date,
           subjective, objective, assessment, plan, observations,
-          exercises_performed, pain_level_before, pain_level_after, organization_id
-        ) VALUES ($1, $2, $3, $4, $5::jsonb, $6, $7, $8, $9::jsonb, $10, $11, $12)
+          exercises_performed, pain_level_before, pain_level_after, organization_id, appointment_id
+        ) VALUES ($1, $2, $3, $4, $5::jsonb, $6, $7, $8, $9::jsonb, $10, $11, $12, $13)
         RETURNING *
       `,
       [
@@ -316,6 +307,7 @@ app.post('/treatment-sessions', requireAuth, async (c) => {
         Number(body.pain_level_before ?? 0),
         Number(body.pain_level_after ?? 0),
         user.organizationId,
+        null, // explicitly pass NULL for appointment_id
       ],
     );
     result = row;

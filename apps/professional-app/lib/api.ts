@@ -231,6 +231,15 @@ function normalizeTarefa(rawTarefa: any): ApiTarefa {
   };
 }
 
+function normalizeLead(rawLead: any): ApiLead {
+  return {
+    ...rawLead,
+    id: String(rawLead.id),
+    created_at: rawLead.created_at ?? new Date().toISOString(),
+    updated_at: rawLead.updated_at ?? new Date().toISOString(),
+  };
+}
+
 // ============================================================
 // AUTH TOKEN
 // ============================================================
@@ -738,6 +747,82 @@ export async function updatePartnership(id: string, data: Partial<ApiPartnership
 
 export async function deletePartnership(_id: string): Promise<{ ok: boolean }> {
   return { ok: true };
+}
+
+// ============================================================
+// CRM API
+// ============================================================
+
+export async function getLeads(params?: any): Promise<ApiLead[]> {
+  const response = await fetchApi<ApiResponse<ApiLead[]>>('/api/crm/leads', {
+    params,
+  });
+  return (response.data || []).map(normalizeLead);
+}
+
+export async function getLeadById(id: string): Promise<ApiLead> {
+  const response = await fetchApi<ApiResponse<ApiLead>>(`/api/crm/leads/${encodeURIComponent(id)}`);
+  if (response.error) throw new Error(response.error);
+  return normalizeLead(response.data);
+}
+
+export async function createLead(data: Partial<ApiLead>): Promise<ApiLead> {
+  const response = await fetchApi<ApiResponse<ApiLead>>('/api/crm/leads', {
+    method: 'POST',
+    data,
+  });
+  if (response.error) throw new Error(response.error);
+  return normalizeLead(response.data);
+}
+
+export async function updateLead(id: string, data: Partial<ApiLead>): Promise<ApiLead> {
+  const response = await fetchApi<ApiResponse<ApiLead>>(`/api/crm/leads/${encodeURIComponent(id)}`, {
+    method: 'PUT',
+    data,
+  });
+  if (response.error) throw new Error(response.error);
+  return normalizeLead(response.data);
+}
+
+export async function deleteLead(id: string): Promise<{ ok: boolean }> {
+  const response = await fetchApi<{ ok: boolean }>(`/api/crm/leads/${encodeURIComponent(id)}`, {
+    method: 'DELETE',
+  });
+  return { ok: response.ok };
+}
+
+export async function getLeadHistory(leadId: string): Promise<ApiLeadHistory[]> {
+  const response = await fetchApi<ApiResponse<ApiLeadHistory[]>>(`/api/crm/leads/${encodeURIComponent(leadId)}/historico`);
+  return response.data || [];
+}
+
+export async function createLeadHistory(leadId: string, data: Partial<ApiLeadHistory>): Promise<ApiLeadHistory> {
+  const response = await fetchApi<ApiResponse<ApiLeadHistory>>(`/api/crm/leads/${encodeURIComponent(leadId)}/historico`, {
+    method: 'POST',
+    data,
+  });
+  if (response.error) throw new Error(response.error);
+  return response.data;
+}
+
+// ============================================================
+// GAMIFICATION API (PRO)
+// ============================================================
+
+export interface ApiLeaderboardEntry {
+  id: string;
+  patient_id: string;
+  full_name: string;
+  level: number;
+  total_points: number;
+  current_streak: number;
+}
+
+export async function getLeaderboard(params?: { period?: 'weekly' | 'monthly' | 'all'; limit?: number }): Promise<ApiLeaderboardEntry[]> {
+  const response = await fetchApi<ApiResponse<ApiLeaderboardEntry[]>>('/api/gamification/leaderboard', {
+    params,
+  });
+  return response.data || [];
 }
 
 // ============================================================
