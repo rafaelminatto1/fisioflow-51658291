@@ -114,6 +114,54 @@ function getPatientInitials(patient: Patient): string {
 	return name.slice(0, 2).toUpperCase() || "?";
 }
 
+function getSessionStartDate(appointment?: Appointment | null): Date | null {
+	if (!appointment) return null;
+
+	const appointmentDateTime = (
+		appointment as Appointment & { appointment_date?: string }
+	).appointment_date;
+
+	if (appointmentDateTime) {
+		const parsed = parseResponseDate(appointmentDateTime);
+		return Number.isNaN(parsed.getTime()) ? null : parsed;
+	}
+
+	const dateValue = (appointment as Appointment & { date?: string }).date;
+	const startTime =
+		(
+			appointment as Appointment & {
+				start_time?: string;
+				startTime?: string;
+				time?: string;
+			}
+		).start_time ||
+		(
+			appointment as Appointment & {
+				start_time?: string;
+				startTime?: string;
+				time?: string;
+			}
+		).startTime ||
+		(appointment as Appointment & { time?: string }).time;
+
+	if (!dateValue) return null;
+
+	const parsedDate = parseResponseDate(dateValue);
+	if (Number.isNaN(parsedDate.getTime())) return null;
+
+	if (startTime) {
+		const [hours, minutes] = startTime.split(":");
+		const parsedHours = Number(hours);
+		const parsedMinutes = Number(minutes);
+
+		if (!Number.isNaN(parsedHours) && !Number.isNaN(parsedMinutes)) {
+			parsedDate.setHours(parsedHours, parsedMinutes, 0, 0);
+		}
+	}
+
+	return parsedDate;
+}
+
 // Componente compacto para primeira evolução no header
 const FirstEvolutionBadge = memo(() => {
 	const [dismissed, setDismissed] = useState(false);
@@ -197,13 +245,13 @@ export const EvolutionHeader = memo(
 		const showTherapistFallback = Boolean(
 			selectedTherapistId && !selectedTherapist,
 		);
+		const sessionStartDate = getSessionStartDate(appointment);
 
-		const appointmentDateLabel = appointment?.appointment_date
-			? format(
-					parseResponseDate(appointment.appointment_date),
-					"dd/MM 'às' HH:mm",
-					{ locale: ptBR },
-				)
+		const appointmentDateLabel = sessionStartDate
+			? format(sessionStartDate, "dd/MM HH:mm", { locale: ptBR })
+			: "";
+		const sessionStartLabel = sessionStartDate
+			? format(sessionStartDate, "dd/MM/yyyy 'às' HH:mm", { locale: ptBR })
 			: "";
 
 		const sessionNumber = evolutionStats.totalEvolutions + 1;
@@ -289,6 +337,12 @@ export const EvolutionHeader = memo(
 					{/* Ações primárias */}
 					<div className="flex items-center gap-3 shrink-0 flex-shrink-0">
 						{showFirstEvolution && <FirstEvolutionBadge />}
+						{sessionStartLabel && (
+							<div className="hidden lg:flex items-center gap-2 rounded-lg border border-primary/15 bg-primary/5 px-3 py-2 text-sm font-semibold text-foreground shadow-sm">
+								<Calendar className="h-4 w-4 shrink-0 text-primary" />
+								<span className="whitespace-nowrap">{sessionStartLabel}</span>
+							</div>
+						)}
 						<Button
 							onClick={onSave}
 							size="sm"
