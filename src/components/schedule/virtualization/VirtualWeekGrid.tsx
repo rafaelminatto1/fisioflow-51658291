@@ -64,6 +64,7 @@ interface VirtualWeekGridProps {
 	selectionMode?: boolean;
 	selectedIds?: Set<string>;
 	onToggleSelection?: (id: string) => void;
+	showCurrentTimeIndicator?: boolean;
 }
 
 interface ItemData {
@@ -102,6 +103,7 @@ interface ItemData {
 	selectionMode?: boolean;
 	selectedIds?: Set<string>;
 	onToggleSelection?: (id: string) => void;
+	showCurrentTimeIndicator?: boolean;
 }
 
 // =====================================================================
@@ -230,6 +232,7 @@ const TimeSlotRow: React.FC<TimeSlotRowProps> = memo(
 							time={time}
 							rowIndex={index}
 							colIndex={colIndex}
+							isLastColumn={colIndex === numDays - 1}
 							isClosed={!!isClosed}
 							isBlocked={blocked}
 							isDropTarget={!!isDropTarget}
@@ -352,10 +355,11 @@ TimeSlotRow.displayName = "TimeSlotRow";
 		isDayClosedForDate,
 		openPopoverId,
 		setOpenPopoverId,
-	selectionMode = false,
-	selectedIds = new Set(),
-	onToggleSelection,
-}) => {
+		selectionMode = false,
+		selectedIds = new Set(),
+		onToggleSelection,
+		showCurrentTimeIndicator = true,
+	}) => {
 		const listRef = useRef<any>(null);
 		const containerRef = useRef<HTMLDivElement>(null);
 
@@ -435,6 +439,7 @@ TimeSlotRow.displayName = "TimeSlotRow";
 				selectionMode,
 				selectedIds,
 				onToggleSelection,
+				showCurrentTimeIndicator,
 			}),
 			[
 				weekDays,
@@ -462,6 +467,7 @@ TimeSlotRow.displayName = "TimeSlotRow";
 				selectionMode,
 				selectedIds,
 				onToggleSelection,
+				showCurrentTimeIndicator,
 			],
 		);
 
@@ -511,6 +517,42 @@ TimeSlotRow.displayName = "TimeSlotRow";
 					rowComponent={TimeSlotRow}
 					overscanCount={3}
 				/>
+				{showCurrentTimeIndicator &&
+					weekDays.some((day) => isSameDay(day, new Date())) && (() => {
+						const now = new Date();
+						const minutesFromStart =
+							(now.getHours() - BUSINESS_HOURS.START) * 60 + now.getMinutes();
+
+						if (
+							minutesFromStart < 0 ||
+							minutesFromStart >
+								(BUSINESS_HOURS.END - BUSINESS_HOURS.START) * 60
+						) {
+							return null;
+						}
+
+						return (
+							<div
+								className="absolute left-0 right-0 z-30 pointer-events-none flex items-center"
+								style={{
+									top: `${
+										(minutesFromStart * slotHeight) /
+										BUSINESS_HOURS.DEFAULT_SLOT_DURATION
+									}px`,
+								}}
+							>
+								<div className="w-[60px] flex justify-end pr-2">
+									<span className="bg-red-500 text-white text-[9px] font-bold px-1 rounded shadow-sm">
+										{now.toLocaleTimeString("pt-BR", {
+											hour: "2-digit",
+											minute: "2-digit",
+										})}
+									</span>
+								</div>
+								<div className="h-px bg-red-500 flex-1 shadow-sm" />
+							</div>
+						);
+					})()}
 			</div>
 		);
 	},
