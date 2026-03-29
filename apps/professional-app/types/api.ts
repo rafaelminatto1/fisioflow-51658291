@@ -192,6 +192,34 @@ export interface ApiDashboardStats {
   completedAppointments: number;
 }
 
+export interface ApiLead {
+  id: string;
+  nome: string;
+  telefone?: string | null;
+  email?: string | null;
+  origem?: string | null;
+  estagio: 'aguardando' | 'contatado' | 'interessado' | 'agendado' | 'convertido' | 'perdido';
+  responsavel_id: string;
+  data_primeiro_contato?: string | null;
+  data_ultimo_contato?: string | null;
+  interesse?: string | null;
+  observacoes?: string | null;
+  motivo_nao_efetivacao?: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface ApiLeadHistory {
+  id: string;
+  lead_id: string;
+  tipo_contato: string;
+  descricao?: string | null;
+  resultado?: string | null;
+  proximo_contato?: string | null;
+  created_by: string;
+  created_at: string;
+}
+
 export interface ApiResponse<T> {
   data: T;
   error?: string;

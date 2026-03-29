@@ -3,6 +3,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { PatientMessages } from "@/components/communications/PatientMessages";
 import { InternalChat } from "@/components/communications/InternalChat";
 import { TemplateManager } from "@/components/communications/TemplateManager";
+import { WhatsAppAutomation } from "@/components/communications/WhatsAppAutomation";
 import { CompanyAnnouncements } from "@/components/communications/CompanyAnnouncements";
 import { PolicyCompliance } from "@/components/communications/PolicyCompliance";
 import { useSearchParams } from "react-router-dom";
@@ -84,6 +85,13 @@ export default function CommunicationsPage() {
 							<FileText className="w-4 h-4 mr-2" />
 							Templates
 						</TabsTrigger>
+						<TabsTrigger
+							value="whatsapp"
+							className="data-[state=active]:border-b-2 data-[state=active]:border-primary rounded-none px-6 py-3 font-medium shrink-0"
+						>
+							<MessageSquareIcon className="w-4 h-4 mr-2" />
+							WhatsApp
+						</TabsTrigger>
 					</TabsList>
 
 					<AnimatePresence mode="wait">
@@ -113,6 +121,10 @@ export default function CommunicationsPage() {
 
 							<TabsContent value="templates" className="mt-0 h-full">
 								<TemplateManager />
+							</TabsContent>
+
+							<TabsContent value="whatsapp" className="mt-0 h-full">
+								<WhatsAppAutomation />
 							</TabsContent>
 						</motion.div>
 					</AnimatePresence>

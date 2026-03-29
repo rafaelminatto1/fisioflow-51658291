@@ -53,6 +53,16 @@ export default function TabsLayout() {
         }}
       />
       <Tabs.Screen
+        name="crm"
+        options={{
+          title: 'CRM',
+          headerTitle: 'Gestão de Leads',
+          tabBarIcon: ({ color, size }) => (
+            <Ionicons name="funnel" size={size} color={color} />
+          ),
+        }}
+      />
+      <Tabs.Screen
         name="agenda"
         options={{
           title: 'Agenda',
