@@ -10,6 +10,7 @@ interface TimeSlotCellProps {
 	time: string;
 	rowIndex: number;
 	colIndex: number;
+	isLastColumn?: boolean;
 	isClosed: boolean;
 	isBlocked: boolean;
 	isDropTarget: boolean;
@@ -34,6 +35,7 @@ export const TimeSlotCell = memo(
 		time,
 		rowIndex,
 		colIndex,
+		isLastColumn = false,
 		isClosed,
 		isBlocked,
 		isDropTarget,
@@ -130,7 +132,7 @@ export const TimeSlotCell = memo(
 					isHourStart && "border-t border-slate-200 dark:border-slate-700",
 					!isHourStart &&
 						"border-t border-dashed border-slate-200 dark:border-slate-800/60",
-					colIndex === 6 && "border-r-0",
+					isLastColumn && "border-r-0",
 					isClosed &&
 						"bg-slate-50/50 dark:bg-slate-900/20 pattern-diagonal-lines",
 					!isClosed &&
