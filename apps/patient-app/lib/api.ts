@@ -206,14 +206,15 @@ export const patientApi = {
 export const gamificationApi = {
   getProfile: async (): Promise<GamificationProfile> => {
     const response = await api.get<any>('/api/gamification/profile');
+    const data = response.data || response;
     return {
-      id: response.id,
-      patientId: response.patient_id,
-      level: response.level,
-      xp: response.xp,
-      nextLevelXp: response.next_level_xp,
-      streak: response.streak,
-      badges: (response.badges || []).map((b: any) => ({
+      id: data.id,
+      patientId: data.patient_id,
+      level: data.level,
+      xp: data.current_xp,
+      nextLevelXp: data.next_level_xp ?? 1000,
+      streak: data.current_streak,
+      badges: (data.badges || []).map((b: any) => ({
         id: b.id,
         name: b.name,
         description: b.description,
@@ -222,6 +223,44 @@ export const gamificationApi = {
       })),
     };
   },
+  getAchievements: async (): Promise<Achievement[]> => {
+    const response = await api.get<any>('/api/gamification/achievements');
+    return (response.data || []).map((a: any) => ({
+      id: a.id,
+      code: a.code,
+      title: a.title,
+      description: a.description,
+      xpReward: a.xp_reward,
+      icon: a.icon,
+      category: a.category,
+      unlockedAt: a.unlocked_at,
+    }));
+  },
+  getQuests: async (): Promise<Quest[]> => {
+    const response = await api.get<any>('/api/gamification/quests');
+    return (response.data || []).map((q: any) => ({
+      id: q.id,
+      title: q.title,
+      description: q.description,
+      xpReward: q.xp_reward,
+      status: q.status,
+    }));
+  },
+  getShop: async (): Promise<ShopItem[]> => {
+    const response = await api.get<any>('/api/gamification/shop');
+    return (response.data || []).map((s: any) => ({
+      id: s.id,
+      code: s.code,
+      name: s.name,
+      description: s.description,
+      cost: s.cost,
+      type: s.type,
+      icon: s.icon,
+      isUnlocked: s.is_unlocked,
+    }));
+  },
+  buyItem: (itemId: string) =>
+    api.post<any>('/api/gamification/buy', { itemId }),
   awardXp: (payload: { patientId: string; amount: number; reason: string; description?: string }) =>
     api.post<any>('/api/gamification/award-xp', payload),
 };

@@ -88,38 +88,98 @@ async function processInactivePatients(db: any, env: Env, ctx: ExecutionContext)
 }
 
 async function sendAppointmentReminders(pool: any, env: Env, _ctx: ExecutionContext) {
-  console.log('[Cron] Sending appointment reminder emails...');
+  console.log('[Cron] Sending appointment reminders (Email & WhatsApp)...');
   const result = await pool.query(`
     SELECT
       a.id,
+      a.organization_id,
+      a.patient_id,
       a.start_time::text AS time,
       TO_CHAR(a.date, 'DD/MM/YYYY') AS formatted_date,
       p.full_name AS patient_name,
       p.email AS patient_email,
+      p.phone AS patient_phone,
       prof.full_name AS therapist_name
     FROM appointments a
     JOIN patients p ON p.id = a.patient_id
     LEFT JOIN profiles prof ON prof.user_id = a.therapist_id
     WHERE a.date = CURRENT_DATE + INTERVAL '1 day'
       AND a.status NOT IN ('cancelled', 'no_show')
-      AND p.email IS NOT NULL
   `);
 
-  let sent = 0;
+  let emailSent = 0;
+  let whatsappSent = 0;
+
   for (const row of result.rows) {
-    try {
-      await sendAppointmentReminderEmail(env, row.patient_email, {
-        patientName: row.patient_name,
-        date: row.formatted_date,
-        time: row.time?.substring(0, 5) ?? '',
-        therapistName: row.therapist_name,
-      });
-      sent++;
-    } catch (err) {
-      console.error(`[Cron] Failed to send reminder to ${row.patient_email}:`, err);
+    // 1. Email Reminder
+    if (row.patient_email) {
+      try {
+        await sendAppointmentReminderEmail(env, row.patient_email, {
+          patientName: row.patient_name,
+          date: row.formatted_date,
+          time: row.time?.substring(0, 5) ?? '',
+          therapistName: row.therapist_name,
+        });
+        emailSent++;
+      } catch (err) {
+        console.error(`[Cron] Failed to send email to ${row.patient_email}:`, err);
+      }
+    }
+
+    // 2. WhatsApp Reminder
+    if (row.patient_phone && env.WHATSAPP_PHONE_NUMBER_ID && env.WHATSAPP_ACCESS_TOKEN) {
+      try {
+        const timeStr = row.time?.substring(0, 5) ?? '';
+        const therapistStr = row.therapist_name || 'Fisioterapeuta';
+        
+        const metaRes = await fetch(`https://graph.facebook.com/v19.0/${env.WHATSAPP_PHONE_NUMBER_ID}/messages`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${env.WHATSAPP_ACCESS_TOKEN}` },
+          body: JSON.stringify({
+            messaging_product: 'whatsapp',
+            to: row.patient_phone.replace(/\D/g, ''),
+            type: 'template',
+            template: {
+              name: 'lembrete_sessao',
+              language: { code: 'pt_BR' },
+              components: [
+                {
+                  type: 'body',
+                  parameters: [
+                    { type: 'text', text: timeStr },
+                    { type: 'text', text: therapistStr },
+                  ],
+                },
+              ],
+            },
+          }),
+        });
+
+        if (metaRes.ok) {
+          whatsappSent++;
+          // Log record in whatsapp_messages
+          await pool.query(
+            `INSERT INTO whatsapp_messages (
+              organization_id, patient_id, from_phone, to_phone, message, type, status, metadata, created_at, updated_at
+            ) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,NOW(),NOW())`,
+            [
+              row.organization_id,
+              row.patient_id,
+              'clinic',
+              row.patient_phone,
+              `Lembrete automático: sua sessão será às ${timeStr} com ${therapistStr}.`,
+              'template',
+              'sent',
+              JSON.stringify({ appointment_id: row.id, template_key: 'lembrete_sessao', auto: true }),
+            ],
+          );
+        }
+      } catch (err) {
+        console.error(`[Cron] Failed to send WhatsApp to ${row.patient_phone}:`, err);
+      }
     }
   }
-  console.log(`[Cron] Sent ${sent}/${result.rows.length} appointment reminders.`);
+  console.log(`[Cron] Sent ${emailSent} emails and ${whatsappSent} WhatsApp reminders.`);
 }
 
 async function performDatabaseCleanup(pool: any, env: Env) {
