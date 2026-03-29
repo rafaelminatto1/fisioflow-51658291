@@ -108,7 +108,7 @@ app.get("/", async (c) => {
 		limit: limitNum,
 		returnedCount: rows.length,
 		totalCount: Number(countResult[0]?.count ?? 0),
-		conditions: conditions.map((c) => c.toString()),
+		conditions: (conditions as any[]).filter(Boolean).map((cond: any) => cond.toString()),
 	});
 
 	return c.json({
