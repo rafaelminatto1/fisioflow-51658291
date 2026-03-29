@@ -153,6 +153,7 @@ export default function EvolutionScreen() {
   const [plan, setPlan] = useState('');
   const [painLevel, setPainLevel] = useState(0);
   const [photos, setPhotos] = useState<Photo[]>([]);
+  const [prescribedExercises, setPrescribedExercises] = useState<any[]>([]);
 
   const [focusedField, setFocusedField] = useState<SOAPKey | null>(null);
   const [isUploading, setIsUploading] = useState(false);
@@ -214,6 +215,7 @@ export default function EvolutionScreen() {
         plan: plan.trim(),
         painLevel,
         attachments: uploadedUrls,
+        exercises_performed: prescribedExercises,
       };
 
       // 3. Call mutation
@@ -305,6 +307,31 @@ export default function EvolutionScreen() {
     medium();
     setPhotos(photos.filter((p) => p.id !== id));
   };
+
+  const handleMoveExercise = (index: number, direction: 'up' | 'down') => {
+    medium();
+    const newExercises = [...prescribedExercises];
+    const newIndex = direction === 'up' ? index - 1 : index + 1;
+    if (newIndex >= 0 && newIndex < newExercises.length) {
+      [newExercises[index], newExercises[newIndex]] = [newExercises[newIndex], newExercises[index]];
+      setPrescribedExercises(newExercises);
+    }
+  };
+
+  const handleAddExercisePlaceholder = () => {
+    medium();
+    setPrescribedExercises([...prescribedExercises, { 
+      id: `ex-${Date.now()}`, 
+      name: 'Novo Exercício', 
+      sets: 3, 
+      reps: 12 
+    }]);
+  };
+
+  const handleRemoveExercise = (id: string) => {
+    medium();
+    setPrescribedExercises(prescribedExercises.filter(e => e.id !== id));
+  };
   
   // ... (rest of the component, including JSX)
   // ... The save button loading state should also check for isUploading
@@ -370,6 +397,36 @@ export default function EvolutionScreen() {
           onBlur={() => setFocusedField(null)}
           colors={colors}
         />
+
+        <View style={styles.exercisesHeader}>
+          <Text style={[styles.sectionTitle, { color: colors.text, marginBottom: 0 }]}>Exercícios da Sessão</Text>
+          <TouchableOpacity onPress={handleAddExercisePlaceholder} style={styles.addExerciseBtn}>
+            <Ionicons name="add-circle-outline" size={20} color={colors.primary} />
+            <Text style={[styles.addExerciseText, { color: colors.primary }]}>Adicionar</Text>
+          </TouchableOpacity>
+        </View>
+
+        {prescribedExercises.map((ex, index) => (
+          <Card key={ex.id} style={styles.exerciseCard}>
+            <View style={styles.exerciseInfo}>
+              <Text style={[styles.exerciseName, { color: colors.text }]}>{ex.name}</Text>
+              <Text style={[styles.exerciseMeta, { color: colors.textSecondary }]}>
+                {ex.sets} séries x {ex.reps} reps
+              </Text>
+            </View>
+            <View style={styles.exerciseActions}>
+              <TouchableOpacity onPress={() => handleMoveExercise(index, 'up')} disabled={index === 0}>
+                <Ionicons name="arrow-up" size={20} color={index === 0 ? colors.border : colors.primary} />
+              </TouchableOpacity>
+              <TouchableOpacity onPress={() => handleMoveExercise(index, 'down')} disabled={index === prescribedExercises.length - 1}>
+                <Ionicons name="arrow-down" size={20} color={index === prescribedExercises.length - 1 ? colors.border : colors.primary} />
+              </TouchableOpacity>
+              <TouchableOpacity onPress={() => handleRemoveExercise(ex.id)}>
+                <Ionicons name="trash-outline" size={20} color={colors.error} />
+              </TouchableOpacity>
+            </View>
+          </Card>
+        ))}
 
         <Text style={[styles.sectionTitle, { color: colors.text }]}>Anexos</Text>
         <PhotoGrid
@@ -499,6 +556,44 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: '600',
     marginBottom: 8,
+  },
+  exercisesHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginTop: 8,
+    marginBottom: 8,
+  },
+  addExerciseBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+  },
+  addExerciseText: {
+    fontSize: 14,
+    fontWeight: '600',
+  },
+  exerciseCard: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    padding: 12,
+    marginBottom: 8,
+  },
+  exerciseInfo: {
+    flex: 1,
+  },
+  exerciseName: {
+    fontSize: 15,
+    fontWeight: '600',
+  },
+  exerciseMeta: {
+    fontSize: 13,
+    marginTop: 2,
+  },
+  exerciseActions: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 16,
   },
   footer: {
     padding: 16,
