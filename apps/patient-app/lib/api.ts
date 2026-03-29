@@ -301,6 +301,25 @@ export const messagingApi = {
     api.post<{ success: boolean }>(`/api/messaging/conversations/${participantId}/read`, {}),
 };
 
+// ============================================================
+// TELEMEDICINE API
+// ============================================================
+
+export const telemedicineApi = {
+  getRooms: async (): Promise<TelemedicineRoom[]> => {
+    const response = await api.get<any[]>('/api/telemedicine/rooms');
+    return response.map(r => ({
+      id: r.id,
+      room_code: r.room_code,
+      status: r.status,
+      meeting_url: r.meeting_url,
+      started_at: r.started_at,
+      ended_at: r.ended_at,
+      created_at: r.created_at,
+    }));
+  },
+};
+
 export function getApiBaseUrl() {
   return API_BASE_URL;
 }
