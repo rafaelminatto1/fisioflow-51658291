@@ -140,11 +140,23 @@ export default function DashboardScreen() {
 
                 <TouchableOpacity
                   style={[styles.quickActionMini, { backgroundColor: colors.surface, borderColor: colors.border }]}
-                  onPress={() => router.push('/protocols?tab=tests' as any)}
+                  onPress={() => router.push('/leaderboard' as any)}
                   activeOpacity={0.8}
                 >
                   <View style={[styles.miniIcon, { backgroundColor: '#F59E0B' + '20' }]}>
-                    <Ionicons name="analytics" size={22} color="#F59E0B" />
+                    <Ionicons name="trophy" size={22} color="#F59E0B" />
+                  </View>
+                  <Text style={[styles.miniTitle, { color: colors.text }]}>Ranking</Text>
+                  <Text style={[styles.miniSub, { color: colors.textSecondary }]}>Gamificação</Text>
+                </TouchableOpacity>
+
+                <TouchableOpacity
+                  style={[styles.quickActionMini, { backgroundColor: colors.surface, borderColor: colors.border }]}
+                  onPress={() => router.push('/protocols?tab=tests' as any)}
+                  activeOpacity={0.8}
+                >
+                  <View style={[styles.miniIcon, { backgroundColor: '#8B5CF6' + '20' }]}>
+                    <Ionicons name="analytics" size={22} color="#8B5CF6" />
                   </View>
                   <Text style={[styles.miniTitle, { color: colors.text }]}>Testes</Text>
                   <Text style={[styles.miniSub, { color: colors.textSecondary }]}>Escalas clínicas</Text>
