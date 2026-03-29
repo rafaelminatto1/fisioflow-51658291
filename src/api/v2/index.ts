@@ -18,7 +18,6 @@ export * from "./marketing";
 export * from "./operations";
 export * from "./patients";
 export * from "./scheduling";
-export * from "./biomechanics";
 export * from "./system";
 export * from "./tracking";
 
@@ -38,6 +37,10 @@ export {
 	exercisePlansApi,
 	exerciseVideosApi,
 } from "./rehab";
+export {
+	biomechanicsApi as biomechanicsAssessmentsApi,
+	type BiomechanicsAssessment,
+} from "./biomechanics";
 
 export type {
 	PatientLifecycleEvent,
