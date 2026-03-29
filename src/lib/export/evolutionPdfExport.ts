@@ -17,6 +17,10 @@ interface SessionData {
 	observations: string;
 	therapist: string;
 	duration: number;
+	subjective?: string;
+	objective?: string;
+	assessment?: string;
+	plan?: string;
 }
 
 interface EvolutionMetrics {
@@ -200,25 +204,29 @@ export const generateEvolutionPDF = (
 		`#${sessions.length - i}`,
 		format(new Date(s.date), "dd/MM/yyyy"),
 		s.painLevel.toString(),
-		`${s.mobilityScore}%`,
-		s.observations.length > 80
-			? s.observations.substring(0, 80) + "..."
-			: s.observations,
+		[
+			s.subjective ? `S: ${s.subjective}` : null,
+			s.objective ? `O: ${s.objective}` : null,
+			s.assessment ? `A: ${s.assessment}` : null,
+			s.plan ? `P: ${s.plan}` : null,
+			s.observations && !s.subjective ? `Obs: ${s.observations}` : null,
+		]
+			.filter(Boolean)
+			.join("\n"),
 	]);
 
 	autoTable(doc, {
 		startY: yPos,
-		head: [["Nº", "Data", "Dor", "Mobilidade", "Conduta/Observações"]],
+		head: [["Nº", "Data", "Dor", "Evolução SOAP / Conduta"]],
 		body: sessionTableData,
 		theme: "grid",
 		headStyles: { fillColor: primaryColor, textColor: 255, fontSize: 10 },
-		styles: { fontSize: 8, cellPadding: 3 },
+		styles: { fontSize: 8, cellPadding: 3, overflow: "linebreak" },
 		columnStyles: {
 			0: { cellWidth: 10 },
 			1: { cellWidth: 25 },
 			2: { cellWidth: 15 },
-			3: { cellWidth: 25 },
-			4: { cellWidth: "auto" },
+			3: { cellWidth: "auto" },
 		},
 		margin: { left: 20, right: 20 },
 	});

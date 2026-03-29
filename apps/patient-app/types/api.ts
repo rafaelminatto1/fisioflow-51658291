@@ -199,6 +199,16 @@ export interface Quest {
   status: 'available' | 'completed' | 'claimed';
 }
 
+export interface TelemedicineRoom {
+  id: string;
+  room_code: string;
+  status: 'aguardando' | 'ativo' | 'encerrado';
+  meeting_url?: string | null;
+  started_at?: string | null;
+  ended_at?: string | null;
+  created_at: string;
+}
+
 export interface ExerciseFeedback {
   exerciseId: string;
   difficulty: number; // 1-5

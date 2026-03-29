@@ -220,6 +220,26 @@ export interface ApiLeadHistory {
   created_at: string;
 }
 
+export interface ApiTelemedicineRoom {
+  id: string;
+  patient_id: string;
+  therapist_id?: string | null;
+  appointment_id?: string | null;
+  room_code: string;
+  status: 'aguardando' | 'ativo' | 'encerrado';
+  meeting_url?: string | null;
+  scheduled_at?: string | null;
+  started_at?: string | null;
+  ended_at?: string | null;
+  patients?: {
+    name: string;
+    email?: string | null;
+    phone?: string | null;
+  };
+  created_at: string;
+  updated_at: string;
+}
+
 export interface ApiResponse<T> {
   data: T;
   error?: string;

@@ -826,6 +826,32 @@ export async function getLeaderboard(params?: { period?: 'weekly' | 'monthly' | 
 }
 
 // ============================================================
+// TELEMEDICINE API
+// ============================================================
+
+export async function getTelemedicineRooms(): Promise<ApiTelemedicineRoom[]> {
+  const response = await fetchApi<ApiResponse<ApiTelemedicineRoom[]>>('/api/telemedicine/rooms');
+  return response.data || [];
+}
+
+export async function createTelemedicineRoom(patientId: string): Promise<ApiTelemedicineRoom> {
+  const response = await fetchApi<ApiResponse<ApiTelemedicineRoom>>('/api/telemedicine/rooms', {
+    method: 'POST',
+    data: { patient_id: patientId },
+  });
+  if (response.error) throw new Error(response.error);
+  return response.data;
+}
+
+export async function startTelemedicineRoom(id: string): Promise<ApiTelemedicineRoom> {
+  const response = await fetchApi<ApiResponse<ApiTelemedicineRoom>>(`/api/telemedicine/rooms/${encodeURIComponent(id)}/start`, {
+    method: 'POST',
+  });
+  if (response.error) throw new Error(response.error);
+  return response.data;
+}
+
+// ============================================================
 // PATIENT FINANCIAL RECORDS API
 // ============================================================
 
