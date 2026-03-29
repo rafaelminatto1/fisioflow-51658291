@@ -152,6 +152,18 @@ export default function DashboardScreen() {
 
                 <TouchableOpacity
                   style={[styles.quickActionMini, { backgroundColor: colors.surface, borderColor: colors.border }]}
+                  onPress={() => router.push('/telemedicine' as any)}
+                  activeOpacity={0.8}
+                >
+                  <View style={[styles.miniIcon, { backgroundColor: '#10B981' + '20' }]}>
+                    <Ionicons name="videocam" size={22} color="#10B981" />
+                  </View>
+                  <Text style={[styles.miniTitle, { color: colors.text }]}>Teleconsulta</Text>
+                  <Text style={[styles.miniSub, { color: colors.textSecondary }]}>Atendimento online</Text>
+                </TouchableOpacity>
+
+                <TouchableOpacity
+                  style={[styles.quickActionMini, { backgroundColor: colors.surface, borderColor: colors.border }]}
                   onPress={() => router.push('/protocols?tab=tests' as any)}
                   activeOpacity={0.8}
                 >

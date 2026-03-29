@@ -29,6 +29,8 @@ import { Spacing } from '@/constants/spacing';
 import * as Notifications from 'expo-notifications';
 import { useExercises } from '@/hooks/useExercises';
 import { useAppointments } from '@/hooks/useAppointments';
+import { useTelemedicine } from '@/hooks/useTelemedicine';
+import { Linking } from 'react-native';
 
 const SCREEN_PADDING = Spacing.screen;
 const CARD_GAP = Spacing.gap;
@@ -56,6 +58,7 @@ export default function DashboardScreen() {
   const { currentLevel, currentXp, xpPerLevel, progressPercentage, isLoading: gamificationLoading } = useGamification();
   const { data: exercises = [], isLoading: exercisesLoading } = useExercises();
   const { data: upcomingAppointments = [], isLoading: appointmentsLoading } = useAppointments(true);
+  const { activeRoom } = useTelemedicine();
 
   const [showNotificationPrompt, setShowNotificationPrompt] = useState(false);
 
@@ -129,6 +132,26 @@ export default function DashboardScreen() {
         contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator={false}
       >
+        {activeRoom && (
+          <TouchableOpacity
+            activeOpacity={0.8}
+            onPress={() => activeRoom.meeting_url && Linking.openURL(activeRoom.meeting_url)}
+            style={styles.telemedicineWrapper}
+          >
+            <Card style={[styles.activeRoomCard, { backgroundColor: colors.success }]}>
+              <View style={styles.telemedicineContent}>
+                <View style={styles.telemedicineIcon}>
+                  <Ionicons name="videocam" size={24} color="#fff" />
+                </View>
+                <View style={styles.telemedicineText}>
+                  <Text style={styles.telemedicineTitle}>Consulta Online Ativa</Text>
+                  <Text style={styles.telemedicineSub}>Toque para entrar na sala</Text>
+                </View>
+                <Ionicons name="chevron-forward" size={20} color="rgba(255,255,255,0.7)" />
+              </View>
+            </Card>
+          </TouchableOpacity>
+        )}
         {/* Header */}
         <View style={styles.header}>
           <View style={styles.headerLeft}>
@@ -447,6 +470,40 @@ const styles = StyleSheet.create({
   scrollContent: {
     padding: Spacing.screen,
     paddingBottom: 32,
+  },
+  telemedicineWrapper: {
+    paddingHorizontal: Spacing.screen,
+    paddingTop: Spacing.sm,
+    marginBottom: Spacing.sm,
+  },
+  activeRoomCard: {
+    padding: 16,
+    borderRadius: 16,
+  },
+  telemedicineContent: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  telemedicineIcon: {
+    width: 48,
+    height: 48,
+    borderRadius: 24,
+    backgroundColor: 'rgba(255,255,255,0.2)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: 12,
+  },
+  telemedicineText: {
+    flex: 1,
+  },
+  telemedicineTitle: {
+    color: '#fff',
+    fontSize: 16,
+    fontWeight: 'bold',
+  },
+  telemedicineSub: {
+    color: 'rgba(255,255,255,0.8)',
+    fontSize: 13,
   },
   header: {
     flexDirection: 'row',
