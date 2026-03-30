@@ -21,7 +21,7 @@ import {
 	PatientPageInsights,
 	PatientsPageHeader,
 } from "@/components/patients";
-import { PatientListItem } from "@/components/patients/PatientListItem";
+import { PatientListItem } from "@/components/patient/PatientListItem";
 import { EmptyState } from "@/components/ui";
 import { Button } from "@/components/ui/button";
 import { LoadingSkeleton } from "@/components/ui/loading-skeleton";
