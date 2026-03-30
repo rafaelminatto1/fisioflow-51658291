@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import {
+  Alert,
   View,
   Text,
   StyleSheet,
@@ -60,6 +61,57 @@ export default function GamificationScreen() {
   const onRefresh = () => {
     setRefreshing(true);
     fetchData();
+  };
+
+  const handleClaimXp = async (questId: string, amount: number) => {
+    try {
+      setLoading(true);
+      await gamificationApi.awardXp({ 
+        patientId: profile?.patientId || '', 
+        amount, 
+        reason: 'QUEST_COMPLETED',
+        description: `Missão concluída: ${quests.find(q => q.id === questId)?.title}`
+      });
+      setShowSuccess(true);
+      setTimeout(() => setShowSuccess(false), 3000);
+      fetchData();
+    } catch (error) {
+      console.error('[Gamification] Error claiming XP:', error);
+      Alert.alert('Erro', 'Não foi possível resgatar seu XP.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleBuyItem = async (item: ShopItem) => {
+    if ((profile?.xp || 0) < item.cost) {
+      Alert.alert('Saldo Insuficiente', `Você precisa de mais ${item.cost - (profile?.xp || 0)} FF para trocar por este item.`);
+      return;
+    }
+
+    Alert.alert(
+      'Confirmar Troca',
+      `Deseja trocar ${item.cost} FF por "${item.name}"?`,
+      [
+        { text: 'Cancelar', style: 'cancel' },
+        { 
+          text: 'Trocar', 
+          onPress: async () => {
+            try {
+              setLoading(true);
+              await gamificationApi.buyItem(item.id);
+              Alert.alert('Parabéns!', `Você adquiriu "${item.name}"!`);
+              fetchData();
+            } catch (error) {
+              console.error('[Gamification] Error buying item:', error);
+              Alert.alert('Erro', 'Ocorreu um problema na troca.');
+            } finally {
+              setLoading(false);
+            }
+          }
+        }
+      ]
+    );
   };
 
   if (loading && !refreshing) {
@@ -154,7 +206,10 @@ export default function GamificationScreen() {
                     </View>
                   </View>
                   {quest.status === 'completed' && (
-                    <TouchableOpacity style={[styles.claimButton, { backgroundColor: colors.primary }]}>
+                    <TouchableOpacity 
+                      style={[styles.claimButton, { backgroundColor: colors.primary }]}
+                      onPress={() => handleClaimXp(quest.id, quest.xpReward)}
+                    >
                       <Text style={styles.claimButtonText}>Resgatar XP</Text>
                     </TouchableOpacity>
                   )}
@@ -211,7 +266,7 @@ export default function GamificationScreen() {
                   </View>
                   <TouchableOpacity 
                     style={[styles.buyButton, { backgroundColor: colors.primary }]}
-                    onPress={() => {}}
+                    onPress={() => handleBuyItem(item)}
                   >
                     <Text style={styles.buyButtonText}>Trocar</Text>
                   </TouchableOpacity>
@@ -221,6 +276,20 @@ export default function GamificationScreen() {
           )}
         </View>
       </ScrollView>
+
+      {showSuccess && (
+        <Animated.View 
+          entering={FadeIn} 
+          exiting={FadeOut}
+          style={[StyleSheet.absoluteFill, styles.successOverlay, { backgroundColor: 'rgba(0,0,0,0.7)' }]}
+        >
+          <Animated.View entering={ZoomIn} style={styles.successContent}>
+            <Ionicons name="sparkles" size={80} color="#FFD700" />
+            <Text style={styles.successTitle}>XP Resgatado!</Text>
+            <Text style={styles.successSub}>Continue evoluindo no seu tratamento.</Text>
+          </Animated.View>
+        </Animated.View>
+      )}
     </SafeAreaView>
   );
 }
@@ -446,5 +515,33 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     marginTop: 40,
     fontSize: 14,
+  },
+  successOverlay: {
+    justifyContent: 'center',
+    alignItems: 'center',
+    zIndex: 1000,
+  },
+  successContent: {
+    backgroundColor: '#fff',
+    padding: 32,
+    borderRadius: 32,
+    alignItems: 'center',
+    elevation: 10,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 10,
+  },
+  successTitle: {
+    fontSize: 24,
+    fontWeight: '900',
+    color: '#1e293b',
+    marginTop: 16,
+  },
+  successSub: {
+    fontSize: 14,
+    color: '#64748b',
+    marginTop: 8,
+    textAlign: 'center',
   }
 });
