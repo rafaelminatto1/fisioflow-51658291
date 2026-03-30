@@ -5,7 +5,7 @@ workflows:
     instance_type: mac_mini_m1
     environment:
       groups:
-        - apple_auth  # <-- Isso importa as variáveis que você cadastrou no grupo
+        - apple_auth
       node: latest
       xcode: latest
       cocoapods: default
@@ -35,12 +35,16 @@ workflows:
       - name: Fetch Signing Files (Apple API)
         script: |
           keychain initialize
-          # Usando as variáveis do grupo apple_auth
+          # Tenta buscar ou criar o certificado. 
+          # DICA: Se falhar, revogue o certificado atual no portal da Apple.
           app-store-connect fetch-signing-files "$BUNDLE_ID" --type IOS_APP_ADHOC --create
-          xcode-project use-profiles
       - name: Build iOS IPA
         script: |
           cd $APP_DIR/ios
+          
+          # Configura o Xcode para usar os perfis baixados, mas ignorando o node_modules
+          xcode-project use-profiles --project "FisioFlowPro.xcodeproj"
+          
           export WORKSPACE=$(ls -d *.xcworkspace | head -1)
           export SCHEME=$(xcodebuild -list -workspace "$WORKSPACE" | grep -A 5 "Schemes:" | tail -n +2 | head -1 | xargs)
           
