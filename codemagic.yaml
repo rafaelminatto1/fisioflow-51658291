@@ -4,8 +4,6 @@ workflows:
     max_build_duration: 120
     instance_type: mac_mini_m1
     environment:
-      groups:
-        - apple_auth
       node: latest
       xcode: latest
       cocoapods: default
@@ -32,17 +30,11 @@ workflows:
         script: |
           cd $APP_DIR/ios
           pod install --repo-update
-      - name: Fetch Signing Files (Apple API)
-        script: |
-          keychain initialize
-          # Tenta buscar ou criar o certificado. 
-          # DICA: Se falhar, revogue o certificado atual no portal da Apple.
-          app-store-connect fetch-signing-files "$BUNDLE_ID" --type IOS_APP_ADHOC --create
       - name: Build iOS IPA
         script: |
           cd $APP_DIR/ios
           
-          # Configura o Xcode para usar os perfis baixados, mas ignorando o node_modules
+          # Configura o Xcode para usar os perfis injetados pela interface do Codemagic
           xcode-project use-profiles --project "FisioFlowPro.xcodeproj"
           
           export WORKSPACE=$(ls -d *.xcworkspace | head -1)
