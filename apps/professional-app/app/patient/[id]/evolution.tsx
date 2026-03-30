@@ -237,6 +237,22 @@ export default function EvolutionScreen() {
     }
   };
 
+  const handleSharePDF = async () => {
+    if (!patient || !evolutionData) {
+      Alert.alert('Erro', 'Dados insuficientes para gerar o relatório.');
+      return;
+    }
+    medium();
+    try {
+      // For single evolution report, we wrap it in an array
+      await generateEvolutionPDF(patient as any, [evolutionData as any]);
+      success();
+    } catch (e) {
+      hapticError();
+      Alert.alert('Erro', 'Falha ao gerar PDF.');
+    }
+  };
+
   const handleDelete = () => {
     if (!evolutionId) return;
     medium();
@@ -348,9 +364,14 @@ export default function EvolutionScreen() {
         </Text>
         <View style={styles.headerActions}>
           {isEditing && (
-            <TouchableOpacity onPress={handleDelete}>
-              <Ionicons name="trash-outline" size={24} color={colors.error} />
-            </TouchableOpacity>
+            <>
+              <TouchableOpacity onPress={handleSharePDF} style={{ marginRight: 16 }}>
+                <Ionicons name="share-outline" size={24} color={colors.primary} />
+              </TouchableOpacity>
+              <TouchableOpacity onPress={handleDelete}>
+                <Ionicons name="trash-outline" size={24} color={colors.error} />
+              </TouchableOpacity>
+            </>
           )}
         </View>
       </View>
