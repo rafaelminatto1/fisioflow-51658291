@@ -1,7 +1,10 @@
 import { Ionicons } from "@expo/vector-icons";
 import { memo, useMemo, useState } from "react";
 import {
+	ActionSheetIOS,
 	ActivityIndicator,
+	Alert,
+	Platform,
 	RefreshControl,
 	ScrollView,
 	StyleSheet,
@@ -34,13 +37,29 @@ const STATUS_COLORS: Record<ApiLead['estagio'], string> = {
 	perdido: "#ef4444",
 };
 
-const LeadCard = memo(({ lead, colors, light }: any) => (
+const LeadCard = memo(({ lead, colors, light, onUpdateStatus }: any) => {
+	const handleLongPress = () => {
+		light();
+		const stages = Object.keys(STATUS_LABELS) as ApiLead['estagio'][];
+		const options = stages.map(s => STATUS_LABELS[s]);
+		if (Platform.OS === 'ios') {
+			ActionSheetIOS.showActionSheetWithOptions(
+				{ options: [...options, 'Cancelar'], cancelButtonIndex: options.length, title: 'Mover para etapa' },
+				(idx) => { if (idx < options.length) onUpdateStatus(lead.id, stages[idx]); }
+			);
+		} else {
+			Alert.alert('Mover para etapa', undefined,
+				stages.map(s => ({ text: STATUS_LABELS[s], onPress: () => onUpdateStatus(lead.id, s) }))
+					.concat([{ text: 'Cancelar', style: 'cancel' } as any])
+			);
+		}
+	};
+	return (
 	<TouchableOpacity
 		activeOpacity={0.7}
-		onPress={() => {
-			light();
-			// No detail screen yet, but we could add one
-		}}
+		onPress={() => light()}
+		onLongPress={handleLongPress}
+		delayLongPress={400}
 	>
 		<Card style={styles.leadCard}>
 			<View style={styles.leadHeader}>
@@ -79,14 +98,15 @@ const LeadCard = memo(({ lead, colors, light }: any) => (
 			)}
 		</Card>
 	</TouchableOpacity>
-));
+	);
+});
 
 export default function CRMScreen() {
 	const colors = useColors();
 	const { light } = useHaptics();
-	const { leads, loading, refreshing, refresh } = useLeads();
+	const { leads, loading, refreshing, refresh, updateLeadStatus } = useLeads();
 	const [searchQuery, setSearchQuery] = useState("");
-	const [selectedStatus, setSelectedStatus] = useState<ApiLead['estagio'] | "todos">("aguardando");
+	const [selectedStatus, setSelectedStatus] = useState<ApiLead['estagio'] | "todos">("todos");
 
 	const filteredLeads = useMemo(() => {
 		return leads.filter((lead) => {
@@ -170,7 +190,7 @@ export default function CRMScreen() {
 					<ActivityIndicator size="large" color={colors.primary} style={styles.loader} />
 				) : filteredLeads.length > 0 ? (
 					filteredLeads.map((lead) => (
-						<LeadCard key={lead.id} lead={lead} colors={colors} light={light} />
+						<LeadCard key={lead.id} lead={lead} colors={colors} light={light} onUpdateStatus={updateLeadStatus} />
 					))
 				) : (
 					<View style={styles.emptyContainer}>
