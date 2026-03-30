@@ -18,8 +18,10 @@ export default [
 
 			// Pacientes
 			route("pacientes", "pages/Patients.tsx"),
+			route("patients", "pages/Patients.tsx"),
 			route("patients/new", "pages/patients/NewPatientPage.tsx"),
 			route("patients/:id", "pages/patients/PatientProfilePage.tsx"),
+			route("patients/:id/mapas-dor", "pages/patients/PainMapHistoryPage.tsx"),
 			route("pacientes/:id/mapas-dor", "pages/patients/PainMapHistoryPage.tsx"),
 			route(
 				"patients/:patientId/evaluations/new/:formId?",
@@ -48,6 +50,7 @@ export default [
 			route("financeiro/nfse", "pages/financeiro/NFSePage.tsx"),
 
 			// Agenda
+			route("agenda", "pages/Schedule.tsx"),
 			route("schedule", "pages/Schedule.tsx"),
 			route("schedule/settings", "pages/ScheduleSettings.tsx"),
 

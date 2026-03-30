@@ -20,6 +20,7 @@ import {
 import { useNavigate } from "react-router";
 import { useQueryClient } from "@tanstack/react-query";
 import { patientsApi } from "@/api/v2";
+import { APP_ROUTES, patientRoutes } from "@/lib/routing/appRoutes";
 import { PatientEditModal } from "./PatientEditModal";
 import { PatientDeleteDialog } from "./PatientDeleteDialog";
 import { toast } from "@/hooks/use-toast";
@@ -68,11 +69,11 @@ export const PatientActions: React.FC<PatientActionsProps> = ({ patient }) => {
 	};
 
 	const handleSchedule = () => {
-		navigate("/");
+		navigate(APP_ROUTES.AGENDA);
 	};
 
 	const handleViewEvolution = () => {
-		navigate(`/patients/${patient.id}?tab=clinical`);
+		navigate(patientRoutes.clinicalTab(patient.id));
 	};
 
 	const handleStatusChange = async (

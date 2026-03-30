@@ -173,7 +173,7 @@ export const AppointmentModal: React.FC<AppointmentModalProps> = ({
 				open={isOpen}
 				onOpenChange={(open) => !open && onClose()}
 				isMobile={isMobile}
-				contentClassName="max-w-5xl"
+				contentClassName="max-w-2xl"
 			>
 				<AppointmentModalHeader currentMode={currentMode} onClose={onClose} />
 
@@ -182,18 +182,18 @@ export const AppointmentModal: React.FC<AppointmentModalProps> = ({
 					onValueChange={setActiveTab}
 					className="flex flex-col flex-1 min-h-0"
 				>
-					<div className="px-5 sm:px-6 py-2 bg-blue-50/30 border-b shrink-0">
-						<TabsList className="flex w-full gap-4 bg-transparent h-10 border-none">
+					<div className="px-5 sm:px-6 border-b border-slate-100 shrink-0">
+						<TabsList className="flex w-full gap-0 bg-transparent h-10 border-none p-0">
 							<TabsTrigger
 								value="info"
-								className="flex items-center gap-2 text-xs sm:text-sm font-medium border-b-2 border-transparent data-[state=active]:border-blue-600 data-[state=active]:text-blue-600 data-[state=active]:bg-transparent rounded-none px-1 transition-all"
+								className="flex items-center gap-1.5 text-sm font-medium border-b-2 border-transparent data-[state=active]:border-blue-500 data-[state=active]:text-blue-600 data-[state=active]:bg-transparent text-slate-500 hover:text-slate-700 rounded-none px-3 h-full transition-colors"
 							>
 								<CalendarIcon className="h-3.5 w-3.5" />
-								<span>Agendamento</span>
+								<span>Informações</span>
 							</TabsTrigger>
 							<TabsTrigger
 								value="options"
-								className="flex items-center gap-2 text-xs sm:text-sm font-medium border-b-2 border-transparent data-[state=active]:border-blue-600 data-[state=active]:text-blue-600 data-[state=active]:bg-transparent rounded-none px-1 transition-all"
+								className="flex items-center gap-1.5 text-sm font-medium border-b-2 border-transparent data-[state=active]:border-blue-500 data-[state=active]:text-blue-600 data-[state=active]:bg-transparent text-slate-500 hover:text-slate-700 rounded-none px-3 h-full transition-colors"
 							>
 								<SlidersHorizontal className="h-3.5 w-3.5" />
 								<span>Configurações</span>
@@ -218,7 +218,7 @@ export const AppointmentModal: React.FC<AppointmentModalProps> = ({
 									},
 								)(e);
 							}}
-							className="px-5 sm:px-6 py-4"
+							className="px-5 sm:px-6 py-5"
 						>
 							<TabsContent value="info">
 								<AppointmentInfoTab

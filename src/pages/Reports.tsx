@@ -6,6 +6,7 @@ import { MainLayout } from "@/components/layout/MainLayout";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { EmptyState } from "@/components/ui/empty-state";
 import {
 	Select,
 	SelectContent,
@@ -45,13 +46,14 @@ import {
 
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
+import { toast } from "sonner";
 import { useAppointments } from "@/hooks/useAppointments";
 import { usePatients } from "@/hooks/patients/usePatients";
 import { useFinancial } from "@/hooks/useFinancial";
 
 const Reports = () => {
 	const [selectedPeriod, setSelectedPeriod] = useState("month");
-	const [selectedReport, setSelectedReport] = useState<string | null>(null);
+	const [activeTab, setActiveTab] = useState("templates");
 
 	// Real data hooks
 	const { data = [] } = useAppointments();
@@ -143,43 +145,14 @@ const Reports = () => {
 		[],
 	);
 
-	// Memoized recent reports (static data)
-	const recentReports = useMemo(
-		() => [
-			{
-				id: 1,
-				name: "Relatório Mensal - Janeiro 2024",
-				type: "Financeiro",
-				generatedAt: new Date("2024-01-31"),
-				status: "Concluído",
-			},
-			{
-				id: 2,
-				name: "Análise de Pacientes - Q4 2023",
-				type: "Pacientes",
-				generatedAt: new Date("2024-01-15"),
-				status: "Concluído",
-			},
-			{
-				id: 3,
-				name: "Resumo de Agendamentos - Dezembro",
-				type: "Agendamentos",
-				generatedAt: new Date("2024-01-02"),
-				status: "Concluído",
-			},
-		],
-		[],
-	);
-
 	const generateReport = useCallback((templateId: string) => {
-		logger.info("Gerando relatório", { templateId }, "Reports");
-		setSelectedReport(templateId);
-		// Simular geração de relatório
-		setTimeout(() => {
-			alert("Relatório gerado com sucesso!");
-			setSelectedReport(null);
-		}, 2000);
-	}, []);
+		logger.info("Redirecionando para gerador avançado", {
+			templateId,
+			selectedPeriod,
+		}, "Reports");
+		setActiveTab("advanced");
+		toast.info("Abra o gerador avançado para emitir este relatório com dados reais.");
+	}, [selectedPeriod]);
 
 	const getStatusColor = useCallback((status: string) => {
 		switch (status) {
@@ -317,7 +290,11 @@ const Reports = () => {
 				</div>
 
 				{/* Main Content */}
-				<Tabs defaultValue="templates" className="space-y-4 sm:space-y-6">
+				<Tabs
+					value={activeTab}
+					onValueChange={setActiveTab}
+					className="space-y-4 sm:space-y-6"
+				>
 					<TabsList className="grid w-full grid-cols-2 sm:grid-cols-4 h-auto">
 						<TabsTrigger value="templates" className="text-xs sm:text-sm py-2">
 							<span className="hidden sm:inline">Modelos de Relatório</span>
@@ -387,7 +364,6 @@ const Reports = () => {
 						<div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
 							{reportTemplates.map((template) => {
 								const IconComponent = template.icon;
-								const isGenerating = selectedReport === template.id;
 
 								return (
 									<Card
@@ -419,19 +395,11 @@ const Reports = () => {
 											<Button
 												className="w-full bg-gradient-primary hover:bg-gradient-primary/90"
 												onClick={() => generateReport(template.id)}
-												disabled={isGenerating}
 											>
-												{isGenerating ? (
-													<>
-														<div className="w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin mr-2" />
-														Gerando...
-													</>
-												) : (
-													<>
-														<Download className="w-4 h-4 mr-2" />
-														Gerar Relatório
-													</>
-												)}
+												<>
+													<Download className="w-4 h-4 mr-2" />
+													Abrir no gerador avançado
+												</>
 											</Button>
 										</CardContent>
 									</Card>
@@ -457,49 +425,15 @@ const Reports = () => {
 							<CardContent>
 								<div className="overflow-x-auto -mx-2 sm:mx-0">
 									<div className="space-y-4 px-2 sm:px-0 min-w-[600px] sm:min-w-0">
-										{recentReports.map((report) => (
-											<div
-												key={report.id}
-												className="flex items-center justify-between p-4 border rounded-lg hover:bg-muted/50 transition-colors"
-											>
-												<div className="flex items-center space-x-4 min-w-0 flex-1">
-													<div className="w-10 h-10 bg-gradient-primary rounded-lg flex items-center justify-center flex-shrink-0">
-														<FileText className="w-5 h-5 text-primary-foreground" />
-													</div>
-													<div className="min-w-0 flex-1">
-														<p className="font-medium text-foreground truncate">
-															{report.name}
-														</p>
-														<p className="text-sm text-muted-foreground">
-															{report.type} •{" "}
-															{format(report.generatedAt, "dd/MM/yyyy", {
-																locale: ptBR,
-															})}
-														</p>
-													</div>
-												</div>
-												<div className="flex items-center gap-2 sm:gap-3 flex-shrink-0 ml-2">
-													<Badge className={getStatusColor(report.status)}>
-														{report.status}
-													</Badge>
-													<Button
-														variant="outline"
-														size="sm"
-														onClick={() => {
-															logger.info(
-																"Downloading report",
-																{ name: report.name },
-																"Reports",
-															);
-															alert(`Baixando: ${report.name}`);
-														}}
-													>
-														<Download className="w-4 h-4 sm:mr-2" />
-														<span className="hidden sm:inline">Download</span>
-													</Button>
-												</div>
-											</div>
-										))}
+										<EmptyState
+											icon={FileText}
+											title="Histórico em implantação"
+											description="Os relatórios recentes ainda não estão persistidos nesta tela. Use o gerador avançado para emitir relatórios com dados reais da clínica."
+											action={{
+												label: "Abrir gerador avançado",
+												onClick: () => setActiveTab("advanced"),
+											}}
+										/>
 									</div>
 								</div>
 							</CardContent>

@@ -8,6 +8,7 @@
 // Cache for prefetched components
 
 import { ComponentType } from "react";
+import { APP_ROUTES } from "@/lib/routing/appRoutes";
 
 const prefetchedCache = new Map<string, ComponentType<unknown>>();
 
@@ -78,13 +79,13 @@ export function getPrefetchStats(): { prefetched: number; pending: number } {
  */
 export const RouteKeys = {
 	// Core pages
-	DASHBOARD: "dashboard",
-	PATIENTS: "patients",
-	SCHEDULE: "/agenda",
-	EXERCISES: "exercises",
-	FINANCIAL: "financial",
-	REPORTS: "reports",
-	SETTINGS: "settings",
+	DASHBOARD: APP_ROUTES.DASHBOARD,
+	PATIENTS: APP_ROUTES.PATIENTS,
+	SCHEDULE: APP_ROUTES.AGENDA,
+	EXERCISES: APP_ROUTES.EXERCISES,
+	FINANCIAL: APP_ROUTES.FINANCIAL,
+	REPORTS: APP_ROUTES.REPORTS,
+	SETTINGS: APP_ROUTES.SETTINGS,
 
 	// Patient-related
 	PATIENT_PROFILE: "patient-profile",
@@ -94,7 +95,7 @@ export const RouteKeys = {
 	// Clinical
 	COMMUNICATIONS: "communications",
 	TELEMEDICINE: "telemedicine",
-	SMART_DASHBOARD: "smart-dashboard",
+	SMART_DASHBOARD: APP_ROUTES.SMART_DASHBOARD,
 
 	// Admin
 	USER_MANAGEMENT: "admin-users",
@@ -163,11 +164,11 @@ export const PrefetchStrategy = {
 export function prefetchRelatedRoutes(currentRoute: string): void {
 	// Define related routes for each section
 	const routeMap: Record<string, string[]> = {
-		"/patients": ["/agenda", "/exercises", "/medical-record"],
-		"/agenda": ["/patients", "/waitlist"],
-		"/financial": ["/reports", "/patients"],
-		"/patients/:id": ["/patient-evolution/:appointmentId", "/medical-record"],
-		"/settings": ["/admin/users", "/security-settings"],
+		[APP_ROUTES.PATIENTS]: [APP_ROUTES.AGENDA, APP_ROUTES.EXERCISES, "/medical-record"],
+		[APP_ROUTES.AGENDA]: [APP_ROUTES.PATIENTS, "/waitlist"],
+		[APP_ROUTES.FINANCIAL]: [APP_ROUTES.REPORTS, APP_ROUTES.PATIENTS],
+		[`${APP_ROUTES.PATIENTS}/:id`]: ["/patient-evolution/:appointmentId", "/medical-record"],
+		[APP_ROUTES.SETTINGS]: ["/admin/users", "/security-settings"],
 	};
 
 	// Find matching routes and prefetch them

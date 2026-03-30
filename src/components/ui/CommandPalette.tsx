@@ -28,6 +28,7 @@ import {
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { cn } from "@/lib/utils";
+import { APP_ROUTES, patientRoutes } from "@/lib/routing/appRoutes";
 
 interface CommandItem {
 	id: string;
@@ -75,7 +76,7 @@ export function CommandPalette({
 				description: "Ver agenda de atendimentos",
 				icon: Calendar,
 				category: "navigation",
-				action: () => navigate("/agenda"),
+				action: () => navigate(APP_ROUTES.AGENDA),
 				shortcut: "G+A",
 				keywords: ["agenda", "calendario", "atendimentos", "marcacoes"],
 			},
@@ -85,7 +86,7 @@ export function CommandPalette({
 				description: "Gerenciar pacientes",
 				icon: Users,
 				category: "navigation",
-				action: () => navigate("/patients"),
+				action: () => navigate(APP_ROUTES.PATIENTS),
 				shortcut: "G+P",
 				keywords: ["pacientes", "lista", "cadastro"],
 			},
@@ -95,7 +96,7 @@ export function CommandPalette({
 				description: "Biblioteca de exercícios",
 				icon: Activity,
 				category: "navigation",
-				action: () => navigate("/exercises"),
+				action: () => navigate(APP_ROUTES.EXERCISES),
 				shortcut: "G+E",
 				keywords: ["exercicios", "biblioteca", "pratica", "movimento"],
 			},
@@ -105,7 +106,7 @@ export function CommandPalette({
 				description: "Ver relatórios e estatísticas",
 				icon: BarChart3,
 				category: "navigation",
-				action: () => navigate("/reports"),
+				action: () => navigate(APP_ROUTES.REPORTS),
 				shortcut: "G+R",
 				keywords: ["relatorios", "estatisticas", "dashboards", "analytics"],
 			},
@@ -115,7 +116,7 @@ export function CommandPalette({
 				description: "Configurações da conta",
 				icon: Settings,
 				category: "navigation",
-				action: () => navigate("/settings"),
+				action: () => navigate(APP_ROUTES.SETTINGS),
 				keywords: ["configuracoes", "preferencias", "perfil", "conta"],
 			},
 
@@ -128,7 +129,7 @@ export function CommandPalette({
 							description: `Ver perfil de ${patientName || "paciente"}`,
 							icon: Users,
 							category: "patient",
-							action: () => navigate(`/patients/${patientId}`),
+							action: () => navigate(patientRoutes.profile(patientId)),
 							keywords: ["perfil", "detalhes", "ficha", "paciente"],
 						},
 						{
@@ -137,7 +138,7 @@ export function CommandPalette({
 							description: "Ver histórico completo do paciente",
 							icon: Clock,
 							category: "patient",
-							action: () => navigate(`/patients/${patientId}?tab=clinical`),
+							action: () => navigate(patientRoutes.clinicalTab(patientId)),
 							keywords: ["historico", "evolucao", "timeline", "passado"],
 						},
 						{
@@ -146,7 +147,7 @@ export function CommandPalette({
 							description: "Gerenciar metas do paciente",
 							icon: Target,
 							category: "patient",
-							action: () => navigate(`/patients/${patientId}?tab=overview`),
+							action: () => navigate(patientRoutes.overviewTab(patientId)),
 							keywords: ["metas", "objetivos", "alvos", "progresso"],
 						},
 						{
@@ -155,7 +156,7 @@ export function CommandPalette({
 							description: "Ver documentos do paciente",
 							icon: FileText,
 							category: "patient",
-							action: () => navigate(`/patients/${patientId}?tab=documents`),
+							action: () => navigate(patientRoutes.documentsTab(patientId)),
 							keywords: ["documentos", "arquivos", "exames", "anexos"],
 						},
 					] as CommandItem[])
@@ -170,7 +171,7 @@ export function CommandPalette({
 							description: "Criar nova evolução SOAP",
 							icon: FileText,
 							category: "clinical",
-							action: () => navigate(`/patients/${patientId}/evolution`),
+							action: () => navigate(patientRoutes.evolution(patientId)),
 							keywords: [
 								"evolucao",
 								"soap",
@@ -186,7 +187,7 @@ export function CommandPalette({
 							description: "Ficha de avaliação",
 							icon: Activity,
 							category: "clinical",
-							action: () => navigate(`/patients/${patientId}/evaluation`),
+							action: () => navigate(patientRoutes.evaluation(patientId)),
 							keywords: ["avaliacao", "ficha", "anamnese", "avaliar"],
 						},
 						{

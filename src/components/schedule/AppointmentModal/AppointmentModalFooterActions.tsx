@@ -38,15 +38,16 @@ export const AppointmentModalFooterActions: React.FC<
 	return (
 		<CustomModalFooter
 			isMobile={isMobile}
-			className="items-stretch flex-col-reverse gap-3 bg-background sm:flex-row sm:items-center sm:justify-between"
+			className="items-stretch flex-col-reverse gap-2 bg-white border-t border-slate-100 px-5 sm:px-6 py-3 sm:flex-row sm:items-center sm:justify-between"
 		>
+			{/* Lado esquerdo: ação destrutiva */}
 			<div className="flex justify-center sm:justify-start w-full sm:w-auto">
 				{currentMode === "edit" && hasAppointment && (
 					<Button
 						type="button"
 						variant="ghost"
 						onClick={onDelete}
-						className="w-full text-red-600 hover:text-red-700 hover:bg-red-50 sm:w-auto font-medium"
+						className="w-full text-red-600 hover:text-red-700 hover:bg-red-50 sm:w-auto font-medium text-sm"
 					>
 						<Trash2 className="w-4 h-4 mr-2" />
 						Excluir
@@ -54,13 +55,14 @@ export const AppointmentModalFooterActions: React.FC<
 				)}
 			</div>
 
+			{/* Lado direito: ações primárias */}
 			<div className="flex w-full flex-col gap-2 sm:w-auto sm:flex-row sm:flex-wrap sm:justify-end">
 				<Button
 					type="button"
 					variant="ghost"
 					onClick={onClose}
 					disabled={isLoading}
-					className="w-full sm:w-auto text-slate-500 hover:text-slate-700 hover:bg-slate-50"
+					className="w-full sm:w-auto text-slate-500 hover:text-slate-700 hover:bg-slate-50 text-sm"
 				>
 					{currentMode === "view" ? "Fechar" : "Cancelar"}
 				</Button>
@@ -70,7 +72,7 @@ export const AppointmentModalFooterActions: React.FC<
 						type="button"
 						variant="default"
 						onClick={onEdit}
-						className="w-full sm:w-auto bg-blue-600 hover:bg-blue-700 text-white shadow-sm"
+						className="w-full sm:w-auto bg-blue-600 hover:bg-blue-700 text-white shadow-sm text-sm"
 					>
 						<Edit className="w-4 h-4 mr-2" />
 						Editar
@@ -82,7 +84,7 @@ export const AppointmentModalFooterActions: React.FC<
 						type="button"
 						variant="outline"
 						disabled={isLoading}
-						className="w-full min-w-[100px] sm:w-auto border-blue-100 text-blue-700 hover:bg-blue-50"
+						className="w-full min-w-[100px] sm:w-auto border-blue-100 text-blue-700 hover:bg-blue-50 text-sm"
 						onClick={onScheduleOnly}
 					>
 						{isLoading ? (
@@ -103,10 +105,7 @@ export const AppointmentModalFooterActions: React.FC<
 						disabled={isLoading}
 						onClick={onSave}
 						className={cn(
-							"w-full min-w-[120px] transition-all duration-200 sm:w-auto shadow-sm",
-							watchedStatus === "avaliacao"
-								? "bg-violet-600 hover:bg-violet-700 text-white"
-								: "bg-blue-600 hover:bg-blue-700 text-white",
+							"w-full min-w-[140px] sm:w-auto shadow-sm bg-blue-600 hover:bg-blue-700 text-white text-sm transition-all duration-200",
 							isLoading && "opacity-80",
 						)}
 					>
