@@ -2,6 +2,7 @@ import { Hono } from 'hono';
 import { createPool } from '../lib/db';
 import { requireAuth, type AuthVariables } from '../lib/auth';
 import type { Env } from '../types/env';
+import { isUuid } from '../lib/validators';
 
 const app = new Hono<{ Bindings: Env; Variables: AuthVariables }>();
 
@@ -69,6 +70,7 @@ app.post('/', requireAuth, async (c) => {
 app.patch('/:id', requireAuth, async (c) => {
   const user = c.get('user');
   const id = c.req.param('id');
+  if (!isUuid(id)) return c.json({ error: 'ID inválido' }, 400);
   const body = await c.req.json();
   const db = await createPool(c.env);
 
@@ -102,6 +104,7 @@ app.patch('/:id', requireAuth, async (c) => {
 app.delete('/:id', requireAuth, async (c) => {
   const user = c.get('user');
   const id = c.req.param('id');
+  if (!isUuid(id)) return c.json({ error: 'ID inválido' }, 400);
   const db = await createPool(c.env);
 
   await db.query(
