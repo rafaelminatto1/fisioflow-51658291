@@ -2,13 +2,16 @@ import type { Env } from '../types/env';
 
 /**
  * Utilitários para usar o Cloudflare Workers AI (Modelos Nativos).
+ * Todas as chamadas passam pelo AI Gateway para logging e rate limiting.
  */
+
+const AI_GATEWAY_ID = 'fisioflow-gateway';
 
 export async function runAi(env: Env, model: string, input: any) {
   if (!env.AI) {
     throw new Error('Workers AI binding (env.AI) not found.');
   }
-  return await env.AI.run(model, input);
+  return await env.AI.run(model, input, { gateway: { id: AI_GATEWAY_ID } });
 }
 
 /**
