@@ -2,6 +2,7 @@ import { Env } from './types/env';
 import { createPool } from './lib/db';
 import { triggerInngestEvent } from './lib/inngest-client';
 import { sendAppointmentReminderEmail } from './lib/email';
+import type { WhatsAppQueuePayload } from './queue';
 
 /**
  * Cloudflare Worker Cron Trigger Handler
@@ -21,20 +22,14 @@ export async function handleScheduled(event: ScheduledEvent, env: Env, ctx: Exec
     const isBusinessHours = day >= 1 && day <= 5 && hour >= 7 && hour < 20;
 
     switch (cron) {
-      case "0 * * * *": // Every hour
-        if (isBusinessHours) {
-          await smartWarmup(pool);
-        }
-        break;
-
-      case "0 9 * * *": // Daily at 9:00 AM
+      case "0 9 * * *": // UTC 09h = BRT 06h — Lembretes + prewarm pós cold-start
+        await prewarmDatabase(pool);
         await sendAppointmentReminders(pool, env, ctx);
         await processBirthdays(pool, env, ctx);
         await processInactivePatients(pool, env, ctx);
         break;
-      
-      case "0 0 * * *": // Daily at Midnight
-        await generateDailyReports(pool, env);
+
+      case "0 11 * * *": // UTC 11h = BRT 08h — Manutenção em horário de expediente
         await performDatabaseCleanup(pool, env);
         break;
 
@@ -68,12 +63,14 @@ async function processBirthdays(db: any, env: Env, ctx: ExecutionContext) {
 async function processInactivePatients(db: any, env: Env, ctx: ExecutionContext) {
   console.log('[Cron] Checking for inactive patients...');
   const result = await db.query(`
-    SELECT p.id, p.full_name, p.phone
+    SELECT p.id, p.full_name, p.phone, p.organization_id
     FROM patients p
     WHERE p.is_active = true
+      AND p.organization_id IS NOT NULL
       AND NOT EXISTS (
-        SELECT 1 FROM appointments a 
-        WHERE a.patient_id = p.id 
+        SELECT 1 FROM appointments a
+        WHERE a.patient_id = p.id
+          AND a.organization_id = p.organization_id
           AND a.date >= (CURRENT_DATE - INTERVAL '15 days')
       )
   `);
@@ -126,56 +123,28 @@ async function sendAppointmentReminders(pool: any, env: Env, _ctx: ExecutionCont
       }
     }
 
-    // 2. WhatsApp Reminder
-    if (row.patient_phone && env.WHATSAPP_PHONE_NUMBER_ID && env.WHATSAPP_ACCESS_TOKEN) {
+    // 2. WhatsApp Reminder — enqueue for async processing with automatic retry
+    if (row.patient_phone && env.BACKGROUND_QUEUE) {
       try {
         const timeStr = row.time?.substring(0, 5) ?? '';
         const therapistStr = row.therapist_name || 'Fisioterapeuta';
-        
-        const metaRes = await fetch(`https://graph.facebook.com/v19.0/${env.WHATSAPP_PHONE_NUMBER_ID}/messages`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${env.WHATSAPP_ACCESS_TOKEN}` },
-          body: JSON.stringify({
-            messaging_product: 'whatsapp',
-            to: row.patient_phone.replace(/\D/g, ''),
-            type: 'template',
-            template: {
-              name: 'lembrete_sessao',
-              language: { code: 'pt_BR' },
-              components: [
-                {
-                  type: 'body',
-                  parameters: [
-                    { type: 'text', text: timeStr },
-                    { type: 'text', text: therapistStr },
-                  ],
-                },
-              ],
-            },
-          }),
-        });
-
-        if (metaRes.ok) {
-          whatsappSent++;
-          // Log record in whatsapp_messages
-          await pool.query(
-            `INSERT INTO whatsapp_messages (
-              organization_id, patient_id, from_phone, to_phone, message, type, status, metadata, created_at, updated_at
-            ) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,NOW(),NOW())`,
-            [
-              row.organization_id,
-              row.patient_id,
-              'clinic',
-              row.patient_phone,
-              `Lembrete automático: sua sessão será às ${timeStr} com ${therapistStr}.`,
-              'template',
-              'sent',
-              JSON.stringify({ appointment_id: row.id, template_key: 'lembrete_sessao', auto: true }),
-            ],
-          );
-        }
+        const queuePayload: WhatsAppQueuePayload = {
+          to: row.patient_phone,
+          templateName: 'lembrete_sessao',
+          languageCode: 'pt_BR',
+          bodyParameters: [
+            { type: 'text', text: timeStr },
+            { type: 'text', text: therapistStr },
+          ],
+          organizationId: row.organization_id,
+          patientId: row.patient_id,
+          messageText: `Lembrete automático: sua sessão será às ${timeStr} com ${therapistStr}.`,
+          appointmentId: row.id,
+        };
+        await env.BACKGROUND_QUEUE.send({ type: 'SEND_WHATSAPP', payload: queuePayload });
+        whatsappSent++;
       } catch (err) {
-        console.error(`[Cron] Failed to send WhatsApp to ${row.patient_phone}:`, err);
+        console.error(`[Cron] Failed to enqueue WhatsApp for ${row.patient_phone}:`, err);
       }
     }
   }
@@ -208,33 +177,21 @@ async function performDatabaseCleanup(pool: any, env: Env) {
   }
 }
 
-async function generateDailyReports(pool: any, env: Env) {
-  console.log('[Cron] Generating daily reports...');
+async function prewarmDatabase(pool: any) {
+  console.log('[Cron] Prewarming database cache after scale-to-zero...');
   try {
+    // pg_prewarm carrega as tabelas mais acessadas no buffer cache do Postgres
+    // Reduz latência das primeiras queries do dia após o banco acordar
     await pool.query(`
       SELECT
-        COUNT(*) as total_appointments,
-        COALESCE(SUM(payment_amount), 0) as total_revenue
-      FROM appointments
-      WHERE date = CURRENT_DATE - INTERVAL '1 day'
+        pg_prewarm('appointments') AS appointments_blocks,
+        pg_prewarm('patients')     AS patients_blocks,
+        pg_prewarm('exercises')    AS exercises_blocks,
+        pg_prewarm('sessions')     AS sessions_blocks,
+        pg_prewarm('exercise_protocols') AS protocols_blocks
     `);
-    console.log('[Cron] Daily report generated successfully.');
+    console.log('[Cron] Database cache prewarmed successfully.');
   } catch (error) {
-    console.error('[Cron] Daily report generation failed:', error);
-  }
-}
-
-async function smartWarmup(pool: any) {
-  console.log('[Cron] Smart warmup: keeping Neon active during business hours...');
-  try {
-    // Queries ultra-leves apenas para manter a instância "awake"
-    await pool.query(`
-      SELECT 
-        (SELECT COUNT(*) FROM patients WHERE is_active = true) as total_patients,
-        (SELECT COUNT(*) FROM appointments WHERE date = CURRENT_DATE) as today_appointments,
-        (SELECT NOW()) as server_time
-    `);
-  } catch (error) {
-    console.warn('[Cron] Smart warmup failed:', error);
+    console.warn('[Cron] Prewarm failed (non-critical):', error);
   }
 }
