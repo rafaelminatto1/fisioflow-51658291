@@ -75,6 +75,18 @@ const DoctorManagement = lazy(() =>
 		/* webpackChunkName: "cadastros-doctors" */ "@/pages/DoctorManagement"
 	).then((module) => ({ default: module.DoctorManagement })),
 );
+const FormasPagamentoPage = lazy(
+	() =>
+		import(
+			/* webpackChunkName: "cadastros-payment-methods" */ "@/pages/cadastros/FormasPagamentoPage"
+		),
+);
+const ConveniosPage = lazy(
+	() =>
+		import(
+			/* webpackChunkName: "cadastros-convenios" */ "@/pages/cadastros/ConveniosPage"
+		),
+);
 
 export const cadastrosRoutes = (
 	<>
@@ -166,6 +178,22 @@ export const cadastrosRoutes = (
 			element={
 				<ProtectedRoute>
 					<DoctorManagement />
+				</ProtectedRoute>
+			}
+		/>
+		<Route
+			path="/cadastros/formas-pagamento"
+			element={
+				<ProtectedRoute>
+					<FormasPagamentoPage />
+				</ProtectedRoute>
+			}
+		/>
+		<Route
+			path="/cadastros/convenios"
+			element={
+				<ProtectedRoute>
+					<ConveniosPage />
 				</ProtectedRoute>
 			}
 		/>
