@@ -49,6 +49,5 @@ export function useLeads() {
     error,
     refresh,
     updateLeadStatus,
-    setLeads,
   };
 }
