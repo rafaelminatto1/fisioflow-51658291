@@ -300,6 +300,7 @@ app.get('/:id', requireAuth, async (c) => {
   const db = createDb(c.env);
   const id = c.req.param('id');
   if (!id) return c.json({ error: 'ID é obrigatório' }, 400);
+  if (!isUuid(id)) return c.json({ error: 'ID inválido' }, 400);
   try {
     const result = await db
       .select({
@@ -339,6 +340,7 @@ const updateAppointmentHandler: MiddlewareHandler<{ Bindings: Env; Variables: Au
   const db = createDb(c.env);
   const id = c.req.param('id');
   if (!id) return c.json({ error: 'ID é obrigatório' }, 400);
+  if (!isUuid(id)) return c.json({ error: 'ID inválido' }, 400);
   try {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const body = await c.req.json() as Record<string, any>;
@@ -497,6 +499,7 @@ app.post('/:id/cancel', requireAuth, async (c) => {
   const db = createDb(c.env);
   const id = c.req.param('id');
   if (!id) return c.json({ error: 'ID é obrigatório' }, 400);
+  if (!isUuid(id)) return c.json({ error: 'ID inválido' }, 400);
 
   try {
     const body = await c.req.json().catch(() => ({}));
@@ -534,6 +537,7 @@ app.delete('/:id', requireAuth, async (c) => {
   const db = createDb(c.env);
   const id = c.req.param('id');
   if (!id) return c.json({ error: 'ID é obrigatório' }, 400);
+  if (!isUuid(id)) return c.json({ error: 'ID inválido' }, 400);
 
   try {
     const result = await db
