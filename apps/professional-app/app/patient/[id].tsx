@@ -11,6 +11,7 @@ import {
   Modal,
   TextInput,
   Alert,
+  Linking,
 } from 'react-native';
 import { useLocalSearchParams, router } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -138,6 +139,23 @@ export default function PatientDetailScreen() {
 
   const name = patient?.name || (patientName as string) || 'Paciente';
 
+  const handleWhatsApp = () => {
+    if (!patient?.phone) {
+      Alert.alert('Erro', 'Paciente sem telefone cadastrado.');
+      return;
+    }
+    light();
+    const phone = patient.phone.replace(/\D/g, '');
+    const url = `whatsapp://send?phone=55${phone}`;
+    Linking.canOpenURL(url).then(supported => {
+      if (supported) {
+        Linking.openURL(url);
+      } else {
+        Linking.openURL(`https://wa.me/55${phone}`);
+      }
+    });
+  };
+
   return (
     <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]} edges={['top', 'left', 'right', 'bottom']}>
       <ScrollView
@@ -170,6 +188,14 @@ export default function PatientDetailScreen() {
 
         {/* Quick Actions */}
         <View style={styles.actionsRow}>
+          <TouchableOpacity
+            style={[styles.actionBtn, { backgroundColor: '#25D366' }]}
+            onPress={handleWhatsApp}
+          >
+            <Ionicons name="logo-whatsapp" size={20} color="#FFFFFF" />
+            <Text style={styles.actionBtnText}>WhatsApp</Text>
+          </TouchableOpacity>
+
           <TouchableOpacity
             style={[styles.actionBtn, { backgroundColor: colors.primary }]}
             onPress={() => {
