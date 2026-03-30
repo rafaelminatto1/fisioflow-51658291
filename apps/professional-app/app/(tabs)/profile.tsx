@@ -128,7 +128,12 @@ export default function ProfileScreen() {
     {
       icon: 'card-outline',
       label: 'Plano e Faturamento',
-      onPress: () => { light(); Linking.openURL('https://fisioflow.pages.dev/financial'); },
+      onPress: () => {
+        light();
+        Linking.openURL('https://fisioflow.pages.dev/financial').catch(() =>
+          Alert.alert('Erro', 'Não foi possível abrir o link.')
+        );
+      },
     },
     {
       icon: 'help-circle-outline',
@@ -267,8 +272,6 @@ const styles = StyleSheet.create({
   },
   menuItemLeft: { flexDirection: 'row', alignItems: 'center', gap: 12, flex: 1 },
   menuItemLabel: { fontSize: 16 },
-  emBreveBadge: { paddingHorizontal: 7, paddingVertical: 3, borderRadius: 6 },
-  emBreveText: { fontSize: 10, fontWeight: '700' },
   logoutButton: { marginBottom: 16, borderColor: '#EF4444' },
   version: { textAlign: 'center', fontSize: 12, marginBottom: 24 },
 });
