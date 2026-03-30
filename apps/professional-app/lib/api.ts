@@ -558,7 +558,18 @@ export async function getEvolutions(patientId: string): Promise<ApiEvolution[]> 
 }
 
 export async function getEvolutionById(id: string): Promise<ApiEvolution | null> {
-  return evolutionCache.get(id) ?? null;
+  if (evolutionCache.has(id)) return evolutionCache.get(id)!;
+  try {
+    const response = await fetchApi<ApiResponse<ApiEvolution>>(
+      `/api/evolution/treatment-sessions/${encodeURIComponent(id)}`
+    );
+    if (!response.data) return null;
+    const result = normalizeEvolution(response.data);
+    evolutionCache.set(id, result);
+    return result;
+  } catch {
+    return null;
+  }
 }
 
 export async function createEvolution(data: Partial<ApiEvolution>): Promise<ApiEvolution> {
@@ -712,40 +723,38 @@ export async function markAsRead(participantId: string): Promise<{ success?: boo
   );
 }
 
-export async function getPartnerships(_options?: { activeOnly?: boolean }): Promise<ApiPartnership[]> {
-  return [];
+export async function getPartnerships(options?: { activeOnly?: boolean }): Promise<ApiPartnership[]> {
+  const response = await fetchApi<ApiResponse<ApiPartnership[]>>('/api/contratados', {
+    params: options?.activeOnly ? { active: true } : undefined,
+  });
+  return response.data || [];
 }
 
-export async function getPartnershipById(_id: string): Promise<ApiPartnership | null> {
-  return null;
+export async function getPartnershipById(id: string): Promise<ApiPartnership | null> {
+  const response = await fetchApi<ApiResponse<ApiPartnership>>(`/api/contratados/${encodeURIComponent(id)}`);
+  return response.data ?? null;
 }
 
 export async function createPartnership(data: Partial<ApiPartnership>): Promise<ApiPartnership> {
-  return {
-    id: String(data.id ?? `local-${Date.now()}`),
-    name: data.name ?? 'Nova parceria',
-    description: data.description ?? null,
-    active: data.active ?? true,
-    discount_type: data.discount_type,
-    discount_value: data.discount_value,
-    created_at: new Date().toISOString(),
-    updated_at: new Date().toISOString(),
-  };
+  const response = await fetchApi<ApiResponse<ApiPartnership>>('/api/contratados', {
+    method: 'POST',
+    data,
+  });
+  if (response.error) throw new Error(response.error);
+  return response.data;
 }
 
 export async function updatePartnership(id: string, data: Partial<ApiPartnership>): Promise<ApiPartnership> {
-  return {
-    id,
-    name: data.name ?? 'Parceria',
-    description: data.description ?? null,
-    active: data.active ?? true,
-    discount_type: data.discount_type,
-    discount_value: data.discount_value,
-    updated_at: new Date().toISOString(),
-  };
+  const response = await fetchApi<ApiResponse<ApiPartnership>>(`/api/contratados/${encodeURIComponent(id)}`, {
+    method: 'PUT',
+    data,
+  });
+  if (response.error) throw new Error(response.error);
+  return response.data;
 }
 
-export async function deletePartnership(_id: string): Promise<{ ok: boolean }> {
+export async function deletePartnership(id: string): Promise<{ ok: boolean }> {
+  await fetchApi(`/api/contratados/${encodeURIComponent(id)}`, { method: 'DELETE' });
   return { ok: true };
 }
 
