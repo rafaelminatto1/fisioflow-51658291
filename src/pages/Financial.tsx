@@ -20,6 +20,8 @@ import {
 	Receipt,
 	TrendingUp,
 	Wallet,
+	Rocket,
+	ChevronRight,
 } from "lucide-react";
 import { lazy, Suspense, useState } from "react";
 import { useSearchParams } from "react-router-dom";
@@ -48,6 +50,7 @@ import {
 } from "@/components/ui/select";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from "@/hooks/use-toast";
+import { Link } from "react-router-dom";
 import type { Transaction } from "@/hooks/useFinancial";
 import {
 	type PeriodType,
@@ -83,6 +86,11 @@ const NFSeContent = lazy(() =>
 const FinancialAIAdvisor = lazy(() =>
 	import("@/components/financial/FinancialAIAdvisor").then((m) => ({
 		default: m.FinancialAIAdvisor,
+	})),
+);
+const CommissionsDashboard = lazy(() =>
+	import("@/components/financial/CommissionsDashboard").then((m) => ({
+		default: m.CommissionsDashboard,
 	})),
 );
 
@@ -233,6 +241,42 @@ const Financial = () => {
 						</Button>
 					</div>
 				</div>
+
+				{/* Onboarding banner — visible only when no transactions exist */}
+				{transactions.length === 0 && (
+					<div className="rounded-2xl border border-dashed border-primary/40 bg-primary/5 p-6 flex flex-col sm:flex-row items-start sm:items-center gap-4">
+						<div className="p-3 rounded-xl bg-primary/10 shrink-0">
+							<Rocket className="h-6 w-6 text-primary" />
+						</div>
+						<div className="flex-1 min-w-0">
+							<p className="font-bold text-slate-900 dark:text-white text-sm">
+								Configure o módulo financeiro
+							</p>
+							<p className="text-xs text-muted-foreground mt-0.5">
+								Antes de registrar transações, cadastre seus serviços e formas
+								de pagamento para ter relatórios precisos.
+							</p>
+						</div>
+						<div className="flex flex-col sm:flex-row gap-2 shrink-0">
+							<Button variant="outline" size="sm" className="rounded-xl text-xs" asChild>
+								<Link to="/cadastros/servicos">
+									Cadastrar Serviços
+									<ChevronRight className="h-3.5 w-3.5 ml-1" />
+								</Link>
+							</Button>
+							<Button variant="outline" size="sm" className="rounded-xl text-xs" asChild>
+								<Link to="/cadastros/formas-pagamento">
+									Formas de Pagamento
+									<ChevronRight className="h-3.5 w-3.5 ml-1" />
+								</Link>
+							</Button>
+							<Button size="sm" className="rounded-xl text-xs" onClick={handleNewTransaction}>
+								<Plus className="h-3.5 w-3.5 mr-1" />
+								1ª Transação
+							</Button>
+						</div>
+					</div>
+				)}
 
 				{/* AI Financial Advisor - Premium Card */}
 				<section className="animate-in fade-in slide-in-from-bottom-4 duration-700">
@@ -387,6 +431,13 @@ const Financial = () => {
 						>
 							<DollarSign className="h-4 w-4" />
 							<span className="hidden sm:inline">Pacotes</span>
+						</TabsTrigger>
+						<TabsTrigger
+							value="comissoes"
+							className="gap-2 data-[state=active]:bg-primary/10 data-[state=active]:text-primary border border-transparent data-[state=active]:border-primary/20 rounded-xl px-4 py-2"
+						>
+							<TrendingUp className="h-4 w-4" />
+							<span className="hidden sm:inline">Comissões</span>
 						</TabsTrigger>
 					</TabsList>
 
@@ -564,6 +615,15 @@ const Financial = () => {
 					>
 						<Suspense fallback={<LoadingSkeleton type="list" rows={4} />}>
 							<PackagesManager />
+						</Suspense>
+					</TabsContent>
+
+					<TabsContent
+						value="comissoes"
+						className="animate-in fade-in-50 slide-in-from-bottom-2 duration-300"
+					>
+						<Suspense fallback={<LoadingSkeleton type="list" rows={4} />}>
+							<CommissionsDashboard />
 						</Suspense>
 					</TabsContent>
 				</Tabs>
