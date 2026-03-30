@@ -1,0 +1,11 @@
+{
+  "name": "expo-vision-pose-detector",
+  "version": "1.0.0",
+  "description": "Expo native module for Apple Vision Framework",
+  "main": "src/index.ts",
+  "peerDependencies": {
+    "expo": "*",
+    "react": "*",
+    "react-native": "*"
+  }
+}

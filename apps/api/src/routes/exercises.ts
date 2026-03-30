@@ -19,21 +19,60 @@ import {
 
 const app = new Hono<{ Bindings: Env; Variables: AuthVariables }>();
 
+const KV_TTL = 3600; // 1 hora
+const KV_CATEGORIES = 'exercises:v1:categories';
+const KV_LIST_PREFIX = 'exercises:v1:list:';
+
+async function kvGet(env: Env, key: string): Promise<unknown | null> {
+  if (!env.FISIOFLOW_CONFIG) return null;
+  try {
+    const cached = await env.FISIOFLOW_CONFIG.get(key, 'json');
+    return cached;
+  } catch { return null; }
+}
+
+async function kvSet(env: Env, key: string, value: unknown): Promise<void> {
+  if (!env.FISIOFLOW_CONFIG) return;
+  try {
+    await env.FISIOFLOW_CONFIG.put(key, JSON.stringify(value), { expirationTtl: KV_TTL });
+  } catch { /* non-critical */ }
+}
+
+async function kvDelete(env: Env, ...keys: string[]): Promise<void> {
+  if (!env.FISIOFLOW_CONFIG) return;
+  const kv = env.FISIOFLOW_CONFIG;
+  await Promise.allSettled(keys.map((k) => kv.delete(k)));
+}
+
 // ===== CATEGORIAS =====
 app.get('/categories', async (c) => {
+  const cached = await kvGet(c.env, KV_CATEGORIES);
+  if (cached) return c.json({ data: cached });
+
   const db = await createDb(c.env);
   const rows = await db
     .select()
     .from(exerciseCategories)
     .orderBy(exerciseCategories.orderIndex);
 
+  c.executionCtx.waitUntil(kvSet(c.env, KV_CATEGORIES, rows));
   return c.json({ data: rows });
 });
 
 // ===== LISTA DE EXERCÍCIOS =====
 app.get('/', async (c) => {
-  const db = await createDb(c.env);
   const { q, category, difficulty, page = '1', limit = '20' } = c.req.query();
+
+  // Cache only unfiltered requests (most common: browsing the library)
+  const isDefaultQuery = !q && !category && !difficulty;
+  const cacheKey = isDefaultQuery ? `${KV_LIST_PREFIX}p${page}:l${limit}` : null;
+
+  if (cacheKey) {
+    const cached = await kvGet(c.env, cacheKey);
+    if (cached) return c.json(cached);
+  }
+
+  const db = await createDb(c.env);
 
   const pageNum = Math.max(1, parseInt(page));
   const limitNum = Math.min(500, Math.max(1, parseInt(limit)));
@@ -91,8 +130,7 @@ app.get('/', async (c) => {
   ]);
 
   const total = Number(countResult[0]?.count ?? 0);
-
-  return c.json({
+  const response = {
     data: rows,
     meta: {
       page: pageNum,
@@ -100,7 +138,13 @@ app.get('/', async (c) => {
       total,
       pages: Math.ceil(total / limitNum),
     },
-  });
+  };
+
+  if (cacheKey) {
+    c.executionCtx.waitUntil(kvSet(c.env, cacheKey, response));
+  }
+
+  return c.json(response);
 });
 
 // ===== DETALHE DO EXERCÍCIO =====
@@ -188,6 +232,7 @@ app.post('/', requireAuth, async (c) => {
     })
     .returning();
 
+  c.executionCtx.waitUntil(kvDelete(c.env, KV_LIST_PREFIX + 'p1:l20', KV_LIST_PREFIX + 'p1:l500'));
   return c.json({ data: row });
 });
 
@@ -213,6 +258,7 @@ app.put('/:id', requireAuth, async (c) => {
 
   if (!row) return c.json({ error: 'Exercício não encontrado' }, 404);
 
+  c.executionCtx.waitUntil(kvDelete(c.env, KV_LIST_PREFIX + 'p1:l20', KV_LIST_PREFIX + 'p1:l500'));
   return c.json({ data: row });
 });
 
@@ -232,6 +278,7 @@ app.delete('/:id', requireAuth, async (c) => {
 
   if (!row) return c.json({ error: 'Exercício não encontrado' }, 404);
 
+  c.executionCtx.waitUntil(kvDelete(c.env, KV_LIST_PREFIX + 'p1:l20', KV_LIST_PREFIX + 'p1:l500'));
   return c.json({ ok: true });
 });
 

@@ -16,6 +16,25 @@ import type { Env } from "../types/env";
 
 const app = new Hono<{ Bindings: Env; Variables: AuthVariables }>();
 
+const KV_TTL = 3600;
+const KV_LIST_PREFIX = 'protocols:v1:list:';
+
+async function kvGet(env: Env, key: string): Promise<unknown | null> {
+  if (!env.FISIOFLOW_CONFIG) return null;
+  try { return await env.FISIOFLOW_CONFIG.get(key, 'json'); } catch { return null; }
+}
+
+async function kvSet(env: Env, key: string, value: unknown): Promise<void> {
+  if (!env.FISIOFLOW_CONFIG) return;
+  try { await env.FISIOFLOW_CONFIG.put(key, JSON.stringify(value), { expirationTtl: KV_TTL }); } catch { /* non-critical */ }
+}
+
+async function kvDelete(env: Env, ...keys: string[]): Promise<void> {
+  if (!env.FISIOFLOW_CONFIG) return;
+  const kv = env.FISIOFLOW_CONFIG;
+  await Promise.allSettled(keys.map((k) => kv.delete(k)));
+}
+
 // ===== LISTA DE PROTOCOLOS =====
 app.get("/", async (c) => {
 	const {
@@ -27,6 +46,15 @@ app.get("/", async (c) => {
 		limit = "20",
 		professionalId,
 	} = c.req.query();
+
+	// Cache only unfiltered public protocol lists
+	const isDefaultQuery = !q && !type && !evidenceLevel && !icd10 && !professionalId;
+	const cacheKey = isDefaultQuery ? `${KV_LIST_PREFIX}p${page}:l${limit}` : null;
+
+	if (cacheKey) {
+		const cached = await kvGet(c.env, cacheKey);
+		if (cached) return c.json(cached);
+	}
 
 	const db = await createDb(c.env);
 	const pageNum = Math.max(1, parseInt(page));
@@ -103,15 +131,7 @@ app.get("/", async (c) => {
 			.where(where),
 	]);
 
-	console.log("[Protocols API] Returning:", {
-		page: pageNum,
-		limit: limitNum,
-		returnedCount: rows.length,
-		totalCount: Number(countResult[0]?.count ?? 0),
-		conditions: (conditions as any[]).filter(Boolean).map((cond: any) => cond.toString()),
-	});
-
-	return c.json({
+	const response = {
 		data: rows,
 		meta: {
 			page: pageNum,
@@ -119,7 +139,13 @@ app.get("/", async (c) => {
 			total: Number(countResult[0]?.count ?? 0),
 			pages: Math.ceil(Number(countResult[0]?.count ?? 0) / limitNum),
 		},
-	});
+	};
+
+	if (cacheKey) {
+		c.executionCtx.waitUntil(kvSet(c.env, cacheKey, response));
+	}
+
+	return c.json(response);
 });
 
 // ===== DETALHE DO PROTOCOLO =====
@@ -209,6 +235,7 @@ app.post("/", requireAuth, async (c) => {
 		})
 		.returning();
 
+	c.executionCtx.waitUntil(kvDelete(c.env, KV_LIST_PREFIX + 'p1:l20', KV_LIST_PREFIX + 'p1:l500'));
 	return c.json({ data: created }, 201);
 });
 
@@ -266,6 +293,7 @@ app.put("/:id", requireAuth, async (c) => {
 
 	if (!updated) return c.json({ error: "Protocolo não encontrado" }, 404);
 
+	c.executionCtx.waitUntil(kvDelete(c.env, KV_LIST_PREFIX + 'p1:l20', KV_LIST_PREFIX + 'p1:l500'));
 	return c.json({ data: updated });
 });
 
@@ -282,6 +310,7 @@ app.delete("/:id", requireAuth, async (c) => {
 
 	if (!deleted) return c.json({ error: "Protocolo não encontrado" }, 404);
 
+	c.executionCtx.waitUntil(kvDelete(c.env, KV_LIST_PREFIX + 'p1:l20', KV_LIST_PREFIX + 'p1:l500'));
 	return c.json({ success: true });
 });
 

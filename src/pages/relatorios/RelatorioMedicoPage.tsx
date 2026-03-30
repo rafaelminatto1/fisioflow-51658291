@@ -1,26 +1,5 @@
 import { useState, useEffect } from "react";
 import { useLocation } from "react-router-dom";
-import { MainLayout } from "@/components/layout/MainLayout";
-import { Button } from "@/components/ui/button";
-import {
-	Card,
-	CardContent,
-	CardHeader,
-	CardTitle,
-	CardDescription,
-} from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
-import {
-	Select,
-	SelectContent,
-	SelectItem,
-	SelectTrigger,
-	SelectValue,
-} from "@/components/ui/select";
-import { Badge } from "@/components/ui/badge";
-import { PatientCombobox } from "@/components/ui/patient-combobox";
 import {
 	Dialog,
 	DialogContent,
@@ -28,39 +7,32 @@ import {
 	DialogHeader,
 	DialogTitle,
 } from "@/components/ui/dialog";
-import { ScrollArea } from "@/components/ui/scroll-area";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Alert, AlertDescription } from "@/components/ui/alert";
 import {
 	FileText,
 	Stethoscope,
-	Edit,
-	Eye,
 	Activity,
 	CheckCircle2,
 	PenTool,
 	Bone,
 	TrendingUp,
-	Save,
-	Plus,
-	Copy,
-	Trash2,
 } from "lucide-react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { format } from "date-fns";
-import { ptBR } from "date-fns/locale";
 import { useAuth } from "@/contexts/AuthContext";
 import { useOrganizations } from "@/hooks/useOrganizations";
 import { usePatients } from "@/hooks/patients/usePatients";
 import { reportsApi, sessionsApi } from "@/api/v2";
-import { Checkbox } from "@/components/ui/checkbox";
-import { LazyPdfDownloadButton } from "@/components/pdf/LazyPdfDownloadButton";
-import { Download, Info, Cloud } from "lucide-react";
 import { useGoogleDocs } from "@/hooks/useGoogleDocs";
 import { useGoogleOAuth } from "@/hooks/useGoogleOAuth";
 import { useUserProfile } from "@/hooks/useUserProfile";
 import { RelatorioMedicoEditor } from "@/components/reports/RelatorioMedicoEditor";
+import { RelatorioMedicoPreviewDialog } from "@/components/reports/RelatorioMedicoPreviewDialog";
+import {
+	RelatorioMedicoGoogleTemplateDialog,
+	RelatorioMedicoTemplateDialog,
+} from "@/components/reports/RelatorioMedicoDialogs";
+import { RelatorioMedicoContent } from "@/components/reports/RelatorioMedicoContent";
 
 const TEMPLATE_FIELD_OPTIONS = [
 	{ id: "queixa_principal", label: "Queixa principal" },
@@ -153,7 +125,7 @@ interface Evolucao {
 	ajustes_realizados?: string;
 }
 
-interface RelatorioTemplate {
+export interface RelatorioTemplate {
 	id: string;
 	nome: string;
 	descricao: string;
@@ -254,17 +226,6 @@ const BUILTIN_TEMPLATES: RelatorioTemplate[] = [
 		updated_at: "2024-01-01T00:00:00.000Z",
 	},
 ];
-
-interface RelatorioTemplate {
-	id: string;
-	nome: string;
-	descricao: string;
-	tipo_relatorio: RelatorioMedicoData["tipo_relatorio"];
-	campos: string[];
-	organization_id?: string | null;
-	created_at: string;
-	updated_at: string;
-}
 
 export interface RelatorioMedicoData {
 	id: string;
@@ -817,300 +778,37 @@ export default function RelatorioMedicoPage() {
 	};
 
 	return (
-		<MainLayout>
-			<div className="space-y-6">
-				{/* Header */}
-				<div className="flex items-center justify-between">
-					<div>
-						<h1 className="text-3xl font-bold flex items-center gap-2">
-							<Stethoscope className="h-8 w-8 text-primary" />
-							Relatórios para Médicos
-						</h1>
-						<p className="text-muted-foreground mt-1">
-							Crie relatórios para comunicação com profissionais de saúde
-						</p>
-					</div>
-				</div>
-
-				<Alert>
-					<Info className="h-4 w-4" />
-					<AlertDescription>
-						Estes relatórios são destinados à comunicação entre profissionais de
-						saúde. Todas as informações são confidenciais e protegidas por
-						sigilo profissional.
-					</AlertDescription>
-				</Alert>
-
-				<Tabs
-					value={activeTab}
-					onValueChange={(v) => setActiveTab(v as "criar" | "lista")}
-				>
-					<TabsList>
-						<TabsTrigger value="criar">Criar Relatório</TabsTrigger>
-						<TabsTrigger value="lista">Relatórios Salvos</TabsTrigger>
-					</TabsList>
-
-					<TabsContent value="criar" className="space-y-4">
-						<Card>
-							<CardHeader>
-								<CardTitle>Selecione o Paciente</CardTitle>
-								<CardDescription>
-									O relatório será preenchido automaticamente com os dados
-									disponíveis
-								</CardDescription>
-							</CardHeader>
-							<CardContent>
-								<div className="space-y-4">
-									<div className="space-y-2">
-										<Label>Paciente *</Label>
-										<PatientCombobox
-											patients={pacientes}
-											value={selectedPatientId}
-											onValueChange={handlePatientSelect}
-											className="w-full"
-										/>
-									</div>
-								</div>
-							</CardContent>
-						</Card>
-
-						<Card>
-							<CardHeader className="flex flex-col gap-2 md:flex-row md:items-center md:justify-between">
-								<div>
-									<CardTitle>Modelos de Relatório</CardTitle>
-									<CardDescription>
-										Crie e reutilize configurações para acelerar o fluxo
-									</CardDescription>
-								</div>
-								<Button
-									variant="outline"
-									size="sm"
-									onClick={startCreateTemplate}
-								>
-									<Plus className="h-4 w-4 mr-1" />
-									Novo modelo
-								</Button>
-							</CardHeader>
-							<CardContent className="space-y-3">
-								{isLoadingTemplates ? (
-									<div className="text-sm text-muted-foreground">
-										Carregando modelos...
-									</div>
-								) : (
-									<div className="space-y-3">
-										{templates.map((template) => {
-											const isBuiltin =
-												template.organization_id === "__builtin__";
-											return (
-												<div
-													key={template.id}
-													className="p-4 border rounded-lg flex flex-col gap-3 md:flex-row md:items-center md:justify-between"
-												>
-													<div className="flex items-start gap-3">
-														<div className="p-2 bg-muted rounded-lg">
-															{templateIcon(template.tipo_relatorio)}
-														</div>
-														<div>
-															<div className="flex items-center gap-2">
-																<p className="font-semibold text-sm">
-																	{template.nome}
-																</p>
-																{isBuiltin && (
-																	<Badge variant="outline">Padrão</Badge>
-																)}
-															</div>
-															<p className="text-xs text-muted-foreground">
-																{template.descricao}
-															</p>
-															<div className="flex flex-wrap gap-1 mt-2">
-																{template.campos.map((campo) => {
-																	const label =
-																		TEMPLATE_FIELD_OPTIONS.find(
-																			(o) => o.id === campo,
-																		)?.label ?? campo;
-																	return (
-																		<Badge
-																			key={campo}
-																			variant="secondary"
-																			className="text-[10px]"
-																		>
-																			{label}
-																		</Badge>
-																	);
-																})}
-															</div>
-														</div>
-													</div>
-													<div className="flex items-center gap-2">
-														<Button
-															size="sm"
-															onClick={() => applyTemplate(template)}
-														>
-															<FileText className="h-4 w-4 mr-1" />
-															Usar
-														</Button>
-														<Button
-															variant="ghost"
-															size="sm"
-															onClick={() =>
-																isBuiltin
-																	? duplicateTemplate(template)
-																	: startEditTemplate(template)
-															}
-														>
-															<Edit className="h-4 w-4 mr-1" />
-															{isBuiltin ? "Duplicar p/ editar" : "Editar"}
-														</Button>
-														<Button
-															variant="ghost"
-															size="sm"
-															onClick={() => duplicateTemplate(template)}
-														>
-															<Copy className="h-4 w-4 mr-1" />
-															Duplicar
-														</Button>
-														<Button
-															variant="ghost"
-															size="sm"
-															className="text-destructive"
-															disabled={
-																isBuiltin || deleteTemplateMutation.isPending
-															}
-															onClick={() => {
-																if (isBuiltin) return;
-																if (window.confirm("Excluir este modelo?")) {
-																	deleteTemplateMutation.mutate(template.id);
-																}
-															}}
-														>
-															<Trash2 className="h-4 w-4 mr-1" />
-															Excluir
-														</Button>
-													</div>
-												</div>
-											);
-										})}
-										{!templates.length && (
-											<div className="text-sm text-muted-foreground">
-												Nenhum modelo encontrado. Crie um novo modelo para
-												acelerar seus relatórios.
-											</div>
-										)}
-									</div>
-								)}
-							</CardContent>
-						</Card>
-					</TabsContent>
-
-					<TabsContent value="lista" className="space-y-4">
-						<Card>
-							<CardContent className="pt-4">
-								{isLoading ? (
-									<div className="text-center py-8 text-muted-foreground">
-										Carregando...
-									</div>
-								) : !relatorios.length ? (
-									<div className="text-center py-12 text-muted-foreground">
-										<FileText className="h-12 w-12 mx-auto mb-4 opacity-30" />
-										<p>Nenhum relatório salvo ainda.</p>
-									</div>
-								) : (
-									<div className="space-y-2">
-										{relatorios.map((relatorio) => (
-											<div
-												key={relatorio.id}
-												className="flex items-center justify-between p-4 border rounded-lg hover:bg-accent/5"
-											>
-												<div className="flex-1">
-													<div className="flex items-center gap-2">
-														<p className="font-semibold">
-															{relatorio.paciente?.nome}
-														</p>
-														{relatorio.urgencia === "alta" && (
-															<Badge variant="destructive">Alta</Badge>
-														)}
-													</div>
-													<p className="text-sm text-muted-foreground">
-														{format(
-															new Date(relatorio.data_emissao),
-															"dd/MM/yyyy 'às' HH:mm",
-															{ locale: ptBR },
-														)}
-													</p>
-													<div className="flex items-center gap-2 mt-1">
-														<Badge variant="outline">
-															{relatorio.tipo_relatorio}
-														</Badge>
-														{relatorio.profissional_destino?.nome && (
-															<Badge variant="secondary">
-																Para: {relatorio.profissional_destino.nome}
-															</Badge>
-														)}
-													</div>
-												</div>
-												<div className="flex items-center gap-2">
-													<Button
-														variant="ghost"
-														size="sm"
-														onClick={() => setPreviewRelatorio(relatorio)}
-													>
-														<Eye className="h-4 w-4 mr-1" />
-														Visualizar
-													</Button>
-													<Button
-														variant="ghost"
-														size="sm"
-														onClick={() => {
-															setEditingRelatorio(relatorio);
-															setIsEditorOpen(true);
-														}}
-													>
-														<Edit className="h-4 w-4 mr-1" />
-														Editar
-													</Button>
-													<Button
-														variant="ghost"
-														size="sm"
-														className="text-destructive"
-														disabled={deleteRelatorio.isPending}
-														onClick={() => {
-															if (
-																window.confirm(
-																	"Excluir este relatório definitivamente?",
-																)
-															) {
-																deleteRelatorio.mutate(relatorio.id);
-															}
-														}}
-													>
-														<Trash2 className="h-4 w-4 mr-1" />
-														Excluir
-													</Button>
-													<Button
-														variant="ghost"
-														size="sm"
-														onClick={() => handleGenerateGoogleDocs(relatorio)}
-													>
-														<Cloud className="h-4 w-4 mr-1 text-blue-500" />
-														Google Docs
-													</Button>
-													<LazyPdfDownloadButton
-														loadDocument={loadRelatorioMedicoPdf}
-														documentProps={{ data: relatorio }}
-														fileName={`relatorio-medico-${relatorio.paciente?.nome?.replace(/\s+/g, "-")}-${format(new Date(relatorio.data_emissao), "dd-MM-yyyy")}.pdf`}
-														label="PDF"
-														icon={<Download className="mr-1 h-4 w-4" />}
-														buttonProps={{ size: "sm" }}
-													/>
-												</div>
-											</div>
-										))}
-									</div>
-								)}
-							</CardContent>
-						</Card>
-					</TabsContent>
-				</Tabs>
+		<>
+			<RelatorioMedicoContent
+				activeTab={activeTab}
+				setActiveTab={setActiveTab}
+				pacientes={pacientes}
+				selectedPatientId={selectedPatientId}
+				handlePatientSelect={handlePatientSelect}
+				templates={templates}
+				isLoadingTemplates={isLoadingTemplates}
+				templateFieldOptions={TEMPLATE_FIELD_OPTIONS}
+				templateIcon={templateIcon}
+				startCreateTemplate={startCreateTemplate}
+				applyTemplate={applyTemplate}
+				startEditTemplate={startEditTemplate}
+				duplicateTemplate={duplicateTemplate}
+				deleteTemplatePending={deleteTemplateMutation.isPending}
+				onDeleteTemplate={(templateId) =>
+					deleteTemplateMutation.mutate(templateId)
+				}
+				relatorios={relatorios}
+				isLoading={isLoading}
+				onPreviewRelatorio={setPreviewRelatorio}
+				onEditRelatorio={(relatorio) => {
+					setEditingRelatorio(relatorio);
+					setIsEditorOpen(true);
+				}}
+				onDeleteRelatorio={(relatorioId) => deleteRelatorio.mutate(relatorioId)}
+				deleteRelatorioPending={deleteRelatorio.isPending}
+				onGenerateGoogleDocs={handleGenerateGoogleDocs}
+				loadRelatorioMedicoPdf={loadRelatorioMedicoPdf}
+			/>
 
 				{/* Dialog Editor */}
 				<Dialog open={isEditorOpen} onOpenChange={setIsEditorOpen}>
@@ -1138,239 +836,39 @@ export default function RelatorioMedicoPage() {
 					</DialogContent>
 				</Dialog>
 
-				{/* Dialog Preview */}
-				{previewRelatorio && (
-					<Dialog
-						open={!!previewRelatorio}
-						onOpenChange={() => setPreviewRelatorio(null)}
-					>
-						<DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
-							<DialogHeader>
-								<DialogTitle>Visualização do Relatório</DialogTitle>
-							</DialogHeader>
-							<div className="space-y-4">
-								<div className="bg-muted p-4 rounded-lg space-y-2">
-									<div className="grid grid-cols-2 gap-2 text-sm">
-										<div>
-											<span className="font-semibold">Paciente:</span>{" "}
-											{previewRelatorio.paciente?.nome}
-										</div>
-										<div>
-											<span className="font-semibold">Tipo:</span>{" "}
-											{previewRelatorio.tipo_relatorio}
-										</div>
-										<div>
-											<span className="font-semibold">Data:</span>{" "}
-											{format(
-												new Date(previewRelatorio.data_emissao),
-												"dd/MM/yyyy",
-												{ locale: ptBR },
-											)}
-										</div>
-										<div>
-											<span className="font-semibold">Urgência:</span>{" "}
-											{previewRelatorio.urgencia}
-										</div>
-									</div>
-									{previewRelatorio.profissional_destino?.nome && (
-										<div className="text-sm">
-											<span className="font-semibold">Destinatário:</span>{" "}
-											{previewRelatorio.profissional_destino.nome} -{" "}
-											{previewRelatorio.profissional_destino.especialidade}
-										</div>
-									)}
-								</div>
-								<div className="flex justify-end gap-2">
-									<Button
-										variant="outline"
-										onClick={() => {
-											setEditingRelatorio(previewRelatorio);
-											setPreviewRelatorio(null);
-											setIsEditorOpen(true);
-										}}
-									>
-										<Edit className="h-4 w-4 mr-2" />
-										Editar
-									</Button>
-									<LazyPdfDownloadButton
-										loadDocument={loadRelatorioMedicoPdf}
-										documentProps={{ data: previewRelatorio }}
-										fileName={`relatorio-medico-${previewRelatorio.paciente?.nome?.replace(/\s+/g, "-")}-${format(new Date(previewRelatorio.data_emissao), "dd-MM-yyyy")}.pdf`}
-										label="Baixar PDF"
-										icon={<Download className="mr-2 h-4 w-4" />}
-									/>
-								</div>
-							</div>
-						</DialogContent>
-					</Dialog>
-				)}
+				<RelatorioMedicoPreviewDialog
+					relatorio={previewRelatorio}
+					onClose={() => setPreviewRelatorio(null)}
+					onEdit={(relatorio) => {
+						setEditingRelatorio(relatorio);
+						setPreviewRelatorio(null);
+						setIsEditorOpen(true);
+					}}
+					loadDocument={loadRelatorioMedicoPdf}
+				/>
 
-				{/* Dialog Template CRUD */}
-				<Dialog
+				<RelatorioMedicoTemplateDialog
 					open={templateDialogOpen}
 					onOpenChange={(open) => {
 						setTemplateDialogOpen(open);
-						if (!open) {
-							setEditingTemplate(null);
-						}
+						if (!open) setEditingTemplate(null);
 					}}
-				>
-					<DialogContent className="max-w-2xl">
-						<DialogHeader>
-							<DialogTitle className="flex items-center gap-2">
-								<PenTool className="h-4 w-4" />
-								{editingTemplate ? "Editar modelo" : "Novo modelo"}
-							</DialogTitle>
-							<DialogDescription>
-								Defina os campos obrigatórios e o tipo de relatório para
-								reutilizar rapidamente.
-							</DialogDescription>
-						</DialogHeader>
+					editingTemplate={editingTemplate}
+					templateForm={templateForm}
+					setTemplateForm={setTemplateForm}
+					toggleCampo={toggleCampo}
+					handleSubmit={handleTemplateSubmit}
+					isSaving={saveTemplateMutation.isPending}
+					fieldOptions={TEMPLATE_FIELD_OPTIONS}
+				/>
 
-						<div className="space-y-4">
-							<div className="space-y-2">
-								<Label>Nome do modelo</Label>
-								<Input
-									value={templateForm.nome}
-									onChange={(e) =>
-										setTemplateForm((prev) => ({
-											...prev,
-											nome: e.target.value,
-										}))
-									}
-									placeholder="Ex: Avaliação ortopédica detalhada"
-								/>
-							</div>
-							<div className="space-y-2">
-								<Label>Descrição</Label>
-								<Textarea
-									value={templateForm.descricao}
-									onChange={(e) =>
-										setTemplateForm((prev) => ({
-											...prev,
-											descricao: e.target.value,
-										}))
-									}
-									rows={2}
-								/>
-							</div>
-							<div className="space-y-2">
-								<Label>Tipo de relatório</Label>
-								<Select
-									value={templateForm.tipo_relatorio}
-									onValueChange={(v) =>
-										setTemplateForm((prev) => ({
-											...prev,
-											tipo_relatorio:
-												v as RelatorioMedicoData["tipo_relatorio"],
-										}))
-									}
-								>
-									<SelectTrigger>
-										<SelectValue />
-									</SelectTrigger>
-									<SelectContent>
-										<SelectItem value="inicial">Avaliação inicial</SelectItem>
-										<SelectItem value="evolucao">Evolução</SelectItem>
-										<SelectItem value="alta">Alta</SelectItem>
-										<SelectItem value="interconsulta">Interconsulta</SelectItem>
-										<SelectItem value="cirurgico">
-											Pré/Pós-operatório
-										</SelectItem>
-									</SelectContent>
-								</Select>
-							</div>
-
-							<div className="space-y-3">
-								<Label>Campos incluídos</Label>
-								<div className="grid grid-cols-2 gap-2 max-h-64 overflow-y-auto pr-1">
-									{TEMPLATE_FIELD_OPTIONS.map((campo) => (
-										<label
-											key={campo.id}
-											className="flex items-center gap-2 text-sm cursor-pointer"
-										>
-											<Checkbox
-												checked={templateForm.campos.includes(campo.id)}
-												onCheckedChange={() => toggleCampo(campo.id)}
-											/>
-											{campo.label}
-										</label>
-									))}
-								</div>
-							</div>
-
-							<div className="flex justify-end gap-2">
-								<Button
-									variant="outline"
-									onClick={() => setTemplateDialogOpen(false)}
-								>
-									Cancelar
-								</Button>
-								<Button
-									onClick={handleTemplateSubmit}
-									disabled={saveTemplateMutation.isPending}
-								>
-									<Save className="h-4 w-4 mr-2" />
-									{saveTemplateMutation.isPending
-										? "Salvando..."
-										: "Salvar modelo"}
-								</Button>
-							</div>
-						</div>
-					</DialogContent>
-				</Dialog>
-
-				{/* Dialog Google Templates */}
-				<Dialog
+				<RelatorioMedicoGoogleTemplateDialog
 					open={isGoogleTemplateDialogOpen}
 					onOpenChange={setIsGoogleTemplateDialogOpen}
-				>
-					<DialogContent>
-						<DialogHeader>
-							<DialogTitle>Selecione um Modelo do Google Docs</DialogTitle>
-							<DialogDescription>
-								Seus templates do Google Drive que contêm "Template" ou "Modelo"
-								no nome.
-							</DialogDescription>
-						</DialogHeader>
-						<div className="space-y-4">
-							<ScrollArea className="h-64">
-								<div className="space-y-2">
-									{googleTemplates.map((template) => (
-										<Button
-											key={template.id}
-											variant="outline"
-											className="w-full justify-start text-left h-auto py-3 px-4"
-											onClick={() => confirmGenerateGoogleDocs(template.id)}
-											disabled={isGenerating}
-										>
-											<div className="flex flex-col">
-												<span className="font-medium">{template.name}</span>
-												<span className="text-xs text-muted-foreground">
-													Google Docs Template
-												</span>
-											</div>
-										</Button>
-									))}
-									{googleTemplates.length === 0 && (
-										<div className="text-center py-8 text-muted-foreground">
-											Nenhum template encontrado no seu Google Drive.
-										</div>
-									)}
-								</div>
-							</ScrollArea>
-							<div className="flex justify-end gap-2">
-								<Button
-									variant="ghost"
-									onClick={() => setIsGoogleTemplateDialogOpen(false)}
-								>
-									Cancelar
-								</Button>
-							</div>
-						</div>
-					</DialogContent>
-				</Dialog>
-			</div>
-		</MainLayout>
+					templates={googleTemplates}
+					onSelectTemplate={confirmGenerateGoogleDocs}
+					isGenerating={isGenerating}
+				/>
+		</>
 	);
 }
