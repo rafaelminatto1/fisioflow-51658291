@@ -51,7 +51,8 @@ workflows:
           
           xcode-project build-ipa \
             --workspace "$WORKSPACE" \
-            --scheme "$SCHEME"
+            --scheme "$SCHEME" \
+            --verbose
     artifacts:
       - apps/professional-app/ios/build/remote/ipa/*.ipa
     publishing:
