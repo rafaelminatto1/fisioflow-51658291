@@ -1,0 +1,43 @@
+workflows:
+  ios-professional-app:
+    name: FisioFlow Pro iOS Build
+    max_build_duration: 120
+    instance_type: mac_mini_m1
+    environment:
+      node: latest
+      xcode: latest
+      cocoapods: default
+      vars:
+        APP_DIR: "apps/professional-app"
+        BUNDLE_ID: "com.fisioflow.professionals"
+    triggering:
+      events:
+        - push
+      branches:
+        - main
+    scripts:
+      - name: Install pnpm
+        script: npm install -g pnpm
+      - name: Install dependencies
+        script: |
+          pnpm install --frozen-lockfile
+      - name: Expo Prebuild
+        script: |
+          cd $APP_DIR
+          npx expo prebuild --platform ios
+      - name: Install CocoaPods
+        script: |
+          cd $APP_DIR/ios
+          pod install
+      - name: Build iOS IPA
+        script: |
+          cd $APP_DIR/ios
+          xcode-project build-ipa \
+            --workspace "FisioFlow Pro.xcworkspace" \
+            --scheme "FisioFlow Pro"
+    artifacts:
+      - apps/professional-app/ios/build/remote/ipa/*.ipa
+    publishing:
+      email:
+        recipients:
+          - rafael@moocafisio.com.br
