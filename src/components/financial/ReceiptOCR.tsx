@@ -1,10 +1,12 @@
-import React, { useState } from "react";
+import React, { useState, useRef } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Camera, Loader2, Sparkles, Check } from "lucide-react";
+import { Camera, Loader2, Sparkles, Check, Info, X } from "lucide-react";
 import { toast } from "sonner";
-import { marketingApi } from "@/api/v2";
+import { getNeonAccessToken } from "@/lib/auth/neon-token";
+
+const WORKERS_BASE = import.meta.env.VITE_WORKERS_URL ?? "https://fisioflow-api.rafalegollas.workers.dev";
 
 interface ReceiptOCRProps {
 	onDataExtracted: (data: {
@@ -19,67 +21,122 @@ interface ReceiptOCRProps {
 export function ReceiptOCR({ onDataExtracted }: ReceiptOCRProps) {
 	const [isAnalyzing, setIsAnalyzing] = useState(false);
 	const [preview, setPreview] = useState<string | null>(null);
+	const [isDragOver, setIsDragOver] = useState(false);
+	const inputRef = useRef<HTMLInputElement>(null);
 
-	const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
-		const file = e.target.files?.[0];
-		if (!file) return;
+	const processFile = async (file: File) => {
+		if (!file.type.startsWith("image/")) {
+			toast.error("Arquivo deve ser uma imagem (JPG, PNG, WEBP, etc.)");
+			return;
+		}
 
-		// Preview
+		// Preview local
 		const reader = new FileReader();
 		reader.onloadend = () => setPreview(reader.result as string);
 		reader.readAsDataURL(file);
 
-		// Analyze via IA
 		setIsAnalyzing(true);
 		try {
-			// Aqui usamos o Gemini ou Vision API do Worker para extrair os dados
-			// Como é experimental, simulamos a extração que seria feita pelo Worker
+			const token = await getNeonAccessToken();
+
 			const formData = new FormData();
 			formData.append("image", file);
 
-			const result = await marketingApi.analysis.extractReceiptData(formData);
+			const res = await fetch(`${WORKERS_BASE}/api/ai/receipt-ocr`, {
+				method: "POST",
+				headers: { Authorization: `Bearer ${token}` },
+				body: formData,
+			});
 
-			if (result.success && result.data) {
-				let extractedData = result.data;
-
-				// Se detectou final de cartão, tenta buscar paciente já mapeado
-				if (extractedData.cardLastDigits) {
-					try {
-						const mappingRes = await fetch(
-							`/api/financial/card-mapping/${extractedData.cardLastDigits}`,
-						);
-						const mapping = await mappingRes.json();
-						if (mapping.data) {
-							extractedData = {
-								...extractedData,
-								patientId: mapping.data.patient_id,
-								nome: mapping.data.patient_name,
-							};
-							toast.success(
-								`Paciente ${mapping.data.patient_name} reconhecido pelo cartão!`,
-							);
-						}
-					} catch (e) {
-						console.error("Mapping lookup error:", e);
-					}
-				}
-
-				onDataExtracted(extractedData);
-				toast.success("Dados extraídos com sucesso via IA!");
-			} else {
-				throw new Error("Não foi possível ler os dados do comprovante");
+			if (!res.ok) {
+				const errBody = await res.json().catch(() => ({})) as any;
+				throw new Error(errBody?.error ?? `Erro HTTP ${res.status}`);
 			}
-		} catch (error) {
-			console.error("OCR Error:", error);
-			toast.error("Erro ao ler comprovante. Tente digitar manualmente.");
+
+			const result = await res.json() as {
+				success: boolean;
+				data?: {
+					valor: number;
+					nome: string | null;
+					cardLastDigits: string | null;
+					isFirstPayment: boolean;
+					pixKey: string | null;
+					dataTransacao: string | null;
+				};
+				error?: string;
+			};
+
+			if (!result.success || !result.data) {
+				throw new Error(result.error ?? "IA não conseguiu extrair os dados");
+			}
+
+			const extracted = result.data;
+
+			// Tentar associar cartão→paciente se detectou dígitos
+			let patientId: string | undefined;
+			if (extracted.cardLastDigits) {
+				try {
+					const mappingRes = await fetch(
+						`${WORKERS_BASE}/api/financial/card-mapping/${extracted.cardLastDigits}`,
+						{ headers: { Authorization: `Bearer ${token}` } },
+					);
+					const mapping = await mappingRes.json() as any;
+					if (mapping?.data?.patient_id) {
+						patientId = mapping.data.patient_id;
+						toast.success(`Paciente ${mapping.data.patient_name ?? ""} reconhecido pelo cartão!`);
+					}
+				} catch {
+					// Non-fatal — continue without mapping
+				}
+			}
+
+			onDataExtracted({
+				valor: extracted.valor,
+				nome: extracted.nome ?? undefined,
+				cardLastDigits: extracted.cardLastDigits ?? undefined,
+				isFirstPayment: extracted.isFirstPayment,
+				patientId,
+			});
+
+			toast.success("Comprovante processado com sucesso!");
+		} catch (error: any) {
+			console.error("[ReceiptOCR] Error:", error);
+			toast.error(error.message ?? "Erro ao processar comprovante. Digite os dados manualmente.");
+			setPreview(null);
 		} finally {
 			setIsAnalyzing(false);
 		}
 	};
 
+	const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+		const file = e.target.files?.[0];
+		if (file) await processFile(file);
+		// Reset input so the same file can be re-selected
+		if (inputRef.current) inputRef.current.value = "";
+	};
+
+	const handleDrop = async (e: React.DragEvent) => {
+		e.preventDefault();
+		setIsDragOver(false);
+		const file = e.dataTransfer.files?.[0];
+		if (file) await processFile(file);
+	};
+
+	const clearPreview = () => {
+		setPreview(null);
+		if (inputRef.current) inputRef.current.value = "";
+	};
+
 	return (
 		<div className="space-y-4">
-			<Card className="border-dashed border-2 bg-slate-50/50 dark:bg-slate-900/50 hover:bg-slate-100 transition-all overflow-hidden relative group">
+			<Card
+				className={`border-dashed border-2 bg-slate-50/50 dark:bg-slate-900/50 overflow-hidden relative group transition-all ${
+					isDragOver ? "border-primary bg-primary/5" : "hover:bg-slate-100"
+				}`}
+				onDragOver={(e) => { e.preventDefault(); setIsDragOver(true); }}
+				onDragLeave={() => setIsDragOver(false)}
+				onDrop={handleDrop}
+			>
 				<CardContent className="p-0">
 					<Label
 						htmlFor="receipt-upload"
@@ -89,7 +146,7 @@ export function ReceiptOCR({ onDataExtracted }: ReceiptOCRProps) {
 							<div className="relative w-full h-40">
 								<img
 									src={preview}
-									alt="Preview"
+									alt="Preview comprovante"
 									className="w-full h-full object-contain opacity-50 blur-[1px]"
 								/>
 								<div className="absolute inset-0 flex flex-col items-center justify-center bg-white/20 backdrop-blur-sm">
@@ -109,6 +166,15 @@ export function ReceiptOCR({ onDataExtracted }: ReceiptOCRProps) {
 										</>
 									)}
 								</div>
+								{!isAnalyzing && (
+									<button
+										type="button"
+										onClick={(e) => { e.preventDefault(); clearPreview(); }}
+										className="absolute top-2 right-2 p-1 rounded-full bg-white/80 hover:bg-white shadow"
+									>
+										<X className="h-3.5 w-3.5 text-slate-500" />
+									</button>
+								)}
 							</div>
 						) : (
 							<>
@@ -123,13 +189,18 @@ export function ReceiptOCR({ onDataExtracted }: ReceiptOCRProps) {
 										<Sparkles className="w-3 h-3 text-amber-500" />
 										Preenchimento Automático via IA
 									</p>
+									<p className="text-[10px] text-slate-300 font-medium">
+										Clique ou arraste a imagem aqui
+									</p>
 								</div>
 							</>
 						)}
 						<Input
 							id="receipt-upload"
+							ref={inputRef}
 							type="file"
 							accept="image/*"
+							capture="environment"
 							className="hidden"
 							onChange={handleFileChange}
 							disabled={isAnalyzing}
@@ -148,26 +219,5 @@ export function ReceiptOCR({ onDataExtracted }: ReceiptOCRProps) {
 				</div>
 			)}
 		</div>
-	);
-}
-
-function Info(props: any) {
-	return (
-		<svg
-			{...props}
-			xmlns="http://www.w3.org/2000/svg"
-			width="24"
-			height="24"
-			viewBox="0 0 24 24"
-			fill="none"
-			stroke="currentColor"
-			strokeWidth="2"
-			strokeLinecap="round"
-			strokeLinejoin="round"
-		>
-			<circle cx="12" cy="12" r="10" />
-			<path d="M12 16v-4" />
-			<path d="M12 8h.01" />
-		</svg>
 	);
 }
