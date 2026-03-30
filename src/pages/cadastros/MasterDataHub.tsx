@@ -9,6 +9,8 @@ import {
 	FileSignature,
 	ClipboardList,
 	CalendarOff,
+	CreditCard,
+	HeartHandshake,
 } from "lucide-react";
 import { ServicosContent } from "./ServicosPage";
 import { DoctorManagementContent } from "../DoctorManagement";
@@ -138,6 +140,47 @@ export default function MasterDataHub() {
 								<CardContent className="grid gap-2">
 									<Button variant="outline" className="justify-start" asChild>
 										<Link to="/cadastros/feriados">Gerenciar Feriados</Link>
+									</Button>
+								</CardContent>
+							</Card>
+
+							<Card>
+								<CardHeader>
+									<CardTitle className="text-lg flex items-center gap-2">
+										<CreditCard className="h-5 w-5 text-violet-500" />
+										Financeiro
+									</CardTitle>
+									<CardDescription>
+										Formas de pagamento e convênios aceitos
+									</CardDescription>
+								</CardHeader>
+								<CardContent className="grid gap-2">
+									<Button variant="outline" className="justify-start" asChild>
+										<Link to="/cadastros/formas-pagamento">
+											Formas de Pagamento
+										</Link>
+									</Button>
+									<Button variant="outline" className="justify-start" asChild>
+										<Link to="/cadastros/convenios">Convênios</Link>
+									</Button>
+								</CardContent>
+							</Card>
+
+							<Card>
+								<CardHeader>
+									<CardTitle className="text-lg flex items-center gap-2">
+										<HeartHandshake className="h-5 w-5 text-rose-500" />
+										Parceiros Clínicos
+									</CardTitle>
+									<CardDescription>
+										Profissionais contratados e colaboradores externos
+									</CardDescription>
+								</CardHeader>
+								<CardContent className="grid gap-2">
+									<Button variant="outline" className="justify-start" asChild>
+										<Link to="/cadastros/contratados">
+											Contratados / Prestadores
+										</Link>
 									</Button>
 								</CardContent>
 							</Card>

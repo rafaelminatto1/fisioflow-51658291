@@ -38,6 +38,17 @@ const DemonstrativoMensalPage = lazy(
 			/* webpackChunkName: "financial-demonstrativo" */ "@/pages/financeiro/DemonstrativoMensalPage"
 		),
 );
+const SimuladorReceitasPage = lazy(
+	() =>
+		import(
+			/* webpackChunkName: "financial-simulador" */ "@/pages/financeiro/SimuladorReceitasPage"
+		),
+);
+const CommissionsPage = lazy(() =>
+	import(
+		/* webpackChunkName: "financial-commissions" */ "@/components/financial/CommissionsDashboard"
+	).then((m) => ({ default: m.CommissionsDashboard })),
+);
 
 export const financialRoutes = (
 	<>
@@ -78,6 +89,22 @@ export const financialRoutes = (
 			element={
 				<ProtectedRoute>
 					<DemonstrativoMensalPage />
+				</ProtectedRoute>
+			}
+		/>
+		<Route
+			path="/financeiro/simulador"
+			element={
+				<ProtectedRoute>
+					<SimuladorReceitasPage />
+				</ProtectedRoute>
+			}
+		/>
+		<Route
+			path="/financeiro/comissoes"
+			element={
+				<ProtectedRoute>
+					<CommissionsPage />
 				</ProtectedRoute>
 			}
 		/>
