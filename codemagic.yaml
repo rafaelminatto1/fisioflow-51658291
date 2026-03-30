@@ -23,7 +23,7 @@ workflows:
       - name: Expo Prebuild
         script: |
           cd $APP_DIR
-          npx expo prebuild --platform ios
+          npx expo prebuild --platform ios --no-install
       - name: Install CocoaPods
         script: |
           cd $APP_DIR/ios
@@ -31,9 +31,16 @@ workflows:
       - name: Build iOS IPA
         script: |
           cd $APP_DIR/ios
+          # Detecta o workspace automaticamente
+          export WORKSPACE=$(ls -d *.xcworkspace | head -1)
+          # Detecta o primeiro scheme disponível
+          export SCHEME=$(xcodebuild -list -workspace "$WORKSPACE" | grep -A 5 "Schemes:" | tail -n +2 | head -1 | xargs)
+          
+          echo "Building Workspace: $WORKSPACE with Scheme: $SCHEME"
+          
           xcode-project build-ipa \
-            --workspace "FisioFlow Pro.xcworkspace" \
-            --scheme "FisioFlow Pro"
+            --workspace "$WORKSPACE" \
+            --scheme "$SCHEME"
     artifacts:
       - apps/professional-app/ios/build/remote/ipa/*.ipa
     publishing:
