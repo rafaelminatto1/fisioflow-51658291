@@ -13,8 +13,9 @@ workflows:
     triggering:
       events:
         - push
-      branches:
-        - main
+      branch_filter:
+        include:
+          - main
     scripts:
       - name: Install pnpm
         script: npm install -g pnpm
