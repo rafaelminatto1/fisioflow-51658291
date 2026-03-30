@@ -30,14 +30,11 @@
  * import { usePatients, usePatientCrud } from '@/hooks/patients';
  */
 
-// Hook principal de pacientes (legacy - estável)
-export { usePatients, useActivePatients } from "../usePatients";
-
-// Hook V2 de pacientes (versão otimizada com nova API)
-export { usePatientsV2 } from "../usePatientsV2";
+// Hook principal de pacientes
+export { usePatients, useActivePatients, usePatientById, useCreatePatient, useUpdatePatient, useDeletePatient } from "./usePatients";
 
 // Hook de CRUD de paciente
-export { usePatientCrud } from "../usePatientCrud";
+export * from "./usePatientCrud";
 
 // Hook de perfil de paciente otimizado
 export {
@@ -60,8 +57,7 @@ export {
 // Hook de exames do paciente
 export { usePatientExams } from "../usePatientExams";
 
-// Hook de evolução do paciente
-export { usePatientEvolution } from "../usePatientEvolution";
+// Hook de evolução do paciente — importar diretamente de @/hooks/usePatientEvolution
 
 // Hook de objetivos do paciente
 export { usePatientObjectives } from "../usePatientObjectives";
@@ -73,11 +69,9 @@ export { usePatientStats } from "../usePatientStats";
 // Patient Analytics Hooks
 // ============================================================================
 
-// Hook de analytics do paciente
-export { usePatientAnalytics } from "../usePatientAnalytics";
+// Hook de analytics do paciente — importar diretamente de @/hooks/usePatientAnalytics
 
-// Hook de retenção de pacientes
-export { usePatientRetention } from "../usePatientRetention";
+// Hook de retenção de pacientes — importar diretamente de @/hooks/usePatientRetention
 
 // Hook de insights do paciente
 export { usePatientInsight } from "../usePatientInsight";
@@ -146,7 +140,7 @@ export {
 	useDeleteMedicalRecord,
 } from "../useMedicalRecords";
 
-export { useMedicalRecord } from "../useMedicalRecord";
+// useMedicalRecord — importar diretamente de @/hooks/useMedicalRecord
 
 // ============================================================================
 // Incomplete Patients
