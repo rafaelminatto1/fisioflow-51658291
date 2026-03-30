@@ -186,17 +186,15 @@ export const DateTimeSection = ({
 
 	return (
 		<div className="space-y-4">
-			{/* Seção Data — Card Minimalista Premium */}
-			<div className="space-y-2">
-				<div className="flex items-center justify-between">
-					<Label
-						id="date-label"
-						className="text-[10px] font-black text-slate-400 uppercase tracking-widest flex items-center gap-1.5"
-					>
-						<CalendarIcon className="h-3 w-3 text-blue-500" />
-						Data do Atendimento *
-					</Label>
-				</div>
+			{/* Data */}
+			<div className="space-y-1.5">
+				<Label
+					id="date-label"
+					className="text-xs font-medium text-slate-500 flex items-center gap-1.5"
+				>
+					<CalendarIcon className="h-3.5 w-3.5" />
+					Data do Atendimento *
+				</Label>
 
 				<Popover open={isCalendarOpen} onOpenChange={setIsCalendarOpen}>
 					<PopoverTrigger asChild>
@@ -204,48 +202,46 @@ export const DateTimeSection = ({
 							type="button"
 							variant="outline"
 							className={cn(
-								"h-12 w-full justify-between items-center rounded-2xl border border-blue-100 bg-white px-4 text-left shadow-premium-sm transition-all hover:border-blue-200 hover:bg-blue-50/30 focus:ring-2 focus:ring-blue-100",
+								"h-10 w-full justify-between items-center rounded-lg border border-slate-200 bg-white px-3 text-left hover:border-slate-300 hover:bg-slate-50 focus:ring-2 focus:ring-blue-500/20 focus:border-blue-400 transition-colors",
 								!watchedDate && "text-slate-400",
 								errors.appointment_date &&
-									"border-red-200 bg-red-50/10 text-red-600",
+									"border-red-300 bg-red-50/30 text-red-600",
 							)}
 							disabled={disabled}
 						>
-							<div className="flex items-center gap-3">
-								<div className="p-2 rounded-xl bg-blue-50 text-blue-600 group-hover:bg-blue-100 transition-colors">
-									<CalendarIcon className="h-4 w-4" />
-								</div>
+							<div className="flex items-center gap-2.5">
+								<CalendarIcon className="h-4 w-4 text-slate-400 shrink-0" />
 								<div className="flex flex-col items-start leading-tight">
-									<span className="text-sm font-bold text-slate-700">
+									<span className="text-sm font-medium text-slate-700">
 										{watchedDate
 											? format(watchedDate, "dd 'de' MMMM, yyyy", {
 													locale: ptBR,
 												})
 											: "Selecionar data"}
 									</span>
-									<span className="text-[10px] text-slate-400 font-medium tracking-tight">
-										{watchedDate
-											? format(watchedDate, "EEEE", { locale: ptBR })
-											: "Próximo dia disponível"}
-									</span>
+									{watchedDate && (
+										<span className="text-xs text-slate-400">
+											{format(watchedDate, "EEEE", { locale: ptBR })}
+										</span>
+									)}
 								</div>
 							</div>
-							<ChevronDown className="h-4 w-4 text-slate-300 group-hover:text-blue-400 transition-colors" />
+							<ChevronDown className="h-4 w-4 text-slate-400 shrink-0" />
 						</Button>
 					</PopoverTrigger>
-					<PopoverContent
-						className="w-auto p-0 border border-blue-50 shadow-premium-lg rounded-[2.5rem] overflow-hidden"
+				<PopoverContent
+						className="w-auto p-0 border border-slate-200 shadow-lg rounded-xl overflow-hidden"
 						align="start"
 					>
-						<div className="p-4 bg-gradient-to-br from-blue-50/50 to-white/90 backdrop-blur-md border-b border-blue-50 flex items-center justify-between gap-2">
-							<span className="text-[11px] font-black uppercase tracking-wider text-blue-600/70">
-								Calendário Clínico
+						<div className="px-3 py-2.5 border-b border-slate-100 flex items-center justify-between gap-2">
+							<span className="text-xs font-medium text-slate-500">
+								Selecionar data
 							</span>
-							<div className="flex gap-2">
+							<div className="flex gap-1">
 								<Button
 									variant="ghost"
 									size="sm"
-									className="h-7 px-3 text-[10px] font-bold uppercase tracking-wider hover:bg-blue-50 text-blue-600 hover:text-blue-700 rounded-full"
+									className="h-7 px-2.5 text-xs font-medium hover:bg-slate-100 text-slate-600 rounded-md"
 									onClick={() => {
 										setValue(
 											"appointment_date",
@@ -259,7 +255,7 @@ export const DateTimeSection = ({
 								<Button
 									variant="ghost"
 									size="sm"
-									className="h-7 px-3 text-[10px] font-bold uppercase tracking-wider hover:bg-blue-50 text-blue-600 hover:text-blue-700 rounded-full"
+									className="h-7 px-2.5 text-xs font-medium hover:bg-slate-100 text-slate-600 rounded-md"
 									onClick={() => {
 										setValue(
 											"appointment_date",
@@ -272,7 +268,7 @@ export const DateTimeSection = ({
 								</Button>
 							</div>
 						</div>
-						<div className="p-2 bg-white">
+						<div className="p-1">
 							<Calendar
 								mode="single"
 								selected={watchedDate || undefined}
@@ -284,7 +280,6 @@ export const DateTimeSection = ({
 								}}
 								locale={ptBR}
 								initialFocus
-								className="rounded-3xl border-0"
 							/>
 						</div>
 					</PopoverContent>
@@ -292,7 +287,7 @@ export const DateTimeSection = ({
 				{errors.appointment_date && (
 					<p
 						id="date-error"
-						className="text-[10px] text-red-500 font-bold uppercase tracking-tight flex items-center gap-1"
+						className="text-xs text-red-500 flex items-center gap-1 mt-1"
 					>
 						<AlertTriangle className="h-3 w-3" />
 						{(errors.appointment_date as { message?: string })?.message}
@@ -300,21 +295,21 @@ export const DateTimeSection = ({
 				)}
 			</div>
 
-			{/* Grid: Horário e Duração — Impacto Visual */}
-			<div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-				<div className="space-y-2 group">
-					<div className="flex items-center justify-between min-h-[16px]">
-						<Label className="text-[10px] font-black text-slate-400 uppercase tracking-widest flex items-center gap-1.5">
-							<Clock className="h-3 w-3 text-blue-500" />
-							Hora de Início
+			{/* Grid: Horário e Duração */}
+			<div className="grid grid-cols-2 gap-4">
+				<div className="space-y-1.5">
+					<div className="flex items-center justify-between">
+						<Label className="text-xs font-medium text-slate-500 flex items-center gap-1.5">
+							<Clock className="h-3.5 w-3.5" />
+							Horário
 						</Label>
 						{onAutoSchedule && !disabled && (
 							<button
 								type="button"
-								className="flex items-center gap-1 text-[9px] font-bold text-blue-600 uppercase tracking-wider bg-blue-50 hover:bg-blue-100 px-2 py-0.5 rounded-full transition-colors"
+								className="flex items-center gap-1 text-xs font-medium text-blue-600 hover:text-blue-700 hover:bg-blue-50 px-2 py-0.5 rounded-md transition-colors"
 								onClick={onAutoSchedule}
 							>
-								<Wand2 className="h-2.5 w-2.5" />
+								<Wand2 className="h-3 w-3" />
 								Sugerir
 							</button>
 						)}
@@ -324,15 +319,15 @@ export const DateTimeSection = ({
 						onValueChange={(value) => setValue("appointment_time", value)}
 						disabled={disabled}
 					>
-						<SelectTrigger className="h-11 rounded-2xl border-blue-100 bg-white px-4 text-xs font-bold text-slate-700 shadow-premium-sm hover:border-blue-200 transition-all focus:ring-blue-100">
-							<SelectValue placeholder="Escolha um horário" />
+						<SelectTrigger className="h-9 rounded-lg border-slate-200 bg-white text-sm text-slate-700 focus:ring-2 focus:ring-blue-500/20 focus:border-blue-400">
+							<SelectValue placeholder="Horário" />
 						</SelectTrigger>
-						<SelectContent className="rounded-2xl border-blue-50 shadow-premium-lg max-h-60 p-1">
+						<SelectContent className="rounded-lg border-slate-200 max-h-60">
 							{timeSlots.map((slot) => (
 								<SelectItem
 									key={slot}
 									value={slot}
-									className="rounded-xl text-xs font-medium py-2.5 transition-colors focus:bg-blue-50 focus:text-blue-700"
+									className="text-sm"
 								>
 									{slot}
 								</SelectItem>
@@ -341,127 +336,62 @@ export const DateTimeSection = ({
 					</Select>
 				</div>
 
-				<div className="space-y-2">
-					<Label className="text-[10px] font-black text-slate-400 uppercase tracking-widest flex items-center gap-1.5">
-						<Zap className="h-3 w-3 text-amber-500" />
-						Duração da Sessão
+				<div className="space-y-1.5">
+					<Label className="text-xs font-medium text-slate-500 flex items-center gap-1.5">
+						<Zap className="h-3.5 w-3.5" />
+						Duração
 					</Label>
 					<Select
 						value={_watchedDuration?.toString()}
 						onValueChange={(value) => setValue("duration", parseInt(value))}
 						disabled={disabled}
 					>
-						<SelectTrigger className="h-11 rounded-2xl border-blue-100 bg-white px-4 text-xs font-bold text-slate-700 shadow-premium-sm hover:border-blue-200 transition-all focus:ring-blue-100">
+						<SelectTrigger className="h-9 rounded-lg border-slate-200 bg-white text-sm text-slate-700 focus:ring-2 focus:ring-blue-500/20 focus:border-blue-400">
 							<SelectValue />
 						</SelectTrigger>
-						<SelectContent className="rounded-2xl border-blue-50 shadow-premium-lg p-1">
-							<SelectItem value="30" className="rounded-xl py-2">
-								30 min
-							</SelectItem>
-							<SelectItem value="45" className="rounded-xl py-2">
-								45 min
-							</SelectItem>
-							<SelectItem value="60" className="rounded-xl py-2">
-								1 hora
-							</SelectItem>
-							<SelectItem value="90" className="rounded-xl py-2">
-								1h 30m
-							</SelectItem>
-							<SelectItem value="120" className="rounded-xl py-2">
-								2 horas
-							</SelectItem>
+						<SelectContent className="rounded-lg border-slate-200">
+							<SelectItem value="30" className="text-sm">30 min</SelectItem>
+							<SelectItem value="45" className="text-sm">45 min</SelectItem>
+							<SelectItem value="60" className="text-sm">1 hora</SelectItem>
+							<SelectItem value="90" className="text-sm">1h 30min</SelectItem>
+							<SelectItem value="120" className="text-sm">2 horas</SelectItem>
 						</SelectContent>
 					</Select>
 				</div>
 			</div>
 
-			{/* Status de Disponibilidade — Banner High-End */}
+			{/* Banner de disponibilidade — clean */}
 			{watchedDate && _watchedTime && (
 				<div
 					className={cn(
-						"relative overflow-hidden rounded-2xl border p-3 transition-all duration-500",
+						"flex items-center gap-3 rounded-lg border px-3 py-2.5 text-sm transition-colors",
 						exceedsCapacity
-							? "border-red-100 bg-red-50/30"
+							? "border-red-200 bg-red-50 text-red-700"
 							: conflictCount > 0
-								? "border-amber-100 bg-amber-50/30"
-								: "border-emerald-100 bg-emerald-50/30",
+								? "border-amber-200 bg-amber-50 text-amber-700"
+								: "border-emerald-200 bg-emerald-50 text-emerald-700",
 					)}
 				>
-					{/* Gradiente sutil de profundidade */}
-					<div
-						className={cn(
-							"absolute inset-0 opacity-[0.03]",
-							exceedsCapacity
-								? "bg-red-600"
+					{exceedsCapacity ? (
+						<AlertTriangle className="h-4 w-4 shrink-0" />
+					) : (
+						<Check className="h-4 w-4 shrink-0" />
+					)}
+					<div className="flex flex-col min-w-0">
+						<span className="font-medium text-sm">
+							{exceedsCapacity
+								? "Horário indisponível"
 								: conflictCount > 0
-									? "bg-amber-600"
-									: "bg-emerald-600",
-						)}
-					/>
-
-					<div className="flex items-center justify-between relative z-10">
-						<div className="flex items-center gap-3">
-							<div
-								className={cn(
-									"p-1.5 rounded-lg",
-									exceedsCapacity
-										? "bg-red-100 text-red-600"
-										: conflictCount > 0
-											? "bg-amber-100 text-amber-600"
-											: "bg-emerald-100 text-emerald-600",
-								)}
-							>
-								{exceedsCapacity ? (
-									<AlertTriangle className="h-3.5 w-3.5" />
-								) : (
-									<Check className="h-3.5 w-3.5" />
-								)}
-							</div>
-							<div className="flex flex-col">
-								<span
-									className={cn(
-										"text-[11px] font-black uppercase tracking-widest",
-										exceedsCapacity
-											? "text-red-700"
-											: conflictCount > 0
-												? "text-amber-700"
-												: "text-emerald-700",
-									)}
-								>
-									{exceedsCapacity
-										? "Horário Indisponível"
-										: "Horário Confirmado"}
-								</span>
-								<span className="text-[10px] font-medium text-slate-500">
-									{exceedsCapacity
-										? "Capacidade máxima atingida."
-										: conflictCount > 0
-											? "Há outros agendamentos, mas com vaga."
-											: "Profissional disponível sem conflitos."}
-								</span>
-							</div>
-						</div>
-
-						<div className="flex flex-col items-end gap-1">
-							<div className="flex -space-x-1.5">
-								{[...Array(maxCapacity)].map((_, i) => (
-									<div
-										key={i}
-										className={cn(
-											"h-1.5 w-4 rounded-full border border-white transition-all duration-700 shadow-sm",
-											i < conflictCount
-												? exceedsCapacity
-													? "bg-red-500"
-													: "bg-amber-500"
-												: "bg-slate-200",
-										)}
-									/>
-								))}
-							</div>
-							<span className="text-[9px] font-black text-slate-400">
-								{conflictCount} / {maxCapacity} OCUPADO
-							</span>
-						</div>
+									? "Com outros agendamentos"
+									: "Horário disponível"}
+						</span>
+						<span className="text-xs opacity-80">
+							{exceedsCapacity
+								? "Capacidade máxima atingida"
+								: conflictCount > 0
+									? `${conflictCount}/${maxCapacity} ocupado — ainda há vaga`
+									: "Profissional sem conflitos"}
+						</span>
 					</div>
 				</div>
 			)}
@@ -1474,7 +1404,7 @@ export const OptionsTab = ({
 				<AppointmentReminder
 					disabled={disabled}
 					reminders={reminders}
-					setReminders={setReminders}
+					onRemindersChange={setReminders}
 				/>
 			</div>
 

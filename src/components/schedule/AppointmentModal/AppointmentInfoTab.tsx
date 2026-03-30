@@ -1,7 +1,5 @@
 import React from "react";
 import { UseFormReturn } from "react-hook-form";
-import { UserCog, Check, ChevronDown, ChevronUp } from "lucide-react";
-import { Label } from "@/components/ui/label";
 import {
 	Select,
 	SelectContent,
@@ -10,11 +8,6 @@ import {
 	SelectValue,
 } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
-import {
-	Collapsible,
-	CollapsibleContent,
-	CollapsibleTrigger,
-} from "@/components/ui/collapsible";
 import {
 	PatientSelectionSection,
 	DateTimeSection,
@@ -56,6 +49,16 @@ interface AppointmentInfoTabProps {
 	setIsNotesExpanded: (expanded: boolean) => void;
 }
 
+/**
+ * Label padrão de campo.
+ * Cor: on_surface_variant (#434655) do design system FisioFlow Clinical
+ */
+const FieldLabel = ({ children }: { children: React.ReactNode }) => (
+	<span className="text-xs font-medium text-slate-500 block mb-1.5">
+		{children}
+	</span>
+);
+
 export const AppointmentInfoTab: React.FC<AppointmentInfoTabProps> = ({
 	methods,
 	currentMode,
@@ -74,8 +77,9 @@ export const AppointmentInfoTab: React.FC<AppointmentInfoTabProps> = ({
 	onAutoSchedule,
 	therapists,
 	therapistsLoading,
-	isNotesExpanded,
-	setIsNotesExpanded,
+	// Mantidos na interface por compatibilidade, mas o campo agora é sempre expandido
+	isNotesExpanded: _isNotesExpanded,
+	setIsNotesExpanded: _setIsNotesExpanded,
 }) => {
 	const { register, setValue, watch } = methods;
 
@@ -83,33 +87,27 @@ export const AppointmentInfoTab: React.FC<AppointmentInfoTabProps> = ({
 	const watchedDateStr = watch("appointment_date");
 	const watchedTime = watch("appointment_time");
 	const watchedDuration = watch("duration");
-	
+	const watchedStatus = watch("status") || "agendado";
+
 	const watchPaymentStatus = watch("payment_status");
 	const watchPaymentMethod = watch("payment_method");
 	const watchPaymentAmount = watch("payment_amount");
 
+	const isViewMode = currentMode === "view";
+
 	return (
-		<div className="grid grid-cols-1 md:grid-cols-12 gap-3">
-			{/* Bloco 1: Paciente (Bento High-End) */}
-			<div className="md:col-span-12 lg:col-span-6 rounded-xl border border-blue-100 bg-white/50 backdrop-blur-sm p-4 shadow-premium-sm hover:shadow-premium-md transition-all duration-300">
-				<h4 className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3 flex items-center gap-2">
-					<span className="w-1 h-4 bg-blue-500 rounded-full" />
-					Informações do Paciente
-				</h4>
+		<div className="space-y-6">
+			{/* ── Paciente ── */}
+			<div>
 				<PatientSelectionSection
 					patients={patients}
 					isLoading={patientsLoading}
-					disabled={
-						currentMode === "view" ||
-						currentMode === "edit" ||
-						!!defaultPatientId
-					}
+					disabled={isViewMode || currentMode === "edit" || !!defaultPatientId}
 					onCreateNew={onQuickPatientCreate}
 					fallbackPatientName={
 						lastCreatedPatient?.id === watchedPatientId
 							? lastCreatedPatient.name
-							: normalizedAppointmentPatientName &&
-									normalizedAppointmentPatientName.trim()
+							: normalizedAppointmentPatientName?.trim()
 								? normalizedAppointmentPatientName
 								: selectedPatientName || undefined
 					}
@@ -121,14 +119,10 @@ export const AppointmentInfoTab: React.FC<AppointmentInfoTabProps> = ({
 				/>
 			</div>
 
-			{/* Bloco 2: Data e Hora */}
-			<div className="md:col-span-6 lg:col-span-6 rounded-xl border border-blue-100 bg-white/50 backdrop-blur-sm p-4 shadow-premium-sm hover:shadow-premium-md transition-all duration-300">
-				<h4 className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3 flex items-center gap-2">
-					<span className="w-1 h-4 bg-emerald-500 rounded-full" />
-					Horário da Sessão
-				</h4>
+			{/* ── Data e Hora ── */}
+			<div>
 				<DateTimeSection
-					disabled={currentMode === "view"}
+					disabled={isViewMode}
 					timeSlots={timeSlots}
 					isCalendarOpen={isCalendarOpen}
 					setIsCalendarOpen={setIsCalendarOpen}
@@ -141,93 +135,80 @@ export const AppointmentInfoTab: React.FC<AppointmentInfoTabProps> = ({
 				/>
 			</div>
 
-			{/* Bloco 3: Profissional e Status */}
-			<div className="md:col-span-6 lg:col-span-6 rounded-xl border border-blue-100 bg-white/50 backdrop-blur-sm p-4 shadow-premium-sm hover:shadow-premium-md transition-all duration-300 space-y-3">
-				<h4 className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3 flex items-center gap-2">
-					<span className="w-1 h-4 bg-violet-500 rounded-full" />
-					Atendimento
-				</h4>
-				<div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-					<div className="space-y-1">
-						<Label className="text-[10px] font-black text-slate-400 uppercase tracking-widest flex items-center gap-1.5">
-							<UserCog className="h-3 w-3" />
-							Profissional
-						</Label>
-						<Select
-							value={watch("therapist_id") || THERAPIST_SELECT_NONE}
-							onValueChange={(value) =>
-								setValue(
-									"therapist_id",
-									value === THERAPIST_SELECT_NONE ? "" : value,
-								)
+			{/* ── Profissional ── */}
+			<div className="space-y-1.5">
+				<FieldLabel>Profissional</FieldLabel>
+				<Select
+					value={watch("therapist_id") || THERAPIST_SELECT_NONE}
+					onValueChange={(value) =>
+						setValue(
+							"therapist_id",
+							value === THERAPIST_SELECT_NONE ? "" : value,
+						)
+					}
+					disabled={isViewMode || therapistsLoading}
+				>
+					<SelectTrigger className="h-10 text-sm border-slate-200 bg-white rounded-lg focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-colors">
+						<SelectValue
+							placeholder={
+								therapistsLoading ? "Carregando..." : THERAPIST_PLACEHOLDER
 							}
-							disabled={currentMode === "view" || therapistsLoading}
-						>
-							<SelectTrigger className="h-9 rounded-lg border-blue-100 bg-white shadow-sm ring-offset-background focus:ring-2 focus:ring-blue-500/20 text-xs">
-								<SelectValue
-									placeholder={
-										therapistsLoading ? "Carregando..." : THERAPIST_PLACEHOLDER
-									}
-								/>
-							</SelectTrigger>
-							<SelectContent className="rounded-xl border-blue-100">
-								<SelectItem value={THERAPIST_SELECT_NONE}>
-									{THERAPIST_PLACEHOLDER}
-								</SelectItem>
-								{therapists.map((t) => (
-									<SelectItem key={t.id} value={t.id} className="text-xs">
-										{formatTherapistLabel(t)}
-									</SelectItem>
-								))}
-							</SelectContent>
-						</Select>
-					</div>
+						/>
+					</SelectTrigger>
+					<SelectContent className="rounded-lg border-slate-200">
+						<SelectItem value={THERAPIST_SELECT_NONE} className="text-sm">
+							{THERAPIST_PLACEHOLDER}
+						</SelectItem>
+						{therapists.map((t) => (
+							<SelectItem key={t.id} value={t.id} className="text-sm">
+								{formatTherapistLabel(t)}
+							</SelectItem>
+						))}
+					</SelectContent>
+				</Select>
+			</div>
 
-					<div className="space-y-1">
-						<Label className="text-[10px] font-black text-slate-400 uppercase tracking-widest flex items-center gap-1.5">
-							<Check className="h-3 w-3" />
-							Status
-						</Label>
-						<Select
-							value={watch("status") || "agendado"}
-							onValueChange={(value) =>
-								setValue("status", value as AppointmentFormData["status"])
-							}
-							disabled={currentMode === "view"}
-						>
-							<SelectTrigger className="h-9 rounded-lg border-blue-100 bg-white shadow-sm ring-offset-background focus:ring-2 focus:ring-blue-500/20 text-xs">
-								<SelectValue />
-							</SelectTrigger>
-							<SelectContent className="rounded-xl border-blue-100">
-								{Object.entries(APPOINTMENT_STATUS_CONFIG).map(
-									([key, config]) => (
-										<SelectItem key={key} value={key} className="text-xs">
-											<span className="flex items-center gap-2">
-												<span
-													className={cn(
-														"h-2 w-2 rounded-full shrink-0",
-														config.iconColor.replace("text-", "bg-"),
-													)}
-												/>
-												{config.label}
-											</span>
-										</SelectItem>
-									),
+			{/* ── Status — pill buttons inline (padrão Stitch FisioFlow Clinical) ── */}
+			<div className="space-y-1.5">
+				<FieldLabel>Status</FieldLabel>
+				<div className="flex flex-wrap gap-1.5">
+					{Object.entries(APPOINTMENT_STATUS_CONFIG).map(([key, config]) => {
+						const isActive = watchedStatus === key;
+						return (
+							<button
+								key={key}
+								type="button"
+								disabled={isViewMode}
+								onClick={() =>
+									setValue("status", key as AppointmentFormData["status"])
+								}
+								className={cn(
+									"inline-flex items-center gap-1.5 px-3 h-8 rounded-md text-xs font-medium transition-all duration-150 select-none",
+									isActive
+										? "bg-blue-600 text-white shadow-sm"
+										: "bg-slate-100 text-slate-600 hover:bg-slate-200",
+									isViewMode && "cursor-default",
 								)}
-							</SelectContent>
-						</Select>
-					</div>
+							>
+								<span
+									className={cn(
+										"h-1.5 w-1.5 rounded-full shrink-0",
+										isActive
+											? "bg-white/80"
+											: config.iconColor.replace("text-", "bg-"),
+									)}
+								/>
+								{config.label}
+							</button>
+						);
+					})}
 				</div>
 			</div>
 
-			{/* Bloco 4: Financeiro */}
-			<div className="md:col-span-12 lg:col-span-6 rounded-xl border border-blue-100 bg-white/50 backdrop-blur-sm p-4 shadow-premium-sm hover:shadow-premium-md transition-all duration-300">
-				<h4 className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3 flex items-center gap-2">
-					<span className="w-1 h-4 bg-emerald-600 rounded-full" />
-					Financeiro
-				</h4>
+			{/* ── Financeiro ── */}
+			<div>
 				<PaymentTab
-					disabled={currentMode === "view"}
+					disabled={isViewMode}
 					watchPaymentStatus={watchPaymentStatus || "pending"}
 					watchPaymentMethod={watchPaymentMethod || ""}
 					watchPaymentAmount={watchPaymentAmount || 0}
@@ -236,35 +217,16 @@ export const AppointmentInfoTab: React.FC<AppointmentInfoTabProps> = ({
 				/>
 			</div>
 
-			{/* Bloco 5: Observações */}
-			<div className="md:col-span-12 rounded-xl border border-blue-100 bg-white/50 backdrop-blur-sm p-4 shadow-premium-sm hover:shadow-premium-md transition-all duration-300">
-				<Collapsible open={isNotesExpanded} onOpenChange={setIsNotesExpanded}>
-					<div className="space-y-3">
-						<CollapsibleTrigger asChild>
-							<div className="flex items-center justify-between cursor-pointer group">
-								<h4 className="text-[10px] font-black text-slate-400 uppercase tracking-widest flex items-center gap-2">
-									<span className="w-1 h-5 bg-amber-400 rounded-full" />
-									Observações e Notas
-								</h4>
-								{isNotesExpanded ? (
-									<ChevronUp className="h-4 w-4 text-blue-400" />
-								) : (
-									<ChevronDown className="h-4 w-4 text-blue-400" />
-								)}
-							</div>
-						</CollapsibleTrigger>
-
-						<CollapsibleContent className="pt-1">
-							<Textarea
-								{...register("notes")}
-								placeholder="Informações importantes sobre o atendimento..."
-								rows={2}
-								disabled={currentMode === "view"}
-								className="resize-none text-xs min-h-[60px] border-blue-100 focus-visible:ring-blue-500/20 rounded-lg bg-white shadow-inner"
-							/>
-						</CollapsibleContent>
-					</div>
-				</Collapsible>
+			{/* ── Observações — sempre visível ── */}
+			<div className="space-y-1.5">
+				<FieldLabel>Observações</FieldLabel>
+				<Textarea
+					{...register("notes")}
+					placeholder="Anotações sobre o atendimento..."
+					rows={3}
+					disabled={isViewMode}
+					className="resize-none text-sm border-slate-200 focus-visible:ring-2 focus-visible:ring-blue-500/20 focus-visible:border-blue-500 rounded-lg bg-white placeholder:text-slate-400 transition-colors"
+				/>
 			</div>
 		</div>
 	);
