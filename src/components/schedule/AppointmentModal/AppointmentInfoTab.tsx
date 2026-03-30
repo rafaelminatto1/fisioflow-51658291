@@ -8,11 +8,6 @@ import {
 	SelectValue,
 } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
-import {
-	PatientSelectionSection,
-	DateTimeSection,
-	PaymentTab,
-} from "../AppointmentDialogSegments";
 import { APPOINTMENT_STATUS_CONFIG } from "../shared/appointment-status";
 import { cn } from "@/lib/utils";
 import {
@@ -22,6 +17,9 @@ import {
 } from "@/hooks/useTherapists";
 import { type Patient } from "@/types";
 import { type AppointmentFormData } from "@/types/appointment";
+import { AppointmentDateTimeSection } from "../AppointmentDateTimeSection";
+import { AppointmentPatientSelectionSection } from "../AppointmentPatientSelectionSection";
+import { AppointmentPaymentTab } from "../AppointmentPaymentTab";
 
 interface AppointmentInfoTabProps {
 	methods: UseFormReturn<AppointmentFormData>;
@@ -99,7 +97,7 @@ export const AppointmentInfoTab: React.FC<AppointmentInfoTabProps> = ({
 		<div className="space-y-6">
 			{/* ── Paciente ── */}
 			<div>
-				<PatientSelectionSection
+				<AppointmentPatientSelectionSection
 					patients={patients}
 					isLoading={patientsLoading}
 					disabled={isViewMode || currentMode === "edit" || !!defaultPatientId}
@@ -121,7 +119,7 @@ export const AppointmentInfoTab: React.FC<AppointmentInfoTabProps> = ({
 
 			{/* ── Data e Hora ── */}
 			<div>
-				<DateTimeSection
+				<AppointmentDateTimeSection
 					disabled={isViewMode}
 					timeSlots={timeSlots}
 					isCalendarOpen={isCalendarOpen}
@@ -207,7 +205,7 @@ export const AppointmentInfoTab: React.FC<AppointmentInfoTabProps> = ({
 
 			{/* ── Financeiro ── */}
 			<div>
-				<PaymentTab
+				<AppointmentPaymentTab
 					disabled={isViewMode}
 					watchPaymentStatus={watchPaymentStatus || "pending"}
 					watchPaymentMethod={watchPaymentMethod || ""}

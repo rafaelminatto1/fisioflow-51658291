@@ -20,17 +20,6 @@ import type { Env } from '../types/env';
 
 const app = new Hono<{ Bindings: Env; Variables: AuthVariables }>();
 
-async function hasTable(
-  pool: ReturnType<typeof createPool>,
-  tableName: string,
-): Promise<boolean> {
-  const result = await pool.query(
-    `SELECT to_regclass($1)::text AS table_name`,
-    [`public.${tableName}`],
-  );
-  return Boolean(result.rows[0]?.table_name);
-}
-
 function normalizeOptions(value: unknown): unknown[] | null {
   if (Array.isArray(value)) return value;
   if (typeof value === 'string') {
@@ -47,8 +36,8 @@ function normalizeOptions(value: unknown): unknown[] | null {
 async function ensureTables(env: Env): Promise<void> {
   const pool = await createPool(env);
   try {
-    await pool.query(`
-      CREATE TABLE IF NOT EXISTS evaluation_forms (
+    const statements = [
+      `CREATE TABLE IF NOT EXISTS evaluation_forms (
         id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
         organization_id UUID NOT NULL,
         created_by TEXT,
@@ -64,9 +53,25 @@ async function ensureTables(env: Env): Promise<void> {
         estimated_time INTEGER,
         created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
         updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
-      );
-
-      CREATE TABLE IF NOT EXISTS evaluation_form_fields (
+      )`,
+      `ALTER TABLE evaluation_forms
+        ADD COLUMN IF NOT EXISTS organization_id UUID,
+        ADD COLUMN IF NOT EXISTS created_by TEXT,
+        ADD COLUMN IF NOT EXISTS nome TEXT,
+        ADD COLUMN IF NOT EXISTS descricao TEXT,
+        ADD COLUMN IF NOT EXISTS referencias TEXT,
+        ADD COLUMN IF NOT EXISTS tipo TEXT DEFAULT 'anamnese',
+        ADD COLUMN IF NOT EXISTS ativo BOOLEAN DEFAULT true,
+        ADD COLUMN IF NOT EXISTS is_favorite BOOLEAN DEFAULT false,
+        ADD COLUMN IF NOT EXISTS usage_count INTEGER DEFAULT 0,
+        ADD COLUMN IF NOT EXISTS last_used_at TIMESTAMP WITH TIME ZONE,
+        ADD COLUMN IF NOT EXISTS cover_image TEXT,
+        ADD COLUMN IF NOT EXISTS estimated_time INTEGER,
+        ADD COLUMN IF NOT EXISTS created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+        ADD COLUMN IF NOT EXISTS updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()`,
+      `CREATE INDEX IF NOT EXISTS idx_evaluation_forms_org_nome
+        ON evaluation_forms (organization_id, nome)`,
+      `CREATE TABLE IF NOT EXISTS evaluation_form_fields (
         id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
         form_id UUID NOT NULL REFERENCES evaluation_forms(id) ON DELETE CASCADE,
         tipo_campo TEXT NOT NULL,
@@ -81,9 +86,24 @@ async function ensureTables(env: Env): Promise<void> {
         maximo NUMERIC,
         created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
         updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
-      );
-
-      CREATE TABLE IF NOT EXISTS patient_evaluation_responses (
+      )`,
+      `ALTER TABLE evaluation_form_fields
+        ADD COLUMN IF NOT EXISTS form_id UUID,
+        ADD COLUMN IF NOT EXISTS tipo_campo TEXT,
+        ADD COLUMN IF NOT EXISTS label TEXT,
+        ADD COLUMN IF NOT EXISTS placeholder TEXT,
+        ADD COLUMN IF NOT EXISTS opcoes JSONB,
+        ADD COLUMN IF NOT EXISTS ordem INTEGER DEFAULT 0,
+        ADD COLUMN IF NOT EXISTS obrigatorio BOOLEAN DEFAULT false,
+        ADD COLUMN IF NOT EXISTS grupo TEXT,
+        ADD COLUMN IF NOT EXISTS descricao TEXT,
+        ADD COLUMN IF NOT EXISTS minimo NUMERIC,
+        ADD COLUMN IF NOT EXISTS maximo NUMERIC,
+        ADD COLUMN IF NOT EXISTS created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+        ADD COLUMN IF NOT EXISTS updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()`,
+      `CREATE INDEX IF NOT EXISTS idx_evaluation_form_fields_form_ordem
+        ON evaluation_form_fields (form_id, ordem)`,
+      `CREATE TABLE IF NOT EXISTS patient_evaluation_responses (
         id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
         organization_id UUID NOT NULL,
         patient_id UUID NOT NULL,
@@ -93,8 +113,21 @@ async function ensureTables(env: Env): Promise<void> {
         created_by TEXT,
         created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
         updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
-      );
-    `);
+      )`,
+      `ALTER TABLE patient_evaluation_responses
+        ADD COLUMN IF NOT EXISTS organization_id UUID,
+        ADD COLUMN IF NOT EXISTS patient_id UUID,
+        ADD COLUMN IF NOT EXISTS form_id UUID,
+        ADD COLUMN IF NOT EXISTS appointment_id UUID,
+        ADD COLUMN IF NOT EXISTS responses JSONB NOT NULL DEFAULT '{}',
+        ADD COLUMN IF NOT EXISTS created_by TEXT,
+        ADD COLUMN IF NOT EXISTS created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+        ADD COLUMN IF NOT EXISTS updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()`,
+    ];
+
+    for (const statement of statements) {
+      await pool.query(statement);
+    }
   } finally {
     await pool.end();
   }
