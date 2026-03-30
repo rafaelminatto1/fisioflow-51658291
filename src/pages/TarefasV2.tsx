@@ -4,6 +4,7 @@ import {
 	LayoutList,
 	BarChart3,
 	GanttChart,
+	ClipboardList,
 	Plus,
 	RefreshCw,
 	Search,
@@ -15,6 +16,7 @@ import {
 	TrendingUp,
 	Target,
 	Zap,
+	Tag,
 	Calendar,
 	ShieldAlert,
 	Filter,
@@ -65,16 +67,21 @@ import {
 } from "@/components/tarefas/v2/LazyComponents";
 import { TaskTableVirtualized } from "@/components/tarefas/virtualized/TaskTableVirtualized";
 import { LoadingSkeleton } from "@/components/ui/loading-skeleton";
+import { EmptyState } from "@/components/ui/empty-state";
 import {
 	Tarefa,
 	TarefaStatus,
 	TarefaPrioridade,
+	TarefaTipo,
 	STATUS_LABELS,
 	STATUS_COLORS,
 	TaskStats,
+	PRIORIDADE_LABELS,
+	TIPO_LABELS,
 } from "@/types/tarefas";
 import { useTarefas, useDeleteTarefa } from "@/hooks/useTarefas";
 import { useTeamMembers } from "@/hooks/useTeamMembers";
+import { useAuth } from "@/contexts/AuthContext";
 import { safeFormat } from "@/lib/utils";
 // Recharts imports removed - moved to TaskInsights
 
@@ -82,382 +89,11 @@ const TaskInsights = lazy(() => import("@/components/tarefas/v2/TaskInsights"));
 
 type ViewMode = "kanban" | "table" | "timeline" | "insights";
 
-// Mock data para teste quando não houver dados reais
-const MOCK_TAREFAS: Tarefa[] = [
-	{
-		id: "mock-1",
-		titulo: "Preparar plano de tratamento para paciente com lombalgia",
-		descricao: "Elaborar protocolo de exercícios para fortalecimento core",
-		status: "BACKLOG",
-		prioridade: "ALTA",
-		tipo: "TAREFA",
-		tags: ["fisioterapia", "coluna", "ortopedia"],
-		data_vencimento: addDays(new Date(), 3).toISOString(),
-		created_at: subDays(new Date(), 5).toISOString(),
-		updated_at: subDays(new Date(), 5).toISOString(),
-		project_id: undefined,
-		responsavel: {
-			id: "user-1",
-			full_name: "Rafael Minatto",
-			email: "REDACTED_EMAIL",
-			avatar_url: undefined,
-		},
-		assignees: [],
-		checklists: [],
-		attachments: [],
-		references: [],
-		comments: [],
-		dependencies: [],
-		blocks: [],
-		color: undefined,
-		cover_image: undefined,
-		start_date: undefined,
-		completed_at: undefined,
-		order_index: 0,
-		parent_id: undefined,
-	},
-	{
-		id: "mock-2",
-		titulo: "Avaliar evolução do paciente João Silva",
-		descricao: "Revisar progresso após 4 sessões de fisioterapia",
-		status: "A_FAZER",
-		prioridade: "MEDIA",
-		tipo: "TAREFA",
-		tags: ["avaliação", "progresso"],
-		data_vencimento: addDays(new Date(), 1).toISOString(),
-		created_at: subDays(new Date(), 2).toISOString(),
-		updated_at: subDays(new Date(), 2).toISOString(),
-		project_id: undefined,
-		responsavel: {
-			id: "user-1",
-			full_name: "Rafael Minatto",
-			email: "REDACTED_EMAIL",
-			avatar_url: undefined,
-		},
-		assignees: [],
-		checklists: [
-			{
-				id: "check-1",
-				title: "Itens de avaliação",
-				items: [
-					{
-						id: "item-1",
-						text: "Verificar amplitude de movimento",
-						completed: true,
-					},
-					{ id: "item-2", text: "Avaliar dor", completed: true },
-					{ id: "item-3", text: "Testar força muscular", completed: false },
-				],
-			},
-		],
-		attachments: [],
-		references: [],
-		comments: [],
-		dependencies: [],
-		blocks: [],
-		color: undefined,
-		cover_image: undefined,
-		start_date: undefined,
-		completed_at: undefined,
-		order_index: 1,
-		parent_id: undefined,
-	},
-	{
-		id: "mock-3",
-		titulo: "Atualizar prontuário do paciente Maria Santos",
-		descricao: "Registrar evolução da sessão de hoje",
-		status: "EM_PROGRESSO",
-		prioridade: "BAIXA",
-		tipo: "DOCUMENTACAO",
-		tags: ["prontuário", "documentação"],
-		data_vencimento: new Date().toISOString(),
-		created_at: subDays(new Date(), 1).toISOString(),
-		updated_at: subDays(new Date(), 1).toISOString(),
-		project_id: undefined,
-		responsavel: {
-			id: "user-1",
-			full_name: "Rafael Minatto",
-			email: "REDACTED_EMAIL",
-			avatar_url: undefined,
-		},
-		assignees: [],
-		checklists: [],
-		attachments: [
-			{
-				id: "att-1",
-				name: "exame-raio-x.jpg",
-				url: "/mock/files/exame.jpg",
-				size: 1024000,
-				type: "image",
-				created_at: new Date().toISOString(),
-			},
-		],
-		references: [
-			{
-				id: "ref-1",
-				title: "Protocolo de Avaliação Lumbar",
-				url: "https://example.com",
-				type: "website",
-				created_at: new Date().toISOString(),
-			},
-		],
-		comments: [
-			{
-				id: "comm-1",
-				content: "Lembre de atualizar os exercícios prescritos",
-				author_id: "user-1",
-				author_name: "Rafael Minatto",
-				created_at: new Date().toISOString(),
-			},
-		],
-		dependencies: [],
-		blocks: [],
-		color: "#3b82f6",
-		cover_image: undefined,
-		start_date: subDays(new Date(), 1).toISOString(),
-		completed_at: undefined,
-		order_index: 2,
-		parent_id: undefined,
-	},
-	{
-		id: "mock-4",
-		titulo: "Reunião com equipe multidisciplinar",
-		descricao: "Discutir casos complexos do mês",
-		status: "EM_PROGRESSO",
-		prioridade: "ALTA",
-		tipo: "REUNIAO",
-		tags: ["equipe", "multidisciplinar"],
-		data_vencimento: addDays(new Date(), 2).toISOString(),
-		created_at: subDays(new Date(), 3).toISOString(),
-		updated_at: subDays(new Date(), 3).toISOString(),
-		project_id: undefined,
-		responsavel: {
-			id: "user-1",
-			full_name: "Rafael Minatto",
-			email: "REDACTED_EMAIL",
-			avatar_url: undefined,
-		},
-		assignees: [],
-		checklists: [],
-		attachments: [],
-		references: [],
-		comments: [],
-		dependencies: [],
-		blocks: [],
-		color: "#06b6d4",
-		cover_image: undefined,
-		start_date: new Date().toISOString(),
-		completed_at: undefined,
-		order_index: 3,
-		parent_id: undefined,
-	},
-	{
-		id: "mock-5",
-		titulo: "Revisar literatura sobre fisioterapia esportiva",
-		descricao: "Pesquisar artigos recentes sobre reabilitação de atletas",
-		status: "REVISAO",
-		prioridade: "MEDIA",
-		tipo: "TAREFA",
-		tags: ["pesquisa", "esporte", "atletas"],
-		data_vencimento: addDays(new Date(), 5).toISOString(),
-		created_at: subDays(new Date(), 7).toISOString(),
-		updated_at: subDays(new Date(), 7).toISOString(),
-		project_id: undefined,
-		responsavel: {
-			id: "user-1",
-			full_name: "Rafael Minatto",
-			email: "REDACTED_EMAIL",
-			avatar_url: undefined,
-		},
-		assignees: [],
-		checklists: [],
-		attachments: [],
-		references: [
-			{
-				id: "ref-1",
-				title: "Journal of Orthopedic & Sports Physical Therapy",
-				url: "https://example.com",
-				type: "website",
-				created_at: new Date().toISOString(),
-			},
-			{
-				id: "ref-2",
-				title: "Physical Therapy in Sport",
-				url: "https://example.com",
-				type: "website",
-				created_at: new Date().toISOString(),
-			},
-		],
-		comments: [],
-		dependencies: [],
-		blocks: [],
-		color: undefined,
-		cover_image: undefined,
-		start_date: undefined,
-		completed_at: undefined,
-		order_index: 4,
-		parent_id: undefined,
-	},
-	{
-		id: "mock-6",
-		titulo: "Organizar estoque de materiais",
-		descricao: "Verificar e repor materiais de consumo do consultório",
-		status: "CONCLUIDO",
-		prioridade: "BAIXA",
-		tipo: "TAREFA",
-		tags: ["estoque", "materiais"],
-		data_vencimento: subDays(new Date(), 2).toISOString(),
-		created_at: subDays(new Date(), 5).toISOString(),
-		updated_at: subDays(new Date(), 5).toISOString(),
-		project_id: undefined,
-		responsavel: {
-			id: "user-1",
-			full_name: "Rafael Minatto",
-			email: "REDACTED_EMAIL",
-			avatar_url: undefined,
-		},
-		assignees: [],
-		checklists: [],
-		attachments: [],
-		references: [],
-		comments: [],
-		dependencies: [],
-		blocks: [],
-		color: undefined,
-		cover_image: undefined,
-		start_date: subDays(new Date(), 5).toISOString(),
-		completed_at: subDays(new Date(), 1).toISOString(),
-		order_index: 5,
-		parent_id: undefined,
-	},
-	{
-		id: "mock-7",
-		titulo: "Curso de atualização em terapia manual",
-		descricao: "Participar do curso online de 20 horas",
-		status: "A_FAZER",
-		prioridade: "MEDIA",
-		tipo: "TAREFA",
-		tags: ["curso", "terapia manual", "capacitação"],
-		data_vencimento: addDays(new Date(), 15).toISOString(),
-		created_at: subDays(new Date(), 10).toISOString(),
-		updated_at: subDays(new Date(), 10).toISOString(),
-		project_id: undefined,
-		responsavel: {
-			id: "user-1",
-			full_name: "Rafael Minatto",
-			email: "REDACTED_EMAIL",
-			avatar_url: undefined,
-		},
-		assignees: [],
-		checklists: [
-			{
-				id: "check-2",
-				title: "Módulos do curso",
-				items: [
-					{ id: "item-1", text: "Módulo 1: Introdução", completed: true },
-					{ id: "item-2", text: "Módulo 2: Técnicas básicas", completed: true },
-					{
-						id: "item-3",
-						text: "Módulo 3: Técnicas avançadas",
-						completed: false,
-					},
-					{ id: "item-4", text: "Módulo 4: Casos clínicos", completed: false },
-				],
-			},
-		],
-		attachments: [],
-		references: [],
-		comments: [],
-		dependencies: [],
-		blocks: [],
-		color: "#f59e0b",
-		cover_image: undefined,
-		start_date: undefined,
-		completed_at: undefined,
-		order_index: 6,
-		parent_id: undefined,
-	},
-	{
-		id: "mock-8",
-		titulo: "Ligar para paciente para confirmar consulta",
-		descricao: "Confirmar consulta de amanhã às 14h",
-		status: "BACKLOG",
-		prioridade: "ALTA",
-		tipo: "TAREFA",
-		tags: ["contato", "confirmação"],
-		data_vencimento: new Date().toISOString(),
-		created_at: new Date().toISOString(),
-		updated_at: new Date().toISOString(),
-		project_id: undefined,
-		responsavel: {
-			id: "user-1",
-			full_name: "Rafael Minatto",
-			email: "REDACTED_EMAIL",
-			avatar_url: undefined,
-		},
-		assignees: [],
-		checklists: [],
-		attachments: [],
-		references: [],
-		comments: [],
-		dependencies: [],
-		blocks: [],
-		color: "#ef4444",
-		cover_image: undefined,
-		start_date: undefined,
-		completed_at: undefined,
-		order_index: 7,
-		parent_id: undefined,
-	},
-	{
-		id: "mock-9",
-		titulo: "Preparar material educativo para paciente",
-		descricao: "Criar folheto com exercícios domiciliares",
-		status: "EM_PROGRESSO",
-		prioridade: "MEDIA",
-		tipo: "TAREFA",
-		tags: ["educação", "exercícios", "domiciliar"],
-		data_vencimento: addDays(new Date(), 4).toISOString(),
-		created_at: subDays(new Date(), 4).toISOString(),
-		updated_at: subDays(new Date(), 4).toISOString(),
-		project_id: undefined,
-		responsavel: {
-			id: "user-1",
-			full_name: "Rafael Minatto",
-			email: "REDACTED_EMAIL",
-			avatar_url: undefined,
-		},
-		assignees: [],
-		checklists: [],
-		attachments: [],
-		references: [],
-		comments: [],
-		dependencies: [],
-		blocks: [],
-		color: "#06b6d4",
-		cover_image: undefined,
-		start_date: subDays(new Date(), 4).toISOString(),
-		completed_at: undefined,
-		order_index: 8,
-		parent_id: undefined,
-	},
-];
-
 export default function TarefasV2() {
 	const { data: tarefas, isLoading, refetch } = useTarefas();
 	const { data: teamMembers } = useTeamMembers();
 	const deleteTarefa = useDeleteTarefa();
-
-	// Use mock data when no real data is available
-	const effectiveTarefas = useMemo(() => {
-		if (!tarefas || tarefas.length === 0) {
-			return MOCK_TAREFAS;
-		}
-		return tarefas;
-	}, [tarefas]);
-
-	// Check if using mock data
-	const usingMockData = !tarefas || tarefas.length === 0;
+	const effectiveTarefas = tarefas ?? [];
 
 	const [viewMode, setViewMode] = useState<ViewMode>("kanban");
 	const [searchTerm, setSearchTerm] = useState("");
@@ -718,14 +354,35 @@ export default function TarefasV2() {
 		setSelectedTasks(newSelected);
 	};
 
-	// Show loading skeleton only if we don't have mock data ready yet
-	// (isLoading && !usingMockData) means we're waiting for real data with no fallback
-	if (isLoading && !usingMockData) {
+	if (isLoading) {
 		return (
 			<MainLayout>
 				<div className="space-y-6">
 					<LoadingSkeleton type="card" className="h-12 w-full" />
 					<LoadingSkeleton type="card" className="h-[600px] w-full" />
+				</div>
+			</MainLayout>
+		);
+	}
+
+	if (effectiveTarefas.length === 0) {
+		return (
+			<MainLayout>
+				<div className="space-y-6">
+					<EmptyState
+						icon={ClipboardList}
+						title="Nenhuma tarefa cadastrada"
+						description="As tarefas premium agora exibem apenas dados reais. Crie a primeira tarefa para começar a acompanhar o fluxo do time."
+						action={{
+							label: "Criar nova tarefa",
+							onClick: () => setQuickCreateOpen(true),
+						}}
+					/>
+
+					<LazyTaskQuickCreateModal
+						open={quickCreateOpen}
+						onOpenChange={setQuickCreateOpen}
+					/>
 				</div>
 			</MainLayout>
 		);

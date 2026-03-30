@@ -400,7 +400,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
 						<CardContent className="grid gap-3 p-5 sm:grid-cols-2">
 							<Button
 								className="h-20 flex-col items-start justify-between rounded-2xl px-4 py-4 text-left"
-								onClick={() => navigate("/pacientes")}
+								onClick={() => navigate("/patients")}
 							>
 								<Users className="h-5 w-5" />
 								<span className="text-sm font-semibold">Pacientes</span>

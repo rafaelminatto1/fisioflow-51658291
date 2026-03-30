@@ -2,6 +2,7 @@ import { PatientCard } from "@fisioflow/ui";
 import { PatientActions } from "@/components/patient/PatientActions";
 import { usePrefetchPatientOnHover } from "@/hooks/performance";
 import { useNavPreload } from "@/hooks/useIntelligentPreload";
+import { patientRoutes } from "@/lib/routing/appRoutes";
 import { PatientHelpers } from "@/types";
 
 interface PatientListItemProps {
@@ -20,7 +21,7 @@ export const PatientListItem = ({
 
 	const handleMouseEnter = () => {
 		prefetch();
-		preloadRoute(`/patients/${patient.id}`);
+		preloadRoute(patientRoutes.profile(patient.id));
 	};
 
 	const patientName = PatientHelpers.getName(patient);
