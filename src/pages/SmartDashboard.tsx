@@ -650,13 +650,13 @@ export default function SmartDashboard() {
 									label: "Novo Agend.",
 									icon: Plus,
 									color: "gradient-success",
-									path: "/agendamentos",
+									path: "/agenda",
 								},
 								{
 									label: "Avaliação",
 									icon: ClipboardList,
 									color: "gradient-accent-teal",
-									path: "/pacientes",
+									path: "/patients",
 								},
 								{
 									label: "Enviar Whats",

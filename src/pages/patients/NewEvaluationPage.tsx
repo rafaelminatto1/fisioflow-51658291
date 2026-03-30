@@ -36,6 +36,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { useToast } from "@/hooks/use-toast";
 import { PatientHelpers } from "@/types";
 import { fisioLogger as logger } from "@/lib/errors/logger";
+import { patientRoutes } from "@/lib/routing/appRoutes";
 import { normalizeGoalRows } from "@/lib/clinical/goalNormalization";
 import {
 	appointmentsApi,
@@ -176,7 +177,7 @@ export default function NewEvaluationPage() {
 				title: "Avaliação salva",
 				description: "Os dados foram registrados com sucesso.",
 			});
-			navigate(`/patients/${patientId}`);
+			navigate(patientRoutes.profile(patientId));
 		} catch (error) {
 			logger.error("Error saving evaluation:", error);
 			toast({

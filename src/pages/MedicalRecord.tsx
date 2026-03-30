@@ -7,6 +7,7 @@ import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useDebounce } from "@/hooks/performance/useDebounce";
 import { MainLayout } from "@/components/layout/MainLayout";
+import { APP_ROUTES, patientRoutes } from "@/lib/routing/appRoutes";
 import { Button } from "@/components/ui/button";
 import {
 	Card,
@@ -69,7 +70,7 @@ export default function MedicalRecord() {
 	}, [debouncedSearch]);
 
 	const handleViewRecord = (patientId: string) => {
-		navigate(`/patients/${patientId}`);
+		navigate(patientRoutes.profile(patientId));
 	};
 
 	const handleExportToExcel = async () => {
@@ -181,7 +182,7 @@ export default function MedicalRecord() {
 									!searchTerm
 										? {
 												label: "Cadastrar paciente",
-												onClick: () => navigate("/patients/new"),
+												onClick: () => navigate(APP_ROUTES.PATIENT_NEW),
 											}
 										: {
 												label: "Limpar busca",
