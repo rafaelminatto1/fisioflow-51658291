@@ -18,6 +18,7 @@ import {
 	Dumbbell,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { APP_ROUTES } from "@/lib/routing/appRoutes";
 
 export interface NavItem {
 	id: string;
@@ -33,37 +34,37 @@ const NAV_ITEMS: NavItem[] = [
 		id: "home",
 		label: "Início",
 		icon: <Home className="w-5 h-5" />,
-		path: "/",
+		path: APP_ROUTES.HOME,
 	},
 	{
 		id: "calendar",
 		label: "Agenda",
 		icon: <Calendar className="w-5 h-5" />,
-		path: "/",
+		path: APP_ROUTES.AGENDA,
 	},
 	{
 		id: "patients",
 		label: "Pacientes",
 		icon: <Users className="w-5 h-5" />,
-		path: "/patients",
+		path: APP_ROUTES.PATIENTS,
 	},
 	{
 		id: "exercises",
 		label: "Exercícios",
 		icon: <Dumbbell className="w-5 h-5" />,
-		path: "/exercises",
+		path: APP_ROUTES.EXERCISES,
 	},
 	{
 		id: "reports",
 		label: "Relatórios",
 		icon: <FileText className="w-5 h-5" />,
-		path: "/reports",
+		path: APP_ROUTES.REPORTS,
 	},
 	{
 		id: "settings",
 		label: "Configurações",
 		icon: <Settings className="w-5 h-5" />,
-		path: "/settings",
+		path: APP_ROUTES.SETTINGS,
 	},
 ];
 

@@ -7,40 +7,31 @@ import React, { useState, useEffect, useMemo, lazy, Suspense } from "react";
 import { useParams, useNavigate, useSearchParams } from "react-router-dom";
 import { MainLayout } from "@/components/layout/MainLayout";
 import { PatientHelpers, Patient } from "@/types";
+import { APP_ROUTES, patientRoutes } from "@/lib/routing/appRoutes";
+import { PatientProfileHeader } from "@/components/patient/PatientProfileHeader";
+import { PersonalDataTab } from "@/components/patient/PersonalDataTab";
+import { PatientClinicalHistoryTab } from "@/components/patient/PatientClinicalHistoryTab";
+import { PatientFinancialTab } from "@/components/patient/PatientFinancialTab";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { LoadingSkeleton } from "@/components/ui/loading-skeleton";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 import { PatientTimeline } from "@/components/patient/PatientTimeline";
 import {
-	ArrowLeft,
-	Edit,
 	Calendar as CalendarIcon,
-	Phone,
-	Mail,
-	MapPin,
-	FileText,
 	Activity,
-	DollarSign,
 	Trophy,
 	Files,
 	Trash,
 	Download,
-	CreditCard,
 	File as FileIcon,
 	Brain,
-	ClipboardList,
 	Sparkles,
 	Gift,
 	History,
 } from "lucide-react";
-import { format } from "date-fns";
-import { ptBR } from "date-fns/locale";
-import { parseResponseDate } from "@/utils/dateUtils";
-
 import EditPatientModal from "@/components/modals/EditPatientModal";
 
 // Hooks Otimizados
@@ -50,7 +41,6 @@ import {
 } from "@/hooks/usePatientProfileOptimized";
 import { useGamification } from "@/hooks/useGamification";
 import { usePatientEvolutionReport } from "@/hooks/usePatientEvolutionReport";
-import { useSoapRecordsV2 } from "@/hooks/useSoapRecordsV2";
 import {
 	useUploadDocument,
 	useDeleteDocument,
@@ -110,11 +100,6 @@ const LazyProgressAnalysisCard = lazy(() =>
 const LazyPatientEvolutionDashboard = lazy(() =>
 	import("@/components/patient/PatientEvolutionDashboard").then((m) => ({
 		default: m.PatientEvolutionDashboard,
-	})),
-);
-const LazySessionHistoryPanel = lazy(() =>
-	import("@/components/session/SessionHistoryPanel").then((m) => ({
-		default: m.SessionHistoryPanel,
 	})),
 );
 const LazyPatientAnalyticsDashboard = lazy(() =>
@@ -180,143 +165,6 @@ const LazyDocumentScanner = lazy(() =>
 	import("@/components/patient/DocumentScanner").then((m) => ({
 		default: m.DocumentScanner,
 	})),
-);
-
-const PersonalDataTab = ({ patient }: { patient: Patient }) => (
-	<div className="space-y-6">
-		<div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-			<div className="space-y-4">
-				<h3 className="font-bold text-base flex items-center gap-2 text-slate-800">
-					<Phone className="h-4 w-4 text-blue-500" />
-					Contato e Emergência
-				</h3>
-				<div className="bg-white border border-blue-100 rounded-xl p-5 space-y-4 shadow-sm">
-					<div className="grid grid-cols-1 sm:grid-cols-2 gap-y-4 gap-x-6">
-						<div>
-							<span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 block mb-1">
-								Telefone
-							</span>
-							<span className="font-semibold text-slate-700">
-								{patient.phone || "-"}
-							</span>
-						</div>
-						<div>
-							<span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 block mb-1">
-								Email
-							</span>
-							<span
-								className="font-semibold text-slate-700 truncate block"
-								title={patient.email}
-							>
-								{patient.email || "-"}
-							</span>
-						</div>
-						<div>
-							<span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 block mb-1">
-								Contato de Emergência
-							</span>
-							<span className="font-semibold text-slate-700">
-								{patient.emergency_contact || "-"}
-							</span>
-						</div>
-						<div>
-							<span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 block mb-1">
-								Tel. Emergência
-							</span>
-							<span className="font-semibold text-slate-700">
-								{patient.emergency_phone || "-"}
-							</span>
-						</div>
-					</div>
-				</div>
-			</div>
-
-			<div className="space-y-4">
-				<h3 className="font-bold text-base flex items-center gap-2 text-slate-800">
-					<MapPin className="h-4 w-4 text-blue-500" />
-					Endereço Residencial
-				</h3>
-				<div className="bg-white border border-blue-100 rounded-xl p-5 space-y-4 shadow-sm">
-					<div className="space-y-4">
-						<div>
-							<span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 block mb-1">
-								Logradouro
-							</span>
-							<span className="font-semibold text-slate-700">
-								{patient.address || "-"}
-							</span>
-						</div>
-						<div className="grid grid-cols-2 gap-6">
-							<div>
-								<span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 block mb-1">
-									Cidade/UF
-								</span>
-								<span className="font-semibold text-slate-700">
-									{patient.city || "-"}{" "}
-									{patient.state ? `/ ${patient.state}` : ""}
-								</span>
-							</div>
-							<div>
-								<span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 block mb-1">
-									CEP
-								</span>
-								<span className="font-semibold text-slate-700">
-									{patient.zip_code || "-"}
-								</span>
-							</div>
-						</div>
-					</div>
-				</div>
-			</div>
-
-			<div className="space-y-4">
-				<h3 className="font-bold text-base flex items-center gap-2 text-slate-800">
-					<Activity className="h-4 w-4 text-blue-500" />
-					Saúde e Convênio
-				</h3>
-				<div className="bg-white border border-blue-100 rounded-xl p-5 space-y-4 shadow-sm">
-					<div className="grid grid-cols-1 sm:grid-cols-2 gap-y-4 gap-x-6">
-						<div>
-							<span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 block mb-1">
-								Convênio
-							</span>
-							<span className="font-semibold text-slate-700">
-								{patient.health_insurance || "Particular"}
-							</span>
-						</div>
-						<div>
-							<span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 block mb-1">
-								Nº da Carteirinha
-							</span>
-							<span className="font-semibold text-slate-700">
-								{patient.insurance_number || "-"}
-							</span>
-						</div>
-						<div className="col-span-1 sm:col-span-2">
-							<span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 block mb-1">
-								CPF
-							</span>
-							<span className="font-semibold text-slate-700">
-								{patient.cpf || "-"}
-							</span>
-						</div>
-					</div>
-				</div>
-			</div>
-
-			<div className="space-y-4">
-				<h3 className="font-bold text-base flex items-center gap-2 text-slate-800">
-					<FileText className="h-4 w-4 text-blue-500" />
-					Observações Internas
-				</h3>
-				<div className="bg-white border border-blue-100 rounded-xl p-5 shadow-sm min-h-[125px]">
-					<p className="text-sm leading-relaxed text-slate-600 italic">
-						{patient.observations || "Nenhuma observação registrada."}
-					</p>
-				</div>
-			</div>
-		</div>
-	</div>
 );
 
 const OverviewTab = ({
@@ -388,203 +236,6 @@ const OverviewTab = ({
 					</Suspense>
 				</div>
 			)}
-		</div>
-	);
-};
-
-const ClinicalHistoryTab = ({ patientId }: { patientId: string }) => {
-	const { data: records = [] } = useSoapRecordsV2(patientId);
-
-	const sessions = useMemo(
-		() =>
-			records.map((record) => ({
-				id: record.id,
-				session_date: record.recordDate,
-				subjective: record.subjective,
-				objective: record.objective,
-				assessment: record.assessment,
-				plan: record.plan,
-				created_at: record.createdAt,
-				pain_level_after: 0,
-			})),
-		[records],
-	);
-
-	return (
-		<div className="h-[600px]">
-			<Suspense fallback={<LoadingSkeleton type="card" />}>
-				<LazySessionHistoryPanel sessions={sessions} onReplicate={() => {}} />
-			</Suspense>
-		</div>
-	);
-};
-
-const FinancialTab = ({
-	patientId,
-	appointments,
-}: {
-	patientId: string;
-	appointments: any[];
-}) => {
-	// Calculate totals based on appointments (which include payment info in FisioFlow)
-	const transactions = appointments;
-
-	const totalPaid = useMemo(
-		() =>
-			transactions
-				.filter(
-					(t: any) =>
-						t.payment_status === "paid_single" ||
-						t.payment_status === "paid_package",
-				)
-				.reduce(
-					(sum: number, t: any) => sum + (Number(t.payment_amount) || 0),
-					0,
-				),
-		[transactions],
-	);
-
-	const totalPending = useMemo(
-		() =>
-			transactions
-				.filter((t: any) => t.payment_status === "pending")
-				.reduce(
-					(sum: number, t: any) => sum + (Number(t.payment_amount) || 0),
-					0,
-				),
-		[transactions],
-	);
-
-	return (
-		<div className="space-y-6">
-			<div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-				<Card className="bg-white border-emerald-100 shadow-sm rounded-xl overflow-hidden">
-					<CardContent className="p-5 flex items-center gap-4">
-						<div className="h-12 w-12 rounded-xl bg-emerald-50 flex items-center justify-center shrink-0">
-							<DollarSign className="h-6 w-6 text-emerald-600" />
-						</div>
-						<div>
-							<span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 block mb-1">
-								Total Pago
-							</span>
-							<p className="text-2xl font-bold text-slate-900">
-								R$ {totalPaid.toFixed(2)}
-							</p>
-						</div>
-					</CardContent>
-				</Card>
-
-				<Card className="bg-white border-amber-100 shadow-sm rounded-xl overflow-hidden">
-					<CardContent className="p-5 flex items-center gap-4">
-						<div className="h-12 w-12 rounded-xl bg-amber-50 flex items-center justify-center shrink-0">
-							<CreditCard className="h-6 w-6 text-amber-600" />
-						</div>
-						<div>
-							<span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 block mb-1">
-								Pendente
-							</span>
-							<p className="text-2xl font-bold text-slate-900">
-								R$ {totalPending.toFixed(2)}
-							</p>
-						</div>
-					</CardContent>
-				</Card>
-
-				<Card className="bg-white border-blue-100 shadow-sm rounded-xl overflow-hidden">
-					<CardContent className="p-5 flex items-center gap-4">
-						<div className="h-12 w-12 rounded-xl bg-blue-50 flex items-center justify-center shrink-0">
-							<CalendarIcon className="h-6 w-6 text-blue-600" />
-						</div>
-						<div>
-							<span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 block mb-1">
-								Total Sessões
-							</span>
-							<p className="text-2xl font-bold text-slate-900">
-								{transactions.length}
-							</p>
-						</div>
-					</CardContent>
-				</Card>
-			</div>
-
-			<Card className="bg-white border-blue-100 shadow-sm rounded-xl">
-				<CardHeader className="pb-3 border-b border-blue-50">
-					<CardTitle className="text-base font-bold text-slate-800 flex items-center gap-2">
-						<DollarSign className="w-4 h-4 text-blue-600" />
-						Histórico de Pagamentos
-					</CardTitle>
-				</CardHeader>
-				<CardContent className="pt-4">
-					{transactions.length === 0 ? (
-						<div className="text-center py-8">
-							<CreditCard className="h-10 w-10 mx-auto mb-3 text-slate-200" />
-							<p className="text-sm font-medium text-slate-500">
-								Nenhuma transação registrada
-							</p>
-						</div>
-					) : (
-						<div className="space-y-3">
-							{transactions.map((tx: any) => (
-								<div
-									key={tx.id}
-									className="flex items-center justify-between p-4 rounded-xl border border-slate-100 hover:border-blue-100 hover:bg-blue-50/10 transition-colors group"
-								>
-									<div className="flex items-center gap-4">
-										<div
-											className={`
-                                            h-10 w-10 rounded-lg flex items-center justify-center shrink-0 transition-colors
-                                            ${
-																							tx.payment_status ===
-																								"paid_single" ||
-																							tx.payment_status ===
-																								"paid_package"
-																								? "bg-emerald-50 text-emerald-600 group-hover:bg-emerald-100"
-																								: "bg-amber-50 text-amber-600 group-hover:bg-amber-100"
-																						}
-                                        `}
-										>
-											<CreditCard className="h-5 w-5" />
-										</div>
-										<div>
-											<p className="font-semibold text-sm text-slate-800">
-												{format(
-													parseResponseDate(tx.appointment_date),
-													"dd 'de' MMM, yyyy",
-													{ locale: ptBR },
-												)}
-											</p>
-											<p className="text-xs text-slate-500 mt-0.5">
-												{tx.type} • {tx.payment_method || "Pendente"}
-												{tx.installments > 1 && ` • ${tx.installments}x`}
-											</p>
-										</div>
-									</div>
-									<div className="text-right">
-										<p className="font-bold text-slate-900">
-											R$ {Number(tx.payment_amount || 0).toFixed(2)}
-										</p>
-										<Badge
-											variant="outline"
-											className={cn(
-												"mt-1 px-2 py-0 text-[10px] font-bold uppercase tracking-wider",
-												tx.payment_status === "paid_single" ||
-													tx.payment_status === "paid_package"
-													? "border-emerald-100 bg-emerald-50 text-emerald-700"
-													: "border-amber-100 bg-amber-50 text-amber-700",
-											)}
-										>
-											{tx.payment_status === "paid_single" ||
-											tx.payment_status === "paid_package"
-												? "Pago"
-												: "Pendente"}
-										</Badge>
-									</div>
-								</div>
-							))}
-						</div>
-					)}
-				</CardContent>
-			</Card>
 		</div>
 	);
 };
@@ -1040,7 +691,8 @@ export const PatientProfilePage = () => {
 
 	const handleSelectTemplate = (templateId: string) => {
 		setEvaluationModalOpen(false);
-		navigate(`/patients/${id}/evaluations/new/${templateId}`);
+		if (!id) return;
+		navigate(`${patientRoutes.profile(id)}/evaluations/new/${templateId}`);
 	};
 
 	if (isLoading) {
@@ -1056,7 +708,7 @@ export const PatientProfilePage = () => {
 			<MainLayout>
 				<div className="flex flex-col items-center justify-center h-[50vh] gap-4">
 					<h2 className="text-2xl font-bold">Paciente não encontrado</h2>
-					<Button onClick={() => navigate("/patients")}>
+					<Button onClick={() => navigate(APP_ROUTES.PATIENTS)}>
 						Voltar para lista
 					</Button>
 				</div>
@@ -1075,165 +727,16 @@ export const PatientProfilePage = () => {
 	return (
 		<MainLayout>
 			<div className="space-y-6 pb-20 fade-in relative">
-				<div className="flex items-center gap-2 text-muted-foreground mb-2">
-					<Button
-						variant="ghost"
-						size="icon"
-						onClick={() => navigate("/patients")}
-						className="-ml-2 hover:bg-transparent hover:text-primary"
-					>
-						<ArrowLeft className="h-5 w-5" />
-					</Button>
-					<span
-						className="text-sm font-medium hover:text-primary cursor-pointer"
-						onClick={() => navigate("/patients")}
-					>
-						Voltar para Pacientes
-					</span>
-				</div>
-
-				<div className="bg-white rounded-xl p-6 shadow-sm border border-blue-100 space-y-6 relative overflow-hidden">
-					<div className="flex flex-col md:flex-row gap-6 items-start md:items-center justify-between relative z-10">
-						<div className="flex items-center gap-5">
-							<div className="relative">
-								<Avatar className="h-20 w-20 border-2 border-blue-50 shadow-sm">
-									<AvatarImage
-										src={(patient as any).photo_url}
-										className="object-cover"
-									/>
-									<AvatarFallback className="text-xl bg-blue-50 text-blue-600 font-bold">
-										{initials}
-									</AvatarFallback>
-								</Avatar>
-								<div
-									className={`absolute bottom-0 right-0 w-3.5 h-3.5 rounded-full border-2 border-white ${(patient as any).status === "active" || (patient as any).status === "Em Tratamento" ? "bg-emerald-500" : "bg-slate-300"}`}
-								/>
-							</div>
-
-							<div className="space-y-1">
-								<h1 className="text-2xl font-bold tracking-tight text-slate-900">
-									{patientName}
-								</h1>
-								<div className="flex flex-wrap items-center gap-2">
-									<Badge
-										variant="outline"
-										className={cn(
-											"px-2 py-0 text-[10px] font-bold uppercase tracking-wider",
-											(patient as any).status === "Em Tratamento" ||
-												(patient as any).status === "active"
-												? "border-emerald-100 bg-emerald-50 text-emerald-700"
-												: "border-slate-100 bg-slate-50 text-slate-600",
-										)}
-									>
-										{(patient as any).status || "Status desconhecido"}
-									</Badge>
-									{(patient as any).birth_date && (
-										<span className="text-xs text-slate-500 flex items-center gap-1.5 bg-slate-50 px-2 py-0.5 rounded-md border border-slate-100">
-											<CalendarIcon className="h-3 w-3 text-blue-500" />
-											{format(
-												new Date((patient as any).birth_date),
-												"dd/MM/yyyy",
-											)}
-											<span className="text-slate-300">|</span>
-											{Math.floor(
-												(new Date().getTime() -
-													new Date((patient as any).birth_date).getTime()) /
-													(365.25 * 24 * 60 * 60 * 1000),
-											)}{" "}
-											anos
-										</span>
-									)}
-								</div>
-							</div>
-						</div>
-
-						<div className="flex flex-wrap gap-2 w-full md:w-auto">
-							<Button
-								onClick={() => navigate(`/patient-evolution-report/${id}`)}
-								variant="outline"
-								size="sm"
-								className="flex-1 md:flex-none gap-2 border-blue-100 text-blue-700 hover:bg-blue-50 hover:text-blue-800 transition-colors shadow-sm font-medium"
-							>
-								<FileText className="h-4 w-4" />
-								Relatório
-							</Button>
-							<Button
-								onClick={() => setEditingPatient(true)}
-								variant="outline"
-								size="sm"
-								className="flex-1 md:flex-none gap-2 border-slate-200 text-slate-600 hover:bg-slate-50 shadow-sm font-medium"
-							>
-								<Edit className="h-4 w-4" />
-								Editar
-							</Button>
-							<Button
-								onClick={handleStartEvaluation}
-								size="sm"
-								className="flex-1 md:flex-none gap-2 bg-blue-600 hover:bg-blue-700 text-white shadow-sm transition-all font-medium"
-							>
-								<ClipboardList className="h-4 w-4" />
-								Avaliar
-							</Button>
-							<Button
-								onClick={() => navigate("/agenda")}
-								size="sm"
-								className="flex-1 md:flex-none gap-2 bg-slate-900 hover:bg-slate-800 text-white shadow-sm font-medium"
-							>
-								<CalendarIcon className="h-4 w-4" />
-								Agendar
-							</Button>
-						</div>
-					</div>
-
-					<div className="grid grid-cols-1 md:grid-cols-3 gap-6 pt-6 border-t border-blue-50">
-						<div className="flex items-center gap-3 text-sm">
-							<div className="p-2 bg-blue-50 rounded-lg text-blue-600 shrink-0">
-								<Phone className="h-4 w-4" />
-							</div>
-							<div className="overflow-hidden">
-								<p className="text-slate-400 text-[10px] font-bold uppercase tracking-wider mb-0.5">
-									Telefone
-								</p>
-								<p className="font-semibold text-slate-700 truncate">
-									{(patient as any).phone || "Não informado"}
-								</p>
-							</div>
-						</div>
-
-						<div className="flex items-center gap-3 text-sm">
-							<div className="p-2 bg-blue-50 rounded-lg text-blue-600 shrink-0">
-								<Mail className="h-4 w-4" />
-							</div>
-							<div className="overflow-hidden">
-								<p className="text-slate-400 text-[10px] font-bold uppercase tracking-wider mb-0.5">
-									Email
-								</p>
-								<p
-									className="font-semibold text-slate-700 truncate"
-									title={(patient as any).email}
-								>
-									{(patient as any).email || "Não informado"}
-								</p>
-							</div>
-						</div>
-
-						<div className="flex items-center gap-3 text-sm">
-							<div className="p-2 bg-blue-50 rounded-lg text-blue-600 shrink-0">
-								<MapPin className="h-4 w-4" />
-							</div>
-							<div className="overflow-hidden">
-								<p className="text-slate-400 text-[10px] font-bold uppercase tracking-wider mb-0.5">
-									Localização
-								</p>
-								<p className="font-semibold text-slate-700 truncate">
-									{(patient as any).city
-										? `${(patient as any).city}/${(patient as any).state || ""}`
-										: "Não informado"}
-								</p>
-							</div>
-						</div>
-					</div>
-				</div>
+				<PatientProfileHeader
+					patient={patient}
+					patientName={patientName}
+					initials={initials}
+					onBack={() => navigate(APP_ROUTES.PATIENTS)}
+					onOpenReport={() => navigate(`/patient-evolution-report/${id}`)}
+					onEdit={() => setEditingPatient(true)}
+					onEvaluate={handleStartEvaluation}
+					onSchedule={() => navigate(APP_ROUTES.AGENDA)}
+				/>
 
 				<Tabs
 					value={activeTab}
@@ -1350,7 +853,7 @@ export const PatientProfilePage = () => {
 							value="clinical"
 							className="mt-0 focus-visible:outline-none animate-in fade-in-50 duration-500 slide-in-from-bottom-2"
 						>
-							<ClinicalHistoryTab patientId={id || ""} />
+							<PatientClinicalHistoryTab patientId={id || ""} />
 						</TabsContent>
 
 						<TabsContent
@@ -1366,7 +869,7 @@ export const PatientProfilePage = () => {
 							value="financial"
 							className="mt-0 focus-visible:outline-none animate-in fade-in-50 duration-500 slide-in-from-bottom-2"
 						>
-							<FinancialTab patientId={id || ""} appointments={appointments} />
+							<PatientFinancialTab appointments={appointments} />
 						</TabsContent>
 
 						<TabsContent

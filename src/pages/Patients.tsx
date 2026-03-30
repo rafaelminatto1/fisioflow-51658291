@@ -40,6 +40,7 @@ import {
 } from "@/components/ui/popover";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { usePatientsPageData } from "@/hooks/usePatientsPage";
+import { patientRoutes } from "@/lib/routing/appRoutes";
 import { cn } from "@/lib/utils";
 import { AniversariantesContent } from "./relatorios/AniversariantesPage";
 
@@ -282,7 +283,9 @@ const Patients = () => {
 												<PatientListItem
 													patient={patient}
 													stats={patientStats}
-													onClick={() => navigate(`/patients/${patient.id}`)}
+													onClick={() =>
+														navigate(patientRoutes.profile(patient.id))
+													}
 												/>
 											</LazyComponent>
 										);

@@ -130,10 +130,10 @@ function generateBreadcrumbsFromPath(pathname: string): BreadcrumbItem[] {
 		const label = routeLabels[segment] || formatBreadcrumbLabel(segment);
 
 		// Special handling for dynamic routes
-		if (segment === "pacientes" && pathSegments[index + 1]) {
+		if ((segment === "pacientes" || segment === "patients") && pathSegments[index + 1]) {
 			items.push({
 				label: "Pacientes",
-				path: "/pacientes",
+				path: "/patients",
 			});
 		} else if (segment === "nova-evolucao") {
 			items.push({

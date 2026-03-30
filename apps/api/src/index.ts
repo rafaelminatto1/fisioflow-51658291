@@ -140,88 +140,89 @@ app.get('/api/health/db', async (c) => {
 });
 
 // ===== ROTAS =====
-app.route('/api/exercises', exercisesRoutes);
-app.route('/api/protocols', protocolsRoutes);
-app.route('/api/wiki', wikiRoutes);
-app.route('/api/knowledge', knowledgeRoutes);
-app.route('/api/templates', templatesRoutes);
-app.route('/api/sessions', sessionsRoutes);
-app.route('/api/auth', authRoutes);
-app.route('/api/media', mediaRoutes);
-app.route('/api/patients', patientsRoutes);
-app.route('/api/appointments', appointmentsRoutes);
-app.route('/api/documents', documentsRoutes);
-app.route('/api/exams', examsRoutes);
-app.route('/api/medical-requests', medicalRequestsRoutes);
-app.route('/api/goals', goalsRoutes);
-app.route('/api/profile', profileRoutes);
-app.route('/api/doctors', doctorsRoutes);
-app.route('/api/goal-profiles', goalProfilesRoutes);
-app.route('/api/financial', financialRoutes);
-app.route('/api/scheduling', schedulingRoutes);
-app.route('/api/crm', crmRoutes);
-app.route('/api/clinical', clinicalRoutes);
-app.route('/api/notifications', notificationsRoutes);
-app.route('/api/communications', communicationsRoutes);
-app.route('/api/organizations', organizationsRoutes);
-app.route('/api/organization-members', organizationMembersRoutes);
-app.route('/api/evolution', evolutionRoutes);
-app.route('/api/evaluation-forms', evaluationFormsRoutes);
-app.route('/api/notification-preferences', notificationPreferencesRoutes);
-app.route('/api/prestadores', prestadoresRoutes);
-app.route('/api/recibos', recibosRoutes);
-app.route('/api/feriados', feriadosRoutes);
-app.route('/api/push-subscriptions', pushSubscriptionsRoutes);
-app.route('/api/automation', automationRoutes);
-app.route('/api/gamification-notifications', gamificationNotificationsRoutes);
-app.route('/api/gamification', gamificationRoutes);
-app.route('/api/exercise-videos', exerciseVideosRoutes);
-app.route('/api/exercise-sessions', exerciseSessionsRoutes);
-app.route('/api/time-entries', timeEntriesRoutes);
-app.route('/api/whatsapp', whatsappRoutes);
-app.route('/api/precadastro', precadastroRoutes);
-app.route('/api/telemedicine', telemedicineRoutes);
-app.route('/api/image-processor', imageProcessorRoutes);
-app.route('/api/inngest', inngestRoutes);
-app.route('/api/calendar', calendarRoutes);
-app.route('/api/projects', projectsRoutes);
-app.route('/api/reports', reportsRoutes);
-app.route('/api/public-booking', publicBookingRoutes);
-app.route('/api/integrations', integrationsRoutes);
-app.route('/api/security', securityRoutes);
-app.route('/api/treatment-cycles', treatmentCyclesRoutes);
-app.route('/api/evolution-versions', evolutionVersionsRoutes);
-app.route('/api/exercise-plans', exercisePlansRoutes);
-app.route('/api/activity-lab', activityLabRoutes);
-app.route('/api/patient-portal', patientPortalRoutes);
-app.route('/api/audit-logs', auditRoutes);
-app.route('/api/analytics', analyticsRoutes);
-app.route('/api/insights', analyticsRoutes);
-app.route('/api', eventosRoutes);
-app.route('/api/innovations', innovationsRoutes);
-app.route('/api/tarefas', tarefasRoutes);
-app.route('/api/invitations', invitationsRoutes);
-app.route('/api/satisfaction-surveys', satisfactionSurveysRoutes);
-app.route('/api/wearables', wearablesRoutes);
-app.route('/api/document-signatures', documentSignaturesRoutes);
-app.route('/api/treatment-cycles', treatmentCyclesRoutes);
-app.route('/api/evolution-versions', evolutionVersionsRoutes);
-app.route('/api/exercise-plans', exercisePlansRoutes);
-app.route('/api/activity-lab', activityLabRoutes);
-app.route('/api/marketing', marketingRoutes);
-app.route('/api/biomechanics', biomechanicsRoutes);
-app.route('/api/ai', aiRoutes);
-app.route('/api/dicom', dicomRoutes);
-app.route('/api/fcm-tokens', fcmTokensRoutes);
-app.route('/api/webhooks', webhooksRoutes);
-app.route('/api/patient-portal', patientPortalRoutes);
-app.route('/api/messaging', messagingRoutes);
-app.route('/api/boards', boardsRoutes);
-app.route('/api/standardized-tests', standardizedTestsRoutes);
-app.route('/api/commissions', commissionsRoutes);
-app.route('/api/nfse', nfseRoutes);
-app.route('/api/announcements', announcementsRoutes);
-app.route('/api/admin/seed-templates', adminSeedTemplatesRoutes);
+const apiRoutes = [
+  ['/api/exercises', exercisesRoutes],
+  ['/api/protocols', protocolsRoutes],
+  ['/api/wiki', wikiRoutes],
+  ['/api/knowledge', knowledgeRoutes],
+  ['/api/templates', templatesRoutes],
+  ['/api/sessions', sessionsRoutes],
+  ['/api/auth', authRoutes],
+  ['/api/media', mediaRoutes],
+  ['/api/patients', patientsRoutes],
+  ['/api/appointments', appointmentsRoutes],
+  ['/api/documents', documentsRoutes],
+  ['/api/exams', examsRoutes],
+  ['/api/medical-requests', medicalRequestsRoutes],
+  ['/api/goals', goalsRoutes],
+  ['/api/profile', profileRoutes],
+  ['/api/doctors', doctorsRoutes],
+  ['/api/goal-profiles', goalProfilesRoutes],
+  ['/api/financial', financialRoutes],
+  ['/api/scheduling', schedulingRoutes],
+  ['/api/crm', crmRoutes],
+  ['/api/clinical', clinicalRoutes],
+  ['/api/notifications', notificationsRoutes],
+  ['/api/communications', communicationsRoutes],
+  ['/api/organizations', organizationsRoutes],
+  ['/api/organization-members', organizationMembersRoutes],
+  ['/api/evolution', evolutionRoutes],
+  ['/api/evaluation-forms', evaluationFormsRoutes],
+  ['/api/notification-preferences', notificationPreferencesRoutes],
+  ['/api/prestadores', prestadoresRoutes],
+  ['/api/recibos', recibosRoutes],
+  ['/api/feriados', feriadosRoutes],
+  ['/api/push-subscriptions', pushSubscriptionsRoutes],
+  ['/api/automation', automationRoutes],
+  ['/api/gamification-notifications', gamificationNotificationsRoutes],
+  ['/api/gamification', gamificationRoutes],
+  ['/api/exercise-videos', exerciseVideosRoutes],
+  ['/api/exercise-sessions', exerciseSessionsRoutes],
+  ['/api/time-entries', timeEntriesRoutes],
+  ['/api/whatsapp', whatsappRoutes],
+  ['/api/precadastro', precadastroRoutes],
+  ['/api/telemedicine', telemedicineRoutes],
+  ['/api/image-processor', imageProcessorRoutes],
+  ['/api/inngest', inngestRoutes],
+  ['/api/calendar', calendarRoutes],
+  ['/api/projects', projectsRoutes],
+  ['/api/reports', reportsRoutes],
+  ['/api/public-booking', publicBookingRoutes],
+  ['/api/integrations', integrationsRoutes],
+  ['/api/security', securityRoutes],
+  ['/api/treatment-cycles', treatmentCyclesRoutes],
+  ['/api/evolution-versions', evolutionVersionsRoutes],
+  ['/api/exercise-plans', exercisePlansRoutes],
+  ['/api/activity-lab', activityLabRoutes],
+  ['/api/patient-portal', patientPortalRoutes],
+  ['/api/audit-logs', auditRoutes],
+  ['/api/analytics', analyticsRoutes],
+  ['/api/insights', analyticsRoutes],
+  ['/api', eventosRoutes],
+  ['/api/innovations', innovationsRoutes],
+  ['/api/tarefas', tarefasRoutes],
+  ['/api/invitations', invitationsRoutes],
+  ['/api/satisfaction-surveys', satisfactionSurveysRoutes],
+  ['/api/wearables', wearablesRoutes],
+  ['/api/document-signatures', documentSignaturesRoutes],
+  ['/api/marketing', marketingRoutes],
+  ['/api/biomechanics', biomechanicsRoutes],
+  ['/api/ai', aiRoutes],
+  ['/api/dicom', dicomRoutes],
+  ['/api/fcm-tokens', fcmTokensRoutes],
+  ['/api/webhooks', webhooksRoutes],
+  ['/api/messaging', messagingRoutes],
+  ['/api/boards', boardsRoutes],
+  ['/api/standardized-tests', standardizedTestsRoutes],
+  ['/api/commissions', commissionsRoutes],
+  ['/api/nfse', nfseRoutes],
+  ['/api/announcements', announcementsRoutes],
+  ['/api/admin/seed-templates', adminSeedTemplatesRoutes],
+] as const;
+
+apiRoutes.forEach(([path, router]) => {
+  app.route(path, router as any);
+});
 
 // REALTIME
 app.get('/api/realtime', async (c) => {

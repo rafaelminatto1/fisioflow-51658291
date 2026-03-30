@@ -56,6 +56,7 @@ import { Progress } from "@/components/ui/progress";
 import { Badge } from "@/components/ui/badge";
 import { GlobalCommandPalette } from "@/components/evolution/search/GlobalCommandPalette";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { APP_ROUTES } from "@/lib/routing/appRoutes";
 
 const GamificationMiniProfile = ({ collapsed }: { collapsed: boolean }) => {
 	const { profile: authProfile } = useAuth();
@@ -117,12 +118,12 @@ const GamificationMiniProfile = ({ collapsed }: { collapsed: boolean }) => {
 
 // ORDEM FLUXO CLÍNICO 2026
 const mainMenuItems = [
-	{ icon: Calendar, label: "Agenda de Hoje", href: "/agenda", badge: "Hoje" },
-	{ icon: Users, label: "Meus Pacientes", href: "/patients" },
+	{ icon: Calendar, label: "Agenda de Hoje", href: APP_ROUTES.AGENDA, badge: "Hoje" },
+	{ icon: Users, label: "Meus Pacientes", href: APP_ROUTES.PATIENTS },
 ];
 
 const clinicaMenuItems = [
-	{ icon: Activity, label: "Exercícios", href: "/exercises" },
+	{ icon: Activity, label: "Exercícios", href: APP_ROUTES.EXERCISES },
 	{ icon: Target, label: "Protocolos e Fases", href: "/protocols" },
 ];
 
@@ -138,7 +139,7 @@ const biomecanicaSubmenu = [
 ];
 
 const inteligenciaMenuItems = [
-	{ icon: LayoutDashboard, label: "Smart Dashboard", href: "/smart-dashboard" },
+	{ icon: LayoutDashboard, label: "Smart Dashboard", href: APP_ROUTES.SMART_DASHBOARD },
 	{ icon: Brain, label: "Assistente IA", href: "/smart-ai" },
 	{ icon: BarChart3, label: "Analytics Avançado", href: "/analytics" },
 ];
@@ -167,7 +168,7 @@ const adminSubmenu = [
 ];
 
 const financeiroSubmenu = [
-	{ icon: DollarSign, label: "Financeiro Hub", href: "/financial" },
+	{ icon: DollarSign, label: "Financeiro Hub", href: APP_ROUTES.FINANCIAL },
 	{ icon: Receipt, label: "Faturamento e Recibos", href: "/financeiro/recibos" },
 	{ icon: Calculator, label: "Simulador de Receitas", href: "/financeiro/simulador" },
 	{ icon: Users, label: "Comissões", href: "/financeiro/comissoes" },
@@ -175,7 +176,7 @@ const financeiroSubmenu = [
 ];
 
 const configuracoesSubmenu = [
-	{ icon: Settings, label: "Geral", href: "/settings" },
+	{ icon: Settings, label: "Geral", href: APP_ROUTES.SETTINGS },
 	{ icon: CalendarDays, label: "Google Calendar", href: "/configuracoes/calendario" },
 	{ icon: LinkIcon, label: "Integrações Google", href: "/integrations" },
 ];

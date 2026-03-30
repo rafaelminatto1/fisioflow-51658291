@@ -8,6 +8,7 @@ import { useNavigate } from "react-router-dom";
 import { AlertTriangle } from "lucide-react";
 
 import { MainLayout } from "@/components/layout/MainLayout";
+import { APP_ROUTES } from "@/lib/routing/appRoutes";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent } from "@/components/ui/tabs";
 import { LoadingSkeleton } from "@/components/ui/loading-skeleton";
@@ -360,7 +361,7 @@ const PatientEvolution = () => {
 				<div className="text-center p-10">
 					<AlertTriangle className="mx-auto h-12 w-12 text-destructive" />
 					<p>Dados não encontrados.</p>
-					<Button onClick={() => navigate("/agenda")} className="mt-4">
+					<Button onClick={() => navigate(APP_ROUTES.AGENDA)} className="mt-4">
 						Voltar
 					</Button>
 				</div>
