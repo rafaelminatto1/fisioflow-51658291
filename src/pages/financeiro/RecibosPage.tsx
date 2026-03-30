@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -247,6 +248,10 @@ export function RecibosContent() {
 			referente: "",
 			cpf_cnpj_pagador: "",
 			usar_dados_clinica: true,
+			card_last_digits: "",
+			is_first_payment: false,
+			package_sessions: "10",
+			is_package: false,
 		});
 	};
 
