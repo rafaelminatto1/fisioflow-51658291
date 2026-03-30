@@ -675,4 +675,112 @@ app.post("/suggest-reply", async (c) => {
 	}
 });
 
+// ─── Receipt OCR — vision extraction via Gemini ──────────────────────────────
+app.post("/receipt-ocr", async (c) => {
+	if (!c.env.GOOGLE_AI_API_KEY) {
+		return c.json({ error: "AI not configured" }, 503);
+	}
+
+	let imageBase64: string;
+	let mimeType: string;
+
+	// Accept both multipart/form-data (file upload) and JSON (base64 pre-encoded)
+	const contentType = c.req.header("content-type") ?? "";
+	if (contentType.includes("multipart/form-data")) {
+		try {
+			const formData = await c.req.formData();
+			const file = formData.get("image") as File | null;
+			if (!file) return c.json({ error: "Campo 'image' ausente no formulário" }, 400);
+			const arrayBuffer = await file.arrayBuffer();
+			const bytes = new Uint8Array(arrayBuffer);
+			let binary = "";
+			for (let i = 0; i < bytes.byteLength; i++) binary += String.fromCharCode(bytes[i]);
+			imageBase64 = btoa(binary);
+			mimeType = file.type || "image/jpeg";
+		} catch {
+			return c.json({ error: "Erro ao ler imagem do formulário" }, 400);
+		}
+	} else {
+		const body = (await c.req.json().catch(() => ({}))) as Record<string, unknown>;
+		imageBase64 = String(body.imageBase64 ?? "");
+		mimeType = String(body.mimeType ?? "image/jpeg");
+		if (!imageBase64) return c.json({ error: "imageBase64 ausente" }, 400);
+	}
+
+	const prompt = `Você é um sistema de extração de dados financeiros para uma clínica de fisioterapia.
+Analise a imagem do comprovante de pagamento e extraia as seguintes informações:
+
+1. valor: valor numérico em reais (número, sem símbolo R$, use ponto como decimal, ex: 150.00)
+2. nome: nome do pagador/titular (string ou null)
+3. cardLastDigits: últimos 4 dígitos do cartão se visível (string de 4 chars ou null)
+4. isFirstPayment: true se o comprovante indica primeira parcela ou pagamento inicial (boolean)
+5. pixKey: chave pix se visível (string ou null)
+6. dataTransacao: data da transação no formato YYYY-MM-DD se visível (string ou null)
+
+Responda APENAS com um JSON válido, sem markdown, sem explicação:
+{"valor": 0, "nome": null, "cardLastDigits": null, "isFirstPayment": false, "pixKey": null, "dataTransacao": null}`;
+
+	try {
+		const baseUrl = c.env.FISIOFLOW_AI_GATEWAY_URL
+			? `${c.env.FISIOFLOW_AI_GATEWAY_URL}/google-ai-studio`
+			: "https://generativelanguage.googleapis.com";
+
+		const headers: Record<string, string> = { "Content-Type": "application/json" };
+		if (c.env.FISIOFLOW_AI_GATEWAY_URL && c.env.FISIOFLOW_AI_GATEWAY_TOKEN) {
+			headers["Authorization"] = `Bearer ${c.env.FISIOFLOW_AI_GATEWAY_TOKEN}`;
+		}
+
+		const response = await fetch(
+			`${baseUrl}/v1beta/models/gemini-1.5-flash:generateContent?key=${c.env.GOOGLE_AI_API_KEY}`,
+			{
+				method: "POST",
+				headers,
+				body: JSON.stringify({
+					contents: [{
+						parts: [
+							{ text: prompt },
+							{ inline_data: { mime_type: mimeType, data: imageBase64 } },
+						],
+					}],
+					generationConfig: { temperature: 0.1, maxOutputTokens: 512 },
+				}),
+			},
+		);
+
+		if (!response.ok) {
+			const err = await response.json().catch(() => ({})) as any;
+			throw new Error(err?.error?.message ?? `Gemini HTTP ${response.status}`);
+		}
+
+		const geminiResult = await response.json() as any;
+		const rawText: string = geminiResult.candidates?.[0]?.content?.parts?.[0]?.text ?? "{}";
+
+		// Strip potential markdown fences
+		const jsonStr = rawText.replace(/```json?\n?/g, "").replace(/```/g, "").trim();
+
+		let extracted: Record<string, unknown>;
+		try {
+			extracted = JSON.parse(jsonStr);
+		} catch {
+			return c.json({ success: false, error: "IA não retornou JSON válido", raw: rawText }, 422);
+		}
+
+		const valor = Number(extracted.valor ?? 0);
+		return c.json({
+			success: true,
+			data: {
+				valor: isNaN(valor) ? 0 : valor,
+				nome: extracted.nome ?? null,
+				cardLastDigits: extracted.cardLastDigits ?? null,
+				isFirstPayment: Boolean(extracted.isFirstPayment),
+				pixKey: extracted.pixKey ?? null,
+				dataTransacao: extracted.dataTransacao ?? null,
+			},
+		});
+	} catch (error: any) {
+		console.error("[AI/ReceiptOCR] Error:", error);
+		return c.json({ success: false, error: "Erro ao processar comprovante", details: error.message }, 500);
+	}
+});
+
 export { app as aiRoutes };
