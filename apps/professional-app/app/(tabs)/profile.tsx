@@ -8,6 +8,7 @@ import {
   TouchableOpacity,
   Alert,
   Image,
+  Linking,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
@@ -27,7 +28,6 @@ type MenuItem = {
   icon: React.ComponentProps<typeof Ionicons>['name'];
   label: string;
   onPress: () => void;
-  emBreve?: boolean;
 };
 
 export default function ProfileScreen() {
@@ -113,14 +113,12 @@ export default function ProfileScreen() {
     {
       icon: 'time-outline',
       label: 'Horários de Atendimento',
-      onPress: () => { light(); Alert.alert('Em breve', 'Funcionalidade em desenvolvimento'); },
-      emBreve: true,
+      onPress: () => { medium(); router.push('/working-hours' as any); },
     },
     {
       icon: 'notifications-outline',
       label: 'Notificações',
-      onPress: () => { light(); Alert.alert('Em breve', 'Funcionalidade em desenvolvimento'); },
-      emBreve: true,
+      onPress: () => { medium(); router.push('/notification-preferences' as any); },
     },
     {
       icon: 'lock-closed-outline',
@@ -130,14 +128,12 @@ export default function ProfileScreen() {
     {
       icon: 'card-outline',
       label: 'Plano e Faturamento',
-      onPress: () => { light(); Alert.alert('Em breve', 'Funcionalidade em desenvolvimento'); },
-      emBreve: true,
+      onPress: () => { light(); Linking.openURL('https://fisioflow.pages.dev/financial'); },
     },
     {
       icon: 'help-circle-outline',
       label: 'Ajuda e Suporte',
-      onPress: () => { light(); Alert.alert('Em breve', 'Funcionalidade em desenvolvimento'); },
-      emBreve: true,
+      onPress: () => { medium(); router.push('/help' as any); },
     },
   ];
 
@@ -218,13 +214,7 @@ export default function ProfileScreen() {
                 <Ionicons name={item.icon} size={22} color={colors.textSecondary} />
                 <Text style={[styles.menuItemLabel, { color: colors.text }]}>{item.label}</Text>
               </View>
-              {item.emBreve ? (
-                <View style={[styles.emBreveBadge, { backgroundColor: colors.warning + '22' }]}>
-                  <Text style={[styles.emBreveText, { color: colors.warning }]}>Em breve</Text>
-                </View>
-              ) : (
-                <Ionicons name="chevron-forward" size={20} color={colors.textMuted} />
-              )}
+              <Ionicons name="chevron-forward" size={20} color={colors.textMuted} />
             </TouchableOpacity>
           ))}
         </Card>
