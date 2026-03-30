@@ -30,11 +30,13 @@ workflows:
         script: |
           cd $APP_DIR/ios
           pod install --repo-update
-      - name: Initialize Keychain and Fetch Profiles
+      - name: Fetch Signing Files (Apple API)
         script: |
-          # Inicializa o chaveiro de certificados do Codemagic
+          # Inicializa o chaveiro
           keychain initialize
-          # Busca os perfis de provisionamento da Apple (Gera o export_options.plist)
+          # Busca certificados e perfis usando as variáveis APP_STORE_CONNECT_... que você cadastrou
+          app-store-connect fetch-signing-files "$BUNDLE_ID" --type IOS_APP_ADHOC --create
+          # Configura o Xcode para usar esses perfis
           xcode-project use-profiles
       - name: Build iOS IPA
         script: |
