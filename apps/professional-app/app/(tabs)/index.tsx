@@ -11,6 +11,8 @@ import { useAppointments } from '@/hooks/useAppointments';
 import { usePatients } from '@/hooks/usePatients';
 import { useHaptics } from '@/hooks/useHaptics';
 import { useDashboardStats } from '@/hooks/useDashboard';
+import { useProtocols } from '@/hooks/useProtocols';
+import { useExercisesLibrary } from '@/hooks/useExercises';
 
 export default function DashboardScreen() {
   const colors = useColors();
@@ -21,7 +23,9 @@ export default function DashboardScreen() {
   // Use new hook for stats
   const { data: stats, refetch: refetchStats, isLoading: isLoadingStats, error: statsError } = useDashboardStats();
   const { data: appointments, refetch: refetchAppointments, isLoading: isLoadingAppointments, error: appointmentsError } = useAppointments();
-  const { data: recentPatients, isLoading: isLoadingPatients, error: patientsError } = usePatients({ limit: 5 }); // Fetch 5 most recent patients
+  const { data: recentPatients, isLoading: isLoadingPatients, error: patientsError } = usePatients({ limit: 5 });
+  const { protocols } = useProtocols();
+  const { data: exercises } = useExercisesLibrary();
 
   // Log any errors for debugging
   if (statsError) console.error('[Dashboard] Stats error:', statsError);
@@ -123,7 +127,7 @@ export default function DashboardScreen() {
                     <Ionicons name="clipboard" size={22} color="#6366F1" />
                   </View>
                   <Text style={[styles.miniTitle, { color: colors.text }]}>Protocolos</Text>
-                  <Text style={[styles.miniSub, { color: colors.textSecondary }]}>119 disponíveis</Text>
+                  <Text style={[styles.miniSub, { color: colors.textSecondary }]}>{protocols.length > 0 ? `${protocols.length} disponíveis` : 'Carregando...'}</Text>
                 </TouchableOpacity>
 
                 <TouchableOpacity
@@ -135,7 +139,7 @@ export default function DashboardScreen() {
                     <Ionicons name="fitness" size={22} color="#10B981" />
                   </View>
                   <Text style={[styles.miniTitle, { color: colors.text }]}>Exercícios</Text>
-                  <Text style={[styles.miniSub, { color: colors.textSecondary }]}>248 exercícios</Text>
+                  <Text style={[styles.miniSub, { color: colors.textSecondary }]}>{exercises && exercises.length > 0 ? `${exercises.length} exercícios` : 'Carregando...'}</Text>
                 </TouchableOpacity>
 
                 <TouchableOpacity
