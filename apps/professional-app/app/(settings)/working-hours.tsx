@@ -8,7 +8,10 @@ import {
 	TouchableOpacity,
 	Alert,
 	ActivityIndicator,
+	Modal,
+	Platform,
 } from 'react-native';
+import DateTimePicker from '@react-native-community/datetimepicker';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { router } from 'expo-router';
@@ -37,53 +40,31 @@ type DayHours = {
 	close_time: string;
 };
 
+type PickerTarget = {
+	day_of_week: number;
+	field: 'open_time' | 'close_time';
+};
+
+function timeToDate(timeStr: string): Date {
+	const [h, m] = timeStr.split(':').map(Number);
+	const d = new Date();
+	d.setHours(h, m, 0, 0);
+	return d;
+}
+
+function dateToTime(d: Date): string {
+	const h = String(d.getHours()).padStart(2, '0');
+	const m = String(d.getMinutes()).padStart(2, '0');
+	return `${h}:${m}`;
+}
+
 function buildDefaults(): DayHours[] {
 	return DAYS.map(({ key }) => ({
 		day_of_week: key,
-		is_open: key >= 1 && key <= 5, // Mon-Fri open by default
+		is_open: key >= 1 && key <= 5,
 		open_time: DEFAULT_OPEN,
 		close_time: DEFAULT_CLOSE,
 	}));
-}
-
-function TimeButton({ time, onPress, colors }: { time: string; onPress: () => void; colors: any }) {
-	return (
-		<TouchableOpacity
-			style={[styles.timeButton, { backgroundColor: colors.surfaceHover, borderColor: colors.border }]}
-			onPress={onPress}
-		>
-			<Ionicons name="time-outline" size={14} color={colors.textSecondary} />
-			<Text style={[styles.timeText, { color: colors.text }]}>{time}</Text>
-		</TouchableOpacity>
-	);
-}
-
-function timePrompt(current: string, onChange: (t: string) => void) {
-	// Simple Alert-based time picker for cross-platform compatibility
-	Alert.prompt(
-		'Horário',
-		'Digite no formato HH:MM (ex: 08:00)',
-		[
-			{ text: 'Cancelar', style: 'cancel' },
-			{
-				text: 'OK',
-				onPress: (value) => {
-					if (!value) return;
-					const trimmed = value.trim();
-					if (/^\d{1,2}:\d{2}$/.test(trimmed)) {
-						const [h, m] = trimmed.split(':').map(Number);
-						if (h >= 0 && h <= 23 && m >= 0 && m <= 59) {
-							onChange(trimmed.padStart(5, '0'));
-							return;
-						}
-					}
-					Alert.alert('Formato inválido', 'Use HH:MM, ex: 08:00 ou 17:30');
-				},
-			},
-		],
-		'plain-text',
-		current,
-	);
 }
 
 export default function WorkingHoursScreen() {
@@ -93,17 +74,21 @@ export default function WorkingHoursScreen() {
 	const [loading, setLoading] = useState(true);
 	const [saving, setSaving] = useState(false);
 
+	// Picker state
+	const [pickerTarget, setPickerTarget] = useState<PickerTarget | null>(null);
+	const [pickerDate, setPickerDate] = useState(new Date());
+
 	const load = useCallback(async () => {
 		try {
 			const res = await fetchApi<{ data: any[] }>('/api/scheduling/settings/business-hours');
-			const rows: any[] = res?.data || [];
+			const rows: any[] = res?.data ?? [];
 			if (rows.length > 0) {
 				setHours(
 					DAYS.map(({ key }) => {
 						const row = rows.find((r: any) => r.day_of_week === key);
 						return {
 							day_of_week: key,
-							is_open: row ? (row.is_open ?? !row.is_closed) : key >= 1 && key <= 5,
+							is_open: row ? (row.is_open ?? !row.is_closed ?? true) : key >= 1 && key <= 5,
 							open_time: row?.open_time || row?.start_time || DEFAULT_OPEN,
 							close_time: row?.close_time || row?.end_time || DEFAULT_CLOSE,
 						};
@@ -111,7 +96,7 @@ export default function WorkingHoursScreen() {
 				);
 			}
 		} catch {
-			// Keep defaults on error
+			// Keep defaults on error — non-fatal
 		} finally {
 			setLoading(false);
 		}
@@ -128,11 +113,26 @@ export default function WorkingHoursScreen() {
 		);
 	};
 
-	const setTime = (dayKey: number, field: 'open_time' | 'close_time', value: string) => {
+	const openPicker = (dayKey: number, field: 'open_time' | 'close_time') => {
+		const day = hours.find((h) => h.day_of_week === dayKey);
+		const currentTime = day?.[field] ?? DEFAULT_OPEN;
+		setPickerDate(timeToDate(currentTime));
+		setPickerTarget({ day_of_week: dayKey, field });
+	};
+
+	const applyPicker = (date: Date) => {
+		if (!pickerTarget) return;
+		const timeStr = dateToTime(date);
 		setHours((prev) =>
-			prev.map((d) => (d.day_of_week === dayKey ? { ...d, [field]: value } : d)),
+			prev.map((d) =>
+				d.day_of_week === pickerTarget.day_of_week
+					? { ...d, [pickerTarget.field]: timeStr }
+					: d,
+			),
 		);
 	};
+
+	const closePicker = () => setPickerTarget(null);
 
 	const handleSave = async () => {
 		setSaving(true);
@@ -152,6 +152,11 @@ export default function WorkingHoursScreen() {
 			setSaving(false);
 		}
 	};
+
+	const currentDay = pickerTarget
+		? hours.find((h) => h.day_of_week === pickerTarget.day_of_week)
+		: null;
+	const pickerLabel = pickerTarget?.field === 'open_time' ? 'Abertura' : 'Fechamento';
 
 	return (
 		<SafeAreaView style={[styles.container, { backgroundColor: colors.background }]} edges={['top']}>
@@ -194,24 +199,29 @@ export default function WorkingHoursScreen() {
 									<View style={styles.timesRow}>
 										<View style={styles.timeGroup}>
 											<Text style={[styles.timeLabel, { color: colors.textSecondary }]}>Abertura</Text>
-											<TimeButton
-												time={day.open_time}
-												colors={colors}
-												onPress={() =>
-													timePrompt(day.open_time, (v) => setTime(key, 'open_time', v))
-												}
-											/>
+											<TouchableOpacity
+												style={[styles.timeButton, { backgroundColor: colors.surfaceHover, borderColor: colors.border }]}
+												onPress={() => openPicker(key, 'open_time')}
+											>
+												<Ionicons name="time-outline" size={14} color={colors.textSecondary} />
+												<Text style={[styles.timeText, { color: colors.text }]}>{day.open_time}</Text>
+											</TouchableOpacity>
 										</View>
-										<Ionicons name="arrow-forward" size={16} color={colors.textMuted} style={{ marginTop: 20 }} />
+										<Ionicons
+											name="arrow-forward"
+											size={16}
+											color={colors.textMuted}
+											style={{ marginTop: 22 }}
+										/>
 										<View style={styles.timeGroup}>
 											<Text style={[styles.timeLabel, { color: colors.textSecondary }]}>Fechamento</Text>
-											<TimeButton
-												time={day.close_time}
-												colors={colors}
-												onPress={() =>
-													timePrompt(day.close_time, (v) => setTime(key, 'close_time', v))
-												}
-											/>
+											<TouchableOpacity
+												style={[styles.timeButton, { backgroundColor: colors.surfaceHover, borderColor: colors.border }]}
+												onPress={() => openPicker(key, 'close_time')}
+											>
+												<Ionicons name="time-outline" size={14} color={colors.textSecondary} />
+												<Text style={[styles.timeText, { color: colors.text }]}>{day.close_time}</Text>
+											</TouchableOpacity>
 										</View>
 									</View>
 								)}
@@ -226,6 +236,53 @@ export default function WorkingHoursScreen() {
 						style={{ marginTop: 8, marginBottom: 32 }}
 					/>
 				</ScrollView>
+			)}
+
+			{/* Time Picker — inline on Android, modal on iOS */}
+			{pickerTarget !== null && Platform.OS === 'android' && (
+				<DateTimePicker
+					value={pickerDate}
+					mode="time"
+					is24Hour
+					display="default"
+					onChange={(event, date) => {
+						closePicker();
+						if (event.type === 'set' && date) applyPicker(date);
+					}}
+				/>
+			)}
+
+			{pickerTarget !== null && Platform.OS === 'ios' && (
+				<Modal transparent animationType="slide" visible>
+					<View style={styles.modalBackdrop}>
+						<View style={[styles.modalSheet, { backgroundColor: colors.surface, borderColor: colors.border }]}>
+							<View style={styles.modalHeader}>
+								<TouchableOpacity onPress={closePicker}>
+									<Text style={{ color: colors.error, fontSize: 16 }}>Cancelar</Text>
+								</TouchableOpacity>
+								<Text style={[styles.modalTitle, { color: colors.text }]}>
+									{pickerLabel} — {currentDay && DAYS.find(d => d.key === pickerTarget!.day_of_week)?.label}
+								</Text>
+								<TouchableOpacity
+									onPress={() => {
+										applyPicker(pickerDate);
+										closePicker();
+									}}
+								>
+									<Text style={{ color: colors.primary, fontSize: 16, fontWeight: '600' }}>OK</Text>
+								</TouchableOpacity>
+							</View>
+							<DateTimePicker
+								value={pickerDate}
+								mode="time"
+								is24Hour
+								display="spinner"
+								onChange={(_, date) => { if (date) setPickerDate(date); }}
+								style={{ height: 180 }}
+							/>
+						</View>
+					</View>
+				</Modal>
 			)}
 		</SafeAreaView>
 	);
@@ -250,12 +307,7 @@ const styles = StyleSheet.create({
 	dayLabelContainer: { flex: 1 },
 	dayLabel: { fontSize: 16, fontWeight: '600' },
 	closedLabel: { fontSize: 12, marginTop: 2 },
-	timesRow: {
-		flexDirection: 'row',
-		alignItems: 'center',
-		gap: 12,
-		marginTop: 12,
-	},
+	timesRow: { flexDirection: 'row', alignItems: 'center', gap: 12, marginTop: 12 },
 	timeGroup: { flex: 1 },
 	timeLabel: { fontSize: 12, marginBottom: 6 },
 	timeButton: {
@@ -268,4 +320,24 @@ const styles = StyleSheet.create({
 		borderWidth: 1,
 	},
 	timeText: { fontSize: 15, fontWeight: '600' },
+	modalBackdrop: {
+		flex: 1,
+		justifyContent: 'flex-end',
+		backgroundColor: 'rgba(0,0,0,0.4)',
+	},
+	modalSheet: {
+		borderTopLeftRadius: 20,
+		borderTopRightRadius: 20,
+		borderWidth: 1,
+		paddingBottom: 32,
+	},
+	modalHeader: {
+		flexDirection: 'row',
+		justifyContent: 'space-between',
+		alignItems: 'center',
+		paddingHorizontal: 20,
+		paddingVertical: 16,
+		borderBottomWidth: StyleSheet.hairlineWidth,
+	},
+	modalTitle: { fontSize: 15, fontWeight: '600', flex: 1, textAlign: 'center', marginHorizontal: 8 },
 });
