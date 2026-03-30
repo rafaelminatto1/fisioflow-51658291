@@ -45,7 +45,7 @@ workflows:
           xcode-project use-profiles --project "FisioFlowPro.xcodeproj"
           
           export WORKSPACE=$(ls -d *.xcworkspace | head -1)
-          export SCHEME=$(xcodebuild -list -workspace "$WORKSPACE" | grep -A 5 "Schemes:" | tail -n +2 | head -1 | xargs)
+          export SCHEME="FisioFlowPro"
           
           echo "Building Workspace: $WORKSPACE with Scheme: $SCHEME"
           
