@@ -14,7 +14,7 @@ import { LoadingSkeleton } from "@/components/ui/loading-skeleton";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
-import { PatientTimeline } from "@/components/patients/PatientTimeline";
+import { PatientTimeline } from "@/components/patient/PatientTimeline";
 import {
 	ArrowLeft,
 	Edit,
@@ -103,12 +103,12 @@ const LazyMetasCard = lazy(() =>
 	})),
 );
 const LazyProgressAnalysisCard = lazy(() =>
-	import("@/components/patients/ProgressAnalysisCard").then((m) => ({
+	import("@/components/patient/ProgressAnalysisCard").then((m) => ({
 		default: m.ProgressAnalysisCard,
 	})),
 );
 const LazyPatientEvolutionDashboard = lazy(() =>
-	import("@/components/patients/PatientEvolutionDashboard").then((m) => ({
+	import("@/components/patient/PatientEvolutionDashboard").then((m) => ({
 		default: m.PatientEvolutionDashboard,
 	})),
 );
@@ -118,12 +118,12 @@ const LazySessionHistoryPanel = lazy(() =>
 	})),
 );
 const LazyPatientAnalyticsDashboard = lazy(() =>
-	import("@/components/patients/analytics/PatientAnalyticsDashboard").then(
+	import("@/components/patient/analytics/PatientAnalyticsDashboard").then(
 		(m) => ({ default: m.PatientAnalyticsDashboard }),
 	),
 );
 const LazyAIAssistantPanel = lazy(() =>
-	import("@/components/patients/analytics/AIAssistantPanel").then((m) => ({
+	import("@/components/patient/analytics/AIAssistantPanel").then((m) => ({
 		default: m.AIAssistantPanel,
 	})),
 );
@@ -143,12 +143,12 @@ const LazyDoctorReferralReportGenerator = lazy(() =>
 	})),
 );
 const LazyPatientLifecycleChart = lazy(() =>
-	import("@/components/patients/analytics/PatientLifecycleChart").then((m) => ({
+	import("@/components/patient/analytics/PatientLifecycleChart").then((m) => ({
 		default: m.PatientLifecycleChart,
 	})),
 );
 const LazyPatientInsightsPanel = lazy(() =>
-	import("@/components/patients/analytics/PatientInsightsPanel").then((m) => ({
+	import("@/components/patient/analytics/PatientInsightsPanel").then((m) => ({
 		default: m.PatientInsightsPanel,
 	})),
 );
