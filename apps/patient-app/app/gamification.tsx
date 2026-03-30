@@ -18,6 +18,7 @@ import { Achievement, ShopItem, Quest, GamificationProfile } from '@/types/api';
 import { Card } from '@/components';
 import { Spacing } from '@/constants/spacing';
 import { router } from 'expo-router';
+import Animated, { FadeIn, ZoomIn, FadeOut } from 'react-native-reanimated';
 
 const { width } = Dimensions.get('window');
 
@@ -30,6 +31,7 @@ export default function GamificationScreen() {
   const [quests, setQuests] = useState<Quest[]>([]);
   const [achievements, setAchievements] = useState<Achievement[]>([]);
   const [shopItems, setShopItems] = useState<ShopItem[]>([]);
+  const [showSuccess, setShowSuccess] = useState(false);
 
   const fetchData = useCallback(async () => {
     try {
