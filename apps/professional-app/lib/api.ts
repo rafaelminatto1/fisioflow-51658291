@@ -741,6 +741,7 @@ export async function createPartnership(data: Partial<ApiPartnership>): Promise<
     data,
   });
   if (response.error) throw new Error(response.error);
+  if (!response.data) throw new Error('Resposta inválida ao criar parceria');
   return response.data;
 }
 
@@ -750,6 +751,7 @@ export async function updatePartnership(id: string, data: Partial<ApiPartnership
     data,
   });
   if (response.error) throw new Error(response.error);
+  if (!response.data) throw new Error('Resposta inválida ao atualizar parceria');
   return response.data;
 }
 
