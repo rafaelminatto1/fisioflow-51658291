@@ -71,6 +71,8 @@ app.get('/', requireAuth, async (c) => {
   const { patientId, status, appointmentId, limit = '20', offset = '0' } = c.req.query();
 
   if (!patientId) return c.json({ error: 'patientId é obrigatório' }, 400);
+  if (!isValidUuid(patientId)) return c.json({ error: 'patientId inválido' }, 400);
+  if (appointmentId && !isValidUuid(appointmentId)) return c.json({ error: 'appointmentId inválido' }, 400);
 
   const limitNum = Math.min(200, Math.max(1, parseInt(limit) || 20));
   const offsetNum = Math.max(0, parseInt(offset) || 0);
@@ -209,6 +211,7 @@ app.get('/:id', requireAuth, async (c) => {
   const db = createDb(c.env);
   const id = c.req.param('id');
   if (!id) return c.json({ error: 'ID é obrigatório' }, 400);
+  if (!isValidUuid(id)) return c.json({ error: 'ID inválido' }, 400);
 
   const [row] = await db.select()
     .from(sessions)
@@ -225,6 +228,7 @@ app.post('/:id/finalize', requireAuth, async (c) => {
   const db = createDb(c.env);
   const id = c.req.param('id');
   if (!id) return c.json({ error: 'ID é obrigatório' }, 400);
+  if (!isValidUuid(id)) return c.json({ error: 'ID inválido' }, 400);
 
   const [row] = await db.update(sessions)
     .set({
@@ -252,6 +256,7 @@ app.post('/', requireAuth, async (c) => {
 
   const patientId = String(body.patient_id ?? '').trim();
   if (!patientId) return c.json({ error: 'patient_id é obrigatório' }, 400);
+  if (!isValidUuid(patientId)) return c.json({ error: 'patient_id inválido' }, 400);
 
   const recordDate = body.record_date ? new Date(String(body.record_date)) : new Date();
 
@@ -282,6 +287,7 @@ app.put('/:id', requireAuth, async (c) => {
   const db = createDb(c.env);
   const id = c.req.param('id');
   if (!id) return c.json({ error: 'ID é obrigatório' }, 400);
+  if (!isValidUuid(id)) return c.json({ error: 'ID inválido' }, 400);
 
   const body = (await c.req.json()) as Record<string, any>;
 
@@ -311,6 +317,7 @@ app.delete('/:id', requireAuth, async (c) => {
   const db = createDb(c.env);
   const id = c.req.param('id');
   if (!id) return c.json({ error: 'ID é obrigatório' }, 400);
+  if (!isValidUuid(id)) return c.json({ error: 'ID inválido' }, 400);
 
   const [existing] = await db.select({ status: sessions.status })
     .from(sessions)
@@ -441,6 +448,7 @@ app.delete('/templates/:templateId', requireAuth, async (c) => {
 app.get('/:id/attachments', requireAuth, async (c) => {
   const db = createDb(c.env);
   const id = c.req.param('id');
+  if (!isValidUuid(id)) return c.json({ error: 'ID inválido' }, 400);
 
   const results = await db.select()
     .from(sessionAttachments)
@@ -468,6 +476,7 @@ app.post('/:id/attachments', requireAuth, async (c) => {
   const user = c.get('user');
   const db = createDb(c.env);
   const id = c.req.param('id');
+  if (!isValidUuid(id)) return c.json({ error: 'ID inválido' }, 400);
   const body = (await c.req.json()) as any;
 
   if (!body.file_url) return c.json({ error: 'file_url é obrigatório' }, 400);

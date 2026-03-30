@@ -21,6 +21,7 @@ import {
 import { fisioLogger as logger } from "@/lib/errors/logger";
 import { AuthLayout } from "@/components/auth/AuthLayout";
 import { LoginForm } from "@/components/auth/LoginForm";
+import { OAuthButtons } from "@/components/auth/OAuthButtons";
 import { RegisterForm } from "@/components/auth/RegisterForm";
 import { signInWithOAuth } from "@/integrations/neon/auth";
 

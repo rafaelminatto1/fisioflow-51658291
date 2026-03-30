@@ -20,7 +20,7 @@ import {
 	PatientCreateModal,
 	PatientPageInsights,
 	PatientsPageHeader,
-} from "@/components/patients";
+} from "@/components/patient";
 import { PatientListItem } from "@/components/patient/PatientListItem";
 import { EmptyState } from "@/components/ui";
 import { Button } from "@/components/ui/button";
