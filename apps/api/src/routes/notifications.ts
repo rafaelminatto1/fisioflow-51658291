@@ -5,51 +5,7 @@ import type { Env } from '../types/env';
 import { broadcastToOrg } from '../lib/realtime';
 
 const app = new Hono<{ Bindings: Env; Variables: AuthVariables }>();
-type Pool = ReturnType<typeof createPool>;
 
-let notificationsSchemaReady: Promise<void> | null = null;
-
-async function ensureNotificationsSchema(pool: Pool) {
-  if (!notificationsSchemaReady) {
-    notificationsSchemaReady = (async () => {
-      const statements = [
-        `CREATE TABLE IF NOT EXISTS notifications (
-          id TEXT PRIMARY KEY DEFAULT md5(random()::text || clock_timestamp()::text),
-          organization_id TEXT,
-          user_id TEXT NOT NULL,
-          type TEXT NOT NULL DEFAULT 'info',
-          title TEXT NOT NULL,
-          message TEXT,
-          link TEXT,
-          is_read BOOLEAN NOT NULL DEFAULT FALSE,
-          metadata JSONB NOT NULL DEFAULT '{}'::jsonb,
-          created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
-        )`,
-        `ALTER TABLE IF EXISTS notifications ADD COLUMN IF NOT EXISTS id TEXT`,
-        `ALTER TABLE IF EXISTS notifications ADD COLUMN IF NOT EXISTS organization_id TEXT`,
-        `ALTER TABLE IF EXISTS notifications ADD COLUMN IF NOT EXISTS user_id TEXT`,
-        `ALTER TABLE IF EXISTS notifications ADD COLUMN IF NOT EXISTS type TEXT NOT NULL DEFAULT 'info'`,
-        `ALTER TABLE IF EXISTS notifications ADD COLUMN IF NOT EXISTS title TEXT NOT NULL DEFAULT ''`,
-        `ALTER TABLE IF EXISTS notifications ADD COLUMN IF NOT EXISTS message TEXT`,
-        `ALTER TABLE IF EXISTS notifications ADD COLUMN IF NOT EXISTS link TEXT`,
-        `ALTER TABLE IF EXISTS notifications ADD COLUMN IF NOT EXISTS is_read BOOLEAN NOT NULL DEFAULT FALSE`,
-        `ALTER TABLE IF EXISTS notifications ADD COLUMN IF NOT EXISTS metadata JSONB NOT NULL DEFAULT '{}'::jsonb`,
-        `ALTER TABLE IF EXISTS notifications ADD COLUMN IF NOT EXISTS created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()`,
-        `CREATE INDEX IF NOT EXISTS idx_notifications_user_created_at ON notifications (user_id, created_at DESC)`,
-        `CREATE INDEX IF NOT EXISTS idx_notifications_user_unread ON notifications (user_id, is_read, created_at DESC)`,
-      ];
-
-      for (const statement of statements) {
-        await pool.query(statement);
-      }
-    })().catch((error) => {
-      notificationsSchemaReady = null;
-      throw error;
-    });
-  }
-
-  await notificationsSchemaReady;
-}
 
 app.get('/', requireAuth, async (c) => {
   const user = c.get('user');
@@ -57,8 +13,6 @@ app.get('/', requireAuth, async (c) => {
   const { unreadOnly, limit = '50' } = c.req.query();
 
   try {
-    await ensureNotificationsSchema(pool);
-
     const conditions = ['user_id = $1'];
     const params: unknown[] = [user.uid];
     if (unreadOnly === 'true') conditions.push('is_read = false');
@@ -79,8 +33,6 @@ app.post('/', requireAuth, async (c) => {
   const user = c.get('user');
   const pool = await createPool(c.env);
   try {
-    await ensureNotificationsSchema(pool);
-
     const body = (await c.req.json()) as Record<string, unknown>;
     const result = await pool.query(
       `INSERT INTO notifications (organization_id, user_id, type, title, message, link, metadata)
@@ -121,8 +73,6 @@ app.put('/:id/read', requireAuth, async (c) => {
   const { id } = c.req.param();
 
   try {
-    await ensureNotificationsSchema(pool);
-
     const result = await pool.query(
       `
         UPDATE notifications
@@ -148,7 +98,6 @@ app.put('/read-all', requireAuth, async (c) => {
   const user = c.get('user');
   const pool = await createPool(c.env);
   try {
-    await ensureNotificationsSchema(pool);
     await pool.query('UPDATE notifications SET is_read = true WHERE user_id = $1', [user.uid]);
     return c.json({ ok: true });
   } catch (error) {
@@ -163,8 +112,6 @@ app.delete('/:id', requireAuth, async (c) => {
   const { id } = c.req.param();
 
   try {
-    await ensureNotificationsSchema(pool);
-
     const result = await pool.query(
       'DELETE FROM notifications WHERE id = $1 AND user_id = $2 RETURNING id',
       [id, user.uid],
