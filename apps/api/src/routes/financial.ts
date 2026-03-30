@@ -29,7 +29,7 @@ import {
   appointments,
   patients,
 } from '@fisioflow/db';
-import { createDb } from '../lib/db';
+import { createDb, createPool } from '../lib/db';
 import { requireAuth, type AuthVariables } from '../lib/auth';
 import type { Env } from '../types/env';
 
@@ -1566,6 +1566,53 @@ app.get('/prediction', requireAuth, async (c) => {
       }
     }
   });
+});
+
+// ─── Card→Patient mapping (receipt OCR automation) ────────────────────────────
+app.get('/card-mapping/:digits', requireAuth, async (c) => {
+  const user = c.get('user');
+  const digits = c.req.param('digits').replace(/\D/g, '').slice(-4);
+  if (digits.length !== 4) return c.json({ data: null });
+  const pool = createPool(c.env);
+  try {
+    await pool.query(`CREATE TABLE IF NOT EXISTS card_patient_mappings (
+      id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+      organization_id TEXT NOT NULL,
+      card_digits CHAR(4) NOT NULL,
+      patient_id UUID NOT NULL,
+      patient_name TEXT,
+      created_at TIMESTAMPTZ DEFAULT NOW(),
+      UNIQUE(organization_id, card_digits)
+    )`);
+    const res = await pool.query(
+      `SELECT patient_id, patient_name FROM card_patient_mappings WHERE organization_id = $1 AND card_digits = $2`,
+      [user.organizationId, digits]
+    );
+    return c.json({ data: res.rows[0] ?? null });
+  } catch {
+    return c.json({ data: null });
+  }
+});
+
+app.post('/card-mapping', requireAuth, async (c) => {
+  const user = c.get('user');
+  const body = await c.req.json() as { patientId: string; cardLastDigits: string; patientName?: string };
+  const digits = String(body.cardLastDigits ?? '').replace(/\D/g, '').slice(-4);
+  if (!body.patientId || digits.length !== 4) {
+    return c.json({ error: 'patientId e cardLastDigits (4 dígitos) são obrigatórios' }, 400);
+  }
+  const pool = createPool(c.env);
+  try {
+    await pool.query(
+      `INSERT INTO card_patient_mappings (organization_id, card_digits, patient_id, patient_name)
+       VALUES ($1, $2, $3, $4)
+       ON CONFLICT (organization_id, card_digits) DO UPDATE SET patient_id = EXCLUDED.patient_id, patient_name = EXCLUDED.patient_name`,
+      [user.organizationId, digits, body.patientId, body.patientName ?? null]
+    );
+    return c.json({ ok: true });
+  } catch (err: any) {
+    return c.json({ error: 'Erro ao salvar mapeamento', details: err.message }, 500);
+  }
 });
 
 export { app as financialRoutes };
