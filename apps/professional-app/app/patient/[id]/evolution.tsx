@@ -157,6 +157,8 @@ export default function EvolutionScreen() {
 
   const [focusedField, setFocusedField] = useState<SOAPKey | null>(null);
   const [isUploading, setIsUploading] = useState(false);
+  const [selectedPhotoUri, setSelectedPhotoUri] = useState<string | null>(null);
+  const [isViewerVisible, setIsViewerVisible] = useState(false);
 
   const isEditing = !!evolutionId;
 
@@ -455,9 +457,20 @@ export default function EvolutionScreen() {
           onAddPhoto={handleAddPhoto}
           onTakePhoto={handleTakePhoto}
           onRemovePhoto={handleRemovePhoto}
+          onViewPhoto={(uri) => {
+            setSelectedPhotoUri(uri);
+            setIsViewerVisible(true);
+          }}
           colors={colors}
         />
       </View>
+
+      <FullScreenImageModal 
+        visible={isViewerVisible} 
+        uri={selectedPhotoUri} 
+        onClose={() => setIsViewerVisible(false)} 
+        colors={colors} 
+      />
 
       <View style={styles.footer}>
         <TouchableOpacity
@@ -615,6 +628,22 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 16,
+  },
+  fullScreenOverlay: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  closeFullBtn: {
+    position: 'absolute',
+    top: 50,
+    right: 20,
+    zIndex: 10,
+    padding: 10,
+  },
+  fullScreenImage: {
+    width: '100%',
+    height: '80%',
   },
   footer: {
     padding: 16,
