@@ -43,6 +43,7 @@ import {
 	User,
 	Zap,
 	Move,
+	Calculator,
 } from "lucide-react";
 import {
 	Collapsible,
@@ -168,6 +169,9 @@ const adminSubmenu = [
 const financeiroSubmenu = [
 	{ icon: DollarSign, label: "Financeiro Hub", href: "/financial" },
 	{ icon: Receipt, label: "Faturamento e Recibos", href: "/financeiro/recibos" },
+	{ icon: Calculator, label: "Simulador de Receitas", href: "/financeiro/simulador" },
+	{ icon: Users, label: "Comissões", href: "/financeiro/comissoes" },
+	{ icon: FileText, label: "Demonstrativo", href: "/financeiro/demonstrativo" },
 ];
 
 const configuracoesSubmenu = [

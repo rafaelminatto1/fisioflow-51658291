@@ -14,7 +14,7 @@
 - `src/components/schedule/AppointmentQuickEditModal.tsx`
 - `src/pages/patients/PatientProfilePage.tsx`
 - `src/components/patient/dashboard/PatientDashboard360.tsx`
-- `src/components/patients/PatientDashboard360.tsx`
+- `src/components/patient/PatientDashboard360.tsx`
 - `src/components/reports/AdvancedReportGenerator.tsx`
 
 **Commits:** `2bd1447e`, `acaea0f5`
