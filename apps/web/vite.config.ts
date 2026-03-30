@@ -180,7 +180,7 @@ export default defineConfig(({ mode }) => {
 							// react-pdf + pdfjs-dist — renderização PDF, ~1.5 MB
 							{
 								name: "vendor-react-pdf",
-								test: /node_modules\/(react-pdf|pdfjs-dist)/,
+								test: /node_modules\/(@react-pdf|react-pdf|pdfjs-dist)/,
 								priority: 25,
 							},
 							// @tiptap + prosemirror + tippy.js — editor rico, ~424 KB
@@ -213,16 +213,28 @@ export default defineConfig(({ mode }) => {
 								test: /node_modules\/@sentry/,
 								priority: 16,
 							},
+							// @radix-ui — primitives usadas em boa parte do app, mas separadas do core React
+							{
+								name: "vendor-radix",
+								test: /node_modules\/@radix-ui/,
+								priority: 15,
+							},
+							// framer-motion — animações carregadas sob demanda em várias telas
+							{
+								name: "vendor-motion",
+								test: /node_modules\/(framer-motion|motion-utils|@motionone)/,
+								priority: 14,
+							},
 							// recharts — gráficos dashboard
 							{
 								name: "vendor-charts",
 								test: /node_modules\/recharts/,
-								priority: 15,
+								priority: 13,
 							},
-							// react + framer-motion + motion-utils + @radix-ui — core UI, mais estável
+							// react + react-dom — runtime base do app
 							{
 								name: "vendor-react",
-								test: /node_modules\/(react|react-dom|framer-motion|motion-utils|@motionone|@radix-ui)/,
+								test: /node_modules\/(react|react-dom)/,
 								priority: 10,
 							},
 						],

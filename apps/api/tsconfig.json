@@ -3,6 +3,7 @@
     "target": "ES2022",
     "module": "ES2022",
     "moduleResolution": "bundler",
+    "baseUrl": ".",
     "lib": ["ES2022"],
     "types": ["@cloudflare/workers-types"],
     "strict": true,
@@ -13,7 +14,9 @@
     "esModuleInterop": false,
     "jsx": "react-jsx",
     "paths": {
-      "@fisioflow/db": ["../../packages/db/src"]
+      "@fisioflow/db": ["../../packages/db/src"],
+      "drizzle-orm": ["../../node_modules/drizzle-orm"],
+      "drizzle-orm/*": ["../../node_modules/drizzle-orm/*"]
     }
   },
   "include": ["src/**/*.ts"],

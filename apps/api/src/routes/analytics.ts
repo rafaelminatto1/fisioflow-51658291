@@ -4,7 +4,7 @@ import { requireAuth, type AuthVariables } from '../lib/auth';
 import { createPool } from '../lib/db';
 import { registerPatientAnalyticsRoutes } from './analytics/patient';
 import { registerMlAnalyticsRoutes } from './analytics/ml';
-import { hasTable, parseDate } from './analytics/shared';
+import { parseDate } from './analytics/shared';
 
 const app = new Hono<{ Bindings: Env; Variables: AuthVariables }>();
 
@@ -39,28 +39,28 @@ app.get('/dashboard', requireAuth, async (c) => {
     pool.query(
       `SELECT COUNT(*)::int AS total
        FROM patients
-       WHERE organization_id = $1 AND is_active = true`,
+       WHERE organization_id = $1 AND COALESCE(is_active, true) = true`,
       [user.organizationId],
     ),
-    { rows: [] as PaymentTrendRow[] },
+    Promise.resolve({ rows: [] as PaymentTrendRow[] }),
     pool.query(
       `SELECT
-         COUNT(*) FILTER (WHERE status = 'completed')::int AS total_completed,
-         COUNT(*) FILTER (WHERE status IN ('scheduled','confirmed'))::int AS upcoming,
-         COUNT(*) AS total,
-         COUNT(*) FILTER (WHERE status = 'no_show')::int AS no_show,
-         COUNT(*) FILTER (WHERE status = 'confirmed')::int AS confirmed
+         COUNT(*) FILTER (WHERE status::text IN ('completed', 'atendido'))::int AS total_completed,
+         COUNT(*) FILTER (WHERE status::text IN ('scheduled', 'confirmed', 'agendado', 'presenca_confirmada'))::int AS upcoming,
+         COUNT(*)::int AS total,
+         COUNT(*) FILTER (WHERE status::text IN ('no_show', 'faltou', 'faltou_sem_aviso', 'faltou_com_aviso'))::int AS no_show,
+         COUNT(*) FILTER (WHERE status::text IN ('confirmed', 'presenca_confirmada'))::int AS confirmed
        FROM appointments
        WHERE organization_id = $1
-         AND start_time BETWEEN $2::timestamp AND $3::timestamp`,
-      [user.organizationId, `${startDate}T00:00:00`, `${endDate}T23:59:59`],
+         AND date BETWEEN $2::date AND $3::date`,
+      [user.organizationId, startDate, endDate],
     ),
     pool.query(
       `SELECT COUNT(*)::int AS count
        FROM appointments
        WHERE organization_id = $1
-         AND start_time BETWEEN $2::timestamp AND $3::timestamp`,
-      [user.organizationId, `${endDate}T00:00:00`, `${endDate}T23:59:59`],
+         AND date = $2::date`,
+      [user.organizationId, endDate],
     ),
     pool.query(
       `SELECT
@@ -68,7 +68,7 @@ app.get('/dashboard', requireAuth, async (c) => {
          AVG(duration_minutes)::numeric AS avg_session_duration
        FROM sessions
        WHERE organization_id = $1
-         AND started_at BETWEEN $2::timestamp AND $3::timestamp`,
+         AND date BETWEEN $2::timestamp AND $3::timestamp`,
       [user.organizationId, `${startDate}T00:00:00`, `${endDate}T23:59:59`],
     ),
   ]);
@@ -212,10 +212,6 @@ app.get('/top-exercises', requireAuth, async (c) => {
   const user = c.get('user');
   const pool = await createPool(c.env);
   const limitValue = Math.min(Number(c.req.query('limit') ?? 5) || 5, 20);
-
-  if (!(await hasTable(pool, 'prescribed_exercises'))) {
-    return c.json({ data: [] });
-  }
 
   const result = await pool.query(
     `
