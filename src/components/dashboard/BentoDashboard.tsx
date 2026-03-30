@@ -286,7 +286,7 @@ export const BentoDashboard: React.FC = () => {
 					</CardHeader>
 					<CardContent className="p-8 pt-0 space-y-6">
 						<div className="space-y-4">
-							<div className="p-5 rounded-[2rem] bg-white/5 border border-white/10 hover:bg-white/10 transition-colors cursor-pointer group/insight" onClick={() => navigate("/pacientes")}>
+							<div className="p-5 rounded-[2rem] bg-white/5 border border-white/10 hover:bg-white/10 transition-colors cursor-pointer group/insight" onClick={() => navigate("/patients")}>
 								<div className="flex items-center gap-3 mb-2">
 									<div className="p-2 bg-amber-500/20 rounded-xl">
 										<AlertCircle className="h-4 w-4 text-amber-500" />
