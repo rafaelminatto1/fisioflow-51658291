@@ -10,6 +10,9 @@ workflows:
       vars:
         APP_DIR: "apps/professional-app"
         BUNDLE_ID: "com.fisioflow.professionals"
+        EXPO_PUBLIC_API_URL: "https://moocafisio.com.br/api"
+        # Garante que o build não trave esperando entrada do usuário
+        CI: "true"
     triggering:
       events:
         - push
@@ -19,18 +22,22 @@ workflows:
           npm install -g pnpm --force
       - name: Install dependencies
         script: |
+          # pnpm install no root para garantir que pacotes compartilhados e a estrutura monorepo estejam corretos
           pnpm install --no-frozen-lockfile
       - name: Expo Prebuild
         script: |
           cd $APP_DIR
+          # --no-install evita que o expo tente rodar npm/yarn interno
           npx expo prebuild --platform ios --no-install
       - name: Install CocoaPods
         script: |
           cd $APP_DIR/ios
-          pod install
+          # --repo-update garante que as specs estejam em dia, importante para novos módulos
+          pod install --repo-update
       - name: Build iOS IPA
         script: |
           cd $APP_DIR/ios
+          
           # Detecta o workspace automaticamente
           export WORKSPACE=$(ls -d *.xcworkspace | head -1)
           # Detecta o primeiro scheme disponível
@@ -38,6 +45,7 @@ workflows:
           
           echo "Building Workspace: $WORKSPACE with Scheme: $SCHEME"
           
+          # build-ipa lida com o export do arquivo final assinado
           xcode-project build-ipa \
             --workspace "$WORKSPACE" \
             --scheme "$SCHEME"
