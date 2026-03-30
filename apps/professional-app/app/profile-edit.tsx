@@ -432,7 +432,7 @@ export default function ProfileEditScreen() {
                   title="Configurar Horários"
                   onPress={() => {
                     medium();
-                    Alert.alert('Em breve', 'Funcionalidade em desenvolvimento');
+                    router.push('/working-hours' as any);
                   }}
                   variant="outline"
                   style={{ marginTop: 16 }}

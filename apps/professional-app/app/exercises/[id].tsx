@@ -1,4 +1,4 @@
-import { View, Text, StyleSheet, ScrollView, ActivityIndicator, Image, TouchableOpacity, Alert } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, ActivityIndicator, Image, TouchableOpacity, Alert, Linking } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useQuery } from '@tanstack/react-query';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -81,9 +81,9 @@ export default function ExerciseDetailScreen() {
 
           {exercise.videoUrl && (
             <View style={styles.section}>
-                <Button 
-                    title="Assistir Vídeo" 
-                    onPress={() => Alert.alert("Abrir vídeo", "Funcionalidade de abrir vídeo não implementada.")} 
+                <Button
+                    title="Assistir Vídeo"
+                    onPress={() => Linking.openURL(exercise.videoUrl!).catch(() => Alert.alert('Erro', 'Não foi possível abrir o vídeo.'))}
                     leftIcon="logo-youtube"
                 />
             </View>
