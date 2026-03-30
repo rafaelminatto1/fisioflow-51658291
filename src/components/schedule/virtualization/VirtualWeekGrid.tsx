@@ -377,8 +377,11 @@ TimeSlotRow.displayName = "TimeSlotRow";
 			return () => ro.disconnect();
 		}, []);
 
-		// Fit all slots into the visible height (min 18px so text stays readable)
-		const slotHeight = Math.max(18, Math.floor(containerHeight / timeSlots.length));
+		const slotCount = Math.max(1, timeSlots.length);
+
+		// Use the exact available height so the last row reaches the bottom edge
+		// without leaving a remainder gap from integer rounding.
+		const slotHeight = Math.max(18, containerHeight / slotCount);
 
 		// Agrupar appointments por time slot e calcular layout lateral por conflito real
 		const { appointmentsByTimeSlot, layoutByAppointmentId } = useMemo(() => {

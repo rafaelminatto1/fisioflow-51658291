@@ -1,6 +1,6 @@
 import React from "react";
-import { OptionsTab } from "../AppointmentDialogSegments";
 import { type RecurringConfig } from "@/types/appointment";
+import { AppointmentOptionsPanel } from "../AppointmentOptionsPanel";
 import { type SelectedEquipment } from "../EquipmentSelector";
 import { type AppointmentReminderData } from "../AppointmentReminder";
 
@@ -29,7 +29,7 @@ export const AppointmentOptionsTab: React.FC<AppointmentOptionsTabProps> = ({
 }) => {
 	return (
 		<div className="mt-0 space-y-3 sm:space-y-4">
-			<OptionsTab
+			<AppointmentOptionsPanel
 				disabled={disabled}
 				currentMode={currentMode}
 				selectedEquipments={selectedEquipments}

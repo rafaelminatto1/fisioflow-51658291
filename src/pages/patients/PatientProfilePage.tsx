@@ -11,7 +11,10 @@ import { APP_ROUTES, patientRoutes } from "@/lib/routing/appRoutes";
 import { PatientProfileHeader } from "@/components/patient/PatientProfileHeader";
 import { PersonalDataTab } from "@/components/patient/PersonalDataTab";
 import { PatientClinicalHistoryTab } from "@/components/patient/PatientClinicalHistoryTab";
+import { PatientAnalyticsTab } from "@/components/patient/PatientAnalyticsTab";
+import { PatientDocumentsTab } from "@/components/patient/PatientDocumentsTab";
 import { PatientFinancialTab } from "@/components/patient/PatientFinancialTab";
+import { PatientGamificationTab } from "@/components/patient/PatientGamificationTab";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -20,17 +23,12 @@ import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 import { PatientTimeline } from "@/components/patient/PatientTimeline";
 import {
-	Calendar as CalendarIcon,
 	Activity,
 	Trophy,
-	Files,
-	Trash,
-	Download,
-	File as FileIcon,
 	Brain,
 	Sparkles,
-	Gift,
 	History,
+	ClipboardList,
 } from "lucide-react";
 import EditPatientModal from "@/components/modals/EditPatientModal";
 
@@ -39,19 +37,11 @@ import {
 	usePatientProfileOptimized,
 	type ProfileTab,
 } from "@/hooks/usePatientProfileOptimized";
-import { useGamification } from "@/hooks/useGamification";
 import { usePatientEvolutionReport } from "@/hooks/usePatientEvolutionReport";
-import {
-	useUploadDocument,
-	useDeleteDocument,
-	useDownloadDocument,
-	type PatientDocument,
-} from "@/hooks/usePatientDocuments";
 import { useEvaluationForms } from "@/hooks/useEvaluationForms";
-import { usePatientLifecycleSummary } from "@/hooks/usePatientAnalytics";
 
 // UI Components
-import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import {
 	Dialog,
 	DialogContent,
@@ -60,15 +50,6 @@ import {
 	DialogDescription,
 	DialogFooter,
 } from "@/components/ui/dialog";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import {
-	Select,
-	SelectContent,
-	SelectItem,
-	SelectTrigger,
-	SelectValue,
-} from "@/components/ui/select";
 import { ScrollArea } from "@/components/ui/scroll-area";
 
 // Lazy loading para componentes de abas pesadas
@@ -102,68 +83,9 @@ const LazyPatientEvolutionDashboard = lazy(() =>
 		default: m.PatientEvolutionDashboard,
 	})),
 );
-const LazyPatientAnalyticsDashboard = lazy(() =>
-	import("@/components/patient/analytics/PatientAnalyticsDashboard").then(
-		(m) => ({ default: m.PatientAnalyticsDashboard }),
-	),
-);
-const LazyAIAssistantPanel = lazy(() =>
-	import("@/components/patient/analytics/AIAssistantPanel").then((m) => ({
-		default: m.AIAssistantPanel,
-	})),
-);
-const LazyPatientAIChat = lazy(() =>
-	import("@/components/ai/PatientAIChat").then((m) => ({
-		default: m.PatientAIChat,
-	})),
-);
-const LazyPatientSmartSummary = lazy(() =>
-	import("@/components/ai/PatientSmartSummary").then((m) => ({
-		default: m.PatientSmartSummary,
-	})),
-);
-const LazyDoctorReferralReportGenerator = lazy(() =>
-	import("@/components/reports/DoctorReferralReportGenerator").then((m) => ({
-		default: m.DoctorReferralReportGenerator,
-	})),
-);
-const LazyPatientLifecycleChart = lazy(() =>
-	import("@/components/patient/analytics/PatientLifecycleChart").then((m) => ({
-		default: m.PatientLifecycleChart,
-	})),
-);
-const LazyPatientInsightsPanel = lazy(() =>
-	import("@/components/patient/analytics/PatientInsightsPanel").then((m) => ({
-		default: m.PatientInsightsPanel,
-	})),
-);
-const LazyGamificationHeader = lazy(
-	() => import("@/components/gamification/GamificationHeader"),
-);
-const LazyStreakCalendar = lazy(
-	() => import("@/components/gamification/StreakCalendar"),
-);
-const LazyLevelJourneyMap = lazy(
-	() => import("@/components/gamification/LevelJourneyMap"),
-);
-const LazyLeaderboard = lazy(() =>
-	import("@/components/gamification/Leaderboard").then((m) => ({
-		default: m.Leaderboard,
-	})),
-);
-const LazyRewardShop = lazy(() =>
-	import("@/components/gamification/RewardShop").then((m) => ({
-		default: m.RewardShop,
-	})),
-);
 const LazyPatientActivityLabTab = lazy(() =>
 	import("@/components/patient/PatientActivityLabTab").then((m) => ({
 		default: m.PatientActivityLabTab,
-	})),
-);
-const LazyDocumentScanner = lazy(() =>
-	import("@/components/patient/DocumentScanner").then((m) => ({
-		default: m.DocumentScanner,
 	})),
 );
 
@@ -236,399 +158,6 @@ const OverviewTab = ({
 					</Suspense>
 				</div>
 			)}
-		</div>
-	);
-};
-
-const DocumentsTab = ({
-	patientId,
-	documents,
-	isLoading,
-}: {
-	patientId: string;
-	documents: PatientDocument[];
-	isLoading: boolean;
-}) => {
-	const uploadDocument = useUploadDocument();
-	const deleteDocument = useDeleteDocument();
-	const downloadDocument = useDownloadDocument();
-	const [uploading, setUploading] = useState(false);
-	const [uploadDialogOpen, setUploadDialogOpen] = useState(false);
-	const [selectedCategory, setSelectedCategory] =
-		useState<PatientDocument["category"]>("outro");
-	const [selectedFile, setSelectedFile] = useState<File | null>(null);
-	const [description, setDescription] = useState("");
-
-	const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
-		const file = e.target.files?.[0];
-		if (file) {
-			setSelectedFile(file);
-			setUploadDialogOpen(true);
-		}
-	};
-
-	const handleUploadConfirm = async () => {
-		if (!selectedFile) return;
-
-		setUploading(true);
-		try {
-			await uploadDocument.mutateAsync({
-				patient_id: patientId,
-				file: selectedFile,
-				category: selectedCategory,
-				description: description || undefined,
-			});
-			setUploadDialogOpen(false);
-			setSelectedFile(null);
-			setSelectedCategory("outro");
-			setDescription("");
-		} finally {
-			setUploading(false);
-		}
-	};
-
-	if (isLoading) {
-		return (
-			<div className="p-8 text-center">
-				<Skeleton className="h-40 w-full mx-auto" />
-			</div>
-		);
-	}
-
-	const formatFileSize = (bytes: number) => {
-		if (bytes < 1024) return bytes + " B";
-		if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + " KB";
-		return (bytes / (1024 * 1024)).toFixed(1) + " MB";
-	};
-
-	const categoryLabels: Record<PatientDocument["category"], string> = {
-		laudo: "Laudo",
-		exame: "Exame",
-		receita: "Receita",
-		termo: "Termo",
-		outro: "Outro",
-	};
-
-	return (
-		<div className="space-y-6">
-			<Suspense fallback={<Skeleton className="h-20 w-full rounded-xl" />}>
-				<LazyDocumentScanner
-					onScanComplete={(text) =>
-						alert("Texto extraído: " + text.substring(0, 100) + "...")
-					}
-				/>
-			</Suspense>
-
-			<Card className="border-2 border-dashed border-blue-200 bg-blue-50/10 hover:bg-blue-50/30 transition-colors rounded-xl shadow-sm">
-				<CardContent className="p-8">
-					<div className="flex flex-col items-center justify-center">
-						<div className="h-16 w-16 bg-blue-100 rounded-full flex items-center justify-center mb-4">
-							<Files className="h-8 w-8 text-blue-600" />
-						</div>
-						<p className="text-slate-600 font-medium mb-1">
-							Arraste arquivos aqui ou clique para selecionar
-						</p>
-						<p className="text-xs text-slate-400 mb-6">
-							Suporta PDF, JPG, PNG e outros formatos comuns.
-						</p>
-						<input
-							type="file"
-							onChange={handleFileSelect}
-							disabled={uploading}
-							className="hidden"
-							id="file-upload"
-						/>
-						<Label htmlFor="file-upload">
-							<Button
-								variant="outline"
-								disabled={uploading}
-								className="border-blue-200 text-blue-700 hover:bg-blue-50 cursor-pointer"
-								asChild
-							>
-								<span>{uploading ? "Enviando..." : "Selecionar Arquivo"}</span>
-							</Button>
-						</Label>
-					</div>
-				</CardContent>
-			</Card>
-
-			{documents && documents.length > 0 ? (
-				<div className="space-y-3">
-					{documents.map((doc: PatientDocument) => (
-						<Card
-							key={doc.id}
-							className="bg-white border-blue-100 shadow-sm rounded-xl hover:shadow-md transition-shadow group"
-						>
-							<CardContent className="p-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-								<div className="flex items-center gap-4 w-full sm:w-auto overflow-hidden">
-									<div className="p-3 bg-blue-50 rounded-xl shrink-0 group-hover:bg-blue-100 transition-colors">
-										<FileIcon className="h-6 w-6 text-blue-600" />
-									</div>
-									<div className="min-w-0 flex-1">
-										<p
-											className="font-bold text-sm text-slate-800 truncate"
-											title={doc.file_name}
-										>
-											{doc.file_name}
-										</p>
-										<div className="flex flex-wrap items-center gap-2 mt-1">
-											<Badge
-												variant="secondary"
-												className="bg-slate-100 text-slate-600 hover:bg-slate-200 px-2 py-0 text-[10px]"
-											>
-												{categoryLabels[doc.category]}
-											</Badge>
-											<span className="text-[10px] text-slate-400 font-medium">
-												{formatFileSize(doc.file_size)} •{" "}
-												{new Date(doc.created_at).toLocaleDateString("pt-BR")}
-											</span>
-										</div>
-										{doc.description && (
-											<p
-												className="text-xs text-slate-500 mt-1 truncate"
-												title={doc.description}
-											>
-												{doc.description}
-											</p>
-										)}
-									</div>
-								</div>
-								<div className="flex gap-2 w-full sm:w-auto justify-end">
-									<Button
-										variant="outline"
-										size="sm"
-										onClick={() => downloadDocument.mutate(doc)}
-										className="border-slate-200 text-slate-600 hover:text-blue-600 hover:border-blue-200 hover:bg-blue-50"
-									>
-										<Download className="h-4 w-4 mr-2" />
-										Baixar
-									</Button>
-									<Button
-										variant="ghost"
-										size="sm"
-										onClick={() => deleteDocument.mutate(doc)}
-										className="text-slate-400 hover:text-rose-600 hover:bg-rose-50"
-									>
-										<Trash className="h-4 w-4" />
-									</Button>
-								</div>
-							</CardContent>
-						</Card>
-					))}
-				</div>
-			) : (
-				<Card className="bg-slate-50 border-dashed border-slate-200 shadow-none rounded-xl">
-					<CardContent className="p-8 text-center flex flex-col items-center">
-						<Files className="h-10 w-10 text-slate-300 mb-3" />
-						<p className="text-slate-500 font-medium">Nenhum arquivo anexado</p>
-					</CardContent>
-				</Card>
-			)}
-
-			<Dialog open={uploadDialogOpen} onOpenChange={setUploadDialogOpen}>
-				<DialogContent>
-					<DialogHeader>
-						<DialogTitle>Categorizar Documento</DialogTitle>
-					</DialogHeader>
-					<div className="space-y-4 py-4">
-						<div className="space-y-2">
-							<Label>Arquivo selecionado</Label>
-							<p className="text-sm text-muted-foreground">
-								{selectedFile?.name}
-							</p>
-						</div>
-						<div className="space-y-2">
-							<Label>Categoria</Label>
-							<Select
-								value={selectedCategory}
-								onValueChange={(v) =>
-									setSelectedCategory(v as PatientDocument["category"])
-								}
-							>
-								<SelectTrigger>
-									<SelectValue />
-								</SelectTrigger>
-								<SelectContent>
-									<SelectItem value="laudo">Laudo</SelectItem>
-									<SelectItem value="exame">Exame</SelectItem>
-									<SelectItem value="receita">Receita</SelectItem>
-									<SelectItem value="termo">Termo</SelectItem>
-									<SelectItem value="outro">Outro</SelectItem>
-								</SelectContent>
-							</Select>
-						</div>
-						<div className="space-y-2">
-							<Label htmlFor="description">Descrição (opcional)</Label>
-							<Input
-								id="description"
-								placeholder="Adicione uma descrição para o documento..."
-								value={description}
-								onChange={(e) => setDescription(e.target.value)}
-							/>
-						</div>
-					</div>
-					<div className="flex justify-end gap-2">
-						<Button
-							variant="outline"
-							onClick={() => setUploadDialogOpen(false)}
-						>
-							Cancelar
-						</Button>
-						<Button onClick={handleUploadConfirm} disabled={uploading}>
-							{uploading ? "Enviando..." : "Enviar"}
-						</Button>
-					</div>
-				</DialogContent>
-			</Dialog>
-		</div>
-	);
-};
-
-const AnalyticsTab = ({
-	patientId,
-	patientName,
-	birthDate,
-	condition,
-}: {
-	patientId: string;
-	patientName: string;
-	birthDate?: string;
-	condition: string;
-}) => {
-	const { data: lifecycleSummary, isLoading: lifecycleLoading } =
-		usePatientLifecycleSummary(patientId);
-	const { data: records = [] } = useSoapRecordsV2(patientId);
-
-	const summaryHistory = useMemo(
-		() =>
-			records.map((r) => ({
-				date: r.recordDate,
-				subjective: r.subjective,
-				objective: r.objective,
-			})),
-		[records],
-	);
-
-	return (
-		<div className="space-y-6">
-			<div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-				<div className="lg:col-span-2">
-					<Suspense fallback={<LoadingSkeleton type="card" />}>
-						<LazyPatientSmartSummary
-							patientId={patientId}
-							patientName={patientName}
-							condition={condition}
-							history={summaryHistory}
-						/>
-					</Suspense>
-				</div>
-				<div className="lg:col-span-1">
-					<Suspense fallback={<LoadingSkeleton type="card" />}>
-						<LazyDoctorReferralReportGenerator
-							patientId={patientId}
-							patientName={patientName}
-							birthDate={birthDate}
-							condition={condition}
-						/>
-					</Suspense>
-				</div>
-			</div>
-
-			<Suspense fallback={<LoadingSkeleton type="card" />}>
-				<LazyPatientAnalyticsDashboard
-					patientId={patientId}
-					patientName={patientName}
-				/>
-			</Suspense>
-
-			<Suspense fallback={<LoadingSkeleton type="card" />}>
-				<LazyAIAssistantPanel patientId={patientId} patientName={patientName} />
-			</Suspense>
-
-			<Suspense fallback={<LoadingSkeleton type="card" />}>
-				<LazyPatientAIChat patientId={patientId} patientName={patientName} />
-			</Suspense>
-
-			<div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-				<Suspense fallback={<LoadingSkeleton type="card" />}>
-					<LazyPatientLifecycleChart
-						summary={lifecycleSummary || null}
-						isLoading={lifecycleLoading}
-					/>
-				</Suspense>
-
-				<Suspense fallback={<LoadingSkeleton type="card" />}>
-					<LazyPatientInsightsPanel
-						patientId={patientId}
-						limit={5}
-						showHeader={true}
-					/>
-				</Suspense>
-			</div>
-		</div>
-	);
-};
-
-const GamificationTab = ({ patientId }: { patientId: string }) => {
-	const { profile, xpPerLevel, currentXp, streak } = useGamification(patientId);
-
-	if (!profile) {
-		return (
-			<div className="flex flex-col items-center justify-center h-64 border rounded-lg bg-muted/10 border-dashed">
-				<Trophy className="h-10 w-10 text-muted-foreground mb-2" />
-				<p className="text-muted-foreground">
-					Gamificação não iniciada para este paciente
-				</p>
-				<Button variant="outline" size="sm" className="mt-4">
-					Iniciar Gamificação
-				</Button>
-			</div>
-		);
-	}
-
-	return (
-		<div className="space-y-8">
-			<Suspense fallback={<Skeleton className="h-32 w-full" />}>
-				<LazyGamificationHeader
-					level={profile.level}
-					currentXp={currentXp}
-					xpPerLevel={xpPerLevel}
-					streak={streak}
-				/>
-			</Suspense>
-
-			<div className="grid grid-cols-1 xl:grid-cols-3 gap-8">
-				<div className="xl:col-span-2 space-y-8">
-					<div>
-						<h3 className="text-xl font-bold mb-4 flex items-center gap-2">
-							<Gift className="w-5 h-5 text-primary" />
-							Loja de Vantagens
-						</h3>
-						<Suspense fallback={<LoadingSkeleton type="card" />}>
-							<LazyRewardShop />
-						</Suspense>
-					</div>
-
-					<Suspense fallback={<Skeleton className="h-64 w-full" />}>
-						<LazyLevelJourneyMap currentLevel={profile.level} />
-					</Suspense>
-				</div>
-
-				<div className="space-y-8">
-					<Suspense fallback={<LoadingSkeleton type="card" />}>
-						<LazyLeaderboard />
-					</Suspense>
-
-					<Suspense fallback={<LoadingSkeleton type="card" />}>
-						<LazyStreakCalendar
-							todayActivity={false}
-							activeDates={
-								profile.last_activity_date ? [profile.last_activity_date] : []
-							}
-						/>
-					</Suspense>
-				</div>
-			</div>
 		</div>
 	);
 };
@@ -834,7 +363,7 @@ export const PatientProfilePage = () => {
 							value="analytics"
 							className="mt-0 focus-visible:outline-none animate-in fade-in-50 duration-500 slide-in-from-bottom-2"
 						>
-							<AnalyticsTab
+							<PatientAnalyticsTab
 								patientId={id || ""}
 								patientName={patientName}
 								birthDate={(patient as any).birth_date}
@@ -876,14 +405,14 @@ export const PatientProfilePage = () => {
 							value="gamification"
 							className="mt-0 focus-visible:outline-none animate-in fade-in-50 duration-500 slide-in-from-bottom-2"
 						>
-							<GamificationTab patientId={id || ""} />
+							<PatientGamificationTab patientId={id || ""} />
 						</TabsContent>
 
 						<TabsContent
 							value="documents"
 							className="mt-0 focus-visible:outline-none animate-in fade-in-50 duration-500 slide-in-from-bottom-2"
 						>
-							<DocumentsTab
+							<PatientDocumentsTab
 								patientId={id || ""}
 								documents={documents as any}
 								isLoading={isLoadingDocuments}
