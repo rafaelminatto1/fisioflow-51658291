@@ -139,7 +139,7 @@ export default function DashboardScreen() {
                     <Ionicons name="fitness" size={22} color="#10B981" />
                   </View>
                   <Text style={[styles.miniTitle, { color: colors.text }]}>Exercícios</Text>
-                  <Text style={[styles.miniSub, { color: colors.textSecondary }]}>{exercises && exercises.length > 0 ? `${exercises.length} exercícios` : 'Carregando...'}</Text>
+                  <Text style={[styles.miniSub, { color: colors.textSecondary }]}>{exercises.length > 0 ? `${exercises.length} exercícios` : 'Carregando...'}</Text>
                 </TouchableOpacity>
 
                 <TouchableOpacity
