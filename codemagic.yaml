@@ -7,6 +7,12 @@ workflows:
       node: latest
       xcode: latest
       cocoapods: default
+      ios_signing:
+        distribution_type: ad_hoc
+        bundle_identifier: com.fisioflow.professionals
+        # Reference name cadastrado no painel do Codemagic
+        provisioning_profiles:
+          - fisioflow_pro_adhoc
       vars:
         APP_DIR: "apps/professional-app"
         BUNDLE_ID: "com.fisioflow.professionals"
@@ -34,7 +40,10 @@ workflows:
         script: |
           cd $APP_DIR/ios
           
-          # Configura o Xcode para usar os perfis injetados pela interface do Codemagic
+          # Initialize keychain
+          keychain initialize
+          
+          # Configura o Xcode usando os perfis injetados pelo Codemagic
           xcode-project use-profiles --project "FisioFlowPro.xcodeproj"
           
           export WORKSPACE=$(ls -d *.xcworkspace | head -1)
