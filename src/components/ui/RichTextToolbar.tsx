@@ -1,3 +1,4 @@
+import DOMPurify from 'dompurify';
 import React, { useRef, useState } from "react";
 import {
 	Bold,
@@ -589,7 +590,7 @@ export const RichTextToolbar: React.FC<RichTextToolbarProps> = ({
 							<div
 								className="command-preview rich-text-editor"
 								data-line-height="normal"
-								dangerouslySetInnerHTML={{ __html: selectedCommand.preview }}
+								dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(selectedCommand.preview) }}
 							/>
 						</div>
 					</div>

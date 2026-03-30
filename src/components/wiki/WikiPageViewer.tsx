@@ -1,3 +1,4 @@
+import DOMPurify from 'dompurify';
 /**
  * WikiPageViewer Component
  * Viewer for wiki pages with markdown rendering
@@ -24,7 +25,7 @@ export function WikiPageViewer({
 			<CardContent className="p-6">
 				<div className="prose max-w-none">
 					{content ? (
-						<div dangerouslySetInnerHTML={{ __html: content }} />
+						<div dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(content) }} />
 					) : (
 						<p className="text-muted-foreground">Carregando conteúdo...</p>
 					)}
