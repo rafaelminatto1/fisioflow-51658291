@@ -2,6 +2,7 @@ import React from "react";
 import { useNavigate } from "react-router-dom";
 import { MainLayout } from "@/components/layout/MainLayout";
 import { PatientForm } from "@/components/patient/PatientForm";
+import { APP_ROUTES, patientRoutes } from "@/lib/routing/appRoutes";
 import {
 	useCreatePatient,
 	type PatientCreateInput,
@@ -25,7 +26,7 @@ export const NewPatientPage = () => {
 			}
 			const result = await createMutation.mutateAsync(data);
 			// toast.success is already called in mutation onSuccess hook
-			navigate(`/patients/${result.id}`);
+			navigate(patientRoutes.profile(result.id));
 		} catch (error) {
 			console.error("[NewPatientPage] Erro ao criar paciente:", error);
 			// Error feedback is handled by mutation onError hook
@@ -77,7 +78,7 @@ export const NewPatientPage = () => {
 					<Button
 						variant="ghost"
 						size="icon"
-						onClick={() => navigate("/patients")}
+						onClick={() => navigate(APP_ROUTES.PATIENTS)}
 						className="-ml-2 touch-target"
 					>
 						<ArrowLeft className="h-5 w-5" />

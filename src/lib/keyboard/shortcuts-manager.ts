@@ -9,6 +9,7 @@
 
 import { useCallback, useEffect, useRef } from "react";
 import { fisioLogger as logger } from "@/lib/errors/logger";
+import { APP_ROUTES } from "@/lib/routing/appRoutes";
 
 export interface KeyboardShortcut {
 	key: string;
@@ -97,7 +98,7 @@ export const DEFAULT_SHORTCUTS: Record<string, KeyboardShortcut[]> = {
 			shiftKey: true,
 			description: "Ir para Agenda",
 			action: () => {
-				window.location.href = "/agenda";
+				window.location.href = APP_ROUTES.AGENDA;
 			},
 			category: "navigation",
 			preventDefault: true,
@@ -107,7 +108,7 @@ export const DEFAULT_SHORTCUTS: Record<string, KeyboardShortcut[]> = {
 			shiftKey: true,
 			description: "Ir para Pacientes",
 			action: () => {
-				window.location.href = "/patients";
+				window.location.href = APP_ROUTES.PATIENTS;
 			},
 			category: "navigation",
 			preventDefault: true,

@@ -4,18 +4,19 @@
  */
 
 import { useEffect, useCallback } from "react";
+import { APP_ROUTES } from "@/lib/routing/appRoutes";
 
 // Mapa de componentes para prefetch manual
 // Usamos a função de import que o React.lazy usa internamente
 const routeImports: Record<string, () => Promise<unknown>> = {
-	"/agenda": () => import("@/pages/Schedule"),
-	"/patients": () => import("@/pages/Patients"),
-	"/exercises": () => import("@/pages/Exercises"),
-	"/eventos": () => import("@/pages/Eventos"),
-	"/tarefas": () => import("@/pages/TarefasV2"),
-	"/financial": () => import("@/pages/Financial"),
-	"/reports": () => import("@/pages/Reports"),
-	"/settings": () => import("@/pages/Settings"),
+	[APP_ROUTES.AGENDA]: () => import("@/pages/Schedule"),
+	[APP_ROUTES.PATIENTS]: () => import("@/pages/Patients"),
+	[APP_ROUTES.EXERCISES]: () => import("@/pages/Exercises"),
+	[APP_ROUTES.EVENTS]: () => import("@/pages/Eventos"),
+	[APP_ROUTES.TASKS]: () => import("@/pages/TarefasV2"),
+	[APP_ROUTES.FINANCIAL]: () => import("@/pages/Financial"),
+	[APP_ROUTES.REPORTS]: () => import("@/pages/Reports"),
+	[APP_ROUTES.SETTINGS]: () => import("@/pages/Settings"),
 };
 
 export const useIntelligentPreload = () => {
@@ -24,7 +25,7 @@ export const useIntelligentPreload = () => {
 			if ("requestIdleCallback" in window) {
 				requestIdleCallback(() => {
 					// Preload apenas das 3 mais prováveis inicialmente
-					["/agenda", "/patients", "/dashboard"].forEach((route) => {
+					[APP_ROUTES.AGENDA, APP_ROUTES.PATIENTS, APP_ROUTES.DASHBOARD].forEach((route) => {
 						const importFn = routeImports[route];
 						if (importFn) {
 							importFn().catch(() => {}); // Preload silancioso

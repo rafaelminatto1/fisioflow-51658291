@@ -8,12 +8,13 @@ import {
 	Plus,
 } from "lucide-react";
 import { memo } from "react";
+import { APP_ROUTES } from "@/lib/routing/appRoutes";
 
 const navItems = [
-	{ icon: LayoutDashboard, label: "Início", href: "/agenda" },
-	{ icon: Users, label: "Pacientes", href: "/patients" },
-	{ icon: Dumbbell, label: "Exercícios", href: "/exercises" },
-	{ icon: DollarSign, label: "Financeiro", href: "/financial" },
+	{ icon: LayoutDashboard, label: "Início", href: APP_ROUTES.AGENDA },
+	{ icon: Users, label: "Pacientes", href: APP_ROUTES.PATIENTS },
+	{ icon: Dumbbell, label: "Exercícios", href: APP_ROUTES.EXERCISES },
+	{ icon: DollarSign, label: "Financeiro", href: APP_ROUTES.FINANCIAL },
 ];
 
 export const BottomNavigation = memo(function BottomNavigation() {
@@ -70,7 +71,7 @@ export const BottomNavigation = memo(function BottomNavigation() {
 
 				{/* Central Add Button - Otimizado para touch */}
 				<button
-					onClick={() => navigate("/agenda")}
+					onClick={() => navigate(APP_ROUTES.AGENDA)}
 					className="flex items-center justify-center w-14 h-14 sm:w-16 sm:h-14 bg-gradient-to-br from-primary to-primary-hover text-white rounded-2xl shadow-lg shadow-primary/30 -mt-6 border-4 border-white dark:border-background-dark hover:shadow-xl hover:shadow-primary/40 hover:scale-105 active:scale-95 transition-all duration-200 touch-target"
 					aria-label="Novo agendamento"
 				>
