@@ -6,6 +6,7 @@ import { requireAuth, type AuthVariables } from "../lib/auth";
 import { createDb } from "../lib/db";
 import { triggerInngestEvent } from "../lib/inngest-client";
 import { registerPatientClinicalDetailRoutes } from "./patients/clinical-details";
+import { isUuid } from "../lib/validators";
 import {
 	type DbRow,
 	type PatientPayload,
@@ -620,6 +621,7 @@ app.get("/:id/stats", async (c) => {
 	const user = c.get("user");
 	const db = createDb(c.env);
 	const { id } = c.req.param();
+	if (!isUuid(id)) return c.json({ error: "ID inválido" }, 400);
 
 	try {
 		// Drizzle approach for stats: using sql template literal for complex aggregation
@@ -663,6 +665,7 @@ app.get("/:id", async (c) => {
 	const user = c.get("user");
 	const db = createDb(c.env);
 	const { id } = c.req.param();
+	if (!isUuid(id)) return c.json({ error: "ID inválido" }, 400);
 
 	try {
 		const result = await db
@@ -688,6 +691,7 @@ const updatePatientHandler = async (c: any) => {
 	const user = c.get("user");
 	const db = createDb(c.env);
 	const { id } = c.req.param();
+	if (!isUuid(id)) return c.json({ error: "ID inválido" }, 400);
 	const body = (await c.req.json()) as PatientPayload;
 
 	try {
@@ -728,6 +732,7 @@ app.delete("/:id", async (c) => {
 	const user = c.get("user");
 	const db = createDb(c.env);
 	const { id } = c.req.param();
+	if (!isUuid(id)) return c.json({ error: "ID inválido" }, 400);
 
 	try {
 		// Logically delete by setting isActive = false
