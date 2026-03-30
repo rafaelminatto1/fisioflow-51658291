@@ -1,0 +1,22 @@
+{
+  "name": "@fisioflow/vinext-poc",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "vinext dev",
+    "build": "vinext build",
+    "start": "vinext start"
+  },
+  "dependencies": {
+    "react": "19.2.4",
+    "react-dom": "19.2.4"
+  },
+  "devDependencies": {
+    "@vitejs/plugin-react": "^6.0.1",
+    "@vitejs/plugin-rsc": "latest",
+    "react-server-dom-webpack": "latest",
+    "vinext": "latest",
+    "vite": "8.0.3"
+  }
+}
