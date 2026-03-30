@@ -280,7 +280,14 @@ app.post("/transcribe-session", async (c) => {
   Retorne em formato JSON: { subjective, objective, assessment, plan }`;
 
 	const start = performance.now();
-	const aiResponse = await callGemini(c.env.GOOGLE_AI_API_KEY, prompt);
+	const aiResponse = await callGemini(
+		c.env.GOOGLE_AI_API_KEY,
+		prompt,
+		"gemini-1.5-flash",
+		c.env.FISIOFLOW_AI_GATEWAY_URL,
+		c.env.FISIOFLOW_AI_GATEWAY_TOKEN,
+		"clinical",
+	);
 	const duration = performance.now() - start;
 
 	c.executionCtx.waitUntil(
