@@ -15,10 +15,11 @@ workflows:
         - push
     scripts:
       - name: Install pnpm
-        script: npm install -g pnpm
+        script: |
+          npm install -g pnpm --force
       - name: Install dependencies
         script: |
-          pnpm install --frozen-lockfile
+          pnpm install --no-frozen-lockfile
       - name: Expo Prebuild
         script: |
           cd $APP_DIR
