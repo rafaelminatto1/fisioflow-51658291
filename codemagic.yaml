@@ -4,6 +4,8 @@ workflows:
     max_build_duration: 120
     instance_type: mac_mini_m1
     environment:
+      groups:
+        - apple_auth  # <-- Isso importa as variáveis que você cadastrou no grupo
       node: latest
       xcode: latest
       cocoapods: default
@@ -32,11 +34,9 @@ workflows:
           pod install --repo-update
       - name: Fetch Signing Files (Apple API)
         script: |
-          # Inicializa o chaveiro
           keychain initialize
-          # Busca certificados e perfis usando as variáveis APP_STORE_CONNECT_... que você cadastrou
+          # Usando as variáveis do grupo apple_auth
           app-store-connect fetch-signing-files "$BUNDLE_ID" --type IOS_APP_ADHOC --create
-          # Configura o Xcode para usar esses perfis
           xcode-project use-profiles
       - name: Build iOS IPA
         script: |
