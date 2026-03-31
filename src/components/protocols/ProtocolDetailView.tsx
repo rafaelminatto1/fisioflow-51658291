@@ -47,7 +47,6 @@ import {
 	PROTOCOL_DETAILS,
 } from "@/data/protocols";
 import { fisioLogger as logger } from "@/lib/errors/logger";
-import { generateProtocolPdf } from "@/utils/generateProtocolPdf";
 import { clinicalTestsApi } from "@/api/v2";
 import { ApplyProtocolModal } from "./ApplyProtocolModal";
 
@@ -171,8 +170,11 @@ export function ProtocolDetailView({
 		},
 	];
 
-	const handleExportPDF = () => {
+	const handleExportPDF = async () => {
 		try {
+			const { generateProtocolPdf } = await import(
+				"@/utils/generateProtocolPdf"
+			);
 			generateProtocolPdf(protocol, currentOrganization);
 			toast.success("PDF do protocolo gerado com sucesso!");
 		} catch (error) {
@@ -309,7 +311,7 @@ export function ProtocolDetailView({
 										<Button
 											variant="outline"
 											size="icon"
-											onClick={handleExportPDF}
+							onClick={() => void handleExportPDF()}
 											className="rounded-full"
 										>
 											<Download className="h-4 w-4" />

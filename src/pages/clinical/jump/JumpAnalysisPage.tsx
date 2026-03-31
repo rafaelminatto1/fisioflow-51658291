@@ -1,9 +1,25 @@
-import React from 'react';
+import React, { Suspense, lazy } from 'react';
 import { MainLayout } from "@/components/layout/MainLayout";
-import { JumpAnalysisStudio } from "@/components/analysis/studios/JumpAnalysisStudio";
 import { Button } from "@/components/ui/button";
-import { ArrowLeft, FileText, Zap } from 'lucide-react';
+import { ArrowLeft, FileText, Loader2, Zap } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
+
+const JumpAnalysisStudio = lazy(() =>
+	import("@/components/analysis/studios/JumpAnalysisStudio").then((m) => ({
+		default: m.JumpAnalysisStudio,
+	})),
+);
+
+function StudioLoadingFallback() {
+	return (
+		<div className="flex h-full min-h-[480px] items-center justify-center rounded-3xl border border-dashed bg-card/40">
+			<div className="flex items-center gap-3 text-sm font-medium text-muted-foreground">
+				<Loader2 className="h-4 w-4 animate-spin" />
+				Carregando estúdio de salto...
+			</div>
+		</div>
+	);
+}
 
 export default function JumpAnalysisPage() {
     const navigate = useNavigate();
@@ -38,7 +54,9 @@ export default function JumpAnalysisPage() {
                 </div>
 
                 <div className="max-w-7xl mx-auto px-4 py-8 h-[calc(100vh-140px)]">
-                    <JumpAnalysisStudio />
+                    <Suspense fallback={<StudioLoadingFallback />}>
+                        <JumpAnalysisStudio />
+                    </Suspense>
                 </div>
             </div>
         </MainLayout>

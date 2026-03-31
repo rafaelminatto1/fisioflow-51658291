@@ -51,9 +51,53 @@ binding = "ANALYTICS"
 dataset = "fisioflow_events"
 
 # ===== VECTORIZE (Base de Conhecimento RAG) =====
+# Crie com: wrangler vectorize create fisioflow-clinical --dimensions=768 --metric=cosine
 [[vectorize]]
 binding = "CLINICAL_KNOWLEDGE"
-index_name = "clinical-knowledge"
+index_name = "fisioflow-clinical"
+
+# ===== AI SEARCH (RAG gerenciado — wiki, protocolos, exercícios) =====
+# Crie no dashboard: AI > AI Search > New Index
+[[ai_search]]
+binding = "AI_SEARCH"
+name = "fisioflow-knowledge"
+
+# ===== PIPELINES (Data warehouse → R2 Iceberg, open beta grátis) =====
+# Crie com: wrangler pipelines create fisioflow-events
+[[pipelines]]
+binding = "EVENTS_PIPELINE"
+pipeline = "fisioflow-events"
+
+# ===== WORKFLOWS (Automações duráveis multi-step) =====
+[[workflows]]
+name = "appointment-reminder"
+binding = "WORKFLOW_APPOINTMENT_REMINDER"
+class_name = "AppointmentReminderWorkflow"
+
+[[workflows]]
+name = "patient-onboarding"
+binding = "WORKFLOW_PATIENT_ONBOARDING"
+class_name = "PatientOnboardingWorkflow"
+
+[[workflows]]
+name = "nfse-emission"
+binding = "WORKFLOW_NFSE"
+class_name = "NFSeWorkflow"
+
+[[workflows]]
+name = "hep-compliance"
+binding = "WORKFLOW_HEP_COMPLIANCE"
+class_name = "HEPComplianceWorkflow"
+
+[[workflows]]
+name = "patient-discharge"
+binding = "WORKFLOW_DISCHARGE"
+class_name = "PatientDischargeWorkflow"
+
+[[workflows]]
+name = "patient-reengagement"
+binding = "WORKFLOW_REENGAGEMENT"
+class_name = "PatientReengagementWorkflow"
 
 # ===== DURABLE OBJECTS (Realtime State & Agents) =====
 [[durable_objects.bindings]]
@@ -107,8 +151,10 @@ dead_letter_queue = "fisioflow-tasks-dlq"
 [vars]
 ENVIRONMENT = "production"
 # Habilita transformações de imagem via URL no painel Cloudflare
-IMAGE_TRANSFORMATIONS = "enabled" 
+IMAGE_TRANSFORMATIONS = "enabled"
 R2_PUBLIC_URL = "https://media.moocafisio.com.br"
+# Turnstile (anti-bot para rotas públicas) — sitekey pública, secret via wrangler secret put
+TURNSTILE_SITE_KEY = ""
 # CORS: domínio do frontend em Cloudflare Pages
 ALLOWED_ORIGINS = "https://minatto-fisio.pages.dev,https://fisioflow.pages.dev,https://moocafisio.com.br,https://www.moocafisio.com.br,https://minatto.moocafisio.com.br,https://media.moocafisio.com.br,http://localhost:5173,https://7d2bdf7d.fisioflow.pages.dev,https://fisioflow-web.rafalegollas.workers.dev,https://fisioflow-api.rafalegollas.workers.dev"
 GOOGLE_MAPS_API_KEY = ""
@@ -174,7 +220,45 @@ dataset = "fisioflow_events"
 
 [[env.production.vectorize]]
 binding = "CLINICAL_KNOWLEDGE"
-index_name = "clinical-knowledge"
+index_name = "fisioflow-clinical"
+
+[[env.production.ai_search]]
+binding = "AI_SEARCH"
+name = "fisioflow-knowledge"
+
+[[env.production.pipelines]]
+binding = "EVENTS_PIPELINE"
+pipeline = "fisioflow-events"
+
+[[env.production.workflows]]
+name = "appointment-reminder"
+binding = "WORKFLOW_APPOINTMENT_REMINDER"
+class_name = "AppointmentReminderWorkflow"
+
+[[env.production.workflows]]
+name = "patient-onboarding"
+binding = "WORKFLOW_PATIENT_ONBOARDING"
+class_name = "PatientOnboardingWorkflow"
+
+[[env.production.workflows]]
+name = "nfse-emission"
+binding = "WORKFLOW_NFSE"
+class_name = "NFSeWorkflow"
+
+[[env.production.workflows]]
+name = "hep-compliance"
+binding = "WORKFLOW_HEP_COMPLIANCE"
+class_name = "HEPComplianceWorkflow"
+
+[[env.production.workflows]]
+name = "patient-discharge"
+binding = "WORKFLOW_DISCHARGE"
+class_name = "PatientDischargeWorkflow"
+
+[[env.production.workflows]]
+name = "patient-reengagement"
+binding = "WORKFLOW_REENGAGEMENT"
+class_name = "PatientReengagementWorkflow"
 
 [[env.production.hyperdrive]]
 binding = "HYPERDRIVE"
