@@ -84,6 +84,7 @@ import { adminSeedTemplatesRoutes } from './routes/admin/seed-templates';
 import { verifyToken } from './lib/auth';
 import { getRawSql } from './lib/db';
 import { routeAgentRequest } from 'agents';
+import { analyticsMiddleware } from './lib/analytics';
 
 
 const app = new Hono<{ Bindings: Env; Variables: CustomVariables }>();
@@ -125,6 +126,8 @@ app.use('*', async (c, next) => {
 app.use('*', logger());
 app.use('*', secureHeaders());
 app.use('*', requestIdMiddleware);
+// Analytics Engine — instrumentação automática de todas as rotas (fire-and-forget)
+app.use('*', (c, next) => analyticsMiddleware(c.env)(c, next));
 
 // ===== HEALTH & DB DIAGNOSTIC =====
 app.get('/api/health', (c) => c.json({ status: 'ok', time: new Date().toISOString() }));
