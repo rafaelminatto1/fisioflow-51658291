@@ -367,6 +367,10 @@ export const innovationsApi = {
 				method: "PUT",
 				body: JSON.stringify(data),
 			}),
+		delete: (id: string) =>
+			innovations(`/inventory/${id}`, {
+				method: "DELETE",
+			}),
 	},
 	inventoryMovements: {
 		list: (params?: { inventoryId?: string; limit?: number }) => {
