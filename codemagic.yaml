@@ -3,6 +3,9 @@ workflows:
     name: FisioFlow Pro iOS Build
     max_build_duration: 120
     instance_type: mac_mini_m1
+    cache:
+      cache_paths:
+        - ~/.cocoapods/repos
     environment:
       node: latest
       xcode: latest
@@ -32,7 +35,19 @@ workflows:
       - name: Install CocoaPods
         script: |
           cd $APP_DIR/ios
-          pod install --repo-update
+          # Ensure CDN trunk repo is registered (avoids raw.githubusercontent.com fallback)
+          pod repo list | grep -q "trunk" || pod repo add-cdn trunk https://cdn.cocoapods.org/
+          # Retry up to 3 times to handle transient 429 rate-limit errors from GitHub CDN
+          for attempt in 1 2 3; do
+            echo "CocoaPods install attempt $attempt/3"
+            pod install --repo-update && break
+            if [ $attempt -eq 3 ]; then
+              echo "pod install failed after 3 attempts"
+              exit 1
+            fi
+            echo "Retrying in 30s..."
+            sleep 30
+          done
       - name: Build iOS IPA
         script: |
           cd $APP_DIR/ios
