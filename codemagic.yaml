@@ -80,7 +80,6 @@ workflows:
             COMPILER_INDEX_STORE_ENABLE=NO \
             CODE_SIGN_STYLE=Manual \
             CODE_SIGN_IDENTITY="Apple Distribution" \
-            "CODE_SIGN_IDENTITY[sdk=iphoneos*]=Apple Distribution" \
             SKIP_INSTALL=NO
 
           APP_PATH=$(find build/ios/xcarchive/FisioFlowPro.xcarchive/Products -name "*.app" -maxdepth 3 | head -1)
