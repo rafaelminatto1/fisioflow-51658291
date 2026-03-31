@@ -1,11 +1,52 @@
-export default function Home() {
+import { neon } from '@neondatabase/serverless';
+
+async function getPatientsCount() {
+  const connectionString = process.env.DATABASE_URL;
+
+  if (!connectionString) {
+    return "DATABASE_URL não configurada no .env";
+  }
+
+  // Utilizando o driver serverless oficial do Neon (já instalado no repo principal)
+  // que suporta execução na edge via WebSocket/HTTP sem depender do módulo `net` do Node.
+  const sql = neon(connectionString);
+
+  try {
+    const result = await sql`SELECT COUNT(*) as count FROM patients`;
+    return result[0].count;
+  } catch (error) {
+    console.error("Erro na consulta DB:", error);
+    return `Erro ao conectar: ${error.message}`;
+  }
+}
+
+export default async function Home() {
+  const patientsCount = await getPatientsCount();
+
   return (
     <div style={{ fontFamily: 'system-ui, sans-serif', padding: '2rem' }}>
-      <h1>Bem-vindo ao FisioFlow Vinext PoC</h1>
+      <h1>FisioFlow Vinext PoC</h1>
       <p>
         Este é um ambiente experimental utilizando <strong>vinext</strong> (Vite + API do Next.js)
         hospedado no Cloudflare Workers.
       </p>
+
+      <div style={{
+        marginTop: '2rem',
+        padding: '1.5rem',
+        border: '1px solid #ddd',
+        borderRadius: '8px',
+        backgroundColor: '#f0f9ff',
+        color: '#0369a1'
+      }}>
+        <h2>🔥 Teste de Server Component com Neon DB</h2>
+        <p>
+          Este dado foi buscado <strong>diretamente no servidor</strong> (SSR) conectando no seu banco Neon sem expor a string de conexão:
+        </p>
+        <p style={{ fontSize: '1.5rem', fontWeight: 'bold' }}>
+          Total de Pacientes no Banco: {patientsCount}
+        </p>
+      </div>
 
       <div style={{
         marginTop: '2rem',
@@ -14,15 +55,12 @@ export default function Home() {
         borderRadius: '8px',
         backgroundColor: '#f9f9f9'
       }}>
-        <h2>Objetivos da PoC:</h2>
+        <h2>Variáveis Carregadas do .env:</h2>
         <ul>
-          <li>Testar Server-Side Rendering (SSR) e React Server Components (RSC) com Vite.</li>
-          <li>Validar conexão Edge (Cloudflare Workers) com Neon DB através da API consolidada (Hono).</li>
-          <li>Avaliar compatibilidade com `@neondatabase/auth`.</li>
+          <li><strong>API URL:</strong> {process.env.VITE_WORKERS_API_URL}</li>
+          <li><strong>Ambiente:</strong> {process.env.VITE_ENVIRONMENT}</li>
+          <li><strong>Neon Auth URL:</strong> {process.env.VITE_NEON_AUTH_URL}</li>
         </ul>
-        <p style={{ fontStyle: 'italic', fontSize: '0.9rem', color: '#666' }}>
-          O repositório principal do FisioFlow (SPA Vite) permanece inalterado para garantir estabilidade em produção.
-        </p>
       </div>
     </div>
   )
