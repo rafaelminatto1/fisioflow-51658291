@@ -73,14 +73,14 @@ workflows:
             CODE_SIGN_IDENTITY="Apple Distribution" \
             CODE_SIGN_STYLE=Manual \
             COMPILER_INDEX_STORE_ENABLE=NO \
-            archive 2>&1 | tee /tmp/xcodebuild.log | xcbeautify --renderer github-actions || \
-            (echo "--- FULL XCODE ERROR LOG ---" && grep -E "error:|fatal error:|BUILD FAILED" /tmp/xcodebuild.log | tail -50 && exit 1)
+            archive 2>&1 | tee /tmp/xcodebuild.log || \
+            (echo "--- XCODE ERRORS ---" && grep -E "error:|fatal error:|BUILD FAILED" /tmp/xcodebuild.log | tail -80 && exit 1)
 
           xcodebuild \
             -exportArchive \
             -archivePath "$ARCHIVE_PATH" \
             -exportPath "$IPA_OUTPUT" \
-            -exportOptionsPlist /Users/builder/export_options.plist 2>&1 | xcbeautify --renderer github-actions
+            -exportOptionsPlist /Users/builder/export_options.plist
     artifacts:
       - apps/professional-app/ios/build/remote/ipa/*.ipa
     publishing:
