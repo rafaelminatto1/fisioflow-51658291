@@ -30,12 +30,12 @@ import {
 	Bar,
 	BarChart,
 	CartesianGrid,
-	ResponsiveContainer,
 	Tooltip,
 	XAxis,
 	YAxis,
 } from "recharts";
 import { toast } from "sonner";
+import { SafeResponsiveContainer } from "@/components/charts/SafeResponsiveContainer";
 import { MainLayout } from "@/components/layout/MainLayout";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -274,7 +274,7 @@ export default function SmartDashboard() {
 					>
 						<div className="h-full p-2">
 							{assessmentData.length > 0 ? (
-								<ResponsiveContainer width="100%" height="100%">
+								<SafeResponsiveContainer className="h-full" minHeight={220}>
 									<AreaChart data={assessmentData}>
 										<defs>
 											<linearGradient
@@ -358,7 +358,7 @@ export default function SmartDashboard() {
 											name="Mobilidade"
 										/>
 									</AreaChart>
-								</ResponsiveContainer>
+								</SafeResponsiveContainer>
 							) : (
 								<div className="h-full flex flex-col items-center justify-center text-center p-4">
 									<Thermometer className="h-8 w-8 text-muted-foreground/30 mb-2" />
@@ -386,7 +386,7 @@ export default function SmartDashboard() {
 						className="card-premium-hover"
 					>
 						<div className="h-full p-2">
-							<ResponsiveContainer width="100%" height="100%">
+							<SafeResponsiveContainer className="h-full" minHeight={220}>
 								<AreaChart data={revenueChartData}>
 									<defs>
 										<linearGradient
@@ -436,7 +436,7 @@ export default function SmartDashboard() {
 										name="Real"
 									/>
 								</AreaChart>
-							</ResponsiveContainer>
+							</SafeResponsiveContainer>
 						</div>
 					</GridWidget>
 				),
@@ -566,7 +566,7 @@ export default function SmartDashboard() {
 						className="card-premium-hover"
 					>
 						<div className="h-full p-2 flex flex-col">
-							<ResponsiveContainer width="100%" height="60%">
+							<SafeResponsiveContainer className="h-[60%]" minHeight={180}>
 								<BarChart data={performanceData}>
 									<CartesianGrid
 										strokeDasharray="3 3"
@@ -593,7 +593,7 @@ export default function SmartDashboard() {
 										name="Re-agendamento %"
 									/>
 								</BarChart>
-							</ResponsiveContainer>
+							</SafeResponsiveContainer>
 							<div className="mt-2 space-y-2 overflow-y-auto pr-1">
 								{staffPerformance.slice(0, 3).map((s, i) => (
 									<div

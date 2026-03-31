@@ -18,22 +18,19 @@ import { useNavigate } from "react-router-dom";
 import {
 	Area,
 	AreaChart,
-	ResponsiveContainer,
 	Tooltip,
 } from "recharts";
+import { SafeResponsiveContainer } from "@/components/charts/SafeResponsiveContainer";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import { Skeleton } from "@/components/ui/skeleton";
-import { useAuth } from "@/contexts/AuthContext";
 import { cn } from "@/lib/utils";
 import { useSmartDashboardData } from "@/hooks/useSmartDashboard";
 
 export const BentoDashboard: React.FC = () => {
 	const navigate = useNavigate();
-	const { profile } = useAuth();
-	
 
 	const { data, isLoading: metricsLoading } = useSmartDashboardData("month");
 	const metrics = data?.metrics;
@@ -364,7 +361,7 @@ export const BentoDashboard: React.FC = () => {
 					</CardHeader>
 					<CardContent className="p-0 h-full">
 						<div className="h-[160px] w-full mt-2">
-							<ResponsiveContainer width="100%" height="100%">
+							<SafeResponsiveContainer className="h-full" minHeight={160}>
 								<AreaChart
 									data={metrics?.revenueChart || []}
 									margin={{ top: 0, right: 0, left: 0, bottom: 0 }}
@@ -409,7 +406,7 @@ export const BentoDashboard: React.FC = () => {
 										itemStyle={{ color: "#fff" }}
 									/>
 								</AreaChart>
-							</ResponsiveContainer>
+							</SafeResponsiveContainer>
 						</div>
 					</CardContent>
 				</Card>
