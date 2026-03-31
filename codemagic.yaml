@@ -65,10 +65,23 @@ workflows:
           echo "Using workspace: $WORKSPACE"
           echo "Using scheme: $SCHEME"
 
-          xcode-project build-ipa \
-            --workspace "$WORKSPACE" \
-            --scheme "$SCHEME" \
-            --archive-flags="-destination 'generic/platform=iOS'"
+          # Build archive directly with xcodebuild, forcing manual code signing
+          xcodebuild -workspace "$WORKSPACE" \
+            -scheme "$SCHEME" \
+            -destination 'generic/platform=iOS' \
+            -archivePath "$CM_BUILD_DIR/build/ios/xcarchive/FisioFlowPro.xcarchive" \
+            CODE_SIGN_IDENTITY="Apple Distribution" \
+            CODE_SIGNING_REQUIRED=YES \
+            CODE_SIGNING_ALLOWED=YES \
+            CODE_SIGN_STYLE=Manual \
+            PROVISIONING_PROFILE_SPECIFIER="" \
+            archive
+
+          # Export IPA from archive
+          xcodebuild -exportArchive \
+            -archivePath "$CM_BUILD_DIR/build/ios/xcarchive/FisioFlowPro.xcarchive" \
+            -exportPath "$CM_BUILD_DIR/build/ios/ipa" \
+            -exportOptionsPlist "$CM_BUILD_DIR/$APP_DIR/ios/ExportOptions.plist"
 
     artifacts:
       - build/ios/ipa/*.ipa
