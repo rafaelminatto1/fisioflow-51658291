@@ -10,9 +10,7 @@
 
 import React, { useMemo, useCallback } from 'react';
 import { createCalendar } from '@schedule-x/calendar';
-import { createViewMonth } from '@schedule-x/calendar';
-import { createViewWeek } from '@schedule-x/calendar';
-import { createViewDay } from '@schedule-x/calendar';
+import { createViewMonthGrid, createViewWeek, createViewDay } from '@schedule-x/calendar';
 import { ScheduleXCalendar, useCalendarApp } from '@schedule-x/react';
 import {
 	createDragAndDropPlugin,
@@ -25,6 +23,7 @@ import { CalendarAppointmentCard } from './CalendarAppointmentCard';
 import { cn } from '@/lib/utils';
 import type { Appointment } from '@/types/appointment';
 import { normalizeStatus, getStatusColor } from './shared/appointment-status';
+import { Temporal } from 'temporal-polyfill';
 
 // Import ScheduleX custom styles
 import '@/styles/schedulex.css';
@@ -77,11 +76,30 @@ const appointmentToEvent = (appointment: Appointment) => {
 
 	const normalizedStatus = normalizeStatus(appointment.status || 'agendado');
 
+	// Convert to Temporal.ZonedDateTime for ScheduleX
+	const startTemporal = Temporal.ZonedDateTime.from({
+		year: startDateTime.getFullYear(),
+		month: startDateTime.getMonth() + 1,
+		day: startDateTime.getDate(),
+		hour: startDateTime.getHours(),
+		minute: startDateTime.getMinutes(),
+		timeZone: 'America/Sao_Paulo',
+	});
+
+	const endTemporal = Temporal.ZonedDateTime.from({
+		year: endDateTime.getFullYear(),
+		month: endDateTime.getMonth() + 1,
+		day: endDateTime.getDate(),
+		hour: endDateTime.getHours(),
+		minute: endDateTime.getMinutes(),
+		timeZone: 'America/Sao_Paulo',
+	});
+
 	return {
 		id: appointment.id,
 		title: appointment.patientName,
-		start: startDateTime.toISOString(),
-		end: endDateTime.toISOString(),
+		start: startTemporal,
+		end: endTemporal,
 		// Custom properties for our card component
 		appointment: appointment,
 		status: normalizedStatus,
@@ -138,11 +156,18 @@ export const ScheduleXCalendarWrapper = React.memo<ScheduleXCalendarWrapperProps
 			},
 		});
 
+		// Convert currentDate to Temporal.PlainDate
+		const currentTemporal = Temporal.PlainDate.from({
+			year: currentDate.getFullYear(),
+			month: currentDate.getMonth() + 1,
+			day: currentDate.getDate(),
+		});
+
 		// View configuration based on viewType prop
 		let view;
 		switch (viewType) {
 			case 'month':
-				view = createViewMonth();
+				view = createViewMonthGrid();
 				break;
 			case 'week':
 				view = createViewWeek();
@@ -154,13 +179,18 @@ export const ScheduleXCalendarWrapper = React.memo<ScheduleXCalendarWrapperProps
 
 		// Create calendar with plugins
 		return createCalendar({
-			view,
+			selectedDate: currentTemporal,
+			views: [view],
 			events,
-			selectedDate: currentDate,
 			plugins: [dndPlugin],
 			callbacks: {
-				onDateUpdate: (date: Date) => {
-					onDateChange(date);
+				onDateUpdate: (date: Temporal.PlainDate) => {
+					const newDate = new Date(
+						date.year,
+						date.month - 1,
+						date.day
+					);
+					onDateChange(newDate);
 				},
 				onEventClick: (eventId: string) => {
 					const appointment = appointments.find((a) => a.id === eventId);
@@ -168,11 +198,16 @@ export const ScheduleXCalendarWrapper = React.memo<ScheduleXCalendarWrapperProps
 						onAppointmentClick?.(appointment);
 					}
 				},
-				onSelectedDateUpdate: (date: Date) => {
+				onSelectedDateUpdate: (date: Temporal.PlainDate) => {
 					// Handle date selection from calendar
 					if (onTimeSlotClick) {
-						const timeStr = format(date, 'HH:mm');
-						onTimeSlotClick(date, timeStr);
+						const newDate = new Date(
+							date.year,
+							date.month - 1,
+							date.day
+						);
+						const timeStr = format(newDate, 'HH:mm');
+						onTimeSlotClick(newDate, timeStr);
 					}
 				},
 			},
@@ -182,12 +217,28 @@ export const ScheduleXCalendarWrapper = React.memo<ScheduleXCalendarWrapperProps
 					const isSelected = selectedIds.has(appointment.id);
 					const isSaving = savingAppointmentId === appointment.id;
 
+					// Convert Temporal to Date for formatting
+					const startDate = new Date(
+						event.start.year,
+						event.start.month - 1,
+						event.start.day,
+						event.start.hour,
+						event.start.minute
+					);
+					const endDate = new Date(
+						event.end.year,
+						event.end.month - 1,
+						event.end.day,
+						event.end.hour,
+						event.end.minute
+					);
+
 					return (
 						<CalendarAppointmentCard
 							ref={null as any}
 							patientName={appointment.patientName}
-							time={format(new Date(event.start), 'HH:mm')}
-							endTime={format(new Date(event.end), 'HH:mm')}
+							time={format(startDate, 'HH:mm')}
+							endTime={format(endDate, 'HH:mm')}
 							type={appointment.type}
 							status={appointment.status}
 							isDragging={dragState?.activeId === appointment.id}
@@ -348,7 +399,6 @@ export const ScheduleXCalendarWrapper = React.memo<ScheduleXCalendarWrapperProps
 				{calendarApp && (
 					<ScheduleXCalendar
 						calendarApp={calendarApp}
-						customComponents={{}}
 					/>
 				)}
 			</div>

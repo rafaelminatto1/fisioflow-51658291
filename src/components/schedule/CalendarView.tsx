@@ -15,9 +15,11 @@ import {
 	ChevronRight,
 	Plus,
 	Search,
+	Settings,
 	X,
 } from "lucide-react";
 import React from "react";
+import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { useCalendarDrag } from "@/hooks/useCalendarDrag";
