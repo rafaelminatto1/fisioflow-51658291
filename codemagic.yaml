@@ -49,6 +49,14 @@ workflows:
           
           echo "Building Workspace: $WORKSPACE with Scheme: $SCHEME"
           
+          # Executa um build bruto apenas para capturar o erro exato no log do Codemagic
+          xcodebuild archive \
+            -workspace "$WORKSPACE" \
+            -scheme "$SCHEME" \
+            -archivePath build.xcarchive \
+            -allowProvisioningUpdates \
+            CODE_SIGNING_ALLOWED=NO || true
+          
           xcode-project build-ipa \
             --workspace "$WORKSPACE" \
             --scheme "$SCHEME" \
