@@ -7,6 +7,7 @@ workflows:
       cache_paths:
         - ~/.npm
         - ~/.eas-build-local-nodejs
+        - ~/.cocoapods/repos
     environment:
       node: latest
       xcode: 16
@@ -30,6 +31,23 @@ workflows:
       - name: Install EAS CLI
         script: |
           npm install -g eas-cli
+      - name: Pre-warm CocoaPods specs cache
+        script: |
+          # EAS runs pod install internally with no retry logic.
+          # Pre-warming ~/.cocoapods/repos here ensures specs are cached
+          # so EAS finds them locally and never hits raw.githubusercontent.com.
+          pod repo list | grep -q "trunk" || pod repo add-cdn trunk https://cdn.cocoapods.org/
+          for attempt in 1 2 3; do
+            echo "Updating CocoaPods trunk specs (attempt $attempt/3)..."
+            pod repo update trunk && break
+            if [ $attempt -eq 3 ]; then
+              echo "pod repo update failed after 3 attempts"
+              exit 1
+            fi
+            echo "Retrying in 30s..."
+            sleep 30
+          done
+          echo "CocoaPods specs cache is ready."
       - name: EAS Build iOS (ad-hoc)
         script: |
           cd $APP_DIR
