@@ -138,6 +138,38 @@ export default defineConfig(({ mode }) => {
 					"node_modules/@cornerstonejs/codec-charls/dist/charlswasm_decode.wasm",
 				),
 				"@fisioflow/skills": path.resolve(repoRoot, "src/lib/skills"),
+				"@fisioflow/cornerstone-tools-init": path.resolve(
+					repoRoot,
+					"node_modules/@cornerstonejs/tools/dist/esm/init.js",
+				),
+				"@fisioflow/cornerstone-tools-add-tool": path.resolve(
+					repoRoot,
+					"node_modules/@cornerstonejs/tools/dist/esm/store/addTool.js",
+				),
+				"@fisioflow/cornerstone-tools-tool-group-manager": path.resolve(
+					repoRoot,
+					"node_modules/@cornerstonejs/tools/dist/esm/store/ToolGroupManager/index.js",
+				),
+				"@fisioflow/cornerstone-tools-enums": path.resolve(
+					repoRoot,
+					"node_modules/@cornerstonejs/tools/dist/esm/enums/index.js",
+				),
+				"@fisioflow/cornerstone-tools-pan": path.resolve(
+					repoRoot,
+					"node_modules/@cornerstonejs/tools/dist/esm/tools/PanTool.js",
+				),
+				"@fisioflow/cornerstone-tools-zoom": path.resolve(
+					repoRoot,
+					"node_modules/@cornerstonejs/tools/dist/esm/tools/ZoomTool.js",
+				),
+				"@fisioflow/cornerstone-tools-length": path.resolve(
+					repoRoot,
+					"node_modules/@cornerstonejs/tools/dist/esm/tools/annotation/LengthTool.js",
+				),
+				"@fisioflow/cornerstone-tools-probe": path.resolve(
+					repoRoot,
+					"node_modules/@cornerstonejs/tools/dist/esm/tools/annotation/ProbeTool.js",
+				),
 				exceljs: path.resolve(
 					repoRoot,
 					"node_modules/exceljs/lib/exceljs.browser.js",
