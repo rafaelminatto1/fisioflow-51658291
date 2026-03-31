@@ -278,6 +278,17 @@ app.post('/', requireAuth, async (c) => {
     .values(insertValues)
     .returning();
 
+  // Indexar no D1 para timeline edge (fire-and-forget)
+  if (c.env.DB) {
+    const preview = [body.subjective, body.assessment].filter(Boolean).join(' ').substring(0, 200);
+    c.executionCtx.waitUntil(
+      c.env.DB.prepare(
+        `INSERT OR REPLACE INTO evolution_index (id, patient_id, appointment_id, therapist_id, organization_id, preview_text, created_at, updated_at)
+         VALUES (?, ?, ?, ?, ?, ?, datetime('now'), datetime('now'))`
+      ).bind(newSession.id, patientId, body.appointment_id ?? null, user.uid, user.organizationId, preview).run()
+    );
+  }
+
   return c.json({ data: rowToRecord(newSession) }, 201);
 });
 
@@ -308,6 +319,17 @@ app.put('/:id', requireAuth, async (c) => {
     .returning();
 
   if (!updated) return c.json({ error: 'Sessão não encontrada' }, 404);
+
+  // Atualizar índice no D1 (fire-and-forget)
+  if (c.env.DB && (body.subjective || body.assessment)) {
+    const preview = [body.subjective, body.assessment].filter(Boolean).join(' ').substring(0, 200);
+    c.executionCtx.waitUntil(
+      c.env.DB.prepare(
+        `UPDATE evolution_index SET preview_text = ?, updated_at = datetime('now') WHERE id = ?`
+      ).bind(preview, id).run()
+    );
+  }
+
   return c.json({ data: rowToRecord(updated) });
 });
 
