@@ -40,10 +40,10 @@ export class PatientDischargeWorkflow extends WorkflowEntrypoint<Env, PatientDis
 
     const surveyResult = await step.do('check-survey-response', async () => {
       const pool = createPool(this.env);
-      const res = await pool.query<{ id: string }>(
+      const res = await pool.query(
         `SELECT id FROM satisfaction_surveys WHERE patient_id = $1 AND organization_id = $2 AND created_at > NOW() - INTERVAL '8 days' LIMIT 1`,
         [patientId, organizationId],
-      );
+      ) as unknown as { rows: { id: string }[] };
       return { responded: res.rows.length > 0 };
     });
 
