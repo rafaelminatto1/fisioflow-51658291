@@ -29,7 +29,7 @@ workflows:
       - name: Expo Prebuild
         script: |
           cd $APP_DIR
-          npx expo prebuild --platform ios --no-install
+          npx expo prebuild --platform ios --clean --non-interactive
       - name: Install CocoaPods
         script: |
           cd $APP_DIR/ios
@@ -37,33 +37,58 @@ workflows:
       - name: Build iOS IPA
         script: |
           cd $APP_DIR/ios
-          
+
           # Initialize keychain
           keychain initialize
-          
+
           # Configura o Xcode usando o perfil específico injetado
           xcode-project use-profiles --project "FisioFlowPro.xcodeproj"
-          
+
           export WORKSPACE=$(ls -d *.xcworkspace | head -1)
           export SCHEME="FisioFlowPro"
-          
+
           echo "Building Workspace: $WORKSPACE with Scheme: $SCHEME"
-          
-          # Executa um build bruto apenas para capturar o erro exato no log do Codemagic
+
+          # Evita falha do Sentry no archive quando sourcemaps nao estao disponiveis no CI
+          export SENTRY_DISABLE_AUTO_UPLOAD=true
+
+          # Xcode 26.2 e build-ipa do Codemagic estao falhando no archive/export para ad-hoc.
+          # Arquiva manualmente com destino iOS generico e empacota o .ipa a partir do .xcarchive.
           xcodebuild archive \
             -workspace "$WORKSPACE" \
             -scheme "$SCHEME" \
-            -archivePath build.xcarchive \
-            -allowProvisioningUpdates \
-            CODE_SIGNING_ALLOWED=NO || true
-          
-          xcode-project build-ipa \
-            --workspace "$WORKSPACE" \
-            --scheme "$SCHEME" \
-            --log-stream stdout \
-            --verbose
+            -configuration Release \
+            -destination "generic/platform=iOS" \
+            -archivePath build/ios/xcarchive/FisioFlowPro.xcarchive \
+            archive \
+            COMPILER_INDEX_STORE_ENABLE=NO \
+            CODE_SIGN_STYLE=Manual \
+            CODE_SIGN_IDENTITY="Apple Distribution" \
+            SKIP_INSTALL=NO
+
+          APP_PATH=$(find build/ios/xcarchive/FisioFlowPro.xcarchive/Products -name "*.app" -maxdepth 3 | head -1)
+          if [ -z "$APP_PATH" ]; then
+            echo "ERRO: Nenhum .app encontrado no archive"
+            find build/ios/xcarchive/FisioFlowPro.xcarchive -type d | head -20
+            exit 1
+          fi
+
+          APP_NAME=$(basename "$APP_PATH" .app)
+          IPA_STAGE=build/ios/ipa-stage
+          IPA_OUT=build/ios/ipa
+
+          rm -rf "$IPA_STAGE" "$IPA_OUT"
+          mkdir -p "$IPA_STAGE/Payload" "$IPA_OUT"
+          cp -R "$APP_PATH" "$IPA_STAGE/Payload/"
+
+          (
+            cd "$IPA_STAGE"
+            zip -qr "../ipa/${APP_NAME}.ipa" Payload
+          )
+
+          echo "IPA gerado em $IPA_OUT/${APP_NAME}.ipa"
     artifacts:
-      - apps/professional-app/ios/build/remote/ipa/*.ipa
+      - apps/professional-app/ios/build/ios/ipa/*.ipa
     publishing:
       email:
         recipients:
