@@ -10,7 +10,7 @@ workflows:
       ios_signing:
         # Usa a identidade exata configurada com "check verde" na interface
         provisioning_profiles:
-          - fisioflow_pro_adhoc
+          - fisioflow_pro_adhoc_push_2026
       vars:
         APP_DIR: "apps/professional-app"
         BUNDLE_ID: "com.fisioflow.professionals"
