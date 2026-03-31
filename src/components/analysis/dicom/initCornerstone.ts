@@ -1,16 +1,23 @@
-import { init as coreInit } from "@cornerstonejs/core";
-import { init as toolsInit } from "@cornerstonejs/tools";
-import dicomImageLoader from "@cornerstonejs/dicom-image-loader";
 import { fisioLogger as logger } from "@/lib/errors/logger";
 
 let initialized = false;
 
-export default async function initCornerstone() {
+type CornerstoneInitRuntime = {
+	core: typeof import("@cornerstonejs/core");
+	tools: typeof import("@cornerstonejs/tools");
+	dicomImageLoader: typeof import("@cornerstonejs/dicom-image-loader");
+};
+
+export default async function initCornerstone({
+	core,
+	tools,
+	dicomImageLoader,
+}: CornerstoneInitRuntime) {
 	if (initialized) return;
 
 	try {
-		await coreInit();
-		await toolsInit();
+		await core.init();
+		await tools.init();
 		dicomImageLoader.init({
 			maxWebWorkers:
 				typeof navigator !== "undefined" && navigator.hardwareConcurrency

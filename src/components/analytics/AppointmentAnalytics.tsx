@@ -7,12 +7,12 @@ import {
 } from "@/components/ui/card";
 import { useQuery } from "@tanstack/react-query";
 import { appointmentsApi, type AppointmentRow } from "@/api/v2";
+import { SafeResponsiveContainer } from "@/components/charts/SafeResponsiveContainer";
 import {
 	XAxis,
 	YAxis,
 	CartesianGrid,
 	Tooltip,
-	ResponsiveContainer,
 	LineChart,
 	Line,
 	BarChart,
@@ -144,7 +144,7 @@ export function AppointmentAnalytics() {
 								Carregando dados...
 							</div>
 						) : (
-							<ResponsiveContainer width="100%" height="100%">
+							<SafeResponsiveContainer className="h-full" minHeight={200}>
 								<LineChart data={dailyData}>
 									<defs>
 										<linearGradient
@@ -208,7 +208,7 @@ export function AppointmentAnalytics() {
 										activeDot={{ r: 6, strokeWidth: 0 }}
 									/>
 								</LineChart>
-							</ResponsiveContainer>
+							</SafeResponsiveContainer>
 						)}
 					</div>
 				</CardContent>
@@ -230,7 +230,7 @@ export function AppointmentAnalytics() {
 								Carregando dados...
 							</div>
 						) : (
-							<ResponsiveContainer width="100%" height="100%">
+							<SafeResponsiveContainer className="h-full" minHeight={200}>
 								<BarChart data={statusData}>
 									<CartesianGrid
 										strokeDasharray="3 3"
@@ -264,7 +264,7 @@ export function AppointmentAnalytics() {
 										barSize={40}
 									/>
 								</BarChart>
-							</ResponsiveContainer>
+							</SafeResponsiveContainer>
 						)}
 					</div>
 				</CardContent>
