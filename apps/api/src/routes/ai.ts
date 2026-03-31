@@ -2,7 +2,7 @@ import { Hono } from "hono";
 import { requireAuth, type AuthVariables } from "../lib/auth";
 import type { Env } from "../types/env";
 
-import { callGemini, transcribeAudioWithGemini } from "../lib/ai-gemini";
+import { callGemini, transcribeAudioWithGemini, streamGeminiChat } from "../lib/ai-gemini";
 import {
 	runAi,
 	transcribeAudio as transcribeWithWhisper,
@@ -183,6 +183,93 @@ app.post("/service", async (c) => {
 	}
 });
 
+app.post("/chat", async (c) => {
+	const body = (await c.req.json().catch(() => ({}))) as any;
+	const messages = Array.isArray(body.messages) ? body.messages : [];
+
+	if (messages.length === 0) {
+		return c.json({ error: "Mensagens são obrigatórias" }, 400);
+	}
+
+	if (!c.env.GOOGLE_AI_API_KEY) {
+		console.error("GOOGLE_AI_API_KEY is missing");
+		return c.json({ error: "Configuração de IA ausente" }, 500);
+	}
+
+	console.log(`Starting chat stream with ${messages.length} messages`);
+
+	const stream = await streamGeminiChat(
+		c.env.GOOGLE_AI_API_KEY,
+		messages,
+		"gemini-1.5-flash-latest",
+		c.env.FISIOFLOW_AI_GATEWAY_URL,
+		c.env.FISIOFLOW_AI_GATEWAY_TOKEN,
+	).catch(e => {
+		console.error("streamGeminiChat error:", e);
+		return null;
+	});
+
+	if (!stream) {
+		return c.json({ error: "Falha ao iniciar stream de IA" }, 500);
+	}
+
+	const { readable, writable } = new TransformStream();
+	const writer = writable.getWriter();
+	const encoder = new TextEncoder();
+	const decoder = new TextDecoder();
+
+	// Processar o stream de forma assíncrona
+	(async () => {
+		try {
+			const reader = stream.getReader();
+			let buffer = "";
+
+			while (true) {
+				const { done, value } = await reader.read();
+				if (done) break;
+
+				buffer += decoder.decode(value, { stream: true });
+				const lines = buffer.split("\n");
+				buffer = lines.pop() || "";
+
+				for (const line of lines) {
+					const trimmed = line.trim();
+					if (trimmed.startsWith("data: ")) {
+						try {
+							const jsonString = trimmed.slice(6).trim();
+							if (jsonString === "[DONE]") break;
+							
+							const json = JSON.parse(jsonString);
+							const text = json.candidates?.[0]?.content?.parts?.[0]?.text;
+							if (text) {
+								const payload = JSON.stringify({
+									choices: [{ delta: { content: text } }],
+								});
+								await writer.write(encoder.encode(`data: ${payload}\n\n`));
+							}
+						} catch (e) {
+							// Ignore parsing errors
+						}
+					}
+				}
+			}
+		} catch (e) {
+			console.error("Stream transformation error:", e);
+		} finally {
+			try {
+				await writer.write(encoder.encode("data: [DONE]\n\n"));
+			} catch (e) {}
+			await writer.close();
+		}
+	})();
+
+	return c.body(readable, 200, {
+		"Content-Type": "text/event-stream",
+		"Cache-Control": "no-cache",
+		"Connection": "keep-alive",
+	});
+});
+
 app.post("/fast-processing", async (c) => {
 	const body = (await c.req.json().catch(() => ({}))) as Record<
 		string,
@@ -199,8 +286,9 @@ app.post("/fast-processing", async (c) => {
 	const result = await callGemini(
 		c.env.GOOGLE_AI_API_KEY,
 		prompt,
-		"gemini-1.5-flash",
+		"gemini-1.5-flash-latest",
 		c.env.FISIOFLOW_AI_GATEWAY_URL,
+		c.env.FISIOFLOW_AI_GATEWAY_TOKEN,
 	);
 	return c.json({ data: { result } });
 });
@@ -530,7 +618,7 @@ app.post("/native/translate", async (c) => {
 		text,
 		target_lang: target || "english",
 	});
-	return c.json({ data: { translated: response.translated_text } });
+	return c.json({ data: { translated: (response as any).translated_text } });
 });
 
 app.post("/movement-video", async (c) => {
