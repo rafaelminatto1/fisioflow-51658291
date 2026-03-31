@@ -300,6 +300,8 @@ export function normalizeStatus(status: string): string {
 	const s = (status ?? "agendado").toLowerCase().trim();
 
 	// Mapeamento para o sistema ZenFisio
+	// IMPORTANTE: 'evaluation' vem do backend e deve ser mapeado para 'avaliacao'
+	if (s === "evaluation") return "avaliacao";
 	if (s === "confirmed" || s === "confirmado") return "presenca_confirmada";
 	if (s === "scheduled" || s === "agendado") return "agendado";
 	if (s === "cancelled" || s === "canceled" || s === "cancelado")
@@ -327,7 +329,7 @@ export function normalizeStatus(status: string): string {
 		s === "realizado"
 	)
 		return "atendido";
-	if (s === "avaliacao" || s === "evaluation") return "avaliacao";
+	if (s === "avaliacao") return "avaliacao";
 	if (s === "faltou_com_aviso") return "faltou_com_aviso";
 	if (s === "faltou_sem_aviso") return "faltou_sem_aviso";
 	if (s === "nao_atendido") return "nao_atendido";
