@@ -39,12 +39,6 @@ workflows:
           set -euo pipefail
           cd $APP_DIR/ios
 
-          # Initialize keychain
-          keychain initialize
-
-          # Configura o Xcode usando o perfil específico injetado
-          xcode-project use-profiles --project "FisioFlowPro.xcodeproj"
-
           # O projeto gerado pelo Expo/Codemagic ainda pode sair com identidades legadas
           # "iOS Distribution" ou "iPhone Distribution", que nao existem mais no keychain moderno.
           if grep -nE 'iOS Distribution|iPhone Distribution|Apple Distribution' FisioFlowPro.xcodeproj/project.pbxproj >/dev/null 2>&1; then
@@ -80,6 +74,7 @@ workflows:
             COMPILER_INDEX_STORE_ENABLE=NO \
             CODE_SIGN_STYLE=Manual \
             CODE_SIGN_IDENTITY="Apple Distribution" \
+            DEVELOPMENT_TEAM=G7FDW933SF \
             SKIP_INSTALL=NO
 
           APP_PATH=$(find build/ios/xcarchive/FisioFlowPro.xcarchive/Products -name "*.app" -maxdepth 3 | head -1)
