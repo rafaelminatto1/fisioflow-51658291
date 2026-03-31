@@ -26,8 +26,13 @@ import type { ViewType as CalendarViewType } from "@/hooks/useScheduleState";
 import { KEYBOARD_SHORTCUTS } from "@/lib/calendar/constants";
 
 const CalendarView = lazy(() => import("@/components/schedule/CalendarView"));
+const ScheduleXCalendarWrapper = lazy(() => import("@/components/schedule/ScheduleXCalendar"));
 
 import "@/styles/schedule.css";
+
+// Feature Flag: Use new ScheduleX calendar instead of custom dnd-kit implementation
+// Set to true to enable the modern calendar with better performance
+const USE_SCHEDULEX = true;
 
 export default function Schedule() {
 	const [searchParams, setSearchParams] = useSearchParams();
@@ -308,38 +313,77 @@ export default function Schedule() {
 										viewType={viewType as CalendarViewType}
 									/>
 								) : (
-									<CalendarView
-										appointments={appointments}
-										currentDate={currentDate}
-										onDateChange={handleDateChange}
-										viewType={viewType as CalendarViewType}
-										onViewTypeChange={handleViewTypeChange}
-										onAppointmentClick={actions.handleAppointmentClick}
-										onTimeSlotClick={actions.handleTimeSlotClick}
-										onAppointmentReschedule={
-											actions.handleAppointmentReschedule
-										}
-										onEditAppointment={actions.handleEditAppointment}
-										onDeleteAppointment={actions.handleDeleteAppointment}
-										onDuplicateAppointment={actions.handleDuplicateAppointment}
-										onStatusChange={actions.handleUpdateStatus}
-										selectionMode={isSelectionMode}
-										selectedIds={selectedIds}
-										onToggleSelection={toggleSelection}
-										rescheduleSuccessMessage={modals.rescheduleSuccessMessage}
-										onCreateAppointment={actions.handleCreateAppointment}
-										onToggleSelectionMode={toggleSelectionMode}
-										onCancelAllToday={() =>
-											modals.setShowCancelAllTodayDialog(true)
-										}
-										filters={filters as any}
-										onFiltersChange={handleFiltersChange}
-										onClearFilters={clearFilters}
-										totalAppointmentsCount={appointments.length}
-										patientFilter={patientFilter}
-										onPatientFilterChange={handlePatientFilterChange}
-										therapists={therapists}
-									/>
+									<>
+										{USE_SCHEDULEX ? (
+											<Suspense
+												fallback={
+													<CalendarSkeletonEnhanced
+														viewType={viewType as CalendarViewType}
+													/>
+												}
+											>
+												<ScheduleXCalendarWrapper
+													appointments={appointments}
+													currentDate={currentDate}
+													onDateChange={handleDateChange}
+													viewType={viewType as CalendarViewType}
+													onViewTypeChange={handleViewTypeChange}
+													onAppointmentClick={actions.handleAppointmentClick}
+													onTimeSlotClick={actions.handleTimeSlotClick}
+													onAppointmentReschedule={
+														actions.handleAppointmentReschedule
+													}
+													onEditAppointment={actions.handleEditAppointment}
+													onStatusChange={actions.handleUpdateStatus}
+													selectionMode={isSelectionMode}
+													selectedIds={selectedIds}
+													onToggleSelection={toggleSelection}
+													onCreateAppointment={actions.handleCreateAppointment}
+													onToggleSelectionMode={toggleSelectionMode}
+													filters={filters as any}
+													onFiltersChange={handleFiltersChange}
+													onClearFilters={clearFilters}
+													totalAppointmentsCount={appointments.length}
+													patientFilter={patientFilter}
+													onPatientFilterChange={handlePatientFilterChange}
+													therapists={therapists}
+												/>
+											</Suspense>
+										) : (
+											<CalendarView
+												appointments={appointments}
+												currentDate={currentDate}
+												onDateChange={handleDateChange}
+												viewType={viewType as CalendarViewType}
+												onViewTypeChange={handleViewTypeChange}
+												onAppointmentClick={actions.handleAppointmentClick}
+												onTimeSlotClick={actions.handleTimeSlotClick}
+												onAppointmentReschedule={
+													actions.handleAppointmentReschedule
+												}
+												onEditAppointment={actions.handleEditAppointment}
+												onDeleteAppointment={actions.handleDeleteAppointment}
+												onDuplicateAppointment={actions.handleDuplicateAppointment}
+												onStatusChange={actions.handleUpdateStatus}
+												selectionMode={isSelectionMode}
+												selectedIds={selectedIds}
+												onToggleSelection={toggleSelection}
+												rescheduleSuccessMessage={modals.rescheduleSuccessMessage}
+												onCreateAppointment={actions.handleCreateAppointment}
+												onToggleSelectionMode={toggleSelectionMode}
+												onCancelAllToday={() =>
+													modals.setShowCancelAllTodayDialog(true)
+												}
+												filters={filters as any}
+												onFiltersChange={handleFiltersChange}
+												onClearFilters={clearFilters}
+												totalAppointmentsCount={appointments.length}
+												patientFilter={patientFilter}
+												onPatientFilterChange={handlePatientFilterChange}
+												therapists={therapists}
+											/>
+										)}
+									</>
 								)}
 							</Suspense>
 						</div>
