@@ -5,19 +5,19 @@ workflows:
     instance_type: mac_mini_m1
     cache:
       cache_paths:
-        - ~/.cocoapods/repos
+        - ~/.npm
+        - ~/.eas-build-local-nodejs
     environment:
       node: latest
       xcode: 16
       cocoapods: default
-      ios_signing:
-        distribution_type: ad_hoc
-        bundle_identifier: com.fisioflow.professionals
       vars:
         APP_DIR: "apps/professional-app"
-        BUNDLE_ID: "com.fisioflow.professionals"
         EXPO_PUBLIC_API_URL: "https://moocafisio.com.br/api"
         CI: "true"
+      # REQUIRED: Add EXPO_TOKEN to Codemagic environment variables
+      # (Codemagic dashboard → app settings → Environment variables)
+      # Get token at: https://expo.dev/accounts/[account]/settings/access-tokens
     triggering:
       events:
         - push
@@ -28,49 +28,22 @@ workflows:
       - name: Install dependencies
         script: |
           pnpm install --no-frozen-lockfile
-      - name: Expo Prebuild
+      - name: Install EAS CLI
+        script: |
+          npm install -g eas-cli
+      - name: EAS Build iOS (ad-hoc)
         script: |
           cd $APP_DIR
-          npx expo prebuild --platform ios --no-install
-      - name: Fix code signing identity
-        script: |
-          # Expo generates xcodeproj with "iPhone Distribution" (old name)
-          # Codemagic provides "Apple Distribution" certificate — patch the mismatch
-          find $APP_DIR/ios -name "*.pbxproj" | xargs sed -i '' \
-            's/CODE_SIGN_IDENTITY = "iPhone Distribution"/CODE_SIGN_IDENTITY = "Apple Distribution"/g'
-          echo "CODE_SIGN_IDENTITY patched to Apple Distribution"
-      - name: Install CocoaPods
-        script: |
-          cd $APP_DIR/ios
-          # Ensure CDN trunk repo is registered (avoids raw.githubusercontent.com fallback)
-          pod repo list | grep -q "trunk" || pod repo add-cdn trunk https://cdn.cocoapods.org/
-          # Retry up to 3 times to handle transient 429 rate-limit errors from GitHub CDN
-          for attempt in 1 2 3; do
-            echo "CocoaPods install attempt $attempt/3"
-            pod install --repo-update && break
-            if [ $attempt -eq 3 ]; then
-              echo "pod install failed after 3 attempts"
-              exit 1
-            fi
-            echo "Retrying in 30s..."
-            sleep 30
-          done
-      - name: Build iOS IPA
-        script: |
-          cd $APP_DIR/ios
-          keychain initialize
-          xcode-project use-profiles --project "FisioFlowPro.xcodeproj"
-
-          export WORKSPACE=$(ls -d *.xcworkspace | head -1)
-          export SCHEME="FisioFlowPro"
-
-          xcode-project build-ipa \
-            --workspace "$WORKSPACE" \
-            --scheme "$SCHEME" \
-            --config "Release" \
-            --log-stream stdout
+          # EAS handles: prebuild, CocoaPods, code signing, xcodebuild, export
+          # credentialsSource: "remote" in eas.json — no manual signing needed
+          eas build \
+            --platform ios \
+            --profile preview \
+            --local \
+            --non-interactive \
+            --output /tmp/FisioFlowPro.ipa
     artifacts:
-      - apps/professional-app/ios/build/remote/ipa/*.ipa
+      - /tmp/FisioFlowPro.ipa
     publishing:
       email:
         recipients:
