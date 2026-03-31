@@ -22,6 +22,7 @@ app.get('/', requireAuth, async (c) => {
   const { year } = c.req.query();
   const pool = await createPool(c.env);
 
+  // 1. Feriados org-específicos (customizados / estaduais) — sempre do Neon
   const conditions = ['organization_id = $1'];
   const params: unknown[] = [user.organizationId];
 
@@ -30,11 +31,43 @@ app.get('/', requireAuth, async (c) => {
     conditions.push(`EXTRACT(YEAR FROM data) = $${params.length}`);
   }
 
-  const result = await pool.query(
-    `SELECT * FROM feriados WHERE ${conditions.join(' AND ')} ORDER BY data ASC`,
-    params,
-  );
-  try { return c.json({ data: result.rows || result }); } catch { return c.json({ data: [] }); }
+  const [orgResult, nacionaisD1] = await Promise.all([
+    pool.query(
+      `SELECT * FROM feriados WHERE ${conditions.join(' AND ')} ORDER BY data ASC`,
+      params,
+    ),
+    // 2. Feriados nacionais do D1 (zero latência, sem hit no Neon)
+    c.env.DB
+      ? c.env.DB.prepare(
+          year
+            ? "SELECT data, nome, tipo FROM feriados_nacionais WHERE data LIKE ? ORDER BY data ASC"
+            : "SELECT data, nome, tipo FROM feriados_nacionais ORDER BY data ASC"
+        ).bind(year ? `${year}-%` : undefined).all<{ data: string; nome: string; tipo: string }>()
+          .then((r) => r.results)
+          .catch(() => [])
+      : Promise.resolve([]),
+  ]);
+
+  // Mapeia nacionais do D1 para o formato esperado pelo frontend (mesclando sem duplicatas)
+  const orgDates = new Set((orgResult.rows as FeriadoRow[]).map((r) => r.data?.split('T')[0]));
+  const nacionaisMapped = nacionaisD1
+    .filter((f) => !orgDates.has(f.data)) // org já definiu override para essa data
+    .map((f) => ({
+      id: `nacional:${f.data}`,
+      organization_id: null,
+      nome: f.nome,
+      data: f.data,
+      tipo: 'nacional' as const,
+      recorrente: true,
+      bloqueia_agenda: true,
+      created_at: f.data,
+      updated_at: f.data,
+    }));
+
+  const merged = [...(orgResult.rows as FeriadoRow[]), ...nacionaisMapped]
+    .sort((a, b) => a.data.localeCompare(b.data));
+
+  return c.json({ data: merged });
 });
 
 app.post('/', requireAuth, async (c) => {

@@ -808,23 +808,35 @@ app.get("/:id/timeline", async (c) => {
 				),
 			);
 
-		// 3. Fetch Evolutions (SOAP)
-		const evolutions = await db
-			.select({
-				id: sql`id`,
-				entry_type: sql`'evolution'`,
-				category: sql`'clinical'`,
-				body: sql`preview_text`,
-				created_at: sql`created_at`,
-			})
-			.from(sql`evolution_index`)
-			.where(
-				and(
-					sql`patient_id = ${id}::uuid`,
-					sql`organization_id = ${user.organizationId}::uuid`,
-				),
-			)
-			.catch(() => []); // If table doesn't exist yet, return empty
+		// 3. Fetch Evolutions (SOAP) — D1 edge index (fast) com fallback para Neon
+		let evolutions: any[] = [];
+		if (c.env.DB) {
+			try {
+				const d1Result = await c.env.DB.prepare(
+					`SELECT id, 'evolution' AS entry_type, 'clinical' AS category,
+					        preview_text AS body, created_at
+					 FROM evolution_index
+					 WHERE patient_id = ? AND (organization_id = ? OR organization_id IS NULL)
+					 ORDER BY created_at DESC LIMIT 50`
+				).bind(id, user.organizationId).all<{
+					id: string; entry_type: string; category: string; body: string; created_at: string;
+				}>();
+				evolutions = d1Result.results;
+			} catch {
+				// D1 falhou — fallback silencioso para Neon
+				evolutions = await db
+					.select({ id: sql`id`, entry_type: sql`'evolution'`, category: sql`'clinical'`, body: sql`preview_text`, created_at: sql`created_at` })
+					.from(sql`evolution_index`)
+					.where(and(sql`patient_id = ${id}::uuid`, sql`organization_id = ${user.organizationId}::uuid`))
+					.catch(() => []) as any[];
+			}
+		} else {
+			evolutions = await db
+				.select({ id: sql`id`, entry_type: sql`'evolution'`, category: sql`'clinical'`, body: sql`preview_text`, created_at: sql`created_at` })
+				.from(sql`evolution_index`)
+				.where(and(sql`patient_id = ${id}::uuid`, sql`organization_id = ${user.organizationId}::uuid`))
+				.catch(() => []) as any[];
+		}
 
 		// Combine and Sort
 		const timeline = [...comms, ...appointments, ...evolutions].sort(

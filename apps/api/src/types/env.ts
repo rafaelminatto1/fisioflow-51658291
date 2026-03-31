@@ -35,11 +35,18 @@ export interface Env {
   R2_SECRET_ACCESS_KEY: string;
   R2_PUBLIC_URL: string;
 
-  // Cloudflare D1 (cache opcional)
+  // Cloudflare D1
+  // fisioflow-db: evolution_index, feriados_nacionais
   DB?: D1Database;
+  // fisioflow-edge-cache: query_cache, rate_limits
+  EDGE_CACHE?: D1Database;
+
+  // Analytics Engine (observabilidade em tempo real, free tier)
+  ANALYTICS?: AnalyticsEngineDataset;
 
   // Durable Objects
   ORGANIZATION_STATE: DurableObjectNamespace;
+  PATIENT_AGENT?: DurableObjectNamespace;
   FISIOFLOW_CONFIG?: KVNamespace;
   CLINICAL_KNOWLEDGE?: any;
 

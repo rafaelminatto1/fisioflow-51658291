@@ -32,6 +32,24 @@ bucket_name = "fisioflow-media"
 binding = "FISIOFLOW_CONFIG"
 id = "4284b33fa7ed40b6bc9c59b6041c03ed"
 
+# ===== D1 SQL (Edge SQLite — evolution_index, feriados, rate limiting) =====
+# fisioflow-db: índice de evoluções, feriados nacionais
+[[d1_databases]]
+binding = "DB"
+database_name = "fisioflow-db"
+database_id = "bf781be2-527d-471d-9cf2-dd18f8e6c2b2"
+
+# fisioflow-edge-cache: query_cache genérico, rate_limits por organização
+[[d1_databases]]
+binding = "EDGE_CACHE"
+database_name = "fisioflow-edge-cache"
+database_id = "9eba3eb7-5486-49d0-9684-c325f8b1ddc2"
+
+# ===== ANALYTICS ENGINE (Observabilidade em tempo real — Free) =====
+[[analytics_engine_datasets]]
+binding = "ANALYTICS"
+dataset = "fisioflow_events"
+
 # ===== VECTORIZE (Base de Conhecimento RAG) =====
 [[vectorize]]
 binding = "CLINICAL_KNOWLEDGE"
@@ -139,6 +157,20 @@ FISIOFLOW_AI_GATEWAY_URL = "https://gateway.ai.cloudflare.com/v1/32156f9a72a32d1
 [[env.production.kv_namespaces]]
 binding = "FISIOFLOW_CONFIG"
 id = "4284b33fa7ed40b6bc9c59b6041c03ed"
+
+[[env.production.d1_databases]]
+binding = "DB"
+database_name = "fisioflow-db"
+database_id = "bf781be2-527d-471d-9cf2-dd18f8e6c2b2"
+
+[[env.production.d1_databases]]
+binding = "EDGE_CACHE"
+database_name = "fisioflow-edge-cache"
+database_id = "9eba3eb7-5486-49d0-9684-c325f8b1ddc2"
+
+[[env.production.analytics_engine_datasets]]
+binding = "ANALYTICS"
+dataset = "fisioflow_events"
 
 [[env.production.vectorize]]
 binding = "CLINICAL_KNOWLEDGE"
