@@ -53,14 +53,34 @@ workflows:
           cd $APP_DIR/ios
           keychain initialize
           xcode-project use-profiles --project "FisioFlowPro.xcodeproj"
-          
+
           export WORKSPACE=$(ls -d *.xcworkspace | head -1)
           export SCHEME="FisioFlowPro"
-          
-          xcode-project build-ipa \
-            --workspace "$WORKSPACE" \
-            --scheme "$SCHEME" \
-            --log-stream stdout
+          export ARCHIVE_PATH="build/ios/xcarchive/FisioFlowPro.xcarchive"
+          export IPA_OUTPUT="build/remote/ipa"
+
+          mkdir -p "$IPA_OUTPUT"
+
+          # Run xcodebuild directly for full error output
+          set -o pipefail
+          xcodebuild \
+            -workspace "$WORKSPACE" \
+            -scheme "$SCHEME" \
+            -configuration Release \
+            -archivePath "$ARCHIVE_PATH" \
+            -destination "generic/platform=iOS" \
+            DEVELOPMENT_TEAM=G7FDW933SF \
+            CODE_SIGN_IDENTITY="Apple Distribution" \
+            CODE_SIGN_STYLE=Manual \
+            COMPILER_INDEX_STORE_ENABLE=NO \
+            archive 2>&1 | tee /tmp/xcodebuild.log | xcbeautify --renderer github-actions || \
+            (echo "--- FULL XCODE ERROR LOG ---" && grep -E "error:|fatal error:|BUILD FAILED" /tmp/xcodebuild.log | tail -50 && exit 1)
+
+          xcodebuild \
+            -exportArchive \
+            -archivePath "$ARCHIVE_PATH" \
+            -exportPath "$IPA_OUTPUT" \
+            -exportOptionsPlist /Users/builder/export_options.plist 2>&1 | xcbeautify --renderer github-actions
     artifacts:
       - apps/professional-app/ios/build/remote/ipa/*.ipa
     publishing:
