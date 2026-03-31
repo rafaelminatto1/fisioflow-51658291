@@ -3,6 +3,7 @@ import { createPool } from './lib/db';
 import { triggerInngestEvent } from './lib/inngest-client';
 import { sendAppointmentReminderEmail } from './lib/email';
 import type { WhatsAppQueuePayload } from './queue';
+import { cleanupRateLimits } from './middleware/rateLimit';
 
 /**
  * Cloudflare Worker Cron Trigger Handler
@@ -31,6 +32,10 @@ export async function handleScheduled(event: ScheduledEvent, env: Env, ctx: Exec
 
       case "0 11 * * *": // UTC 11h = BRT 08h — Manutenção em horário de expediente
         await performDatabaseCleanup(pool, env);
+        if (env.EDGE_CACHE) {
+          const deleted = await cleanupRateLimits(env.EDGE_CACHE);
+          console.log(`[Cron] D1 rate_limits cleanup: ${deleted} rows deleted.`);
+        }
         break;
 
       default:

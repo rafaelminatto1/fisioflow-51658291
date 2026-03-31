@@ -2,6 +2,7 @@ import React, { useEffect, useState, useCallback, useRef } from "react";
 import { authClient } from "@/integrations/neon/auth";
 import { fisioLogger as logger } from "@/lib/errors/logger";
 import { auditApi } from "@/api/v2";
+import { profileApi } from "@/api/v2/system";
 import {
 	getNeonAccessToken,
 	invalidateNeonTokenCache,
@@ -333,10 +334,22 @@ export const AuthContextProvider: React.FC<{ children: React.ReactNode }> = ({
 	const updateProfile = async (updates: Partial<Profile>) => {
 		try {
 			if (!user) return { error: { message: "Usuário não autenticado" } };
+
+			await profileApi.updateMe({
+				full_name: updates.full_name,
+				birth_date: updates.birth_date ?? null,
+			});
+
 			if (updates.full_name || updates.avatar_url) {
 				await authClient.updateUser({
 					name: updates.full_name,
 					image: updates.avatar_url,
+				}).catch((error) => {
+					logger.warn(
+						"Falha ao sincronizar perfil no Neon Auth; mantendo perfil da aplicacao",
+						error,
+						"AuthContextProvider",
+					);
 				});
 			}
 			if (profile) setProfile({ ...profile, ...updates });
