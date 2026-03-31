@@ -63,7 +63,7 @@ app.post('/', requireAuth, async (c) => {
     if (body.saveToR2 !== false) {
       const key = `reports/${user.organizationId}/${body.patientId}/${body.type}-${Date.now()}.pdf`;
 
-      await c.env.MEDIA_BUCKET.put(key, pdfBuffer, {
+      await c.env.MEDIA_BUCKET.put(key, new Uint8Array(pdfBuffer as any), {
         httpMetadata: {
           contentType: 'application/pdf',
           contentDisposition: `attachment; filename="${body.type}-${body.patientName.replace(/\s+/g, '_')}.pdf"`,
@@ -83,7 +83,7 @@ app.post('/', requireAuth, async (c) => {
     }
 
     // Retornar binário direto
-    return new Response(pdfBuffer, {
+    return new Response(new Uint8Array(pdfBuffer as any), {
       headers: {
         'Content-Type': 'application/pdf',
         'Content-Disposition': `attachment; filename="${body.type}-${body.patientName.replace(/\s+/g, '_')}.pdf"`,
