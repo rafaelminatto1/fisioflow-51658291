@@ -8,9 +8,8 @@ workflows:
       xcode: latest
       cocoapods: default
       ios_signing:
-        # Mudamos para busca automática por Bundle ID, que é mais resiliente a Capabilities
-        distribution_type: ad_hoc
-        bundle_identifier: com.fisioflow.professionals
+        provisioning_profiles:
+          - fisioflow_pro_adhoc
       vars:
         APP_DIR: "apps/professional-app"
         BUNDLE_ID: "com.fisioflow.professionals"
@@ -41,7 +40,7 @@ workflows:
           # Initialize keychain
           keychain initialize
           
-          # Tenta configurar os perfis de forma automática
+          # Força o uso do perfil específico e desabilita a assinatura automática do Xcode que causa conflito
           xcode-project use-profiles --project "FisioFlowPro.xcodeproj"
           
           export WORKSPACE=$(ls -d *.xcworkspace | head -1)
