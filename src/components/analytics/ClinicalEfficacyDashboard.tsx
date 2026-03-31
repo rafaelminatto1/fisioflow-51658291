@@ -1,12 +1,12 @@
 import React, { useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { analyticsApi } from "@/api/v2/insights";
+import { SafeResponsiveContainer } from "@/components/charts/SafeResponsiveContainer";
 import { 
 	XAxis, 
 	YAxis, 
 	CartesianGrid, 
 	Tooltip, 
-	ResponsiveContainer,
 	AreaChart,
 	Area
 } from "recharts";
@@ -93,7 +93,7 @@ export function ClinicalEfficacyDashboard() {
 				</CardHeader>
 				<CardContent className="p-6">
 					<div className="h-[300px] w-full">
-						<ResponsiveContainer width="100%" height="100%">
+						<SafeResponsiveContainer className="h-full" minHeight={300}>
 							<AreaChart data={chartData}>
 								<defs>
 									<linearGradient id="colorPain" x1="0" y1="0" x2="0" y2="1">
@@ -128,7 +128,7 @@ export function ClinicalEfficacyDashboard() {
 									animationDuration={1500}
 								/>
 							</AreaChart>
-						</ResponsiveContainer>
+						</SafeResponsiveContainer>
 					</div>
 				</CardContent>
 			</Card>

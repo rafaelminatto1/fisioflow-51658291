@@ -37,6 +37,7 @@ import {
 	TableRow,
 } from "@/components/ui/table";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { SafeResponsiveContainer } from "@/components/charts/SafeResponsiveContainer";
 import {
 	BarChart,
 	Bar,
@@ -44,7 +45,6 @@ import {
 	YAxis,
 	CartesianGrid,
 	Tooltip,
-	ResponsiveContainer,
 	Cell,
 } from "recharts";
 import { useAnalyticsFilters } from "@/contexts/AnalyticsFiltersContext";
@@ -180,7 +180,7 @@ function TeamPerformanceComponent() {
 					</CardHeader>
 					<CardContent>
 						<div className="h-[300px] w-full">
-							<ResponsiveContainer width="100%" height="100%">
+							<SafeResponsiveContainer className="h-full" minHeight={300}>
 								<BarChart data={performanceData || []}>
 									<CartesianGrid strokeDasharray="3 3" vertical={false} strokeOpacity={0.1} />
 									<XAxis 
@@ -200,7 +200,7 @@ function TeamPerformanceComponent() {
 										))}
 									</Bar>
 								</BarChart>
-							</ResponsiveContainer>
+							</SafeResponsiveContainer>
 						</div>
 					</CardContent>
 				</Card>

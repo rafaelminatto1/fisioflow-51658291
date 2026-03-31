@@ -21,10 +21,7 @@ import { useSoapRecordsV2 } from "@/hooks/useSoapRecordsV2";
 import { format } from "date-fns";
 import { toast } from "sonner";
 import { aiApi } from "@/api/v2";
-import {
-	exportDoctorReferralPdf,
-	type DoctorReferralPdfData,
-} from "@/lib/export/doctorReferralPdfExport";
+import type { DoctorReferralPdfData } from "@/lib/export/doctorReferralPdfExport";
 
 interface DoctorReferralReportGeneratorProps {
 	patientId: string;
@@ -113,6 +110,9 @@ export function DoctorReferralReportGenerator({
 	const handleDownloadPdf = async () => {
 		setGeneratingPdf(true);
 		try {
+			const { exportDoctorReferralPdf } = await import(
+				"@/lib/export/doctorReferralPdfExport"
+			);
 			await exportDoctorReferralPdf(
 				`Relatorio_${patientName.replace(/\s+/g, "_")}_${format(new Date(), "yyyyMMdd")}.pdf`,
 				reportData,
