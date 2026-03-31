@@ -60,13 +60,13 @@ index_name = "fisioflow-clinical"
 # Crie no dashboard: AI > AI Search > New Index
 [[ai_search]]
 binding = "AI_SEARCH"
-name = "fisioflow-knowledge"
+instance_name = "fisioflow-knowledge"
 
 # ===== PIPELINES (Data warehouse → R2 Iceberg, open beta grátis) =====
 # Crie com: wrangler pipelines create fisioflow-events
-[[pipelines]]
-binding = "EVENTS_PIPELINE"
-pipeline = "fisioflow-events"
+# [[pipelines]]
+# binding = "EVENTS_PIPELINE"
+# pipeline = "fisioflow-events"
 
 # ===== WORKFLOWS (Automações duráveis multi-step) =====
 [[workflows]]
@@ -224,11 +224,11 @@ index_name = "fisioflow-clinical"
 
 [[env.production.ai_search]]
 binding = "AI_SEARCH"
-name = "fisioflow-knowledge"
+instance_name = "fisioflow-knowledge"
 
-[[env.production.pipelines]]
-binding = "EVENTS_PIPELINE"
-pipeline = "fisioflow-events"
+# [[env.production.pipelines]]
+# binding = "EVENTS_PIPELINE"
+# pipeline = "fisioflow-events"
 
 [[env.production.workflows]]
 name = "appointment-reminder"
