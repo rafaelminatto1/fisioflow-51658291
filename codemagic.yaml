@@ -9,7 +9,7 @@ workflows:
       cocoapods: default
       ios_signing:
         provisioning_profiles:
-          - fisioflow_pro_adhoc
+          - fisioflow_pro_adhoc_push_2026 # Novo perfil com Push habilitado
       vars:
         APP_DIR: "apps/professional-app"
         BUNDLE_ID: "com.fisioflow.professionals"
@@ -40,7 +40,7 @@ workflows:
           # Initialize keychain
           keychain initialize
           
-          # Força o uso do perfil específico e desabilita a assinatura automática do Xcode que causa conflito
+          # Aplica o novo perfil de provisionamento
           xcode-project use-profiles --project "FisioFlowPro.xcodeproj"
           
           export WORKSPACE=$(ls -d *.xcworkspace | head -1)
