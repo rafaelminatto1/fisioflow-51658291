@@ -51,14 +51,23 @@ workflows:
 
       - name: Set up code signing
         script: |
-          xcode-project use-profiles \
-            --project "$CM_BUILD_DIR/$APP_DIR/ios/vite_react_shadcn_ts.xcodeproj"
+          # Find actual project name (Expo uses bundle ID, not slug)
+          PROJECT=$(find "$CM_BUILD_DIR/$APP_DIR/ios" -name "*.xcodeproj" -maxdepth 1 | head -1)
+          echo "Using project: $PROJECT"
+          xcode-project use-profiles --project "$PROJECT"
 
       - name: Build IPA (ad-hoc)
         script: |
+          # Find actual workspace and scheme (Expo uses app name, not slug)
+          WORKSPACE=$(find "$CM_BUILD_DIR/$APP_DIR/ios" -name "*.xcworkspace" -maxdepth 1 | head -1)
+          SCHEME=$(basename "$WORKSPACE" .xcworkspace)
+
+          echo "Using workspace: $WORKSPACE"
+          echo "Using scheme: $SCHEME"
+
           xcode-project build-ipa \
-            --workspace "$CM_BUILD_DIR/$APP_DIR/ios/vite_react_shadcn_ts.xcworkspace" \
-            --scheme vite_react_shadcn_ts \
+            --workspace "$WORKSPACE" \
+            --scheme "$SCHEME" \
             --archive-flags="-destination 'generic/platform=iOS'"
 
     artifacts:
