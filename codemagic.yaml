@@ -8,7 +8,7 @@ workflows:
         - ~/.cocoapods/repos
     environment:
       node: latest
-      xcode: latest
+      xcode: 16
       cocoapods: default
       ios_signing:
         distribution_type: ad_hoc
@@ -32,6 +32,13 @@ workflows:
         script: |
           cd $APP_DIR
           npx expo prebuild --platform ios --no-install
+      - name: Fix code signing identity
+        script: |
+          # Expo generates xcodeproj with "iPhone Distribution" (old name)
+          # Codemagic provides "Apple Distribution" certificate — patch the mismatch
+          find $APP_DIR/ios -name "*.pbxproj" | xargs sed -i '' \
+            's/CODE_SIGN_IDENTITY = "iPhone Distribution"/CODE_SIGN_IDENTITY = "Apple Distribution"/g'
+          echo "CODE_SIGN_IDENTITY patched to Apple Distribution"
       - name: Install CocoaPods
         script: |
           cd $APP_DIR/ios
@@ -56,31 +63,12 @@ workflows:
 
           export WORKSPACE=$(ls -d *.xcworkspace | head -1)
           export SCHEME="FisioFlowPro"
-          export ARCHIVE_PATH="build/ios/xcarchive/FisioFlowPro.xcarchive"
-          export IPA_OUTPUT="build/remote/ipa"
 
-          mkdir -p "$IPA_OUTPUT"
-
-          # Run xcodebuild directly for full error output
-          set -o pipefail
-          xcodebuild \
-            -workspace "$WORKSPACE" \
-            -scheme "$SCHEME" \
-            -configuration Release \
-            -archivePath "$ARCHIVE_PATH" \
-            -destination "generic/platform=iOS" \
-            DEVELOPMENT_TEAM=G7FDW933SF \
-            CODE_SIGN_IDENTITY="Apple Distribution" \
-            CODE_SIGN_STYLE=Manual \
-            COMPILER_INDEX_STORE_ENABLE=NO \
-            archive 2>&1 | tee /tmp/xcodebuild.log || \
-            (echo "--- XCODE ERRORS ---" && grep -E "error:|fatal error:|BUILD FAILED" /tmp/xcodebuild.log | tail -80 && exit 1)
-
-          xcodebuild \
-            -exportArchive \
-            -archivePath "$ARCHIVE_PATH" \
-            -exportPath "$IPA_OUTPUT" \
-            -exportOptionsPlist /Users/builder/export_options.plist
+          xcode-project build-ipa \
+            --workspace "$WORKSPACE" \
+            --scheme "$SCHEME" \
+            --config "Release" \
+            --log-stream stdout
     artifacts:
       - apps/professional-app/ios/build/remote/ipa/*.ipa
     publishing:
