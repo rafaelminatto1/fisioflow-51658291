@@ -214,7 +214,7 @@ export function useSchedulePageData(
 				throw error;
 			}
 		},
-		staleTime: 1000 * 60 * 2,
+		staleTime: 0, // Refetch imediato após mudanças
 		gcTime: 1000 * 60 * 5,
 	});
 
@@ -244,7 +244,7 @@ export function useSchedulePageData(
 				return [];
 			}
 		},
-		staleTime: 1000 * 60 * 2,
+		staleTime: 0, // Refetch imediato após mudanças
 		gcTime: 1000 * 60 * 5,
 	});
 
