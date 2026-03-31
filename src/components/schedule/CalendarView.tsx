@@ -649,14 +649,27 @@ export default function CalendarView({
 									)}
 								</div>
 								{onCreateAppointment && (
-									<Button
-										onClick={onCreateAppointment}
-										size="sm"
-										className="h-10 px-5 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-xl shadow-lg shadow-blue-500/25 active:scale-95 transition-all gap-2"
-									>
-										<Plus className="w-4 h-4" />
-										<span className="hidden xl:inline text-xs">Agendar</span>
-									</Button>
+									<div className="flex items-center gap-2">
+										<Button
+											asChild
+											variant="ghost"
+											size="icon"
+											className="h-10 w-10 rounded-xl text-slate-400 hover:text-blue-600 hover:bg-blue-50 transition-all"
+											title="Configurações da Agenda"
+										>
+											<Link to="/schedule/settings">
+												<Settings className="w-5 h-5" />
+											</Link>
+										</Button>
+										<Button
+											onClick={onCreateAppointment}
+											size="sm"
+											className="h-10 px-5 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-xl shadow-lg shadow-blue-500/25 active:scale-95 transition-all gap-2"
+										>
+											<Plus className="w-4 h-4" />
+											<span className="hidden xl:inline text-xs">Agendar</span>
+										</Button>
+									</div>
 								)}
 							</div>
 						</div>
