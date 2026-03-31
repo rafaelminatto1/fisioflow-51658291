@@ -154,3 +154,12 @@ export class OrganizationState implements DurableObject {
     }
   }
 }
+
+export async function broadcastToOrg(env: any, orgId: string, message: any) {
+  const id = env.ORGANIZATION_STATE.idFromName(orgId);
+  const stub = env.ORGANIZATION_STATE.get(id);
+  await stub.fetch(new Request('http://do/broadcast', {
+    method: 'POST',
+    body: typeof message === 'string' ? message : JSON.stringify(message)
+  }));
+}
