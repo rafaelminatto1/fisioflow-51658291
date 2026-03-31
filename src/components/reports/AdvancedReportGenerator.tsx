@@ -21,8 +21,6 @@ import { FileText, Download, Loader2 } from "lucide-react";
 import { format } from "date-fns";
 import { DateRange } from "react-day-picker";
 import { parseResponseDate } from "@/utils/dateUtils";
-import jsPDF from "jspdf";
-import autoTable from "jspdf-autotable";
 import { fisioLogger as logger } from "@/lib/errors/logger";
 import { appointmentsApi } from "@/api/v2";
 import { toast } from "sonner";
@@ -96,6 +94,10 @@ export function AdvancedReportGenerator() {
 
 	const generatePDF = async (data: unknown[]) => {
 		const formattedData = data as AppointmentData[];
+		const [{ default: jsPDF }, { default: autoTable }] = await Promise.all([
+			import("jspdf"),
+			import("jspdf-autotable"),
+		]);
 		const doc = new jsPDF();
 
 		// Header

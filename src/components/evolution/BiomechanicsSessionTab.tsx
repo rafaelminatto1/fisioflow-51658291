@@ -2,7 +2,7 @@
  * BiomechanicsSessionTab — Renders the correct studio inside a session context.
  * Results are auto-linked to the session's appointment_id when saved.
  */
-import React, { useState } from "react";
+import React, { Suspense, lazy, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Activity, Zap, AlignJustify, Layout, Save, CheckCircle2, Loader2, ChevronDown } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -11,12 +11,28 @@ import { Card, CardContent } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
 import { biomechanicsApi, sessionsApi, type BiomechanicsData } from "@/api/v2";
 
-import { GaitAnalysisStudio } from "@/components/analysis/studios/GaitAnalysisStudio";
-import { JumpAnalysisStudio } from "@/components/analysis/studios/JumpAnalysisStudio";
-import { PostureAnalysisStudio } from "@/components/analysis/studios/PostureAnalysisStudio";
-import { FunctionalAnalysisStudio } from "@/components/analysis/studios/FunctionalAnalysisStudio";
-
 type StudioType = "gait" | "jump" | "posture" | "functional";
+
+const GaitAnalysisStudio = lazy(() =>
+	import("@/components/analysis/studios/GaitAnalysisStudio").then((m) => ({
+		default: m.GaitAnalysisStudio,
+	})),
+);
+const JumpAnalysisStudio = lazy(() =>
+	import("@/components/analysis/studios/JumpAnalysisStudio").then((m) => ({
+		default: m.JumpAnalysisStudio,
+	})),
+);
+const PostureAnalysisStudio = lazy(() =>
+	import("@/components/analysis/studios/PostureAnalysisStudio").then((m) => ({
+		default: m.PostureAnalysisStudio,
+	})),
+);
+const FunctionalAnalysisStudio = lazy(() =>
+	import("@/components/analysis/studios/FunctionalAnalysisStudio").then((m) => ({
+		default: m.FunctionalAnalysisStudio,
+	})),
+);
 
 const STUDIO_CONFIG: Record<
   StudioType,
@@ -57,6 +73,19 @@ interface BiomechanicsSessionTabProps {
   appointmentId: string | null;
   patientName: string;
   existingBiomechanics?: BiomechanicsData | null;
+}
+
+function StudioLoadingFallback({ label }: { label: string }) {
+  return (
+    <Card className="border-dashed">
+      <CardContent className="flex min-h-[420px] items-center justify-center">
+        <div className="flex items-center gap-3 text-sm font-medium text-muted-foreground">
+          <Loader2 className="h-4 w-4 animate-spin" />
+          Carregando {label.toLowerCase()}...
+        </div>
+      </CardContent>
+    </Card>
+  );
 }
 
 export const BiomechanicsSessionTab: React.FC<BiomechanicsSessionTabProps> = ({
@@ -131,11 +160,33 @@ export const BiomechanicsSessionTab: React.FC<BiomechanicsSessionTabProps> = ({
   };
 
   const renderStudio = () => {
+    const selectedLabel = selectedStudio ? STUDIO_CONFIG[selectedStudio].label : "estúdio";
+
     switch (selectedStudio) {
-      case "gait": return <GaitAnalysisStudio onDataUpdate={handleStudioData} />;
-      case "jump": return <JumpAnalysisStudio onDataUpdate={handleStudioData} />;
-      case "posture": return <PostureAnalysisStudio onDataUpdate={handleStudioData} />;
-      case "functional": return <FunctionalAnalysisStudio onDataUpdate={handleStudioData} />;
+      case "gait":
+        return (
+          <Suspense fallback={<StudioLoadingFallback label={selectedLabel} />}>
+            <GaitAnalysisStudio onDataUpdate={handleStudioData} />
+          </Suspense>
+        );
+      case "jump":
+        return (
+          <Suspense fallback={<StudioLoadingFallback label={selectedLabel} />}>
+            <JumpAnalysisStudio onDataUpdate={handleStudioData} />
+          </Suspense>
+        );
+      case "posture":
+        return (
+          <Suspense fallback={<StudioLoadingFallback label={selectedLabel} />}>
+            <PostureAnalysisStudio onDataUpdate={handleStudioData} />
+          </Suspense>
+        );
+      case "functional":
+        return (
+          <Suspense fallback={<StudioLoadingFallback label={selectedLabel} />}>
+            <FunctionalAnalysisStudio onDataUpdate={handleStudioData} />
+          </Suspense>
+        );
       default: return null;
     }
   };

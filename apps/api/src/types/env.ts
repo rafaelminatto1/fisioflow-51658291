@@ -1,3 +1,12 @@
+import type {
+  AppointmentReminderWorkflow,
+  PatientOnboardingWorkflow,
+  NFSeWorkflow,
+  HEPComplianceWorkflow,
+  PatientDischargeWorkflow,
+  PatientReengagementWorkflow,
+} from '../workflows';
+
 /**
  * Cloudflare Workers Environment Bindings
  * Define todas as variáveis e bindings disponíveis no Worker
@@ -36,22 +45,49 @@ export interface Env {
   R2_PUBLIC_URL: string;
 
   // Cloudflare D1
-  // fisioflow-db: evolution_index, feriados_nacionais
-  DB?: D1Database;
-  // fisioflow-edge-cache: query_cache, rate_limits
-  EDGE_CACHE?: D1Database;
+  DB?: D1Database;         // fisioflow-db: evolution_index, feriados_nacionais
+  EDGE_CACHE?: D1Database; // fisioflow-edge-cache: rate_limits, query_cache
+
+  // Cloudflare KV
+  FISIOFLOW_CONFIG?: KVNamespace;
 
   // Analytics Engine (observabilidade em tempo real, free tier)
   ANALYTICS?: AnalyticsEngineDataset;
 
+  // Vectorize (busca semântica — exercícios, protocolos, wiki)
+  CLINICAL_KNOWLEDGE?: VectorizeIndex;
+
+  // AI Search (RAG gerenciado — busca em linguagem natural)
+  AI_SEARCH?: {
+    search(query: string, options?: { limit?: number; filter?: Record<string, string> }): Promise<{
+      results: Array<{
+        id: string;
+        score: number;
+        content: string;
+        metadata?: Record<string, string>;
+      }>;
+    }>;
+  };
+
+  // Pipelines (data warehouse → R2 Iceberg, open beta)
+  EVENTS_PIPELINE?: {
+    send(events: Array<Record<string, unknown>>): Promise<void>;
+  };
+
   // Durable Objects
   ORGANIZATION_STATE: DurableObjectNamespace;
   PATIENT_AGENT?: DurableObjectNamespace;
-  FISIOFLOW_CONFIG?: KVNamespace;
-  CLINICAL_KNOWLEDGE?: any;
+
+  // Cloudflare Workflows (automações duráveis)
+  WORKFLOW_APPOINTMENT_REMINDER?: Workflow<AppointmentReminderWorkflow>;
+  WORKFLOW_PATIENT_ONBOARDING?: Workflow<PatientOnboardingWorkflow>;
+  WORKFLOW_NFSE?: Workflow<NFSeWorkflow>;
+  WORKFLOW_HEP_COMPLIANCE?: Workflow<HEPComplianceWorkflow>;
+  WORKFLOW_DISCHARGE?: Workflow<PatientDischargeWorkflow>;
+  WORKFLOW_REENGAGEMENT?: Workflow<PatientReengagementWorkflow>;
 
   // AI & Browser Rendering
-  AI: any;
+  AI: Ai;
   BROWSER: any;
 
   // Queues
@@ -82,5 +118,24 @@ export interface Env {
 
   // Resend (Email)
   RESEND_API_KEY?: string;
-  RESEND_FROM_EMAIL?: string; // ex: "FisioFlow <noreply@moocafisio.com.br>"
+  RESEND_FROM_EMAIL?: string;
+
+  // Cloudflare Turnstile (anti-bot para rotas públicas)
+  TURNSTILE_SECRET_KEY?: string;
+  TURNSTILE_SITE_KEY?: string;
 }
+
+// Helper type para Workflow binding
+type Workflow<T> = {
+  create(opts: { id?: string; params?: Record<string, unknown> }): Promise<WorkflowInstance>;
+  get(id: string): Promise<WorkflowInstance>;
+};
+
+type WorkflowInstance = {
+  id: string;
+  status(): Promise<{ status: string; error?: string; output?: unknown }>;
+  sendEvent(event: { type: string; payload?: unknown }): Promise<void>;
+  pause(): Promise<void>;
+  resume(): Promise<void>;
+  terminate(): Promise<void>;
+};

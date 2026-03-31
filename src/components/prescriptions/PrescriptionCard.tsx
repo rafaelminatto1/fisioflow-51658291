@@ -30,7 +30,6 @@ import {
 import { format, parseISO, isAfter } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { Prescription } from "@/hooks/usePrescriptions";
-import { downloadPrescriptionPDF } from "@/lib/export/prescriptionPdfExport";
 import { toast } from "sonner";
 import { PatientHelpers } from "@/types";
 import { fisioLogger as logger } from "@/lib/errors/logger";
@@ -68,6 +67,9 @@ export function PrescriptionCard({
 	const handleDownloadPdf = async () => {
 		setIsGeneratingPdf(true);
 		try {
+			const { downloadPrescriptionPDF } = await import(
+				"@/lib/export/prescriptionPdfExport"
+			);
 			await downloadPrescriptionPDF({
 				id: prescription.id,
 				qr_code: prescription.qr_code,

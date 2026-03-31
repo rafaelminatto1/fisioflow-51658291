@@ -9,11 +9,12 @@ import path from 'path';
 import { fileURLToPath } from 'url';
 import { mkdirSync, rmSync } from 'fs';
 import { testUsers } from './fixtures/test-data';
+import { getE2EAuthOrigin } from './helpers/neon-auth';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const AUTH_STATE_PATH = path.join(__dirname, '../playwright/.auth/user.json');
 
-export default async function globalSetup(config: FullConfig) {
+export default async function globalSetup(_config: FullConfig) {
   console.log('\n🧪 Playwright Global Setup - Iniciando...');
 
   if (process.env.E2E_SKIP_AUTH_SETUP === 'true') {
@@ -21,9 +22,7 @@ export default async function globalSetup(config: FullConfig) {
     return;
   }
 
-  const projectUse = (config.projects?.[0]?.use || {}) as Record<string, unknown>;
-  const baseURL = String(projectUse.baseURL || process.env.BASE_URL || 'http://localhost:5173');
-  const authBaseURL = baseURL.split('?')[0];
+  const authBaseURL = getE2EAuthOrigin();
   const neonAuthUrl = String(process.env.VITE_NEON_AUTH_URL || '');
 
   if (!neonAuthUrl) {
@@ -40,7 +39,7 @@ export default async function globalSetup(config: FullConfig) {
   });
 
   try {
-    console.log(`⏳ Autenticando por HTTP em ${neonAuthUrl}/sign-in/email...`);
+    console.log(`⏳ Autenticando por HTTP em ${neonAuthUrl}/sign-in/email (origin ${authBaseURL})...`);
     const response = await context.post(`${neonAuthUrl}/sign-in/email`, {
       data: {
         email: testUsers.admin.email,

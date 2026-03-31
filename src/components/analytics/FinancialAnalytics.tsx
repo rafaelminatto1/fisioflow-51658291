@@ -7,12 +7,12 @@ import {
 } from "@/components/ui/card";
 import { useQuery } from "@tanstack/react-query";
 import { analyticsApi, financialApi, type Pagamento } from "@/api/v2";
+import { SafeResponsiveContainer } from "@/components/charts/SafeResponsiveContainer";
 import {
 	XAxis,
 	YAxis,
 	CartesianGrid,
 	Tooltip,
-	ResponsiveContainer,
 	BarChart,
 	Bar,
 	LineChart,
@@ -144,7 +144,7 @@ export function FinancialAnalytics() {
 								Carregando dados...
 							</div>
 						) : (
-							<ResponsiveContainer width="100%" height="100%">
+							<SafeResponsiveContainer className="h-full" minHeight={300}>
 								<LineChart data={revenueData}>
 									<defs>
 										<linearGradient
@@ -206,7 +206,7 @@ export function FinancialAnalytics() {
 										activeDot={{ r: 6, strokeWidth: 0 }}
 									/>
 								</LineChart>
-							</ResponsiveContainer>
+							</SafeResponsiveContainer>
 						)}
 					</div>
 				</CardContent>
@@ -226,7 +226,7 @@ export function FinancialAnalytics() {
 								Carregando dados...
 							</div>
 						) : (
-							<ResponsiveContainer width="100%" height="100%">
+							<SafeResponsiveContainer className="h-full" minHeight={300}>
 								<BarChart data={paymentMethods}>
 									<CartesianGrid
 										strokeDasharray="3 3"
@@ -262,7 +262,7 @@ export function FinancialAnalytics() {
 										barSize={40}
 									/>
 								</BarChart>
-							</ResponsiveContainer>
+							</SafeResponsiveContainer>
 						)}
 					</div>
 				</CardContent>

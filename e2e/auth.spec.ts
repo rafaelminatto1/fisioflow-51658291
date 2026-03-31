@@ -2,10 +2,12 @@ import { expect, type Page, test } from "@playwright/test";
 import path from "path";
 import { fileURLToPath } from "url";
 import { testUsers } from "./fixtures/test-data";
+import { isCanonicalMoocaOrigin } from "./helpers/neon-auth";
 
 const loginEmail = process.env.E2E_LOGIN_EMAIL || testUsers.admin.email;
 const loginPassword =
 	process.env.E2E_LOGIN_PASSWORD || testUsers.admin.password;
+const currentBaseURL = process.env.BASE_URL || "http://localhost:5173";
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
 const TEST_ORG_ID = "00000000-0000-0000-0000-000000000001";
@@ -69,6 +71,10 @@ test.describe("Autenticação", () => {
 	test.use({ storageState: { cookies: [], origins: [] } });
 
 	test("deve fazer login com credenciais válidas", async ({ page }) => {
+		test.skip(
+			!isCanonicalMoocaOrigin(currentBaseURL),
+			"Login via UI depende de origin permitido no Neon Auth; previews fora de *.moocafisio.com.br usam autenticação HTTP nos demais testes.",
+		);
 		console.log(`[Test] Iniciando login para: ${loginEmail}`);
 		await mockOrganizationBootstrap(page);
 		await page.goto("/auth", { waitUntil: "domcontentloaded" });
@@ -117,6 +123,10 @@ test.describe("Autenticação", () => {
 	});
 
 	test("deve mostrar erro com credenciais inválidas", async ({ page }) => {
+		test.skip(
+			!isCanonicalMoocaOrigin(currentBaseURL),
+			"Validação de erro de login por UI depende de origin permitido no Neon Auth.",
+		);
 		await page.goto("/auth", { waitUntil: "domcontentloaded" });
 
 		// Aguardar React carregar completamente (sem depender do loader)

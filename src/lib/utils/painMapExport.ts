@@ -1,5 +1,4 @@
 import type { PainPoint } from "@/components/pain-map/BodyMap";
-import { jsPDF } from "jspdf";
 import { fisioLogger as logger } from "@/lib/errors/logger";
 
 export interface PainMapExportData {
@@ -87,6 +86,7 @@ export function generateTextReport(data: PainMapExportData): string {
 export async function generatePDFReport(
 	data: PainMapExportData,
 ): Promise<Blob> {
+	const { jsPDF } = await import("jspdf");
 	const doc = new jsPDF({
 		orientation: "portrait",
 		unit: "mm",

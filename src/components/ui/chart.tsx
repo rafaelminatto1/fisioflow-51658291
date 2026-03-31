@@ -2,6 +2,7 @@
 
 import * as React from "react";
 import * as RechartsPrimitive from "recharts";
+import { SafeResponsiveContainer } from "@/components/charts/SafeResponsiveContainer";
 import { cn } from "@/lib/utils";
 
 const THEMES = { light: "", dark: ".dark" } as const;
@@ -56,9 +57,9 @@ const ChartContainer = React.forwardRef<
 				{...props}
 			>
 				<ChartStyle id={chartId} config={config} />
-				<RechartsPrimitive.ResponsiveContainer>
+				<SafeResponsiveContainer className="h-full w-full" minHeight={180}>
 					{children}
-				</RechartsPrimitive.ResponsiveContainer>
+				</SafeResponsiveContainer>
 			</div>
 		</ChartContext.Provider>
 	);

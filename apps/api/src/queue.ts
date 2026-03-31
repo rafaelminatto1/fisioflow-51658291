@@ -1,6 +1,7 @@
 import type { Env } from './types/env';
 import { createPool } from './lib/db';
 import { writeEvent } from './lib/analytics';
+import { transcribeAudio, analyzeClinicImage } from './lib/ai-native';
 
 export type WhatsAppQueuePayload = {
   to: string;
@@ -13,14 +14,50 @@ export type WhatsAppQueuePayload = {
   appointmentId: string;
 };
 
+export type R2NotificationPayload = {
+  action: 'PutObject' | 'DeleteObject' | 'CopyObject';
+  bucket: string;
+  key: string;
+  size?: number;
+  eTag?: string;
+  organizationId?: string;
+  patientId?: string;
+  contentType?: string;
+};
+
+export type ExamProcessPayload = {
+  examId: string;
+  r2Key: string;
+  organizationId: string;
+  patientId: string;
+  fileType: 'image' | 'audio' | 'pdf';
+};
+
+export type TTSPayload = {
+  text: string;
+  voice?: string;
+  r2Key: string; // onde salvar o áudio gerado
+  organizationId: string;
+};
+
+export type WorkflowTriggerPayload = {
+  workflowType: 'appointment-reminder' | 'patient-onboarding' | 'nfse' | 'hep-compliance' | 'discharge' | 'reengagement';
+  params: Record<string, unknown>;
+  organizationId: string;
+};
+
 export type QueueTask =
   | { type: 'SEND_WHATSAPP'; payload: WhatsAppQueuePayload }
   | { type: 'PROCESS_BACKUP'; payload: Record<string, unknown> }
-  | { type: 'CLEANUP_LOGS'; payload: Record<string, unknown> };
+  | { type: 'CLEANUP_LOGS'; payload: Record<string, unknown> }
+  | { type: 'R2_OBJECT_CREATED'; payload: R2NotificationPayload }
+  | { type: 'PROCESS_EXAM'; payload: ExamProcessPayload }
+  | { type: 'GENERATE_TTS'; payload: TTSPayload }
+  | { type: 'TRIGGER_WORKFLOW'; payload: WorkflowTriggerPayload };
 
 /**
  * Handler para o Cloudflare Queues.
- * Processa tarefas em segundo plano: WhatsApp, backup, limpeza.
+ * Processa tarefas em segundo plano: WhatsApp, R2 events, AI, Workflows.
  * Retries automáticos pela política da fila (max_retries = 3).
  */
 export async function handleQueue(batch: MessageBatch<QueueTask>, env: Env): Promise<void> {
@@ -33,10 +70,28 @@ export async function handleQueue(batch: MessageBatch<QueueTask>, env: Env): Pro
         case 'SEND_WHATSAPP':
           await processWhatsAppMessage(task.payload, env);
           break;
+
+        case 'R2_OBJECT_CREATED':
+          await processR2Notification(task.payload, env);
+          break;
+
+        case 'PROCESS_EXAM':
+          await processExamUpload(task.payload, env);
+          break;
+
+        case 'GENERATE_TTS':
+          await generateTTS(task.payload, env);
+          break;
+
+        case 'TRIGGER_WORKFLOW':
+          await triggerWorkflow(task.payload, env);
+          break;
+
         case 'PROCESS_BACKUP':
         case 'CLEANUP_LOGS':
           console.log(`[Queue] Task ${task.type} acknowledged (no-op placeholder)`);
           break;
+
         default:
           console.warn(`[Queue] Unknown task type`);
       }
@@ -48,6 +103,8 @@ export async function handleQueue(batch: MessageBatch<QueueTask>, env: Env): Pro
     }
   }
 }
+
+// ===== WHATSAPP =====
 
 async function processWhatsAppMessage(payload: WhatsAppQueuePayload, env: Env): Promise<void> {
   if (!env.WHATSAPP_PHONE_NUMBER_ID || !env.WHATSAPP_ACCESS_TOKEN) {
@@ -70,12 +127,7 @@ async function processWhatsAppMessage(payload: WhatsAppQueuePayload, env: Env): 
         template: {
           name: payload.templateName,
           language: { code: payload.languageCode },
-          components: [
-            {
-              type: 'body',
-              parameters: payload.bodyParameters,
-            },
-          ],
+          components: [{ type: 'body', parameters: payload.bodyParameters }],
         },
       }),
     },
@@ -99,12 +151,7 @@ async function processWhatsAppMessage(payload: WhatsAppQueuePayload, env: Env): 
       payload.messageText,
       'template',
       'sent',
-      JSON.stringify({
-        appointment_id: payload.appointmentId,
-        template_key: payload.templateName,
-        auto: true,
-        via_queue: true,
-      }),
+      JSON.stringify({ appointment_id: payload.appointmentId, template_key: payload.templateName, via_queue: true }),
     ],
   );
 
@@ -115,6 +162,175 @@ async function processWhatsAppMessage(payload: WhatsAppQueuePayload, env: Env): 
     method: 'QUEUE',
     status: 200,
   });
+}
 
-  console.log(`[Queue/WhatsApp] Sent to ${payload.to} (appointment ${payload.appointmentId})`);
+// ===== R2 EVENT NOTIFICATIONS =====
+
+async function processR2Notification(payload: R2NotificationPayload, env: Env): Promise<void> {
+  console.log(`[Queue/R2] ${payload.action} → ${payload.key}`);
+
+  if (payload.action !== 'PutObject') return;
+
+  const key = payload.key;
+  const contentType = payload.contentType ?? '';
+
+  // Detecta tipo de arquivo e enfileira processamento AI apropriado
+  if (contentType.startsWith('image/') || /\.(jpg|jpeg|png|webp|heic)$/i.test(key)) {
+    await env.BACKGROUND_QUEUE.send({
+      type: 'PROCESS_EXAM',
+      payload: {
+        examId: crypto.randomUUID(),
+        r2Key: key,
+        organizationId: payload.organizationId ?? 'unknown',
+        patientId: payload.patientId ?? 'unknown',
+        fileType: 'image',
+      },
+    });
+  } else if (contentType.startsWith('audio/') || /\.(mp3|wav|ogg|m4a|webm)$/i.test(key)) {
+    await env.BACKGROUND_QUEUE.send({
+      type: 'PROCESS_EXAM',
+      payload: {
+        examId: crypto.randomUUID(),
+        r2Key: key,
+        organizationId: payload.organizationId ?? 'unknown',
+        patientId: payload.patientId ?? 'unknown',
+        fileType: 'audio',
+      },
+    });
+  }
+
+  writeEvent(env, {
+    event: 'r2_object_processed',
+    orgId: payload.organizationId ?? 'global',
+    route: '/queue/r2',
+    method: 'QUEUE',
+    status: 200,
+  });
+}
+
+// ===== AI: PROCESSAMENTO DE EXAMES =====
+
+async function processExamUpload(payload: ExamProcessPayload, env: Env): Promise<void> {
+  console.log(`[Queue/Exam] Processing ${payload.fileType}: ${payload.r2Key}`);
+
+  // Baixa arquivo do R2
+  const object = await env.MEDIA_BUCKET.get(payload.r2Key);
+  if (!object) {
+    console.warn(`[Queue/Exam] Object not found: ${payload.r2Key}`);
+    return;
+  }
+
+  const arrayBuffer = await object.arrayBuffer();
+  const base64 = btoa(String.fromCharCode(...new Uint8Array(arrayBuffer)));
+
+  let extractedText = '';
+
+  try {
+    if (payload.fileType === 'image') {
+      extractedText = await analyzeClinicImage(
+        env,
+        base64,
+        'Analise esta imagem clínica/radiografia em português brasileiro. Descreva achados relevantes, estruturas anatômicas visíveis e qualquer anomalia ou observação clínica importante.',
+      );
+    } else if (payload.fileType === 'audio') {
+      extractedText = await transcribeAudio(env, base64, 'pt-BR');
+    }
+  } catch (err) {
+    console.error(`[Queue/Exam] AI processing failed:`, err);
+    return;
+  }
+
+  if (!extractedText) return;
+
+  // Salva resultado no banco
+  const pool = createPool(env);
+  await pool.query(
+    `INSERT INTO exam_ai_results (exam_id, patient_id, organization_id, r2_key, extracted_text, file_type, created_at)
+     VALUES ($1, $2, $3, $4, $5, $6, NOW())
+     ON CONFLICT (r2_key) DO UPDATE SET extracted_text = EXCLUDED.extracted_text, updated_at = NOW()`,
+    [payload.examId, payload.patientId, payload.organizationId, payload.r2Key, extractedText, payload.fileType],
+  ).catch(() => {
+    // Tabela pode não existir ainda — log e continua
+    console.warn('[Queue/Exam] exam_ai_results table not found, skipping DB write');
+  });
+
+  writeEvent(env, {
+    event: `exam_ai_${payload.fileType}`,
+    orgId: payload.organizationId,
+    route: '/queue/exam',
+    method: 'QUEUE',
+    status: 200,
+  });
+}
+
+// ===== TTS: TEXT-TO-SPEECH PARA EXERCÍCIOS =====
+
+async function generateTTS(payload: TTSPayload, env: Env): Promise<void> {
+  console.log(`[Queue/TTS] Generating audio for key: ${payload.r2Key}`);
+
+  if (!env.AI) {
+    console.warn('[Queue/TTS] Workers AI not available');
+    return;
+  }
+
+  try {
+    const response = await env.AI.run(
+      '@cf/deepgram/aura-2-es',
+      { text: payload.text, voice: payload.voice ?? 'asteria' },
+      { gateway: { id: 'fisioflow-gateway', cacheTtl: 86400 } },
+    );
+
+    const audioBuffer = response instanceof ArrayBuffer ? response : await response.arrayBuffer?.();
+    if (!audioBuffer) return;
+
+    await env.MEDIA_BUCKET.put(payload.r2Key, audioBuffer, {
+      httpMetadata: { contentType: 'audio/mpeg' },
+      customMetadata: { organizationId: payload.organizationId, generated: 'tts' },
+    });
+
+    writeEvent(env, {
+      event: 'tts_generated',
+      orgId: payload.organizationId,
+      route: '/queue/tts',
+      method: 'QUEUE',
+      status: 200,
+    });
+  } catch (err) {
+    console.error('[Queue/TTS] Error:', err);
+    throw err; // Retry automático pelo Queue
+  }
+}
+
+// ===== TRIGGER WORKFLOW =====
+
+async function triggerWorkflow(payload: WorkflowTriggerPayload, env: Env): Promise<void> {
+  const workflowMap: Record<string, any> = {
+    'appointment-reminder': env.WORKFLOW_APPOINTMENT_REMINDER,
+    'patient-onboarding': env.WORKFLOW_PATIENT_ONBOARDING,
+    'nfse': env.WORKFLOW_NFSE,
+    'hep-compliance': env.WORKFLOW_HEP_COMPLIANCE,
+    'discharge': env.WORKFLOW_DISCHARGE,
+    'reengagement': env.WORKFLOW_REENGAGEMENT,
+  };
+
+  const workflow = workflowMap[payload.workflowType];
+  if (!workflow) {
+    console.warn(`[Queue/Workflow] Unknown workflow: ${payload.workflowType}`);
+    return;
+  }
+
+  const instance = await workflow.create({
+    id: `${payload.workflowType}-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
+    params: payload.params,
+  });
+
+  console.log(`[Queue/Workflow] Started ${payload.workflowType}: ${instance.id}`);
+
+  writeEvent(env, {
+    event: `workflow_started_${payload.workflowType.replace(/-/g, '_')}`,
+    orgId: payload.organizationId,
+    route: '/queue/workflow',
+    method: 'QUEUE',
+    status: 200,
+  });
 }

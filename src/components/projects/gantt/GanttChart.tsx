@@ -45,8 +45,6 @@ import { GanttDependencyLine } from "./GanttDependencyLine";
 import { GanttTimelineHeader } from "./GanttTimelineHeader";
 import { calculateCriticalPath } from "@/lib/gantt/criticalPath";
 import { fisioLogger as logger } from "@/lib/errors/logger";
-import { jsPDF } from "jspdf";
-import autoTable from "jspdf-autotable";
 
 import type {
 	GanttTask,
@@ -226,49 +224,58 @@ export function GanttChart({
 	);
 
 	const handleExport = useCallback(() => {
-		try {
-			const doc = new jsPDF();
-			const margin = 20;
+		const runExport = async () => {
+			try {
+				const [{ jsPDF }, { default: autoTable }] = await Promise.all([
+					import("jspdf"),
+					import("jspdf-autotable"),
+				]);
 
-			// Header
-			doc.setFontSize(18);
-			doc.text("Cronograma do Projeto (Gantt)", margin, 20);
-			doc.setFontSize(10);
-			doc.setTextColor(100, 100, 100);
-			doc.text(
-				`Gerado em: ${format(new Date(), "dd/MM/yyyy HH:mm")}`,
-				margin,
-				28,
-			);
+				const doc = new jsPDF();
+				const margin = 20;
 
-			// Table
-			autoTable(doc, {
-				startY: 35,
-				head: [["Tarefa", "Início", "Fim", "Status"]],
-				body: tasks.map((t) => [
-					t.title,
-					format(t.start_date, "dd/MM/yyyy"),
-					format(t.end_date, "dd/MM/yyyy"),
-					t.status || "Pendente",
-				]),
-				theme: "grid",
-				headStyles: { fillColor: [59, 130, 246] }, // Primary color
-				styles: { fontSize: 9 },
-			});
+				// Header
+				doc.setFontSize(18);
+				doc.text("Cronograma do Projeto (Gantt)", margin, 20);
+				doc.setFontSize(10);
+				doc.setTextColor(100, 100, 100);
+				doc.text(
+					`Gerado em: ${format(new Date(), "dd/MM/yyyy HH:mm")}`,
+					margin,
+					28,
+				);
 
-			doc.save(`gantt-chart-${format(new Date(), "yyyy-MM-dd")}.pdf`);
-			toast({
-				title: "Sucesso",
-				description: "Gráfico de Gantt exportado para PDF",
-			});
-		} catch (error) {
-			logger.error("Erro ao exportar Gantt para PDF", error, "GanttChart");
-			toast({
-				title: "Erro",
-				description: "Não foi possível gerar o PDF",
-				variant: "destructive",
-			});
-		}
+				// Table
+				autoTable(doc, {
+					startY: 35,
+					head: [["Tarefa", "Início", "Fim", "Status"]],
+					body: tasks.map((t) => [
+						t.title,
+						format(t.start_date, "dd/MM/yyyy"),
+						format(t.end_date, "dd/MM/yyyy"),
+						t.status || "Pendente",
+					]),
+					theme: "grid",
+					headStyles: { fillColor: [59, 130, 246] },
+					styles: { fontSize: 9 },
+				});
+
+				doc.save(`gantt-chart-${format(new Date(), "yyyy-MM-dd")}.pdf`);
+				toast({
+					title: "Sucesso",
+					description: "Gráfico de Gantt exportado para PDF",
+				});
+			} catch (error) {
+				logger.error("Erro ao exportar Gantt para PDF", error, "GanttChart");
+				toast({
+					title: "Erro",
+					description: "Não foi possível gerar o PDF",
+					variant: "destructive",
+				});
+			}
+		};
+
+		void runExport();
 	}, [tasks]);
 
 	// Render

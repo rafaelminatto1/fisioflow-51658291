@@ -4,7 +4,7 @@ type CornerstoneRuntime = {
 	core: typeof import("@cornerstonejs/core");
 	tools: typeof import("@cornerstonejs/tools");
 	dicomImageLoader: typeof import("@cornerstonejs/dicom-image-loader");
-	initCornerstone: typeof import("./initCornerstone").default;
+	initCornerstone: () => Promise<void>;
 };
 
 let runtimePromise: Promise<CornerstoneRuntime> | null = null;
@@ -21,7 +21,12 @@ export async function loadCornerstoneRuntime(): Promise<CornerstoneRuntime> {
 				core,
 				tools,
 				dicomImageLoader,
-				initCornerstone: initModule.default,
+				initCornerstone: () =>
+					initModule.default({
+						core,
+						tools,
+						dicomImageLoader,
+					}),
 			}))
 			.catch((error) => {
 				runtimePromise = null;
