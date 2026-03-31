@@ -37,7 +37,8 @@ export async function runAi(env: Env, model: string, input: unknown, opts: Gatew
     // Prompt caching: rotas para mesma instância GPU maximizando cache-hit
     headers['x-session-affinity'] = opts.sessionId;
   }
-  return env.AI.run(model, input, { gateway: buildGateway(opts), headers });
+  // Cast necessário: Workers AI types não incluem todos os modelos partner
+  return (env.AI as any).run(model, input, { gateway: buildGateway(opts), headers });
 }
 
 /**

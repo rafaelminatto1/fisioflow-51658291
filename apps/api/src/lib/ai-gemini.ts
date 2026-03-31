@@ -1,7 +1,7 @@
 export async function callGemini(
   apiKey: string, 
   prompt: string, 
-  model: string = 'gemini-1.5-flash', 
+  model: string = 'gemini-1.5-flash-latest', 
   gatewayUrl?: string,
   gatewayToken?: string,
   context: 'exercise' | 'clinical' | 'general' = 'clinical'
@@ -9,11 +9,12 @@ export async function callGemini(
   // Configuração de vanguarda 2026: Cache dinâmico por tipo de uso
   const cacheTtl = context === 'exercise' ? 86400 : 3600; // 24h para exercícios, 1h para clínico
   
-  const baseUrl = gatewayUrl 
+  const useGateway = !!(gatewayUrl && gatewayToken);
+  const baseUrl = useGateway
     ? `${gatewayUrl}/google-ai-studio` 
     : 'https://generativelanguage.googleapis.com';
 
-  const url = `${baseUrl}/v1beta/models/${model}:generateContent?key=${apiKey}`;
+  const url = `${baseUrl}/v1/models/${model}:generateContent?key=${apiKey}`;
   
   const headers: Record<string, string> = {
     'Content-Type': 'application/json',
@@ -41,8 +42,16 @@ export async function callGemini(
   });
 
   if (!response.ok) {
-    const error = await response.json() as any;
-    throw new Error(error.error?.message || `Failed to call Gemini AI (Status: ${response.status})`);
+    let errorMessage = `Failed to call Gemini AI (Status: ${response.status})`;
+    try {
+      const error = await response.json() as any;
+      errorMessage = error.error?.message || errorMessage;
+    } catch (e) {
+      // Se não for JSON (erro do Gateway Cloudflare por exemplo)
+      const textError = await response.text().catch(() => '');
+      errorMessage = `${errorMessage}: ${textError.substring(0, 200)}`;
+    }
+    throw new Error(errorMessage);
   }
 
   const result = await response.json() as any;
@@ -56,17 +65,18 @@ export async function transcribeAudioWithGemini(
   gatewayUrl?: string,
   gatewayToken?: string
 ) {
-  const baseUrl = gatewayUrl 
+  const useGateway = !!(gatewayUrl && gatewayToken);
+  const baseUrl = useGateway 
     ? `${gatewayUrl}/google-ai-studio` 
     : 'https://generativelanguage.googleapis.com';
 
-  const url = `${baseUrl}/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`;
+  const url = `${baseUrl}/v1/models/gemini-1.5-flash-latest:generateContent?key=${apiKey}`;
   
   const headers: Record<string, string> = {
     'Content-Type': 'application/json',
   };
 
-  if (gatewayUrl && gatewayToken) {
+  if (useGateway) {
     headers['Authorization'] = `Bearer ${gatewayToken}`;
     headers['cf-aig-cache-ttl'] = '3600'; // 1h para áudios
     headers['cf-aig-metadata'] = JSON.stringify({ source: 'fisioflow-backend', type: 'transcription' });
@@ -91,10 +101,74 @@ export async function transcribeAudioWithGemini(
   });
 
   if (!response.ok) {
-    const error = await response.json() as any;
-    throw new Error(error.error?.message || 'Failed to transcribe audio with Gemini');
+    let errorMessage = `Failed to transcribe audio with Gemini (Status: ${response.status})`;
+    try {
+      const error = await response.json() as any;
+      errorMessage = error.error?.message || errorMessage;
+    } catch (e) {
+      const textError = await response.text().catch(() => '');
+      errorMessage = `${errorMessage}: ${textError.substring(0, 200)}`;
+    }
+    throw new Error(errorMessage);
   }
 
   const result = await response.json() as any;
   return result.candidates?.[0]?.content?.parts?.[0]?.text || '';
+}
+
+export async function streamGeminiChat(
+  apiKey: string,
+  messages: Array<{ role: string; content: string }>,
+  model: string = 'gemini-1.5-flash-latest',
+  gatewayUrl?: string,
+  gatewayToken?: string
+) {
+  const useGateway = !!(gatewayUrl && gatewayToken);
+  const baseUrl = useGateway 
+    ? `${gatewayUrl}/google-ai-studio` 
+    : 'https://generativelanguage.googleapis.com';
+
+  const url = `${baseUrl}/v1/models/${model}:streamGenerateContent?alt=sse&key=${apiKey}`;
+  
+  const headers: Record<string, string> = {
+    'Content-Type': 'application/json',
+  };
+
+  if (useGateway) {
+    headers['Authorization'] = `Bearer ${gatewayToken}`;
+    headers['cf-aig-cache-ttl'] = '0'; // Streaming usually shouldn't be cached at the gateway level
+    headers['cf-aig-metadata'] = JSON.stringify({ source: 'fisioflow-backend', type: 'chat-streaming' });
+  }
+
+  // Convert messages to Gemini format
+  const contents = messages.map(msg => ({
+    role: msg.role === 'assistant' ? 'model' : 'user',
+    parts: [{ text: msg.content }]
+  }));
+
+  const response = await fetch(url, {
+    method: 'POST',
+    headers,
+    body: JSON.stringify({
+      contents,
+      generationConfig: {
+        temperature: 0.7,
+        maxOutputTokens: 2048,
+      }
+    })
+  });
+
+  if (!response.ok) {
+    let errorMessage = `Failed to start Gemini stream (Status: ${response.status})`;
+    try {
+      const error = await response.json() as any;
+      errorMessage = error.error?.message || errorMessage;
+    } catch (e) {
+      const textError = await response.text().catch(() => '');
+      errorMessage = `${errorMessage}: ${textError.substring(0, 200)}`;
+    }
+    throw new Error(errorMessage);
+  }
+
+  return response.body;
 }

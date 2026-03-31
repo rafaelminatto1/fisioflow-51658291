@@ -280,7 +280,13 @@ async function generateTTS(payload: TTSPayload, env: Env): Promise<void> {
       { gateway: { id: 'fisioflow-gateway', cacheTtl: 86400 } },
     );
 
-    const audioBuffer = response instanceof ArrayBuffer ? response : await response.arrayBuffer?.();
+    const r = response as any;
+    const audioBuffer: ArrayBuffer | undefined =
+      ArrayBuffer.isView(r) || r instanceof ArrayBuffer
+        ? (r as ArrayBuffer)
+        : typeof r.arrayBuffer === 'function'
+          ? await r.arrayBuffer()
+          : undefined;
     if (!audioBuffer) return;
 
     await env.MEDIA_BUCKET.put(payload.r2Key, audioBuffer, {

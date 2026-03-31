@@ -96,10 +96,10 @@ export class PatientReengagementWorkflow extends WorkflowEntrypoint<Env, Patient
     // Verifica se agendou nesse intervalo
     const booked = await step.do('check-if-booked', async () => {
       const pool = createPool(this.env);
-      const res = await pool.query<{ id: string }>(
+      const res = await pool.query(
         `SELECT id FROM appointments WHERE patient_id = $1 AND organization_id = $2 AND created_at > NOW() - INTERVAL '16 days' LIMIT 1`,
         [patientId, organizationId],
-      );
+      ) as unknown as { rows: { id: string }[] };
       return res.rows.length > 0;
     });
 
