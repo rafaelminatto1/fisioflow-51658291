@@ -24,10 +24,9 @@ import {
 	YAxis,
 	CartesianGrid,
 	Tooltip,
-	ResponsiveContainer,
 	Legend,
 } from "recharts";
-import { MainLayout } from "@/components/layout/MainLayout";
+import { SafeResponsiveContainer } from "@/components/charts/SafeResponsiveContainer";
 import { formatDateToLocalISO } from "@/utils/dateUtils";
 
 function formatMonthLabel(monthKey: string): string {
@@ -182,7 +181,7 @@ export function FluxoCaixaContent() {
 						</CardHeader>
 						<CardContent className="p-6">
 							<div className="h-[350px] w-full">
-								<ResponsiveContainer width="100%" height="100%">
+								<SafeResponsiveContainer className="h-full" minHeight={350}>
 									<BarChart data={chartDataComAcumulado}>
 										<CartesianGrid
 											strokeDasharray="3 3"
@@ -235,7 +234,7 @@ export function FluxoCaixaContent() {
 											radius={[4, 4, 0, 0]}
 										/>
 									</BarChart>
-								</ResponsiveContainer>
+								</SafeResponsiveContainer>
 							</div>
 						</CardContent>
 					</Card>

@@ -60,8 +60,8 @@ app.get('/', requireAuth, async (c) => {
       tipo: 'nacional' as const,
       recorrente: true,
       bloqueia_agenda: true,
-      created_at: f.data,
-      updated_at: f.data,
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString(),
     }));
 
   const merged = [...(orgResult.rows as FeriadoRow[]), ...nacionaisMapped]

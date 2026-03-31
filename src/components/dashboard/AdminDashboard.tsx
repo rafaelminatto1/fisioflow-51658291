@@ -14,11 +14,11 @@ import {
 import {
 	Bar,
 	BarChart,
-	ResponsiveContainer,
 	Tooltip,
 	XAxis,
 	YAxis,
 } from "recharts";
+import { SafeResponsiveContainer } from "@/components/charts/SafeResponsiveContainer";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -455,7 +455,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
 						</CardHeader>
 						<CardContent className="p-5">
 							<div className="h-[220px] w-full">
-								<ResponsiveContainer width="100%" height="100%">
+								<SafeResponsiveContainer className="h-full" minHeight={220}>
 									{!metrics?.tendenciaSemanal ||
 									metrics.tendenciaSemanal.length === 0 ? (
 										<EmptyStateEnhanced
@@ -548,7 +548,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
 											/>
 										</BarChart>
 									)}
-								</ResponsiveContainer>
+								</SafeResponsiveContainer>
 							</div>
 						</CardContent>
 					</Card>

@@ -42,14 +42,14 @@ export function rateLimit(opts: RateLimitOptions) {
         RETURNING count
       `).bind(key, windowStart).first<{ count: number }>();
 
-      const count = result?.count ?? 1;
+      const count = Number(result?.count ?? 1);
 
       c.header('X-RateLimit-Limit', String(opts.limit));
       c.header('X-RateLimit-Remaining', String(Math.max(0, opts.limit - count)));
       c.header('X-RateLimit-Reset', String(windowStart + windowSeconds));
 
       if (count > opts.limit) {
-        const retryAfter = windowStart + windowSeconds - now;
+        const retryAfter = Math.max(1, windowStart + windowSeconds - now);
         c.header('Retry-After', String(retryAfter));
         return c.json(
           { error: 'Rate limit exceeded', retryAfter },

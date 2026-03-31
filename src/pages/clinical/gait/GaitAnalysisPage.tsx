@@ -1,9 +1,25 @@
-import React from 'react';
+import React, { Suspense, lazy } from 'react';
 import { MainLayout } from "@/components/layout/MainLayout";
-import { GaitAnalysisStudio } from "@/components/analysis/studios/GaitAnalysisStudio";
 import { Button } from "@/components/ui/button";
-import { ArrowLeft, FileText, Activity } from 'lucide-react';
+import { ArrowLeft, FileText, Activity, Loader2 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
+
+const GaitAnalysisStudio = lazy(() =>
+	import("@/components/analysis/studios/GaitAnalysisStudio").then((m) => ({
+		default: m.GaitAnalysisStudio,
+	})),
+);
+
+function StudioLoadingFallback() {
+	return (
+		<div className="flex h-full min-h-[480px] items-center justify-center rounded-3xl border border-dashed bg-card/40">
+			<div className="flex items-center gap-3 text-sm font-medium text-muted-foreground">
+				<Loader2 className="h-4 w-4 animate-spin" />
+				Carregando estúdio de marcha...
+			</div>
+		</div>
+	);
+}
 
 export default function GaitAnalysisPage() {
     const navigate = useNavigate();
@@ -38,7 +54,9 @@ export default function GaitAnalysisPage() {
                 </div>
 
                 <div className="max-w-7xl mx-auto px-4 py-8 h-[calc(100vh-140px)]">
-                    <GaitAnalysisStudio />
+                    <Suspense fallback={<StudioLoadingFallback />}>
+                        <GaitAnalysisStudio />
+                    </Suspense>
                 </div>
             </div>
         </MainLayout>
