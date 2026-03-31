@@ -52,6 +52,7 @@ workflows:
           xcode-project build-ipa \
             --workspace "$WORKSPACE" \
             --scheme "$SCHEME" \
+            --log-stream stdout \
             --verbose
     artifacts:
       - apps/professional-app/ios/build/remote/ipa/*.ipa

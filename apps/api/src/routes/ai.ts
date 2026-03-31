@@ -9,10 +9,12 @@ import {
 	summarizeClinicalNote,
 } from "../lib/ai-native";
 import { logToAxiom } from "../lib/axiom";
+import { rateLimit } from "../middleware/rateLimit";
 
 const app = new Hono<{ Bindings: Env; Variables: AuthVariables }>();
 
-app.use("*", requireAuth);
+// Rate limiting: 100 chamadas AI por org por hora
+app.use("*", requireAuth, rateLimit({ endpoint: "ai", limit: 100, windowSeconds: 3600 }));
 
 type ClinicalTrend = "positive" | "neutral" | "negative";
 
