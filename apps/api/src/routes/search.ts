@@ -105,13 +105,13 @@ app.post('/index', requireAuth, async (c) => {
   let indexed = 0;
 
   if (body.type === 'exercises' || body.type === 'all') {
-    const res = await pool.query<{ id: string; name: string; description: string; category: string }>(
+    const res = await pool.query(
       `SELECT id, name, description, COALESCE(category, '') AS category FROM exercises
        WHERE (is_public = true OR organization_id = $1)
        ${body.ids?.length ? 'AND id = ANY($2::uuid[])' : ''}
        LIMIT 500`,
       body.ids?.length ? [user.organizationId, body.ids] : [user.organizationId],
-    );
+    ) as unknown as { rows: { id: string; name: string; description: string; category: string }[] };
 
     const vectors = await Promise.all(
       res.rows.map(async (row) => ({
@@ -137,13 +137,13 @@ app.post('/index', requireAuth, async (c) => {
   }
 
   if (body.type === 'wiki' || body.type === 'all') {
-    const res = await pool.query<{ id: string; title: string; content: string }>(
+    const res = await pool.query(
       `SELECT id, title, LEFT(content, 1000) AS content FROM wiki_pages
        WHERE organization_id = $1 OR is_public = true
        ${body.ids?.length ? 'AND id = ANY($2::uuid[])' : ''}
        LIMIT 200`,
       body.ids?.length ? [user.organizationId, body.ids] : [user.organizationId],
-    );
+    ) as unknown as { rows: { id: string; title: string; content: string }[] };
 
     const vectors = await Promise.all(
       res.rows.map(async (row) => ({
@@ -167,12 +167,12 @@ app.post('/index', requireAuth, async (c) => {
   }
 
   if (body.type === 'protocols' || body.type === 'all') {
-    const res = await pool.query<{ id: string; name: string; description: string }>(
+    const res = await pool.query(
       `SELECT id, name, COALESCE(description, '') AS description FROM exercise_protocols
        WHERE organization_id = $1 OR is_public = true
        LIMIT 300`,
       [user.organizationId],
-    );
+    ) as unknown as { rows: { id: string; name: string; description: string }[] };
 
     const vectors = await Promise.all(
       res.rows.map(async (row) => ({

@@ -20,6 +20,7 @@ import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "@/hooks/use-toast";
 import { fisioLogger as logger } from "@/lib/errors/logger";
+import { getNeonAccessToken } from "@/lib/auth/neon-token";
 
 interface Message {
 	id: string;
@@ -77,15 +78,17 @@ const SmartAI = () => {
 		setLoading(true);
 
 		try {
+			const token = await getNeonAccessToken();
 			const WORKERS_BASE =
 				import.meta.env.VITE_WORKERS_API_URL ||
-				"https://api-pro.moocafisio.com.br";
+				"https://fisioflow-api.rafalegollas.workers.dev";
 			const CHAT_URL = `${WORKERS_BASE}/api/ai/chat`;
 
 			const response = await fetch(CHAT_URL, {
 				method: "POST",
 				headers: {
 					"Content-Type": "application/json",
+					Authorization: `Bearer ${token}`,
 				},
 				body: JSON.stringify({
 					messages: [...messages, userMessage].map((m) => ({
