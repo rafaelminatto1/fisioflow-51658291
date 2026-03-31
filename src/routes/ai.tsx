@@ -4,10 +4,13 @@
  */
 
 import { lazy } from "react";
-import { Route } from "react-router-dom";
+import { Route, useParams } from "react-router-dom";
+import { useQuery } from "@tanstack/react-query";
 import { RouteErrorBoundary } from "@/components/error";
 import { MainLayout } from "@/components/layout/MainLayout";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
+import { patientsApi } from "@/api/v2";
+import { PatientHelpers } from "@/types";
 
 // Lazy loads - AI Features
 const SmartDashboard = lazy(
@@ -81,6 +84,28 @@ const DynamicCompareDetailsPage = lazy(
 			/* webpackChunkName: "analysis-dynamic" */ "@/pages/dashboard/dinamica/DynamicCompareDetailsPage"
 		),
 );
+
+function IntelligentReportsRoute() {
+	const { patientId = "" } = useParams<{ patientId: string }>();
+	const { data: patient } = useQuery({
+		queryKey: ["patient-intelligent-reports", patientId],
+		queryFn: async () => {
+			if (!patientId) return null;
+			const result = await patientsApi.get(patientId);
+			return result?.data ?? null;
+		},
+		enabled: !!patientId,
+	});
+
+	return (
+		<MainLayout>
+			<IntelligentReports
+				patientId={patientId}
+				patientName={patient ? PatientHelpers.getName(patient) : "paciente"}
+			/>
+		</MainLayout>
+	);
+}
 
 export const aiRoutes = (
 	<>
@@ -171,9 +196,7 @@ export const aiRoutes = (
 			path="/intelligent-reports/:patientId"
 			element={
 				<ProtectedRoute>
-					<MainLayout>
-						<IntelligentReports patientId="" patientName="" />
-					</MainLayout>
+					<IntelligentReportsRoute />
 				</ProtectedRoute>
 			}
 		/>
