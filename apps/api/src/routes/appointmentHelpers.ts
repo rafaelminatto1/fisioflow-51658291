@@ -11,6 +11,7 @@ export const STATUS_MAP: Record<string, string> = {
   cancelled: 'cancelled',
   no_show: 'no_show',
   rescheduled: 'rescheduled',
+  evaluation: 'evaluation',
   agendado: 'scheduled',
   confirmado: 'confirmed',
   presenca_confirmada: 'confirmed',
@@ -18,7 +19,8 @@ export const STATUS_MAP: Record<string, string> = {
   atendido: 'completed',
   concluido: 'completed',
   cancelado: 'cancelled',
-  avaliacao: 'scheduled',
+  avaliacao: 'evaluation', // ✅ CORRIGIDO: mapeia para 'evaluation'
+  evaluation: 'evaluation', // Já mantém em inglês
   falta: 'no_show',
   faltou: 'no_show',
   faltou_com_aviso: 'no_show',
@@ -66,6 +68,7 @@ const VALID_STATUSES = new Set([
   'cancelled',
   'no_show',
   'rescheduled',
+  'evaluation', // Novo status para avaliações
 ]);
 
 export function normalizeStatus(raw: string | undefined): string {
