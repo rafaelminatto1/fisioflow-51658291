@@ -16,9 +16,9 @@ import { BulkActionsBar } from "@/components/schedule/BulkActionsBar";
 import { ScheduleModals } from "@/components/schedule/ScheduleModals";
 import { CalendarSkeletonEnhanced } from "@/components/schedule/skeletons/CalendarSkeletonEnhanced";
 import { Button } from "@/components/ui/button";
-import { useAuth } from "@/hooks/useAuth";
 import { useBirthdayNotification } from "@/hooks/useBirthdayNotification";
 import { useBulkActions } from "@/hooks/useBulkActions";
+import { useIsMobile } from "@/hooks/use-mobile";
 import { usePatientReengagement } from "@/hooks/usePatientReengagement";
 import { useScheduleHandlers } from "@/hooks/useScheduleHandlers";
 import { useSchedulePageData, type ViewType } from "@/hooks/useSchedulePage";
@@ -75,6 +75,7 @@ export default function Schedule() {
 
 	const { sendBirthdayMessage, isSending } = useBirthdayNotification();
 	const { totalToReengage } = usePatientReengagement();
+	const isMobile = useIsMobile();
 
 	const {
 		selectedIds,
@@ -290,7 +291,10 @@ export default function Schedule() {
 						</div>
 					)}
 
-					<div className="flex-1 flex flex-col min-w-0 min-h-0 bg-white dark:bg-slate-950">
+					<div
+						className="flex-1 flex flex-col min-w-0 min-h-0 bg-white dark:bg-slate-950"
+						data-testid={isMobile ? "mobile-schedule-list" : "schedule-content"}
+					>
 						<div className="flex-1 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm relative min-h-0">
 							<Suspense
 								fallback={

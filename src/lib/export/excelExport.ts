@@ -1,8 +1,10 @@
 // Types
 
-import XLSX from "./exceljsWrapper";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
+import type { ColInfo, WorkSheet } from "./exceljsWrapper";
+
+type ExcelApi = typeof import("./exceljsWrapper").default;
 
 export interface ExcelColumn {
 	header: string;
@@ -121,15 +123,20 @@ const dataToAoa = (
 	return result;
 };
 
+async function loadExcelApi(): Promise<ExcelApi> {
+	const module = await import("./exceljsWrapper");
+	return module.default;
+}
+
 /**
  * Define largura das colunas automaticamente
  */
 const setColumnWidths = (
-	ws: XLSX.WorkSheet,
+	ws: WorkSheet,
 	columns: ExcelColumn[],
 	data: (string | number)[][],
 ) => {
-	const colWidths: XLSX.ColInfo[] = columns.map((col, index) => {
+	const colWidths: ColInfo[] = columns.map((col, index) => {
 		if (col.width) {
 			return { wch: col.width };
 		}
@@ -161,6 +168,7 @@ export const exportToExcel = async (
 		clinicName = "FisioFlow",
 	} = options;
 
+	const XLSX = await loadExcelApi();
 	const wb = XLSX.utils.book_new();
 
 	sheets.forEach((sheet) => {

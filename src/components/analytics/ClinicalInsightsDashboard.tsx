@@ -6,6 +6,7 @@ import {
 	CardHeader,
 	CardTitle,
 } from "@/components/ui/card";
+import { SafeResponsiveContainer } from "@/components/charts/SafeResponsiveContainer";
 import {
 	BarChart,
 	Bar,
@@ -13,7 +14,6 @@ import {
 	YAxis,
 	CartesianGrid,
 	Tooltip,
-	ResponsiveContainer,
 	PieChart,
 	Pie,
 	Cell,
@@ -136,7 +136,7 @@ export const ClinicalInsightsDashboard = () => {
 					</CardHeader>
 					<CardContent>
 						<div className="h-[300px] w-full">
-							<ResponsiveContainer width="100%" height="100%">
+							<SafeResponsiveContainer className="h-full" minHeight={300}>
 								<BarChart
 									data={pathologies}
 									layout="vertical"
@@ -161,7 +161,7 @@ export const ClinicalInsightsDashboard = () => {
 										radius={[0, 4, 4, 0]}
 									/>
 								</BarChart>
-							</ResponsiveContainer>
+							</SafeResponsiveContainer>
 						</div>
 					</CardContent>
 				</Card>
@@ -177,7 +177,7 @@ export const ClinicalInsightsDashboard = () => {
 					</CardHeader>
 					<CardContent>
 						<div className="h-[300px] w-full">
-							<ResponsiveContainer width="100%" height="100%">
+							<SafeResponsiveContainer className="h-full" minHeight={300}>
 								<PieChart>
 									<Pie
 										data={painTrend}
@@ -200,7 +200,7 @@ export const ClinicalInsightsDashboard = () => {
 									<Tooltip />
 									<Legend />
 								</PieChart>
-							</ResponsiveContainer>
+							</SafeResponsiveContainer>
 						</div>
 					</CardContent>
 				</Card>

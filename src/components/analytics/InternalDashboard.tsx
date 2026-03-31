@@ -44,12 +44,12 @@ import {
 	TableRow,
 } from "@/components/ui/table";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { SafeResponsiveContainer } from "@/components/charts/SafeResponsiveContainer";
 import {
 	XAxis,
 	YAxis,
 	CartesianGrid,
 	Tooltip,
-	ResponsiveContainer,
 	LineChart,
 	Line,
 } from "recharts";
@@ -427,7 +427,7 @@ function InternalDashboardComponent() {
 					</CardHeader>
 					<CardContent className="pt-8">
 						<div className="h-[280px] w-full">
-							<ResponsiveContainer width="100%" height="100%">
+							<SafeResponsiveContainer className="h-full" minHeight={280}>
 								<LineChart data={newPatientsData?.chartData || []}>
 									<CartesianGrid
 										strokeDasharray="3 3"
@@ -479,7 +479,7 @@ function InternalDashboardComponent() {
 										name="Novos Pacientes"
 									/>
 								</LineChart>
-							</ResponsiveContainer>
+							</SafeResponsiveContainer>
 						</div>
 					</CardContent>
 				</Card>

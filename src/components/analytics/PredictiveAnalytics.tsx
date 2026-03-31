@@ -7,12 +7,12 @@ import {
 } from "@/components/ui/card";
 import { useQuery } from "@tanstack/react-query";
 import { appointmentsApi, type AppointmentRow } from "@/api/v2";
+import { SafeResponsiveContainer } from "@/components/charts/SafeResponsiveContainer";
 import {
 	XAxis,
 	YAxis,
 	CartesianGrid,
 	Tooltip,
-	ResponsiveContainer,
 	LineChart,
 	Line,
 } from "recharts";
@@ -236,7 +236,7 @@ export function PredictiveAnalytics() {
 				</CardHeader>
 				<CardContent className="pt-6">
 					<div className="h-[350px] w-full">
-						<ResponsiveContainer width="100%" height="100%">
+						<SafeResponsiveContainer className="h-full" minHeight={350}>
 							<LineChart data={predictions}>
 								<defs>
 									<linearGradient id="colorReal" x1="0" y1="0" x2="0" y2="1">
@@ -300,7 +300,7 @@ export function PredictiveAnalytics() {
 									name="Previsão IA"
 								/>
 							</LineChart>
-						</ResponsiveContainer>
+						</SafeResponsiveContainer>
 					</div>
 				</CardContent>
 			</Card>

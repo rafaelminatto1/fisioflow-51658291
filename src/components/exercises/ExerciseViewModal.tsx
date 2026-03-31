@@ -113,7 +113,7 @@ export function ExerciseViewModal({
 	return (
 		<Dialog open={open} onOpenChange={onOpenChange}>
 			<DialogContent
-				className="fixed left-[50%] top-[50%] z-50 !-translate-x-1/2 !-translate-y-1/2 w-[90vw] md:w-[80vw] lg:w-[75vw] max-w-5xl max-h-[85vh] p-0 gap-0 overflow-hidden flex flex-col bg-background/95 backdrop-blur-xl border-border/50 shadow-2xl rounded-lg"
+				className="fixed left-[50%] top-[50%] z-50 !-translate-x-1/2 !-translate-y-1/2 w-[90vw] md:w-[80vw] lg:w-[85vw] max-w-6xl max-h-[85vh] p-0 gap-0 overflow-hidden flex flex-col bg-background/95 backdrop-blur-xl border-border/50 shadow-2xl rounded-lg"
 				onInteractOutside={(e) => e.preventDefault()}
 				onEscapeKeyDown={(e) => {
 					e.preventDefault();
@@ -231,8 +231,8 @@ export function ExerciseViewModal({
 
 				{/* Content - Scrollable */}
 				<div className="flex-1 min-h-0 overflow-hidden grid grid-cols-1 lg:grid-cols-12">
-					{/* Left Column - Media (7 cols) */}
-					<div className="lg:col-span-7 bg-muted/10 h-full flex flex-col border-r border-border/50 overflow-hidden relative">
+					{/* Left Column - Media (8 cols) */}
+					<div className="lg:col-span-8 bg-muted/10 h-full flex flex-col border-r border-border/50 overflow-hidden relative">
 						<div className="absolute inset-0 bg-gradient-to-br from-background via-muted/20 to-muted/40 pointer-events-none" />
 
 						<Tabs
@@ -332,8 +332,8 @@ export function ExerciseViewModal({
 						</Tabs>
 					</div>
 
-					{/* Right Column - Information (5 cols) */}
-					<div className="lg:col-span-5 h-full min-h-0 bg-background flex flex-col">
+					{/* Right Column - Information (4 cols) */}
+					<div className="lg:col-span-4 h-full min-h-0 bg-background flex flex-col">
 						<ScrollArea className="flex-1 h-full min-h-0">
 							<div className="p-4 sm:p-6 space-y-6 sm:space-y-8">
 								{/* Metrics / Parameters */}
@@ -433,7 +433,7 @@ function MetricCard({
 	icon: Icon,
 	label,
 	value,
-	_subLabel,
+	subLabel,
 }: {
 	icon: React.ComponentType<{ className?: string }>;
 	label: string;

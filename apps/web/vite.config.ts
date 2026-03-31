@@ -138,6 +138,10 @@ export default defineConfig(({ mode }) => {
 					"node_modules/@cornerstonejs/codec-charls/dist/charlswasm_decode.wasm",
 				),
 				"@fisioflow/skills": path.resolve(repoRoot, "src/lib/skills"),
+				exceljs: path.resolve(
+					repoRoot,
+					"node_modules/exceljs/lib/exceljs.browser.js",
+				),
 				"react-grid-layout/dist/legacy": path.resolve(
 					repoRoot,
 					"node_modules/react-grid-layout/dist/legacy.mjs",
@@ -171,13 +175,76 @@ export default defineConfig(({ mode }) => {
 					// Priority: maior = avaliado primeiro (chunk mais específico vence).
 					codeSplitting: {
 						groups: [
-							// @cornerstonejs — viewer DICOM, ~2.8 MB total, muda raramente
+							// DICOM viewer split — evita um único megachunk monolítico
+							{
+								name: "vendor-vtk",
+								test: /node_modules\/@kitware\/vtk\.js/,
+								priority: 34.7,
+							},
+							{
+								name: "vendor-cornerstone-math",
+								test: /node_modules\/(gl-matrix|comlink|loglevel)/,
+								priority: 34.6,
+							},
+							{
+								name: "vendor-cornerstone-core",
+								test: /node_modules\/@cornerstonejs\/core/,
+								priority: 34,
+							},
+							{
+								name: "vendor-cornerstone-tools",
+								test: /node_modules\/@cornerstonejs\/tools/,
+								priority: 33,
+							},
+							{
+								name: "vendor-cornerstone-loader",
+								test: /node_modules\/@cornerstonejs\/dicom-image-loader/,
+								priority: 32,
+							},
+							// fallback para qualquer outro pacote cornerstone
 							{
 								name: "vendor-cornerstone",
 								test: /node_modules\/@cornerstonejs/,
 								priority: 30,
 							},
-							// react-pdf + pdfjs-dist — renderização PDF, ~1.5 MB
+							// react-pdf renderer — geração de PDFs por exportação
+							{
+								name: "vendor-react-pdf-font",
+								test: /node_modules\/(fontkit|linebreak|is-url|emoji-regex-xs)/,
+								priority: 28.8,
+							},
+							{
+								name: "vendor-react-pdf-textkit",
+								test: /node_modules\/(@react-pdf\/textkit|yoga-layout|queue)/,
+								priority: 28.6,
+							},
+							{
+								name: "vendor-react-pdf-images",
+								test: /node_modules\/(@react-pdf\/image|@react-pdf\/png-js|jay-peg|crypto-js|browserify-zlib|vite-compatible-readable-stream)/,
+								priority: 28.4,
+							},
+							{
+								name: "vendor-react-pdf-pdfkit",
+								test: /node_modules\/@react-pdf\/pdfkit/,
+								priority: 28,
+							},
+							{
+								name: "vendor-react-pdf-layout",
+								test: /node_modules\/@react-pdf\/(layout|render|font|fns|primitives|reconciler|types)/,
+								priority: 27.5,
+							},
+							{
+								name: "vendor-react-pdf-renderer",
+								test: /node_modules\/@react-pdf/,
+								priority: 27,
+							},
+							// pdfjs-dist + react-pdf viewer — visualização PDF
+							{
+								name: "vendor-pdfjs-viewer",
+								test: /node_modules\/(react-pdf|pdfjs-dist)/,
+								priority: 26,
+							},
+							// fallback legado para dependências restantes ligadas a PDF
 							{
 								name: "vendor-react-pdf",
 								test: /node_modules\/(@react-pdf|react-pdf|pdfjs-dist)/,
@@ -191,11 +258,61 @@ export default defineConfig(({ mode }) => {
 							},
 							// @tensorflow + pose-detection — IA/biomecânica, ~693 KB
 							{
+								name: "vendor-tfjs-core",
+								test: /node_modules\/@tensorflow\/tfjs-core/,
+								priority: 23,
+							},
+							{
+								name: "vendor-tfjs-webgl",
+								test: /node_modules\/@tensorflow\/tfjs-backend-webgl/,
+								priority: 22.8,
+							},
+							{
+								name: "vendor-tfjs-backend-cpu",
+								test: /node_modules\/@tensorflow\/tfjs-backend-cpu/,
+								priority: 22.75,
+							},
+							{
+								name: "vendor-tfjs-layers",
+								test: /node_modules\/@tensorflow\/tfjs-layers/,
+								priority: 22.7,
+							},
+							{
+								name: "vendor-tfjs-data",
+								test: /node_modules\/@tensorflow\/tfjs-data/,
+								priority: 22.65,
+							},
+							{
+								name: "vendor-tfjs-converter-core",
+								test: /node_modules\/@tensorflow\/tfjs-converter/,
+								priority: 22.62,
+							},
+							{
+								name: "vendor-tfjs-converter",
+								test: /node_modules\/@tensorflow\/(tfjs-converter|tfjs-layers|tfjs-data|tfjs-backend-cpu|tfjs)/,
+								priority: 22.6,
+							},
+							{
+								name: "vendor-pose-detection",
+								test: /node_modules\/(@tensorflow-models\/pose-detection|pose-detection)/,
+								priority: 22.4,
+							},
+							{
 								name: "vendor-tensorflow",
 								test: /node_modules\/(@tensorflow|pose-detection)/,
 								priority: 20,
 							},
 							// exceljs — exportação planilhas, ~930 KB
+							{
+								name: "vendor-exceljs-zip",
+								test: /node_modules\/(jszip|archiver|unzipper)/,
+								priority: 19,
+							},
+							{
+								name: "vendor-exceljs-streams",
+								test: /node_modules\/(readable-stream|fast-csv|saxes|tmp|uuid|dayjs)/,
+								priority: 18.5,
+							},
 							{
 								name: "vendor-exceljs",
 								test: /node_modules\/exceljs/,
@@ -208,6 +325,16 @@ export default defineConfig(({ mode }) => {
 								priority: 17,
 							},
 							// @sentry/react — error tracking, ~441 KB
+							{
+								name: "vendor-sentry-replay",
+								test: /node_modules\/@sentry\/(replay-internal|replay-canvas|browser)/,
+								priority: 16.4,
+							},
+							{
+								name: "vendor-sentry-core",
+								test: /node_modules\/@sentry\/(core|utils|react)/,
+								priority: 16.2,
+							},
 							{
 								name: "vendor-sentry",
 								test: /node_modules\/@sentry/,
@@ -230,6 +357,42 @@ export default defineConfig(({ mode }) => {
 								name: "vendor-charts",
 								test: /node_modules\/recharts/,
 								priority: 13,
+							},
+							// react-router — navegação e data routers
+							{
+								name: "vendor-router",
+								test: /node_modules\/(react-router|react-router-dom|@remix-run\/router)/,
+								priority: 12.6,
+							},
+							// react-query + persistência
+							{
+								name: "vendor-query",
+								test: /node_modules\/@tanstack\/(react-query|query-core|react-query-persist-client|query-async-storage-persister)/,
+								priority: 12.5,
+							},
+							// react-hook-form + resolvers
+							{
+								name: "vendor-forms",
+								test: /node_modules\/(react-hook-form|@hookform\/resolvers)/,
+								priority: 12.4,
+							},
+							// dnd-kit agenda/boards
+							{
+								name: "vendor-dnd",
+								test: /node_modules\/@dnd-kit\//,
+								priority: 12.3,
+							},
+							// estado local leve
+							{
+								name: "vendor-state",
+								test: /node_modules\/zustand/,
+								priority: 12.2,
+							},
+							// command palette, calendários e toasts
+							{
+								name: "vendor-ui-helpers",
+								test: /node_modules\/(cmdk|sonner|react-day-picker)/,
+								priority: 12.1,
 							},
 							// react + react-dom — runtime base do app
 							{
