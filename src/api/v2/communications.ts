@@ -48,7 +48,8 @@ const crm = (path: string, opts?: RequestInit) =>
 	request<any>(`/api/crm${path}`, opts);
 
 export const notificationsApi = {
-	list: () => request<{ data: Notification[] }>("/api/notifications"),
+	list: (params?: { limit?: number }) =>
+		request<{ data: Notification[] }>(withQuery("/api/notifications", params)),
 	create: (d: Partial<Notification>) =>
 		request<{ data: Notification }>("/api/notifications", {
 			method: "POST",
