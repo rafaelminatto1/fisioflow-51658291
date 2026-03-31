@@ -24,7 +24,7 @@ import {
 import { useAuth } from "@/contexts/AuthContext";
 import { useUserProfile } from "@/hooks/useUserProfile";
 import { useToast } from "@/hooks/use-toast";
-import { DatePicker } from "@/components/ui/date-picker";
+import { SmartDatePicker } from "@/components/ui/smart-date-picker";
 import { parseISO, format as formatDateFns, isValid } from "date-fns";
 
 export const Profile = () => {
@@ -279,7 +279,7 @@ export const Profile = () => {
 
 										<div className="space-y-2">
 											<Label htmlFor="birthDate">Data de Nascimento</Label>
-											<DatePicker
+											<SmartDatePicker
 												date={
 													profileData.birthDate
 														? parseISO(profileData.birthDate)

@@ -20,6 +20,7 @@ import { type AppointmentFormData } from "@/types/appointment";
 import { AppointmentDateTimeSection } from "../AppointmentDateTimeSection";
 import { AppointmentPatientSelectionSection } from "../AppointmentPatientSelectionSection";
 import { AppointmentPaymentTab } from "../AppointmentPaymentTab";
+import { User, Briefcase, MessageSquare, Info } from "lucide-react";
 
 interface AppointmentInfoTabProps {
 	methods: UseFormReturn<AppointmentFormData>;
@@ -48,11 +49,11 @@ interface AppointmentInfoTabProps {
 }
 
 /**
- * Label padrão de campo.
- * Cor: on_surface_variant (#434655) do design system FisioFlow Clinical
+ * Label padrão de campo com ícone opcional.
  */
-const FieldLabel = ({ children }: { children: React.ReactNode }) => (
-	<span className="text-xs font-medium text-slate-500 block mb-1.5">
+const FieldLabel = ({ children, icon: Icon }: { children: React.ReactNode; icon?: any }) => (
+	<span className="text-[11px] font-semibold text-slate-500 uppercase tracking-wider flex items-center gap-1.5 mb-2">
+		{Icon && <Icon className="h-3.5 w-3.5 text-slate-400" />}
 		{children}
 	</span>
 );
@@ -75,9 +76,6 @@ export const AppointmentInfoTab: React.FC<AppointmentInfoTabProps> = ({
 	onAutoSchedule,
 	therapists,
 	therapistsLoading,
-	// Mantidos na interface por compatibilidade, mas o campo agora é sempre expandido
-	isNotesExpanded: _isNotesExpanded,
-	setIsNotesExpanded: _setIsNotesExpanded,
 }) => {
 	const { register, setValue, watch } = methods;
 
@@ -94,137 +92,140 @@ export const AppointmentInfoTab: React.FC<AppointmentInfoTabProps> = ({
 	const isViewMode = currentMode === "view";
 
 	return (
-		<div className="space-y-6">
-			{/* ── Paciente ── */}
-			<div>
-				<AppointmentPatientSelectionSection
-					patients={patients}
-					isLoading={patientsLoading}
-					disabled={isViewMode || currentMode === "edit" || !!defaultPatientId}
-					onCreateNew={onQuickPatientCreate}
-					fallbackPatientName={
-						lastCreatedPatient?.id === watchedPatientId
-							? lastCreatedPatient.name
-							: normalizedAppointmentPatientName?.trim()
-								? normalizedAppointmentPatientName
-								: selectedPatientName || undefined
-					}
-					fallbackDescription={
-						lastCreatedPatient?.id === watchedPatientId
-							? "Recém-cadastrado"
-							: undefined
-					}
-				/>
-			</div>
+		<div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
+			{/* ── Coluna Esquerda (Principal: Paciente e Notas) ── */}
+			<div className="lg:col-span-7 space-y-8">
+				<section className="bg-slate-50/50 rounded-2xl p-1 border border-transparent">
+					<AppointmentPatientSelectionSection
+						patients={patients}
+						isLoading={patientsLoading}
+						disabled={isViewMode || currentMode === "edit" || !!defaultPatientId}
+						onCreateNew={onQuickPatientCreate}
+						fallbackPatientName={
+							lastCreatedPatient?.id === watchedPatientId
+								? lastCreatedPatient.name
+								: normalizedAppointmentPatientName?.trim()
+									? normalizedAppointmentPatientName
+									: selectedPatientName || undefined
+						}
+						fallbackDescription={
+							lastCreatedPatient?.id === watchedPatientId
+								? "Recém-cadastrado"
+								: undefined
+						}
+					/>
+				</section>
 
-			{/* ── Data e Hora ── */}
-			<div>
-				<AppointmentDateTimeSection
-					disabled={isViewMode}
-					timeSlots={timeSlots}
-					isCalendarOpen={isCalendarOpen}
-					setIsCalendarOpen={setIsCalendarOpen}
-					getMinCapacityForInterval={getMinCapacityForInterval}
-					conflictCount={conflictCount}
-					watchedDateStr={watchedDateStr}
-					watchedTime={watchedTime}
-					watchedDuration={watchedDuration}
-					onAutoSchedule={onAutoSchedule}
-				/>
-			</div>
-
-			{/* ── Profissional ── */}
-			<div className="space-y-1.5">
-				<FieldLabel>Profissional</FieldLabel>
-				<Select
-					value={watch("therapist_id") || THERAPIST_SELECT_NONE}
-					onValueChange={(value) =>
-						setValue(
-							"therapist_id",
-							value === THERAPIST_SELECT_NONE ? "" : value,
-						)
-					}
-					disabled={isViewMode || therapistsLoading}
-				>
-					<SelectTrigger className="h-10 text-sm border-slate-200 bg-white rounded-lg focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-colors">
-						<SelectValue
-							placeholder={
-								therapistsLoading ? "Carregando..." : THERAPIST_PLACEHOLDER
-							}
-						/>
-					</SelectTrigger>
-					<SelectContent className="rounded-lg border-slate-200">
-						<SelectItem value={THERAPIST_SELECT_NONE} className="text-sm">
-							{THERAPIST_PLACEHOLDER}
-						</SelectItem>
-						{therapists.map((t) => (
-							<SelectItem key={t.id} value={t.id} className="text-sm">
-								{formatTherapistLabel(t)}
-							</SelectItem>
-						))}
-					</SelectContent>
-				</Select>
-			</div>
-
-			{/* ── Status — pill buttons inline (padrão Stitch FisioFlow Clinical) ── */}
-			<div className="space-y-1.5">
-				<FieldLabel>Status</FieldLabel>
-				<div className="flex flex-wrap gap-1.5">
-					{Object.entries(APPOINTMENT_STATUS_CONFIG).map(([key, config]) => {
-						const isActive = watchedStatus === key;
-						return (
-							<button
-								key={key}
-								type="button"
-								disabled={isViewMode}
-								onClick={() =>
-									setValue("status", key as AppointmentFormData["status"])
-								}
-								className={cn(
-									"inline-flex items-center gap-1.5 px-3 h-8 rounded-md text-xs font-medium transition-all duration-150 select-none",
-									isActive
-										? "bg-blue-600 text-white shadow-sm"
-										: "bg-slate-100 text-slate-600 hover:bg-slate-200",
-									isViewMode && "cursor-default",
-								)}
-							>
-								<span
-									className={cn(
-										"h-1.5 w-1.5 rounded-full shrink-0",
-										isActive
-											? "bg-white/80"
-											: config.iconColor.replace("text-", "bg-"),
-									)}
-								/>
-								{config.label}
-							</button>
-						);
-					})}
+				<div className="space-y-2">
+					<FieldLabel icon={MessageSquare}>Observações do Atendimento</FieldLabel>
+					<Textarea
+						{...register("notes")}
+						placeholder="Digite aqui anotações importantes para este atendimento..."
+						rows={10}
+						disabled={isViewMode}
+						className="resize-none text-sm border-slate-200 focus-visible:ring-2 focus-visible:ring-blue-500/20 focus-visible:border-blue-500 rounded-xl bg-white placeholder:text-slate-400 transition-all shadow-sm"
+					/>
 				</div>
 			</div>
 
-			{/* ── Financeiro ── */}
-			<div>
-				<AppointmentPaymentTab
-					disabled={isViewMode}
-					watchPaymentStatus={watchPaymentStatus || "pending"}
-					watchPaymentMethod={watchPaymentMethod || ""}
-					watchPaymentAmount={watchPaymentAmount || 0}
-					patientId={watchedPatientId}
-					patientName={selectedPatientName}
-				/>
-			</div>
+			{/* ── Coluna Direita (Detalhes: Data, Profissional, Status, Financeiro) ── */}
+			<div className="lg:col-span-5 space-y-8">
+				{/* Seção Data e Hora */}
+				<div className="bg-white rounded-2xl border border-slate-100 p-5 shadow-sm space-y-6">
+					<AppointmentDateTimeSection
+						disabled={isViewMode}
+						timeSlots={timeSlots}
+						isCalendarOpen={isCalendarOpen}
+						setIsCalendarOpen={setIsCalendarOpen}
+						getMinCapacityForInterval={getMinCapacityForInterval}
+						conflictCount={conflictCount}
+						watchedDateStr={watchedDateStr}
+						watchedTime={watchedTime}
+						watchedDuration={watchedDuration}
+						onAutoSchedule={onAutoSchedule}
+					/>
 
-			{/* ── Observações — sempre visível ── */}
-			<div className="space-y-1.5">
-				<FieldLabel>Observações</FieldLabel>
-				<Textarea
-					{...register("notes")}
-					placeholder="Anotações sobre o atendimento..."
-					rows={3}
-					disabled={isViewMode}
-					className="resize-none text-sm border-slate-200 focus-visible:ring-2 focus-visible:ring-blue-500/20 focus-visible:border-blue-500 rounded-lg bg-white placeholder:text-slate-400 transition-colors"
-				/>
+					<div className="pt-4 border-t border-slate-50">
+						<FieldLabel icon={Briefcase}>Profissional Responsável</FieldLabel>
+						<Select
+							value={watch("therapist_id") || THERAPIST_SELECT_NONE}
+							onValueChange={(value) =>
+								setValue(
+									"therapist_id",
+									value === THERAPIST_SELECT_NONE ? "" : value,
+								)
+							}
+							disabled={isViewMode || therapistsLoading}
+						>
+							<SelectTrigger className="h-11 text-sm border-slate-200 bg-slate-50/30 rounded-xl focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all">
+								<SelectValue
+									placeholder={
+										therapistsLoading ? "Carregando..." : THERAPIST_PLACEHOLDER
+									}
+								/>
+							</SelectTrigger>
+							<SelectContent className="rounded-xl border-slate-200 shadow-xl">
+								<SelectItem value={THERAPIST_SELECT_NONE} className="text-sm">
+									{THERAPIST_PLACEHOLDER}
+								</SelectItem>
+								{therapists.map((t) => (
+									<SelectItem key={t.id} value={t.id} className="text-sm">
+										{formatTherapistLabel(t)}
+									</SelectItem>
+								))}
+							</SelectContent>
+						</Select>
+					</div>
+				</div>
+
+				{/* Seção Status */}
+				<div className="space-y-3">
+					<FieldLabel icon={Info}>Status do Agendamento</FieldLabel>
+					<div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+						{Object.entries(APPOINTMENT_STATUS_CONFIG).map(([key, config]) => {
+							const isActive = watchedStatus === key;
+							return (
+								<button
+									key={key}
+									type="button"
+									disabled={isViewMode}
+									onClick={() =>
+										setValue("status", key as AppointmentFormData["status"])
+									}
+									className={cn(
+										"flex items-center gap-2 px-3 h-10 rounded-xl text-xs font-semibold transition-all duration-200 border",
+										isActive
+											? "bg-blue-600 text-white border-blue-600 shadow-md ring-2 ring-blue-500/20"
+											: "bg-white text-slate-600 border-slate-200 hover:border-slate-300 hover:bg-slate-50 shadow-sm",
+										isViewMode && "cursor-default",
+									)}
+								>
+									<span
+										className={cn(
+											"h-2 w-2 rounded-full shrink-0",
+											isActive
+												? "bg-white"
+												: config.iconColor.replace("text-", "bg-"),
+										)}
+									/>
+									<span className="truncate">{config.label}</span>
+								</button>
+							);
+						})}
+					</div>
+				</div>
+
+				{/* Seção Financeiro */}
+				<div className="pt-2">
+					<AppointmentPaymentTab
+						disabled={isViewMode}
+						watchPaymentStatus={watchPaymentStatus || "pending"}
+						watchPaymentMethod={watchPaymentMethod || ""}
+						watchPaymentAmount={watchPaymentAmount || 0}
+						patientId={watchedPatientId}
+						patientName={selectedPatientName}
+					/>
+				</div>
 			</div>
 		</div>
 	);
