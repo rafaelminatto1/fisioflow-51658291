@@ -44,15 +44,6 @@ workflows:
           
           echo "Building Workspace: $WORKSPACE with Scheme: $SCHEME"
           
-          # Tentativa de build direta para capturar erros de compilação Swift
-          xcodebuild \
-            -workspace "$WORKSPACE" \
-            -scheme "$SCHEME" \
-            -sdk iphoneos \
-            -configuration Release \
-            build \
-            CODE_SIGNING_ALLOWED=NO | grep -A 5 "error:" || true
-
           xcode-project build-ipa \
             --workspace "$WORKSPACE" \
             --scheme "$SCHEME" \
