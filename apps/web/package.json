@@ -120,6 +120,8 @@
     "@react-native-async-storage/async-storage": "^2.2.0",
     "@react-native-community/netinfo": "^11.5.0",
     "@react-pdf/renderer": "^4.3.2",
+    "@schedule-x/react": "^4.1.0",
+    "@schedule-x/theme-default": "^4.3.1",
     "@sendgrid/mail": "^8.1.5",
     "@sentry/react": "^10.45.0",
     "@tanstack/query-async-storage-persister": "^5.90.17",
