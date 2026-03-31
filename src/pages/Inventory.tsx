@@ -38,11 +38,13 @@ import {
 	Edit,
 	History,
 	Filter,
+	Trash2,
 } from "lucide-react";
 import {
 	useInventory,
 	useCreateInventoryItem,
 	useUpdateInventoryItem,
+	useDeleteInventoryItem,
 	useInventoryMovements,
 	useCreateMovement,
 	InventoryItem,
@@ -90,6 +92,7 @@ export default function Inventory() {
 	const { data: movements = [] } = useInventoryMovements();
 	const createItem = useCreateInventoryItem();
 	const updateItem = useUpdateInventoryItem();
+	const deleteItem = useDeleteInventoryItem();
 	const createMovement = useCreateMovement();
 
 	const filteredInventory = useMemo(() => {
@@ -187,6 +190,14 @@ export default function Inventory() {
 			location: item.location || "",
 		});
 		setIsItemDialogOpen(true);
+	};
+
+	const handleDeleteItem = async (item: InventoryItem) => {
+		if (!confirm(`Tem certeza que deseja remover "${item.item_name}" do estoque?`)) {
+			return;
+		}
+
+		await deleteItem.mutateAsync(item.id);
 	};
 
 	return (
@@ -388,6 +399,15 @@ export default function Inventory() {
 																	onClick={() => openEditDialog(item)}
 																>
 																	<Edit className="h-4 w-4" />
+																</Button>
+																<Button
+																	variant="ghost"
+																	size="sm"
+																	className="text-destructive"
+																	disabled={deleteItem.isPending}
+																	onClick={() => handleDeleteItem(item)}
+																>
+																	<Trash2 className="h-4 w-4" />
 																</Button>
 															</div>
 														</TableCell>

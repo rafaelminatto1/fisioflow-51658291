@@ -251,7 +251,7 @@ export default function MarketingDashboard() {
 								className="magnetic-button glow-on-hover font-display"
 								asChild
 							>
-								<Link to="/marketing/fisolink">
+								<Link to="/marketing/fisiolink">
 									<Link2 className="h-4 w-4 mr-2" />
 									Meu FisioLink
 								</Link>
