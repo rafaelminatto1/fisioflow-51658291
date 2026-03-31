@@ -12,22 +12,26 @@ function Calendar({
 	classNames,
 	showOutsideDays = true,
 	locale = ptBR,
-	..._props
+	...props
 }: CalendarProps) {
 	return (
 		<DayPicker
 			showOutsideDays={showOutsideDays}
 			className={cn("p-3", className)}
 			locale={locale}
-			formatters={{
-				formatCaption: (date, options) => {
-					const month = date.toLocaleString(options?.locale?.code, {
-						month: "long",
-					});
-					const year = date.getFullYear();
-					return `${month.charAt(0).toUpperCase() + month.slice(1)} ${year}`;
-				},
-			}}
+			formatters={
+				props.captionLayout !== "dropdown" && props.captionLayout !== "dropdown-buttons"
+					? {
+							formatCaption: (date, options) => {
+								const month = date.toLocaleString(options?.locale?.code, {
+									month: "long",
+								});
+								const year = date.getFullYear();
+								return `${month.charAt(0).toUpperCase() + month.slice(1)} ${year}`;
+							},
+						}
+					: undefined
+			}
 			classNames={{
 				months: "flex flex-col sm:flex-row space-y-4 sm:space-x-4 sm:space-y-0",
 				month: "space-y-4",

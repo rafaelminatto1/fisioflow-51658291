@@ -26,7 +26,7 @@ import { toast } from "@/hooks/use-toast";
 import { Loader2, UserX } from "lucide-react";
 import { PatientService } from "@/lib/services/PatientService";
 import type { Patient } from "@/types";
-import { DatePicker } from "@/components/ui/date-picker";
+import { SmartDatePicker } from "@/components/ui/smart-date-picker";
 import { parseISO, format as formatDateFns } from "date-fns";
 
 const patientSchema = z.object({
@@ -236,7 +236,7 @@ export const EditPatientModal: React.FC<{
 											name="birth_date"
 											control={control}
 											render={({ field }) => (
-												<DatePicker
+												<SmartDatePicker
 													date={field.value ? parseISO(field.value) : undefined}
 													onChange={(date) =>
 														field.onChange(
