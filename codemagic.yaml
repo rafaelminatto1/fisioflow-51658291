@@ -3,64 +3,67 @@ workflows:
     name: FisioFlow Pro iOS Build
     max_build_duration: 120
     instance_type: mac_mini_m1
-    cache:
-      cache_paths:
-        - ~/.npm
-        - ~/.eas-build-local-nodejs
-        - ~/.cocoapods/repos
+
     environment:
-      node: latest
-      xcode: 16
+      node: 22
+      xcode: 16.4
       cocoapods: default
-      groups:
-        - expo
       vars:
         APP_DIR: "apps/professional-app"
         EXPO_PUBLIC_API_URL: "https://moocafisio.com.br/api"
         CI: "true"
+      groups:
+        - expo
+        - appstore  # CM_CERTIFICATE, CM_CERTIFICATE_PASSWORD, CM_PROVISIONING_PROFILE
+
     triggering:
       events:
         - push
+
+    # Code signing is auto-configured via CM_* environment variables
+    # No need for ios_signing block when using manual signing
+
+    cache:
+      cache_paths:
+        - $HOME/Library/Caches/CocoaPods
+        - ~/.cocoapods/repos
+        - ~/.npm
+        - $APP_DIR/ios/Pods
+
     scripts:
       - name: Install pnpm
         script: |
           npm install -g pnpm --force
+
       - name: Install dependencies
         script: |
           pnpm install --no-frozen-lockfile
-      - name: Install EAS CLI
-        script: |
-          npm install -g eas-cli
-      - name: Pre-warm CocoaPods specs cache
-        script: |
-          # EAS runs pod install internally with no retry logic.
-          # Pre-warming ~/.cocoapods/repos here ensures specs are cached
-          # so EAS finds them locally and never hits raw.githubusercontent.com.
-          pod repo list | grep -q "trunk" || pod repo add-cdn trunk https://cdn.cocoapods.org/
-          for attempt in 1 2 3; do
-            echo "Updating CocoaPods trunk specs (attempt $attempt/3)..."
-            pod repo update trunk && break
-            if [ $attempt -eq 3 ]; then
-              echo "pod repo update failed after 3 attempts"
-              exit 1
-            fi
-            echo "Retrying in 30s..."
-            sleep 30
-          done
-          echo "CocoaPods specs cache is ready."
-      - name: EAS Build iOS (ad-hoc)
+
+      - name: Expo prebuild (generate ios/)
         script: |
           cd $APP_DIR
-          # EAS handles: prebuild, CocoaPods, code signing, xcodebuild, export
-          # credentialsSource: "remote" in eas.json — no manual signing needed
-          eas build \
-            --platform ios \
-            --profile preview \
-            --local \
-            --non-interactive \
-            --output /tmp/FisioFlowPro.ipa
+          npx expo prebuild --platform ios --clean
+
+      - name: Install CocoaPods
+        script: |
+          cd $APP_DIR/ios
+          pod install
+
+      - name: Set up code signing
+        script: |
+          xcode-project use-profiles \
+            --project "$CM_BUILD_DIR/$APP_DIR/ios/vite_react_shadcn_ts.xcodeproj"
+
+      - name: Build IPA (ad-hoc)
+        script: |
+          xcode-project build-ipa \
+            --workspace "$CM_BUILD_DIR/$APP_DIR/ios/vite_react_shadcn_ts.xcworkspace" \
+            --scheme vite_react_shadcn_ts \
+            --archive-flags="-destination 'generic/platform=iOS'"
+
     artifacts:
-      - /tmp/FisioFlowPro.ipa
+      - build/ios/ipa/*.ipa
+
     publishing:
       email:
         recipients:
