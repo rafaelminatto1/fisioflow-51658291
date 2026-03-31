@@ -11,13 +11,12 @@ workflows:
       node: latest
       xcode: 16
       cocoapods: default
+      groups:
+        - expo
       vars:
         APP_DIR: "apps/professional-app"
         EXPO_PUBLIC_API_URL: "https://moocafisio.com.br/api"
         CI: "true"
-      # REQUIRED: Add EXPO_TOKEN to Codemagic environment variables
-      # (Codemagic dashboard → app settings → Environment variables)
-      # Get token at: https://expo.dev/accounts/[account]/settings/access-tokens
     triggering:
       events:
         - push
