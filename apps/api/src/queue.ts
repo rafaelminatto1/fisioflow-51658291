@@ -1,5 +1,6 @@
 import type { Env } from './types/env';
 import { createPool } from './lib/db';
+import { writeEvent } from './lib/analytics';
 
 export type WhatsAppQueuePayload = {
   to: string;
@@ -106,6 +107,14 @@ async function processWhatsAppMessage(payload: WhatsAppQueuePayload, env: Env): 
       }),
     ],
   );
+
+  writeEvent(env, {
+    event: 'whatsapp_sent',
+    orgId: payload.organizationId,
+    route: '/queue/whatsapp',
+    method: 'QUEUE',
+    status: 200,
+  });
 
   console.log(`[Queue/WhatsApp] Sent to ${payload.to} (appointment ${payload.appointmentId})`);
 }
