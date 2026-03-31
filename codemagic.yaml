@@ -36,6 +36,7 @@ workflows:
           pod install --repo-update
       - name: Build iOS IPA
         script: |
+          set -euo pipefail
           cd $APP_DIR/ios
 
           # Initialize keychain
@@ -43,6 +44,12 @@ workflows:
 
           # Configura o Xcode usando o perfil específico injetado
           xcode-project use-profiles --project "FisioFlowPro.xcodeproj"
+
+          # O projeto gerado pelo Expo/Codemagic ainda pode sair com a identidade legada
+          # "iOS Distribution", que nao existe mais no keychain moderno da Apple.
+          if rg -n 'iOS Distribution' FisioFlowPro.xcodeproj/project.pbxproj >/dev/null 2>&1; then
+            perl -0pi -e 's/iOS Distribution/Apple Distribution/g' FisioFlowPro.xcodeproj/project.pbxproj
+          fi
 
           export WORKSPACE=$(ls -d *.xcworkspace | head -1)
           export SCHEME="FisioFlowPro"
