@@ -1,15 +1,7 @@
 import * as React from "react";
-import {
-	format,
-	getYear,
-	getMonth,
-	setYear,
-	setMonth,
-} from "date-fns";
+import { format, parse, isValid, startOfMonth } from "date-fns";
 import { ptBR } from "date-fns/locale";
-import {
-	Calendar as CalendarIcon,
-} from "lucide-react";
+import { Calendar as CalendarIcon } from "lucide-react";
 
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
@@ -19,13 +11,7 @@ import {
 	PopoverContent,
 	PopoverTrigger,
 } from "@/components/ui/popover";
-import {
-	Select,
-	SelectContent,
-	SelectItem,
-	SelectTrigger,
-	SelectValue,
-} from "@/components/ui/select";
+import { Input } from "@/components/ui/input";
 
 interface SmartDatePickerProps {
 	date?: Date;
@@ -35,7 +21,7 @@ interface SmartDatePickerProps {
 	disabled?: boolean;
 	fromYear?: number;
 	toYear?: number;
-	showYearPicker?: boolean;
+	enableManualInput?: boolean;
 }
 
 export function SmartDatePicker({
@@ -44,127 +30,106 @@ export function SmartDatePicker({
 	placeholder = "Selecione uma data",
 	className,
 	disabled,
-	fromYear = 1920,
-	toYear = new Date().getFullYear() + 5,
-	showYearPicker = true,
+	fromYear = 1900,
+	toYear = new Date().getFullYear() + 10,
+	enableManualInput = true,
 }: SmartDatePickerProps) {
-	const [month, setMonthDate] = React.useState<Date>(date || new Date());
+	const [inputValue, setInputValue] = React.useState(
+		date ? format(date, "dd/MM/yyyy") : "",
+	);
+	const [month, setMonth] = React.useState<Date>(date || new Date());
 
-	const years = React.useMemo(() => {
-		const yearsArray = [];
-		for (let i = toYear; i >= fromYear; i--) {
-			yearsArray.push(i);
+	React.useEffect(() => {
+		if (date) {
+			setInputValue(format(date, "dd/MM/yyyy"));
+			setMonth(date);
+		} else {
+			setInputValue("");
 		}
-		return yearsArray;
-	}, [fromYear, toYear]);
+	}, [date]);
 
-	const months = [
-		"Janeiro",
-		"Fevereiro",
-		"Março",
-		"Abril",
-		"Maio",
-		"Junho",
-		"Julho",
-		"Agosto",
-		"Setembro",
-		"Outubro",
-		"Novembro",
-		"Dezembro",
-	];
+	const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+		const value = e.target.value;
 
-	const handleYearChange = (year: string) => {
-		const newDate = setYear(month, parseInt(year));
-		setMonthDate(newDate);
-	};
+		// Mask for DD/MM/YYYY
+		const cleaned = value.replace(/\D/g, "");
+		let formatted = cleaned;
+		if (cleaned.length > 2) {
+			formatted = `${cleaned.slice(0, 2)}/${cleaned.slice(2)}`;
+		}
+		if (cleaned.length > 4) {
+			formatted = `${cleaned.slice(0, 2)}/${cleaned.slice(2, 4)}/${cleaned.slice(4, 8)}`;
+		}
 
-	const handleMonthChange = (monthIndex: string) => {
-		const newDate = setMonth(month, parseInt(monthIndex));
-		setMonthDate(newDate);
+		setInputValue(formatted);
+
+		if (formatted.length === 10) {
+			const parsedDate = parse(formatted, "dd/MM/yyyy", new Date());
+			if (isValid(parsedDate)) {
+				onChange?.(parsedDate);
+				setMonth(parsedDate);
+			}
+		}
 	};
 
 	return (
-		<Popover>
-			<PopoverTrigger asChild>
-				<Button
-					variant={"outline"}
-					disabled={disabled}
-					className={cn(
-						"w-full justify-start text-left font-normal h-11 rounded-2xl border-slate-200 dark:border-slate-800 bg-white/50 dark:bg-slate-900/50 backdrop-blur-sm transition-all hover:border-primary/50 focus:ring-4 focus:ring-primary/10",
-						!date && "text-muted-foreground",
-						className,
-					)}
+		<div className={cn("flex items-center gap-2", className)}>
+			<Popover onOpenChange={(open) => {
+				if (open && date) {
+					setMonth(date);
+				}
+			}}>
+				<PopoverTrigger asChild>
+					<Button
+						variant={"outline"}
+						disabled={disabled}
+						className={cn(
+							"flex-1 justify-start text-left font-normal h-10 rounded-xl border-slate-200 hover:border-primary/50 transition-all",
+							!date && "text-muted-foreground"
+						)}
+					>
+						<CalendarIcon className="mr-2 h-4 w-4 text-primary" />
+						{date ? (
+							format(date, "dd 'de' MMMM 'de' yyyy", { locale: ptBR })
+						) : (
+							<span>{placeholder}</span>
+						)}
+					</Button>
+				</PopoverTrigger>
+				<PopoverContent
+					className="w-auto p-0 rounded-2xl shadow-xl border-slate-200"
+					align="start"
 				>
-					<CalendarIcon className="mr-2 h-4 w-4 text-primary" />
-					{date ? (
-						format(date, "dd 'de' MMMM 'de' yyyy", { locale: ptBR })
-					) : (
-						<span>{placeholder}</span>
-					)}
-				</Button>
-			</PopoverTrigger>
-			<PopoverContent
-				className="w-auto p-4 rounded-3xl shadow-2xl border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950"
-				align="start"
-			>
-				{showYearPicker && (
-					<div className="flex gap-2 mb-4">
-						<Select
-							value={getMonth(month).toString()}
-							onValueChange={handleMonthChange}
-						>
-							<SelectTrigger className="flex-1 h-9 rounded-xl text-xs font-bold bg-slate-50 dark:bg-slate-900 border-none">
-								<SelectValue placeholder="Mês" />
-							</SelectTrigger>
-							<SelectContent className="rounded-xl">
-								{months.map((m, index) => (
-									<SelectItem
-										key={m}
-										value={index.toString()}
-										className="text-xs"
-									>
-										{m}
-									</SelectItem>
-								))}
-							</SelectContent>
-						</Select>
-
-						<Select
-							value={getYear(month).toString()}
-							onValueChange={handleYearChange}
-						>
-							<SelectTrigger className="w-[100px] h-9 rounded-xl text-xs font-bold bg-slate-50 dark:bg-slate-900 border-none">
-								<SelectValue placeholder="Ano" />
-							</SelectTrigger>
-							<SelectContent className="rounded-xl max-h-[300px]">
-								{years.map((y) => (
-									<SelectItem key={y} value={y.toString()} className="text-xs">
-										{y}
-									</SelectItem>
-								))}
-							</SelectContent>
-						</Select>
-					</div>
-				)}
-
-				<Calendar
-					mode="single"
-					selected={date}
-					onSelect={onChange}
-					month={month}
-					onMonthChange={setMonthDate}
-					initialFocus
-					locale={ptBR}
-					className="rounded-xl border-none p-0"
-					classNames={{
-						day_selected:
-							"bg-primary text-white hover:bg-primary hover:text-white rounded-xl shadow-lg shadow-primary/30 font-bold",
-						day_today:
-							"bg-slate-100 dark:bg-slate-800 text-primary font-black rounded-xl",
-						day: "h-9 w-9 p-0 font-medium aria-selected:opacity-100 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-xl transition-colors",
-					}}
+					<Calendar
+						mode="single"
+						selected={date}
+						onSelect={(newDate) => {
+							onChange?.(newDate);
+						}}
+						month={month}
+						onMonthChange={setMonth}
+						initialFocus
+						captionLayout="dropdown"
+						fromYear={fromYear}
+						toYear={toYear}
+						classNames={{
+							caption_dropdowns: "flex justify-center gap-1 mb-2",
+							dropdown: "flex items-center bg-slate-50 dark:bg-slate-900 rounded-md px-1 py-0.5 text-xs font-medium",
+							vhidden: "hidden", // react-day-picker dropdown label
+						}}
+					/>
+				</PopoverContent>
+			</Popover>
+			{enableManualInput && (
+				<Input
+					placeholder="DD/MM/AAAA"
+					value={inputValue}
+					onChange={handleInputChange}
+					className="w-[120px] h-10 rounded-xl border-slate-200 text-center text-sm"
+					maxLength={10}
+					disabled={disabled}
 				/>
-			</PopoverContent>
-		</Popover>
+			)}
+		</div>
 	);
 }
