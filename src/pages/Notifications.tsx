@@ -14,6 +14,7 @@ import {
 	MessageCircle,
 	Users,
 	Loader2,
+	Trash2,
 } from "lucide-react";
 import { MainLayout } from "@/components/layout/MainLayout";
 import { Button } from "@/components/ui/button";
@@ -60,7 +61,8 @@ const typeColors: Record<Notification["type"], string> = {
 const NotificationCard: React.FC<{
 	notification: Notification;
 	onMarkAsRead: (id: string) => void;
-}> = ({ notification, onMarkAsRead }) => {
+	onDelete: (id: string) => void;
+}> = ({ notification, onMarkAsRead, onDelete }) => {
 	const timeAgo = formatDistanceToNow(new Date(notification.created_at), {
 		addSuffix: true,
 		locale: ptBR,
@@ -111,6 +113,14 @@ const NotificationCard: React.FC<{
 										Marcar como lida
 									</Button>
 								)}
+								<Button
+									variant="ghost"
+									size="sm"
+									className="h-8 text-muted-foreground"
+									onClick={() => onDelete(notification.id)}
+								>
+									<Trash2 className="h-3.5 w-3.5" />
+								</Button>
 							</div>
 						</div>
 						<p className="text-sm text-muted-foreground mt-2">
@@ -142,6 +152,7 @@ const Notifications: React.FC = () => {
 		isLoading,
 		markAsRead,
 		markAllAsRead,
+		deleteNotification,
 		isMarkingAllAsRead,
 	} = useNotifications(100);
 
@@ -220,6 +231,7 @@ const Notifications: React.FC = () => {
 												key={notification.id}
 												notification={notification}
 												onMarkAsRead={markAsRead}
+												onDelete={deleteNotification}
 											/>
 										))}
 									</div>
@@ -236,6 +248,7 @@ const Notifications: React.FC = () => {
 												key={notification.id}
 												notification={notification}
 												onMarkAsRead={markAsRead}
+												onDelete={deleteNotification}
 											/>
 										))}
 									</div>
@@ -252,6 +265,7 @@ const Notifications: React.FC = () => {
 												key={notification.id}
 												notification={notification}
 												onMarkAsRead={markAsRead}
+												onDelete={deleteNotification}
 											/>
 										))}
 									</div>

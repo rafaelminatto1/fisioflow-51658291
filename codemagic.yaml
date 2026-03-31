@@ -9,7 +9,7 @@ workflows:
       cocoapods: default
       ios_signing:
         provisioning_profiles:
-          - fisioflow_pro_adhoc_push_2026 # Novo perfil com Push habilitado
+          - fisioflow_pro_adhoc_push_2026
       vars:
         APP_DIR: "apps/professional-app"
         BUNDLE_ID: "com.fisioflow.professionals"
@@ -36,11 +36,7 @@ workflows:
       - name: Build iOS IPA
         script: |
           cd $APP_DIR/ios
-          
-          # Initialize keychain
           keychain initialize
-          
-          # Aplica o novo perfil de provisionamento
           xcode-project use-profiles --project "FisioFlowPro.xcodeproj"
           
           export WORKSPACE=$(ls -d *.xcworkspace | head -1)
@@ -48,6 +44,15 @@ workflows:
           
           echo "Building Workspace: $WORKSPACE with Scheme: $SCHEME"
           
+          # Tentativa de build direta para capturar erros de compilação Swift
+          xcodebuild \
+            -workspace "$WORKSPACE" \
+            -scheme "$SCHEME" \
+            -sdk iphoneos \
+            -configuration Release \
+            build \
+            CODE_SIGNING_ALLOWED=NO | grep -A 5 "error:" || true
+
           xcode-project build-ipa \
             --workspace "$WORKSPACE" \
             --scheme "$SCHEME" \

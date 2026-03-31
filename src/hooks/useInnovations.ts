@@ -215,6 +215,22 @@ export function useUpdateInventoryItem() {
 	});
 }
 
+export function useDeleteInventoryItem() {
+	const queryClient = useQueryClient();
+
+	return useMutation({
+		mutationFn: async (id: string) => {
+			await innovationsApi.inventory.delete(id);
+			return id;
+		},
+		onSuccess: () => {
+			queryClient.invalidateQueries({ queryKey: ["inventory"] });
+			queryClient.invalidateQueries({ queryKey: ["inventory-movements"] });
+			toast.success("Item removido do estoque");
+		},
+	});
+}
+
 export function useInventoryMovements(inventoryId?: string) {
 	return useQuery({
 		queryKey: ["inventory-movements", inventoryId],
