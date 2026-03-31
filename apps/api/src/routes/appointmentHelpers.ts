@@ -4,6 +4,7 @@
  */
 
 export const STATUS_MAP: Record<string, string> = {
+  // Inglês (valores canônicos do backend)
   scheduled: 'scheduled',
   confirmed: 'confirmed',
   in_progress: 'in_progress',
@@ -12,6 +13,8 @@ export const STATUS_MAP: Record<string, string> = {
   no_show: 'no_show',
   rescheduled: 'rescheduled',
   evaluation: 'evaluation',
+
+  // Português → mapeamento para inglês
   agendado: 'scheduled',
   confirmado: 'confirmed',
   presenca_confirmada: 'confirmed',
@@ -19,8 +22,7 @@ export const STATUS_MAP: Record<string, string> = {
   atendido: 'completed',
   concluido: 'completed',
   cancelado: 'cancelled',
-  avaliacao: 'evaluation', // ✅ CORRIGIDO: mapeia para 'evaluation'
-  evaluation: 'evaluation', // Já mantém em inglês
+  avaliacao: 'evaluation',
   falta: 'no_show',
   faltou: 'no_show',
   faltou_com_aviso: 'no_show',
