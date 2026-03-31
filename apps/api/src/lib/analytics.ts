@@ -72,25 +72,27 @@ export function writeEvent(env: Env, data: EventData): void {
  * Registra rota, método, status e latência no Analytics Engine.
  */
 export function analyticsMiddleware(env: Env) {
-  return async (c: any, next: () => Promise<void>) => {
+  return async (c: { req: { url: string; method: string }; res: { status: number }; get: (key: string) => any }, next: () => Promise<void>) => {
     const start = Date.now();
-    await next();
-    const latencyMs = Date.now() - start;
+    try {
+      await next();
+    } finally {
+      const latencyMs = Date.now() - start;
+      const url = new URL(c.req.url);
+      // Normaliza path removendo IDs (UUIDs e números) para agrupamento correto
+      const route = url.pathname.replace(
+        /\/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}/gi,
+        '/:id'
+      ).replace(/\/\d+/g, '/:n');
 
-    const url = new URL(c.req.url);
-    // Normaliza path removendo IDs (UUIDs e números) para agrupamento correto
-    const route = url.pathname.replace(
-      /\/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}/gi,
-      '/:id'
-    ).replace(/\/\d+/g, '/:n');
-
-    writeEvent(env, {
-      route,
-      method: c.req.method,
-      status: c.res.status,
-      orgId: c.get('user')?.organizationId,
-      event: 'request',
-      latencyMs,
-    });
+      writeEvent(env, {
+        route,
+        method: c.req.method,
+        status: c.res.status,
+        orgId: c.get('user')?.organizationId,
+        event: 'request',
+        latencyMs,
+      });
+    }
   };
 }

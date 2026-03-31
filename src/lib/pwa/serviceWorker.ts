@@ -4,7 +4,8 @@ export function canUseServiceWorker(): boolean {
 	return (
 		typeof window !== "undefined" &&
 		"serviceWorker" in navigator &&
-		import.meta.env.PROD
+		import.meta.env.PROD &&
+		!navigator.webdriver
 	);
 }
 

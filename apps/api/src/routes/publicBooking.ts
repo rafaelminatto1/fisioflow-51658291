@@ -1,8 +1,12 @@
 import { Hono } from 'hono';
 import { createPool } from '../lib/db';
 import type { Env } from '../types/env';
+import { turnstileVerify } from '../middleware/turnstile';
 
 const app = new Hono<{ Bindings: Env }>();
+
+// Proteção anti-bot em todas as rotas de agendamento público
+app.use('*', turnstileVerify);
 
 async function hasTable(pool: ReturnType<typeof createPool>, tableName: string): Promise<boolean> {
   const result = await pool.query(`SELECT to_regclass($1)::text AS table_name`, [`public.${tableName}`]);

@@ -5,6 +5,7 @@
  */
 
 import React from "react";
+import { SafeResponsiveContainer } from "@/components/charts/SafeResponsiveContainer";
 import {
 	Card,
 	CardContent,
@@ -29,7 +30,6 @@ import {
 	YAxis,
 	CartesianGrid,
 	Tooltip,
-	ResponsiveContainer,
 	Cell,
 	PieChart,
 	Pie,
@@ -137,7 +137,7 @@ export function ClinicalAnalyticsDashboard() {
 					</CardHeader>
 					<CardContent>
 						<div className="h-[300px]">
-							<ResponsiveContainer width="100%" height="100%">
+							<SafeResponsiveContainer className="h-full" minHeight={300}>
 								<BarChart data={topExercises}>
 									<CartesianGrid strokeDasharray="3 3" vertical={false} />
 									<XAxis dataKey="name" />
@@ -152,7 +152,7 @@ export function ClinicalAnalyticsDashboard() {
 										))}
 									</Bar>
 								</BarChart>
-							</ResponsiveContainer>
+							</SafeResponsiveContainer>
 						</div>
 					</CardContent>
 				</Card>
@@ -170,7 +170,7 @@ export function ClinicalAnalyticsDashboard() {
 					</CardHeader>
 					<CardContent>
 						<div className="h-[300px]">
-							<ResponsiveContainer width="100%" height="100%">
+							<SafeResponsiveContainer className="h-full" minHeight={300}>
 								<PieChart>
 									<Pie
 										data={dashboard?.topPainRegions || []}
@@ -194,7 +194,7 @@ export function ClinicalAnalyticsDashboard() {
 									<Tooltip />
 									<Legend />
 								</PieChart>
-							</ResponsiveContainer>
+							</SafeResponsiveContainer>
 						</div>
 					</CardContent>
 				</Card>

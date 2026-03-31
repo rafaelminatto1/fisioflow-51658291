@@ -1,13 +1,8 @@
-import { lazy, Suspense, useMemo } from "react";
+import { useState } from "react";
 import type { ComponentProps, ComponentType, ReactNode } from "react";
 import { Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
-
-const PDFDownloadLink = lazy(() =>
-	import("@react-pdf/renderer").then((module) => ({
-		default: module.PDFDownloadLink,
-	})),
-);
+import { downloadReactPdfDocument } from "@/lib/export/reactPdfDownload";
 
 interface LazyPdfDownloadButtonProps<TDocumentProps> {
 	loadDocument: () => Promise<{ default: ComponentType<TDocumentProps> }>;
@@ -28,28 +23,29 @@ export function LazyPdfDownloadButton<TDocumentProps>({
 	icon,
 	buttonProps,
 }: LazyPdfDownloadButtonProps<TDocumentProps>) {
-	const PdfDocument = useMemo(() => lazy(loadDocument), [loadDocument]);
+	const [isGenerating, setIsGenerating] = useState(false);
+
+	const handleDownload = async () => {
+		setIsGenerating(true);
+		try {
+			await downloadReactPdfDocument({
+				fileName,
+				loadDocument: async () => (await loadDocument()).default,
+				props: documentProps,
+			});
+		} finally {
+			setIsGenerating(false);
+		}
+	};
 
 	return (
-		<Suspense
-			fallback={
-				<Button disabled {...buttonProps}>
-					<Loader2 className="mr-2 h-4 w-4 animate-spin" />
-					Preparando PDF
-				</Button>
-			}
+		<Button
+			disabled={isGenerating}
+			onClick={() => void handleDownload()}
+			{...buttonProps}
 		>
-			<PDFDownloadLink
-				document={<PdfDocument {...documentProps} />}
-				fileName={fileName}
-			>
-				{({ loading }) => (
-					<Button disabled={loading} {...buttonProps}>
-						{loading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : icon}
-						{loading ? loadingLabel : label}
-					</Button>
-				)}
-			</PDFDownloadLink>
-		</Suspense>
+			{isGenerating ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : icon}
+			{isGenerating ? loadingLabel : label}
+		</Button>
 	);
 }

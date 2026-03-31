@@ -5,19 +5,45 @@ type SharedAuthSession = {
   bearer: string;
 };
 
-const baseURL = process.env.BASE_URL || 'http://localhost:5173';
+const DEFAULT_ALLOWED_AUTH_ORIGIN = 'https://www.moocafisio.com.br';
 const neonAuthUrl = process.env.VITE_NEON_AUTH_URL || '';
 const sessionCache = new Map<string, Promise<SharedAuthSession>>();
+
+function normalizeOrigin(value: string): string {
+  try {
+    return new URL(value).origin;
+  } catch {
+    return value.replace(/\/+$/, '');
+  }
+}
+
+export function getE2EAuthOrigin(): string {
+  return normalizeOrigin(
+    process.env.E2E_NEON_AUTH_ORIGIN ||
+      process.env.E2E_AUTH_ORIGIN ||
+      DEFAULT_ALLOWED_AUTH_ORIGIN,
+  );
+}
+
+export function isCanonicalMoocaOrigin(value: string): boolean {
+  try {
+    const { hostname } = new URL(normalizeOrigin(value));
+    return hostname === 'moocafisio.com.br' || hostname === 'www.moocafisio.com.br';
+  } catch {
+    return false;
+  }
+}
 
 async function createSession(email: string, password: string): Promise<SharedAuthSession> {
   if (!neonAuthUrl) {
     throw new Error('VITE_NEON_AUTH_URL ausente para os testes E2E.');
   }
 
+  const requestOrigin = getE2EAuthOrigin();
   const authContext = await request.newContext({
-    baseURL,
+    baseURL: requestOrigin,
     extraHTTPHeaders: {
-      origin: baseURL,
+      origin: requestOrigin,
     },
   });
 
@@ -35,7 +61,7 @@ async function createSession(email: string, password: string): Promise<SharedAut
 
     const session = await authContext.get(`${neonAuthUrl}/get-session`, {
       headers: {
-        origin: baseURL,
+        origin: requestOrigin,
       },
     });
 
@@ -84,4 +110,3 @@ export async function getSharedBearer(email: string, password: string): Promise<
   const session = await getSharedAuthSession(email, password);
   return session.bearer;
 }
-

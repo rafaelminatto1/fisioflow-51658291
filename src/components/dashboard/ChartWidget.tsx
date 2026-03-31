@@ -14,6 +14,7 @@ import {
 } from "recharts";
 import { TrendingUp, Filter } from "lucide-react";
 import { useState } from "react";
+import { SafeResponsiveContainer } from "@/components/charts/SafeResponsiveContainer";
 
 type ChartType = "line" | "bar" | "pie";
 type TimePeriod = "week" | "month" | "3months" | "6months" | "year";
@@ -120,23 +121,25 @@ export function ChartWidget({
 						className="w-full bg-white dark:bg-gray-800 rounded-lg"
 						style={{ height: `${height}px` }}
 					>
-						<BarChart
-							data={data}
-							margin={{ top: 5, right: 30, left: 20, bottom: 5 }}
-						>
-							<CartesianGrid
-								strokeDasharray="3 3"
-								stroke="hsl(var(--border))"
-							/>
-							<XAxis
-								dataKey="name"
-								stroke="hsl(var(--muted-foreground))"
-								fontSize={12}
-							/>
-							<YAxis stroke="hsl(var(--muted-foreground))" fontSize={12} />
-							<Tooltip content={<CustomTooltip />} />
-							<Bar dataKey="value" fill={colors[0]} radius={[4, 4, 0, 0]} />
-						</BarChart>
+						<SafeResponsiveContainer className="h-full" minHeight={height}>
+							<BarChart
+								data={data}
+								margin={{ top: 5, right: 30, left: 20, bottom: 5 }}
+							>
+								<CartesianGrid
+									strokeDasharray="3 3"
+									stroke="hsl(var(--border))"
+								/>
+								<XAxis
+									dataKey="name"
+									stroke="hsl(var(--muted-foreground))"
+									fontSize={12}
+								/>
+								<YAxis stroke="hsl(var(--muted-foreground))" fontSize={12} />
+								<Tooltip content={<CustomTooltip />} />
+								<Bar dataKey="value" fill={colors[0]} radius={[4, 4, 0, 0]} />
+							</BarChart>
+						</SafeResponsiveContainer>
 					</div>
 				);
 
@@ -146,26 +149,28 @@ export function ChartWidget({
 						className="w-full bg-white dark:bg-gray-800 rounded-lg"
 						style={{ height: `${height}px` }}
 					>
-						<PieChart>
-							<Pie
-								data={data}
-								cx="50%"
-								cy="50%"
-								labelLine={false}
-								label={({ name, value }) => `${name}: ${value}`}
-								outerRadius={80}
-								fill="#8884d8"
-								dataKey="value"
-							>
-								{data.map((entry, index) => (
-									<Cell
-										key={`cell-${index}`}
-										fill={colors[index % colors.length]}
-									/>
-								))}
-							</Pie>
-							<Tooltip content={<CustomTooltip />} />
-						</PieChart>
+						<SafeResponsiveContainer className="h-full" minHeight={height}>
+							<PieChart>
+								<Pie
+									data={data}
+									cx="50%"
+									cy="50%"
+									labelLine={false}
+									label={({ name, value }) => `${name}: ${value}`}
+									outerRadius={80}
+									fill="#8884d8"
+									dataKey="value"
+								>
+									{data.map((entry, index) => (
+										<Cell
+											key={`cell-${index}`}
+											fill={colors[index % colors.length]}
+										/>
+									))}
+								</Pie>
+								<Tooltip content={<CustomTooltip />} />
+							</PieChart>
+						</SafeResponsiveContainer>
 					</div>
 				);
 
@@ -176,25 +181,27 @@ export function ChartWidget({
 						className="w-full bg-white dark:bg-gray-800 rounded-lg"
 						style={{ height: `${height}px` }}
 					>
-						<LineChart
-							data={data}
-							margin={{ top: 10, right: 10, left: 0, bottom: 0 }}
-						>
-							<XAxis
-								dataKey="name"
-								stroke="hsl(var(--muted-foreground))"
-								fontSize={12}
-							/>
-							<YAxis stroke="hsl(var(--muted-foreground))" fontSize={12} />
-							<Tooltip content={<CustomTooltip />} />
-							<Line
-								type="monotone"
-								dataKey="value"
-								stroke="hsl(var(--primary))"
-								strokeWidth={3}
-								fillOpacity={1}
-							/>
-						</LineChart>
+						<SafeResponsiveContainer className="h-full" minHeight={height}>
+							<LineChart
+								data={data}
+								margin={{ top: 10, right: 10, left: 0, bottom: 0 }}
+							>
+								<XAxis
+									dataKey="name"
+									stroke="hsl(var(--muted-foreground))"
+									fontSize={12}
+								/>
+								<YAxis stroke="hsl(var(--muted-foreground))" fontSize={12} />
+								<Tooltip content={<CustomTooltip />} />
+								<Line
+									type="monotone"
+									dataKey="value"
+									stroke="hsl(var(--primary))"
+									strokeWidth={3}
+									fillOpacity={1}
+								/>
+							</LineChart>
+						</SafeResponsiveContainer>
 					</div>
 				);
 		}

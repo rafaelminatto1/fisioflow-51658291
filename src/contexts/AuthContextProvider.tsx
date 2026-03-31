@@ -339,19 +339,6 @@ export const AuthContextProvider: React.FC<{ children: React.ReactNode }> = ({
 				full_name: updates.full_name,
 				birth_date: updates.birth_date ?? null,
 			});
-
-			if (updates.full_name || updates.avatar_url) {
-				await authClient.updateUser({
-					name: updates.full_name,
-					image: updates.avatar_url,
-				}).catch((error) => {
-					logger.warn(
-						"Falha ao sincronizar perfil no Neon Auth; mantendo perfil da aplicacao",
-						error,
-						"AuthContextProvider",
-					);
-				});
-			}
 			if (profile) setProfile({ ...profile, ...updates });
 			return { error: null };
 		} catch (err: any) {

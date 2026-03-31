@@ -5,7 +5,6 @@ import { Download, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { OptimizedImage } from "@/components/ui/OptimizedImage";
 import { valorPorExtenso } from "@/hooks/useRecibos";
-import { exportReceiptPdf } from "@/lib/export/receiptPdfExport";
 
 export interface ReciboData {
 	numero: number;
@@ -42,6 +41,9 @@ export const ReciboPDF: React.FC<ReciboPDFProps> = ({
 	const handleDownload = async () => {
 		setIsGenerating(true);
 		try {
+			const { exportReceiptPdf } = await import(
+				"@/lib/export/receiptPdfExport"
+			);
 			await exportReceiptPdf(`${fileName}.pdf`, data);
 		} finally {
 			setIsGenerating(false);

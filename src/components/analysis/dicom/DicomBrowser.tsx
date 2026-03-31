@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { Suspense, lazy, useEffect, useState } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import {
@@ -14,10 +14,23 @@ import {
 	Image as ImageIcon,
 	ArrowLeft,
 	RefreshCw,
+	Loader2,
 } from "lucide-react";
 import { dicomWebClient, DicomStudy } from "@/services/dicom/dicomWebClient";
-import DicomViewer from "./DicomViewer";
 import { fisioLogger as logger } from "@/lib/errors/logger";
+
+const DicomViewer = lazy(() => import("./DicomViewer"));
+
+function DicomViewerLoading() {
+	return (
+		<div className="flex h-full min-h-[320px] items-center justify-center bg-black">
+			<div className="flex flex-col items-center gap-3 text-center">
+				<Loader2 className="h-8 w-8 animate-spin text-white" />
+				<p className="text-sm text-slate-300">Carregando viewer DICOM...</p>
+			</div>
+		</div>
+	);
+}
 
 interface DicomBrowserProps {
 	onSelectSeries?: (selection: {
@@ -136,11 +149,13 @@ const DicomBrowser: React.FC<DicomBrowserProps> = ({ onSelectSeries }) => {
 					</span>
 				</div>
 				<div className="flex-1 overflow-hidden relative">
-					<DicomViewer
-						studyInstanceUid={getTagValue(selectedStudy, "0020000D")}
-						seriesInstanceUid={selectedSeriesUid}
-						wadoUrl={dicomWebClient.getProxyUrl()} // We pass the proxy base URL
-					/>
+					<Suspense fallback={<DicomViewerLoading />}>
+						<DicomViewer
+							studyInstanceUid={getTagValue(selectedStudy, "0020000D")}
+							seriesInstanceUid={selectedSeriesUid}
+							wadoUrl={dicomWebClient.getProxyUrl()} // We pass the proxy base URL
+						/>
+					</Suspense>
 				</div>
 			</div>
 		);

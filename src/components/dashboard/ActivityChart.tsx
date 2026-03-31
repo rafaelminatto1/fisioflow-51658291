@@ -6,11 +6,11 @@ import {
 	YAxis,
 	CartesianGrid,
 	Tooltip,
-	ResponsiveContainer,
 } from "recharts";
 import { useQuery } from "@tanstack/react-query";
 import { analyticsApi } from "@/api/v2/insights";
 import { Loader2 } from "lucide-react";
+import { SafeResponsiveContainer } from "@/components/charts/SafeResponsiveContainer";
 
 export function ActivityChart() {
 	const { data: activityData, isLoading } = useQuery({
@@ -36,7 +36,7 @@ export function ActivityChart() {
 							<Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
 						</div>
 					) : (
-						<ResponsiveContainer width="100%" height="100%">
+						<SafeResponsiveContainer className="h-full" minHeight={300}>
 							<BarChart data={activityData || []}>
 								<CartesianGrid strokeDasharray="3 3" className="opacity-30" />
 								<XAxis
@@ -71,7 +71,7 @@ export function ActivityChart() {
 									name="Exercícios"
 								/>
 							</BarChart>
-						</ResponsiveContainer>
+						</SafeResponsiveContainer>
 					)}
 				</div>
 			</CardContent>

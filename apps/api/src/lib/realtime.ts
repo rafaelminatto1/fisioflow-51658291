@@ -1,79 +1,156 @@
 /**
  * Durable Object para gerenciar o estado em tempo real de uma organização.
- * Mantém conexões WebSocket ativas e permite broadcast de mensagens.
+ *
+ * Usa WebSocket Hibernation API para economizar GB-s de compute:
+ * o DO hiberna durante inatividade e acorda ao receber mensagem.
+ *
+ * Suporta DO Alarms para lembretes específicos por agendamento.
  */
 export class OrganizationState implements DurableObject {
-  private sessions: Set<WebSocket>;
+  private state: DurableObjectState;
+  private env: any;
 
-  constructor(private state: DurableObjectState, private env: any) {
-    this.sessions = new Set();
+  constructor(state: DurableObjectState, env: any) {
+    this.state = state;
+    this.env = env;
   }
 
   async fetch(request: Request): Promise<Response> {
     const url = new URL(request.url);
 
-    // Endpoint para upgrade de WebSocket
+    // WebSocket upgrade — usa Hibernation API
     if (url.pathname === '/ws') {
+      const upgradeHeader = request.headers.get('Upgrade');
+      if (upgradeHeader !== 'websocket') {
+        return new Response('Expected WebSocket upgrade', { status: 426 });
+      }
+
       const [client, server] = Object.values(new WebSocketPair());
-      
 
-      server.accept();
-      this.sessions.add(server);
+      // Hiberna durante inatividade (economiza GB-s de compute)
+      this.state.acceptWebSocket(server);
 
-      server.addEventListener('message', (msg) => {
-        if (msg.data === 'ping') {
-          server.send('pong');
-        }
-      });
-
-      server.addEventListener('close', () => {
-        this.sessions.delete(server);
-      });
-
-      server.addEventListener('error', () => {
-        this.sessions.delete(server);
-      });
+      // Armazena metadados da sessão no attachment (max 2 KB)
+      const userId = url.searchParams.get('userId') ?? 'unknown';
+      const orgId = url.searchParams.get('orgId') ?? 'unknown';
+      server.serializeAttachment({ userId, orgId, connectedAt: Date.now() });
 
       return new Response(null, { status: 101, webSocket: client });
     }
 
-    // Endpoint interno para broadcast via HTTP POST
+    // Broadcast via HTTP POST (chamado por outros Workers)
     if (url.pathname === '/broadcast' && request.method === 'POST') {
       const message = await request.text();
       this.broadcast(message);
       return new Response('OK');
     }
 
+    // Agendar alarme para lembrete de consulta
+    if (url.pathname === '/schedule-alarm' && request.method === 'POST') {
+      const { scheduledAt, payload } = (await request.json()) as {
+        scheduledAt: number;
+        payload: Record<string, unknown>;
+      };
+
+      // Armazena payload do alarme no storage do DO
+      const alarms = await this.state.storage.get<Record<string, unknown>[]>('pending-alarms') ?? [];
+      alarms.push({ scheduledAt, payload });
+      await this.state.storage.put('pending-alarms', alarms);
+
+      // Agenda alarme — DO acorda exatamente nesse timestamp
+      await this.state.storage.setAlarm(scheduledAt);
+
+      return new Response(JSON.stringify({ scheduled: true }), {
+        headers: { 'Content-Type': 'application/json' },
+      });
+    }
+
+    // Status das conexões ativas
+    if (url.pathname === '/connections') {
+      const sockets = this.state.getWebSockets();
+      return new Response(
+        JSON.stringify({
+          active: sockets.length,
+          sessions: sockets.map((ws) => ws.deserializeAttachment()),
+        }),
+        { headers: { 'Content-Type': 'application/json' } },
+      );
+    }
+
     return new Response('Not Found', { status: 404 });
   }
 
-  private broadcast(message: string) {
-    for (const ws of this.sessions) {
-      try {
-        ws.send(message);
-      } catch  {
-        this.sessions.delete(ws);
+  // ===== Hibernation API Handlers =====
+  // Chamados automaticamente pelo runtime quando o DO acorda
+
+  async webSocketMessage(ws: WebSocket, message: string | ArrayBuffer) {
+    if (message === 'ping') {
+      ws.send('pong');
+      return;
+    }
+
+    // Echo estruturado ou broadcast para sala
+    try {
+      const data = typeof message === 'string' ? JSON.parse(message) : {};
+
+      if (data.type === 'broadcast') {
+        // Broadcast para todos na org, exceto quem enviou
+        this.broadcast(JSON.stringify(data.payload), ws);
       }
+    } catch {
+      // Mensagem não-JSON — ignore
     }
   }
-}
 
-/**
- * Helper para enviar mensagens em tempo real para uma organização.
- */
-export async function broadcastToOrg(env: any, orgId: string, message: any) {
-  if (!env.ORGANIZATION_STATE) return;
-  
-  try {
-    const id = env.ORGANIZATION_STATE.idFromName(orgId);
-    const obj = env.ORGANIZATION_STATE.get(id);
-    
-    // Usamos um domínio interno fictício para a chamada entre Worker e DO
-    await obj.fetch(new Request('http://realtime/broadcast', {
-      method: 'POST',
-      body: JSON.stringify(message)
-    }));
-  } catch (e) {
-    console.error(`[Realtime] Failed to broadcast to org ${orgId}:`, e);
+  async webSocketClose(ws: WebSocket, code: number, reason: string) {
+    ws.close(code, reason);
+  }
+
+  async webSocketError(ws: WebSocket, error: unknown) {
+    console.error('[OrganizationState] WebSocket error:', error);
+    ws.close(1011, 'Internal error');
+  }
+
+  // ===== DO Alarm =====
+
+  async alarm() {
+    const now = Date.now();
+    const alarms = await this.state.storage.get<Record<string, unknown>[]>('pending-alarms') ?? [];
+
+    // Processa alarmes vencidos
+    const remaining: Record<string, unknown>[] = [];
+
+    for (const alarm of alarms) {
+      const scheduledAt = alarm.scheduledAt as number;
+
+      if (scheduledAt <= now) {
+        // Dispara notificação via broadcast WebSocket
+        const payload = alarm.payload as Record<string, unknown>;
+        this.broadcast(JSON.stringify({ type: 'alarm', ...payload }));
+      } else {
+        remaining.push(alarm);
+      }
+    }
+
+    await this.state.storage.put('pending-alarms', remaining);
+
+    // Reagenda alarme para o próximo pendente
+    if (remaining.length > 0) {
+      const nextAt = Math.min(...remaining.map((a) => a.scheduledAt as number));
+      await this.state.storage.setAlarm(nextAt);
+    }
+  }
+
+  // ===== Helpers =====
+
+  private broadcast(message: string, exclude?: WebSocket) {
+    for (const ws of this.state.getWebSockets()) {
+      if (ws === exclude) continue;
+      try {
+        ws.send(message);
+      } catch {
+        // WebSocket fechado — Hibernation API limpa automaticamente
+      }
+    }
   }
 }
