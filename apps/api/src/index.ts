@@ -251,6 +251,14 @@ import { handleScheduled } from './cron';
 import { handleQueue } from './queue';
 export { OrganizationState } from './lib/realtime';
 export { PatientAgent } from './agents/PatientAgent';
+export {
+  AppointmentReminderWorkflow,
+  PatientOnboardingWorkflow,
+  NFSeWorkflow,
+  HEPComplianceWorkflow,
+  PatientDischargeWorkflow,
+  PatientReengagementWorkflow,
+} from './workflows';
 
 // Hono RPC — exporta o tipo da app para type-safe client no frontend
 export type AppType = typeof app;

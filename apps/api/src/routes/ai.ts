@@ -5,7 +5,7 @@ import type { Env } from "../types/env";
 import { callGemini, transcribeAudioWithGemini } from "../lib/ai-gemini";
 import {
 	runAi,
-	transcribeWithWhisper,
+	transcribeAudio as transcribeWithWhisper,
 	summarizeClinicalNote,
 } from "../lib/ai-native";
 import { logToAxiom } from "../lib/axiom";
