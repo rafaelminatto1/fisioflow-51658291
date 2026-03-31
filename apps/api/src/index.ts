@@ -81,6 +81,9 @@ import { commissionsRoutes } from './routes/commissions';
 import { nfseRoutes } from './routes/nfse';
 import { announcementsRoutes } from './routes/announcements';
 import { adminSeedTemplatesRoutes } from './routes/admin/seed-templates';
+import { searchRoutes } from './routes/search';
+import { reportsPdfRoutes } from './routes/reportsPdf';
+import { eventsRoutes as businessEventsRoutes } from './routes/events';
 import { verifyToken } from './lib/auth';
 import { getRawSql } from './lib/db';
 import { routeAgentRequest } from 'agents';
@@ -221,6 +224,9 @@ const apiRoutes = [
   ['/api/nfse', nfseRoutes],
   ['/api/announcements', announcementsRoutes],
   ['/api/admin/seed-templates', adminSeedTemplatesRoutes],
+  ['/api/search', searchRoutes],
+  ['/api/reports/pdf', reportsPdfRoutes],
+  ['/api/events', businessEventsRoutes],
 ] as const;
 
 apiRoutes.forEach(([path, router]) => {

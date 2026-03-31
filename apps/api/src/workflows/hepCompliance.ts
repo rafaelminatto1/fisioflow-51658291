@@ -37,7 +37,7 @@ export class HEPComplianceWorkflow extends WorkflowEntrypoint<Env, HEPCompliance
       // Verifica adesão da semana
       const adherence = await step.do(`check-adherence-week-${week}`, async () => {
         const pool = createPool(this.env);
-        const result = await pool.query<{ rate: string }>(
+        const result = await pool.query(
           `SELECT
              ROUND(
                COUNT(CASE WHEN completed = true THEN 1 END)::numeric /
@@ -49,7 +49,7 @@ export class HEPComplianceWorkflow extends WorkflowEntrypoint<Env, HEPCompliance
              AND patient_id = $2
              AND completed_at >= NOW() - INTERVAL '7 days'`,
           [exercisePlanId, patientId],
-        );
+        ) as unknown as { rows: { rate: string }[] };
         return Number(result.rows[0]?.rate ?? 0);
       });
 
