@@ -1555,7 +1555,7 @@ importers:
         version: 4.3.2(react@19.2.0)
       '@schedule-x/react':
         specifier: ^4.1.0
-        version: 4.1.0(@schedule-x/calendar@4.3.1(@preact/signals@2.9.0(preact@10.29.0))(preact@10.29.0)(temporal-polyfill@0.3.0))(react-dom@19.2.0(react@19.2.0))(react@19.2.0)
+        version: 4.1.0(@schedule-x/calendar@4.3.1(@preact/signals@2.9.0(preact@10.29.0))(preact@10.29.0)(temporal-polyfill@0.3.2))(react-dom@19.2.0(react@19.2.0))(react@19.2.0)
       '@schedule-x/theme-default':
         specifier: ^4.3.1
         version: 4.3.1
@@ -1889,6 +1889,9 @@ importers:
       tailwindcss-animate:
         specifier: ^1.0.7
         version: 1.0.7(tailwindcss@4.2.2)
+      temporal-polyfill:
+        specifier: ^0.3.2
+        version: 0.3.2
       tippy.js:
         specifier: ^6.3.7
         version: 6.3.7
@@ -2121,6 +2124,12 @@ importers:
       wrangler:
         specifier: ^4.78.0
         version: 4.78.0(@cloudflare/workers-types@4.20260317.1)
+
+  apps/web/apps/web:
+    dependencies:
+      '@schedule-x/drag-and-drop':
+        specifier: ^3.7.3
+        version: 3.7.3
 
   packages/config:
     dependencies:
@@ -8645,6 +8654,9 @@ packages:
       '@preact/signals': ^2.0.2
       preact: ^10.19.2
       temporal-polyfill: 0.3.0
+
+  '@schedule-x/drag-and-drop@3.7.3':
+    resolution: {integrity: sha512-nHwZKzdIKWNTdT5BEXy4vLlHOmOH3C3M744QUIU0EOXPAFZQR1bBTviGs2NhmvaLiGstnVx2/TZtdhocy60hgg==}
 
   '@schedule-x/react@4.1.0':
     resolution: {integrity: sha512-l2hn1kdTModk4Lbt+nEr/VAcuNMA+w+hAAtgz8VLOj5UeieM7PWoK+cDapzPHCjUKisCSPd8QZfAX966Ma82kQ==}
@@ -19366,14 +19378,14 @@ packages:
   temporal-polyfill@0.2.5:
     resolution: {integrity: sha512-ye47xp8Cb0nDguAhrrDS1JT1SzwEV9e26sSsrWzVu+yPZ7LzceEcH0i2gci9jWfOfSCCgM3Qv5nOYShVUUFUXA==}
 
-  temporal-polyfill@0.3.0:
-    resolution: {integrity: sha512-qNsTkX9K8hi+FHDfHmf22e/OGuXmfBm9RqNismxBrnSmZVJKegQ+HYYXT+R7Ha8F/YSm2Y34vmzD4cxMu2u95g==}
+  temporal-polyfill@0.3.2:
+    resolution: {integrity: sha512-TzHthD/heRK947GNiSu3Y5gSPpeUDH34+LESnfsq8bqpFhsB79HFBX8+Z834IVX68P3EUyRPZK5bL/1fh437Eg==}
 
   temporal-spec@0.2.4:
     resolution: {integrity: sha512-lDMFv4nKQrSjlkHKAlHVqKrBG4DyFfa9F74cmBZ3Iy3ed8yvWnlWSIdi4IKfSqwmazAohBNwiN64qGx4y5Q3IQ==}
 
-  temporal-spec@0.3.0:
-    resolution: {integrity: sha512-n+noVpIqz4hYgFSMOSiINNOUOMFtV5cZQNCmmszA6GiVFVRt3G7AqVyhXjhCSmowvQn+NsGn+jMDMKJYHd3bSQ==}
+  temporal-spec@0.3.1:
+    resolution: {integrity: sha512-B4TUhezh9knfSIMwt7RVggApDRJZo73uZdj8AacL2mZ8RP5KtLianh2MXxL06GN9ESYiIsiuoLQhgVfwe55Yhw==}
 
   terminal-link@2.1.1:
     resolution: {integrity: sha512-un0FmiRUQNr5PJqy9kP7c40F5BOfpGlYTrxonDChEZB7pzZxRNp/bt+ymiy9/npwXya9KH99nJ/GXFIiUkYGFQ==}
@@ -29706,15 +29718,17 @@ snapshots:
 
   '@scarf/scarf@1.4.0': {}
 
-  '@schedule-x/calendar@4.3.1(@preact/signals@2.9.0(preact@10.29.0))(preact@10.29.0)(temporal-polyfill@0.3.0)':
+  '@schedule-x/calendar@4.3.1(@preact/signals@2.9.0(preact@10.29.0))(preact@10.29.0)(temporal-polyfill@0.3.2)':
     dependencies:
       '@preact/signals': 2.9.0(preact@10.29.0)
       preact: 10.29.0
-      temporal-polyfill: 0.3.0
+      temporal-polyfill: 0.3.2
 
-  '@schedule-x/react@4.1.0(@schedule-x/calendar@4.3.1(@preact/signals@2.9.0(preact@10.29.0))(preact@10.29.0)(temporal-polyfill@0.3.0))(react-dom@19.2.0(react@19.2.0))(react@19.2.0)':
+  '@schedule-x/drag-and-drop@3.7.3': {}
+
+  '@schedule-x/react@4.1.0(@schedule-x/calendar@4.3.1(@preact/signals@2.9.0(preact@10.29.0))(preact@10.29.0)(temporal-polyfill@0.3.2))(react-dom@19.2.0(react@19.2.0))(react@19.2.0)':
     dependencies:
-      '@schedule-x/calendar': 4.3.1(@preact/signals@2.9.0(preact@10.29.0))(preact@10.29.0)(temporal-polyfill@0.3.0)
+      '@schedule-x/calendar': 4.3.1(@preact/signals@2.9.0(preact@10.29.0))(preact@10.29.0)(temporal-polyfill@0.3.2)
       react: 19.2.0
       react-dom: 19.2.0(react@19.2.0)
 
@@ -44228,13 +44242,13 @@ snapshots:
     dependencies:
       temporal-spec: 0.2.4
 
-  temporal-polyfill@0.3.0:
+  temporal-polyfill@0.3.2:
     dependencies:
-      temporal-spec: 0.3.0
+      temporal-spec: 0.3.1
 
   temporal-spec@0.2.4: {}
 
-  temporal-spec@0.3.0: {}
+  temporal-spec@0.3.1: {}
 
   terminal-link@2.1.1:
     dependencies:
