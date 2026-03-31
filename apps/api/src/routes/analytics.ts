@@ -24,6 +24,25 @@ type PainRegionRow = {
   value: number | string | null;
 };
 
+type QueryResultLike<T> = {
+  rows: T[];
+};
+
+async function queryWithFallback<T>(
+  pool: ReturnType<typeof createPool>,
+  label: string,
+  query: string,
+  params: unknown[],
+  fallbackRows: T[],
+): Promise<QueryResultLike<T>> {
+  try {
+    return (await pool.query(query, params)) as QueryResultLike<T>;
+  } catch (error) {
+    console.warn(`[analytics] ${label} fallback:`, error);
+    return { rows: fallbackRows };
+  }
+}
+
 app.get('/dashboard', requireAuth, async (c) => {
   const user = c.get('user');
   const pool = await createPool(c.env);
@@ -36,14 +55,19 @@ app.get('/dashboard', requireAuth, async (c) => {
   })();
 
   const [activePatientsRes, paymentsRes, appointmentsRes, todayRes, sessionStatsRes] = await Promise.all([
-    pool.query(
+    queryWithFallback(
+      pool,
+      'dashboard.activePatients',
       `SELECT COUNT(*)::int AS total
        FROM patients
        WHERE organization_id = $1 AND COALESCE(is_active, true) = true`,
       [user.organizationId],
+      [{ total: 0 } as { total: number }],
     ),
     Promise.resolve({ rows: [] as PaymentTrendRow[] }),
-    pool.query(
+    queryWithFallback(
+      pool,
+      'dashboard.appointmentsRange',
       `SELECT
          COUNT(*) FILTER (WHERE status::text IN ('completed', 'atendido'))::int AS total_completed,
          COUNT(*) FILTER (WHERE status::text IN ('scheduled', 'confirmed', 'agendado', 'presenca_confirmada'))::int AS upcoming,
@@ -54,15 +78,35 @@ app.get('/dashboard', requireAuth, async (c) => {
        WHERE organization_id = $1
          AND date BETWEEN $2::date AND $3::date`,
       [user.organizationId, startDate, endDate],
+      [
+        {
+          total_completed: 0,
+          upcoming: 0,
+          total: 0,
+          no_show: 0,
+          confirmed: 0,
+        } as {
+          total_completed: number;
+          upcoming: number;
+          total: number;
+          no_show: number;
+          confirmed: number;
+        },
+      ],
     ),
-    pool.query(
+    queryWithFallback(
+      pool,
+      'dashboard.appointmentsToday',
       `SELECT COUNT(*)::int AS count
        FROM appointments
        WHERE organization_id = $1
          AND date = $2::date`,
       [user.organizationId, endDate],
+      [{ count: 0 } as { count: number }],
     ),
-    pool.query(
+    queryWithFallback(
+      pool,
+      'dashboard.sessionStats',
       `SELECT
          COUNT(*)::int AS total_sessions,
          AVG(duration_minutes)::numeric AS avg_session_duration
@@ -70,6 +114,15 @@ app.get('/dashboard', requireAuth, async (c) => {
        WHERE organization_id = $1
          AND date BETWEEN $2::timestamp AND $3::timestamp`,
       [user.organizationId, `${startDate}T00:00:00`, `${endDate}T23:59:59`],
+      [
+        {
+          total_sessions: 0,
+          avg_session_duration: 0,
+        } as {
+          total_sessions: number;
+          avg_session_duration: number;
+        },
+      ],
     ),
   ]);
 
