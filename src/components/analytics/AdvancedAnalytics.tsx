@@ -8,6 +8,7 @@ import {
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Progress } from "@/components/ui/progress";
 import { useQuery } from "@tanstack/react-query";
+import { SafeResponsiveContainer } from "@/components/charts/SafeResponsiveContainer";
 import {
 	analyticsApi,
 	appointmentsApi,
@@ -30,7 +31,6 @@ import {
 	CartesianGrid,
 	Tooltip,
 	Legend,
-	ResponsiveContainer,
 } from "recharts";
 import {
 	TrendingUp,
@@ -421,7 +421,7 @@ export default function AdvancedAnalytics() {
 							</CardDescription>
 						</CardHeader>
 						<CardContent>
-							<ResponsiveContainer width="100%" height={200} minWidth={300}>
+							<SafeResponsiveContainer minHeight={200} minWidth={300}>
 								<BarChart data={appointmentsByMonth}>
 									<CartesianGrid strokeDasharray="3 3" />
 									<XAxis dataKey="month" />
@@ -431,7 +431,7 @@ export default function AdvancedAnalytics() {
 									<Bar dataKey="completed" name="Concluídas" fill={COLORS[0]} />
 									<Bar dataKey="cancelled" name="Canceladas" fill={COLORS[3]} />
 								</BarChart>
-							</ResponsiveContainer>
+							</SafeResponsiveContainer>
 						</CardContent>
 					</Card>
 				</TabsContent>
@@ -447,7 +447,7 @@ export default function AdvancedAnalytics() {
 							</CardDescription>
 						</CardHeader>
 						<CardContent>
-							<ResponsiveContainer width="100%" height={200} minWidth={300}>
+							<SafeResponsiveContainer minHeight={200} minWidth={300}>
 								<LineChart data={financialByMonth}>
 									<CartesianGrid strokeDasharray="3 3" />
 									<XAxis dataKey="month" />
@@ -483,7 +483,7 @@ export default function AdvancedAnalytics() {
 										strokeWidth={2}
 									/>
 								</LineChart>
-							</ResponsiveContainer>
+							</SafeResponsiveContainer>
 						</CardContent>
 					</Card>
 				</TabsContent>
@@ -499,7 +499,7 @@ export default function AdvancedAnalytics() {
 							</CardDescription>
 						</CardHeader>
 						<CardContent>
-							<ResponsiveContainer width="100%" height={200} minWidth={300}>
+							<SafeResponsiveContainer minHeight={200} minWidth={300}>
 								<PieChart>
 									<Pie
 										data={appointmentStatus}
@@ -522,7 +522,7 @@ export default function AdvancedAnalytics() {
 									</Pie>
 									<Tooltip />
 								</PieChart>
-							</ResponsiveContainer>
+							</SafeResponsiveContainer>
 						</CardContent>
 					</Card>
 				</TabsContent>

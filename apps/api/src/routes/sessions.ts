@@ -320,13 +320,16 @@ app.put('/:id', requireAuth, async (c) => {
 
   if (!updated) return c.json({ error: 'Sessão não encontrada' }, 404);
 
-  // Atualizar índice no D1 (fire-and-forget)
+  // Atualizar índice no D1 (fire-and-forget) — usa INSERT OR REPLACE para garantir que
+  // o registro existe mesmo que a sessão tenha sido criada antes da feature de indexação
   if (c.env.DB && (body.subjective || body.assessment)) {
     const preview = [body.subjective, body.assessment].filter(Boolean).join(' ').substring(0, 200);
+    const patientIdForIndex = updated.patientId;
     c.executionCtx.waitUntil(
       c.env.DB.prepare(
-        `UPDATE evolution_index SET preview_text = ?, updated_at = datetime('now') WHERE id = ?`
-      ).bind(preview, id).run()
+        `INSERT OR REPLACE INTO evolution_index (id, patient_id, appointment_id, therapist_id, organization_id, preview_text, created_at, updated_at)
+         VALUES (?, ?, ?, ?, ?, ?, datetime('now'), datetime('now'))`
+      ).bind(id, patientIdForIndex, updated.appointmentId ?? null, user.uid, user.organizationId, preview).run()
     );
   }
 

@@ -12,8 +12,8 @@ import {
 	type PatientRow,
 	type AppointmentRow,
 } from "@/api/v2";
+import { SafeResponsiveContainer } from "@/components/charts/SafeResponsiveContainer";
 import {
-	ResponsiveContainer,
 	Tooltip,
 	BarChart,
 	Bar,
@@ -186,7 +186,7 @@ export function PatientAnalytics() {
 									Carregando...
 								</div>
 							) : (
-								<ResponsiveContainer width="100%" height="100%">
+								<SafeResponsiveContainer className="h-full" minHeight={300}>
 									<PieChart>
 										<Pie
 											data={statusData}
@@ -212,7 +212,7 @@ export function PatientAnalytics() {
 											}}
 										/>
 									</PieChart>
-								</ResponsiveContainer>
+								</SafeResponsiveContainer>
 							)}
 						</div>
 						<div className="flex justify-center gap-4 mt-4">
@@ -245,7 +245,7 @@ export function PatientAnalytics() {
 									Carregando...
 								</div>
 							) : (
-								<ResponsiveContainer width="100%" height="100%">
+								<SafeResponsiveContainer className="h-full" minHeight={300}>
 									<BarChart data={ageData}>
 										<CartesianGrid
 											strokeDasharray="3 3"
@@ -279,7 +279,7 @@ export function PatientAnalytics() {
 											barSize={40}
 										/>
 									</BarChart>
-								</ResponsiveContainer>
+								</SafeResponsiveContainer>
 							)}
 						</div>
 					</CardContent>
