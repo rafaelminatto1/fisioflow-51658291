@@ -604,7 +604,7 @@ app.get('/appointments', async (c) => {
 
   if (upcoming) {
     filters.push(`a.date >= CURRENT_DATE`);
-    filters.push(`COALESCE(a.status, 'scheduled') NOT IN ('cancelled', 'completed')`);
+    filters.push(`COALESCE(a.status, 'agendado') NOT IN ('cancelado', 'atendido')`);
   }
 
   const result = await pool.query(
@@ -632,7 +632,7 @@ app.get('/appointments', async (c) => {
     date: (row as DbRow).date ? String((row as DbRow).date) : new Date().toISOString().slice(0, 10),
     time: trimmedString((row as DbRow).start_time) ?? '09:00',
     duration: nullableNumber((row as DbRow).duration_minutes) ?? 60,
-    status: trimmedString((row as DbRow).status) ?? 'scheduled',
+    status: (row as DbRow).status ? String((row as DbRow).status) : 'agendado',
     notes: trimmedString((row as DbRow).notes) ?? null,
     createdAt: (row as DbRow).created_at ? String((row as DbRow).created_at) : new Date().toISOString(),
     updatedAt: (row as DbRow).updated_at ? String((row as DbRow).updated_at) : new Date().toISOString(),
@@ -653,7 +653,7 @@ app.post('/appointments/:id/confirm', async (c) => {
     `
       UPDATE appointments
       SET
-        status = 'confirmed',
+        status = 'presenca_confirmada',
         confirmed_at = NOW(),
         confirmed_via = 'app',
         updated_at = NOW()
@@ -680,7 +680,7 @@ app.post('/appointments/:id/cancel', async (c) => {
     `
       UPDATE appointments
       SET
-        status = 'cancelled',
+        status = 'cancelado',
         cancellation_reason = $1,
         cancelled_at = NOW(),
         updated_at = NOW()
