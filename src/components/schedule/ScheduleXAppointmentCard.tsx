@@ -5,18 +5,19 @@
  * Sem props de dnd-kit — o ScheduleX gerencia drag & drop internamente.
  */
 
-import React from "react";
 import { format } from "date-fns";
-import { cn } from "@/lib/utils";
-import { normalizeStatus, getStatusColor } from "./shared/appointment-status";
-import { normalizeTime, calculateEndTime } from "./shared/utils";
-import { AppointmentContextMenu } from "./AppointmentContextMenu";
+import type React from "react";
 import { useStatusConfig } from "@/hooks/useStatusConfig";
+import { cn } from "@/lib/utils";
 import type { Appointment } from "@/types/appointment";
+import { AppointmentContextMenu } from "./AppointmentContextMenu";
+import { getStatusColor, normalizeStatus } from "./shared/appointment-status";
+import { calculateEndTime, normalizeTime } from "./shared/utils";
 
 interface ScheduleXAppointmentCardProps {
 	appointment: Appointment;
 	onEditAppointment?: (appointment: Appointment) => void;
+	onDeleteAppointment?: (appointment: Appointment) => void;
 	onStatusChange?: (id: string, status: string) => void;
 	selectionMode?: boolean;
 	isSelected?: boolean;
@@ -26,6 +27,7 @@ interface ScheduleXAppointmentCardProps {
 export function ScheduleXAppointmentCard({
 	appointment,
 	onEditAppointment,
+	onDeleteAppointment,
 	onStatusChange,
 	selectionMode = false,
 	isSelected = false,
@@ -60,7 +62,7 @@ export function ScheduleXAppointmentCard({
 			appointment={appointment}
 			onStatusChange={(status) => onStatusChange?.(appointment.id, status)}
 			onEdit={() => onEditAppointment?.(appointment)}
-			onDelete={() => {}}
+			onDelete={() => onDeleteAppointment?.(appointment)}
 		>
 			<div
 				role="button"

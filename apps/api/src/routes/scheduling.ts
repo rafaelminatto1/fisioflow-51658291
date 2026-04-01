@@ -525,7 +525,7 @@ const generateRecurringOccurrences = (row: Record<string, any>, limit = 24) => {
           series_id: series.id,
           occurrence_date: toIsoDate(current),
           occurrence_time: appointmentTime,
-          status: series.is_active === false ? 'cancelled' : 'scheduled',
+          status: series.is_active === false ? 'cancelado' : 'agendado',
           created_at: series.created_at ?? new Date().toISOString(),
         });
       }
@@ -542,7 +542,7 @@ const generateRecurringOccurrences = (row: Record<string, any>, limit = 24) => {
       series_id: series.id,
       occurrence_date: toIsoDate(current),
       occurrence_time: appointmentTime,
-      status: series.is_active === false ? 'cancelled' : 'scheduled',
+      status: series.is_active === false ? 'cancelado' : 'agendado',
       created_at: series.created_at ?? new Date().toISOString(),
     });
 
