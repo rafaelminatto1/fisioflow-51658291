@@ -257,14 +257,12 @@ export function ScheduleXCalendarWrapper(props: ScheduleXCalendarWrapperProps) {
 	const calendarApp = useCalendarApp({
 		views: [createViewDay(), createViewWeek(), createViewMonthGrid()],
 		defaultView: VIEW_MAP[viewType],
-		selectedDate: Temporal.PlainDate.from("2026-04-01"), 
+		// REMOVING selectedDate entirely to test default behavior
+		// selectedDate: Temporal.PlainDate.from("2026-04-01"), 
 		events: [], 
 		firstDayOfWeek: 1, 
 		dayBoundaries: { start: "07:00", end: "20:00" },
 		plugins: [calendarControls],
-		// Removing minDate/maxDate temporarily to isolate
-		// minDate: "2020-01-01",
-		// maxDate: "2030-12-31",
 		callbacks: {
 			onRangeUpdate: (range: any) => {
 				// ScheduleX passa range.start como string "YYYY-MM-DD"
