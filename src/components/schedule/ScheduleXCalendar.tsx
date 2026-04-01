@@ -239,9 +239,9 @@ export function ScheduleXCalendarWrapper(props: ScheduleXCalendarWrapperProps) {
 	const [calendarControls] = useState(() => createCalendarControlsPlugin());
 	const [dndPlugin] = useState(() => createDragAndDropPlugin(15));
 
-	// ── E) Data inicial como Temporal.PlainDate (ScheduleX v4 requer objeto, não string) ──
+	// ── E) Data inicial como string YYYY-MM-DD (ScheduleX v4 documentation says Temporal, but validation error suggests string) ──
 	// eslint-disable-next-line react-hooks/exhaustive-deps
-	const initialPlainDate = useMemo(() => {
+	const initialDateStr = useMemo(() => {
 		try {
 			const isValidDate = currentDate instanceof Date && !isNaN(currentDate.getTime());
 			const dateStr = isValidDate ? format(currentDate, "yyyy-MM-dd") : format(new Date(), "yyyy-MM-dd");
@@ -249,20 +249,20 @@ export function ScheduleXCalendarWrapper(props: ScheduleXCalendarWrapperProps) {
 			// Double-check format for ScheduleX
 			if (!/^\d{4}-\d{2}-\d{2}$/.test(dateStr)) {
 				console.error("[ScheduleX] Invalid date format detected:", dateStr);
-				return Temporal.PlainDate.from(format(new Date(), "yyyy-MM-dd"));
+				return format(new Date(), "yyyy-MM-dd");
 			}
 
-			return Temporal.PlainDate.from(dateStr);
+			return dateStr;
 		} catch (err) {
 			console.error("[ScheduleX] Error creating initial date:", err);
-			return Temporal.PlainDate.from(format(new Date(), "yyyy-MM-dd"));
+			return format(new Date(), "yyyy-MM-dd");
 		}
 	}, []); // Intencional: só para inicialização; sincronização feita no useEffect I
 
 	const calendarApp = useCalendarApp({
 		views: [createViewDay(), createViewWeek(), createViewMonthGrid()],
 		defaultView: VIEW_MAP[viewType],
-		selectedDate: initialPlainDate,
+		selectedDate: initialDateStr,
 		events: [], // ← VAZIO — não passe events aqui
 		locale: "pt-BR",
 		firstDayOfWeek: 7, // Domingo no Schedule-X é 7 (ou 1 se for Segunda)
