@@ -138,10 +138,8 @@ export default defineConfig(({ mode }) => {
 					"node_modules/@cornerstonejs/codec-charls/dist/charlswasm_decode.wasm",
 				),
 				"@fisioflow/skills": path.resolve(repoRoot, "src/lib/skills"),
-				preact: "react",
-				"preact/hooks": "react",
-				"preact/compat": "react",
 				"preact/jsx-runtime": "react/jsx-runtime",
+				"/^preact($|\\/hooks$|\\/compat$)/": "react",
 				"@fisioflow/cornerstone-tools-init": path.resolve(
 					repoRoot,
 					"node_modules/@cornerstonejs/tools/dist/esm/init.js",
