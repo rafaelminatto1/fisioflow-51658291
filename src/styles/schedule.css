@@ -24,3 +24,49 @@
 .calendar-day-header.today {
 	@apply bg-blue-50/50 dark:bg-blue-900/10 border-b-2 border-b-blue-600;
 }
+
+/* ScheduleX Internal Overrides - Clinical Look */
+.sx__calendar-wrapper {
+	--sx-color-primary: #2563eb;
+	--sx-color-on-primary: #ffffff;
+	--sx-color-background: #ffffff;
+	--sx-color-on-background: #0f172a;
+	--sx-color-neutral-variant: #f1f5f9;
+	--sx-color-border-subtle: #e2e8f0;
+	--sx-border-radius-lg: 12px;
+	border: none !important;
+}
+
+.sx__time-grid-day {
+	border-right: 1px solid #f1f5f9 !important;
+}
+
+.sx__time-row-line {
+	border-bottom: 1px solid #f1f5f9 !important;
+}
+
+.sx__time-grid-hour-text {
+	@apply font-bold text-slate-400 text-[10px] uppercase tracking-tighter !important;
+}
+
+.sx__week-grid__day-header {
+	@apply border-b border-slate-200 bg-white py-3 !important;
+}
+
+.sx__week-grid__day-header-date {
+	@apply font-black text-slate-900 !important;
+}
+
+.sx__week-grid__day-header-day {
+	@apply text-[10px] uppercase font-bold tracking-widest text-slate-400 !important;
+}
+
+/* Remove internal shadows and blurs */
+.sx__event {
+	box-shadow: none !important;
+	border-radius: 6px !important;
+}
+
+.sx__time-grid-event {
+	padding: 0 !important;
+}
