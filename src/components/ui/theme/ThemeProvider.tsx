@@ -253,8 +253,8 @@ export const ThemeProvider: React.FC<ThemeProviderProps> = ({
 		const root = document.documentElement;
 
 		// Remove todas as classes de tema
-		root.classList.remove("light", "dark", "high-contrast", "reduce-motion");
-		root.classList.remove("font-sm", "font-md", "font-lg", "font-xl");
+		root.classList.remove("light", "dark", "high-contrast", "reduced-motion");
+		root.classList.remove("text-small", "text-medium", "text-large", "text-xlarge");
 		root.classList.remove(
 			"anim-off",
 			"anim-reduced",
@@ -272,7 +272,7 @@ export const ThemeProvider: React.FC<ThemeProviderProps> = ({
 
 		// Aplicar modo
 		if (resolvedMode === "dark") {
-			root.classList.add("premium-dark");
+			root.classList.add("dark");
 		} else {
 			root.classList.add("light");
 		}
@@ -284,11 +284,17 @@ export const ThemeProvider: React.FC<ThemeProviderProps> = ({
 
 		// Aplicar redução de movimento
 		if (preferences.reduceMotion || preferences.animationSpeed === "off") {
-			root.classList.add("reduce-motion");
+			root.classList.add("reduced-motion");
 		}
 
 		// Aplicar tamanho de fonte
-		root.classList.add(`font-${preferences.fontSize}`);
+		const fontSizeClassMap: Record<FontSize, string> = {
+			sm: "text-small",
+			md: "text-medium",
+			lg: "text-large",
+			xl: "text-xlarge",
+		};
+		root.classList.add(fontSizeClassMap[preferences.fontSize]);
 
 		// Aplicar velocidade de animação
 		root.classList.add(`anim-${preferences.animationSpeed}`);

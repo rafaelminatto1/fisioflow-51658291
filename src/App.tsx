@@ -5,7 +5,6 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient } from "@tanstack/react-query";
 import { RouterProvider } from "react-router-dom";
 import { AuthContextProvider } from "@/contexts/AuthContextProvider";
-import { HighContrastProvider } from "@/contexts/HighContrastContext";
 import { useAuth } from "@/contexts/AuthContext";
 import { ErrorBoundary } from "@/components/error/ErrorBoundary";
 import { GlobalErrorBoundary } from "@/components/error/GlobalErrorBoundary";
@@ -23,7 +22,6 @@ import { router } from "./routes/router";
 // NOVO: TEMA PROVIDER
 // ============================================================================
 import { ThemeProvider } from "@/components/ui/theme";
-import { PremiumThemeToggle } from "@/components/ui/PremiumThemeToggle";
 import { FeatureFlagProvider } from "@/lib/featureFlags/hooks";
 import { useServiceWorkerUpdate } from "@/hooks/useServiceWorkerUpdate";
 import { SkipLink, FocusVisibleHandler } from "@/components/accessibility";
@@ -117,13 +115,10 @@ const AppProviders = ({ children }: { children: React.ReactNode }) => {
 						}
 					>
 						<TooltipProvider>
-							<AuthContextProvider>
-								<HighContrastProvider>
-									<StatsigProviderWrapper>{children}</StatsigProviderWrapper>
-								</HighContrastProvider>
-							</AuthContextProvider>
-						</TooltipProvider>
-					</PersistQueryClientProvider>
+						<AuthContextProvider>
+						<StatsigProviderWrapper>{children}</StatsigProviderWrapper>
+						</AuthContextProvider>
+						</TooltipProvider>					</PersistQueryClientProvider>
 				</ThemeProvider>
 			</ErrorBoundary>
 		</GlobalErrorBoundary>
@@ -228,7 +223,6 @@ const App = () => {
 
 	return (
 		<AppProviders>
-			<PremiumThemeToggle />
 			<Toaster />
 			<Sonner />
 			<RouterProvider router={router} />
