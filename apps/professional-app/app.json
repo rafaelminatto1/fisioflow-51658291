@@ -16,6 +16,7 @@
     "ios": {
       "supportsTablet": true,
       "bundleIdentifier": "com.fisioflow.professionals",
+      "appleTeamId": "G7FDW933SF",
       "infoPlist": {
         "NSHealthShareUsageDescription": "O FisioFlow utiliza dados de saúde para analisar a assimetria e estabilidade da sua marcha, permitindo um acompanhamento clínico preciso.",
         "NSHealthUpdateUsageDescription": "O FisioFlow salva dados de evolução biomecânica no HealthKit para histórico do paciente.",
@@ -46,7 +47,8 @@
         "expo-build-properties",
         {
           "ios": {
-            "deploymentTarget": "16.0"
+            "deploymentTarget": "16.0",
+            "developmentTeam": "G7FDW933SF"
           }
         }
       ],
