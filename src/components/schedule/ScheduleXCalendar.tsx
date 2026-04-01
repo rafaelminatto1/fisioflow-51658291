@@ -14,6 +14,7 @@ import { createCalendarControlsPlugin } from "@schedule-x/calendar-controls";
 import "@schedule-x/theme-default/dist/index.css";
 import { format, isValid, parseISO } from "date-fns";
 import { Temporal } from "temporal-polyfill";
+import { toast } from "sonner";
 
 // Tipos
 type ViewType = "day" | "week" | "month";
@@ -81,7 +82,8 @@ export function ScheduleXCalendarWrapper({
 			events: [], 
 			locale: "pt-BR",
 			firstDayOfWeek: 1, 
-			dayBoundaries: { start: "07:00", end: "20:00" },
+			dayBoundaries: { start: "07:00", end: "21:00" },
+			weekOptions: { gridHeight: 560 },
 			plugins: [calendarControls, dndPlugin],
 			callbacks: {
 				onRangeUpdate: (range: any) => {
@@ -101,6 +103,14 @@ export function ScheduleXCalendarWrapper({
 				onEventUpdate: (event: any) => {
 					if (onAppointmentReschedule) {
 						onAppointmentReschedule(event.id, event.start, event.end);
+						
+						// Feedback Tátil (Mobile) - Vibração leve
+						if (typeof navigator !== "undefined" && navigator.vibrate) {
+							navigator.vibrate([15, 50, 15]); 
+						}
+						
+						// Feedback Visual (Toast Sonner)
+						toast.success("Horário atualizado com sucesso!");
 					}
 				}
 			},
