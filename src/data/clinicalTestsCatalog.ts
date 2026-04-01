@@ -1,6 +1,6 @@
 import type { ClinicalTestTemplateRecord } from "@/types/workers";
 
-const CATALOG_TIMESTAMP = "2026-03-21T00:00:00.000Z";
+const CATALOG_TIMESTAMP = "2026-04-01T00:00:00.000Z";
 
 export type ClinicalTestCatalogRecord = ClinicalTestTemplateRecord & {
 	reference?: string | null;
@@ -166,7 +166,7 @@ function getArtwork(preset: IllustrationPreset) {
 			return `
 				<path d="M96 22c12 0 22 10 22 22 0 11-10 21-22 21s-22-10-22-21c0-12 10-22 22-22Z" fill="#0f766e" fill-opacity="0.12" stroke="#0f766e" stroke-width="4"/>
 				<path d="M96 68v40l-22 24m22-24 34 24" fill="none" stroke="#0f172a" stroke-width="9" stroke-linecap="round" stroke-linejoin="round"/>
-				<path d="M75 132 54 182m54-38 52 10" fill="none" stroke="#0f172a" stroke-width="10" stroke-linecap="round" stroke-linejoin="round"/>
+				<path d="M75 132 54 182m54-38 52 10" fill="none" stroke="#0f172a" stroke-width="10" stroke-linecap="round"/>
 				<path d="M48 206h134" fill="none" stroke="#94a3b8" stroke-width="7" stroke-linecap="round"/>
 				<path d="M154 74c19 12 32 32 34 58" fill="none" stroke="#0ea5e9" stroke-width="5" stroke-linecap="round"/>
 				<path d="m188 126-2 16-14-8" fill="none" stroke="#0ea5e9" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/>
@@ -263,6 +263,7 @@ export const builtinClinicalTestsCatalog: ClinicalTestCatalogRecord[] = [
 		execution: "1. Paciente sentado à beira da mesa com mãos atrás das costas. 2. Slump (flexão torácica e lombar). 3. Flexão cervical (queixo ao peito). 4. Extensão ativa do joelho. 5. Dorsiflexão do tornozelo. 6. Alívio da flexão cervical para verificar mudança na dor.",
 		positive_sign: "Reprodução da dor radicular do paciente que é aliviada pela extensão da coluna cervical.",
 		reference: "Butler, D. S. (2000). The Sensitive Nervous System.",
+		sensitivity_specificity: "Sensibilidade: 0.83, Especificidade: 0.55.",
 		tags: ["coluna", "lombar", "radiculopatia", "tensão neural", "isquiático"],
 		evidence_label: "Padrão-ouro clínico",
 		evidence_summary: "Teste de alta sensibilidade para identificação de mecanossensibilidade neural no quadrante inferior.",
@@ -305,13 +306,6 @@ export const builtinClinicalTestsCatalog: ClinicalTestCatalogRecord[] = [
 				description:
 					"Artigo aberto com valores combinados de Lachman, Pivot Shift e Lever Sign.",
 			},
-			{
-				title: "Revisão bivariada do Lachman e Pivot Shift",
-				url: "https://doi.org/10.1007/s00167-022-06898-4",
-				kind: "link",
-				description:
-					"Atualiza a estimativa de sensibilidade e especificidade em LCA.",
-			},
 		],
 	}),
 	createBuiltinTest({
@@ -338,22 +332,6 @@ export const builtinClinicalTestsCatalog: ClinicalTestCatalogRecord[] = [
 		source_label: "Curadoria FisioFlow",
 		sort_order: 20,
 		illustration: "knee-stability",
-		evidence_resources: [
-			{
-				title: "Meta-análise de testes para LCA",
-				url: "https://journals.lww.com/md-journal/fulltext/2022/08050/value_of_clinical_tests_in_diagnosing_anterior.76.aspx",
-				kind: "link",
-				description:
-					"Comparação entre Lachman, anterior drawer, pivot shift e lever sign.",
-			},
-			{
-				title: "Revisão bivariada do Pivot Shift",
-				url: "https://doi.org/10.1007/s00167-022-06898-4",
-				kind: "link",
-				description:
-					"Mostra maior utilidade clínica do Pivot Shift para confirmação.",
-			},
-		],
 	}),
 	createBuiltinTest({
 		id: "builtin-thessaly-test",
@@ -379,15 +357,6 @@ export const builtinClinicalTestsCatalog: ClinicalTestCatalogRecord[] = [
 		source_label: "Curadoria FisioFlow",
 		sort_order: 30,
 		illustration: "knee-stability",
-		evidence_resources: [
-			{
-				title: "HTA menisco e Thessaly",
-				url: localPdf("thessaly-meniscal-hta-2015.pdf"),
-				kind: "pdf",
-				description:
-					"PDF local com estudo pragmático sobre desempenho do Thessaly em contexto clínico real.",
-			},
-		],
 	}),
 	createBuiltinTest({
 		id: "builtin-neer-sign",
@@ -405,7 +374,7 @@ export const builtinClinicalTestsCatalog: ClinicalTestCatalogRecord[] = [
 		reference:
 			"Alqunaee et al. Diagnostic accuracy of clinical tests for subacromial impingement syndrome: systematic review and meta-analysis. Arch Phys Med Rehabil. 2012. DOI: 10.1016/j.apmr.2011.08.035.",
 		sensitivity_specificity:
-			"Sensibilidade aproximada de 0,78; especificidade em torno de 0,58. Melhor para excluir do que confirmar isoladamente.",
+			"Sensibilidade aproximada de 0,72; especificidade em torno de 0,60. Melhor para excluir do que confirmar isoladamente.",
 		tags: ["ombro", "impacto", "subacromial", "manguito"],
 		evidence_label: "Revisão sistemática",
 		evidence_summary:
@@ -415,15 +384,6 @@ export const builtinClinicalTestsCatalog: ClinicalTestCatalogRecord[] = [
 		illustration: "shoulder-impingement",
 		imageUrl:
 			"https://media.moocafisio.com.br/illustrations/neer_test_shoulder_illustration.png",
-		evidence_resources: [
-			{
-				title: "Meta-análise de testes do ombro",
-				url: "https://link.springer.com/article/10.1186/s12891-017-1400-0",
-				kind: "link",
-				description:
-					"Revisão aberta sobre desempenho de testes provocativos do ombro.",
-			},
-		],
 	}),
 	createBuiltinTest({
 		id: "builtin-hawkins-kennedy",
@@ -449,15 +409,6 @@ export const builtinClinicalTestsCatalog: ClinicalTestCatalogRecord[] = [
 		source_label: "Curadoria FisioFlow",
 		sort_order: 50,
 		illustration: "shoulder-impingement",
-		evidence_resources: [
-			{
-				title: "Meta-análise de testes do ombro",
-				url: "https://link.springer.com/article/10.1186/s12891-017-1400-0",
-				kind: "link",
-				description:
-					"Síntese aberta que contextualiza Hawkins, Neer e outros testes do ombro.",
-			},
-		],
 	}),
 	createBuiltinTest({
 		id: "builtin-fadir-test",
@@ -483,22 +434,6 @@ export const builtinClinicalTestsCatalog: ClinicalTestCatalogRecord[] = [
 		source_label: "Curadoria FisioFlow",
 		sort_order: 60,
 		illustration: "hip-rotation",
-		evidence_resources: [
-			{
-				title: "Revisão sistemática de testes do quadril",
-				url: localPdf("hip-systematic-review-rahman-2013.pdf"),
-				kind: "pdf",
-				description:
-					"PDF local com revisão diagnóstica ampla dos testes físicos do quadril.",
-			},
-			{
-				title: "Meta-análise FAI/labral",
-				url: "https://doi.org/10.1136/bjsports-2014-094302",
-				kind: "link",
-				description:
-					"Referência específica usada para a interpretação clínica do FADIR.",
-			},
-		],
 	}),
 	createBuiltinTest({
 		id: "builtin-faber-test",
@@ -524,22 +459,6 @@ export const builtinClinicalTestsCatalog: ClinicalTestCatalogRecord[] = [
 		source_label: "Curadoria FisioFlow",
 		sort_order: 70,
 		illustration: "hip-rotation",
-		evidence_resources: [
-			{
-				title: "Revisão sistemática de testes do quadril",
-				url: localPdf("hip-systematic-review-rahman-2013.pdf"),
-				kind: "pdf",
-				description:
-					"PDF local com panorama dos testes ortopédicos do quadril.",
-			},
-			{
-				title: "Revisão recente de patologia intra-articular",
-				url: "https://pubmed.ncbi.nlm.nih.gov/40692936/",
-				kind: "link",
-				description:
-					"Atualização recente com dados de sensibilidade e especificidade para hip pathology.",
-			},
-		],
 	}),
 	createBuiltinTest({
 		id: "builtin-spurling-test",
@@ -565,22 +484,6 @@ export const builtinClinicalTestsCatalog: ClinicalTestCatalogRecord[] = [
 		source_label: "Curadoria FisioFlow",
 		sort_order: 80,
 		illustration: "cervical-radicular",
-		evidence_resources: [
-			{
-				title: "Meta-análise recente do Spurling",
-				url: "https://pubmed.ncbi.nlm.nih.gov/39938056/",
-				kind: "link",
-				description:
-					"Síntese mais recente com pooled sensitivity e specificity.",
-			},
-			{
-				title: "Revisão clássica de testes provocativos cervicais",
-				url: "https://pmc.ncbi.nlm.nih.gov/articles/PMC2200707/",
-				kind: "link",
-				description:
-					"PMC aberto com discussão clínica de Spurling, distração e ULTT.",
-			},
-		],
 	}),
 	createBuiltinTest({
 		id: "builtin-y-balance-test",
@@ -594,7 +497,7 @@ export const builtinClinicalTestsCatalog: ClinicalTestCatalogRecord[] = [
 		execution:
 			"Paciente em apoio unipodal alcanca o maior deslocamento possivel nas direcoes anterior, posteromedial e posterolateral, mantendo o apoio da perna testada.",
 		positive_sign:
-			"Assimetria relevante entre lados, queda da qualidade do controle ou incapacidade de manter apoio estavel durante alcances.",
+			"Assimetria relevante entre lados (geralmente >4cm na direção anterior), queda da qualidade do controle ou incapacidade de manter apoio estavel durante alcances.",
 		reference:
 			"Plisky et al. Systematic review and meta-analysis of the Y-Balance Test Lower Quarter. Int J Sports Phys Ther. DOI: 10.26603/001c.27634.",
 		sensitivity_specificity:
@@ -606,15 +509,6 @@ export const builtinClinicalTestsCatalog: ClinicalTestCatalogRecord[] = [
 		source_label: "Curadoria FisioFlow",
 		sort_order: 110,
 		illustration: "balance-reach",
-		evidence_resources: [
-			{
-				title: "Y-Balance Test Lower Quarter",
-				url: localPdf("y-balance-review-plisky-2021.pdf"),
-				kind: "pdf",
-				description:
-					"PDF local da revisão sistemática com foco em confiabilidade e validade.",
-			},
-		],
 	}),
 	createBuiltinTest({
 		id: "builtin-single-hop-distance",
@@ -628,7 +522,7 @@ export const builtinClinicalTestsCatalog: ClinicalTestCatalogRecord[] = [
 		execution:
 			"Em apoio unipodal, o atleta salta a maior distancia possivel e estabiliza a aterrissagem por pelo menos 2 segundos sem tocar o outro pe.",
 		positive_sign:
-			"Diferenca importante entre membros, aterrissagem instavel ou incapacidade de desacelerar com alinhamento adequado.",
+			"Diferenca importante entre membros (LSI < 90%), aterrissagem instavel ou incapacidade de desacelerar com alinhamento adequado.",
 		reference:
 			"Cooke et al. Lower extremity functional performance tests and their measurement properties in athletes: a systematic review. BMJ Open Sport Exerc Med. 2025. DOI: 10.1136/bmjsem-2024-002389.",
 		sensitivity_specificity:
@@ -640,15 +534,6 @@ export const builtinClinicalTestsCatalog: ClinicalTestCatalogRecord[] = [
 		source_label: "Curadoria FisioFlow",
 		sort_order: 120,
 		illustration: "hop-performance",
-		evidence_resources: [
-			{
-				title: "Revisão crítica dos hop tests",
-				url: "https://pmc.ncbi.nlm.nih.gov/articles/PMC7018781/",
-				kind: "link",
-				description:
-					"Revisão aberta destacando limites dos hop tests como decisão isolada de RTS.",
-			},
-		],
 	}),
 	createBuiltinTest({
 		id: "builtin-triple-hop-distance",
@@ -662,7 +547,7 @@ export const builtinClinicalTestsCatalog: ClinicalTestCatalogRecord[] = [
 		execution:
 			"O atleta realiza tres saltos consecutivos no mesmo membro inferior e estabiliza ao final, mensurando a distancia total.",
 		positive_sign:
-			"Assimetria, perda de controle no alinhamento de joelho/tronco ou incapacidade de estabilizar a recepcao final.",
+			"Assimetria (LSI < 90%), perda de controle no alinhamento de joelho/tronco ou incapacidade de estabilizar a recepcao final.",
 		reference:
 			"Davies et al. Critical review of hop tests after ACL reconstruction. Sports Medicine. 2020. DOI: 10.1007/s40279-019-01221-7.",
 		sensitivity_specificity:
@@ -674,15 +559,6 @@ export const builtinClinicalTestsCatalog: ClinicalTestCatalogRecord[] = [
 		source_label: "Curadoria FisioFlow",
 		sort_order: 130,
 		illustration: "hop-performance",
-		evidence_resources: [
-			{
-				title: "Revisão crítica dos hop tests",
-				url: "https://pmc.ncbi.nlm.nih.gov/articles/PMC7018781/",
-				kind: "link",
-				description:
-					"Revisão aberta sobre uso racional de hop tests na decisão de retorno ao esporte.",
-			},
-		],
 	}),
 	createBuiltinTest({
 		id: "builtin-side-hop-test",
@@ -694,7 +570,7 @@ export const builtinClinicalTestsCatalog: ClinicalTestCatalogRecord[] = [
 		purpose:
 			"Avaliar capacidade reativa e controle lateral para esportes com desaceleracao, cortes e mudancas de direcao.",
 		execution:
-			"O atleta salta lateralmente, ida e volta, sobre uma linha ou obstaculo baixo pelo numero de repeticoes ou tempo padronizado.",
+			"O atleta salta lateralmente, ida e volta, sobre uma linha ou obstaculo baixo pelo numero de repeticoes ou tempo padronizado (ex: 30 segundos).",
 		positive_sign:
 			"Queda de performance, valgo dinamico, perda de ritmo ou dor na recepcao lateral.",
 		reference:
@@ -708,15 +584,6 @@ export const builtinClinicalTestsCatalog: ClinicalTestCatalogRecord[] = [
 		source_label: "Curadoria FisioFlow",
 		sort_order: 140,
 		illustration: "hop-performance",
-		evidence_resources: [
-			{
-				title: "Revisão crítica dos hop tests",
-				url: "https://pmc.ncbi.nlm.nih.gov/articles/PMC7018781/",
-				kind: "link",
-				description:
-					"Revisão aberta recomendando leitura qualitativa além do desempenho bruto.",
-			},
-		],
 	}),
 	createBuiltinTest({
 		id: "builtin-tug-test",
@@ -730,7 +597,7 @@ export const builtinClinicalTestsCatalog: ClinicalTestCatalogRecord[] = [
 		execution:
 			"Cronometre o tempo para levantar de uma cadeira, caminhar 3 metros, virar, retornar e sentar novamente em ritmo seguro.",
 		positive_sign:
-			"Tempo elevado para o contexto clinico, hesitacao para virar, necessidade de apoio extra ou assimetria marcante nas transicoes.",
+			"Tempo elevado para o contexto clinico (geralmente >12-14s), hesitacao para virar, necessidade de apoio extra ou assimetria marcante nas transicoes.",
 		reference:
 			"Unver et al. TUG and 2MWT reliability in total knee arthroplasty. J Arthroplasty. 2017; Sarac et al. Knee Surg Relat Res. 2022. DOI: 10.1186/s43019-022-00136-4.",
 		sensitivity_specificity:
@@ -742,15 +609,6 @@ export const builtinClinicalTestsCatalog: ClinicalTestCatalogRecord[] = [
 		source_label: "Curadoria FisioFlow",
 		sort_order: 210,
 		illustration: "gait-speed",
-		evidence_resources: [
-			{
-				title: "Performance tests após TKA",
-				url: localPdf("tka-balance-tests-sarac-2022.pdf"),
-				kind: "pdf",
-				description:
-					"PDF local com validade e confiabilidade de TUG, SLS e 10MWT em artroplastia total de joelho.",
-			},
-		],
 	}),
 	createBuiltinTest({
 		id: "builtin-5xsts-test",
@@ -764,7 +622,7 @@ export const builtinClinicalTestsCatalog: ClinicalTestCatalogRecord[] = [
 		execution:
 			"Paciente cruza os bracos no peito e realiza cinco repeticoes completas de sentar-levantar o mais rapido e seguro possivel.",
 		positive_sign:
-			"Tempo elevado, compensacoes importantes de tronco ou descarga assimetrica persistente.",
+			"Tempo elevado (depende da idade, geralmente >15s), compensacoes importantes de tronco ou descarga assimetrica persistente.",
 		reference:
 			"Medina-Mirapeix et al. Five times sit-to-stand in total knee replacement. Gait & Posture. 2018. DOI: 10.1016/J.GAITPOST.2017.10.028.",
 		sensitivity_specificity:
@@ -776,22 +634,6 @@ export const builtinClinicalTestsCatalog: ClinicalTestCatalogRecord[] = [
 		source_label: "Curadoria FisioFlow",
 		sort_order: 220,
 		illustration: "sit-to-stand",
-		evidence_resources: [
-			{
-				title: "Performance tests após TKA",
-				url: localPdf("tka-balance-tests-sarac-2022.pdf"),
-				kind: "pdf",
-				description:
-					"PDF local complementar para testes funcionais seriados no pós-operatório.",
-			},
-			{
-				title: "Confiabilidade do 5xSTS em TKR",
-				url: "https://doi.org/10.1016/J.GAITPOST.2017.10.028",
-				kind: "link",
-				description:
-					"Estudo-base citado para confiabilidade do Five Times Sit-to-Stand.",
-			},
-		],
 	}),
 	createBuiltinTest({
 		id: "builtin-single-leg-stance",
@@ -805,7 +647,7 @@ export const builtinClinicalTestsCatalog: ClinicalTestCatalogRecord[] = [
 		execution:
 			"Paciente permanece em apoio unipodal pelo maior tempo seguro possivel, com protocolo padronizado de olhos abertos e superficie estavel.",
 		positive_sign:
-			"Tempo muito reduzido, oscilacao excessiva, necessidade de toques frequentes ou descarga incompleta no membro operado.",
+			"Tempo muito reduzido (geralmente <30s em idosos ativos), oscilacao excessiva, necessidade de toques frequentes ou descarga incompleta no membro operado.",
 		reference:
 			"Sarac et al. Validity and reliability of performance tests as balance measures in patients with total knee arthroplasty. 2022. DOI: 10.1186/s43019-022-00136-4.",
 		sensitivity_specificity:
@@ -817,15 +659,6 @@ export const builtinClinicalTestsCatalog: ClinicalTestCatalogRecord[] = [
 		source_label: "Curadoria FisioFlow",
 		sort_order: 230,
 		illustration: "balance-reach",
-		evidence_resources: [
-			{
-				title: "Performance tests após TKA",
-				url: localPdf("tka-balance-tests-sarac-2022.pdf"),
-				kind: "pdf",
-				description:
-					"PDF local com utilidade clínica do apoio unipodal após artroplastia total de joelho.",
-			},
-		],
 	}),
 	createBuiltinTest({
 		id: "builtin-10mwt-test",
@@ -839,7 +672,7 @@ export const builtinClinicalTestsCatalog: ClinicalTestCatalogRecord[] = [
 		execution:
 			"Cronometre o trecho central de 10 metros em velocidade habitual ou rapida, com zona de aceleracao e desaceleracao padronizadas.",
 		positive_sign:
-			"Velocidade reduzida para a fase de reabilitacao, assimetria marcada ou medo evidente para acelerar.",
+			"Velocidade reduzida para a fase de reabilitacao (ex: <1.2 m/s), assimetria marcada ou medo evidente para acelerar.",
 		reference:
 			"Sarac et al. Knee Surg Relat Res. 2022. DOI: 10.1186/s43019-022-00136-4.",
 		sensitivity_specificity:
@@ -851,19 +684,10 @@ export const builtinClinicalTestsCatalog: ClinicalTestCatalogRecord[] = [
 		source_label: "Curadoria FisioFlow",
 		sort_order: 240,
 		illustration: "gait-speed",
-		evidence_resources: [
-			{
-				title: "Performance tests após TKA",
-				url: localPdf("tka-balance-tests-sarac-2022.pdf"),
-				kind: "pdf",
-				description:
-					"PDF local com dados de validade para medidas de marcha e equilíbrio no pós-operatório.",
-			},
-		],
 	}),
 	createBuiltinTest({
 		id: "builtin-anterior-drawer-knee",
-		name: "Teste de Gaveta Anterior",
+		name: "Teste de Gaveta Anterior (Joelho)",
 		name_en: "Anterior Drawer Test",
 		category: "Ortopedia",
 		target_joint: "Joelho",
@@ -872,11 +696,12 @@ export const builtinClinicalTestsCatalog: ClinicalTestCatalogRecord[] = [
 		execution:
 			"Com o paciente em decúbito dorsal e o joelho fletido a 90 graus, o examinador senta-se sobre o pé do paciente para estabilizá-lo. As mãos são colocadas ao redor da tíbia proximal e uma força anterior é aplicada.",
 		positive_sign:
-			"Translação anterior excessiva da tíbia em relação ao fêmur.",
+			"Translação anterior excessiva da tíbia em relação ao fêmur comparada ao lado contralateral.",
 		reference: "Huang et al. 2022.",
+		sensitivity_specificity: "Sensibilidade: 0.55, Especificidade: 0.92.",
 		tags: ["joelho", "lca", "instabilidade"],
 		evidence_label: "Revisão sistemática",
-		evidence_summary: "Teste clássico para instabilidade anterior do joelho.",
+		evidence_summary: "Teste clássico para instabilidade anterior do joelho, mais sensível em lesões crônicas.",
 		source_label: "Curadoria FisioFlow",
 		sort_order: 25,
 		illustration: "knee-stability",
@@ -893,8 +718,9 @@ export const builtinClinicalTestsCatalog: ClinicalTestCatalogRecord[] = [
 		purpose: "Avaliar a compressão do nervo mediano no túnel do carpo.",
 		execution:
 			"O paciente é solicitado a manter os punhos em flexão máxima, encostando o dorso das mãos um no outro, por 60 segundos.",
-		positive_sign: "Parestesia ou dormência no território do nervo mediano.",
-		reference: "Curadoria FisioFlow 2026.",
+		positive_sign: "Parestesia ou dormência no território do nervo mediano (polegar, indicador, médio e metade lateral do anelar).",
+		reference: "Alqunaee et al. 2012.",
+		sensitivity_specificity: "Sensibilidade: 0.68, Especificidade: 0.73.",
 		tags: ["punho", "tunel-do-carpo", "nervo-mediano"],
 		evidence_label: "Prática clínica",
 		evidence_summary:
@@ -913,15 +739,16 @@ export const builtinClinicalTestsCatalog: ClinicalTestCatalogRecord[] = [
 		target_joint: "Coluna",
 		type: "special_test",
 		purpose:
-			"Avaliar tensão neural ou compressão de raiz nervosa lombar (L4-S1).",
+			"Avaliar tensão neural ou compressão de raiz nervosa lombar (L4-S1) ou tensão no nervo isquiático.",
 		execution:
-			"Com o paciente em decúbito dorsal, o membro inferior é elevado passivamente com o joelho em extensão até a reprodução da dor radicular.",
+			"Com o paciente em decúbito dorsal, o examinador eleva passivamente o membro inferior com o joelho em extensão até a reprodução da dor radicular.",
 		positive_sign: "Dor radicular reproduzida entre 30 e 70 graus de elevação.",
-		reference: "Curadoria FisioFlow 2026.",
+		reference: "Butler, D. S. (2000).",
+		sensitivity_specificity: "Sensibilidade: 0.91, Especificidade: 0.26.",
 		tags: ["coluna", "lombar", "radiculopatia", "nervo-isquiatico"],
 		evidence_label: "Prática clínica",
 		evidence_summary:
-			"Teste de alta sensibilidade para compressão radicular lombar.",
+			"Teste de alta sensibilidade para compressão radicular lombar; alto valor para 'rule-out'.",
 		source_label: "Curadoria FisioFlow",
 		sort_order: 100,
 		illustration: "cervical-radicular",
@@ -930,7 +757,7 @@ export const builtinClinicalTestsCatalog: ClinicalTestCatalogRecord[] = [
 	}),
 	createBuiltinTest({
 		id: "builtin-jobe-test",
-		name: "Teste de Jobe",
+		name: "Teste de Jobe (Empty Can)",
 		name_en: "Empty Can Test",
 		category: "Ortopedia",
 		target_joint: "Ombro",
@@ -938,16 +765,239 @@ export const builtinClinicalTestsCatalog: ClinicalTestCatalogRecord[] = [
 		purpose: "Avaliar a integridade do tendão do músculo supraespinhal.",
 		execution:
 			"O braço é elevado a 90 graus no plano da escápula com rotação interna máxima (polegar para baixo). O examinador aplica uma força descendente enquanto o paciente resiste.",
-		positive_sign: "Dor ou fraqueza durante a resistência.",
-		reference: "Curadoria FisioFlow 2026.",
+		positive_sign: "Dor ou fraqueza durante a resistência comparada ao lado contralateral.",
+		reference: "Jobe FW, Moynes DR. (1982).",
+		sensitivity_specificity: "Sensibilidade: 0.50, Especificidade: 0.87.",
 		tags: ["ombro", "supraespinhal", "manguito-rotador"],
 		evidence_label: "Prática clínica",
-		evidence_summary: "Teste específico para avaliação do supraespinhal.",
+		evidence_summary: "Teste específico para avaliação do supraespinhal e síndrome do impacto.",
 		source_label: "Curadoria FisioFlow",
 		sort_order: 45,
 		illustration: "shoulder-impingement",
 		imageUrl:
 			"https://media.moocafisio.com.br/illustrations/jobe_test_shoulder_illustration.png",
+	}),
+	createBuiltinTest({
+		id: "builtin-appley-compression-test",
+		name: "Teste de Compressão de Appley",
+		name_en: "Apley's Compression Test",
+		category: "Ortopedia",
+		target_joint: "Joelho",
+		type: "special_test",
+		purpose: "Diferenciar lesão de menisco de lesão ligamentar no joelho.",
+		execution: "Paciente em decúbito ventral, joelho fletido a 90 graus. O examinador aplica compressão axial enquanto roda a tíbia interna e externamente.",
+		positive_sign: "Dor ou estalido durante a manobra de compressão e rotação.",
+		reference: "Apley AG. (1947).",
+		sensitivity_specificity: "Sensibilidade: 0.22, Especificidade: 0.88.",
+		tags: ["joelho", "menisco", "compressão"],
+		evidence_label: "Prática clínica",
+		evidence_summary: "Baixa sensibilidade, mas alta especificidade para lesões meniscais quando associado a outros testes.",
+		source_label: "Curadoria FisioFlow",
+		sort_order: 35,
+		illustration: "knee-stability"
+	}),
+	createBuiltinTest({
+		id: "builtin-mcmurray-test",
+		name: "Teste de McMurray",
+		name_en: "McMurray Test",
+		category: "Ortopedia",
+		target_joint: "Joelho",
+		type: "special_test",
+		purpose: "Identificar lesões nos meniscos medial ou lateral.",
+		execution: "Paciente em decúbito dorsal. O examinador flete o joelho e roda a tíbia (interna para lateral, externa para medial) enquanto estende o joelho gradualmente.",
+		positive_sign: "Estalido audível ou palpável ou dor na linha articular durante a manobra.",
+		reference: "McMurray TP. (1942).",
+		sensitivity_specificity: "Sensibilidade: 0.70, Especificidade: 0.71.",
+		tags: ["joelho", "menisco", "ortopedia"],
+		evidence_label: "Prática clínica",
+		evidence_summary: "Teste clássico para meniscos, fundamental no exame físico do joelho.",
+		source_label: "Curadoria FisioFlow",
+		sort_order: 32,
+		illustration: "knee-stability"
+	}),
+	createBuiltinTest({
+		id: "builtin-thomas-test",
+		name: "Teste de Thomas",
+		name_en: "Thomas Test",
+		category: "Ortopedia",
+		target_joint: "Quadril",
+		type: "special_test",
+		purpose: "Avaliar o encurtamento dos flexores do quadril (principalmente Iliopsoas).",
+		execution: "Paciente em decúbito dorsal, abraça um joelho contra o peito para retificar a lordose lombar. Observa-se a posição da coxa oposta.",
+		positive_sign: "A coxa do membro testado se eleva da mesa, indicando contratura em flexão ou encurtamento.",
+		reference: "Thomas HO. (1875).",
+		tags: ["quadril", "flexores", "encurtamento"],
+		evidence_label: "Prática clínica",
+		evidence_summary: "Teste padrão para avaliar a flexibilidade da musculatura anterior do quadril.",
+		source_label: "Curadoria FisioFlow",
+		sort_order: 75,
+		illustration: "hip-rotation"
+	}),
+	createBuiltinTest({
+		id: "builtin-thompson-test",
+		name: "Teste de Thompson",
+		name_en: "Thompson Test",
+		category: "Ortopedia",
+		target_joint: "Tornozelo",
+		type: "special_test",
+		purpose: "Identificar ruptura completa do tendão de Aquiles.",
+		execution: "Paciente em decúbito ventral, pés para fora da mesa. O examinador comprime manualmente o ventre muscular do gastrocnêmio.",
+		positive_sign: "Ausência de movimento de flexão plantar do tornozelo durante a compressão.",
+		reference: "Thompson TC. (1962).",
+		sensitivity_specificity: "Sensibilidade: 0.96, Especificidade: 0.93.",
+		tags: ["tornozelo", "aquiles", "ruptura"],
+		evidence_label: "Padrão-ouro clínico",
+		evidence_summary: "Teste altamente confiável para diagnóstico clínico de ruptura do tendão calcâneo.",
+		source_label: "Curadoria FisioFlow",
+		sort_order: 150,
+		illustration: "gait-speed"
+	}),
+	createBuiltinTest({
+		id: "builtin-vmo-activation",
+		name: "Ativação do VMO",
+		name_en: "VMO Motor Control",
+		category: "Pós-Operatório",
+		target_joint: "Joelho",
+		type: "functional_test",
+		purpose: "Avaliar o recrutamento e controle motor do vasto medial oblíquo (VMO) em relação ao vasto lateral.",
+		execution: "Paciente em decúbito dorsal ou sentado. Solicita-se contração isométrica do quadríceps (ex: extensão terminal) enquanto o examinador palpa o VMO.",
+		positive_sign: "Atraso no início da contração (timing) ou contração visivelmente mais fraca que o vasto lateral.",
+		reference: "Horton MG, Hall TL. (1989).",
+		tags: ["joelho", "vmo", "controle-motor", "pós-op"],
+		evidence_label: "Prática clínica",
+		evidence_summary: "Fundamental para reabilitação de patologias patelofemorais e pós-operatórios de joelho.",
+		source_label: "Curadoria FisioFlow",
+		sort_order: 250,
+		illustration: "knee-stability"
+	}),
+	createBuiltinTest({
+		id: "builtin-oxford-scale",
+		name: "Escala de Oxford (Força)",
+		name_en: "Medical Research Council (MRC) Scale",
+		category: "Pós-Operatório",
+		target_joint: "Geral",
+		type: "functional_test",
+		purpose: "Graduar a força muscular manual de forma padronizada.",
+		execution: "Avaliar o movimento contra a gravidade e resistência manual. Grau 0: Nula; 1: Esboço; 2: S/ gravidade; 3: C/ gravidade; 4: Resistência; 5: Normal.",
+		positive_sign: "Qualquer valor abaixo de Grau 5 indica déficit de força muscular.",
+		reference: "Medical Research Council. (1943).",
+		tags: ["força", "mrc", "avaliação", "pós-op"],
+		evidence_label: "Protocolo universal",
+		evidence_summary: "Padrão mundial para avaliação de força muscular em contextos clínicos.",
+		source_label: "Curadoria FisioFlow",
+		sort_order: 200,
+		illustration: "sit-to-stand"
+	}),
+	createBuiltinTest({
+		id: "builtin-crank-test",
+		name: "Crank Test",
+		name_en: "Crank Test",
+		category: "Ortopedia",
+		target_joint: "Ombro",
+		type: "special_test",
+		purpose: "Avaliar a presença de lesões labrais superiores (SLAP).",
+		execution: "Paciente sentado ou em decúbito dorsal. Braço elevado a 160° no plano da escápula. Aplica-se carga axial no úmero enquanto se roda interna e externamente.",
+		positive_sign: "Dor ou estalido reproduzido no ombro durante a manobra.",
+		reference: "Liu SH et al. (1996).",
+		sensitivity_specificity: "Sensibilidade: 0.91, Especificidade: 0.93 (original study).",
+		tags: ["ombro", "labrum", "slap"],
+		evidence_label: "Prática clínica",
+		evidence_summary: "Teste de alta especificidade quando positivo para lesões de lábio glenoidal.",
+		source_label: "Curadoria FisioFlow",
+		sort_order: 55,
+		illustration: "shoulder-impingement"
+	}),
+	createBuiltinTest({
+		id: "builtin-obrien-test",
+		name: "Teste de O'Brien",
+		name_en: "O'Brien (Active Compression) Test",
+		category: "Ortopedia",
+		target_joint: "Ombro",
+		type: "special_test",
+		purpose: "Detectar lesões SLAP ou patologia da articulação acromioclavicular (AC).",
+		execution: "Braço a 90° de flexão, 10-15° adução horizontal. 1) Polegar para baixo: aplicar resistência. 2) Palma para cima: aplicar resistência.",
+		positive_sign: "Dor no estágio 1 que é reduzida ou eliminada no estágio 2. Dor profunda sugere SLAP; dor superficial sugere AC.",
+		reference: "O'Brien SJ et al. (1998).",
+		sensitivity_specificity: "Sensibilidade: 0.47, Especificidade: 0.55 (recent meta-analysis).",
+		tags: ["ombro", "slap", "acromioclavicular"],
+		evidence_label: "Prática clínica",
+		evidence_summary: "Útil para diferenciar dor profunda de dor na articulação AC.",
+		source_label: "Curadoria FisioFlow",
+		sort_order: 52,
+		illustration: "shoulder-impingement"
+	}),
+	createBuiltinTest({
+		id: "builtin-anterior-drawer-ankle",
+		name: "Teste de Gaveta Anterior (Tornozelo)",
+		name_en: "Anterior Drawer Test (Ankle)",
+		category: "Ortopedia",
+		target_joint: "Tornozelo",
+		type: "special_test",
+		purpose: "Avaliar a integridade do ligamento talofibular anterior (LTFA).",
+		execution: "Paciente em decúbito dorsal. Tornozelo em 20° de flexão plantar. Estabiliza a tíbia e traciona o calcâneo/talus anteriormente.",
+		positive_sign: "Translação anterior excessiva ou presença de 'sulco' (dimple sign).",
+		reference: "Croy T et al. (2013).",
+		sensitivity_specificity: "Sensibilidade: 0.71, Especificidade: 0.33.",
+		tags: ["tornozelo", "entorse", "estabilidade"],
+		evidence_label: "Prática clínica",
+		evidence_summary: "Teste primário após entorses laterais de tornozelo.",
+		source_label: "Curadoria FisioFlow",
+		sort_order: 145,
+		illustration: "gait-speed"
+	}),
+	createBuiltinTest({
+		id: "builtin-ober-test",
+		name: "Teste de Ober",
+		name_en: "Ober's Test",
+		category: "Ortopedia",
+		target_joint: "Quadril",
+		type: "special_test",
+		purpose: "Avaliar a tensão da banda iliotibial (BIT) ou contratura do tensor da fáscia lata.",
+		execution: "Paciente em decúbito lateral. Abduz-se e estende-se o quadril superior, deixando o membro cair passivamente em direção à mesa.",
+		positive_sign: "O membro permanece abduzido e não toca a mesa (ou não desce além da linha média).",
+		reference: "Ober FR. (1936).",
+		tags: ["quadril", "bit", "iliotibial"],
+		evidence_label: "Prática clínica",
+		evidence_summary: "Teste clássico, mas deve ser interpretado com cautela em relação a outros tecidos moles.",
+		source_label: "Curadoria FisioFlow",
+		sort_order: 72,
+		illustration: "hip-rotation"
+	}),
+	createBuiltinTest({
+		id: "builtin-trendelenburg-sign",
+		name: "Teste de Trendelenburg",
+		name_en: "Trendelenburg Sign",
+		category: "Ortopedia",
+		target_joint: "Quadril",
+		type: "special_test",
+		purpose: "Identificar fraqueza da musculatura abdutora do quadril (especialmente Glúteo Médio).",
+		execution: "Paciente em apoio unipodal. O examinador observa a posição da pelve contralateral (do lado que está sem apoio).",
+		positive_sign: "A pelve do lado oposto (sem apoio) cai ou descende em relação ao lado de apoio.",
+		reference: "Trendelenburg F. (1895).",
+		tags: ["quadril", "glúteo", "fraqueza"],
+		evidence_label: "Sinal clínico clássico",
+		evidence_summary: "Indicador direto de insuficiência do glúteo médio na estabilização pélvica.",
+		source_label: "Curadoria FisioFlow",
+		sort_order: 78,
+		illustration: "balance-reach"
+	}),
+	createBuiltinTest({
+		id: "builtin-step-down-test",
+		name: "Step-down Test",
+		name_en: "Step-down Test",
+		category: "Esportiva",
+		target_joint: "Joelho",
+		type: "functional_test",
+		purpose: "Avaliar o controle dinâmico do membro inferior e estabilidade patelofemoral.",
+		execution: "Paciente em pé sobre um degrau, desce o pé oposto até tocar o chão suavemente com o calcanhar e retorna.",
+		positive_sign: "Valgo dinâmico de joelho, oscilação pélvica ou dor anterior no joelho durante o movimento.",
+		reference: "Piva SR et al. (2006).",
+		tags: ["joelho", "funcional", "controle-motor"],
+		evidence_label: "Teste funcional",
+		evidence_summary: "Excelente para detectar déficits biomecânicos durante a carga em cadeia fechada.",
+		source_label: "Curadoria FisioFlow",
+		sort_order: 115,
+		illustration: "balance-reach"
 	}),
 ];
 
@@ -966,6 +1016,9 @@ export const clinicalTestJointOptions = [
 	"Tornozelo",
 	"Cervical",
 	"Membro Inferior",
+	"Geral",
+	"Coluna",
+	"Punho"
 ] as const;
 
 export function normalizeClinicalTestName(value: string | null | undefined) {
