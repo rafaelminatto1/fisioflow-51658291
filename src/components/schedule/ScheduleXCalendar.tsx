@@ -166,7 +166,7 @@ function formatHeader(date: Date, view: ViewType): string {
 // Component
 // ─────────────────────────────────────────────────────────────
 
-function ScheduleXCalendarWrapper(props: ScheduleXCalendarWrapperProps) {
+export function ScheduleXCalendarWrapper(props: ScheduleXCalendarWrapperProps) {
 	const {
 		appointments,
 		currentDate,
@@ -427,5 +427,3 @@ function ScheduleXCalendarWrapper(props: ScheduleXCalendarWrapperProps) {
 		</div>
 	);
 }
-
-export default ScheduleXCalendarWrapper;
