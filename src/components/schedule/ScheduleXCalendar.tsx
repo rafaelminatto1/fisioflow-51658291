@@ -53,12 +53,9 @@ interface ScheduleXCalendarWrapperProps {
 	onEventClick?: (event: any) => void;
 	onTimeSlotClick?: (time: string) => void;
 	onAppointmentReschedule?: (id: string, start: string, end: string) => void;
-	onDateChange?: (date: Date) => void;
-	onViewTypeChange?: (view: ViewType) => void;
-	onEditAppointment?: (id: string) => void;
-	onDeleteAppointment?: (id: string) => void;
 	onStatusChange?: (id: string, status: string) => void;
 	onRangeChange?: (range: { start: string; end: string }) => void;
+	onViewTypeChange?: (view: ViewType) => void;
 	customEventComponent?: any;
 	therapists?: any[];
 	isSelectionMode?: boolean;
@@ -235,15 +232,16 @@ export function ScheduleXCalendarWrapper(props: ScheduleXCalendarWrapperProps) {
 		onAppointmentReschedule,
 		onRangeChange,
 		onDateChange,
+		onViewTypeChange,
 	} = props;
 
 	// ── A) Aguardar Temporal estar pronto ──
-	const [isTemporalReady, setIsTemporalReady] = useState(() => typeof window !== "undefined" && !!window.Temporal);
+	const [isTemporalReady, setIsTemporalReady] = useState(() => typeof window !== "undefined" && !!(window as any).Temporal);
 
 	useEffect(() => {
 		if (isTemporalReady) return;
 		const check = setInterval(() => {
-			if (typeof window !== "undefined" && window.Temporal) {
+			if (typeof window !== "undefined" && (window as any).Temporal) {
 				setIsTemporalReady(true);
 				clearInterval(check);
 			}
@@ -260,7 +258,7 @@ export function ScheduleXCalendarWrapper(props: ScheduleXCalendarWrapperProps) {
 		if (!isTemporalReady) return null;
 
 		return {
-			views: [createViewDay(), createViewWeek(), createViewMonthGrid()],
+			views: [createViewDay(), createViewWeek(), createViewMonthGrid()] as [any, ...any[]],
 			defaultView: VIEW_MAP[viewType],
 			events: [], 
 			locale: "pt-BR",
@@ -336,8 +334,8 @@ export function ScheduleXCalendarWrapper(props: ScheduleXCalendarWrapperProps) {
 		if (!calendarApp || !isTemporalReady || !calendarControls) return;
 		try {
 			const targetDate = format(currentDate, "yyyy-MM-dd");
-			if (calendarControls.setViewDate) {
-				calendarControls.setViewDate(targetDate);
+			if (calendarControls && (calendarControls as any).setViewDate) {
+				(calendarControls as any).setViewDate(targetDate);
 			}
 		} catch (e) {}
 	}, [currentDate, calendarApp, calendarControls, isTemporalReady]);
