@@ -26,6 +26,12 @@ import { ScheduleXCalendar, useCalendarApp } from "@schedule-x/react";
 import { createCalendarControlsPlugin } from "@schedule-x/calendar-controls";
 import { createDragAndDropPlugin } from "@schedule-x/drag-and-drop";
 import { Temporal } from "temporal-polyfill";
+
+// Patch global Temporal para o Schedule-X interno
+if (typeof window !== "undefined" && !window.Temporal) {
+	(window as any).Temporal = Temporal;
+}
+
 import { format, addDays, addMonths, addWeeks, subDays, subMonths, subWeeks } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { ChevronLeft, ChevronRight } from "lucide-react";
