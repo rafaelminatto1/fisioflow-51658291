@@ -257,12 +257,12 @@ export function ScheduleXCalendarWrapper(props: ScheduleXCalendarWrapperProps) {
 	const calendarApp = useCalendarApp({
 		views: [createViewDay(), createViewWeek(), createViewMonthGrid()],
 		defaultView: VIEW_MAP[viewType],
-		// REMOVING selectedDate entirely to test default behavior
-		// selectedDate: Temporal.PlainDate.from("2026-04-01"), 
+		selectedDate: Temporal.PlainDate.from(format(currentDate instanceof Date && !isNaN(currentDate.getTime()) ? currentDate : new Date(), "yyyy-MM-dd")), 
 		events: [], 
-		firstDayOfWeek: 1, 
+		locale: "pt-BR",
+		firstDayOfWeek: 7, 
 		dayBoundaries: { start: "07:00", end: "20:00" },
-		plugins: [calendarControls],
+		plugins: [calendarControls, dndPlugin],
 		callbacks: {
 			onRangeUpdate: (range: any) => {
 				// ScheduleX passa range.start como string "YYYY-MM-DD"
