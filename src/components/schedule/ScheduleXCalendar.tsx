@@ -80,7 +80,8 @@ export function ScheduleXCalendarWrapper({
 		return {
 			views: [createViewDay(), createViewWeek(), createViewMonthGrid()],
 			defaultView: VIEW_MAP[viewType],
-			selectedDate: initialDateStr, 
+			// REMOVE selectedDate to bypass constructor validation error
+			// selectedDate: initialDateStr, 
 			events: [], 
 			locale: "pt-BR",
 			firstDayOfWeek: 7, 
