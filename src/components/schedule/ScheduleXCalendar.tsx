@@ -104,6 +104,9 @@ function appointmentToEvent(apt: Appointment) {
 
 	const duration = apt.duration && apt.duration > 0 ? apt.duration : 60;
 
+	const pad = (n: number) => String(n).padStart(2, "0");
+	const startStr = `${yStr}-${moStr}-${dStr} ${pad(hour)}:${pad(minute)}`;
+
 	const startZdt = Temporal.ZonedDateTime.from({
 		year,
 		month,
@@ -114,14 +117,15 @@ function appointmentToEvent(apt: Appointment) {
 		timeZone: "America/Sao_Paulo",
 	});
 	const endZdt = startZdt.add({ minutes: duration });
+	const endStr = `${endZdt.year}-${pad(endZdt.month)}-${pad(endZdt.day)} ${pad(endZdt.hour)}:${pad(endZdt.minute)}`;
 
 	const normalizedStatus = normalizeStatus(apt.status || "agendado");
 
 	return {
 		id: apt.id,
 		title: apt.patientName || "Paciente",
-		start: startZdt,
-		end: endZdt,
+		start: startStr,
+		end: endStr,
 		// Dados originais para recuperar no customComponent
 		_customData: apt,
 		_options: {
@@ -248,13 +252,10 @@ export function ScheduleXCalendarWrapper(props: ScheduleXCalendarWrapperProps) {
 		}
 	}, [currentDate]);
 
-	// Log para debug em produção (remover após validar)
-	console.log("[ScheduleX] Initializing with date:", safeSelectedDate);
-
 	const calendarApp = useCalendarApp({
 		views: [createViewDay(), createViewWeek(), createViewMonthGrid()],
 		defaultView: VIEW_MAP[viewType],
-		selectedDate: "2026-04-01",
+		selectedDate: initialDate,
 		events: [], // ← VAZIO — não passe events aqui
 		locale: "pt-BR",
 		firstDayOfWeek: 7, // Domingo no Schedule-X é 7 (ou 1 se for Segunda)
@@ -262,12 +263,12 @@ export function ScheduleXCalendarWrapper(props: ScheduleXCalendarWrapperProps) {
 		plugins: [calendarControls, dndPlugin],
 		callbacks: {
 			onRangeUpdate: (range: any) => {
-				// Usuário navegou dentro do calendário; sincronizar data de volta para URL
-				const r = range.start as Temporal.PlainDate | Temporal.ZonedDateTime;
-				const year = r.year;
-				const month = r.month;
-				const day = r.day;
-				const newDate = new Date(year, month - 1, day);
+				// ScheduleX passa range.start como string "YYYY-MM-DD"
+				const startStr: string = typeof range.start === "string"
+					? range.start
+					: format(new Date(), "yyyy-MM-dd");
+				const [y, mo, d] = startStr.split("-").map(Number);
+				const newDate = new Date(y, mo - 1, d);
 				const dateStr = format(newDate, "yyyy-MM-dd");
 				prevDateRef.current = dateStr; // Marca como "nossa atualização" → evita echo
 				cbRef.current.onDateChange(newDate);
@@ -281,10 +282,12 @@ export function ScheduleXCalendarWrapper(props: ScheduleXCalendarWrapperProps) {
 			onEventUpdate: (updatedEvent: any) => {
 				const apt: Appointment | undefined = updatedEvent._customData;
 				if (!apt || !cbRef.current.onAppointmentReschedule) return;
-				// newStart é ZonedDateTime em America/Sao_Paulo — usamos .hour/.minute direto
-				const newStart = updatedEvent.start as Temporal.ZonedDateTime;
-				const newDate = new Date(newStart.year, newStart.month - 1, newStart.day);
-				const newTime = `${String(newStart.hour).padStart(2, "0")}:${String(newStart.minute).padStart(2, "0")}`;
+				// start é string "YYYY-MM-DD HH:mm" após migração de ZonedDateTime
+				const startStr: string = updatedEvent.start;
+				const [datePart, timePart] = startStr.split(" ");
+				const [y, mo, d] = datePart.split("-").map(Number);
+				const newDate = new Date(y, mo - 1, d);
+				const newTime = timePart || "08:00";
 				cbRef.current
 					.onAppointmentReschedule(apt, newDate, newTime)
 					.catch(() => {
@@ -328,12 +331,8 @@ export function ScheduleXCalendarWrapper(props: ScheduleXCalendarWrapperProps) {
 		const dateStr = format(currentDate, "yyyy-MM-dd");
 		if (prevDateRef.current === dateStr) return;
 		prevDateRef.current = dateStr;
-		const plain = Temporal.PlainDate.from({
-			year: currentDate.getFullYear(),
-			month: currentDate.getMonth() + 1,
-			day: currentDate.getDate(),
-		});
-		calendarControls.setDate(plain);
+		// setDate aceita string "YYYY-MM-DD"
+		calendarControls.setDate(dateStr);
 	}, [calendarApp, calendarControls, currentDate]);
 
 	// ── J) Custom event component ──
