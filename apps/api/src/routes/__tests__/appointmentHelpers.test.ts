@@ -26,41 +26,42 @@ describe('calculateEndTime', () => {
 });
 
 describe('normalizeStatus', () => {
-  it('retorna scheduled para undefined', () => {
-    expect(normalizeStatus(undefined)).toBe('scheduled');
+  it('retorna agendado para undefined', () => {
+    expect(normalizeStatus(undefined)).toBe('agendado');
   });
 
-  it('mantém status EN do banco como estão', () => {
-    expect(normalizeStatus('scheduled')).toBe('scheduled');
-    expect(normalizeStatus('confirmed')).toBe('confirmed');
-    expect(normalizeStatus('completed')).toBe('completed');
-    expect(normalizeStatus('cancelled')).toBe('cancelled');
-    expect(normalizeStatus('no_show')).toBe('no_show');
-    expect(normalizeStatus('rescheduled')).toBe('rescheduled');
+  it('mantém status PT do banco como estão', () => {
+    expect(normalizeStatus('agendado')).toBe('agendado');
+    expect(normalizeStatus('atendido')).toBe('atendido');
+    expect(normalizeStatus('avaliacao')).toBe('avaliacao');
+    expect(normalizeStatus('cancelado')).toBe('cancelado');
+    expect(normalizeStatus('faltou')).toBe('faltou');
+    expect(normalizeStatus('presenca_confirmada')).toBe('presenca_confirmada');
+    expect(normalizeStatus('remarcar')).toBe('remarcar');
   });
 
-  it('mapeia aliases PT-BR para o enum EN do banco', () => {
-    expect(normalizeStatus('agendado')).toBe('scheduled');
-    expect(normalizeStatus('cancelado')).toBe('cancelled');
-    expect(normalizeStatus('atendido')).toBe('completed');
-    expect(normalizeStatus('presenca_confirmada')).toBe('confirmed');
-    expect(normalizeStatus('remarcar')).toBe('rescheduled');
+  it('mapeia aliases EN para o enum PT do banco', () => {
+    expect(normalizeStatus('scheduled')).toBe('agendado');
+    expect(normalizeStatus('cancelled')).toBe('cancelado');
+    expect(normalizeStatus('completed')).toBe('atendido');
+    expect(normalizeStatus('confirmed')).toBe('presenca_confirmada');
+    expect(normalizeStatus('rescheduled')).toBe('remarcar');
   });
 
-  it('mapeia aliases PT-BR variantes para o enum EN do banco', () => {
-    expect(normalizeStatus('concluido')).toBe('completed');
-    expect(normalizeStatus('remarcado')).toBe('rescheduled');
-    expect(normalizeStatus('reagendado')).toBe('rescheduled');
-    expect(normalizeStatus('confirmado')).toBe('confirmed');
+  it('mapeia aliases PT-BR variantes para o enum PT do banco', () => {
+    expect(normalizeStatus('concluido')).toBe('atendido');
+    expect(normalizeStatus('remarcado')).toBe('remarcar');
+    expect(normalizeStatus('reagendado')).toBe('remarcar');
+    expect(normalizeStatus('confirmado')).toBe('presenca_confirmada');
   });
 
-  it('retorna scheduled para status desconhecido', () => {
-    expect(normalizeStatus('inexistente')).toBe('scheduled');
+  it('retorna agendado para status desconhecido', () => {
+    expect(normalizeStatus('inexistente')).toBe('agendado');
   });
 
   it('ignora maiúsculas/minúsculas e espaços', () => {
-    expect(normalizeStatus('  AGENDADO  ')).toBe('scheduled');
-    expect(normalizeStatus('CONFIRMADO')).toBe('confirmed');
+    expect(normalizeStatus('  AGENDADO  ')).toBe('agendado');
+    expect(normalizeStatus('CONFIRMADO')).toBe('presenca_confirmada');
   });
 });
 
@@ -113,29 +114,29 @@ describe('isConflictError', () => {
 
 describe('countsTowardCapacity', () => {
   it('conta statuses ativos do enum do banco', () => {
-    expect(countsTowardCapacity('scheduled')).toBe(true);
-    expect(countsTowardCapacity('confirmed')).toBe(true);
-    expect(countsTowardCapacity('completed')).toBe(true);
+    expect(countsTowardCapacity('agendado')).toBe(true);
+    expect(countsTowardCapacity('presenca_confirmada')).toBe(true);
+    expect(countsTowardCapacity('atendido')).toBe(true);
   });
 
   it('não conta statuses finais/cancelados', () => {
-    expect(countsTowardCapacity('cancelled')).toBe(false);
-    expect(countsTowardCapacity('no_show')).toBe(false);
-    expect(countsTowardCapacity('rescheduled')).toBe(false);
+    expect(countsTowardCapacity('cancelado')).toBe(false);
+    expect(countsTowardCapacity('faltou')).toBe(false);
+    expect(countsTowardCapacity('remarcar')).toBe(false);
   });
 });
 
 describe('STATUS_MAP', () => {
   it('contém mapeamentos PT-BR variantes para o enum do banco', () => {
-    expect(STATUS_MAP['concluido']).toBe('completed');
-    expect(STATUS_MAP['falta']).toBe('no_show');
-    expect(STATUS_MAP['faltou']).toBe('no_show');
+    expect(STATUS_MAP['concluido']).toBe('atendido');
+    expect(STATUS_MAP['falta']).toBe('faltou');
+    expect(STATUS_MAP['faltou']).toBe('faltou');
   });
 
-  it('contém mapeamentos EN preservando o enum do banco', () => {
-    expect(STATUS_MAP['scheduled']).toBe('scheduled');
-    expect(STATUS_MAP['cancelled']).toBe('cancelled');
-    expect(STATUS_MAP['completed']).toBe('completed');
-    expect(STATUS_MAP['confirmed']).toBe('confirmed');
+  it('contém mapeamentos EN para o enum do banco', () => {
+    expect(STATUS_MAP['scheduled']).toBe('agendado');
+    expect(STATUS_MAP['cancelled']).toBe('cancelado');
+    expect(STATUS_MAP['completed']).toBe('atendido');
+    expect(STATUS_MAP['confirmed']).toBe('presenca_confirmada');
   });
 });
