@@ -17,6 +17,7 @@ import { format, isValid, parseISO } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { Temporal } from "temporal-polyfill";
 import { toast } from "sonner";
+import { cn } from "@/lib/utils";
 
 // UI Components
 import {
@@ -37,8 +38,10 @@ import {
 	MoreHorizontal,
 	AlertTriangle,
 	BrainCircuit,
-	MessageSquare
+	MessageSquare,
+	Settings
 } from "lucide-react";
+import { ScheduleToolbar } from "./ScheduleToolbar";
 
 // Tipos
 type ViewType = "day" | "week" | "month";
@@ -58,6 +61,13 @@ interface ScheduleXCalendarWrapperProps {
 	onRangeChange?: (range: { start: string; end: string }) => void;
 	customEventComponent?: any;
 	therapists?: any[];
+	isSelectionMode?: boolean;
+	onToggleSelectionMode?: () => void;
+	onCreateAppointment?: () => void;
+	filters?: any;
+	onFiltersChange?: (filters: any) => void;
+	onClearFilters?: () => void;
+	onToggleSelection?: (id: string) => void;
 }
 
 const VIEW_MAP: Record<ViewType, string> = {
@@ -90,19 +100,35 @@ const CustomEventCard = ({ calendarEvent, props }: { calendarEvent: any, props: 
 		<Popover>
 			<PopoverTrigger asChild>
 				<div 
-					className={`w-full h-full p-1 text-xs overflow-hidden cursor-pointer transition-all hover:ring-2 hover:ring-primary/50 ${appointment.status === 'cancelled' ? 'opacity-60 grayscale' : ''} ${isHighRisk ? 'ring-1 ring-red-400/50 animate-pulse-subtle' : ''}`}
+					className={cn(
+						"w-full h-full p-0.5 overflow-hidden cursor-pointer transition-all hover:ring-2 hover:ring-blue-500/30 rounded-md",
+						appointment.status === 'cancelled' && "opacity-50 grayscale",
+						isHighRisk && "ring-1 ring-red-400/50"
+					)}
 					onClick={(e) => e.stopPropagation()}
 				>
-					<div className={`flex flex-col h-full bg-background/40 backdrop-blur-md border border-white/20 rounded-md p-1 shadow-sm overflow-hidden ${isHighRisk ? 'bg-red-50/10' : ''}`}>
-						<div className="flex items-center justify-between gap-1 mb-0.5">
+					<div className={cn(
+						"flex flex-col h-full border-l-[3px] rounded-r-md p-2 shadow-sm overflow-hidden",
+						appointment.status === 'confirmed' && "border-emerald-500 bg-white text-slate-900",
+						appointment.status === 'pending' && "border-amber-500 bg-white text-slate-900",
+						appointment.status === 'cancelled' && "border-red-500 bg-white text-slate-900",
+						appointment.status === 'completed' && "border-blue-500 bg-white text-slate-900",
+						!appointment.status && "border-slate-300 bg-white text-slate-900"
+					)}>
+						<div className="flex items-center justify-between gap-1 mb-1">
+							<span className="font-black text-[9px] uppercase tracking-widest text-slate-400">
+								{formattedTime}
+							</span>
 							<div className="flex items-center gap-1">
-								<div className={`w-1.5 h-1.5 rounded-full ${statusColors[appointment.status] || 'bg-slate-400'}`} />
-								<span className="font-bold truncate">{formattedTime}</span>
+								{isHighRisk && <div className="h-1.5 w-1.5 rounded-full bg-red-500 animate-pulse" />}
+								<div className={`h-1.5 w-1.5 rounded-full ${statusColors[appointment.status] || 'bg-slate-300'}`} />
 							</div>
-							{isHighRisk && <AlertTriangle className="h-2.5 w-2.5 text-red-500" />}
 						</div>
-						<div className="font-medium leading-tight line-clamp-2">
+						<div className="font-black leading-tight line-clamp-1 text-[11px] uppercase tracking-tight text-slate-800">
 							{appointment.title}
+						</div>
+						<div className="text-[9px] font-bold text-slate-400 uppercase tracking-tighter mt-0.5 line-clamp-1">
+							{appointment.type === 'paid' ? 'REABILITAÇÃO' : 'AVALIAÇÃO'}
 						</div>
 					</div>
 				</div>
@@ -208,6 +234,7 @@ export function ScheduleXCalendarWrapper(props: ScheduleXCalendarWrapperProps) {
 		onTimeSlotClick,
 		onAppointmentReschedule,
 		onRangeChange,
+		onDateChange,
 	} = props;
 
 	// ── A) Aguardar Temporal estar pronto ──
@@ -319,17 +346,69 @@ export function ScheduleXCalendarWrapper(props: ScheduleXCalendarWrapperProps) {
 		return <div className="flex-1 flex items-center justify-center">Carregando...</div>;
 	}
 
+	// ── F) Event Listeners para Toolbar Navigation ──
+	useEffect(() => {
+		const handleNavigate = (e: any) => {
+			if (!onDateChange) return;
+			const direction = e.detail.direction;
+			const newDate = new Date(currentDate);
+			if (direction === "prev") {
+				if (viewType === "day") newDate.setDate(newDate.getDate() - 1);
+				else if (viewType === "week") newDate.setDate(newDate.getDate() - 7);
+				else if (viewType === "month") newDate.setMonth(newDate.getMonth() - 1);
+			} else {
+				if (viewType === "day") newDate.setDate(newDate.getDate() + 1);
+				else if (viewType === "week") newDate.setDate(newDate.getDate() + 7);
+				else if (viewType === "month") newDate.setMonth(newDate.getMonth() + 1);
+			}
+			onDateChange(newDate);
+		};
+
+		const handleToday = () => {
+			if (onDateChange) onDateChange(new Date());
+		};
+
+		const handleDateChange = (e: any) => {
+			if (onDateChange) onDateChange(e.detail);
+		};
+
+		window.addEventListener("schedule-navigate", handleNavigate);
+		window.addEventListener("schedule-today-click", handleToday);
+		window.addEventListener("schedule-date-change", handleDateChange);
+
+		return () => {
+			window.removeEventListener("schedule-navigate", handleNavigate);
+			window.removeEventListener("schedule-today-click", handleToday);
+			window.removeEventListener("schedule-date-change", handleDateChange);
+		};
+	}, [currentDate, viewType, onDateChange]);
+
 	return (
-		<div className="flex-1 flex flex-col min-h-0 bg-background/30 backdrop-blur-md p-4 overflow-hidden">
-			<div className="flex-1 min-h-0 glass-panel overflow-hidden">
-				<ScheduleXCalendar
-					calendarApp={calendarApp}
-					customComponents={{
-						timeGridEvent: (eventProps) => <CustomEventCard {...eventProps} props={props} />,
-						dateGridEvent: (eventProps) => <CustomEventCard {...eventProps} props={props} />,
-						monthGridEvent: (eventProps) => <CustomEventCard {...eventProps} props={props} />,
-					}}
-				/>
+		<div className="flex-1 flex flex-col min-h-0 bg-slate-50/50 overflow-hidden">
+			{/* Toolbar Integrada seguindo o design Stitch */}
+			<ScheduleToolbar 
+				currentDate={currentDate}
+				viewType={viewType}
+				onViewChange={onViewTypeChange as any}
+				isSelectionMode={props.isSelectionMode || false}
+				onToggleSelection={props.onToggleSelectionMode || (() => {})}
+				onCreateAppointment={props.onCreateAppointment || (() => {})}
+				filters={props.filters || { status: [], types: [], therapists: [] }}
+				onFiltersChange={props.onFiltersChange || (() => {})}
+				onClearFilters={props.onClearFilters || (() => {})}
+			/>
+
+			<div className="flex-1 p-4 min-h-0 overflow-hidden">
+				<div className="flex-1 h-full min-h-0 bg-white border border-slate-200 shadow-sm rounded-xl overflow-hidden">
+					<ScheduleXCalendar
+						calendarApp={calendarApp}
+						customComponents={{
+							timeGridEvent: (eventProps) => <CustomEventCard {...eventProps} props={props} />,
+							dateGridEvent: (eventProps) => <CustomEventCard {...eventProps} props={props} />,
+							monthGridEvent: (eventProps) => <CustomEventCard {...eventProps} props={props} />,
+						}}
+					/>
+				</div>
 			</div>
 		</div>
 	);
