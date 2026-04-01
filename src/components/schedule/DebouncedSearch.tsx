@@ -14,6 +14,7 @@ import React, {
 	useEffect,
 	useCallback,
 	useMemo,
+	memo,
 } from "react";
 import { Search, X, Command } from "lucide-react";
 import { cn } from "@/lib/utils";

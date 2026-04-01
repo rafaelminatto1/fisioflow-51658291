@@ -15,6 +15,7 @@ import React, {
 	useCallback,
 	useRef,
 	useEffect,
+	memo,
 } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { X } from "lucide-react";
