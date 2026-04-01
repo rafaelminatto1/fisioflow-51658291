@@ -232,7 +232,7 @@ export const registerPatientAnalyticsRoutes = (app: AnalyticsRouteApp) => {
       `SELECT started_at, pain_level
        FROM sessions
        WHERE organization_id = $1 AND patient_id = $2
-         AND status = 'completed'
+         AND status = 'atendido'
        ORDER BY started_at ASC
        LIMIT 50`,
       [user.organizationId, patientId],

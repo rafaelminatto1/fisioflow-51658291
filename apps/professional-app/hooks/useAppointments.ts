@@ -92,27 +92,33 @@ function mapAppointmentStatus(status: string): Appointment['status'] {
     'agendado': 'scheduled',
     'confirmed': 'confirmed',
     'confirmado': 'confirmed',
+    'presenca_confirmada': 'confirmed',
     'in_progress': 'in_progress',
+    'em_andamento': 'in_progress',
     'em_atendimento': 'in_progress',
     'completed': 'completed',
     'concluido': 'completed',
+    'atendido': 'completed',
     'cancelled': 'cancelled',
     'cancelado': 'cancelled',
     'no_show': 'no_show',
+    'faltou': 'no_show',
+    'remarcar': 'scheduled',
+    'avaliacao': 'scheduled',
   };
   return statusMap[status] || 'scheduled';
 }
 
 function mapToApiStatus(status: Appointment['status']): string {
   const statusMap: Record<string, string> = {
-    'scheduled': 'scheduled',
-    'confirmed': 'confirmed',
-    'in_progress': 'in_progress',
-    'completed': 'completed',
-    'cancelled': 'cancelled',
-    'no_show': 'no_show',
+    'scheduled': 'agendado',
+    'confirmed': 'presenca_confirmada',
+    'in_progress': 'presenca_confirmada',
+    'completed': 'atendido',
+    'cancelled': 'cancelado',
+    'no_show': 'faltou',
   };
-  return statusMap[status] || 'scheduled';
+  return statusMap[status] || 'agendado';
 }
 
 // Format Date to YYYY-MM-DD
