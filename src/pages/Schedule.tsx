@@ -31,9 +31,8 @@ const ScheduleXCalendarWrapper = lazy(() => import("@/components/schedule/Schedu
 import "@/styles/schedule.css";
 
 // Feature Flag: Use new ScheduleX calendar instead of custom dnd-kit implementation
-// Set to true to enable the modern calendar with better performance
-// DISABLED: @schedule-x/react has incompatible hook architecture with our React setup
-const USE_SCHEDULEX = false;
+// Set to false to revert to the original dnd-kit calendar
+const USE_SCHEDULEX = true;
 
 export default function Schedule() {
 	const [searchParams, setSearchParams] = useSearchParams();

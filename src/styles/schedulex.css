@@ -1,172 +1,224 @@
 /**
  * ScheduleX Calendar Custom Styles
  *
- * Custom styling for @schedule-x/react to match FisioFlow theme
+ * Plain CSS (NOT CSS Modules) — sem :global() wrappers.
+ * ScheduleX v4 usa prefixo sx__ (dois underscores).
  */
 
-/* Calendar wrapper */
+/* ───────────── 1. TEMA BASE (deve vir PRIMEIRO) ───────────── */
+@import '@schedule-x/theme-default/dist/calendar.css';
+
+/* ───────────── 2. CONTAINER / VARIÁVEIS DE BRAND ──────────── */
 .schedulex-calendar-wrapper {
-	/* Ensure calendar fills available space */
+	/* Brand colors */
+	--sx-color-primary: #2563eb;
+	--sx-color-on-primary: #ffffff;
+	--sx-color-primary-container: #eff6ff;
+	--sx-color-on-primary-container: #1e3a8a;
+	--sx-color-secondary: #64748b;
+	--sx-color-on-secondary: #ffffff;
+
+	/* Surface */
+	--sx-color-surface: #ffffff;
+	--sx-color-on-surface: #0f172a;
+	--sx-color-surface-variant: #f8fafc;
+	--sx-color-on-surface-variant: #475569;
+
+	/* Border */
+	--sx-color-outline: #e2e8f0;
+	--sx-color-outline-variant: #f1f5f9;
+
+	/* Typography */
+	--sx-font-family: inherit;
+	--sx-font-size-xs: 0.65rem;
+	--sx-font-size-sm: 0.75rem;
+	--sx-font-size-md: 0.875rem;
+
 	display: flex;
 	flex-direction: column;
 	height: 100%;
 	position: relative;
 }
 
-/* Override ScheduleX default styles */
-.schedulex-calendar-wrapper :global(.sx-calendar) {
-	font-family: var(--font-sans);
+/* ───────────── 3. DARK MODE ────────────────────────────────── */
+html.dark .schedulex-calendar-wrapper {
+	--sx-color-primary: #60a5fa;
+	--sx-color-on-primary: #1e3a8a;
+	--sx-color-primary-container: #1e3a8a;
+	--sx-color-on-primary-container: #bfdbfe;
+
+	--sx-color-surface: #020617;
+	--sx-color-on-surface: #f8fafc;
+	--sx-color-surface-variant: #1e293b;
+	--sx-color-on-surface-variant: #94a3b8;
+
+	--sx-color-outline: #334155;
+	--sx-color-outline-variant: #1e293b;
+}
+
+/* ───────────── 4. ESCONDER HEADER BUILT-IN ─────────────────── */
+/* FisioFlow usa ScheduleToolbar + navigation próprios */
+.schedulex-calendar-wrapper .sx__header {
+	display: none;
+}
+
+/* ───────────── 5. GRID / LAYOUT ────────────────────────────── */
+.schedulex-calendar-wrapper .sx__calendar-wrapper {
+	height: 100%;
+	font-family: inherit;
+	flex: 1;
+}
+
+.schedulex-calendar-wrapper .sx__time-grid-wrapper {
 	height: 100%;
 }
 
-.schedulex-calendar-wrapper :global(.sx-month-grid) {
-	border-radius: 0;
-}
-
-.schedulex-calendar-wrapper :global(.sx-week-grid) {
-	border-radius: 0;
-}
-
-.schedulex-calendar-wrapper :global(.sx-day-grid) {
-	border-radius: 0;
-}
-
-/* Day cells */
-.schedulex-calendar-wrapper :global(.sx-day) {
+/* ───────────── 6. EVENTO BASE ──────────────────────────────── */
+.schedulex-calendar-wrapper .sx__event {
 	border-radius: 8px;
-	transition: all 0.2s ease;
-}
-
-.schedulex-calendar-wrapper :global(.sx-day:hover) {
-	background-color: rgb(248, 250, 252);
-}
-
-.schedulex-calendar-wrapper :global(.sx-day.is-today) {
-	background-color: rgb(239, 246, 255);
-	font-weight: 600;
-}
-
-.schedulex-calendar-wrapper :global(.sx-day.is-selected) {
-	background-color: rgb(59, 130, 246);
-	color: white;
-}
-
-/* Event cards */
-.schedulex-calendar-wrapper :global(.sx-event) {
-	border-radius: 8px;
-	font-size: 12px;
-	transition: all 0.2s ease;
+	font-size: 0.75rem;
 	cursor: pointer;
+	transition: transform 0.1s ease, box-shadow 0.1s ease;
+	overflow: hidden;
 }
 
-.schedulex-calendar-wrapper :global(.sx-event:hover) {
+.schedulex-calendar-wrapper .sx__event:hover {
 	transform: translateY(-1px);
 	box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1);
 }
 
-/* Status-based event colors */
-.schedulex-calendar-wrapper :global(.sx-event.calendar-card-agendado) {
-	background-color: rgb(239, 246, 255);
-	border-left: 3px solid rgb(59, 130, 246);
-	color: rgb(30, 58, 138);
+/* ───────────── 7. STATUS-BASED EVENT COLORS ────────────────── */
+/* Usados via: _options: { additionalClasses: ['calendar-card-{status}'] } */
+
+.calendar-card-agendado {
+	background-color: #eff6ff !important;
+	border-left: 3px solid #3b82f6 !important;
+	color: #1e3a8a !important;
 }
 
-.schedulex-calendar-wrapper :global(.sx-event.calendar-card-atendido) {
-	background-color: rgb(236, 253, 245);
-	border-left: 3px solid rgb(16, 185, 129);
-	color: rgb(4, 75, 55);
+.calendar-card-atendido {
+	background-color: #ecfdf5 !important;
+	border-left: 3px solid #10b981 !important;
+	color: #044b37 !important;
 }
 
-.schedulex-calendar-wrapper :global(.sx-event.calendar-card-avaliacao) {
-	background-color: rgb(245, 243, 255);
-	border-left: 3px solid rgb(139, 92, 246);
-	color: rgb(76, 29, 149);
+.calendar-card-avaliacao {
+	background-color: #f5f3ff !important;
+	border-left: 3px solid #8b5cf6 !important;
+	color: #3b0764 !important;
 }
 
-.schedulex-calendar-wrapper :global(.sx-event.calendar-card-cancelado) {
-	background-color: rgb(241, 245, 249);
-	border-left: 3px solid rgb(100, 116, 139);
-	color: rgb(15, 23, 42);
+.calendar-card-aguardando_confirmacao {
+	background-color: #fefce8 !important;
+	border-left: 3px solid #eab308 !important;
+	color: #713f12 !important;
 }
 
-.schedulex-calendar-wrapper :global(.sx-event.calendar-card-faltou) {
-	background-color: rgb(254, 242, 242);
-	border-left: 3px solid rgb(239, 68, 68);
-	color: rgb(127, 29, 29);
+.calendar-card-presenca_confirmada {
+	background-color: #dbeafe !important;
+	border-left: 3px solid #1e3a8a !important;
+	color: #1e3a8a !important;
 }
 
-.schedulex-calendar-wrapper :global(.sx-event.calendar-card-faltou_com_aviso) {
-	background-color: rgb(240, 253, 250);
-	border-left: 3px solid rgb(45, 212, 191);
-	color: rgb(19, 78, 74);
+.calendar-card-cancelado {
+	background-color: #f1f5f9 !important;
+	border-left: 3px solid #64748b !important;
+	color: #334155 !important;
+	opacity: 0.7;
 }
 
-.schedulex-calendar-wrapper :global(.sx-event.calendar-card-faltou_sem_aviso) {
-	background-color: rgb(254, 243, 235);
-	border-left: 3px solid rgb(249, 115, 22);
-	color: rgb(124, 45, 18);
+.calendar-card-faltou {
+	background-color: #fef2f2 !important;
+	border-left: 3px solid #ef4444 !important;
+	color: #7f1d1d !important;
 }
 
-.schedulex-calendar-wrapper :global(.sx-event.calendar-card-presenca_confirmada) {
-	background-color: rgb(239, 246, 255);
-	border-left: 3px solid rgb(30, 58, 138);
-	color: rgb(30, 58, 138);
+.calendar-card-faltou_com_aviso {
+	background-color: #f0fdfa !important;
+	border-left: 3px solid #2dd4bf !important;
+	color: #134e4a !important;
 }
 
-.schedulex-calendar-wrapper :global(.sx-event.calendar-card-aguardando_confirmacao) {
-	background-color: rgb(254, 252, 232);
-	border-left: 3px solid rgb(245, 158, 11);
-	color: rgb(113, 63, 18);
+.calendar-card-faltou_sem_aviso {
+	background-color: #fff7ed !important;
+	border-left: 3px solid #f97316 !important;
+	color: #7c2d12 !important;
 }
 
-/* Drag and drop */
-.schedulex-calendar-wrapper :global(.sx-event.is-dragging) {
+.calendar-card-nao_atendido {
+	background-color: #fdf4ff !important;
+	border-left: 3px solid #a855f7 !important;
+	color: #3b0764 !important;
+}
+
+.calendar-card-nao_atendido_sem_cobranca {
+	background-color: #fdf4ff !important;
+	border-left: 3px solid #a855f7 !important;
+	color: #3b0764 !important;
+	opacity: 0.7;
+}
+
+.calendar-card-remarcar {
+	background-color: #fff8f1 !important;
+	border-left: 3px solid #fb923c !important;
+	color: #7c2d12 !important;
+}
+
+/* ───────────── 8. DARK MODE — OVERRIDES DE STATUS ──────────── */
+html.dark .calendar-card-agendado {
+	background-color: rgb(30 58 138 / 0.25) !important;
+	border-left-color: #60a5fa !important;
+	color: #bfdbfe !important;
+}
+
+html.dark .calendar-card-atendido {
+	background-color: rgb(34 197 94 / 0.15) !important;
+	border-left-color: #4ade80 !important;
+	color: #bbf7d0 !important;
+}
+
+html.dark .calendar-card-avaliacao {
+	background-color: rgb(139 92 246 / 0.2) !important;
+	border-left-color: #a78bfa !important;
+	color: #ddd6fe !important;
+}
+
+html.dark .calendar-card-cancelado {
+	background-color: rgb(100 116 139 / 0.15) !important;
+	border-left-color: #94a3b8 !important;
+	color: #cbd5e1 !important;
+}
+
+html.dark .calendar-card-faltou {
+	background-color: rgb(239 68 68 / 0.2) !important;
+	border-left-color: #f87171 !important;
+	color: #fecaca !important;
+}
+
+/* ───────────── 9. DRAG & DROP ──────────────────────────────── */
+.schedulex-calendar-wrapper .sx__event.sx__event--being-timed-placed {
 	opacity: 0.6;
 	transform: scale(0.95);
+	box-shadow: 0 8px 24px rgb(0 0 0 / 0.15);
 }
 
-.schedulex-calendar-wrapper :global(.sx-day.is-drop-target) {
-	background-color: rgb(239, 246, 255);
-	border: 2px dashed rgb(59, 130, 246);
+/* ───────────── 10. INDICADOR DE HORA ATUAL ─────────────────── */
+.schedulex-calendar-wrapper .sx__current-time-line {
+	background-color: #ef4444;
 }
 
-/* Time grid */
-.schedulex-calendar-wrapper :global(.sx-time-grid-line) {
-	stroke: rgb(226, 232, 240);
-	stroke-width: 1;
+.schedulex-calendar-wrapper .sx__current-time-circle {
+	background-color: #ef4444;
 }
 
-/* Current time indicator */
-.schedulex-calendar-wrapper :global(.sx-current-time-indicator) {
-	background-color: rgb(239, 68, 68);
+/* ───────────── 11. TODAY HIGHLIGHT ─────────────────────────── */
+.schedulex-calendar-wrapper .sx__month-grid-day.sx__month-grid-day--current-month.sx__is-today .sx__month-grid-day__header-date {
+	background-color: #2563eb;
+	color: #ffffff;
+	border-radius: 50%;
 }
 
-/* Dark mode overrides */
-@media (prefers-color-scheme: dark) {
-	.schedulex-calendar-wrapper :global(.sx-day:hover) {
-		background-color: rgb(30, 41, 59);
-	}
-
-	.schedulex-calendar-wrapper :global(.sx-day.is-today) {
-		background-color: rgb(30, 58, 138);
-		color: white;
-	}
-
-	.schedulex-calendar-wrapper :global(.sx-event.calendar-card-agendado) {
-		background-color: rgb(30, 58, 138 / 0.2);
-		border-left-color: rgb(96, 165, 250);
-		color: rgb(147, 197, 253);
-	}
-
-	.schedulex-calendar-wrapper :global(.sx-event.calendar-card-atendido) {
-		background-color: rgb(34, 197, 94 / 0.2);
-		border-left-color: rgb(74, 222, 128);
-		color: rgb(74, 222, 128);
-	}
-
-	.schedulex-calendar-wrapper :global(.sx-event.calendar-card-avaliacao) {
-		background-color: rgb(139, 92, 246 / 0.2);
-		border-left-color: rgb(167, 139, 250);
-		color: rgb(192, 132, 252);
-	}
+/* ───────────── 12. MONTH GRID ──────────────────────────────── */
+.schedulex-calendar-wrapper .sx__month-grid-day {
+	min-height: 80px;
 }

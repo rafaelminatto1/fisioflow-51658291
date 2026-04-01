@@ -143,7 +143,7 @@ async function getOverlappingAppointments(
   let conditions = and(
     eq(appointments.organizationId, organizationId),
     eq(appointments.date, date),
-    sql`${appointments.status} NOT IN ('cancelled', 'no_show', 'rescheduled')`,
+    sql`${appointments.status} NOT IN ('cancelado', 'faltou', 'remarcar')`,
     sql`${appointments.startTime} < ${endTime}::time`,
     sql`${appointments.endTime} > ${startTime}::time`,
   );
@@ -523,7 +523,7 @@ app.post('/:id/cancel', requireAuth, async (c) => {
     // Real-time Broadcast
     await broadcastToOrg(c.env, user.organizationId, {
       type: 'APPOINTMENT_UPDATED',
-      payload: { id, action: 'cancelled', timestamp: new Date().toISOString() }
+      payload: { id, action: 'cancelado', timestamp: new Date().toISOString() }
     });
 
     return c.json({ success: true });
