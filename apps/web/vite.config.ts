@@ -408,12 +408,6 @@ export default defineConfig(({ mode }) => {
 								test: /node_modules\/(react-hook-form|@hookform\/resolvers)/,
 								priority: 12.4,
 							},
-							// schedule-x — calendário moderno (isolado para evitar conflito de chunks)
-							{
-								name: "vendor-schedulex",
-								test: /node_modules\/(@schedule-x|preact|temporal-polyfill)/,
-								priority: 40,
-							},
 							// dnd-kit agenda/boards
 							{
 								name: "vendor-dnd",
