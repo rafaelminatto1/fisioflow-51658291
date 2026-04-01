@@ -252,7 +252,7 @@ export function ScheduleXCalendarWrapper(props: ScheduleXCalendarWrapperProps) {
 	const calendarApp = useCalendarApp({
 		views: [createViewDay(), createViewWeek(), createViewMonthGrid()],
 		defaultView: VIEW_MAP[viewType],
-		selectedDate: initialDate,
+		selectedDate: "2026-04-01",
 		events: [], // ← VAZIO — não passe events aqui
 		locale: "pt-BR",
 		firstDayOfWeek: 0, // Domingo
