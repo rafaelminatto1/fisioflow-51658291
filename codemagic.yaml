@@ -44,6 +44,28 @@ workflows:
           cd $APP_DIR
           npx expo prebuild --platform ios --clean
 
+      - name: Patch Podfile for signing
+        script: |
+          cd $APP_DIR/ios
+          ruby -e '
+            podfile = File.read("Podfile")
+            new_code = "
+              installer.pods_project.targets.each do |target|
+                target.build_configurations.each do |config|
+                  config.build_settings[\"CODE_SIGNING_ALLOWED\"] = \"NO\"
+                  config.build_settings[\"CODE_SIGNING_REQUIRED\"] = \"NO\"
+                  config.build_settings[\"DEVELOPMENT_TEAM\"] = \"G7FDW933SF\"
+                end
+              end
+            "
+            if podfile.include?("post_install do |installer|")
+              podfile.gsub!("post_install do |installer|", "post_install do |installer|#{new_code}")
+            else
+              podfile += "\npost_install do |installer|\n#{new_code}\nend\n"
+            end
+            File.write("Podfile", podfile)
+          '
+
       - name: Install CocoaPods
         script: |
           cd $APP_DIR/ios
@@ -54,7 +76,8 @@ workflows:
           # Find actual project name (Expo uses bundle ID, not slug)
           PROJECT=$(find "$CM_BUILD_DIR/$APP_DIR/ios" -name "*.xcodeproj" -maxdepth 1 | head -1)
           echo "Using project: $PROJECT"
-          xcode-project use-profiles --project "$PROJECT"
+          # Automatically generate ExportOptions.plist
+          xcode-project use-profiles --project "$PROJECT" --export-options-plist "$CM_BUILD_DIR/$APP_DIR/ios/ExportOptions.plist"
 
       - name: Build IPA (ad-hoc)
         script: |
@@ -65,16 +88,16 @@ workflows:
           echo "Using workspace: $WORKSPACE"
           echo "Using scheme: $SCHEME"
 
-          # Build archive directly with xcodebuild, forcing manual code signing
+          # Create build directory
+          mkdir -p "$CM_BUILD_DIR/build/ios/xcarchive"
+
+          # Build archive directly with xcodebuild
           xcodebuild -workspace "$WORKSPACE" \
             -scheme "$SCHEME" \
             -destination 'generic/platform=iOS' \
             -archivePath "$CM_BUILD_DIR/build/ios/xcarchive/FisioFlowPro.xcarchive" \
-            CODE_SIGN_IDENTITY="Apple Distribution" \
             CODE_SIGNING_REQUIRED=YES \
             CODE_SIGNING_ALLOWED=YES \
-            CODE_SIGN_STYLE=Manual \
-            PROVISIONING_PROFILE_SPECIFIER="" \
             archive
 
           # Export IPA from archive
