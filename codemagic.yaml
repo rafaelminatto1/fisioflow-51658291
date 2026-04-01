@@ -49,12 +49,15 @@ workflows:
           cd $APP_DIR/ios
           ruby -e '
             podfile = File.read("Podfile")
+            # Improved hook to disable signing for ALL pod targets and match deployment target
             new_code = "
               installer.pods_project.targets.each do |target|
                 target.build_configurations.each do |config|
                   config.build_settings[\"CODE_SIGNING_ALLOWED\"] = \"NO\"
                   config.build_settings[\"CODE_SIGNING_REQUIRED\"] = \"NO\"
-                  config.build_settings[\"DEVELOPMENT_TEAM\"] = \"G7FDW933SF\"
+                  config.build_settings[\"CODE_SIGN_IDENTITY\"] = \"\"
+                  config.build_settings[\"DEVELOPMENT_TEAM\"] = \"\"
+                  config.build_settings[\"IPHONEOS_DEPLOYMENT_TARGET\"] = \"16.0\"
                 end
               end
             "
@@ -73,15 +76,41 @@ workflows:
 
       - name: Set up code signing
         script: |
-          # Find actual project name (Expo uses bundle ID, not slug)
+          # Find actual project name
           PROJECT=$(find "$CM_BUILD_DIR/$APP_DIR/ios" -name "*.xcodeproj" -maxdepth 1 | head -1)
           echo "Using project: $PROJECT"
-          # Automatically generate ExportOptions.plist
-          xcode-project use-profiles --project "$PROJECT" --export-options-plist "$CM_BUILD_DIR/$APP_DIR/ios/ExportOptions.plist"
+          
+          # Just install profiles, dont let it generate the plist (it was failing)
+          xcode-project use-profiles --project "$PROJECT"
+
+          # Manually create a robust ExportOptions.plist
+          cat <<EOF > "$CM_BUILD_DIR/$APP_DIR/ios/ExportOptions.plist"
+          <?xml version="1.0" encoding="UTF-8"?>
+          <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+          <plist version="1.0">
+          <dict>
+              <key>method</key>
+              <string>ad-hoc</string>
+              <key>teamID</key>
+              <string>G7FDW933SF</string>
+              <key>uploadSymbols</key>
+              <true/>
+              <key>compileBitcode</key>
+              <false/>
+              <key>signingStyle</key>
+              <string>manual</string>
+              <key>provisioningProfiles</key>
+              <dict>
+                  <key>com.fisioflow.professionals</key>
+                  <string>FisioFlowProfissionaisAdHoc</string>
+              </dict>
+          </dict>
+          </plist>
+          EOF
 
       - name: Build IPA (ad-hoc)
         script: |
-          # Find actual workspace and scheme (Expo uses app name, not slug)
+          # Find actual workspace and scheme
           WORKSPACE=$(find "$CM_BUILD_DIR/$APP_DIR/ios" -name "*.xcworkspace" -maxdepth 1 | head -1)
           SCHEME=$(basename "$WORKSPACE" .xcworkspace)
 
@@ -91,20 +120,23 @@ workflows:
           # Create build directory
           mkdir -p "$CM_BUILD_DIR/build/ios/xcarchive"
 
-          # Build archive directly with xcodebuild
+          # Build archive explicitly forcing the profile and identity
           xcodebuild -workspace "$WORKSPACE" \
             -scheme "$SCHEME" \
             -destination 'generic/platform=iOS' \
             -archivePath "$CM_BUILD_DIR/build/ios/xcarchive/FisioFlowPro.xcarchive" \
-            CODE_SIGNING_REQUIRED=YES \
-            CODE_SIGNING_ALLOWED=YES \
+            CODE_SIGN_STYLE=Manual \
+            CODE_SIGN_IDENTITY="Apple Distribution" \
+            PROVISIONING_PROFILE_SPECIFIER="FisioFlowProfissionaisAdHoc" \
+            AD_HOC_CODE_SIGNING_ALLOWED=YES \
             archive
 
           # Export IPA from archive
           xcodebuild -exportArchive \
             -archivePath "$CM_BUILD_DIR/build/ios/xcarchive/FisioFlowPro.xcarchive" \
             -exportPath "$CM_BUILD_DIR/build/ios/ipa" \
-            -exportOptionsPlist "$CM_BUILD_DIR/$APP_DIR/ios/ExportOptions.plist"
+            -exportOptionsPlist "$CM_BUILD_DIR/$APP_DIR/ios/ExportOptions.plist" \
+            -allowProvisioningUpdates
 
     artifacts:
       - build/ios/ipa/*.ipa
