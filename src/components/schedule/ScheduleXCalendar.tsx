@@ -4,11 +4,11 @@
  * Built with @schedule-x/react - a modern, high-performance calendar library.
  * Replaces the custom dnd-kit implementation with better UX and performance.
  *
- * @version 1.0.0 - ScheduleX Migration
+ * @version 1.1.0 - Fixed React hooks order
  * @see https://schedule-x.dev/
  */
 
-import React, { useMemo, useCallback } from 'react';
+import React, { useMemo, useCallback, useState, useEffect } from 'react';
 import { createCalendar } from '@schedule-x/calendar';
 import { createViewMonthGrid, createViewWeek, createViewDay } from '@schedule-x/calendar';
 import { ScheduleXCalendar, useCalendarApp } from '@schedule-x/react';
@@ -20,6 +20,7 @@ import { format, addDays, addWeeks, addMonths, subDays, subWeeks, subMonths } fr
 import { motion } from 'framer-motion';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { CalendarAppointmentCard } from './CalendarAppointmentCard';
+import { CalendarSkeletonEnhanced } from './skeletons/CalendarSkeletonEnhanced';
 import { cn } from '@/lib/utils';
 import type { Appointment } from '@/types/appointment';
 import { normalizeStatus, getStatusColor } from './shared/appointment-status';
@@ -110,32 +111,38 @@ const appointmentToEvent = (appointment: Appointment) => {
 
 /**
  * Main ScheduleX Calendar Component Wrapper
+ * Fixed: No conditional rendering based on hook results
  */
-export const ScheduleXCalendarWrapper = React.memo<ScheduleXCalendarWrapperProps>(({
-	appointments,
-	currentDate,
-	viewType,
-	onDateChange,
-	onViewTypeChange,
-	onTimeSlotClick,
-	onAppointmentClick,
-	onEditAppointment,
-	onStatusChange,
-	onAppointmentReschedule,
-	selectionMode = false,
-	selectedIds = new Set(),
-	onToggleSelection,
-	savingAppointmentId,
-	dragState,
-	onDragStart,
-	onDragEnd,
-}) => {
+export const ScheduleXCalendarWrapper = (props: ScheduleXCalendarWrapperProps) => {
+	const {
+		appointments,
+		currentDate,
+		viewType,
+		onDateChange,
+		onViewTypeChange,
+		onTimeSlotClick,
+		onAppointmentClick,
+		onEditAppointment,
+		onStatusChange,
+		onAppointmentReschedule,
+		selectionMode = false,
+		selectedIds = new Set(),
+		onToggleSelection,
+		savingAppointmentId,
+		dragState,
+		onDragStart,
+		onDragEnd,
+	} = props;
+
 	// Convert appointments to ScheduleX events format
 	const events = useMemo(() => {
 		return appointments.map(appointmentToEvent);
 	}, [appointments]);
 
-	// Create calendar app instance
+	// State to track if calendar is ready
+	const [isReady, setIsReady] = useState(false);
+
+	// Create calendar app instance - MUST be called unconditionally
 	const calendarApp = useCalendarApp(() => {
 		// Drag and drop plugin
 		const dndPlugin = createDragAndDropPlugin({
@@ -278,6 +285,13 @@ export const ScheduleXCalendarWrapper = React.memo<ScheduleXCalendarWrapperProps
 		onAppointmentReschedule,
 	]);
 
+	// Mark as ready after calendar app is initialized
+	useEffect(() => {
+		if (calendarApp) {
+			setIsReady(true);
+		}
+	}, [calendarApp]);
+
 	// Navigation handlers
 	const handlePrevious = useCallback(() => {
 		let newDate: Date;
@@ -323,30 +337,27 @@ export const ScheduleXCalendarWrapper = React.memo<ScheduleXCalendarWrapperProps
 			className="flex items-center justify-between mb-4 px-2"
 		>
 			<div className="flex items-center gap-2">
-				<Button
-					variant="outline"
-					size="sm"
+				<button
+					type="button"
 					onClick={handlePrevious}
-					className="h-8 w-8 p-0"
+					className="h-8 w-8 p-0 inline-flex items-center justify-center rounded-md border border-slate-200 bg-transparent hover:bg-slate-100 dark:border-slate-700 dark:hover:bg-slate-800"
 				>
 					<ChevronLeft className="h-4 w-4" />
-				</Button>
-				<Button
-					variant="outline"
-					size="sm"
+				</button>
+				<button
+					type="button"
 					onClick={handleToday}
-					className="h-8"
+					className="h-8 px-3 inline-flex items-center justify-center rounded-md border border-slate-200 bg-transparent hover:bg-slate-100 dark:border-slate-700 dark:hover:bg-slate-800 text-sm font-medium"
 				>
 					Hoje
-				</Button>
-				<Button
-					variant="outline"
-					size="sm"
+				</button>
+				<button
+					type="button"
 					onClick={handleNext}
-					className="h-8 w-8 p-0"
+					className="h-8 w-8 p-0 inline-flex items-center justify-center rounded-md border border-slate-200 bg-transparent hover:bg-slate-100 dark:border-slate-700 dark:hover:bg-slate-800"
 				>
 					<ChevronRight className="h-4 w-4" />
-				</Button>
+				</button>
 			</div>
 
 			<h2 className="text-lg font-semibold">
@@ -354,30 +365,39 @@ export const ScheduleXCalendarWrapper = React.memo<ScheduleXCalendarWrapperProps
 			</h2>
 
 			<div className="flex items-center gap-2">
-				<Button
-					variant={viewType === 'day' ? 'default' : 'outline'}
-					size="sm"
+				<button
+					type="button"
 					onClick={() => onViewTypeChange('day')}
-					className="h-8"
+					className={`h-8 px-3 inline-flex items-center justify-center rounded-md text-sm font-medium ${
+						viewType === 'day'
+							? 'bg-primary text-primary-foreground'
+							: 'border border-slate-200 bg-transparent hover:bg-slate-100 dark:border-slate-700 dark:hover:bg-slate-800'
+					}`}
 				>
 					Dia
-				</Button>
-				<Button
-					variant={viewType === 'week' ? 'default' : 'outline'}
-					size="sm"
+				</button>
+				<button
+					type="button"
 					onClick={() => onViewTypeChange('week')}
-					className="h-8"
+					className={`h-8 px-3 inline-flex items-center justify-center rounded-md text-sm font-medium ${
+						viewType === 'week'
+							? 'bg-primary text-primary-foreground'
+							: 'border border-slate-200 bg-transparent hover:bg-slate-100 dark:border-slate-700 dark:hover:bg-slate-800'
+					}`}
 				>
 					Semana
-				</Button>
-				<Button
-					variant={viewType === 'month' ? 'default' : 'outline'}
-					size="sm"
+				</button>
+				<button
+					type="button"
 					onClick={() => onViewTypeChange('month')}
-					className="h-8"
+					className={`h-8 px-3 inline-flex items-center justify-center rounded-md text-sm font-medium ${
+						viewType === 'month'
+							? 'bg-primary text-primary-foreground'
+							: 'border border-slate-200 bg-transparent hover:bg-slate-100 dark:border-slate-700 dark:hover:bg-slate-800'
+					}`}
 				>
 					Mês
-				</Button>
+				</button>
 			</div>
 		</motion.div>
 	);
@@ -386,7 +406,7 @@ export const ScheduleXCalendarWrapper = React.memo<ScheduleXCalendarWrapperProps
 		<div className="h-full flex flex-col bg-white dark:bg-slate-950 rounded-xl border border-slate-200 dark:border-slate-800 overflow-hidden">
 			{renderHeader()}
 
-			{/* ScheduleX Calendar Component */}
+			{/* ScheduleX Calendar Component - Always render, no conditional */}
 			<div
 				className="flex-1 schedulex-calendar-wrapper"
 				style={{
@@ -396,14 +416,12 @@ export const ScheduleXCalendarWrapper = React.memo<ScheduleXCalendarWrapperProps
 					'--sx-text-primary': 'rgb(15, 23, 42)',
 				} as React.CSSProperties}
 			>
-				{calendarApp && (
-					<ScheduleXCalendar
-						calendarApp={calendarApp}
-					/>
+				{isReady && calendarApp ? (
+					<ScheduleXCalendar calendarApp={calendarApp} />
+				) : (
+					<CalendarSkeletonEnhanced viewType={viewType} />
 				)}
 			</div>
 		</div>
 	);
-});
-
-ScheduleXCalendarWrapper.displayName = 'ScheduleXCalendarWrapper';
+};
