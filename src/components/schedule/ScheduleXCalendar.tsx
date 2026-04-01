@@ -80,7 +80,7 @@ export function ScheduleXCalendarWrapper({
 			// selectedDate: initialDateStr, 
 			events: [], 
 			locale: "pt-BR",
-			firstDayOfWeek: 7, 
+			firstDayOfWeek: 1, 
 			dayBoundaries: { start: "07:00", end: "20:00" },
 			plugins: [calendarControls, dndPlugin],
 			callbacks: {
