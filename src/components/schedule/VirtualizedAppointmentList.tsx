@@ -8,7 +8,7 @@
  * - Suporte a reciclagem de itens
  */
 
-import React, { useMemo, useRef, useCallback } from "react";
+import React, { useMemo, useRef, useCallback, memo } from "react";
 import {
 	VariableSizeList as List,
 	ListChildComponentProps,
