@@ -3,22 +3,19 @@
  * Script para popular o banco de dados com exercícios de fisioterapia
  */
 
-
-// Configuração
-
 import { Pool } from 'pg';
 import * as fs from 'fs';
 import * as path from 'path';
 
-const CLOUD_SQL_CONNECTION_STRING = process.env.CLOUD_SQL_CONNECTION_STRING;
+const DATABASE_URL = process.env.DATABASE_URL || process.env.CLOUD_SQL_CONNECTION_STRING;
 
-if (!CLOUD_SQL_CONNECTION_STRING) {
-  console.error('❌ CLOUD_SQL_CONNECTION_STRING não configurada');
+if (!DATABASE_URL) {
+  console.error('❌ DATABASE_URL ou CLOUD_SQL_CONNECTION_STRING não configurada');
   process.exit(1);
 }
 
-const cloudsql = new Pool({
-  connectionString: CLOUD_SQL_CONNECTION_STRING,
+const pool = new Pool({
+  connectionString: DATABASE_URL,
   ssl: { rejectUnauthorized: false },
 });
 
@@ -32,9 +29,9 @@ interface Exercise {
   muscles: string[];
   equipment: string;
   difficulty: string;
-  duration_minutes?: number;
-  sets_recommended?: string;
-  reps_recommended?: string;
+  duration_seconds?: number;
+  sets_recommended?: number;
+  reps_recommended?: number;
   precautions?: string;
   benefits?: string;
   tags: string[];
@@ -44,8 +41,6 @@ interface Exercise {
  * Carrega os exercícios do arquivo JSON
  */
 function loadExercises(): Exercise[] {
-  // const jsonPath = path.join(__dirname, '../data/exercises.json');
-  // ESM fix
   const jsonPath = path.resolve('scripts/data/exercises.json');
 
   if (!fs.existsSync(jsonPath)) {
@@ -58,68 +53,84 @@ function loadExercises(): Exercise[] {
 }
 
 /**
- * Faz upload de um arquivo para o Firebase Storage
+ * Garante que as categorias existam e retorna um mapa de slug -> id
  */
-async function uploadExerciseFile(
-  exerciseId: string,
-  type: 'video' | 'thumbnail',
-  localPath: string
-): Promise<string | null> {
-  // Verificar se arquivo existe
-  if (!fs.existsSync(localPath)) {
-    return null;
+async function syncCategories(exercises: Exercise[]): Promise<Map<string, string>> {
+  const categories = new Set(exercises.map(e => e.category));
+  const categoryMap = new Map<string, string>();
+
+  for (const catName of categories) {
+    const slug = catName.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/\s+/g, '-');
+    
+    const res = await pool.query(`
+      INSERT INTO exercise_categories (name, slug)
+      VALUES ($1, $2)
+      ON CONFLICT (slug) DO UPDATE SET name = EXCLUDED.name
+      RETURNING id
+    `, [catName, slug]);
+    
+    categoryMap.set(catName, res.rows[0].id);
   }
 
-  // Simulação - na implementação real, faria upload para Firebase Storage
-  // Por enquanto, retorna URL placeholder
-  const bucket = type === 'video' ? 'exercise-videos' : 'exercise-thumbnails';
-  return `https://storage.googleapis.com/${bucket}/${exerciseId}.mp4`;
+  return categoryMap;
 }
 
 /**
  * Insere um exercício no banco de dados
  */
-async function insertExercise(exercise: Exercise): Promise<string> {
+async function insertExercise(exercise: Exercise, categoryId: string): Promise<string> {
   const query = `
     INSERT INTO exercises (
-      name, slug, category, description, instructions,
-      muscles, equipment, difficulty, duration_minutes,
+      name, slug, category_id, description, instructions,
+      muscles_primary, equipment, difficulty, duration_seconds,
       sets_recommended, reps_recommended, precautions,
-      benefits, tags, is_active, is_featured
+      benefits, tags, is_active, is_public, updated_at
     )
-    VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16)
+    VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, NOW())
     ON CONFLICT (slug) DO UPDATE SET
       name = EXCLUDED.name,
+      category_id = EXCLUDED.category_id,
       description = EXCLUDED.description,
       instructions = EXCLUDED.instructions,
-      muscles = EXCLUDED.muscles,
-      tags = EXCLUDED.tags
+      muscles_primary = EXCLUDED.muscles_primary,
+      equipment = EXCLUDED.equipment,
+      difficulty = EXCLUDED.difficulty,
+      duration_seconds = EXCLUDED.duration_seconds,
+      sets_recommended = EXCLUDED.sets_recommended,
+      reps_recommended = EXCLUDED.reps_recommended,
+      precautions = EXCLUDED.precautions,
+      benefits = EXCLUDED.benefits,
+      tags = EXCLUDED.tags,
+      updated_at = NOW()
     RETURNING id
   `;
+
+  const difficultyMap: Record<string, string> = {
+    'beginner': 'iniciante',
+    'intermediate': 'intermediario',
+    'advanced': 'avancado'
+  };
 
   const values = [
     exercise.name,
     exercise.slug,
-    exercise.category,
+    categoryId,
     exercise.description,
-    JSON.stringify(exercise.instructions),
-    JSON.stringify(exercise.muscles),
-    exercise.equipment,
-    // Map difficulty: beginner->easy, intermediate->medium, advanced->hard
-    (exercise.difficulty === 'beginner' ? 'easy' :
-      exercise.difficulty === 'intermediate' ? 'medium' :
-        exercise.difficulty === 'advanced' ? 'hard' : 'easy'),
-    exercise.duration_minutes || null,
+    exercise.instructions.join('\n'), // O schema espera text, provavelmente markdown
+    exercise.muscles, // Array
+    [exercise.equipment].filter(e => e !== 'nenhum'), // Array
+    difficultyMap[exercise.difficulty] || 'iniciante',
+    exercise.duration_seconds || null,
     exercise.sets_recommended || null,
     exercise.reps_recommended || null,
     exercise.precautions || null,
     exercise.benefits || null,
-    JSON.stringify(exercise.tags),
+    exercise.tags,
     true, // is_active
-    true, // is_featured (todos como featured inicialmente)
+    true, // is_public
   ];
 
-  const result = await cloudsql.query(query, values);
+  const result = await pool.query(query, values);
   return result.rows[0].id;
 }
 
@@ -132,6 +143,9 @@ async function seedExercises(): Promise<void> {
   const exercises = loadExercises();
   console.log(`   ${exercises.length} exercícios encontrados`);
 
+  console.log('🔧 Sincronizando categorias...');
+  const categoryMap = await syncCategories(exercises);
+
   console.log('\n🔄 Inserindo exercícios no banco de dados...\n');
 
   let inserted = 0;
@@ -140,30 +154,10 @@ async function seedExercises(): Promise<void> {
 
   for (const exercise of exercises) {
     try {
-      const exerciseId = await insertExercise(exercise);
-
-      // Verificar se foi inserido ou atualizado pelo ON CONFLICT
-      const existing = await cloudsql.query(
-        'SELECT created_at FROM exercises WHERE slug = $1',
-        [exercise.slug]
-      );
-
-      const createdAt = new Date(existing.rows[0].created_at);
-      const now = new Date();
-      const isRecent = (now.getTime() - createdAt.getTime()) < 5000; // 5 segundos
-
-      if (isRecent) {
-        inserted++;
-        console.log(`   ✅ ${exercise.name}`);
-      } else {
-        updated++;
-        console.log(`   ♻️  ${exercise.name} (atualizado)`);
-      }
-
-      // Upload de arquivos (quando implementado)
-      // const videoPath = path.join(__dirname, `../data/exercises/${exercise.slug}.mp4`);
-      // await uploadExerciseFile(exerciseId, 'video', videoPath);
-
+      const categoryId = categoryMap.get(exercise.category)!;
+      await insertExercise(exercise, categoryId);
+      console.log(`   ✅ ${exercise.name}`);
+      inserted++;
     } catch (error: any) {
       errors++;
       console.error(`   ❌ Erro ao inserir ${exercise.name}:`, error.message);
@@ -173,49 +167,8 @@ async function seedExercises(): Promise<void> {
   console.log('\n========================================');
   console.log('  RESUMO DO SEED');
   console.log('========================================\n');
-  console.log(`Exercícios inseridos: ${inserted}`);
-  console.log(`Exercícios atualizados: ${updated}`);
+  console.log(`Exercícios processados: ${inserted}`);
   console.log(`Erros: ${errors}`);
-  console.log(`Total processado: ${inserted + updated}`);
-}
-
-/**
- * Verifica se exercícios foram carregados corretamente
- */
-async function verifySeed(): Promise<void> {
-  console.log('\n🔍 Verificando seed...');
-
-  const { rows } = await cloudsql.query(`
-    SELECT
-      category,
-      COUNT(*) as count
-    FROM exercises
-    WHERE is_active = true
-    GROUP BY category
-    ORDER BY category
-  `);
-
-  console.log('\n   Exercícios por categoria:');
-  let total = 0;
-  for (const row of rows) {
-    console.log(`   • ${row.category}: ${row.count}`);
-    total += parseInt(row.count);
-  }
-
-  console.log(`\n   Total: ${total} exercícios ativos`);
-}
-
-/**
- * Cria categorias de exercícios se não existirem
- */
-async function ensureCategoriesExist(): Promise<void> {
-  console.log('🔧 Verificando categorias...');
-
-  
-
-  // Categorias são apenas valores enum, não precisam de tabela separada
-  // Mas poderíamos criar uma tabela de referência
-  console.log('   ✅ Categorias OK (usando enum/check constraint)');
 }
 
 /**
@@ -226,27 +179,20 @@ async function main(): Promise<void> {
   console.log('  SEED: EXERCÍCIOS FISIOTERAPIA');
   console.log('========================================\n');
 
-  // Testar conexão
-  await cloudsql.query('SELECT 1');
-  console.log('✅ Cloud SQL conectado\n');
+  try {
+    await pool.query('SELECT 1');
+    console.log('✅ Banco de dados conectado\n');
+    await seedExercises();
+  } catch (error) {
+    console.error('❌ Erro fatal:', error);
+  } finally {
+    await pool.end();
+  }
 
-  // Verificar categorias
-  await ensureCategoriesExist();
-
-  // Fazer seed
-  await seedExercises();
-
-  // Verificar
-  await verifySeed();
-
-  // Finalizar
-  await cloudsql.end();
-
-  console.log('\n✅ SEED CONCLUÍDO!\n');
+  console.log('\n✅ PROCESSO CONCLUÍDO!\n');
 }
 
-// Executar
 main().catch((error) => {
-  console.error('Erro fatal:', error);
+  console.error('Erro inesperado:', error);
   process.exit(1);
 });
