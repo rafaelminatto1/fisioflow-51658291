@@ -138,6 +138,10 @@ export default defineConfig(({ mode }) => {
 					"node_modules/@cornerstonejs/codec-charls/dist/charlswasm_decode.wasm",
 				),
 				"@fisioflow/skills": path.resolve(repoRoot, "src/lib/skills"),
+				preact: "react",
+				"preact/hooks": "react",
+				"preact/compat": "react",
+				"preact/jsx-runtime": "react/jsx-runtime",
 				"@fisioflow/cornerstone-tools-init": path.resolve(
 					repoRoot,
 					"node_modules/@cornerstonejs/tools/dist/esm/init.js",
@@ -241,46 +245,15 @@ export default defineConfig(({ mode }) => {
 							},
 							// react-pdf renderer — geração de PDFs por exportação
 							{
-								name: "vendor-react-pdf-font",
-								test: /node_modules\/(fontkit|linebreak|is-url|emoji-regex-xs)/,
-								priority: 28.8,
-							},
-							{
-								name: "vendor-react-pdf-textkit",
-								test: /node_modules\/(@react-pdf\/textkit|yoga-layout|queue)/,
-								priority: 28.6,
-							},
-							{
-								name: "vendor-react-pdf-images",
-								test: /node_modules\/(@react-pdf\/image|@react-pdf\/png-js|jay-peg|crypto-js|browserify-zlib|vite-compatible-readable-stream)/,
-								priority: 28.4,
-							},
-							{
-								name: "vendor-react-pdf-pdfkit",
-								test: /node_modules\/@react-pdf\/pdfkit/,
-								priority: 28,
-							},
-							{
-								name: "vendor-react-pdf-layout",
-								test: /node_modules\/@react-pdf\/(layout|render|font|fns|primitives|types)/,
-								priority: 27.5,
-							},
-							{
-								name: "vendor-react-pdf-renderer",
-								test: /node_modules\/@react-pdf/,
-								priority: 27,
+								name: "vendor-react-pdf-renderer-consolidated",
+								test: /node_modules\/(@react-pdf|fontkit|linebreak|is-url|emoji-regex-xs|yoga-layout|queue|jay-peg|vite-compatible-readable-stream|crypto-js|browserify-zlib|pako|base64-js|ieee754)/,
+								priority: 25,
 							},
 							// pdfjs-dist + react-pdf viewer — visualização PDF
 							{
 								name: "vendor-pdfjs-viewer",
 								test: /node_modules\/(react-pdf|pdfjs-dist)/,
-								priority: 26,
-							},
-							// fallback legado para dependências restantes ligadas a PDF
-							{
-								name: "vendor-react-pdf",
-								test: /node_modules\/(@react-pdf|react-pdf|pdfjs-dist)/,
-								priority: 25,
+								priority: 24,
 							},
 							// @tiptap + prosemirror + tippy.js — editor rico, ~424 KB
 							{
@@ -460,10 +433,6 @@ export default defineConfig(({ mode }) => {
 			"@schedule-x/drag-and-drop",
 			"@schedule-x/theme-default",
 			"temporal-polyfill",
-			"preact",
-			"preact/hooks",
-			"preact/compat",
-			"@preact/signals",
 			],
 			// Módulos IIFE/UMD: não pré-bundlar (side-effect imports no código-fonte)
 			exclude: ["@mediapipe/drawing_utils", "@mediapipe/pose"],
