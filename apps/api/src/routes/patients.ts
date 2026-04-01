@@ -4,6 +4,7 @@ import { patients } from "@fisioflow/db";
 import type { Env } from "../types/env";
 import { requireAuth, type AuthVariables } from "../lib/auth";
 import { createDb } from "../lib/db";
+import { searchFilter } from "../lib/db-utils";
 import { triggerInngestEvent } from "../lib/inngest-client";
 import { registerPatientClinicalDetailRoutes } from "./patients/clinical-details";
 import { isUuid } from "../lib/validators";
@@ -469,14 +470,13 @@ app.get("/", async (c) => {
 		}
 
 		if (search) {
-			const searchPattern = `%${search}%`;
 			conditions = and(
 				conditions,
 				or(
-					ilike(patients.fullName, searchPattern),
-					ilike(patients.email, searchPattern),
-					ilike(patients.cpf, searchPattern),
-					ilike(patients.phone, searchPattern),
+					searchFilter(patients.fullName, search),
+					searchFilter(patients.email, search),
+					searchFilter(patients.cpf, search),
+					searchFilter(patients.phone, search),
 				),
 			)!;
 		}
