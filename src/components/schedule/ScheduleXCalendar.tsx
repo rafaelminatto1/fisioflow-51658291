@@ -242,10 +242,21 @@ export function ScheduleXCalendarWrapper(props: ScheduleXCalendarWrapperProps) {
 	// ── E) Data inicial como Temporal.PlainDate (ScheduleX v4 requer objeto, não string) ──
 	// eslint-disable-next-line react-hooks/exhaustive-deps
 	const initialPlainDate = useMemo(() => {
-		const dateStr = format(currentDate instanceof Date && !isNaN(currentDate.getTime())
-			? currentDate
-			: new Date(), "yyyy-MM-dd");
-		return Temporal.PlainDate.from(dateStr);
+		try {
+			const isValidDate = currentDate instanceof Date && !isNaN(currentDate.getTime());
+			const dateStr = isValidDate ? format(currentDate, "yyyy-MM-dd") : format(new Date(), "yyyy-MM-dd");
+			
+			// Double-check format for ScheduleX
+			if (!/^\d{4}-\d{2}-\d{2}$/.test(dateStr)) {
+				console.error("[ScheduleX] Invalid date format detected:", dateStr);
+				return Temporal.PlainDate.from(format(new Date(), "yyyy-MM-dd"));
+			}
+
+			return Temporal.PlainDate.from(dateStr);
+		} catch (err) {
+			console.error("[ScheduleX] Error creating initial date:", err);
+			return Temporal.PlainDate.from(format(new Date(), "yyyy-MM-dd"));
+		}
 	}, []); // Intencional: só para inicialização; sincronização feita no useEffect I
 
 	const calendarApp = useCalendarApp({
