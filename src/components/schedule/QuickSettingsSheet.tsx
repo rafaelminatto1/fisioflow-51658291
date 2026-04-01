@@ -11,6 +11,7 @@ import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { ScrollArea } from "@/components/ui/scroll-area";
 import { Clock, Calendar, Check, Loader2, Settings2, Info } from "lucide-react";
 import { cn } from "@/lib/utils";
 import {
