@@ -72,29 +72,33 @@ export function ScheduleXAppointmentCard({
 				aria-label={`${appointment.patientName} - ${time} - ${statusConfig.label}`}
 				aria-selected={isSelected}
 				className={cn(
-					"h-full w-full flex flex-col gap-0.5 px-2 py-1 text-xs overflow-hidden rounded-md",
+					"h-full w-full flex flex-col gap-0.5 px-2 py-1.5 text-xs overflow-hidden rounded-md border-l-4 shadow-sm transition-all",
 					"cursor-pointer select-none outline-none",
 					"focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-1",
-					selectionMode && "cursor-pointer",
 					isSelected && "ring-2 ring-primary ring-offset-1",
+					normalizedStatus === 'confirmado' && "border-emerald-500 bg-emerald-50 text-emerald-950",
+					normalizedStatus === 'agendado' && "border-blue-500 bg-blue-50 text-blue-950",
+					normalizedStatus === 'atendido' && "border-emerald-600 bg-emerald-100 text-emerald-950",
+					normalizedStatus === 'cancelado' && "border-red-500 bg-red-50 text-red-950 opacity-70",
+					normalizedStatus === 'faltou' && "border-rose-500 bg-rose-50 text-rose-950",
+					!['confirmado', 'agendado', 'atendido', 'cancelado', 'faltou'].includes(normalizedStatus) && "border-slate-400 bg-slate-100 text-slate-900"
 				)}
 			>
-				{/* Hora */}
-				<span className="font-semibold leading-tight opacity-80 shrink-0">
-					{time}
-					{endTime && endTime !== time && (
-						<span className="font-normal"> – {endTime}</span>
-					)}
-				</span>
+				<div className="flex items-center justify-between gap-1 mb-0.5">
+					<span className="font-bold text-[10px] uppercase tracking-wider opacity-70">
+						{time}
+						{endTime && endTime !== time && (
+							<span className="font-normal"> – {endTime}</span>
+						)}
+					</span>
+				</div>
 
-				{/* Nome do paciente */}
-				<span className="font-bold leading-tight line-clamp-2 break-words">
+				<span className="font-bold leading-tight line-clamp-2 break-words text-xs">
 					{appointment.patientName}
 				</span>
 
-				{/* Tipo de atendimento (compact) */}
 				{appointment.type && (
-					<span className="opacity-70 leading-tight truncate shrink-0">
+					<span className="text-[10px] font-medium opacity-60 uppercase tracking-tighter mt-auto">
 						{appointment.type}
 					</span>
 				)}
