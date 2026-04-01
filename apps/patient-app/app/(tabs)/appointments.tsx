@@ -34,22 +34,31 @@ export default function AppointmentsScreen() {
   const now = new Date();
   
   const upcomingAppointments = appointments.filter(
-    a => new Date(a.date) >= now && a.status !== 'cancelled' && a.status !== 'completed'
+    a => new Date(a.date) >= now && 
+         !['cancelled', 'cancelado', 'completed', 'atendido'].includes(a.status)
   );
   
   const pastAppointments = appointments.filter(
-    a => new Date(a.date) < now || a.status === 'completed' || a.status === 'cancelled'
+    a => new Date(a.date) < now || 
+         ['completed', 'atendido', 'cancelled', 'cancelado'].includes(a.status)
   );
 
   const getStatusColor = (status: Appointment['status']) => {
-    switch (status) {
+    const s = String(status || '').toLowerCase();
+    switch (s) {
       case 'confirmed':
+      case 'confirmado':
+      case 'presenca_confirmada':
         return colors.success;
       case 'scheduled':
+      case 'agendado':
         return colors.warning;
       case 'completed':
+      case 'atendido':
+      case 'concluido':
         return colors.textMuted;
       case 'cancelled':
+      case 'cancelado':
         return colors.error;
       default:
         return colors.textSecondary;
@@ -57,15 +66,27 @@ export default function AppointmentsScreen() {
   };
 
   const getStatusLabel = (status: Appointment['status']) => {
-    switch (status) {
+    const s = String(status || '').toLowerCase();
+    switch (s) {
       case 'confirmed':
+      case 'confirmado':
+      case 'presenca_confirmada':
         return 'Confirmado';
       case 'scheduled':
+      case 'agendado':
         return 'Agendado';
       case 'completed':
+      case 'atendido':
+      case 'concluido':
         return 'Concluído';
       case 'cancelled':
+      case 'cancelado':
         return 'Cancelado';
+      case 'no_show':
+      case 'faltou':
+        return 'Faltou';
+      case 'remarcar':
+        return 'Remarcar';
       default:
         return status;
     }
