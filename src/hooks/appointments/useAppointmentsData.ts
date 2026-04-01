@@ -63,9 +63,9 @@ async function fetchAppointments(
 			};
 		}
 
-		const now = new Date();
-		const dateFrom = formatDateToLocalISO(addDays(now, -15));
-		const dateTo = formatDateToLocalISO(addDays(now, 15));
+		const now = Temporal.Now.plainDateISO();
+		const dateFrom = now.subtract({ days: 15 }).toString();
+		const dateTo = now.add({ days: 15 }).toString();
 
 		const data = await retryWithBackoff(() =>
 			withTimeout(
