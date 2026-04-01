@@ -40,6 +40,18 @@
 	position: relative;
 }
 
+/* ───────────── 2b. OVERRIDE GLOBAL — aplica brand no sx__calendar-wrapper ─ */
+/* O wrapper real do ScheduleX é .sx__calendar-wrapper, não .schedulex-calendar-wrapper */
+/* Sobrescreve o roxo padrão (#6750a4) do tema ScheduleX com azul bebê do sistema */
+.sx__calendar-wrapper {
+	--sx-color-primary: #60a5fa;        /* azul bebê — cor do logo/sistema */
+	--sx-color-on-primary: #ffffff;
+	--sx-color-primary-container: #dbeafe;
+	--sx-color-on-primary-container: #1e3a8a;
+	--sx-font-extra-large: 0.9rem;      /* tamanho do número do dia */
+	--sx-font-extra-small: 0.65rem;     /* tamanho do nome do dia */
+}
+
 /* ───────────── 3. DARK MODE ────────────────────────────────── */
 html.dark .schedulex-calendar-wrapper {
 	--sx-color-primary: #60a5fa;
@@ -221,4 +233,23 @@ html.dark .calendar-card-faltou {
 /* ───────────── 12. MONTH GRID ──────────────────────────────── */
 .schedulex-calendar-wrapper .sx__month-grid-day {
 	min-height: 80px;
+}
+
+/* ───────────── 13. WEEK DATE HEADER — tamanho compacto ─────── */
+/* Reduz o padding e tamanho do nome + número do dia */
+.sx__week-grid__date {
+	padding: 4px 0 !important;
+	gap: 2px !important;
+}
+.sx__week-grid__date-number {
+	height: 1.6em !important;
+	width: 1.6em !important;
+}
+/* Garante que o círculo de hoje usa azul bebê (override da var inline do :root) */
+.sx__week-grid__date--is-today .sx__week-grid__date-number {
+	background-color: #60a5fa !important;
+	color: #ffffff !important;
+}
+.sx__week-grid__date--is-today .sx__week-grid__day-name {
+	color: #60a5fa !important;
 }
