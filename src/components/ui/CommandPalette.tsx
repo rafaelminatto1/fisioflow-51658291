@@ -28,6 +28,7 @@ import {
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { cn } from "@/lib/utils";
+import { normalizeText } from "@/lib/utils/string";
 import { APP_ROUTES, patientRoutes } from "@/lib/routing/appRoutes";
 
 interface CommandItem {
@@ -335,14 +336,14 @@ export function CommandPalette({
 			return commandItems;
 		}
 
-		const searchLower = searchQuery.toLowerCase();
+		const searchTerm = normalizeText(searchQuery);
 		return commandItems.filter((item) => {
-			const matchLabel = item.label.toLowerCase().includes(searchLower);
+			const matchLabel = normalizeText(item.label).includes(searchTerm);
 			const matchDescription = item.description
-				?.toLowerCase()
-				.includes(searchLower);
+				? normalizeText(item.description).includes(searchTerm)
+				: false;
 			const matchKeywords = item.keywords?.some((keyword) =>
-				keyword.toLowerCase().includes(searchLower),
+				normalizeText(keyword).includes(searchTerm),
 			);
 
 			return matchLabel || matchDescription || matchKeywords;
