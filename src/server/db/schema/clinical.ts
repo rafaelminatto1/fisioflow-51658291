@@ -151,6 +151,8 @@ export const clinicalTestTemplates = pgTable("clinical_test_templates", {
 	regularitySessions: integer("regularity_sessions"),
 	layoutType: text("layout_type"),
 	imageUrl: text("image_url"),
+	initialPositionImageUrl: text("initial_position_image_url"),
+	finalPositionImageUrl: text("final_position_image_url"),
 	mediaUrls: text("media_urls").array().default([]),
 	isCustom: boolean("is_custom").default(false),
 	createdAt: timestamp("created_at").defaultNow().notNull(),
