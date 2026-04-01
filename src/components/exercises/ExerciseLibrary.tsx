@@ -63,6 +63,7 @@ import { getBestImageUrl } from "@/lib/imageUtils";
 
 import { useDebounce } from "@/hooks/performance/useDebounce";
 import { fisioLogger as logger } from "@/lib/errors/logger";
+import { normalizeText } from "@/lib/utils/string";
 
 interface ExerciseLibraryProps {
 	onSelectExercise?: (exercise: Exercise) => void;
@@ -596,17 +597,18 @@ export function ExerciseLibrary({
 	const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
 
 	const filteredExercises = useMemo(() => {
+		const searchTermNormalized = normalizeText(debouncedSearchTerm);
+
 		return exercises
 			.filter((ex): ex is Exercise => ex != null && typeof ex === "object")
 			.filter((exercise) => {
 				// Text search
+				const nameNormalized = normalizeText(exercise.name || "");
+				const descNormalized = normalizeText(exercise.description || "");
+
 				const matchesSearch =
-					(exercise.name?.toLowerCase() || "").includes(
-						debouncedSearchTerm.toLowerCase(),
-					) ||
-					(exercise.description?.toLowerCase() || "").includes(
-						debouncedSearchTerm.toLowerCase(),
-					);
+					nameNormalized.includes(searchTermNormalized) ||
+					descNormalized.includes(searchTermNormalized);
 
 				if (!matchesSearch) return false;
 
