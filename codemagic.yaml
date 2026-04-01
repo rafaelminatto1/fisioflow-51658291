@@ -80,15 +80,15 @@ workflows:
           PROJECT=$(find "$CM_BUILD_DIR/$APP_DIR/ios" -name "*.xcodeproj" -maxdepth 1 | head -1)
           echo "Using project: $PROJECT"
           
-          # 1. Install the provisioning profile manually so Xcode can find it
-          # Using the UUID we extracted: 33c33a27-a698-4984-9461-2f2383749de9
+          # 1. Install the provisioning profile manually using UUID (required for folder structure)
+          # UUID: 33c33a27-a698-4984-9461-2f2383749de9, Name: FisioFlowProfissionaisAdHoc
           mkdir -p ~/Library/MobileDevice/Provisioning\ Profiles
           cp "$CM_BUILD_DIR/FisioFlow_Profissionais_AdHoc.mobileprovision" ~/Library/MobileDevice/Provisioning\ Profiles/33c33a27-a698-4984-9461-2f2383749de9.mobileprovision
 
-          # 2. Install certificates/profiles from CM environment if any
-          xcode-project use-profiles --project "$PROJECT"
+          # 2. List available signing identities for debugging
+          security find-identity -v -p codesigning
 
-          # 3. Create ExportOptions.plist using UUID for the profile
+          # 3. Create ExportOptions.plist using Name for the profile
           cat <<EOF > "$CM_BUILD_DIR/$APP_DIR/ios/ExportOptions.plist"
           <?xml version="1.0" encoding="UTF-8"?>
           <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
@@ -107,7 +107,7 @@ workflows:
               <key>provisioningProfiles</key>
               <dict>
                   <key>com.fisioflow.professionals</key>
-                  <string>33c33a27-a698-4984-9461-2f2383749de9</string>
+                  <string>FisioFlowProfissionaisAdHoc</string>
               </dict>
           </dict>
           </plist>
@@ -125,16 +125,16 @@ workflows:
           # Create build directory
           mkdir -p "$CM_BUILD_DIR/build/ios/xcarchive"
 
-          # Build archive forcing UUID and TeamID
+          # Build archive using Profile Name (Specifier)
+          # We remove explicit CODE_SIGN_IDENTITY to let Xcode match it automatically with the profile
           xcodebuild -workspace "$WORKSPACE" \
             -scheme "$SCHEME" \
+            -configuration Release \
             -destination 'generic/platform=iOS' \
             -archivePath "$CM_BUILD_DIR/build/ios/xcarchive/FisioFlowPro.xcarchive" \
             CODE_SIGN_STYLE=Manual \
             DEVELOPMENT_TEAM=G7FDW933SF \
-            CODE_SIGN_IDENTITY="Apple Distribution" \
-            PROVISIONING_PROFILE="33c33a27-a698-4984-9461-2f2383749de9" \
-            AD_HOC_CODE_SIGNING_ALLOWED=YES \
+            PROVISIONING_PROFILE_SPECIFIER="FisioFlowProfissionaisAdHoc" \
             archive
 
           # Export IPA from archive
