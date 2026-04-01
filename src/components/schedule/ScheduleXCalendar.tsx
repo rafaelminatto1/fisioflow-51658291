@@ -45,12 +45,20 @@ export function ScheduleXCalendarWrapper({
 	onRangeChange,
 	customEventComponent,
 }: ScheduleXCalendarWrapperProps) {
-	// ── A) Injeção do Temporal no escopo global (Requisito Schedule-X v4) ──
+	// ── A) Aguardar Temporal estar pronto (Injetado via index.html) ──
+	const [isTemporalReady, setIsTemporalReady] = useState(() => typeof window !== "undefined" && !!window.Temporal);
+
 	useEffect(() => {
-		if (typeof window !== "undefined" && !window.Temporal) {
-			(window as any).Temporal = Temporal;
-		}
-	}, []);
+		if (isTemporalReady) return;
+		
+		const check = setInterval(() => {
+			if (typeof window !== "undefined" && window.Temporal) {
+				setIsTemporalReady(true);
+				clearInterval(check);
+			}
+		}, 50);
+		return () => clearInterval(check);
+	}, [isTemporalReady]);
 
 	// ── B) Plugins Estáveis ──
 	const [calendarControls] = useState(() => createCalendarControlsPlugin());
@@ -58,6 +66,8 @@ export function ScheduleXCalendarWrapper({
 
 	// ── C) Configuração Memoizada do Calendário (EVITA RE-RENDER DO CORE) ──
 	const calendarConfig = useMemo(() => {
+		if (!isTemporalReady) return null;
+
 		const initialDateStr = format(
 			currentDate instanceof Date && !isNaN(currentDate.getTime()) 
 				? currentDate 
@@ -65,15 +75,15 @@ export function ScheduleXCalendarWrapper({
 			"yyyy-MM-dd"
 		);
 
-		console.log("[ScheduleX] Initializing Core with STRING date:", initialDateStr);
+		console.log("[ScheduleX] Initializing Core with validated string:", initialDateStr);
 
 		return {
 			views: [createViewDay(), createViewWeek(), createViewMonthGrid()],
 			defaultView: VIEW_MAP[viewType],
-			selectedDate: initialDateStr, // USAR STRING PURA
-			events: [], // Sempre inicia vazio para evitar race conditions
+			selectedDate: initialDateStr, 
+			events: [], 
 			locale: "pt-BR",
-			firstDayOfWeek: 7, // Domingo (Padrão BR)
+			firstDayOfWeek: 7, 
 			dayBoundaries: { start: "07:00", end: "20:00" },
 			plugins: [calendarControls, dndPlugin],
 			callbacks: {
@@ -91,20 +101,20 @@ export function ScheduleXCalendarWrapper({
 			},
 		};
 	// eslint-disable-next-line react-hooks/exhaustive-deps
-	}, []); 
+	}, [isTemporalReady]); 
 
-	const calendarApp = useCalendarApp(calendarConfig);
+	const calendarApp = useCalendarApp(calendarConfig || { views: [createViewWeek()], events: [] });
 
 	// ── D) Sincronização Imperativa de Eventos ──
 	useEffect(() => {
-		if (calendarApp && events) {
+		if (calendarApp && events && isTemporalReady) {
 			calendarApp.events.set(events);
 		}
-	}, [events, calendarApp]);
+	}, [events, calendarApp, isTemporalReady]);
 
 	// ── E) Sincronização Imperativa de Data e View ──
 	useEffect(() => {
-		if (!calendarApp) return;
+		if (!calendarApp || !isTemporalReady) return;
 
 		try {
 			const targetDate = format(currentDate, "yyyy-MM-dd");
@@ -117,7 +127,11 @@ export function ScheduleXCalendarWrapper({
 		} catch (e) {
 			console.error("[ScheduleX] Sync error:", e);
 		}
-	}, [currentDate, calendarApp, calendarControls]);
+	}, [currentDate, calendarApp, calendarControls, isTemporalReady]);
+
+	if (!isTemporalReady) {
+		return <div className="flex-1 flex items-center justify-center">Carregando calendário...</div>;
+	}
 
 	return (
 		<div className="flex-1 flex flex-col min-h-0 bg-background/30 backdrop-blur-md p-4 overflow-hidden">
