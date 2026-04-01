@@ -33,6 +33,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
+import { normalizeText } from "@/lib/utils/string";
 import type { WikiPage, WikiCategory } from "@/types/wiki";
 import { getEvidenceTree } from "@/features/wiki/utils/evidenceTrails";
 
@@ -107,6 +108,21 @@ export function WikiTopNav({
 	onTagSelect,
 }: WikiTopNavProps) {
 	const [searchQuery, setSearchQuery] = React.useState("");
+
+	const normalizedSearchQuery = useMemo(
+		() => normalizeText(searchQuery),
+		[searchQuery],
+	);
+
+	const searchResults = useMemo(() => {
+		if (!normalizedSearchQuery) return [];
+		return pages.filter(
+			(p) =>
+				normalizeText(p.title).includes(normalizedSearchQuery) ||
+				(p.content && normalizeText(p.content).includes(normalizedSearchQuery)) ||
+				p.tags?.some((t) => normalizeText(t).includes(normalizedSearchQuery)),
+		);
+	}, [pages, normalizedSearchQuery]);
 
 	const evidenceTree = useMemo(() => getEvidenceTree(pages), [pages]);
 	const generalPages = useMemo(
@@ -361,13 +377,62 @@ export function WikiTopNav({
 
 				{/* Search bar expanded */}
 				<div className="flex-1 max-w-sm ml-auto relative group">
-					<Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground transition-colors group-focus-within:text-primary" />
-					<Input
-						placeholder="Buscar na wiki..."
-						className="pl-9 h-9 bg-muted/40 border-none focus-visible:ring-1 focus-visible:bg-background transition-all"
-						value={searchQuery}
-						onChange={(e) => setSearchQuery(e.target.value)}
-					/>
+					<DropdownMenu open={searchQuery.length > 0}>
+						<DropdownMenuTrigger asChild>
+							<div className="relative w-full">
+								<Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground transition-colors group-focus-within:text-primary" />
+								<Input
+									placeholder="Buscar na wiki..."
+									className="pl-9 h-9 bg-muted/40 border-none focus-visible:ring-1 focus-visible:bg-background transition-all"
+									value={searchQuery}
+									onChange={(e) => setSearchQuery(e.target.value)}
+								/>
+							</div>
+						</DropdownMenuTrigger>
+						<DropdownMenuContent
+							align="end"
+							className="w-80 max-h-[400px] overflow-y-auto"
+							onCloseAutoFocus={(e) => e.preventDefault()}
+						>
+							<DropdownMenuLabel className="flex items-center justify-between">
+								Resultados da busca
+								<Button
+									variant="ghost"
+									size="sm"
+									className="h-6 px-2 text-[10px]"
+									onClick={() => setSearchQuery("")}
+								>
+									Fechar
+								</Button>
+							</DropdownMenuLabel>
+							<DropdownMenuSeparator />
+							{searchResults.length === 0 ? (
+								<div className="p-4 text-center text-xs text-muted-foreground">
+									Nenhuma página encontrada para "{searchQuery}"
+								</div>
+							) : (
+								searchResults.map((page) => (
+									<DropdownMenuItem
+										key={page.id}
+										onClick={() => {
+											onPageSelect(page);
+											setSearchQuery("");
+										}}
+									>
+										<div className="flex flex-col gap-0.5">
+											<span className="font-medium">{page.title}</span>
+											{page.category && (
+												<span className="text-[10px] text-muted-foreground uppercase">
+													{categories.find((c) => c.id === page.category)
+														?.name || page.category}
+												</span>
+											)}
+										</div>
+									</DropdownMenuItem>
+								))
+							)}
+						</DropdownMenuContent>
+					</DropdownMenu>
 				</div>
 
 				<Button
