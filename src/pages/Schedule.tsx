@@ -41,8 +41,12 @@ export default function Schedule() {
 	// Beta override
 	const useScheduleX = searchParams.get("beta") === "schedulex" || USE_SCHEDULEX_DEFAULT;
 
-	const dateParam =
-		searchParams.get("date") || format(new Date(), "yyyy-MM-dd");
+	const dateParamRaw = searchParams.get("date");
+	// Validate YYYY-MM-DD format
+	const dateParam = (dateParamRaw && /^\d{4}-\d{2}-\d{2}$/.test(dateParamRaw)) 
+		? dateParamRaw 
+		: format(new Date(), "yyyy-MM-dd");
+
 	const viewParam = (searchParams.get("view") || "week") as ViewType;
 	const statusParam =
 		searchParams.get("status")?.split(",").filter(Boolean) || [];
