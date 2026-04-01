@@ -81,7 +81,7 @@ workflows:
           
           # 1. Install certificate from environment variable
           if [ -z "$CM_CERTIFICATE" ]; then
-            echo "ERRO: CM_CERTIFICATE não encontrada. Certifique-se de que a variável está no grupo 'appstore' no Codemagic."
+            echo "ERRO: CM_CERTIFICATE não encontrada no grupo appstore."
             exit 1
           fi
           
@@ -127,7 +127,7 @@ workflows:
           # Create build directory
           mkdir -p "$CM_BUILD_DIR/build/ios/xcarchive"
 
-          # Build archive with explicit signing
+          # Build archive forcing ALL signing variables to use Distribution
           xcodebuild -workspace "$XCODE_WORKSPACE" \
             -scheme "$XCODE_SCHEME" \
             -configuration Release \
@@ -135,7 +135,10 @@ workflows:
             -archivePath "$CM_BUILD_DIR/build/ios/xcarchive/FisioFlowPro.xcarchive" \
             CODE_SIGN_STYLE=Manual \
             DEVELOPMENT_TEAM=G7FDW933SF \
+            CODE_SIGN_IDENTITY="Apple Distribution" \
             PROVISIONING_PROFILE="33c33a27-a698-4984-9461-2f2383749de9" \
+            PROVISIONING_PROFILE_SPECIFIER="33c33a27-a698-4984-9461-2f2383749de9" \
+            AD_HOC_CODE_SIGNING_ALLOWED=YES \
             archive
 
           # Export IPA from archive
