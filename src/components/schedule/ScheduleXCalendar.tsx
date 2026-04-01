@@ -239,35 +239,29 @@ export function ScheduleXCalendarWrapper(props: ScheduleXCalendarWrapperProps) {
 	const [calendarControls] = useState(() => createCalendarControlsPlugin());
 	const [dndPlugin] = useState(() => createDragAndDropPlugin(15));
 
-	// ── E) Data inicial como string YYYY-MM-DD (ScheduleX v4 documentation says Temporal, but validation error suggests string) ──
+	// ── E) Data inicial como Temporal.PlainDate (ScheduleX v4) ──
 	// eslint-disable-next-line react-hooks/exhaustive-deps
-	const initialDateStr = useMemo(() => {
+	const initialPlainDate = useMemo(() => {
 		try {
 			const isValidDate = currentDate instanceof Date && !isNaN(currentDate.getTime());
 			const dateStr = isValidDate ? format(currentDate, "yyyy-MM-dd") : format(new Date(), "yyyy-MM-dd");
-			
-			// Double-check format for ScheduleX
-			if (!/^\d{4}-\d{2}-\d{2}$/.test(dateStr)) {
-				console.error("[ScheduleX] Invalid date format detected:", dateStr);
-				return format(new Date(), "yyyy-MM-dd");
-			}
-
-			return dateStr;
+			return Temporal.PlainDate.from(dateStr);
 		} catch (err) {
 			console.error("[ScheduleX] Error creating initial date:", err);
-			return format(new Date(), "yyyy-MM-dd");
+			return Temporal.PlainDate.from(format(new Date(), "yyyy-MM-dd"));
 		}
 	}, []); // Intencional: só para inicialização; sincronização feita no useEffect I
 
 	const calendarApp = useCalendarApp({
 		views: [createViewDay(), createViewWeek(), createViewMonthGrid()],
 		defaultView: VIEW_MAP[viewType],
-		selectedDate: initialDateStr,
-		events: [], // ← VAZIO — não passe events aqui
-		locale: "pt-BR",
-		firstDayOfWeek: 7, // Domingo no Schedule-X é 7 (ou 1 se for Segunda)
+		selectedDate: initialPlainDate,
+		events: [], 
+		firstDayOfWeek: 1, 
 		dayBoundaries: { start: "07:00", end: "20:00" },
 		plugins: [calendarControls, dndPlugin],
+		minDate: Temporal.PlainDate.from("2020-01-01"),
+		maxDate: Temporal.PlainDate.from("2030-12-31"),
 		callbacks: {
 			onRangeUpdate: (range: any) => {
 				// ScheduleX passa range.start como string "YYYY-MM-DD"
