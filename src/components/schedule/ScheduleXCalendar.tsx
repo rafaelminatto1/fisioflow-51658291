@@ -139,16 +139,18 @@ export function ScheduleXCalendarWrapper({
 	// ── D) Sincronização Imperativa de Eventos ──
 	useEffect(() => {
 		if (calendarApp && appointments && isTemporalReady) {
-			// Adaptar appointments para o formato ScheduleX
-			const sxEvents = appointments.map(a => ({
-				id: a.id,
-				title: a.patient_name || "Consulta",
-				start: a.start_time.replace(' ', 'T').substring(0, 16),
-				end: a.end_time.replace(' ', 'T').substring(0, 16),
-				status: a.status,
-				type: a.type,
-				therapist_id: a.therapist_id
-			}));
+			// Adaptar appointments para o formato ScheduleX com guardas defensivas
+			const sxEvents = appointments
+				.filter(a => a && a.start_time && a.end_time) // Garantir que datas existam
+				.map(a => ({
+					id: a.id,
+					title: a.patient_name || "Consulta",
+					start: a.start_time.replace(' ', 'T').substring(0, 16),
+					end: a.end_time.replace(' ', 'T').substring(0, 16),
+					status: a.status,
+					type: a.type,
+					therapist_id: a.therapist_id
+				}));
 			calendarApp.events.set(sxEvents);
 		}
 	}, [appointments, calendarApp, isTemporalReady]);
