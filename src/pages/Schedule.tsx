@@ -325,13 +325,46 @@ export default function Schedule() {
 										onDateChange={handleDateChange}
 										viewType={viewType as "day" | "week" | "month"}
 										onViewTypeChange={handleViewTypeChange}
-										onAppointmentClick={actions.handleAppointmentClick}
-										onTimeSlotClick={actions.handleTimeSlotClick}
-										onAppointmentReschedule={
-											actions.handleAppointmentReschedule
-										}
-										onEditAppointment={actions.handleEditAppointment}
-										onDeleteAppointment={actions.handleDeleteAppointment}
+										onEventClick={(event: any) => {
+											const appointment = appointments.find(
+												(a) => a.id === event.id,
+											);
+											if (appointment) actions.handleAppointmentClick(appointment);
+										}}
+										onTimeSlotClick={(dateTime: string) => {
+											// Schedule-X gives "YYYY-MM-DD HH:mm" or "YYYY-MM-DD"
+											const [datePart, timePart] = dateTime.split(" ");
+											if (datePart) {
+												// Use a date that won't be shifted by timezone
+												const [year, month, day] = datePart.split("-").map(Number);
+												const date = new Date(year, month - 1, day);
+												actions.handleTimeSlotClick(date, timePart || "");
+											}
+										}}
+										onAppointmentReschedule={(id: string, start: string) => {
+											const appointment = appointments.find((a) => a.id === id);
+											if (!appointment) return;
+
+											// start is "YYYY-MM-DD HH:mm"
+											const [datePart, timePart] = start.split(" ");
+											const [year, month, day] = datePart.split("-").map(Number);
+											const date = new Date(year, month - 1, day);
+
+											actions.handleAppointmentReschedule(
+												appointment,
+												date,
+												timePart,
+											);
+										}}
+										onEditAppointment={(id: string) => {
+											const appointment = appointments.find((a) => a.id === id);
+											if (appointment) actions.handleEditAppointment(appointment);
+										}}
+										onDeleteAppointment={(id: string) => {
+											const appointment = appointments.find((a) => a.id === id);
+											if (appointment)
+												actions.handleDeleteAppointment(appointment);
+										}}
 										onStatusChange={actions.handleUpdateStatus}
 										selectionMode={isSelectionMode}
 										selectedIds={selectedIds}
