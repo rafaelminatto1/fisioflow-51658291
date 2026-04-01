@@ -68,6 +68,13 @@
   --color-pain-gauge-med: #eab308;
   --color-pain-gauge-high: #ef4444;
   --color-pain-gauge-severe: #7f1d1d;
+
+  /* Glassmorphism 2026 Design System */
+  --glass-bg: rgba(255, 255, 255, 0.7);
+  --glass-bg-dark: rgba(15, 23, 42, 0.7);
+  --glass-border: rgba(255, 255, 255, 0.2);
+  --glass-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.07);
+
   /* Border Radius */
   --radius-lg: var(--radius);
   --radius-md: calc(var(--radius) - 2px);
@@ -842,4 +849,37 @@ html.using-keyboard *:focus-visible {
 
 .tracking-tight {
   letter-spacing: -0.03em;
+}
+
+/* Glassmorphism 2026 Utilities */
+@utility glass-panel {
+  background: var(--glass-bg);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid var(--glass-border);
+  box-shadow: var(--glass-shadow);
+  border-radius: 16px;
+}
+
+@utility glass-card {
+  background: rgba(255, 255, 255, 0.4);
+  backdrop-filter: blur(4px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  transition: all 0.3s ease;
+}
+
+.dark .glass-panel {
+  background: var(--glass-bg-dark);
+}
+
+/* ScheduleX Specific overrides for Glassmorphism */
+.sx__calendar-wrapper {
+  background: transparent !important;
+}
+
+.sx__time-grid-event {
+  border-radius: 8px !important;
+  backdrop-filter: blur(4px);
+  border: 1px solid rgba(255, 255, 255, 0.2) !important;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05) !important;
 }
