@@ -214,6 +214,7 @@ export default defineConfig(({ mode }) => {
 					// Priority: maior = avaliado primeiro (chunk mais específico vence).
 					codeSplitting: {
 						groups: [
+							// command palette, calendários e toasts
 							{
 								name: "vendor-ui-helpers",
 								test: /node_modules\/(cmdk|sonner|react-day-picker)/,
@@ -438,6 +439,7 @@ export default defineConfig(({ mode }) => {
 								test: /node_modules\/zustand/,
 								priority: 12.2,
 							},
+							// command palette, calendários e toasts
 							// command palette, calendários e toasts
 							{
 								name: "vendor-ui-helpers",
