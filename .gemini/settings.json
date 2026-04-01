@@ -21,6 +21,10 @@
     "neon": {
       "type": "http",
       "url": "https://mcp.neon.tech"
+    },
+    "pubmed": {
+      "url": "https://server.smithery.ai/pubmed/mcp",
+      "type": "http"
     }
   }
 }
