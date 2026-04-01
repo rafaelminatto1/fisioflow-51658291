@@ -411,8 +411,8 @@ export default defineConfig(({ mode }) => {
 							// schedule-x — calendário moderno (isolado para evitar conflito de chunks)
 							{
 								name: "vendor-schedulex",
-								test: /node_modules\/@schedule-x\//,
-								priority: 12.35,
+								test: /node_modules\/(@schedule-x|preact|temporal-polyfill)/,
+								priority: 40,
 							},
 							// dnd-kit agenda/boards
 							{
@@ -466,6 +466,7 @@ export default defineConfig(({ mode }) => {
 			"@schedule-x/drag-and-drop",
 			"@schedule-x/theme-default",
 			"temporal-polyfill",
+			"preact",
 			],
 			// Módulos IIFE/UMD: não pré-bundlar (side-effect imports no código-fonte)
 			exclude: ["@mediapipe/drawing_utils", "@mediapipe/pose"],
