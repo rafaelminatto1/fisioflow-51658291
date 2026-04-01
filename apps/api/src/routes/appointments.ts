@@ -2,7 +2,7 @@ import { Hono } from 'hono';
 import type { MiddlewareHandler } from 'hono';
 import type { Env } from '../types/env';
 import { requireAuth, type AuthVariables } from '../lib/auth';
-import { eq, and, sql, desc, asc, lte, gte, ne } from 'drizzle-orm';
+import { eq, and, sql, desc, asc, lte, gte, ne, lt, gt, notInArray } from 'drizzle-orm';
 import { appointments, patients } from '@fisioflow/db';
 import {
   normalizeStatus,
@@ -143,13 +143,13 @@ async function getOverlappingAppointments(
   let conditions = and(
     eq(appointments.organizationId, organizationId),
     eq(appointments.date, date),
-    sql`${appointments.status} NOT IN ('cancelado', 'faltou', 'remarcar')`,
-    sql`${appointments.startTime} < ${endTime}::time`,
-    sql`${appointments.endTime} > ${startTime}::time`,
+    notInArray(appointments.status, ['cancelado', 'faltou', 'remarcar']),
+    lt(appointments.startTime, endTime),
+    gt(appointments.endTime, startTime)
   );
 
   if (excludeAppointmentId) {
-    conditions = and(conditions, ne(appointments.id, excludeAppointmentId))!;
+    conditions = and(conditions, ne(appointments.id, excludeAppointmentId));
   }
 
   const result = await db
@@ -218,6 +218,17 @@ app.post('/', requireAuth, async (c) => {
     const date        = body.date        || body.appointment_date;
     const startTime   = body.startTime   || body.start_time;
     const endTime     = body.endTime     || body.end_time;
+
+    // Calculate duration in minutes if not provided
+    let durationMinutes = body.durationMinutes || body.duration;
+    if (!durationMinutes && startTime && endTime) {
+      const [startH, startM] = startTime.split(':').map(Number);
+      const [endH, endM] = endTime.split(':').map(Number);
+      durationMinutes = (endH * 60 + endM) - (startH * 60 + startM);
+      if (durationMinutes < 0) durationMinutes += 24 * 60; // handle overnight
+    }
+    durationMinutes = durationMinutes || 60;
+
     // Sempre usa user.uid do JWT (confiável) como therapistId
     const therapistId = user.uid;
     const notes       = body.notes ?? null;
@@ -248,6 +259,7 @@ app.post('/', requireAuth, async (c) => {
       date,
       startTime,
       endTime,
+      durationMinutes,
       organizationId: user.organizationId,
       status,
       type,
@@ -255,37 +267,20 @@ app.post('/', requireAuth, async (c) => {
       createdAt: new Date(),
       updatedAt: new Date(),
     };
-
-    const result = await db.insert(appointments).values(insertValues).returning();
-    const row = result[0];
-    
-    // Real-time Broadcast
-    await broadcastToOrg(c.env, user.organizationId, {
-      type: 'APPOINTMENT_UPDATED',
-      payload: { id: row.id, action: 'created', timestamp: new Date().toISOString() }
-    });
-    
-    // Busca dados do paciente para o lembrete
-    const patientRow = await db.select({
-      fullName: patients.fullName,
-      phone: patients.phone
-    }).from(patients).where(eq(patients.id, patientId)).limit(1).then(res => res[0]);
-
     try {
-      triggerInngestEvent(c.env, c.executionCtx, 'appointment.created', {
-        appointmentId: row.id,
-        patientId: row.patientId,
-        name: patientRow?.fullName,
-        phone: patientRow?.phone,
-        date: row.date,
-        startTime: row.startTime,
-        status: row.status,
-      }, { id: user.uid });
-    } catch (eventError: any) {
-      console.error('[Appointments/Create] Failed to trigger event:', eventError?.message ?? eventError);
+      const result = await db.insert(appointments).values(insertValues).returning();
+      const row = result[0];
+      return c.json({ data: normalizeAppointmentRow(row) }, 201);
+    } catch (dbError: any) {
+      console.error('[Appointments/Create] DB Insert Error:', {
+        message: dbError.message,
+        code: dbError.code,
+        detail: dbError.detail,
+        table: dbError.table,
+        constraint: dbError.constraint,
+      });
+      throw dbError; // rethrow to be caught by outer catch
     }
-
-    return c.json({ data: normalizeAppointmentRow(row) }, 201);
   } catch (error: any) {
     if (isConflictError(error)) {
       return c.json({ error: 'Conflito de horário: o terapeuta já possui um agendamento neste período.' }, 409);
