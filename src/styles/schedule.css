@@ -46,19 +46,19 @@
 }
 
 .sx__time-grid-hour-text {
-	@apply font-bold text-slate-400 text-[10px] uppercase tracking-tighter !important;
+	@apply !font-bold !text-slate-400 !text-[10px] !uppercase !tracking-tighter;
 }
 
 .sx__week-grid__day-header {
-	@apply border-b border-slate-200 bg-white py-3 !important;
+	@apply !border-b !border-slate-200 !bg-white !py-3;
 }
 
 .sx__week-grid__day-header-date {
-	@apply font-black text-slate-900 !important;
+	@apply !font-black !text-slate-900;
 }
 
 .sx__week-grid__day-header-day {
-	@apply text-[10px] uppercase font-bold tracking-widest text-slate-400 !important;
+	@apply !text-[10px] !uppercase !font-bold !tracking-widest !text-slate-400;
 }
 
 /* Remove internal shadows and blurs */
