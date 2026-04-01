@@ -138,9 +138,6 @@ export default defineConfig(({ mode }) => {
 					"node_modules/@cornerstonejs/codec-charls/dist/charlswasm_decode.wasm",
 				),
 				"@fisioflow/skills": path.resolve(repoRoot, "src/lib/skills"),
-				preact: "react",
-				"preact/hooks": "react",
-				"preact/compat": "react",
 				"@fisioflow/cornerstone-tools-init": path.resolve(
 					repoRoot,
 					"node_modules/@cornerstonejs/tools/dist/esm/init.js",
@@ -414,7 +411,7 @@ export default defineConfig(({ mode }) => {
 							// schedule-x — calendário moderno (isolado para evitar conflito de chunks)
 							{
 								name: "vendor-schedulex",
-								test: /node_modules\/@schedule-x\//,
+								test: /node_modules\/(@schedule-x|preact|temporal-polyfill)/,
 								priority: 40,
 							},
 							// dnd-kit agenda/boards
@@ -468,6 +465,11 @@ export default defineConfig(({ mode }) => {
 			"@schedule-x/calendar-controls",
 			"@schedule-x/drag-and-drop",
 			"@schedule-x/theme-default",
+			"temporal-polyfill",
+			"preact",
+			"preact/hooks",
+			"preact/compat",
+			"@preact/signals",
 			],
 			// Módulos IIFE/UMD: não pré-bundlar (side-effect imports no código-fonte)
 			exclude: ["@mediapipe/drawing_utils", "@mediapipe/pose"],
