@@ -51,7 +51,6 @@ export function ScheduleXCalendarWrapper({
 	onRangeChange,
 	customEventComponent,
 }: ScheduleXCalendarWrapperProps) {
-	// ── A) Aguardar Temporal estar pronto (Injetado via index.html) ──
 	const [isTemporalReady, setIsTemporalReady] = useState(() => typeof window !== "undefined" && !!window.Temporal);
 
 	useEffect(() => {
@@ -65,14 +64,11 @@ export function ScheduleXCalendarWrapper({
 		return () => clearInterval(check);
 	}, [isTemporalReady]);
 
-	// ── B) Plugins Estáveis ──
 	const [calendarControls] = useState(() => createCalendarControlsPlugin());
 	const [dndPlugin] = useState(() => createDragAndDropPlugin());
 
-	// ── C) Configuração Memoizada do Calendário ──
 	const calendarConfig = useMemo(() => {
 		if (!isTemporalReady) return null;
-
 		return {
 			views: [createViewDay(), createViewWeek(), createViewMonthGrid()],
 			defaultView: VIEW_MAP[viewType],
@@ -103,40 +99,38 @@ export function ScheduleXCalendarWrapper({
 				}
 			},
 		};
-	// eslint-disable-next-line react-hooks/exhaustive-deps
 	}, [isTemporalReady]); 
 
 	const calendarApp = useCalendarApp(calendarConfig || { views: [createViewWeek()], events: [] });
 
-	// ── D) Sincronização Imperativa de Eventos com Validação Rigorosa ──
 	useEffect(() => {
 		if (calendarApp && appointments && isTemporalReady) {
 			try {
 				const sxEvents = appointments
 					.filter(a => {
 						if (!a || !a.start_time || !a.end_time) return false;
-						const start = parseISO(a.start_time);
-						const end = parseISO(a.end_time);
-						return isValid(start) && isValid(end);
+						const s = String(a.start_time).trim();
+						const e = String(a.end_time).trim();
+						if (!s || !e) return false;
+						return isValid(parseISO(s)) && isValid(parseISO(e));
 					})
 					.map(a => ({
 						id: String(a.id),
 						title: a.patient_name || "Consulta",
-						start: a.start_time.replace(' ', 'T').substring(0, 16),
-						end: a.end_time.replace(' ', 'T').substring(0, 16),
+						start: String(a.start_time).replace(' ', 'T').substring(0, 16),
+						end: String(a.end_time).replace(' ', 'T').substring(0, 16),
 						status: a.status,
 						type: a.type,
 						therapist_id: a.therapist_id
 					}));
 				
 				calendarApp.events.set(sxEvents);
-			} catch (e) {
-				console.error("[ScheduleX] Error setting events:", e);
+			} catch (err) {
+				console.error("[ScheduleX] Critical map error:", err);
 			}
 		}
 	}, [appointments, calendarApp, isTemporalReady]);
 
-	// ── E) Sincronização Imperativa de Data ──
 	useEffect(() => {
 		if (!calendarApp || !isTemporalReady || !calendarControls) return;
 		try {
