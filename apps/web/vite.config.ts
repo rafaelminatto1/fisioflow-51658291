@@ -202,6 +202,7 @@ export default defineConfig(({ mode }) => {
 			},
 		},
 		build: {
+			minify: false,
 			outDir: path.resolve(__dirname, "dist"),
 			target: "es2022",
 			cssTarget: "es2020",
