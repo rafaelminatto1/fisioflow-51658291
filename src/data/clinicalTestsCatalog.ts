@@ -53,6 +53,8 @@ interface BaseCatalogInput {
 	sort_order: number;
 	illustration: IllustrationPreset;
 	imageUrl?: string;
+	initialPositionImageUrl?: string;
+	finalPositionImageUrl?: string;
 	evidence_resources?: ClinicalEvidenceResource[];
 }
 
@@ -195,11 +197,11 @@ function getArtwork(preset: IllustrationPreset) {
 
 function escapeXml(value: string) {
 	return value
-		.replaceAll("&", "&amp;")
-		.replaceAll("<", "&lt;")
-		.replaceAll(">", "&gt;")
-		.replaceAll('"', "&quot;")
-		.replaceAll("'", "&apos;");
+		.replace(/&/g, "&amp;")
+		.replace(/</g, "&lt;")
+		.replace(/>/g, "&gt;")
+		.replace(/"/g, "&quot;")
+		.replace(/'/g, "&apos;");
 }
 
 function createBuiltinTest(input: BaseCatalogInput): ClinicalTestCatalogRecord {
@@ -225,6 +227,8 @@ function createBuiltinTest(input: BaseCatalogInput): ClinicalTestCatalogRecord {
 				input.target_joint,
 				input.illustration,
 			),
+		initial_position_image_url: input.initialPositionImageUrl ?? null,
+		final_position_image_url: input.finalPositionImageUrl ?? null,
 		media_urls: [],
 		created_at: CATALOG_TIMESTAMP,
 		updated_at: CATALOG_TIMESTAMP,
@@ -248,6 +252,26 @@ function createBuiltinTest(input: BaseCatalogInput): ClinicalTestCatalogRecord {
 }
 
 export const builtinClinicalTestsCatalog: ClinicalTestCatalogRecord[] = [
+	createBuiltinTest({
+		id: "builtin-slump-test",
+		name: "Slump Test",
+		name_en: "Slump Test",
+		category: "Ortopedia",
+		target_joint: "Coluna",
+		type: "special_test",
+		purpose: "Avaliar a tensão neural e irritação dural, especialmente das raízes nervosas lombares e do nervo isquiático.",
+		execution: "1. Paciente sentado à beira da mesa com mãos atrás das costas. 2. Slump (flexão torácica e lombar). 3. Flexão cervical (queixo ao peito). 4. Extensão ativa do joelho. 5. Dorsiflexão do tornozelo. 6. Alívio da flexão cervical para verificar mudança na dor.",
+		positive_sign: "Reprodução da dor radicular do paciente que é aliviada pela extensão da coluna cervical.",
+		reference: "Butler, D. S. (2000). The Sensitive Nervous System.",
+		tags: ["coluna", "lombar", "radiculopatia", "tensão neural", "isquiático"],
+		evidence_label: "Padrão-ouro clínico",
+		evidence_summary: "Teste de alta sensibilidade para identificação de mecanossensibilidade neural no quadrante inferior.",
+		source_label: "Curadoria FisioFlow",
+		sort_order: 105,
+		illustration: "cervical-radicular",
+		initialPositionImageUrl: "/clinical-tests/illustrations/slump-test-initial.png",
+		finalPositionImageUrl: "/clinical-tests/illustrations/slump-test-final.png"
+	}),
 	createBuiltinTest({
 		id: "builtin-lachman-test",
 		name: "Teste de Lachman",
@@ -947,7 +971,7 @@ export const clinicalTestJointOptions = [
 export function normalizeClinicalTestName(value: string | null | undefined) {
 	return (value ?? "")
 		.normalize("NFD")
-		.replaceAll(/[\u0300-\u036f]/g, "")
+		.replace(/[\u0300-\u036f]/g, "")
 		.toLowerCase()
 		.trim();
 }
@@ -989,6 +1013,14 @@ export function mergeClinicalTestsCatalog(
 				builtin?.sensitivity_specificity ??
 				null,
 			image_url: remoteTest.image_url ?? builtin?.image_url ?? null,
+			initial_position_image_url:
+				remoteTest.initial_position_image_url ??
+				builtin?.initial_position_image_url ??
+				null,
+			final_position_image_url:
+				remoteTest.final_position_image_url ??
+				builtin?.final_position_image_url ??
+				null,
 			media_urls:
 				remoteTest.media_urls && remoteTest.media_urls.length > 0
 					? remoteTest.media_urls
