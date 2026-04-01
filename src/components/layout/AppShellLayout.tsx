@@ -4,11 +4,7 @@ import { AppLoadingSkeleton } from "@/components/ui/AppLoadingSkeleton";
 import { isPublicBootPath } from "./InfrastructureLayout";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
 
-const RouteAwareAuthenticatedAppShell = lazy(() =>
-	import("@/components/app/AuthenticatedAppShell").then((module) => ({
-		default: module.AuthenticatedAppShell,
-	})),
-);
+import { AuthenticatedAppShell } from "@/components/app/AuthenticatedAppShell";
 
 /**
  * App Shell Layout
@@ -24,11 +20,9 @@ export default function AppShellLayout() {
 
 	return (
 		<ProtectedRoute>
-			<Suspense fallback={<AppLoadingSkeleton message="Carregando sistema..." />}>
-				<RouteAwareAuthenticatedAppShell>
-					<Outlet />
-				</RouteAwareAuthenticatedAppShell>
-			</Suspense>
+			<AuthenticatedAppShell>
+				<Outlet />
+			</AuthenticatedAppShell>
 		</ProtectedRoute>
 	);
 }
