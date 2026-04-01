@@ -34,10 +34,14 @@ import "@/styles/schedule.css";
 
 // Feature Flag: Use new ScheduleX calendar instead of custom dnd-kit implementation
 // Set to false to revert to the original dnd-kit calendar
-const USE_SCHEDULEX = false;
+// Can be overridden via ?beta=schedulex URL parameter
+const USE_SCHEDULEX_DEFAULT = false;
 
 export default function Schedule() {
 	const [searchParams, setSearchParams] = useSearchParams();
+
+	// Beta override
+	const useScheduleX = searchParams.get("beta") === "schedulex" || USE_SCHEDULEX_DEFAULT;
 
 	const dateParam =
 		searchParams.get("date") || format(new Date(), "yyyy-MM-dd");
@@ -316,7 +320,7 @@ export default function Schedule() {
 									/>
 								) : (
 									<>
-										{USE_SCHEDULEX ? (
+										{useScheduleX ? (
 											<Suspense
 												fallback={
 													<CalendarSkeletonEnhanced
