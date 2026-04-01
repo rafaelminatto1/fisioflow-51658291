@@ -92,11 +92,6 @@ export function useSettingsState() {
 	const [workingHours, setWorkingHours] = useState<WorkingHours>(
 		DEFAULT_WORKING_HOURS,
 	);
-	const [accessibilitySettings, setAccessibilitySettings] =
-		useState<AccessibilitySettings>(() => {
-			const saved = localStorage.getItem("accessibility-settings");
-			return saved ? JSON.parse(saved) : DEFAULT_ACCESSIBILITY_SETTINGS;
-		});
 
 	// Password State
 	const [passwordForm, setPasswordForm] = useState({
@@ -147,23 +142,6 @@ export function useSettingsState() {
 			}
 		}
 	}, [user?.uid]);
-
-	// Apply a11y
-	useEffect(() => {
-		localStorage.setItem(
-			"accessibility-settings",
-			JSON.stringify(accessibilitySettings),
-		);
-		const cl = document.documentElement.classList;
-		accessibilitySettings.highContrast
-			? cl.add("high-contrast")
-			: cl.remove("high-contrast");
-		accessibilitySettings.reducedMotion
-			? cl.add("reduced-motion")
-			: cl.remove("reduced-motion");
-		cl.remove("text-small", "text-medium", "text-large");
-		cl.add(`text-${accessibilitySettings.fontSize}`);
-	}, [accessibilitySettings]);
 
 	const saveWorkingHours = useCallback(() => {
 		localStorage.setItem("workingHours", JSON.stringify(workingHours));
@@ -261,10 +239,6 @@ export function useSettingsState() {
 		workingHours,
 		setWorkingHours,
 		saveWorkingHours,
-		accessibility: {
-			settings: accessibilitySettings,
-			setSettings: setAccessibilitySettings,
-		},
 		password: {
 			form: passwordForm,
 			setForm: setPasswordForm,
