@@ -252,7 +252,7 @@ export function ScheduleXCalendarWrapper(props: ScheduleXCalendarWrapperProps) {
 	const calendarApp = useCalendarApp({
 		views: [createViewDay(), createViewWeek(), createViewMonthGrid()],
 		defaultView: VIEW_MAP[viewType],
-		selectedDate: safeSelectedDate,
+		selectedDate: "", // Empty string instead of undefined or formatted string
 		events: [], // ← VAZIO — não passe events aqui
 		locale: "pt-BR",
 		firstDayOfWeek: 7, // Domingo no Schedule-X é 7 (ou 1 se for Segunda)
