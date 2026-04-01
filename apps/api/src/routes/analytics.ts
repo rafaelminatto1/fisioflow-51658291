@@ -69,11 +69,11 @@ app.get('/dashboard', requireAuth, async (c) => {
       pool,
       'dashboard.appointmentsRange',
       `SELECT
-         COUNT(*) FILTER (WHERE status::text IN ('completed', 'atendido'))::int AS total_completed,
-         COUNT(*) FILTER (WHERE status::text IN ('scheduled', 'confirmed', 'agendado', 'presenca_confirmada'))::int AS upcoming,
+         COUNT(*) FILTER (WHERE status::text IN ('atendido'))::int AS total_completed,
+         COUNT(*) FILTER (WHERE status::text IN ('agendado', 'presenca_confirmada'))::int AS upcoming,
          COUNT(*)::int AS total,
-         COUNT(*) FILTER (WHERE status::text IN ('no_show', 'faltou', 'faltou_sem_aviso', 'faltou_com_aviso'))::int AS no_show,
-         COUNT(*) FILTER (WHERE status::text IN ('confirmed', 'presenca_confirmada'))::int AS confirmed
+         COUNT(*) FILTER (WHERE status::text IN ('faltou', 'faltou_sem_aviso', 'faltou_com_aviso'))::int AS no_show,
+         COUNT(*) FILTER (WHERE status::text IN ('presenca_confirmada'))::int AS confirmed
        FROM appointments
        WHERE organization_id = $1
          AND date BETWEEN $2::date AND $3::date`,
@@ -339,7 +339,7 @@ app.get('/retention/risk', requireAuth, async (c) => {
           p.full_name,
           p.phone,
           MAX(a.date) as last_appointment,
-          COUNT(*) FILTER (WHERE a.status = 'no_show' AND a.date > NOW() - INTERVAL '30 days') as missed_count,
+          COUNT(*) FILTER (WHERE a.status = 'faltou' AND a.date > NOW() - INTERVAL '30 days') as missed_count,
           (SELECT COUNT(*) FROM patient_exercise_logs pel WHERE pel.patient_id = p.id AND pel.created_at > NOW() - INTERVAL '7 days') as recent_exercises
         FROM patients p
         LEFT JOIN appointments a ON a.patient_id = p.id
