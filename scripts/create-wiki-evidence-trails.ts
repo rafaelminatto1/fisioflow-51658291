@@ -633,6 +633,37 @@ async function runOnce(
 			parentId: root.id,
 		});
 
+		const groinContent = [
+			"# Trilha Avançada: Manejo de Dor Inguinal e Isquiotibiais",
+			"",
+			"## Objetivo clínico",
+			"Padronizar o tratamento de lesões musculares complexas e dores inguinais crônicas com base nos consensos de Doha e British Athletics (BAMIC).",
+			"",
+			"## Testes Clínicos de Elite",
+			"- **Adductor Squeeze Test (Doha)**: Diferenciação diagnóstica de dor inguinal.",
+			"- **BAMIC Hamstring Assessment**: Prognóstico clínico baseado em localização e gravidade.",
+			"- **Take-the-shoe-off Test**: Sensibilidade funcional para isquiotibiais.",
+			"",
+			"## Protocolos de Exercícios de Alta Performance",
+			"- **Copenhagen Adduction**: Prevenção e força reativa de adutores.",
+			"- **Nordic Hamstrings**: Fortalecimento excêntrico padrão-ouro.",
+			"- **Estratégia de Isometria**: Analgesia rápida para tendinopatias proximais.",
+			"",
+			"## Aplicação Prática",
+			"- Utilize esta trilha para atletas de futebol, rugby e corredores de velocidade.",
+			"- Foco em critérios de força (squeeze > 80% do baseline) e performance funcional antes do retorno ao treino total.",
+		].join("\n");
+
+		await upsertPage(client, organizationId, userId, {
+			slug: "trilha-dor-inguinal-isquiotibiais",
+			title: "Trilha: Dor Inguinal e Isquiotibiais",
+			icon: "Zap",
+			category: "knowledge",
+			tags: ["inguinal", "isquiotibiais", "esportiva", "doha"],
+			content: groinContent,
+			parentId: root.id,
+		});
+
 		const ankleProtocolContent = [
 			"# Protocolo Prático: Tornozelo, Aquiles e Instabilidade",
 			"",

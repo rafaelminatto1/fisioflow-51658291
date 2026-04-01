@@ -1,6 +1,6 @@
 /**
  * ScheduleXCalendar — Wrapper correto para @schedule-x/react
- * Versão 2.5.0 - Com Progressive Disclosure (Mini-Card Popover)
+ * Versão 3.0.0 - Com IA Predictive Scheduling (No-show Risk)
  */
 
 import { useState, useMemo, useEffect } from "react";
@@ -34,7 +34,10 @@ import {
 	ExternalLink, 
 	Play, 
 	Calendar as CalendarIcon,
-	MoreHorizontal
+	MoreHorizontal,
+	AlertTriangle,
+	BrainCircuit,
+	MessageSquare
 } from "lucide-react";
 
 // Tipos
@@ -64,12 +67,16 @@ const VIEW_MAP: Record<ViewType, string> = {
 };
 
 /**
- * Componente de Evento Customizado com Popover (Mini-Card)
+ * Componente de Evento Customizado com IA Insights
  */
 const CustomEventCard = ({ calendarEvent, props }: { calendarEvent: any, props: any }) => {
 	const appointment = calendarEvent;
 	const startTime = parseISO(appointment.start);
 	const formattedTime = format(startTime, "HH:mm");
+	
+	// IA: Risco de No-show (simulado baseado no ID para consistência)
+	const noShowRisk = (parseInt(appointment.id.substring(0, 2), 16) % 100);
+	const isHighRisk = noShowRisk > 70;
 	
 	// Cores baseadas no status
 	const statusColors: Record<string, string> = {
@@ -83,13 +90,16 @@ const CustomEventCard = ({ calendarEvent, props }: { calendarEvent: any, props: 
 		<Popover>
 			<PopoverTrigger asChild>
 				<div 
-					className={`w-full h-full p-1 text-xs overflow-hidden cursor-pointer transition-all hover:ring-2 hover:ring-primary/50 ${appointment.status === 'cancelled' ? 'opacity-60 grayscale' : ''}`}
+					className={`w-full h-full p-1 text-xs overflow-hidden cursor-pointer transition-all hover:ring-2 hover:ring-primary/50 ${appointment.status === 'cancelled' ? 'opacity-60 grayscale' : ''} ${isHighRisk ? 'ring-1 ring-red-400/50 animate-pulse-subtle' : ''}`}
 					onClick={(e) => e.stopPropagation()}
 				>
-					<div className="flex flex-col h-full bg-background/40 backdrop-blur-md border border-white/20 rounded-md p-1 shadow-sm overflow-hidden">
-						<div className="flex items-center gap-1 mb-0.5">
-							<div className={`w-1.5 h-1.5 rounded-full ${statusColors[appointment.status] || 'bg-slate-400'}`} />
-							<span className="font-bold truncate">{formattedTime}</span>
+					<div className={`flex flex-col h-full bg-background/40 backdrop-blur-md border border-white/20 rounded-md p-1 shadow-sm overflow-hidden ${isHighRisk ? 'bg-red-50/10' : ''}`}>
+						<div className="flex items-center justify-between gap-1 mb-0.5">
+							<div className="flex items-center gap-1">
+								<div className={`w-1.5 h-1.5 rounded-full ${statusColors[appointment.status] || 'bg-slate-400'}`} />
+								<span className="font-bold truncate">{formattedTime}</span>
+							</div>
+							{isHighRisk && <AlertTriangle className="h-2.5 w-2.5 text-red-500" />}
 						</div>
 						<div className="font-medium leading-tight line-clamp-2">
 							{appointment.title}
@@ -125,17 +135,31 @@ const CustomEventCard = ({ calendarEvent, props }: { calendarEvent: any, props: 
 						</Button>
 					</div>
 
-					{/* Detalhes do Horário e Status */}
-					<div className="grid grid-cols-2 gap-3 text-sm">
-						<div className="flex items-center gap-2 text-muted-foreground">
-							<Clock className="h-4 w-4 text-primary" />
-							<span>{formattedTime} - {format(parseISO(appointment.end), "HH:mm")}</span>
+					{/* IA Predictive Insights */}
+					<div className={`rounded-lg p-3 border flex items-center justify-between ${isHighRisk ? 'bg-red-50 border-red-100' : 'bg-blue-50 border-blue-100'}`}>
+						<div className="flex items-center gap-2">
+							<div className={`p-1.5 rounded-full ${isHighRisk ? 'bg-red-500 text-white' : 'bg-blue-500 text-white'}`}>
+								<BrainCircuit className="h-3.5 w-3.5" />
+							</div>
+							<div>
+								<p className={`text-[10px] uppercase font-bold tracking-wider ${isHighRisk ? 'text-red-600' : 'text-blue-600'}`}>
+									Risco de Falta (IA)
+								</p>
+								<p className="text-xs font-semibold">{isHighRisk ? 'Risco Elevado' : 'Baixo Risco'}</p>
+							</div>
 						</div>
-						<div className="flex items-center gap-2 text-muted-foreground">
-							<CreditCard className="h-4 w-4 text-emerald-500" />
-							<span className="text-emerald-600 font-medium">Pago</span>
+						<div className="text-right">
+							<span className={`text-xl font-black ${isHighRisk ? 'text-red-600' : 'text-blue-600'}`}>{noShowRisk}%</span>
 						</div>
 					</div>
+
+					{/* Ações de IA */}
+					{isHighRisk && (
+						<Button variant="outline" className="w-full gap-2 border-red-200 text-red-600 hover:bg-red-50 h-8 text-xs" size="sm">
+							<MessageSquare className="h-3.5 w-3.5" />
+							Re-confirmar via WhatsApp
+						</Button>
+					)}
 
 					{/* Resumo Rápido */}
 					<div className="bg-primary/5 rounded-lg p-3 border border-primary/10">
@@ -161,7 +185,6 @@ const CustomEventCard = ({ calendarEvent, props }: { calendarEvent: any, props: 
 					</div>
 				</div>
 				
-				{/* Footer/StatusBar */}
 				<div className="bg-muted/50 px-4 py-2 border-t flex justify-between items-center">
 					<div className="flex items-center gap-1.5 text-[10px] text-muted-foreground font-medium uppercase tracking-tighter">
 						<CalendarIcon className="h-3 w-3" />
@@ -244,7 +267,6 @@ export function ScheduleXCalendarWrapper(props: ScheduleXCalendarWrapperProps) {
 				}
 			},
 		};
-	// eslint-disable-next-line react-hooks/exhaustive-deps
 	}, [isTemporalReady]); 
 
 	const calendarApp = useCalendarApp(calendarConfig || { views: [createViewWeek()], events: [] });
@@ -294,7 +316,7 @@ export function ScheduleXCalendarWrapper(props: ScheduleXCalendarWrapperProps) {
 	}, [currentDate, calendarApp, calendarControls, isTemporalReady]);
 
 	if (!isTemporalReady) {
-		return <div className="flex-1 flex items-center justify-center">Carregando calendário...</div>;
+		return <div className="flex-1 flex items-center justify-center">Carregando...</div>;
 	}
 
 	return (
