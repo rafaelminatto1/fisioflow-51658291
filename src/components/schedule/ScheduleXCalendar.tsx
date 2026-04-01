@@ -240,7 +240,6 @@ export function ScheduleXCalendarWrapper(props: ScheduleXCalendarWrapperProps) {
 	// events: [] → vazio, populado imperativamente no useEffect G
 	const safeSelectedDate = useMemo(() => {
 		try {
-			if (!currentDate) return format(new Date(), "yyyy-MM-dd");
 			const d = currentDate instanceof Date ? currentDate : new Date(currentDate);
 			if (isNaN(d.getTime())) return format(new Date(), "yyyy-MM-dd");
 			return format(d, "yyyy-MM-dd");
@@ -249,10 +248,13 @@ export function ScheduleXCalendarWrapper(props: ScheduleXCalendarWrapperProps) {
 		}
 	}, [currentDate]);
 
+	// Log para debug em produção (remover após validar)
+	console.log("[ScheduleX] Initializing with date:", safeSelectedDate);
+
 	const calendarApp = useCalendarApp({
 		views: [createViewDay(), createViewWeek(), createViewMonthGrid()],
 		defaultView: VIEW_MAP[viewType],
-		selectedDate: "", // Empty string instead of undefined or formatted string
+		selectedDate: safeSelectedDate,
 		events: [], // ← VAZIO — não passe events aqui
 		locale: "pt-BR",
 		firstDayOfWeek: 7, // Domingo no Schedule-X é 7 (ou 1 se for Segunda)
