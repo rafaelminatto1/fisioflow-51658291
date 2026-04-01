@@ -115,14 +115,13 @@ export function ScheduleXCalendarWrapper({
 
 	// ── E) Sincronização Imperativa de Data e View ──
 	useEffect(() => {
-		if (!calendarApp || !isTemporalReady) return;
+		if (!calendarApp || !isTemporalReady || !calendarControls) return;
 
 		try {
 			const targetDate = format(currentDate, "yyyy-MM-dd");
-			const currentSelected = calendarApp.range.value?.start;
 			
-			// Só atualiza se for diferente para evitar loops
-			if (currentSelected !== targetDate && calendarControls.setViewDate) {
+			// Usar setViewDate diretamente sem verificar o valor atual se o core estiver instável
+			if (calendarControls.setViewDate) {
 				calendarControls.setViewDate(targetDate);
 			}
 		} catch (e) {
