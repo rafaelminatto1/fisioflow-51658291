@@ -238,10 +238,21 @@ export function ScheduleXCalendarWrapper(props: ScheduleXCalendarWrapperProps) {
 
 	// ── F) Calendário criado UMA VEZ ──
 	// events: [] → vazio, populado imperativamente no useEffect G
+	const safeSelectedDate = useMemo(() => {
+		try {
+			if (!currentDate) return format(new Date(), "yyyy-MM-dd");
+			const d = currentDate instanceof Date ? currentDate : new Date(currentDate);
+			if (isNaN(d.getTime())) return format(new Date(), "yyyy-MM-dd");
+			return format(d, "yyyy-MM-dd");
+		} catch (e) {
+			return format(new Date(), "yyyy-MM-dd");
+		}
+	}, [currentDate]);
+
 	const calendarApp = useCalendarApp({
 		views: [createViewDay(), createViewWeek(), createViewMonthGrid()],
 		defaultView: VIEW_MAP[viewType],
-		selectedDate: format(currentDate, "yyyy-MM-dd"),
+		selectedDate: safeSelectedDate,
 		events: [], // ← VAZIO — não passe events aqui
 		locale: "pt-BR",
 		firstDayOfWeek: 0, // Domingo
