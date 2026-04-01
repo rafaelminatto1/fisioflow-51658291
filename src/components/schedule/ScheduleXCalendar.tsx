@@ -23,12 +23,32 @@ import { Temporal } from "temporal-polyfill";
 type ViewType = "day" | "week" | "month";
 
 interface ScheduleXCalendarWrapperProps {
-	events: any[];
+	appointments: any[];
 	currentDate: Date;
 	viewType: ViewType;
 	onEventClick?: (event: any) => void;
+	onTimeSlotClick?: (time: string) => void;
+	onAppointmentReschedule?: (id: string, start: string, end: string) => void;
+	onDateChange?: (date: Date) => void;
+	onViewTypeChange?: (view: ViewType) => void;
+	onEditAppointment?: (id: string) => void;
+	onDeleteAppointment?: (id: string) => void;
+	onStatusChange?: (id: string, status: string) => void;
 	onRangeChange?: (range: { start: string; end: string }) => void;
 	customEventComponent?: any;
+	// Outras props passadas pela página que podemos ignorar ou usar depois
+	selectionMode?: boolean;
+	selectedIds?: string[];
+	onToggleSelection?: (id: string) => void;
+	onCreateAppointment?: (data: any) => void;
+	onToggleSelectionMode?: () => void;
+	filters?: any;
+	onFiltersChange?: (filters: any) => void;
+	onClearFilters?: () => void;
+	totalAppointmentsCount?: number;
+	patientFilter?: string;
+	onPatientFilterChange?: (val: string) => void;
+	therapists?: any[];
 }
 
 const VIEW_MAP: Record<ViewType, string> = {
@@ -38,10 +58,12 @@ const VIEW_MAP: Record<ViewType, string> = {
 };
 
 export function ScheduleXCalendarWrapper({
-	events,
+	appointments,
 	currentDate,
 	viewType,
 	onEventClick,
+	onTimeSlotClick,
+	onAppointmentReschedule,
 	onRangeChange,
 	customEventComponent,
 }: ScheduleXCalendarWrapperProps) {
@@ -99,6 +121,14 @@ export function ScheduleXCalendarWrapper({
 				onEventClick: (event: any) => {
 					if (onEventClick) onEventClick(event);
 				},
+				onClickDateTime: (dateTime: string) => {
+					if (onTimeSlotClick) onTimeSlotClick(dateTime);
+				},
+				onEventUpdate: (event: any) => {
+					if (onAppointmentReschedule) {
+						onAppointmentReschedule(event.id, event.start, event.end);
+					}
+				}
 			},
 		};
 	// eslint-disable-next-line react-hooks/exhaustive-deps
@@ -108,10 +138,20 @@ export function ScheduleXCalendarWrapper({
 
 	// ── D) Sincronização Imperativa de Eventos ──
 	useEffect(() => {
-		if (calendarApp && events && isTemporalReady) {
-			calendarApp.events.set(events);
+		if (calendarApp && appointments && isTemporalReady) {
+			// Adaptar appointments para o formato ScheduleX
+			const sxEvents = appointments.map(a => ({
+				id: a.id,
+				title: a.patient_name || "Consulta",
+				start: a.start_time.replace(' ', 'T').substring(0, 16),
+				end: a.end_time.replace(' ', 'T').substring(0, 16),
+				status: a.status,
+				type: a.type,
+				therapist_id: a.therapist_id
+			}));
+			calendarApp.events.set(sxEvents);
 		}
-	}, [events, calendarApp, isTemporalReady]);
+	}, [appointments, calendarApp, isTemporalReady]);
 
 	// ── E) Sincronização Imperativa de Data e View ──
 	useEffect(() => {
@@ -119,8 +159,6 @@ export function ScheduleXCalendarWrapper({
 
 		try {
 			const targetDate = format(currentDate, "yyyy-MM-dd");
-			
-			// Usar setViewDate diretamente sem verificar o valor atual se o core estiver instável
 			if (calendarControls.setViewDate) {
 				calendarControls.setViewDate(targetDate);
 			}
