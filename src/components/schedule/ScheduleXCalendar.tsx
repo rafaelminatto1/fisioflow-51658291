@@ -65,12 +65,12 @@ export function ScheduleXCalendarWrapper({
 			"yyyy-MM-dd"
 		);
 
-		console.log("[ScheduleX] Initializing Core with date:", initialDateStr);
+		console.log("[ScheduleX] Initializing Core with Temporal object from:", initialDateStr);
 
 		return {
 			views: [createViewDay(), createViewWeek(), createViewMonthGrid()],
 			defaultView: VIEW_MAP[viewType],
-			selectedDate: initialDateStr, // Passamos string, o wrapper converte
+			selectedDate: Temporal.PlainDate.from(initialDateStr), // USAR OBJETO TEMPORAL REAL
 			events: [], // Sempre inicia vazio para evitar race conditions
 			locale: "pt-BR",
 			firstDayOfWeek: 7, // Domingo (Padrão BR)
