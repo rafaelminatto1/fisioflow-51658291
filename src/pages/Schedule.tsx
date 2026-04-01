@@ -26,7 +26,9 @@ import type { ViewType as CalendarViewType } from "@/hooks/useScheduleState";
 import { KEYBOARD_SHORTCUTS } from "@/lib/calendar/constants";
 
 const CalendarView = lazy(() => import("@/components/schedule/CalendarView"));
-import ScheduleXCalendarWrapper from "@/components/schedule/ScheduleXCalendar";
+const ScheduleXCalendarWrapper = lazy(
+	() => import("@/components/schedule/ScheduleXCalendar"),
+);
 
 import "@/styles/schedule.css";
 
@@ -319,33 +321,41 @@ export default function Schedule() {
 								) : (
 									<>
 										{useScheduleX ? (
-											<ScheduleXCalendarWrapper
-												appointments={appointments}
-												currentDate={currentDate}
-												onDateChange={handleDateChange}
-												viewType={viewType as "day" | "week" | "month"}
-												onViewTypeChange={handleViewTypeChange}
-												onAppointmentClick={actions.handleAppointmentClick}
-												onTimeSlotClick={actions.handleTimeSlotClick}
-												onAppointmentReschedule={
-													actions.handleAppointmentReschedule
+											<Suspense
+												fallback={
+													<CalendarSkeletonEnhanced
+														viewType={viewType as CalendarViewType}
+													/>
 												}
-												onEditAppointment={actions.handleEditAppointment}
-												onDeleteAppointment={actions.handleDeleteAppointment}
-												onStatusChange={actions.handleUpdateStatus}
-												selectionMode={isSelectionMode}
-												selectedIds={selectedIds}
-												onToggleSelection={toggleSelection}
-												onCreateAppointment={actions.handleCreateAppointment}
-												onToggleSelectionMode={toggleSelectionMode}
-												filters={filters as any}
-												onFiltersChange={handleFiltersChange}
-												onClearFilters={clearFilters}
-												totalAppointmentsCount={appointments.length}
-												patientFilter={patientFilter}
-												onPatientFilterChange={handlePatientFilterChange}
-												therapists={therapists}
-											/>
+											>
+												<ScheduleXCalendarWrapper
+													appointments={appointments}
+													currentDate={currentDate}
+													onDateChange={handleDateChange}
+													viewType={viewType as CalendarViewType}
+													onViewTypeChange={handleViewTypeChange}
+													onAppointmentClick={actions.handleAppointmentClick}
+													onTimeSlotClick={actions.handleTimeSlotClick}
+													onAppointmentReschedule={
+														actions.handleAppointmentReschedule
+													}
+													onEditAppointment={actions.handleEditAppointment}
+													onDeleteAppointment={actions.handleDeleteAppointment}
+													onStatusChange={actions.handleUpdateStatus}
+													selectionMode={isSelectionMode}
+													selectedIds={selectedIds}
+													onToggleSelection={toggleSelection}
+													onCreateAppointment={actions.handleCreateAppointment}
+													onToggleSelectionMode={toggleSelectionMode}
+													filters={filters as any}
+													onFiltersChange={handleFiltersChange}
+													onClearFilters={clearFilters}
+													totalAppointmentsCount={appointments.length}
+													patientFilter={patientFilter}
+													onPatientFilterChange={handlePatientFilterChange}
+													therapists={therapists}
+												/>
+											</Suspense>
 										) : (
 											<CalendarView
 												appointments={appointments}
