@@ -2,7 +2,7 @@ import { useState, useEffect, useCallback } from "react";
 import { useSearchParams } from "react-router-dom";
 import { format, parseISO } from "date-fns";
 import { useIsMobile } from "@/hooks/use-mobile";
-import { CalendarViewType } from "@/components/schedule/CalendarView";
+import type { CalendarViewType } from "@/types/agenda";
 import { useDebounce } from "@/hooks/use-debounce";
 
 export interface ScheduleFilters {

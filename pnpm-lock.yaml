@@ -1553,9 +1553,18 @@ importers:
       '@react-pdf/renderer':
         specifier: ^4.3.2
         version: 4.3.2(react@19.2.0)
+      '@schedule-x/calendar':
+        specifier: ^4.3.1
+        version: 4.3.1(@preact/signals@2.9.0(preact@10.29.0))(preact@10.29.0)(temporal-polyfill@0.3.2)
       '@schedule-x/calendar-controls':
         specifier: ^4.3.1
         version: 4.3.1
+      '@schedule-x/current-time':
+        specifier: ^4.3.1
+        version: 4.3.1
+      '@schedule-x/drag-and-drop':
+        specifier: ^3.7.3
+        version: 3.7.3
       '@schedule-x/react':
         specifier: ^4.1.0
         version: 4.1.0(@schedule-x/calendar@4.3.1(@preact/signals@2.9.0(preact@10.29.0))(preact@10.29.0)(temporal-polyfill@0.3.2))(react-dom@19.2.0(react@19.2.0))(react@19.2.0)
@@ -2127,12 +2136,6 @@ importers:
       wrangler:
         specifier: ^4.78.0
         version: 4.78.0(@cloudflare/workers-types@4.20260317.1)
-
-  apps/web/apps/web:
-    dependencies:
-      '@schedule-x/drag-and-drop':
-        specifier: ^3.7.3
-        version: 3.7.3
 
   packages/config:
     dependencies:
@@ -8660,6 +8663,9 @@ packages:
       '@preact/signals': ^2.0.2
       preact: ^10.19.2
       temporal-polyfill: 0.3.0
+
+  '@schedule-x/current-time@4.3.1':
+    resolution: {integrity: sha512-mV0sLZ66BF6qjcpo87Yd95DNFuyl57QPq6KZOmbbHXg7jV2REV3r4QsGUIwZrLEQF7QlWKQl+NN97XD6oYAY7g==}
 
   '@schedule-x/drag-and-drop@3.7.3':
     resolution: {integrity: sha512-nHwZKzdIKWNTdT5BEXy4vLlHOmOH3C3M744QUIU0EOXPAFZQR1bBTviGs2NhmvaLiGstnVx2/TZtdhocy60hgg==}
@@ -29731,6 +29737,8 @@ snapshots:
       '@preact/signals': 2.9.0(preact@10.29.0)
       preact: 10.29.0
       temporal-polyfill: 0.3.2
+
+  '@schedule-x/current-time@4.3.1': {}
 
   '@schedule-x/drag-and-drop@3.7.3': {}
 
