@@ -426,10 +426,10 @@ export default defineConfig(({ mode }) => {
 								test: /node_modules\/(cmdk|sonner|react-day-picker)/,
 								priority: 12.1,
 							},
-							// react + react-dom — runtime base do app
+							// react + react-dom — runtime base do app (prioridade máxima absoluta)
 							{
 								name: "vendor-react",
-								test: /[\\/]node_modules[\\/](react|react-dom)[\\/]/,
+								test: /[\\/]node_modules[\\/](react|react-dom|scheduler|prop-types|use-sync-external-store)[\\/]/,
 								priority: 100,
 							},
 						],
