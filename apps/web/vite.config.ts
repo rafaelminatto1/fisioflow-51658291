@@ -408,6 +408,12 @@ export default defineConfig(({ mode }) => {
 								test: /node_modules\/(react-hook-form|@hookform\/resolvers)/,
 								priority: 12.4,
 							},
+							// schedule-x — calendário moderno (isolado para evitar conflito de chunks)
+							{
+								name: "vendor-schedulex",
+								test: /node_modules\/@schedule-x\//,
+								priority: 12.35,
+							},
 							// dnd-kit agenda/boards
 							{
 								name: "vendor-dnd",
@@ -452,6 +458,12 @@ export default defineConfig(({ mode }) => {
 				"@dnd-kit/sortable",
 				"@dnd-kit/utilities",
 				"date-fns",
+			"@schedule-x/calendar",
+			"@schedule-x/react",
+			"@schedule-x/calendar-controls",
+			"@schedule-x/drag-and-drop",
+			"@schedule-x/theme-default",
+			"temporal-polyfill",
 			],
 			// Módulos IIFE/UMD: não pré-bundlar (side-effect imports no código-fonte)
 			exclude: ["@mediapipe/drawing_utils", "@mediapipe/pose"],
