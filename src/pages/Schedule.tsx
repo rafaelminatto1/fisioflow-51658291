@@ -26,8 +26,10 @@ import type { ViewType as CalendarViewType } from "@/hooks/useScheduleState";
 import { KEYBOARD_SHORTCUTS } from "@/lib/calendar/constants";
 
 const CalendarView = lazy(() => import("@/components/schedule/CalendarView"));
-const ScheduleXCalendarWrapper = lazy(
-	() => import("@/components/schedule/ScheduleXCalendar"),
+const ScheduleXCalendarWrapper = lazy(() =>
+	import("@/components/schedule/ScheduleXCalendar").then((m) => ({
+		default: m.ScheduleXCalendarWrapper,
+	})),
 );
 
 import "@/styles/schedule.css";
