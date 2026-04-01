@@ -239,29 +239,19 @@ export function ScheduleXCalendarWrapper(props: ScheduleXCalendarWrapperProps) {
 	const [calendarControls] = useState(() => createCalendarControlsPlugin());
 	const [dndPlugin] = useState(() => createDragAndDropPlugin(15));
 
-	// ── E) Data inicial como string YYYY-MM-DD (só usado na inicialização) ──
+	// ── E) Data inicial como Temporal.PlainDate (ScheduleX v4 requer objeto, não string) ──
 	// eslint-disable-next-line react-hooks/exhaustive-deps
-	const initialDate = useMemo(
-		() => format(currentDate, "yyyy-MM-dd"),
-		[], // Intencional: só para inicialização; sincronização feita no useEffect I
-	);
-
-	// ── F) Calendário criado UMA VEZ ──
-	// events: [] → vazio, populado imperativamente no useEffect G
-	const safeSelectedDate = useMemo(() => {
-		try {
-			const d = currentDate instanceof Date ? currentDate : new Date(currentDate);
-			if (isNaN(d.getTime())) return format(new Date(), "yyyy-MM-dd");
-			return format(d, "yyyy-MM-dd");
-		} catch (e) {
-			return format(new Date(), "yyyy-MM-dd");
-		}
-	}, [currentDate]);
+	const initialPlainDate = useMemo(() => {
+		const dateStr = format(currentDate instanceof Date && !isNaN(currentDate.getTime())
+			? currentDate
+			: new Date(), "yyyy-MM-dd");
+		return Temporal.PlainDate.from(dateStr);
+	}, []); // Intencional: só para inicialização; sincronização feita no useEffect I
 
 	const calendarApp = useCalendarApp({
 		views: [createViewDay(), createViewWeek(), createViewMonthGrid()],
 		defaultView: VIEW_MAP[viewType],
-		selectedDate: initialDate,
+		selectedDate: initialPlainDate,
 		events: [], // ← VAZIO — não passe events aqui
 		locale: "pt-BR",
 		firstDayOfWeek: 7, // Domingo no Schedule-X é 7 (ou 1 se for Segunda)
@@ -337,8 +327,8 @@ export function ScheduleXCalendarWrapper(props: ScheduleXCalendarWrapperProps) {
 		const dateStr = format(currentDate, "yyyy-MM-dd");
 		if (prevDateRef.current === dateStr) return;
 		prevDateRef.current = dateStr;
-		// setDate aceita string "YYYY-MM-DD"
-		calendarControls.setDate(dateStr);
+		// setDate requer Temporal.PlainDate (ScheduleX v4)
+		calendarControls.setDate(Temporal.PlainDate.from(dateStr));
 	}, [calendarApp, calendarControls, currentDate]);
 
 	// ── J) Custom event component ──
