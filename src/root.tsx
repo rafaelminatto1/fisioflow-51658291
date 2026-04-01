@@ -11,8 +11,6 @@ import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient } from "@tanstack/react-query";
 import { AuthContextProvider } from "@/contexts/AuthContextProvider";
-import { HighContrastProvider } from "@/contexts/HighContrastContext";
-import { useAuth } from "@/contexts/AuthContext";
 import { ErrorBoundary as FisioErrorBoundary } from "@/components/error/ErrorBoundary";
 import { GlobalErrorBoundary } from "@/components/error/GlobalErrorBoundary";
 import { fisioLogger as logger } from "@/lib/errors/logger";
@@ -21,7 +19,6 @@ import { PersistQueryClientProvider } from "@tanstack/react-query-persist-client
 import { createAsyncStoragePersister } from "@tanstack/query-async-storage-persister";
 import { get, set, del } from "idb-keyval";
 import { ThemeProvider } from "@/components/ui/theme";
-import { PremiumThemeToggle } from "@/components/ui/PremiumThemeToggle";
 import { FeatureFlagProvider } from "@/lib/featureFlags/hooks";
 import { useServiceWorkerUpdate } from "@/hooks/useServiceWorkerUpdate";
 import { SkipLink, FocusVisibleHandler } from "@/components/accessibility";
@@ -177,14 +174,11 @@ export default function App() {
           >
             <TooltipProvider>
               <AuthContextProvider>
-                <HighContrastProvider>
-                  <StatsigProviderWrapper>
-                    <PremiumThemeToggle />
-                    <Toaster />
-                    <Sonner />
-                    <Outlet />
-                  </StatsigProviderWrapper>
-                </HighContrastProvider>
+                <StatsigProviderWrapper>
+                  <Toaster />
+                  <Sonner />
+                  <Outlet />
+                </StatsigProviderWrapper>
               </AuthContextProvider>
             </TooltipProvider>
           </PersistQueryClientProvider>

@@ -204,7 +204,6 @@ export { VirtualizedList } from "./virtualized-list";
 export { LazyRenderList } from "./lazy-render-list";
 export { MultiSelect } from "./multi-select";
 export { SmartTextarea } from "./SmartTextarea";
-export { PremiumThemeToggle } from "./PremiumThemeToggle";
 export { KeyboardShortcutsDialog } from "./KeyboardShortcutsDialog";
 export { AppLoadingSkeleton } from "./AppLoadingSkeleton";
 export { NetworkStatus } from "./network-status";
