@@ -1,0 +1,298 @@
+[GET] https://fisioflow-api.rafalegollas.workers.dev/api/appointments?dateFrom=2026-03-30&dateTo=2026-04-05 => [200] 
+  Request headers:
+    sec-ch-ua-platform: "Linux"
+    authorization: Bearer eyJhbGciOiJFZERTQSIsImtpZCI6IjM1NDViNjdiLWJiMzItNDMzYi1hNDNkLTBhY2E5ODZkMDQ4YyJ9.eyJpYXQiOjE3NzUwMjE5NjgsIm5hbWUiOiJEci4gVGVzdGUgQXR1YWxpemFkbyIsImVtYWlsIjoicmFmYWVsLm1pbmF0dG9AeWFob28uY29tLmJyIiwiZW1haWxWZXJpZmllZCI6ZmFsc2UsImNyZWF0ZWRBdCI6IjIwMjYtMDMtMDVUMjM6NDE6MzQuNTg3WiIsInVwZGF0ZWRBdCI6IjIwMjYtMDMtMzBUMTg6NTQ6MjQuNDI0WiIsInJvbGUiOiJhdXRoZW50aWNhdGVkIiwiYmFubmVkIjpmYWxzZSwiYmFuUmVhc29uIjpudWxsLCJiYW5FeHBpcmVzIjpudWxsLCJpZCI6IjFiNTI3NzU5LWYxMzEtNGFjNC04NmJkLTdhM2UwZGViNDgyZiIsInN1YiI6IjFiNTI3NzU5LWYxMzEtNGFjNC04NmJkLTdhM2UwZGViNDgyZiIsImV4cCI6MTc3NTAyMjg2OCwiaXNzIjoiaHR0cHM6Ly9lcC13YW5kZXJpbmctYm9udXMtYWNqNHp3dm8ubmVvbmF1dGguc2EtZWFzdC0xLmF3cy5uZW9uLnRlY2giLCJhdWQiOiJodHRwczovL2VwLXdhbmRlcmluZy1ib251cy1hY2o0end2by5uZW9uYXV0aC5zYS1lYXN0LTEuYXdzLm5lb24udGVjaCJ9.46ooiW4xYVNxqNRs635UqP8zTD_4hf4xYy3q4gjwzKXEHqUuj8xDo3vMTKTDAo6_ECLD1wbjEpiWaHM6AXD4Dw
+    referer: https://www.moocafisio.com.br/
+    user-agent: Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/146.0.0.0 Safari/537.36
+    sec-ch-ua: "Chromium";v="146", "Not-A.Brand";v="24", "Google Chrome";v="146"
+    content-type: application/json
+    sec-ch-ua-mobile: ?0
+[GET] https://fisioflow-api.rafalegollas.workers.dev/api/appointments?dateFrom=2026-03-25&limit=100 => [200] 
+  Request headers:
+    sec-ch-ua-platform: "Linux"
+    authorization: Bearer eyJhbGciOiJFZERTQSIsImtpZCI6IjM1NDViNjdiLWJiMzItNDMzYi1hNDNkLTBhY2E5ODZkMDQ4YyJ9.eyJpYXQiOjE3NzUwMjE5NjgsIm5hbWUiOiJEci4gVGVzdGUgQXR1YWxpemFkbyIsImVtYWlsIjoicmFmYWVsLm1pbmF0dG9AeWFob28uY29tLmJyIiwiZW1haWxWZXJpZmllZCI6ZmFsc2UsImNyZWF0ZWRBdCI6IjIwMjYtMDMtMDVUMjM6NDE6MzQuNTg3WiIsInVwZGF0ZWRBdCI6IjIwMjYtMDMtMzBUMTg6NTQ6MjQuNDI0WiIsInJvbGUiOiJhdXRoZW50aWNhdGVkIiwiYmFubmVkIjpmYWxzZSwiYmFuUmVhc29uIjpudWxsLCJiYW5FeHBpcmVzIjpudWxsLCJpZCI6IjFiNTI3NzU5LWYxMzEtNGFjNC04NmJkLTdhM2UwZGViNDgyZiIsInN1YiI6IjFiNTI3NzU5LWYxMzEtNGFjNC04NmJkLTdhM2UwZGViNDgyZiIsImV4cCI6MTc3NTAyMjg2OCwiaXNzIjoiaHR0cHM6Ly9lcC13YW5kZXJpbmctYm9udXMtYWNqNHp3dm8ubmVvbmF1dGguc2EtZWFzdC0xLmF3cy5uZW9uLnRlY2giLCJhdWQiOiJodHRwczovL2VwLXdhbmRlcmluZy1ib251cy1hY2o0end2by5uZW9uYXV0aC5zYS1lYXN0LTEuYXdzLm5lb24udGVjaCJ9.46ooiW4xYVNxqNRs635UqP8zTD_4hf4xYy3q4gjwzKXEHqUuj8xDo3vMTKTDAo6_ECLD1wbjEpiWaHM6AXD4Dw
+    referer: https://www.moocafisio.com.br/
+    user-agent: Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/146.0.0.0 Safari/537.36
+    sec-ch-ua: "Chromium";v="146", "Not-A.Brand";v="24", "Google Chrome";v="146"
+    content-type: application/json
+    sec-ch-ua-mobile: ?0
+[GET] https://fisioflow-api.rafalegollas.workers.dev/api/appointments?limit=500 => [200] 
+  Request headers:
+    sec-ch-ua-platform: "Linux"
+    authorization: Bearer eyJhbGciOiJFZERTQSIsImtpZCI6IjM1NDViNjdiLWJiMzItNDMzYi1hNDNkLTBhY2E5ODZkMDQ4YyJ9.eyJpYXQiOjE3NzUwMjE5NjgsIm5hbWUiOiJEci4gVGVzdGUgQXR1YWxpemFkbyIsImVtYWlsIjoicmFmYWVsLm1pbmF0dG9AeWFob28uY29tLmJyIiwiZW1haWxWZXJpZmllZCI6ZmFsc2UsImNyZWF0ZWRBdCI6IjIwMjYtMDMtMDVUMjM6NDE6MzQuNTg3WiIsInVwZGF0ZWRBdCI6IjIwMjYtMDMtMzBUMTg6NTQ6MjQuNDI0WiIsInJvbGUiOiJhdXRoZW50aWNhdGVkIiwiYmFubmVkIjpmYWxzZSwiYmFuUmVhc29uIjpudWxsLCJiYW5FeHBpcmVzIjpudWxsLCJpZCI6IjFiNTI3NzU5LWYxMzEtNGFjNC04NmJkLTdhM2UwZGViNDgyZiIsInN1YiI6IjFiNTI3NzU5LWYxMzEtNGFjNC04NmJkLTdhM2UwZGViNDgyZiIsImV4cCI6MTc3NTAyMjg2OCwiaXNzIjoiaHR0cHM6Ly9lcC13YW5kZXJpbmctYm9udXMtYWNqNHp3dm8ubmVvbmF1dGguc2EtZWFzdC0xLmF3cy5uZW9uLnRlY2giLCJhdWQiOiJodHRwczovL2VwLXdhbmRlcmluZy1ib251cy1hY2o0end2by5uZW9uYXV0aC5zYS1lYXN0LTEuYXdzLm5lb24udGVjaCJ9.46ooiW4xYVNxqNRs635UqP8zTD_4hf4xYy3q4gjwzKXEHqUuj8xDo3vMTKTDAo6_ECLD1wbjEpiWaHM6AXD4Dw
+    referer: https://www.moocafisio.com.br/
+    user-agent: Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/146.0.0.0 Safari/537.36
+    sec-ch-ua: "Chromium";v="146", "Not-A.Brand";v="24", "Google Chrome";v="146"
+    content-type: application/json
+    sec-ch-ua-mobile: ?0
+[GET] https://fisioflow-api.rafalegollas.workers.dev/api/appointments?dateFrom=2026-03-25&limit=100 => [200] 
+  Request headers:
+    sec-ch-ua-platform: "Linux"
+    authorization: Bearer eyJhbGciOiJFZERTQSIsImtpZCI6IjM1NDViNjdiLWJiMzItNDMzYi1hNDNkLTBhY2E5ODZkMDQ4YyJ9.eyJpYXQiOjE3NzUwMjE5NjgsIm5hbWUiOiJEci4gVGVzdGUgQXR1YWxpemFkbyIsImVtYWlsIjoicmFmYWVsLm1pbmF0dG9AeWFob28uY29tLmJyIiwiZW1haWxWZXJpZmllZCI6ZmFsc2UsImNyZWF0ZWRBdCI6IjIwMjYtMDMtMDVUMjM6NDE6MzQuNTg3WiIsInVwZGF0ZWRBdCI6IjIwMjYtMDMtMzBUMTg6NTQ6MjQuNDI0WiIsInJvbGUiOiJhdXRoZW50aWNhdGVkIiwiYmFubmVkIjpmYWxzZSwiYmFuUmVhc29uIjpudWxsLCJiYW5FeHBpcmVzIjpudWxsLCJpZCI6IjFiNTI3NzU5LWYxMzEtNGFjNC04NmJkLTdhM2UwZGViNDgyZiIsInN1YiI6IjFiNTI3NzU5LWYxMzEtNGFjNC04NmJkLTdhM2UwZGViNDgyZiIsImV4cCI6MTc3NTAyMjg2OCwiaXNzIjoiaHR0cHM6Ly9lcC13YW5kZXJpbmctYm9udXMtYWNqNHp3dm8ubmVvbmF1dGguc2EtZWFzdC0xLmF3cy5uZW9uLnRlY2giLCJhdWQiOiJodHRwczovL2VwLXdhbmRlcmluZy1ib251cy1hY2o0end2by5uZW9uYXV0aC5zYS1lYXN0LTEuYXdzLm5lb24udGVjaCJ9.46ooiW4xYVNxqNRs635UqP8zTD_4hf4xYy3q4gjwzKXEHqUuj8xDo3vMTKTDAo6_ECLD1wbjEpiWaHM6AXD4Dw
+    referer: https://www.moocafisio.com.br/
+    user-agent: Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/146.0.0.0 Safari/537.36
+    sec-ch-ua: "Chromium";v="146", "Not-A.Brand";v="24", "Google Chrome";v="146"
+    content-type: application/json
+    sec-ch-ua-mobile: ?0
+[GET] https://fisioflow-api.rafalegollas.workers.dev/api/appointments?dateFrom=2026-04-01&dateTo=2026-04-02&limit=500 => [200] 
+  Request headers:
+    sec-ch-ua-platform: "Linux"
+    authorization: Bearer eyJhbGciOiJFZERTQSIsImtpZCI6IjM1NDViNjdiLWJiMzItNDMzYi1hNDNkLTBhY2E5ODZkMDQ4YyJ9.eyJpYXQiOjE3NzUwMjE5NjgsIm5hbWUiOiJEci4gVGVzdGUgQXR1YWxpemFkbyIsImVtYWlsIjoicmFmYWVsLm1pbmF0dG9AeWFob28uY29tLmJyIiwiZW1haWxWZXJpZmllZCI6ZmFsc2UsImNyZWF0ZWRBdCI6IjIwMjYtMDMtMDVUMjM6NDE6MzQuNTg3WiIsInVwZGF0ZWRBdCI6IjIwMjYtMDMtMzBUMTg6NTQ6MjQuNDI0WiIsInJvbGUiOiJhdXRoZW50aWNhdGVkIiwiYmFubmVkIjpmYWxzZSwiYmFuUmVhc29uIjpudWxsLCJiYW5FeHBpcmVzIjpudWxsLCJpZCI6IjFiNTI3NzU5LWYxMzEtNGFjNC04NmJkLTdhM2UwZGViNDgyZiIsInN1YiI6IjFiNTI3NzU5LWYxMzEtNGFjNC04NmJkLTdhM2UwZGViNDgyZiIsImV4cCI6MTc3NTAyMjg2OCwiaXNzIjoiaHR0cHM6Ly9lcC13YW5kZXJpbmctYm9udXMtYWNqNHp3dm8ubmVvbmF1dGguc2EtZWFzdC0xLmF3cy5uZW9uLnRlY2giLCJhdWQiOiJodHRwczovL2VwLXdhbmRlcmluZy1ib251cy1hY2o0end2by5uZW9uYXV0aC5zYS1lYXN0LTEuYXdzLm5lb24udGVjaCJ9.46ooiW4xYVNxqNRs635UqP8zTD_4hf4xYy3q4gjwzKXEHqUuj8xDo3vMTKTDAo6_ECLD1wbjEpiWaHM6AXD4Dw
+    referer: https://www.moocafisio.com.br/
+    user-agent: Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/146.0.0.0 Safari/537.36
+    sec-ch-ua: "Chromium";v="146", "Not-A.Brand";v="24", "Google Chrome";v="146"
+    content-type: application/json
+    sec-ch-ua-mobile: ?0
+[GET] https://fisioflow-api.rafalegollas.workers.dev/api/appointments?limit=500&dateFrom=2026-03-17&dateTo=2026-04-16 => [200] 
+  Request headers:
+    sec-ch-ua-platform: "Linux"
+    authorization: Bearer eyJhbGciOiJFZERTQSIsImtpZCI6IjM1NDViNjdiLWJiMzItNDMzYi1hNDNkLTBhY2E5ODZkMDQ4YyJ9.eyJpYXQiOjE3NzUwMjE5NjgsIm5hbWUiOiJEci4gVGVzdGUgQXR1YWxpemFkbyIsImVtYWlsIjoicmFmYWVsLm1pbmF0dG9AeWFob28uY29tLmJyIiwiZW1haWxWZXJpZmllZCI6ZmFsc2UsImNyZWF0ZWRBdCI6IjIwMjYtMDMtMDVUMjM6NDE6MzQuNTg3WiIsInVwZGF0ZWRBdCI6IjIwMjYtMDMtMzBUMTg6NTQ6MjQuNDI0WiIsInJvbGUiOiJhdXRoZW50aWNhdGVkIiwiYmFubmVkIjpmYWxzZSwiYmFuUmVhc29uIjpudWxsLCJiYW5FeHBpcmVzIjpudWxsLCJpZCI6IjFiNTI3NzU5LWYxMzEtNGFjNC04NmJkLTdhM2UwZGViNDgyZiIsInN1YiI6IjFiNTI3NzU5LWYxMzEtNGFjNC04NmJkLTdhM2UwZGViNDgyZiIsImV4cCI6MTc3NTAyMjg2OCwiaXNzIjoiaHR0cHM6Ly9lcC13YW5kZXJpbmctYm9udXMtYWNqNHp3dm8ubmVvbmF1dGguc2EtZWFzdC0xLmF3cy5uZW9uLnRlY2giLCJhdWQiOiJodHRwczovL2VwLXdhbmRlcmluZy1ib251cy1hY2o0end2by5uZW9uYXV0aC5zYS1lYXN0LTEuYXdzLm5lb24udGVjaCJ9.46ooiW4xYVNxqNRs635UqP8zTD_4hf4xYy3q4gjwzKXEHqUuj8xDo3vMTKTDAo6_ECLD1wbjEpiWaHM6AXD4Dw
+    referer: https://www.moocafisio.com.br/
+    user-agent: Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/146.0.0.0 Safari/537.36
+    sec-ch-ua: "Chromium";v="146", "Not-A.Brand";v="24", "Google Chrome";v="146"
+    content-type: application/json
+    sec-ch-ua-mobile: ?0
+[POST] https://fisioflow-api.rafalegollas.workers.dev/api/appointments => [500] 
+  Request headers:
+    sec-ch-ua-platform: "Linux"
+    authorization: Bearer eyJhbGciOiJFZERTQSIsImtpZCI6IjM1NDViNjdiLWJiMzItNDMzYi1hNDNkLTBhY2E5ODZkMDQ4YyJ9.eyJpYXQiOjE3NzUwMjE5NjgsIm5hbWUiOiJEci4gVGVzdGUgQXR1YWxpemFkbyIsImVtYWlsIjoicmFmYWVsLm1pbmF0dG9AeWFob28uY29tLmJyIiwiZW1haWxWZXJpZmllZCI6ZmFsc2UsImNyZWF0ZWRBdCI6IjIwMjYtMDMtMDVUMjM6NDE6MzQuNTg3WiIsInVwZGF0ZWRBdCI6IjIwMjYtMDMtMzBUMTg6NTQ6MjQuNDI0WiIsInJvbGUiOiJhdXRoZW50aWNhdGVkIiwiYmFubmVkIjpmYWxzZSwiYmFuUmVhc29uIjpudWxsLCJiYW5FeHBpcmVzIjpudWxsLCJpZCI6IjFiNTI3NzU5LWYxMzEtNGFjNC04NmJkLTdhM2UwZGViNDgyZiIsInN1YiI6IjFiNTI3NzU5LWYxMzEtNGFjNC04NmJkLTdhM2UwZGViNDgyZiIsImV4cCI6MTc3NTAyMjg2OCwiaXNzIjoiaHR0cHM6Ly9lcC13YW5kZXJpbmctYm9udXMtYWNqNHp3dm8ubmVvbmF1dGguc2EtZWFzdC0xLmF3cy5uZW9uLnRlY2giLCJhdWQiOiJodHRwczovL2VwLXdhbmRlcmluZy1ib251cy1hY2o0end2by5uZW9uYXV0aC5zYS1lYXN0LTEuYXdzLm5lb24udGVjaCJ9.46ooiW4xYVNxqNRs635UqP8zTD_4hf4xYy3q4gjwzKXEHqUuj8xDo3vMTKTDAo6_ECLD1wbjEpiWaHM6AXD4Dw
+    referer: https://www.moocafisio.com.br/
+    user-agent: Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/146.0.0.0 Safari/537.36
+    sec-ch-ua: "Chromium";v="146", "Not-A.Brand";v="24", "Google Chrome";v="146"
+    content-type: application/json
+    sec-ch-ua-mobile: ?0
+  Request body: {"patient_id":"3ec7ea02-8772-4aec-9dc7-ba0571130b78","therapist_id":"1b527759-f131-4ac4-86bd-7a3e0deb482f","date":"2026-04-10","start_time":"07:00","end_time":"08:00","status":"avaliacao","payment_status":"pending","notes":"","session_type":"individual","session_package_id":null,"payment_method":"","organizationId":"00000000-0000-0000-0000-000000000001","ignoreCapacity":false}
+[POST] https://fisioflow-api.rafalegollas.workers.dev/api/appointments => [500] 
+  Request headers:
+    sec-ch-ua-platform: "Linux"
+    authorization: Bearer eyJhbGciOiJFZERTQSIsImtpZCI6IjM1NDViNjdiLWJiMzItNDMzYi1hNDNkLTBhY2E5ODZkMDQ4YyJ9.eyJpYXQiOjE3NzUwMjE5NjgsIm5hbWUiOiJEci4gVGVzdGUgQXR1YWxpemFkbyIsImVtYWlsIjoicmFmYWVsLm1pbmF0dG9AeWFob28uY29tLmJyIiwiZW1haWxWZXJpZmllZCI6ZmFsc2UsImNyZWF0ZWRBdCI6IjIwMjYtMDMtMDVUMjM6NDE6MzQuNTg3WiIsInVwZGF0ZWRBdCI6IjIwMjYtMDMtMzBUMTg6NTQ6MjQuNDI0WiIsInJvbGUiOiJhdXRoZW50aWNhdGVkIiwiYmFubmVkIjpmYWxzZSwiYmFuUmVhc29uIjpudWxsLCJiYW5FeHBpcmVzIjpudWxsLCJpZCI6IjFiNTI3NzU5LWYxMzEtNGFjNC04NmJkLTdhM2UwZGViNDgyZiIsInN1YiI6IjFiNTI3NzU5LWYxMzEtNGFjNC04NmJkLTdhM2UwZGViNDgyZiIsImV4cCI6MTc3NTAyMjg2OCwiaXNzIjoiaHR0cHM6Ly9lcC13YW5kZXJpbmctYm9udXMtYWNqNHp3dm8ubmVvbmF1dGguc2EtZWFzdC0xLmF3cy5uZW9uLnRlY2giLCJhdWQiOiJodHRwczovL2VwLXdhbmRlcmluZy1ib251cy1hY2o0end2by5uZW9uYXV0aC5zYS1lYXN0LTEuYXdzLm5lb24udGVjaCJ9.46ooiW4xYVNxqNRs635UqP8zTD_4hf4xYy3q4gjwzKXEHqUuj8xDo3vMTKTDAo6_ECLD1wbjEpiWaHM6AXD4Dw
+    referer: https://www.moocafisio.com.br/
+    user-agent: Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/146.0.0.0 Safari/537.36
+    sec-ch-ua: "Chromium";v="146", "Not-A.Brand";v="24", "Google Chrome";v="146"
+    content-type: application/json
+    sec-ch-ua-mobile: ?0
+  Request body: {"patient_id":"3ec7ea02-8772-4aec-9dc7-ba0571130b78","therapist_id":"1b527759-f131-4ac4-86bd-7a3e0deb482f","date":"2026-04-10","start_time":"07:00","end_time":"08:00","status":"avaliacao","payment_status":"pending","notes":"","session_type":"individual","session_package_id":null,"payment_method":"","organizationId":"00000000-0000-0000-0000-000000000001","ignoreCapacity":false}
+[POST] https://fisioflow-api.rafalegollas.workers.dev/api/appointments => [500] 
+  Request headers:
+    sec-ch-ua-platform: "Linux"
+    authorization: Bearer eyJhbGciOiJFZERTQSIsImtpZCI6IjM1NDViNjdiLWJiMzItNDMzYi1hNDNkLTBhY2E5ODZkMDQ4YyJ9.eyJpYXQiOjE3NzUwMjE5NjgsIm5hbWUiOiJEci4gVGVzdGUgQXR1YWxpemFkbyIsImVtYWlsIjoicmFmYWVsLm1pbmF0dG9AeWFob28uY29tLmJyIiwiZW1haWxWZXJpZmllZCI6ZmFsc2UsImNyZWF0ZWRBdCI6IjIwMjYtMDMtMDVUMjM6NDE6MzQuNTg3WiIsInVwZGF0ZWRBdCI6IjIwMjYtMDMtMzBUMTg6NTQ6MjQuNDI0WiIsInJvbGUiOiJhdXRoZW50aWNhdGVkIiwiYmFubmVkIjpmYWxzZSwiYmFuUmVhc29uIjpudWxsLCJiYW5FeHBpcmVzIjpudWxsLCJpZCI6IjFiNTI3NzU5LWYxMzEtNGFjNC04NmJkLTdhM2UwZGViNDgyZiIsInN1YiI6IjFiNTI3NzU5LWYxMzEtNGFjNC04NmJkLTdhM2UwZGViNDgyZiIsImV4cCI6MTc3NTAyMjg2OCwiaXNzIjoiaHR0cHM6Ly9lcC13YW5kZXJpbmctYm9udXMtYWNqNHp3dm8ubmVvbmF1dGguc2EtZWFzdC0xLmF3cy5uZW9uLnRlY2giLCJhdWQiOiJodHRwczovL2VwLXdhbmRlcmluZy1ib251cy1hY2o0end2by5uZW9uYXV0aC5zYS1lYXN0LTEuYXdzLm5lb24udGVjaCJ9.46ooiW4xYVNxqNRs635UqP8zTD_4hf4xYy3q4gjwzKXEHqUuj8xDo3vMTKTDAo6_ECLD1wbjEpiWaHM6AXD4Dw
+    referer: https://www.moocafisio.com.br/
+    user-agent: Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/146.0.0.0 Safari/537.36
+    sec-ch-ua: "Chromium";v="146", "Not-A.Brand";v="24", "Google Chrome";v="146"
+    content-type: application/json
+    sec-ch-ua-mobile: ?0
+  Request body: {"patient_id":"3ec7ea02-8772-4aec-9dc7-ba0571130b78","therapist_id":"1b527759-f131-4ac4-86bd-7a3e0deb482f","date":"2026-04-10","start_time":"07:00","end_time":"08:00","status":"avaliacao","payment_status":"pending","notes":"","session_type":"individual","session_package_id":null,"payment_method":"","organizationId":"00000000-0000-0000-0000-000000000001","ignoreCapacity":false}
+[POST] https://fisioflow-api.rafalegollas.workers.dev/api/appointments => [500] 
+  Request headers:
+    sec-ch-ua-platform: "Linux"
+    authorization: Bearer eyJhbGciOiJFZERTQSIsImtpZCI6IjM1NDViNjdiLWJiMzItNDMzYi1hNDNkLTBhY2E5ODZkMDQ4YyJ9.eyJpYXQiOjE3NzUwMjE5NjgsIm5hbWUiOiJEci4gVGVzdGUgQXR1YWxpemFkbyIsImVtYWlsIjoicmFmYWVsLm1pbmF0dG9AeWFob28uY29tLmJyIiwiZW1haWxWZXJpZmllZCI6ZmFsc2UsImNyZWF0ZWRBdCI6IjIwMjYtMDMtMDVUMjM6NDE6MzQuNTg3WiIsInVwZGF0ZWRBdCI6IjIwMjYtMDMtMzBUMTg6NTQ6MjQuNDI0WiIsInJvbGUiOiJhdXRoZW50aWNhdGVkIiwiYmFubmVkIjpmYWxzZSwiYmFuUmVhc29uIjpudWxsLCJiYW5FeHBpcmVzIjpudWxsLCJpZCI6IjFiNTI3NzU5LWYxMzEtNGFjNC04NmJkLTdhM2UwZGViNDgyZiIsInN1YiI6IjFiNTI3NzU5LWYxMzEtNGFjNC04NmJkLTdhM2UwZGViNDgyZiIsImV4cCI6MTc3NTAyMjg2OCwiaXNzIjoiaHR0cHM6Ly9lcC13YW5kZXJpbmctYm9udXMtYWNqNHp3dm8ubmVvbmF1dGguc2EtZWFzdC0xLmF3cy5uZW9uLnRlY2giLCJhdWQiOiJodHRwczovL2VwLXdhbmRlcmluZy1ib251cy1hY2o0end2by5uZW9uYXV0aC5zYS1lYXN0LTEuYXdzLm5lb24udGVjaCJ9.46ooiW4xYVNxqNRs635UqP8zTD_4hf4xYy3q4gjwzKXEHqUuj8xDo3vMTKTDAo6_ECLD1wbjEpiWaHM6AXD4Dw
+    referer: https://www.moocafisio.com.br/
+    user-agent: Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/146.0.0.0 Safari/537.36
+    sec-ch-ua: "Chromium";v="146", "Not-A.Brand";v="24", "Google Chrome";v="146"
+    content-type: application/json
+    sec-ch-ua-mobile: ?0
+  Request body: {"patient_id":"3ec7ea02-8772-4aec-9dc7-ba0571130b78","therapist_id":"1b527759-f131-4ac4-86bd-7a3e0deb482f","date":"2026-04-10","start_time":"07:00","end_time":"08:00","status":"avaliacao","payment_status":"pending","notes":"","session_type":"individual","session_package_id":null,"payment_method":"","organizationId":"00000000-0000-0000-0000-000000000001","ignoreCapacity":false}
+[GET] https://fisioflow-api.rafalegollas.workers.dev/api/appointments?dateFrom=2026-03-25&limit=100 => [200] 
+  Request headers:
+    sec-ch-ua-platform: "Linux"
+    authorization: Bearer eyJhbGciOiJFZERTQSIsImtpZCI6IjM1NDViNjdiLWJiMzItNDMzYi1hNDNkLTBhY2E5ODZkMDQ4YyJ9.eyJpYXQiOjE3NzUwMjE5NjgsIm5hbWUiOiJEci4gVGVzdGUgQXR1YWxpemFkbyIsImVtYWlsIjoicmFmYWVsLm1pbmF0dG9AeWFob28uY29tLmJyIiwiZW1haWxWZXJpZmllZCI6ZmFsc2UsImNyZWF0ZWRBdCI6IjIwMjYtMDMtMDVUMjM6NDE6MzQuNTg3WiIsInVwZGF0ZWRBdCI6IjIwMjYtMDMtMzBUMTg6NTQ6MjQuNDI0WiIsInJvbGUiOiJhdXRoZW50aWNhdGVkIiwiYmFubmVkIjpmYWxzZSwiYmFuUmVhc29uIjpudWxsLCJiYW5FeHBpcmVzIjpudWxsLCJpZCI6IjFiNTI3NzU5LWYxMzEtNGFjNC04NmJkLTdhM2UwZGViNDgyZiIsInN1YiI6IjFiNTI3NzU5LWYxMzEtNGFjNC04NmJkLTdhM2UwZGViNDgyZiIsImV4cCI6MTc3NTAyMjg2OCwiaXNzIjoiaHR0cHM6Ly9lcC13YW5kZXJpbmctYm9udXMtYWNqNHp3dm8ubmVvbmF1dGguc2EtZWFzdC0xLmF3cy5uZW9uLnRlY2giLCJhdWQiOiJodHRwczovL2VwLXdhbmRlcmluZy1ib251cy1hY2o0end2by5uZW9uYXV0aC5zYS1lYXN0LTEuYXdzLm5lb24udGVjaCJ9.46ooiW4xYVNxqNRs635UqP8zTD_4hf4xYy3q4gjwzKXEHqUuj8xDo3vMTKTDAo6_ECLD1wbjEpiWaHM6AXD4Dw
+    referer: https://www.moocafisio.com.br/
+    user-agent: Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/146.0.0.0 Safari/537.36
+    sec-ch-ua: "Chromium";v="146", "Not-A.Brand";v="24", "Google Chrome";v="146"
+    content-type: application/json
+    sec-ch-ua-mobile: ?0
+[POST] https://fisioflow-api.rafalegollas.workers.dev/api/appointments => [500] 
+  Request headers:
+    sec-ch-ua-platform: "Linux"
+    authorization: Bearer eyJhbGciOiJFZERTQSIsImtpZCI6IjM1NDViNjdiLWJiMzItNDMzYi1hNDNkLTBhY2E5ODZkMDQ4YyJ9.eyJpYXQiOjE3NzUwMjE5NjgsIm5hbWUiOiJEci4gVGVzdGUgQXR1YWxpemFkbyIsImVtYWlsIjoicmFmYWVsLm1pbmF0dG9AeWFob28uY29tLmJyIiwiZW1haWxWZXJpZmllZCI6ZmFsc2UsImNyZWF0ZWRBdCI6IjIwMjYtMDMtMDVUMjM6NDE6MzQuNTg3WiIsInVwZGF0ZWRBdCI6IjIwMjYtMDMtMzBUMTg6NTQ6MjQuNDI0WiIsInJvbGUiOiJhdXRoZW50aWNhdGVkIiwiYmFubmVkIjpmYWxzZSwiYmFuUmVhc29uIjpudWxsLCJiYW5FeHBpcmVzIjpudWxsLCJpZCI6IjFiNTI3NzU5LWYxMzEtNGFjNC04NmJkLTdhM2UwZGViNDgyZiIsInN1YiI6IjFiNTI3NzU5LWYxMzEtNGFjNC04NmJkLTdhM2UwZGViNDgyZiIsImV4cCI6MTc3NTAyMjg2OCwiaXNzIjoiaHR0cHM6Ly9lcC13YW5kZXJpbmctYm9udXMtYWNqNHp3dm8ubmVvbmF1dGguc2EtZWFzdC0xLmF3cy5uZW9uLnRlY2giLCJhdWQiOiJodHRwczovL2VwLXdhbmRlcmluZy1ib251cy1hY2o0end2by5uZW9uYXV0aC5zYS1lYXN0LTEuYXdzLm5lb24udGVjaCJ9.46ooiW4xYVNxqNRs635UqP8zTD_4hf4xYy3q4gjwzKXEHqUuj8xDo3vMTKTDAo6_ECLD1wbjEpiWaHM6AXD4Dw
+    referer: https://www.moocafisio.com.br/
+    user-agent: Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/146.0.0.0 Safari/537.36
+    sec-ch-ua: "Chromium";v="146", "Not-A.Brand";v="24", "Google Chrome";v="146"
+    content-type: application/json
+    sec-ch-ua-mobile: ?0
+  Request body: {"patient_id":"3ec7ea02-8772-4aec-9dc7-ba0571130b78","therapist_id":"1b527759-f131-4ac4-86bd-7a3e0deb482f","date":"2026-04-10","start_time":"07:00","end_time":"08:00","status":"avaliacao","payment_status":"pending","notes":"","session_type":"individual","session_package_id":null,"payment_method":"","organizationId":"00000000-0000-0000-0000-000000000001","ignoreCapacity":false}
+[POST] https://fisioflow-api.rafalegollas.workers.dev/api/appointments => [500] 
+  Request headers:
+    sec-ch-ua-platform: "Linux"
+    authorization: Bearer eyJhbGciOiJFZERTQSIsImtpZCI6IjM1NDViNjdiLWJiMzItNDMzYi1hNDNkLTBhY2E5ODZkMDQ4YyJ9.eyJpYXQiOjE3NzUwMjE5NjgsIm5hbWUiOiJEci4gVGVzdGUgQXR1YWxpemFkbyIsImVtYWlsIjoicmFmYWVsLm1pbmF0dG9AeWFob28uY29tLmJyIiwiZW1haWxWZXJpZmllZCI6ZmFsc2UsImNyZWF0ZWRBdCI6IjIwMjYtMDMtMDVUMjM6NDE6MzQuNTg3WiIsInVwZGF0ZWRBdCI6IjIwMjYtMDMtMzBUMTg6NTQ6MjQuNDI0WiIsInJvbGUiOiJhdXRoZW50aWNhdGVkIiwiYmFubmVkIjpmYWxzZSwiYmFuUmVhc29uIjpudWxsLCJiYW5FeHBpcmVzIjpudWxsLCJpZCI6IjFiNTI3NzU5LWYxMzEtNGFjNC04NmJkLTdhM2UwZGViNDgyZiIsInN1YiI6IjFiNTI3NzU5LWYxMzEtNGFjNC04NmJkLTdhM2UwZGViNDgyZiIsImV4cCI6MTc3NTAyMjg2OCwiaXNzIjoiaHR0cHM6Ly9lcC13YW5kZXJpbmctYm9udXMtYWNqNHp3dm8ubmVvbmF1dGguc2EtZWFzdC0xLmF3cy5uZW9uLnRlY2giLCJhdWQiOiJodHRwczovL2VwLXdhbmRlcmluZy1ib251cy1hY2o0end2by5uZW9uYXV0aC5zYS1lYXN0LTEuYXdzLm5lb24udGVjaCJ9.46ooiW4xYVNxqNRs635UqP8zTD_4hf4xYy3q4gjwzKXEHqUuj8xDo3vMTKTDAo6_ECLD1wbjEpiWaHM6AXD4Dw
+    referer: https://www.moocafisio.com.br/
+    user-agent: Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/146.0.0.0 Safari/537.36
+    sec-ch-ua: "Chromium";v="146", "Not-A.Brand";v="24", "Google Chrome";v="146"
+    content-type: application/json
+    sec-ch-ua-mobile: ?0
+  Request body: {"patient_id":"3ec7ea02-8772-4aec-9dc7-ba0571130b78","therapist_id":"1b527759-f131-4ac4-86bd-7a3e0deb482f","date":"2026-04-10","start_time":"07:00","end_time":"08:00","status":"avaliacao","payment_status":"pending","notes":"","session_type":"individual","session_package_id":null,"payment_method":"","organizationId":"00000000-0000-0000-0000-000000000001","ignoreCapacity":false}
+[POST] https://fisioflow-api.rafalegollas.workers.dev/api/appointments => [500] 
+  Request headers:
+    sec-ch-ua-platform: "Linux"
+    authorization: Bearer eyJhbGciOiJFZERTQSIsImtpZCI6IjM1NDViNjdiLWJiMzItNDMzYi1hNDNkLTBhY2E5ODZkMDQ4YyJ9.eyJpYXQiOjE3NzUwMjE5NjgsIm5hbWUiOiJEci4gVGVzdGUgQXR1YWxpemFkbyIsImVtYWlsIjoicmFmYWVsLm1pbmF0dG9AeWFob28uY29tLmJyIiwiZW1haWxWZXJpZmllZCI6ZmFsc2UsImNyZWF0ZWRBdCI6IjIwMjYtMDMtMDVUMjM6NDE6MzQuNTg3WiIsInVwZGF0ZWRBdCI6IjIwMjYtMDMtMzBUMTg6NTQ6MjQuNDI0WiIsInJvbGUiOiJhdXRoZW50aWNhdGVkIiwiYmFubmVkIjpmYWxzZSwiYmFuUmVhc29uIjpudWxsLCJiYW5FeHBpcmVzIjpudWxsLCJpZCI6IjFiNTI3NzU5LWYxMzEtNGFjNC04NmJkLTdhM2UwZGViNDgyZiIsInN1YiI6IjFiNTI3NzU5LWYxMzEtNGFjNC04NmJkLTdhM2UwZGViNDgyZiIsImV4cCI6MTc3NTAyMjg2OCwiaXNzIjoiaHR0cHM6Ly9lcC13YW5kZXJpbmctYm9udXMtYWNqNHp3dm8ubmVvbmF1dGguc2EtZWFzdC0xLmF3cy5uZW9uLnRlY2giLCJhdWQiOiJodHRwczovL2VwLXdhbmRlcmluZy1ib251cy1hY2o0end2by5uZW9uYXV0aC5zYS1lYXN0LTEuYXdzLm5lb24udGVjaCJ9.46ooiW4xYVNxqNRs635UqP8zTD_4hf4xYy3q4gjwzKXEHqUuj8xDo3vMTKTDAo6_ECLD1wbjEpiWaHM6AXD4Dw
+    referer: https://www.moocafisio.com.br/
+    user-agent: Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/146.0.0.0 Safari/537.36
+    sec-ch-ua: "Chromium";v="146", "Not-A.Brand";v="24", "Google Chrome";v="146"
+    content-type: application/json
+    sec-ch-ua-mobile: ?0
+  Request body: {"patient_id":"3ec7ea02-8772-4aec-9dc7-ba0571130b78","therapist_id":"1b527759-f131-4ac4-86bd-7a3e0deb482f","date":"2026-04-10","start_time":"07:00","end_time":"08:00","status":"avaliacao","payment_status":"pending","notes":"","session_type":"individual","session_package_id":null,"payment_method":"","organizationId":"00000000-0000-0000-0000-000000000001","ignoreCapacity":false}
+[POST] https://fisioflow-api.rafalegollas.workers.dev/api/appointments => [500] 
+  Request headers:
+    sec-ch-ua-platform: "Linux"
+    authorization: Bearer eyJhbGciOiJFZERTQSIsImtpZCI6IjM1NDViNjdiLWJiMzItNDMzYi1hNDNkLTBhY2E5ODZkMDQ4YyJ9.eyJpYXQiOjE3NzUwMjE5NjgsIm5hbWUiOiJEci4gVGVzdGUgQXR1YWxpemFkbyIsImVtYWlsIjoicmFmYWVsLm1pbmF0dG9AeWFob28uY29tLmJyIiwiZW1haWxWZXJpZmllZCI6ZmFsc2UsImNyZWF0ZWRBdCI6IjIwMjYtMDMtMDVUMjM6NDE6MzQuNTg3WiIsInVwZGF0ZWRBdCI6IjIwMjYtMDMtMzBUMTg6NTQ6MjQuNDI0WiIsInJvbGUiOiJhdXRoZW50aWNhdGVkIiwiYmFubmVkIjpmYWxzZSwiYmFuUmVhc29uIjpudWxsLCJiYW5FeHBpcmVzIjpudWxsLCJpZCI6IjFiNTI3NzU5LWYxMzEtNGFjNC04NmJkLTdhM2UwZGViNDgyZiIsInN1YiI6IjFiNTI3NzU5LWYxMzEtNGFjNC04NmJkLTdhM2UwZGViNDgyZiIsImV4cCI6MTc3NTAyMjg2OCwiaXNzIjoiaHR0cHM6Ly9lcC13YW5kZXJpbmctYm9udXMtYWNqNHp3dm8ubmVvbmF1dGguc2EtZWFzdC0xLmF3cy5uZW9uLnRlY2giLCJhdWQiOiJodHRwczovL2VwLXdhbmRlcmluZy1ib251cy1hY2o0end2by5uZW9uYXV0aC5zYS1lYXN0LTEuYXdzLm5lb24udGVjaCJ9.46ooiW4xYVNxqNRs635UqP8zTD_4hf4xYy3q4gjwzKXEHqUuj8xDo3vMTKTDAo6_ECLD1wbjEpiWaHM6AXD4Dw
+    referer: https://www.moocafisio.com.br/
+    user-agent: Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/146.0.0.0 Safari/537.36
+    sec-ch-ua: "Chromium";v="146", "Not-A.Brand";v="24", "Google Chrome";v="146"
+    content-type: application/json
+    sec-ch-ua-mobile: ?0
+  Request body: {"patient_id":"3ec7ea02-8772-4aec-9dc7-ba0571130b78","therapist_id":"1b527759-f131-4ac4-86bd-7a3e0deb482f","date":"2026-04-10","start_time":"07:00","end_time":"08:00","status":"avaliacao","payment_status":"pending","notes":"","session_type":"individual","session_package_id":null,"payment_method":"","organizationId":"00000000-0000-0000-0000-000000000001","ignoreCapacity":false}
+[POST] https://fisioflow-api.rafalegollas.workers.dev/api/appointments => [500] 
+  Request headers:
+    sec-ch-ua-platform: "Linux"
+    authorization: Bearer eyJhbGciOiJFZERTQSIsImtpZCI6IjM1NDViNjdiLWJiMzItNDMzYi1hNDNkLTBhY2E5ODZkMDQ4YyJ9.eyJpYXQiOjE3NzUwMjE5NjgsIm5hbWUiOiJEci4gVGVzdGUgQXR1YWxpemFkbyIsImVtYWlsIjoicmFmYWVsLm1pbmF0dG9AeWFob28uY29tLmJyIiwiZW1haWxWZXJpZmllZCI6ZmFsc2UsImNyZWF0ZWRBdCI6IjIwMjYtMDMtMDVUMjM6NDE6MzQuNTg3WiIsInVwZGF0ZWRBdCI6IjIwMjYtMDMtMzBUMTg6NTQ6MjQuNDI0WiIsInJvbGUiOiJhdXRoZW50aWNhdGVkIiwiYmFubmVkIjpmYWxzZSwiYmFuUmVhc29uIjpudWxsLCJiYW5FeHBpcmVzIjpudWxsLCJpZCI6IjFiNTI3NzU5LWYxMzEtNGFjNC04NmJkLTdhM2UwZGViNDgyZiIsInN1YiI6IjFiNTI3NzU5LWYxMzEtNGFjNC04NmJkLTdhM2UwZGViNDgyZiIsImV4cCI6MTc3NTAyMjg2OCwiaXNzIjoiaHR0cHM6Ly9lcC13YW5kZXJpbmctYm9udXMtYWNqNHp3dm8ubmVvbmF1dGguc2EtZWFzdC0xLmF3cy5uZW9uLnRlY2giLCJhdWQiOiJodHRwczovL2VwLXdhbmRlcmluZy1ib251cy1hY2o0end2by5uZW9uYXV0aC5zYS1lYXN0LTEuYXdzLm5lb24udGVjaCJ9.46ooiW4xYVNxqNRs635UqP8zTD_4hf4xYy3q4gjwzKXEHqUuj8xDo3vMTKTDAo6_ECLD1wbjEpiWaHM6AXD4Dw
+    referer: https://www.moocafisio.com.br/
+    user-agent: Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/146.0.0.0 Safari/537.36
+    sec-ch-ua: "Chromium";v="146", "Not-A.Brand";v="24", "Google Chrome";v="146"
+    content-type: application/json
+    sec-ch-ua-mobile: ?0
+  Request body: {"patient_id":"3ec7ea02-8772-4aec-9dc7-ba0571130b78","therapist_id":"1b527759-f131-4ac4-86bd-7a3e0deb482f","date":"2026-04-10","start_time":"07:00","end_time":"08:00","status":"avaliacao","payment_status":"pending","notes":"","session_type":"individual","session_package_id":null,"payment_method":"","organizationId":"00000000-0000-0000-0000-000000000001","ignoreCapacity":false}
+[POST] https://fisioflow-api.rafalegollas.workers.dev/api/appointments => [500] 
+  Request headers:
+    sec-ch-ua-platform: "Linux"
+    authorization: Bearer eyJhbGciOiJFZERTQSIsImtpZCI6IjM1NDViNjdiLWJiMzItNDMzYi1hNDNkLTBhY2E5ODZkMDQ4YyJ9.eyJpYXQiOjE3NzUwMjE5NjgsIm5hbWUiOiJEci4gVGVzdGUgQXR1YWxpemFkbyIsImVtYWlsIjoicmFmYWVsLm1pbmF0dG9AeWFob28uY29tLmJyIiwiZW1haWxWZXJpZmllZCI6ZmFsc2UsImNyZWF0ZWRBdCI6IjIwMjYtMDMtMDVUMjM6NDE6MzQuNTg3WiIsInVwZGF0ZWRBdCI6IjIwMjYtMDMtMzBUMTg6NTQ6MjQuNDI0WiIsInJvbGUiOiJhdXRoZW50aWNhdGVkIiwiYmFubmVkIjpmYWxzZSwiYmFuUmVhc29uIjpudWxsLCJiYW5FeHBpcmVzIjpudWxsLCJpZCI6IjFiNTI3NzU5LWYxMzEtNGFjNC04NmJkLTdhM2UwZGViNDgyZiIsInN1YiI6IjFiNTI3NzU5LWYxMzEtNGFjNC04NmJkLTdhM2UwZGViNDgyZiIsImV4cCI6MTc3NTAyMjg2OCwiaXNzIjoiaHR0cHM6Ly9lcC13YW5kZXJpbmctYm9udXMtYWNqNHp3dm8ubmVvbmF1dGguc2EtZWFzdC0xLmF3cy5uZW9uLnRlY2giLCJhdWQiOiJodHRwczovL2VwLXdhbmRlcmluZy1ib251cy1hY2o0end2by5uZW9uYXV0aC5zYS1lYXN0LTEuYXdzLm5lb24udGVjaCJ9.46ooiW4xYVNxqNRs635UqP8zTD_4hf4xYy3q4gjwzKXEHqUuj8xDo3vMTKTDAo6_ECLD1wbjEpiWaHM6AXD4Dw
+    referer: https://www.moocafisio.com.br/
+    user-agent: Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/146.0.0.0 Safari/537.36
+    sec-ch-ua: "Chromium";v="146", "Not-A.Brand";v="24", "Google Chrome";v="146"
+    content-type: application/json
+    sec-ch-ua-mobile: ?0
+  Request body: {"patient_id":"3ec7ea02-8772-4aec-9dc7-ba0571130b78","therapist_id":"1b527759-f131-4ac4-86bd-7a3e0deb482f","date":"2026-04-10","start_time":"07:00","end_time":"08:00","status":"avaliacao","payment_status":"pending","notes":"","session_type":"individual","session_package_id":null,"payment_method":"","organizationId":"00000000-0000-0000-0000-000000000001","ignoreCapacity":false}
+[POST] https://fisioflow-api.rafalegollas.workers.dev/api/appointments => [500] 
+  Request headers:
+    sec-ch-ua-platform: "Linux"
+    authorization: Bearer eyJhbGciOiJFZERTQSIsImtpZCI6IjM1NDViNjdiLWJiMzItNDMzYi1hNDNkLTBhY2E5ODZkMDQ4YyJ9.eyJpYXQiOjE3NzUwMjE5NjgsIm5hbWUiOiJEci4gVGVzdGUgQXR1YWxpemFkbyIsImVtYWlsIjoicmFmYWVsLm1pbmF0dG9AeWFob28uY29tLmJyIiwiZW1haWxWZXJpZmllZCI6ZmFsc2UsImNyZWF0ZWRBdCI6IjIwMjYtMDMtMDVUMjM6NDE6MzQuNTg3WiIsInVwZGF0ZWRBdCI6IjIwMjYtMDMtMzBUMTg6NTQ6MjQuNDI0WiIsInJvbGUiOiJhdXRoZW50aWNhdGVkIiwiYmFubmVkIjpmYWxzZSwiYmFuUmVhc29uIjpudWxsLCJiYW5FeHBpcmVzIjpudWxsLCJpZCI6IjFiNTI3NzU5LWYxMzEtNGFjNC04NmJkLTdhM2UwZGViNDgyZiIsInN1YiI6IjFiNTI3NzU5LWYxMzEtNGFjNC04NmJkLTdhM2UwZGViNDgyZiIsImV4cCI6MTc3NTAyMjg2OCwiaXNzIjoiaHR0cHM6Ly9lcC13YW5kZXJpbmctYm9udXMtYWNqNHp3dm8ubmVvbmF1dGguc2EtZWFzdC0xLmF3cy5uZW9uLnRlY2giLCJhdWQiOiJodHRwczovL2VwLXdhbmRlcmluZy1ib251cy1hY2o0end2by5uZW9uYXV0aC5zYS1lYXN0LTEuYXdzLm5lb24udGVjaCJ9.46ooiW4xYVNxqNRs635UqP8zTD_4hf4xYy3q4gjwzKXEHqUuj8xDo3vMTKTDAo6_ECLD1wbjEpiWaHM6AXD4Dw
+    referer: https://www.moocafisio.com.br/
+    user-agent: Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/146.0.0.0 Safari/537.36
+    sec-ch-ua: "Chromium";v="146", "Not-A.Brand";v="24", "Google Chrome";v="146"
+    content-type: application/json
+    sec-ch-ua-mobile: ?0
+  Request body: {"patient_id":"3ec7ea02-8772-4aec-9dc7-ba0571130b78","therapist_id":"1b527759-f131-4ac4-86bd-7a3e0deb482f","date":"2026-04-10","start_time":"07:00","end_time":"08:00","status":"avaliacao","payment_status":"pending","notes":"","session_type":"individual","session_package_id":null,"payment_method":"","organizationId":"00000000-0000-0000-0000-000000000001","ignoreCapacity":false}
+[POST] https://fisioflow-api.rafalegollas.workers.dev/api/appointments => [500] 
+  Request headers:
+    sec-ch-ua-platform: "Linux"
+    authorization: Bearer eyJhbGciOiJFZERTQSIsImtpZCI6IjM1NDViNjdiLWJiMzItNDMzYi1hNDNkLTBhY2E5ODZkMDQ4YyJ9.eyJpYXQiOjE3NzUwMjE5NjgsIm5hbWUiOiJEci4gVGVzdGUgQXR1YWxpemFkbyIsImVtYWlsIjoicmFmYWVsLm1pbmF0dG9AeWFob28uY29tLmJyIiwiZW1haWxWZXJpZmllZCI6ZmFsc2UsImNyZWF0ZWRBdCI6IjIwMjYtMDMtMDVUMjM6NDE6MzQuNTg3WiIsInVwZGF0ZWRBdCI6IjIwMjYtMDMtMzBUMTg6NTQ6MjQuNDI0WiIsInJvbGUiOiJhdXRoZW50aWNhdGVkIiwiYmFubmVkIjpmYWxzZSwiYmFuUmVhc29uIjpudWxsLCJiYW5FeHBpcmVzIjpudWxsLCJpZCI6IjFiNTI3NzU5LWYxMzEtNGFjNC04NmJkLTdhM2UwZGViNDgyZiIsInN1YiI6IjFiNTI3NzU5LWYxMzEtNGFjNC04NmJkLTdhM2UwZGViNDgyZiIsImV4cCI6MTc3NTAyMjg2OCwiaXNzIjoiaHR0cHM6Ly9lcC13YW5kZXJpbmctYm9udXMtYWNqNHp3dm8ubmVvbmF1dGguc2EtZWFzdC0xLmF3cy5uZW9uLnRlY2giLCJhdWQiOiJodHRwczovL2VwLXdhbmRlcmluZy1ib251cy1hY2o0end2by5uZW9uYXV0aC5zYS1lYXN0LTEuYXdzLm5lb24udGVjaCJ9.46ooiW4xYVNxqNRs635UqP8zTD_4hf4xYy3q4gjwzKXEHqUuj8xDo3vMTKTDAo6_ECLD1wbjEpiWaHM6AXD4Dw
+    referer: https://www.moocafisio.com.br/
+    user-agent: Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/146.0.0.0 Safari/537.36
+    sec-ch-ua: "Chromium";v="146", "Not-A.Brand";v="24", "Google Chrome";v="146"
+    content-type: application/json
+    sec-ch-ua-mobile: ?0
+  Request body: {"patient_id":"3ec7ea02-8772-4aec-9dc7-ba0571130b78","therapist_id":"1b527759-f131-4ac4-86bd-7a3e0deb482f","date":"2026-04-10","start_time":"07:00","end_time":"08:00","status":"avaliacao","payment_status":"pending","notes":"","session_type":"individual","session_package_id":null,"payment_method":"","organizationId":"00000000-0000-0000-0000-000000000001","ignoreCapacity":false}
+[GET] https://fisioflow-api.rafalegollas.workers.dev/api/appointments?dateFrom=2026-03-25&limit=100 => [200] 
+  Request headers:
+    sec-ch-ua-platform: "Linux"
+    authorization: Bearer eyJhbGciOiJFZERTQSIsImtpZCI6IjM1NDViNjdiLWJiMzItNDMzYi1hNDNkLTBhY2E5ODZkMDQ4YyJ9.eyJpYXQiOjE3NzUwMjE5NjgsIm5hbWUiOiJEci4gVGVzdGUgQXR1YWxpemFkbyIsImVtYWlsIjoicmFmYWVsLm1pbmF0dG9AeWFob28uY29tLmJyIiwiZW1haWxWZXJpZmllZCI6ZmFsc2UsImNyZWF0ZWRBdCI6IjIwMjYtMDMtMDVUMjM6NDE6MzQuNTg3WiIsInVwZGF0ZWRBdCI6IjIwMjYtMDMtMzBUMTg6NTQ6MjQuNDI0WiIsInJvbGUiOiJhdXRoZW50aWNhdGVkIiwiYmFubmVkIjpmYWxzZSwiYmFuUmVhc29uIjpudWxsLCJiYW5FeHBpcmVzIjpudWxsLCJpZCI6IjFiNTI3NzU5LWYxMzEtNGFjNC04NmJkLTdhM2UwZGViNDgyZiIsInN1YiI6IjFiNTI3NzU5LWYxMzEtNGFjNC04NmJkLTdhM2UwZGViNDgyZiIsImV4cCI6MTc3NTAyMjg2OCwiaXNzIjoiaHR0cHM6Ly9lcC13YW5kZXJpbmctYm9udXMtYWNqNHp3dm8ubmVvbmF1dGguc2EtZWFzdC0xLmF3cy5uZW9uLnRlY2giLCJhdWQiOiJodHRwczovL2VwLXdhbmRlcmluZy1ib251cy1hY2o0end2by5uZW9uYXV0aC5zYS1lYXN0LTEuYXdzLm5lb24udGVjaCJ9.46ooiW4xYVNxqNRs635UqP8zTD_4hf4xYy3q4gjwzKXEHqUuj8xDo3vMTKTDAo6_ECLD1wbjEpiWaHM6AXD4Dw
+    referer: https://www.moocafisio.com.br/
+    user-agent: Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/146.0.0.0 Safari/537.36
+    sec-ch-ua: "Chromium";v="146", "Not-A.Brand";v="24", "Google Chrome";v="146"
+    content-type: application/json
+    sec-ch-ua-mobile: ?0
+[POST] https://fisioflow-api.rafalegollas.workers.dev/api/appointments => [500] 
+  Request headers:
+    sec-ch-ua-platform: "Linux"
+    authorization: Bearer eyJhbGciOiJFZERTQSIsImtpZCI6IjM1NDViNjdiLWJiMzItNDMzYi1hNDNkLTBhY2E5ODZkMDQ4YyJ9.eyJpYXQiOjE3NzUwMjE5NjgsIm5hbWUiOiJEci4gVGVzdGUgQXR1YWxpemFkbyIsImVtYWlsIjoicmFmYWVsLm1pbmF0dG9AeWFob28uY29tLmJyIiwiZW1haWxWZXJpZmllZCI6ZmFsc2UsImNyZWF0ZWRBdCI6IjIwMjYtMDMtMDVUMjM6NDE6MzQuNTg3WiIsInVwZGF0ZWRBdCI6IjIwMjYtMDMtMzBUMTg6NTQ6MjQuNDI0WiIsInJvbGUiOiJhdXRoZW50aWNhdGVkIiwiYmFubmVkIjpmYWxzZSwiYmFuUmVhc29uIjpudWxsLCJiYW5FeHBpcmVzIjpudWxsLCJpZCI6IjFiNTI3NzU5LWYxMzEtNGFjNC04NmJkLTdhM2UwZGViNDgyZiIsInN1YiI6IjFiNTI3NzU5LWYxMzEtNGFjNC04NmJkLTdhM2UwZGViNDgyZiIsImV4cCI6MTc3NTAyMjg2OCwiaXNzIjoiaHR0cHM6Ly9lcC13YW5kZXJpbmctYm9udXMtYWNqNHp3dm8ubmVvbmF1dGguc2EtZWFzdC0xLmF3cy5uZW9uLnRlY2giLCJhdWQiOiJodHRwczovL2VwLXdhbmRlcmluZy1ib251cy1hY2o0end2by5uZW9uYXV0aC5zYS1lYXN0LTEuYXdzLm5lb24udGVjaCJ9.46ooiW4xYVNxqNRs635UqP8zTD_4hf4xYy3q4gjwzKXEHqUuj8xDo3vMTKTDAo6_ECLD1wbjEpiWaHM6AXD4Dw
+    referer: https://www.moocafisio.com.br/
+    user-agent: Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/146.0.0.0 Safari/537.36
+    sec-ch-ua: "Chromium";v="146", "Not-A.Brand";v="24", "Google Chrome";v="146"
+    content-type: application/json
+    sec-ch-ua-mobile: ?0
+  Request body: {"patient_id":"3ec7ea02-8772-4aec-9dc7-ba0571130b78","therapist_id":"1b527759-f131-4ac4-86bd-7a3e0deb482f","date":"2026-04-10","start_time":"07:00","end_time":"08:00","status":"avaliacao","payment_status":"pending","notes":"","session_type":"individual","session_package_id":null,"payment_method":"","organizationId":"00000000-0000-0000-0000-000000000001","ignoreCapacity":false}
+[POST] https://fisioflow-api.rafalegollas.workers.dev/api/appointments => [500] 
+  Request headers:
+    sec-ch-ua-platform: "Linux"
+    authorization: Bearer eyJhbGciOiJFZERTQSIsImtpZCI6IjM1NDViNjdiLWJiMzItNDMzYi1hNDNkLTBhY2E5ODZkMDQ4YyJ9.eyJpYXQiOjE3NzUwMjI5MDQsIm5hbWUiOiJEci4gVGVzdGUgQXR1YWxpemFkbyIsImVtYWlsIjoicmFmYWVsLm1pbmF0dG9AeWFob28uY29tLmJyIiwiZW1haWxWZXJpZmllZCI6ZmFsc2UsImNyZWF0ZWRBdCI6IjIwMjYtMDMtMDVUMjM6NDE6MzQuNTg3WiIsInVwZGF0ZWRBdCI6IjIwMjYtMDMtMzBUMTg6NTQ6MjQuNDI0WiIsInJvbGUiOiJhdXRoZW50aWNhdGVkIiwiYmFubmVkIjpmYWxzZSwiYmFuUmVhc29uIjpudWxsLCJiYW5FeHBpcmVzIjpudWxsLCJpZCI6IjFiNTI3NzU5LWYxMzEtNGFjNC04NmJkLTdhM2UwZGViNDgyZiIsInN1YiI6IjFiNTI3NzU5LWYxMzEtNGFjNC04NmJkLTdhM2UwZGViNDgyZiIsImV4cCI6MTc3NTAyMzgwNCwiaXNzIjoiaHR0cHM6Ly9lcC13YW5kZXJpbmctYm9udXMtYWNqNHp3dm8ubmVvbmF1dGguc2EtZWFzdC0xLmF3cy5uZW9uLnRlY2giLCJhdWQiOiJodHRwczovL2VwLXdhbmRlcmluZy1ib251cy1hY2o0end2by5uZW9uYXV0aC5zYS1lYXN0LTEuYXdzLm5lb24udGVjaCJ9.Qm8EZKZAaYfdan1nyKSC04CujpNdGnFML-KpvBJxJesIFywMiP8dmYAqPdbMnB4I12m-vYMA6iGDTUQO4H3rCg
+    referer: https://www.moocafisio.com.br/
+    user-agent: Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/146.0.0.0 Safari/537.36
+    sec-ch-ua: "Chromium";v="146", "Not-A.Brand";v="24", "Google Chrome";v="146"
+    content-type: application/json
+    sec-ch-ua-mobile: ?0
+  Request body: {"patient_id":"3ec7ea02-8772-4aec-9dc7-ba0571130b78","therapist_id":"1b527759-f131-4ac4-86bd-7a3e0deb482f","date":"2026-04-10","start_time":"07:00","end_time":"08:00","status":"avaliacao","payment_status":"pending","notes":"","session_type":"individual","session_package_id":null,"payment_method":"","organizationId":"00000000-0000-0000-0000-000000000001","ignoreCapacity":false}
+[GET] https://fisioflow-api.rafalegollas.workers.dev/api/appointments?dateFrom=2026-03-25&limit=100 => [200] 
+  Request headers:
+    sec-ch-ua-platform: "Linux"
+    authorization: Bearer eyJhbGciOiJFZERTQSIsImtpZCI6IjM1NDViNjdiLWJiMzItNDMzYi1hNDNkLTBhY2E5ODZkMDQ4YyJ9.eyJpYXQiOjE3NzUwMjI5MDQsIm5hbWUiOiJEci4gVGVzdGUgQXR1YWxpemFkbyIsImVtYWlsIjoicmFmYWVsLm1pbmF0dG9AeWFob28uY29tLmJyIiwiZW1haWxWZXJpZmllZCI6ZmFsc2UsImNyZWF0ZWRBdCI6IjIwMjYtMDMtMDVUMjM6NDE6MzQuNTg3WiIsInVwZGF0ZWRBdCI6IjIwMjYtMDMtMzBUMTg6NTQ6MjQuNDI0WiIsInJvbGUiOiJhdXRoZW50aWNhdGVkIiwiYmFubmVkIjpmYWxzZSwiYmFuUmVhc29uIjpudWxsLCJiYW5FeHBpcmVzIjpudWxsLCJpZCI6IjFiNTI3NzU5LWYxMzEtNGFjNC04NmJkLTdhM2UwZGViNDgyZiIsInN1YiI6IjFiNTI3NzU5LWYxMzEtNGFjNC04NmJkLTdhM2UwZGViNDgyZiIsImV4cCI6MTc3NTAyMzgwNCwiaXNzIjoiaHR0cHM6Ly9lcC13YW5kZXJpbmctYm9udXMtYWNqNHp3dm8ubmVvbmF1dGguc2EtZWFzdC0xLmF3cy5uZW9uLnRlY2giLCJhdWQiOiJodHRwczovL2VwLXdhbmRlcmluZy1ib251cy1hY2o0end2by5uZW9uYXV0aC5zYS1lYXN0LTEuYXdzLm5lb24udGVjaCJ9.Qm8EZKZAaYfdan1nyKSC04CujpNdGnFML-KpvBJxJesIFywMiP8dmYAqPdbMnB4I12m-vYMA6iGDTUQO4H3rCg
+    referer: https://www.moocafisio.com.br/
+    user-agent: Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/146.0.0.0 Safari/537.36
+    sec-ch-ua: "Chromium";v="146", "Not-A.Brand";v="24", "Google Chrome";v="146"
+    content-type: application/json
+    sec-ch-ua-mobile: ?0
+[GET] https://fisioflow-api.rafalegollas.workers.dev/api/appointments?dateFrom=2026-03-25&limit=100 => [200] 
+  Request headers:
+    sec-ch-ua-platform: "Linux"
+    authorization: Bearer eyJhbGciOiJFZERTQSIsImtpZCI6IjM1NDViNjdiLWJiMzItNDMzYi1hNDNkLTBhY2E5ODZkMDQ4YyJ9.eyJpYXQiOjE3NzUwMjI5MDQsIm5hbWUiOiJEci4gVGVzdGUgQXR1YWxpemFkbyIsImVtYWlsIjoicmFmYWVsLm1pbmF0dG9AeWFob28uY29tLmJyIiwiZW1haWxWZXJpZmllZCI6ZmFsc2UsImNyZWF0ZWRBdCI6IjIwMjYtMDMtMDVUMjM6NDE6MzQuNTg3WiIsInVwZGF0ZWRBdCI6IjIwMjYtMDMtMzBUMTg6NTQ6MjQuNDI0WiIsInJvbGUiOiJhdXRoZW50aWNhdGVkIiwiYmFubmVkIjpmYWxzZSwiYmFuUmVhc29uIjpudWxsLCJiYW5FeHBpcmVzIjpudWxsLCJpZCI6IjFiNTI3NzU5LWYxMzEtNGFjNC04NmJkLTdhM2UwZGViNDgyZiIsInN1YiI6IjFiNTI3NzU5LWYxMzEtNGFjNC04NmJkLTdhM2UwZGViNDgyZiIsImV4cCI6MTc3NTAyMzgwNCwiaXNzIjoiaHR0cHM6Ly9lcC13YW5kZXJpbmctYm9udXMtYWNqNHp3dm8ubmVvbmF1dGguc2EtZWFzdC0xLmF3cy5uZW9uLnRlY2giLCJhdWQiOiJodHRwczovL2VwLXdhbmRlcmluZy1ib251cy1hY2o0end2by5uZW9uYXV0aC5zYS1lYXN0LTEuYXdzLm5lb24udGVjaCJ9.Qm8EZKZAaYfdan1nyKSC04CujpNdGnFML-KpvBJxJesIFywMiP8dmYAqPdbMnB4I12m-vYMA6iGDTUQO4H3rCg
+    referer: https://www.moocafisio.com.br/
+    user-agent: Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/146.0.0.0 Safari/537.36
+    sec-ch-ua: "Chromium";v="146", "Not-A.Brand";v="24", "Google Chrome";v="146"
+    content-type: application/json
+    sec-ch-ua-mobile: ?0
+[POST] https://fisioflow-api.rafalegollas.workers.dev/api/appointments => [500] 
+  Request headers:
+    sec-ch-ua-platform: "Linux"
+    authorization: Bearer eyJhbGciOiJFZERTQSIsImtpZCI6IjM1NDViNjdiLWJiMzItNDMzYi1hNDNkLTBhY2E5ODZkMDQ4YyJ9.eyJpYXQiOjE3NzUwMjI5MDQsIm5hbWUiOiJEci4gVGVzdGUgQXR1YWxpemFkbyIsImVtYWlsIjoicmFmYWVsLm1pbmF0dG9AeWFob28uY29tLmJyIiwiZW1haWxWZXJpZmllZCI6ZmFsc2UsImNyZWF0ZWRBdCI6IjIwMjYtMDMtMDVUMjM6NDE6MzQuNTg3WiIsInVwZGF0ZWRBdCI6IjIwMjYtMDMtMzBUMTg6NTQ6MjQuNDI0WiIsInJvbGUiOiJhdXRoZW50aWNhdGVkIiwiYmFubmVkIjpmYWxzZSwiYmFuUmVhc29uIjpudWxsLCJiYW5FeHBpcmVzIjpudWxsLCJpZCI6IjFiNTI3NzU5LWYxMzEtNGFjNC04NmJkLTdhM2UwZGViNDgyZiIsInN1YiI6IjFiNTI3NzU5LWYxMzEtNGFjNC04NmJkLTdhM2UwZGViNDgyZiIsImV4cCI6MTc3NTAyMzgwNCwiaXNzIjoiaHR0cHM6Ly9lcC13YW5kZXJpbmctYm9udXMtYWNqNHp3dm8ubmVvbmF1dGguc2EtZWFzdC0xLmF3cy5uZW9uLnRlY2giLCJhdWQiOiJodHRwczovL2VwLXdhbmRlcmluZy1ib251cy1hY2o0end2by5uZW9uYXV0aC5zYS1lYXN0LTEuYXdzLm5lb24udGVjaCJ9.Qm8EZKZAaYfdan1nyKSC04CujpNdGnFML-KpvBJxJesIFywMiP8dmYAqPdbMnB4I12m-vYMA6iGDTUQO4H3rCg
+    referer: https://www.moocafisio.com.br/
+    user-agent: Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/146.0.0.0 Safari/537.36
+    sec-ch-ua: "Chromium";v="146", "Not-A.Brand";v="24", "Google Chrome";v="146"
+    content-type: application/json
+    sec-ch-ua-mobile: ?0
+  Request body: {"patient_id":"3ec7ea02-8772-4aec-9dc7-ba0571130b78","therapist_id":"1b527759-f131-4ac4-86bd-7a3e0deb482f","date":"2026-04-10","start_time":"07:00","end_time":"08:00","status":"avaliacao","payment_status":"pending","notes":"","session_type":"individual","session_package_id":null,"payment_method":"","organizationId":"00000000-0000-0000-0000-000000000001","ignoreCapacity":false}
+[POST] https://fisioflow-api.rafalegollas.workers.dev/api/appointments => [500] 
+  Request headers:
+    sec-ch-ua-platform: "Linux"
+    authorization: Bearer eyJhbGciOiJFZERTQSIsImtpZCI6IjM1NDViNjdiLWJiMzItNDMzYi1hNDNkLTBhY2E5ODZkMDQ4YyJ9.eyJpYXQiOjE3NzUwMjI5MDQsIm5hbWUiOiJEci4gVGVzdGUgQXR1YWxpemFkbyIsImVtYWlsIjoicmFmYWVsLm1pbmF0dG9AeWFob28uY29tLmJyIiwiZW1haWxWZXJpZmllZCI6ZmFsc2UsImNyZWF0ZWRBdCI6IjIwMjYtMDMtMDVUMjM6NDE6MzQuNTg3WiIsInVwZGF0ZWRBdCI6IjIwMjYtMDMtMzBUMTg6NTQ6MjQuNDI0WiIsInJvbGUiOiJhdXRoZW50aWNhdGVkIiwiYmFubmVkIjpmYWxzZSwiYmFuUmVhc29uIjpudWxsLCJiYW5FeHBpcmVzIjpudWxsLCJpZCI6IjFiNTI3NzU5LWYxMzEtNGFjNC04NmJkLTdhM2UwZGViNDgyZiIsInN1YiI6IjFiNTI3NzU5LWYxMzEtNGFjNC04NmJkLTdhM2UwZGViNDgyZiIsImV4cCI6MTc3NTAyMzgwNCwiaXNzIjoiaHR0cHM6Ly9lcC13YW5kZXJpbmctYm9udXMtYWNqNHp3dm8ubmVvbmF1dGguc2EtZWFzdC0xLmF3cy5uZW9uLnRlY2giLCJhdWQiOiJodHRwczovL2VwLXdhbmRlcmluZy1ib251cy1hY2o0end2by5uZW9uYXV0aC5zYS1lYXN0LTEuYXdzLm5lb24udGVjaCJ9.Qm8EZKZAaYfdan1nyKSC04CujpNdGnFML-KpvBJxJesIFywMiP8dmYAqPdbMnB4I12m-vYMA6iGDTUQO4H3rCg
+    referer: https://www.moocafisio.com.br/
+    user-agent: Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/146.0.0.0 Safari/537.36
+    sec-ch-ua: "Chromium";v="146", "Not-A.Brand";v="24", "Google Chrome";v="146"
+    content-type: application/json
+    sec-ch-ua-mobile: ?0
+  Request body: {"patient_id":"3ec7ea02-8772-4aec-9dc7-ba0571130b78","therapist_id":"1b527759-f131-4ac4-86bd-7a3e0deb482f","date":"2026-04-10","start_time":"07:00","end_time":"08:00","status":"avaliacao","payment_status":"pending","notes":"","session_type":"individual","session_package_id":null,"payment_method":"","organizationId":"00000000-0000-0000-0000-000000000001","ignoreCapacity":false}
+[GET] https://fisioflow-api.rafalegollas.workers.dev/api/appointments?dateFrom=2026-03-25&limit=100 => [200] 
+  Request headers:
+    sec-ch-ua-platform: "Linux"
+    authorization: Bearer eyJhbGciOiJFZERTQSIsImtpZCI6IjM1NDViNjdiLWJiMzItNDMzYi1hNDNkLTBhY2E5ODZkMDQ4YyJ9.eyJpYXQiOjE3NzUwMjI5MDQsIm5hbWUiOiJEci4gVGVzdGUgQXR1YWxpemFkbyIsImVtYWlsIjoicmFmYWVsLm1pbmF0dG9AeWFob28uY29tLmJyIiwiZW1haWxWZXJpZmllZCI6ZmFsc2UsImNyZWF0ZWRBdCI6IjIwMjYtMDMtMDVUMjM6NDE6MzQuNTg3WiIsInVwZGF0ZWRBdCI6IjIwMjYtMDMtMzBUMTg6NTQ6MjQuNDI0WiIsInJvbGUiOiJhdXRoZW50aWNhdGVkIiwiYmFubmVkIjpmYWxzZSwiYmFuUmVhc29uIjpudWxsLCJiYW5FeHBpcmVzIjpudWxsLCJpZCI6IjFiNTI3NzU5LWYxMzEtNGFjNC04NmJkLTdhM2UwZGViNDgyZiIsInN1YiI6IjFiNTI3NzU5LWYxMzEtNGFjNC04NmJkLTdhM2UwZGViNDgyZiIsImV4cCI6MTc3NTAyMzgwNCwiaXNzIjoiaHR0cHM6Ly9lcC13YW5kZXJpbmctYm9udXMtYWNqNHp3dm8ubmVvbmF1dGguc2EtZWFzdC0xLmF3cy5uZW9uLnRlY2giLCJhdWQiOiJodHRwczovL2VwLXdhbmRlcmluZy1ib251cy1hY2o0end2by5uZW9uYXV0aC5zYS1lYXN0LTEuYXdzLm5lb24udGVjaCJ9.Qm8EZKZAaYfdan1nyKSC04CujpNdGnFML-KpvBJxJesIFywMiP8dmYAqPdbMnB4I12m-vYMA6iGDTUQO4H3rCg
+    referer: https://www.moocafisio.com.br/
+    user-agent: Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/146.0.0.0 Safari/537.36
+    sec-ch-ua: "Chromium";v="146", "Not-A.Brand";v="24", "Google Chrome";v="146"
+    content-type: application/json
+    sec-ch-ua-mobile: ?0
+[POST] https://fisioflow-api.rafalegollas.workers.dev/api/appointments => [500] 
+  Request headers:
+    sec-ch-ua-platform: "Linux"
+    authorization: Bearer eyJhbGciOiJFZERTQSIsImtpZCI6IjM1NDViNjdiLWJiMzItNDMzYi1hNDNkLTBhY2E5ODZkMDQ4YyJ9.eyJpYXQiOjE3NzUwMjI5MDQsIm5hbWUiOiJEci4gVGVzdGUgQXR1YWxpemFkbyIsImVtYWlsIjoicmFmYWVsLm1pbmF0dG9AeWFob28uY29tLmJyIiwiZW1haWxWZXJpZmllZCI6ZmFsc2UsImNyZWF0ZWRBdCI6IjIwMjYtMDMtMDVUMjM6NDE6MzQuNTg3WiIsInVwZGF0ZWRBdCI6IjIwMjYtMDMtMzBUMTg6NTQ6MjQuNDI0WiIsInJvbGUiOiJhdXRoZW50aWNhdGVkIiwiYmFubmVkIjpmYWxzZSwiYmFuUmVhc29uIjpudWxsLCJiYW5FeHBpcmVzIjpudWxsLCJpZCI6IjFiNTI3NzU5LWYxMzEtNGFjNC04NmJkLTdhM2UwZGViNDgyZiIsInN1YiI6IjFiNTI3NzU5LWYxMzEtNGFjNC04NmJkLTdhM2UwZGViNDgyZiIsImV4cCI6MTc3NTAyMzgwNCwiaXNzIjoiaHR0cHM6Ly9lcC13YW5kZXJpbmctYm9udXMtYWNqNHp3dm8ubmVvbmF1dGguc2EtZWFzdC0xLmF3cy5uZW9uLnRlY2giLCJhdWQiOiJodHRwczovL2VwLXdhbmRlcmluZy1ib251cy1hY2o0end2by5uZW9uYXV0aC5zYS1lYXN0LTEuYXdzLm5lb24udGVjaCJ9.Qm8EZKZAaYfdan1nyKSC04CujpNdGnFML-KpvBJxJesIFywMiP8dmYAqPdbMnB4I12m-vYMA6iGDTUQO4H3rCg
+    referer: https://www.moocafisio.com.br/
+    user-agent: Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/146.0.0.0 Safari/537.36
+    sec-ch-ua: "Chromium";v="146", "Not-A.Brand";v="24", "Google Chrome";v="146"
+    content-type: application/json
+    sec-ch-ua-mobile: ?0
+  Request body: {"patient_id":"3ec7ea02-8772-4aec-9dc7-ba0571130b78","therapist_id":"1b527759-f131-4ac4-86bd-7a3e0deb482f","date":"2026-04-10","start_time":"07:00","end_time":"08:00","status":"avaliacao","payment_status":"pending","notes":"","session_type":"individual","session_package_id":null,"payment_method":"","organizationId":"00000000-0000-0000-0000-000000000001","ignoreCapacity":false}
+[POST] https://fisioflow-api.rafalegollas.workers.dev/api/appointments => [500] 
+  Request headers:
+    sec-ch-ua-platform: "Linux"
+    authorization: Bearer eyJhbGciOiJFZERTQSIsImtpZCI6IjM1NDViNjdiLWJiMzItNDMzYi1hNDNkLTBhY2E5ODZkMDQ4YyJ9.eyJpYXQiOjE3NzUwMjI5MDQsIm5hbWUiOiJEci4gVGVzdGUgQXR1YWxpemFkbyIsImVtYWlsIjoicmFmYWVsLm1pbmF0dG9AeWFob28uY29tLmJyIiwiZW1haWxWZXJpZmllZCI6ZmFsc2UsImNyZWF0ZWRBdCI6IjIwMjYtMDMtMDVUMjM6NDE6MzQuNTg3WiIsInVwZGF0ZWRBdCI6IjIwMjYtMDMtMzBUMTg6NTQ6MjQuNDI0WiIsInJvbGUiOiJhdXRoZW50aWNhdGVkIiwiYmFubmVkIjpmYWxzZSwiYmFuUmVhc29uIjpudWxsLCJiYW5FeHBpcmVzIjpudWxsLCJpZCI6IjFiNTI3NzU5LWYxMzEtNGFjNC04NmJkLTdhM2UwZGViNDgyZiIsInN1YiI6IjFiNTI3NzU5LWYxMzEtNGFjNC04NmJkLTdhM2UwZGViNDgyZiIsImV4cCI6MTc3NTAyMzgwNCwiaXNzIjoiaHR0cHM6Ly9lcC13YW5kZXJpbmctYm9udXMtYWNqNHp3dm8ubmVvbmF1dGguc2EtZWFzdC0xLmF3cy5uZW9uLnRlY2giLCJhdWQiOiJodHRwczovL2VwLXdhbmRlcmluZy1ib251cy1hY2o0end2by5uZW9uYXV0aC5zYS1lYXN0LTEuYXdzLm5lb24udGVjaCJ9.Qm8EZKZAaYfdan1nyKSC04CujpNdGnFML-KpvBJxJesIFywMiP8dmYAqPdbMnB4I12m-vYMA6iGDTUQO4H3rCg
+    referer: https://www.moocafisio.com.br/
+    user-agent: Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/146.0.0.0 Safari/537.36
+    sec-ch-ua: "Chromium";v="146", "Not-A.Brand";v="24", "Google Chrome";v="146"
+    content-type: application/json
+    sec-ch-ua-mobile: ?0
+  Request body: {"patient_id":"3ec7ea02-8772-4aec-9dc7-ba0571130b78","therapist_id":"1b527759-f131-4ac4-86bd-7a3e0deb482f","date":"2026-04-10","start_time":"07:00","end_time":"08:00","status":"avaliacao","payment_status":"pending","notes":"","session_type":"individual","session_package_id":null,"payment_method":"","organizationId":"00000000-0000-0000-0000-000000000001","ignoreCapacity":false}
+[GET] https://fisioflow-api.rafalegollas.workers.dev/api/appointments?dateFrom=2026-03-25&limit=100 => [200] 
+  Request headers:
+    sec-ch-ua-platform: "Linux"
+    authorization: Bearer eyJhbGciOiJFZERTQSIsImtpZCI6IjM1NDViNjdiLWJiMzItNDMzYi1hNDNkLTBhY2E5ODZkMDQ4YyJ9.eyJpYXQiOjE3NzUwMjI5MDQsIm5hbWUiOiJEci4gVGVzdGUgQXR1YWxpemFkbyIsImVtYWlsIjoicmFmYWVsLm1pbmF0dG9AeWFob28uY29tLmJyIiwiZW1haWxWZXJpZmllZCI6ZmFsc2UsImNyZWF0ZWRBdCI6IjIwMjYtMDMtMDVUMjM6NDE6MzQuNTg3WiIsInVwZGF0ZWRBdCI6IjIwMjYtMDMtMzBUMTg6NTQ6MjQuNDI0WiIsInJvbGUiOiJhdXRoZW50aWNhdGVkIiwiYmFubmVkIjpmYWxzZSwiYmFuUmVhc29uIjpudWxsLCJiYW5FeHBpcmVzIjpudWxsLCJpZCI6IjFiNTI3NzU5LWYxMzEtNGFjNC04NmJkLTdhM2UwZGViNDgyZiIsInN1YiI6IjFiNTI3NzU5LWYxMzEtNGFjNC04NmJkLTdhM2UwZGViNDgyZiIsImV4cCI6MTc3NTAyMzgwNCwiaXNzIjoiaHR0cHM6Ly9lcC13YW5kZXJpbmctYm9udXMtYWNqNHp3dm8ubmVvbmF1dGguc2EtZWFzdC0xLmF3cy5uZW9uLnRlY2giLCJhdWQiOiJodHRwczovL2VwLXdhbmRlcmluZy1ib251cy1hY2o0end2by5uZW9uYXV0aC5zYS1lYXN0LTEuYXdzLm5lb24udGVjaCJ9.Qm8EZKZAaYfdan1nyKSC04CujpNdGnFML-KpvBJxJesIFywMiP8dmYAqPdbMnB4I12m-vYMA6iGDTUQO4H3rCg
+    referer: https://www.moocafisio.com.br/
+    user-agent: Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/146.0.0.0 Safari/537.36
+    sec-ch-ua: "Chromium";v="146", "Not-A.Brand";v="24", "Google Chrome";v="146"
+    content-type: application/json
+    sec-ch-ua-mobile: ?0
+[POST] https://fisioflow-api.rafalegollas.workers.dev/api/appointments => [500] 
+  Request headers:
+    sec-ch-ua-platform: "Linux"
+    authorization: Bearer eyJhbGciOiJFZERTQSIsImtpZCI6IjM1NDViNjdiLWJiMzItNDMzYi1hNDNkLTBhY2E5ODZkMDQ4YyJ9.eyJpYXQiOjE3NzUwMjI5MDQsIm5hbWUiOiJEci4gVGVzdGUgQXR1YWxpemFkbyIsImVtYWlsIjoicmFmYWVsLm1pbmF0dG9AeWFob28uY29tLmJyIiwiZW1haWxWZXJpZmllZCI6ZmFsc2UsImNyZWF0ZWRBdCI6IjIwMjYtMDMtMDVUMjM6NDE6MzQuNTg3WiIsInVwZGF0ZWRBdCI6IjIwMjYtMDMtMzBUMTg6NTQ6MjQuNDI0WiIsInJvbGUiOiJhdXRoZW50aWNhdGVkIiwiYmFubmVkIjpmYWxzZSwiYmFuUmVhc29uIjpudWxsLCJiYW5FeHBpcmVzIjpudWxsLCJpZCI6IjFiNTI3NzU5LWYxMzEtNGFjNC04NmJkLTdhM2UwZGViNDgyZiIsInN1YiI6IjFiNTI3NzU5LWYxMzEtNGFjNC04NmJkLTdhM2UwZGViNDgyZiIsImV4cCI6MTc3NTAyMzgwNCwiaXNzIjoiaHR0cHM6Ly9lcC13YW5kZXJpbmctYm9udXMtYWNqNHp3dm8ubmVvbmF1dGguc2EtZWFzdC0xLmF3cy5uZW9uLnRlY2giLCJhdWQiOiJodHRwczovL2VwLXdhbmRlcmluZy1ib251cy1hY2o0end2by5uZW9uYXV0aC5zYS1lYXN0LTEuYXdzLm5lb24udGVjaCJ9.Qm8EZKZAaYfdan1nyKSC04CujpNdGnFML-KpvBJxJesIFywMiP8dmYAqPdbMnB4I12m-vYMA6iGDTUQO4H3rCg
+    referer: https://www.moocafisio.com.br/
+    user-agent: Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/146.0.0.0 Safari/537.36
+    sec-ch-ua: "Chromium";v="146", "Not-A.Brand";v="24", "Google Chrome";v="146"
+    content-type: application/json
+    sec-ch-ua-mobile: ?0
+  Request body: {"patient_id":"3ec7ea02-8772-4aec-9dc7-ba0571130b78","therapist_id":"1b527759-f131-4ac4-86bd-7a3e0deb482f","date":"2026-04-10","start_time":"07:00","end_time":"08:00","status":"avaliacao","payment_status":"pending","notes":"","session_type":"individual","session_package_id":null,"payment_method":"","organizationId":"00000000-0000-0000-0000-000000000001","ignoreCapacity":false}

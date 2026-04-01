@@ -12,7 +12,7 @@ export const STATUS_MAP: Record<string, string> = {
   cancelled: 'cancelado',
   no_show: 'faltou',
   rescheduled: 'remarcar',
-  evaluation: 'avaliacao',
+  evaluation: 'atendido',
 
   // Portuguese aliases -> Canonical Portuguese (DB)
   agendado: 'agendado',
@@ -22,7 +22,7 @@ export const STATUS_MAP: Record<string, string> = {
   atendido: 'atendido',
   concluido: 'atendido',
   cancelado: 'cancelado',
-  avaliacao: 'avaliacao',
+  avaliacao: 'atendido',
   falta: 'faltou',
   faltou: 'faltou',
   faltou_com_aviso: 'faltou_com_aviso',
