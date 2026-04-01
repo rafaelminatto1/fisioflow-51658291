@@ -619,6 +619,66 @@
       "precautions": "Mantenha coluna lombar no chão. Movimento lento e controlado.",
       "benefits": "Coordenação core, seguro para coluna, acessível",
       "tags": ["core", "coordenação", "abdominal", "funcional"]
+    },
+    {
+      "name": "Copenhagen Adduction (Nível 1)",
+      "slug": "copenhagen-adduction-lvl1",
+      "category": "fortalecimento",
+      "description": "Exercício padrão-ouro para fortalecimento de adutores e prevenção de dor inguinal.",
+      "instructions": [
+        "Deitado de lado, perna de cima apoiada em um banco/cadeira pelo joelho.",
+        "Perna de baixo livre para subir em direção ao banco.",
+        "Eleve o quadril do chão mantendo o alinhamento.",
+        "Mantenha por 3-5 segundos ou realize repetições."
+      ],
+      "muscles": ["adutores", "oblíquos", "estabilizadores do quadril"],
+      "equipment": "banco",
+      "difficulty": "intermediate",
+      "sets_recommended": 3,
+      "reps_recommended": 8,
+      "precautions": "Evite se houver dor aguda na sínfise púbica.",
+      "benefits": "Aumento expressivo da força de adução e resiliência inguinal.",
+      "tags": ["esportiva", "quadril", "adutores", "prevenção"]
+    },
+    {
+      "name": "Spanish Squat (Agachamento Espanhol)",
+      "slug": "spanish-squat",
+      "category": "fortalecimento",
+      "description": "Agachamento isométrico indicado para tendinopatia patelar, isolando o quadríceps sem sobrecarregar a articulação.",
+      "instructions": [
+        "Use uma faixa elástica forte presa atrás dos joelhos e em um ponto fixo.",
+        "Afaste-se até a faixa estar tensionada.",
+        "Realize um agachamento mantendo as tíbias verticais (não projete joelhos à frente).",
+        "Mantenha a posição isométrica ou realize o movimento lento."
+      ],
+      "muscles": ["quadríceps"],
+      "equipment": "elástico forte",
+      "difficulty": "intermediate",
+      "sets_recommended": 3,
+      "duration_seconds": 45,
+      "precautions": "Mantenha o tronco ereto e peso nos calcanhares.",
+      "benefits": "Analgesia em tendão patelar e recrutamento massivo de quadríceps.",
+      "tags": ["joelho", "tendinopatia", "quadríceps"]
+    },
+    {
+      "name": "Nordic Hamstring (Iniciante)",
+      "slug": "nordic-hamstring-beginner",
+      "category": "fortalecimento",
+      "description": "Exercício excêntrico potente para prevenção de lesões de isquiotibiais.",
+      "instructions": [
+        "Ajoelhado, com os pés fixos por um colega ou suporte.",
+        "Incline o tronco para frente o mais devagar possível.",
+        "Mantenha o quadril em extensão neutra (não dobre o bumbum para trás).",
+        "Use as mãos para amortecer a queda ao final e empurrar de volta."
+      ],
+      "muscles": ["isquiotibiais"],
+      "equipment": "suporte para pés ou colega",
+      "difficulty": "advanced",
+      "sets_recommended": 2,
+      "reps_recommended": 5,
+      "precautions": "Alto risco de câimbra nas primeiras sessões. Progressão lenta.",
+      "benefits": "Aumenta o comprimento dos fascículos musculares e previne estiramentos.",
+      "tags": ["esportiva", "isquiotibiais", "excêntrico", "prevenção"]
     }
   ]
 }
