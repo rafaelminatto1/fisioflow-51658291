@@ -1,42 +1,63 @@
 /**
- * ScheduleX Calendar - Modern Calendar Component
+ * ScheduleXCalendar — Wrapper correto para @schedule-x/react
  *
- * Built with @schedule-x/react - a modern, high-performance calendar library.
- * Replaces the custom dnd-kit implementation with better UX and performance.
+ * PADRÃO DE HOOKS CORRETO:
+ * 1. useCalendarApp() chamado UMA VEZ com events: []
+ * 2. Eventos atualizados imperativamente via calendarApp.events.set()
+ * 3. View/data trocados via calendarControls plugin
+ * 4. Callbacks usam ref para evitar stale closures sem recriar calendário
  *
- * @version 1.1.0 - Fixed React hooks order
- * @see https://schedule-x.dev/
+ * Isso resolve o React error #306 das tentativas anteriores.
  */
 
-import React, { useMemo, useCallback, useState, useEffect } from 'react';
-import { createCalendar } from '@schedule-x/calendar';
-import { createViewMonthGrid, createViewWeek, createViewDay } from '@schedule-x/calendar';
-import { ScheduleXCalendar, useCalendarApp } from '@schedule-x/react';
+import React, {
+	useCallback,
+	useEffect,
+	useMemo,
+	useRef,
+	useState,
+} from "react";
 import {
-	createDragAndDropPlugin,
-} from '@schedule-x/drag-and-drop';
-import { ptBR } from 'date-fns/locale';
-import { format, addDays, addWeeks, addMonths, subDays, subWeeks, subMonths } from 'date-fns';
-import { motion } from 'framer-motion';
-import { ChevronLeft, ChevronRight } from 'lucide-react';
-import { CalendarAppointmentCard } from './CalendarAppointmentCard';
-import { CalendarSkeletonEnhanced } from './skeletons/CalendarSkeletonEnhanced';
-import { cn } from '@/lib/utils';
-import type { Appointment } from '@/types/appointment';
-import { normalizeStatus, getStatusColor } from './shared/appointment-status';
-import { Temporal } from 'temporal-polyfill';
+	createViewDay,
+	createViewMonthGrid,
+	createViewWeek,
+} from "@schedule-x/calendar";
+import { ScheduleXCalendar, useCalendarApp } from "@schedule-x/react";
+import { createCalendarControlsPlugin } from "@schedule-x/calendar-controls";
+import { createDragAndDropPlugin } from "@schedule-x/drag-and-drop";
+import { Temporal } from "temporal-polyfill";
+import { format, addDays, addMonths, addWeeks, subDays, subMonths, subWeeks } from "date-fns";
+import { ptBR } from "date-fns/locale";
+import { ChevronLeft, ChevronRight } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { ScheduleToolbar } from "./ScheduleToolbar";
+import { ScheduleXAppointmentCard } from "./ScheduleXAppointmentCard";
+import { normalizeStatus } from "./shared/appointment-status";
+import { cn } from "@/lib/utils";
+import type { Appointment } from "@/types/appointment";
+import type { TherapistProfileRow } from "@/types/therapist";
 
-// Import ScheduleX custom styles
-import '@/styles/schedulex.css';
+import "@/styles/schedulex.css";
 
-export type CalendarViewType = 'day' | 'week' | 'month';
+// ─────────────────────────────────────────────────────────────
+// Types
+// ─────────────────────────────────────────────────────────────
+
+type ViewType = "day" | "week" | "month";
+
+// Mapeamento: nosso viewType → nome da view no ScheduleX v4
+const VIEW_MAP: Record<ViewType, string> = {
+	day: "day",
+	week: "week",
+	month: "month-grid",
+};
 
 interface ScheduleXCalendarWrapperProps {
 	appointments: Appointment[];
 	currentDate: Date;
-	viewType: CalendarViewType;
+	viewType: ViewType;
 	onDateChange: (date: Date) => void;
-	onViewTypeChange: (type: CalendarViewType) => void;
+	onViewTypeChange: (type: string) => void;
 	onTimeSlotClick: (date: Date, time: string) => void;
 	onAppointmentClick?: (appointment: Appointment) => void;
 	onEditAppointment?: (appointment: Appointment) => void;
@@ -49,71 +70,101 @@ interface ScheduleXCalendarWrapperProps {
 	selectionMode?: boolean;
 	selectedIds?: Set<string>;
 	onToggleSelection?: (id: string) => void;
-	savingAppointmentId?: string | null;
-	dragState?: any;
-	onDragStart?: (e: any, appointment: Appointment) => void;
-	onDragEnd?: () => void;
+	onCreateAppointment?: () => void;
+	onToggleSelectionMode?: () => void;
+	filters: { status: string[]; types: string[]; therapists: string[] };
+	onFiltersChange: (filters: any) => void;
+	onClearFilters: () => void;
+	totalAppointmentsCount?: number;
+	patientFilter?: string;
+	onPatientFilterChange?: (val: string) => void;
+	therapists?: TherapistProfileRow[];
 }
 
-/**
- * Convert FisioFlow Appointment to ScheduleX Event format
- */
-const appointmentToEvent = (appointment: Appointment) => {
+// ─────────────────────────────────────────────────────────────
+// Conversion: FisioFlow Appointment → ScheduleX Event
+// ─────────────────────────────────────────────────────────────
+
+function appointmentToEvent(apt: Appointment) {
 	const dateStr =
-		appointment.date instanceof Date
-			? format(appointment.date, 'yyyy-MM-dd')
-			: String(appointment.date).substring(0, 10);
+		apt.date instanceof Date
+			? format(apt.date, "yyyy-MM-dd")
+			: String(apt.date).substring(0, 10);
 
-	const startTime = appointment.time || '00:00';
-	const [hours, minutes] = startTime.split(':').map(Number);
+	const [yStr, moStr, dStr] = dateStr.split("-");
+	const year = Number(yStr);
+	const month = Number(moStr);
+	const day = Number(dStr);
 
-	const startDateTime = new Date(dateStr);
-	startDateTime.setHours(hours || 0, minutes || 0, 0, 0);
+	const timeParts = (apt.time || "08:00").split(":");
+	const hour = Number(timeParts[0]) || 0;
+	const minute = Number(timeParts[1]) || 0;
 
-	// Calculate end time
-	const duration = appointment.duration || 60;
-	const endDateTime = new Date(startDateTime);
-	endDateTime.setMinutes(endDateTime.getMinutes() + duration);
+	const duration = apt.duration ?? 60;
 
-	const normalizedStatus = normalizeStatus(appointment.status || 'agendado');
-
-	// Convert to Temporal.ZonedDateTime for ScheduleX
-	const startTemporal = Temporal.ZonedDateTime.from({
-		year: startDateTime.getFullYear(),
-		month: startDateTime.getMonth() + 1,
-		day: startDateTime.getDate(),
-		hour: startDateTime.getHours(),
-		minute: startDateTime.getMinutes(),
-		timeZone: 'America/Sao_Paulo',
+	const startZdt = Temporal.ZonedDateTime.from({
+		year,
+		month,
+		day,
+		hour,
+		minute,
+		second: 0,
+		timeZone: "America/Sao_Paulo",
 	});
+	const endZdt = startZdt.add({ minutes: duration });
 
-	const endTemporal = Temporal.ZonedDateTime.from({
-		year: endDateTime.getFullYear(),
-		month: endDateTime.getMonth() + 1,
-		day: endDateTime.getDate(),
-		hour: endDateTime.getHours(),
-		minute: endDateTime.getMinutes(),
-		timeZone: 'America/Sao_Paulo',
-	});
+	const normalizedStatus = normalizeStatus(apt.status || "agendado");
 
 	return {
-		id: appointment.id,
-		title: appointment.patientName,
-		start: startTemporal,
-		end: endTemporal,
-		// Custom properties for our card component
-		appointment: appointment,
-		status: normalizedStatus,
-		statusColor: getStatusColor(normalizedStatus),
-		cssClasses: [`calendar-card-${normalizedStatus}`],
+		id: apt.id,
+		title: apt.patientName,
+		start: startZdt,
+		end: endZdt,
+		// Dados originais para recuperar no customComponent
+		_customData: apt,
+		_options: {
+			additionalClasses: [`calendar-card-${normalizedStatus}`],
+		},
 	};
-};
+}
 
-/**
- * Main ScheduleX Calendar Component Wrapper
- * Fixed: No conditional rendering based on hook results
- */
-export const ScheduleXCalendarWrapper = (props: ScheduleXCalendarWrapperProps) => {
+// ─────────────────────────────────────────────────────────────
+// Navigation helpers
+// ─────────────────────────────────────────────────────────────
+
+function getPrev(date: Date, view: ViewType): Date {
+	if (view === "day") return subDays(date, 1);
+	if (view === "week") return subWeeks(date, 1);
+	return subMonths(date, 1);
+}
+
+function getNext(date: Date, view: ViewType): Date {
+	if (view === "day") return addDays(date, 1);
+	if (view === "week") return addWeeks(date, 1);
+	return addMonths(date, 1);
+}
+
+function formatHeader(date: Date, view: ViewType): string {
+	if (view === "day")
+		return format(date, "EEEE, d 'de' MMMM 'de' yyyy", { locale: ptBR });
+	if (view === "week") {
+		const start = new Date(date);
+		start.setDate(date.getDate() - date.getDay()); // domingo
+		const end = new Date(start);
+		end.setDate(start.getDate() + 6);
+		const sameMonth = start.getMonth() === end.getMonth();
+		if (sameMonth)
+			return `${format(start, "d", { locale: ptBR })} – ${format(end, "d 'de' MMMM", { locale: ptBR })}`;
+		return `${format(start, "d MMM", { locale: ptBR })} – ${format(end, "d MMM", { locale: ptBR })}`;
+	}
+	return format(date, "MMMM yyyy", { locale: ptBR });
+}
+
+// ─────────────────────────────────────────────────────────────
+// Component
+// ─────────────────────────────────────────────────────────────
+
+function ScheduleXCalendarWrapper(props: ScheduleXCalendarWrapperProps) {
 	const {
 		appointments,
 		currentDate,
@@ -126,302 +177,251 @@ export const ScheduleXCalendarWrapper = (props: ScheduleXCalendarWrapperProps) =
 		onStatusChange,
 		onAppointmentReschedule,
 		selectionMode = false,
-		selectedIds = new Set(),
+		selectedIds = new Set<string>(),
 		onToggleSelection,
-		savingAppointmentId,
-		dragState,
-		onDragStart,
-		onDragEnd,
+		onCreateAppointment,
+		onToggleSelectionMode,
+		filters,
+		onFiltersChange,
+		onClearFilters,
+		patientFilter = "",
+		onPatientFilterChange,
+		therapists = [],
 	} = props;
 
-	// Convert appointments to ScheduleX events format
-	const events = useMemo(() => {
-		return appointments.map(appointmentToEvent);
-	}, [appointments]);
+	// ── A) Refs para callbacks: sem stale closures, sem recriar calendário ──
+	const cbRef = useRef({
+		onDateChange,
+		onViewTypeChange,
+		onTimeSlotClick,
+		onAppointmentClick,
+		onEditAppointment,
+		onStatusChange,
+		onAppointmentReschedule,
+	});
+	// Atualiza refs após cada render sem triggering useEffect
+	useEffect(() => {
+		cbRef.current = {
+			onDateChange,
+			onViewTypeChange,
+			onTimeSlotClick,
+			onAppointmentClick,
+			onEditAppointment,
+			onStatusChange,
+			onAppointmentReschedule,
+		};
+	});
 
-	// State to track if calendar is ready
-	const [isReady, setIsReady] = useState(false);
+	// ── B) Guards: evitam loop de sincronização ──
+	// onRangeUpdate → onDateChange → currentDate prop muda → calendarControls.setDate → onRangeUpdate
+	const prevDateRef = useRef(format(currentDate, "yyyy-MM-dd"));
+	const prevViewRef = useRef(viewType);
 
-	// Create calendar app instance - MUST be called unconditionally
-	const calendarApp = useCalendarApp(() => {
-		// Drag and drop plugin
-		const dndPlugin = createDragAndDropPlugin({
-			// Configure drag behavior
-			onDrop: async (eventId: string, newTime: string) => {
-				const appointment = appointments.find((a) => a.id === eventId);
-				if (!appointment || !onAppointmentReschedule) return;
+	// ── C) Eventos convertidos ──
+	const events = useMemo(
+		() => appointments.map(appointmentToEvent),
+		[appointments],
+	);
 
-				// Parse the new time from ScheduleX format
-				const [datePart, timePart] = newTime.split(' ');
-				const newDate = new Date(datePart);
+	// ── D) Plugins estáveis (useState garante ref única para toda a vida do componente) ──
+	const [calendarControls] = useState(() => createCalendarControlsPlugin());
+	const [dndPlugin] = useState(() => createDragAndDropPlugin(15));
 
-				try {
-					await onAppointmentReschedule(appointment, newDate, timePart);
-				} catch (error) {
-					console.error('Failed to reschedule:', error);
-				}
+	// ── E) Data inicial como Temporal.PlainDate (só usado na inicialização) ──
+	// eslint-disable-next-line react-hooks/exhaustive-deps
+	const initialDate = useMemo(
+		() =>
+			Temporal.PlainDate.from({
+				year: currentDate.getFullYear(),
+				month: currentDate.getMonth() + 1,
+				day: currentDate.getDate(),
+			}),
+		[], // Intencional: só para inicialização
+	);
+
+	// ── F) Calendário criado UMA VEZ ──
+	// events: [] → vazio, populado imperativamente no useEffect G
+	const calendarApp = useCalendarApp({
+		views: [createViewDay(), createViewWeek(), createViewMonthGrid()],
+		defaultView: VIEW_MAP[viewType],
+		selectedDate: initialDate,
+		events: [], // ← VAZIO — não passe events aqui
+		locale: "pt-BR",
+		firstDayOfWeek: 0, // Domingo
+		dayBoundaries: { start: "07:00", end: "20:00" },
+		plugins: [calendarControls, dndPlugin],
+		callbacks: {
+			onRangeUpdate: (range: any) => {
+				// Usuário navegou dentro do calendário; sincronizar data de volta para URL
+				const r = range.start as Temporal.PlainDate | Temporal.ZonedDateTime;
+				const year = r.year;
+				const month = r.month;
+				const day = r.day;
+				const newDate = new Date(year, month - 1, day);
+				const dateStr = format(newDate, "yyyy-MM-dd");
+				prevDateRef.current = dateStr; // Marca como "nossa atualização" → evita echo
+				cbRef.current.onDateChange(newDate);
 			},
-		});
+			onEventClick: (event: any) => {
+				const apt: Appointment | undefined = event._customData;
+				if (!apt) return;
+				cbRef.current.onAppointmentClick?.(apt);
+				cbRef.current.onEditAppointment?.(apt);
+			},
+			onEventUpdate: (updatedEvent: any) => {
+				const apt: Appointment | undefined = updatedEvent._customData;
+				if (!apt || !cbRef.current.onAppointmentReschedule) return;
+				const newStart = updatedEvent.start as Temporal.ZonedDateTime;
+				const newDate = new Date(newStart.year, newStart.month - 1, newStart.day);
+				const newTime = `${String(newStart.hour).padStart(2, "0")}:${String(newStart.minute).padStart(2, "0")}`;
+				cbRef.current
+					.onAppointmentReschedule(apt, newDate, newTime)
+					.catch(() => {
+						// Em caso de falha, o refetch do React Query vai reverter
+					});
+			},
+			onClickDateTime: (dateTime: any) => {
+				const d = new Date(
+					dateTime.year,
+					dateTime.month - 1,
+					dateTime.day,
+				);
+				const t = `${String(dateTime.hour).padStart(2, "0")}:${String(dateTime.minute).padStart(2, "0")}`;
+				cbRef.current.onTimeSlotClick(d, t);
+			},
+			onClickDate: (date: any) => {
+				// Clique em dia no month view
+				const d = new Date(date.year, date.month - 1, date.day);
+				cbRef.current.onTimeSlotClick(d, "08:00");
+			},
+		},
+	});
 
-		// Convert currentDate to Temporal.PlainDate
-		const currentTemporal = Temporal.PlainDate.from({
+	// ── G) Sincronizar eventos quando appointments mudar ──
+	useEffect(() => {
+		if (!calendarApp) return;
+		(calendarApp as any).events.set(events);
+	}, [calendarApp, events]);
+
+	// ── H) Sincronizar viewType quando mudar externamente (URL / teclado) ──
+	useEffect(() => {
+		if (!calendarApp) return;
+		if (prevViewRef.current === viewType) return;
+		prevViewRef.current = viewType;
+		calendarControls.setView(VIEW_MAP[viewType]);
+	}, [calendarApp, calendarControls, viewType]);
+
+	// ── I) Sincronizar data quando mudar externamente (URL / teclado T) ──
+	useEffect(() => {
+		if (!calendarApp) return;
+		const dateStr = format(currentDate, "yyyy-MM-dd");
+		if (prevDateRef.current === dateStr) return;
+		prevDateRef.current = dateStr;
+		const plain = Temporal.PlainDate.from({
 			year: currentDate.getFullYear(),
 			month: currentDate.getMonth() + 1,
 			day: currentDate.getDate(),
 		});
+		calendarControls.setDate(plain);
+	}, [calendarApp, calendarControls, currentDate]);
 
-		// View configuration based on viewType prop
-		let view;
-		switch (viewType) {
-			case 'month':
-				view = createViewMonthGrid();
-				break;
-			case 'week':
-				view = createViewWeek();
-				break;
-			case 'day':
-				view = createViewDay();
-				break;
-		}
-
-		// Create calendar with plugins
-		return createCalendar({
-			selectedDate: currentTemporal,
-			views: [view],
-			events,
-			plugins: [dndPlugin],
-			callbacks: {
-				onDateUpdate: (date: Temporal.PlainDate) => {
-					const newDate = new Date(
-						date.year,
-						date.month - 1,
-						date.day
-					);
-					onDateChange(newDate);
-				},
-				onEventClick: (eventId: string) => {
-					const appointment = appointments.find((a) => a.id === eventId);
-					if (appointment) {
-						onAppointmentClick?.(appointment);
-					}
-				},
-				onSelectedDateUpdate: (date: Temporal.PlainDate) => {
-					// Handle date selection from calendar
-					if (onTimeSlotClick) {
-						const newDate = new Date(
-							date.year,
-							date.month - 1,
-							date.day
-						);
-						const timeStr = format(newDate, 'HH:mm');
-						onTimeSlotClick(newDate, timeStr);
-					}
-				},
-			},
-			customComponents: {
-				eventComponent: ({ event }: any) => {
-					const appointment: Appointment = event.appointment;
-					const isSelected = selectedIds.has(appointment.id);
-					const isSaving = savingAppointmentId === appointment.id;
-
-					// Convert Temporal to Date for formatting
-					const startDate = new Date(
-						event.start.year,
-						event.start.month - 1,
-						event.start.day,
-						event.start.hour,
-						event.start.minute
-					);
-					const endDate = new Date(
-						event.end.year,
-						event.end.month - 1,
-						event.end.day,
-						event.end.hour,
-						event.end.minute
-					);
-
-					return (
-						<CalendarAppointmentCard
-							ref={null as any}
-							patientName={appointment.patientName}
-							time={format(startDate, 'HH:mm')}
-							endTime={format(endDate, 'HH:mm')}
-							type={appointment.type}
-							status={appointment.status}
-							isDragging={dragState?.activeId === appointment.id}
-							isSaving={isSaving}
-							isSelected={isSelected}
-							statusConfig={{
-								color: event.statusColor,
-								icon: null as any,
-							}}
-							onClick={(e) => {
-								e.preventDefault();
-								e.stopPropagation();
-								onEditAppointment?.(appointment);
-							}}
-							className={cn(
-								'cursor-pointer',
-								selectionMode && 'selectable',
-								isSelected && 'ring-2 ring-primary'
-							)}
-						/>
-					);
-				},
-			},
-		});
-	}, [
-		events,
-		viewType,
-		currentDate,
-		appointments,
-		selectedIds,
-		savingAppointmentId,
-		dragState,
-		onDateChange,
-		onTimeSlotClick,
-		onAppointmentClick,
-		onEditAppointment,
-		onAppointmentReschedule,
-	]);
-
-	// Mark as ready after calendar app is initialized
-	useEffect(() => {
-		if (calendarApp) {
-			setIsReady(true);
-		}
-	}, [calendarApp]);
-
-	// Navigation handlers
-	const handlePrevious = useCallback(() => {
-		let newDate: Date;
-		switch (viewType) {
-			case 'month':
-				newDate = subMonths(currentDate, 1);
-				break;
-			case 'week':
-				newDate = subWeeks(currentDate, 1);
-				break;
-			case 'day':
-				newDate = subDays(currentDate, 1);
-				break;
-		}
-		onDateChange(newDate);
-	}, [currentDate, viewType, onDateChange]);
-
-	const handleNext = useCallback(() => {
-		let newDate: Date;
-		switch (viewType) {
-			case 'month':
-				newDate = addMonths(currentDate, 1);
-				break;
-			case 'week':
-				newDate = addWeeks(currentDate, 1);
-				break;
-			case 'day':
-				newDate = addDays(currentDate, 1);
-				break;
-		}
-		onDateChange(newDate);
-	}, [currentDate, viewType, onDateChange]);
-
-	const handleToday = useCallback(() => {
-		onDateChange(new Date());
-	}, [onDateChange]);
-
-	// Render header
-	const renderHeader = () => (
-		<motion.div
-			initial={{ opacity: 0, y: -10 }}
-			animate={{ opacity: 1, y: 0 }}
-			className="flex items-center justify-between mb-4 px-2"
-		>
-			<div className="flex items-center gap-2">
-				<button
-					type="button"
-					onClick={handlePrevious}
-					className="h-8 w-8 p-0 inline-flex items-center justify-center rounded-md border border-slate-200 bg-transparent hover:bg-slate-100 dark:border-slate-700 dark:hover:bg-slate-800"
-				>
-					<ChevronLeft className="h-4 w-4" />
-				</button>
-				<button
-					type="button"
-					onClick={handleToday}
-					className="h-8 px-3 inline-flex items-center justify-center rounded-md border border-slate-200 bg-transparent hover:bg-slate-100 dark:border-slate-700 dark:hover:bg-slate-800 text-sm font-medium"
-				>
-					Hoje
-				</button>
-				<button
-					type="button"
-					onClick={handleNext}
-					className="h-8 w-8 p-0 inline-flex items-center justify-center rounded-md border border-slate-200 bg-transparent hover:bg-slate-100 dark:border-slate-700 dark:hover:bg-slate-800"
-				>
-					<ChevronRight className="h-4 w-4" />
-				</button>
-			</div>
-
-			<h2 className="text-lg font-semibold">
-				{format(currentDate, 'MMMM yyyy', { locale: ptBR })}
-			</h2>
-
-			<div className="flex items-center gap-2">
-				<button
-					type="button"
-					onClick={() => onViewTypeChange('day')}
-					className={`h-8 px-3 inline-flex items-center justify-center rounded-md text-sm font-medium ${
-						viewType === 'day'
-							? 'bg-primary text-primary-foreground'
-							: 'border border-slate-200 bg-transparent hover:bg-slate-100 dark:border-slate-700 dark:hover:bg-slate-800'
-					}`}
-				>
-					Dia
-				</button>
-				<button
-					type="button"
-					onClick={() => onViewTypeChange('week')}
-					className={`h-8 px-3 inline-flex items-center justify-center rounded-md text-sm font-medium ${
-						viewType === 'week'
-							? 'bg-primary text-primary-foreground'
-							: 'border border-slate-200 bg-transparent hover:bg-slate-100 dark:border-slate-700 dark:hover:bg-slate-800'
-					}`}
-				>
-					Semana
-				</button>
-				<button
-					type="button"
-					onClick={() => onViewTypeChange('month')}
-					className={`h-8 px-3 inline-flex items-center justify-center rounded-md text-sm font-medium ${
-						viewType === 'month'
-							? 'bg-primary text-primary-foreground'
-							: 'border border-slate-200 bg-transparent hover:bg-slate-100 dark:border-slate-700 dark:hover:bg-slate-800'
-					}`}
-				>
-					Mês
-				</button>
-			</div>
-		</motion.div>
+	// ── J) Custom event component ──
+	// Recriado apenas quando selection state mudar
+	const customEventComponent = useCallback(
+		({ calendarEvent }: { calendarEvent: any }) => {
+			const apt: Appointment | undefined = calendarEvent._customData;
+			if (!apt) {
+				return (
+					<div className="text-xs p-1 truncate">{calendarEvent.title}</div>
+				);
+			}
+			return (
+				<ScheduleXAppointmentCard
+					appointment={apt}
+					onEditAppointment={cbRef.current.onEditAppointment}
+					onStatusChange={cbRef.current.onStatusChange}
+					selectionMode={selectionMode}
+					isSelected={selectedIds.has(apt.id)}
+					onToggleSelection={onToggleSelection}
+				/>
+			);
+		},
+		[selectionMode, selectedIds, onToggleSelection],
 	);
 
-	return (
-		<div className="h-full flex flex-col bg-white dark:bg-slate-950 rounded-xl border border-slate-200 dark:border-slate-800 overflow-hidden">
-			{renderHeader()}
+	// ─────────────────────────────────────────────────────────
+	// Render
+	// ─────────────────────────────────────────────────────────
 
-			{/* ScheduleX Calendar Component - Always render, no conditional */}
-			<div
-				className="flex-1 schedulex-calendar-wrapper"
-				style={{
-					minHeight: '600px',
-					'--sx-primary-color': 'rgb(59, 130, 246)',
-					'--sx-bg-primary': 'rgb(248, 250, 252)',
-					'--sx-text-primary': 'rgb(15, 23, 42)',
-				} as React.CSSProperties}
-			>
-				{isReady && calendarApp ? (
-					<ScheduleXCalendar calendarApp={calendarApp} />
-				) : (
-					<CalendarSkeletonEnhanced viewType={viewType} />
-				)}
+	return (
+		<div className="h-full flex flex-col bg-white dark:bg-slate-950 overflow-hidden">
+			{/* ── Navigation row ── */}
+			<div className="flex items-center gap-2 px-3 py-2 border-b border-slate-200 dark:border-slate-800 shrink-0">
+				<Button
+					variant="outline"
+					size="icon"
+					className="h-7 w-7"
+					onClick={() => onDateChange(getPrev(currentDate, viewType))}
+					aria-label="Anterior"
+				>
+					<ChevronLeft className="h-3.5 w-3.5" />
+				</Button>
+
+				<Button
+					variant="outline"
+					size="sm"
+					className="h-7 px-2.5 text-xs font-medium"
+					onClick={() => onDateChange(new Date())}
+				>
+					Hoje
+				</Button>
+
+				<Button
+					variant="outline"
+					size="icon"
+					className="h-7 w-7"
+					onClick={() => onDateChange(getNext(currentDate, viewType))}
+					aria-label="Próximo"
+				>
+					<ChevronRight className="h-3.5 w-3.5" />
+				</Button>
+
+				<h2
+					className={cn(
+						"text-sm font-semibold ml-1 capitalize",
+						"text-slate-800 dark:text-slate-100",
+					)}
+				>
+					{formatHeader(currentDate, viewType)}
+				</h2>
+			</div>
+
+			{/* ── Toolbar com filtros ── */}
+			<ScheduleToolbar
+				currentDate={currentDate}
+				viewType={viewType}
+				onViewChange={(v) => onViewTypeChange(v)}
+				isSelectionMode={selectionMode}
+				onToggleSelection={onToggleSelectionMode ?? (() => {})}
+				onCreateAppointment={onCreateAppointment ?? (() => {})}
+				filters={filters}
+				onFiltersChange={onFiltersChange}
+				onClearFilters={onClearFilters}
+			/>
+
+			{/* ── ScheduleX Calendar ── */}
+			<div className="flex-1 min-h-0 schedulex-calendar-wrapper overflow-auto">
+				<ScheduleXCalendar
+					calendarApp={calendarApp}
+					customComponents={{
+						timeGridEvent: customEventComponent,
+						dateGridEvent: customEventComponent,
+						monthGridEvent: customEventComponent,
+					}}
+				/>
 			</div>
 		</div>
 	);
-};
+}
+
+export default ScheduleXCalendarWrapper;
