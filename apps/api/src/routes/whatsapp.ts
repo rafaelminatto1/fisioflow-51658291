@@ -315,7 +315,7 @@ app.get('/pending-confirmations', requireAuth, async (c) => {
       LEFT JOIN patients p ON p.id = a.patient_id
       WHERE a.organization_id = $1
         AND a.date >= $2
-        AND a.status IN ('scheduled', 'agendado')
+        AND a.status IN ('agendado')
       ORDER BY a.date ASC, a.start_time ASC
       LIMIT $3
     `,

@@ -29,6 +29,7 @@ import { Temporal } from "temporal-polyfill";
 import { format, addDays, addMonths, addWeeks, subDays, subMonths, subWeeks } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { ChevronLeft, ChevronRight } from "lucide-react";
+import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { ScheduleToolbar } from "./ScheduleToolbar";
 import { ScheduleXAppointmentCard } from "./ScheduleXAppointmentCard";
@@ -61,6 +62,7 @@ interface ScheduleXCalendarWrapperProps {
 	onTimeSlotClick: (date: Date, time: string) => void;
 	onAppointmentClick?: (appointment: Appointment) => void;
 	onEditAppointment?: (appointment: Appointment) => void;
+	onDeleteAppointment?: (appointment: Appointment) => void;
 	onStatusChange?: (id: string, status: string) => void;
 	onAppointmentReschedule?: (
 		appointment: Appointment,
@@ -100,7 +102,7 @@ function appointmentToEvent(apt: Appointment) {
 	const hour = Number(timeParts[0]) || 0;
 	const minute = Number(timeParts[1]) || 0;
 
-	const duration = apt.duration ?? 60;
+	const duration = apt.duration && apt.duration > 0 ? apt.duration : 60;
 
 	const startZdt = Temporal.ZonedDateTime.from({
 		year,
@@ -117,7 +119,7 @@ function appointmentToEvent(apt: Appointment) {
 
 	return {
 		id: apt.id,
-		title: apt.patientName,
+		title: apt.patientName || "Paciente",
 		start: startZdt,
 		end: endZdt,
 		// Dados originais para recuperar no customComponent
@@ -174,6 +176,7 @@ function ScheduleXCalendarWrapper(props: ScheduleXCalendarWrapperProps) {
 		onTimeSlotClick,
 		onAppointmentClick,
 		onEditAppointment,
+		onDeleteAppointment,
 		onStatusChange,
 		onAppointmentReschedule,
 		selectionMode = false,
@@ -184,9 +187,6 @@ function ScheduleXCalendarWrapper(props: ScheduleXCalendarWrapperProps) {
 		filters,
 		onFiltersChange,
 		onClearFilters,
-		patientFilter = "",
-		onPatientFilterChange,
-		therapists = [],
 	} = props;
 
 	// ── A) Refs para callbacks: sem stale closures, sem recriar calendário ──
@@ -196,6 +196,7 @@ function ScheduleXCalendarWrapper(props: ScheduleXCalendarWrapperProps) {
 		onTimeSlotClick,
 		onAppointmentClick,
 		onEditAppointment,
+		onDeleteAppointment,
 		onStatusChange,
 		onAppointmentReschedule,
 	});
@@ -207,6 +208,7 @@ function ScheduleXCalendarWrapper(props: ScheduleXCalendarWrapperProps) {
 			onTimeSlotClick,
 			onAppointmentClick,
 			onEditAppointment,
+			onDeleteAppointment,
 			onStatusChange,
 			onAppointmentReschedule,
 		};
@@ -236,7 +238,7 @@ function ScheduleXCalendarWrapper(props: ScheduleXCalendarWrapperProps) {
 				month: currentDate.getMonth() + 1,
 				day: currentDate.getDate(),
 			}),
-		[], // Intencional: só para inicialização
+		[], // Intencional: só para inicialização; sincronização feita no useEffect I
 	);
 
 	// ── F) Calendário criado UMA VEZ ──
@@ -271,13 +273,14 @@ function ScheduleXCalendarWrapper(props: ScheduleXCalendarWrapperProps) {
 			onEventUpdate: (updatedEvent: any) => {
 				const apt: Appointment | undefined = updatedEvent._customData;
 				if (!apt || !cbRef.current.onAppointmentReschedule) return;
+				// newStart é ZonedDateTime em America/Sao_Paulo — usamos .hour/.minute direto
 				const newStart = updatedEvent.start as Temporal.ZonedDateTime;
 				const newDate = new Date(newStart.year, newStart.month - 1, newStart.day);
 				const newTime = `${String(newStart.hour).padStart(2, "0")}:${String(newStart.minute).padStart(2, "0")}`;
 				cbRef.current
 					.onAppointmentReschedule(apt, newDate, newTime)
 					.catch(() => {
-						// Em caso de falha, o refetch do React Query vai reverter
+						toast.error("Erro ao reagendar. O agendamento será restaurado.");
 					});
 			},
 			onClickDateTime: (dateTime: any) => {
@@ -339,6 +342,7 @@ function ScheduleXCalendarWrapper(props: ScheduleXCalendarWrapperProps) {
 				<ScheduleXAppointmentCard
 					appointment={apt}
 					onEditAppointment={cbRef.current.onEditAppointment}
+					onDeleteAppointment={cbRef.current.onDeleteAppointment}
 					onStatusChange={cbRef.current.onStatusChange}
 					selectionMode={selectionMode}
 					isSelected={selectedIds.has(apt.id)}
