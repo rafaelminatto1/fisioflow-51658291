@@ -98,8 +98,9 @@ export const RealtimeProvider: React.FC<{ children: React.ReactNode }> = ({
 			let confirmed = 0;
 			let cancelled = 0;
 			let revenue = 0;
-			const todayStart = new Date();
-			todayStart.setHours(0, 0, 0, 0);
+			
+			// Usando Temporal para data de hoje sem horas (comparação segura)
+			const today = Temporal.Now.plainDateISO();
 			const patientSet = new Set<string>();
 
 			for (const a of appointments) {
@@ -107,9 +108,17 @@ export const RealtimeProvider: React.FC<{ children: React.ReactNode }> = ({
 					confirmed++;
 					patientSet.add(a.patient_name);
 
-					const apptDate = new Date(a.start_time);
-					if (apptDate >= todayStart && a.type === "paid") {
-						revenue += 100;
+					try {
+						// Converte start_time ISO para PlainDate para comparar com 'today'
+						const apptDate = Temporal.Instant.from(a.start_time)
+							.toZonedDateTimeISO(Temporal.Now.timeZoneId())
+							.toPlainDate();
+						
+						if (Temporal.PlainDate.compare(apptDate, today) >= 0 && a.type === "paid") {
+							revenue += 100;
+						}
+					} catch (e) {
+						// Fallback silencioso se a data estiver malformada
 					}
 				} else if (a.status === "cancelled") {
 					cancelled++;
