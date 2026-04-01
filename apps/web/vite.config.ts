@@ -214,18 +214,6 @@ export default defineConfig(({ mode }) => {
 					// Priority: maior = avaliado primeiro (chunk mais específico vence).
 					codeSplitting: {
 						groups: [
-							// command palette, calendários e toasts
-							{
-								name: "vendor-ui-helpers",
-								test: /node_modules\/(cmdk|sonner|react-day-picker)/,
-								priority: 12.1,
-							},
-							// react + react-dom — runtime base do app (prioridade máxima absoluta)
-							{
-								name: "vendor-react",
-								test: /[\\/]node_modules[\\/](react|react-dom|react-reconciler|scheduler|temporal-polyfill|date-fns)[\\/]/,
-								priority: 100,
-							},
 							// DICOM viewer split — evita um único megachunk monolítico
 							{
 								name: "vendor-vtk",
@@ -440,10 +428,9 @@ export default defineConfig(({ mode }) => {
 								priority: 12.2,
 							},
 							// command palette, calendários e toasts
-							// command palette, calendários e toasts
 							{
 								name: "vendor-ui-helpers",
-								test: /node_modules\/(cmdk|sonner|react-day-picker)/,
+								test: /node_modules\/(cmdk|sonner|react-day-picker|@schedule-x)/,
 								priority: 12.1,
 							},
 							// react + react-dom — runtime base do app (prioridade máxima absoluta)

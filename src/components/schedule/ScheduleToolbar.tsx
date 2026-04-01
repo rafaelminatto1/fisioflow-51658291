@@ -37,6 +37,7 @@ export interface ScheduleToolbarProps {
 	currentDate: Date;
 	viewType: "day" | "week" | "month";
 	onViewChange: (view: "day" | "week" | "month") => void;
+	onDateChange: (date: Date) => void;
 	isSelectionMode: boolean;
 	onToggleSelection: () => void;
 	onCreateAppointment: () => void;
@@ -64,6 +65,7 @@ export const ScheduleToolbar: React.FC<ScheduleToolbarProps> = ({
 	currentDate,
 	viewType,
 	onViewChange,
+	onDateChange,
 	isSelectionMode,
 	onToggleSelection,
 	onCreateAppointment,
@@ -73,6 +75,20 @@ export const ScheduleToolbar: React.FC<ScheduleToolbarProps> = ({
 	onCancelAllToday,
 }) => {
 	const isMobile = useIsMobile();
+
+	const handleNavigate = (direction: "prev" | "next") => {
+		const newDate = new Date(currentDate);
+		if (direction === "prev") {
+			if (viewType === "day") newDate.setDate(newDate.getDate() - 1);
+			else if (viewType === "week") newDate.setDate(newDate.getDate() - 7);
+			else if (viewType === "month") newDate.setMonth(newDate.getMonth() - 1);
+		} else {
+			if (viewType === "day") newDate.setDate(newDate.getDate() + 1);
+			else if (viewType === "week") newDate.setDate(newDate.getDate() + 7);
+			else if (viewType === "month") newDate.setMonth(newDate.getMonth() + 1);
+		}
+		onDateChange(newDate);
+	};
 
 	// Format current date range based on view type
 	const formattedDateRange = React.useMemo(() => {
@@ -116,7 +132,7 @@ export const ScheduleToolbar: React.FC<ScheduleToolbarProps> = ({
 						<Button
 							variant="ghost"
 							size="icon"
-							onClick={() => window.dispatchEvent(new CustomEvent("schedule-navigate", { detail: { direction: "prev" } }))}
+							onClick={() => handleNavigate("prev")}
 							className="h-7 w-7 p-0 rounded-md hover:bg-white dark:hover:bg-slate-800"
 						>
 							<ChevronLeft className="w-4 h-4" />
@@ -124,7 +140,7 @@ export const ScheduleToolbar: React.FC<ScheduleToolbarProps> = ({
 						<Button
 							variant="ghost"
 							size="icon"
-							onClick={() => window.dispatchEvent(new CustomEvent("schedule-navigate", { detail: { direction: "next" } }))}
+							onClick={() => handleNavigate("next")}
 							className="h-7 w-7 p-0 rounded-md hover:bg-white dark:hover:bg-slate-800"
 						>
 							<ChevronRight className="w-4 h-4" />
@@ -133,7 +149,7 @@ export const ScheduleToolbar: React.FC<ScheduleToolbarProps> = ({
 					
 					<SmartDatePicker
 						date={currentDate}
-						onChange={(date) => date && window.dispatchEvent(new CustomEvent("schedule-date-change", { detail: date }))}
+						onChange={(date) => date && onDateChange(date)}
 						className="h-9 px-3 border-none bg-transparent hover:bg-slate-50 dark:hover:bg-slate-900 font-bold text-sm tracking-tight min-w-[160px]"
 						placeholder={formattedDateRange}
 					/>
@@ -233,7 +249,7 @@ export const ScheduleToolbar: React.FC<ScheduleToolbarProps> = ({
 					<Button
 						variant="ghost"
 						size="icon"
-						onClick={() => window.dispatchEvent(new CustomEvent("schedule-navigate", { detail: { direction: "prev" } }))}
+						onClick={() => handleNavigate("prev")}
 						className="h-9 w-9 rounded-xl border border-slate-200 dark:border-slate-800"
 					>
 						<ChevronLeft className="w-5 h-5" />
@@ -241,7 +257,7 @@ export const ScheduleToolbar: React.FC<ScheduleToolbarProps> = ({
 
 					<SmartDatePicker
 						date={currentDate}
-						onChange={(date) => date && window.dispatchEvent(new CustomEvent("schedule-date-change", { detail: date }))}
+						onChange={(date) => date && onDateChange(date)}
 						className="h-9 min-w-[120px] border-none bg-transparent font-black text-sm px-1"
 						placeholder={format(currentDate, "MMM yyyy", { locale: ptBR })}
 					/>
@@ -249,7 +265,7 @@ export const ScheduleToolbar: React.FC<ScheduleToolbarProps> = ({
 					<Button
 						variant="ghost"
 						size="icon"
-						onClick={() => window.dispatchEvent(new CustomEvent("schedule-navigate", { detail: { direction: "next" } }))}
+						onClick={() => handleNavigate("next")}
 						className="h-9 w-9 rounded-xl border border-slate-200 dark:border-slate-800"
 					>
 						<ChevronRight className="w-5 h-5" />
