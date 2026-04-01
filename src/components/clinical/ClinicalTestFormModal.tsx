@@ -106,6 +106,8 @@ export function ClinicalTestFormModal({
 		regularity_sessions: null,
 		layout_type: undefined,
 		image_url: "",
+		initial_position_image_url: "",
+		final_position_image_url: "",
 		media_urls: [],
 	});
 
@@ -120,6 +122,8 @@ export function ClinicalTestFormModal({
 					: [],
 				layout_type: test.layout_type ?? undefined,
 				image_url: test.image_url ?? "",
+				initial_position_image_url: test.initial_position_image_url ?? "",
+				final_position_image_url: test.final_position_image_url ?? "",
 				media_urls: Array.isArray(test.media_urls) ? test.media_urls : [],
 			});
 			setTagsInput((test.tags || []).join(", "));
@@ -140,6 +144,8 @@ export function ClinicalTestFormModal({
 				regularity_sessions: null,
 				layout_type: undefined,
 				image_url: "",
+				initial_position_image_url: "",
+				final_position_image_url: "",
 				media_urls: [],
 			});
 			setTagsInput("");
@@ -164,6 +170,8 @@ export function ClinicalTestFormModal({
 				regularity_sessions: data.regularity_sessions || null,
 				layout_type: data.layout_type || null,
 				image_url: data.image_url || null,
+				initial_position_image_url: data.initial_position_image_url || null,
+				final_position_image_url: data.final_position_image_url || null,
 				media_urls: data.media_urls?.length ? data.media_urls : null,
 				organization_id: organizationId,
 				created_by: user?.uid,
@@ -548,8 +556,52 @@ export function ClinicalTestFormModal({
 									placeholder="https://... (imagem de execução)"
 								/>
 								<p className="text-xs text-slate-500 mt-1">
-									Imagem exibida como referência visual para o teste.
+									Imagem exibida como referência visual principal.
 								</p>
+							</div>
+
+							{/* Initial Position Image URL */}
+							<div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+								<div>
+									<Label
+										htmlFor="initial_position_image"
+										className="flex items-center gap-2"
+									>
+										<ImageIcon className="h-4 w-4" /> Posição Inicial
+									</Label>
+									<Input
+										id="initial_position_image"
+										type="url"
+										value={formData.initial_position_image_url || ""}
+										onChange={(e) =>
+											setFormData({
+												...formData,
+												initial_position_image_url: e.target.value,
+											})
+										}
+										placeholder="https://... (posição inicial)"
+									/>
+								</div>
+								<div>
+									<Label
+										htmlFor="final_position_image"
+										className="flex items-center gap-2"
+									>
+										<ImageIcon className="h-4 w-4" /> Posição Final
+									</Label>
+									<Input
+										id="final_position_image"
+										type="url"
+										value={formData.final_position_image_url || ""}
+										onChange={(e) =>
+											setFormData({
+												...formData,
+												final_position_image_url: e.target.value,
+											})
+										}
+										placeholder="https://... (posição final)"
+									/>
+								</div>
 							</div>
 						</TabsContent>
 					</div>

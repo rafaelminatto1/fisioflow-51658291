@@ -207,20 +207,26 @@ export function ClinicalTestDetailsModal({
 						)}
 
 						<div className="grid grid-cols-2 gap-4">
-							{galleryImages.length > 0 ? (
-								galleryImages.map((url, index) => (
-									<div key={url} className="space-y-2">
-										<span className="pl-1 text-[10px] font-bold uppercase tracking-widest text-slate-400">
-											{index === 0 ? "Posição inicial" : "Posição final"}
-										</span>
+							{[
+								{
+									url: test.initial_position_image_url,
+									label: "Posição inicial",
+								},
+								{ url: test.final_position_image_url, label: "Posição final" },
+							].map((item, index) => (
+								<div key={item.label} className="space-y-2">
+									<span className="pl-1 text-[10px] font-bold uppercase tracking-widest text-slate-400">
+										{item.label}
+									</span>
+									{item.url ? (
 										<button
 											type="button"
-											onClick={() => setPreviewImage(url)}
+											onClick={() => setPreviewImage(item.url || null)}
 											className="group relative aspect-square w-full cursor-zoom-in overflow-hidden rounded-2xl border border-slate-100 bg-slate-50 shadow-sm transition-all active:scale-95"
 										>
 											<img
-												src={url}
-												alt={`${test.name} - ${index === 0 ? "Inicial" : "Final"}`}
+												src={item.url}
+												alt={`${test.name} - ${item.label}`}
 												className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-110"
 											/>
 											<div className="absolute inset-0 bg-slate-900/0 transition-colors group-hover:bg-slate-900/10" />
@@ -230,14 +236,11 @@ export function ClinicalTestDetailsModal({
 												</div>
 											</div>
 										</button>
-									</div>
-								))
-							) : (
-								<>
-									<MediaPlaceholder label="Posição inicial" />
-									<MediaPlaceholder label="Posição final" />
-								</>
-							)}
+									) : (
+										<MediaPlaceholder label={item.label} />
+									)}
+								</div>
+							))}
 						</div>
 					</div>
 
