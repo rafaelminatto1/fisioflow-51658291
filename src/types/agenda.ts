@@ -167,6 +167,9 @@ export interface CardSizeConfig {
 	heightMultiplier: number;
 }
 
+// Calendar view types
+export type CalendarViewType = "day" | "week" | "month";
+
 // ============================================================================
 // SCHEDULE CONFIGURATION TYPES (Database tables: schedule_*)
 // ============================================================================
