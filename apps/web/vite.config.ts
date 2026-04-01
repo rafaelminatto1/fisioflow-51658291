@@ -429,7 +429,7 @@ export default defineConfig(({ mode }) => {
 							// react + react-dom — runtime base do app (prioridade máxima absoluta)
 							{
 								name: "vendor-react",
-								test: /[\\/]node_modules[\\/](react|react-dom|react-reconciler|scheduler)[\\/]/,
+								test: /[\\/]node_modules[\\/](react|react-dom|react-reconciler|scheduler|temporal-polyfill|date-fns)[\\/]/,
 								priority: 100,
 							},
 						],
