@@ -111,18 +111,22 @@ export function ScheduleXCalendarWrapper({
 						if (!a || !a.start_time || !a.end_time) return false;
 						const s = String(a.start_time).trim();
 						const e = String(a.end_time).trim();
-						if (!s || !e) return false;
+						if (!s || !e || s === "undefined" || e === "undefined") return false;
 						return isValid(parseISO(s)) && isValid(parseISO(e));
 					})
-					.map(a => ({
-						id: String(a.id),
-						title: a.patient_name || "Consulta",
-						start: String(a.start_time).replace(' ', 'T').substring(0, 16),
-						end: String(a.end_time).replace(' ', 'T').substring(0, 16),
-						status: a.status,
-						type: a.type,
-						therapist_id: a.therapist_id
-					}));
+					.map(a => {
+						const start = String(a.start_time).replace(' ', 'T').substring(0, 16);
+						const end = String(a.end_time).replace(' ', 'T').substring(0, 16);
+						return {
+							id: String(a.id),
+							title: a.patient_name || "Consulta",
+							start,
+							end,
+							status: a.status,
+							type: a.type,
+							therapist_id: a.therapist_id
+						};
+					});
 				
 				calendarApp.events.set(sxEvents);
 			} catch (err) {
