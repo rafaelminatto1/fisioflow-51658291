@@ -148,7 +148,7 @@ export const useAppointmentForm = ({
 				type: "Fisioterapia",
 				status: "agendado",
 				notes: "",
-				therapist_id: "",
+				therapist_id: effectiveTherapistId,
 				payment_status: "pending",
 				payment_amount: 170,
 				payment_method: "",
@@ -232,7 +232,7 @@ export const useAppointmentForm = ({
 
 		const formattedData = {
 			patient_id: appointmentData.patient_id,
-			therapist_id: appointmentData.therapist_id || null,
+			therapist_id: appointmentData.therapist_id || effectiveTherapistId,
 			date: appointmentData.appointment_date,
 			start_time: appointmentData.appointment_time,
 			end_time: endTimeString,
