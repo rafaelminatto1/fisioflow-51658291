@@ -2,6 +2,7 @@ import Fuse from "fuse.js";
 import * as React from "react";
 import { Check, ChevronsUpDown, Search, User, UserPlus } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { normalizeText } from "@/lib/utils/string";
 import { Button } from "@/components/ui/button";
 import {
 	Command,
@@ -105,12 +106,19 @@ export function PatientCombobox({
 		);
 	};
 
-	// Initialize Fuse instance with improved settings
+	// Initialize Fuse instance with improved settings and accent insensitivity
 	const fuse = React.useMemo(() => {
-		return new Fuse(patients, {
+		// Criamos uma versão dos pacientes com campos normalizados para o Fuse
+		const searchablePatients = patients.map(p => ({
+			...p,
+			normalized_name: normalizeText(p.name || p.full_name || ""),
+			normalized_full_name: normalizeText(p.full_name || ""),
+		}));
+
+		return new Fuse(searchablePatients, {
 			keys: [
-				{ name: "name", weight: 0.7 },
-				{ name: "full_name", weight: 0.7 },
+				{ name: "normalized_name", weight: 0.7 },
+				{ name: "normalized_full_name", weight: 0.7 },
 				{ name: "cpf", weight: 0.3 },
 				{ name: "phone", weight: 0.3 },
 			],
@@ -132,16 +140,19 @@ export function PatientCombobox({
 
 		if (!trimmedSearch || trimmedSearch === "") return patients;
 
-		const searchTerm = trimmedSearch.toLowerCase();
+		const searchTerm = normalizeText(trimmedSearch);
 		const normalizedDigits = searchTerm.replace(/\D/g, "");
 
-		const matchName = (p: Patient) =>
-			(p.name && p.name.toLowerCase().includes(searchTerm)) ||
-			(p.full_name && p.full_name.toLowerCase().includes(searchTerm));
+		const matchName = (p: Patient) => {
+			const name = normalizeText(p.name || "");
+			const fullName = normalizeText(p.full_name || "");
+			return name.includes(searchTerm) || fullName.includes(searchTerm);
+		};
 
 		const matchCpf = (p: Patient) => {
 			if (!p.cpf) return false;
-			if (p.cpf.toLowerCase().includes(searchTerm)) return true;
+			const normalizedCpf = p.cpf.toLowerCase();
+			if (normalizedCpf.includes(searchTerm)) return true;
 			if (
 				normalizedDigits.length >= 2 &&
 				p.cpf.replace(/\D/g, "").includes(normalizedDigits)
@@ -152,8 +163,9 @@ export function PatientCombobox({
 
 		const matchPhone = (p: Patient) => {
 			if (!p.phone) return false;
+			const normalizedPhone = p.phone.toLowerCase();
 			if (
-				p.phone.includes(searchTerm) ||
+				normalizedPhone.includes(searchTerm) ||
 				p.phone.replace(/\D/g, "").includes(searchTerm)
 			)
 				return true;
@@ -172,7 +184,7 @@ export function PatientCombobox({
 		const results = fuse.search(searchTerm);
 		const mapped = results
 			.sort((a, b) => (a.score || 0) - (b.score || 0))
-			.map((result) => result.item);
+			.map((result) => result.item as unknown as Patient);
 
 		const resultList = directMatches.length > 0 ? directMatches : mapped;
 		logger.debug(

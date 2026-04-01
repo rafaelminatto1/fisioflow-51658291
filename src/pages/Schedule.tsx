@@ -32,7 +32,8 @@ import "@/styles/schedule.css";
 
 // Feature Flag: Use new ScheduleX calendar instead of custom dnd-kit implementation
 // Set to true to enable the modern calendar with better performance
-const USE_SCHEDULEX = true;
+// DISABLED: @schedule-x/react has incompatible hook architecture with our React setup
+const USE_SCHEDULEX = false;
 
 export default function Schedule() {
 	const [searchParams, setSearchParams] = useSearchParams();
