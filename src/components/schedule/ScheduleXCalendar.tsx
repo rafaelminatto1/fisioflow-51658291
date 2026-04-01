@@ -16,7 +16,7 @@ import {
 import { createDragAndDropPlugin } from "@schedule-x/drag-and-drop";
 import { createCalendarControlsPlugin } from "@schedule-x/calendar-controls";
 import "@schedule-x/theme-default/dist/index.css";
-import { format } from "date-fns";
+import { format, isValid, parseISO } from "date-fns";
 import { Temporal } from "temporal-polyfill";
 
 // Tipos
@@ -36,7 +36,7 @@ interface ScheduleXCalendarWrapperProps {
 	onStatusChange?: (id: string, status: string) => void;
 	onRangeChange?: (range: { start: string; end: string }) => void;
 	customEventComponent?: any;
-	// Outras props passadas pela página que podemos ignorar ou usar depois
+	// Outras props passadas pela página
 	selectionMode?: boolean;
 	selectedIds?: string[];
 	onToggleSelection?: (id: string) => void;
@@ -97,13 +97,12 @@ export function ScheduleXCalendarWrapper({
 			"yyyy-MM-dd"
 		);
 
-		console.log("[ScheduleX] Initializing Core with validated string:", initialDateStr);
+		console.log("[ScheduleX] Initializing Core with stable config");
 
 		return {
 			views: [createViewDay(), createViewWeek(), createViewMonthGrid()],
 			defaultView: VIEW_MAP[viewType],
-			// REMOVE selectedDate to bypass constructor validation error
-			// selectedDate: initialDateStr, 
+			// Bypassing constructor selectedDate to avoid RangeError/Validation error
 			events: [], 
 			locale: "pt-BR",
 			firstDayOfWeek: 7, 
@@ -139,19 +138,28 @@ export function ScheduleXCalendarWrapper({
 	// ── D) Sincronização Imperativa de Eventos ──
 	useEffect(() => {
 		if (calendarApp && appointments && isTemporalReady) {
-			// Adaptar appointments para o formato ScheduleX com guardas defensivas
-			const sxEvents = appointments
-				.filter(a => a && a.start_time && a.end_time) // Garantir que datas existam
-				.map(a => ({
-					id: a.id,
-					title: a.patient_name || "Consulta",
-					start: a.start_time.replace(' ', 'T').substring(0, 16),
-					end: a.end_time.replace(' ', 'T').substring(0, 16),
-					status: a.status,
-					type: a.type,
-					therapist_id: a.therapist_id
-				}));
-			calendarApp.events.set(sxEvents);
+			try {
+				// Adaptar appointments para o formato ScheduleX com guardas rigorosas
+				const sxEvents = appointments
+					.filter(a => {
+						if (!a || !a.start_time || !a.end_time) return false;
+						// Validar se as datas são parseáveis e não vazias
+						return isValid(parseISO(a.start_time)) && isValid(parseISO(a.end_time));
+					})
+					.map(a => ({
+						id: a.id,
+						title: a.patient_name || "Consulta",
+						start: a.start_time.replace(' ', 'T').substring(0, 16),
+						end: a.end_time.replace(' ', 'T').substring(0, 16),
+						status: a.status,
+						type: a.type,
+						therapist_id: a.therapist_id
+					}));
+				
+				calendarApp.events.set(sxEvents);
+			} catch (e) {
+				console.error("[ScheduleX] Error setting events:", e);
+			}
 		}
 	}, [appointments, calendarApp, isTemporalReady]);
 
