@@ -229,15 +229,10 @@ export function ScheduleXCalendarWrapper(props: ScheduleXCalendarWrapperProps) {
 	const [calendarControls] = useState(() => createCalendarControlsPlugin());
 	const [dndPlugin] = useState(() => createDragAndDropPlugin(15));
 
-	// ── E) Data inicial como Temporal.PlainDate (só usado na inicialização) ──
+	// ── E) Data inicial como string YYYY-MM-DD (só usado na inicialização) ──
 	// eslint-disable-next-line react-hooks/exhaustive-deps
 	const initialDate = useMemo(
-		() =>
-			Temporal.PlainDate.from({
-				year: currentDate.getFullYear(),
-				month: currentDate.getMonth() + 1,
-				day: currentDate.getDate(),
-			}),
+		() => format(currentDate, "yyyy-MM-dd"),
 		[], // Intencional: só para inicialização; sincronização feita no useEffect I
 	);
 
