@@ -2,39 +2,14 @@ import { Suspense, lazy, useEffect } from "react";
 import { Outlet, useLocation, useNavigate } from "react-router";
 import { fisioLogger as logger } from "@/lib/errors/logger";
 
-// Lazy loads for infrastructure components
-const RouteAwareNetworkStatus = lazy(() =>
-	import("@/components/ui/network-status").then((module) => ({
-		default: module.NetworkStatus,
-	})),
-);
-const RouteAwareSyncManager = lazy(() =>
-	import("@/components/sync/SyncManager").then((module) => ({
-		default: module.SyncManager,
-	})),
-);
-const RouteAwareTourGuide = lazy(() =>
-	import("@/components/system/TourGuide").then((module) => ({
-		default: module.TourGuide,
-	})),
-);
-const RouteAwareVersionManager = lazy(() =>
-	import("@/components/system/VersionManager").then((module) => ({
-		default: module.VersionManager,
-	})),
-);
-const RouteAwareWebVitalsIndicator = lazy(() =>
-	import("@/lib/monitoring/web-vitals").then((module) => ({
-		default: module.WebVitalsIndicator,
-	})),
-);
-const RouteAwarePosePreloadManager = lazy(() =>
-	import("@/components/ai/PosePreloadManager").then((module) => ({
-		default: module.PosePreloadManager,
-	})),
-);
+import { NetworkStatus } from "@/components/system/NetworkStatus";
+import { SyncManager } from "@/components/system/SyncManager";
+import { TourGuide } from "@/components/system/TourGuide";
+import { VersionManager } from "@/components/system/VersionManager";
+import { WebVitalsIndicator } from "@/components/system/WebVitalsIndicator";
+import { PosePreloadManager } from "@/components/system/PosePreloadManager";
 
-const NotificationInitializer = () => {
+export function InfrastructureLayout() {
 	const navigate = useNavigate();
 
 	useEffect(() => {
@@ -103,41 +78,19 @@ export default function InfrastructureLayout() {
 	const location = useLocation();
 	const isPublicRoute = isPublicBootPath(location.pathname);
 	const shouldPreloadPose = shouldPreloadPoseForPath(location.pathname);
-
-	return (
-		<>
-			<Suspense fallback={null}>
-				<RouteAwareNetworkStatus />
-			</Suspense>
-			{!isPublicRoute && (
-				<Suspense fallback={null}>
-					<RouteAwareSyncManager />
-				</Suspense>
+return (
+	<>
+		{!isPublicRoute && <NetworkStatus />}
+		{!isPublicRoute && <SyncManager />}
+		{!isPublicRoute && <TourGuide />}
+		{!isPublicRoute && <VersionManager />}
+		{!isPublicRoute && shouldPreloadPose && <PosePreloadManager />}
+		{!isPublicRoute &&
+			import.meta.env.DEV &&
+			!window.location.search.includes("e2e=true") && (
+				<WebVitalsIndicator />
 			)}
-			{!isPublicRoute && (
-				<Suspense fallback={null}>
-					<RouteAwareTourGuide />
-				</Suspense>
-			)}
-			{!isPublicRoute && <NotificationInitializer />}
-			{!isPublicRoute && (
-				<Suspense fallback={null}>
-					<RouteAwareVersionManager />
-				</Suspense>
-			)}
-			{!isPublicRoute && shouldPreloadPose && (
-				<Suspense fallback={null}>
-					<RouteAwarePosePreloadManager />
-				</Suspense>
-			)}
-			{!isPublicRoute &&
-				import.meta.env.DEV &&
-				!window.location.search.includes("e2e=true") && (
-					<Suspense fallback={null}>
-						<RouteAwareWebVitalsIndicator />
-					</Suspense>
-				)}
-			<Outlet />
-		</>
-	);
+		<Outlet />
+	</>
+);
 }
