@@ -11,6 +11,7 @@ import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient } from "@tanstack/react-query";
 import { AuthContextProvider } from "@/contexts/AuthContextProvider";
+import { useAuth } from "@/contexts/AuthContext";
 import { ErrorBoundary as FisioErrorBoundary } from "@/components/error/ErrorBoundary";
 import { GlobalErrorBoundary } from "@/components/error/GlobalErrorBoundary";
 import { fisioLogger as logger } from "@/lib/errors/logger";
