@@ -51,6 +51,7 @@ export function ScheduleXCalendarWrapper({
 	onRangeChange,
 	customEventComponent,
 }: ScheduleXCalendarWrapperProps) {
+	// ── A) Aguardar Temporal estar pronto (Injetado via index.html) ──
 	const [isTemporalReady, setIsTemporalReady] = useState(() => typeof window !== "undefined" && !!window.Temporal);
 
 	useEffect(() => {
@@ -64,14 +65,19 @@ export function ScheduleXCalendarWrapper({
 		return () => clearInterval(check);
 	}, [isTemporalReady]);
 
+	// ── B) Plugins Estáveis ──
 	const [calendarControls] = useState(() => createCalendarControlsPlugin());
 	const [dndPlugin] = useState(() => createDragAndDropPlugin());
 
+	// ── C) Configuração Memoizada do Calendário (EVITA RE-RENDER DO CORE) ──
 	const calendarConfig = useMemo(() => {
 		if (!isTemporalReady) return null;
+
 		return {
 			views: [createViewDay(), createViewWeek(), createViewMonthGrid()],
 			defaultView: VIEW_MAP[viewType],
+			// REMOVE selectedDate to bypass constructor validation error
+			// selectedDate: initialDateStr, 
 			events: [], 
 			locale: "pt-BR",
 			firstDayOfWeek: 7, 
@@ -99,29 +105,38 @@ export function ScheduleXCalendarWrapper({
 				}
 			},
 		};
+	// eslint-disable-next-line react-hooks/exhaustive-deps
 	}, [isTemporalReady]); 
 
 	const calendarApp = useCalendarApp(calendarConfig || { views: [createViewWeek()], events: [] });
 
+	// ── D) Sincronização Imperativa de Eventos com SANITIZAÇÃO RIGOROSA ──
 	useEffect(() => {
 		if (calendarApp && appointments && isTemporalReady) {
 			try {
 				const sxEvents = appointments
 					.filter(a => {
 						if (!a || !a.start_time || !a.end_time) return false;
+						// Verificar se são strings e têm conteúdo
 						const s = String(a.start_time).trim();
 						const e = String(a.end_time).trim();
-						if (!s || !e || s === "undefined" || e === "undefined") return false;
-						return isValid(parseISO(s)) && isValid(parseISO(e));
+						if (!s || !e || s === "undefined" || e === "undefined" || s === "null" || e === "null") return false;
+						
+						// Validar se as datas são parseáveis
+						const startDate = parseISO(s);
+						const endDate = parseISO(e);
+						return isValid(startDate) && isValid(endDate);
 					})
 					.map(a => {
-						const start = String(a.start_time).replace(' ', 'T').substring(0, 16);
-						const end = String(a.end_time).replace(' ', 'T').substring(0, 16);
+						// Formatar rigorosamente para YYYY-MM-DDTHH:mm
+						const startISO = String(a.start_time).replace(' ', 'T').substring(0, 16);
+						const endISO = String(a.end_time).replace(' ', 'T').substring(0, 16);
+						
 						return {
 							id: String(a.id),
 							title: a.patient_name || "Consulta",
-							start,
-							end,
+							start: startISO,
+							end: endISO,
 							status: a.status,
 							type: a.type,
 							therapist_id: a.therapist_id
@@ -130,13 +145,15 @@ export function ScheduleXCalendarWrapper({
 				
 				calendarApp.events.set(sxEvents);
 			} catch (err) {
-				console.error("[ScheduleX] Critical map error:", err);
+				console.error("[ScheduleX] Critical sync error:", err);
 			}
 		}
 	}, [appointments, calendarApp, isTemporalReady]);
 
+	// ── E) Sincronização Imperativa de Data e View ──
 	useEffect(() => {
 		if (!calendarApp || !isTemporalReady || !calendarControls) return;
+
 		try {
 			const targetDate = format(currentDate, "yyyy-MM-dd");
 			if (calendarControls.setViewDate) {
@@ -145,7 +162,9 @@ export function ScheduleXCalendarWrapper({
 		} catch (e) {}
 	}, [currentDate, calendarApp, calendarControls, isTemporalReady]);
 
-	if (!isTemporalReady) return <div className="flex-1 flex items-center justify-center">Carregando...</div>;
+	if (!isTemporalReady) {
+		return <div className="flex-1 flex items-center justify-center">Carregando calendário...</div>;
+	}
 
 	return (
 		<div className="flex-1 flex flex-col min-h-0 bg-background/30 backdrop-blur-md p-4 overflow-hidden">
