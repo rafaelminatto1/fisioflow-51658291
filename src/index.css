@@ -778,6 +778,9 @@ html.text-medium {
 html.text-large {
 	font-size: 20px;
 }
+html.text-xlarge {
+	font-size: 24px;
+}
 /* Ensure text respects user font size settings */
 @media (min-width: 640px) {
 	html.text-small {
@@ -788,6 +791,9 @@ html.text-large {
 	}
 	html.text-large {
 		font-size: 22px;
+	}
+	html.text-xlarge {
+		font-size: 26px;
 	}
 }
 /* Focus visible for keyboard navigation */

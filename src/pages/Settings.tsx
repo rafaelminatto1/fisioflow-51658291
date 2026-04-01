@@ -126,10 +126,7 @@ export default function Settings() {
 						/>
 					</TabsContent>
 					<TabsContent value="a11y" className="pt-4">
-						<AccessibilityTab
-							settings={state.accessibility.settings}
-							setSettings={state.accessibility.setSettings}
-						/>
+						<AccessibilityTab />
 					</TabsContent>
 				</Tabs>
 			</div>
