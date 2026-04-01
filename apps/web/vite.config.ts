@@ -202,7 +202,6 @@ export default defineConfig(({ mode }) => {
 			},
 		},
 		build: {
-			minify: false,
 			outDir: path.resolve(__dirname, "dist"),
 			target: "es2022",
 			cssTarget: "es2020",
@@ -215,6 +214,17 @@ export default defineConfig(({ mode }) => {
 					// Priority: maior = avaliado primeiro (chunk mais específico vence).
 					codeSplitting: {
 						groups: [
+							{
+								name: "vendor-ui-helpers",
+								test: /node_modules\/(cmdk|sonner|react-day-picker)/,
+								priority: 12.1,
+							},
+							// react + react-dom — runtime base do app (prioridade máxima absoluta)
+							{
+								name: "vendor-react",
+								test: /[\\/]node_modules[\\/](react|react-dom|react-reconciler|scheduler|temporal-polyfill|date-fns)[\\/]/,
+								priority: 100,
+							},
 							// DICOM viewer split — evita um único megachunk monolítico
 							{
 								name: "vendor-vtk",
