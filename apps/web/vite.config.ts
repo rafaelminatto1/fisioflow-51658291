@@ -123,7 +123,14 @@ export default defineConfig(({ mode }) => {
 		},
 		resolve: {
 			// Manual aliases are used below for precise control over package versions and stubs.
-			dedupe: ["react", "react-dom", "framer-motion"],
+			dedupe: [
+				"react",
+				"react-dom",
+				"framer-motion",
+				"scheduler",
+				"temporal-polyfill",
+				"date-fns",
+			],
 			alias: {
 				"@": path.resolve(repoRoot, "src"),
 				lodash: "lodash-es",
@@ -426,11 +433,12 @@ export default defineConfig(({ mode }) => {
 								test: /node_modules\/(cmdk|sonner|react-day-picker)/,
 								priority: 12.1,
 							},
-							// {
-							// 	name: "vendor-react",
-							// 	test: /[\\/]node_modules[\\/](react|react-dom|react-reconciler|scheduler|temporal-polyfill|date-fns)[\\/]/,
-							// 	priority: 100,
-							// },
+							// react + react-dom — runtime base do app (prioridade máxima absoluta)
+							{
+								name: "vendor-react",
+								test: /[\\/]node_modules[\\/](react|react-dom|react-reconciler|scheduler|temporal-polyfill|date-fns)[\\/]/,
+								priority: 100,
+							},
 						],
 					},
 				},
