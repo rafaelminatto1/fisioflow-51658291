@@ -251,7 +251,7 @@ function ScheduleXCalendarWrapper(props: ScheduleXCalendarWrapperProps) {
 		locale: "pt-BR",
 		firstDayOfWeek: 0, // Domingo
 		dayBoundaries: { start: "07:00", end: "20:00" },
-		plugins: [calendarControls, dndPlugin],
+		plugins: [], // [calendarControls, dndPlugin],
 		callbacks: {
 			onRangeUpdate: (range: any) => {
 				// Usuário navegou dentro do calendário; sincronizar data de volta para URL
@@ -308,7 +308,7 @@ function ScheduleXCalendarWrapper(props: ScheduleXCalendarWrapperProps) {
 
 	// ── H) Sincronizar viewType quando mudar externamente (URL / teclado) ──
 	useEffect(() => {
-		if (!calendarApp) return;
+		if (!calendarApp || !calendarControls.setView) return;
 		if (prevViewRef.current === viewType) return;
 		prevViewRef.current = viewType;
 		calendarControls.setView(VIEW_MAP[viewType]);
@@ -316,7 +316,7 @@ function ScheduleXCalendarWrapper(props: ScheduleXCalendarWrapperProps) {
 
 	// ── I) Sincronizar data quando mudar externamente (URL / teclado T) ──
 	useEffect(() => {
-		if (!calendarApp) return;
+		if (!calendarApp || !calendarControls.setDate) return;
 		const dateStr = format(currentDate, "yyyy-MM-dd");
 		if (prevDateRef.current === dateStr) return;
 		prevDateRef.current = dateStr;
