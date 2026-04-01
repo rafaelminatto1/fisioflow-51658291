@@ -79,29 +79,71 @@ workflows:
         script: |
           keychain initialize
           
-          # Manually install the provisioning profile from the repo
-          # Name: FisioFlowProfissionaisAdHoc, UUID: 33c33a27-a698-4984-9461-2f2383749de9
+          # 1. Install certificate from environment variable
+          if [ -z "$CM_CERTIFICATE" ]; then
+            echo "ERRO: CM_CERTIFICATE não encontrada. Certifique-se de que a variável está no grupo 'appstore' no Codemagic."
+            exit 1
+          fi
+          
+          echo "$CM_CERTIFICATE" | base64 --decode > /tmp/certificate.p12
+          keychain add-certificates --certificate /tmp/certificate.p12 --certificate-password "$CM_CERTIFICATE_PASSWORD"
+          
+          # 2. Install provisioning profile from repo
+          # UUID: 33c33a27-a698-4984-9461-2f2383749de9
           PROFILES_HOME="$HOME/Library/MobileDevice/Provisioning Profiles"
           mkdir -p "$PROFILES_HOME"
           cp "$CM_BUILD_DIR/FisioFlow_Profissionais_AdHoc.mobileprovision" "$PROFILES_HOME/33c33a27-a698-4984-9461-2f2383749de9.mobileprovision"
           
-          # If certificates are provided via CM_CERTIFICATE group, they will be used.
-          # Otherwise, we rely on the ones already in the keychain or installed manually.
-          if [ ! -z "$CM_CERTIFICATE" ]; then
-            echo "$CM_CERTIFICATE" | base64 --decode > /tmp/certificate.p12
-            keychain add-certificates --certificate /tmp/certificate.p12 --certificate-password "$CM_CERTIFICATE_PASSWORD"
-          fi
+          # 3. List identities for debug
+          security find-identity -v -p codesigning
           
-          xcode-project use-profiles --project "$XCODE_PROJECT"
+          # 4. Create ExportOptions.plist manually
+          cat <<EOF > "$CM_BUILD_DIR/$APP_DIR/ios/ExportOptions.plist"
+          <?xml version="1.0" encoding="UTF-8"?>
+          <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+          <plist version="1.0">
+          <dict>
+              <key>method</key>
+              <string>ad-hoc</string>
+              <key>teamID</key>
+              <string>G7FDW933SF</string>
+              <key>uploadSymbols</key>
+              <true/>
+              <key>compileBitcode</key>
+              <false/>
+              <key>signingStyle</key>
+              <string>manual</string>
+              <key>provisioningProfiles</key>
+              <dict>
+                  <key>com.fisioflow.professionals</key>
+                  <string>33c33a27-a698-4984-9461-2f2383749de9</string>
+              </dict>
+          </dict>
+          </plist>
+          EOF
 
       - name: Build IPA (ad-hoc)
         script: |
-          # Use Codemagic CLI for a more reliable build-and-export process
-          xcode-project build-ipa \
-            --workspace "$XCODE_WORKSPACE" \
-            --scheme "$XCODE_SCHEME" \
-            --archive-flags "-destination 'generic/platform=iOS'" \
-            --export-options-plist "$APP_DIR/ios/ExportOptions.plist"
+          # Create build directory
+          mkdir -p "$CM_BUILD_DIR/build/ios/xcarchive"
+
+          # Build archive with explicit signing
+          xcodebuild -workspace "$XCODE_WORKSPACE" \
+            -scheme "$XCODE_SCHEME" \
+            -configuration Release \
+            -destination 'generic/platform=iOS' \
+            -archivePath "$CM_BUILD_DIR/build/ios/xcarchive/FisioFlowPro.xcarchive" \
+            CODE_SIGN_STYLE=Manual \
+            DEVELOPMENT_TEAM=G7FDW933SF \
+            PROVISIONING_PROFILE="33c33a27-a698-4984-9461-2f2383749de9" \
+            archive
+
+          # Export IPA from archive
+          xcodebuild -exportArchive \
+            -archivePath "$CM_BUILD_DIR/build/ios/xcarchive/FisioFlowPro.xcarchive" \
+            -exportPath "$CM_BUILD_DIR/build/ios/ipa" \
+            -exportOptionsPlist "$CM_BUILD_DIR/$APP_DIR/ios/ExportOptions.plist" \
+            -allowProvisioningUpdates
 
     artifacts:
       - build/ios/ipa/*.ipa
