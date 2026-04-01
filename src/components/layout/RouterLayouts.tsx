@@ -2,42 +2,13 @@ import { Suspense, lazy } from "react";
 import { Outlet, useLocation } from "react-router-dom";
 import { AppLoadingSkeleton } from "@/components/ui/AppLoadingSkeleton";
 
-// Lazy loads for infrastructure components
-const RouteAwareNetworkStatus = lazy(() =>
-	import("@/components/ui/network-status").then((module) => ({
-		default: module.NetworkStatus,
-	})),
-);
-const RouteAwareSyncManager = lazy(() =>
-	import("@/components/sync/SyncManager").then((module) => ({
-		default: module.SyncManager,
-	})),
-);
-const RouteAwareTourGuide = lazy(() =>
-	import("@/components/system/TourGuide").then((module) => ({
-		default: module.TourGuide,
-	})),
-);
-const RouteAwareVersionManager = lazy(() =>
-	import("@/components/system/VersionManager").then((module) => ({
-		default: module.VersionManager,
-	})),
-);
-const RouteAwareWebVitalsIndicator = lazy(() =>
-	import("@/lib/monitoring/web-vitals").then((module) => ({
-		default: module.WebVitalsIndicator,
-	})),
-);
-const RouteAwarePosePreloadManager = lazy(() =>
-	import("@/components/ai/PosePreloadManager").then((module) => ({
-		default: module.PosePreloadManager,
-	})),
-);
-const RouteAwareAuthenticatedAppShell = lazy(() =>
-	import("@/components/app/AuthenticatedAppShell").then((module) => ({
-		default: module.AuthenticatedAppShell,
-	})),
-);
+import { NetworkStatus } from "@/components/ui/network-status";
+import { SyncManager } from "@/components/sync/SyncManager";
+import { TourGuide } from "@/components/system/TourGuide";
+import { VersionManager } from "@/components/system/VersionManager";
+import { WebVitalsIndicator } from "@/lib/monitoring/web-vitals";
+import { PosePreloadManager } from "@/components/ai/PosePreloadManager";
+import { AuthenticatedAppShell } from "@/components/app/AuthenticatedAppShell";
 
 // Notification Initializer from App.tsx
 import { useEffect } from "react";
@@ -116,36 +87,16 @@ export const InfrastructureLayout = () => {
 
 	return (
 		<>
-			<Suspense fallback={null}>
-				<RouteAwareNetworkStatus />
-			</Suspense>
-			{!isPublicRoute && (
-				<Suspense fallback={null}>
-					<RouteAwareSyncManager />
-				</Suspense>
-			)}
-			{!isPublicRoute && (
-				<Suspense fallback={null}>
-					<RouteAwareTourGuide />
-				</Suspense>
-			)}
+			<NetworkStatus />
+			{!isPublicRoute && <SyncManager />}
+			{!isPublicRoute && <TourGuide />}
 			{!isPublicRoute && <NotificationInitializer />}
-			{!isPublicRoute && (
-				<Suspense fallback={null}>
-					<RouteAwareVersionManager />
-				</Suspense>
-			)}
-			{!isPublicRoute && shouldPreloadPose && (
-				<Suspense fallback={null}>
-					<RouteAwarePosePreloadManager />
-				</Suspense>
-			)}
+			{!isPublicRoute && <VersionManager />}
+			{!isPublicRoute && shouldPreloadPose && <PosePreloadManager />}
 			{!isPublicRoute &&
 				import.meta.env.DEV &&
 				!window.location.search.includes("e2e=true") && (
-					<Suspense fallback={null}>
-						<RouteAwareWebVitalsIndicator />
-					</Suspense>
+					<WebVitalsIndicator />
 				)}
 			<Outlet />
 		</>
@@ -165,10 +116,8 @@ export const AppShellLayout = () => {
 	}
 
 	return (
-		<Suspense fallback={<AppLoadingSkeleton message="Carregando sistema..." />}>
-			<RouteAwareAuthenticatedAppShell>
-				<Outlet />
-			</RouteAwareAuthenticatedAppShell>
-		</Suspense>
+		<AuthenticatedAppShell>
+			<Outlet />
+		</AuthenticatedAppShell>
 	);
 };
