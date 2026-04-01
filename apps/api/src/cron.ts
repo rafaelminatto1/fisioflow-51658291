@@ -106,7 +106,7 @@ async function sendAppointmentReminders(pool: any, env: Env, _ctx: ExecutionCont
     JOIN patients p ON p.id = a.patient_id
     LEFT JOIN profiles prof ON prof.user_id = a.therapist_id
     WHERE a.date = CURRENT_DATE + INTERVAL '1 day'
-      AND a.status NOT IN ('cancelled', 'no_show')
+      AND a.status NOT IN ('cancelado', 'faltou')
   `);
 
   let emailSent = 0;

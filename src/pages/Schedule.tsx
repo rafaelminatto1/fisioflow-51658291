@@ -16,9 +16,9 @@ import { BulkActionsBar } from "@/components/schedule/BulkActionsBar";
 import { ScheduleModals } from "@/components/schedule/ScheduleModals";
 import { CalendarSkeletonEnhanced } from "@/components/schedule/skeletons/CalendarSkeletonEnhanced";
 import { Button } from "@/components/ui/button";
+import { useIsMobile } from "@/hooks/use-mobile";
 import { useBirthdayNotification } from "@/hooks/useBirthdayNotification";
 import { useBulkActions } from "@/hooks/useBulkActions";
-import { useIsMobile } from "@/hooks/use-mobile";
 import { usePatientReengagement } from "@/hooks/usePatientReengagement";
 import { useScheduleHandlers } from "@/hooks/useScheduleHandlers";
 import { useSchedulePageData, type ViewType } from "@/hooks/useSchedulePage";
@@ -26,7 +26,9 @@ import type { ViewType as CalendarViewType } from "@/hooks/useScheduleState";
 import { KEYBOARD_SHORTCUTS } from "@/lib/calendar/constants";
 
 const CalendarView = lazy(() => import("@/components/schedule/CalendarView"));
-const ScheduleXCalendarWrapper = lazy(() => import("@/components/schedule/ScheduleXCalendar"));
+const ScheduleXCalendarWrapper = lazy(
+	() => import("@/components/schedule/ScheduleXCalendar"),
+);
 
 import "@/styles/schedule.css";
 
@@ -334,6 +336,7 @@ export default function Schedule() {
 														actions.handleAppointmentReschedule
 													}
 													onEditAppointment={actions.handleEditAppointment}
+													onDeleteAppointment={actions.handleDeleteAppointment}
 													onStatusChange={actions.handleUpdateStatus}
 													selectionMode={isSelectionMode}
 													selectedIds={selectedIds}
@@ -363,12 +366,16 @@ export default function Schedule() {
 												}
 												onEditAppointment={actions.handleEditAppointment}
 												onDeleteAppointment={actions.handleDeleteAppointment}
-												onDuplicateAppointment={actions.handleDuplicateAppointment}
+												onDuplicateAppointment={
+													actions.handleDuplicateAppointment
+												}
 												onStatusChange={actions.handleUpdateStatus}
 												selectionMode={isSelectionMode}
 												selectedIds={selectedIds}
 												onToggleSelection={toggleSelection}
-												rescheduleSuccessMessage={modals.rescheduleSuccessMessage}
+												rescheduleSuccessMessage={
+													modals.rescheduleSuccessMessage
+												}
 												onCreateAppointment={actions.handleCreateAppointment}
 												onToggleSelectionMode={toggleSelectionMode}
 												onCancelAllToday={() =>
