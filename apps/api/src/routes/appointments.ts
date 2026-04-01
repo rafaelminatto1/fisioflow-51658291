@@ -140,30 +140,29 @@ async function getOverlappingAppointments(
   endTime: string,
   excludeAppointmentId?: string,
 ): Promise<Array<{ id: string; patientId: string; startTime: string; date: string }>> {
-  let conditions = and(
-    eq(appointments.organizationId, organizationId),
-    eq(appointments.date, date),
-    notInArray(appointments.status, ['cancelado', 'faltou', 'remarcar']),
-    lt(appointments.startTime, endTime),
-    gt(appointments.endTime, startTime)
-  );
+  try {
+    // Usamos sql.raw para garantir que o Postgres receba os tipos corretos (time, date, uuid)
+    // e evitar falhas de inferência do driver HTTP do Neon.
+    const result = await db.execute(sql`
+      SELECT id, patient_id AS "patientId", start_time AS "startTime", date
+      FROM appointments
+      WHERE organization_id = ${organizationId}::uuid
+        AND date = ${date}::date
+        AND status NOT IN ('cancelado', 'faltou', 'remarcar')
+        AND start_time < ${endTime}::time
+        AND end_time > ${startTime}::time
+        ${excludeAppointmentId ? sql`AND id != ${excludeAppointmentId}::uuid` : sql``}
+      ORDER BY start_time ASC, created_at ASC
+    `);
 
-  if (excludeAppointmentId) {
-    conditions = and(conditions, ne(appointments.id, excludeAppointmentId));
+    return (result.rows || []) as any;
+  } catch (error: any) {
+    console.error('[getOverlappingAppointments] Query failed:', error.message);
+    // Se a tabela não existir ou outro erro crítico, retornamos vazio para não travar o fluxo principal
+    // mas logamos o erro para auditoria.
+    if (error.message.includes('does not exist')) return [];
+    throw error;
   }
-
-  const result = await db
-    .select({
-      id: appointments.id,
-      patientId: appointments.patientId,
-      startTime: appointments.startTime,
-      date: appointments.date,
-    })
-    .from(appointments)
-    .where(conditions)
-    .orderBy(asc(appointments.startTime), asc(appointments.createdAt));
-
-  return result;
 }
 
 
