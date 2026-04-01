@@ -261,7 +261,7 @@ export function ScheduleXCalendarWrapper(props: ScheduleXCalendarWrapperProps) {
 	const calendarApp = useCalendarApp({
 		views: [createViewDay(), createViewWeek(), createViewMonthGrid()],
 		defaultView: VIEW_MAP[viewType],
-		selectedDate: "", // Hack: string vazia evita erro de validação YYYY-MM-DD no bootstrap
+		selectedDate: initialDate,
 		events: [], // ← VAZIO — não passe events aqui
 		locale: "pt-BR",
 		firstDayOfWeek: 7, // Domingo no Schedule-X é 7 (ou 1 se for Segunda)
@@ -316,20 +316,6 @@ export function ScheduleXCalendarWrapper(props: ScheduleXCalendarWrapperProps) {
 			},
 		},
 	});
-
-	// ── G) Sincronizar data inicial correta logo após montagem ──
-	useEffect(() => {
-		if (calendarApp && calendarControls.setDate) {
-			const dateStr = format(currentDate, "yyyy-MM-dd");
-			const [y, mo, d] = dateStr.split("-").map(Number);
-			const plain = Temporal.PlainDate.from({
-				year: y,
-				month: mo,
-				day: d,
-			});
-			calendarControls.setDate(plain);
-		}
-	}, [calendarApp, calendarControls, currentDate]);
 
 	// ── G) Sincronizar eventos quando appointments mudar ──
 	useEffect(() => {
