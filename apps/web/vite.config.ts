@@ -239,11 +239,36 @@ export default defineConfig(({ mode }) => {
 								test: /node_modules\/@cornerstonejs/,
 								priority: 30,
 							},
-							// react-pdf renderer — geração de PDFs por exportação (unificado para evitar quebra de named exports/reconciler)
+							// react-pdf renderer — geração de PDFs por exportação
+							{
+								name: "vendor-react-pdf-font",
+								test: /node_modules\/(fontkit|linebreak|is-url|emoji-regex-xs)/,
+								priority: 28.8,
+							},
+							{
+								name: "vendor-react-pdf-textkit",
+								test: /node_modules\/(@react-pdf\/textkit|yoga-layout|queue)/,
+								priority: 28.6,
+							},
+							{
+								name: "vendor-react-pdf-images",
+								test: /node_modules\/(@react-pdf\/image|@react-pdf\/png-js|jay-peg|crypto-js|browserify-zlib|vite-compatible-readable-stream)/,
+								priority: 28.4,
+							},
+							{
+								name: "vendor-react-pdf-pdfkit",
+								test: /node_modules\/@react-pdf\/pdfkit/,
+								priority: 28,
+							},
+							{
+								name: "vendor-react-pdf-layout",
+								test: /node_modules\/@react-pdf\/(layout|render|font|fns|primitives|types)/,
+								priority: 27.5,
+							},
 							{
 								name: "vendor-react-pdf-renderer",
-								test: /node_modules\/(@react-pdf|fontkit|linebreak|is-url|emoji-regex-xs|yoga-layout|queue|jay-peg|vite-compatible-readable-stream|crypto-js|browserify-zlib|pako|base64-js|ieee754)/,
-								priority: 28,
+								test: /node_modules\/@react-pdf/,
+								priority: 27,
 							},
 							// pdfjs-dist + react-pdf viewer — visualização PDF
 							{
