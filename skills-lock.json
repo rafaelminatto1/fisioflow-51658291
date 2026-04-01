@@ -41,6 +41,11 @@
       "sourceType": "github",
       "computedHash": "5655f09026204f4b753c9e06dc6483e9f6ddeec18bb3daa8735195c4b2d1f752"
     },
+    "smithery-ai-cli": {
+      "source": "smithery.ai",
+      "sourceType": "well-known",
+      "computedHash": "dc17f090c975afe1d96a25dbe843fc9c978e96d5699eed1bb7c12b411e10b830"
+    },
     "web-perf": {
       "source": "cloudflare/skills",
       "sourceType": "github",
