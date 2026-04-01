@@ -12,14 +12,14 @@ interface jsPDFWithPageCount extends jsPDF {
 interface ClinicalTest {
 	id: string;
 	name: string;
-	name_en?: string;
+	name_en?: string | null;
 	category: string | null;
 	target_joint: string | null;
-	purpose: string | null;
-	execution: string | null;
-	positive_sign?: string;
-	reference?: string;
-	sensitivity_specificity?: string;
+	purpose?: string | null;
+	execution?: string | null;
+	positive_sign?: string | null;
+	reference?: string | null;
+	sensitivity_specificity?: string | null;
 	regularity_sessions?: number | null;
 }
 

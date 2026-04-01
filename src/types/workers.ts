@@ -765,6 +765,8 @@ export interface ClinicalTestTemplateRecord {
 	fields_definition: any[];
 	tags: string[];
 	image_url?: string | null;
+	initial_position_image_url?: string | null;
+	final_position_image_url?: string | null;
 	media_urls?: string[] | null;
 	created_at: string;
 	updated_at: string;

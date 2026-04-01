@@ -255,9 +255,14 @@ export function ScheduleXCalendarWrapper(props: ScheduleXCalendarWrapperProps) {
 	console.log("[ScheduleX] Rendering with currentDate:", currentDate, "viewType:", viewType);
 
 	const calendarApp = useCalendarApp({
-		views: [createViewWeek()],
-		// Minimal config
+		views: [createViewDay(), createViewWeek(), createViewMonthGrid()],
+		defaultView: VIEW_MAP[viewType],
+		selectedDate: Temporal.PlainDate.from(format(currentDate instanceof Date && !isNaN(currentDate.getTime()) ? currentDate : new Date(), "yyyy-MM-dd")), 
 		events: [], 
+		locale: "pt-BR",
+		firstDayOfWeek: 7, 
+		dayBoundaries: { start: "07:00", end: "20:00" },
+		plugins: [calendarControls, dndPlugin],
 		callbacks: {
 			onRangeUpdate: (range: any) => {
 				// ScheduleX passa range.start como string "YYYY-MM-DD"
