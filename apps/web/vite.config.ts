@@ -436,9 +436,9 @@ export default defineConfig(({ mode }) => {
 						],
 					},
 				},
-				experimental: {
-					minify: true, // Rolldown built-in minifier (Oxide)
-				},
+				// experimental: {
+				// 	minify: true, // Desativado: pode quebrar proxies do Preact Signals no Schedule-X v4
+				// },
 			},
 		},
 		optimizeDeps: {
