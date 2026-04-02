@@ -270,6 +270,7 @@ export const builtinClinicalTestsCatalog: ClinicalTestCatalogRecord[] = [
 		source_label: "Curadoria FisioFlow",
 		sort_order: 105,
 		illustration: "cervical-radicular",
+		imageUrl: "/clinical-tests/illustrations/slump-test-initial.png",
 		initialPositionImageUrl: "/clinical-tests/illustrations/slump-test-initial.png",
 		finalPositionImageUrl: "/clinical-tests/illustrations/slump-test-final.png"
 	}),
@@ -331,6 +332,7 @@ export const builtinClinicalTestsCatalog: ClinicalTestCatalogRecord[] = [
 			"Alta especificidade para rule-in de lesao de LCA quando positivo.",
 		source_label: "Curadoria FisioFlow",
 		sort_order: 20,
+		illustration: "knee-stability",
 		imageUrl: '/clinical-tests/illustrations/pivot-shift.png',
 	}),
 	createBuiltinTest({
@@ -356,6 +358,7 @@ export const builtinClinicalTestsCatalog: ClinicalTestCatalogRecord[] = [
 			"Util para reproduzir sintomas, mas nao deve ser usado isoladamente como substituto de MRI/artroscopia.",
 		source_label: "Curadoria FisioFlow",
 		sort_order: 30,
+		illustration: "knee-stability",
 		imageUrl: '/clinical-tests/illustrations/thessaly-test.png',
 	}),
 	createBuiltinTest({
