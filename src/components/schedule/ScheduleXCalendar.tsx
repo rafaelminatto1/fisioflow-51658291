@@ -1,6 +1,6 @@
 /**
  * ScheduleXCalendar — Wrapper para @schedule-x/react v3.7.3
- * Versão de Resiliência Máxima - Injeção Pós-Montagem
+ * Versão de Resiliência Total - Data Dinâmica via Controls
  */
 
 import { useState, useMemo, useEffect, useOptimistic, useTransition, useRef } from "react";
@@ -208,24 +208,15 @@ export function ScheduleXCalendarWrapper(props: ScheduleXCalendarWrapperProps) {
 	const dnd = useMemo(() => createDragAndDropPlugin(), []);
 	const time = useMemo(() => createCurrentTimePlugin(), []);
 
-	const safeSelectedDate = useMemo(() => {
-		try {
-			return isValid(currentDate) ? format(currentDate, "yyyy-MM-dd") : format(new Date(), "yyyy-MM-dd");
-		} catch (e) {
-			return format(new Date(), "yyyy-MM-dd");
-		}
-	}, [currentDate]);
-
-	// 1. Instanciar Calendário SEMPRE COM EVENTOS VAZIOS para evitar crash no constructor
+	// Instanciar Calendário SEM selectedDate inicial para evitar constructor crash
 	const calendarApp = useMemo(() => {
 		if (typeof window === "undefined") return null;
 		
-		console.log("[ScheduleX] Criando instância estável do calendário...");
+		console.log("[ScheduleX] Criando instância resiliente...");
 		return createCalendar({
 			views: [createViewDay(), createViewWeek(), createViewMonthGrid()],
 			defaultView: VIEW_MAP[viewType] || "week",
-			selectedDate: safeSelectedDate,
-			events: [], // VAZIO NO INIT
+			events: [], // Sempre vazio no init
 			locale: "pt-BR",
 			firstDayOfWeek: 1, 
 			dayBoundaries: { start: "07:00", end: "21:00" },
@@ -247,54 +238,56 @@ export function ScheduleXCalendarWrapper(props: ScheduleXCalendarWrapperProps) {
 				}
 			}
 		});
-	}, [viewType, safeSelectedDate, controls, dnd, time]); 
+	}, [viewType, controls, dnd, time]); 
 
-	// 2. Sincronizar Eventos APÓS A MONTAGEM via Service
+	// Sincronizar Data e Eventos APÓS a criação estável
 	useEffect(() => {
-		if (!calendarApp) return;
+		if (!calendarApp || !controls) return;
 		
-		console.log("[ScheduleX] Sincronizando eventos via service:", optimisticAppointments.length);
-		const sxEvents = optimisticAppointments
-			.filter(a => !!a)
-			.map(a => {
-				let start: string;
-				let end: string;
-				if (a.start_time && a.end_time) {
-					start = String(a.start_time).replace('T', ' ').substring(0, 16);
-					end = String(a.end_time).replace('T', ' ').substring(0, 16);
-				} else {
-					const d = a.date instanceof Date ? a.date : new Date(a.date);
-					const dateStr = format(isValid(d) ? d : new Date(), "yyyy-MM-dd");
-					const timeStr = String(a.time || "00:00").padStart(5, '0').slice(0, 5);
-					start = `${dateStr} ${timeStr}`;
-					const durationMin = a.duration || 60;
-					const endDate = new Date(d.getFullYear(), d.getMonth(), d.getDate(),
-						parseInt(timeStr.split(":")[0], 10),
-						parseInt(timeStr.split(":")[1], 10) + durationMin);
-					end = format(endDate, "yyyy-MM-dd HH:mm");
-				}
-				return {
-					id: String(a.id),
-					title: a.patient_name || a.patientName || "Consulta",
-					start, end,
-					status: a.status,
-					type: a.type,
-					patient_avatar: a.patient_avatar,
-				};
-			});
-
 		try {
-			// Tentar todos os caminhos possíveis de sincronização
-			if (calendarApp.eventsService) {
-				calendarApp.eventsService.set(sxEvents);
-			} else if ((calendarApp as any).events) {
-				(calendarApp as any).events.set(sxEvents);
+			// 1. Sincronizar Data
+			if (isValid(currentDate)) {
+				controls.setViewDate(format(currentDate, "yyyy-MM-dd"));
 			}
-			console.log("[ScheduleX] Eventos inseridos via service.");
+
+			// 2. Sincronizar Eventos via Service
+			const sxEvents = optimisticAppointments
+				.filter(a => !!a)
+				.map(a => {
+					let start: string;
+					let end: string;
+					if (a.start_time && a.end_time) {
+						start = String(a.start_time).replace('T', ' ').substring(0, 16);
+						end = String(a.end_time).replace('T', ' ').substring(0, 16);
+					} else {
+						const d = a.date instanceof Date ? a.date : new Date(a.date);
+						const dateStr = format(isValid(d) ? d : new Date(), "yyyy-MM-dd");
+						const timeStr = String(a.time || "00:00").padStart(5, '0').slice(0, 5);
+						start = `${dateStr} ${timeStr}`;
+						const durationMin = a.duration || 60;
+						const endDate = new Date(d.getFullYear(), d.getMonth(), d.getDate(),
+							parseInt(timeStr.split(":")[0], 10),
+							parseInt(timeStr.split(":")[1], 10) + durationMin);
+						end = format(endDate, "yyyy-MM-dd HH:mm");
+					}
+					return {
+						id: String(a.id),
+						title: a.patient_name || a.patientName || "Consulta",
+						start, end,
+						status: a.status,
+						type: a.type,
+						patient_avatar: a.patient_avatar,
+					};
+				});
+
+			if (calendarApp.eventsService) calendarApp.eventsService.set(sxEvents);
+			else if ((calendarApp as any).events) (calendarApp as any).events.set(sxEvents);
+			
+			console.log("[ScheduleX] Data e Eventos sincronizados pós-mount.");
 		} catch (e) {
-			console.warn("[ScheduleX] Erro na injeção via service (tentando reconstruir):", e);
+			console.error("[ScheduleX] Erro na sincronização pós-mount:", e);
 		}
-	}, [optimisticAppointments, calendarApp]);
+	}, [currentDate, optimisticAppointments, calendarApp, controls]);
 
 	const customComponents = useMemo(() => ({
 		timeGridEvent: (eventProps: any) => <CustomEventCard {...eventProps} props={propsRef.current} />,
