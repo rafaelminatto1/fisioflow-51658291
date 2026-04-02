@@ -4,8 +4,9 @@
  */
 
 import { useState, useMemo, useEffect, useOptimistic, useTransition, useRef } from "react";
-import { ScheduleXCalendar, createCalendar } from "@schedule-x/calendar";
+import { ScheduleXCalendar } from "@schedule-x/react";
 import {
+	createCalendar,
 	createViewDay,
 	createViewMonthGrid,
 	createViewWeek,
