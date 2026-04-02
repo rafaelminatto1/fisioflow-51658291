@@ -85,17 +85,22 @@ const VIEW_MAP: Record<ViewType, string> = {
 const CustomEventCard = ({ calendarEvent, props }: { calendarEvent: any, props: any }) => {
 	const appointment = calendarEvent;
 	
-	// No Schedule-X 4.x, start é um Temporal.ZonedDateTime
+	// Parsing resiliente de data para o Schedule-X 4.x
 	let startTime: Date;
 	try {
-		startTime = appointment.start && appointment.start.epochMilliseconds 
-			? new Date(appointment.start.epochMilliseconds)
-			: (appointment.start ? parseISO(String(appointment.start).split('[')[0]) : new Date());
+		if (appointment.start && typeof appointment.start === 'object' && appointment.start.epochMilliseconds) {
+			startTime = new Date(appointment.start.epochMilliseconds);
+		} else {
+			// Se for string "YYYY-MM-DD HH:mm", trocar espaço por T para o parseISO
+			const dateStr = String(appointment.start || "").replace(' ', 'T').split('[')[0];
+			const parsed = parseISO(dateStr);
+			startTime = isValid(parsed) ? parsed : new Date();
+		}
 	} catch (e) {
 		startTime = new Date();
 	}
 	
-	const formattedTime = format(startTime, "HH:mm");
+	const formattedTime = isValid(startTime) ? format(startTime, "HH:mm") : "--:--";
 	
 	// IA: Risco de No-show
 	const noShowRisk = (parseInt(appointment.id.substring(0, 2), 16) % 100);
@@ -292,6 +297,7 @@ export function ScheduleXCalendarWrapper(props: ScheduleXCalendarWrapperProps) {
 	const [calendarConfig] = useState(() => ({
 		views: [createViewDay(), createViewWeek(), createViewMonthGrid()],
 		defaultView: VIEW_MAP[viewType] || "week",
+		events: [],
 		locale: "pt-BR",
 		firstDayOfWeek: 1, 
 		dayBoundaries: { start: "07:00", end: "21:00" },
@@ -455,6 +461,7 @@ export function ScheduleXCalendarWrapper(props: ScheduleXCalendarWrapperProps) {
 					{calendarApp && (
 						<ScheduleXCalendar
 							calendarApp={calendarApp}
+							customComponents={customComponents}
 						/>
 					)}
 				</div>
