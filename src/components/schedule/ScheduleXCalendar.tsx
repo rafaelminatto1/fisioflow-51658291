@@ -288,8 +288,8 @@ export function ScheduleXCalendarWrapper(props: ScheduleXCalendarWrapperProps) {
 	const [dndPlugin] = useState(() => createDragAndDropPlugin());
 	const [currentTimePlugin] = useState(() => createCurrentTimePlugin());
 
-	// Configuração Básica e Estável do Calendário
-	const calendarApp = useCalendarApp({
+	// Configuração Básica e Estável do Calendário (Apenas 1 vez na montagem)
+	const [calendarConfig] = useState(() => ({
 		views: [createViewDay(), createViewWeek(), createViewMonthGrid()],
 		defaultView: VIEW_MAP[viewType] || "week",
 		locale: "pt-BR",
@@ -326,7 +326,9 @@ export function ScheduleXCalendarWrapper(props: ScheduleXCalendarWrapperProps) {
 				}
 			}
 		}
-	});
+	}));
+
+	const calendarApp = useCalendarApp(calendarConfig);
 
 	// Sincronização de Visualização (View Type)
 	useEffect(() => {
