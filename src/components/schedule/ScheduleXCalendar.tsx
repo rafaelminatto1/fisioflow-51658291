@@ -1,6 +1,6 @@
 /**
  * ScheduleXCalendar — Wrapper para @schedule-x/react v3.7.3
- * Versão Final - Objetos Temporal Reais
+ * Versão Final Corrigida - Estabilidade de selectedDate e Eventos
  */
 
 import { useState, useMemo, useEffect, useOptimistic, useTransition, useRef } from "react";
@@ -17,7 +17,6 @@ import { createCurrentTimePlugin } from "@schedule-x/current-time";
 import "@schedule-x/theme-default/dist/index.css";
 import { format, isValid, parseISO } from "date-fns";
 import { ptBR } from "date-fns/locale";
-import { Temporal } from "temporal-polyfill";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 
@@ -83,16 +82,16 @@ const VIEW_MAP: Record<ViewType, string> = {
 const CustomEventCard = ({ calendarEvent, props }: { calendarEvent: any, props: any }) => {
 	const appointment = calendarEvent;
 	
-	// v3.x com objetos Temporal: acessamos epochMilliseconds
 	let startTime: Date;
 	try {
-		if (appointment.start && typeof appointment.start === 'object' && appointment.start.epochMilliseconds) {
-			startTime = new Date(Number(appointment.start.epochMilliseconds));
-		} else {
-			const dateStr = String(appointment.start || "").replace(' ', 'T');
-			const parsed = parseISO(dateStr);
-			startTime = isValid(parsed) ? parsed : new Date();
-		}
+		// v3.x parsing resiliente
+		const startStr = typeof appointment.start === 'string' 
+			? appointment.start 
+			: (appointment.start?.toString().split('[')[0] || "");
+		
+		const dateStr = startStr.replace(' ', 'T');
+		const parsed = parseISO(dateStr);
+		startTime = isValid(parsed) ? parsed : new Date();
 	} catch (e) {
 		startTime = new Date();
 	}
@@ -131,7 +130,6 @@ const CustomEventCard = ({ calendarEvent, props }: { calendarEvent: any, props: 
 							</span>
 							<div className={`h-1 w-1 @[120px]:h-1.5 @[120px]:w-1.5 rounded-full ${statusColors[appointment.status] || 'bg-slate-300'}`} />
 						</div>
-						
 						<div className="font-black leading-tight line-clamp-1 text-[10px] @[120px]:text-[11px] uppercase tracking-tight text-slate-800">
 							{appointment.title}
 						</div>
@@ -152,7 +150,7 @@ const CustomEventCard = ({ calendarEvent, props }: { calendarEvent: any, props: 
 								<h4 className="font-bold text-base leading-tight">{appointment.title}</h4>
 								<div className="flex items-center gap-1 text-xs text-muted-foreground mt-0.5">
 									<Badge variant="outline" className="text-[10px] px-1 py-0 h-4">
-										{appointment.type || 'Sessão'}
+										{appointment.type || 'Fisioterapia'}
 									</Badge>
 									<span className="bullet mx-1">•</span>
 									<span>ID: {appointment.id.substring(0, 8)}</span>
@@ -206,54 +204,52 @@ export function ScheduleXCalendarWrapper(props: ScheduleXCalendarWrapperProps) {
 		}
 	);
 
-	// Mapeamento de Eventos (USANDO OBJETOS TEMPORAL)
+	// Mapeamento de Eventos (STRINGS ISO - Mais estável para v3.x)
 	const sxEvents = useMemo(() => {
-		const tz = Intl.DateTimeFormat().resolvedOptions().timeZone;
-		
 		return optimisticAppointments
 			.filter(a => !!a)
 			.map(a => {
-				let startStr: string;
-				let endStr: string;
+				let start: string;
+				let end: string;
 				
 				if (a.start_time && a.end_time) {
-					startStr = String(a.start_time).replace(' ', 'T').substring(0, 16);
-					endStr = String(a.end_time).replace(' ', 'T').substring(0, 16);
+					start = String(a.start_time).replace('T', ' ').substring(0, 16);
+					end = String(a.end_time).replace('T', ' ').substring(0, 16);
 				} else {
 					const d = a.date instanceof Date ? a.date : new Date(a.date);
-					const dateStr = format(d, "yyyy-MM-dd");
+					const dateStr = format(isValid(d) ? d : new Date(), "yyyy-MM-dd");
 					const timeStr = String(a.time || "00:00").padStart(5, '0').slice(0, 5);
-					startStr = `${dateStr}T${timeStr}`;
+					start = `${dateStr} ${timeStr}`;
 					const durationMin = a.duration || 60;
 					const endDate = new Date(d.getFullYear(), d.getMonth(), d.getDate(),
 						parseInt(timeStr.split(":")[0], 10),
 						parseInt(timeStr.split(":")[1], 10) + durationMin);
-					endStr = format(endDate, "yyyy-MM-dd'T'HH:mm");
+					end = format(endDate, "yyyy-MM-dd HH:mm");
 				}
 
-				// CRIAR OBJETOS TEMPORAL REAIS
-				try {
-					return {
-						id: String(a.id),
-						title: a.patient_name || a.patientName || "Consulta",
-						start: Temporal.ZonedDateTime.from(`${startStr}:00[${tz}]`),
-						end: Temporal.ZonedDateTime.from(`${endStr}:00[${tz}]`),
-						status: a.status,
-						type: a.type,
-						patient_avatar: a.patient_avatar,
-					};
-				} catch (e) {
-					console.error("[ScheduleX] Erro ao criar objeto Temporal:", e, startStr);
-					return null;
-				}
-			})
-			.filter(Boolean);
+				return {
+					id: String(a.id),
+					title: a.patient_name || a.patientName || "Consulta",
+					start, end,
+					status: a.status,
+					type: a.type,
+					patient_avatar: a.patient_avatar,
+				};
+			});
 	}, [optimisticAppointments]);
 
-	// Plugins estáveis
 	const controls = useMemo(() => createCalendarControlsPlugin(), []);
 	const dnd = useMemo(() => createDragAndDropPlugin(), []);
 	const time = useMemo(() => createCurrentTimePlugin(), []);
+
+	// selectedDate DEVE ser YYYY-MM-DD rigoroso
+	const safeSelectedDate = useMemo(() => {
+		try {
+			return isValid(currentDate) ? format(currentDate, "yyyy-MM-dd") : format(new Date(), "yyyy-MM-dd");
+		} catch (e) {
+			return format(new Date(), "yyyy-MM-dd");
+		}
+	}, [currentDate]);
 
 	// Instanciar Calendário
 	const calendarApp = useMemo(() => {
@@ -262,7 +258,7 @@ export function ScheduleXCalendarWrapper(props: ScheduleXCalendarWrapperProps) {
 		return createCalendar({
 			views: [createViewDay(), createViewWeek(), createViewMonthGrid()],
 			defaultView: VIEW_MAP[viewType] || "week",
-			selectedDate: format(currentDate, "yyyy-MM-dd"),
+			selectedDate: safeSelectedDate,
 			events: sxEvents,
 			locale: "pt-BR",
 			firstDayOfWeek: 1, 
@@ -271,37 +267,31 @@ export function ScheduleXCalendarWrapper(props: ScheduleXCalendarWrapperProps) {
 			plugins: [controls, dnd, time],
 			callbacks: {
 				onEventClick: (event: any) => propsRef.current.onEventClick?.(event),
-				onClickDateTime: (dateTime: any) => propsRef.current.onTimeSlotClick?.(typeof dateTime === 'string' ? dateTime : dateTime.toString()),
+				onClickDateTime: (dateTime: any) => propsRef.current.onTimeSlotClick?.(String(dateTime)),
 				onEventUpdate: (event: any) => {
 					if (propsRef.current.onAppointmentReschedule) {
-						// Para o callback, enviamos strings simples
-						const start = event.start.toString().split('[')[0].replace('T', ' ').substring(0, 16);
-						const end = event.end.toString().split('[')[0].replace('T', ' ').substring(0, 16);
-						
+						const start = String(event.start).replace('T', ' ').substring(0, 16);
+						const end = String(event.end).replace('T', ' ').substring(0, 16);
 						startTransition(() => {
 							addOptimisticAppointment({ id: event.id, start, end });
 						});
 						propsRef.current.onAppointmentReschedule(event.id, start, end);
-						if (typeof navigator !== "undefined" && navigator.vibrate) {
-							navigator.vibrate([15, 50, 15]); 
-						}
 						toast.success("Horário atualizado com sucesso!");
 					}
 				}
 			}
 		});
-	}, [sxEvents, viewType, controls, dnd, time]); 
+	}, [sxEvents, viewType, safeSelectedDate, controls, dnd, time]); 
 
-	// Sincronizar Data
+	// Sincronizar Data (Sem recriar)
 	useEffect(() => {
-		if (calendarApp && controls) {
+		if (calendarApp && controls && isValid(currentDate)) {
 			try {
 				controls.setViewDate(format(currentDate, "yyyy-MM-dd"));
 			} catch (e) {}
 		}
 	}, [currentDate, calendarApp, controls]);
 
-	// Componentes Customizados
 	const customComponents = useMemo(() => ({
 		timeGridEvent: (eventProps: any) => <CustomEventCard {...eventProps} props={propsRef.current} />,
 		dateGridEvent: (eventProps: any) => <CustomEventCard {...eventProps} props={propsRef.current} />,
@@ -328,7 +318,7 @@ export function ScheduleXCalendarWrapper(props: ScheduleXCalendarWrapperProps) {
 					{calendarApp && (
 						<div className="h-full sx-react-calendar-wrapper">
 							<ScheduleXCalendar
-								key={`sx-cal-${sxEvents.length}-${viewType}`}
+								key={`sx-cal-${sxEvents.length}-${viewType}-${safeSelectedDate}`}
 								calendarApp={calendarApp}
 								customComponents={customComponents}
 							/>
