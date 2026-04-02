@@ -201,7 +201,7 @@ const googleReviewRequest = inngest.createFunction(
     const sessionCount = await step.run('count-sessions', async () => {
       const db = createPool(env as Env);
       const res = await db.query(
-        "SELECT COUNT(*)::int FROM appointments WHERE patient_id = $1 AND status = 'atendido'",
+        "SELECT COUNT(*)::int FROM appointments WHERE patient_id = $1 AND status = 'completed'",
         [patientId]
       );
       return res.rows[0].count;
