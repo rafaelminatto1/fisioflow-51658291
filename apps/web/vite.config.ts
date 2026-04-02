@@ -424,7 +424,7 @@ export default defineConfig(({ mode }) => {
 							// command palette, calendários e toasts
 							{
 								name: "vendor-ui-helpers",
-								test: /node_modules\/(cmdk|sonner|react-day-picker|@schedule-x)/,
+								test: /node_modules\/(cmdk|sonner|react-day-picker)/,
 								priority: 12.1,
 							},
 							// react + react-dom — runtime base do app (prioridade máxima absoluta)
@@ -436,9 +436,9 @@ export default defineConfig(({ mode }) => {
 						],
 					},
 				},
-				// experimental: {
-				// 	minify: true, // Desativado: pode quebrar proxies do Preact Signals no Schedule-X v4
-				// },
+				experimental: {
+				minify: true,
+				},
 			},
 		},
 		optimizeDeps: {

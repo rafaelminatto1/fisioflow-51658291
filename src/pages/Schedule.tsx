@@ -26,7 +26,7 @@ import type { ViewType as CalendarViewType } from "@/hooks/useScheduleState";
 import { KEYBOARD_SHORTCUTS } from "@/lib/calendar/constants";
 
 // import CalendarView from "@/components/schedule/CalendarView";
-import { ScheduleXCalendarWrapper } from "@/components/schedule/ScheduleXCalendar";
+import { DayFlowCalendarWrapper } from "@/components/schedule/DayFlowCalendar";
 
 import "@/styles/schedule.css";
 
@@ -336,7 +336,7 @@ export default function Schedule() {
 										viewType={viewType as CalendarViewType}
 									/>
 								) : (
-									<ScheduleXCalendarWrapper
+									<DayFlowCalendarWrapper
 										appointments={appointments}
 										currentDate={currentDate}
 										onDateChange={handleDateChange}
