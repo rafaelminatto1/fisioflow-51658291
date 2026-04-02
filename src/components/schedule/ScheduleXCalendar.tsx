@@ -108,6 +108,7 @@ const CustomEventCard = ({ calendarEvent, props }: { calendarEvent: any, props: 
 	
 	const statusColors: Record<string, string> = {
 		confirmed: "bg-status-confirmed",
+		scheduled: "bg-status-confirmed", // Mapear scheduled para o mesmo que confirmado ou cor base
 		pending: "bg-status-pending",
 		cancelled: "bg-status-cancelled",
 		completed: "bg-status-completed"
@@ -125,12 +126,12 @@ const CustomEventCard = ({ calendarEvent, props }: { calendarEvent: any, props: 
 					onClick={(e) => e.stopPropagation()}
 				>
 					<div className={cn(
-						"flex flex-col h-full border-l-[3px] rounded-r-md p-1.5 @[120px]:p-2 shadow-sm overflow-hidden",
-						appointment.status === 'confirmed' && "border-status-confirmed bg-white text-slate-900",
-						appointment.status === 'pending' && "border-status-pending bg-white text-slate-900",
-						appointment.status === 'cancelled' && "border-status-cancelled bg-white text-slate-900",
-						appointment.status === 'completed' && "border-status-completed bg-white text-slate-900",
-						!appointment.status && "border-slate-300 bg-white text-slate-900"
+						"flex flex-col h-full border-l-[3px] rounded-r-md p-1.5 @[120px]:p-2 shadow-sm overflow-hidden bg-white text-slate-900",
+						(appointment.status === 'confirmed' || appointment.status === 'scheduled') && "border-status-confirmed",
+						appointment.status === 'pending' && "border-status-pending",
+						appointment.status === 'cancelled' && "border-status-cancelled",
+						appointment.status === 'completed' && "border-status-completed",
+						(!appointment.status || !statusColors[appointment.status]) && "border-slate-300"
 					)}>
 						<div className="flex items-center justify-between gap-1 mb-0.5 @[120px]:mb-1">
 							<span className="font-black text-[8px] @[120px]:text-[9px] uppercase tracking-widest text-slate-400">
