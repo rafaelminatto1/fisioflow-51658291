@@ -3,7 +3,7 @@
  * Versão 4.0.0 - React 19 + Tailwind v4 + Optimistic UI
  */
 
-import { useState, useMemo, useEffect, useOptimistic, useTransition } from "react";
+import { useState, useMemo, useEffect, useOptimistic, useTransition, useRef } from "react";
 import { ScheduleXCalendar, useCalendarApp } from "@schedule-x/react";
 import {
 	createViewDay,
@@ -239,6 +239,19 @@ export function ScheduleXCalendarWrapper(props: ScheduleXCalendarWrapperProps) {
 
 	const [, startTransition] = useTransition();
 
+	// Use refs for callbacks to avoid stale closures in Schedule-X
+	const onTimeSlotClickRef = useRef(onTimeSlotClick);
+	const onEventClickRef = useRef(onEventClick);
+	const onAppointmentRescheduleRef = useRef(onAppointmentReschedule);
+	const onRangeChangeRef = useRef(onRangeChange);
+
+	useEffect(() => {
+		onTimeSlotClickRef.current = onTimeSlotClick;
+		onEventClickRef.current = onEventClick;
+		onAppointmentRescheduleRef.current = onAppointmentReschedule;
+		onRangeChangeRef.current = onRangeChange;
+	}, [onTimeSlotClick, onEventClick, onAppointmentReschedule, onRangeChange]);
+
 	// React 19: Optimistic UI para reagendamento rápido
 	const [optimisticAppointments, addOptimisticAppointment] = useOptimistic(
 		appointments,
@@ -269,25 +282,30 @@ export function ScheduleXCalendarWrapper(props: ScheduleXCalendarWrapperProps) {
 			plugins: [calendarControls, dndPlugin, currentTimePlugin],
 			callbacks: {
 				onRangeUpdate: (range: any) => {
-					onRangeChange?.({
+					onRangeChangeRef.current?.({
 						start: typeof range.start === "string" ? range.start : range.start.toString(),
 						end: typeof range.end === "string" ? range.end : range.end.toString(),
 					});
 				},
 				onEventClick: (event: any) => {
-					onEventClick?.(event);
+					onEventClickRef.current?.(event);
 				},
-				onClickDateTime: (dateTime: string) => {
-					onTimeSlotClick?.(dateTime);
+				onClickDateTime: (dateTime: any) => {
+					// Schedule-X v3+ passes Temporal.ZonedDateTime, convert to string for compatibility
+					onTimeSlotClickRef.current?.(typeof dateTime === "string" ? dateTime : dateTime.toString());
+				},
+				onClickDate: (date: any) => {
+					// Schedule-X v3+ passes Temporal.PlainDate, convert to string for compatibility
+					onTimeSlotClickRef.current?.(typeof date === "string" ? date : date.toString());
 				},
 				onEventUpdate: (event: any) => {
-					if (onAppointmentReschedule) {
+					if (onAppointmentRescheduleRef.current) {
 						// Aplicar atualização otimista (React 19)
 						startTransition(() => {
 							addOptimisticAppointment({ id: event.id, start: event.start, end: event.end });
 						});
 
-						onAppointmentReschedule(event.id, event.start, event.end);
+						onAppointmentRescheduleRef.current(event.id, event.start, event.end);
 						
 						if (typeof navigator !== "undefined" && navigator.vibrate) {
 							navigator.vibrate([15, 50, 15]); 
@@ -297,7 +315,7 @@ export function ScheduleXCalendarWrapper(props: ScheduleXCalendarWrapperProps) {
 				}
 			},
 		};
-	}, [viewType, calendarControls, dndPlugin, currentTimePlugin, onAppointmentReschedule, onRangeChange, onEventClick, onTimeSlotClick]); 
+	}, [viewType, calendarControls, dndPlugin, currentTimePlugin]); 
 
 	const calendarApp = useCalendarApp(calendarConfig);
 
