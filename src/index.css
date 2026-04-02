@@ -231,6 +231,8 @@
 /* ScheduleX Specific overrides */
 .sx__calendar-wrapper {
   background: transparent !important;
+  transition: none !important;
+  animation: none !important;
 }
 
 .sx__time-grid-event {

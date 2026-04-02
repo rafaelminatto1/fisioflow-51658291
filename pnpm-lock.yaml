@@ -1415,30 +1415,12 @@ importers:
       '@cornerstonejs/tools':
         specifier: ^4.20.0
         version: 4.20.0(@cornerstonejs/core@4.20.0(@babel/preset-env@7.29.2(@babel/core@7.29.0))(autoprefixer@10.4.27(postcss@8.5.8))(webpack@5.105.2(esbuild@0.27.4))(wslink@2.5.0))(@kitware/vtk.js@34.15.1(@babel/preset-env@7.29.2(@babel/core@7.29.0))(autoprefixer@10.4.27(postcss@8.5.8))(webpack@5.105.2(esbuild@0.27.4))(wslink@2.5.0))(@types/d3-array@3.2.1)(@types/d3-interpolate@3.0.4)(d3-array@3.2.4)(d3-interpolate@3.0.1)(gl-matrix@3.4.3)
-      '@dnd-kit/accessibility':
-        specifier: ^3.1.1
-        version: 3.1.1(react@19.2.0)
-      '@dnd-kit/core':
-        specifier: ^6.3.1
-        version: 6.3.1(react-dom@19.2.0(react@19.2.0))(react@19.2.0)
-      '@dnd-kit/modifiers':
-        specifier: ^9.0.0
-        version: 9.0.0(@dnd-kit/core@6.3.1(react-dom@19.2.0(react@19.2.0))(react@19.2.0))(react@19.2.0)
-      '@dnd-kit/sortable':
-        specifier: ^10.0.0
-        version: 10.0.0(@dnd-kit/core@6.3.1(react-dom@19.2.0(react@19.2.0))(react@19.2.0))(react@19.2.0)
-      '@dnd-kit/utilities':
-        specifier: ^3.2.2
-        version: 3.2.2(react@19.2.0)
       '@fisioflow/config':
         specifier: workspace:*
         version: link:../../packages/config
       '@google/generative-ai':
         specifier: ^0.24.1
         version: 0.24.1
-      '@hello-pangea/dnd':
-        specifier: ^18.0.1
-        version: 18.0.1(@types/react@19.2.14)(react-dom@19.2.0(react@19.2.0))(react@19.2.0)
       '@hookform/resolvers':
         specifier: ^3.10.0
         version: 3.10.0(react-hook-form@7.71.2(react@19.2.0))
