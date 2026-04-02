@@ -5,7 +5,6 @@
 import type React from "react";
 import "@/styles/premium-utilities.css";
 import "@/styles/mobile-utilities.css";
-import { AnimatePresence, motion } from "framer-motion";
 import { Bell, ChevronDown, LogOut, Settings, User } from "lucide-react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { SkipLinks } from "@/components/accessibility/SkipLinks";
@@ -279,18 +278,9 @@ export const MainLayout: React.FC<MainLayoutProps> = ({
 								!fullWidth && !maxWidth && "max-w-full",
 							)}
 						>
-							<AnimatePresence mode="wait">
-								<motion.div
-									key={location.pathname}
-									initial={{ opacity: 0, y: 6 }}
-									animate={{ opacity: 1, y: 0 }}
-									exit={{ opacity: 0, y: -6 }}
-									transition={{ duration: 0.15, ease: "easeOut" }}
-									className="w-full"
-								>
+								<div key={location.pathname} className="w-full">
 									{children}
-								</motion.div>
-							</AnimatePresence>
+								</div>
 						</div>
 					</main>
 				</div>
