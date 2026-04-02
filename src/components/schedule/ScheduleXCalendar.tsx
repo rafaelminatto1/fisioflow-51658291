@@ -84,8 +84,17 @@ const VIEW_MAP: Record<ViewType, string> = {
  */
 const CustomEventCard = ({ calendarEvent, props }: { calendarEvent: any, props: any }) => {
 	const appointment = calendarEvent;
-	const parsedStart = appointment.start ? parseISO(String(appointment.start)) : null;
-	const startTime = parsedStart && isValid(parsedStart) ? parsedStart : new Date();
+	
+	// No Schedule-X 4.x, start é um Temporal.ZonedDateTime
+	let startTime: Date;
+	try {
+		startTime = appointment.start && appointment.start.epochMilliseconds 
+			? new Date(appointment.start.epochMilliseconds)
+			: (appointment.start ? parseISO(String(appointment.start).split('[')[0]) : new Date());
+	} catch (e) {
+		startTime = new Date();
+	}
+	
 	const formattedTime = format(startTime, "HH:mm");
 	
 	// IA: Risco de No-show
@@ -334,14 +343,14 @@ export function ScheduleXCalendarWrapper(props: ScheduleXCalendarWrapperProps) {
 	useEffect(() => {
 		if (calendarApp && optimisticAppointments) {
 			try {
+				const timeZone = Intl.DateTimeFormat().resolvedOptions().timeZone;
+				
 				const sxEvents = optimisticAppointments
 					.filter(a => {
 						if (!a) return false;
-						// Support both raw API shape (start_time/end_time) and Appointment type (date+time)
 						if (a.start_time && a.end_time) {
 							return isValid(parseISO(String(a.start_time).trim())) && isValid(parseISO(String(a.end_time).trim()));
 						}
-						// Appointment type: date (Date object) + time ("HH:mm")
 						if (a.date && a.time) {
 							const d = a.date instanceof Date ? a.date : new Date(a.date);
 							return isValid(d);
@@ -349,29 +358,41 @@ export function ScheduleXCalendarWrapper(props: ScheduleXCalendarWrapperProps) {
 						return false;
 					})
 					.map(a => {
-						// Build start/end from whichever shape is present
-						let startStr: string;
-						let endStr: string;
+						let startISO: string;
+						let endISO: string;
+						
 						if (a.start_time && a.end_time) {
-							// Schedule-X 4.x requires "YYYY-MM-DD HH:mm" (space, not T)
-							startStr = String(a.start_time).replace('T', ' ').substring(0, 16);
-							endStr = String(a.end_time).replace('T', ' ').substring(0, 16);
+							startISO = String(a.start_time).replace(' ', 'T').substring(0, 16);
+							endISO = String(a.end_time).replace(' ', 'T').substring(0, 16);
 						} else {
 							const d = a.date instanceof Date ? a.date : new Date(a.date);
 							const dateStr = format(d, "yyyy-MM-dd");
-							const timeStr = String(a.time || "00:00").slice(0, 5);
-							startStr = `${dateStr} ${timeStr}`;
+							const timeStr = String(a.time || "00:00").padStart(5, '0').slice(0, 5);
+							startISO = `${dateStr}T${timeStr}`;
+							
 							const durationMin = a.duration || 60;
 							const endDate = new Date(d.getFullYear(), d.getMonth(), d.getDate(),
 								parseInt(timeStr.split(":")[0], 10),
 								parseInt(timeStr.split(":")[1], 10) + durationMin);
-							endStr = format(endDate, "yyyy-MM-dd HH:mm");
+							endISO = format(endDate, "yyyy-MM-dd'T'HH:mm");
 						}
+						
+						// Converter para o formato Temporal suportado pelo Schedule-X 4.x
+						let start, end;
+						try {
+							start = Temporal.PlainDateTime.from(startISO).toZonedDateTime(timeZone).toString();
+							end = Temporal.PlainDateTime.from(endISO).toZonedDateTime(timeZone).toString();
+						} catch (e) {
+							// Fallback se Temporal falhar
+							start = startISO;
+							end = endISO;
+						}
+
 						return {
 							id: String(a.id),
 							title: a.patient_name || a.patientName || "Consulta",
-							start: startStr,
-							end: endStr,
+							start,
+							end,
 							status: a.status,
 							type: a.type,
 							therapist_id: a.therapist_id || a.therapistId,
@@ -384,6 +405,7 @@ export function ScheduleXCalendarWrapper(props: ScheduleXCalendarWrapperProps) {
 			}
 		}
 	}, [optimisticAppointments, calendarApp]);
+
 
 	// Sincronização de Data
 	useEffect(() => {
