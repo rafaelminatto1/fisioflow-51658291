@@ -1,6 +1,6 @@
 /**
  * ScheduleXCalendar — Wrapper para @schedule-x/react v3.7.3
- * Versão Estável - React 19 + Tailwind v4
+ * Versão Ultra-Estável com Re-renderização Forçada
  */
 
 import { useState, useMemo, useEffect, useOptimistic, useTransition, useRef } from "react";
@@ -79,12 +79,11 @@ const VIEW_MAP: Record<ViewType, string> = {
 };
 
 /**
- * Componente de Evento Customizado (Estável para v3.x)
+ * Componente de Evento Customizado
  */
 const CustomEventCard = ({ calendarEvent, props }: { calendarEvent: any, props: any }) => {
 	const appointment = calendarEvent;
 	
-	// Parsing estável para v3.x (recebe strings)
 	let startTime: Date;
 	try {
 		const dateStr = String(appointment.start || "").replace(' ', 'T');
@@ -95,10 +94,6 @@ const CustomEventCard = ({ calendarEvent, props }: { calendarEvent: any, props: 
 	}
 	
 	const formattedTime = format(startTime, "HH:mm");
-	
-	// IA: Risco de No-show
-	const noShowRisk = (parseInt(appointment.id.substring(0, 2), 16) % 100);
-	const isHighRisk = noShowRisk > 70;
 	
 	const statusColors: Record<string, string> = {
 		confirmed: "bg-status-confirmed",
@@ -114,8 +109,7 @@ const CustomEventCard = ({ calendarEvent, props }: { calendarEvent: any, props: 
 				<div 
 					className={cn(
 						"w-full h-full p-0.5 overflow-hidden cursor-pointer transition-all hover:ring-2 hover:ring-blue-500/30 rounded-md @container",
-						appointment.status === 'cancelled' && "opacity-50 grayscale",
-						isHighRisk && "ring-1 ring-red-400/50"
+						appointment.status === 'cancelled' && "opacity-50 grayscale"
 					)}
 					onClick={(e) => e.stopPropagation()}
 				>
@@ -131,18 +125,11 @@ const CustomEventCard = ({ calendarEvent, props }: { calendarEvent: any, props: 
 							<span className="font-black text-[8px] @[120px]:text-[9px] uppercase tracking-widest text-slate-400">
 								{formattedTime}
 							</span>
-							<div className="flex items-center gap-1">
-								{isHighRisk && <div className="h-1 w-1 @[120px]:h-1.5 @[120px]:w-1.5 rounded-full bg-red-500 animate-pulse" />}
-								<div className={`h-1 w-1 @[120px]:h-1.5 @[120px]:w-1.5 rounded-full ${statusColors[appointment.status] || 'bg-slate-300'}`} />
-							</div>
+							<div className={`h-1 w-1 @[120px]:h-1.5 @[120px]:w-1.5 rounded-full ${statusColors[appointment.status] || 'bg-slate-300'}`} />
 						</div>
 						
 						<div className="font-black leading-tight line-clamp-1 text-[10px] @[120px]:text-[11px] uppercase tracking-tight text-slate-800">
 							{appointment.title}
-						</div>
-
-						<div className="hidden @[150px]:block text-[9px] font-bold text-slate-400 uppercase tracking-tighter mt-0.5 line-clamp-1">
-							{appointment.type || 'Sessão'}
 						</div>
 					</div>
 				</div>
@@ -153,7 +140,6 @@ const CustomEventCard = ({ calendarEvent, props }: { calendarEvent: any, props: 
 					<div className="flex items-start justify-between">
 						<div className="flex items-center gap-3">
 							<Avatar className="h-12 w-12 border-2 border-primary/20">
-								<AvatarImage src={appointment.patient_avatar} />
 								<AvatarFallback className="bg-primary/10 text-primary">
 									{appointment.title?.substring(0, 2).toUpperCase()}
 								</AvatarFallback>
@@ -162,32 +148,12 @@ const CustomEventCard = ({ calendarEvent, props }: { calendarEvent: any, props: 
 								<h4 className="font-bold text-base leading-tight">{appointment.title}</h4>
 								<div className="flex items-center gap-1 text-xs text-muted-foreground mt-0.5">
 									<Badge variant="outline" className="text-[10px] px-1 py-0 h-4">
-										{appointment.type || 'Fisioterapia'}
+										{appointment.type || 'Sessão'}
 									</Badge>
 									<span className="bullet mx-1">•</span>
 									<span>ID: {appointment.id.substring(0, 8)}</span>
 								</div>
 							</div>
-						</div>
-						<Button variant="ghost" size="icon" className="h-8 w-8">
-							<MoreHorizontal className="h-4 w-4" />
-						</Button>
-					</div>
-
-					<div className={`rounded-lg p-3 border flex items-center justify-between ${isHighRisk ? 'bg-red-50 border-red-100' : 'bg-blue-50 border-blue-100'}`}>
-						<div className="flex items-center gap-2">
-							<div className={`p-1.5 rounded-full ${isHighRisk ? 'bg-red-500 text-white' : 'bg-blue-500 text-white'}`}>
-								<BrainCircuit className="h-3.5 w-3.5" />
-							</div>
-							<div>
-								<p className={`text-[10px] uppercase font-bold tracking-wider ${isHighRisk ? 'text-red-600' : 'text-blue-600'}`}>
-									Risco de Falta (IA)
-								</p>
-								<p className="text-xs font-semibold">{isHighRisk ? 'Risco Elevado' : 'Baixo Risco'}</p>
-							</div>
-						</div>
-						<div className="text-right">
-							<span className={`text-xl font-black ${isHighRisk ? 'text-red-600' : 'text-blue-600'}`}>{noShowRisk}%</span>
 						</div>
 					</div>
 
@@ -206,16 +172,6 @@ const CustomEventCard = ({ calendarEvent, props }: { calendarEvent: any, props: 
 						</Button>
 					</div>
 				</div>
-				
-				<div className="bg-muted/50 px-4 py-2 border-t flex justify-between items-center">
-					<div className="flex items-center gap-1.5 text-[10px] text-muted-foreground font-medium uppercase tracking-tighter">
-						<CalendarIcon className="h-3 w-3" />
-						{format(startTime, "EEEE, d 'de' MMMM", { locale: ptBR })}
-					</div>
-					<Badge variant={appointment.status === 'confirmed' ? 'default' : 'secondary'} className="text-[9px] uppercase h-4 px-1.5">
-						{appointment.status}
-					</Badge>
-				</div>
 			</PopoverContent>
 		</Popover>
 	);
@@ -229,25 +185,17 @@ export function ScheduleXCalendarWrapper(props: ScheduleXCalendarWrapperProps) {
 		onEventClick,
 		onTimeSlotClick,
 		onAppointmentReschedule,
-		onRangeChange,
 		onDateChange,
 		onViewTypeChange,
 	} = props;
 
 	const [, startTransition] = useTransition();
 
-	// Referência mutável para callbacks
-	const onAppointmentRescheduleRef = useRef(onAppointmentReschedule);
-	const onRangeChangeRef = useRef(onRangeChange);
-	const onEventClickRef = useRef(onEventClick);
-	const onTimeSlotClickRef = useRef(onTimeSlotClick);
-
+	// Referência mutável para sempre acessar as props mais recentes
+	const propsRef = useRef(props);
 	useEffect(() => {
-		onAppointmentRescheduleRef.current = onAppointmentReschedule;
-		onRangeChangeRef.current = onRangeChange;
-		onEventClickRef.current = onEventClick;
-		onTimeSlotClickRef.current = onTimeSlotClick;
-	}, [onAppointmentReschedule, onRangeChange, onEventClick, onTimeSlotClick]);
+		propsRef.current = props;
+	}, [props]);
 
 	// React 19: Optimistic UI
 	const [optimisticAppointments, addOptimisticAppointment] = useOptimistic(
@@ -261,40 +209,66 @@ export function ScheduleXCalendarWrapper(props: ScheduleXCalendarWrapperProps) {
 		}
 	);
 
-	// Plugins Estáveis (v3.x)
-	const [calendarControls] = useState(() => createCalendarControlsPlugin());
-	const [dndPlugin] = useState(() => createDragAndDropPlugin());
-	const [currentTimePlugin] = useState(() => createCurrentTimePlugin());
+	// Mapeamento de Eventos (Memoizado)
+	const sxEvents = useMemo(() => {
+		return optimisticAppointments
+			.filter(a => !!a)
+			.map(a => {
+				let start: string;
+				let end: string;
+				
+				if (a.start_time && a.end_time) {
+					start = String(a.start_time).replace('T', ' ').substring(0, 16);
+					end = String(a.end_time).replace('T', ' ').substring(0, 16);
+				} else {
+					const d = a.date instanceof Date ? a.date : new Date(a.date);
+					const dateStr = format(d, "yyyy-MM-dd");
+					const timeStr = String(a.time || "00:00").padStart(5, '0').slice(0, 5);
+					start = `${dateStr} ${timeStr}`;
+					const durationMin = a.duration || 60;
+					const endDate = new Date(d.getFullYear(), d.getMonth(), d.getDate(),
+						parseInt(timeStr.split(":")[0], 10),
+						parseInt(timeStr.split(":")[1], 10) + durationMin);
+					end = format(endDate, "yyyy-MM-dd HH:mm");
+				}
 
-	// Configuração Estável (v3.x)
-	const [calendarConfig] = useState(() => ({
+				return {
+					id: String(a.id),
+					title: a.patient_name || a.patientName || "Consulta",
+					start,
+					end,
+					status: a.status,
+					type: a.type,
+					therapist_id: a.therapist_id,
+					patient_avatar: a.patient_avatar,
+				};
+			});
+	}, [optimisticAppointments]);
+
+	// Plugins (Memoizados)
+	const calendarControls = useMemo(() => createCalendarControlsPlugin(), []);
+	const dndPlugin = useMemo(() => createDragAndDropPlugin(), []);
+	const currentTimePlugin = useMemo(() => createCurrentTimePlugin(), []);
+
+	// Configuração do Calendário (Recriada quando os eventos mudam para garantir renderização)
+	const calendarConfig = useMemo(() => ({
 		views: [createViewDay(), createViewWeek(), createViewMonthGrid()],
 		defaultView: VIEW_MAP[viewType] || "week",
-		events: [],
+		events: sxEvents,
 		locale: "pt-BR",
 		firstDayOfWeek: 1, 
 		dayBoundaries: { start: "07:00", end: "21:00" },
 		weekOptions: { gridHeight: 560 },
 		plugins: [calendarControls, dndPlugin, currentTimePlugin],
 		callbacks: {
-			onRangeUpdate: (range: any) => {
-				onRangeChangeRef.current?.({
-					start: String(range.start),
-					end: String(range.end),
-				});
-			},
-			onEventClick: (event: any) => {
-				onEventClickRef.current?.(event);
-			},
-			onClickDateTime: (dateTime: string) => {
-				onTimeSlotClickRef.current?.(dateTime);
-			},
+			onEventClick: (event: any) => propsRef.current.onEventClick?.(event),
+			onClickDateTime: (dateTime: string) => propsRef.current.onTimeSlotClick?.(dateTime),
 			onEventUpdate: (event: any) => {
-				if (onAppointmentRescheduleRef.current) {
+				if (propsRef.current.onAppointmentReschedule) {
 					startTransition(() => {
 						addOptimisticAppointment({ id: event.id, start: event.start, end: event.end });
 					});
-					onAppointmentRescheduleRef.current(event.id, event.start, event.end);
+					propsRef.current.onAppointmentReschedule(event.id, event.start, event.end);
 					if (typeof navigator !== "undefined" && navigator.vibrate) {
 						navigator.vibrate([15, 50, 15]); 
 					}
@@ -302,86 +276,17 @@ export function ScheduleXCalendarWrapper(props: ScheduleXCalendarWrapperProps) {
 				}
 			}
 		}
-	}));
+	}), [sxEvents, viewType, calendarControls, dndPlugin, currentTimePlugin]);
 
 	const calendarApp = useCalendarApp(calendarConfig);
 
-	// Sincronização de Visualização
-	useEffect(() => {
-		if (calendarApp && calendarControls) {
-			try {
-				calendarControls.setView(VIEW_MAP[viewType]);
-			} catch (e) {}
-		}
-	}, [viewType, calendarApp, calendarControls]);
-
-	// Sincronização de Eventos (v3.x - Formato YYYY-MM-DD HH:mm)
-	useEffect(() => {
-		if (calendarApp && optimisticAppointments) {
-			try {
-				const sxEvents = optimisticAppointments
-					.filter(a => !!a)
-					.map(a => {
-						let start: string;
-						let end: string;
-						
-						if (a.start_time && a.end_time) {
-							start = String(a.start_time).replace('T', ' ').substring(0, 16);
-							end = String(a.end_time).replace('T', ' ').substring(0, 16);
-						} else {
-							const d = a.date instanceof Date ? a.date : new Date(a.date);
-							const dateStr = format(d, "yyyy-MM-dd");
-							const timeStr = String(a.time || "00:00").padStart(5, '0').slice(0, 5);
-							start = `${dateStr} ${timeStr}`;
-							
-							const durationMin = a.duration || 60;
-							const endDate = new Date(d.getFullYear(), d.getMonth(), d.getDate(),
-								parseInt(timeStr.split(":")[0], 10),
-								parseInt(timeStr.split(":")[1], 10) + durationMin);
-							end = format(endDate, "yyyy-MM-dd HH:mm");
-						}
-
-						return {
-							id: String(a.id),
-							title: a.patient_name || a.patientName || "Consulta",
-							start,
-							end,
-							status: a.status,
-							type: a.type,
-							therapist_id: a.therapist_id,
-							patient_avatar: a.patient_avatar,
-						};
-					});
-				console.log("[ScheduleX] Inserindo eventos via eventsService:", sxEvents);
-				if (calendarApp.eventsService && calendarApp.eventsService.set) {
-					calendarApp.eventsService.set(sxEvents);
-					console.log("[ScheduleX] Sincronização concluída.");
-				} else if (calendarApp.events && (calendarApp.events as any).set) {
-					(calendarApp.events as any).set(sxEvents);
-					console.log("[ScheduleX] Sincronização concluída (via .events).");
-				} else {
-					console.error("[ScheduleX] Nenhum serviço de eventos encontrado no app instance!", calendarApp);
-				}
-			} catch (err) {
-				console.error("[ScheduleX] Sync error:", err);
-			}
-		}
-	}, [optimisticAppointments, calendarApp]);
-
 	// Sincronização de Data
 	useEffect(() => {
-		if (!calendarApp || !calendarControls) return;
-		try {
+		if (calendarApp && calendarControls) {
 			const targetDate = format(currentDate, "yyyy-MM-dd");
 			calendarControls.setViewDate(targetDate);
-		} catch (e) {}
+		}
 	}, [currentDate, calendarApp, calendarControls]);
-
-	// Referência mutável para sempre acessar as props mais recentes sem quebrar o memo
-	const propsRef = useRef(props);
-	useEffect(() => {
-		propsRef.current = props;
-	}, [props]);
 
 	// Componentes customizados MEMOIZADOS
 	const customComponents = useMemo(() => ({
@@ -407,12 +312,11 @@ export function ScheduleXCalendarWrapper(props: ScheduleXCalendarWrapperProps) {
 
 			<div className="flex-1 p-4 min-h-0 overflow-hidden">
 				<div className="flex-1 h-full min-h-0 bg-white border border-slate-200 shadow-sm rounded-xl overflow-hidden">
-					{calendarApp && (
-						<ScheduleXCalendar
-							calendarApp={calendarApp}
-							customComponents={customComponents}
-						/>
-					)}
+					<ScheduleXCalendar
+						key={`${viewType}-${sxEvents.length}`}
+						calendarApp={calendarApp}
+						customComponents={customComponents}
+					/>
 				</div>
 			</div>
 		</div>
