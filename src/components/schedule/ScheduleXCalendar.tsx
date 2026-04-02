@@ -1,11 +1,12 @@
 /**
  * ScheduleXCalendar — Wrapper para @schedule-x/react v3.7.3
- * Versão de Diagnóstico - Sem Plugins (Apenas Core)
+ * Versão de Produção Restaurada - Estável e Completa
  */
 
 import { useState, useMemo, useEffect, useOptimistic, useTransition, useRef, useLayoutEffect } from "react";
 import { createCalendar, createViewDay, createViewMonthGrid, createViewWeek } from "@schedule-x/calendar";
-import { ScheduleXCalendar } from "@schedule-x/react";
+import { createDragAndDropPlugin } from "@schedule-x/drag-and-drop";
+import { createCalendarControlsPlugin } from "@schedule-x/calendar-controls";
 import "@schedule-x/theme-default/dist/index.css";
 import { format, isValid, parseISO } from "date-fns";
 import { ptBR } from "date-fns/locale";
@@ -69,12 +70,56 @@ const VIEW_MAP: Record<ViewType, string> = {
 };
 
 /**
- * Componente de Evento Customizado (Ultra-Simples para Diagnóstico)
+ * Componente de Evento Customizado
  */
-const CustomEventCard = ({ calendarEvent }: { calendarEvent: any }) => {
+const CustomEventCard = ({ calendarEvent, props }: { calendarEvent: any, props: any }) => {
+	const appointment = calendarEvent;
+	
+	let startTime: Date;
+	try {
+		const startValue = appointment.start;
+		const dateStr = String(startValue || "").replace(' ', 'T').split('[')[0];
+		const parsed = parseISO(dateStr);
+		startTime = isValid(parsed) ? parsed : new Date();
+	} catch (e) {
+		startTime = new Date();
+	}
+	
+	const formattedTime = format(startTime, "HH:mm");
+	
+	const statusColors: Record<string, string> = {
+		confirmed: "bg-status-confirmed",
+		scheduled: "bg-status-confirmed",
+		pending: "bg-status-pending",
+		cancelled: "bg-status-cancelled",
+		completed: "bg-status-completed"
+	};
+
 	return (
-		<div className="w-full h-full bg-blue-500 text-white p-1 rounded text-[10px] font-bold overflow-hidden border border-blue-600">
-			{calendarEvent.title}
+		<div 
+			className={cn(
+				"w-full h-full p-0.5 overflow-hidden cursor-pointer transition-all hover:ring-2 hover:ring-blue-500/30 rounded-md bg-white",
+				appointment.status === 'cancelled' && "opacity-50 grayscale"
+			)}
+		>
+			<div className={cn(
+				"flex flex-col h-full border-l-[3px] rounded-r-md p-1.5 shadow-sm overflow-hidden text-slate-900",
+				(appointment.status === 'confirmed' || appointment.status === 'scheduled') && "border-status-confirmed",
+				appointment.status === 'pending' && "border-status-pending",
+				appointment.status === 'cancelled' && "border-status-cancelled",
+				appointment.status === 'completed' && "border-status-completed",
+				(!appointment.status || !statusColors[appointment.status]) && "border-slate-300"
+			)}>
+				<div className="flex items-center justify-between gap-1 mb-0.5">
+					<span className="font-black text-[8px] uppercase tracking-widest text-slate-400">
+						{formattedTime}
+					</span>
+					<div className={`h-1 w-1 rounded-full ${statusColors[appointment.status] || 'bg-slate-300'}`} />
+				</div>
+				<div className="font-black leading-tight line-clamp-1 text-[10px] uppercase tracking-tight text-slate-800">
+					{appointment.title}
+				</div>
+			</div>
 		</div>
 	);
 };
@@ -88,22 +133,55 @@ export function ScheduleXCalendarWrapper(props: ScheduleXCalendarWrapperProps) {
 		onViewTypeChange,
 	} = props;
 
+	const [, startTransition] = useTransition();
 	const containerRef = useRef<HTMLDivElement>(null);
 	const calendarInstance = useRef<any>(null);
 	const propsRef = useRef(props);
 	useEffect(() => { propsRef.current = props; }, [props]);
 
 	// React 19: Optimistic UI
-	const [optimisticAppointments] = useOptimistic(appointments);
+	const [optimisticAppointments, addOptimisticAppointment] = useOptimistic(
+		appointments,
+		(state, { id, start, end }: { id: string, start: string, end: string }) => {
+			return state.map(app => 
+				app.id === id 
+					? { ...app, start_time: start.replace('T', ' '), end_time: end.replace('T', ' ') }
+					: app
+			);
+		}
+	);
 
-	// Montagem Vanilla SEM PLUGINS para isolar erro Temporal
+	// Mapeamento de Eventos Estável
+	const sxEvents = useMemo(() => {
+		return optimisticAppointments
+			.filter(a => !!a)
+			.map(a => {
+				let start: string;
+				let end: string;
+				if (a.start_time && a.end_time) {
+					start = String(a.start_time).replace('T', ' ').substring(0, 16);
+					end = String(a.end_time).replace('T', ' ').substring(0, 16);
+				} else {
+					const d = a.date instanceof Date ? a.date : new Date(a.date);
+					const dateStr = format(isValid(d) ? d : new Date(), "yyyy-MM-dd");
+					const timeStr = String(a.time || "00:00").padStart(5, '0').slice(0, 5);
+					start = `${dateStr} ${timeStr}`;
+					const durationMin = a.duration || 60;
+					const endDate = new Date(d.getFullYear(), d.getMonth(), d.getDate(),
+						parseInt(timeStr.split(":")[0], 10),
+						parseInt(timeStr.split(":")[1], 10) + durationMin);
+					end = format(endDate, "yyyy-MM-dd HH:mm");
+				}
+				return { id: String(a.id), title: a.patient_name || a.patientName || "Consulta", start, end, status: a.status };
+			});
+	}, [optimisticAppointments]);
+
+	// Montagem Vanilla do Calendário
 	useLayoutEffect(() => {
 		if (!containerRef.current || typeof window === "undefined") return;
 
 		try {
-			if (calendarInstance.current) {
-				calendarInstance.current.destroy();
-			}
+			if (calendarInstance.current) calendarInstance.current.destroy();
 		} catch (e) {}
 
 		try {
@@ -111,14 +189,34 @@ export function ScheduleXCalendarWrapper(props: ScheduleXCalendarWrapperProps) {
 				views: [createViewDay(), createViewWeek(), createViewMonthGrid()],
 				defaultView: VIEW_MAP[viewType] || "week",
 				locale: "pt-BR",
-				events: [], // Iniciar vazio
+				selectedDate: format(isValid(currentDate) ? currentDate : new Date(), "yyyy-MM-dd"),
+				events: sxEvents,
 				dayBoundaries: { start: "07:00", end: "21:00" },
+				plugins: [
+					createCalendarControlsPlugin(),
+					createDragAndDropPlugin()
+				],
+				callbacks: {
+					onEventClick: (event: any) => propsRef.current.onEventClick?.(event),
+					onClickDateTime: (dateTime: any) => propsRef.current.onTimeSlotClick?.(String(dateTime)),
+					onEventUpdate: (event: any) => {
+						if (propsRef.current.onAppointmentReschedule) {
+							const start = String(event.start).replace('T', ' ').substring(0, 16);
+							const end = String(event.end).replace('T', ' ').substring(0, 16);
+							startTransition(() => {
+								addOptimisticAppointment({ id: event.id, start, end });
+							});
+							propsRef.current.onAppointmentReschedule(event.id, start, end);
+							toast.success("Horário atualizado com sucesso!");
+						}
+					}
+				}
 			});
 
 			calendar.render(containerRef.current);
 			calendarInstance.current = calendar;
 		} catch (err) {
-			console.error("[ScheduleX] Erro no core render:", err);
+			console.error("[ScheduleX] Erro no render:", err);
 		}
 
 		return () => {
@@ -126,30 +224,7 @@ export function ScheduleXCalendarWrapper(props: ScheduleXCalendarWrapperProps) {
 				try { calendarInstance.current.destroy(); } catch (e) {}
 			}
 		};
-	}, [viewType]); 
-
-	// Sincronizar Dados e Data
-	useEffect(() => {
-		const calendar = calendarInstance.current;
-		if (!calendar) return;
-
-		const sxEvents = optimisticAppointments
-			.filter(a => !!a)
-			.map(a => {
-				const start = String(a.start_time || "").replace('T', ' ').substring(0, 16);
-				const end = String(a.end_time || "").replace('T', ' ').substring(0, 16);
-				if (!start || !end) return null;
-				return { id: String(a.id), title: a.patient_name || "Consulta", start, end };
-			})
-			.filter(Boolean);
-
-		try {
-			if (calendar.eventsService) calendar.eventsService.set(sxEvents);
-			else if (calendar.events) calendar.events.set(sxEvents);
-		} catch (e) {
-			console.warn("[ScheduleX] Erro sync events:", e);
-		}
-	}, [optimisticAppointments]);
+	}, [viewType, sxEvents.length]); // Recriar se mudar view ou quantidade de eventos
 
 	return (
 		<div className="flex-1 flex flex-col min-h-0 bg-slate-50/50 overflow-hidden">
@@ -168,7 +243,7 @@ export function ScheduleXCalendarWrapper(props: ScheduleXCalendarWrapperProps) {
 
 			<div className="flex-1 p-4 min-h-0 overflow-hidden">
 				<div className="flex-1 h-full min-h-0 bg-white border border-slate-200 shadow-sm rounded-xl overflow-hidden relative">
-					<div ref={containerRef} className="h-full w-full" />
+					<div ref={containerRef} className="h-full w-full sx-vanilla-mount" />
 				</div>
 			</div>
 		</div>
