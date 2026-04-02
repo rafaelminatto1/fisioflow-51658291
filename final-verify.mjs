@@ -5,25 +5,32 @@ import { testUsers } from './e2e/fixtures/test-data.ts';
   const browser = await chromium.launch({ headless: true });
   const page = await browser.newPage();
   
+  console.log('1. Acessando login...');
   await page.goto('https://fisioflow-web.rafalegollas.workers.dev/login');
   await page.fill('input[type="email"]', testUsers.admin.email);
   await page.fill('input[type="password"]', testUsers.admin.password);
   await page.click('button[type="submit"]');
 
-  await page.waitForURL('**/agenda**', { timeout: 30000 }).catch(() => {});
+  console.log('2. Esperando redirecionamento...');
+  await page.waitForTimeout(10000); // 10s fixos para garantir auth
+
+  console.log('3. Indo para agenda...');
+  await page.goto('https://fisioflow-web.rafalegollas.workers.dev/agenda');
   await page.waitForTimeout(10000); 
 
-  const html = await page.$eval('.sx__view-container', el => el.innerHTML).catch(e => "CONTAINER NOT FOUND");
   const data = await page.evaluate(() => {
+    const grid = document.querySelector('.sx__view-container');
+    const events = document.querySelectorAll('.sx__event, .sx__time-grid-event, [class*="event"]');
     return {
-      classes: Array.from(document.querySelectorAll('*')).map(el => Array.from(el.classList)).flat().filter(c => c.startsWith('sx__')),
-      url: window.location.href
+      eventsCount: events.length,
+      gridPresent: !!grid,
+      gridHtml: grid?.innerHTML.substring(0, 200),
+      url: window.location.href,
+      bodyClasses: document.body.className
     };
   });
 
-  console.log('HTML DO GRID:', html.substring(0, 1000));
-  console.log('CLASSES ENCONTRADAS:', [...new Set(data.classes)]);
-  
-  await page.screenshot({ path: 'final-agenda.png', fullPage: true });
+  console.log('RESULTADO:', data);
+  await page.screenshot({ path: 'final-check.png', fullPage: true });
   await browser.close();
 })();
