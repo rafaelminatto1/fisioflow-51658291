@@ -1,6 +1,6 @@
 /**
  * ScheduleXCalendar — Wrapper para @schedule-x/react v3.7.3
- * Versão de Controle Total - Montagem Vanilla Direta
+ * Versão Final - Inicialização Nua e Injeção Forçada
  */
 
 import { useState, useMemo, useEffect, useOptimistic, useTransition, useRef, useLayoutEffect } from "react";
@@ -97,66 +97,72 @@ export function ScheduleXCalendarWrapper(props: ScheduleXCalendarWrapperProps) {
 		}
 	);
 
-	// Montagem Vanilla do Calendário
+	// Montagem Vanilla do Calendário (INICIALIZAÇÃO NUA)
 	useLayoutEffect(() => {
 		if (!containerRef.current || typeof window === "undefined") return;
 
-		// Limpar instância anterior se existir
-		if (calendarInstance.current) {
-			try { calendarInstance.current.destroy(); } catch (e) {}
-		}
+		try {
+			if (calendarInstance.current) {
+				calendarInstance.current.destroy();
+			}
+		} catch (e) {}
 
 		const controls = createCalendarControlsPlugin();
 		const dnd = createDragAndDropPlugin();
 		const time = createCurrentTimePlugin();
 
-		const calendar = createCalendar({
-			views: [createViewDay(), createViewWeek(), createViewMonthGrid()],
-			defaultView: VIEW_MAP[viewType] || "week",
-			selectedDate: isValid(currentDate) ? format(currentDate, "yyyy-MM-dd") : format(new Date(), "yyyy-MM-dd"),
-			events: [], // Inicialmente vazio
-			locale: "pt-BR",
-			firstDayOfWeek: 1, 
-			dayBoundaries: { start: "07:00", end: "21:00" },
-			weekOptions: { gridHeight: 560 },
-			plugins: [controls, dnd, time],
-			callbacks: {
-				onEventClick: (event: any) => propsRef.current.onEventClick?.(event),
-				onClickDateTime: (dateTime: any) => propsRef.current.onTimeSlotClick?.(String(dateTime)),
-				onEventUpdate: (event: any) => {
-					if (propsRef.current.onAppointmentReschedule) {
-						const start = String(event.start).replace('T', ' ').substring(0, 16);
-						const end = String(event.end).replace('T', ' ').substring(0, 16);
-						startTransition(() => {
-							addOptimisticAppointment({ id: event.id, start, end });
-						});
-						propsRef.current.onAppointmentReschedule(event.id, start, end);
-						toast.success("Horário atualizado com sucesso!");
+		try {
+			// CONSTRUTOR SEM DATAS OU EVENTOS PARA EVITAR CRASH
+			const calendar = createCalendar({
+				views: [createViewDay(), createViewWeek(), createViewMonthGrid()],
+				defaultView: VIEW_MAP[viewType] || "week",
+				locale: "pt-BR",
+				firstDayOfWeek: 1, 
+				dayBoundaries: { start: "07:00", end: "21:00" },
+				weekOptions: { gridHeight: 560 },
+				plugins: [controls, dnd, time],
+				callbacks: {
+					onEventClick: (event: any) => propsRef.current.onEventClick?.(event),
+					onClickDateTime: (dateTime: any) => propsRef.current.onTimeSlotClick?.(String(dateTime)),
+					onEventUpdate: (event: any) => {
+						if (propsRef.current.onAppointmentReschedule) {
+							const start = String(event.start).replace('T', ' ').substring(0, 16);
+							const end = String(event.end).replace('T', ' ').substring(0, 16);
+							startTransition(() => {
+								addOptimisticAppointment({ id: event.id, start, end });
+							});
+							propsRef.current.onAppointmentReschedule(event.id, start, end);
+							toast.success("Horário atualizado com sucesso!");
+						}
 					}
 				}
-			}
-		});
+			});
 
-		calendar.render(containerRef.current);
-		calendarInstance.current = calendar;
+			calendar.render(containerRef.current);
+			calendarInstance.current = calendar;
+		} catch (err) {
+			console.error("[ScheduleX] Falha crítica no construtor:", err);
+		}
 
 		return () => {
 			if (calendarInstance.current) {
 				try { calendarInstance.current.destroy(); } catch (e) {}
 			}
 		};
-	}, [viewType]); // Recriar apenas se a view mudar
+	}, [viewType]); 
 
-	// Sincronizar Dados e Data
+	// Sincronizar Dados e Data (INJEÇÃO FORÇADA)
 	useEffect(() => {
 		const calendar = calendarInstance.current;
 		if (!calendar) return;
 
-		// 1. Sincronizar Data
+		// 1. Sincronizar Data (via service apenas)
 		try {
-			const targetDate = format(currentDate, "yyyy-MM-dd");
-			if (calendar.plugins.calendarControls) {
-				calendar.plugins.calendarControls.setViewDate(targetDate);
+			const targetDate = format(isValid(currentDate) ? currentDate : new Date(), "yyyy-MM-dd");
+			const controls = calendar.plugins.calendarControls;
+			if (controls) {
+				if (controls.setViewDate) controls.setViewDate(targetDate);
+				else if (controls.setDate) controls.setDate(targetDate);
 			}
 		} catch (e) {}
 
@@ -187,7 +193,7 @@ export function ScheduleXCalendarWrapper(props: ScheduleXCalendarWrapperProps) {
 			if (calendar.eventsService) calendar.eventsService.set(sxEvents);
 			else if (calendar.events) calendar.events.set(sxEvents);
 		} catch (e) {
-			console.warn("[ScheduleX] Erro de sincronização vanilla:", e);
+			console.warn("[ScheduleX] Erro de sincronização forçada:", e);
 		}
 	}, [currentDate, optimisticAppointments]);
 
