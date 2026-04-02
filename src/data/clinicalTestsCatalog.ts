@@ -270,9 +270,9 @@ export const builtinClinicalTestsCatalog: ClinicalTestCatalogRecord[] = [
 		source_label: "Curadoria FisioFlow",
 		sort_order: 105,
 		illustration: "cervical-radicular",
-		imageUrl: "/clinical-tests/illustrations/slump-test-initial.png",
-		initialPositionImageUrl: "/clinical-tests/illustrations/slump-test-initial.png",
-		finalPositionImageUrl: "/clinical-tests/illustrations/slump-test-final.png"
+		imageUrl: "/clinical-tests/illustrations/slump-test-initial.avif",
+		initialPositionImageUrl: "/clinical-tests/illustrations/slump-test-initial.avif",
+		finalPositionImageUrl: "/clinical-tests/illustrations/slump-test-final.avif"
 	}),
 	createBuiltinTest({
 		id: "builtin-lachman-test",
@@ -298,7 +298,7 @@ export const builtinClinicalTestsCatalog: ClinicalTestCatalogRecord[] = [
 		source_label: "Curadoria FisioFlow",
 		sort_order: 10,
 		illustration: "knee-stability",
-		imageUrl: "https://media.moocafisio.com.br/illustrations/lachman_test.png",
+		imageUrl: "https://media.moocafisio.com.br/illustrations/lachman_test.avif",
 		evidence_resources: [
 			{
 				title: "Meta-análise de testes para LCA",
@@ -333,7 +333,7 @@ export const builtinClinicalTestsCatalog: ClinicalTestCatalogRecord[] = [
 		source_label: "Curadoria FisioFlow",
 		sort_order: 20,
 		illustration: "knee-stability",
-		imageUrl: '/clinical-tests/illustrations/pivot-shift.png',
+		imageUrl: '/clinical-tests/illustrations/pivot-shift.avif',
 	}),
 	createBuiltinTest({
 		id: "builtin-thessaly-test",
@@ -359,7 +359,7 @@ export const builtinClinicalTestsCatalog: ClinicalTestCatalogRecord[] = [
 		source_label: "Curadoria FisioFlow",
 		sort_order: 30,
 		illustration: "knee-stability",
-		imageUrl: '/clinical-tests/illustrations/thessaly-test.png',
+		imageUrl: '/clinical-tests/illustrations/thessaly-test.avif',
 	}),
 	createBuiltinTest({
 		id: "builtin-neer-sign",
@@ -386,7 +386,7 @@ export const builtinClinicalTestsCatalog: ClinicalTestCatalogRecord[] = [
 		sort_order: 40,
 		illustration: "shoulder-impingement",
 		imageUrl:
-			"https://media.moocafisio.com.br/illustrations/neer_test_shoulder_illustration.png",
+			"https://media.moocafisio.com.br/illustrations/neer_test_shoulder_illustration.avif",
 	}),
 	createBuiltinTest({
 		id: "builtin-hawkins-kennedy",
@@ -709,7 +709,7 @@ export const builtinClinicalTestsCatalog: ClinicalTestCatalogRecord[] = [
 		sort_order: 25,
 		illustration: "knee-stability",
 		imageUrl:
-			"https://media.moocafisio.com.br/illustrations/anterior_drawer_test_knee.png",
+			"https://media.moocafisio.com.br/illustrations/anterior_drawer_test_knee.avif",
 	}),
 	createBuiltinTest({
 		id: "builtin-phalen-test",
@@ -732,7 +732,7 @@ export const builtinClinicalTestsCatalog: ClinicalTestCatalogRecord[] = [
 		sort_order: 90,
 		illustration: "cervical-radicular",
 		imageUrl:
-			"https://media.moocafisio.com.br/illustrations/phalen_test_illustration.png",
+			"https://media.moocafisio.com.br/illustrations/phalen_test_illustration.avif",
 	}),
 	createBuiltinTest({
 		id: "builtin-lasegue-test",
@@ -756,7 +756,7 @@ export const builtinClinicalTestsCatalog: ClinicalTestCatalogRecord[] = [
 		sort_order: 100,
 		illustration: "cervical-radicular",
 		imageUrl:
-			"https://media.moocafisio.com.br/illustrations/lasegue_test_spine_illustration.png",
+			"https://media.moocafisio.com.br/illustrations/lasegue_test_spine_illustration.avif",
 	}),
 	createBuiltinTest({
 		id: "builtin-jobe-test",
@@ -778,7 +778,7 @@ export const builtinClinicalTestsCatalog: ClinicalTestCatalogRecord[] = [
 		sort_order: 45,
 		illustration: "shoulder-impingement",
 		imageUrl:
-			"https://media.moocafisio.com.br/illustrations/jobe_test_shoulder_illustration.png",
+			"https://media.moocafisio.com.br/illustrations/jobe_test_shoulder_illustration.avif",
 	}),
 	createBuiltinTest({
 		id: "builtin-appley-compression-test",
