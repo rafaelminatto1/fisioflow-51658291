@@ -1,6 +1,6 @@
 /**
- * ScheduleXCalendar — Wrapper correto para @schedule-x/react
- * Versão 4.0.0 - React 19 + Tailwind v4 + Optimistic UI
+ * ScheduleXCalendar — Wrapper para @schedule-x/react v3.7.3
+ * Versão Estável - React 19 + Tailwind v4
  */
 
 import { useState, useMemo, useEffect, useOptimistic, useTransition, useRef } from "react";
@@ -16,7 +16,6 @@ import { createCurrentTimePlugin } from "@schedule-x/current-time";
 import "@schedule-x/theme-default/dist/index.css";
 import { format, isValid, parseISO } from "date-fns";
 import { ptBR } from "date-fns/locale";
-import { Temporal } from "temporal-polyfill";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 
@@ -80,27 +79,22 @@ const VIEW_MAP: Record<ViewType, string> = {
 };
 
 /**
- * Componente de Evento Customizado com IA Insights e Container Queries (Tailwind v4)
+ * Componente de Evento Customizado (Estável para v3.x)
  */
 const CustomEventCard = ({ calendarEvent, props }: { calendarEvent: any, props: any }) => {
 	const appointment = calendarEvent;
 	
-	// Parsing resiliente de data para o Schedule-X 4.x
+	// Parsing estável para v3.x (recebe strings)
 	let startTime: Date;
 	try {
-		if (appointment.start && typeof appointment.start === 'object' && appointment.start.epochMilliseconds) {
-			startTime = new Date(appointment.start.epochMilliseconds);
-		} else {
-			// Se for string "YYYY-MM-DD HH:mm", trocar espaço por T para o parseISO
-			const dateStr = String(appointment.start || "").replace(' ', 'T').split('[')[0];
-			const parsed = parseISO(dateStr);
-			startTime = isValid(parsed) ? parsed : new Date();
-		}
+		const dateStr = String(appointment.start || "").replace(' ', 'T');
+		const parsed = parseISO(dateStr);
+		startTime = isValid(parsed) ? parsed : new Date();
 	} catch (e) {
 		startTime = new Date();
 	}
 	
-	const formattedTime = isValid(startTime) ? format(startTime, "HH:mm") : "--:--";
+	const formattedTime = format(startTime, "HH:mm");
 	
 	// IA: Risco de No-show
 	const noShowRisk = (parseInt(appointment.id.substring(0, 2), 16) % 100);
@@ -108,7 +102,7 @@ const CustomEventCard = ({ calendarEvent, props }: { calendarEvent: any, props: 
 	
 	const statusColors: Record<string, string> = {
 		confirmed: "bg-status-confirmed",
-		scheduled: "bg-status-confirmed", // Mapear scheduled para o mesmo que confirmado ou cor base
+		scheduled: "bg-status-confirmed",
 		pending: "bg-status-pending",
 		cancelled: "bg-status-cancelled",
 		completed: "bg-status-completed"
@@ -147,9 +141,8 @@ const CustomEventCard = ({ calendarEvent, props }: { calendarEvent: any, props: 
 							{appointment.title}
 						</div>
 
-						{/* Info extra visível apenas se houver espaço (Container Query) */}
 						<div className="hidden @[150px]:block text-[9px] font-bold text-slate-400 uppercase tracking-tighter mt-0.5 line-clamp-1">
-							{appointment.type === 'paid' ? 'Particular' : 'Avaliação'}
+							{appointment.type || 'Sessão'}
 						</div>
 					</div>
 				</div>
@@ -169,7 +162,7 @@ const CustomEventCard = ({ calendarEvent, props }: { calendarEvent: any, props: 
 								<h4 className="font-bold text-base leading-tight">{appointment.title}</h4>
 								<div className="flex items-center gap-1 text-xs text-muted-foreground mt-0.5">
 									<Badge variant="outline" className="text-[10px] px-1 py-0 h-4">
-										{appointment.type === 'paid' ? 'Particular' : 'Convênio'}
+										{appointment.type || 'Fisioterapia'}
 									</Badge>
 									<span className="bullet mx-1">•</span>
 									<span>ID: {appointment.id.substring(0, 8)}</span>
@@ -198,32 +191,11 @@ const CustomEventCard = ({ calendarEvent, props }: { calendarEvent: any, props: 
 						</div>
 					</div>
 
-					{isHighRisk && (
-						<Button variant="outline" className="w-full gap-2 border-red-200 text-red-600 hover:bg-red-50 h-8 text-xs" size="sm">
-							<MessageSquare className="h-3.5 w-3.5" />
-							Re-confirmar via WhatsApp
-						</Button>
-					)}
-
-					<div className="bg-primary/5 rounded-lg p-3 border border-primary/10">
-						<div className="flex items-center gap-2 mb-1">
-							<User className="h-3.5 w-3.5 text-primary" />
-							<span className="text-[11px] font-semibold uppercase tracking-wider text-primary/70">Última Evolução</span>
-						</div>
-						<p className="text-xs italic text-muted-foreground line-clamp-2">
-							"Paciente apresenta melhora na amplitude de movimento do ombro direito após exercícios de mobilidade..."
-						</p>
-					</div>
-
 					<div className="flex gap-2 pt-2">
 						<Button 
 							className="flex-1 gap-2 h-9 text-xs shadow-md" 
 							size="sm"
-							onClick={() => {
-								if (props.onEventClick) {
-									props.onEventClick({ id: appointment.id });
-								}
-							}}
+							onClick={() => props.onEventClick?.({ id: appointment.id })}
 						>
 							<Play className="h-3.5 w-3.5" />
 							Iniciar Atendimento
@@ -264,20 +236,20 @@ export function ScheduleXCalendarWrapper(props: ScheduleXCalendarWrapperProps) {
 
 	const [, startTransition] = useTransition();
 
-	// Use refs for callbacks to avoid stale closures in Schedule-X
-	const onTimeSlotClickRef = useRef(onTimeSlotClick);
-	const onEventClickRef = useRef(onEventClick);
+	// Referência mutável para callbacks
 	const onAppointmentRescheduleRef = useRef(onAppointmentReschedule);
 	const onRangeChangeRef = useRef(onRangeChange);
+	const onEventClickRef = useRef(onEventClick);
+	const onTimeSlotClickRef = useRef(onTimeSlotClick);
 
 	useEffect(() => {
-		onTimeSlotClickRef.current = onTimeSlotClick;
-		onEventClickRef.current = onEventClick;
 		onAppointmentRescheduleRef.current = onAppointmentReschedule;
 		onRangeChangeRef.current = onRangeChange;
-	}, [onTimeSlotClick, onEventClick, onAppointmentReschedule, onRangeChange]);
+		onEventClickRef.current = onEventClick;
+		onTimeSlotClickRef.current = onTimeSlotClick;
+	}, [onAppointmentReschedule, onRangeChange, onEventClick, onTimeSlotClick]);
 
-	// React 19: Optimistic UI para reagendamento rápido
+	// React 19: Optimistic UI
 	const [optimisticAppointments, addOptimisticAppointment] = useOptimistic(
 		appointments,
 		(state, { id, start, end }: { id: string, start: string, end: string }) => {
@@ -289,12 +261,12 @@ export function ScheduleXCalendarWrapper(props: ScheduleXCalendarWrapperProps) {
 		}
 	);
 
-	// Plugins Estáveis
+	// Plugins Estáveis (v3.x)
 	const [calendarControls] = useState(() => createCalendarControlsPlugin());
 	const [dndPlugin] = useState(() => createDragAndDropPlugin());
 	const [currentTimePlugin] = useState(() => createCurrentTimePlugin());
 
-	// Configuração Básica e Estável do Calendário (Apenas 1 vez na montagem)
+	// Configuração Estável (v3.x)
 	const [calendarConfig] = useState(() => ({
 		views: [createViewDay(), createViewWeek(), createViewMonthGrid()],
 		defaultView: VIEW_MAP[viewType] || "week",
@@ -307,18 +279,15 @@ export function ScheduleXCalendarWrapper(props: ScheduleXCalendarWrapperProps) {
 		callbacks: {
 			onRangeUpdate: (range: any) => {
 				onRangeChangeRef.current?.({
-					start: typeof range.start === "string" ? range.start : range.start.toString(),
-					end: typeof range.end === "string" ? range.end : range.end.toString(),
+					start: String(range.start),
+					end: String(range.end),
 				});
 			},
 			onEventClick: (event: any) => {
 				onEventClickRef.current?.(event);
 			},
-			onClickDateTime: (dateTime: any) => {
-				onTimeSlotClickRef.current?.(typeof dateTime === "string" ? dateTime : dateTime.toString());
-			},
-			onClickDate: (date: any) => {
-				onTimeSlotClickRef.current?.(typeof date === "string" ? date : date.toString());
+			onClickDateTime: (dateTime: string) => {
+				onTimeSlotClickRef.current?.(dateTime);
 			},
 			onEventUpdate: (event: any) => {
 				if (onAppointmentRescheduleRef.current) {
@@ -337,88 +306,58 @@ export function ScheduleXCalendarWrapper(props: ScheduleXCalendarWrapperProps) {
 
 	const calendarApp = useCalendarApp(calendarConfig);
 
-	// Sincronização de Visualização (View Type)
+	// Sincronização de Visualização
 	useEffect(() => {
 		if (calendarApp && calendarControls) {
 			try {
-				if (calendarControls.setView) {
-					calendarControls.setView(VIEW_MAP[viewType]);
-				}
-			} catch (e) {
-				console.error("[ScheduleX] Erro ao mudar view:", e);
-			}
+				calendarControls.setView(VIEW_MAP[viewType]);
+			} catch (e) {}
 		}
 	}, [viewType, calendarApp, calendarControls]);
 
-	// Sincronização de Eventos usando a lista otimista
+	// Sincronização de Eventos (v3.x - Formato YYYY-MM-DD HH:mm)
 	useEffect(() => {
 		if (calendarApp && optimisticAppointments) {
-			console.log("[ScheduleX] Inciando sincronização de eventos. Total recebido:", optimisticAppointments.length);
-			
 			try {
-				const timeZone = Intl.DateTimeFormat().resolvedOptions().timeZone;
-				
 				const sxEvents = optimisticAppointments
-					.filter(a => {
-						if (!a) return false;
-						if (a.start_time && a.end_time) {
-							return isValid(parseISO(String(a.start_time).trim())) && isValid(parseISO(String(a.end_time).trim()));
-						}
-						if (a.date && a.time) {
-							const d = a.date instanceof Date ? a.date : new Date(a.date);
-							return isValid(d);
-						}
-						return false;
-					})
+					.filter(a => !!a)
 					.map(a => {
-						let startISO: string;
-						let endISO: string;
+						let start: string;
+						let end: string;
 						
 						if (a.start_time && a.end_time) {
-							startISO = String(a.start_time).replace(' ', 'T').substring(0, 16);
-							endISO = String(a.end_time).replace(' ', 'T').substring(0, 16);
+							start = String(a.start_time).replace('T', ' ').substring(0, 16);
+							end = String(a.end_time).replace('T', ' ').substring(0, 16);
 						} else {
 							const d = a.date instanceof Date ? a.date : new Date(a.date);
 							const dateStr = format(d, "yyyy-MM-dd");
 							const timeStr = String(a.time || "00:00").padStart(5, '0').slice(0, 5);
-							startISO = `${dateStr}T${timeStr}`;
+							start = `${dateStr} ${timeStr}`;
 							
 							const durationMin = a.duration || 60;
 							const endDate = new Date(d.getFullYear(), d.getMonth(), d.getDate(),
 								parseInt(timeStr.split(":")[0], 10),
 								parseInt(timeStr.split(":")[1], 10) + durationMin);
-							endISO = format(endDate, "yyyy-MM-dd'T'HH:mm");
+							end = format(endDate, "yyyy-MM-dd HH:mm");
 						}
-						
-						// Schedule-X 4.x exige o formato YYYY-MM-DD HH:mm
-						const start = startISO.replace('T', ' ');
-						const end = endISO.replace('T', ' ');
 
-						const event = {
+						return {
 							id: String(a.id),
 							title: a.patient_name || a.patientName || "Consulta",
 							start,
 							end,
 							status: a.status,
 							type: a.type,
-							therapist_id: a.therapist_id || a.therapistId,
+							therapist_id: a.therapist_id,
 							patient_avatar: a.patient_avatar,
 						};
-						
-						return event;
 					});
-					
-				console.log("[ScheduleX] Eventos mapeados e prontos para o calendário:", sxEvents);
 				calendarApp.events.set(sxEvents);
-				console.log("[ScheduleX] Eventos inseridos no calendário com sucesso!");
 			} catch (err) {
 				console.error("[ScheduleX] Sync error:", err);
 			}
-		} else {
-			console.log("[ScheduleX] Sincronização ignorada. calendarApp:", !!calendarApp, "optimisticAppointments:", optimisticAppointments?.length);
 		}
 	}, [optimisticAppointments, calendarApp]);
-
 
 	// Sincronização de Data
 	useEffect(() => {
@@ -435,7 +374,7 @@ export function ScheduleXCalendarWrapper(props: ScheduleXCalendarWrapperProps) {
 		propsRef.current = props;
 	}, [props]);
 
-	// Componentes customizados MEMOIZADOS para não destruir o calendário
+	// Componentes customizados MEMOIZADOS
 	const customComponents = useMemo(() => ({
 		timeGridEvent: (eventProps: any) => <CustomEventCard {...eventProps} props={propsRef.current} />,
 		dateGridEvent: (eventProps: any) => <CustomEventCard {...eventProps} props={propsRef.current} />,
