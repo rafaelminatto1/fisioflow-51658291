@@ -1,6 +1,6 @@
 /**
  * ScheduleXCalendar — Wrapper para @schedule-x/react v3.7.3
- * Versão de Vanguarda - Imutabilidade Total e Sincronização Estrita
+ * Versão Final - Objetos Temporal Reais
  */
 
 import { useState, useMemo, useEffect, useOptimistic, useTransition, useRef } from "react";
@@ -17,6 +17,7 @@ import { createCurrentTimePlugin } from "@schedule-x/current-time";
 import "@schedule-x/theme-default/dist/index.css";
 import { format, isValid, parseISO } from "date-fns";
 import { ptBR } from "date-fns/locale";
+import { Temporal } from "temporal-polyfill";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 
@@ -37,9 +38,6 @@ import {
 	Play, 
 	Calendar as CalendarIcon,
 	MoreHorizontal,
-	AlertTriangle,
-	BrainCircuit,
-	MessageSquare,
 } from "lucide-react";
 import { ScheduleToolbar } from "./ScheduleToolbar";
 
@@ -85,11 +83,16 @@ const VIEW_MAP: Record<ViewType, string> = {
 const CustomEventCard = ({ calendarEvent, props }: { calendarEvent: any, props: any }) => {
 	const appointment = calendarEvent;
 	
+	// v3.x com objetos Temporal: acessamos epochMilliseconds
 	let startTime: Date;
 	try {
-		const dateStr = String(appointment.start || "").replace(' ', 'T');
-		const parsed = parseISO(dateStr);
-		startTime = isValid(parsed) ? parsed : new Date();
+		if (appointment.start && typeof appointment.start === 'object' && appointment.start.epochMilliseconds) {
+			startTime = new Date(Number(appointment.start.epochMilliseconds));
+		} else {
+			const dateStr = String(appointment.start || "").replace(' ', 'T');
+			const parsed = parseISO(dateStr);
+			startTime = isValid(parsed) ? parsed : new Date();
+		}
 	} catch (e) {
 		startTime = new Date();
 	}
@@ -203,44 +206,56 @@ export function ScheduleXCalendarWrapper(props: ScheduleXCalendarWrapperProps) {
 		}
 	);
 
-	// Mapeamento de Eventos (Memoizado e Estável)
+	// Mapeamento de Eventos (USANDO OBJETOS TEMPORAL)
 	const sxEvents = useMemo(() => {
+		const tz = Intl.DateTimeFormat().resolvedOptions().timeZone;
+		
 		return optimisticAppointments
 			.filter(a => !!a)
 			.map(a => {
-				let start: string;
-				let end: string;
+				let startStr: string;
+				let endStr: string;
+				
 				if (a.start_time && a.end_time) {
-					start = String(a.start_time).replace('T', ' ').substring(0, 16);
-					end = String(a.end_time).replace('T', ' ').substring(0, 16);
+					startStr = String(a.start_time).replace(' ', 'T').substring(0, 16);
+					endStr = String(a.end_time).replace(' ', 'T').substring(0, 16);
 				} else {
 					const d = a.date instanceof Date ? a.date : new Date(a.date);
 					const dateStr = format(d, "yyyy-MM-dd");
 					const timeStr = String(a.time || "00:00").padStart(5, '0').slice(0, 5);
-					start = `${dateStr} ${timeStr}`;
+					startStr = `${dateStr}T${timeStr}`;
 					const durationMin = a.duration || 60;
 					const endDate = new Date(d.getFullYear(), d.getMonth(), d.getDate(),
 						parseInt(timeStr.split(":")[0], 10),
 						parseInt(timeStr.split(":")[1], 10) + durationMin);
-					end = format(endDate, "yyyy-MM-dd HH:mm");
+					endStr = format(endDate, "yyyy-MM-dd'T'HH:mm");
 				}
-				return {
-					id: String(a.id),
-					title: a.patient_name || a.patientName || "Consulta",
-					start, end,
-					status: a.status,
-					type: a.type,
-					patient_avatar: a.patient_avatar,
-				};
-			});
+
+				// CRIAR OBJETOS TEMPORAL REAIS
+				try {
+					return {
+						id: String(a.id),
+						title: a.patient_name || a.patientName || "Consulta",
+						start: Temporal.ZonedDateTime.from(`${startStr}:00[${tz}]`),
+						end: Temporal.ZonedDateTime.from(`${endStr}:00[${tz}]`),
+						status: a.status,
+						type: a.type,
+						patient_avatar: a.patient_avatar,
+					};
+				} catch (e) {
+					console.error("[ScheduleX] Erro ao criar objeto Temporal:", e, startStr);
+					return null;
+				}
+			})
+			.filter(Boolean);
 	}, [optimisticAppointments]);
 
-	// 1. Criar Plugins
+	// Plugins estáveis
 	const controls = useMemo(() => createCalendarControlsPlugin(), []);
 	const dnd = useMemo(() => createDragAndDropPlugin(), []);
 	const time = useMemo(() => createCurrentTimePlugin(), []);
 
-	// 2. Instanciar Calendário (Recriado apenas quando estritamente necessário para garantir renderização)
+	// Instanciar Calendário
 	const calendarApp = useMemo(() => {
 		if (typeof window === "undefined") return null;
 		
@@ -256,13 +271,17 @@ export function ScheduleXCalendarWrapper(props: ScheduleXCalendarWrapperProps) {
 			plugins: [controls, dnd, time],
 			callbacks: {
 				onEventClick: (event: any) => propsRef.current.onEventClick?.(event),
-				onClickDateTime: (dateTime: string) => propsRef.current.onTimeSlotClick?.(dateTime),
+				onClickDateTime: (dateTime: any) => propsRef.current.onTimeSlotClick?.(typeof dateTime === 'string' ? dateTime : dateTime.toString()),
 				onEventUpdate: (event: any) => {
 					if (propsRef.current.onAppointmentReschedule) {
+						// Para o callback, enviamos strings simples
+						const start = event.start.toString().split('[')[0].replace('T', ' ').substring(0, 16);
+						const end = event.end.toString().split('[')[0].replace('T', ' ').substring(0, 16);
+						
 						startTransition(() => {
-							addOptimisticAppointment({ id: event.id, start: event.start, end: event.end });
+							addOptimisticAppointment({ id: event.id, start, end });
 						});
-						propsRef.current.onAppointmentReschedule(event.id, event.start, event.end);
+						propsRef.current.onAppointmentReschedule(event.id, start, end);
 						if (typeof navigator !== "undefined" && navigator.vibrate) {
 							navigator.vibrate([15, 50, 15]); 
 						}
@@ -271,10 +290,9 @@ export function ScheduleXCalendarWrapper(props: ScheduleXCalendarWrapperProps) {
 				}
 			}
 		});
-	// Recriar o objeto de calendário quando os eventos mudam garante que o Preact renderize os cards
 	}, [sxEvents, viewType, controls, dnd, time]); 
 
-	// Sincronizar Data (Sem recriar o calendário)
+	// Sincronizar Data
 	useEffect(() => {
 		if (calendarApp && controls) {
 			try {
@@ -283,7 +301,7 @@ export function ScheduleXCalendarWrapper(props: ScheduleXCalendarWrapperProps) {
 		}
 	}, [currentDate, calendarApp, controls]);
 
-	// 3. Componentes Customizados (Referência estável)
+	// Componentes Customizados
 	const customComponents = useMemo(() => ({
 		timeGridEvent: (eventProps: any) => <CustomEventCard {...eventProps} props={propsRef.current} />,
 		dateGridEvent: (eventProps: any) => <CustomEventCard {...eventProps} props={propsRef.current} />,
@@ -310,7 +328,7 @@ export function ScheduleXCalendarWrapper(props: ScheduleXCalendarWrapperProps) {
 					{calendarApp && (
 						<div className="h-full sx-react-calendar-wrapper">
 							<ScheduleXCalendar
-								key={`sx-cal-${sxEvents.length}`} // Chave dinâmica força a reconstrução do componente wrapper
+								key={`sx-cal-${sxEvents.length}-${viewType}`}
 								calendarApp={calendarApp}
 								customComponents={customComponents}
 							/>
