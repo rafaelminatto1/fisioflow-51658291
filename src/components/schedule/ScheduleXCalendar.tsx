@@ -1,10 +1,10 @@
 /**
  * ScheduleXCalendar — Wrapper para @schedule-x/react v3.7.3
- * Versão Ultra-Estável com Re-renderização Forçada
+ * Versão de Vanguarda - Inicialização Manual e Segura
  */
 
 import { useState, useMemo, useEffect, useOptimistic, useTransition, useRef } from "react";
-import { ScheduleXCalendar, useCalendarApp } from "@schedule-x/react";
+import { ScheduleXCalendar, createCalendar } from "@schedule-x/calendar";
 import {
 	createViewDay,
 	createViewMonthGrid,
@@ -182,20 +182,13 @@ export function ScheduleXCalendarWrapper(props: ScheduleXCalendarWrapperProps) {
 		appointments,
 		currentDate,
 		viewType,
-		onEventClick,
-		onTimeSlotClick,
-		onAppointmentReschedule,
 		onDateChange,
 		onViewTypeChange,
 	} = props;
 
 	const [, startTransition] = useTransition();
-
-	// Referência mutável para sempre acessar as props mais recentes
 	const propsRef = useRef(props);
-	useEffect(() => {
-		propsRef.current = props;
-	}, [props]);
+	useEffect(() => { propsRef.current = props; }, [props]);
 
 	// React 19: Optimistic UI
 	const [optimisticAppointments, addOptimisticAppointment] = useOptimistic(
@@ -209,14 +202,52 @@ export function ScheduleXCalendarWrapper(props: ScheduleXCalendarWrapperProps) {
 		}
 	);
 
-	// Mapeamento de Eventos (Memoizado)
-	const sxEvents = useMemo(() => {
-		return optimisticAppointments
+	// 1. Inicializar Plugins Manualmente
+	const [controls] = useState(() => createCalendarControlsPlugin());
+	const [dnd] = useState(() => createDragAndDropPlugin());
+	const [time] = useState(() => createCurrentTimePlugin());
+
+	// 2. Instanciar Calendário Manualmente (Fora do Hook useCalendarApp)
+	const calendarApp = useMemo(() => {
+		if (typeof window === "undefined") return null;
+		
+		return createCalendar({
+			views: [createViewDay(), createViewWeek(), createViewMonthGrid()],
+			defaultView: VIEW_MAP[viewType] || "week",
+			events: [],
+			locale: "pt-BR",
+			firstDayOfWeek: 1, 
+			dayBoundaries: { start: "07:00", end: "21:00" },
+			weekOptions: { gridHeight: 560 },
+			plugins: [controls, dnd, time],
+			callbacks: {
+				onEventClick: (event: any) => propsRef.current.onEventClick?.(event),
+				onClickDateTime: (dateTime: string) => propsRef.current.onTimeSlotClick?.(dateTime),
+				onEventUpdate: (event: any) => {
+					if (propsRef.current.onAppointmentReschedule) {
+						startTransition(() => {
+							addOptimisticAppointment({ id: event.id, start: event.start, end: event.end });
+						});
+						propsRef.current.onAppointmentReschedule(event.id, event.start, event.end);
+						if (typeof navigator !== "undefined" && navigator.vibrate) {
+							navigator.vibrate([15, 50, 15]); 
+						}
+						toast.success("Horário atualizado com sucesso!");
+					}
+				}
+			}
+		});
+	}, [controls, dnd, time]); // Estabilidade máxima
+
+	// 3. Sincronizar Eventos (Uso de eventsService.set)
+	useEffect(() => {
+		if (!calendarApp) return;
+		
+		const sxEvents = optimisticAppointments
 			.filter(a => !!a)
 			.map(a => {
 				let start: string;
 				let end: string;
-				
 				if (a.start_time && a.end_time) {
 					start = String(a.start_time).replace('T', ' ').substring(0, 16);
 					end = String(a.end_time).replace('T', ' ').substring(0, 16);
@@ -231,64 +262,34 @@ export function ScheduleXCalendarWrapper(props: ScheduleXCalendarWrapperProps) {
 						parseInt(timeStr.split(":")[1], 10) + durationMin);
 					end = format(endDate, "yyyy-MM-dd HH:mm");
 				}
-
 				return {
 					id: String(a.id),
 					title: a.patient_name || a.patientName || "Consulta",
-					start,
-					end,
+					start, end,
 					status: a.status,
 					type: a.type,
-					therapist_id: a.therapist_id,
 					patient_avatar: a.patient_avatar,
 				};
 			});
-	}, [optimisticAppointments]);
 
-	// Plugins (Memoizados)
-	const calendarControls = useMemo(() => createCalendarControlsPlugin(), []);
-	const dndPlugin = useMemo(() => createDragAndDropPlugin(), []);
-	const currentTimePlugin = useMemo(() => createCurrentTimePlugin(), []);
-
-	// Configuração do Calendário (Recriada quando os eventos mudam para garantir renderização)
-	const calendarConfig = useMemo(() => ({
-		views: [createViewDay(), createViewWeek(), createViewMonthGrid()],
-		defaultView: VIEW_MAP[viewType] || "week",
-		events: sxEvents,
-		locale: "pt-BR",
-		firstDayOfWeek: 1, 
-		dayBoundaries: { start: "07:00", end: "21:00" },
-		weekOptions: { gridHeight: 560 },
-		plugins: [calendarControls, dndPlugin, currentTimePlugin],
-		callbacks: {
-			onEventClick: (event: any) => propsRef.current.onEventClick?.(event),
-			onClickDateTime: (dateTime: string) => propsRef.current.onTimeSlotClick?.(dateTime),
-			onEventUpdate: (event: any) => {
-				if (propsRef.current.onAppointmentReschedule) {
-					startTransition(() => {
-						addOptimisticAppointment({ id: event.id, start: event.start, end: event.end });
-					});
-					propsRef.current.onAppointmentReschedule(event.id, event.start, event.end);
-					if (typeof navigator !== "undefined" && navigator.vibrate) {
-						navigator.vibrate([15, 50, 15]); 
-					}
-					toast.success("Horário atualizado com sucesso!");
-				}
-			}
+		try {
+			if (calendarApp.eventsService) calendarApp.eventsService.set(sxEvents);
+			else if ((calendarApp as any).events) (calendarApp as any).events.set(sxEvents);
+		} catch (e) {
+			console.error("[ScheduleX] Erro ao sincronizar eventos:", e);
 		}
-	}), [sxEvents, viewType, calendarControls, dndPlugin, currentTimePlugin]);
+	}, [optimisticAppointments, calendarApp]);
 
-	const calendarApp = useCalendarApp(calendarConfig);
-
-	// Sincronização de Data
+	// 4. Sincronizar Visualização e Data
 	useEffect(() => {
-		if (calendarApp && calendarControls) {
-			const targetDate = format(currentDate, "yyyy-MM-dd");
-			calendarControls.setViewDate(targetDate);
-		}
-	}, [currentDate, calendarApp, calendarControls]);
+		if (!calendarApp || !controls) return;
+		try {
+			controls.setView(VIEW_MAP[viewType]);
+			controls.setViewDate(format(currentDate, "yyyy-MM-dd"));
+		} catch (e) {}
+	}, [viewType, currentDate, calendarApp, controls]);
 
-	// Componentes customizados MEMOIZADOS
+	// 5. Componentes Customizados
 	const customComponents = useMemo(() => ({
 		timeGridEvent: (eventProps: any) => <CustomEventCard {...eventProps} props={propsRef.current} />,
 		dateGridEvent: (eventProps: any) => <CustomEventCard {...eventProps} props={propsRef.current} />,
@@ -312,11 +313,14 @@ export function ScheduleXCalendarWrapper(props: ScheduleXCalendarWrapperProps) {
 
 			<div className="flex-1 p-4 min-h-0 overflow-hidden">
 				<div className="flex-1 h-full min-h-0 bg-white border border-slate-200 shadow-sm rounded-xl overflow-hidden">
-					<ScheduleXCalendar
-						key={`${viewType}-${sxEvents.length}`}
-						calendarApp={calendarApp}
-						customComponents={customComponents}
-					/>
+					{calendarApp && (
+						<div className="h-full sx-react-calendar-wrapper">
+							<ScheduleXCalendar
+								calendarApp={calendarApp}
+								customComponents={customComponents}
+							/>
+						</div>
+					)}
 				</div>
 			</div>
 		</div>
