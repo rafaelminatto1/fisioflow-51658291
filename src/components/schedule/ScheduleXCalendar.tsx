@@ -311,16 +311,13 @@ export function ScheduleXCalendarWrapper(props: ScheduleXCalendarWrapperProps) {
 					onEventClickRef.current?.(event);
 				},
 				onClickDateTime: (dateTime: any) => {
-					// Schedule-X v3+ passes Temporal.ZonedDateTime, convert to string for compatibility
 					onTimeSlotClickRef.current?.(typeof dateTime === "string" ? dateTime : dateTime.toString());
 				},
 				onClickDate: (date: any) => {
-					// Schedule-X v3+ passes Temporal.PlainDate, convert to string for compatibility
 					onTimeSlotClickRef.current?.(typeof date === "string" ? date : date.toString());
 				},
 				onEventUpdate: (event: any) => {
 					if (onAppointmentRescheduleRef.current) {
-						// Aplicar atualização otimista (React 19)
 						startTransition(() => {
 							addOptimisticAppointment({ id: event.id, start: event.start, end: event.end });
 						});
@@ -335,9 +332,24 @@ export function ScheduleXCalendarWrapper(props: ScheduleXCalendarWrapperProps) {
 				}
 			},
 		};
-	}, [viewType, calendarControls, dndPlugin, currentTimePlugin]); 
+		// NOTA: Não incluir viewType nas dependências para evitar recriação destrutiva do calendário
+		// eslint-disable-next-line react-hooks/exhaustive-deps
+	}, [calendarControls, dndPlugin, currentTimePlugin]); 
 
 	const calendarApp = useCalendarApp(calendarConfig);
+
+	// Sincronização de Visualização (View Type)
+	useEffect(() => {
+		if (calendarApp && calendarControls) {
+			try {
+				if (calendarControls.setView) {
+					calendarControls.setView(VIEW_MAP[viewType]);
+				}
+			} catch (e) {
+				console.error("[ScheduleX] Erro ao mudar view:", e);
+			}
+		}
+	}, [viewType, calendarApp, calendarControls]);
 
 	// Sincronização de Eventos usando a lista otimista
 	useEffect(() => {
