@@ -345,69 +345,69 @@ export function ScheduleXCalendarWrapper(props: ScheduleXCalendarWrapperProps) {
 
 	// Sincronização de Eventos usando a lista otimista
 	useEffect(() => {
-		if (calendarApp && optimisticAppointments) {
-			try {
-				const timeZone = Intl.DateTimeFormat().resolvedOptions().timeZone;
-				
-				const sxEvents = optimisticAppointments
-					.filter(a => {
-						if (!a) return false;
-						if (a.start_time && a.end_time) {
-							return isValid(parseISO(String(a.start_time).trim())) && isValid(parseISO(String(a.end_time).trim()));
-						}
-						if (a.date && a.time) {
-							const d = a.date instanceof Date ? a.date : new Date(a.date);
-							return isValid(d);
-						}
-						return false;
-					})
-					.map(a => {
-						let startISO: string;
-						let endISO: string;
-						
-						if (a.start_time && a.end_time) {
-							startISO = String(a.start_time).replace(' ', 'T').substring(0, 16);
-							endISO = String(a.end_time).replace(' ', 'T').substring(0, 16);
-						} else {
-							const d = a.date instanceof Date ? a.date : new Date(a.date);
-							const dateStr = format(d, "yyyy-MM-dd");
-							const timeStr = String(a.time || "00:00").padStart(5, '0').slice(0, 5);
-							startISO = `${dateStr}T${timeStr}`;
-							
-							const durationMin = a.duration || 60;
-							const endDate = new Date(d.getFullYear(), d.getMonth(), d.getDate(),
-								parseInt(timeStr.split(":")[0], 10),
-								parseInt(timeStr.split(":")[1], 10) + durationMin);
-							endISO = format(endDate, "yyyy-MM-dd'T'HH:mm");
-						}
-						
-						// Converter para o formato Temporal suportado pelo Schedule-X 4.x
-						let start, end;
-						try {
-							start = Temporal.PlainDateTime.from(startISO).toZonedDateTime(timeZone).toString();
-							end = Temporal.PlainDateTime.from(endISO).toZonedDateTime(timeZone).toString();
-						} catch (e) {
-							// Fallback se Temporal falhar
-							start = startISO;
-							end = endISO;
-						}
-
-						return {
-							id: String(a.id),
-							title: a.patient_name || a.patientName || "Consulta",
-							start,
-							end,
-							status: a.status,
-							type: a.type,
-							therapist_id: a.therapist_id || a.therapistId,
-							patient_avatar: a.patient_avatar,
-						};
-					});
-				calendarApp.events.set(sxEvents);
-			} catch (err) {
-				console.error("[ScheduleX] Sync error:", err);
-			}
-		}
+		// if (calendarApp && optimisticAppointments) {
+		// 	try {
+		// 		const timeZone = Intl.DateTimeFormat().resolvedOptions().timeZone;
+		// 		
+		// 		const sxEvents = optimisticAppointments
+		// 			.filter(a => {
+		// 				if (!a) return false;
+		// 				if (a.start_time && a.end_time) {
+		// 					return isValid(parseISO(String(a.start_time).trim())) && isValid(parseISO(String(a.end_time).trim()));
+		// 				}
+		// 				if (a.date && a.time) {
+		// 					const d = a.date instanceof Date ? a.date : new Date(a.date);
+		// 					return isValid(d);
+		// 				}
+		// 				return false;
+		// 			})
+		// 			.map(a => {
+		// 				let startISO: string;
+		// 				let endISO: string;
+		// 				
+		// 				if (a.start_time && a.end_time) {
+		// 					startISO = String(a.start_time).replace(' ', 'T').substring(0, 16);
+		// 					endISO = String(a.end_time).replace(' ', 'T').substring(0, 16);
+		// 				} else {
+		// 					const d = a.date instanceof Date ? a.date : new Date(a.date);
+		// 					const dateStr = format(d, "yyyy-MM-dd");
+		// 					const timeStr = String(a.time || "00:00").padStart(5, '0').slice(0, 5);
+		// 					startISO = `${dateStr}T${timeStr}`;
+		// 					
+		// 					const durationMin = a.duration || 60;
+		// 					const endDate = new Date(d.getFullYear(), d.getMonth(), d.getDate(),
+		// 						parseInt(timeStr.split(":")[0], 10),
+		// 						parseInt(timeStr.split(":")[1], 10) + durationMin);
+		// 					endISO = format(endDate, "yyyy-MM-dd'T'HH:mm");
+		// 				}
+		// 				
+		// 				// Converter para o formato Temporal suportado pelo Schedule-X 4.x
+		// 				let start, end;
+		// 				try {
+		// 					start = Temporal.PlainDateTime.from(startISO).toZonedDateTime(timeZone).toString();
+		// 					end = Temporal.PlainDateTime.from(endISO).toZonedDateTime(timeZone).toString();
+		// 				} catch (e) {
+		// 					// Fallback se Temporal falhar
+		// 					start = startISO;
+		// 					end = endISO;
+		// 				}
+        //
+		// 				return {
+		// 					id: String(a.id),
+		// 					title: a.patient_name || a.patientName || "Consulta",
+		// 					start,
+		// 					end,
+		// 					status: a.status,
+		// 					type: a.type,
+		// 					therapist_id: a.therapist_id || a.therapistId,
+		// 					patient_avatar: a.patient_avatar,
+		// 				};
+		// 			});
+		// 		calendarApp.events.set(sxEvents);
+		// 	} catch (err) {
+		// 		console.error("[ScheduleX] Sync error:", err);
+		// 	}
+		// }
 	}, [optimisticAppointments, calendarApp]);
 
 
@@ -453,7 +453,6 @@ export function ScheduleXCalendarWrapper(props: ScheduleXCalendarWrapperProps) {
 					{calendarApp && (
 						<ScheduleXCalendar
 							calendarApp={calendarApp}
-							customComponents={customComponents}
 						/>
 					)}
 				</div>
