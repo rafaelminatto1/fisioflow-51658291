@@ -1,6 +1,6 @@
 /**
  * ScheduleXCalendar — Wrapper para @schedule-x/react v3.7.3
- * Versão Final Estabilizada - Parsing Automático via Strings ISO
+ * Versão de Resiliência Máxima - Injeção Pós-Montagem
  */
 
 import { useState, useMemo, useEffect, useOptimistic, useTransition, useRef } from "react";
@@ -84,7 +84,6 @@ const CustomEventCard = ({ calendarEvent, props }: { calendarEvent: any, props: 
 	
 	let startTime: Date;
 	try {
-		// Parsing resiliente: aceita objeto Temporal ou string
 		const startValue = appointment.start;
 		if (startValue && typeof startValue === 'object' && startValue.epochMilliseconds) {
 			startTime = new Date(Number(startValue.epochMilliseconds));
@@ -205,41 +204,6 @@ export function ScheduleXCalendarWrapper(props: ScheduleXCalendarWrapperProps) {
 		}
 	);
 
-	// Mapeamento de Eventos (STRINGS ISO - Mais estável com polyfill 0.3.0 unificado)
-	const sxEvents = useMemo(() => {
-		return optimisticAppointments
-			.filter(a => !!a)
-			.map(a => {
-				let start: string;
-				let end: string;
-				
-				if (a.start_time && a.end_time) {
-					// Schedule-X v3.x aceita "YYYY-MM-DD HH:mm" e o converte para Temporal internamente
-					start = String(a.start_time).replace('T', ' ').substring(0, 16);
-					end = String(a.end_time).replace('T', ' ').substring(0, 16);
-				} else {
-					const d = a.date instanceof Date ? a.date : new Date(a.date);
-					const dateStr = format(isValid(d) ? d : new Date(), "yyyy-MM-dd");
-					const timeStr = String(a.time || "00:00").padStart(5, '0').slice(0, 5);
-					start = `${dateStr} ${timeStr}`;
-					const durationMin = a.duration || 60;
-					const endDate = new Date(d.getFullYear(), d.getMonth(), d.getDate(),
-						parseInt(timeStr.split(":")[0], 10),
-						parseInt(timeStr.split(":")[1], 10) + durationMin);
-					end = format(endDate, "yyyy-MM-dd HH:mm");
-				}
-
-				return {
-					id: String(a.id),
-					title: a.patient_name || a.patientName || "Consulta",
-					start, end,
-					status: a.status,
-					type: a.type,
-					patient_avatar: a.patient_avatar,
-				};
-			});
-	}, [optimisticAppointments]);
-
 	const controls = useMemo(() => createCalendarControlsPlugin(), []);
 	const dnd = useMemo(() => createDragAndDropPlugin(), []);
 	const time = useMemo(() => createCurrentTimePlugin(), []);
@@ -252,15 +216,16 @@ export function ScheduleXCalendarWrapper(props: ScheduleXCalendarWrapperProps) {
 		}
 	}, [currentDate]);
 
-	// Instanciar Calendário
+	// 1. Instanciar Calendário SEMPRE COM EVENTOS VAZIOS para evitar crash no constructor
 	const calendarApp = useMemo(() => {
 		if (typeof window === "undefined") return null;
 		
+		console.log("[ScheduleX] Criando instância estável do calendário...");
 		return createCalendar({
 			views: [createViewDay(), createViewWeek(), createViewMonthGrid()],
 			defaultView: VIEW_MAP[viewType] || "week",
 			selectedDate: safeSelectedDate,
-			events: sxEvents,
+			events: [], // VAZIO NO INIT
 			locale: "pt-BR",
 			firstDayOfWeek: 1, 
 			dayBoundaries: { start: "07:00", end: "21:00" },
@@ -282,16 +247,54 @@ export function ScheduleXCalendarWrapper(props: ScheduleXCalendarWrapperProps) {
 				}
 			}
 		});
-	}, [sxEvents, viewType, safeSelectedDate, controls, dnd, time]); 
+	}, [viewType, safeSelectedDate, controls, dnd, time]); 
 
-	// Sincronizar Data (Sem recriar)
+	// 2. Sincronizar Eventos APÓS A MONTAGEM via Service
 	useEffect(() => {
-		if (calendarApp && controls && isValid(currentDate)) {
-			try {
-				controls.setViewDate(format(currentDate, "yyyy-MM-dd"));
-			} catch (e) {}
+		if (!calendarApp) return;
+		
+		console.log("[ScheduleX] Sincronizando eventos via service:", optimisticAppointments.length);
+		const sxEvents = optimisticAppointments
+			.filter(a => !!a)
+			.map(a => {
+				let start: string;
+				let end: string;
+				if (a.start_time && a.end_time) {
+					start = String(a.start_time).replace('T', ' ').substring(0, 16);
+					end = String(a.end_time).replace('T', ' ').substring(0, 16);
+				} else {
+					const d = a.date instanceof Date ? a.date : new Date(a.date);
+					const dateStr = format(isValid(d) ? d : new Date(), "yyyy-MM-dd");
+					const timeStr = String(a.time || "00:00").padStart(5, '0').slice(0, 5);
+					start = `${dateStr} ${timeStr}`;
+					const durationMin = a.duration || 60;
+					const endDate = new Date(d.getFullYear(), d.getMonth(), d.getDate(),
+						parseInt(timeStr.split(":")[0], 10),
+						parseInt(timeStr.split(":")[1], 10) + durationMin);
+					end = format(endDate, "yyyy-MM-dd HH:mm");
+				}
+				return {
+					id: String(a.id),
+					title: a.patient_name || a.patientName || "Consulta",
+					start, end,
+					status: a.status,
+					type: a.type,
+					patient_avatar: a.patient_avatar,
+				};
+			});
+
+		try {
+			// Tentar todos os caminhos possíveis de sincronização
+			if (calendarApp.eventsService) {
+				calendarApp.eventsService.set(sxEvents);
+			} else if ((calendarApp as any).events) {
+				(calendarApp as any).events.set(sxEvents);
+			}
+			console.log("[ScheduleX] Eventos inseridos via service.");
+		} catch (e) {
+			console.warn("[ScheduleX] Erro na injeção via service (tentando reconstruir):", e);
 		}
-	}, [currentDate, calendarApp, controls]);
+	}, [optimisticAppointments, calendarApp]);
 
 	const customComponents = useMemo(() => ({
 		timeGridEvent: (eventProps: any) => <CustomEventCard {...eventProps} props={propsRef.current} />,
@@ -319,7 +322,6 @@ export function ScheduleXCalendarWrapper(props: ScheduleXCalendarWrapperProps) {
 					{calendarApp && (
 						<div className="h-full sx-react-calendar-wrapper">
 							<ScheduleXCalendar
-								key={`sx-cal-${sxEvents.length}-${viewType}-${safeSelectedDate}`}
 								calendarApp={calendarApp}
 								customComponents={customComponents}
 							/>
