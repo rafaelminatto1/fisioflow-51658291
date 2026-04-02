@@ -150,7 +150,7 @@ async function getOverlappingAppointments(
       FROM appointments
       WHERE organization_id = ${safeOrgId}::uuid
         AND date = ${date}::date
-        AND status NOT IN ('cancelado', 'faltou', 'remarcar')
+        AND status NOT IN ('cancelled', 'no_show', 'rescheduled')
         AND start_time < ${endTime}::time
         AND end_time > ${startTime}::time
         ${excludeAppointmentId && isUuid(excludeAppointmentId) ? sql`AND id != ${excludeAppointmentId}::uuid` : sql``}
@@ -237,6 +237,34 @@ app.post('/', requireAuth, async (c) => {
     const status      = normalizeStatus(body.status);
     const ignoreCapacity = body.ignoreCapacity === true;
 
+    // Fallback para organizationId se vier o default ou nulo
+    let organizationId = user.organizationId;
+    if (!organizationId || organizationId === '00000000-0000-0000-0000-000000000001') {
+      console.log('[Appointments/Create] Invalid/Default Org ID detected, looking up profile for uid:', therapistId);
+      try {
+        const { profiles } = await import('@fisioflow/db');
+        const profileResult = await db.select().from(profiles).where(eq(profiles.userId, therapistId)).limit(1);
+        if (profileResult[0]?.organizationId) {
+          organizationId = profileResult[0].organizationId;
+          console.log('[Appointments/Create] Found correct Org ID from profile:', organizationId);
+        }
+      } catch (profileErr) {
+        console.error('[Appointments/Create] Error fetching profile for org fallback:', profileErr);
+      }
+    }
+
+    console.log('[Appointments/Create] Input Body:', JSON.stringify(body));
+    console.log('[Appointments/Create] Processed Fields:', {
+      patientId,
+      therapistId,
+      date,
+      startTime,
+      endTime,
+      durationMinutes,
+      status,
+      organizationId
+    });
+
     if (!patientId)    return c.json({ error: 'patient_id é obrigatório' }, 400);
     if (!date)         return c.json({ error: 'date é obrigatório' }, 400);
     if (!startTime)    return c.json({ error: 'start_time é obrigatório' }, 400);
@@ -246,15 +274,13 @@ app.post('/', requireAuth, async (c) => {
     // Validação de UUID para therapistId
     if (!isUuid(therapistId)) {
       console.error('[Appointments/Create] Invalid therapistId (not a UUID):', therapistId);
-      // Se não for UUID, não podemos inserir na coluna uuid.
-      // Tentamos prosseguir se a organização tiver um fallback ou retornar erro claro.
       return c.json({ 
         error: 'Erro de configuração de perfil', 
-        details: 'O ID do terapeuta no token não é um UUID válido. Verifique o cadastro do perfil.' 
+        details: `O ID do terapeuta no token (${therapistId}) não é um UUID válido. Verifique o cadastro do perfil.` 
       }, 400);
     }
 
-    const capacityError = await enforceCapacity(db, user.organizationId, {
+    const capacityError = await enforceCapacity(db, organizationId, {
       date,
       startTime,
       endTime,
@@ -269,37 +295,49 @@ app.post('/', requireAuth, async (c) => {
       patientId,
       therapistId,
       date,
-      startTime,
-      endTime,
+      startTime: startTime.length === 5 ? `${startTime}:00` : startTime,
+      endTime: endTime.length === 5 ? `${endTime}:00` : endTime,
       durationMinutes,
-      organizationId: user.organizationId,
+      organizationId,
       status,
       type,
       notes,
       createdAt: new Date(),
       updatedAt: new Date(),
+      createdBy: therapistId,
     };
     try {
+      console.log('[Appointments/Create] Final Insert Values:', JSON.stringify(insertValues));
       const result = await db.insert(appointments).values(insertValues).returning();
       const row = result[0];
+      if (!row) {
+        throw new Error('Database insertion returned no rows');
+      }
+      console.log('[Appointments/Create] Success! Row ID:', row.id);
       return c.json({ data: normalizeAppointmentRow(row) }, 201);
     } catch (dbError: any) {
       console.error('[Appointments/Create] DB Insert Error Detail:', {
+        name: dbError.name,
         message: dbError.message,
         code: dbError.code,
         detail: dbError.detail,
         table: dbError.table,
         constraint: dbError.constraint,
-        payload: { patientId, therapistId, date, startTime, organizationId: user.organizationId }
+        stack: dbError.stack
       });
-      throw dbError; // rethrow to be caught by outer catch
+      // Importante: re-lançar para o catch externo capturar e retornar 500 ou 409
+      throw dbError; 
     }
   } catch (error: any) {
     if (isConflictError(error)) {
       return c.json({ error: 'Conflito de horário: o terapeuta já possui um agendamento neste período.' }, 409);
     }
-    console.error('[Appointments/Create] Error:', error.message);
-    return c.json({ error: 'Erro ao criar agendamento', details: error.message }, 500);
+    console.error('[Appointments/Create] Critical Error Catch-All:', error.message, error.stack);
+    return c.json({ 
+      error: 'Erro ao criar agendamento', 
+      details: error.message,
+      code: error.code || 'UNKNOWN_ERROR'
+    }, 500);
   }
 });
 
@@ -386,7 +424,7 @@ const updateAppointmentHandler: MiddlewareHandler<{ Bindings: Env; Variables: Au
     const ignoreCapacity = body.ignoreCapacity === true;
 
     const parsedDuration = rawDuration !== undefined ? parseInt(String(rawDuration), 10) : undefined;
-    const normalizedStatus = status !== undefined ? normalizeStatus(status) : String(current.status ?? 'agendado');
+    const normalizedStatus = status !== undefined ? normalizeStatus(status) : String(current.status ?? 'scheduled');
 
     if (parsedDuration !== undefined && (!Number.isFinite(parsedDuration) || parsedDuration <= 0)) {
       return c.json({ error: 'duration inválida' }, 400);
@@ -464,7 +502,7 @@ const updateAppointmentHandler: MiddlewareHandler<{ Bindings: Env; Variables: Au
 
     // Eventos Inngest baseados em mudança de status
     try {
-      if (row.status === 'atendido') {
+      if (row.status === 'completed') {
         const patientRow = await db.select({
             fullName: patients.fullName,
             phone: patients.phone
@@ -514,7 +552,7 @@ app.post('/:id/cancel', requireAuth, async (c) => {
     const result = await db
       .update(appointments)
       .set({
-        status: 'cancelado',
+        status: 'cancelled',
         cancellationReason: body.reason ?? null,
         cancelledAt: new Date(),
         updatedAt: new Date(),
