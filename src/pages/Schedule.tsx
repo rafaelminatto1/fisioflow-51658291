@@ -172,13 +172,15 @@ export default function Schedule() {
 		const dtString = typeof dateTime === "string" ? dateTime : (dateTime?.toString() || "");
 		if (!dtString) return;
 
-		// Schedule-X gives "YYYY-MM-DD HH:mm" or "YYYY-MM-DD"
-		const [datePart, timePart] = dtString.split(" ");
-		if (datePart) {
-			// Use a date that won't be shifted by timezone
+		// Extract YYYY-MM-DD and optionally HH:mm regardless of "T" or space or timezone suffix
+		const match = dtString.match(/^(\d{4}-\d{2}-\d{2})(?:[T\s](\d{2}:\d{2}))?/);
+		if (match) {
+			const datePart = match[1];
+			const timePart = match[2] || "";
+			
 			const [year, month, day] = datePart.split("-").map(Number);
 			const date = new Date(year, month - 1, day);
-			actions.handleTimeSlotClick(date, timePart || "");
+			actions.handleTimeSlotClick(date, timePart);
 		}
 	}, [actions]);
 
@@ -355,16 +357,20 @@ export default function Schedule() {
 											const startStr = typeof start === "string" ? start : start.toString();
 											if (!startStr) return;
 
-											// startStr is "YYYY-MM-DD HH:mm"
-											const [datePart, timePart] = startStr.split(" ");
-											const [year, month, day] = datePart.split("-").map(Number);
-											const date = new Date(year, month - 1, day);
+											// Extract YYYY-MM-DD and optionally HH:mm regardless of "T" or space or timezone suffix
+											const match = startStr.match(/^(\d{4}-\d{2}-\d{2})(?:[T\s](\d{2}:\d{2}))?/);
+											if (match) {
+												const datePart = match[1];
+												const timePart = match[2] || "";
+												const [year, month, day] = datePart.split("-").map(Number);
+												const date = new Date(year, month - 1, day);
 
-											actions.handleAppointmentReschedule(
-												appointment,
-												date,
-												timePart,
-											);
+												actions.handleAppointmentReschedule(
+													appointment,
+													date,
+													timePart,
+												);
+											}
 										}}
 										onEditAppointment={(id: string) => {
 											const appointment = appointments.find((a) => a.id === id);
