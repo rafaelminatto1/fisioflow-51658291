@@ -90,7 +90,7 @@ export function useScheduleHandlers(
 			if (isSelectionMode) return;
 			setSelectedAppointment(null);
 			setModalDefaultDate(date);
-			setModalDefaultTime(time);
+			setModalDefaultTime(time || roundToNextSlot(new Date()));
 			setIsModalOpen(true);
 		},
 		[isSelectionMode],
@@ -302,41 +302,71 @@ export function useScheduleHandlers(
 		[refetchAppointments],
 	);
 
+	const actions = useMemo(() => ({
+		handleCreateAppointment,
+		handleTimeSlotClick,
+		handleModalClose,
+		handleAppointmentReschedule,
+		handleEditAppointment,
+		handleDeleteAppointment,
+		handleDuplicateAppointment,
+		handleUpdateStatus,
+		handleAppointmentClick,
+		handleScheduleFromWaitlist: handleScheduleFromWaitlistFn,
+		handleCancelAllToday,
+		checkEditUrlParam,
+	}), [
+		handleCreateAppointment,
+		handleTimeSlotClick,
+		handleModalClose,
+		handleAppointmentReschedule,
+		handleEditAppointment,
+		handleDeleteAppointment,
+		handleDuplicateAppointment,
+		handleUpdateStatus,
+		handleAppointmentClick,
+		handleScheduleFromWaitlistFn,
+		handleCancelAllToday,
+		checkEditUrlParam,
+	]);
+
+	const modalsState = useMemo(() => ({
+		selectedAppointment,
+		quickEditAppointment,
+		setQuickEditAppointment,
+		isModalOpen,
+		setIsModalOpen,
+		modalDefaultDate,
+		modalDefaultTime,
+		waitlistQuickAdd,
+		setWaitlistQuickAdd,
+		scheduleFromWaitlist,
+		showKeyboardShortcuts,
+		setShowKeyboardShortcuts,
+		duplicateDialogOpen,
+		setDuplicateDialogOpen,
+		showCancelAllTodayDialog,
+		setShowCancelAllTodayDialog,
+		isCancellingAllToday,
+		rescheduleSuccessMessage,
+		setRescheduleSuccessMessage,
+	}), [
+		selectedAppointment,
+		quickEditAppointment,
+		isModalOpen,
+		modalDefaultDate,
+		modalDefaultTime,
+		waitlistQuickAdd,
+		scheduleFromWaitlist,
+		showKeyboardShortcuts,
+		duplicateDialogOpen,
+		showCancelAllTodayDialog,
+		isCancellingAllToday,
+		rescheduleSuccessMessage,
+	]);
+
 	return {
-		modals: {
-			selectedAppointment,
-			quickEditAppointment,
-			setQuickEditAppointment,
-			isModalOpen,
-			setIsModalOpen,
-			modalDefaultDate,
-			modalDefaultTime,
-			waitlistQuickAdd,
-			setWaitlistQuickAdd,
-			scheduleFromWaitlist,
-			showKeyboardShortcuts,
-			setShowKeyboardShortcuts,
-			duplicateDialogOpen,
-			setDuplicateDialogOpen,
-			showCancelAllTodayDialog,
-			setShowCancelAllTodayDialog,
-			isCancellingAllToday,
-			rescheduleSuccessMessage,
-			setRescheduleSuccessMessage,
-		},
-		actions: {
-			handleCreateAppointment,
-			handleTimeSlotClick,
-			handleModalClose,
-			handleAppointmentReschedule,
-			handleEditAppointment,
-			handleDeleteAppointment,
-			handleDuplicateAppointment,
-			handleUpdateStatus,
-			handleAppointmentClick,
-			handleScheduleFromWaitlist: handleScheduleFromWaitlistFn,
-			handleCancelAllToday,
-			checkEditUrlParam,
-		},
+		modals: modalsState,
+		actions: actions,
 	};
 }

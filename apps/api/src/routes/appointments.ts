@@ -143,15 +143,17 @@ async function getOverlappingAppointments(
   try {
     // Usamos sql.raw para garantir que o Postgres receba os tipos corretos (time, date, uuid)
     // e evitar falhas de inferência do driver HTTP do Neon.
+    // Guardamos o cast ::uuid para evitar erro se organizationId não for UUID válido
+    const safeOrgId = isUuid(organizationId) ? organizationId : '00000000-0000-0000-0000-000000000000';
     const result = await db.execute(sql`
       SELECT id, patient_id AS "patientId", start_time AS "startTime", date
       FROM appointments
-      WHERE organization_id = ${organizationId}::uuid
+      WHERE organization_id = ${safeOrgId}::uuid
         AND date = ${date}::date
         AND status NOT IN ('cancelado', 'faltou', 'remarcar')
         AND start_time < ${endTime}::time
         AND end_time > ${startTime}::time
-        ${excludeAppointmentId ? sql`AND id != ${excludeAppointmentId}::uuid` : sql``}
+        ${excludeAppointmentId && isUuid(excludeAppointmentId) ? sql`AND id != ${excludeAppointmentId}::uuid` : sql``}
       ORDER BY start_time ASC, created_at ASC
     `);
 
@@ -241,6 +243,17 @@ app.post('/', requireAuth, async (c) => {
     if (!endTime)      return c.json({ error: 'end_time é obrigatório' }, 400);
     if (!therapistId)  return c.json({ error: 'therapist_id não encontrado no token' }, 401);
 
+    // Validação de UUID para therapistId
+    if (!isUuid(therapistId)) {
+      console.error('[Appointments/Create] Invalid therapistId (not a UUID):', therapistId);
+      // Se não for UUID, não podemos inserir na coluna uuid.
+      // Tentamos prosseguir se a organização tiver um fallback ou retornar erro claro.
+      return c.json({ 
+        error: 'Erro de configuração de perfil', 
+        details: 'O ID do terapeuta no token não é um UUID válido. Verifique o cadastro do perfil.' 
+      }, 400);
+    }
+
     const capacityError = await enforceCapacity(db, user.organizationId, {
       date,
       startTime,
@@ -271,12 +284,13 @@ app.post('/', requireAuth, async (c) => {
       const row = result[0];
       return c.json({ data: normalizeAppointmentRow(row) }, 201);
     } catch (dbError: any) {
-      console.error('[Appointments/Create] DB Insert Error:', {
+      console.error('[Appointments/Create] DB Insert Error Detail:', {
         message: dbError.message,
         code: dbError.code,
         detail: dbError.detail,
         table: dbError.table,
         constraint: dbError.constraint,
+        payload: { patientId, therapistId, date, startTime, organizationId: user.organizationId }
       });
       throw dbError; // rethrow to be caught by outer catch
     }
