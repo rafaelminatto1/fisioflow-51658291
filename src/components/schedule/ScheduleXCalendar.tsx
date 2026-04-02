@@ -1,12 +1,13 @@
 /**
  * ScheduleXCalendar — Wrapper para @schedule-x/react v3.7.3
- * Versão de Produção Restaurada - Estável e Completa
+ * Versão de Produção Final - Estável e Completa
  */
 
 import { useState, useMemo, useEffect, useOptimistic, useTransition, useRef, useLayoutEffect } from "react";
 import { createCalendar, createViewDay, createViewMonthGrid, createViewWeek } from "@schedule-x/calendar";
 import { createDragAndDropPlugin } from "@schedule-x/drag-and-drop";
 import { createCalendarControlsPlugin } from "@schedule-x/calendar-controls";
+import { createCurrentTimePlugin } from "@schedule-x/current-time";
 import "@schedule-x/theme-default/dist/index.css";
 import { format, isValid, parseISO } from "date-fns";
 import { ptBR } from "date-fns/locale";
@@ -96,31 +97,75 @@ const CustomEventCard = ({ calendarEvent, props }: { calendarEvent: any, props: 
 	};
 
 	return (
-		<div 
-			className={cn(
-				"w-full h-full p-0.5 overflow-hidden cursor-pointer transition-all hover:ring-2 hover:ring-blue-500/30 rounded-md bg-white",
-				appointment.status === 'cancelled' && "opacity-50 grayscale"
-			)}
-		>
-			<div className={cn(
-				"flex flex-col h-full border-l-[3px] rounded-r-md p-1.5 shadow-sm overflow-hidden text-slate-900",
-				(appointment.status === 'confirmed' || appointment.status === 'scheduled') && "border-status-confirmed",
-				appointment.status === 'pending' && "border-status-pending",
-				appointment.status === 'cancelled' && "border-status-cancelled",
-				appointment.status === 'completed' && "border-status-completed",
-				(!appointment.status || !statusColors[appointment.status]) && "border-slate-300"
-			)}>
-				<div className="flex items-center justify-between gap-1 mb-0.5">
-					<span className="font-black text-[8px] uppercase tracking-widest text-slate-400">
-						{formattedTime}
-					</span>
-					<div className={`h-1 w-1 rounded-full ${statusColors[appointment.status] || 'bg-slate-300'}`} />
+		<Popover>
+			<PopoverTrigger asChild>
+				<div 
+					className={cn(
+						"w-full h-full p-0.5 overflow-hidden cursor-pointer transition-all hover:ring-2 hover:ring-blue-500/30 rounded-md bg-white",
+						appointment.status === 'cancelled' && "opacity-50 grayscale"
+					)}
+					onClick={(e) => e.stopPropagation()}
+				>
+					<div className={cn(
+						"flex flex-col h-full border-l-[3px] rounded-r-md p-1.5 shadow-sm overflow-hidden text-slate-900",
+						(appointment.status === 'confirmed' || appointment.status === 'scheduled') && "border-status-confirmed",
+						appointment.status === 'pending' && "border-status-pending",
+						appointment.status === 'cancelled' && "border-status-cancelled",
+						appointment.status === 'completed' && "border-status-completed",
+						(!appointment.status || !statusColors[appointment.status]) && "border-slate-300"
+					)}>
+						<div className="flex items-center justify-between gap-1 mb-0.5">
+							<span className="font-black text-[8px] uppercase tracking-widest text-slate-400">
+								{formattedTime}
+							</span>
+							<div className={`h-1 w-1 rounded-full ${statusColors[appointment.status] || 'bg-slate-300'}`} />
+						</div>
+						<div className="font-black leading-tight line-clamp-1 text-[10px] uppercase tracking-tight text-slate-800">
+							{appointment.title}
+						</div>
+					</div>
 				</div>
-				<div className="font-black leading-tight line-clamp-1 text-[10px] uppercase tracking-tight text-slate-800">
-					{appointment.title}
+			</PopoverTrigger>
+			
+			<PopoverContent className="w-80 p-0 overflow-hidden glass-panel border-none shadow-2xl z-[100]" align="start">
+				<div className="p-4 space-y-4">
+					<div className="flex items-start justify-between">
+						<div className="flex items-center gap-3">
+							<Avatar className="h-12 w-12 border-2 border-primary/20">
+								<AvatarFallback className="bg-primary/10 text-primary">
+									{appointment.title?.substring(0, 2).toUpperCase()}
+								</AvatarFallback>
+							</Avatar>
+							<div>
+								<h4 className="font-bold text-base leading-tight">{appointment.title}</h4>
+								<div className="flex items-center gap-1 text-xs text-muted-foreground mt-0.5">
+									<Badge variant="outline" className="text-[10px] px-1 py-0 h-4">
+										{appointment.type || 'Sessão'}
+									</Badge>
+									<span className="bullet mx-1">•</span>
+									<span>ID: {appointment.id.substring(0, 8)}</span>
+								</div>
+							</div>
+						</div>
+					</div>
+
+					<div className="flex gap-2 pt-2">
+						<Button 
+							className="flex-1 gap-2 h-9 text-xs shadow-md" 
+							size="sm"
+							onClick={() => props.onEventClick?.({ id: appointment.id })}
+						>
+							<Play className="h-3.5 w-3.5" />
+							Iniciar Atendimento
+						</Button>
+						<Button variant="outline" className="flex-1 gap-2 h-9 text-xs glass-card" size="sm" onClick={() => props.onEditAppointment?.(appointment.id)}>
+							<ExternalLink className="h-3.5 w-3.5" />
+							Ver Prontuário
+						</Button>
+					</div>
 				</div>
-			</div>
-		</div>
+			</PopoverContent>
+		</Popover>
 	);
 };
 
@@ -176,7 +221,14 @@ export function ScheduleXCalendarWrapper(props: ScheduleXCalendarWrapperProps) {
 			});
 	}, [optimisticAppointments]);
 
-	// Montagem Vanilla do Calendário
+	// 1. Criar Referências Estáveis para os Componentes Customizados
+	const customComponents = useMemo(() => ({
+		timeGridEvent: (eventProps: any) => <CustomEventCard {...eventProps} props={propsRef.current} />,
+		dateGridEvent: (eventProps: any) => <CustomEventCard {...eventProps} props={propsRef.current} />,
+		monthGridEvent: (eventProps: any) => <CustomEventCard {...eventProps} props={propsRef.current} />,
+	}), []);
+
+	// 2. Montagem Vanilla do Calendário
 	useLayoutEffect(() => {
 		if (!containerRef.current || typeof window === "undefined") return;
 
@@ -194,7 +246,8 @@ export function ScheduleXCalendarWrapper(props: ScheduleXCalendarWrapperProps) {
 				dayBoundaries: { start: "07:00", end: "21:00" },
 				plugins: [
 					createCalendarControlsPlugin(),
-					createDragAndDropPlugin()
+					createDragAndDropPlugin(),
+					createCurrentTimePlugin()
 				],
 				callbacks: {
 					onEventClick: (event: any) => propsRef.current.onEventClick?.(event),
@@ -211,7 +264,12 @@ export function ScheduleXCalendarWrapper(props: ScheduleXCalendarWrapperProps) {
 						}
 					}
 				}
-			});
+			}, {
+				// Injeção de componentes React via portal dentro da montagem vanilla
+				timeGridEvent: customComponents.timeGridEvent,
+				dateGridEvent: customComponents.dateGridEvent,
+				monthGridEvent: customComponents.monthGridEvent
+			} as any);
 
 			calendar.render(containerRef.current);
 			calendarInstance.current = calendar;
@@ -224,7 +282,7 @@ export function ScheduleXCalendarWrapper(props: ScheduleXCalendarWrapperProps) {
 				try { calendarInstance.current.destroy(); } catch (e) {}
 			}
 		};
-	}, [viewType, sxEvents.length]); // Recriar se mudar view ou quantidade de eventos
+	}, [viewType, sxEvents.length]); 
 
 	return (
 		<div className="flex-1 flex flex-col min-h-0 bg-slate-50/50 overflow-hidden">
