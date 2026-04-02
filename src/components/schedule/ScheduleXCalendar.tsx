@@ -352,7 +352,16 @@ export function ScheduleXCalendarWrapper(props: ScheduleXCalendarWrapperProps) {
 							patient_avatar: a.patient_avatar,
 						};
 					});
-				calendarApp.events.set(sxEvents);
+				console.log("[ScheduleX] Inserindo eventos via eventsService:", sxEvents);
+				if (calendarApp.eventsService && calendarApp.eventsService.set) {
+					calendarApp.eventsService.set(sxEvents);
+					console.log("[ScheduleX] Sincronização concluída.");
+				} else if (calendarApp.events && (calendarApp.events as any).set) {
+					(calendarApp.events as any).set(sxEvents);
+					console.log("[ScheduleX] Sincronização concluída (via .events).");
+				} else {
+					console.error("[ScheduleX] Nenhum serviço de eventos encontrado no app instance!", calendarApp);
+				}
 			} catch (err) {
 				console.error("[ScheduleX] Sync error:", err);
 			}
