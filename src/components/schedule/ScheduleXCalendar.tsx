@@ -1,6 +1,6 @@
 /**
  * ScheduleXCalendar — Wrapper para @schedule-x/react v3.7.3
- * Versão Final Corrigida - Estabilidade de selectedDate e Eventos
+ * Versão Final Estabilizada - Parsing Automático via Strings ISO
  */
 
 import { useState, useMemo, useEffect, useOptimistic, useTransition, useRef } from "react";
@@ -84,14 +84,15 @@ const CustomEventCard = ({ calendarEvent, props }: { calendarEvent: any, props: 
 	
 	let startTime: Date;
 	try {
-		// v3.x parsing resiliente
-		const startStr = typeof appointment.start === 'string' 
-			? appointment.start 
-			: (appointment.start?.toString().split('[')[0] || "");
-		
-		const dateStr = startStr.replace(' ', 'T');
-		const parsed = parseISO(dateStr);
-		startTime = isValid(parsed) ? parsed : new Date();
+		// Parsing resiliente: aceita objeto Temporal ou string
+		const startValue = appointment.start;
+		if (startValue && typeof startValue === 'object' && startValue.epochMilliseconds) {
+			startTime = new Date(Number(startValue.epochMilliseconds));
+		} else {
+			const dateStr = String(startValue || "").replace(' ', 'T').split('[')[0];
+			const parsed = parseISO(dateStr);
+			startTime = isValid(parsed) ? parsed : new Date();
+		}
 	} catch (e) {
 		startTime = new Date();
 	}
@@ -150,7 +151,7 @@ const CustomEventCard = ({ calendarEvent, props }: { calendarEvent: any, props: 
 								<h4 className="font-bold text-base leading-tight">{appointment.title}</h4>
 								<div className="flex items-center gap-1 text-xs text-muted-foreground mt-0.5">
 									<Badge variant="outline" className="text-[10px] px-1 py-0 h-4">
-										{appointment.type || 'Fisioterapia'}
+										{appointment.type || 'Sessão'}
 									</Badge>
 									<span className="bullet mx-1">•</span>
 									<span>ID: {appointment.id.substring(0, 8)}</span>
@@ -204,7 +205,7 @@ export function ScheduleXCalendarWrapper(props: ScheduleXCalendarWrapperProps) {
 		}
 	);
 
-	// Mapeamento de Eventos (STRINGS ISO - Mais estável para v3.x)
+	// Mapeamento de Eventos (STRINGS ISO - Mais estável com polyfill 0.3.0 unificado)
 	const sxEvents = useMemo(() => {
 		return optimisticAppointments
 			.filter(a => !!a)
@@ -213,6 +214,7 @@ export function ScheduleXCalendarWrapper(props: ScheduleXCalendarWrapperProps) {
 				let end: string;
 				
 				if (a.start_time && a.end_time) {
+					// Schedule-X v3.x aceita "YYYY-MM-DD HH:mm" e o converte para Temporal internamente
 					start = String(a.start_time).replace('T', ' ').substring(0, 16);
 					end = String(a.end_time).replace('T', ' ').substring(0, 16);
 				} else {
@@ -242,7 +244,6 @@ export function ScheduleXCalendarWrapper(props: ScheduleXCalendarWrapperProps) {
 	const dnd = useMemo(() => createDragAndDropPlugin(), []);
 	const time = useMemo(() => createCurrentTimePlugin(), []);
 
-	// selectedDate DEVE ser YYYY-MM-DD rigoroso
 	const safeSelectedDate = useMemo(() => {
 		try {
 			return isValid(currentDate) ? format(currentDate, "yyyy-MM-dd") : format(new Date(), "yyyy-MM-dd");
