@@ -200,7 +200,15 @@ const CustomEventCard = ({ calendarEvent, props }: { calendarEvent: any, props: 
 					</div>
 
 					<div className="flex gap-2 pt-2">
-						<Button className="flex-1 gap-2 h-9 text-xs shadow-md" size="sm">
+						<Button 
+							className="flex-1 gap-2 h-9 text-xs shadow-md" 
+							size="sm"
+							onClick={() => {
+								if (props.onEventClick) {
+									props.onEventClick({ id: appointment.id });
+								}
+							}}
+						>
 							<Play className="h-3.5 w-3.5" />
 							Iniciar Atendimento
 						</Button>
