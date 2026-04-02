@@ -8,7 +8,6 @@ export { AppointmentModalRefactored as AppointmentModal } from "./AppointmentMod
 export { DailyAppointmentList } from "./DailyAppointmentList";
 
 // View Components
-export { CalendarView } from "./CalendarView";
 export { ScheduleXCalendarWrapper } from "./ScheduleXCalendar";
 export { AppointmentListView } from "./AppointmentListView";
 
