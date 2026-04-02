@@ -20,7 +20,7 @@ app.get('/feed/:patientId.ics', async (c) => {
     JOIN organizations o ON o.id = a.organization_id
     WHERE a.patient_id = $1 
       AND a.date >= (CURRENT_DATE - INTERVAL '1 day')
-      AND a.status NOT IN ('cancelado', 'faltou')
+      AND a.status NOT IN ('cancelled', 'no_show')
     ORDER BY a.date ASC, a.start_time ASC
   `, [patientId]);
 
