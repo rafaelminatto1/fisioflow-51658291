@@ -216,8 +216,16 @@ export function ScheduleXCalendarWrapper(props: ScheduleXCalendarWrapperProps) {
 		return createCalendar({
 			views: [createViewDay(), createViewWeek(), createViewMonthGrid()],
 			defaultView: VIEW_MAP[viewType] || "week",
-			events: [], // VAZIO NO INIT
+			events: [
+				{ 
+					id: 'test-mount-check', 
+					title: '⚡ SISTEMA ATIVO', 
+					start: format(new Date(), "yyyy-MM-dd") + ' 10:00', 
+					end: format(new Date(), "yyyy-MM-dd") + ' 11:00' 
+				}
+			],
 			locale: "pt-BR",
+
 			firstDayOfWeek: 1, 
 			dayBoundaries: { start: "07:00", end: "21:00" },
 			weekOptions: { gridHeight: 560 },
