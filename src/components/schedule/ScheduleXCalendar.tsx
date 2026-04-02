@@ -420,6 +420,19 @@ export function ScheduleXCalendarWrapper(props: ScheduleXCalendarWrapperProps) {
 		} catch (e) {}
 	}, [currentDate, calendarApp, calendarControls]);
 
+	// Referência mutável para sempre acessar as props mais recentes sem quebrar o memo
+	const propsRef = useRef(props);
+	useEffect(() => {
+		propsRef.current = props;
+	}, [props]);
+
+	// Componentes customizados MEMOIZADOS para não destruir o calendário
+	const customComponents = useMemo(() => ({
+		timeGridEvent: (eventProps: any) => <CustomEventCard {...eventProps} props={propsRef.current} />,
+		dateGridEvent: (eventProps: any) => <CustomEventCard {...eventProps} props={propsRef.current} />,
+		monthGridEvent: (eventProps: any) => <CustomEventCard {...eventProps} props={propsRef.current} />,
+	}), []);
+
 	return (
 		<div className="flex-1 flex flex-col min-h-0 bg-slate-50/50 overflow-hidden">
 			<ScheduleToolbar 
@@ -437,14 +450,12 @@ export function ScheduleXCalendarWrapper(props: ScheduleXCalendarWrapperProps) {
 
 			<div className="flex-1 p-4 min-h-0 overflow-hidden">
 				<div className="flex-1 h-full min-h-0 bg-white border border-slate-200 shadow-sm rounded-xl overflow-hidden">
-					<ScheduleXCalendar
-						calendarApp={calendarApp}
-						customComponents={{
-							timeGridEvent: (eventProps) => <CustomEventCard {...eventProps} props={props} />,
-							dateGridEvent: (eventProps) => <CustomEventCard {...eventProps} props={props} />,
-							monthGridEvent: (eventProps) => <CustomEventCard {...eventProps} props={props} />,
-						}}
-					/>
+					{calendarApp && (
+						<ScheduleXCalendar
+							calendarApp={calendarApp}
+							customComponents={customComponents}
+						/>
+					)}
 				</div>
 			</div>
 		</div>
