@@ -284,59 +284,49 @@ export function ScheduleXCalendarWrapper(props: ScheduleXCalendarWrapperProps) {
 	);
 
 	// Plugins Estáveis
-	const calendarControls = useMemo(() => createCalendarControlsPlugin(), []);
-	const dndPlugin = useMemo(() => createDragAndDropPlugin(), []);
-	const currentTimePlugin = useMemo(() => createCurrentTimePlugin(), []);
+	const [calendarControls] = useState(() => createCalendarControlsPlugin());
+	const [dndPlugin] = useState(() => createDragAndDropPlugin());
+	const [currentTimePlugin] = useState(() => createCurrentTimePlugin());
 
-	// Configuração do Calendário
-	const calendarConfig = useMemo(() => {
-		return {
-			views: [createViewDay(), createViewWeek(), createViewMonthGrid()],
-			defaultView: VIEW_MAP[viewType],
-			events: [], 
-			locale: "pt-BR",
-			firstDayOfWeek: 1, 
-			dayBoundaries: { start: "07:00", end: "21:00" },
-			weekOptions: { gridHeight: 560 },
-			timeZone: Intl.DateTimeFormat().resolvedOptions().timeZone,
-			plugins: [calendarControls, dndPlugin, currentTimePlugin],
-			callbacks: {
-				onRangeUpdate: (range: any) => {
-					onRangeChangeRef.current?.({
-						start: typeof range.start === "string" ? range.start : range.start.toString(),
-						end: typeof range.end === "string" ? range.end : range.end.toString(),
-					});
-				},
-				onEventClick: (event: any) => {
-					onEventClickRef.current?.(event);
-				},
-				onClickDateTime: (dateTime: any) => {
-					onTimeSlotClickRef.current?.(typeof dateTime === "string" ? dateTime : dateTime.toString());
-				},
-				onClickDate: (date: any) => {
-					onTimeSlotClickRef.current?.(typeof date === "string" ? date : date.toString());
-				},
-				onEventUpdate: (event: any) => {
-					if (onAppointmentRescheduleRef.current) {
-						startTransition(() => {
-							addOptimisticAppointment({ id: event.id, start: event.start, end: event.end });
-						});
-
-						onAppointmentRescheduleRef.current(event.id, event.start, event.end);
-						
-						if (typeof navigator !== "undefined" && navigator.vibrate) {
-							navigator.vibrate([15, 50, 15]); 
-						}
-						toast.success("Horário atualizado com sucesso!");
-					}
-				}
+	// Configuração Básica e Estável do Calendário
+	const calendarApp = useCalendarApp({
+		views: [createViewDay(), createViewWeek(), createViewMonthGrid()],
+		defaultView: VIEW_MAP[viewType] || "week",
+		locale: "pt-BR",
+		firstDayOfWeek: 1, 
+		dayBoundaries: { start: "07:00", end: "21:00" },
+		weekOptions: { gridHeight: 560 },
+		plugins: [calendarControls, dndPlugin, currentTimePlugin],
+		callbacks: {
+			onRangeUpdate: (range: any) => {
+				onRangeChangeRef.current?.({
+					start: typeof range.start === "string" ? range.start : range.start.toString(),
+					end: typeof range.end === "string" ? range.end : range.end.toString(),
+				});
 			},
-		};
-		// NOTA: Não incluir viewType nas dependências para evitar recriação destrutiva do calendário
-		// eslint-disable-next-line react-hooks/exhaustive-deps
-	}, [calendarControls, dndPlugin, currentTimePlugin]); 
-
-	const calendarApp = useCalendarApp(calendarConfig);
+			onEventClick: (event: any) => {
+				onEventClickRef.current?.(event);
+			},
+			onClickDateTime: (dateTime: any) => {
+				onTimeSlotClickRef.current?.(typeof dateTime === "string" ? dateTime : dateTime.toString());
+			},
+			onClickDate: (date: any) => {
+				onTimeSlotClickRef.current?.(typeof date === "string" ? date : date.toString());
+			},
+			onEventUpdate: (event: any) => {
+				if (onAppointmentRescheduleRef.current) {
+					startTransition(() => {
+						addOptimisticAppointment({ id: event.id, start: event.start, end: event.end });
+					});
+					onAppointmentRescheduleRef.current(event.id, event.start, event.end);
+					if (typeof navigator !== "undefined" && navigator.vibrate) {
+						navigator.vibrate([15, 50, 15]); 
+					}
+					toast.success("Horário atualizado com sucesso!");
+				}
+			}
+		}
+	});
 
 	// Sincronização de Visualização (View Type)
 	useEffect(() => {
