@@ -63,9 +63,6 @@ export function createDb(env: Env) {
 /**
  * @deprecated Use createDb(env) for Drizzle ORM instead.
  * Retorna um objeto compatível com pg.Pool.query({ rows }).
- * fullResults: true → retorna { rows, rowCount, fields } como pg.
- * Sem TCP, sem conexões persistentes — usa Neon HTTP.
- * Inclui timeout padrão de 10s para queries.
  */
 export function createPool(env: Env, defaultTimeout: number = DEFAULT_TIMEOUTS.query) {
   const sql = neon(getUrl(env), { fullResults: true });
@@ -89,7 +86,6 @@ export function getRawSql(env: Env) {
 /**
  * Retorna um pool com pré-configuração de RLS para organização específica.
  * Define current_setting('app.org_id') antes de cada query para compatibilidade com RLS.
- * Inclui timeout padrão de 10s para queries.
  */
 export function createPoolForOrg(env: Env, organizationId: string, defaultTimeout: number = DEFAULT_TIMEOUTS.query) {
   const sql = neon(getUrl(env), { fullResults: true });
