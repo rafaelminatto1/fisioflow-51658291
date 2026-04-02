@@ -628,8 +628,8 @@ app.get("/:id/stats", async (c) => {
 		// or multiple queries if needed. Here we stick to a custom select.
 		const result = await db
 			.select({
-				total_sessions: sql<number>`count(*) filter (where status = 'atendido')`,
-				upcoming_appointments: sql<number>`count(*) filter (where date >= current_date and (status not in ('cancelado', 'atendido') or status is null))`,
+				total_sessions: sql<number>`count(*) filter (where status = 'completed')`,
+				upcoming_appointments: sql<number>`count(*) filter (where date >= current_date and (status not in ('cancelled', 'completed') or status is null))`,
 				last_visit: sql<string>`max(date) filter (where date <= current_date)`,
 			})
 			.from(sql`appointments`) // Fallback to raw table name if not in schema yet
