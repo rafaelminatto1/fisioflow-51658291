@@ -83,7 +83,8 @@ const VIEW_MAP: Record<ViewType, string> = {
  */
 const CustomEventCard = ({ calendarEvent, props }: { calendarEvent: any, props: any }) => {
 	const appointment = calendarEvent;
-	const startTime = parseISO(appointment.start);
+	const parsedStart = appointment.start ? parseISO(String(appointment.start)) : null;
+	const startTime = parsedStart && isValid(parsedStart) ? parsedStart : new Date();
 	const formattedTime = format(startTime, "HH:mm");
 	
 	// IA: Risco de No-show
@@ -325,21 +326,47 @@ export function ScheduleXCalendarWrapper(props: ScheduleXCalendarWrapperProps) {
 			try {
 				const sxEvents = optimisticAppointments
 					.filter(a => {
-						if (!a?.start_time || !a?.end_time) return false;
-						const s = String(a.start_time).trim();
-						const e = String(a.end_time).trim();
-						return isValid(parseISO(s)) && isValid(parseISO(e));
+						if (!a) return false;
+						// Support both raw API shape (start_time/end_time) and Appointment type (date+time)
+						if (a.start_time && a.end_time) {
+							return isValid(parseISO(String(a.start_time).trim())) && isValid(parseISO(String(a.end_time).trim()));
+						}
+						// Appointment type: date (Date object) + time ("HH:mm")
+						if (a.date && a.time) {
+							const d = a.date instanceof Date ? a.date : new Date(a.date);
+							return isValid(d);
+						}
+						return false;
 					})
-					.map(a => ({
-						id: String(a.id),
-						title: a.patient_name || "Consulta",
-						start: String(a.start_time).replace(' ', 'T').substring(0, 16),
-						end: String(a.end_time).replace(' ', 'T').substring(0, 16),
-						status: a.status,
-						type: a.type,
-						therapist_id: a.therapist_id,
-						patient_avatar: a.patient_avatar
-					}));
+					.map(a => {
+						// Build start/end from whichever shape is present
+						let startStr: string;
+						let endStr: string;
+						if (a.start_time && a.end_time) {
+							startStr = String(a.start_time).replace(' ', 'T').substring(0, 16);
+							endStr = String(a.end_time).replace(' ', 'T').substring(0, 16);
+						} else {
+							const d = a.date instanceof Date ? a.date : new Date(a.date);
+							const dateStr = format(d, "yyyy-MM-dd");
+							const timeStr = String(a.time || "00:00").slice(0, 5);
+							startStr = `${dateStr}T${timeStr}`;
+							const durationMin = a.duration || 60;
+							const endDate = new Date(d.getFullYear(), d.getMonth(), d.getDate(),
+								parseInt(timeStr.split(":")[0], 10),
+								parseInt(timeStr.split(":")[1], 10) + durationMin);
+							endStr = format(endDate, "yyyy-MM-dd'T'HH:mm");
+						}
+						return {
+							id: String(a.id),
+							title: a.patient_name || a.patientName || "Consulta",
+							start: startStr,
+							end: endStr,
+							status: a.status,
+							type: a.type,
+							therapist_id: a.therapist_id || a.therapistId,
+							patient_avatar: a.patient_avatar,
+						};
+					});
 				calendarApp.events.set(sxEvents);
 			} catch (err) {
 				console.error("[ScheduleX] Sync error:", err);
