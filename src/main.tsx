@@ -1,4 +1,5 @@
 // Inicializar serviços globais de forma otimizada
+import "temporal-polyfill/global";
 import { StrictMode } from "react";
 import { createRoot } from "react-dom/client";
 import App from "./App.tsx";
