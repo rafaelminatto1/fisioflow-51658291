@@ -16,6 +16,7 @@ import { createCurrentTimePlugin } from "@schedule-x/current-time";
 import "@schedule-x/theme-default/dist/index.css";
 import { format, isValid, parseISO } from "date-fns";
 import { ptBR } from "date-fns/locale";
+import { Temporal } from "temporal-polyfill";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 
@@ -288,6 +289,7 @@ export function ScheduleXCalendarWrapper(props: ScheduleXCalendarWrapperProps) {
 			firstDayOfWeek: 1, 
 			dayBoundaries: { start: "07:00", end: "21:00" },
 			weekOptions: { gridHeight: 560 },
+			timeZone: Intl.DateTimeFormat().resolvedOptions().timeZone,
 			plugins: [calendarControls, dndPlugin, currentTimePlugin],
 			callbacks: {
 				onRangeUpdate: (range: any) => {
@@ -351,18 +353,19 @@ export function ScheduleXCalendarWrapper(props: ScheduleXCalendarWrapperProps) {
 						let startStr: string;
 						let endStr: string;
 						if (a.start_time && a.end_time) {
-							startStr = String(a.start_time).replace(' ', 'T').substring(0, 16);
-							endStr = String(a.end_time).replace(' ', 'T').substring(0, 16);
+							// Schedule-X 4.x requires "YYYY-MM-DD HH:mm" (space, not T)
+							startStr = String(a.start_time).replace('T', ' ').substring(0, 16);
+							endStr = String(a.end_time).replace('T', ' ').substring(0, 16);
 						} else {
 							const d = a.date instanceof Date ? a.date : new Date(a.date);
 							const dateStr = format(d, "yyyy-MM-dd");
 							const timeStr = String(a.time || "00:00").slice(0, 5);
-							startStr = `${dateStr}T${timeStr}`;
+							startStr = `${dateStr} ${timeStr}`;
 							const durationMin = a.duration || 60;
 							const endDate = new Date(d.getFullYear(), d.getMonth(), d.getDate(),
 								parseInt(timeStr.split(":")[0], 10),
 								parseInt(timeStr.split(":")[1], 10) + durationMin);
-							endStr = format(endDate, "yyyy-MM-dd'T'HH:mm");
+							endStr = format(endDate, "yyyy-MM-dd HH:mm");
 						}
 						return {
 							id: String(a.id),
