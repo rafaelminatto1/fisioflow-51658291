@@ -148,7 +148,7 @@ export default function Schedule() {
 		setSearchParams(newParams, { replace: true });
 	};
 
-	const handlePatientFilterChange = (val: string) => {
+	const handlePatientFilterChange = useCallback((val: string) => {
 		const newParams = new URLSearchParams(searchParams);
 		if (val) {
 			newParams.set("patient", val);
@@ -156,16 +156,31 @@ export default function Schedule() {
 			newParams.delete("patient");
 		}
 		setSearchParams(newParams, { replace: true });
-	};
+	}, [searchParams, setSearchParams]);
 
-	const clearFilters = () => {
+	const clearFilters = useCallback(() => {
 		const newParams = new URLSearchParams(searchParams);
 		newParams.delete("status");
 		newParams.delete("types");
 		newParams.delete("therapists");
 		newParams.delete("patient");
 		setSearchParams(newParams, { replace: true });
-	};
+	}, [searchParams, setSearchParams]);
+
+	const handleTimeSlotClick = useCallback((dateTime: any) => {
+		// Ensure we have a string (Schedule-X v3+ passes Temporal objects)
+		const dtString = typeof dateTime === "string" ? dateTime : (dateTime?.toString() || "");
+		if (!dtString) return;
+
+		// Schedule-X gives "YYYY-MM-DD HH:mm" or "YYYY-MM-DD"
+		const [datePart, timePart] = dtString.split(" ");
+		if (datePart) {
+			// Use a date that won't be shifted by timezone
+			const [year, month, day] = datePart.split("-").map(Number);
+			const date = new Date(year, month - 1, day);
+			actions.handleTimeSlotClick(date, timePart || "");
+		}
+	}, [actions]);
 
 	// Keyboard Shortcuts
 	useEffect(() => {
@@ -331,22 +346,17 @@ export default function Schedule() {
 											);
 											if (appointment) actions.handleAppointmentClick(appointment);
 										}}
-										onTimeSlotClick={(dateTime: string) => {
-											// Schedule-X gives "YYYY-MM-DD HH:mm" or "YYYY-MM-DD"
-											const [datePart, timePart] = dateTime.split(" ");
-											if (datePart) {
-												// Use a date that won't be shifted by timezone
-												const [year, month, day] = datePart.split("-").map(Number);
-												const date = new Date(year, month - 1, day);
-												actions.handleTimeSlotClick(date, timePart || "");
-											}
-										}}
-										onAppointmentReschedule={(id: string, start: string) => {
+										onTimeSlotClick={handleTimeSlotClick}
+										onAppointmentReschedule={(id: string, start: any) => {
 											const appointment = appointments.find((a) => a.id === id);
 											if (!appointment) return;
 
-											// start is "YYYY-MM-DD HH:mm"
-											const [datePart, timePart] = start.split(" ");
+											// start might be a Temporal object in v3+
+											const startStr = typeof start === "string" ? start : start.toString();
+											if (!startStr) return;
+
+											// startStr is "YYYY-MM-DD HH:mm"
+											const [datePart, timePart] = startStr.split(" ");
 											const [year, month, day] = datePart.split("-").map(Number);
 											const date = new Date(year, month - 1, day);
 

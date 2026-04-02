@@ -415,12 +415,6 @@ export default defineConfig(({ mode }) => {
 								test: /node_modules\/(react-hook-form|@hookform\/resolvers)/,
 								priority: 12.4,
 							},
-							// dnd-kit agenda/boards
-							{
-								name: "vendor-dnd",
-								test: /node_modules\/@dnd-kit\//,
-								priority: 12.3,
-							},
 							// estado local leve
 							{
 								name: "vendor-state",
@@ -442,10 +436,9 @@ export default defineConfig(({ mode }) => {
 						],
 					},
 				},
-				// experimental: {
-				//   minify: true, // Rolldown built-in minifier — habilitar quando Vite 8.1 estabilizar
-				//                 // substitui esbuild/oxc minify, ~2x mais rápido
-				// },
+				experimental: {
+					minify: true, // Rolldown built-in minifier (Oxide)
+				},
 			},
 		},
 		optimizeDeps: {
@@ -457,20 +450,17 @@ export default defineConfig(({ mode }) => {
 				"@tanstack/react-query",
 				"@react-pdf/renderer",
 				"yoga-layout",
-				"@dnd-kit/core",
-				"@dnd-kit/sortable",
-				"@dnd-kit/utilities",
 				"date-fns",
-			"@schedule-x/calendar",
-			"@schedule-x/react",
-			"@schedule-x/calendar-controls",
-			"@schedule-x/drag-and-drop",
-			"@schedule-x/theme-default",
-			"temporal-polyfill",
-			"preact",
-			"preact/hooks",
-			"preact/compat",
-			"@preact/signals",
+				"@schedule-x/calendar",
+				"@schedule-x/react",
+				"@schedule-x/calendar-controls",
+				"@schedule-x/drag-and-drop",
+				"@schedule-x/theme-default",
+				"temporal-polyfill",
+				"preact",
+				"preact/hooks",
+				"preact/compat",
+				"@preact/signals",
 			],
 			// Módulos IIFE/UMD: não pré-bundlar (side-effect imports no código-fonte)
 			exclude: ["@mediapipe/drawing_utils", "@mediapipe/pose"],

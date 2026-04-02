@@ -35,6 +35,8 @@
 	--sx-color-border-subtle: #e2e8f0;
 	--sx-border-radius-lg: 12px;
 	border: none !important;
+	transition: none !important;
+	animation: none !important;
 }
 
 .sx__time-grid-day {
