@@ -156,7 +156,7 @@ export class AppointmentService {
 						time: validData.start_time || validData.appointment_time || "00:00",
 						duration: validData.duration || 60,
 						type: (validData.type || "Fisioterapia") as AppointmentType,
-						status: (validData.status || "agendado") as AppointmentStatus,
+						status: (validData.status || "scheduled") as AppointmentStatus,
 						notes: validData.notes || "",
 						createdAt: validData.created_at
 							? new Date(validData.created_at)
@@ -287,7 +287,7 @@ export class AppointmentService {
 				endTime,
 				type: sessionType,
 				session_type: sessionType,
-				status: data.status || "agendado",
+				status: data.status || "scheduled",
 				notes: data.notes || null,
 				ignoreCapacity: data.ignoreCapacity || false,
 			};
@@ -723,8 +723,12 @@ export class AppointmentService {
 			return;
 		}
 
-		// Status que não devem gerar cobrança/receita (Sistema ZenFisio)
+		// Status que não devem gerar cobrança/receita (DB uses English values)
 		const nonChargingStatuses = [
+			"cancelled",
+			"no_show",
+			"rescheduled",
+			// Legacy Portuguese (kept for backward compat)
 			"cancelado",
 			"faltou",
 			"faltou_com_aviso",
