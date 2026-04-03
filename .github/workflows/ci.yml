@@ -28,6 +28,9 @@ concurrency:
 env:
   NODE_VERSION: '20'
   PNPM_VERSION: '10.33.0'
+  # Default URLs for fallback; preferred via GitHub Variables
+  VITE_API_BASE_URL: ${{ vars.VITE_API_BASE_URL || 'https://api-pro.moocafisio.com.br/api' }}
+  VITE_NEON_AUTH_URL: ${{ vars.VITE_NEON_AUTH_URL || 'https://ep-wandering-bonus-acj4zwvo.neonauth.sa-east-1.aws.neon.tech/neondb/auth' }}
 
 jobs:
   # =====================================================================
@@ -98,8 +101,8 @@ jobs:
         env:
           NODE_OPTIONS: --max-old-space-size=4096
           VITE_APP_ENV: production
-          VITE_API_BASE_URL: https://api-pro.moocafisio.com.br/api
-          VITE_NEON_AUTH_URL: ${{ vars.VITE_NEON_AUTH_URL || 'https://ep-wandering-bonus-acj4zwvo.neonauth.sa-east-1.aws.neon.tech/neondb/auth' }}
+          VITE_API_BASE_URL: ${{ env.VITE_API_BASE_URL }}
+          VITE_NEON_AUTH_URL: ${{ env.VITE_NEON_AUTH_URL }}
 
   # =====================================================================
   # UNIT TESTS
@@ -143,3 +146,10 @@ jobs:
           project_id: ${{ vars.NEON_PROJECT_ID }}
           branch_name: preview/pr-${{ github.event.number }}
           api_key: ${{ secrets.NEON_API_KEY }}
+
+      - name: Verify Migrations (Dry Run)
+        run: |
+          echo "DATABASE_URL=${{ steps.create-branch.outputs.db_url_with_pooler }}" >> $GITHUB_ENV
+          pnpm db:audit:schema
+        env:
+          DATABASE_URL: ${{ steps.create-branch.outputs.db_url_with_pooler }}
