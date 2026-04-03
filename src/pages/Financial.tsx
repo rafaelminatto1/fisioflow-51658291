@@ -16,6 +16,7 @@ import {
 	FileText,
 	Filter,
 	LineChart,
+	BarChart3,
 	Plus,
 	Receipt,
 	TrendingUp,
@@ -88,6 +89,12 @@ const FinancialAIAdvisor = lazy(() =>
 		default: m.FinancialAIAdvisor,
 	})),
 );
+const FinancialDRE = lazy(() =>
+	import("@/components/financial/dre/FinancialDRE").then((m) => ({
+		default: m.FinancialDRE,
+	}))
+);
+
 const CommissionsDashboard = lazy(() =>
 	import("@/components/financial/CommissionsDashboard").then((m) => ({
 		default: m.CommissionsDashboard,
@@ -433,6 +440,13 @@ const Financial = () => {
 							<span className="hidden sm:inline">Pacotes</span>
 						</TabsTrigger>
 						<TabsTrigger
+							value="dre"
+							className="gap-2 data-[state=active]:bg-primary/10 data-[state=active]:text-primary border border-transparent data-[state=active]:border-primary/20 rounded-xl px-4 py-2"
+						>
+							<BarChart3 className="h-4 w-4" />
+							<span className="hidden sm:inline">DRE</span>
+						</TabsTrigger>
+						<TabsTrigger
 							value="comissoes"
 							className="gap-2 data-[state=active]:bg-primary/10 data-[state=active]:text-primary border border-transparent data-[state=active]:border-primary/20 rounded-xl px-4 py-2"
 						>
@@ -624,6 +638,14 @@ const Financial = () => {
 					>
 						<Suspense fallback={<LoadingSkeleton type="list" rows={4} />}>
 							<CommissionsDashboard />
+						</Suspense>
+					</TabsContent>
+									<TabsContent
+						value="dre"
+						className="animate-in fade-in-50 slide-in-from-bottom-2 duration-300"
+					>
+						<Suspense fallback={<LoadingSkeleton type="list" rows={4} />}>
+							<FinancialDRE />
 						</Suspense>
 					</TabsContent>
 				</Tabs>
