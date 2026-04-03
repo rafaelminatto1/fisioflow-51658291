@@ -196,9 +196,6 @@ export { ContratadoCombobox } from "./contratado-combobox";
 // Misc
 export { CommandPalette } from "./CommandPalette";
 export { CustomModal } from "./custom-modal";
-export { DraggableGrid } from "./DraggableGrid";
-export { GridWidget } from "./GridWidget";
-export { TabletResponsiveGrid } from "./TabletResponsiveGrid";
 export { VirtualList } from "./virtual-list";
 export { VirtualizedList } from "./virtualized-list";
 export { LazyRenderList } from "./lazy-render-list";

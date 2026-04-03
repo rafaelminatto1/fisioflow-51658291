@@ -118,8 +118,19 @@ export interface DashboardMetrics {
 		date: string;
 		revenue: number;
 	}>;
+	clinicalImprovement: number;
+	evolutionChart: Array<{
+		day: number;
+		actualPain: number;
+		actualMobility: number;
+		predictedPain: number;
+	}>;
+	targetRevenue: number;
 	engagementScore: number;
 	patientsAtRisk: number;
+	occupancyRate: number;
+	retentionRate: number;
+	avgTicket: number;
 }
 
 export interface SmartDashboardData {
@@ -631,6 +642,51 @@ export function useSmartDashboardData(viewMode: ViewMode = "today") {
 				adData?.engagementScore ?? gamificationStats?.engagementRate ?? 0,
 			patientsAtRisk:
 				atRiskPatients.length || adData?.patientsAtRisk || 0,
+			occupancyRate: Math.round(
+				(agendamentosHoje / Math.max(1, therapists.length * 8)) * 100,
+			),
+			retentionRate: (() => {
+				const uniquePatientsLast30d = new Set(
+					appointments30d.map((a) => a.patient_id),
+				);
+				if (uniquePatientsLast30d.size === 0) return 0;
+				const futureApts = appointmentsWeek.filter(
+					(a) => new Date(a.date as string) > now,
+				);
+				const returnedPatients = new Set(
+					futureApts
+						.filter((a) => uniquePatientsLast30d.has(a.patient_id))
+						.map((a) => a.patient_id),
+				);
+				return Math.round(
+					(returnedPatients.size / uniquePatientsLast30d.size) * 100,
+				);
+			})(),
+			avgTicket:
+				pacientesAtivosCount > 0
+					? Math.round(receitaMensal / pacientesAtivosCount)
+					: 0,
+			clinicalImprovement: (() => {
+				if (selfAssessments.length < 2) return 0;
+				const scores = selfAssessments
+					.map((s: PatientSelfAssessment) => Number(s.pain_level || 0))
+					.filter((s: number) => !isNaN(s));
+				if (scores.length < 2) return 0;
+				// Newest score is at 0
+				const first = scores[scores.length - 1];
+				const last = scores[0];
+				return first > 0 ? Math.round(((last - first) / first) * 100) : 0;
+			})(),
+			evolutionChart: (() => {
+				const data = selfAssessments.slice(0, 10).reverse().map((s: PatientSelfAssessment, idx: number) => ({
+					day: idx + 1,
+					actualPain: Number(s.pain_level || 0),
+					actualMobility: Number(s.mobility_score || 0),
+					predictedPain: Math.max(0, 10 - (idx + 1) * 0.8), // Target: pain goes down
+				}));
+				return data;
+			})(),
+			targetRevenue: forecasts[0]?.predicted_revenue ?? receitaMensal * 1.1,
 		};
 
 		return metrics;

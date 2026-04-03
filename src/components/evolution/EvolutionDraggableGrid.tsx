@@ -1,12 +1,5 @@
-// ============================================================================================
-// TYPES & INTERFACES
-// ============================================================================================
-
-import React, { useState, useEffect } from "react";
-import { DraggableGrid, GridItem } from "@/components/ui/DraggableGrid";
-import { Layout } from "react-grid-layout";
+import React, { useState, useCallback, useMemo } from "react";
 import { useAuth } from "@/contexts/AuthContext";
-import { GridWidget } from "@/components/ui/GridWidget";
 import { SmartTextarea } from "@/components/ui/SmartTextarea";
 import { Button } from "@/components/ui/button";
 import {
@@ -23,9 +16,6 @@ import {
 	ClipboardList,
 	Sparkles,
 	Copy,
-	LayoutDashboard,
-	Save,
-	RotateCcw,
 	Activity,
 	TrendingDown,
 	TrendingUp,
@@ -37,8 +27,8 @@ import {
 	House,
 	History,
 } from "lucide-react";
-import { toast } from "sonner";
 import { cn } from "@/lib/utils";
+import { Card, CardContent } from "@/components/ui/card";
 import { PainScaleWidget } from "@/components/evolution/PainScaleWidget";
 import {
 	calculatePainTrend,
@@ -50,8 +40,10 @@ import { ExerciseBlockWidget } from "@/components/evolution/ExerciseBlockWidget"
 import { HomeCareWidget } from "@/components/evolution/HomeCareWidget";
 import { SessionExercise } from "@/components/evolution/SessionExercisesPanel";
 import { SessionImageUpload } from "@/components/evolution/SessionImageUpload";
-import { fisioLogger as logger } from "@/lib/errors/logger";
-import { profileApi } from "@/api/v2";
+
+// ============================================================================================
+// TYPES & INTERFACES
+// ============================================================================================
 
 export interface SOAPData {
 	subjective: string;
@@ -91,139 +83,116 @@ interface SOAPSection {
 	borderColor: string;
 }
 
-// ============================================================================================
-// CONSTANTS
-// ============================================================================================
 const SOAP_SECTIONS: Readonly<SOAPSection[]> = [
 	{
 		key: "subjective",
 		label: "Subjetivo",
 		shortLabel: "S",
 		icon: User,
-		placeholder:
-			"Queixa principal, relato do paciente, sintomas, dor, desconforto, sono, estresse...",
+		placeholder: "Relato do paciente, sintomas, dor, sono, estresse...",
 		color: "text-blue-600 dark:text-blue-400",
-		bgColor: "bg-gradient-to-r from-blue-500/20 to-blue-400/15",
-		borderColor: "border-blue-500/50",
+		bgColor: "bg-blue-500/5",
+		borderColor: "border-blue-500/20",
 	},
 	{
 		key: "objective",
 		label: "Objetivo",
 		shortLabel: "O",
 		icon: Eye,
-		placeholder:
-			"Achados do exame físico, amplitude de movimento, força, testes especiais...",
-		color: "text-green-600 dark:text-green-400",
-		bgColor: "bg-gradient-to-r from-green-500/20 to-emerald-400/15",
-		borderColor: "border-green-500/50",
+		placeholder: "Exame físico, ADM, força, testes especiais...",
+		color: "text-emerald-600 dark:text-emerald-400",
+		bgColor: "bg-emerald-500/5",
+		borderColor: "border-emerald-500/20",
 	},
 	{
 		key: "assessment",
 		label: "Avaliação",
 		shortLabel: "A",
 		icon: Brain,
-		placeholder:
-			"Análise do progresso, resposta ao tratamento, correlações clínicas...",
+		placeholder: "Análise do progresso, resposta ao tratamento...",
 		color: "text-purple-600 dark:text-purple-400",
-		bgColor: "bg-gradient-to-r from-purple-500/20 to-violet-400/15",
-		borderColor: "border-purple-500/50",
+		bgColor: "bg-purple-500/5",
+		borderColor: "border-purple-500/20",
 	},
 	{
 		key: "plan",
 		label: "Plano",
 		shortLabel: "P",
 		icon: ClipboardList,
-		placeholder:
-			"Conduta, exercícios prescritos, orientações para casa, plano para próxima visita...",
+		placeholder: "Conduta, exercícios, plano para próxima visita...",
 		color: "text-amber-600 dark:text-amber-400",
-		bgColor: "bg-gradient-to-r from-amber-500/20 to-orange-400/15",
-		borderColor: "border-amber-500/50",
+		bgColor: "bg-amber-500/5",
+		borderColor: "border-amber-500/20",
 	},
 ];
 
 // ============================================================================================
-// MEMOIZED SOAP SECTION WIDGET - Performance optimized to only re-render when its value changes
+// BENTO WIDGET COMPONENT (Replaces GridWidget for "No-Line" design)
+// ============================================================================================
+interface BentoWidgetProps {
+	title: string;
+	icon?: React.ReactNode;
+	children: React.ReactNode;
+	className?: string;
+	headerClassName?: string;
+	extraHeaderContent?: React.ReactNode;
+	variant?: "default" | "subtle" | "accent";
+}
+
+const BentoWidget = ({
+	title,
+	icon,
+	children,
+	className,
+	headerClassName,
+	extraHeaderContent,
+	variant = "default",
+}: BentoWidgetProps) => (
+	<Card
+		className={cn(
+			"rounded-[2.5rem] border-none shadow-[0_4px_24px_rgba(0,0,0,0.02)] overflow-hidden flex flex-col transition-all duration-300",
+			variant === "default" && "bg-white dark:bg-slate-900",
+			variant === "subtle" && "bg-slate-50/50 dark:bg-slate-950/30",
+			variant === "accent" && "bg-primary/5 dark:bg-primary/10",
+			className
+		)}
+	>
+		<div className={cn("px-8 pt-7 pb-4 flex items-center justify-between", headerClassName)}>
+			<div className="flex items-center gap-3">
+				{icon && <div className="p-2 rounded-2xl bg-white/50 dark:bg-slate-800/50 shadow-sm">{icon}</div>}
+				<h4 className="font-display text-[11px] font-black uppercase tracking-[0.2em] text-slate-400">
+					{title}
+				</h4>
+			</div>
+			{extraHeaderContent}
+		</div>
+		<CardContent className="flex-1 p-0 flex flex-col">{children}</CardContent>
+	</Card>
+);
+
+// ============================================================================================
+// SOAP SECTION WIDGET
 // ============================================================================================
 interface SOAPSectionWidgetProps {
 	section: SOAPSection;
 	value: string;
 	onChange: (key: keyof SOAPData, value: string) => void;
 	disabled: boolean;
-	isEditable: boolean;
 	onAISuggest?: (section: keyof SOAPData) => void;
 	onCopyLast?: (section: keyof SOAPData) => void;
 }
 
 const SOAPSectionWidget = React.memo(
-	({
-		section,
-		value,
-		onChange,
-		disabled,
-		isEditable,
-		onAISuggest,
-		onCopyLast,
-	}: SOAPSectionWidgetProps) => {
-		// Local state for immediate UI feedback
-		const [localValue, setLocalValue] = useState(value);
-		const lastSentValue = React.useRef(value);
-		const debouncedUpdate = React.useRef<NodeJS.Timeout | null>(null);
-
-		// Sync local value when prop changes (handling external updates like AI or database load)
-		// We only update if the new value is different from what we have AND different from what we last sent.
-		React.useEffect(() => {
-			if (value !== localValue && value !== lastSentValue.current) {
-				setLocalValue(value || "");
-				lastSentValue.current = value || "";
-			}
-		}, [value, localValue]);
-
-		// Cleanup timeout on unmount
-		React.useEffect(() => {
-			return () => {
-				if (debouncedUpdate.current) {
-					clearTimeout(debouncedUpdate.current);
-				}
-			};
-		}, []);
-
-		const handleChange = React.useCallback(
-			(e: React.ChangeEvent<HTMLTextAreaElement>) => {
-				const newValue = e.target.value;
-				setLocalValue(newValue);
-
-				if (debouncedUpdate.current) {
-					clearTimeout(debouncedUpdate.current);
-				}
-
-				debouncedUpdate.current = setTimeout(() => {
-					if (newValue !== lastSentValue.current) {
-						lastSentValue.current = newValue;
-						onChange(section.key, newValue);
-					}
-				}, 1000); // Increased to 1000ms for better typing performance
-			},
-			[onChange, section.key],
-		);
-
-		const wordCount = React.useMemo(
-			() => localValue.split(/\s+/).filter((w) => w.length > 0).length,
-			[localValue],
-		);
+	({ section, value, onChange, disabled, onAISuggest, onCopyLast }: SOAPSectionWidgetProps) => {
+		const wordCount = useMemo(() => value.split(/\s+/).filter((w) => w.length > 0).length, [value]);
 
 		return (
-			<GridWidget
+			<BentoWidget
 				title={section.label}
-				icon={<section.icon className={cn("h-5 w-5", section.color)} />}
-				isDraggable={isEditable}
-				className={cn("h-full border-t-4", section.borderColor)}
-				headerClassName={cn(section.bgColor, "py-3 px-4")}
+				icon={<section.icon className={cn("h-4 w-4", section.color)} />}
+				className="h-full"
 				extraHeaderContent={
-					<div
-						className="flex gap-1.5"
-						role="group"
-						aria-label={`Ações para ${section.key}`}
-					>
+					<div className="flex gap-1.5">
 						{onAISuggest && (
 							<Tooltip>
 								<TooltipTrigger asChild>
@@ -231,20 +200,14 @@ const SOAPSectionWidget = React.memo(
 										type="button"
 										variant="ghost"
 										size="icon"
-										className="h-8 w-8 hover:bg-muted/50"
+										className="h-8 w-8 rounded-xl hover:bg-primary/10 transition-colors"
 										onClick={() => onAISuggest(section.key)}
 										disabled={disabled}
-										aria-label={`Sugerir com IA para ${section.key}`}
 									>
-										<Sparkles
-											className="h-4 w-4 text-purple-500"
-											aria-hidden="true"
-										/>
+										<Sparkles className="h-3.5 w-3.5 text-primary" />
 									</Button>
 								</TooltipTrigger>
-								<TooltipContent side="bottom">
-									<p className="text-xs">Sugestão de IA</p>
-								</TooltipContent>
+								<TooltipContent side="bottom">Sugestão de IA</TooltipContent>
 							</Tooltip>
 						)}
 						{onCopyLast && (
@@ -254,51 +217,46 @@ const SOAPSectionWidget = React.memo(
 										type="button"
 										variant="ghost"
 										size="icon"
-										className="h-8 w-8 hover:bg-muted/50"
+										className="h-8 w-8 rounded-xl hover:bg-slate-100 transition-colors"
 										onClick={() => onCopyLast(section.key)}
 										disabled={disabled}
-										aria-label={`Copiar última sessão para ${section.key}`}
 									>
-										<Copy className="h-4 w-4" aria-hidden="true" />
+										<Copy className="h-3.5 w-3.5 text-slate-400" />
 									</Button>
 								</TooltipTrigger>
-								<TooltipContent side="bottom">
-									<p className="text-xs">Copiar da última sessão</p>
-								</TooltipContent>
+								<TooltipContent side="bottom">Copiar da última sessão</TooltipContent>
 							</Tooltip>
 						)}
 					</div>
 				}
 			>
-				<div className="flex-1 flex flex-col min-h-0 relative">
+				<div className="flex-1 flex flex-col px-4">
 					<SmartTextarea
-						value={localValue}
-						onChange={handleChange}
+						value={value}
+						onChange={(e) => onChange(section.key, e.target.value)}
 						placeholder={section.placeholder}
 						disabled={disabled}
 						variant="ghost"
-						className="flex-1 p-5 sm:p-6 text-base sm:text-lg leading-relaxed font-medium"
-						containerClassName="flex-1 min-h-0"
+						className="flex-1 p-4 pt-2 text-base font-medium bg-transparent border-none focus-visible:ring-0"
 						showStats={false}
-						showToolbarOnFocus={true}
-						compact={false}
-						aria-label={`Campo SOAP: ${section.label}`}
+						compact={true}
 					/>
-					<div className="px-5 py-3 bg-muted/30 border-t flex justify-between items-center text-sm text-muted-foreground font-semibold shrink-0 select-none">
-						<div className="flex items-center gap-2">
-							<span className="w-1.5 h-1.5 rounded-full bg-primary/60" />
+					<div className="px-6 py-4 flex justify-between items-center text-[9px] font-black uppercase tracking-widest text-slate-400 border-t border-slate-50 dark:border-slate-800/50">
+						<span className="flex items-center gap-2">
+							<span className={cn("w-1 h-1 rounded-full", section.color.replace("text-", "bg-"))} />
 							{wordCount} palavras
-						</div>
-						<span className="uppercase tracking-widest opacity-60 font-black text-xs">
-							{section.shortLabel}
 						</span>
+						<span className="opacity-40">{section.shortLabel}</span>
 					</div>
 				</div>
-			</GridWidget>
+			</BentoWidget>
 		);
-	},
+	}
 );
 
+// ============================================================================================
+// MAIN EVOLUTION GRID
+// ============================================================================================
 interface EvolutionDraggableGridProps {
 	soapData: SOAPData;
 	onSoapChange: (data: SOAPData) => void;
@@ -310,19 +268,15 @@ interface EvolutionDraggableGridProps {
 	onCopyLast?: (section: keyof SOAPData) => void;
 	disabled?: boolean;
 	className?: string;
-	// Props for MeasurementWidget
 	patientId?: string;
 	soapRecordId?: string;
 	requiredMeasurements?: RequiredMeasurement[];
-	// Exercises
 	exercises?: SessionExercise[];
 	onExercisesChange?: (exercises: SessionExercise[]) => void;
 	onSuggestExercises?: () => void;
 	onRepeatLastSession?: () => void;
 	lastSessionExercises?: SessionExercise[];
-	// Home Care
 	patientPhone?: string;
-	// Previous Sessions
 	previousEvolutions?: PreviousEvolution[];
 	onCopyLastEvolution?: (evolution: PreviousEvolution) => void;
 }
@@ -350,852 +304,201 @@ export const EvolutionDraggableGrid: React.FC<EvolutionDraggableGridProps> = ({
 	previousEvolutions = [],
 	onCopyLastEvolution,
 }) => {
-	const normalizeLayout = React.useCallback((layout: Layout[], cols = 12) => {
-		if (!Array.isArray(layout)) return [];
-		return layout.map((item) => {
-			const safeW = Math.max(1, Math.min(item.w ?? 1, cols));
-			const safeH = Math.max(1, item.h ?? 1);
-			let safeX = item.x ?? 0;
-			const safeY = Math.max(0, item.y ?? 0);
-
-			if (safeX < 0) safeX = 0;
-			if (safeX + safeW > cols) {
-				safeX = Math.max(0, cols - safeW);
-			}
-
-			return {
-				...item,
-				w: safeW,
-				h: safeH,
-				x: safeX,
-				y: safeY,
-			};
-		});
-	}, []);
-
-	// State initialization with lazy loading for performance
-	const [isEditable, setIsEditable] = useState(false);
 	const [showPainDetails, setShowPainDetails] = useState(false);
-	const [currentLayout, setCurrentLayout] = useState<Layout[]>([]);
-	const { user, profile } = useAuth();
 
-	const [storedLayouts, setStoredLayouts] = useState<
-		{ lg: Layout[] } | undefined
-	>(() => {
-		if (typeof window === "undefined") return undefined;
-
-		const saved = localStorage.getItem("evolution_layout_v1");
-		if (saved) {
-			try {
-				const parsed = JSON.parse(saved);
-				if (Array.isArray(parsed) && parsed.length > 0) {
-					return { lg: normalizeLayout(parsed) };
-				}
-			} catch (e) {
-				logger.error(
-					"Failed to parse saved layout",
-					e,
-					"EvolutionDraggableGrid",
-				);
-			}
-		}
-
-		if (profile?.preferences?.evolution_layout) {
-			return { lg: normalizeLayout(profile.preferences.evolution_layout) };
-		}
-
-		return undefined;
-	});
-
-	// Update stored layouts when profile loads (if not already set by localStorage)
-	useEffect(() => {
-		if (!storedLayouts && profile?.preferences?.evolution_layout) {
-			const normalized = normalizeLayout(profile.preferences.evolution_layout);
-			setStoredLayouts({ lg: normalized });
-			// Sync to local storage for faster subsequent loads
-			localStorage.setItem("evolution_layout_v1", JSON.stringify(normalized));
-		}
-	}, [normalizeLayout, profile, storedLayouts]);
-
-	// Calculate Trend
-	const trend = React.useMemo(() => {
+	const trend = useMemo(() => {
 		if (!painHistory) return null;
 		return calculatePainTrend(painHistory, painScaleData.level);
 	}, [painHistory, painScaleData.level]);
 
-	// Memoize grid layout calculations to prevent recreation
-	const gridLayouts = React.useMemo(
-		() => ({
-			painHeight: showPainDetails ? 11 : 6, // Reduced from 9 to 6
-			soapYOffset: showPainDetails ? 11 : 6, // Reduced from 9 to 6
-			measurementsYOffset: showPainDetails ? 25 : 20, // Adjusted based on new height
-		}),
-		[showPainDetails],
-	);
-
-	// Update stored layout when pain details are toggled
-	// We update the local state but NOT localStorage yet (unless user saves)
-	// Actually, we should probably just treat this as a temporary strict override for the view
-	useEffect(() => {
-		if (storedLayouts?.lg) {
-			const currentLayout = storedLayouts.lg as Layout[];
-			const painItem = currentLayout.find((i) => i.i === "pain-scale");
-			const targetH = showPainDetails ? 11 : 6;
-
-			if (painItem && painItem.h !== targetH) {
-				const newLayout = currentLayout.map((item) => {
-					if (item.i === "pain-scale") {
-						return { ...item, h: targetH };
-					}
-					return item;
-				});
-				setStoredLayouts({ ...storedLayouts, lg: newLayout });
-				// Also update currentLayout if we are in edit mode to prevent jump
-				if (isEditable) {
-					setCurrentLayout(newLayout);
-				}
-			}
-		}
-
-		// Fix for overlap issue: Force layout recalculation after animation
-		// This resolves issues where widgets below didn't push down correctly
-		const timer = setTimeout(() => {
-			window.dispatchEvent(new Event("resize"));
-		}, 350); // Slightly longer than transition duration (usually 300ms)
-
-		return () => clearTimeout(timer);
-	}, [showPainDetails, storedLayouts, isEditable]);
-
-	const handleLayoutChange = (layout: Layout[]) => {
-		if (isEditable) {
-			setCurrentLayout(normalizeLayout(layout));
-		}
-	};
-
-	const handleSaveLayout = async () => {
-		if (currentLayout.length > 0) {
-			const normalized = normalizeLayout(currentLayout);
-			// 1. Save to local storage
-			localStorage.setItem("evolution_layout_v1", JSON.stringify(normalized));
-			setStoredLayouts({ lg: normalized });
-			setIsEditable(false);
-			toast.success("Layout salvo com sucesso!");
-
-			// 2. Persist to backend profile preferences
-			if (user?.uid) {
-				try {
-					await profileApi.updateMe({
-						preferences: {
-							...profile?.preferences,
-							evolution_layout: normalized,
-						},
-					});
-					logger.info(
-						"Layout preference saved via Workers API",
-						{ userId: user.uid },
-						"EvolutionDraggableGrid",
-					);
-				} catch (err) {
-					logger.error(
-						"Failed to save preferences via Workers API",
-						err,
-						"EvolutionDraggableGrid",
-					);
-				}
-			}
-		} else {
-			setIsEditable(false);
-		}
-	};
-
-	const handleResetLayout = async () => {
-		localStorage.removeItem("evolution_layout_v1");
-		setStoredLayouts(undefined);
-		setCurrentLayout([]);
-		setIsEditable(false);
-		toast.success("Layout restaurado para o padrão!");
-
-		// Remove from backend profile preferences
-		if (user?.uid && profile?.preferences?.evolution_layout) {
-			try {
-				const restPreferences = { ...profile.preferences };
-				delete restPreferences.evolution_layout;
-				await profileApi.updateMe({
-					preferences: restPreferences,
-				});
-				logger.info(
-					"Reset evolution_layout preference via Workers API",
-					{ userId: user.uid },
-					"EvolutionDraggableGrid",
-				);
-			} catch (err) {
-				logger.error(
-					"Failed to reset preferences via Workers API",
-					err,
-					"EvolutionDraggableGrid",
-				);
-			}
-		}
-
-		// Force a page reload to ensure all components reset properly
-		setTimeout(() => {
-			window.location.reload();
-		}, 500);
-	};
-
-	// ========== PERFORMANCE OPTIMIZATION ==========
-	// Keep a ref to soapData to avoid recreating handleSoapFieldChange on every keystroke
-	const soapDataRef = React.useRef(soapData);
-	React.useEffect(() => {
-		soapDataRef.current = soapData;
-	}, [soapData]);
-
-	// This callback is now STABLE - doesn't depend on soapData directly
-	const handleSoapFieldChange = React.useCallback(
+	const handleSoapFieldChange = useCallback(
 		(key: keyof SOAPData, value: string) => {
-			onSoapChange({ ...soapDataRef.current, [key]: value });
+			onSoapChange({ ...soapData, [key]: value });
 		},
-		[onSoapChange],
+		[onSoapChange, soapData]
 	);
 
-	const handlePainScaleChange = React.useCallback(
-		(data: PainScaleData) => {
-			onPainScaleChange(data);
-		},
-		[onPainScaleChange],
-	);
-
-	const handleExercisesChange = React.useCallback(
-		(exercises: SessionExercise[]) => {
-			onExercisesChange?.(exercises);
-		},
-		[onExercisesChange],
-	);
-
-	const toggleEditMode = () => {
-		if (!isEditable) {
-			// Start from saved layout when available to avoid snapping back to defaults
-			const fallbackLayout = gridItems.map((item) => ({
-				i: item.id,
-				w: item.defaultLayout.w,
-				h: item.defaultLayout.h,
-				x: item.defaultLayout.x,
-				y: item.defaultLayout.y,
-				minW: item.defaultLayout.minW,
-				minH: item.defaultLayout.minH,
-			}));
-			const initialLayout = storedLayouts?.lg?.length
-				? normalizeLayout(storedLayouts.lg)
-				: normalizeLayout(fallbackLayout);
-			setCurrentLayout(initialLayout);
-			setIsEditable(true);
-		} else {
-			setIsEditable(false);
-			setCurrentLayout([]);
-		}
-	};
-
-	const gridItems: GridItem[] = React.useMemo(
-		() => [
-			// ===== LINHA 1: Nível de Dor (25%) | Exercícios (75%) =====
-			{
-				id: "pain-scale",
-				content: (
-					<GridWidget
-						title="Nível de dor (EVA)"
-						icon={<Activity className="h-4 w-4 text-rose-600" />}
-						isDraggable={isEditable}
-						className="h-full border-t-4 border-rose-500/60"
-						headerClassName="bg-gradient-to-r from-rose-500/25 to-pink-400/20"
+	return (
+		<TooltipProvider>
+			<div className={cn("grid grid-cols-1 md:grid-cols-12 gap-6 pb-12", className)}>
+				{/* ROW 1: Pain & Exercises */}
+				<div className="md:col-span-4 h-full min-h-[300px]">
+					<BentoWidget
+						title="Pain Level (EVA)"
+						icon={<Activity className="h-4 w-4 text-rose-500" />}
 						extraHeaderContent={
 							<div className="flex items-center gap-2">
 								{showPainTrend && trend && (
-									<Tooltip>
-										<TooltipTrigger asChild>
-											<Badge
-												variant="outline"
-												className={cn(
-													"text-xs cursor-help transition-colors",
-													trend.direction === "down" &&
-														"border-green-500/50 bg-green-50 text-green-700 dark:bg-green-950/20",
-													trend.direction === "up" &&
-														"border-red-500/50 bg-red-50 text-red-700 dark:bg-red-950/20",
-												)}
-												aria-label={`Tendência de dor: ${trend.label}`}
-											>
-												{trend.direction === "down" ? (
-													<TrendingDown
-														className="h-3.5 w-3.5 text-green-600"
-														aria-hidden="true"
-													/>
-												) : trend.direction === "up" ? (
-													<TrendingUp
-														className="h-3.5 w-3.5 text-red-600"
-														aria-hidden="true"
-													/>
-												) : (
-													<Minus
-														className="h-3.5 w-3.5 text-muted-foreground"
-														aria-hidden="true"
-													/>
-												)}
-												<span className="ml-1">{trend.label}</span>
-											</Badge>
-										</TooltipTrigger>
-										<TooltipContent side="bottom">
-											<p className="text-xs">Comparado à última sessão</p>
-										</TooltipContent>
-									</Tooltip>
+									<Badge
+										variant="outline"
+										className={cn(
+											"text-[9px] font-black uppercase px-2 h-6 border-none",
+											trend.direction === "down" ? "bg-emerald-500/10 text-emerald-600" : "bg-rose-500/10 text-rose-600"
+										)}
+									>
+										{trend.direction === "down" ? (
+											<TrendingDown className="h-3 w-3 mr-1" />
+										) : (
+											<TrendingUp className="h-3 w-3 mr-1" />
+										)}
+										{trend.label}
+									</Badge>
 								)}
 								<Button
-									type="button"
 									variant="ghost"
-									size="sm"
+									size="icon"
+									className="h-8 w-8 rounded-xl"
 									onClick={() => setShowPainDetails(!showPainDetails)}
-									className="h-7 px-2 hover:bg-muted/50"
-									aria-label={
-										showPainDetails
-											? "Recolher detalhes da dor"
-											: "Expandir detalhes da dor"
-									}
-									aria-expanded={showPainDetails}
 								>
-									{showPainDetails ? (
-										<ChevronUp className="h-4 w-4" aria-hidden="true" />
-									) : (
-										<ChevronDown className="h-4 w-4" aria-hidden="true" />
-									)}
+									{showPainDetails ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
 								</Button>
 							</div>
 						}
 					>
-						<div className="p-3 h-full overflow-visible">
+						<div className="p-6 pt-2 h-full">
 							<PainScaleWidget
 								value={painScaleData}
-								onChange={handlePainScaleChange}
+								onChange={onPainScaleChange}
 								hideHeader={true}
 								showDetails={showPainDetails}
-								onToggleDetails={setShowPainDetails}
 								disabled={disabled}
-								className="border-0 shadow-none h-full bg-transparent"
+								className="border-none shadow-none p-0 bg-transparent"
 							/>
 						</div>
-					</GridWidget>
-				),
-				defaultLayout: {
-					w: 3,
-					h: gridLayouts.painHeight,
-					x: 0,
-					y: 0,
-					minW: 3,
-					minH: 6,
-				},
-			},
-			// Exercícios da Sessão (75% da largura)
-			{
-				id: "exercises-block",
-				content: (
-					<GridWidget
-						title="Exercícios da Sessão"
-						icon={<Dumbbell className="h-4 w-4 text-purple-600" />}
-						isDraggable={isEditable}
-						className="h-full border-t-4 border-purple-500/60"
-						headerClassName="bg-gradient-to-r from-purple-500/25 to-fuchsia-400/20"
+					</BentoWidget>
+				</div>
+
+				<div className="md:col-span-8 h-full min-h-[300px]">
+					<BentoWidget
+						title="Session Exercises"
+						icon={<Dumbbell className="h-4 w-4 text-primary" />}
 					>
-						<div className="h-full overflow-hidden">
+						<div className="h-full px-4 overflow-hidden">
 							<ExerciseBlockWidget
 								exercises={exercises}
-								onChange={handleExercisesChange}
+								onChange={onExercisesChange || (() => {})}
 								onSuggest={onSuggestExercises}
 								onRepeatLastSession={onRepeatLastSession}
 								hasLastSession={lastSessionExercises.length > 0}
 								disabled={disabled}
 							/>
 						</div>
-					</GridWidget>
-				),
-				defaultLayout: {
-					w: 9,
-					h: gridLayouts.painHeight,
-					x: 3,
-					y: 0,
-					minW: 6,
-					minH: 6,
-				},
-			},
+					</BentoWidget>
+				</div>
 
-			// ===== LINHA 2: Formulário SOAP (4 campos em 2x2) - Using memoized components =====
-			...SOAP_SECTIONS.map((section, index) => ({
-				id: section.key,
-				content: (
-					<SOAPSectionWidget
-						key={section.key}
-						section={section}
-						value={soapData[section.key]}
-						onChange={handleSoapFieldChange}
-						disabled={disabled}
-						isEditable={isEditable}
-						onAISuggest={onAISuggest}
-						onCopyLast={onCopyLast}
-					/>
-				),
-				defaultLayout: {
-					w: 6,
-					h: 7,
-					x: (index % 2) * 6,
-					y: gridLayouts.soapYOffset + Math.floor(index / 2) * 7,
-					minW: 4,
-					minH: 5,
-				},
-			})),
+				{/* ROW 2: SOAP FIELDS (Grid 2x2 on desktop) */}
+				{SOAP_SECTIONS.map((section) => (
+					<div key={section.key} className="md:col-span-6 h-[280px]">
+						<SOAPSectionWidget
+							section={section}
+							value={soapData[section.key]}
+							onChange={handleSoapFieldChange}
+							disabled={disabled}
+							onAISuggest={onAISuggest}
+							onCopyLast={onCopyLast}
+						/>
+					</div>
+				))}
 
-			// ===== LINHA 3: Registro de Medições | Home Care =====
-			// Registro de Medições (esquerda)
-			{
-				id: "measurements",
-				content: (
-					<GridWidget
-						title="Registro de Medições"
-						icon={<Activity className="h-4 w-4 text-teal-600" />}
-						isDraggable={isEditable}
-						className="h-full border-t-4 border-teal-500/60"
-						headerClassName="bg-gradient-to-r from-teal-500/25 to-cyan-400/20"
+				{/* ROW 3: Measurements & Home Care */}
+				<div className="md:col-span-6 h-full min-h-[400px]">
+					<BentoWidget
+						title="Clinical Measurements"
+						icon={<Activity className="h-4 w-4 text-emerald-500" />}
 					>
-						<div className="h-full overflow-auto p-0">
-							{patientId ? (
-								<div className="p-4">
-									<MeasurementForm
-										patientId={patientId}
-										soapRecordId={soapRecordId}
-										requiredMeasurements={requiredMeasurements}
-									/>
-								</div>
-							) : (
-								<div className="flex items-center justify-center h-full text-muted-foreground text-sm p-5">
-									Carregando formulário...
-								</div>
-							)}
+						<div className="p-4 pt-0 h-full overflow-auto">
+							<MeasurementForm
+								patientId={patientId || ""}
+								soapRecordId={soapRecordId}
+								requiredMeasurements={requiredMeasurements}
+							/>
 						</div>
-					</GridWidget>
-				),
-				defaultLayout: {
-					w: 6,
-					h: 12,
-					x: 0,
-					y: gridLayouts.measurementsYOffset,
-					minW: 6,
-					minH: 6,
-				},
-			},
-			// Home Care (direita)
-			{
-				id: "home-care-block",
-				content: (
-					<GridWidget
-						title="Home Care"
-						icon={<House className="h-4 w-4 text-green-600" />}
-						isDraggable={isEditable}
-						className="h-full border-t-4 border-green-500/60"
-						headerClassName="bg-gradient-to-r from-green-500/25 to-emerald-400/20"
+					</BentoWidget>
+				</div>
+
+				<div className="md:col-span-6 h-full min-h-[400px]">
+					<BentoWidget
+						title="Home Care Guide"
+						icon={<House className="h-4 w-4 text-amber-500" />}
 					>
-						<div className="h-full overflow-hidden">
+						<div className="p-4 pt-0 h-full overflow-auto">
 							<HomeCareWidget
 								patientId={patientId || ""}
 								patientPhone={patientPhone}
 								disabled={disabled}
 							/>
 						</div>
-					</GridWidget>
-				),
-				defaultLayout: {
-					w: 6,
-					h: 12,
-					x: 6,
-					y: gridLayouts.measurementsYOffset,
-					minW: 6,
-					minH: 8,
-				},
-			},
-
-			// ===== LINHA 4: Sessões Anteriores | Anexos =====
-			// Sessões Anteriores (esquerda)
-			{
-				id: "previous-sessions",
-				content: (
-					<GridWidget
-						title="Sessões Anteriores"
-						icon={<History className="h-4 w-4 text-amber-600" />}
-						isDraggable={isEditable}
-						className="h-full border-t-4 border-amber-500/60"
-						headerClassName="bg-gradient-to-r from-amber-500/25 to-yellow-400/20"
-						extraHeaderContent={
-							previousEvolutions.length > 0 && onCopyLastEvolution ? (
-								<Tooltip>
-									<TooltipTrigger asChild>
-										<Button
-											type="button"
-											variant="default"
-											size="sm"
-											className="h-8 px-3 text-xs font-medium"
-											onClick={() => {
-												const lastEvolution = previousEvolutions[0];
-												if (lastEvolution) {
-													onCopyLastEvolution(lastEvolution);
-												}
-											}}
-											disabled={disabled}
-										>
-											<Copy className="h-3 w-3 mr-1.5" aria-hidden="true" />
-											Replicar Última
-										</Button>
-									</TooltipTrigger>
-									<TooltipContent side="bottom">
-										<p className="text-xs">
-											Copiar toda a última sessão para os campos atuais
-										</p>
-									</TooltipContent>
-								</Tooltip>
-							) : null
-						}
-					>
-						<div className="h-full overflow-auto p-4">
-							{previousEvolutions.length > 0 ? (
-								<div className="space-y-3">
-									{previousEvolutions
-										.slice(0, 5)
-										.map((evolution, index: number) => {
-											const sessionNumber = previousEvolutions.length - index;
-											const date = new Date(
-												evolution.created_at || evolution.record_date,
-											);
-											return (
-												<div
-													key={evolution.id}
-													role="button"
-													tabIndex={0}
-													className="group border rounded-lg p-3.5 hover:bg-muted/50 transition-all cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
-													onClick={() =>
-														onCopyLastEvolution &&
-														onCopyLastEvolution(evolution)
-													}
-													onKeyDown={(e) => {
-														if (e.key === "Enter" || e.key === " ") {
-															e.preventDefault();
-															if (onCopyLastEvolution) {
-																onCopyLastEvolution(evolution);
-															}
-														}
-													}}
-													aria-label={`Sessão ${sessionNumber} de ${date.toLocaleDateString("pt-BR")}. Clique para copiar.`}
-												>
-													<div className="flex items-center justify-between mb-2">
-														<div className="flex items-center gap-2.5">
-															<div
-																className="w-7 h-7 rounded-full bg-amber-500/10 text-amber-600 dark:text-amber-400 flex items-center justify-center text-xs font-bold"
-																aria-hidden="true"
-															>
-																{sessionNumber}
-															</div>
-															<div>
-																<p className="text-xs font-semibold">
-																	{date.toLocaleDateString("pt-BR")}
-																</p>
-																{evolution.pain_level !== undefined && (
-																	<p className="text-[10px] text-muted-foreground">
-																		Dor: {evolution.pain_level}/10
-																	</p>
-																)}
-															</div>
-														</div>
-														<Copy
-															className="h-3.5 w-3.5 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity"
-															aria-hidden="true"
-														/>
-													</div>
-													{(evolution.subjective || evolution.objective) && (
-														<div
-															className="text-xs text-muted-foreground line-clamp-2"
-															aria-hidden="true"
-														>
-															{evolution.subjective?.substring(0, 80) ||
-																evolution.objective?.substring(0, 80)}
-															{(evolution.subjective?.length > 80 ||
-																evolution.objective?.length > 80) &&
-																"..."}
-														</div>
-													)}
-												</div>
-											);
-										})}
-									{previousEvolutions.length > 5 && (
-										<div className="text-center text-xs text-muted-foreground pt-2 font-medium">
-											+ {previousEvolutions.length - 5} sessões anteriores
-										</div>
-									)}
-								</div>
-							) : (
-								<div className="flex flex-col items-center justify-center h-full text-center text-muted-foreground gap-2">
-									<History
-										className="h-10 w-10 opacity-40"
-										aria-hidden="true"
-									/>
-									<p className="text-sm font-medium">Nenhuma sessão anterior</p>
-									<p className="text-xs">
-										As sessões registradas aparecerão aqui
-									</p>
-								</div>
-							)}
-						</div>
-					</GridWidget>
-				),
-				defaultLayout: {
-					w: 6,
-					h: 10,
-					x: 0,
-					y: showPainDetails ? 37 : 32,
-					minW: 6,
-					minH: 6,
-				},
-			},
-			// Anexos (direita)
-			{
-				id: "photos",
-				content: (
-					<GridWidget
-						title="Anexos"
-						icon={<ImageIcon className="h-4 w-4 text-indigo-600" />}
-						isDraggable={isEditable}
-						className="h-full border-t-4 border-indigo-500/60"
-						headerClassName="bg-gradient-to-r from-indigo-500/25 to-blue-400/20"
-					>
-						<div className="h-full overflow-auto p-0">
-							{patientId ? (
-								<div className="p-4">
-									<SessionImageUpload
-										patientId={patientId}
-										soapRecordId={soapRecordId}
-										maxFiles={5}
-									/>
-								</div>
-							) : (
-								<div className="flex items-center justify-center h-full text-muted-foreground text-sm p-5">
-									Carregando galeria...
-								</div>
-							)}
-						</div>
-					</GridWidget>
-				),
-				defaultLayout: {
-					w: 6,
-					h: 10,
-					x: 6,
-					y: showPainDetails ? 37 : 32,
-					minW: 6,
-					minH: 6,
-				},
-			},
-		],
-		[
-			isEditable,
-			showPainTrend,
-			trend,
-			showPainDetails,
-			painScaleData,
-			handlePainScaleChange,
-			disabled,
-			patientId,
-			soapRecordId,
-			requiredMeasurements,
-			exercises,
-			handleExercisesChange,
-			onSuggestExercises,
-			onAISuggest,
-			onCopyLast,
-			onRepeatLastSession,
-			lastSessionExercises.length,
-			gridLayouts,
-			// soapData is needed for SOAPSectionWidget props, but each widget is memoized
-			soapData,
-			handleSoapFieldChange,
-			patientPhone,
-			previousEvolutions,
-			onCopyLastEvolution,
-		],
-	);
-
-	// Generate layouts for different breakpoints - optimized for iPad/tablet/notebook
-	const layouts = React.useMemo(() => {
-		const xlLayout = gridItems.map((item) => ({
-			i: item.id,
-			...item.defaultLayout,
-		}));
-
-		// Use stored layout when available (localStorage or Neon), otherwise default
-		const desktopLayout =
-			storedLayouts?.lg && storedLayouts.lg.length > 0
-				? normalizeLayout(storedLayouts.lg)
-				: xlLayout;
-
-		// iPad 12.9" / Large notebooks (8 cols)
-		const lgLayout = gridItems.map((item, index) => {
-			const w = Math.min(item.defaultLayout.w, 8);
-			return {
-				i: item.id,
-				x: (index % 2) * 4, // 2 items per row
-				y: Math.floor(index / 2) * item.defaultLayout.h,
-				w,
-				h: item.defaultLayout.h,
-				minW: Math.min(item.defaultLayout.minW || 4, 4),
-				minH: item.defaultLayout.minH || 4,
-			};
-		});
-
-		// iPad 10.5"/11" / Small notebooks (6 cols)
-		const mdLayout = gridItems.map((item, index) => {
-			const w = Math.min(item.defaultLayout.w, 6);
-			return {
-				i: item.id,
-				x: (index % 2) * 3, // 2 items per row
-				y: Math.floor(index / 2) * item.defaultLayout.h,
-				w: w >= 4 ? 3 : w,
-				h: item.defaultLayout.h,
-				minW: Math.min(item.defaultLayout.minW || 3, 3),
-				minH: item.defaultLayout.minH || 4,
-			};
-		});
-
-		// iPad Mini / Small tablets (4 cols)
-		const smLayout = gridItems.map((item, index) => ({
-			i: item.id,
-			x: (index % 2) * 2, // 2 items per row
-			y: Math.floor(index / 2) * item.defaultLayout.h,
-			w: 2,
-			h: Math.min(item.defaultLayout.h, 8),
-			minW: 2,
-			minH: 4,
-		}));
-
-		// Large phones (2 cols)
-		const xsLayout = gridItems.map((item, index) => ({
-			i: item.id,
-			x: 0,
-			y: index * 8,
-			w: 2,
-			h: Math.min(item.defaultLayout.h, 8),
-			minW: 2,
-			minH: 4,
-		}));
-
-		// Small phones (1 col)
-		const xxsLayout = gridItems.map((item, index) => ({
-			i: item.id,
-			x: 0,
-			y: index * 8,
-			w: 1,
-			h: Math.min(item.defaultLayout.h, 6),
-			minW: 1,
-			minH: 3,
-		}));
-
-		return {
-			xl: desktopLayout,
-			lg: lgLayout,
-			md: mdLayout,
-			sm: smLayout,
-			xs: xsLayout,
-			xxs: xxsLayout,
-		};
-	}, [gridItems, normalizeLayout, storedLayouts]);
-
-	return (
-		<TooltipProvider>
-			<div className={cn("space-y-5", className)}>
-				{/* Header de Controle do Layout */}
-				<div className="flex justify-between items-center bg-muted/40 px-5 py-3.5 rounded-xl border">
-					<div className="flex items-center gap-2.5">
-						<LayoutDashboard className="h-4.5 w-4.5 text-muted-foreground" />
-						<span className="text-sm font-semibold text-foreground">
-							Layout da Evolução
-						</span>
-					</div>
-					<div className="flex gap-2">
-						{isEditable ? (
-							<>
-								<Button
-									variant="ghost"
-									size="sm"
-									onClick={() => {
-										setIsEditable(false);
-										setCurrentLayout([]); // Clear current changes
-									}}
-									className="h-8.5 px-3"
-								>
-									Cancelar
-								</Button>
-								<Button
-									size="sm"
-									onClick={handleSaveLayout}
-									className="h-8.5 px-3.5 gap-2"
-								>
-									<Save className="h-3.5 w-3.5" /> Salvar Alterações
-								</Button>
-								<TooltipProvider>
-									<Tooltip>
-										<TooltipTrigger asChild>
-											<Button
-												variant="ghost"
-												size="icon"
-												onClick={handleResetLayout}
-												aria-label="Redefinir layout para o padrão"
-												className="h-8.5 w-8.5 text-muted-foreground hover:text-destructive"
-											>
-												<RotateCcw className="h-3.5 w-3.5" />
-											</Button>
-										</TooltipTrigger>
-										<TooltipContent side="bottom">
-											<p className="text-xs">Restaurar layout padrão</p>
-										</TooltipContent>
-									</Tooltip>
-								</TooltipProvider>
-							</>
-						) : (
-							<>
-								<Button
-									variant="outline"
-									size="sm"
-									onClick={toggleEditMode}
-									className="h-8.5 px-3 gap-2 border-primary/20 hover:border-primary/50 hover:bg-primary/5 transition-all"
-								>
-									<LayoutDashboard className="h-3.5 w-3.5 text-primary" />
-									<span className="font-semibold">Personalizar</span>
-								</Button>
-							</>
-						)}
-					</div>
+					</BentoWidget>
 				</div>
 
-				<div
-					className={cn(
-						"relative rounded-2xl transition-all duration-300",
-						isEditable && "bg-muted/30 p-4 ring-1 ring-primary/10 shadow-inner",
-					)}
-				>
-					{isEditable && (
-						<div
-							className="absolute inset-0 pointer-events-none opacity-[0.03] dark:opacity-[0.05]"
-							style={{
-								backgroundImage: `radial-gradient(circle at 1px 1px, currentColor 1px, transparent 0)`,
-								backgroundSize: "24px 24px",
-							}}
-						/>
-					)}
-					<DraggableGrid
-						items={gridItems}
-						onLayoutChange={handleLayoutChange}
-						isEditable={isEditable}
-						layouts={layouts}
-						className="min-h-[800px]"
-					/>
+				{/* ROW 4: History & Media */}
+				<div className="md:col-span-6 h-full min-h-[350px]">
+					<BentoWidget
+						title="Clinical History"
+						icon={<History className="h-4 w-4 text-blue-500" />}
+						extraHeaderContent={
+							previousEvolutions.length > 0 && onCopyLastEvolution && (
+								<Button
+									variant="subtle"
+									size="sm"
+									className="rounded-xl h-8 text-[10px] font-black uppercase tracking-widest bg-blue-500/10 text-blue-600 hover:bg-blue-500/20"
+									onClick={() => onCopyLastEvolution(previousEvolutions[0])}
+									disabled={disabled}
+								>
+									<Copy className="h-3 w-3 mr-2" /> Replicate Last
+								</Button>
+							)
+						}
+					>
+						<div className="p-6 pt-0 h-full overflow-auto">
+							{previousEvolutions.length > 0 ? (
+								<div className="space-y-4">
+									{previousEvolutions.slice(0, 5).map((evolution, idx) => (
+										<div
+											key={evolution.id}
+											className="group p-4 rounded-[1.5rem] bg-slate-50/50 dark:bg-slate-900/50 hover:bg-white hover:shadow-lg transition-all duration-300 cursor-pointer border border-transparent hover:border-slate-100"
+											onClick={() => onCopyLastEvolution?.(evolution)}
+										>
+											<div className="flex items-center justify-between mb-2">
+												<div className="flex items-center gap-3">
+													<div className="w-8 h-8 rounded-2xl bg-white flex items-center justify-center text-[10px] font-black text-slate-400 shadow-sm">
+														{previousEvolutions.length - idx}
+													</div>
+													<p className="text-xs font-bold text-slate-700 dark:text-slate-300">
+														{new Date(evolution.created_at || evolution.record_date || "").toLocaleDateString("pt-BR")}
+													</p>
+												</div>
+												<Copy className="h-3.5 w-3.5 text-slate-300 opacity-0 group-hover:opacity-100 transition-opacity" />
+											</div>
+											<p className="text-[11px] text-slate-400 line-clamp-2 leading-relaxed italic">
+												{evolution.subjective || evolution.objective || "Sem resumo disponível."}
+											</p>
+										</div>
+									))}
+								</div>
+							) : (
+								<div className="flex flex-col items-center justify-center h-full text-center p-8 opacity-20">
+									<History className="h-12 w-12 mb-3" />
+									<p className="text-xs font-bold">No history found.</p>
+								</div>
+							)}
+						</div>
+					</BentoWidget>
+				</div>
+
+				<div className="md:col-span-6 h-full min-h-[350px]">
+					<BentoWidget
+						title="Session Media"
+						icon={<ImageIcon className="h-4 w-4 text-purple-500" />}
+					>
+						<div className="h-full px-4 pt-0">
+							<SessionImageUpload
+								patientId={patientId || ""}
+								soapRecordId={soapRecordId}
+								maxFiles={5}
+							/>
+						</div>
+					</BentoWidget>
 				</div>
 			</div>
 		</TooltipProvider>
