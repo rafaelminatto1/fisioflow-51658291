@@ -65,25 +65,24 @@ export const FinancialDRE: React.FC = () => {
 			const valor = Number(t.valor);
 			const desc = t.descricao?.toLowerCase() || "";
 
+			// Usa a categoria DRE do banco se existir
+			const dreCategoriaStr = t.dre_categoria?.toLowerCase() || "";
+
 			if (t.tipo === "receita") {
-				// Heurística básica para receitas
-				if (desc.includes("juros") || desc.includes("rendimento")) {
+				if (dreCategoriaStr === "receitas_financeiras" || desc.includes("juros") || desc.includes("rendimento")) {
 					receitasFinanceiras += valor;
 				} else {
 					receitaBruta += valor;
 				}
 			} else if (t.tipo === "despesa") {
-				// Heurísticas básicas para despesas
-				if (desc.includes("imposto") || desc.includes("taxa") || desc.includes("simples") || desc.includes("iss")) {
-					if (desc.includes("cartão") || desc.includes("cartao") || desc.includes("bancária") || desc.includes("bancaria")) {
-						despesasFinanceiras += valor;
-					} else {
-						deducoes += valor;
-					}
-				} else if (desc.includes("salário") || desc.includes("salario") || desc.includes("material") || desc.includes("insumo")) {
+				if (dreCategoriaStr === "despesas_financeiras" || (desc.includes("cartão") || desc.includes("cartao") || desc.includes("bancária") || desc.includes("bancaria"))) {
+					despesasFinanceiras += valor;
+				} else if (dreCategoriaStr === "deducoes" || desc.includes("imposto") || desc.includes("taxa") || desc.includes("simples") || desc.includes("iss")) {
+					deducoes += valor;
+				} else if (dreCategoriaStr === "custos_operacionais" || desc.includes("salário") || desc.includes("salario") || desc.includes("material") || desc.includes("insumo")) {
 					custosOperacionais += valor;
 				} else {
-					despesasOperacionais += valor; // Default fallback for expenses
+					despesasOperacionais += valor;
 				}
 			}
 		});
