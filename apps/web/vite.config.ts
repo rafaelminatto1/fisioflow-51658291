@@ -218,12 +218,12 @@ export default defineConfig(({ mode }) => {
 							{
 								name: "vendor-vtk",
 								test: /node_modules\/@kitware\/vtk\.js/,
-								priority: 34.7,
+								priority: 35,
 							},
 							{
 								name: "vendor-cornerstone-math",
 								test: /node_modules\/(gl-matrix|comlink|loglevel)/,
-								priority: 34.6,
+								priority: 35,
 							},
 							{
 								name: "vendor-cornerstone-core",
@@ -250,7 +250,7 @@ export default defineConfig(({ mode }) => {
 							{
 								name: "vendor-react-pdf-font",
 								test: /node_modules\/(fontkit|linebreak|is-url|emoji-regex-xs)/,
-								priority: 28.8,
+								priority: 29,
 							},
 							{
 								name: "vendor-react-pdf-textkit",
