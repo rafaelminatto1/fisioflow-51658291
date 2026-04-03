@@ -10,8 +10,12 @@ import { beforeAll, afterEach, afterAll, vi } from "vitest";
 import { cleanup } from "@testing-library/react";
 import "@testing-library/jest-dom";
 import React from "react";
+import { Temporal } from "temporal-polyfill";
 import { BrowserRouter } from "react-router-dom";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+
+// @ts-ignore
+global.Temporal = Temporal;
 
 vi.mock("@/integrations/neon/auth", () => ({
 	auth: {
