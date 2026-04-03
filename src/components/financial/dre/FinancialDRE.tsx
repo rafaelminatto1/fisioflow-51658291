@@ -7,7 +7,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { BarChart3, TrendingDown, TrendingUp } from "lucide-react";
-import { formatCurrency } from "@/utils/format";
+import { formatCurrency } from "@/lib/utils";
 import { financialApi } from "@/api/v2/financial";
 import type { Transacao } from "@/types/workers";
 
