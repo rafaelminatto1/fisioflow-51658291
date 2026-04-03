@@ -9,26 +9,18 @@ import {
 	useMemo,
 	useOptimistic,
 	useRef,
+	useState,
 	useTransition,
 } from "react";
-import Calendar from "@event-calendar/core";
-import TimeGrid from "@event-calendar/time-grid";
-import DayGrid from "@event-calendar/day-grid";
-import Interaction from "@event-calendar/interaction";
+import { createPortal } from "react-dom";
+import { createCalendar, destroyCalendar, TimeGrid, DayGrid, Interaction } from "@event-calendar/core";
 import "@event-calendar/core/index.css";
 import { format, isValid, addMinutes } from "date-fns";
-import { ExternalLink, Play } from "lucide-react";
 import { toast } from "sonner";
-import { Avatar, AvatarFallback } from "@/components/ui/avatar";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import {
-	Popover,
-	PopoverContent,
-	PopoverTrigger,
-} from "@/components/ui/popover";
 import { cn } from "@/lib/utils";
 import { ScheduleToolbar } from "./ScheduleToolbar";
+import { AppointmentQuickView } from "./AppointmentQuickView";
+import { getStatusConfig } from "./shared/appointment-status";
 
 type ViewType = "day" | "week" | "month";
 
@@ -43,112 +35,63 @@ interface CustomEventCardProps {
 	props: any;
 }
 
-const statusColors: Record<string, string> = {
-	scheduled: "bg-blue-500",
-	confirmed: "bg-emerald-500",
-	pending: "bg-amber-500",
-	cancelled: "bg-rose-500",
-	completed: "bg-slate-700",
-	arrived: "bg-indigo-500",
-};
-
 const CustomEventCard = ({ calendarEvent, props }: CustomEventCardProps) => {
 	// event-calendar injects event data via info.event
 	const appointment = calendarEvent.extendedProps;
 	const formattedTime = format(calendarEvent.start, "HH:mm");
+	const statusConfig = getStatusConfig(appointment.status);
+	const [open, setOpen] = useState(false);
 
 	return (
-		<Popover>
-			<PopoverTrigger asChild>
-				<button
-					className={cn(
-						"w-full h-full p-0.5 overflow-hidden cursor-pointer transition-all hover:ring-2 hover:ring-blue-500/30 rounded-md bg-white text-left",
-						appointment.status === "cancelled" && "opacity-50 grayscale",
-					)}
-					onClick={(e) => {
-						e.stopPropagation();
-					}}
-				>
-					<div
-						className={cn(
-							"flex flex-col h-full border-l-[3px] rounded-r-md p-1.5 shadow-sm overflow-hidden text-slate-900 bg-white",
-							(appointment.status === "confirmed" ||
-								appointment.status === "scheduled") &&
-								"border-emerald-500",
-							appointment.status === "pending" && "border-amber-500",
-							appointment.status === "cancelled" && "border-rose-500",
-							appointment.status === "completed" && "border-slate-700",
-							(!appointment.status || !statusColors[appointment.status]) &&
-								"border-slate-300",
-						)}
-					>
-						<div className="flex items-center justify-between gap-1 mb-0.5">
-							<span className="font-black text-[8px] uppercase tracking-widest text-slate-400">
-								{formattedTime}
-							</span>
-							<div
-								className={`h-1 w-1 rounded-full ${statusColors[appointment.status] || "bg-slate-300"}`}
-							/>
-						</div>
-						<div className="font-black leading-tight line-clamp-1 text-[10px] uppercase tracking-tight text-slate-800">
-							{appointment.title}
-						</div>
-					</div>
-				</button>
-			</PopoverTrigger>
-
-			<PopoverContent
-				className="w-80 p-0 overflow-hidden glass-panel border-none shadow-2xl z-[100]"
-				align="start"
+		<AppointmentQuickView
+			open={open}
+			onOpenChange={setOpen}
+			appointment={{
+				...appointment,
+				date: calendarEvent.start,
+				time: formattedTime,
+				duration: Math.round((calendarEvent.end - calendarEvent.start) / 60000),
+			}}
+			onEdit={() => {
+				setOpen(false);
+				props.onEditAppointment?.(appointment.id);
+			}}
+			onDelete={() => {
+				setOpen(false);
+				props.onDeleteAppointment?.(appointment.id);
+			}}
+		>
+			<button
+				className={cn(
+					"w-full h-full p-0.5 overflow-hidden cursor-pointer transition-all hover:ring-2 hover:ring-blue-500/30 rounded-md bg-white text-left",
+					appointment.status === "cancelled" && "opacity-50 grayscale",
+				)}
+				onClick={(e) => {
+					e.preventDefault();
+					e.stopPropagation();
+					setOpen(true);
+				}}
 			>
-				<div className="p-4 space-y-4">
-					<div className="flex items-start justify-between">
-						<div className="flex items-center gap-3">
-							<Avatar className="h-12 w-12 border-2 border-primary/20">
-								<AvatarFallback className="bg-primary/10 text-primary">
-									{appointment.title?.substring(0, 2).toUpperCase()}
-								</AvatarFallback>
-							</Avatar>
-							<div>
-								<h4 className="font-bold text-base leading-tight">
-									{appointment.title}
-								</h4>
-								<div className="flex items-center gap-1 text-xs text-muted-foreground mt-0.5">
-									<Badge
-										variant="outline"
-										className="text-[10px] px-1 py-0 h-4"
-									>
-										{appointment.type || "Sessão"}
-									</Badge>
-									<span className="bullet mx-1">•</span>
-									<span>ID: {appointment.id.substring(0, 8)}</span>
-								</div>
-							</div>
-						</div>
+				<div
+					className={cn(
+						"flex flex-col h-full border-l-[3px] rounded-r-md p-1.5 shadow-sm overflow-hidden text-slate-900 bg-white",
+						statusConfig.borderColor,
+					)}
+				>
+					<div className="flex items-center justify-between gap-1 mb-0.5">
+						<span className="font-black text-[8px] uppercase tracking-widest text-slate-400">
+							{formattedTime}
+						</span>
+						<div
+							className={cn("h-1 w-1 rounded-full", statusConfig.calendarAccent)}
+						/>
 					</div>
-
-					<div className="flex gap-2 pt-2">
-						<Button
-							className="flex-1 gap-2 h-9 text-xs shadow-md"
-							size="sm"
-							onClick={() => props.onEventClick?.({ id: appointment.id })}
-						>
-							<Play className="h-3.5 w-3.5" />
-							Iniciar Atendimento
-						</Button>
-						<Button
-							variant="outline"
-							className="flex-1 gap-2 h-9 text-xs glass-card"
-							size="sm"
-							onClick={() => props.onEditAppointment?.(appointment.id)}
-						>
-							<ExternalLink className="h-3.5 w-3.5" />
-							Ver Prontuário
-						</Button>
+					<div className="font-black leading-tight line-clamp-1 text-[10px] uppercase tracking-tight text-slate-800">
+						{appointment.title}
 					</div>
 				</div>
-			</PopoverContent>
-		</Popover>
+			</button>
+		</AppointmentQuickView>
 	);
 };
 
@@ -191,6 +134,7 @@ export function DayFlowCalendarWrapper(props: DayFlowCalendarWrapperProps) {
 	const containerRef = useRef<HTMLDivElement>(null);
 	const calendarInstance = useRef<any>(null);
 	const propsRef = useRef(props);
+	const [portals, setPortals] = useState<Map<string, { el: HTMLElement; event: any }>>(new Map());
 
 	useEffect(() => {
 		propsRef.current = props;
@@ -215,7 +159,7 @@ export function DayFlowCalendarWrapper(props: DayFlowCalendarWrapperProps) {
 	);
 
 	const dfEvents = useMemo(() => {
-		return optimisticAppointments
+		return (optimisticAppointments || [])
 			.filter((a) => !!a)
 			.flatMap((a) => {
 				try {
@@ -261,6 +205,14 @@ export function DayFlowCalendarWrapper(props: DayFlowCalendarWrapperProps) {
 								status: a.status,
 								type: a.type,
 								therapist_id: a.therapist_id || a.therapistId,
+								patient_id: a.patient_id || a.patientId,
+								patientId: a.patient_id || a.patientId,
+								patientName: a.patient_name || a.patientName,
+								phone: a.phone || a.patient_phone,
+								notes: a.notes,
+								payment_status: a.payment_status,
+								session_package_id: a.session_package_id,
+								payment_method: a.payment_method,
 								patient_avatar: a.patient_avatar,
 							}
 						},
@@ -275,71 +227,80 @@ export function DayFlowCalendarWrapper(props: DayFlowCalendarWrapperProps) {
 		if (!containerRef.current || typeof window === "undefined") return;
 
 		try {
-			if (calendarInstance.current) calendarInstance.current.destroy();
+			if (calendarInstance.current) destroyCalendar(calendarInstance.current);
 		} catch {}
 
 		try {
-			// Tailwind-based rendering of the calendar cells
-			import("react-dom/client").then(({ createRoot }) => {
-				const calendar = new Calendar({
-					target: containerRef.current!,
-					props: {
-						plugins: [TimeGrid, DayGrid, Interaction],
-						options: {
-							view: VIEW_MAP[viewType] || "timeGridWeek",
-							events: dfEvents,
-							date: isValid(currentDate) ? currentDate : new Date(),
-							slotMinTime: "07:00:00",
-							slotMaxTime: "21:00:00",
-							editable: true, // Enables free Drag & Drop via Interaction plugin
-							selectable: true,
-							headerToolbar: false, // We use our own ScheduleToolbar
-							locale: 'pt-br',
-							firstDay: 1, // Monday
-							allDaySlot: false,
-							eventContent: (info: any) => {
-								// EventCalendar allows returning HTML or manipulating a DOM node.
-								// We will create a React root inside the provided container to render our beautiful CustomEventCard.
-								const div = document.createElement('div');
-								div.className = "w-full h-full";
-								const root = createRoot(div);
-								root.render(<CustomEventCard calendarEvent={info.event} props={propsRef.current} />);
-								return { domNodes: [div] };
-							},
-							eventClick: (info: any) => {
-								propsRef.current.onEventClick?.(info.event.extendedProps);
-							},
-							dateClick: (info: any) => {
-								propsRef.current.onTimeSlotClick?.(format(info.date, "yyyy-MM-dd'T'HH:mm"));
-							},
-							eventDrop: (info: any) => {
-								if (propsRef.current.onAppointmentReschedule) {
-									const startStr = format(info.event.start, "yyyy-MM-dd'T'HH:mm");
-									const endStr = format(info.event.end, "yyyy-MM-dd'T'HH:mm");
-									startTransition(() => {
-										addOptimisticAppointment({
-											id: info.event.id,
-											start: startStr,
-											end: endStr,
-										});
-									});
-									propsRef.current.onAppointmentReschedule(
-										info.event.id,
-										startStr,
-										endStr,
-									);
-									if (typeof navigator !== "undefined" && navigator.vibrate) {
-										navigator.vibrate([15, 50, 15]);
-									}
-									toast.success("Horário atualizado com sucesso!");
-								}
-							},
-						}
+			const calendar = createCalendar(containerRef.current!, [TimeGrid, DayGrid, Interaction], {
+				view: VIEW_MAP[viewType] || "timeGridWeek",
+				events: dfEvents,
+				date: isValid(currentDate) ? currentDate : new Date(),
+				slotMinTime: "07:00:00",
+				slotMaxTime: "21:00:00",
+				slotDuration: "00:15:00",
+				snapDuration: "00:05:00",
+				editable: true,
+				droppable: true,
+				selectable: true,
+				headerToolbar: false,
+				locale: 'pt-br',
+				firstDay: 1,
+				allDaySlot: false,
+				eventContent: (info: any) => {
+					const div = document.createElement("div");
+					div.className = "w-full h-full event-portal-container";
+					return { domNodes: [div] };
+				},
+				eventDidMount: (info: any) => {
+					const el = info.el.querySelector(".event-portal-container");
+					if (el) {
+						setPortals((prev) => {
+							const next = new Map(prev);
+							next.set(info.event.id, { el, event: info.event });
+							return next;
+						});
 					}
-				});
-
-				calendarInstance.current = calendar;
+				},
+				eventWillUnmount: (info: any) => {
+					const el = info.el.querySelector(".event-portal-container");
+					setPortals((prev) => {
+						const current = prev.get(info.event.id);
+						if (current && current.el === el) {
+							const next = new Map(prev);
+							next.delete(info.event.id);
+							return next;
+						}
+						return prev;
+					});
+				},
+				dateClick: (info: any) => {
+					propsRef.current.onTimeSlotClick?.(format(info.date, "yyyy-MM-dd'T'HH:mm"));
+				},
+				eventDrop: (info: any) => {
+					if (propsRef.current.onAppointmentReschedule) {
+						const startStr = format(info.event.start, "yyyy-MM-dd'T'HH:mm");
+						const endStr = format(info.event.end, "yyyy-MM-dd'T'HH:mm");
+						startTransition(() => {
+							addOptimisticAppointment({
+								id: info.event.id,
+								start: startStr,
+								end: endStr,
+							});
+						});
+						propsRef.current.onAppointmentReschedule(
+							info.event.id,
+							startStr,
+							endStr,
+						);
+						if (typeof navigator !== "undefined" && navigator.vibrate) {
+							navigator.vibrate([15, 50, 15]);
+						}
+						toast.success("Horário atualizado com sucesso!");
+					}
+				},
 			});
+
+			calendarInstance.current = calendar;
 		} catch (err) {
 			console.error("[DayFlow] Render Error:", err);
 		}
@@ -347,33 +308,28 @@ export function DayFlowCalendarWrapper(props: DayFlowCalendarWrapperProps) {
 		return () => {
 			if (calendarInstance.current) {
 				try {
-					calendarInstance.current.$destroy();
+					destroyCalendar(calendarInstance.current);
 				} catch {}
 			}
 		};
 		// eslint-disable-next-line react-hooks/exhaustive-deps
-	}, []); // Mount only once, handle updates in useEffect
+	}, []);
 
 	useEffect(() => {
 		const calendar = calendarInstance.current;
 		if (!calendar) return;
 
 		try {
-			calendar.$set({
-				options: {
-					...calendar.options,
-					view: VIEW_MAP[viewType],
-					date: isValid(currentDate) ? currentDate : new Date(),
-					events: dfEvents,
-				}
-			});
+			calendar.setOption('view', VIEW_MAP[viewType]);
+			calendar.setOption('date', isValid(currentDate) ? currentDate : new Date());
+			calendar.setOption('events', dfEvents);
 		} catch (e) {
 			console.warn("[DayFlow] Sync error:", e);
 		}
 	}, [dfEvents, currentDate, viewType]);
 
 	return (
-		<div className="flex-1 flex flex-col min-h-0 bg-slate-50/50 overflow-hidden">
+		<div className="flex-1 flex flex-col min-h-0 bg-slate-50/50 overflow-hidden relative">
 			<ScheduleToolbar
 				currentDate={currentDate}
 				viewType={viewType}
@@ -393,7 +349,15 @@ export function DayFlowCalendarWrapper(props: DayFlowCalendarWrapperProps) {
 				</div>
 			</div>
 
-			{/* DayFlow Custom Styles to Override Default Borders/Margins */}
+			{/* Render Portals for each event */}
+			{[...portals.entries()].map(([id, { el, event }]) =>
+				createPortal(
+					<CustomEventCard calendarEvent={event} props={propsRef.current} />,
+					el
+				)
+			)}
+
+			{/* DayFlow Custom Styles */}
 			<style>{`
 				.ec-event {
 					background: transparent !important;
@@ -408,3 +372,5 @@ export function DayFlowCalendarWrapper(props: DayFlowCalendarWrapperProps) {
 		</div>
 	);
 }
+
+export default DayFlowCalendarWrapper;
