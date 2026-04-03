@@ -195,6 +195,7 @@ export interface AtestadoTemplateRecord {
 	organization_id: string | null;
 	nome: string;
 	descricao: string | null;
+	dre_categoria?: string | null;
 	conteudo: string;
 	variaveis_disponiveis: string[];
 	ativo: boolean;
@@ -208,6 +209,7 @@ export interface ContratoTemplateRecord {
 	organization_id: string | null;
 	nome: string;
 	descricao: string | null;
+	dre_categoria?: string | null;
 	tipo: string;
 	conteudo: string;
 	variaveis_disponiveis: string[];
@@ -484,6 +486,7 @@ export interface Transacao {
 	valor: number;
 	data_transacao: string;
 	descricao: string | null;
+	dre_categoria?: string | null;
 	status: "concluido" | "pendente" | "cancelado";
 	created_at?: string;
 	updated_at?: string;
@@ -628,6 +631,7 @@ export interface ChecklistItem {
 	evento_id: string;
 	titulo: string;
 	descricao: string | null;
+	dre_categoria?: string | null;
 	concluido: boolean;
 	ordem: number;
 	created_at: string;
@@ -668,6 +672,7 @@ export interface PrecadastroToken {
 	organization_id: string;
 	nome: string;
 	descricao: string | null;
+	dre_categoria?: string | null;
 	token: string;
 	ativo: boolean;
 	max_usos: number | null;
@@ -915,6 +920,7 @@ export interface TarefaRow {
 	parent_id: string | null;
 	titulo: string;
 	descricao: string | null;
+	dre_categoria?: string | null;
 	status: string;
 	prioridade: string;
 	tipo: string;
