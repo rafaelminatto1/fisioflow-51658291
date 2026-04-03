@@ -64,6 +64,7 @@ index_name = "fisioflow-clinical"
 
 # ===== PIPELINES (Data warehouse → R2 JSON, open beta grátis) =====
 # Pipeline: fisioflow_events (id: 584a8a3054d1437686b35823f8476fde)
+# Stream: fisioflow_events_stream (id: 701aff68d26e4c45a29f090389bcd4f2)
 # Stream endpoint: https://701aff68d26e4c45a29f090389bcd4f2.ingest.cloudflare.com
 [[pipelines]]
 binding = "EVENTS_PIPELINE"
@@ -227,9 +228,9 @@ index_name = "fisioflow-clinical"
 # binding = "AI_SEARCH"
 # instance_name = "fisioflow-knowledge"
 
-[[env.production.pipelines]]
-binding = "EVENTS_PIPELINE"
-pipeline = "701aff68d26e4c45a29f090389bcd4f2"
+# [[env.production.pipelines]]
+# binding = "EVENTS_PIPELINE"
+# pipeline = "701aff68d26e4c45a29f090389bcd4f2"
 
 [[env.production.workflows]]
 name = "appointment-reminder"
