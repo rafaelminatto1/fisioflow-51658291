@@ -27,6 +27,7 @@ export const transacoes = pgTable("transacoes", {
 	descricao: text("descricao"),
 	status: varchar("status", { length: 50 }).default("pendente"),
 	categoria: varchar("categoria", { length: 100 }),
+	dreCategoria: varchar("dre_categoria", { length: 100 }),
 	stripePaymentIntentId: varchar("stripe_payment_intent_id", { length: 255 }),
 	stripeRefundId: varchar("stripe_refund_id", { length: 255 }),
 	metadata: jsonb("metadata").default({}),
