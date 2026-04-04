@@ -343,7 +343,7 @@ export function DayFlowCalendarWrapper(props: DayFlowCalendarWrapperProps) {
 				onClearFilters={props.onClearFilters || (() => {})}
 			/>
 
-			<div className="flex-1 p-4 min-h-0 overflow-hidden">
+			<div className="flex-1 p-1 md:p-2 min-h-0 overflow-hidden">
 				<div className="flex-1 h-full min-h-0 bg-white border border-slate-200 shadow-sm rounded-xl overflow-hidden relative">
 					<div ref={containerRef} className="h-full w-full dayflow-vanilla-mount" />
 				</div>
@@ -359,6 +359,9 @@ export function DayFlowCalendarWrapper(props: DayFlowCalendarWrapperProps) {
 
 			{/* DayFlow Custom Styles */}
 			<style>{`
+				.dayflow-vanilla-mount {
+					--ec-slot-height: 22px;
+				}
 				.ec-event {
 					background: transparent !important;
 					border: none !important;
@@ -367,6 +370,9 @@ export function DayFlowCalendarWrapper(props: DayFlowCalendarWrapperProps) {
 				}
 				.ec-time-grid .ec-event {
 					z-index: 10;
+				}
+				.ec-time-grid .ec-slot {
+					height: var(--ec-slot-height);
 				}
 			`}</style>
 		</div>

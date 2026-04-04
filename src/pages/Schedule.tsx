@@ -252,13 +252,13 @@ export default function Schedule() {
 
 	return (
 		<MainLayout fullWidth noPadding showBreadcrumbs={false}>
-			<div className="flex flex-col h-[calc(100vh-128px)] md:h-[calc(100dvh-4rem)] overflow-hidden bg-slate-50 dark:bg-slate-950">
+			<div className="flex flex-col h-[calc(100dvh-64px)] overflow-hidden bg-slate-50 dark:bg-slate-950">
 				<div className="flex flex-col flex-1 relative min-h-0">
 					{/* Action Banner: Birthdays & Reengagement */}
 					{(birthdaysToday.length > 0 ||
 						staffBirthdaysToday.length > 0 ||
 						totalToReengage > 0) && (
-						<div className="gradient-brand-light px-6 py-3 border-b border-primary/20 flex items-center justify-between">
+						<div className="gradient-brand-light px-6 py-3 border-b border-primary/20 flex items-center justify-between flex-shrink-0">
 							<div className="flex items-center gap-6">
 								{(birthdaysToday.length > 0 ||
 									staffBirthdaysToday.length > 0) && (
@@ -323,7 +323,7 @@ export default function Schedule() {
 						className="flex-1 flex flex-col min-w-0 min-h-0 bg-white dark:bg-slate-950"
 						data-testid={isMobile ? "mobile-schedule-list" : "schedule-content"}
 					>
-						<div className="flex-1 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm relative min-h-0">
+						<div className="flex-1 flex flex-col rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm relative min-h-0">
 							<Suspense
 								fallback={
 									<CalendarSkeletonEnhanced
