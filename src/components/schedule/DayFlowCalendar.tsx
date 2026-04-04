@@ -134,7 +134,9 @@ export function DayFlowCalendarWrapper(props: DayFlowCalendarWrapperProps) {
 	const containerRef = useRef<HTMLDivElement>(null);
 	const calendarInstance = useRef<any>(null);
 	const propsRef = useRef(props);
-	const [portals, setPortals] = useState<Map<HTMLElement, { el: HTMLElement; event: any; key: string }>>(new Map());
+	// Stable Map for portals using event ID as key, but with a unique instance counter
+	// to handle clones/mirrors during drag and drop.
+	const [portals, setPortals] = useState<Map<string, { el: HTMLElement; event: any }>>(new Map());
 
 	useEffect(() => {
 		propsRef.current = props;
@@ -252,24 +254,30 @@ export function DayFlowCalendarWrapper(props: DayFlowCalendarWrapperProps) {
 				eventDidMount: (info: any) => {
 					const el = info.el.querySelector(".event-portal-container");
 					if (el) {
-						// Clear any cloned children (from drag/resize mirrors) to prevent React crashes
-						el.innerHTML = "";
+						// Important: Give each instance a truly unique ID in the DOM
+						// to prevent React from confusing the nodes during cloning.
+						const instanceId = `portal-${info.event.id}-${Math.random().toString(36).substr(2, 9)}`;
+						el.id = instanceId;
+						el.innerHTML = ""; // Force clear
 						
 						setPortals((prev) => {
 							const next = new Map(prev);
-							const key = String(info.event.id) + "-" + Math.random().toString(36).substr(2, 9);
-							next.set(info.el, { el, event: info.event, key });
+							next.set(instanceId, { el, event: info.event });
 							return next;
 						});
 					}
 				},
 				eventWillUnmount: (info: any) => {
-					setPortals((prev) => {
-						if (!prev.has(info.el)) return prev;
-						const next = new Map(prev);
-						next.delete(info.el);
-						return next;
-					});
+					const el = info.el.querySelector(".event-portal-container");
+					const instanceId = el?.id;
+					if (instanceId) {
+						setPortals((prev) => {
+							if (!prev.has(instanceId)) return prev;
+							const next = new Map(prev);
+							next.delete(instanceId);
+							return next;
+						});
+					}
 				},
 				dateClick: (info: any) => {
 					propsRef.current.onTimeSlotClick?.(format(info.date, "yyyy-MM-dd'T'HH:mm"));
@@ -353,9 +361,9 @@ export function DayFlowCalendarWrapper(props: DayFlowCalendarWrapperProps) {
 			</div>
 
 			{/* Render Portals for each event */}
-			{[...portals.values()].map(({ el, event, key }) =>
+			{[...portals.entries()].map(([instanceId, { el, event }]) =>
 				createPortal(
-					<CustomEventCard key={key} calendarEvent={event} props={propsRef.current} />,
+					<CustomEventCard key={instanceId} calendarEvent={event} props={propsRef.current} />,
 					el
 				)
 			)}
