@@ -235,6 +235,7 @@ export function DayFlowCalendarWrapper(props: DayFlowCalendarWrapperProps) {
 				view: VIEW_MAP[viewType] || "timeGridWeek",
 				events: dfEvents,
 				date: isValid(currentDate) ? currentDate : new Date(),
+				height: "100%",
 				slotMinTime: "07:00:00",
 				slotMaxTime: "21:00:00",
 				slotDuration: "00:15:00",
