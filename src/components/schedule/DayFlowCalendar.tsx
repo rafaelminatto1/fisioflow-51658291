@@ -134,8 +134,9 @@ export function DayFlowCalendarWrapper(props: DayFlowCalendarWrapperProps) {
 	const containerRef = useRef<HTMLDivElement>(null);
 	const calendarInstance = useRef<any>(null);
 	const propsRef = useRef(props);
-	// Stable Map for portals using event ID as key, but with a unique instance counter
-	// to handle clones/mirrors during drag and drop.
+	const isDraggingRef = useRef(false);
+	
+	// Separate portals state to minimize re-renders of the main wrapper
 	const [portals, setPortals] = useState<Map<string, { el: HTMLElement; event: any }>>(new Map());
 
 	useEffect(() => {
@@ -249,16 +250,17 @@ export function DayFlowCalendarWrapper(props: DayFlowCalendarWrapperProps) {
 				eventContent: (info: any) => {
 					const div = document.createElement("div");
 					div.className = "w-full h-full event-portal-container";
+					// Critical: Prevent internal interactions from bubbling up during drag
+					div.style.pointerEvents = "auto";
 					return { domNodes: [div] };
 				},
 				eventDidMount: (info: any) => {
 					const el = info.el.querySelector(".event-portal-container");
 					if (el) {
-						// Important: Give each instance a truly unique ID in the DOM
-						// to prevent React from confusing the nodes during cloning.
-						const instanceId = `portal-${info.event.id}-${Math.random().toString(36).substr(2, 9)}`;
+						// Each instance (mirror or original) gets a truly unique portal ID
+						const instanceId = `p-${info.event.id}-${Math.random().toString(36).substring(2, 7)}`;
 						el.id = instanceId;
-						el.innerHTML = ""; // Force clear
+						el.innerHTML = ""; 
 						
 						setPortals((prev) => {
 							const next = new Map(prev);
@@ -269,12 +271,12 @@ export function DayFlowCalendarWrapper(props: DayFlowCalendarWrapperProps) {
 				},
 				eventWillUnmount: (info: any) => {
 					const el = info.el.querySelector(".event-portal-container");
-					const instanceId = el?.id;
-					if (instanceId) {
+					const id = el?.id;
+					if (id) {
 						setPortals((prev) => {
-							if (!prev.has(instanceId)) return prev;
+							if (!prev.has(id)) return prev;
 							const next = new Map(prev);
-							next.delete(instanceId);
+							next.delete(id);
 							return next;
 						});
 					}
@@ -282,12 +284,18 @@ export function DayFlowCalendarWrapper(props: DayFlowCalendarWrapperProps) {
 				dateClick: (info: any) => {
 					propsRef.current.onTimeSlotClick?.(format(info.date, "yyyy-MM-dd'T'HH:mm"));
 				},
+				eventDragStart: () => {
+					isDraggingRef.current = true;
+				},
+				eventDragStop: () => {
+					isDraggingRef.current = false;
+				},
 				eventDrop: (info: any) => {
+					isDraggingRef.current = false;
 					if (propsRef.current.onAppointmentReschedule) {
 						const startStr = format(info.event.start, "yyyy-MM-dd'T'HH:mm");
 						const endStr = format(info.event.end, "yyyy-MM-dd'T'HH:mm");
 						
-						// Use optimistic update to keep UI in sync
 						startTransition(() => {
 							addOptimisticAppointment({
 								id: String(info.event.id),
@@ -328,7 +336,9 @@ export function DayFlowCalendarWrapper(props: DayFlowCalendarWrapperProps) {
 
 	useEffect(() => {
 		const calendar = calendarInstance.current;
-		if (!calendar) return;
+		// CRITICAL: Do NOT update events if a drag is in progress. 
+		// Updating the events list while dragging is the #1 cause of library crashes/freezes.
+		if (!calendar || isDraggingRef.current) return;
 
 		try {
 			calendar.setOption('view', VIEW_MAP[viewType]);
