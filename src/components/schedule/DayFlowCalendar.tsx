@@ -74,19 +74,19 @@ const CustomEventCard = ({ calendarEvent, props }: CustomEventCardProps) => {
 			>
 				<div
 					className={cn(
-						"flex flex-col h-full border-l-[3px] rounded-r-md p-1.5 shadow-sm overflow-hidden text-slate-900 bg-white",
+						"flex flex-col h-full border-l-[3px] rounded-r-md p-0.5 px-1.5 shadow-sm overflow-hidden text-slate-900 bg-white justify-center",
 						statusConfig.borderColor,
 					)}
 				>
-					<div className="flex items-center justify-between gap-1 mb-0.5">
-						<span className="font-black text-[8px] uppercase tracking-widest text-slate-400">
+					<div className="flex items-center justify-between gap-1">
+						<span className="font-black text-[7px] uppercase tracking-wider text-slate-400 leading-none">
 							{formattedTime}
 						</span>
 						<div
-							className={cn("h-1 w-1 rounded-full", statusConfig.calendarAccent)}
+							className={cn("h-1 w-1 rounded-full flex-shrink-0", statusConfig.calendarAccent)}
 						/>
 					</div>
-					<div className="font-black leading-tight line-clamp-1 text-[10px] uppercase tracking-tight text-slate-800">
+					<div className="font-black leading-none line-clamp-1 text-[9px] uppercase tracking-tight text-slate-800 mt-[1px]">
 						{appointment.title}
 					</div>
 				</div>
@@ -239,7 +239,7 @@ export function DayFlowCalendarWrapper(props: DayFlowCalendarWrapperProps) {
 				slotMinTime: "07:00:00",
 				slotMaxTime: "21:00:00",
 				slotDuration: "00:15:00",
-				slotHeight: 22,
+				slotHeight: 14,
 				hiddenDays: [0],
 				snapDuration: "00:05:00",
 				editable: true,
