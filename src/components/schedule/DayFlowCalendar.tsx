@@ -30,71 +30,6 @@ const VIEW_MAP: Record<ViewType, string> = {
 	month: "dayGridMonth",
 };
 
-interface CustomEventCardProps {
-	calendarEvent: any;
-	props: any;
-}
-
-const CustomEventCard = ({ calendarEvent, props }: CustomEventCardProps) => {
-	// event-calendar injects event data via info.event
-	const appointment = calendarEvent.extendedProps;
-	const formattedTime = format(calendarEvent.start, "HH:mm");
-	const statusConfig = getStatusConfig(appointment.status);
-	const [open, setOpen] = useState(false);
-
-	return (
-		<AppointmentQuickView
-			open={open}
-			onOpenChange={setOpen}
-			appointment={{
-				...appointment,
-				date: calendarEvent.start,
-				time: formattedTime,
-				duration: Math.round((calendarEvent.end - calendarEvent.start) / 60000),
-			}}
-			onEdit={() => {
-				setOpen(false);
-				props.onEditAppointment?.(appointment.id);
-			}}
-			onDelete={() => {
-				setOpen(false);
-				props.onDeleteAppointment?.(appointment.id);
-			}}
-		>
-			<button
-				className={cn(
-					"w-full h-full p-0.5 overflow-hidden cursor-pointer transition-all hover:ring-2 hover:ring-blue-500/30 rounded-md bg-white text-left",
-					appointment.status === "cancelled" && "opacity-50 grayscale",
-				)}
-				onClick={(e) => {
-					e.preventDefault();
-					e.stopPropagation();
-					setOpen(true);
-				}}
-			>
-				<div
-					className={cn(
-						"flex flex-col h-full border-l-[3px] rounded-r-md p-0.5 px-1.5 shadow-sm overflow-hidden text-slate-900 bg-white justify-center",
-						statusConfig.borderColor,
-					)}
-				>
-					<div className="flex items-center justify-between gap-1">
-						<span className="font-black text-[7px] uppercase tracking-wider text-slate-400 leading-none">
-							{formattedTime}
-						</span>
-						<div
-							className={cn("h-1 w-1 rounded-full flex-shrink-0", statusConfig.calendarAccent)}
-						/>
-					</div>
-					<div className="font-black leading-none line-clamp-1 text-[9px] uppercase tracking-tight text-slate-800 mt-[1px]">
-						{appointment.title}
-					</div>
-				</div>
-			</button>
-		</AppointmentQuickView>
-	);
-};
-
 export interface DayFlowCalendarWrapperProps {
 	appointments: any[];
 	currentDate: Date;
@@ -136,8 +71,8 @@ export function DayFlowCalendarWrapper(props: DayFlowCalendarWrapperProps) {
 	const propsRef = useRef(props);
 	const isDraggingRef = useRef(false);
 	
-	// Separate portals state to minimize re-renders of the main wrapper
-	const [portals, setPortals] = useState<Map<string, { el: HTMLElement; event: any }>>(new Map());
+	// State for the globally floating Popover, totally detached from calendar DOM nodes
+	const [activePopover, setActivePopover] = useState<{ event: any, rect: DOMRect } | null>(null);
 
 	useEffect(() => {
 		propsRef.current = props;
@@ -248,47 +183,47 @@ export function DayFlowCalendarWrapper(props: DayFlowCalendarWrapperProps) {
 				firstDay: 1,
 				allDaySlot: false,
 				eventContent: (info: any) => {
-					const div = document.createElement("div");
-					div.className = "w-full h-full event-portal-container";
-					// Critical: Prevent internal interactions from bubbling up during drag
-					div.style.pointerEvents = "auto";
-					return { domNodes: [div] };
+					const appointment = info.event.extendedProps;
+					const formattedTime = format(info.event.start, "HH:mm");
+					const statusConfig = getStatusConfig(appointment.status);
+					const isCancelled = appointment.status === "cancelled";
+					
+					// Render raw HTML. No React reconciliation, completely immune to drag-and-drop cloning crashes.
+					const html = `
+						<div class="w-full h-full p-0.5 overflow-hidden cursor-pointer transition-all hover:ring-2 hover:ring-blue-500/30 rounded-md bg-white text-left ${isCancelled ? 'opacity-50 grayscale' : ''}">
+							<div class="flex flex-col h-full border-l-[3px] rounded-r-md p-0.5 px-1.5 shadow-sm overflow-hidden text-slate-900 bg-white justify-center ${statusConfig.borderColor}">
+								<div class="flex items-center justify-between gap-1">
+									<span class="font-black text-[7px] uppercase tracking-wider text-slate-400 leading-none">
+										${formattedTime}
+									</span>
+									<div class="h-1 w-1 rounded-full flex-shrink-0 ${statusConfig.calendarAccent}"></div>
+								</div>
+								<div class="font-black leading-none line-clamp-1 text-[9px] uppercase tracking-tight text-slate-800 mt-[1px]">
+									${appointment.title}
+								</div>
+							</div>
+						</div>
+					`;
+					return { html };
 				},
-				eventDidMount: (info: any) => {
-					const el = info.el.querySelector(".event-portal-container");
-					if (el) {
-						// Each instance (mirror or original) gets a truly unique portal ID
-						const instanceId = `p-${info.event.id}-${Math.random().toString(36).substring(2, 7)}`;
-						el.id = instanceId;
-						el.innerHTML = ""; 
-						
-						setPortals((prev) => {
-							const next = new Map(prev);
-							next.set(instanceId, { el, event: info.event });
-							return next;
-						});
-					}
-				},
-				eventWillUnmount: (info: any) => {
-					const el = info.el.querySelector(".event-portal-container");
-					const id = el?.id;
-					if (id) {
-						setPortals((prev) => {
-							if (!prev.has(id)) return prev;
-							const next = new Map(prev);
-							next.delete(id);
-							return next;
-						});
-					}
+				eventClick: (info: any) => {
+					// Use coordinate-based anchor to detach popover from calendar DOM node
+					const rect = info.el.getBoundingClientRect();
+					setActivePopover({ event: info.event, rect });
 				},
 				dateClick: (info: any) => {
+					setActivePopover(null);
 					propsRef.current.onTimeSlotClick?.(format(info.date, "yyyy-MM-dd'T'HH:mm"));
 				},
 				eventDragStart: () => {
+					setActivePopover(null);
 					isDraggingRef.current = true;
 				},
 				eventDragStop: () => {
-					isDraggingRef.current = false;
+					// Delay resetting dragging flag to allow internal logic to complete without interference
+					setTimeout(() => {
+						isDraggingRef.current = false;
+					}, 200);
 				},
 				eventDrop: (info: any) => {
 					isDraggingRef.current = false;
@@ -296,6 +231,7 @@ export function DayFlowCalendarWrapper(props: DayFlowCalendarWrapperProps) {
 						const startStr = format(info.event.start, "yyyy-MM-dd'T'HH:mm");
 						const endStr = format(info.event.end, "yyyy-MM-dd'T'HH:mm");
 						
+						// Use optimistic update to keep UI in sync immediately
 						startTransition(() => {
 							addOptimisticAppointment({
 								id: String(info.event.id),
@@ -336,8 +272,8 @@ export function DayFlowCalendarWrapper(props: DayFlowCalendarWrapperProps) {
 
 	useEffect(() => {
 		const calendar = calendarInstance.current;
-		// CRITICAL: Do NOT update events if a drag is in progress. 
-		// Updating the events list while dragging is the #1 cause of library crashes/freezes.
+		// CRITICAL: Do NOT update calendar options if a drag is in progress.
+		// Updating events list mid-drag destroys the dragging mirror and crashes the UI.
 		if (!calendar || isDraggingRef.current) return;
 
 		try {
@@ -364,18 +300,50 @@ export function DayFlowCalendarWrapper(props: DayFlowCalendarWrapperProps) {
 				onClearFilters={props.onClearFilters || (() => {})}
 			/>
 
-			<div className="flex-1 p-1 md:p-2 min-h-0 overflow-hidden">
+			<div 
+				className="flex-1 p-1 md:p-2 min-h-0 overflow-hidden"
+				onClick={() => {
+					// Close popover if user clicks outside of an event
+					if (activePopover) setActivePopover(null);
+				}}
+			>
 				<div className="flex-1 h-full min-h-0 bg-white border border-slate-200 shadow-sm rounded-xl overflow-hidden relative">
 					<div ref={containerRef} className="h-full w-full dayflow-vanilla-mount" />
 				</div>
 			</div>
 
-			{/* Render Portals for each event */}
-			{[...portals.entries()].map(([instanceId, { el, event }]) =>
-				createPortal(
-					<CustomEventCard key={instanceId} calendarEvent={event} props={propsRef.current} />,
-					el
-				)
+			{/* Coordinate-based Popover rendering - completely detached from buggy DOM clones */}
+			{activePopover && (
+				<AppointmentQuickView
+					open={!!activePopover}
+					onOpenChange={(open) => !open && setActivePopover(null)}
+					appointment={{
+						...activePopover.event.extendedProps,
+						date: activePopover.event.start,
+						time: format(activePopover.event.start, "HH:mm"),
+						duration: Math.round((activePopover.event.end - activePopover.event.start) / 60000),
+					}}
+					onEdit={() => {
+						setActivePopover(null);
+						propsRef.current.onEditAppointment?.(activePopover.event.id);
+					}}
+					onDelete={() => {
+						setActivePopover(null);
+						propsRef.current.onDeleteAppointment?.(activePopover.event.id);
+					}}
+				>
+					<div 
+						style={{
+							position: 'fixed',
+							top: activePopover.rect.top,
+							left: activePopover.rect.left,
+							width: activePopover.rect.width,
+							height: activePopover.rect.height,
+							pointerEvents: 'none',
+							zIndex: -1
+						}}
+					/>
+				</AppointmentQuickView>
 			)}
 
 			{/* DayFlow Custom Styles */}
