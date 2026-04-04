@@ -252,6 +252,9 @@ export function DayFlowCalendarWrapper(props: DayFlowCalendarWrapperProps) {
 				eventDidMount: (info: any) => {
 					const el = info.el.querySelector(".event-portal-container");
 					if (el) {
+						// Clear any cloned children (from drag/resize mirrors) to prevent React crashes
+						el.innerHTML = "";
+						
 						setPortals((prev) => {
 							const next = new Map(prev);
 							const key = String(info.event.id) + "-" + Math.random().toString(36).substr(2, 9);
