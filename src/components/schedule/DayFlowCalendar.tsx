@@ -238,6 +238,8 @@ export function DayFlowCalendarWrapper(props: DayFlowCalendarWrapperProps) {
 				slotMinTime: "07:00:00",
 				slotMaxTime: "21:00:00",
 				slotDuration: "00:15:00",
+				slotHeight: 22,
+				hiddenDays: [0],
 				snapDuration: "00:05:00",
 				editable: true,
 				droppable: true,
@@ -359,9 +361,6 @@ export function DayFlowCalendarWrapper(props: DayFlowCalendarWrapperProps) {
 
 			{/* DayFlow Custom Styles */}
 			<style>{`
-				.dayflow-vanilla-mount {
-					--ec-slot-height: 22px;
-				}
 				.ec-event {
 					background: transparent !important;
 					border: none !important;
@@ -370,9 +369,6 @@ export function DayFlowCalendarWrapper(props: DayFlowCalendarWrapperProps) {
 				}
 				.ec-time-grid .ec-event {
 					z-index: 10;
-				}
-				.ec-time-grid .ec-slot {
-					height: var(--ec-slot-height);
 				}
 			`}</style>
 		</div>
