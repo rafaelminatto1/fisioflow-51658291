@@ -134,7 +134,7 @@ export function DayFlowCalendarWrapper(props: DayFlowCalendarWrapperProps) {
 	const containerRef = useRef<HTMLDivElement>(null);
 	const calendarInstance = useRef<any>(null);
 	const propsRef = useRef(props);
-	const [portals, setPortals] = useState<Map<string, { el: HTMLElement; event: any }>>(new Map());
+	const [portals, setPortals] = useState<Map<HTMLElement, { el: HTMLElement; event: any; key: string }>>(new Map());
 
 	useEffect(() => {
 		propsRef.current = props;
@@ -254,16 +254,17 @@ export function DayFlowCalendarWrapper(props: DayFlowCalendarWrapperProps) {
 					if (el) {
 						setPortals((prev) => {
 							const next = new Map(prev);
-							next.set(String(info.event.id), { el, event: info.event });
+							const key = String(info.event.id) + "-" + Math.random().toString(36).substr(2, 9);
+							next.set(info.el, { el, event: info.event, key });
 							return next;
 						});
 					}
 				},
 				eventWillUnmount: (info: any) => {
 					setPortals((prev) => {
-						if (!prev.has(String(info.event.id))) return prev;
+						if (!prev.has(info.el)) return prev;
 						const next = new Map(prev);
-						next.delete(String(info.event.id));
+						next.delete(info.el);
 						return next;
 					});
 				},
@@ -349,9 +350,9 @@ export function DayFlowCalendarWrapper(props: DayFlowCalendarWrapperProps) {
 			</div>
 
 			{/* Render Portals for each event */}
-			{[...portals.entries()].map(([id, { el, event }]) =>
+			{[...portals.values()].map(({ el, event, key }) =>
 				createPortal(
-					<CustomEventCard calendarEvent={event} props={propsRef.current} />,
+					<CustomEventCard key={key} calendarEvent={event} props={propsRef.current} />,
 					el
 				)
 			)}
