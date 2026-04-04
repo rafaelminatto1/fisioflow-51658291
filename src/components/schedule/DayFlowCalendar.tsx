@@ -141,10 +141,11 @@ export function DayFlowCalendarWrapper(props: DayFlowCalendarWrapperProps) {
 	}, [props]);
 
 	const [optimisticAppointments, addOptimisticAppointment] = useOptimistic(
-		appointments,
+		appointments || [],
 		(state, { id, start, end }: { id: string; start: string; end: string }) => {
+			if (!state || state.length === 0) return state;
 			return state.map((app) => {
-				if (app.id !== id) return app;
+				if (String(app.id) !== String(id)) return app;
 				const [datePart, timePart] = start.split("T");
 				const [endDatePart, endTimePart] = end.split("T");
 				return {
@@ -160,7 +161,7 @@ export function DayFlowCalendarWrapper(props: DayFlowCalendarWrapperProps) {
 
 	const dfEvents = useMemo(() => {
 		return (optimisticAppointments || [])
-			.filter((a) => !!a)
+			.filter((a) => !!a && (a.id || a.tempId))
 			.flatMap((a) => {
 				try {
 					let startDate: Date;
@@ -173,7 +174,9 @@ export function DayFlowCalendarWrapper(props: DayFlowCalendarWrapperProps) {
 								: String(a.date || "").slice(0, 10);
 						const startTime = String(a.start_time).slice(0, 5);
 						const endTime = String(a.end_time).slice(0, 5);
+						
 						if (rawDate.length < 10 || !startTime.includes(":")) return [];
+						
 						startDate = new Date(`${rawDate}T${startTime}:00`);
 						endDate = new Date(`${rawDate}T${endTime}:00`);
 					} else if (a.date && a.time) {
@@ -187,37 +190,29 @@ export function DayFlowCalendarWrapper(props: DayFlowCalendarWrapperProps) {
 						return [];
 					}
 
+					if (!isValid(startDate) || !isValid(endDate)) return [];
+
 					if (endDate <= startDate) {
 						endDate = addMinutes(startDate, 60);
 					}
 
 					return [
 						{
-							id: String(a.id),
+							id: String(a.id || a.tempId),
 							title: a.patient_name || a.patientName || "Consulta",
 							start: startDate,
 							end: endDate,
 							backgroundColor: 'transparent',
 							borderColor: 'transparent',
 							extendedProps: {
-								id: String(a.id),
+								...a,
+								id: String(a.id || a.tempId),
 								title: a.patient_name || a.patientName || "Consulta",
-								status: a.status,
-								type: a.type,
-								therapist_id: a.therapist_id || a.therapistId,
-								patient_id: a.patient_id || a.patientId,
-								patientId: a.patient_id || a.patientId,
-								patientName: a.patient_name || a.patientName,
-								phone: a.phone || a.patient_phone,
-								notes: a.notes,
-								payment_status: a.payment_status,
-								session_package_id: a.session_package_id,
-								payment_method: a.payment_method,
-								patient_avatar: a.patient_avatar,
 							}
 						},
 					];
-				} catch {
+				} catch (err) {
+					console.error("[DayFlow] Event mapping error:", err, a);
 					return [];
 				}
 			});
@@ -259,21 +254,17 @@ export function DayFlowCalendarWrapper(props: DayFlowCalendarWrapperProps) {
 					if (el) {
 						setPortals((prev) => {
 							const next = new Map(prev);
-							next.set(info.event.id, { el, event: info.event });
+							next.set(String(info.event.id), { el, event: info.event });
 							return next;
 						});
 					}
 				},
 				eventWillUnmount: (info: any) => {
-					const el = info.el.querySelector(".event-portal-container");
 					setPortals((prev) => {
-						const current = prev.get(info.event.id);
-						if (current && current.el === el) {
-							const next = new Map(prev);
-							next.delete(info.event.id);
-							return next;
-						}
-						return prev;
+						if (!prev.has(String(info.event.id))) return prev;
+						const next = new Map(prev);
+						next.delete(String(info.event.id));
+						return next;
 					});
 				},
 				dateClick: (info: any) => {
@@ -283,18 +274,22 @@ export function DayFlowCalendarWrapper(props: DayFlowCalendarWrapperProps) {
 					if (propsRef.current.onAppointmentReschedule) {
 						const startStr = format(info.event.start, "yyyy-MM-dd'T'HH:mm");
 						const endStr = format(info.event.end, "yyyy-MM-dd'T'HH:mm");
+						
+						// Use optimistic update to keep UI in sync
 						startTransition(() => {
 							addOptimisticAppointment({
-								id: info.event.id,
+								id: String(info.event.id),
 								start: startStr,
 								end: endStr,
 							});
 						});
+
 						propsRef.current.onAppointmentReschedule(
-							info.event.id,
+							String(info.event.id),
 							startStr,
 							endStr,
 						);
+						
 						if (typeof navigator !== "undefined" && navigator.vibrate) {
 							navigator.vibrate([15, 50, 15]);
 						}
@@ -313,6 +308,7 @@ export function DayFlowCalendarWrapper(props: DayFlowCalendarWrapperProps) {
 				try {
 					destroyCalendar(calendarInstance.current);
 				} catch {}
+				calendarInstance.current = null;
 			}
 		};
 		// eslint-disable-next-line react-hooks/exhaustive-deps
