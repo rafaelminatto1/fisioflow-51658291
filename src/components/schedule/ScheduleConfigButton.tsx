@@ -3,6 +3,7 @@ import { Settings } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { QuickSettingsSheet } from "./QuickSettingsSheet";
+import { Link } from "react-router-dom";
 
 interface ScheduleConfigButtonProps {
 	variant?:
@@ -35,7 +36,7 @@ export const ScheduleConfigButton = memo(
 					className={cn("gap-2", className)}
 				>
 					<Settings className="w-4 h-4" />
-					{showLabel && <span>Configurações</span>}
+					{showLabel && <span>Configurações Rápidas</span>}
 				</Button>
 
 				<QuickSettingsSheet open={open} onOpenChange={setOpen} />
@@ -46,26 +47,23 @@ export const ScheduleConfigButton = memo(
 
 ScheduleConfigButton.displayName = "ScheduleConfigButton";
 
-// Export a simpler icon-only version
+// Export a simpler icon-only version that links to the full settings page
 export const ScheduleConfigIconButton = memo(
 	({ className }: { className?: string }) => {
-		const [open, setOpen] = useState(false);
-
 		return (
-			<>
-				<Button
-					variant="ghost"
-					size="icon"
-					onClick={() => setOpen(true)}
-					className={cn("h-8 w-8", className)}
-				>
+			<Button
+				variant="ghost"
+				size="icon"
+				asChild
+				className={cn("h-8 w-8", className)}
+			>
+				<Link to="/agenda/settings">
 					<Settings className="w-4 h-4" />
-				</Button>
-
-				<QuickSettingsSheet open={open} onOpenChange={setOpen} />
-			</>
+				</Link>
+			</Button>
 		);
 	},
 );
 
 ScheduleConfigIconButton.displayName = "ScheduleConfigIconButton";
+
