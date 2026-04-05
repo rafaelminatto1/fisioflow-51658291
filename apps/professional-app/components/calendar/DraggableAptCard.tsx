@@ -127,19 +127,27 @@ export const DraggableAptCard = ({
               height: apt.height,
               left: pos.left,
               width: pos.width,
-              backgroundColor: colors.primary + '20',
-              borderColor: colors.primary,
+              backgroundColor: colors.primary + '10', // bg-brand-50 approx
+              borderLeftColor: colors.primary,
+              borderColor: colors.primary + '30',
             },
             cardAnimatedStyle,
           ]}
           onTouchEnd={onPress}
         >
-          <Text style={[styles.aptTitle, { color: colors.primary }]} numberOfLines={1}>
-            {apt.patientName || 'Paciente'}
-          </Text>
-          <Text style={[styles.aptTime, { color: colors.textSecondary }]}>
-            {apt.time || format(new Date(apt.date), 'HH:mm')} - {apt.type}
-          </Text>
+          <Animated.View style={styles.cardInner}>
+            <Animated.View style={styles.cardHeader}>
+              <Text style={[styles.aptType, { color: colors.primary }]}>
+                {apt.type || 'Sessão'}
+              </Text>
+            </Animated.View>
+            <Text style={styles.aptTitle} numberOfLines={1}>
+              {apt.patientName || 'Paciente'}
+            </Text>
+            <Text style={styles.aptTime}>
+              {apt.time || format(new Date(apt.date), 'HH:mm')}
+            </Text>
+          </Animated.View>
         </Animated.View>
       </GestureDetector>
     </>
@@ -149,22 +157,45 @@ export const DraggableAptCard = ({
 const styles = StyleSheet.create({
   ghost: {
     position: 'absolute',
-    borderRadius: 8,
+    borderRadius: 12,
     borderWidth: 2,
     borderStyle: 'dashed',
   },
   card: {
     position: 'absolute',
-    borderRadius: 8,
+    borderRadius: 12,
     borderLeftWidth: 4,
-    padding: 4,
+    borderWidth: 1,
     overflow: 'hidden',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.05,
+    shadowRadius: 2,
+  },
+  cardInner: {
+    flex: 1,
+    padding: 12,
+  },
+  cardHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'flex-start',
+    marginBottom: 4,
+  },
+  aptType: {
+    fontSize: 9,
+    fontWeight: '900',
+    textTransform: 'uppercase',
+    letterSpacing: 0.5,
   },
   aptTitle: {
-    fontSize: 12,
+    fontSize: 14,
     fontWeight: 'bold',
+    color: '#0f172a', // text-slate-900
   },
   aptTime: {
-    fontSize: 10,
+    fontSize: 11,
+    color: '#64748b', // text-slate-500
+    marginTop: 4,
   },
 });

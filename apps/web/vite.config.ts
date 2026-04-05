@@ -17,6 +17,19 @@ function htmlPlugin(appVersion: string, buildTime: string): any {
 				.replace(/%BUILD_TIME%/g, buildTime)
 				.replace(/%CACHE_BUSTER%/g, buildTime);
 		},
+		generateBundle() {
+			const swPath = path.resolve(__dirname, "public/sw.js");
+			const swContent = require("fs").readFileSync(swPath, "utf-8");
+			const updatedSw = swContent
+				.replace(/%APP_VERSION%/g, appVersion)
+				.replace(/%BUILD_TIME%/g, buildTime)
+				.replace(/'fisioflow-v1'/g, `'fisioflow-${appVersion}'`);
+			this.emitFile({
+				type: "asset",
+				fileName: "sw.js",
+				source: updatedSw,
+			});
+		},
 	};
 }
 
@@ -437,7 +450,7 @@ export default defineConfig(({ mode }) => {
 					},
 				},
 				experimental: {
-				minify: true,
+					minify: true,
 				},
 			},
 		},
