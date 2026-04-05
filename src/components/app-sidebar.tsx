@@ -4,6 +4,7 @@ import {
 	Command,
 	LayoutDashboard,
 	SquareTerminal,
+	ClipboardList,
 } from "lucide-react";
 
 import {
@@ -58,6 +59,11 @@ const data = {
 					url: "#",
 				},
 			],
+		},
+		{
+			title: "Templates",
+			url: "/templates",
+			icon: ClipboardList,
 		},
 	],
 };

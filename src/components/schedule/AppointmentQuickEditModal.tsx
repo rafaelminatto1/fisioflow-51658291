@@ -1,33 +1,32 @@
-import React, { useState, useEffect, useMemo, useCallback } from "react";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import {
-	format,
-	differenceInYears,
 	differenceInMinutes,
+	differenceInYears,
+	format,
 	parseISO,
 } from "date-fns";
 import { ptBR } from "date-fns/locale";
+import {
+	AlertTriangle,
+	Calendar,
+	Clock,
+	Edit,
+	FileText,
+	Loader2,
+	MessageCircle,
+	Phone,
+	Play,
+	Save,
+	Trash2,
+	User,
+	UserCog,
+	X,
+} from "lucide-react";
+import type React from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { parseResponseDate } from "@/utils/dateUtils";
-import {
-	Dialog,
-	DialogContent,
-	DialogHeader,
-	DialogTitle,
-	DialogDescription,
-	DialogFooter,
-} from "@/components/ui/dialog";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
-import { Badge } from "@/components/ui/badge";
-import {
-	Select,
-	SelectContent,
-	SelectItem,
-	SelectTrigger,
-	SelectValue,
-} from "@/components/ui/select";
+import { toast } from "sonner";
+import { appointmentsApi } from "@/api/v2";
 import {
 	AlertDialog,
 	AlertDialogAction,
@@ -38,49 +37,49 @@ import {
 	AlertDialogHeader,
 	AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { Separator } from "@/components/ui/separator";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import {
-	Calendar,
-	Clock,
-	User,
-	Phone,
-	Edit,
-	X,
-	MessageCircle,
-	Trash2,
-	Save,
-	AlertTriangle,
-	UserCog,
-	FileText,
-	Play,
-	Loader2,
-} from "lucide-react";
-import { cn } from "@/lib/utils";
-import { toast } from "sonner";
-import { useQuery, useQueryClient } from "@tanstack/react-query";
+	Dialog,
+	DialogContent,
+	DialogDescription,
+	DialogFooter,
+	DialogHeader,
+	DialogTitle,
+} from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import {
+	Select,
+	SelectContent,
+	SelectItem,
+	SelectTrigger,
+	SelectValue,
+} from "@/components/ui/select";
+import { Separator } from "@/components/ui/separator";
+import { Textarea } from "@/components/ui/textarea";
 import { useAppointmentActions } from "@/hooks/useAppointmentActions";
 import { useUpdateAppointment } from "@/hooks/useAppointments";
 import { useScheduleSettings } from "@/hooks/useScheduleSettings";
 import {
-	checkAppointmentConflict,
-	formatTimeRange,
-} from "@/utils/appointmentValidation";
+	formatTherapistLabel,
+	THERAPIST_PLACEHOLDER,
+	useTherapists,
+} from "@/hooks/useTherapists";
+import { cn } from "@/lib/utils";
 import { PatientService } from "@/services/patientService";
 import type {
 	Appointment,
-	AppointmentStatus,
 	AppointmentBase,
+	AppointmentStatus,
 } from "@/types/appointment";
-import { appointmentsApi } from "@/api/v2";
 import {
-	useTherapists,
-	formatTherapistLabel,
-	THERAPIST_PLACEHOLDER,
-} from "@/hooks/useTherapists";
+	checkAppointmentConflict,
+	formatTimeRange,
+} from "@/utils/appointmentValidation";
+import { parseResponseDate } from "@/utils/dateUtils";
 
-import {
-	APPOINTMENT_STATUS_CONFIG,
-} from "./shared/appointment-status";
+import { APPOINTMENT_STATUS_CONFIG } from "./shared/appointment-status";
 
 interface AppointmentQuickEditModalProps {
 	appointment: Appointment | null;
@@ -126,7 +125,7 @@ export const AppointmentQuickEditModal: React.FC<
 	AppointmentQuickEditModalProps
 > = ({ appointment, open, onOpenChange, onDeleted: _onDeleted }) => {
 	const navigate = useNavigate();
-	
+
 	const { cancelAppointment, isCanceling } = useAppointmentActions();
 	const { cancellationRules } = useScheduleSettings();
 	const { mutateAsync: updateAppointment, isPending: isSaving } =
@@ -340,7 +339,9 @@ export const AppointmentQuickEditModal: React.FC<
 		[formData.appointment_date],
 	);
 
-	const statusConfig = STATUS_CONFIG[formData.status];
+	const statusConfig =
+		APPOINTMENT_STATUS_CONFIG[formData.status] ||
+		APPOINTMENT_STATUS_CONFIG.agendado;
 
 	const effectiveCancellationRules = useMemo(
 		() => ({
@@ -442,7 +443,7 @@ export const AppointmentQuickEditModal: React.FC<
 				},
 			});
 			setIsEditing(false);
-		} catch  {
+		} catch {
 			// Erro já tratado pelo hook useUpdateAppointment
 		}
 	}, [appointment, formData, conflictError, updateAppointment]);

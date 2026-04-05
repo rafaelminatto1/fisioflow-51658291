@@ -41,6 +41,12 @@ const Communications = lazy(
 const ProtocolsPage = lazy(
 	() => import(/* webpackChunkName: "protocols" */ "@/pages/Protocols"),
 );
+const EvaluationTemplatesPage = lazy(
+	() =>
+		import(
+			/* webpackChunkName: "evaluation-templates" */ "@/pages/EvaluationTemplatesPage"
+		),
+);
 
 export const coreRoutes = (
 	<>
@@ -102,6 +108,14 @@ export const coreRoutes = (
 			element={
 				<ProtectedRoute>
 					<ProtocolsPage />
+				</ProtectedRoute>
+			}
+		/>
+		<Route
+			path="/templates"
+			element={
+				<ProtectedRoute>
+					<EvaluationTemplatesPage />
 				</ProtectedRoute>
 			}
 		/>

@@ -24,11 +24,11 @@ export const TimeGrid = ({
             {hours.map((hour) => (
                 <View key={hour} style={[styles.row, { height: rowHeight }]}>
                     <View style={styles.timeLabelContainer}>
-                        <Text style={[styles.timeLabel, { color: colors.textSecondary }]}>
+                        <Text style={styles.timeLabel}>
                             {`${hour.toString().padStart(2, '0')}:00`}
                         </Text>
                     </View>
-                    <View style={[styles.gridLine, { borderTopColor: colors.border }]} />
+                    <View style={[styles.gridLine, { borderTopColor: '#e2e8f0' }]} />
                 </View>
             ))}
         </View>
@@ -41,20 +41,23 @@ const styles = StyleSheet.create({
     },
     row: {
         flexDirection: 'row',
-        alignItems: 'center', // Change to 'flex-start' if we want the line at the top of the hour
+        alignItems: 'flex-start', // Match HTML flex-start alignment
     },
     timeLabelContainer: {
-        width: 50,
-        alignItems: 'flex-end',
-        paddingRight: 8,
-        transform: [{ translateY: -10 }], // Center label on the line
+        width: 60,
+        alignItems: 'center',
+        paddingTop: 12, // Match HTML pt-3
     },
     timeLabel: {
-        fontSize: 12,
+        fontSize: 11,
+        fontWeight: 'bold',
+        color: '#94a3b8',
+        // fontFamily: 'monospace', // Platform dependent, left generic if not loaded
     },
     gridLine: {
         flex: 1,
         borderTopWidth: 1,
+        borderStyle: 'solid',
         height: '100%',
     },
 });
