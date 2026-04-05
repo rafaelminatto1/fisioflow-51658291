@@ -26,6 +26,23 @@ function topToTime(snappedTop: number, startHour: number): string {
   return `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}`;
 }
 
+function getCardColors(apt: AppointmentBase, primary: string) {
+  const typeLower = (apt.type || '').toLowerCase();
+  const statusLower = apt.status || '';
+
+  if (statusLower === 'agendado' || statusLower === 'scheduled') {
+    return { bg: '#fffbeb', borderLeft: '#f59e0b', border: '#fef3c7', text: '#b45309' }; // Amber
+  }
+  if (statusLower === 'confirmado' || statusLower === 'confirmed' || typeLower.includes('avaliação') || typeLower.includes('assessment')) {
+    return { bg: '#ecfdf5', borderLeft: '#10b981', border: '#d1fae5', text: '#047857' }; // Emerald
+  }
+  if (statusLower === 'em_atendimento' || statusLower === 'in_progress' || typeLower.includes('pilates') || typeLower.includes('grupo')) {
+    return { bg: '#eef2ff', borderLeft: '#6366f1', border: '#e0e7ff', text: '#4338ca' }; // Indigo
+  }
+
+  return { bg: primary + '10', borderLeft: primary, border: primary + '30', text: primary }; // Brand default
+}
+
 interface DraggableAptCardColors {
   primary: string;
   textSecondary: string;
@@ -58,6 +75,7 @@ export const DraggableAptCard = ({
   const ghostTop = useSharedValue(apt.top);
 
   const maxTop = (endHour - startHour) * HOUR_HEIGHT - apt.height;
+  const cardColors = getCardColors(apt, colors.primary);
 
   const panGesture = Gesture.Pan()
     .activateAfterLongPress(500)
@@ -111,7 +129,7 @@ export const DraggableAptCard = ({
             left: pos.left,
             width: pos.width,
             height: apt.height,
-            borderColor: colors.primary,
+            borderColor: cardColors.text,
           },
           ghostAnimatedStyle,
         ]}
@@ -127,9 +145,9 @@ export const DraggableAptCard = ({
               height: apt.height,
               left: pos.left,
               width: pos.width,
-              backgroundColor: colors.primary + '10', // bg-brand-50 approx
-              borderLeftColor: colors.primary,
-              borderColor: colors.primary + '30',
+              backgroundColor: cardColors.bg,
+              borderLeftColor: cardColors.borderLeft,
+              borderColor: cardColors.border,
             },
             cardAnimatedStyle,
           ]}
@@ -137,7 +155,7 @@ export const DraggableAptCard = ({
         >
           <Animated.View style={styles.cardInner}>
             <Animated.View style={styles.cardHeader}>
-              <Text style={[styles.aptType, { color: colors.primary }]}>
+              <Text style={[styles.aptType, { color: cardColors.text }]}>
                 {apt.type || 'Sessão'}
               </Text>
             </Animated.View>
