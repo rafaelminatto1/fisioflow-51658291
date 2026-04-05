@@ -103,33 +103,33 @@ html.dark .schedulex-calendar-wrapper {
 /* Usados via: _options: { additionalClasses: ['calendar-card-{status}'] } */
 
 .calendar-card-agendado {
-	background-color: #eff6ff !important;
-	border-left: 3px solid #3b82f6 !important;
-	color: #1e3a8a !important;
+	background-color: #fffbeb !important;
+	border-left: 3px solid #f59e0b !important;
+	color: #b45309 !important;
 }
 
 .calendar-card-atendido {
 	background-color: #ecfdf5 !important;
 	border-left: 3px solid #10b981 !important;
-	color: #044b37 !important;
+	color: #047857 !important;
 }
 
 .calendar-card-avaliacao {
-	background-color: #f5f3ff !important;
-	border-left: 3px solid #8b5cf6 !important;
-	color: #3b0764 !important;
+	background-color: #ecfdf5 !important;
+	border-left: 3px solid #10b981 !important;
+	color: #047857 !important;
 }
 
 .calendar-card-aguardando_confirmacao {
-	background-color: #fefce8 !important;
-	border-left: 3px solid #eab308 !important;
-	color: #713f12 !important;
+	background-color: #fffbeb !important;
+	border-left: 3px solid #f59e0b !important;
+	color: #b45309 !important;
 }
 
 .calendar-card-presenca_confirmada {
-	background-color: #dbeafe !important;
-	border-left: 3px solid #1e3a8a !important;
-	color: #1e3a8a !important;
+	background-color: #ecfdf5 !important;
+	border-left: 3px solid #10b981 !important;
+	color: #047857 !important;
 }
 
 .calendar-card-cancelado {
@@ -178,21 +178,21 @@ html.dark .schedulex-calendar-wrapper {
 
 /* ───────────── 8. DARK MODE — OVERRIDES DE STATUS ──────────── */
 html.dark .calendar-card-agendado {
-	background-color: rgb(30 58 138 / 0.25) !important;
-	border-left-color: #60a5fa !important;
-	color: #bfdbfe !important;
+	background-color: rgb(245 158 11 / 0.15) !important;
+	border-left-color: #f59e0b !important;
+	color: #fbbf24 !important;
 }
 
 html.dark .calendar-card-atendido {
-	background-color: rgb(34 197 94 / 0.15) !important;
-	border-left-color: #4ade80 !important;
-	color: #bbf7d0 !important;
+	background-color: rgb(16 185 129 / 0.15) !important;
+	border-left-color: #10b981 !important;
+	color: #34d399 !important;
 }
 
 html.dark .calendar-card-avaliacao {
-	background-color: rgb(139 92 246 / 0.2) !important;
-	border-left-color: #a78bfa !important;
-	color: #ddd6fe !important;
+	background-color: rgb(16 185 129 / 0.15) !important;
+	border-left-color: #10b981 !important;
+	color: #34d399 !important;
 }
 
 html.dark .calendar-card-cancelado {
