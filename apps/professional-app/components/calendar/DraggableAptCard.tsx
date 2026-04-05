@@ -201,18 +201,18 @@ const styles = StyleSheet.create({
     marginBottom: 4,
   },
   aptType: {
-    fontSize: 9,
+    fontSize: 10,
     fontWeight: '900',
     textTransform: 'uppercase',
     letterSpacing: 0.5,
   },
   aptTitle: {
-    fontSize: 14,
+    fontSize: 16,
     fontWeight: 'bold',
     color: '#0f172a', // text-slate-900
   },
   aptTime: {
-    fontSize: 11,
+    fontSize: 12,
     color: '#64748b', // text-slate-500
     marginTop: 4,
   },
