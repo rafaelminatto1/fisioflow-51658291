@@ -324,6 +324,7 @@ export const AppointmentStatusEnum = z.enum(
 		"nao_atendido_sem_cobranca",
 		"presenca_confirmada",
 		"remarcar",
+		"aguardando_confirmacao",
 	],
 	{
 		errorMap: () => ({ message: "Status inválido" }),

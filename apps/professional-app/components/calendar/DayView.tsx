@@ -29,7 +29,7 @@ export const DayView = ({
     const [scrollEnabled, setScrollEnabled] = useState(true);
     
     // Calculate available width for appointments (total width - time label width)
-    const TIME_LABEL_WIDTH = 50;
+    const TIME_LABEL_WIDTH = 60;
     const RIGHT_MARGIN = 40; // Space on the right to allow tapping the grid
     const availableWidth = windowWidth - TIME_LABEL_WIDTH - RIGHT_MARGIN;
 
@@ -198,7 +198,7 @@ const styles = StyleSheet.create({
     touchableOverlay: {
         position: 'absolute',
         top: 10, // Match paddingTop of gridContainer if needed, but TimeGrid handles rows
-        left: 50, // Match TimeGrid label width
+        left: 60, // Match TimeGrid label width
         right: 0,
         bottom: 0,
         zIndex: 1,
@@ -206,7 +206,7 @@ const styles = StyleSheet.create({
     appointmentsLayer: {
         position: 'absolute',
         top: 10,
-        left: 50,
+        left: 60,
         right: 0,
         bottom: 0,
         zIndex: 2, // Above touchable overlay

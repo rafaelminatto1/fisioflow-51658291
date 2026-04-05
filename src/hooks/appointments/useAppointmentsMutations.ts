@@ -3,25 +3,25 @@
  */
 
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/contexts/AuthContext";
-import {
+import { useToast } from "@/hooks/use-toast";
+import { ErrorHandler } from "@/lib/errors/ErrorHandler";
+import { fisioLogger as logger } from "@/lib/errors/logger";
+import { AppointmentNotificationService } from "@/lib/services/AppointmentNotificationService";
+import { AppointmentService } from "@/services/appointmentService";
+import type {
 	AppointmentBase,
 	AppointmentFormData,
 	AppointmentStatus,
 } from "@/types/appointment";
-import { AppointmentService } from "@/services/appointmentService";
-import { ErrorHandler } from "@/lib/errors/ErrorHandler";
-import { fisioLogger as logger } from "@/lib/errors/logger";
 import { isAppointmentConflictError } from "@/utils/appointmentErrors";
 import { invalidateAffectedPeriods } from "@/utils/cacheInvalidation";
 import { formatDateToLocalISO } from "@/utils/dateUtils";
 import { requireUserOrganizationId } from "@/utils/userHelpers";
-import { AppointmentNotificationService } from "@/lib/services/AppointmentNotificationService";
 import { parseUpdatesToAppointment } from "../appointmentOptimistic";
-import { appointmentKeys } from "./useAppointmentsData";
-import { type AppointmentsQueryResult } from "./useAppointmentsCache";
 import { appointmentPeriodKeys } from "../useAppointmentsByPeriod";
+import type { AppointmentsQueryResult } from "./useAppointmentsCache";
+import { appointmentKeys } from "./useAppointmentsData";
 
 export function useCreateAppointment() {
 	const queryClient = useQueryClient();
@@ -210,6 +210,9 @@ export function useUpdateAppointment() {
 			queryClient.invalidateQueries({
 				queryKey: appointmentKeys.detail(data.id),
 			});
+			queryClient.invalidateQueries({
+				queryKey: ["schedule-appointments"],
+			});
 
 			await queryClient.refetchQueries({
 				queryKey: appointmentPeriodKeys.all,
@@ -372,8 +375,7 @@ export function useUpdateAppointmentStatus() {
 				exact: false,
 			});
 			queryClient.invalidateQueries({ queryKey: appointmentPeriodKeys.all });
-			// Apenas invalidamos, não forçamos refetch imediato 'active' que causaria flicker
-			queryClient.invalidateQueries({ queryKey: appointmentPeriodKeys.all });
+			queryClient.invalidateQueries({ queryKey: ["schedule-appointments"] });
 
 			toast({
 				title: "Status atualizado",
