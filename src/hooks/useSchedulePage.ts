@@ -17,6 +17,8 @@ import { profileApi } from "@/api/v2/system";
 import { useAuth } from "@/hooks/useAuth";
 import { fisioLogger as logger } from "@/lib/errors/logger";
 import { AppointmentService } from "@/services/appointmentService";
+import { normalizeStatus } from "@/components/schedule/shared/appointment-status";
+
 import type { Appointment } from "@/types/appointment";
 import type {
 	AppointmentRow,
@@ -87,14 +89,16 @@ const mapAppointmentRowToCalendarAppointment = (
 	time: row.start_time?.slice(0, 5) || "00:00",
 	duration: calculateDurationMinutes(row.start_time, row.end_time),
 	type: (row.type || "Fisioterapia") as Appointment["type"],
-	status: String(row.status || "agendado") as Appointment["status"],
+	status: normalizeStatus(
+		String(row.status || "agendado"),
+	) as Appointment["status"],
 	notes: row.notes || "",
 	therapistId: row.therapist_id,
 	payment_status: row.payment_status || undefined,
 	payment_amount:
 		typeof row.payment_amount === "string"
 			? Number(row.payment_amount)
-			: row.payment_amount ?? undefined,
+			: (row.payment_amount ?? undefined),
 	payment_method: row.payment_method || undefined,
 	room: row.room_id || undefined,
 	session_package_id: row.session_package_id || undefined,

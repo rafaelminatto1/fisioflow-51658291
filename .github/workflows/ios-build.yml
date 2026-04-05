@@ -21,7 +21,7 @@ on:
           - preview       # Ad-hoc — mesma coisa, build release
 
 env:
-  NODE_VERSION: '20'
+  NODE_VERSION: '22'
   PNPM_VERSION: '10.33.0'
   # Usa Node.js 24 nos GitHub Actions (Node 20 deprecated a partir de Jun/2026)
   FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: 'true'
@@ -59,7 +59,7 @@ jobs:
         working-directory: apps/${{ inputs.app }}
         run: npx expo prebuild --platform ios --clean --non-interactive
         env:
-          EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
+          EXPO_TOKEN: ${{ secrets['EXPO_TOKEN'] }}
 
       # ── 4. Cache CocoaPods (economiza ~10 min) ────────────────────────────
       - name: Cache CocoaPods
@@ -76,9 +76,9 @@ jobs:
       # ── 5. Importar certificado Apple (.p12) ──────────────────────────────
       - name: Importar certificado p12
         env:
-          CERTIFICATE_BASE64: ${{ secrets.APPLE_CERTIFICATE_P12_BASE64 }}
-          CERTIFICATE_PASSWORD: ${{ secrets.APPLE_CERTIFICATE_PASSWORD }}
-          KEYCHAIN_PASSWORD: ${{ secrets.KEYCHAIN_PASSWORD }}
+          CERTIFICATE_BASE64: ${{ secrets['APPLE_CERTIFICATE_P12_BASE64'] }}
+          CERTIFICATE_PASSWORD: ${{ secrets['APPLE_CERTIFICATE_PASSWORD'] }}
+          KEYCHAIN_PASSWORD: ${{ secrets['KEYCHAIN_PASSWORD'] }}
         run: |
           CERT_PATH=$RUNNER_TEMP/cert.p12
           KEYCHAIN_PATH=$RUNNER_TEMP/app.keychain-db
@@ -101,8 +101,8 @@ jobs:
       # ── 6. Importar Provisioning Profile — extrai UUID e copia com nome correto
       - name: Importar provisioning profile
         env:
-          PROFILE_BASE64_PACIENTES: ${{ secrets.APPLE_PROVISIONING_PROFILE_PACIENTES_BASE64 }}
-          PROFILE_BASE64_PROFISSIONAIS: ${{ secrets.APPLE_PROVISIONING_PROFILE_PROFISSIONAIS_BASE64 }}
+          PROFILE_BASE64_PACIENTES: ${{ secrets['APPLE_PROVISIONING_PROFILE_PACIENTES_BASE64'] }}
+          PROFILE_BASE64_PROFISSIONAIS: ${{ secrets['APPLE_PROVISIONING_PROFILE_PROFISSIONAIS_BASE64'] }}
         run: |
           PROFILE_PATH=$RUNNER_TEMP/profile.mobileprovision
 
@@ -154,7 +154,7 @@ jobs:
       - name: Build & Archive
         working-directory: apps/${{ inputs.app }}/ios
         env:
-          APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
+          APPLE_TEAM_ID: ${{ secrets['APPLE_TEAM_ID'] }}
           # Desabilita upload automático do Sentry (sem credenciais configuradas no CI)
           # Evita que collect-modules.sh falhe com exit 1 por source map ausente
           SENTRY_DISABLE_AUTO_UPLOAD: "true"
