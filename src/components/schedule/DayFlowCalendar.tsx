@@ -207,6 +207,10 @@ export function DayFlowCalendarWrapper(props: DayFlowCalendarWrapperProps) {
 					return { html };
 				},
 				eventClick: (info: any) => {
+					if (info.jsEvent) {
+						info.jsEvent.preventDefault();
+						info.jsEvent.stopPropagation();
+					}
 					// Use coordinate-based anchor to detach popover from calendar DOM node
 					const rect = info.el.getBoundingClientRect();
 					setActivePopover({ event: info.event, rect });
@@ -302,9 +306,12 @@ export function DayFlowCalendarWrapper(props: DayFlowCalendarWrapperProps) {
 
 			<div 
 				className="flex-1 p-1 md:p-2 min-h-0 overflow-hidden"
-				onClick={() => {
+				onClick={(e) => {
 					// Close popover if user clicks outside of an event
-					if (activePopover) setActivePopover(null);
+					const target = e.target as HTMLElement;
+					if (activePopover && !target.closest('.ec-event') && !target.closest('[role="dialog"]')) {
+						setActivePopover(null);
+					}
 				}}
 			>
 				<div className="flex-1 h-full min-h-0 bg-white border border-slate-200 shadow-sm rounded-xl overflow-hidden relative">
@@ -340,7 +347,7 @@ export function DayFlowCalendarWrapper(props: DayFlowCalendarWrapperProps) {
 							width: activePopover.rect.width,
 							height: activePopover.rect.height,
 							pointerEvents: 'none',
-							zIndex: -1
+							visibility: 'hidden'
 						}}
 					/>
 				</AppointmentQuickView>
