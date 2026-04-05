@@ -5,8 +5,10 @@
  * ScheduleX v4 usa prefixo sx__ (dois underscores).
  */
 
-/* ───────────── 1. TEMA BASE (deve vir PRIMEIRO) ───────────── */
-@import '@schedule-x/theme-default/dist/calendar.css';
+/* ───────────── 1. TEMA BASE ─────────────
+ * O tema externo foi removido daqui porque o pacote correspondente não está
+ * presente no monorepo e a simples referência quebrava o build.
+ */
 
 /* ───────────── 2. CONTAINER / VARIÁVEIS DE BRAND ──────────── */
 .schedulex-calendar-wrapper {
