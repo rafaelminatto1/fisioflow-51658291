@@ -145,7 +145,7 @@ const styles = StyleSheet.create({
         borderColor: '#e5e5e5',
     },
     timeColumnHeader: {
-        width: 50,
+        width: 60,
     },
     dayHeader: {
         flex: 1,
@@ -169,7 +169,7 @@ const styles = StyleSheet.create({
     columnsContainer: {
         position: 'absolute',
         top: 0,
-        left: 50, // After time labels
+        left: 60, // After time labels
         right: 0,
         bottom: 0,
         flexDirection: 'row',
