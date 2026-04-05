@@ -129,6 +129,7 @@ const clinicaMenuItems = [
 
 const avaliacoesSubmenu = [
 	{ icon: FlaskConical, label: "Testes Clínicos", href: "/clinical-tests" },
+	{ icon: ClipboardList, label: "Modelos", href: "/templates" },
 ];
 
 const biomecanicaSubmenu = [
@@ -216,7 +217,8 @@ export function Sidebar() {
 
 	const isAdminActive = location.pathname.startsWith("/admin");
 	const isAvaliacaoActive =
-		location.pathname === "/clinical-tests";
+		location.pathname === "/clinical-tests" || 
+		location.pathname === "/templates";
 	const isBiomecanicaActive =
 		location.pathname.startsWith("/clinical/biomechanics") ||
 		location.pathname === "/biomechanics";
