@@ -14,6 +14,7 @@ export const sessionStatusSchema = z.enum([
 	"nao_atendido_sem_cobranca",
 	"presenca_confirmada",
 	"remarcar",
+	"aguardando_confirmacao",
 ]);
 export const paymentStatusSchema = z.enum(["pending", "paid", "partial"]);
 export const sessionTypeSchema = z.enum(["individual", "group"]);
