@@ -190,15 +190,15 @@ export function DayFlowCalendarWrapper(props: DayFlowCalendarWrapperProps) {
 					
 					// Render raw HTML. No React reconciliation, completely immune to drag-and-drop cloning crashes.
 					const html = `
-						<div class="w-full h-full p-0.5 overflow-hidden cursor-pointer transition-all hover:ring-2 hover:ring-blue-500/30 rounded-md bg-white text-left ${isCancelled ? 'opacity-50 grayscale' : ''}">
-							<div class="flex flex-col h-full border-l-[3px] rounded-r-md p-0.5 px-1.5 shadow-sm overflow-hidden text-slate-900 bg-white justify-center ${statusConfig.borderColor}">
+						<div class="w-full h-full p-0.5 overflow-hidden cursor-pointer transition-all hover:ring-2 hover:ring-blue-500/30 rounded-md ${statusConfig.bg} text-left ${isCancelled ? 'opacity-50 grayscale' : ''} ${statusConfig.calendarClassName}">
+							<div class="flex flex-col h-full border-l-[3px] rounded-r-md p-0.5 px-1.5 shadow-sm overflow-hidden ${statusConfig.text} ${statusConfig.bg} justify-center ${statusConfig.borderColor}">
 								<div class="flex items-center justify-between gap-1">
-									<span class="font-black text-[7px] uppercase tracking-wider text-slate-400 leading-none">
+									<span class="font-black text-[7px] uppercase tracking-wider opacity-70 leading-none">
 										${formattedTime}
 									</span>
 									<div class="h-1 w-1 rounded-full flex-shrink-0 ${statusConfig.calendarAccent}"></div>
 								</div>
-								<div class="font-black leading-none line-clamp-1 text-[9px] uppercase tracking-tight text-slate-800 mt-[1px]">
+								<div class="font-black leading-none line-clamp-1 text-[9px] uppercase tracking-tight mt-[1px]">
 									${appointment.title}
 								</div>
 							</div>
