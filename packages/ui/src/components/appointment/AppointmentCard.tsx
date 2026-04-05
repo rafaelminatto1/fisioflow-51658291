@@ -57,7 +57,6 @@ export const AppointmentCard = React.forwardRef<HTMLDivElement, AppointmentCardP
         style={{
           ...style,
           background: className?.includes('calendar-card-') ? undefined : style?.background,
-          backgroundColor: className?.includes('calendar-card-') ? 'transparent' : style?.backgroundColor,
         }}
         className={cn(
           "relative overflow-hidden cursor-pointer flex flex-col",
@@ -67,7 +66,7 @@ export const AppointmentCard = React.forwardRef<HTMLDivElement, AppointmentCardP
           isDropTarget && "ring-2 ring-primary/60 shadow-2xl scale-105 z-25",
           isSelected && "ring-2 ring-primary shadow-xl z-40",
           compact && "calendar-card-weekly",
-          compact ? "justify-start px-2 py-1 pl-3" : "justify-center p-2 pl-3.5",
+          compact ? "justify-start px-2 py-1 pl-3" : "justify-center p-3 pl-4",
           className
         )}
         {...(props as any)}
@@ -105,7 +104,7 @@ export const AppointmentCard = React.forwardRef<HTMLDivElement, AppointmentCardP
               ? isVeryCompact
                 ? "text-[10px] leading-none truncate"
                 : "text-[11px] leading-tight line-clamp-2"
-              : "text-sm leading-tight truncate"
+              : "text-base leading-tight truncate"
           )}>
             {patientName}
           </span>
