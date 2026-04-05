@@ -1,31 +1,31 @@
+import { format as formatDateFns, isValid, parseISO } from "date-fns";
+import {
+	Bell,
+	Camera,
+	Edit,
+	Mail,
+	MapPin,
+	Phone,
+	Save,
+	Settings,
+	Shield,
+	User,
+} from "lucide-react";
 import React, { useState } from "react";
 import { MainLayout } from "@/components/layout/MainLayout";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
-import {
-	User,
-	Mail,
-	Phone,
-	MapPin,
-	Shield,
-	Bell,
-	Settings,
-	Camera,
-	Save,
-	Edit,
-} from "lucide-react";
-import { useAuth } from "@/contexts/AuthContext";
-import { useUserProfile } from "@/hooks/useUserProfile";
-import { useToast } from "@/hooks/use-toast";
 import { SmartDatePicker } from "@/components/ui/smart-date-picker";
-import { parseISO, format as formatDateFns, isValid } from "date-fns";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Textarea } from "@/components/ui/textarea";
+import { useAuth } from "@/contexts/AuthContext";
+import { useToast } from "@/hooks/use-toast";
+import { useUserProfile } from "@/hooks/useUserProfile";
 
 export const Profile = () => {
 	const { user } = useAuth();
@@ -131,20 +131,21 @@ export const Profile = () => {
 					<Button
 						onClick={() => setIsEditing(!isEditing)}
 						variant={isEditing ? "outline" : "default"}
+						size="lg"
 						className={
 							isEditing
-								? ""
-								: "bg-gradient-primary hover:bg-gradient-primary/90"
+								? "border-2 border-muted-foreground/50 hover:border-muted-foreground hover:bg-muted-foreground/5 transition-all duration-200"
+								: "bg-gradient-to-r from-primary to-primary/80 hover:from-primary/90 hover:to-primary/70 shadow-lg hover:shadow-xl transition-all duration-200 font-semibold text-base px-6"
 						}
 					>
 						{isEditing ? (
 							<>
-								<Edit className="w-4 h-4 mr-2" />
+								<Edit className="w-5 h-5 mr-2" />
 								Cancelar
 							</>
 						) : (
 							<>
-								<Edit className="w-4 h-4 mr-2" />
+								<Edit className="w-5 h-5 mr-2" />
 								Editar Perfil
 							</>
 						)}
