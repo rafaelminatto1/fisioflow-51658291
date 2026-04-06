@@ -247,7 +247,7 @@ export class PoseAnalytics {
 	 * Obter métricas de execução do usuário
 	 * Média de score por exercício nos últimos 7 dias
 	 */
-	async getUserMetrics(exerciseId: string): Promise<{
+	async getUserMetrics(_exerciseId: string): Promise<{
 		avgScore: number;
 		bestScore: number;
 		totalSessions: number;
@@ -279,7 +279,7 @@ export class PoseAnalytics {
 	/**
 	 * Obter streak de exercícios
 	 */
-	async getExerciseStreak(patientId: string): Promise<{
+	async getExerciseStreak(_patientId: string): Promise<{
 		currentStreak: number;
 		longestStreak: number;
 	}> {
@@ -329,9 +329,9 @@ export function createPoseAnalyticsInstance(): PoseAnalytics {
 export function logExerciseStarted(
 	exerciseId: string,
 	exerciseType: ExerciseType,
-	userType: string = "patient",
+	_userType: string = "patient",
 ): void {
-	const session: any = {
+	const session = {
 		id: `temp_${Date.now()}`,
 		exerciseId,
 		exerciseType,
@@ -348,9 +348,9 @@ export function logExerciseCompleted(
 	exerciseId: string,
 	repetitions: number,
 	score: number,
-	duration: number,
+	_duration: number,
 ): void {
-	const session: any = {
+	const session = {
 		exerciseId,
 		repetitions,
 		totalScore: score,

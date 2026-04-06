@@ -211,7 +211,7 @@ interface ExerciseSheetProps {
 
 export const ExerciseSheetWrapper: React.FC<ExerciseSheetProps> = ({
 	exercises,
-	onChange,
+	onChange: _onChange,
 	disabled = false,
 	children,
 }) => {
@@ -264,7 +264,7 @@ interface MeasurementsSheetProps {
 
 export const MeasurementsSheetWrapper: React.FC<MeasurementsSheetProps> = ({
 	measurements,
-	onChange,
+	onChange: _onChange,
 	disabled = false,
 	children,
 }) => {

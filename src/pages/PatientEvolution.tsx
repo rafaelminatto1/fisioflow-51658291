@@ -230,6 +230,37 @@ const PatientEvolution = () => {
 		[state],
 	);
 
+	const evolutionStats = useMemo(
+		() => ({
+			totalEvolutions: state.previousEvolutions.length,
+			totalGoals: state.goals.length,
+			completedGoals: state.goals.filter((g: any) => g.status === "concluido")
+				.length,
+			activePathologiesCount: state.activePathologies.length,
+			totalMeasurements: state.measurements.length,
+			avgGoalProgress:
+				state.goals.length > 0
+					? Math.round(
+							(state.goals.filter((g: any) => g.status === "concluido").length /
+								state.goals.length) *
+								100,
+						)
+					: 0,
+			completionRate: state.previousEvolutions.length > 0 ? 100 : 0, // Placeholder logic
+		}),
+		[
+			state.previousEvolutions.length,
+			state.goals,
+			state.activePathologies.length,
+			state.measurements.length,
+		],
+	);
+
+	const treatmentDuration = useMemo(() => {
+		if (state.previousEvolutions.length === 0) return "Primeira sessão";
+		return `${state.previousEvolutions.length + 1}ª sessão`;
+	}, [state.previousEvolutions.length]);
+
 	const topSectionContent = useMemo(
 		() => (
 			<CardGrid>
@@ -240,27 +271,7 @@ const PatientEvolution = () => {
 				/>
 				<SurgeriesCard patientId={state.patientId} />
 				<div className="lg:row-span-2">
-					<EvolutionSummaryCard
-						stats={{
-							totalEvolutions: state.previousEvolutions.length,
-							totalGoals: state.goals.length,
-							completedGoals: state.goals.filter(
-								(g: any) => g.status === "concluido",
-							).length,
-							activePathologiesCount: state.activePathologies.length,
-							totalMeasurements: state.measurements.length,
-							avgGoalProgress:
-								state.goals.length > 0
-									? Math.round(
-											(state.goals.filter((g: any) => g.status === "concluido")
-												.length /
-												state.goals.length) *
-												100,
-										)
-									: 0,
-							completionRate: state.previousEvolutions.length > 0 ? 100 : 0, // Placeholder logic
-						}}
-					/>
+					<EvolutionSummaryCard stats={evolutionStats} />
 				</div>
 				<div className="sm:col-span-2 lg:col-span-2">
 					<MetasCard patientId={state.patientId} />
@@ -270,10 +281,8 @@ const PatientEvolution = () => {
 		[
 			state.patient,
 			state.patientId,
-			state.goals,
-			state.previousEvolutions.length,
-			state.activePathologies.length,
-			state.measurements.length,
+			state.invalidateData,
+			evolutionStats,
 		],
 	);
 
@@ -375,13 +384,14 @@ const PatientEvolution = () => {
 					<EvolutionHeader
 						patient={state.patient}
 						appointment={state.appointment}
-						evolutionStats={{
-							totalEvolutions: state.previousEvolutions.length,
-						}}
+						evolutionStats={evolutionStats}
+						treatmentDuration={treatmentDuration}
 						onSave={handlers.handleSave}
 						onComplete={handlers.handleCompleteSession}
 						isSaving={handlers.isSaving}
+						isCompleting={handlers.isCompleting}
 						autoSaveEnabled={state.autoSaveEnabled}
+						toggleAutoSave={() => state.setAutoSaveEnabled(!state.autoSaveEnabled)}
 						lastSavedAt={lastSavedAt}
 						activeTab={state.activeTab}
 						onTabChange={(v) => state.setActiveTab(v as EvolutionTab)}
@@ -391,6 +401,11 @@ const PatientEvolution = () => {
 						therapists={state.therapists}
 						selectedTherapistId={state.selectedTherapistId}
 						onTherapistChange={state.setSelectedTherapistId}
+						showInsights={state.showInsights}
+						toggleInsights={() => state.setShowInsights(!state.showInsights)}
+						onShowTemplateModal={() => state.setShowApplyTemplate(true)}
+						onShowKeyboardHelp={() => state.setShowKeyboardHelp(true)}
+						previousEvolutionsCount={state.previousEvolutions.length}
 					/>
 
 					<Tabs
@@ -402,7 +417,7 @@ const PatientEvolution = () => {
 							<Suspense fallback={<LoadingSkeleton />}>
 								<LazyEvolucaoTab
 									alertsSection={alertsSectionContent}
-									topSection={topSectionContent}
+									topSection={state.showInsights ? topSectionContent : null}
 									mainGrid={mainGridContent}
 								/>
 							</Suspense>

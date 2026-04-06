@@ -63,3 +63,7 @@ export {
 	type TrendData,
 	type DataPoint,
 } from "./ProgressTrending";
+
+// Rich Notion-style clinical templates
+export { NOTION_TEMPLATES } from "./notion-templates";
+export type { SOAPTemplate as NotionSOAPTemplate } from "./TemplateSelector";

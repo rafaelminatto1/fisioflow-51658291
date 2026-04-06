@@ -408,7 +408,7 @@ export class VideoExerciseImport {
 	/**
 	 * Valida se o vídeo pode ser usado (direitos autorais)
 	 */
-	validateVideoUsage(video: VideoSource): {
+	validateVideoUsage(_video: VideoSource): {
 		canUse: boolean;
 		reason?: string;
 		requiresAttribution: boolean;
