@@ -528,7 +528,7 @@ export const usePerformanceBudget = (
 		};
 	}, [config]);
 
-	const recordImageSize = useCallback((size: number) => {
+	const recordImageSize = useCallback((_size: number) => {
 		// Implementar se necessário
 	}, []);
 

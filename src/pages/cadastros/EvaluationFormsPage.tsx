@@ -74,7 +74,6 @@ import { useNavigate } from "react-router-dom";
 import { StandardFormsManager } from "@/components/clinical/StandardFormsManager";
 import {
 	useImportEvaluationForm,
-	EvaluationFormImportData,
 } from "@/hooks/useEvaluationForms";
 import { DynamicFieldRenderer } from "@/components/evaluation/DynamicFieldRenderer";
 // New components
