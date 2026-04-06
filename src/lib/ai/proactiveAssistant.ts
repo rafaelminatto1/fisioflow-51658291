@@ -169,7 +169,6 @@ async function generateScheduleOptimization(
 			minConcurrent = Math.min(minConcurrent, count);
 		});
 		if (
-			maxConcurrent > 0 &&
 			minConcurrent < maxConcurrent / 3 &&
 			maxConcurrent >= 2
 		) {

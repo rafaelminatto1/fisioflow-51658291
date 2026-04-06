@@ -343,7 +343,7 @@ export function WikiSidebar({
 								<Tag className="w-3 h-3" /> Tags Populares
 							</div>
 							<div className="flex flex-wrap gap-1 px-2 mt-2">
-								{allTags.map(([tag]) => (
+								{allTags.map(([tag, _count]) => (
 									<Badge
 										key={tag}
 										variant="outline"

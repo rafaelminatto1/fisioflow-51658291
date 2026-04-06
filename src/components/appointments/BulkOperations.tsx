@@ -162,7 +162,6 @@ export const BulkOperations: React.FC<BulkOperationsProps> = ({
 		URL.revokeObjectURL(link.href);
 	}, [appointments, selectedIds]);
 
-	// Verificar se todos os selecionados têm o mesmo status
 	return (
 		<div className={cn("space-y-4", className)}>
 			{/* Barra de ações em massa */}

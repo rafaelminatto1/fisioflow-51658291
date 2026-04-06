@@ -8,9 +8,17 @@ import {
 } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { useQuery } from "@tanstack/react-query";
-import { appointmentsApi } from "@/api/v2";
-import { CheckCircle2, Clock, Award } from "lucide-react";
-import { format } from "date-fns";
+import {
+	appointmentsApi,
+} from "@/api/v2";
+import {
+	CheckCircle2,
+	Clock,
+	Award,
+} from "lucide-react";
+import {
+	format,
+} from "date-fns";
 import {
 	Table,
 	TableBody,
