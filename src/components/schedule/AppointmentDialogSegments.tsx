@@ -6,7 +6,7 @@ import { AppointmentOptionsPanel } from "./AppointmentOptionsPanel";
 import { AppointmentPaymentTab } from "./AppointmentPaymentTab";
 import { AppointmentPatientSelectionSection } from "./AppointmentPatientSelectionSection";
 import { AppointmentTypeStatusSection } from "./AppointmentTypeStatusSection";
-import { EquipmentSelector, type SelectedEquipment } from "./EquipmentSelector";
+import type { SelectedEquipment } from "./EquipmentSelector";
 
 export const PatientSelectionSection = ({
 	patients,

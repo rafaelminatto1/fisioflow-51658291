@@ -1,6 +1,4 @@
-import { Suspense, lazy } from "react";
 import { Outlet, useLocation } from "react-router";
-import { AppLoadingSkeleton } from "@/components/ui/AppLoadingSkeleton";
 import { isPublicBootPath } from "./InfrastructureLayout";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
 

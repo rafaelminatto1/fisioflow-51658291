@@ -16,8 +16,6 @@ export const BiomechanicsComparison: React.FC<BiomechanicsComparisonProps> = ({
 	baseAssessment,
 	compareAssessment,
 }) => {
-	const isVideo = (item: BiomechanicsAssessment) => item.mediaUrl.endsWith('.mp4');
-
 	return (
 		<div className="grid grid-cols-1 md:grid-cols-2 gap-6 w-full">
 			<AssessmentView assessment={baseAssessment} label="Base" />

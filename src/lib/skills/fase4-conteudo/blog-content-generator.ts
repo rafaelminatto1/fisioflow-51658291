@@ -529,7 +529,7 @@ Neste artigo, discutimos como ${article.tags[0] || "a fisioterapia"} pode impact
 	async generateWeeklyNewsletter(
 		articles: Article[],
 		weekNumber: number,
-		year: number,
+		_year: number,
 	): Promise<Newsletter> {
 		const subject = `FisioFlow #${weekNumber}: ${articles[0].title}`;
 		const preview = `Esta semana: ${articles.map((a) => a.title).join(", ")}`;
