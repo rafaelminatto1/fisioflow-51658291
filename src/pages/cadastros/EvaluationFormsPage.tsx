@@ -72,10 +72,7 @@ import {
 } from "@/components/ui/alert-dialog";
 import { useNavigate } from "react-router-dom";
 import { StandardFormsManager } from "@/components/clinical/StandardFormsManager";
-import {
-	useImportEvaluationForm,
-	EvaluationFormImportData,
-} from "@/hooks/useEvaluationForms";
+import { useImportEvaluationForm } from "@/hooks/useEvaluationForms";
 import { DynamicFieldRenderer } from "@/components/evaluation/DynamicFieldRenderer";
 // New components
 import { PageHeader } from "@/components/evaluation/PageHeader";

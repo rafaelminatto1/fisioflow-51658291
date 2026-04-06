@@ -9,7 +9,7 @@
 
 import { format } from "date-fns";
 import { AlertTriangle, Cake, MessageCircle, Sparkles } from "lucide-react";
-import { lazy, Suspense, useCallback, useEffect, useMemo } from "react";
+import { Suspense, useCallback, useEffect, useMemo } from "react";
 import { Link, useSearchParams } from "react-router-dom";
 import { MainLayout } from "@/components/layout/MainLayout";
 import { BulkActionsBar } from "@/components/schedule/BulkActionsBar";
@@ -30,14 +30,8 @@ import { DayFlowCalendarWrapper } from "@/components/schedule/DayFlowCalendar";
 
 import "@/styles/schedule.css";
 
-// Feature Flag: Use new ScheduleX calendar instead of custom dnd-kit implementation
-const USE_SCHEDULEX_DEFAULT = true;
-
 export default function Schedule() {
 	const [searchParams, setSearchParams] = useSearchParams();
-
-	// Use ScheduleX by default
-	const useScheduleX = true;
 
 	const dateParamRaw = searchParams.get("date");
 	// Validate YYYY-MM-DD format

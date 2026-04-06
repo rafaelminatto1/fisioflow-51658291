@@ -18,8 +18,8 @@ export const CalibrationOverlay: React.FC<CalibrationOverlayProps> = ({
 	onComplete,
 	onCancel,
 	landmarks,
-	width,
-	height,
+	width: _width,
+	height: _height,
 }) => {
 	if (!isVisible) return null;
 

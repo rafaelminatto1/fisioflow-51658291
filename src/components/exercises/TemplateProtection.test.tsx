@@ -9,9 +9,9 @@
  * Validates: Requirements 5.3
  */
 
-import { describe, it, expect } from "vitest";
+import { describe, it } from "vitest";
 import * as fc from "fast-check";
-import type { ExerciseTemplate, PatientProfileCategory } from "@/types/workers";
+import type { ExerciseTemplate } from "@/types/workers";
 
 // ─── Arbitrary generators ────────────────────────────────────────────────────
 

@@ -607,7 +607,7 @@ export function useAcknowledgeInsight() {
 	return useMutation({
 		mutationFn: async ({
 			insightId,
-			patientId,
+			patientId: _patientId,
 		}: {
 			insightId: string;
 			patientId: string;

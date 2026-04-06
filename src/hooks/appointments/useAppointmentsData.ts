@@ -3,11 +3,9 @@
  */
 
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { addDays } from "date-fns";
 import { useAuth } from "@/contexts/AuthContext";
 import { appointmentsCacheService } from "@/lib/offline/AppointmentsCacheService";
 import { AppointmentService } from "@/services/appointmentService";
-import { formatDateToLocalISO } from "@/utils/dateUtils";
 import { fisioLogger as logger } from "@/lib/errors/logger";
 import { useRealtimeAppointments } from "../useRealtimeAppointments";
 import { appointmentPeriodKeys } from "../useAppointmentsByPeriod";

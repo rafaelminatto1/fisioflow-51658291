@@ -1,6 +1,5 @@
-import { Suspense, lazy } from "react";
+import { useEffect } from "react";
 import { Outlet, useLocation } from "react-router-dom";
-import { AppLoadingSkeleton } from "@/components/ui/AppLoadingSkeleton";
 
 import { NetworkStatus } from "@/components/ui/network-status";
 import { SyncManager } from "@/components/sync/SyncManager";
@@ -10,8 +9,6 @@ import { WebVitalsIndicator } from "@/lib/monitoring/web-vitals";
 import { PosePreloadManager } from "@/components/ai/PosePreloadManager";
 import { AuthenticatedAppShell } from "@/components/app/AuthenticatedAppShell";
 
-// Notification Initializer from App.tsx
-import { useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { fisioLogger as logger } from "@/lib/errors/logger";
 

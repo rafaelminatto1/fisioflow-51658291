@@ -7,13 +7,6 @@
  * Automação completa
  */
 
-type TimestampLikeLike =
-	| string
-	| Date
-	| {
-			toDate?: () => Date;
-	  };
-
 export interface Automation {
 	id: string;
 	name: string;

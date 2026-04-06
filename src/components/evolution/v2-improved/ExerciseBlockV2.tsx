@@ -4,7 +4,7 @@
  * Enhanced exercises block with better UX,
  * professional design, and improved feedback indicators.
  */
-import React, { useState, useMemo, useCallback } from "react";
+import React, { useState, useCallback } from "react";
 import {
 	Dumbbell,
 	Plus,
@@ -59,8 +59,6 @@ export const ExerciseBlockV2: React.FC<ExerciseBlockV2Props> = ({
 	const [,setShowAutocomplete] = useState(false);
 	const [quickAddValue, setQuickAddValue] = useState("");
 	const { exercises: libraryExercises } = useExercises();
-	const [searchValue, setSearchValue] = useState("");
-
 	const completedCount = exercises.filter((e) => e.completed).length;
 	
 
@@ -78,7 +76,6 @@ export const ExerciseBlockV2: React.FC<ExerciseBlockV2Props> = ({
 			};
 			onChange([...exercises, newExercise]);
 			setShowAutocomplete(false);
-			setSearchValue("");
 		},
 		[exercises, onChange],
 	);

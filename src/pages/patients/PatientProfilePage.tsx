@@ -3,7 +3,7 @@
  * Optimized with usePatientProfileOptimized for better performance
  */
 
-import React, { useState, useEffect, useMemo, lazy, Suspense } from "react";
+import React, { useState, useEffect, lazy, Suspense } from "react";
 import { useParams, useNavigate, useSearchParams } from "react-router-dom";
 import { MainLayout } from "@/components/layout/MainLayout";
 import { PatientHelpers, Patient } from "@/types";
@@ -17,14 +17,11 @@ import { PatientFinancialTab } from "@/components/patient/PatientFinancialTab";
 import { PatientGamificationTab } from "@/components/patient/PatientGamificationTab";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
-import { Skeleton } from "@/components/ui/skeleton";
 import { LoadingSkeleton } from "@/components/ui/loading-skeleton";
 import { Badge } from "@/components/ui/badge";
-import { cn } from "@/lib/utils";
 import { PatientTimeline } from "@/components/patient/PatientTimeline";
 import {
 	Activity,
-	Trophy,
 	Brain,
 	Sparkles,
 	History,
@@ -41,14 +38,12 @@ import { usePatientEvolutionReport } from "@/hooks/usePatientEvolutionReport";
 import { useEvaluationForms } from "@/hooks/useEvaluationForms";
 
 // UI Components
-import { Card, CardContent } from "@/components/ui/card";
 import {
 	Dialog,
 	DialogContent,
 	DialogHeader,
 	DialogTitle,
 	DialogDescription,
-	DialogFooter,
 } from "@/components/ui/dialog";
 import { ScrollArea } from "@/components/ui/scroll-area";
 

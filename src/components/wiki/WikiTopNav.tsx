@@ -13,7 +13,6 @@ import {
 	Library,
 	Search,
 	Plus,
-	Tag,
 	Pin,
 	LayoutDashboard,
 	FileText,
@@ -179,11 +178,6 @@ export function WikiTopNav({
 		});
 		return byCategory;
 	}, [generalPages]);
-
-	const selectedPage = useMemo(
-		() => pages.find((p) => p.id === selectedPageId),
-		[pages, selectedPageId],
-	);
 
 	return (
 		<div className="w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 sticky top-0 z-30">
@@ -447,5 +441,4 @@ export function WikiTopNav({
 		</div>
 	);
 }
-
 

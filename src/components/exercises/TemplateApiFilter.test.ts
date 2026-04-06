@@ -4,7 +4,7 @@
  * Validates: Requirements 7.2
  */
 
-import { describe, it, expect } from 'vitest';
+import { describe, it } from 'vitest';
 import * as fc from 'fast-check';
 import type { ExerciseTemplate, PatientProfileCategory } from '@/types/workers';
 
@@ -85,21 +85,6 @@ function arbitraryCustomTemplateForOrg(orgId: string): fc.Arbitrary<ExerciseTemp
     templateType: 'custom' as const,
     organizationId: orgId,
   }));
-}
-
-/** Generates a custom template for a DIFFERENT org (not the target org) */
-function arbitraryCustomTemplateForOtherOrg(targetOrgId: string): fc.Arbitrary<ExerciseTemplate> {
-  return fc
-    .uuid()
-    .filter((id) => id !== targetOrgId)
-    .chain((otherId) =>
-      arbitraryTemplate().map((t) => ({
-        ...t,
-        templateType: 'custom' as const,
-        organizationId: otherId,
-        isActive: true,
-      })),
-    );
 }
 
 // ─── Tests ────────────────────────────────────────────────────────────────────

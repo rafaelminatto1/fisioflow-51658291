@@ -186,7 +186,7 @@ export function prefetchRelatedRoutes(currentRoute: string): void {
  * Hook to prefetch routes on component mount
  */
 export function usePrefetchRoutes(
-	routes: Array<{
+	_routes: Array<{
 		key: string;
 		loader: () => Promise<{ default: ComponentType<unknown> }>;
 	}>,

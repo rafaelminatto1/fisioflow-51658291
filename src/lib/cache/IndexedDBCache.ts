@@ -349,7 +349,7 @@ export const getCacheStats = async (): Promise<{
 	expiredCount: number;
 	lastCleanup: number | null;
 }> => {
-	const db = await openDB();
+	await openDB();
 	const store = await openStore();
 
 	const count = await requestToPromise(store.count()).catch(() => 0);

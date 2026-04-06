@@ -305,7 +305,7 @@ abstract class BasePDFGenerator {
 	/**
 	 * Gera o PDF como blob
 	 */
-	protected generate(filename: string): Blob {
+	protected generate(_filename: string): Blob {
 		this.addFooter();
 		return this.doc.output("blob");
 	}

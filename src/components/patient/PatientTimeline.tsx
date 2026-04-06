@@ -65,7 +65,7 @@ export function PatientTimeline({ patientId }: PatientTimelineProps) {
 
 	return (
 		<div className="space-y-6 relative before:absolute before:inset-0 before:ml-5 before:-translate-x-px before:h-full before:w-0.5 before:bg-gradient-to-b before:from-transparent before:via-border/40 before:to-transparent">
-			{entries.map((entry, idx) => (
+			{entries.map((entry) => (
 				<div key={entry.id} className="relative flex items-start gap-6 group">
 					{/* dot */}
 					<div

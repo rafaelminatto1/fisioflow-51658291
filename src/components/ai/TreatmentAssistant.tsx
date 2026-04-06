@@ -158,13 +158,14 @@ export function TreatmentAssistant({
 						const subjective =
 							document.getElementById("subjective")?.innerText || "";
 						const text = `S: ${subjective}\nO: ${objective}`;
-						!loading &&
-							callNativeAI(
+						if (!loading) {
+							void callNativeAI(
 								"summarize",
 								text.length > 10
 									? text
 									: "Sem conteúdo clínico suficiente para resumir.",
 							);
+						}
 					}}
 				>
 					<CardContent className="p-6 text-center">
