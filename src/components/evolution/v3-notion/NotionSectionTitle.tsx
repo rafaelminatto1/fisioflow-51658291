@@ -81,7 +81,7 @@ export const NotionSectionTitle: React.FC<NotionSectionTitleProps> = ({
 					{subtitle}
 				</span>
 			)}
-			{badge && badge}
+			{badge}
 		</div>
 	);
 };

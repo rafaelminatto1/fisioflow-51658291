@@ -17,9 +17,7 @@ import {
 	Milestone,
 	Activity,
 	Trash2,
-	Filter,
 	Layers,
-	Sparkles,
 } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import {
@@ -35,7 +33,6 @@ import {
 import { motion, AnimatePresence } from "framer-motion";
 import { NewProtocolModal } from "@/components/modals/NewProtocolModal";
 import ProtocolDetailView from "./ProtocolDetailView";
-import { cn } from "@/lib/utils";
 
 export const ProtocolsManager = memo(function ProtocolsManager() {
 	const [activeTab, setActiveTab] = useState<"patologia" | "pos_operatorio">(
@@ -386,16 +383,3 @@ export const ProtocolsManager = memo(function ProtocolsManager() {
 		</div>
 	);
 });
-
-
-const Label = ({
-	children,
-	className,
-}: {
-	children: React.ReactNode;
-	className?: string;
-}) => (
-	<label className={cn("block text-sm font-medium", className)}>
-		{children}
-	</label>
-);

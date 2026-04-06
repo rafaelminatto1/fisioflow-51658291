@@ -44,7 +44,7 @@ import {
 interface KnowledgeCardProps {
 	item: KnowledgeArticle;
 	onEdit: (item: KnowledgeArticle) => void;
-	onAudit: (item: KnowledgeArticle) => void;
+	onAudit: (_item: KnowledgeArticle) => void;
 	onDelete?: (item: KnowledgeArticle) => void;
 	curationMap?: Map<string, any>;
 	auditProfiles?: any;

@@ -119,6 +119,9 @@ export const MeasurementsBlock: React.FC<MeasurementsBlockProps> = ({
 	className,
 }) => {
 	const [expandedId, setExpandedId] = useState<string | null>(null);
+	const [, _setShowTemplates] = useState(false);
+
+	
 
 	const handleRemoveMeasurement = useCallback(
 		(id: string) => {

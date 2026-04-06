@@ -206,7 +206,7 @@ export class NotionIntegration {
 			},
 		});
 
-		for (const [index, step] of procedure.steps.entries()) {
+		for (const [, step] of procedure.steps.entries()) {
 			contentBlocks.push({
 				object: "block" as const,
 				type: "numbered_list_item" as const,
@@ -399,7 +399,7 @@ export class NotionIntegration {
 			},
 		});
 
-		for (const [index, instruction] of exercise.instructions.entries()) {
+		for (const [, instruction] of exercise.instructions.entries()) {
 			contentBlocks.push({
 				object: "block" as const,
 				type: "numbered_list_item" as const,
@@ -823,7 +823,7 @@ export class NotionIntegration {
 			},
 		});
 
-		for (const [index, criteria] of feature.acceptanceCriteria.entries()) {
+		for (const [, criteria] of feature.acceptanceCriteria.entries()) {
 			contentBlocks.push({
 				object: "block" as const,
 				type: "to_do" as const,

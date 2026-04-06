@@ -1,6 +1,4 @@
-import { useEffect } from "react";
 import { Outlet, useLocation } from "react-router-dom";
-
 import { NetworkStatus } from "@/components/ui/network-status";
 import { SyncManager } from "@/components/sync/SyncManager";
 import { TourGuide } from "@/components/system/TourGuide";

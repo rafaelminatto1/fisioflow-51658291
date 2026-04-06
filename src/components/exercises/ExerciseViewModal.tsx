@@ -433,7 +433,7 @@ function MetricCard({
 	icon: Icon,
 	label,
 	value,
-	subLabel,
+	subLabel: _subLabel,
 }: {
 	icon: React.ComponentType<{ className?: string }>;
 	label: string;

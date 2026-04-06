@@ -232,77 +232,62 @@ export default defineConfig(({ mode }) => {
 							{
 								name: "vendor-vtk-rendering-core",
 								test: /node_modules\/@kitware\/vtk\.js\/Rendering\/Core/,
-								priority: 36.9,
+								priority: 40,
 							},
 							{
 								name: "vendor-vtk-rendering-opengl",
 								test: /node_modules\/@kitware\/vtk\.js\/Rendering\/OpenGL/,
-								priority: 36.8,
+								priority: 39.8,
 							},
 							{
 								name: "vendor-vtk-rendering-volume",
 								test: /node_modules\/@kitware\/vtk\.js\/Rendering\/Volume/,
-								priority: 36.7,
+								priority: 39.6,
 							},
 							{
 								name: "vendor-vtk-rendering",
 								test: /node_modules\/@kitware\/vtk\.js\/Rendering/,
-								priority: 36.5,
+								priority: 39.4,
 							},
 							{
 								name: "vendor-vtk-common",
 								test: /node_modules\/@kitware\/vtk\.js\/Common/,
-								priority: 36.4,
+								priority: 39.2,
 							},
 							{
 								name: "vendor-vtk-filters",
 								test: /node_modules\/@kitware\/vtk\.js\/Filters/,
-								priority: 36.3,
+								priority: 39,
 							},
 							{
 								name: "vendor-vtk-io-core",
 								test: /node_modules\/@kitware\/vtk\.js\/IO\/Core/,
-								priority: 36.25,
+								priority: 38.8,
 							},
 							{
 								name: "vendor-vtk-io-image",
 								test: /node_modules\/@kitware\/vtk\.js\/IO\/Image/,
-								priority: 36.24,
+								priority: 38.6,
 							},
 							{
 								name: "vendor-vtk-io-geometry",
 								test: /node_modules\/@kitware\/vtk\.js\/IO\/Geometry/,
-								priority: 36.23,
+								priority: 38.4,
 							},
 							{
 								name: "vendor-vtk-io-legacy",
 								test: /node_modules\/@kitware\/vtk\.js\/IO\/Legacy/,
-								priority: 36.22,
+								priority: 38.2,
 							},
 							{
 								name: "vendor-vtk-io-xml",
 								test: /node_modules\/@kitware\/vtk\.js\/IO\/XML/,
-								priority: 36.21,
+								priority: 38,
 							},
 							{
 								name: "vendor-vtk-io",
 								test: /node_modules\/@kitware\/vtk\.js\/IO/,
-								priority: 36.2,
-							},
-							{
-								name: "vendor-vtk-imaging",
-								test: /node_modules\/@kitware\/vtk\.js\/Imaging/,
-								priority: 36.1,
-							},
-							{
-								name: "vendor-vtk-interaction",
-								test: /node_modules\/@kitware\/vtk\.js\/Interaction/,
-								priority: 36,
-							},
-							{
-								name: "vendor-vtk-widgets",
-								test: /node_modules\/@kitware\/vtk\.js\/Widgets/,
-								priority: 35.5,
+								priority: 37.8,
 							},
 							{
 								name: "vendor-vtk",
@@ -390,8 +375,18 @@ export default defineConfig(({ mode }) => {
 								priority: 22.3,
 							},
 							{
+								name: "vendor-prosemirror",
+								test: /node_modules\/prosemirror/,
+								priority: 22.3,
+							},
+							{
+								name: "vendor-tippy",
+								test: /node_modules\/tippy/,
+								priority: 22.2,
+							},
+							{
 								name: "vendor-tiptap",
-								test: /node_modules\/(@tiptap|prosemirror|tippy)/,
+								test: /node_modules\/@tiptap/,
 								priority: 22,
 							},
 							// @tensorflow + pose-detection — IA/biomecânica, ~693 KB

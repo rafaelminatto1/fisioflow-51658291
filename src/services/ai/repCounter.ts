@@ -407,7 +407,7 @@ export class RepetitionCounter {
 	/**
 	 * Processar método: Flexão/Extensão (ombro, joelho)
 	 */
-	private processPhaseFlexionExtension(landmarks: PoseLandmark[]): {
+	private processPhaseFlexionExtension(_landmarks: PoseLandmark[]): {
 		count: number;
 		phase: MovementPhase | null;
 		repCompleted?: Repetition;
@@ -470,7 +470,7 @@ export class RepetitionCounter {
 	/**
 	 * Processar método: Manter Posição (prancha)
 	 */
-	private processHoldPosition(landmarks: PoseLandmark[]): {
+	private processHoldPosition(_landmarks: PoseLandmark[]): {
 		count: number;
 		phase: MovementPhase | null;
 		repCompleted?: Repetition;

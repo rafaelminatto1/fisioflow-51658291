@@ -252,6 +252,7 @@ export class PoseAnalytics {
 		bestScore: number;
 		totalSessions: number;
 	}> {
+		void exerciseId;
 		// Nota: Isso requer acesso ao banco de dados (Neon DB)
 		// Implementação básica que pode ser expandida
 		try {
@@ -283,6 +284,7 @@ export class PoseAnalytics {
 		currentStreak: number;
 		longestStreak: number;
 	}> {
+		void patientId;
 		// Nota: Requer acesso ao banco de dados (Neon DB)
 		return {
 			currentStreak: 3,

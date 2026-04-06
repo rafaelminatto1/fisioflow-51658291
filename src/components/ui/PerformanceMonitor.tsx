@@ -94,8 +94,7 @@ export const PerformanceMonitor = ({
 	showToggle = true,
 }: PerformanceMonitorProps) => {
 	const [isExpanded, setIsExpanded] = useState(false);
-	const [performanceData, _setPerformanceData] =
-		useState<PerformanceData | null>(null);
+	const [performanceData] = useState<PerformanceData | null>(null);
 
 	// Refs para medição
 	
