@@ -31,7 +31,7 @@ export default function EvolutionFormScreen() {
   const patientName = params.patientName as string || 'Paciente';
   const appointmentId = params.appointmentId as string | undefined;
 
-  const { medium, success, error: hapticError } = useHaptics();
+  const { success, error: hapticError } = useHaptics();
 
   const {
     createAsync: createEvolutionAsync,

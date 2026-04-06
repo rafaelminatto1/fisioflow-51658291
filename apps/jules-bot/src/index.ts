@@ -14,7 +14,7 @@ const app = new Hono<{ Bindings: Env }>();
 app.get('/', (c) => c.text('Jules PR Bot is alive! 🦾'));
 
 app.post('/webhook', async (c) => {
-  const signature = c.req.header('x-hub-signature-256');
+  const _signature = c.req.header('x-hub-signature-256');
   const payload = await c.req.json();
   const event = c.req.header('x-github-event');
 

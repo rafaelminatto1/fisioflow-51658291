@@ -22,7 +22,7 @@ export type PatientOnboardingParams = {
  */
 export class PatientOnboardingWorkflow extends WorkflowEntrypoint<Env, PatientOnboardingParams> {
   async run(event: WorkflowEvent<PatientOnboardingParams>, step: WorkflowStep) {
-    const { patientId, patientName, patientEmail, patientPhone, organizationId, therapistName } =
+    const { patientId, patientName, patientEmail: _patientEmail, patientPhone, organizationId, therapistName } =
       event.payload;
 
     // 1. Boas-vindas imediatas
@@ -112,7 +112,7 @@ export class PatientOnboardingWorkflow extends WorkflowEntrypoint<Env, PatientOn
     );
   }
 
-  private async logEvent(orgId: string, event: string, entityId: string) {
+  private async logEvent(orgId: string, event: string, _entityId: string) {
     if (!this.env.ANALYTICS) return;
     try {
       this.env.ANALYTICS.writeDataPoint({

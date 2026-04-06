@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, useWindowDimensions } from 'react-native';
+import { View, StyleSheet, ScrollView, TouchableOpacity, useWindowDimensions } from 'react-native';
 import { useColors } from '@/hooks/useColorScheme';
 import { TimeGrid } from './TimeGrid';
 import { AppointmentBase } from '@/types';

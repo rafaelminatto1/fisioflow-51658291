@@ -1,7 +1,6 @@
-import { jsPDF } from "jspdf";
-import autoTable from "jspdf-autotable";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
+import { loadJsPdfRuntime } from "@/lib/export/jspdfRuntime";
 import { GaitMetrics, JumpMetrics } from "../types/biomechanics";
 
 // ===== Types =====
@@ -31,6 +30,7 @@ interface ComparativeReportData {
 // ===== Single Assessment Report =====
 
 export const generateBiomechanicsReport = async (data: ReportData) => {
+    const { jsPDF, autoTable } = await loadJsPdfRuntime();
     const doc = new jsPDF();
     const pageWidth = doc.internal.pageSize.getWidth();
     
@@ -138,6 +138,7 @@ export const generateBiomechanicsReport = async (data: ReportData) => {
 export const generateComparativeReport = async (data: ComparativeReportData) => {
     if (data.assessments.length < 1) return;
 
+    const { jsPDF, autoTable } = await loadJsPdfRuntime();
     const doc = new jsPDF();
     const pageWidth = doc.internal.pageSize.getWidth();
     const sorted = [...data.assessments].sort((a, b) => a.date.getTime() - b.date.getTime());

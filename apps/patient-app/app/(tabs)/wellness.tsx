@@ -19,15 +19,6 @@ import {
 import { useHealthKit, getTodaySteps } from '@/lib/healthkit';
 import { log } from '@/lib/logger';
 
-interface MetricCardProps {
-  icon: keyof typeof Ionicons.glyphMap;
-  label: string;
-  value: string | number;
-  unit?: string;
-  color: string;
-  iconBgColor: string;
-}
-
 export default function WellnessScreen() {
   const colors = useColors();
 
@@ -345,7 +336,7 @@ export default function WellnessScreen() {
             <Text style={[styles.summaryTitle, { color: colors.text }]}>Resumo Semanal</Text>
           </View>
           <View style={styles.weeklyData}>
-            {['Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb', 'Dom'].map((day, index) => {
+            {['Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb', 'Dom'].map((day, _index) => {
               // Mock data for weekly view
               const daySteps = Math.floor(Math.random() * 8000) + 4000;
               const percentage = Math.min((daySteps / 10000) * 100, 100);

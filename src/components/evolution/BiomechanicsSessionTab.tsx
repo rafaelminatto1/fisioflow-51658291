@@ -39,8 +39,8 @@ const STUDIO_CONFIG: Record<
   { label: string; description: string; icon: React.FC<any>; color: string; bgColor: string }
 > = {
   gait: {
-    label: "Análise de Marcha",
-    description: "TC/TF, cadência, passada, fórmulas Morin",
+    label: "Marcha & Corrida em Esteira",
+    description: "TC/TF, cadência, eventos e comparação 2D",
     icon: Activity,
     color: "text-blue-400",
     bgColor: "bg-blue-500/10 border-blue-500/30",
@@ -61,7 +61,7 @@ const STUDIO_CONFIG: Record<
   },
   functional: {
     label: "Análise Funcional",
-    description: "Tracking de pontos, optical flow, vídeo",
+    description: "Tracking de pontos, checkpoints e vídeo 2D",
     icon: Layout,
     color: "text-indigo-400",
     bgColor: "bg-indigo-500/10 border-indigo-500/30",

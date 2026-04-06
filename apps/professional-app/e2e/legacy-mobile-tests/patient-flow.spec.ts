@@ -58,7 +58,7 @@ test.describe('Fluxo de Pacientes', () => {
         dateOfBirth: '1985-05-20',
       };
 
-      const patientId = await createPatient(page, minimalData);
+      await createPatient(page, minimalData);
 
       // Verificar que o paciente foi criado
       await expectPatientInList(page, minimalData.name);
@@ -66,7 +66,7 @@ test.describe('Fluxo de Pacientes', () => {
     });
 
     test('deve criar paciente com todos os campos', async () => {
-      const patientId = await createPatient(page, TEST_PATIENT);
+      await createPatient(page, TEST_PATIENT);
 
       await expectPatientInList(page, TEST_PATIENT.name);
       await expectToast(page, 'Paciente salvo com sucesso');
@@ -118,7 +118,7 @@ test.describe('Fluxo de Pacientes', () => {
     });
 
     test('deve mostrar informações relevantes no card', async () => {
-      const patientId = await createPatient(page, TEST_PATIENT);
+      await createPatient(page, TEST_PATIENT);
 
       const patientCard = page.locator(`[data-testid="patient-card"][data-name="${TEST_PATIENT.name}"]`);
 

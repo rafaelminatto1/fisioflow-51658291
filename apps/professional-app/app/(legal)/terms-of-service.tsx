@@ -17,11 +17,6 @@ import { fetchApi } from '@/lib/api';
 import * as Device from 'expo-device';
 import Constants from 'expo-constants';
 
-interface TermsOfServiceScreenProps {
-  mode?: 'onboarding' | 'view';
-  onAccept?: () => void;
-}
-
 export default function TermsOfServiceScreen() {
   const router = useRouter();
   const params = useLocalSearchParams();

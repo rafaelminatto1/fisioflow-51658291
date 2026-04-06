@@ -46,7 +46,7 @@ export async function callGemini(
     try {
       const error = await response.json() as any;
       errorMessage = error.error?.message || errorMessage;
-    } catch (e) {
+    } catch {
       // Se não for JSON (erro do Gateway Cloudflare por exemplo)
       const textError = await response.text().catch(() => '');
       errorMessage = `${errorMessage}: ${textError.substring(0, 200)}`;
@@ -105,7 +105,7 @@ export async function transcribeAudioWithGemini(
     try {
       const error = await response.json() as any;
       errorMessage = error.error?.message || errorMessage;
-    } catch (e) {
+    } catch {
       const textError = await response.text().catch(() => '');
       errorMessage = `${errorMessage}: ${textError.substring(0, 200)}`;
     }
@@ -163,7 +163,7 @@ export async function streamGeminiChat(
     try {
       const error = await response.json() as any;
       errorMessage = error.error?.message || errorMessage;
-    } catch (e) {
+    } catch {
       const textError = await response.text().catch(() => '');
       errorMessage = `${errorMessage}: ${textError.substring(0, 200)}`;
     }

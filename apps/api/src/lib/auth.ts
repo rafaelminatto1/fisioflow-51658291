@@ -3,7 +3,7 @@
  *
  * O Worker valida JWTs do Neon Auth usando JWKS remoto.
  */
-import { createRemoteJWKSet, jwtVerify, decodeJwt } from 'jose';
+import { createRemoteJWKSet, jwtVerify } from 'jose';
 import type { MiddlewareHandler, Context } from 'hono';
 import { getCookie } from 'hono/cookie';
 import type { Env } from '../types/env';

@@ -256,7 +256,7 @@ app.post('/generate', requireAuth, async (c) => {
   );
   const numeroRps = String(seqResult.rows[0]?.next_rps ?? 1);
 
-  const aliquota = body.aliquota_iss ?? Number(cfg.aliquota_padrao) ?? 0.02;
+  const aliquota = body.aliquota_iss ?? (Number(cfg.aliquota_padrao) || 0.02);
   const valorIss = Number((body.valor_servico * aliquota).toFixed(2));
   const dataEmissao = new Date().toISOString();
 

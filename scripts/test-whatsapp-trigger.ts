@@ -1,10 +1,4 @@
-
-
 // Initialize Inngest client (matches your project's setup)
-
-import { Inngest } from 'inngest';
-
-
 
 async function testWhatsApp() {
     console.log("🚀 Enviando evento de teste para o Inngest Dev Server...");

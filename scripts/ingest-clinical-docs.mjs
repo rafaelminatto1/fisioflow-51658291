@@ -6,7 +6,6 @@
  */
 
 import { config } from 'dotenv';
-import { resolve } from 'node:path';
 
 config({ path: '.env.local', override: true });
 
@@ -15,7 +14,7 @@ const GATEWAY_ID = "fisioflow-gateway";
 const GATEWAY_TOKEN = process.env.FISIOFLOW_AI_GATEWAY_TOKEN;
 const GOOGLE_API_KEY = process.env.GOOGLE_AI_API_KEY;
 
-async function generateEmbedding(text) {
+async function _generateEmbedding(text) {
   // Usando o AI Gateway para gerar o vetor (Embedding)
   const url = `https://gateway.ai.cloudflare.com/v1/${ACCOUNT_ID}/${GATEWAY_ID}/google-ai-studio/v1beta/models/text-embedding-004:embedContent?key=${GOOGLE_API_KEY}`;
   

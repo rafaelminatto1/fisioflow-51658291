@@ -65,7 +65,7 @@ app.post('/', requireAuth, async (c) => {
   }
 
   try {
-    const result = await pool.query(
+    await pool.query(
       `INSERT INTO announcements (organization_id, title, content, is_mandatory, type, media_url, created_by, created_at)
        VALUES ($1, $2, $3, $4, $5, $6, $7, NOW()) RETURNING *`,
       [
@@ -109,7 +109,7 @@ app.post('/:id/read', requireAuth, async (c) => {
   const { id } = c.req.param();
 
   try {
-    const result = await pool.query(
+    await pool.query(
       `INSERT INTO announcement_reads (announcement_id, user_id, read_at)
        VALUES ($1, $2, NOW())
        ON CONFLICT DO NOTHING

@@ -20,7 +20,6 @@ import { useColors } from '@/hooks/useColorScheme';
 import { useHaptics } from '@/hooks/useHaptics';
 import { AnalysisEngine } from '@/lib/ai/analysisEngine';
 import { PoseFeedbackOverlay } from '@/components/ai/PoseFeedbackOverlay';
-import { useAudioFeedback } from '@/hooks/useAudioFeedback';
 import { useAIExercisePersistence } from '@/hooks/useAIExercisePersistence';
 import { ExerciseType, ExerciseSession } from '@/types/pose';
 
@@ -63,7 +62,7 @@ export default function AIAssessmentScreen() {
   
   // Refs
   const engineRef = useRef(new AnalysisEngine(ExerciseType.SQUAT));
-  const [lastAnalysis, setLastAnalysis] = useState<any>(null);
+  const [lastAnalysis] = useState<any>(null);
 
   useEffect(() => {
     if (permission?.granted) {

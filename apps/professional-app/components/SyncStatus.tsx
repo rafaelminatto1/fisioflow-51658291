@@ -11,7 +11,7 @@ interface Props {
   compact?: boolean;
 }
 
-export function SyncStatus({ status, isOnline, pendingChanges = 0, compact = false }: Props) {
+export function SyncStatus({ status, isOnline: _isOnline, pendingChanges = 0, compact = false }: Props) {
   const colors = useColors();
 
   if (compact && status === 'synced' && pendingChanges === 0) {

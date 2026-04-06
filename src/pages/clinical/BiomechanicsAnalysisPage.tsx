@@ -19,37 +19,43 @@ import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
+import { biomechanicsProtocols } from "@/data/biomechanicsEvidence";
+
+type HubMode = keyof Pick<
+	typeof biomechanicsProtocols,
+	"gait" | "jump" | "posture" | "functional"
+>;
 
 export default function BiomechanicsAnalysisPage() {
 	const [activeView, setActiveTab] = useState<"hub" | "instructions" | "library">("hub");
-	const [selectedTest, setSelectedTest] = useState<string | null>(null);
+	const [selectedTest, setSelectedTest] = useState<HubMode | null>(null);
 	const navigate = useNavigate();
 
 	const categories = [
 		{
-			id: "gait",
+			id: "gait" as const,
 			title: "Corrida & Marcha",
-			subtitle: "Análise em Esteira",
+			subtitle: "Análise 2D em Esteira",
 			icon: Activity,
 			color: "text-green-500",
 			bg: "bg-green-500/10",
-			reference: "Morin et al. (2005)",
-			description: "Métricas de cadência, oscilação vertical e tempo de contato.",
+			reference: "Morin et al. (2005) + confiabilidade 2D",
+			description: "Cadência, tempo de contato, corrida em esteira e comparação frame a frame.",
             route: "/clinical/biomechanics/gait"
 		},
 		{
-			id: "jump",
+			id: "jump" as const,
 			title: "Performance de Salto",
-			subtitle: "MyJump Lab",
+			subtitle: "CMJ / My Jump",
 			icon: Zap,
 			color: "text-blue-500",
 			bg: "bg-blue-500/10",
-			reference: "Bosco et al. (1983)",
-			description: "Altura de salto (CMJ/SJ), RSI e perfil de força-velocidade.",
+			reference: "Bosco + My Jump",
+			description: "Altura de salto, tempo de voo, potência e comparação entre tentativas.",
             route: "/clinical/biomechanics/jump"
 		},
 		{
-			id: "posture",
+			id: "posture" as const,
 			title: "Postura & Escoliose",
 			subtitle: "Adams & SAPO",
 			icon: User,
@@ -60,60 +66,17 @@ export default function BiomechanicsAnalysisPage() {
             route: "/clinical/biomechanics/posture"
 		},
 		{
-			id: "functional",
+			id: "functional" as const,
 			title: "Gesto Funcional",
-			subtitle: "Kinovea Free",
+			subtitle: "Vídeo 2D Assistido",
 			icon: Move,
 			color: "text-orange-500",
 			bg: "bg-orange-500/10",
-			reference: "Clinical Biomechanics",
-			description: "Análise livre de agachamento, arremesso ou gestos específicos.",
+			reference: "FMS / observação clínica",
+			description: "Agachamento, gesto esportivo e testes funcionais com checkpoints e overlays.",
             route: "/clinical/biomechanics/functional"
 		}
 	];
-
-	const tests = {
-		gait: {
-			id: "morin_gait",
-			title: "Análise de Corrida (Esteira)",
-			steps: [
-				"Posicione o iPhone 15 lateralmente à esteira (3 metros).",
-				"Grave em 240fps para máxima precisão temporal.",
-				"Marque os pontos de Contato e Impulsão para gerar as métricas.",
-			],
-			positioning: "Câmera a 1 metro de altura, plano sagital.",
-		},
-		jump: {
-			id: "bosco_jump",
-			title: "Salto Vertical (Bosco Test)",
-			steps: [
-				"Capture o salto completo do início ao fim (plano frontal).",
-				"Identifique o frame exato onde os pés perdem contato com o solo.",
-				"Identifique o frame do primeiro contato no pouso.",
-			],
-			positioning: "iPhone no chão ou tripé baixo, visão frontal total.",
-		},
-		posture: {
-			id: "sapo_posture",
-			title: "Postura e Escoliose",
-			steps: [
-				"Paciente em posição ortostática neutra.",
-				"Para Escoliose: Realizar o teste de inclinação de Adams.",
-				"Utilizar a linha de prumo digital para referências verticais.",
-			],
-			positioning: "Tripé obrigatório, câmera nivelada pelos ombros.",
-		},
-		functional: {
-			id: "kinovea_free",
-			title: "Análise de Gesto Esportivo",
-			steps: [
-				"Grave o movimento específico do atleta.",
-				"Use a ferramenta de Trajetória para rastrear pontos críticos.",
-				"Compare ângulos em diferentes fases do movimento.",
-			],
-			positioning: "Livre, dependendo do gesto analisado.",
-		}
-	};
 
 	const renderHub = () => (
 		<div className="space-y-12">
@@ -158,6 +121,20 @@ export default function BiomechanicsAnalysisPage() {
                                     <p className="text-sm text-slate-400 font-medium leading-relaxed">
                                         {cat.description}
                                     </p>
+									<div className="grid grid-cols-1 gap-2 rounded-2xl border border-white/5 bg-white/[0.02] p-3 text-xs text-slate-300">
+										<div>
+											<p className="mb-1 text-[10px] font-black uppercase tracking-widest text-slate-500">
+												Captura ideal
+											</p>
+											<p>{biomechanicsProtocols[cat.id].captureAngles[0]}</p>
+										</div>
+										<div>
+											<p className="mb-1 text-[10px] font-black uppercase tracking-widest text-slate-500">
+												Saída principal
+											</p>
+											<p>{biomechanicsProtocols[cat.id].measuredOutputs[0]}</p>
+										</div>
+									</div>
                                     <div className="pt-4 flex items-center text-[10px] font-black text-primary tracking-widest uppercase opacity-0 group-hover:opacity-100 translate-y-2group-hover:translate-y-0 transition-all duration-300">
                                         INICIAR PROTOCOLO <PlayCircle className="ml-2 h-4 w-4" />
                                     </div>
@@ -216,14 +193,15 @@ export default function BiomechanicsAnalysisPage() {
 			case "hub":
 				return renderHub();
 			case "instructions":
-				const test = tests[selectedTest as keyof typeof tests];
+				if (!selectedTest) return renderHub();
+				const protocol = biomechanicsProtocols[selectedTest];
                 const routeInfo = categories.find(c => c.id === selectedTest)?.route;
 				return (
 					<AssessmentInstruction
-						testId={test.id}
-						title={test.title}
-						steps={test.steps}
-						positioning={test.positioning}
+						testId={`${selectedTest}-guided-protocol`}
+						title={protocol.title}
+						steps={protocol.executionSteps}
+						positioning={protocol.captureAngles.join(" • ")}
 						onStart={() => {
                             if (routeInfo) navigate(routeInfo);
                         }}

@@ -1,4 +1,3 @@
-import { GoogleGenerativeAI } from '@google/generative-ai';
 async function test() {
   // The error said 404 for v1beta, so maybe gemini-pro (v1) works.
   const model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash' });

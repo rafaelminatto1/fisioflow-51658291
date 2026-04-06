@@ -247,7 +247,7 @@ app.post("/chat", async (c) => {
 								});
 								await writer.write(encoder.encode(`data: ${payload}\n\n`));
 							}
-						} catch (e) {
+						} catch {
 							// Ignore parsing errors
 						}
 					}
@@ -258,7 +258,7 @@ app.post("/chat", async (c) => {
 		} finally {
 			try {
 				await writer.write(encoder.encode("data: [DONE]\n\n"));
-			} catch (e) {}
+			} catch {}
 			await writer.close();
 		}
 	})();

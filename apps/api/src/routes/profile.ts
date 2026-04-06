@@ -168,7 +168,6 @@ app.put("/me", requireAuth, async (c) => {
 });
 
 app.get("/users/:id", requireAuth, async (c) => {
-	const currentUser = c.get("user");
 	const userId = c.req.param("id");
 	const pool = createPool(c.env);
 

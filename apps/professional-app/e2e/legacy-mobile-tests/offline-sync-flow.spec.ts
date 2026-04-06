@@ -106,7 +106,7 @@ test.describe('Fluxo de Sincronização Offline', () => {
 
       // Criar paciente
       const patientName = `Paciente Offline ${Date.now()}`;
-      const patientId = await createPatient(page, {
+      await createPatient(page, {
         ...TEST_PATIENT,
         name: patientName,
       });

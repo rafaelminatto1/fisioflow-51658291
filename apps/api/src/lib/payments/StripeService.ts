@@ -79,7 +79,7 @@ export class StripeService {
    * Verifies a Webhook signature (Advanced — usually requires full library)
    * For worker-lite usage, we can implement the logic if needed or skip.
    */
-  async verifyWebhookSignature(payload: string, signature: string) {
+  async verifyWebhookSignature(_payload: string, _signature: string) {
     // This is complex manually. If the user doesn't use webhooks yet,
     // we'll stick to 'getCheckoutSession' polling/verify on return.
     return true; // Placeholder for now

@@ -164,7 +164,7 @@ export class AnalysisEngine {
     return angles;
   }
 
-  private detectPostureIssues(landmarks: PoseLandmark[], angles: Map<MainJoint, any>): PostureIssue[] {
+  private detectPostureIssues(landmarks: PoseLandmark[], _angles: Map<MainJoint, any>): PostureIssue[] {
     const issues: PostureIssue[] = [];
     
     // Alinhamento cabeça-ombros
@@ -202,7 +202,7 @@ export class AnalysisEngine {
     return issues;
   }
 
-  private calculateFormScore(angles: Map<MainJoint, any>, issues: PostureIssue[]): number {
+  private calculateFormScore(_angles: Map<MainJoint, any>, issues: PostureIssue[]): number {
     let score = 100;
     for (const issue of issues) {
       score -= issue.scoreImpact;
@@ -210,15 +210,15 @@ export class AnalysisEngine {
     return Math.max(0, score);
   }
 
-  private calculateStability(angles: Map<MainJoint, any>): number {
+  private calculateStability(_angles: Map<MainJoint, any>): number {
     return 100; // Simplificado para mobile
   }
 
-  private calculateRangeOfMotion(angles: Map<MainJoint, any>): any {
+  private calculateRangeOfMotion(_angles: Map<MainJoint, any>): any {
     return { rom: 0, percentageOfNormal: 0 }; // Simplificado
   }
 
-  private updateState(landmarks: PoseLandmark[], angles: Map<MainJoint, any>) {
+  private updateState(landmarks: PoseLandmark[], _angles: Map<MainJoint, any>) {
     this.previousLandmarks = [...landmarks];
     // Atualizar histórico...
   }
@@ -248,8 +248,8 @@ export class AnalysisEngine {
     return 'FRONT';
   }
 
-  private getMinFromHistory(pivot: number): number { return 180; }
-  private getMaxFromHistory(pivot: number): number { return 0; }
+  private getMinFromHistory(_pivot: number): number { return 180; }
+  private getMaxFromHistory(_pivot: number): number { return 0; }
 
   private getJointNameByPivot(pivot: number): MainJoint {
     if (pivot === 23) return MainJoint.LEFT_HIP;

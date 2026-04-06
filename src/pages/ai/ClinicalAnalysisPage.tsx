@@ -210,9 +210,9 @@ export default function ClinicalAnalysisPage() {
 					{/* Opções */}
 					<div className="flex items-center gap-3">
 						<Button asChild variant="outline">
-							<Link to="/ai/dicom">
+							<Link to="/biomechanics">
 								<Database className="mr-2 h-4 w-4" />
-								Abrir PACS / DICOM
+								Abrir hub biomecânico
 							</Link>
 						</Button>
 						<div className="flex items-center gap-2 px-3 py-2 bg-gray-100 rounded-lg">

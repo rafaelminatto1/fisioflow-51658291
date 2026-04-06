@@ -97,14 +97,6 @@ async function openQuickView(page: Page, appointmentId: string): Promise<void> {
 }
 
 /**
- * Fecha quick view
- */
-async function closeQuickView(page: Page): Promise<void> {
-  await page.click('[data-testid="close-quick-view"]');
-  await expect(page.locator('[data-testid="appointment-quick-view"]')).not.toBeVisible();
-}
-
-/**
  * Altera status do agendamento
  */
 async function changeAppointmentStatus(page: Page, status: string): Promise<void> {

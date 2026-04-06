@@ -8,7 +8,6 @@ import { Badge } from "@/components/ui/badge";
 import { motion } from 'framer-motion';
 
 import { useMoveNet, useTrajectory, useGoniometer, useOpticalFlow, useAutoAngles } from '@/hooks/biomechanics';
-import { generateBiomechanicsReport } from '@/utils/biomechanics-reports';
 import { FunctionalTestType, FunctionalAssessment } from '@/types/biomechanics';
 
 import { MoveNetSkeleton } from '../canvas/MoveNetSkeleton';
@@ -131,8 +130,11 @@ export const FunctionalAnalysisStudio: React.FC<FunctionalAnalysisStudioProps> =
 		}
 	}, [videoMode, fps, aiEnabled, activeTool, processFrame]);
 
-	const exportReport = () => {
-		generateBiomechanicsReport({
+	const exportReport = async () => {
+		const { generateBiomechanicsReport } = await import(
+			"@/utils/biomechanics-reports"
+		);
+		await generateBiomechanicsReport({
 			patientName: "Paciente Teste", // In production, get from context
 			date: new Date(),
 			type: 'Functional',

@@ -15,7 +15,7 @@ import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { biomechanicsApi, type BiomechanicsData } from "@/api/v2";
-import { generateComparativeReport, type Assessment } from "@/utils/biomechanics-reports";
+import type { Assessment } from "@/utils/biomechanics-reports";
 import type { SessionRecord } from "@/types/workers";
 
 type BiomechanicsSession = SessionRecord & { biomechanics_data?: BiomechanicsData };
@@ -82,6 +82,9 @@ export const BiomechanicsEvolutionTab: React.FC<BiomechanicsEvolutionTabProps> =
   const handleExport = async () => {
     setIsExporting(true);
     try {
+      const { generateComparativeReport } = await import(
+        "@/utils/biomechanics-reports"
+      );
       const assessments: Assessment[] = sessions
         .filter((s) => s.biomechanics_data)
         .map((s) => ({

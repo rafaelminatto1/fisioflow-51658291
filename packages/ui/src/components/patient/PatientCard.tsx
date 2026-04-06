@@ -20,7 +20,7 @@ export interface PatientCardProps {
 }
 
 export const PatientCard = React.forwardRef<HTMLDivElement, PatientCardProps>(
-  ({ name, condition, status, lastVisit, onClick, actions, stats, variant = 'default', className }, ref) => {
+  ({ name, condition, status, lastVisit: _lastVisit, onClick, actions, stats, variant: _variant = 'default', className }, ref) => {
     
     const statusColors: Record<string, string> = {
       'Em Tratamento': 'bg-green-500/10 text-green-700 border-green-200',
