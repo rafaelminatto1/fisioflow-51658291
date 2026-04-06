@@ -50,14 +50,12 @@ async function autoScreenshot() {
             'button:has-text("Iniciar")'
         ];
 
-        let clicked = false;
         for (const selector of selectors) {
             try {
                 const count = await page.locator(selector).count();
                 if (count > 0) {
                     console.log(`Found element with selector: ${selector}`);
                     await page.locator(selector).first().click({ timeout: 5000 });
-                    clicked = true;
                     await page.waitForTimeout(1000);
                     break;
                 }

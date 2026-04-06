@@ -175,7 +175,7 @@ export function ProtocolDetailView({
 			const { generateProtocolPdf } = await import(
 				"@/utils/generateProtocolPdf"
 			);
-			generateProtocolPdf(protocol, currentOrganization);
+			await generateProtocolPdf(protocol, currentOrganization);
 			toast.success("PDF do protocolo gerado com sucesso!");
 		} catch (error) {
 			logger.error("Error generating PDF", error, "ProtocolDetailView");

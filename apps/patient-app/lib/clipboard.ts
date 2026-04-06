@@ -40,6 +40,6 @@ export async function copyUrl(url: string): Promise<Result<void>> {
 /**
  * Copy code snippet to clipboard
  */
-export async function copyCode(code: string, language?: string): Promise<Result<void>> {
+export async function copyCode(code: string, _language?: string): Promise<Result<void>> {
   return copyToClipboard(code);
 }

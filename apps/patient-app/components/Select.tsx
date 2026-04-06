@@ -39,7 +39,7 @@ export function Select({
   disabled = false,
   error,
   required = false,
-  style,
+  style: _style,
   containerStyle,
 }: SelectProps) {
   const colors = useColors();
@@ -179,7 +179,7 @@ export function MultiSelect({
   disabled = false,
   error,
   max,
-  style,
+  style: _style,
   containerStyle,
 }: MultiSelectProps) {
   const colors = useColors();

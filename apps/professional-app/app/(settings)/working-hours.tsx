@@ -88,7 +88,7 @@ export default function WorkingHoursScreen() {
 						const row = rows.find((r: any) => r.day_of_week === key);
 						return {
 							day_of_week: key,
-							is_open: row ? (row.is_open ?? !row.is_closed ?? true) : key >= 1 && key <= 5,
+							is_open: row ? (row.is_open ?? !row.is_closed) : key >= 1 && key <= 5,
 							open_time: row?.open_time || row?.start_time || DEFAULT_OPEN,
 							close_time: row?.close_time || row?.end_time || DEFAULT_CLOSE,
 						};

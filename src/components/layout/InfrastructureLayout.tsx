@@ -55,7 +55,8 @@ export function isPublicBootPath(pathname: string): boolean {
 
 // Pose preload helper
 const POSE_BOOT_PATH_PREFIXES = [
-	"/ai/movement",
+	"/biomechanics",
+	"/clinical/biomechanics",
 	"/computer-vision",
 	"/augmented-reality",
 	"/dashboard/imagens",

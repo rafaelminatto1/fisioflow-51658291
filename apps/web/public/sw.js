@@ -7,7 +7,6 @@ const APP_VERSION =
 		? globalThis.__APP_VERSION__
 		: "dev";
 const CACHE_NAME = `fisioflow-${APP_VERSION}`;
-const PREVIOUS_CACHE_KEY = "fisioflow-previous-cache";
 const STATIC_ASSETS = ["/", "/index.html", "/manifest.json", "/favicon.svg"];
 
 self.addEventListener("install", (event) => {

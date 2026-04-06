@@ -2,7 +2,7 @@
 import { Command } from 'commander';
 import chalk from 'chalk';
 import { execSync } from 'child_process';
-import { parseDiff, JulesAI } from './index.js';
+import { JulesAI } from './index.js';
 import 'dotenv/config';
 
 const program = new Command();

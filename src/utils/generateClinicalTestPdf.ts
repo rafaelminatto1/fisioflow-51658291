@@ -1,11 +1,12 @@
-// Type extension for jsPDF with getNumberOfPages method
-
-import { jsPDF } from "jspdf";
-import autoTable from "jspdf-autotable";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
+import { loadJsPdfRuntime } from "@/lib/export/jspdfRuntime";
 
-interface jsPDFWithPageCount extends jsPDF {
+type JsPdfInstance = InstanceType<(await import("jspdf"))["jsPDF"]>;
+type JsPdfCtor = typeof import("jspdf")["jsPDF"];
+type JsPdfInstance = InstanceType<JsPdfCtor>;
+
+interface jsPDFWithPageCount extends JsPdfInstance {
 	getNumberOfPages(): number;
 }
 
@@ -23,7 +24,8 @@ interface ClinicalTest {
 	regularity_sessions?: number | null;
 }
 
-export const generateClinicalTestPdf = (test: ClinicalTest) => {
+export const generateClinicalTestPdf = async (test: ClinicalTest) => {
+	const { jsPDF, autoTable } = await loadJsPdfRuntime();
 	const doc = new jsPDF();
 	const pageWidth = doc.internal.pageSize.getWidth();
 	const margin = 20;

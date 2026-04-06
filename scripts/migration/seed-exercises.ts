@@ -149,7 +149,6 @@ async function seedExercises(): Promise<void> {
   console.log('\n🔄 Inserindo exercícios no banco de dados...\n');
 
   let inserted = 0;
-  let updated = 0;
   let errors = 0;
 
   for (const exercise of exercises) {

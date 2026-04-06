@@ -542,7 +542,7 @@ test.describe('Exercise AI Assistant - Accessibility', () => {
     console.log('\n' + '█'.repeat(70));
   });
 
-  test('should be keyboard navigable', async ({ page, context }) => {
+  test('should be keyboard navigable', async ({ page, context: _context }) => {
     console.log('\n' + '█'.repeat(70));
     console.log('█    TEST: Exercise AI Keyboard Navigation');
     console.log('█'.repeat(70));
