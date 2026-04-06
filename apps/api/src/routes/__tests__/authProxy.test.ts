@@ -108,6 +108,21 @@ describe('POST /api/auth/login', () => {
   });
 });
 
+describe('POST /api/auth/signup', () => {
+  beforeEach(() => vi.clearAllMocks());
+
+  it('retorna 400 quando email ou senha estão ausentes', async () => {
+    const app = await buildApp();
+    const res = await app.fetch(
+      makeRequest('POST', '/api/auth/signup', { email: 'new@example.com' }),
+      BASE_ENV as Env,
+    );
+
+    expect(res.status).toBe(400);
+    expect(mockFetch).not.toHaveBeenCalled();
+  });
+});
+
 describe('POST /api/auth/logout', () => {
   beforeEach(() => vi.clearAllMocks());
 
@@ -164,5 +179,83 @@ describe('POST /api/auth/forgot-password', () => {
       BASE_ENV as Env
     );
     expect(res.status).toBe(400);
+  });
+});
+
+describe('POST /api/auth/reset-password', () => {
+  beforeEach(() => vi.clearAllMocks());
+
+  it('encaminha para Neon Auth reset-password', async () => {
+    mockFetch.mockResolvedValueOnce(new Response('{}', { status: 200 }));
+
+    const app = await buildApp();
+    const res = await app.fetch(
+      makeRequest('POST', '/api/auth/reset-password', {
+        token: 'reset-token',
+        password: 'new-secret123',
+      }),
+      BASE_ENV as Env,
+    );
+
+    expect(res.status).toBe(200);
+    await expect(res.json()).resolves.toMatchObject({
+      success: true,
+      message: 'Senha redefinida com sucesso',
+    });
+    expect(mockFetch).toHaveBeenCalledWith(
+      `${BASE_ENV.NEON_AUTH_URL}/reset-password`,
+      expect.objectContaining({ method: 'POST' }),
+    );
+  });
+
+  it('retorna 400 sem token ou senha', async () => {
+    const app = await buildApp();
+    const res = await app.fetch(
+      makeRequest('POST', '/api/auth/reset-password', { token: 'reset-token' }),
+      BASE_ENV as Env,
+    );
+
+    expect(res.status).toBe(400);
+    expect(mockFetch).not.toHaveBeenCalled();
+  });
+});
+
+describe('GET /api/auth/session', () => {
+  beforeEach(() => vi.clearAllMocks());
+
+  it('retorna session null quando Authorization está ausente', async () => {
+    const app = await buildApp();
+    const res = await app.fetch(
+      makeRequest('GET', '/api/auth/session'),
+      BASE_ENV as Env
+    );
+
+    expect(res.status).toBe(200);
+    await expect(res.json()).resolves.toEqual({ session: null });
+    expect(mockFetch).not.toHaveBeenCalled();
+  });
+
+  it('encaminha get-session para Neon Auth quando token está presente', async () => {
+    mockFetch.mockResolvedValueOnce(
+      new Response(
+        JSON.stringify({ session: { userId: 'user-uuid-123' }, user: { email: 'test@example.com' } }),
+        { status: 200, headers: { 'Content-Type': 'application/json' } },
+      )
+    );
+
+    const app = await buildApp();
+    const res = await app.fetch(
+      makeRequest('GET', '/api/auth/session', undefined, { Authorization: `Bearer ${FAKE_JWT}` }),
+      BASE_ENV as Env
+    );
+
+    expect(res.status).toBe(200);
+    await expect(res.json()).resolves.not.toHaveProperty('error');
+    expect(mockFetch).toHaveBeenCalledWith(
+      `${BASE_ENV.NEON_AUTH_URL}/get-session`,
+      expect.objectContaining({
+        headers: { Authorization: `Bearer ${FAKE_JWT}` },
+      })
+    );
   });
 });

@@ -8,23 +8,12 @@
 
 import { GoogleGenerativeAI } from "@google/generative-ai";
 import { fisioLogger as logger } from "@/lib/errors/logger";
-
-const getEnv = (key: string): string | undefined => {
-	// @ts-expect-error - import.meta is not fully typed in all environments
-	if (typeof import.meta !== "undefined" && import.meta.env) {
-		// @ts-expect-error - import.meta.env is not fully typed
-		return import.meta.env[key];
-	}
-	if (typeof process !== "undefined" && process.env) {
-		return process.env[key];
-	}
-	return undefined;
-};
+import { getServerOnlyEnv } from "@/lib/config/server-only";
 
 // Initialize Gemini
 const apiKey =
-	getEnv("GOOGLE_GENERATIVE_AI_API_KEY") ||
-	getEnv("VITE_GOOGLE_GENERATIVE_AI_API_KEY");
+	getServerOnlyEnv("GOOGLE_GENERATIVE_AI_API_KEY") ||
+	getServerOnlyEnv("GOOGLE_AI_API_KEY");
 
 if (!apiKey) {
 	logger.warn(

@@ -16,6 +16,10 @@ import { OAuth2Client } from "google-auth-library";
 import { Appointment } from "@/types/appointment";
 import { calculateEndTime } from "./utils";
 import { fisioLogger as logger } from "@/lib/errors/logger";
+import {
+	createServerOnlyFeatureError,
+	getServerOnlyEnv,
+} from "@/lib/config/server-only";
 
 export interface GoogleOAuthToken {
 	/** Token de acesso */
@@ -447,11 +451,11 @@ export async function exchangeCodeForToken(
 	code: string,
 ): Promise<GoogleOAuthToken> {
 	const clientId = import.meta.env.VITE_GOOGLE_CLIENT_ID;
-	const clientSecret = import.meta.env.VITE_GOOGLE_CLIENT_SECRET;
+	const clientSecret = getServerOnlyEnv("GOOGLE_CLIENT_SECRET");
 	const redirectUri = import.meta.env.VITE_GOOGLE_REDIRECT_URI;
 
 	if (!clientId || !clientSecret || !redirectUri) {
-		throw new Error("Google OAuth não configurado");
+		throw createServerOnlyFeatureError("Google OAuth token exchange");
 	}
 
 	const response = await fetch("https://oauth2.googleapis.com/token", {
@@ -490,10 +494,10 @@ export async function refreshAccessToken(
 	refreshToken: string,
 ): Promise<GoogleOAuthToken> {
 	const clientId = import.meta.env.VITE_GOOGLE_CLIENT_ID;
-	const clientSecret = import.meta.env.VITE_GOOGLE_CLIENT_SECRET;
+	const clientSecret = getServerOnlyEnv("GOOGLE_CLIENT_SECRET");
 
 	if (!clientId || !clientSecret) {
-		throw new Error("Google OAuth não configurado");
+		throw createServerOnlyFeatureError("Google OAuth token refresh");
 	}
 
 	const response = await fetch("https://oauth2.googleapis.com/token", {

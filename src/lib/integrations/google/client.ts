@@ -2,12 +2,14 @@
  * Google AI Client - Frontend
  *
  * Serviço cliente para chamadas diretas às APIs do Google AI (Gemini)
- * Usa a API key configurada nas variáveis de ambiente
+ * Usa credenciais server-side quando disponíveis; no browser opera em modo mock.
  */
 
+import { getServerOnlyEnv } from "@/lib/config/server-only";
+
 const GEMINI_API_KEY =
-	import.meta.env.VITE_GEMINI_API_KEY ||
-	import.meta.env.VITE_GOOGLE_AI_API_KEY ||
+	getServerOnlyEnv("GOOGLE_GENERATIVE_AI_API_KEY") ||
+	getServerOnlyEnv("GOOGLE_AI_API_KEY") ||
 	"";
 const GEMINI_API_URL = "https://generativelanguage.googleapis.com/v1beta";
 
@@ -341,7 +343,7 @@ export class GeminiClient {
 			});
 		}
 
-		return "Esta é uma resposta simulada do Gemini. Configure a VITE_GEMINI_API_KEY para usar a API real.";
+		return "Esta é uma resposta simulada do Gemini. Use a API canônica do backend para chamadas reais.";
 	}
 
 	/**
