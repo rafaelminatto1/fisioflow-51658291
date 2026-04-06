@@ -76,10 +76,6 @@ function getFromCache<T>(key: string): T[] | null {
 	return entry.data;
 }
 
-function setCache<T>(key: string, data: T[], ttl: number): void {
-	queryCache.set(key, { data, timestamp: Date.now(), ttl, key });
-}
-
 function trackQueryMetric(metric: QueryMetric): void {
 	queryMetrics.push(metric);
 	if (queryMetrics.length > MAX_METRICS) queryMetrics.shift();

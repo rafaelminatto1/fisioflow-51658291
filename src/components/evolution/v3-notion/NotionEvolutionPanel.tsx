@@ -148,7 +148,8 @@ const NotionEvolutionPanel: React.FC<NotionEvolutionPanelProps> = ({
 	const resolvedAutoSaveEnabled = autoSaveEnabled ?? true;
 	const attachmentInputRef = useRef<HTMLInputElement | null>(null);
 	const scanInputRef = useRef<HTMLInputElement | null>(null);
-	const { activeEditor } = useRichTextContext();
+	const richTextCtx = useRichTextContext();
+	const activeEditor = richTextCtx?.activeEditor ?? null;
 
 	const statusTags = ["Dor aguda", "Reabilitação", "Alta próxima"] as const;
 	const [selectedTags, setSelectedTags] = useState<string[]>([]);
@@ -432,12 +433,29 @@ const NotionEvolutionPanel: React.FC<NotionEvolutionPanelProps> = ({
 				);
 			}
 			onTemplateSelect?.(template);
+
+			// Build the full evolution HTML preserving each SOAP section.
+			// toEditorHtml already detects HTML and passes it through unchanged,
+			// so we can safely join the HTML sections with a semantic divider.
+			const sectionSep = `<hr>`;
+			const objectiveBlock = template.objective
+				? `<h2>Objetivo</h2>${sectionSep}${template.objective}`
+				: "";
+			const assessmentBlock = template.assessment
+				? `<h2>Avaliação</h2>${sectionSep}${template.assessment}`
+				: "";
+			const planBlock = template.plan
+				? `<h2>Plano</h2>${sectionSep}${template.plan}`
+				: "";
+
+			const evolutionHtml = [objectiveBlock, assessmentBlock, planBlock]
+				.filter(Boolean)
+				.join(sectionSep);
+
 			onChange({
 				...data,
 				patientReport: toEditorHtml(template.subjective),
-				evolutionText: toEditorHtml(
-					`${template.objective}\n\n${template.assessment}\n\n${template.plan}`,
-				),
+				evolutionText: toEditorHtml(evolutionHtml),
 			});
 		},
 		[onTemplateSelect, onChange, data, toEditorHtml],

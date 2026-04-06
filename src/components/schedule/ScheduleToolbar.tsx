@@ -12,11 +12,9 @@ import { Link } from "react-router-dom";
 import {
 	ChevronLeft,
 	ChevronRight,
-	Settings as SettingsIcon,
 	CheckSquare,
 	Plus,
 	Stethoscope,
-	Trash2,
 	Sparkles,
 	MoreVertical,
 	Zap,
@@ -72,7 +70,7 @@ export const ScheduleToolbar: React.FC<ScheduleToolbarProps> = ({
 	filters,
 	onFiltersChange,
 	onClearFilters,
-	onCancelAllToday,
+	onCancelAllToday: _onCancelAllToday,
 }) => {
 	const isMobile = useIsMobile();
 

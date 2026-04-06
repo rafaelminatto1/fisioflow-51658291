@@ -229,6 +229,66 @@ export default defineConfig(({ mode }) => {
 						groups: [
 							// DICOM viewer split — evita um único megachunk monolítico
 							{
+								name: "vendor-vtk-rendering-core",
+								test: /node_modules\/@kitware\/vtk\.js\/Rendering\/Core/,
+								priority: 40,
+							},
+							{
+								name: "vendor-vtk-rendering-opengl",
+								test: /node_modules\/@kitware\/vtk\.js\/Rendering\/OpenGL/,
+								priority: 39.8,
+							},
+							{
+								name: "vendor-vtk-rendering-volume",
+								test: /node_modules\/@kitware\/vtk\.js\/Rendering\/Volume/,
+								priority: 39.6,
+							},
+							{
+								name: "vendor-vtk-rendering",
+								test: /node_modules\/@kitware\/vtk\.js\/Rendering/,
+								priority: 39.4,
+							},
+							{
+								name: "vendor-vtk-common",
+								test: /node_modules\/@kitware\/vtk\.js\/Common/,
+								priority: 39.2,
+							},
+							{
+								name: "vendor-vtk-filters",
+								test: /node_modules\/@kitware\/vtk\.js\/Filters/,
+								priority: 39,
+							},
+							{
+								name: "vendor-vtk-io-core",
+								test: /node_modules\/@kitware\/vtk\.js\/IO\/Core/,
+								priority: 38.8,
+							},
+							{
+								name: "vendor-vtk-io-image",
+								test: /node_modules\/@kitware\/vtk\.js\/IO\/Image/,
+								priority: 38.6,
+							},
+							{
+								name: "vendor-vtk-io-geometry",
+								test: /node_modules\/@kitware\/vtk\.js\/IO\/Geometry/,
+								priority: 38.4,
+							},
+							{
+								name: "vendor-vtk-io-legacy",
+								test: /node_modules\/@kitware\/vtk\.js\/IO\/Legacy/,
+								priority: 38.2,
+							},
+							{
+								name: "vendor-vtk-io-xml",
+								test: /node_modules\/@kitware\/vtk\.js\/IO\/XML/,
+								priority: 38,
+							},
+							{
+								name: "vendor-vtk-io",
+								test: /node_modules\/@kitware\/vtk\.js\/IO/,
+								priority: 37.8,
+							},
+							{
 								name: "vendor-vtk",
 								test: /node_modules\/@kitware\/vtk\.js/,
 								priority: 35,
@@ -304,8 +364,18 @@ export default defineConfig(({ mode }) => {
 							},
 							// @tiptap + prosemirror + tippy.js — editor rico, ~424 KB
 							{
+								name: "vendor-prosemirror",
+								test: /node_modules\/prosemirror/,
+								priority: 22.3,
+							},
+							{
+								name: "vendor-tippy",
+								test: /node_modules\/tippy/,
+								priority: 22.2,
+							},
+							{
 								name: "vendor-tiptap",
-								test: /node_modules\/(@tiptap|prosemirror|tippy)/,
+								test: /node_modules\/@tiptap/,
 								priority: 22,
 							},
 							// @tensorflow + pose-detection — IA/biomecânica, ~693 KB
@@ -448,9 +518,6 @@ export default defineConfig(({ mode }) => {
 							},
 						],
 					},
-				},
-				experimental: {
-					minify: true,
 				},
 			},
 		},

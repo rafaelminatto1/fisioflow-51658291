@@ -12,12 +12,10 @@ import {
 	useState,
 	useTransition,
 } from "react";
-import { createPortal } from "react-dom";
 import { createCalendar, destroyCalendar, TimeGrid, DayGrid, Interaction } from "@event-calendar/core";
 import "@event-calendar/core/index.css";
 import { format, isValid, addMinutes } from "date-fns";
 import { toast } from "sonner";
-import { cn } from "@/lib/utils";
 import { ScheduleToolbar } from "./ScheduleToolbar";
 import { AppointmentQuickView } from "./AppointmentQuickView";
 import { getStatusConfig } from "./shared/appointment-status";
@@ -85,7 +83,7 @@ export function DayFlowCalendarWrapper(props: DayFlowCalendarWrapperProps) {
 			return state.map((app) => {
 				if (String(app.id) !== String(id)) return app;
 				const [datePart, timePart] = start.split("T");
-				const [endDatePart, endTimePart] = end.split("T");
+				const [, endTimePart] = end.split("T");
 				return {
 					...app,
 					start_time: timePart?.slice(0, 5) || start,
