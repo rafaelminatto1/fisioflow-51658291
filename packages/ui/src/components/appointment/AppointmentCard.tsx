@@ -27,7 +27,7 @@ export const AppointmentCard = React.forwardRef<HTMLDivElement, AppointmentCardP
     time,
     endTime,
     type,
-    status = 'agendado',
+    status: _status = 'agendado',
     isDragging,
     isSaving,
     isDropTarget,

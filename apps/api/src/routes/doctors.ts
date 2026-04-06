@@ -5,16 +5,6 @@ import { createPool } from '../lib/db';
 
 const app = new Hono<{ Bindings: Env; Variables: AuthVariables }>();
 
-async function hasDoctorsTable(env: Env): Promise<boolean> {
-  const pool = createPool(env);
-  try {
-    const result = await pool.query("SELECT to_regclass('public.doctors')::text AS table_name");
-    return Boolean(result.rows[0]?.table_name);
-  } finally {
-    await pool.end();
-  }
-}
-
 app.get('/', requireAuth, async (c) => {
   const user = c.get('user');
   const { search, q, limit = '50', offset = '0' } = c.req.query();

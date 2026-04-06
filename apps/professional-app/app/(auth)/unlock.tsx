@@ -59,7 +59,7 @@ export default function UnlockScreen() {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  const handleBiometricAuth = async (currentUserId: string) => {
+  const handleBiometricAuth = async (_currentUserId: string) => {
     if (isAuthenticating) return;
 
     setIsAuthenticating(true);

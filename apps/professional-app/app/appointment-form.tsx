@@ -76,7 +76,6 @@ export default function AppointmentFormScreen() {
     updateAsync, 
     deleteAsync, 
     isCreating, 
-    isUpdating, 
     isDeleting 
   } = useAppointments();
 
@@ -370,7 +369,7 @@ export default function AppointmentFormScreen() {
         <Controller
           control={control}
           name="patientId"
-          render={({ field: { value, onChange } }) => (
+          render={({ field: { value: _value, onChange } }) => (
             <PatientAutocomplete
               value={watch('patientName')}
               onSelect={(p) => {

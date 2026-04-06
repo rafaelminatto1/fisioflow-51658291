@@ -96,9 +96,6 @@ export function CircularProgress({
   };
 
   const sizeValue = getSize();
-  const radius = (sizeValue - thickness) / 2;
-  const circumference = 2 * Math.PI * radius;
-  
   const percentage = Math.round(progress * 100);
 
   return (

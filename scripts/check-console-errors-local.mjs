@@ -97,7 +97,7 @@ const PROTECTED_ROUTES = [
 ];
 
 function setupConsoleListeners(page, errors, warnings) {
-  const shouldIgnoreError = (text, locUrl) => {
+  const shouldIgnoreError = (text, _locUrl) => {
     if (!text || typeof text !== 'string') return false;
     if (text.includes('WebChannelConnection RPC') && text.includes('transport errored')) return true;
     if (text.includes('RunAggregationQuery') && text.includes('failed-precondition')) return true;

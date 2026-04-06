@@ -18,7 +18,7 @@ interface OverviewTabProps {
 export function OverviewTab({ 
   appointments, 
   patients, 
-  stats, 
+  stats: _stats, 
   appointmentsByType, 
   maxTypeValue 
 }: OverviewTabProps) {

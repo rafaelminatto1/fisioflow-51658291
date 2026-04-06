@@ -302,6 +302,22 @@ export const enterpriseRoutes = (
 			}
 		/>
 		<Route
+			path="/clinical/biomechanics/running"
+			element={
+				<ProtectedRoute>
+					<GaitAnalysisPage />
+				</ProtectedRoute>
+			}
+		/>
+		<Route
+			path="/clinical/biomechanics/treadmill"
+			element={
+				<ProtectedRoute>
+					<GaitAnalysisPage />
+				</ProtectedRoute>
+			}
+		/>
+		<Route
 			path="/clinical/biomechanics/posture"
 			element={
 				<ProtectedRoute>
