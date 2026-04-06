@@ -58,14 +58,18 @@ O FisioFlow utiliza **Neon** (Banco de Dados e Autenticação) e **Cloudflare** 
 
 ### 2.2 Cloudflare Workers (API)
 
-A API principal reside em `cloudflare-worker/` (ou `workers/` dependendo da versão).
+A API principal reside em `apps/api`.
+O diretório `cloudflare-worker/` e um artefato legado mantido apenas para compatibilidade historica e esta desativado.
 
 ```bash
-cd cloudflare-worker
+cd apps/api
 # Instalar dependências
 pnpm install
+# Desenvolvimento local
+pnpm dev
 # Deploy para staging/produção
-wrangler deploy
+pnpm deploy:staging
+pnpm deploy
 ```
 
 ---
