@@ -55,7 +55,7 @@ describe("OfflineSyncService", () => {
 		const db = await getDB();
 		try {
 			await db.clear("offline_actions");
-		} catch (e) {
+		} catch {
 			// Object store might not exist yet
 		}
 	});
@@ -64,7 +64,7 @@ describe("OfflineSyncService", () => {
 		const db = await getDB();
 		try {
 			await db.clear("offline_actions");
-		} catch (e) {
+		} catch {
 		}
 	});
 

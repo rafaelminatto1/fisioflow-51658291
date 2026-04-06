@@ -6,9 +6,7 @@
  * - Usa useFavoriteExercise() para mutations
  * - Dados sincronizados entre dispositivos
  */
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { toast } from "sonner";
-import { useAuth } from "@/hooks/useAuth";
+import { useQueryClient } from "@tanstack/react-query";
 import {
 	useFavoriteExercise,
 	useMyFavoriteExercises,
@@ -16,7 +14,6 @@ import {
 
 export const useExerciseFavorites = () => {
 	const queryClient = useQueryClient();
-	const { user } = useAuth();
 
 	// Carregar favoritos do backend
 	const { data: favoriteExercises = [], isLoading } = useMyFavoriteExercises();

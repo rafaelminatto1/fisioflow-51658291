@@ -22,7 +22,8 @@ export function sanitizeString(input: string): string {
 		input
 			.trim()
 			// Remove caracteres nulos
-			.replace(/\u0000/g, "")
+			.split("\u0000")
+			.join("")
 			// Remove múltiplos espaços
 			.replace(/\s+/g, " ")
 			// Remove tags HTML (básico)
@@ -65,7 +66,8 @@ export function sanitizeUrl(url: string): string {
 export function sanitizeLongText(text: string): string {
 	return text
 		.trim()
-		.replace(/\u0000/g, "")
+		.split("\u0000")
+		.join("")
 		.replace(/\s+/g, " ")
 		.slice(0, 50000); // 50KB max
 }
