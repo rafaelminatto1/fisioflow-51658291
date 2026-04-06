@@ -19,7 +19,6 @@ import {
 } from "lucide-react";
 import { fisioLogger as logger } from "@/lib/errors/logger";
 import { precadastroApi, type PrecadastroToken } from "@/api/v2";
-import { cn } from "@/lib/utils";
 
 const PreCadastro = () => {
 	const { token } = useParams<{ token: string }>();
