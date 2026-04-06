@@ -1,7 +1,7 @@
 // Lazy-loaded heavy components for code-splitting
 
-import React, { useEffect, useState, useCallback, lazy, Suspense } from "react";
-import { Link, useSearchParams } from "react-router-dom";
+import React, { useState, useCallback, lazy, Suspense } from "react";
+import { useSearchParams } from "react-router-dom";
 import { useDropzone } from "react-dropzone";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -12,20 +12,11 @@ import {
 	Video,
 	RotateCcw,
 	Loader2,
-	Database,
-	HardDriveDownload,
 } from "lucide-react";
 import { MainLayout } from "@/components/layout/MainLayout";
 import { GaitMetrics } from "@/types/analysis/schemas";
 import { fisioLogger as logger } from "@/lib/errors/logger";
-import { dicomApi } from "@/api/v2";
-import {
-	getTrackedTransferSyntaxDetails,
-	subscribeToTrackedTransferSyntaxes,
-	type TrackedTransferSyntax,
-} from "@/components/analysis/dicom/transferSyntaxTracker";
 
-const DicomViewer = lazy(() => import("../dicom/DicomViewer"));
 const PoseAnalyzer = lazy(() => import("../posture/PoseAnalyzer"));
 const AssetViewer = lazy(() => import("../viewer/AssetViewer"));
 const ClinicalPostureAnalysis = lazy(
@@ -34,7 +25,6 @@ const ClinicalPostureAnalysis = lazy(
 const DynamicAnalysisViewer = lazy(
 	() => import("../dynamic/DynamicAnalysisViewer"),
 );
-// const DicomBrowser = lazy(() => import('../dicom/DicomBrowser'));
 const DynamicComparisonPage = lazy(
 	() => import("../dynamic/DynamicComparisonPage"),
 );
@@ -87,7 +77,6 @@ const MOCK_GAIT_DATA: GaitMetrics = {
 
 type ViewerMode =
 	| "upload"
-	| "dicom"
 	| "pose"
 	| "image"
 	| "clinical_posture"
@@ -95,11 +84,6 @@ type ViewerMode =
 	| "dynamic_compare";
 
 function getModeFromFile(file: File): ViewerMode | null {
-	if (
-		file.name.toLowerCase().endsWith(".dcm") ||
-		file.type === "application/dicom"
-	)
-		return "dicom";
 	if (file.type.startsWith("video/")) return "pose";
 	if (file.type.startsWith("image/")) return "image";
 	return null;
@@ -110,55 +94,6 @@ const ImageAnalysisDashboard = () => {
 	const urlMode = (searchParams.get("mode") as ViewerMode) || null;
 
 	const [file, setFile] = useState<File | null>(null);
-	const [dicomRemoteEnabled, setDicomRemoteEnabled] = useState(false);
-	const [dicomConfigLoading, setDicomConfigLoading] = useState(true);
-	const [trackedSyntaxes, setTrackedSyntaxes] = useState<
-		TrackedTransferSyntax[]
-	>([]);
-
-	useEffect(() => {
-		let isMounted = true;
-
-		const loadDicomConfig = async () => {
-			try {
-				const response = await dicomApi.config();
-				if (isMounted) {
-					setDicomRemoteEnabled(Boolean(response.data?.enabled));
-				}
-			} catch (error) {
-				logger.warn(
-					"Falha ao obter configuração DICOM",
-					error,
-					"ImageAnalysisDashboard",
-				);
-				if (isMounted) {
-					setDicomRemoteEnabled(false);
-				}
-			} finally {
-				if (isMounted) {
-					setDicomConfigLoading(false);
-				}
-			}
-		};
-
-		void loadDicomConfig();
-
-		return () => {
-			isMounted = false;
-		};
-	}, []);
-
-	useEffect(() => {
-		setTrackedSyntaxes(getTrackedTransferSyntaxDetails());
-	}, [mode]);
-
-	useEffect(
-		() =>
-			subscribeToTrackedTransferSyntaxes(() => {
-				setTrackedSyntaxes(getTrackedTransferSyntaxDetails());
-			}),
-		[],
-	);
 
 	const mode: ViewerMode =
 		(file ? getModeFromFile(file) : null) ?? urlMode ?? "upload";
@@ -194,20 +129,16 @@ const ImageAnalysisDashboard = () => {
 		handleModeChange("upload");
 	};
 
-	const trackedFamilies = Array.from(
-		new Set(trackedSyntaxes.map((item) => item.codec)),
-	).filter((item) => item !== "native" && item !== "unknown");
-
 	return (
 		<MainLayout>
 			<div className="flex flex-col h-[calc(100vh-8rem)] gap-6">
 				<div className="flex justify-between items-center">
 					<div>
 						<h1 className="text-3xl font-bold tracking-tight">
-							NeuroPose Analysis
+							Análise de Imagens & Movimento
 						</h1>
 						<p className="text-muted-foreground">
-							Plataforma de análise biométrica e imagiologia médica.
+							Upload simples de fotos e vídeos clínicos para análise 2D.
 						</p>
 					</div>
 					{mode !== "upload" && (
@@ -236,38 +167,23 @@ const ImageAnalysisDashboard = () => {
 										Arraste e solte seus arquivos aqui
 									</h3>
 									<p className="text-sm text-muted-foreground max-w-sm mx-auto">
-										Suporta Imagens DICOM (.dcm), Vídeos de Postura (.mp4,
-										.webm) e Imagens Clínicas (.avif, .avif).
+										Suporta vídeos clínicos e imagens comuns para postura,
+										marcha, corrida em esteira e comparação antes x depois.
 									</p>
 								</div>
 								<div className="flex gap-4 mt-4">
-									<div className="flex items-center gap-2 text-xs text-slate-500">
-										<Activity className="w-4 h-4" /> DICOM
-									</div>
 									<div className="flex items-center gap-2 text-xs text-slate-500">
 										<Video className="w-4 h-4" /> Vídeo
 									</div>
 									<div className="flex items-center gap-2 text-xs text-slate-500">
 										<ImageIcon className="w-4 h-4" /> Imagens
 									</div>
+									<div className="flex items-center gap-2 text-xs text-slate-500">
+										<Activity className="w-4 h-4" /> Movimento 2D
+									</div>
 								</div>
 
 								<div className="mt-8 border-t pt-6 w-full max-w-md space-y-2">
-									{dicomRemoteEnabled && !dicomConfigLoading ? (
-										<Button asChild variant="outline" className="w-full">
-											<Link to="/ai/dicom">
-												<Database className="mr-2 h-4 w-4" />
-												Explorar estudos DICOM
-											</Link>
-										</Button>
-									) : (
-										<Button variant="outline" className="w-full" disabled>
-											<Database className="mr-2 h-4 w-4" />
-											{dicomConfigLoading
-												? "Verificando PACS DICOM..."
-												: "PACS DICOM indisponível"}
-										</Button>
-									)}
 									<Button
 										variant="secondary"
 										className="w-full"
@@ -290,53 +206,9 @@ const ImageAnalysisDashboard = () => {
 										Comparativo de Vídeo (Antes x Depois)
 									</Button>
 								</div>
-
-								<div className="mt-6 w-full max-w-md rounded-xl border bg-slate-50 p-4 text-left">
-									<div className="flex items-center gap-2 text-sm font-medium text-slate-700">
-										<HardDriveDownload className="h-4 w-4" />
-										Auditoria DICOM local
-									</div>
-									<p className="mt-2 text-xs text-slate-500">
-										Studies remotos e arquivos `.dcm` locais salvam os `Transfer
-										Syntax UID` usados no navegador. Isso mostra quais codecs
-										realmente importam antes de cortar `openjpeg` ou `openjph`
-										do bundle.
-									</p>
-									<div className="mt-3 flex flex-wrap gap-2">
-										{trackedSyntaxes.length > 0 ? (
-											trackedSyntaxes.map((item) => (
-												<div
-													key={item.syntax}
-													className="rounded-full border bg-white px-3 py-1 text-[11px] text-slate-600"
-													title={item.syntax}
-												>
-													{item.label} · {item.codec}
-												</div>
-											))
-										) : (
-											<div className="text-xs text-slate-500">
-												Ainda sem dados coletados nesta máquina.
-											</div>
-										)}
-									</div>
-									{trackedFamilies.length > 0 && (
-										<p className="mt-3 text-xs text-amber-700">
-											Codecs especializados detectados:{" "}
-											{trackedFamilies.join(", ")}.
-										</p>
-									)}
-								</div>
 							</div>
 						</Card>
 					</div>
-				)}
-
-				{mode === "dicom" && file && (
-					<Suspense fallback={<LoadingFallback />}>
-						<div className="flex-1 overflow-hidden border rounded-lg bg-black">
-							<DicomViewer file={file} />
-						</div>
-					</Suspense>
 				)}
 
 				{mode === "pose" && file && (

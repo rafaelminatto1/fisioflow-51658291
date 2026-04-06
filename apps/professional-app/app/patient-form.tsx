@@ -87,19 +87,6 @@ function normalizeDateForApi(value: string) {
   return `${year}-${month}-${day}`;
 }
 
-function mapPatientToForm(patient: Patient): FormData {
-  return {
-    name: patient.name ?? '',
-    email: patient.email ?? '',
-    phone: patient.phone ?? '',
-    birthDate: formatDateForInput(patient.birthDate),
-    condition: patient.condition ?? '',
-    diagnosis: patient.diagnosis ?? '',
-    notes: patient.notes ?? '',
-    status: patient.status ?? 'active',
-  };
-}
-
 export default function PatientFormScreen() {
   const colors = useColors();
   const router = useRouter();

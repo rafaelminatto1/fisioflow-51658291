@@ -12,7 +12,6 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import { useColors } from '@/hooks/useColorScheme';
-import { useAuthStore } from '@/store/auth';
 import { Button, Card } from '@/components';
 import { useHaptics } from '@/hooks/useHaptics';
 import { fetchApi } from '@/lib/api';
