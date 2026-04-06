@@ -13,7 +13,7 @@
  * - Latência de queries
  */
 
-import { useState, useEffect, useRef, useCallback, memo } from "react";
+import { useState, useEffect, useRef, memo } from "react";
 import { Activity, Database, Zap } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { cn } from "@/lib/utils";
@@ -94,8 +94,7 @@ export const PerformanceMonitor = ({
 	showToggle = true,
 }: PerformanceMonitorProps) => {
 	const [isExpanded, setIsExpanded] = useState(false);
-	const [performanceData, setPerformanceData] =
-		useState<PerformanceData | null>(null);
+	const [performanceData] = useState<PerformanceData | null>(null);
 
 	// Refs para medição
 	

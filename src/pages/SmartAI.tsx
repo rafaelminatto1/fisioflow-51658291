@@ -1,5 +1,6 @@
 import React, { useState, useRef, useEffect } from "react";
 import ReactMarkdown from "react-markdown";
+import { useLocation } from "react-router-dom";
 import { MainLayout } from "@/components/layout/MainLayout";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -14,6 +15,8 @@ import {
 	AlertCircle,
 	Copy,
 	Check,
+	Library,
+	FileText,
 } from "lucide-react";
 import remarkGfm from "remark-gfm";
 import { Alert, AlertDescription } from "@/components/ui/alert";
@@ -21,28 +24,63 @@ import { Badge } from "@/components/ui/badge";
 import { toast } from "@/hooks/use-toast";
 import { fisioLogger as logger } from "@/lib/errors/logger";
 import { getNeonAccessToken } from "@/lib/auth/neon-token";
+import { useAiSearch, type AiSource } from "@/hooks/useAiSearch";
+import { cn } from "@/lib/utils";
 
 interface Message {
 	id: string;
 	role: "user" | "assistant";
 	content: string;
 	timestamp: Date;
+	isRag?: boolean;
+	sources?: AiSource[];
 }
 
 const SmartAI = () => {
-	const [messages, setMessages] = useState<Message[]>([
-		{
+	const location = useLocation();
+	const state = location.state as { 
+		initialQuery?: string; 
+		initialResult?: string; 
+		initialSources?: AiSource[] 
+	} | null;
+
+	const [messages, setMessages] = useState<Message[]>(() => {
+		const defaultMessage: Message = {
 			id: "1",
 			role: "assistant",
 			content:
 				"Olá! Sou o assistente inteligente de fisioterapia da Activity. Posso ajudar com recomendações de exercícios, orientações sobre tratamentos, análise de sintomas e muito mais. Como posso ajudar você hoje?",
 			timestamp: new Date(),
-		},
-	]);
+		};
+
+		if (state?.initialQuery && state?.initialResult) {
+			return [
+				defaultMessage,
+				{
+					id: "initial-user",
+					role: "user",
+					content: state.initialQuery,
+					timestamp: new Date(),
+					isRag: true,
+				},
+				{
+					id: "initial-assistant",
+					role: "assistant",
+					content: state.initialResult,
+					timestamp: new Date(),
+					isRag: true,
+					sources: state.initialSources,
+				}
+			];
+		}
+
+		return [defaultMessage];
+	});
 	const [input, setInput] = useState("");
 	const [loading, setLoading] = useState(false);
 	const [copiedId, setCopiedId] = useState<string | null>(null);
 	const scrollRef = useRef<HTMLDivElement>(null);
+	const { search: aiSearch, loading: searching } = useAiSearch();
 
 	const handleCopy = (content: string, id: string) => {
 		navigator.clipboard.writeText(content);
@@ -62,6 +100,47 @@ const SmartAI = () => {
 			scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
 		}
 	}, [messages]);
+
+	const handleSearch = async () => {
+		if (!input.trim() || searching || loading) return;
+
+		const userMessage: Message = {
+			id: Date.now().toString(),
+			role: "user",
+			content: input,
+			timestamp: new Date(),
+			isRag: true,
+		};
+
+		setMessages((prev) => [...prev, userMessage]);
+		const currentQuery = input;
+		setInput("");
+		setLoading(true);
+
+		try {
+			const result = await aiSearch(currentQuery);
+
+			const assistantMessage: Message = {
+				id: (Date.now() + 1).toString(),
+				role: "assistant",
+				content: result?.response || "Nenhuma informação encontrada na base de conhecimento para esta consulta.",
+				timestamp: new Date(),
+				isRag: true,
+				sources: result?.data,
+			};
+
+			setMessages((prev) => [...prev, assistantMessage]);
+		} catch (error) {
+			logger.error("Erro na busca RAG", error, "SmartAI");
+			toast({
+				title: "Erro na busca",
+				description: "Não foi possível consultar a base de conhecimento.",
+				variant: "destructive",
+			});
+		} finally {
+			setLoading(false);
+		}
+	};
 
 	const handleSend = async () => {
 		if (!input.trim() || loading) return;
@@ -288,17 +367,32 @@ const SmartAI = () => {
 										className={`flex gap-3 ${message.role === "user" ? "justify-end" : "justify-start"}`}
 									>
 										{message.role === "assistant" && (
-											<div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
-												<Bot className="w-4 h-4 text-primary" />
+											<div className={cn(
+												"w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0",
+												message.isRag ? "bg-amber-100 dark:bg-amber-950/30" : "bg-primary/10"
+											)}>
+												{message.isRag ? (
+													<Library className="w-4 h-4 text-amber-600 dark:text-amber-400" />
+												) : (
+													<Bot className="w-4 h-4 text-primary" />
+												)}
 											</div>
 										)}
 										<div
-											className={`max-w-[85%] rounded-lg px-4 py-2 ${
+											className={cn(
+												"max-w-[85%] rounded-lg px-4 py-2",
 												message.role === "user"
 													? "bg-primary text-primary-foreground"
-													: "bg-muted"
-											}`}
+													: "bg-muted",
+												message.isRag && message.role === "assistant" && "border-l-4 border-amber-500"
+											)}
 										>
+											{message.role === "assistant" && message.isRag && (
+												<div className="flex items-center gap-1.5 mb-1.5 text-[10px] font-bold uppercase tracking-wider text-amber-600 dark:text-amber-400">
+													<Library className="w-3 h-3" />
+													Resposta da Base de Conhecimento
+												</div>
+											)}
 											{message.role === "user" ? (
 												<p className="text-sm whitespace-pre-wrap">
 													{message.content}
@@ -425,6 +519,26 @@ const SmartAI = () => {
 															{message.content}
 														</ReactMarkdown>
 													</div>
+
+													{message.sources && message.sources.length > 0 && (
+														<div className="mt-4 pt-3 border-t border-amber-200/30 dark:border-amber-900/30">
+															<p className="text-[10px] font-bold uppercase tracking-wider text-amber-600 dark:text-amber-400 mb-2 flex items-center gap-1">
+																<FileText className="w-3 h-3" />
+																Fontes consultadas:
+															</p>
+															<div className="flex flex-wrap gap-1.5">
+																{message.sources.map((source, sIdx) => (
+																	<Badge 
+																		key={sIdx} 
+																		variant="outline" 
+																		className="text-[9px] bg-amber-50/50 dark:bg-amber-950/20 border-amber-200/50 text-amber-700 dark:text-amber-300 font-medium py-0 h-5"
+																	>
+																		{source.filename} ({(source.score * 100).toFixed(0)}%)
+																	</Badge>
+																))}
+															</div>
+														</div>
+													)}
 												</div>
 											)}
 											<span className="text-xs opacity-70 mt-1 block">
@@ -499,14 +613,30 @@ const SmartAI = () => {
 									}}
 									className="min-h-[60px] resize-none"
 								/>
-								<Button
-									onClick={handleSend}
-									disabled={!input.trim() || loading}
-									size="icon"
-									className="h-[60px] w-[60px]"
-								>
-									<Send className="w-4 h-4" />
-								</Button>
+								<div className="flex flex-col gap-2">
+									<Button
+										onClick={handleSend}
+										disabled={!input.trim() || loading || searching}
+										size="icon"
+										className="h-[30px] w-[60px]"
+										title="Enviar mensagem"
+									>
+										<Send className="w-4 h-4" />
+									</Button>
+									<Button
+										onClick={handleSearch}
+										disabled={!input.trim() || loading || searching}
+										variant="outline"
+										size="icon"
+										className={cn(
+											"h-[30px] w-[60px] border-amber-200 bg-amber-50 text-amber-700 hover:bg-amber-100 hover:text-amber-800",
+											searching && "animate-pulse"
+										)}
+										title="Buscar na base de conhecimento"
+									>
+										<Library className="w-4 h-4" />
+									</Button>
+								</div>
 							</div>
 						</div>
 					</CardContent>

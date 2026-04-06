@@ -358,7 +358,7 @@ export class AnalysisEngine {
 	 */
 	private detectPostureIssues(
 		landmarks: PoseLandmark[],
-		jointAngles: Record<MainJoint, any>,
+		_jointAngles: Record<MainJoint, any>,
 	): PostureIssue[] {
 		const issues: PostureIssue[] = [];
 		const nose = landmarks[0];
@@ -455,7 +455,7 @@ export class AnalysisEngine {
 		}
 
 		// Avaliar alinhamento de articulações principais
-		for (const [joint, angleData] of Object.entries(jointAngles)) {
+		for (const [_joint, angleData] of Object.entries(jointAngles)) {
 			if (angleData && typeof angleData === "object") {
 				const angle = angleData as {
 					current: number;
@@ -513,7 +513,7 @@ export class AnalysisEngine {
 		let stabilityScore = 100;
 		let unstableJoints = 0;
 
-		for (const [joint, angleData] of Object.entries(jointAngles)) {
+		for (const [_joint, angleData] of Object.entries(jointAngles)) {
 			if (angleData && typeof angleData === "object") {
 				const data = angleData as { min: number; max: number };
 				const range = data.max - data.min;

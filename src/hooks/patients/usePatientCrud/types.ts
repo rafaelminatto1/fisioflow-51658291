@@ -1,5 +1,3 @@
-import type { PatientRow } from "@/types/workers";
-
 export interface Patient {
 	id: string;
 	full_name: string;
