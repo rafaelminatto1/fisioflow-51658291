@@ -26,11 +26,11 @@ config.resolver.sourceExts = [
 // Stubs para dependências web não usadas no mobile
 try {
 	config.resolver.extraNodeModules = {
-		...(config.resolver.extraNodeModules || {}),
+		...config.resolver.extraNodeModules,
 		"framer-motion": path.resolve(projectRoot, "stubs/framer-motion.js"),
 		"@radix-ui/react-slot": path.resolve(projectRoot, "stubs/radix-slot.js"),
 	};
-} catch (e) {
+} catch {
 	// stubs opcionais
 }
 
@@ -39,7 +39,6 @@ config.resolver.blockList = [
 	/.*\.cache.*/,
 	/\.git\/.*/,
 	/.*\.md$/,
-	/node_modules\/@cornerstonejs\/.*/,
 	/node_modules\/@aws-sdk\/.*/,
 	/node_modules\/@sentry\/vite-plugin\/.*/,
 	/node_modules\/@playwright\/.*/,

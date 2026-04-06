@@ -1,7 +1,7 @@
 import { db } from '../../lib/db';
 import { getAuthSession } from '../../lib/auth';
 import { transacoes } from '@fisioflow/db';
-import { eq, desc, sql } from 'drizzle-orm';
+import { eq, desc } from 'drizzle-orm';
 import { Card, CardContent, CardHeader, CardTitle } from '@fisioflow/ui';
 import { TrendingUp, TrendingDown, DollarSign, Calendar, LineChart } from 'lucide-react';
 import { FluxoCaixaChart } from '../../components/financeiro/FluxoCaixaChart';

@@ -59,7 +59,7 @@ export const AppointmentCard = React.forwardRef<View, AppointmentCardProps>(
     status = 'agendado', 
     isDragging, 
     isSaving, 
-    isDropTarget, 
+    isDropTarget: _isDropTarget, 
     isSelected,
     onClick, 
     statusConfig,

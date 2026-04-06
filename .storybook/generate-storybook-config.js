@@ -1,9 +1,6 @@
 const fs = require('fs')
 const path = require('path')
 
-const packageJsonPath = path.join(__dirname, '..', 'apps/web/package.json')
-const packageJson = JSON.parse(fs.readFileSync(packageJsonPath, 'utf8'))
-
 const mainTemplate = `import type { StorybookConfig } from '@storybook/react-vite'
 
 const config: StorybookConfig = {

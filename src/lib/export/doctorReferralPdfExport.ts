@@ -1,6 +1,6 @@
-import jsPDF from "jspdf";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
+import { loadJsPdfRuntime } from "@/lib/export/jspdfRuntime";
 
 export interface DoctorReferralPdfData {
 	patient: {
@@ -29,6 +29,7 @@ export async function exportDoctorReferralPdf(
 	fileName: string,
 	data: DoctorReferralPdfData,
 ) {
+	const { jsPDF } = await loadJsPdfRuntime();
 	const doc = new jsPDF({
 		unit: "mm",
 		format: "a4",

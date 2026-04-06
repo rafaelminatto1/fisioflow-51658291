@@ -15,7 +15,6 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { useColors } from '@/hooks/useColorScheme';
-import { useAuthStore } from '@/store/auth';
 import { Card, SyncIndicator } from '@/components';
 import { Spacing } from '@/constants/spacing';
 import { format, subDays, startOfDay } from 'date-fns';

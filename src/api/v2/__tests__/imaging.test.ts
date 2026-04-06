@@ -1,25 +1,15 @@
-import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 
 const requestMock = vi.fn();
-const getWorkersApiUrlMock = vi.fn();
 
 vi.mock("../base", () => ({
 	request: (...args: unknown[]) => requestMock(...args),
-}));
-
-vi.mock("@/lib/api/config", () => ({
-	getWorkersApiUrl: () => getWorkersApiUrlMock(),
 }));
 
 describe("api v2 imaging", () => {
 	beforeEach(() => {
 		vi.resetModules();
 		vi.clearAllMocks();
-		getWorkersApiUrlMock.mockReturnValue("https://workers.example.com");
-	});
-
-	afterEach(() => {
-		vi.unstubAllEnvs();
 	});
 
 	it("activityLab patients.list serializa apenas parâmetros preenchidos", async () => {
@@ -37,54 +27,28 @@ describe("api v2 imaging", () => {
 		);
 	});
 
-	it("dicomApi.series faz encode dos study UIDs", async () => {
-		requestMock.mockResolvedValueOnce({ data: [] });
-
+	it("dicomApi.config sinaliza descontinuidade do fluxo DICOM", async () => {
 		const { dicomApi } = await import("../imaging");
 
-		await dicomApi.series("1.2.840/Study UID");
+		await expect(dicomApi.config()).resolves.toEqual({
+			data: expect.objectContaining({
+				enabled: false,
+				deprecated: true,
+			}),
+		});
+	});
 
-		expect(requestMock).toHaveBeenCalledWith(
-			"/api/dicom/studies/1.2.840%2FStudy%20UID/series",
+	it("dicomApi.series falha com mensagem deprecada", async () => {
+		const { dicomApi } = await import("../imaging");
+
+		await expect(dicomApi.series("1.2.840/Study UID")).rejects.toThrow(
+			/descontinuado/i,
 		);
 	});
 
-	it("dicomApi.uploadInstances dispara um POST por instância", async () => {
-		requestMock
-			.mockResolvedValueOnce({ data: { ok: true, id: "1" } })
-			.mockResolvedValueOnce({ data: { ok: true, id: "2" } });
-
+	it("dicomApi.getWadoUrl falha com mensagem deprecada", async () => {
 		const { dicomApi } = await import("../imaging");
 
-		const result = await dicomApi.uploadInstances([
-			{ body: "base64-a", fileName: "a.dcm" },
-			{ body: "base64-b", fileName: "b.dcm" },
-		]);
-
-		expect(result).toHaveLength(2);
-		expect(requestMock).toHaveBeenNthCalledWith(
-			1,
-			"/api/dicom/instances",
-			{
-				method: "POST",
-				body: JSON.stringify({ body: "base64-a", fileName: "a.dcm" }),
-			},
-		);
-		expect(requestMock).toHaveBeenNthCalledWith(
-			2,
-			"/api/dicom/instances",
-			{
-				method: "POST",
-				body: JSON.stringify({ body: "base64-b", fileName: "b.dcm" }),
-			},
-		);
-	});
-
-	it("dicomApi.getWadoUrl usa a Workers API centralizada", async () => {
-		const { dicomApi } = await import("../imaging");
-
-		expect(dicomApi.getWadoUrl()).toBe(
-			"https://workers.example.com/api/dicom/wado",
-		);
+		expect(() => dicomApi.getWadoUrl()).toThrow(/descontinuado/i);
 	});
 });

@@ -5,6 +5,7 @@ import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { useColors } from '@/hooks/useColorScheme';
 import { useAllFinancialRecords } from '@/hooks/usePatientFinancial';
+import { useNFSeList, NFSE_STATUS_LABELS, NFSE_STATUS_COLORS } from '@/hooks/useNFSe';
 import { Card } from '@/components';
 import { format, subDays } from 'date-fns';
 import { useHaptics } from '@/hooks/useHaptics';
@@ -29,7 +30,7 @@ export default function FinancialsScreen() {
   const { light, medium } = useHaptics();
   
   const [filter, setFilter] = useState<'all' | 'pending' | 'paid'>('all');
-  const [activeTab, setActiveTab] = useState<'transactions' | 'receipts'>('transactions');
+  const [activeTab, setActiveTab] = useState<'transactions' | 'nfse' | 'receipts'>('transactions');
   const [dateRange] = useState<{ startDate: Date, endDate: Date }>({
     startDate: subDays(new Date(), 30),
     endDate: new Date(),
@@ -41,6 +42,7 @@ export default function FinancialsScreen() {
   }), [dateRange.startDate, dateRange.endDate]);
 
   const { data: records, isLoading, error, refetch } = useAllFinancialRecords(queryOptions);
+  const { data: nfseRecords = [], isLoading: isLoadingNFSe, refetch: refetchNFSe } = useNFSeList();
 
   const filteredRecords = useMemo(() => {
     if (!records) return [];
@@ -58,8 +60,12 @@ export default function FinancialsScreen() {
 
   const handleAdd = useCallback(() => {
     medium();
-    router.push('/financial-form');
-  }, [medium]);
+    if (activeTab === 'nfse') {
+      router.push('/nfse-form');
+    } else {
+      router.push('/financial-form');
+    }
+  }, [medium, activeTab]);
 
   const handleEdit = useCallback((record: any) => {
     medium();
@@ -85,23 +91,35 @@ export default function FinancialsScreen() {
       </View>
 
       <View style={styles.tabContainer}>
-        <TouchableOpacity 
-          style={[styles.tab, activeTab === 'transactions' && { borderBottomColor: colors.primary, borderBottomWidth: 2 }]} 
+        <TouchableOpacity
+          style={[styles.tab, activeTab === 'transactions' && { borderBottomColor: colors.primary, borderBottomWidth: 2 }]}
           onPress={() => { light(); setActiveTab('transactions'); }}
         >
           <Text style={[styles.tabText, { color: activeTab === 'transactions' ? colors.primary : colors.textSecondary }]}>Transações</Text>
         </TouchableOpacity>
-        <TouchableOpacity 
-          style={[styles.tab, activeTab === 'receipts' && { borderBottomColor: colors.primary, borderBottomWidth: 2 }]} 
+        <TouchableOpacity
+          style={[styles.tab, activeTab === 'nfse' && { borderBottomColor: colors.primary, borderBottomWidth: 2 }]}
+          onPress={() => { light(); setActiveTab('nfse'); }}
+        >
+          <Text style={[styles.tabText, { color: activeTab === 'nfse' ? colors.primary : colors.textSecondary }]}>NFS-e</Text>
+        </TouchableOpacity>
+        <TouchableOpacity
+          style={[styles.tab, activeTab === 'receipts' && { borderBottomColor: colors.primary, borderBottomWidth: 2 }]}
           onPress={() => { light(); setActiveTab('receipts'); }}
         >
           <Text style={[styles.tabText, { color: activeTab === 'receipts' ? colors.primary : colors.textSecondary }]}>Recibos</Text>
         </TouchableOpacity>
       </View>
 
-      <ScrollView 
+      <ScrollView
         style={styles.scroll}
-        refreshControl={<RefreshControl refreshing={isLoading} onRefresh={handleRefresh} tintColor={colors.primary} />}
+        refreshControl={
+          <RefreshControl
+            refreshing={activeTab === 'nfse' ? isLoadingNFSe : isLoading}
+            onRefresh={activeTab === 'nfse' ? refetchNFSe : handleRefresh}
+            tintColor={colors.primary}
+          />
+        }
       >
         {activeTab === 'transactions' ? (
           <>
@@ -198,6 +216,47 @@ export default function FinancialsScreen() {
                       Nenhum registro encontrado.
                   </Text>
               </View>
+            )}
+          </>
+        ) : activeTab === 'nfse' ? (
+          <>
+            {isLoadingNFSe ? (
+              <ActivityIndicator size="large" color={colors.primary} style={{ marginTop: 40 }} />
+            ) : nfseRecords.length === 0 ? (
+              <View style={styles.emptyState}>
+                <Ionicons name="receipt-outline" size={48} color={colors.textMuted} />
+                <Text style={{ textAlign: 'center', color: colors.textSecondary, marginTop: 12 }}>
+                  Nenhuma NFS-e emitida.{'\n'}Toque em + para emitir.
+                </Text>
+              </View>
+            ) : (
+              nfseRecords.map((nfse) => (
+                <Card key={nfse.id} style={styles.recordCard}>
+                  <View style={styles.cardHeader}>
+                    <View>
+                      <Text style={[styles.patientName, { color: colors.text }]}>
+                        {nfse.tomador_nome || 'Sem tomador'}
+                      </Text>
+                      <Text style={[styles.recordDate, { color: colors.textSecondary }]}>
+                        {format(new Date(nfse.data_emissao), 'dd/MM/yyyy')} • RPS {nfse.numero_rps}
+                      </Text>
+                    </View>
+                    <View style={[styles.statusBadge, { backgroundColor: (NFSE_STATUS_COLORS[nfse.status] ?? '#9CA3AF') + '20' }]}>
+                      <Text style={[styles.statusText, { color: NFSE_STATUS_COLORS[nfse.status] ?? '#9CA3AF' }]}>
+                        {NFSE_STATUS_LABELS[nfse.status]}
+                      </Text>
+                    </View>
+                  </View>
+                  <View style={[styles.cardFooter, { borderTopColor: colors.border }]}>
+                    <Text style={[styles.recordValue, { color: colors.text }]}>
+                      R$ {nfse.valor_servico.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+                    </Text>
+                    {nfse.link_nfse ? (
+                      <Ionicons name="open-outline" size={20} color={colors.primary} />
+                    ) : null}
+                  </View>
+                </Card>
+              ))
             )}
           </>
         ) : (
