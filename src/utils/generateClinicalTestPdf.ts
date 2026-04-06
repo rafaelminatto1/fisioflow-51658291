@@ -2,7 +2,6 @@ import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { loadJsPdfRuntime } from "@/lib/export/jspdfRuntime";
 
-type JsPdfInstance = InstanceType<(await import("jspdf"))["jsPDF"]>;
 type JsPdfCtor = typeof import("jspdf")["jsPDF"];
 type JsPdfInstance = InstanceType<JsPdfCtor>;
 
