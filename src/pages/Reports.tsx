@@ -152,19 +152,6 @@ const Reports = () => {
 		toast.info("Abra o gerador avançado para emitir este relatório com dados reais.");
 	}, [selectedPeriod]);
 
-	const getStatusColor = useCallback((status: string) => {
-		switch (status) {
-			case "Concluído":
-				return "bg-green-100 text-green-800";
-			case "Processando":
-				return "bg-yellow-100 text-yellow-800";
-			case "Erro":
-				return "bg-red-100 text-red-800";
-			default:
-				return "bg-gray-100 text-gray-800";
-		}
-	}, []);
-
 	return (
 		<MainLayout>
 			<div className="space-y-4 sm:space-y-6 animate-fade-in pb-20 md:pb-0">
