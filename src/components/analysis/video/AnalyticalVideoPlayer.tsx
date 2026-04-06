@@ -1,4 +1,4 @@
-import React, { useRef, useState, useEffect, useCallback } from "react";
+import React, { useRef, useState, useEffect } from "react";
 import { 
 	Play, 
 	Pause, 
@@ -6,7 +6,6 @@ import {
 	SkipForward, 
 	Camera, 
 	Gauge, 
-	Settings2,
 	Maximize2
 } from "lucide-react";
 import { Button } from "@/components/ui/button";

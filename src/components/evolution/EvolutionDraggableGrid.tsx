@@ -1,5 +1,4 @@
 import React, { useState, useCallback, useMemo } from "react";
-import { useAuth } from "@/contexts/AuthContext";
 import { SmartTextarea } from "@/components/ui/SmartTextarea";
 import { Button } from "@/components/ui/button";
 import {
@@ -19,7 +18,6 @@ import {
 	Activity,
 	TrendingDown,
 	TrendingUp,
-	Minus,
 	ChevronUp,
 	ChevronDown,
 	ImageIcon,

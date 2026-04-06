@@ -1,7 +1,6 @@
 import {
 	Activity,
 	ClipboardList,
-	Filter,
 	History,
 	LayoutGrid,
 	Search,
@@ -14,15 +13,15 @@ import {
 	Star,
 } from "lucide-react";
 import { useState, useMemo } from "react";
+import type { LucideIcon } from "lucide-react";
 import MainLayout from "@/components/layout/MainLayout";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
-import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 import { builtinEvaluationTemplates } from "@/data/defaultEvaluationTemplates";
 
-const CATEGORY_CONFIG: Record<string, { label: string; icon: any; color: string; bg: string }> = {
+const CATEGORY_CONFIG: Record<string, { label: string; icon: LucideIcon; color: string; bg: string }> = {
 	ortopedica: { label: "Ortopédica", icon: Activity, color: "text-blue-600", bg: "bg-blue-50 dark:bg-blue-950/30" },
 	esportiva: { label: "Esportiva", icon: Zap, color: "text-orange-600", bg: "bg-orange-50 dark:bg-orange-950/30" },
 	"pos-operatorio": { label: "Pós-Op", icon: History, color: "text-purple-600", bg: "bg-purple-50 dark:bg-purple-950/30" },

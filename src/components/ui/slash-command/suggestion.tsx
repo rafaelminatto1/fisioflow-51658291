@@ -17,9 +17,6 @@ import {
 	CheckSquare,
 	Search,
 	Stethoscope,
-	Info,
-	CheckCircle2,
-	AlertTriangle,
 	Target,
 	Activity,
 	History,
@@ -32,7 +29,6 @@ import {
 import { CommandList } from "./CommandList";
 import { withImageParams } from "@/lib/storageProxy";
 import { cn } from "@/lib/utils";
-import { uploadFile } from "@/lib/storage/upload";
 
 // ── Suggestion Logic ──────────────────────────────────
 
@@ -70,42 +66,6 @@ function insertClinicalBlock(
 		.run();
 }
 
-function insertCallout(
-	editor: any,
-	range: any,
-	type: "info" | "success" | "warning",
-) {
-	const config = {
-		info: {
-			emoji: "💡",
-			title: "Dica",
-			className: "notion-callout--info",
-			icon: <Info className="w-4 h-4" />,
-		},
-		success: {
-			emoji: "✅",
-			title: "Sucesso",
-			className: "notion-callout--success",
-			icon: <CheckCircle2 className="w-4 h-4" />,
-		},
-		warning: {
-			emoji: "⚠️",
-			title: "Atenção",
-			className: "notion-callout--warning",
-			icon: <AlertTriangle className="w-4 h-4" />,
-		},
-	}[type];
-
-	editor
-		.chain()
-		.focus()
-		.deleteRange(range)
-		.insertContent(
-			`<div class="notion-callout ${config.className}"><span class="notion-callout-icon">${config.emoji}</span><div class="notion-callout-content"><p><strong>${config.title}:</strong> </p></div></div>`,
-		)
-		.run();
-}
-
 interface SlashSuggestionItem {
 	title: string;
 	description: string;
@@ -118,15 +78,6 @@ interface SlashSuggestionItem {
 
 interface SuggestionRuntimeOptions {
 	imageUploadFolder?: string;
-}
-
-function promptValue(message: string): string | null {
-	if (typeof window === "undefined" || typeof window.prompt !== "function")
-		return null;
-	const value = window.prompt(message);
-	if (!value) return null;
-	const trimmed = value.trim();
-	return trimmed.length > 0 ? trimmed : null;
 }
 
 function pickLocalFile(accept: string): Promise<File | null> {
@@ -158,47 +109,10 @@ function pickLocalFile(accept: string): Promise<File | null> {
 	});
 }
 
-async function uploadAndInsertFile({
-	editor,
-	range,
-	accept,
-	imageUploadFolder,
-	defaultFolder,
-	asImage,
-}: {
-	editor: any;
-	range: any;
-	accept: string;
-	imageUploadFolder?: string;
-	defaultFolder: string;
-	asImage: boolean;
-}) {
-	editor.chain().focus().deleteRange(range).run();
-	const file = await pickLocalFile(accept);
-	if (!file) return;
-
-	const result = await uploadFile(file, {
-		folder: imageUploadFolder || defaultFolder,
-	});
-
-	if (asImage && file.type.startsWith("image/")) {
-		editor.chain().focus().setImage({ src: result.url, alt: file.name }).run();
-		return;
-	}
-
-	editor
-		.chain()
-		.focus()
-		.insertContent(
-			`<p><a href="${result.url}" target="_blank" rel="noopener noreferrer">📎 ${file.name}</a></p>`,
-		)
-		.run();
-}
-
 export const getSuggestionItems = ({
 	query,
 	exercises,
-	options,
+	options: _options,
 }: {
 	query: string;
 	exercises?: any[];

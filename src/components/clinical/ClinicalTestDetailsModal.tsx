@@ -82,7 +82,6 @@ export function ClinicalTestDetailsModal({
 	if (!test) return null;
 
 	const primaryImage = test.image_url || test.media_urls?.[0] || null;
-	const galleryImages = test.media_urls?.slice(1, 3) ?? [];
 	const evidenceResources = test.evidence_resources ?? [];
 
 	const handleDownloadPDF = async () => {
@@ -213,7 +212,7 @@ export function ClinicalTestDetailsModal({
 									label: "Posição inicial",
 								},
 								{ url: test.final_position_image_url, label: "Posição final" },
-							].map((item, index) => (
+							].map((item) => (
 								<div key={item.label} className="space-y-2">
 									<span className="pl-1 text-[10px] font-bold uppercase tracking-widest text-slate-400">
 										{item.label}

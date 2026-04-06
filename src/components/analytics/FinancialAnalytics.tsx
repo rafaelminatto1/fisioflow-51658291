@@ -25,7 +25,6 @@ import {
 	addMonths,
 	subDays,
 	differenceInMonths,
-	eachDayOfInterval,
 } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { useAnalyticsFilters } from "@/contexts/AnalyticsFiltersContext";

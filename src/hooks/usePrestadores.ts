@@ -48,7 +48,7 @@ export function useUpdatePrestador() {
 		mutationFn: async ({
 			id,
 			data,
-			eventoId,
+			eventoId: _eventoId,
 		}: {
 			id: string;
 			data: PrestadorUpdate;
@@ -93,7 +93,7 @@ export function useMarcarPagamento() {
 	const queryClient = useQueryClient();
 
 	return useMutation({
-		mutationFn: async ({ id, eventoId }: { id: string; eventoId: string }) => {
+		mutationFn: async ({ id, eventoId: _eventoId }: { id: string; eventoId: string }) => {
 			const res = await prestadoresApi.toggleStatus(id);
 			return (res?.data ?? res) as Prestador;
 		},

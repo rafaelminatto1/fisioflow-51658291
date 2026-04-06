@@ -57,7 +57,7 @@ export function BoardCalendarView({
 					modifiers={modifiers}
 					modifiersStyles={modifiersStyles}
 					components={{
-						DayButton: ({ day, modifiers, ...props }) => {
+						DayButton: ({ day, modifiers: _modifiers, ...props }) => {
 							const dateKey = format(day.date, "yyyy-MM-dd");
 							const count = dayTasksMap[dateKey]?.length ?? 0;
 							return (

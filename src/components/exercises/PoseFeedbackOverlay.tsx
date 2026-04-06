@@ -152,7 +152,7 @@ export const PoseFeedbackOverlay: React.FC<PoseFeedbackOverlayProps> = ({
 	showAngles = true,
 	showConnections = true,
 	simpleMode = false,
-	highlightColor = "#3b82f6",
+	highlightColor: _highlightColor = "#3b82f6",
 	opacity = 1,
 	onPoseChange,
 }) => {

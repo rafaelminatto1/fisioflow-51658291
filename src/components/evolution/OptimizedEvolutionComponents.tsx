@@ -329,7 +329,7 @@ interface LazyWrapperProps {
  * Evita flicker em carregamentos rápidos
  */
 export const LazyWrapper = memo(
-	({ children, fallback, delay = 200 }: LazyWrapperProps) => {
+	({ children, fallback: _fallback, delay = 200 }: LazyWrapperProps) => {
 		const [,setShowFallback] = useState(false);
 
 		useEffect(() => {

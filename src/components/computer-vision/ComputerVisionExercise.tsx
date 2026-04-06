@@ -438,7 +438,7 @@ const ComputerVisionExercise: React.FC<ComputerVisionExerciseProps> = ({
 		}
 	};
 
-	const handleCalibrate = (height: number, armSpan: number) => {
+	const handleCalibrate = (_height: number, _armSpan: number) => {
 		_calibrateSystem(); // Mock implementation in hook for now
 		setShowCalibration(false);
 	};

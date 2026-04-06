@@ -25,7 +25,6 @@ import {
 import type { BoardColumn } from "@/types/boards";
 import type { Tarefa, TarefaStatus } from "@/types/tarefas";
 import {
-	useUpdateTarefa,
 	useDeleteTarefa,
 	useBulkUpdateTarefas,
 } from "@/hooks/useTarefas";

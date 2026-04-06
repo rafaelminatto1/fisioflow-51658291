@@ -1,7 +1,4 @@
-import { Suspense, lazy } from "react";
 import { Outlet, useLocation } from "react-router-dom";
-import { AppLoadingSkeleton } from "@/components/ui/AppLoadingSkeleton";
-
 import { NetworkStatus } from "@/components/ui/network-status";
 import { SyncManager } from "@/components/sync/SyncManager";
 import { TourGuide } from "@/components/system/TourGuide";

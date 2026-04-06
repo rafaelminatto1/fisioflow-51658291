@@ -1,7 +1,6 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Plus, Search, Filter, Grid, List, ClipboardList } from "lucide-react";
-import { useQuery } from "@tanstack/react-query";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -20,7 +19,6 @@ import {
 	DialogDescription,
 	DialogHeader,
 	DialogTitle,
-	DialogTrigger,
 } from "@/components/ui/dialog";
 import { TemplateCard } from "@/components/evaluation/TemplateCard";
 import { EvaluationTemplate } from "@/types/clinical-forms";
@@ -29,13 +27,6 @@ import { useDeleteEvaluationForm } from "@/hooks/useEvaluationForms";
 import { useDuplicateEvaluationForm } from "@/hooks/useEvaluationForms";
 import { useToggleFavorite } from "@/hooks/useTemplateFavorites";
 import { useIncrementTemplateUsage } from "@/hooks/useTemplateStats";
-import { toast } from "sonner";
-import {
-	DropdownMenu,
-	DropdownMenuContent,
-	DropdownMenuItem,
-	DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
 import {
 	Popover,
 	PopoverContent,
