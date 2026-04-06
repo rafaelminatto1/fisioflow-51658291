@@ -119,11 +119,7 @@ export default function Settings() {
 						</TabsContent>
 					)}
 					<TabsContent value="schedule" className="pt-4">
-						<ScheduleTab
-							workingHours={state.workingHours}
-							setWorkingHours={state.setWorkingHours}
-							onSave={state.saveWorkingHours}
-						/>
+						<ScheduleTab />
 					</TabsContent>
 					<TabsContent value="a11y" className="pt-4">
 						<AccessibilityTab />
