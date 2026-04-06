@@ -33,13 +33,13 @@ export function usePatientEvolutionHandlers({
 	previousEvolutions,
 	requiredMeasurements,
 	todayMeasurements,
-	goals,
+	goals: _goals,
 	user,
 	selectedTherapistId,
 }: any) {
 	const { toast } = useToast();
 	const navigate = useNavigate();
-	const { } = usePDFGenerator();
+	usePDFGenerator();
 	const { completeAppointment } = useAppointmentActions();
 	const { awardXp } = useGamification(patientId || "");
 	const { exportPdf, } = useExportPdf();
