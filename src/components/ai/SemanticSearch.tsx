@@ -7,7 +7,7 @@
 import React, { useState, useCallback } from "react";
 import { Search, FileText, Calendar, User, TrendingUp } from "lucide-react";
 import { findSimilarEvolutions } from "@/lib/services/vector-search";
-import { useDebounce } from "@/hooks/useDebounce";
+import { useDebounce } from "@/hooks/performance/useDebounce";
 import {
 	Card,
 	CardContent,
