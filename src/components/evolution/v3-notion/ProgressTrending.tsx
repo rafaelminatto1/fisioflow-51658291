@@ -249,7 +249,7 @@ export interface CompactTrendProps {
 export const CompactTrend: React.FC<CompactTrendProps> = ({
 	data,
 	className,
-	isPain = false,
+	isPain: _isPain = false,
 }) => {
 	if (data.length < 2) return null;
 

@@ -232,7 +232,7 @@ export const useSectionSwipe = (config: SectionSwipeConfig) => {
 
 	const hintTimeoutRef = useRef<NodeJS.Timeout>();
 
-	const showHint = useCallback((message: string) => {
+	const showHint = useCallback((_message: string) => {
 		setHintVisible(true);
 
 		if (hintTimeoutRef.current) {

@@ -117,16 +117,6 @@ const isCompletedStatus = (status: string | undefined) => {
 	);
 };
 
-const isNoShowStatus = (status: string | undefined) => {
-	const normalized = (status ?? "").toLowerCase();
-	return ["no_show", "falta", "paciente_faltou", "faltou"].includes(normalized);
-};
-
-const isCancelledStatus = (status: string | undefined) => {
-	const normalized = (status ?? "").toLowerCase();
-	return ["cancelled", "cancelado"].includes(normalized);
-};
-
 // ============================================================================
 // TYPES
 // ============================================================================

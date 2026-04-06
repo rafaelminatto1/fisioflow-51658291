@@ -38,6 +38,7 @@ export function ScheduleXAppointmentCard({
 	const duration = appointment.duration || 60;
 	const time = normalizeTime(appointment.time);
 	const endTime = calculateEndTime(time, duration);
+
 	const handleClick = (e: React.MouseEvent) => {
 		e.stopPropagation();
 		if (selectionMode && onToggleSelection) {

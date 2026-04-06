@@ -128,7 +128,7 @@ export const exerciseProtocols = pgTable(
 		// Controle
 		embedding: customType<{ data: number[] }>({
 			dataType() {
-				return "vector(1536)";
+				return "vector(768)";
 			},
 		})("embedding"),
 		createdBy: text("created_by"),

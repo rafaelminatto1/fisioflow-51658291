@@ -15,7 +15,7 @@ import {
 	text,
 	boolean,
 	timestamp,
-	integer,
+	integer, customType
 } from "drizzle-orm/pg-core";
 import { relations } from "drizzle-orm";
 
@@ -59,6 +59,13 @@ export const wikiPages = pgTable("wiki_pages", {
 	createdAt: timestamp("created_at").defaultNow().notNull(),
 	updatedAt: timestamp("updated_at").defaultNow().notNull(),
 	deletedAt: timestamp("deleted_at"), // soft delete
+
+	// AI Vector Search (Cloudflare bge-base-en = 768 dimensions)
+	embedding: customType<{ data: number[] }>({
+		dataType() {
+			return "vector(768)";
+		},
+	})("embedding"),
 });
 
 export const wikiPagesRelations = relations(wikiPages, ({ one, many }) => ({
