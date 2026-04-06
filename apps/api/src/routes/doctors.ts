@@ -131,6 +131,7 @@ async function ensureDoctorsTable(env: Env): Promise<void> {
         clinic_phone TEXT,
         notes TEXT,
         is_active BOOLEAN DEFAULT true,
+        created_by TEXT,
         created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
         updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
       )
@@ -166,10 +167,11 @@ app.post('/', requireAuth, async (c) => {
         clinic_phone,
         notes,
         is_active,
+        created_by,
         created_at,
         updated_at
       ) VALUES (
-        $1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,true,NOW(),NOW()
+        $1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,true,$12,NOW(),NOW()
       )
       RETURNING
         id,
@@ -184,6 +186,7 @@ app.post('/', requireAuth, async (c) => {
         clinic_phone,
         notes,
         is_active,
+        created_by,
         created_at,
         updated_at
       `,
@@ -199,6 +202,7 @@ app.post('/', requireAuth, async (c) => {
         body.clinic_address ? String(body.clinic_address) : null,
         body.clinic_phone ? String(body.clinic_phone) : null,
         body.notes ? String(body.notes) : null,
+        user.uid,
       ],
     );
     return c.json({ data: result.rows[0] }, 201);

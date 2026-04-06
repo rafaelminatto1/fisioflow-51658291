@@ -124,7 +124,7 @@ export const PatientForm = forwardRef<HTMLFormElement, PatientFormProps>(
 			handleSubmit,
 			watch,
 			setValue,
-			formState: { errors, isDirty: _isDirty },
+			formState: { errors },
 		} = form;
 
 		const watchedBirthDate = watch("birth_date");

@@ -1,531 +1,928 @@
 /**
  * notion-templates.ts
  *
- * Rich Notion-style templates for clinical evolution records.
- * Based on real physiotherapy evolution patterns from Brazilian clinics.
+ * Rich Notion-style SOAP templates for orthopedic physiotherapy.
+ * HTML content is rendered inside the NotionEvolutionEditor (Tiptap + prose CSS).
  *
- * Each template produces structured HTML content that renders beautifully
- * inside the Notion-style RichTextEditor used in NotionEvolutionPanel.
+ * Sections map to the SOAPTemplate interface:
+ *   - subjective  → "S" — patient subjective report
+ *   - objective   → "O" — measurable physical exam findings
+ *   - assessment  → "A" — clinical reasoning & diagnosis
+ *   - plan        → "P" — intervention & next steps
  */
 
 import type { SOAPTemplate } from "./TemplateSelector";
 
-// ──────────────────────────────────────────────────────────────────────────────
-// Helper to wrap text in a Notion-style callout HTML block
-// ──────────────────────────────────────────────────────────────────────────────
-function callout(emoji: string, text: string): string {
-  return `<blockquote><p>${emoji} ${text}</p></blockquote>`;
-}
+// ─────────────────────────────────────────────────────────────────────────────
+// HTML block helpers
+// ─────────────────────────────────────────────────────────────────────────────
 
-function bulletList(items: string[]): string {
-  return `<ul>${items.map((i) => `<li><p>${i}</p></li>`).join("")}</ul>`;
-}
+const h3 = (text: string) => `<h3>${text}</h3>`;
+const p = (text: string) => `<p>${text}</p>`;
+const ul = (items: string[]) =>
+	`<ul>${items.map((i) => `<li>${i}</li>`).join("")}</ul>`;
+const ol = (items: string[]) =>
+	`<ol>${items.map((i) => `<li>${i}</li>`).join("")}</ol>`;
+const callout = (emoji: string, text: string) =>
+	`<div class="callout"><span class="callout-icon">${emoji}</span><span>${text}</span></div>`;
+const hr = () => `<hr>`;
+const bold = (text: string) => `<strong>${text}</strong>`;
 
-function orderedList(items: string[]): string {
-  return `<ol>${items.map((i) => `<li><p>${i}</p></li>`).join("")}</ol>`;
-}
+// ─────────────────────────────────────────────────────────────────────────────
+// Templates
+// ─────────────────────────────────────────────────────────────────────────────
 
-function h3(text: string): string {
-  return `<h3>${text}</h3>`;
-}
-
-function paragraph(text: string): string {
-  return `<p>${text}</p>`;
-}
-
-function bold(text: string): string {
-  return `<strong>${text}</strong>`;
-}
-
-function divider(): string {
-  return `<hr/>`;
-}
-
-// ──────────────────────────────────────────────────────────────────────────────
-// TEMPLATE COLLECTION
-// ──────────────────────────────────────────────────────────────────────────────
-
-/**
- * Builds the "evolutionText" section (html) for the Notion editor
- * from structured data. Mirrors what therapists write manually.
- */
-function buildEvolutionBlock(opts: {
-  heading: string;
-  calloutText?: string;
-  calloutEmoji?: string;
-  orientation?: string[];
-  techniques: string[];
-  goniometry?: Record<string, string>;
-  observations?: string;
-}): string {
-  const parts: string[] = [];
-
-  if (opts.calloutText) {
-    parts.push(
-      callout(opts.calloutEmoji ?? "📋", opts.calloutText)
-    );
-  }
-
-  if (opts.orientation && opts.orientation.length > 0) {
-    parts.push(h3("🏠 Orientação Domiciliar"));
-    parts.push(bulletList(opts.orientation));
-    parts.push(divider());
-  }
-
-  parts.push(h3(`🩺 ${opts.heading}`));
-  parts.push(bulletList(opts.techniques));
-
-  if (opts.goniometry) {
-    parts.push(divider());
-    parts.push(h3("📐 Goniometria Final"));
-    const gLines = Object.entries(opts.goniometry).map(
-      ([k, v]) => `${bold(k)}: ${v}`
-    );
-    parts.push(bulletList(gLines));
-  }
-
-  if (opts.observations) {
-    parts.push(divider());
-    parts.push(paragraph(opts.observations));
-  }
-
-  return parts.join("\n");
-}
-
-// ──────────────────────────────────────────────────────────────────────────────
-// 01 — COLUNA CERVICAL / CERVICALGIA
-// ──────────────────────────────────────────────────────────────────────────────
-export const CERVICALGIA_TEMPLATE: SOAPTemplate = {
-  id: "notion-cervicalgia",
-  name: "Cervicalgia & Coluna Cervical",
-  category: "followup",
-  isFavorite: false,
-  usageCount: 0,
-  subjective:
-    "Paciente relatou que houve melhora da dor em cervical, mas ainda tem considerável tensão em TFS e torácica E ao realizar fix da cervical.",
-  objective: buildEvolutionBlock({
-    heading: "Técnicas Aplicadas",
-    orientation: [
-      "Melhorar postura durante o trabalho no computador",
-      "Se levantar a cada 2h",
-      "Realizar exerc. de mob torácica",
-    ],
-    techniques: [
-      "Lib Mio com massagem gun em TFS e paravertebral torácico",
-      "Thrust torácico",
-      "Lib Mio manual em suboccipital, cervical, TFS e paravertebral torácico",
-      "Combinada em ombro E",
-      "Mob torácica na rolimã 3x5rep (orientação domiciliar)",
-      "Mob torácica em 4 apoios 3x10 (orientação domiciliar)",
-      "Mob em posição de semi afundo 3x10rep (orientação domiciliar)",
-      "Mob escapular 3x10rep (Orientação domiciliar)",
-      "EENM em TFI na posição sentado realizando RL com thera band amarelo 10/10 S'",
-      "90/90 com thera band amarelo arklus 3x10",
-      "Remada escapular no TRX 3x10rep",
-      "Remada com thera band verde listrado 3x10rep",
-      "Tens Acup em paravertebral torácico",
-    ],
-  }),
-  assessment:
-    "Evolução favorável com melhora gradual da dor cervical. Ainda apresenta tensão considerável em região torácica superior. Continuar protocolo de mobilização e fortalecimento escapular.",
-  plan: orderedList([
-    "Manter protocolo de mobilização torácica (3x/semana)",
-    "Reforçar orientações posturais no trabalho",
-    "Progredir carga no fortalecimento escapular",
-    "Reavaliar em 2 semanas",
-  ]),
-};
-
-// ──────────────────────────────────────────────────────────────────────────────
-// 02 — JOELHO / ENTORSE / SINDESMOSE
-// ──────────────────────────────────────────────────────────────────────────────
-export const JOELHO_TORNOZELO_TEMPLATE: SOAPTemplate = {
-  id: "notion-joelho-tornozelo",
-  name: "Joelho & Tornozelo – Entorse / Sindesmose",
-  category: "followup",
-  isFavorite: false,
-  usageCount: 0,
-  subjective:
-    "Paciente relatou estar bem, sem dores em tornozelo E no dia de hoje e apresentando redução de edema.",
-  objective: buildEvolutionBlock({
-    heading: "Técnicas Aplicadas",
-    calloutEmoji: "📍",
-    calloutText:
-      "PO de Fratura de Maisonneuve MIE 26/02 – 05 semanas e 00 dias",
-    techniques: [
-      "Lib Mio em perna MIE",
-      "Laser na região da sindesmose MIF",
-      "Mob (ADM reduzida) de dorsi e plantif MIE em DD",
-      "SLR ant / lat / post com 9kg na coxa 3x15rep",
-      "Órtese com robotfoot MIE com caneleira 9kg, 3x10rep",
-      "Exercício de intrínsecos puxando a toalha 3x30''",
-      "EENM em intrínsecos do pé E na posição sentado 10/10 S'",
-      "Mob de tornozelo arrastando o pé E na toalha na posição sentado 3x10rep",
-      "Cad ext E com velcro em terço médio da perna e thera tube 3x10rep",
-      "Cad flex E com velcro em terço médio da perna e thera tube 3x10rep",
-      "Bota 150mmHg",
-      "Gelo no tornozelo E",
-    ],
-  }),
-  assessment:
-    "Boa evolução pós-fratura de Maisonneuve. Edema em regressão. Ganho gradual de ADM. Continuar protocolo de reabilitação funcional.",
-  plan: orderedList([
-    "Manter uso da bota compressiva 150mmHg",
-    "Progredir carga nos exercícios de fortalecimento",
-    "Iniciar propriocepção gradual em superfície estável",
-    "Reavaliar ADM em próxima sessão",
-  ]),
-};
-
-// ──────────────────────────────────────────────────────────────────────────────
-// 03 — OMBRO / FRATURA ÚMERO / PRAXIA
-// ──────────────────────────────────────────────────────────────────────────────
-export const OMBRO_FRATURA_TEMPLATE: SOAPTemplate = {
-  id: "notion-ombro-fratura",
-  name: "Ombro – Fratura Úmero distal / Praxia Nervo Radial",
-  category: "followup",
-  isFavorite: false,
-  usageCount: 0,
-  subjective:
-    "Paciente apresentando melhora gradual após fratura do úmero distal. Realizando exercícios domiciliares conforme orientado.",
-  objective: buildEvolutionBlock({
-    heading: "Técnicas Aplicadas",
-    calloutEmoji: "📍",
-    calloutText:
-      "Fratura de úmero distal E + Praxia do nervo radial (12/12/2025) – 15 semanas e dias",
-    techniques: [
-      "Drenagem em MSE",
-      "EENM em extensores E e intrínseco das mãos E realizando força para extensão de punho e dedos 15/15 S'",
-      "Sustentação do punho em posição neutra com 1kg 3x20''",
-      "Remada com thera tube amarelo (leve) 3x10rep",
-      "EENM em tríceps realizando extensão de cotovelo com faixa forçando de forma isotônica 15/10/S'",
-      "Flexão do braço em pé apoiado na maca com o peso do corpo 3x8rep",
-      "Extensão de punho com peso do corpo na maca 3x10rep",
-      "Bíceps com 1kg 3x10rep",
-      "Tríceps com thera tube amarelo 3x10rep",
-      "Elevação lateral/elevação frontal com caneleira de 0,5kg 2x10rep (angulação reduzida de acordo com sintomas álgicos em região de ombro)",
-      "Distribuição de cotovelo E",
-      "Mob de prono e supino E",
-      "Energia muscular de Fle e ext de cotovelo E",
-      "Mob passiva para extensão e fix de cotovelo E",
-      "Mob passiva para flexão e extensão de dedos",
-      "Tens em face anterior de ombro",
-    ],
-    goniometry: {
-      Extensão: "-15°",
-      Flexão: "110°",
-    },
-  }),
-  assessment:
-    "Evolução pós-fratura de úmero distal com praxia do nervo radial. Ganho gradual de ADM. Fortalecimento progressivo em andamento.",
-  plan: orderedList([
-    "Continuar EENM e exercícios graduais de cotovelo e punho",
-    "Progredir carga conforme tolerância álgica",
-    "Manter mobilização passiva e ativa assistida",
-    "Reavaliação goniométrica na próxima sessão",
-  ]),
-};
-
-// ──────────────────────────────────────────────────────────────────────────────
-// 04 — MEMBROS INFERIORES / RUNNING / JOELHO + PANTURRILHA
-// ──────────────────────────────────────────────────────────────────────────────
-export const CORRIDA_JOELHO_TEMPLATE: SOAPTemplate = {
-  id: "notion-corrida-joelho",
-  name: "Corrida & Joelho – Dor + Panturrilha",
-  category: "followup",
-  isFavorite: false,
-  usageCount: 0,
-  subjective:
-    "Paciente relatou estar sem dores em joelho E, quadril E e panturrilha E no dia de hoje. Retomaremos gradualmente a corrida durante as sessões.",
-  objective: buildEvolutionBlock({
-    heading: "Técnicas Aplicadas",
-    techniques: [
-      "Lib mio manual em glúteo E, TFL, glúteo médio, TIT E e tríceps sural E",
-      "Sensório motor no solo unipodal bilateral realizando ext de quadril + rot ext com band verde tribe 3x15 reps",
-      "Siri com agilidade com band verde tribe 3x1'",
-      "Salto vertical uni 3x10rep",
-      "Corrida na esteira 1/1' velocidade 5km/h e 9km/h 6'",
-      "Salto horizontal uni 3x5rep",
-      "Panturrilha unipodal bilateral 3x15 reps de cada lado",
-      "Avanço na posição afundo e colocar o pé no calcote + anilha de 5kg 3x10rep de cada lado",
-      "Salto do calcote para o chão 3x5rep",
-      "Salta com afundo alternado 3x5rep de cada lado",
-      "TENS em joelho E e região lateral",
-    ],
-  }),
-  assessment:
-    "Excelente evolução. Paciente sem dores durante atividades de corrida. Progressão gradual para retorno esportivo em andamento.",
-  plan: orderedList([
-    "Manter progressão de corrida em esteira (velocidade e tempo)",
-    "Continuar fortalecimento excêntrico de panturrilha",
-    "Aumentar volume de pliometria gradualmente",
-    "Reavaliar para retorno às atividades esportivas em 3 semanas",
-  ]),
-};
-
-// ──────────────────────────────────────────────────────────────────────────────
-// 05 — NEUROLÓGICO / AVC / REABILITAÇÃO FUNCIONAL
-// ──────────────────────────────────────────────────────────────────────────────
-export const NEUROLOGICO_AVC_TEMPLATE: SOAPTemplate = {
-  id: "notion-neurologico-avc",
-  name: "Neurológico – AVC / Reabilitação Funcional",
-  category: "followup",
-  isFavorite: false,
-  usageCount: 0,
-  subjective:
-    "Paciente relata melhora na movimentação do membro superior afetado. Família relata maior independência nas AVDs. Nega dor.",
-  objective: buildEvolutionBlock({
-    heading: "Técnicas Neurológicas Aplicadas",
-    techniques: [
-      "FNP de membro superior – padrões de flexão/extensão 3x10rep",
-      "Treino de alcance funcional em prono sobre cotovelos",
-      "Estimulação sensorial com texturas diversas em mão afetada",
-      "Treino de segurar e soltar objetos de diferentes tamanhos",
-      "EENM em extensores de punho afetado 15/15 S' por 20min",
-      "Mobilização escapular passiva e ativa assistida",
-      "Treino de transferência sentado ↔ em pé com apoio mínimo",
-      "Treino de marcha em paralelas 3x10 metros",
-      "Exercícios de equilíbrio em base reduzida",
-      "Treino de coordenação motora fina – pegada bimanual",
-    ],
-    observations:
-      "Sessão de neuroreabilitação com foco em funcionalidade e independência. Paciente colaborativo e motivado.",
-  }),
-  assessment:
-    "Progressão positiva em neuroreabilitação pós-AVC. Ganho de força distal em MSE. Melhora no controle de tronco e qualidade da marcha.",
-  plan: orderedList([
-    "Manter estimulação sensório-motora de MSE",
-    "Progredir treino de marcha para superfícies irregulares",
-    "Orientar família quanto a atividades de estimulação domiciliar",
-    "Reavaliação funcional em 4 semanas",
-  ]),
-};
-
-// ──────────────────────────────────────────────────────────────────────────────
-// 06 — DOR CRÔNICA / LOMBALGIA CRÔNICA
-// ──────────────────────────────────────────────────────────────────────────────
-export const LOMBALGIA_CRONICA_TEMPLATE: SOAPTemplate = {
-  id: "notion-lombalgia-cronica",
-  name: "Lombalgia Crônica – Coluna Lombar",
-  category: "followup",
-  isFavorite: false,
-  usageCount: 0,
-  subjective:
-    "Paciente refere dor lombar persistente há 6 meses, EVA 6/10 hoje. Piora com esforço físico e posição sentada prolongada. Melhora com calor local.",
-  objective: buildEvolutionBlock({
-    heading: "Técnicas Aplicadas",
-    orientation: [
-      "Evitar ficar sentado por mais de 45 minutos sem pausas",
-      "Realizar série de exercícios de Bird-Dog 2x diariamente",
-      "Aplicar calor úmido por 15 minutos antes dos exercícios",
-    ],
-    techniques: [
-      "Lib Mio paravertebral lombar bilateral com massagem gun",
-      "Mobilização vertebral L4-L5-S1 grau III",
-      "Thrust lombar unilateral",
-      "Exercício Bird-Dog 3x10rep cada lado",
-      "Ponte com ativação de glúteos 3x15rep",
-      "Prancha isométrica frontal 3x30''",
-      "Prancha lateral 3x20'' cada lado",
-      "Exercício de controle motor – ativação de multífidos",
-      "Agachamento parcial com biopode 3x12rep",
-      "TENS lombar paravertebral 80Hz por 20min",
-      "Crioterapia pós-sessão em região lombar",
-    ],
-  }),
-  assessment:
-    "Lombalgia crônica inespecífica com progressão satisfatória. EVA reduzida de 8 para 6. Fortalecimento do core em desenvolvimento.",
-  plan: orderedList([
-    "Continuar protocolo de estabilização lombar",
-    "Progredir para exercícios em superfície instável",
-    "Incluir pilates terapêutico 2x/semana como complemento",
-    "Revisar ergonomia do posto de trabalho",
-    "Reavaliar em 3 semanas",
-  ]),
-};
-
-// ──────────────────────────────────────────────────────────────────────────────
-// 07 — PÓS-CIRÚRGICO JOELHO / LCA / ARTROSCOPIA
-// ──────────────────────────────────────────────────────────────────────────────
-export const POS_CIRURGICO_LCA_TEMPLATE: SOAPTemplate = {
-  id: "notion-pos-cirurgico-lca",
-  name: "Pós-Cirúrgico – LCA / Artroscopia de Joelho",
-  category: "procedure",
-  isFavorite: false,
-  usageCount: 0,
-  subjective:
-    "Paciente em pós-operatório de reconstrução de LCA. Refere dor 4/10 e edema moderado. Nega febre ou secreção na cicatriz.",
-  objective: buildEvolutionBlock({
-    heading: "Protocolo Pós-Op LCA",
-    calloutEmoji: "⚕️",
-    calloutText: "Protocolo pós-reconstrução de LCA – Semana 4",
-    techniques: [
-      "Crioterapia em joelho operado 15min",
-      "Drenagem linfática manual em joelho e coxa",
-      "EENM em quadríceps 15/15 S' – contrações isométricas",
-      "SLR (elevação do membro reto) 3x15rep",
-      "Extensão isométrica de joelho em 60° 3x10rep",
-      "Flexão ativa de joelho a 90° com suporte 3x10rep",
-      "Fortalecimento de cadeia posterior – leg curl 3x12rep leve",
-      "Propriocepção em equilíbrio bipodal estático 3x30''",
-      "Mobilização patelar – todos os planos",
-      "Treino de marcha sem muleta em ambiente seguro",
-    ],
-    goniometry: {
-      "Extensão ativa": "0° (completa)",
-      "Flexão ativa": "95°",
-      "Flexão passiva": "105°",
-    },
-  }),
-  assessment:
-    "Evolução pós-op de LCA dentro do esperado. Ganho de ADM de flexão de 85° para 95°. Extensão completa. Edema em regressão.",
-  plan: orderedList([
-    "Progredir flexão para 110° na próxima semana",
-    "Iniciar bicicleta ergométrica sem resistência quando flexão ≥ 105°",
-    "Manter crioterapia pós-sessão por 20 minutos",
-    "Reavaliação ortopédica programada em 2 semanas",
-  ]),
-};
-
-// ──────────────────────────────────────────────────────────────────────────────
-// 08 — RESPIRATÓRIO / DPOC / FISIOTERAPIA RESPIRATÓRIA
-// ──────────────────────────────────────────────────────────────────────────────
-export const RESPIRATORIO_TEMPLATE: SOAPTemplate = {
-  id: "notion-respiratorio",
-  name: "Fisioterapia Respiratória – DPOC / Pneumonia",
-  category: "procedure",
-  isFavorite: false,
-  usageCount: 0,
-  subjective:
-    "Paciente refere melhora da dispneia em repouso. Tosse produtiva com expectoração esbranquiçada. SpO₂ 94% em ar ambiente.",
-  objective: buildEvolutionBlock({
-    heading: "Técnicas Respiratórias Aplicadas",
-    techniques: [
-      "Oximetria: SpO₂ 94% → 97% após sessão",
-      "Inaloterapia com SF 0,9% 3ml por 10min",
-      "Vibração manual em bases e ápices pulmonares bilaterais",
-      "Percussão torácica em decúbito lateral D e E",
-      "Drenagem postural em todos os segmentos",
-      "Huffing (Técnica de exalação forçada) – 3 séries",
-      "Ciclo ativo de técnicas respiratórias (CATR)",
-      "Exercícios diafragmáticos com carga 1kg",
-      "Exercícios com Threshold IMT – 30% da PiMáx",
-      "Cinesioterapia respiratória – expansão costal",
-      "Deambulação supervisionada 10 minutos com SpO₂ monitorada",
-    ],
-    observations:
-      "Paciente tolerou bem a sessão. SpO₂ mantida acima de 95% durante todos os exercícios.",
-  }),
-  assessment:
-    "Melhora da clearance mucociliar e capacidade de expansão torácica. SpO₂ em melhora progressiva. Dispneia reduzida de 4 para 2 na escala de Borg.",
-  plan: orderedList([
-    "Manter sessões de fisioterapia respiratória diária",
-    "Progredir carga no Threshold IMT em 5% semanalmente",
-    "Treino aeróbico de baixa intensidade quando SpO₂ estável",
-    "Orientar exercícios respiratórios domiciliares 2x/dia",
-  ]),
-};
-
-// ──────────────────────────────────────────────────────────────────────────────
-// 09 — ALTA CLÍNICA / FINALIZAÇÃO DE TRATAMENTO
-// ──────────────────────────────────────────────────────────────────────────────
-export const ALTA_CLINICA_TEMPLATE: SOAPTemplate = {
-  id: "notion-alta-clinica",
-  name: "Alta Clínica – Finalização de Tratamento",
-  category: "discharge",
-  isFavorite: false,
-  usageCount: 0,
-  subjective:
-    "Paciente relata ausência de dor há 3 semanas. Retornou a todas as atividades funcionais e esportivas sem limitações.",
-  objective: buildEvolutionBlock({
-    heading: "Testes Funcionais de Alta",
-    techniques: [
-      "Hop Test unipodal: D 90cm / E 88cm (≥ 85% do contralateral ✓)",
-      "Y-Balance Test: dentro dos valores normativos bilateralmente",
-      "Força de extensão de joelho: 90% do contralateral (dinamometria)",
-      "Escala Lysholm: 95/100",
-      "IKDC: 88/100",
-      "Sem déficit de propriocepção nos testes funcionais",
-      "ADM completa e simétrica bilateralmente",
-    ],
-    observations:
-      "Alta com orientações de manutenção. Paciente consciente sobre prevenção de recidivas e importância da manutenção física.",
-  }),
-  assessment:
-    "Critérios de alta atingidos. Paciente com função completa restaurada, sem dor e sem limitações funcionais.",
-  plan: [
-    h3("📋 Orientações de Alta"),
-    bulletList([
-      "Manter atividade física regular 3x/semana",
-      "Continuar série de exercícios preventivos domiciliares",
-      "Retornar em caso de recidiva ou nova lesão",
-      "Consulta de follow-up em 6 meses",
-    ]),
-    callout(
-      "✅",
-      "Alta fisioterapêutica concedida. Objetivo terapêutico alcançado."
-    ),
-  ].join("\n"),
-};
-
-// ──────────────────────────────────────────────────────────────────────────────
-// 10 — PRIMEIRA CONSULTA / AVALIAÇÃO INICIAL
-// ──────────────────────────────────────────────────────────────────────────────
-export const PRIMEIRA_CONSULTA_TEMPLATE: SOAPTemplate = {
-  id: "notion-primeira-consulta",
-  name: "Primeira Consulta – Avaliação Inicial",
-  category: "initial",
-  isFavorite: false,
-  usageCount: 0,
-  subjective:
-    "Paciente comparece à primeira consulta referindo queixa principal de ___. Início do quadro há ___. Piora com ___ e melhora com ___. Histórico de: ___.",
-  objective: [
-    h3("👤 Dados Gerais"),
-    paragraph(
-      "Postura: ___ | Marcha: ___ | Padrão respiratório: ___"
-    ),
-    divider(),
-    h3("🔍 Testes Especiais"),
-    bulletList([
-      "Teste ___ : Positivo / Negativo",
-      "Amplitude de movimento: ___",
-      "Força muscular grau ___/5",
-      "Sensibilidade: Preservada / Alterada",
-      "Reflexos: Normais / Diminuídos / Aumentados",
-    ]),
-    divider(),
-    h3("📐 Goniometria Inicial"),
-    bulletList([
-      "Flexão: ___°",
-      "Extensão: ___°",
-      "Rotação interna: ___°",
-      "Rotação externa: ___°",
-    ]),
-  ].join("\n"),
-  assessment:
-    "Impressão clínica: ___. Hipótese diagnóstica fisioterapêutica: ___. Prognóstico: ___.",
-  plan: orderedList([
-    "Controle da dor e inflamação (fase 1)",
-    "Restauração da ADM e mobilidade articular (fase 2)",
-    "Fortalecimento muscular progressivo (fase 3)",
-    "Treino funcional e retorno às atividades (fase 4)",
-    "Previsão de alta: ___ sessões",
-    "Frequência recomendada: ___ vezes/semana",
-  ]),
-};
-
-// ──────────────────────────────────────────────────────────────────────────────
-// EXPORTED COLLECTION
-// ──────────────────────────────────────────────────────────────────────────────
 export const NOTION_TEMPLATES: SOAPTemplate[] = [
-  PRIMEIRA_CONSULTA_TEMPLATE,
-  CERVICALGIA_TEMPLATE,
-  JOELHO_TORNOZELO_TEMPLATE,
-  OMBRO_FRATURA_TEMPLATE,
-  CORRIDA_JOELHO_TEMPLATE,
-  NEUROLOGICO_AVC_TEMPLATE,
-  LOMBALGIA_CRONICA_TEMPLATE,
-  POS_CIRURGICO_LCA_TEMPLATE,
-  RESPIRATORIO_TEMPLATE,
-  ALTA_CLINICA_TEMPLATE,
+	// ═══════════════════════════════════════════════════════════════════════════
+	// 0. ORTOPEDIA GERAL — SESSÃO DE RETORNO (template universal)
+	// ═══════════════════════════════════════════════════════════════════════════
+	{
+		id: "notion-orto-geral",
+		name: "🦴 Ortopedia Geral — Sessão de Retorno",
+		category: "followup",
+		usageCount: 0,
+		subjective: [
+			callout("🔄", "<strong>Fisioterapia Ortopédica — Retorno de Sessão</strong>"),
+			h3("Relato do Paciente"),
+			ul([
+				"EVA atual: <strong>__/10</strong> &nbsp;·&nbsp; Comparado à sessão anterior: ( ) Melhorou &nbsp;( ) Igual &nbsp;( ) Piorou",
+				"Localização da dor: __________  &nbsp;·&nbsp;  Irradiação: ( ) Não &nbsp;( ) Sim → __________",
+				"Período de maior dor: ( ) Manhã &nbsp;( ) Tarde &nbsp;( ) Noite &nbsp;( ) Constante",
+				"Sono: ( ) Sem alteração &nbsp;( ) Acordou __x &nbsp;·&nbsp; Posição antiálgica: __________",
+			]),
+			h3("Atividades entre Sessões"),
+			ul([
+				"Exercícios domiciliares (HEP): ( ) Realizou todos &nbsp;( ) Parcialmente &nbsp;( ) Não realizou",
+				"Atividade física / trabalho desde a última sessão: __________",
+				"Piora após: __________",
+				"Melhora após: __________",
+			]),
+			h3("Objetivos do Paciente Hoje"),
+			p("Paciente refere como prioridade desta sessão: __________"),
+		].join(""),
+
+		objective: [
+			h3("Amplitude de Movimento (Goniometria / Visual)"),
+			ul([
+				"Movimento principal limitado: __________ → D: ___° / E: ___°  <em>(ref.: ___°)</em>",
+				"Comparado à última sessão: ( ) Ganho de ___° &nbsp;( ) Estável &nbsp;( ) Regresso",
+				"Dor durante ADM: ( ) Ausente &nbsp;( ) No início &nbsp;( ) No fim &nbsp;( ) Em todo arco",
+			]),
+			hr(),
+			h3("Força Muscular (MRC 0–5)"),
+			ul([
+				"Grupo muscular principal: __________ &nbsp;→&nbsp; D: ___/5 &nbsp;/ E: ___/5",
+				"Déficit em relação ao lado oposto: ___% &nbsp;·&nbsp; Comparado à última sessão: __________",
+			]),
+			hr(),
+			h3("Testes Especiais (aplicáveis ao quadro)"),
+			ul([
+				"Teste 1: __________ → ( ) Negativo &nbsp;( ) Positivo",
+				"Teste 2: __________ → ( ) Negativo &nbsp;( ) Positivo",
+				"Teste 3: __________ → ( ) Negativo &nbsp;( ) Positivo",
+			]),
+			hr(),
+			h3("Medidas / Perimetria (quando pertinente)"),
+			ul([
+				"Edema local: ( ) Ausente &nbsp;( ) Leve &nbsp;( ) Moderado &nbsp;( ) Importante",
+				"Perimetria: D ___cm / E ___cm &nbsp;<em>(ponto anatômico: __________)</em>",
+			]),
+		].join(""),
+
+		assessment: [
+			callout(
+				"📊",
+				`Progressão clínica: ( ) Satisfatória &nbsp;( ) Estagnada &nbsp;( ) Regressão<br>` +
+				`<strong>Sessão nº ___</strong> — Objetivo atingido: ___% (estimado)`,
+			),
+			p(
+				"Paciente evolui com __________ <em>(melhora / manutenção / piora)</em> do quadro de __________, apresentando EVA __/10 e ganho de ADM de ___° desde o início do tratamento. Limitação funcional atual: __________.",
+			),
+			h3("Achados Relevantes"),
+			ul([
+				"Dor: ( ) Mecânica &nbsp;( ) Inflamatória &nbsp;( ) Neuropática &nbsp;( ) Mista",
+				"Controle neuromuscular: ( ) Adequado &nbsp;( ) Insuficiente → __________",
+				"Padrão de compensação observado: __________",
+				"Critérios de progressão de fase: __________  <em>(atingidos / pendentes)</em>",
+			]),
+		].join(""),
+
+		plan: [
+			h3("Condutas da Sessão"),
+			ol([
+				"Recursos físicos: __________ &nbsp;·&nbsp; Parâmetros: __________ &nbsp;·&nbsp; Tempo: ___min",
+				"Terapia manual: __________ &nbsp;·&nbsp; Grau: ___ &nbsp;·&nbsp; Região: __________",
+				"Exercício terapêutico 1: __________ × ___rep × ___séries &nbsp;<em>carga: ___kg / nível: ___</em>",
+				"Exercício terapêutico 2: __________ × ___rep × ___séries",
+				"Exercício terapêutico 3: __________ × ___rep × ___séries",
+				"Propriocepção / equilíbrio: __________ × ___seg × ___séries",
+			]),
+			hr(),
+			h3("Resposta ao Tratamento"),
+			ul([
+				"EVA pós-sessão: __/10 &nbsp;<em>(melhora de ___pontos vs. início da sessão)</em>",
+				"ADM pós-mobilização: ___°",
+				"Reação adversa: ( ) Nenhuma &nbsp;( ) Piora transitória → __________",
+			]),
+			hr(),
+			callout("🏠", `<strong>HEP — Exercícios para casa:</strong><br>
+1. __________ × ___rep × ___séries<br>
+2. __________ × ___rep × ___séries<br>
+Frequência: ___ vezes ao dia / semana`),
+			p("Próxima sessão: __________ &nbsp;·&nbsp; Frequência recomandada: ___×/semana"),
+		].join(""),
+	},
+
+	// ═══════════════════════════════════════════════════════════════════════════
+	// 1. PRIMEIRA CONSULTA ORTOPÉDICA
+	// ═══════════════════════════════════════════════════════════════════════════
+	{
+		id: "notion-orto-primeira-consulta",
+		name: "Primeira Consulta Ortopédica",
+		category: "initial",
+		usageCount: 0,
+		subjective: [
+			callout(
+				"🆕",
+				"<strong>Primeira sessão — anamnese completa obrigatória</strong>",
+			),
+			h3("Queixa Principal"),
+			p("Paciente relata __________ há ______ semanas/meses."),
+			h3("Mecanismo de Lesão / Início"),
+			ul([
+				"Início: ( ) Súbito  ( ) Gradual  ( ) Insidioso",
+				"Fator desencadeante: __________",
+				"Localização: __________ irradiação para __________",
+			]),
+			h3("Comportamento da Dor"),
+			ul([
+				"EVA repouso: __/10 · EVA movimento: __/10 · EVA pior: __/10",
+				"Piora com: __________",
+				"Melhora com: __________",
+				"Comportamento noturno: ( ) Não incomoda  ( ) Acorda  ( ) Impede dormir",
+			]),
+			h3("Histórico Relevante"),
+			ul([
+				"Cirurgias: ( ) Não  ( ) Sim → __________",
+				"Fraturas: ( ) Não  ( ) Sim → __________",
+				"Tratamento fisioterapêutico anterior: ( ) Não  ( ) Sim → Resposta: __________",
+				"Medicação em uso: __________",
+			]),
+			callout("🚩", "Red Flags triados: ( ) Ausentes  ( ) Presentes → __________"),
+		].join(""),
+
+		objective: [
+			h3("Inspeção"),
+			ul([
+				"Postura estática: __________",
+				"Deformidades / atrofias: __________",
+				"Edema / equimose: ( ) Ausente  ( ) Presente ______",
+			]),
+			hr(),
+			h3("Palpação"),
+			ul([
+				"Dor à palpação: __________ (região / estrutura)",
+				"Temperatura local: ( ) Normal  ( ) Aumentada",
+				"Crepitação: ( ) Não  ( ) Sim",
+			]),
+			hr(),
+			h3("Amplitude de Movimento (Goniometria)"),
+			ul([
+				"Flexão: ___°  (ref. ___°)",
+				"Extensão: ___°  (ref. ___°)",
+				"Rotação interna: ___°  Rotação externa: ___°",
+				"ADM: ( ) Sem dor  ( ) Com dor no fim  ( ) Com dor durante",
+			]),
+			hr(),
+			h3("Força Muscular (MRC 0–5)"),
+			ul([
+				"Grupos principais: __________",
+				"Déficit comparativo lado oposto: ( ) Não  ( ) Sim _______%",
+			]),
+			hr(),
+			h3("Testes Especiais"),
+			ul([
+				"Teste 1: __________ → ( ) Neg  ( ) Pos",
+				"Teste 2: __________ → ( ) Neg  ( ) Pos",
+				"Teste 3: __________ → ( ) Neg  ( ) Pos",
+			]),
+		].join(""),
+
+		assessment: [
+			callout(
+				"🩺",
+				`${bold("Diagnóstico Fisioterapêutico:")} __________`,
+			),
+			p(
+				"Paciente apresenta quadro compatível com __________ com comprometimento de __________, resultando em limitações funcionais de __________.",
+			),
+			h3("Achados Relevantes"),
+			ul([
+				"Dor: __________ (mecânica / inflamatória / neural / mista)",
+				"Déficit de ADM: __________",
+				"Fraqueza muscular: __________",
+				"Instabilidade: ( ) Não  ( ) Sim → __________",
+			]),
+			h3("Hipóteses Diagnósticas"),
+			ol(["Principal: __________", "Diferencial: __________"]),
+			callout("📎", "Exames solicitados/pendentes: __________"),
+		].join(""),
+
+		plan: [
+			h3("Objetivos de Tratamento"),
+			ul([
+				"Curto prazo (2–4 sem): Redução da dor · Controle do edema · Ganho de ADM",
+				"Médio prazo (4–8 sem): Fortalecimento · Estabilidade articular",
+				"Longo prazo (8–12 sem): Retorno às AVDs / atividade esportiva",
+			]),
+			hr(),
+			h3("Condutas da 1ª Sessão"),
+			ol([
+				"Crioterapia / termoterapia — ___min na região __________",
+				"Mobilização articular — grau ______ em __________",
+				"Alongamento — __________ × ___seg × ___séries",
+				"Eletroterapia: ( ) TENS  ( ) FES  ( ) Ultrassom → Parâmetros: __________",
+			]),
+			hr(),
+			h3("Plano de Tratamento"),
+			ul([
+				"Frequência: ___× semana · Duração estimada: ___ semanas",
+				"Próxima sessão: __________",
+			]),
+			callout("📌", "Orientações domiciliares: __________ "),
+		].join(""),
+	},
+
+	// ═══════════════════════════════════════════════════════════════════════════
+	// 2. LOMBALGIA / DOR LOMBAR (retorno)
+	// ═══════════════════════════════════════════════════════════════════════════
+	{
+		id: "notion-orto-lombalgia",
+		name: "Lombalgia — Retorno de Sessão",
+		category: "followup",
+		usageCount: 0,
+		subjective: [
+			callout("🔄", "Sessão de retorno — Lombalgia"),
+			h3("Relato do Paciente"),
+			ul([
+				"EVA atual: __/10 (anterior: __/10) → ( ) Melhorou  ( ) Igual  ( ) Piorou",
+				"Dor irradiadora para MMII: ( ) Não  ( ) Sim → _______________",
+				"Sintomas neurológicos (formigamento, dormência): ( ) Ausentes  ( ) Presentes → ___",
+				"Qualidade do sono: ( ) Não afetado  ( ) Acordou ___x · Posição de alívio: ___",
+			]),
+			h3("Atividades desde a última sessão"),
+			ul([
+				"Exercícios domiciliares: ( ) Realizou  ( ) Não realizou  ( ) Parcialmente",
+				"Atividade física: __________",
+				"Piora após: __________",
+			]),
+		].join(""),
+
+		objective: [
+			h3("Mobilidade Lombar (Flexicurvo / Visual)"),
+			ul([
+				"Flexão anterior: ___cm (distância dedos–chão) ou ___°",
+				"Extensão: ___°  Inclinação Lat D: ___°  Inclinação Lat E: ___°",
+				"Padrão de movimento: ( ) Normal  ( ) Antálgico  ( ) Limitado",
+			]),
+			h3("Exame Neurológico Rápido"),
+			ul([
+				"Lasègue: ( ) Neg  ( ) Pos → ___° MMID / MMIE",
+				"Reflexos patelares e aquileus: ( ) Normais  ( ) Alterados → ___",
+				"Sensibilidade: ( ) Preservada  ( ) Alterada → dermátomos ___",
+			]),
+			h3("Força e Estabilidade"),
+			ul([
+				"Transverso do abdômen: ( ) Ativa corretamente  ( ) Dificuldade",
+				"Glúteo médio (teste de Trendelenburg): D: ( ) Neg  ( ) Pos · E: ( ) Neg  ( ) Pos",
+				"Core Draw-In Maneuver: ___seg sustentação",
+			]),
+		].join(""),
+
+		assessment: [
+			callout(
+				"📊",
+				"Progressão em relação à sessão anterior: ( ) Satisfatória  ( ) Estagnada  ( ) Regressão",
+			),
+			p(
+				"Paciente apresenta lombalgia __________ (mecânica / discal / facetária / miofascial) com EVA __/10. Apresenta __________ em comparação à sessão anterior.",
+			),
+			h3("Achados Clínicos"),
+			ul([
+				"Dor mecânica: ( ) Sim  ( ) Não · Comportamento: ( ) Centralização  ( ) Periferalização",
+				"Déficit neurológico: ( ) Ausente  ( ) Presente → ___",
+				"Instabilidade segmentar: ( ) Suspeita  ( ) Descartada",
+			]),
+		].join(""),
+
+		plan: [
+			h3("Condutas da Sessão"),
+			ol([
+				"Terapia manual: __________ (mobilização/manipulação L___–L___)",
+				"Exercício terapêutico: __________ × ___rep × ___séries",
+				"Eletroterapia: TENS ____Hz ____min / Ultrassom ___W/cm² ___min",
+				"Liberação miofascial: __________ (região / músculo)",
+			]),
+			h3("Resposta ao Tratamento"),
+			ul([
+				"EVA pós-sessão: __/10",
+				"ADM pós-mobilização: Flexão ___° / Extensão ___°",
+			]),
+			hr(),
+			callout("📌", "Orientações domiciliares: __________"),
+			p(`Próxima sessão: __________`),
+		].join(""),
+	},
+
+	// ═══════════════════════════════════════════════════════════════════════════
+	// 3. JOELHO — RETORNO (pós-lesão/pós-cirúrgico)
+	// ═══════════════════════════════════════════════════════════════════════════
+	{
+		id: "notion-orto-joelho",
+		name: "Joelho — Reabilitação / Retorno",
+		category: "followup",
+		usageCount: 0,
+		subjective: [
+			callout("🦵", "Protocolo de reabilitação de joelho"),
+			h3("Queixa do Dia"),
+			ul([
+				"EVA: __/10 · Localização: ( ) Medial  ( ) Lateral  ( ) Anterior  ( ) Posterior  ( ) Difuso",
+				"Edema percebido pelo paciente: ( ) Não  ( ) Sim",
+				"Sensação de instabilidade: ( ) Não  ( ) Sim → situação: ___",
+				"Atividades limitadas: __________",
+			]),
+			h3("Status Pós-Operatório (se aplicável)"),
+			ul([
+				"Semana pós-op: ___",
+				"Carga: ( ) NWB  ( ) PWB (__%) ( ) FWB  ( ) Sem auxílio",
+				"Órtese em uso: ( ) Não  ( ) Sim → tipo: ___",
+			]),
+		].join(""),
+
+		objective: [
+			h3("Medidas Objetivas"),
+			ul([
+				"Perimetria coxa (10cm prox. a patela): D ___cm / E ___cm",
+				"Perimetria joelho (linha articular): D ___cm / E ___cm",
+				"Edema articular: ( ) Ausente  ( ) + ( ) ++ ( ) +++",
+			]),
+			h3("Amplitude de Movimento"),
+			ul([
+				"Flexão ativa: D ___° / E ___°  (ref. 135°)",
+				"Extensão ativa: D ___° / E ___°  (ref. 0°)",
+				"Hiperextensão: ( ) Ausente  ( ) Presente ___°",
+			]),
+			h3("Testes Especiais"),
+			ul([
+				"Lachman: ( ) Neg  ( ) Pos grad. ___",
+				"Gaveta anterior/posterior: ( ) Neg  ( ) Pos ___mm",
+				"McMurray (menisco): ( ) Neg  ( ) Pos medial/lateral",
+				"Clarke (femuropatelar): ( ) Neg  ( ) Pos",
+				"Varo / Valgo stress: ( ) Neg  ( ) Pos ___mm",
+			]),
+			h3("Força (Dinamometria / MRC)"),
+			ul([
+				"Quadríceps MRC: D ___/5  E ___/5",
+				"Isquiotibiais MRC: D ___/5  E ___/5",
+				"Glúteo médio: D ___/5  E ___/5",
+			]),
+		].join(""),
+
+		assessment: [
+			callout(
+				"📊",
+				"Fase de reabilitação: ( ) Inflamatória/Proteção  ( ) Fortalecimento  ( ) Funcional  ( ) RTP",
+			),
+			p(
+				"Joelho __________ (D/E) apresenta __________ com déficit de __________ comparado ao lado contralateral. Critérios de progressão de fase: __________ (atingidos / pendentes).",
+			),
+			h3("Raciocínio Clínico"),
+			ul([
+				"Déficit de força quádriceps: ___%",
+				"Déficit de ADM: ___%",
+				"Limb Symmetry Index: ___%",
+			]),
+		].join(""),
+
+		plan: [
+			h3("Condutas"),
+			ol([
+				"Crioterapia pós-exercício: 15min",
+				"Mobilização patelar: superior/inferior/medial/lateral — ___ séries",
+				"Fortalecimento CCA: __________ × ___rep × ___séries com ___kg",
+				"Fortalecimento CCF: __________ × ___rep × ___séries",
+				"Propriocepção: __________ × ___seg × ___séries",
+				"Eletroestimulação (FES Quádriceps): ___Hz ___µs ___min",
+			]),
+			hr(),
+			h3("Progressão para Próxima Sessão"),
+			ul([
+				"Critério para progressar: __________",
+				"EVA pós-sessão: __/10",
+			]),
+			callout("📌", "HEP (Home Exercise Program): __________"),
+			p("Retorno: __________"),
+		].join(""),
+	},
+
+	// ═══════════════════════════════════════════════════════════════════════════
+	// 4. OMBRO — SÍNDROME DO IMPACTO / MANGUITO ROTADOR
+	// ═══════════════════════════════════════════════════════════════════════════
+	{
+		id: "notion-orto-ombro",
+		name: "Ombro — Síndrome do Impacto / Manguito",
+		category: "followup",
+		usageCount: 0,
+		subjective: [
+			callout("💪", "Reabilitação de ombro — Patologia do Manguito Rotador"),
+			h3("Relato"),
+			ul([
+				"EVA: __/10 · Piora: ( ) Elevação  ( ) Rotação  ( ) Noturno  ( ) Repouso",
+				"Arco doloroso: ( ) Ausente  ( ) 60–120°  ( ) Acima de 120°",
+				"Limitação funcional: __________ (vestir-se / alcançar / dormir)",
+				"Estalinhos / crepitação: ( ) Não  ( ) Sim",
+			]),
+		].join(""),
+
+		objective: [
+			h3("Amplitude de Movimento (Ativo / Passivo)"),
+			ul([
+				"Flexão: A ___° / P ___° (ref. 180°)",
+				"Abdução: A ___° / P ___° (ref. 180°)",
+				"Rotação Interna: A ___° / P ___° (ref. 70°)",
+				"Rotação Externa: A ___° / P ___° (ref. 90°)",
+				"Elevação no plano escap. (Scaption): ___°",
+			]),
+			h3("Testes Especiais"),
+			ul([
+				"Neer: ( ) Neg  ( ) Pos",
+				"Hawkins–Kennedy: ( ) Neg  ( ) Pos",
+				"Speed (bíceps longo): ( ) Neg  ( ) Pos",
+				"Lift-off / Bear hug (subescapular): ( ) Neg  ( ) Pos",
+				"Empty Can / Full Can (supra): ( ) Neg  ( ) Pos",
+				"AC joint compression: ( ) Neg  ( ) Pos",
+			]),
+			h3("Ritmo Escapulotorácico"),
+			ul([
+				"Discinesia escapular: ( ) Ausente  ( ) Tipo I  ( ) Tipo II  ( ) Tipo III",
+				"Teste de reposicionamento escapular (TRA): ( ) Neg  ( ) Pos",
+			]),
+		].join(""),
+
+		assessment: [
+			callout(
+				"🩺",
+				"Diagnóstico provável: Síndrome do impacto subacromial (__° estágio) / Lesão parcial de manguito / Bursite subacromial",
+			),
+			p(
+				"Ombro __________ (D/E) com dor __/10, arco doloroso __________, discinesia __________ e fraqueza de __________. Fase: ( ) Aguda ( ) Subaguda ( ) Crônica.",
+			),
+		].join(""),
+
+		plan: [
+			h3("Condutas"),
+			ol([
+				"Mobilização articular glenoumeral: inferior/posterior — grau ___",
+				"Mobilização escapulotorácica: __________ × ___rep",
+				"Fortalecimento manguito (rotadores externos): __________",
+				"Fortalecimento serrátil anterior / trapézio inferior: __________",
+				"Ultrassom contínuo 1MHz ___W/cm² ___min OR TENS ___Hz ___min",
+				"Kinesio Tape escapular: ( ) Aplicado  ( ) Não",
+			]),
+			hr(),
+			callout("📌", "Orientações: Evitar elevação acima de ____ / Exercícios domiciliares: __________"),
+			p("Retorno: __________"),
+		].join(""),
+	},
+
+	// ═══════════════════════════════════════════════════════════════════════════
+	// 5. TORNOZELO — ENTORSE / INSTABILIDADE
+	// ═══════════════════════════════════════════════════════════════════════════
+	{
+		id: "notion-orto-tornozelo",
+		name: "Tornozelo — Entorse / Instabilidade",
+		category: "followup",
+		usageCount: 0,
+		subjective: [
+			callout("🦶", "Reabilitação de tornozelo — Entorse / Instabilidade ligamentar"),
+			h3("Queixa"),
+			ul([
+				"Data da entorse: ___/___/___",
+				"Mecanismo: ( ) Inversão  ( ) Eversão  ( ) Outros: ___",
+				"EVA: __/10 · Edema pós-lesão: ( ) Insignificante  ( ) Moderado  ( ) Importante",
+				"Capacidade de carga: ( ) Total  ( ) Parcial  ( ) Nenhuma",
+				"Episódios anteriores: ( ) Não  ( ) Sim — ___× no tornozelo ___",
+			]),
+		].join(""),
+
+		objective: [
+			h3("Medidas"),
+			ul([
+				"Perimetria maleolar: D ___cm / E ___cm",
+				"Edema (cacifo): ( ) 0  ( ) +  ( ) ++ ( ) +++",
+			]),
+			h3("ADM"),
+			ul([
+				"Dorsiflexão: D ___° / E ___° (ref. ≥10° com joelho em extensão)",
+				"Plantiflexão: D ___° / E ___°",
+				"Inversão: D ___° / E ___°  Eversão: D ___° / E ___°",
+			]),
+			h3("Testes Especiais"),
+			ul([
+				"Gaveta anterior: ( ) Neg  ( ) Pos",
+				"Varo stress (talar tilt): ( ) Neg  ( ) Pos",
+				"Squeeze test (fíbula): ( ) Neg  ( ) Pos",
+				"Thompson (tendão Aquiles): ( ) Neg  ( ) Pos",
+				"Ottawa Ankle Rules: ( ) Positivo — raio-X indicado  ( ) Negativo",
+			]),
+			h3("Propriocepção"),
+			ul([
+				"Apoio unipodal (olhos abertos): D ___seg / E ___seg",
+				"Apoio unipodal (olhos fechados): D ___seg / E ___seg",
+				"Star Excursion Balance Test (SEBT): ___cm",
+			]),
+		].join(""),
+
+		assessment: [
+			callout(
+				"🩺",
+				"Grau da entorse: ( ) I (leve) ( ) II (moderado) ( ) III (grave/ruptura). Fase: ( ) Aguda ( ) Subaguda ( ) Crônica",
+			),
+			p(
+				"Tornozelo __________ (D/E) com déficit de __________ e instabilidade ligamentar __________ confirmada. Critérios RTS pendentes: __________.",
+			),
+		].join(""),
+
+		plan: [
+			h3("Protocolo POLICE"),
+			ul([
+				"Protection: Imobilização / restrição de carga ___ dias",
+				"Optimal Loading: Carga progressiva com ___",
+				"Ice: 15min × ___ ao dia",
+				"Compression: Bandagem / brace",
+				"Elevation: acima do nível cardíaco",
+			]),
+			hr(),
+			h3("Condutas"),
+			ol([
+				"Mobilização talocrural (deslizamento posterior): ___ séries",
+				"Fortalecimento eversores (fibular): ___rep × ___séries",
+				"Treino proprioceptivo: __________ × ___seg × ___séries",
+				"Taping / Bandagem funcional: ( ) Aplicada",
+				"Crioterapia: 15min pós-sessão",
+			]),
+			callout("📌", "Critério para RTS: __________"),
+			p("Retorno: __________"),
+		].join(""),
+	},
+
+	// ═══════════════════════════════════════════════════════════════════════════
+	// 6. QUADRIL — FAI / BURSITE / DOR INGUINAL
+	// ═══════════════════════════════════════════════════════════════════════════
+	{
+		id: "notion-orto-quadril",
+		name: "Quadril — FAI / Bursite / Dor Inguinal",
+		category: "followup",
+		usageCount: 0,
+		subjective: [
+			callout("🦴", "Reabilitação de quadril"),
+			h3("Relato"),
+			ul([
+				"EVA: __/10 · Localização: ( ) Inguinal  ( ) Trocantérica  ( ) Glútea  ( ) Difusa",
+				"Piora com: ( ) Rotação  ( ) Flexão >90°  ( ) Sedestação prolongada  ( ) Esporte: ___",
+				"Percepção de estalincho (snapping hip): ( ) Não  ( ) Sim — ( ) Medial  ( ) Lateral",
+				"Impacto nas AVDs: __________",
+			]),
+		].join(""),
+
+		objective: [
+			h3("ADM (Flexão / Extensão / Rot.)"),
+			ul([
+				"Flexão: D ___° / E ___° (ref. 120°)",
+				"Extensão: D ___° / E ___° (ref. 20°)",
+				"RI em 90° flex: D ___° / E ___° (ref. 45°)",
+				"RE em 90° flex: D ___° / E ___° (ref. 45°)",
+				"Abdução: D ___° / E ___° (ref. 45°)",
+			]),
+			h3("Testes Especiais"),
+			ul([
+				"FADIR (FAI): ( ) Neg  ( ) Pos",
+				"FABER (Patrick): ( ) Neg  ( ) Pos — dist. joelho-maca: ___cm",
+				"Thomas (flexores curtos): D ( ) Neg ( ) Pos / E ( ) Neg ( ) Pos",
+				"Trendelenburg: D ( ) Neg ( ) Pos / E ( ) Neg ( ) Pos",
+				"Ober (TFL/banda iliotibial): ( ) Neg  ( ) Pos",
+			]),
+			h3("Força Muscular"),
+			ul([
+				"Glúteo médio (abdução isométrica): D ___N / E ___N",
+				"Glúteo máximo (extensão resistida): D ___/5 / E ___/5",
+				"Hip flexor (iliopsoas): D ___/5 / E ___/5",
+			]),
+		].join(""),
+
+		assessment: [
+			callout(
+				"🩺",
+				"Hipótese: ( ) FAI Cam  ( ) FAI Pincer  ( ) Bursite trocantérica  ( ) Síndrome do piriforme  ( ) LBP referida",
+			),
+			p(
+				"Quadril __________ (D/E) com padrão __________ e déficit principal de __________. Fase de tratamento: __________.",
+			),
+		].join(""),
+
+		plan: [
+			h3("Condutas"),
+			ol([
+				"Mobilização de quadril: tração longitudinal / posterior — ___ séries",
+				"Liberação miofascial: __________ (piriforme/TFL/psoas)",
+				"Fortalecimento glúteo médio: __________ × ___rep × ___séries",
+				"Fortalecimento glúteo máximo: __________ × ___rep × ___séries",
+				"Treino de controle motor (Trendelenburg): ___rep × ___séries",
+				"Crioterapia / TENS: ___min",
+			]),
+			callout("📌", "Restrições: evitar __________ / Retorno: __________"),
+		].join(""),
+	},
+
+	// ═══════════════════════════════════════════════════════════════════════════
+	// 7. CERVICALGIA / COLUNA CERVICAL
+	// ═══════════════════════════════════════════════════════════════════════════
+	{
+		id: "notion-orto-cervicalgia",
+		name: "Cervicalgia — Coluna Cervical",
+		category: "followup",
+		usageCount: 0,
+		subjective: [
+			callout("🦿", "Reabilitação cervical"),
+			h3("Relato"),
+			ul([
+				"EVA: __/10 · Irradiação para MMSS: ( ) Não  ( ) Sim → dermátomo: ___",
+				"Cefaleia associada: ( ) Não  ( ) Sim — frequência: ___",
+				"Tontura / zumbido: ( ) Não  ( ) Sim",
+				"Piora com: ( ) Flexão  ( ) Extensão  ( ) Rotação  ( ) Compressão axial  ( ) Postura",
+				"Trabalho: ( ) Sedentário  ( ) Atividade física  ( ) Horas em tela: ___h/dia",
+			]),
+			callout("🚩", "Red flags triados: cefaleia em trovão? déficit neurológico progressivo? mielopatia?"),
+		].join(""),
+
+		objective: [
+			h3("ADM Cervical"),
+			ul([
+				"Flexão: ___°  Extensão: ___°  (ref. 50°/60°)",
+				"Rot. D: ___°  Rot. E: ___°  (ref. 80°)",
+				"Inc. Lat. D: ___°  Inc. Lat. E: ___°  (ref. 45°)",
+			]),
+			h3("Exame Neurológico"),
+			ul([
+				"Spurling: ( ) Neg  ( ) Pos → dermátomo: ___",
+				"Distração cervical: ( ) Neg  ( ) Pos",
+				"Reflexos: Bíceps C5–C6 ( ) Normal  ( ) Alt · Tríceps C7 ( ) Normal  ( ) Alt",
+				"Sensibilidade: __________ (dermátomo afetado)",
+				"Força MRC: Del. ___/5  Bíc. ___/5  Tríc. ___/5  Interóss. ___/5",
+			]),
+			h3("Musculatura Cervical"),
+			ul([
+				"Flexão cérvico-craniana profunda (DCF — Longus Colli): ___mmHg biofeedback",
+				"Tensão muscular palpável: __________ (músculo/s)",
+			]),
+		].join(""),
+
+		assessment: [
+			callout(
+				"🩺",
+				"Diagnóstico: ( ) Cervicalgia mecânica  ( ) Cervicalgia discogênica  ( ) Radiculopatia C___  ( ) Síndrome facetária",
+			),
+			p(
+				"Coluna cervical com dor __/10, ADM limitada em __________, comprometimento neurológico: __________ (ausente / presente).",
+			),
+		].join(""),
+
+		plan: [
+			h3("Condutas"),
+			ol([
+				"Mobilização cervical: C___–C___ (deslizamento ant/post/lat) — grau ___",
+				"Tração cervical manual / mecânica: ___kg × ___min",
+				"Fortalecimento flexores profundos (DCF): ___mmHg × ___seg × ___rep",
+				"Liberação dos extensores / suboccipitais: ___min",
+				"TENS cervical: ___Hz ___min",
+				"Postura de trabalho (ergonomia): ( ) Orientado",
+			]),
+			callout("📌", "Orientações: __________ / Retorno: __________"),
+		].join(""),
+	},
+
+	// ═══════════════════════════════════════════════════════════════════════════
+	// 8. PÓS-OPERATÓRIO LCA
+	// ═══════════════════════════════════════════════════════════════════════════
+	{
+		id: "notion-orto-pos-op-lca",
+		name: "Pós-Operatório LCA — Protocolo",
+		category: "procedure",
+		usageCount: 0,
+		subjective: [
+			callout("⚕️", "Protocolo pós-operatório Ligamento Cruzado Anterior"),
+			h3("Semana Pós-op e Status"),
+			ul([
+				"Semana: ___ · Data da cirurgia: ___/___/___",
+				"Enxerto utilizado: ( ) Tendão Patelar  ( ) Semitendinoso/Gracilis  ( ) BPTB Allograft",
+				"Procedimento adicional: ( ) Meniscectomia parcial  ( ) Microfraturas  ( ) Outros: ___",
+				"Dor: EVA __/10 · Rigidez matinal: ( ) Não  ( ) Sim",
+			]),
+			h3("Funcionalidade"),
+			ul([
+				"Carga: ( ) NWB  ( ) PWB (__%)  ( ) FWB  ( ) Sem auxílio",
+				"Órtese: ( ) Sim — ___ graus  ( ) Não",
+				"Deambulação: __________ (bengala, muleta, livre)",
+			]),
+		].join(""),
+
+		objective: [
+			h3("Avaliação Objetiva"),
+			ul([
+				"Perimetria coxa (10cm acima patela): Op ___cm / Contralt ___cm",
+				"Edema articular (linha articular joelho): Op ___cm / Contralt ___cm",
+				"ADM: Flexão ___° / Extensão ___° (lag de extensão: ___°)",
+				"Sinal de derrame articular (balloon test): ( ) Neg  ( ) Pos",
+			]),
+			h3("Força e Controle Motor"),
+			ul([
+				"SLR (contração quádriceps sem deficit de extensão): ( ) Realiza  ( ) Não realiza",
+				"Quádriceps set: ___rep realizadas sem dor",
+				"Controle de VMO: ( ) Bom  ( ) Regular  ( ) Ruim",
+			]),
+		].join(""),
+
+		assessment: [
+			callout(
+				"📊",
+				"Fase de reabilitação: ( ) I — Proteção ≤2 sem  ( ) II — Mobilidade 2–6 sem  ( ) III — Força 6–12 sem  ( ) IV — Funcional 3–6 m  ( ) V — RTP >6 m",
+			),
+			p(
+				"Paciente na semana ___ pós-op de reconstrução de LCA. Evolução __________ (esperada / acelerada / atrasada). Critérios de progressão de fase: __________ (atingidos/pendentes).",
+			),
+			h3("Limitantes Atuais"),
+			ul([
+				"Dor: __________ ",
+				"Edema: __________",
+				"ADM: __________ (gap de extensão — prioridade máxima)",
+				"Força: __________",
+			]),
+		].join(""),
+
+		plan: [
+			h3("Condutas — Semana ___"),
+			ol([
+				"Crioterapia: 20min com compressão",
+				"Extensão passiva / mobilização patelar inferior para extensão completa",
+				"Quádriceps set isométrico: 10rep × 3 séries",
+				"SLR com controle de lag: ___rep × ___séries",
+				"Flexão ativa assistida: até ___° graus",
+				"Eletroestimulação FES quádriceps: ___Hz ___µs ___min",
+				"Mini-agachamento (CCF 0–60°): ___rep × ___séries",
+			]),
+			hr(),
+			h3("Critérios de Progressão"),
+			ul([
+				"Extensão completa (0°): ( ) Atingida  ( ) Pendente",
+				"Flexão ≥90°: ( ) Atingida sem edema  ( ) Pendente",
+				"SLR sem lag: ( ) Sim  ( ) Não",
+				"Edema controlado: ( ) Sim  ( ) Não",
+			]),
+			callout("📌", "HEP: __________ / Retorno: __________"),
+		].join(""),
+	},
+
+	// ═══════════════════════════════════════════════════════════════════════════
+	// 9. PUNHO E MÃO — SÍNDROME DO TÚNEL DO CARPO / TENDINITE
+	// ═══════════════════════════════════════════════════════════════════════════
+	{
+		id: "notion-orto-punho-mao",
+		name: "Punho / Mão — Túnel do Carpo / Tendinite",
+		category: "followup",
+		usageCount: 0,
+		subjective: [
+			callout("✋", "Reabilitação de punho e mão"),
+			h3("Relato"),
+			ul([
+				"EVA: __/10 · Região: ( ) Punho  ( ) Polegar  ( ) Dedos ___  ( ) Palma  ( ) Dorso",
+				"Parestesias: ( ) Não  ( ) Sim → dedos: ___ · Piora à noite: ( ) Não  ( ) Sim",
+				"Atividade desencadeante: __________ (digitação / pinça / trabalho manual)",
+				"Ocupação: ___________",
+			]),
+		].join(""),
+
+		objective: [
+			h3("ADM Punho (Ativo)"),
+			ul([
+				"Flexão: D ___° / E ___°  (ref. 80°)",
+				"Extensão: D ___° / E ___°  (ref. 70°)",
+				"Desvio Ulnar: D ___°  Desvio Radial: D ___°",
+				"Pronação/Supinação: Pro ___° / Sup ___°",
+			]),
+			h3("Força de Preensão"),
+			ul([
+				"Dinamometria: D ___kgf / E ___kgf (posição II)",
+				"Pinça polpa-polpa: D ___kgf / E ___kgf",
+			]),
+			h3("Testes Especiais"),
+			ul([
+				"Tinel (nervo mediano): ( ) Neg  ( ) Pos",
+				"Phalen: ( ) Neg  ( ) Pos — sintomas em ___seg",
+				"Finkelstein: ( ) Neg  ( ) Pos (de Quervain)",
+				"Teste de Wartenberg: ( ) Neg  ( ) Pos (nervo radial)",
+				"Compressão do carpo: ( ) Neg  ( ) Pos ___seg",
+			]),
+		].join(""),
+
+		assessment: [
+			callout(
+				"🩺",
+				"Diagnóstico: ( ) STC leve/mod/grave  ( ) Tendinite de de Quervain  ( ) Epicondilalgia  ( ) Artrose CMC1  ( ) Tendinite flexores",
+			),
+			p("Punho/mão __________ (D/E) com EVA __/10, déficit de força __% comparado ao lado contralateral e __________."),
+		].join(""),
+
+		plan: [
+			h3("Condutas"),
+			ol([
+				"Órtese de repouso nocturna: ( ) Prescrita  ( ) Já utiliza",
+				"Mobilização neural: deslizamento do nervo mediano — ___ séries suaves",
+				"Mobilização do carpo: ___",
+				"Fortalecimento progressivo: __________ com grip trainer / terapêutico",
+				"Ultrassom terapêutico: 1MHz ___W/cm² ___min",
+				"Laser de baixa intensidade: __________ J/cm²",
+			]),
+			callout("📌", "Orientações ergonômicas: __________ / Retorno: __________"),
+		].join(""),
+	},
+
+	// ═══════════════════════════════════════════════════════════════════════════
+	// 10. ALTA CLÍNICA ORTOPÉDICA
+	// ═══════════════════════════════════════════════════════════════════════════
+	{
+		id: "notion-orto-alta",
+		name: "Alta Clínica Ortopédica",
+		category: "discharge",
+		usageCount: 0,
+		subjective: [
+			callout("✅", "Documento de Alta Fisioterapêutica"),
+			h3("Resumo Clínico"),
+			ul([
+				"Condição tratada: __________",
+				"Período de tratamento: ___ semanas · Total de sessões: ___",
+				"Relato final do paciente: sem queixa ativa / assintomático / independente",
+			]),
+		].join(""),
+
+		objective: [
+			h3("Comparativo Inicial × Final"),
+			ul([
+				"EVA inicial: __/10 → EVA final: __/10",
+				"ADM inicial: ___° → ADM final: ___° (___% de recuperação)",
+				"Força inicial: ___/5 → Força final: ___/5",
+				"Perimetria (se aplicável): ___cm → ___cm",
+			]),
+			h3("Testes Funcionais (alta)"),
+			ul([
+				"Hop Test (LCA/joelho): Limb Symmetry Index ___% (OK ≥90%)",
+				"SEBT tornozelo: ___cm (OK ≥95% lado contralateral)",
+				"Teste de Elevação Ombro: ___° sem dor",
+				"Distância dedos–chão: ___cm",
+			]),
+			h3("Escalas Funcionais"),
+			ul([
+				"DASH: ___/100 (inicial: ___)",
+				"KOOS / IKDC: ___/100",
+				"Lysholm: ___/100",
+				"PSFS (Patient-Specific Functional Scale): ___/10",
+			]),
+		].join(""),
+
+		assessment: [
+			callout(
+				"🏆",
+				"Paciente atingiu os objetivos terapêuticos estabelecidos e está apto para receber alta.",
+			),
+			p(
+				"Após ___ semanas de tratamento, o paciente apresenta resolução de __________ com retorno à(s) atividade(s) __________. Função recuperada: ___%. Sem limitações residuais significativas.",
+			),
+		].join(""),
+
+		plan: [
+			h3("Recomendações de Alta"),
+			ol([
+				"Manutenção de programa de exercícios domiciliares: __________",
+				"Retorno ao esporte / atividade profissional: liberado / a partir de: ___",
+				"Reavaliação preventiva em: ___ meses",
+				"Encaminhamento para: ( ) Ortopedista  ( ) Médico do esporte  ( ) Nenhum",
+			]),
+			hr(),
+			callout(
+				"⚠️",
+				"Sinais de alerta para retorno: recidiva de dor intensa, novo episódio de trauma, limitação funcional súbita.",
+			),
+			p(`Alta concedida em: ___ / ___ / _____`),
+			p("Fisioterapeuta: ___________________  CREFITO: ___________"),
+		].join(""),
+	},
 ];

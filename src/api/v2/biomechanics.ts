@@ -1,4 +1,13 @@
+import type { JsonValue } from "@/types/common";
 import { request } from "./base";
+
+export interface BiomechanicsLandmark {
+  x: number;
+  y: number;
+  z?: number;
+  visibility?: number;
+  presence?: number;
+}
 
 export interface BiomechanicsAssessment {
   id: string;
@@ -7,9 +16,9 @@ export interface BiomechanicsAssessment {
   mediaUrl: string;
   thumbnailUrl?: string;
   analysisData: {
-    landmarks?: any[];
+    landmarks?: BiomechanicsLandmark[];
     angles?: Record<string, number>;
-    metrics?: Record<string, any>;
+    metrics?: Record<string, JsonValue>;
   };
   observations?: string;
   conclusions?: string;
