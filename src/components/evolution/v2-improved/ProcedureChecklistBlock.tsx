@@ -4,7 +4,7 @@
  * Enhanced procedures checklist with better UX,
  * smooth animations, and professional visual design.
  */
-import React, { useState, useMemo, useCallback, useRef } from "react";
+import React, { useState, useCallback, useRef } from "react";
 import {
 	CheckSquare,
 	Plus,
@@ -37,7 +37,6 @@ import { cn } from "@/lib/utils";
 import {
 	type ProcedureItem,
 	type ProcedureCategory,
-	COMMON_PROCEDURES,
 	PROCEDURE_CATEGORY_LABELS,
 } from "./types";
 
@@ -331,7 +330,7 @@ const ProcedureRow: React.FC<{
 	disabled: boolean;
 	index: number;
 }> = React.memo(
-	({ procedure, onToggle, onRemove, onUpdateNotes, disabled, index }) => {
+	({ procedure, onToggle, onRemove, onUpdateNotes, disabled, index: _index }) => {
 		const [showNotes, setShowNotes] = useState(false);
 		const [isRemoving, setIsRemoving] = useState(false);
 
