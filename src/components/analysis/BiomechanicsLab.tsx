@@ -5,8 +5,6 @@ import {
 	Activity, 
 	ChevronRight, 
 	BarChart3, 
-	Download,
-	Trash2,
 	Eye,
 	ArrowLeftRight
 } from "lucide-react";
@@ -14,9 +12,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { ScrollArea } from "@/components/ui/scroll-area";
 import { PosturalAnalysisTool } from "./PosturalAnalysisTool";
-import { AnalyticalVideoPlayer } from "./video/AnalyticalVideoPlayer";
 import { biomechanicsApi, BiomechanicsAssessment } from "@/api/v2/biomechanics";
 import { biomechanicsPersistenceService } from "@/services/biomechanics/persistenceService";
 import { format } from "date-fns";
@@ -35,7 +31,6 @@ export const BiomechanicsLab: React.FC<BiomechanicsLabProps> = ({
 	const [activeTab, setActiveTab] = useState("history");
 	const [assessments, setAssessments] = useState<BiomechanicsAssessment[]>([]);
 	const [isLoading, setIsLoading] = useState(true);
-	const [isSaving, setIsSaving] = useState(false);
 	const { toast } = useToast();
 
 	const loadHistory = async () => {
@@ -56,7 +51,6 @@ export const BiomechanicsLab: React.FC<BiomechanicsLabProps> = ({
 
 	const handleCapture = async (image: string, analysis: any) => {
 		try {
-			setIsSaving(true);
 			await biomechanicsPersistenceService.saveAssessment({
 				patientId,
 				type: "static_posture",
@@ -67,10 +61,8 @@ export const BiomechanicsLab: React.FC<BiomechanicsLabProps> = ({
 			toast({ title: "Sucesso", description: "Avaliação postural salva no laboratório." });
 			setActiveTab("history");
 			loadHistory();
-		} catch (error) {
+		} catch {
 			toast({ variant: "destructive", title: "Erro", description: "Falha ao salvar avaliação." });
-		} finally {
-			setIsSaving(false);
 		}
 	};
 

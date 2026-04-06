@@ -93,7 +93,7 @@ export async function exportPatientsToExcel(
 		totalSessions?: number;
 		city?: string;
 	}>,
-	clinicName: string,
+	_clinicName: string,
 ): Promise<Buffer> {
 	const ExcelJS = await loadExcelJS();
 	const workbook = new ExcelJS.Workbook();
