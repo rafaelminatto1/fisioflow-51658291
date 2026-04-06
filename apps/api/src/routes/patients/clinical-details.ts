@@ -867,6 +867,7 @@ export function registerPatientClinicalDetailRoutes(app: PatientRouteApp) {
           notes,
           report_done,
           report_sent,
+          created_by,
           created_at,
           updated_at
         )
@@ -880,6 +881,7 @@ export function registerPatientClinicalDetailRoutes(app: PatientRouteApp) {
           $7,
           COALESCE($8, false),
           COALESCE($9, false),
+          $10,
           NOW(),
           NOW()
         )
@@ -895,6 +897,7 @@ export function registerPatientClinicalDetailRoutes(app: PatientRouteApp) {
         nullableString(body.notes),
         nullableBoolean(body.report_done),
         nullableBoolean(body.report_sent),
+        user.uid,
       ],
     );
 

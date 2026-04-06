@@ -236,7 +236,7 @@ export async function exportFinancialReport(
 			value: number;
 		}>;
 	},
-	clinicName: string,
+	_clinicName: string,
 ): Promise<Buffer> {
 	const ExcelJS = await loadExcelJS();
 	const workbook = new ExcelJS.Workbook();

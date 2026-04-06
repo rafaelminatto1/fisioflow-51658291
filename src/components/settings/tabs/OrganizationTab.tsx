@@ -25,7 +25,6 @@ import {
 import { InviteUserModal } from "@/components/admin/InviteUserModal";
 import { Badge } from "@/components/ui/badge";
 import { safeFormat } from "@/lib/utils";
-import { useToast } from "@/hooks/use-toast";
 
 export function OrganizationTab() {
 	const {

@@ -74,7 +74,7 @@ export const InternalChat = () => {
 		setMessageText("");
 	};
 
-	const handleSelectFromTeam = (userId: string, name: string) => {
+	const handleSelectFromTeam = (userId: string, _name: string) => {
 		setSelectedParticipantId(userId);
 		setNewChatPopoverOpen(false);
 	};
