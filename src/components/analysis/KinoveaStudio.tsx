@@ -25,6 +25,7 @@ import {
 } from "@/components/ui/tooltip";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { loadTfjsPoseRuntime } from "@/lib/ai/tfjsRuntime";
 
 interface KinoveaStudioProps {
 	onCapture?: (image: string, analysis: any) => void;
@@ -104,11 +105,10 @@ export const KinoveaStudio: React.FC<KinoveaStudioProps> = ({
 		if (detectorRef.current) return;
 		setAiLoading(true);
 		try {
-			const [tf, poseDetection] = await Promise.all([
-				import("@tensorflow/tfjs"),
+			const [poseDetection] = await Promise.all([
+				loadTfjsPoseRuntime(),
 				import("@tensorflow-models/pose-detection"),
 			]);
-			await tf.ready();
 			detectorRef.current = await poseDetection.createDetector(
 				poseDetection.SupportedModels.MoveNet,
 				{

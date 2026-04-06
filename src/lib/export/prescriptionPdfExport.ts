@@ -1,9 +1,8 @@
-import jsPDF from "jspdf";
-import autoTable from "jspdf-autotable";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import QRCode from "qrcode";
 import { fisioLogger as logger } from "@/lib/errors/logger";
+import { loadJsPdfRuntime } from "@/lib/export/jspdfRuntime";
 
 interface PrescriptionExercise {
 	id: string;
@@ -30,6 +29,7 @@ interface PrescriptionData {
 export const generatePrescriptionPDF = async (
 	prescription: PrescriptionData,
 ): Promise<Blob> => {
+	const { jsPDF, autoTable } = await loadJsPdfRuntime();
 	const doc = new jsPDF();
 	let yPosition = 20;
 

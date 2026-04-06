@@ -65,35 +65,6 @@ function mockMobileModules() {
 	};
 }
 
-function lazyCornerstoneCharls() {
-	const lazyDecoderPath = path.resolve(
-		repoRoot,
-		"src/components/analysis/dicom/decoders/lazyDecodeJPEGLS.ts",
-	);
-
-	return {
-		name: "lazy-cornerstone-charls",
-		enforce: "pre" as const,
-		resolveId(source: string, importer?: string) {
-			if (
-				!importer ||
-				!importer.includes("@cornerstonejs/dicom-image-loader")
-			) {
-				return null;
-			}
-
-			if (
-				source === "./decodeJPEGLS" ||
-				source === "./shared/decoders/decodeJPEGLS"
-			) {
-				return lazyDecoderPath;
-			}
-
-			return null;
-		},
-	};
-}
-
 export default defineConfig(({ mode }) => {
 	const isProduction = mode === "production";
 	const isAnalyze = process.env.ANALYZE === "true";
@@ -113,7 +84,6 @@ export default defineConfig(({ mode }) => {
 			tailwindcss(),
 			react(),
 			mockMobileModules(),
-			lazyCornerstoneCharls(),
 			htmlPlugin(appVersion, buildTime),
 			isAnalyze &&
 				visualizer({
@@ -150,47 +120,7 @@ export default defineConfig(({ mode }) => {
 				lodash: "lodash-es",
 				"@fisioflow/ui": path.resolve(repoRoot, "packages/ui/src"),
 				"@fisioflow/core": path.resolve(repoRoot, "packages/core/src"),
-				"@fisioflow/codec-charls-real": path.resolve(
-					repoRoot,
-					"node_modules/@cornerstonejs/codec-charls/dist/charlswasm_decode.js",
-				),
-				"@fisioflow/codec-charls-wasm": path.resolve(
-					repoRoot,
-					"node_modules/@cornerstonejs/codec-charls/dist/charlswasm_decode.wasm",
-				),
 				"@fisioflow/skills": path.resolve(repoRoot, "src/lib/skills"),
-				"@fisioflow/cornerstone-tools-init": path.resolve(
-					repoRoot,
-					"node_modules/@cornerstonejs/tools/dist/esm/init.js",
-				),
-				"@fisioflow/cornerstone-tools-add-tool": path.resolve(
-					repoRoot,
-					"node_modules/@cornerstonejs/tools/dist/esm/store/addTool.js",
-				),
-				"@fisioflow/cornerstone-tools-tool-group-manager": path.resolve(
-					repoRoot,
-					"node_modules/@cornerstonejs/tools/dist/esm/store/ToolGroupManager/index.js",
-				),
-				"@fisioflow/cornerstone-tools-enums": path.resolve(
-					repoRoot,
-					"node_modules/@cornerstonejs/tools/dist/esm/enums/index.js",
-				),
-				"@fisioflow/cornerstone-tools-pan": path.resolve(
-					repoRoot,
-					"node_modules/@cornerstonejs/tools/dist/esm/tools/PanTool.js",
-				),
-				"@fisioflow/cornerstone-tools-zoom": path.resolve(
-					repoRoot,
-					"node_modules/@cornerstonejs/tools/dist/esm/tools/ZoomTool.js",
-				),
-				"@fisioflow/cornerstone-tools-length": path.resolve(
-					repoRoot,
-					"node_modules/@cornerstonejs/tools/dist/esm/tools/annotation/LengthTool.js",
-				),
-				"@fisioflow/cornerstone-tools-probe": path.resolve(
-					repoRoot,
-					"node_modules/@cornerstonejs/tools/dist/esm/tools/annotation/ProbeTool.js",
-				),
 				exceljs: path.resolve(
 					repoRoot,
 					"node_modules/exceljs/lib/exceljs.browser.js",
@@ -228,98 +158,6 @@ export default defineConfig(({ mode }) => {
 					// Priority: maior = avaliado primeiro (chunk mais específico vence).
 					codeSplitting: {
 						groups: [
-							// DICOM viewer split — evita um único megachunk monolítico
-							{
-								name: "vendor-vtk-rendering-core",
-								test: /node_modules\/@kitware\/vtk\.js\/Rendering\/Core/,
-								priority: 40,
-							},
-							{
-								name: "vendor-vtk-rendering-opengl",
-								test: /node_modules\/@kitware\/vtk\.js\/Rendering\/OpenGL/,
-								priority: 39.8,
-							},
-							{
-								name: "vendor-vtk-rendering-volume",
-								test: /node_modules\/@kitware\/vtk\.js\/Rendering\/Volume/,
-								priority: 39.6,
-							},
-							{
-								name: "vendor-vtk-rendering",
-								test: /node_modules\/@kitware\/vtk\.js\/Rendering/,
-								priority: 39.4,
-							},
-							{
-								name: "vendor-vtk-common",
-								test: /node_modules\/@kitware\/vtk\.js\/Common/,
-								priority: 39.2,
-							},
-							{
-								name: "vendor-vtk-filters",
-								test: /node_modules\/@kitware\/vtk\.js\/Filters/,
-								priority: 39,
-							},
-							{
-								name: "vendor-vtk-io-core",
-								test: /node_modules\/@kitware\/vtk\.js\/IO\/Core/,
-								priority: 38.8,
-							},
-							{
-								name: "vendor-vtk-io-image",
-								test: /node_modules\/@kitware\/vtk\.js\/IO\/Image/,
-								priority: 38.6,
-							},
-							{
-								name: "vendor-vtk-io-geometry",
-								test: /node_modules\/@kitware\/vtk\.js\/IO\/Geometry/,
-								priority: 38.4,
-							},
-							{
-								name: "vendor-vtk-io-legacy",
-								test: /node_modules\/@kitware\/vtk\.js\/IO\/Legacy/,
-								priority: 38.2,
-							},
-							{
-								name: "vendor-vtk-io-xml",
-								test: /node_modules\/@kitware\/vtk\.js\/IO\/XML/,
-								priority: 38,
-							},
-							{
-								name: "vendor-vtk-io",
-								test: /node_modules\/@kitware\/vtk\.js\/IO/,
-								priority: 37.8,
-							},
-							{
-								name: "vendor-vtk",
-								test: /node_modules\/@kitware\/vtk\.js/,
-								priority: 35,
-							},
-							{
-								name: "vendor-cornerstone-math",
-								test: /node_modules\/(gl-matrix|comlink|loglevel)/,
-								priority: 35,
-							},
-							{
-								name: "vendor-cornerstone-core",
-								test: /node_modules\/@cornerstonejs\/core/,
-								priority: 34,
-							},
-							{
-								name: "vendor-cornerstone-tools",
-								test: /node_modules\/@cornerstonejs\/tools/,
-								priority: 33,
-							},
-							{
-								name: "vendor-cornerstone-loader",
-								test: /node_modules\/@cornerstonejs\/dicom-image-loader/,
-								priority: 32,
-							},
-							// fallback para qualquer outro pacote cornerstone
-							{
-								name: "vendor-cornerstone",
-								test: /node_modules\/@cornerstonejs/,
-								priority: 30,
-							},
 							// react-pdf renderer — geração de PDFs por exportação
 							{
 								name: "vendor-react-pdf-font",
@@ -453,9 +291,19 @@ export default defineConfig(({ mode }) => {
 							},
 							// jspdf — geração PDF, ~400 KB
 							{
+								name: "vendor-jspdf-autotable",
+								test: /node_modules\/jspdf-autotable/,
+								priority: 17.2,
+							},
+							{
 								name: "vendor-jspdf",
 								test: /node_modules\/jspdf/,
 								priority: 17,
+							},
+							{
+								name: "vendor-qrcode",
+								test: /node_modules\/qrcode/,
+								priority: 16.8,
 							},
 							// @sentry/react — error tracking, ~441 KB
 							{

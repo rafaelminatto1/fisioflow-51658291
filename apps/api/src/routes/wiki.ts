@@ -48,7 +48,7 @@ app.delete('/categories/:id', requireAuth, async (c) => {
 
 // ===== LISTA DE PÁGINAS =====
 app.get('/', async (c) => {
-  const authUser = await verifyToken(c, c.env);
+  await verifyToken(c, c.env);
   const db = await createDb(c.env);
 
   const { q, category, page = '1', limit = '30' } = c.req.query();
@@ -103,7 +103,7 @@ app.get('/', async (c) => {
 
 // ===== PÁGINA COMPLETA =====
 app.get('/:slug', async (c) => {
-  const authUser = await verifyToken(c, c.env);
+  await verifyToken(c, c.env);
   const db = await createDb(c.env);
   const { slug } = c.req.param();
 
@@ -135,7 +135,7 @@ app.get('/:slug', async (c) => {
 
 // ===== SUB-PÁGINAS =====
 app.get('/:slug/children', async (c) => {
-  const authUser = await verifyToken(c, c.env);
+  await verifyToken(c, c.env);
   const db = await createDb(c.env);
   const { slug } = c.req.param();
 

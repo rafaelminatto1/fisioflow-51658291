@@ -110,7 +110,7 @@ class OfflineManager {
     }
   }
 
-  async syncAll(userId: string): Promise<void> {
+  async syncAll(_userId: string): Promise<void> {
     if (this.isSyncing || this.queue.length === 0) {
       return;
     }

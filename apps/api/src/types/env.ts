@@ -157,7 +157,7 @@ export interface Env {
 }
 
 // Helper type para Workflow binding
-type Workflow<T> = {
+type Workflow<_T> = {
   create(opts: { id?: string; params?: Record<string, unknown> }): Promise<WorkflowInstance>;
   get(id: string): Promise<WorkflowInstance>;
 };

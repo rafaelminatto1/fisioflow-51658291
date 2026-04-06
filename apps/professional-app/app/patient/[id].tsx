@@ -43,7 +43,7 @@ export default function PatientDetailScreen() {
   const colors = useColors();
   const { light, medium, success, error } = useHaptics();
   const [refreshing, setRefreshing] = useState(false);
-  const [selectedTab, setSelectedTab] = useState<'info' | 'financial' | 'evolutions' | 'biofeedback'>((tab as any) || 'info');
+  const [selectedTab, setSelectedTab] = useState<'info' | 'financial' | 'evolutions' | 'biofeedback' | 'proms' | 'hep'>((tab as any) || 'info');
 
   const { data: patient, refetch } = useQuery({
     queryKey: ['patient', id],
@@ -225,6 +225,26 @@ export default function PatientDetailScreen() {
           >
             <Ionicons name="document-text" size={20} color="#FFFFFF" />
             <Text style={styles.actionBtnText}>Evolucao</Text>
+          </TouchableOpacity>
+          <TouchableOpacity
+            style={[styles.actionBtn, { backgroundColor: '#8B5CF6' }]}
+            onPress={() => {
+              medium();
+              router.push({ pathname: '/proms', params: { patientId: id as string, patientName: name } });
+            }}
+          >
+            <Ionicons name="clipboard" size={20} color="#FFFFFF" />
+            <Text style={styles.actionBtnText}>Escalas</Text>
+          </TouchableOpacity>
+          <TouchableOpacity
+            style={[styles.actionBtn, { backgroundColor: '#059669' }]}
+            onPress={() => {
+              medium();
+              router.push({ pathname: '/hep-compliance', params: { patientId: id as string, patientName: name } });
+            }}
+          >
+            <Ionicons name="stats-chart" size={20} color="#FFFFFF" />
+            <Text style={styles.actionBtnText}>HEP</Text>
           </TouchableOpacity>
         </View>
 

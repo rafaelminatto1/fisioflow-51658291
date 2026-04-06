@@ -295,7 +295,7 @@ export interface MeasurementEventData {
 export interface AttachmentEventData {
 	attachmentId: string;
 	name: string;
-	type: "image" | "pdf" | "document" | "video" | "dicom";
+	type: "image" | "pdf" | "document" | "video";
 	url: string;
 	size: number;
 	thumbnailUrl?: string;

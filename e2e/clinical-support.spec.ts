@@ -259,19 +259,6 @@ async function mockClinicalAnalysis(page: any, mockResponse: any) {
 }
 
 /**
- * Mock red flag check
- */
-async function mockRedFlagCheck(page: any, mockResponse: any) {
-  await page.route('**/api/ai/red-flags**', async route => {
-    await route.fulfill({
-      status: 200,
-      contentType: 'application/json',
-      body: JSON.stringify(mockResponse),
-    });
-  });
-}
-
-/**
  * Mock evidence search
  */
 async function mockEvidenceSearch(page: any, mockResponse: any) {

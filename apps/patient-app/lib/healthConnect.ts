@@ -137,7 +137,7 @@ export class HealthConnectManager {
   /**
    * Solicita permissões para ler dados de saúde
    */
-  async requestPermissions(permissions: HealthConnectDataType[]): Promise<boolean> {
+  async requestPermissions(_permissions: HealthConnectDataType[]): Promise<boolean> {
     if (!this.isInitialized) {
       await this.initialize();
     }
@@ -166,7 +166,7 @@ export class HealthConnectManager {
   /**
    * Busca dados de saúde do Health Connect
    */
-  async getHealthData(options: HealthConnectOptions): Promise<HealthConnectData | null> {
+  async getHealthData(_options: HealthConnectOptions): Promise<HealthConnectData | null> {
     if (!this.isAvailable || !this.isInitialized) {
       return null;
     }
@@ -203,7 +203,7 @@ export class HealthConnectManager {
   /**
    * Busca contagem de passos
    */
-  async getSteps(options: HealthConnectOptions): Promise<number | null> {
+  async getSteps(_options: HealthConnectOptions): Promise<number | null> {
     if (!this.isAvailable) {
       // Retornar dados mockados para Expo Go
       return this.getMockHealthData().steps || null;
@@ -230,7 +230,7 @@ export class HealthConnectManager {
   /**
    * Busca dados de frequência cardíaca
    */
-  async getHeartRate(options: HealthConnectOptions): Promise<number[] | null> {
+  async getHeartRate(_options: HealthConnectOptions): Promise<number[] | null> {
     if (!this.isAvailable) {
       return null;
     }
@@ -253,7 +253,7 @@ export class HealthConnectManager {
   /**
    * Salva dados de saúde (ex: gravar exercícios)
    */
-  async saveWorkout(workout: {
+  async saveWorkout(_workout: {
     activityType: string;
     startDate: Date;
     endDate: Date;

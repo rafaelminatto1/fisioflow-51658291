@@ -28,7 +28,7 @@ import { chromium } from 'playwright';
   
   const bodyText = await page.evaluate(() => document.body.innerText.trim());
   const hasAppRoot = await page.evaluate(() => !!document.getElementById('root'));
-  const hasAppRuntime = await page.evaluate(() => !!document.querySelector('.app-runtime-error, [data-error]')); // look for error boundaries
+  await page.evaluate(() => !!document.querySelector('.app-runtime-error, [data-error]')); // look for error boundaries
   
   console.log("\n--- TEST RESULTS ---");
   console.log(`Logs found: ${logs.length}`);

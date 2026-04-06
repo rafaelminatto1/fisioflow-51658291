@@ -5,17 +5,16 @@
  * biofeedback em tempo real e contagem automática.
  */
 
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, Dimensions } from 'react-native';
 import { CameraView, useCameraPermissions } from 'expo-camera';
 import { Ionicons } from '@expo/vector-icons';
-import { AnalysisEngine } from '../../lib/ai/analysisEngine';
 import { PoseFeedbackOverlay } from './PoseFeedbackOverlay';
 import { ExerciseType, AnalysisResult } from '../../types/ai/pose';
 
 const { width, height } = Dimensions.get('window');
 
-export const ExerciseAiScreen = ({ exerciseType, onComplete }: { exerciseType: ExerciseType, onComplete: (res: any) => void }) => {
+export const ExerciseAiScreen = ({ exerciseType: _exerciseType, onComplete }: { exerciseType: ExerciseType, onComplete: (res: any) => void }) => {
   const [permission, requestPermission] = useCameraPermissions();
   const [isRecording, setIsRecording] = useState(false);
   const [result] = useState<AnalysisResult | null>(null);

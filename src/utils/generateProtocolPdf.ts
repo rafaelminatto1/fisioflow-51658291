@@ -1,14 +1,14 @@
-import { jsPDF } from "jspdf";
-import autoTable from "jspdf-autotable";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { ExerciseProtocol } from "@/hooks/useExerciseProtocols";
 import { Organization } from "@/hooks/useOrganizations";
+import { loadJsPdfRuntime } from "@/lib/export/jspdfRuntime";
 
-export const generateProtocolPdf = (
+export const generateProtocolPdf = async (
 	protocol: ExerciseProtocol,
 	organization?: Organization | null,
 ) => {
+	const { jsPDF, autoTable } = await loadJsPdfRuntime();
 	const doc = new jsPDF();
 	const pageWidth = doc.internal.pageSize.getWidth();
 	const margin = 20;

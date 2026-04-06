@@ -2,7 +2,7 @@ import { Hono } from 'hono';
 import type { MiddlewareHandler } from 'hono';
 import type { Env } from '../types/env';
 import { requireAuth, type AuthVariables } from '../lib/auth';
-import { eq, and, sql, desc, asc, lte, gte, ne, lt, gt, notInArray } from 'drizzle-orm';
+import { eq, and, sql, desc, lte, gte } from 'drizzle-orm';
 import { appointments, patients } from '@fisioflow/db';
 import {
   normalizeStatus,

@@ -20,7 +20,7 @@ export async function handleScheduled(event: ScheduledEvent, env: Env, ctx: Exec
     const hour = now.getUTCHours() - 3; // Ajuste para Horário de Brasília (BRT)
 
     // Business Hours check: Monday to Friday, 7 AM to 8 PM (20h)
-    const isBusinessHours = day >= 1 && day <= 5 && hour >= 7 && hour < 20;
+    const _isBusinessHours = day >= 1 && day <= 5 && hour >= 7 && hour < 20;
 
     switch (cron) {
       case "0 9 * * *": // UTC 09h = BRT 06h — Lembretes + prewarm pós cold-start
@@ -156,7 +156,7 @@ async function sendAppointmentReminders(pool: any, env: Env, _ctx: ExecutionCont
   console.log(`[Cron] Sent ${emailSent} emails and ${whatsappSent} WhatsApp reminders.`);
 }
 
-async function performDatabaseCleanup(pool: any, env: Env) {
+async function performDatabaseCleanup(pool: any, _env: Env) {
   console.log('[Cron] Performing database maintenance...');
   
   try {

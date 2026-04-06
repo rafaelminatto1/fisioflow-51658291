@@ -1,5 +1,3 @@
-const { drizzle } = require("drizzle-orm/neon-http");
-
 const fs = require("fs");
 const path = require("path");
 

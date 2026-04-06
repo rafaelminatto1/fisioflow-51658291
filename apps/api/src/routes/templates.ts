@@ -166,7 +166,7 @@ app.post('/:id/apply', requireAuth, async (c) => {
   }
 
   const body = await c.req.json();
-  const { patientId, startDate, surgeryId, notes } = body as {
+  const { patientId, startDate, surgeryId: _surgeryId, notes } = body as {
     patientId: string;
     startDate: string;
     surgeryId?: string;

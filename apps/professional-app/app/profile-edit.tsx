@@ -59,7 +59,7 @@ export default function ProfileEditScreen() {
 	const { light, medium, success, error } = useHaptics();
 	const queryClient = useQueryClient();
 
-	const [, setIsLoading] = useState(false);
+	const [, _setIsLoading] = useState(false);
 	const [isSaving, setIsSaving] = useState(false);
 	const [avatarUri, setAvatarUri] = useState<string | null>(null);
 
@@ -95,10 +95,9 @@ export default function ProfileEditScreen() {
 				specialty: profile.specialty || "",
 				crefito: profile.crefito || profile.licenseNumber || "",
 				phone: profile.phone || "",
-				clinicName: profile.clinicName || (profile as any).clinicName || "",
-				clinicAddress:
-					profile.clinicAddress || (profile as any).clinicAddress || "",
-				clinicPhone: profile.clinicPhone || (profile as any).clinicPhone || "",
+				clinicName: profile.clinicName || "",
+				clinicAddress: profile.clinicAddress || "",
+				clinicPhone: profile.clinicPhone || "",
 			});
 		}
 	}, [profile]);
@@ -118,7 +117,7 @@ export default function ProfileEditScreen() {
 				{ text: "OK", onPress: () => router.back() },
 			]);
 		},
-		onError: (err) => {
+		onError: (_err) => {
 			error();
 			Alert.alert(
 				"Erro",

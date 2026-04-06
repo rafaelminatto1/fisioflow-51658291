@@ -19,7 +19,7 @@ export function renderWithProviders(
     withNavigation?: boolean;
   }
 ): RenderAPI {
-  const { } = options || {};
+  void options;
 
   // In a real app, you would wrap with theme provider, navigation provider, etc.
   // For now, we'll just do a basic render

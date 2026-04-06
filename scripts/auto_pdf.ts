@@ -75,11 +75,9 @@ async function main() {
           console.log(`\nSearching for PDF button for ${paper.file}...`);
           const pdfButton = page.locator('a[title*="PDF"], a:text-matches("Download PDF", "i"), a:text-matches("View PDF", "i"), a.pdf-link, button:has-text("Download PDF"), a[data-test="pdf-link"], a[data-track-action="download pdf"], a.c-pdf-download__link').first();
           
-          let clicked = false;
           if (await pdfButton.isVisible({ timeout: 5000 }).catch(() => false)) {
               console.log("Found PDF button! Clicking automatically...");
               await pdfButton.click();
-              clicked = true;
           } else {
               console.log("Could not find a clear PDF download button.");
           }

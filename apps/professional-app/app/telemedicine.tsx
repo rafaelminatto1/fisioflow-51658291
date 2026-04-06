@@ -1,6 +1,5 @@
 import { Ionicons } from "@expo/vector-icons";
 import { router } from "expo-router";
-import { useState, useCallback } from "react";
 import {
 	ActivityIndicator,
 	RefreshControl,
@@ -93,7 +92,7 @@ export default function TelemedicineScreen() {
 						const room = await createRoom(p.id);
 						Alert.alert("Sucesso", "Sala criada com sucesso!");
 						if (room.meeting_url) Linking.openURL(room.meeting_url);
-					} catch (e) {
+					} catch {
 						Alert.alert("Erro", "Não foi possível criar a sala.");
 					}
 				}

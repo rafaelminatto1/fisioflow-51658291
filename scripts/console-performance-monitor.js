@@ -197,7 +197,7 @@
           console.log('🎨 Skeleton loader appeared');
           
           // Detectar quando o skeleton desaparece
-          const observer = new MutationObserver((mutations) => {
+          const observer = new MutationObserver((_mutations) => {
             if (!document.contains(node)) {
               console.log('✅ Skeleton loader removed (content loaded)');
               observer.disconnect();

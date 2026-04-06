@@ -1,5 +1,4 @@
 import { createAuthClient } from '@neondatabase/neon-js/auth';
-import * as SecureStore from 'expo-secure-store';
 
 /**
  * Custom storage for Better Auth in React Native using Expo SecureStore

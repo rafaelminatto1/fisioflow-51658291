@@ -26,11 +26,14 @@ async function getToken() {
 }
 
 async function req(method, path, token, body) {
-  const res = await fetch(`${API}${path}`, {
+  const requestInit = {
     method,
     headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
-    body: body ? JSON.stringify(body) : undefined,
-  });
+  };
+  if (body && method !== 'GET') {
+    requestInit.body = JSON.stringify(body);
+  }
+  const res = await fetch(`${API}${path}`, requestInit);
   let json;
   try { json = await res.json(); } catch { json = {}; }
   return { status: res.status, ok: res.ok, json };
@@ -296,12 +299,18 @@ async function main() {
     if (!patient) { skip('Sem paciente'); return; }
 
     const r1 = await req('GET', `/api/evolution/treatment-sessions?patientId=${patient.id}`, token);
-    r1.ok ? ok(`Sessions → ${r1.status} — ${r1.json?.data?.length ?? 0}`)
-          : fail(`Sessions → ${r1.status}: ${JSON.stringify(r1.json)}`);
+    if (r1.ok) {
+      ok(`Sessions → ${r1.status} — ${r1.json?.data?.length ?? 0}`);
+    } else {
+      fail(`Sessions → ${r1.status}: ${JSON.stringify(r1.json)}`);
+    }
 
     const r2 = await req('GET', `/api/evolution/measurements?patientId=${patient.id}`, token);
-    r2.ok ? ok(`Measurements → ${r2.status} — ${r2.json?.data?.length ?? 0}`)
-          : fail(`Measurements → ${r2.status}: ${JSON.stringify(r2.json)}`);
+    if (r2.ok) {
+      ok(`Measurements → ${r2.status} — ${r2.json?.data?.length ?? 0}`);
+    } else {
+      fail(`Measurements → ${r2.status}: ${JSON.stringify(r2.json)}`);
+    }
   });
 
   // ── 12. GAMIFICAÇÃO ───────────────────────────────────────────────────────

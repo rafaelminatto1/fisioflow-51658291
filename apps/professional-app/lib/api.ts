@@ -1047,6 +1047,176 @@ export async function markFinancialRecordAsPaid(
 }
 
 // ============================================================
+// PROMS — ESCALAS CLÍNICAS VALIDADAS
+// ============================================================
+
+export interface ApiStandardizedTestResult {
+  id: string;
+  organization_id?: string;
+  patient_id: string;
+  scale_name: string;
+  score: number;
+  interpretation?: string | null;
+  responses?: Record<string, unknown> | null;
+  applied_at: string;
+  applied_by?: string | null;
+  session_id?: string | null;
+  notes?: string | null;
+  created_at?: string;
+  updated_at?: string;
+}
+
+export async function getPatientStandardizedTests(
+  patientId: string,
+  options?: { scale?: string; limit?: number }
+): Promise<ApiStandardizedTestResult[]> {
+  const response = await fetchApi<ApiResponse<ApiStandardizedTestResult[]>>(
+    '/api/standardized-tests',
+    { params: { patientId, scale: options?.scale, limit: options?.limit } }
+  );
+  return response.data || [];
+}
+
+export async function createStandardizedTestResult(
+  data: Omit<ApiStandardizedTestResult, 'id' | 'created_at' | 'updated_at'>
+): Promise<ApiStandardizedTestResult> {
+  const response = await fetchApi<ApiResponse<ApiStandardizedTestResult>>(
+    '/api/standardized-tests',
+    { method: 'POST', data }
+  );
+  if (response.error) throw new Error(response.error);
+  return response.data;
+}
+
+// ============================================================
+// HEP COMPLIANCE
+// ============================================================
+
+export interface ApiHEPComplianceData {
+  planId: string;
+  patientId: string;
+  planName: string;
+  totalDays: number;
+  completedDays: number;
+  rate: number;
+  byExercise: Record<string, { completed: number; total: number; rate: number }>;
+  last14Days: Array<{ date: string; completed: boolean }>;
+}
+
+export async function getHEPCompliance(planId: string): Promise<ApiHEPComplianceData> {
+  const response = await fetchApi<ApiResponse<ApiHEPComplianceData>>(
+    `/api/exercise-plans/${encodeURIComponent(planId)}/compliance`
+  );
+  if (!response.data) throw new Error('Dados de compliance não encontrados');
+  return response.data;
+}
+
+export async function getPatientExercisePlans(
+  patientId: string
+): Promise<Array<{ id: string; name: string; created_at: string }>> {
+  const response = await fetchApi<ApiResponse<Array<{ id: string; name: string; created_at: string }>>>(
+    '/api/exercise-plans',
+    { params: { patientId } }
+  );
+  return response.data || [];
+}
+
+// ============================================================
+// NFS-e — NOTA FISCAL DE SERVIÇO ELETRÔNICA
+// ============================================================
+
+export interface ApiNFSeRecord {
+  id: string;
+  patient_id?: string;
+  appointment_id?: string;
+  numero_nfse?: string;
+  numero_rps: string;
+  serie_rps: string;
+  data_emissao: string;
+  valor_servico: number;
+  aliquota_iss: number;
+  valor_iss?: number;
+  status: 'rascunho' | 'enviado' | 'autorizado' | 'cancelado' | 'erro';
+  codigo_verificacao?: string;
+  link_nfse?: string;
+  tomador_nome?: string;
+  created_at: string;
+}
+
+export async function getNFSeList(params?: {
+  patientId?: string;
+  month?: string;
+  status?: string;
+}): Promise<ApiNFSeRecord[]> {
+  const response = await fetchApi<ApiResponse<ApiNFSeRecord[]>>(
+    '/api/nfse',
+    { params: params as any }
+  );
+  return response.data || [];
+}
+
+export async function generateNFSe(data: {
+  patient_id?: string;
+  appointment_id?: string;
+  valor_servico: number;
+  discriminacao?: string;
+  tomador_nome?: string;
+  tomador_cpf_cnpj?: string;
+}): Promise<ApiNFSeRecord> {
+  const response = await fetchApi<ApiResponse<ApiNFSeRecord>>(
+    '/api/nfse',
+    { method: 'POST', data }
+  );
+  if (response.error) throw new Error(response.error);
+  return response.data;
+}
+
+export async function cancelNFSe(id: string): Promise<void> {
+  await fetchApi<{ success: boolean }>(`/api/nfse/${encodeURIComponent(id)}/cancel`, {
+    method: 'POST',
+  });
+}
+
+// ============================================================
+// WIKI — BASE DE CONHECIMENTO
+// ============================================================
+
+export interface ApiWikiPage {
+  id: string;
+  organization_id?: string;
+  title: string;
+  content?: string;
+  category_id?: string | null;
+  category?: string | null;
+  tags?: string[];
+  author_id?: string;
+  status: 'published' | 'draft' | 'archived';
+  view_count?: number;
+  created_at: string;
+  updated_at: string;
+}
+
+export async function getWikiPages(params?: {
+  search?: string;
+  category?: string;
+  limit?: number;
+}): Promise<ApiWikiPage[]> {
+  const response = await fetchApi<ApiResponse<ApiWikiPage[]>>(
+    '/api/wiki',
+    { params: params as any }
+  );
+  return response.data || [];
+}
+
+export async function getWikiPageById(id: string): Promise<ApiWikiPage> {
+  const response = await fetchApi<ApiResponse<ApiWikiPage>>(
+    `/api/wiki/${encodeURIComponent(id)}`
+  );
+  if (!response.data) throw new Error('Página não encontrada');
+  return response.data;
+}
+
+// ============================================================
 // PATIENT DUPLICATE CHECK API
 // ============================================================
 

@@ -1,5 +1,5 @@
 import { Hono } from "hono";
-import { eq, and, or, ilike, count, sql, desc, asc } from "drizzle-orm";
+import { eq, and, or, count, sql, desc, asc } from "drizzle-orm";
 import { patients } from "@fisioflow/db";
 import type { Env } from "../types/env";
 import { requireAuth, type AuthVariables } from "../lib/auth";
@@ -424,18 +424,6 @@ function buildPatientWritePayload(
 }
 
 // Removed buildInsertStatement and buildUpdateStatement as we shift to Drizzle ORM
-
-function getPatientOrderClause(sortBy: string | undefined): string {
-	switch (sortBy) {
-		case "created_at_asc":
-			return "created_at ASC, full_name ASC";
-		case "created_at_desc":
-			return "created_at DESC, full_name ASC";
-		case "name_asc":
-		default:
-			return "full_name ASC, created_at DESC";
-	}
-}
 
 app.use("*", requireAuth);
 

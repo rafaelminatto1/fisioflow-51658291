@@ -14,14 +14,19 @@ const REGION = "south-america-east1"; // São Paulo, Brazil
 
 async function cfApi(endpoint, method = 'GET', body = null) {
   const url = `https://api.cloudflare.com/client/v4/zones/${CF_ZONE_ID}${endpoint}`;
-  const response = await fetch(url, {
+  const requestInit = {
     method,
     headers: {
       'Authorization': `Bearer ${CF_API_TOKEN}`,
       'Content-Type': 'application/json',
     },
-    body: body ? JSON.stringify(body) : null,
-  });
+  };
+
+  if (body && method !== 'GET') {
+    requestInit.body = JSON.stringify(body);
+  }
+
+  const response = await fetch(url, requestInit);
 
   const text = await response.text();
   try {
