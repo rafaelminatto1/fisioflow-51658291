@@ -576,11 +576,11 @@ const VIEW_MODES: Array<{
 
 export const EvolutionMultiView: React.FC<EvolutionMultiViewProps> = ({
 	patientId,
-	surgeries,
+	surgeries: _surgeries,
 	previousEvolutions = [],
 	onCopyEvolution,
-	showComparison,
-	onToggleComparison,
+	showComparison: _showComparison,
+	onToggleComparison: _onToggleComparison,
 	goals = [],
 	pathologies = [],
 }) => {

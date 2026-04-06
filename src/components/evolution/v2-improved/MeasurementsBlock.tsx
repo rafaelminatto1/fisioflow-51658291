@@ -112,13 +112,6 @@ interface MeasurementsBlockProps {
 	className?: string;
 }
 
-const generateId = () =>
-	typeof crypto !== "undefined" && crypto.randomUUID
-		? crypto.randomUUID()
-		: "meas_" +
-			Math.random().toString(36).substring(2, 9) +
-			Date.now().toString(36);
-
 export const MeasurementsBlock: React.FC<MeasurementsBlockProps> = ({
 	measurements,
 	onChange,
@@ -126,7 +119,7 @@ export const MeasurementsBlock: React.FC<MeasurementsBlockProps> = ({
 	className,
 }) => {
 	const [expandedId, setExpandedId] = useState<string | null>(null);
-	const [,setShowTemplates] = useState(false);
+	const [, _setShowTemplates] = useState(false);
 
 	
 
@@ -253,7 +246,7 @@ const MeasurementCard: React.FC<{
 }> = React.memo(
 	({
 		measurement,
-		index,
+		index: _index,
 		isExpanded,
 		onToggleExpand,
 		onUpdate,

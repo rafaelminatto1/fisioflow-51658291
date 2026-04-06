@@ -77,17 +77,20 @@ const powerZone = (val: number) => {
 	return { color: "text-muted-foreground", label: "Baixo" };
 };
 
-export const KinoveaStudio: React.FC<KinoveaStudioProps> = ({ onCapture, patientName }) => {
+export const KinoveaStudio: React.FC<KinoveaStudioProps> = ({
+	onCapture: _onCapture,
+	patientName: _patientName,
+}) => {
 	const webcamRef = useRef<Webcam>(null);
 	const containerRef = useRef<HTMLDivElement>(null);
 	const stageRef = useRef<any>(null);
 
 	// Tool + display state
 	const [activeTool, setActiveTool] = useState<"none" | "goniometer" | "trajectory" | "jump">("none");
-	const [,setDimensions] = useState({ width: 800, height: 600 });
+	const [, _setDimensions] = useState({ width: 800, height: 600 });
 	const [currentFrame, setCurrentFrame] = useState(0);
 	const [fps] = useState(240);
-	const [,setIsPlaying] = useState(false);
+	const [, _setIsPlaying] = useState(false);
 
 	// MoveNet state
 	const detectorRef = useRef<PoseDetector | null>(null);

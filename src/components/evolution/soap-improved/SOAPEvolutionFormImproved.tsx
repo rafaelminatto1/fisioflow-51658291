@@ -300,7 +300,7 @@ const getPainColor = (level: number) => {
 // ==================== MAIN COMPONENT ====================
 
 export const SOAPEvolutionFormImproved: React.FC<SOAPEvolutionFormProps> = ({
-	patientId,
+	patientId: _patientId,
 	patientName,
 	data = {},
 	onChange,
