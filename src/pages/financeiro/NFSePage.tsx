@@ -37,7 +37,6 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { useAuth } from "@/contexts/AuthContext";
 import { useOrganizations } from "@/hooks/useOrganizations";
-import { useUserProfile } from "@/hooks/useUserProfile";
 import { financialApi, type NFSeConfigRecord, type NFSeRecord } from "@/api/v2";
 import { MainLayout } from "@/components/layout/MainLayout";
 
@@ -60,17 +59,6 @@ export interface NFSe extends NFSeRecord {
 		valor_iss: number;
 	};
 }
-
-type NFSConfig = NFSeConfigRecord;
-
-const DEFAULT_NFSE_CONFIG: NFSConfig = {
-	ambiente: "homologacao",
-	municipio_codigo: "",
-	cnpj_prestador: "",
-	inscricao_municipal: "",
-	aliquota_iss: 5,
-	auto_emissao: false,
-};
 
 function normalizeNFSe(row: NFSeRecord): NFSe {
 	return {
@@ -122,7 +110,7 @@ function normalizeNFSe(row: NFSeRecord): NFSe {
 
 export function NFSePreview({
 	nfse,
-	onEdit,
+	onEdit: _onEdit,
 }: {
 	nfse: NFSe;
 	onEdit?: () => void;
@@ -193,8 +181,8 @@ export function NFSeContent() {
 	const queryClient = useQueryClient();
 	const [isDialogOpen, setIsDialogOpen] = useState(false);
 	const [activeTab, setActiveTab] = useState<"lista" | "config">("lista");
-	const [,setSearchTerm] = useState("");
-	const [,setStatusFilter] = useState<string>("todos");
+	const [_searchTerm, _setSearchTerm] = useState("");
+	const [_statusFilter, _setStatusFilter] = useState<string>("todos");
 
 	const [formData] = useState({
 		tipo: "entrada" as "entrada" | "saida",

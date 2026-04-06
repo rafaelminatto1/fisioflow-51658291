@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React from "react";
 import {
 	Card,
 	CardContent,
@@ -7,17 +7,15 @@ import {
 	CardTitle,
 } from "@/components/ui/card";
 import { Switch } from "@/components/ui/switch";
-import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { whatsappApi, type WhatsAppTemplateRecord } from "@/api/v2";
+import { whatsappApi } from "@/api/v2";
 import { 
 	MessageSquare, 
 	Settings, 
 	RefreshCcw, 
 	CheckCircle2, 
-	XCircle, 
 	Bell,
 	Calendar,
 	History
@@ -30,7 +28,6 @@ import { ptBR } from "date-fns/locale";
 
 export function WhatsAppAutomation() {
 	const queryClient = useQueryClient();
-	const [isUpdating, setIsUpdating] = useState(false);
 
 	// Queries
 	const { data: config, isLoading: loadingConfig } = useQuery({
@@ -49,7 +46,7 @@ export function WhatsAppAutomation() {
 		},
 	});
 
-	const { data: logs, isLoading: loadingLogs } = useQuery({
+	const { data: logs } = useQuery({
 		queryKey: ["whatsapp-logs"],
 		queryFn: async () => {
 			const res = await whatsappApi.listWebhookLogs({ limit: 10 });

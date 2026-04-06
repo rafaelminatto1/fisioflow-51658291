@@ -5,13 +5,12 @@
  * Sem props de dnd-kit — o ScheduleX gerencia drag & drop internamente.
  */
 
-import { format } from "date-fns";
 import type React from "react";
 import { useStatusConfig } from "@/hooks/useStatusConfig";
 import { cn } from "@/lib/utils";
 import type { Appointment } from "@/types/appointment";
 import { AppointmentContextMenu } from "./AppointmentContextMenu";
-import { getStatusColor, normalizeStatus } from "./shared/appointment-status";
+import { normalizeStatus } from "./shared/appointment-status";
 import { calculateEndTime, normalizeTime } from "./shared/utils";
 
 interface ScheduleXAppointmentCardProps {
@@ -39,8 +38,6 @@ export function ScheduleXAppointmentCard({
 	const duration = appointment.duration || 60;
 	const time = normalizeTime(appointment.time);
 	const endTime = calculateEndTime(time, duration);
-	const color = getStatusColor(normalizedStatus);
-
 	const handleClick = (e: React.MouseEvent) => {
 		e.stopPropagation();
 		if (selectionMode && onToggleSelection) {

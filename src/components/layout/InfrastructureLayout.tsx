@@ -1,4 +1,4 @@
-import { Suspense, lazy, useEffect } from "react";
+import { useEffect } from "react";
 import { Outlet, useLocation, useNavigate } from "react-router";
 import { fisioLogger as logger } from "@/lib/errors/logger";
 
@@ -78,19 +78,19 @@ export default function InfrastructureLayout() {
 	const location = useLocation();
 	const isPublicRoute = isPublicBootPath(location.pathname);
 	const shouldPreloadPose = shouldPreloadPoseForPath(location.pathname);
-return (
-	<>
-		{!isPublicRoute && <NetworkStatus />}
-		{!isPublicRoute && <SyncManager />}
-		{!isPublicRoute && <TourGuide />}
-		{!isPublicRoute && <VersionManager />}
-		{!isPublicRoute && shouldPreloadPose && <PosePreloadManager />}
-		{!isPublicRoute &&
-			import.meta.env.DEV &&
-			!window.location.search.includes("e2e=true") && (
-				<WebVitalsIndicator />
-			)}
-		<Outlet />
-	</>
-);
+	return (
+		<>
+			{!isPublicRoute && <NetworkStatus />}
+			{!isPublicRoute && <SyncManager />}
+			{!isPublicRoute && <TourGuide />}
+			{!isPublicRoute && <VersionManager />}
+			{!isPublicRoute && shouldPreloadPose && <PosePreloadManager />}
+			{!isPublicRoute &&
+				import.meta.env.DEV &&
+				!window.location.search.includes("e2e=true") && (
+					<WebVitalsIndicator />
+				)}
+			<Outlet />
+		</>
+	);
 }

@@ -82,7 +82,6 @@ import {
 	STATUS_COLORS,
 } from "@/types/tarefas";
 import { useUpdateTarefa, useTarefas } from "@/hooks/useTarefas";
-import { useProjects } from "@/hooks/useProjects";
 import { toast } from "sonner";
 import { useIsMobile } from "@/hooks/use-mobile";
 
