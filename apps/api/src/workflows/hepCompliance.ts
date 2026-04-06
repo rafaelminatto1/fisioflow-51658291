@@ -78,7 +78,7 @@ export class HEPComplianceWorkflow extends WorkflowEntrypoint<Env, HEPCompliance
           ? Math.round(weeklyAdherence.reduce((a, b) => a + b, 0) / weeklyAdherence.length)
           : 0;
 
-      const weeklyStr = weeklyAdherence.map((r, i) => `Semana ${i + 1}: ${r}%`).join('\n');
+      const _weeklyStr = weeklyAdherence.map((r, i) => `Semana ${i + 1}: ${r}%`).join('\n');
 
       await this.sendWhatsApp(
         patientPhone,

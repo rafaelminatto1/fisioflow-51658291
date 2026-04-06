@@ -1,7 +1,6 @@
 import { useState, useEffect } from 'react';
 import {
   Alert,
-  Dimensions,
   View,
   Text,
   TextInput,
@@ -249,7 +248,7 @@ export default function EvolutionScreen() {
       // For single evolution report, we wrap it in an array
       await generateEvolutionPDF(patient as any, [evolutionData as any]);
       success();
-    } catch (e) {
+    } catch {
       hapticError();
       Alert.alert('Erro', 'Falha ao gerar PDF.');
     }

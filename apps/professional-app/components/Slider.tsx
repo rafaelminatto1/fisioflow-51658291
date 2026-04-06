@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { View, Text, StyleSheet, PanResponder, Dimensions } from 'react-native';
+import { View, Text, StyleSheet, PanResponder } from 'react-native';
 import { useColors } from '@/hooks/useColorScheme';
 
 

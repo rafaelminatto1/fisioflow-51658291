@@ -108,14 +108,14 @@ test.describe('Evolução SOAP (Mocked)', () => {
                 return;
             }
 
-            let body: Record<string, unknown> = {};
+            let _body: Record<string, unknown> = {};
             try {
-                body = req.postDataJSON() as Record<string, unknown>;
+                _body = req.postDataJSON() as Record<string, unknown>;
             } catch {
-                body = {};
+                _body = {};
             }
 
-            const action = String(body.action || '');
+            const action = String(_body.action || '');
             if (action === 'get') {
                 await route.fulfill({ status: 200, json: { data: mockAppointment } });
                 return;
@@ -393,7 +393,7 @@ test.describe('Evolução SOAP (Mocked)', () => {
             }
 
             // Dump body start
-            const bodyText = await page.textContent('body');
+            await page.textContent('body');
             // Removed console.error
 
             throw e;

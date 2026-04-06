@@ -4,8 +4,8 @@
  *
  * @example
  * const { load, isLoaded, isLoading, error } = useLazyLibrary({
- *   importFn: () => import('@cornerstonejs/core'),
- *   moduleName: 'Cornerstone'
+ *   importFn: () => import('@/lib/export/jspdfRuntime'),
+ *   moduleName: 'jsPDF runtime'
  * });
  */
 
