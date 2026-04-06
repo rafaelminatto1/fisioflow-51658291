@@ -11,6 +11,7 @@
 // ============================================================================
 
 import { fisioLogger as logger } from "@/lib/errors/logger";
+import { getWorkersApiUrl } from "@/lib/api/config";
 
 export type SynthesisType =
 	| "accessibility"
@@ -43,9 +44,7 @@ class TextToSpeechService {
 			return;
 		}
 
-		this.baseUrl =
-			import.meta.env.VITE_WORKERS_API_URL ||
-			"https://fisioflow-api.rafalegollas.workers.dev";
+		this.baseUrl = getWorkersApiUrl();
 	}
 
 	/**

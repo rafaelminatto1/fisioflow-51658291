@@ -8,7 +8,6 @@ import { Patient } from "@/schemas/patient";
 import { PatientHelpers } from "@/types";
 import {
 	PatientStats,
-	formatFirstEvaluationDate,
 	PATIENT_CLASSIFICATIONS,
 } from "@/hooks/usePatientStats";
 

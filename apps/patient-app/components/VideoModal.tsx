@@ -111,8 +111,6 @@ export function VideoModal({
             style={styles.video}
             nativeControls={false}
             contentFit="contain"
-            allowsFullscreen
-            allowsPictureInPicture
           />
         </View>
 

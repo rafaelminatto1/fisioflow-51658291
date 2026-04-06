@@ -1,5 +1,5 @@
-# FisioFlow API Worker - Wrangler Config
-name = "fisioflow-api"
+# Legacy API Worker - intentionally disabled
+name = "fisioflow-api-legacy-disabled"
 main = "fisioflow-api.ts"
 compatibility_date = "2024-03-06"
 
@@ -15,7 +15,7 @@ database_id = "bf781be2-527d-471d-9cf2-dd18f8e6c2b2"
 
 [vars]
 ENVIRONMENT = "production"
-AUTH_TOKEN = "FISIOFLOW_SECRET_TOKEN_2026"
+AUTH_TOKEN = ""
 
 [[durable_objects.bindings]]
 name = "ORGANIZATION_STATE"
@@ -27,8 +27,8 @@ deleted_classes = ["PatientAgent"]
 
 # Staging environment
 [env.staging]
-name = "fisioflow-api-staging"
-vars = { ENVIRONMENT = "staging", AUTH_TOKEN = "FISIOFLOW_SECRET_TOKEN_2026_STAGING" }
+name = "fisioflow-api-legacy-disabled-staging"
+vars = { ENVIRONMENT = "staging", AUTH_TOKEN = "" }
 
 [[env.staging.kv_namespaces]]
 binding = "FISIOFLOW_CONFIG"

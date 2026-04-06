@@ -5,8 +5,9 @@ import { Label } from "@/components/ui/label";
 import { Camera, Loader2, Sparkles, Check, Info, X } from "lucide-react";
 import { toast } from "sonner";
 import { getNeonAccessToken } from "@/lib/auth/neon-token";
+import { getWorkersApiUrl } from "@/lib/api/config";
 
-const WORKERS_BASE = import.meta.env.VITE_WORKERS_URL ?? "https://fisioflow-api.rafalegollas.workers.dev";
+const WORKERS_BASE = getWorkersApiUrl();
 
 interface ReceiptOCRProps {
 	onDataExtracted: (data: {

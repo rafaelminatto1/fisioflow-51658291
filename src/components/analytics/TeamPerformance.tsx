@@ -8,26 +8,9 @@ import {
 } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { useQuery } from "@tanstack/react-query";
-import {
-	appointmentsApi,
-	financialApi,
-	patientsApi,
-	type AppointmentRow,
-	type OrganizationMember,
-} from "@/api/v2";
-import {
-	Users,
-	TrendingUp,
-	CheckCircle2,
-	XCircle,
-	Clock,
-	Award,
-} from "lucide-react";
-import {
-	format,
-	startOfMonth,
-	endOfMonth,
-} from "date-fns";
+import { appointmentsApi } from "@/api/v2";
+import { CheckCircle2, Clock, Award } from "lucide-react";
+import { format } from "date-fns";
 import {
 	Table,
 	TableBody,

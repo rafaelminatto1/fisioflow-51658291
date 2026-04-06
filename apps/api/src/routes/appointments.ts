@@ -502,7 +502,7 @@ const updateAppointmentHandler: MiddlewareHandler<{ Bindings: Env; Variables: Au
 
     // Eventos Inngest baseados em mudança de status
     try {
-      if (row.status === 'completed') {
+      if (row.status === 'atendido') {
         const patientRow = await db.select({
             fullName: patients.fullName,
             phone: patients.phone
@@ -552,7 +552,7 @@ app.post('/:id/cancel', requireAuth, async (c) => {
     const result = await db
       .update(appointments)
       .set({
-        status: 'cancelled',
+        status: 'cancelado',
         cancellationReason: body.reason ?? null,
         cancelledAt: new Date(),
         updatedAt: new Date(),

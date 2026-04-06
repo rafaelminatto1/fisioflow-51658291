@@ -33,7 +33,7 @@ Removemos projetos duplicados que estavam poluindo o dashboard e gerando custos/
 
 Em vez de criar novos projetos para cada ambiente, agora usamos a funcionalidade nativa de **Environments** do Wrangler.
 
-### Configuração no `wrangler-api.toml`:
+### Configuração no `apps/api/wrangler.toml`:
 ```toml
 # Produção (Padrão)
 name = "fisioflow-api"
@@ -46,10 +46,10 @@ name = "fisioflow-api-staging"
 ### Como fazer o deploy agora?
 ```bash
 # Deploy em PRODUÇÃO
-npx wrangler deploy --config cloudflare-worker/wrangler-api.toml
+cd apps/api && npx wrangler deploy --env production
 
 # Deploy em STAGING
-npx wrangler deploy --config cloudflare-worker/wrangler-api.toml --env staging
+cd apps/api && npx wrangler deploy --env staging
 ```
 
 ---

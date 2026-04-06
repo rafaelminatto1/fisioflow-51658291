@@ -2,6 +2,8 @@
  * Utilitário para gerar URLs de imagens otimizadas via Cloudflare Workers
  */
 
+import { getWorkersApiUrl } from "@/lib/api/config";
+
 interface ImageTransformOptions {
 	width?: number;
 	height?: number;
@@ -23,7 +25,7 @@ export function getOptimizedImageUrl(
 	if (!key) return "";
 
 	// Se for uma URL completa externa, podemos passar como key também
-	const baseUrl = import.meta.env.VITE_WORKERS_API_URL + "/api/exercise-image";
+	const baseUrl = `${getWorkersApiUrl()}/api/exercise-image`;
 	const url = new URL(
 		`${baseUrl}/${key.startsWith("http") ? encodeURIComponent(key) : key}`,
 	);

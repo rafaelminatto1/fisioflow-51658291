@@ -24,6 +24,7 @@ import {
 	CheckCircle2,
 } from "lucide-react";
 import { toast } from "sonner";
+import { getWorkersApiUrl } from "@/lib/api/config";
 
 const SPECIALTIES = [
 	"Traumato-ortopedia",
@@ -76,7 +77,7 @@ export function ClinicalImportIA() {
 			// Usando o endpoint de ingestão via Worker (precisamos garantir que ele exista ou simular via serviço)
 			// Para fins desta implementação, vamos enviar para uma rota que processa e salva no Vectorize
 			const response = await fetch(
-				`${import.meta.env.VITE_WORKERS_API_URL}/api/ai/ingest`,
+				`${getWorkersApiUrl()}/api/ai/ingest`,
 				{
 					method: "POST",
 					headers: { "Content-Type": "application/json" },

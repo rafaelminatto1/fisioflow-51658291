@@ -1,44 +1,14 @@
-import { format, parseISO } from "date-fns";
 import {
-	Activity,
 	ArrowUpRight,
 	Brain,
-	Calendar,
-	CheckCircle,
-	ClipboardList,
-	DollarSign,
-	FileText,
-	LayoutDashboard,
 	MoreHorizontal,
-	Plus,
-	Save,
-	Send,
 	Sparkles,
 	Stethoscope,
-	Target,
-	Thermometer,
-	Users,
-	Wand2,
-	Zap,
 } from "lucide-react";
-import { lazy, Suspense, useMemo, useState } from "react";
 import { useNavigate, useSearchParams } from "react-router";
-import {
-	Area,
-	AreaChart,
-	Bar,
-	BarChart,
-	CartesianGrid,
-	Tooltip,
-	XAxis,
-	YAxis,
-} from "recharts";
-import { toast } from "sonner";
-import { SafeResponsiveContainer } from "@/components/charts/SafeResponsiveContainer";
 import { MainLayout } from "@/components/layout/MainLayout";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { CardContent } from "@/components/ui/card";
 import { useSmartDashboardData } from "@/hooks/useSmartDashboard";
 import { BentoDashboard } from "@/components/dashboard/BentoDashboard";
 import { cn } from "@/lib/utils";

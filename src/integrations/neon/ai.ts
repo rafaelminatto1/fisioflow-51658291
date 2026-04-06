@@ -9,6 +9,7 @@
 import { initializeRemoteConfig } from "@/lib/remote-config-manager";
 import { initAppCheck } from "@/lib/app-check";
 import { fisioLogger as logger } from "@/lib/errors/logger";
+import { getServerOnlyEnv } from "@/lib/config/server-only";
 
 export enum AIModelType {
 	GEMINI_2_5_FLASH = "gemini-2.5-flash",
@@ -102,7 +103,9 @@ class AIModelFactory {
 function getAiRuntime() {
 	return {
 		model: "gemini-2.5-flash",
-		apiKey: import.meta.env.VITE_GEMINI_API_KEY,
+		apiKey:
+			getServerOnlyEnv("GOOGLE_GENERATIVE_AI_API_KEY") ||
+			getServerOnlyEnv("GOOGLE_AI_API_KEY"),
 	};
 }
 

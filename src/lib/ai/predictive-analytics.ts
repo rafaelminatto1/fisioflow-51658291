@@ -21,6 +21,7 @@ import { createGoogleGenerativeAI } from "@ai-sdk/google";
 import { z } from "zod";
 import { fisioLogger as logger } from "@/lib/errors/logger";
 import { analyticsApi } from "@/api/v2";
+import { getServerOnlyEnv } from "@/lib/config/server-only";
 
 export interface RecoveryPrediction {
 	patientId: string;
@@ -167,9 +168,8 @@ let googleAI: ReturnType<typeof createGoogleGenerativeAI> | null = null;
 function getGoogleAI() {
 	if (!googleAI) {
 		const apiKey =
-			process.env.GOOGLE_GENERATIVE_AI_API_KEY ||
-			process.env.NEXT_PUBLIC_GOOGLE_AI_API_KEY ||
-			process.env.VITE_GOOGLE_AI_API_KEY;
+			getServerOnlyEnv("GOOGLE_GENERATIVE_AI_API_KEY") ||
+			getServerOnlyEnv("GOOGLE_AI_API_KEY");
 
 		if (!apiKey) {
 			throw new Error("Google AI API key not configured");
