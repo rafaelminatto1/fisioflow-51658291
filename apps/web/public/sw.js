@@ -1,14 +1,14 @@
 // FisioFlow Service Worker
 // Responsável por Push Notifications e Background Sync
 
-const CACHE_NAME = `fisioflow-${%APP_VERSION%}`;
+const CACHE_NAME = "fisioflow-%APP_VERSION%";
 const PREVIOUS_CACHE_KEY = "fisioflow-previous-cache";
 const STATIC_ASSETS = ["/", "/index.html", "/manifest.json", "/favicon.svg"];
 
 self.addEventListener("install", (event) => {
 	event.waitUntil(
 		(async () => {
-			console.log('[SW] Installing version:', %APP_VERSION%);
+			console.log("[SW] Installing version:", "%APP_VERSION%");
 			const cache = await caches.open(CACHE_NAME);
 			console.log("[SW] Caching static assets");
 			await cache.addAll(STATIC_ASSETS);
@@ -21,7 +21,7 @@ self.addEventListener("install", (event) => {
 self.addEventListener("activate", (event) => {
 	event.waitUntil(
 		(async () => {
-			console.log("[SW] Activating version:", %APP_VERSION%);
+			console.log("[SW] Activating version:", "%APP_VERSION%");
 			const cacheNames = await caches.keys();
 			await Promise.all(
 				cacheNames.map((name) => {

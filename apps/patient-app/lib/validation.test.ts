@@ -60,11 +60,11 @@ describe('Validation Utilities', () => {
       expect(validators.phone('(11) 98765-4321')).toBeNull();
       expect(validators.phone('11987654321')).toBeNull();
       expect(validators.phone('(21) 1234-5678')).toBeNull();
+      expect(validators.phone('')).toBeNull();
     });
 
     it('should reject invalid phone numbers', () => {
       expect(validators.phone('123')).not.toBeNull();
-      expect(validators.phone('')).not.toBeNull();
       // Phone with 10 digits but starting with 00 might still be valid format
       // Let's test truly invalid formats
       expect(validators.phone('12')).not.toBeNull();

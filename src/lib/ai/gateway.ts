@@ -20,6 +20,10 @@ import { createGoogleGenerativeAI } from "@ai-sdk/google";
 import { generateText, streamText, generateObject } from "ai";
 import { z } from "zod";
 import { fisioLogger as logger } from "@/lib/errors/logger";
+import {
+	createServerOnlyFeatureError,
+	getServerOnlyEnv,
+} from "@/lib/config/server-only";
 
 export type AIProvider = "openai" | "google" | "grok" | "anthropic";
 
@@ -87,31 +91,24 @@ const PROVIDER_CONFIG = {
 	openai: {
 		baseURL: "https://api.openai.com/v1",
 		defaultModel: "gpt-4o-mini",
-		apiKey:
-			import.meta.env.VITE_OPENAI_API_KEY ||
-			import.meta.env.NEXT_PUBLIC_OPENAI_API_KEY,
+		apiKey: getServerOnlyEnv("OPENAI_API_KEY"),
 	},
 	google: {
 		baseURL: undefined, // Google SDK handles this automatically
 		defaultModel: "gemini-2.0-flash-exp",
 		apiKey:
-			import.meta.env.VITE_GOOGLE_GENERATIVE_AI_API_KEY ||
-			import.meta.env.NEXT_PUBLIC_GOOGLE_AI_API_KEY ||
-			import.meta.env.VITE_GOOGLE_AI_API_KEY,
+			getServerOnlyEnv("GOOGLE_GENERATIVE_AI_API_KEY") ||
+			getServerOnlyEnv("GOOGLE_AI_API_KEY"),
 	},
 	grok: {
 		baseURL: "https://api.x.ai/v1",
 		defaultModel: "grok-2-1212",
-		apiKey:
-			import.meta.env.VITE_XAI_API_KEY ||
-			import.meta.env.NEXT_PUBLIC_XAI_API_KEY,
+		apiKey: getServerOnlyEnv("XAI_API_KEY"),
 	},
 	anthropic: {
 		baseURL: "https://api.anthropic.com/v1",
 		defaultModel: "claude-3-5-sonnet",
-		apiKey:
-			import.meta.env.VITE_ANTHROPIC_API_KEY ||
-			import.meta.env.NEXT_PUBLIC_ANTHROPIC_API_KEY,
+		apiKey: getServerOnlyEnv("ANTHROPIC_API_KEY"),
 	},
 } as const;
 
@@ -174,6 +171,11 @@ const clients: Record<
 function getClient(provider: AIProvider) {
 	if (!clients[provider]) {
 		const config = PROVIDER_CONFIG[provider];
+		if (!config.apiKey) {
+			throw createServerOnlyFeatureError(
+				`Direct ${provider} AI access`,
+			);
+		}
 
 		switch (provider) {
 			case "google":

@@ -3,9 +3,11 @@
  * Centraliza a comunicação com o Hasura Cloud sobre o Neon DB.
  */
 
+import { getServerOnlyEnv } from "@/lib/config/server-only";
+
 export async function fetchGraphQL(query: string, variables = {}) {
 	const endpoint = import.meta.env.VITE_HASURA_PROJECT_URL;
-	const adminSecret = import.meta.env.VITE_HASURA_ADMIN_SECRET;
+	const adminSecret = getServerOnlyEnv("HASURA_ADMIN_SECRET");
 
 	if (!endpoint) {
 		console.error(
@@ -19,7 +21,9 @@ export async function fetchGraphQL(query: string, variables = {}) {
 			method: "POST",
 			headers: {
 				"Content-Type": "application/json",
-				"x-hasura-admin-secret": adminSecret || "",
+				...(adminSecret
+					? { "x-hasura-admin-secret": adminSecret }
+					: {}),
 			},
 			body: JSON.stringify({ query, variables }),
 		});

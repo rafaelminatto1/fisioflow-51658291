@@ -30,7 +30,7 @@ export default defineConfig({
     pool: 'threads',
 
     // Setup files for test configuration
-    setupFiles: [path.resolve(repoRoot, 'src/tests/setup.ts')],
+    setupFiles: [path.resolve(__dirname, 'src/test/setup.ts')],
 
     // Enable CSS modules for component tests
     css: true,
