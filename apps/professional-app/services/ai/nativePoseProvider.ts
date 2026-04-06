@@ -49,7 +49,7 @@ export class NativePoseProvider implements PoseProvider {
             analysisType: AnalysisType.FORM
           };
         }
-      } catch (e) {
+      } catch {
         console.error('[NativePoseProvider] Erro na detecção nativa iOS:', e);
       }
     }
@@ -63,7 +63,7 @@ export class NativePoseProvider implements PoseProvider {
     };
   }
 
-  startStream(video: any, callback: (result: PoseDetection) => void): void {
+  startStream(_video: any, _callback: (result: PoseDetection) => void): void {
     if (!this.isLoaded) return;
     
     // Em uma implementação real com Vision Camera, aqui configuraríamos o Frame Processor

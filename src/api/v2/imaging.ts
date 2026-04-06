@@ -1,6 +1,4 @@
 import { request } from "./base";
-import { getWorkersApiUrl } from "@/lib/api/config";
-import type { DicomStudyRecord } from "@/types/workers";
 
 function withQuery(
 	path: string,
@@ -14,8 +12,6 @@ function withQuery(
 
 	return qs ? `${path}?${qs}` : path;
 }
-
-export type { DicomStudyRecord };
 
 export const activityLabApi = {
 	patients: {
@@ -46,28 +42,24 @@ export const activityLabApi = {
 	},
 };
 
+const DICOM_DEPRECATED_MESSAGE =
+	"O fluxo DICOM/PACS foi descontinuado no produto web. Use o hub biomecanico com imagens e videos comuns.";
+
+function dicomDeprecated(): never {
+	throw new Error(DICOM_DEPRECATED_MESSAGE);
+}
+
 export const dicomApi = {
-	studies: (params?: Record<string, string | number | boolean | undefined>) =>
-		request<{ data: Record<string, unknown>[] }>(
-			withQuery("/api/dicom/studies", params),
-		),
-	series: (studyUid: string) =>
-		request<{ data: Record<string, unknown>[] }>(
-			`/api/dicom/studies/${encodeURIComponent(studyUid)}/series`,
-		),
-	instances: (studyUid: string, seriesUid: string) =>
-		request<{ data: Array<Record<string, { Value?: string[] }>> }>(
-			`/api/dicom/studies/${encodeURIComponent(studyUid)}/series/${encodeURIComponent(seriesUid)}/instances`,
-		),
-	uploadInstances: (payloads: Array<{ body: string; fileName: string }>) =>
-		Promise.all(
-			payloads.map((payload) =>
-				request<{ data: Record<string, unknown> }>("/api/dicom/instances", {
-					method: "POST",
-					body: JSON.stringify(payload),
-				}),
-			),
-		),
-	config: () => request<{ data: Record<string, unknown> }>("/api/dicom/config"),
-	getWadoUrl: () => `${getWorkersApiUrl()}/api/dicom/wado`,
+	studies: async () => dicomDeprecated(),
+	series: async () => dicomDeprecated(),
+	instances: async () => dicomDeprecated(),
+	uploadInstances: async () => dicomDeprecated(),
+	config: async () => ({
+		data: {
+			enabled: false,
+			deprecated: true,
+			message: DICOM_DEPRECATED_MESSAGE,
+		},
+	}),
+	getWadoUrl: () => dicomDeprecated(),
 };

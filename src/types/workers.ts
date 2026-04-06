@@ -907,10 +907,6 @@ export interface AIDocumentAnalysisResult {
 	tags?: Array<Record<string, unknown>>;
 }
 
-export interface DicomStudyRecord {
-	[tag: string]: unknown;
-}
-
 export interface TarefaRow {
 	id: string;
 	organization_id: string;

@@ -10,14 +10,14 @@
 
 
 let mockAuthUser: any = null;
-let mockAuthError: Error | null = null;
+let _mockAuthError: Error | null = null;
 
 export function setMockAuthUser(user: any | null) {
   mockAuthUser = user;
 }
 
 export function setMockAuthError(error: Error | null) {
-  mockAuthError = error;
+  _mockAuthError = error;
 }
 
 export function getMockAuthUser() {

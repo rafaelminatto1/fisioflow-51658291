@@ -12,6 +12,7 @@ import {
   KeyboardAvoidingView,
   Modal,
 } from 'react-native';
+import DateTimePicker from '@react-native-community/datetimepicker';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter, useLocalSearchParams, Stack } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
@@ -34,7 +35,8 @@ export default function FinancialFormScreen() {
   // Form State
   const [patientId, setPatientId] = useState(params.patientId as string || '');
   const [amount, setAmount] = useState(params.amount ? String(params.amount) : '');
-  const [date] = useState(params.date ? new Date(params.date as string) : new Date());
+  const [date, setDate] = useState(params.date ? new Date(params.date as string) : new Date());
+  const [showDatePicker, setShowDatePicker] = useState(false);
   const [description, setDescription] = useState(params.description as string || '');
   const [paymentMethod, setPaymentMethod] = useState(params.paymentMethod as string || 'pix');
   const [status, setStatus] = useState<'pending' | 'paid'>(params.status as 'pending' | 'paid' || 'pending');
@@ -42,7 +44,7 @@ export default function FinancialFormScreen() {
   // Pickers State
   const [showPatientPicker, setShowPatientPicker] = useState(false);
   const [showPaymentPicker, setShowPaymentPicker] = useState(false);
-  const [,setShowStatusPicker] = useState(false);
+  const [, _setShowStatusPicker] = useState(false);
 
   // Hooks
   const { data: patients, isLoading: isLoadingPatients } = usePatients({ status: 'active' });
@@ -189,16 +191,29 @@ export default function FinancialFormScreen() {
             />
           </View>
 
-          {/* Date Input (Simple Text for MVP, better with DatePicker) */}
+          {/* Date Input */}
           <View style={styles.inputGroup}>
             <Text style={[styles.label, { color: colors.text }]}>Data</Text>
-            <TouchableOpacity style={[styles.selector, { borderColor: colors.border, backgroundColor: colors.surface }]}>
-                 <Text style={[styles.selectorText, { color: colors.text }]}>
-                    {format(date, 'dd/MM/yyyy')}
-                 </Text>
-                 <Ionicons name="calendar-outline" size={20} color={colors.textSecondary} />
+            <TouchableOpacity
+              style={[styles.selector, { borderColor: colors.border, backgroundColor: colors.surface }]}
+              onPress={() => { light(); setShowDatePicker(true); }}
+            >
+              <Text style={[styles.selectorText, { color: colors.text }]}>
+                {format(date, 'dd/MM/yyyy')}
+              </Text>
+              <Ionicons name="calendar-outline" size={20} color={colors.textSecondary} />
             </TouchableOpacity>
-            {/* Note: In a real app, integrate a DatePicker modal here */}
+            {Platform.OS === 'android' && showDatePicker && (
+              <DateTimePicker
+                value={date}
+                mode="date"
+                display="default"
+                onChange={(_, selected) => {
+                  setShowDatePicker(false);
+                  if (selected) setDate(selected);
+                }}
+              />
+            )}
           </View>
 
           {/* Payment Method */}
@@ -260,6 +275,32 @@ export default function FinancialFormScreen() {
 
         </ScrollView>
       </KeyboardAvoidingView>
+
+      {/* iOS Date Picker Modal */}
+      {Platform.OS === 'ios' && (
+        <Modal visible={showDatePicker} animationType="slide" transparent>
+          <TouchableOpacity style={styles.modalOverlay} activeOpacity={1} onPress={() => setShowDatePicker(false)}>
+            <View style={[styles.pickerModalContent, { backgroundColor: colors.surface }]}>
+              <View style={[styles.modalHeader, { borderBottomColor: colors.border }]}>
+                <Text style={[styles.modalTitle, { color: colors.text }]}>Selecionar Data</Text>
+                <TouchableOpacity onPress={() => setShowDatePicker(false)}>
+                  <Text style={{ color: colors.primary, fontWeight: '600', fontSize: 16 }}>OK</Text>
+                </TouchableOpacity>
+              </View>
+              <DateTimePicker
+                value={date}
+                mode="date"
+                display="spinner"
+                locale="pt-BR"
+                onChange={(_, selected) => {
+                  if (selected) setDate(selected);
+                }}
+                style={{ backgroundColor: colors.surface }}
+              />
+            </View>
+          </TouchableOpacity>
+        </Modal>
+      )}
 
       {/* Patient Picker Modal */}
       <Modal visible={showPatientPicker} animationType="slide" transparent>

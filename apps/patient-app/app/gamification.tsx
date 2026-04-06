@@ -8,7 +8,6 @@ import {
   TouchableOpacity,
   ActivityIndicator,
   RefreshControl,
-  Image,
   Dimensions,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -17,7 +16,6 @@ import { useColors } from '@/hooks/useColorScheme';
 import { gamificationApi } from '@/lib/api';
 import { Achievement, ShopItem, Quest, GamificationProfile } from '@/types/api';
 import { Card } from '@/components';
-import { Spacing } from '@/constants/spacing';
 import { router } from 'expo-router';
 import Animated, { FadeIn, ZoomIn, FadeOut } from 'react-native-reanimated';
 

@@ -122,7 +122,7 @@ export class HealthKitManager {
   /**
    * Solicita permissões para ler dados de saúde
    */
-  async requestPermissions(permissions: HealthDataType[]): Promise<boolean> {
+  async requestPermissions(_permissions: HealthDataType[]): Promise<boolean> {
     if (!this.isInitialized) {
       await this.initialize();
     }
@@ -148,7 +148,7 @@ export class HealthKitManager {
   /**
    * Busca dados de saúde do HealthKit
    */
-  async getHealthData(options: HealthDataOptions): Promise<HealthData | null> {
+  async getHealthData(_options: HealthDataOptions): Promise<HealthData | null> {
     if (!this.isAvailable || !this.isInitialized) {
       return null;
     }
@@ -181,7 +181,7 @@ export class HealthKitManager {
   /**
    * Busca contagem de passos
    */
-  async getSteps(options: HealthDataOptions): Promise<number | null> {
+  async getSteps(_options: HealthDataOptions): Promise<number | null> {
     if (!this.isAvailable) {
       // Retornar dados mockados para Expo Go
       return this.getMockHealthData().steps || null;
@@ -202,7 +202,7 @@ export class HealthKitManager {
   /**
    * Busca dados de frequência cardíaca
    */
-  async getHeartRate(options: HealthDataOptions): Promise<number[] | null> {
+  async getHeartRate(_options: HealthDataOptions): Promise<number[] | null> {
     if (!this.isAvailable) {
       return null;
     }
@@ -222,7 +222,7 @@ export class HealthKitManager {
   /**
    * Busca dados de sono
    */
-  async getSleepAnalysis(date: Date): Promise<any | null> {
+  async getSleepAnalysis(_date: Date): Promise<any | null> {
     if (!this.isAvailable) {
       return null;
     }
@@ -245,7 +245,7 @@ export class HealthKitManager {
   /**
    * Salva dados de saúde (ex: gravar exercícios como ActiveEnergyBurned)
    */
-  async saveWorkout(workout: {
+  async saveWorkout(_workout: {
     activityType: string;
     startDate: Date;
     endDate: Date;

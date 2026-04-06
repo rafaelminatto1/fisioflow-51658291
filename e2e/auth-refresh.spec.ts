@@ -26,11 +26,11 @@ test.describe('Login Page Refresh Test', () => {
     console.log('Waiting 35 seconds to detect periodic refreshes...');
 
     // Check for DOM changes that might indicate refresh
-    const initialBodyHTML = await page.content();
+    await page.content();
 
     await page.waitForTimeout(35000);
 
-    const finalBodyHTML = await page.content();
+    await page.content();
     const finalCount = navigationCount;
 
     console.log(`Final navigation count: ${finalCount}`);

@@ -13,7 +13,7 @@ export const TimeGrid = ({
     endHour = 20,
     rowHeight = 60
 }: TimeGridProps) => {
-    const colors = useColors();
+    const _colors = useColors();
     const hours = Array.from(
         { length: endHour - startHour + 1 },
         (_, i) => startHour + i

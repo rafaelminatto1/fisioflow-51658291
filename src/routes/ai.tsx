@@ -4,7 +4,7 @@
  */
 
 import { lazy } from "react";
-import { Route, useParams } from "react-router-dom";
+import { Navigate, Route, useParams } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { RouteErrorBoundary } from "@/components/error";
 import { MainLayout } from "@/components/layout/MainLayout";
@@ -25,14 +25,6 @@ const ClinicalAnalysisPage = lazy(
 		import(
 			/* webpackChunkName: "ai-clinical" */ "@/pages/ai/ClinicalAnalysisPage"
 		),
-);
-const DicomWorkspacePage = lazy(
-	() =>
-		import(/* webpackChunkName: "ai-dicom" */ "@/pages/ai/DicomWorkspacePage"),
-);
-const MovementLabPage = lazy(
-	() =>
-		import(/* webpackChunkName: "ai-movement" */ "@/pages/ai/MovementLabPage"),
 );
 const DocumentScannerPage = lazy(
 	() =>
@@ -142,7 +134,7 @@ export const aiRoutes = (
 			path="/ai/dicom"
 			element={
 				<ProtectedRoute>
-					<DicomWorkspacePage />
+					<Navigate to="/biomechanics" replace />
 				</ProtectedRoute>
 			}
 		/>
@@ -150,7 +142,7 @@ export const aiRoutes = (
 			path="/ai/movement"
 			element={
 				<ProtectedRoute>
-					<MovementLabPage />
+					<Navigate to="/biomechanics" replace />
 				</ProtectedRoute>
 			}
 		/>
