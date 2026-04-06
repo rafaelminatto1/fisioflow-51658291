@@ -4,6 +4,18 @@ import { getNeonAuthUrl } from "@/lib/config/neon";
 const JWT_SEGMENTS = 3;
 const SESSION_FETCH_TIMEOUT_MS = 5000;
 
+type SessionTokenData = {
+	session?: {
+		token?: string;
+		access_token?: string;
+	};
+	token?: string;
+};
+
+type TokenCapableAuthClient = {
+	token?: () => Promise<{ data?: { token?: string } | null }>;
+};
+
 function looksLikeJwt(token: string): boolean {
 	return token.split(".").length === JWT_SEGMENTS;
 }
@@ -51,8 +63,9 @@ async function fetchJwtFromSdk(): Promise<string | null> {
 		// NOTA: authClient é um Proxy. Não utilize `.call(authClient)` aqui,
 		// pois o Proxy intercepta chamadas internas (como fetchOptions)
 		// e constrói caminhos de API inválidos (ex: /fetch-options/method/to-upper-case).
-		if (typeof (authClient as any).token === "function") {
-			const { data } = await (authClient as any).token();
+		const tokenClient = authClient as TokenCapableAuthClient;
+		if (typeof tokenClient.token === "function") {
+			const { data } = await tokenClient.token();
 			const token = data?.token;
 			if (typeof token === "string" && looksLikeJwt(token)) return token;
 		}
@@ -63,10 +76,11 @@ async function fetchJwtFromSdk(): Promise<string | null> {
 	// 2. Tenta obter da sessão ativa
 	try {
 		const { data } = await authClient.getSession();
+		const sessionData = data as SessionTokenData | null | undefined;
 		const token =
-			(data as any)?.session?.token ||
-			(data as any)?.token ||
-			(data as any)?.session?.access_token;
+			sessionData?.session?.token ||
+			sessionData?.token ||
+			sessionData?.session?.access_token;
 		if (typeof token === "string" && looksLikeJwt(token)) return token;
 	} catch {
 		// Fallback below
