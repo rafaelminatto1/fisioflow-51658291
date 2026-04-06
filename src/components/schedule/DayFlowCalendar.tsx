@@ -12,7 +12,10 @@ import {
 	useState,
 	useTransition,
 } from "react";
-import { createCalendar, destroyCalendar, TimeGrid, DayGrid, Interaction } from "@event-calendar/core";
+import Calendar from "@event-calendar/core";
+import TimeGrid from "@event-calendar/time-grid";
+import DayGrid from "@event-calendar/day-grid";
+import Interaction from "@event-calendar/interaction";
 import "@event-calendar/core/index.css";
 import { format, isValid, addMinutes } from "date-fns";
 import { toast } from "sonner";
@@ -158,102 +161,110 @@ export function DayFlowCalendarWrapper(props: DayFlowCalendarWrapperProps) {
 		if (!containerRef.current || typeof window === "undefined") return;
 
 		try {
-			if (calendarInstance.current) destroyCalendar(calendarInstance.current);
+			if (calendarInstance.current) {
+				calendarInstance.current.destroy();
+			}
 		} catch {}
 
 		try {
-			const calendar = createCalendar(containerRef.current!, [TimeGrid, DayGrid, Interaction], {
-				view: VIEW_MAP[viewType] || "timeGridWeek",
-				events: dfEvents,
-				date: isValid(currentDate) ? currentDate : new Date(),
-				height: "100%",
-				slotMinTime: "07:00:00",
-				slotMaxTime: "21:00:00",
-				slotDuration: "00:15:00",
-				slotHeight: 14,
-				hiddenDays: [0],
-				snapDuration: "00:05:00",
-				editable: true,
-				droppable: true,
-				selectable: true,
-				headerToolbar: false,
-				locale: 'pt-br',
-				firstDay: 1,
-				allDaySlot: false,
-				eventContent: (info: any) => {
-					const appointment = info.event.extendedProps;
-					const formattedTime = format(info.event.start, "HH:mm");
-					const statusConfig = getStatusConfig(appointment.status);
-					const isCancelled = appointment.status === "cancelled";
-					
-					// Render raw HTML. No React reconciliation, completely immune to drag-and-drop cloning crashes.
-					const html = `
-						<div class="w-full h-full p-0.5 overflow-hidden cursor-pointer transition-all hover:ring-2 hover:ring-blue-500/30 rounded-md ${statusConfig.bg} text-left ${isCancelled ? 'opacity-50 grayscale' : ''} ${statusConfig.calendarClassName}">
-							<div class="flex flex-col h-full border-l-[3px] rounded-r-md p-0.5 px-1.5 shadow-sm overflow-hidden ${statusConfig.text} ${statusConfig.bg} justify-center ${statusConfig.borderColor}">
-								<div class="flex items-center justify-between gap-1">
-									<span class="font-black text-[9px] uppercase tracking-wider opacity-70 leading-none">
-										${formattedTime}
-									</span>
-									<div class="h-1 w-1 rounded-full flex-shrink-0 ${statusConfig.calendarAccent}"></div>
+			const calendar = new Calendar({
+				target: containerRef.current!,
+				props: {
+					plugins: [TimeGrid, DayGrid, Interaction],
+					options: {
+						view: VIEW_MAP[viewType] || "timeGridWeek",
+						events: dfEvents,
+						date: isValid(currentDate) ? currentDate : new Date(),
+						height: "100%",
+						slotMinTime: "07:00:00",
+						slotMaxTime: "21:00:00",
+						slotDuration: "00:15:00",
+						slotHeight: 14,
+						hiddenDays: [0],
+						snapDuration: "00:05:00",
+						editable: true,
+						droppable: true,
+						selectable: true,
+						headerToolbar: false,
+						locale: 'pt-br',
+						firstDay: 1,
+						allDaySlot: false,
+						eventContent: (info: any) => {
+							const appointment = info.event.extendedProps;
+							const formattedTime = format(info.event.start, "HH:mm");
+							const statusConfig = getStatusConfig(appointment.status);
+							const isCancelled = appointment.status === "cancelled";
+							
+							// Render raw HTML. No React reconciliation, completely immune to drag-and-drop cloning crashes.
+							const html = `
+								<div class="w-full h-full p-0.5 overflow-hidden cursor-pointer transition-all hover:ring-2 hover:ring-blue-500/30 rounded-md ${statusConfig.bg} text-left ${isCancelled ? 'opacity-50 grayscale' : ''} ${statusConfig.calendarClassName}">
+									<div class="flex flex-col h-full border-l-[3px] rounded-r-md p-0.5 px-1.5 shadow-sm overflow-hidden ${statusConfig.text} ${statusConfig.bg} justify-center ${statusConfig.borderColor}">
+										<div class="flex items-center justify-between gap-1">
+											<span class="font-black text-[9px] uppercase tracking-wider opacity-70 leading-none">
+												${formattedTime}
+											</span>
+											<div class="h-1 w-1 rounded-full flex-shrink-0 ${statusConfig.calendarAccent}"></div>
+										</div>
+										<div class="font-black leading-none line-clamp-1 text-[11px] uppercase tracking-tight mt-[1.5px]">
+											${appointment.title}
+										</div>
+									</div>
 								</div>
-								<div class="font-black leading-none line-clamp-1 text-[11px] uppercase tracking-tight mt-[1.5px]">
-									${appointment.title}
-								</div>
-							</div>
-						</div>
-					`;
-					return { html };
-				},
-				eventClick: (info: any) => {
-					if (info.jsEvent) {
-						info.jsEvent.preventDefault();
-						info.jsEvent.stopPropagation();
-					}
-					// Use coordinate-based anchor to detach popover from calendar DOM node
-					const rect = info.el.getBoundingClientRect();
-					setActivePopover({ event: info.event, rect });
-				},
-				dateClick: (info: any) => {
-					setActivePopover(null);
-					propsRef.current.onTimeSlotClick?.(format(info.date, "yyyy-MM-dd'T'HH:mm"));
-				},
-				eventDragStart: () => {
-					setActivePopover(null);
-					isDraggingRef.current = true;
-				},
-				eventDragStop: () => {
-					// Delay resetting dragging flag to allow internal logic to complete without interference
-					setTimeout(() => {
-						isDraggingRef.current = false;
-					}, 200);
-				},
-				eventDrop: (info: any) => {
-					isDraggingRef.current = false;
-					if (propsRef.current.onAppointmentReschedule) {
-						const startStr = format(info.event.start, "yyyy-MM-dd'T'HH:mm");
-						const endStr = format(info.event.end, "yyyy-MM-dd'T'HH:mm");
-						
-						// Use optimistic update to keep UI in sync immediately
-						startTransition(() => {
-							addOptimisticAppointment({
-								id: String(info.event.id),
-								start: startStr,
-								end: endStr,
-							});
-						});
+							`;
+							return { html };
+						},
+						eventClick: (info: any) => {
+							if (info.jsEvent) {
+								info.jsEvent.preventDefault();
+								info.jsEvent.stopPropagation();
+							}
+							// Use coordinate-based anchor to detach popover from calendar DOM node
+							const rect = info.el.getBoundingClientRect();
+							setActivePopover({ event: info.event, rect });
+						},
+						dateClick: (info: any) => {
+							setActivePopover(null);
+							propsRef.current.onTimeSlotClick?.(format(info.date, "yyyy-MM-dd'T'HH:mm"));
+						},
+						eventDragStart: () => {
+							setActivePopover(null);
+							isDraggingRef.current = true;
+						},
+						eventDragStop: () => {
+							// Delay resetting dragging flag to allow internal logic to complete without interference
+							setTimeout(() => {
+								isDraggingRef.current = false;
+							}, 200);
+						},
+						eventDrop: (info: any) => {
+							isDraggingRef.current = false;
+							if (propsRef.current.onAppointmentReschedule) {
+								const startStr = format(info.event.start, "yyyy-MM-dd'T'HH:mm");
+								const endStr = format(info.event.end, "yyyy-MM-dd'T'HH:mm");
+								
+								// Use optimistic update to keep UI in sync immediately
+								startTransition(() => {
+									addOptimisticAppointment({
+										id: String(info.event.id),
+										start: startStr,
+										end: endStr,
+									});
+								});
 
-						propsRef.current.onAppointmentReschedule(
-							String(info.event.id),
-							startStr,
-							endStr,
-						);
-						
-						if (typeof navigator !== "undefined" && navigator.vibrate) {
-							navigator.vibrate([15, 50, 15]);
-						}
-						toast.success("Horário atualizado com sucesso!");
+								propsRef.current.onAppointmentReschedule(
+									String(info.event.id),
+									startStr,
+									endStr,
+								);
+								
+								if (typeof navigator !== "undefined" && navigator.vibrate) {
+									navigator.vibrate([15, 50, 15]);
+								}
+								toast.success("Horário atualizado com sucesso!");
+							}
+						},
 					}
-				},
+				}
 			});
 
 			calendarInstance.current = calendar;
@@ -264,7 +275,7 @@ export function DayFlowCalendarWrapper(props: DayFlowCalendarWrapperProps) {
 		return () => {
 			if (calendarInstance.current) {
 				try {
-					destroyCalendar(calendarInstance.current);
+					calendarInstance.current.destroy();
 				} catch {}
 				calendarInstance.current = null;
 			}
