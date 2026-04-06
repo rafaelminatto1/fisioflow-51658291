@@ -18,7 +18,7 @@ interface UseAudioFeedbackProps {
 
 export function useAudioFeedback({
 	enabled = true,
-	voice = null,
+	voice: _voice = null,
 	rate = 1.0,
 	pitch = 1.0,
 	volume = 1.0,
@@ -167,7 +167,7 @@ export function useAudioFeedback({
 	 * Feedback automático baseado na fase do movimento
 	 */
 	const announcePhase = useCallback(
-		(phase: MovementPhase) => {
+		(_phase: MovementPhase) => {
 			playSound("phase_change");
 			// Opcional: falar a fase (pode ser irritante se muito frequente)
 			// speak(phase === MovementPhase.UP ? 'Sobe' : 'Desce');

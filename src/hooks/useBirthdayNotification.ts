@@ -58,7 +58,7 @@ export function useBirthdayNotification() {
 	const sendMessageMutation = useMutation({
 		mutationFn: async ({
 			patientId,
-			phone,
+			phone: _phone,
 		}: {
 			patientId: string;
 			phone: string;
