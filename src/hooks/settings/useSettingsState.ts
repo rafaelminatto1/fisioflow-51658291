@@ -4,7 +4,6 @@ import { useAuth } from "@/hooks/useAuth";
 import { mfaService } from "@/lib/auth/mfa";
 import { useToast } from "@/hooks/use-toast";
 import { usePermissions } from "@/hooks/usePermissions";
-import { fisioLogger as logger } from "@/lib/errors/logger";
 
 export type TabValue =
 	| "profile"
@@ -13,13 +12,6 @@ export type TabValue =
 	| "schedule"
 	| "a11y"
 	| "organization";
-
-export interface WorkingHours {
-	start: string;
-	end: string;
-	lunchStart: string;
-	lunchEnd: string;
-}
 
 export interface NotificationSettings {
 	email: boolean;
@@ -35,25 +27,12 @@ export interface AccessibilitySettings {
 	fontSize: "small" | "medium" | "large";
 }
 
-const DEFAULT_WORKING_HOURS: WorkingHours = {
-	start: "08:00",
-	end: "18:00",
-	lunchStart: "12:00",
-	lunchEnd: "13:00",
-};
-
 const DEFAULT_NOTIFICATIONS: NotificationSettings = {
 	email: true,
 	sms: false,
 	push: true,
 	appointments: true,
 	reminders: true,
-};
-
-const DEFAULT_ACCESSIBILITY_SETTINGS: AccessibilitySettings = {
-	highContrast: false,
-	reducedMotion: false,
-	fontSize: "medium",
 };
 
 const VALID_TABS: TabValue[] = [
@@ -88,9 +67,6 @@ export function useSettingsState() {
 	// Settings State
 	const [notifications, setNotifications] = useState<NotificationSettings>(
 		DEFAULT_NOTIFICATIONS,
-	);
-	const [workingHours, setWorkingHours] = useState<WorkingHours>(
-		DEFAULT_WORKING_HOURS,
 	);
 
 	// Password State
@@ -132,21 +108,8 @@ export function useSettingsState() {
 			.getMFASettings(user.uid)
 			.then((s) => setMfaEnabled(s.enabled))
 			.catch(() => {});
-
-		const savedHours = localStorage.getItem("workingHours");
-		if (savedHours) {
-			try {
-				setWorkingHours(JSON.parse(savedHours));
-			} catch (e) {
-				logger.warn("Failed to parse working hours", e);
-			}
-		}
 	}, [user?.uid]);
 
-	const saveWorkingHours = useCallback(() => {
-		localStorage.setItem("workingHours", JSON.stringify(workingHours));
-		toast({ title: "Horários salvos!" });
-	}, [workingHours, toast]);
 
 	const handleEnable2FA = useCallback(
 		async (enabled: boolean) => {
@@ -236,9 +199,6 @@ export function useSettingsState() {
 		},
 		notifications,
 		setNotifications,
-		workingHours,
-		setWorkingHours,
-		saveWorkingHours,
 		password: {
 			form: passwordForm,
 			setForm: setPasswordForm,
