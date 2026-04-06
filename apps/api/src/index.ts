@@ -84,6 +84,7 @@ import { adminSeedTemplatesRoutes } from './routes/admin/seed-templates';
 import { searchRoutes } from './routes/search';
 import { reportsPdfRoutes } from './routes/reportsPdf';
 import { eventsRoutes as businessEventsRoutes } from './routes/events';
+import aiSearchApp from './routes/aiSearch';
 import { verifyToken } from './lib/auth';
 import { getRawSql } from './lib/db';
 import { routeAgentRequest } from 'agents';
@@ -229,6 +230,7 @@ const apiRoutes = [
   ['/api/search', searchRoutes],
   ['/api/reports/pdf', reportsPdfRoutes],
   ['/api/events', businessEventsRoutes],
+  ['/api/ai-search', aiSearchApp],
 ] as const;
 
 apiRoutes.forEach(([path, router]) => {
