@@ -379,6 +379,7 @@ const NotionEvolutionPanel: React.FC<NotionEvolutionPanelProps> = ({
 	};
 
 	const handleQuickUpload = async (file: File, type: "attachment" | "scan") => {
+		void type;
 		if (!patientId) {
 			toast.error(
 				"Não foi possível identificar o paciente para salvar o arquivo.",

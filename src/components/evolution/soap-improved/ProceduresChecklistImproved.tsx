@@ -215,7 +215,7 @@ export const ProceduresChecklistImproved: React.FC<
 	className,
 	showProgress = true,
 	showCategories = true,
-	allowCustomCategories = false,
+	allowCustomCategories: _allowCustomCategories = false,
 	maxHeight = "400px",
 }) => {
 	const [showAutocomplete, setShowAutocomplete] = useState(false);

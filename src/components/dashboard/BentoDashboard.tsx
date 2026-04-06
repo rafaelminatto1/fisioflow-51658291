@@ -26,16 +26,17 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import { Skeleton } from "@/components/ui/skeleton";
 import { cn } from "@/lib/utils";
+import type { DashboardViewMode } from "@/hooks/useSmartDashboard";
 import { useSmartDashboardData } from "@/hooks/useSmartDashboard";
 import { RagSearchWidget } from "./RagSearchWidget";
 interface BentoDashboardProps {
-	viewMode?: "today" | "week" | "month" | "custom";
+	viewMode?: DashboardViewMode;
 }
 
 export const BentoDashboard: React.FC<BentoDashboardProps> = ({ viewMode = "month" }) => {
 	const navigate = useNavigate();
 
-	const { data, isLoading: metricsLoading } = useSmartDashboardData(viewMode as any);
+	const { data, isLoading: metricsLoading } = useSmartDashboardData(viewMode);
 	const metrics = data?.metrics;
 	const appointments = data?.appointmentsToday || [];
 	const atRiskPatients = data?.atRiskPatients || [];

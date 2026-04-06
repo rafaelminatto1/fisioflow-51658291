@@ -83,7 +83,7 @@ export const goalProfilesApi = {
 		request<{ ok: boolean }>(`/api/goal-profiles/${id}`, { method: "DELETE" }),
 };
 
-export const doctorsApi = {
+export const adminDoctorsApi = {
 	list: (params?: { searchTerm?: string; limit?: number }) => {
 		const qs = new URLSearchParams(
 			Object.entries(params ?? {})
@@ -96,7 +96,7 @@ export const doctorsApi = {
 	},
 
 	search: (params: { searchTerm: string; limit?: number }) =>
-		doctorsApi.list(params),
+		adminDoctorsApi.list(params),
 
 	get: (id: string) =>
 		request<{ data: DoctorRecord }>(`/api/doctors/${encodeURIComponent(id)}`),
