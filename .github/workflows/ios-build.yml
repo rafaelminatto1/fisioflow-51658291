@@ -80,7 +80,14 @@ jobs:
           CERT_PATH=$RUNNER_TEMP/cert.p12
           KEYCHAIN_PATH=$RUNNER_TEMP/app.keychain-db
 
-          echo -n "$CERTIFICATE_BASE64" | base64 --decode -o "$CERT_PATH"
+          # Decodifica removendo possíveis espaços/quebras de linha acidentais
+          echo "$CERTIFICATE_BASE64" | tr -d '\n ' | base64 --decode > "$CERT_PATH"
+
+          # Validação básica do arquivo gerado
+          if [ ! -s "$CERT_PATH" ]; then
+            echo "ERRO: O arquivo de certificado está vazio após a decodificação."
+            exit 1
+          fi
 
           security create-keychain -p "$KEYCHAIN_PASSWORD" "$KEYCHAIN_PATH"
           security set-keychain-settings -lut 21600 "$KEYCHAIN_PATH"
