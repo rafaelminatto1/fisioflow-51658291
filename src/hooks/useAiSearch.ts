@@ -2,21 +2,23 @@ import { useState } from 'react';
 import { useAuth } from './useAuth';
 import { API_BASE_URL } from '../integrations/api/client';
 
-interface AiSearchResult {
+export interface AiSource {
+  file_id: string;
+  filename: string;
+  score: number;
+  attributes?: Record<string, any>;
+  content: Array<{
+    id: string;
+    type: string;
+    text: string;
+  }>;
+}
+
+export interface AiSearchResult {
   object: string;
   search_query: string;
   response?: string;
-  data: Array<{
-    file_id: string;
-    filename: string;
-    score: number;
-    attributes?: Record<string, any>;
-    content: Array<{
-      id: string;
-      type: string;
-      text: string;
-    }>;
-  }>;
+  data: AiSource[];
 }
 
 export function useAiSearch() {

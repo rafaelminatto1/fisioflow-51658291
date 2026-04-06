@@ -20,7 +20,11 @@ aiSearchApp.post('/', requireAuth, zValidator('json', querySchema), async (c) =>
   }
 
   try {
-    // @ts-ignore - The types for Ai binding might not be updated yet with autorag
+    // Check if the AI binding has the autorag method (Beta feature)
+    if (typeof c.env.AI.autorag !== 'function') {
+      return c.json({ error: 'Managed AI Search (autorag) is not available in this environment' }, 500);
+    }
+
     const aiSearchInstance = c.env.AI.autorag("fisioflow-rag");
 
     // Filtros de segurança: isolamento de tenant

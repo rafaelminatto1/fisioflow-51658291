@@ -181,7 +181,7 @@ export class FinancialReportGenerator {
 				4: { cellWidth: 25 },
 			},
 			margin: { top: 0, left: 20, right: 20 },
-			didDrawPage: (data) => {
+			didDrawPage: (_data) => {
 				// Adicionar número da página
 				this.doc.setFontSize(8);
 				this.doc.setTextColor(128, 128, 128);

@@ -152,8 +152,8 @@ export function useImageWithFallback(exercise: {
  */
 export function getResponsiveImageSizes(
 	columns: number = 3,
-	minSize: number = 120,
-	maxSize: number = 400,
+	_minSize: number = 120,
+	_maxSize: number = 400,
 ): string {
 	// Exemplo: "(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
 	const breakpoints = [640, 768, 1024, 1280];

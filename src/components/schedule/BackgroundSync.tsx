@@ -334,7 +334,7 @@ interface BackgroundSyncProviderProps {
 
 export const BackgroundSyncProvider = ({
 	children,
-	options,
+	options: _options,
 }: BackgroundSyncProviderProps) => {
 	return <>{children}</>; // Contexto pode ser adicionado se necessário
 };

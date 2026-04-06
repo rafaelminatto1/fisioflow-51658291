@@ -55,7 +55,7 @@ class NativePoseProvider implements PoseProvider {
 		}
 	}
 
-	async detect(image: any): Promise<PoseDetection> {
+	async detect(_image: unknown): Promise<PoseDetection> {
 		if (!this.isLoaded) {
 			throw new Error("NativePoseProvider não inicializado");
 		}
@@ -71,7 +71,10 @@ class NativePoseProvider implements PoseProvider {
 		};
 	}
 
-	startStream(video: any, callback: (result: PoseDetection) => void): void {
+	startStream(
+		_video: unknown,
+		_callback: (result: PoseDetection) => void,
+	): void {
 		if (!this.isLoaded) return;
 		logger.info(
 			"[NativePoseProvider] Iniciando stream nativo...",

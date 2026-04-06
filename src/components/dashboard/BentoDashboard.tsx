@@ -1,32 +1,20 @@
 import {
-	Activity,
 	AlertCircle,
-	ArrowUpRight,
-	Bell,
 	Calendar,
 	ChevronRight,
 	ClipboardCheck,
-	Clock,
 	DollarSign,
-	MessageSquare,
-	Send,
-	Sparkles,
 	TrendingUp,
 	Users,
-	ArrowDownRight,
-	Percent,
-	Target,
 } from "lucide-react";
 import type React from "react";
 import { useNavigate } from "react-router-dom";
 import {
-	ResponsiveContainer,
 	AreaChart,
 	Area,
 	CartesianGrid,
 	Tooltip,
 	XAxis,
-	YAxis,
 	BarChart,
 	Bar,
 	Cell,
@@ -39,6 +27,7 @@ import { Progress } from "@/components/ui/progress";
 import { Skeleton } from "@/components/ui/skeleton";
 import { cn } from "@/lib/utils";
 import { useSmartDashboardData } from "@/hooks/useSmartDashboard";
+import { RagSearchWidget } from "./RagSearchWidget";
 interface BentoDashboardProps {
 	viewMode?: "today" | "week" | "month" | "custom";
 }
@@ -362,39 +351,10 @@ export const BentoDashboard: React.FC<BentoDashboardProps> = ({ viewMode = "mont
 					</CardContent>
 				</Card>
 
-				{/* AI Insights - Expanded */}
-				<Card className="lg:col-span-6 rounded-[3.5rem] border-none shadow-[0_4px_24px_rgba(0,0,0,0.02)] bg-white dark:bg-slate-950 overflow-hidden relative group">
-					<CardHeader className="p-10 pb-6">
-						<p className="font-display text-[10px] font-bold uppercase tracking-[0.2em] text-primary mb-1">
-							FisioAI Suite
-						</p>
-						<CardTitle className="font-display text-2xl font-extrabold tracking-tighter text-slate-900 dark:text-white">
-							Clinical Insights
-						</CardTitle>
-					</CardHeader>
-					<CardContent className="px-10 pb-10 pt-0 flex flex-row gap-4">
-						<div className="flex-1 p-6 rounded-[2rem] bg-[#f7f9fb] dark:bg-slate-900/50 hover:bg-white hover:shadow-xl transition-all duration-300 cursor-pointer group/insight">
-							<div className="flex items-center gap-3 mb-2.5">
-								<Target className="h-4 w-4 text-primary" />
-								<span className="text-[10px] font-extrabold uppercase text-primary">Ponto de Atenção</span>
-							</div>
-							<p className="text-xs text-slate-500 font-medium">
-								{atRiskPatients.length > 0 
-									? `Paciente ${atRiskPatients[0].name} em risco de abandono.`
-									: "Nenhum paciente crítico detectado hoje."}
-							</p>
-						</div>
-						<div className="flex-1 p-6 rounded-[2rem] bg-[#f7f9fb] dark:bg-slate-900/50 hover:bg-white hover:shadow-xl transition-all duration-300 cursor-pointer group/insight">
-							<div className="flex items-center gap-3 mb-2.5">
-								<TrendingUp className="h-4 w-4 text-emerald-500" />
-								<span className="text-[10px] font-extrabold uppercase text-emerald-500">Oportunidade</span>
-							</div>
-							<p className="text-xs text-slate-500 font-medium">
-								Taxa de conversão em avaliações subiu 12%.
-							</p>
-						</div>
-					</CardContent>
-				</Card>
+				{/* AI Search / Clinical Knowledge */}
+				<div className="lg:col-span-6 rounded-[3.5rem] overflow-hidden">
+					<RagSearchWidget />
+				</div>
 			</div>
 
 			{/* Footbar */}

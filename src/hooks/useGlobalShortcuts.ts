@@ -11,15 +11,6 @@
 
 import { useEffect, useCallback } from "react";
 
-interface ShortcutAction {
-	key: string;
-	ctrlKey?: boolean;
-	shiftKey?: boolean;
-	altKey?: boolean;
-	action: () => void;
-	description: string;
-}
-
 interface UseGlobalShortcutsOptions {
 	onSave?: () => void;
 	onNewSection?: () => void;

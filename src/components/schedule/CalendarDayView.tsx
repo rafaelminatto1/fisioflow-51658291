@@ -70,7 +70,7 @@ const CalendarDayView = memo(
 	({
 		currentDate,
 		currentTime,
-		currentTimePosition,
+		currentTimePosition: _currentTimePosition,
 		// appointments, // We will use getAppointmentsForDate instead for consistency
 		getAppointmentsForDate,
 		savingAppointmentId,
@@ -174,7 +174,7 @@ const CalendarDayView = memo(
 		}, [dayAppointments]);
 
 		const renderSlot = React.useCallback(
-			(time: string, rowIndex: number) => {
+			(time: string, _rowIndex: number) => {
 				const hour = parseInt(time.split(":")[0]);
 				const isCurrentHour = hour === currentTime.getHours();
 				const isDropTarget =
