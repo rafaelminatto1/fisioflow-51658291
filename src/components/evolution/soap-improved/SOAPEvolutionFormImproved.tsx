@@ -1110,7 +1110,7 @@ const ProcedureRow: React.FC<{
 				<div className="px-4 pb-3 animate-in slide-in-from-top-2 duration-200">
 					<Input
 						value={procedure.notes || ""}
-						onChange={(e) => {
+						onChange={(_e) => {
 							// Handle notes update (would need proper handler)
 						}}
 						placeholder="Adicione detalhes: região, parâmetros, tempo, observações..."
@@ -1379,7 +1379,7 @@ const ExerciseRow: React.FC<{
 				<div className="px-4 pb-3 animate-in slide-in-from-top-2 duration-200">
 					<Input
 						value={exercise.observations || ""}
-						onChange={(e) => {
+						onChange={(_e) => {
 							// Handle observations update (would need proper handler)
 						}}
 						placeholder="Observações: amplitude, compensações, ajustes realizados..."

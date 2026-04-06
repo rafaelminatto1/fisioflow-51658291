@@ -58,13 +58,6 @@ interface Photo {
 	id: string;
 }
 
-interface SOAPData {
-	subjective: string;
-	objective: string;
-	assessment: string;
-	plan: string;
-}
-
 // ==================== CONSTANTS ====================
 
 const COLORS = {
