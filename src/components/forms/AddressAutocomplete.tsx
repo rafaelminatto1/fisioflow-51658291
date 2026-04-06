@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { Input } from "@/components/ui/input";
-import { useDebounce } from "@/hooks/useDebounce";
+import { useDebounce } from "@/hooks/performance/useDebounce";
 import { Loader2, MapPin } from "lucide-react";
 import { integrationsApi, type GooglePlacePrediction } from "@/api/v2";
 
