@@ -4,17 +4,15 @@ import {
 	CardContent,
 	CardHeader,
 	CardTitle,
-	CardDescription,
 } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Library, Search, Sparkles, Loader2, ArrowRight, ExternalLink, FileText } from "lucide-react";
+import { Library, Search, Sparkles, Loader2, ExternalLink, FileText } from "lucide-react";
 import { useAiSearch, type AiSource } from "@/hooks/useAiSearch";
 import { motion, AnimatePresence } from "framer-motion";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { cn } from "@/lib/utils";
 import { useNavigate } from "react-router-dom";
 
 export const RagSearchWidget: React.FC = () => {
@@ -32,7 +30,7 @@ export const RagSearchWidget: React.FC = () => {
 			const response = await search(query);
 			setResult(response?.response || "Nenhuma informação encontrada na base de conhecimento.");
 			setSources(response?.data || []);
-		} catch (error) {
+		} catch {
 			setResult("Erro ao consultar a base de conhecimento. Tente novamente.");
 			setSources([]);
 		}
