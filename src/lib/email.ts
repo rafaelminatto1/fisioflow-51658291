@@ -3,6 +3,8 @@
  * Ported from Jules task 4594806547830790725
  */
 
+import { isBrowserRuntime } from "@/lib/config/server-only";
+
 interface EmailMessage {
 	to: string;
 	subject: string;
@@ -21,8 +23,14 @@ export async function sendEmail(
 	message: EmailMessage,
 ): Promise<ResendResponse | null> {
 	try {
-		const apiKey =
-			import.meta.env.VITE_RESEND_API_KEY || process.env.RESEND_API_KEY;
+		if (isBrowserRuntime) {
+			console.warn(
+				"[security] sendEmail is disabled in browser runtime; use the backend mail flow.",
+			);
+			return null;
+		}
+
+		const apiKey = process.env.RESEND_API_KEY;
 		const from =
 			message.from || process.env.EMAIL_FROM || "onboarding@resend.dev";
 

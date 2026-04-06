@@ -4,11 +4,13 @@ import {
 	Search,
 	FileText,
 	Calendar,
+	Cloud,
 	Loader2,
 	X,
 	ArrowRight,
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import { getWorkersApiUrl } from "@/lib/api/config";
 
 interface SearchResult {
 	id: string;
@@ -50,9 +52,8 @@ export const GlobalCommandPalette: React.FC = () => {
 
 		setIsLoading(true);
 		try {
-			const WORKER_URL = import.meta.env.VITE_CLOUDFLARE_WORKER_URL;
 			const response = await fetch(
-				`${WORKER_URL}/search?tag=${encodeURIComponent(searchQuery)}`,
+				`${getWorkersApiUrl()}/api/search?tag=${encodeURIComponent(searchQuery)}`,
 			);
 			if (response.ok) {
 				const data = await response.json();

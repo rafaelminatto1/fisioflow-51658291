@@ -120,6 +120,18 @@ export interface Env {
   RESEND_API_KEY?: string;
   RESEND_FROM_EMAIL?: string;
 
+  // Stripe
+  STRIPE_SECRET_KEY?: string;
+
+  // Twilio WhatsApp fallback
+  TWILIO_ACCOUNT_SID?: string;
+  TWILIO_AUTH_TOKEN?: string;
+  TWILIO_PHONE_NUMBER?: string;
+
+  // Focus NFe / NFSe
+  FOCUS_NFE_TOKEN?: string;
+  FOCUS_NFE_ENVIRONMENT?: string;
+
   // Cloudflare Turnstile (anti-bot para rotas públicas)
   TURNSTILE_SECRET_KEY?: string;
   TURNSTILE_SITE_KEY?: string;

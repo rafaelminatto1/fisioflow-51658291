@@ -18,6 +18,7 @@ import {
 	Zap,
 } from "lucide-react";
 import { toast } from "sonner";
+import { getWorkersApiUrl } from "@/lib/api/config";
 import { cn } from "@/lib/utils";
 
 interface RetentionState {
@@ -48,7 +49,7 @@ export const PatientRetentionAgent: React.FC<PatientRetentionAgentProps> = ({
 			// No mundo real, usaríamos useAgent do Agents SDK.
 			// Aqui, vamos bater na rota do Worker que faz o proxy para o Durable Object.
 			const res = await fetch(
-				`https://fisioflow-api.rafalegollas.workers.dev/agents/patient-agent/${patientId}`,
+				`${getWorkersApiUrl()}/agents/patient-agent/${patientId}`,
 			);
 			if (res.ok) {
 				const data = await res.json();
@@ -73,7 +74,7 @@ export const PatientRetentionAgent: React.FC<PatientRetentionAgentProps> = ({
 		try {
 			// Trigger manual para o agente reavaliar o paciente
 			const res = await fetch(
-				`https://fisioflow-api.rafalegollas.workers.dev/agents/patient-agent/${patientId}/updateClinicalStatus`,
+				`${getWorkersApiUrl()}/agents/patient-agent/${patientId}/updateClinicalStatus`,
 				{
 					method: "POST",
 					body: JSON.stringify({ name: patientName }),
@@ -93,7 +94,7 @@ export const PatientRetentionAgent: React.FC<PatientRetentionAgentProps> = ({
 	const handleDismiss = async () => {
 		try {
 			await fetch(
-				`https://fisioflow-api.rafalegollas.workers.dev/agents/patient-agent/${patientId}/dismissAction`,
+				`${getWorkersApiUrl()}/agents/patient-agent/${patientId}/dismissAction`,
 				{ method: "POST" },
 			);
 			toast.info("Ação arquivada pelo Agente.");

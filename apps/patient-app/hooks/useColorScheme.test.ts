@@ -2,8 +2,8 @@
  * useColorScheme Hook Tests
  */
 
-import { renderHook } from '@testing-library/react-native';
 import { useColors, useColorScheme as useBaseColorScheme } from './useColorScheme';
+import { useColorScheme as useRNColorScheme } from 'react-native';
 
 jest.mock('react-native', () => ({
   useColorScheme: jest.fn(),
@@ -15,11 +15,12 @@ describe('useColors Hook', () => {
   });
 
   it('should return colors object', () => {
-    const { result } = renderHook(() => useColors());
+    (useRNColorScheme as jest.Mock).mockReturnValue('dark');
+    const result = useColors();
 
-    expect(result.current).toBeDefined();
-    expect(typeof result.current.primary).toBe('string');
-    expect(typeof result.current.background).toBe('string');
+    expect(result).toBeDefined();
+    expect(typeof result.primary).toBe('string');
+    expect(typeof result.background).toBe('string');
   });
 });
 
@@ -29,8 +30,15 @@ describe('useColorScheme Hook', () => {
   });
 
   it('should return color scheme', () => {
-    const { result } = renderHook(() => useBaseColorScheme());
+    (useRNColorScheme as jest.Mock).mockReturnValue('dark');
+    const result = useBaseColorScheme();
 
-    expect(result.current).toBeDefined();
+    expect(result).toBe('dark');
+  });
+
+  it('should fallback to light for unspecified schemes', () => {
+    (useRNColorScheme as jest.Mock).mockReturnValue('unspecified');
+
+    expect(useBaseColorScheme()).toBe('light');
   });
 });

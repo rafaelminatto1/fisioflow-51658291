@@ -3,7 +3,7 @@ import { Colors, ColorScheme } from '@/constants/colors';
 
 export function useColorScheme(): ColorScheme {
   const colorScheme = useRNColorScheme();
-  return colorScheme ?? 'light';
+  return colorScheme === 'dark' ? 'dark' : 'light';
 }
 
 export function useColors() {

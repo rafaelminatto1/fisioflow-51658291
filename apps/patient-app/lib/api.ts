@@ -10,7 +10,11 @@ import {
   PatientStats,
   GamificationProfile,
   Conversation,
-  Message
+  Message,
+  Achievement,
+  Quest,
+  ShopItem,
+  TelemedicineRoom,
 } from '@/types/api';
 import { Mappers } from './mappers';
 
@@ -19,9 +23,28 @@ const API_BASE_URL =
   process.env.EXPO_PUBLIC_API_URL ||
   'https://api-paciente.moocafisio.com.br'; // Novo domínio unificado
 
+const PATIENT_PORTAL_PREFIX = '/api/patient-portal';
+
 interface RequestOptions extends RequestInit {
   params?: Record<string, string | number | boolean | undefined | null>;
 }
+
+type PatientSessionResponse = {
+  data?: {
+    session?: {
+      token?: string;
+    };
+    token?: string;
+  };
+};
+
+type SessionFetchContext = {
+  response?: {
+    headers?: {
+      get?: (name: string) => string | null;
+    };
+  };
+};
 
 function isPlainObject(value: unknown): value is Record<string, unknown> {
   return !!value && typeof value === 'object' && !Array.isArray(value);
@@ -37,9 +60,10 @@ function extractPayload<T>(payload: unknown): T {
 async function getNeonAccessToken(): Promise<string> {
   try {
     const session = await authClient.getSession();
+    const sessionData = session as PatientSessionResponse | null | undefined;
     const token =
-      (session as any)?.data?.session?.token ||
-      (session as any)?.data?.token;
+      sessionData?.data?.session?.token ||
+      sessionData?.data?.token;
 
     if (typeof token === 'string' && token.trim()) {
       return token;
@@ -49,15 +73,15 @@ async function getNeonAccessToken(): Promise<string> {
   }
 
   const token = await new Promise<string | null>((resolve) => {
-    authClient.getSession({
+    Promise.resolve(authClient.getSession({
       fetchOptions: {
-        onSuccess: (ctx: any) => {
+        onSuccess: (ctx: SessionFetchContext) => {
           const jwt = ctx.response?.headers?.get?.('set-auth-jwt');
           resolve(typeof jwt === 'string' && jwt.trim() ? jwt : null);
         },
         onError: () => resolve(null),
       },
-    }).catch(() => resolve(null));
+    })).catch(() => resolve(null));
   });
 
   if (!token) {
@@ -140,19 +164,19 @@ export const api = {
 
 export const patientApi = {
   bootstrapProfile: async (data: Record<string, unknown>): Promise<PatientProfile> => {
-    const response = await api.post<any>('/api/patient/bootstrap', data);
+    const response = await api.post<any>(`${PATIENT_PORTAL_PREFIX}/bootstrap`, data);
     return Mappers.patientProfile(response);
   },
   getProfile: async (): Promise<PatientProfile> => {
-    const response = await api.get<any>('/api/patient/profile');
+    const response = await api.get<any>(`${PATIENT_PORTAL_PREFIX}/profile`);
     return Mappers.patientProfile(response);
   },
   updateProfile: async (data: Record<string, unknown>): Promise<PatientProfile> => {
-    const response = await api.patch<any>('/api/patient/profile', data);
+    const response = await api.patch<any>(`${PATIENT_PORTAL_PREFIX}/profile`, data);
     return Mappers.patientProfile(response);
   },
   getTherapists: async (search?: string): Promise<Therapist[]> => {
-    const response = await api.get<any[]>('/api/patient/therapists', search ? { search } : undefined);
+    const response = await api.get<any[]>(`${PATIENT_PORTAL_PREFIX}/therapists`, search ? { search } : undefined);
     return response.map(t => ({
       id: t.id,
       name: t.name,
@@ -163,31 +187,31 @@ export const patientApi = {
     }));
   },
   linkProfessional: async (professionalId: string): Promise<{ success: boolean }> =>
-    api.post<{ success: boolean }>('/api/patient/link-professional', { professional_id: professionalId }),
+    api.post<{ success: boolean }>(`${PATIENT_PORTAL_PREFIX}/link-professional`, { professional_id: professionalId }),
   getAppointments: async (upcoming?: boolean): Promise<Appointment[]> => {
-    const response = await api.get<any[]>('/api/patient/appointments', upcoming ? { upcoming: true } : undefined);
+    const response = await api.get<any[]>(`${PATIENT_PORTAL_PREFIX}/appointments`, upcoming ? { upcoming: true } : undefined);
     return response.map(a => Mappers.appointment(a));
   },
   confirmAppointment: (id: string) =>
-    api.post<{ success: boolean }>(`/api/patient/appointments/${id}/confirm`, {}),
+    api.post<{ success: boolean }>(`${PATIENT_PORTAL_PREFIX}/appointments/${id}/confirm`, {}),
   cancelAppointment: (id: string, reason?: string) =>
-    api.post<{ success: boolean }>(`/api/patient/appointments/${id}/cancel`, { reason }),
+    api.post<{ success: boolean }>(`${PATIENT_PORTAL_PREFIX}/appointments/${id}/cancel`, { reason }),
   getExercises: async (): Promise<ExerciseAssignment[]> => {
-    const response = await api.get<any[]>('/api/patient/exercises');
+    const response = await api.get<any[]>(`${PATIENT_PORTAL_PREFIX}/exercises`);
     return response.map(e => Mappers.exerciseAssignment(e));
   },
   completeExercise: (assignmentId: string, data: Record<string, unknown>) =>
-    api.post<{ success: boolean }>(`/api/patient/exercises/${assignmentId}/complete`, data),
+    api.post<{ success: boolean }>(`${PATIENT_PORTAL_PREFIX}/exercises/${assignmentId}/complete`, data),
   getNotifications: async (): Promise<Notification[]> => {
-    const response = await api.get<any[]>('/api/patient/notifications');
+    const response = await api.get<any[]>(`${PATIENT_PORTAL_PREFIX}/notifications`);
     return response.map(n => Mappers.notification(n));
   },
   markNotificationRead: (id: string) =>
-    api.post<{ success: boolean }>(`/api/patient/notifications/${id}/read`, {}),
+    api.post<{ success: boolean }>(`${PATIENT_PORTAL_PREFIX}/notifications/${id}/read`, {}),
   markAllNotificationsRead: () =>
-    api.post<{ success: boolean }>('/api/patient/notifications/read-all', {}),
+    api.post<{ success: boolean }>(`${PATIENT_PORTAL_PREFIX}/notifications/read-all`, {}),
   getProgress: async (): Promise<PatientProgress> => {
-    const response = await api.get<{ evolutions: any[]; reports: any[] }>('/api/patient/progress');
+    const response = await api.get<{ evolutions: any[]; reports: any[] }>(`${PATIENT_PORTAL_PREFIX}/progress`);
     return {
       evolutions: response.evolutions.map(e => Mappers.evolution(e)),
       reports: response.reports.map(r => ({
@@ -200,7 +224,7 @@ export const patientApi = {
     };
   },
   getStats: (): Promise<PatientStats> =>
-    api.get<PatientStats>('/api/patient/stats'),
+    api.get<PatientStats>(`${PATIENT_PORTAL_PREFIX}/stats`),
 };
 
 export const gamificationApi = {

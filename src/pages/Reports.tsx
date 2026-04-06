@@ -1,6 +1,6 @@
 // Lazy load AdvancedReportGenerator (contém jsPDF - 442KB) - só carrega quando a tab é acessada
 
-import React, { useState, useCallback, useMemo, lazy, Suspense } from "react";
+import { useState, useCallback, useMemo, lazy, Suspense } from "react";
 import { fisioLogger as logger } from "@/lib/errors/logger";
 import { MainLayout } from "@/components/layout/MainLayout";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -44,8 +44,6 @@ import {
 	Search,
 } from "lucide-react";
 
-import { format } from "date-fns";
-import { ptBR } from "date-fns/locale";
 import { toast } from "sonner";
 import { useAppointments } from "@/hooks/useAppointments";
 import { usePatients } from "@/hooks/patients/usePatients";
@@ -153,19 +151,6 @@ const Reports = () => {
 		setActiveTab("advanced");
 		toast.info("Abra o gerador avançado para emitir este relatório com dados reais.");
 	}, [selectedPeriod]);
-
-	const getStatusColor = useCallback((status: string) => {
-		switch (status) {
-			case "Concluído":
-				return "bg-green-100 text-green-800";
-			case "Processando":
-				return "bg-yellow-100 text-yellow-800";
-			case "Erro":
-				return "bg-red-100 text-red-800";
-			default:
-				return "bg-gray-100 text-gray-800";
-		}
-	}, []);
 
 	return (
 		<MainLayout>

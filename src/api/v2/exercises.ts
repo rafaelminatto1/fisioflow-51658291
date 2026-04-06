@@ -183,7 +183,7 @@ export const protocolsApi = {
 
 export const exercisePlansApi = {
 	list: (params: { patientId: string }) =>
-		request<{ data: any[] }>(
+		request<{ data: Array<Record<string, unknown>> }>(
 			`/api/clinical/exercise-plans?patientId=${encodeURIComponent(params.patientId)}`,
 		),
 	create: (data: {
@@ -191,9 +191,9 @@ export const exercisePlansApi = {
 		template_id?: string;
 		name: string;
 		notes?: string;
-		items: any[];
+		items: Array<Record<string, unknown>>;
 	}) =>
-		request<{ data: any }>("/api/clinical/exercise-plans", {
+		request<{ data: Record<string, unknown> }>("/api/clinical/exercise-plans", {
 			method: "POST",
 			body: JSON.stringify(data),
 		}),
@@ -230,7 +230,11 @@ export const templatesApi = {
 			`/api/templates/${id}`,
 		),
 
-	create: (data: Omit<ExerciseTemplate, "id"> & { items: any[] }) =>
+	create: (
+		data: Omit<ExerciseTemplate, "id"> & {
+			items: Array<Record<string, unknown>>;
+		},
+	) =>
 		request<{ data: ExerciseTemplate & { items: ExerciseTemplateItem[] } }>(
 			"/api/templates",
 			{
@@ -239,7 +243,12 @@ export const templatesApi = {
 			},
 		),
 
-	update: (id: string, data: Partial<ExerciseTemplate> & { items?: any[] }) =>
+	update: (
+		id: string,
+		data: Partial<ExerciseTemplate> & {
+			items?: Array<Record<string, unknown>>;
+		},
+	) =>
 		request<{ data: ExerciseTemplate & { items: ExerciseTemplateItem[] } }>(
 			`/api/templates/${id}`,
 			{

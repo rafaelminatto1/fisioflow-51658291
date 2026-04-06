@@ -274,7 +274,7 @@ async function callWorkersApi<TResponse>(
 	descriptor: LegacyRouteDescriptor,
 ): Promise<TResponse> {
 	if (!WORKERS_API_BASE) {
-		throw new Error("VITE_WORKERS_API_URL não configurada");
+		throw new Error("Workers API base URL não configurada");
 	}
 
 	const token = await getNeonAccessToken();

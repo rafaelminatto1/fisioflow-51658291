@@ -15,6 +15,8 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { Separator } from "@/components/ui/separator";
 import { toast } from "@/hooks/use-toast";
 import { aiApi } from "@/api/v2";
+import { getWorkersApiUrl } from "@/lib/api/config";
+import { getNeonAccessToken } from "@/lib/auth/neon-token";
 import {
 	Brain,
 	Sparkles,
@@ -90,14 +92,15 @@ export function TreatmentAssistant({
 			setLoading(true);
 			setActiveAction(action);
 			setSuggestion(null);
+			const token = await getNeonAccessToken();
 
 			const response = await fetch(
-				`${import.meta.env.VITE_WORKERS_API_URL}/api/ai/native/${action}`,
+				`${getWorkersApiUrl()}/api/ai/native/${action}`,
 				{
 					method: "POST",
 					headers: {
 						"Content-Type": "application/json",
-						Authorization: `Bearer ${localStorage.getItem("neon_access_token")}`,
+						Authorization: `Bearer ${token}`,
 					},
 					body: JSON.stringify({ text }),
 				},
