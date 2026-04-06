@@ -7,6 +7,7 @@ import { useEffect, useState, useCallback } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { fisioLogger as logger } from "@/lib/errors/logger";
 import { useConnectionStatus } from "./useConnectionStatus";
+import { cn } from "@/lib/utils";
 
 interface SyncQueueItem {
 	id: string;
@@ -173,7 +174,6 @@ export function useOfflineSync(
 
 import { Wifi, WifiOff } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
-import { cn } from "@/lib/utils";
 import {
 	Tooltip,
 	TooltipContent,
