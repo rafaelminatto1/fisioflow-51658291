@@ -7,13 +7,6 @@
  * Integração configurada
  */
 
-type TimestampLikeLike =
-	| string
-	| Date
-	| {
-			toDate?: () => Date;
-	  };
-
 export interface Integration {
 	id: string;
 	organization_id: string;

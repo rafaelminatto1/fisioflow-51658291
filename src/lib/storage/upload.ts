@@ -68,7 +68,7 @@ export async function uploadBase64(
 	}
 
 	const byteCharacters = atob(data);
-	const byteNumbers = new Array(byteCharacters.length);
+	const byteNumbers = Array.from<number>({ length: byteCharacters.length });
 	for (let i = 0; i < byteCharacters.length; i++) {
 		byteNumbers[i] = byteCharacters.charCodeAt(i);
 	}

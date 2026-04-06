@@ -86,7 +86,7 @@ interface EvolutionSettingsModalProps {
 export function EvolutionSettingsModal({
 	open,
 	onOpenChange,
-	currentViewVersion,
+	currentViewVersion: _currentViewVersion,
 	onViewVersionChange,
 }: EvolutionSettingsModalProps) {
 	const [settings, setSettings] = useState<EvolutionSettings>(DEFAULT_SETTINGS);

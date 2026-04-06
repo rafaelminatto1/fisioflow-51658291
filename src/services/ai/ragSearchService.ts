@@ -7,7 +7,6 @@
  * 3. Fallback para LLM caso o nível de similaridade seja baixo ou se o usuário pedir.
  */
 
-import { sql } from "drizzle-orm";
 // Assume que existe uma inicialização de db usando drizzle
 // import { db } from "@/server/db";
 // import { exerciseProtocols, wikiPages } from "@/server/db/schema";
@@ -61,11 +60,8 @@ export class RagSearchService {
 		const limit = options.limit || 5;
 		// 1 - Cosine Distance: 1 é exatamente oposto, 0 é idêntico.
 		// Então Similaridade = 1 - Distância
-		const maxDistance = 1 - (options.minSimilarity || 0.6);
-
 		// Passo 1: Transforma a pergunta do Fisioterapeuta em Vetor
-		const queryVector = await this.generateEmbedding(query);
-		const vectorString = `[${queryVector.join(",")}]`;
+		await this.generateEmbedding(query);
 
 		const results: SearchResult[] = [];
 

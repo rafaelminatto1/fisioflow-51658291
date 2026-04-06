@@ -45,7 +45,6 @@ export const StickySectionHeader: React.FC<StickySectionHeaderProps> = ({
 	accentColor = "sky",
 }) => {
 	const [isSticky, setIsSticky] = useState(false);
-	const [,setIsVisible] = useState(false);
 	const headerRef = useRef<HTMLDivElement>(null);
 	const sentinelRef = useRef<HTMLDivElement>(null);
 	const observerRef = useRef<IntersectionObserver | null>(null);
