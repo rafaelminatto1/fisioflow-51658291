@@ -81,7 +81,7 @@ export function initSentry(config: Partial<SentryConfig> = {}) {
 			},
 
 			// Breadcrumbs
-			beforeBreadcrumb(breadcrumb: Breadcrumb, hint?: BreadcrumbHint) {
+			beforeBreadcrumb(breadcrumb: Breadcrumb, _hint?: BreadcrumbHint) {
 				// Filtrar breadcrumbs desnecessários
 				if (breadcrumb.category === "xhr") {
 					const url = (breadcrumb.data?.url as string) || "";

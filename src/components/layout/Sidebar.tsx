@@ -1,6 +1,5 @@
 import { useState } from "react";
 import { Link, useLocation } from "react-router-dom";
-import { useQueryClient } from "@tanstack/react-query";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { useNavPreload } from "@/hooks/useIntelligentPreload";
@@ -25,9 +24,6 @@ import {
 	Building2,
 	Target,
 	Trophy,
-	ScanFace,
-	Footprints,
-	Image as ImageIcon,
 	Mail,
 	Database,
 	Package,

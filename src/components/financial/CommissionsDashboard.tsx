@@ -141,7 +141,7 @@ interface PayConfirmModalProps {
 
 function PayConfirmModal({
 	row,
-	period,
+	period: _period,
 	onConfirm,
 	onCancel,
 	isPending,

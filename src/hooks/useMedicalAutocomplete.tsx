@@ -218,7 +218,7 @@ const ALL_SUGGESTIONS = Object.values(MEDICAL_ABBREVIATIONS);
 
 export const useMedicalAutocomplete = ({
 	pathology,
-	triggerShortcut = "Ctrl+Space",
+	triggerShortcut: _triggerShortcut = "Ctrl+Space",
 	onSelect,
 	disabled = false,
 }: UseMedicalAutocompleteProps) => {

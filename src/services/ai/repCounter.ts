@@ -277,7 +277,7 @@ export class RepetitionCounter {
 	/**
 	 * Processar método: Fase Up/Down (agachamento, pushup)
 	 */
-	private processPhaseUpDown(landmarks: PoseLandmark[]): {
+	private processPhaseUpDown(_landmarks: PoseLandmark[]): {
 		count: number;
 		phase: MovementPhase | null;
 		repCompleted?: Repetition;
@@ -343,7 +343,7 @@ export class RepetitionCounter {
 	/**
 	 * Processar método: Fase Left/Right (abdução/adução)
 	 */
-	private processPhaseLeftRight(landmarks: PoseLandmark[]): {
+	private processPhaseLeftRight(_landmarks: PoseLandmark[]): {
 		count: number;
 		phase: MovementPhase | null;
 		repCompleted?: Repetition;
