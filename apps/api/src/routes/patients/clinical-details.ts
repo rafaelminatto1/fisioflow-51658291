@@ -591,6 +591,7 @@ export function registerPatientClinicalDetailRoutes(app: PatientRouteApp) {
           status,
           treated_at,
           notes,
+          created_by,
           created_at,
           updated_at
         )
@@ -605,6 +606,7 @@ export function registerPatientClinicalDetailRoutes(app: PatientRouteApp) {
           COALESCE($8, 'ativo'),
           $9::date,
           $10,
+          $11,
           NOW(),
           NOW()
         )
@@ -621,6 +623,7 @@ export function registerPatientClinicalDetailRoutes(app: PatientRouteApp) {
         nullableString(body.status),
         nullableString(body.treated_at),
         nullableString(body.notes),
+        user.uid,
       ],
     );
 

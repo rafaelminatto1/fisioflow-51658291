@@ -1,6 +1,5 @@
 import { useState } from 'react';
-import { useAuth } from './useAuth';
-import { API_BASE_URL } from '../integrations/api/client';
+import { apiClient } from '../lib/api/v2/client';
 
 export interface AiSource {
   file_id: string;
@@ -24,33 +23,15 @@ export interface AiSearchResult {
 export function useAiSearch() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const { session } = useAuth();
 
   const search = async (query: string): Promise<AiSearchResult | null> => {
-    if (!session?.access_token) {
-      setError('Sessão inválida');
-      return null;
-    }
-
+    const API_BASE = import.meta.env.VITE_WORKERS_API_URL || 'https://fisioflow-api.rafalegollas.workers.dev';
+    
     setLoading(true);
     setError(null);
 
     try {
-      const response = await fetch(`${API_BASE_URL}/api/ai-search`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${session.access_token}`
-        },
-        body: JSON.stringify({ query })
-      });
-
-      if (!response.ok) {
-        const errData = await response.json().catch(() => ({}));
-        throw new Error(errData.error || errData.details || `Erro ${response.status} na busca com IA`);
-      }
-
-      const data = await response.json() as AiSearchResult;
+      const data = await apiClient.post<AiSearchResult>(`${API_BASE}/api/ai-search`, { query });
       return data;
     } catch (err: any) {
       console.error('AI Search Hook Error:', err);

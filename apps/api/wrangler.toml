@@ -363,7 +363,3 @@ crons = [
 # ===== OBSERVABILIDADE =====
 [observability]
 enabled = true
-
-# ===== CLOUDFLARE WORKERS AI / AI SEARCH =====
-[ai]
-binding = "AI"

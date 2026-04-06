@@ -183,7 +183,7 @@ const MetricCard: React.FC<{
 		<div
 			className={cn(
 				"flex flex-col items-center justify-center p-3 rounded-lg bg-muted/50",
-				color && color,
+				color,
 			)}
 		>
 			<div className={cn("p-2 rounded-full mb-2", color)}>{icon}</div>
@@ -209,7 +209,7 @@ export const RealTimeMetricsPanel: React.FC<RealTimeMetricsPanelProps> = ({
 	duration = 0,
 	targetRepetitions,
 	targetDuration,
-	showDetailedScore = true,
+	showDetailedScore: _showDetailedScore = true,
 	compact = false,
 	onPause,
 	onResume,

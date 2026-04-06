@@ -25,7 +25,7 @@ interface ProgressTimelineProps {
 
 export function ProgressTimeline({
 	className,
-	patientId,
+	patientId: _patientId,
 	patientName = "Paciente",
 }: ProgressTimelineProps) {
 	const [selectedPeriod, setSelectedPeriod] = useState<

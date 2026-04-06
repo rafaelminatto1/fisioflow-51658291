@@ -33,7 +33,6 @@ import {
 import { motion, AnimatePresence } from "framer-motion";
 import { NewProtocolModal } from "@/components/modals/NewProtocolModal";
 import ProtocolDetailView from "./ProtocolDetailView";
-import { cn } from "@/lib/utils";
 
 export const ProtocolsManager = memo(function ProtocolsManager() {
 	const [activeTab, setActiveTab] = useState<"patologia" | "pos_operatorio">(
@@ -384,4 +383,3 @@ export const ProtocolsManager = memo(function ProtocolsManager() {
 		</div>
 	);
 });
-
