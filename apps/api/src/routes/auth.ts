@@ -214,8 +214,8 @@ app.get('/session', async (c) => {
       headers: { Authorization: authHeader },
     });
     if (!neonRes.ok) return c.json({ session: null }, 200);
-    const data = await neonRes.json();
-    return c.json(data);
+    const data = await neonRes.json() as Record<string, unknown>;
+    return c.json(data as any);
   } catch {
     return c.json({ error: 'Erro ao verificar sessão' }, 500);
   }

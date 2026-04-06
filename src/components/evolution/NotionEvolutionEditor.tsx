@@ -21,6 +21,9 @@ import {
 import { toast } from "sonner";
 import { Commands } from "./suggestion/commands";
 import { Backlinks } from "./suggestion/backlinks";
+import { uploadToR2 } from "@/lib/storage/r2-storage";
+import { getWorkersApiUrl } from "@/lib/api/config";
+import { getNeonAccessToken } from "@/lib/auth/neon-token";
 
 interface NotionEvolutionEditorProps {
 	initialContent?: string;
@@ -158,28 +161,8 @@ export const NotionEvolutionEditor: React.FC<NotionEvolutionEditorProps> = ({
 			const toastId = toast.loading(`Subindo exame: ${file.name}...`);
 
 			try {
-				const CLOUDFLARE_WORKER_URL = import.meta.env
-					.VITE_CLOUDFLARE_WORKER_URL;
-				const AUTH_TOKEN = import.meta.env.VITE_CLOUDFLARE_AUTH_TOKEN;
-
-				const fileName = `patient_${patientId}_ev_${evolutionId}_${Date.now()}_${file.name.replace(/\s+/g, "_")}`;
-
-				const response = await fetch(
-					`${CLOUDFLARE_WORKER_URL}?key=${encodeURIComponent(fileName)}`,
-					{
-						method: "PUT",
-						headers: {
-							Authorization: `Bearer ${AUTH_TOKEN}`,
-							"Content-Type": file.type,
-						},
-						body: file,
-					},
-				);
-
-				if (!response.ok)
-					throw new Error("Falha no upload para o Cloudflare R2");
-
-				const data = await response.json();
+				const folder = patientId ? `patient-evolutions/${patientId}` : "patient-evolutions";
+				const data = await uploadToR2(file, folder);
 
 				if (data.url) {
 					if (file.type.startsWith("image/")) {
@@ -236,16 +219,16 @@ export const NotionEvolutionEditor: React.FC<NotionEvolutionEditorProps> = ({
 
 		// Indexação no D1 para busca ultrarrápida
 		try {
-			const CLOUDFLARE_WORKER_URL = import.meta.env.VITE_CLOUDFLARE_WORKER_URL;
-			const AUTH_TOKEN = import.meta.env.VITE_CLOUDFLARE_AUTH_TOKEN;
+			const workersApiUrl = getWorkersApiUrl();
+			const authToken = await getNeonAccessToken();
 
 			const tags = Array.from(html.matchAll(/#\w+/g)).map((m) => m[0]);
 			const previewText = editor.getText().substring(0, 300);
 
-			await fetch(`${CLOUDFLARE_WORKER_URL}/index`, {
+			await fetch(`${workersApiUrl}/api/search/index`, {
 				method: "POST",
 				headers: {
-					Authorization: `Bearer ${AUTH_TOKEN}`,
+					Authorization: `Bearer ${authToken}`,
 					"Content-Type": "application/json",
 				},
 				body: JSON.stringify({
