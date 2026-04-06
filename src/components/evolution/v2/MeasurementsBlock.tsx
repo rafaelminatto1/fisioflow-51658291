@@ -427,7 +427,7 @@ const MeasurementCard: React.FC<{
 }> = React.memo(
 	({
 		measurement,
-		index,
+		_index,
 		isExpanded,
 		onToggleExpand,
 		onUpdate,

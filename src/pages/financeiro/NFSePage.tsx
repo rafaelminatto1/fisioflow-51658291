@@ -37,7 +37,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { useAuth } from "@/contexts/AuthContext";
 import { useOrganizations } from "@/hooks/useOrganizations";
-import { financialApi, type NFSeConfigRecord, type NFSeRecord } from "@/api/v2";
+import { financialApi, type NFSeRecord } from "@/api/v2";
 import { MainLayout } from "@/components/layout/MainLayout";
 
 export interface NFSe extends NFSeRecord {
