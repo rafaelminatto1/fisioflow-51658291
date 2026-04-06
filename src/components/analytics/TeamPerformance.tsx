@@ -10,14 +10,8 @@ import { Badge } from "@/components/ui/badge";
 import { useQuery } from "@tanstack/react-query";
 import {
 	appointmentsApi,
-	financialApi,
-	patientsApi,
-	type AppointmentRow,
-	type OrganizationMember,
 } from "@/api/v2";
 import {
-	Users,
-	TrendingUp,
 	CheckCircle2,
 	XCircle,
 	Clock,

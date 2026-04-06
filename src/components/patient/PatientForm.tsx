@@ -75,7 +75,7 @@ export const PatientForm = forwardRef<HTMLFormElement, PatientFormProps>(
 			organizationId,
 			hideActions = false,
 			intent = "create",
-			onCancel,
+			onCancel: _onCancel,
 		},
 		ref,
 	) => {
@@ -124,7 +124,7 @@ export const PatientForm = forwardRef<HTMLFormElement, PatientFormProps>(
 			handleSubmit,
 			watch,
 			setValue,
-			formState: { errors, isDirty },
+			formState: { errors },
 		} = form;
 
 		const watchedBirthDate = watch("birth_date");

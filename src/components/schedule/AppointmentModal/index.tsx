@@ -129,7 +129,7 @@ export const AppointmentModal: React.FC<AppointmentModalProps> = ({
 		persistAppointment,
 		scheduleOnlyRef,
 	} = form;
-	const { setValue, handleSubmit, watch } = methods;
+	const { setValue, watch } = methods;
 
 	const logic = useAppointmentModalLogic({
 		isOpen,

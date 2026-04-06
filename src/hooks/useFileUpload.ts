@@ -1,19 +1,26 @@
 import { useState } from "react";
 
-export interface UseFileUploadOptions {
-	onUploadSuccess?: (files: any[]) => void;
-	onUploadError?: (error: any) => void;
-	maxSize?: number;
-	acceptedFileTypes?: string[];
-	[key: string]: any;
+export interface UploadedFile {
+	id: string;
+	path?: string;
+	name?: string;
+	url?: string;
 }
 
-export function useFileUpload(options?: UseFileUploadOptions) {
+export interface UseFileUploadOptions {
+	onUploadSuccess?: (files: UploadedFile[]) => void;
+	onUploadError?: (error: unknown) => void;
+	maxSize?: number;
+	acceptedFileTypes?: string[];
+	[key: string]: unknown;
+}
+
+export function useFileUpload(_options?: UseFileUploadOptions) {
 	const [isUploading, setIsUploading] = useState(false);
 	const [progress, setProgress] = useState(0);
-	const [uploadedFiles, setUploadedFiles] = useState<any[]>([]);
+	const [uploadedFiles, setUploadedFiles] = useState<UploadedFile[]>([]);
 
-	const upload = async (files: File[]) => {
+	const upload = async (_files: File[]) => {
 		setIsUploading(true);
 		setProgress(0);
 		// mock implementation
@@ -23,7 +30,7 @@ export function useFileUpload(options?: UseFileUploadOptions) {
 		}, 1000);
 	};
 
-	const removeFile = (id: string, path: string) => {
+	const removeFile = (id: string, _path: string) => {
 		setUploadedFiles((prev) => prev.filter((f) => f.id !== id));
 	};
 

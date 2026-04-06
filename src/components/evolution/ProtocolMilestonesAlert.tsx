@@ -28,7 +28,7 @@ interface ProtocolMilestonesAlertProps {
 export const ProtocolMilestonesAlert: React.FC<
 	ProtocolMilestonesAlertProps
 > = ({
-	patientId,
+	patientId: _patientId,
 	surgeries,
 	pathologies,
 	onApplyMilestone,

@@ -680,7 +680,6 @@ export function ExerciseLibrary({
 
 					const exerciseEquipment = exercise.equipment || [];
 					const isHomeExercise =
-						exerciseEquipment.length === 0 ||
 						exerciseEquipment.every((eq) =>
 							homeEquipmentLabels.some((he) =>
 								eq.toLowerCase().includes(he.toLowerCase()),

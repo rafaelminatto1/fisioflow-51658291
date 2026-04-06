@@ -17,9 +17,7 @@ import {
 	Milestone,
 	Activity,
 	Trash2,
-	Filter,
 	Layers,
-	Sparkles,
 } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import {
@@ -387,15 +385,3 @@ export const ProtocolsManager = memo(function ProtocolsManager() {
 	);
 });
 
-
-const Label = ({
-	children,
-	className,
-}: {
-	children: React.ReactNode;
-	className?: string;
-}) => (
-	<label className={cn("block text-sm font-medium", className)}>
-		{children}
-	</label>
-);

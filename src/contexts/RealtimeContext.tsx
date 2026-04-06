@@ -117,7 +117,7 @@ export const RealtimeProvider: React.FC<{ children: React.ReactNode }> = ({
 						if (Temporal.PlainDate.compare(apptDate, today) >= 0 && a.type === "paid") {
 							revenue += 100;
 						}
-					} catch (e) {
+					} catch {
 						// Fallback silencioso se a data estiver malformada
 					}
 				} else if (a.status === "cancelled") {

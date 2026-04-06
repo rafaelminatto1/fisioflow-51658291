@@ -7,13 +7,6 @@
  * Página da Wiki
  */
 
-type TimestampLikeLike =
-	| string
-	| Date
-	| {
-			toDate?: () => Date;
-	  };
-
 export interface WikiPage {
 	id: string;
 	slug: string;

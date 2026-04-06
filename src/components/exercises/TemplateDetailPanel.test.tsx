@@ -7,7 +7,7 @@
  */
 
 import { describe, it, expect } from "vitest";
-import { render, within, fireEvent, waitFor } from "@testing-library/react";
+import { render, within } from "@testing-library/react";
 import * as fc from "fast-check";
 import { TemplateDetailPanel } from "./TemplateDetailPanel";
 import type { ExerciseTemplate, PatientProfileCategory } from "@/types/workers";

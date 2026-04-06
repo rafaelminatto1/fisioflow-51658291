@@ -252,6 +252,7 @@ export class PoseAnalytics {
 		bestScore: number;
 		totalSessions: number;
 	}> {
+		void exerciseId;
 		// Nota: Isso requer acesso ao banco de dados (Neon DB)
 		// Implementação básica que pode ser expandida
 		try {
@@ -283,6 +284,7 @@ export class PoseAnalytics {
 		currentStreak: number;
 		longestStreak: number;
 	}> {
+		void patientId;
 		// Nota: Requer acesso ao banco de dados (Neon DB)
 		return {
 			currentStreak: 3,
@@ -329,7 +331,7 @@ export function createPoseAnalyticsInstance(): PoseAnalytics {
 export function logExerciseStarted(
 	exerciseId: string,
 	exerciseType: ExerciseType,
-	userType: string = "patient",
+	_userType: string = "patient",
 ): void {
 	const session: any = {
 		id: `temp_${Date.now()}`,
@@ -348,7 +350,7 @@ export function logExerciseCompleted(
 	exerciseId: string,
 	repetitions: number,
 	score: number,
-	duration: number,
+	_duration: number,
 ): void {
 	const session: any = {
 		exerciseId,

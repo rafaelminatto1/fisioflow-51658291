@@ -397,35 +397,3 @@ interface StatCardProps {
 	icon: React.ComponentType<{ className?: string }>;
 	color: "blue" | "green" | "cyan" | "yellow";
 }
-
-function StatCard({
-	title,
-	value,
-	subtitle,
-	icon: Icon,
-	color,
-}: StatCardProps) {
-	const colorClasses = {
-		blue: "bg-blue-500/10 text-blue-500",
-		green: "bg-green-500/10 text-green-500",
-		cyan: "bg-cyan-500/10 text-cyan-500",
-		yellow: "bg-yellow-500/10 text-yellow-500",
-	};
-
-	return (
-		<Card>
-			<CardContent className="p-4">
-				<div className="flex items-start justify-between">
-					<div>
-						<p className="text-sm text-muted-foreground">{title}</p>
-						<p className="text-2xl font-bold mt-1">{value}</p>
-						<p className="text-xs text-muted-foreground mt-1">{subtitle}</p>
-					</div>
-					<div className={`p-2 rounded-lg ${colorClasses[color]}`}>
-						<Icon className="w-4 h-4" />
-					</div>
-				</div>
-			</CardContent>
-		</Card>
-	);
-}

@@ -395,7 +395,7 @@ export async function generateClinicalReport(
 	input: ClinicalReportInput,
 ): Promise<string> {
 	const sessionsText = input.sessions
-		.map((s, i) => {
+		.map((s) => {
 			const exercisesText =
 				s.exercises
 					?.map((e) => e.name + (e.notes ? " (" + e.notes + ")" : ""))

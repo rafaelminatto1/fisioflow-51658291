@@ -6,8 +6,16 @@ import "./index.css";
 import { fisioLogger as logger } from "@/lib/errors/logger";
 
 // 3. MONITORAMENTO DE ERROS DE BUNDLE (VITE 8)
-const isChunkLoadError = (error: any) => {
-	const message = typeof error === "string" ? error : error?.message || "";
+const isChunkLoadError = (error: unknown) => {
+	const message =
+		typeof error === "string"
+			? error
+			: typeof error === "object" &&
+				  error !== null &&
+				  "message" in error &&
+				  typeof error.message === "string"
+				? error.message
+				: "";
 	return (
 		/Loading chunk/i.test(message) ||
 		/Loading CSS chunk/i.test(message) ||

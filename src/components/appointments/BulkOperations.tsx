@@ -10,7 +10,7 @@
  * - Enviar notificação em massa
  */
 
-import React, { useState, useMemo, useCallback } from "react";
+import React, { useState, useCallback } from "react";
 import {
 	CheckSquare,
 	Square,
@@ -161,13 +161,6 @@ export const BulkOperations: React.FC<BulkOperationsProps> = ({
 		link.click();
 		URL.revokeObjectURL(link.href);
 	}, [appointments, selectedIds]);
-
-	// Verificar se todos os selecionados têm o mesmo status
-	const selectedAppointments = useMemo(() => {
-		return appointments.filter((a) => selectedIds.has(a.id || ""));
-	}, [appointments, selectedIds]);
-
-	
 
 	return (
 		<div className={cn("space-y-4", className)}>
