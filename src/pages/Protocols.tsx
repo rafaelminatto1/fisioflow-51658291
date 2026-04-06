@@ -37,7 +37,6 @@ import {
 	getQuickTemplateCounts,
 	MUSCULATURE_FILTERS,
 	PROTOCOL_CATEGORIES,
-	QUICK_TEMPLATES,
 	SEED_PROTOCOLS_DATA,
 } from "@/data/protocols";
 import { useToast } from "@/hooks/use-toast";
