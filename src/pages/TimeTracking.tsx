@@ -389,11 +389,3 @@ export default function TimeTrackingPage() {
 		</MainLayout>
 	);
 }
-
-interface StatCardProps {
-	title: string;
-	value: string;
-	subtitle: string;
-	icon: React.ComponentType<{ className?: string }>;
-	color: "blue" | "green" | "cyan" | "yellow";
-}

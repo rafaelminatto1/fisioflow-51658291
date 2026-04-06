@@ -208,7 +208,6 @@ export const createMockQueryChain = () => {
 		range: vi.fn().mockReturnThis(),
 		single: vi.fn(),
 		maybeSingle: vi.fn(),
-		then: vi.fn(),
 	};
 
 	return chain;
