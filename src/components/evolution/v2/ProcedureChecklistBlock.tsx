@@ -447,7 +447,7 @@ const ProcedureRow: React.FC<{
 	disabled: boolean;
 	index: number;
 }> = React.memo(
-	({ procedure, onToggle, onRemove, onUpdateNotes, disabled, index }) => {
+	({ procedure, onToggle, onRemove, onUpdateNotes, disabled, index: _index }) => {
 		const [showNotes, setShowNotes] = useState(false);
 		const [isRemoving, setIsRemoving] = useState(false);
 

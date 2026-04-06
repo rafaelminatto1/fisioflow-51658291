@@ -51,15 +51,6 @@ export interface ChartDataPoint {
 	label?: string;
 }
 
-// Neon milestone record structure
-interface NeonMilestone {
-	name: string;
-	description?: string;
-	expectedDate: string;
-	achieved: boolean;
-	criteria?: string[];
-}
-
 // Risk factor entry structure
 interface RiskFactorEntry {
 	factor: string;

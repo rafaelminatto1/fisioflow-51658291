@@ -37,7 +37,6 @@ import {
 import { usePatientEvolutionReport } from "@/hooks/usePatientEvolutionReport";
 import { useEvaluationForms } from "@/hooks/useEvaluationForms";
 
-// UI Components
 import {
 	Dialog,
 	DialogContent,

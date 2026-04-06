@@ -159,7 +159,7 @@ export function TreatmentAssistant({
 							document.getElementById("subjective")?.innerText || "";
 						const text = `S: ${subjective}\nO: ${objective}`;
 						if (!loading) {
-							void callNativeAI(
+							callNativeAI(
 								"summarize",
 								text.length > 10
 									? text

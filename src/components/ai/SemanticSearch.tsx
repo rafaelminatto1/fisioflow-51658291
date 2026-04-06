@@ -183,7 +183,7 @@ export function SemanticSearch({
 									: "evoluções encontradas"}
 							</p>
 
-							{results.map((result, index) => (
+							{results.map((result) => (
 								<Card
 									key={result.evolutionId}
 									className="cursor-pointer hover:shadow-md transition-shadow"

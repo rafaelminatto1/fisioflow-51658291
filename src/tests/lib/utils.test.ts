@@ -15,7 +15,10 @@ describe("cn (className utility)", () => {
 	});
 
 	it("should handle conditional classes", () => {
-		expect(cn("foo", undefined, "baz")).toBe("foo baz");
+		const shouldIncludeBar = false;
+		expect(cn("foo", shouldIncludeBar ? "bar" : undefined, "baz")).toBe(
+			"foo baz",
+		);
 	});
 
 	it("should handle Tailwind class conflicts", () => {

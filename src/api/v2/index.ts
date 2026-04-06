@@ -6,6 +6,7 @@ export * from "./boards";
 export * from "./clinical";
 export * from "./communications";
 export * from "./documents";
+export * from "./doctors";
 export * from "./events";
 export * from "./exercises";
 export * from "./feedback";

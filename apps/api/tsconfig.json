@@ -10,7 +10,6 @@
     "noEmit": true,
     "skipLibCheck": true,
     "allowSyntheticDefaultImports": true,
-    "ignoreDeprecations": "6.0",
     "esModuleInterop": false,
     "jsx": "react-jsx",
     "paths": {

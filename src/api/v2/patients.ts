@@ -234,6 +234,29 @@ export const patientsApi = {
 				severity?: string;
 			}>;
 		}>(`/api/patients/${encodeURIComponent(patientId)}/pathologies`),
+	createPathology: (patientId: string, data: any) =>
+		request<{ data: any }>(
+			`/api/patients/${encodeURIComponent(patientId)}/pathologies`,
+			{
+				method: "POST",
+				body: JSON.stringify(data),
+			},
+		),
+	updatePathology: (patientId: string, pathologyId: string, data: any) =>
+		request<{ data: any }>(
+			`/api/patients/${encodeURIComponent(patientId)}/pathologies/${encodeURIComponent(pathologyId)}`,
+			{
+				method: "PUT",
+				body: JSON.stringify(data),
+			},
+		),
+	deletePathology: (patientId: string, pathologyId: string) =>
+		request<{ ok: boolean }>(
+			`/api/patients/${encodeURIComponent(patientId)}/pathologies/${encodeURIComponent(pathologyId)}`,
+			{
+				method: "DELETE",
+			},
+		),
 	medicalReturns: (patientId: string) =>
 		request<{ data: any[] }>(
 			`/api/patients/${encodeURIComponent(patientId)}/medical-returns`,

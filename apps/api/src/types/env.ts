@@ -87,7 +87,26 @@ export interface Env {
   WORKFLOW_REENGAGEMENT?: Workflow<PatientReengagementWorkflow>;
 
   // AI & Browser Rendering
-  AI: Ai;
+  AI: {
+    run(model: string, input: any): Promise<any>;
+    autorag(indexName: string): {
+      aiSearch(options: {
+        query: string;
+        model?: string;
+        rewrite_query?: boolean;
+        max_num_results?: number;
+        ranking_options?: {
+          score_threshold?: number;
+        };
+        reranking?: {
+          enabled?: boolean;
+          model?: string;
+        };
+        stream?: boolean;
+        filters?: Record<string, any>;
+      }): Promise<any>;
+    };
+  };
   BROWSER: any;
 
   // Queues
