@@ -22,13 +22,6 @@ interface LeaderboardEntry {
 	title?: string;
 }
 
-interface GamificationData {
-	patient_id: string;
-	level: number;
-	total_points: number;
-	current_streak: number;
-}
-
 const RANK_ICONS = [Crown, Medal, Award];
 const _RANK_COLORS = ["text-yellow-500", "text-gray-500", "text-amber-600"];
 const RANK_BG = [

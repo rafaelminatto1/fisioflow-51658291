@@ -11,7 +11,6 @@ import { useAppointmentData } from "@/hooks/useAppointmentData";
 import { useCreateSoapRecord, useSoapRecords } from "@/hooks/useSoapRecords";
 import { useAppointmentActions } from "@/hooks/useAppointmentActions";
 import { useGamification } from "@/hooks/useGamification";
-import { useAuth } from "@/contexts/AuthContext";
 import { fisioLogger as logger } from "@/lib/errors/logger";
 import {
 	normalizeGoalRow,

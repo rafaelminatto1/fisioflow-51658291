@@ -17,7 +17,6 @@ import {
 	XAxis,
 	BarChart,
 	Bar,
-	Cell,
 } from "recharts";
 import { SafeResponsiveContainer } from "@/components/charts/SafeResponsiveContainer";
 import { Badge } from "@/components/ui/badge";
@@ -39,7 +38,6 @@ export const BentoDashboard: React.FC<BentoDashboardProps> = ({ viewMode = "mont
 	const { data, isLoading: metricsLoading } = useSmartDashboardData(viewMode);
 	const metrics = data?.metrics;
 	const appointments = data?.appointmentsToday || [];
-	const atRiskPatients = data?.atRiskPatients || [];
 
 	if (metricsLoading) {
 		return (
