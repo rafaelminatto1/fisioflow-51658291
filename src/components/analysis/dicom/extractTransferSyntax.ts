@@ -15,7 +15,8 @@ const LONG_VR = new Set([
 function readAscii(bytes: Uint8Array, start: number, length: number) {
 	return new TextDecoder("ascii")
 		.decode(bytes.subarray(start, start + length))
-		.replace(/\u0000/g, "")
+		.split("\u0000")
+		.join("")
 		.trim();
 }
 

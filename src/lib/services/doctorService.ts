@@ -1,4 +1,4 @@
-import { doctorsApi } from "@/api/v2";
+import { doctorsApi } from "@/api/v2/doctors";
 import type { Doctor, DoctorFormData } from "@/types/doctor";
 
 export class DoctorService {

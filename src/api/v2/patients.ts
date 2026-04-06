@@ -234,4 +234,54 @@ export const patientsApi = {
 				severity?: string;
 			}>;
 		}>(`/api/patients/${encodeURIComponent(patientId)}/pathologies`),
+	createPathology: (patientId: string, data: any) =>
+		request<{ data: any }>(
+			`/api/patients/${encodeURIComponent(patientId)}/pathologies`,
+			{
+				method: "POST",
+				body: JSON.stringify(data),
+			},
+		),
+	updatePathology: (patientId: string, pathologyId: string, data: any) =>
+		request<{ data: any }>(
+			`/api/patients/${encodeURIComponent(patientId)}/pathologies/${encodeURIComponent(pathologyId)}`,
+			{
+				method: "PUT",
+				body: JSON.stringify(data),
+			},
+		),
+	deletePathology: (patientId: string, pathologyId: string) =>
+		request<{ ok: boolean }>(
+			`/api/patients/${encodeURIComponent(patientId)}/pathologies/${encodeURIComponent(pathologyId)}`,
+			{
+				method: "DELETE",
+			},
+		),
+	medicalReturns: (patientId: string) =>
+		request<{ data: any[] }>(
+			`/api/patients/${encodeURIComponent(patientId)}/medical-returns`,
+		),
+	createMedicalReturn: (patientId: string, data: any) =>
+		request<{ data: any }>(
+			`/api/patients/${encodeURIComponent(patientId)}/medical-returns`,
+			{
+				method: "POST",
+				body: JSON.stringify(data),
+			},
+		),
+	updateMedicalReturn: (patientId: string, returnId: string, data: any) =>
+		request<{ data: any }>(
+			`/api/patients/${encodeURIComponent(patientId)}/medical-returns/${encodeURIComponent(returnId)}`,
+			{
+				method: "PUT",
+				body: JSON.stringify(data),
+			},
+		),
+	deleteMedicalReturn: (patientId: string, returnId: string) =>
+		request<{ ok: boolean }>(
+			`/api/patients/${encodeURIComponent(patientId)}/medical-returns/${encodeURIComponent(returnId)}`,
+			{
+				method: "DELETE",
+			},
+		),
 };

@@ -469,7 +469,7 @@ export const useUploadSessionAttachment = () => {
 		mutationFn: async ({
 			file,
 			soapRecordId,
-			patientId,
+			patientId: _patientId,
 			category = "other",
 			description,
 		}: {
