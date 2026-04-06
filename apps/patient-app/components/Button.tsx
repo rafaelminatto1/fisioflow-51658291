@@ -5,6 +5,7 @@ import {
   Text,
   StyleSheet,
   ActivityIndicator,
+  View,
   ViewStyle,
   TextStyle,
   StyleProp,
@@ -20,6 +21,7 @@ interface ButtonProps {
   loading?: boolean;
   style?: StyleProp<ViewStyle>;
   textStyle?: StyleProp<TextStyle>;
+  icon?: React.ReactNode;
 }
 
 export function Button({
@@ -31,6 +33,7 @@ export function Button({
   loading = false,
   style,
   textStyle,
+  icon,
 }: ButtonProps) {
   const colors = useColors();
 
@@ -110,18 +113,21 @@ export function Button({
       {loading ? (
         <ActivityIndicator color={getTextColor()} size="small" />
       ) : (
-        <Text
-          style={[
-            styles.text,
-            {
-              color: getTextColor(),
-              fontSize: getFontSize(),
-            },
-            textStyle,
-          ]}
-        >
-          {title}
-        </Text>
+        <View style={styles.content}>
+          {icon}
+          <Text
+            style={[
+              styles.text,
+              {
+                color: getTextColor(),
+                fontSize: getFontSize(),
+              },
+              textStyle,
+            ]}
+          >
+            {title}
+          </Text>
+        </View>
       )}
     </TouchableOpacity>
   );
@@ -136,5 +142,10 @@ const styles = StyleSheet.create({
   },
   text: {
     fontWeight: '600',
+  },
+  content: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
   },
 });

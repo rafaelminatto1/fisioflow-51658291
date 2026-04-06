@@ -21,6 +21,38 @@ import { AppointmentService } from "@/services/appointmentService";
 /** ID da Organização Padrão (Clínica Única) */
 export const DEFAULT_ORG_ID = "00000000-0000-0000-0000-000000000001";
 
+interface NeonUserLike {
+	id?: string;
+	email?: string | null;
+	name?: string | null;
+	image?: string | null;
+	emailVerified?: boolean;
+	role?: string;
+	organization_id?: string;
+	organizationId?: string;
+	user_metadata?: Record<string, unknown>;
+	metadata?: Record<string, unknown>;
+}
+
+interface NeonSessionResult {
+	data?: {
+		user?: NeonUserLike;
+	};
+}
+
+interface PasswordChangePayload {
+	newPassword: string;
+	currentPassword: string;
+}
+
+function toAuthError(error: unknown, fallbackMessage: string): AuthError {
+	if (error instanceof Error && error.message) {
+		return { message: error.message };
+	}
+
+	return { message: fallbackMessage };
+}
+
 export const AuthContextProvider: React.FC<{ children: React.ReactNode }> = ({
 	children,
 }) => {
@@ -32,13 +64,16 @@ export const AuthContextProvider: React.FC<{ children: React.ReactNode }> = ({
 	const queryClient = useQueryClient();
 	const prefetchedOrgIdsRef = useRef(new Set<string>());
 
-	const adaptNeonUser = useCallback((neonUser: any): AuthUser => {
-		if (!neonUser) return null as any;
+	const adaptNeonUser = useCallback((neonUser: NeonUserLike | null): AuthUser => {
+		if (!neonUser?.id) {
+			throw new Error("Usuário Neon inválido");
+		}
+
 		return {
 			uid: neonUser.id,
-			email: neonUser.email,
-			displayName: neonUser.name,
-			photoURL: neonUser.image,
+			email: neonUser.email ?? null,
+			displayName: neonUser.name ?? null,
+			photoURL: neonUser.image ?? null,
 			emailVerified: neonUser.emailVerified ?? false,
 			getIdToken: async () => getNeonAccessToken(),
 		};
@@ -73,7 +108,7 @@ export const AuthContextProvider: React.FC<{ children: React.ReactNode }> = ({
 	);
 
 	const buildProfile = useCallback(
-		(neonUser: any, adaptedUser: AuthUser): Profile => {
+		(neonUser: NeonUserLike | undefined, adaptedUser: AuthUser): Profile => {
 			const meta = (neonUser?.user_metadata ??
 				neonUser?.metadata ??
 				{}) as Record<string, unknown>;
@@ -84,13 +119,11 @@ export const AuthContextProvider: React.FC<{ children: React.ReactNode }> = ({
 					neonUser.organizationId) ||
 				(typeof meta.organization_id === "string" && meta.organization_id) ||
 				(typeof meta.organizationId === "string" && meta.organizationId) ||
-				(adaptedUser as any).organizationId ||
 				DEFAULT_ORG_ID;
 
 			const role =
 				(typeof neonUser?.role === "string" && neonUser.role) ||
 				(typeof meta.role === "string" && meta.role) ||
-				(adaptedUser as any).role ||
 				"admin";
 			return {
 				id: String(neonUser?.id ?? adaptedUser.uid),
@@ -113,7 +146,7 @@ export const AuthContextProvider: React.FC<{ children: React.ReactNode }> = ({
 	);
 
 	const loadUserAndProfile = useCallback(
-		async (newUser: AuthUser | null, neonUser?: any) => {
+		async (newUser: AuthUser | null, neonUser?: NeonUserLike) => {
 			setUser(newUser);
 			if (newUser) {
 				const profileData = buildProfile(neonUser, newUser);
@@ -143,7 +176,7 @@ export const AuthContextProvider: React.FC<{ children: React.ReactNode }> = ({
 				const result = (await Promise.race([
 					authClient.getSession(),
 					timeout,
-				])) as any;
+				])) as NeonSessionResult | null;
 
 				console.log(
 					"[AuthContext] Sessão recuperada:",
@@ -240,10 +273,10 @@ export const AuthContextProvider: React.FC<{ children: React.ReactNode }> = ({
 			}
 
 			return { error: null };
-		} catch (err: any) {
+		} catch (err: unknown) {
 			logger.error("Erro no login", err, "AuthContextProvider");
 			setLoading(false);
-			return { error: { message: err.message || "Erro ao fazer login" } };
+			return { error: toAuthError(err, "Erro ao fazer login") };
 		}
 	};
 
@@ -260,11 +293,11 @@ export const AuthContextProvider: React.FC<{ children: React.ReactNode }> = ({
 			if (error) throw new Error(error.message || "Erro ao cadastrar");
 			const adapted = adaptNeonUser(neonData.user);
 			await loadUserAndProfile(adapted);
-			return { user: adapted as any, error: null };
-		} catch (err: any) {
+			return { user: adapted, error: null };
+		} catch (err: unknown) {
 			logger.error("Erro no cadastro", err, "AuthContextProvider");
 			setLoading(false);
-			return { error: { message: err.message || "Erro ao cadastrar" } };
+			return { error: toAuthError(err, "Erro ao cadastrar") };
 		}
 	};
 
@@ -312,8 +345,8 @@ export const AuthContextProvider: React.FC<{ children: React.ReactNode }> = ({
 				redirectTo: `${window.location.origin}/auth/reset-password`,
 			});
 			return { error: null };
-		} catch (err: any) {
-			return { error: { message: err.message || "Erro ao resetar senha" } };
+		} catch (err: unknown) {
+			return { error: toAuthError(err, "Erro ao resetar senha") };
 		}
 	};
 
@@ -321,13 +354,14 @@ export const AuthContextProvider: React.FC<{ children: React.ReactNode }> = ({
 		try {
 			// Nota: O SDK do Neon Auth pode exigir a senha atual.
 			// Aqui estamos fazendo o melhor esforço conforme a API sugere.
-			await authClient.changePassword({
+			const payload: PasswordChangePayload = {
 				newPassword: password,
 				currentPassword: "", // Caso seja obrigatório mas não tenhamos no contexto
-			} as any);
+			};
+			await authClient.changePassword(payload);
 			return { error: null };
-		} catch (err: any) {
-			return { error: { message: err.message || "Erro ao atualizar senha" } };
+		} catch (err: unknown) {
+			return { error: toAuthError(err, "Erro ao atualizar senha") };
 		}
 	};
 
@@ -341,8 +375,8 @@ export const AuthContextProvider: React.FC<{ children: React.ReactNode }> = ({
 			});
 			if (profile) setProfile({ ...profile, ...updates });
 			return { error: null };
-		} catch (err: any) {
-			return { error: { message: err.message || "Erro ao atualizar perfil" } };
+		} catch (err: unknown) {
+			return { error: toAuthError(err, "Erro ao atualizar perfil") };
 		}
 	};
 
