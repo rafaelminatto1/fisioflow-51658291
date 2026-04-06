@@ -31,11 +31,6 @@ import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { fisioLogger as logger } from "@/lib/errors/logger";
 
-interface BookingResponse {
-	error?: string;
-	success?: boolean;
-}
-
 export const BookingPage = () => {
 	const { slug } = useParams();
 	const _navigate = useNavigate();

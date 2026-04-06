@@ -58,8 +58,6 @@ interface BaseCatalogInput {
 	evidence_resources?: ClinicalEvidenceResource[];
 }
 
-const localPdf = (filename: string) => `/clinical-tests/papers/${filename}`;
-
 function createSvgDataUrl(svg: string) {
 	return `data:image/svg+xml;utf8,${encodeURIComponent(svg)}`;
 }

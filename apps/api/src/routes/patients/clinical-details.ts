@@ -731,6 +731,7 @@ export function registerPatientClinicalDetailRoutes(app: PatientRouteApp) {
           affected_side,
           complications,
           notes,
+          created_by,
           created_at,
           updated_at
         )
@@ -746,6 +747,7 @@ export function registerPatientClinicalDetailRoutes(app: PatientRouteApp) {
           $9,
           $10,
           $11,
+          $12,
           NOW(),
           NOW()
         )
@@ -763,6 +765,7 @@ export function registerPatientClinicalDetailRoutes(app: PatientRouteApp) {
         nullableString(body.affected_side),
         nullableString(body.complications),
         nullableString(body.notes),
+        user.uid,
       ],
     );
 
