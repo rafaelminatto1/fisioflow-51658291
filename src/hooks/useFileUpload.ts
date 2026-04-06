@@ -1,10 +1,11 @@
 import { useState } from "react";
 
-type UploadedFile = {
+export interface UploadedFile {
 	id: string;
 	path?: string;
-	[key: string]: unknown;
-};
+	name?: string;
+	url?: string;
+}
 
 export interface UseFileUploadOptions {
 	onUploadSuccess?: (files: UploadedFile[]) => void;

@@ -721,7 +721,7 @@ function calculateConfidenceScore(
 
 async function storeOptimization(
 	patientId: string,
-	optimization: TreatmentOptimization,
+	_optimization: TreatmentOptimization,
 ): Promise<void> {
 	try {
 		// TODO: Chamar o Worker endpoint apropriado via workers-client

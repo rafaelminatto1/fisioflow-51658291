@@ -72,7 +72,7 @@ export function SecondaryDataBoundary({
 export function HeavyDataBoundary({
 	children,
 	fallback,
-	className,
+	className: _className,
 }: SuspenseBoundaryProps) {
 	const defaultFallback = <OptimizedLoadingSkeleton type="list" />;
 
