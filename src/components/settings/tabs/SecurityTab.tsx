@@ -38,7 +38,7 @@ const BackupSettings = lazy(() =>
 
 export function SecurityTab({
 	isAdmin,
-	user,
+	user: _user,
 	mfa,
 	password,
 	navigate,
