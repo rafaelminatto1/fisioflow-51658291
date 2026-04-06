@@ -33,7 +33,7 @@ export const TimeSlotCell = memo(
 	({
 		day,
 		time,
-		rowIndex,
+		rowIndex: _rowIndex,
 		colIndex,
 		isLastColumn = false,
 		isClosed,

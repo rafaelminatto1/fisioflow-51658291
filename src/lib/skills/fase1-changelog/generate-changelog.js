@@ -261,7 +261,7 @@ function generateMarkdown(grouped, byScope, version, date) {
 /**
  * Exibe o changelog no terminal com cores
  */
-function displayConsole(grouped, byScope) {
+function displayConsole(grouped, _byScope) {
 	console.log("\n" + "=".repeat(80));
 	console.log("\x1b[1m\x1b[36m  FisioFlow - Changelog\x1b[0m");
 	console.log("=".repeat(80) + "\n");

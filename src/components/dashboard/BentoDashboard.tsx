@@ -1,35 +1,23 @@
 import {
-	Activity,
 	AlertCircle,
-	ArrowUpRight,
-	Bell,
 	Calendar,
 	ChevronRight,
 	ClipboardCheck,
-	Clock,
 	DollarSign,
-	MessageSquare,
-	Send,
-	Sparkles,
 	TrendingUp,
 	Users,
-	ArrowDownRight,
-	Percent,
 	Target,
 } from "lucide-react";
 import type React from "react";
 import { useNavigate } from "react-router-dom";
 import {
-	ResponsiveContainer,
 	AreaChart,
 	Area,
 	CartesianGrid,
 	Tooltip,
 	XAxis,
-	YAxis,
 	BarChart,
 	Bar,
-	Cell,
 } from "recharts";
 import { SafeResponsiveContainer } from "@/components/charts/SafeResponsiveContainer";
 import { Badge } from "@/components/ui/badge";
@@ -441,24 +429,5 @@ const Plus = ({ className }: { className?: string }) => (
 	>
 		<path d="M5 12h14" />
 		<path d="M12 5v14" />
-	</svg>
-);
-
-const XCircle = ({ className }: { className?: string }) => (
-	<svg
-		className={className}
-		xmlns="http://www.w3.org/2000/svg"
-		width="24"
-		height="24"
-		viewBox="0 0 24 24"
-		fill="none"
-		stroke="currentColor"
-		strokeWidth="2"
-		strokeLinecap="round"
-		strokeLinejoin="round"
-	>
-		<circle cx="12" cy="12" r="10" />
-		<path d="m15 9-6 6" />
-		<path d="m9 9 6 6" />
 	</svg>
 );

@@ -63,11 +63,11 @@ const evidenceColorMap: Record<EvidenceTier, string> = {
 function KnowledgeCard({
 	item,
 	onEdit,
-	onAudit,
+	onAudit: _onAudit,
 	onDelete,
 	curationMap,
 	auditProfiles,
-	score,
+	score: _score,
 }: KnowledgeCardProps) {
 	
 
@@ -344,15 +344,15 @@ interface KnowledgeHubViewProps {
 
 export function KnowledgeHubView({
 	knowledgeStats,
-	knowledgeGroupsFiltered,
+	knowledgeGroupsFiltered: _knowledgeGroupsFiltered,
 	filteredKnowledge,
 	auditItems,
 	auditProfiles,
 	semanticScoreMap,
 	kbFilters,
 	setKbFilters,
-	syncing,
-	indexing,
+	syncing: _syncing,
+	indexing: _indexing,
 	onCreateArticle,
 	onEditArticle,
 	onDeleteArticle,

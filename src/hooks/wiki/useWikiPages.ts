@@ -1,6 +1,5 @@
 import { useState, useMemo, useEffect } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { useNavigate } from "react-router-dom";
 import { wikiService } from "@/lib/services/wikiService";
 import { toast } from "sonner";
 import type { WikiPage } from "@/types/wiki";

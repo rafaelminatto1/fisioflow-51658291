@@ -230,6 +230,81 @@ export default defineConfig(({ mode }) => {
 						groups: [
 							// DICOM viewer split — evita um único megachunk monolítico
 							{
+								name: "vendor-vtk-rendering-core",
+								test: /node_modules\/@kitware\/vtk\.js\/Rendering\/Core/,
+								priority: 36.9,
+							},
+							{
+								name: "vendor-vtk-rendering-opengl",
+								test: /node_modules\/@kitware\/vtk\.js\/Rendering\/OpenGL/,
+								priority: 36.8,
+							},
+							{
+								name: "vendor-vtk-rendering-volume",
+								test: /node_modules\/@kitware\/vtk\.js\/Rendering\/Volume/,
+								priority: 36.7,
+							},
+							{
+								name: "vendor-vtk-rendering",
+								test: /node_modules\/@kitware\/vtk\.js\/Rendering/,
+								priority: 36.5,
+							},
+							{
+								name: "vendor-vtk-common",
+								test: /node_modules\/@kitware\/vtk\.js\/Common/,
+								priority: 36.4,
+							},
+							{
+								name: "vendor-vtk-filters",
+								test: /node_modules\/@kitware\/vtk\.js\/Filters/,
+								priority: 36.3,
+							},
+							{
+								name: "vendor-vtk-io-core",
+								test: /node_modules\/@kitware\/vtk\.js\/IO\/Core/,
+								priority: 36.25,
+							},
+							{
+								name: "vendor-vtk-io-image",
+								test: /node_modules\/@kitware\/vtk\.js\/IO\/Image/,
+								priority: 36.24,
+							},
+							{
+								name: "vendor-vtk-io-geometry",
+								test: /node_modules\/@kitware\/vtk\.js\/IO\/Geometry/,
+								priority: 36.23,
+							},
+							{
+								name: "vendor-vtk-io-legacy",
+								test: /node_modules\/@kitware\/vtk\.js\/IO\/Legacy/,
+								priority: 36.22,
+							},
+							{
+								name: "vendor-vtk-io-xml",
+								test: /node_modules\/@kitware\/vtk\.js\/IO\/XML/,
+								priority: 36.21,
+							},
+							{
+								name: "vendor-vtk-io",
+								test: /node_modules\/@kitware\/vtk\.js\/IO/,
+								priority: 36.2,
+							},
+							{
+								name: "vendor-vtk-imaging",
+								test: /node_modules\/@kitware\/vtk\.js\/Imaging/,
+								priority: 36.1,
+							},
+							{
+								name: "vendor-vtk-interaction",
+								test: /node_modules\/@kitware\/vtk\.js\/Interaction/,
+								priority: 36,
+							},
+							{
+								name: "vendor-vtk-widgets",
+								test: /node_modules\/@kitware\/vtk\.js\/Widgets/,
+								priority: 35.5,
+							},
+							{
 								name: "vendor-vtk",
 								test: /node_modules\/@kitware\/vtk\.js/,
 								priority: 35,
@@ -303,7 +378,17 @@ export default defineConfig(({ mode }) => {
 								test: /node_modules\/(@react-pdf|react-pdf|pdfjs-dist)/,
 								priority: 25,
 							},
-							// @tiptap + prosemirror + tippy.js — editor rico, ~424 KB
+							// @tiptap + prosemirror + tippy.js — editor rico
+							{
+								name: "vendor-prosemirror",
+								test: /node_modules\/prosemirror/,
+								priority: 22.4,
+							},
+							{
+								name: "vendor-tippy",
+								test: /node_modules\/tippy/,
+								priority: 22.3,
+							},
 							{
 								name: "vendor-tiptap",
 								test: /node_modules\/(@tiptap|prosemirror|tippy)/,
