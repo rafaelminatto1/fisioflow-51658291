@@ -80,35 +80,6 @@ interface SuggestionRuntimeOptions {
 	imageUploadFolder?: string;
 }
 
-function pickLocalFile(accept: string): Promise<File | null> {
-	return new Promise((resolve) => {
-		if (typeof document === "undefined") {
-			resolve(null);
-			return;
-		}
-
-		const input = document.createElement("input");
-		input.type = "file";
-		input.accept = accept;
-		input.style.display = "none";
-		document.body.appendChild(input);
-
-		const cleanup = () => input.remove();
-
-		input.onchange = () => {
-			const file = input.files?.[0] ?? null;
-			cleanup();
-			resolve(file);
-		};
-		input.oncancel = () => {
-			cleanup();
-			resolve(null);
-		};
-
-		input.click();
-	});
-}
-
 export const getSuggestionItems = ({
 	query,
 	exercises,

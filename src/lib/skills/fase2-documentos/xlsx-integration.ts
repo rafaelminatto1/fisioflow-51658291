@@ -516,7 +516,7 @@ export async function exportAttendanceStats(
 			count: number;
 		}>;
 	},
-	clinicName: string,
+	_clinicName: string,
 ): Promise<Buffer> {
 	const ExcelJS = await loadExcelJS();
 	const workbook = new ExcelJS.Workbook();
