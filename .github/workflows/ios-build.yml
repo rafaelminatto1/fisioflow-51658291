@@ -22,14 +22,13 @@ on:
 
 env:
   NODE_VERSION: '22'
-  PNPM_VERSION: '10.33.0'
   # Usa Node.js 24 nos GitHub Actions (Node 20 deprecated a partir de Jun/2026)
   FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: 'true'
 
 jobs:
   build-ios:
     name: Build iOS — ${{ inputs.app }} (${{ inputs.profile }})
-    runs-on: macos-26
+    runs-on: macos-latest
     timeout-minutes: 90
 
     steps:
@@ -42,8 +41,6 @@ jobs:
       # ── 2. Node + pnpm ────────────────────────────────────────────────────
       - name: Setup pnpm
         uses: pnpm/action-setup@v4
-        with:
-          version: ${{ env.PNPM_VERSION }}
 
       - name: Setup Node
         uses: actions/setup-node@v4
