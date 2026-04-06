@@ -9,6 +9,7 @@
  */
 
 import { useEffect, useRef, useCallback, useState } from "react";
+import { cn } from "@/lib/utils";
 
 export type SwipeDirection = "left" | "right" | "up" | "down";
 export type SwipeCallback = (direction: SwipeDirection) => void;
