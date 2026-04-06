@@ -2,7 +2,7 @@
 
 ## 1. Architectural Transition & Technical Debt
 - **Transition Status:** The project is migrating from Firebase to Neon DB (PostgreSQL) + Drizzle ORM + Cloudflare Workers (v4.0.0 architecture).
-- **API Consolidation:** The legacy API (`cloudflare-worker/fisioflow-api.ts`) is deprecated and should be fully removed or ignored. The canonical API is `apps/api/src/index.ts`.
+- **API Consolidation:** The legacy API (`cloudflare-worker/fisioflow-api.ts`) is disabled in fail-closed mode and should not be used. The canonical API is `apps/api/src/index.ts`.
 - **Duplicate Data Hooks:** Hooks like `usePatientsV2.ts` existed as partial migration attempts but were largely unused. I have deleted `usePatientsV2.ts` to reduce confusion. The application is standardizing around `usePatientCrud.ts` and `usePatients.ts` for patient management, which already query the new Workers API (`patientsApi`).
 
 ## 2. Dead Code Elimination

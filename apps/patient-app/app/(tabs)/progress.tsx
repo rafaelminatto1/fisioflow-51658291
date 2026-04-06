@@ -1,4 +1,5 @@
 import { useState, useMemo } from 'react';
+import { router } from 'expo-router';
 
 import {
   View,
@@ -122,8 +123,6 @@ export default function ProgressScreen() {
           />
         }
       >
-import { router } from 'expo-router';
-...
         {/* Period Selector */}
         <View style={[styles.periodSelector, { backgroundColor: colors.surface }]}>
           {(['week', 'month', 'all'] as const).map((period) => (
@@ -150,7 +149,7 @@ import { router } from 'expo-router';
         {/* Gamification Card */}
         <TouchableOpacity
           activeOpacity={0.7}
-          onPress={() => router.push('/gamification')}
+          onPress={() => router.push('/gamification' as any)}
           style={styles.gamificationWrapper}
         >
           <Card style={[styles.gamificationCard, { backgroundColor: colors.primary }]}>

@@ -21,6 +21,7 @@ import { Badge } from "@/components/ui/badge";
 import { toast } from "@/hooks/use-toast";
 import { fisioLogger as logger } from "@/lib/errors/logger";
 import { getNeonAccessToken } from "@/lib/auth/neon-token";
+import { getWorkersApiUrl } from "@/lib/api/config";
 
 interface Message {
 	id: string;
@@ -79,10 +80,7 @@ const SmartAI = () => {
 
 		try {
 			const token = await getNeonAccessToken();
-			const WORKERS_BASE =
-				import.meta.env.VITE_WORKERS_API_URL ||
-				"https://fisioflow-api.rafalegollas.workers.dev";
-			const CHAT_URL = `${WORKERS_BASE}/api/ai/chat`;
+			const CHAT_URL = `${getWorkersApiUrl()}/api/ai/chat`;
 
 			const response = await fetch(CHAT_URL, {
 				method: "POST",

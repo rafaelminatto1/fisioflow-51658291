@@ -17,6 +17,7 @@
 // ============================================================================
 
 import { GoogleGenerativeAI } from "@google/generative-ai";
+import { getServerOnlyEnv } from "@/lib/config/server-only";
 import { PainMapService } from "@/lib/services/painMapService";
 import {
 	PainEvolutionData,
@@ -107,10 +108,11 @@ export interface PainAnalysisResult {
 // ============================================================================
 
 const GEMINI_API_KEY =
-	import.meta.env.VITE_GOOGLE_GENERATIVE_AI_API_KEY ||
-	import.meta.env.NEXT_PUBLIC_GOOGLE_AI_API_KEY;
+	getServerOnlyEnv("GOOGLE_GENERATIVE_AI_API_KEY") ||
+	getServerOnlyEnv("GOOGLE_AI_API_KEY") ||
+	"";
 
-const genAI = new GoogleGenerativeAI(GEMINI_API_KEY);
+const genAI = new GoogleGenerativeAI(GEMINI_API_KEY || "disabled");
 
 // Usar Gemini 2.5 Flash para eficiência em análise de dor
 const PAIN_MODEL = "gemini-2.5-flash";

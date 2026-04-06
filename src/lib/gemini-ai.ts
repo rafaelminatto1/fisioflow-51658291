@@ -9,12 +9,39 @@
  */
 
 import { GoogleGenerativeAI } from "@google/generative-ai";
+import {
+	createServerOnlyFeatureError,
+	getServerOnlyEnv,
+} from "@/lib/config/server-only";
 
 const apiKey =
-	import.meta.env.VITE_GOOGLE_GENERATIVE_AI_API_KEY ||
-	import.meta.env.GOOGLE_GENERATIVE_AI_API_KEY ||
+	getServerOnlyEnv("GOOGLE_GENERATIVE_AI_API_KEY") ||
+	getServerOnlyEnv("GOOGLE_AI_API_KEY") ||
 	"";
-const genAI = new GoogleGenerativeAI(apiKey);
+const genAI = new GoogleGenerativeAI(apiKey || "disabled");
+
+function ensureGeminiAccess() {
+	if (!apiKey) {
+		throw createServerOnlyFeatureError("Gemini direct access");
+	}
+}
+
+function createProtectedModel(model: string) {
+	const instance = genAI.getGenerativeModel({ model });
+
+	return {
+		generateContent: async (...args: Parameters<typeof instance.generateContent>) => {
+			ensureGeminiAccess();
+			return instance.generateContent(...args);
+		},
+		generateContentStream: async (
+			...args: Parameters<typeof instance.generateContentStream>
+		) => {
+			ensureGeminiAccess();
+			return instance.generateContentStream(...args);
+		},
+	};
+}
 
 // ============================================================================
 // MODEL INSTANCES
@@ -24,17 +51,13 @@ const genAI = new GoogleGenerativeAI(apiKey);
  * Fast model for quick suggestions and UI helpers
  * Use for: autocomplete, text formatting, general suggestions
  */
-export const flashModel = genAI.getGenerativeModel({
-	model: "gemini-2.5-flash",
-});
+export const flashModel = createProtectedModel("gemini-2.5-flash");
 
 /**
  * Advanced model for complex reasoning (use sparingly from client)
  * Use for: complex analysis that doesn't involve PHI
  */
-export const proModel = genAI.getGenerativeModel({
-	model: "gemini-2.5-pro",
-});
+export const proModel = createProtectedModel("gemini-2.5-pro");
 
 // ============================================================================
 // CLIENT-SIDE AI HELPERS
@@ -51,6 +74,7 @@ export async function generateQuickSuggestion(
 		maxTokens?: number;
 	},
 ): Promise<string> {
+	ensureGeminiAccess();
 	const result = await flashModel.generateContent({
 		contents: [{ role: "user", parts: [{ text: prompt }] }],
 		generationConfig: {
@@ -72,6 +96,7 @@ export async function expandExerciseDescription(exerciseName: string): Promise<{
 	benefits: string[];
 	precautions: string[];
 }> {
+	ensureGeminiAccess();
 	const prompt = `Como especialista em fisioterapia, forneça uma descrição detalhada do exercício "${exerciseName}".
 
 Retorne um JSON com:
@@ -118,6 +143,7 @@ export async function generateWellnessTips(
 	topic: string,
 	count: number = 5,
 ): Promise<string[]> {
+	ensureGeminiAccess();
 	const prompt = `Gere ${count} dicas de bem-estar sobre: ${topic}.
 
 Retorne um JSON array de strings com dicas práticas e acionáveis.
@@ -152,6 +178,7 @@ export async function formatText(
 	text: string,
 	style: "professional" | "casual" | "medical" = "professional",
 ): Promise<string> {
+	ensureGeminiAccess();
 	const stylePrompts = {
 		professional: "Reformule o texto de forma profissional e clara",
 		casual: "Reformule o texto de forma amigável e acessível",
@@ -185,6 +212,7 @@ export async function getAutocompleteSuggestions(
 	context: string,
 	maxSuggestions: number = 5,
 ): Promise<string[]> {
+	ensureGeminiAccess();
 	const prompt = `Complete a seguinte entrada no contexto de ${context}:
 
 Entrada parcial: "${partial}"
@@ -227,6 +255,7 @@ export async function* streamGeneration(
 		maxTokens?: number;
 	},
 ): AsyncGenerator<string, void, unknown> {
+	ensureGeminiAccess();
 	const result = await flashModel.generateContentStream({
 		contents: [{ role: "user", parts: [{ text: prompt }] }],
 		generationConfig: {
