@@ -1,5 +1,5 @@
 import React, { useEffect, useRef } from "react";
-import { UnifiedLandmark, calculateAngle, Point2D } from "@/utils/geometry";
+import { UnifiedLandmark, calculateAngle } from "@/utils/geometry";
 
 interface BiomechanicsOverlayProps {
 	landmarks: UnifiedLandmark[];
@@ -147,7 +147,12 @@ export const BiomechanicsOverlay: React.FC<BiomechanicsOverlayProps> = ({
 	);
 };
 
-function drawSilhouette(ctx: CanvasRenderingContext2D, w: number, h: number, type: string) {
+function drawSilhouette(
+	ctx: CanvasRenderingContext2D,
+	w: number,
+	h: number,
+	_type: string,
+) {
 	ctx.save();
 	ctx.strokeStyle = "rgba(255, 255, 255, 0.3)";
 	ctx.lineWidth = 2;
@@ -157,9 +162,6 @@ function drawSilhouette(ctx: CanvasRenderingContext2D, w: number, h: number, typ
 	const centerX = w / 2;
 	const headRadius = h * 0.05;
 	const shoulderWidth = w * 0.25;
-	const torsoHeight = h * 0.3;
-	const legHeight = h * 0.4;
-
 	ctx.beginPath();
 	// Head
 	ctx.arc(centerX, h * 0.15, headRadius, 0, Math.PI * 2);

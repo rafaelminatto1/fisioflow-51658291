@@ -7,13 +7,6 @@
  * Tarefa com dados para Gantt
  */
 
-type TimestampLikeLike =
-	| string
-	| Date
-	| {
-			toDate?: () => Date;
-	  };
-
 export interface GanttTask {
 	id: string;
 	title: string;

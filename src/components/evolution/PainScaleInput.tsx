@@ -162,12 +162,6 @@ export const PainScaleInput = React.memo(function PainScaleInput({
 		[value, onChange],
 	);
 
-	// Cálculo da posição do indicador
-	const sliderPosition = useMemo(
-		() => `${(value.level / 10) * 100}%`,
-		[value.level],
-	);
-
 	// Média de dor do histórico
 	const avgPain = useMemo(() => {
 		if (history.length === 0) return null;

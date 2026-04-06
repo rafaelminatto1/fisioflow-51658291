@@ -184,7 +184,7 @@ export const NewPatientModal: React.FC<NewPatientModalProps> = ({
 		handleSubmit,
 		watch,
 		setValue,
-		formState: { errors, isSubmitting, isValid, isDirty },
+		formState: { errors, isSubmitting, isValid: _isValid, isDirty: _isDirty },
 		reset,
 		} = form;
 
