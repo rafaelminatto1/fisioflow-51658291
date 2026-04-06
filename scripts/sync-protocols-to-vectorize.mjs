@@ -16,7 +16,7 @@ const GATEWAY_ID = "fisioflow-gateway";
 const GATEWAY_TOKEN = process.env.FISIOFLOW_AI_GATEWAY_TOKEN;
 const GOOGLE_API_KEY = process.env.GOOGLE_AI_API_KEY;
 
-async function generateEmbedding(text) {
+async function _generateEmbedding(text) {
   const url = `https://gateway.ai.cloudflare.com/v1/${ACCOUNT_ID}/${GATEWAY_ID}/google-ai-studio/v1beta/models/text-embedding-004:embedContent?key=${GOOGLE_API_KEY}`;
   
   const response = await fetch(url, {

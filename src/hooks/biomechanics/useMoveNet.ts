@@ -1,4 +1,5 @@
 import { useState, useRef, useCallback, useEffect } from "react";
+import { loadTfjsPoseRuntime } from "@/lib/ai/tfjsRuntime";
 type PoseDetector = import("@tensorflow-models/pose-detection").PoseDetector;
 type Keypoint = import("@tensorflow-models/pose-detection").Keypoint;
 
@@ -42,11 +43,10 @@ export const useMoveNet = (videoRef: React.RefObject<HTMLVideoElement | null>) =
 			try {
 				if (!_initPromise) {
 					_initPromise = (async () => {
-						const [tf, poseDetection] = await Promise.all([
-							import("@tensorflow/tfjs"),
+						const [, poseDetection] = await Promise.all([
+							loadTfjsPoseRuntime(),
 							import("@tensorflow-models/pose-detection"),
 						]);
-						await tf.ready();
 						_detector = await poseDetection.createDetector(
 							poseDetection.SupportedModels.MoveNet,
 							{

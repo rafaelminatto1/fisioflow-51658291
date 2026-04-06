@@ -15,7 +15,7 @@ async function runResponsiveCheck() {
     args: ['--no-sandbox', '--disable-setuid-sandbox']
   });
 
-  const context = await browser.newContext({
+  await browser.newContext({
     viewport: null,
     userAgent: 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'
   });
@@ -148,7 +148,7 @@ async function runResponsiveCheck() {
     let layoutIssues = 0;
     let errorCount = 0;
 
-    Object.entries(report.summary).forEach(([key, value]) => {
+    Object.entries(report.summary).forEach(([_key, value]) => {
       if (value.status === 'completed') {
         totalScreenshots++;
         if (value.hasHorizontalScroll) horizontalScrollIssues++;

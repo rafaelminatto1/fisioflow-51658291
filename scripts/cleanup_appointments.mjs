@@ -5,7 +5,7 @@ const sql = neon("postgresql://neondb_owner:REDACTED-NEON-PASSWORD@ep-wandering-
 async function run() {
   console.log("Cleaning up exact duplicate appointments...");
   try {
-    const res = await sql`
+    await sql`
       DELETE FROM appointments a
       WHERE a.id IN (
         SELECT id FROM (

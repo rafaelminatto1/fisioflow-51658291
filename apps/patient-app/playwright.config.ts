@@ -83,7 +83,7 @@ export default defineConfig({
 /**
  * Criação de fixtures para testes de paciente
  */
-export const patientTestFixtures = async ({ page }: any, use: any) => {
+export const patientTestFixtures = async ({ page }: any, _use: any) => {
   return {
     page,
     auth: {

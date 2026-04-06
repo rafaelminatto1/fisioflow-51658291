@@ -50,20 +50,6 @@ async function resetTriageFilters(page: Page) {
   await page.getByPlaceholder('buscar no título/conteúdo...').fill('');
 }
 
-function cardLocatorInColumn(
-  page: Page,
-  column: 'backlog' | 'in-progress' | 'done',
-  cardTitle: string,
-  capture: SaveCapture
-) {
-  const triageColumn = page.locator(`[data-testid="triage-column-${column}"]`);
-  const pageId = capture.titleToId.get(cardTitle);
-  if (pageId) {
-    return triageColumn.locator(`[data-testid="triage-card-${pageId}"]`).first();
-  }
-  return triageColumn.locator('[data-testid^="triage-card-"]', { hasText: cardTitle }).first();
-}
-
 async function isCardVisibleInColumn(
   page: Page,
   column: 'backlog' | 'in-progress' | 'done',
@@ -141,7 +127,7 @@ async function waitForStableBoardState(
   );
 }
 
-async function createTriagePageFromTemplate(page: Page, title: string, capture: SaveCapture) {
+async function createTriagePageFromTemplate(page: Page, title: string, _capture: SaveCapture) {
   const titleInput = page.locator('input[placeholder="Título da página..."]').first();
   const quickTemplateButton = page.getByRole('button', { name: 'PRD Enxuto' }).first();
   const blockingOverlay = page.locator('div[data-state="open"][aria-hidden="true"][data-aria-hidden="true"]').first();

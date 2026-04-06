@@ -89,7 +89,7 @@ export function ClinicalTestDetailsModal({
 			const { generateClinicalTestPdf } = await import(
 				"@/utils/generateClinicalTestPdf"
 			);
-			generateClinicalTestPdf(test);
+			await generateClinicalTestPdf(test);
 			toast.success("PDF gerado com sucesso.");
 		} catch (error) {
 			logger.error("Error generating PDF", error, "ClinicalTestDetailsModal");

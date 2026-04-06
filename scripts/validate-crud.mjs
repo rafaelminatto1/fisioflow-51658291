@@ -28,14 +28,17 @@ async function getToken() {
 }
 
 async function api(method, path, token, body) {
-  const res = await fetch(`${API}${path}`, {
+  const requestInit = {
     method,
     headers: {
       'Authorization': `Bearer ${token}`,
       'Content-Type': 'application/json',
     },
-    body: body ? JSON.stringify(body) : undefined,
-  });
+  };
+  if (body && method !== 'GET') {
+    requestInit.body = JSON.stringify(body);
+  }
+  const res = await fetch(`${API}${path}`, requestInit);
   const text = await res.text();
   let json;
   try { json = JSON.parse(text); } catch { json = { raw: text }; }

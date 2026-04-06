@@ -14,7 +14,7 @@ import { useColors } from "@/hooks/useColorScheme";
 import { usePatients } from "@/hooks/usePatients";
 import { fetchApi } from "@/lib/api";
 
-const { width: W, height: H } = Dimensions.get("window");
+const { width: W } = Dimensions.get("window");
 
 // ── Tipos ──────────────────────────────────────────────────────────────────
 
@@ -39,7 +39,7 @@ const ANALYSIS_TYPES: { id: AnalysisType; label: string; icon: string; descripti
   { id: "plumb", label: "Linha de Prumo", icon: "git-commit", description: "Alinhamento vertical do centro de gravidade" },
 ];
 
-const REFERENCE_ANGLES: Record<string, { label: string; reference: number; tolerance: number }> = {
+const _REFERENCE_ANGLES: Record<string, { label: string; reference: number; tolerance: number }> = {
   joelho_flex:    { label: "Flexão do Joelho",    reference: 0,   tolerance: 5  },
   quadril_abd:    { label: "Abdução do Quadril",   reference: 0,   tolerance: 5  },
   ombro_flex:     { label: "Flexão do Ombro",      reference: 180, tolerance: 10 },
@@ -67,7 +67,7 @@ export default function BiomechanicsScreen() {
   const [mediaUri, setMediaUri] = useState<string | null>(null);
   const [frameCounter, setFrameCounter] = useState(0);
   const [gaitEvents, setGaitEvents] = useState<{ type: string; frame: number }[]>([]);
-  const [angles, setAngles] = useState<AnglePoint[]>([]);
+  const [_angles, _setAngles] = useState<AnglePoint[]>([]);
   const [result, setResult] = useState<AnalysisResult | null>(null);
   const [analyzing, setAnalyzing] = useState(false);
   const [selectedPatientId, setSelectedPatientId] = useState<string>(params.patientId as string || "");
@@ -175,7 +175,7 @@ export default function BiomechanicsScreen() {
           { joint: "Joelhos",         angle: 3,  reference: 0, status: "ok"      },
         );
       } else if (analysisType === "marcha") {
-        const events = gaitEvents.length > 0 ? gaitEvents : [
+        const _events = gaitEvents.length > 0 ? gaitEvents : [
           { type: "CONTATO", frame: 20 }, { type: "IMPULSÃO", frame: 45 }
         ];
         mockAngles.push(
@@ -204,7 +204,7 @@ export default function BiomechanicsScreen() {
 
       setResult(analysisResult);
       setScreen("report");
-    } catch (err: any) {
+    } catch {
       Alert.alert("Erro", "Não foi possível processar a análise.");
     } finally {
       setAnalyzing(false);

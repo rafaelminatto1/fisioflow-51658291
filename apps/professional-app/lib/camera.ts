@@ -120,7 +120,7 @@ export async function pickFromGallery(
  * Obtém informações sobre um arquivo de imagem
  * @param uri URI da imagem
  */
-export async function getImageInfo(uri: string): Promise<{
+export async function getImageInfo(_uri: string): Promise<{
   width: number;
   height: number;
   type?: string;
