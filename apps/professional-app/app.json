@@ -1,88 +1,72 @@
 {
-  "expo": {
-    "name": "FisioFlow Pro",
-    "slug": "vite_react_shadcn_ts",
-    "version": "1.0.0",
-    "orientation": "portrait",
-    "icon": "./assets/icon.png",
-    "scheme": "fisioflowpro",
-    "userInterfaceStyle": "automatic",
-    "newArchEnabled": true,
-    "splash": {
-      "image": "./assets/splash.png",
-      "resizeMode": "contain",
-      "backgroundColor": "#1E40AF"
-    },
-    "ios": {
-      "supportsTablet": true,
-      "bundleIdentifier": "com.fisioflow.professionals",
-      "appleTeamId": "G7FDW933SF",
-      "infoPlist": {
-        "NSHealthShareUsageDescription": "O FisioFlow utiliza dados de saúde para analisar a assimetria e estabilidade da sua marcha, permitindo um acompanhamento clínico preciso.",
-        "NSHealthUpdateUsageDescription": "O FisioFlow salva dados de evolução biomecânica no HealthKit para histórico do paciente.",
-        "NSCameraUsageDescription": "O FisioFlow precisa acessar sua câmera para capturar fotos de progresso dos pacientes e demonstrações de exercícios. Essas fotos são criptografadas e armazenadas com segurança.",
-        "NSPhotoLibraryUsageDescription": "O FisioFlow precisa acessar sua galeria de fotos para selecionar imagens existentes de pacientes e exercícios. Suas fotos são protegidas com criptografia.",
-        "NSLocationWhenInUseUsageDescription": "O FisioFlow usa sua localização para verificar check-in na clínica e confirmar presença em consultas. Sua localização nunca é compartilhada com terceiros.",
-        "NSFaceIDUsageDescription": "O FisioFlow usa Face ID para proteger o acesso aos dados sensíveis de saúde dos seus pacientes com autenticação biométrica segura."
-      },
-      "config": {
-        "usesNonExemptEncryption": false
-      }
-    },
-    "android": {
-      "adaptiveIcon": {
-        "foregroundImage": "./assets/adaptive-icon.png",
-        "backgroundColor": "#1E40AF"
-      },
-      "package": "com.fisioflow.professional",
-      "edgeToEdgeEnabled": true
-    },
-    "web": {
-      "bundler": "metro",
-      "output": "static",
-      "favicon": "./assets/favicon.png"
-    },
-    "plugins": [
-      [
-        "expo-build-properties",
-        {
-          "ios": {
-            "deploymentTarget": "16.0",
-            "developmentTeam": "G7FDW933SF"
-          }
-        }
-      ],
-      "expo-router",
-      "expo-secure-store",
-      "expo-notifications",
-      "expo-font",
-      "@react-native-community/datetimepicker",
-      [
-        "react-native-vision-camera",
-        {
-          "cameraPermissionText": "O FisioFlow precisa acessar sua câmera para capturar fotos e vídeos de progresso dos pacientes.",
-          "enableMicrophonePermission": true,
-          "microphonePermissionText": "O FisioFlow precisa acessar seu microfone para gravar vídeos de exercícios."
-        }
-      ]
-    ],
-    "experiments": {
-      "typedRoutes": true
-    },
-    "extra": {
-      "router": {
-        "origin": false
-      },
-      "eas": {
-        "projectId": "8e006901-c021-464d-bbcd-96d821ab62d0"
-      }
-    },
-    "owner": "rafaelminatto",
-    "updates": {
-      "enabled": false
-    },
-    "runtimeVersion": {
-      "policy": "appVersion"
-    }
-  }
+	"expo": {
+		"name": "FisioFlow Pro",
+		"slug": "vite_react_shadcn_ts",
+		"version": "1.0.0",
+		"orientation": "portrait",
+		"icon": "./assets/icon.png",
+		"scheme": "fisioflowpro",
+		"userInterfaceStyle": "automatic",
+		"splash": {
+			"image": "./assets/splash.png",
+			"resizeMode": "contain",
+			"backgroundColor": "#1E40AF"
+		},
+		"ios": {
+			"supportsTablet": true,
+			"bundleIdentifier": "com.fisioflow.professionals",
+			"appleTeamId": "G7FDW933SF",
+			"infoPlist": {
+				"NSHealthShareUsageDescription": "O FisioFlow utiliza dados de saúde para analisar a assimetria e estabilidade da sua marcha, permitindo um acompanhamento clínico preciso.",
+				"NSHealthUpdateUsageDescription": "O FisioFlow salva dados de evolução biomecânica no HealthKit para histórico do paciente.",
+				"NSCameraUsageDescription": "O FisioFlow precisa acessar sua câmera para capturar fotos de progresso dos pacientes e demonstrações de exercícios. Essas fotos são criptografadas e armazenadas com segurança.",
+				"NSPhotoLibraryUsageDescription": "O FisioFlow precisa acessar sua galeria de fotos para selecionar imagens existentes de pacientes e exercícios. Suas fotos são protegidas com criptografia.",
+				"NSLocationWhenInUseUsageDescription": "O FisioFlow usa sua localização para verificar check-in na clínica e confirmar presença em consultas. Sua localização nunca é compartilhada com terceiros.",
+				"NSFaceIDUsageDescription": "O FisioFlow usa Face ID para proteger o acesso aos dados sensíveis de saúde dos seus pacientes com autenticação biométrica segura."
+			},
+			"config": {
+				"usesNonExemptEncryption": false
+			}
+		},
+		"android": {
+			"adaptiveIcon": {
+				"foregroundImage": "./assets/adaptive-icon.png",
+				"backgroundColor": "#1E40AF"
+			},
+			"package": "com.fisioflow.professional",
+			"edgeToEdgeEnabled": true
+		},
+		"web": {
+			"bundler": "metro",
+			"output": "static",
+			"favicon": "./assets/favicon.png"
+		},
+		"plugins": [
+			"expo-router",
+			"expo-secure-store",
+			"expo-notifications",
+			"expo-font",
+			"@react-native-community/datetimepicker"
+		],
+		"experiments": {
+			"typedRoutes": true
+		},
+		"extra": {
+			"router": {
+				"origin": false
+			},
+			"eas": {
+				"projectId": "8e006901-c021-464d-bbcd-96d821ab62d0"
+			}
+		},
+		"owner": "rafaelminatto",
+		"updates": {
+			"enabled": true,
+			"url": "https://u.expo.dev/8e006901-c021-464d-bbcd-96d821ab62d0",
+			"enableBsdiffPatchSupport": true
+		},
+		"runtimeVersion": {
+			"policy": "appVersion"
+		}
+	}
 }

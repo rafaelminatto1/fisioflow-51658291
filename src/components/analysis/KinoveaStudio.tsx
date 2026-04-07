@@ -1,5 +1,4 @@
 import React, { useState, useRef, useEffect, useCallback, useMemo } from "react";
-import Webcam from "react-webcam";
 import { Stage, Layer, Line, Circle, Group, Text as KText } from "react-konva";
 import {
 	Activity,
@@ -10,6 +9,7 @@ import {
 	Ruler,
 	User2,
 	Cpu,
+	Upload,
 } from "lucide-react";
 
 // ─── MoveNet (TensorFlow.js) — dynamic import para não bloquear o build ───────
@@ -25,7 +25,7 @@ import {
 } from "@/components/ui/tooltip";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { loadTfjsPoseRuntime } from "@/lib/ai/tfjsRuntime";
+import { createMoveNetDetector } from "@/lib/ai/poseDetectionRuntime";
 
 interface KinoveaStudioProps {
 	onCapture?: (image: string, analysis: any) => void;
@@ -82,9 +82,10 @@ export const KinoveaStudio: React.FC<KinoveaStudioProps> = ({
 	onCapture: _onCapture,
 	patientName: _patientName,
 }) => {
-	const webcamRef = useRef<Webcam>(null);
+	const videoRef = useRef<HTMLVideoElement>(null);
 	const containerRef = useRef<HTMLDivElement>(null);
 	const stageRef = useRef<any>(null);
+	const fileInputRef = useRef<HTMLInputElement>(null);
 
 	// Tool + display state
 	const [activeTool, setActiveTool] = useState<"none" | "goniometer" | "trajectory" | "jump">("none");
@@ -92,6 +93,7 @@ export const KinoveaStudio: React.FC<KinoveaStudioProps> = ({
 	const [currentFrame, setCurrentFrame] = useState(0);
 	const [fps] = useState(240);
 	const [, _setIsPlaying] = useState(false);
+	const [videoSrc, setVideoSrc] = useState<string | null>(null);
 
 	// MoveNet state
 	const detectorRef = useRef<PoseDetector | null>(null);
@@ -105,21 +107,11 @@ export const KinoveaStudio: React.FC<KinoveaStudioProps> = ({
 		if (detectorRef.current) return;
 		setAiLoading(true);
 		try {
-			const [poseDetection] = await Promise.all([
-				loadTfjsPoseRuntime(),
-				import("@tensorflow-models/pose-detection"),
-			]);
-			detectorRef.current = await poseDetection.createDetector(
-				poseDetection.SupportedModels.MoveNet,
-				{
-					modelType: poseDetection.movenet.modelType.SINGLEPOSE_THUNDER,
-					enableSmoothing: true,
-				}
-			);
+			detectorRef.current = await createMoveNetDetector();
 			setAiEnabled(true);
 
 			const detect = async () => {
-				const video = webcamRef.current?.video;
+				const video = videoRef.current;
 				if (video && video.readyState === 4 && detectorRef.current) {
 					const poses = await detectorRef.current.estimatePoses(video);
 					if (poses[0]?.keypoints) setPoseKeypoints(poses[0].keypoints);
@@ -269,6 +261,27 @@ export const KinoveaStudio: React.FC<KinoveaStudioProps> = ({
 		return angle.toFixed(1);
 	};
 
+	const handleFileUpload = useCallback((event: React.ChangeEvent<HTMLInputElement>) => {
+		const file = event.target.files?.[0];
+		if (!file || !file.type.startsWith("video/")) return;
+		const nextUrl = URL.createObjectURL(file);
+		setVideoSrc((previous) => {
+			if (previous) URL.revokeObjectURL(previous);
+			return nextUrl;
+		});
+		setCurrentFrame(0);
+		setJumpEvents({});
+		setGaitEvents([]);
+		setTrackedTrajs([]);
+		setPoseKeypoints(null);
+	}, []);
+
+	useEffect(() => {
+		return () => {
+			if (videoSrc) URL.revokeObjectURL(videoSrc);
+		};
+	}, [videoSrc]);
+
 	return (
 		<TooltipProvider>
 			<div className="flex flex-col gap-6 h-full">
@@ -277,10 +290,44 @@ export const KinoveaStudio: React.FC<KinoveaStudioProps> = ({
 					{/* ── Video Canvas ─────────────────────────────────────── */}
 					<Card className="lg:col-span-3 relative overflow-hidden bg-black border-2 border-primary/20 rounded-3xl shadow-2xl h-[600px]">
 						<div ref={containerRef} className="relative w-full h-full">
-							<Webcam
-								ref={webcamRef}
-								audio={false}
-								className="absolute inset-0 w-full h-full object-cover opacity-60"
+							{videoSrc ? (
+								<video
+									ref={videoRef}
+									src={videoSrc}
+									className="absolute inset-0 w-full h-full object-contain opacity-70"
+									playsInline
+									muted
+									controls={false}
+								/>
+							) : (
+								<div className="absolute inset-0 flex flex-col items-center justify-center gap-4 bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950 text-center text-white/80 px-6">
+									<div className="rounded-2xl border border-white/10 bg-white/5 p-4">
+										<Upload className="h-10 w-10" />
+									</div>
+									<div className="space-y-1">
+										<p className="text-sm font-black uppercase tracking-[0.2em] text-white">
+											Upload de video para analise
+										</p>
+										<p className="text-sm text-white/60">
+											Envie um video gravado para usar goniometro, trajetoria, salto e eventos da marcha.
+										</p>
+									</div>
+									<Button
+										type="button"
+										onClick={() => fileInputRef.current?.click()}
+										className="rounded-xl font-black"
+									>
+										<Upload className="mr-2 h-4 w-4" />
+										Selecionar video
+									</Button>
+								</div>
+							)}
+							<input
+								ref={fileInputRef}
+								type="file"
+								accept="video/*"
+								className="hidden"
+								onChange={handleFileUpload}
 							/>
 							<Stage width={800} height={600} className="absolute inset-0 z-10" ref={stageRef} onClick={handleCanvasClick}>
 								<Layer>
@@ -371,7 +418,7 @@ export const KinoveaStudio: React.FC<KinoveaStudioProps> = ({
 							<Button
 								variant={aiEnabled ? "default" : "ghost"}
 								size="sm"
-								disabled={aiLoading}
+								disabled={aiLoading || !videoSrc}
 								onClick={() => aiEnabled ? stopMoveNet() : startMoveNet()}
 								className={`rounded-xl gap-2 text-xs font-black ${aiEnabled ? "bg-green-600 hover:bg-green-700" : ""}`}
 							>
@@ -403,6 +450,7 @@ export const KinoveaStudio: React.FC<KinoveaStudioProps> = ({
 							<div className="h-6 w-px bg-white/20 mx-1" />
 							<div className="flex gap-1 bg-muted/20 p-1 rounded-lg">
 								<Button size="icon" variant="ghost" className="h-8 w-8 text-white"
+									disabled={!videoSrc}
 									onClick={() => setCurrentFrame(f => Math.max(0, f - 1))}>
 									<ChevronLeft className="h-4 w-4" />
 								</Button>
@@ -410,6 +458,7 @@ export const KinoveaStudio: React.FC<KinoveaStudioProps> = ({
 									{currentFrame}
 								</span>
 								<Button size="icon" variant="ghost" className="h-8 w-8 text-white"
+									disabled={!videoSrc}
 									onClick={() => setCurrentFrame(f => f + 1)}>
 									<ChevronRight className="h-4 w-4" />
 								</Button>
