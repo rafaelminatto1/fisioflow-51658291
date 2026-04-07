@@ -1,0 +1,13 @@
+=== RELATÓRIO DE VALIDAÇÃO DE IMAGENS DE EXERCÍCIOS ===
+Data/Hora: 07/04/2026, 17:44:46
+
+RESUMO:
+- Total de exercícios: 329
+- Com imagens funcionando: 289
+- Com imagens quebradas: 0
+- Sem imagens: 40
+
+FORMATOS:
+- AVIF: 209
+- PNG: 0
+- WebP: 0

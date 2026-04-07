@@ -393,9 +393,16 @@ export default defineConfig(({ mode }) => {
 			// Módulos IIFE/UMD: não pré-bundlar (side-effect imports no código-fonte)
 			exclude: ["@mediapipe/drawing_utils", "@mediapipe/pose"],
 		},
+		envDir: "../../",
 		server: {
 			port: 5173,
 			strictPort: false,
+			proxy: {
+				"/api": {
+					target: "http://localhost:8787",
+					changeOrigin: true,
+				},
+			},
 			forwardConsole: process.env.VITE_FORWARD_CONSOLE === "true",
 			fs: {
 				allow: [repoRoot],

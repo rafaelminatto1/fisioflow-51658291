@@ -4,7 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Slider } from "@/components/ui/slider";
 import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
+import { MagicTextarea } from "@/components/ai/MagicTextarea";
 import { Activity } from "lucide-react";
 
 interface VasFormProps {
@@ -139,12 +139,13 @@ export function VasForm({ onSave, onCancel }: VasFormProps) {
 
 				<div className="space-y-1.5">
 					<Label htmlFor="vas-notes">Observações (opcional)</Label>
-					<Textarea
+					<MagicTextarea
 						id="vas-notes"
 						placeholder="Localização da dor, fatores agravantes, etc."
 						value={notes}
-						onChange={(e) => setNotes(e.target.value)}
+						onValueChange={(val) => setNotes(val)}
 						rows={2}
+						className="bg-muted/30 border-slate-200 focus:bg-background transition-all"
 					/>
 				</div>
 

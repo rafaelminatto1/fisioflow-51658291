@@ -1,0 +1,3292 @@
+[
+  {
+    "uuid": "d0f4adf7-5f02-4578-a120-e150fe0fc653",
+    "name": "Mobilização de Tornozelo em DF",
+    "imageUrl": "https://media.moocafisio.com.br/exercises/d0f4adf7-5f02-4578-a120-e150fe0fc653/image.avif",
+    "thumbnailUrl": "https://fisioflow-media.r2.dev/exercises/d0f4adf7-5f02-4578-a120-e150fe0fc653/thumbnail.avif",
+    "imageStatus": 200,
+    "thumbnailStatus": 500,
+    "imageFormat": "avif",
+    "thumbnailFormat": "avif"
+  },
+  {
+    "uuid": "81b3cfe4-abd8-4bf1-a338-fe583aa407ed",
+    "name": "Rotação Externa de Ombro com Thera-Band",
+    "imageUrl": "https://i.ytimg.com/vi/rSh83N6Rn1s/hq720.jpg",
+    "thumbnailUrl": null,
+    "imageStatus": 200,
+    "thumbnailStatus": 0,
+    "imageFormat": "jpg",
+    "thumbnailFormat": null
+  },
+  {
+    "uuid": "663e8b11-b463-4ad8-8280-3797c030d378",
+    "name": "Elevação de Perna Reta (SLR)",
+    "imageUrl": "https://i.ytimg.com/vi/lqSvgCmOR9Y/hq720.jpg",
+    "thumbnailUrl": null,
+    "imageStatus": 200,
+    "thumbnailStatus": 0,
+    "imageFormat": "jpg",
+    "thumbnailFormat": null
+  },
+  {
+    "uuid": "e950b101-d893-4f23-aa12-be9c8094fce9",
+    "name": "Extensão de Joelho na Cadeira",
+    "imageUrl": "https://i.ytimg.com/vi/W2Xl74jF5wM/hq720.jpg",
+    "thumbnailUrl": null,
+    "imageStatus": 200,
+    "thumbnailStatus": 0,
+    "imageFormat": "jpg",
+    "thumbnailFormat": null
+  },
+  {
+    "uuid": "00bd4bee-f76e-4787-b5c0-d2de83f91098",
+    "name": "Exercício Pêndulo de Codman",
+    "imageUrl": "https://i.ytimg.com/vi/xmrJPPs80XA/hq720_2.jpg",
+    "thumbnailUrl": null,
+    "imageStatus": 200,
+    "thumbnailStatus": 0,
+    "imageFormat": "jpg",
+    "thumbnailFormat": null
+  },
+  {
+    "uuid": "e589794c-6474-4982-bdb5-29724af5bbf2",
+    "name": "Fortalecimento de Glúteo",
+    "imageUrl": "https://media.moocafisio.com.br/exercises/e589794c-6474-4982-bdb5-29724af5bbf2/image.avif",
+    "thumbnailUrl": "https://fisioflow-media.r2.dev/exercises/e589794c-6474-4982-bdb5-29724af5bbf2/thumbnail.avif",
+    "imageStatus": 200,
+    "thumbnailStatus": 500,
+    "imageFormat": "avif",
+    "thumbnailFormat": "avif"
+  },
+  {
+    "uuid": "bf4208a8-e581-42a2-8ada-8c58cf610e70",
+    "name": "Oposição de Dedos",
+    "imageUrl": "https://media.moocafisio.com.br/exercises/bf4208a8-e581-42a2-8ada-8c58cf610e70/image.avif",
+    "thumbnailUrl": "https://fisioflow-media.r2.dev/exercises/bf4208a8-e581-42a2-8ada-8c58cf610e70/thumbnail.avif",
+    "imageStatus": 200,
+    "thumbnailStatus": 500,
+    "imageFormat": "avif",
+    "thumbnailFormat": "avif"
+  },
+  {
+    "uuid": "3f1aba01-9a6b-4569-b152-19ec1164cdfd",
+    "name": "Depth Jump (Salto Profundo)",
+    "imageUrl": "https://media.moocafisio.com.br/exercises/3f1aba01-9a6b-4569-b152-19ec1164cdfd/image.avif",
+    "thumbnailUrl": "https://fisioflow-media.r2.dev/exercises/3f1aba01-9a6b-4569-b152-19ec1164cdfd/thumbnail.avif",
+    "imageStatus": 200,
+    "thumbnailStatus": 500,
+    "imageFormat": "avif",
+    "thumbnailFormat": "avif"
+  },
+  {
+    "uuid": "15068005-3448-4b29-aa5e-7a596d7929df",
+    "name": "Saltos Laterais (Skater Hops)",
+    "imageUrl": "https://media.moocafisio.com.br/exercises/15068005-3448-4b29-aa5e-7a596d7929df/image.avif",
+    "thumbnailUrl": "https://fisioflow-media.r2.dev/exercises/15068005-3448-4b29-aa5e-7a596d7929df/thumbnail.avif",
+    "imageStatus": 200,
+    "thumbnailStatus": 500,
+    "imageFormat": "avif",
+    "thumbnailFormat": "avif"
+  },
+  {
+    "uuid": "9e380020-c4fd-4365-8473-c61ae50d9629",
+    "name": "Cat-Camel (Mobilização Lombar)",
+    "imageUrl": "https://i.ytimg.com/vi/OQJAHhHwodc/hq720.jpg",
+    "thumbnailUrl": null,
+    "imageStatus": 200,
+    "thumbnailStatus": 0,
+    "imageFormat": "jpg",
+    "thumbnailFormat": null
+  },
+  {
+    "uuid": "a5068f85-cf46-41c9-b1b0-e553f9fbe83e",
+    "name": "Clamshell (Concha do Mar)",
+    "imageUrl": "https://i.ytimg.com/vi/39vuP5xozsI/hq720.jpg",
+    "thumbnailUrl": null,
+    "imageStatus": 200,
+    "thumbnailStatus": 0,
+    "imageFormat": "jpg",
+    "thumbnailFormat": null
+  },
+  {
+    "uuid": "f42beb4a-d66a-4024-b45d-7727b5d69352",
+    "name": "Abdução de Quadril em Pé com Thera-Band",
+    "imageUrl": "https://i.ytimg.com/vi/NCkFuy2zdqw/hqdefault.jpg",
+    "thumbnailUrl": null,
+    "imageStatus": 200,
+    "thumbnailStatus": 0,
+    "imageFormat": "jpg",
+    "thumbnailFormat": null
+  },
+  {
+    "uuid": "aaa6c339-97e4-4f04-a2c0-047e8c00e5fe",
+    "name": "Agachamento com Suporte",
+    "imageUrl": "https://i.ytimg.com/vi/iGLzCCZr_Xw/hq720_2.jpg",
+    "thumbnailUrl": null,
+    "imageStatus": 200,
+    "thumbnailStatus": 0,
+    "imageFormat": "jpg",
+    "thumbnailFormat": null
+  },
+  {
+    "uuid": "44f17d93-fc49-4090-8d75-eaeb6e0b6b6d",
+    "name": "Espirometria Incentivada",
+    "imageUrl": "https://media.moocafisio.com.br/exercises/44f17d93-fc49-4090-8d75-eaeb6e0b6b6d/image.avif",
+    "thumbnailUrl": "https://fisioflow-media.r2.dev/exercises/44f17d93-fc49-4090-8d75-eaeb6e0b6b6d/thumbnail.avif",
+    "imageStatus": 200,
+    "thumbnailStatus": 500,
+    "imageFormat": "avif",
+    "thumbnailFormat": "avif"
+  },
+  {
+    "uuid": "a333405d-3745-47fd-89e6-f80e1553526d",
+    "name": "Scorpion Stretch",
+    "imageUrl": "https://media.moocafisio.com.br/exercises/a333405d-3745-47fd-89e6-f80e1553526d/image.avif",
+    "thumbnailUrl": "https://fisioflow-media.r2.dev/exercises/a333405d-3745-47fd-89e6-f80e1553526d/thumbnail.avif",
+    "imageStatus": 200,
+    "thumbnailStatus": 500,
+    "imageFormat": "avif",
+    "thumbnailFormat": "avif"
+  },
+  {
+    "uuid": "952feafb-55e0-4fc6-90b6-1d380bf26bcf",
+    "name": "Prancha Abdominal",
+    "imageUrl": "https://media.moocafisio.com.br/exercises/952feafb-55e0-4fc6-90b6-1d380bf26bcf/image.avif",
+    "thumbnailUrl": "https://fisioflow-media.r2.dev/exercises/952feafb-55e0-4fc6-90b6-1d380bf26bcf/thumbnail.avif",
+    "imageStatus": 200,
+    "thumbnailStatus": 500,
+    "imageFormat": "avif",
+    "thumbnailFormat": "avif"
+  },
+  {
+    "uuid": "8e3d37be-eb88-4a4a-8891-6fb0ee9f0ac3",
+    "name": "Alongamento de Tríceps por Trás",
+    "imageUrl": "https://media.fisioflow.com.br/exercises/8e3d37be-eb88-4a4a-8891-6fb0ee9f0ac3/image.avif",
+    "thumbnailUrl": "https://fisioflow-media.r2.dev/exercises/8e3d37be-eb88-4a4a-8891-6fb0ee9f0ac3/thumbnail.avif",
+    "imageStatus": -1,
+    "thumbnailStatus": 500,
+    "imageFormat": null,
+    "thumbnailFormat": "avif"
+  },
+  {
+    "uuid": "30d75609-e612-4cb8-a9f8-018e6156a2db",
+    "name": "Tandem Walk (Caminhada em Tandem)",
+    "imageUrl": "https://media.moocafisio.com.br/exercises/30d75609-e612-4cb8-a9f8-018e6156a2db/image.avif",
+    "thumbnailUrl": "https://fisioflow-media.r2.dev/exercises/30d75609-e612-4cb8-a9f8-018e6156a2db/thumbnail.avif",
+    "imageStatus": 200,
+    "thumbnailStatus": 500,
+    "imageFormat": "avif",
+    "thumbnailFormat": "avif"
+  },
+  {
+    "uuid": "eff0c28a-e0ac-4611-abc7-cd4e6d1174db",
+    "name": "Alongamento de Quadríceps com Toalha",
+    "imageUrl": "https://media.moocafisio.com.br/exercises/eff0c28a-e0ac-4611-abc7-cd4e6d1174db/image.avif",
+    "thumbnailUrl": "https://fisioflow-media.r2.dev/exercises/eff0c28a-e0ac-4611-abc7-cd4e6d1174db/thumbnail.avif",
+    "imageStatus": 200,
+    "thumbnailStatus": 500,
+    "imageFormat": "avif",
+    "thumbnailFormat": "avif"
+  },
+  {
+    "uuid": "27851959-7ca7-4df8-8374-ac40eabc100b",
+    "name": "Fortalecimento de Glúteo",
+    "imageUrl": "https://media.moocafisio.com.br/exercises/27851959-7ca7-4df8-8374-ac40eabc100b/image.avif",
+    "thumbnailUrl": "https://fisioflow-media.r2.dev/exercises/27851959-7ca7-4df8-8374-ac40eabc100b/thumbnail.avif",
+    "imageStatus": 200,
+    "thumbnailStatus": 500,
+    "imageFormat": "avif",
+    "thumbnailFormat": "avif"
+  },
+  {
+    "uuid": "3b2a0999-9ba6-4f4f-a037-bfb94551622f",
+    "name": "Face Pull",
+    "imageUrl": "https://media.fisioflow.com.br/exercises/3b2a0999-9ba6-4f4f-a037-bfb94551622f/image.avif",
+    "thumbnailUrl": "https://fisioflow-media.r2.dev/exercises/3b2a0999-9ba6-4f4f-a037-bfb94551622f/thumbnail.avif",
+    "imageStatus": -1,
+    "thumbnailStatus": 500,
+    "imageFormat": null,
+    "thumbnailFormat": "avif"
+  },
+  {
+    "uuid": "ccb7432a-6bb0-403d-8db5-fa1cb03f00ff",
+    "name": "Ponte Unilateral",
+    "imageUrl": "https://media.fisioflow.com.br/exercises/ccb7432a-6bb0-403d-8db5-fa1cb03f00ff/image.avif",
+    "thumbnailUrl": "https://fisioflow-media.r2.dev/exercises/ccb7432a-6bb0-403d-8db5-fa1cb03f00ff/thumbnail.avif",
+    "imageStatus": -1,
+    "thumbnailStatus": 500,
+    "imageFormat": null,
+    "thumbnailFormat": "avif"
+  },
+  {
+    "uuid": "f9b5eb0c-34f0-47ae-a5a4-c0f723a86cea",
+    "name": "Respiração com Labios Franzidos (Pursed Lip)",
+    "imageUrl": "https://media.fisioflow.com.br/exercises/f9b5eb0c-34f0-47ae-a5a4-c0f723a86cea/image.avif",
+    "thumbnailUrl": "https://fisioflow-media.r2.dev/exercises/f9b5eb0c-34f0-47ae-a5a4-c0f723a86cea/thumbnail.avif",
+    "imageStatus": -1,
+    "thumbnailStatus": 500,
+    "imageFormat": null,
+    "thumbnailFormat": "avif"
+  },
+  {
+    "uuid": "4ba7ec7b-8948-413e-8559-490dff6ae989",
+    "name": "4 Apoios (Four Point kneeling)",
+    "imageUrl": "https://media.moocafisio.com.br/exercises/4ba7ec7b-8948-413e-8559-490dff6ae989/image.avif",
+    "thumbnailUrl": "https://fisioflow-media.r2.dev/exercises/4ba7ec7b-8948-413e-8559-490dff6ae989/thumbnail.avif",
+    "imageStatus": 200,
+    "thumbnailStatus": 500,
+    "imageFormat": "avif",
+    "thumbnailFormat": "avif"
+  },
+  {
+    "uuid": "dd153c41-4535-4966-ac0a-7f457e90b0ab",
+    "name": "Ankle Pumps (Bombinha)",
+    "imageUrl": null,
+    "thumbnailUrl": null,
+    "imageStatus": 0,
+    "thumbnailStatus": 0,
+    "imageFormat": null,
+    "thumbnailFormat": null
+  },
+  {
+    "uuid": "1475a829-62a0-4c98-8b23-2f62672f7e50",
+    "name": "Mobilidade de Coluna",
+    "imageUrl": "https://media.fisioflow.com.br/exercises/1475a829-62a0-4c98-8b23-2f62672f7e50/image.avif",
+    "thumbnailUrl": "https://fisioflow-media.r2.dev/exercises/1475a829-62a0-4c98-8b23-2f62672f7e50/thumbnail.avif",
+    "imageStatus": -1,
+    "thumbnailStatus": 500,
+    "imageFormat": null,
+    "thumbnailFormat": "avif"
+  },
+  {
+    "uuid": "89fe1888-aa91-4dbb-9372-64b702e67aa0",
+    "name": "Pallof Press",
+    "imageUrl": "https://media.fisioflow.com.br/exercises/89fe1888-aa91-4dbb-9372-64b702e67aa0/image.avif",
+    "thumbnailUrl": "https://fisioflow-media.r2.dev/exercises/89fe1888-aa91-4dbb-9372-64b702e67aa0/thumbnail.avif",
+    "imageStatus": -1,
+    "thumbnailStatus": 500,
+    "imageFormat": null,
+    "thumbnailFormat": "avif"
+  },
+  {
+    "uuid": "e05cb78b-bcaa-41d0-a9e6-6fe6db307b51",
+    "name": "Bird-dog (Cachorro e Pássaro)",
+    "imageUrl": "https://media.fisioflow.com.br/exercises/e05cb78b-bcaa-41d0-a9e6-6fe6db307b51/image.avif",
+    "thumbnailUrl": "https://fisioflow-media.r2.dev/exercises/e05cb78b-bcaa-41d0-a9e6-6fe6db307b51/thumbnail.avif",
+    "imageStatus": -1,
+    "thumbnailStatus": 500,
+    "imageFormat": null,
+    "thumbnailFormat": "avif"
+  },
+  {
+    "uuid": "e33feda9-054e-4da4-9dda-1e464b59292c",
+    "name": "Extensão de Ombro em Pronação",
+    "imageUrl": "https://media.fisioflow.com.br/exercises/e33feda9-054e-4da4-9dda-1e464b59292c/image.avif",
+    "thumbnailUrl": "https://fisioflow-media.r2.dev/exercises/e33feda9-054e-4da4-9dda-1e464b59292c/thumbnail.avif",
+    "imageStatus": -1,
+    "thumbnailStatus": 500,
+    "imageFormat": null,
+    "thumbnailFormat": "avif"
+  },
+  {
+    "uuid": "5637ceb1-b46e-4d29-9bc9-d8a3afbe4ff6",
+    "name": "Levantamento Terra",
+    "imageUrl": "https://media.fisioflow.com.br/exercises/5637ceb1-b46e-4d29-9bc9-d8a3afbe4ff6/image.avif",
+    "thumbnailUrl": "https://fisioflow-media.r2.dev/exercises/5637ceb1-b46e-4d29-9bc9-d8a3afbe4ff6/thumbnail.avif",
+    "imageStatus": -1,
+    "thumbnailStatus": 500,
+    "imageFormat": null,
+    "thumbnailFormat": "avif"
+  },
+  {
+    "uuid": "3f5ce2d6-5a7e-4bc2-b048-cd2144afee7b",
+    "name": "Agachamento Livre",
+    "imageUrl": "https://media.fisioflow.com.br/exercises/3f5ce2d6-5a7e-4bc2-b048-cd2144afee7b/image.avif",
+    "thumbnailUrl": "https://fisioflow-media.r2.dev/exercises/3f5ce2d6-5a7e-4bc2-b048-cd2144afee7b/thumbnail.avif",
+    "imageStatus": -1,
+    "thumbnailStatus": 500,
+    "imageFormat": null,
+    "thumbnailFormat": "avif"
+  },
+  {
+    "uuid": "46065bd9-070c-48c0-89c2-74dcab4de78e",
+    "name": "Alongamento de Panturrilha Sentado (Sóleo)",
+    "imageUrl": "https://media.fisioflow.com.br/exercises/46065bd9-070c-48c0-89c2-74dcab4de78e/image.avif",
+    "thumbnailUrl": "https://fisioflow-media.r2.dev/exercises/46065bd9-070c-48c0-89c2-74dcab4de78e/thumbnail.avif",
+    "imageStatus": -1,
+    "thumbnailStatus": 500,
+    "imageFormat": null,
+    "thumbnailFormat": "avif"
+  },
+  {
+    "uuid": "26b81426-b061-4050-a7d2-a77eb62208c4",
+    "name": "Ponte de Glúteo Unilateral",
+    "imageUrl": "https://media.fisioflow.com.br/exercises/26b81426-b061-4050-a7d2-a77eb62208c4/image.avif",
+    "thumbnailUrl": "https://fisioflow-media.r2.dev/exercises/26b81426-b061-4050-a7d2-a77eb62208c4/thumbnail.avif",
+    "imageStatus": -1,
+    "thumbnailStatus": 500,
+    "imageFormat": null,
+    "thumbnailFormat": "avif"
+  },
+  {
+    "uuid": "54a5abf8-892a-4ee7-a1ba-860b956e7eb7",
+    "name": "Remada Curvada (Barbell Row)",
+    "imageUrl": "https://media.fisioflow.com.br/exercises/54a5abf8-892a-4ee7-a1ba-860b956e7eb7/image.avif",
+    "thumbnailUrl": "https://fisioflow-media.r2.dev/exercises/54a5abf8-892a-4ee7-a1ba-860b956e7eb7/thumbnail.avif",
+    "imageStatus": -1,
+    "thumbnailStatus": 500,
+    "imageFormat": null,
+    "thumbnailFormat": "avif"
+  },
+  {
+    "uuid": "24d82dd7-2f73-46db-aece-ded80cf13a46",
+    "name": "Ponte de Glúteo",
+    "imageUrl": "https://media.moocafisio.com.br/exercises/24d82dd7-2f73-46db-aece-ded80cf13a46/image.avif",
+    "thumbnailUrl": "https://fisioflow-media.r2.dev/exercises/24d82dd7-2f73-46db-aece-ded80cf13a46/thumbnail.avif",
+    "imageStatus": 200,
+    "thumbnailStatus": 500,
+    "imageFormat": "avif",
+    "thumbnailFormat": "avif"
+  },
+  {
+    "uuid": "81b9bb61-e0b5-4736-88a6-2a635d9a908b",
+    "name": "Alongamento de Panturrilha na Parede",
+    "imageUrl": "https://media.fisioflow.com.br/exercises/81b9bb61-e0b5-4736-88a6-2a635d9a908b/image.avif",
+    "thumbnailUrl": "https://fisioflow-media.r2.dev/exercises/81b9bb61-e0b5-4736-88a6-2a635d9a908b/thumbnail.avif",
+    "imageStatus": -1,
+    "thumbnailStatus": 500,
+    "imageFormat": null,
+    "thumbnailFormat": "avif"
+  },
+  {
+    "uuid": "6e6fa606-3248-4a8f-a015-ae0026fae84a",
+    "name": "Equilíbrio em Disco Instável",
+    "imageUrl": "https://media.moocafisio.com.br/exercises/6e6fa606-3248-4a8f-a015-ae0026fae84a/image.avif",
+    "thumbnailUrl": "https://fisioflow-media.r2.dev/exercises/6e6fa606-3248-4a8f-a015-ae0026fae84a/thumbnail.avif",
+    "imageStatus": 200,
+    "thumbnailStatus": 500,
+    "imageFormat": "avif",
+    "thumbnailFormat": "avif"
+  },
+  {
+    "uuid": "a644a383-289e-4fb9-9a1b-3f1513b29872",
+    "name": "Mobilização Cervical com Toalha",
+    "imageUrl": "https://media.fisioflow.com.br/exercises/a644a383-289e-4fb9-9a1b-3f1513b29872/image.avif",
+    "thumbnailUrl": "https://fisioflow-media.r2.dev/exercises/a644a383-289e-4fb9-9a1b-3f1513b29872/thumbnail.avif",
+    "imageStatus": -1,
+    "thumbnailStatus": 500,
+    "imageFormat": null,
+    "thumbnailFormat": "avif"
+  },
+  {
+    "uuid": "e93d18c5-6f31-4f4b-b76f-da556d762cb4",
+    "name": "Isometria Cervical (Extensão)",
+    "imageUrl": "https://media.fisioflow.com.br/exercises/e93d18c5-6f31-4f4b-b76f-da556d762cb4/image.avif",
+    "thumbnailUrl": "https://fisioflow-media.r2.dev/exercises/e93d18c5-6f31-4f4b-b76f-da556d762cb4/thumbnail.avif",
+    "imageStatus": -1,
+    "thumbnailStatus": 500,
+    "imageFormat": null,
+    "thumbnailFormat": "avif"
+  },
+  {
+    "uuid": "0c2f993e-0331-400f-8c6b-3ca1c765c5fe",
+    "name": "Abdominal Crupeado",
+    "imageUrl": "https://media.moocafisio.com.br/exercises/0c2f993e-0331-400f-8c6b-3ca1c765c5fe/image.avif",
+    "thumbnailUrl": "https://fisioflow-media.r2.dev/exercises/0c2f993e-0331-400f-8c6b-3ca1c765c5fe/thumbnail.avif",
+    "imageStatus": 200,
+    "thumbnailStatus": 500,
+    "imageFormat": "avif",
+    "thumbnailFormat": "avif"
+  },
+  {
+    "uuid": "d6e3b771-45fe-4dfe-ac60-3f851e05dbf4",
+    "name": "Alongamento de Sóleo na Parede",
+    "imageUrl": "https://media.moocafisio.com.br/exercises/d6e3b771-45fe-4dfe-ac60-3f851e05dbf4/image.avif",
+    "thumbnailUrl": "https://fisioflow-media.r2.dev/exercises/d6e3b771-45fe-4dfe-ac60-3f851e05dbf4/thumbnail.avif",
+    "imageStatus": 200,
+    "thumbnailStatus": 500,
+    "imageFormat": "avif",
+    "thumbnailFormat": "avif"
+  },
+  {
+    "uuid": "3772c13d-9a3f-4938-96e4-b33d725e4346",
+    "name": "Inversão de Tornozelo com Faixa",
+    "imageUrl": "https://media.fisioflow.com.br/exercises/3772c13d-9a3f-4938-96e4-b33d725e4346/image.avif",
+    "thumbnailUrl": "https://fisioflow-media.r2.dev/exercises/3772c13d-9a3f-4938-96e4-b33d725e4346/thumbnail.avif",
+    "imageStatus": -1,
+    "thumbnailStatus": 500,
+    "imageFormat": null,
+    "thumbnailFormat": "avif"
+  },
+  {
+    "uuid": "5ce76038-76ef-43d6-8455-60290a618ff0",
+    "name": "Alongamento de Glúteo Supino",
+    "imageUrl": "https://media.fisioflow.com.br/exercises/5ce76038-76ef-43d6-8455-60290a618ff0/image.avif",
+    "thumbnailUrl": "https://fisioflow-media.r2.dev/exercises/5ce76038-76ef-43d6-8455-60290a618ff0/thumbnail.avif",
+    "imageStatus": -1,
+    "thumbnailStatus": 500,
+    "imageFormat": null,
+    "thumbnailFormat": "avif"
+  },
+  {
+    "uuid": "323149ca-b32d-4e3d-a144-4fe8a5cf3c18",
+    "name": "Flexão de Cotovelo (Bicep Curl)",
+    "imageUrl": "https://media.moocafisio.com.br/exercises/323149ca-b32d-4e3d-a144-4fe8a5cf3c18/image.avif",
+    "thumbnailUrl": "https://fisioflow-media.r2.dev/exercises/323149ca-b32d-4e3d-a144-4fe8a5cf3c18/thumbnail.avif",
+    "imageStatus": 200,
+    "thumbnailStatus": 500,
+    "imageFormat": "avif",
+    "thumbnailFormat": "avif"
+  },
+  {
+    "uuid": "5638e403-b106-4451-8b98-f14c049447d2",
+    "name": "Thomas Test Stretch",
+    "imageUrl": "https://media.moocafisio.com.br/exercises/5638e403-b106-4451-8b98-f14c049447d2/image.avif",
+    "thumbnailUrl": "https://fisioflow-media.r2.dev/exercises/5638e403-b106-4451-8b98-f14c049447d2/thumbnail.avif",
+    "imageStatus": 200,
+    "thumbnailStatus": 500,
+    "imageFormat": "avif",
+    "thumbnailFormat": "avif"
+  },
+  {
+    "uuid": "868bd11e-5352-4eca-882d-bf1faf4cee0c",
+    "name": "V-Up (Abdominal Canivete)",
+    "imageUrl": "https://media.moocafisio.com.br/exercises/868bd11e-5352-4eca-882d-bf1faf4cee0c/image.avif",
+    "thumbnailUrl": "https://fisioflow-media.r2.dev/exercises/868bd11e-5352-4eca-882d-bf1faf4cee0c/thumbnail.avif",
+    "imageStatus": 200,
+    "thumbnailStatus": 500,
+    "imageFormat": "avif",
+    "thumbnailFormat": "avif"
+  },
+  {
+    "uuid": "68efc336-a02f-4fb8-9f05-00afb97207c3",
+    "name": "Superman",
+    "imageUrl": "https://media.moocafisio.com.br/exercises/68efc336-a02f-4fb8-9f05-00afb97207c3/image.avif",
+    "thumbnailUrl": "https://fisioflow-media.r2.dev/exercises/68efc336-a02f-4fb8-9f05-00afb97207c3/thumbnail.avif",
+    "imageStatus": 200,
+    "thumbnailStatus": 500,
+    "imageFormat": "avif",
+    "thumbnailFormat": "avif"
+  },
+  {
+    "uuid": "f319c5f4-888f-4858-ab9e-1efd4e9e7b42",
+    "name": "Apoio Unipodal",
+    "imageUrl": "https://media.moocafisio.com.br/exercises/f319c5f4-888f-4858-ab9e-1efd4e9e7b42/image.avif",
+    "thumbnailUrl": "https://fisioflow-media.r2.dev/exercises/f319c5f4-888f-4858-ab9e-1efd4e9e7b42/thumbnail.avif",
+    "imageStatus": 200,
+    "thumbnailStatus": 500,
+    "imageFormat": "avif",
+    "thumbnailFormat": "avif"
+  },
+  {
+    "uuid": "25814c99-f438-48f3-84ed-8cb49d2fbbc9",
+    "name": "Gato-Camelo",
+    "imageUrl": "https://media.moocafisio.com.br/exercises/25814c99-f438-48f3-84ed-8cb49d2fbbc9/image.avif",
+    "thumbnailUrl": "https://fisioflow-media.r2.dev/exercises/25814c99-f438-48f3-84ed-8cb49d2fbbc9/thumbnail.avif",
+    "imageStatus": 200,
+    "thumbnailStatus": 500,
+    "imageFormat": "avif",
+    "thumbnailFormat": "avif"
+  },
+  {
+    "uuid": "2085e49d-db48-47a9-90cc-45db7c33709d",
+    "name": "Monster Walk (Caminhada Monster)",
+    "imageUrl": "https://media.moocafisio.com.br/exercises/2085e49d-db48-47a9-90cc-45db7c33709d/image.avif",
+    "thumbnailUrl": "https://fisioflow-media.r2.dev/exercises/2085e49d-db48-47a9-90cc-45db7c33709d/thumbnail.avif",
+    "imageStatus": 200,
+    "thumbnailStatus": 500,
+    "imageFormat": "avif",
+    "thumbnailFormat": "avif"
+  },
+  {
+    "uuid": "ca9a5c32-3e82-4e8a-9a21-371e484d80eb",
+    "name": "Alongamento de Rombóides na Parede",
+    "imageUrl": "https://media.moocafisio.com.br/exercises/ca9a5c32-3e82-4e8a-9a21-371e484d80eb/image.avif",
+    "thumbnailUrl": "https://fisioflow-media.r2.dev/exercises/ca9a5c32-3e82-4e8a-9a21-371e484d80eb/thumbnail.avif",
+    "imageStatus": 200,
+    "thumbnailStatus": 500,
+    "imageFormat": "avif",
+    "thumbnailFormat": "avif"
+  },
+  {
+    "uuid": "0513186d-aaca-4001-8047-2e9cbed2f213",
+    "name": "Propriocepção em Disco",
+    "imageUrl": "https://media.moocafisio.com.br/exercises/0513186d-aaca-4001-8047-2e9cbed2f213/image.avif",
+    "thumbnailUrl": "https://fisioflow-media.r2.dev/exercises/0513186d-aaca-4001-8047-2e9cbed2f213/thumbnail.avif",
+    "imageStatus": 200,
+    "thumbnailStatus": 500,
+    "imageFormat": "avif",
+    "thumbnailFormat": "avif"
+  },
+  {
+    "uuid": "20a987b4-9d25-468a-9e25-15cd4369a2e0",
+    "name": "Alongamento de Quadríceps",
+    "imageUrl": "https://media.moocafisio.com.br/exercises/20a987b4-9d25-468a-9e25-15cd4369a2e0/image.avif",
+    "thumbnailUrl": "https://fisioflow-media.r2.dev/exercises/20a987b4-9d25-468a-9e25-15cd4369a2e0/thumbnail.avif",
+    "imageStatus": 200,
+    "thumbnailStatus": 500,
+    "imageFormat": "avif",
+    "thumbnailFormat": "avif"
+  },
+  {
+    "uuid": "a35d481b-5764-43ae-ac66-3f3500fb061c",
+    "name": "Agachamento Parelde (Wall Sit)",
+    "imageUrl": "https://media.moocafisio.com.br/exercises/a35d481b-5764-43ae-ac66-3f3500fb061c/image.avif",
+    "thumbnailUrl": "https://fisioflow-media.r2.dev/exercises/a35d481b-5764-43ae-ac66-3f3500fb061c/thumbnail.avif",
+    "imageStatus": 200,
+    "thumbnailStatus": 500,
+    "imageFormat": "avif",
+    "thumbnailFormat": "avif"
+  },
+  {
+    "uuid": "6b3ea758-f4cd-4c6a-bb1b-7f9732d3510d",
+    "name": "Extensão de Dedos",
+    "imageUrl": "https://media.moocafisio.com.br/exercises/6b3ea758-f4cd-4c6a-bb1b-7f9732d3510d/image.avif",
+    "thumbnailUrl": "https://fisioflow-media.r2.dev/exercises/6b3ea758-f4cd-4c6a-bb1b-7f9732d3510d/thumbnail.avif",
+    "imageStatus": 200,
+    "thumbnailStatus": 500,
+    "imageFormat": "avif",
+    "thumbnailFormat": "avif"
+  },
+  {
+    "uuid": "0c71c989-d905-4617-a92f-cc32de6cce87",
+    "name": "Remada Sentada com Faixa",
+    "imageUrl": "https://media.moocafisio.com.br/exercises/0c71c989-d905-4617-a92f-cc32de6cce87/image.avif",
+    "thumbnailUrl": "https://fisioflow-media.r2.dev/exercises/0c71c989-d905-4617-a92f-cc32de6cce87/thumbnail.avif",
+    "imageStatus": 200,
+    "thumbnailStatus": 500,
+    "imageFormat": "avif",
+    "thumbnailFormat": "avif"
+  },
+  {
+    "uuid": "34dd0feb-bc0a-4280-bf20-1f241ae2ce75",
+    "name": "Boxe de Sombra (Shadow Boxing)",
+    "imageUrl": "https://media.moocafisio.com.br/exercises/34dd0feb-bc0a-4280-bf20-1f241ae2ce75/image.avif",
+    "thumbnailUrl": "https://fisioflow-media.r2.dev/exercises/34dd0feb-bc0a-4280-bf20-1f241ae2ce75/thumbnail.avif",
+    "imageStatus": 200,
+    "thumbnailStatus": 500,
+    "imageFormat": "avif",
+    "thumbnailFormat": "avif"
+  },
+  {
+    "uuid": "211605de-5150-48e1-b003-de6d23b344fe",
+    "name": "Salto Lateral (Lateral Bound)",
+    "imageUrl": null,
+    "thumbnailUrl": null,
+    "imageStatus": 0,
+    "thumbnailStatus": 0,
+    "imageFormat": null,
+    "thumbnailFormat": null
+  },
+  {
+    "uuid": "b2c15717-dfe9-4078-a678-0ece6f3a1ec1",
+    "name": "Alongamento de Piriforme (4 Supino)",
+    "imageUrl": "https://media.fisioflow.com.br/exercises/b2c15717-dfe9-4078-a678-0ece6f3a1ec1/image.avif",
+    "thumbnailUrl": "https://fisioflow-media.r2.dev/exercises/b2c15717-dfe9-4078-a678-0ece6f3a1ec1/thumbnail.avif",
+    "imageStatus": -1,
+    "thumbnailStatus": 500,
+    "imageFormat": null,
+    "thumbnailFormat": "avif"
+  },
+  {
+    "uuid": "fa8a49b7-cfcd-4a77-84ec-ec345ecd08c5",
+    "name": "Agachamento na Cadeira",
+    "imageUrl": "https://media.moocafisio.com.br/exercises/fa8a49b7-cfcd-4a77-84ec-ec345ecd08c5/image.avif",
+    "thumbnailUrl": "https://fisioflow-media.r2.dev/exercises/fa8a49b7-cfcd-4a77-84ec-ec345ecd08c5/thumbnail.avif",
+    "imageStatus": 200,
+    "thumbnailStatus": 500,
+    "imageFormat": "avif",
+    "thumbnailFormat": "avif"
+  },
+  {
+    "uuid": "851e26fa-08a7-4dfe-848e-408184efb167",
+    "name": "Panturrilha em Pé",
+    "imageUrl": "https://media.moocafisio.com.br/exercises/851e26fa-08a7-4dfe-848e-408184efb167/image.avif",
+    "thumbnailUrl": "https://fisioflow-media.r2.dev/exercises/851e26fa-08a7-4dfe-848e-408184efb167/thumbnail.avif",
+    "imageStatus": 200,
+    "thumbnailStatus": 500,
+    "imageFormat": "avif",
+    "thumbnailFormat": "avif"
+  },
+  {
+    "uuid": "b2a513c5-5da4-4d17-b0f8-ec63381a49a6",
+    "name": "Ponte de Glúteo Bilateral",
+    "imageUrl": "https://media.moocafisio.com.br/exercises/b2a513c5-5da4-4d17-b0f8-ec63381a49a6/image.avif",
+    "thumbnailUrl": "https://fisioflow-media.r2.dev/exercises/b2a513c5-5da4-4d17-b0f8-ec63381a49a6/thumbnail.avif",
+    "imageStatus": 200,
+    "thumbnailStatus": 500,
+    "imageFormat": "avif",
+    "thumbnailFormat": "avif"
+  },
+  {
+    "uuid": "51cdeee6-ca28-4e1a-800e-c7262504fb03",
+    "name": "Coordenação Óculo-Manual",
+    "imageUrl": "https://media.moocafisio.com.br/exercises/51cdeee6-ca28-4e1a-800e-c7262504fb03/image.avif",
+    "thumbnailUrl": "https://fisioflow-media.r2.dev/exercises/51cdeee6-ca28-4e1a-800e-c7262504fb03/thumbnail.avif",
+    "imageStatus": 200,
+    "thumbnailStatus": 500,
+    "imageFormat": "avif",
+    "thumbnailFormat": "avif"
+  },
+  {
+    "uuid": "230fe21d-6124-492c-a6be-2bff1e8ed40a",
+    "name": "Mobilização de Escápula (Wall Slides)",
+    "imageUrl": "https://media.moocafisio.com.br/exercises/230fe21d-6124-492c-a6be-2bff1e8ed40a/image.avif",
+    "thumbnailUrl": "https://fisioflow-media.r2.dev/exercises/230fe21d-6124-492c-a6be-2bff1e8ed40a/thumbnail.avif",
+    "imageStatus": 200,
+    "thumbnailStatus": 500,
+    "imageFormat": "avif",
+    "thumbnailFormat": "avif"
+  },
+  {
+    "uuid": "48ba9b50-ff7b-4c49-988d-4906150a4251",
+    "name": "Dead Bug",
+    "imageUrl": "https://media.moocafisio.com.br/exercises/48ba9b50-ff7b-4c49-988d-4906150a4251/image.avif",
+    "thumbnailUrl": "https://fisioflow-media.r2.dev/exercises/48ba9b50-ff7b-4c49-988d-4906150a4251/thumbnail.avif",
+    "imageStatus": 200,
+    "thumbnailStatus": 500,
+    "imageFormat": "avif",
+    "thumbnailFormat": "avif"
+  },
+  {
+    "uuid": "50beed4a-b853-4ba5-a16a-ca1e6da28c3d",
+    "name": "Alongamento de Peitoral na Porta (Variação)",
+    "imageUrl": "https://media.moocafisio.com.br/exercises/50beed4a-b853-4ba5-a16a-ca1e6da28c3d/image.avif",
+    "thumbnailUrl": "https://fisioflow-media.r2.dev/exercises/50beed4a-b853-4ba5-a16a-ca1e6da28c3d/thumbnail.avif",
+    "imageStatus": 200,
+    "thumbnailStatus": 500,
+    "imageFormat": "avif",
+    "thumbnailFormat": "avif"
+  },
+  {
+    "uuid": "81cadc1c-8ff5-4093-abd1-713f133fb4ca",
+    "name": "Marcha Supina de Quadril",
+    "imageUrl": "https://media.moocafisio.com.br/exercises/81cadc1c-8ff5-4093-abd1-713f133fb4ca/image.avif",
+    "thumbnailUrl": "https://fisioflow-media.r2.dev/exercises/81cadc1c-8ff5-4093-abd1-713f133fb4ca/thumbnail.avif",
+    "imageStatus": 200,
+    "thumbnailStatus": 500,
+    "imageFormat": "avif",
+    "thumbnailFormat": "avif"
+  },
+  {
+    "uuid": "ab7fa768-9f2b-4171-96e4-8db1bce61c87",
+    "name": "L-Sit (Sustentação em L)",
+    "imageUrl": "https://media.moocafisio.com.br/exercises/ab7fa768-9f2b-4171-96e4-8db1bce61c87/image.avif",
+    "thumbnailUrl": "https://fisioflow-media.r2.dev/exercises/ab7fa768-9f2b-4171-96e4-8db1bce61c87/thumbnail.avif",
+    "imageStatus": 200,
+    "thumbnailStatus": 500,
+    "imageFormat": "avif",
+    "thumbnailFormat": "avif"
+  },
+  {
+    "uuid": "d910a6fa-c42a-451b-af7a-b6c76fda3cb6",
+    "name": "Elevação de Panturrilha em Pé",
+    "imageUrl": "https://media.moocafisio.com.br/exercises/d910a6fa-c42a-451b-af7a-b6c76fda3cb6/image.avif",
+    "thumbnailUrl": "https://fisioflow-media.r2.dev/exercises/d910a6fa-c42a-451b-af7a-b6c76fda3cb6/thumbnail.avif",
+    "imageStatus": 200,
+    "thumbnailStatus": 500,
+    "imageFormat": "avif",
+    "thumbnailFormat": "avif"
+  },
+  {
+    "uuid": "8597c8ee-caca-45cb-8c2d-a3c7bb1f88dc",
+    "name": "Respiração Diafragmática",
+    "imageUrl": "https://media.moocafisio.com.br/exercises/8597c8ee-caca-45cb-8c2d-a3c7bb1f88dc/image.avif",
+    "thumbnailUrl": "https://fisioflow-media.r2.dev/exercises/8597c8ee-caca-45cb-8c2d-a3c7bb1f88dc/thumbnail.avif",
+    "imageStatus": 200,
+    "thumbnailStatus": 500,
+    "imageFormat": "avif",
+    "thumbnailFormat": "avif"
+  },
+  {
+    "uuid": "e61cabcd-f72e-47fe-adb7-a394d8bac445",
+    "name": "Elevação de Panturrilha em Pé",
+    "imageUrl": "https://media.moocafisio.com.br/exercises/e61cabcd-f72e-47fe-adb7-a394d8bac445/image.avif",
+    "thumbnailUrl": "https://fisioflow-media.r2.dev/exercises/e61cabcd-f72e-47fe-adb7-a394d8bac445/thumbnail.avif",
+    "imageStatus": 200,
+    "thumbnailStatus": 500,
+    "imageFormat": "avif",
+    "thumbnailFormat": "avif"
+  },
+  {
+    "uuid": "7c602d5c-bbbb-4ddb-97d0-6ebcc3ddfa20",
+    "name": "Alongamento Levantador da Escápula",
+    "imageUrl": "https://media.moocafisio.com.br/exercises/7c602d5c-bbbb-4ddb-97d0-6ebcc3ddfa20/image.avif",
+    "thumbnailUrl": "https://fisioflow-media.r2.dev/exercises/7c602d5c-bbbb-4ddb-97d0-6ebcc3ddfa20/thumbnail.avif",
+    "imageStatus": 200,
+    "thumbnailStatus": 500,
+    "imageFormat": "avif",
+    "thumbnailFormat": "avif"
+  },
+  {
+    "uuid": "d7feba14-d7dd-416f-862e-69b604d371d5",
+    "name": "Alongamento 90-90",
+    "imageUrl": "https://media.moocafisio.com.br/exercises/d7feba14-d7dd-416f-862e-69b604d371d5/image.avif",
+    "thumbnailUrl": "https://fisioflow-media.r2.dev/exercises/d7feba14-d7dd-416f-862e-69b604d371d5/thumbnail.avif",
+    "imageStatus": 200,
+    "thumbnailStatus": 500,
+    "imageFormat": "avif",
+    "thumbnailFormat": "avif"
+  },
+  {
+    "uuid": "d5ca93dc-44da-45eb-8de1-c139b2bee50d",
+    "name": "World's Greatest Stretch",
+    "imageUrl": "https://media.moocafisio.com.br/exercises/d5ca93dc-44da-45eb-8de1-c139b2bee50d/image.avif",
+    "thumbnailUrl": "https://fisioflow-media.r2.dev/exercises/d5ca93dc-44da-45eb-8de1-c139b2bee50d/thumbnail.avif",
+    "imageStatus": 200,
+    "thumbnailStatus": 500,
+    "imageFormat": "avif",
+    "thumbnailFormat": "avif"
+  },
+  {
+    "uuid": "5d1ccf64-73d9-46e1-a95b-c535dc634b1d",
+    "name": "Extensão de Cotovelo (Tricep)",
+    "imageUrl": "https://media.moocafisio.com.br/exercises/5d1ccf64-73d9-46e1-a95b-c535dc634b1d/image.avif",
+    "thumbnailUrl": "https://fisioflow-media.r2.dev/exercises/5d1ccf64-73d9-46e1-a95b-c535dc634b1d/thumbnail.avif",
+    "imageStatus": 200,
+    "thumbnailStatus": 500,
+    "imageFormat": "avif",
+    "thumbnailFormat": "avif"
+  },
+  {
+    "uuid": "70751514-d6d8-4ffc-9037-226b7433c590",
+    "name": "Alongamento de Adutores",
+    "imageUrl": "https://media.moocafisio.com.br/exercises/70751514-d6d8-4ffc-9037-226b7433c590/image.avif",
+    "thumbnailUrl": "https://fisioflow-media.r2.dev/exercises/70751514-d6d8-4ffc-9037-226b7433c590/thumbnail.avif",
+    "imageStatus": 200,
+    "thumbnailStatus": 500,
+    "imageFormat": "avif",
+    "thumbnailFormat": "avif"
+  },
+  {
+    "uuid": "6b574243-5a72-44bd-b143-bdf5c8976940",
+    "name": "Alongamento de Isquiotibiais em Pé",
+    "imageUrl": "https://media.moocafisio.com.br/exercises/6b574243-5a72-44bd-b143-bdf5c8976940/image.avif",
+    "thumbnailUrl": "https://fisioflow-media.r2.dev/exercises/6b574243-5a72-44bd-b143-bdf5c8976940/thumbnail.avif",
+    "imageStatus": 200,
+    "thumbnailStatus": 500,
+    "imageFormat": "avif",
+    "thumbnailFormat": "avif"
+  },
+  {
+    "uuid": "705de1c3-7aa2-4b32-bf9f-2bb903e79450",
+    "name": "Hip Airplane",
+    "imageUrl": "https://media.moocafisio.com.br/exercises/705de1c3-7aa2-4b32-bf9f-2bb903e79450/image.avif",
+    "thumbnailUrl": "https://fisioflow-media.r2.dev/exercises/705de1c3-7aa2-4b32-bf9f-2bb903e79450/thumbnail.avif",
+    "imageStatus": 200,
+    "thumbnailStatus": 500,
+    "imageFormat": "avif",
+    "thumbnailFormat": "avif"
+  },
+  {
+    "uuid": "74ad1c8a-c300-419d-b6a0-4f331a98b611",
+    "name": "Perdigueiro (Bird Dog)",
+    "imageUrl": "https://media.moocafisio.com.br/exercises/74ad1c8a-c300-419d-b6a0-4f331a98b611/image.avif",
+    "thumbnailUrl": "https://fisioflow-media.r2.dev/exercises/74ad1c8a-c300-419d-b6a0-4f331a98b611/thumbnail.avif",
+    "imageStatus": 200,
+    "thumbnailStatus": 500,
+    "imageFormat": "avif",
+    "thumbnailFormat": "avif"
+  },
+  {
+    "uuid": "e3b2b395-8c80-4ad0-a9d1-62170cd41446",
+    "name": "Flexão de Quadril com Vassoura",
+    "imageUrl": "https://media.moocafisio.com.br/exercises/e3b2b395-8c80-4ad0-a9d1-62170cd41446/image.avif",
+    "thumbnailUrl": "https://fisioflow-media.r2.dev/exercises/e3b2b395-8c80-4ad0-a9d1-62170cd41446/thumbnail.avif",
+    "imageStatus": 200,
+    "thumbnailStatus": 500,
+    "imageFormat": "avif",
+    "thumbnailFormat": "avif"
+  },
+  {
+    "uuid": "9cc3f8a7-4e9b-4ad0-82c7-6e4c8e451002",
+    "name": "Elevação Frontal de Ombro",
+    "imageUrl": "https://media.fisioflow.com.br/exercises/9cc3f8a7-4e9b-4ad0-82c7-6e4c8e451002/image.avif",
+    "thumbnailUrl": "https://fisioflow-media.r2.dev/exercises/9cc3f8a7-4e9b-4ad0-82c7-6e4c8e451002/thumbnail.avif",
+    "imageStatus": -1,
+    "thumbnailStatus": 500,
+    "imageFormat": null,
+    "thumbnailFormat": "avif"
+  },
+  {
+    "uuid": "d68483d3-04e4-4f34-8e41-1a37635a141a",
+    "name": "Alongamento de Bíceps na Parede",
+    "imageUrl": "https://media.moocafisio.com.br/exercises/d68483d3-04e4-4f34-8e41-1a37635a141a/image.avif",
+    "thumbnailUrl": "https://fisioflow-media.r2.dev/exercises/d68483d3-04e4-4f34-8e41-1a37635a141a/thumbnail.avif",
+    "imageStatus": 200,
+    "thumbnailStatus": 500,
+    "imageFormat": "avif",
+    "thumbnailFormat": "avif"
+  },
+  {
+    "uuid": "50919edd-6639-44e1-851a-115a56758a96",
+    "name": "Codman Pendular",
+    "imageUrl": "https://media.moocafisio.com.br/exercises/50919edd-6639-44e1-851a-115a56758a96/image.avif",
+    "thumbnailUrl": "https://fisioflow-media.r2.dev/exercises/50919edd-6639-44e1-851a-115a56758a96/thumbnail.avif",
+    "imageStatus": 200,
+    "thumbnailStatus": 500,
+    "imageFormat": "avif",
+    "thumbnailFormat": "avif"
+  },
+  {
+    "uuid": "5465a626-f7a3-4541-94f7-5e281b9036ce",
+    "name": "Mobilização Patelar",
+    "imageUrl": "https://media.moocafisio.com.br/exercises/5465a626-f7a3-4541-94f7-5e281b9036ce/image.avif",
+    "thumbnailUrl": "https://fisioflow-media.r2.dev/exercises/5465a626-f7a3-4541-94f7-5e281b9036ce/thumbnail.avif",
+    "imageStatus": 200,
+    "thumbnailStatus": 500,
+    "imageFormat": "avif",
+    "thumbnailFormat": "avif"
+  },
+  {
+    "uuid": "41a6c525-a53e-457e-a90c-d27ca5cf09e7",
+    "name": "agachamento sumo",
+    "imageUrl": "https://media.moocafisio.com.br/exercises/41a6c525-a53e-457e-a90c-d27ca5cf09e7/image.avif",
+    "thumbnailUrl": "https://fisioflow-media.r2.dev/exercises/41a6c525-a53e-457e-a90c-d27ca5cf09e7/thumbnail.avif",
+    "imageStatus": 200,
+    "thumbnailStatus": 500,
+    "imageFormat": "avif",
+    "thumbnailFormat": "avif"
+  },
+  {
+    "uuid": "22f56dfc-0802-4828-b5ce-bcb1ec61c87a",
+    "name": "SLR com Dorsiflexão Automática",
+    "imageUrl": "https://media.moocafisio.com.br/exercises/22f56dfc-0802-4828-b5ce-bcb1ec61c87a/image.avif",
+    "thumbnailUrl": "https://fisioflow-media.r2.dev/exercises/22f56dfc-0802-4828-b5ce-bcb1ec61c87a/thumbnail.avif",
+    "imageStatus": 200,
+    "thumbnailStatus": 500,
+    "imageFormat": "avif",
+    "thumbnailFormat": "avif"
+  },
+  {
+    "uuid": "06bec5ab-ee79-4b3c-969f-d57a85883701",
+    "name": "Flexão de Punho com Halter",
+    "imageUrl": "https://media.moocafisio.com.br/exercises/06bec5ab-ee79-4b3c-969f-d57a85883701/image.avif",
+    "thumbnailUrl": "https://fisioflow-media.r2.dev/exercises/06bec5ab-ee79-4b3c-969f-d57a85883701/thumbnail.avif",
+    "imageStatus": 200,
+    "thumbnailStatus": 500,
+    "imageFormat": "avif",
+    "thumbnailFormat": "avif"
+  },
+  {
+    "uuid": "7a349c3c-6a9b-43fb-bf86-525e5264210a",
+    "name": "Afundo",
+    "imageUrl": "https://media.moocafisio.com.br/exercises/7a349c3c-6a9b-43fb-bf86-525e5264210a/image.avif",
+    "thumbnailUrl": "https://fisioflow-media.r2.dev/exercises/7a349c3c-6a9b-43fb-bf86-525e5264210a/thumbnail.avif",
+    "imageStatus": 200,
+    "thumbnailStatus": 500,
+    "imageFormat": "avif",
+    "thumbnailFormat": "avif"
+  },
+  {
+    "uuid": "59933cf5-7599-43de-8f69-606575f91b4f",
+    "name": "Huff Cough",
+    "imageUrl": "https://media.fisioflow.com.br/exercises/59933cf5-7599-43de-8f69-606575f91b4f/image.avif",
+    "thumbnailUrl": "https://fisioflow-media.r2.dev/exercises/59933cf5-7599-43de-8f69-606575f91b4f/thumbnail.avif",
+    "imageStatus": -1,
+    "thumbnailStatus": 500,
+    "imageFormat": null,
+    "thumbnailFormat": "avif"
+  },
+  {
+    "uuid": "bd0eb7cb-7c6e-4978-8586-1a2872cf40aa",
+    "name": "Single Leg Stance com Movimento de Braço",
+    "imageUrl": "https://media.moocafisio.com.br/exercises/bd0eb7cb-7c6e-4978-8586-1a2872cf40aa/image.avif",
+    "thumbnailUrl": "https://fisioflow-media.r2.dev/exercises/bd0eb7cb-7c6e-4978-8586-1a2872cf40aa/thumbnail.avif",
+    "imageStatus": 200,
+    "thumbnailStatus": 500,
+    "imageFormat": "avif",
+    "thumbnailFormat": "avif"
+  },
+  {
+    "uuid": "3f5976ad-ae6b-45e9-b7de-6c0f80f00504",
+    "name": "Desvio Radial de Punho",
+    "imageUrl": "https://media.moocafisio.com.br/exercises/3f5976ad-ae6b-45e9-b7de-6c0f80f00504/image.avif",
+    "thumbnailUrl": "https://fisioflow-media.r2.dev/exercises/3f5976ad-ae6b-45e9-b7de-6c0f80f00504/thumbnail.avif",
+    "imageStatus": 200,
+    "thumbnailStatus": 500,
+    "imageFormat": "avif",
+    "thumbnailFormat": "avif"
+  },
+  {
+    "uuid": "6fd80f36-b005-458b-afba-2a7a96930675",
+    "name": "Perdigueiro",
+    "imageUrl": "https://i.ytimg.com/vi/bwR-atty1Fo/hq720_2.jpg",
+    "thumbnailUrl": null,
+    "imageStatus": 200,
+    "thumbnailStatus": 0,
+    "imageFormat": "jpg",
+    "thumbnailFormat": null
+  },
+  {
+    "uuid": "92b3a045-151d-4ad1-aa0a-2c9058e7331d",
+    "name": "Quadríceps Arco Curto",
+    "imageUrl": null,
+    "thumbnailUrl": null,
+    "imageStatus": 0,
+    "thumbnailStatus": 0,
+    "imageFormat": null,
+    "thumbnailFormat": null
+  },
+  {
+    "uuid": "635c6016-449d-4237-8777-471e23f4c6a8",
+    "name": "E2E Exercise 1772730891830",
+    "imageUrl": "https://i.ytimg.com/vi/5DmNrYUYc34/hq720_2.jpg",
+    "thumbnailUrl": null,
+    "imageStatus": 200,
+    "thumbnailStatus": 0,
+    "imageFormat": "jpg",
+    "thumbnailFormat": null
+  },
+  {
+    "uuid": "af0783bd-59f0-41be-953d-ad088c642d03",
+    "name": "E2E Exercise 1772757332358",
+    "imageUrl": "https://i.ytimg.com/vi/nVuUHbBpGlw/hq720_2.jpg",
+    "thumbnailUrl": null,
+    "imageStatus": 200,
+    "thumbnailStatus": 0,
+    "imageFormat": "jpg",
+    "thumbnailFormat": null
+  },
+  {
+    "uuid": "cd0ea681-c92c-4006-bdd7-5afc3c868bab",
+    "name": "Exercício de Parede para Ombro",
+    "imageUrl": "https://media.moocafisio.com.br/exercises/cd0ea681-c92c-4006-bdd7-5afc3c868bab/image.avif",
+    "thumbnailUrl": "https://fisioflow-media.r2.dev/exercises/cd0ea681-c92c-4006-bdd7-5afc3c868bab/thumbnail.avif",
+    "imageStatus": 200,
+    "thumbnailStatus": 500,
+    "imageFormat": "avif",
+    "thumbnailFormat": "avif"
+  },
+  {
+    "uuid": "7d5a4d7d-9386-450e-91f7-5bfe6e70e12e",
+    "name": "Push-up Plus",
+    "imageUrl": "https://media.moocafisio.com.br/exercises/7d5a4d7d-9386-450e-91f7-5bfe6e70e12e/image.avif",
+    "thumbnailUrl": "https://fisioflow-media.r2.dev/exercises/7d5a4d7d-9386-450e-91f7-5bfe6e70e12e/thumbnail.avif",
+    "imageStatus": 200,
+    "thumbnailStatus": 500,
+    "imageFormat": "avif",
+    "thumbnailFormat": "avif"
+  },
+  {
+    "uuid": "dcf3b879-b4c9-4f30-bf44-d66b14930d99",
+    "name": "Heel Flicks (Calcanhar no Glúteo)",
+    "imageUrl": "https://media.moocafisio.com.br/exercises/dcf3b879-b4c9-4f30-bf44-d66b14930d99/image.avif",
+    "thumbnailUrl": "https://fisioflow-media.r2.dev/exercises/dcf3b879-b4c9-4f30-bf44-d66b14930d99/thumbnail.avif",
+    "imageStatus": 200,
+    "thumbnailStatus": 500,
+    "imageFormat": "avif",
+    "thumbnailFormat": "avif"
+  },
+  {
+    "uuid": "7650559d-cd6a-4bb9-8f3d-46c861130a0a",
+    "name": "E2E Exercise 1772757820439",
+    "imageUrl": "https://i.ytimg.com/vi/o5b0gS7wI1k/hq720.jpg",
+    "thumbnailUrl": null,
+    "imageStatus": 200,
+    "thumbnailStatus": 0,
+    "imageFormat": "jpg",
+    "thumbnailFormat": null
+  },
+  {
+    "uuid": "5146db83-8b1e-45a1-bb3a-267e402c1c20",
+    "name": "E2E Exercicio 1772908219740",
+    "imageUrl": "https://i.ytimg.com/vi/_zT1C9vFATE/hq720_2.jpg",
+    "thumbnailUrl": null,
+    "imageStatus": 200,
+    "thumbnailStatus": 0,
+    "imageFormat": "jpg",
+    "thumbnailFormat": null
+  },
+  {
+    "uuid": "c5e626d6-48c5-46be-bd29-0e0a800bbbd9",
+    "name": "Passos Laterais com Faixa",
+    "imageUrl": "https://media.moocafisio.com.br/exercises/c5e626d6-48c5-46be-bd29-0e0a800bbbd9/image.avif",
+    "thumbnailUrl": "https://fisioflow-media.r2.dev/exercises/c5e626d6-48c5-46be-bd29-0e0a800bbbd9/thumbnail.avif",
+    "imageStatus": 200,
+    "thumbnailStatus": 500,
+    "imageFormat": "avif",
+    "thumbnailFormat": "avif"
+  },
+  {
+    "uuid": "f87d9c7a-9b35-4235-b7a0-59ef2d3f0f20",
+    "name": "Star Excursion Balance Test (SEBT)",
+    "imageUrl": "https://media.moocafisio.com.br/exercises/f87d9c7a-9b35-4235-b7a0-59ef2d3f0f20/image.avif",
+    "thumbnailUrl": "https://fisioflow-media.r2.dev/exercises/f87d9c7a-9b35-4235-b7a0-59ef2d3f0f20/thumbnail.avif",
+    "imageStatus": 200,
+    "thumbnailStatus": 500,
+    "imageFormat": "avif",
+    "thumbnailFormat": "avif"
+  },
+  {
+    "uuid": "56b512a2-f095-4c5f-94db-c7a31ecb9e18",
+    "name": "Afundo Lateral",
+    "imageUrl": "https://media.moocafisio.com.br/exercises/56b512a2-f095-4c5f-94db-c7a31ecb9e18/image.avif",
+    "thumbnailUrl": "https://fisioflow-media.r2.dev/exercises/56b512a2-f095-4c5f-94db-c7a31ecb9e18/thumbnail.avif",
+    "imageStatus": 200,
+    "thumbnailStatus": 500,
+    "imageFormat": "avif",
+    "thumbnailFormat": "avif"
+  },
+  {
+    "uuid": "328f722b-9b0a-4cec-a75d-5d9deb1738de",
+    "name": "Copenhagen Plank",
+    "imageUrl": "https://media.moocafisio.com.br/exercises/328f722b-9b0a-4cec-a75d-5d9deb1738de/image.avif",
+    "thumbnailUrl": "https://fisioflow-media.r2.dev/exercises/328f722b-9b0a-4cec-a75d-5d9deb1738de/thumbnail.avif",
+    "imageStatus": 200,
+    "thumbnailStatus": 500,
+    "imageFormat": "avif",
+    "thumbnailFormat": "avif"
+  },
+  {
+    "uuid": "bfa8bbeb-a9c2-4389-9046-508ba943addc",
+    "name": "Exercício Teste 1773152272756 EDIT",
+    "imageUrl": "https://i.ytimg.com/vi/dYnuwaxUszI/hq720_2.jpg",
+    "thumbnailUrl": null,
+    "imageStatus": 200,
+    "thumbnailStatus": 0,
+    "imageFormat": "jpg",
+    "thumbnailFormat": null
+  },
+  {
+    "uuid": "7ba143f2-c6da-4ffc-971e-079d0f0bb7a2",
+    "name": "E2E Exercise 1772757952573",
+    "imageUrl": "https://i.ytimg.com/vi/t1pzBIZTHHc/hq720.jpg",
+    "thumbnailUrl": null,
+    "imageStatus": 200,
+    "thumbnailStatus": 0,
+    "imageFormat": "jpg",
+    "thumbnailFormat": null
+  },
+  {
+    "uuid": "0b58bee7-1965-42c1-96ef-069f48afb230",
+    "name": "E2E Exercicio 1772908656797",
+    "imageUrl": "https://i.ytimg.com/vi/B5CUJwmfdDo/hq720_2.jpg",
+    "thumbnailUrl": null,
+    "imageStatus": 200,
+    "thumbnailStatus": 0,
+    "imageFormat": "jpg",
+    "thumbnailFormat": null
+  },
+  {
+    "uuid": "e7b7fe16-e2d7-42f5-8650-eb4ea6d4b5da",
+    "name": "Agachamento em Disco Instável",
+    "imageUrl": "https://media.moocafisio.com.br/exercises/e7b7fe16-e2d7-42f5-8650-eb4ea6d4b5da/image.avif",
+    "thumbnailUrl": "https://fisioflow-media.r2.dev/exercises/e7b7fe16-e2d7-42f5-8650-eb4ea6d4b5da/thumbnail.avif",
+    "imageStatus": 200,
+    "thumbnailStatus": 500,
+    "imageFormat": "avif",
+    "thumbnailFormat": "avif"
+  },
+  {
+    "uuid": "ddb808f5-5ab5-49ca-bfe4-31f7e641582e",
+    "name": "Respiração 4-7-8",
+    "imageUrl": "https://media.moocafisio.com.br/exercises/ddb808f5-5ab5-49ca-bfe4-31f7e641582e/image.avif",
+    "thumbnailUrl": "https://fisioflow-media.r2.dev/exercises/ddb808f5-5ab5-49ca-bfe4-31f7e641582e/thumbnail.avif",
+    "imageStatus": 200,
+    "thumbnailStatus": 500,
+    "imageFormat": "avif",
+    "thumbnailFormat": "avif"
+  },
+  {
+    "uuid": "acf2a152-86f3-4b04-95ec-4ff661ab8fdb",
+    "name": "Equilíbrio Unipodal Solo",
+    "imageUrl": "https://media.moocafisio.com.br/exercises/acf2a152-86f3-4b04-95ec-4ff661ab8fdb/image.avif",
+    "thumbnailUrl": "https://fisioflow-media.r2.dev/exercises/acf2a152-86f3-4b04-95ec-4ff661ab8fdb/thumbnail.avif",
+    "imageStatus": 200,
+    "thumbnailStatus": 500,
+    "imageFormat": "avif",
+    "thumbnailFormat": "avif"
+  },
+  {
+    "uuid": "bf106c3d-7d51-413c-a7e7-c8d77c018949",
+    "name": "Mobilidade do Hálux",
+    "imageUrl": "https://media.moocafisio.com.br/exercises/bf106c3d-7d51-413c-a7e7-c8d77c018949/image.avif",
+    "thumbnailUrl": "https://fisioflow-media.r2.dev/exercises/bf106c3d-7d51-413c-a7e7-c8d77c018949/thumbnail.avif",
+    "imageStatus": 200,
+    "thumbnailStatus": 500,
+    "imageFormat": "avif",
+    "thumbnailFormat": "avif"
+  },
+  {
+    "uuid": "61ab52c6-cdf5-406b-b940-d7dbbfcecc05",
+    "name": "Mobilidade de Tornozelo",
+    "imageUrl": "https://media.moocafisio.com.br/exercises/61ab52c6-cdf5-406b-b940-d7dbbfcecc05/image.avif",
+    "thumbnailUrl": "https://fisioflow-media.r2.dev/exercises/61ab52c6-cdf5-406b-b940-d7dbbfcecc05/thumbnail.avif",
+    "imageStatus": 200,
+    "thumbnailStatus": 500,
+    "imageFormat": "avif",
+    "thumbnailFormat": "avif"
+  },
+  {
+    "uuid": "96cc9b30-d14a-4938-b490-4d2775343539",
+    "name": "Step Down",
+    "imageUrl": "https://media.moocafisio.com.br/exercises/96cc9b30-d14a-4938-b490-4d2775343539/image.avif",
+    "thumbnailUrl": "https://fisioflow-media.r2.dev/exercises/96cc9b30-d14a-4938-b490-4d2775343539/thumbnail.avif",
+    "imageStatus": 200,
+    "thumbnailStatus": 500,
+    "imageFormat": "avif",
+    "thumbnailFormat": "avif"
+  },
+  {
+    "uuid": "44026881-f395-43b1-8437-87a747671833",
+    "name": "Flexão de Punho",
+    "imageUrl": "https://media.moocafisio.com.br/exercises/44026881-f395-43b1-8437-87a747671833/image.avif",
+    "thumbnailUrl": "https://fisioflow-media.r2.dev/exercises/44026881-f395-43b1-8437-87a747671833/thumbnail.avif",
+    "imageStatus": 200,
+    "thumbnailStatus": 500,
+    "imageFormat": "avif",
+    "thumbnailFormat": "avif"
+  },
+  {
+    "uuid": "d513c74d-5adf-4ae2-872b-5a80d26f5a00",
+    "name": "Deadlift (Levantamento Terra) com Halteres",
+    "imageUrl": "https://media.moocafisio.com.br/exercises/d513c74d-5adf-4ae2-872b-5a80d26f5a00/image.avif",
+    "thumbnailUrl": "https://fisioflow-media.r2.dev/exercises/d513c74d-5adf-4ae2-872b-5a80d26f5a00/thumbnail.avif",
+    "imageStatus": 200,
+    "thumbnailStatus": 500,
+    "imageFormat": "avif",
+    "thumbnailFormat": "avif"
+  },
+  {
+    "uuid": "2da02ebe-d89c-46ba-bdcc-1453c30a89a4",
+    "name": "Salto Unilateral na Caixa",
+    "imageUrl": "https://media.moocafisio.com.br/exercises/2da02ebe-d89c-46ba-bdcc-1453c30a89a4/image.avif",
+    "thumbnailUrl": "https://fisioflow-media.r2.dev/exercises/2da02ebe-d89c-46ba-bdcc-1453c30a89a4/thumbnail.avif",
+    "imageStatus": 200,
+    "thumbnailStatus": 500,
+    "imageFormat": "avif",
+    "thumbnailFormat": "avif"
+  },
+  {
+    "uuid": "b72a76d3-aa13-4456-a2e1-20c383aafa5a",
+    "name": "Exercício 1773152600452 EDIT",
+    "imageUrl": "https://i.ytimg.com/vi/5DmNrYUYc34/hq720_2.jpg",
+    "thumbnailUrl": null,
+    "imageStatus": 200,
+    "thumbnailStatus": 0,
+    "imageFormat": "jpg",
+    "thumbnailFormat": null
+  },
+  {
+    "uuid": "84faf27d-ac1d-49b6-8ff3-89cc0dc87576",
+    "name": "E2E Exercise 1772758050943",
+    "imageUrl": "https://i.ytimg.com/vi/nVuUHbBpGlw/hq720_2.jpg",
+    "thumbnailUrl": null,
+    "imageStatus": 200,
+    "thumbnailStatus": 0,
+    "imageFormat": "jpg",
+    "thumbnailFormat": null
+  },
+  {
+    "uuid": "33259902-49cb-46ae-8cbc-8e623bb8bb4c",
+    "name": "E2E Exercício 1773248273255",
+    "imageUrl": "https://i.ytimg.com/vi/P-NdPWxDgrU/hq720.jpg",
+    "thumbnailUrl": null,
+    "imageStatus": 200,
+    "thumbnailStatus": 0,
+    "imageFormat": "jpg",
+    "thumbnailFormat": null
+  },
+  {
+    "uuid": "5fae1aae-7c09-425f-b812-ecd3f43c6770",
+    "name": "Elevação de Perna Retificada (SLR)",
+    "imageUrl": null,
+    "thumbnailUrl": null,
+    "imageStatus": 0,
+    "thumbnailStatus": 0,
+    "imageFormat": null,
+    "thumbnailFormat": null
+  },
+  {
+    "uuid": "79d3afbb-49a6-4957-ae4a-38477cbdf58f",
+    "name": "Rotação Torácica em 4 Apoios",
+    "imageUrl": "https://media.moocafisio.com.br/exercises/79d3afbb-49a6-4957-ae4a-38477cbdf58f/image.avif",
+    "thumbnailUrl": "https://fisioflow-media.r2.dev/exercises/79d3afbb-49a6-4957-ae4a-38477cbdf58f/thumbnail.avif",
+    "imageStatus": 200,
+    "thumbnailStatus": 500,
+    "imageFormat": "avif",
+    "thumbnailFormat": "avif"
+  },
+  {
+    "uuid": "1b74c160-5442-4c67-a1db-16eed6846dc6",
+    "name": "Abdominal Oblíquo",
+    "imageUrl": "https://media.moocafisio.com.br/exercises/1b74c160-5442-4c67-a1db-16eed6846dc6/image.avif",
+    "thumbnailUrl": "https://fisioflow-media.r2.dev/exercises/1b74c160-5442-4c67-a1db-16eed6846dc6/thumbnail.avif",
+    "imageStatus": 200,
+    "thumbnailStatus": 500,
+    "imageFormat": "avif",
+    "thumbnailFormat": "avif"
+  },
+  {
+    "uuid": "a69f1946-6f77-4840-a737-6eb4089e3c60",
+    "name": "Relaxamento Progressivo de Jacobson",
+    "imageUrl": "https://media.moocafisio.com.br/exercises/a69f1946-6f77-4840-a737-6eb4089e3c60/image.avif",
+    "thumbnailUrl": "https://fisioflow-media.r2.dev/exercises/a69f1946-6f77-4840-a737-6eb4089e3c60/thumbnail.avif",
+    "imageStatus": 200,
+    "thumbnailStatus": 500,
+    "imageFormat": "avif",
+    "thumbnailFormat": "avif"
+  },
+  {
+    "uuid": "560ae5f4-0d5a-4c18-9631-fa74e58277c7",
+    "name": "Mobilidade de Ombro",
+    "imageUrl": "https://media.moocafisio.com.br/exercises/560ae5f4-0d5a-4c18-9631-fa74e58277c7/image.avif",
+    "thumbnailUrl": "https://fisioflow-media.r2.dev/exercises/560ae5f4-0d5a-4c18-9631-fa74e58277c7/thumbnail.avif",
+    "imageStatus": 200,
+    "thumbnailStatus": 500,
+    "imageFormat": "avif",
+    "thumbnailFormat": "avif"
+  },
+  {
+    "uuid": "f3d3f0f4-0366-42a4-9d6d-ce72d13f0fdb",
+    "name": "Afundo Reverso",
+    "imageUrl": "https://media.moocafisio.com.br/exercises/f3d3f0f4-0366-42a4-9d6d-ce72d13f0fdb/image.avif",
+    "thumbnailUrl": "https://fisioflow-media.r2.dev/exercises/f3d3f0f4-0366-42a4-9d6d-ce72d13f0fdb/thumbnail.avif",
+    "imageStatus": 200,
+    "thumbnailStatus": 500,
+    "imageFormat": "avif",
+    "thumbnailFormat": "avif"
+  },
+  {
+    "uuid": "0d47fc21-637f-484d-bea6-9e8fe7ba4a5e",
+    "name": "Chin Tucks",
+    "imageUrl": "https://media.moocafisio.com.br/exercises/0d47fc21-637f-484d-bea6-9e8fe7ba4a5e/image.avif",
+    "thumbnailUrl": "https://fisioflow-media.r2.dev/exercises/0d47fc21-637f-484d-bea6-9e8fe7ba4a5e/thumbnail.avif",
+    "imageStatus": 200,
+    "thumbnailStatus": 500,
+    "imageFormat": "avif",
+    "thumbnailFormat": "avif"
+  },
+  {
+    "uuid": "0223355b-41cb-4082-9a5f-3d99b6c34b29",
+    "name": "Elevação de Panturrilha em Degrau",
+    "imageUrl": "https://media.moocafisio.com.br/exercises/0223355b-41cb-4082-9a5f-3d99b6c34b29/image.avif",
+    "thumbnailUrl": "https://fisioflow-media.r2.dev/exercises/0223355b-41cb-4082-9a5f-3d99b6c34b29/thumbnail.avif",
+    "imageStatus": 200,
+    "thumbnailStatus": 500,
+    "imageFormat": "avif",
+    "thumbnailFormat": "avif"
+  },
+  {
+    "uuid": "fc65fe36-79d2-4af3-8185-751e335b920d",
+    "name": "Carregamento Lateral",
+    "imageUrl": "https://media.moocafisio.com.br/exercises/fc65fe36-79d2-4af3-8185-751e335b920d/image.avif",
+    "thumbnailUrl": "https://fisioflow-media.r2.dev/exercises/fc65fe36-79d2-4af3-8185-751e335b920d/thumbnail.avif",
+    "imageStatus": 200,
+    "thumbnailStatus": 500,
+    "imageFormat": "avif",
+    "thumbnailFormat": "avif"
+  },
+  {
+    "uuid": "9cbff473-4215-4a0e-9fbd-2ddfbed8ddf4",
+    "name": "Abdução de Quadril em Pé",
+    "imageUrl": "https://media.moocafisio.com.br/exercises/9cbff473-4215-4a0e-9fbd-2ddfbed8ddf4/image.avif",
+    "thumbnailUrl": "https://fisioflow-media.r2.dev/exercises/9cbff473-4215-4a0e-9fbd-2ddfbed8ddf4/thumbnail.avif",
+    "imageStatus": 200,
+    "thumbnailStatus": 500,
+    "imageFormat": "avif",
+    "thumbnailFormat": "avif"
+  },
+  {
+    "uuid": "5b42e888-789f-43e5-8145-5d41b325acc6",
+    "name": "Box Jump",
+    "imageUrl": "https://media.moocafisio.com.br/exercises/5b42e888-789f-43e5-8145-5d41b325acc6/image.avif",
+    "thumbnailUrl": "https://fisioflow-media.r2.dev/exercises/5b42e888-789f-43e5-8145-5d41b325acc6/thumbnail.avif",
+    "imageStatus": 200,
+    "thumbnailStatus": 500,
+    "imageFormat": "avif",
+    "thumbnailFormat": "avif"
+  },
+  {
+    "uuid": "9b4fc45d-bcde-4d38-86f5-cd37ea1b5a02",
+    "name": "Exercício 1773152956456 EDIT",
+    "imageUrl": "https://i.ytimg.com/vi/5rvAzYJTE3Q/hq720_2.jpg",
+    "thumbnailUrl": null,
+    "imageStatus": 200,
+    "thumbnailStatus": 0,
+    "imageFormat": "jpg",
+    "thumbnailFormat": null
+  },
+  {
+    "uuid": "54792e1d-0a12-4d3a-b70d-7edc674df6ea",
+    "name": "Tapete de Pisos Diferentes",
+    "imageUrl": "https://media.moocafisio.com.br/exercises/54792e1d-0a12-4d3a-b70d-7edc674df6ea/image.avif",
+    "thumbnailUrl": "https://fisioflow-media.r2.dev/exercises/54792e1d-0a12-4d3a-b70d-7edc674df6ea/thumbnail.avif",
+    "imageStatus": 200,
+    "thumbnailStatus": 500,
+    "imageFormat": "avif",
+    "thumbnailFormat": "avif"
+  },
+  {
+    "uuid": "831a4893-7d40-417b-8469-633910020002",
+    "name": "Mobilidade de Coluna",
+    "imageUrl": "https://media.moocafisio.com.br/exercises/831a4893-7d40-417b-8469-633910020002/image.avif",
+    "thumbnailUrl": "https://fisioflow-media.r2.dev/exercises/831a4893-7d40-417b-8469-633910020002/thumbnail.avif",
+    "imageStatus": 200,
+    "thumbnailStatus": 500,
+    "imageFormat": "avif",
+    "thumbnailFormat": "avif"
+  },
+  {
+    "uuid": "75ea596d-7506-43fc-b4f7-b86a97ac0583",
+    "name": "Mobilização de Nervo Mediano (Tinel e Phalen)",
+    "imageUrl": "https://media.moocafisio.com.br/exercises/75ea596d-7506-43fc-b4f7-b86a97ac0583/image.avif",
+    "thumbnailUrl": "https://fisioflow-media.r2.dev/exercises/75ea596d-7506-43fc-b4f7-b86a97ac0583/thumbnail.avif",
+    "imageStatus": 200,
+    "thumbnailStatus": 500,
+    "imageFormat": "avif",
+    "thumbnailFormat": "avif"
+  },
+  {
+    "uuid": "7e21f14a-72e3-4535-9ef9-10392d908432",
+    "name": "Exercício do Pé Curto (Short Foot)",
+    "imageUrl": "https://media.moocafisio.com.br/exercises/7e21f14a-72e3-4535-9ef9-10392d908432/image.avif",
+    "thumbnailUrl": "https://fisioflow-media.r2.dev/exercises/7e21f14a-72e3-4535-9ef9-10392d908432/thumbnail.avif",
+    "imageStatus": 200,
+    "thumbnailStatus": 500,
+    "imageFormat": "avif",
+    "thumbnailFormat": "avif"
+  },
+  {
+    "uuid": "69f345ad-dfbe-42e7-b476-fae3c48b12e6",
+    "name": "Desvio Radial",
+    "imageUrl": "https://media.moocafisio.com.br/exercises/69f345ad-dfbe-42e7-b476-fae3c48b12e6/image.avif",
+    "thumbnailUrl": "https://fisioflow-media.r2.dev/exercises/69f345ad-dfbe-42e7-b476-fae3c48b12e6/thumbnail.avif",
+    "imageStatus": 200,
+    "thumbnailStatus": 500,
+    "imageFormat": "avif",
+    "thumbnailFormat": "avif"
+  },
+  {
+    "uuid": "deafbb28-b240-4e10-8d9a-26e76609f627",
+    "name": "Postura da Criança",
+    "imageUrl": "https://media.moocafisio.com.br/exercises/deafbb28-b240-4e10-8d9a-26e76609f627/image.avif",
+    "thumbnailUrl": "https://fisioflow-media.r2.dev/exercises/deafbb28-b240-4e10-8d9a-26e76609f627/thumbnail.avif",
+    "imageStatus": 200,
+    "thumbnailStatus": 500,
+    "imageFormat": "avif",
+    "thumbnailFormat": "avif"
+  },
+  {
+    "uuid": "9285358c-8172-4389-af39-4ca0f67f1a96",
+    "name": "Pular Corda Imaginária",
+    "imageUrl": "https://media.moocafisio.com.br/exercises/9285358c-8172-4389-af39-4ca0f67f1a96/image.avif",
+    "thumbnailUrl": "https://fisioflow-media.r2.dev/exercises/9285358c-8172-4389-af39-4ca0f67f1a96/thumbnail.avif",
+    "imageStatus": 200,
+    "thumbnailStatus": 500,
+    "imageFormat": "avif",
+    "thumbnailFormat": "avif"
+  },
+  {
+    "uuid": "93953049-0b8c-45b1-850d-5e6c70ecfe19",
+    "name": "Exercício 1773156764772 EDIT",
+    "imageUrl": "https://i.ytimg.com/vi/szfAxHHMMz4/hq720_2.jpg",
+    "thumbnailUrl": null,
+    "imageStatus": 200,
+    "thumbnailStatus": 0,
+    "imageFormat": "jpg",
+    "thumbnailFormat": null
+  },
+  {
+    "uuid": "4daa9c7a-2e85-4388-ab61-f80249ff81b7",
+    "name": "Exercício 1773156846646 EDIT",
+    "imageUrl": "https://i.ytimg.com/vi/JhBVNUpkdo0/hq720_2.jpg",
+    "thumbnailUrl": null,
+    "imageStatus": 200,
+    "thumbnailStatus": 0,
+    "imageFormat": "jpg",
+    "thumbnailFormat": null
+  },
+  {
+    "uuid": "0addbdf4-6f98-4112-a7a6-19ed15e6dde7",
+    "name": "Exercício 1773157234245 EDIT",
+    "imageUrl": "https://i.ytimg.com/vi/JhBVNUpkdo0/hq720_2.jpg",
+    "thumbnailUrl": null,
+    "imageStatus": 200,
+    "thumbnailStatus": 0,
+    "imageFormat": "jpg",
+    "thumbnailFormat": null
+  },
+  {
+    "uuid": "1aad542e-26ee-4758-8a97-450e4db0d3fa",
+    "name": "Flexão de Joelho em Pronação",
+    "imageUrl": "https://media.moocafisio.com.br/exercises/1aad542e-26ee-4758-8a97-450e4db0d3fa/image.avif",
+    "thumbnailUrl": "https://fisioflow-media.r2.dev/exercises/1aad542e-26ee-4758-8a97-450e4db0d3fa/thumbnail.avif",
+    "imageStatus": 200,
+    "thumbnailStatus": 500,
+    "imageFormat": "avif",
+    "thumbnailFormat": "avif"
+  },
+  {
+    "uuid": "a846b647-74f5-41e5-a583-8147cbd61919",
+    "name": "Expansão Torácica unilateral",
+    "imageUrl": "https://media.moocafisio.com.br/exercises/a846b647-74f5-41e5-a583-8147cbd61919/image.avif",
+    "thumbnailUrl": "https://fisioflow-media.r2.dev/exercises/a846b647-74f5-41e5-a583-8147cbd61919/thumbnail.avif",
+    "imageStatus": 200,
+    "thumbnailStatus": 500,
+    "imageFormat": "avif",
+    "thumbnailFormat": "avif"
+  },
+  {
+    "uuid": "bbfab6d3-4108-44b1-867a-4bf8d3e17514",
+    "name": "Torção de Toalha (Grip)",
+    "imageUrl": "https://media.moocafisio.com.br/exercises/bbfab6d3-4108-44b1-867a-4bf8d3e17514/image.avif",
+    "thumbnailUrl": "https://fisioflow-media.r2.dev/exercises/bbfab6d3-4108-44b1-867a-4bf8d3e17514/thumbnail.avif",
+    "imageStatus": 200,
+    "thumbnailStatus": 500,
+    "imageFormat": "avif",
+    "thumbnailFormat": "avif"
+  },
+  {
+    "uuid": "9eec7ecd-e16c-491a-9843-45c9fb9b3eeb",
+    "name": "Isometria Cervical (Inclinção Lateral)",
+    "imageUrl": "https://media.moocafisio.com.br/exercises/9eec7ecd-e16c-491a-9843-45c9fb9b3eeb/image.avif",
+    "thumbnailUrl": "https://fisioflow-media.r2.dev/exercises/9eec7ecd-e16c-491a-9843-45c9fb9b3eeb/thumbnail.avif",
+    "imageStatus": 200,
+    "thumbnailStatus": 500,
+    "imageFormat": "avif",
+    "thumbnailFormat": "avif"
+  },
+  {
+    "uuid": "577b7d6e-b3c3-431a-9d85-9addd133f3c9",
+    "name": "Extensão de Punho com Halter",
+    "imageUrl": "https://media.moocafisio.com.br/exercises/577b7d6e-b3c3-431a-9d85-9addd133f3c9/image.avif",
+    "thumbnailUrl": "https://fisioflow-media.r2.dev/exercises/577b7d6e-b3c3-431a-9d85-9addd133f3c9/thumbnail.avif",
+    "imageStatus": 200,
+    "thumbnailStatus": 500,
+    "imageFormat": "avif",
+    "thumbnailFormat": "avif"
+  },
+  {
+    "uuid": "c15042de-aa4f-4cde-9cf9-28cdb6c8169e",
+    "name": "Nordic Hamstring Curl",
+    "imageUrl": "https://media.moocafisio.com.br/exercises/c15042de-aa4f-4cde-9cf9-28cdb6c8169e/image.avif",
+    "thumbnailUrl": "https://fisioflow-media.r2.dev/exercises/c15042de-aa4f-4cde-9cf9-28cdb6c8169e/thumbnail.avif",
+    "imageStatus": 200,
+    "thumbnailStatus": 500,
+    "imageFormat": "avif",
+    "thumbnailFormat": "avif"
+  },
+  {
+    "uuid": "ed0d2a9e-281f-41fd-b314-29dd5d6b18b2",
+    "name": "Rolling com Foam Roller",
+    "imageUrl": "https://media.moocafisio.com.br/exercises/ed0d2a9e-281f-41fd-b314-29dd5d6b18b2/image.avif",
+    "thumbnailUrl": "https://fisioflow-media.r2.dev/exercises/ed0d2a9e-281f-41fd-b314-29dd5d6b18b2/thumbnail.avif",
+    "imageStatus": 200,
+    "thumbnailStatus": 500,
+    "imageFormat": "avif",
+    "thumbnailFormat": "avif"
+  },
+  {
+    "uuid": "00b03826-fd00-4741-b4ba-3fe06c71cc34",
+    "name": "Respiração Costal Inferior",
+    "imageUrl": "https://media.moocafisio.com.br/exercises/00b03826-fd00-4741-b4ba-3fe06c71cc34/image.avif",
+    "thumbnailUrl": "https://fisioflow-media.r2.dev/exercises/00b03826-fd00-4741-b4ba-3fe06c71cc34/thumbnail.avif",
+    "imageStatus": 200,
+    "thumbnailStatus": 500,
+    "imageFormat": "avif",
+    "thumbnailFormat": "avif"
+  },
+  {
+    "uuid": "c773d10f-e2ed-4ca6-864a-f355a83ceeda",
+    "name": "Flexão de Braço na Parede",
+    "imageUrl": "https://media.moocafisio.com.br/exercises/c773d10f-e2ed-4ca6-864a-f355a83ceeda/image.avif",
+    "thumbnailUrl": "https://fisioflow-media.r2.dev/exercises/c773d10f-e2ed-4ca6-864a-f355a83ceeda/thumbnail.avif",
+    "imageStatus": 200,
+    "thumbnailStatus": 500,
+    "imageFormat": "avif",
+    "thumbnailFormat": "avif"
+  },
+  {
+    "uuid": "55be11db-c9c8-482f-bc30-f0e57f4e7b72",
+    "name": "Marcha Estacionária Alta",
+    "imageUrl": "https://media.moocafisio.com.br/exercises/55be11db-c9c8-482f-bc30-f0e57f4e7b72/image.avif",
+    "thumbnailUrl": "https://fisioflow-media.r2.dev/exercises/55be11db-c9c8-482f-bc30-f0e57f4e7b72/thumbnail.avif",
+    "imageStatus": 200,
+    "thumbnailStatus": 500,
+    "imageFormat": "avif",
+    "thumbnailFormat": "avif"
+  },
+  {
+    "uuid": "70f736f0-8a3b-4984-af93-c48ac192c748",
+    "name": "Agachamento com Soco",
+    "imageUrl": "https://media.moocafisio.com.br/exercises/70f736f0-8a3b-4984-af93-c48ac192c748/image.avif",
+    "thumbnailUrl": "https://fisioflow-media.r2.dev/exercises/70f736f0-8a3b-4984-af93-c48ac192c748/thumbnail.avif",
+    "imageStatus": 200,
+    "thumbnailStatus": 500,
+    "imageFormat": "avif",
+    "thumbnailFormat": "avif"
+  },
+  {
+    "uuid": "3f57c569-7c3d-4203-a0b0-9252839c50da",
+    "name": "Salto Horizontal (Broad Jump)",
+    "imageUrl": "https://media.moocafisio.com.br/exercises/3f57c569-7c3d-4203-a0b0-9252839c50da/image.avif",
+    "thumbnailUrl": "https://fisioflow-media.r2.dev/exercises/3f57c569-7c3d-4203-a0b0-9252839c50da/thumbnail.avif",
+    "imageStatus": 200,
+    "thumbnailStatus": 500,
+    "imageFormat": "avif",
+    "thumbnailFormat": "avif"
+  },
+  {
+    "uuid": "4f3a3e90-6240-4fd7-84ba-959830031184",
+    "name": "Medicine Ball Slam",
+    "imageUrl": "https://media.moocafisio.com.br/exercises/4f3a3e90-6240-4fd7-84ba-959830031184/image.avif",
+    "thumbnailUrl": "https://fisioflow-media.r2.dev/exercises/4f3a3e90-6240-4fd7-84ba-959830031184/thumbnail.avif",
+    "imageStatus": 200,
+    "thumbnailStatus": 500,
+    "imageFormat": "avif",
+    "thumbnailFormat": "avif"
+  },
+  {
+    "uuid": "fc207ece-1acb-4fdc-849f-0b47eee02d03",
+    "name": "Tuck Jump (Salto Grupard)",
+    "imageUrl": "https://media.moocafisio.com.br/exercises/fc207ece-1acb-4fdc-849f-0b47eee02d03/image.avif",
+    "thumbnailUrl": "https://fisioflow-media.r2.dev/exercises/fc207ece-1acb-4fdc-849f-0b47eee02d03/thumbnail.avif",
+    "imageStatus": 200,
+    "thumbnailStatus": 500,
+    "imageFormat": "avif",
+    "thumbnailFormat": "avif"
+  },
+  {
+    "uuid": "9749eff6-5362-48c3-9448-67e7d0dce8e8",
+    "name": "Elevação de Pernas na Barra",
+    "imageUrl": "https://media.moocafisio.com.br/exercises/9749eff6-5362-48c3-9448-67e7d0dce8e8/image.avif",
+    "thumbnailUrl": "https://fisioflow-media.r2.dev/exercises/9749eff6-5362-48c3-9448-67e7d0dce8e8/thumbnail.avif",
+    "imageStatus": 200,
+    "thumbnailStatus": 500,
+    "imageFormat": "avif",
+    "thumbnailFormat": "avif"
+  },
+  {
+    "uuid": "8bbfbc91-dd2d-4b53-9dcb-5b1b99404bf3",
+    "name": "Exercício 1773157003872 EDIT",
+    "imageUrl": "https://i.ytimg.com/vi/P-NdPWxDgrU/hq720.jpg",
+    "thumbnailUrl": null,
+    "imageStatus": 200,
+    "thumbnailStatus": 0,
+    "imageFormat": "jpg",
+    "thumbnailFormat": null
+  },
+  {
+    "uuid": "bb55dfb5-03f9-40e8-8a0b-8c6f5e6882fc",
+    "name": "E2E Exercício 1773252585726",
+    "imageUrl": "https://i.ytimg.com/vi/P-NdPWxDgrU/hq720.jpg",
+    "thumbnailUrl": null,
+    "imageStatus": 200,
+    "thumbnailStatus": 0,
+    "imageFormat": "jpg",
+    "thumbnailFormat": null
+  },
+  {
+    "uuid": "e7404a6b-2e13-462d-b574-b3ef8a8be90d",
+    "name": "E2E Exercício 1773253900285",
+    "imageUrl": "https://i.ytimg.com/vi/e-JUfgcn3H0/hq720_2.jpg",
+    "thumbnailUrl": null,
+    "imageStatus": 200,
+    "thumbnailStatus": 0,
+    "imageFormat": "jpg",
+    "thumbnailFormat": null
+  },
+  {
+    "uuid": "9723383b-ccdc-4815-a219-8e42d0c87944",
+    "name": "Mobilização de Nervo Ulnar",
+    "imageUrl": "https://media.moocafisio.com.br/exercises/9723383b-ccdc-4815-a219-8e42d0c87944/image.avif",
+    "thumbnailUrl": "https://fisioflow-media.r2.dev/exercises/9723383b-ccdc-4815-a219-8e42d0c87944/thumbnail.avif",
+    "imageStatus": 200,
+    "thumbnailStatus": 500,
+    "imageFormat": "avif",
+    "thumbnailFormat": "avif"
+  },
+  {
+    "uuid": "50729cb6-5ec7-4d82-830d-13f567589a8a",
+    "name": "Carrying de Carga (Farmer Walk)",
+    "imageUrl": "https://media.moocafisio.com.br/exercises/50729cb6-5ec7-4d82-830d-13f567589a8a/image.avif",
+    "thumbnailUrl": "https://fisioflow-media.r2.dev/exercises/50729cb6-5ec7-4d82-830d-13f567589a8a/thumbnail.avif",
+    "imageStatus": 200,
+    "thumbnailStatus": 500,
+    "imageFormat": "avif",
+    "thumbnailFormat": "avif"
+  },
+  {
+    "uuid": "10680f49-f713-41bb-98b9-9ec93825116e",
+    "name": "Ab Wheel Rollout",
+    "imageUrl": "https://media.moocafisio.com.br/exercises/10680f49-f713-41bb-98b9-9ec93825116e/image.avif",
+    "thumbnailUrl": "https://fisioflow-media.r2.dev/exercises/10680f49-f713-41bb-98b9-9ec93825116e/thumbnail.avif",
+    "imageStatus": 200,
+    "thumbnailStatus": 500,
+    "imageFormat": "avif",
+    "thumbnailFormat": "avif"
+  },
+  {
+    "uuid": "5559e99d-bc89-47eb-b4c2-0960e21e0346",
+    "name": "Alongamento de Peitoral no Canto",
+    "imageUrl": "https://media.moocafisio.com.br/exercises/5559e99d-bc89-47eb-b4c2-0960e21e0346/image.avif",
+    "thumbnailUrl": "https://fisioflow-media.r2.dev/exercises/5559e99d-bc89-47eb-b4c2-0960e21e0346/thumbnail.avif",
+    "imageStatus": 200,
+    "thumbnailStatus": 500,
+    "imageFormat": "avif",
+    "thumbnailFormat": "avif"
+  },
+  {
+    "uuid": "a025c68c-a3cb-45d6-82fb-2de5ad632766",
+    "name": "Escalada na Parede (Wall Climber)",
+    "imageUrl": "https://media.moocafisio.com.br/exercises/a025c68c-a3cb-45d6-82fb-2de5ad632766/image.avif",
+    "thumbnailUrl": "https://fisioflow-media.r2.dev/exercises/a025c68c-a3cb-45d6-82fb-2de5ad632766/thumbnail.avif",
+    "imageStatus": 200,
+    "thumbnailStatus": 500,
+    "imageFormat": "avif",
+    "thumbnailFormat": "avif"
+  },
+  {
+    "uuid": "fbe63e9c-f8ec-4b82-aa8a-c6c2b3a4e4f7",
+    "name": "Caminhada nos Calcanhares",
+    "imageUrl": "https://i.ytimg.com/vi/fPPIDcDcmC0/hq720.jpg",
+    "thumbnailUrl": null,
+    "imageStatus": 200,
+    "thumbnailStatus": 0,
+    "imageFormat": "jpg",
+    "thumbnailFormat": null
+  },
+  {
+    "uuid": "8e6df1f7-a78d-481a-b9ce-37c3438a045c",
+    "name": "Exercício 1773157087227 EDIT",
+    "imageUrl": "https://i.ytimg.com/vi/B5CUJwmfdDo/hq720_2.jpg",
+    "thumbnailUrl": null,
+    "imageStatus": 200,
+    "thumbnailStatus": 0,
+    "imageFormat": "jpg",
+    "thumbnailFormat": null
+  },
+  {
+    "uuid": "8595c6ce-5f03-404a-bbd0-fa56f6c64b25",
+    "name": "E2E Exercicio 1773172792489",
+    "imageUrl": "https://i.ytimg.com/vi/qAhqPSv7EsQ/hq720.jpg",
+    "thumbnailUrl": null,
+    "imageStatus": 200,
+    "thumbnailStatus": 0,
+    "imageFormat": "jpg",
+    "thumbnailFormat": null
+  },
+  {
+    "uuid": "f3d4b00a-4981-43bb-b1da-cd880f2771a3",
+    "name": "E2E Exercicio 1773173386309",
+    "imageUrl": "https://i.ytimg.com/vi/rYguUwD_SmI/hq720.jpg",
+    "thumbnailUrl": null,
+    "imageStatus": 200,
+    "thumbnailStatus": 0,
+    "imageFormat": "jpg",
+    "thumbnailFormat": null
+  },
+  {
+    "uuid": "0c4077f8-179f-43b1-b4ff-05d8a14803f0",
+    "name": "Flexão Inclinada",
+    "imageUrl": "https://media.moocafisio.com.br/exercises/0c4077f8-179f-43b1-b4ff-05d8a14803f0/image.avif",
+    "thumbnailUrl": "https://fisioflow-media.r2.dev/exercises/0c4077f8-179f-43b1-b4ff-05d8a14803f0/thumbnail.avif",
+    "imageStatus": 200,
+    "thumbnailStatus": 500,
+    "imageFormat": "avif",
+    "thumbnailFormat": "avif"
+  },
+  {
+    "uuid": "88c5043c-6ddb-42a6-99b5-96cd3a3ec56b",
+    "name": "Extensão de Cotovelo com Garrafa",
+    "imageUrl": "https://media.moocafisio.com.br/exercises/88c5043c-6ddb-42a6-99b5-96cd3a3ec56b/image.avif",
+    "thumbnailUrl": "https://fisioflow-media.r2.dev/exercises/88c5043c-6ddb-42a6-99b5-96cd3a3ec56b/thumbnail.avif",
+    "imageStatus": 200,
+    "thumbnailStatus": 500,
+    "imageFormat": "avif",
+    "thumbnailFormat": "avif"
+  },
+  {
+    "uuid": "a621e7bf-7b02-4b2c-83b8-b3f81e4fae95",
+    "name": "Alongamento de Peitoral na Porta",
+    "imageUrl": "https://media.moocafisio.com.br/exercises/a621e7bf-7b02-4b2c-83b8-b3f81e4fae95/image.avif",
+    "thumbnailUrl": "https://fisioflow-media.r2.dev/exercises/a621e7bf-7b02-4b2c-83b8-b3f81e4fae95/thumbnail.avif",
+    "imageStatus": 200,
+    "thumbnailStatus": 500,
+    "imageFormat": "avif",
+    "thumbnailFormat": "avif"
+  },
+  {
+    "uuid": "e9a54ab2-a99b-4b10-b548-f2b643fdea45",
+    "name": "Elevação Lateral de Ombro (0-90°)",
+    "imageUrl": "https://media.moocafisio.com.br/exercises/e9a54ab2-a99b-4b10-b548-f2b643fdea45/image.avif",
+    "thumbnailUrl": "https://fisioflow-media.r2.dev/exercises/e9a54ab2-a99b-4b10-b548-f2b643fdea45/thumbnail.avif",
+    "imageStatus": 200,
+    "thumbnailStatus": 500,
+    "imageFormat": "avif",
+    "thumbnailFormat": "avif"
+  },
+  {
+    "uuid": "e74298ae-21c3-4e6e-83a8-354c722c9d7e",
+    "name": "Círculos de Quadril",
+    "imageUrl": "https://media.moocafisio.com.br/exercises/e74298ae-21c3-4e6e-83a8-354c722c9d7e/image.avif",
+    "thumbnailUrl": "https://fisioflow-media.r2.dev/exercises/e74298ae-21c3-4e6e-83a8-354c722c9d7e/thumbnail.avif",
+    "imageStatus": 200,
+    "thumbnailStatus": 500,
+    "imageFormat": "avif",
+    "thumbnailFormat": "avif"
+  },
+  {
+    "uuid": "f5301e49-9396-4fc4-8198-9e69b06a807e",
+    "name": "Coordenação Cruzada (Cross Crawl)",
+    "imageUrl": "https://media.moocafisio.com.br/exercises/f5301e49-9396-4fc4-8198-9e69b06a807e/image.avif",
+    "thumbnailUrl": "https://fisioflow-media.r2.dev/exercises/f5301e49-9396-4fc4-8198-9e69b06a807e/thumbnail.avif",
+    "imageStatus": 200,
+    "thumbnailStatus": 500,
+    "imageFormat": "avif",
+    "thumbnailFormat": "avif"
+  },
+  {
+    "uuid": "3e4379aa-1bbe-470d-a902-6b318fac80ea",
+    "name": "Step Touch com Braços",
+    "imageUrl": "https://media.moocafisio.com.br/exercises/3e4379aa-1bbe-470d-a902-6b318fac80ea/image.avif",
+    "thumbnailUrl": "https://fisioflow-media.r2.dev/exercises/3e4379aa-1bbe-470d-a902-6b318fac80ea/thumbnail.avif",
+    "imageStatus": 200,
+    "thumbnailStatus": 500,
+    "imageFormat": "avif",
+    "thumbnailFormat": "avif"
+  },
+  {
+    "uuid": "13194255-4faa-480f-a13c-6081fdd2a831",
+    "name": "Polichinelo Adaptado",
+    "imageUrl": "https://media.moocafisio.com.br/exercises/13194255-4faa-480f-a13c-6081fdd2a831/image.avif",
+    "thumbnailUrl": "https://fisioflow-media.r2.dev/exercises/13194255-4faa-480f-a13c-6081fdd2a831/thumbnail.avif",
+    "imageStatus": 200,
+    "thumbnailStatus": 500,
+    "imageFormat": "avif",
+    "thumbnailFormat": "avif"
+  },
+  {
+    "uuid": "f4a309c4-ce4c-4be9-bc48-b2cb34aacb04",
+    "name": "Descida Controlada de Degrau",
+    "imageUrl": "https://media.moocafisio.com.br/exercises/f4a309c4-ce4c-4be9-bc48-b2cb34aacb04/image.avif",
+    "thumbnailUrl": "https://fisioflow-media.r2.dev/exercises/f4a309c4-ce4c-4be9-bc48-b2cb34aacb04/thumbnail.avif",
+    "imageStatus": 200,
+    "thumbnailStatus": 500,
+    "imageFormat": "avif",
+    "thumbnailFormat": "avif"
+  },
+  {
+    "uuid": "7fc51511-d748-40e8-8a1d-620bf1781e0a",
+    "name": "Mobilização de Coluna Thorácica com Foam Roller",
+    "imageUrl": "https://media.moocafisio.com.br/exercises/7fc51511-d748-40e8-8a1d-620bf1781e0a/image.avif",
+    "thumbnailUrl": "https://fisioflow-media.r2.dev/exercises/7fc51511-d748-40e8-8a1d-620bf1781e0a/thumbnail.avif",
+    "imageStatus": 200,
+    "thumbnailStatus": 500,
+    "imageFormat": "avif",
+    "thumbnailFormat": "avif"
+  },
+  {
+    "uuid": "9da8f08b-1db1-49fd-980f-8f8c2a923989",
+    "name": "Rowing com Faixa Elástica",
+    "imageUrl": "https://media.moocafisio.com.br/exercises/9da8f08b-1db1-49fd-980f-8f8c2a923989/image.avif",
+    "thumbnailUrl": "https://fisioflow-media.r2.dev/exercises/9da8f08b-1db1-49fd-980f-8f8c2a923989/thumbnail.avif",
+    "imageStatus": 200,
+    "thumbnailStatus": 500,
+    "imageFormat": "avif",
+    "thumbnailFormat": "avif"
+  },
+  {
+    "uuid": "de6daecf-7e3a-497e-a9a9-41b6a97d3ed8",
+    "name": "Prancha Abdominal",
+    "imageUrl": "https://media.moocafisio.com.br/exercises/de6daecf-7e3a-497e-a9a9-41b6a97d3ed8/image.avif",
+    "thumbnailUrl": "https://fisioflow-media.r2.dev/exercises/de6daecf-7e3a-497e-a9a9-41b6a97d3ed8/thumbnail.avif",
+    "imageStatus": 200,
+    "thumbnailStatus": 500,
+    "imageFormat": "avif",
+    "thumbnailFormat": "avif"
+  },
+  {
+    "uuid": "e7f16c0f-7597-42b1-acfd-cce87575fd23",
+    "name": "Subida de Escada",
+    "imageUrl": "https://media.moocafisio.com.br/exercises/e7f16c0f-7597-42b1-acfd-cce87575fd23/image.avif",
+    "thumbnailUrl": "https://fisioflow-media.r2.dev/exercises/e7f16c0f-7597-42b1-acfd-cce87575fd23/thumbnail.avif",
+    "imageStatus": 200,
+    "thumbnailStatus": 500,
+    "imageFormat": "avif",
+    "thumbnailFormat": "avif"
+  },
+  {
+    "uuid": "d6ffdfe8-8442-4951-9904-51239f5765e9",
+    "name": "Mobilização de Quadril (Capsular)",
+    "imageUrl": "https://media.moocafisio.com.br/exercises/d6ffdfe8-8442-4951-9904-51239f5765e9/image.avif",
+    "thumbnailUrl": "https://fisioflow-media.r2.dev/exercises/d6ffdfe8-8442-4951-9904-51239f5765e9/thumbnail.avif",
+    "imageStatus": 200,
+    "thumbnailStatus": 500,
+    "imageFormat": "avif",
+    "thumbnailFormat": "avif"
+  },
+  {
+    "uuid": "eee9e338-9f83-45b1-b27a-2280f370a73b",
+    "name": "Preensão de Toalha com os Dedos",
+    "imageUrl": "https://media.moocafisio.com.br/exercises/eee9e338-9f83-45b1-b27a-2280f370a73b/image.avif",
+    "thumbnailUrl": "https://fisioflow-media.r2.dev/exercises/eee9e338-9f83-45b1-b27a-2280f370a73b/thumbnail.avif",
+    "imageStatus": 200,
+    "thumbnailStatus": 500,
+    "imageFormat": "avif",
+    "thumbnailFormat": "avif"
+  },
+  {
+    "uuid": "ec506e09-826f-4f30-886c-b90d54ea4aa2",
+    "name": "Extensão de Punho",
+    "imageUrl": "https://media.moocafisio.com.br/exercises/ec506e09-826f-4f30-886c-b90d54ea4aa2/image.avif",
+    "thumbnailUrl": "https://fisioflow-media.r2.dev/exercises/ec506e09-826f-4f30-886c-b90d54ea4aa2/thumbnail.avif",
+    "imageStatus": 200,
+    "thumbnailStatus": 500,
+    "imageFormat": "avif",
+    "thumbnailFormat": "avif"
+  },
+  {
+    "uuid": "4b616021-729d-4de6-b20f-b2ec4b37b2a3",
+    "name": "Extensão de Joelho em Cadeia Cinética Aberta",
+    "imageUrl": "https://media.moocafisio.com.br/exercises/4b616021-729d-4de6-b20f-b2ec4b37b2a3/image.avif",
+    "thumbnailUrl": "https://fisioflow-media.r2.dev/exercises/4b616021-729d-4de6-b20f-b2ec4b37b2a3/thumbnail.avif",
+    "imageStatus": 200,
+    "thumbnailStatus": 500,
+    "imageFormat": "avif",
+    "thumbnailFormat": "avif"
+  },
+  {
+    "uuid": "05cc9ea0-8087-492a-8750-ecabf4d1373f",
+    "name": "BOSU Ball Squat",
+    "imageUrl": "https://media.moocafisio.com.br/exercises/05cc9ea0-8087-492a-8750-ecabf4d1373f/image.avif",
+    "thumbnailUrl": "https://fisioflow-media.r2.dev/exercises/05cc9ea0-8087-492a-8750-ecabf4d1373f/thumbnail.avif",
+    "imageStatus": 200,
+    "thumbnailStatus": 500,
+    "imageFormat": "avif",
+    "thumbnailFormat": "avif"
+  },
+  {
+    "uuid": "2e57d2da-071a-4c73-889a-faa456447738",
+    "name": "Deslocamento Lateral (Shuffle)",
+    "imageUrl": "https://media.moocafisio.com.br/exercises/2e57d2da-071a-4c73-889a-faa456447738/image.avif",
+    "thumbnailUrl": "https://fisioflow-media.r2.dev/exercises/2e57d2da-071a-4c73-889a-faa456447738/thumbnail.avif",
+    "imageStatus": 200,
+    "thumbnailStatus": 500,
+    "imageFormat": "avif",
+    "thumbnailFormat": "avif"
+  },
+  {
+    "uuid": "6c6b60cb-347b-4317-8e49-449f9cea9d2b",
+    "name": "Corner Stretch (Alongamento no Canto)",
+    "imageUrl": "https://i.ytimg.com/vi/wz13wVcULxM/hq720.jpg",
+    "thumbnailUrl": null,
+    "imageStatus": 200,
+    "thumbnailStatus": 0,
+    "imageFormat": "jpg",
+    "thumbnailFormat": null
+  },
+  {
+    "uuid": "158c531f-3285-4a29-913e-a486e1b48350",
+    "name": "Chin Tuck com Elevação (Head Lift)",
+    "imageUrl": "https://media.moocafisio.com.br/exercises/158c531f-3285-4a29-913e-a486e1b48350/image.avif",
+    "thumbnailUrl": "https://fisioflow-media.r2.dev/exercises/158c531f-3285-4a29-913e-a486e1b48350/thumbnail.avif",
+    "imageStatus": 200,
+    "thumbnailStatus": 500,
+    "imageFormat": "avif",
+    "thumbnailFormat": "avif"
+  },
+  {
+    "uuid": "d45ebafe-e55e-442f-a745-28fa9f149b5b",
+    "name": "Retração Escapular",
+    "imageUrl": "https://media.moocafisio.com.br/exercises/d45ebafe-e55e-442f-a745-28fa9f149b5b/image.avif",
+    "thumbnailUrl": "https://fisioflow-media.r2.dev/exercises/d45ebafe-e55e-442f-a745-28fa9f149b5b/thumbnail.avif",
+    "imageStatus": 200,
+    "thumbnailStatus": 500,
+    "imageFormat": "avif",
+    "thumbnailFormat": "avif"
+  },
+  {
+    "uuid": "cc193885-c225-4308-961d-6344ba96bcd9",
+    "name": "Deslizamento de Tendões (Tendon Glides)",
+    "imageUrl": "https://media.moocafisio.com.br/exercises/cc193885-c225-4308-961d-6344ba96bcd9/image.avif",
+    "thumbnailUrl": "https://fisioflow-media.r2.dev/exercises/cc193885-c225-4308-961d-6344ba96bcd9/thumbnail.avif",
+    "imageStatus": 200,
+    "thumbnailStatus": 500,
+    "imageFormat": "avif",
+    "thumbnailFormat": "avif"
+  },
+  {
+    "uuid": "8371d239-46d5-45e4-98d4-5c350d76ba9b",
+    "name": "Clamshell (Concha)",
+    "imageUrl": "https://media.moocafisio.com.br/exercises/8371d239-46d5-45e4-98d4-5c350d76ba9b/image.avif",
+    "thumbnailUrl": "https://fisioflow-media.r2.dev/exercises/8371d239-46d5-45e4-98d4-5c350d76ba9b/thumbnail.avif",
+    "imageStatus": 200,
+    "thumbnailStatus": 500,
+    "imageFormat": "avif",
+    "thumbnailFormat": "avif"
+  },
+  {
+    "uuid": "6bc8caa0-645b-469e-b7e8-4aa18d336761",
+    "name": "Burpee Modificado",
+    "imageUrl": "https://media.moocafisio.com.br/exercises/6bc8caa0-645b-469e-b7e8-4aa18d336761/image.avif",
+    "thumbnailUrl": "https://fisioflow-media.r2.dev/exercises/6bc8caa0-645b-469e-b7e8-4aa18d336761/thumbnail.avif",
+    "imageStatus": 200,
+    "thumbnailStatus": 500,
+    "imageFormat": "avif",
+    "thumbnailFormat": "avif"
+  },
+  {
+    "uuid": "b2baee7b-8594-4298-8056-20946cdf57ba",
+    "name": "Prone Y-T-W",
+    "imageUrl": "https://media.moocafisio.com.br/exercises/b2baee7b-8594-4298-8056-20946cdf57ba/image.avif",
+    "thumbnailUrl": "https://fisioflow-media.r2.dev/exercises/b2baee7b-8594-4298-8056-20946cdf57ba/thumbnail.avif",
+    "imageStatus": 200,
+    "thumbnailStatus": 500,
+    "imageFormat": "avif",
+    "thumbnailFormat": "avif"
+  },
+  {
+    "uuid": "52b768f7-3d62-4379-b756-18626a24f4d1",
+    "name": "Equilíbrio Unipodal em Disco/Espuma",
+    "imageUrl": "https://media.moocafisio.com.br/exercises/52b768f7-3d62-4379-b756-18626a24f4d1/image.avif",
+    "thumbnailUrl": "https://fisioflow-media.r2.dev/exercises/52b768f7-3d62-4379-b756-18626a24f4d1/thumbnail.avif",
+    "imageStatus": 200,
+    "thumbnailStatus": 500,
+    "imageFormat": "avif",
+    "thumbnailFormat": "avif"
+  },
+  {
+    "uuid": "0c9b37a4-2fef-487f-b746-fce035272b10",
+    "name": "Rotação Interna de Ombro com Thera-Band",
+    "imageUrl": "https://i.ytimg.com/vi/dQoE-UEs5LM/hq720.jpg",
+    "thumbnailUrl": null,
+    "imageStatus": 200,
+    "thumbnailStatus": 0,
+    "imageFormat": "jpg",
+    "thumbnailFormat": null
+  },
+  {
+    "uuid": "a2129d7d-6679-443b-ac47-5e2063309f36",
+    "name": "Sentar e Levantar da Cadeira (Sit-to-Stand)",
+    "imageUrl": "https://i.ytimg.com/vi/tIpa1dnMGeI/hq720_2.jpg",
+    "thumbnailUrl": null,
+    "imageStatus": 200,
+    "thumbnailStatus": 0,
+    "imageFormat": "jpg",
+    "thumbnailFormat": null
+  },
+  {
+    "uuid": "cbb419ee-c38d-4396-b597-52fcf5ada112",
+    "name": "Exercício de Teste - Alongamento de Isquiotibiais",
+    "imageUrl": "https://i.ytimg.com/vi/V5cGLIu7N0g/hq2.jpg",
+    "thumbnailUrl": null,
+    "imageStatus": 200,
+    "thumbnailStatus": 0,
+    "imageFormat": "jpg",
+    "thumbnailFormat": null
+  },
+  {
+    "uuid": "e57a3517-b93f-4dfc-9a36-7155521d1d0e",
+    "name": "Stretching Global Ativo",
+    "imageUrl": "https://media.moocafisio.com.br/exercises/e57a3517-b93f-4dfc-9a36-7155521d1d0e/image.avif",
+    "thumbnailUrl": "https://fisioflow-media.r2.dev/exercises/e57a3517-b93f-4dfc-9a36-7155521d1d0e/thumbnail.avif",
+    "imageStatus": 200,
+    "thumbnailStatus": 500,
+    "imageFormat": "avif",
+    "thumbnailFormat": "avif"
+  },
+  {
+    "uuid": "2cd154da-2ec7-4da9-893a-1a301e4221cd",
+    "name": "Pronação e Supinação com Peso",
+    "imageUrl": "https://media.moocafisio.com.br/exercises/2cd154da-2ec7-4da9-893a-1a301e4221cd/image.avif",
+    "thumbnailUrl": "https://fisioflow-media.r2.dev/exercises/2cd154da-2ec7-4da9-893a-1a301e4221cd/thumbnail.avif",
+    "imageStatus": 200,
+    "thumbnailStatus": 500,
+    "imageFormat": "avif",
+    "thumbnailFormat": "avif"
+  },
+  {
+    "uuid": "533a69d8-7fb5-44a5-a51d-721fba253192",
+    "name": "Pronação e Supinação de Punho",
+    "imageUrl": "https://media.moocafisio.com.br/exercises/533a69d8-7fb5-44a5-a51d-721fba253192/image.avif",
+    "thumbnailUrl": "https://fisioflow-media.r2.dev/exercises/533a69d8-7fb5-44a5-a51d-721fba253192/thumbnail.avif",
+    "imageStatus": 200,
+    "thumbnailStatus": 500,
+    "imageFormat": "avif",
+    "thumbnailFormat": "avif"
+  },
+  {
+    "uuid": "7526c048-545e-488b-8f4d-0e23ddd9a4f2",
+    "name": "Hollow Rock (Canoa)",
+    "imageUrl": "https://media.moocafisio.com.br/exercises/7526c048-545e-488b-8f4d-0e23ddd9a4f2/image.avif",
+    "thumbnailUrl": "https://fisioflow-media.r2.dev/exercises/7526c048-545e-488b-8f4d-0e23ddd9a4f2/thumbnail.avif",
+    "imageStatus": 200,
+    "thumbnailStatus": 500,
+    "imageFormat": "avif",
+    "thumbnailFormat": "avif"
+  },
+  {
+    "uuid": "c8ef6137-514c-439a-b522-199ed4ac7968",
+    "name": "Agachamento Livre",
+    "imageUrl": "https://i.ytimg.com/vi/n8YNOz0W5kM/hq720.jpg",
+    "thumbnailUrl": null,
+    "imageStatus": 200,
+    "thumbnailStatus": 0,
+    "imageFormat": "jpg",
+    "thumbnailFormat": null
+  },
+  {
+    "uuid": "f31824d4-ce62-4c4a-80ea-2b248041de7d",
+    "name": "Rotação Torácica Sentado",
+    "imageUrl": "https://i.ytimg.com/vi/BAsD0SqDbr4/hq720.jpg",
+    "thumbnailUrl": null,
+    "imageStatus": 200,
+    "thumbnailStatus": 0,
+    "imageFormat": "jpg",
+    "thumbnailFormat": null
+  },
+  {
+    "uuid": "620fc8d3-0d28-4499-9102-6a9a3e86d5d9",
+    "name": "Elevação de Calcanhar Sentado",
+    "imageUrl": "https://i.ytimg.com/vi/3Na2HeL4i-c/hq720.jpg",
+    "thumbnailUrl": null,
+    "imageStatus": 200,
+    "thumbnailStatus": 0,
+    "imageFormat": "jpg",
+    "thumbnailFormat": null
+  },
+  {
+    "uuid": "230ba5be-9b9b-4e33-989c-33175b477d37",
+    "name": "Wall Angels (Anjos na Parede)",
+    "imageUrl": "https://i.ytimg.com/vi/xg5fYtn305I/hq720.jpg",
+    "thumbnailUrl": null,
+    "imageStatus": 200,
+    "thumbnailStatus": 0,
+    "imageFormat": "jpg",
+    "thumbnailFormat": null
+  },
+  {
+    "uuid": "bf41a9b5-fc3f-4110-8b71-0ef5d9aa4b6d",
+    "name": "Apoio Unipodal Olhos Fechados",
+    "imageUrl": "https://i.ytimg.com/vi/z-GrNaTVDhw/hq720.jpg",
+    "thumbnailUrl": null,
+    "imageStatus": 200,
+    "thumbnailStatus": 0,
+    "imageFormat": "jpg",
+    "thumbnailFormat": null
+  },
+  {
+    "uuid": "0d194359-daa9-4579-b24d-b31d0b7e0312",
+    "name": "Clock Reach (Alcance do Relógio)",
+    "imageUrl": "https://i.ytimg.com/vi/s6bVhXYdsp0/hq720.jpg",
+    "thumbnailUrl": null,
+    "imageStatus": 200,
+    "thumbnailStatus": 0,
+    "imageFormat": "jpg",
+    "thumbnailFormat": null
+  },
+  {
+    "uuid": "092ddd12-0558-4b87-99a0-c073603eb1e5",
+    "name": "Caminhada na Ponta dos Pés",
+    "imageUrl": "https://i.ytimg.com/vi/0BGFL8kI_80/hq720.jpg",
+    "thumbnailUrl": null,
+    "imageStatus": 200,
+    "thumbnailStatus": 0,
+    "imageFormat": "jpg",
+    "thumbnailFormat": null
+  },
+  {
+    "uuid": "3e8bd760-cec2-462c-9f10-39aa8c243aeb",
+    "name": "Ponte com Uma Perna",
+    "imageUrl": "https://i.ytimg.com/vi/O18cJCrlU1M/hq720_2.jpg",
+    "thumbnailUrl": null,
+    "imageStatus": 200,
+    "thumbnailStatus": 0,
+    "imageFormat": "jpg",
+    "thumbnailFormat": null
+  },
+  {
+    "uuid": "d0ea84cb-9549-48ff-abef-22c63b522832",
+    "name": "Salto Unipodal com Aterrissagem",
+    "imageUrl": null,
+    "thumbnailUrl": null,
+    "imageStatus": 0,
+    "thumbnailStatus": 0,
+    "imageFormat": null,
+    "thumbnailFormat": null
+  },
+  {
+    "uuid": "725e7c07-fe79-46fb-99f4-b6fd1738ce82",
+    "name": "Mini-Landing Protocol",
+    "imageUrl": "https://media.moocafisio.com.br/exercises/725e7c07-fe79-46fb-99f4-b6fd1738ce82/image.avif",
+    "thumbnailUrl": "https://fisioflow-media.r2.dev/exercises/725e7c07-fe79-46fb-99f4-b6fd1738ce82/thumbnail.avif",
+    "imageStatus": 200,
+    "thumbnailStatus": 500,
+    "imageFormat": "avif",
+    "thumbnailFormat": "avif"
+  },
+  {
+    "uuid": "c8392015-d666-4626-a562-7e9de6474c95",
+    "name": "Coordenação Digital (Dedos)",
+    "imageUrl": "https://media.moocafisio.com.br/exercises/c8392015-d666-4626-a562-7e9de6474c95/image.avif",
+    "thumbnailUrl": "https://fisioflow-media.r2.dev/exercises/c8392015-d666-4626-a562-7e9de6474c95/thumbnail.avif",
+    "imageStatus": 200,
+    "thumbnailStatus": 500,
+    "imageFormat": "avif",
+    "thumbnailFormat": "avif"
+  },
+  {
+    "uuid": "73573738-bb4b-43ad-b67a-f78548ad210c",
+    "name": "Alongamento Lateral de Pescoço",
+    "imageUrl": "https://media.moocafisio.com.br/exercises/73573738-bb4b-43ad-b67a-f78548ad210c/image.avif",
+    "thumbnailUrl": "https://fisioflow-media.r2.dev/exercises/73573738-bb4b-43ad-b67a-f78548ad210c/thumbnail.avif",
+    "imageStatus": 200,
+    "thumbnailStatus": 500,
+    "imageFormat": "avif",
+    "thumbnailFormat": "avif"
+  },
+  {
+    "uuid": "f6dc95d4-dc8d-4169-b717-f9bfd1ba62cc",
+    "name": "Deslizamento de Calcanhar",
+    "imageUrl": "https://media.moocafisio.com.br/exercises/f6dc95d4-dc8d-4169-b717-f9bfd1ba62cc/image.avif",
+    "thumbnailUrl": "https://fisioflow-media.r2.dev/exercises/f6dc95d4-dc8d-4169-b717-f9bfd1ba62cc/thumbnail.avif",
+    "imageStatus": 200,
+    "thumbnailStatus": 500,
+    "imageFormat": "avif",
+    "thumbnailFormat": "avif"
+  },
+  {
+    "uuid": "fc7afc33-b2ed-4db9-a166-591247232c97",
+    "name": "Alongamento de Quadríceps em Pé",
+    "imageUrl": "https://media.moocafisio.com.br/exercises/fc7afc33-b2ed-4db9-a166-591247232c97/image.avif",
+    "thumbnailUrl": "https://fisioflow-media.r2.dev/exercises/fc7afc33-b2ed-4db9-a166-591247232c97/thumbnail.avif",
+    "imageStatus": 200,
+    "thumbnailStatus": 500,
+    "imageFormat": "avif",
+    "thumbnailFormat": "avif"
+  },
+  {
+    "uuid": "296c9330-4818-4cc4-9c77-ccd1030952ce",
+    "name": "Afundo Frontal (Lunge)",
+    "imageUrl": "https://media.moocafisio.com.br/exercises/296c9330-4818-4cc4-9c77-ccd1030952ce/image.avif",
+    "thumbnailUrl": "https://fisioflow-media.r2.dev/exercises/296c9330-4818-4cc4-9c77-ccd1030952ce/thumbnail.avif",
+    "imageStatus": 200,
+    "thumbnailStatus": 500,
+    "imageFormat": "avif",
+    "thumbnailFormat": "avif"
+  },
+  {
+    "uuid": "5fea5895-0b84-4c1a-b10c-131744270173",
+    "name": "1 teste",
+    "imageUrl": "https://i.ytimg.com/vi/XuwWkKV2hxo/hq720.jpg",
+    "thumbnailUrl": null,
+    "imageStatus": 200,
+    "thumbnailStatus": 0,
+    "imageFormat": "jpg",
+    "thumbnailFormat": null
+  },
+  {
+    "uuid": "d8a822b6-4a69-4cb0-ae7d-2b71fccca5a7",
+    "name": "E2E Exercicio 1772789132667",
+    "imageUrl": "https://i.ytimg.com/vi/_zT1C9vFATE/hq720_2.jpg",
+    "thumbnailUrl": null,
+    "imageStatus": 200,
+    "thumbnailStatus": 0,
+    "imageFormat": "jpg",
+    "thumbnailFormat": null
+  },
+  {
+    "uuid": "77cc3f0b-38d1-4ebf-9831-3e1563e26a73",
+    "name": "E2E Template 1772789131481",
+    "imageUrl": "https://i.ytimg.com/vi/vH74Wolc0YU/hq720_2.jpg",
+    "thumbnailUrl": null,
+    "imageStatus": 200,
+    "thumbnailStatus": 0,
+    "imageFormat": "jpg",
+    "thumbnailFormat": null
+  },
+  {
+    "uuid": "11badf2d-3975-45e0-a661-43269e7e4280",
+    "name": "E2E Exercicio 1772789279527",
+    "imageUrl": "https://i.ytimg.com/vi/_zT1C9vFATE/hq720_2.jpg",
+    "thumbnailUrl": null,
+    "imageStatus": 200,
+    "thumbnailStatus": 0,
+    "imageFormat": "jpg",
+    "thumbnailFormat": null
+  },
+  {
+    "uuid": "06694efa-9061-47e2-8ba0-0a16d1a42a4e",
+    "name": "E2E Exercicio 1772799764480",
+    "imageUrl": "https://i.ytimg.com/vi/qAhqPSv7EsQ/hq720.jpg",
+    "thumbnailUrl": null,
+    "imageStatus": 200,
+    "thumbnailStatus": 0,
+    "imageFormat": "jpg",
+    "thumbnailFormat": null
+  },
+  {
+    "uuid": "89e48c15-48dd-49d3-acba-8a171964f177",
+    "name": "E2E Exercicio 1772905274592",
+    "imageUrl": "https://i.ytimg.com/vi/B5CUJwmfdDo/hq720_2.jpg",
+    "thumbnailUrl": null,
+    "imageStatus": 200,
+    "thumbnailStatus": 0,
+    "imageFormat": "jpg",
+    "thumbnailFormat": null
+  },
+  {
+    "uuid": "6e5dcede-d3e6-433a-a398-f1a4f9ed4c30",
+    "name": "E2E Exercise 1772757659459",
+    "imageUrl": "https://i.ytimg.com/vi/_zT1C9vFATE/hq720_2.jpg",
+    "thumbnailUrl": null,
+    "imageStatus": 200,
+    "thumbnailStatus": 0,
+    "imageFormat": "jpg",
+    "thumbnailFormat": null
+  },
+  {
+    "uuid": "8eea5078-aa0f-4868-85e4-3c1138fad046",
+    "name": "E2E Exercise 1772757739752",
+    "imageUrl": "https://i.ytimg.com/vi/B5CUJwmfdDo/hq720_2.jpg",
+    "thumbnailUrl": null,
+    "imageStatus": 200,
+    "thumbnailStatus": 0,
+    "imageFormat": "jpg",
+    "thumbnailFormat": null
+  },
+  {
+    "uuid": "cf1a5391-8608-40ae-9d93-1444c57b6ef0",
+    "name": "E2E Exercicio 1772905582900",
+    "imageUrl": "https://i.ytimg.com/vi/UcGKO9EbtAQ/hq720_2.jpg",
+    "thumbnailUrl": null,
+    "imageStatus": 200,
+    "thumbnailStatus": 0,
+    "imageFormat": "jpg",
+    "thumbnailFormat": null
+  },
+  {
+    "uuid": "fda2f37b-f25c-4a30-87b8-126b4ea2b91a",
+    "name": "E2E Exercicio 1772908093261",
+    "imageUrl": "https://i.ytimg.com/vi/BUnPgt5XkoU/hq720_2.jpg",
+    "thumbnailUrl": null,
+    "imageStatus": 200,
+    "thumbnailStatus": 0,
+    "imageFormat": "jpg",
+    "thumbnailFormat": null
+  },
+  {
+    "uuid": "8b5c58c0-69d7-4600-b192-84d9188c0a15",
+    "name": "E2E Exercicio 1772908139435",
+    "imageUrl": "https://i.ytimg.com/vi/P-NdPWxDgrU/hq720.jpg",
+    "thumbnailUrl": null,
+    "imageStatus": 200,
+    "thumbnailStatus": 0,
+    "imageFormat": "jpg",
+    "thumbnailFormat": null
+  },
+  {
+    "uuid": "3492c862-87db-48a6-bfed-728c5028e680",
+    "name": "E2E Exercicio 1772908686492",
+    "imageUrl": "https://i.ytimg.com/vi/MbazUs0T6as/hq720.jpg",
+    "thumbnailUrl": null,
+    "imageStatus": 200,
+    "thumbnailStatus": 0,
+    "imageFormat": "jpg",
+    "thumbnailFormat": null
+  },
+  {
+    "uuid": "def8aec2-2014-45f9-b4ae-26c4c12227bd",
+    "name": "E2E Exercicio 1772908724979",
+    "imageUrl": "https://i.ytimg.com/vi/qAhqPSv7EsQ/hq720.jpg",
+    "thumbnailUrl": null,
+    "imageStatus": 200,
+    "thumbnailStatus": 0,
+    "imageFormat": "jpg",
+    "thumbnailFormat": null
+  },
+  {
+    "uuid": "722a77fc-d935-472c-810d-91dbfd3dac18",
+    "name": "E2E Exercício 1773248253945",
+    "imageUrl": "https://i.ytimg.com/vi/2OQIbdJfvK8/hq720_2.jpg",
+    "thumbnailUrl": null,
+    "imageStatus": 200,
+    "thumbnailStatus": 0,
+    "imageFormat": "jpg",
+    "thumbnailFormat": null
+  },
+  {
+    "uuid": "1decf38f-53a9-4153-abd4-5725ed44eff2",
+    "name": "E2E Exercício 1773248432464",
+    "imageUrl": "https://i.ytimg.com/vi/e-JUfgcn3H0/hq720_2.jpg",
+    "thumbnailUrl": null,
+    "imageStatus": 200,
+    "thumbnailStatus": 0,
+    "imageFormat": "jpg",
+    "thumbnailFormat": null
+  },
+  {
+    "uuid": "fe19eb22-acf3-4d09-bd85-3fbca9994a0c",
+    "name": "E2E Template 1772758050921",
+    "imageUrl": "https://i.ytimg.com/vi/3hC3BobNVjI/hq720_2.jpg",
+    "thumbnailUrl": null,
+    "imageStatus": 200,
+    "thumbnailStatus": 0,
+    "imageFormat": "jpg",
+    "thumbnailFormat": null
+  },
+  {
+    "uuid": "2645701a-5c00-4f5b-b3bb-2aa03bde078c",
+    "name": "E2E Exercício 1773248825264",
+    "imageUrl": "https://i.ytimg.com/vi/_zT1C9vFATE/hq720_2.jpg",
+    "thumbnailUrl": null,
+    "imageStatus": 200,
+    "thumbnailStatus": 0,
+    "imageFormat": "jpg",
+    "thumbnailFormat": null
+  },
+  {
+    "uuid": "11f342f7-b448-4382-98e4-01b1de5ec447",
+    "name": "E2E Exercicio 1773172882724",
+    "imageUrl": "https://i.ytimg.com/vi/j14uSQo-Rkg/hq720_2.jpg",
+    "thumbnailUrl": null,
+    "imageStatus": 200,
+    "thumbnailStatus": 0,
+    "imageFormat": "jpg",
+    "thumbnailFormat": null
+  },
+  {
+    "uuid": "63f9c28f-eee0-4a7a-887d-b294ca730c9e",
+    "name": "E2E Exercicio 1773173295266",
+    "imageUrl": "https://i.ytimg.com/vi/B5CUJwmfdDo/hq720_2.jpg",
+    "thumbnailUrl": null,
+    "imageStatus": 200,
+    "thumbnailStatus": 0,
+    "imageFormat": "jpg",
+    "thumbnailFormat": null
+  },
+  {
+    "uuid": "d046aa99-eeef-40de-abca-a4d923402fee",
+    "name": "E2E Exercicio 1773173339116",
+    "imageUrl": "https://i.ytimg.com/vi/rYguUwD_SmI/hq720.jpg",
+    "thumbnailUrl": null,
+    "imageStatus": 200,
+    "thumbnailStatus": 0,
+    "imageFormat": "jpg",
+    "thumbnailFormat": null
+  },
+  {
+    "uuid": "06c3f90b-a573-4cfb-ae69-f5c15c8ecd59",
+    "name": "E2E Template 1772789281152",
+    "imageUrl": "https://i.ytimg.com/vi/3hC3BobNVjI/hq720_2.jpg",
+    "thumbnailUrl": null,
+    "imageStatus": 200,
+    "thumbnailStatus": 0,
+    "imageFormat": "jpg",
+    "thumbnailFormat": null
+  },
+  {
+    "uuid": "731f8406-6101-4dbe-ae0e-706caeca6f60",
+    "name": "Respiração Labial Franzida",
+    "imageUrl": null,
+    "thumbnailUrl": null,
+    "imageStatus": 0,
+    "thumbnailStatus": 0,
+    "imageFormat": null,
+    "thumbnailFormat": null
+  },
+  {
+    "uuid": "579602db-606f-4c82-812d-a623131f24ff",
+    "name": "Agachamento na Parede (Wall Squat)",
+    "imageUrl": "https://i.ytimg.com/vi/sHxPFpaB6W4/hq720_2.jpg",
+    "thumbnailUrl": null,
+    "imageStatus": 200,
+    "thumbnailStatus": 0,
+    "imageFormat": "jpg",
+    "thumbnailFormat": null
+  },
+  {
+    "uuid": "6b005f9c-97d2-415f-aa8d-6607faed7ff5",
+    "name": "Terminal Knee Extension (TKE) com Thera-Band",
+    "imageUrl": "https://i.ytimg.com/vi/xdKm8PSX438/hq720.jpg",
+    "thumbnailUrl": null,
+    "imageStatus": 200,
+    "thumbnailStatus": 0,
+    "imageFormat": "jpg",
+    "thumbnailFormat": null
+  },
+  {
+    "uuid": "f3d6370e-8a90-49cb-840c-287997c35978",
+    "name": "Ponte de Glúteo (Glute Bridge)",
+    "imageUrl": "https://i.ytimg.com/vi/Q_Bpj91Yiis/hq720.jpg",
+    "thumbnailUrl": null,
+    "imageStatus": 200,
+    "thumbnailStatus": 0,
+    "imageFormat": "jpg",
+    "thumbnailFormat": null
+  },
+  {
+    "uuid": "8c85d73b-8c32-416d-9d81-6d0f3ec00ccd",
+    "name": "Prancha Frontal (Plank)",
+    "imageUrl": "https://i.ytimg.com/vi/GQE8ASRA7t0/hq720.jpg",
+    "thumbnailUrl": null,
+    "imageStatus": 200,
+    "thumbnailStatus": 0,
+    "imageFormat": "jpg",
+    "thumbnailFormat": null
+  },
+  {
+    "uuid": "4bcd540f-67d4-4c4b-95d8-a44467da53cf",
+    "name": "Respiração Diafragmática",
+    "imageUrl": "https://i.ytimg.com/vi/9jpchJcKivk/hq720.jpg",
+    "thumbnailUrl": null,
+    "imageStatus": 200,
+    "thumbnailStatus": 0,
+    "imageFormat": "jpg",
+    "thumbnailFormat": null
+  },
+  {
+    "uuid": "8dd30660-1907-42ec-9a5b-1548e4437839",
+    "name": "Treino de Marcha na Barra Paralela",
+    "imageUrl": "https://i.ytimg.com/vi/iwefbdeMydA/hq720_2.jpg",
+    "thumbnailUrl": null,
+    "imageStatus": 200,
+    "thumbnailStatus": 0,
+    "imageFormat": "jpg",
+    "thumbnailFormat": null
+  },
+  {
+    "uuid": "b20df563-5a86-42f3-b69e-376f961ff70b",
+    "name": "Farmer's Carry (Caminhada do Fazendeiro)",
+    "imageUrl": "https://i.ytimg.com/vi/NxUXgNNLIvk/hq720.jpg",
+    "thumbnailUrl": null,
+    "imageStatus": 200,
+    "thumbnailStatus": 0,
+    "imageFormat": "jpg",
+    "thumbnailFormat": null
+  },
+  {
+    "uuid": "d793fc85-be13-4267-b5fd-2defd5218a57",
+    "name": "Contrações de Kegel",
+    "imageUrl": null,
+    "thumbnailUrl": null,
+    "imageStatus": 0,
+    "thumbnailStatus": 0,
+    "imageFormat": null,
+    "thumbnailFormat": null
+  },
+  {
+    "uuid": "6d0e2daf-d04c-4305-b554-e1369342435e",
+    "name": "Step Up Frontal",
+    "imageUrl": "https://i.ytimg.com/vi/wfhXnLILqdk/hq720.jpg",
+    "thumbnailUrl": null,
+    "imageStatus": 200,
+    "thumbnailStatus": 0,
+    "imageFormat": "jpg",
+    "thumbnailFormat": null
+  },
+  {
+    "uuid": "7e2cb83e-3c78-4d8f-941f-e4745add4760",
+    "name": "Elevação de Calcanhares (Heel Raises)",
+    "imageUrl": "https://i.ytimg.com/vi/dV4Yjv-gsyY/hq720.jpg",
+    "thumbnailUrl": null,
+    "imageStatus": 200,
+    "thumbnailStatus": 0,
+    "imageFormat": "jpg",
+    "thumbnailFormat": null
+  },
+  {
+    "uuid": "71dd6b08-8a16-4ee6-a179-69cbda0f5ccd",
+    "name": "Agachamento Livre",
+    "imageUrl": "https://i.ytimg.com/vi/U5CFJQazg6s/hq720_2.jpg",
+    "thumbnailUrl": null,
+    "imageStatus": 200,
+    "thumbnailStatus": 0,
+    "imageFormat": "jpg",
+    "thumbnailFormat": null
+  },
+  {
+    "uuid": "a5c8396f-5cbb-46ad-9111-a7591a22d4f1",
+    "name": "E2E Exercise 1772731015380",
+    "imageUrl": "https://i.ytimg.com/vi/_zT1C9vFATE/hq720_2.jpg",
+    "thumbnailUrl": null,
+    "imageStatus": 200,
+    "thumbnailStatus": 0,
+    "imageFormat": "jpg",
+    "thumbnailFormat": null
+  },
+  {
+    "uuid": "366a2f08-b203-430f-bdfd-462e098d69a6",
+    "name": "E2E Exercicio 1772799887149",
+    "imageUrl": "https://i.ytimg.com/vi/_zT1C9vFATE/hq720_2.jpg",
+    "thumbnailUrl": null,
+    "imageStatus": 200,
+    "thumbnailStatus": 0,
+    "imageFormat": "jpg",
+    "thumbnailFormat": null
+  },
+  {
+    "uuid": "32333cbe-9dc3-4ad9-9a38-e8859d96db83",
+    "name": "E2E Exercicio 1772908915238",
+    "imageUrl": "https://i.ytimg.com/vi/4h5wRszUH2I/hq720_2.jpg",
+    "thumbnailUrl": null,
+    "imageStatus": 200,
+    "thumbnailStatus": 0,
+    "imageFormat": "jpg",
+    "thumbnailFormat": null
+  },
+  {
+    "uuid": "69d6950a-937d-4e51-b66f-772d4eed5c89",
+    "name": "E2E Exercício 1773248292127",
+    "imageUrl": "https://i.ytimg.com/vi/P-NdPWxDgrU/hq720.jpg",
+    "thumbnailUrl": null,
+    "imageStatus": 200,
+    "thumbnailStatus": 0,
+    "imageFormat": "jpg",
+    "thumbnailFormat": null
+  },
+  {
+    "uuid": "7a1a1676-5d2f-46af-aaa0-376a30646ffb",
+    "name": "E2E Exercicio 1773172836327",
+    "imageUrl": "https://i.ytimg.com/vi/P-NdPWxDgrU/hq720.jpg",
+    "thumbnailUrl": null,
+    "imageStatus": 200,
+    "thumbnailStatus": 0,
+    "imageFormat": "jpg",
+    "thumbnailFormat": null
+  },
+  {
+    "uuid": "8d439220-9c79-44db-834a-a9d128ff5646",
+    "name": "E2E Exercício 1773251124901",
+    "imageUrl": "https://i.ytimg.com/vi/P-NdPWxDgrU/hq720.jpg",
+    "thumbnailUrl": null,
+    "imageStatus": 200,
+    "thumbnailStatus": 0,
+    "imageFormat": "jpg",
+    "thumbnailFormat": null
+  },
+  {
+    "uuid": "b7a73f65-a68d-4aa1-a437-3ab7602a5192",
+    "name": "Isometria de Quadríceps (Quad Sets)",
+    "imageUrl": null,
+    "thumbnailUrl": null,
+    "imageStatus": 0,
+    "thumbnailStatus": 0,
+    "imageFormat": null,
+    "thumbnailFormat": null
+  },
+  {
+    "uuid": "b6a0717c-87af-4d36-a237-7fb215b33345",
+    "name": "Deslizamento de Nervo Mediano",
+    "imageUrl": null,
+    "thumbnailUrl": null,
+    "imageStatus": 0,
+    "thumbnailStatus": 0,
+    "imageFormat": null,
+    "thumbnailFormat": null
+  },
+  {
+    "uuid": "24c00b51-2456-4701-b2c8-3f799d045d3d",
+    "name": "Alongamento da Fáscia Plantar",
+    "imageUrl": null,
+    "thumbnailUrl": null,
+    "imageStatus": 0,
+    "thumbnailStatus": 0,
+    "imageFormat": null,
+    "thumbnailFormat": null
+  },
+  {
+    "uuid": "12f79b82-471b-460a-bc3a-452ce974de2a",
+    "name": "Fortalecimento de Intrínsecos do Pé (Toalha)",
+    "imageUrl": null,
+    "thumbnailUrl": null,
+    "imageStatus": 0,
+    "thumbnailStatus": 0,
+    "imageFormat": null,
+    "thumbnailFormat": null
+  },
+  {
+    "uuid": "876b6902-53ce-4843-918d-558a50c6ca9f",
+    "name": "McKenzie - Extensão Lombar deitado",
+    "imageUrl": null,
+    "thumbnailUrl": null,
+    "imageStatus": 0,
+    "thumbnailStatus": 0,
+    "imageFormat": null,
+    "thumbnailFormat": null
+  },
+  {
+    "uuid": "2977395c-8997-4a1c-a7a9-d188de10a2a7",
+    "name": "Auto-correção 3D (Escoliose)",
+    "imageUrl": null,
+    "thumbnailUrl": null,
+    "imageStatus": 0,
+    "thumbnailStatus": 0,
+    "imageFormat": null,
+    "thumbnailFormat": null
+  },
+  {
+    "uuid": "f0ed5600-3b49-4d13-bee3-8eb5420c19a4",
+    "name": "Caminhada com Amplitude (Big Steps)",
+    "imageUrl": null,
+    "thumbnailUrl": null,
+    "imageStatus": 0,
+    "thumbnailStatus": 0,
+    "imageFormat": null,
+    "thumbnailFormat": null
+  },
+  {
+    "uuid": "7fe58d49-929a-49ae-8b2d-38956375a25a",
+    "name": "Abdominal Oblíquo",
+    "imageUrl": null,
+    "thumbnailUrl": null,
+    "imageStatus": 0,
+    "thumbnailStatus": 0,
+    "imageFormat": null,
+    "thumbnailFormat": null
+  },
+  {
+    "uuid": "ae74db8b-9cda-49ba-a00f-f57ee4b3196c",
+    "name": "Prancha abdominal",
+    "imageUrl": null,
+    "thumbnailUrl": null,
+    "imageStatus": 0,
+    "thumbnailStatus": 0,
+    "imageFormat": null,
+    "thumbnailFormat": null
+  },
+  {
+    "uuid": "a4126950-a670-40ba-96d0-b801390befc9",
+    "name": "Agachamento com peso corporal",
+    "imageUrl": null,
+    "thumbnailUrl": null,
+    "imageStatus": 0,
+    "thumbnailStatus": 0,
+    "imageFormat": null,
+    "thumbnailFormat": null
+  },
+  {
+    "uuid": "7038d7f5-be9e-4f65-b638-3cc83be03634",
+    "name": "Abdominal Crupeado",
+    "imageUrl": null,
+    "thumbnailUrl": null,
+    "imageStatus": 0,
+    "thumbnailStatus": 0,
+    "imageFormat": null,
+    "thumbnailFormat": null
+  },
+  {
+    "uuid": "eba41151-26ed-4486-a860-abc1b88b8c7b",
+    "name": "4 Apoios (Four Point Kneeling)",
+    "imageUrl": null,
+    "thumbnailUrl": null,
+    "imageStatus": 0,
+    "thumbnailStatus": 0,
+    "imageFormat": null,
+    "thumbnailFormat": null
+  },
+  {
+    "uuid": "86219ef7-f9ba-43a9-9022-09d322ea4570",
+    "name": "Abdução de Quadril Deitado",
+    "imageUrl": null,
+    "thumbnailUrl": null,
+    "imageStatus": 0,
+    "thumbnailStatus": 0,
+    "imageFormat": null,
+    "thumbnailFormat": null
+  },
+  {
+    "uuid": "9aa24b0b-e159-4d34-b447-15264aa58c32",
+    "name": "Prancha Lateral",
+    "imageUrl": null,
+    "thumbnailUrl": null,
+    "imageStatus": 0,
+    "thumbnailStatus": 0,
+    "imageFormat": null,
+    "thumbnailFormat": null
+  },
+  {
+    "uuid": "8a7ffd62-5075-453c-89e6-057843dcb8e1",
+    "name": "Marcha com Padrões Cruzados",
+    "imageUrl": "https://media.moocafisio.com.br/exercises/8a7ffd62-5075-453c-89e6-057843dcb8e1/image.avif",
+    "thumbnailUrl": "https://fisioflow-media.r2.dev/exercises/8a7ffd62-5075-453c-89e6-057843dcb8e1/thumbnail.avif",
+    "imageStatus": 200,
+    "thumbnailStatus": 500,
+    "imageFormat": "avif",
+    "thumbnailFormat": "avif"
+  },
+  {
+    "uuid": "85e6c2ad-6e77-4857-bda8-42c7ce0c2d95",
+    "name": "Agachamento Sumô",
+    "imageUrl": null,
+    "thumbnailUrl": null,
+    "imageStatus": 0,
+    "thumbnailStatus": 0,
+    "imageFormat": null,
+    "thumbnailFormat": null
+  },
+  {
+    "uuid": "3a8c0b21-2903-4c4a-99a7-fd401de3ffcc",
+    "name": "Alongamento de Quadríceps",
+    "imageUrl": null,
+    "thumbnailUrl": null,
+    "imageStatus": 0,
+    "thumbnailStatus": 0,
+    "imageFormat": null,
+    "thumbnailFormat": null
+  },
+  {
+    "uuid": "50d2fbe0-c7be-466b-a3bb-0c5e8c777feb",
+    "name": "Elevação Pélvica (Ponte)",
+    "imageUrl": null,
+    "thumbnailUrl": null,
+    "imageStatus": 0,
+    "thumbnailStatus": 0,
+    "imageFormat": null,
+    "thumbnailFormat": null
+  },
+  {
+    "uuid": "10abc60f-3bec-40ce-9261-e26b2e42f5f3",
+    "name": "Extensão de Quadril (4 Apoios)",
+    "imageUrl": null,
+    "thumbnailUrl": null,
+    "imageStatus": 0,
+    "thumbnailStatus": 0,
+    "imageFormat": null,
+    "thumbnailFormat": null
+  },
+  {
+    "uuid": "a1d17d0d-8464-4a12-85b1-44e82251d1b0",
+    "name": "Flexão de Braço (Push-up)",
+    "imageUrl": null,
+    "thumbnailUrl": null,
+    "imageStatus": 0,
+    "thumbnailStatus": 0,
+    "imageFormat": null,
+    "thumbnailFormat": null
+  },
+  {
+    "uuid": "3e42027b-5eec-4da2-abc2-747262861148",
+    "name": "Panturrilha Unilateral",
+    "imageUrl": null,
+    "thumbnailUrl": null,
+    "imageStatus": 0,
+    "thumbnailStatus": 0,
+    "imageFormat": null,
+    "thumbnailFormat": null
+  },
+  {
+    "uuid": "3af81177-a497-4709-843a-499d1f00a4d5",
+    "name": "Ponte com uma perna",
+    "imageUrl": null,
+    "thumbnailUrl": null,
+    "imageStatus": 0,
+    "thumbnailStatus": 0,
+    "imageFormat": null,
+    "thumbnailFormat": null
+  },
+  {
+    "uuid": "74123e1f-5ab0-4338-b40c-32abc180309d",
+    "name": "Serrote com halter (Remada Unilateral)",
+    "imageUrl": null,
+    "thumbnailUrl": null,
+    "imageStatus": 0,
+    "thumbnailStatus": 0,
+    "imageFormat": null,
+    "thumbnailFormat": null
+  },
+  {
+    "uuid": "13918b7b-c13f-462f-99f2-b6e17c15ee52",
+    "name": "Supino com halter",
+    "imageUrl": null,
+    "thumbnailUrl": null,
+    "imageStatus": 0,
+    "thumbnailStatus": 0,
+    "imageFormat": null,
+    "thumbnailFormat": null
+  },
+  {
+    "uuid": "c2f7dedb-5fbf-4a04-9975-d4b8ed213036",
+    "name": "Abdução de Quadril em Pé",
+    "imageUrl": null,
+    "thumbnailUrl": null,
+    "imageStatus": 0,
+    "thumbnailStatus": 0,
+    "imageFormat": null,
+    "thumbnailFormat": null
+  },
+  {
+    "uuid": "989da605-c597-4fb3-a5fc-d26048e15fff",
+    "name": "Afundo ou Passada",
+    "imageUrl": null,
+    "thumbnailUrl": null,
+    "imageStatus": 0,
+    "thumbnailStatus": 0,
+    "imageFormat": null,
+    "thumbnailFormat": null
+  },
+  {
+    "uuid": "11572ad9-14a7-4f47-84ee-20fda0d11843",
+    "name": "Gato-Vaca (Cat-Cow)",
+    "imageUrl": null,
+    "thumbnailUrl": null,
+    "imageStatus": 0,
+    "thumbnailStatus": 0,
+    "imageFormat": null,
+    "thumbnailFormat": null
+  },
+  {
+    "uuid": "6e3082dd-12fe-4f59-90c4-99cc16c9baf2",
+    "name": "Bird-Dog (Cachorro-Passarinho)",
+    "imageUrl": "https://i.ytimg.com/vi/b6zcIxFkuN4/hq720.jpg",
+    "thumbnailUrl": null,
+    "imageStatus": 200,
+    "thumbnailStatus": 0,
+    "imageFormat": "jpg",
+    "thumbnailFormat": null
+  },
+  {
+    "uuid": "8258ea49-2021-4271-a3e6-14024657b1c0",
+    "name": "Extensão de joelho em cadeia cinética aberta",
+    "imageUrl": null,
+    "thumbnailUrl": null,
+    "imageStatus": 0,
+    "thumbnailStatus": 0,
+    "imageFormat": null,
+    "thumbnailFormat": null
+  },
+  {
+    "uuid": "2ef9c4eb-6e28-4416-b264-66d804504a53",
+    "name": "Alongamento de peitoral na porta",
+    "imageUrl": null,
+    "thumbnailUrl": null,
+    "imageStatus": 0,
+    "thumbnailStatus": 0,
+    "imageFormat": null,
+    "thumbnailFormat": null
+  },
+  {
+    "uuid": "63b1216c-631f-4e32-9762-effa9fff42e5",
+    "name": "Rotação externa de ombro com elástico",
+    "imageUrl": null,
+    "thumbnailUrl": null,
+    "imageStatus": 0,
+    "thumbnailStatus": 0,
+    "imageFormat": null,
+    "thumbnailFormat": null
+  },
+  {
+    "uuid": "93eb7067-4f5c-41d4-b0ea-74cfbf8422a0",
+    "name": "Dead Bug",
+    "imageUrl": null,
+    "thumbnailUrl": null,
+    "imageStatus": 0,
+    "thumbnailStatus": 0,
+    "imageFormat": null,
+    "thumbnailFormat": null
+  },
+  {
+    "uuid": "bc69e40a-c984-4635-9489-45412917f13e",
+    "name": "Copenhagen Adduction (Nível 1)",
+    "imageUrl": null,
+    "thumbnailUrl": null,
+    "imageStatus": 0,
+    "thumbnailStatus": 0,
+    "imageFormat": null,
+    "thumbnailFormat": null
+  },
+  {
+    "uuid": "7cad6665-244c-4cd3-99c1-0b4025614503",
+    "name": "Spanish Squat (Agachamento Espanhol)",
+    "imageUrl": null,
+    "thumbnailUrl": null,
+    "imageStatus": 0,
+    "thumbnailStatus": 0,
+    "imageFormat": null,
+    "thumbnailFormat": null
+  },
+  {
+    "uuid": "4e0439b7-6214-4783-8649-8f1e704f9628",
+    "name": "Nordic Hamstring (Iniciante)",
+    "imageUrl": null,
+    "thumbnailUrl": null,
+    "imageStatus": 0,
+    "thumbnailStatus": 0,
+    "imageFormat": null,
+    "thumbnailFormat": null
+  },
+  {
+    "uuid": "23fb8e81-b882-46f7-b923-db6cab7ae954",
+    "name": "Rotação de Ombro com Toalha",
+    "imageUrl": "https://media.fisioflow.com.br/exercises/23fb8e81-b882-46f7-b923-db6cab7ae954/image.avif",
+    "thumbnailUrl": "https://fisioflow-media.r2.dev/exercises/23fb8e81-b882-46f7-b923-db6cab7ae954/thumbnail.avif",
+    "imageStatus": -1,
+    "thumbnailStatus": 500,
+    "imageFormat": null,
+    "thumbnailFormat": "avif"
+  },
+  {
+    "uuid": "53273709-b9bd-49b5-8495-8f6cdce44f12",
+    "name": "Alongamento Trapézio Superior",
+    "imageUrl": "https://media.moocafisio.com.br/exercises/53273709-b9bd-49b5-8495-8f6cdce44f12/image.avif",
+    "thumbnailUrl": "https://fisioflow-media.r2.dev/exercises/53273709-b9bd-49b5-8495-8f6cdce44f12/thumbnail.avif",
+    "imageStatus": 200,
+    "thumbnailStatus": 500,
+    "imageFormat": "avif",
+    "thumbnailFormat": "avif"
+  },
+  {
+    "uuid": "f54c7e59-5005-4f97-8aa3-079e28df7389",
+    "name": "Mobilização de Ombro com Bastão",
+    "imageUrl": "https://media.moocafisio.com.br/exercises/f54c7e59-5005-4f97-8aa3-079e28df7389/image.avif",
+    "thumbnailUrl": "https://fisioflow-media.r2.dev/exercises/f54c7e59-5005-4f97-8aa3-079e28df7389/thumbnail.avif",
+    "imageStatus": 200,
+    "thumbnailStatus": 500,
+    "imageFormat": "avif",
+    "thumbnailFormat": "avif"
+  },
+  {
+    "uuid": "c5da19e8-e549-4bdd-8e82-5a87b7759c4f",
+    "name": "Descida de Escada",
+    "imageUrl": "https://media.moocafisio.com.br/exercises/c5da19e8-e549-4bdd-8e82-5a87b7759c4f/image.avif",
+    "thumbnailUrl": "https://fisioflow-media.r2.dev/exercises/c5da19e8-e549-4bdd-8e82-5a87b7759c4f/thumbnail.avif",
+    "imageStatus": 200,
+    "thumbnailStatus": 500,
+    "imageFormat": "avif",
+    "thumbnailFormat": "avif"
+  },
+  {
+    "uuid": "f9e420fc-7da5-479c-a850-beedeca1c86b",
+    "name": "Equilíbrio em Tandem",
+    "imageUrl": "https://media.moocafisio.com.br/exercises/f9e420fc-7da5-479c-a850-beedeca1c86b/image.avif",
+    "thumbnailUrl": "https://fisioflow-media.r2.dev/exercises/f9e420fc-7da5-479c-a850-beedeca1c86b/thumbnail.avif",
+    "imageStatus": 200,
+    "thumbnailStatus": 500,
+    "imageFormat": "avif",
+    "thumbnailFormat": "avif"
+  },
+  {
+    "uuid": "2741a4de-a779-4741-9596-bcb139945d13",
+    "name": "Levantamento Terra",
+    "imageUrl": "https://media.moocafisio.com.br/exercises/2741a4de-a779-4741-9596-bcb139945d13/image.avif",
+    "thumbnailUrl": "https://fisioflow-media.r2.dev/exercises/2741a4de-a779-4741-9596-bcb139945d13/thumbnail.avif",
+    "imageStatus": 200,
+    "thumbnailStatus": 500,
+    "imageFormat": "avif",
+    "thumbnailFormat": "avif"
+  },
+  {
+    "uuid": "0c3e5d4e-3afb-4ffc-8206-d8b642f8902f",
+    "name": "Alongamento de Quadríceps",
+    "imageUrl": "https://media.moocafisio.com.br/exercises/0c3e5d4e-3afb-4ffc-8206-d8b642f8902f/image.avif",
+    "thumbnailUrl": "https://fisioflow-media.r2.dev/exercises/0c3e5d4e-3afb-4ffc-8206-d8b642f8902f/thumbnail.avif",
+    "imageStatus": 200,
+    "thumbnailStatus": 500,
+    "imageFormat": "avif",
+    "thumbnailFormat": "avif"
+  },
+  {
+    "uuid": "81f95733-aa81-4bde-8c4a-25adc832dcbb",
+    "name": "RDL (Romanian Deadlift)",
+    "imageUrl": "https://media.moocafisio.com.br/exercises/81f95733-aa81-4bde-8c4a-25adc832dcbb/image.avif",
+    "thumbnailUrl": "https://fisioflow-media.r2.dev/exercises/81f95733-aa81-4bde-8c4a-25adc832dcbb/thumbnail.avif",
+    "imageStatus": 200,
+    "thumbnailStatus": 500,
+    "imageFormat": "avif",
+    "thumbnailFormat": "avif"
+  },
+  {
+    "uuid": "df77fa5b-306e-4053-91d2-a60cc0017411",
+    "name": "Alongamento de Psoas (Ilíaco)",
+    "imageUrl": "https://media.moocafisio.com.br/exercises/df77fa5b-306e-4053-91d2-a60cc0017411/image.avif",
+    "thumbnailUrl": "https://fisioflow-media.r2.dev/exercises/df77fa5b-306e-4053-91d2-a60cc0017411/thumbnail.avif",
+    "imageStatus": 200,
+    "thumbnailStatus": 500,
+    "imageFormat": "avif",
+    "thumbnailFormat": "avif"
+  },
+  {
+    "uuid": "cc02bbba-113d-433f-a70c-9590b3bdbd74",
+    "name": "Cobra Prona",
+    "imageUrl": "https://media.moocafisio.com.br/exercises/cc02bbba-113d-433f-a70c-9590b3bdbd74/image.avif",
+    "thumbnailUrl": "https://fisioflow-media.r2.dev/exercises/cc02bbba-113d-433f-a70c-9590b3bdbd74/thumbnail.avif",
+    "imageStatus": 200,
+    "thumbnailStatus": 500,
+    "imageFormat": "avif",
+    "thumbnailFormat": "avif"
+  },
+  {
+    "uuid": "fa1baabf-13fc-4e11-bca4-e017a4a77c81",
+    "name": "Gato-Vaca (Cat-Cow)",
+    "imageUrl": "https://media.moocafisio.com.br/exercises/fa1baabf-13fc-4e11-bca4-e017a4a77c81/image.avif",
+    "thumbnailUrl": "https://fisioflow-media.r2.dev/exercises/fa1baabf-13fc-4e11-bca4-e017a4a77c81/thumbnail.avif",
+    "imageStatus": 200,
+    "thumbnailStatus": 500,
+    "imageFormat": "avif",
+    "thumbnailFormat": "avif"
+  },
+  {
+    "uuid": "4d63978d-437d-4034-9996-d3a7499b9e35",
+    "name": "Elevação de Panturrilha Sentado",
+    "imageUrl": "https://media.moocafisio.com.br/exercises/4d63978d-437d-4034-9996-d3a7499b9e35/image.avif",
+    "thumbnailUrl": "https://fisioflow-media.r2.dev/exercises/4d63978d-437d-4034-9996-d3a7499b9e35/thumbnail.avif",
+    "imageStatus": 200,
+    "thumbnailStatus": 500,
+    "imageFormat": "avif",
+    "thumbnailFormat": "avif"
+  },
+  {
+    "uuid": "be22afd1-de31-400b-a3d0-2a59a14fcdab",
+    "name": "Rotação Externa de Ombro",
+    "imageUrl": "https://media.moocafisio.com.br/exercises/be22afd1-de31-400b-a3d0-2a59a14fcdab/image.avif",
+    "thumbnailUrl": "https://fisioflow-media.r2.dev/exercises/be22afd1-de31-400b-a3d0-2a59a14fcdab/thumbnail.avif",
+    "imageStatus": 200,
+    "thumbnailStatus": 500,
+    "imageFormat": "avif",
+    "thumbnailFormat": "avif"
+  },
+  {
+    "uuid": "c35453b6-4ff1-4294-98e0-f53fd09d921d",
+    "name": "Alongamento de Isquiotibiais",
+    "imageUrl": "https://media.moocafisio.com.br/exercises/c35453b6-4ff1-4294-98e0-f53fd09d921d/image.avif",
+    "thumbnailUrl": "https://fisioflow-media.r2.dev/exercises/c35453b6-4ff1-4294-98e0-f53fd09d921d/thumbnail.avif",
+    "imageStatus": 200,
+    "thumbnailStatus": 500,
+    "imageFormat": "avif",
+    "thumbnailFormat": "avif"
+  },
+  {
+    "uuid": "f81327c9-a0a0-4bb1-8a75-31659c051516",
+    "name": "Mobilidade de Ombro",
+    "imageUrl": "https://media.moocafisio.com.br/exercises/f81327c9-a0a0-4bb1-8a75-31659c051516/image.avif",
+    "thumbnailUrl": "https://fisioflow-media.r2.dev/exercises/f81327c9-a0a0-4bb1-8a75-31659c051516/thumbnail.avif",
+    "imageStatus": 200,
+    "thumbnailStatus": 500,
+    "imageFormat": "avif",
+    "thumbnailFormat": "avif"
+  },
+  {
+    "uuid": "3974836c-03ed-49a0-9aef-10e02c51621f",
+    "name": "Agachamento Búlgaro",
+    "imageUrl": "https://media.moocafisio.com.br/exercises/3974836c-03ed-49a0-9aef-10e02c51621f/image.avif",
+    "thumbnailUrl": "https://fisioflow-media.r2.dev/exercises/3974836c-03ed-49a0-9aef-10e02c51621f/thumbnail.avif",
+    "imageStatus": 200,
+    "thumbnailStatus": 500,
+    "imageFormat": "avif",
+    "thumbnailFormat": "avif"
+  },
+  {
+    "uuid": "e7f22737-a2f6-4f85-946f-b5d16339bc46",
+    "name": "Stiff Unilateral",
+    "imageUrl": "https://media.moocafisio.com.br/exercises/e7f22737-a2f6-4f85-946f-b5d16339bc46/image.avif",
+    "thumbnailUrl": "https://fisioflow-media.r2.dev/exercises/e7f22737-a2f6-4f85-946f-b5d16339bc46/thumbnail.avif",
+    "imageStatus": 200,
+    "thumbnailStatus": 500,
+    "imageFormat": "avif",
+    "thumbnailFormat": "avif"
+  },
+  {
+    "uuid": "f4934299-cf2b-4453-880a-6f3cfb9e398a",
+    "name": "Deslizamento do Nervo Mediano",
+    "imageUrl": "https://media.moocafisio.com.br/exercises/f4934299-cf2b-4453-880a-6f3cfb9e398a/image.avif",
+    "thumbnailUrl": "https://fisioflow-media.r2.dev/exercises/f4934299-cf2b-4453-880a-6f3cfb9e398a/thumbnail.avif",
+    "imageStatus": 200,
+    "thumbnailStatus": 500,
+    "imageFormat": "avif",
+    "thumbnailFormat": "avif"
+  },
+  {
+    "uuid": "5eca0c6e-41ba-4ed5-93c1-fb5ae4660db0",
+    "name": "Mergulho no Banco (Tríceps)",
+    "imageUrl": "https://media.moocafisio.com.br/exercises/5eca0c6e-41ba-4ed5-93c1-fb5ae4660db0/image.avif",
+    "thumbnailUrl": "https://fisioflow-media.r2.dev/exercises/5eca0c6e-41ba-4ed5-93c1-fb5ae4660db0/thumbnail.avif",
+    "imageStatus": 200,
+    "thumbnailStatus": 500,
+    "imageFormat": "avif",
+    "thumbnailFormat": "avif"
+  },
+  {
+    "uuid": "dc9d2b2a-6836-4d4d-9b62-ac80b22d7c54",
+    "name": "Rotação Externa de Ombro com Faixa",
+    "imageUrl": "https://media.moocafisio.com.br/exercises/dc9d2b2a-6836-4d4d-9b62-ac80b22d7c54/image.avif",
+    "thumbnailUrl": "https://fisioflow-media.r2.dev/exercises/dc9d2b2a-6836-4d4d-9b62-ac80b22d7c54/thumbnail.avif",
+    "imageStatus": 200,
+    "thumbnailStatus": 500,
+    "imageFormat": "avif",
+    "thumbnailFormat": "avif"
+  },
+  {
+    "uuid": "dcba2295-5810-48ad-b100-e7166eda0d5f",
+    "name": "Side Plank (Prancha Lateral)",
+    "imageUrl": "https://media.moocafisio.com.br/exercises/dcba2295-5810-48ad-b100-e7166eda0d5f/image.avif",
+    "thumbnailUrl": "https://fisioflow-media.r2.dev/exercises/dcba2295-5810-48ad-b100-e7166eda0d5f/thumbnail.avif",
+    "imageStatus": 200,
+    "thumbnailStatus": 500,
+    "imageFormat": "avif",
+    "thumbnailFormat": "avif"
+  },
+  {
+    "uuid": "9e20767b-ba39-4407-9c90-3a348ba150c5",
+    "name": "Squeeze de Bola (Espalmar)",
+    "imageUrl": "https://media.moocafisio.com.br/exercises/9e20767b-ba39-4407-9c90-3a348ba150c5/image.avif",
+    "thumbnailUrl": "https://fisioflow-media.r2.dev/exercises/9e20767b-ba39-4407-9c90-3a348ba150c5/thumbnail.avif",
+    "imageStatus": 200,
+    "thumbnailStatus": 500,
+    "imageFormat": "avif",
+    "thumbnailFormat": "avif"
+  },
+  {
+    "uuid": "92c07ed7-e61c-43c4-8651-08a34ca3e1fe",
+    "name": "Gait Training com Obstáculos",
+    "imageUrl": "https://media.moocafisio.com.br/exercises/92c07ed7-e61c-43c4-8651-08a34ca3e1fe/image.avif",
+    "thumbnailUrl": "https://fisioflow-media.r2.dev/exercises/92c07ed7-e61c-43c4-8651-08a34ca3e1fe/thumbnail.avif",
+    "imageStatus": 200,
+    "thumbnailStatus": 500,
+    "imageFormat": "avif",
+    "thumbnailFormat": "avif"
+  },
+  {
+    "uuid": "61dcaaf9-92ed-4224-b242-d2406a00e8ea",
+    "name": "Agachamento Goblet",
+    "imageUrl": "https://media.moocafisio.com.br/exercises/61dcaaf9-92ed-4224-b242-d2406a00e8ea/image.avif",
+    "thumbnailUrl": "https://fisioflow-media.r2.dev/exercises/61dcaaf9-92ed-4224-b242-d2406a00e8ea/thumbnail.avif",
+    "imageStatus": 200,
+    "thumbnailStatus": 500,
+    "imageFormat": "avif",
+    "thumbnailFormat": "avif"
+  },
+  {
+    "uuid": "524dca2d-cf76-4bbe-b68e-745859dc402d",
+    "name": "Prancha na Parede",
+    "imageUrl": "https://media.moocafisio.com.br/exercises/524dca2d-cf76-4bbe-b68e-745859dc402d/image.avif",
+    "thumbnailUrl": "https://fisioflow-media.r2.dev/exercises/524dca2d-cf76-4bbe-b68e-745859dc402d/thumbnail.avif",
+    "imageStatus": 200,
+    "thumbnailStatus": 500,
+    "imageFormat": "avif",
+    "thumbnailFormat": "avif"
+  },
+  {
+    "uuid": "a7a80b05-0723-4c52-97c2-4e6689371143",
+    "name": "Lunge com Rotação",
+    "imageUrl": "https://media.moocafisio.com.br/exercises/a7a80b05-0723-4c52-97c2-4e6689371143/image.avif",
+    "thumbnailUrl": "https://fisioflow-media.r2.dev/exercises/a7a80b05-0723-4c52-97c2-4e6689371143/thumbnail.avif",
+    "imageStatus": 200,
+    "thumbnailStatus": 500,
+    "imageFormat": "avif",
+    "thumbnailFormat": "avif"
+  },
+  {
+    "uuid": "f32367e8-ce7e-45a4-ae5e-a8a3eb0056bf",
+    "name": "Leg Press 45°",
+    "imageUrl": "https://media.moocafisio.com.br/exercises/f32367e8-ce7e-45a4-ae5e-a8a3eb0056bf/image.avif",
+    "thumbnailUrl": "https://fisioflow-media.r2.dev/exercises/f32367e8-ce7e-45a4-ae5e-a8a3eb0056bf/thumbnail.avif",
+    "imageStatus": 200,
+    "thumbnailStatus": 500,
+    "imageFormat": "avif",
+    "thumbnailFormat": "avif"
+  },
+  {
+    "uuid": "205ef2f5-83b5-41c0-932b-d6e8b8a53f29",
+    "name": "Squat Jump",
+    "imageUrl": "https://media.moocafisio.com.br/exercises/205ef2f5-83b5-41c0-932b-d6e8b8a53f29/image.avif",
+    "thumbnailUrl": "https://fisioflow-media.r2.dev/exercises/205ef2f5-83b5-41c0-932b-d6e8b8a53f29/thumbnail.avif",
+    "imageStatus": 200,
+    "thumbnailStatus": 500,
+    "imageFormat": "avif",
+    "thumbnailFormat": "avif"
+  },
+  {
+    "uuid": "32ab5f26-a92f-476d-98a2-8d461d45bb39",
+    "name": "Mobilização de Nervo Ciático (Slump)",
+    "imageUrl": "https://media.moocafisio.com.br/exercises/32ab5f26-a92f-476d-98a2-8d461d45bb39/image.avif",
+    "thumbnailUrl": "https://fisioflow-media.r2.dev/exercises/32ab5f26-a92f-476d-98a2-8d461d45bb39/thumbnail.avif",
+    "imageStatus": 200,
+    "thumbnailStatus": 500,
+    "imageFormat": "avif",
+    "thumbnailFormat": "avif"
+  },
+  {
+    "uuid": "e5b40a4b-ee8b-483f-b45f-40a23a769a4b",
+    "name": "Alcance em Y (Y-Balance Practice)",
+    "imageUrl": "https://media.moocafisio.com.br/exercises/e5b40a4b-ee8b-483f-b45f-40a23a769a4b/image.avif",
+    "thumbnailUrl": "https://fisioflow-media.r2.dev/exercises/e5b40a4b-ee8b-483f-b45f-40a23a769a4b/thumbnail.avif",
+    "imageStatus": 200,
+    "thumbnailStatus": 500,
+    "imageFormat": "avif",
+    "thumbnailFormat": "avif"
+  },
+  {
+    "uuid": "9f6cddd0-664a-465e-adc7-e587571df522",
+    "name": "Eversão de Tornozelo com Faixa",
+    "imageUrl": "https://media.moocafisio.com.br/exercises/9f6cddd0-664a-465e-adc7-e587571df522/image.avif",
+    "thumbnailUrl": "https://fisioflow-media.r2.dev/exercises/9f6cddd0-664a-465e-adc7-e587571df522/thumbnail.avif",
+    "imageStatus": 200,
+    "thumbnailStatus": 500,
+    "imageFormat": "avif",
+    "thumbnailFormat": "avif"
+  },
+  {
+    "uuid": "5bc20d55-ceed-4fd1-8274-2eede587cb33",
+    "name": "Abdução de Quadril Deitado",
+    "imageUrl": "https://media.moocafisio.com.br/exercises/5bc20d55-ceed-4fd1-8274-2eede587cb33/image.avif",
+    "thumbnailUrl": "https://fisioflow-media.r2.dev/exercises/5bc20d55-ceed-4fd1-8274-2eede587cb33/thumbnail.avif",
+    "imageStatus": 200,
+    "thumbnailStatus": 500,
+    "imageFormat": "avif",
+    "thumbnailFormat": "avif"
+  },
+  {
+    "uuid": "d029f7ce-9617-4f04-9834-3faa425a9d3e",
+    "name": "Alongamento Isquiotibiais com Toalha",
+    "imageUrl": "https://media.moocafisio.com.br/exercises/d029f7ce-9617-4f04-9834-3faa425a9d3e/image.avif",
+    "thumbnailUrl": "https://fisioflow-media.r2.dev/exercises/d029f7ce-9617-4f04-9834-3faa425a9d3e/thumbnail.avif",
+    "imageStatus": 200,
+    "thumbnailStatus": 500,
+    "imageFormat": "avif",
+    "thumbnailFormat": "avif"
+  },
+  {
+    "uuid": "794029e9-4902-47db-b7e9-7f547467a026",
+    "name": "Step Up",
+    "imageUrl": "https://media.moocafisio.com.br/exercises/794029e9-4902-47db-b7e9-7f547467a026/image.avif",
+    "thumbnailUrl": "https://fisioflow-media.r2.dev/exercises/794029e9-4902-47db-b7e9-7f547467a026/thumbnail.avif",
+    "imageStatus": 200,
+    "thumbnailStatus": 500,
+    "imageFormat": "avif",
+    "thumbnailFormat": "avif"
+  },
+  {
+    "uuid": "7de5e406-fd14-4b51-958d-0c26e9be6eca",
+    "name": "Prancha Abdominal (Plank)",
+    "imageUrl": "https://media.moocafisio.com.br/exercises/7de5e406-fd14-4b51-958d-0c26e9be6eca/image.avif",
+    "thumbnailUrl": "https://fisioflow-media.r2.dev/exercises/7de5e406-fd14-4b51-958d-0c26e9be6eca/thumbnail.avif",
+    "imageStatus": 200,
+    "thumbnailStatus": 500,
+    "imageFormat": "avif",
+    "thumbnailFormat": "avif"
+  },
+  {
+    "uuid": "ca4e687d-07b7-4a5f-a92d-27a7c366da65",
+    "name": "Sit-to-Stand",
+    "imageUrl": "https://media.moocafisio.com.br/exercises/ca4e687d-07b7-4a5f-a92d-27a7c366da65/image.avif",
+    "thumbnailUrl": "https://fisioflow-media.r2.dev/exercises/ca4e687d-07b7-4a5f-a92d-27a7c366da65/thumbnail.avif",
+    "imageStatus": 200,
+    "thumbnailStatus": 500,
+    "imageFormat": "avif",
+    "thumbnailFormat": "avif"
+  },
+  {
+    "uuid": "f5a45273-0528-443c-8b47-add6b7f4d054",
+    "name": "Fortalecimento de Preensão (Bolinha)",
+    "imageUrl": "https://media.moocafisio.com.br/exercises/f5a45273-0528-443c-8b47-add6b7f4d054/image.avif",
+    "thumbnailUrl": "https://fisioflow-media.r2.dev/exercises/f5a45273-0528-443c-8b47-add6b7f4d054/thumbnail.avif",
+    "imageStatus": 200,
+    "thumbnailStatus": 500,
+    "imageFormat": "avif",
+    "thumbnailFormat": "avif"
+  },
+  {
+    "uuid": "79739c5b-4d8d-4e20-b064-ee1c1aa4bc5e",
+    "name": "Rotação Interna de Ombro com Faixa",
+    "imageUrl": "https://media.moocafisio.com.br/exercises/79739c5b-4d8d-4e20-b064-ee1c1aa4bc5e/image.avif",
+    "thumbnailUrl": "https://fisioflow-media.r2.dev/exercises/79739c5b-4d8d-4e20-b064-ee1c1aa4bc5e/thumbnail.avif",
+    "imageStatus": 200,
+    "thumbnailStatus": 500,
+    "imageFormat": "avif",
+    "thumbnailFormat": "avif"
+  }
+]

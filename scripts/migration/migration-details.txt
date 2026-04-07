@@ -1,0 +1,591 @@
+=== MIGRAÇÃO DE EXERCÍCIOS: PNG → AVIF ===
+Data/Hora: 07/04/2026, 17:39:32
+Backup: /home/rafael/Documents/fisioflow/fisioflow-51658291/scripts/migration/backups/exercises-urls-backup-2026-04-07T20-39-09-084Z.json
+Rollback: /home/rafael/Documents/fisioflow/fisioflow-51658291/scripts/migration/rollback-exercises-urls.ts
+
+RESUMO:
+- Migrados: 145
+- Pulados: 184
+
+EXERCÍCIOS MIGRADOS:
+
+Panturrilha em Pé (851e26fa-08a7-4dfe-848e-408184efb167)
+  image_url: https://media.moocafisio.com.br/exercises/851e26fa-08a7-4dfe-848e-408184efb167/image.png → https://media.moocafisio.com.br/exercises/851e26fa-08a7-4dfe-848e-408184efb167/image.avif
+  thumbnail_url: https://fisioflow-media.r2.dev/exercises/851e26fa-08a7-4dfe-848e-408184efb167/thumbnail.png → https://fisioflow-media.r2.dev/exercises/851e26fa-08a7-4dfe-848e-408184efb167/thumbnail.avif
+
+Ponte de Glúteo Bilateral (b2a513c5-5da4-4d17-b0f8-ec63381a49a6)
+  image_url: https://media.moocafisio.com.br/exercises/b2a513c5-5da4-4d17-b0f8-ec63381a49a6/image.png → https://media.moocafisio.com.br/exercises/b2a513c5-5da4-4d17-b0f8-ec63381a49a6/image.avif
+  thumbnail_url: https://fisioflow-media.r2.dev/exercises/b2a513c5-5da4-4d17-b0f8-ec63381a49a6/thumbnail.png → https://fisioflow-media.r2.dev/exercises/b2a513c5-5da4-4d17-b0f8-ec63381a49a6/thumbnail.avif
+
+Coordenação Óculo-Manual (51cdeee6-ca28-4e1a-800e-c7262504fb03)
+  image_url: https://media.moocafisio.com.br/exercises/51cdeee6-ca28-4e1a-800e-c7262504fb03/image.png → https://media.moocafisio.com.br/exercises/51cdeee6-ca28-4e1a-800e-c7262504fb03/image.avif
+  thumbnail_url: https://fisioflow-media.r2.dev/exercises/51cdeee6-ca28-4e1a-800e-c7262504fb03/thumbnail.png → https://fisioflow-media.r2.dev/exercises/51cdeee6-ca28-4e1a-800e-c7262504fb03/thumbnail.avif
+
+Mobilização de Escápula (Wall Slides) (230fe21d-6124-492c-a6be-2bff1e8ed40a)
+  image_url: https://media.moocafisio.com.br/exercises/230fe21d-6124-492c-a6be-2bff1e8ed40a/image.png → https://media.moocafisio.com.br/exercises/230fe21d-6124-492c-a6be-2bff1e8ed40a/image.avif
+  thumbnail_url: https://fisioflow-media.r2.dev/exercises/230fe21d-6124-492c-a6be-2bff1e8ed40a/thumbnail.png → https://fisioflow-media.r2.dev/exercises/230fe21d-6124-492c-a6be-2bff1e8ed40a/thumbnail.avif
+
+Dead Bug (48ba9b50-ff7b-4c49-988d-4906150a4251)
+  image_url: https://media.moocafisio.com.br/exercises/48ba9b50-ff7b-4c49-988d-4906150a4251/image.png → https://media.moocafisio.com.br/exercises/48ba9b50-ff7b-4c49-988d-4906150a4251/image.avif
+  thumbnail_url: https://fisioflow-media.r2.dev/exercises/48ba9b50-ff7b-4c49-988d-4906150a4251/thumbnail.png → https://fisioflow-media.r2.dev/exercises/48ba9b50-ff7b-4c49-988d-4906150a4251/thumbnail.avif
+
+Alongamento de Peitoral na Porta (Variação) (50beed4a-b853-4ba5-a16a-ca1e6da28c3d)
+  image_url: https://media.moocafisio.com.br/exercises/50beed4a-b853-4ba5-a16a-ca1e6da28c3d/image.png → https://media.moocafisio.com.br/exercises/50beed4a-b853-4ba5-a16a-ca1e6da28c3d/image.avif
+  thumbnail_url: https://fisioflow-media.r2.dev/exercises/50beed4a-b853-4ba5-a16a-ca1e6da28c3d/thumbnail.png → https://fisioflow-media.r2.dev/exercises/50beed4a-b853-4ba5-a16a-ca1e6da28c3d/thumbnail.avif
+
+Marcha Supina de Quadril (81cadc1c-8ff5-4093-abd1-713f133fb4ca)
+  image_url: https://media.moocafisio.com.br/exercises/81cadc1c-8ff5-4093-abd1-713f133fb4ca/image.png → https://media.moocafisio.com.br/exercises/81cadc1c-8ff5-4093-abd1-713f133fb4ca/image.avif
+  thumbnail_url: https://fisioflow-media.r2.dev/exercises/81cadc1c-8ff5-4093-abd1-713f133fb4ca/thumbnail.png → https://fisioflow-media.r2.dev/exercises/81cadc1c-8ff5-4093-abd1-713f133fb4ca/thumbnail.avif
+
+Agachamento na Cadeira (fa8a49b7-cfcd-4a77-84ec-ec345ecd08c5)
+  image_url: https://media.moocafisio.com.br/exercises/fa8a49b7-cfcd-4a77-84ec-ec345ecd08c5/image.avif → https://media.moocafisio.com.br/exercises/fa8a49b7-cfcd-4a77-84ec-ec345ecd08c5/image.avif
+  thumbnail_url: https://fisioflow-media.r2.dev/exercises/fa8a49b7-cfcd-4a77-84ec-ec345ecd08c5/thumbnail.png → https://fisioflow-media.r2.dev/exercises/fa8a49b7-cfcd-4a77-84ec-ec345ecd08c5/thumbnail.avif
+
+Mobilização de Ombro com Bastão (f54c7e59-5005-4f97-8aa3-079e28df7389)
+  image_url: https://media.moocafisio.com.br/exercises/f54c7e59-5005-4f97-8aa3-079e28df7389/image.png → https://media.moocafisio.com.br/exercises/f54c7e59-5005-4f97-8aa3-079e28df7389/image.avif
+  thumbnail_url: https://fisioflow-media.r2.dev/exercises/f54c7e59-5005-4f97-8aa3-079e28df7389/thumbnail.png → https://fisioflow-media.r2.dev/exercises/f54c7e59-5005-4f97-8aa3-079e28df7389/thumbnail.avif
+
+Elevação de Panturrilha em Pé (d910a6fa-c42a-451b-af7a-b6c76fda3cb6)
+  image_url: https://media.moocafisio.com.br/exercises/d910a6fa-c42a-451b-af7a-b6c76fda3cb6/image.png → https://media.moocafisio.com.br/exercises/d910a6fa-c42a-451b-af7a-b6c76fda3cb6/image.avif
+  thumbnail_url: https://fisioflow-media.r2.dev/exercises/d910a6fa-c42a-451b-af7a-b6c76fda3cb6/thumbnail.png → https://fisioflow-media.r2.dev/exercises/d910a6fa-c42a-451b-af7a-b6c76fda3cb6/thumbnail.avif
+
+Respiração Diafragmática (8597c8ee-caca-45cb-8c2d-a3c7bb1f88dc)
+  image_url: https://media.moocafisio.com.br/exercises/8597c8ee-caca-45cb-8c2d-a3c7bb1f88dc/image.png → https://media.moocafisio.com.br/exercises/8597c8ee-caca-45cb-8c2d-a3c7bb1f88dc/image.avif
+  thumbnail_url: https://fisioflow-media.r2.dev/exercises/8597c8ee-caca-45cb-8c2d-a3c7bb1f88dc/thumbnail.png → https://fisioflow-media.r2.dev/exercises/8597c8ee-caca-45cb-8c2d-a3c7bb1f88dc/thumbnail.avif
+
+Elevação de Panturrilha em Pé (e61cabcd-f72e-47fe-adb7-a394d8bac445)
+  image_url: https://media.moocafisio.com.br/exercises/e61cabcd-f72e-47fe-adb7-a394d8bac445/image.png → https://media.moocafisio.com.br/exercises/e61cabcd-f72e-47fe-adb7-a394d8bac445/image.avif
+  thumbnail_url: https://fisioflow-media.r2.dev/exercises/e61cabcd-f72e-47fe-adb7-a394d8bac445/thumbnail.png → https://fisioflow-media.r2.dev/exercises/e61cabcd-f72e-47fe-adb7-a394d8bac445/thumbnail.avif
+
+Alongamento Levantador da Escápula (7c602d5c-bbbb-4ddb-97d0-6ebcc3ddfa20)
+  image_url: https://media.moocafisio.com.br/exercises/7c602d5c-bbbb-4ddb-97d0-6ebcc3ddfa20/image.png → https://media.moocafisio.com.br/exercises/7c602d5c-bbbb-4ddb-97d0-6ebcc3ddfa20/image.avif
+  thumbnail_url: https://fisioflow-media.r2.dev/exercises/7c602d5c-bbbb-4ddb-97d0-6ebcc3ddfa20/thumbnail.png → https://fisioflow-media.r2.dev/exercises/7c602d5c-bbbb-4ddb-97d0-6ebcc3ddfa20/thumbnail.avif
+
+Alongamento 90-90 (d7feba14-d7dd-416f-862e-69b604d371d5)
+  image_url: https://media.moocafisio.com.br/exercises/d7feba14-d7dd-416f-862e-69b604d371d5/image.png → https://media.moocafisio.com.br/exercises/d7feba14-d7dd-416f-862e-69b604d371d5/image.avif
+  thumbnail_url: https://fisioflow-media.r2.dev/exercises/d7feba14-d7dd-416f-862e-69b604d371d5/thumbnail.png → https://fisioflow-media.r2.dev/exercises/d7feba14-d7dd-416f-862e-69b604d371d5/thumbnail.avif
+
+World's Greatest Stretch (d5ca93dc-44da-45eb-8de1-c139b2bee50d)
+  image_url: https://media.moocafisio.com.br/exercises/d5ca93dc-44da-45eb-8de1-c139b2bee50d/image.png → https://media.moocafisio.com.br/exercises/d5ca93dc-44da-45eb-8de1-c139b2bee50d/image.avif
+  thumbnail_url: https://fisioflow-media.r2.dev/exercises/d5ca93dc-44da-45eb-8de1-c139b2bee50d/thumbnail.png → https://fisioflow-media.r2.dev/exercises/d5ca93dc-44da-45eb-8de1-c139b2bee50d/thumbnail.avif
+
+Extensão de Cotovelo (Tricep) (5d1ccf64-73d9-46e1-a95b-c535dc634b1d)
+  image_url: https://media.moocafisio.com.br/exercises/5d1ccf64-73d9-46e1-a95b-c535dc634b1d/image.png → https://media.moocafisio.com.br/exercises/5d1ccf64-73d9-46e1-a95b-c535dc634b1d/image.avif
+  thumbnail_url: https://fisioflow-media.r2.dev/exercises/5d1ccf64-73d9-46e1-a95b-c535dc634b1d/thumbnail.png → https://fisioflow-media.r2.dev/exercises/5d1ccf64-73d9-46e1-a95b-c535dc634b1d/thumbnail.avif
+
+Alongamento de Adutores (70751514-d6d8-4ffc-9037-226b7433c590)
+  image_url: https://media.moocafisio.com.br/exercises/70751514-d6d8-4ffc-9037-226b7433c590/image.png → https://media.moocafisio.com.br/exercises/70751514-d6d8-4ffc-9037-226b7433c590/image.avif
+  thumbnail_url: https://fisioflow-media.r2.dev/exercises/70751514-d6d8-4ffc-9037-226b7433c590/thumbnail.png → https://fisioflow-media.r2.dev/exercises/70751514-d6d8-4ffc-9037-226b7433c590/thumbnail.avif
+
+Alongamento de Isquiotibiais em Pé (6b574243-5a72-44bd-b143-bdf5c8976940)
+  image_url: https://media.moocafisio.com.br/exercises/6b574243-5a72-44bd-b143-bdf5c8976940/image.png → https://media.moocafisio.com.br/exercises/6b574243-5a72-44bd-b143-bdf5c8976940/image.avif
+  thumbnail_url: https://fisioflow-media.r2.dev/exercises/6b574243-5a72-44bd-b143-bdf5c8976940/thumbnail.png → https://fisioflow-media.r2.dev/exercises/6b574243-5a72-44bd-b143-bdf5c8976940/thumbnail.avif
+
+Descida de Escada (c5da19e8-e549-4bdd-8e82-5a87b7759c4f)
+  image_url: https://media.moocafisio.com.br/exercises/c5da19e8-e549-4bdd-8e82-5a87b7759c4f/image.png → https://media.moocafisio.com.br/exercises/c5da19e8-e549-4bdd-8e82-5a87b7759c4f/image.avif
+  thumbnail_url: https://fisioflow-media.r2.dev/exercises/c5da19e8-e549-4bdd-8e82-5a87b7759c4f/thumbnail.png → https://fisioflow-media.r2.dev/exercises/c5da19e8-e549-4bdd-8e82-5a87b7759c4f/thumbnail.avif
+
+Hip Airplane (705de1c3-7aa2-4b32-bf9f-2bb903e79450)
+  image_url: https://media.moocafisio.com.br/exercises/705de1c3-7aa2-4b32-bf9f-2bb903e79450/image.png → https://media.moocafisio.com.br/exercises/705de1c3-7aa2-4b32-bf9f-2bb903e79450/image.avif
+  thumbnail_url: https://fisioflow-media.r2.dev/exercises/705de1c3-7aa2-4b32-bf9f-2bb903e79450/thumbnail.png → https://fisioflow-media.r2.dev/exercises/705de1c3-7aa2-4b32-bf9f-2bb903e79450/thumbnail.avif
+
+Perdigueiro (Bird Dog) (74ad1c8a-c300-419d-b6a0-4f331a98b611)
+  image_url: https://media.moocafisio.com.br/exercises/74ad1c8a-c300-419d-b6a0-4f331a98b611/image.png → https://media.moocafisio.com.br/exercises/74ad1c8a-c300-419d-b6a0-4f331a98b611/image.avif
+  thumbnail_url: https://fisioflow-media.r2.dev/exercises/74ad1c8a-c300-419d-b6a0-4f331a98b611/thumbnail.png → https://fisioflow-media.r2.dev/exercises/74ad1c8a-c300-419d-b6a0-4f331a98b611/thumbnail.avif
+
+Flexão de Quadril com Vassoura (e3b2b395-8c80-4ad0-a9d1-62170cd41446)
+  image_url: https://media.moocafisio.com.br/exercises/e3b2b395-8c80-4ad0-a9d1-62170cd41446/image.png → https://media.moocafisio.com.br/exercises/e3b2b395-8c80-4ad0-a9d1-62170cd41446/image.avif
+  thumbnail_url: https://fisioflow-media.r2.dev/exercises/e3b2b395-8c80-4ad0-a9d1-62170cd41446/thumbnail.png → https://fisioflow-media.r2.dev/exercises/e3b2b395-8c80-4ad0-a9d1-62170cd41446/thumbnail.avif
+
+Elevação Frontal de Ombro (9cc3f8a7-4e9b-4ad0-82c7-6e4c8e451002)
+  image_url: https://media.fisioflow.com.br/exercises/9cc3f8a7-4e9b-4ad0-82c7-6e4c8e451002/image.png → https://media.fisioflow.com.br/exercises/9cc3f8a7-4e9b-4ad0-82c7-6e4c8e451002/image.avif
+  thumbnail_url: https://fisioflow-media.r2.dev/exercises/9cc3f8a7-4e9b-4ad0-82c7-6e4c8e451002/thumbnail.png → https://fisioflow-media.r2.dev/exercises/9cc3f8a7-4e9b-4ad0-82c7-6e4c8e451002/thumbnail.avif
+
+Alongamento de Bíceps na Parede (d68483d3-04e4-4f34-8e41-1a37635a141a)
+  image_url: https://media.moocafisio.com.br/exercises/d68483d3-04e4-4f34-8e41-1a37635a141a/image.png → https://media.moocafisio.com.br/exercises/d68483d3-04e4-4f34-8e41-1a37635a141a/image.avif
+  thumbnail_url: https://fisioflow-media.r2.dev/exercises/d68483d3-04e4-4f34-8e41-1a37635a141a/thumbnail.png → https://fisioflow-media.r2.dev/exercises/d68483d3-04e4-4f34-8e41-1a37635a141a/thumbnail.avif
+
+Codman Pendular (50919edd-6639-44e1-851a-115a56758a96)
+  image_url: https://media.moocafisio.com.br/exercises/50919edd-6639-44e1-851a-115a56758a96/image.png → https://media.moocafisio.com.br/exercises/50919edd-6639-44e1-851a-115a56758a96/image.avif
+  thumbnail_url: https://fisioflow-media.r2.dev/exercises/50919edd-6639-44e1-851a-115a56758a96/thumbnail.png → https://fisioflow-media.r2.dev/exercises/50919edd-6639-44e1-851a-115a56758a96/thumbnail.avif
+
+Mobilização Patelar (5465a626-f7a3-4541-94f7-5e281b9036ce)
+  image_url: https://media.moocafisio.com.br/exercises/5465a626-f7a3-4541-94f7-5e281b9036ce/image.png → https://media.moocafisio.com.br/exercises/5465a626-f7a3-4541-94f7-5e281b9036ce/image.avif
+  thumbnail_url: https://fisioflow-media.r2.dev/exercises/5465a626-f7a3-4541-94f7-5e281b9036ce/thumbnail.png → https://fisioflow-media.r2.dev/exercises/5465a626-f7a3-4541-94f7-5e281b9036ce/thumbnail.avif
+
+agachamento sumo (41a6c525-a53e-457e-a90c-d27ca5cf09e7)
+  image_url: https://media.moocafisio.com.br/exercises/41a6c525-a53e-457e-a90c-d27ca5cf09e7/image.png → https://media.moocafisio.com.br/exercises/41a6c525-a53e-457e-a90c-d27ca5cf09e7/image.avif
+  thumbnail_url: https://fisioflow-media.r2.dev/exercises/41a6c525-a53e-457e-a90c-d27ca5cf09e7/thumbnail.png → https://fisioflow-media.r2.dev/exercises/41a6c525-a53e-457e-a90c-d27ca5cf09e7/thumbnail.avif
+
+SLR com Dorsiflexão Automática (22f56dfc-0802-4828-b5ce-bcb1ec61c87a)
+  image_url: https://media.moocafisio.com.br/exercises/22f56dfc-0802-4828-b5ce-bcb1ec61c87a/image.png → https://media.moocafisio.com.br/exercises/22f56dfc-0802-4828-b5ce-bcb1ec61c87a/image.avif
+  thumbnail_url: https://fisioflow-media.r2.dev/exercises/22f56dfc-0802-4828-b5ce-bcb1ec61c87a/thumbnail.png → https://fisioflow-media.r2.dev/exercises/22f56dfc-0802-4828-b5ce-bcb1ec61c87a/thumbnail.avif
+
+Flexão de Punho com Halter (06bec5ab-ee79-4b3c-969f-d57a85883701)
+  image_url: https://media.moocafisio.com.br/exercises/06bec5ab-ee79-4b3c-969f-d57a85883701/image.png → https://media.moocafisio.com.br/exercises/06bec5ab-ee79-4b3c-969f-d57a85883701/image.avif
+  thumbnail_url: https://fisioflow-media.r2.dev/exercises/06bec5ab-ee79-4b3c-969f-d57a85883701/thumbnail.png → https://fisioflow-media.r2.dev/exercises/06bec5ab-ee79-4b3c-969f-d57a85883701/thumbnail.avif
+
+Equilíbrio em Tandem (f9e420fc-7da5-479c-a850-beedeca1c86b)
+  image_url: https://media.moocafisio.com.br/exercises/f9e420fc-7da5-479c-a850-beedeca1c86b/image.png → https://media.moocafisio.com.br/exercises/f9e420fc-7da5-479c-a850-beedeca1c86b/image.avif
+  thumbnail_url: https://fisioflow-media.r2.dev/exercises/f9e420fc-7da5-479c-a850-beedeca1c86b/thumbnail.png → https://fisioflow-media.r2.dev/exercises/f9e420fc-7da5-479c-a850-beedeca1c86b/thumbnail.avif
+
+Afundo (7a349c3c-6a9b-43fb-bf86-525e5264210a)
+  image_url: https://media.moocafisio.com.br/exercises/7a349c3c-6a9b-43fb-bf86-525e5264210a/image.png → https://media.moocafisio.com.br/exercises/7a349c3c-6a9b-43fb-bf86-525e5264210a/image.avif
+  thumbnail_url: https://fisioflow-media.r2.dev/exercises/7a349c3c-6a9b-43fb-bf86-525e5264210a/thumbnail.png → https://fisioflow-media.r2.dev/exercises/7a349c3c-6a9b-43fb-bf86-525e5264210a/thumbnail.avif
+
+Huff Cough (59933cf5-7599-43de-8f69-606575f91b4f)
+  image_url: https://media.fisioflow.com.br/exercises/59933cf5-7599-43de-8f69-606575f91b4f/image.png → https://media.fisioflow.com.br/exercises/59933cf5-7599-43de-8f69-606575f91b4f/image.avif
+  thumbnail_url: https://fisioflow-media.r2.dev/exercises/59933cf5-7599-43de-8f69-606575f91b4f/thumbnail.png → https://fisioflow-media.r2.dev/exercises/59933cf5-7599-43de-8f69-606575f91b4f/thumbnail.avif
+
+Single Leg Stance com Movimento de Braço (bd0eb7cb-7c6e-4978-8586-1a2872cf40aa)
+  image_url: https://media.moocafisio.com.br/exercises/bd0eb7cb-7c6e-4978-8586-1a2872cf40aa/image.png → https://media.moocafisio.com.br/exercises/bd0eb7cb-7c6e-4978-8586-1a2872cf40aa/image.avif
+  thumbnail_url: https://fisioflow-media.r2.dev/exercises/bd0eb7cb-7c6e-4978-8586-1a2872cf40aa/thumbnail.png → https://fisioflow-media.r2.dev/exercises/bd0eb7cb-7c6e-4978-8586-1a2872cf40aa/thumbnail.avif
+
+Desvio Radial de Punho (3f5976ad-ae6b-45e9-b7de-6c0f80f00504)
+  image_url: https://media.moocafisio.com.br/exercises/3f5976ad-ae6b-45e9-b7de-6c0f80f00504/image.png → https://media.moocafisio.com.br/exercises/3f5976ad-ae6b-45e9-b7de-6c0f80f00504/image.avif
+  thumbnail_url: https://fisioflow-media.r2.dev/exercises/3f5976ad-ae6b-45e9-b7de-6c0f80f00504/thumbnail.png → https://fisioflow-media.r2.dev/exercises/3f5976ad-ae6b-45e9-b7de-6c0f80f00504/thumbnail.avif
+
+Marcha com Padrões Cruzados (8a7ffd62-5075-453c-89e6-057843dcb8e1)
+  image_url: https://media.moocafisio.com.br/exercises/8a7ffd62-5075-453c-89e6-057843dcb8e1/image.png → https://media.moocafisio.com.br/exercises/8a7ffd62-5075-453c-89e6-057843dcb8e1/image.avif
+  thumbnail_url: https://fisioflow-media.r2.dev/exercises/8a7ffd62-5075-453c-89e6-057843dcb8e1/thumbnail.png → https://fisioflow-media.r2.dev/exercises/8a7ffd62-5075-453c-89e6-057843dcb8e1/thumbnail.avif
+
+Levantamento Terra (2741a4de-a779-4741-9596-bcb139945d13)
+  image_url: https://media.moocafisio.com.br/exercises/2741a4de-a779-4741-9596-bcb139945d13/image.png → https://media.moocafisio.com.br/exercises/2741a4de-a779-4741-9596-bcb139945d13/image.avif
+  thumbnail_url: https://fisioflow-media.r2.dev/exercises/2741a4de-a779-4741-9596-bcb139945d13/thumbnail.png → https://fisioflow-media.r2.dev/exercises/2741a4de-a779-4741-9596-bcb139945d13/thumbnail.avif
+
+Alongamento de Quadríceps (0c3e5d4e-3afb-4ffc-8206-d8b642f8902f)
+  image_url: https://media.moocafisio.com.br/exercises/0c3e5d4e-3afb-4ffc-8206-d8b642f8902f/image.png → https://media.moocafisio.com.br/exercises/0c3e5d4e-3afb-4ffc-8206-d8b642f8902f/image.avif
+  thumbnail_url: https://fisioflow-media.r2.dev/exercises/0c3e5d4e-3afb-4ffc-8206-d8b642f8902f/thumbnail.png → https://fisioflow-media.r2.dev/exercises/0c3e5d4e-3afb-4ffc-8206-d8b642f8902f/thumbnail.avif
+
+RDL (Romanian Deadlift) (81f95733-aa81-4bde-8c4a-25adc832dcbb)
+  image_url: https://media.moocafisio.com.br/exercises/81f95733-aa81-4bde-8c4a-25adc832dcbb/image.png → https://media.moocafisio.com.br/exercises/81f95733-aa81-4bde-8c4a-25adc832dcbb/image.avif
+  thumbnail_url: https://fisioflow-media.r2.dev/exercises/81f95733-aa81-4bde-8c4a-25adc832dcbb/thumbnail.png → https://fisioflow-media.r2.dev/exercises/81f95733-aa81-4bde-8c4a-25adc832dcbb/thumbnail.avif
+
+Alongamento de Psoas (Ilíaco) (df77fa5b-306e-4053-91d2-a60cc0017411)
+  image_url: https://media.moocafisio.com.br/exercises/df77fa5b-306e-4053-91d2-a60cc0017411/image.png → https://media.moocafisio.com.br/exercises/df77fa5b-306e-4053-91d2-a60cc0017411/image.avif
+  thumbnail_url: https://fisioflow-media.r2.dev/exercises/df77fa5b-306e-4053-91d2-a60cc0017411/thumbnail.png → https://fisioflow-media.r2.dev/exercises/df77fa5b-306e-4053-91d2-a60cc0017411/thumbnail.avif
+
+Cobra Prona (cc02bbba-113d-433f-a70c-9590b3bdbd74)
+  image_url: https://media.moocafisio.com.br/exercises/cc02bbba-113d-433f-a70c-9590b3bdbd74/image.png → https://media.moocafisio.com.br/exercises/cc02bbba-113d-433f-a70c-9590b3bdbd74/image.avif
+  thumbnail_url: https://fisioflow-media.r2.dev/exercises/cc02bbba-113d-433f-a70c-9590b3bdbd74/thumbnail.png → https://fisioflow-media.r2.dev/exercises/cc02bbba-113d-433f-a70c-9590b3bdbd74/thumbnail.avif
+
+Gato-Vaca (Cat-Cow) (fa1baabf-13fc-4e11-bca4-e017a4a77c81)
+  image_url: https://media.moocafisio.com.br/exercises/fa1baabf-13fc-4e11-bca4-e017a4a77c81/image.png → https://media.moocafisio.com.br/exercises/fa1baabf-13fc-4e11-bca4-e017a4a77c81/image.avif
+  thumbnail_url: https://fisioflow-media.r2.dev/exercises/fa1baabf-13fc-4e11-bca4-e017a4a77c81/thumbnail.png → https://fisioflow-media.r2.dev/exercises/fa1baabf-13fc-4e11-bca4-e017a4a77c81/thumbnail.avif
+
+Elevação de Panturrilha Sentado (4d63978d-437d-4034-9996-d3a7499b9e35)
+  image_url: https://media.moocafisio.com.br/exercises/4d63978d-437d-4034-9996-d3a7499b9e35/image.png → https://media.moocafisio.com.br/exercises/4d63978d-437d-4034-9996-d3a7499b9e35/image.avif
+  thumbnail_url: https://fisioflow-media.r2.dev/exercises/4d63978d-437d-4034-9996-d3a7499b9e35/thumbnail.png → https://fisioflow-media.r2.dev/exercises/4d63978d-437d-4034-9996-d3a7499b9e35/thumbnail.avif
+
+Rotação Externa de Ombro (be22afd1-de31-400b-a3d0-2a59a14fcdab)
+  image_url: https://media.moocafisio.com.br/exercises/be22afd1-de31-400b-a3d0-2a59a14fcdab/image.png → https://media.moocafisio.com.br/exercises/be22afd1-de31-400b-a3d0-2a59a14fcdab/image.avif
+  thumbnail_url: https://fisioflow-media.r2.dev/exercises/be22afd1-de31-400b-a3d0-2a59a14fcdab/thumbnail.png → https://fisioflow-media.r2.dev/exercises/be22afd1-de31-400b-a3d0-2a59a14fcdab/thumbnail.avif
+
+Alongamento de Isquiotibiais (c35453b6-4ff1-4294-98e0-f53fd09d921d)
+  image_url: https://media.moocafisio.com.br/exercises/c35453b6-4ff1-4294-98e0-f53fd09d921d/image.png → https://media.moocafisio.com.br/exercises/c35453b6-4ff1-4294-98e0-f53fd09d921d/image.avif
+  thumbnail_url: https://fisioflow-media.r2.dev/exercises/c35453b6-4ff1-4294-98e0-f53fd09d921d/thumbnail.png → https://fisioflow-media.r2.dev/exercises/c35453b6-4ff1-4294-98e0-f53fd09d921d/thumbnail.avif
+
+Mobilidade de Ombro (f81327c9-a0a0-4bb1-8a75-31659c051516)
+  image_url: https://media.moocafisio.com.br/exercises/f81327c9-a0a0-4bb1-8a75-31659c051516/image.png → https://media.moocafisio.com.br/exercises/f81327c9-a0a0-4bb1-8a75-31659c051516/image.avif
+  thumbnail_url: https://fisioflow-media.r2.dev/exercises/f81327c9-a0a0-4bb1-8a75-31659c051516/thumbnail.png → https://fisioflow-media.r2.dev/exercises/f81327c9-a0a0-4bb1-8a75-31659c051516/thumbnail.avif
+
+Agachamento Búlgaro (3974836c-03ed-49a0-9aef-10e02c51621f)
+  image_url: https://media.moocafisio.com.br/exercises/3974836c-03ed-49a0-9aef-10e02c51621f/image.png → https://media.moocafisio.com.br/exercises/3974836c-03ed-49a0-9aef-10e02c51621f/image.avif
+  thumbnail_url: https://fisioflow-media.r2.dev/exercises/3974836c-03ed-49a0-9aef-10e02c51621f/thumbnail.png → https://fisioflow-media.r2.dev/exercises/3974836c-03ed-49a0-9aef-10e02c51621f/thumbnail.avif
+
+Stiff Unilateral (e7f22737-a2f6-4f85-946f-b5d16339bc46)
+  image_url: https://media.moocafisio.com.br/exercises/e7f22737-a2f6-4f85-946f-b5d16339bc46/image.png → https://media.moocafisio.com.br/exercises/e7f22737-a2f6-4f85-946f-b5d16339bc46/image.avif
+  thumbnail_url: https://fisioflow-media.r2.dev/exercises/e7f22737-a2f6-4f85-946f-b5d16339bc46/thumbnail.png → https://fisioflow-media.r2.dev/exercises/e7f22737-a2f6-4f85-946f-b5d16339bc46/thumbnail.avif
+
+Deslizamento do Nervo Mediano (f4934299-cf2b-4453-880a-6f3cfb9e398a)
+  image_url: https://media.moocafisio.com.br/exercises/f4934299-cf2b-4453-880a-6f3cfb9e398a/image.png → https://media.moocafisio.com.br/exercises/f4934299-cf2b-4453-880a-6f3cfb9e398a/image.avif
+  thumbnail_url: https://fisioflow-media.r2.dev/exercises/f4934299-cf2b-4453-880a-6f3cfb9e398a/thumbnail.png → https://fisioflow-media.r2.dev/exercises/f4934299-cf2b-4453-880a-6f3cfb9e398a/thumbnail.avif
+
+Mergulho no Banco (Tríceps) (5eca0c6e-41ba-4ed5-93c1-fb5ae4660db0)
+  image_url: https://media.moocafisio.com.br/exercises/5eca0c6e-41ba-4ed5-93c1-fb5ae4660db0/image.png → https://media.moocafisio.com.br/exercises/5eca0c6e-41ba-4ed5-93c1-fb5ae4660db0/image.avif
+  thumbnail_url: https://fisioflow-media.r2.dev/exercises/5eca0c6e-41ba-4ed5-93c1-fb5ae4660db0/thumbnail.png → https://fisioflow-media.r2.dev/exercises/5eca0c6e-41ba-4ed5-93c1-fb5ae4660db0/thumbnail.avif
+
+Exercício de Parede para Ombro (cd0ea681-c92c-4006-bdd7-5afc3c868bab)
+  image_url: https://media.moocafisio.com.br/exercises/cd0ea681-c92c-4006-bdd7-5afc3c868bab/image.png → https://media.moocafisio.com.br/exercises/cd0ea681-c92c-4006-bdd7-5afc3c868bab/image.avif
+  thumbnail_url: https://fisioflow-media.r2.dev/exercises/cd0ea681-c92c-4006-bdd7-5afc3c868bab/thumbnail.png → https://fisioflow-media.r2.dev/exercises/cd0ea681-c92c-4006-bdd7-5afc3c868bab/thumbnail.avif
+
+Rotação Externa de Ombro com Faixa (dc9d2b2a-6836-4d4d-9b62-ac80b22d7c54)
+  image_url: https://media.moocafisio.com.br/exercises/dc9d2b2a-6836-4d4d-9b62-ac80b22d7c54/image.png → https://media.moocafisio.com.br/exercises/dc9d2b2a-6836-4d4d-9b62-ac80b22d7c54/image.avif
+  thumbnail_url: https://fisioflow-media.r2.dev/exercises/dc9d2b2a-6836-4d4d-9b62-ac80b22d7c54/thumbnail.png → https://fisioflow-media.r2.dev/exercises/dc9d2b2a-6836-4d4d-9b62-ac80b22d7c54/thumbnail.avif
+
+Side Plank (Prancha Lateral) (dcba2295-5810-48ad-b100-e7166eda0d5f)
+  image_url: https://media.moocafisio.com.br/exercises/dcba2295-5810-48ad-b100-e7166eda0d5f/image.png → https://media.moocafisio.com.br/exercises/dcba2295-5810-48ad-b100-e7166eda0d5f/image.avif
+  thumbnail_url: https://fisioflow-media.r2.dev/exercises/dcba2295-5810-48ad-b100-e7166eda0d5f/thumbnail.png → https://fisioflow-media.r2.dev/exercises/dcba2295-5810-48ad-b100-e7166eda0d5f/thumbnail.avif
+
+Squeeze de Bola (Espalmar) (9e20767b-ba39-4407-9c90-3a348ba150c5)
+  image_url: https://media.moocafisio.com.br/exercises/9e20767b-ba39-4407-9c90-3a348ba150c5/image.png → https://media.moocafisio.com.br/exercises/9e20767b-ba39-4407-9c90-3a348ba150c5/image.avif
+  thumbnail_url: https://fisioflow-media.r2.dev/exercises/9e20767b-ba39-4407-9c90-3a348ba150c5/thumbnail.png → https://fisioflow-media.r2.dev/exercises/9e20767b-ba39-4407-9c90-3a348ba150c5/thumbnail.avif
+
+Gait Training com Obstáculos (92c07ed7-e61c-43c4-8651-08a34ca3e1fe)
+  image_url: https://media.moocafisio.com.br/exercises/92c07ed7-e61c-43c4-8651-08a34ca3e1fe/image.png → https://media.moocafisio.com.br/exercises/92c07ed7-e61c-43c4-8651-08a34ca3e1fe/image.avif
+  thumbnail_url: https://fisioflow-media.r2.dev/exercises/92c07ed7-e61c-43c4-8651-08a34ca3e1fe/thumbnail.png → https://fisioflow-media.r2.dev/exercises/92c07ed7-e61c-43c4-8651-08a34ca3e1fe/thumbnail.avif
+
+Agachamento Goblet (61dcaaf9-92ed-4224-b242-d2406a00e8ea)
+  image_url: https://media.moocafisio.com.br/exercises/61dcaaf9-92ed-4224-b242-d2406a00e8ea/image.png → https://media.moocafisio.com.br/exercises/61dcaaf9-92ed-4224-b242-d2406a00e8ea/image.avif
+  thumbnail_url: https://fisioflow-media.r2.dev/exercises/61dcaaf9-92ed-4224-b242-d2406a00e8ea/thumbnail.png → https://fisioflow-media.r2.dev/exercises/61dcaaf9-92ed-4224-b242-d2406a00e8ea/thumbnail.avif
+
+Prancha na Parede (524dca2d-cf76-4bbe-b68e-745859dc402d)
+  image_url: https://media.moocafisio.com.br/exercises/524dca2d-cf76-4bbe-b68e-745859dc402d/image.png → https://media.moocafisio.com.br/exercises/524dca2d-cf76-4bbe-b68e-745859dc402d/image.avif
+  thumbnail_url: https://fisioflow-media.r2.dev/exercises/524dca2d-cf76-4bbe-b68e-745859dc402d/thumbnail.png → https://fisioflow-media.r2.dev/exercises/524dca2d-cf76-4bbe-b68e-745859dc402d/thumbnail.avif
+
+Push-up Plus (7d5a4d7d-9386-450e-91f7-5bfe6e70e12e)
+  image_url: https://media.moocafisio.com.br/exercises/7d5a4d7d-9386-450e-91f7-5bfe6e70e12e/image.png → https://media.moocafisio.com.br/exercises/7d5a4d7d-9386-450e-91f7-5bfe6e70e12e/image.avif
+  thumbnail_url: https://fisioflow-media.r2.dev/exercises/7d5a4d7d-9386-450e-91f7-5bfe6e70e12e/thumbnail.png → https://fisioflow-media.r2.dev/exercises/7d5a4d7d-9386-450e-91f7-5bfe6e70e12e/thumbnail.avif
+
+Lunge com Rotação (a7a80b05-0723-4c52-97c2-4e6689371143)
+  image_url: https://media.moocafisio.com.br/exercises/a7a80b05-0723-4c52-97c2-4e6689371143/image.png → https://media.moocafisio.com.br/exercises/a7a80b05-0723-4c52-97c2-4e6689371143/image.avif
+  thumbnail_url: https://fisioflow-media.r2.dev/exercises/a7a80b05-0723-4c52-97c2-4e6689371143/thumbnail.png → https://fisioflow-media.r2.dev/exercises/a7a80b05-0723-4c52-97c2-4e6689371143/thumbnail.avif
+
+Leg Press 45° (f32367e8-ce7e-45a4-ae5e-a8a3eb0056bf)
+  image_url: https://media.moocafisio.com.br/exercises/f32367e8-ce7e-45a4-ae5e-a8a3eb0056bf/image.png → https://media.moocafisio.com.br/exercises/f32367e8-ce7e-45a4-ae5e-a8a3eb0056bf/image.avif
+  thumbnail_url: https://fisioflow-media.r2.dev/exercises/f32367e8-ce7e-45a4-ae5e-a8a3eb0056bf/thumbnail.png → https://fisioflow-media.r2.dev/exercises/f32367e8-ce7e-45a4-ae5e-a8a3eb0056bf/thumbnail.avif
+
+Squat Jump (205ef2f5-83b5-41c0-932b-d6e8b8a53f29)
+  image_url: https://media.moocafisio.com.br/exercises/205ef2f5-83b5-41c0-932b-d6e8b8a53f29/image.png → https://media.moocafisio.com.br/exercises/205ef2f5-83b5-41c0-932b-d6e8b8a53f29/image.avif
+  thumbnail_url: https://fisioflow-media.r2.dev/exercises/205ef2f5-83b5-41c0-932b-d6e8b8a53f29/thumbnail.png → https://fisioflow-media.r2.dev/exercises/205ef2f5-83b5-41c0-932b-d6e8b8a53f29/thumbnail.avif
+
+Mobilização de Nervo Ciático (Slump) (32ab5f26-a92f-476d-98a2-8d461d45bb39)
+  image_url: https://media.moocafisio.com.br/exercises/32ab5f26-a92f-476d-98a2-8d461d45bb39/image.png → https://media.moocafisio.com.br/exercises/32ab5f26-a92f-476d-98a2-8d461d45bb39/image.avif
+  thumbnail_url: https://fisioflow-media.r2.dev/exercises/32ab5f26-a92f-476d-98a2-8d461d45bb39/thumbnail.png → https://fisioflow-media.r2.dev/exercises/32ab5f26-a92f-476d-98a2-8d461d45bb39/thumbnail.avif
+
+Alcance em Y (Y-Balance Practice) (e5b40a4b-ee8b-483f-b45f-40a23a769a4b)
+  image_url: https://media.moocafisio.com.br/exercises/e5b40a4b-ee8b-483f-b45f-40a23a769a4b/image.png → https://media.moocafisio.com.br/exercises/e5b40a4b-ee8b-483f-b45f-40a23a769a4b/image.avif
+  thumbnail_url: https://fisioflow-media.r2.dev/exercises/e5b40a4b-ee8b-483f-b45f-40a23a769a4b/thumbnail.png → https://fisioflow-media.r2.dev/exercises/e5b40a4b-ee8b-483f-b45f-40a23a769a4b/thumbnail.avif
+
+Eversão de Tornozelo com Faixa (9f6cddd0-664a-465e-adc7-e587571df522)
+  image_url: https://media.moocafisio.com.br/exercises/9f6cddd0-664a-465e-adc7-e587571df522/image.png → https://media.moocafisio.com.br/exercises/9f6cddd0-664a-465e-adc7-e587571df522/image.avif
+  thumbnail_url: https://fisioflow-media.r2.dev/exercises/9f6cddd0-664a-465e-adc7-e587571df522/thumbnail.png → https://fisioflow-media.r2.dev/exercises/9f6cddd0-664a-465e-adc7-e587571df522/thumbnail.avif
+
+Abdução de Quadril Deitado (5bc20d55-ceed-4fd1-8274-2eede587cb33)
+  image_url: https://media.moocafisio.com.br/exercises/5bc20d55-ceed-4fd1-8274-2eede587cb33/image.png → https://media.moocafisio.com.br/exercises/5bc20d55-ceed-4fd1-8274-2eede587cb33/image.avif
+  thumbnail_url: https://fisioflow-media.r2.dev/exercises/5bc20d55-ceed-4fd1-8274-2eede587cb33/thumbnail.png → https://fisioflow-media.r2.dev/exercises/5bc20d55-ceed-4fd1-8274-2eede587cb33/thumbnail.avif
+
+Alongamento Isquiotibiais com Toalha (d029f7ce-9617-4f04-9834-3faa425a9d3e)
+  image_url: https://media.moocafisio.com.br/exercises/d029f7ce-9617-4f04-9834-3faa425a9d3e/image.png → https://media.moocafisio.com.br/exercises/d029f7ce-9617-4f04-9834-3faa425a9d3e/image.avif
+  thumbnail_url: https://fisioflow-media.r2.dev/exercises/d029f7ce-9617-4f04-9834-3faa425a9d3e/thumbnail.png → https://fisioflow-media.r2.dev/exercises/d029f7ce-9617-4f04-9834-3faa425a9d3e/thumbnail.avif
+
+Step Up (794029e9-4902-47db-b7e9-7f547467a026)
+  image_url: https://media.moocafisio.com.br/exercises/794029e9-4902-47db-b7e9-7f547467a026/image.png → https://media.moocafisio.com.br/exercises/794029e9-4902-47db-b7e9-7f547467a026/image.avif
+  thumbnail_url: https://fisioflow-media.r2.dev/exercises/794029e9-4902-47db-b7e9-7f547467a026/thumbnail.png → https://fisioflow-media.r2.dev/exercises/794029e9-4902-47db-b7e9-7f547467a026/thumbnail.avif
+
+Prancha Abdominal (Plank) (7de5e406-fd14-4b51-958d-0c26e9be6eca)
+  image_url: https://media.moocafisio.com.br/exercises/7de5e406-fd14-4b51-958d-0c26e9be6eca/image.png → https://media.moocafisio.com.br/exercises/7de5e406-fd14-4b51-958d-0c26e9be6eca/image.avif
+  thumbnail_url: https://fisioflow-media.r2.dev/exercises/7de5e406-fd14-4b51-958d-0c26e9be6eca/thumbnail.png → https://fisioflow-media.r2.dev/exercises/7de5e406-fd14-4b51-958d-0c26e9be6eca/thumbnail.avif
+
+Sit-to-Stand (ca4e687d-07b7-4a5f-a92d-27a7c366da65)
+  image_url: https://media.moocafisio.com.br/exercises/ca4e687d-07b7-4a5f-a92d-27a7c366da65/image.png → https://media.moocafisio.com.br/exercises/ca4e687d-07b7-4a5f-a92d-27a7c366da65/image.avif
+  thumbnail_url: https://fisioflow-media.r2.dev/exercises/ca4e687d-07b7-4a5f-a92d-27a7c366da65/thumbnail.png → https://fisioflow-media.r2.dev/exercises/ca4e687d-07b7-4a5f-a92d-27a7c366da65/thumbnail.avif
+
+Fortalecimento de Preensão (Bolinha) (f5a45273-0528-443c-8b47-add6b7f4d054)
+  image_url: https://media.moocafisio.com.br/exercises/f5a45273-0528-443c-8b47-add6b7f4d054/image.png → https://media.moocafisio.com.br/exercises/f5a45273-0528-443c-8b47-add6b7f4d054/image.avif
+  thumbnail_url: https://fisioflow-media.r2.dev/exercises/f5a45273-0528-443c-8b47-add6b7f4d054/thumbnail.png → https://fisioflow-media.r2.dev/exercises/f5a45273-0528-443c-8b47-add6b7f4d054/thumbnail.avif
+
+Passos Laterais com Faixa (c5e626d6-48c5-46be-bd29-0e0a800bbbd9)
+  image_url: https://media.moocafisio.com.br/exercises/c5e626d6-48c5-46be-bd29-0e0a800bbbd9/image.png → https://media.moocafisio.com.br/exercises/c5e626d6-48c5-46be-bd29-0e0a800bbbd9/image.avif
+  thumbnail_url: https://fisioflow-media.r2.dev/exercises/c5e626d6-48c5-46be-bd29-0e0a800bbbd9/thumbnail.png → https://fisioflow-media.r2.dev/exercises/c5e626d6-48c5-46be-bd29-0e0a800bbbd9/thumbnail.avif
+
+Afundo Lateral (56b512a2-f095-4c5f-94db-c7a31ecb9e18)
+  image_url: https://media.moocafisio.com.br/exercises/56b512a2-f095-4c5f-94db-c7a31ecb9e18/image.png → https://media.moocafisio.com.br/exercises/56b512a2-f095-4c5f-94db-c7a31ecb9e18/image.avif
+  thumbnail_url: https://fisioflow-media.r2.dev/exercises/56b512a2-f095-4c5f-94db-c7a31ecb9e18/thumbnail.png → https://fisioflow-media.r2.dev/exercises/56b512a2-f095-4c5f-94db-c7a31ecb9e18/thumbnail.avif
+
+Copenhagen Plank (328f722b-9b0a-4cec-a75d-5d9deb1738de)
+  image_url: https://media.moocafisio.com.br/exercises/328f722b-9b0a-4cec-a75d-5d9deb1738de/image.png → https://media.moocafisio.com.br/exercises/328f722b-9b0a-4cec-a75d-5d9deb1738de/image.avif
+  thumbnail_url: https://fisioflow-media.r2.dev/exercises/328f722b-9b0a-4cec-a75d-5d9deb1738de/thumbnail.png → https://fisioflow-media.r2.dev/exercises/328f722b-9b0a-4cec-a75d-5d9deb1738de/thumbnail.avif
+
+Star Excursion Balance Test (SEBT) (f87d9c7a-9b35-4235-b7a0-59ef2d3f0f20)
+  image_url: https://media.moocafisio.com.br/exercises/f87d9c7a-9b35-4235-b7a0-59ef2d3f0f20/image.png → https://media.moocafisio.com.br/exercises/f87d9c7a-9b35-4235-b7a0-59ef2d3f0f20/image.avif
+  thumbnail_url: https://fisioflow-media.r2.dev/exercises/f87d9c7a-9b35-4235-b7a0-59ef2d3f0f20/thumbnail.png → https://fisioflow-media.r2.dev/exercises/f87d9c7a-9b35-4235-b7a0-59ef2d3f0f20/thumbnail.avif
+
+Agachamento em Disco Instável (e7b7fe16-e2d7-42f5-8650-eb4ea6d4b5da)
+  image_url: https://media.moocafisio.com.br/exercises/e7b7fe16-e2d7-42f5-8650-eb4ea6d4b5da/image.png → https://media.moocafisio.com.br/exercises/e7b7fe16-e2d7-42f5-8650-eb4ea6d4b5da/image.avif
+  thumbnail_url: https://fisioflow-media.r2.dev/exercises/e7b7fe16-e2d7-42f5-8650-eb4ea6d4b5da/thumbnail.png → https://fisioflow-media.r2.dev/exercises/e7b7fe16-e2d7-42f5-8650-eb4ea6d4b5da/thumbnail.avif
+
+Respiração 4-7-8 (ddb808f5-5ab5-49ca-bfe4-31f7e641582e)
+  image_url: https://media.moocafisio.com.br/exercises/ddb808f5-5ab5-49ca-bfe4-31f7e641582e/image.png → https://media.moocafisio.com.br/exercises/ddb808f5-5ab5-49ca-bfe4-31f7e641582e/image.avif
+  thumbnail_url: https://fisioflow-media.r2.dev/exercises/ddb808f5-5ab5-49ca-bfe4-31f7e641582e/thumbnail.png → https://fisioflow-media.r2.dev/exercises/ddb808f5-5ab5-49ca-bfe4-31f7e641582e/thumbnail.avif
+
+Equilíbrio Unipodal Solo (acf2a152-86f3-4b04-95ec-4ff661ab8fdb)
+  image_url: https://media.moocafisio.com.br/exercises/acf2a152-86f3-4b04-95ec-4ff661ab8fdb/image.png → https://media.moocafisio.com.br/exercises/acf2a152-86f3-4b04-95ec-4ff661ab8fdb/image.avif
+  thumbnail_url: https://fisioflow-media.r2.dev/exercises/acf2a152-86f3-4b04-95ec-4ff661ab8fdb/thumbnail.png → https://fisioflow-media.r2.dev/exercises/acf2a152-86f3-4b04-95ec-4ff661ab8fdb/thumbnail.avif
+
+Mobilidade do Hálux (bf106c3d-7d51-413c-a7e7-c8d77c018949)
+  image_url: https://media.moocafisio.com.br/exercises/bf106c3d-7d51-413c-a7e7-c8d77c018949/image.png → https://media.moocafisio.com.br/exercises/bf106c3d-7d51-413c-a7e7-c8d77c018949/image.avif
+  thumbnail_url: https://fisioflow-media.r2.dev/exercises/bf106c3d-7d51-413c-a7e7-c8d77c018949/thumbnail.png → https://fisioflow-media.r2.dev/exercises/bf106c3d-7d51-413c-a7e7-c8d77c018949/thumbnail.avif
+
+Mobilidade de Tornozelo (61ab52c6-cdf5-406b-b940-d7dbbfcecc05)
+  image_url: https://media.moocafisio.com.br/exercises/61ab52c6-cdf5-406b-b940-d7dbbfcecc05/image.png → https://media.moocafisio.com.br/exercises/61ab52c6-cdf5-406b-b940-d7dbbfcecc05/image.avif
+  thumbnail_url: https://fisioflow-media.r2.dev/exercises/61ab52c6-cdf5-406b-b940-d7dbbfcecc05/thumbnail.png → https://fisioflow-media.r2.dev/exercises/61ab52c6-cdf5-406b-b940-d7dbbfcecc05/thumbnail.avif
+
+Step Down (96cc9b30-d14a-4938-b490-4d2775343539)
+  image_url: https://media.moocafisio.com.br/exercises/96cc9b30-d14a-4938-b490-4d2775343539/image.png → https://media.moocafisio.com.br/exercises/96cc9b30-d14a-4938-b490-4d2775343539/image.avif
+  thumbnail_url: https://fisioflow-media.r2.dev/exercises/96cc9b30-d14a-4938-b490-4d2775343539/thumbnail.png → https://fisioflow-media.r2.dev/exercises/96cc9b30-d14a-4938-b490-4d2775343539/thumbnail.avif
+
+Flexão de Punho (44026881-f395-43b1-8437-87a747671833)
+  image_url: https://media.moocafisio.com.br/exercises/44026881-f395-43b1-8437-87a747671833/image.png → https://media.moocafisio.com.br/exercises/44026881-f395-43b1-8437-87a747671833/image.avif
+  thumbnail_url: https://fisioflow-media.r2.dev/exercises/44026881-f395-43b1-8437-87a747671833/thumbnail.png → https://fisioflow-media.r2.dev/exercises/44026881-f395-43b1-8437-87a747671833/thumbnail.avif
+
+Deadlift (Levantamento Terra) com Halteres (d513c74d-5adf-4ae2-872b-5a80d26f5a00)
+  image_url: https://media.moocafisio.com.br/exercises/d513c74d-5adf-4ae2-872b-5a80d26f5a00/image.png → https://media.moocafisio.com.br/exercises/d513c74d-5adf-4ae2-872b-5a80d26f5a00/image.avif
+  thumbnail_url: https://fisioflow-media.r2.dev/exercises/d513c74d-5adf-4ae2-872b-5a80d26f5a00/thumbnail.png → https://fisioflow-media.r2.dev/exercises/d513c74d-5adf-4ae2-872b-5a80d26f5a00/thumbnail.avif
+
+Abdominal Oblíquo (1b74c160-5442-4c67-a1db-16eed6846dc6)
+  image_url: https://media.moocafisio.com.br/exercises/1b74c160-5442-4c67-a1db-16eed6846dc6/image.png → https://media.moocafisio.com.br/exercises/1b74c160-5442-4c67-a1db-16eed6846dc6/image.avif
+  thumbnail_url: https://fisioflow-media.r2.dev/exercises/1b74c160-5442-4c67-a1db-16eed6846dc6/thumbnail.png → https://fisioflow-media.r2.dev/exercises/1b74c160-5442-4c67-a1db-16eed6846dc6/thumbnail.avif
+
+Relaxamento Progressivo de Jacobson (a69f1946-6f77-4840-a737-6eb4089e3c60)
+  image_url: https://media.moocafisio.com.br/exercises/a69f1946-6f77-4840-a737-6eb4089e3c60/image.png → https://media.moocafisio.com.br/exercises/a69f1946-6f77-4840-a737-6eb4089e3c60/image.avif
+  thumbnail_url: https://fisioflow-media.r2.dev/exercises/a69f1946-6f77-4840-a737-6eb4089e3c60/thumbnail.png → https://fisioflow-media.r2.dev/exercises/a69f1946-6f77-4840-a737-6eb4089e3c60/thumbnail.avif
+
+Mobilidade de Ombro (560ae5f4-0d5a-4c18-9631-fa74e58277c7)
+  image_url: https://media.moocafisio.com.br/exercises/560ae5f4-0d5a-4c18-9631-fa74e58277c7/image.png → https://media.moocafisio.com.br/exercises/560ae5f4-0d5a-4c18-9631-fa74e58277c7/image.avif
+  thumbnail_url: https://fisioflow-media.r2.dev/exercises/560ae5f4-0d5a-4c18-9631-fa74e58277c7/thumbnail.png → https://fisioflow-media.r2.dev/exercises/560ae5f4-0d5a-4c18-9631-fa74e58277c7/thumbnail.avif
+
+Afundo Reverso (f3d3f0f4-0366-42a4-9d6d-ce72d13f0fdb)
+  image_url: https://media.moocafisio.com.br/exercises/f3d3f0f4-0366-42a4-9d6d-ce72d13f0fdb/image.png → https://media.moocafisio.com.br/exercises/f3d3f0f4-0366-42a4-9d6d-ce72d13f0fdb/image.avif
+  thumbnail_url: https://fisioflow-media.r2.dev/exercises/f3d3f0f4-0366-42a4-9d6d-ce72d13f0fdb/thumbnail.png → https://fisioflow-media.r2.dev/exercises/f3d3f0f4-0366-42a4-9d6d-ce72d13f0fdb/thumbnail.avif
+
+Chin Tucks (0d47fc21-637f-484d-bea6-9e8fe7ba4a5e)
+  image_url: https://media.moocafisio.com.br/exercises/0d47fc21-637f-484d-bea6-9e8fe7ba4a5e/image.png → https://media.moocafisio.com.br/exercises/0d47fc21-637f-484d-bea6-9e8fe7ba4a5e/image.avif
+  thumbnail_url: https://fisioflow-media.r2.dev/exercises/0d47fc21-637f-484d-bea6-9e8fe7ba4a5e/thumbnail.png → https://fisioflow-media.r2.dev/exercises/0d47fc21-637f-484d-bea6-9e8fe7ba4a5e/thumbnail.avif
+
+Rotação Torácica em 4 Apoios (79d3afbb-49a6-4957-ae4a-38477cbdf58f)
+  image_url: https://media.moocafisio.com.br/exercises/79d3afbb-49a6-4957-ae4a-38477cbdf58f/image.png → https://media.moocafisio.com.br/exercises/79d3afbb-49a6-4957-ae4a-38477cbdf58f/image.avif
+  thumbnail_url: https://fisioflow-media.r2.dev/exercises/79d3afbb-49a6-4957-ae4a-38477cbdf58f/thumbnail.png → https://fisioflow-media.r2.dev/exercises/79d3afbb-49a6-4957-ae4a-38477cbdf58f/thumbnail.avif
+
+Elevação de Panturrilha em Degrau (0223355b-41cb-4082-9a5f-3d99b6c34b29)
+  image_url: https://media.moocafisio.com.br/exercises/0223355b-41cb-4082-9a5f-3d99b6c34b29/image.png → https://media.moocafisio.com.br/exercises/0223355b-41cb-4082-9a5f-3d99b6c34b29/image.avif
+  thumbnail_url: https://fisioflow-media.r2.dev/exercises/0223355b-41cb-4082-9a5f-3d99b6c34b29/thumbnail.png → https://fisioflow-media.r2.dev/exercises/0223355b-41cb-4082-9a5f-3d99b6c34b29/thumbnail.avif
+
+Rotação Interna de Ombro com Faixa (79739c5b-4d8d-4e20-b064-ee1c1aa4bc5e)
+  image_url: https://media.moocafisio.com.br/exercises/79739c5b-4d8d-4e20-b064-ee1c1aa4bc5e/image.png → https://media.moocafisio.com.br/exercises/79739c5b-4d8d-4e20-b064-ee1c1aa4bc5e/image.avif
+  thumbnail_url: https://fisioflow-media.r2.dev/exercises/79739c5b-4d8d-4e20-b064-ee1c1aa4bc5e/thumbnail.png → https://fisioflow-media.r2.dev/exercises/79739c5b-4d8d-4e20-b064-ee1c1aa4bc5e/thumbnail.avif
+
+Tapete de Pisos Diferentes (54792e1d-0a12-4d3a-b70d-7edc674df6ea)
+  image_url: https://media.moocafisio.com.br/exercises/54792e1d-0a12-4d3a-b70d-7edc674df6ea/image.png → https://media.moocafisio.com.br/exercises/54792e1d-0a12-4d3a-b70d-7edc674df6ea/image.avif
+  thumbnail_url: https://fisioflow-media.r2.dev/exercises/54792e1d-0a12-4d3a-b70d-7edc674df6ea/thumbnail.png → https://fisioflow-media.r2.dev/exercises/54792e1d-0a12-4d3a-b70d-7edc674df6ea/thumbnail.avif
+
+Mobilidade de Coluna (831a4893-7d40-417b-8469-633910020002)
+  image_url: https://media.moocafisio.com.br/exercises/831a4893-7d40-417b-8469-633910020002/image.png → https://media.moocafisio.com.br/exercises/831a4893-7d40-417b-8469-633910020002/image.avif
+  thumbnail_url: https://fisioflow-media.r2.dev/exercises/831a4893-7d40-417b-8469-633910020002/thumbnail.png → https://fisioflow-media.r2.dev/exercises/831a4893-7d40-417b-8469-633910020002/thumbnail.avif
+
+Mobilização de Nervo Mediano (Tinel e Phalen) (75ea596d-7506-43fc-b4f7-b86a97ac0583)
+  image_url: https://media.moocafisio.com.br/exercises/75ea596d-7506-43fc-b4f7-b86a97ac0583/image.png → https://media.moocafisio.com.br/exercises/75ea596d-7506-43fc-b4f7-b86a97ac0583/image.avif
+  thumbnail_url: https://fisioflow-media.r2.dev/exercises/75ea596d-7506-43fc-b4f7-b86a97ac0583/thumbnail.png → https://fisioflow-media.r2.dev/exercises/75ea596d-7506-43fc-b4f7-b86a97ac0583/thumbnail.avif
+
+Exercício do Pé Curto (Short Foot) (7e21f14a-72e3-4535-9ef9-10392d908432)
+  image_url: https://media.moocafisio.com.br/exercises/7e21f14a-72e3-4535-9ef9-10392d908432/image.png → https://media.moocafisio.com.br/exercises/7e21f14a-72e3-4535-9ef9-10392d908432/image.avif
+  thumbnail_url: https://fisioflow-media.r2.dev/exercises/7e21f14a-72e3-4535-9ef9-10392d908432/thumbnail.png → https://fisioflow-media.r2.dev/exercises/7e21f14a-72e3-4535-9ef9-10392d908432/thumbnail.avif
+
+Desvio Radial (69f345ad-dfbe-42e7-b476-fae3c48b12e6)
+  image_url: https://media.moocafisio.com.br/exercises/69f345ad-dfbe-42e7-b476-fae3c48b12e6/image.png → https://media.moocafisio.com.br/exercises/69f345ad-dfbe-42e7-b476-fae3c48b12e6/image.avif
+  thumbnail_url: https://fisioflow-media.r2.dev/exercises/69f345ad-dfbe-42e7-b476-fae3c48b12e6/thumbnail.png → https://fisioflow-media.r2.dev/exercises/69f345ad-dfbe-42e7-b476-fae3c48b12e6/thumbnail.avif
+
+Postura da Criança (deafbb28-b240-4e10-8d9a-26e76609f627)
+  image_url: https://media.moocafisio.com.br/exercises/deafbb28-b240-4e10-8d9a-26e76609f627/image.png → https://media.moocafisio.com.br/exercises/deafbb28-b240-4e10-8d9a-26e76609f627/image.avif
+  thumbnail_url: https://fisioflow-media.r2.dev/exercises/deafbb28-b240-4e10-8d9a-26e76609f627/thumbnail.png → https://fisioflow-media.r2.dev/exercises/deafbb28-b240-4e10-8d9a-26e76609f627/thumbnail.avif
+
+Abdução de Quadril em Pé (9cbff473-4215-4a0e-9fbd-2ddfbed8ddf4)
+  image_url: https://media.moocafisio.com.br/exercises/9cbff473-4215-4a0e-9fbd-2ddfbed8ddf4/image.png → https://media.moocafisio.com.br/exercises/9cbff473-4215-4a0e-9fbd-2ddfbed8ddf4/image.avif
+  thumbnail_url: https://fisioflow-media.r2.dev/exercises/9cbff473-4215-4a0e-9fbd-2ddfbed8ddf4/thumbnail.png → https://fisioflow-media.r2.dev/exercises/9cbff473-4215-4a0e-9fbd-2ddfbed8ddf4/thumbnail.avif
+
+Carregamento Lateral (fc65fe36-79d2-4af3-8185-751e335b920d)
+  image_url: https://media.moocafisio.com.br/exercises/fc65fe36-79d2-4af3-8185-751e335b920d/image.png → https://media.moocafisio.com.br/exercises/fc65fe36-79d2-4af3-8185-751e335b920d/image.avif
+  thumbnail_url: https://fisioflow-media.r2.dev/exercises/fc65fe36-79d2-4af3-8185-751e335b920d/thumbnail.png → https://fisioflow-media.r2.dev/exercises/fc65fe36-79d2-4af3-8185-751e335b920d/thumbnail.avif
+
+Box Jump (5b42e888-789f-43e5-8145-5d41b325acc6)
+  image_url: https://media.moocafisio.com.br/exercises/5b42e888-789f-43e5-8145-5d41b325acc6/image.png → https://media.moocafisio.com.br/exercises/5b42e888-789f-43e5-8145-5d41b325acc6/image.avif
+  thumbnail_url: https://fisioflow-media.r2.dev/exercises/5b42e888-789f-43e5-8145-5d41b325acc6/thumbnail.png → https://fisioflow-media.r2.dev/exercises/5b42e888-789f-43e5-8145-5d41b325acc6/thumbnail.avif
+
+Mobilização de Tornozelo em DF (d0f4adf7-5f02-4578-a120-e150fe0fc653)
+  image_url: https://media.moocafisio.com.br/exercises/d0f4adf7-5f02-4578-a120-e150fe0fc653/image.png → https://media.moocafisio.com.br/exercises/d0f4adf7-5f02-4578-a120-e150fe0fc653/image.avif
+  thumbnail_url: https://fisioflow-media.r2.dev/exercises/d0f4adf7-5f02-4578-a120-e150fe0fc653/thumbnail.png → https://fisioflow-media.r2.dev/exercises/d0f4adf7-5f02-4578-a120-e150fe0fc653/thumbnail.avif
+
+Flexão de Joelho em Pronação (1aad542e-26ee-4758-8a97-450e4db0d3fa)
+  image_url: https://media.moocafisio.com.br/exercises/1aad542e-26ee-4758-8a97-450e4db0d3fa/image.png → https://media.moocafisio.com.br/exercises/1aad542e-26ee-4758-8a97-450e4db0d3fa/image.avif
+  thumbnail_url: https://fisioflow-media.r2.dev/exercises/1aad542e-26ee-4758-8a97-450e4db0d3fa/thumbnail.png → https://fisioflow-media.r2.dev/exercises/1aad542e-26ee-4758-8a97-450e4db0d3fa/thumbnail.avif
+
+Expansão Torácica unilateral (a846b647-74f5-41e5-a583-8147cbd61919)
+  image_url: https://media.moocafisio.com.br/exercises/a846b647-74f5-41e5-a583-8147cbd61919/image.png → https://media.moocafisio.com.br/exercises/a846b647-74f5-41e5-a583-8147cbd61919/image.avif
+  thumbnail_url: https://fisioflow-media.r2.dev/exercises/a846b647-74f5-41e5-a583-8147cbd61919/thumbnail.png → https://fisioflow-media.r2.dev/exercises/a846b647-74f5-41e5-a583-8147cbd61919/thumbnail.avif
+
+Torção de Toalha (Grip) (bbfab6d3-4108-44b1-867a-4bf8d3e17514)
+  image_url: https://media.moocafisio.com.br/exercises/bbfab6d3-4108-44b1-867a-4bf8d3e17514/image.png → https://media.moocafisio.com.br/exercises/bbfab6d3-4108-44b1-867a-4bf8d3e17514/image.avif
+  thumbnail_url: https://fisioflow-media.r2.dev/exercises/bbfab6d3-4108-44b1-867a-4bf8d3e17514/thumbnail.png → https://fisioflow-media.r2.dev/exercises/bbfab6d3-4108-44b1-867a-4bf8d3e17514/thumbnail.avif
+
+Isometria Cervical (Inclinção Lateral) (9eec7ecd-e16c-491a-9843-45c9fb9b3eeb)
+  image_url: https://media.moocafisio.com.br/exercises/9eec7ecd-e16c-491a-9843-45c9fb9b3eeb/image.png → https://media.moocafisio.com.br/exercises/9eec7ecd-e16c-491a-9843-45c9fb9b3eeb/image.avif
+  thumbnail_url: https://fisioflow-media.r2.dev/exercises/9eec7ecd-e16c-491a-9843-45c9fb9b3eeb/thumbnail.png → https://fisioflow-media.r2.dev/exercises/9eec7ecd-e16c-491a-9843-45c9fb9b3eeb/thumbnail.avif
+
+Extensão de Punho com Halter (577b7d6e-b3c3-431a-9d85-9addd133f3c9)
+  image_url: https://media.moocafisio.com.br/exercises/577b7d6e-b3c3-431a-9d85-9addd133f3c9/image.png → https://media.moocafisio.com.br/exercises/577b7d6e-b3c3-431a-9d85-9addd133f3c9/image.avif
+  thumbnail_url: https://fisioflow-media.r2.dev/exercises/577b7d6e-b3c3-431a-9d85-9addd133f3c9/thumbnail.png → https://fisioflow-media.r2.dev/exercises/577b7d6e-b3c3-431a-9d85-9addd133f3c9/thumbnail.avif
+
+Nordic Hamstring Curl (c15042de-aa4f-4cde-9cf9-28cdb6c8169e)
+  image_url: https://media.moocafisio.com.br/exercises/c15042de-aa4f-4cde-9cf9-28cdb6c8169e/image.png → https://media.moocafisio.com.br/exercises/c15042de-aa4f-4cde-9cf9-28cdb6c8169e/image.avif
+  thumbnail_url: https://fisioflow-media.r2.dev/exercises/c15042de-aa4f-4cde-9cf9-28cdb6c8169e/thumbnail.png → https://fisioflow-media.r2.dev/exercises/c15042de-aa4f-4cde-9cf9-28cdb6c8169e/thumbnail.avif
+
+Rolling com Foam Roller (ed0d2a9e-281f-41fd-b314-29dd5d6b18b2)
+  image_url: https://media.moocafisio.com.br/exercises/ed0d2a9e-281f-41fd-b314-29dd5d6b18b2/image.png → https://media.moocafisio.com.br/exercises/ed0d2a9e-281f-41fd-b314-29dd5d6b18b2/image.avif
+  thumbnail_url: https://fisioflow-media.r2.dev/exercises/ed0d2a9e-281f-41fd-b314-29dd5d6b18b2/thumbnail.png → https://fisioflow-media.r2.dev/exercises/ed0d2a9e-281f-41fd-b314-29dd5d6b18b2/thumbnail.avif
+
+Respiração Costal Inferior (00b03826-fd00-4741-b4ba-3fe06c71cc34)
+  image_url: https://media.moocafisio.com.br/exercises/00b03826-fd00-4741-b4ba-3fe06c71cc34/image.png → https://media.moocafisio.com.br/exercises/00b03826-fd00-4741-b4ba-3fe06c71cc34/image.avif
+  thumbnail_url: https://fisioflow-media.r2.dev/exercises/00b03826-fd00-4741-b4ba-3fe06c71cc34/thumbnail.png → https://fisioflow-media.r2.dev/exercises/00b03826-fd00-4741-b4ba-3fe06c71cc34/thumbnail.avif
+
+Oposição de Dedos (bf4208a8-e581-42a2-8ada-8c58cf610e70)
+  image_url: https://media.moocafisio.com.br/exercises/bf4208a8-e581-42a2-8ada-8c58cf610e70/image.png → https://media.moocafisio.com.br/exercises/bf4208a8-e581-42a2-8ada-8c58cf610e70/image.avif
+  thumbnail_url: https://fisioflow-media.r2.dev/exercises/bf4208a8-e581-42a2-8ada-8c58cf610e70/thumbnail.png → https://fisioflow-media.r2.dev/exercises/bf4208a8-e581-42a2-8ada-8c58cf610e70/thumbnail.avif
+
+Flexão de Braço na Parede (c773d10f-e2ed-4ca6-864a-f355a83ceeda)
+  image_url: https://media.moocafisio.com.br/exercises/c773d10f-e2ed-4ca6-864a-f355a83ceeda/image.png → https://media.moocafisio.com.br/exercises/c773d10f-e2ed-4ca6-864a-f355a83ceeda/image.avif
+  thumbnail_url: https://fisioflow-media.r2.dev/exercises/c773d10f-e2ed-4ca6-864a-f355a83ceeda/thumbnail.png → https://fisioflow-media.r2.dev/exercises/c773d10f-e2ed-4ca6-864a-f355a83ceeda/thumbnail.avif
+
+Mobilização de Nervo Ulnar (9723383b-ccdc-4815-a219-8e42d0c87944)
+  image_url: https://media.moocafisio.com.br/exercises/9723383b-ccdc-4815-a219-8e42d0c87944/image.png → https://media.moocafisio.com.br/exercises/9723383b-ccdc-4815-a219-8e42d0c87944/image.avif
+  thumbnail_url: https://fisioflow-media.r2.dev/exercises/9723383b-ccdc-4815-a219-8e42d0c87944/thumbnail.png → https://fisioflow-media.r2.dev/exercises/9723383b-ccdc-4815-a219-8e42d0c87944/thumbnail.avif
+
+Carrying de Carga (Farmer Walk) (50729cb6-5ec7-4d82-830d-13f567589a8a)
+  image_url: https://media.moocafisio.com.br/exercises/50729cb6-5ec7-4d82-830d-13f567589a8a/image.png → https://media.moocafisio.com.br/exercises/50729cb6-5ec7-4d82-830d-13f567589a8a/image.avif
+  thumbnail_url: https://fisioflow-media.r2.dev/exercises/50729cb6-5ec7-4d82-830d-13f567589a8a/thumbnail.png → https://fisioflow-media.r2.dev/exercises/50729cb6-5ec7-4d82-830d-13f567589a8a/thumbnail.avif
+
+Depth Jump (Salto Profundo) (3f1aba01-9a6b-4569-b152-19ec1164cdfd)
+  image_url: https://media.moocafisio.com.br/exercises/3f1aba01-9a6b-4569-b152-19ec1164cdfd/image.png → https://media.moocafisio.com.br/exercises/3f1aba01-9a6b-4569-b152-19ec1164cdfd/image.avif
+  thumbnail_url: https://fisioflow-media.r2.dev/exercises/3f1aba01-9a6b-4569-b152-19ec1164cdfd/thumbnail.png → https://fisioflow-media.r2.dev/exercises/3f1aba01-9a6b-4569-b152-19ec1164cdfd/thumbnail.avif
+
+Alongamento de Peitoral no Canto (5559e99d-bc89-47eb-b4c2-0960e21e0346)
+  image_url: https://media.moocafisio.com.br/exercises/5559e99d-bc89-47eb-b4c2-0960e21e0346/image.png → https://media.moocafisio.com.br/exercises/5559e99d-bc89-47eb-b4c2-0960e21e0346/image.avif
+  thumbnail_url: https://fisioflow-media.r2.dev/exercises/5559e99d-bc89-47eb-b4c2-0960e21e0346/thumbnail.png → https://fisioflow-media.r2.dev/exercises/5559e99d-bc89-47eb-b4c2-0960e21e0346/thumbnail.avif
+
+Flexão Inclinada (0c4077f8-179f-43b1-b4ff-05d8a14803f0)
+  image_url: https://media.moocafisio.com.br/exercises/0c4077f8-179f-43b1-b4ff-05d8a14803f0/image.png → https://media.moocafisio.com.br/exercises/0c4077f8-179f-43b1-b4ff-05d8a14803f0/image.avif
+  thumbnail_url: https://fisioflow-media.r2.dev/exercises/0c4077f8-179f-43b1-b4ff-05d8a14803f0/thumbnail.png → https://fisioflow-media.r2.dev/exercises/0c4077f8-179f-43b1-b4ff-05d8a14803f0/thumbnail.avif
+
+Extensão de Cotovelo com Garrafa (88c5043c-6ddb-42a6-99b5-96cd3a3ec56b)
+  image_url: https://media.moocafisio.com.br/exercises/88c5043c-6ddb-42a6-99b5-96cd3a3ec56b/image.png → https://media.moocafisio.com.br/exercises/88c5043c-6ddb-42a6-99b5-96cd3a3ec56b/image.avif
+  thumbnail_url: https://fisioflow-media.r2.dev/exercises/88c5043c-6ddb-42a6-99b5-96cd3a3ec56b/thumbnail.png → https://fisioflow-media.r2.dev/exercises/88c5043c-6ddb-42a6-99b5-96cd3a3ec56b/thumbnail.avif
+
+Alongamento de Peitoral na Porta (a621e7bf-7b02-4b2c-83b8-b3f81e4fae95)
+  image_url: https://media.moocafisio.com.br/exercises/a621e7bf-7b02-4b2c-83b8-b3f81e4fae95/image.png → https://media.moocafisio.com.br/exercises/a621e7bf-7b02-4b2c-83b8-b3f81e4fae95/image.avif
+  thumbnail_url: https://fisioflow-media.r2.dev/exercises/a621e7bf-7b02-4b2c-83b8-b3f81e4fae95/thumbnail.png → https://fisioflow-media.r2.dev/exercises/a621e7bf-7b02-4b2c-83b8-b3f81e4fae95/thumbnail.avif
+
+Elevação Lateral de Ombro (0-90°) (e9a54ab2-a99b-4b10-b548-f2b643fdea45)
+  image_url: https://media.moocafisio.com.br/exercises/e9a54ab2-a99b-4b10-b548-f2b643fdea45/image.png → https://media.moocafisio.com.br/exercises/e9a54ab2-a99b-4b10-b548-f2b643fdea45/image.avif
+  thumbnail_url: https://fisioflow-media.r2.dev/exercises/e9a54ab2-a99b-4b10-b548-f2b643fdea45/thumbnail.png → https://fisioflow-media.r2.dev/exercises/e9a54ab2-a99b-4b10-b548-f2b643fdea45/thumbnail.avif
+
+Círculos de Quadril (e74298ae-21c3-4e6e-83a8-354c722c9d7e)
+  image_url: https://media.moocafisio.com.br/exercises/e74298ae-21c3-4e6e-83a8-354c722c9d7e/image.png → https://media.moocafisio.com.br/exercises/e74298ae-21c3-4e6e-83a8-354c722c9d7e/image.avif
+  thumbnail_url: https://fisioflow-media.r2.dev/exercises/e74298ae-21c3-4e6e-83a8-354c722c9d7e/thumbnail.png → https://fisioflow-media.r2.dev/exercises/e74298ae-21c3-4e6e-83a8-354c722c9d7e/thumbnail.avif
+
+Saltos Laterais (Skater Hops) (15068005-3448-4b29-aa5e-7a596d7929df)
+  image_url: https://media.moocafisio.com.br/exercises/15068005-3448-4b29-aa5e-7a596d7929df/image.png → https://media.moocafisio.com.br/exercises/15068005-3448-4b29-aa5e-7a596d7929df/image.avif
+  thumbnail_url: https://fisioflow-media.r2.dev/exercises/15068005-3448-4b29-aa5e-7a596d7929df/thumbnail.png → https://fisioflow-media.r2.dev/exercises/15068005-3448-4b29-aa5e-7a596d7929df/thumbnail.avif
+
+Descida Controlada de Degrau (f4a309c4-ce4c-4be9-bc48-b2cb34aacb04)
+  image_url: https://media.moocafisio.com.br/exercises/f4a309c4-ce4c-4be9-bc48-b2cb34aacb04/image.png → https://media.moocafisio.com.br/exercises/f4a309c4-ce4c-4be9-bc48-b2cb34aacb04/image.avif
+  thumbnail_url: https://fisioflow-media.r2.dev/exercises/f4a309c4-ce4c-4be9-bc48-b2cb34aacb04/thumbnail.png → https://fisioflow-media.r2.dev/exercises/f4a309c4-ce4c-4be9-bc48-b2cb34aacb04/thumbnail.avif
+
+Mobilização de Coluna Thorácica com Foam Roller (7fc51511-d748-40e8-8a1d-620bf1781e0a)
+  image_url: https://media.moocafisio.com.br/exercises/7fc51511-d748-40e8-8a1d-620bf1781e0a/image.png → https://media.moocafisio.com.br/exercises/7fc51511-d748-40e8-8a1d-620bf1781e0a/image.avif
+  thumbnail_url: https://fisioflow-media.r2.dev/exercises/7fc51511-d748-40e8-8a1d-620bf1781e0a/thumbnail.png → https://fisioflow-media.r2.dev/exercises/7fc51511-d748-40e8-8a1d-620bf1781e0a/thumbnail.avif
+
+Rowing com Faixa Elástica (9da8f08b-1db1-49fd-980f-8f8c2a923989)
+  image_url: https://media.moocafisio.com.br/exercises/9da8f08b-1db1-49fd-980f-8f8c2a923989/image.png → https://media.moocafisio.com.br/exercises/9da8f08b-1db1-49fd-980f-8f8c2a923989/image.avif
+  thumbnail_url: https://fisioflow-media.r2.dev/exercises/9da8f08b-1db1-49fd-980f-8f8c2a923989/thumbnail.png → https://fisioflow-media.r2.dev/exercises/9da8f08b-1db1-49fd-980f-8f8c2a923989/thumbnail.avif
+
+Prancha Abdominal (de6daecf-7e3a-497e-a9a9-41b6a97d3ed8)
+  image_url: https://media.moocafisio.com.br/exercises/de6daecf-7e3a-497e-a9a9-41b6a97d3ed8/image.png → https://media.moocafisio.com.br/exercises/de6daecf-7e3a-497e-a9a9-41b6a97d3ed8/image.avif
+  thumbnail_url: https://fisioflow-media.r2.dev/exercises/de6daecf-7e3a-497e-a9a9-41b6a97d3ed8/thumbnail.png → https://fisioflow-media.r2.dev/exercises/de6daecf-7e3a-497e-a9a9-41b6a97d3ed8/thumbnail.avif
+
+Subida de Escada (e7f16c0f-7597-42b1-acfd-cce87575fd23)
+  image_url: https://media.moocafisio.com.br/exercises/e7f16c0f-7597-42b1-acfd-cce87575fd23/image.png → https://media.moocafisio.com.br/exercises/e7f16c0f-7597-42b1-acfd-cce87575fd23/image.avif
+  thumbnail_url: https://fisioflow-media.r2.dev/exercises/e7f16c0f-7597-42b1-acfd-cce87575fd23/thumbnail.png → https://fisioflow-media.r2.dev/exercises/e7f16c0f-7597-42b1-acfd-cce87575fd23/thumbnail.avif
+
+Mobilização de Quadril (Capsular) (d6ffdfe8-8442-4951-9904-51239f5765e9)
+  image_url: https://media.moocafisio.com.br/exercises/d6ffdfe8-8442-4951-9904-51239f5765e9/image.png → https://media.moocafisio.com.br/exercises/d6ffdfe8-8442-4951-9904-51239f5765e9/image.avif
+  thumbnail_url: https://fisioflow-media.r2.dev/exercises/d6ffdfe8-8442-4951-9904-51239f5765e9/thumbnail.png → https://fisioflow-media.r2.dev/exercises/d6ffdfe8-8442-4951-9904-51239f5765e9/thumbnail.avif
+
+Preensão de Toalha com os Dedos (eee9e338-9f83-45b1-b27a-2280f370a73b)
+  image_url: https://media.moocafisio.com.br/exercises/eee9e338-9f83-45b1-b27a-2280f370a73b/image.png → https://media.moocafisio.com.br/exercises/eee9e338-9f83-45b1-b27a-2280f370a73b/image.avif
+  thumbnail_url: https://fisioflow-media.r2.dev/exercises/eee9e338-9f83-45b1-b27a-2280f370a73b/thumbnail.png → https://fisioflow-media.r2.dev/exercises/eee9e338-9f83-45b1-b27a-2280f370a73b/thumbnail.avif
+
+Extensão de Punho (ec506e09-826f-4f30-886c-b90d54ea4aa2)
+  image_url: https://media.moocafisio.com.br/exercises/ec506e09-826f-4f30-886c-b90d54ea4aa2/image.png → https://media.moocafisio.com.br/exercises/ec506e09-826f-4f30-886c-b90d54ea4aa2/image.avif
+  thumbnail_url: https://fisioflow-media.r2.dev/exercises/ec506e09-826f-4f30-886c-b90d54ea4aa2/thumbnail.png → https://fisioflow-media.r2.dev/exercises/ec506e09-826f-4f30-886c-b90d54ea4aa2/thumbnail.avif
+
+Extensão de Joelho em Cadeia Cinética Aberta (4b616021-729d-4de6-b20f-b2ec4b37b2a3)
+  image_url: https://media.moocafisio.com.br/exercises/4b616021-729d-4de6-b20f-b2ec4b37b2a3/image.png → https://media.moocafisio.com.br/exercises/4b616021-729d-4de6-b20f-b2ec4b37b2a3/image.avif
+  thumbnail_url: https://fisioflow-media.r2.dev/exercises/4b616021-729d-4de6-b20f-b2ec4b37b2a3/thumbnail.png → https://fisioflow-media.r2.dev/exercises/4b616021-729d-4de6-b20f-b2ec4b37b2a3/thumbnail.avif
+
+BOSU Ball Squat (05cc9ea0-8087-492a-8750-ecabf4d1373f)
+  image_url: https://media.moocafisio.com.br/exercises/05cc9ea0-8087-492a-8750-ecabf4d1373f/image.png → https://media.moocafisio.com.br/exercises/05cc9ea0-8087-492a-8750-ecabf4d1373f/image.avif
+  thumbnail_url: https://fisioflow-media.r2.dev/exercises/05cc9ea0-8087-492a-8750-ecabf4d1373f/thumbnail.png → https://fisioflow-media.r2.dev/exercises/05cc9ea0-8087-492a-8750-ecabf4d1373f/thumbnail.avif
+
+Chin Tuck com Elevação (Head Lift) (158c531f-3285-4a29-913e-a486e1b48350)
+  image_url: https://media.moocafisio.com.br/exercises/158c531f-3285-4a29-913e-a486e1b48350/image.png → https://media.moocafisio.com.br/exercises/158c531f-3285-4a29-913e-a486e1b48350/image.avif
+  thumbnail_url: https://fisioflow-media.r2.dev/exercises/158c531f-3285-4a29-913e-a486e1b48350/thumbnail.png → https://fisioflow-media.r2.dev/exercises/158c531f-3285-4a29-913e-a486e1b48350/thumbnail.avif
+
+Retração Escapular (d45ebafe-e55e-442f-a745-28fa9f149b5b)
+  image_url: https://media.moocafisio.com.br/exercises/d45ebafe-e55e-442f-a745-28fa9f149b5b/image.png → https://media.moocafisio.com.br/exercises/d45ebafe-e55e-442f-a745-28fa9f149b5b/image.avif
+  thumbnail_url: https://fisioflow-media.r2.dev/exercises/d45ebafe-e55e-442f-a745-28fa9f149b5b/thumbnail.png → https://fisioflow-media.r2.dev/exercises/d45ebafe-e55e-442f-a745-28fa9f149b5b/thumbnail.avif
+
+Deslizamento de Tendões (Tendon Glides) (cc193885-c225-4308-961d-6344ba96bcd9)
+  image_url: https://media.moocafisio.com.br/exercises/cc193885-c225-4308-961d-6344ba96bcd9/image.png → https://media.moocafisio.com.br/exercises/cc193885-c225-4308-961d-6344ba96bcd9/image.avif
+  thumbnail_url: https://fisioflow-media.r2.dev/exercises/cc193885-c225-4308-961d-6344ba96bcd9/thumbnail.png → https://fisioflow-media.r2.dev/exercises/cc193885-c225-4308-961d-6344ba96bcd9/thumbnail.avif
+
+Clamshell (Concha) (8371d239-46d5-45e4-98d4-5c350d76ba9b)
+  image_url: https://media.moocafisio.com.br/exercises/8371d239-46d5-45e4-98d4-5c350d76ba9b/image.png → https://media.moocafisio.com.br/exercises/8371d239-46d5-45e4-98d4-5c350d76ba9b/image.avif
+  thumbnail_url: https://fisioflow-media.r2.dev/exercises/8371d239-46d5-45e4-98d4-5c350d76ba9b/thumbnail.png → https://fisioflow-media.r2.dev/exercises/8371d239-46d5-45e4-98d4-5c350d76ba9b/thumbnail.avif
+
+Burpee Modificado (6bc8caa0-645b-469e-b7e8-4aa18d336761)
+  image_url: https://media.moocafisio.com.br/exercises/6bc8caa0-645b-469e-b7e8-4aa18d336761/image.png → https://media.moocafisio.com.br/exercises/6bc8caa0-645b-469e-b7e8-4aa18d336761/image.avif
+  thumbnail_url: https://fisioflow-media.r2.dev/exercises/6bc8caa0-645b-469e-b7e8-4aa18d336761/thumbnail.png → https://fisioflow-media.r2.dev/exercises/6bc8caa0-645b-469e-b7e8-4aa18d336761/thumbnail.avif
+
+Prone Y-T-W (b2baee7b-8594-4298-8056-20946cdf57ba)
+  image_url: https://media.moocafisio.com.br/exercises/b2baee7b-8594-4298-8056-20946cdf57ba/image.png → https://media.moocafisio.com.br/exercises/b2baee7b-8594-4298-8056-20946cdf57ba/image.avif
+  thumbnail_url: https://fisioflow-media.r2.dev/exercises/b2baee7b-8594-4298-8056-20946cdf57ba/thumbnail.png → https://fisioflow-media.r2.dev/exercises/b2baee7b-8594-4298-8056-20946cdf57ba/thumbnail.avif
+
+Stretching Global Ativo (e57a3517-b93f-4dfc-9a36-7155521d1d0e)
+  image_url: https://media.moocafisio.com.br/exercises/e57a3517-b93f-4dfc-9a36-7155521d1d0e/image.png → https://media.moocafisio.com.br/exercises/e57a3517-b93f-4dfc-9a36-7155521d1d0e/image.avif
+  thumbnail_url: https://fisioflow-media.r2.dev/exercises/e57a3517-b93f-4dfc-9a36-7155521d1d0e/thumbnail.png → https://fisioflow-media.r2.dev/exercises/e57a3517-b93f-4dfc-9a36-7155521d1d0e/thumbnail.avif
+
+Equilíbrio Unipodal em Disco/Espuma (52b768f7-3d62-4379-b756-18626a24f4d1)
+  image_url: https://media.moocafisio.com.br/exercises/52b768f7-3d62-4379-b756-18626a24f4d1/image.png → https://media.moocafisio.com.br/exercises/52b768f7-3d62-4379-b756-18626a24f4d1/image.avif
+  thumbnail_url: https://fisioflow-media.r2.dev/exercises/52b768f7-3d62-4379-b756-18626a24f4d1/thumbnail.png → https://fisioflow-media.r2.dev/exercises/52b768f7-3d62-4379-b756-18626a24f4d1/thumbnail.avif
+
+Pronação e Supinação com Peso (2cd154da-2ec7-4da9-893a-1a301e4221cd)
+  image_url: https://media.moocafisio.com.br/exercises/2cd154da-2ec7-4da9-893a-1a301e4221cd/image.png → https://media.moocafisio.com.br/exercises/2cd154da-2ec7-4da9-893a-1a301e4221cd/image.avif
+  thumbnail_url: https://fisioflow-media.r2.dev/exercises/2cd154da-2ec7-4da9-893a-1a301e4221cd/thumbnail.png → https://fisioflow-media.r2.dev/exercises/2cd154da-2ec7-4da9-893a-1a301e4221cd/thumbnail.avif
+
+Pronação e Supinação de Punho (533a69d8-7fb5-44a5-a51d-721fba253192)
+  image_url: https://media.moocafisio.com.br/exercises/533a69d8-7fb5-44a5-a51d-721fba253192/image.png → https://media.moocafisio.com.br/exercises/533a69d8-7fb5-44a5-a51d-721fba253192/image.avif
+  thumbnail_url: https://fisioflow-media.r2.dev/exercises/533a69d8-7fb5-44a5-a51d-721fba253192/thumbnail.png → https://fisioflow-media.r2.dev/exercises/533a69d8-7fb5-44a5-a51d-721fba253192/thumbnail.avif
+
+Mini-Landing Protocol (725e7c07-fe79-46fb-99f4-b6fd1738ce82)
+  image_url: https://media.moocafisio.com.br/exercises/725e7c07-fe79-46fb-99f4-b6fd1738ce82/image.png → https://media.moocafisio.com.br/exercises/725e7c07-fe79-46fb-99f4-b6fd1738ce82/image.avif
+  thumbnail_url: https://fisioflow-media.r2.dev/exercises/725e7c07-fe79-46fb-99f4-b6fd1738ce82/thumbnail.png → https://fisioflow-media.r2.dev/exercises/725e7c07-fe79-46fb-99f4-b6fd1738ce82/thumbnail.avif
+
+Coordenação Digital (Dedos) (c8392015-d666-4626-a562-7e9de6474c95)
+  image_url: https://media.moocafisio.com.br/exercises/c8392015-d666-4626-a562-7e9de6474c95/image.png → https://media.moocafisio.com.br/exercises/c8392015-d666-4626-a562-7e9de6474c95/image.avif
+  thumbnail_url: https://fisioflow-media.r2.dev/exercises/c8392015-d666-4626-a562-7e9de6474c95/thumbnail.png → https://fisioflow-media.r2.dev/exercises/c8392015-d666-4626-a562-7e9de6474c95/thumbnail.avif
+
+Deslizamento de Calcanhar (f6dc95d4-dc8d-4169-b717-f9bfd1ba62cc)
+  image_url: https://media.moocafisio.com.br/exercises/f6dc95d4-dc8d-4169-b717-f9bfd1ba62cc/image.png → https://media.moocafisio.com.br/exercises/f6dc95d4-dc8d-4169-b717-f9bfd1ba62cc/image.avif
+  thumbnail_url: https://fisioflow-media.r2.dev/exercises/f6dc95d4-dc8d-4169-b717-f9bfd1ba62cc/thumbnail.png → https://fisioflow-media.r2.dev/exercises/f6dc95d4-dc8d-4169-b717-f9bfd1ba62cc/thumbnail.avif
+
+Alongamento de Quadríceps em Pé (fc7afc33-b2ed-4db9-a166-591247232c97)
+  image_url: https://media.moocafisio.com.br/exercises/fc7afc33-b2ed-4db9-a166-591247232c97/image.png → https://media.moocafisio.com.br/exercises/fc7afc33-b2ed-4db9-a166-591247232c97/image.avif
+  thumbnail_url: https://fisioflow-media.r2.dev/exercises/fc7afc33-b2ed-4db9-a166-591247232c97/thumbnail.png → https://fisioflow-media.r2.dev/exercises/fc7afc33-b2ed-4db9-a166-591247232c97/thumbnail.avif
+
+Alongamento Lateral de Pescoço (73573738-bb4b-43ad-b67a-f78548ad210c)
+  image_url: https://media.moocafisio.com.br/exercises/73573738-bb4b-43ad-b67a-f78548ad210c/image.png → https://media.moocafisio.com.br/exercises/73573738-bb4b-43ad-b67a-f78548ad210c/image.avif
+  thumbnail_url: https://fisioflow-media.r2.dev/exercises/73573738-bb4b-43ad-b67a-f78548ad210c/thumbnail.png → https://fisioflow-media.r2.dev/exercises/73573738-bb4b-43ad-b67a-f78548ad210c/thumbnail.avif
+
+Afundo Frontal (Lunge) (296c9330-4818-4cc4-9c77-ccd1030952ce)
+  image_url: https://media.moocafisio.com.br/exercises/296c9330-4818-4cc4-9c77-ccd1030952ce/image.png → https://media.moocafisio.com.br/exercises/296c9330-4818-4cc4-9c77-ccd1030952ce/image.avif
+  thumbnail_url: https://fisioflow-media.r2.dev/exercises/296c9330-4818-4cc4-9c77-ccd1030952ce/thumbnail.png → https://fisioflow-media.r2.dev/exercises/296c9330-4818-4cc4-9c77-ccd1030952ce/thumbnail.avif
+

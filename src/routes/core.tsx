@@ -41,11 +41,14 @@ const Communications = lazy(
 const ProtocolsPage = lazy(
 	() => import(/* webpackChunkName: "protocols" */ "@/pages/Protocols"),
 );
-const EvaluationTemplatesPage = lazy(
-	() =>
-		import(
-			/* webpackChunkName: "evaluation-templates" */ "@/pages/EvaluationTemplatesPage"
-		),
+const Templates = lazy(
+	() => import(/* webpackChunkName: "templates" */ "@/pages/Templates"),
+);
+const NewTemplatePage = lazy(
+	() => import(/* webpackChunkName: "template-builder" */ "@/pages/templates/NewTemplatePage"),
+);
+const EditTemplatePage = lazy(
+	() => import(/* webpackChunkName: "template-builder" */ "@/pages/templates/EditTemplatePage"),
 );
 
 export const coreRoutes = (
@@ -112,7 +115,23 @@ export const coreRoutes = (
 			path="/templates"
 			element={
 				<ProtectedRoute>
-					<EvaluationTemplatesPage />
+					<Templates />
+				</ProtectedRoute>
+			}
+		/>
+		<Route
+			path="/templates/new"
+			element={
+				<ProtectedRoute>
+					<NewTemplatePage />
+				</ProtectedRoute>
+			}
+		/>
+		<Route
+			path="/templates/:id/edit"
+			element={
+				<ProtectedRoute>
+					<EditTemplatePage />
 				</ProtectedRoute>
 			}
 		/>

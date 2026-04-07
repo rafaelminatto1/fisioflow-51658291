@@ -11,15 +11,31 @@ import {
 	ArrowRight,
 	Info,
 	Star,
+	Plus,
+	Pencil,
 	type LucideIcon,
 } from "lucide-react";
 import { useState, useMemo } from "react";
+import { useNavigate } from "react-router-dom";
 import MainLayout from "@/components/layout/MainLayout";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
+import { useEvaluationForms, useDeleteEvaluationForm } from "@/hooks/useEvaluationForms";
+import {
+	AlertDialog,
+	AlertDialogAction,
+	AlertDialogCancel,
+	AlertDialogContent,
+	AlertDialogDescription,
+	AlertDialogFooter,
+	AlertDialogHeader,
+	AlertDialogTitle,
+	AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
 import { cn } from "@/lib/utils";
 import { builtinEvaluationTemplates } from "@/data/defaultEvaluationTemplates";
+import { toast } from "sonner";
 
 const CATEGORY_CONFIG: Record<string, { label: string; icon: LucideIcon; color: string; bg: string }> = {
 	ortopedica: { label: "Ortopédica", icon: Activity, color: "text-blue-600", bg: "bg-blue-50 dark:bg-blue-950/30" },
@@ -33,23 +49,56 @@ const CATEGORY_CONFIG: Record<string, { label: string; icon: LucideIcon; color: 
 };
 
 export default function Templates() {
+	const navigate = useNavigate();
 	const [search, setSearch] = useState("");
 	const [activeCategory, setActiveCategory] = useState<string | null>(null);
+	const { data: customTemplates = [], isLoading } = useEvaluationForms("custom");
+	const deleteMutation = useDeleteEvaluationForm();
+
+	const allTemplates = useMemo(() => {
+		const customMapped = (customTemplates || []).map((t) => ({
+			id: t.id,
+			nome: t.nome,
+			descricao: t.descricao || "",
+			category: "personalizado",
+			isCustom: true,
+			fieldsCount: t.fields?.length || 0,
+		}));
+
+		const builtinMapped = (builtinEvaluationTemplates || []).map((t) => ({
+			id: t.id,
+			nome: t.nome,
+			descricao: t.descricao,
+			category: t.category,
+			isCustom: false,
+			fieldsCount: t.fields.length,
+		}));
+
+		return [...customMapped, ...builtinMapped];
+	}, [customTemplates, builtinEvaluationTemplates]);
 
 	const filteredTemplates = useMemo(() => {
-		return builtinEvaluationTemplates.filter((t) => {
+		return allTemplates.filter((t) => {
 			const matchesSearch =
 				t.nome.toLowerCase().includes(search.toLowerCase()) ||
 				(t.descricao || "").toLowerCase().includes(search.toLowerCase());
 			const matchesCategory = activeCategory ? t.category === activeCategory : true;
 			return matchesSearch && matchesCategory;
 		});
-	}, [search, activeCategory]);
+	}, [search, activeCategory, allTemplates]);
 
 	const categories = useMemo(() => {
-		const cats = new Set(builtinEvaluationTemplates.map((t) => t.category));
+		const cats = new Set(allTemplates.map((t) => t.category));
 		return Array.from(cats) as string[];
-	}, []);
+	}, [allTemplates]);
+
+	const handleDelete = async (id: string) => {
+		try {
+			await deleteMutation.mutateAsync(id);
+		} catch (error) {
+			console.error("Erro ao excluir template:", error);
+		}
+	};
 
 	return (
 		<MainLayout>
@@ -97,6 +146,22 @@ export default function Templates() {
 							Todos
 						</Button>
 						{categories.map((cat) => {
+							if (cat === "personalizado") {
+								return (
+									<Button
+										key={cat}
+										variant={activeCategory === cat ? "default" : "outline"}
+										onClick={() => setActiveCategory(cat || null)}
+										className={cn(
+											"rounded-xl h-11 px-6 font-bold uppercase tracking-widest text-[10px] transition-all gap-2",
+											activeCategory === cat ? "shadow-premium-md" : "border-border/40 text-slate-500"
+										)}
+									>
+										<Star className="w-3.5 h-3.5" />
+										Meus Modelos
+									</Button>
+								);
+							}
 							const config = (cat && CATEGORY_CONFIG[cat]) || CATEGORY_CONFIG.geral;
 							return (
 								<Button
@@ -120,15 +185,16 @@ export default function Templates() {
 				<div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
 					{filteredTemplates.map((template, idx) => {
 						const categoryKey = template.category || "geral";
-						const config = CATEGORY_CONFIG[categoryKey] || CATEGORY_CONFIG.geral;
+						const config = CATEGORY_CONFIG[categoryKey] || (categoryKey === "personalizado" ? { label: "Personalizado", icon: Star, color: "text-amber-500", bg: "bg-amber-50" } : CATEGORY_CONFIG.geral);
+						
 						return (
 							<Card
 								key={template.id}
 								className={cn(
 									"group relative overflow-hidden rounded-[2rem] border-border/40 bg-white dark:bg-slate-900 p-6 shadow-premium-sm hover:shadow-premium-xl transition-all duration-500 hover:-translate-y-2 border-t-4 text-left",
-									idx % 4 === 0 ? "md:col-span-1 lg:col-span-1" : ""
+									template.isCustom ? "border-t-amber-500" : ""
 								)}
-								style={{ borderTopColor: "var(--primary)" }}
+								style={!template.isCustom ? { borderTopColor: "var(--primary)" } : {}}
 							>
 								{/* Category Badge */}
 								<div className="flex items-center justify-between mb-6">
@@ -140,15 +206,58 @@ export default function Templates() {
 									</div>
 									<div className="flex items-center gap-1.5 text-slate-400">
 										<LayoutGrid className="w-4 h-4" />
-										<span className="text-[11px] font-black">{(template.fields || []).length} campos</span>
+										<span className="text-[11px] font-black">{template.fieldsCount} campos</span>
 									</div>
 								</div>
 
 								{/* Content */}
 								<div className="space-y-4">
-									<h3 className="text-xl font-black tracking-tight group-hover:text-primary transition-colors">
-										{template.nome}
-									</h3>
+									<div className="flex items-start justify-between">
+										<h3 className="text-xl font-black tracking-tight group-hover:text-primary transition-colors flex-1">
+											{template.nome}
+										</h3>
+										{template.isCustom && (
+											<div className="flex gap-1 ml-2 opacity-0 group-hover:opacity-100 transition-opacity">
+												<Button
+													variant="ghost"
+													size="icon"
+													className="h-8 w-8 rounded-lg hover:bg-amber-50 hover:text-amber-600"
+													onClick={() => navigate(`/templates/${template.id}/edit`)}
+												>
+													<Pencil className="w-4 h-4" />
+												</Button>
+												
+												<AlertDialog>
+													<AlertDialogTrigger asChild>
+														<Button
+															variant="ghost"
+															size="icon"
+															className="h-8 w-8 rounded-lg hover:bg-red-50 hover:text-red-600"
+														>
+															<Trash2 className="w-4 h-4" />
+														</Button>
+													</AlertDialogTrigger>
+													<AlertDialogContent>
+														<AlertDialogHeader>
+															<AlertDialogTitle>Excluir Template?</AlertDialogTitle>
+															<AlertDialogDescription>
+																Esta ação não pode ser desfeita. O template "{template.nome}" será removido permanentemente.
+															</AlertDialogDescription>
+														</AlertDialogHeader>
+														<AlertDialogFooter>
+															<AlertDialogCancel>Cancelar</AlertDialogCancel>
+															<AlertDialogAction 
+																onClick={() => handleDelete(template.id)}
+																className="bg-red-600 hover:bg-red-700"
+															>
+																Excluir
+															</AlertDialogAction>
+														</AlertDialogFooter>
+													</AlertDialogContent>
+												</AlertDialog>
+											</div>
+										)}
+									</div>
 									<p className="text-slate-500 dark:text-slate-400 text-sm font-medium leading-relaxed line-clamp-3">
 										{template.descricao}
 									</p>
@@ -160,6 +269,11 @@ export default function Templates() {
 										variant="ghost"
 										size="sm"
 										className="h-9 gap-2 rounded-xl text-[10px] font-black uppercase tracking-widest text-slate-400 hover:text-primary hover:bg-primary/5 px-3"
+										onClick={() => {
+											if (template.isCustom) {
+												navigate(`/templates/${template.id}/edit`);
+											}
+										}}
 									>
 										<Info className="w-3.5 h-3.5" />
 										Detalhes
@@ -167,6 +281,10 @@ export default function Templates() {
 									<Button
 										size="sm"
 										className="h-10 rounded-xl px-5 bg-slate-900 dark:bg-white text-white dark:text-slate-900 hover:scale-105 transition-all shadow-premium-sm group-hover:bg-primary group-hover:text-white"
+										onClick={() => {
+											// Use logic
+											toast.info("Em breve: Aplicar template direto no atendimento");
+										}}
 									>
 										<span className="text-[10px] font-black uppercase tracking-widest mr-2">Usar Template</span>
 										<ArrowRight className="w-3.5 h-3.5 group-hover:translate-x-1 transition-transform" />
@@ -180,7 +298,10 @@ export default function Templates() {
 					})}
 
 					{/* Add Custom Suggestion Card */}
-					<Card className="flex flex-col items-center justify-center p-8 rounded-[2rem] border-2 border-dashed border-border/60 bg-transparent hover:border-primary/40 transition-all group cursor-pointer space-y-4">
+					<Card 
+						onClick={() => navigate("/templates/new")}
+						className="flex flex-col items-center justify-center p-8 rounded-[2rem] border-2 border-dashed border-border/60 bg-transparent hover:border-primary/40 transition-all group cursor-pointer space-y-4"
+					>
 						<div className="w-16 h-16 rounded-3xl bg-slate-100 dark:bg-slate-800 flex items-center justify-center group-hover:scale-110 transition-transform duration-500">
 							<PlusCircle className="w-8 h-8 text-slate-400 group-hover:text-primary" />
 						</div>

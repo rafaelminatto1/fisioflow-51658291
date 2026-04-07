@@ -4,6 +4,7 @@ import { Input } from "@/components/ui/input";
 import { Search, BookOpen, Stethoscope, Activity, ArrowRight } from "lucide-react";
 import { expandSearchQuery, normalizeForSearch } from "@/lib/utils/bilingualSearch";
 import { physioDictionary, PhysioDictionaryEntry } from "@/data/physioDictionary";
+import { useBilingualSearch } from "@/hooks/useBilingualSearch";
 
 interface BilingualSuggestionsModalProps {
   open: boolean;
@@ -16,8 +17,7 @@ export const BilingualSuggestionsModal: React.FC<BilingualSuggestionsModalProps>
   onOpenChange,
   onSelect
 }) => {
-  const [query, setQuery] = useState("");
-  const [results, setResults] = useState<PhysioDictionaryEntry[]>([]);
+  const { query, setQuery, results, formatSelection } = useBilingualSearch();
   const [selectedIndex, setSelectedIndex] = useState(0);
   const inputRef = useRef<HTMLInputElement>(null);
 
@@ -25,43 +25,15 @@ export const BilingualSuggestionsModal: React.FC<BilingualSuggestionsModalProps>
     if (open) {
       setTimeout(() => inputRef.current?.focus(), 100);
       setQuery("");
-      setResults([]);
     }
-  }, [open]);
+  }, [open, setQuery]);
 
   useEffect(() => {
-    if (!query) {
-      setResults([]);
-      return;
-    }
-
-    const expandedQueries = expandSearchQuery(query);
-    const normalizedQueries = expandedQueries.map(normalizeForSearch);
-    
-    // Search in local dictionary array
-    const matchedEntries = physioDictionary.filter(entry => {
-      const entryTerms = [
-        normalizeForSearch(entry.pt),
-        normalizeForSearch(entry.en),
-        ...(entry.description_pt ? [normalizeForSearch(entry.description_pt)] : []),
-        ...(entry.description_en ? [normalizeForSearch(entry.description_en)] : []),
-        ...entry.aliases_pt.map(normalizeForSearch),
-        ...entry.aliases_en.map(normalizeForSearch)
-      ];
-
-      // Check if any of the expanded queries are in the entry terms
-      return normalizedQueries.some(nq => {
-        return entryTerms.some(term => term.includes(nq) || nq.includes(term));
-      });
-    });
-
-    setResults(matchedEntries.slice(0, 10)); // Limit to 10 results
     setSelectedIndex(0);
-  }, [query]);
+  }, [results]);
 
   const handleSelect = (entry: PhysioDictionaryEntry) => {
-    const desc = entry.description_pt ? `: ${entry.description_pt}` : "";
-    onSelect(`**${entry.pt}** (${entry.en})${desc}`);
+    onSelect(formatSelection(entry));
     onOpenChange(false);
   };
 
@@ -124,7 +96,7 @@ export const BilingualSuggestionsModal: React.FC<BilingualSuggestionsModalProps>
             </div>
           ) : (
             <div className="p-2 space-y-1">
-              {results.map((entry, idx) => (
+              {results.map((entry: PhysioDictionaryEntry, idx: number) => (
                 <button
                   key={entry.id}
                   onClick={() => handleSelect(entry)}
