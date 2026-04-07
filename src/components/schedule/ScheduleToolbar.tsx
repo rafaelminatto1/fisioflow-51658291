@@ -154,30 +154,6 @@ export const ScheduleToolbar: React.FC<ScheduleToolbarProps> = ({
 				</div>
 			</div>
 
-			{/* Center Group: Navigation Tabs (Stitch: Agenda, Patients, Analytics) */}
-			<div className="flex items-center bg-slate-100 dark:bg-slate-900/50 p-1 rounded-xl border border-slate-200/50 dark:border-slate-800/50">
-				<Button
-					variant="ghost"
-					className="px-6 py-2 h-8 text-[11px] font-black uppercase tracking-widest rounded-lg bg-white dark:bg-slate-800 text-blue-600 dark:text-blue-400 shadow-sm shadow-blue-500/10"
-				>
-					Agenda
-				</Button>
-				<Button
-					variant="ghost"
-					asChild
-					className="px-6 py-2 h-8 text-[11px] font-black uppercase tracking-widest rounded-lg text-slate-400 hover:text-slate-600 dark:hover:text-slate-300"
-				>
-					<Link to="/patients">Pacientes</Link>
-				</Button>
-				<Button
-					variant="ghost"
-					asChild
-					className="px-6 py-2 h-8 text-[11px] font-black uppercase tracking-widest rounded-lg text-slate-400 hover:text-slate-600 dark:hover:text-slate-300"
-				>
-					<Link to="/analytics">Analytics</Link>
-				</Button>
-			</div>
-
 			{/* Right Group: Capacity indicator + Gear Button + Actions */}
 			<div className="flex items-center gap-4">
 				{/* Capacity Indicator (Stitch style) */}
