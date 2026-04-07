@@ -2,7 +2,6 @@ import { Ionicons } from "@expo/vector-icons";
 import { router } from "expo-router";
 import { memo, useCallback, useMemo, useState } from "react";
 import {
-	ActivityIndicator,
 	RefreshControl,
 	ScrollView,
 	StyleSheet,
@@ -12,7 +11,7 @@ import {
 	View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { Card, SyncStatus } from "@/components";
+import { Card, SyncStatus, Skeleton } from "@/components";
 import { useColors } from "@/hooks/useColorScheme";
 import { useHaptics } from "@/hooks/useHaptics";
 import { usePatients } from "@/hooks/usePatients";
@@ -101,6 +100,41 @@ const PatientCard = memo(({ patient, colors, formatDate, light }: any) => (
 	</TouchableOpacity>
 ));
 
+function PatientSkeletonCard() {
+	return (
+		<Card style={styles.patientCard}>
+			<View style={styles.patientHeader}>
+				<Skeleton width={48} height={48} variant="circular" />
+				<View style={styles.patientInfo}>
+					<Skeleton width="70%" height={16} variant="text" />
+					<Skeleton
+						width="45%"
+						height={12}
+						variant="text"
+						style={{ marginTop: 8 }}
+					/>
+				</View>
+			</View>
+			<View style={[styles.patientFooter, { borderTopColor: "transparent" }]}>
+				<View style={{ flexDirection: "row", gap: 16 }}>
+					<Skeleton width={100} height={12} variant="text" />
+					<Skeleton width={90} height={12} variant="text" />
+				</View>
+			</View>
+		</Card>
+	);
+}
+
+function PatientListSkeleton() {
+	return (
+		<View style={styles.listContainer}>
+			{[1, 2, 3, 4, 5].map((i) => (
+				<PatientSkeletonCard key={i} />
+			))}
+		</View>
+	);
+}
+
 export default function PatientsScreen() {
 	const colors = useColors();
 	const {
@@ -154,7 +188,6 @@ export default function PatientsScreen() {
 			style={[styles.container, { backgroundColor: colors.background }]}
 			edges={["left", "right"]}
 		>
-			{/* Search + Add */}
 			<View style={styles.searchContainer}>
 				<View
 					style={[
@@ -199,7 +232,6 @@ export default function PatientsScreen() {
 				</TouchableOpacity>
 			</View>
 
-			{/* Sync + Stats */}
 			<View style={styles.metaRow}>
 				<View style={styles.statsRow}>
 					{!isLoading && (
@@ -244,13 +276,8 @@ export default function PatientsScreen() {
 					/>
 				}
 			>
-				{isLoading ? (
-					<View style={styles.loadingState}>
-						<ActivityIndicator size="large" color={colors.primary} />
-						<Text style={[styles.loadingText, { color: colors.textSecondary }]}>
-							Buscando prontuários…
-						</Text>
-					</View>
+				{isLoading && !refreshing ? (
+					<PatientListSkeleton />
 				) : filteredPatients.length === 0 ? (
 					<Card style={styles.emptyCard}>
 						<View
@@ -340,8 +367,6 @@ const styles = StyleSheet.create({
 	statBadge: { paddingHorizontal: 10, paddingVertical: 4, borderRadius: 20 },
 	statBadgeText: { fontSize: 12, fontWeight: "600" },
 	scrollContent: { padding: 16, paddingTop: 4, paddingBottom: 48 },
-	loadingState: { alignItems: "center", paddingVertical: 60, gap: 16 },
-	loadingText: { fontSize: 14 },
 	listContainer: { gap: 12 },
 	patientCard: { borderRadius: 16 },
 	patientHeader: { flexDirection: "row", alignItems: "center", gap: 14 },

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
 	X,
@@ -12,11 +12,19 @@ import {
 	CheckCircle2,
 	Activity,
 	Loader2,
+	Search,
+	BookOpen,
+	ExternalLink,
+	Link2,
+	FileText,
+	ChevronDown,
 } from "lucide-react";
 import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
+import { Badge } from "@/components/ui/badge";
 import { useQuery } from "@tanstack/react-query";
 import { knowledgeService } from "@/features/wiki/services/knowledgeService";
 import { useAuth } from "@/contexts/AuthContext";
@@ -41,6 +49,12 @@ interface Restriction {
 	description: string;
 }
 
+interface ReferenceArticle {
+	name: string;
+	link: string;
+	description: string;
+}
+
 interface ProtocolFormData {
 	name: string;
 	protocol_type:
@@ -55,6 +69,7 @@ interface ProtocolFormData {
 	restrictions: Restriction[];
 	evidence_level?: string;
 	wiki_page_id?: string;
+	reference_articles: ReferenceArticle[];
 }
 
 interface NewProtocolModalProps {
@@ -73,6 +88,11 @@ export const NewProtocolModal: React.FC<NewProtocolModalProps> = ({
 	isLoading,
 }) => {
 	const [step, setStep] = useState(1);
+	const [wikiSearch, setWikiSearch] = useState("");
+	const [wikiSubgroupFilter, setWikiSubgroupFilter] = useState("all");
+	const [wikiDropdownOpen, setWikiDropdownOpen] = useState(false);
+	const wikiDropdownRef = useRef<HTMLDivElement>(null);
+
 	const [formData, setFormData] = useState<ProtocolFormData>({
 		name: "",
 		protocol_type: "pos_operatorio",
@@ -82,6 +102,7 @@ export const NewProtocolModal: React.FC<NewProtocolModalProps> = ({
 		restrictions: [],
 		evidence_level: "B",
 		wiki_page_id: "",
+		reference_articles: [],
 	});
 
 	const { organizationId } = useAuth();
@@ -110,7 +131,12 @@ export const NewProtocolModal: React.FC<NewProtocolModalProps> = ({
 					: [],
 				evidence_level: protocol.evidence_level || "B",
 				wiki_page_id: protocol.wiki_page_id || "",
+				reference_articles: Array.isArray((protocol as any).reference_articles)
+					? (protocol as any).reference_articles
+					: [],
 			});
+			setWikiSearch("");
+			setWikiSubgroupFilter("all");
 			setStep(1);
 		} else if (!protocol && open) {
 			setFormData({
@@ -122,10 +148,27 @@ export const NewProtocolModal: React.FC<NewProtocolModalProps> = ({
 				restrictions: [],
 				evidence_level: "B",
 				wiki_page_id: "",
+				reference_articles: [],
 			});
+			setWikiSearch("");
+			setWikiSubgroupFilter("all");
 			setStep(1);
 		}
 	}, [protocol, open]);
+
+	// Close wiki dropdown on outside click
+	useEffect(() => {
+		const handleClick = (e: MouseEvent) => {
+			if (
+				wikiDropdownRef.current &&
+				!wikiDropdownRef.current.contains(e.target as Node)
+			) {
+				setWikiDropdownOpen(false);
+			}
+		};
+		document.addEventListener("mousedown", handleClick);
+		return () => document.removeEventListener("mousedown", handleClick);
+	}, []);
 
 	const nextStep = () => setStep((s) => Math.min(s + 1, 3));
 	const prevStep = () => setStep((s) => Math.max(s - 1, 1));
@@ -187,6 +230,53 @@ export const NewProtocolModal: React.FC<NewProtocolModalProps> = ({
 		newRestrictions[index] = { ...newRestrictions[index], [field]: value };
 		setFormData((prev) => ({ ...prev, restrictions: newRestrictions }));
 	};
+
+	// Reference articles helpers
+	const addReferenceArticle = () => {
+		setFormData((prev) => ({
+			...prev,
+			reference_articles: [
+				...prev.reference_articles,
+				{ name: "", link: "", description: "" },
+			],
+		}));
+	};
+
+	const removeReferenceArticle = (index: number) => {
+		setFormData((prev) => ({
+			...prev,
+			reference_articles: prev.reference_articles.filter((_, i) => i !== index),
+		}));
+	};
+
+	const updateReferenceArticle = (
+		index: number,
+		field: keyof ReferenceArticle,
+		value: string,
+	) => {
+		const updated = [...formData.reference_articles];
+		updated[index] = { ...updated[index], [field]: value };
+		setFormData((prev) => ({ ...prev, reference_articles: updated }));
+	};
+
+	// Wiki autocomplete derived data
+	const wikiSubgroups = Array.from(
+		new Set(wikiArticles.map((a) => a.subgroup).filter(Boolean)),
+	).sort();
+
+	const filteredWikiArticles = wikiArticles.filter((art) => {
+		const matchesSearch =
+			wikiSearch.trim() === "" ||
+			art.title.toLowerCase().includes(wikiSearch.toLowerCase()) ||
+			art.subgroup.toLowerCase().includes(wikiSearch.toLowerCase());
+		const matchesSubgroup =
+			wikiSubgroupFilter === "all" || art.subgroup === wikiSubgroupFilter;
+		return matchesSearch && matchesSubgroup;
+	});
+
+	const selectedWikiArticle = wikiArticles.find(
+		(a) => a.id === formData.wiki_page_id,
+	);
 
 	const steps = [
 		{ id: 1, name: "Informações", icon: Info },
@@ -376,29 +466,213 @@ export const NewProtocolModal: React.FC<NewProtocolModalProps> = ({
 												</Select>
 											</div>
 
+											{/* Wiki autocomplete */}
 											<div className="col-span-2 space-y-2">
-												<Label>Vincular Página da Wiki</Label>
-												<Select
-													value={formData.wiki_page_id || "none"}
-													onValueChange={(v) =>
-														setFormData((prev) => ({
-															...prev,
-															wiki_page_id: v === "none" ? "" : v,
-														}))
-													}
-												>
-													<SelectTrigger className="h-12">
-														<SelectValue placeholder="Selecione um artigo/consenso" />
-													</SelectTrigger>
-													<SelectContent className="max-h-[300px]">
-														<SelectItem value="none">Nenhum vínculo</SelectItem>
-														{wikiArticles.map((art) => (
-															<SelectItem key={art.id} value={art.id}>
-																{art.title} ({art.subgroup})
-															</SelectItem>
+												<Label className="flex items-center gap-1.5">
+													<BookOpen className="w-3.5 h-3.5 text-primary" />
+													Vincular Página da Wiki
+												</Label>
+
+												{/* Subgroup filters */}
+												{wikiSubgroups.length > 0 && (
+													<div className="flex flex-wrap gap-1.5">
+														<Badge
+															variant={wikiSubgroupFilter === "all" ? "default" : "outline"}
+															className="cursor-pointer select-none text-xs"
+															onClick={() => setWikiSubgroupFilter("all")}
+														>
+															Todos
+														</Badge>
+														{wikiSubgroups.map((sg) => (
+															<Badge
+																key={sg}
+																variant={wikiSubgroupFilter === sg ? "default" : "outline"}
+																className="cursor-pointer select-none text-xs"
+																onClick={() =>
+																	setWikiSubgroupFilter(sg === wikiSubgroupFilter ? "all" : sg)
+																}
+															>
+																{sg}
+															</Badge>
 														))}
-													</SelectContent>
-												</Select>
+													</div>
+												)}
+
+												{/* Autocomplete input + dropdown */}
+												<div className="relative" ref={wikiDropdownRef}>
+													<div
+														className={cn(
+															"flex items-center h-12 border rounded-md bg-background px-3 gap-2 cursor-text transition-colors",
+															wikiDropdownOpen
+																? "border-primary ring-1 ring-primary/30"
+																: "border-input hover:border-muted-foreground/50",
+														)}
+														onClick={() => setWikiDropdownOpen(true)}
+													>
+														<Search className="w-4 h-4 text-muted-foreground shrink-0" />
+														<input
+															className="flex-1 bg-transparent text-sm outline-none placeholder:text-muted-foreground"
+															placeholder={
+																selectedWikiArticle
+																	? selectedWikiArticle.title
+																	: "Pesquisar artigo ou consenso..."
+															}
+															value={wikiDropdownOpen ? wikiSearch : ""}
+															onChange={(e) => setWikiSearch(e.target.value)}
+															onFocus={() => setWikiDropdownOpen(true)}
+														/>
+														{selectedWikiArticle && !wikiDropdownOpen && (
+															<Badge variant="secondary" className="text-xs shrink-0 max-w-[180px] truncate">
+																{selectedWikiArticle.subgroup}
+															</Badge>
+														)}
+														{formData.wiki_page_id && (
+															<button
+																type="button"
+																className="text-muted-foreground hover:text-destructive transition-colors"
+																onClick={(e) => {
+																	e.stopPropagation();
+																	setFormData((prev) => ({ ...prev, wiki_page_id: "" }));
+																	setWikiSearch("");
+																}}
+															>
+																<X className="w-3.5 h-3.5" />
+															</button>
+														)}
+														<ChevronDown className={cn("w-4 h-4 text-muted-foreground transition-transform shrink-0", wikiDropdownOpen && "rotate-180")} />
+													</div>
+
+													{/* Dropdown */}
+													{wikiDropdownOpen && (
+														<div className="absolute z-50 top-[calc(100%+4px)] left-0 right-0 bg-popover border border-border rounded-md shadow-lg overflow-hidden">
+															<div className="max-h-[220px] overflow-y-auto">
+																<div
+																	className="flex items-center gap-2 px-3 py-2 text-sm text-muted-foreground hover:bg-muted cursor-pointer transition-colors"
+																	onClick={() => {
+																		setFormData((prev) => ({ ...prev, wiki_page_id: "" }));
+																		setWikiSearch("");
+																		setWikiDropdownOpen(false);
+																	}}
+																>
+																	<X className="w-3.5 h-3.5" />
+																	Nenhum vínculo
+																</div>
+
+																{filteredWikiArticles.length === 0 ? (
+																	<div className="px-3 py-4 text-center text-sm text-muted-foreground">
+																		Nenhum artigo encontrado
+																	</div>
+																) : (
+																	filteredWikiArticles.map((art) => (
+																		<div
+																			key={art.id}
+																			className={cn(
+																				"flex items-start gap-2 px-3 py-2.5 cursor-pointer transition-colors hover:bg-muted",
+																				formData.wiki_page_id === art.id && "bg-primary/10",
+																			)}
+																			onClick={() => {
+																				setFormData((prev) => ({ ...prev, wiki_page_id: art.id }));
+																				setWikiSearch("");
+																				setWikiDropdownOpen(false);
+																			}}
+																		>
+																			<BookOpen className="w-3.5 h-3.5 mt-0.5 text-primary shrink-0" />
+																			<div className="flex-1 min-w-0">
+																				<p className="text-sm font-medium leading-tight truncate">
+																					{art.title}
+																				</p>
+																				{art.subgroup && (
+																					<p className="text-xs text-muted-foreground">
+																						{art.subgroup}
+																					</p>
+																				)}
+																			</div>
+																			{formData.wiki_page_id === art.id && (
+																				<CheckCircle2 className="w-3.5 h-3.5 text-primary shrink-0 mt-0.5" />
+																			)}
+																		</div>
+																	))
+																)}
+															</div>
+														</div>
+													)}
+												</div>
+											</div>
+
+											{/* Reference Articles */}
+											<div className="col-span-2 space-y-3 pt-1">
+												<div className="flex items-center justify-between">
+													<Label className="flex items-center gap-1.5">
+														<FileText className="w-3.5 h-3.5 text-primary" />
+														Artigos de Referência
+													</Label>
+													<Button
+														size="sm"
+														variant="outline"
+														onClick={addReferenceArticle}
+														className="h-7 text-xs gap-1"
+													>
+														<Plus className="w-3 h-3" /> Adicionar Artigo
+													</Button>
+												</div>
+
+												{formData.reference_articles.length === 0 ? (
+													<div className="text-center py-4 border border-dashed border-border rounded-lg text-xs text-muted-foreground">
+														Nenhum artigo adicionado. Adicione referências científicas para embasar o protocolo.
+													</div>
+												) : (
+													<div className="space-y-3">
+														{formData.reference_articles.map((article, idx) => (
+															<motion.div
+																key={idx}
+																initial={{ opacity: 0, y: 4 }}
+																animate={{ opacity: 1, y: 0 }}
+																className="p-3 border border-border rounded-xl bg-muted/20 space-y-2"
+															>
+																<div className="flex items-center justify-between gap-2">
+																	<span className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">
+																		Artigo {idx + 1}
+																	</span>
+																	<Button
+																		variant="ghost"
+																		size="icon"
+																		className="h-6 w-6 text-muted-foreground hover:text-destructive hover:bg-destructive/10"
+																		onClick={() => removeReferenceArticle(idx)}
+																	>
+																		<Trash2 className="w-3 h-3" />
+																	</Button>
+																</div>
+																<Input
+																	placeholder="Nome / Título do artigo"
+																	className="h-9 text-sm"
+																	value={article.name}
+																	onChange={(e) =>
+																		updateReferenceArticle(idx, "name", e.target.value)
+																	}
+																/>
+																<div className="flex items-center gap-1.5">
+																	<Link2 className="w-3.5 h-3.5 text-muted-foreground shrink-0" />
+																	<Input
+																		placeholder="https://doi.org/..."
+																		className="h-9 text-sm"
+																		value={article.link}
+																		onChange={(e) =>
+																			updateReferenceArticle(idx, "link", e.target.value)
+																		}
+																	/>
+																</div>
+																<Textarea
+																	placeholder="Descrição resumida do artigo (opcional)"
+																	className="text-sm min-h-[60px] resize-none"
+																	value={article.description}
+																	onChange={(e) =>
+																		updateReferenceArticle(idx, "description", e.target.value)
+																	}
+																/>
+															</motion.div>
+														))}
+													</div>
+												)}
 											</div>
 										</div>
 									</div>
