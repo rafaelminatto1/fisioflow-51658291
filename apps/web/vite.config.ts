@@ -387,8 +387,6 @@ export default defineConfig(({ mode }) => {
 				"framer-motion",
 				"react-router-dom",
 				"@tanstack/react-query",
-				"@react-pdf/renderer",
-				"yoga-layout",
 				"date-fns",
 				"temporal-polyfill",
 			],

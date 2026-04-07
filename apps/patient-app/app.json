@@ -46,6 +46,7 @@
       ]
     },
     "plugins": [
+      "./plugins/withSwiftConcurrency",
       "expo-router",
       "expo-secure-store",
       "expo-calendar",

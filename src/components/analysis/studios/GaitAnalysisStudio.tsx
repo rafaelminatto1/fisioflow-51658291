@@ -1,5 +1,4 @@
 import React, { useRef, useState, useMemo } from 'react';
-import Webcam from "react-webcam";
 import { Stage, Layer } from 'react-konva';
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -23,12 +22,10 @@ interface GaitAnalysisStudioProps {
 }
 
 export const GaitAnalysisStudio: React.FC<GaitAnalysisStudioProps> = ({ onDataUpdate }) => {
-	const webcamRef = useRef<Webcam>(null);
 	const videoRef = useRef<HTMLVideoElement>(null);
 	const stageRef = useRef<any>(null);
 	const fileInputRef = useRef<HTMLInputElement>(null);
 
-	const [videoMode, setVideoMode] = useState<"webcam" | "file">("webcam");
 	const [videoSrc, setVideoSrc] = useState<string | null>(null);
 	const [isPlaying, setIsPlaying] = useState(false);
 	const [currentFrame, setCurrentFrame] = useState(0);
@@ -39,9 +36,7 @@ export const GaitAnalysisStudio: React.FC<GaitAnalysisStudioProps> = ({ onDataUp
 
 	const [gaitEvents, setGaitEvents] = useState<GaitEvent[]>([]);
 
-	const { aiEnabled, aiLoading, poseKeypoints, startMoveNet, stopMoveNet } = useMoveNet(
-		(videoMode === "webcam" ? webcamRef : videoRef) as any
-	);
+	const { aiEnabled, aiLoading, poseKeypoints, startMoveNet, stopMoveNet } = useMoveNet(videoRef as any);
 
 	const {
 		trackedTrajs,
@@ -57,7 +52,8 @@ export const GaitAnalysisStudio: React.FC<GaitAnalysisStudioProps> = ({ onDataUp
 		if (file) {
 			const url = URL.createObjectURL(file);
 			setVideoSrc(url);
-			setVideoMode("file");
+			setCurrentFrame(0);
+			setIsPlaying(false);
 		}
 	};
 
@@ -77,13 +73,13 @@ export const GaitAnalysisStudio: React.FC<GaitAnalysisStudioProps> = ({ onDataUp
 	};
 
 	React.useEffect(() => {
-		if (videoMode === "file" && videoRef.current) {
+		if (videoRef.current && videoSrc) {
 			const v = videoRef.current;
 			const update = () => setCurrentFrame(Math.floor(v.currentTime * fps));
 			v.addEventListener('timeupdate', update);
 			return () => v.removeEventListener('timeupdate', update);
 		}
-	}, [videoMode, fps]);
+	}, [videoSrc, fps]);
 
 	const gaitMetrics = useMemo(() => calcGaitMetrics(gaitEvents, fps, patientMass, legLength, runSpeed), [gaitEvents, fps, patientMass, legLength, runSpeed]);
 
@@ -99,20 +95,26 @@ export const GaitAnalysisStudio: React.FC<GaitAnalysisStudioProps> = ({ onDataUp
 				{/* ── Video Canvas ─────────────────────────────────────── */}
 				<Card className="lg:col-span-3 relative overflow-hidden bg-slate-950 border-none rounded-[2.5rem] shadow-2xl h-[600px] group/canvas">
 					<div className="relative w-full h-full flex items-center justify-center overflow-hidden">
-						{videoMode === "webcam" ? (
-							<Webcam
-								ref={webcamRef}
-								audio={false}
-								className="absolute inset-0 w-full h-full object-cover opacity-60 transition-opacity group-hover/canvas:opacity-80"
-							/>
-						) : (
-							<video
-								ref={videoRef}
-								src={videoSrc || ""}
-								className="absolute inset-0 w-full h-full object-contain opacity-80"
-								playsInline
-								muted
-							/>
+						<video
+							ref={videoRef}
+							src={videoSrc || ""}
+							className="absolute inset-0 h-full w-full object-contain opacity-80"
+							playsInline
+							muted
+						/>
+						{!videoSrc && (
+							<div className="absolute inset-0 z-20 flex flex-col items-center justify-center gap-3 bg-slate-950/90 px-6 text-center">
+								<Upload className="h-10 w-10 text-blue-400" />
+								<div>
+									<p className="text-sm font-black uppercase tracking-widest text-white">
+										Envie um vídeo de marcha ou corrida
+									</p>
+									<p className="mt-2 max-w-md text-sm text-white/70">
+										Prefira gravação lateral e frontal feita no celular. A análise
+										web é focada em upload e revisão quadro a quadro.
+									</p>
+								</div>
+							</div>
 						)}
 						<Stage width={800} height={600} className="absolute inset-0 z-10" ref={stageRef} onClick={(e) => {
 							const pos = e.target.getStage()?.getPointerPosition();
@@ -144,23 +146,22 @@ export const GaitAnalysisStudio: React.FC<GaitAnalysisStudioProps> = ({ onDataUp
 							<Upload className="h-5 w-5 text-blue-400" />
 						</Button>
 
-						{videoMode === "file" && (
-							<Button
-								variant="ghost"
-								size="icon"
-								onClick={togglePlayback}
-								className="rounded-full h-10 w-10 hover:bg-white/10"
-							>
-								{isPlaying ? <Pause className="h-5 w-5 fill-current" /> : <Play className="h-5 w-5 fill-current ml-0.5" />}
-							</Button>
-						)}
+						<Button
+							variant="ghost"
+							size="icon"
+							onClick={togglePlayback}
+							disabled={!videoSrc}
+							className="rounded-full h-10 w-10 hover:bg-white/10"
+						>
+							{isPlaying ? <Pause className="h-5 w-5 fill-current" /> : <Play className="h-5 w-5 fill-current ml-0.5" />}
+						</Button>
 
 						<div className="h-8 w-px bg-white/10 mx-1" />
 						
 						<Button
 							variant={aiEnabled ? "default" : "ghost"}
 							size="sm"
-							disabled={aiLoading}
+							disabled={aiLoading || !videoSrc}
 							onClick={() => aiEnabled ? stopMoveNet() : startMoveNet()}
 							className={`rounded-2xl gap-2 text-[10px] font-black tracking-widest uppercase px-4 h-10 transition-all ${aiEnabled ? "bg-green-600 hover:bg-green-700 shadow-[0_0_20px_rgba(34,197,94,0.4)] border-none" : "hover:bg-white/5"}`}
 						>
@@ -170,6 +171,7 @@ export const GaitAnalysisStudio: React.FC<GaitAnalysisStudioProps> = ({ onDataUp
 						<div className="h-8 w-px bg-white/10 mx-1" />
 						<div className="flex gap-1 bg-white/5 p-1 rounded-2xl border border-white/5">
 							<Button size="icon" variant="ghost" className="h-8 w-8 text-white/60 hover:text-white rounded-xl"
+								disabled={!videoSrc}
 								onClick={() => seekToFrame(Math.max(0, currentFrame - 1))}>
 								<ChevronLeft className="h-4 w-4" />
 							</Button>
@@ -180,6 +182,7 @@ export const GaitAnalysisStudio: React.FC<GaitAnalysisStudioProps> = ({ onDataUp
 								<span className="text-[6px] text-white/40 font-black uppercase">Frame</span>
 							</div>
 							<Button size="icon" variant="ghost" className="h-8 w-8 text-white/60 hover:text-white rounded-xl"
+								disabled={!videoSrc}
 								onClick={() => seekToFrame(currentFrame + 1)}>
 								<ChevronRight className="h-4 w-4" />
 							</Button>

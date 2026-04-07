@@ -49,7 +49,9 @@ jobs:
           cache: 'pnpm'
 
       - name: Install dependencies
-        run: pnpm install --frozen-lockfile
+        # --filter "@fisioflow/<app>..." instala apenas o app selecionado e suas
+        # dependências de workspace — ignora apps/web (251 deps), api, jules-bot, etc.
+        run: pnpm install --frozen-lockfile --filter "@fisioflow/${{ inputs.app }}..."
 
       # ── 3. Expo Prebuild ───────────────────────────────────────────────────
       - name: Expo Prebuild (gera /ios nativa)

@@ -1,4 +1,4 @@
-import { useState, useCallback, useEffect } from "react";
+import { Suspense, lazy, useState, useCallback, useEffect } from "react";
 import { useNavigate, useParams, useSearchParams } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import {
@@ -17,7 +17,6 @@ import {
 import { MainLayout } from "@/components/layout/MainLayout";
 import { PatientDashboard360 } from "@/components/patient/dashboard/PatientDashboard360";
 import { PhysicalExamForm } from "@/components/patient/forms/PhysicalExamForm";
-import { KinoveaStudio } from "@/components/analysis/KinoveaStudio";
 import { PainMapManager } from "@/components/evolution/PainMapManager";
 import {
 	EvaluationTemplateSelector,
@@ -50,6 +49,12 @@ import { RichTextEditor } from "@/components/ui/RichTextEditor";
 import { RichTextToolbar } from "@/components/ui/RichTextToolbar";
 import { RichTextProvider } from "@/contexts/RichTextContext";
 import { Badge } from "@/components/ui/badge";
+
+const KinoveaStudio = lazy(() =>
+	import("@/components/analysis/KinoveaStudio").then((module) => ({
+		default: module.KinoveaStudio,
+	})),
+);
 
 // Helper function to generate UUID
 const uuidv4 = (): string => crypto.randomUUID();
@@ -390,18 +395,26 @@ export default function NewEvaluationPage() {
 											<p className="text-muted-foreground print:hidden">Identifique desvios posturais automaticamente.</p>
 										</div>
 										<div className="print:hidden">
-											<KinoveaStudio
-												patientName={patient ? PatientHelpers.getName(patient) : undefined}
-												onCapture={(img, analysis) => {
-													setPhysicalExamData((prev: any) => ({
-														...prev,
-														posturalAnalysis: [
-															...(prev.posturalAnalysis || []),
-															{ img, analysis, timestamp: new Date().toISOString() }
-														]
-													}));
-												}}
-											/>
+											<Suspense
+												fallback={
+													<div className="flex min-h-[420px] items-center justify-center rounded-3xl border border-dashed bg-card/30 text-sm text-muted-foreground">
+														Carregando estúdio postural...
+													</div>
+												}
+											>
+												<KinoveaStudio
+													patientName={patient ? PatientHelpers.getName(patient) : undefined}
+													onCapture={(img, analysis) => {
+														setPhysicalExamData((prev: any) => ({
+															...prev,
+															posturalAnalysis: [
+																...(prev.posturalAnalysis || []),
+																{ img, analysis, timestamp: new Date().toISOString() }
+															]
+														}));
+													}}
+												/>
+											</Suspense>
 										</div>
 										<div className="hidden print:grid grid-cols-2 gap-4">
 											{physicalExamData.posturalAnalysis?.map((item: any, idx: number) => (
