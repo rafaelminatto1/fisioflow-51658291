@@ -24,7 +24,7 @@ export const EvolutionSummaryCard = memo(function EvolutionSummaryCard({
 	stats,
 }: EvolutionSummaryCardProps) {
 	return (
-		<Card className="border-primary/20 bg-primary/5 flex min-h-[300px] flex-col shadow-sm overflow-hidden">
+		<Card className="border-primary/20 bg-primary/5 flex h-full flex-col shadow-sm overflow-hidden">
 			<CardHeader className="pb-2 pt-3 px-4 flex-shrink-0">
 				<CardTitle className="text-base font-semibold flex items-center gap-2 text-foreground">
 					<BarChart2 className="h-5 w-5 text-primary" />
