@@ -24,8 +24,21 @@ function decodeJwtPayload(token: string): { exp?: number } | null {
 	try {
 		const payload = token.split(".")[1];
 		if (!payload) return null;
-		const normalized = payload.replace(/-/g, "+").replace(/_/g, "/");
-		const json = atob(normalized);
+
+		let json: string;
+		if (typeof Buffer !== "undefined") {
+			// In Node.js (tests), use Buffer to handle base64url correctly
+			json = Buffer.from(payload, "base64url").toString("utf8");
+		} else {
+			// In browser, manually convert base64url to base64 and add padding
+			let base64 = payload.replace(/-/g, "+").replace(/_/g, "/");
+			const pad = base64.length % 4;
+			if (pad) {
+				base64 += "=".repeat(4 - pad);
+			}
+			json = atob(base64);
+		}
+
 		return JSON.parse(json) as { exp?: number };
 	} catch {
 		return null;
