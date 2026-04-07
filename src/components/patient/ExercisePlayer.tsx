@@ -2,7 +2,7 @@ import { useState, useRef, useEffect, lazy, Suspense } from "react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
-import { Textarea } from "@/components/ui/textarea";
+import { MagicTextarea } from "@/components/ai/MagicTextarea";
 import {
 	Play,
 	Pause,
@@ -480,11 +480,11 @@ export function ExercisePlayer({
 									<label className="text-sm font-medium mb-2 block">
 										Anotações (Opcional)
 									</label>
-									<Textarea
+									<MagicTextarea
 										placeholder="Sentiu dor ou desconforto?"
 										value={feedback}
-										onChange={(e) => setFeedback(e.target.value)}
-										className="h-20 resize-none"
+										onValueChange={(val) => setFeedback(val)}
+										className="h-20 resize-none bg-muted/30 border-slate-200 focus:bg-background transition-all"
 									/>
 								</div>
 							</div>
