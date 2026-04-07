@@ -30,7 +30,7 @@ const VIEW_MAP: Record<ViewType, string> = {
 	week: "timeGridWeek",
 	month: "dayGridMonth",
 };
-const WEEK_SLOT_COUNT = 56; // 14 hours * 4 slots per hour.
+const WEEK_SLOT_COUNT = 28; // 14 hours * 2 slots per hour.
 const WEEK_HEADER_HEIGHT = 28;
 
 export interface DayFlowCalendarWrapperProps {
@@ -68,8 +68,9 @@ export function DayFlowCalendarWrapper(props: DayFlowCalendarWrapperProps) {
 		onViewTypeChange,
 	} = props;
 	const isWeekView = viewType === "week";
-	const [weekSlotHeight, setWeekSlotHeight] = useState(12);
+	const [weekSlotHeight, setWeekSlotHeight] = useState(20);
 	const slotHeight = isWeekView ? weekSlotHeight : 14;
+	const slotDuration = isWeekView ? "00:30:00" : "00:15:00";
 	const slotLabelFormat = useMemo(
 		() => (time: Date) => (time.getMinutes() === 0 ? format(time, "HH:mm") : ""),
 		[],
@@ -97,7 +98,7 @@ export function DayFlowCalendarWrapper(props: DayFlowCalendarWrapperProps) {
 			const availableHeight = containerRef.current?.getBoundingClientRect().height ?? 0;
 			if (!availableHeight) return;
 			const nextSlotHeight = Math.max(
-				10,
+				16,
 				Math.floor((availableHeight - WEEK_HEADER_HEIGHT) / WEEK_SLOT_COUNT),
 			);
 			setWeekSlotHeight((current) => (current === nextSlotHeight ? current : nextSlotHeight));
@@ -227,7 +228,7 @@ export function DayFlowCalendarWrapper(props: DayFlowCalendarWrapperProps) {
 						height: "100%",
 						slotMinTime: "07:00:00",
 						slotMaxTime: "21:00:00",
-						slotDuration: "00:15:00",
+						slotDuration,
 						slotHeight,
 						slotLabelInterval: "00:00:00",
 						slotLabelFormat,
@@ -348,6 +349,7 @@ export function DayFlowCalendarWrapper(props: DayFlowCalendarWrapperProps) {
 			calendar.setOption('view', VIEW_MAP[viewType]);
 			calendar.setOption('date', isValid(currentDate) ? currentDate : new Date());
 			calendar.setOption('slotHeight', slotHeight);
+			calendar.setOption('slotDuration', slotDuration);
 			calendar.setOption('slotLabelInterval', "00:00:00");
 			calendar.setOption('slotLabelFormat', slotLabelFormat);
 			calendar.setOption('scrollTime', "07:00:00");
@@ -355,7 +357,7 @@ export function DayFlowCalendarWrapper(props: DayFlowCalendarWrapperProps) {
 		} catch (e) {
 			console.warn("[DayFlow] Sync error:", e);
 		}
-	}, [dfEvents, currentDate, viewType, slotHeight, slotLabelFormat]);
+	}, [dfEvents, currentDate, viewType, slotHeight, slotDuration, slotLabelFormat]);
 
 	return (
 		<div className="flex-1 flex flex-col min-h-0 bg-slate-50/50 overflow-hidden relative">
@@ -458,7 +460,7 @@ export function DayFlowCalendarWrapper(props: DayFlowCalendarWrapperProps) {
 				.dayflow-week-view .ec-body .ec-time {
 					font-size: 9px !important;
 					line-height: ${slotHeight}px !important;
-					top: -${slotHeight / 2}px !important;
+					top: 0 !important;
 				}
 				.dayflow-event-shell {
 					width: 100%;
