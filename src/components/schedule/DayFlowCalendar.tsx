@@ -543,7 +543,8 @@ export function DayFlowCalendarWrapper(props: DayFlowCalendarWrapperProps) {
 				}
 				.dayflow-event-card--compact .dayflow-event-card__title {
 					margin-top: 1px;
-					font-size: 9px;
+					font-size: 10px;
+					line-height: 1.08;
 					font-weight: 500;
 				}
 			`}</style>
