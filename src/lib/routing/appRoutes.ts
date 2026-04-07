@@ -8,7 +8,7 @@ export const APP_ROUTES = {
 	EXERCISES: "/exercises",
 	FINANCIAL: "/financial",
 	REPORTS: "/reports",
-	SETTINGS: "/settings",
+	SETTINGS: "/profile",
 	EVENTS: "/eventos",
 	TASKS: "/tarefas",
 } as const;

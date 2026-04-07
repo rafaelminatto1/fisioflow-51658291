@@ -296,7 +296,7 @@ export const builtinClinicalTestsCatalog: ClinicalTestCatalogRecord[] = [
 		source_label: "Curadoria FisioFlow",
 		sort_order: 10,
 		illustration: "knee-stability",
-		imageUrl: "https://media.moocafisio.com.br/illustrations/lachman_test.avif",
+		imageUrl: "/clinical-tests/illustrations/lachman-test.avif",
 		evidence_resources: [
 			{
 				title: "Meta-análise de testes para LCA",
@@ -383,8 +383,7 @@ export const builtinClinicalTestsCatalog: ClinicalTestCatalogRecord[] = [
 		source_label: "Curadoria FisioFlow",
 		sort_order: 40,
 		illustration: "shoulder-impingement",
-		imageUrl:
-			"https://media.moocafisio.com.br/illustrations/neer_test_shoulder_illustration.avif",
+		imageUrl: "/clinical-tests/illustrations/neer-sign.avif",
 	}),
 	createBuiltinTest({
 		id: "builtin-hawkins-kennedy",
@@ -410,6 +409,7 @@ export const builtinClinicalTestsCatalog: ClinicalTestCatalogRecord[] = [
 		source_label: "Curadoria FisioFlow",
 		sort_order: 50,
 		illustration: "shoulder-impingement",
+		imageUrl: "/clinical-tests/illustrations/hawkins-kennedy.avif",
 	}),
 	createBuiltinTest({
 		id: "builtin-fadir-test",
@@ -435,6 +435,7 @@ export const builtinClinicalTestsCatalog: ClinicalTestCatalogRecord[] = [
 		source_label: "Curadoria FisioFlow",
 		sort_order: 60,
 		illustration: "hip-rotation",
+		imageUrl: "/clinical-tests/illustrations/fadir-test.avif",
 	}),
 	createBuiltinTest({
 		id: "builtin-faber-test",
@@ -460,6 +461,7 @@ export const builtinClinicalTestsCatalog: ClinicalTestCatalogRecord[] = [
 		source_label: "Curadoria FisioFlow",
 		sort_order: 70,
 		illustration: "hip-rotation",
+		imageUrl: "/clinical-tests/illustrations/faber-test.avif",
 	}),
 	createBuiltinTest({
 		id: "builtin-spurling-test",
@@ -485,6 +487,7 @@ export const builtinClinicalTestsCatalog: ClinicalTestCatalogRecord[] = [
 		source_label: "Curadoria FisioFlow",
 		sort_order: 80,
 		illustration: "cervical-radicular",
+		imageUrl: "/clinical-tests/illustrations/spurling-test.avif",
 	}),
 	createBuiltinTest({
 		id: "builtin-y-balance-test",
@@ -510,6 +513,7 @@ export const builtinClinicalTestsCatalog: ClinicalTestCatalogRecord[] = [
 		source_label: "Curadoria FisioFlow",
 		sort_order: 110,
 		illustration: "balance-reach",
+		imageUrl: "/clinical-tests/illustrations/y-balance-test.avif",
 	}),
 	createBuiltinTest({
 		id: "builtin-single-hop-distance",
@@ -535,6 +539,7 @@ export const builtinClinicalTestsCatalog: ClinicalTestCatalogRecord[] = [
 		source_label: "Curadoria FisioFlow",
 		sort_order: 120,
 		illustration: "hop-performance",
+		imageUrl: "/clinical-tests/illustrations/single-hop.avif",
 	}),
 	createBuiltinTest({
 		id: "builtin-triple-hop-distance",
@@ -560,6 +565,7 @@ export const builtinClinicalTestsCatalog: ClinicalTestCatalogRecord[] = [
 		source_label: "Curadoria FisioFlow",
 		sort_order: 130,
 		illustration: "hop-performance",
+		imageUrl: "/clinical-tests/illustrations/triple-hop.avif",
 	}),
 	createBuiltinTest({
 		id: "builtin-side-hop-test",
@@ -585,6 +591,7 @@ export const builtinClinicalTestsCatalog: ClinicalTestCatalogRecord[] = [
 		source_label: "Curadoria FisioFlow",
 		sort_order: 140,
 		illustration: "hop-performance",
+		imageUrl: "/clinical-tests/illustrations/side-hop.avif",
 	}),
 	createBuiltinTest({
 		id: "builtin-tug-test",
@@ -610,6 +617,7 @@ export const builtinClinicalTestsCatalog: ClinicalTestCatalogRecord[] = [
 		source_label: "Curadoria FisioFlow",
 		sort_order: 210,
 		illustration: "gait-speed",
+		imageUrl: "/clinical-tests/illustrations/tug-test.avif",
 	}),
 	createBuiltinTest({
 		id: "builtin-5xsts-test",
@@ -635,6 +643,7 @@ export const builtinClinicalTestsCatalog: ClinicalTestCatalogRecord[] = [
 		source_label: "Curadoria FisioFlow",
 		sort_order: 220,
 		illustration: "sit-to-stand",
+		imageUrl: "/clinical-tests/illustrations/5xsts-test.avif",
 	}),
 	createBuiltinTest({
 		id: "builtin-single-leg-stance",
@@ -685,6 +694,7 @@ export const builtinClinicalTestsCatalog: ClinicalTestCatalogRecord[] = [
 		source_label: "Curadoria FisioFlow",
 		sort_order: 240,
 		illustration: "gait-speed",
+		imageUrl: "/clinical-tests/illustrations/10mwt-test.avif",
 	}),
 	createBuiltinTest({
 		id: "builtin-anterior-drawer-knee",
@@ -706,8 +716,7 @@ export const builtinClinicalTestsCatalog: ClinicalTestCatalogRecord[] = [
 		source_label: "Curadoria FisioFlow",
 		sort_order: 25,
 		illustration: "knee-stability",
-		imageUrl:
-			"https://media.moocafisio.com.br/illustrations/anterior_drawer_test_knee.avif",
+		imageUrl: "/clinical-tests/illustrations/anterior-drawer-knee.avif",
 	}),
 	createBuiltinTest({
 		id: "builtin-phalen-test",
@@ -729,8 +738,7 @@ export const builtinClinicalTestsCatalog: ClinicalTestCatalogRecord[] = [
 		source_label: "Curadoria FisioFlow",
 		sort_order: 90,
 		illustration: "cervical-radicular",
-		imageUrl:
-			"https://media.moocafisio.com.br/illustrations/phalen_test_illustration.avif",
+		imageUrl: "/clinical-tests/illustrations/phalen-test.avif",
 	}),
 	createBuiltinTest({
 		id: "builtin-lasegue-test",
@@ -753,8 +761,7 @@ export const builtinClinicalTestsCatalog: ClinicalTestCatalogRecord[] = [
 		source_label: "Curadoria FisioFlow",
 		sort_order: 100,
 		illustration: "cervical-radicular",
-		imageUrl:
-			"https://media.moocafisio.com.br/illustrations/lasegue_test_spine_illustration.avif",
+		imageUrl: "/clinical-tests/illustrations/lasegue-test.avif",
 	}),
 	createBuiltinTest({
 		id: "builtin-jobe-test",
@@ -775,8 +782,7 @@ export const builtinClinicalTestsCatalog: ClinicalTestCatalogRecord[] = [
 		source_label: "Curadoria FisioFlow",
 		sort_order: 45,
 		illustration: "shoulder-impingement",
-		imageUrl:
-			"https://media.moocafisio.com.br/illustrations/jobe_test_shoulder_illustration.avif",
+		imageUrl: "/clinical-tests/illustrations/jobe-test.avif",
 	}),
 	createBuiltinTest({
 		id: "builtin-appley-compression-test",

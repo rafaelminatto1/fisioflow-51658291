@@ -103,7 +103,7 @@ export function TransactionCard({
 
 	return (
 		<TouchableOpacity onPress={handlePress} activeOpacity={0.7}>
-			<Card style={{ ...styles.card, ...(style || {}) }} padding="none">
+			<Card style={{ ...styles.card, ...style }} padding="none">
 				<View style={styles.cardContent}>
 					<View style={styles.mainContent}>
 						<View style={styles.avatarContainer}>
