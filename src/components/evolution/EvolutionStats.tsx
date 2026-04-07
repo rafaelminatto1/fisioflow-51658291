@@ -123,7 +123,7 @@ export const EvolutionStats = memo(
 		// Layout vertical para o card de resumo lateral, mantendo o visual padrão
 		if (vertical) {
 			return (
-				<div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+				<div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
 					{STAT_CONFIG.map((config, idx) => {
 						const colors = COLOR_CLASSES[config.color];
 						const rawValue = config.getVal(stats);
@@ -138,25 +138,25 @@ export const EvolutionStats = memo(
 						return (
 							<div
 								key={idx}
-								className={`group relative overflow-hidden rounded-xl border ${colors.border} bg-card/40 backdrop-blur-sm p-3 hover:bg-card/60 transition-all shadow-sm`}
+								className={`group relative overflow-hidden rounded-xl border ${colors.border} bg-card/40 backdrop-blur-sm p-2 hover:bg-card/60 transition-all shadow-sm`}
 							>
-								<div className="flex items-center gap-2 mb-1.5">
+								<div className="flex items-center gap-1.5 mb-1">
 									<div
-										className={`p-1.5 rounded-md bg-gradient-to-br ${colors.bg}`}
+										className={`p-1 rounded-md bg-gradient-to-br ${colors.bg}`}
 									>
-										<config.icon className={`h-4 w-4 ${colors.text}`} />
+										<config.icon className={`h-3 w-3 ${colors.text}`} />
 									</div>
-									<span className="text-sm font-semibold text-muted-foreground/90 uppercase tracking-tight">
+									<span className="text-xs font-semibold text-muted-foreground/90 uppercase tracking-tight">
 										{config.label}
 									</span>
 								</div>
 								<p
-									className={`text-xl font-black leading-tight ${colors.text}`}
+									className={`text-lg font-black leading-tight ${colors.text}`}
 								>
 									{rawValue}
 								</p>
 								{isPercent && (
-									<div className="mt-2 h-2 w-full bg-muted/50 rounded-full overflow-hidden border border-border/5">
+									<div className="mt-1.5 h-1.5 w-full bg-muted/50 rounded-full overflow-hidden border border-border/5">
 										<div
 											className={`h-full ${colors.progress} rounded-full transition-all duration-500`}
 											style={{
