@@ -15,6 +15,7 @@ import {
 	LineChart as LineChartIcon,
 } from "lucide-react";
 import { useFluxoCaixaResumo, useCaixaDiario } from "@/hooks/useFluxoCaixa";
+import { MainLayout } from "@/components/layout/MainLayout";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import {
