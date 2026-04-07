@@ -10,7 +10,8 @@
 	},
 	"scripts": {
 		"predev": "pnpm --filter fisioflow-web predev",
-		"dev": "pnpm --filter fisioflow-web dev",
+		"dev": "turbo dev --filter=fisioflow-web --filter=@fisioflow/api",
+		"dev:full": "turbo dev --filter=fisioflow-web --filter=@fisioflow/api",
 		"dev:web": "pnpm --filter fisioflow-web dev",
 		"dev:patient": "pnpm --filter fisioflow-patient-ios start",
 		"dev:professional": "pnpm --filter @fisioflow/professional-app start",

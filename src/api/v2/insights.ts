@@ -61,6 +61,16 @@ export const aiApi = {
 			"/api/ai/movement-video",
 			{ method: "POST", body: JSON.stringify(params) },
 		),
+	transcribeAudio: (params: { audio: string; mimeType: string }) =>
+		request<{ data: { transcription: string } }>("/api/ai/transcribe-audio", {
+			method: "POST",
+			body: JSON.stringify(params),
+		}),
+	fastProcessing: (params: { text: string; mode: string }) =>
+		request<{ data: { result: string } }>("/api/ai/fast-processing", {
+			method: "POST",
+			body: JSON.stringify(params),
+		}),
 };
 
 export const analyticsApi = {

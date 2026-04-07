@@ -1,13 +1,7 @@
 import React from "react";
 import { UseFormReturn } from "react-hook-form";
-import {
-	Select,
-	SelectContent,
-	SelectItem,
-	SelectTrigger,
-	SelectValue,
-} from "@/components/ui/select";
-import { Textarea } from "@/components/ui/textarea";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { MagicTextarea } from "@/components/ai/MagicTextarea";
 import { APPOINTMENT_STATUS_CONFIG } from "../shared/appointment-status";
 import { cn } from "@/lib/utils";
 import {
@@ -119,8 +113,9 @@ export const AppointmentInfoTab: React.FC<AppointmentInfoTabProps> = ({
 				<div className="space-y-2">
 					<FieldLabel icon={MessageSquare}>Observações do Atendimento</FieldLabel>
 					<div className="relative group">
-						<Textarea
-							{...register("notes")}
+						<MagicTextarea
+							value={watch("notes") || ""}
+							onValueChange={(val) => setValue("notes", val)}
 							placeholder="Digite aqui anotações importantes para este atendimento..."
 							rows={14}
 							disabled={isViewMode}
