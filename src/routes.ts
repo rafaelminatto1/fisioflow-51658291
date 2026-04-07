@@ -57,7 +57,7 @@ export default [
 			// Exercises & Protocols
 			route("exercises", "pages/Exercises.tsx"),
 			route("protocols", "pages/Protocols.tsx"),
-			route("templates", "pages/Templates.tsx"),
+
 
 			// Settings
 			route("settings", "pages/Settings.tsx"),
