@@ -41,25 +41,3 @@ export const activityLabApi = {
 			),
 	},
 };
-
-const DICOM_DEPRECATED_MESSAGE =
-	"O fluxo DICOM/PACS foi descontinuado no produto web. Use o hub biomecanico com imagens e videos comuns.";
-
-function dicomDeprecated(): never {
-	throw new Error(DICOM_DEPRECATED_MESSAGE);
-}
-
-export const dicomApi = {
-	studies: async () => dicomDeprecated(),
-	series: async () => dicomDeprecated(),
-	instances: async () => dicomDeprecated(),
-	uploadInstances: async () => dicomDeprecated(),
-	config: async () => ({
-		data: {
-			enabled: false,
-			deprecated: true,
-			message: DICOM_DEPRECATED_MESSAGE,
-		},
-	}),
-	getWadoUrl: () => dicomDeprecated(),
-};
