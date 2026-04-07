@@ -9,19 +9,19 @@ export async function loadTfjsPoseRuntime(): Promise<TfjsCore> {
 				import("@tensorflow/tfjs-core"),
 				import("@tensorflow/tfjs-converter"),
 				import("@tensorflow/tfjs-backend-webgl"),
-				import("@tensorflow/tfjs-backend-cpu"),
 			]);
-
-			await tf.ready();
 
 			const currentBackend = tf.getBackend();
 			if (!currentBackend) {
 				try {
 					await tf.setBackend("webgl");
 				} catch {
+					await import("@tensorflow/tfjs-backend-cpu");
 					await tf.setBackend("cpu");
 				}
 			}
+
+			await tf.ready();
 
 			return tf;
 		})().catch((error) => {

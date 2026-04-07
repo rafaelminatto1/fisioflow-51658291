@@ -1,6 +1,5 @@
-import React, { useState } from "react";
+import React, { Suspense, lazy, useState } from "react";
 import { MainLayout } from "@/components/layout/MainLayout";
-import { ServerSideVideoAnalyzer } from "@/components/analysis/video/ServerSideVideoAnalyzer";
 import { AssessmentInstruction } from "@/components/clinical/AssessmentInstruction";
 import { 
 	Video, 
@@ -20,6 +19,12 @@ import { Card, CardContent } from "@/components/ui/card";
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import { biomechanicsProtocols } from "@/data/biomechanicsEvidence";
+
+const ServerSideVideoAnalyzer = lazy(() =>
+	import("@/components/analysis/video/ServerSideVideoAnalyzer").then((module) => ({
+		default: module.ServerSideVideoAnalyzer,
+	})),
+);
 
 type HubMode = keyof Pick<
 	typeof biomechanicsProtocols,
@@ -197,15 +202,64 @@ export default function BiomechanicsAnalysisPage() {
 				const protocol = biomechanicsProtocols[selectedTest];
                 const routeInfo = categories.find(c => c.id === selectedTest)?.route;
 				return (
-					<AssessmentInstruction
-						testId={`${selectedTest}-guided-protocol`}
-						title={protocol.title}
-						steps={protocol.executionSteps}
-						positioning={protocol.captureAngles.join(" • ")}
-						onStart={() => {
-                            if (routeInfo) navigate(routeInfo);
-                        }}
-					/>
+					<div className="space-y-6">
+						<AssessmentInstruction
+							testId={`${selectedTest}-guided-protocol`}
+							title={protocol.title}
+							steps={protocol.executionSteps}
+							positioning={protocol.captureAngles.join(" • ")}
+							onStart={() => {
+	                            if (routeInfo) navigate(routeInfo);
+	                        }}
+						/>
+						<div className="grid gap-4 lg:grid-cols-2">
+							{protocol.guidedTemplates.map((template) => (
+								<Card
+									key={template.id}
+									className="border-white/10 bg-slate-950/40 backdrop-blur-xl"
+								>
+									<CardContent className="space-y-4 p-5">
+										<div className="space-y-2">
+											<p className="text-[10px] font-black uppercase tracking-widest text-primary/70">
+												Template guiado
+											</p>
+											<h3 className="text-lg font-black tracking-tight text-white">
+												{template.title}
+											</h3>
+											<p className="text-sm text-slate-400">{template.goal}</p>
+										</div>
+										<div className="space-y-2 text-sm text-slate-300">
+											<p>
+												<span className="font-bold text-slate-100">
+													Captura:
+												</span>{" "}
+												{template.capturePreset}
+											</p>
+											<p>
+												<span className="font-bold text-slate-100">
+													Ideal para:
+												</span>{" "}
+												{template.idealFor}
+											</p>
+										</div>
+										<ul className="space-y-1 text-sm text-slate-400">
+											{template.checklist.map((item) => (
+												<li key={item}>• {item}</li>
+											))}
+										</ul>
+										<Button
+											className="w-full"
+											onClick={() => {
+												if (routeInfo) navigate(routeInfo);
+											}}
+										>
+											Abrir análise
+										</Button>
+									</CardContent>
+								</Card>
+							))}
+						</div>
+					</div>
 				);
 			case "library":
 				return (
@@ -220,7 +274,15 @@ export default function BiomechanicsAnalysisPage() {
 							</Button>
 						</div>
 						<div className="bg-card border shadow-sm rounded-2xl p-4">
-							<ServerSideVideoAnalyzer exerciseName="Biomecânica Livre" />
+							<Suspense
+								fallback={
+									<div className="flex min-h-[360px] items-center justify-center rounded-2xl border border-dashed bg-muted/20 text-sm text-muted-foreground">
+										Carregando biblioteca de vídeos...
+									</div>
+								}
+							>
+								<ServerSideVideoAnalyzer exerciseName="Biomecânica Livre" />
+							</Suspense>
 						</div>
 						<p className="text-[10px] text-muted-foreground text-center">
 							Vídeos são salvos no R2 (media.moocafisio.com.br) e analisados pelo Gemini 1.5 Pro
