@@ -1,3 +1,4 @@
+import { useEffect } from "react";
 import { Outlet, useLocation } from "react-router-dom";
 import { NetworkStatus } from "@/components/ui/network-status";
 import { SyncManager } from "@/components/sync/SyncManager";
@@ -56,8 +57,6 @@ function isPublicBootPath(pathname: string): boolean {
 
 // Pose preload helper
 const POSE_BOOT_PATH_PREFIXES = [
-	"/biomechanics",
-	"/clinical/biomechanics",
 	"/computer-vision",
 	"/augmented-reality",
 	"/dashboard/imagens",

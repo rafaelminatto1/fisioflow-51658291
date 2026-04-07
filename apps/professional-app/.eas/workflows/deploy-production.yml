@@ -1,0 +1,55 @@
+name: Deploy to Production (Smart)
+
+# Roda ao fazer push na main.
+# Usa fingerprint para decidir automaticamente:
+#   - Só JS mudou → publica OTA update (NÃO gasta build)
+#   - Código nativo mudou → faz novo build + submete App Store
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  # 1. Calcula o fingerprint do código nativo atual
+  fingerprint:
+    name: Compute Fingerprint
+    type: fingerprint
+
+  # 2. Verifica se já existe um build iOS com esse fingerprint
+  get_ios_build:
+    name: Check existing iOS build
+    needs: [fingerprint]
+    type: get-build
+    params:
+      fingerprint_hash: ${{ needs.fingerprint.outputs.ios_fingerprint_hash }}
+      profile: production
+
+  # 3a. Se NÃO existe build compatível → cria novo build nativo
+  build_ios:
+    name: Build iOS (native changed)
+    needs: [get_ios_build]
+    if: ${{ !needs.get_ios_build.outputs.build_id }}
+    type: build
+    params:
+      platform: ios
+      profile: production
+
+  # 4a. Submete o novo build para o App Store
+  submit_ios:
+    name: Submit to App Store
+    needs: [build_ios]
+    type: submit
+    params:
+      build_id: ${{ needs.build_ios.outputs.build_id }}
+      platform: ios
+
+  # 3b. Se JÁ existe build compatível → publica OTA update (não gasta build!)
+  publish_ios_update:
+    name: Publish OTA update (JS only)
+    needs: [get_ios_build]
+    if: ${{ needs.get_ios_build.outputs.build_id }}
+    type: update
+    params:
+      branch: production
+      platform: ios
+      message: "OTA deploy from main"

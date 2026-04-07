@@ -390,34 +390,41 @@ export default function AppointmentFormScreen() {
               name="date"
               render={({ field: { value, onChange } }) => (
                 <View>
-                  <TouchableOpacity
-                    style={[styles.pickerButton, { borderColor: colors.border, backgroundColor: colors.surface }]}
-                    onPress={() => setShowDatePicker(true)}
-                  >
-                    <Ionicons name="calendar-outline" size={20} color={colors.textSecondary} />
-                    <Text style={[styles.pickerText, { color: colors.text }]}>{value || 'DD/MM/AAAA'}</Text>
-                  </TouchableOpacity>
-                  {showDatePicker && (
-                    <DateTimePicker
-                      value={parseDateString(value)}
-                      mode="date"
-                      locale="pt-BR"
-                      display={Platform.OS === 'ios' ? 'spinner' : 'default'}
-                      onChange={(_e, date) => {
-                        if (Platform.OS !== 'ios') setShowDatePicker(false);
-                        if (date) {
-                          onChange(format(date, 'dd/MM/yyyy'));
-                        }
-                      }}
-                    />
-                  )}
-                  {Platform.OS === 'ios' && showDatePicker && (
-                    <Button 
-                      title="Confirmar Data" 
-                      onPress={() => setShowDatePicker(false)} 
-                      style={styles.confirmPickerButton} 
-                      variant="secondary" 
-                    />
+                  {Platform.OS === 'ios' ? (
+                    <View style={[styles.pickerButton, { borderColor: colors.border, backgroundColor: colors.surface }]}>
+                      <Ionicons name="calendar-outline" size={20} color={colors.textSecondary} />
+                      <DateTimePicker
+                        value={parseDateString(value)}
+                        mode="date"
+                        locale="pt-BR"
+                        display="compact"
+                        style={{ flex: 1 }}
+                        onChange={(_e, date) => {
+                          if (date) onChange(format(date, 'dd/MM/yyyy'));
+                        }}
+                      />
+                    </View>
+                  ) : (
+                    <>
+                      <TouchableOpacity
+                        style={[styles.pickerButton, { borderColor: colors.border, backgroundColor: colors.surface }]}
+                        onPress={() => setShowDatePicker(true)}
+                      >
+                        <Ionicons name="calendar-outline" size={20} color={colors.textSecondary} />
+                        <Text style={[styles.pickerText, { color: colors.text }]}>{value || 'DD/MM/AAAA'}</Text>
+                      </TouchableOpacity>
+                      {showDatePicker && (
+                        <DateTimePicker
+                          value={parseDateString(value)}
+                          mode="date"
+                          display="default"
+                          onChange={(_e, date) => {
+                            setShowDatePicker(false);
+                            if (date) onChange(format(date, 'dd/MM/yyyy'));
+                          }}
+                        />
+                      )}
+                    </>
                   )}
                 </View>
               )}
@@ -431,35 +438,43 @@ export default function AppointmentFormScreen() {
               name="time"
               render={({ field: { value, onChange } }) => (
                 <View>
-                  <TouchableOpacity
-                    style={[styles.pickerButton, { borderColor: colors.border, backgroundColor: colors.surface }]}
-                    onPress={() => setShowTimePicker(true)}
-                  >
-                    <Ionicons name="time-outline" size={20} color={colors.textSecondary} />
-                    <Text style={[styles.pickerText, { color: colors.text }]}>{value || 'HH:MM'}</Text>
-                  </TouchableOpacity>
-                  {showTimePicker && (
-                    <DateTimePicker
-                      value={parseTimeString(value)}
-                      mode="time"
-                      is24Hour={true}
-                      locale="pt-BR"
-                      display={Platform.OS === 'ios' ? 'spinner' : 'default'}
-                      onChange={(_e, date) => {
-                        if (Platform.OS !== 'ios') setShowTimePicker(false);
-                        if (date) {
-                          onChange(format(date, 'HH:mm'));
-                        }
-                      }}
-                    />
-                  )}
-                  {Platform.OS === 'ios' && showTimePicker && (
-                    <Button 
-                      title="Confirmar Horário" 
-                      onPress={() => setShowTimePicker(false)} 
-                      style={styles.confirmPickerButton} 
-                      variant="secondary" 
-                    />
+                  {Platform.OS === 'ios' ? (
+                    <View style={[styles.pickerButton, { borderColor: colors.border, backgroundColor: colors.surface }]}>
+                      <Ionicons name="time-outline" size={20} color={colors.textSecondary} />
+                      <DateTimePicker
+                        value={parseTimeString(value)}
+                        mode="time"
+                        is24Hour={true}
+                        locale="pt-BR"
+                        display="compact"
+                        style={{ flex: 1 }}
+                        onChange={(_e, date) => {
+                          if (date) onChange(format(date, 'HH:mm'));
+                        }}
+                      />
+                    </View>
+                  ) : (
+                    <>
+                      <TouchableOpacity
+                        style={[styles.pickerButton, { borderColor: colors.border, backgroundColor: colors.surface }]}
+                        onPress={() => setShowTimePicker(true)}
+                      >
+                        <Ionicons name="time-outline" size={20} color={colors.textSecondary} />
+                        <Text style={[styles.pickerText, { color: colors.text }]}>{value || 'HH:MM'}</Text>
+                      </TouchableOpacity>
+                      {showTimePicker && (
+                        <DateTimePicker
+                          value={parseTimeString(value)}
+                          mode="time"
+                          is24Hour={true}
+                          display="default"
+                          onChange={(_e, date) => {
+                            setShowTimePicker(false);
+                            if (date) onChange(format(date, 'HH:mm'));
+                          }}
+                        />
+                      )}
+                    </>
                   )}
                 </View>
               )}
