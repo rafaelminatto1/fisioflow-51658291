@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
-import { Sparkles, Loader2, Mic, StopCircle } from "lucide-react";
+import { Sparkles, Loader2, Mic, StopCircle, BookOpen } from "lucide-react";
 import { cn } from "@/lib/utils";
 import {
 	Tooltip,
@@ -11,6 +11,7 @@ import {
 } from "@/components/ui/tooltip";
 import { useAudioRecorder } from "@/hooks/useAudioRecorder";
 import { aiApi } from "@/api/v2";
+import { BilingualSuggestionsModal } from "../evolution/suggestion/BilingualSuggestionsModal";
 
 interface MagicTextareaProps
 	extends React.TextareaHTMLAttributes<HTMLTextAreaElement> {
@@ -25,6 +26,7 @@ export function MagicTextarea({
 	...props
 }: MagicTextareaProps) {
 	const [loading, setLoading] = useState(false);
+	const [isSearchOpen, setIsSearchOpen] = useState(false);
 	const { isRecording, startRecording, stopRecording } = useAudioRecorder();
 
 	const blobToBase64 = (blob: Blob): Promise<string> => {
@@ -90,13 +92,35 @@ export function MagicTextarea({
 		}
 	};
 
+	const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
+		// Detectar /sugestoes
+		if (e.key === "Enter" || e.key === " ") {
+			const lastWord = value.split(/[\s\n]+/).pop();
+			if (lastWord === "/sugestoes") {
+				e.preventDefault();
+				// Remove o comando do texto
+				const newValue = value.slice(0, -10).trim();
+				onValueChange(newValue);
+				setIsSearchOpen(true);
+			}
+		}
+		// Também permite props.onKeyDown se existir
+		props.onKeyDown?.(e);
+	};
+
+	const handleSearchSelect = (term: string) => {
+		const newValue = value ? `${value}\n${term}` : term;
+		onValueChange(newValue);
+	};
+
 	return (
 		<div className="relative group">
 			<Textarea
 				value={value}
 				onChange={(e) => onValueChange(e.target.value)}
+				onKeyDown={handleKeyDown}
 				className={cn(
-					"pr-20 transition-all focus:ring-purple-500/20",
+					"pr-24 transition-all focus:ring-purple-500/20",
 					className,
 				)}
 				{...props}
@@ -156,7 +180,32 @@ export function MagicTextarea({
 							<p>Melhorar texto com IA (Groq)</p>
 						</TooltipContent>
 					</Tooltip>
+
+					{/* Botão de Dicionário Clínico (Bilingue) */}
+					<Tooltip>
+						<TooltipTrigger asChild>
+							<Button
+								type="button"
+								size="icon"
+								variant="ghost"
+								className="h-8 w-8 hover:bg-blue-100 text-blue-600 rounded-full"
+								onClick={() => setIsSearchOpen(true)}
+								disabled={isRecording}
+							>
+								<BookOpen className="h-4 w-4" />
+							</Button>
+						</TooltipTrigger>
+						<TooltipContent>
+							<p>Dicionário Clínico Bilingue (/sugestoes)</p>
+						</TooltipContent>
+					</Tooltip>
 				</TooltipProvider>
+
+				<BilingualSuggestionsModal 
+					open={isSearchOpen}
+					onOpenChange={setIsSearchOpen}
+					onSelect={handleSearchSelect}
+				/>
 			</div>
 		</div>
 	);

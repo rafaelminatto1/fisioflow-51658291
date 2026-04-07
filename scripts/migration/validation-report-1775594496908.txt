@@ -1,0 +1,104 @@
+=== RELATÓRIO DE VALIDAÇÃO DE IMAGENS DE EXERCÍCIOS ===
+Data/Hora: 07/04/2026, 17:41:36
+
+RESUMO:
+- Total de exercícios: 329
+- Com imagens funcionando: 267
+- Com imagens quebradas: 22
+- Sem imagens: 40
+
+FORMATOS:
+- AVIF: 209
+- PNG: 0
+- WebP: 0
+
+IMAGENS QUEBRADAS:
+
+Alongamento de Tríceps por Trás (8e3d37be-eb88-4a4a-8891-6fb0ee9f0ac3)
+  Imagem: https://media.fisioflow.com.br/exercises/8e3d37be-eb88-4a4a-8891-6fb0ee9f0ac3/image.avif - Status: -1
+  Thumbnail: https://fisioflow-media.r2.dev/exercises/8e3d37be-eb88-4a4a-8891-6fb0ee9f0ac3/thumbnail.avif - Status: 500
+
+Face Pull (3b2a0999-9ba6-4f4f-a037-bfb94551622f)
+  Imagem: https://media.fisioflow.com.br/exercises/3b2a0999-9ba6-4f4f-a037-bfb94551622f/image.avif - Status: -1
+  Thumbnail: https://fisioflow-media.r2.dev/exercises/3b2a0999-9ba6-4f4f-a037-bfb94551622f/thumbnail.avif - Status: 500
+
+Ponte Unilateral (ccb7432a-6bb0-403d-8db5-fa1cb03f00ff)
+  Imagem: https://media.fisioflow.com.br/exercises/ccb7432a-6bb0-403d-8db5-fa1cb03f00ff/image.avif - Status: -1
+  Thumbnail: https://fisioflow-media.r2.dev/exercises/ccb7432a-6bb0-403d-8db5-fa1cb03f00ff/thumbnail.avif - Status: 500
+
+Respiração com Labios Franzidos (Pursed Lip) (f9b5eb0c-34f0-47ae-a5a4-c0f723a86cea)
+  Imagem: https://media.fisioflow.com.br/exercises/f9b5eb0c-34f0-47ae-a5a4-c0f723a86cea/image.avif - Status: -1
+  Thumbnail: https://fisioflow-media.r2.dev/exercises/f9b5eb0c-34f0-47ae-a5a4-c0f723a86cea/thumbnail.avif - Status: 500
+
+Mobilidade de Coluna (1475a829-62a0-4c98-8b23-2f62672f7e50)
+  Imagem: https://media.fisioflow.com.br/exercises/1475a829-62a0-4c98-8b23-2f62672f7e50/image.avif - Status: -1
+  Thumbnail: https://fisioflow-media.r2.dev/exercises/1475a829-62a0-4c98-8b23-2f62672f7e50/thumbnail.avif - Status: 500
+
+Pallof Press (89fe1888-aa91-4dbb-9372-64b702e67aa0)
+  Imagem: https://media.fisioflow.com.br/exercises/89fe1888-aa91-4dbb-9372-64b702e67aa0/image.avif - Status: -1
+  Thumbnail: https://fisioflow-media.r2.dev/exercises/89fe1888-aa91-4dbb-9372-64b702e67aa0/thumbnail.avif - Status: 500
+
+Bird-dog (Cachorro e Pássaro) (e05cb78b-bcaa-41d0-a9e6-6fe6db307b51)
+  Imagem: https://media.fisioflow.com.br/exercises/e05cb78b-bcaa-41d0-a9e6-6fe6db307b51/image.avif - Status: -1
+  Thumbnail: https://fisioflow-media.r2.dev/exercises/e05cb78b-bcaa-41d0-a9e6-6fe6db307b51/thumbnail.avif - Status: 500
+
+Extensão de Ombro em Pronação (e33feda9-054e-4da4-9dda-1e464b59292c)
+  Imagem: https://media.fisioflow.com.br/exercises/e33feda9-054e-4da4-9dda-1e464b59292c/image.avif - Status: -1
+  Thumbnail: https://fisioflow-media.r2.dev/exercises/e33feda9-054e-4da4-9dda-1e464b59292c/thumbnail.avif - Status: 500
+
+Levantamento Terra (5637ceb1-b46e-4d29-9bc9-d8a3afbe4ff6)
+  Imagem: https://media.fisioflow.com.br/exercises/5637ceb1-b46e-4d29-9bc9-d8a3afbe4ff6/image.avif - Status: -1
+  Thumbnail: https://fisioflow-media.r2.dev/exercises/5637ceb1-b46e-4d29-9bc9-d8a3afbe4ff6/thumbnail.avif - Status: 500
+
+Agachamento Livre (3f5ce2d6-5a7e-4bc2-b048-cd2144afee7b)
+  Imagem: https://media.fisioflow.com.br/exercises/3f5ce2d6-5a7e-4bc2-b048-cd2144afee7b/image.avif - Status: -1
+  Thumbnail: https://fisioflow-media.r2.dev/exercises/3f5ce2d6-5a7e-4bc2-b048-cd2144afee7b/thumbnail.avif - Status: 500
+
+Alongamento de Panturrilha Sentado (Sóleo) (46065bd9-070c-48c0-89c2-74dcab4de78e)
+  Imagem: https://media.fisioflow.com.br/exercises/46065bd9-070c-48c0-89c2-74dcab4de78e/image.avif - Status: -1
+  Thumbnail: https://fisioflow-media.r2.dev/exercises/46065bd9-070c-48c0-89c2-74dcab4de78e/thumbnail.avif - Status: 500
+
+Ponte de Glúteo Unilateral (26b81426-b061-4050-a7d2-a77eb62208c4)
+  Imagem: https://media.fisioflow.com.br/exercises/26b81426-b061-4050-a7d2-a77eb62208c4/image.avif - Status: -1
+  Thumbnail: https://fisioflow-media.r2.dev/exercises/26b81426-b061-4050-a7d2-a77eb62208c4/thumbnail.avif - Status: 500
+
+Remada Curvada (Barbell Row) (54a5abf8-892a-4ee7-a1ba-860b956e7eb7)
+  Imagem: https://media.fisioflow.com.br/exercises/54a5abf8-892a-4ee7-a1ba-860b956e7eb7/image.avif - Status: -1
+  Thumbnail: https://fisioflow-media.r2.dev/exercises/54a5abf8-892a-4ee7-a1ba-860b956e7eb7/thumbnail.avif - Status: 500
+
+Alongamento de Panturrilha na Parede (81b9bb61-e0b5-4736-88a6-2a635d9a908b)
+  Imagem: https://media.fisioflow.com.br/exercises/81b9bb61-e0b5-4736-88a6-2a635d9a908b/image.avif - Status: -1
+  Thumbnail: https://fisioflow-media.r2.dev/exercises/81b9bb61-e0b5-4736-88a6-2a635d9a908b/thumbnail.avif - Status: 500
+
+Mobilização Cervical com Toalha (a644a383-289e-4fb9-9a1b-3f1513b29872)
+  Imagem: https://media.fisioflow.com.br/exercises/a644a383-289e-4fb9-9a1b-3f1513b29872/image.avif - Status: -1
+  Thumbnail: https://fisioflow-media.r2.dev/exercises/a644a383-289e-4fb9-9a1b-3f1513b29872/thumbnail.avif - Status: 500
+
+Isometria Cervical (Extensão) (e93d18c5-6f31-4f4b-b76f-da556d762cb4)
+  Imagem: https://media.fisioflow.com.br/exercises/e93d18c5-6f31-4f4b-b76f-da556d762cb4/image.avif - Status: -1
+  Thumbnail: https://fisioflow-media.r2.dev/exercises/e93d18c5-6f31-4f4b-b76f-da556d762cb4/thumbnail.avif - Status: 500
+
+Inversão de Tornozelo com Faixa (3772c13d-9a3f-4938-96e4-b33d725e4346)
+  Imagem: https://media.fisioflow.com.br/exercises/3772c13d-9a3f-4938-96e4-b33d725e4346/image.avif - Status: -1
+  Thumbnail: https://fisioflow-media.r2.dev/exercises/3772c13d-9a3f-4938-96e4-b33d725e4346/thumbnail.avif - Status: 500
+
+Alongamento de Glúteo Supino (5ce76038-76ef-43d6-8455-60290a618ff0)
+  Imagem: https://media.fisioflow.com.br/exercises/5ce76038-76ef-43d6-8455-60290a618ff0/image.avif - Status: -1
+  Thumbnail: https://fisioflow-media.r2.dev/exercises/5ce76038-76ef-43d6-8455-60290a618ff0/thumbnail.avif - Status: 500
+
+Alongamento de Piriforme (4 Supino) (b2c15717-dfe9-4078-a678-0ece6f3a1ec1)
+  Imagem: https://media.fisioflow.com.br/exercises/b2c15717-dfe9-4078-a678-0ece6f3a1ec1/image.avif - Status: -1
+  Thumbnail: https://fisioflow-media.r2.dev/exercises/b2c15717-dfe9-4078-a678-0ece6f3a1ec1/thumbnail.avif - Status: 500
+
+Elevação Frontal de Ombro (9cc3f8a7-4e9b-4ad0-82c7-6e4c8e451002)
+  Imagem: https://media.fisioflow.com.br/exercises/9cc3f8a7-4e9b-4ad0-82c7-6e4c8e451002/image.avif - Status: -1
+  Thumbnail: https://fisioflow-media.r2.dev/exercises/9cc3f8a7-4e9b-4ad0-82c7-6e4c8e451002/thumbnail.avif - Status: 500
+
+Huff Cough (59933cf5-7599-43de-8f69-606575f91b4f)
+  Imagem: https://media.fisioflow.com.br/exercises/59933cf5-7599-43de-8f69-606575f91b4f/image.avif - Status: -1
+  Thumbnail: https://fisioflow-media.r2.dev/exercises/59933cf5-7599-43de-8f69-606575f91b4f/thumbnail.avif - Status: 500
+
+Rotação de Ombro com Toalha (23fb8e81-b882-46f7-b923-db6cab7ae954)
+  Imagem: https://media.fisioflow.com.br/exercises/23fb8e81-b882-46f7-b923-db6cab7ae954/image.avif - Status: -1
+  Thumbnail: https://fisioflow-media.r2.dev/exercises/23fb8e81-b882-46f7-b923-db6cab7ae954/thumbnail.avif - Status: 500
+

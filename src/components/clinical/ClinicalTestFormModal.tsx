@@ -16,7 +16,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
+import { MagicTextarea } from "@/components/ai/MagicTextarea";
 import {
 	Select,
 	SelectContent,
@@ -325,42 +325,45 @@ export function ClinicalTestFormModal({
 							{/* Purpose */}
 							<div>
 								<Label htmlFor="purpose">Propósito</Label>
-								<Textarea
+								<MagicTextarea
 									id="purpose"
-									value={formData.purpose}
-									onChange={(e) =>
-										setFormData({ ...formData, purpose: e.target.value })
+									value={formData.purpose || ""}
+									onValueChange={(val) =>
+										setFormData({ ...formData, purpose: val })
 									}
 									placeholder="Descreva o objetivo clínico do teste..."
 									rows={2}
+									className="bg-muted/30 border-transparent focus:bg-background focus:border-input transition-all"
 								/>
 							</div>
 
 							{/* Execution */}
 							<div>
 								<Label htmlFor="execution">Execução</Label>
-								<Textarea
+								<MagicTextarea
 									id="execution"
-									value={formData.execution}
-									onChange={(e) =>
-										setFormData({ ...formData, execution: e.target.value })
+									value={formData.execution || ""}
+									onValueChange={(val) =>
+										setFormData({ ...formData, execution: val })
 									}
 									placeholder="Descreva passo a passo como realizar o teste..."
 									rows={3}
+									className="bg-muted/30 border-transparent focus:bg-background focus:border-input transition-all"
 								/>
 							</div>
 
 							{/* Positive Sign */}
 							<div>
 								<Label htmlFor="positive_sign">Interpretação Positiva</Label>
-								<Textarea
+								<MagicTextarea
 									id="positive_sign"
 									value={formData.positive_sign || ""}
-									onChange={(e) =>
-										setFormData({ ...formData, positive_sign: e.target.value })
+									onValueChange={(val) =>
+										setFormData({ ...formData, positive_sign: val })
 									}
 									placeholder="O que indica um resultado positivo..."
 									rows={2}
+									className="bg-muted/30 border-transparent focus:bg-background focus:border-input transition-all"
 								/>
 							</div>
 
@@ -520,11 +523,11 @@ export function ClinicalTestFormModal({
 									<Video className="h-4 w-4" /> Vídeos (URLs, separadas por
 									vírgula)
 								</Label>
-								<Textarea
+								<MagicTextarea
 									id="media_urls"
 									value={formData.media_urls?.join(", ") || ""}
-									onChange={(e) => {
-										const urls = e.target.value
+									onValueChange={(val) => {
+										const urls = val
 											.split(",")
 											.map((u) => u.trim())
 											.filter(Boolean);
@@ -532,6 +535,7 @@ export function ClinicalTestFormModal({
 									}}
 									placeholder="https://www.youtube.com/watch?v=..., https://vimeo.com/..."
 									rows={3}
+									className="bg-muted/30 border-transparent focus:bg-background focus:border-input transition-all"
 								/>
 								<p className="text-xs text-slate-500 mt-1">
 									Adicione links de vídeos demonstrativos da execução do teste.

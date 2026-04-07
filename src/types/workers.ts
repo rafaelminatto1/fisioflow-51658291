@@ -1519,3 +1519,141 @@ export interface FinancialReportResponse {
 		}>;
 	};
 }
+
+export interface AnalyticsExerciseUsage {
+	exercise_id: string;
+	name: string;
+	usage_count: number;
+}
+
+export interface AnalyticsPainRegion {
+	region: string;
+	count: number;
+	avg_intensity: number;
+}
+
+export interface IntelligentReportRecord {
+	id: string;
+	patient_id: string;
+	type: string;
+	status: string;
+	created_at: string;
+}
+
+export interface IntelligentReportResponse {
+	id: string;
+	type: string;
+	content: string;
+	generated_at: string;
+}
+
+export interface PatientEvolutionPoint {
+	date: string;
+	value: number;
+	label: string;
+}
+
+export interface PatientProgressSummary {
+	adherence_rate: number;
+	improvement_percentage: number;
+	next_milestone?: string;
+}
+
+export interface PatientLifecycleEvent {
+	id: string;
+	patient_id: string;
+	event_type: string;
+	event_date: string;
+	notes?: string;
+}
+
+export interface PatientOutcomeMeasure {
+	id: string;
+	patient_id: string;
+	measure_type: string;
+	measure_name: string;
+	score: number;
+	measurement_date: string;
+}
+
+export interface PatientSessionMetrics {
+	id: string;
+	session_id?: string;
+	pain_before?: number;
+	pain_after?: number;
+	duration_minutes?: number;
+}
+
+export interface PatientRiskScore {
+	patient_id: string;
+	risk_score: number;
+	factors: string[];
+}
+
+export interface PatientInsight {
+	id: string;
+	type: string;
+	message: string;
+	priority: "low" | "medium" | "high";
+	acknowledged: boolean;
+}
+
+export interface PatientGoalTracking {
+	id: string;
+	description: string;
+	target_value?: number;
+	current_value?: number;
+	status: string;
+}
+
+export interface ClinicalBenchmark {
+	id: string;
+	metric_name: string;
+	category: string;
+	average_value: number;
+}
+
+export interface MLTrainingData {
+	id: string;
+	patient_id: string;
+	features: Record<string, unknown>;
+	label: unknown;
+}
+
+export interface MlTrainingStats {
+	total_records: number;
+	model_accuracy: number;
+}
+
+export interface MlTrainingPatientRecord {
+	id: string;
+	patient_name: string;
+	last_train_date: string;
+}
+
+export interface PopulationHealthResponse {
+	total_patients: number;
+	prevalent_conditions: Array<{ name: string; count: number }>;
+}
+
+export interface InventoryItemRow {
+	id: string;
+	name: string;
+	quantity: number;
+	min_quantity?: number;
+}
+
+export interface InventoryMovementRow {
+	id: string;
+	item_id: string;
+	type: "in" | "out";
+	quantity: number;
+}
+
+export interface WhatsAppExerciseQueueRow {
+	id: string;
+	patient_id: string;
+	exercise_id: string;
+	scheduled_at: string;
+	status: "pending" | "sent" | "failed";
+}

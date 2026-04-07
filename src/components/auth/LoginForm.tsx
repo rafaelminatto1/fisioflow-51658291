@@ -42,7 +42,7 @@ const loginSchema = z.object({
 			error: "Senha deve ser uma string",
 		})
 		.min(1, "Senha é obrigatória")
-		.min(6, "Senha deve ter no mínimo 6 caracteres")
+		.min(8, "Senha deve ter no mínimo 8 caracteres")
 		.max(128, "Senha muito longa"),
 });
 

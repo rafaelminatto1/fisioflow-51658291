@@ -43,7 +43,7 @@ export const signUpSchema = z
 // Schema para login
 export const signInSchema = z.object({
 	email: emailSchema,
-	password: z.string().min(1, "Senha é obrigatória"),
+	password: z.string().min(8, "Senha deve ter no mínimo 8 caracteres"),
 });
 
 export type SignUpInput = z.infer<typeof signUpSchema>;
