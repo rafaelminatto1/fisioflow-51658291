@@ -14,6 +14,7 @@ import { Tabs, TabsContent } from "@/components/ui/tabs";
 import { LoadingSkeleton } from "@/components/ui/loading-skeleton";
 import { useCommandPalette } from "@/hooks/ui/useCommandPalette";
 import { PatientHelpers } from "@/types";
+import { FileText, Activity, Layers, History, Bot, Settings as SettingsIcon } from "lucide-react";
 
 // Hooks Modulares
 import { usePatientEvolutionState } from "@/hooks/evolution/usePatientEvolutionState";
@@ -68,6 +69,11 @@ const LazyAssistenteTab = lazy(() =>
 const LazyPROMsDashboard = lazy(() =>
 	import("@/components/clinical/PROMs/PROMsDashboard").then((m) => ({
 		default: m.PROMsDashboard,
+	})),
+);
+const LazyEvolutionSettingsTab = lazy(() =>
+	import("@/components/evolution/v3-notion/EvolutionSettingsTab").then((m) => ({
+		default: m.EvolutionSettingsTab,
 	})),
 );
 
@@ -198,7 +204,7 @@ const PatientEvolution = () => {
 							g.status !== "concluido" &&
 							g.target_date &&
 							new Date(g.target_date) < new Date(),
-					)}
+					).map((g: any) => ({ ...g, title: g.goal_title }))}
 					painScale={state.painScale}
 					upcomingGoals={state.goals.filter(
 						(g: any) =>
@@ -206,7 +212,7 @@ const PatientEvolution = () => {
 							g.target_date &&
 							new Date(g.target_date) >= new Date() &&
 							new Date(g.target_date) <= new Date(Date.now() + 3 * 86400000),
-					)}
+					).map((g: any) => ({ ...g, title: g.goal_title }))}
 					daysSinceLastEvolution={
 						state.previousEvolutions.length > 0
 							? Math.floor(
@@ -221,7 +227,9 @@ const PatientEvolution = () => {
 					sessionDurationMinutes={Math.floor(
 						(Date.now() - new Date().getTime()) / 60000,
 					)}
-					activePathologies={state.activePathologies}
+					sessionLongAlertShown={false}
+					painTrend={null}
+					activePathologies={state.activePathologies.map((p: any) => ({ id: p.id, name: p.pathology_name }))}
 					previousEvolutionsCount={state.previousEvolutions.length}
 					onTabChange={(v) => state.setActiveTab(v as EvolutionTab)}
 				/>
@@ -376,14 +384,25 @@ const PatientEvolution = () => {
 				</div>
 			</MainLayout>
 		);
+	
+	const pendingRequiredMeasurements = state.requiredMeasurements?.filter((rm: any) => 
+		!state.measurements?.some((m: any) => m.measurement_name === rm.measurement_name)
+	) || [];
+
+	const measurementsByType = (state.measurements || []).reduce((acc: any, current: any) => {
+		const type = current.measurement_type || 'outros';
+		if (!acc[type]) acc[type] = [];
+		acc[type].push(current);
+		return acc;
+	}, {});
 
 	return (
 		<ComponentErrorBoundary componentName="PatientEvolution">
 			<MainLayout maxWidth="full" compactPadding>
 				<div className="space-y-5 animate-fade-in pb-8">
 					<EvolutionHeader
-						patient={state.patient}
-						appointment={state.appointment}
+						patient={state.patient as any}
+						appointment={state.appointment as any}
 						evolutionStats={evolutionStats}
 						treatmentDuration={treatmentDuration}
 						onSave={handlers.handleSave}
@@ -406,6 +425,14 @@ const PatientEvolution = () => {
 						onShowTemplateModal={() => state.setShowApplyTemplate(true)}
 						onShowKeyboardHelp={() => state.setShowKeyboardHelp(true)}
 						previousEvolutionsCount={state.previousEvolutions.length}
+						tabsConfig={[
+							{ value: "evolucao", label: "Evolução", shortLabel: "Evol", icon: FileText, description: "Evolução clínica" },
+							{ value: "avaliacao", label: "Avaliação", shortLabel: "Aval", icon: Activity, description: "Testes e medições" },
+							{ value: "tratamento", label: "Tratamento", shortLabel: "Trat", icon: Layers, description: "Condutas e intervenções" },
+							{ value: "historico", label: "Histórico", shortLabel: "Hist", icon: History, description: "Sessões anteriores" },
+							{ value: "assistente", label: "Assistente", shortLabel: "IA", icon: Bot, description: "Assistente de IA" },
+							{ value: "configuracoes", label: "Ajustes", shortLabel: "Ajustes", icon: SettingsIcon, description: "Configurações da Evolução" }
+						]}
 					/>
 
 					<Tabs
@@ -428,6 +455,9 @@ const PatientEvolution = () => {
 									patientId={state.patientId!}
 									appointmentId={state.appointmentId!}
 									todayMeasurements={state.measurements}
+									requiredMeasurements={state.requiredMeasurements}
+									pendingRequiredMeasurements={pendingRequiredMeasurements}
+									measurementsByType={measurementsByType}
 								/>
 							</Suspense>
 						</TabsContent>
@@ -437,6 +467,8 @@ const PatientEvolution = () => {
 									sessionExercises={state.sessionExercises}
 									onExercisesChange={state.setSessionExercises}
 									patientId={state.patientId!}
+									goals={state.goals}
+									pathologies={state.pathologies}
 								/>
 							</Suspense>
 						</TabsContent>
@@ -446,6 +478,9 @@ const PatientEvolution = () => {
 									patientId={state.patientId!}
 									previousEvolutions={state.previousEvolutions}
 									onCopyEvolution={handlers.handleCopyPreviousEvolution}
+									surgeries={state.surgeries.map((s: any) => ({ ...s, name: s.surgery_name, date: s.surgery_date }))}
+									showComparison={state.showComparison}
+									onToggleComparison={() => state.setShowComparison(!state.showComparison)}
 								/>
 							</Suspense>
 						</TabsContent>
@@ -474,6 +509,11 @@ const PatientEvolution = () => {
 										/>
 									</div>
 								)}
+							</Suspense>
+						</TabsContent>
+						<TabsContent value="configuracoes" className="mt-0 p-4">
+							<Suspense fallback={<LoadingSkeleton />}>
+								<LazyEvolutionSettingsTab />
 							</Suspense>
 						</TabsContent>
 					</Tabs>

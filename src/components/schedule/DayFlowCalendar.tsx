@@ -18,7 +18,6 @@ import DayGrid from "@event-calendar/day-grid";
 import Interaction from "@event-calendar/interaction";
 import "@event-calendar/core/index.css";
 import { format, isValid, addMinutes, addDays, startOfWeek } from "date-fns";
-import { toast } from "sonner";
 import { ScheduleToolbar } from "./ScheduleToolbar";
 import { AppointmentQuickView } from "./AppointmentQuickView";
 import { getStatusConfig } from "./shared/appointment-status";
@@ -316,7 +315,6 @@ export function DayFlowCalendarWrapper(props: DayFlowCalendarWrapperProps) {
 								if (typeof navigator !== "undefined" && navigator.vibrate) {
 									navigator.vibrate([15, 50, 15]);
 								}
-								toast.success("Horário atualizado com sucesso!");
 							}
 						},
 					}

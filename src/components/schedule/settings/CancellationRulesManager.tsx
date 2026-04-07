@@ -133,19 +133,14 @@ export function CancellationRulesManager() {
 	const lateFee = rules.late_cancellation_fee || 0;
 
 	return (
-		<Card className="border-none shadow-lg">
-			<CardHeader className="bg-gradient-to-br from-amber-50 to-orange-50 dark:from-amber-950/30 dark:to-orange-950/30 rounded-t-xl">
-				<CardTitle className="flex items-center gap-2">
-					<div className="p-2 bg-amber-500 rounded-lg">
-						<AlertTriangle className="h-5 w-5 text-white" />
-					</div>
-					Regras de Cancelamento
-				</CardTitle>
+		<Card className="border shadow-sm">
+			<CardHeader className="pb-3">
+				<CardTitle className="text-base">Regras de Cancelamento</CardTitle>
 				<CardDescription>
-					Configure as políticas de cancelamento de agendamentos
+					Políticas de cancelamento de agendamentos
 				</CardDescription>
 			</CardHeader>
-			<CardContent className="space-y-6 pt-6">
+			<CardContent className="space-y-4">
 				{/* Quick Presets */}
 				<div className="space-y-3">
 					<Label className="text-sm font-medium">Presets de Política</Label>
@@ -176,19 +171,6 @@ export function CancellationRulesManager() {
 						))}
 					</div>
 				</div>
-
-				{/* Info Banner */}
-				<Alert className="border-blue-200 bg-blue-50/50 dark:bg-blue-950/20">
-					<Info className="h-4 w-4 text-blue-600" />
-					<AlertTitle className="text-blue-900 dark:text-blue-100">
-						Dica
-					</AlertTitle>
-					<AlertDescription className="text-blue-700 dark:text-blue-300">
-						Regras de cancelamento ajudam a reduzir faltas e permitem melhor
-						planejamento da agenda. As opções desta aba são salvas para uso em
-						fluxos automatizados e integrações.
-					</AlertDescription>
-				</Alert>
 
 				{/* Antecedência Mínima */}
 				<div className="space-y-4 p-4 rounded-xl border bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-950/20 dark:to-indigo-950/20">
