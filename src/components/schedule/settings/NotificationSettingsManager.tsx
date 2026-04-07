@@ -127,36 +127,23 @@ export function NotificationSettingsManager() {
 	].filter(Boolean).length;
 
 	return (
-		<Card className="border-none shadow-lg">
-			<CardHeader className="bg-gradient-to-br from-violet-50 to-purple-50 dark:from-violet-950/30 dark:to-purple-950/30 rounded-t-xl">
-				<CardTitle className="flex items-center gap-2">
-					<div className="p-2 bg-violet-500 rounded-lg">
-						<Bell className="h-5 w-5 text-white" />
+		<Card className="border shadow-sm">
+			<CardHeader className="pb-3">
+				<div className="flex items-center justify-between">
+					<div>
+						<CardTitle className="text-base">
+							Notificações Automáticas
+						</CardTitle>
+						<CardDescription>
+							Como e quando os pacientes são notificados
+						</CardDescription>
 					</div>
-					Notificações Automáticas
-				</CardTitle>
-				<CardDescription>
-					Configure como e quando os pacientes são notificados
-				</CardDescription>
-				<div className="flex items-center gap-2 mt-2">
 					<Badge variant="secondary" className="text-xs">
 						{activeCount} ativo{activeCount !== 1 ? "s" : ""}
 					</Badge>
 				</div>
 			</CardHeader>
-			<CardContent className="space-y-6 pt-6">
-				{/* Info Banner */}
-				<Alert className="border-blue-200 bg-blue-50/50 dark:bg-blue-950/20">
-					<Info className="h-4 w-4 text-blue-600" />
-					<AlertTitle className="text-blue-900 dark:text-blue-100">
-						Personalização
-					</AlertTitle>
-					<AlertDescription className="text-blue-700 dark:text-blue-300">
-						Mensagens personalizadas melhoram o comparecimento. As opções desta
-						aba são persistidas para fluxos automáticos de comunicação.
-					</AlertDescription>
-				</Alert>
-
+			<CardContent className="space-y-4">
 				{/* Confirmação de Agendamento */}
 				<div className="space-y-4 p-4 rounded-xl border bg-gradient-to-r from-blue-50 to-cyan-50 dark:from-blue-950/20 dark:to-cyan-950/20">
 					<h3 className="font-semibold text-base flex items-center gap-2">

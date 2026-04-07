@@ -6,12 +6,12 @@ import { useToast } from "@/hooks/use-toast";
 import { usePermissions } from "@/hooks/usePermissions";
 
 export type TabValue =
-	| "profile"
+	| "perfil"
 	| "notifications"
 	| "security"
-	| "schedule"
-	| "a11y"
-	| "organization";
+	| "clinic"
+	| "agenda"
+	| "appearance";
 
 export interface NotificationSettings {
 	email: boolean;
@@ -36,13 +36,23 @@ const DEFAULT_NOTIFICATIONS: NotificationSettings = {
 };
 
 const VALID_TABS: TabValue[] = [
-	"profile",
+	"perfil",
 	"notifications",
 	"security",
-	"schedule",
-	"a11y",
-	"organization",
+	"clinic",
+	"agenda",
+	"appearance",
 ];
+
+const TAB_MAPPINGS: Record<string, TabValue> = {
+	profile: "perfil",
+	a11y: "a11y",
+	accessibility: "appearance",
+	schedule: "agenda",
+	horarios: "agenda",
+	organization: "clinic",
+	clinica: "clinic",
+};
 
 export function useSettingsState() {
 	const [searchParams] = useSearchParams();
@@ -51,7 +61,7 @@ export function useSettingsState() {
 	const { isAdmin } = usePermissions();
 	const { toast } = useToast();
 
-	const [activeTab, setActiveTab] = useState<TabValue>("profile");
+	const [activeTab, setActiveTab] = useState<TabValue>("perfil");
 	const [inviteModalOpen, setInviteModalOpen] = useState(false);
 
 	// MFA State
@@ -82,10 +92,16 @@ export function useSettingsState() {
 
 	// Sync tab with URL
 	useEffect(() => {
-		const tab = searchParams.get("tab") as TabValue;
-		if (tab && VALID_TABS.includes(tab)) {
-			if (tab === "organization" && !isAdmin) {
-				setActiveTab("profile");
+		const tabParam = searchParams.get("tab");
+		if (tabParam) {
+			let tab: TabValue = tabParam as TabValue;
+
+			if (!VALID_TABS.includes(tab)) {
+				tab = TAB_MAPPINGS[tabParam] || "perfil";
+			}
+
+			if (tab === "clinic" && !isAdmin) {
+				setActiveTab("notifications");
 			} else {
 				setActiveTab(tab);
 			}
@@ -110,7 +126,6 @@ export function useSettingsState() {
 			.catch(() => {});
 	}, [user?.uid]);
 
-
 	const handleEnable2FA = useCallback(
 		async (enabled: boolean) => {
 			if (!user?.uid) return;
@@ -130,7 +145,7 @@ export function useSettingsState() {
 					setMfaFactorId(result.factorId);
 					setShowMfaModal(true);
 				}
-			} catch  {
+			} catch {
 				toast({ title: "Erro MFA", variant: "destructive" });
 			} finally {
 				setMfaLoading(false);

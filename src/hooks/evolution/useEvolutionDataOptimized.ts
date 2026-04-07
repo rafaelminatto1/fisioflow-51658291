@@ -41,7 +41,8 @@ export type EvolutionTab =
 	| "avaliacao"
 	| "tratamento"
 	| "historico"
-	| "assistente";
+	| "assistente"
+	| "configuracoes";
 export type LoadStrategy = "critical" | "tab-based" | "full";
 
 export interface EvolutionDataOptions {
@@ -209,6 +210,7 @@ export function useEvolutionDataOptimized(options: EvolutionDataOptions) {
 				tratamento: ["goals", "pathologies"],
 				historico: ["soap", "surgeries", "medical-returns", "measurements"],
 				assistente: ["goals", "pathologies"],
+				configuracoes: [],
 			};
 
 			return tabDataMap[activeTab]?.includes(dataType) || false;
@@ -220,19 +222,13 @@ export function useEvolutionDataOptimized(options: EvolutionDataOptions) {
 	// Sempre carregados, independente da aba (ou baseado em strategy)
 
 	// Goals - usados em múltiplas abas
-	const goalsQuery = usePatientGoals(patientId, {
-		enabled: shouldLoadData("goals"),
-	});
+	const goalsQuery = usePatientGoals(patientId);
 
 	// Pathologies - usadas em múltiplas abas
-	const pathologiesQuery = usePatientPathologies(patientId, {
-		enabled: shouldLoadData("pathologies"),
-	});
+	const pathologiesQuery = usePatientPathologies(patientId);
 
 	// SOAP records (últimas 10) - sempre necessário
-	const soapRecordsQuery = useSoapRecords(patientId, 10, {
-		enabled: shouldLoadData("soap"),
-	});
+	const soapRecordsQuery = useSoapRecords(patientId, 10);
 
 	// ==================== DADOS CONDICIONAIS ====================
 	// Carregados baseado na aba ativa e strategy
@@ -299,6 +295,7 @@ export function useEvolutionDataOptimized(options: EvolutionDataOptions) {
 				"measurements",
 			],
 			assistente: ["goals", "pathologies"],
+			configuracoes: [],
 		};
 
 		// Determinar próxima aba
@@ -308,6 +305,7 @@ export function useEvolutionDataOptimized(options: EvolutionDataOptions) {
 			"tratamento",
 			"historico",
 			"assistente",
+			"configuracoes",
 		];
 		const currentIdx = tabs.indexOf(activeTab);
 		const nextTab = tabs[(currentIdx + 1) % tabs.length];

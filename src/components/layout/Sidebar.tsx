@@ -114,7 +114,12 @@ const GamificationMiniProfile = ({ collapsed }: { collapsed: boolean }) => {
 
 // ORDEM FLUXO CLÍNICO 2026
 const mainMenuItems = [
-	{ icon: Calendar, label: "Agenda de Hoje", href: APP_ROUTES.AGENDA, badge: "Hoje" },
+	{
+		icon: Calendar,
+		label: "Agenda de Hoje",
+		href: APP_ROUTES.AGENDA,
+		badge: "Hoje",
+	},
 	{ icon: Users, label: "Meus Pacientes", href: APP_ROUTES.PATIENTS },
 ];
 
@@ -129,14 +134,34 @@ const avaliacoesSubmenu = [
 ];
 
 const biomecanicaSubmenu = [
-	{ icon: User, label: "Postura & Escoliose", href: "/clinical/biomechanics/posture" },
-	{ icon: Activity, label: "Corrida & Marcha", href: "/clinical/biomechanics/gait" },
-	{ icon: Zap, label: "Performance de Salto", href: "/clinical/biomechanics/jump" },
-	{ icon: Move, label: "Gesto Funcional", href: "/clinical/biomechanics/functional" },
+	{
+		icon: User,
+		label: "Postura & Escoliose",
+		href: "/clinical/biomechanics/posture",
+	},
+	{
+		icon: Activity,
+		label: "Corrida & Marcha",
+		href: "/clinical/biomechanics/gait",
+	},
+	{
+		icon: Zap,
+		label: "Performance de Salto",
+		href: "/clinical/biomechanics/jump",
+	},
+	{
+		icon: Move,
+		label: "Gesto Funcional",
+		href: "/clinical/biomechanics/functional",
+	},
 ];
 
 const inteligenciaMenuItems = [
-	{ icon: LayoutDashboard, label: "Smart Dashboard", href: APP_ROUTES.SMART_DASHBOARD },
+	{
+		icon: LayoutDashboard,
+		label: "Smart Dashboard",
+		href: APP_ROUTES.SMART_DASHBOARD,
+	},
 	{ icon: Brain, label: "Assistente IA", href: "/smart-ai" },
 	{ icon: BarChart3, label: "Analytics Avançado", href: "/analytics" },
 ];
@@ -166,15 +191,27 @@ const adminSubmenu = [
 
 const financeiroSubmenu = [
 	{ icon: DollarSign, label: "Financeiro Hub", href: APP_ROUTES.FINANCIAL },
-	{ icon: Receipt, label: "Faturamento e Recibos", href: "/financeiro/recibos" },
-	{ icon: Calculator, label: "Simulador de Receitas", href: "/financeiro/simulador" },
+	{
+		icon: Receipt,
+		label: "Faturamento e Recibos",
+		href: "/financeiro/recibos",
+	},
+	{
+		icon: Calculator,
+		label: "Simulador de Receitas",
+		href: "/financeiro/simulador",
+	},
 	{ icon: Users, label: "Comissões", href: "/financeiro/comissoes" },
 	{ icon: FileText, label: "Demonstrativo", href: "/financeiro/demonstrativo" },
 ];
 
 const configuracoesSubmenu = [
 	{ icon: Settings, label: "Geral", href: APP_ROUTES.SETTINGS },
-	{ icon: CalendarDays, label: "Google Calendar", href: "/configuracoes/calendario" },
+	{
+		icon: CalendarDays,
+		label: "Google Calendar",
+		href: "/configuracoes/calendario",
+	},
 	{ icon: LinkIcon, label: "Integrações Google", href: "/integrations" },
 ];
 
@@ -208,12 +245,12 @@ export function Sidebar() {
 	const [configuracoesOpen, setConfiguracoesOpen] = useState(false);
 	const location = useLocation();
 	const { toast } = useToast();
-	
+
 	const { preloadRoute } = useNavPreload();
 
 	const isAdminActive = location.pathname.startsWith("/admin");
 	const isAvaliacaoActive =
-		location.pathname === "/clinical-tests" || 
+		location.pathname === "/clinical-tests" ||
 		location.pathname === "/templates";
 	const isBiomecanicaActive =
 		location.pathname.startsWith("/clinical/biomechanics") ||
@@ -222,6 +259,7 @@ export function Sidebar() {
 		location.pathname.startsWith("/financial") ||
 		location.pathname.startsWith("/financeiro");
 	const isConfiguracoesActive =
+		location.pathname === "/profile" ||
 		location.pathname === "/settings" ||
 		location.pathname.startsWith("/configuracoes") ||
 		location.pathname === "/integrations";
@@ -445,7 +483,8 @@ export function Sidebar() {
 											<ChevronDown
 												className={cn(
 													"h-3.5 w-3.5 transition-transform",
-													(biomecanicaOpen || isBiomecanicaActive) && "rotate-180",
+													(biomecanicaOpen || isBiomecanicaActive) &&
+														"rotate-180",
 												)}
 											/>
 										)}
@@ -519,7 +558,8 @@ export function Sidebar() {
 											<ChevronDown
 												className={cn(
 													"h-3.5 w-3.5 transition-transform",
-													(financeiroOpen || isFinanceiroActive) && "rotate-180",
+													(financeiroOpen || isFinanceiroActive) &&
+														"rotate-180",
 												)}
 											/>
 										)}
@@ -574,7 +614,8 @@ export function Sidebar() {
 											<ChevronDown
 												className={cn(
 													"h-3.5 w-3.5 transition-transform",
-													(configuracoesOpen || isConfiguracoesActive) && "rotate-180",
+													(configuracoesOpen || isConfiguracoesActive) &&
+														"rotate-180",
 												)}
 											/>
 										)}

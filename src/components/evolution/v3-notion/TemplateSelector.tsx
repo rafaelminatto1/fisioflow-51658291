@@ -13,6 +13,7 @@
 import React, { useState, useMemo } from "react";
 import { FileText, Plus, ChevronDown, Search, Star } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { expandSearchQuery, normalizeForSearch } from "@/lib/utils/bilingualSearch";
 import { Button } from "@/components/ui/button";
 import {
 	Popover,
@@ -190,26 +191,33 @@ export const TemplateSelector: React.FC<TemplateSelectorProps> = ({
 		return [...richTemplates, ...LEGACY_TEMPLATES, ...customTemplates];
 	}, [richTemplates, customTemplates]);
 
-	// Filter templates by search and category (HTML-aware)
+	// Filter templates by search and category (HTML-aware and bilingual)
 	const filteredTemplates = useMemo(() => {
-		return allTemplates.filter((template) => {
-			const searchIn = [
-				template.name,
-				stripHtml(template.subjective),
-				stripHtml(template.assessment),
-				stripHtml(template.objective),
-			]
-				.join(" ")
-				.toLowerCase();
+		if (!searchQuery && !selectedCategory) return allTemplates;
 
-			const matchesSearch =
-				!searchQuery || searchIn.includes(searchQuery.toLowerCase());
+		let filtered = allTemplates;
+		if (selectedCategory) {
+			filtered = filtered.filter((t) => t.category === selectedCategory);
+		}
 
-			const matchesCategory =
-				!selectedCategory || template.category === selectedCategory;
+		if (searchQuery) {
+			const expandedTerms = expandSearchQuery(searchQuery);
 
-			return matchesSearch && matchesCategory;
-		});
+			filtered = filtered.filter((template) => {
+				const searchIn = [
+					normalizeForSearch(template.name),
+					normalizeForSearch(stripHtml(template.subjective)),
+					normalizeForSearch(stripHtml(template.assessment)),
+					normalizeForSearch(stripHtml(template.objective)),
+				];
+
+				return expandedTerms.some((term: string) =>
+					searchIn.some((field) => field.includes(term)),
+				);
+			});
+		}
+
+		return filtered;
 	}, [allTemplates, searchQuery, selectedCategory]);
 
 	const categories = [

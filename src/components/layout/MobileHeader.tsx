@@ -72,7 +72,7 @@ const menuGroups = [
 			{ icon: Package, label: "Estoque", href: "/inventory" },
 			{ icon: MessageSquare, label: "Comunicação", href: "/communications" },
 			{ icon: DollarSign, label: "Financeiro", href: "/financial" },
-			{ icon: Settings, label: "Configurações", href: "/settings" },
+			{ icon: Settings, label: "Configurações", href: "/profile" },
 		],
 	},
 ];

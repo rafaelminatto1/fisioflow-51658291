@@ -1,0 +1,38 @@
+uid=8_0 RootWebArea "FisioFlow - Sistema de Gestão para Clínicas de Fisioterapia" url="https://3b877011.fisioflow-web.pages.dev/auth/login"
+  uid=8_1 region "Notifications (F8)"
+    uid=8_2 list
+  uid=8_3 region "Notifications alt+T" live="polite" relevant="additions text"
+  uid=8_4 banner
+    uid=8_5 heading "FisioFlow" level="1"
+    uid=8_6 heading "Gestão clínica elevada ao máximo." level="2"
+    uid=8_7 StaticText "Centralize seus atendimentos, evoluções e financeiro em uma única plataforma inteligente e intuitiva."
+    uid=8_8 StaticText "Agenda inteligente com drag-and-drop"
+    uid=8_9 StaticText "Evoluções SOAP automatizadas com IA"
+    uid=8_10 StaticText "Controle financeiro completo e NF-e"
+    uid=8_11 StaticText "Portal do paciente e biofeedback"
+    uid=8_12 contentinfo
+      uid=8_13 StaticText "© 2026 FisioFlow Inc."
+      uid=8_14 button "Segurança"
+      uid=8_15 button "Termos"
+  uid=8_16 main
+    uid=8_17 heading "Bem-vindo de volta" level="3"
+    uid=8_18 StaticText "Entre com suas credenciais para acessar sua conta"
+    uid=8_19 tablist orientation="horizontal"
+      uid=8_20 tab "Login" selectable selected
+      uid=8_21 tab "Cadastro" selectable
+    uid=8_22 tabpanel "Login"
+      uid=8_23 StaticText "Email"
+      uid=8_24 textbox "Email"
+      uid=8_25 StaticText "Senha"
+      uid=8_26 button "Esqueceu a senha?"
+      uid=8_27 textbox "Senha"
+      uid=8_28 button "Acessar Minha Conta"
+    uid=8_29 StaticText "OU CONTINUE COM"
+    uid=8_30 button "Google"
+    uid=8_31 button "GitHub"
+    uid=8_32 button "Apple"
+    uid=8_33 StaticText "Ao continuar, você concorda com nossos"
+    uid=8_34 button "Termos de Serviço"
+    uid=8_35 StaticText "e"
+    uid=8_36 button "Política de Privacidade"
+    uid=8_37 StaticText "."

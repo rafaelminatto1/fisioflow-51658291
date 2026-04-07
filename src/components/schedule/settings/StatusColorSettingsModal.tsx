@@ -278,6 +278,7 @@ export function StatusColorSettingsModal({
 		resetStatusColor,
 		_isCustomStatus,
 		hasCustomColors,
+		getStatusColors,
 		customStatuses,
 	} = useStatusConfig();
 
@@ -361,7 +362,7 @@ export function StatusColorSettingsModal({
 														key={statusId}
 														statusId={statusId}
 														label={config.label}
-														currentColor={config.color}
+														currentColor={getStatusColors(statusId).color}
 														isCustom={false}
 														hasCustomColor={hasCustomColors(statusId)}
 														onColorChange={(color) =>

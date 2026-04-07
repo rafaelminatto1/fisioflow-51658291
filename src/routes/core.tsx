@@ -57,10 +57,7 @@ export const coreRoutes = (
 		<Route path="/schedule" element={<Navigate to="/agenda" replace />} />
 		<Route path="/login" element={<Navigate to="/auth" replace />} />
 		<Route path="/perfil" element={<Navigate to="/profile" replace />} />
-		<Route
-			path="/configuracoes"
-			element={<Navigate to="/settings" replace />}
-		/>
+		<Route path="/configuracoes" element={<Navigate to="/profile" replace />} />
 
 		{/* Core protected routes */}
 		<Route
@@ -137,14 +134,7 @@ export const coreRoutes = (
 				</ProtectedRoute>
 			}
 		/>
-		<Route
-			path="/settings"
-			element={
-				<ProtectedRoute>
-					<Settings />
-				</ProtectedRoute>
-			}
-		/>
+		<Route path="/settings" element={<Settings />} />
 		<Route
 			path="/profile"
 			element={
@@ -156,9 +146,11 @@ export const coreRoutes = (
 		<Route
 			path="/communications"
 			element={
-				<ProtectedRoute>
-					<Communications />
-				</ProtectedRoute>
+				<RouteErrorBoundary routeName="Communications">
+					<ProtectedRoute>
+						<Communications />
+					</ProtectedRoute>
+				</RouteErrorBoundary>
 			}
 		/>
 	</>

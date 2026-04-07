@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { cn } from "@/lib/utils";
 import { Smile, Meh, Frown, Angry } from "lucide-react";
 
@@ -26,6 +26,10 @@ export const QuickPainSlider: React.FC<QuickPainSliderProps> = ({
 }) => {
 	const [sliderValue, setSliderValue] = useState(value || 0);
 
+	useEffect(() => {
+		setSliderValue(value || 0);
+	}, [value]);
+
 	const handleSliderChange = (e: React.ChangeEvent<HTMLInputElement>) => {
 		const newValue = parseInt(e.target.value);
 		setSliderValue(newValue);
@@ -34,7 +38,7 @@ export const QuickPainSlider: React.FC<QuickPainSliderProps> = ({
 
 	return (
 		<div className={cn("w-full py-4", className)}>
-			<div className="relative mb-6 px-1">
+			<div className="relative px-1">
 				{/* Track Background */}
 				<div className="absolute top-1/2 left-1 right-1 h-3 -mt-1.5 rounded-full bg-slate-100 pointer-events-none" />
 
@@ -64,54 +68,73 @@ export const QuickPainSlider: React.FC<QuickPainSliderProps> = ({
 					)}
 					aria-label="Nível de dor (EVA)"
 				/>
-
-				{/* Labels below slider */}
-				<div className="absolute top-full left-0 right-0 mt-3 flex justify-between px-1">
-					{PAIN_LEVELS.map((level) => {
-						const Icon = level.icon;
-						const isClose = Math.abs(sliderValue - level.value) <= 1;
-
-						return (
-							<div
-								key={level.value}
-								className="flex flex-col items-center cursor-pointer select-none group"
-								onClick={() => {
-									if (!disabled) {
-										setSliderValue(level.value);
-										onChange(level.value);
-									}
-								}}
-							>
-								{/* Tick mark */}
-								<div className="w-0.5 h-1.5 bg-slate-300 mb-1.5 rounded-full group-hover:bg-slate-400" />
-
-								<span
-									className={cn(
-										"text-[10px] sm:text-xs font-medium transition-colors text-center whitespace-nowrap mb-1",
-										isClose
-											? "text-slate-800"
-											: "text-slate-400 group-hover:text-slate-600",
-									)}
-								>
-									{level.value} - {level.label}
-								</span>
-
-								<Icon
-									className={cn(
-										"w-4 h-4 transition-all",
-										isClose
-											? "text-slate-700 opacity-100"
-											: "text-slate-400 opacity-50 block sm:hidden", // Hide icons on larger screens if unselected to reduce clutter, or keep them? Let's keep them with lower opacity.
-									)}
-								/>
-							</div>
-						);
-					})}
-				</div>
 			</div>
 
-			{/* Spacer to accommodate absolute positioned labels */}
-			<div className="h-10" />
+			<div className="mt-2 grid grid-cols-5 gap-1 px-0.5">
+				{PAIN_LEVELS.map((level) => {
+					const Icon = level.icon;
+					const isActive = Math.abs(sliderValue - level.value) <= 1;
+
+					return (
+						<button
+							key={level.value}
+							type="button"
+							disabled={disabled}
+							className={cn(
+								"group min-w-0 rounded-xl px-1.5 py-1.5 text-center transition-all duration-200",
+								"focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sky-300",
+								disabled
+									? "cursor-not-allowed opacity-50"
+									: "cursor-pointer hover:bg-slate-50",
+								isActive && "bg-sky-50 ring-1 ring-sky-100 shadow-sm",
+							)}
+							onClick={() => {
+								if (!disabled) {
+									setSliderValue(level.value);
+									onChange(level.value);
+								}
+							}}
+						>
+							{/* Tick mark */}
+							<div
+								className={cn(
+									"mx-auto mb-1.5 h-1.5 w-0.5 rounded-full transition-colors",
+									isActive ? "bg-sky-500" : "bg-slate-300",
+								)}
+							/>
+
+							<span
+								className={cn(
+									"block text-xs font-bold leading-none transition-colors",
+									isActive ? "text-slate-900" : "text-slate-400",
+								)}
+							>
+								{level.value}
+							</span>
+
+							<span
+								className={cn(
+									"mt-1 block min-h-[2rem] text-[10px] font-medium leading-tight transition-colors",
+									isActive
+										? "text-slate-700"
+										: "text-slate-400 group-hover:text-slate-600",
+								)}
+							>
+								{level.label}
+							</span>
+
+							<Icon
+								className={cn(
+									"mx-auto mt-1 h-3.5 w-3.5 transition-all",
+									isActive
+										? "text-slate-700 opacity-100"
+										: "text-slate-300 opacity-70",
+								)}
+							/>
+						</button>
+					);
+				})}
+			</div>
 		</div>
 	);
 };

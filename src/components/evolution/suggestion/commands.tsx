@@ -3,13 +3,17 @@ import Suggestion from "@tiptap/suggestion";
 import { ReactRenderer } from "@tiptap/react";
 import { PluginKey } from "@tiptap/pm/state";
 import tippy from "tippy.js";
-import {
-	ClipboardList,
-	CheckSquare,
-	ImageIcon,
-	Sparkles,
-} from "lucide-react";
-import { getEvolutionSettings } from "../EvolutionSettingsModal";
+import { Sparkles, ClipboardList, CheckSquare, ImageIcon, BookOpen } from "lucide-react";
+
+export function getEvolutionSettings() {
+  const STORAGE_KEY = 'fisioflow_evolution_settings';
+  try {
+    const item = window.localStorage.getItem(STORAGE_KEY);
+    return item ? { defaultView: 'notion', enableSuggestions: true, disabledCommands: [], commandOrder: [], ...JSON.parse(item) } : { defaultView: 'notion', enableSuggestions: true, disabledCommands: [], commandOrder: [] };
+  } catch (error) {
+    return { defaultView: 'notion', enableSuggestions: true, disabledCommands: [], commandOrder: [] };
+  }
+}
 
 const COMMANDS_REGISTRY: Record<string, any> = {
 	ai: {
@@ -68,6 +72,16 @@ const COMMANDS_REGISTRY: Record<string, any> = {
 			input.click();
 		},
 	},
+	sugestoes: {
+		id: "sugestoes",
+		title: "Dicionário Clínico",
+		icon: BookOpen,
+		description: "Pesquisa bilíngue de diagnósticos, procedimentos, equipamentos",
+		command: ({ editor, range }: any) => {
+			editor.chain().focus().deleteRange(range).run();
+			window.dispatchEvent(new CustomEvent("tiptap-sugestoes-open"));
+		},
+	},
 };
 
 export const Commands = Extension.create({
@@ -93,12 +107,26 @@ export const Commands = Extension.create({
 				items: ({ query }: { query: string }) => {
 					const settings = getEvolutionSettings();
 
-					return settings.slashCommands
-						.filter((cmd) => cmd.visible)
-						.map((cmd) => COMMANDS_REGISTRY[cmd.id])
-						.filter(Boolean)
-						.filter((item) =>
-							item.title.toLowerCase().startsWith(query.toLowerCase()),
+					const availableCommands = Object.values(COMMANDS_REGISTRY).filter(
+						(cmd: any) => !settings.disabledCommands?.includes(cmd.id)
+					);
+
+					// Sort by the defined order, or keep default
+					if (settings.commandOrder && settings.commandOrder.length > 0) {
+						availableCommands.sort((a: any, b: any) => {
+							const idxA = settings.commandOrder.indexOf(a.id);
+							const idxB = settings.commandOrder.indexOf(b.id);
+							if (idxA !== -1 && idxB !== -1) return idxA - idxB;
+							if (idxA !== -1) return -1;
+							if (idxB !== -1) return 1;
+							return 0;
+						});
+					}
+
+					return availableCommands
+						.filter((item: any) =>
+							item.title.toLowerCase().includes(query.toLowerCase()) || 
+							item.description.toLowerCase().includes(query.toLowerCase())
 						);
 				},
 				render: () => {

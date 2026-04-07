@@ -1,6 +1,8 @@
 import { useState, useCallback, useMemo } from "react";
 import {
 	APPOINTMENT_STATUS_CONFIG,
+	getStatusColor,
+	normalizeStatus,
 	type AppointmentStatusConfig,
 } from "@/components/schedule/shared/appointment-status";
 import { getTextColorClass } from "@/utils/colorContrast";
@@ -26,11 +28,79 @@ interface StoredStatusConfig {
 	customStatuses: CustomStatusConfig[];
 }
 
+type StatusColors = StoredStatusConfig["customColors"][string];
+
+const getDefaultStatusColors = (statusId: string): StatusColors => {
+	const color = getStatusColor(statusId);
+	return { color, bgColor: color, borderColor: color };
+};
+
+const isRecord = (value: unknown): value is Record<string, unknown> =>
+	typeof value === "object" && value !== null && !Array.isArray(value);
+
+const normalizeStoredConfig = (value: unknown): StoredStatusConfig => {
+	if (!isRecord(value)) return { customColors: {}, customStatuses: [] };
+
+	const customColors: StoredStatusConfig["customColors"] = {};
+	if (isRecord(value.customColors)) {
+		Object.entries(value.customColors).forEach(([statusId, colors]) => {
+			if (!isRecord(colors)) return;
+			const color = typeof colors.color === "string" ? colors.color : undefined;
+			const bgColor =
+				typeof colors.bgColor === "string" ? colors.bgColor : color;
+			const borderColor =
+				typeof colors.borderColor === "string" ? colors.borderColor : color;
+			if (color && bgColor && borderColor) {
+				customColors[statusId] = { color, bgColor, borderColor };
+			}
+		});
+	}
+
+	const customStatuses = Array.isArray(value.customStatuses)
+		? value.customStatuses
+				.filter(isRecord)
+				.map((status) => {
+					const id = typeof status.id === "string" ? status.id : "";
+					const label = typeof status.label === "string" ? status.label : "";
+					const fallbackColor =
+						typeof status.color === "string" ? status.color : "#0073EA";
+					const allowedActions = Array.isArray(status.allowedActions)
+						? status.allowedActions.filter(
+								(action): action is string => typeof action === "string",
+							)
+						: ["view", "edit"];
+
+					if (!id || !label) return null;
+
+					const normalizedStatus: CustomStatusConfig = {
+						id,
+						label,
+						color: fallbackColor,
+						bgColor:
+							typeof status.bgColor === "string"
+								? status.bgColor
+								: fallbackColor,
+						borderColor:
+							typeof status.borderColor === "string"
+								? status.borderColor
+								: fallbackColor,
+						allowedActions,
+						isCustom: true,
+					};
+
+					return normalizedStatus;
+				})
+				.filter((status): status is CustomStatusConfig => status !== null)
+		: [];
+
+	return { customColors, customStatuses };
+};
+
 const getStoredConfig = (): StoredStatusConfig => {
 	try {
 		const stored = localStorage.getItem(STORAGE_KEY);
 		if (stored) {
-			return JSON.parse(stored);
+			return normalizeStoredConfig(JSON.parse(stored));
 		}
 	} catch (e) {
 		logger.error(
@@ -69,12 +139,19 @@ export function useStatusConfig() {
 				const textColorClass = getTextColorClass(customColor.bgColor);
 				merged[key] = {
 					...value,
+					color: customColor.color,
+					bgColor: customColor.bgColor,
 					bg: customColor.bgColor,
 					borderColor: customColor.borderColor,
 					text: textColorClass,
 				};
 			} else {
-				merged[key] = value;
+				const defaultColors = getDefaultStatusColors(key);
+				merged[key] = {
+					...value,
+					color: defaultColors.color,
+					bgColor: defaultColors.bgColor,
+				};
 			}
 		});
 
@@ -113,6 +190,46 @@ export function useStatusConfig() {
 			});
 		},
 		[],
+	);
+
+	const resetStatusColor = useCallback((statusId: string) => {
+		setStoredConfig((prev) => {
+			const { [statusId]: _removed, ...customColors } = prev.customColors;
+			const newConfig = { ...prev, customColors };
+			saveStoredConfig(newConfig);
+			return newConfig;
+		});
+	}, []);
+
+	const hasCustomColors = useCallback(
+		(statusId: string) => Boolean(storedConfig.customColors[statusId]),
+		[storedConfig.customColors],
+	);
+
+	const _isCustomStatus = useCallback(
+		(statusId: string) =>
+			storedConfig.customStatuses.some((status) => status.id === statusId),
+		[storedConfig.customStatuses],
+	);
+
+	const getStatusColors = useCallback(
+		(statusId: string): StatusColors => {
+			const normalizedStatus = normalizeStatus(statusId);
+			const customStatus = storedConfig.customStatuses.find(
+				(status) => status.id === statusId,
+			);
+			return (
+				storedConfig.customColors[statusId] ||
+				(customStatus
+					? {
+							color: customStatus.color,
+							bgColor: customStatus.bgColor,
+							borderColor: customStatus.borderColor,
+						}
+					: getDefaultStatusColors(normalizedStatus))
+			);
+		},
+		[storedConfig.customColors, storedConfig.customStatuses],
 	);
 
 	const createStatus = useCallback(
@@ -175,6 +292,10 @@ export function useStatusConfig() {
 		statusConfig,
 		getStatusConfig,
 		updateStatusColor,
+		resetStatusColor,
+		hasCustomColors,
+		_isCustomStatus,
+		getStatusColors,
 		createStatus,
 		updateStatus,
 		deleteStatus,
