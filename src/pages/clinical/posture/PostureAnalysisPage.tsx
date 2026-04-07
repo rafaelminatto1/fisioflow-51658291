@@ -1,8 +1,22 @@
-import React from "react";
+import React, { Suspense, lazy } from "react";
 import { User } from "lucide-react";
 
 import { BiomechanicsAnalysisLayout } from "@/components/analysis/evidence/BiomechanicsAnalysisLayout";
-import { PostureAnalysisStudio } from "@/components/analysis/studios/PostureAnalysisStudio";
+const PostureAnalysisStudio = lazy(() =>
+	import("@/components/analysis/studios/PostureAnalysisStudio").then((m) => ({
+		default: m.PostureAnalysisStudio,
+	})),
+);
+
+function StudioLoadingFallback() {
+	return (
+		<div className="flex h-full min-h-[480px] items-center justify-center rounded-3xl border border-dashed bg-card/40">
+			<div className="flex items-center gap-3 text-sm font-medium text-muted-foreground">
+				Carregando estúdio postural...
+			</div>
+		</div>
+	);
+}
 
 export default function PostureAnalysisPage() {
 	return (
@@ -14,7 +28,9 @@ export default function PostureAnalysisPage() {
 			iconBgClassName="border-purple-500/20 bg-purple-500/10"
 			iconClassName="text-purple-500"
 		>
-			<PostureAnalysisStudio />
+			<Suspense fallback={<StudioLoadingFallback />}>
+				<PostureAnalysisStudio />
+			</Suspense>
 		</BiomechanicsAnalysisLayout>
 	);
 }

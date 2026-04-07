@@ -26,6 +26,24 @@ function topToTime(snappedTop: number, startHour: number): string {
   return `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}`;
 }
 
+function formatStatus(status?: string): string {
+  const map: Record<string, string> = {
+    agendado: 'Agendado',
+    scheduled: 'Agendado',
+    confirmado: 'Confirmado',
+    confirmed: 'Confirmado',
+    em_atendimento: 'Em atendimento',
+    in_progress: 'Em atendimento',
+    cancelado: 'Cancelado',
+    cancelled: 'Cancelado',
+    concluido: 'Concluído',
+    completed: 'Concluído',
+    faltou: 'Faltou',
+    no_show: 'Faltou',
+  };
+  return map[(status || '').toLowerCase()] ?? (status || 'Agendado');
+}
+
 function getCardColors(apt: AppointmentBase, primary: string) {
   const typeLower = (apt.type || '').toLowerCase();
   const statusLower = apt.status || '';
@@ -156,7 +174,7 @@ export const DraggableAptCard = ({
           <Animated.View style={styles.cardInner}>
             <Animated.View style={styles.cardHeader}>
               <Text style={[styles.aptType, { color: cardColors.text }]}>
-                {apt.type || 'Sessão'}
+                {formatStatus(apt.status)}
               </Text>
             </Animated.View>
             <Text style={styles.aptTitle} numberOfLines={1}>
