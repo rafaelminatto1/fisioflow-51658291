@@ -119,9 +119,15 @@ pids
 .out
 .storybook-out
 
+# Wrangler
+.wrangler/
+
 # Temporary folders
 tmp/
 temp/
+temp-avif-conversion/
+temp-webp-conversion/
+DE-FRAUDE_E_ESTELIONATO_*.pdf
 
 # IDE
 *.swp
