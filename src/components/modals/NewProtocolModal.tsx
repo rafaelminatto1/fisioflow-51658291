@@ -286,46 +286,53 @@ export const NewProtocolModal: React.FC<NewProtocolModalProps> = ({
 
 	return (
 		<Dialog open={open} onOpenChange={onOpenChange}>
-			<DialogContent className="max-w-2xl p-0 overflow-hidden rounded-2xl border-border bg-background shadow-lg">
+			<DialogContent className="max-w-4xl w-full p-0 overflow-hidden rounded-2xl border-border bg-background shadow-xl">
 				<DialogTitle className="sr-only">
 					{protocol ? "Editar Protocolo" : "Criar Novo Protocolo"}
 				</DialogTitle>
 				<div className="relative w-full h-full flex flex-col">
 					{/* Header with Stepper */}
-					<div className="relative p-6 border-b bg-muted/30">
-						<div className="flex items-center justify-between mb-8">
-							<div>
-								<h2 className="text-2xl font-bold flex items-center gap-2">
-									<Activity className="w-6 h-6 text-primary" />
-									{protocol ? "Editar Protocolo" : "Criar Novo Protocolo"}
-								</h2>
-								<p className="text-sm text-muted-foreground">
-									Personalize a jornada de recuperação do paciente
-								</p>
+					<div className="relative px-8 pt-6 pb-5 border-b bg-muted/30">
+						<div className="flex items-center justify-between mb-6">
+							<div className="flex items-center gap-3">
+								<div className="flex h-9 w-9 items-center justify-center rounded-xl bg-primary/10 text-primary">
+									<Activity className="w-5 h-5" />
+								</div>
+								<div>
+									<h2 className="text-xl font-bold leading-tight">
+										{protocol ? "Editar Protocolo" : "Criar Novo Protocolo"}
+									</h2>
+									<p className="text-xs text-muted-foreground mt-0.5">
+										Personalize a jornada de recuperação do paciente
+									</p>
+								</div>
 							</div>
 							<Button
 								variant="ghost"
 								size="icon"
 								onClick={() => onOpenChange(false)}
-								className="text-muted-foreground hover:text-foreground"
+								className="text-muted-foreground hover:text-foreground rounded-full"
 							>
 								<X className="w-5 h-5" />
 							</Button>
 						</div>
 
-						<div className="flex items-center justify-between px-4">
+						<div className="flex items-center justify-between px-8">
 							{steps.map((s, idx) => (
 								<React.Fragment key={s.id}>
-									<div
-										className="flex flex-col items-center gap-2 group cursor-pointer"
-										onClick={() => step > s.id && setStep(s.id)}
+									<button
+										type="button"
+										className="flex flex-col items-center gap-2 group cursor-pointer focus:outline-none"
+										onClick={() => setStep(s.id)}
 									>
 										<div
 											className={cn(
 												"w-10 h-10 rounded-full flex items-center justify-center transition-all duration-300 border-2",
-												step >= s.id
-													? "bg-primary/10 border-primary text-primary shadow-sm"
-													: "bg-muted border-border text-muted-foreground",
+												step === s.id
+													? "bg-primary border-primary text-primary-foreground shadow-md scale-110"
+													: step > s.id
+														? "bg-primary/10 border-primary text-primary"
+														: "bg-muted border-border text-muted-foreground hover:border-primary/40 hover:text-primary/60",
 											)}
 										>
 											<s.icon className="w-5 h-5" />
@@ -333,18 +340,20 @@ export const NewProtocolModal: React.FC<NewProtocolModalProps> = ({
 										<span
 											className={cn(
 												"text-[10px] font-semibold transition-colors uppercase tracking-wider",
-												step >= s.id
-													? "text-foreground"
-													: "text-muted-foreground/50",
+												step === s.id
+													? "text-primary"
+													: step > s.id
+														? "text-foreground"
+														: "text-muted-foreground/60 group-hover:text-muted-foreground",
 											)}
 										>
 											{s.name}
 										</span>
-									</div>
+									</button>
 									{idx < steps.length - 1 && (
 										<div
 											className={cn(
-												"flex-1 h-0.5 mx-4 transition-colors",
+												"flex-1 h-0.5 mx-4 transition-all duration-300",
 												step > s.id ? "bg-primary" : "bg-border",
 											)}
 										/>
@@ -355,7 +364,7 @@ export const NewProtocolModal: React.FC<NewProtocolModalProps> = ({
 					</div>
 
 					{/* Content Area */}
-					<div className="relative p-8 min-h-[400px] overflow-y-auto">
+					<div className="relative p-8 min-h-[480px] max-h-[68vh] overflow-y-auto">
 						<AnimatePresence mode="wait">
 							<motion.div
 								key={step}
@@ -365,13 +374,14 @@ export const NewProtocolModal: React.FC<NewProtocolModalProps> = ({
 								transition={{ duration: 0.3, ease: "easeOut" }}
 							>
 								{step === 1 && (
-									<div className="space-y-6">
-										<div className="grid grid-cols-2 gap-4">
+									<div className="space-y-5">
+										<div className="grid grid-cols-3 gap-4">
+											{/* Row 1: Nome + Condição side by side */}
 											<div className="col-span-2 space-y-2">
 												<Label>Nome do Protocolo</Label>
 												<Input
 													placeholder="Ex: Reabilitação LCA - Fase Pós-Op"
-													className="h-12 focus-visible:ring-primary"
+													className="h-11 focus-visible:ring-primary"
 													value={formData.name}
 													onChange={(e) =>
 														setFormData((prev) => ({
@@ -381,11 +391,11 @@ export const NewProtocolModal: React.FC<NewProtocolModalProps> = ({
 													}
 												/>
 											</div>
-											<div className="col-span-2 space-y-2">
+											<div className="col-span-1 space-y-2">
 												<Label>Condição / Patologia</Label>
 												<Input
-													placeholder="Ex: LCA, Menisco, Manguito Rotador"
-													className="h-12 focus-visible:ring-primary"
+													placeholder="Ex: LCA, Menisco..."
+													className="h-11 focus-visible:ring-primary"
 													value={formData.condition_name}
 													onChange={(e) =>
 														setFormData((prev) => ({
@@ -395,7 +405,8 @@ export const NewProtocolModal: React.FC<NewProtocolModalProps> = ({
 													}
 												/>
 											</div>
-											<div className="space-y-2">
+											{/* Row 2: Tipo | Duração | Evidência */}
+											<div className="col-span-1 space-y-2">
 												<Label>Tipo</Label>
 												<Select
 													value={formData.protocol_type}
@@ -406,31 +417,23 @@ export const NewProtocolModal: React.FC<NewProtocolModalProps> = ({
 														}))
 													}
 												>
-													<SelectTrigger className="h-12">
+													<SelectTrigger className="h-11">
 														<SelectValue placeholder="Selecione o tipo" />
 													</SelectTrigger>
 													<SelectContent>
-														<SelectItem value="pos_operatorio">
-															Pós-Operatório
-														</SelectItem>
-														<SelectItem value="esportivo">
-															Reabilitação Esportiva
-														</SelectItem>
-														<SelectItem value="conservador">
-															Tratamento Conservador
-														</SelectItem>
-														<SelectItem value="geriatria">
-															Idosos e Geriatria
-														</SelectItem>
+														<SelectItem value="pos_operatorio">Pós-Operatório</SelectItem>
+														<SelectItem value="esportivo">Reabilitação Esportiva</SelectItem>
+														<SelectItem value="conservador">Conservador</SelectItem>
+														<SelectItem value="geriatria">Geriatria</SelectItem>
 														<SelectItem value="patologia">Patologia</SelectItem>
 													</SelectContent>
 												</Select>
 											</div>
-											<div className="space-y-2">
-												<Label>Duração Total (Semanas)</Label>
+											<div className="col-span-1 space-y-2">
+												<Label>Duração (Semanas)</Label>
 												<Input
 													type="number"
-													className="h-12"
+													className="h-11"
 													value={formData.weeks_total}
 													onChange={(e) =>
 														setFormData((prev) => ({
@@ -440,8 +443,7 @@ export const NewProtocolModal: React.FC<NewProtocolModalProps> = ({
 													}
 												/>
 											</div>
-
-											<div className="space-y-2">
+											<div className="col-span-1 space-y-2">
 												<Label>Nível de Evidência</Label>
 												<Select
 													value={formData.evidence_level}
@@ -452,22 +454,20 @@ export const NewProtocolModal: React.FC<NewProtocolModalProps> = ({
 														}))
 													}
 												>
-													<SelectTrigger className="h-12">
+													<SelectTrigger className="h-11">
 														<SelectValue placeholder="Selecione o nível" />
 													</SelectTrigger>
 													<SelectContent>
 														<SelectItem value="A">Nível A (Ouro)</SelectItem>
 														<SelectItem value="B">Nível B (Prata)</SelectItem>
 														<SelectItem value="C">Nível C (Bronze)</SelectItem>
-														<SelectItem value="D">
-															Nível D (Consenso)
-														</SelectItem>
+														<SelectItem value="D">Nível D (Consenso)</SelectItem>
 													</SelectContent>
 												</Select>
 											</div>
 
-											{/* Wiki autocomplete */}
-											<div className="col-span-2 space-y-2">
+											{/* Wiki autocomplete — full width */}
+											<div className="col-span-3 space-y-2">
 												<Label className="flex items-center gap-1.5">
 													<BookOpen className="w-3.5 h-3.5 text-primary" />
 													Vincular Página da Wiki
@@ -600,7 +600,7 @@ export const NewProtocolModal: React.FC<NewProtocolModalProps> = ({
 											</div>
 
 											{/* Reference Articles */}
-											<div className="col-span-2 space-y-3 pt-1">
+											<div className="col-span-3 space-y-3 pt-1">
 												<div className="flex items-center justify-between">
 													<Label className="flex items-center gap-1.5">
 														<FileText className="w-3.5 h-3.5 text-primary" />
