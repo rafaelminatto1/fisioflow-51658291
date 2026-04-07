@@ -20,6 +20,8 @@ import {
 	PopoverTrigger,
 } from "@/components/ui/popover";
 
+import { expandSearchQuery, normalizeForSearch } from "@/lib/utils/bilingualSearch";
+
 export interface Exercise {
 	id: string;
 	name: string;
@@ -78,13 +80,36 @@ export const ExerciseQuickAdd: React.FC<ExerciseQuickAddProps> = ({
 		return [...new Set([...recentExercises, ...exerciseLibrary])];
 	}, [recentExercises, exerciseLibrary]);
 
-	// Filter exercises by search
+	// Filter exercises with bilingual search (PT ↔ EN)
 	const filteredExercises = useMemo(() => {
-		return allExercises.filter(
+		if (!searchQuery || searchQuery.trim() === "") return allExercises;
+
+		const normalizedQuery = normalizeForSearch(searchQuery);
+
+		// First: standard match
+		let results = allExercises.filter(
 			(exercise) =>
-				exercise.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-				exercise.category?.toLowerCase().includes(searchQuery.toLowerCase()),
+				normalizeForSearch(exercise.name).includes(normalizedQuery) ||
+				normalizeForSearch(exercise.category || "").includes(normalizedQuery),
 		);
+
+		// Fallback: bilingual synonym expansion
+		if (results.length === 0 && normalizedQuery.length >= 2) {
+			const expandedTerms = expandSearchQuery(searchQuery);
+			if (expandedTerms.length > 1) {
+				results = allExercises.filter((exercise) => {
+					const fields = [
+						normalizeForSearch(exercise.name),
+						normalizeForSearch(exercise.category || ""),
+					];
+					return expandedTerms.some((term) =>
+						fields.some((field) => field.includes(term)),
+					);
+				});
+			}
+		}
+
+		return results;
 	}, [allExercises, searchQuery]);
 
 	const handleAddExercise = useCallback(

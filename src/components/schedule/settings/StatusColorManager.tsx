@@ -52,8 +52,6 @@ import {
 	DialogTitle,
 } from "@/components/ui/dialog";
 
-
-
 // Predefined vivid color palette (Monday.com inspired)
 const COLOR_PALETTE = [
 	"#00C875", // Green
@@ -849,8 +847,9 @@ export function StatusColorManager() {
 		resetToDefaults,
 		resetStatusColor,
 		hasCustomColors,
+		getStatusColors,
 		customStatuses,
-		} = useStatusConfig();
+	} = useStatusConfig();
 
 	const [showNewDialog, setShowNewDialog] = useState(false);
 	const [editingStatus, setEditingStatus] = useState<CustomStatusConfig | null>(
@@ -923,110 +922,59 @@ export function StatusColorManager() {
 	}, [statusConfig, hasCustomColors]);
 
 	return (
-		<div className="space-y-6">
-			{/* Header Card */}
-			<Card className="border-none shadow-lg overflow-hidden">
-				<CardHeader className="bg-gradient-to-br from-pink-500 via-fuchsia-500 to-purple-600 text-white">
-					<div className="flex items-center justify-between">
-						<div className="flex items-center gap-3">
-							<div className="p-2 bg-white/20 rounded-lg backdrop-blur-sm">
-								<Palette className="h-6 w-6" />
-							</div>
-							<div>
-								<CardTitle className="text-xl">Cores dos Status</CardTitle>
-								<CardDescription className="text-white/80">
-									Personalize as cores de cada status da agenda
-								</CardDescription>
-							</div>
-						</div>
-						<div className="flex items-center gap-2">
-							{customColorCount > 0 && (
-								<Badge
-									variant="secondary"
-									className="bg-white/20 text-white border-white/30"
-								>
-									{customColorCount} cores alteradas
-								</Badge>
-							)}
-							{customStatuses.length > 0 && (
-								<Badge
-									variant="secondary"
-									className="bg-white/20 text-white border-white/30"
-								>
-									{customStatuses.length} personalizados
-								</Badge>
-							)}
-						</div>
-					</div>
-				</CardHeader>
-			</Card>
-
-			{/* Info Alert */}
-			<Alert className="border-pink-200 bg-gradient-to-r from-pink-50 to-fuchsia-50 dark:from-pink-950/20 dark:to-fuchsia-950/20">
-				<Info className="h-4 w-4 text-pink-600" />
-				<AlertDescription className="text-pink-700 dark:text-pink-300 text-sm">
-					<strong>Dica:</strong> As cores dos status ajudam a identificar
-					visualmente o estado de cada agendamento. Clique em uma cor para
-					expandir e ver mais opções.
-				</AlertDescription>
-			</Alert>
+		<div className="space-y-4">
+			<div className="flex items-center justify-between">
+				<div>
+					<h2 className="text-base font-semibold">Cores dos Status</h2>
+					<p className="text-sm text-muted-foreground">
+						Personalize as cores de cada status
+					</p>
+				</div>
+				<div className="flex items-center gap-2">
+					{customColorCount > 0 && (
+						<Badge variant="secondary" className="text-xs">
+							{customColorCount} alteradas
+						</Badge>
+					)}
+					{customStatuses.length > 0 && (
+						<Badge variant="secondary" className="text-xs">
+							{customStatuses.length} personalizados
+						</Badge>
+					)}
+				</div>
+			</div>
 
 			{/* Custom Statuses Section */}
-			<Card className="border-2 border-purple-200 dark:border-purple-800">
-				<CardHeader className="bg-gradient-to-r from-purple-50 to-violet-50 dark:from-purple-950/20 dark:to-violet-950/20">
+			<Card>
+				<CardHeader className="pb-3">
 					<div className="flex items-center justify-between">
 						<div>
-							<CardTitle className="text-lg flex items-center gap-2">
-								<Plus className="w-5 h-5 text-purple-600" />
-								Status Personalizados
-							</CardTitle>
+							<CardTitle className="text-base">Status Personalizados</CardTitle>
 							<CardDescription>
 								Crie novos status para sua clínica
 							</CardDescription>
 						</div>
 						<div className="flex items-center gap-2">
 							{customColorCount > 0 && (
-								<Button
-									variant="outline"
-									size="sm"
-									onClick={handleResetAll}
-									className="text-pink-600 border-pink-200 hover:bg-pink-50"
-								>
+								<Button variant="outline" size="sm" onClick={handleResetAll}>
 									<RotateCcw className="w-4 h-4 mr-2" />
-									Resetar Todas
+									Resetar
 								</Button>
 							)}
-							<Button
-								onClick={() => setShowNewDialog(true)}
-								className="bg-purple-600 hover:bg-purple-700"
-							>
+							<Button size="sm" onClick={() => setShowNewDialog(true)}>
 								<Plus className="w-4 h-4 mr-2" />
 								Novo Status
 							</Button>
 						</div>
 					</div>
 				</CardHeader>
-				<CardContent className="pt-4">
+				<CardContent className="pt-3">
 					{customStatuses.length === 0 ? (
-						<div className="text-center py-12 px-4 rounded-xl border-2 border-dashed border-purple-200 dark:border-purple-800 bg-gradient-to-br from-purple-50/50 to-violet-50/50 dark:from-purple-950/10 dark:to-violet-950/10">
-							<div className="inline-flex p-4 rounded-full bg-purple-100 dark:bg-purple-900/30 mb-4">
-								<Palette className="h-10 w-10 text-purple-400" />
-							</div>
-							<p className="text-base font-medium text-purple-700 dark:text-purple-300 mb-1">
+						<div className="text-center py-8 px-4 rounded-lg border border-dashed">
+							<Palette className="h-8 w-8 text-muted-foreground mx-auto mb-2" />
+							<p className="text-sm text-muted-foreground">
 								Nenhum status personalizado criado
 							</p>
-							<p className="text-sm text-purple-600/70 dark:text-purple-400/70 max-w-xs mx-auto mb-4">
-								Clique em "Novo Status" para criar novos tipos de status para
-								sua clínica
-							</p>
-							<Button
-								onClick={() => setShowNewDialog(true)}
-								variant="outline"
-								className="border-purple-300 text-purple-600 hover:bg-purple-50"
-							>
-								<Plus className="w-4 h-4 mr-2" />
-								Criar Primeiro Status
-							</Button>
 						</div>
 					) : (
 						<div className="space-y-3">
@@ -1076,49 +1024,20 @@ export function StatusColorManager() {
 							open={expandedCategories[categoryName]}
 							onOpenChange={() => toggleCategory(categoryName)}
 						>
-							<Card className="border-2">
+							<Card>
 								<CollapsibleTrigger asChild>
-									<CardHeader
-										className={cn(
-											"cursor-pointer hover:opacity-90 transition-opacity",
-											categoryConfig.color,
-										)}
-									>
+									<CardHeader className="cursor-pointer py-3">
 										<div className="flex items-center justify-between">
-											<div className="flex items-center gap-3">
-												<div
-													className={cn(
-														"p-2 rounded-lg bg-white/50 dark:bg-black/20",
-														categoryConfig.iconColor,
-													)}
-												>
-													{categoryName === "Sucesso" && (
-														<Check className="w-5 h-5" />
-													)}
-													{categoryName === "Agendamento" && (
-														<Palette className="w-5 h-5" />
-													)}
-													{categoryName === "Pendente" && (
-														<Info className="w-5 h-5" />
-													)}
-													{categoryName === "Problemas" && (
-														<Trash2 className="w-5 h-5" />
-													)}
-												</div>
-												<div>
-													<CardTitle className="text-lg">
-														{categoryName}
-													</CardTitle>
-													<CardDescription>
-														{categoryConfig.description}
-													</CardDescription>
-												</div>
+											<div>
+												<CardTitle className="text-sm">
+													{categoryName}
+												</CardTitle>
+												<CardDescription className="text-xs">
+													{categoryConfig.description}
+												</CardDescription>
 											</div>
 											<div className="flex items-center gap-2">
-												<Badge
-													variant="outline"
-													className="bg-white/50 dark:bg-black/20"
-												>
+												<Badge variant="outline" className="text-xs">
 													{availableStatuses.length} status
 												</Badge>
 												{expandedCategories[categoryName] ? (
@@ -1136,14 +1055,15 @@ export function StatusColorManager() {
 											{availableStatuses.map((statusId) => {
 												const config = statusConfig[statusId];
 												if (!config) return null;
+												const colors = getStatusColors(statusId);
 												return (
 													<StatusColorEditor
 														key={statusId}
 														statusId={statusId}
 														label={config.label}
-														currentColor={config.color}
-														currentBgColor={config.bgColor}
-														currentBorderColor={config.borderColor}
+														currentColor={colors.color}
+														currentBgColor={colors.bgColor}
+														currentBorderColor={colors.borderColor}
 														isCustom={false}
 														hasCustomColor={hasCustomColors(statusId)}
 														onColorChange={(color, bgColor, borderColor) =>

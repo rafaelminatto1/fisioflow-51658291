@@ -64,8 +64,8 @@ test.describe('Agenda - Fluxo de Criação (Schedule-X) - Produção', () => {
         await page.mouse.move(targetBox.x + targetBox.width / 2, targetBox.y + 200, { steps: 10 });
         await page.mouse.up();
 
-        // Validar toast de sucesso (Optimistic UI + API)
-        await expect(page.locator('text=Horário atualizado com sucesso')).toBeVisible({ timeout: 5000 });
+        // Validar toast de sucesso do reagendamento
+        await expect(page.locator('text=Reagendado com sucesso')).toBeVisible({ timeout: 5000 });
       }
 
     } else {

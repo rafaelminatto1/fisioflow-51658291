@@ -66,6 +66,8 @@ import { WikiTriageBoard } from "@/features/wiki/components/WikiTriageBoard";
 import { KnowledgeHubView } from "@/features/wiki/components/KnowledgeHubView";
 import { WikiPageCard } from "@/features/wiki/components/WikiPageCard";
 import { KnowledgeArticleDialog } from "@/features/wiki/components/KnowledgeArticleDialog";
+import { PhysioDictionaryView } from "@/features/wiki/components/PhysioDictionaryView";
+import { bilingualFilter } from "@/lib/utils/bilingualSearch";
 import {
 	getEvidenceTree,
 	isEvidencePage,
@@ -87,7 +89,7 @@ export default function WikiPage() {
 
 	// Estados Locais
 	const [activeView, setActiveView] = useState<
-		"dashboard" | "knowledge-hub" | "page"
+		"dashboard" | "knowledge-hub" | "dictionary" | "page"
 	>("dashboard");
 	const [searchQuery, setSearchQuery] = useState("");
 	const [isEditing, setIsEditing] = useState(false);
@@ -169,22 +171,16 @@ export default function WikiPage() {
 
 	// Filtragem de páginas
 	const filteredPages = useMemo(() => {
-		const query = searchQuery.toLowerCase();
-		return pages.filter((page) => {
-			const matchesSearch =
-				!searchQuery ||
-				page.title.toLowerCase().includes(query) ||
-				page.content.toLowerCase().includes(query) ||
-				page.tags.some((tag) => tag.toLowerCase().includes(query));
+		// Se a query começar com #, filtramos especificamente por tag
+		if (searchQuery.startsWith("#")) {
+			const tagName = searchQuery.slice(1).toLowerCase();
+			return pages.filter(page => page.tags.some((t) => t.toLowerCase().includes(tagName)));
+		}
 
-			// Se a query começar com #, filtramos especificamente por tag
-			if (searchQuery.startsWith("#")) {
-				const tagName = searchQuery.slice(1).toLowerCase();
-				return page.tags.some((t) => t.toLowerCase().includes(tagName));
-			}
+		if (!searchQuery) return pages;
 
-			return matchesSearch;
-		});
+		// Utilizando a busca bilíngue (Português/Inglês) + Sinônimos
+		return bilingualFilter(pages, searchQuery, ['title', 'content', 'tags']);
 	}, [pages, searchQuery]);
 
 	const evidenceTree = useMemo(() => getEvidenceTree(pages), [pages]);
@@ -419,6 +415,10 @@ export default function WikiPage() {
 					onCreatePage={handleCreatePage}
 					onDashboardSelect={handleDashboardSelect}
 					onKnowledgeHubSelect={handleKnowledgeHubSelect}
+					onDictionarySelect={() => {
+						setActiveView("dictionary");
+						setSelectedPage(null);
+					}}
 					onTagSelect={handleTagSelect}
 				/>
 
@@ -454,6 +454,8 @@ export default function WikiPage() {
 								curationMap={curationMap}
 							/>
 						</div>
+					) : activeView === "dictionary" ? (
+						<PhysioDictionaryView />
 					) : (
 						<div className="p-4 sm:p-6 space-y-6 animate-in fade-in duration-500">
 							{/* Compact header */}
