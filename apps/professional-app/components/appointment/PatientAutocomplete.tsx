@@ -4,6 +4,7 @@ import {
   Text,
   StyleSheet,
   TouchableOpacity,
+  Keyboard,
 } from 'react-native';
 import { Input } from '@/components';
 import { useColors } from '@/hooks/useColorScheme';
@@ -59,6 +60,7 @@ export function PatientAutocomplete({
                 key={patient.id}
                 style={[styles.suggestionItem, { borderBottomColor: colors.border }]}
                 onPress={() => {
+                  Keyboard.dismiss();
                   medium();
                   setSearch(patient.name);
                   setShowSuggestions(false);

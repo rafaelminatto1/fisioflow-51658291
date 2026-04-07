@@ -1,8 +1,0 @@
-{
-  "mcpServers": {
-    "neon": {
-      "url": "https://server.smithery.ai/neon/mcp",
-      "type": "http"
-    }
-  }
-}

@@ -1,5 +1,4 @@
 import React, { useRef, useState } from 'react';
-import Webcam from "react-webcam";
 import { Stage, Layer, Line } from 'react-konva';
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -19,13 +18,13 @@ interface PostureAnalysisStudioProps {
 }
 
 export const PostureAnalysisStudio: React.FC<PostureAnalysisStudioProps> = ({ onDataUpdate }) => {
-    const webcamRef = useRef<Webcam>(null);
     const videoRef = useRef<HTMLVideoElement>(null);
+    const imageRef = useRef<HTMLImageElement>(null);
     const stageRef = useRef<any>(null);
     const fileInputRef = useRef<HTMLInputElement>(null);
     
-    const [videoMode, setVideoMode] = useState<"webcam" | "file">("webcam");
     const [videoSrc, setVideoSrc] = useState<string | null>(null);
+    const [mediaKind, setMediaKind] = useState<"video" | "image">("video");
     const [isPlaying, setIsPlaying] = useState(false);
     const [currentFrame, setCurrentFrame] = useState(0);
     const [fps] = useState(30);
@@ -34,9 +33,7 @@ export const PostureAnalysisStudio: React.FC<PostureAnalysisStudioProps> = ({ on
     const [showPlumbLine, setShowPlumbLine] = useState(true);
     const [plumbX, setPlumbX] = useState(400);
 
-    const { aiEnabled, aiLoading, poseKeypoints, startMoveNet, stopMoveNet } = useMoveNet(
-        (videoMode === "webcam" ? webcamRef : videoRef) as any
-    );
+    const { aiEnabled, aiLoading, poseKeypoints, startMoveNet, stopMoveNet } = useMoveNet(videoRef as any);
     const { points: goniometerPoints, updatePoint, currentAngle, clearGoniometer } = useGoniometer();
     const { trackedTrajs, addTrajectory, handleCanvasClick, removeTrajectory, removeTrajectoryByKeypoint, clearTrajectories } = useTrajectory(poseKeypoints, aiEnabled, currentFrame, { width: 800, height: 600 });
     const [activeTool, setActiveTool] = useState<"none" | "goniometer" | "trajectory">("goniometer");
@@ -50,7 +47,9 @@ export const PostureAnalysisStudio: React.FC<PostureAnalysisStudioProps> = ({ on
         if (file) {
             const url = URL.createObjectURL(file);
             setVideoSrc(url);
-            setVideoMode("file");
+            setMediaKind(file.type.startsWith("image/") ? "image" : "video");
+            setCurrentFrame(0);
+            setIsPlaying(false);
         }
     };
 
@@ -70,33 +69,48 @@ export const PostureAnalysisStudio: React.FC<PostureAnalysisStudioProps> = ({ on
     };
 
     React.useEffect(() => {
-        if (videoMode === "file" && videoRef.current) {
+        if (videoRef.current && videoSrc && mediaKind === "video") {
             const v = videoRef.current;
             const update = () => setCurrentFrame(Math.floor(v.currentTime * fps));
             v.addEventListener('timeupdate', update);
             return () => v.removeEventListener('timeupdate', update);
         }
-    }, [videoMode, fps]);
+    }, [videoSrc, mediaKind, fps]);
 
     return (
         <div className="flex flex-col gap-6 h-full">
             <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
                 <Card className="lg:col-span-3 relative overflow-hidden bg-slate-950 border-none rounded-[2.5rem] shadow-2xl h-[600px] group/canvas">
                     <div className="relative w-full h-full flex items-center justify-center overflow-hidden">
-                        {videoMode === "webcam" ? (
-                            <Webcam
-                                ref={webcamRef}
-                                audio={false}
-                                className="absolute inset-0 w-full h-full object-cover opacity-60 transition-opacity group-hover/canvas:opacity-80"
-                            />
-                        ) : (
+                        {mediaKind === "video" ? (
                             <video
                                 ref={videoRef}
                                 src={videoSrc || ""}
-                                className="absolute inset-0 w-full h-full object-contain opacity-80"
+                                className="absolute inset-0 h-full w-full object-contain opacity-80"
                                 playsInline
                                 muted
                             />
+                        ) : (
+                            <img
+                                ref={imageRef}
+                                src={videoSrc || ""}
+                                alt="Upload postural"
+                                className="absolute inset-0 h-full w-full object-contain opacity-80"
+                            />
+                        )}
+                        {!videoSrc && (
+                            <div className="absolute inset-0 z-20 flex flex-col items-center justify-center gap-3 bg-slate-950/90 px-6 text-center">
+                                <Upload className="h-10 w-10 text-blue-400" />
+                                <div>
+                                    <p className="text-sm font-black uppercase tracking-widest text-white">
+                                        Envie uma imagem ou vídeo postural
+                                    </p>
+                                    <p className="mt-2 max-w-md text-sm text-white/70">
+                                        Para postura, uma foto ou vídeo curto já é suficiente para
+                                        linhas de referência e comparação.
+                                    </p>
+                                </div>
+                            </div>
                         )}
                         <Stage width={800} height={600} className="absolute inset-0 z-10" ref={stageRef} onClick={(e) => {
                             const pos = e.target.getStage()?.getPointerPosition();
@@ -132,7 +146,7 @@ export const PostureAnalysisStudio: React.FC<PostureAnalysisStudioProps> = ({ on
                             type="file" 
                             className="hidden" 
                             ref={fileInputRef} 
-                            accept="video/*" 
+                            accept="video/*,image/*" 
                             onChange={handleFileUpload} 
                         />
                         <Button
@@ -149,7 +163,7 @@ export const PostureAnalysisStudio: React.FC<PostureAnalysisStudioProps> = ({ on
                         <Button
                             variant={aiEnabled ? "default" : "ghost"}
                             size="sm"
-                            disabled={aiLoading}
+                            disabled={aiLoading || !videoSrc || mediaKind !== "video"}
                             onClick={() => aiEnabled ? stopMoveNet() : startMoveNet()}
                             className={`rounded-2xl gap-2 text-[10px] font-black tracking-widest uppercase px-4 h-10 transition-all ${aiEnabled ? "bg-green-600 hover:bg-green-700 shadow-[0_0_20px_rgba(34,197,94,0.4)] border-none" : "hover:bg-white/5"}`}
                         >
@@ -176,7 +190,7 @@ export const PostureAnalysisStudio: React.FC<PostureAnalysisStudioProps> = ({ on
                             </Button>
                         </div>
 
-                        {videoMode === "file" && (
+                        {videoSrc && mediaKind === "video" && (
                             <>
                                 <div className="h-8 w-px bg-white/10 mx-1" />
                                 <div className="flex items-center gap-1">
