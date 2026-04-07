@@ -52,6 +52,7 @@ export function useRescheduleAppointment() {
 				appointmentId,
 				updates: { appointment_date, appointment_time, duration },
 				ignoreCapacity,
+				suppressSuccessToast: true,
 			}),
 		isPending: false,
 	};

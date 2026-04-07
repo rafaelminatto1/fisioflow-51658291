@@ -26,7 +26,6 @@
     "noFallthroughCasesInSwitch": true,
     "noImplicitReturns": false,
     "noUncheckedIndexedAccess": false,
-    "ignoreDeprecations": "6.0",
     "paths": {
       "@/*": [
         "../../src/*"

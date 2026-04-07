@@ -23,6 +23,7 @@ import {
 	patientsRoutes,
 	reportsRoutes,
 } from "./index";
+import { RouterErrorElement } from "@/components/error/RouterErrorElement";
 
 const BookingPage = lazy(() =>
 	import("@/pages/public/BookingPage").then((module) => ({
@@ -40,7 +41,7 @@ const MasterDataHub = lazy(() => import("@/pages/cadastros/MasterDataHub"));
 
 export const router = createBrowserRouter(
 	createRoutesFromElements(
-		<Route element={<InfrastructureLayout />}>
+		<Route element={<InfrastructureLayout />} errorElement={<RouterErrorElement />}>
 			<Route element={<AppShellLayout />}>
 				{authRoutes}
 				{coreRoutes}

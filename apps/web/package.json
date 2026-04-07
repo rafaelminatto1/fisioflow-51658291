@@ -200,6 +200,7 @@
     "react-day-picker": "^9.13.0",
     "react-dropzone": "^15.0.0",
     "react-error-boundary": "^6.0.1",
+    "react-filerobot-image-editor": "5.0.0-beta.156",
     "react-grid-layout": "^2.2.3",
     "react-hook-form": "^7.61.1",
     "react-konva": "^19.2.3",

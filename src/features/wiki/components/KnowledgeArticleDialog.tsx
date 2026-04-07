@@ -26,6 +26,8 @@ import {
 	Sparkles,
 	AlertCircle,
 	Lightbulb,
+	Image,
+	BookOpen,
 } from "lucide-react";
 import {
 	knowledgeGroups,
@@ -75,6 +77,7 @@ export function KnowledgeArticleDialog({
 	const [questionInput, setQuestionInput] = useState("");
 	const [attachmentName, setAttachmentName] = useState("");
 	const [attachmentUrl, setAttachmentUrl] = useState("");
+	const [attachmentType, setAttachmentType] = useState("file");
 	const [isSubmitting, setIsSubmitting] = useState(false);
 
 	useEffect(() => {
@@ -157,13 +160,14 @@ export function KnowledgeArticleDialog({
 					{
 						name: attachmentName.trim(),
 						url: attachmentUrl.trim(),
-						type: "link",
+						type: attachmentType,
 					},
 				],
 			},
 		}));
 		setAttachmentName("");
 		setAttachmentUrl("");
+		setAttachmentType("file");
 	};
 
 	const removeAttachment = (index: number) => {
@@ -184,10 +188,10 @@ export function KnowledgeArticleDialog({
 			<DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
 				<DialogHeader className="flex flex-row items-center justify-between border-b pb-4 mb-4">
 					<div>
-						<DialogTitle className="text-xl font-bold">
+						<DialogTitle className="text-2xl font-bold">
 							{article ? "Editar Diretriz Clínica" : "Adicionar Nova Diretriz"}
 						</DialogTitle>
-						<p className="text-xs text-muted-foreground mt-1">
+						<p className="text-sm text-muted-foreground mt-1">
 							Configure os detalhes técnicos e evidências do protocolo.
 						</p>
 					</div>
@@ -196,7 +200,7 @@ export function KnowledgeArticleDialog({
 							<Sparkles className="h-3.5 w-3.5 text-primary" />
 							<Label
 								htmlFor="quick-add"
-								className="text-[10px] font-bold uppercase tracking-tight cursor-pointer"
+								className="text-xs font-bold uppercase tracking-tight cursor-pointer"
 							>
 								Modo Inteligente
 							</Label>
@@ -216,7 +220,7 @@ export function KnowledgeArticleDialog({
 						<div className="grid gap-2">
 							<Label
 								htmlFor="title"
-								className="font-bold text-xs uppercase tracking-wider text-slate-500"
+								className="font-bold text-sm uppercase tracking-wider text-slate-500"
 							>
 								Título do Artigo / Diretriz
 							</Label>
@@ -227,14 +231,14 @@ export function KnowledgeArticleDialog({
 									setFormData((prev) => ({ ...prev, title: e.target.value }))
 								}
 								placeholder="Ex: Low back pain: clinical practice guidelines..."
-								className="h-11 font-medium"
+								className="h-11 text-base font-medium"
 							/>
 						</div>
 
 						<div className="grid gap-2">
 							<Label
 								htmlFor="url"
-								className="font-bold text-xs uppercase tracking-wider text-slate-500"
+								className="font-bold text-sm uppercase tracking-wider text-slate-500"
 							>
 								URL da Fonte Principal (PubMed / PDF / Journal)
 							</Label>
@@ -248,15 +252,15 @@ export function KnowledgeArticleDialog({
 											setFormData((prev) => ({ ...prev, url: e.target.value }))
 										}
 										placeholder="https://..."
-										className="pl-10 h-11"
+										className="pl-10 h-11 text-base"
 									/>
 								</div>
 							</div>
 							{isQuickAdd && (
-								<div className="flex items-start gap-2 bg-blue-50 dark:bg-blue-950/30 p-3 rounded-lg border border-blue-100 dark:border-blue-900/50">
-									<AlertCircle className="h-4 w-4 text-blue-500 mt-0.5" />
-									<p className="text-[11px] text-blue-700 dark:text-blue-400 leading-relaxed font-medium">
-										<span className="font-bold">Nota da IA:</span> No Modo
+								<div className="flex items-start gap-2 bg-blue-50 dark:bg-blue-950/30 p-4 rounded-lg border border-blue-100 dark:border-blue-900/50">
+									<AlertCircle className="h-5 w-5 text-blue-500 mt-0.5" />
+									<p className="text-sm text-blue-700 dark:text-blue-400 leading-relaxed font-medium">
+										<span className="font-bold text-blue-800 dark:text-blue-300">Nota da IA:</span> No Modo
 										Inteligente, você só precisa do Título e Link. Nossa IA
 										processará o PDF/Site automaticamente para extrair o resumo,
 										destaques e nível de evidência após você salvar.
@@ -274,7 +278,7 @@ export function KnowledgeArticleDialog({
 								<div className="grid gap-2">
 									<Label
 										htmlFor="group"
-										className="font-bold text-xs uppercase tracking-wider text-slate-500"
+										className="font-bold text-sm uppercase tracking-wider text-slate-500"
 									>
 										Especialidade
 									</Label>
@@ -287,7 +291,7 @@ export function KnowledgeArticleDialog({
 											}))
 										}
 									>
-										<SelectTrigger id="group" className="h-10">
+										<SelectTrigger id="group" className="h-11 text-base">
 											<SelectValue placeholder="Selecione o grupo" />
 										</SelectTrigger>
 										<SelectContent>
@@ -302,7 +306,7 @@ export function KnowledgeArticleDialog({
 								<div className="grid gap-2">
 									<Label
 										htmlFor="subgroup"
-										className="font-bold text-xs uppercase tracking-wider text-slate-500"
+										className="font-bold text-sm uppercase tracking-wider text-slate-500"
 									>
 										Subgrupo / Patologia
 									</Label>
@@ -316,13 +320,13 @@ export function KnowledgeArticleDialog({
 											}))
 										}
 										placeholder="Ex: Joelho, Coluna..."
-										className="h-10"
+										className="h-11 text-base"
 									/>
 								</div>
 								<div className="grid gap-2">
 									<Label
 										htmlFor="status"
-										className="font-bold text-xs uppercase tracking-wider text-slate-500"
+										className="font-bold text-sm uppercase tracking-wider text-slate-500"
 									>
 										Status
 									</Label>
@@ -335,7 +339,7 @@ export function KnowledgeArticleDialog({
 											}))
 										}
 									>
-										<SelectTrigger id="status" className="h-10">
+										<SelectTrigger id="status" className="h-11 text-base">
 											<SelectValue placeholder="Selecione o status" />
 										</SelectTrigger>
 										<SelectContent>
@@ -356,7 +360,7 @@ export function KnowledgeArticleDialog({
 								<div className="grid gap-2">
 									<Label
 										htmlFor="evidence"
-										className="font-bold text-xs uppercase tracking-wider text-slate-500"
+										className="font-bold text-sm uppercase tracking-wider text-slate-500"
 									>
 										Nível de Evidência
 									</Label>
@@ -369,7 +373,7 @@ export function KnowledgeArticleDialog({
 											}))
 										}
 									>
-										<SelectTrigger id="evidence" className="h-10">
+										<SelectTrigger id="evidence" className="h-11 text-base">
 											<SelectValue placeholder="Selecione a evidência" />
 										</SelectTrigger>
 										<SelectContent>
@@ -386,7 +390,7 @@ export function KnowledgeArticleDialog({
 								<div className="grid gap-2">
 									<Label
 										htmlFor="year"
-										className="font-bold text-xs uppercase tracking-wider text-slate-500"
+										className="font-bold text-sm uppercase tracking-wider text-slate-500"
 									>
 										Ano de Publicação
 									</Label>
@@ -400,13 +404,13 @@ export function KnowledgeArticleDialog({
 												year: parseInt(e.target.value),
 											}))
 										}
-										className="h-10"
+										className="h-11 text-base"
 									/>
 								</div>
 								<div className="grid gap-2">
 									<Label
 										htmlFor="source"
-										className="font-bold text-xs uppercase tracking-wider text-slate-500"
+										className="font-bold text-sm uppercase tracking-wider text-slate-500"
 									>
 										Fonte (Ex: JOSPT, APTA)
 									</Label>
@@ -420,7 +424,7 @@ export function KnowledgeArticleDialog({
 											}))
 										}
 										placeholder="Fonte principal"
-										className="h-10"
+										className="h-11 text-base"
 									/>
 								</div>
 							</div>
@@ -428,7 +432,7 @@ export function KnowledgeArticleDialog({
 							<div className="grid gap-2">
 								<Label
 									htmlFor="summary"
-									className="font-bold text-xs uppercase tracking-wider text-slate-500"
+									className="font-bold text-sm uppercase tracking-wider text-slate-500"
 								>
 									Resumo Executivo (Clinical Summary)
 								</Label>
@@ -442,14 +446,14 @@ export function KnowledgeArticleDialog({
 										}))
 									}
 									placeholder="Escreva um breve resumo clínico para consulta rápida..."
-									rows={3}
-									className="resize-none"
+									rows={4}
+									className="resize-none text-base leading-relaxed"
 								/>
 							</div>
 
 							<div className="grid gap-4 md:grid-cols-2">
 								<div className="space-y-3">
-									<Label className="font-bold text-xs uppercase tracking-wider text-slate-500">
+									<Label className="font-bold text-sm uppercase tracking-wider text-slate-500">
 										Destaques (Key Findings)
 									</Label>
 									<div className="flex gap-2">
@@ -457,7 +461,7 @@ export function KnowledgeArticleDialog({
 											value={highlightInput}
 											onChange={(e) => setHighlightInput(e.target.value)}
 											placeholder="Novo destaque..."
-											className="h-9 text-xs"
+											className="h-10 text-sm"
 											onKeyDown={(e) =>
 												e.key === "Enter" &&
 												(e.preventDefault(),
@@ -472,7 +476,7 @@ export function KnowledgeArticleDialog({
 											type="button"
 											size="icon"
 											variant="secondary"
-											className="h-9 w-9 shrink-0"
+											className="h-10 w-10 shrink-0"
 											onClick={() =>
 												addItem("highlights", highlightInput, setHighlightInput)
 											}
@@ -485,7 +489,7 @@ export function KnowledgeArticleDialog({
 											<Badge
 												key={idx}
 												variant="secondary"
-												className="pr-1 text-[10px] h-6"
+												className="pr-1 text-xs h-7"
 											>
 												{item}
 												<Button
@@ -502,7 +506,7 @@ export function KnowledgeArticleDialog({
 								</div>
 
 								<div className="space-y-3">
-									<Label className="font-bold text-xs uppercase tracking-wider text-slate-500">
+									<Label className="font-bold text-sm uppercase tracking-wider text-slate-500">
 										Observações Clínicas (Internal)
 									</Label>
 									<div className="flex gap-2">
@@ -510,7 +514,7 @@ export function KnowledgeArticleDialog({
 											value={observationInput}
 											onChange={(e) => setObservationInput(e.target.value)}
 											placeholder="Nova observação..."
-											className="h-9 text-xs"
+											className="h-10 text-sm"
 											onKeyDown={(e) =>
 												e.key === "Enter" &&
 												(e.preventDefault(),
@@ -525,7 +529,7 @@ export function KnowledgeArticleDialog({
 											type="button"
 											size="icon"
 											variant="secondary"
-											className="h-9 w-9 shrink-0"
+											className="h-10 w-10 shrink-0"
 											onClick={() =>
 												addItem(
 													"observations",
@@ -542,7 +546,7 @@ export function KnowledgeArticleDialog({
 											<Badge
 												key={idx}
 												variant="secondary"
-												className="pr-1 text-[10px] h-6 bg-slate-100 text-slate-700"
+												className="pr-1 text-xs h-7 bg-slate-100 text-slate-700"
 											>
 												{item}
 												<Button
@@ -560,7 +564,7 @@ export function KnowledgeArticleDialog({
 							</div>
 
 							<div className="space-y-3">
-								<Label className="font-bold text-xs uppercase tracking-wider text-slate-500">
+								<Label className="font-bold text-sm uppercase tracking-wider text-slate-500">
 									Perguntas que este artigo responde (Q&A)
 								</Label>
 								<div className="flex gap-2">
@@ -568,7 +572,7 @@ export function KnowledgeArticleDialog({
 										value={questionInput}
 										onChange={(e) => setQuestionInput(e.target.value)}
 										placeholder="Ex: Qual o critério de alta para corrida?"
-										className="h-10 text-sm"
+										className="h-11 text-base"
 										onKeyDown={(e) =>
 											e.key === "Enter" &&
 											(e.preventDefault(),
@@ -579,22 +583,22 @@ export function KnowledgeArticleDialog({
 										type="button"
 										size="icon"
 										variant="secondary"
-										className="h-10 w-10 shrink-0"
+										className="h-11 w-11 shrink-0"
 										onClick={() =>
 											addItem("keyQuestions", questionInput, setQuestionInput)
 										}
 									>
-										<Plus className="h-4 w-4" />
+										<Plus className="h-5 w-5" />
 									</Button>
 								</div>
 								<div className="space-y-2">
 									{formData.keyQuestions?.map((item, idx) => (
 										<div
 											key={idx}
-											className="flex items-center justify-between gap-2 p-2 rounded-lg border bg-muted/30 text-[11px] font-medium italic"
+											className="flex items-center justify-between gap-2 p-3 rounded-lg border bg-muted/30 text-sm font-medium italic"
 										>
 											<span className="flex items-center gap-2">
-												<Lightbulb className="h-3 w-3 text-amber-500" /> "{item}
+												<Lightbulb className="h-4 w-4 text-amber-500" /> "{item}
 												"
 											</span>
 											<Button
@@ -603,7 +607,7 @@ export function KnowledgeArticleDialog({
 												className="h-6 w-6 text-slate-400 hover:text-destructive"
 												onClick={() => removeItem("keyQuestions", idx)}
 											>
-												<X className="h-3 w-3" />
+												<X className="h-4 w-4" />
 											</Button>
 										</div>
 									))}
@@ -611,41 +615,60 @@ export function KnowledgeArticleDialog({
 							</div>
 
 							<div className="space-y-3">
-								<Label className="font-bold text-xs uppercase tracking-wider text-slate-500">
+								<Label className="font-bold text-sm uppercase tracking-wider text-slate-500">
 									Anexos e Documentos Suplementares
 								</Label>
-								<div className="grid grid-cols-1 md:grid-cols-[1.2fr_1.8fr_auto] gap-2">
+								<div className="grid grid-cols-1 md:grid-cols-[1fr_1.2fr_1.8fr_auto] gap-2">
+									<Select value={attachmentType} onValueChange={setAttachmentType}>
+										<SelectTrigger className="h-10 text-xs">
+											<SelectValue placeholder="Tipo" />
+										</SelectTrigger>
+										<SelectContent>
+											<SelectItem value="file">Arquivo</SelectItem>
+											<SelectItem value="image">Imagem</SelectItem>
+											<SelectItem value="url">URL / Link</SelectItem>
+											<SelectItem value="guideline">Diretriz</SelectItem>
+										</SelectContent>
+									</Select>
 									<Input
 										value={attachmentName}
 										onChange={(e) => setAttachmentName(e.target.value)}
-										placeholder="Nome do arquivo"
-										className="h-9 text-xs"
+										placeholder="Nome"
+										className="h-10 text-sm"
 									/>
 									<Input
 										value={attachmentUrl}
 										onChange={(e) => setAttachmentUrl(e.target.value)}
-										placeholder="URL (https://...)"
-										className="h-9 text-xs"
+										placeholder="URL ou Caminho"
+										className="h-10 text-sm"
 									/>
 									<Button
 										type="button"
 										size="icon"
 										variant="outline"
-										className="h-9 w-9 shrink-0"
+										className="h-10 w-10 shrink-0"
 										onClick={addAttachment}
 									>
-										<Plus className="h-4 w-4" />
+										<Plus className="h-5 w-5" />
 									</Button>
 								</div>
-								<div className="grid grid-cols-1 md:grid-cols-2 gap-2">
+								<div className="grid grid-cols-1 md:grid-cols-2 gap-3">
 									{(formData.metadata?.attachments || []).map(
 										(att: any, idx: number) => (
 											<div
 												key={idx}
-												className="flex items-center justify-between gap-2 p-2 rounded-lg border bg-emerald-50/30 dark:bg-emerald-950/10 text-xs"
+												className="flex items-center justify-between gap-2 p-3 rounded-lg border bg-emerald-50/30 dark:bg-emerald-950/10 text-sm"
 											>
-												<div className="flex items-center gap-2 overflow-hidden">
-													<FileText className="h-3.5 w-3.5 shrink-0 text-emerald-600" />
+												<div className="flex items-center gap-3 overflow-hidden">
+													{att.type === "image" ? (
+														<Image className="h-4 w-4 shrink-0 text-emerald-600" />
+													) : att.type === "url" ? (
+														<LinkIcon className="h-4 w-4 shrink-0 text-emerald-600" />
+													) : att.type === "guideline" ? (
+														<BookOpen className="h-4 w-4 shrink-0 text-emerald-600" />
+													) : (
+														<FileText className="h-4 w-4 shrink-0 text-emerald-600" />
+													)}
 													<span className="truncate font-bold text-emerald-800 dark:text-emerald-400">
 														{att.name}
 													</span>
@@ -653,10 +676,10 @@ export function KnowledgeArticleDialog({
 												<Button
 													variant="ghost"
 													size="icon"
-													className="h-6 w-6 text-slate-400 hover:text-destructive"
+													className="h-7 w-7 text-slate-400 hover:text-destructive"
 													onClick={() => removeAttachment(idx)}
 												>
-													<X className="h-3.5 w-3.5" />
+													<X className="h-4 w-4" />
 												</Button>
 											</div>
 										),
@@ -665,7 +688,7 @@ export function KnowledgeArticleDialog({
 							</div>
 
 							<div className="space-y-3">
-								<Label className="font-bold text-xs uppercase tracking-wider text-slate-500">
+								<Label className="font-bold text-sm uppercase tracking-wider text-slate-500">
 									Tags de Busca
 								</Label>
 								<div className="flex gap-2">
@@ -673,7 +696,7 @@ export function KnowledgeArticleDialog({
 										value={tagInput}
 										onChange={(e) => setTagInput(e.target.value)}
 										placeholder="Adicionar tag..."
-										className="h-9 text-xs"
+										className="h-10 text-sm"
 										onKeyDown={(e) =>
 											e.key === "Enter" &&
 											(e.preventDefault(),
@@ -684,10 +707,10 @@ export function KnowledgeArticleDialog({
 										type="button"
 										size="icon"
 										variant="outline"
-										className="h-9 w-9 shrink-0"
+										className="h-10 w-10 shrink-0"
 										onClick={() => addItem("tags", tagInput, setTagInput)}
 									>
-										<Plus className="h-4 w-4" />
+										<Plus className="h-5 w-5" />
 									</Button>
 								</div>
 								<div className="flex flex-wrap gap-2">
@@ -695,16 +718,16 @@ export function KnowledgeArticleDialog({
 										<Badge
 											key={idx}
 											variant="outline"
-											className="pr-1 h-6 text-[10px] font-bold"
+											className="pr-1 h-7 text-xs font-bold"
 										>
 											#{tag}
 											<Button
 												variant="ghost"
 												size="icon"
-												className="h-4 w-4 ml-1 hover:bg-transparent"
+												className="h-5 w-5 ml-1 hover:bg-transparent"
 												onClick={() => removeItem("tags", idx)}
 											>
-												<X className="h-3 w-3" />
+												<X className="h-3.5 w-3.5" />
 											</Button>
 										</Badge>
 									))}
@@ -719,14 +742,14 @@ export function KnowledgeArticleDialog({
 						variant="ghost"
 						onClick={() => onOpenChange(false)}
 						disabled={isSubmitting}
-						className="font-bold text-xs uppercase tracking-wider"
+						className="font-bold text-sm uppercase tracking-wider"
 					>
 						Cancelar
 					</Button>
 					<Button
 						onClick={handleSave}
 						disabled={isSubmitting || !formData.title || !formData.url}
-						className="font-bold text-xs uppercase tracking-wider min-w-[140px]"
+						className="font-bold text-sm uppercase tracking-wider min-w-[140px]"
 					>
 						{isSubmitting
 							? "Salvando..."

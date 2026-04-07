@@ -256,19 +256,12 @@ export function BusinessHoursManager() {
 	const maxTime = 1380; // 23:00
 
 	return (
-		<Card className="border-none shadow-lg">
-			<CardHeader className="bg-gradient-to-br from-blue-50 to-indigo-50 dark:from-blue-950/30 dark:to-indigo-950/30 rounded-t-xl">
-				<CardTitle className="flex items-center gap-2">
-					<div className="p-2 bg-blue-500 rounded-lg">
-						<Clock className="h-5 w-5 text-white" />
-					</div>
-					Horários de Funcionamento
-				</CardTitle>
-				<CardDescription>
-					Configure os dias e horários de atendimento da clínica
-				</CardDescription>
+		<Card className="border shadow-sm">
+			<CardHeader className="pb-3">
+				<CardTitle className="text-base">Horários de Funcionamento</CardTitle>
+				<CardDescription>Dias e horários de atendimento</CardDescription>
 			</CardHeader>
-			<CardContent className="space-y-6 pt-6">
+			<CardContent className="space-y-4">
 				{/* Quick presets section */}
 				<div className="p-4 rounded-xl border bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-950/20 dark:to-indigo-950/20">
 					<div className="flex items-center gap-2 mb-3">

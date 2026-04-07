@@ -64,6 +64,7 @@ import { getBestImageUrl } from "@/lib/imageUtils";
 import { useDebounce } from "@/hooks/performance/useDebounce";
 import { fisioLogger as logger } from "@/lib/errors/logger";
 import { normalizeText } from "@/lib/utils/string";
+import { expandSearchQuery, normalizeForSearch, bilingualFilter } from "@/lib/utils/bilingualSearch";
 
 interface ExerciseLibraryProps {
 	onSelectExercise?: (exercise: Exercise) => void;
@@ -597,35 +598,32 @@ export function ExerciseLibrary({
 	const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
 
 	const filteredExercises = useMemo(() => {
-		const searchTermNormalized = normalizeText(debouncedSearchTerm);
+		const validExercises = exercises.filter(
+			(ex): ex is Exercise => ex != null && typeof ex === "object"
+		);
 
-		return exercises
-			.filter((ex): ex is Exercise => ex != null && typeof ex === "object")
-			.filter((exercise) => {
-				// Text search
-				const nameNormalized = normalizeText(exercise.name || "");
-				const descNormalized = normalizeText(exercise.description || "");
+		// Aplica a busca bilíngue
+		const searchFiltered = bilingualFilter(
+			validExercises, 
+			debouncedSearchTerm, 
+			["name", "description", "category", "body_parts"]
+		);
 
-				const matchesSearch =
-					nameNormalized.includes(searchTermNormalized) ||
-					descNormalized.includes(searchTermNormalized);
+		return searchFiltered.filter((exercise) => {
+			// Quick filters
+			if (activeFilter === "favorites") return isFavorite(exercise.id);
+			if (activeFilter === "no-video") return !exercise.video_url;
 
-				if (!matchesSearch) return false;
-
-				// Quick filters
-				if (activeFilter === "favorites") return isFavorite(exercise.id);
-				if (activeFilter === "no-video") return !exercise.video_url;
-
-				// Advanced filters - Body Parts
-				if (advancedFilters.bodyParts.length > 0) {
-					const exerciseBodyParts = exercise.body_parts || [];
-					const hasMatchingBodyPart = advancedFilters.bodyParts.some((bp) =>
-						exerciseBodyParts.some((ebp) =>
-							ebp.toLowerCase().includes(bp.toLowerCase()),
-						),
-					);
-					if (!hasMatchingBodyPart) return false;
-				}
+			// Advanced filters - Body Parts
+			if (advancedFilters.bodyParts.length > 0) {
+				const exerciseBodyParts = exercise.body_parts || [];
+				const hasMatchingBodyPart = advancedFilters.bodyParts.some((bp) =>
+					exerciseBodyParts.some((ebp) =>
+						ebp.toLowerCase().includes(bp.toLowerCase()),
+					),
+				);
+				if (!hasMatchingBodyPart) return false;
+			}
 
 				// Advanced filters - Difficulty
 				if (advancedFilters.difficulty.length > 0) {

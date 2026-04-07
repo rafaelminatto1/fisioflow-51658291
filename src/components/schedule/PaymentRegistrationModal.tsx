@@ -135,6 +135,7 @@ export function PaymentRegistrationModal({
 				updates: {
 					payment_status: "paid",
 				},
+				suppressSuccessToast: true,
 			});
 
 			toast.success("Pagamento registrado com sucesso!");
