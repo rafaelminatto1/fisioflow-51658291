@@ -28,7 +28,7 @@ aiSearchApp.post('/', requireAuth, zValidator('json', querySchema), async (c) =>
     const aiSearchInstance = c.env.AI.autorag("fisioflow-rag");
 
     // Filtros de segurança: isolamento de tenant
-    const orgId = organizationId || user?.organization_id;
+    const orgId = organizationId || user?.organizationId;
     const filters = orgId ? { organizationId: orgId } : undefined;
 
     const answer = await aiSearchInstance.aiSearch({
