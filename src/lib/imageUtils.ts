@@ -4,8 +4,29 @@
  */
 
 /**
+ * Converte URL de imagem para formato otimizado (AVIF -> WebP -> original)
+ * Substitui automaticamente a extensão .png por .avif se disponível
+ */
+function getOptimizedImageUrl(url: string | null | undefined): string | null {
+	if (!url || typeof url !== "string") return null;
+
+	// Se a URL já termina em AVIF ou WebP, retorna como está
+	if (url.endsWith(".avif") || url.endsWith(".webp")) {
+		return url;
+	}
+
+	// Substitui .png por .avif para imagens do R2
+	if (url.includes("media.moocafisio.com.br") && url.endsWith(".png")) {
+		return url.replace(/\.png$/i, ".avif");
+	}
+
+	return url;
+}
+
+/**
  * Obtém a melhor URL de imagem disponível para um exercício
  * Prioridade: thumbnail_url > image_url > fallback
+ * Agora suporta conversão automática de PNG/AVIF
  */
 export function getBestImageUrl(exercise: {
 	thumbnail_url?: string | null;
@@ -14,12 +35,12 @@ export function getBestImageUrl(exercise: {
 }): string | null {
 	// Prioridade 1: thumbnail (mais rápido, menor)
 	if (exercise.thumbnail_url && isValidImageUrl(exercise.thumbnail_url)) {
-		return exercise.thumbnail_url;
+		return getOptimizedImageUrl(exercise.thumbnail_url);
 	}
 
 	// Prioridade 2: image_url
 	if (exercise.image_url && isValidImageUrl(exercise.image_url)) {
-		return exercise.image_url;
+		return getOptimizedImageUrl(exercise.image_url);
 	}
 
 	// Prioridade 3: YouTube thumbnail (para vídeos do YouTube)
