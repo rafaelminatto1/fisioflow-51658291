@@ -24,6 +24,8 @@ import { Backlinks } from "./suggestion/backlinks";
 import { uploadToR2 } from "@/lib/storage/r2-storage";
 import { getWorkersApiUrl } from "@/lib/api/config";
 import { getNeonAccessToken } from "@/lib/auth/neon-token";
+import FilerobotImageEditor, { TABS, TOOLS } from "react-filerobot-image-editor";
+import { BilingualSuggestionsModal } from "./suggestion/BilingualSuggestionsModal";
 
 interface NotionEvolutionEditorProps {
 	initialContent?: string;
@@ -53,6 +55,8 @@ export const NotionEvolutionEditor: React.FC<NotionEvolutionEditorProps> = ({
 		"idle",
 	);
 	const [isUploading, setIsUploading] = useState(false);
+	const [editingImage, setEditingImage] = useState<File | null>(null);
+	const [showSuggestions, setShowSuggestions] = useState(false);
 
 	const DRAFT_KEY = `evolution_draft_${evolutionId}`;
 
@@ -205,10 +209,24 @@ export const NotionEvolutionEditor: React.FC<NotionEvolutionEditorProps> = ({
 
 	useEffect(() => {
 		const handleUploadEvent = (e: any) => {
-			if (e.detail?.file) uploadToCloudflareR2(e.detail.file);
+			if (e.detail?.file) {
+				const file = e.detail.file;
+				if (file.type.startsWith("image/")) {
+					setEditingImage(file);
+				} else {
+					uploadToCloudflareR2(file);
+				}
+			}
 		};
 		window.addEventListener("tiptap-upload", handleUploadEvent);
-		return () => window.removeEventListener("tiptap-upload", handleUploadEvent);
+		
+		const handleSuggestionsOpen = () => setShowSuggestions(true);
+		window.addEventListener("tiptap-sugestoes-open", handleSuggestionsOpen);
+		
+		return () => {
+			window.removeEventListener("tiptap-upload", handleUploadEvent);
+			window.removeEventListener("tiptap-sugestoes-open", handleSuggestionsOpen);
+		};
 	}, [uploadToCloudflareR2]);
 
 	
@@ -430,6 +448,97 @@ export const NotionEvolutionEditor: React.FC<NotionEvolutionEditorProps> = ({
 					SISTEMA OPERACIONAL • MOOCA FISIO V4.0
 				</p>
 			</div>
+
+			<BilingualSuggestionsModal 
+				open={showSuggestions}
+				onOpenChange={setShowSuggestions}
+				onSelect={(term) => {
+					editor?.chain().focus().insertContent(term).run();
+				}}
+			/>
+
+			{editingImage && (
+				<div className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/90 backdrop-blur-sm p-2 sm:p-6">
+					<div className="w-full h-full max-w-[1200px] max-h-[95vh] bg-slate-900 rounded-2xl overflow-hidden shadow-[0_0_50px_-12px_rgba(0,0,0,0.5)] border border-slate-800 relative flex flex-col">
+						<FilerobotImageEditor
+							source={URL.createObjectURL(editingImage)}
+							onSave={async (editedImageObject, _designState) => {
+								try {
+									setIsUploading(true);
+									setEditingImage(null);
+									if (editedImageObject.imageBase64) {
+										const res = await fetch(editedImageObject.imageBase64);
+										const blob = await res.blob();
+										const originalName = editingImage.name.replace(/\.[^/.]+$/, "");
+										const extension = editedImageObject.extension || "png";
+										const newFile = new File(
+											[blob], 
+											`${originalName}-editada.${extension}`, 
+											{ type: editedImageObject.mimeType || "image/png" }
+										);
+										await uploadToCloudflareR2(newFile);
+									}
+								} catch (e) {
+									console.error(e);
+									toast.error("Erro ao salvar imagem editada.");
+									setIsUploading(false);
+								}
+							}}
+							onClose={() => setEditingImage(null)}
+							annotationsCommon={{
+								fill: '#ef4444',
+								stroke: '#ef4444',
+							}}
+							Text={{ text: 'Anotação...' }}
+							tabsIds={[TABS.ANNOTATE, TABS.ADJUST, TABS.FILTERS, TABS.FINETUNE, TABS.WATERMARK]} 
+							defaultTabId={TABS.ANNOTATE}
+							defaultToolId={TOOLS.PEN}
+							savingPixelRatio={2.5}
+							previewPixelRatio={window.devicePixelRatio}
+							translations={{
+								name: 'Nome do Arquivo',
+								save: 'Salvar na Evolução',
+								saveAs: 'Salvar como',
+								extension: 'Extensão',
+								format: 'Formato',
+								quality: 'Qualidade',
+								resize: 'Redimensionar',
+								crop: 'Cortar',
+								adjust: 'Ajustar / Cortar',
+								filters: 'Filtros',
+								finetune: 'Refinar Cores',
+								annotate: 'Anotar / Desenhar',
+								watermark: 'Marca d\'água',
+								pen: 'Caneta',
+								arrow: 'Seta',
+								line: 'Linha',
+								rect: 'Retângulo',
+								ellipse: 'Elipse',
+								polygon: 'Polígono',
+								text: 'Texto',
+								image: 'Imagem',
+								color: 'Cor',
+								fill: 'Preenchimento',
+								stroke: 'Contorno',
+								brightness: 'Brilho',
+								contrast: 'Contraste',
+								saturation: 'Saturação',
+								exposure: 'Exposição',
+								temperature: 'Temperatura',
+								undo: 'Desfazer',
+								redo: 'Refazer',
+								reset: 'Zerar Edições',
+								cancel: 'Cancelar',
+								original: 'Original',
+								custom: 'Personalizado',
+								square: 'Quadrado',
+								landscape: 'Paisagem',
+								portrait: 'Retrato'
+							}}
+						/>
+					</div>
+				</div>
+			)}
 		</div>
 	);
 };

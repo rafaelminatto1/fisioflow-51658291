@@ -16,7 +16,8 @@ const routeImports: Record<string, () => Promise<unknown>> = {
 	[APP_ROUTES.TASKS]: () => import("@/pages/TarefasV2"),
 	[APP_ROUTES.FINANCIAL]: () => import("@/pages/Financial"),
 	[APP_ROUTES.REPORTS]: () => import("@/pages/Reports"),
-	[APP_ROUTES.SETTINGS]: () => import("@/pages/Settings"),
+	[APP_ROUTES.SETTINGS]: () =>
+		import("@/pages/Profile").then((m) => ({ default: m.Profile })),
 };
 
 export const useIntelligentPreload = () => {
@@ -25,7 +26,11 @@ export const useIntelligentPreload = () => {
 			if ("requestIdleCallback" in window) {
 				requestIdleCallback(() => {
 					// Preload apenas das 3 mais prováveis inicialmente
-					[APP_ROUTES.AGENDA, APP_ROUTES.PATIENTS, APP_ROUTES.DASHBOARD].forEach((route) => {
+					[
+						APP_ROUTES.AGENDA,
+						APP_ROUTES.PATIENTS,
+						APP_ROUTES.DASHBOARD,
+					].forEach((route) => {
 						const importFn = routeImports[route];
 						if (importFn) {
 							importFn().catch(() => {}); // Preload silancioso
