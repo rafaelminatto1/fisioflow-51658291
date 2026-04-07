@@ -65,7 +65,7 @@ app.post('/', requireAuth, async (c) => {
   }
 
   try {
-    await pool.query(
+    const result = await pool.query(
       `INSERT INTO announcements (organization_id, title, content, is_mandatory, type, media_url, created_by, created_at)
        VALUES ($1, $2, $3, $4, $5, $6, $7, NOW()) RETURNING *`,
       [

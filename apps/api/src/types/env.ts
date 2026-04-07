@@ -88,7 +88,7 @@ export interface Env {
 
   // AI & Browser Rendering
   AI: {
-    run(model: string, input: any): Promise<any>;
+    run(model: string, input: any, options?: any): Promise<any>;
     autorag(indexName: string): {
       aiSearch(options: {
         query: string;
