@@ -30,6 +30,8 @@ const VIEW_MAP: Record<ViewType, string> = {
 	week: "timeGridWeek",
 	month: "dayGridMonth",
 };
+const WEEK_SLOT_COUNT = 56; // 14 hours * 4 slots per hour.
+const WEEK_HEADER_HEIGHT = 28;
 
 export interface DayFlowCalendarWrapperProps {
 	appointments: any[];
@@ -66,7 +68,8 @@ export function DayFlowCalendarWrapper(props: DayFlowCalendarWrapperProps) {
 		onViewTypeChange,
 	} = props;
 	const isWeekView = viewType === "week";
-	const slotHeight = isWeekView ? 10 : 14;
+	const [weekSlotHeight, setWeekSlotHeight] = useState(12);
+	const slotHeight = isWeekView ? weekSlotHeight : 14;
 	const slotLabelFormat = useMemo(
 		() => (time: Date) => (time.getMinutes() === 0 ? format(time, "HH:mm") : ""),
 		[],
@@ -84,6 +87,28 @@ export function DayFlowCalendarWrapper(props: DayFlowCalendarWrapperProps) {
 	useEffect(() => {
 		propsRef.current = props;
 	}, [props]);
+
+	useEffect(() => {
+		if (!isWeekView || !containerRef.current || typeof ResizeObserver === "undefined") {
+			return;
+		}
+
+		const updateWeekSlotHeight = () => {
+			const availableHeight = containerRef.current?.getBoundingClientRect().height ?? 0;
+			if (!availableHeight) return;
+			const nextSlotHeight = Math.max(
+				10,
+				Math.floor((availableHeight - WEEK_HEADER_HEIGHT) / WEEK_SLOT_COUNT),
+			);
+			setWeekSlotHeight((current) => (current === nextSlotHeight ? current : nextSlotHeight));
+		};
+
+		updateWeekSlotHeight();
+		const observer = new ResizeObserver(updateWeekSlotHeight);
+		observer.observe(containerRef.current);
+
+		return () => observer.disconnect();
+	}, [isWeekView]);
 
 	const [optimisticAppointments, addOptimisticAppointment] = useOptimistic(
 		appointments || [],
@@ -412,9 +437,12 @@ export function DayFlowCalendarWrapper(props: DayFlowCalendarWrapperProps) {
 				.ec-time-grid .ec-event {
 					z-index: 10;
 				}
+				.dayflow-week-view .ec-body {
+					overflow-y: hidden !important;
+				}
 				.dayflow-week-view .ec-body .ec-time,
 				.dayflow-week-view .ec-body .ec-line {
-					height: 10px !important;
+					height: ${slotHeight}px !important;
 				}
 				.dayflow-week-view .ec-header .ec-time,
 				.dayflow-week-view .ec-header .ec-sidebar-title,
@@ -429,8 +457,8 @@ export function DayFlowCalendarWrapper(props: DayFlowCalendarWrapperProps) {
 				}
 				.dayflow-week-view .ec-body .ec-time {
 					font-size: 9px !important;
-					line-height: 10px !important;
-					top: -5px !important;
+					line-height: ${slotHeight}px !important;
+					top: -${slotHeight / 2}px !important;
 				}
 				.dayflow-event-shell {
 					width: 100%;
