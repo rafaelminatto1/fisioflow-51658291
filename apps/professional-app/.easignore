@@ -1,0 +1,153 @@
+# ─── node_modules (EAS reinstala via pnpm lockfile) ───
+node_modules/
+**/node_modules/
+
+# ─── Outras apps do monorepo (não usadas no build iOS) ───
+apps/web/
+apps/api/
+apps/patient-app/
+apps/jules-bot/
+apps/vinext-poc/
+apps/mobile-ios/
+
+# ─── Web dashboard source (Vite/React) ───
+src/
+
+# ─── Cloudflare Workers ───
+cloudflare-worker/
+workers/
+
+# ─── Pacotes do monorepo não usados no mobile ───
+packages/jules/
+
+# ─── Testes e artefatos de teste ───
+e2e/
+playwright/
+playwright-profile/
+playwright-profile-auto/
+playwright-report/
+test-results/
+coverage/
+testsprite_tests/
+test-drag.spec.ts
+test-start-attendance.spec.ts
+
+# ─── Docker ───
+docker/
+docker-compose.yml
+
+# ─── Drizzle (raiz do monorepo) ───
+drizzle/
+drizzle.config.ts
+schemas/
+
+# ─── Assets e configs da web ───
+public/
+.storybook/
+storybook-static/
+components.json
+vite.config.*
+vitest.config.*
+vitest.setup.ts
+eslint.config.js
+biome.json
+capacitor.config.ts
+turbo.json
+codemagic.yaml
+
+# ─── Documentação ───
+docs/
+docs2026/
+logo/
+homebrew/
+ARCHITECTURE.md
+CHANGELOG.md
+CONTRIBUTING.md
+DEPLOYMENT.md
+DEBUG_AUTH_RENDERING.md
+MIGRATION_GUIDE.md
+SCHEDULE_OPTIMIZATION_README.md
+SECURITY.md
+SETUP_GUIDE.md
+TESTING_README.md
+TESTSPRITE_DECISION.md
+TEST_REPORT.md
+TEST_REPORT_UPDATED.md
+TESTS_FINAL_REPORT.md
+CODEBASE_ANALYSIS.md
+prd.md
+README.md
+
+# ─── TypeScript build info e outputs ───
+*.tsbuildinfo
+tsconfig.app.json
+tsconfig.node.json
+dist/
+dist-ssr/
+build/
+
+# ─── Logs, debug e scripts temporários ───
+*.log
+tail.log
+tsc-output.txt
+type-check-error.log
+build_errors.txt
+build-log.txt
+xcode-build-*.log
+debug-*.mjs
+debug-*.png
+final-*.mjs
+final-*.png
+final-check.png
+debug-agenda.png
+target_screen.html
+check-*.mjs
+validate_*.mjs
+run-migration.mjs
+apply-migration.cjs
+create-announcements*.cjs
+debug-info.mjs
+debug.mjs
+debug-*.mjs
+list-models.ts
+test-*.mjs
+test_*.ts
+test_*.cjs
+debug-storybook.log
+feature_analysis.txt
+schema_analysis.txt
+ANALYSIS_REPORT.md
+analysis_report.txt
+appointments_network.txt
+
+# ─── Certificados e chaves (não devem estar no repo) ───
+*.cer
+*.pem
+*.p12
+*.csr
+*.key
+*.mobileprovision
+cert_*.txt
+*_base64.txt
+profile_*.txt
+dist.cer
+distribution.*
+ios_distribution.*
+app.json.root-backup
+
+# ─── Arquivos temporários ───
+_tmp_*/
+temp-avif-conversion/
+temp-webp-conversion/
+*.dcm
+*.html
+
+# ─── MCP / ferramentas de dev ───
+opencode.json
+mcp.json
+skills-lock.json
+.opencode/
+.gemini/
+
+# ─── CI configs não usados no EAS ───
+.github/
