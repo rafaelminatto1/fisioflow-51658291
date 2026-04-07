@@ -122,6 +122,9 @@ pids
 # Wrangler
 .wrangler/
 
+# OpenCode
+.opencode/
+
 # Temporary folders
 tmp/
 temp/
