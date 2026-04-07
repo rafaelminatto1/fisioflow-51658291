@@ -1,5 +1,4 @@
 import React, { useRef, useState } from 'react';
-import Webcam from "react-webcam";
 import { Stage, Layer } from 'react-konva';
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -27,12 +26,10 @@ interface FunctionalAnalysisStudioProps {
 }
 
 export const FunctionalAnalysisStudio: React.FC<FunctionalAnalysisStudioProps> = ({ onDataUpdate }) => {
-	const webcamRef = useRef<Webcam>(null);
 	const videoRef = useRef<HTMLVideoElement>(null);
 	const stageRef = useRef<any>(null);
 	const fileInputRef = useRef<HTMLInputElement>(null);
 
-	const [videoMode, setVideoMode] = useState<"webcam" | "file">("webcam");
 	const [videoSrc, setVideoSrc] = useState<string | null>(null);
 	const [isPlaying, setIsPlaying] = useState(false);
 	const [currentFrame, setCurrentFrame] = useState(0);
@@ -43,9 +40,7 @@ export const FunctionalAnalysisStudio: React.FC<FunctionalAnalysisStudioProps> =
 	const [assessment, setAssessment] = useState<FunctionalAssessment | null>(null);
 	const [autoAngleHistory, setAutoAngleHistory] = useState<Array<{ frame: number } & Record<string, number>>>([]);
 
-	const { aiEnabled, aiLoading, poseKeypoints, startMoveNet, stopMoveNet } = useMoveNet(
-		(videoMode === "webcam" ? webcamRef : videoRef) as any
-	);
+	const { aiEnabled, aiLoading, poseKeypoints, startMoveNet, stopMoveNet } = useMoveNet(videoRef as any);
 
 	const {
 		trackedTrajs,
@@ -58,9 +53,7 @@ export const FunctionalAnalysisStudio: React.FC<FunctionalAnalysisStudioProps> =
 
 	const { points: goniometerPoints, updatePoint, currentAngle, clearGoniometer, linkedKP, linkKeypoint, isRecording, toggleRecording, angleHistory } = useGoniometer(undefined, poseKeypoints, { width: 800, height: 600 });
 
-	const { trackedPoints, addPointToTrack, processFrame, setTrackedPoints } = useOpticalFlow(
-		(videoMode === "webcam" ? webcamRef : videoRef) as any
-	);
+	const { trackedPoints, addPointToTrack, processFrame, setTrackedPoints } = useOpticalFlow(videoRef as any);
 
 	const { angles: autoAngles } = useAutoAngles(poseKeypoints || []);
 
@@ -99,7 +92,8 @@ export const FunctionalAnalysisStudio: React.FC<FunctionalAnalysisStudioProps> =
 		if (file) {
 			const url = URL.createObjectURL(file);
 			setVideoSrc(url);
-			setVideoMode("file");
+			setCurrentFrame(0);
+			setIsPlaying(false);
 		}
 	};
 
@@ -119,7 +113,7 @@ export const FunctionalAnalysisStudio: React.FC<FunctionalAnalysisStudioProps> =
 	};
 
 	React.useEffect(() => {
-		if (videoMode === "file" && videoRef.current) {
+		if (videoRef.current && videoSrc) {
 			const v = videoRef.current;
 			const update = () => {
 				setCurrentFrame(Math.floor(v.currentTime * fps));
@@ -128,7 +122,7 @@ export const FunctionalAnalysisStudio: React.FC<FunctionalAnalysisStudioProps> =
 			v.addEventListener('timeupdate', update);
 			return () => v.removeEventListener('timeupdate', update);
 		}
-	}, [videoMode, fps, aiEnabled, activeTool, processFrame]);
+	}, [videoSrc, fps, aiEnabled, activeTool, processFrame]);
 
 	const exportReport = async () => {
 		const { generateBiomechanicsReport } = await import(
@@ -155,20 +149,26 @@ export const FunctionalAnalysisStudio: React.FC<FunctionalAnalysisStudioProps> =
 				{/* ── Video Canvas ─────────────────────────────────────── */}
 				<Card className="lg:col-span-3 relative overflow-hidden bg-slate-950 border-none rounded-[2.5rem] shadow-[0_0_50px_rgba(0,0,0,0.5)] h-[600px] group/canvas">
 					<div className="relative w-full h-full flex items-center justify-center overflow-hidden">
-						{videoMode === "webcam" ? (
-							<Webcam
-								ref={webcamRef}
-								audio={false}
-								className="absolute inset-0 w-full h-full object-cover opacity-60 transition-opacity group-hover/canvas:opacity-80"
-							/>
-						) : (
-							<video
-								ref={videoRef}
-								src={videoSrc || ""}
-								className="absolute inset-0 w-full h-full object-contain opacity-80"
-								playsInline
-								muted
-							/>
+						<video
+							ref={videoRef}
+							src={videoSrc || ""}
+							className="absolute inset-0 h-full w-full object-contain opacity-80"
+							playsInline
+							muted
+						/>
+						{!videoSrc && (
+							<div className="absolute inset-0 z-20 flex flex-col items-center justify-center gap-3 bg-slate-950/90 px-6 text-center">
+								<Upload className="h-10 w-10 text-blue-400" />
+								<div>
+									<p className="text-sm font-black uppercase tracking-widest text-white">
+										Envie um vídeo funcional
+									</p>
+									<p className="mt-2 max-w-md text-sm text-white/70">
+										Use vídeos gravados do gesto que deseja avaliar. O modo live
+										ficará para o app professional depois.
+									</p>
+								</div>
+							</div>
 						)}
 						<Stage width={800} height={600} className="absolute inset-0 z-10 cursor-crosshair" ref={stageRef} onClick={(e) => {
 							const pos = e.target.getStage()?.getPointerPosition();
@@ -217,23 +217,22 @@ export const FunctionalAnalysisStudio: React.FC<FunctionalAnalysisStudioProps> =
 							<Upload className="h-5 w-5 text-blue-400" />
 						</Button>
 
-						{videoMode === "file" && (
-							<Button
-								variant="ghost"
-								size="icon"
-								onClick={togglePlayback}
-								className="rounded-full h-10 w-10 hover:bg-white/10"
-							>
-								{isPlaying ? <Pause className="h-5 w-5 fill-current" /> : <Play className="h-5 w-5 fill-current ml-0.5" />}
-							</Button>
-						)}
+						<Button
+							variant="ghost"
+							size="icon"
+							onClick={togglePlayback}
+							disabled={!videoSrc}
+							className="rounded-full h-10 w-10 hover:bg-white/10"
+						>
+							{isPlaying ? <Pause className="h-5 w-5 fill-current" /> : <Play className="h-5 w-5 fill-current ml-0.5" />}
+						</Button>
 
 						<div className="h-8 w-px bg-white/10 mx-1" />
 						
 						<Button
 							variant={aiEnabled ? "default" : "ghost"}
 							size="sm"
-							disabled={aiLoading}
+							disabled={aiLoading || !videoSrc}
 							onClick={() => aiEnabled ? stopMoveNet() : startMoveNet()}
 							className={`rounded-2xl gap-2 text-[10px] font-black tracking-widest uppercase px-4 h-10 transition-all ${aiEnabled ? "bg-green-600 hover:bg-green-700 shadow-[0_0_20px_rgba(34,197,94,0.4)] border-none" : "hover:bg-white/5"}`}
 						>
