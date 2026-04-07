@@ -26,6 +26,7 @@ import {
 	normalizeClinicalTestName,
 	type ClinicalTestCatalogRecord,
 } from "@/data/clinicalTestsCatalog";
+import { expandSearchQuery, normalizeForSearch } from "@/lib/utils/bilingualSearch";
 
 type ClinicalTest = ClinicalTestCatalogRecord;
 
@@ -62,21 +63,35 @@ export default function ClinicalTestsLibrary() {
 
 	const filteredTests = useMemo(() => {
 		const normalizedSearch = normalizeClinicalTestName(searchTerm);
+		const expandedTerms = searchTerm.length >= 2 ? expandSearchQuery(searchTerm) : [];
 		const categorySet = new Set<string>(clinicalTestCategoryOptions);
 
 		return tests.filter((test) => {
-			const matchesSearch =
-				normalizedSearch.length === 0 ||
-				[
-					test.name,
-					test.name_en,
-					test.target_joint,
-					test.category,
-					test.purpose,
-					...(test.tags ?? []),
-				].some((value) =>
+			const fieldValues = [
+				test.name,
+				test.name_en,
+				test.target_joint,
+				test.category,
+				test.purpose,
+				...(test.tags ?? []),
+			];
+
+			let matchesSearch = normalizedSearch.length === 0;
+
+			if (!matchesSearch) {
+				// Standard search
+				matchesSearch = fieldValues.some((value) =>
 					normalizeClinicalTestName(value).includes(normalizedSearch),
 				);
+			}
+
+			if (!matchesSearch && expandedTerms.length > 1) {
+				// Bilingual expanded search (synonym matching)
+				const normalizedFields = fieldValues.filter((v): v is string => !!v).map(normalizeForSearch);
+				matchesSearch = expandedTerms.some((term) =>
+					normalizedFields.some((field) => field.includes(term)),
+				);
+			}
 
 			if (!matchesSearch) return false;
 			if (activeFilter === "Todos") return true;

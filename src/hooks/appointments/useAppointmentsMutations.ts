@@ -142,6 +142,7 @@ export function useUpdateAppointment() {
 			appointmentId: string;
 			updates: Partial<AppointmentFormData>;
 			ignoreCapacity?: boolean;
+			suppressSuccessToast?: boolean;
 		}) => {
 			const organizationId =
 				profile?.organization_id || (await requireUserOrganizationId());
@@ -219,10 +220,12 @@ export function useUpdateAppointment() {
 				type: "active",
 			});
 
-			toast({
-				title: "Sucesso",
-				description: "Agendamento atualizado com sucesso",
-			});
+			if (!variables.suppressSuccessToast) {
+				toast({
+					title: "Sucesso",
+					description: "Agendamento atualizado com sucesso",
+				});
+			}
 		},
 		onError: (error: Error, _variables, context) => {
 			const organizationId = profile?.organization_id;
