@@ -1,0 +1,17 @@
+name: Publish OTA Update (development)
+
+# Publica update JS para o canal de desenvolvimento
+# Não gasta builds do EAS — apenas atualiza o bundle JS
+on:
+  push:
+    branches:
+      - expo-go-dev
+
+jobs:
+  publish_update:
+    name: Publish JS update
+    type: update
+    params:
+      branch: ${{ github.ref_name }}
+      platform: ios
+      message: "OTA: ${{ github.ref_name }}"
