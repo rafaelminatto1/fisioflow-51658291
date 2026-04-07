@@ -13,7 +13,6 @@ import { useRouter, useLocalSearchParams, Stack } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { useColors } from '@/hooks/useColorScheme';
 import { useHaptics } from '@/hooks/useHaptics';
-import { useEvolutions } from '@/hooks';
 import { SOAPForm } from '@/components/evolution/SOAPForm';
 import { PainLevelSlider } from '@/components/evolution/PainLevelSlider';
 import { PhotoUpload } from '@/components/evolution/PhotoUpload';
@@ -33,10 +32,6 @@ export default function EvolutionFormScreen() {
 
   const { success, error: hapticError } = useHaptics();
 
-  const {
-    createAsync: createEvolutionAsync,
-    updateAsync: updateEvolutionAsync,
-  } = useEvolutions(patientId);
 
   // Form state
   const [mode, setMode] = useState<FillingMode>('SOAP');
@@ -70,27 +65,26 @@ export default function EvolutionFormScreen() {
       setAutoSaveStatus('saving');
       setAutoSaveErrorDetail(null);
       try {
-        const payload = {
-          patientId,
-          appointmentId,
-          date: new Date(),
+        const body: Record<string, any> = {
+          patient_id: patientId,
+          appointment_id: appointmentId ?? null,
+          record_date: new Date().toISOString().split('T')[0],
           subjective: mode === 'SOAP' ? subjective.trim() : '',
           objective: mode === 'SOAP' ? objective.trim() : '',
           assessment: mode === 'SOAP' ? assessment.trim() : freeContent.trim(),
           plan: mode === 'SOAP' ? plan.trim() : '',
-          painLevel,
-          attachments: photos,
-          metadata: { fillingMode: mode },
+          pain_level: painLevel,
         };
 
         if (savedEvolutionId.current) {
-          // Já foi criado — só atualiza
-          await updateEvolutionAsync({ id: savedEvolutionId.current, data: payload as any });
-        } else {
-          // Primeira vez — cria e salva o ID
-          const created = await createEvolutionAsync(payload as any);
-          savedEvolutionId.current = created.id ?? null;
+          body.recordId = savedEvolutionId.current;
         }
+
+        const res = await fetchApi<{ data: { id: string } }>('/api/sessions/autosave', {
+          method: 'POST',
+          data: body,
+        });
+        savedEvolutionId.current = res.data?.id ?? savedEvolutionId.current;
         setAutoSaveStatus('saved');
       } catch (err: any) {
         setAutoSaveStatus('error');
@@ -103,7 +97,7 @@ export default function EvolutionFormScreen() {
         console.error('[AutoSave]', err);
       }
     }, 2000);
-  }, [mode, subjective, objective, assessment, plan, freeContent, patientId, appointmentId, painLevel, photos, createEvolutionAsync, updateEvolutionAsync]);
+  }, [mode, subjective, objective, assessment, plan, freeContent, patientId, appointmentId, painLevel]);
 
   // Trigger auto-save on content changes
   useEffect(() => {
