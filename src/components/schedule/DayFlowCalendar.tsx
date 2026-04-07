@@ -67,6 +67,10 @@ export function DayFlowCalendarWrapper(props: DayFlowCalendarWrapperProps) {
 	} = props;
 	const isWeekView = viewType === "week";
 	const slotHeight = isWeekView ? 10 : 14;
+	const slotLabelFormat = useMemo(
+		() => (time: Date) => (time.getMinutes() === 0 ? format(time, "HH:mm") : ""),
+		[],
+	);
 
 	const [, startTransition] = useTransition();
 	const containerRef = useRef<HTMLDivElement>(null);
@@ -200,6 +204,9 @@ export function DayFlowCalendarWrapper(props: DayFlowCalendarWrapperProps) {
 						slotMaxTime: "21:00:00",
 						slotDuration: "00:15:00",
 						slotHeight,
+						slotLabelInterval: "00:00:00",
+						slotLabelFormat,
+						scrollTime: "07:00:00",
 						hiddenDays: [0],
 						snapDuration: "00:05:00",
 						editable: true,
@@ -316,11 +323,14 @@ export function DayFlowCalendarWrapper(props: DayFlowCalendarWrapperProps) {
 			calendar.setOption('view', VIEW_MAP[viewType]);
 			calendar.setOption('date', isValid(currentDate) ? currentDate : new Date());
 			calendar.setOption('slotHeight', slotHeight);
+			calendar.setOption('slotLabelInterval', "00:00:00");
+			calendar.setOption('slotLabelFormat', slotLabelFormat);
+			calendar.setOption('scrollTime', "07:00:00");
 			calendar.setOption('events', dfEvents);
 		} catch (e) {
 			console.warn("[DayFlow] Sync error:", e);
 		}
-	}, [dfEvents, currentDate, viewType, slotHeight]);
+	}, [dfEvents, currentDate, viewType, slotHeight, slotLabelFormat]);
 
 	return (
 		<div className="flex-1 flex flex-col min-h-0 bg-slate-50/50 overflow-hidden relative">
@@ -402,12 +412,25 @@ export function DayFlowCalendarWrapper(props: DayFlowCalendarWrapperProps) {
 				.ec-time-grid .ec-event {
 					z-index: 10;
 				}
-				.dayflow-week-view .ec-time,
-				.dayflow-week-view .ec-line {
+				.dayflow-week-view .ec-body .ec-time,
+				.dayflow-week-view .ec-body .ec-line {
 					height: 10px !important;
 				}
-				.dayflow-week-view .ec-time {
+				.dayflow-week-view .ec-header .ec-time,
+				.dayflow-week-view .ec-header .ec-sidebar-title,
+				.dayflow-week-view .ec-all-day .ec-time,
+				.dayflow-week-view .ec-all-day .ec-sidebar-title {
+					height: 0 !important;
+					min-height: 0 !important;
+					line-height: 0 !important;
+					padding: 0 !important;
+					overflow: hidden !important;
+					visibility: hidden !important;
+				}
+				.dayflow-week-view .ec-body .ec-time {
 					font-size: 9px !important;
+					line-height: 10px !important;
+					top: -5px !important;
 				}
 				.dayflow-event-shell {
 					width: 100%;
