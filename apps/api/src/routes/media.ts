@@ -112,8 +112,8 @@ app.post('/upload-url', requireAuth, async (c) => {
             CacheControl: 'public, max-age=31536000, immutable',
         });
 
-        // Gera o link para o client subir o arquivo diretamente com validade de 10 minutos
-        const signedUrl = await getSignedUrl(s3Client, command, { expiresIn: 600 });
+        // Gera o link para o client subir o arquivo diretamente com validade de 90 minutos (sessão de fisioterapia)
+        const signedUrl = await getSignedUrl(s3Client, command, { expiresIn: 5400 });
         const publicUrl = `${c.env.R2_PUBLIC_URL}/${key}`;
 
         return c.json({
@@ -121,7 +121,7 @@ app.post('/upload-url', requireAuth, async (c) => {
                 uploadUrl: signedUrl,
                 publicUrl,
                 key,
-                expiresIn: 600
+                expiresIn: 5400
             }
         });
     } catch (error) {

@@ -190,7 +190,7 @@ export const MainLayout: React.FC<MainLayoutProps> = ({
 													className="rounded-2xl px-4 py-3 hover:bg-primary/5 hover:text-primary cursor-pointer transition-all duration-300 focus:bg-primary/5 focus:text-primary group magnetic-button"
 												>
 													<Link
-														to="/settings"
+														to="/profile"
 														className="flex items-center w-full"
 													>
 														<div className="p-2 bg-slate-100 dark:bg-slate-800 rounded-xl mr-3 group-hover:bg-primary/10 transition-colors">
@@ -278,9 +278,9 @@ export const MainLayout: React.FC<MainLayoutProps> = ({
 								!fullWidth && !maxWidth && "max-w-full",
 							)}
 						>
-								<div key={location.pathname} className="w-full">
-									{children}
-								</div>
+							<div key={location.pathname} className="w-full">
+								{children}
+							</div>
 						</div>
 					</main>
 				</div>

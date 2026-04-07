@@ -629,11 +629,8 @@ const NotionEvolutionPanel: React.FC<NotionEvolutionPanelProps> = ({
 				<div className="mx-auto mt-12 w-full max-w-[1536px] px-4 lg:px-8">
 					<div className="grid grid-cols-1 lg:grid-cols-[minmax(0,1024px)_340px] gap-8 xl:gap-12 items-start justify-center">
 						<div className="min-w-0">
-							{/* H1 Header: Patient Evolution */}
+							{/* Header: Patient Evolution */}
 							<div className="flex items-baseline mb-12 group gap-4">
-								<div className="w-8 flex-shrink-0 text-right text-sm font-medium text-[#D3D1CB] select-none">
-									H1
-								</div>
 								<div className="flex-1">
 									<h1 className="font-bold text-[#37352f] leading-tight text-4xl tracking-tight">
 										Evolução Clínica
@@ -645,7 +642,7 @@ const NotionEvolutionPanel: React.FC<NotionEvolutionPanelProps> = ({
 							</div>
 
 							{/* Mobile summary / checklist */}
-							<div className="lg:hidden space-y-4 mb-10 ml-12">
+							<div className="lg:hidden space-y-4 mb-10">
 								<div className="p-4 rounded-xl border border-[#ECEBEA] bg-[#FBFBFA]">
 									<div className="flex flex-wrap items-center gap-3 text-xs text-muted-foreground">
 										<span>
@@ -708,7 +705,7 @@ const NotionEvolutionPanel: React.FC<NotionEvolutionPanelProps> = ({
 
 							{/* AI Summary Display */}
 							{aiSummary && (
-								<div className="mb-12 ml-12 animate-in fade-in slide-in-from-top-4">
+								<div className="mb-12 animate-in fade-in slide-in-from-top-4">
 									<div className="p-4 rounded-xl bg-primary/5 border border-primary/10 shadow-sm">
 										<div className="flex items-start gap-3">
 											<div className="p-2 rounded-lg bg-primary/10">
@@ -727,17 +724,14 @@ const NotionEvolutionPanel: React.FC<NotionEvolutionPanelProps> = ({
 								</div>
 							)}
 
-							<div className="h-px bg-[#ECEBEA] mb-8 ml-12 lg:hidden" />
+							<div className="h-px bg-[#ECEBEA] mb-8 lg:hidden" />
 
-							{/* H2 Header: Pain Level */}
+							{/* Header: Pain Level */}
 							{showQuickPainSlider && (
 								<div
 									id="pain-section"
 									className="flex items-baseline mb-12 group gap-4 scroll-mt-28 lg:hidden"
 								>
-									<div className="w-8 flex-shrink-0 text-right text-sm font-medium text-[#D3D1CB] select-none">
-										H2
-									</div>
 									<div className="flex-1">
 										<h2 className="text-2xl font-semibold text-[#37352f] mb-6">
 											Nível de Dor (EVA)
@@ -754,16 +748,13 @@ const NotionEvolutionPanel: React.FC<NotionEvolutionPanelProps> = ({
 								</div>
 							)}
 
-							<div className="h-px bg-[#ECEBEA] mb-8 ml-12 lg:hidden" />
+							<div className="h-px bg-[#ECEBEA] mb-8 lg:hidden" />
 
-							{/* H2 Header: Patient Report */}
+							{/* Header: Patient Report */}
 							<div
 								id="patientReport"
 								className="flex items-baseline mb-8 group gap-4"
 							>
-								<div className="w-8 flex-shrink-0 text-right text-sm font-medium text-[#D3D1CB] select-none">
-									H2
-								</div>
 								<div className="flex-1">
 									<div className="flex items-baseline justify-between gap-2">
 										<h2 className="text-2xl font-semibold text-[#37352f] mb-2 hover:text-[#2383e2] cursor-text transition-colors">
@@ -794,16 +785,13 @@ const NotionEvolutionPanel: React.FC<NotionEvolutionPanelProps> = ({
 								</div>
 							</div>
 
-							<div className="h-px bg-[#ECEBEA] mb-8 ml-12" />
+							<div className="h-px bg-[#ECEBEA] mb-8" />
 
-							{/* H2 Header: Evolution Text */}
+							{/* Header: Evolution Text */}
 							<div
 								id="evolutionText"
 								className="flex items-baseline mb-8 group gap-4"
 							>
-								<div className="w-8 flex-shrink-0 text-right text-sm font-medium text-[#D3D1CB] select-none">
-									H2
-								</div>
 								<div className="flex-1">
 									<div className="flex items-baseline justify-between gap-2">
 										<h2 className="text-2xl font-semibold text-[#37352f] mb-2 hover:text-[#2383e2] cursor-text transition-colors">

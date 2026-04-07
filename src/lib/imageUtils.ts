@@ -4,216 +4,245 @@
  */
 
 /**
- * Converte URL de imagem para formato otimizado (AVIF -> WebP -> original)
- * Substitui automaticamente a extensão .png por .avif se disponível
+ * Mantém a URL persistida como primária.
+ * A negociação de AVIF/WebP deve ocorrer via proxy/format=auto ou fallbacks.
  */
 function getOptimizedImageUrl(url: string | null | undefined): string | null {
-	if (!url || typeof url !== "string") return null;
+  if (!url || typeof url !== "string") return null;
 
-	// Se a URL já termina em AVIF ou WebP, retorna como está
-	if (url.endsWith(".avif") || url.endsWith(".webp")) {
-		return url;
-	}
+  return url;
+}
 
-	// Substitui .png por .avif para imagens do R2
-	if (url.includes("media.moocafisio.com.br") && url.endsWith(".png")) {
-		return url.replace(/\.png$/i, ".avif");
-	}
+function addUniqueUrl(target: string[], url: string | null | undefined) {
+  if (!url || target.includes(url)) return;
+  target.push(url);
+}
 
-	return url;
+function getFormatVariantUrls(url: string): string[] {
+  const variants: string[] = [];
+
+  addUniqueUrl(variants, url);
+
+  if (url.includes("media.moocafisio.com.br") && /\.(png|jpe?g)(\?.*)?$/i.test(url)) {
+    addUniqueUrl(variants, url.replace(/\.(png|jpe?g)(\?.*)?$/i, ".avif$2"));
+    addUniqueUrl(variants, url.replace(/\.(png|jpe?g)(\?.*)?$/i, ".webp$2"));
+  }
+
+  return variants;
 }
 
 /**
  * Obtém a melhor URL de imagem disponível para um exercício
  * Prioridade: thumbnail_url > image_url > fallback
- * Agora suporta conversão automática de PNG/AVIF
+ * A lista completa de fallbacks por formato fica em getImageUrlCandidates.
  */
 export function getBestImageUrl(exercise: {
-	thumbnail_url?: string | null;
-	image_url?: string | null;
-	video_url?: string | null;
+  thumbnail_url?: string | null;
+  image_url?: string | null;
+  video_url?: string | null;
 }): string | null {
-	// Prioridade 1: thumbnail (mais rápido, menor)
-	if (exercise.thumbnail_url && isValidImageUrl(exercise.thumbnail_url)) {
-		return getOptimizedImageUrl(exercise.thumbnail_url);
-	}
+  // Prioridade 1: thumbnail (mais rápido, menor)
+  if (exercise.thumbnail_url && isValidImageUrl(exercise.thumbnail_url)) {
+    return getOptimizedImageUrl(exercise.thumbnail_url);
+  }
 
-	// Prioridade 2: image_url
-	if (exercise.image_url && isValidImageUrl(exercise.image_url)) {
-		return getOptimizedImageUrl(exercise.image_url);
-	}
+  // Prioridade 2: image_url
+  if (exercise.image_url && isValidImageUrl(exercise.image_url)) {
+    return getOptimizedImageUrl(exercise.image_url);
+  }
 
-	// Prioridade 3: YouTube thumbnail (para vídeos do YouTube)
-	if (exercise.video_url && isYouTubeUrl(exercise.video_url)) {
-		return getYouTubeThumbnailUrl(exercise.video_url);
-	}
+  // Prioridade 3: YouTube thumbnail (para vídeos do YouTube)
+  if (exercise.video_url && isYouTubeUrl(exercise.video_url)) {
+    return getYouTubeThumbnailUrl(exercise.video_url);
+  }
 
-	return null;
+  return null;
 }
 
 /**
  * Verifica se uma URL de imagem é válida
  */
 export function isValidImageUrl(url: string | null | undefined): boolean {
-	if (!url || typeof url !== "string") return false;
-	const trimmed = url.trim();
+  if (!url || typeof url !== "string") return false;
+  const trimmed = url.trim();
 
-	// Rejeitar caminhos locais inválidos
-	if (
-		trimmed.startsWith("/brain/") ||
-		trimmed.startsWith("/home/") ||
-		trimmed.startsWith("/tmp/") ||
-		trimmed.startsWith("/api/")
-	) {
-		return false;
-	}
+  // Rejeitar caminhos locais inválidos
+  if (
+    trimmed.startsWith("/brain/") ||
+    trimmed.startsWith("/home/") ||
+    trimmed.startsWith("/tmp/") ||
+    trimmed.startsWith("/api/")
+  ) {
+    return false;
+  }
 
-	// Aceitar URLs HTTP/HTTPS, data: URLs e blob: URLs
-	return (
-		trimmed.startsWith("http://") ||
-		trimmed.startsWith("https://") ||
-		trimmed.startsWith("data:") ||
-		trimmed.startsWith("blob:") ||
-		trimmed.startsWith("/")
-	);
+  // Aceitar URLs HTTP/HTTPS, data: URLs e blob: URLs
+  return (
+    trimmed.startsWith("http://") ||
+    trimmed.startsWith("https://") ||
+    trimmed.startsWith("data:") ||
+    trimmed.startsWith("blob:") ||
+    trimmed.startsWith("/")
+  );
 }
 
 /**
  * Verifica se uma URL é do YouTube
  */
 export function isYouTubeUrl(url: string | null | undefined): boolean {
-	if (!url) return false;
-	const patterns = [
-		/^https?:\/\/(www\.)?youtube\.com\/watch\?v=/,
-		/^https?:\/\/(www\.)?youtube\.com\/embed\//,
-		/^https?:\/\/youtu\.be\//,
-		/^https?:\/\/(www\.)?youtube\.com\/shorts\//,
-	];
-	return patterns.some((pattern) => pattern.test(url));
+  if (!url) return false;
+  const patterns = [
+    /^https?:\/\/(www\.)?youtube\.com\/watch\?v=/,
+    /^https?:\/\/(www\.)?youtube\.com\/embed\//,
+    /^https?:\/\/youtu\.be\//,
+    /^https?:\/\/(www\.)?youtube\.com\/shorts\//,
+  ];
+  return patterns.some((pattern) => pattern.test(url));
 }
 
 /**
  * Extrai o ID do YouTube de uma URL
  */
 export function getYouTubeId(url: string): string | null {
-	const patterns = [
-		/(?:youtube\.com\/watch\?v=|youtu\.be\/|youtube\.com\/embed\/|youtube\.com\/shorts\/)([a-zA-Z0-9_-]{11})/,
-	];
-	for (const pattern of patterns) {
-		const match = url.match(pattern);
-		if (match && match[1]) {
-			return match[1];
-		}
-	}
-	return null;
+  const patterns = [
+    /(?:youtube\.com\/watch\?v=|youtu\.be\/|youtube\.com\/embed\/|youtube\.com\/shorts\/)([a-zA-Z0-9_-]{11})/,
+  ];
+  for (const pattern of patterns) {
+    const match = url.match(pattern);
+    if (match && match[1]) {
+      return match[1];
+    }
+  }
+  return null;
 }
 
 /**
  * Obtém a URL do thumbnail do YouTube de melhor qualidade
  */
 export function getYouTubeThumbnailUrl(youtubeUrl: string): string | null {
-	const videoId = getYouTubeId(youtubeUrl);
-	if (!videoId) return null;
+  const videoId = getYouTubeId(youtubeUrl);
+  if (!videoId) return null;
 
-	// Prioridade de qualidade: maxresdefault > sddefault > hqdefault > mqdefault > default
-	return `https://img.youtube.com/vi/${videoId}/hqdefault.jpg`;
+  // Prioridade de qualidade: maxresdefault > sddefault > hqdefault > mqdefault > default
+  return `https://img.youtube.com/vi/${videoId}/hqdefault.jpg`;
 }
 
 /**
  * Prepara uma lista de URLs de imagem com fallbacks em ordem de preferência
  */
 export function getImageUrlsWithFallbacks(exercise: {
-	thumbnail_url?: string | null;
-	image_url?: string | null;
-	video_url?: string | null;
+  thumbnail_url?: string | null;
+  image_url?: string | null;
+  video_url?: string | null;
 }): Array<{ url: string; type: "thumbnail" | "image" | "youtube" }> {
-	const result: Array<{
-		url: string;
-		type: "thumbnail" | "image" | "youtube";
-	}> = [];
+  const result: Array<{
+    url: string;
+    type: "thumbnail" | "image" | "youtube";
+  }> = [];
 
-	if (exercise.thumbnail_url && isValidImageUrl(exercise.thumbnail_url)) {
-		result.push({ url: exercise.thumbnail_url, type: "thumbnail" });
-	}
+  if (exercise.thumbnail_url && isValidImageUrl(exercise.thumbnail_url)) {
+    result.push({ url: exercise.thumbnail_url, type: "thumbnail" });
+  }
 
-	if (exercise.image_url && isValidImageUrl(exercise.image_url)) {
-		result.push({ url: exercise.image_url, type: "image" });
-	}
+  if (exercise.image_url && isValidImageUrl(exercise.image_url)) {
+    result.push({ url: exercise.image_url, type: "image" });
+  }
 
-	if (exercise.video_url && isYouTubeUrl(exercise.video_url)) {
-		const ytThumb = getYouTubeThumbnailUrl(exercise.video_url);
-		if (ytThumb) {
-			result.push({ url: ytThumb, type: "youtube" });
-		}
-	}
+  if (exercise.video_url && isYouTubeUrl(exercise.video_url)) {
+    const ytThumb = getYouTubeThumbnailUrl(exercise.video_url);
+    if (ytThumb) {
+      result.push({ url: ytThumb, type: "youtube" });
+    }
+  }
 
-	return result;
+  return result;
+}
+
+/**
+ * Retorna candidatos de imagem em ordem de preferência, incluindo variantes de
+ * formato quando a biblioteca ainda aponta para PNG/JPEG antigos no R2.
+ */
+export function getImageUrlCandidates(exercise: {
+  thumbnail_url?: string | null;
+  image_url?: string | null;
+  video_url?: string | null;
+}): string[] {
+  const candidates: string[] = [];
+
+  if (exercise.thumbnail_url && isValidImageUrl(exercise.thumbnail_url)) {
+    getFormatVariantUrls(exercise.thumbnail_url).forEach((url) => addUniqueUrl(candidates, url));
+  }
+
+  if (exercise.image_url && isValidImageUrl(exercise.image_url)) {
+    getFormatVariantUrls(exercise.image_url).forEach((url) => addUniqueUrl(candidates, url));
+  }
+
+  if (exercise.video_url && isYouTubeUrl(exercise.video_url)) {
+    addUniqueUrl(candidates, getYouTubeThumbnailUrl(exercise.video_url));
+  }
+
+  return candidates;
 }
 
 /**
  * Hook personalizado para gerenciar o estado de carregamento de imagem com fallback
  */
 export function useImageWithFallback(exercise: {
-	thumbnail_url?: string | null;
-	image_url?: string | null;
-	video_url?: string | null;
+  thumbnail_url?: string | null;
+  image_url?: string | null;
+  video_url?: string | null;
 }) {
-	const bestUrl = getBestImageUrl(exercise);
-	const fallbackUrls = getImageUrlsWithFallbacks(exercise);
+  const bestUrl = getBestImageUrl(exercise);
+  const fallbackUrls = getImageUrlsWithFallbacks(exercise);
 
-	return {
-		primaryUrl: bestUrl,
-		fallbackUrls,
-		hasImage: bestUrl !== null,
-	};
+  return {
+    primaryUrl: bestUrl,
+    fallbackUrls,
+    hasImage: bestUrl !== null,
+  };
 }
 
 /**
  * Calcula o tamanho da imagem para diferentes breakpoints de tela
  */
 export function getResponsiveImageSizes(
-	columns: number = 3,
-	_minSize: number = 120,
-	_maxSize: number = 400,
+  columns: number = 3,
+  _minSize: number = 120,
+  _maxSize: number = 400,
 ): string {
-	// Exemplo: "(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
-	const breakpoints = [640, 768, 1024, 1280];
-	const sizes: string[] = [];
+  // Exemplo: "(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
+  const breakpoints = [640, 768, 1024, 1280];
+  const sizes: string[] = [];
 
-	for (let i = 0; i < breakpoints.length; i++) {
-		const bp = breakpoints[i];
-		const vw = Math.round(100 / (i + 2));
-		sizes.push(`(max-width: ${bp}px) ${vw}vw`);
-	}
+  for (let i = 0; i < breakpoints.length; i++) {
+    const bp = breakpoints[i];
+    const vw = Math.round(100 / (i + 2));
+    sizes.push(`(max-width: ${bp}px) ${vw}vw`);
+  }
 
-	sizes.push(`${Math.round(100 / columns)}vw`);
-	return sizes.join(", ");
+  sizes.push(`${Math.round(100 / columns)}vw`);
+  return sizes.join(", ");
 }
 
 /**
  * Tipos de formato de imagem suportados pelo navegador
  */
 export function getSupportedImageFormat(): "avif" | "webp" | "jpeg" | "png" {
-	if (typeof document === "undefined") return "jpeg";
+  if (typeof document === "undefined") return "jpeg";
 
-	// Verificar suporte a AVIF
-	const avifTest = document.createElement("canvas");
-	avifTest.width = 1;
-	avifTest.height = 1;
-	if (avifTest.toDataURL("image/avif").includes("data:image/avif")) {
-		return "avif";
-	}
+  // Verificar suporte a AVIF
+  const avifTest = document.createElement("canvas");
+  avifTest.width = 1;
+  avifTest.height = 1;
+  if (avifTest.toDataURL("image/avif").includes("data:image/avif")) {
+    return "avif";
+  }
 
-	// Verificar suporte a WebP
-	if (
-		document
-			.createElement("canvas")
-			.toDataURL("image/webp")
-			.includes("data:image/webp")
-	) {
-		return "webp";
-	}
+  // Verificar suporte a WebP
+  if (document.createElement("canvas").toDataURL("image/webp").includes("data:image/webp")) {
+    return "webp";
+  }
 
-	// Fallback para JPEG
-	return "jpeg";
+  // Fallback para JPEG
+  return "jpeg";
 }

@@ -16,6 +16,7 @@ import {
 	Pin,
 	LayoutDashboard,
 	FileText,
+	Languages,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import {
@@ -93,6 +94,7 @@ interface WikiTopNavProps {
 	onCreatePage: () => void;
 	onKnowledgeHubSelect?: () => void;
 	onDashboardSelect?: () => void;
+	onDictionarySelect?: () => void;
 	onTagSelect?: (tag: string) => void;
 }
 
@@ -104,6 +106,7 @@ export function WikiTopNav({
 	onCreatePage,
 	onKnowledgeHubSelect,
 	onDashboardSelect,
+	onDictionarySelect,
 	onTagSelect,
 }: WikiTopNavProps) {
 	const [searchQuery, setSearchQuery] = React.useState("");
@@ -204,6 +207,15 @@ export function WikiTopNav({
 					>
 						<Sparkles className="h-4 w-4 text-amber-500" />
 						<span className="hidden sm:inline">Knowledge Hub</span>
+					</Button>
+					<Button
+						variant="ghost"
+						size="sm"
+						className="gap-2 font-medium"
+						onClick={onDictionarySelect}
+					>
+						<Languages className="h-4 w-4 text-sky-500" />
+						<span className="hidden sm:inline">Dicionário</span>
 					</Button>
 				</div>
 

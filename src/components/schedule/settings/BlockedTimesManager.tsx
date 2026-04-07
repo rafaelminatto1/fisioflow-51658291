@@ -264,33 +264,21 @@ export function BlockedTimesManager() {
 	}).length;
 
 	return (
-		<Card className="border-none shadow-lg">
-			<CardHeader className="bg-gradient-to-br from-red-50 to-rose-50 dark:from-red-950/30 dark:to-rose-950/30 rounded-t-xl">
-				<CardTitle className="flex items-center gap-2">
-					<div className="p-2 bg-red-500 rounded-lg">
-						<CalendarOff className="h-5 w-5 text-white" />
+		<Card className="border shadow-sm">
+			<CardHeader className="pb-3">
+				<div className="flex items-center justify-between">
+					<div>
+						<CardTitle className="text-base">Bloqueio de Horários</CardTitle>
+						<CardDescription>
+							Férias, feriados ou indisponibilidades
+						</CardDescription>
 					</div>
-					Bloqueio de Horários
-				</CardTitle>
-				<CardDescription>
-					Bloqueie períodos para férias, feriados ou indisponibilidades
-				</CardDescription>
-				<div className="flex items-center gap-2 mt-2">
 					<Badge variant="secondary" className="text-xs">
 						{activeBlockCount} ativo{activeBlockCount !== 1 ? "s" : ""}
 					</Badge>
 				</div>
 			</CardHeader>
-			<CardContent className="space-y-4 pt-6">
-				{/* Info Banner */}
-				<Alert className="border-blue-200 bg-blue-50/50 dark:bg-blue-950/20">
-					<Info className="h-4 w-4 text-blue-600" />
-					<AlertDescription className="text-blue-700 dark:text-blue-300 text-sm">
-						Bloqueios impedem que novos agendamentos sejam criados no período
-						especificado.
-					</AlertDescription>
-				</Alert>
-
+			<CardContent className="space-y-4">
 				{/* Quick Templates */}
 				<div className="space-y-3">
 					<Label className="text-sm font-medium">Modelos Rápidos</Label>

@@ -409,24 +409,17 @@ export function ScheduleCapacityManager() {
 	const totalSlots = capacities.reduce((sum, cap) => sum + cap.max_patients, 0);
 
 	return (
-		<Card className="border-none shadow-lg">
-			<CardHeader className="bg-gradient-to-br from-green-50 to-emerald-50 dark:from-green-950/30 dark:to-emerald-950/30 rounded-t-xl">
-				<CardTitle className="flex items-center gap-2">
-					<div className="p-2 bg-green-500 rounded-lg">
-						<Users className="h-5 w-5 text-white" />
-					</div>
-					Capacidade da Agenda
-				</CardTitle>
-				<CardDescription>
-					Configure quantos pacientes podem ser atendidos por horário
-				</CardDescription>
-				<div className="flex items-center gap-2 mt-2">
+		<Card className="border shadow-sm">
+			<CardHeader className="pb-3">
+				<div className="flex items-center justify-between">
+					<CardTitle className="text-base">Capacidade da Agenda</CardTitle>
 					<Badge variant="secondary" className="text-xs">
 						{totalSlots} vagas/dia
 					</Badge>
 				</div>
+				<CardDescription>Pacientes por horário em cada período</CardDescription>
 			</CardHeader>
-			<CardContent className="space-y-4 pt-6">
+			<CardContent className="space-y-4">
 				{authError && (
 					<Alert variant="destructive">
 						<Info className="h-4 w-4" />
@@ -438,17 +431,7 @@ export function ScheduleCapacityManager() {
 					</Alert>
 				)}
 
-				{/* Info Banner */}
-				<Alert className="border-blue-200 bg-blue-50/50 dark:bg-blue-950/20">
-					<Calendar className="h-4 w-4 text-blue-600" />
-					<AlertDescription className="text-blue-700 dark:text-blue-300 text-sm">
-						Configure diferentes capacidades para cada período do dia. Por
-						exemplo, 3 pacientes pela manhã e 2 à tarde.
-					</AlertDescription>
-				</Alert>
-
-				{/* Lista de configurações agrupadas */}
-				<div className="space-y-4">
+				<div className="space-y-3">
 					<div className="space-y-3">
 						{capacityGroups.map((group, index) => {
 							const level = getCapacityLevel(group.max_patients);
