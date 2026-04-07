@@ -342,99 +342,69 @@ export function ProtocolDetailView({
 			<div className="grid gap-6 xl:grid-cols-[minmax(0,1.55fr)_340px]">
 				<div className="space-y-6">
 					<Card className="overflow-hidden border-primary/10 bg-[radial-gradient(circle_at_top_left,rgba(37,99,235,0.12),transparent_34%),linear-gradient(180deg,rgba(255,255,255,0.96),rgba(248,250,252,0.98))] p-6 shadow-sm dark:bg-[radial-gradient(circle_at_top_left,rgba(37,99,235,0.18),transparent_34%),linear-gradient(180deg,rgba(2,6,23,0.96),rgba(15,23,42,0.96))]">
-						<div className="grid gap-6 lg:grid-cols-[minmax(0,1.2fr)_minmax(0,0.85fr)]">
-							<div className="space-y-5">
-								<div className="flex items-start gap-3">
-									<div className="mt-0.5 flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary">
-										<Activity className="h-5 w-5" />
-									</div>
-									<div>
-										<p className="text-xs font-semibold uppercase tracking-[0.22em] text-primary/75">
-											Resumo clínico
-										</p>
-										<h2 className="mt-1 text-xl font-semibold tracking-tight">
-											Leitura rápida do protocolo
-										</h2>
-										<p className="mt-2 text-sm leading-6 text-muted-foreground">
-											{details?.description ||
-												"Protocolo organizado para aplicação clínica com foco em acompanhamento, progressão e segurança."}
-										</p>
-									</div>
-								</div>
+						<div className="flex items-start gap-3">
+							<div className="mt-0.5 flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary">
+								<Activity className="h-5 w-5" />
+							</div>
+							<div className="flex-1 min-w-0">
+								<p className="text-xs font-semibold uppercase tracking-[0.22em] text-primary/75">
+									Resumo clínico
+								</p>
+								<h2 className="mt-1 text-xl font-semibold tracking-tight">
+									Leitura rápida do protocolo
+								</h2>
+								<p className="mt-2 text-sm leading-6 text-muted-foreground">
+									{details?.description ||
+										"Protocolo organizado para aplicação clínica com foco em acompanhamento, progressão e segurança."}
+								</p>
+							</div>
+						</div>
 
-								{overviewObjectives.length > 0 && (
-									<div className="grid gap-3 sm:grid-cols-2">
-										{overviewObjectives.map((objective, index) => (
-											<div
-												key={`${objective}-${index}`}
-												className="flex items-start gap-3 rounded-2xl border border-primary/10 bg-background/75 px-4 py-3"
-											>
-												<div className="mt-0.5 flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-primary/10 text-primary">
-													<CheckCircle2 className="h-3.5 w-3.5" />
-												</div>
-												<span className="text-sm font-medium leading-5">
-													{objective}
+						{overviewObjectives.length > 0 && (
+							<div className="mt-5 grid gap-2.5 sm:grid-cols-2 lg:grid-cols-3">
+								{overviewObjectives.map((objective, index) => (
+									<div
+										key={`${objective}-${index}`}
+										className="flex items-start gap-3 rounded-2xl border border-primary/10 bg-background/75 px-4 py-3"
+									>
+										<div className="mt-0.5 flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-primary/10 text-primary">
+											<CheckCircle2 className="h-3.5 w-3.5" />
+										</div>
+										<span className="text-sm font-medium leading-5">
+											{objective}
+										</span>
+									</div>
+								))}
+							</div>
+						)}
+
+						{phases.length > 0 && (
+							<div className="mt-5 rounded-2xl border border-border/60 bg-background/60 p-4">
+								<div className="mb-3 flex items-center justify-between gap-2">
+									<span className="text-xs font-semibold uppercase tracking-[0.18em] text-muted-foreground">
+										Progressão clínica
+									</span>
+									<span className="text-xs text-muted-foreground">
+										{protocol.weeks_total} semanas
+									</span>
+								</div>
+								<div className="relative">
+									<div className="h-2 w-full overflow-hidden rounded-full bg-muted/60">
+										<div className="h-full rounded-full bg-gradient-to-r from-primary via-sky-400 to-emerald-500" />
+									</div>
+									<div className="mt-2.5 flex justify-between">
+										{phases.slice(0, 5).map((phase, i) => (
+											<div key={i} className="flex flex-col items-center gap-1 text-center" style={{ width: `${100 / Math.min(phases.length, 5)}%` }}>
+												<div className="h-1.5 w-1.5 rounded-full bg-primary/60" />
+												<span className="line-clamp-1 text-[10px] font-medium text-muted-foreground px-1">
+													{phase.name?.split(":")[0] ?? `F${i + 1}`}
 												</span>
 											</div>
 										))}
 									</div>
-								)}
-							</div>
-
-							<div className="rounded-[28px] border border-border/60 bg-background/80 p-5 shadow-sm">
-								<div className="flex items-center justify-between gap-3">
-									<div>
-										<p className="text-xs font-semibold uppercase tracking-[0.22em] text-primary/75">
-											Jornada clínica
-										</p>
-										<h3 className="mt-1 text-lg font-semibold">
-											Marcos principais
-										</h3>
-									</div>
-									<Badge
-										variant="outline"
-										className="border-primary/15 bg-primary/5 text-primary"
-									>
-										{milestones.length || phases.length} checkpoints
-									</Badge>
 								</div>
-
-								<div className="mt-5 flex items-center gap-3">
-									<span className="text-xs font-medium text-muted-foreground">
-										Início
-									</span>
-									<div className="relative h-2 flex-1 overflow-hidden rounded-full bg-muted/60">
-										<div className="absolute inset-0 rounded-full bg-gradient-to-r from-primary via-sky-400 to-emerald-500" />
-									</div>
-									<span className="text-xs font-medium text-muted-foreground">
-										Alta
-									</span>
-								</div>
-
-								{milestones.length > 0 ? (
-									<div className="mt-5 flex flex-wrap gap-2.5">
-										{milestones.slice(0, 6).map((milestone, index) => (
-											<div
-												key={`${milestone.week}-${index}`}
-												className="min-w-[92px] rounded-2xl border border-border/60 bg-background px-3 py-2 shadow-sm"
-											>
-												<p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-primary/75">
-													W{milestone.week}
-												</p>
-												<p className="mt-1 line-clamp-2 text-sm font-medium leading-5 text-foreground">
-													{milestone.title}
-												</p>
-											</div>
-										))}
-									</div>
-								) : (
-									<div className="mt-5 rounded-2xl border border-dashed border-border/70 bg-background/60 px-4 py-5 text-sm text-muted-foreground">
-										Nenhum marco definido. Use as fases abaixo para acompanhar a
-										progressão clínica.
-									</div>
-								)}
 							</div>
-						</div>
+						)}
 					</Card>
 
 					{phases.length > 0 && (
@@ -504,30 +474,26 @@ export function ProtocolDetailView({
 																</div>
 
 																<div className="mt-2 flex flex-wrap gap-2">
-																	<Badge
-																		variant="secondary"
-																		className="bg-muted text-muted-foreground"
-																	>
-																		{goals.length} objetivos
-																	</Badge>
-																	<Badge
-																		variant="secondary"
-																		className="bg-muted text-muted-foreground"
-																	>
-																		{criteria.length} critérios
-																	</Badge>
-																	<Badge
-																		variant="secondary"
-																		className="bg-muted text-muted-foreground"
-																	>
-																		{exercises.length} intervenções
-																	</Badge>
-																	<Badge
-																		variant="secondary"
-																		className="bg-muted text-muted-foreground"
-																	>
-																		{precautions.length} alertas
-																	</Badge>
+																	{goals.length > 0 && (
+																		<Badge variant="secondary" className="bg-muted text-muted-foreground">
+																			{goals.length} objetivos
+																		</Badge>
+																	)}
+																	{criteria.length > 0 && (
+																		<Badge variant="outline" className="border-emerald-500/20 bg-emerald-500/5 text-emerald-700 dark:text-emerald-300">
+																			{criteria.length} critérios
+																		</Badge>
+																	)}
+																	{precautions.length > 0 && (
+																		<Badge variant="outline" className="border-amber-500/20 bg-amber-500/5 text-amber-700 dark:text-amber-300">
+																			{precautions.length} alertas
+																		</Badge>
+																	)}
+																	{exercises.length > 0 && (
+																		<Badge variant="outline" className="border-indigo-500/20 bg-indigo-500/5 text-indigo-700 dark:text-indigo-300">
+																			{exercises.length} intervenções
+																		</Badge>
+																	)}
 																</div>
 															</div>
 														</div>
@@ -651,164 +617,167 @@ export function ProtocolDetailView({
 						</Card>
 					)}
 
-					{protocol.references && protocol.references.length > 0 && (
-						<Card className="border-border/60 bg-background/70 p-5 shadow-sm">
-							<div className="flex flex-col gap-2 border-b border-border/60 pb-4 sm:flex-row sm:items-end sm:justify-between">
-								<div>
-									<p className="text-xs font-semibold uppercase tracking-[0.22em] text-primary/75">
-										Evidência
-									</p>
-									<h2 className="mt-1 text-xl font-semibold tracking-tight">
-										Referências científicas
-									</h2>
+					{(() => {
+						const refs = protocol.references ?? [];
+						const refArticles: { name: string; link: string; description: string }[] =
+							(protocol as any).reference_articles ?? [];
+						const hasAny = refs.length > 0 || refArticles.length > 0;
+						if (!hasAny) return null;
+						return (
+							<Card className="border-border/60 bg-background/70 p-5 shadow-sm">
+								<div className="flex items-center justify-between gap-2 border-b border-border/60 pb-4">
+									<div>
+										<p className="text-xs font-semibold uppercase tracking-[0.22em] text-primary/75">
+											Evidência
+										</p>
+										<h2 className="mt-1 text-xl font-semibold tracking-tight">
+											Referências científicas
+										</h2>
+									</div>
+									<Badge variant="outline" className="border-border/70 bg-background/80 text-muted-foreground">
+										{refs.length + refArticles.length}
+									</Badge>
 								</div>
-								<Badge
-									variant="outline"
-									className="w-fit border-border/70 bg-background/80 text-muted-foreground"
-								>
-									{protocol.references.length} referências
-								</Badge>
-							</div>
 
-							<div className="mt-4 grid gap-4 lg:grid-cols-2">
-								{protocol.references.map((reference, index) => (
-									<div
-										key={`${reference.title}-${index}`}
-										className="rounded-[26px] border border-border/60 bg-background p-4 shadow-sm transition-colors hover:border-primary/15"
-									>
-										<div className="flex items-center gap-2">
-											<Badge className="bg-primary text-[10px] font-bold">
+								<div className="mt-4 space-y-2">
+									{refs.map((reference, index) => (
+										<div
+											key={`ref-${index}`}
+											className="flex items-start gap-3 rounded-xl border border-border/60 bg-background px-4 py-3 transition-colors hover:border-primary/20"
+										>
+											<Badge className="mt-0.5 bg-primary shrink-0 text-[10px] font-bold">
 												{reference.year}
 											</Badge>
-											<span className="truncate text-[11px] font-semibold uppercase tracking-[0.18em] text-muted-foreground">
-												{reference.journal || "Study"}
-											</span>
+											<div className="min-w-0 flex-1">
+												{reference.url ? (
+													<a
+														href={reference.url}
+														target="_blank"
+														rel="noopener noreferrer"
+														className="flex items-start gap-1.5 text-sm font-semibold text-foreground transition-colors hover:text-primary"
+													>
+														<span className="flex-1 leading-5">{reference.title}</span>
+														<Share2 className="mt-0.5 h-3.5 w-3.5 shrink-0" />
+													</a>
+												) : (
+													<p className="text-sm font-semibold leading-5 text-foreground">
+														{reference.title}
+													</p>
+												)}
+												<p className="mt-1 line-clamp-1 text-xs text-muted-foreground">
+													{reference.authors}
+													{reference.journal && ` · ${reference.journal}`}
+												</p>
+											</div>
 										</div>
+									))}
 
-										{reference.url ? (
-											<a
-												href={reference.url}
-												target="_blank"
-												rel="noopener noreferrer"
-												className="mt-3 flex items-start gap-2 text-base font-semibold leading-6 text-foreground transition-colors hover:text-primary"
-											>
-												<span className="flex-1">{reference.title}</span>
-												<Share2 className="mt-1 h-4 w-4 shrink-0" />
-											</a>
-										) : (
-											<p className="mt-3 text-base font-semibold leading-6 text-foreground">
-												{reference.title}
-											</p>
-										)}
-
-										<p className="mt-3 line-clamp-2 text-sm text-muted-foreground">
-											{reference.authors}
-										</p>
-									</div>
-								))}
-							</div>
-						</Card>
-					)}
+									{refArticles.map((article, index) => (
+										<div
+											key={`art-${index}`}
+											className="flex items-start gap-3 rounded-xl border border-primary/10 bg-primary/[0.03] px-4 py-3 transition-colors hover:border-primary/20"
+										>
+											<BookOpen className="mt-0.5 h-4 w-4 shrink-0 text-primary" />
+											<div className="min-w-0 flex-1">
+												{article.link ? (
+													<a
+														href={article.link}
+														target="_blank"
+														rel="noopener noreferrer"
+														className="flex items-start gap-1.5 text-sm font-semibold text-foreground transition-colors hover:text-primary"
+													>
+														<span className="flex-1 leading-5">{article.name}</span>
+														<Share2 className="mt-0.5 h-3.5 w-3.5 shrink-0" />
+													</a>
+												) : (
+													<p className="text-sm font-semibold leading-5 text-foreground">
+														{article.name}
+													</p>
+												)}
+												{article.description && (
+													<p className="mt-1 line-clamp-2 text-xs text-muted-foreground">
+														{article.description}
+													</p>
+												)}
+											</div>
+										</div>
+									))}
+								</div>
+							</Card>
+						);
+					})()}
 				</div>
 
 				<div className="space-y-6 xl:sticky xl:top-24 xl:self-start">
 					<Card className="border-border/60 bg-background/70 p-5 shadow-sm">
-						<p className="text-xs font-semibold uppercase tracking-[0.22em] text-primary/75">
-							Resumo rápido
-						</p>
-						<h2 className="mt-1 text-lg font-semibold">Visão condensada</h2>
+						<div className="flex items-center justify-between gap-2">
+							<div>
+								<p className="text-xs font-semibold uppercase tracking-[0.22em] text-primary/75">
+									Visão geral
+								</p>
+								<h2 className="mt-0.5 text-lg font-semibold">Resumo do protocolo</h2>
+							</div>
+							<div className="flex flex-wrap gap-1.5 justify-end">
+								<Badge variant="outline" className="border-primary/15 bg-primary/5 text-primary text-[10px]">
+									{categoryInfo.name}
+								</Badge>
+								{protocol.wiki_page_id && (
+									<Badge variant="outline" className="border-primary/15 bg-primary/5 text-primary text-[10px]">
+										Wiki
+									</Badge>
+								)}
+							</div>
+						</div>
 
-						<div className="mt-4 grid grid-cols-2 gap-3">
+						{/* Stats row — compact */}
+						<div className="mt-4 grid grid-cols-4 gap-2">
 							{summaryCards.map((item) => (
-								<div
-									key={item.label}
-									className="rounded-2xl border border-border/60 bg-background px-4 py-3 shadow-sm"
-								>
-									<div className="flex items-center justify-between gap-2">
-										<item.icon className={cn("h-4 w-4", item.tone)} />
-										<span className={cn("text-lg font-bold", item.tone)}>
-											{item.value}
-										</span>
-									</div>
-									<p className="mt-2 text-[11px] font-semibold uppercase tracking-[0.18em] text-muted-foreground">
+								<div key={item.label} className="flex flex-col items-center rounded-2xl border border-border/60 bg-background py-3 shadow-sm">
+									<span className={cn("text-xl font-bold leading-none", item.tone)}>
+										{item.value}
+									</span>
+									<p className="mt-1.5 text-[10px] font-semibold uppercase tracking-[0.14em] text-muted-foreground text-center leading-tight">
 										{item.label}
 									</p>
 								</div>
 							))}
 						</div>
 
-						<div className="mt-4 flex flex-wrap gap-2">
-							<Badge
-								variant="outline"
-								className="border-primary/15 bg-primary/5 text-primary"
-							>
-								{categoryInfo.name}
-							</Badge>
-							{protocol.wiki_page_id && (
-								<Badge
-									variant="outline"
-									className="border-primary/15 bg-primary/5 text-primary"
-								>
-									Wiki vinculada
-								</Badge>
-							)}
-							{protocol.references && protocol.references.length > 0 && (
-								<Badge
-									variant="outline"
-									className="border-primary/15 bg-primary/5 text-primary"
-								>
-									{protocol.references.length} estudos
-								</Badge>
-							)}
-						</div>
-					</Card>
-
-					<Card className="border-border/60 bg-background/70 p-5 shadow-sm">
-						<div className="flex items-center justify-between gap-3">
-							<div>
-								<p className="text-xs font-semibold uppercase tracking-[0.22em] text-emerald-600/80">
-									Linha do tempo
-								</p>
-								<h2 className="mt-1 text-lg font-semibold">
-									Marcos do protocolo
-								</h2>
-							</div>
-							<Badge
-								variant="outline"
-								className="border-emerald-500/15 bg-emerald-500/5 text-emerald-700 dark:text-emerald-300"
-							>
-								{milestones.length}
-							</Badge>
-						</div>
-
-						<div className="mt-4 space-y-3">
-							{milestones.length > 0 ? (
-								milestones.slice(0, 5).map((milestone, index) => (
-									<div
-										key={`${milestone.week}-${index}`}
-										className="flex items-start gap-3 rounded-2xl border border-emerald-500/10 bg-emerald-500/[0.04] px-4 py-3"
-									>
-										<div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-emerald-600 text-sm font-bold text-white shadow-sm">
-											W{milestone.week}
-										</div>
-										<div className="min-w-0">
-											<p className="text-sm font-semibold text-foreground">
-												{milestone.title}
-											</p>
-											{milestone.criteria?.[0] && (
-												<p className="mt-1 line-clamp-2 text-xs leading-5 text-muted-foreground">
-													{milestone.criteria[0]}
-												</p>
-											)}
-										</div>
-									</div>
-								))
-							) : (
-								<div className="rounded-2xl border border-dashed border-border/70 bg-background/60 px-4 py-5 text-sm text-muted-foreground">
-									Nenhum marco definido.
+						{/* Timeline */}
+						{milestones.length > 0 && (
+							<>
+								<div className="mt-5 flex items-center justify-between gap-2">
+									<p className="text-xs font-semibold uppercase tracking-[0.18em] text-emerald-600/80">
+										Marcos
+									</p>
+									<Badge variant="outline" className="border-emerald-500/15 bg-emerald-500/5 text-emerald-700 dark:text-emerald-300 text-[10px]">
+										{milestones.length}
+									</Badge>
 								</div>
-							)}
-						</div>
+								<div className="mt-2 space-y-2">
+									{milestones.slice(0, 5).map((milestone, index) => (
+										<div
+											key={`${milestone.week}-${index}`}
+											className="flex items-center gap-3 rounded-xl border border-emerald-500/10 bg-emerald-500/[0.04] px-3 py-2.5"
+										>
+											<div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl bg-emerald-600 text-[11px] font-bold text-white">
+												W{milestone.week}
+											</div>
+											<div className="min-w-0">
+												<p className="text-sm font-semibold leading-tight text-foreground truncate">
+													{milestone.title}
+												</p>
+												{milestone.criteria?.[0] && (
+													<p className="mt-0.5 line-clamp-1 text-[11px] text-muted-foreground">
+														{milestone.criteria[0]}
+													</p>
+												)}
+											</div>
+										</div>
+									))}
+								</div>
+							</>
+						)}
 					</Card>
 
 					<Card className="border-border/60 bg-background/70 p-5 shadow-sm">

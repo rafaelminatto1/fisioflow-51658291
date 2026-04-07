@@ -13,13 +13,15 @@ import {
 	TouchableOpacity,
 	View,
 } from "react-native";
-import { Card } from "@/components";
+import { SafeAreaView } from "react-native-safe-area-context";
+import { Card, SyncStatus, Skeleton, CardSkeleton } from "@/components";
 import { useColors } from "@/hooks/useColorScheme";
 import { useHaptics } from "@/hooks/useHaptics";
+import { useSyncStatus } from "@/hooks/useSyncStatus";
 import { useLeads } from "@/hooks/useLeads";
 import { ApiLead } from "@/lib/api";
 
-const STATUS_LABELS: Record<ApiLead['estagio'], string> = {
+const STATUS_LABELS: Record<ApiLead["estagio"], string> = {
 	aguardando: "Novo",
 	contatado: "Em Contato",
 	interessado: "Interessado",
@@ -28,7 +30,7 @@ const STATUS_LABELS: Record<ApiLead['estagio'], string> = {
 	perdido: "Perdido",
 };
 
-const STATUS_COLORS: Record<ApiLead['estagio'], string> = {
+const STATUS_COLORS: Record<ApiLead["estagio"], string> = {
 	aguardando: "#3b82f6",
 	contatado: "#8b5cf6",
 	interessado: "#f59e0b",
@@ -40,92 +42,193 @@ const STATUS_COLORS: Record<ApiLead['estagio'], string> = {
 const LeadCard = memo(({ lead, colors, light, onUpdateStatus }: any) => {
 	const handleLongPress = () => {
 		light();
-		const stages = Object.keys(STATUS_LABELS) as ApiLead['estagio'][];
-		const options = stages.map(s => STATUS_LABELS[s]);
-		if (Platform.OS === 'ios') {
+		const stages = Object.keys(STATUS_LABELS) as ApiLead["estagio"][];
+		const options = stages.map((s) => STATUS_LABELS[s]);
+		if (Platform.OS === "ios") {
 			ActionSheetIOS.showActionSheetWithOptions(
-				{ options: [...options, 'Cancelar'], cancelButtonIndex: options.length, title: 'Mover para etapa' },
-				(idx) => { if (idx < options.length) onUpdateStatus(lead.id, stages[idx]); }
+				{
+					options: [...options, "Cancelar"],
+					cancelButtonIndex: options.length,
+					title: "Mover para etapa",
+				},
+				(idx) => {
+					if (idx < options.length) onUpdateStatus(lead.id, stages[idx]);
+				},
 			);
 		} else {
-			Alert.alert('Mover para etapa', undefined,
-				stages.map(s => ({ text: STATUS_LABELS[s], onPress: () => onUpdateStatus(lead.id, s) }))
-					.concat([{ text: 'Cancelar', style: 'cancel' } as any])
+			Alert.alert(
+				"Mover para etapa",
+				undefined,
+				stages
+					.map((s) => ({
+						text: STATUS_LABELS[s],
+						onPress: () => onUpdateStatus(lead.id, s),
+					}))
+					.concat([{ text: "Cancelar", style: "cancel" } as any]),
 			);
 		}
 	};
+
 	return (
-	<TouchableOpacity
-		activeOpacity={0.7}
-		onPress={() => light()}
-		onLongPress={handleLongPress}
-		delayLongPress={400}
-	>
-		<Card style={styles.leadCard}>
-			<View style={styles.leadHeader}>
-				<View style={styles.leadMainInfo}>
-					<Text style={[styles.leadName, { color: colors.text }]} numberOfLines={1}>
-						{lead.nome}
-					</Text>
-					<View style={[styles.statusBadge, { backgroundColor: STATUS_COLORS[lead.estagio] + "20" }]}>
-						<Text style={[styles.statusText, { color: STATUS_COLORS[lead.estagio] }]}>
-							{STATUS_LABELS[lead.estagio]}
+		<TouchableOpacity
+			activeOpacity={0.7}
+			onPress={() => light()}
+			onLongPress={handleLongPress}
+			delayLongPress={400}
+		>
+			<Card style={styles.leadCard}>
+				<View style={styles.leadHeader}>
+					<View
+						style={[
+							styles.leadAvatar,
+							{ backgroundColor: STATUS_COLORS[lead.estagio] + "18" },
+						]}
+					>
+						<Ionicons
+							name="person-outline"
+							size={20}
+							color={STATUS_COLORS[lead.estagio]}
+						/>
+					</View>
+					<View style={styles.leadMainInfo}>
+						<Text
+							style={[styles.leadName, { color: colors.text }]}
+							numberOfLines={1}
+						>
+							{lead.nome}
 						</Text>
+						<View style={styles.leadMetaRow}>
+							<View
+								style={[
+									styles.statusBadge,
+									{ backgroundColor: STATUS_COLORS[lead.estagio] + "20" },
+								]}
+							>
+								<Text
+									style={[
+										styles.statusText,
+										{ color: STATUS_COLORS[lead.estagio] },
+									]}
+								>
+									{STATUS_LABELS[lead.estagio]}
+								</Text>
+							</View>
+							{lead.origem && (
+								<Text style={[styles.sourceText, { color: colors.textMuted }]}>
+									{lead.origem}
+								</Text>
+							)}
+						</View>
 					</View>
+					<Ionicons name="chevron-forward" size={18} color={colors.textMuted} />
 				</View>
-				<Ionicons name="chevron-forward" size={18} color={colors.textMuted} />
-			</View>
 
-			<View style={styles.leadDetails}>
-				{lead.telefone && (
-					<View style={styles.detailItem}>
-						<Ionicons name="call-outline" size={14} color={colors.textSecondary} />
-						<Text style={[styles.detailText, { color: colors.textSecondary }]}>{lead.telefone}</Text>
-					</View>
+				{lead.interesse && (
+					<Text
+						style={[styles.interestText, { color: colors.textSecondary }]}
+						numberOfLines={2}
+					>
+						{lead.interesse}
+					</Text>
 				)}
-				{lead.origem && (
-					<View style={styles.detailItem}>
-						<Ionicons name="share-social-outline" size={14} color={colors.textSecondary} />
-						<Text style={[styles.detailText, { color: colors.textSecondary }]}>{lead.origem}</Text>
-					</View>
-				)}
-			</View>
 
-			{lead.interesse && (
-				<Text style={[styles.interestText, { color: colors.textMuted }]} numberOfLines={2}>
-					Interesse: {lead.interesse}
-				</Text>
-			)}
-		</Card>
-	</TouchableOpacity>
+				<View style={[styles.leadFooter, { borderTopColor: colors.border }]}>
+					{lead.telefone && (
+						<View style={styles.footerItem}>
+							<Ionicons
+								name="call-outline"
+								size={14}
+								color={colors.textSecondary}
+							/>
+							<Text
+								style={[styles.footerText, { color: colors.textSecondary }]}
+							>
+								{lead.telefone}
+							</Text>
+						</View>
+					)}
+					<Text style={[styles.hintText, { color: colors.textMuted }]}>
+						Toque longo para mover
+					</Text>
+				</View>
+			</Card>
+		</TouchableOpacity>
 	);
 });
+
+function CRMSkeletonLoader() {
+	return (
+		<View style={styles.skeletonContainer}>
+			<View style={styles.skeletonStatsRow}>
+				{[1, 2, 3].map((i) => (
+					<View key={i} style={styles.skeletonStat}>
+						<Skeleton width={28} height={28} variant="circular" />
+						<Skeleton
+							width={40}
+							height={20}
+							variant="text"
+							style={{ marginTop: 6 }}
+						/>
+						<Skeleton width={60} height={12} variant="text" />
+					</View>
+				))}
+			</View>
+			{[1, 2, 3, 4].map((i) => (
+				<CardSkeleton key={i} />
+			))}
+		</View>
+	);
+}
 
 export default function CRMScreen() {
 	const colors = useColors();
 	const { light } = useHaptics();
 	const { leads, loading, refreshing, refresh, updateLeadStatus } = useLeads();
+	const { status: syncStatus, isOnline } = useSyncStatus();
 	const [searchQuery, setSearchQuery] = useState("");
-	const [selectedStatus, setSelectedStatus] = useState<ApiLead['estagio'] | "todos">("todos");
+	const [selectedStatus, setSelectedStatus] = useState<
+		ApiLead["estagio"] | "todos"
+	>("todos");
 
 	const filteredLeads = useMemo(() => {
 		return leads.filter((lead) => {
-			const matchesSearch = lead.nome.toLowerCase().includes(searchQuery.toLowerCase()) ||
+			const matchesSearch =
+				lead.nome.toLowerCase().includes(searchQuery.toLowerCase()) ||
 				(lead.telefone && lead.telefone.includes(searchQuery)) ||
-				(lead.interesse && lead.interesse.toLowerCase().includes(searchQuery.toLowerCase()));
-			
-			const matchesStatus = selectedStatus === "todos" || lead.estagio === selectedStatus;
-			
+				(lead.interesse &&
+					lead.interesse.toLowerCase().includes(searchQuery.toLowerCase()));
+
+			const matchesStatus =
+				selectedStatus === "todos" || lead.estagio === selectedStatus;
+
 			return matchesSearch && matchesStatus;
 		});
 	}, [leads, searchQuery, selectedStatus]);
 
 	const statusOptions = ["todos", ...Object.keys(STATUS_LABELS)] as const;
 
+	const leadsByStage = useMemo(() => {
+		const counts: Record<string, number> = {};
+		for (const lead of leads) {
+			counts[lead.estagio] = (counts[lead.estagio] || 0) + 1;
+		}
+		return counts;
+	}, [leads]);
+
 	return (
-		<View style={[styles.container, { backgroundColor: colors.background }]}>
-			<View style={[styles.searchContainer, { borderBottomColor: colors.border }]}>
-				<View style={[styles.searchBar, { backgroundColor: colors.surfaceHover }]}>
+		<SafeAreaView
+			style={[styles.container, { backgroundColor: colors.background }]}
+			edges={["left", "right"]}
+		>
+			<View
+				style={[styles.searchContainer, { borderBottomColor: colors.border }]}
+			>
+				<View
+					style={[
+						styles.searchBar,
+						{ backgroundColor: colors.surface, borderColor: colors.border },
+					]}
+				>
 					<Ionicons name="search" size={20} color={colors.textMuted} />
 					<TextInput
 						placeholder="Buscar leads..."
@@ -135,8 +238,17 @@ export default function CRMScreen() {
 						onChangeText={setSearchQuery}
 					/>
 					{searchQuery.length > 0 && (
-						<TouchableOpacity onPress={() => setSearchQuery("")}>
-							<Ionicons name="close-circle" size={20} color={colors.textMuted} />
+						<TouchableOpacity
+							onPress={() => {
+								light();
+								setSearchQuery("");
+							}}
+						>
+							<Ionicons
+								name="close-circle"
+								size={20}
+								color={colors.textMuted}
+							/>
 						</TouchableOpacity>
 					)}
 				</View>
@@ -146,33 +258,70 @@ export default function CRMScreen() {
 					showsHorizontalScrollIndicator={false}
 					contentContainerStyle={styles.statusFilters}
 				>
-					{statusOptions.map((status) => (
-						<TouchableOpacity
-							key={status}
-							onPress={() => {
-								light();
-								setSelectedStatus(status);
-							}}
-							style={[
-								styles.statusFilterChip,
-								{
-									backgroundColor: selectedStatus === status ? colors.primary : colors.surfaceHover,
-								},
-							]}
-						>
-							<Text
+					{statusOptions.map((status) => {
+						const isActive = selectedStatus === status;
+						const stageKey = status as ApiLead["estagio"];
+						const stageColor =
+							status !== "todos" ? STATUS_COLORS[stageKey] : colors.primary;
+						return (
+							<TouchableOpacity
+								key={status}
+								onPress={() => {
+									light();
+									setSelectedStatus(status as typeof selectedStatus);
+								}}
 								style={[
-									styles.statusFilterText,
+									styles.statusFilterChip,
 									{
-										color: selectedStatus === status ? "#fff" : colors.textSecondary,
+										backgroundColor: isActive ? stageColor : colors.surface,
+										borderColor: isActive ? stageColor : colors.border,
 									},
 								]}
 							>
-								{status === "todos" ? "Todos" : STATUS_LABELS[status as ApiLead['estagio']]}
-							</Text>
-						</TouchableOpacity>
-					))}
+								<Text
+									style={[
+										styles.statusFilterText,
+										{
+											color: isActive ? "#fff" : colors.textSecondary,
+										},
+									]}
+								>
+									{status === "todos"
+										? `Todos (${leads.length})`
+										: `${STATUS_LABELS[stageKey]} (${leadsByStage[stageKey] || 0})`}
+								</Text>
+							</TouchableOpacity>
+						);
+					})}
 				</ScrollView>
+			</View>
+
+			<View style={styles.metaRow}>
+				{!loading && (
+					<View style={styles.statsRow}>
+						<View
+							style={[
+								styles.statBadge,
+								{ backgroundColor: colors.successLight },
+							]}
+						>
+							<Text style={[styles.statBadgeText, { color: colors.success }]}>
+								{leadsByStage.convertido || 0} convertidos
+							</Text>
+						</View>
+						<View
+							style={[
+								styles.statBadge,
+								{ backgroundColor: colors.primaryLight + "40" },
+							]}
+						>
+							<Text style={[styles.statBadgeText, { color: colors.primary }]}>
+								{leads.length} total
+							</Text>
+						</View>
+					</View>
+				)}
+				<SyncStatus status={syncStatus} isOnline={isOnline} compact />
 			</View>
 
 			<ScrollView
@@ -187,21 +336,47 @@ export default function CRMScreen() {
 				}
 			>
 				{loading && !refreshing ? (
-					<ActivityIndicator size="large" color={colors.primary} style={styles.loader} />
+					<CRMSkeletonLoader />
 				) : filteredLeads.length > 0 ? (
-					filteredLeads.map((lead) => (
-						<LeadCard key={lead.id} lead={lead} colors={colors} light={light} onUpdateStatus={updateLeadStatus} />
-					))
-				) : (
-					<View style={styles.emptyContainer}>
-						<Ionicons name="funnel-outline" size={64} color={colors.textMuted} />
-						<Text style={[styles.emptyText, { color: colors.textSecondary }]}>
-							Nenhum lead encontrado
-						</Text>
+					<View style={styles.listContainer}>
+						{filteredLeads.map((lead) => (
+							<LeadCard
+								key={lead.id}
+								lead={lead}
+								colors={colors}
+								light={light}
+								onUpdateStatus={updateLeadStatus}
+							/>
+						))}
 					</View>
+				) : (
+					<Card style={styles.emptyCard}>
+						<View
+							style={[
+								styles.emptyIconContainer,
+								{ backgroundColor: colors.border },
+							]}
+						>
+							<Ionicons
+								name={searchQuery ? "search-outline" : "funnel-outline"}
+								size={32}
+								color={colors.textMuted}
+							/>
+						</View>
+						<Text style={[styles.emptyTitle, { color: colors.text }]}>
+							{searchQuery ? "Sem resultados" : "Nenhum lead encontrado"}
+						</Text>
+						<Text
+							style={[styles.emptyDescription, { color: colors.textSecondary }]}
+						>
+							{searchQuery
+								? "Tente buscar com outro termo ou limpe o filtro."
+								: "Seus leads aparecerão aqui conforme forem cadastrados."}
+						</Text>
+					</Card>
 				)}
 			</ScrollView>
-		</View>
+		</SafeAreaView>
 	);
 }
 
@@ -216,14 +391,15 @@ const styles = StyleSheet.create({
 	searchBar: {
 		flexDirection: "row",
 		alignItems: "center",
-		paddingHorizontal: 12,
-		height: 44,
+		paddingHorizontal: 14,
+		height: 48,
 		borderRadius: 12,
+		borderWidth: 1,
 		marginBottom: 12,
+		gap: 10,
 	},
 	searchInput: {
 		flex: 1,
-		marginLeft: 8,
 		fontSize: 16,
 	},
 	statusFilters: {
@@ -231,13 +407,34 @@ const styles = StyleSheet.create({
 		paddingBottom: 4,
 	},
 	statusFilterChip: {
-		paddingHorizontal: 16,
+		paddingHorizontal: 14,
 		paddingVertical: 8,
 		borderRadius: 20,
 		marginRight: 8,
+		borderWidth: 1,
 	},
 	statusFilterText: {
-		fontSize: 14,
+		fontSize: 13,
+		fontWeight: "600",
+	},
+	metaRow: {
+		flexDirection: "row",
+		alignItems: "center",
+		justifyContent: "space-between",
+		paddingHorizontal: 16,
+		marginBottom: 4,
+	},
+	statsRow: {
+		flexDirection: "row",
+		gap: 8,
+	},
+	statBadge: {
+		paddingHorizontal: 10,
+		paddingVertical: 4,
+		borderRadius: 20,
+	},
+	statBadgeText: {
+		fontSize: 12,
 		fontWeight: "600",
 	},
 	scrollView: {
@@ -246,65 +443,116 @@ const styles = StyleSheet.create({
 	scrollContent: {
 		padding: 16,
 	},
+	listContainer: {
+		gap: 12,
+	},
 	leadCard: {
-		marginBottom: 12,
-		padding: 16,
+		borderRadius: 16,
 	},
 	leadHeader: {
 		flexDirection: "row",
-		justifyContent: "space-between",
 		alignItems: "center",
-		marginBottom: 12,
+		gap: 12,
+	},
+	leadAvatar: {
+		width: 40,
+		height: 40,
+		borderRadius: 20,
+		alignItems: "center",
+		justifyContent: "center",
+		flexShrink: 0,
 	},
 	leadMainInfo: {
 		flex: 1,
-		flexDirection: "row",
-		alignItems: "center",
-		flexWrap: "wrap",
 	},
 	leadName: {
-		fontSize: 18,
-		fontWeight: "bold",
-		marginRight: 8,
+		fontSize: 16,
+		fontWeight: "600",
+		marginBottom: 4,
+	},
+	leadMetaRow: {
+		flexDirection: "row",
+		alignItems: "center",
+		gap: 8,
 	},
 	statusBadge: {
 		paddingHorizontal: 8,
-		paddingVertical: 4,
+		paddingVertical: 2,
 		borderRadius: 6,
 	},
 	statusText: {
+		fontSize: 11,
+		fontWeight: "600",
+	},
+	sourceText: {
 		fontSize: 12,
-		fontWeight: "bold",
-	},
-	leadDetails: {
-		flexDirection: "row",
-		flexWrap: "wrap",
-		marginBottom: 8,
-	},
-	detailItem: {
-		flexDirection: "row",
-		alignItems: "center",
-		marginRight: 16,
-		marginBottom: 4,
-	},
-	detailText: {
-		fontSize: 14,
-		marginLeft: 4,
 	},
 	interestText: {
-		fontSize: 14,
+		fontSize: 13,
+		marginTop: 10,
+		lineHeight: 18,
+	},
+	leadFooter: {
+		flexDirection: "row",
+		justifyContent: "space-between",
+		alignItems: "center",
+		marginTop: 12,
+		paddingTop: 10,
+		borderTopWidth: 1,
+	},
+	footerItem: {
+		flexDirection: "row",
+		alignItems: "center",
+		gap: 6,
+	},
+	footerText: {
+		fontSize: 12,
+		fontWeight: "500",
+	},
+	hintText: {
+		fontSize: 11,
 		fontStyle: "italic",
 	},
-	loader: {
-		marginTop: 40,
+	emptyCard: {
+		alignItems: "center",
+		paddingVertical: 48,
+		gap: 8,
+		borderRadius: 16,
+		borderStyle: "dashed",
 	},
-	emptyContainer: {
+	emptyIconContainer: {
+		width: 64,
+		height: 64,
+		borderRadius: 32,
 		alignItems: "center",
 		justifyContent: "center",
-		marginTop: 80,
+		marginBottom: 8,
 	},
-	emptyText: {
-		fontSize: 16,
-		marginTop: 16,
+	emptyTitle: {
+		fontSize: 17,
+		fontWeight: "600",
+	},
+	emptyDescription: {
+		fontSize: 14,
+		textAlign: "center",
+		paddingHorizontal: 24,
+		lineHeight: 20,
+	},
+	skeletonContainer: {
+		gap: 12,
+	},
+	skeletonStatsRow: {
+		flexDirection: "row",
+		gap: 12,
+		marginBottom: 8,
+	},
+	skeletonStat: {
+		flex: 1,
+		alignItems: "center",
+		backgroundColor: "#fff",
+		borderRadius: 16,
+		padding: 16,
+		borderWidth: 1,
+		borderColor: "#e5e7eb",
 	},
 });
