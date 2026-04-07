@@ -26,9 +26,11 @@ export default function EvolutionFormScreen() {
   const router = useRouter();
   const params = useLocalSearchParams();
 
-  const patientId = params.patientId as string;
+  const rawPatientId = params.patientId as string;
+  const patientId = rawPatientId && rawPatientId !== 'undefined' ? rawPatientId : '';
   const patientName = params.patientName as string || 'Paciente';
-  const appointmentId = params.appointmentId as string | undefined;
+  const rawAppointmentId = params.appointmentId as string | undefined;
+  const appointmentId = rawAppointmentId && rawAppointmentId !== 'undefined' ? rawAppointmentId : undefined;
 
   const { success, error: hapticError } = useHaptics();
 
@@ -52,6 +54,43 @@ export default function EvolutionFormScreen() {
   // AI Generation state
   const [generatingSOAP, setGeneratingSOAP] = useState(false);
   const [generatedSuggestions, setGeneratedSuggestions] = useState<string[]>([]);
+
+  // Load existing draft on mount
+  useEffect(() => {
+    if (!patientId) return;
+    const fetchDraft = async () => {
+      try {
+        let url = `/api/sessions?patientId=${patientId}&status=draft&limit=1`;
+        if (appointmentId) {
+          url += `&appointmentId=${appointmentId}`;
+        }
+        const res = await fetchApi<{ data: any[] }>(url);
+        const draft = res.data?.[0];
+        if (draft && !savedEvolutionId.current) {
+          savedEvolutionId.current = draft.id;
+          const subj = draft.subjective || '';
+          const obj = draft.objective || '';
+          const ass = draft.assessment || '';
+          const pln = draft.plan || '';
+          
+          setSubjective(subj);
+          setObjective(obj);
+          setAssessment(ass);
+          setPlan(pln);
+          setFreeContent(ass); // Also populate freeContent in case it's Notion
+          setPainLevel(draft.pain_level || 0);
+
+          // Guess the mode: if only assessment is filled, it's likely Notion or Tiptap
+          if (!subj && !obj && !pln && ass) {
+            setMode('Notion');
+          }
+        }
+      } catch (err) {
+        console.error('[EvolutionForm] Error fetching draft:', err);
+      }
+    };
+    fetchDraft();
+  }, [patientId, appointmentId]);
 
   // Auto-save debounced — cria na primeira vez, atualiza nas seguintes
   const triggerAutoSave = useCallback(() => {
