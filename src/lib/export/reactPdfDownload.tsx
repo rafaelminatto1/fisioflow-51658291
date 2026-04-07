@@ -1,4 +1,5 @@
 import React from "react";
+import { loadReactPdfRuntime } from "@/lib/export/reactPdfRuntime";
 
 function downloadBlob(blob: Blob, fileName: string) {
 	const url = URL.createObjectURL(blob);
@@ -21,7 +22,7 @@ export async function downloadReactPdfDocument<Props>({
 	props: Props;
 }) {
 	const [{ pdf }, DocumentComponent] = await Promise.all([
-		import("@react-pdf/renderer"),
+		loadReactPdfRuntime(),
 		loadDocument(),
 	]);
 

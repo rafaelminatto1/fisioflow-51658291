@@ -4,10 +4,9 @@ import React, { useEffect, useRef, useState } from "react";
 import "@mediapipe/drawing_utils";
 const { drawConnectors, drawLandmarks } = globalThis as any;
 import { calculateAngle, POSE_LANDMARKS } from "@/utils/geometry";
-import { useToast } from "@/components/ui/use-toast";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Play, Pause, Camera, Upload } from "lucide-react";
+import { Play, Pause, Upload } from "lucide-react";
 import { fisioLogger as logger } from "@/lib/errors/logger";
 
 interface PoseOptions {
@@ -90,7 +89,7 @@ const POSE_CONNECTIONS: [number, number][] = [
 ];
 
 interface PoseAnalyzerProps {
-	videoSrc?: string; // URL object or null for webcam
+	videoSrc?: string;
 	onAnalysisUpdate?: (data: {
 		torsoAngle: number;
 		isBadPosture: boolean;
@@ -106,8 +105,6 @@ const PoseAnalyzer: React.FC<PoseAnalyzerProps> = ({
 	const poseRef = useRef<PoseInstance | null>(null);
 	const requestRef = useRef<number>();
 	const [isProcessing, setIsProcessing] = useState(false);
-	const [cameraActive, setCameraActive] = useState(false);
-	const { toast } = useToast();
 
 	const analyzePosture = React.useCallback(
 		(
@@ -278,35 +275,8 @@ const PoseAnalyzer: React.FC<PoseAnalyzerProps> = ({
 		if (videoSrc && videoRef.current) {
 			videoRef.current.src = videoSrc;
 			videoRef.current.load();
-			setCameraActive(false);
-		} else if (!videoSrc) {
-			// Optional: Auto-start webcam or wait for user
 		}
 	}, [videoSrc]);
-
-	const startCamera = async () => {
-		if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
-			try {
-				const stream = await navigator.mediaDevices.getUserMedia({
-					video: true,
-				});
-				if (videoRef.current) {
-					videoRef.current.srcObject = stream;
-					videoRef.current.onloadedmetadata = () => {
-						videoRef.current?.play();
-						startProcessing();
-					};
-					setCameraActive(true);
-				}
-			} catch {
-				toast({
-					title: "Erro na Câmera",
-					description: "Não foi possível acessar a câmera.",
-					variant: "destructive",
-				});
-			}
-		}
-	};
 
 	const startProcessing = () => {
 		setIsProcessing(true);
@@ -344,7 +314,6 @@ const PoseAnalyzer: React.FC<PoseAnalyzerProps> = ({
 			const url = URL.createObjectURL(file);
 			if (videoRef.current) {
 				videoRef.current.src = url;
-				setCameraActive(false);
 			}
 		}
 	};
@@ -367,27 +336,18 @@ const PoseAnalyzer: React.FC<PoseAnalyzerProps> = ({
 
 			<div className="flex gap-2 w-full justify-center">
 				{!videoSrc && (
-					<>
-						<Button
-							onClick={startCamera}
-							variant={cameraActive ? "default" : "secondary"}
-						>
-							<Camera className="w-4 h-4 mr-2" />
-							Webcam
+					<div className="relative">
+						<Button variant="outline">
+							<Upload className="w-4 h-4 mr-2" />
+							Carregar Video
 						</Button>
-						<div className="relative">
-							<Button variant="outline">
-								<Upload className="w-4 h-4 mr-2" />
-								Carregar Vídeo
-							</Button>
-							<input
-								type="file"
-								accept="video/*"
-								className="absolute inset-0 opacity-0 cursor-pointer"
-								onChange={handleFileUpload}
-							/>
-						</div>
-					</>
+						<input
+							type="file"
+							accept="video/*"
+							className="absolute inset-0 opacity-0 cursor-pointer"
+							onChange={handleFileUpload}
+						/>
+					</div>
 				)}
 
 				<Button

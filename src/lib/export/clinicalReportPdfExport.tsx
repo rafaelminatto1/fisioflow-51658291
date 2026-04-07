@@ -1,5 +1,6 @@
 import React from "react";
 import type { ClinicalReportInput } from "@/services/ai/geminiAiService";
+import { loadReactPdfRuntime } from "@/lib/export/reactPdfRuntime";
 
 export const exportClinicalReportToPDF = async (
 	patientName: string,
@@ -7,7 +8,7 @@ export const exportClinicalReportToPDF = async (
 	reportInput: ClinicalReportInput,
 ) => {
 	const [{ pdf }, { ClinicalReportPDFDocument }] = await Promise.all([
-		import("@react-pdf/renderer"),
+		loadReactPdfRuntime(),
 		import("@/components/patient/pdf/ClinicalReportPDFDocument"),
 	]);
 

@@ -1,0 +1,12 @@
+name: Development Build (iOS)
+
+# Só roda manualmente para não gastar builds automáticos
+# Para rodar: eas workflow:run development-build.yml
+
+jobs:
+  build_ios_dev:
+    name: Build iOS (development)
+    type: build
+    params:
+      platform: ios
+      profile: development
