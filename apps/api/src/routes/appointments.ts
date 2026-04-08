@@ -2,6 +2,7 @@ import { Hono } from 'hono';
 import type { MiddlewareHandler } from 'hono';
 import type { Env } from '../types/env';
 import { requireAuth, type AuthVariables } from '../lib/auth';
+import { rateLimit } from '../middleware/rateLimit';
 import { eq, and, sql, desc, lte, gte } from 'drizzle-orm';
 import { appointments, patients } from '@fisioflow/db';
 import {
@@ -208,7 +209,8 @@ async function enforceCapacity(
 }
 
 
-app.post('/', requireAuth, async (c) => {
+// 20 agendamentos criados por organização por hora
+app.post('/', requireAuth, rateLimit({ limit: 20, windowSeconds: 3600, endpoint: 'appointments-create' }), async (c) => {
   const user = c.get('user');
   const db = createDb(c.env);
 

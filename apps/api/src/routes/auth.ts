@@ -1,8 +1,20 @@
 import { Hono } from 'hono';
 import { createPool } from '../lib/db';
+import { rateLimit } from '../middleware/rateLimit';
 import type { Env } from '../types/env';
 
 const app = new Hono<{ Bindings: Env }>();
+
+// 10 tentativas de login por IP por 15 minutos
+const loginRateLimit = rateLimit({
+  limit: 10,
+  windowSeconds: 900,
+  endpoint: 'auth-login',
+  keyFn: (c) =>
+    c.req.header('CF-Connecting-IP') ??
+    c.req.header('X-Forwarded-For')?.split(',')[0].trim() ??
+    'unknown',
+});
 
 async function forwardToNeonAuth(
   neonAuthUrl: string,
@@ -40,7 +52,7 @@ function extractSubFromJwt(token: string): string | null {
 }
 
 // POST /api/auth/login
-app.post('/login', async (c) => {
+app.post('/login', loginRateLimit, async (c) => {
   const { email, password } = await c.req.json();
   if (!email || !password) {
     return c.json({ error: 'Email e senha são obrigatórios' }, 400);

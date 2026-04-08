@@ -14,7 +14,6 @@ export const authApi = {
       skipAuth: true,
     });
 
-    console.log(`[Auth] Token recebido: ${data.token ? data.token.substring(0, 10) + '...' : 'null/undefined'} (length: ${data.token?.length})`);
     if (!data.token) {
       throw new Error('Token não recebido do servidor');
     }

@@ -6,11 +6,13 @@
  *
  * Suporta DO Alarms para lembretes específicos por agendamento.
  */
+import type { Env } from '../types/env';
+
 export class OrganizationState implements DurableObject {
   private state: DurableObjectState;
-  private env: any;
+  private env: Env;
 
-  constructor(state: DurableObjectState, env: any) {
+  constructor(state: DurableObjectState, env: Env) {
     this.state = state;
     this.env = env;
   }

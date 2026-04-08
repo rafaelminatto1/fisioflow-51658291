@@ -19,7 +19,7 @@ export const inngest = new Inngest({
 const appointmentReminder = inngest.createFunction(
   { id: 'send-appointment-reminder', name: 'Lembrete de Consulta' },
   { event: 'appointment.created' },
-  async ({ event, step, env }: any) => {
+  async ({ event, step, env }: { event: any; step: any; env: Env }) => {
     const { date, startTime, appointmentId, phone, name } = event.data;
 
     // 1. Calcula o horário do lembrete (24h antes da consulta)
@@ -34,8 +34,9 @@ const appointmentReminder = inngest.createFunction(
     // 3. Dispara o WhatsApp Real
     await step.run('send-whatsapp-reminder', async () => {
       if (!phone) return { error: 'Telefone do paciente ausente' };
-      const whatsapp = new WhatsAppService(env as Env);
-      
+      const whatsapp = new WhatsAppService(env);
+
+      // TODO: mover para env var API_BASE_URL (adicionar em wrangler.toml + Env interface)
       const calendarUrl = `https://api-pro.moocafisio.com.br/api/calendar/${appointmentId}.ics`;
       
       // Tenta usar template aprovado, enviando também o link do calendário
@@ -61,13 +62,13 @@ ${calendarUrl}`;
 const patientWelcome = inngest.createFunction(
   { id: 'patient-welcome', name: 'Boas-vindas Paciente' },
   { event: 'patient.created' },
-  async ({ event, step, env }: any) => {
+  async ({ event, step, env }: { event: any; step: any; env: Env }) => {
     const { patientId, name, phone } = event.data;
 
     await step.run('send-welcome-whatsapp', async () => {
       if (!phone) return { error: 'Telefone ausente' };
-      const db = createPool(env as Env);
-      const whatsapp = new WhatsAppService(env as Env);
+      const db = createPool(env);
+      const whatsapp = new WhatsAppService(env);
 
       // Verifica se o paciente já instalou o app (se tem token de push ou login)
       const res = await db.query('SELECT fcm_token FROM patients WHERE id = $1', [patientId]);
@@ -93,7 +94,7 @@ const patientWelcome = inngest.createFunction(
 const appointmentFeedback = inngest.createFunction(
   { id: 'appointment-feedback', name: 'Feedback Pós-Consulta' },
   { event: 'appointment.completed' },
-  async ({ event, step, env }: any) => {
+  async ({ event, step, env }: { event: any; step: any; env: Env }) => {
     const { phone, name } = event.data;
 
     // Aguarda 2 horas após a consulta
@@ -101,7 +102,7 @@ const appointmentFeedback = inngest.createFunction(
 
     await step.run('send-feedback-request', async () => {
       if (!phone) return { error: 'Telefone ausente' };
-      const whatsapp = new WhatsAppService(env as Env);
+      const whatsapp = new WhatsAppService(env);
       return await whatsapp.sendSmartTemplate(phone, 'feedback_atendimento', [name]);
     });
 
@@ -115,7 +116,7 @@ const appointmentFeedback = inngest.createFunction(
 const exerciseReminder = inngest.createFunction(
   { id: 'exercise-reminder', name: 'Lembrete de Exercícios em Casa' },
   { event: 'appointment.completed' },
-  async ({ event, step, env }: any) => {
+  async ({ event, step, env }: { event: any; step: any; env: Env }) => {
     const { phone, name } = event.data;
 
     // Aguarda 2 dias para perguntar sobre os exercícios
@@ -123,7 +124,7 @@ const exerciseReminder = inngest.createFunction(
 
     await step.run('send-exercise-whatsapp', async () => {
       if (!phone) return;
-      const whatsapp = new WhatsAppService(env as Env);
+      const whatsapp = new WhatsAppService(env);
       return await whatsapp.sendSmartTemplate(phone, 'lembrete_exercicios_v1', [name]);
     });
 
@@ -137,12 +138,12 @@ const exerciseReminder = inngest.createFunction(
 const birthdayGreeting = inngest.createFunction(
   { id: 'birthday-greeting', name: 'Parabéns Aniversariante' },
   { event: 'patient.birthday' },
-  async ({ event, step, env }: any) => {
+  async ({ event, step, env }: { event: any; step: any; env: Env }) => {
     const { phone, name } = event.data;
 
     await step.run('send-birthday-whatsapp', async () => {
       if (!phone) return;
-      const whatsapp = new WhatsAppService(env as Env);
+      const whatsapp = new WhatsAppService(env);
       return await whatsapp.sendSmartTemplate(phone, 'parabens_paciente', [name]);
     });
 
@@ -156,12 +157,12 @@ const birthdayGreeting = inngest.createFunction(
 const inactiveRecovery = inngest.createFunction(
   { id: 'inactive-recovery', name: 'Recuperação de Inativo' },
   { event: 'patient.inactive' },
-  async ({ event, step, env }: any) => {
+  async ({ event, step, env }: { event: any; step: any; env: Env }) => {
     const { phone, name } = event.data;
 
     await step.run('send-recovery-whatsapp', async () => {
       if (!phone) return;
-      const whatsapp = new WhatsAppService(env as Env);
+      const whatsapp = new WhatsAppService(env);
       return await whatsapp.sendSmartTemplate(phone, 'recuperacao_inativo', [name]);
     });
 
@@ -175,12 +176,12 @@ const inactiveRecovery = inngest.createFunction(
 const paymentConfirmation = inngest.createFunction(
   { id: 'payment-confirmation', name: 'Confirmação de Pagamento' },
   { event: 'payment.received' },
-  async ({ event, step, env }: any) => {
+  async ({ event, step, env }: { event: any; step: any; env: Env }) => {
     const { phone, name } = event.data;
 
     await step.run('send-payment-whatsapp', async () => {
       if (!phone) return;
-      const whatsapp = new WhatsAppService(env as Env);
+      const whatsapp = new WhatsAppService(env);
       return await whatsapp.sendSmartTemplate(phone, 'pagamento_confirmado', [name]);
     });
 
@@ -194,12 +195,12 @@ const paymentConfirmation = inngest.createFunction(
 const googleReviewRequest = inngest.createFunction(
   { id: 'google-review-request', name: 'Solicitar Avaliação Google' },
   { event: 'appointment.completed' },
-  async ({ event, step, env }: any) => {
+  async ({ event, step, env }: { event: any; step: any; env: Env }) => {
     const { patientId, phone, name } = event.data;
 
     // 1. Verifica no banco se o paciente já completou 5 sessões
     const sessionCount = await step.run('count-sessions', async () => {
-      const db = createPool(env as Env);
+      const db = createPool(env);
       const res = await db.query(
         "SELECT COUNT(*)::int FROM appointments WHERE patient_id = $1 AND status = 'completed'",
         [patientId]
@@ -211,7 +212,7 @@ const googleReviewRequest = inngest.createFunction(
     if (sessionCount === 5) {
       await step.run('send-review-whatsapp', async () => {
         if (!phone) return;
-        const whatsapp = new WhatsAppService(env as Env);
+        const whatsapp = new WhatsAppService(env);
         return await whatsapp.sendSmartTemplate(phone, 'avaliacao_google', [name]);
       });
     }
