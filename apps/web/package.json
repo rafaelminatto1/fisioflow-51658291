@@ -305,7 +305,7 @@
     "typescript-eslint": "^8.38.0",
     "vite": "8.0.3",
     "vitest": "^4.0.18",
-    "wrangler": "^4.80.0"
+    "wrangler": "^4.81.0"
   },
   "peerDependencies": {
     "@capgo/capacitor-native-biometric": "^8.4.2"
