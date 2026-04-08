@@ -76,6 +76,12 @@ app.post('/booking', async (c) => {
   if (!slug || !requestedDate || !requestedTime) {
     return c.json({ error: 'slug, date e time são obrigatórios' }, 400);
   }
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(requestedDate) || isNaN(Date.parse(requestedDate))) {
+    return c.json({ error: 'date deve estar no formato YYYY-MM-DD' }, 400);
+  }
+  if (!/^\d{2}:\d{2}$/.test(requestedTime)) {
+    return c.json({ error: 'time deve estar no formato HH:MM' }, 400);
+  }
   if (!patient.name || !String(patient.name).trim() || !patient.phone || !String(patient.phone).trim()) {
     return c.json({ error: 'Nome e telefone são obrigatórios' }, 400);
   }
