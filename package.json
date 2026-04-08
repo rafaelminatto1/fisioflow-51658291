@@ -78,7 +78,7 @@
 		"workers:deploy": "pnpm --filter @fisioflow/api run deploy",
 		"workers:deploy:staging": "pnpm --filter @fisioflow/api deploy:staging",
 		"workers:type-check": "pnpm --filter @fisioflow/api type-check",
-		"deploy:web": "pnpm build && wrangler deploy",
+		"deploy:web": "pnpm build && wrangler deploy --env=\"\"",
 		"deploy:all": "pnpm run deploy:web && pnpm run workers:deploy",
 		"patient:start": "pnpm --filter fisioflow-patient-ios start",
 		"patient:build:dev": "pnpm --filter fisioflow-patient-ios build:dev",
