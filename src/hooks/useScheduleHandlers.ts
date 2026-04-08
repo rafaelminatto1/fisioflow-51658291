@@ -3,7 +3,13 @@ import { useSearchParams } from "react-router-dom";
 import { toast } from "@/hooks/use-toast";
 import { AppointmentService } from "@/services/appointmentService";
 import { getUserOrganizationId } from "@/utils/userHelpers";
-import { formatDateToLocalISO, formatDateToBrazilian } from "@/utils/dateUtils";
+import {
+	formatDateToLocalISO,
+	formatDateToBrazilian,
+	formatTime,
+	roundDateToNextInterval,
+	roundDateToNearestInterval,
+} from "@/utils/dateUtils";
 import {
 	isAppointmentConflictError,
 	APPOINTMENT_CONFLICT_TITLE,
@@ -17,25 +23,26 @@ import { ScheduleModalsState, ScheduleActions } from "@/types/schedule-hooks";
 const BUSINESS_HOURS = {
 	start: 7,
 	end: 21,
-	defaultRound: 30,
+	defaultRound: 15,
 } as const;
 
 export const roundToNextSlot = (date: Date): string => {
-	const minutes = date.getMinutes();
-	const roundedMinutes =
-		minutes < BUSINESS_HOURS.defaultRound ? BUSINESS_HOURS.defaultRound : 0;
-	let hour =
-		minutes < BUSINESS_HOURS.defaultRound
-			? date.getHours()
-			: date.getHours() + 1;
+	const roundedDate = roundDateToNextInterval(
+		date,
+		BUSINESS_HOURS.defaultRound,
+	);
+	let hour = roundedDate.getHours();
+	let minutes = roundedDate.getMinutes();
 
 	if (hour >= BUSINESS_HOURS.end) {
 		hour = BUSINESS_HOURS.start;
+		minutes = 0;
 	} else if (hour < BUSINESS_HOURS.start) {
 		hour = BUSINESS_HOURS.start;
+		minutes = 0;
 	}
 
-	return `${String(hour).padStart(2, "0")}:${String(roundedMinutes).padStart(2, "0")}`;
+	return formatTime(hour, minutes);
 };
 
 export function useScheduleHandlers(
@@ -90,7 +97,24 @@ export function useScheduleHandlers(
 			if (isSelectionMode) return;
 			setSelectedAppointment(null);
 			setModalDefaultDate(date);
-			setModalDefaultTime(time || roundToNextSlot(new Date()));
+			if (time) {
+				const [hours, minutes] = time.split(":").map(Number);
+				const roundedTime = roundDateToNearestInterval(
+					new Date(
+						date.getFullYear(),
+						date.getMonth(),
+						date.getDate(),
+						hours || 0,
+						minutes || 0,
+					),
+					BUSINESS_HOURS.defaultRound,
+				);
+				setModalDefaultTime(
+					formatTime(roundedTime.getHours(), roundedTime.getMinutes()),
+				);
+			} else {
+				setModalDefaultTime(roundToNextSlot(new Date()));
+			}
 			setIsModalOpen(true);
 		},
 		[isSelectionMode],
