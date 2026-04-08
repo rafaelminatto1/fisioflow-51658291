@@ -21,13 +21,10 @@ import { motion, AnimatePresence } from "framer-motion";
 import { X } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Appointment } from "@/types";
+import type { AppointmentModalProps } from "./AppointmentModal";
 
 // Lazy load do modal completo
-const AppointmentModalContent = lazy(() =>
-	import("./AppointmentModalRefactored").then((m) => ({
-		default: m.AppointmentModalRefactored,
-	})),
-);
+const AppointmentModalContent = lazy(() => import("./AppointmentModal"));
 
 // Skeleton loading otimizado
 const ModalSkeleton = () => (
@@ -56,10 +53,7 @@ const ModalSkeleton = () => (
 	</div>
 );
 
-interface LazyAppointmentModalProps {
-	isOpen: boolean;
-	onClose: () => void;
-	appointment?: Appointment | null;
+interface LazyAppointmentModalProps extends AppointmentModalProps {
 	onSave?: (appointment: Appointment) => void;
 	onDelete?: (appointment: Appointment) => void;
 	className?: string;
@@ -71,6 +65,12 @@ export const LazyAppointmentModal = memo(
 		isOpen,
 		onClose,
 		appointment,
+		defaultDate,
+		defaultTime,
+		defaultPatientId,
+		mode,
+		therapists,
+		patients,
 		onSave,
 		onDelete,
 		className,
@@ -87,7 +87,7 @@ export const LazyAppointmentModal = memo(
 			preloadedRef.current = true;
 
 			// Trigger lazy load
-			import("./AppointmentModalRefactored");
+			import("./AppointmentModal");
 			setIsLoaded(true);
 		}, []);
 
@@ -191,8 +191,12 @@ export const LazyAppointmentModal = memo(
 									isOpen={isOpen}
 									onClose={onClose}
 									appointment={appointment}
-									onSave={onSave}
-									onDelete={onDelete}
+									defaultDate={defaultDate}
+									defaultTime={defaultTime}
+									defaultPatientId={defaultPatientId}
+									mode={mode}
+									therapists={therapists}
+									patients={patients}
 								/>
 							</Suspense>
 						</div>
@@ -208,7 +212,7 @@ LazyAppointmentModal.displayName = "LazyAppointmentModal";
 // Hook para preloading do modal
 export const useAppointmentModalPreload = () => {
 	const preload = useCallback(() => {
-		import("./AppointmentModalRefactored");
+		import("./AppointmentModal");
 	}, []);
 
 	return { preload };

@@ -8,9 +8,10 @@ import { Route, Navigate } from "react-router-dom";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
 import { RouteErrorBoundary } from "@/components/error";
 
-import Schedule from "@/pages/Schedule";
-
 // Lazy loads - Core pages
+const Schedule = lazy(
+	() => import(/* webpackChunkName: "schedule" */ "@/pages/Schedule"),
+);
 const Index = lazy(
 	() => import(/* webpackChunkName: "dashboard" */ "@/pages/Index"),
 );
