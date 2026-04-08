@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, Suspense } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { ArrowLeft, Save, X, Loader2, AlertTriangle, UserCog } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -48,10 +48,17 @@ import { PatientService } from "@/lib/services/PatientService";
 import { useQueryClient } from "@tanstack/react-query";
 import { soapKeys } from "@/hooks/useSoapRecords";
 import { AgendaAutomationService } from "@/lib/services/AgendaAutomationService";
-import { NotionEvolutionPanel } from "./v2-improved/NotionEvolutionPanel";
-import { NotionEvolutionPanel as NotionV3Panel } from "./v3-notion/NotionEvolutionPanel";
 import { EvolutionVersionToggle } from "./v2-improved/EvolutionVersionToggle";
-import { NotionEvolutionEditor } from "./NotionEvolutionEditor";
+// Lazy load — cada versão do editor só é carregada quando o usuário a seleciona.
+const NotionEvolutionEditor = React.lazy(() =>
+  import("./NotionEvolutionEditor").then((m) => ({ default: m.NotionEvolutionEditor }))
+);
+const NotionV3Panel = React.lazy(() =>
+  import("./v3-notion/NotionEvolutionPanel").then((m) => ({ default: m.NotionEvolutionPanel }))
+);
+const NotionEvolutionPanel = React.lazy(() =>
+  import("./v2-improved/NotionEvolutionPanel").then((m) => ({ default: m.NotionEvolutionPanel }))
+);
 import { EvolutionSettingsModal, getEvolutionSettings } from "./EvolutionSettingsModal";
 import {
   appointmentsApi,
@@ -885,6 +892,11 @@ export const SessionEvolutionContainer: React.FC<SessionEvolutionContainerProps>
 
       {/* Main Content */}
       <div className="p-4 h-[calc(100vh-80px)] overflow-hidden">
+        <Suspense fallback={
+          <div className="flex items-center justify-center h-full">
+            <Loader2 className="w-8 h-8 animate-spin text-blue-600" />
+          </div>
+        }>
         {viewVersion === "v4-tiptap" ? (
           <div className="h-full overflow-y-auto">
             <NotionEvolutionEditor
@@ -1170,6 +1182,7 @@ export const SessionEvolutionContainer: React.FC<SessionEvolutionContainerProps>
             </div>
           </div>
         )}
+        </Suspense>
       </div>
 
       <EvolutionSettingsModal

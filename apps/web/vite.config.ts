@@ -150,6 +150,9 @@ export default defineConfig(({ mode }) => {
 			target: "es2022",
 			cssTarget: "es2020",
 			sourcemap: !isProduction,
+			// vendor-image-editor é lazy (~978 KB gzip 277 KB) — só carrega ao abrir editor de imagem.
+			// Aumentado para 1000 KB para suprimir warning de chunks lazy legítimos.
+			chunkSizeWarningLimit: 1000,
 			rolldownOptions: {
 				external: [],
 				output: {
@@ -320,6 +323,12 @@ export default defineConfig(({ mode }) => {
 								name: "vendor-sentry",
 								test: /node_modules\/@sentry/,
 								priority: 16,
+							},
+							// react-filerobot-image-editor — lazy loaded, só entra quando usuário edita imagem
+							{
+								name: "vendor-image-editor",
+								test: /node_modules\/(react-filerobot-image-editor|@scaleflex)/,
+								priority: 15.5,
 							},
 							// @radix-ui — primitives usadas em boa parte do app, mas separadas do core React
 							{

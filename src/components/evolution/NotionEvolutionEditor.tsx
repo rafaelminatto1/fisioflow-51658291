@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from "react";
+import React, { useState, useEffect, useCallback, Suspense } from "react";
 import { useEditor, EditorContent } from "@tiptap/react";
 // import { BubbleMenu } from '@tiptap/react';
 // import { FloatingMenu } from '@tiptap/react/menus';
@@ -24,7 +24,9 @@ import { Backlinks } from "./suggestion/backlinks";
 import { uploadToR2 } from "@/lib/storage/r2-storage";
 import { getWorkersApiUrl } from "@/lib/api/config";
 import { getNeonAccessToken } from "@/lib/auth/neon-token";
-import FilerobotImageEditor, { TABS, TOOLS } from "react-filerobot-image-editor";
+// Lazy load — react-filerobot-image-editor puxa styled-components + @scaleflex/ui (~350 KB).
+// Carrega apenas quando o usuário abre a edição de imagem.
+const LazyFilerobotImageEditor = React.lazy(() => import("react-filerobot-image-editor"));
 import { BilingualSuggestionsModal } from "./suggestion/BilingualSuggestionsModal";
 
 interface NotionEvolutionEditorProps {
@@ -458,86 +460,92 @@ export const NotionEvolutionEditor: React.FC<NotionEvolutionEditorProps> = ({
 			/>
 
 			{editingImage && (
-				<div className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/90 backdrop-blur-sm p-2 sm:p-6">
-					<div className="w-full h-full max-w-[1200px] max-h-[95vh] bg-slate-900 rounded-2xl overflow-hidden shadow-[0_0_50px_-12px_rgba(0,0,0,0.5)] border border-slate-800 relative flex flex-col">
-						<FilerobotImageEditor
-							source={URL.createObjectURL(editingImage)}
-							onSave={async (editedImageObject, _designState) => {
-								try {
-									setIsUploading(true);
-									setEditingImage(null);
-									if (editedImageObject.imageBase64) {
-										const res = await fetch(editedImageObject.imageBase64);
-										const blob = await res.blob();
-										const originalName = editingImage.name.replace(/\.[^/.]+$/, "");
-										const extension = editedImageObject.extension || "png";
-										const newFile = new File(
-											[blob], 
-											`${originalName}-editada.${extension}`, 
-											{ type: editedImageObject.mimeType || "image/png" }
-										);
-										await uploadToCloudflareR2(newFile);
-									}
-								} catch (e) {
-									console.error(e);
-									toast.error("Erro ao salvar imagem editada.");
-									setIsUploading(false);
-								}
-							}}
-							onClose={() => setEditingImage(null)}
-							annotationsCommon={{
-								fill: '#ef4444',
-								stroke: '#ef4444',
-							}}
-							Text={{ text: 'Anotação...' }}
-							tabsIds={[TABS.ANNOTATE, TABS.ADJUST, TABS.FILTERS, TABS.FINETUNE, TABS.WATERMARK]} 
-							defaultTabId={TABS.ANNOTATE}
-							defaultToolId={TOOLS.PEN}
-							savingPixelRatio={2.5}
-							previewPixelRatio={window.devicePixelRatio}
-							translations={{
-								name: 'Nome do Arquivo',
-								save: 'Salvar na Evolução',
-								saveAs: 'Salvar como',
-								extension: 'Extensão',
-								format: 'Formato',
-								quality: 'Qualidade',
-								resize: 'Redimensionar',
-								crop: 'Cortar',
-								adjust: 'Ajustar / Cortar',
-								filters: 'Filtros',
-								finetune: 'Refinar Cores',
-								annotate: 'Anotar / Desenhar',
-								watermark: 'Marca d\'água',
-								pen: 'Caneta',
-								arrow: 'Seta',
-								line: 'Linha',
-								rect: 'Retângulo',
-								ellipse: 'Elipse',
-								polygon: 'Polígono',
-								text: 'Texto',
-								image: 'Imagem',
-								color: 'Cor',
-								fill: 'Preenchimento',
-								stroke: 'Contorno',
-								brightness: 'Brilho',
-								contrast: 'Contraste',
-								saturation: 'Saturação',
-								exposure: 'Exposição',
-								temperature: 'Temperatura',
-								undo: 'Desfazer',
-								redo: 'Refazer',
-								reset: 'Zerar Edições',
-								cancel: 'Cancelar',
-								original: 'Original',
-								custom: 'Personalizado',
-								square: 'Quadrado',
-								landscape: 'Paisagem',
-								portrait: 'Retrato'
-							}}
-						/>
+				<Suspense fallback={
+					<div className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/90">
+						<Loader2 className="w-10 h-10 text-white animate-spin" />
 					</div>
-				</div>
+				}>
+					<div className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/90 backdrop-blur-sm p-2 sm:p-6">
+						<div className="w-full h-full max-w-[1200px] max-h-[95vh] bg-slate-900 rounded-2xl overflow-hidden shadow-[0_0_50px_-12px_rgba(0,0,0,0.5)] border border-slate-800 relative flex flex-col">
+							<LazyFilerobotImageEditor
+								source={URL.createObjectURL(editingImage)}
+								onSave={async (editedImageObject: any, _designState: any) => {
+									try {
+										setIsUploading(true);
+										setEditingImage(null);
+										if (editedImageObject.imageBase64) {
+											const res = await fetch(editedImageObject.imageBase64);
+											const blob = await res.blob();
+											const originalName = editingImage.name.replace(/\.[^/.]+$/, "");
+											const extension = editedImageObject.extension || "png";
+											const newFile = new File(
+												[blob],
+												`${originalName}-editada.${extension}`,
+												{ type: editedImageObject.mimeType || "image/png" }
+											);
+											await uploadToCloudflareR2(newFile);
+										}
+									} catch (e) {
+										console.error(e);
+										toast.error("Erro ao salvar imagem editada.");
+										setIsUploading(false);
+									}
+								}}
+								onClose={() => setEditingImage(null)}
+								annotationsCommon={{
+									fill: '#ef4444',
+									stroke: '#ef4444',
+								}}
+								Text={{ text: 'Anotação...' }}
+								tabsIds={['Annotate', 'Adjust', 'Filters', 'Finetune', 'Watermark']}
+								defaultTabId="Annotate"
+								defaultToolId="Pen"
+								savingPixelRatio={2.5}
+								previewPixelRatio={window.devicePixelRatio}
+								translations={{
+									name: 'Nome do Arquivo',
+									save: 'Salvar na Evolução',
+									saveAs: 'Salvar como',
+									extension: 'Extensão',
+									format: 'Formato',
+									quality: 'Qualidade',
+									resize: 'Redimensionar',
+									crop: 'Cortar',
+									adjust: 'Ajustar / Cortar',
+									filters: 'Filtros',
+									finetune: 'Refinar Cores',
+									annotate: 'Anotar / Desenhar',
+									watermark: 'Marca d\'água',
+									pen: 'Caneta',
+									arrow: 'Seta',
+									line: 'Linha',
+									rect: 'Retângulo',
+									ellipse: 'Elipse',
+									polygon: 'Polígono',
+									text: 'Texto',
+									image: 'Imagem',
+									color: 'Cor',
+									fill: 'Preenchimento',
+									stroke: 'Contorno',
+									brightness: 'Brilho',
+									contrast: 'Contraste',
+									saturation: 'Saturação',
+									exposure: 'Exposição',
+									temperature: 'Temperatura',
+									undo: 'Desfazer',
+									redo: 'Refazer',
+									reset: 'Zerar Edições',
+									cancel: 'Cancelar',
+									original: 'Original',
+									custom: 'Personalizado',
+									square: 'Quadrado',
+									landscape: 'Paisagem',
+									portrait: 'Retrato'
+								}}
+							/>
+						</div>
+					</div>
+				</Suspense>
 			)}
 		</div>
 	);

@@ -184,7 +184,6 @@ export { PhoneInput } from "./phone-input";
 export { PasswordInput } from "./password-input";
 export { NameInput } from "./name-input";
 export { DateInputBR } from "./date-input-br";
-export { DatePicker } from "./date-picker";
 export { DatePickerWithRange as DateRangePicker } from "./date-range-picker";
 export { InputOTP } from "./input-otp";
 
