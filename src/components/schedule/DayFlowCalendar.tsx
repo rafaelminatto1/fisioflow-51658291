@@ -21,6 +21,10 @@ import { format, isValid, addMinutes, addDays, startOfWeek } from "date-fns";
 import { ScheduleToolbar } from "./ScheduleToolbar";
 import { AppointmentQuickView } from "./AppointmentQuickView";
 import { getStatusConfig } from "./shared/appointment-status";
+import {
+	formatTime,
+	roundDateToNearestInterval,
+} from "@/utils/dateUtils";
 
 type ViewType = "day" | "week" | "month";
 
@@ -233,7 +237,7 @@ export function DayFlowCalendarWrapper(props: DayFlowCalendarWrapperProps) {
 						slotLabelFormat,
 						scrollTime: "07:00:00",
 						hiddenDays: [0],
-						snapDuration: "00:05:00",
+						snapDuration: "00:15:00",
 						editable: true,
 						droppable: true,
 						selectable: true,
@@ -283,7 +287,10 @@ export function DayFlowCalendarWrapper(props: DayFlowCalendarWrapperProps) {
 						},
 						dateClick: (info: any) => {
 							setActivePopover(null);
-							propsRef.current.onTimeSlotClick?.(format(info.date, "yyyy-MM-dd'T'HH:mm"));
+							const roundedDate = roundDateToNearestInterval(info.date, 15);
+							propsRef.current.onTimeSlotClick?.(
+								format(roundedDate, "yyyy-MM-dd'T'HH:mm"),
+							);
 						},
 						eventDragStart: () => {
 							setActivePopover(null);
@@ -298,8 +305,22 @@ export function DayFlowCalendarWrapper(props: DayFlowCalendarWrapperProps) {
 						eventDrop: (info: any) => {
 							isDraggingRef.current = false;
 							if (propsRef.current.onAppointmentReschedule) {
-								const startStr = format(info.event.start, "yyyy-MM-dd'T'HH:mm");
-								const endStr = format(info.event.end, "yyyy-MM-dd'T'HH:mm");
+								const roundedStart = roundDateToNearestInterval(
+									info.event.start,
+									15,
+								);
+								const durationInMinutes = Math.max(
+									15,
+									Math.round(
+										(info.event.end.getTime() - info.event.start.getTime()) / 60000,
+									),
+								);
+								const roundedEnd = addMinutes(roundedStart, durationInMinutes);
+								const startStr = format(roundedStart, "yyyy-MM-dd'T'HH:mm");
+								const endStr = format(roundedEnd, "yyyy-MM-dd'T'HH:mm");
+
+								info.event.setStart(roundedStart);
+								info.event.setEnd(roundedEnd);
 								
 								// Use optimistic update to keep UI in sync immediately
 								startTransition(() => {
@@ -401,7 +422,10 @@ export function DayFlowCalendarWrapper(props: DayFlowCalendarWrapperProps) {
 					appointment={{
 						...activePopover.event.extendedProps,
 						date: activePopover.event.start,
-						time: format(activePopover.event.start, "HH:mm"),
+						time: formatTime(
+							activePopover.event.start.getHours(),
+							activePopover.event.start.getMinutes(),
+						),
 						duration: Math.round((activePopover.event.end - activePopover.event.start) / 60000),
 					}}
 					onEdit={() => {
