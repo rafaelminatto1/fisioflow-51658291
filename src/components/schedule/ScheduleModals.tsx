@@ -1,4 +1,4 @@
-import React from "react";
+import React, { Suspense, lazy } from "react";
 import {
 	AlertDialog,
 	AlertDialogAction,
@@ -10,13 +10,25 @@ import {
 	AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { formatDateToBrazilian } from "@/utils/dateUtils";
-import { AppointmentModal } from "@/components/schedule/AppointmentModal";
-import { DuplicateAppointmentDialog } from "@/components/schedule/DuplicateAppointmentDialog";
+import { LazyAppointmentModal } from "@/components/schedule/LazyAppointmentModal";
 import { ScheduleModalsState, ScheduleActions } from "@/types/schedule-hooks";
-
-import { AppointmentQuickEditModal } from "@/components/schedule/AppointmentQuickEditModal";
-import { WaitlistQuickAdd } from "@/components/schedule/WaitlistQuickAdd";
 import { KeyboardShortcuts } from "@/components/schedule/KeyboardShortcuts";
+
+const DuplicateAppointmentDialog = lazy(() =>
+	import("@/components/schedule/DuplicateAppointmentDialog").then((m) => ({
+		default: m.DuplicateAppointmentDialog,
+	}))
+);
+const AppointmentQuickEditModal = lazy(() =>
+	import("@/components/schedule/AppointmentQuickEditModal").then((m) => ({
+		default: m.AppointmentQuickEditModal,
+	}))
+);
+const WaitlistQuickAdd = lazy(() =>
+	import("@/components/schedule/WaitlistQuickAdd").then((m) => ({
+		default: m.WaitlistQuickAdd,
+	}))
+);
 
 interface ScheduleModalsProps {
 	currentDate: Date;
@@ -35,40 +47,41 @@ export const ScheduleModals: React.FC<ScheduleModalsProps> = ({
 }) => {
 	return (
 		<>
-			{/* Modals Layer - AppointmentModal imported directly to avoid lazy loading issues */}
 			{modals.quickEditAppointment && (
-				<AppointmentQuickEditModal
-					appointment={modals.quickEditAppointment}
-					open={!!modals.quickEditAppointment}
-					onOpenChange={(open) =>
-						!open && modals.setQuickEditAppointment(null)
-					}
-				/>
+				<Suspense fallback={null}>
+					<AppointmentQuickEditModal
+						appointment={modals.quickEditAppointment}
+						open={!!modals.quickEditAppointment}
+						onOpenChange={(open) =>
+							!open && modals.setQuickEditAppointment(null)
+						}
+					/>
+				</Suspense>
 			)}
 
-			{modals.isModalOpen && (
-				<AppointmentModal
-					isOpen={modals.isModalOpen}
-					onClose={() => {
-						actions.handleModalClose();
-					}}
-					appointment={modals.selectedAppointment}
-					defaultDate={modals.modalDefaultDate}
-					defaultTime={modals.modalDefaultTime}
-					defaultPatientId={modals.scheduleFromWaitlist?.patientId}
-					mode={modals.selectedAppointment ? "edit" : "create"}
-					therapists={therapists}
-					patients={patients}
-				/>
-			)}
+			<LazyAppointmentModal
+				isOpen={modals.isModalOpen}
+				onClose={() => {
+					actions.handleModalClose();
+				}}
+				appointment={modals.selectedAppointment}
+				defaultDate={modals.modalDefaultDate}
+				defaultTime={modals.modalDefaultTime}
+				defaultPatientId={modals.scheduleFromWaitlist?.patientId}
+				mode={modals.selectedAppointment ? "edit" : "create"}
+				therapists={therapists}
+				patients={patients}
+			/>
 
 			{modals.waitlistQuickAdd && (
-				<WaitlistQuickAdd
-					open={!!modals.waitlistQuickAdd}
-					onOpenChange={(open) => !open && modals.setWaitlistQuickAdd(null)}
-					date={modals.waitlistQuickAdd.date}
-					time={modals.waitlistQuickAdd.time}
-				/>
+				<Suspense fallback={null}>
+					<WaitlistQuickAdd
+						open={!!modals.waitlistQuickAdd}
+						onOpenChange={(open) => !open && modals.setWaitlistQuickAdd(null)}
+						date={modals.waitlistQuickAdd.date}
+						time={modals.waitlistQuickAdd.time}
+					/>
+				</Suspense>
 			)}
 
 			<KeyboardShortcuts
@@ -76,12 +89,14 @@ export const ScheduleModals: React.FC<ScheduleModalsProps> = ({
 				onOpenChange={modals.setShowKeyboardShortcuts}
 			/>
 
-			<DuplicateAppointmentDialog
-				open={modals.duplicateDialogOpen}
-				onOpenChange={modals.setDuplicateDialogOpen}
-				appointment={modals.selectedAppointment}
-				onDuplicate={() => modals.setDuplicateDialogOpen(false)}
-			/>
+			<Suspense fallback={null}>
+				<DuplicateAppointmentDialog
+					open={modals.duplicateDialogOpen}
+					onOpenChange={modals.setDuplicateDialogOpen}
+					appointment={modals.selectedAppointment}
+					onDuplicate={() => modals.setDuplicateDialogOpen(false)}
+				/>
+			</Suspense>
 
 			<AlertDialog
 				open={modals.showCancelAllTodayDialog}
