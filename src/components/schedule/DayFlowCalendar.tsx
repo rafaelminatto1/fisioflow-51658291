@@ -242,6 +242,10 @@ export function DayFlowCalendarWrapper(props: DayFlowCalendarWrapperProps) {
 						firstDay: 1,
 						allDaySlot: false,
 						eventContent: (info: any) => {
+							// Background events (ex: closed-saturday) não renderizam card
+							if (info.event.display === 'background' || info.event.id?.startsWith('closed-')) {
+								return { html: '' };
+							}
 							const appointment = info.event.extendedProps;
 							const formattedTime = format(info.event.start, "HH:mm");
 							const statusConfig = getStatusConfig(appointment.status);
