@@ -1,4 +1,5 @@
 import { createMiddleware } from 'hono/factory';
+import type { Context } from 'hono';
 import type { Env } from '../types/env';
 import type { AuthVariables } from '../lib/auth';
 
@@ -9,6 +10,11 @@ type RateLimitOptions = {
   windowSeconds?: number;
   /** Label for the rate limit key (e.g. "ai", "whatsapp") */
   endpoint: string;
+  /**
+   * Custom key function — substitui o padrão orgId.
+   * Use para rotas não autenticadas (ex: auth login por IP).
+   */
+  keyFn?: (c: Context) => string;
 };
 
 /**
@@ -25,13 +31,14 @@ export function rateLimit(opts: RateLimitOptions) {
     const db = c.env.EDGE_CACHE;
     if (!db) return next(); // local dev: sem cache
 
-    const user = c.get('user');
-    const orgId = user?.organizationId ?? 'anon';
+    const subject = opts.keyFn
+      ? opts.keyFn(c)
+      : (c.get('user')?.organizationId ?? 'anon');
 
     // Janela atual: ex. "2026-03-31:14" para window de 1h
     const now = Math.floor(Date.now() / 1000);
     const windowStart = now - (now % windowSeconds);
-    const key = `rl:${orgId}:${opts.endpoint}:${windowStart}`;
+    const key = `rl:${subject}:${opts.endpoint}:${windowStart}`;
 
     try {
       // Upsert atômico — D1 SQLite garante atomicidade por statement

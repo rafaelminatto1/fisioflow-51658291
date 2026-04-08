@@ -94,39 +94,22 @@ import { cors } from 'hono/cors';
 
 const app = new Hono<{ Bindings: Env; Variables: CustomVariables }>();
 
-// 0. Manual OPTIONS handler (PRE-CORS)
-app.options('*', (c) => {
-  const origin = c.req.header('Origin') || '*';
-  return new Response(null, {
-    status: 204,
-    headers: {
-      'Access-Control-Allow-Origin': origin,
-      'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS, PATCH',
-      'Access-Control-Allow-Headers': 'Content-Type, Authorization, X-Requested-With, Accept, Cookie, X-Neon-Auth-Token, X-Request-ID',
-      'Access-Control-Allow-Credentials': 'true',
-      'Access-Control-Max-Age': '86400',
-    }
-  });
+// CORS: lê ALLOWED_ORIGINS do env para que preflight e respostas usem a mesma lista.
+// O factory pattern (função em vez de objeto) garante que c.env está disponível.
+app.use('*', (c, next) => {
+  const allowed = (c.env.ALLOWED_ORIGINS || '')
+    .split(',')
+    .map((o) => o.trim())
+    .filter(Boolean);
+  return cors({
+    origin: (origin) => (allowed.includes(origin) ? origin : null),
+    allowMethods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS', 'PATCH'],
+    allowHeaders: ['Content-Type', 'Authorization', 'X-Requested-With', 'Accept', 'Cookie', 'X-Neon-Auth-Token', 'X-Request-ID'],
+    exposeHeaders: ['X-Request-ID'],
+    credentials: true,
+    maxAge: 86400,
+  })(c, next);
 });
-
-// 1. MIDDLEWARE DE CORS (Padrão Hono)
-app.use('*', cors({
-  origin: (origin) => {
-    const allowed = [
-      'https://moocafisio.com.br',
-      'https://www.moocafisio.com.br',
-      'https://fisioflow.pages.dev',
-      'https://fisioflow-web.rafalegollas.workers.dev',
-      'http://localhost:5173'
-    ];
-    return allowed.includes(origin) ? origin : allowed[0];
-  },
-  allowMethods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS', 'PATCH'],
-  allowHeaders: ['Content-Type', 'Authorization', 'X-Requested-With', 'Accept', 'Cookie', 'X-Neon-Auth-Token', 'X-Request-ID'],
-  exposeHeaders: ['X-Request-ID'],
-  credentials: true,
-  maxAge: 86400,
-}));
 
 app.use('*', logger());
 app.use('*', secureHeaders());
@@ -275,7 +258,7 @@ export type AppType = typeof app;
  * WebSocket upgrades precisam ser tratados ANTES do middleware Hono para que os
  * headers do middleware (CORS, secureHeaders) não corrompam a resposta 101.
  */
-async function handleRealtimeWS(request: Request, env: any): Promise<Response> {
+async function handleRealtimeWS(request: Request, env: Env): Promise<Response> {
   const url = new URL(request.url);
   const token = url.searchParams.get('token');
   if (!token) return new Response(JSON.stringify({ error: 'Token required' }), { status: 401 });
@@ -294,7 +277,7 @@ async function handleRealtimeWS(request: Request, env: any): Promise<Response> {
 }
 
 export default {
-  async fetch(request: Request, env: any, ctx: ExecutionContext): Promise<Response> {
+  async fetch(request: Request, env: Env, ctx: ExecutionContext): Promise<Response> {
     // 1. Roteamento de Agentes (Cloudflare Agents SDK) - Intercepta /agents/*
     const agentResponse = await routeAgentRequest(request, env);
     if (agentResponse) return agentResponse;

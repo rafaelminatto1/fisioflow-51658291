@@ -104,17 +104,9 @@ export async function errorHandler(err: Error, c: CustomContext) {
 
   const requestOrigin = c.req.header('Origin');
   
-  // Lista robusta de origens permitidas (fallback para produção se a env falhar)
-  const defaultOrigins = [
-    'https://moocafisio.com.br',
-    'https://www.moocafisio.com.br',
-    'https://fisioflow.pages.dev',
-    'http://localhost:5173'
-  ];
-
   const allowedOrigins = (c.env as any).ALLOWED_ORIGINS
     ? String((c.env as any).ALLOWED_ORIGINS).split(',').map((o: string) => o.trim())
-    : defaultOrigins;
+    : [];
     
   const isAllowed = !requestOrigin || allowedOrigins.includes(requestOrigin);
   const origin = isAllowed && requestOrigin ? requestOrigin : allowedOrigins[0];

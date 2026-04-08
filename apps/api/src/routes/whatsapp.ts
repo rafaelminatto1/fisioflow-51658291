@@ -372,7 +372,7 @@ function classifyIntentLocal(text: string): ParsedIntent {
   return { type: 'other', entities: {} };
 }
 
-async function sendWhatsAppReply(env: any, to: string, text: string): Promise<void> {
+async function sendWhatsAppReply(env: Env, to: string, text: string): Promise<void> {
   const phoneId = env.WHATSAPP_PHONE_NUMBER_ID;
   const token = env.WHATSAPP_ACCESS_TOKEN;
   if (!phoneId || !token) return;
@@ -399,7 +399,7 @@ app.post('/webhook', async (c) => {
   return c.json({ status: 'ok' });
 });
 
-async function processWhatsAppWebhook(body: Record<string, unknown>, env: any): Promise<void> {
+async function processWhatsAppWebhook(body: Record<string, unknown>, env: Env): Promise<void> {
   try {
     const entry = (body.entry as any[])?.[0];
     const changes = entry?.changes?.[0];
