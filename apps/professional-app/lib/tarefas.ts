@@ -33,5 +33,5 @@ export function isOverdue(dateStr?: string): boolean {
 
 /** Gera ID único para items de checklist criados localmente */
 export function genLocalId(): string {
-  return `${Date.now()}-${Math.random().toString(36).slice(2, 7)}`;
+  return crypto.randomUUID();
 }
