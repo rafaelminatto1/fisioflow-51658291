@@ -235,3 +235,13 @@ storybook-static
 # Dev vars (secrets)
 **/.dev.vars
 apps/jules-bot/.dev.vars
+
+# Env files with real tokens/secrets (não .example)
+.env.build
+.env.dev-run
+
+# iOS/Apple distribution credentials (nunca commitar chaves privadas)
+*.p12
+*.cer
+*.mobileprovision
+*.csr

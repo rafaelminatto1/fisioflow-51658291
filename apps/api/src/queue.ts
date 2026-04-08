@@ -326,7 +326,7 @@ async function triggerWorkflow(payload: WorkflowTriggerPayload, env: Env): Promi
   }
 
   const instance = await workflow.create({
-    id: `${payload.workflowType}-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
+    id: `${payload.workflowType}-${crypto.randomUUID()}`,
     params: payload.params,
   });
 
