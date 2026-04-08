@@ -204,14 +204,6 @@ FISIOFLOW_AI_GATEWAY_URL = "https://gateway.ai.cloudflare.com/v1/32156f9a72a32d1
 # Turnstile (anti-bot) — sitekey pública, secret via wrangler secret put TURNSTILE_SECRET_KEY
 TURNSTILE_SITE_KEY = ""
 
-[[env.production.hyperdrive]]
-binding = "HYPERDRIVE"
-id = "12b9fefcfbc04074a63342a9212e1b4f"
-
-[[env.production.r2_buckets]]
-binding = "MEDIA_BUCKET"
-bucket_name = "fisioflow-media"
-
 [[env.production.kv_namespaces]]
 binding = "FISIOFLOW_CONFIG"
 id = "4284b33fa7ed40b6bc9c59b6041c03ed"
