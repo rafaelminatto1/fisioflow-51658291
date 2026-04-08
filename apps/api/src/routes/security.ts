@@ -21,21 +21,20 @@ const parseArray = (value: unknown): string[] => {
 };
 
 function generateBackupCodes(): string[] {
-  return Array.from({ length: 10 }, () =>
-    Math.random().toString(36).substring(2, 10).toUpperCase(),
-  );
+  return Array.from({ length: 10 }, () => {
+    const bytes = crypto.getRandomValues(new Uint8Array(6));
+    return Array.from(bytes, (b) => b.toString(16).padStart(2, '0')).join('').toUpperCase();
+  });
 }
 
 function generateOtpCode() {
-  return `${Math.floor(100000 + Math.random() * 900000)}`;
+  const n = crypto.getRandomValues(new Uint32Array(1))[0] % 900000 + 100000;
+  return `${n}`;
 }
 
 function generateTotpSecret(): string {
-  let secret = '';
-  for (let i = 0; i < 32; i += 1) {
-    secret += BASE32_ALPHABET.charAt(Math.floor(Math.random() * BASE32_ALPHABET.length));
-  }
-  return secret;
+  const indices = crypto.getRandomValues(new Uint8Array(32));
+  return Array.from(indices, (b) => BASE32_ALPHABET[b % BASE32_ALPHABET.length]).join('');
 }
 
 function base32Decode(base32: string): Uint8Array {
