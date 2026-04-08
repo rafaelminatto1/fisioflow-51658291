@@ -201,6 +201,16 @@ VITE_HASURA_PROJECT_URL = "https://capital-duckling-42.hasura.app/v1/graphql"
 AXIOM_ORG_ID = "activity-dbyc"
 AXIOM_DATASET = "fisioflow-logs"
 FISIOFLOW_AI_GATEWAY_URL = "https://gateway.ai.cloudflare.com/v1/32156f9a72a32d1ece28ab74bcd398fb/fisioflow-gateway"
+# Turnstile (anti-bot) — sitekey pública, secret via wrangler secret put TURNSTILE_SECRET_KEY
+TURNSTILE_SITE_KEY = ""
+
+[[env.production.hyperdrive]]
+binding = "HYPERDRIVE"
+id = "12b9fefcfbc04074a63342a9212e1b4f"
+
+[[env.production.r2_buckets]]
+binding = "MEDIA_BUCKET"
+bucket_name = "fisioflow-media"
 
 [[env.production.kv_namespaces]]
 binding = "FISIOFLOW_CONFIG"
@@ -228,9 +238,9 @@ index_name = "fisioflow-clinical"
 # binding = "AI_SEARCH"
 # instance_name = "fisioflow-knowledge"
 
-# [[env.production.pipelines]]
-# binding = "EVENTS_PIPELINE"
-# pipeline = "701aff68d26e4c45a29f090389bcd4f2"
+[[env.production.pipelines]]
+binding = "EVENTS_PIPELINE"
+pipeline = "701aff68d26e4c45a29f090389bcd4f2"
 
 [[env.production.workflows]]
 name = "appointment-reminder"

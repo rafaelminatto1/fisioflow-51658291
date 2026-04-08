@@ -29,7 +29,7 @@ app.post('/', requireAuth, async (c) => {
     return c.json({ error: 'Já existe um convite pendente para este email' }, 409);
   }
 
-  const token = Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15);
+  const token = crypto.randomUUID().replace(/-/g, '') + crypto.randomUUID().replace(/-/g, '');
   const expiresAt = new Date();
   expiresAt.setDate(expiresAt.getDate() + 7);
 
