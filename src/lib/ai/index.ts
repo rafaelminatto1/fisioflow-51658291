@@ -156,11 +156,3 @@ export {
 	type PopulationAnalysisOptions,
 } from "./population-health";
 
-// Treatment Optimizer
-export {
-	optimizeTreatmentPlan,
-	type TreatmentOptimization,
-	type OptimizationInput,
-	type EvidenceLevel,
-	type RecommendationType,
-} from "./treatment-optimizer";
