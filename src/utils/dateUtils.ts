@@ -122,6 +122,49 @@ export function formatTime(hours: number, minutes: number): string {
 }
 
 /**
+ * Arredonda uma data para o próximo intervalo de minutos.
+ *
+ * Útil para horários sugeridos de criação, garantindo que o usuário
+ * sempre abra o modal em um slot válido da agenda.
+ */
+export function roundDateToNextInterval(
+	date: Date,
+	intervalMinutes = 15,
+): Date {
+	const result = new Date(date);
+	result.setSeconds(0, 0);
+
+	const minutes = result.getMinutes();
+	const remainder = minutes % intervalMinutes;
+
+	if (remainder !== 0) {
+		result.setMinutes(minutes + (intervalMinutes - remainder));
+	}
+
+	return result;
+}
+
+/**
+ * Arredonda uma data para o intervalo de minutos mais próximo.
+ *
+ * Útil para normalizar horários vindos de drag and drop.
+ */
+export function roundDateToNearestInterval(
+	date: Date,
+	intervalMinutes = 15,
+): Date {
+	const result = new Date(date);
+	result.setSeconds(0, 0);
+
+	const totalMinutes = result.getHours() * 60 + result.getMinutes();
+	const roundedMinutes =
+		Math.round(totalMinutes / intervalMinutes) * intervalMinutes;
+
+	result.setHours(0, roundedMinutes, 0, 0);
+	return result;
+}
+
+/**
  * Parse de string de hora HH:MM para objeto
  */
 export function parseTime(timeString: string): {
