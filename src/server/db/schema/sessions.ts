@@ -239,6 +239,8 @@ export const sessionAttachments = pgTable(
 			.notNull()
 			.references(() => patients.id),
 
+		organizationId: uuid("organization_id"),
+
 		// File Info
 		fileName: varchar("file_name", { length: 255 }).notNull(),
 		originalName: varchar("original_name", { length: 255 }),
@@ -256,6 +258,7 @@ export const sessionAttachments = pgTable(
 		uploadedAt: timestamp("uploaded_at").defaultNow().notNull(),
 	},
 	(table) => ({
+		orgIdx: index("idx_session_attachments_org_id").on(table.organizationId),
 		sessionIdIdx: index("idx_session_attachments_session_id").on(
 			table.sessionId,
 		),
