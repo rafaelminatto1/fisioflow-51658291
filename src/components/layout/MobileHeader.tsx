@@ -34,6 +34,7 @@ import {
 	Target,
 	CalendarDays,
 	Package,
+	MessageCircle,
 } from "lucide-react";
 
 const menuGroups = [
@@ -71,6 +72,7 @@ const menuGroups = [
 			{ icon: LayoutGrid, label: "Boards", href: "/boards" },
 			{ icon: Package, label: "Estoque", href: "/inventory" },
 			{ icon: MessageSquare, label: "Comunicação", href: "/communications" },
+			{ icon: MessageCircle, label: "WhatsApp", href: "/whatsapp/inbox" },
 			{ icon: DollarSign, label: "Financeiro", href: "/financial" },
 			{ icon: Settings, label: "Configurações", href: "/profile" },
 		],
