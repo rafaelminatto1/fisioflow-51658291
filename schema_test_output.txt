@@ -1,0 +1,171 @@
+
+> @fisioflow/db@1.0.0 test:unit /home/rafael/Documents/fisioflow/fisioflow-51658291/packages/db
+> vitest run --reporter verbose
+
+
+ RUN  v4.1.2 /home/rafael/Documents/fisioflow/fisioflow-51658291/packages/db
+
+ ✓ src/__tests__/schema.test.ts > Drizzle Schema Integrity > should have at least one table exported 2ms
+ ✓ src/__tests__/schema.test.ts > Drizzle Schema Integrity > Multi-tenancy isolation (organizationId) > table 'patients' should have an organizationId column 0ms
+ ✓ src/__tests__/schema.test.ts > Drizzle Schema Integrity > Multi-tenancy isolation (organizationId) > table 'medicalRecords' should have an organizationId column 0ms
+ × src/__tests__/schema.test.ts > Drizzle Schema Integrity > Multi-tenancy isolation (organizationId) > table 'pathologies' should have an organizationId column 4ms
+   → expected undefined to be defined
+ × src/__tests__/schema.test.ts > Drizzle Schema Integrity > Multi-tenancy isolation (organizationId) > table 'surgeries' should have an organizationId column 1ms
+   → expected undefined to be defined
+ × src/__tests__/schema.test.ts > Drizzle Schema Integrity > Multi-tenancy isolation (organizationId) > table 'goals' should have an organizationId column 0ms
+   → expected undefined to be defined
+ ✓ src/__tests__/schema.test.ts > Drizzle Schema Integrity > Multi-tenancy isolation (organizationId) > table 'appointments' should have an organizationId column 0ms
+ ✓ src/__tests__/schema.test.ts > Drizzle Schema Integrity > Multi-tenancy isolation (organizationId) > table 'rooms' should have an organizationId column 0ms
+ ✓ src/__tests__/schema.test.ts > Drizzle Schema Integrity > Multi-tenancy isolation (organizationId) > table 'blockedSlots' should have an organizationId column 0ms
+ × src/__tests__/schema.test.ts > Drizzle Schema Integrity > Multi-tenancy isolation (organizationId) > table 'sessionAttachments' should have an organizationId column 0ms
+   → expected undefined to be defined
+ ✓ src/__tests__/schema.test.ts > Drizzle Schema Integrity > Multi-tenancy isolation (organizationId) > table 'sessionTemplates' should have an organizationId column 0ms
+ × src/__tests__/schema.test.ts > Drizzle Schema Integrity > Multi-tenancy isolation (organizationId) > table 'exerciseCategories' should have an organizationId column 1ms
+   → expected undefined to be defined
+ ✓ src/__tests__/schema.test.ts > Drizzle Schema Integrity > Multi-tenancy isolation (organizationId) > table 'exercises' should have an organizationId column 0ms
+ ✓ src/__tests__/schema.test.ts > Drizzle Schema Integrity > Multi-tenancy isolation (organizationId) > table 'exerciseFavorites' should have an organizationId column 0ms
+ ✓ src/__tests__/schema.test.ts > Drizzle Schema Integrity > Multi-tenancy isolation (organizationId) > table 'exerciseProtocols' should have an organizationId column 0ms
+ × src/__tests__/schema.test.ts > Drizzle Schema Integrity > Multi-tenancy isolation (organizationId) > table 'protocolExercises' should have an organizationId column 0ms
+   → expected undefined to be defined
+ ✓ src/__tests__/schema.test.ts > Drizzle Schema Integrity > Multi-tenancy isolation (organizationId) > table 'wikiPages' should have an organizationId column 0ms
+ × src/__tests__/schema.test.ts > Drizzle Schema Integrity > Multi-tenancy isolation (organizationId) > table 'wikiPageVersions' should have an organizationId column 0ms
+   → expected undefined to be defined
+ × src/__tests__/schema.test.ts > Drizzle Schema Integrity > Multi-tenancy isolation (organizationId) > table 'patientGamification' should have an organizationId column 0ms
+   → expected undefined to be defined
+ × src/__tests__/schema.test.ts > Drizzle Schema Integrity > Multi-tenancy isolation (organizationId) > table 'xpTransactions' should have an organizationId column 1ms
+   → expected undefined to be defined
+ × src/__tests__/schema.test.ts > Drizzle Schema Integrity > Multi-tenancy isolation (organizationId) > table 'achievements' should have an organizationId column 0ms
+   → expected undefined to be defined
+ × src/__tests__/schema.test.ts > Drizzle Schema Integrity > Multi-tenancy isolation (organizationId) > table 'achievementsLog' should have an organizationId column 0ms
+   → expected undefined to be defined
+ × src/__tests__/schema.test.ts > Drizzle Schema Integrity > Multi-tenancy isolation (organizationId) > table 'dailyQuests' should have an organizationId column 0ms
+   → expected undefined to be defined
+ × src/__tests__/schema.test.ts > Drizzle Schema Integrity > Multi-tenancy isolation (organizationId) > table 'evaluationTemplates' should have an organizationId column 0ms
+   → expected undefined to be defined
+ × src/__tests__/schema.test.ts > Drizzle Schema Integrity > Multi-tenancy isolation (organizationId) > table 'taskBoards' should have an organizationId column 0ms
+   → expected undefined to be defined
+ × src/__tests__/schema.test.ts > Drizzle Schema Integrity > Multi-tenancy isolation (organizationId) > table 'taskColumns' should have an organizationId column 0ms
+   → expected undefined to be defined
+ × src/__tests__/schema.test.ts > Drizzle Schema Integrity > Multi-tenancy isolation (organizationId) > table 'tasks' should have an organizationId column 0ms
+   → expected undefined to be defined
+ × src/__tests__/schema.test.ts > Drizzle Schema Integrity > Multi-tenancy isolation (organizationId) > table 'taskAssignments' should have an organizationId column 0ms
+   → expected undefined to be defined
+ × src/__tests__/schema.test.ts > Drizzle Schema Integrity > Multi-tenancy isolation (organizationId) > table 'taskAcknowledgments' should have an organizationId column 0ms
+   → expected undefined to be defined
+ × src/__tests__/schema.test.ts > Drizzle Schema Integrity > Multi-tenancy isolation (organizationId) > table 'taskVisibility' should have an organizationId column 0ms
+   → expected undefined to be defined
+ × src/__tests__/schema.test.ts > Drizzle Schema Integrity > Multi-tenancy isolation (organizationId) > table 'taskAuditLogs' should have an organizationId column 0ms
+   → expected undefined to be defined
+ ✓ src/__tests__/schema.test.ts > Drizzle Schema Integrity > Multi-tenancy isolation (organizationId) > table 'transacoes' should have an organizationId column 0ms
+ ✓ src/__tests__/schema.test.ts > Drizzle Schema Integrity > Multi-tenancy isolation (organizationId) > table 'contasFinanceiras' should have an organizationId column 0ms
+ ✓ src/__tests__/schema.test.ts > Drizzle Schema Integrity > Multi-tenancy isolation (organizationId) > table 'centrosCusto' should have an organizationId column 0ms
+ ✓ src/__tests__/schema.test.ts > Drizzle Schema Integrity > Multi-tenancy isolation (organizationId) > table 'convenios' should have an organizationId column 0ms
+ ✓ src/__tests__/schema.test.ts > Drizzle Schema Integrity > Multi-tenancy isolation (organizationId) > table 'pagamentos' should have an organizationId column 0ms
+ ✓ src/__tests__/schema.test.ts > Drizzle Schema Integrity > Multi-tenancy isolation (organizationId) > table 'empresasParceiras' should have an organizationId column 0ms
+ ✓ src/__tests__/schema.test.ts > Drizzle Schema Integrity > Multi-tenancy isolation (organizationId) > table 'fornecedores' should have an organizationId column 0ms
+ ✓ src/__tests__/schema.test.ts > Drizzle Schema Integrity > Multi-tenancy isolation (organizationId) > table 'formasPagamento' should have an organizationId column 0ms
+ ✓ src/__tests__/schema.test.ts > Drizzle Schema Integrity > Multi-tenancy isolation (organizationId) > table 'sessionPackageTemplates' should have an organizationId column 0ms
+ ✓ src/__tests__/schema.test.ts > Drizzle Schema Integrity > Multi-tenancy isolation (organizationId) > table 'patientPackages' should have an organizationId column 0ms
+ ✓ src/__tests__/schema.test.ts > Drizzle Schema Integrity > Multi-tenancy isolation (organizationId) > table 'packageUsage' should have an organizationId column 0ms
+ ✓ src/__tests__/schema.test.ts > Drizzle Schema Integrity > Multi-tenancy isolation (organizationId) > table 'vouchers' should have an organizationId column 0ms
+ ✓ src/__tests__/schema.test.ts > Drizzle Schema Integrity > Multi-tenancy isolation (organizationId) > table 'userVouchers' should have an organizationId column 0ms
+ ✓ src/__tests__/schema.test.ts > Drizzle Schema Integrity > Multi-tenancy isolation (organizationId) > table 'voucherCheckoutSessions' should have an organizationId column 0ms
+ ✓ src/__tests__/schema.test.ts > Drizzle Schema Integrity > Multi-tenancy isolation (organizationId) > table 'nfse' should have an organizationId column 0ms
+ ✓ src/__tests__/schema.test.ts > Drizzle Schema Integrity > Multi-tenancy isolation (organizationId) > table 'nfseConfig' should have an organizationId column 0ms
+ ✓ src/__tests__/schema.test.ts > Drizzle Schema Integrity > Multi-tenancy isolation (organizationId) > table 'patientGoals' should have an organizationId column 0ms
+ ✓ src/__tests__/schema.test.ts > Drizzle Schema Integrity > Multi-tenancy isolation (organizationId) > table 'patientPathologies' should have an organizationId column 0ms
+ ✓ src/__tests__/schema.test.ts > Drizzle Schema Integrity > Multi-tenancy isolation (organizationId) > table 'patientSessionMetrics' should have an organizationId column 0ms
+ ✓ src/__tests__/schema.test.ts > Drizzle Schema Integrity > Multi-tenancy isolation (organizationId) > table 'prescribedExercises' should have an organizationId column 0ms
+ ✓ src/__tests__/schema.test.ts > Drizzle Schema Integrity > Multi-tenancy isolation (organizationId) > table 'generatedReports' should have an organizationId column 0ms
+ ✓ src/__tests__/schema.test.ts > Drizzle Schema Integrity > Multi-tenancy isolation (organizationId) > table 'conductLibrary' should have an organizationId column 0ms
+ ✓ src/__tests__/schema.test.ts > Drizzle Schema Integrity > Multi-tenancy isolation (organizationId) > table 'clinicalTestTemplates' should have an organizationId column 0ms
+ ✓ src/__tests__/schema.test.ts > Drizzle Schema Integrity > Multi-tenancy isolation (organizationId) > table 'standardizedTestResults' should have an organizationId column 0ms
+ ✓ src/__tests__/schema.test.ts > Drizzle Schema Integrity > Multi-tenancy isolation (organizationId) > table 'painMaps' should have an organizationId column 0ms
+ × src/__tests__/schema.test.ts > Drizzle Schema Integrity > Multi-tenancy isolation (organizationId) > table 'painMapPoints' should have an organizationId column 0ms
+   → expected undefined to be defined
+ ✓ src/__tests__/schema.test.ts > Drizzle Schema Integrity > Multi-tenancy isolation (organizationId) > table 'evolutionTemplates' should have an organizationId column 0ms
+ ✓ src/__tests__/schema.test.ts > Drizzle Schema Integrity > Multi-tenancy isolation (organizationId) > table 'exercisePrescriptions' should have an organizationId column 0ms
+ ✓ src/__tests__/schema.test.ts > Drizzle Schema Integrity > Multi-tenancy isolation (organizationId) > table 'patientObjectives' should have an organizationId column 0ms
+ ✓ src/__tests__/schema.test.ts > Drizzle Schema Integrity > Multi-tenancy isolation (organizationId) > table 'patientObjectiveAssignments' should have an organizationId column 0ms
+ × src/__tests__/schema.test.ts > Drizzle Schema Integrity > Multi-tenancy isolation (organizationId) > table 'exerciseTemplateCategories' should have an organizationId column 0ms
+   → expected undefined to be defined
+ ✓ src/__tests__/schema.test.ts > Drizzle Schema Integrity > Multi-tenancy isolation (organizationId) > table 'exerciseTemplates' should have an organizationId column 0ms
+ × src/__tests__/schema.test.ts > Drizzle Schema Integrity > Multi-tenancy isolation (organizationId) > table 'exerciseTemplateItems' should have an organizationId column 0ms
+   → expected undefined to be defined
+ ✓ src/__tests__/schema.test.ts > Drizzle Schema Integrity > Multi-tenancy isolation (organizationId) > table 'announcements' should have an organizationId column 0ms
+ × src/__tests__/schema.test.ts > Drizzle Schema Integrity > Multi-tenancy isolation (organizationId) > table 'announcementReads' should have an organizationId column 0ms
+   → expected undefined to be defined
+ × src/__tests__/schema.test.ts > Drizzle Schema Integrity > Multi-tenancy isolation (organizationId) > table 'julesPrReviews' should have an organizationId column 0ms
+   → expected undefined to be defined
+ × src/__tests__/schema.test.ts > Drizzle Schema Integrity > Multi-tenancy isolation (organizationId) > table 'julesLearnings' should have an organizationId column 0ms
+   → expected undefined to be defined
+ ✓ src/__tests__/schema.test.ts > Drizzle Schema Integrity > Multi-tenancy isolation (organizationId) > table 'biomechanicsAssessments' should have an organizationId column 0ms
+ ✓ src/__tests__/schema.test.ts > Drizzle Schema Integrity > Multi-tenancy isolation (organizationId) > table 'whatsappContacts' should have an organizationId column 0ms
+ ✓ src/__tests__/schema.test.ts > Drizzle Schema Integrity > Multi-tenancy isolation (organizationId) > table 'waConversations' should have an organizationId column 0ms
+ ✓ src/__tests__/schema.test.ts > Drizzle Schema Integrity > Multi-tenancy isolation (organizationId) > table 'waMessages' should have an organizationId column 0ms
+ ✓ src/__tests__/schema.test.ts > Drizzle Schema Integrity > Multi-tenancy isolation (organizationId) > table 'waRawEvents' should have an organizationId column 0ms
+ ✓ src/__tests__/schema.test.ts > Drizzle Schema Integrity > Multi-tenancy isolation (organizationId) > table 'waAssignments' should have an organizationId column 0ms
+ ✓ src/__tests__/schema.test.ts > Drizzle Schema Integrity > Multi-tenancy isolation (organizationId) > table 'waInternalNotes' should have an organizationId column 0ms
+ ✓ src/__tests__/schema.test.ts > Drizzle Schema Integrity > Multi-tenancy isolation (organizationId) > table 'waTags' should have an organizationId column 0ms
+ × src/__tests__/schema.test.ts > Drizzle Schema Integrity > Multi-tenancy isolation (organizationId) > table 'waConversationTags' should have an organizationId column 0ms
+   → expected undefined to be defined
+ ✓ src/__tests__/schema.test.ts > Drizzle Schema Integrity > Multi-tenancy isolation (organizationId) > table 'waQuickReplies' should have an organizationId column 0ms
+ ✓ src/__tests__/schema.test.ts > Drizzle Schema Integrity > Multi-tenancy isolation (organizationId) > table 'waAutomationRules' should have an organizationId column 0ms
+ ✓ src/__tests__/schema.test.ts > Drizzle Schema Integrity > Multi-tenancy isolation (organizationId) > table 'waSlaConfig' should have an organizationId column 0ms
+ ✓ src/__tests__/schema.test.ts > Drizzle Schema Integrity > Multi-tenancy isolation (organizationId) > table 'waSlaTracking' should have an organizationId column 0ms
+ ✓ src/__tests__/schema.test.ts > Drizzle Schema Integrity > Multi-tenancy isolation (organizationId) > table 'waOptInOut' should have an organizationId column 0ms
+ ✓ src/__tests__/schema.test.ts > Drizzle Schema Integrity > Critical Table: Patients > should have fullName as not null 0ms
+ ✓ src/__tests__/schema.test.ts > Drizzle Schema Integrity > Critical Table: Patients > should have isActive as not null with default true 0ms
+ ✓ src/__tests__/schema.test.ts > Drizzle Schema Integrity > Critical Table: Patients > should have soft delete support (deletedAt) 0ms
+ ✓ src/__tests__/schema.test.ts > Drizzle Schema Integrity > Critical Table: Appointments > should have patientId and organizationId 0ms
+ ✓ src/__tests__/schema.test.ts > Drizzle Schema Integrity > Critical Table: Appointments > should have status 0ms
+
+⎯⎯⎯⎯⎯⎯ Failed Tests 27 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/__tests__/schema.test.ts > Drizzle Schema Integrity > Multi-tenancy isolation (organizationId) > table 'pathologies' should have an organizationId column
+ FAIL  src/__tests__/schema.test.ts > Drizzle Schema Integrity > Multi-tenancy isolation (organizationId) > table 'surgeries' should have an organizationId column
+ FAIL  src/__tests__/schema.test.ts > Drizzle Schema Integrity > Multi-tenancy isolation (organizationId) > table 'goals' should have an organizationId column
+ FAIL  src/__tests__/schema.test.ts > Drizzle Schema Integrity > Multi-tenancy isolation (organizationId) > table 'sessionAttachments' should have an organizationId column
+ FAIL  src/__tests__/schema.test.ts > Drizzle Schema Integrity > Multi-tenancy isolation (organizationId) > table 'exerciseCategories' should have an organizationId column
+ FAIL  src/__tests__/schema.test.ts > Drizzle Schema Integrity > Multi-tenancy isolation (organizationId) > table 'protocolExercises' should have an organizationId column
+ FAIL  src/__tests__/schema.test.ts > Drizzle Schema Integrity > Multi-tenancy isolation (organizationId) > table 'wikiPageVersions' should have an organizationId column
+ FAIL  src/__tests__/schema.test.ts > Drizzle Schema Integrity > Multi-tenancy isolation (organizationId) > table 'patientGamification' should have an organizationId column
+ FAIL  src/__tests__/schema.test.ts > Drizzle Schema Integrity > Multi-tenancy isolation (organizationId) > table 'xpTransactions' should have an organizationId column
+ FAIL  src/__tests__/schema.test.ts > Drizzle Schema Integrity > Multi-tenancy isolation (organizationId) > table 'achievements' should have an organizationId column
+ FAIL  src/__tests__/schema.test.ts > Drizzle Schema Integrity > Multi-tenancy isolation (organizationId) > table 'achievementsLog' should have an organizationId column
+ FAIL  src/__tests__/schema.test.ts > Drizzle Schema Integrity > Multi-tenancy isolation (organizationId) > table 'dailyQuests' should have an organizationId column
+ FAIL  src/__tests__/schema.test.ts > Drizzle Schema Integrity > Multi-tenancy isolation (organizationId) > table 'evaluationTemplates' should have an organizationId column
+ FAIL  src/__tests__/schema.test.ts > Drizzle Schema Integrity > Multi-tenancy isolation (organizationId) > table 'taskBoards' should have an organizationId column
+ FAIL  src/__tests__/schema.test.ts > Drizzle Schema Integrity > Multi-tenancy isolation (organizationId) > table 'taskColumns' should have an organizationId column
+ FAIL  src/__tests__/schema.test.ts > Drizzle Schema Integrity > Multi-tenancy isolation (organizationId) > table 'tasks' should have an organizationId column
+ FAIL  src/__tests__/schema.test.ts > Drizzle Schema Integrity > Multi-tenancy isolation (organizationId) > table 'taskAssignments' should have an organizationId column
+ FAIL  src/__tests__/schema.test.ts > Drizzle Schema Integrity > Multi-tenancy isolation (organizationId) > table 'taskAcknowledgments' should have an organizationId column
+ FAIL  src/__tests__/schema.test.ts > Drizzle Schema Integrity > Multi-tenancy isolation (organizationId) > table 'taskVisibility' should have an organizationId column
+ FAIL  src/__tests__/schema.test.ts > Drizzle Schema Integrity > Multi-tenancy isolation (organizationId) > table 'taskAuditLogs' should have an organizationId column
+ FAIL  src/__tests__/schema.test.ts > Drizzle Schema Integrity > Multi-tenancy isolation (organizationId) > table 'painMapPoints' should have an organizationId column
+ FAIL  src/__tests__/schema.test.ts > Drizzle Schema Integrity > Multi-tenancy isolation (organizationId) > table 'exerciseTemplateCategories' should have an organizationId column
+ FAIL  src/__tests__/schema.test.ts > Drizzle Schema Integrity > Multi-tenancy isolation (organizationId) > table 'exerciseTemplateItems' should have an organizationId column
+ FAIL  src/__tests__/schema.test.ts > Drizzle Schema Integrity > Multi-tenancy isolation (organizationId) > table 'announcementReads' should have an organizationId column
+ FAIL  src/__tests__/schema.test.ts > Drizzle Schema Integrity > Multi-tenancy isolation (organizationId) > table 'julesPrReviews' should have an organizationId column
+ FAIL  src/__tests__/schema.test.ts > Drizzle Schema Integrity > Multi-tenancy isolation (organizationId) > table 'julesLearnings' should have an organizationId column
+ FAIL  src/__tests__/schema.test.ts > Drizzle Schema Integrity > Multi-tenancy isolation (organizationId) > table 'waConversationTags' should have an organizationId column
+AssertionError: expected undefined to be defined
+ ❯ src/__tests__/schema.test.ts:27:49
+     25|
+     26|             it(`table '${tableName}' should have an organizationId col…
+     27|                 expect(tableObj.organizationId).toBeDefined();
+       |                                                 ^
+     28|             });
+     29|         });
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/27]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  27 failed | 60 passed (87)
+   Start at  19:25:44
+   Duration  1.14s (transform 230ms, setup 0ms, import 847ms, tests 25ms, environment 0ms)
+
+/home/rafael/Documents/fisioflow/fisioflow-51658291/packages/db:
+ ERR_PNPM_RECURSIVE_RUN_FIRST_FAIL  @fisioflow/db@1.0.0 test:unit: `vitest run --reporter verbose`
+Exit status 1
