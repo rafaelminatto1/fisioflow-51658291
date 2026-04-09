@@ -5,7 +5,7 @@
 import type React from "react";
 import "@/styles/premium-utilities.css";
 import "@/styles/mobile-utilities.css";
-import { Bell, ChevronDown, LogOut, Settings, User } from "lucide-react";
+import { Bell, ChevronDown, LogOut, User } from "lucide-react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { SkipLinks } from "@/components/accessibility/SkipLinks";
 import { ComplianceBanner } from "@/components/communications/ComplianceBanner";
@@ -194,35 +194,6 @@ export const MainLayout: React.FC<MainLayoutProps> = ({
 														className="flex items-center w-full"
 													>
 														<div className="p-2 bg-slate-100 dark:bg-slate-800 rounded-xl mr-3 group-hover:bg-primary/10 transition-colors">
-															<Settings className="w-4 h-4" />
-														</div>
-														<span className="font-bold text-sm">
-															Configurações
-														</span>
-													</Link>
-												</DropdownMenuItem>
-												<DropdownMenuSeparator className="my-2" />
-												<DropdownMenuItem
-													onClick={handleLogout}
-													data-testid="user-menu-logout"
-													className="rounded-2xl px-4 py-3 text-red-500 hover:bg-red-50 dark:hover:bg-red-950/20 cursor-pointer transition-all duration-300 focus:bg-red-50 focus:text-red-500 group magnetic-button glow-on-hover"
-												>
-													<div className="p-2 bg-red-50 dark:bg-red-950/10 rounded-xl mr-3 group-hover:bg-red-100 transition-colors">
-														<LogOut className="w-4 h-4" />
-													</div>
-													<span className="font-bold text-sm">
-														Encerrar Sessão
-													</span>
-												</DropdownMenuItem>
-												<DropdownMenuItem
-													asChild
-													className="rounded-2xl px-4 py-3 hover:bg-primary/5 hover:text-primary cursor-pointer transition-all duration-300 focus:bg-primary/5 focus:text-primary group magnetic-button"
-												>
-													<Link
-														to="/profile"
-														className="flex items-center w-full"
-													>
-														<div className="p-2 bg-slate-100 dark:bg-slate-800 rounded-xl mr-3 group-hover:bg-primary/10 transition-colors">
 															<User className="w-4 h-4" />
 														</div>
 														<span className="font-bold text-sm">
@@ -234,7 +205,7 @@ export const MainLayout: React.FC<MainLayoutProps> = ({
 												<DropdownMenuItem
 													onClick={handleLogout}
 													data-testid="user-menu-logout"
-													className="rounded-2xl px-4 py-3 text-red-500 hover:bg-red-50 dark:hover:bg-red-950/20 cursor-pointer transition-all duration-300 focus:bg-red-50 focus:text-red-500 group"
+													className="rounded-2xl px-4 py-3 text-red-500 hover:bg-red-50 dark:hover:bg-red-950/20 cursor-pointer transition-all duration-300 focus:bg-red-50 focus:text-red-500 group magnetic-button glow-on-hover"
 												>
 													<div className="p-2 bg-red-50 dark:bg-red-950/10 rounded-xl mr-3 group-hover:bg-red-100 transition-colors">
 														<LogOut className="w-4 h-4" />
