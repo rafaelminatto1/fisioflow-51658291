@@ -91,6 +91,7 @@ export const wikiPageVersions = pgTable("wiki_page_versions", {
 
 	version: integer("version").notNull(),
 	comment: varchar("comment", { length: 500 }), // ex: "Atualização das referências"
+	organizationId: uuid("organization_id"),
 	createdBy: text("created_by"),
 
 	createdAt: timestamp("created_at").defaultNow().notNull(),
