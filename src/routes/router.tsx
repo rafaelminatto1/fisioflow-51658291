@@ -22,6 +22,7 @@ import {
 	marketingRoutes,
 	patientsRoutes,
 	reportsRoutes,
+	whatsappRoutes,
 } from "./index";
 import { RouterErrorElement } from "@/components/error/RouterErrorElement";
 
@@ -41,7 +42,10 @@ const MasterDataHub = lazy(() => import("@/pages/cadastros/MasterDataHub"));
 
 export const router = createBrowserRouter(
 	createRoutesFromElements(
-		<Route element={<InfrastructureLayout />} errorElement={<RouterErrorElement />}>
+		<Route
+			element={<InfrastructureLayout />}
+			errorElement={<RouterErrorElement />}
+		>
 			<Route element={<AppShellLayout />}>
 				{authRoutes}
 				{coreRoutes}
@@ -54,6 +58,7 @@ export const router = createBrowserRouter(
 				{aiRoutes}
 				{gamificationRoutes}
 				{enterpriseRoutes}
+				{whatsappRoutes}
 
 				<Route
 					path="/prescricoes/publica/:qrCode"
