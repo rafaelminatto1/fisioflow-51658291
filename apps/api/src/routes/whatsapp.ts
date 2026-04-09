@@ -342,6 +342,33 @@ app.get('/pending-confirmations', requireAuth, async (c) => {
 
 // ===== WEBHOOK (entrada de mensagens do Meta) =====
 
+/** Verifica assinatura HMAC-SHA256 do Meta/WhatsApp */
+async function verifyMetaSignature(
+  appSecret: string,
+  rawBody: string,
+  signature: string | undefined,
+): Promise<boolean> {
+  if (!signature || !signature.startsWith('sha256=')) return false;
+  const encoder = new TextEncoder();
+  const key = await crypto.subtle.importKey(
+    'raw',
+    encoder.encode(appSecret),
+    { name: 'HMAC', hash: 'SHA-256' },
+    false,
+    ['sign'],
+  );
+  const expected = await crypto.subtle.sign('HMAC', key, encoder.encode(rawBody));
+  const expectedHex = 'sha256=' + Array.from(new Uint8Array(expected))
+    .map((b) => b.toString(16).padStart(2, '0'))
+    .join('');
+  if (expectedHex.length !== signature.length) return false;
+  let diff = 0;
+  for (let i = 0; i < expectedHex.length; i++) {
+    diff |= expectedHex.charCodeAt(i) ^ signature.charCodeAt(i);
+  }
+  return diff === 0;
+}
+
 // GET /api/whatsapp/webhook — validação do token pelo Meta
 app.get('/webhook', async (c) => {
   const mode = c.req.query('hub.mode');
@@ -391,9 +418,27 @@ async function sendWhatsAppReply(env: Env, to: string, text: string): Promise<vo
 
 // POST /api/whatsapp/webhook — receber mensagens do Meta
 app.post('/webhook', async (c) => {
-  const body = (await c.req.json().catch(() => ({}))) as Record<string, unknown>;
+  const rawBody = await c.req.text();
+  const signature = c.req.header('x-hub-signature-256');
+  const appSecret = (c.env as any).WHATSAPP_APP_SECRET as string | undefined;
 
-  // Confirmar recebimento ao Meta
+  // Validar HMAC se APP_SECRET estiver configurado
+  if (appSecret) {
+    const valid = await verifyMetaSignature(appSecret, rawBody, signature);
+    if (!valid) {
+      console.warn('[WhatsApp Webhook] Assinatura HMAC inválida — descartando payload');
+      return c.json({ error: 'Assinatura inválida' }, 401);
+    }
+  }
+
+  let body: Record<string, unknown> = {};
+  try {
+    body = JSON.parse(rawBody);
+  } catch {
+    return c.json({ error: 'Payload inválido' }, 400);
+  }
+
+  // Confirmar recebimento ao Meta imediatamente (exigido pela API)
   c.executionCtx?.waitUntil(processWhatsAppWebhook(body, c.env));
 
   return c.json({ status: 'ok' });
