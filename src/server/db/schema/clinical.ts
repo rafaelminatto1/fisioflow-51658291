@@ -211,6 +211,7 @@ export const painMapPoints = pgTable("pain_map_points", {
 	painMapId: uuid("pain_map_id")
 		.references(() => painMaps.id)
 		.notNull(),
+	organizationId: uuid("organization_id"),
 	xCoordinate: numeric("x_coordinate", { precision: 10, scale: 2 }),
 	yCoordinate: numeric("y_coordinate", { precision: 10, scale: 2 }),
 	intensity: numeric("intensity", { precision: 10, scale: 2 }),
