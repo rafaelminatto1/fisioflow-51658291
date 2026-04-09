@@ -54,6 +54,12 @@ const PatientPortal = lazy(
 	() =>
 		import(/* webpackChunkName: "portal-patient" */ "@/pages/PatientPortal"),
 );
+const ProntuarioEletronico = lazy(
+	() =>
+		import(
+			/* webpackChunkName: "prontuario-eletronico" */ "@/pages/ProntuarioEletronico"
+		),
+);
 
 export const patientsRoutes = (
 	<>
@@ -135,6 +141,16 @@ export const patientsRoutes = (
 			element={
 				<ProtectedRoute>
 					<PatientPortal />
+				</ProtectedRoute>
+			}
+		/>
+
+		{/* Prontuário Eletrônico */}
+		<Route
+			path="/prontuario/:patientId"
+			element={
+				<ProtectedRoute>
+					<ProntuarioEletronico />
 				</ProtectedRoute>
 			}
 		/>

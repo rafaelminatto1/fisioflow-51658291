@@ -1148,7 +1148,10 @@ export function mergeClinicalTestsCatalog(
 				builtin?.layout_type ??
 				null,
 			is_custom: (remoteTest as ClinicalTestCatalogRecord).is_custom ?? true,
-			is_builtin: false,
+			is_builtin: builtin?.is_builtin ?? false,
+			aliases_pt: remoteTest.aliases_pt ?? builtin?.aliases_pt ?? [],
+			aliases_en: remoteTest.aliases_en ?? builtin?.aliases_en ?? [],
+			dictionary_id: remoteTest.dictionary_id ?? builtin?.dictionary_id ?? null,
 			evidence_label: builtin?.evidence_label ?? "Customizado",
 			evidence_summary:
 				builtin?.evidence_summary ?? "Teste criado ou adaptado pela equipe.",

@@ -9,8 +9,8 @@ import { createAuthClient } from '@neondatabase/neon-js/auth';
  * Neon Auth Client for Patient App
  */
 export const authClient = createAuthClient(
-  process.env.EXPO_PUBLIC_NEON_AUTH_URL || 'https://your-auth-endpoint.neonauth.aws.neon.tech'
-) as any; // Cast as any because we can't cleanly inject custom storage without additional plugins in this version
+  process.env.EXPO_PUBLIC_NEON_AUTH_URL || 'https://ep-wandering-bonus-acj4zwvo.neonauth.sa-east-1.aws.neon.tech/neondb/auth'
+) as any;
 
 /**
  * Helper to check if Neon Auth is configured

@@ -44,6 +44,8 @@ const patientSchema = z.object({
 	emergency_phone: z.string().optional(),
 	observations: z.string().optional(),
 	status: z.string().optional(),
+	nickname: z.string().optional(),
+	social_name: z.string().optional(),
 });
 
 type PatientFormData = z.infer<typeof patientSchema>;
@@ -66,6 +68,8 @@ function formDataToPatientUpdate(
 	if (data.birth_date) update.birthDate = data.birth_date;
 	if (data.observations !== undefined) update.mainCondition = data.observations;
 	if (data.status) update.status = data.status;
+	if (data.nickname !== undefined) update.nickname = data.nickname;
+	if (data.social_name !== undefined) update.socialName = data.social_name;
 
 	// Se o cadastro estava incompleto, marca como completo
 	if (wasIncompleteRegistration) {
@@ -106,6 +110,8 @@ export const EditPatientModal: React.FC<{
 			emergency_phone: "",
 			observations: "",
 			status: "active",
+			nickname: "",
+			social_name: "",
 		},
 	});
 
@@ -137,6 +143,8 @@ export const EditPatientModal: React.FC<{
 				emergency_phone: "",
 				observations: patientData.mainCondition || "",
 				status: patientData.status || "active",
+				nickname: patientData.nickname || "",
+				social_name: patientData.socialName || "",
 			});
 		}
 	}, [patientData, reset]);
@@ -226,6 +234,31 @@ export const EditPatientModal: React.FC<{
 												{errors.name.message}
 											</p>
 										)}
+									</div>
+
+									<div className="space-y-1.5 md:col-span-2 grid grid-cols-2 gap-3">
+										<div className="space-y-1.5">
+											<Label htmlFor="social_name" className="text-sm">
+												Nome Social
+											</Label>
+											<Input
+												id="social_name"
+												{...register("social_name")}
+												placeholder="Prefere ser chamado por"
+												className="h-9"
+											/>
+										</div>
+										<div className="space-y-1.5">
+											<Label htmlFor="nickname" className="text-sm">
+												Apelido
+											</Label>
+											<Input
+												id="nickname"
+												{...register("nickname")}
+												placeholder="Ex: Joãozinho"
+												className="h-9"
+											/>
+										</div>
 									</div>
 
 									<div className="space-y-1.5">

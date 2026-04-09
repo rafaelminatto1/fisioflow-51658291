@@ -2,6 +2,10 @@
   "name": "@fisioflow/api",
   "version": "1.0.0",
   "private": true,
+  "engines": {
+    "node": ">=22.12.0",
+    "pnpm": ">=10.0.0"
+  },
   "description": "FisioFlow Cloudflare Workers API — Hono + Neon (Hyperdrive) + Drizzle",
   "scripts": {
     "dev": "sh dev.sh",

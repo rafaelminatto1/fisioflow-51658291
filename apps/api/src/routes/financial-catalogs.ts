@@ -95,7 +95,7 @@ export const registerFinancialCatalogRoutes = (app: FinancialApp) => {
     const { id } = c.req.param();
 
     try {
-      const [result] = await db.delete(empresasParceiras)
+      const [result] = await db.update(empresasParceiras).set({ deletedAt: new Date() })
         .where(and(
           eq(empresasParceiras.id, id),
           eq(empresasParceiras.organizationId, user.organizationId)
@@ -208,7 +208,7 @@ export const registerFinancialCatalogRoutes = (app: FinancialApp) => {
     const { id } = c.req.param();
 
     try {
-      const [result] = await db.delete(fornecedores)
+      const [result] = await db.update(fornecedores).set({ deletedAt: new Date() })
         .where(and(
           eq(fornecedores.id, id),
           eq(fornecedores.organizationId, user.organizationId)
@@ -301,7 +301,7 @@ export const registerFinancialCatalogRoutes = (app: FinancialApp) => {
     const { id } = c.req.param();
 
     try {
-      const [result] = await db.delete(formasPagamento)
+      const [result] = await db.update(formasPagamento).set({ deletedAt: new Date() })
         .where(and(
           eq(formasPagamento.id, id),
           eq(formasPagamento.organizationId, user.organizationId)
@@ -409,7 +409,7 @@ export const registerFinancialCatalogRoutes = (app: FinancialApp) => {
     const { id } = c.req.param();
 
     try {
-      const [result] = await db.delete(convenios)
+      const [result] = await db.update(convenios).set({ deletedAt: new Date() })
         .where(and(
           eq(convenios.id, id),
           eq(convenios.organizationId, user.organizationId)
