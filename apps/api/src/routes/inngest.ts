@@ -36,8 +36,8 @@ const appointmentReminder = inngest.createFunction(
       if (!phone) return { error: 'Telefone do paciente ausente' };
       const whatsapp = new WhatsAppService(env);
 
-      // TODO: mover para env var API_BASE_URL (adicionar em wrangler.toml + Env interface)
-      const calendarUrl = `https://api-pro.moocafisio.com.br/api/calendar/${appointmentId}.ics`;
+      const baseUrl = env.API_BASE_URL ?? 'https://api-pro.moocafisio.com.br';
+      const calendarUrl = `${baseUrl}/api/calendar/${appointmentId}.ics`;
       
       // Tenta usar template aprovado, enviando também o link do calendário
       try {
