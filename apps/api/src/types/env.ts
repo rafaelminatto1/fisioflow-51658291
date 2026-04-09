@@ -125,10 +125,14 @@ export interface Env {
   INNGEST_EVENT_KEY?: string;
   INNGEST_SIGNING_KEY?: string;
 
+  // URL base da API (ex: https://api-pro.moocafisio.com.br)
+  API_BASE_URL?: string;
+
   // WhatsApp Business API
   WHATSAPP_PHONE_NUMBER_ID?: string;
   WHATSAPP_ACCESS_TOKEN?: string;
   WHATSAPP_VERIFY_TOKEN?: string;
+  WHATSAPP_APP_SECRET?: string; // App Secret para validação HMAC dos webhooks
 
   // LiveKit Telehealth
   LIVEKIT_API_KEY?: string;
