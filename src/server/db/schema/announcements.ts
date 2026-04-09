@@ -28,5 +28,6 @@ export const announcementReads = pgTable("announcement_reads", {
 		.notNull()
 		.references(() => announcements.id),
 	userId: uuid("user_id").notNull(),
+	organizationId: uuid("organization_id"),
 	readAt: timestamp("read_at").defaultNow().notNull(),
 });

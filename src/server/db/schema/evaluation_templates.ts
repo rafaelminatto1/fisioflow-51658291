@@ -52,6 +52,7 @@ export const evaluationTemplates = pgTable("evaluation_templates", {
 
 	isGlobal: boolean("is_global").default(false),
 	isActive: boolean("is_active").default(true),
+	organizationId: uuid("organization_id"),
 
 	createdAt: timestamp("created_at").defaultNow().notNull(),
 	updatedAt: timestamp("updated_at").defaultNow().notNull(),

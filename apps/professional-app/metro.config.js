@@ -101,12 +101,9 @@ config.resolver.blockList = [
 // toda a pasta node_modules/.pnpm/ como watchFolder.
 config.resolver.unstable_enableSymlinks = true;
 
-// Limita watchFolders ao app + node_modules da raiz do monorepo (onde ficam os .pnpm symlinks).
-// Exclui todos os outros apps via blockList abaixo, evitando scan desnecessário.
-config.watchFolders = [
-	projectRoot,
-	path.resolve(monorepoRoot, "node_modules"),
-];
+// watchFolders: apenas o próprio app.
+// nodeModulesPaths (abaixo) resolve módulos sem precisar assistir 4GB de node_modules raiz.
+config.watchFolders = [projectRoot];
 
 // Resolução de módulos: local primeiro, depois raiz (pnpm hoist)
 config.resolver.nodeModulesPaths = [
