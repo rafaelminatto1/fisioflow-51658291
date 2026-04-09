@@ -60,13 +60,34 @@ jobs:
         env:
           EXPO_TOKEN: ${{ secrets['EXPO_TOKEN'] || '' }}
 
+      # ── 3b. Patch Podfile — corrige Swift 6 strict concurrency (Xcode 16.4) ─
+      # expo-modules-core usa @MainActor em contextos não isolados, quebrando com
+      # Swift 6. SWIFT_STRICT_CONCURRENCY=minimal restaura comportamento Swift 5.
+      - name: Patch Podfile (Swift strict concurrency fix)
+        working-directory: apps/${{ inputs.app }}/ios
+        run: |
+          cat >> Podfile << 'PODFILE_PATCH'
+
+          # Fix: Xcode 16.4 / Swift 6 strict concurrency quebra expo-modules-core
+          # Ref: https://github.com/expo/expo/issues/33297
+          post_install do |installer|
+            installer.pods_project.targets.each do |target|
+              target.build_configurations.each do |config|
+                config.build_settings['SWIFT_STRICT_CONCURRENCY'] = 'minimal'
+              end
+            end
+          end
+          PODFILE_PATCH
+          echo "Podfile patched:"
+          tail -10 Podfile
+
       # ── 4. Cache CocoaPods (economiza ~10 min) ────────────────────────────
       - name: Cache CocoaPods
         uses: actions/cache@v4
         with:
           path: apps/${{ inputs.app }}/ios/Pods
-          key: pods-v4-${{ inputs.app }}-${{ hashFiles(format('apps/{0}/ios/Podfile.lock', inputs.app)) }}
-          restore-keys: pods-v4-${{ inputs.app }}-
+          key: pods-v5-${{ inputs.app }}-${{ hashFiles(format('apps/{0}/ios/Podfile.lock', inputs.app)) }}
+          restore-keys: pods-v5-${{ inputs.app }}-
 
       - name: Pod install
         working-directory: apps/${{ inputs.app }}/ios
