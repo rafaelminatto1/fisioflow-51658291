@@ -101,12 +101,9 @@ config.resolver.blockList = [
 // toda a pasta node_modules/.pnpm/ como watchFolder.
 config.resolver.unstable_enableSymlinks = true;
 
-// watchFolders: app + root node_modules (para pnpm symlinks).
-// .pnpm está no blockList — Metro segue os symlinks sem indexar a pasta inteira.
-config.watchFolders = [
-	projectRoot,
-	path.resolve(monorepoRoot, "node_modules"),
-];
+// watchFolders: apenas o app. Pacotes do monorepo devem ser declarados
+// explicitamente no package.json para ficarem no node_modules local.
+config.watchFolders = [projectRoot];
 
 // Resolução de módulos: local primeiro, depois raiz (pnpm hoist)
 config.resolver.nodeModulesPaths = [
