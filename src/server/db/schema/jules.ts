@@ -29,12 +29,14 @@ export const julesPrReviews = pgTable(
 			}>;
 			score?: number;
 		}>(),
+		organizationId: uuid("organization_id"),
 		
 		createdAt: timestamp("created_at").defaultNow().notNull(),
 		updatedAt: timestamp("updated_at").defaultNow().notNull(),
 	},
 	(table) => ({
 		repoPrIdx: index("idx_jules_pr_repo_number").on(table.repoName, table.prNumber),
+		orgIdx: index("idx_jules_pr_org_id").on(table.organizationId),
 		createdAtIdx: index("idx_jules_pr_created_at").on(table.createdAt),
 	}),
 );
@@ -53,11 +55,13 @@ export const julesLearnings = pgTable(
 		
 		// Optional link to the PR review that generated this learning
 		prReviewId: uuid("pr_review_id").references(() => julesPrReviews.id, { onDelete: "set null" }),
+		organizationId: uuid("organization_id"),
 		
 		createdAt: timestamp("created_at").defaultNow().notNull(),
 	},
 	(table) => ({
 		categoryIdx: index("idx_jules_learnings_category").on(table.category),
+		orgIdx: index("idx_jules_learnings_org_id").on(table.organizationId),
 	}),
 );
 

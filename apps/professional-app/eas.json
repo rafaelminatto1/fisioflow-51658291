@@ -8,11 +8,14 @@
       "developmentClient": true,
       "distribution": "internal",
       "channel": "development",
+      "credentialsSource": "remote",
       "ios": {
         "simulator": false
       },
       "env": {
-        "EXPO_PUBLIC_API_URL": "https://moocafisio.com.br/api"
+        "EXPO_PUBLIC_API_URL": "https://fisioflow-api.rafalegollas.workers.dev",
+        "EXPO_PUBLIC_NEON_AUTH_URL": "https://ep-wandering-bonus-acj4zwvo.neonauth.sa-east-1.aws.neon.tech/neondb/auth",
+        "EXPO_PUBLIC_LIVEKIT_URL": "wss://fisioflow-2w7ld7bi.livekit.cloud"
       }
     },
     "preview": {

@@ -26,6 +26,7 @@ export const patientGamification = pgTable(
 		longestStreak: integer("longest_streak").default(0),
 		totalPoints: integer("total_points").default(0),
 		lastActivityDate: timestamp("last_activity_date", { withTimezone: true }),
+		organizationId: uuid("organization_id"),
 		createdAt: timestamp("created_at", { withTimezone: true }).defaultNow(),
 		updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow(),
 	},
@@ -43,6 +44,7 @@ export const xpTransactions = pgTable("xp_transactions", {
 	amount: integer("amount").notNull(),
 	reason: text("reason").notNull(),
 	description: text("description"),
+	organizationId: uuid("organization_id"),
 	createdAt: timestamp("created_at", { withTimezone: true }).defaultNow(),
 	createdBy: uuid("created_by"), // References auth.users, keeping simplified for now
 });
@@ -57,6 +59,7 @@ export const achievements = pgTable("achievements", {
 	icon: text("icon"),
 	category: text("category").default("general"),
 	requirements: jsonb("requirements"),
+	organizationId: uuid("organization_id"),
 	createdAt: timestamp("created_at", { withTimezone: true }).defaultNow(),
 });
 
@@ -70,6 +73,7 @@ export const achievementsLog = pgTable("achievements_log", {
 		.notNull()
 		.references(() => achievements.id),
 	achievementTitle: text("achievement_title").notNull(),
+	organizationId: uuid("organization_id"),
 	unlockedAt: timestamp("unlocked_at", { withTimezone: true }),
 	xpReward: integer("xp_reward"),
 });
@@ -95,6 +99,7 @@ export const dailyQuests = pgTable(
 			}[]
 		>(),
 		completedCount: integer("completed_count").default(0),
+		organizationId: uuid("organization_id"),
 		createdAt: timestamp("created_at", { withTimezone: true }).defaultNow(),
 		updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow(),
 	},

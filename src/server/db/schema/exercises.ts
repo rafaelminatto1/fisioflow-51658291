@@ -57,11 +57,13 @@ export const exerciseCategories = pgTable(
 		color: varchar("color", { length: 20 }), // hex ex: "#3B82F6"
 		orderIndex: integer("order_index").default(0),
 		parentId: uuid("parent_id"), // subcategoria
+		organizationId: uuid("organization_id"), // Para categorias personalizadas da clínica
 		createdAt: timestamp("created_at").defaultNow().notNull(),
 	},
 	(table) => ({
 		slugIdx: index("idx_exercise_categories_slug").on(table.slug),
 		parentIdIdx: index("idx_exercise_categories_parent_id").on(table.parentId),
+		orgIdx: index("idx_exercise_categories_org_id").on(table.organizationId),
 	}),
 );
 
