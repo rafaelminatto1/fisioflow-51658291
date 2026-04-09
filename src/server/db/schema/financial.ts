@@ -31,6 +31,7 @@ export const transacoes = pgTable("transacoes", {
 	stripePaymentIntentId: varchar("stripe_payment_intent_id", { length: 255 }),
 	stripeRefundId: varchar("stripe_refund_id", { length: 255 }),
 	metadata: jsonb("metadata").default({}),
+	deletedAt: timestamp("deleted_at"),
 	createdAt: timestamp("created_at").defaultNow().notNull(),
 	updatedAt: timestamp("updated_at").defaultNow().notNull(),
 });
@@ -38,7 +39,7 @@ export const transacoes = pgTable("transacoes", {
 export const contasFinanceiras = pgTable("contas_financeiras", {
 	id: uuid("id").primaryKey().defaultRandom(),
 	organizationId: uuid("organization_id")
-		.references(() => organizations.id, { onDelete: 'cascade' })
+		.references(() => organizations.id)
 		.notNull(),
 	tipo: text("tipo").notNull(),
 	valor: numeric("valor", { precision: 12, scale: 2 }).notNull(),
@@ -51,6 +52,7 @@ export const contasFinanceiras = pgTable("contas_financeiras", {
 	categoria: text("categoria"),
 	formaPagamento: text("forma_pagamento"),
 	observacoes: text("observacoes"),
+	deletedAt: timestamp("deleted_at"),
 	createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
 	updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow().notNull(),
 });
@@ -58,12 +60,13 @@ export const contasFinanceiras = pgTable("contas_financeiras", {
 export const centrosCusto = pgTable("centros_custo", {
 	id: uuid("id").primaryKey().defaultRandom(),
 	organizationId: uuid("organization_id")
-		.references(() => organizations.id, { onDelete: 'cascade' })
+		.references(() => organizations.id)
 		.notNull(),
 	nome: varchar("nome", { length: 255 }).notNull(),
 	descricao: text("descricao"),
 	codigo: varchar("codigo", { length: 50 }),
 	ativo: varchar("ativo", { length: 10 }).default("true"), // Keeping as varchar matching the convenios pattern if needed, but db said boolean for others. Let's check centros_custo specifically.
+	deletedAt: timestamp("deleted_at"),
 	createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
 	updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow().notNull(),
 });
@@ -84,6 +87,7 @@ export const convenios = pgTable("convenios", {
 	ativo: boolean("ativo").default(true),
 	registroAns: varchar("registro_ans", { length: 50 }),
 	tabelaPrecos: jsonb("tabela_precos").default({}),
+	deletedAt: timestamp("deleted_at"),
 	createdAt: timestamp("created_at").defaultNow().notNull(),
 	updatedAt: timestamp("updated_at").defaultNow().notNull(),
 });
@@ -91,7 +95,7 @@ export const convenios = pgTable("convenios", {
 export const pagamentos = pgTable("pagamentos", {
 	id: uuid("id").primaryKey().defaultRandom(),
 	organizationId: uuid("organization_id")
-		.references(() => organizations.id, { onDelete: 'cascade' })
+		.references(() => organizations.id)
 		.notNull(),
 	eventoId: uuid("evento_id"),
 	appointmentId: uuid("appointment_id"),
@@ -102,6 +106,7 @@ export const pagamentos = pgTable("pagamentos", {
 	pagoEm: date("pago_em"),
 	observacoes: text("observacoes"),
 	metadata: jsonb("metadata").notNull().default({}),
+	deletedAt: timestamp("deleted_at"),
 	createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
 	updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow().notNull(),
 });
@@ -109,7 +114,7 @@ export const pagamentos = pgTable("pagamentos", {
 export const empresasParceiras = pgTable("empresas_parceiras", {
 	id: uuid("id").primaryKey().defaultRandom(),
 	organizationId: uuid("organization_id")
-		.references(() => organizations.id, { onDelete: 'cascade' })
+		.references(() => organizations.id)
 		.notNull(),
 	nome: text("nome").notNull(),
 	contato: text("contato"),
@@ -118,6 +123,7 @@ export const empresasParceiras = pgTable("empresas_parceiras", {
 	contrapartidas: text("contrapartidas"),
 	observacoes: text("observacoes"),
 	ativo: varchar("ativo", { length: 10 }).default("true"),
+	deletedAt: timestamp("deleted_at"),
 	createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
 	updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow().notNull(),
 });
@@ -125,7 +131,7 @@ export const empresasParceiras = pgTable("empresas_parceiras", {
 export const fornecedores = pgTable("fornecedores", {
 	id: uuid("id").primaryKey().defaultRandom(),
 	organizationId: uuid("organization_id")
-		.references(() => organizations.id, { onDelete: 'cascade' })
+		.references(() => organizations.id)
 		.notNull(),
 	tipoPessoa: text("tipo_pessoa").notNull().default("pj"),
 	razaoSocial: text("razao_social").notNull(),
@@ -142,6 +148,7 @@ export const fornecedores = pgTable("fornecedores", {
 	observacoes: text("observacoes"),
 	categoria: text("categoria"),
 	ativo: varchar("ativo", { length: 10 }).default("true"),
+	deletedAt: timestamp("deleted_at"),
 	createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
 	updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow().notNull(),
 });
@@ -149,13 +156,14 @@ export const fornecedores = pgTable("fornecedores", {
 export const formasPagamento = pgTable("formas_pagamento", {
 	id: uuid("id").primaryKey().defaultRandom(),
 	organizationId: uuid("organization_id")
-		.references(() => organizations.id, { onDelete: 'cascade' })
+		.references(() => organizations.id)
 		.notNull(),
 	nome: varchar("nome", { length: 255 }).notNull(),
 	tipo: varchar("tipo", { length: 50 }).default("geral"),
 	taxaPercentual: numeric("taxa_percentual", { precision: 5, scale: 2 }).default("0"),
 	diasRecebimento: integer("dias_recebimento").default(0),
 	ativo: boolean("ativo").default(true),
+	deletedAt: timestamp("deleted_at"),
 	createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
 	updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow().notNull(),
 });
@@ -163,7 +171,7 @@ export const formasPagamento = pgTable("formas_pagamento", {
 export const sessionPackageTemplates = pgTable("session_package_templates", {
 	id: uuid("id").primaryKey().defaultRandom(),
 	organizationId: uuid("organization_id")
-		.references(() => organizations.id, { onDelete: 'cascade' })
+		.references(() => organizations.id)
 		.notNull(),
 	name: varchar("name", { length: 255 }).notNull(),
 	description: text("description"),
@@ -172,6 +180,7 @@ export const sessionPackageTemplates = pgTable("session_package_templates", {
 	validityDays: integer("validity_days").default(365),
 	isActive: boolean("is_active").default(true),
 	createdBy: text("created_by"),
+	deletedAt: timestamp("deleted_at"),
 	createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
 	updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow().notNull(),
 });
@@ -188,11 +197,11 @@ export const patientPackages = pgTable(
 	{
 		id: uuid("id").primaryKey().defaultRandom(),
 		organizationId: uuid("organization_id")
-			.references(() => organizations.id, { onDelete: "cascade" })
+			.references(() => organizations.id)
 			.notNull(),
 		patientId: uuid("patient_id")
 			.notNull()
-			.references(() => patients.id, { onDelete: "cascade" }),
+			.references(() => patients.id),
 		packageTemplateId: uuid("package_template_id").references(() => sessionPackageTemplates.id),
 		name: varchar("name", { length: 255 }).notNull(),
 		totalSessions: integer("total_sessions").notNull(),
@@ -205,6 +214,7 @@ export const patientPackages = pgTable(
 		expiresAt: timestamp("expires_at", { withTimezone: true }),
 		lastUsedAt: timestamp("last_used_at", { withTimezone: true }),
 		createdBy: text("created_by"),
+		deletedAt: timestamp("deleted_at"),
 		createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
 		updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow().notNull(),
 	},
@@ -227,7 +237,7 @@ export const patientPackagesRelations = relations(
 export const packageUsage = pgTable("package_usage", {
 	id: uuid("id").primaryKey().defaultRandom(),
 	organizationId: uuid("organization_id")
-		.references(() => organizations.id, { onDelete: 'cascade' })
+		.references(() => organizations.id)
 		.notNull(),
 	patientPackageId: uuid("patient_package_id").references(() => patientPackages.id),
 	patientId: uuid("patient_id").notNull(),
@@ -239,7 +249,7 @@ export const packageUsage = pgTable("package_usage", {
 export const vouchers = pgTable("vouchers", {
 	id: uuid("id").primaryKey().defaultRandom(),
 	organizationId: uuid("organization_id")
-		.references(() => organizations.id, { onDelete: 'cascade' })
+		.references(() => organizations.id)
 		.notNull(),
 	nome: varchar("nome", { length: 255 }).notNull(),
 	descricao: text("descricao"),
@@ -249,6 +259,7 @@ export const vouchers = pgTable("vouchers", {
 	preco: numeric("preco", { precision: 12, scale: 2 }).notNull(),
 	ativo: boolean("ativo").default(true),
 	stripePriceId: varchar("stripe_price_id", { length: 255 }),
+	deletedAt: timestamp("deleted_at"),
 	createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
 	updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow().notNull(),
 });
@@ -256,11 +267,11 @@ export const vouchers = pgTable("vouchers", {
 export const userVouchers = pgTable("user_vouchers", {
 	id: uuid("id").primaryKey().defaultRandom(),
 	organizationId: uuid("organization_id")
-		.references(() => organizations.id, { onDelete: 'cascade' })
+		.references(() => organizations.id)
 		.notNull(),
 	userId: text("user_id").notNull(),
 	voucherId: uuid("voucher_id")
-		.references(() => vouchers.id, { onDelete: 'cascade' })
+		.references(() => vouchers.id)
 		.notNull(),
 	sessoesRestantes: integer("sessoes_restantes").notNull(),
 	sessoesTotais: integer("sessoes_totais").notNull(),
@@ -268,6 +279,7 @@ export const userVouchers = pgTable("user_vouchers", {
 	dataExpiracao: timestamp("data_expiracao", { withTimezone: true }),
 	ativo: boolean("ativo").default(true),
 	valorPago: numeric("valor_pago", { precision: 12, scale: 2 }).notNull(),
+	deletedAt: timestamp("deleted_at"),
 	createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
 	updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow().notNull(),
 });
@@ -275,15 +287,16 @@ export const userVouchers = pgTable("user_vouchers", {
 export const voucherCheckoutSessions = pgTable("voucher_checkout_sessions", {
 	id: uuid("id").primaryKey().defaultRandom(),
 	organizationId: uuid("organization_id")
-		.references(() => organizations.id, { onDelete: 'cascade' })
+		.references(() => organizations.id)
 		.notNull(),
 	userId: text("user_id").notNull(),
 	voucherId: uuid("voucher_id")
-		.references(() => vouchers.id, { onDelete: 'cascade' })
+		.references(() => vouchers.id)
 		.notNull(),
 	amount: numeric("amount", { precision: 12, scale: 2 }).notNull(),
 	status: varchar("status", { length: 50 }).default("pending"),
 	userVoucherId: uuid("user_voucher_id"),
+	deletedAt: timestamp("deleted_at"),
 	createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
 	updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow().notNull(),
 });
@@ -291,7 +304,7 @@ export const voucherCheckoutSessions = pgTable("voucher_checkout_sessions", {
 export const nfse = pgTable("nfse", {
 	id: uuid("id").primaryKey().defaultRandom(),
 	organizationId: uuid("organization_id")
-		.references(() => organizations.id, { onDelete: 'cascade' })
+		.references(() => organizations.id)
 		.notNull(),
 	numero: varchar("numero", { length: 50 }).notNull(),
 	serie: varchar("serie", { length: 20 }).default("1"),
@@ -306,12 +319,13 @@ export const nfse = pgTable("nfse", {
 	chaveAcesso: varchar("chave_acesso", { length: 100 }),
 	protocolo: varchar("protocolo", { length: 100 }),
 	verificacao: varchar("verificacao", { length: 100 }),
+	deletedAt: timestamp("deleted_at"),
 	createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
 	updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow().notNull(),
 });
 export const nfseConfig = pgTable("nfse_config", {
 	organizationId: uuid("organization_id")
-		.references(() => organizations.id, { onDelete: 'cascade' })
+		.references(() => organizations.id)
 		.primaryKey()
 		.notNull(),
 	ambiente: varchar("ambiente", { length: 50 }).default("homologacao"),

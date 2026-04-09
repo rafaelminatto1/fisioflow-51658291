@@ -430,4 +430,122 @@ app.get('/weekly-activity', requireAuth, async (c) => {
   return c.json({ data: activity });
 });
 
+// ─── BI Management Dashboard ─────────────────────────────────────────────────
+// GET /api/analytics/bi?months=6
+app.get('/bi', requireAuth, async (c) => {
+  const user = c.get('user');
+  const pool = await createPool(c.env);
+  const months = Math.min(Math.max(Number(c.req.query('months') ?? 6) || 6, 1), 24);
+
+  const [revenueRes, occupancyRes, retentionRes, topTherapistsRes, statusBreakdownRes] = await Promise.all([
+    // Revenue trend — monthly
+    pool.query(
+      `SELECT
+         TO_CHAR(date_trunc('month', a.date), 'YYYY-MM') AS month,
+         COUNT(*) FILTER (WHERE a.status IN ('completed','realizado'))::int AS sessions,
+         COALESCE(SUM(a.price) FILTER (WHERE a.status IN ('completed','realizado')), 0)::numeric(12,2) AS revenue
+       FROM appointments a
+       WHERE a.organization_id = $1
+         AND a.date >= date_trunc('month', NOW()) - ($2 - 1) * INTERVAL '1 month'
+       GROUP BY 1 ORDER BY 1`,
+      [user.organizationId, months],
+    ),
+
+    // Occupancy rate — current month completed vs total slots
+    pool.query(
+      `SELECT
+         COUNT(*) FILTER (WHERE status IN ('completed','realizado','scheduled','confirmed'))::numeric AS booked,
+         COUNT(*)::numeric AS total
+       FROM appointments
+       WHERE organization_id = $1
+         AND date >= date_trunc('month', NOW())
+         AND date < date_trunc('month', NOW()) + INTERVAL '1 month'`,
+      [user.organizationId],
+    ),
+
+    // Patient retention — returned after first visit
+    pool.query(
+      `SELECT
+         COUNT(DISTINCT patient_id) FILTER (WHERE visit_count >= 2)::int AS retained,
+         COUNT(DISTINCT patient_id)::int AS total
+       FROM (
+         SELECT patient_id, COUNT(*) AS visit_count
+         FROM appointments
+         WHERE organization_id = $1
+           AND status IN ('completed','realizado')
+           AND date >= NOW() - INTERVAL '90 days'
+         GROUP BY patient_id
+       ) t`,
+      [user.organizationId],
+    ),
+
+    // Top therapists by sessions (last 30 days)
+    pool.query(
+      `SELECT
+         a.therapist_id,
+         COALESCE(p.full_name, a.therapist_id) AS name,
+         COUNT(*) FILTER (WHERE a.status IN ('completed','realizado'))::int AS sessions_completed,
+         COUNT(*) FILTER (WHERE a.status = 'no_show')::int AS no_shows,
+         COALESCE(SUM(a.price) FILTER (WHERE a.status IN ('completed','realizado')), 0)::numeric(12,2) AS revenue
+       FROM appointments a
+       LEFT JOIN patients p ON p.id = a.therapist_id::uuid AND p.organization_id = $1
+       WHERE a.organization_id = $1
+         AND a.date >= NOW() - INTERVAL '30 days'
+         AND a.therapist_id IS NOT NULL
+       GROUP BY a.therapist_id, p.full_name
+       ORDER BY sessions_completed DESC
+       LIMIT 10`,
+      [user.organizationId],
+    ),
+
+    // Status breakdown — last 30 days
+    pool.query(
+      `SELECT status, COUNT(*)::int AS count
+       FROM appointments
+       WHERE organization_id = $1
+         AND date >= NOW() - INTERVAL '30 days'
+       GROUP BY status`,
+      [user.organizationId],
+    ),
+  ]);
+
+  const booked = Number(occupancyRes.rows[0]?.booked ?? 0);
+  const total = Number(occupancyRes.rows[0]?.total ?? 1);
+  const occupancyRate = total > 0 ? Math.round((booked / total) * 100) : 0;
+
+  const retained = Number(retentionRes.rows[0]?.retained ?? 0);
+  const totalPatients = Number(retentionRes.rows[0]?.total ?? 1);
+  const retentionRate = totalPatients > 0 ? Math.round((retained / totalPatients) * 100) : 0;
+
+  const totalRevenue = revenueRes.rows.reduce((s, r) => s + Number(r.revenue), 0);
+  const currentMonth = revenueRes.rows.at(-1);
+  const prevMonth = revenueRes.rows.at(-2);
+  const revenueTrend = prevMonth && Number(prevMonth.revenue) > 0
+    ? Math.round(((Number(currentMonth?.revenue ?? 0) - Number(prevMonth.revenue)) / Number(prevMonth.revenue)) * 100)
+    : 0;
+
+  return c.json({
+    data: {
+      revenue: {
+        trend: revenueRes.rows,
+        total_period: Number(totalRevenue.toFixed(2)),
+        current_month: Number(Number(currentMonth?.revenue ?? 0).toFixed(2)),
+        trend_pct: revenueTrend,
+      },
+      occupancy: {
+        rate: occupancyRate,
+        booked,
+        total_slots: total,
+      },
+      retention: {
+        rate: retentionRate,
+        retained_patients: retained,
+        total_active_patients: totalPatients,
+      },
+      top_therapists: topTherapistsRes.rows,
+      status_breakdown: statusBreakdownRes.rows,
+    },
+  });
+});
+
 export { app as analyticsRoutes };

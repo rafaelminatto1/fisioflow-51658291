@@ -1,4 +1,9 @@
-import { type RouteConfig, index, layout, route } from "@react-router/dev/routes";
+import {
+	type RouteConfig,
+	index,
+	layout,
+	route,
+} from "@react-router/dev/routes";
 
 export default [
 	layout("components/layout/InfrastructureLayout.tsx", [
@@ -7,7 +12,9 @@ export default [
 		route("auth", "pages/Auth.tsx", { id: "auth-root" }),
 		route("auth/login", "pages/Auth.tsx", { id: "auth-login" }),
 		route("pre-cadastro", "pages/PreCadastro.tsx", { id: "pre-cadastro-root" }),
-		route("pre-cadastro/:token", "pages/PreCadastro.tsx", { id: "pre-cadastro-token" }),
+		route("pre-cadastro/:token", "pages/PreCadastro.tsx", {
+			id: "pre-cadastro-token",
+		}),
 		route("feedback-pre-cadastro", "pages/FeedbackPreCadastro.tsx"),
 		route("pending-approval", "pages/PendingApproval.tsx"),
 
@@ -29,10 +36,7 @@ export default [
 			),
 
 			// Evolução
-			route(
-				"patient-evolution/:appointmentId",
-				"pages/PatientEvolution.tsx",
-			),
+			route("patient-evolution/:appointmentId", "pages/PatientEvolution.tsx"),
 			route(
 				"patient-evolution-report/:patientId",
 				"pages/PatientEvolutionReport.tsx",
@@ -58,6 +62,19 @@ export default [
 			route("exercises", "pages/Exercises.tsx"),
 			route("protocols", "pages/Protocols.tsx"),
 
+			// WhatsApp Inbox
+			route("whatsapp/inbox", "pages/WhatsAppInbox.tsx"),
+			route("whatsapp/dashboard", "pages/WhatsAppDashboard.tsx"),
+			route("whatsapp/automations", "pages/WhatsAppAutomations.tsx"),
+			route("whatsapp/templates", "pages/WhatsAppTemplates.tsx"),
+
+			// Analytics & BI
+			route("analytics", "pages/AdvancedAnalytics.tsx"),
+			route("bi", "pages/BIDashboard.tsx"),
+
+			// Telemedicina
+			route("telemedicine", "pages/Telemedicine.tsx"),
+			route("telemedicine-room/:roomId", "pages/TelemedicineRoom.tsx"),
 
 			// Settings
 			route("settings", "pages/Settings.tsx"),

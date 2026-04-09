@@ -83,7 +83,7 @@ export const wikiPageVersions = pgTable("wiki_page_versions", {
 	id: uuid("id").primaryKey().defaultRandom(),
 	pageId: uuid("page_id")
 		.notNull()
-		.references(() => wikiPages.id, { onDelete: "cascade" }),
+		.references(() => wikiPages.id),
 
 	title: varchar("title", { length: 500 }).notNull(),
 	content: text("content").notNull(),

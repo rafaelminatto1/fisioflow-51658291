@@ -218,6 +218,26 @@ export const marketingApi = {
 		request<{ data: { totalLeads: number; convertedLeads: number } }>(
 			`/api/marketing/roi?startDate=${encodeURIComponent(data.startDate)}&endDate=${encodeURIComponent(data.endDate)}`,
 		),
+	sendWhatsAppTemplate: (data: {
+		patient_id: string;
+		template_key: string;
+		variables: Record<string, string>;
+	}) =>
+		request<{ data: { status: string; message_id?: string } }>(
+			"/api/whatsapp/send-template",
+			{ method: "POST", body: JSON.stringify(data) },
+		),
+	atRiskPatients: () =>
+		request<{
+			data: Array<{
+				id: string;
+				full_name: string;
+				phone: string;
+				last_appointment: string | null;
+				missed_count: number;
+				recent_exercises: number;
+			}>;
+		}>("/api/analytics/retention/risk"),
 };
 
 export const communicationsApi = {

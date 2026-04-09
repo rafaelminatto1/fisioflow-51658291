@@ -27,6 +27,7 @@ export const patientGoals = pgTable("patient_goals", {
 	),
 	achievedAt: timestamp("achieved_at"),
 	metadata: jsonb("metadata"),
+	deletedAt: timestamp("deleted_at"),
 	createdAt: timestamp("created_at").defaultNow().notNull(),
 	updatedAt: timestamp("updated_at").defaultNow().notNull(),
 });
@@ -45,6 +46,7 @@ export const patientPathologies = pgTable("patient_pathologies", {
 		.notNull(),
 	isPrimary: boolean("is_primary").default(false),
 	icdCode: text("icd_code"), // CID-10
+	deletedAt: timestamp("deleted_at"),
 	createdAt: timestamp("created_at").defaultNow().notNull(),
 	updatedAt: timestamp("updated_at").defaultNow().notNull(),
 });
@@ -52,7 +54,7 @@ export const patientPathologies = pgTable("patient_pathologies", {
 export const patientSessionMetrics = pgTable("patient_session_metrics", {
 	id: uuid("id").primaryKey().defaultRandom(),
 	patientId: uuid("patient_id")
-		.references(() => patients.id, { onDelete: "cascade" })
+		.references(() => patients.id)
 		.notNull(),
 	organizationId: uuid("organization_id").notNull(),
 	sessionId: uuid("session_id"),
@@ -85,6 +87,7 @@ export const patientSessionMetrics = pgTable("patient_session_metrics", {
 	}),
 	notes: text("notes"),
 	therapistId: text("therapist_id"),
+	deletedAt: timestamp("deleted_at"),
 	createdAt: timestamp("created_at").defaultNow().notNull(),
 	updatedAt: timestamp("updated_at").defaultNow().notNull(),
 });
@@ -93,7 +96,7 @@ export const prescribedExercises = pgTable("prescribed_exercises", {
 	id: uuid("id").primaryKey().defaultRandom(),
 	organizationId: uuid("organization_id").notNull(),
 	patientId: uuid("patient_id")
-		.references(() => patients.id, { onDelete: "cascade" })
+		.references(() => patients.id)
 		.notNull(),
 	exerciseId: uuid("exercise_id"), // Removed reference to exercises(id) to keep it simple if it's external
 	frequency: text("frequency"),
@@ -102,6 +105,7 @@ export const prescribedExercises = pgTable("prescribed_exercises", {
 	duration: integer("duration"),
 	notes: text("notes"),
 	isActive: boolean("is_active").default(true).notNull(),
+	deletedAt: timestamp("deleted_at"),
 	createdAt: timestamp("created_at").defaultNow().notNull(),
 	updatedAt: timestamp("updated_at").defaultNow().notNull(),
 });
@@ -110,13 +114,14 @@ export const generatedReports = pgTable("generated_reports", {
 	id: uuid("id").primaryKey().defaultRandom(),
 	organizationId: uuid("organization_id").notNull(),
 	patientId: uuid("patient_id")
-		.references(() => patients.id, { onDelete: "cascade" })
+		.references(() => patients.id)
 		.notNull(),
 	reportType: text("report_type").notNull(),
 	reportContent: text("report_content").notNull(),
 	dateRangeStart: date("date_range_start"),
 	dateRangeEnd: date("date_range_end"),
 	createdBy: text("created_by"),
+	deletedAt: timestamp("deleted_at"),
 	createdAt: timestamp("created_at").defaultNow().notNull(),
 });
 
@@ -128,6 +133,7 @@ export const conductLibrary = pgTable("conduct_library", {
 	description: text("description"),
 	conductText: text("conduct_text").notNull(),
 	category: text("category").notNull(),
+	deletedAt: timestamp("deleted_at"),
 	createdAt: timestamp("created_at").defaultNow().notNull(),
 	updatedAt: timestamp("updated_at").defaultNow().notNull(),
 });
@@ -155,6 +161,7 @@ export const clinicalTestTemplates = pgTable("clinical_test_templates", {
 	finalPositionImageUrl: text("final_position_image_url"),
 	mediaUrls: text("media_urls").array().default([]),
 	isCustom: boolean("is_custom").default(false),
+	deletedAt: timestamp("deleted_at"),
 	createdAt: timestamp("created_at").defaultNow().notNull(),
 	updatedAt: timestamp("updated_at").defaultNow().notNull(),
 });
@@ -163,7 +170,7 @@ export const standardizedTestResults = pgTable("standardized_test_results", {
 	id: uuid("id").primaryKey().defaultRandom(),
 	organizationId: uuid("organization_id").notNull(),
 	patientId: uuid("patient_id")
-		.references(() => patients.id, { onDelete: "cascade" })
+		.references(() => patients.id)
 		.notNull(),
 	testType: text("test_type").notNull(),
 	testName: text("test_name").notNull(),
@@ -178,6 +185,7 @@ export const standardizedTestResults = pgTable("standardized_test_results", {
 	sessionId: uuid("session_id"),
 	notes: text("notes"),
 	createdBy: text("created_by"),
+	deletedAt: timestamp("deleted_at"),
 	createdAt: timestamp("created_at").defaultNow().notNull(),
 	updatedAt: timestamp("updated_at").defaultNow().notNull(),
 });
@@ -186,13 +194,14 @@ export const painMaps = pgTable("pain_maps", {
 	id: uuid("id").primaryKey().defaultRandom(),
 	organizationId: uuid("organization_id").notNull(),
 	patientId: uuid("patient_id")
-		.references(() => patients.id, { onDelete: "cascade" })
+		.references(() => patients.id)
 		.notNull(),
 	evolutionId: uuid("evolution_id"),
 	bodyRegion: text("body_region"),
 	painLevel: integer("pain_level"),
 	colorCode: text("color_code"),
 	notes: text("notes"),
+	deletedAt: timestamp("deleted_at"),
 	createdAt: timestamp("created_at").defaultNow().notNull(),
 	updatedAt: timestamp("updated_at").defaultNow().notNull(),
 });
@@ -200,12 +209,13 @@ export const painMaps = pgTable("pain_maps", {
 export const painMapPoints = pgTable("pain_map_points", {
 	id: uuid("id").primaryKey().defaultRandom(),
 	painMapId: uuid("pain_map_id")
-		.references(() => painMaps.id, { onDelete: "cascade" })
+		.references(() => painMaps.id)
 		.notNull(),
 	xCoordinate: numeric("x_coordinate", { precision: 10, scale: 2 }),
 	yCoordinate: numeric("y_coordinate", { precision: 10, scale: 2 }),
 	intensity: numeric("intensity", { precision: 10, scale: 2 }),
 	region: text("region"),
+	deletedAt: timestamp("deleted_at"),
 	createdAt: timestamp("created_at").defaultNow().notNull(),
 });
 
@@ -224,6 +234,7 @@ export const evolutionTemplates = pgTable("evolution_templates", {
 	tags: text("tags").array().default([]),
 	ativo: boolean("ativo").default(true),
 	createdBy: text("created_by"),
+	deletedAt: timestamp("deleted_at"),
 	createdAt: timestamp("created_at").defaultNow().notNull(),
 	updatedAt: timestamp("updated_at").defaultNow().notNull(),
 });
@@ -232,7 +243,7 @@ export const exercisePrescriptions = pgTable("exercise_prescriptions", {
 	id: uuid("id").primaryKey().defaultRandom(),
 	organizationId: uuid("organization_id").notNull(),
 	patientId: uuid("patient_id")
-		.references(() => patients.id, { onDelete: "cascade" })
+		.references(() => patients.id)
 		.notNull(),
 	therapistId: text("therapist_id"),
 	qrCode: text("qr_code"),
@@ -245,6 +256,7 @@ export const exercisePrescriptions = pgTable("exercise_prescriptions", {
 	viewCount: integer("view_count").default(0),
 	lastViewedAt: timestamp("last_viewed_at"),
 	completedExercises: jsonb("completed_exercises").default([]),
+	deletedAt: timestamp("deleted_at"),
 	createdAt: timestamp("created_at").defaultNow().notNull(),
 	updatedAt: timestamp("updated_at").defaultNow().notNull(),
 });
@@ -257,6 +269,7 @@ export const patientObjectives = pgTable("patient_objectives", {
 	categoria: text("categoria"),
 	ativo: boolean("ativo").default(true),
 	createdBy: text("created_by"),
+	deletedAt: timestamp("deleted_at"),
 	createdAt: timestamp("created_at").defaultNow().notNull(),
 	updatedAt: timestamp("updated_at").defaultNow().notNull(),
 });
@@ -265,13 +278,14 @@ export const patientObjectiveAssignments = pgTable("patient_objective_assignment
 	id: uuid("id").primaryKey().defaultRandom(),
 	organizationId: uuid("organization_id").notNull(),
 	patientId: uuid("patient_id")
-		.references(() => patients.id, { onDelete: "cascade" })
+		.references(() => patients.id)
 		.notNull(),
 	objectiveId: uuid("objective_id")
-		.references(() => patientObjectives.id, { onDelete: "cascade" })
+		.references(() => patientObjectives.id)
 		.notNull(),
 	prioridade: integer("prioridade").default(2),
 	notas: text("notas"),
 	createdBy: text("created_by"),
+	deletedAt: timestamp("deleted_at"),
 	createdAt: timestamp("created_at").defaultNow().notNull(),
 });

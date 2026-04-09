@@ -124,6 +124,8 @@ const patientSchema = z.object({
 	education_level: z.string().optional(),
 	insurance_plan: z.string().max(200, "Plano muito longo").optional(),
 	insurance_number: z.string().max(100, "Número muito longo").optional(),
+	nickname: z.string().max(100, "Apelido muito longo").optional(),
+	social_name: z.string().max(200, "Nome social muito longo").optional(),
 });
 
 type PatientFormData = z.infer<typeof patientSchema>;
@@ -176,6 +178,8 @@ export const NewPatientModal: React.FC<NewPatientModalProps> = ({
 			education_level: "",
 			insurance_plan: "",
 			insurance_number: "",
+			nickname: "",
+			social_name: "",
 		},
 	});
 
@@ -307,6 +311,8 @@ export const NewPatientModal: React.FC<NewPatientModalProps> = ({
 				insurance_number: data.insurance_number
 					? sanitizeString(data.insurance_number, 100)
 					: null,
+				nickname: data.nickname ? sanitizeString(data.nickname, 100) : null,
+				social_name: data.social_name ? sanitizeString(data.social_name, 200) : null,
 				status: "Inicial",
 				progress: 0,
 				consent_data: true,
@@ -543,6 +549,25 @@ export const NewPatientModal: React.FC<NewPatientModalProps> = ({
 														{String(errors.name.message)}
 													</p>
 												)}
+											</div>
+
+											{/* Nome Social e Apelido */}
+											<div className="space-y-2">
+												<Label htmlFor="social_name">Nome Social</Label>
+												<Input
+													id="social_name"
+													{...register("social_name")}
+													placeholder="Como o paciente prefere ser chamado"
+												/>
+											</div>
+
+											<div className="space-y-2">
+												<Label htmlFor="nickname">Apelido / Nome Curto</Label>
+												<Input
+													id="nickname"
+													{...register("nickname")}
+													placeholder="Ex: Joãozinho, Maria do Carmo"
+												/>
 											</div>
 
 											{/* Email */}

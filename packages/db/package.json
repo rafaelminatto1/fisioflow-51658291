@@ -2,6 +2,10 @@
   "name": "@fisioflow/db",
   "version": "1.0.0",
   "private": true,
+  "engines": {
+    "node": ">=22.12.0",
+    "pnpm": ">=10.0.0"
+  },
   "description": "Shared Drizzle schema — single source of truth for frontend and workers",
   "main": "./src/index.ts",
   "types": "./src/index.ts",
@@ -21,10 +25,13 @@
     "build": "echo \"no build\"",
     "lint": "oxlint",
     "type-check": "tsc --noEmit",
-    "test:unit": "echo \"no unit tests\""
+    "test:unit": "vitest run"
   },
   "dependencies": {
     "drizzle-orm": "^0.45.1",
     "recharts": "^2.15.4"
+  },
+  "devDependencies": {
+    "vitest": "^4.0.18"
   }
 }

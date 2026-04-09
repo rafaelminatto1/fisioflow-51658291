@@ -44,7 +44,7 @@ export const sessions = pgTable(
 		// Patient & Links
 		patientId: uuid("patient_id")
 			.notNull()
-			.references(() => patients.id, { onDelete: "cascade" }),
+			.references(() => patients.id),
 		appointmentId: uuid("appointment_id").references(() => appointments.id, {
 			onDelete: "set null",
 		}),
@@ -182,6 +182,8 @@ export const sessions = pgTable(
 		activityLabDuration: doublePrecision("duration"),
 		activityLabNotes: text("notes"),
 
+		deletedAt: timestamp("deleted_at"),
+
 		createdAt: timestamp("created_at").defaultNow().notNull(),
 		updatedAt: timestamp("updated_at").defaultNow().notNull(),
 	},
@@ -232,12 +234,10 @@ export const sessionAttachments = pgTable(
 		id: uuid("id").primaryKey().defaultRandom(),
 
 		// Can be attached to session or just patient (for general docs)
-		sessionId: uuid("session_id").references(() => sessions.id, {
-			onDelete: "cascade",
-		}),
+		sessionId: uuid("session_id").references(() => sessions.id),
 		patientId: uuid("patient_id")
 			.notNull()
-			.references(() => patients.id, { onDelete: "cascade" }),
+			.references(() => patients.id),
 
 		// File Info
 		fileName: varchar("file_name", { length: 255 }).notNull(),
@@ -298,6 +298,8 @@ export const sessionTemplates = pgTable(
 		plan: jsonb("plan"),
 
 		isGlobal: boolean("is_global").default(false), // Available to all therapists
+
+		deletedAt: timestamp("deleted_at"),
 
 		createdAt: timestamp("created_at").defaultNow().notNull(),
 		updatedAt: timestamp("updated_at").defaultNow().notNull(),

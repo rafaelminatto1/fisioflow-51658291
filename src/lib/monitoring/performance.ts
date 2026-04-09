@@ -327,3 +327,10 @@ interface MemoryInfo {
 
 // Export singleton instance
 export const performanceMonitor = PerformanceMonitor;
+
+/**
+ * Initialize performance monitoring for the application
+ */
+export function initPerformanceMonitoring() {
+	PerformanceMonitor.trackPageLoad("initial_load");
+}

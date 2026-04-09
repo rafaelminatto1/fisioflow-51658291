@@ -53,6 +53,8 @@ export const patients = pgTable(
 
 		// Basic Info
 		fullName: varchar("full_name", { length: 150 }).notNull(),
+		socialName: varchar("social_name", { length: 150 }), // Nome social
+		nickname: varchar("nickname", { length: 100 }), // Apelido / Alias clínico
 		cpf: varchar("cpf", { length: 14 }).unique(), // With mask: 000.000.000-00
 		rg: varchar("rg", { length: 20 }),
 		gender: genderEnum("gender"),
@@ -128,6 +130,8 @@ export const patients = pgTable(
 		status: varchar("status", { length: 100 }),
 		sessionValue: numeric("session_value", { precision: 10, scale: 2 }),
 
+		deletedAt: timestamp("deleted_at"),
+
 		createdAt: timestamp("created_at").defaultNow().notNull(),
 		updatedAt: timestamp("updated_at").defaultNow().notNull(),
 	},
@@ -157,7 +161,7 @@ export const medicalRecords = pgTable(
 		id: uuid("id").primaryKey().defaultRandom(),
 		patientId: uuid("patient_id")
 			.notNull()
-			.references(() => patients.id, { onDelete: "cascade" }),
+			.references(() => patients.id),
 
 		organizationId: uuid("organization_id"),
 
@@ -233,6 +237,8 @@ export const medicalRecords = pgTable(
 		diagnosis: text("diagnosis"),
 		icd10Codes: jsonb("icd10_codes").$type<string[]>().default([]),
 
+		deletedAt: timestamp("deleted_at"),
+
 		createdAt: timestamp("created_at").defaultNow().notNull(),
 		updatedAt: timestamp("updated_at").defaultNow().notNull(),
 	},
@@ -261,7 +267,7 @@ export const pathologies = pgTable(
 		id: uuid("id").primaryKey().defaultRandom(),
 		medicalRecordId: uuid("medical_record_id")
 			.notNull()
-			.references(() => medicalRecords.id, { onDelete: "cascade" }),
+			.references(() => medicalRecords.id),
 
 		name: varchar("name", { length: 200 }).notNull(),
 		icdCode: varchar("icd_code", { length: 20 }),
@@ -269,6 +275,8 @@ export const pathologies = pgTable(
 		diagnosedAt: date("diagnosed_at"),
 		treatedAt: date("treated_at"),
 		notes: text("notes"),
+
+		deletedAt: timestamp("deleted_at"),
 
 		createdAt: timestamp("created_at").defaultNow().notNull(),
 	},
@@ -294,7 +302,7 @@ export const surgeries = pgTable(
 		id: uuid("id").primaryKey().defaultRandom(),
 		medicalRecordId: uuid("medical_record_id")
 			.notNull()
-			.references(() => medicalRecords.id, { onDelete: "cascade" }),
+			.references(() => medicalRecords.id),
 
 		name: varchar("name", { length: 200 }).notNull(),
 		surgeryDate: date("surgery_date"),
@@ -302,6 +310,8 @@ export const surgeries = pgTable(
 		hospital: varchar("hospital", { length: 150 }),
 		postOpProtocol: text("post_op_protocol"),
 		notes: text("notes"),
+
+		deletedAt: timestamp("deleted_at"),
 
 		createdAt: timestamp("created_at").defaultNow().notNull(),
 	},
@@ -326,7 +336,7 @@ export const goals = pgTable(
 		id: uuid("id").primaryKey().defaultRandom(),
 		medicalRecordId: uuid("medical_record_id")
 			.notNull()
-			.references(() => medicalRecords.id, { onDelete: "cascade" }),
+			.references(() => medicalRecords.id),
 
 		description: text("description").notNull(),
 		targetDate: date("target_date"), // For countdown feature
@@ -334,6 +344,8 @@ export const goals = pgTable(
 		status: goalStatusEnum("status").default("pending"),
 		achievedAt: timestamp("achieved_at"),
 		notes: text("notes"),
+
+		deletedAt: timestamp("deleted_at"),
 
 		createdAt: timestamp("created_at").defaultNow().notNull(),
 	},

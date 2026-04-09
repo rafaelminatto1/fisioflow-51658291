@@ -167,6 +167,19 @@ const CalendarSettings = lazy(
 			/* webpackChunkName: "settings-calendar" */ "@/pages/configuracoes/CalendarSettings"
 		),
 );
+const AdvancedAnalytics = lazy(
+	() =>
+		import(
+			/* webpackChunkName: "advanced-analytics" */ "@/pages/AdvancedAnalytics"
+		),
+);
+const BIDashboard = lazy(
+	() => import(/* webpackChunkName: "bi-dashboard" */ "@/pages/BIDashboard"),
+);
+const SmartDashboard = lazy(
+	() =>
+		import(/* webpackChunkName: "smart-dashboard" */ "@/pages/SmartDashboard"),
+);
 
 export const enterpriseRoutes = (
 	<>
@@ -463,6 +476,32 @@ export const enterpriseRoutes = (
 			element={
 				<ProtectedRoute>
 					<EmailTest />
+				</ProtectedRoute>
+			}
+		/>
+
+		{/* Analytics & BI */}
+		<Route
+			path="/analytics"
+			element={
+				<ProtectedRoute>
+					<AdvancedAnalytics />
+				</ProtectedRoute>
+			}
+		/>
+		<Route
+			path="/bi"
+			element={
+				<ProtectedRoute>
+					<BIDashboard />
+				</ProtectedRoute>
+			}
+		/>
+		<Route
+			path="/smart-dashboard"
+			element={
+				<ProtectedRoute>
+					<SmartDashboard />
 				</ProtectedRoute>
 			}
 		/>

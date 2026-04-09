@@ -164,6 +164,7 @@ const inteligenciaMenuItems = [
 	},
 	{ icon: Brain, label: "Assistente IA", href: "/smart-ai" },
 	{ icon: BarChart3, label: "Analytics Avançado", href: "/analytics" },
+	{ icon: BarChart3, label: "Dashboard BI", href: "/bi" },
 ];
 
 const operacionalMenuItems = [

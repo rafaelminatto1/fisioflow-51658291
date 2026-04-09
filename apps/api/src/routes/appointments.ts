@@ -3,7 +3,7 @@ import type { MiddlewareHandler } from 'hono';
 import type { Env } from '../types/env';
 import { requireAuth, type AuthVariables } from '../lib/auth';
 import { rateLimit } from '../middleware/rateLimit';
-import { eq, and, sql, desc, lte, gte } from 'drizzle-orm';
+import { eq, and, sql, desc, lte, gte, isNull } from 'drizzle-orm';
 import { appointments, patients } from '@fisioflow/db';
 import {
   normalizeStatus,
@@ -14,6 +14,7 @@ import {
   countsTowardCapacity,
 } from './appointmentHelpers';
 import { createDb } from '../lib/db';
+import { withTenant } from '../lib/db-utils';
 import { isUuid } from '../lib/validators';
 import { triggerInngestEvent } from '../lib/inngest-client';
 import { broadcastToOrg } from '../lib/realtime';
@@ -58,7 +59,7 @@ app.get('/', requireAuth, async (c) => {
       status 
     });
 
-    let conditions = eq(appointments.organizationId, user.organizationId);
+    let conditions: any = withTenant(appointments, user.organizationId);
 
     if (dateFrom) conditions = and(conditions, gte(appointments.date, dateFrom))!;
     if (dateTo)   conditions = and(conditions, lte(appointments.date, dateTo))!;
@@ -152,6 +153,7 @@ async function getOverlappingAppointments(
       WHERE organization_id = ${safeOrgId}::uuid
         AND date = ${date}::date
         AND status NOT IN ('cancelled', 'no_show', 'rescheduled')
+        AND deleted_at IS NULL
         AND start_time < ${endTime}::time
         AND end_time > ${startTime}::time
         ${excludeAppointmentId && isUuid(excludeAppointmentId) ? sql`AND id != ${excludeAppointmentId}::uuid` : sql``}
@@ -370,7 +372,7 @@ app.get('/:id', requireAuth, async (c) => {
       .from(appointments)
       .leftJoin(patients, eq(patients.id, appointments.patientId))
       .where(
-        and(eq(appointments.id, id as string), eq(appointments.organizationId, user.organizationId))
+        withTenant(appointments, user.organizationId, eq(appointments.id, id as string))
       )
       .limit(1);
 
@@ -404,7 +406,7 @@ const updateAppointmentHandler: MiddlewareHandler<{ Bindings: Env; Variables: Au
       })
       .from(appointments)
       .where(
-        and(eq(appointments.id, id as string), eq(appointments.organizationId, user.organizationId))
+        withTenant(appointments, user.organizationId, eq(appointments.id, id as string))
       )
       .limit(1);
 
@@ -488,7 +490,7 @@ const updateAppointmentHandler: MiddlewareHandler<{ Bindings: Env; Variables: Au
       .update(appointments)
       .set(updatePayload)
       .where(
-        and(eq(appointments.id, id as string), eq(appointments.organizationId, user.organizationId))
+        withTenant(appointments, user.organizationId, eq(appointments.id, id as string))
       )
       .returning();
 
@@ -560,7 +562,7 @@ app.post('/:id/cancel', requireAuth, async (c) => {
         updatedAt: new Date(),
       })
       .where(
-        and(eq(appointments.id, id), eq(appointments.organizationId, user.organizationId))
+        withTenant(appointments, user.organizationId, eq(appointments.id, id))
       )
       .returning({ id: appointments.id });
 
@@ -589,9 +591,10 @@ app.delete('/:id', requireAuth, async (c) => {
 
   try {
     const result = await db
-      .delete(appointments)
+      .update(appointments)
+      .set({ deletedAt: new Date(), updatedAt: new Date() })
       .where(
-        and(eq(appointments.id, id), eq(appointments.organizationId, user.organizationId))
+        withTenant(appointments, user.organizationId, eq(appointments.id, id))
       )
       .returning({ id: appointments.id });
 

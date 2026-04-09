@@ -39,7 +39,7 @@ const STATUS_COLORS: Record<ApiLead["estagio"], string> = {
 	perdido: "#ef4444",
 };
 
-const LeadCard = memo(({ lead, colors, light, onUpdateStatus }: any) => {
+const LeadCard = memo(({ lead, colors, light, onUpdateStatus }: { lead: ApiLead; colors: ReturnType<typeof import('@/hooks/useColorScheme').useColors>; light: () => void; onUpdateStatus: (id: string, estagio: ApiLead['estagio']) => void }) => {
 	const handleLongPress = () => {
 		light();
 		const stages = Object.keys(STATUS_LABELS) as ApiLead["estagio"][];

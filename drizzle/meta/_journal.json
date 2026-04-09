@@ -8,6 +8,13 @@
       "when": 1774462264737,
       "tag": "0000_overjoyed_gorgon",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1775743623096,
+      "tag": "0001_add_soft_deletes_remove_cascades",
+      "breakpoints": true
     }
   ]
 }
