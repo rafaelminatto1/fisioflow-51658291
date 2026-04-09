@@ -10,6 +10,7 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { useAuthStore } from '@/store/auth';
 import { useColors, useColorScheme } from '@/hooks/useColorScheme';
 import * as SplashScreen from 'expo-splash-screen';
+import * as Haptics from 'expo-haptics';
 import { registerForPushNotificationsAsync } from '@/lib/notifications';
 import * as Sentry from '@sentry/react-native';
 import { ErrorBoundary } from '@/components/ErrorBoundary';
@@ -21,7 +22,10 @@ if (sentryDsn && sentryDsn.startsWith('https://')) {
     dsn: sentryDsn,
     debug: __DEV__,
     enableNative: !__DEV__,
-    tracesSampleRate: 1.0,
+    // 1.0 envia TODAS as transações — caro em produção. 0.1 = 10% sample.
+    tracesSampleRate: __DEV__ ? 1.0 : 0.1,
+    // Captura erros no boot nativo (feature do Sentry v8)
+    enableNativeCrashHandling: true,
   });
 } else if (__DEV__) {
   console.log('Sentry disabled: valid DSN not found in environment');
@@ -80,9 +84,11 @@ function RootLayoutContent() {
       if (!isLoading) {
         try {
           await SplashScreen.hideAsync();
-          
+          // Haptic suave ao app ficar pronto — sensação nativa iOS
+          await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+
           // Iniciar notificações apenas se houver um projeto configurado
-          if (process.env.EXPO_PUBLIC_PROJECT_ID) {
+          if (process.env.EXPO_PUBLIC_EXPO_PROJECT_ID) {
             await registerForPushNotificationsAsync();
           }
         } catch (error) {
@@ -123,9 +129,108 @@ function RootLayoutContent() {
         <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
         <Stack.Screen
           name="patient/[id]"
+          options={{ title: 'Paciente', headerBackTitle: 'Voltar' }}
+        />
+
+        {/* ── Form sheets iOS nativos (bottom sheet arrastável) ─────────────── */}
+        {/* Sensação nativa de formulário: sobe do baixo, pode fechar arrastando */}
+        <Stack.Screen
+          name="patient-form"
           options={{
             title: 'Paciente',
-            headerBackTitle: 'Voltar',
+            presentation: 'formSheet',
+            sheetAllowedDetents: [0.6, 1],
+            sheetInitialDetentIndex: 0,
+            sheetGrabberVisible: true,
+            sheetCornerRadius: 20,
+          }}
+        />
+        <Stack.Screen
+          name="appointment-form"
+          options={{
+            title: 'Agendamento',
+            presentation: 'formSheet',
+            sheetAllowedDetents: [0.7, 1],
+            sheetInitialDetentIndex: 0,
+            sheetGrabberVisible: true,
+            sheetCornerRadius: 20,
+          }}
+        />
+        <Stack.Screen
+          name="evolution-form"
+          options={{
+            title: 'Evolução',
+            presentation: 'formSheet',
+            sheetAllowedDetents: [0.85, 1],
+            sheetInitialDetentIndex: 0,
+            sheetGrabberVisible: true,
+            sheetCornerRadius: 20,
+          }}
+        />
+        <Stack.Screen
+          name="tarefa-form"
+          options={{
+            title: 'Tarefa',
+            presentation: 'formSheet',
+            sheetAllowedDetents: [0.5, 1],
+            sheetInitialDetentIndex: 0,
+            sheetGrabberVisible: true,
+            sheetCornerRadius: 20,
+          }}
+        />
+        <Stack.Screen
+          name="financial-form"
+          options={{
+            title: 'Financeiro',
+            presentation: 'formSheet',
+            sheetAllowedDetents: [0.6, 1],
+            sheetInitialDetentIndex: 0,
+            sheetGrabberVisible: true,
+            sheetCornerRadius: 20,
+          }}
+        />
+        <Stack.Screen
+          name="nfse-form"
+          options={{
+            title: 'NFS-e',
+            presentation: 'formSheet',
+            sheetAllowedDetents: [0.7, 1],
+            sheetInitialDetentIndex: 0,
+            sheetGrabberVisible: true,
+            sheetCornerRadius: 20,
+          }}
+        />
+        <Stack.Screen
+          name="protocol-form"
+          options={{
+            title: 'Protocolo',
+            presentation: 'formSheet',
+            sheetAllowedDetents: [0.6, 1],
+            sheetInitialDetentIndex: 0,
+            sheetGrabberVisible: true,
+            sheetCornerRadius: 20,
+          }}
+        />
+        <Stack.Screen
+          name="prom-form"
+          options={{
+            title: 'Escala Clínica',
+            presentation: 'formSheet',
+            sheetAllowedDetents: [0.75, 1],
+            sheetInitialDetentIndex: 0,
+            sheetGrabberVisible: true,
+            sheetCornerRadius: 20,
+          }}
+        />
+        <Stack.Screen
+          name="exercise-form"
+          options={{
+            title: 'Exercício',
+            presentation: 'formSheet',
+            sheetAllowedDetents: [0.65, 1],
+            sheetInitialDetentIndex: 0,
+            sheetGrabberVisible: true,
+            sheetCornerRadius: 20,
           }}
         />
       </Stack>
