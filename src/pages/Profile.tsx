@@ -70,7 +70,7 @@ const ADMIN_TAB = {
 
 function ProfileContent() {
 	const queryClient = useQueryClient();
-	const { user } = useAuth();
+	const { user, updateProfile: updateAuthProfile } = useAuth();
 	const { isAdmin } = usePermissions();
 
 	const { data: profileRes, isLoading } = useQuery({
@@ -129,6 +129,7 @@ function ProfileContent() {
 		onSuccess: () => {
 			toast.success("Perfil atualizado com sucesso!");
 			setIsEditing(false);
+			updateAuthProfile({ full_name: form.full_name });
 			queryClient.invalidateQueries({ queryKey: ["profile-me"] });
 			queryClient.invalidateQueries({ queryKey: ["user-profile"] });
 		},

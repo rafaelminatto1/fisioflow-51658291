@@ -112,7 +112,7 @@ export function useSettingsState() {
 		(value: string) => {
 			const tabValue = value as TabValue;
 			setActiveTab(tabValue);
-			navigate(`/settings?tab=${tabValue}`, { replace: true });
+			navigate(`/profile?tab=${tabValue}`, { replace: true });
 		},
 		[navigate],
 	);

@@ -268,7 +268,7 @@ export function ScheduleVisualTab() {
 		<div className="space-y-4">
 			<Accordion
 				type="multiple"
-				defaultValue={["presets", "appearance", "colors", "accessibility"]}
+				defaultValue={[]}
 				className="space-y-2"
 			>
 				<AccordionItem value="presets" className="border rounded-lg px-4">
