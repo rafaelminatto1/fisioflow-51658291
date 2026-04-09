@@ -311,6 +311,9 @@ export interface Exercise {
 	indicated_pathologies?: string[];
 	contraindicated_pathologies?: string[];
 	body_parts?: string[];
+	aliases_pt?: string[];
+	aliases_en?: string[];
+	dictionary_id?: string;
 	created_at?: string;
 	updated_at?: string;
 }
