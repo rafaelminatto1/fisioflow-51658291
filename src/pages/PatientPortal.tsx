@@ -25,10 +25,22 @@ import {
 	Bell,
 	Plus,
 	Sparkles,
+	CheckCircle2,
+	XCircle,
+	BarChart3,
+	Target,
+	Flame,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { fisioLogger as logger } from "@/lib/errors/logger";
 import { useAuth } from "@/contexts/AuthContext";
+import {
+	usePortalStats,
+	usePortalProgress,
+	usePortalNotifications,
+	usePortalAppointmentActions,
+	usePortalExercises,
+} from "@/hooks/usePatientPortal";
 
 // Lazy load PatientGamification (594KB) - só carrega quando a tab é acessada
 const PatientGamification = lazy(() =>
@@ -89,6 +101,13 @@ const PatientPortal = () => {
 	const [showPainReg, setShowPainReg] = useState(false);
 	const [selectedPrescription, setSelectedPrescription] =
 		useState<PrescriptionExercise | null>(null);
+
+	// Portal-specific hooks (dedicated /api/patient-portal/* endpoints)
+	const { data: portalStats } = usePortalStats();
+	const { data: portalProgress } = usePortalProgress();
+	const { data: portalNotifications, markRead, markAllRead, unreadCount } = usePortalNotifications();
+	const { confirm: confirmApt, cancel: cancelApt } = usePortalAppointmentActions();
+	const { data: portalExercises, complete: completeExercise } = usePortalExercises();
 
 	// Fetch patient data linked to the profile
 	const { data: patient, isLoading: isLoadingPatient } = useQuery({
@@ -276,11 +295,18 @@ const PatientPortal = () => {
 						</div>
 					</div>
 					<div className="flex items-center gap-2">
-						<Button variant="outline" size="sm" className="relative">
+						<Button
+							variant="outline"
+							size="sm"
+							className="relative"
+							onClick={() => setActiveTab("notifications")}
+						>
 							<Bell className="h-4 w-4" />
-							<span className="absolute -top-1 -right-1 h-4 w-4 bg-red-500 rounded-full text-xs text-white flex items-center justify-center">
-								0
-							</span>
+							{unreadCount > 0 && (
+								<span className="absolute -top-1 -right-1 h-4 w-4 bg-red-500 rounded-full text-xs text-white flex items-center justify-center">
+									{unreadCount > 9 ? "9+" : unreadCount}
+								</span>
+							)}
 						</Button>
 						<Button variant="outline" size="sm" className="hidden sm:flex">
 							<MessageCircle className="h-4 w-4 mr-2" />
@@ -288,6 +314,87 @@ const PatientPortal = () => {
 						</Button>
 					</div>
 				</div>
+
+				{/* Stats Cards do Portal (dados reais via /api/patient-portal/stats) */}
+				{portalStats && (
+					<div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+						<Card className="border-l-4 border-l-emerald-500 bg-gradient-to-br from-white to-emerald-50/30">
+							<CardContent className="p-4">
+								<div className="flex items-center gap-2 mb-1">
+									<CheckCircle2 className="h-4 w-4 text-emerald-500" />
+									<p className="text-xs text-muted-foreground">Consultas realizadas</p>
+								</div>
+								<p className="text-2xl font-bold text-emerald-700">{portalStats.completed_appointments}</p>
+								<p className="text-xs text-muted-foreground">de {portalStats.total_appointments} total</p>
+							</CardContent>
+						</Card>
+						<Card className="border-l-4 border-l-blue-500 bg-gradient-to-br from-white to-blue-50/30">
+							<CardContent className="p-4">
+								<div className="flex items-center gap-2 mb-1">
+									<Calendar className="h-4 w-4 text-blue-500" />
+									<p className="text-xs text-muted-foreground">Próximas consultas</p>
+								</div>
+								<p className="text-2xl font-bold text-blue-700">{portalStats.upcoming_appointments}</p>
+								<p className="text-xs text-muted-foreground">agendadas</p>
+							</CardContent>
+						</Card>
+						<Card className="border-l-4 border-l-violet-500 bg-gradient-to-br from-white to-violet-50/30">
+							<CardContent className="p-4">
+								<div className="flex items-center gap-2 mb-1">
+									<Dumbbell className="h-4 w-4 text-violet-500" />
+									<p className="text-xs text-muted-foreground">Exercícios esta semana</p>
+								</div>
+								<p className="text-2xl font-bold text-violet-700">{portalStats.exercises_completed_week}</p>
+								<p className="text-xs text-muted-foreground">de {portalStats.exercises_assigned} prescritos</p>
+							</CardContent>
+						</Card>
+						<Card className="border-l-4 border-l-amber-500 bg-gradient-to-br from-white to-amber-50/30">
+							<CardContent className="p-4">
+								<div className="flex items-center gap-2 mb-1">
+									<Flame className="h-4 w-4 text-amber-500" />
+									<p className="text-xs text-muted-foreground">Dias em tratamento</p>
+								</div>
+								<p className="text-2xl font-bold text-amber-700">{portalStats.days_in_treatment}</p>
+								<p className="text-xs text-muted-foreground">dias</p>
+							</CardContent>
+						</Card>
+					</div>
+				)}
+
+				{/* Progress Bar (dados reais via /api/patient-portal/progress) */}
+				{portalProgress && (
+					<Card className="border-none bg-gradient-to-r from-primary/5 to-blue-50/30">
+						<CardContent className="p-4">
+							<div className="flex items-center justify-between mb-2">
+								<div className="flex items-center gap-2">
+									<Target className="h-4 w-4 text-primary" />
+									<span className="text-sm font-semibold">Progresso do Tratamento</span>
+								</div>
+								<div className="flex items-center gap-3 text-xs text-muted-foreground">
+									{portalProgress.streak_days > 0 && (
+										<span className="flex items-center gap-1 font-medium text-amber-600">
+											<Flame className="h-3.5 w-3.5" /> {portalProgress.streak_days} dias seguidos
+										</span>
+									)}
+									{portalProgress.pain_trend && (
+										<Badge variant="outline" className={cn("text-xs",
+											portalProgress.pain_trend === "improving" && "border-emerald-300 text-emerald-700",
+											portalProgress.pain_trend === "worsening" && "border-red-300 text-red-700",
+										)}>
+											{portalProgress.pain_trend === "improving" ? "Melhorando" :
+											 portalProgress.pain_trend === "stable" ? "Estável" : "Atenção"}
+										</Badge>
+									)}
+									<span>{portalProgress.progress_percentage}%</span>
+								</div>
+							</div>
+							<Progress value={portalProgress.progress_percentage} className="h-2" />
+							{portalProgress.next_goal && (
+								<p className="text-xs text-muted-foreground mt-1">Meta: {portalProgress.next_goal}</p>
+							)}
+						</CardContent>
+					</Card>
+				)}
 
 				{/* Cards de Resumo */}
 				<div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
@@ -375,11 +482,19 @@ const PatientPortal = () => {
 					onValueChange={setActiveTab}
 					className="space-y-4"
 				>
-					<TabsList className="grid grid-cols-4 w-full">
+					<TabsList className="grid grid-cols-5 w-full">
 						<TabsTrigger value="overview">Visão Geral</TabsTrigger>
 						<TabsTrigger value="exercises">Exercícios</TabsTrigger>
 						<TabsTrigger value="history">Histórico</TabsTrigger>
 						<TabsTrigger value="gamification">Conquistas</TabsTrigger>
+						<TabsTrigger value="notifications" className="relative">
+							Notificações
+							{unreadCount > 0 && (
+								<span className="ml-1 h-4 w-4 bg-red-500 rounded-full text-[10px] text-white inline-flex items-center justify-center">
+									{unreadCount > 9 ? "9+" : unreadCount}
+								</span>
+							)}
+						</TabsTrigger>
 					</TabsList>
 
 					{/* Tab Visão Geral */}
@@ -653,6 +768,54 @@ const PatientPortal = () => {
 						>
 							<PatientGamification patientId={patient.id} />
 						</Suspense>
+					</TabsContent>
+
+					{/* Tab Notificações */}
+					<TabsContent value="notifications" className="space-y-3">
+						<div className="flex items-center justify-between">
+							<h3 className="text-sm font-semibold">
+								{unreadCount > 0 ? `${unreadCount} não lidas` : "Todas lidas"}
+							</h3>
+							{unreadCount > 0 && (
+								<Button variant="ghost" size="sm" onClick={() => markAllRead.mutate()}>
+									Marcar todas como lidas
+								</Button>
+							)}
+						</div>
+						{!portalNotifications || portalNotifications.length === 0 ? (
+							<div className="text-center py-12 text-muted-foreground">
+								<Bell className="h-10 w-10 mx-auto mb-3 opacity-30" />
+								<p className="text-sm">Nenhuma notificação</p>
+							</div>
+						) : (
+							<div className="space-y-2">
+								{portalNotifications.map((n) => (
+									<div
+										key={n.id}
+										onClick={() => !n.read && markRead.mutate(n.id)}
+										className={cn(
+											"p-4 rounded-xl border cursor-pointer transition-colors",
+											n.read
+												? "bg-muted/30 text-muted-foreground"
+												: "bg-primary/5 border-primary/20 hover:bg-primary/10",
+										)}
+									>
+										<div className="flex items-start justify-between gap-3">
+											<div className="flex-1">
+												<p className={cn("text-sm font-medium", !n.read && "text-foreground")}>{n.title}</p>
+												<p className="text-xs text-muted-foreground mt-0.5">{n.body}</p>
+												<p className="text-xs text-muted-foreground mt-1">
+													{format(new Date(n.created_at), "dd/MM 'às' HH:mm", { locale: ptBR })}
+												</p>
+											</div>
+											{!n.read && (
+												<div className="h-2 w-2 rounded-full bg-primary shrink-0 mt-1.5" />
+											)}
+										</div>
+									</div>
+								))}
+							</div>
+						)}
 					</TabsContent>
 				</Tabs>
 			</div>
