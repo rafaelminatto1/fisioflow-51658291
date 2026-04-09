@@ -468,7 +468,7 @@ app.post('/send/:id', requireAuth, async (c) => {
            WHERE id = $5`,
           [result.numero_nfse, result.codigo_verificacao, result.link_nfse, result.ref, id],
         );
-        return c.json({ data: { id, status: 'autorizado', ...result } });
+        return c.json({ data: { id, ...result, status: 'autorizado' } });
       }
 
       if (result.status === 'erro') {

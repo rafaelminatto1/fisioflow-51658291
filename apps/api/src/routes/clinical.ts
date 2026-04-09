@@ -11,6 +11,7 @@
 import { Hono } from 'hono';
 import { createDb } from '../lib/db';
 import { requireAuth, type AuthVariables } from '../lib/auth';
+import { withTenant } from '../lib/db-utils';
 import type { Env } from '../types/env';
 import { registerClinicalResourceRoutes } from './clinical/resources';
 import { 
@@ -53,7 +54,7 @@ app.get('/insights', requireAuth, async (c) => {
       )`,
     })
     .from(patientGoals)
-    .where(eq(patientGoals.organizationId, user.organizationId))
+    .where(withTenant(patientGoals, user.organizationId))
     .groupBy(sql`1`)
     .orderBy(desc(sql`COUNT(*)`));
 
@@ -64,7 +65,7 @@ app.get('/insights', requireAuth, async (c) => {
       patient_count: sql<string>`COUNT(*)::text`,
     })
     .from(patientPathologies)
-    .where(eq(patientPathologies.organizationId, user.organizationId))
+    .where(withTenant(patientPathologies, user.organizationId))
     .groupBy(patientPathologies.name)
     .orderBy(desc(sql`COUNT(*)`), patientPathologies.name)
     .limit(10);

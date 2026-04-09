@@ -21,6 +21,7 @@ interface PatientProfileHeaderProps {
 	initials: string;
 	onBack: () => void;
 	onOpenReport: () => void;
+	onOpenProntuario?: () => void;
 	onEdit: () => void;
 	onEvaluate: () => void;
 	onSchedule: () => void;
@@ -39,6 +40,7 @@ export function PatientProfileHeader({
 	initials,
 	onBack,
 	onOpenReport,
+	onOpenProntuario,
 	onEdit,
 	onEvaluate,
 	onSchedule,
@@ -125,6 +127,17 @@ export function PatientProfileHeader({
 							<FileText className="h-4 w-4" />
 							Relatório
 						</Button>
+						{onOpenProntuario && (
+							<Button
+								onClick={onOpenProntuario}
+								variant="outline"
+								size="sm"
+								className="flex-1 md:flex-none gap-2 border-violet-100 text-violet-700 hover:bg-violet-50 hover:text-violet-800 transition-colors shadow-sm font-medium"
+							>
+								<ClipboardList className="h-4 w-4" />
+								Prontuário
+							</Button>
+						)}
 						<Button
 							onClick={onEdit}
 							variant="outline"

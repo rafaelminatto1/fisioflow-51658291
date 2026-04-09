@@ -2,6 +2,10 @@
 	"name": "@fisioflow/professional-app",
 	"version": "0.0.1",
 	"main": "index.ts",
+	"engines": {
+		"node": ">=22.12.0",
+		"pnpm": ">=10.0.0"
+	},
 	"scripts": {
 		"start": "expo start",
 		"android": "expo run:android",

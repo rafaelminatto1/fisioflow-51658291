@@ -19,18 +19,24 @@ import { useTelemedicine } from "@/hooks/useTelemedicine";
 import { usePatients } from "@/hooks/usePatients";
 import { ApiTelemedicineRoom } from "@/lib/api";
 
+const STATUS_LABELS: Record<ApiTelemedicineRoom['status'], string> = {
+	waiting: 'Aguardando',
+	active: 'Em andamento',
+	ended: 'Encerrado',
+};
+
 const RoomCard = ({ room, colors, light, onStart }: { room: ApiTelemedicineRoom, colors: any, light: () => void, onStart: (id: string) => void }) => {
-	const statusColors = {
-		aguardando: colors.warning,
-		ativo: colors.success,
-		encerrado: colors.textMuted,
+	const statusColors: Record<ApiTelemedicineRoom['status'], string> = {
+		waiting: colors.warning,
+		active: colors.success,
+		ended: colors.textMuted,
 	};
 
 	const handleEnter = () => {
 		light();
-		if (room.status === 'aguardando') {
+		if (room.status === 'waiting') {
 			onStart(room.id);
-		} else if (room.meeting_url) {
+		} else if (typeof room.meeting_url === 'string') {
 			Linking.openURL(room.meeting_url);
 		}
 	};
@@ -43,22 +49,22 @@ const RoomCard = ({ room, colors, light, onStart }: { room: ApiTelemedicineRoom,
 				</View>
 				<View style={styles.roomInfo}>
 					<Text style={[styles.patientName, { color: colors.text }]} numberOfLines={1}>
-						{room.patients?.name || "Paciente"}
+						{room.patient_name || "Paciente"}
 					</Text>
 					<View style={styles.statusRow}>
 						<View style={[styles.statusDot, { backgroundColor: statusColors[room.status] }]} />
 						<Text style={[styles.statusText, { color: colors.textSecondary }]}>
-							{room.status.charAt(0).toUpperCase() + room.status.slice(1)}
+							{STATUS_LABELS[room.status]}
 						</Text>
 					</View>
 				</View>
-				{room.status !== 'encerrado' && (
-					<TouchableOpacity 
-						style={[styles.enterButton, { backgroundColor: colors.primary }]} 
+				{room.status !== 'ended' && (
+					<TouchableOpacity
+						style={[styles.enterButton, { backgroundColor: colors.primary }]}
 						onPress={handleEnter}
 					>
 						<Text style={styles.enterButtonText}>
-							{room.status === 'aguardando' ? 'Iniciar' : 'Entrar'}
+							{room.status === 'waiting' ? 'Iniciar' : 'Entrar'}
 						</Text>
 					</TouchableOpacity>
 				)}
@@ -70,7 +76,7 @@ const RoomCard = ({ room, colors, light, onStart }: { room: ApiTelemedicineRoom,
 export default function TelemedicineScreen() {
 	const colors = useColors();
 	const { rooms, loading, refreshing, refresh, createRoom, startRoom } = useTelemedicine();
-	const { data: patients } = usePatients({ status: "active" });
+	const { data: patients } = usePatients({ status: 'active' });
 	const { light, medium } = useHaptics();
 
 	const handleNewRoom = () => {
@@ -85,18 +91,17 @@ export default function TelemedicineScreen() {
 		Alert.alert(
 			"Nova Teleconsulta",
 			"Selecione um paciente para iniciar:",
-			patients.slice(0, 5).map(p => ({
-				text: p.name,
-				onPress: async () => {
-					try {
-						const room = await createRoom(p.id);
-						Alert.alert("Sucesso", "Sala criada com sucesso!");
-						if (room.meeting_url) Linking.openURL(room.meeting_url);
-					} catch {
-						Alert.alert("Erro", "Não foi possível criar a sala.");
-					}
-				}
-			})).concat([{ text: "Cancelar", style: "cancel" }])
+			(patients.slice(0, 5).map(p => ({
+				text: p.name ?? p.id,
+				onPress: () => {
+					createRoom(p.id)
+						.then((room) => {
+							Alert.alert("Sucesso", "Sala criada com sucesso!");
+							if (typeof room.meeting_url === 'string') Linking.openURL(room.meeting_url);
+						})
+						.catch(() => Alert.alert("Erro", "Não foi possível criar a sala."));
+				},
+			})) as import('react-native').AlertButton[]).concat([{ text: "Cancelar", style: "cancel" }])
 		);
 	};
 
@@ -127,7 +132,7 @@ export default function TelemedicineScreen() {
 							light={light} 
 							onStart={async (id) => {
 								const updated = await startRoom(id);
-								if (updated.meeting_url) Linking.openURL(updated.meeting_url);
+								if (typeof updated.meeting_url === 'string') Linking.openURL(updated.meeting_url);
 							}}
 						/>
 					))

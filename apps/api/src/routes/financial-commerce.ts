@@ -90,7 +90,7 @@ export const registerFinancialCommerceRoutes = (app: FinancialApp) => {
     const db = createDb(c.env);
     const { id } = c.req.param();
 
-    await db.delete(vouchers).where(and(eq(vouchers.id, id), eq(vouchers.organizationId, user.organizationId)));
+    await db.update(vouchers).set({ deletedAt: new Date() }).where(and(eq(vouchers.id, id), eq(vouchers.organizationId, user.organizationId)));
     return c.json({ ok: true });
   });
 
@@ -307,7 +307,7 @@ export const registerFinancialCommerceRoutes = (app: FinancialApp) => {
     const db = createDb(c.env);
     const { id } = c.req.param();
 
-    const [deleted] = await db.delete(nfse)
+    const [deleted] = await db.update(nfse).set({ deletedAt: new Date() })
       .where(and(eq(nfse.id, id), eq(nfse.organizationId, user.organizationId)))
       .returning({ id: nfse.id });
 

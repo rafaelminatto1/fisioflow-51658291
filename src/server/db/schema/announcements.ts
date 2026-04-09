@@ -26,7 +26,7 @@ export const announcementReads = pgTable("announcement_reads", {
 	id: uuid("id").primaryKey().defaultRandom(),
 	announcementId: uuid("announcement_id")
 		.notNull()
-		.references(() => announcements.id, { onDelete: "cascade" }),
+		.references(() => announcements.id),
 	userId: uuid("user_id").notNull(),
 	readAt: timestamp("read_at").defaultNow().notNull(),
 });

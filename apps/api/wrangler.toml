@@ -20,6 +20,8 @@ routes = [
 [[hyperdrive]]
 binding = "HYPERDRIVE"
 id = "12b9fefcfbc04074a63342a9212e1b4f"
+max_age = 60
+max_stale = 300
 
 # ===== CLOUDFLARE R2 (Media Storage) =====
 # Crie com: wrangler r2 bucket create fisioflow-media
@@ -267,6 +269,8 @@ class_name = "PatientReengagementWorkflow"
 [[env.production.hyperdrive]]
 binding = "HYPERDRIVE"
 id = "12b9fefcfbc04074a63342a9212e1b4f"
+max_age = 3600 # Cache read results for 1 hour at the edge
+max_stale = 86400 # Allow stale data for up to 24h if origin is down
 
 [[env.production.r2_buckets]]
 binding = "MEDIA_BUCKET"

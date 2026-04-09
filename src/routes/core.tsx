@@ -8,6 +8,10 @@ import { Route, Navigate } from "react-router-dom";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
 import { RouteErrorBoundary } from "@/components/error";
 
+const GoogleCallback = lazy(
+	() => import(/* webpackChunkName: "google-callback" */ "@/pages/auth/GoogleCallback"),
+);
+
 // Lazy loads - Core pages
 const Schedule = lazy(
 	() => import(/* webpackChunkName: "schedule" */ "@/pages/Schedule"),
@@ -54,6 +58,9 @@ const EditTemplatePage = lazy(
 
 export const coreRoutes = (
 	<>
+		{/* Public OAuth callbacks */}
+		<Route path="/auth/google/callback" element={<GoogleCallback />} />
+
 		{/* Redirects */}
 		<Route path="/" element={<Navigate to="/agenda" replace />} />
 		<Route path="/calendar" element={<Navigate to="/agenda" replace />} />

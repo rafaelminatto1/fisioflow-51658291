@@ -398,6 +398,8 @@ export interface PatientRow {
 	birth_date: string | null;
 	date_of_birth: string | null;
 	gender: string | null;
+	nickname: string | null;
+	social_name: string | null;
 	address: string | null;
 	status: string;
 	main_condition: string | null;
@@ -776,6 +778,9 @@ export interface ClinicalTestTemplateRecord {
 	initial_position_image_url?: string | null;
 	final_position_image_url?: string | null;
 	media_urls?: string[] | null;
+	aliases_pt?: string[] | null;
+	aliases_en?: string[] | null;
+	dictionary_id?: string | null;
 	created_at: string;
 	updated_at: string;
 }
@@ -1171,6 +1176,9 @@ export interface EvolutionTemplate {
 	id: string;
 	name: string;
 	content: string;
+	aliases_pt?: string[];
+	aliases_en?: string[];
+	dictionary_id?: string;
 }
 
 export interface ConductLibraryRecord {

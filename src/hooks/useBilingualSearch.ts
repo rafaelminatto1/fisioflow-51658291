@@ -1,15 +1,19 @@
 import { useState, useEffect } from "react";
 import { expandSearchQuery, normalizeForSearch } from "@/lib/utils/bilingualSearch";
 import { physioDictionary, PhysioDictionaryEntry } from "@/data/physioDictionary";
+import { exercisesApi, protocolsApi } from "@/api/v2/exercises";
+import { clinicalTestsApi, clinicalApi } from "@/api/v2/clinical";
 
 /**
  * Reusable hook for bilingual clinical search.
  * 
  * Provides query state, search results, and a formatter for clinical terms.
+ * Now includes support for database-backed exercises and clinical tests with aliases.
  */
 export function useBilingualSearch() {
   const [query, setQuery] = useState("");
   const [results, setResults] = useState<PhysioDictionaryEntry[]>([]);
+  const [loading, setLoading] = useState(false);
 
   useEffect(() => {
     if (!query || query.length < 2) {
@@ -17,27 +21,119 @@ export function useBilingualSearch() {
       return;
     }
 
-    const expandedQueries = expandSearchQuery(query);
-    const normalizedQueries = expandedQueries.map(normalizeForSearch);
-    
-    // Search in local dictionary array
-    const matchedEntries = physioDictionary.filter(entry => {
-      const entryTerms = [
-        normalizeForSearch(entry.pt),
-        normalizeForSearch(entry.en),
-        ...(entry.description_pt ? [normalizeForSearch(entry.description_pt)] : []),
-        ...(entry.description_en ? [normalizeForSearch(entry.description_en)] : []),
-        ...entry.aliases_pt.map(normalizeForSearch),
-        ...entry.aliases_en.map(normalizeForSearch)
-      ];
+    const searchItems = async () => {
+      setLoading(true);
+      try {
+        const expandedQueries = expandSearchQuery(query);
+        const normalizedQueries = expandedQueries.map(normalizeForSearch);
+        
+        // 1. Search in local static dictionary
+        const dictionaryResults = physioDictionary.filter(entry => {
+          const entryTerms = [
+            normalizeForSearch(entry.pt),
+            normalizeForSearch(entry.en),
+            ...entry.aliases_pt.map(normalizeForSearch),
+            ...entry.aliases_en.map(normalizeForSearch)
+          ];
+          return normalizedQueries.some(nq => entryTerms.some(term => term.includes(nq)));
+        });
 
-      // Check if any of the expanded queries are in the entry terms
-      return normalizedQueries.some(nq => {
-        return entryTerms.some(term => term.includes(nq) || nq.includes(term));
-      });
-    });
+        // 2. Search in Database (Exercises)
+        const exerciseRes = await exercisesApi.list({ q: query, limit: 10 });
+        const exerciseResults: PhysioDictionaryEntry[] = (exerciseRes.data || []).map(ex => ({
+          id: ex.id,
+          pt: ex.name,
+          en: (ex.aliases_en || [])[0] || "",
+          aliases_pt: ex.aliases_pt || [],
+          aliases_en: ex.aliases_en || [],
+          category: 'exercise',
+          subcategory: ex.subcategory || "",
+          description_pt: ex.description || ""
+        }));
 
-    setResults(matchedEntries.slice(0, 10)); // Limit to 10 results
+        // 3. Search in Database (Clinical Tests)
+        const testRes = await clinicalTestsApi.list(); 
+        const testResults: PhysioDictionaryEntry[] = (testRes.data || [])
+          .filter(t => {
+            const terms = [
+              normalizeForSearch(t.name),
+              ...(t.aliases_pt || []).map(normalizeForSearch),
+              ...(t.aliases_en || []).map(normalizeForSearch)
+            ];
+            return normalizedQueries.some(nq => terms.some(term => term.includes(nq)));
+          })
+          .map(t => ({
+            id: t.id,
+            pt: t.name,
+            en: (t.aliases_en || [])[0] || "",
+            aliases_pt: t.aliases_pt || [],
+            aliases_en: t.aliases_en || [],
+            category: 'test',
+            description_pt: t.purpose || ""
+          }));
+
+        // 4. Search in Database (Protocols)
+        const protocolRes = await protocolsApi.list({ q: query, limit: 10 });
+        const protocolResults: PhysioDictionaryEntry[] = (protocolRes.data || []).map(p => ({
+          id: p.id,
+          pt: p.name,
+          en: (p.aliases_en || [])[0] || "",
+          aliases_pt: p.aliases_pt || [],
+          aliases_en: p.aliases_en || [],
+          category: 'procedure', // Map protocols to procedure category
+          subcategory: 'Protocolo',
+          description_pt: p.description || ""
+        }));
+
+        // 5. Search in Database (Evaluation Templates)
+        const templateRes = await clinicalApi.evolutionTemplates.list({ ativo: true });
+        const templateResults: PhysioDictionaryEntry[] = (templateRes.data || [])
+          .filter(t => {
+            const terms = [
+              normalizeForSearch(t.name),
+              ...(t.aliases_pt || []).map(normalizeForSearch),
+              ...(t.aliases_en || []).map(normalizeForSearch)
+            ];
+            return normalizedQueries.some(nq => terms.some(term => term.includes(nq)));
+          })
+          .map(t => ({
+            id: t.id,
+            pt: t.name,
+            en: (t.aliases_en || [])[0] || "",
+            aliases_pt: t.aliases_pt || [],
+            aliases_en: t.aliases_en || [],
+            category: 'assessment', // Map templates to assessment category
+            subcategory: 'Modelo de Avaliação',
+            description_pt: t.description || ""
+          }));
+
+        // 6. Combine and deduplicate by name
+        const combined = [
+          ...dictionaryResults, 
+          ...exerciseResults, 
+          ...testResults, 
+          ...protocolResults,
+          ...templateResults
+        ];
+        const unique = new Map<string, PhysioDictionaryEntry>();
+        
+        for (const item of combined) {
+          const key = normalizeForSearch(item.pt);
+          if (!unique.has(key)) {
+            unique.set(key, item);
+          }
+        }
+
+        setResults(Array.from(unique.values()).slice(0, 15));
+      } catch (err) {
+        console.error("Clinical search error:", err);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    const debounce = setTimeout(searchItems, 300);
+    return () => clearTimeout(debounce);
   }, [query]);
 
   /**
@@ -45,13 +141,15 @@ export function useBilingualSearch() {
    */
   const formatSelection = (entry: PhysioDictionaryEntry) => {
     const desc = entry.description_pt ? `: ${entry.description_pt}` : "";
-    return `**${entry.pt}** (${entry.en})${desc}`;
+    const en = entry.en ? ` (${entry.en})` : "";
+    return `**${entry.pt}**${en}${desc}`;
   };
 
   return {
     query,
     setQuery,
     results,
+    loading,
     formatSelection
   };
 }

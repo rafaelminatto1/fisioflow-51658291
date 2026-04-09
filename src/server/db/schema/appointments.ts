@@ -67,7 +67,7 @@ export const appointments = pgTable(
 		// Patient & Therapist
 		patientId: uuid("patient_id")
 			.notNull()
-			.references(() => patients.id, { onDelete: "cascade" }),
+			.references(() => patients.id),
 		therapistId: uuid("therapist_id").notNull(), // FK to auth.users or therapists table
 
 		// Organization (multi-tenant)
@@ -117,6 +117,8 @@ export const appointments = pgTable(
 		isRecurring: boolean("is_recurring").default(false),
 		recurrencePattern: varchar("recurrence_pattern", { length: 50 }), // 'weekly', 'biweekly'
 		recurrenceGroupId: uuid("recurrence_group_id"),
+
+		deletedAt: timestamp("deleted_at"),
 
 		createdAt: timestamp("created_at").defaultNow().notNull(),
 		updatedAt: timestamp("updated_at").defaultNow().notNull(),
@@ -169,6 +171,8 @@ export const rooms = pgTable(
 			sunday?: { start: string; end: string };
 		}>(),
 
+		deletedAt: timestamp("deleted_at"),
+
 		createdAt: timestamp("created_at").defaultNow().notNull(),
 	},
 	(table) => ({
@@ -195,6 +199,8 @@ export const blockedSlots = pgTable(
 
 		reason: varchar("reason", { length: 200 }),
 		isAllDay: boolean("is_all_day").default(false),
+
+		deletedAt: timestamp("deleted_at"),
 
 		createdAt: timestamp("created_at").defaultNow().notNull(),
 	},

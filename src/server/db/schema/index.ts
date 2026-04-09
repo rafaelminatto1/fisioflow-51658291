@@ -52,3 +52,6 @@ export * from "./jules";
 
 // Biomechanics & Gait Analysis (RF01.6)
 export * from "./biomechanics";
+
+// WhatsApp Shared Inbox
+export * from "./whatsapp-inbox";

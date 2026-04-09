@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import {
   Alert,
+  Modal,
   View,
   Text,
   TextInput,
@@ -17,7 +18,25 @@ import Slider from '@react-native-community/slider';
 import { useColors } from '@/hooks/useColorScheme';
 import { useHaptics } from '@/hooks/useHaptics';
 import { useEvolutions, useEvolution } from '@/hooks';
+import { useQuery } from '@tanstack/react-query';
 import { uploadFile } from '@/lib/storage';
+import { Card } from '@/components';
+import { getPatientById } from '@/lib/api';
+import { generateEvolutionPDF } from '@/lib/services/pdfGenerator';
+
+function FullScreenImageModal({ visible, uri, onClose, colors }: { visible: boolean; uri: string | null; onClose: () => void; colors: any }) {
+  if (!uri) return null;
+  return (
+    <Modal visible={visible} transparent animationType="fade" onRequestClose={onClose}>
+      <View style={{ flex: 1, backgroundColor: 'rgba(0,0,0,0.92)', justifyContent: 'center', alignItems: 'center' }}>
+        <TouchableOpacity onPress={onClose} style={{ position: 'absolute', top: 48, right: 20, zIndex: 10 }}>
+          <Ionicons name="close" size={32} color="#fff" />
+        </TouchableOpacity>
+        <Image source={{ uri }} style={{ width: '100%', height: '80%' }} resizeMode="contain" />
+      </View>
+    </Modal>
+  );
+}
 
 
 
@@ -93,12 +112,14 @@ const PhotoGrid = ({
   onAddPhoto,
   onTakePhoto,
   onRemovePhoto,
+  onViewPhoto,
   colors,
 }: {
   photos: Photo[];
   onAddPhoto: () => void;
   onTakePhoto: () => void;
   onRemovePhoto: (id: string) => void;
+  onViewPhoto?: (uri: string) => void;
   colors: any;
 }) => {
   return (
@@ -106,7 +127,9 @@ const PhotoGrid = ({
       <View style={styles.photoGrid}>
         {photos.map((photo) => (
           <View key={photo.id} style={styles.photoWrapper}>
-            <Image source={{ uri: photo.uri }} style={styles.photo} />
+            <TouchableOpacity onPress={() => onViewPhoto?.(photo.uri)} activeOpacity={0.8}>
+              <Image source={{ uri: photo.uri }} style={styles.photo} />
+            </TouchableOpacity>
             <TouchableOpacity
               style={[styles.photoRemoveButton, { backgroundColor: colors.surface }]}
               onPress={() => onRemovePhoto(photo.id)}
@@ -136,14 +159,20 @@ export default function EvolutionScreen() {
   
 
   const { medium, success, error: hapticError } = useHaptics();
-  
-  const { 
-    createAsync: createEvolutionAsync, 
-    updateAsync: updateEvolutionAsync, 
+
+  const {
+    createAsync: createEvolutionAsync,
+    updateAsync: updateEvolutionAsync,
     deleteAsync: deleteEvolutionAsync,
     isCreating,
     isUpdating,
     } = useEvolutions(patientId);
+
+  const { data: patient } = useQuery({
+    queryKey: ['patient', patientId],
+    queryFn: () => getPatientById(patientId),
+    enabled: !!patientId,
+  });
 
   // Form state
   const [subjective, setSubjective] = useState('');

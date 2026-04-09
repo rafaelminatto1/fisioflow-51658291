@@ -90,7 +90,7 @@ export const exerciseTemplateItems = pgTable("exercise_template_items", {
 	id: uuid("id").primaryKey().defaultRandom(),
 	templateId: uuid("template_id")
 		.notNull()
-		.references(() => exerciseTemplates.id, { onDelete: "cascade" }),
+		.references(() => exerciseTemplates.id),
 
 	// Reference to exercise
 	exerciseId: text("exercise_id").notNull(),

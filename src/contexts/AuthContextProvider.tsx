@@ -17,6 +17,7 @@ import {
 import { Profile, RegisterFormData, UserRole } from "@/types/auth";
 import { useQueryClient } from "@tanstack/react-query";
 import { AppointmentService } from "@/services/appointmentService";
+import { setupUserTracking, clearUserTracking } from "@/lib/services/initialization";
 
 /** ID da Organização Padrão (Clínica Única) */
 export const DEFAULT_ORG_ID = "00000000-0000-0000-0000-000000000001";
@@ -242,6 +243,11 @@ export const AuthContextProvider: React.FC<{ children: React.ReactNode }> = ({
 
 			if (data?.user) {
 				await loadUserAndProfile(adaptNeonUser(data.user));
+				setupUserTracking({
+					uid: data.user.id,
+					email: data.user.email,
+					displayName: data.user.name,
+				});
 				void import("@/lib/analytics/posthog")
 					.then(({ identifyUser }) =>
 						identifyUser(data.user.id, data.user.email, data.user.name),
@@ -334,6 +340,7 @@ export const AuthContextProvider: React.FC<{ children: React.ReactNode }> = ({
 			}
 		}
 		invalidateNeonTokenCache();
+		clearUserTracking();
 		queryClient.clear();
 		await loadUserAndProfile(null);
 	};

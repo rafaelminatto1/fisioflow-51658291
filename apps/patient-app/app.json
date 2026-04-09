@@ -71,6 +71,14 @@
         "projectId": "3dc7141f-4e97-4c2c-b4aa-959888a0e810"
       }
     },
-    "owner": "rafaelminatto"
+    "owner": "rafaelminatto",
+    "updates": {
+      "enabled": true,
+      "url": "https://u.expo.dev/3dc7141f-4e97-4c2c-b4aa-959888a0e810",
+      "enableBsdiffPatchSupport": true
+    },
+    "runtimeVersion": {
+      "policy": "appVersion"
+    }
   }
 }

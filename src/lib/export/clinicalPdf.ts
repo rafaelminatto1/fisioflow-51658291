@@ -78,6 +78,10 @@ export interface SoapEvolution {
   goals?: string;
   diagnosis?: string;
   session_number?: number;
+  /** Base64 PNG de assinatura digital para embutir no PDF */
+  signature_image?: string;
+  /** Timestamp da assinatura para exibir no rodapé */
+  signed_at?: string;
 }
 
 export function generateSoapPDF(evolution: SoapEvolution): void {
@@ -136,10 +140,21 @@ export function generateSoapPDF(evolution: SoapEvolution): void {
 
   // Assinatura
   const signY = Math.max(y + 10, 240);
+  if (evolution.signature_image) {
+    try {
+      doc.addImage(evolution.signature_image, "PNG", 14, signY - 20, 60, 18);
+    } catch { /* ignore invalid image */ }
+  }
   doc.setDrawColor(60, 60, 60);
   doc.line(14, signY, 90, signY);
   doc.setFontSize(8);
   doc.text(evolution.therapist_name ?? "Fisioterapeuta Responsável", 14, signY + 4);
+  if (evolution.signed_at) {
+    doc.setFontSize(7);
+    doc.setTextColor(120, 120, 120);
+    doc.text(`Assinado digitalmente em ${evolution.signed_at}`, 14, signY + 9);
+    doc.setTextColor(40, 40, 40);
+  }
 
   addFooter(doc, 1, 1);
   const filename = `evolucao-soap-${(evolution.patient_name ?? "paciente").replace(/\s+/g, "-")}-${dateStr.replace(/\//g, "-")}.pdf`;

@@ -444,7 +444,6 @@ export default function AppointmentFormScreen() {
                       <DateTimePicker
                         value={parseTimeString(value)}
                         mode="time"
-                        is24Hour={true}
                         locale="pt-BR"
                         display="compact"
                         style={{ flex: 1 }}

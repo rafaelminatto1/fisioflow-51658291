@@ -62,14 +62,13 @@ export default defineConfig({
 		// },
 	],
 
-	webServer: process.env.CI
-		? undefined
-		: {
-				// Frontend Vite - não iniciar servidor, apenas reutilizar
-				command: "echo 'Reusing existing server'",
-				url: "http://localhost:5173",
-				reuseExistingServer: !process.env.CI,
-				timeout: 120000,
+  webServer: process.env.CI
+    ? undefined
+    : {
+        command: "tail -f /dev/null", // Dummy command that doesn't exit immediately
+        url: "http://localhost:4173",
+        reuseExistingServer: true,
+        timeout: 120000,
 				env: {
 					...process.env,
 					// Use production Worker URL for E2E tests so they go through the real deployed Worker.

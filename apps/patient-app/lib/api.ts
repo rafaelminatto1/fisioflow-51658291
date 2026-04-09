@@ -21,7 +21,7 @@ import { Mappers } from './mappers';
 // CANONICAL API DOMAIN (Migração Neon/Cloudflare 2026)
 const API_BASE_URL =
   process.env.EXPO_PUBLIC_API_URL ||
-  'https://api-paciente.moocafisio.com.br'; // Novo domínio unificado
+  'https://api.moocafisio.com.br'; // Novo domínio unificado (Hono/Cloudflare)
 
 const PATIENT_PORTAL_PREFIX = '/api/patient-portal';
 
