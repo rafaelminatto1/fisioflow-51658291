@@ -3,7 +3,8 @@ import { createDb } from '../lib/db';
 import { requireAuth, type AuthVariables } from '../lib/auth';
 import type { Env } from '../types/env';
 import { sessions, sessionAttachments, sessionTemplates } from '@fisioflow/db';
-import { eq, and, desc, count, sql, or, ilike } from 'drizzle-orm';
+import { eq, and, desc, count, sql, or, ilike, isNull } from 'drizzle-orm';
+import { withTenant } from '../lib/db-utils';
 
 const app = new Hono<{ Bindings: Env; Variables: AuthVariables }>();
 
@@ -78,9 +79,8 @@ app.get('/', requireAuth, async (c) => {
   const offsetNum = Math.max(0, parseInt(offset) || 0);
 
   try {
-    const conditions = [
-      eq(sessions.patientId, patientId),
-      eq(sessions.organizationId, user.organizationId)
+    const conditions: any[] = [
+      withTenant(sessions, user.organizationId, eq(sessions.patientId, patientId))
     ];
 
     if (status) {
@@ -151,7 +151,9 @@ app.post('/autosave', requireAuth, async (c) => {
   if (idToUpdate) {
     const res = await db.update(sessions)
       .set(buildUpdatePayload())
-      .where(and(eq(sessions.id, idToUpdate), eq(sessions.organizationId, user.organizationId)))
+      .where(
+        withTenant(sessions, user.organizationId, eq(sessions.id, idToUpdate))
+      )
       .returning();
     
     if (res.length) {
@@ -162,9 +164,10 @@ app.post('/autosave', requireAuth, async (c) => {
   if (body.appointment_id) {
     const existing = await db.select({ id: sessions.id })
       .from(sessions)
-      .where(and(
+      .where(withTenant(
+        sessions,
+        user.organizationId,
         eq(sessions.appointmentId, body.appointment_id),
-        eq(sessions.organizationId, user.organizationId),
         eq(sessions.status, 'draft')
       ))
       .limit(1);
@@ -215,7 +218,9 @@ app.get('/:id', requireAuth, async (c) => {
 
   const [row] = await db.select()
     .from(sessions)
-    .where(and(eq(sessions.id, id), eq(sessions.organizationId, user.organizationId)))
+    .where(
+      withTenant(sessions, user.organizationId, eq(sessions.id, id))
+    )
     .limit(1);
 
   if (!row) return c.json({ error: 'Sessão não encontrada' }, 404);
@@ -237,9 +242,10 @@ app.post('/:id/finalize', requireAuth, async (c) => {
       finalizedBy: user.uid as any,
       updatedAt: new Date()
     })
-    .where(and(
+    .where(withTenant(
+      sessions,
+      user.organizationId,
       eq(sessions.id, id),
-      eq(sessions.organizationId, user.organizationId),
       sql`${sessions.status} != 'finalized'`
     ))
     .returning();
@@ -315,7 +321,9 @@ app.put('/:id', requireAuth, async (c) => {
 
   const [updated] = await db.update(sessions)
     .set(updatePayload)
-    .where(and(eq(sessions.id, id), eq(sessions.organizationId, user.organizationId)))
+    .where(
+      withTenant(sessions, user.organizationId, eq(sessions.id, id))
+    )
     .returning();
 
   if (!updated) return c.json({ error: 'Sessão não encontrada' }, 404);
@@ -354,8 +362,10 @@ app.delete('/:id', requireAuth, async (c) => {
     return c.json({ error: 'Não é possível excluir uma evolução finalizada' }, 409);
   }
 
-  await db.delete(sessions)
-    .where(and(eq(sessions.id, id), eq(sessions.organizationId, user.organizationId)));
+  await db.update(sessions).set({ deletedAt: new Date() })
+    .where(
+      withTenant(sessions, user.organizationId, eq(sessions.id, id))
+    );
 
   return c.json({ success: true });
 });
@@ -461,7 +471,7 @@ app.delete('/templates/:templateId', requireAuth, async (c) => {
   const db = createDb(c.env);
   const { templateId } = c.req.param();
 
-  const [deleted] = await db.delete(sessionTemplates)
+  const [deleted] = await db.update(sessionTemplates).set({ deletedAt: new Date() })
     .where(and(eq(sessionTemplates.id, templateId), eq(sessionTemplates.organizationId, user.organizationId)))
     .returning();
 
@@ -546,7 +556,7 @@ app.delete('/:id/attachments/:attachmentId', requireAuth, async (c) => {
   const db = createDb(c.env);
   const attachmentId = c.req.param('attachmentId');
 
-  const [deleted] = await db.delete(sessionAttachments)
+  const [deleted] = await db.update(sessionAttachments).set({ deletedAt: new Date() })
     .where(eq(sessionAttachments.id, attachmentId))
     .returning();
 

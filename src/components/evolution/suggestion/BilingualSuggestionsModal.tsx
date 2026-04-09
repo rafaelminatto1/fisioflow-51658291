@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
-import { Search, BookOpen, Stethoscope, Activity, ArrowRight } from "lucide-react";
+import { Search, BookOpen, Stethoscope, Activity, ArrowRight, Loader2 } from "lucide-react";
 import { expandSearchQuery, normalizeForSearch } from "@/lib/utils/bilingualSearch";
 import { physioDictionary, PhysioDictionaryEntry } from "@/data/physioDictionary";
 import { useBilingualSearch } from "@/hooks/useBilingualSearch";
@@ -17,7 +17,7 @@ export const BilingualSuggestionsModal: React.FC<BilingualSuggestionsModalProps>
   onOpenChange,
   onSelect
 }) => {
-  const { query, setQuery, results, formatSelection } = useBilingualSearch();
+  const { query, setQuery, results, loading, formatSelection } = useBilingualSearch();
   const [selectedIndex, setSelectedIndex] = useState(0);
   const inputRef = useRef<HTMLInputElement>(null);
 
@@ -76,6 +76,11 @@ export const BilingualSuggestionsModal: React.FC<BilingualSuggestionsModalProps>
               placeholder="Digite um termo, patologia ou diagnóstico..."
               className="pl-9 h-11 bg-white dark:bg-slate-950 border-slate-200 dark:border-slate-800 rounded-xl font-medium focus-visible:ring-blue-500"
             />
+            {loading && (
+              <div className="absolute right-3 top-1/2 -translate-y-1/2">
+                <Loader2 className="w-4 h-4 text-slate-400 animate-spin" />
+              </div>
+            )}
           </div>
         </div>
 

@@ -1,16 +1,16 @@
-import React from "react";
-import { useParams } from "react-router-dom";
+import { useParams, useNavigate } from "react-router-dom";
 import { MainLayout } from "@/components/layout/MainLayout";
 import { Button } from "@/components/ui/button";
-import { Card } from "@/components/ui/card";
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useQuery } from "@tanstack/react-query";
 import { telemedicineApi, type TelemedicineRoomRecord } from "@/api/v2";
-import { Video, Copy, ExternalLink, Loader2 } from "lucide-react";
-import { toast } from "sonner";
+import { ArrowLeft, Loader2 } from "lucide-react";
+import { LiveKitRoom } from "@/components/telemedicine/LiveKitRoom";
+import { useAuth } from "@/contexts/AuthContext";
 
 export default function TelemedicineRoom() {
 	const { roomId } = useParams();
-	const queryClient = useQueryClient();
+	const navigate = useNavigate();
+	const { profile } = useAuth();
 
 	const { data: room, isLoading } = useQuery({
 		queryKey: ["telemedicine-room", roomId],
@@ -22,87 +22,36 @@ export default function TelemedicineRoom() {
 		enabled: !!roomId,
 	});
 
-	const startMeeting = useMutation({
-		mutationFn: async () => {
-			if (!roomId) throw new Error("Sala inválida");
-			const res = await telemedicineApi.rooms.start(roomId);
-			return (res?.data ?? null) as TelemedicineRoomRecord | null;
-		},
-		onSuccess: (data) => {
-			queryClient.setQueryData(["telemedicine-room", roomId], data);
-			queryClient.invalidateQueries({ queryKey: ["telemedicine-rooms"] });
-			toast.success("Sala iniciada");
-		},
-		onError: (error: Error) => {
-			toast.error(error.message || "Erro ao iniciar sala");
-		},
-	});
-
-	const meetingLink = room?.meeting_url ?? "";
-
 	return (
-		<MainLayout>
-			<div className="flex flex-col items-center justify-center min-h-screen bg-gray-50 p-4">
-				<Card className="w-full max-w-md p-8 text-center space-y-6">
-					<div className="bg-green-100 p-4 rounded-full w-20 h-20 mx-auto flex items-center justify-center">
-						<Video className="w-10 h-10 text-green-600" />
-					</div>
+		<MainLayout compactPadding>
+			<div className="p-4 space-y-4 max-w-3xl mx-auto">
+				<div className="flex items-center gap-3">
+					<Button variant="ghost" size="sm" className="gap-1.5" onClick={() => navigate("/telemedicine")}>
+						<ArrowLeft className="h-4 w-4" />
+						Voltar
+					</Button>
+				</div>
 
-					<div>
-						<h1 className="text-2xl font-bold text-gray-900">
-							Sala de Telemedicina
-						</h1>
-						<p className="text-gray-500 mt-2">
-							{room?.patients?.name
-								? `Paciente: ${room.patients.name}`
-								: "Consulta online"}
-						</p>
+				{isLoading ? (
+					<div className="flex items-center justify-center py-20">
+						<Loader2 className="h-8 w-8 animate-spin text-primary" />
 					</div>
-
-					{isLoading ? (
-						<div className="flex justify-center py-4">
-							<Loader2 className="w-6 h-6 animate-spin text-green-600" />
-						</div>
-					) : !meetingLink ? (
-						<Button
-							onClick={() => startMeeting.mutate()}
-							disabled={startMeeting.isPending}
-							className="w-full bg-green-600 hover:bg-green-700 h-12 text-lg"
-						>
-							{startMeeting.isPending ? "Iniciando..." : "Iniciar Reunião"}
+				) : !room ? (
+					<div className="text-center py-20 text-muted-foreground">
+						<p className="font-medium">Sala não encontrada</p>
+						<Button variant="outline" className="mt-4" onClick={() => navigate("/telemedicine")}>
+							Voltar para Telemedicina
 						</Button>
-					) : (
-						<div className="space-y-4">
-							<div className="p-4 bg-gray-100 rounded-lg break-all text-sm">
-								{meetingLink}
-							</div>
-
-							<div className="flex gap-3">
-								<Button
-									variant="outline"
-									className="flex-1"
-									onClick={() => {
-										navigator.clipboard.writeText(meetingLink);
-										toast.success("Link copiado");
-									}}
-								>
-									<Copy className="w-4 h-4 mr-2" /> Copiar
-								</Button>
-								<Button
-									className="flex-1 bg-green-600 hover:bg-green-700"
-									onClick={() => window.open(meetingLink, "_blank")}
-								>
-									<ExternalLink className="w-4 h-4 mr-2" /> Entrar
-								</Button>
-							</div>
-
-							<p className="text-xs text-gray-500">
-								O link abrirá em uma nova aba segura da sala de
-								videoconferência.
-							</p>
-						</div>
-					)}
-				</Card>
+					</div>
+				) : (
+					<LiveKitRoom
+						roomId={room.room_name ?? room.id}
+						identity={profile?.id}
+						displayName={profile?.full_name ?? "Fisioterapeuta"}
+						role="therapist"
+						onEnd={() => navigate("/telemedicine")}
+					/>
+				)}
 			</div>
 		</MainLayout>
 	);

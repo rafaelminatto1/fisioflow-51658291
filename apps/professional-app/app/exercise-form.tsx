@@ -8,7 +8,6 @@ import {
 	KeyboardAvoidingView,
 	Modal,
 	Platform,
-	SafeAreaView,
 	ScrollView,
 	StyleSheet,
 	Text,
@@ -31,6 +30,7 @@ import {
 	EQUIPMENT,
 } from "@/lib/constants/exerciseConstants";
 import type { Exercise } from "@/types";
+import { SafeAreaView } from "react-native-safe-area-context";
 
 const DIFFICULTIES = [
 	{ label: "Iniciante", value: "easy" },

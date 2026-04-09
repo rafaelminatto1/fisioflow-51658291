@@ -488,7 +488,7 @@ export function registerClinicalResourceRoutes(app: ClinicalRouteApp) {
 
     if (!check) return c.json({ error: 'Mapa de dor não encontrado' }, 404);
 
-    await db.delete(painMaps).where(eq(painMaps.id, id));
+    await db.update(painMaps).set({ deletedAt: new Date() }).where(eq(painMaps.id, id));
     return c.json({ ok: true });
   });
 
@@ -632,7 +632,7 @@ export function registerClinicalResourceRoutes(app: ClinicalRouteApp) {
 
     if (!check) return c.json({ error: 'Template não encontrado' }, 404);
 
-    await db.delete(evolutionTemplates).where(eq(evolutionTemplates.id, id));
+    await db.update(evolutionTemplates).set({ deletedAt: new Date() }).where(eq(evolutionTemplates.id, id));
     return c.json({ ok: true });
   });
 
@@ -793,7 +793,7 @@ export function registerClinicalResourceRoutes(app: ClinicalRouteApp) {
 
     if (!check) return c.json({ error: 'Prescrição não encontrada' }, 404);
 
-    await db.delete(exercisePrescriptions).where(eq(exercisePrescriptions.id, id));
+    await db.update(exercisePrescriptions).set({ deletedAt: new Date() }).where(eq(exercisePrescriptions.id, id));
     return c.json({ ok: true });
   });
 

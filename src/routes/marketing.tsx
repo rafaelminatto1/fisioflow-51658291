@@ -95,6 +95,12 @@ const BeforeAfterPage = lazy(
 			/* webpackChunkName: "marketing-beforeafter" */ "@/pages/marketing/BeforeAfter"
 		),
 );
+const ReactivationCampaign = lazy(
+	() =>
+		import(
+			/* webpackChunkName: "marketing-reactivation" */ "@/pages/marketing/ReactivationCampaign"
+		),
+);
 
 export const marketingRoutes = (
 	<>
@@ -223,6 +229,14 @@ export const marketingRoutes = (
 			element={
 				<ProtectedRoute>
 					<BeforeAfterPage />
+				</ProtectedRoute>
+			}
+		/>
+		<Route
+			path="/marketing/reativacao"
+			element={
+				<ProtectedRoute>
+					<ReactivationCampaign />
 				</ProtectedRoute>
 			}
 		/>

@@ -29,7 +29,7 @@ export const taskBoards = pgTable("task_boards", {
 export const taskColumns = pgTable("task_columns", {
 	id: uuid("id").primaryKey().defaultRandom(),
 	boardId: uuid("board_id")
-		.references(() => taskBoards.id, { onDelete: "cascade" })
+		.references(() => taskBoards.id)
 		.notNull(),
 	title: varchar("title", { length: 255 }).notNull(),
 	order: integer("order").notNull().default(0),
@@ -40,7 +40,7 @@ export const taskColumns = pgTable("task_columns", {
 export const tasks = pgTable("tasks", {
 	id: uuid("id").primaryKey().defaultRandom(),
 	columnId: uuid("column_id")
-		.references(() => taskColumns.id, { onDelete: "cascade" })
+		.references(() => taskColumns.id)
 		.notNull(),
 	title: varchar("title", { length: 255 }).notNull(),
 	description: text("description"), // Rich text content
@@ -65,7 +65,7 @@ export const tasks = pgTable("tasks", {
 export const taskAssignments = pgTable("task_assignments", {
 	id: uuid("id").primaryKey().defaultRandom(),
 	taskId: uuid("task_id")
-		.references(() => tasks.id, { onDelete: "cascade" })
+		.references(() => tasks.id)
 		.notNull(),
 	userId: varchar("user_id").notNull(), // Assigned to
 	assignedAt: timestamp("assigned_at").defaultNow().notNull(),
@@ -75,7 +75,7 @@ export const taskAssignments = pgTable("task_assignments", {
 export const taskAcknowledgments = pgTable("task_acknowledgments", {
 	id: uuid("id").primaryKey().defaultRandom(),
 	taskId: uuid("task_id")
-		.references(() => tasks.id, { onDelete: "cascade" })
+		.references(() => tasks.id)
 		.notNull(),
 	userId: varchar("user_id").notNull(),
 
@@ -90,7 +90,7 @@ export const taskAcknowledgments = pgTable("task_acknowledgments", {
 export const taskVisibility = pgTable("task_visibility", {
 	id: uuid("id").primaryKey().defaultRandom(),
 	taskId: uuid("task_id")
-		.references(() => tasks.id, { onDelete: "cascade" })
+		.references(() => tasks.id)
 		.notNull(),
 	role: varchar("role", { length: 50 }), // 'ADMIN', 'PHYSIOTHERAPIST', 'INTERN'
 	userId: varchar("user_id"), // Specific user override
@@ -101,7 +101,7 @@ export const taskVisibility = pgTable("task_visibility", {
 export const taskAuditLogs = pgTable("task_audit_logs", {
 	id: uuid("id").primaryKey().defaultRandom(),
 	taskId: uuid("task_id")
-		.references(() => tasks.id, { onDelete: "cascade" })
+		.references(() => tasks.id)
 		.notNull(),
 	action: varchar("action", { length: 100 }).notNull(), // 'created', 'moved', 'assigned', 'read', 'acknowledged'
 	performedBy: varchar("performed_by").notNull(),
