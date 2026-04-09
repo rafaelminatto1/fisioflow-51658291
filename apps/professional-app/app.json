@@ -22,7 +22,8 @@
 				"NSCameraUsageDescription": "O FisioFlow precisa acessar sua câmera para capturar fotos de progresso dos pacientes e demonstrações de exercícios. Essas fotos são criptografadas e armazenadas com segurança.",
 				"NSPhotoLibraryUsageDescription": "O FisioFlow precisa acessar sua galeria de fotos para selecionar imagens existentes de pacientes e exercícios. Suas fotos são protegidas com criptografia.",
 				"NSLocationWhenInUseUsageDescription": "O FisioFlow usa sua localização para verificar check-in na clínica e confirmar presença em consultas. Sua localização nunca é compartilhada com terceiros.",
-				"NSFaceIDUsageDescription": "O FisioFlow usa Face ID para proteger o acesso aos dados sensíveis de saúde dos seus pacientes com autenticação biométrica segura."
+				"NSFaceIDUsageDescription": "O FisioFlow usa Face ID para proteger o acesso aos dados sensíveis de saúde dos seus pacientes com autenticação biométrica segura.",
+					"UIBackgroundModes": ["remote-notification", "fetch"]
 			},
 			"config": {
 				"usesNonExemptEncryption": false
@@ -43,14 +44,42 @@
 		},
 		"plugins": [
 			"expo-router",
-			"expo-secure-store",
-			"expo-notifications",
+			[
+				"expo-secure-store",
+				{
+					"faceIDPermission": "O FisioFlow usa Face ID para proteger o acesso aos dados dos seus pacientes."
+				}
+			],
+			[
+				"expo-local-authentication",
+				{
+					"faceIDPermission": "O FisioFlow usa Face ID para autenticação rápida e segura."
+				}
+			],
+			[
+				"expo-notifications",
+				{
+					"icon": "./assets/notification-icon.png",
+					"color": "#1E40AF",
+					"sounds": [],
+					"enableBackgroundRemoteNotifications": true
+				}
+			],
 			"expo-font",
-			"@react-native-community/datetimepicker"
+			"@react-native-community/datetimepicker",
+			[
+				"@sentry/react-native/expo",
+				{
+					"url": "https://sentry.io/",
+					"project": "fisioflow-professional",
+					"organization": "activity-fisioterapia-rg"
+				}
+			]
 		],
 		"experiments": {
 			"typedRoutes": true
 		},
+		"newArchEnabled": true,
 		"extra": {
 			"router": {
 				"origin": false
