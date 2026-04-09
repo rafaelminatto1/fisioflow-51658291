@@ -311,6 +311,122 @@ app.post('/generate', requireAuth, async (c) => {
   return c.json({ data: result.rows[0] }, 201);
 });
 
+// ===== INTEGRAÇÃO FOCUS NFE =====
+
+/**
+ * Envia NFS-e via API Focus NFe (foco.io)
+ * Eles gerenciam o certificado digital A1 e o SOAP com a prefeitura.
+ * Docs: https://focusnfe.com.br/doc/#nfse-envio
+ */
+async function sendViaFocusNfe(
+  env: Env,
+  nfse: Record<string, any>,
+  cfg: Record<string, any>,
+  ambiente: 'homologacao' | 'producao',
+): Promise<{
+  ref: string;
+  status: string;
+  numero_nfse?: string;
+  codigo_verificacao?: string;
+  link_nfse?: string;
+  erros?: string;
+}> {
+  const token = env.FOCUS_NFE_TOKEN;
+  if (!token) throw new Error('FOCUS_NFE_TOKEN não configurado');
+
+  const baseUrl = ambiente === 'producao'
+    ? 'https://api.focusnfe.com.br'
+    : 'https://homologacao.focusnfe.com.br';
+
+  const ref = `fisioflow-${nfse.id}`;
+
+  const payload = {
+    data_emissao: nfse.data_emissao ?? new Date().toISOString(),
+    natureza_operacao: 1,
+    optante_simples_nacional: cfg.optante_simples ? 1 : 2,
+    incentivador_cultural: cfg.incentivo_fiscal ? 1 : 2,
+    status: 1, // Normal
+    prestador: {
+      cnpj: cfg.cnpj?.replace(/\D/g, ''),
+      inscricao_municipal: cfg.inscricao_municipal,
+      codigo_municipio: cfg.codigo_municipio ?? '3550308', // SP default
+    },
+    tomador: {
+      ...(nfse.tomador_cpf_cnpj
+        ? (nfse.tomador_cpf_cnpj.replace(/\D/g, '').length <= 11
+            ? { cpf: nfse.tomador_cpf_cnpj.replace(/\D/g, '') }
+            : { cnpj: nfse.tomador_cpf_cnpj.replace(/\D/g, '') })
+        : {}),
+      razao_social: nfse.tomador_nome,
+      ...(nfse.tomador_email ? { email: nfse.tomador_email } : {}),
+    },
+    itens: [
+      {
+        discriminacao: nfse.discriminacao,
+        valor_unitario: Number(nfse.valor_servico),
+        quantidade: 1,
+        item_lista_servico: cfg.codigo_servico_padrao ?? '14.01',
+        aliquota_iss: Number(nfse.aliquota_iss ?? cfg.aliquota_padrao ?? 0.02) * 100,
+        iss_retido: false,
+      },
+    ],
+  };
+
+  // Enviar NFS-e
+  const sendResp = await fetch(`${baseUrl}/v2/nfse?ref=${ref}`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Basic ${btoa(`${token}:`)}`,
+    },
+    body: JSON.stringify(payload),
+  });
+
+  if (!sendResp.ok && sendResp.status !== 422) {
+    const err = await sendResp.text();
+    throw new Error(`Focus NFe erro ${sendResp.status}: ${err}`);
+  }
+
+  const sendData = await sendResp.json() as Record<string, any>;
+
+  // Se já foi autorizado diretamente
+  if (sendData.status === 'autorizado') {
+    return {
+      ref,
+      status: 'autorizado',
+      numero_nfse: sendData.numero,
+      codigo_verificacao: sendData.codigo_verificacao,
+      link_nfse: sendData.caminho_danfe_nfse ?? sendData.url,
+    };
+  }
+
+  // Aguardar processamento (polling até 30s)
+  for (let i = 0; i < 6; i++) {
+    await new Promise((r) => setTimeout(r, 5000));
+    const statusResp = await fetch(`${baseUrl}/v2/nfse/${ref}`, {
+      headers: { Authorization: `Basic ${btoa(`${token}:`)}` },
+    });
+    if (!statusResp.ok) continue;
+    const statusData = await statusResp.json() as Record<string, any>;
+    if (statusData.status === 'autorizado') {
+      return {
+        ref,
+        status: 'autorizado',
+        numero_nfse: statusData.numero,
+        codigo_verificacao: statusData.codigo_verificacao,
+        link_nfse: statusData.caminho_danfe_nfse ?? statusData.url,
+      };
+    }
+    if (statusData.status === 'erro' || statusData.status === 'cancelado') {
+      const erros = statusData.erros?.map((e: any) => e.mensagem).join('; ') ?? 'Erro desconhecido';
+      return { ref, status: 'erro', erros };
+    }
+  }
+
+  // Ainda processando — retornar como "enviado" e checar depois
+  return { ref, status: 'enviado' };
+}
+
 // POST /api/nfse/send/:id — enviar ao webservice da prefeitura SP
 app.post('/send/:id', requireAuth, async (c) => {
   const user = c.get('user');
@@ -320,63 +436,102 @@ app.post('/send/:id', requireAuth, async (c) => {
   const pool = createPool(c.env);
 
   const nfseResult = await pool.query(
-    `SELECT * FROM nfse_records WHERE id = $1 AND organization_id = $2 LIMIT 1`,
+    `SELECT n.*, cfg.cnpj, cfg.inscricao_municipal, cfg.codigo_municipio,
+            cfg.optante_simples, cfg.incentivo_fiscal, cfg.aliquota_padrao,
+            cfg.codigo_servico_padrao, cfg.ambiente
+     FROM nfse_records n
+     JOIN nfse_config cfg ON cfg.organization_id = n.organization_id
+     WHERE n.id = $1 AND n.organization_id = $2 LIMIT 1`,
     [id, user.organizationId],
   );
 
-  if (!nfseResult.rows.length) return c.json({ error: 'NFS-e não encontrada' }, 404);
+  if (!nfseResult.rows.length) return c.json({ error: 'NFS-e não encontrada ou configuração pendente' }, 404);
 
   const nfse = nfseResult.rows[0];
   if (nfse.status !== 'rascunho') {
     return c.json({ error: `NFS-e não pode ser enviada no status "${nfse.status}"` }, 422);
   }
 
-  // Nota: envio real ao webservice da prefeitura SP requer:
-  // 1. Certificado A1 (.pfx) carregado nas configurações
-  // 2. Assinatura XML com crypto.subtle (EdDSA/RSA)
-  // 3. Endpoint SOAP: https://nfe.prefeitura.sp.gov.br/ws/lotenfe.asmx
-  // Por ora, marcamos como "enviado" (mock para ambientes de teste/homologação)
-  const cfgResult = await pool.query(
-    `SELECT ambiente FROM nfse_config WHERE organization_id = $1 LIMIT 1`,
-    [user.organizationId],
-  );
-  const ambiente = cfgResult.rows[0]?.ambiente ?? 'homologacao';
+  const ambiente = (nfse.ambiente ?? 'homologacao') as 'homologacao' | 'producao';
+  const temFocusToken = !!c.env.FOCUS_NFE_TOKEN;
 
-  if (ambiente === 'producao') {
-    // TODO: implementar envio real com certificado digital
-    await pool.query(
-      `UPDATE nfse_records SET status = 'enviado', updated_at = NOW() WHERE id = $1`,
-      [id],
-    );
-    return c.json({ data: { id, status: 'enviado', message: 'Enviado ao webservice (modo produção — integração pendente)' } });
+  if (temFocusToken) {
+    // Envio real via Focus NFe (gerencia certificado A1 + SOAP)
+    try {
+      const result = await sendViaFocusNfe(c.env, nfse, nfse, ambiente);
+
+      if (result.status === 'autorizado') {
+        await pool.query(
+          `UPDATE nfse_records
+           SET status = 'autorizado', numero_nfse = $1, codigo_verificacao = $2,
+               link_nfse = $3, focus_nfe_ref = $4, updated_at = NOW()
+           WHERE id = $5`,
+          [result.numero_nfse, result.codigo_verificacao, result.link_nfse, result.ref, id],
+        );
+        return c.json({ data: { id, status: 'autorizado', ...result } });
+      }
+
+      if (result.status === 'erro') {
+        await pool.query(
+          `UPDATE nfse_records SET status = 'erro', focus_nfe_ref = $1, updated_at = NOW() WHERE id = $2`,
+          [result.ref, id],
+        );
+        return c.json({ error: `Prefeitura recusou: ${result.erros}` }, 422);
+      }
+
+      // enviado — processando de forma assíncrona
+      await pool.query(
+        `UPDATE nfse_records SET status = 'enviado', focus_nfe_ref = $1, updated_at = NOW() WHERE id = $2`,
+        [result.ref, id],
+      );
+      return c.json({ data: { id, status: 'enviado', ref: result.ref, message: 'NFS-e enviada — aguardando autorização da prefeitura' } });
+    } catch (err: any) {
+      console.error('[NFSe] Erro Focus NFe:', err);
+      return c.json({ error: `Falha no envio: ${err.message}` }, 500);
+    }
   }
 
-  // Homologação: simula autorização
-  const numeroNfse = String(Date.now()).slice(-8);
-  const codigoVerificacao = crypto.randomUUID().replace(/-/g, '').slice(0, 8).toUpperCase();
+  if (ambiente === 'homologacao') {
+    // Simulação de autorização para homologação sem token Focus
+    const numeroNfse = String(Date.now()).slice(-8);
+    const codigoVerificacao = crypto.randomUUID().replace(/-/g, '').slice(0, 8).toUpperCase();
+    await pool.query(
+      `UPDATE nfse_records
+       SET status = 'autorizado', numero_nfse = $1, codigo_verificacao = $2,
+           link_nfse = $3, updated_at = NOW()
+       WHERE id = $4`,
+      [
+        numeroNfse,
+        codigoVerificacao,
+        `https://nfe.prefeitura.sp.gov.br/contribuinte/notaprint.aspx?nf=${numeroNfse}&c=${codigoVerificacao}`,
+        id,
+      ],
+    );
+    return c.json({ data: { id, status: 'autorizado', numero_nfse: numeroNfse, codigo_verificacao: codigoVerificacao, ambiente: 'homologacao (simulado)' } });
+  }
 
-  await pool.query(
-    `UPDATE nfse_records
-     SET status = 'autorizado', numero_nfse = $1, codigo_verificacao = $2,
-         link_nfse = $3, updated_at = NOW()
-     WHERE id = $4`,
-    [
-      numeroNfse,
-      codigoVerificacao,
-      `https://nfe.prefeitura.sp.gov.br/contribuinte/notaprint.aspx?nf=${numeroNfse}&c=${codigoVerificacao}`,
-      id,
-    ],
+  return c.json({ error: 'Configure FOCUS_NFE_TOKEN para envio em produção' }, 422);
+});
+
+// GET /api/nfse/status/:ref — consultar status na Focus NFe
+app.get('/status/:ref', requireAuth, async (c) => {
+  const { ref } = c.req.param();
+  const token = c.env.FOCUS_NFE_TOKEN;
+  if (!token) return c.json({ error: 'FOCUS_NFE_TOKEN não configurado' }, 422);
+
+  const cfgResult = await createPool(c.env).query(
+    `SELECT ambiente FROM nfse_config WHERE organization_id = $1 LIMIT 1`,
+    [c.get('user').organizationId],
   );
+  const ambiente = cfgResult.rows[0]?.ambiente ?? 'homologacao';
+  const baseUrl = ambiente === 'producao' ? 'https://api.focusnfe.com.br' : 'https://homologacao.focusnfe.com.br';
 
-  return c.json({
-    data: {
-      id,
-      status: 'autorizado',
-      numero_nfse: numeroNfse,
-      codigo_verificacao: codigoVerificacao,
-      ambiente: 'homologacao',
-    },
+  const resp = await fetch(`${baseUrl}/v2/nfse/${encodeURIComponent(ref)}`, {
+    headers: { Authorization: `Basic ${btoa(`${token}:`)}` },
   });
+
+  if (!resp.ok) return c.json({ error: 'Referência não encontrada na Focus NFe' }, 404);
+  return c.json({ data: await resp.json() });
 });
 
 // DELETE /api/nfse/:id — cancelar NFS-e
