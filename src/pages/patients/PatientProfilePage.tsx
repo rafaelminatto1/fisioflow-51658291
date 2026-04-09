@@ -257,6 +257,7 @@ export const PatientProfilePage = () => {
 					initials={initials}
 					onBack={() => navigate(APP_ROUTES.PATIENTS)}
 					onOpenReport={() => navigate(`/patient-evolution-report/${id}`)}
+					onOpenProntuario={() => navigate(`/prontuario/${id}`)}
 					onEdit={() => setEditingPatient(true)}
 					onEvaluate={handleStartEvaluation}
 					onSchedule={() => navigate(APP_ROUTES.AGENDA)}

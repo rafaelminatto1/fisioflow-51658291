@@ -24,7 +24,7 @@ export const biomechanicsAssessments = pgTable(
 		id: uuid("id").primaryKey().defaultRandom(),
 		patientId: uuid("patient_id")
 			.notNull()
-			.references(() => patients.id, { onDelete: "cascade" }),
+			.references(() => patients.id),
 		organizationId: uuid("organization_id"),
 		professionalId: uuid("professional_id"),
 		

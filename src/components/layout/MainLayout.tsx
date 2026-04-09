@@ -5,8 +5,9 @@
 import type React from "react";
 import "@/styles/premium-utilities.css";
 import "@/styles/mobile-utilities.css";
-import { Bell, ChevronDown, LogOut, User } from "lucide-react";
+import { Bell, ChevronDown, LogOut, User, WifiOff } from "lucide-react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
+import { useState, useEffect } from "react";
 import { SkipLinks } from "@/components/accessibility/SkipLinks";
 import { ComplianceBanner } from "@/components/communications/ComplianceBanner";
 import { GlobalSearch } from "@/components/eventos/GlobalSearch";
@@ -58,6 +59,20 @@ export const MainLayout: React.FC<MainLayoutProps> = ({
 	const { signOut } = useAuth();
 	const navigate = useNavigate();
 	const location = useLocation();
+	const [isOffline, setIsOffline] = useState(!window.navigator.onLine);
+
+	useEffect(() => {
+		const handleOnline = () => setIsOffline(false);
+		const handleOffline = () => setIsOffline(true);
+
+		window.addEventListener("online", handleOnline);
+		window.addEventListener("offline", handleOffline);
+
+		return () => {
+			window.removeEventListener("online", handleOnline);
+			window.removeEventListener("offline", handleOffline);
+		};
+	}, []);
 
 	const handleLogout = async () => {
 		try {
@@ -145,6 +160,16 @@ export const MainLayout: React.FC<MainLayoutProps> = ({
 
 											<OnlineUsersIndicator />
 										</div>
+
+										{/* Offline Badge */}
+										{isOffline && (
+											<div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-red-500/10 dark:bg-red-500/20 border border-red-500/30 animate-pulse transition-all duration-500">
+												<div className="h-1.5 w-1.5 rounded-full bg-red-500 shadow-[0_0_8px_rgba(239,68,68,0.5)]" />
+												<span className="text-[9px] text-red-600 dark:text-red-400 font-black uppercase tracking-widest">
+													Modo Offline
+												</span>
+											</div>
+										)}
 
 										<DropdownMenu>
 											<DropdownMenuTrigger asChild>

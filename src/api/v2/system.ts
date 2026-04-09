@@ -34,6 +34,14 @@ export const integrationsApi = {
 					"/api/integrations/google/business/reviews",
 				),
 		},
+		exchangeCode: (code: string) =>
+			request<{ data: GoogleIntegrationRecord }>(
+				"/api/integrations/google/exchange-code",
+				{
+					method: "POST",
+					body: JSON.stringify({ code }),
+				},
+			),
 		connect: (data?: { code?: string; email?: string }) =>
 			request<{ data: GoogleIntegrationRecord }>(
 				"/api/integrations/google/connect",

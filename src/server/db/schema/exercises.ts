@@ -163,7 +163,7 @@ export const exerciseFavorites = pgTable(
 		id: uuid("id").primaryKey().defaultRandom(),
 		exerciseId: uuid("exercise_id")
 			.notNull()
-			.references(() => exercises.id, { onDelete: "cascade" }),
+			.references(() => exercises.id),
 		userId: text("user_id").notNull(), // Neon Auth UID
 		organizationId: uuid("organization_id"),
 		createdAt: timestamp("created_at").defaultNow().notNull(),
