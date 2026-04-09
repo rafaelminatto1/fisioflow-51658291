@@ -1,7 +1,7 @@
 {
 	"expo": {
 		"name": "FisioFlow Pro",
-		"slug": "vite_react_shadcn_ts",
+		"slug": "fisioflow-pro",
 		"version": "1.0.0",
 		"orientation": "portrait",
 		"icon": "./assets/icon.png",

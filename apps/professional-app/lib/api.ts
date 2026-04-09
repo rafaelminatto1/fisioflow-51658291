@@ -764,6 +764,50 @@ export async function deletePartnership(id: string): Promise<{ ok: boolean }> {
 // CRM API
 // ============================================================
 
+export interface ApiLead {
+  id: string;
+  organization_id?: string;
+  nome: string;
+  full_name?: string;
+  email?: string | null;
+  phone?: string | null;
+  telefone?: string | null;
+  interesse?: string | null;
+  estagio: 'aguardando' | 'contatado' | 'interessado' | 'agendado' | 'convertido' | 'perdido';
+  status?: string | null;
+  origem?: string | null;
+  source?: string | null;
+  notes?: string | null;
+  assigned_to?: string | null;
+  created_at: string;
+  updated_at: string;
+  [key: string]: unknown;
+}
+
+export interface ApiLeadHistory {
+  id: string;
+  lead_id: string;
+  action: string;
+  description?: string | null;
+  created_by?: string | null;
+  created_at: string;
+  [key: string]: unknown;
+}
+
+export interface ApiTelemedicineRoom {
+  id: string;
+  organization_id?: string;
+  patient_id: string;
+  patient_name?: string | null;
+  room_name: string;
+  livekit_token?: string | null;
+  status: 'waiting' | 'active' | 'ended';
+  started_at?: string | null;
+  ended_at?: string | null;
+  created_at: string;
+  [key: string]: unknown;
+}
+
 export async function getLeads(params?: any): Promise<ApiLead[]> {
   const response = await fetchApi<ApiResponse<ApiLead[]>>('/api/crm/leads', {
     params,

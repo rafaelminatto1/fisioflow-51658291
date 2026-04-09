@@ -4,6 +4,7 @@ import { createRoot } from "react-dom/client";
 import App from "./App.tsx";
 import "./index.css";
 import { fisioLogger as logger } from "@/lib/errors/logger";
+import { initializeOnClient } from "@/lib/services/initialization";
 
 // 3. MONITORAMENTO DE ERROS DE BUNDLE (VITE 8)
 const isChunkLoadError = (error: unknown) => {
@@ -48,8 +49,10 @@ createRoot(container).render(<App />);
 
 // Inicialização de serviços secundários após o render inicial para TBT zero
 setTimeout(() => {
-	logger.info("Sistema inicializado", { 
-		version: "2026.1.0",
-		engine: "Vite 8 + Rolldown"
-	}, "main");
+	initializeOnClient().then(() => {
+		logger.info("Sistema inicializado", {
+			version: "2026.1.0",
+			engine: "Vite 8 + Rolldown"
+		}, "main");
+	});
 }, 100);

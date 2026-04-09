@@ -3,7 +3,7 @@ import { CapacitorConfig } from '@capacitor/cli';
 const config: CapacitorConfig = {
   appId: 'com.fisioflow.app',
   appName: 'FisioFlow',
-  webDir: 'dist',
+  webDir: 'apps/web/dist',
   // Configuração do servidor removida para usar build local
   // Para desenvolvimento com hot reload, descomente a seção server abaixo:
   // server: {

@@ -1,26 +1,20 @@
 # 🏗️ FisioFlow - System Architecture (v4.0.0 - 2026)
 
-## ⚠️ Alerta de Segurança e Migração
-
-O projeto está em transição final para a arquitetura v4.0.0.
-
-*   **API Legada (DEPRECATED/DISABLED)**: `cloudflare-worker/fisioflow-api.ts`. Esta API foi mantida apenas como stub fail-closed para preservar referências históricas e **não** deve ser utilizada em produção.
-*   **API Atual (CANÔNICA)**: `apps/api/src/index.ts`. Esta é a API oficial baseada em Hono, com verificação robusta via JWKS (`jose`) e integração total com Drizzle ORM.
-
-Todas as aplicações (Patient e Professional) devem apontar para os domínios `api-paciente.moocafisio.com.br` e `api-pro.moocafisio.com.br` respectivamente, que são servidos pela nova API.
+A arquitetura do **FisioFlow** foi projetada para ser nativa da borda (Edge-Native), utilizando a infraestrutura global da Cloudflare e o escalonamento serverless do Neon PostgreSQL.
 
 ## 🚀 Tecnologias Principais
 
 | Camada | Tecnologia | Implementação |
 | :--- | :--- | :--- |
-| **Frontend** | React 19 + Vite | Hospedado no **Cloudflare Pages**. |
-| **Backend** | Cloudflare Workers | Serverless API (Hono.js/TypeScript). |
-| **Database** | **Neon DB (PostgreSQL)** | Banco relacional com **Drizzle ORM**. |
-| **Auth** | **Neon Auth (Better Auth)** | Gestão de identidade integrada ao banco. |
-| **Storage** | **Cloudflare R2** | Armazenamento de mídia (Vídeos/Imagens). |
-| **Aceleração** | Cloudflare Hyperdrive | Pooling de conexões PostgreSQL na borda. |
+| **Runtime** | Node.js v20.12.0+ | Ambiente de desenvolvimento e build consistente. |
+| **Frontend** | React 19 + Vite 8 | Hospedado no **Cloudflare Pages**. |
+| **Backend** | Cloudflare Workers | Serverless API (Hono.js/TypeScript) em `apps/api`. |
+| **Database** | **Neon DB (PostgreSQL)** | Banco relacional serverless com **Drizzle ORM**. |
+| **Auth** | **Neon Auth (JWKS)** | Gestão de identidade integrada com validação por chaves públicas. |
+| **Storage** | **Cloudflare R2** | Armazenamento de mídia (Vídeos/Imagens) via S3 API. |
+| **Aceleração** | Cloudflare Hyperdrive | Pooling de conexões PostgreSQL distribuído na borda. |
 
-## 📐 Arquitetura do Sistema
+## 📐 Diagrama de Arquitetura
 
 ```mermaid
 graph TD
@@ -29,7 +23,7 @@ graph TD
     CF_Edge --> CF_Workers[Cloudflare Workers - API]
     
     subgraph "Auth & Security"
-        CF_Workers --> Neon_Auth[Neon Auth / Better Auth]
+        CF_Workers --> Neon_Auth[Neon Auth / JWKS Verification]
     end
     
     subgraph "Data Persistence"
@@ -42,19 +36,20 @@ graph TD
     end
 ```
 
-## 🔐 Modelo de Segurança
+## 🔐 Modelo de Segurança e Isolamento
 
-1.  **Isolamento de Tenant**: Utilização de Row Level Security (RLS) no PostgreSQL via Neon para garantir que uma clínica nunca acesse dados de outra.
-2.  **Autenticação JWT**: Os Workers validam os tokens emitidos pelo Neon Auth usando chaves públicas (JWKS).
-3.  **Acesso Interno**: O sistema está configurado com `X-Robots-Tag: noindex` e headers de segurança para evitar indexação em motores de busca.
-4.  **Presigned URLs**: Todo acesso ao Cloudflare R2 é feito via URLs temporárias geradas pelo backend, garantindo que arquivos de pacientes não sejam públicos.
+1.  **Isolamento de Tenant**: O sistema utiliza um padrão de **Multi-tenancy** no nível da aplicação. Todas as tabelas possuem `organizationId`, e o acesso é filtrado em tempo de execução pelo Drizzle ORM baseado no contexto do usuário autenticado.
+2.  **Autenticação JWT**: Os tokens emitidos pelo provedor de identidade (Neon Auth) são validados pelos Workers via chaves JWKS distribuídas, eliminando dependência de chamadas externas para verificação de sessão.
+3.  **Audit Log**: Operações críticas são registradas para conformidade com a LGPD, garantindo rastreabilidade de acesso aos dados de saúde.
+4.  **Presigned URLs**: Todo acesso ao Cloudflare R2 é autenticado; o backend gera URLs temporárias para visualização/upload de mídia privada.
 
-## 💾 Fluxo de Dados
+## 💾 Fluxo de Dados Operacional
 
-- **Leitura**: Client -> Worker -> Hyperdrive -> Neon DB (Cacheado na borda se aplicável).
-- **Escrita**: Client -> Worker -> Neon DB (Commit imediato).
-- **Mídia**: Client -> Worker (Gera URL de Upload) -> R2 (Upload direto do Client).
+- **Leitura**: Client -> Worker -> Hyperdrive (Connection Pooling) -> Neon DB.
+- **Escrita**: Client -> Worker -> Neon DB (Transações via Drizzle ORM).
+- **Consistência**: O banco Neon opera em modo serverless, escalando de zero à demanda máxima instantaneamente.
 
 ---
-**Última Atualização:** Março de 2026  
-**Status:** Produção em Transição (Firebase Deprecated)
+
+**Última Atualização:** Abril de 2026  
+**Status:** Produção Estável (Legacy Firebase/Supabase Decommissioned)

@@ -1,10 +1,10 @@
 import { Hono } from "hono";
-import { eq, and, or, count, sql, desc, asc } from "drizzle-orm";
+import { eq, and, or, count, sql, desc, asc, isNull } from "drizzle-orm";
 import { patients } from "@fisioflow/db";
 import type { Env } from "../types/env";
 import { requireAuth, type AuthVariables } from "../lib/auth";
 import { createDb } from "../lib/db";
-import { searchFilter } from "../lib/db-utils";
+import { searchFilter, withTenant } from "../lib/db-utils";
 import { triggerInngestEvent } from "../lib/inngest-client";
 import { registerPatientClinicalDetailRoutes } from "./patients/clinical-details";
 import { isUuid } from "../lib/validators";
@@ -252,6 +252,8 @@ function normalizePatientRow(row: DbRow) {
 		professional_name: trimmedString(professionalName) ?? null,
 		birth_date: birthDate ? String(birthDate) : null,
 		gender: normalizeGenderFromDb(row.gender),
+		nickname: trimmedString(row.nickname) ?? null,
+		social_name: trimmedString(row.social_name ?? row.socialName) ?? null,
 		address: trimmedString(address?.street ?? row.address) ?? null,
 		city: trimmedString(address?.city ?? row.city) ?? null,
 		state: trimmedString(address?.state ?? row.state) ?? null,
@@ -326,6 +328,12 @@ function buildPatientWritePayload(
 	}
 	if (body.gender !== undefined) {
 		payload.gender = normalizeGenderToDb(body.gender) as any;
+	}
+	if (body.nickname !== undefined) {
+		payload.nickname = nullableString(body.nickname);
+	}
+	if (body.social_name !== undefined || body.socialName !== undefined) {
+		payload.socialName = nullableString(body.social_name ?? body.socialName);
 	}
 
 	// Address, Emergency Contact, Insurance are stored as JSONB in Drizzle/Postgres
@@ -444,7 +452,7 @@ app.get("/", async (c) => {
 	);
 
 	try {
-		let conditions = eq(patients.organizationId, user.organizationId);
+		let conditions: any = withTenant(patients, user.organizationId);
 
 		const normalizedStatus = requestedStatus?.toLowerCase();
 		if (normalizedStatus) {
@@ -462,6 +470,8 @@ app.get("/", async (c) => {
 				conditions,
 				or(
 					searchFilter(patients.fullName, search),
+					searchFilter(patients.nickname, search),
+					searchFilter(patients.socialName, search),
 					searchFilter(patients.email, search),
 					searchFilter(patients.cpf, search),
 					searchFilter(patients.phone, search),
@@ -518,7 +528,9 @@ app.get("/last-updated", async (c) => {
 		const result = await db
 			.select({ last_updated_at: sql<string>`MAX(${patients.updatedAt})` })
 			.from(patients)
-			.where(eq(patients.organizationId, user.organizationId));
+			.where(
+				withTenant(patients, user.organizationId)
+			);
 
 		const lastUpdated = result[0]?.last_updated_at;
 		return c.json({
@@ -540,10 +552,11 @@ app.get("/by-profile/:profileId", async (c) => {
 			.select()
 			.from(patients)
 			.where(
-				and(
-					eq(patients.profileId, profileId),
-					eq(patients.organizationId, user.organizationId),
-				),
+				withTenant(
+					patients,
+					user.organizationId,
+					eq(patients.profileId, profileId)
+				)
 			)
 			.limit(1);
 
@@ -625,6 +638,7 @@ app.get("/:id/stats", async (c) => {
 				and(
 					sql`patient_id = ${id}::uuid`,
 					sql`organization_id = ${user.organizationId}::uuid`,
+					sql`deleted_at IS NULL`
 				),
 			);
 
@@ -660,7 +674,11 @@ app.get("/:id", async (c) => {
 			.select()
 			.from(patients)
 			.where(
-				and(eq(patients.id, id), eq(patients.organizationId, user.organizationId)),
+				withTenant(
+					patients,
+					user.organizationId,
+					eq(patients.id, id)
+				),
 			)
 			.limit(1);
 
@@ -692,7 +710,11 @@ const updatePatientHandler = async (c: any) => {
 			.update(patients)
 			.set(updateValues as any)
 			.where(
-				and(eq(patients.id, id), eq(patients.organizationId, user.organizationId)),
+				withTenant(
+					patients,
+					user.organizationId,
+					eq(patients.id, id)
+				),
 			)
 			.returning();
 
@@ -726,9 +748,13 @@ app.delete("/:id", async (c) => {
 		// Logically delete by setting isActive = false
 		const result = await db
 			.update(patients)
-			.set({ isActive: false, updatedAt: new Date() })
+			.set({ isActive: false, deletedAt: new Date(), updatedAt: new Date() })
 			.where(
-				and(eq(patients.id, id), eq(patients.organizationId, user.organizationId)),
+				withTenant(
+					patients,
+					user.organizationId,
+					eq(patients.id, id)
+				),
 			)
 			.returning({ id: patients.id });
 

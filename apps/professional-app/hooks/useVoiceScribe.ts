@@ -42,7 +42,7 @@ export function useVoiceScribe(onTranscribed: (text: string) => void) {
       if (!uri) throw new Error('Arquivo de áudio não encontrado');
 
       const base64 = await FileSystem.readAsStringAsync(uri, {
-        encoding: FileSystem.EncodingType.Base64,
+        encoding: 'base64' as any,
       });
 
       const result = await fetchApi<{ text?: string; transcription?: string }>(
