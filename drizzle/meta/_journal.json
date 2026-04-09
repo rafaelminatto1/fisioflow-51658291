@@ -15,6 +15,13 @@
       "when": 1775743623096,
       "tag": "0001_add_soft_deletes_remove_cascades",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1775773980793,
+      "tag": "0002_short_taskmaster",
+      "breakpoints": true
     }
   ]
 }

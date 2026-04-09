@@ -229,6 +229,7 @@ export const waConversationTags = pgTable(
 			() => waConversations.id,
 		),
 		tagId: uuid("tag_id").references(() => waTags.id),
+		organizationId: uuid("organization_id"),
 		createdAt: timestamp("created_at").defaultNow().notNull(),
 	},
 	(table) => ({

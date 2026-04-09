@@ -269,6 +269,7 @@ export const pathologies = pgTable(
 			.notNull()
 			.references(() => medicalRecords.id),
 
+		organizationId: uuid("organization_id"),
 		name: varchar("name", { length: 200 }).notNull(),
 		icdCode: varchar("icd_code", { length: 20 }),
 		status: pathologyStatusEnum("status").default("active"),
@@ -281,6 +282,7 @@ export const pathologies = pgTable(
 		createdAt: timestamp("created_at").defaultNow().notNull(),
 	},
 	(table) => ({
+		orgIdx: index("idx_pathologies_org_id").on(table.organizationId),
 		medicalRecordIdIdx: index("idx_pathologies_medical_record_id").on(
 			table.medicalRecordId,
 		),
@@ -304,6 +306,7 @@ export const surgeries = pgTable(
 			.notNull()
 			.references(() => medicalRecords.id),
 
+		organizationId: uuid("organization_id"),
 		name: varchar("name", { length: 200 }).notNull(),
 		surgeryDate: date("surgery_date"),
 		surgeon: varchar("surgeon", { length: 150 }),
@@ -316,6 +319,7 @@ export const surgeries = pgTable(
 		createdAt: timestamp("created_at").defaultNow().notNull(),
 	},
 	(table) => ({
+		orgIdx: index("idx_surgeries_org_id").on(table.organizationId),
 		medicalRecordIdIdx: index("idx_surgeries_medical_record_id").on(
 			table.medicalRecordId,
 		),
@@ -338,6 +342,7 @@ export const goals = pgTable(
 			.notNull()
 			.references(() => medicalRecords.id),
 
+		organizationId: uuid("organization_id"),
 		description: text("description").notNull(),
 		targetDate: date("target_date"), // For countdown feature
 		priority: integer("priority").default(0), // Higher = more important
@@ -350,6 +355,7 @@ export const goals = pgTable(
 		createdAt: timestamp("created_at").defaultNow().notNull(),
 	},
 	(table) => ({
+		orgIdx: index("idx_goals_org_id").on(table.organizationId),
 		medicalRecordIdIdx: index("idx_goals_medical_record_id").on(
 			table.medicalRecordId,
 		),

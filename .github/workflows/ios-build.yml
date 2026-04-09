@@ -58,7 +58,7 @@ jobs:
         working-directory: apps/${{ inputs.app }}
         run: npx expo prebuild --platform ios --clean --non-interactive
         env:
-          EXPO_TOKEN: ${{ secrets['EXPO_TOKEN'] }}
+          EXPO_TOKEN: ${{ secrets['EXPO_TOKEN'] || '' }}
 
       # ── 4. Cache CocoaPods (economiza ~10 min) ────────────────────────────
       - name: Cache CocoaPods
