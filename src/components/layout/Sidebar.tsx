@@ -40,6 +40,7 @@ import {
 	Zap,
 	Move,
 	Calculator,
+	MessageCircle,
 } from "lucide-react";
 import {
 	Collapsible,
@@ -175,6 +176,7 @@ const operacionalMenuItems = [
 	{ icon: Package, label: "Estoque", href: "/inventory" },
 	{ icon: Video, label: "Telemedicina", href: "/telemedicine" },
 	{ icon: MessageSquare, label: "Comunicação", href: "/communications" },
+	{ icon: MessageCircle, label: "WhatsApp", href: "/whatsapp/inbox" },
 ];
 
 const adminSubmenu = [
