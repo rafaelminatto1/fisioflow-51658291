@@ -28,8 +28,6 @@ try {
 // usamos resolveRequest para interceptar e redirecionar para stubs.
 const moduleStubs = {
 	"react-native-vision-camera": path.resolve(projectRoot, "stubs/vision-camera.js"),
-	"expo-linear-gradient": path.resolve(projectRoot, "stubs/linear-gradient.js"),
-	"react-native-linear-gradient": path.resolve(projectRoot, "stubs/linear-gradient.js"),
 };
 
 config.resolver.resolveRequest = (context, moduleName, platform) => {
