@@ -161,7 +161,7 @@ export const protocolExercises = pgTable(
 		id: uuid("id").primaryKey().defaultRandom(),
 		protocolId: uuid("protocol_id")
 			.notNull()
-			.references(() => exerciseProtocols.id, { onDelete: "cascade" }),
+			.references(() => exerciseProtocols.id),
 		exerciseId: uuid("exercise_id").notNull(), // referência lazy (evita circular no Drizzle)
 
 		phaseWeekStart: integer("phase_week_start").notNull(),

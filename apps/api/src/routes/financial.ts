@@ -21,6 +21,7 @@ import {
 } from '@fisioflow/db';
 import { createDb } from '../lib/db';
 import { requireAuth, type AuthVariables } from '../lib/auth';
+import { withTenant } from '../lib/db-utils';
 import type { Env } from '../types/env';
 import { registerFinancialCommerceRoutes } from './financial-commerce';
 import { registerFinancialAnalyticsRoutes } from './financial-analytics';
@@ -36,7 +37,7 @@ app.get('/transacoes', requireAuth, async (c) => {
   const { tipo, status, dateFrom, dateTo, limit = '50', offset = '0' } = c.req.query();
 
   try {
-    const filters = [eq(transacoes.organizationId, user.organizationId)];
+    const filters = [withTenant(transacoes, user.organizationId)];
 
     if (tipo) filters.push(eq(transacoes.tipo, tipo));
     if (status) filters.push(eq(transacoes.status, status));
@@ -104,10 +105,7 @@ app.put('/transacoes/:id', requireAuth, async (c) => {
         metadata: body.metadata !== undefined ? body.metadata : undefined,
         updatedAt: new Date(),
       })
-      .where(and(
-        eq(transacoes.id, id),
-        eq(transacoes.organizationId, user.organizationId)
-      ))
+      .where(withTenant(transacoes, user.organizationId, eq(transacoes.id, id)))
       .returning();
 
     if (!result) return c.json({ error: 'Transação não encontrada' }, 404);
@@ -124,11 +122,8 @@ app.delete('/transacoes/:id', requireAuth, async (c) => {
   const { id } = c.req.param();
 
   try {
-    const [result] = await db.delete(transacoes)
-      .where(and(
-        eq(transacoes.id, id),
-        eq(transacoes.organizationId, user.organizationId)
-      ))
+    const [result] = await db.update(transacoes).set({ deletedAt: new Date() })
+      .where(withTenant(transacoes, user.organizationId, eq(transacoes.id, id)))
       .returning();
 
     if (!result) return c.json({ error: 'Transação não encontrada' }, 404);
@@ -147,7 +142,7 @@ app.get('/contas', requireAuth, async (c) => {
   const { tipo, status, dateFrom, dateTo, limit = '50', offset = '0', patientId } = c.req.query();
  
   try {
-    const filters = [eq(contasFinanceiras.organizationId, user.organizationId)];
+    const filters = [withTenant(contasFinanceiras, user.organizationId)];
    
     if (tipo) filters.push(eq(contasFinanceiras.tipo, tipo));
     if (status) filters.push(eq(contasFinanceiras.status, status));
@@ -239,10 +234,7 @@ app.put('/contas/:id', requireAuth, async (c) => {
         categoria: body.categoria !== undefined ? body.categoria : undefined,
         updatedAt: new Date(),
       })
-      .where(and(
-        eq(contasFinanceiras.id, id),
-        eq(contasFinanceiras.organizationId, user.organizationId)
-      ))
+      .where(withTenant(contasFinanceiras, user.organizationId, eq(contasFinanceiras.id, id)))
       .returning();
 
     if (!result) return c.json({ error: 'Conta não encontrada' }, 404);
@@ -259,11 +251,8 @@ app.delete('/contas/:id', requireAuth, async (c) => {
   const { id } = c.req.param();
 
   try {
-    const [result] = await db.delete(contasFinanceiras)
-      .where(and(
-        eq(contasFinanceiras.id, id),
-        eq(contasFinanceiras.organizationId, user.organizationId)
-      ))
+    const [result] = await db.update(contasFinanceiras).set({ deletedAt: new Date() })
+      .where(withTenant(contasFinanceiras, user.organizationId, eq(contasFinanceiras.id, id)))
       .returning();
 
     if (!result) return c.json({ error: 'Conta não encontrada' }, 404);
@@ -282,7 +271,7 @@ app.get('/centros-custo', requireAuth, async (c) => {
   const { ativo } = c.req.query();
 
   try {
-    const filters = [eq(centrosCusto.organizationId, user.organizationId)];
+    const filters = [withTenant(centrosCusto, user.organizationId)];
     if (ativo !== undefined) filters.push(eq(centrosCusto.ativo, ativo));
 
     const result = await db.select().from(centrosCusto)
@@ -336,10 +325,7 @@ app.put('/centros-custo/:id', requireAuth, async (c) => {
         ativo: body.ativo !== undefined ? String(body.ativo) : undefined,
         updatedAt: new Date(),
       })
-      .where(and(
-        eq(centrosCusto.id, id),
-        eq(centrosCusto.organizationId, user.organizationId)
-      ))
+      .where(withTenant(centrosCusto, user.organizationId, eq(centrosCusto.id, id)))
       .returning();
 
     if (!result) return c.json({ error: 'Centro de custo não encontrado' }, 404);
@@ -356,11 +342,8 @@ app.delete('/centros-custo/:id', requireAuth, async (c) => {
   const { id } = c.req.param();
 
   try {
-    const [result] = await db.delete(centrosCusto)
-      .where(and(
-        eq(centrosCusto.id, id),
-        eq(centrosCusto.organizationId, user.organizationId)
-      ))
+    const [result] = await db.update(centrosCusto).set({ deletedAt: new Date() })
+      .where(withTenant(centrosCusto, user.organizationId, eq(centrosCusto.id, id)))
       .returning();
 
     if (!result) return c.json({ error: 'Centro de custo não encontrado' }, 404);
@@ -378,7 +361,7 @@ app.get('/pagamentos', requireAuth, async (c) => {
   const db = createDb(c.env);
   const { eventoId, patientId, appointmentId, dateFrom, dateTo, limit = '50', offset = '0' } = c.req.query();
 
-  const where = [eq(pagamentos.organizationId, user.organizationId)];
+  const where = [withTenant(pagamentos, user.organizationId)];
   if (eventoId) where.push(eq(pagamentos.eventoId, eventoId));
   if (patientId) where.push(eq(pagamentos.patientId, patientId));
   if (appointmentId) where.push(eq(pagamentos.appointmentId, appointmentId));
@@ -449,10 +432,7 @@ app.put('/pagamentos/:id', requireAuth, async (c) => {
         observacoes: body.observacoes !== undefined ? body.observacoes : undefined,
         updatedAt: new Date(),
       })
-      .where(and(
-        eq(pagamentos.id, id),
-        eq(pagamentos.organizationId, user.organizationId)
-      ))
+      .where(withTenant(pagamentos, user.organizationId, eq(pagamentos.id, id)))
       .returning();
 
     if (!result) return c.json({ error: 'Pagamento não encontrado' }, 404);
@@ -469,11 +449,8 @@ app.delete('/pagamentos/:id', requireAuth, async (c) => {
   const { id } = c.req.param();
 
   try {
-    const [result] = await db.delete(pagamentos)
-      .where(and(
-        eq(pagamentos.id, id),
-        eq(pagamentos.organizationId, user.organizationId)
-      ))
+    const [result] = await db.update(pagamentos).set({ deletedAt: new Date() })
+      .where(withTenant(pagamentos, user.organizationId, eq(pagamentos.id, id)))
       .returning();
 
     if (!result) return c.json({ error: 'Pagamento não encontrado' }, 404);
@@ -493,7 +470,7 @@ app.get('/package-templates', requireAuth, async (c) => {
   try {
     const result = await db.select()
       .from(sessionPackageTemplates)
-      .where(eq(sessionPackageTemplates.organizationId, user.organizationId))
+      .where(withTenant(sessionPackageTemplates, user.organizationId))
       .orderBy(sessionPackageTemplates.sessionsCount, desc(sessionPackageTemplates.createdAt));
 
     return c.json({ data: result });
@@ -550,10 +527,7 @@ app.put('/package-templates/:id', requireAuth, async (c) => {
         isActive: body.is_active !== undefined ? Boolean(body.is_active) : undefined,
         updatedAt: new Date(),
       })
-      .where(and(
-        eq(sessionPackageTemplates.id, id),
-        eq(sessionPackageTemplates.organizationId, user.organizationId)
-      ))
+      .where(withTenant(sessionPackageTemplates, user.organizationId, eq(sessionPackageTemplates.id, id)))
       .returning();
 
     if (!result) return c.json({ error: 'Pacote não encontrado' }, 404);
@@ -570,11 +544,8 @@ app.delete('/package-templates/:id', requireAuth, async (c) => {
   const { id } = c.req.param();
 
   try {
-    const [result] = await db.delete(sessionPackageTemplates)
-      .where(and(
-        eq(sessionPackageTemplates.id, id),
-        eq(sessionPackageTemplates.organizationId, user.organizationId)
-      ))
+    const [result] = await db.update(sessionPackageTemplates).set({ deletedAt: new Date() })
+      .where(withTenant(sessionPackageTemplates, user.organizationId, eq(sessionPackageTemplates.id, id)))
       .returning();
 
     if (!result) return c.json({ error: 'Pacote não encontrado' }, 404);
@@ -590,7 +561,7 @@ app.get('/patient-packages', requireAuth, async (c) => {
   const db = createDb(c.env);
   const { patientId, status: filterStatus, limit = '100', offset = '0' } = c.req.query();
 
-  const whereConditions = [eq(patientPackages.organizationId, user.organizationId)];
+  const whereConditions = [withTenant(patientPackages, user.organizationId)];
   if (patientId) whereConditions.push(eq(patientPackages.patientId, patientId));
     if (filterStatus) whereConditions.push(eq(patientPackages.status, filterStatus as any));
 
@@ -641,10 +612,7 @@ app.post('/patient-packages', requireAuth, async (c) => {
     if (packageTemplateId) {
       [template] = await db.select()
         .from(sessionPackageTemplates)
-        .where(and(
-          eq(sessionPackageTemplates.id, packageTemplateId),
-          eq(sessionPackageTemplates.organizationId, user.organizationId)
-        ))
+        .where(withTenant(sessionPackageTemplates, user.organizationId, eq(sessionPackageTemplates.id, packageTemplateId)))
         .limit(1);
       
       if (!template) return c.json({ error: 'Template de pacote não encontrado' }, 404);
@@ -688,50 +656,52 @@ app.post('/patient-packages/:id/consume', requireAuth, async (c) => {
   const body = (await c.req.json().catch(() => ({}))) as Record<string, any>;
 
   try {
-    const [current] = await db.select()
-      .from(patientPackages)
-      .where(and(
-        eq(patientPackages.id, id),
-        eq(patientPackages.organizationId, user.organizationId)
-      ))
-      .limit(1);
+    const updated = await db.transaction(async (tx) => {
+      const [current] = await tx.select()
+        .from(patientPackages)
+        .where(withTenant(patientPackages, user.organizationId, eq(patientPackages.id, id)))
+        .limit(1);
 
-    if (!current) return c.json({ error: 'Pacote não encontrado' }, 404);
-    if (current.status !== 'active') return c.json({ error: 'Pacote não está ativo' }, 400);
-    if (current.expiresAt && new Date(current.expiresAt) < new Date()) {
-      return c.json({ error: 'Pacote expirado' }, 400);
-    }
-    if ((current.remainingSessions ?? 0) <= 0) {
-      return c.json({ error: 'Sem sessões disponíveis neste pacote' }, 400);
-    }
+      if (!current) throw new Error('Pacote não encontrado');
+      if (current.status !== 'active') throw new Error('Pacote não está ativo');
+      if (current.expiresAt && new Date(current.expiresAt) < new Date()) {
+        throw new Error('Pacote expirado');
+      }
+      if ((current.remainingSessions ?? 0) <= 0) {
+        throw new Error('Sem sessões disponíveis neste pacote');
+      }
 
-    const [updated] = await db.update(patientPackages)
-      .set({
-        usedSessions: (current.usedSessions ?? 0) + 1,
-        remainingSessions: (current.remainingSessions ?? 0) - 1,
-        lastUsedAt: new Date(),
-        status: (current.remainingSessions ?? 0) - 1 <= 0 ? 'used' : current.status as any,
-        updatedAt: new Date(),
-      })
-      .where(and(
-        eq(patientPackages.id, id),
-        eq(patientPackages.organizationId, user.organizationId)
-      ))
-      .returning();
+      const [updatedRecord] = await tx.update(patientPackages)
+        .set({
+          usedSessions: (current.usedSessions ?? 0) + 1,
+          remainingSessions: (current.remainingSessions ?? 0) - 1,
+          lastUsedAt: new Date(),
+          status: (current.remainingSessions ?? 0) - 1 <= 0 ? 'used' : current.status as any,
+          updatedAt: new Date(),
+        })
+        .where(withTenant(patientPackages, user.organizationId, eq(patientPackages.id, id)))
+        .returning();
 
-    await db.insert(packageUsage)
-      .values({
-        organizationId: user.organizationId,
-        patientPackageId: id,
-        patientId: current.patientId,
-        appointmentId: body.appointmentId ? String(body.appointmentId) : null,
-        usedAt: new Date(),
-        createdBy: user.uid,
-      });
+      await tx.insert(packageUsage)
+        .values({
+          organizationId: user.organizationId,
+          patientPackageId: id,
+          patientId: current.patientId,
+          appointmentId: body.appointmentId ? String(body.appointmentId) : null,
+          usedAt: new Date(),
+          createdBy: user.uid,
+        });
+
+      return updatedRecord;
+    });
 
     return c.json({ data: updated });
-  } catch (e) {
+  } catch (e: any) {
     console.error('[Financial/PatientPackages] Consume error:', e);
+    if (e.message === 'Pacote não encontrado') return c.json({ error: e.message }, 404);
+    if (['Pacote não está ativo', 'Pacote expirado', 'Sem sessões disponíveis neste pacote'].includes(e.message)) {
+      return c.json({ error: e.message }, 400);
+    }
     return c.json({ error: 'Erro ao consumir pacote' }, 500);
   }
 });

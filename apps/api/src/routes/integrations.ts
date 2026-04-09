@@ -148,6 +148,56 @@ app.get('/google/business/reviews', async (c) => {
   return c.json({ data: reviews });
 });
 
+app.post('/google/exchange-code', async (c) => {
+  const user = c.get('user');
+  const { code } = await c.req.json<{ code: string }>();
+  if (!code) return c.json({ error: 'code é obrigatório' }, 400);
+
+  const clientId = c.env.GOOGLE_CLIENT_ID;
+  const clientSecret = c.env.GOOGLE_CLIENT_SECRET;
+  const redirectUri = c.env.GOOGLE_REDIRECT_URI;
+  if (!clientId || !clientSecret || !redirectUri) {
+    return c.json({ error: 'Google OAuth não configurado no servidor' }, 500);
+  }
+
+  const tokenRes = await fetch('https://oauth2.googleapis.com/token', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+    body: new URLSearchParams({ code, client_id: clientId, client_secret: clientSecret, redirect_uri: redirectUri, grant_type: 'authorization_code' }),
+  });
+  if (!tokenRes.ok) {
+    const err = await tokenRes.text();
+    return c.json({ error: `Falha na troca de código: ${err}` }, 400);
+  }
+  const tokens = await tokenRes.json<{ access_token: string; refresh_token?: string; expires_in: number; token_type: string }>();
+
+  // Fetch Google profile to get email
+  const profileRes = await fetch('https://www.googleapis.com/oauth2/v2/userinfo', {
+    headers: { Authorization: `Bearer ${tokens.access_token}` },
+  });
+  const profile = profileRes.ok ? await profileRes.json<{ email?: string }>() : {};
+
+  const pool = await createPool(c.env);
+  const expiry = Date.now() + tokens.expires_in * 1000;
+
+  const result = await pool.query(
+    `INSERT INTO google_integrations (user_id, organization_id, provider, external_email, status, tokens, created_at, updated_at)
+     VALUES ($1, $2, 'google', $3, 'connected', $4::jsonb, NOW(), NOW())
+     ON CONFLICT (user_id, provider) DO UPDATE
+     SET status = 'connected', external_email = EXCLUDED.external_email, tokens = EXCLUDED.tokens, updated_at = NOW()
+     RETURNING *`,
+    [user.uid, user.organizationId, profile.email ?? null, JSON.stringify({ access_token: tokens.access_token, refresh_token: tokens.refresh_token ?? null, expiry_date: expiry })],
+  );
+
+  const integration = result.rows[0];
+  await pool.query(
+    `INSERT INTO google_sync_logs (integration_id, action, status, message) VALUES ($1, 'connect', 'success', 'OAuth code exchanged')`,
+    [integration.id],
+  );
+
+  return c.json({ data: integration });
+});
+
 app.post('/google/connect', async (c) => {
   const user = c.get('user');
   const body = (await c.req.json().catch(() => ({}))) as Record<string, unknown>;

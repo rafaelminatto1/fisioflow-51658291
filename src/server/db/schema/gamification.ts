@@ -19,7 +19,7 @@ export const patientGamification = pgTable(
 		id: uuid("id").defaultRandom().primaryKey(),
 		patientId: uuid("patient_id")
 			.notNull()
-			.references(() => patients.id, { onDelete: "cascade" }),
+			.references(() => patients.id),
 		currentXp: integer("current_xp").default(0),
 		level: integer("level").default(1),
 		currentStreak: integer("current_streak").default(0),
@@ -39,7 +39,7 @@ export const xpTransactions = pgTable("xp_transactions", {
 	id: uuid("id").defaultRandom().primaryKey(),
 	patientId: uuid("patient_id")
 		.notNull()
-		.references(() => patients.id, { onDelete: "cascade" }),
+		.references(() => patients.id),
 	amount: integer("amount").notNull(),
 	reason: text("reason").notNull(),
 	description: text("description"),
@@ -65,7 +65,7 @@ export const achievementsLog = pgTable("achievements_log", {
 	id: uuid("id").defaultRandom().primaryKey(),
 	patientId: uuid("patient_id")
 		.notNull()
-		.references(() => patients.id, { onDelete: "cascade" }),
+		.references(() => patients.id),
 	achievementId: uuid("achievement_id")
 		.notNull()
 		.references(() => achievements.id),
@@ -81,7 +81,7 @@ export const dailyQuests = pgTable(
 		id: uuid("id").defaultRandom().primaryKey(),
 		patientId: uuid("patient_id")
 			.notNull()
-			.references(() => patients.id, { onDelete: "cascade" }),
+			.references(() => patients.id),
 		date: date("date").defaultNow(), // Logic default to CURRENT_DATE
 		// Definition of Quest Item interface for Drizzle usage
 		questsData: jsonb("quests_data").notNull().default(sql`'[]'::jsonb`).$type<

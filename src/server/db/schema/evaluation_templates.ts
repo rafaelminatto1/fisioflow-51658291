@@ -19,6 +19,9 @@ export const evaluationTemplates = pgTable("evaluation_templates", {
 
 	title: varchar("title", { length: 200 }).notNull(),
 	description: text("description"),
+	aliases_pt: text("aliases_pt").array(),
+	aliases_en: text("aliases_en").array(),
+	dictionary_id: text("dictionary_id"),
 
 	// Categorization
 	category: varchar("category", { length: 100 }), // e.g., "Orthopedic", "Neurological", "Respiratory"
