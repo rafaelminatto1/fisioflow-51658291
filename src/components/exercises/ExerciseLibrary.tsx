@@ -606,7 +606,7 @@ export function ExerciseLibrary({
 		const searchFiltered = bilingualFilter(
 			validExercises, 
 			debouncedSearchTerm, 
-			["name", "description", "category", "body_parts"]
+			["name", "description", "category", "body_parts", "aliases_pt", "aliases_en"]
 		);
 
 		return searchFiltered.filter((exercise) => {

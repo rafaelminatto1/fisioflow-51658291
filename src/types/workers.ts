@@ -17,6 +17,9 @@ export interface Exercise {
 	equipment: string[];
 	durationSeconds: number | null;
 	description: string | null;
+	aliasesPt?: string[] | null;
+	aliasesEn?: string[] | null;
+	dictionaryId?: string | null;
 }
 
 export interface ExerciseImageAnalysisResult {
