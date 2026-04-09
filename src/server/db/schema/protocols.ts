@@ -174,9 +174,11 @@ export const protocolExercises = pgTable(
 		progressionNotes: text("progression_notes"),
 		orderIndex: integer("order_index").default(0),
 
+		organizationId: uuid("organization_id"),
 		createdAt: timestamp("created_at").defaultNow().notNull(),
 	},
 	(table) => ({
+		orgIdx: index("idx_protocol_exercises_org_id").on(table.organizationId),
 		protocolIdIdx: index("idx_protocol_exercises_protocol_id").on(
 			table.protocolId,
 		),

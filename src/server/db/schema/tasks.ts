@@ -22,6 +22,7 @@ export const taskBoards = pgTable("task_boards", {
 	title: varchar("title", { length: 255 }).notNull(),
 	description: text("description"),
 	ownerId: varchar("owner_id").notNull(), // User who created the board
+	organizationId: uuid("organization_id"),
 	createdAt: timestamp("created_at").defaultNow().notNull(),
 	updatedAt: timestamp("updated_at").defaultNow().notNull(),
 });
@@ -33,6 +34,7 @@ export const taskColumns = pgTable("task_columns", {
 		.notNull(),
 	title: varchar("title", { length: 255 }).notNull(),
 	order: integer("order").notNull().default(0),
+	organizationId: uuid("organization_id"),
 	createdAt: timestamp("created_at").defaultNow().notNull(),
 	updatedAt: timestamp("updated_at").defaultNow().notNull(),
 });
@@ -58,6 +60,7 @@ export const tasks = pgTable("tasks", {
 	relatedEntityType: varchar("related_entity_type"), // e.g., 'evolution', 'appointment'
 
 	createdBy: varchar("created_by").notNull(),
+	organizationId: uuid("organization_id"),
 	createdAt: timestamp("created_at").defaultNow().notNull(),
 	updatedAt: timestamp("updated_at").defaultNow().notNull(),
 });
@@ -68,6 +71,7 @@ export const taskAssignments = pgTable("task_assignments", {
 		.references(() => tasks.id)
 		.notNull(),
 	userId: varchar("user_id").notNull(), // Assigned to
+	organizationId: uuid("organization_id"),
 	assignedAt: timestamp("assigned_at").defaultNow().notNull(),
 	assignedBy: varchar("assigned_by"),
 });
@@ -83,6 +87,7 @@ export const taskAcknowledgments = pgTable("task_acknowledgments", {
 	readAt: timestamp("read_at"), // Recibo de Leitura
 	acknowledgedAt: timestamp("acknowledged_at"), // Aceite explícito
 	notes: text("notes"), // Optional notes upon acknowledgment
+	organizationId: uuid("organization_id"),
 
 	createdAt: timestamp("created_at").defaultNow().notNull(),
 });
@@ -95,6 +100,7 @@ export const taskVisibility = pgTable("task_visibility", {
 	role: varchar("role", { length: 50 }), // 'ADMIN', 'PHYSIOTHERAPIST', 'INTERN'
 	userId: varchar("user_id"), // Specific user override
 	canView: boolean("can_view").default(true).notNull(),
+	organizationId: uuid("organization_id"),
 	createdAt: timestamp("created_at").defaultNow().notNull(),
 });
 
@@ -106,5 +112,6 @@ export const taskAuditLogs = pgTable("task_audit_logs", {
 	action: varchar("action", { length: 100 }).notNull(), // 'created', 'moved', 'assigned', 'read', 'acknowledged'
 	performedBy: varchar("performed_by").notNull(),
 	details: jsonb("details"), // Optional JSON for old/new values
+	organizationId: uuid("organization_id"),
 	timestamp: timestamp("timestamp").defaultNow().notNull(),
 });

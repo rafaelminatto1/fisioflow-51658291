@@ -138,6 +138,39 @@ export default function EvolutionFormScreen() {
     }, 2000);
   }, [mode, subjective, objective, assessment, plan, freeContent, patientId, appointmentId, painLevel]);
 
+  // Carrega sessão existente no mount (para restaurar conteúdo após sair e voltar)
+  useEffect(() => {
+    if (!patientId) return;
+    const load = async () => {
+      try {
+        const qParams: Record<string, string> = { patientId, status: 'draft', limit: '1' };
+        if (appointmentId) qParams.appointmentId = appointmentId;
+        const res = await fetchApi<{ data: Array<Record<string, any>> }>(
+          '/api/sessions',
+          { params: qParams }
+        );
+        const session = res.data?.[0];
+        if (!session) return;
+        savedEvolutionId.current = session.id;
+        const hasSoap = session.subjective || session.objective || session.plan;
+        if (hasSoap) {
+          setMode('SOAP');
+          setSubjective(session.subjective || '');
+          setObjective(session.objective || '');
+          setAssessment(session.assessment || '');
+          setPlan(session.plan || '');
+        } else if (session.assessment) {
+          setFreeContent(session.assessment);
+        }
+        if (session.pain_level != null) setPainLevel(Number(session.pain_level));
+      } catch {
+        // silencioso — começa em branco se falhar
+      }
+    };
+    load();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []); // apenas no mount
+
   // Trigger auto-save on content changes
   useEffect(() => {
     triggerAutoSave();

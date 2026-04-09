@@ -26,6 +26,7 @@ export const exerciseTemplateCategories = pgTable(
 		label: text("label").notNull(), // 'Ortopédico', 'Esportivo', etc.
 		icon: text("icon"), // Lucide icon name
 		orderIndex: integer("order_index").notNull().default(0),
+		organizationId: uuid("organization_id"),
 	},
 );
 
@@ -107,6 +108,7 @@ export const exerciseTemplateItems = pgTable("exercise_template_items", {
 	clinicalNotes: text("clinical_notes"),
 	focusMuscles: text("focus_muscles").array().default([]),
 	purpose: text("purpose"),
+	organizationId: uuid("organization_id"),
 
 	createdAt: timestamp("created_at").defaultNow().notNull(),
 	updatedAt: timestamp("updated_at").defaultNow().notNull(),
