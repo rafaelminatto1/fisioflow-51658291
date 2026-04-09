@@ -82,12 +82,45 @@ export const exerciseService = {
 	},
 
 	async mergeExercises(
-		_keepId: string,
+		keepId: string,
 		mergeIds: string[],
 	): Promise<{ success: boolean; deletedCount: number }> {
-		await Promise.all(
-			mergeIds.map((id) => exercisesApi.delete(id).catch(() => {})),
-		);
-		return { success: true, deletedCount: mergeIds.length };
+		try {
+			// 1. Buscar os exercícios que serão fundidos para capturar seus nomes
+			const exercisesToMerge = await Promise.all(
+				mergeIds.map(id => exercisesApi.get(id).catch(() => null))
+			);
+			
+			const namesToAlias = exercisesToMerge
+				.filter(res => res && res.data)
+				.map(res => res!.data!.name)
+				.filter(Boolean) as string[];
+
+			// 2. Buscar o exercício canônico
+			const canonicalRes = await exercisesApi.get(keepId);
+			if (!canonicalRes.data) throw new Error("Exercício canônico não encontrado");
+			
+			const currentAliases = canonicalRes.data.aliases_pt || [];
+			const updatedAliases = Array.from(new Set([...currentAliases, ...namesToAlias]));
+
+			// 3. Atualizar o exercício canônico com os novos apelidos
+			await exercisesApi.update(keepId, {
+				aliases_pt: updatedAliases
+			} as any);
+
+			// 4. Deletar os obsoletos
+			await Promise.all(
+				mergeIds.map((id) => exercisesApi.delete(id).catch(() => {}))
+			);
+
+			return { success: true, deletedCount: mergeIds.length };
+		} catch (error) {
+			logger.error("Falha ao unir exercícios de forma inteligente", error as Error, "exerciseService");
+			// Fallback para delete simples se falhar a lógica de aliases
+			await Promise.all(
+				mergeIds.map((id) => exercisesApi.delete(id).catch(() => {}))
+			);
+			return { success: true, deletedCount: mergeIds.length };
+		}
 	},
 };

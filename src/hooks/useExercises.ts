@@ -30,6 +30,9 @@ const makeMapper =
 		equipment: ex.equipment,
 		body_parts: ex.bodyParts,
 		duration: ex.durationSeconds || undefined,
+		aliases_pt: ex.aliasesPt || undefined,
+		aliases_en: ex.aliasesEn || undefined,
+		dictionary_id: ex.dictionaryId || undefined,
 	});
 
 export const useExerciseCategories = () => {
