@@ -83,6 +83,8 @@ config.resolver.blockList = [
 	/.*\.cache.*/,
 	/\.git\/.*/,
 	/.*\.md$/,
+	// Bloqueia .pnpm — Metro segue os symlinks de node_modules sem indexar os 4GB
+	/node_modules\/\.pnpm\/.*/,
 	/node_modules\/@aws-sdk\/.*/,
 	/node_modules\/@sentry\/vite-plugin\/.*/,
 	/node_modules\/@playwright\/.*/,
@@ -99,9 +101,12 @@ config.resolver.blockList = [
 // toda a pasta node_modules/.pnpm/ como watchFolder.
 config.resolver.unstable_enableSymlinks = true;
 
-// watchFolders: apenas o próprio app.
-// nodeModulesPaths (abaixo) resolve módulos sem precisar assistir 4GB de node_modules raiz.
-config.watchFolders = [projectRoot];
+// watchFolders: app + root node_modules (para pnpm symlinks).
+// .pnpm está no blockList — Metro segue os symlinks sem indexar a pasta inteira.
+config.watchFolders = [
+	projectRoot,
+	path.resolve(monorepoRoot, "node_modules"),
+];
 
 // Resolução de módulos: local primeiro, depois raiz (pnpm hoist)
 config.resolver.nodeModulesPaths = [
