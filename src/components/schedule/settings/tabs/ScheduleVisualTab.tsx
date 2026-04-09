@@ -9,10 +9,9 @@ import { CardSizeManager } from "@/components/schedule/settings/CardSizeManager"
 import { StatusColorManager } from "@/components/schedule/settings/StatusColorManager";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
-import { Button } from "@/components/ui/button";
+import { toast } from "@/hooks/use-toast";
 import { useCardSize } from "@/hooks/useCardSize";
 import { cn } from "@/lib/utils";
-import { toast } from "@/hooks/use-toast";
 import {
 	Palette,
 	Sparkles,
@@ -198,78 +197,88 @@ function AccessibilitySection() {
 	);
 }
 
-export function ScheduleVisualTab() {
+/* Reusable section card with accordion */
+function SectionCard({
+	value,
+	iconBg,
+	icon,
+	title,
+	description,
+	children,
+}: {
+	value: string;
+	iconBg: string;
+	icon: React.ReactNode;
+	title: string;
+	description: string;
+	children: React.ReactNode;
+}) {
 	return (
-		<div className="space-y-1">
-			<Accordion type="multiple" defaultValue={[]} className="space-y-2">
-				<AccordionItem value="presets" className="border rounded-xl px-4">
+		<div className="rounded-xl border bg-muted/10">
+			<Accordion type="multiple" defaultValue={[]}>
+				<AccordionItem value={value} className="border-0 px-4">
 					<AccordionTrigger className="py-3 hover:no-underline">
 						<div className="flex items-center gap-2.5">
-							<div className="p-1.5 bg-fuchsia-100 dark:bg-fuchsia-900/30 rounded-md">
-								<Sparkles className="h-4 w-4 text-fuchsia-600 dark:text-fuchsia-400" />
+							<div className={`p-1.5 rounded-md ${iconBg}`}>
+								{icon}
 							</div>
 							<div className="text-left">
-								<p className="text-sm font-semibold">Presets Rápidos</p>
-								<p className="text-xs text-muted-foreground font-normal">Configuração otimizada com um clique</p>
+								<p className="text-sm font-semibold">{title}</p>
+								<p className="text-xs text-muted-foreground font-normal">{description}</p>
 							</div>
 						</div>
 					</AccordionTrigger>
 					<AccordionContent className="pb-4">
-						<PresetsSection />
-					</AccordionContent>
-				</AccordionItem>
-
-				<AccordionItem value="appearance" className="border rounded-xl px-4">
-					<AccordionTrigger className="py-3 hover:no-underline">
-						<div className="flex items-center gap-2.5">
-							<div className="p-1.5 bg-sky-100 dark:bg-sky-900/30 rounded-md">
-								<Frame className="h-4 w-4 text-sky-600 dark:text-sky-400" />
-							</div>
-							<div className="text-left">
-								<p className="text-sm font-semibold">Cards e Layout</p>
-								<p className="text-xs text-muted-foreground font-normal">Tamanho dos cards e altura dos slots</p>
-							</div>
-						</div>
-					</AccordionTrigger>
-					<AccordionContent className="pb-4">
-						<CardSizeManager />
-					</AccordionContent>
-				</AccordionItem>
-
-				<AccordionItem value="colors" className="border rounded-xl px-4">
-					<AccordionTrigger className="py-3 hover:no-underline">
-						<div className="flex items-center gap-2.5">
-							<div className="p-1.5 bg-pink-100 dark:bg-pink-900/30 rounded-md">
-								<Palette className="h-4 w-4 text-pink-600 dark:text-pink-400" />
-							</div>
-							<div className="text-left">
-								<p className="text-sm font-semibold">Cores de Status</p>
-								<p className="text-xs text-muted-foreground font-normal">Cores dos agendamentos por status</p>
-							</div>
-						</div>
-					</AccordionTrigger>
-					<AccordionContent className="pb-4">
-						<StatusColorManager />
-					</AccordionContent>
-				</AccordionItem>
-
-				<AccordionItem value="accessibility" className="border rounded-xl px-4">
-					<AccordionTrigger className="py-3 hover:no-underline">
-						<div className="flex items-center gap-2.5">
-							<div className="p-1.5 bg-cyan-100 dark:bg-cyan-900/30 rounded-md">
-								<Eye className="h-4 w-4 text-cyan-600 dark:text-cyan-400" />
-							</div>
-							<div className="text-left">
-								<p className="text-sm font-semibold">Acessibilidade</p>
-								<p className="text-xs text-muted-foreground font-normal">Contraste, animações e tamanho de texto</p>
-							</div>
-						</div>
-					</AccordionTrigger>
-					<AccordionContent className="pb-4">
-						<AccessibilitySection />
+						{children}
 					</AccordionContent>
 				</AccordionItem>
 			</Accordion>
+		</div>
+	);
+}
+
+export function ScheduleVisualTab() {
+	return (
+		<div className="grid gap-3 sm:grid-cols-2">
+			<SectionCard
+				value="presets"
+				iconBg="bg-fuchsia-100 dark:bg-fuchsia-900/30"
+				icon={<Sparkles className="h-4 w-4 text-fuchsia-600 dark:text-fuchsia-400" />}
+				title="Presets Rápidos"
+				description="Configuração otimizada com um clique"
+			>
+				<PresetsSection />
+			</SectionCard>
+
+			<SectionCard
+				value="appearance"
+				iconBg="bg-sky-100 dark:bg-sky-900/30"
+				icon={<Frame className="h-4 w-4 text-sky-600 dark:text-sky-400" />}
+				title="Cards e Layout"
+				description="Tamanho dos cards e altura dos slots"
+			>
+				<CardSizeManager />
+			</SectionCard>
+
+			<SectionCard
+				value="colors"
+				iconBg="bg-pink-100 dark:bg-pink-900/30"
+				icon={<Palette className="h-4 w-4 text-pink-600 dark:text-pink-400" />}
+				title="Cores de Status"
+				description="Cores dos agendamentos por status"
+			>
+				<StatusColorManager />
+			</SectionCard>
+
+			<SectionCard
+				value="accessibility"
+				iconBg="bg-cyan-100 dark:bg-cyan-900/30"
+				icon={<Eye className="h-4 w-4 text-cyan-600 dark:text-cyan-400" />}
+				title="Acessibilidade"
+				description="Contraste, animações e tamanho de texto"
+			>
+				<AccessibilitySection />
+			</SectionCard>
 		</div>
 	);
 }
