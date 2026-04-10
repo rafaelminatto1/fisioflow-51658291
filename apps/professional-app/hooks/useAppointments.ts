@@ -71,6 +71,9 @@ function mapApiAppointment(apiAppointment: ApiAppointment): Appointment {
     type: mapAppointmentType(apiAppointment.type || apiAppointment.session_type),
     status: mapAppointmentStatus(apiAppointment.status),
     notes: apiAppointment.notes,
+    isGroup: apiAppointment.isGroup ?? apiAppointment.is_group ?? false,
+    additionalNames: apiAppointment.additionalNames ?? apiAppointment.additional_names ?? '',
+    isUnlimited: apiAppointment.isUnlimited ?? apiAppointment.is_unlimited ?? false,
     createdAt: apiAppointment.created_at || appointmentDate,
     updatedAt: apiAppointment.updated_at || appointmentDate,
   };
@@ -201,6 +204,9 @@ export function useAppointments(options?: UseAppointmentsOptions) {
         organizationId: user.organizationId,
         type: data.type,
         notes: data.notes,
+        isGroup: data.isGroup,
+        additionalNames: data.additionalNames,
+        isUnlimited: data.isUnlimited,
       });
 
       return mapApiAppointment(apiAppointment);
@@ -218,6 +224,9 @@ export function useAppointments(options?: UseAppointmentsOptions) {
       if (data.type) updateData.type = data.type;
       if (data.notes !== undefined) updateData.notes = data.notes;
       if (data.status) updateData.status = mapToApiStatus(data.status);
+      if (data.isGroup !== undefined) (updateData as any).isGroup = data.isGroup;
+      if (data.additionalNames !== undefined) (updateData as any).additionalNames = data.additionalNames;
+      if (data.isUnlimited !== undefined) (updateData as any).isUnlimited = data.isUnlimited;
 
       if (data.date || data.time || data.duration) {
         const date = data.date ? new Date(data.date) : new Date();
