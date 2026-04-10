@@ -39,15 +39,24 @@ export const PatientCreateModal: React.FC<PatientCreateModalProps> = ({
 		}
 	};
 
-	const handleSubmit = async (data: Parameters<typeof patientsApi.create>[0]) => {
+	const handleSubmit = async (
+		data: Parameters<typeof patientsApi.create>[0],
+	) => {
 		setIsSubmitting(true);
 		try {
-			await patientsApi.create(data);
-			toast.success("Paciente cadastrado com sucesso!");
+			console.log("[PatientCreateModal] Enviando dados do paciente...", {
+				full_name: data.full_name,
+				organization_id: data.organization_id,
+			});
+			const result = await patientsApi.create(data);
+			console.log("[PatientCreateModal] Paciente criado com sucesso:", result);
+			toast.success(`${data.full_name} foi cadastrado com sucesso!`);
 			queryClient.invalidateQueries({ queryKey: ["patients"] });
 			onOpenChange(false);
 		} catch (err: unknown) {
-			const msg = err instanceof Error ? err.message : "Erro ao cadastrar paciente";
+			console.error("[PatientCreateModal] Erro ao criar paciente:", err);
+			const msg =
+				err instanceof Error ? err.message : "Erro ao cadastrar paciente";
 			toast.error(msg);
 		} finally {
 			setIsSubmitting(false);

@@ -1,5 +1,6 @@
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
+import { useNavigate } from "react-router-dom";
 import { TimelineEntry, usePatientTimeline } from "@/hooks/usePatientTimeline";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -17,8 +18,104 @@ interface PatientTimelineProps {
 	patientId: string | undefined;
 }
 
+type SoapSectionKey = "subjective" | "objective" | "assessment" | "plan";
+
+const SOAP_SECTION_LABELS: Array<{
+	key: SoapSectionKey;
+	title: string;
+}> = [
+	{ key: "subjective", title: "Subjetivo" },
+	{ key: "objective", title: "Objetivo" },
+	{ key: "assessment", title: "Avaliação" },
+	{ key: "plan", title: "Plano" },
+];
+
 export function PatientTimeline({ patientId }: PatientTimelineProps) {
 	const { data: entries = [], isLoading } = usePatientTimeline(patientId);
+	const navigate = useNavigate();
+
+	const translateStatus = (status?: string) => {
+		switch ((status ?? "").toLowerCase()) {
+			case "draft":
+				return "Rascunho";
+			case "finalized":
+				return "Finalizada";
+			case "scheduled":
+				return "Agendada";
+			case "confirmed":
+				return "Confirmada";
+			case "cancelled":
+				return "Cancelada";
+			case "completed":
+				return "Concluída";
+			case "pending":
+				return "Pendente";
+			case "sent":
+			case "enviado":
+				return "Enviado";
+			case "failed":
+				return "Falhou";
+			case "delivered":
+				return "Entregue";
+			case "read":
+				return "Lido";
+			default:
+				return status ? status.charAt(0).toUpperCase() + status.slice(1) : "";
+		}
+	};
+
+	const getStatusDotClass = (status?: string) => {
+		switch ((status ?? "").toLowerCase()) {
+			case "completed":
+			case "confirmed":
+			case "finalized":
+			case "sent":
+			case "enviado":
+			case "delivered":
+			case "read":
+				return "bg-green-500";
+			case "cancelled":
+			case "failed":
+				return "bg-red-500";
+			default:
+				return "bg-amber-500";
+		}
+	};
+
+	const formatClockTime = (value?: string) => {
+		if (!value) return "";
+		const trimmed = value.trim();
+		if (/^\d{2}:\d{2}(:\d{2})?$/.test(trimmed)) {
+			return trimmed.slice(0, 5);
+		}
+
+		const parsed = new Date(trimmed);
+		if (Number.isNaN(parsed.getTime())) return trimmed;
+
+		return format(parsed, "HH:mm", { locale: ptBR });
+	};
+
+	const formatAppointmentLabel = (entry: TimelineEntry) => {
+		const start = formatClockTime(entry.start_time);
+		const end = formatClockTime(entry.end_time);
+
+		if (start && end) {
+			return `Sessão agendada para ${start} às ${end}`;
+		}
+
+		if (start) {
+			return `Sessão agendada para ${start}`;
+		}
+
+		return "Sessão agendada";
+	};
+
+	const openEvolution = (entry: TimelineEntry, section?: SoapSectionKey) => {
+		if (!patientId || entry.entry_type !== "evolution") return;
+		const params = new URLSearchParams({ sessionId: entry.id });
+		if (section) params.set("section", section);
+		navigate(`/prontuario/${patientId}?${params.toString()}`);
+	};
 
 	const getEntryIcon = (entry: TimelineEntry) => {
 		switch (entry.entry_type) {
@@ -41,6 +138,43 @@ export function PatientTimeline({ patientId }: PatientTimelineProps) {
 		if (entry.category === "clinical")
 			return "bg-blue-500/10 text-blue-600 border-blue-200";
 		return "bg-purple-500/10 text-purple-600 border-purple-200";
+	};
+
+	const renderEvolutionSections = (entry: TimelineEntry) => {
+		const sections = SOAP_SECTION_LABELS.filter(({ key }) => Boolean(entry[key]));
+
+		if (sections.length === 0) {
+			return (
+				<p className="text-xs text-muted-foreground leading-relaxed">
+					{entry.body || "Sem detalhes"}
+				</p>
+			);
+		}
+
+		return (
+			<div className="space-y-2">
+				{sections.map(({ key, title }) => {
+					const value = entry[key];
+					if (!value) return null;
+
+					return (
+						<button
+							key={key}
+							type="button"
+							onClick={() => openEvolution(entry, key)}
+							className="w-full rounded-xl border border-border/30 bg-background/80 p-3 text-left transition-colors hover:border-primary/40 hover:bg-primary/5"
+						>
+							<p className="text-[11px] font-black uppercase tracking-wider text-primary">
+								{title}
+							</p>
+							<p className="mt-1 whitespace-pre-wrap text-xs leading-relaxed text-foreground/80">
+								{value}
+							</p>
+						</button>
+					);
+				})}
+			</div>
+		);
 	};
 
 	if (isLoading) {
@@ -91,7 +225,9 @@ export function PatientTimeline({ patientId }: PatientTimelineProps) {
 									variant="outline"
 									className="text-[9px] font-black uppercase tracking-tighter h-4 px-1.5"
 								>
-									{entry.category}
+									{entry.category === "clinical"
+										? "Clínico"
+										: "Comunicação"}
 								</Badge>
 							</div>
 							<time className="text-[10px] font-bold text-muted-foreground uppercase whitespace-nowrap">
@@ -102,30 +238,27 @@ export function PatientTimeline({ patientId }: PatientTimelineProps) {
 						</div>
 
 						<div className="bg-muted/30 rounded-2xl p-3 border border-border/20 transition-all hover:bg-muted/50 hover:shadow-premium-sm">
-							{entry.subject && (
+							{entry.subject && entry.entry_type !== "evolution" && (
 								<p className="text-xs font-bold mb-1 text-foreground/80">
 									{entry.subject}
 								</p>
 							)}
-							<p className="text-xs text-muted-foreground leading-relaxed line-clamp-3">
-								{entry.body ||
-									(entry.entry_type === "appointment"
-										? `Sessão agendada para ${entry.start_time}`
-										: "Sem detalhes")}
-							</p>
+							{entry.entry_type === "evolution" ? (
+								renderEvolutionSections(entry)
+							) : (
+								<p className="text-xs text-muted-foreground leading-relaxed line-clamp-3">
+									{entry.body ||
+										(entry.entry_type === "appointment"
+											? formatAppointmentLabel(entry)
+											: "Sem detalhes")}
+								</p>
+							)}
 
 							{entry.status && (
 								<div className="flex items-center gap-1.5 mt-3 pt-2 border-t border-border/20">
-									<div
-										className={cn(
-											"w-1.5 h-1.5 rounded-full",
-											entry.status === "enviado" || entry.status === "completed"
-												? "bg-green-500"
-												: "bg-amber-500",
-										)}
-									/>
+									<div className={cn("w-1.5 h-1.5 rounded-full", getStatusDotClass(entry.status))} />
 									<span className="text-[9px] font-black uppercase tracking-widest text-muted-foreground">
-										Status: {entry.status}
+										Status: {translateStatus(entry.status)}
 									</span>
 								</div>
 							)}

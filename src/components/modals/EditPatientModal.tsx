@@ -125,29 +125,30 @@ export const EditPatientModal: React.FC<{
 	});
 
 	useEffect(() => {
-		if (patientData) {
+		const patientToUse = patient || patientData;
+		if (patientToUse) {
 			reset({
-				name: patientData.name || "",
-				email: patientData.email || "",
-				phone: patientData.phone || "",
-				cpf: patientData.cpf || "",
-				birth_date: patientData.birthDate
-					? patientData.birthDate.slice(0, 10)
+				name: patientToUse.name || "",
+				email: patientToUse.email || "",
+				phone: patientToUse.phone || "",
+				cpf: patientToUse.cpf || "",
+				birth_date: patientToUse.birthDate
+					? patientToUse.birthDate.slice(0, 10)
 					: "",
-				address: "",
-				city: "",
-				state: "",
-				zip_code: "",
-				health_insurance: "",
-				emergency_contact: "",
-				emergency_phone: "",
-				observations: patientData.mainCondition || "",
-				status: patientData.status || "active",
-				nickname: patientData.nickname || "",
-				social_name: patientData.socialName || "",
+				address: patientToUse.address || "",
+				city: patientToUse.city || "",
+				state: patientToUse.state || "",
+				zip_code: patientToUse.zipCode || "",
+				health_insurance: patientToUse.healthInsurance || "",
+				emergency_contact: patientToUse.emergencyContact || "",
+				emergency_phone: patientToUse.emergencyPhone || "",
+				observations: patientToUse.mainCondition || "",
+				status: patientToUse.status || "active",
+				nickname: patientToUse.nickname || "",
+				social_name: patientToUse.socialName || "",
 			});
 		}
-	}, [patientData, reset]);
+	}, [patient, patientData, reset]);
 
 	useEffect(() => {
 		if (!open) {

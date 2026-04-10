@@ -179,7 +179,7 @@ export function exportEventoResumoPDF(evento: EventoResumo) {
 	// Footer
 	doc.setFontSize(8);
 	doc.text(
-		`Relatório gerado em ${new Date().toLocaleDateString("pt-BR")} às ${new Date().toLocaleTimeString("pt-BR")}`,
+		`Relatório gerado em ${new Date().toLocaleDateString("pt-BR")} às ${new Date().toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" })}`,
 		14,
 		280,
 	);

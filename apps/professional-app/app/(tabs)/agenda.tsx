@@ -3,7 +3,13 @@ import { View, StyleSheet, Text, TouchableOpacity } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
 import { router } from "expo-router";
-import { startOfWeek, endOfWeek, startOfMonth, endOfMonth } from "date-fns";
+import {
+	startOfWeek,
+	endOfWeek,
+	startOfMonth,
+	endOfMonth,
+	format,
+} from "date-fns";
 import { useColors } from "@/hooks/useColorScheme";
 import { useAppointments } from "@/hooks/useAppointments";
 import { useHaptics } from "@/hooks/useHaptics";
@@ -132,13 +138,18 @@ export default function AgendaScreen() {
 	);
 
 	const handleReschedule = useCallback(
-		async (id: string, newTime: string) => {
+		async (id: string, newDate: Date, newTime: string) => {
 			const apt = appointments?.find((a) => a.id === id);
 			if (!apt) return;
 			try {
+				const dateStr = format(newDate, "yyyy-MM-dd");
 				await updateAsync({
 					id,
-					data: { time: newTime, duration: apt.duration },
+					data: {
+						date: dateStr,
+						time: newTime,
+						duration: apt.duration,
+					},
 				});
 				hapticSuccess();
 			} catch {}

@@ -74,6 +74,22 @@ export interface Contact {
 	totalConversations: number;
 }
 
+function mapContact(row: any): Contact {
+	return {
+		id: row.id,
+		name: row.name || row.display_name || row.username || row.wa_id || "Sem nome",
+		phone: row.phone || row.wa_id || "",
+		patientId: row.patientId || row.patient_id || undefined,
+		patientName: row.patientName || row.patient_name || undefined,
+		email: row.email || undefined,
+		avatarUrl: row.avatarUrl || row.avatar_url || undefined,
+		lastInteraction:
+			row.lastInteraction || row.last_interaction || row.updated_at || undefined,
+		totalConversations:
+			row.totalConversations || row.total_conversations || 0,
+	};
+}
+
 export interface Tag {
 	id: string;
 	name: string;
@@ -281,15 +297,29 @@ export async function fetchContacts(filters?: {
 	if (filters?.limit) params.set("limit", String(filters.limit));
 	const qs = params.toString();
 	const res = await request<{
-		data: Contact[];
+		data: any[];
 		pagination: { page: number; limit: number; total: number };
 	}>(`${BASE}/contacts${qs ? `?${qs}` : ""}`);
-	return res;
+	return {
+		...res,
+		data: (res.data || []).map(mapContact),
+	};
 }
 
 export async function fetchContact(id: string) {
-	const res = await request<{ data: Contact } | Contact>(
+	const res = await request<{ data: any } | any>(
 		`${BASE}/contacts/${id}`,
+	);
+	return mapContact("data" in (res as any) ? (res as any).data : res);
+}
+
+export async function findOrCreateConversation(contactId: string) {
+	const res = await request<{ data: Conversation } | Conversation>(
+		`${BASE}/conversations`,
+		{
+			method: "POST",
+			body: JSON.stringify({ contactId }),
+		},
 	);
 	return "data" in (res as any) ? (res as any).data : res;
 }
