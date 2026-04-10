@@ -68,18 +68,18 @@ jobs:
         run: |
           cat >> Podfile << 'PODFILE_PATCH'
 
-          # Fix: Xcode 16.4 / Swift 6 strict concurrency quebra expo-modules-core
-          # Ref: https://github.com/expo/expo/issues/33297
-          post_install do |installer|
-            installer.pods_project.targets.each do |target|
-              target.build_configurations.each do |config|
-                config.build_settings['SWIFT_STRICT_CONCURRENCY'] = 'minimal'
-              end
-            end
-          end
-          PODFILE_PATCH
+# Fix: Xcode 16.4 / Swift 6 strict concurrency quebra expo-modules-core
+# Ref: https://github.com/expo/expo/issues/33297
+post_install do |installer|
+  installer.pods_project.targets.each do |target|
+    target.build_configurations.each do |config|
+      config.build_settings['SWIFT_STRICT_CONCURRENCY'] = 'minimal'
+    end
+  end
+end
+PODFILE_PATCH
           echo "Podfile patched:"
-          tail -10 Podfile
+          tail -15 Podfile
 
       # ── 4. Cache CocoaPods (economiza ~10 min) ────────────────────────────
       - name: Cache CocoaPods
