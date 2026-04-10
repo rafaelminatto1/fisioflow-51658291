@@ -87,14 +87,6 @@ const Patients = () => {
 
 	const { currentPage, totalPages, pageSize } = pagination;
 
-	if (isLoading && patients.length === 0) {
-		return (
-			<MainLayout>
-				<LoadingSkeleton type="card" rows={4} />
-			</MainLayout>
-		);
-	}
-
 	const activeAdvancedFiltersCount = countActiveFilters({
 		classification:
 			filtersState.classification !== "all"
@@ -238,7 +230,11 @@ const Patients = () => {
 							</LazyComponent>
 						)}
 
-						{patients.length === 0 ? (
+						{isLoading && patients.length === 0 ? (
+							<div className="mt-8">
+								<LoadingSkeleton type="card" rows={4} />
+							</div>
+						) : patients.length === 0 ? (
 							<EmptyState
 								icon={Users}
 								title={
