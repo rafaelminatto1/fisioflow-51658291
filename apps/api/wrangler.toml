@@ -20,8 +20,9 @@ routes = [
 [[hyperdrive]]
 binding = "HYPERDRIVE"
 id = "12b9fefcfbc04074a63342a9212e1b4f"
-max_age = 60 # Default to 1-minute cache for non-prod
-max_stale = 300 # Allow 5 minutes stale for non-prod
+# Query caching is configured on the Hyperdrive resource itself via:
+#   wrangler hyperdrive update <id> --max-age <seconds> --swr <seconds>
+# Cloudflare requires `--swr` to be lower than `--max-age`.
 
 # ===== CLOUDFLARE R2 (Media Storage) =====
 # Crie com: wrangler r2 bucket create fisioflow-media
@@ -269,8 +270,8 @@ class_name = "PatientReengagementWorkflow"
 [[env.production.hyperdrive]]
 binding = "HYPERDRIVE"
 id = "12b9fefcfbc04074a63342a9212e1b4f"
-max_age = 3600 # Cache read results for 1 hour at the edge
-max_stale = 86400 # Allow stale data for up to 24h if origin is down
+# Production caching is configured on the Hyperdrive resource itself:
+#   wrangler hyperdrive update 12b9fefcfbc04074a63342a9212e1b4f --max-age 3600 --swr 300
 
 [[env.production.r2_buckets]]
 binding = "MEDIA_BUCKET"
@@ -332,6 +333,8 @@ id = "0efd6e0e5f144b25a32ff31f70946a94"
 [[env.staging.hyperdrive]]
 binding = "HYPERDRIVE"
 id = "37189eb42d314a0a8fd0e169a2b27ad1"
+# Staging caching is configured on the Hyperdrive resource itself:
+#   wrangler hyperdrive update 37189eb42d314a0a8fd0e169a2b27ad1 --max-age 60 --swr 15
 
 [[env.staging.r2_buckets]]
 binding = "MEDIA_BUCKET"
