@@ -85,6 +85,10 @@ export function formatPhone(phone: string): string {
 export function isValidCPF(cpf: string): boolean {
 	const digits = stripNonDigits(cpf);
 
+	// Se não houver dígitos, consideramos válido (opcional)
+	// O Zod se encarrega de validar obrigatoriedade se necessário
+	if (digits.length === 0) return true;
+
 	if (digits.length !== 11) return false;
 	if (/^(\d)\1{10}$/.test(digits)) return false;
 
@@ -117,6 +121,7 @@ export function isValidCPF(cpf: string): boolean {
 
 export function isValidPhone(phone: string): boolean {
 	const digits = stripNonDigits(phone);
+	if (digits.length === 0) return true;
 	if (digits.length === 10 || digits.length === 11) {
 		const ddd = parseInt(digits.substring(0, 2));
 		return ddd >= 11 && ddd <= 99;

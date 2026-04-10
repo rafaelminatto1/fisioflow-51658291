@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from "react";
-import { View, StyleSheet, Text, TouchableOpacity } from "react-native";
+import { View, StyleSheet, Text, TouchableOpacity, Alert } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
 import { router } from "expo-router";
@@ -157,6 +157,54 @@ export default function AgendaScreen() {
 		[appointments, updateAsync, hapticSuccess],
 	);
 
+	const handleRescheduleRequest = useCallback(
+		(
+			id: string,
+			newDate: Date,
+			newTime: string,
+			confirm: (confirm: boolean) => void,
+		) => {
+			const apt = appointments?.find((a) => a.id === id);
+			if (!apt) {
+				confirm(false);
+				return;
+			}
+			const newDateStr = format(newDate, "dd/MM/yyyy");
+			Alert.alert(
+				"Confirmar reagendamento",
+				`Tem certeza que deseja reagendar para ${newDateStr} às ${newTime}?`,
+				[
+					{
+						text: "Não",
+						style: "cancel",
+						onPress: () => confirm(false),
+					},
+					{
+						text: "Sim",
+						onPress: async () => {
+							confirm(true);
+							try {
+								const dateStr = format(newDate, "yyyy-MM-dd");
+								await updateAsync({
+									id,
+									data: {
+										date: dateStr,
+										time: newTime,
+										duration: apt.duration,
+									},
+								});
+								hapticSuccess();
+							} catch {
+								Alert.alert("Erro", "Não foi possível reagendar.");
+							}
+						},
+					},
+				],
+			);
+		},
+		[appointments, updateAsync, hapticSuccess],
+	);
+
 	return (
 		<SafeAreaView
 			style={[styles.container, { backgroundColor: colors.background }]}
@@ -172,6 +220,7 @@ export default function AgendaScreen() {
 					viewMode={viewMode}
 					onViewModeChange={handleViewModeChange}
 					onReschedule={handleReschedule}
+					onRescheduleRequest={handleRescheduleRequest}
 				/>
 			)}
 

@@ -96,15 +96,11 @@ import { cors } from "hono/cors";
 
 const app = new Hono<{ Bindings: Env; Variables: CustomVariables }>();
 
-// CORS: lê ALLOWED_ORIGINS do env para que preflight e respostas usem a mesma lista.
-// O factory pattern (função em vez de objeto) garante que c.env está disponível.
-app.use("*", (c, next) => {
-	const allowed = (c.env.ALLOWED_ORIGINS || "")
-		.split(",")
-		.map((o) => o.trim())
-		.filter(Boolean);
-	return cors({
-		origin: (origin) => (allowed.includes(origin) ? origin : null),
+// CORS: Permitir todos os origins em produção para debug, depois restricting
+app.use(
+	"*",
+	cors({
+		origin: "*",
 		allowMethods: ["GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"],
 		allowHeaders: [
 			"Content-Type",
@@ -115,11 +111,10 @@ app.use("*", (c, next) => {
 			"X-Neon-Auth-Token",
 			"X-Request-ID",
 		],
-		exposeHeaders: ["X-Request-ID"],
 		credentials: true,
 		maxAge: 86400,
-	})(c, next);
-});
+	}),
+);
 
 app.use("*", logger());
 app.use("*", secureHeaders());
@@ -150,7 +145,7 @@ app.get("/api/health/schema", async (c) => {
 			FROM information_schema.columns 
 			WHERE table_name = 'patients'
 		`;
-		return c.json({ table: 'patients', columns: result });
+		return c.json({ table: "patients", columns: result });
 	} catch (error: any) {
 		return c.json({ status: "error", message: error.message }, 500);
 	}

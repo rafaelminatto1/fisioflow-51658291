@@ -1,7 +1,7 @@
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 
-export const TIME_LABEL_WIDTH = 38;
+export const TIME_LABEL_WIDTH = 20;
 
 export function getTimeParts(
 	time?: string,

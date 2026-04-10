@@ -48,13 +48,14 @@ export const PatientCreateModal: React.FC<PatientCreateModalProps> = ({
 				full_name: data.full_name,
 				organization_id: data.organization_id,
 			});
+
 			const result = await patientsApi.create(data);
 			console.log("[PatientCreateModal] Paciente criado com sucesso:", result);
 			toast.success(`${data.full_name} foi cadastrado com sucesso!`);
 			queryClient.invalidateQueries({ queryKey: ["patients"] });
 			onOpenChange(false);
 		} catch (err: unknown) {
-			console.error("[PatientCreateModal] Erro ao criar paciente:", err);
+			console.error("[PatientCreateModal] Erro completo:", err);
 			const msg =
 				err instanceof Error ? err.message : "Erro ao cadastrar paciente";
 			toast.error(msg);
