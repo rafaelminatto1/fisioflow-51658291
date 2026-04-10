@@ -87,6 +87,7 @@
 		"professional:start": "pnpm --filter @fisioflow/professional-app start",
 		"professional:build:prod": "pnpm --filter @fisioflow/professional-app build:prod",
 		"db:proxy": "bash ./scripts/db-proxy.sh",
+		"db:backup": "tsx scripts/neon-backup.ts",
 		"verify": "node scripts/health-check.js",
 		"migration:verify": "node scripts/verify-neon-cloudflare-migration.mjs",
 		"check:console": "BASE_URL=http://127.0.0.1:8084 node scripts/check-console-errors-local.mjs",
