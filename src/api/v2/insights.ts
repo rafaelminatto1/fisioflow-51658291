@@ -26,6 +26,11 @@ import type {
 } from "@/types/workers";
 
 export const aiApi = {
+	service: <TInput, TOutput>(action: string, data: TInput) =>
+		request<{ data: TOutput }>("/api/ai/service", {
+			method: "POST",
+			body: JSON.stringify({ action, data }),
+		}),
 	translate: (text: string, targetLanguage: string) =>
 		request<{ data: { translatedText: string } }>("/api/ai/translate", {
 			method: "POST",

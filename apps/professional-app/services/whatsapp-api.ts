@@ -5,11 +5,23 @@ const BASE = "/api/whatsapp/inbox";
 export interface WaConversation {
 	id: string;
 	contactId: string;
+	contactName?: string;
+	contactPhone?: string;
 	patientId?: string;
+	patientName?: string;
 	status: string;
 	priority: string;
 	assignedTo?: string;
+	assignedToName?: string;
+	unreadCount?: number;
+	lastMessage?: {
+		content?: any;
+		messageType?: string;
+		direction?: string;
+		createdAt?: string;
+	};
 	lastMessageAt?: string;
+	lastMessageDirection?: string;
 	createdAt: string;
 	updatedAt: string;
 	contact?: {
@@ -17,12 +29,6 @@ export interface WaConversation {
 		displayName?: string;
 		phoneE164?: string;
 		avatarUrl?: string;
-	};
-	lastMessage?: {
-		content?: any;
-		messageType?: string;
-		direction?: string;
-		createdAt?: string;
 	};
 }
 
@@ -34,6 +40,7 @@ export interface WaMessage {
 	messageType: string;
 	content: any;
 	status: string;
+	isInternalNote?: boolean;
 	createdAt: string;
 }
 
@@ -45,32 +52,90 @@ export interface WaQuickReply {
 	team?: string;
 }
 
-export async function fetchMyConversations(
-	token: string,
-): Promise<WaConversation[]> {
-	return fetchApi<WaConversation[]>(`${BASE}/conversations`, {
-		params: { assignedTo: "me" },
+export interface ConversationFilters {
+	status?: string;
+	assignedTo?: string;
+	search?: string;
+	page?: number;
+	limit?: number;
+}
+
+export interface ConversationsResponse {
+	data: WaConversation[];
+	pagination: {
+		page: number;
+		limit: number;
+		total: number;
+		totalPages: number;
+	};
+}
+
+export function getContactName(conv: WaConversation): string {
+	return (
+		conv.contactName ||
+		conv.contact?.displayName ||
+		conv.contact?.phoneE164 ||
+		conv.contactPhone ||
+		"Desconhecido"
+	);
+}
+
+export function getContactPhone(conv: WaConversation): string {
+	return conv.contactPhone || conv.contact?.phoneE164 || "";
+}
+
+export function getMessageTextPreview(msg?: WaConversation["lastMessage"]): string {
+	if (!msg) return "";
+	const c = msg.content;
+	if (typeof c === "string") return c;
+	return c?.text || c?.body || (msg.messageType ? `[${msg.messageType}]` : "");
+}
+
+export function getMessageText(msg: WaMessage): string {
+	const c = msg.content;
+	if (typeof c === "string") return c;
+	return c?.text || c?.body || `[${msg.messageType}]`;
+}
+
+export async function fetchConversations(
+	filters?: ConversationFilters,
+): Promise<ConversationsResponse> {
+	const params: Record<string, any> = {
+		limit: 50,
+		...filters,
+	};
+	// Remove empty values
+	Object.keys(params).forEach((k) => {
+		if (params[k] === undefined || params[k] === "" || params[k] === "all") {
+			delete params[k];
+		}
 	});
+	// "mine" filter maps to assignedTo=me
+	if (filters?.status === "mine") {
+		params.assignedTo = "me";
+		delete params.status;
+	}
+	const result = await fetchApi<ConversationsResponse | WaConversation[]>(
+		`${BASE}/conversations`,
+		{ params },
+	);
+	// Handle both paginated and array responses
+	if (Array.isArray(result)) {
+		return { data: result, pagination: { page: 1, limit: 50, total: result.length, totalPages: 1 } };
+	}
+	return result as ConversationsResponse;
 }
 
-export async function fetchConversation(
-	token: string,
+export async function fetchConversationDetail(
 	id: string,
-): Promise<WaConversation> {
-	return fetchApi<WaConversation>(`${BASE}/conversations/${id}`);
-}
-
-export async function fetchConversationMessages(
-	token: string,
-	conversationId: string,
-): Promise<WaMessage[]> {
-	return fetchApi<WaMessage[]>(
-		`${BASE}/conversations/${conversationId}/messages`,
+): Promise<{ conversation: WaConversation; messages: WaMessage[] }> {
+	return fetchApi<{ conversation: WaConversation; messages: WaMessage[] }>(
+		`${BASE}/conversations/${id}`,
+		{ params: { includeMessages: "true", messageLimit: 100 } },
 	);
 }
 
 export async function sendMessage(
-	token: string,
 	conversationId: string,
 	content: string,
 ): Promise<WaMessage> {
@@ -78,24 +143,52 @@ export async function sendMessage(
 		`${BASE}/conversations/${conversationId}/messages`,
 		{
 			method: "POST",
-			data: { content, messageType: "text" },
+			data: { content, type: "text" },
 		},
 	);
 }
 
-export async function fetchQuickReplies(
-	token: string,
-): Promise<WaQuickReply[]> {
-	return fetchApi<WaQuickReply[]>(`${BASE}/quick-replies`);
+export async function addNote(
+	conversationId: string,
+	content: string,
+): Promise<WaMessage> {
+	return fetchApi<WaMessage>(
+		`${BASE}/conversations/${conversationId}/notes`,
+		{
+			method: "POST",
+			data: { content },
+		},
+	);
 }
 
 export async function updateConversationStatus(
-	token: string,
 	conversationId: string,
 	status: string,
 ): Promise<WaConversation> {
-	return fetchApi<WaConversation>(`${BASE}/conversations/${conversationId}`, {
-		method: "PUT",
-		data: { status },
-	});
+	return fetchApi<WaConversation>(
+		`${BASE}/conversations/${conversationId}/status`,
+		{
+			method: "PUT",
+			data: { status },
+		},
+	);
+}
+
+export async function assignConversation(
+	conversationId: string,
+	assignedTo: string,
+	team?: string,
+	reason?: string,
+): Promise<WaConversation> {
+	return fetchApi<WaConversation>(
+		`${BASE}/conversations/${conversationId}/assign`,
+		{
+			method: "POST",
+			data: { assignedTo, team, reason },
+		},
+	);
+}
+
+export async function fetchQuickReplies(): Promise<WaQuickReply[]> {
+	return fetchApi<WaQuickReply[]>(`${BASE}/quick-replies`);
 }

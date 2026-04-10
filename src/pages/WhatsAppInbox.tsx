@@ -22,6 +22,7 @@ import {
 	Tag,
 	User,
 	UserPlus,
+	X,
 	XCircle,
 	Zap,
 } from "lucide-react";
@@ -52,6 +53,8 @@ import { Separator } from "@/components/ui/separator";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Textarea } from "@/components/ui/textarea";
 import { useWhatsAppConversation, useWhatsAppInbox } from "@/hooks/useWhatsApp";
+import { organizationMembersApi } from "@/api/v2/system";
+import { uploadFile } from "@/lib/storage/upload";
 import type {
 	Conversation,
 	Message,
@@ -570,7 +573,13 @@ function ChatPanel({
 	const [sending, setSending] = useState(false);
 	const [showNoteDialog, setShowNoteDialog] = useState(false);
 	const [noteContent, setNoteContent] = useState("");
+	const [attachment, setAttachment] = useState<{
+		file: File;
+		preview: string;
+	} | null>(null);
+	const [uploading, setUploading] = useState(false);
 	const messagesEndRef = useRef<HTMLDivElement>(null);
+	const fileInputRef = useRef<HTMLInputElement>(null);
 
 	useEffect(() => {
 		messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -617,13 +626,41 @@ function ChatPanel({
 
 	if (!conversation) return null;
 
+	const handleFileSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
+		const file = e.target.files?.[0];
+		if (!file) return;
+
+		const preview = file.type.startsWith("image/")
+			? URL.createObjectURL(file)
+			: file.name;
+
+		setAttachment({ file, preview });
+		e.target.value = "";
+	};
+
 	const handleSend = async () => {
-		if (!input.trim() || sending) return;
+		if ((!input.trim() && !attachment) || sending) return;
 		setSending(true);
 		try {
-			await sendMessage(input.trim());
+			if (attachment) {
+				setUploading(true);
+				const upload = await uploadFile(attachment.file, {
+					folder: "whatsapp-attachments",
+				});
+				await sendMessage(input.trim(), {
+					type: attachment.file.type.startsWith("image/")
+						? "image"
+						: "document",
+					attachmentUrl: upload.url,
+				});
+				setUploading(false);
+			} else {
+				await sendMessage(input.trim());
+			}
 			setInput("");
+			setAttachment(null);
 		} catch {
+			setUploading(false);
 		} finally {
 			setSending(false);
 		}
@@ -743,12 +780,46 @@ function ChatPanel({
 			</ScrollArea>
 
 			<div className="p-4 bg-background border-t z-10 shrink-0">
+				{attachment && (
+					<div className="mb-3 flex items-center gap-2 p-2 bg-muted/50 rounded-lg">
+						{attachment.file.type.startsWith("image/") ? (
+							<img
+								src={attachment.preview}
+								alt="Attachment preview"
+								className="h-12 w-12 object-cover rounded"
+							/>
+						) : (
+							<div className="h-12 w-12 bg-primary/10 rounded flex items-center justify-center">
+								<Paperclip className="h-5 w-5 text-primary" />
+							</div>
+						)}
+						<span className="text-sm truncate flex-1">
+							{attachment.file.name}
+						</span>
+						<Button
+							variant="ghost"
+							size="icon"
+							className="h-6 w-6"
+							onClick={() => setAttachment(null)}
+						>
+							<XCircle className="h-4 w-4" />
+						</Button>
+					</div>
+				)}
 				<div className="flex items-end gap-3 max-w-5xl mx-auto">
 					<div className="flex gap-1.5 pb-1">
+						<input
+							type="file"
+							ref={fileInputRef}
+							className="hidden"
+							accept="image/*,.pdf,.doc,.docx,.xls,.xlsx"
+							onChange={handleFileSelect}
+						/>
 						<Button
 							variant="ghost"
 							size="icon"
 							className="h-9 w-9 rounded-full text-muted-foreground hover:text-foreground hover:bg-muted"
+							onClick={() => fileInputRef.current?.click()}
 						>
 							<Paperclip className="h-5 w-5" />
 						</Button>
@@ -780,14 +851,14 @@ function ChatPanel({
 					<Button
 						size="icon"
 						className={`h-11 w-11 rounded-full shrink-0 shadow-md transition-all ${
-							input.trim()
+							input.trim() || attachment
 								? "bg-primary text-primary-foreground hover:bg-primary/90"
 								: "bg-muted text-muted-foreground"
 						}`}
 						onClick={handleSend}
-						disabled={sending || !input.trim()}
+						disabled={sending || (!input.trim() && !attachment) || uploading}
 					>
-						{sending ? (
+						{sending || uploading ? (
 							<Loader2 className="h-5 w-5 animate-spin" />
 						) : (
 							<Send className="h-5 w-5 ml-0.5" />
@@ -842,6 +913,9 @@ export default function WhatsAppInboxPage() {
 	const [showAssignDialog, setShowAssignDialog] = useState(false);
 	const [showTransferDialog, setShowTransferDialog] = useState(false);
 	const [quickReplyText, setQuickReplyText] = useState<string | null>(null);
+	const [teamMembers, setTeamMembers] = useState<any[]>([]);
+	const [memberSearch, setMemberSearch] = useState("");
+	const [assigning, setAssigning] = useState(false);
 
 	const { conversations, loading, pagination } = useWhatsAppInbox({
 		status:
@@ -861,13 +935,47 @@ export default function WhatsAppInboxPage() {
 			? conversations.filter((c) => c.assignedTo)
 			: conversations;
 
-	console.log(
-		"[WhatsAppInbox] conversations:",
-		conversations.length,
-		"filtered:",
-		filteredConversations.length,
-		"statusFilter:",
-		statusFilter,
+	useEffect(() => {
+		if (showAssignDialog || showTransferDialog) {
+			organizationMembersApi
+				.list({ limit: 100 })
+				.then((res) => {
+					setTeamMembers(res.data || []);
+				})
+				.catch(() => setTeamMembers([]));
+		}
+	}, [showAssignDialog, showTransferDialog]);
+
+	const handleAssign = async (userId: string) => {
+		if (!selectedId || assigning) return;
+		setAssigning(true);
+		try {
+			await assign(userId);
+			setShowAssignDialog(false);
+		} catch (e) {
+			console.error("Assign failed:", e);
+		} finally {
+			setAssigning(false);
+		}
+	};
+
+	const handleTransfer = async (userId: string) => {
+		if (!selectedId || assigning) return;
+		setAssigning(true);
+		try {
+			await transfer(userId);
+			setShowTransferDialog(false);
+		} catch (e) {
+			console.error("Transfer failed:", e);
+		} finally {
+			setAssigning(false);
+		}
+	};
+
+	const filteredMembers = teamMembers.filter(
+		(m) =>
+			m.user?.name?.toLowerCase().includes(memberSearch.toLowerCase()) ||
+			m.user?.email?.toLowerCase().includes(memberSearch.toLowerCase()),
 	);
 
 	return (
@@ -1002,11 +1110,42 @@ export default function WhatsAppInboxPage() {
 					<div className="space-y-4 py-4">
 						<Input
 							placeholder="Buscar membro da equipe..."
+							value={memberSearch}
+							onChange={(e) => setMemberSearch(e.target.value)}
 							className="rounded-full bg-muted/50"
 						/>
-						<div className="text-sm text-muted-foreground text-center py-6 border rounded-lg bg-muted/20 border-dashed">
-							Selecione um membro para atribuir
-						</div>
+						<ScrollArea className="h-[200px]">
+							{filteredMembers.length === 0 ? (
+								<div className="text-sm text-muted-foreground text-center py-6">
+									Nenhum membro encontrado
+								</div>
+							) : (
+								<div className="space-y-1">
+									{filteredMembers.map((member) => (
+										<button
+											key={member.id}
+											type="button"
+											className="w-full flex items-center gap-3 p-2 hover:bg-muted rounded-lg transition-colors text-left"
+											onClick={() => handleAssign(member.userId)}
+										>
+											<Avatar className="h-8 w-8">
+												<AvatarFallback className="text-xs">
+													{member.user?.name?.slice(0, 2).toUpperCase() || "??"}
+												</AvatarFallback>
+											</Avatar>
+											<div className="flex-1">
+												<p className="text-sm font-medium">
+													{member.user?.name || "Membro"}
+												</p>
+												<p className="text-xs text-muted-foreground">
+													{member.role}
+												</p>
+											</div>
+										</button>
+									))}
+								</div>
+							)}
+						</ScrollArea>
 					</div>
 					<DialogFooter>
 						<DialogClose asChild>
@@ -1027,19 +1166,47 @@ export default function WhatsAppInboxPage() {
 					<div className="space-y-4 py-4">
 						<Input
 							placeholder="Buscar setor ou responsável..."
+							value={memberSearch}
+							onChange={(e) => setMemberSearch(e.target.value)}
 							className="rounded-full bg-muted/50"
 						/>
-						<Textarea
-							placeholder="Motivo da transferência (opcional)"
-							className="resize-none"
-							rows={3}
-						/>
+						<ScrollArea className="h-[200px]">
+							{filteredMembers.length === 0 ? (
+								<div className="text-sm text-muted-foreground text-center py-6">
+									Nenhum membro encontrado
+								</div>
+							) : (
+								<div className="space-y-1">
+									{filteredMembers.map((member) => (
+										<button
+											key={member.id}
+											type="button"
+											className="w-full flex items-center gap-3 p-2 hover:bg-muted rounded-lg transition-colors text-left"
+											onClick={() => handleTransfer(member.userId)}
+										>
+											<Avatar className="h-8 w-8">
+												<AvatarFallback className="text-xs">
+													{member.user?.name?.slice(0, 2).toUpperCase() || "??"}
+												</AvatarFallback>
+											</Avatar>
+											<div className="flex-1">
+												<p className="text-sm font-medium">
+													{member.user?.name || "Membro"}
+												</p>
+												<p className="text-xs text-muted-foreground">
+													{member.role}
+												</p>
+											</div>
+										</button>
+									))}
+								</div>
+							)}
+						</ScrollArea>
 					</div>
 					<DialogFooter>
 						<DialogClose asChild>
 							<Button variant="ghost">Cancelar</Button>
 						</DialogClose>
-						<Button>Confirmar Transferência</Button>
 					</DialogFooter>
 				</DialogContent>
 			</Dialog>

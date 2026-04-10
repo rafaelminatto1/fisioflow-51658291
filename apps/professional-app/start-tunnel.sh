@@ -10,7 +10,7 @@ cd "$(dirname "$0")"
 
 echo "🚀 Iniciando Metro Bundler com tunnel e mais memória..."
 # Aumentamos o limite de memória do Node para 8GB e iniciamos o Expo
-NODE_OPTIONS="--max-old-space-size=8192" npx expo start --tunnel "$@" &
+NODE_OPTIONS="--max-old-space-size=8192" npx expo start --lan "$@" &
 EXPO_PID=$!
 
 # Garante que ao fechar o script (Ctrl+C), o Metro também feche
@@ -35,7 +35,7 @@ echo "💡 Se o progresso travar em 99%, não se preocupe, o script vai detectar
 # Disparar o bundle em background mas redirecionar a saída para um arquivo temporário
 # para podermos monitorar o progresso se quisermos, mas o foco é o log do Metro.
 curl -f -s \
-  "http://localhost:8081/apps/professional-app/index.ts.bundle?platform=ios&dev=true&hot=false&lazy=false&transform.engine=hermes&transform.bytecode=1&transform.routerRoot=app&unstable_transformProfile=hermes-stable" \
+  "http://192.168.31.116:8081/apps/professional-app/index.ts.bundle?platform=ios&dev=true&hot=false&lazy=false&transform.engine=hermes&transform.bytecode=1&transform.routerRoot=app&unstable_transformProfile=hermes-stable" \
   -o /dev/null \
   --max-time 600 &
 CURL_PID=$!

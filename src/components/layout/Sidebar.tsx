@@ -122,6 +122,7 @@ const mainMenuItems = [
 		badge: "Hoje",
 	},
 	{ icon: Users, label: "Meus Pacientes", href: APP_ROUTES.PATIENTS },
+	{ icon: MessageCircle, label: "WhatsApp", href: "/whatsapp/inbox" },
 ];
 
 const clinicaMenuItems = [

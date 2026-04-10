@@ -15,20 +15,15 @@ import { registerForPushNotificationsAsync } from '@/lib/notifications';
 import * as Sentry from '@sentry/react-native';
 import { ErrorBoundary } from '@/components/ErrorBoundary';
 
-// Initialize Sentry
+// Initialize Sentry — only in production builds (native SDK not available via Metro)
 const sentryDsn = process.env.EXPO_PUBLIC_SENTRY_DSN;
-if (sentryDsn && sentryDsn.startsWith('https://')) {
+if (!__DEV__ && sentryDsn && sentryDsn.startsWith('https://')) {
   Sentry.init({
     dsn: sentryDsn,
-    debug: __DEV__,
-    enableNative: !__DEV__,
-    // 1.0 envia TODAS as transações — caro em produção. 0.1 = 10% sample.
-    tracesSampleRate: __DEV__ ? 1.0 : 0.1,
-    // Captura erros no boot nativo (feature do Sentry v8)
+    enableNative: true,
+    tracesSampleRate: 0.1,
     enableNativeCrashHandling: true,
   });
-} else if (__DEV__) {
-  console.log('Sentry disabled: valid DSN not found in environment');
 }
 
 SplashScreen.preventAutoHideAsync();
@@ -149,6 +144,7 @@ function RootLayoutContent() {
           name="appointment-form"
           options={{
             title: 'Agendamento',
+            headerShown: false,
             presentation: 'formSheet',
             sheetAllowedDetents: [0.7, 1],
             sheetInitialDetentIndex: 0,
@@ -232,6 +228,10 @@ function RootLayoutContent() {
             sheetGrabberVisible: true,
             sheetCornerRadius: 20,
           }}
+        />
+        <Stack.Screen
+          name="whatsapp-chat/[id]"
+          options={{ headerShown: false }}
         />
       </Stack>
     </>

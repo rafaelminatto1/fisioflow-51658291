@@ -11,7 +11,7 @@ import {
   Modal,
   TextInput,
 } from 'react-native';
-import { useLocalSearchParams, useRouter, Stack } from 'expo-router';
+import { useLocalSearchParams, useRouter } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { Button, Input } from '@/components';
@@ -21,7 +21,7 @@ import { useHaptics } from '@/hooks/useHaptics';
 import { useCreateFinancialRecord, useMarkAsPaid } from '@/hooks/usePatientFinancial';
 import type { AppointmentStatus } from '@/types';
 import { format } from 'date-fns';
-import { useForm, Controller } from 'react-hook-form';
+import { useForm, Controller, type FieldErrors } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
 import { PatientAutocomplete } from '@/components/appointment/PatientAutocomplete';
@@ -213,6 +213,24 @@ export default function AppointmentFormScreen() {
     }
   };
 
+  const onInvalid = (fieldErrors: FieldErrors<AppointmentFormData>) => {
+    hapticError();
+
+    const firstMessage =
+      fieldErrors.patientId?.message ||
+      fieldErrors.date?.message ||
+      fieldErrors.time?.message ||
+      fieldErrors.type?.message ||
+      fieldErrors.duration?.message ||
+      fieldErrors.status?.message;
+
+    if (firstMessage) {
+      Alert.alert('Campos pendentes', String(firstMessage));
+    }
+  };
+
+  const submitAppointment = handleSubmit(onSave, onInvalid);
+
   const handleDelete = () => {
     medium();
     Alert.alert(
@@ -336,18 +354,16 @@ export default function AppointmentFormScreen() {
 
   return (
     <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]} edges={['top', 'left', 'right', 'bottom']}>
-      <Stack.Screen options={{ headerShown: false }} />
-      
       <View style={[styles.header, { borderBottomColor: colors.border }]}>
         <TouchableOpacity
           onPress={() => {
             if (isEditing && isDirty) {
-              Alert.alert(
+                  Alert.alert(
                 'Salvar alterações?',
                 'Você fez alterações neste agendamento.',
                 [
                   { text: 'Não', style: 'cancel', onPress: navigateToAgenda },
-                  { text: 'Sim', onPress: () => void handleSubmit(onSave)() },
+                  { text: 'Sim', onPress: () => void submitAppointment() },
                 ]
               );
             } else {
@@ -533,63 +549,6 @@ export default function AppointmentFormScreen() {
           </View>
         </View>
 
-        {/* Group Session Options */}
-        <View style={[styles.groupSection, { backgroundColor: colors.surface, borderColor: colors.border }]}>
-          <View style={styles.groupSwitchRow}>
-            <View>
-              <Text style={[styles.groupTitle, { color: colors.text }]}>Sessão de Grupo</Text>
-              <Text style={[styles.groupSubtitle, { color: colors.textSecondary }]}>Adicionar múltiplos participantes</Text>
-            </View>
-            <Controller
-              control={control}
-              name="isGroup"
-              render={({ field: { value, onChange } }) => (
-                <TouchableOpacity 
-                  onPress={() => onChange(!value)}
-                  style={[styles.switch, { backgroundColor: value ? colors.primary : colors.border }]}
-                >
-                  <View style={[styles.switchThumb, { transform: [{ translateX: value ? 20 : 2 }] }]} />
-                </TouchableOpacity>
-              )}
-            />
-          </View>
-
-          {watch('isGroup') && (
-            <View style={styles.groupFields}>
-              <Text style={[styles.label, { color: colors.textSecondary, marginTop: 12 }]}>Nomes Adicionais</Text>
-              <Controller
-                control={control}
-                name="additionalNames"
-                render={({ field: { value, onChange } }) => (
-                  <Input
-                    placeholder="Ex: Esposa do Sr. João, Acompanhante..."
-                    value={value}
-                    onChangeText={onChange}
-                  />
-                )}
-              />
-
-              <View style={[styles.groupSwitchRow, { marginTop: 12 }]}>
-                <View>
-                  <Text style={[styles.groupTitle, { color: colors.text, fontSize: 13 }]}>Sem Limite de Participantes</Text>
-                </View>
-                <Controller
-                  control={control}
-                  name="isUnlimited"
-                  render={({ field: { value, onChange } }) => (
-                    <TouchableOpacity 
-                      onPress={() => onChange(!value)}
-                      style={[styles.switchSmall, { backgroundColor: value ? colors.success : colors.border }]}
-                    >
-                      <View style={[styles.switchThumbSmall, { transform: [{ translateX: value ? 14 : 2 }] }]} />
-                    </TouchableOpacity>
-                  )}
-                />
-              </View>
-            </View>
-          )}
-        </View>
-
         <Text style={[styles.label, { color: colors.textSecondary }]}>Observações</Text>
         <Controller
           control={control}
@@ -657,7 +616,7 @@ export default function AppointmentFormScreen() {
         {!isEditing && (
           <Button
             title="Agendar"
-            onPress={handleSubmit(onSave)}
+            onPress={() => void submitAppointment()}
             loading={isCreating}
             style={styles.saveButton}
           />
@@ -861,57 +820,6 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     gap: 8,
-  },
-  // Group Section Styles
-  groupSection: {
-    marginTop: 16,
-    marginBottom: 16,
-    borderRadius: 16,
-    borderWidth: 1,
-    padding: 16,
-  },
-  groupSwitchRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-  },
-  groupTitle: {
-    fontSize: 16,
-    fontWeight: '600',
-  },
-  groupSubtitle: {
-    fontSize: 12,
-    marginTop: 2,
-  },
-  groupFields: {
-    marginTop: 8,
-    borderTopWidth: 1,
-    borderTopColor: '#f1f5f920',
-    paddingTop: 8,
-  },
-  switch: {
-    width: 44,
-    height: 24,
-    borderRadius: 12,
-    justifyContent: 'center',
-  },
-  switchThumb: {
-    width: 20,
-    height: 20,
-    borderRadius: 10,
-    backgroundColor: '#fff',
-  },
-  switchSmall: {
-    width: 32,
-    height: 18,
-    borderRadius: 9,
-    justifyContent: 'center',
-  },
-  switchThumbSmall: {
-    width: 14,
-    height: 14,
-    borderRadius: 7,
-    backgroundColor: '#fff',
   },
   payButtonText: {
     color: '#fff',
