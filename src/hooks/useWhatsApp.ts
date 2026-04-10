@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import {
 	fetchConversations,
 	fetchConversation,
@@ -25,6 +25,7 @@ export function useWhatsAppInbox(filters?: ConversationFilters) {
 	});
 
 	const refetch = useCallback(async () => {
+		setLoading(true);
 		try {
 			const result = await fetchConversations(filters);
 			setConversations(result.data);
@@ -46,14 +47,33 @@ export function useWhatsAppInbox(filters?: ConversationFilters) {
 		}
 	}, [filters]);
 
+	const mountedRef = useRef(false);
+
 	useEffect(() => {
-		refetch();
+		if (!mountedRef.current) {
+			mountedRef.current = true;
+			refetch();
+		}
 	}, [refetch]);
 
 	useEffect(() => {
-		const interval = setInterval(refetch, 15000);
+		const interval = setInterval(() => {
+			fetchConversations(filters)
+				.then((result) => {
+					setConversations(result.data);
+					setPagination(result.pagination);
+				})
+				.catch((err) => {
+					if (
+						!err.message?.includes("401") &&
+						!err.message?.includes("token")
+					) {
+						console.error("[WhatsAppInbox] Poll error:", err);
+					}
+				});
+		}, 15000);
 		return () => clearInterval(interval);
-	}, [refetch]);
+	}, [filters]);
 
 	return { conversations, loading, error, refetch, pagination };
 }
