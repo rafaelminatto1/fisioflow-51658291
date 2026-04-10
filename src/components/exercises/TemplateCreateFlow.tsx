@@ -40,6 +40,7 @@ export interface TemplateCreateFlowProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   sourceTemplate?: ExerciseTemplate; // customize mode
+  editTemplate?: ExerciseTemplate; // edit mode
   onSuccess: () => void;
 }
 
@@ -497,10 +498,12 @@ export function TemplateCreateFlow({
   open,
   onOpenChange,
   sourceTemplate,
+  editTemplate,
   onSuccess,
 }: TemplateCreateFlowProps) {
   const queryClient = useQueryClient();
   const isCustomizeMode = !!sourceTemplate;
+  const isEditMode = !!editTemplate;
   const [step, setStep] = useState<Step>(1);
   const [exerciseItems, setExerciseItems] = useState<ExerciseItemValues[]>([]);
 
@@ -531,9 +534,48 @@ export function TemplateCreateFlow({
   const patientProfile = watch("patientProfile");
   const isPosOperatorio = patientProfile === "pos_operatorio";
 
-  // Pre-fill from sourceTemplate when in customize mode
+  // Fetch items when in edit mode
+  const { data: editTemplateData } = useQuery({
+    queryKey: ["templates", editTemplate?.id, "detail"],
+    queryFn: () => templatesApi.get(editTemplate!.id),
+    enabled: isEditMode && open && !!editTemplate?.id,
+    staleTime: 0,
+  });
+
+  // Pre-fill from sourceTemplate when in customize mode, or editTemplate when in edit mode
   useEffect(() => {
-    if (open && sourceTemplate) {
+    if (open && editTemplate) {
+      reset({
+        name: editTemplate.name,
+        patientProfile: editTemplate.patientProfile ?? undefined,
+        conditionName: editTemplate.conditionName ?? "",
+        templateVariant: editTemplate.templateVariant ?? "",
+        clinicalNotes: editTemplate.clinicalNotes ?? "",
+        contraindications: editTemplate.contraindications ?? "",
+        precautions: editTemplate.precautions ?? "",
+        progressionNotes: editTemplate.progressionNotes ?? "",
+        evidenceLevel: editTemplate.evidenceLevel ?? undefined,
+        bibliographicReferences: (editTemplate.bibliographicReferences ?? []).join("\n"),
+        items: [],
+      });
+      const items = editTemplateData?.data?.items ?? [];
+      setExerciseItems(
+        items
+          .slice()
+          .sort((a, b) => (a.orderIndex ?? 0) - (b.orderIndex ?? 0))
+          .map((item) => ({
+            exerciseId: item.exerciseId,
+            exerciseName: item.exerciseId, // will show id until exercise name resolves
+            sets: item.sets ?? undefined,
+            reps: item.repetitions ?? undefined,
+            duration: item.duration ?? undefined,
+            weekStart: item.weekStart ?? undefined,
+            weekEnd: item.weekEnd ?? undefined,
+            notes: item.notes ?? undefined,
+          })),
+      );
+      setStep(1);
+    } else if (open && sourceTemplate) {
       reset({
         name: `${sourceTemplate.name} (Personalizado)`,
         patientProfile: sourceTemplate.patientProfile ?? undefined,
@@ -549,7 +591,7 @@ export function TemplateCreateFlow({
       });
       setExerciseItems([]);
       setStep(1);
-    } else if (open && !sourceTemplate) {
+    } else if (open && !sourceTemplate && !editTemplate) {
       reset({
         name: "",
         patientProfile: undefined,
@@ -566,7 +608,7 @@ export function TemplateCreateFlow({
       setExerciseItems([]);
       setStep(1);
     }
-  }, [open, sourceTemplate, reset]);
+  }, [open, sourceTemplate, editTemplate, editTemplateData, reset]);
 
   // ─── Exercise management ────────────────────────────────────────────────────
 
@@ -659,6 +701,22 @@ export function TemplateCreateFlow({
     },
   });
 
+  const updateMutation = useMutation({
+    mutationFn: (payload: ReturnType<typeof buildPayload>) =>
+      templatesApi.update(editTemplate!.id, payload),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["templates"] });
+      toast.success("Template atualizado com sucesso!");
+      onOpenChange(false);
+      onSuccess();
+    },
+    onError: (err: Error) => {
+      toast.error("Erro ao atualizar template", {
+        description: err.message ?? "Tente novamente.",
+      });
+    },
+  });
+
   // ─── Navigation ─────────────────────────────────────────────────────────────
 
   function handleNext() {
@@ -669,12 +727,22 @@ export function TemplateCreateFlow({
     if (step > 1) setStep((s) => (s - 1) as Step);
   }
 
+  const isSaving = createMutation.isPending || updateMutation.isPending;
+
   const onSubmit = handleSubmit((values) => {
-    createMutation.mutate(buildPayload(values, false));
+    if (isEditMode) {
+      updateMutation.mutate(buildPayload(values, false));
+    } else {
+      createMutation.mutate(buildPayload(values, false));
+    }
   });
 
   const onSaveDraft = handleSubmit((values) => {
-    createMutation.mutate(buildPayload(values, true));
+    if (isEditMode) {
+      updateMutation.mutate(buildPayload(values, true));
+    } else {
+      createMutation.mutate(buildPayload(values, true));
+    }
   });
 
   // Step 1 is valid when name, patientProfile, conditionName are filled
@@ -690,7 +758,7 @@ export function TemplateCreateFlow({
       <DialogContent className="sm:max-w-lg max-h-[90vh] flex flex-col">
         <DialogHeader>
           <DialogTitle>
-            {isCustomizeMode ? "Personalizar template" : "Criar template"}
+            {isEditMode ? "Editar template" : isCustomizeMode ? "Personalizar template" : "Criar template"}
           </DialogTitle>
           <DialogDescription>
             {isCustomizeMode && sourceTemplate ? (
@@ -700,6 +768,8 @@ export function TemplateCreateFlow({
                   {sourceTemplate.name}
                 </Badge>
               </span>
+            ) : isEditMode ? (
+              "Edite as informações do template."
             ) : (
               "Preencha as informações do novo template de exercícios."
             )}
@@ -748,7 +818,7 @@ export function TemplateCreateFlow({
                 type="button"
                 variant="outline"
                 onClick={handleBack}
-                disabled={createMutation.isPending}
+                disabled={isSaving}
                 className="flex-1 min-w-[80px]"
               >
                 <ChevronLeft className="h-4 w-4 mr-1" />
@@ -772,10 +842,10 @@ export function TemplateCreateFlow({
                   type="button"
                   variant="outline"
                   onClick={onSaveDraft}
-                  disabled={createMutation.isPending}
+                  disabled={isSaving}
                   className="flex-1 min-w-[100px]"
                 >
-                  {createMutation.isPending ? (
+                  {isSaving ? (
                     <Loader2 className="h-4 w-4 animate-spin" />
                   ) : (
                     "Salvar rascunho"
@@ -783,14 +853,16 @@ export function TemplateCreateFlow({
                 </Button>
                 <Button
                   type="submit"
-                  disabled={createMutation.isPending}
+                  disabled={isSaving}
                   className="flex-1 min-w-[100px]"
                 >
-                  {createMutation.isPending ? (
+                  {isSaving ? (
                     <>
                       <Loader2 className="h-4 w-4 mr-2 animate-spin" />
                       Salvando...
                     </>
+                  ) : isEditMode ? (
+                    "Salvar alterações"
                   ) : (
                     "Salvar template"
                   )}

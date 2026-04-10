@@ -5,6 +5,27 @@ import { ptBR } from 'date-fns/locale';
 import type { Patient, Evolution } from '@/types';
 
 /**
+ * Generates a professional text summary for WhatsApp sharing.
+ */
+export function generateEvolutionTextSummary(patient: Patient, evolution: Evolution): string {
+  const dateStr = evolution.date ? format(new Date(evolution.date), "dd/MM/yyyy", { locale: ptBR }) : 'N/A';
+  
+  let summary = `*Fisioterapia - Relatório de Evolução*\n\n`;
+  summary += `*Paciente:* ${patient.name}\n`;
+  summary += `*Data:* ${dateStr}\n`;
+  summary += `*Nível de Dor:* ${evolution.painLevel}/10\n\n`;
+  
+  if (evolution.subjective) summary += `*Subjetivo:* ${evolution.subjective}\n`;
+  if (evolution.objective) summary += `*Objetivo:* ${evolution.objective}\n`;
+  if (evolution.assessment) summary += `*Avaliação:* ${evolution.assessment}\n`;
+  if (evolution.plan) summary += `*Conduta/Plano:* ${evolution.plan}\n\n`;
+  
+  summary += `_Relatório gerado via FisioFlow_`;
+  
+  return summary;
+}
+
+/**
  * Generates a high-quality, professional PDF report for patient evolution.
  * Uses modern CSS patterns for a clean, medical-grade look.
  */

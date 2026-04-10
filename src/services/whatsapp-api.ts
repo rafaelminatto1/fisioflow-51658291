@@ -77,8 +77,14 @@ export interface Contact {
 function mapContact(row: any): Contact {
 	return {
 		id: row.id,
-		name: row.name || row.display_name || row.username || row.wa_id || "Sem nome",
-		phone: row.phone || row.wa_id || "",
+		name:
+			row.name ||
+			row.display_name ||
+			row.displayName ||
+			row.username ||
+			row.wa_id ||
+			"Sem nome",
+		phone: row.phone || row.wa_id || row.phoneE164 || "",
 		patientId: row.patientId || row.patient_id || undefined,
 		patientName: row.patientName || row.patient_name || undefined,
 		email: row.email || undefined,
@@ -307,9 +313,19 @@ export async function fetchContacts(filters?: {
 }
 
 export async function fetchContact(id: string) {
-	const res = await request<{ data: any } | any>(
-		`${BASE}/contacts/${id}`,
-	);
+	const res = await request<{ data: any } | any>(`${BASE}/contacts/${id}`);
+	return mapContact("data" in (res as any) ? (res as any).data : res);
+}
+
+export async function resolveContact(data: {
+	phone?: string;
+	displayName?: string;
+	patientId?: string;
+}) {
+	const res = await request<{ data: any } | any>(`${BASE}/contacts/resolve`, {
+		method: "POST",
+		body: JSON.stringify(data),
+	});
 	return mapContact("data" in (res as any) ? (res as any).data : res);
 }
 
@@ -366,6 +382,41 @@ export async function fetchQuickReplies(team?: string) {
 		`${BASE}/quick-replies${qs ? `?${qs}` : ""}`,
 	);
 	return Array.isArray(res) ? res : ((res as any).data ?? res);
+}
+
+export async function updatePriority(
+	conversationId: string,
+	priority: "low" | "medium" | "high" | "urgent",
+) {
+	const res = await request<{ data: { id: string; priority: string } }>(
+		`${BASE}/conversations/${conversationId}/priority`,
+		{
+			method: "PUT",
+			body: JSON.stringify({ priority }),
+		},
+	);
+	return (res as any).data ?? res;
+}
+
+export async function sendBroadcast(
+	contactIds: string[],
+	content: string,
+	options?: { templateName?: string; templateLanguage?: string },
+) {
+	const res = await request<{
+		data: { sent: number; failed: number; total: number };
+	}>(`${BASE}/broadcast`, {
+		method: "POST",
+		body: JSON.stringify({ contactIds, content, ...options }),
+	});
+	return (res as any).data ?? res;
+}
+
+export async function fetchPendingConfirmations(limit = 50) {
+	const res = await request<{ data: any[] }>(
+		`${BASE}/pending-confirmations?limit=${limit}`,
+	);
+	return Array.isArray(res) ? res : ((res as any).data ?? []);
 }
 
 export async function createQuickReply(data: Omit<QuickReply, "id">) {

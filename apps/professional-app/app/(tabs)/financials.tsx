@@ -240,19 +240,26 @@ export default function FinancialsScreen() {
 			edges={["top"]}
 		>
 			<View style={[styles.header, { borderBottomColor: colors.border }]}>
-				<Text style={[styles.headerTitle, { color: colors.text }]}>
-					Financeiro
-				</Text>
+				<View style={styles.headerTitleContainer}>
+					<Ionicons name="wallet" size={22} color={colors.primary} />
+					<Text style={[styles.headerTitle, { color: colors.text }]}>
+						Financeiro
+					</Text>
+				</View>
+				<TouchableOpacity
+					style={[styles.searchBtn, { backgroundColor: colors.surface }]}
+					onPress={() => light()}
+				>
+					<Ionicons name="search" size={20} color={colors.textSecondary} />
+				</TouchableOpacity>
 			</View>
 
-			<View style={styles.tabContainer}>
+			<View style={[styles.tabContainer, { borderBottomColor: colors.border }]}>
 				<TouchableOpacity
 					style={[
 						styles.tab,
-						activeTab === "transactions" && {
-							borderBottomColor: colors.primary,
-							borderBottomWidth: 2,
-						},
+						activeTab === "transactions" && styles.activeTab,
+						activeTab === "transactions" && { borderBottomColor: colors.primary },
 					]}
 					onPress={() => {
 						light();
@@ -268,6 +275,7 @@ export default function FinancialsScreen() {
 										? colors.primary
 										: colors.textSecondary,
 							},
+							activeTab === "transactions" && styles.activeTabText,
 						]}
 					>
 						Transações
@@ -276,10 +284,8 @@ export default function FinancialsScreen() {
 				<TouchableOpacity
 					style={[
 						styles.tab,
-						activeTab === "nfse" && {
-							borderBottomColor: colors.primary,
-							borderBottomWidth: 2,
-						},
+						activeTab === "nfse" && styles.activeTab,
+						activeTab === "nfse" && { borderBottomColor: colors.primary },
 					]}
 					onPress={() => {
 						light();
@@ -293,6 +299,7 @@ export default function FinancialsScreen() {
 								color:
 									activeTab === "nfse" ? colors.primary : colors.textSecondary,
 							},
+							activeTab === "nfse" && styles.activeTabText,
 						]}
 					>
 						NFS-e
@@ -301,10 +308,8 @@ export default function FinancialsScreen() {
 				<TouchableOpacity
 					style={[
 						styles.tab,
-						activeTab === "receipts" && {
-							borderBottomColor: colors.primary,
-							borderBottomWidth: 2,
-						},
+						activeTab === "receipts" && styles.activeTab,
+						activeTab === "receipts" && { borderBottomColor: colors.primary },
 					]}
 					onPress={() => {
 						light();
@@ -320,6 +325,7 @@ export default function FinancialsScreen() {
 										? colors.primary
 										: colors.textSecondary,
 							},
+							activeTab === "receipts" && styles.activeTabText,
 						]}
 					>
 						Recibos
@@ -329,6 +335,8 @@ export default function FinancialsScreen() {
 
 			<ScrollView
 				style={styles.scroll}
+				contentContainerStyle={styles.scrollContent}
+				showsVerticalScrollIndicator={false}
 				refreshControl={
 					<RefreshControl
 						refreshing={activeTab === "nfse" ? isLoadingNFSe : isLoading}
@@ -345,21 +353,23 @@ export default function FinancialsScreen() {
 							totalPending={totalPending}
 						/>
 
-						<FinancialFilters
-							filters={filters}
-							onFiltersChange={setFilters}
-							hasActiveFilters={hasActiveFilters}
-						/>
+						<View style={styles.section}>
+							<FinancialFilters
+								filters={filters}
+								onFiltersChange={setFilters}
+								hasActiveFilters={hasActiveFilters}
+							/>
+						</View>
 
 						<FinancialSummaryGrid
 							cards={[
 								{
 									title: "Receita",
 									amount: totalRevenue,
-									subtitle: `(${getDatePeriodLabel()})`,
+									subtitle: getDatePeriodLabel(),
 									trend: {
 										value: 12.5,
-										label: "vs mês anterior",
+										label: "vs mês ant.",
 										positive: true,
 									},
 									icon: "arrow-up-circle" as any,
@@ -368,10 +378,10 @@ export default function FinancialsScreen() {
 								{
 									title: "Pendente",
 									amount: totalPending,
-									subtitle: `(${getDatePeriodLabel()})`,
+									subtitle: getDatePeriodLabel(),
 									trend: {
 										value: 8.3,
-										label: "vs mês anterior",
+										label: "vs mês ant.",
 										positive: false,
 									},
 									icon: "time" as any,
@@ -381,63 +391,68 @@ export default function FinancialsScreen() {
 						/>
 
 						{chartData.length > 0 && (
-							<FinancialChart
-								data={chartData}
-								title="Evolução de Receitas"
-								type="line"
-								showDots={true}
-							/>
-						)}
-
-						<View
-							style={[styles.listHeader, { borderBottomColor: colors.border }]}
-						>
-							<Text style={[styles.listHeaderTitle, { color: colors.text }]}>
-								Transações ({filteredRecords.length})
-							</Text>
-						</View>
-
-						{isLoading && !records ? (
-							<TransactionListSkeleton count={3} />
-						) : filteredRecords.length > 0 ? (
-							filteredRecords.map((record) => (
-								<TransactionCard
-									key={record.id}
-									id={record.id}
-									patientName={record.patient_name}
-									amount={record.final_value}
-									date={record.session_date}
-									paymentMethod={record.payment_method}
-									status={record.payment_status}
-									onEdit={() => handleEdit(record)}
-									onDelete={(e) => handleDeletePress(record, e)}
-									onReceipt={(e) => {
-										e?.stopPropagation();
-										light();
-									}}
+							<View style={styles.chartSection}>
+								<FinancialChart
+									data={chartData}
+									title="Evolução de Receitas"
+									type="line"
+									showDots={true}
 								/>
-							))
-						) : (
-							<EmptyStateFinancial
-								title={
-									hasActiveFilters
-										? "Nenhum registro encontrado"
-										: "Nenhuma transação encontrada"
-								}
-								description={
-									hasActiveFilters
-										? "Tente ajustar os filtros para encontrar transações."
-										: "Adicione sua primeira transação para começar."
-								}
-								actionLabel="Adicionar Transação"
-								onAction={handleAdd}
-								illustration="transactions"
-								variant={hasActiveFilters ? "no-results" : "initial"}
-							/>
+							</View>
 						)}
+
+						<View style={styles.listSection}>
+							<View style={styles.listHeader}>
+								<Text style={[styles.listHeaderTitle, { color: colors.text }]}>
+									Lista de Transações
+								</Text>
+								<Text style={[styles.listHeaderSub, { color: colors.textSecondary }]}>
+									{filteredRecords.length} registros
+								</Text>
+							</View>
+
+							{isLoading && !records ? (
+								<TransactionListSkeleton count={3} />
+							) : filteredRecords.length > 0 ? (
+								filteredRecords.map((record) => (
+									<TransactionCard
+										key={record.id}
+										id={record.id}
+										patientName={record.patient_name}
+										amount={record.final_value}
+										date={record.session_date}
+										paymentMethod={record.payment_method}
+										status={record.payment_status}
+										onEdit={() => handleEdit(record)}
+										onDelete={(e) => handleDeletePress(record, e)}
+										onReceipt={(e) => {
+											e?.stopPropagation();
+											light();
+										}}
+									/>
+								))
+							) : (
+								<EmptyStateFinancial
+									title={
+										hasActiveFilters
+											? "Nenhum registro encontrado"
+											: "Nenhuma transação encontrada"
+									}
+									description={
+										hasActiveFilters
+											? "Tente ajustar os filtros para encontrar transações."
+											: "Adicione sua primeira transação para começar."
+									}
+									actionLabel="Adicionar Transação"
+									onAction={handleAdd}
+									illustration="transactions"
+									variant={hasActiveFilters ? "no-results" : "initial"}
+								/>
+							)}
+						</View>
 					</>
 				) : activeTab === "nfse" ? (
-					<>
+					<View style={styles.listSection}>
 						{isLoadingNFSe ? (
 							<TransactionListSkeleton count={3} />
 						) : nfseRecords.length === 0 ? (
@@ -451,10 +466,19 @@ export default function FinancialsScreen() {
 							/>
 						) : (
 							nfseRecords.map((nfse) => (
-								<View key={nfse.id} style={styles.nfseCard}>
+								<View
+									key={nfse.id}
+									style={[
+										styles.nfseCard,
+										{ backgroundColor: colors.surface, borderColor: colors.border },
+									]}
+								>
 									<View style={styles.nfseHeader}>
-										<View>
-											<Text style={[styles.nfseTitle, { color: colors.text }]}>
+										<View style={{ flex: 1 }}>
+											<Text
+												style={[styles.nfseTitle, { color: colors.text }]}
+												numberOfLines={1}
+											>
 												{nfse.tomador_nome || "Sem tomador"}
 											</Text>
 											<Text
@@ -463,8 +487,8 @@ export default function FinancialsScreen() {
 													{ color: colors.textSecondary },
 												]}
 											>
-												{format(new Date(nfse.data_emissao), "dd/MM/yyyy")} •
-												RPS {nfse.numero_rps}
+												{format(new Date(nfse.data_emissao), "dd/MM/yyyy")} • RPS{" "}
+												{nfse.numero_rps}
 											</Text>
 										</View>
 										<View
@@ -473,7 +497,7 @@ export default function FinancialsScreen() {
 												{
 													backgroundColor:
 														(NFSE_STATUS_COLORS[nfse.status] ?? "#9CA3AF") +
-														"20",
+														"15",
 												},
 											]}
 										>
@@ -492,7 +516,7 @@ export default function FinancialsScreen() {
 									<View
 										style={[
 											styles.nfseFooter,
-											{ borderTopColor: colors.border },
+											{ borderTopColor: colors.border + "50" },
 										]}
 									>
 										<Text style={[styles.nfseValue, { color: colors.text }]}>
@@ -502,26 +526,38 @@ export default function FinancialsScreen() {
 											})}
 										</Text>
 										{nfse.link_nfse ? (
-											<Ionicons
-												name="open-outline"
-												size={20}
-												color={colors.primary}
-											/>
+											<TouchableOpacity
+												onPress={() => light()}
+												style={styles.openNfseBtn}
+											>
+												<Ionicons
+													name="open-outline"
+													size={18}
+													color={colors.primary}
+												/>
+												<Text
+													style={[styles.openNfseText, { color: colors.primary }]}
+												>
+													Ver PDF
+												</Text>
+											</TouchableOpacity>
 										) : null}
 									</View>
 								</View>
 							))
 						)}
-					</>
+					</View>
 				) : (
-					<EmptyStateFinancial
-						title="Nenhum recibo emitido"
-						description="Os recibos emitidos aparecerão aqui."
-						illustration="receipts"
-						variant="initial"
-					/>
+					<View style={styles.listSection}>
+						<EmptyStateFinancial
+							title="Nenhum recibo emitido"
+							description="Os recibos emitidos aparecerão aqui."
+							illustration="receipts"
+							variant="initial"
+						/>
+					</View>
 				)}
-				<View style={{ height: 80 }} />
+				<View style={{ height: 100 }} />
 			</ScrollView>
 
 			<DeleteConfirmationModal
@@ -543,7 +579,10 @@ export default function FinancialsScreen() {
 			/>
 
 			<TouchableOpacity
-				style={[styles.fab, { backgroundColor: colors.primary }]}
+				style={[
+					styles.fab,
+					{ backgroundColor: colors.primary, shadowColor: colors.primary },
+				]}
 				onPress={handleAdd}
 				activeOpacity={0.8}
 			>
@@ -558,99 +597,156 @@ const styles = StyleSheet.create({
 		flex: 1,
 	},
 	header: {
-		padding: 12,
+		flexDirection: "row",
+		alignItems: "center",
+		justifyContent: "space-between",
+		paddingHorizontal: 16,
+		paddingVertical: 14,
 		borderBottomWidth: 1,
+	},
+	headerTitleContainer: {
+		flexDirection: "row",
+		alignItems: "center",
+		gap: 8,
+	},
+	headerTitle: {
+		fontSize: 20,
+		fontWeight: "800",
+		letterSpacing: -0.5,
+	},
+	searchBtn: {
+		width: 38,
+		height: 38,
+		borderRadius: 12,
 		alignItems: "center",
 		justifyContent: "center",
 	},
-	headerTitle: {
-		fontSize: 17,
-		fontWeight: "600",
-	},
 	tabContainer: {
 		flexDirection: "row",
-		paddingHorizontal: 14,
+		paddingHorizontal: 16,
 		borderBottomWidth: 1,
-		borderBottomColor: "rgba(0,0,0,0.05)",
 	},
 	tab: {
-		paddingVertical: 10,
-		marginRight: 20,
+		paddingVertical: 12,
+		marginRight: 24,
+		borderBottomWidth: 2,
+		borderBottomColor: "transparent",
+	},
+	activeTab: {
+		borderBottomWidth: 2,
 	},
 	tabText: {
 		fontSize: 14,
 		fontWeight: "600",
+		letterSpacing: 0.2,
+	},
+	activeTabText: {
+		fontWeight: "700",
 	},
 	scroll: {
 		flex: 1,
-		padding: 14,
+	},
+	scrollContent: {
+		padding: 16,
+	},
+	section: {
+		marginBottom: 20,
+	},
+	chartSection: {
+		marginBottom: 24,
+		borderRadius: 16,
+		overflow: "hidden",
+	},
+	listSection: {
+		flex: 1,
 	},
 	listHeader: {
 		flexDirection: "row",
 		justifyContent: "space-between",
-		alignItems: "center",
-		paddingVertical: 10,
-		marginBottom: 10,
-		borderBottomWidth: 1,
+		alignItems: "flex-end",
+		marginBottom: 14,
+		paddingHorizontal: 4,
 	},
 	listHeaderTitle: {
-		fontSize: 15,
-		fontWeight: "600",
+		fontSize: 17,
+		fontWeight: "700",
+		letterSpacing: -0.3,
+	},
+	listHeaderSub: {
+		fontSize: 12,
+		fontWeight: "500",
 	},
 	nfseCard: {
-		padding: 14,
-		marginBottom: 10,
-		backgroundColor: "#fff",
-		borderRadius: 14,
+		padding: 16,
+		marginBottom: 12,
+		borderRadius: 16,
 		borderWidth: 1,
+		shadowColor: "#000",
+		shadowOffset: { width: 0, height: 2 },
+		shadowOpacity: 0.04,
+		shadowRadius: 8,
+		elevation: 2,
 	},
 	nfseHeader: {
 		flexDirection: "row",
 		justifyContent: "space-between",
 		alignItems: "flex-start",
-		marginBottom: 10,
+		marginBottom: 14,
 	},
 	nfseTitle: {
-		fontSize: 15,
-		fontWeight: "600",
-		marginBottom: 3,
+		fontSize: 16,
+		fontWeight: "700",
+		marginBottom: 4,
 	},
 	nfseDate: {
 		fontSize: 12,
+		fontWeight: "500",
 	},
 	nfseBadge: {
-		paddingHorizontal: 6,
-		paddingVertical: 3,
-		borderRadius: 6,
+		paddingHorizontal: 8,
+		paddingVertical: 4,
+		borderRadius: 8,
 	},
 	nfseBadgeText: {
 		fontSize: 11,
-		fontWeight: "600",
+		fontWeight: "700",
+		textTransform: "uppercase",
 	},
 	nfseFooter: {
 		flexDirection: "row",
 		justifyContent: "space-between",
 		alignItems: "center",
-		paddingTop: 10,
+		paddingTop: 12,
 		borderTopWidth: 1,
 	},
 	nfseValue: {
-		fontSize: 16,
-		fontWeight: "bold",
+		fontSize: 18,
+		fontWeight: "800",
+	},
+	openNfseBtn: {
+		flexDirection: "row",
+		alignItems: "center",
+		gap: 4,
+		paddingVertical: 4,
+		paddingHorizontal: 8,
+		borderRadius: 8,
+	},
+	openNfseText: {
+		fontSize: 13,
+		fontWeight: "600",
 	},
 	fab: {
 		position: "absolute",
 		bottom: 24,
 		right: 24,
-		width: 52,
-		height: 52,
-		borderRadius: 26,
+		width: 60,
+		height: 60,
+		borderRadius: 30,
 		alignItems: "center",
 		justifyContent: "center",
-		elevation: 4,
-		shadowColor: "#000",
-		shadowOffset: { width: 0, height: 2 },
-		shadowOpacity: 0.25,
-		shadowRadius: 3.84,
+		elevation: 6,
+		shadowOffset: { width: 0, height: 4 },
+		shadowOpacity: 0.3,
+		shadowRadius: 8,
 	},
 });

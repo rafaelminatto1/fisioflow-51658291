@@ -1668,3 +1668,15 @@ export interface WhatsAppExerciseQueueRow {
 	scheduled_at: string;
 	status: "pending" | "sent" | "failed";
 }
+
+export interface GeneratedReport {
+	id: string;
+	organization_id: string;
+	patient_id: string;
+	report_type: string;
+	report_content: string;
+	date_range_start?: string | null;
+	date_range_end?: string | null;
+	created_by?: string | null;
+	created_at: string;
+}

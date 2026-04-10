@@ -10,7 +10,7 @@ import { useColors } from "@/hooks/useColorScheme";
 import { TimeGrid } from "./TimeGrid";
 import { AppointmentBase } from "@/types";
 import { router } from "expo-router";
-import { format } from "date-fns";
+import { format, isSameDay } from "date-fns";
 import { DraggableAptCard } from "./DraggableAptCard";
 import { TIME_LABEL_WIDTH, getTimeParts } from "./utils";
 
@@ -112,15 +112,9 @@ export const DayView = ({
 		// First pass: filter and calculate positions
 		const processedAppointments = appointments
 			.filter((apt) => {
-				// Robust date matching: compare local date components
+				// Robust date matching
 				const aptDate = new Date(apt.date);
-				const viewDate = date;
-
-				return (
-					aptDate.getFullYear() === viewDate.getFullYear() &&
-					aptDate.getMonth() === viewDate.getMonth() &&
-					aptDate.getDate() === viewDate.getDate()
-				);
+				return isSameDay(aptDate, date);
 			})
 			.map((apt) => {
 				const { hour, minutes } = getTimeParts(apt.time, apt.date);
@@ -155,6 +149,7 @@ export const DayView = ({
 					pos={pos}
 					startHour={startHour}
 					endHour={endHour}
+					hourHeight={HOUR_HEIGHT}
 					targetDay={date}
 					allDays={[date]}
 					columnWidth={availableWidth}

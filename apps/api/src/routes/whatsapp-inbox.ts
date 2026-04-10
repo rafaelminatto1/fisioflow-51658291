@@ -80,12 +80,14 @@ function mapMessageRow(row: any): any {
 
 function mapContactRow(row: any) {
 	return {
-		id: row.id,
+		id: row.contact_id || row.id || row.patient_id,
 		displayName:
-			row.display_name || row.username || row.wa_id || "Desconhecido",
-		phoneE164: row.wa_id || "",
+			row.display_name || row.patient_name || row.username || row.wa_id || "Desconhecido",
+		phoneE164: row.wa_id || row.patient_phone || row.phone_e164 || "",
 		username: row.username || undefined,
-		patientId: row.patient_id || undefined,
+		patientId: row.patient_id || row.wc_patient_id || row.p_patient_id || undefined,
+		patientName: row.patient_name || undefined,
+		isPatientOnly: !row.contact_id && !!row.p_patient_id,
 		createdAt: row.created_at,
 		updatedAt: row.updated_at,
 	};
@@ -711,23 +713,60 @@ app.get("/contacts", requireAuth, async (c) => {
 	const offset = (pageNum - 1) * limitNum;
 
 	try {
-		const conditions = ["organization_id = $1"];
-		const params: any[] = [user.organizationId];
-		let idx = 2;
+		let query = "";
+		let params: any[] = [user.organizationId];
 
 		if (search) {
-			conditions.push(
-				`(display_name ILIKE $${idx} OR wa_id ILIKE $${idx} OR username ILIKE $${idx})`,
-			);
 			params.push(`%${search}%`);
-			idx++;
+			query = `
+				SELECT 
+					wc.id as contact_id,
+					wc.display_name,
+					wc.wa_id,
+					wc.username,
+					wc.patient_id as wc_patient_id,
+					p.id as p_patient_id,
+					p.full_name as patient_name,
+					p.phone as patient_phone,
+					COALESCE(wc.created_at, p.created_at) as created_at,
+					COALESCE(wc.updated_at, p.updated_at) as updated_at
+				FROM whatsapp_contacts wc
+				FULL OUTER JOIN patients p ON p.id = wc.patient_id AND p.organization_id = wc.organization_id
+				WHERE (wc.organization_id = $1 OR p.organization_id = $1)
+				AND (
+					wc.display_name ILIKE $2 OR 
+					wc.wa_id ILIKE $2 OR 
+					wc.username ILIKE $2 OR 
+					p.full_name ILIKE $2 OR 
+					p.phone ILIKE $2
+				)
+				ORDER BY COALESCE(wc.updated_at, p.updated_at) DESC NULLS LAST
+				LIMIT $3 OFFSET $4
+			`;
+			params.push(limitNum, offset);
+		} else {
+			query = `
+				SELECT 
+					wc.id as contact_id,
+					wc.display_name,
+					wc.wa_id,
+					wc.username,
+					wc.patient_id as wc_patient_id,
+					p.id as p_patient_id,
+					p.full_name as patient_name,
+					p.phone as patient_phone,
+					COALESCE(wc.created_at, p.created_at) as created_at,
+					COALESCE(wc.updated_at, p.updated_at) as updated_at
+				FROM whatsapp_contacts wc
+				FULL OUTER JOIN patients p ON p.id = wc.patient_id AND p.organization_id = wc.organization_id
+				WHERE (wc.organization_id = $1 OR p.organization_id = $1)
+				ORDER BY COALESCE(wc.updated_at, p.updated_at) DESC NULLS LAST
+				LIMIT $2 OFFSET $3
+			`;
+			params.push(limitNum, offset);
 		}
 
-		params.push(limitNum, offset);
-		const result = await pool.query(
-			`SELECT * FROM whatsapp_contacts WHERE ${conditions.join(" AND ")} ORDER BY updated_at DESC LIMIT $${idx++} OFFSET $${idx++}`,
-			params,
-		);
+		const result = await pool.query(query, params);
 
 		return c.json({
 			data: result.rows.map(mapContactRow),
@@ -962,6 +1001,153 @@ app.get("/pending-confirmations", requireAuth, async (c) => {
 		console.error("[WhatsApp Inbox] GET /pending-confirmations error:", err);
 		return c.json({ error: "Failed to fetch pending confirmations" }, 500);
 	}
+});
+
+app.put("/conversations/:id/priority", requireAuth, async (c) => {
+	const { id } = c.req.param();
+	const pool = await createPool(c.env);
+	const body = (await c.req.json()) as { priority: string };
+	const valid = ["low", "medium", "high", "urgent"];
+	if (!body.priority || !valid.includes(body.priority)) {
+		return c.json({ error: `priority must be one of: ${valid.join(", ")}` }, 400);
+	}
+	try {
+		const result = await pool.query(
+			`UPDATE wa_conversations SET priority = $1, updated_at = NOW() WHERE id = $2 RETURNING id, priority`,
+			[body.priority, id],
+		);
+		if (result.rows.length === 0) {
+			return c.json({ error: "Conversation not found" }, 404);
+		}
+		return c.json({ data: result.rows[0] });
+	} catch (err) {
+		console.error("[WhatsApp Inbox] PUT /conversations/:id/priority error:", err);
+		return c.json({ error: "Failed to update priority" }, 500);
+	}
+});
+
+app.post("/broadcast", requireAuth, async (c) => {
+	const user = c.get("user");
+	const pool = await createPool(c.env);
+	const body = (await c.req.json()) as {
+		contactIds: string[];
+		content: string;
+		templateName?: string;
+		templateLanguage?: string;
+	};
+
+	if (!body.contactIds?.length) {
+		return c.json({ error: "contactIds array is required" }, 400);
+	}
+	if (!body.content && !body.templateName) {
+		return c.json({ error: "content or templateName is required" }, 400);
+	}
+	if (body.contactIds.length > 200) {
+		return c.json({ error: "Maximum 200 contacts per broadcast" }, 400);
+	}
+
+	const phoneId = c.env.WHATSAPP_PHONE_NUMBER_ID;
+	const token = c.env.WHATSAPP_ACCESS_TOKEN;
+	const results: Array<{ contactId: string; status: "sent" | "failed"; error?: string }> = [];
+
+	for (const contactId of body.contactIds) {
+		try {
+			const contactResult = await pool.query(
+				`SELECT id, wa_id, bsuid FROM whatsapp_contacts WHERE id = $1 AND organization_id = $2 LIMIT 1`,
+				[contactId, user.organizationId],
+			);
+
+			if (contactResult.rows.length === 0) {
+				results.push({ contactId, status: "failed", error: "Contact not found" });
+				continue;
+			}
+
+			const contact = contactResult.rows[0];
+			const to = contact.wa_id;
+
+			if (!to) {
+				results.push({ contactId, status: "failed", error: "No phone number" });
+				continue;
+			}
+
+			const conversation = await findOrCreateConversationSvc(
+				pool,
+				user.organizationId,
+				contactId,
+			);
+
+			let metaMessageId: string | null = null;
+			let sendStatus: "sent" | "failed" = "failed";
+
+			if (phoneId && token) {
+				let metaPayload: Record<string, unknown>;
+				const toClean = to.replace(/\D/g, "");
+
+				if (body.templateName) {
+					metaPayload = {
+						messaging_product: "whatsapp",
+						to: toClean,
+						type: "template",
+						template: {
+							name: body.templateName,
+							language: { code: body.templateLanguage ?? "pt_BR" },
+						},
+					};
+				} else {
+					metaPayload = {
+						messaging_product: "whatsapp",
+						to: toClean,
+						type: "text",
+						text: { body: body.content },
+					};
+				}
+
+				if (contact.bsuid) (metaPayload as any).recipient = contact.bsuid;
+
+				const metaRes = await fetch(
+					`https://graph.facebook.com/v21.0/${phoneId}/messages`,
+					{
+						method: "POST",
+						headers: {
+							"Content-Type": "application/json",
+							Authorization: `Bearer ${token}`,
+						},
+						body: JSON.stringify(metaPayload),
+					},
+				);
+
+				const metaData = (await metaRes.json()) as any;
+				metaMessageId = metaData.messages?.[0]?.id ?? null;
+				sendStatus = metaRes.ok ? "sent" : "failed";
+			} else {
+				sendStatus = "sent";
+			}
+
+			await addMessage(
+				pool,
+				conversation.id,
+				user.organizationId,
+				contactId,
+				"outbound",
+				"agent",
+				user.uid,
+				body.templateName ? "template" : "text",
+				body.content || `[Template: ${body.templateName}]`,
+				metaMessageId ?? undefined,
+				{ templateName: body.templateName },
+			);
+
+			results.push({ contactId, status: sendStatus });
+		} catch (err) {
+			console.error("[WhatsApp Inbox] Broadcast error for contact", contactId, err);
+			results.push({ contactId, status: "failed", error: String(err) });
+		}
+	}
+
+	const sent = results.filter((r) => r.status === "sent").length;
+	const failed = results.filter((r) => r.status === "failed").length;
+
+	return c.json({ data: { sent, failed, total: results.length, results } });
 });
 
 export { app as whatsappInboxRoutes };

@@ -198,16 +198,16 @@ export default function TarefasScreen() {
 		>
 			<View style={[styles.header, { borderBottomColor: colors.border }]}>
 				<View style={styles.headerLeft}>
-					<Ionicons name="checkmark-circle" size={22} color={colors.primary} />
+					<Ionicons name="checkbox" size={22} color={colors.primary} />
 					<Text style={[styles.headerTitle, { color: colors.text }]}>
 						Tarefas
 					</Text>
 					{!isLoading && (
 						<View
-							style={[styles.totalBadge, { backgroundColor: colors.surface }]}
+							style={[styles.totalBadge, { backgroundColor: colors.primary + "15" }]}
 						>
 							<Text
-								style={[styles.totalBadgeText, { color: colors.textMuted }]}
+								style={[styles.totalBadgeText, { color: colors.primary }]}
 							>
 								{data.length}
 							</Text>
@@ -215,40 +215,42 @@ export default function TarefasScreen() {
 					)}
 				</View>
 				<View style={styles.headerRight}>
-					<TouchableOpacity
-						style={[
-							styles.viewToggle,
-							viewMode === "list" && { backgroundColor: colors.primary + "22" },
-						]}
-						onPress={() => {
-							light();
-							setViewMode("list");
-						}}
-					>
-						<Ionicons
-							name="list"
-							size={18}
-							color={viewMode === "list" ? colors.primary : colors.textMuted}
-						/>
-					</TouchableOpacity>
-					<TouchableOpacity
-						style={[
-							styles.viewToggle,
-							viewMode === "kanban" && {
-								backgroundColor: colors.primary + "22",
-							},
-						]}
-						onPress={() => {
-							light();
-							setViewMode("kanban");
-						}}
-					>
-						<Ionicons
-							name="apps"
-							size={18}
-							color={viewMode === "kanban" ? colors.primary : colors.textMuted}
-						/>
-					</TouchableOpacity>
+					<View style={[styles.toggleContainer, { backgroundColor: colors.surface, borderColor: colors.border }]}>
+						<TouchableOpacity
+							style={[
+								styles.viewToggle,
+								viewMode === "list" && styles.activeToggle,
+								viewMode === "list" && { backgroundColor: colors.primary },
+							]}
+							onPress={() => {
+								light();
+								setViewMode("list");
+							}}
+						>
+							<Ionicons
+								name="list"
+								size={16}
+								color={viewMode === "list" ? "#fff" : colors.textMuted}
+							/>
+						</TouchableOpacity>
+						<TouchableOpacity
+							style={[
+								styles.viewToggle,
+								viewMode === "kanban" && styles.activeToggle,
+								viewMode === "kanban" && { backgroundColor: colors.primary },
+							]}
+							onPress={() => {
+								light();
+								setViewMode("kanban");
+							}}
+						>
+							<Ionicons
+								name="apps"
+								size={16}
+								color={viewMode === "kanban" ? "#fff" : colors.textMuted}
+							/>
+						</TouchableOpacity>
+					</View>
 					<TouchableOpacity
 						style={[styles.addBtn, { backgroundColor: colors.primary }]}
 						onPress={() => {
@@ -257,14 +259,14 @@ export default function TarefasScreen() {
 						}}
 						accessibilityLabel="Criar nova tarefa"
 					>
-						<Ionicons name="add" size={20} color="#fff" />
+						<Ionicons name="add" size={22} color="#fff" />
 					</TouchableOpacity>
 				</View>
 			</View>
 
 			{viewMode === "list" ? (
 				<>
-					<View style={styles.filtersAndSyncRow}>
+					<View style={styles.filtersSection}>
 						<ScrollView
 							horizontal
 							showsHorizontalScrollIndicator={false}
@@ -282,6 +284,7 @@ export default function TarefasScreen() {
 												backgroundColor: active
 													? colors.primary
 													: colors.surface,
+												borderColor: active ? colors.primary : colors.border,
 											},
 										]}
 										onPress={() => {
@@ -292,12 +295,12 @@ export default function TarefasScreen() {
 										<Text
 											style={[
 												styles.filterPillText,
-												{ color: active ? "#fff" : colors.textMuted },
+												{ color: active ? "#fff" : colors.textSecondary },
 											]}
 										>
 											{opt.label}
 											{opt.value !== "TODAS" && !isLoading
-												? ` (${statusCounts[opt.value] || 0})`
+												? ` ${statusCounts[opt.value] || 0}`
 												: ""}
 										</Text>
 									</TouchableOpacity>
@@ -313,28 +316,28 @@ export default function TarefasScreen() {
 							<View
 								style={[
 									styles.emptyIconContainer,
-									{ backgroundColor: colors.border },
+									{ backgroundColor: colors.primary + "10" },
 								]}
 							>
 								<Ionicons
 									name={
 										filterStatus === "TODAS"
-											? "checkmark-circle-outline"
+											? "clipboard-outline"
 											: "filter-outline"
 									}
-									size={40}
-									color={colors.textMuted}
+									size={48}
+									color={colors.primary}
 								/>
 							</View>
 							<Text style={[styles.emptyTitle, { color: colors.text }]}>
 								{filterStatus === "TODAS"
-									? "Nenhuma tarefa"
-									: "Nenhuma tarefa neste filtro"}
+									? "Tudo em dia!"
+									: "Nenhuma tarefa encontrada"}
 							</Text>
-							<Text style={[styles.emptySubtitle, { color: colors.textMuted }]}>
+							<Text style={[styles.emptySubtitle, { color: colors.textSecondary }]}>
 								{filterStatus === "TODAS"
-									? "Crie sua primeira tarefa para começar"
-									: "Tente outro filtro ou crie uma nova tarefa"}
+									? "Você não tem nenhuma tarefa pendente.\nQue tal criar uma nova?"
+									: "Tente ajustar os filtros ou criar uma nova tarefa para este status."}
 							</Text>
 							<TouchableOpacity
 								style={[styles.emptyBtn, { backgroundColor: colors.primary }]}
@@ -343,7 +346,8 @@ export default function TarefasScreen() {
 									router.push("/tarefa-form");
 								}}
 							>
-								<Text style={styles.emptyBtnText}>Criar tarefa</Text>
+								<Ionicons name="add" size={20} color="#fff" />
+								<Text style={styles.emptyBtnText}>Criar Tarefa</Text>
 							</TouchableOpacity>
 						</View>
 					) : (
@@ -352,6 +356,7 @@ export default function TarefasScreen() {
 							keyExtractor={(item) => item.id}
 							renderItem={renderItem}
 							contentContainerStyle={styles.listContent}
+							showsVerticalScrollIndicator={false}
 							refreshControl={
 								<RefreshControl
 									refreshing={refreshing}
@@ -368,7 +373,7 @@ export default function TarefasScreen() {
 				<KanbanBoard tarefas={data} onMoveCard={handleMoveCard} />
 			)}
 
-			<View style={[styles.bottomSyncBar, { borderTopColor: colors.border }]}>
+			<View style={[styles.bottomSyncBar, { borderTopColor: colors.border, backgroundColor: colors.surface }]}>
 				<SyncStatus status={syncStatus} isOnline={isOnline} compact />
 			</View>
 		</SafeAreaView>
@@ -382,7 +387,7 @@ const styles = StyleSheet.create({
 		flex: 1,
 		alignItems: "center",
 		justifyContent: "center",
-		gap: 10,
+		gap: 12,
 		paddingHorizontal: 40,
 	},
 	errorIconContainer: {
@@ -391,89 +396,119 @@ const styles = StyleSheet.create({
 		borderRadius: 40,
 		alignItems: "center",
 		justifyContent: "center",
-		marginBottom: 6,
+		marginBottom: 8,
 	},
 	header: {
 		flexDirection: "row",
 		alignItems: "center",
 		justifyContent: "space-between",
-		paddingHorizontal: 14,
-		paddingVertical: 12,
+		paddingHorizontal: 16,
+		paddingVertical: 14,
 		borderBottomWidth: 1,
 	},
-	headerLeft: { flexDirection: "row", alignItems: "center", gap: 6 },
-	headerTitle: { fontSize: 17, fontWeight: "700" },
+	headerLeft: { flexDirection: "row", alignItems: "center", gap: 10 },
+	headerTitle: { fontSize: 20, fontWeight: "800", letterSpacing: -0.5 },
 	totalBadge: {
-		borderRadius: 999,
-		paddingHorizontal: 6,
+		borderRadius: 8,
+		paddingHorizontal: 8,
 		paddingVertical: 2,
 	},
-	totalBadgeText: { fontSize: 11, fontWeight: "600" },
-	headerRight: { flexDirection: "row", alignItems: "center", gap: 6 },
-	viewToggle: { padding: 6, borderRadius: 6 },
-	addBtn: {
+	totalBadgeText: { fontSize: 12, fontWeight: "700" },
+	headerRight: { flexDirection: "row", alignItems: "center", gap: 12 },
+	toggleContainer: {
+		flexDirection: "row",
+		borderRadius: 10,
+		padding: 3,
+		borderWidth: 1,
+	},
+	viewToggle: {
 		width: 32,
 		height: 32,
 		borderRadius: 8,
 		alignItems: "center",
 		justifyContent: "center",
 	},
-	filtersAndSyncRow: {
-		flexDirection: "row",
-		alignItems: "center",
+	activeToggle: {
+		shadowColor: "#000",
+		shadowOffset: { width: 0, height: 2 },
+		shadowOpacity: 0.1,
+		shadowRadius: 4,
+		elevation: 2,
 	},
-	filtersScroll: { flex: 1, maxHeight: 44 },
+	addBtn: {
+		width: 38,
+		height: 38,
+		borderRadius: 12,
+		alignItems: "center",
+		justifyContent: "center",
+		shadowColor: "#000",
+		shadowOffset: { width: 0, height: 2 },
+		shadowOpacity: 0.1,
+		shadowRadius: 4,
+		elevation: 2,
+	},
+	filtersSection: {
+		backgroundColor: "#fff",
+	},
+	filtersScroll: { maxHeight: 54 },
 	filtersContent: {
-		paddingHorizontal: 14,
-		paddingVertical: 6,
-		gap: 6,
+		paddingHorizontal: 16,
+		paddingVertical: 12,
+		gap: 8,
 		flexDirection: "row",
 		alignItems: "center",
 	},
 	filterPill: {
-		paddingHorizontal: 10,
-		paddingVertical: 5,
-		borderRadius: 999,
-		marginRight: 4,
+		paddingHorizontal: 14,
+		paddingVertical: 8,
+		borderRadius: 12,
+		borderWidth: 1,
 	},
-	filterPillText: { fontSize: 11, fontWeight: "500" },
-	listContent: { paddingHorizontal: 14, paddingTop: 10, paddingBottom: 32 },
+	filterPillText: { fontSize: 13, fontWeight: "600" },
+	listContent: { paddingHorizontal: 16, paddingTop: 4, paddingBottom: 40 },
 	emptyState: {
 		flex: 1,
 		alignItems: "center",
 		justifyContent: "center",
-		gap: 10,
 		paddingHorizontal: 40,
+		paddingBottom: 60,
 	},
 	emptyIconContainer: {
-		width: 60,
-		height: 60,
-		borderRadius: 30,
+		width: 100,
+		height: 100,
+		borderRadius: 50,
 		alignItems: "center",
 		justifyContent: "center",
-		marginBottom: 6,
+		marginBottom: 20,
 	},
-	emptyTitle: { fontSize: 15, fontWeight: "600" },
-	emptySubtitle: { fontSize: 13, textAlign: "center", lineHeight: 18 },
+	emptyTitle: { fontSize: 20, fontWeight: "800", marginBottom: 8, letterSpacing: -0.5 },
+	emptySubtitle: { fontSize: 15, textAlign: "center", lineHeight: 22, marginBottom: 24 },
 	emptyBtn: {
-		marginTop: 6,
-		paddingHorizontal: 20,
-		paddingVertical: 10,
-		borderRadius: 10,
+		flexDirection: "row",
+		alignItems: "center",
+		gap: 8,
+		paddingHorizontal: 24,
+		paddingVertical: 14,
+		borderRadius: 16,
+		shadowColor: "#000",
+		shadowOffset: { width: 0, height: 4 },
+		shadowOpacity: 0.15,
+		shadowRadius: 12,
+		elevation: 4,
 	},
-	emptyBtnText: { color: "#fff", fontSize: 14, fontWeight: "600" },
-	errorTitle: { fontSize: 15, fontWeight: "600" },
-	errorSubtitle: { fontSize: 13, textAlign: "center" },
+	emptyBtnText: { color: "#fff", fontSize: 16, fontWeight: "700" },
+	errorTitle: { fontSize: 18, fontWeight: "700" },
+	errorSubtitle: { fontSize: 14, textAlign: "center", lineHeight: 20 },
 	retryBtn: {
-		marginTop: 4,
-		paddingHorizontal: 18,
-		paddingVertical: 9,
-		borderRadius: 8,
+		marginTop: 8,
+		paddingHorizontal: 24,
+		paddingVertical: 12,
+		borderRadius: 12,
 	},
-	retryBtnText: { color: "#fff", fontSize: 13, fontWeight: "600" },
+	retryBtnText: { color: "#fff", fontSize: 14, fontWeight: "700" },
 	bottomSyncBar: {
-		paddingHorizontal: 14,
-		paddingVertical: 6,
+		paddingHorizontal: 16,
+		paddingVertical: 8,
 		borderTopWidth: 1,
 		flexDirection: "row",
 		justifyContent: "flex-end",
@@ -481,13 +516,13 @@ const styles = StyleSheet.create({
 	kanbanSkeletonContainer: {
 		flex: 1,
 		flexDirection: "row",
-		gap: 6,
-		paddingHorizontal: 6,
-		paddingVertical: 10,
+		gap: 8,
+		paddingHorizontal: 8,
+		paddingVertical: 12,
 	},
 	kanbanSkeletonCol: {
 		flex: 1,
-		borderRadius: 10,
+		borderRadius: 12,
 		overflow: "hidden",
 	},
 });
