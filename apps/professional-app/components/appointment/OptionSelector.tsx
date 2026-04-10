@@ -19,10 +19,11 @@ interface Option {
 
 interface OptionSelectorProps {
   label: string;
-  value: any;
+  value: any | any[];
   options: Option[];
-  onSelect: (value: any) => void;
+  onSelect: (value: any | any[]) => void;
   placeholder?: string;
+  multiple?: boolean;
 }
 
 export function OptionSelector({
@@ -31,12 +32,45 @@ export function OptionSelector({
   options,
   onSelect,
   placeholder = 'Selecione uma opção',
+  multiple = false,
 }: OptionSelectorProps) {
   const colors = useColors();
   const { medium } = useHaptics();
   const [showModal, setShowModal] = useState(false);
 
-  const selectedOption = options.find((opt) => opt.value === value);
+  const isSelected = (val: any) => {
+    if (multiple && Array.isArray(value)) {
+      return value.includes(val);
+    }
+    return value === val;
+  };
+
+  const getLabel = () => {
+    if (multiple && Array.isArray(value)) {
+      if (value.length === 0) return placeholder;
+      if (value.length === 1) return options.find(o => o.value === value[0])?.label || placeholder;
+      return `${value.length} selecionados`;
+    }
+    const selectedOption = options.find((opt) => opt.value === value);
+    return selectedOption ? selectedOption.label : placeholder;
+  };
+
+  const handleSelect = (val: any) => {
+    medium();
+    if (multiple) {
+      const currentValues = Array.isArray(value) ? [...value] : [];
+      const index = currentValues.indexOf(val);
+      if (index > -1) {
+        currentValues.splice(index, 1);
+      } else {
+        currentValues.push(val);
+      }
+      onSelect(currentValues);
+    } else {
+      onSelect(val);
+      setShowModal(false);
+    }
+  };
 
   return (
     <View style={styles.container}>
@@ -48,8 +82,8 @@ export function OptionSelector({
           setShowModal(true);
         }}
       >
-        <Text style={[styles.selectorText, { color: value ? colors.text : colors.textMuted }]}>
-          {selectedOption ? selectedOption.label : placeholder}
+        <Text style={[styles.selectorText, { color: value ? (Array.isArray(value) && value.length === 0 ? colors.textMuted : colors.text) : colors.textMuted }]}>
+          {getLabel()}
         </Text>
         <Ionicons name="chevron-down" size={20} color={colors.textSecondary} />
       </TouchableOpacity>
@@ -64,9 +98,16 @@ export function OptionSelector({
           <View style={[styles.modalContent, { backgroundColor: colors.background }]}>
             <View style={[styles.modalHeader, { borderBottomColor: colors.border }]}>
               <Text style={[styles.modalTitle, { color: colors.text }]}>{label}</Text>
-              <TouchableOpacity onPress={() => setShowModal(false)}>
-                <Ionicons name="close" size={24} color={colors.text} />
-              </TouchableOpacity>
+              <View style={{ flexDirection: 'row', gap: 16 }}>
+                {multiple && (
+                  <TouchableOpacity onPress={() => setShowModal(false)}>
+                    <Text style={{ color: colors.primary, fontWeight: '600' }}>Concluído</Text>
+                  </TouchableOpacity>
+                )}
+                <TouchableOpacity onPress={() => setShowModal(false)}>
+                  <Ionicons name="close" size={24} color={colors.text} />
+                </TouchableOpacity>
+              </View>
             </View>
             <ScrollView style={styles.modalList}>
               {options.map((option) => (
@@ -76,22 +117,18 @@ export function OptionSelector({
                     styles.modalItem,
                     { 
                       borderBottomColor: colors.border,
-                      backgroundColor: value === option.value ? colors.primary + '10' : 'transparent' 
+                      backgroundColor: isSelected(option.value) ? colors.primary + '10' : 'transparent' 
                     }
                   ]}
-                  onPress={() => {
-                    medium();
-                    onSelect(option.value);
-                    setShowModal(false);
-                  }}
+                  onPress={() => handleSelect(option.value)}
                 >
                   <Text style={[
                     styles.modalItemText, 
-                    { color: value === option.value ? colors.primary : colors.text }
+                    { color: isSelected(option.value) ? colors.primary : colors.text }
                   ]}>
                     {option.label}
                   </Text>
-                  {value === option.value && (
+                  {isSelected(option.value) && (
                     <Ionicons name="checkmark" size={20} color={colors.primary} />
                   )}
                 </TouchableOpacity>
