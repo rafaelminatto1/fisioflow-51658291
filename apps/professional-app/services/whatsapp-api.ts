@@ -52,6 +52,27 @@ export interface WaQuickReply {
 	team?: string;
 }
 
+export interface WaContact {
+	id: string;
+	displayName?: string;
+	phoneE164?: string;
+	username?: string;
+	patientId?: string;
+	createdAt?: string;
+	updatedAt?: string;
+}
+
+export interface ResolveContactInput {
+	phone?: string;
+	displayName?: string;
+	patientId?: string;
+}
+
+export interface WaConversationDetailResponse {
+	conversation: WaConversation;
+	messages: WaMessage[];
+}
+
 export interface ConversationFilters {
 	status?: string;
 	assignedTo?: string;
@@ -128,11 +149,38 @@ export async function fetchConversations(
 
 export async function fetchConversationDetail(
 	id: string,
-): Promise<{ conversation: WaConversation; messages: WaMessage[] }> {
-	return fetchApi<{ conversation: WaConversation; messages: WaMessage[] }>(
+): Promise<WaConversationDetailResponse> {
+	return fetchApi<WaConversationDetailResponse>(
 		`${BASE}/conversations/${id}`,
 		{ params: { includeMessages: "true", messageLimit: 100 } },
 	);
+}
+
+export async function fetchContacts(search?: string): Promise<WaContact[]> {
+	const response = await fetchApi<{ data?: WaContact[] }>(`${BASE}/contacts`, {
+		params: { search, limit: 20 },
+	});
+	return response.data ?? [];
+}
+
+export async function resolveContact(
+	input: ResolveContactInput,
+): Promise<WaContact> {
+	const response = await fetchApi<{ data?: WaContact }>(`${BASE}/contacts/resolve`, {
+		method: "POST",
+		data: input,
+	});
+	if (!response.data) {
+		throw new Error("Não foi possível resolver o contato.");
+	}
+	return response.data;
+}
+
+export async function openConversation(contactId: string): Promise<WaConversation> {
+	return fetchApi<WaConversation>(`${BASE}/conversations`, {
+		method: "POST",
+		data: { contactId },
+	});
 }
 
 export async function sendMessage(
@@ -190,5 +238,6 @@ export async function assignConversation(
 }
 
 export async function fetchQuickReplies(): Promise<WaQuickReply[]> {
-	return fetchApi<WaQuickReply[]>(`${BASE}/quick-replies`);
+	const response = await fetchApi<{ data?: WaQuickReply[] }>(`${BASE}/quick-replies`);
+	return response.data ?? [];
 }

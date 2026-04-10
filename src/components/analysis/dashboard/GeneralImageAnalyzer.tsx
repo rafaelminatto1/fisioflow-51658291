@@ -72,7 +72,10 @@ const GeneralImageAnalyzer: React.FC<GeneralImageAnalyzerProps> = ({
 					</h3>
 					{analysis && (
 						<span className="text-xs text-muted-foreground">
-							{new Date(analysis.timestamp).toLocaleTimeString()}
+							{new Date(analysis.timestamp).toLocaleTimeString("pt-BR", {
+								hour: "2-digit",
+								minute: "2-digit",
+							})}
 						</span>
 					)}
 				</div>
