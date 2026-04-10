@@ -142,6 +142,20 @@ app.get("/api/health/db", async (c) => {
 	}
 });
 
+app.get("/api/health/schema", async (c) => {
+	try {
+		const sql = getRawSql(c.env);
+		const result = await sql`
+			SELECT column_name, data_type 
+			FROM information_schema.columns 
+			WHERE table_name = 'patients'
+		`;
+		return c.json({ table: 'patients', columns: result });
+	} catch (error: any) {
+		return c.json({ status: "error", message: error.message }, 500);
+	}
+});
+
 // ===== ROTAS =====
 const apiRoutes = [
 	["/api/exercises", exercisesRoutes],
