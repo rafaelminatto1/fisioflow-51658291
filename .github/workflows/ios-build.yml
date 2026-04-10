@@ -4,21 +4,21 @@ on:
   workflow_dispatch:
     inputs:
       app:
-        description: 'App a buildar'
+        description: 'Selecione o app'
         required: true
-        default: 'patient-app'
+        default: 'professional-app'
         type: choice
         options:
           - patient-app
           - professional-app
       profile:
-        description: 'Perfil de distribuição'
+        description: 'Perfil'
         required: true
         default: 'development'
         type: choice
         options:
-          - development   # Ad-hoc — instala direto no device registrado
-          - preview       # Ad-hoc — mesma coisa, build release
+          - development
+          - preview
 
 env:
   NODE_VERSION: '22'
