@@ -272,7 +272,7 @@ export function WearablesData({ patientId }: WearablesDataProps) {
 								/>
 								<Tooltip
 									labelFormatter={(val) =>
-										format(new Date(val), "dd/MM/yyyy HH:mm:ss")
+										format(new Date(val), "dd/MM/yyyy HH:mm")
 									}
 									contentStyle={{
 										borderRadius: "8px",

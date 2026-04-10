@@ -11,6 +11,12 @@ export interface TimelineEntry {
 	created_at: string;
 	start_time?: string;
 	end_time?: string;
+	appointment_id?: string;
+	record_date?: string;
+	subjective?: string;
+	objective?: string;
+	assessment?: string;
+	plan?: string;
 }
 
 export function usePatientTimeline(patientId: string | undefined) {

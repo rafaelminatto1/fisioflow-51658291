@@ -6,6 +6,7 @@ import {
 	getInboxConversations,
 	getConversationWithMessages,
 	addMessage,
+	findOrCreateConversation as findOrCreateConversationSvc,
 	assignConversation as assignConversationSvc,
 	transferConversation as transferConversationSvc,
 	addInternalNote,
@@ -17,6 +18,10 @@ import {
 	sendListMessage,
 	sendFlowMessage,
 } from "../lib/whatsapp-interactive";
+import {
+	resolveOrCreateContact,
+	linkContactToPatient,
+} from "../lib/whatsapp-identity";
 import type { Env } from "../types/env";
 
 const app = new Hono<{ Bindings: Env; Variables: { user: AuthUser } }>();
@@ -73,6 +78,19 @@ function mapMessageRow(row: any): any {
 	};
 }
 
+function mapContactRow(row: any) {
+	return {
+		id: row.id,
+		displayName:
+			row.display_name || row.username || row.wa_id || "Desconhecido",
+		phoneE164: row.wa_id || "",
+		username: row.username || undefined,
+		patientId: row.patient_id || undefined,
+		createdAt: row.created_at,
+		updatedAt: row.updated_at,
+	};
+}
+
 app.get("/conversations", requireAuth, async (c) => {
 	const user = c.get("user");
 	const pool = await createPool(c.env);
@@ -125,6 +143,51 @@ app.get("/conversations", requireAuth, async (c) => {
 	} catch (err) {
 		console.error("[WhatsApp Inbox] GET /conversations error:", err);
 		return c.json({ error: "Failed to fetch conversations" }, 500);
+	}
+});
+
+app.post("/conversations", requireAuth, async (c) => {
+	const user = c.get("user");
+	const pool = await createPool(c.env);
+	const body = (await c.req.json()) as { contactId?: string };
+
+	if (!body.contactId) {
+		return c.json({ error: "contactId is required" }, 400);
+	}
+
+	try {
+		const contactResult = await pool.query(
+			`SELECT id FROM whatsapp_contacts WHERE id = $1 AND organization_id = $2 LIMIT 1`,
+			[body.contactId, user.organizationId],
+		);
+
+		if (contactResult.rows.length === 0) {
+			return c.json({ error: "Contact not found" }, 404);
+		}
+
+		const conversation = await findOrCreateConversationSvc(
+			pool,
+			user.organizationId,
+			body.contactId,
+		);
+
+		const conversationResult = await pool.query(
+			`SELECT c.*, wc.wa_id, wc.display_name, wc.username, wc.bsuid, wc.patient_id
+       FROM wa_conversations c
+       LEFT JOIN whatsapp_contacts wc ON wc.id = c.contact_id
+       WHERE c.id = $1 AND c.organization_id = $2
+       LIMIT 1`,
+			[conversation.id, user.organizationId],
+		);
+
+		if (conversationResult.rows.length === 0) {
+			return c.json({ error: "Conversation not found" }, 404);
+		}
+
+		return c.json(mapConversationRow(conversationResult.rows[0]));
+	} catch (err) {
+		console.error("[WhatsApp Inbox] POST /conversations error:", err);
+		return c.json({ error: "Failed to open conversation" }, 500);
 	}
 });
 
@@ -580,6 +643,64 @@ app.put("/conversations/:id/status", requireAuth, async (c) => {
 	}
 });
 
+app.post("/contacts/resolve", requireAuth, async (c) => {
+	const user = c.get("user");
+	const pool = await createPool(c.env);
+	const body = (await c.req.json()) as {
+		phone?: string;
+		displayName?: string;
+		patientId?: string;
+	};
+
+	let phone = String(body.phone ?? "").replace(/\D/g, "");
+	let displayName = body.displayName?.trim() || null;
+
+	try {
+		if (body.patientId) {
+			const patientResult = await pool.query(
+				`SELECT id, full_name, phone
+         FROM patients
+         WHERE id = $1 AND organization_id = $2
+         LIMIT 1`,
+				[body.patientId, user.organizationId],
+			);
+
+			if (patientResult.rows.length === 0) {
+				return c.json({ error: "Patient not found" }, 404);
+			}
+
+			const patient = patientResult.rows[0];
+			if (!displayName) displayName = patient.full_name || null;
+			if (!phone && patient.phone) {
+				phone = String(patient.phone).replace(/\D/g, "");
+			}
+		}
+
+		if (phone.length < 10) {
+			return c.json({ error: "A valid phone is required" }, 400);
+		}
+
+		const contact = await resolveOrCreateContact(
+			pool,
+			user.organizationId,
+			phone,
+			null,
+			null,
+			null,
+			displayName,
+		);
+
+		const resolvedContact = body.patientId
+			? ((await linkContactToPatient(pool, contact.id, body.patientId)) ?? contact)
+			: contact;
+
+		return c.json({ data: mapContactRow(resolvedContact) });
+	} catch (err) {
+		console.error("[WhatsApp Inbox] POST /contacts/resolve error:", err);
+		return c.json({ error: "Failed to resolve contact" }, 500);
+	}
+});
+
 app.get("/contacts", requireAuth, async (c) => {
 	const user = c.get("user");
 	const pool = await createPool(c.env);
@@ -609,7 +730,7 @@ app.get("/contacts", requireAuth, async (c) => {
 		);
 
 		return c.json({
-			data: result.rows,
+			data: result.rows.map(mapContactRow),
 			pagination: { page: pageNum, limit: limitNum, offset },
 		});
 	} catch (err) {
@@ -633,7 +754,7 @@ app.get("/contacts/:id", requireAuth, async (c) => {
 			return c.json({ error: "Contact not found" }, 404);
 		}
 
-		return c.json({ data: result.rows[0] });
+		return c.json({ data: mapContactRow(result.rows[0]) });
 	} catch (err) {
 		console.error("[WhatsApp Inbox] GET /contacts/:id error:", err);
 		return c.json({ error: "Failed to fetch contact" }, 500);

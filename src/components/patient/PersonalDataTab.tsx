@@ -1,10 +1,46 @@
 import { Card, CardContent } from "@/components/ui/card";
 import type { Patient } from "@/types";
-import { Activity, FileText, MapPin, Phone } from "lucide-react";
+import {
+	Activity,
+	FileText,
+	MapPin,
+	Phone,
+	Copy,
+	ExternalLink,
+	MessageCircle,
+} from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { toast } from "sonner";
 
 interface PersonalDataTabProps {
 	patient: Patient;
 }
+
+const formatPhone = (phone: string | undefined) => {
+	if (!phone) return "";
+	return phone.replace(/\D/g, "");
+};
+
+const openWhatsApp = (phone: string) => {
+	const formatted = formatPhone(phone);
+	if (formatted) {
+		window.open(`https://wa.me/55${formatted}`, "_blank");
+	}
+};
+
+const openGoogleMaps = (address: string) => {
+	if (address) {
+		window.open(
+			`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(address)}`,
+			"_blank",
+		);
+	}
+};
+
+const copyToClipboard = (text: string, label: string) => {
+	navigator.clipboard.writeText(text);
+	toast.success(`${label} copiado!`);
+};
 
 export function PersonalDataTab({ patient }: PersonalDataTabProps) {
 	return (
@@ -22,20 +58,59 @@ export function PersonalDataTab({ patient }: PersonalDataTabProps) {
 									<span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 block mb-1">
 										Telefone
 									</span>
-									<span className="font-semibold text-slate-700">
-										{patient.phone || "-"}
-									</span>
+									<div className="flex items-center gap-2">
+										<span className="font-semibold text-slate-700">
+											{patient.phone || "-"}
+										</span>
+										{patient.phone && (
+											<>
+												<Button
+													variant="ghost"
+													size="sm"
+													className="h-6 w-6 p-0 text-green-600 hover:text-green-700 hover:bg-green-50"
+													onClick={() => openWhatsApp(patient.phone!)}
+													title="Abrir WhatsApp"
+												>
+													<MessageCircle className="h-3 w-3" />
+												</Button>
+												<Button
+													variant="ghost"
+													size="sm"
+													className="h-6 w-6 p-0 text-blue-600 hover:text-blue-700 hover:bg-blue-50"
+													onClick={() =>
+														copyToClipboard(patient.phone!, "Telefone")
+													}
+													title="Copiar"
+												>
+													<Copy className="h-3 w-3" />
+												</Button>
+											</>
+										)}
+									</div>
 								</div>
 								<div>
 									<span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 block mb-1">
 										Email
 									</span>
-									<span
-										className="font-semibold text-slate-700 truncate block"
-										title={patient.email}
-									>
-										{patient.email || "-"}
-									</span>
+									<div className="flex items-center gap-2">
+										<span
+											className="font-semibold text-slate-700 truncate block"
+											title={patient.email}
+										>
+											{patient.email || "-"}
+										</span>
+										{patient.email && (
+											<Button
+												variant="ghost"
+												size="sm"
+												className="h-6 w-6 p-0 text-blue-600 hover:text-blue-700 hover:bg-blue-50"
+												onClick={() => copyToClipboard(patient.email!, "Email")}
+												title="Copiar"
+											>
+												<Copy className="h-3 w-3" />
+											</Button>
+										)}
+									</div>
 								</div>
 								<div>
 									<span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 block mb-1">
@@ -49,9 +124,22 @@ export function PersonalDataTab({ patient }: PersonalDataTabProps) {
 									<span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 block mb-1">
 										Tel. Emergência
 									</span>
-									<span className="font-semibold text-slate-700">
-										{patient.emergency_phone || "-"}
-									</span>
+									<div className="flex items-center gap-2">
+										<span className="font-semibold text-slate-700">
+											{patient.emergency_phone || "-"}
+										</span>
+										{patient.emergency_phone && (
+											<Button
+												variant="ghost"
+												size="sm"
+												className="h-6 w-6 p-0 text-green-600 hover:text-green-700 hover:bg-green-50"
+												onClick={() => openWhatsApp(patient.emergency_phone!)}
+												title="Abrir WhatsApp"
+											>
+												<MessageCircle className="h-3 w-3" />
+											</Button>
+										)}
+									</div>
 								</div>
 							</div>
 						</CardContent>
@@ -70,9 +158,22 @@ export function PersonalDataTab({ patient }: PersonalDataTabProps) {
 									<span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 block mb-1">
 										Logradouro
 									</span>
-									<span className="font-semibold text-slate-700">
-										{patient.address || "-"}
-									</span>
+									<div className="flex items-center gap-2">
+										<span className="font-semibold text-slate-700">
+											{patient.address || "-"}
+										</span>
+										{patient.address && (
+											<Button
+												variant="ghost"
+												size="sm"
+												className="h-6 w-6 p-0 text-blue-600 hover:text-blue-700 hover:bg-blue-50"
+												onClick={() => openGoogleMaps(patient.address!)}
+												title="Abrir no Mapa"
+											>
+												<ExternalLink className="h-3 w-3" />
+											</Button>
+										)}
+									</div>
 								</div>
 								<div className="grid grid-cols-2 gap-6">
 									<div>

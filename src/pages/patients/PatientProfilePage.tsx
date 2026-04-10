@@ -28,6 +28,8 @@ import {
 	ClipboardList,
 } from "lucide-react";
 import EditPatientModal from "@/components/modals/EditPatientModal";
+import { PatientQuickScheduleModal } from "@/components/patient/PatientQuickScheduleModal";
+import { useTherapists } from "@/hooks/useTherapists";
 
 // Hooks Otimizados
 import {
@@ -165,9 +167,11 @@ export const PatientProfilePage = () => {
 	// Valid tab values
 	const validTabs = [
 		"overview",
+		"timeline",
 		"analytics",
 		"personal",
 		"clinical",
+		"activity-lab",
 		"financial",
 		"gamification",
 		"documents",
@@ -200,8 +204,12 @@ export const PatientProfilePage = () => {
 	const [editingPatient, setEditingPatient] = useState<boolean>(false);
 	const [evaluationModalOpen, setEvaluationModalOpen] =
 		useState<boolean>(false);
+	const [scheduleModalOpen, setScheduleModalOpen] = useState<boolean>(false);
 
 	const { data: evaluationForms = [] } = useEvaluationForms();
+
+	// Buscar terapeutas para o modal de agendamento
+	const { data: therapists = [] } = useTherapists();
 
 	useEffect(() => {
 		if (patient && (patient as any).incomplete_registration) {
@@ -260,12 +268,28 @@ export const PatientProfilePage = () => {
 					onOpenProntuario={() => navigate(`/prontuario/${id}`)}
 					onEdit={() => setEditingPatient(true)}
 					onEvaluate={handleStartEvaluation}
-					onSchedule={() => navigate(APP_ROUTES.AGENDA)}
+					onSchedule={() => setScheduleModalOpen(true)}
+				/>
+
+				{/* Modal de Agendamento Rápido */}
+				<PatientQuickScheduleModal
+					open={scheduleModalOpen}
+					onOpenChange={setScheduleModalOpen}
+					patient={patient as Patient}
+					therapists={therapists.map((t: any) => ({
+						id: t.id,
+						name: t.name || t.full_name,
+					}))}
 				/>
 
 				<Tabs
 					value={activeTab}
-					onValueChange={(value) => setActiveTab(value as TabValue)}
+					onValueChange={(value) => {
+						setActiveTab(value as TabValue);
+						const params = new URLSearchParams(searchParams);
+						params.set("tab", value as string);
+						navigate(`?${params.toString()}`, { replace: true });
+					}}
 					className="w-full"
 				>
 					<div className="sticky top-0 z-20 bg-background/95 backdrop-blur-sm pb-1 pt-2 -mx-4 px-4 border-b border-blue-50">
@@ -394,7 +418,10 @@ export const PatientProfilePage = () => {
 							value="financial"
 							className="mt-0 focus-visible:outline-none animate-in fade-in-50 duration-500 slide-in-from-bottom-2"
 						>
-							<PatientFinancialTab appointments={appointments} />
+							<PatientFinancialTab
+								patientId={id || ""}
+								appointments={appointments}
+							/>
 						</TabsContent>
 
 						<TabsContent
@@ -468,6 +495,7 @@ export const PatientProfilePage = () => {
 													.slice(0, 3)
 													.map((form) => (
 														<button
+															type="button"
 															key={form.id}
 															onClick={() => handleSelectTemplate(form.id)}
 															className="w-full text-left p-3 rounded-lg border-2 border-primary/20 hover:border-primary hover:bg-primary/5 transition-all group"
@@ -508,6 +536,7 @@ export const PatientProfilePage = () => {
 											<div className="mt-2 space-y-2 pl-4">
 												{evaluationForms.map((form) => (
 													<button
+														type="button"
 														key={form.id}
 														onClick={() => handleSelectTemplate(form.id)}
 														className="w-full text-left p-3 rounded-lg border hover:border-primary/50 hover:bg-muted/50 transition-all flex items-center justify-between group"

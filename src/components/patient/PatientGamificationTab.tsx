@@ -1,5 +1,5 @@
 import React, { lazy, Suspense } from "react";
-import { Gift, Trophy } from "lucide-react";
+import { Gift, Trophy, Sparkles } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { LoadingSkeleton } from "@/components/ui/loading-skeleton";
@@ -30,17 +30,54 @@ export const PatientGamificationTab = ({
 }: {
 	patientId: string;
 }) => {
-	const { profile, xpPerLevel, currentXp, streak } = useGamification(patientId);
+	const {
+		profile,
+		isProfileNotFound,
+		isLoading,
+		xpPerLevel,
+		currentXp,
+		streak,
+	} = useGamification(patientId);
 
-	if (!profile) {
+	if (isLoading) {
+		return (
+			<div className="space-y-4">
+				<Skeleton className="h-32 w-full" />
+				<Skeleton className="h-64 w-full" />
+			</div>
+		);
+	}
+
+	if (isProfileNotFound) {
 		return (
 			<div className="flex flex-col items-center justify-center h-64 border rounded-lg bg-muted/10 border-dashed">
 				<Trophy className="h-10 w-10 text-muted-foreground mb-2" />
 				<p className="text-muted-foreground">
-					Gamificação não iniciada para este paciente
+					Gamificação não disponível no momento
 				</p>
-				<Button variant="outline" size="sm" className="mt-4">
-					Iniciar Gamificação
+				<p className="text-xs text-muted-foreground mt-2">
+					Entre em contato com o administrador
+				</p>
+			</div>
+		);
+	}
+
+	if (!profile) {
+		return (
+			<div className="flex flex-col items-center justify-center h-64 border rounded-lg bg-gradient-to-b from-blue-50 to-white border-blue-200">
+				<div className="h-16 w-16 bg-blue-100 rounded-full flex items-center justify-center mb-4">
+					<Sparkles className="h-8 w-8 text-blue-600" />
+				</div>
+				<p className="text-lg font-semibold text-slate-700 mb-2">
+					Bem-vindo ao Programa de Gamificação!
+				</p>
+				<p className="text-sm text-slate-500 text-center max-w-md mb-4">
+					Participe ativamente das sessões de fisioterapia para acumular pontos,
+					desbloquear conquistas e avançar em sua jornada de recuperação.
+				</p>
+				<Button className="bg-blue-600 hover:bg-blue-700">
+					<Trophy className="h-4 w-4 mr-2" />
+					Começar Minha Jornada
 				</Button>
 			</div>
 		);
