@@ -858,8 +858,17 @@ export default function WhatsAppInboxPage() {
 
 	const filteredConversations =
 		statusFilter === "mine"
-			? conversations.filter((c) => c.assignedTo === "current-user")
+			? conversations.filter((c) => c.assignedTo)
 			: conversations;
+
+	console.log(
+		"[WhatsAppInbox] conversations:",
+		conversations.length,
+		"filtered:",
+		filteredConversations.length,
+		"statusFilter:",
+		statusFilter,
+	);
 
 	return (
 		<MainLayout fullWidth noPadding>
