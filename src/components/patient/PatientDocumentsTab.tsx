@@ -1,6 +1,17 @@
 import React, { Suspense, lazy, useState } from "react";
-import { Download, File as FileIcon, Files, Trash } from "lucide-react";
-import { useDeleteDocument, useDownloadDocument, useUploadDocument, type PatientDocument } from "@/hooks/usePatientDocuments";
+import {
+	Download,
+	File as FileIcon,
+	Files,
+	Trash,
+	FileSearch,
+} from "lucide-react";
+import {
+	useDeleteDocument,
+	useDownloadDocument,
+	useUploadDocument,
+	type PatientDocument,
+} from "@/hooks/usePatientDocuments";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -27,6 +38,12 @@ const LazyDocumentScanner = lazy(() =>
 	})),
 );
 
+interface ScannedData {
+	text: string;
+	summary?: string;
+	category: string;
+}
+
 interface PatientDocumentsTabProps {
 	patientId: string;
 	documents: PatientDocument[];
@@ -43,6 +60,8 @@ export function PatientDocumentsTab({
 	const downloadDocument = useDownloadDocument();
 	const [uploading, setUploading] = useState(false);
 	const [uploadDialogOpen, setUploadDialogOpen] = useState(false);
+	const [scannerDialogOpen, setScannerDialogOpen] = useState(false);
+	const [scannedData, setScannedData] = useState<ScannedData | null>(null);
 	const [selectedCategory, setSelectedCategory] =
 		useState<PatientDocument["category"]>("outro");
 	const [selectedFile, setSelectedFile] = useState<File | null>(null);
@@ -97,15 +116,111 @@ export function PatientDocumentsTab({
 		);
 	}
 
+	const handleScanComplete = (data: ScannedData) => {
+		setScannedData(data);
+		setScannerDialogOpen(true);
+	};
+
+	const handleScannerUpload = async () => {
+		if (!scannedData || !selectedFile) return;
+
+		setUploading(true);
+		try {
+			await uploadDocument.mutateAsync({
+				patient_id: patientId,
+				file: selectedFile,
+				category:
+					(scannedData.category as PatientDocument["category"]) || "laudo",
+				description: description || scannedData.summary,
+				extracted_text: scannedData.text,
+				ai_summary: scannedData.summary,
+			});
+			setScannerDialogOpen(false);
+			setScannedData(null);
+			setSelectedFile(null);
+			setSelectedCategory("outro");
+			setDescription("");
+		} finally {
+			setUploading(false);
+		}
+	};
+
 	return (
 		<div className="space-y-6">
 			<Suspense fallback={<Skeleton className="h-20 w-full rounded-xl" />}>
-				<LazyDocumentScanner
-					onScanComplete={(text) =>
-						alert(`Texto extraído: ${text.substring(0, 100)}...`)
-					}
-				/>
+				<LazyDocumentScanner onScanComplete={handleScanComplete} />
 			</Suspense>
+
+			<Dialog open={scannerDialogOpen} onOpenChange={setScannerDialogOpen}>
+				<DialogContent className="max-w-2xl">
+					<DialogHeader>
+						<DialogTitle className="flex items-center gap-2">
+							<FileSearch className="h-5 w-5 text-blue-600" />
+							Scanner IA - Resultado
+						</DialogTitle>
+					</DialogHeader>
+					{scannedData && (
+						<div className="space-y-4">
+							<div className="p-4 bg-blue-50 rounded-lg">
+								<p className="text-sm font-medium text-blue-800 mb-2">
+									Resumo IA
+								</p>
+								<p className="text-sm text-blue-700">
+									{scannedData.summary || "Sem resumo disponível"}
+								</p>
+							</div>
+							<div>
+								<Label>Categoria Detectada</Label>
+								<Select
+									value={selectedCategory}
+									onValueChange={(v) =>
+										setSelectedCategory(v as PatientDocument["category"])
+									}
+								>
+									<SelectTrigger>
+										<SelectValue />
+									</SelectTrigger>
+									<SelectContent>
+										<SelectItem value="laudo">Laudo</SelectItem>
+										<SelectItem value="exame">Exame</SelectItem>
+										<SelectItem value="receita">Receita</SelectItem>
+										<SelectItem value="termo">Termo</SelectItem>
+										<SelectItem value="outro">Outro</SelectItem>
+									</SelectContent>
+								</Select>
+							</div>
+							<div>
+								<Label>Descrição (opcional)</Label>
+								<Input
+									value={description}
+									onChange={(e) => setDescription(e.target.value)}
+									placeholder="Adicione uma descrição..."
+								/>
+							</div>
+							<div className="max-h-40 overflow-y-auto p-3 bg-muted rounded-lg">
+								<p className="text-xs text-muted-foreground font-medium mb-2">
+									Texto Extraído:
+								</p>
+								<p className="text-xs text-muted-foreground whitespace-pre-wrap">
+									{scannedData.text.substring(0, 1000)}
+									{scannedData.text.length > 1000 ? "..." : ""}
+								</p>
+							</div>
+							<div className="flex gap-2 justify-end">
+								<Button
+									variant="outline"
+									onClick={() => setScannerDialogOpen(false)}
+								>
+									Descartar
+								</Button>
+								<Button onClick={handleScannerUpload} disabled={uploading}>
+									{uploading ? "Salvando..." : "Salvar no Prontuário"}
+								</Button>
+							</div>
+						</div>
+					)}
+				</DialogContent>
+			</Dialog>
 
 			<Card className="border-2 border-dashed border-blue-200 bg-blue-50/10 hover:bg-blue-50/30 transition-colors rounded-xl shadow-sm">
 				<CardContent className="p-8">

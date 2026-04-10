@@ -775,7 +775,7 @@ export default function CalendarSettings() {
 														<p className="text-xs text-muted-foreground mt-1">
 															{format(
 																new Date(log.created_at),
-																"dd/MM/yyyy 'às' HH:mm:ss",
+																"dd/MM/yyyy 'às' HH:mm",
 																{ locale: ptBR },
 															)}
 														</p>

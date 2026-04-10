@@ -2,7 +2,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Badge } from "@/components/ui/badge";
-import { FileText, Copy, Calendar } from "lucide-react";
+import { FileText, Copy, Calendar, Loader2 } from "lucide-react";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import {
@@ -25,11 +25,13 @@ interface SessionData {
 interface SessionHistoryPanelProps {
 	sessions: SessionData[];
 	onReplicate: (session: SessionData) => void;
+	replicatingId?: string | null;
 }
 
 export const SessionHistoryPanel = ({
 	sessions,
 	onReplicate,
+	replicatingId = null,
 }: SessionHistoryPanelProps) => {
 	if (!sessions || sessions.length === 0) {
 		return (
@@ -110,6 +112,14 @@ export const SessionHistoryPanel = ({
 												{session.objective}
 											</div>
 										)}
+										{session.assessment && (
+											<div className="bg-muted/30 p-2 rounded">
+												<span className="font-semibold text-xs text-purple-600">
+													A:
+												</span>{" "}
+												{session.assessment}
+											</div>
+										)}
 										{session.plan && (
 											<div className="bg-muted/30 p-2 rounded">
 												<span className="font-semibold text-xs text-orange-600">
@@ -123,9 +133,14 @@ export const SessionHistoryPanel = ({
 										size="sm"
 										className="w-full gap-2"
 										variant="secondary"
+										disabled={replicatingId === session.id}
 										onClick={() => onReplicate(session)}
 									>
-										<Copy className="h-3 w-3" />
+										{replicatingId === session.id ? (
+											<Loader2 className="h-3 w-3 animate-spin" />
+										) : (
+											<Copy className="h-3 w-3" />
+										)}
 										Replicar Conduta
 									</Button>
 								</AccordionContent>

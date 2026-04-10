@@ -860,14 +860,14 @@ ${
 								<div className="flex justify-between items-center">
 									<span>Último auto-save:</span>
 									<span>
-										{safeFormat(session.last_auto_save_at, "HH:mm:ss")}
+										{safeFormat(session.last_auto_save_at, "HH:mm")}
 									</span>
 								</div>
 							)}
 							<div className="flex justify-between items-center">
 								<span>Criado em:</span>
 								<span>
-									{safeFormat(session.created_at, "dd/MM/yyyy 'as' HH:mm:ss")}
+									{safeFormat(session.created_at, "dd/MM/yyyy 'as' HH:mm")}
 								</span>
 							</div>
 						</div>
