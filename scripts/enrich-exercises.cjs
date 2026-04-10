@@ -1,6 +1,6 @@
 const { Client } = require('pg');
 
-const DB_URL = "postgresql://neondb_owner:REDACTED-NEON-PASSWORD@ep-wandering-bonus-acj4zwvo-pooler.sa-east-1.aws.neon.tech/neondb?sslmode=require";
+const DB_URL = "process.env.DATABASE_URL";
 
 const CATEGORIES = {
     "Joelho": "7fba5d96-dd36-401f-b5f9-ab59d708e1ad",

@@ -4,8 +4,13 @@ import fs from 'fs';
 const { Client } = pg;
 
 async function run() {
+    const connectionString = process.env.DATABASE_URL;
+    if (!connectionString) {
+      console.error("DATABASE_URL environment variable is not defined.");
+      process.exit(1);
+    }
     const client = new Client({
-        connectionString: "postgresql://neondb_owner:REDACTED-NEON-PASSWORD@ep-wandering-bonus-acj4zwvo.sa-east-1.aws.neon.tech/neondb?sslmode=require&channel_binding=require",
+        connectionString,
     });
 
     try {

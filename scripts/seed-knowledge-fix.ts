@@ -158,7 +158,7 @@ export const GOLD_STANDARD_SEED = [
 	},
 ];
 
-const DATABASE_URL = "postgresql://neondb_owner:REDACTED-NEON-PASSWORD@ep-wandering-bonus-acj4zwvo-pooler.sa-east-1.aws.neon.tech/neondb?sslmode=require&channel_binding=require";
+const DATABASE_URL = "process.env.DATABASE_URL";
 
 async function main() {
   const pool = new Pool({ connectionString: DATABASE_URL });
