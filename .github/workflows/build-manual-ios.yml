@@ -4,13 +4,21 @@ on:
   workflow_dispatch:
     inputs:
       app:
-        description: 'App'
+        description: 'App name'
         required: true
         default: 'professional-app'
+        type: choice
+        options:
+          - patient-app
+          - professional-app
       profile:
-        description: 'Profile'
+        description: 'Build profile'
         required: true
         default: 'development'
+        type: choice
+        options:
+          - development
+          - preview
 
 env:
   NODE_VERSION: '22'
