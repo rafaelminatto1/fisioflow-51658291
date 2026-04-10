@@ -2,23 +2,6 @@ name: Generate IPA Professional
 
 on:
   workflow_dispatch:
-    inputs:
-      app:
-        description: 'App'
-        required: true
-        default: 'professional-app'
-        type: choice
-        options:
-          - patient-app
-          - professional-app
-      profile:
-        description: 'Profile'
-        required: true
-        default: 'development'
-        type: choice
-        options:
-          - development
-          - preview
 
 env:
   NODE_VERSION: '22'
@@ -26,7 +9,7 @@ env:
 
 jobs:
   build-ios:
-    name: Build iOS - ${{ inputs.app }}
+    name: Build iOS - professional-app
     runs-on: macos-latest
     timeout-minutes: 90
 
@@ -44,16 +27,16 @@ jobs:
           cache: 'pnpm'
 
       - name: Install dependencies
-        run: pnpm install --frozen-lockfile --filter "@fisioflow/${{ inputs.app }}..."
+        run: pnpm install --frozen-lockfile --filter "@fisioflow/professional-app..."
 
       - name: Expo Prebuild
-        working-directory: apps/${{ inputs.app }}
+        working-directory: apps/professional-app
         run: npx expo prebuild --platform ios --clean --non-interactive
         env:
           EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
 
       - name: Patch Podfile
-        working-directory: apps/${{ inputs.app }}/ios
+        working-directory: apps/professional-app/ios
         run: |
           cat >> Podfile << 'PODFILE_PATCH'
 post_install do |installer|
@@ -66,7 +49,7 @@ end
 PODFILE_PATCH
 
       - name: Pod install
-        working-directory: apps/${{ inputs.app }}/ios
+        working-directory: apps/professional-app/ios
         run: pod install --repo-update
 
       - name: Importar certificado p12
@@ -91,7 +74,7 @@ PODFILE_PATCH
         run: |
           PROFILE_PATH=$RUNNER_TEMP/profile.mobileprovision
           PROFILE_PLIST=$RUNNER_TEMP/profile.plist
-          if [ "${{ inputs.app }}" = "patient-app" ]; then
+          if [ "professional-app" = "patient-app" ]; then
             PROFILE_BASE64="$PROFILE_BASE64_PACIENTES"
           else
             PROFILE_BASE64="$PROFILE_BASE64_PROFISSIONAIS"
@@ -104,7 +87,7 @@ PODFILE_PATCH
           echo "PROFILE_UUID=$PROFILE_UUID" >> $GITHUB_ENV
 
       - name: Detectar workspace e schemes
-        working-directory: apps/${{ inputs.app }}/ios
+        working-directory: apps/professional-app/ios
         run: |
           WORKSPACE=$(ls -d *.xcworkspace | head -1)
           SCHEME=$(echo "$WORKSPACE" | sed 's/\.xcworkspace//')
@@ -112,7 +95,7 @@ PODFILE_PATCH
           echo "SCHEME=$SCHEME" >> $GITHUB_ENV
 
       - name: Build & Archive
-        working-directory: apps/${{ inputs.app }}/ios
+        working-directory: apps/professional-app/ios
         env:
           APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
           SENTRY_DISABLE_AUTO_UPLOAD: "true"
@@ -142,7 +125,7 @@ PODFILE_PATCH
       - name: Upload IPA
         uses: actions/upload-artifact@v4
         with:
-          name: ios-${{ inputs.app }}-${{ github.sha }}
+          name: ios-professional-app-${{ github.sha }}
           path: ${{ runner.temp }}/ipa/*.ipa
           retention-days: 14
 
