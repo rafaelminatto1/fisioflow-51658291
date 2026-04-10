@@ -100,6 +100,7 @@ const rowToInventoryItem = (row: UserInventoryRow): UserInventoryItem => ({
 
 export interface UseGamificationResult {
 	profile: GamificationProfile | null;
+	isProfileNotFound: boolean;
 	dailyQuests: DailyQuestItem[];
 	allAchievements: Achievement[];
 	unlockedAchievements: UnlockedAchievement[];
@@ -181,7 +182,11 @@ export const useGamification = (patientId: string): UseGamificationResult => {
 	const userInventory = inventoryRaw.map(rowToInventoryItem);
 
 	// ── 3. Perfil de gamificação ───────────────────────────────────────────────
-	const { data: profileRaw, isLoading: isLoadingProfile } = useQuery({
+	const {
+		data: profileRaw,
+		isLoading: isLoadingProfile,
+		error: profileError,
+	} = useQuery({
 		queryKey: ["gamification-profile", patientId],
 		queryFn: async () => {
 			try {
@@ -198,9 +203,11 @@ export const useGamification = (patientId: string): UseGamificationResult => {
 		},
 		enabled,
 		staleTime: 1000 * 60 * 2,
+		retry: 1,
 	});
 
 	const profile = profileRaw ? rowToProfile(profileRaw) : null;
+	const isProfileNotFound = !profile && !isLoadingProfile && profileError;
 
 	// ── 4. Missões diárias ────────────────────────────────────────────────────
 	const { data: questsRecord } = useQuery({
@@ -361,6 +368,7 @@ export const useGamification = (patientId: string): UseGamificationResult => {
 
 	return {
 		profile,
+		isProfileNotFound,
 		dailyQuests,
 		allAchievements,
 		unlockedAchievements,

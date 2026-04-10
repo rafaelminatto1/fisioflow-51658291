@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, useRef } from "react";
+import { useState, useEffect, useCallback } from "react";
 import {
 	fetchConversations,
 	fetchConversation,
@@ -47,13 +47,8 @@ export function useWhatsAppInbox(filters?: ConversationFilters) {
 		}
 	}, [filters]);
 
-	const mountedRef = useRef(false);
-
 	useEffect(() => {
-		if (!mountedRef.current) {
-			mountedRef.current = true;
-			refetch();
-		}
+		void refetch();
 	}, [refetch]);
 
 	useEffect(() => {

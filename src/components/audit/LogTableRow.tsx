@@ -126,7 +126,7 @@ const LogTableRow = memo(({ log }: LogTableRowProps) => {
 						{format(new Date(log.timestamp), "dd/MM/yyyy", { locale: ptBR })}
 					</div>
 					<div className="text-xs text-muted-foreground ml-5">
-						{format(new Date(log.timestamp), "HH:mm:ss", { locale: ptBR })}
+						{format(new Date(log.timestamp), "HH:mm", { locale: ptBR })}
 					</div>
 					{isNew && (
 						<Badge

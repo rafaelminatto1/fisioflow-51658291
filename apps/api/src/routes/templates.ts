@@ -377,7 +377,9 @@ app.put('/:id', requireAuth, async (c) => {
   if (items && Array.isArray(items)) {
     // Substituição atômica dos itens dentro de uma transaction
     await db.transaction(async (tx) => {
-      await tx.update(exerciseTemplateItems).set({ deletedAt: new Date() }).where(eq(exerciseTemplateItems.templateId, template.id));
+      await tx
+        .delete(exerciseTemplateItems)
+        .where(eq(exerciseTemplateItems.templateId, template.id));
       if (items.length > 0) {
         updatedItems = await tx
           .insert(exerciseTemplateItems)

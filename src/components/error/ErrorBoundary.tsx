@@ -200,7 +200,10 @@ ${errorInfo?.componentStack || "No component stack"}
 			message: error?.message || "Erro desconhecido",
 			url: url.split("/").pop() || url,
 			stack: relevantStack,
-			timestamp: new Date().toLocaleTimeString("pt-BR"),
+			timestamp: new Date().toLocaleTimeString("pt-BR", {
+				hour: "2-digit",
+				minute: "2-digit",
+			}),
 		};
 	};
 

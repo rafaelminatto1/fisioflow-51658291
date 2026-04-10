@@ -39,122 +39,140 @@ const STATUS_COLORS: Record<ApiLead["estagio"], string> = {
 	perdido: "#ef4444",
 };
 
-const LeadCard = memo(({ lead, colors, light, onUpdateStatus }: { lead: ApiLead; colors: ReturnType<typeof import('@/hooks/useColorScheme').useColors>; light: () => void; onUpdateStatus: (id: string, estagio: ApiLead['estagio']) => void }) => {
-	const handleLongPress = () => {
-		light();
-		const stages = Object.keys(STATUS_LABELS) as ApiLead["estagio"][];
-		const options = stages.map((s) => STATUS_LABELS[s]);
-		if (Platform.OS === "ios") {
-			ActionSheetIOS.showActionSheetWithOptions(
-				{
-					options: [...options, "Cancelar"],
-					cancelButtonIndex: options.length,
-					title: "Mover para etapa",
-				},
-				(idx) => {
-					if (idx < options.length) onUpdateStatus(lead.id, stages[idx]);
-				},
-			);
-		} else {
-			Alert.alert(
-				"Mover para etapa",
-				undefined,
-				stages
-					.map((s) => ({
-						text: STATUS_LABELS[s],
-						onPress: () => onUpdateStatus(lead.id, s),
-					}))
-					.concat([{ text: "Cancelar", style: "cancel" } as any]),
-			);
-		}
-	};
+const LeadCard = memo(
+	({
+		lead,
+		colors,
+		light,
+		onUpdateStatus,
+	}: {
+		lead: ApiLead;
+		colors: ReturnType<typeof import("@/hooks/useColorScheme").useColors>;
+		light: () => void;
+		onUpdateStatus: (id: string, estagio: ApiLead["estagio"]) => void;
+	}) => {
+		const handleLongPress = () => {
+			light();
+			const stages = Object.keys(STATUS_LABELS) as ApiLead["estagio"][];
+			const options = stages.map((s) => STATUS_LABELS[s]);
+			if (Platform.OS === "ios") {
+				ActionSheetIOS.showActionSheetWithOptions(
+					{
+						options: [...options, "Cancelar"],
+						cancelButtonIndex: options.length,
+						title: "Mover para etapa",
+					},
+					(idx) => {
+						if (idx < options.length) onUpdateStatus(lead.id, stages[idx]);
+					},
+				);
+			} else {
+				Alert.alert(
+					"Mover para etapa",
+					undefined,
+					stages
+						.map((s) => ({
+							text: STATUS_LABELS[s],
+							onPress: () => onUpdateStatus(lead.id, s),
+						}))
+						.concat([{ text: "Cancelar", style: "cancel" } as any]),
+				);
+			}
+		};
 
-	return (
-		<TouchableOpacity
-			activeOpacity={0.7}
-			onPress={() => light()}
-			onLongPress={handleLongPress}
-			delayLongPress={400}
-		>
-			<Card style={styles.leadCard}>
-				<View style={styles.leadHeader}>
-					<View
-						style={[
-							styles.leadAvatar,
-							{ backgroundColor: STATUS_COLORS[lead.estagio] + "18" },
-						]}
-					>
-						<Ionicons
-							name="person-outline"
-							size={20}
-							color={STATUS_COLORS[lead.estagio]}
-						/>
-					</View>
-					<View style={styles.leadMainInfo}>
-						<Text
-							style={[styles.leadName, { color: colors.text }]}
-							numberOfLines={1}
+		return (
+			<TouchableOpacity
+				activeOpacity={0.7}
+				onPress={() => light()}
+				onLongPress={handleLongPress}
+				delayLongPress={400}
+			>
+				<Card style={styles.leadCard}>
+					<View style={styles.leadHeader}>
+						<View
+							style={[
+								styles.leadAvatar,
+								{ backgroundColor: STATUS_COLORS[lead.estagio] + "18" },
+							]}
 						>
-							{lead.nome}
-						</Text>
-						<View style={styles.leadMetaRow}>
-							<View
-								style={[
-									styles.statusBadge,
-									{ backgroundColor: STATUS_COLORS[lead.estagio] + "20" },
-								]}
+							<Ionicons
+								name="person-outline"
+								size={20}
+								color={STATUS_COLORS[lead.estagio]}
+							/>
+						</View>
+						<View style={styles.leadMainInfo}>
+							<Text
+								style={[styles.leadName, { color: colors.text }]}
+								numberOfLines={1}
 							>
-								<Text
+								{lead.nome}
+							</Text>
+							<View style={styles.leadMetaRow}>
+								<View
 									style={[
-										styles.statusText,
-										{ color: STATUS_COLORS[lead.estagio] },
+										styles.statusBadge,
+										{ backgroundColor: STATUS_COLORS[lead.estagio] + "20" },
 									]}
 								>
-									{STATUS_LABELS[lead.estagio]}
+									<Text
+										style={[
+											styles.statusText,
+											{ color: STATUS_COLORS[lead.estagio] },
+										]}
+									>
+										{STATUS_LABELS[lead.estagio]}
+									</Text>
+								</View>
+								{lead.origem && (
+									<Text
+										style={[styles.sourceText, { color: colors.textMuted }]}
+									>
+										{lead.origem}
+									</Text>
+								)}
+							</View>
+						</View>
+						<Ionicons
+							name="chevron-forward"
+							size={18}
+							color={colors.textMuted}
+						/>
+					</View>
+
+					{lead.interesse && (
+						<Text
+							style={[styles.interestText, { color: colors.textSecondary }]}
+							numberOfLines={2}
+						>
+							{lead.interesse}
+						</Text>
+					)}
+
+					<View style={[styles.leadFooter, { borderTopColor: colors.border }]}>
+						{lead.telefone && (
+							<View style={styles.footerItem}>
+								<Ionicons
+									name="call-outline"
+									size={14}
+									color={colors.textSecondary}
+								/>
+								<Text
+									style={[styles.footerText, { color: colors.textSecondary }]}
+								>
+									{lead.telefone}
 								</Text>
 							</View>
-							{lead.origem && (
-								<Text style={[styles.sourceText, { color: colors.textMuted }]}>
-									{lead.origem}
-								</Text>
-							)}
-						</View>
+						)}
+						<Text style={[styles.hintText, { color: colors.textMuted }]}>
+							Toque longo para mover
+						</Text>
 					</View>
-					<Ionicons name="chevron-forward" size={18} color={colors.textMuted} />
-				</View>
-
-				{lead.interesse && (
-					<Text
-						style={[styles.interestText, { color: colors.textSecondary }]}
-						numberOfLines={2}
-					>
-						{lead.interesse}
-					</Text>
-				)}
-
-				<View style={[styles.leadFooter, { borderTopColor: colors.border }]}>
-					{lead.telefone && (
-						<View style={styles.footerItem}>
-							<Ionicons
-								name="call-outline"
-								size={14}
-								color={colors.textSecondary}
-							/>
-							<Text
-								style={[styles.footerText, { color: colors.textSecondary }]}
-							>
-								{lead.telefone}
-							</Text>
-						</View>
-					)}
-					<Text style={[styles.hintText, { color: colors.textMuted }]}>
-						Toque longo para mover
-					</Text>
-				</View>
-			</Card>
-		</TouchableOpacity>
-	);
-});
+				</Card>
+			</TouchableOpacity>
+		);
+	},
+);
 
 function CRMSkeletonLoader() {
 	return (
@@ -385,79 +403,79 @@ const styles = StyleSheet.create({
 		flex: 1,
 	},
 	searchContainer: {
-		padding: 16,
+		padding: 14,
 		borderBottomWidth: 1,
 	},
 	searchBar: {
 		flexDirection: "row",
 		alignItems: "center",
-		paddingHorizontal: 14,
-		height: 48,
+		paddingHorizontal: 12,
+		height: 44,
 		borderRadius: 12,
 		borderWidth: 1,
-		marginBottom: 12,
-		gap: 10,
+		marginBottom: 10,
+		gap: 8,
 	},
 	searchInput: {
 		flex: 1,
-		fontSize: 16,
+		fontSize: 15,
 	},
 	statusFilters: {
 		flexDirection: "row",
 		paddingBottom: 4,
 	},
 	statusFilterChip: {
-		paddingHorizontal: 14,
-		paddingVertical: 8,
+		paddingHorizontal: 12,
+		paddingVertical: 6,
 		borderRadius: 20,
-		marginRight: 8,
+		marginRight: 6,
 		borderWidth: 1,
 	},
 	statusFilterText: {
-		fontSize: 13,
+		fontSize: 12,
 		fontWeight: "600",
 	},
 	metaRow: {
 		flexDirection: "row",
 		alignItems: "center",
 		justifyContent: "space-between",
-		paddingHorizontal: 16,
+		paddingHorizontal: 14,
 		marginBottom: 4,
 	},
 	statsRow: {
 		flexDirection: "row",
-		gap: 8,
+		gap: 6,
 	},
 	statBadge: {
-		paddingHorizontal: 10,
-		paddingVertical: 4,
+		paddingHorizontal: 8,
+		paddingVertical: 3,
 		borderRadius: 20,
 	},
 	statBadgeText: {
-		fontSize: 12,
+		fontSize: 11,
 		fontWeight: "600",
 	},
 	scrollView: {
 		flex: 1,
 	},
 	scrollContent: {
-		padding: 16,
+		padding: 14,
 	},
 	listContainer: {
-		gap: 12,
+		gap: 10,
 	},
 	leadCard: {
-		borderRadius: 16,
+		borderRadius: 14,
 	},
 	leadHeader: {
 		flexDirection: "row",
 		alignItems: "center",
-		gap: 12,
+		gap: 10,
 	},
 	leadAvatar: {
-		width: 40,
-		height: 40,
-		borderRadius: 20,
+		width: 36,
+		height: 36,
+		borderRadius: 18,
 		alignItems: "center",
 		justifyContent: "center",
 		flexShrink: 0,
@@ -466,92 +484,92 @@ const styles = StyleSheet.create({
 		flex: 1,
 	},
 	leadName: {
-		fontSize: 16,
+		fontSize: 15,
 		fontWeight: "600",
-		marginBottom: 4,
+		marginBottom: 3,
 	},
 	leadMetaRow: {
 		flexDirection: "row",
 		alignItems: "center",
-		gap: 8,
+		gap: 6,
 	},
 	statusBadge: {
-		paddingHorizontal: 8,
+		paddingHorizontal: 6,
 		paddingVertical: 2,
-		borderRadius: 6,
+		borderRadius: 5,
 	},
 	statusText: {
-		fontSize: 11,
+		fontSize: 10,
 		fontWeight: "600",
 	},
 	sourceText: {
-		fontSize: 12,
+		fontSize: 11,
 	},
 	interestText: {
-		fontSize: 13,
-		marginTop: 10,
-		lineHeight: 18,
+		fontSize: 12,
+		marginTop: 8,
+		lineHeight: 16,
 	},
 	leadFooter: {
 		flexDirection: "row",
 		justifyContent: "space-between",
 		alignItems: "center",
-		marginTop: 12,
-		paddingTop: 10,
+		marginTop: 10,
+		paddingTop: 8,
 		borderTopWidth: 1,
 	},
 	footerItem: {
 		flexDirection: "row",
 		alignItems: "center",
-		gap: 6,
+		gap: 4,
 	},
 	footerText: {
-		fontSize: 12,
+		fontSize: 11,
 		fontWeight: "500",
 	},
 	hintText: {
-		fontSize: 11,
+		fontSize: 10,
 		fontStyle: "italic",
 	},
 	emptyCard: {
 		alignItems: "center",
-		paddingVertical: 48,
-		gap: 8,
-		borderRadius: 16,
+		paddingVertical: 40,
+		gap: 6,
+		borderRadius: 14,
 		borderStyle: "dashed",
 	},
 	emptyIconContainer: {
-		width: 64,
-		height: 64,
-		borderRadius: 32,
+		width: 56,
+		height: 56,
+		borderRadius: 28,
 		alignItems: "center",
 		justifyContent: "center",
-		marginBottom: 8,
+		marginBottom: 6,
 	},
 	emptyTitle: {
-		fontSize: 17,
+		fontSize: 15,
 		fontWeight: "600",
 	},
 	emptyDescription: {
-		fontSize: 14,
+		fontSize: 13,
 		textAlign: "center",
-		paddingHorizontal: 24,
-		lineHeight: 20,
+		paddingHorizontal: 20,
+		lineHeight: 18,
 	},
 	skeletonContainer: {
-		gap: 12,
+		gap: 10,
 	},
 	skeletonStatsRow: {
 		flexDirection: "row",
-		gap: 12,
-		marginBottom: 8,
+		gap: 10,
+		marginBottom: 6,
 	},
 	skeletonStat: {
 		flex: 1,
 		alignItems: "center",
 		backgroundColor: "#fff",
-		borderRadius: 16,
-		padding: 16,
+		borderRadius: 14,
+		padding: 14,
 		borderWidth: 1,
 		borderColor: "#e5e7eb",
 	},

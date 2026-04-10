@@ -3,8 +3,8 @@
  * Acesso: /prontuario/:patientId
  */
 
-import { useState } from "react";
-import { useParams, useNavigate } from "react-router-dom";
+import { useEffect, useState } from "react";
+import { useParams, useNavigate, useSearchParams } from "react-router-dom";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { MainLayout } from "@/components/layout/MainLayout";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -24,6 +24,37 @@ import { format, parseISO } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { useAuth } from "@/contexts/AuthContext";
 import { documentSignaturesApi } from "@/api/v2";
+import { cn } from "@/lib/utils";
+
+type SoapSectionKey = "subjective" | "objective" | "assessment" | "plan";
+
+function normalizeSoapSection(value: string | null): SoapSectionKey | null {
+	if (value === "subjective" || value === "objective" || value === "assessment" || value === "plan") {
+		return value;
+	}
+	return null;
+}
+
+function getSessionDate(session: Record<string, unknown>): Date | null {
+	const rawValue =
+		(session.record_date as string | undefined) ??
+		(session.date as string | undefined) ??
+		(session.created_at as string | undefined);
+
+	if (!rawValue) return null;
+
+	const parsed = parseISO(rawValue);
+	if (!Number.isNaN(parsed.getTime())) return parsed;
+
+	const fallback = new Date(rawValue);
+	return Number.isNaN(fallback.getTime()) ? null : fallback;
+}
+
+function formatSessionDate(session: Record<string, unknown>, pattern: string) {
+	const sessionDate = getSessionDate(session);
+	if (!sessionDate) return "Data desconhecida";
+	return format(sessionDate, pattern, { locale: ptBR });
+}
 
 // ─── API helpers ──────────────────────────────────────────────────────────────
 
@@ -32,7 +63,7 @@ function usePatientSessions(patientId: string) {
 		queryKey: ["patient-sessions", patientId],
 		queryFn: () =>
 			request<{ data: Array<Record<string, unknown>> }>(
-				`/api/sessions?patient_id=${patientId}&limit=20`,
+				`/api/sessions?patientId=${encodeURIComponent(patientId)}&limit=20`,
 			).then((r) => r.data ?? []),
 		enabled: !!patientId,
 		staleTime: 2 * 60 * 1000,
@@ -77,9 +108,7 @@ function SessionCard({
 	onSelect: () => void;
 	isSelected: boolean;
 }) {
-	const dateStr = session.date
-		? format(parseISO(session.date as string), "dd/MM/yyyy", { locale: ptBR })
-		: "Data desconhecida";
+	const dateStr = formatSessionDate(session, "dd/MM/yyyy");
 
 	return (
 		<button
@@ -111,16 +140,19 @@ function SessionDetail({
 	patientName,
 	therapistName,
 	clinicName,
+	highlightSection,
 }: {
 	session: Record<string, unknown>;
 	patientName: string;
 	therapistName: string;
 	clinicName: string;
+	highlightSection?: SoapSectionKey | null;
 }) {
 	const qc = useQueryClient();
 	const [showSignature, setShowSignature] = useState(false);
 	const { data: signatures = [] } = useSessionSignatures(session.id as string);
 	const isSigned = signatures.length > 0;
+	const sessionDate = getSessionDate(session);
 
 	const signMutation = useMutation({
 		mutationFn: async (signatureData: SignatureData) => {
@@ -145,7 +177,7 @@ function SessionDetail({
 		const sig = signatures[0] as Record<string, unknown> | undefined;
 		const evolution: SoapEvolution = {
 			id: session.id as string,
-			date: (session.date as string) ?? new Date().toISOString(),
+			date: sessionDate?.toISOString() ?? new Date().toISOString(),
 			patient_name: patientName,
 			therapist_name: therapistName,
 			clinic_name: clinicName,
@@ -161,15 +193,23 @@ function SessionDetail({
 		generateSoapPDF(evolution);
 	};
 
-	const dateStr = session.date
-		? format(parseISO(session.date as string), "dd/MM/yyyy", { locale: ptBR })
-		: "";
+	useEffect(() => {
+		if (!highlightSection) return;
+		const target = document.getElementById(`soap-section-${highlightSection}`);
+		target?.scrollIntoView({ behavior: "smooth", block: "center" });
+	}, [highlightSection, session.id]);
 
-	const fields: Array<{ label: string; value: string | undefined; sectionTitle?: string }> = [
-		{ sectionTitle: "S — Subjetivo", label: "", value: session.subjective as string },
-		{ sectionTitle: "O — Objetivo", label: "", value: session.objective as string },
-		{ sectionTitle: "A — Avaliação/Diagnóstico", label: "", value: session.assessment as string },
-		{ sectionTitle: "P — Plano", label: "", value: session.plan as string },
+	const dateStr = formatSessionDate(session, "dd/MM/yyyy");
+
+	const fields: Array<{
+		key: SoapSectionKey;
+		value: string | undefined;
+		sectionTitle: string;
+	}> = [
+		{ key: "subjective", sectionTitle: "S — Subjetivo", value: session.subjective as string | undefined },
+		{ key: "objective", sectionTitle: "O — Objetivo", value: session.objective as string | undefined },
+		{ key: "assessment", sectionTitle: "A — Avaliação/Diagnóstico", value: session.assessment as string | undefined },
+		{ key: "plan", sectionTitle: "P — Plano", value: session.plan as string | undefined },
 	];
 
 	return (
@@ -221,7 +261,16 @@ function SessionDetail({
 			{fields.map(
 				(f, i) =>
 					f.value && (
-						<div key={i} className="space-y-1">
+						<div
+							key={i}
+							id={`soap-section-${f.key}`}
+							className={cn(
+								"space-y-1 rounded-xl border p-3 transition-colors",
+								highlightSection === f.key
+									? "border-primary/40 bg-primary/5 shadow-sm"
+									: "border-border/40 bg-background",
+							)}
+						>
 							<p className="text-xs font-bold text-primary uppercase tracking-wider">{f.sectionTitle}</p>
 							<div className="rounded-lg bg-muted/30 p-3 text-sm whitespace-pre-wrap leading-relaxed">
 								{f.value}
@@ -262,19 +311,54 @@ function SessionDetail({
 export default function ProntuarioEletronico() {
 	const { patientId } = useParams<{ patientId: string }>();
 	const navigate = useNavigate();
+	const [searchParams, setSearchParams] = useSearchParams();
 	const { profile } = useAuth();
-	const [selectedSessionId, setSelectedSessionId] = useState<string | null>(null);
 
 	const { data: patient, isLoading: patientLoading } = usePatient(patientId ?? "");
 	const { data: sessions = [], isLoading: sessionsLoading } = usePatientSessions(patientId ?? "");
+	const requestedSessionId = searchParams.get("sessionId");
+	const highlightedSection = normalizeSoapSection(searchParams.get("section"));
+	const firstSessionId =
+		sessions.length > 0
+			? String((sessions[0] as Record<string, unknown>).id ?? "")
+			: null;
+	const selectedSessionId = requestedSessionId ?? firstSessionId;
 
 	const patientName = (patient?.full_name as string) ?? "Paciente";
 	const therapistName = profile?.full_name ?? "Fisioterapeuta";
 	const clinicName = "FisioFlow Clínica";
 
-	const selectedSession = sessions.find((s) => (s as Record<string, unknown>).id === selectedSessionId) as
+	useEffect(() => {
+		if (!firstSessionId) return;
+
+		const hasRequestedSession = requestedSessionId
+			? sessions.some(
+					(session) =>
+						String((session as Record<string, unknown>).id ?? "") ===
+						requestedSessionId,
+				)
+			: false;
+
+		if (hasRequestedSession) return;
+
+		const nextParams = new URLSearchParams(searchParams);
+		nextParams.set("sessionId", firstSessionId);
+		nextParams.delete("section");
+		if (nextParams.toString() !== searchParams.toString()) {
+			setSearchParams(nextParams, { replace: true });
+		}
+	}, [firstSessionId, requestedSessionId, searchParams, sessions, setSearchParams]);
+
+	const selectedSession = sessions.find((s) => String((s as Record<string, unknown>).id ?? "") === selectedSessionId) as
 		| Record<string, unknown>
 		| undefined;
+
+	const handleSelectSession = (sessionId: string) => {
+		const nextParams = new URLSearchParams(searchParams);
+		nextParams.set("sessionId", sessionId);
+		nextParams.delete("section");
+		setSearchParams(nextParams);
+	};
 
 	return (
 		<MainLayout compactPadding>
@@ -335,7 +419,7 @@ export default function ProntuarioEletronico() {
 										patientName={patientName}
 										therapistName={therapistName}
 										clinicName={clinicName}
-										onSelect={() => setSelectedSessionId(s.id as string)}
+										onSelect={() => handleSelectSession(s.id as string)}
 										isSelected={selectedSessionId === s.id}
 									/>
 								);
@@ -360,6 +444,7 @@ export default function ProntuarioEletronico() {
 									patientName={patientName}
 									therapistName={therapistName}
 									clinicName={clinicName}
+									highlightSection={highlightedSection}
 								/>
 							)}
 						</CardContent>

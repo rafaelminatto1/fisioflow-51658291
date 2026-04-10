@@ -654,7 +654,7 @@ export function WhatsAppDashboard() {
 														{log.processed ? "Processado" : "Pendente"}
 													</Badge>
 													<p className="text-xs text-muted-foreground mt-1">
-														{format(new Date(log.created_at), "dd/MM HH:mm:ss")}
+														{format(new Date(log.created_at), "dd/MM HH:mm")}
 													</p>
 												</div>
 											</div>
