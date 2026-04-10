@@ -287,6 +287,7 @@ function ConversationDetailPanel({
 	onClose,
 	onAddTag,
 	onRemoveTag,
+	onQuickReply,
 }: {
 	conversation: Conversation;
 	onAssign: () => void;
@@ -295,6 +296,7 @@ function ConversationDetailPanel({
 	onClose: () => void;
 	onAddTag: (tagId: string) => void;
 	onRemoveTag: (tagId: string) => void;
+	onQuickReply: (content: string) => void;
 }) {
 	const [allTags, setAllTags] = useState<TagType[]>([]);
 	const [quickReplies, setQuickReplies] = useState<QuickReply[]>([]);
@@ -528,7 +530,11 @@ function ConversationDetailPanel({
 								</DropdownMenuTrigger>
 								<DropdownMenuContent className="w-64" align="end">
 									{quickReplies.map((qr) => (
-										<DropdownMenuItem key={qr.id} className="cursor-pointer">
+										<DropdownMenuItem
+											key={qr.id}
+											className="cursor-pointer"
+											onClick={() => onQuickReply(qr.content)}
+										>
 											<div className="flex flex-col gap-0.5">
 												<span className="font-medium text-xs">{qr.name}</span>
 												<span className="text-[10px] text-muted-foreground truncate max-w-[220px]">
@@ -550,9 +556,13 @@ function ConversationDetailPanel({
 function ChatPanel({
 	selectedId,
 	onAddNote,
+	quickReplyText,
+	onQuickReplyUsed,
 }: {
 	selectedId: string | null;
 	onAddNote: (content: string) => void;
+	quickReplyText: string | null;
+	onQuickReplyUsed: () => void;
 }) {
 	const { conversation, messages, loading, sendMessage } =
 		useWhatsAppConversation(selectedId);
@@ -565,6 +575,13 @@ function ChatPanel({
 	useEffect(() => {
 		messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
 	});
+
+	useEffect(() => {
+		if (quickReplyText) {
+			setInput(quickReplyText);
+			onQuickReplyUsed();
+		}
+	}, [quickReplyText, onQuickReplyUsed]);
 
 	if (!selectedId) {
 		return (
@@ -824,6 +841,7 @@ export default function WhatsAppInboxPage() {
 	const [selectedId, setSelectedId] = useState<string | null>(null);
 	const [showAssignDialog, setShowAssignDialog] = useState(false);
 	const [showTransferDialog, setShowTransferDialog] = useState(false);
+	const [quickReplyText, setQuickReplyText] = useState<string | null>(null);
 
 	const { conversations, loading, pagination } = useWhatsAppInbox({
 		status:
@@ -930,6 +948,8 @@ export default function WhatsAppInboxPage() {
 					onAddNote={async (content) => {
 						await addNote(content);
 					}}
+					quickReplyText={quickReplyText}
+					onQuickReplyUsed={() => setQuickReplyText(null)}
 				/>
 
 				<div
@@ -956,6 +976,7 @@ export default function WhatsAppInboxPage() {
 							onRemoveTag={async (tagId) => {
 								await apiRemoveTag(conversation.id, tagId);
 							}}
+							onQuickReply={(content) => setQuickReplyText(content)}
 						/>
 					)}
 				</div>
