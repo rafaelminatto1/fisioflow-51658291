@@ -107,6 +107,7 @@ export const exercises = pgTable(
 
 		// Equipamentos
 		equipment: text("equipment").array().default([]),
+		alternativeEquipment: text("alternative_equipment").array().default([]),
 
 		// Parâmetros padrão
 		setsRecommended: integer("sets_recommended"),
