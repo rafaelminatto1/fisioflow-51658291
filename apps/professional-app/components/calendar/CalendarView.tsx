@@ -28,6 +28,12 @@ interface CalendarViewProps {
 	viewMode: ViewMode;
 	onViewModeChange: (mode: ViewMode) => void;
 	onReschedule?: (id: string, newDate: Date, time: string) => void;
+	onRescheduleRequest?: (
+		id: string,
+		newDate: Date,
+		time: string,
+		confirm: (confirm: boolean) => void,
+	) => void;
 }
 
 export const CalendarView = ({
@@ -37,6 +43,7 @@ export const CalendarView = ({
 	viewMode,
 	onViewModeChange,
 	onReschedule,
+	onRescheduleRequest,
 }: CalendarViewProps) => {
 	const colors = useColors();
 
@@ -117,6 +124,7 @@ export const CalendarView = ({
 						appointments={appointments}
 						startHour={7}
 						onReschedule={onReschedule}
+						onRescheduleRequest={onRescheduleRequest}
 					/>
 				)}
 				{viewMode === "week" && (
@@ -125,6 +133,7 @@ export const CalendarView = ({
 						appointments={appointments}
 						startHour={7}
 						onReschedule={onReschedule}
+						onRescheduleRequest={onRescheduleRequest}
 					/>
 				)}
 				{viewMode === "month" && (
