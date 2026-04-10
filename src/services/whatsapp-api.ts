@@ -175,9 +175,15 @@ export async function fetchConversation(
 	if (params?.messageLimit)
 		query.set("messageLimit", String(params.messageLimit));
 	const qs = query.toString();
-	return request<{ conversation: Conversation; messages: Message[] }>(
-		`${BASE}/conversations/${id}${qs ? `?${qs}` : ""}`,
-	);
+	const res = await request<{
+		conversation: Conversation;
+		messages: Message[];
+	}>(`${BASE}/conversations/${id}${qs ? `?${qs}` : ""}`);
+	if ("data" in res && !("conversation" in res)) {
+		const d = (res as any).data;
+		return { conversation: d, messages: d.messages || [] };
+	}
+	return res;
 }
 
 export async function sendMessage(
@@ -185,10 +191,14 @@ export async function sendMessage(
 	content: string,
 	options?: { type?: string; attachmentUrl?: string },
 ) {
-	return request<Message>(`${BASE}/conversations/${conversationId}/messages`, {
-		method: "POST",
-		body: JSON.stringify({ content, ...options }),
-	});
+	const res = await request<Message | { data: Message }>(
+		`${BASE}/conversations/${conversationId}/messages`,
+		{
+			method: "POST",
+			body: JSON.stringify({ content, ...options }),
+		},
+	);
+	return "data" in (res as any) ? (res as any).data : res;
 }
 
 export async function sendInteractiveMessage(
@@ -196,13 +206,14 @@ export async function sendInteractiveMessage(
 	type: string,
 	data: Record<string, unknown>,
 ) {
-	return request<Message>(
+	const res = await request<Message | { data: Message }>(
 		`${BASE}/conversations/${conversationId}/interactive`,
 		{
 			method: "POST",
 			body: JSON.stringify({ type, data }),
 		},
 	);
+	return "data" in (res as any) ? (res as any).data : res;
 }
 
 export async function assignConversation(
@@ -211,13 +222,14 @@ export async function assignConversation(
 	team?: string,
 	reason?: string,
 ) {
-	return request<Conversation>(
+	const res = await request<Conversation | { data: Conversation }>(
 		`${BASE}/conversations/${conversationId}/assign`,
 		{
 			method: "POST",
 			body: JSON.stringify({ assignedTo, team, reason }),
 		},
 	);
+	return "data" in (res as any) ? (res as any).data : res;
 }
 
 export async function transferConversation(
@@ -226,30 +238,36 @@ export async function transferConversation(
 	team?: string,
 	reason?: string,
 ) {
-	return request<Conversation>(
+	const res = await request<Conversation | { data: Conversation }>(
 		`${BASE}/conversations/${conversationId}/transfer`,
 		{
 			method: "POST",
 			body: JSON.stringify({ newAssignee, team, reason }),
 		},
 	);
+	return "data" in (res as any) ? (res as any).data : res;
 }
 
 export async function addNote(conversationId: string, content: string) {
-	return request<Message>(`${BASE}/conversations/${conversationId}/notes`, {
-		method: "POST",
-		body: JSON.stringify({ content }),
-	});
+	const res = await request<Message | { data: Message }>(
+		`${BASE}/conversations/${conversationId}/notes`,
+		{
+			method: "POST",
+			body: JSON.stringify({ content }),
+		},
+	);
+	return "data" in (res as any) ? (res as any).data : res;
 }
 
 export async function updateStatus(conversationId: string, status: string) {
-	return request<Conversation>(
+	const res = await request<Conversation | { data: Conversation }>(
 		`${BASE}/conversations/${conversationId}/status`,
 		{
 			method: "PUT",
 			body: JSON.stringify({ status }),
 		},
 	);
+	return "data" in (res as any) ? (res as any).data : res;
 }
 
 export async function fetchContacts(filters?: {
@@ -262,29 +280,36 @@ export async function fetchContacts(filters?: {
 	if (filters?.page) params.set("page", String(filters.page));
 	if (filters?.limit) params.set("limit", String(filters.limit));
 	const qs = params.toString();
-	return request<{
+	const res = await request<{
 		data: Contact[];
 		pagination: { page: number; limit: number; total: number };
 	}>(`${BASE}/contacts${qs ? `?${qs}` : ""}`);
+	return res;
 }
 
 export async function fetchContact(id: string) {
-	return request<Contact>(`${BASE}/contacts/${id}`);
+	const res = await request<{ data: Contact } | Contact>(
+		`${BASE}/contacts/${id}`,
+	);
+	return "data" in (res as any) ? (res as any).data : res;
 }
 
 export async function fetchMetrics() {
-	return request<Metrics>(`${BASE}/metrics`);
+	const res = await request<{ data: Metrics } | Metrics>(`${BASE}/metrics`);
+	return "data" in (res as any) ? (res as any).data : res;
 }
 
 export async function fetchTags() {
-	return request<Tag[]>(`${BASE}/tags`);
+	const res = await request<{ data: Tag[] } | Tag[]>(`${BASE}/tags`);
+	return Array.isArray(res) ? res : ((res as any).data ?? res);
 }
 
 export async function createTag(name: string, color: string) {
-	return request<Tag>(`${BASE}/tags`, {
+	const res = await request<{ data: Tag } | Tag>(`${BASE}/tags`, {
 		method: "POST",
 		body: JSON.stringify({ name, color }),
 	});
+	return "data" in (res as any) ? (res as any).data : res;
 }
 
 export async function addTags(conversationId: string, tagIds: string[]) {
@@ -307,37 +332,55 @@ export async function fetchQuickReplies(team?: string) {
 	const params = new URLSearchParams();
 	if (team) params.set("team", team);
 	const qs = params.toString();
-	return request<QuickReply[]>(`${BASE}/quick-replies${qs ? `?${qs}` : ""}`);
+	const res = await request<{ data: QuickReply[] } | QuickReply[]>(
+		`${BASE}/quick-replies${qs ? `?${qs}` : ""}`,
+	);
+	return Array.isArray(res) ? res : ((res as any).data ?? res);
 }
 
 export async function createQuickReply(data: Omit<QuickReply, "id">) {
-	return request<QuickReply>(`${BASE}/quick-replies`, {
-		method: "POST",
-		body: JSON.stringify(data),
-	});
+	const res = await request<{ data: QuickReply } | QuickReply>(
+		`${BASE}/quick-replies`,
+		{
+			method: "POST",
+			body: JSON.stringify(data),
+		},
+	);
+	return "data" in (res as any) ? (res as any).data : res;
 }
 
 export async function fetchAutomationRules() {
-	return request<AutomationRule[]>(`${BASE}/automations`);
+	const res = await request<{ data: AutomationRule[] } | AutomationRule[]>(
+		`${BASE}/automations`,
+	);
+	return Array.isArray(res) ? res : ((res as any).data ?? res);
 }
 
 export async function createAutomationRule(
 	data: Omit<AutomationRule, "id" | "createdAt" | "updatedAt">,
 ) {
-	return request<AutomationRule>(`${BASE}/automations`, {
-		method: "POST",
-		body: JSON.stringify(data),
-	});
+	const res = await request<{ data: AutomationRule } | AutomationRule>(
+		`${BASE}/automations`,
+		{
+			method: "POST",
+			body: JSON.stringify(data),
+		},
+	);
+	return "data" in (res as any) ? (res as any).data : res;
 }
 
 export async function updateAutomationRule(
 	id: string,
 	data: Partial<AutomationRule>,
 ) {
-	return request<AutomationRule>(`${BASE}/automations/${id}`, {
-		method: "PUT",
-		body: JSON.stringify(data),
-	});
+	const res = await request<{ data: AutomationRule } | AutomationRule>(
+		`${BASE}/automations/${id}`,
+		{
+			method: "PUT",
+			body: JSON.stringify(data),
+		},
+	);
+	return "data" in (res as any) ? (res as any).data : res;
 }
 
 export async function deleteAutomationRule(id: string) {
@@ -347,18 +390,29 @@ export async function deleteAutomationRule(id: string) {
 }
 
 export async function fetchTemplates() {
-	return request<Template[]>(`${BASE}/templates`);
+	const res = await request<{ data: Template[] } | Template[]>(
+		`${BASE}/templates`,
+	);
+	return Array.isArray(res) ? res : ((res as any).data ?? res);
 }
 
 export async function syncTemplatesWithMeta() {
-	return request<{ synced: number }>(`${BASE}/templates/sync`, {
-		method: "POST",
-	});
+	const res = await request<{ data: { synced: number } } | { synced: number }>(
+		`${BASE}/templates/sync`,
+		{
+			method: "POST",
+		},
+	);
+	return "data" in (res as any) ? (res as any).data : res;
 }
 
 export async function updateTemplate(id: string, data: Partial<Template>) {
-	return request<Template>(`${BASE}/templates/${id}`, {
-		method: "PUT",
-		body: JSON.stringify(data),
-	});
+	const res = await request<{ data: Template } | Template>(
+		`${BASE}/templates/${id}`,
+		{
+			method: "PUT",
+			body: JSON.stringify(data),
+		},
+	);
+	return "data" in (res as any) ? (res as any).data : res;
 }

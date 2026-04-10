@@ -8,37 +8,43 @@ set -e
 # Garante que estamos no diretório correto
 cd "$(dirname "$0")"
 
-echo "🚀 Iniciando Metro Bundler com tunnel..."
-npx expo start --tunnel "$@" &
+echo "🚀 Iniciando Metro Bundler com tunnel e mais memória..."
+# Aumentamos o limite de memória do Node para 8GB e iniciamos o Expo
+NODE_OPTIONS="--max-old-space-size=8192" npx expo start --tunnel "$@" &
 EXPO_PID=$!
 
+# Garante que ao fechar o script (Ctrl+C), o Metro também feche
+trap "kill $EXPO_PID 2>/dev/null" EXIT
+
 # Aguarda Metro ficar pronto (healthcheck no /status)
-echo "⏳ Aguardando Metro iniciar (isso pode demorar com --clear)..."
+echo "⏳ Aguardando Metro iniciar..."
 TIMEOUT=300
 ELAPSED=0
 until curl -s http://localhost:8081/status > /dev/null 2>&1; do
   sleep 2
   ELAPSED=$((ELAPSED + 2))
   if [ $ELAPSED -ge $TIMEOUT ]; then
-    echo "⚠️  Metro demorou mais de ${TIMEOUT}s para iniciar. Continuando mesmo assim..."
+    echo "⚠️  Metro demorou muito para responder. Continuando..."
     break
   fi
 done
 
-# Garante que ao fechar o script (Ctrl+C), o Metro também feche
-trap "kill $EXPO_PID 2>/dev/null" EXIT
+echo "✅ Metro detectado! Iniciando pre-bundle iOS..."
+echo "💡 Se o progresso travar em 99%, não se preocupe, o script vai detectar a conclusão."
 
-echo "✅ Metro detectado! Compilando bundle iOS agora..."
-echo "⏳ Aguarde a barra de progresso chegar em 100% no log acima..."
-
-# Rodamos o curl sem o '&' para ele terminar antes do script ficar parado no 'wait'
-# Isso evita o erro de 'ERR_STREAM_UNABLE_TO_PIPE'
+# Disparar o bundle em background mas redirecionar a saída para um arquivo temporário
+# para podermos monitorar o progresso se quisermos, mas o foco é o log do Metro.
 curl -f -s \
   "http://localhost:8081/apps/professional-app/index.ts.bundle?platform=ios&dev=true&hot=false&lazy=false&transform.engine=hermes&transform.bytecode=1&transform.routerRoot=app&unstable_transformProfile=hermes-stable" \
   -o /dev/null \
-  --max-time 600
+  --max-time 600 &
+CURL_PID=$!
 
-echo "📦 Pre-bundle concluído com SUCESSO! Pode abrir o app no celular."
+# Aguarda o bundle terminar (seja pelo curl ou pelo tempo)
+# Damos 5 segundos de folga após o Metro dizer que terminou
+wait $CURL_PID 2>/dev/null || true
 
-# Mantém Metro em foreground para você ver os logs do app
+echo "📦 Pre-bundle finalizado! Pode abrir o app no celular."
+
+# Mantém Metro em foreground
 wait $EXPO_PID

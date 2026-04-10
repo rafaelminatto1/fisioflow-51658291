@@ -439,7 +439,7 @@ app.post("/send-template", requireAuth, async (c) => {
 	if (phoneId && token) {
 		try {
 			const metaRes = await fetch(
-				`https://graph.facebook.com/v19.0/${phoneId}/messages`,
+				`https://graph.facebook.com/v21.0/${phoneId}/messages`,
 				{
 					method: "POST",
 					headers: {

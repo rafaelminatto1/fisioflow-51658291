@@ -9,7 +9,7 @@
 import pg from 'pg';
 
 const { Client } = pg;
-const DB_URL = 'postgresql://neondb_owner:npg_GDT83hbugqXf@ep-wandering-bonus-acj4zwvo-pooler.sa-east-1.aws.neon.tech/neondb?sslmode=require';
+const DB_URL = 'process.env.DATABASE_URL
 
 const SQL = `
 -- ═══════════════════════════════════════════════════════
