@@ -20,8 +20,8 @@ routes = [
 [[hyperdrive]]
 binding = "HYPERDRIVE"
 id = "12b9fefcfbc04074a63342a9212e1b4f"
-max_age = 60
-max_stale = 300
+max_age = 60 # Default to 1-minute cache for non-prod
+max_stale = 300 # Allow 5 minutes stale for non-prod
 
 # ===== CLOUDFLARE R2 (Media Storage) =====
 # Crie com: wrangler r2 bucket create fisioflow-media

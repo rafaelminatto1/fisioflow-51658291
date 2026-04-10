@@ -355,9 +355,16 @@ export default function DashboardScreen() {
                     <Text style={[styles.appointmentLabel, { color: colors.textSecondary }]}>
                       Próxima Consulta
                     </Text>
-                    <Text style={[styles.appointmentTime, { color: colors.text }]}>
-                      {getNextAppointmentLabel() || '--'}
-                    </Text>
+                    <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+                      <Text style={[styles.appointmentTime, { color: colors.text }]}>
+                        {getNextAppointmentLabel() || '--'}
+                      </Text>
+                      {nextAppointment.isGroup && (
+                        <View style={[styles.groupBadge, { backgroundColor: colors.primary + '20' }]}>
+                          <Text style={[styles.groupBadgeText, { color: colors.primary }]}>Grupo</Text>
+                        </View>
+                      )}
+                    </View>
                     <Text
                       style={[styles.appointmentDetails, { color: colors.textSecondary }]}
                       numberOfLines={1}
@@ -796,5 +803,15 @@ const styles = StyleSheet.create({
   },
   bottomSpacing: {
     height: 16,
+  },
+  groupBadge: {
+    paddingHorizontal: 8,
+    paddingVertical: 2,
+    borderRadius: 6,
+  },
+  groupBadgeText: {
+    fontSize: 10,
+    fontWeight: '700',
+    textTransform: 'uppercase',
   },
 });

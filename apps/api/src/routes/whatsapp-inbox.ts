@@ -157,7 +157,7 @@ app.post("/conversations/:id/messages", requireAuth, async (c) => {
 				}
 
 				const metaRes = await fetch(
-					`https://graph.facebook.com/v19.0/${phoneId}/messages`,
+					`https://graph.facebook.com/v21.0/${phoneId}/messages`,
 					{
 						method: "POST",
 						headers: {
@@ -179,7 +179,7 @@ app.post("/conversations/:id/messages", requireAuth, async (c) => {
 		const savedMsg = await addMessage(
 			pool,
 			id,
-			conv.org_id,
+			conv.organization_id,
 			conv.contact_id,
 			"outbound",
 			"agent",
@@ -197,7 +197,7 @@ app.post("/conversations/:id/messages", requireAuth, async (c) => {
 			savedMsg.status = "sent";
 		}
 
-		await broadcastToOrg(c.env, conv.org_id, {
+		await broadcastToOrg(c.env, conv.organization_id, {
 			type: "whatsapp_message",
 			conversationId: id,
 			message: savedMsg,
@@ -301,7 +301,7 @@ app.post("/conversations/:id/interactive", requireAuth, async (c) => {
 		const savedMsg = await addMessage(
 			pool,
 			id,
-			conv.org_id,
+			conv.organization_id,
 			conv.contact_id,
 			"outbound",
 			"agent",
@@ -311,7 +311,7 @@ app.post("/conversations/:id/interactive", requireAuth, async (c) => {
 			metaMessageId ?? undefined,
 		);
 
-		await broadcastToOrg(c.env, conv.org_id, {
+		await broadcastToOrg(c.env, conv.organization_id, {
 			type: "whatsapp_message",
 			conversationId: id,
 			message: savedMsg,
@@ -352,11 +352,11 @@ app.post("/conversations/:id/assign", requireAuth, async (c) => {
 		);
 
 		const convResult = await pool.query(
-			`SELECT org_id FROM wa_conversations WHERE id = $1`,
+			`SELECT organization_id FROM wa_conversations WHERE id = $1`,
 			[id],
 		);
 		if (convResult.rows.length > 0) {
-			await broadcastToOrg(c.env, convResult.rows[0].org_id, {
+			await broadcastToOrg(c.env, convResult.rows[0].organization_id, {
 				type: "whatsapp_assignment",
 				conversationId: id,
 				assignedTo: body.assignedTo,
@@ -399,11 +399,11 @@ app.post("/conversations/:id/transfer", requireAuth, async (c) => {
 		);
 
 		const convResult = await pool.query(
-			`SELECT org_id FROM wa_conversations WHERE id = $1`,
+			`SELECT organization_id FROM wa_conversations WHERE id = $1`,
 			[id],
 		);
 		if (convResult.rows.length > 0) {
-			await broadcastToOrg(c.env, convResult.rows[0].org_id, {
+			await broadcastToOrg(c.env, convResult.rows[0].organization_id, {
 				type: "whatsapp_transfer",
 				conversationId: id,
 				newAssignee: body.newAssignee,
@@ -497,7 +497,7 @@ app.get("/contacts", requireAuth, async (c) => {
 	const offset = (pageNum - 1) * limitNum;
 
 	try {
-		const conditions = ["org_id = $1"];
+		const conditions = ["organization_id = $1"];
 		const params: any[] = [user.organizationId];
 		let idx = 2;
 
@@ -532,7 +532,7 @@ app.get("/contacts/:id", requireAuth, async (c) => {
 
 	try {
 		const result = await pool.query(
-			`SELECT * FROM whatsapp_contacts WHERE id = $1 AND org_id = $2`,
+			`SELECT * FROM whatsapp_contacts WHERE id = $1 AND organization_id = $2`,
 			[id, user.organizationId],
 		);
 
@@ -566,7 +566,7 @@ app.get("/tags", requireAuth, async (c) => {
 
 	try {
 		const result = await pool.query(
-			`SELECT * FROM wa_tags WHERE org_id = $1 ORDER BY name`,
+			`SELECT * FROM wa_tags WHERE organization_id = $1 ORDER BY name`,
 			[user.organizationId],
 		);
 		return c.json({ data: result.rows });
@@ -587,7 +587,7 @@ app.post("/tags", requireAuth, async (c) => {
 
 	try {
 		const result = await pool.query(
-			`INSERT INTO wa_tags (org_id, name, color) VALUES ($1, $2, $3) RETURNING *`,
+			`INSERT INTO wa_tags (organization_id, name, color) VALUES ($1, $2, $3) RETURNING *`,
 			[user.organizationId, body.name, body.color ?? null],
 		);
 		return c.json({ data: result.rows[0] }, 201);
@@ -646,7 +646,7 @@ app.get("/quick-replies", requireAuth, async (c) => {
 	const { team } = c.req.query();
 
 	try {
-		const conditions = ["org_id = $1"];
+		const conditions = ["organization_id = $1"];
 		const params: any[] = [user.organizationId];
 		let idx = 2;
 
@@ -683,7 +683,7 @@ app.post("/quick-replies", requireAuth, async (c) => {
 
 	try {
 		const result = await pool.query(
-			`INSERT INTO wa_quick_replies (org_id, title, content, team, category, variables, created_by)
+			`INSERT INTO wa_quick_replies (organization_id, title, content, team, category, variables, created_by)
        VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING *`,
 			[
 				user.organizationId,

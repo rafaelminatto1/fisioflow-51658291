@@ -34,6 +34,12 @@ export interface ApiAppointment {
   status: string;
   type?: string;
   notes?: string;
+  is_group?: boolean;
+  isGroup?: boolean;
+  additional_names?: string;
+  additionalNames?: string;
+  is_unlimited?: boolean;
+  isUnlimited?: boolean;
   session_type?: string;
   created_at?: string;
   updated_at?: string;
