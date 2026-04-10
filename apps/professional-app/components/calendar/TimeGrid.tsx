@@ -26,7 +26,7 @@ export const TimeGrid = ({
 				<View key={hour} style={[styles.row, { height: rowHeight }]}>
 					<View style={styles.timeLabelContainer}>
 						<Text style={styles.timeLabel}>
-							{`${hour.toString().padStart(2, "0")}:00`}
+							{hour.toString().padStart(2, "0")}
 						</Text>
 					</View>
 					<View style={[styles.gridLine, { borderTopColor: "#e2e8f0" }]} />
@@ -42,16 +42,15 @@ const styles = StyleSheet.create({
 	},
 	row: {
 		flexDirection: "row",
-		alignItems: "flex-start", // Match HTML flex-start alignment
+		alignItems: "center",
 	},
 	timeLabelContainer: {
 		width: TIME_LABEL_WIDTH,
 		alignItems: "flex-end",
-		paddingTop: 10,
-		paddingRight: 6,
+		paddingRight: 2,
 	},
 	timeLabel: {
-		fontSize: 9,
+		fontSize: 7,
 		fontWeight: "600",
 		color: "#94a3b8",
 	},
