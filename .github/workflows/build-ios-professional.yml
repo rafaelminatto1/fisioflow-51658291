@@ -1,0 +1,20 @@
+name: Build iOS Professional
+
+on:
+  workflow_dispatch:
+    inputs:
+      app:
+        description: 'App'
+        required: true
+        default: 'professional-app'
+      profile:
+        description: 'Profile'
+        required: true
+        default: 'development'
+
+jobs:
+  build:
+    runs-on: macos-latest
+    steps:
+      - name: Test
+        run: echo "Testing trigger for ${{ inputs.app }}"
