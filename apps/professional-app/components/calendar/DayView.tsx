@@ -20,6 +20,12 @@ interface DayViewProps {
 	startHour?: number;
 	endHour?: number;
 	onReschedule?: (id: string, newDate: Date, time: string) => void;
+	onRescheduleRequest?: (
+		id: string,
+		newDate: Date,
+		time: string,
+		confirm: (confirm: boolean) => void,
+	) => void;
 }
 
 const HOUR_HEIGHT = 60; // Must match TimeGrid
@@ -30,6 +36,7 @@ export const DayView = ({
 	startHour = 7,
 	endHour = 20,
 	onReschedule,
+	onRescheduleRequest,
 }: DayViewProps) => {
 	const colors = useColors();
 	const { width: windowWidth } = useWindowDimensions();
@@ -152,6 +159,7 @@ export const DayView = ({
 					allDays={[date]}
 					columnWidth={availableWidth}
 					onReschedule={onReschedule}
+					onRescheduleRequest={onRescheduleRequest}
 					onScrollEnable={setScrollEnabled}
 					colors={{
 						primary: colors.primary,
