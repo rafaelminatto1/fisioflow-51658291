@@ -74,6 +74,8 @@ const ACCEPTED_TYPES = [
 	"image/gif",
 	"image/webp",
 	"application/pdf",
+	"application/msword",
+	"application/vnd.openxmlformats-officedocument.wordprocessingml.document",
 ];
 
 const CATEGORY_LABELS: Record<SessionAttachmentCategory, string> = {
@@ -164,7 +166,7 @@ export const SessionImageUpload: React.FC<SessionImageUploadProps> = ({
 			if (!ACCEPTED_TYPES.includes(file.type)) {
 				toast({
 					title: "Tipo de arquivo não suportado",
-					description: `O arquivo "${file.name}" não é suportado. Use JPG, PNG, GIF, WebP ou PDF.`,
+					description: `O arquivo "${file.name}" não é suportado. Use JPG, PNG, GIF, WebP, PDF ou Word.`,
 					variant: "destructive",
 				});
 				errorCount++;
@@ -335,7 +337,7 @@ export const SessionImageUpload: React.FC<SessionImageUploadProps> = ({
 											Arraste arquivos aqui ou clique para selecionar
 										</p>
 										<p className="text-xs text-muted-foreground">
-											JPG, PNG, PDF (máx. 10MB)
+											JPG, PNG, PDF, Word (máx. 10MB)
 										</p>
 									</div>
 								)}
