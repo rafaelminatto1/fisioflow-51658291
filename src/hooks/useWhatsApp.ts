@@ -25,16 +25,22 @@ export function useWhatsAppInbox(filters?: ConversationFilters) {
 	});
 
 	const refetch = useCallback(async () => {
-		setLoading(true);
-		setError(null);
 		try {
 			const result = await fetchConversations(filters);
 			setConversations(result.data);
 			setPagination(result.pagination);
+			setError(null);
 		} catch (err) {
-			setError(
-				err instanceof Error ? err.message : "Failed to load conversations",
-			);
+			const errorMessage =
+				err instanceof Error ? err.message : "Failed to load conversations";
+			const isAuthError =
+				errorMessage.includes("401") ||
+				errorMessage.includes("token") ||
+				errorMessage.includes("authorized") ||
+				errorMessage.includes("sessao");
+			if (!isAuthError) {
+				setError(errorMessage);
+			}
 		} finally {
 			setLoading(false);
 		}
@@ -70,9 +76,16 @@ export function useWhatsAppConversation(id: string | null) {
 			setConversation(result.conversation);
 			setMessages(result.messages);
 		} catch (err) {
-			setError(
-				err instanceof Error ? err.message : "Failed to load conversation",
-			);
+			const errorMessage =
+				err instanceof Error ? err.message : "Failed to load conversation";
+			const isAuthError =
+				errorMessage.includes("401") ||
+				errorMessage.includes("token") ||
+				errorMessage.includes("authorized") ||
+				errorMessage.includes("sessao");
+			if (!isAuthError) {
+				setError(errorMessage);
+			}
 		} finally {
 			setLoading(false);
 		}
