@@ -2,9 +2,142 @@ name: Build Manual iOS
 
 on:
   workflow_dispatch:
+    inputs:
+      app:
+        description: 'App'
+        required: true
+        default: 'professional-app'
+      profile:
+        description: 'Profile'
+        required: true
+        default: 'development'
+
+env:
+  NODE_VERSION: '22'
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: 'true'
 
 jobs:
-  test:
-    runs-on: ubuntu-latest
+  build-ios:
+    name: Build iOS - ${{ inputs.app }}
+    runs-on: macos-latest
+    timeout-minutes: 90
+
     steps:
-      - run: echo "Hello"
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'pnpm'
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile --filter "@fisioflow/${{ inputs.app }}..."
+
+      - name: Expo Prebuild
+        working-directory: apps/${{ inputs.app }}
+        run: npx expo prebuild --platform ios --clean --non-interactive
+        env:
+          EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
+
+      - name: Patch Podfile
+        working-directory: apps/${{ inputs.app }}/ios
+        run: |
+          cat >> Podfile << 'PODFILE_PATCH'
+post_install do |installer|
+  installer.pods_project.targets.each do |target|
+    target.build_configurations.each do |config|
+      config.build_settings['SWIFT_STRICT_CONCURRENCY'] = 'minimal'
+    end
+  end
+end
+PODFILE_PATCH
+
+      - name: Pod install
+        working-directory: apps/${{ inputs.app }}/ios
+        run: pod install --repo-update
+
+      - name: Importar certificado p12
+        env:
+          CERTIFICATE_BASE64: ${{ secrets.APPLE_CERTIFICATE_P12_BASE64 }}
+          CERTIFICATE_PASSWORD: ${{ secrets.APPLE_CERTIFICATE_PASSWORD }}
+          KEYCHAIN_PASSWORD: ${{ secrets.KEYCHAIN_PASSWORD }}
+        run: |
+          CERT_PATH=$RUNNER_TEMP/cert.p12
+          KEYCHAIN_PATH=$RUNNER_TEMP/app.keychain-db
+          echo "$CERTIFICATE_BASE64" | tr -d '\n ' | base64 --decode > "$CERT_PATH"
+          security create-keychain -p "$KEYCHAIN_PASSWORD" "$KEYCHAIN_PATH"
+          security set-keychain-settings -lut 21600 "$KEYCHAIN_PATH"
+          security unlock-keychain -p "$KEYCHAIN_PASSWORD" "$KEYCHAIN_PATH"
+          security import "$CERT_PATH" -P "$CERTIFICATE_PASSWORD" -A -t cert -f pkcs12 -k "$KEYCHAIN_PATH"
+          security set-key-partition-list -S apple-tool:,apple: -k "$KEYCHAIN_PASSWORD" "$KEYCHAIN_PATH"
+
+      - name: Importar provisioning profile
+        env:
+          PROFILE_BASE64_PACIENTES: ${{ secrets.APPLE_PROVISIONING_PROFILE_PACIENTES_BASE64 }}
+          PROFILE_BASE64_PROFISSIONAIS: ${{ secrets.APPLE_PROVISIONING_PROFILE_PROFISSIONAIS_BASE64 }}
+        run: |
+          PROFILE_PATH=$RUNNER_TEMP/profile.mobileprovision
+          PROFILE_PLIST=$RUNNER_TEMP/profile.plist
+          if [ "${{ inputs.app }}" = "patient-app" ]; then
+            PROFILE_BASE64="$PROFILE_BASE64_PACIENTES"
+          else
+            PROFILE_BASE64="$PROFILE_BASE64_PROFISSIONAIS"
+          fi
+          echo "$PROFILE_BASE64" | tr -d '\n ' | base64 --decode > "$PROFILE_PATH"
+          security cms -D -i "$PROFILE_PATH" > "$PROFILE_PLIST"
+          PROFILE_UUID=$(/usr/libexec/PlistBuddy -c "Print UUID" "$PROFILE_PLIST")
+          mkdir -p ~/Library/MobileDevice/Provisioning\ Profiles
+          cp "$PROFILE_PATH" ~/Library/MobileDevice/Provisioning\ Profiles/"$PROFILE_UUID.mobileprovision"
+          echo "PROFILE_UUID=$PROFILE_UUID" >> $GITHUB_ENV
+
+      - name: Detectar workspace e schemes
+        working-directory: apps/${{ inputs.app }}/ios
+        run: |
+          WORKSPACE=$(ls -d *.xcworkspace | head -1)
+          SCHEME=$(echo "$WORKSPACE" | sed 's/\.xcworkspace//')
+          echo "WORKSPACE=$WORKSPACE" >> $GITHUB_ENV
+          echo "SCHEME=$SCHEME" >> $GITHUB_ENV
+
+      - name: Build & Archive
+        working-directory: apps/${{ inputs.app }}/ios
+        env:
+          APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
+          SENTRY_DISABLE_AUTO_UPLOAD: "true"
+        run: |
+          xcodebuild \
+            -workspace "$WORKSPACE" \
+            -scheme "$SCHEME" \
+            -configuration Release \
+            -destination "generic/platform=iOS" \
+            -archivePath "$RUNNER_TEMP/app.xcarchive" \
+            archive \
+            CODE_SIGN_STYLE=Manual \
+            CODE_SIGN_IDENTITY="Apple Distribution" \
+            DEVELOPMENT_TEAM="$APPLE_TEAM_ID" \
+            PROVISIONING_PROFILE="$PROFILE_UUID" \
+            SKIP_INSTALL=NO
+
+      - name: Empacotar IPA
+        run: |
+          APP_PATH=$(find "$RUNNER_TEMP/app.xcarchive/Products" -name "*.app" | head -1)
+          APP_NAME=$(basename "$APP_PATH" .app)
+          mkdir -p "$RUNNER_TEMP/ipa-stage/Payload"
+          cp -r "$APP_PATH" "$RUNNER_TEMP/ipa-stage/Payload/"
+          mkdir -p "$RUNNER_TEMP/ipa"
+          (cd "$RUNNER_TEMP/ipa-stage" && zip -qr "$RUNNER_TEMP/ipa/${APP_NAME}.ipa" Payload/)
+
+      - name: Upload IPA
+        uses: actions/upload-artifact@v4
+        with:
+          name: ios-${{ inputs.app }}-${{ github.sha }}
+          path: ${{ runner.temp }}/ipa/*.ipa
+          retention-days: 14
+
+      - name: Limpar keychain
+        if: always()
+        run: security delete-keychain "$RUNNER_TEMP/app.keychain-db" || true
