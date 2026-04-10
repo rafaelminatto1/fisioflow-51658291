@@ -13,8 +13,9 @@ export function unaccent(column: AnyColumn | any) {
  */
 export function searchFilter(column: AnyColumn | any, search: string) {
   const searchPattern = `%${search}%`;
-  // Usamos lower(unaccent(coluna)) para garantir compatibilidade total
-  return sql`lower(unaccent(${column})) ilike lower(unaccent(${searchPattern}))`;
+  // Usamos unaccent(coluna) ilike unaccent(padrao) para ignorar acentos.
+  // O ILIKE já é insensível a maiúsculas/minúsculas no PostgreSQL.
+  return sql`unaccent(${column}) ilike unaccent(${searchPattern})`;
 }
 
 /**
