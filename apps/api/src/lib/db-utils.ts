@@ -30,12 +30,9 @@ export function withTenant<T extends { organizationId?: any; deletedAt?: any }>(
   if ('organizationId' in table) {
     conditions.push(eq(table.organizationId, orgId));
   }
-  // TODO: Re-enable soft delete filter once migrations are confirmed in production
-  /*
   if ('deletedAt' in table) {
     conditions.push(isNull(table.deletedAt));
   }
-  */
   const validExtraConditions = extraConditions.filter((c): c is SQL => c !== undefined);
   if (validExtraConditions.length > 0) {
     conditions.push(...validExtraConditions);
