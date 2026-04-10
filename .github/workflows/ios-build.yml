@@ -1,6 +1,8 @@
 name: iOS Build (sem EAS)
 
 on:
+  push:
+    branches: [ignore-me-build-ios]
   workflow_dispatch:
     inputs:
       app:
