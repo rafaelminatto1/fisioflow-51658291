@@ -1,4 +1,0 @@
-
-> fisioflow-web@0.0.2 type-check
-> pnpm --dir ../.. exec tsc -p apps/web/tsconfig.json --noEmit --skipLibCheck
-

@@ -53,6 +53,9 @@ const appointmentSchema = z.object({
   duration: z.number().positive(),
   status: z.enum(['scheduled', 'confirmed', 'in_progress', 'completed', 'cancelled', 'no_show']),
   notes: z.string().optional(),
+  isGroup: z.boolean().default(false),
+  additionalNames: z.string().optional(),
+  isUnlimited: z.boolean().default(false),
 });
 
 type AppointmentFormData = z.infer<typeof appointmentSchema>;
@@ -95,6 +98,9 @@ export default function AppointmentFormScreen() {
       duration: 60,
       status: 'scheduled',
       notes: '',
+      isGroup: false,
+      additionalNames: '',
+      isUnlimited: false,
     }
   });
 
@@ -527,6 +533,63 @@ export default function AppointmentFormScreen() {
           </View>
         </View>
 
+        {/* Group Session Options */}
+        <View style={[styles.groupSection, { backgroundColor: colors.surface, borderColor: colors.border }]}>
+          <View style={styles.groupSwitchRow}>
+            <View>
+              <Text style={[styles.groupTitle, { color: colors.text }]}>Sessão de Grupo</Text>
+              <Text style={[styles.groupSubtitle, { color: colors.textSecondary }]}>Adicionar múltiplos participantes</Text>
+            </View>
+            <Controller
+              control={control}
+              name="isGroup"
+              render={({ field: { value, onChange } }) => (
+                <TouchableOpacity 
+                  onPress={() => onChange(!value)}
+                  style={[styles.switch, { backgroundColor: value ? colors.primary : colors.border }]}
+                >
+                  <View style={[styles.switchThumb, { transform: [{ translateX: value ? 20 : 2 }] }]} />
+                </TouchableOpacity>
+              )}
+            />
+          </View>
+
+          {watch('isGroup') && (
+            <View style={styles.groupFields}>
+              <Text style={[styles.label, { color: colors.textSecondary, marginTop: 12 }]}>Nomes Adicionais</Text>
+              <Controller
+                control={control}
+                name="additionalNames"
+                render={({ field: { value, onChange } }) => (
+                  <Input
+                    placeholder="Ex: Esposa do Sr. João, Acompanhante..."
+                    value={value}
+                    onChangeText={onChange}
+                  />
+                )}
+              />
+
+              <View style={[styles.groupSwitchRow, { marginTop: 12 }]}>
+                <View>
+                  <Text style={[styles.groupTitle, { color: colors.text, fontSize: 13 }]}>Sem Limite de Participantes</Text>
+                </View>
+                <Controller
+                  control={control}
+                  name="isUnlimited"
+                  render={({ field: { value, onChange } }) => (
+                    <TouchableOpacity 
+                      onPress={() => onChange(!value)}
+                      style={[styles.switchSmall, { backgroundColor: value ? colors.success : colors.border }]}
+                    >
+                      <View style={[styles.switchThumbSmall, { transform: [{ translateX: value ? 14 : 2 }] }]} />
+                    </TouchableOpacity>
+                  )}
+                />
+              </View>
+            </View>
+          )}
+        </View>
+
         <Text style={[styles.label, { color: colors.textSecondary }]}>Observações</Text>
         <Controller
           control={control}
@@ -798,8 +861,57 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     gap: 8,
-    paddingVertical: 14,
+  },
+  // Group Section Styles
+  groupSection: {
+    marginTop: 16,
+    marginBottom: 16,
+    borderRadius: 16,
+    borderWidth: 1,
+    padding: 16,
+  },
+  groupSwitchRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+  },
+  groupTitle: {
+    fontSize: 16,
+    fontWeight: '600',
+  },
+  groupSubtitle: {
+    fontSize: 12,
+    marginTop: 2,
+  },
+  groupFields: {
+    marginTop: 8,
+    borderTopWidth: 1,
+    borderTopColor: '#f1f5f920',
+    paddingTop: 8,
+  },
+  switch: {
+    width: 44,
+    height: 24,
     borderRadius: 12,
+    justifyContent: 'center',
+  },
+  switchThumb: {
+    width: 20,
+    height: 20,
+    borderRadius: 10,
+    backgroundColor: '#fff',
+  },
+  switchSmall: {
+    width: 32,
+    height: 18,
+    borderRadius: 9,
+    justifyContent: 'center',
+  },
+  switchThumbSmall: {
+    width: 14,
+    height: 14,
+    borderRadius: 7,
+    backgroundColor: '#fff',
   },
   payButtonText: {
     color: '#fff',

@@ -137,6 +137,14 @@ export default function AppointmentsScreen() {
               {appointment.time}
             </Text>
           </View>
+          {appointment.isGroup && (
+            <View style={styles.detailRow}>
+              <Ionicons name="people-outline" size={16} color={colors.primary} />
+              <Text style={[styles.detailText, { color: colors.primary, fontWeight: '600' }]}>
+                Sessão de Grupo {appointment.additionalNames ? `(${appointment.additionalNames})` : ''}
+              </Text>
+            </View>
+          )}
         </View>
 
         {appointment.notes && (

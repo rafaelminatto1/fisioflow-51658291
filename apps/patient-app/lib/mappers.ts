@@ -64,6 +64,9 @@ export const Mappers = {
       type: data.type,
       status: data.status,
       notes: data.notes,
+      isGroup: data.is_group ?? data.isGroup ?? false,
+      additionalNames: data.additional_names ?? data.additionalNames ?? '',
+      isUnlimited: data.is_unlimited ?? data.isUnlimited ?? false,
       location: data.location,
     };
   },

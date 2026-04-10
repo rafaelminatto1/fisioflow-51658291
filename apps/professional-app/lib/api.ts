@@ -58,6 +58,9 @@ function normalizeAppointment(apiAppointment: ApiAppointment): ApiAppointment {
     organizationId: apiAppointment.organizationId ?? apiAppointment.organization_id,
     startTime: apiAppointment.startTime ?? apiAppointment.start_time,
     endTime: apiAppointment.endTime ?? apiAppointment.end_time,
+    isGroup: apiAppointment.isGroup ?? apiAppointment.is_group,
+    additionalNames: apiAppointment.additionalNames ?? apiAppointment.additional_names,
+    isUnlimited: apiAppointment.isUnlimited ?? apiAppointment.is_unlimited,
   };
 }
 
@@ -71,6 +74,9 @@ function normalizeAppointmentPayload(
     organization_id: data.organization_id ?? data.organizationId,
     start_time: data.start_time ?? data.startTime,
     end_time: data.end_time ?? data.endTime,
+    is_group: data.is_group ?? (data as any).isGroup,
+    additional_names: data.additional_names ?? (data as any).additionalNames,
+    is_unlimited: data.is_unlimited ?? (data as any).isUnlimited,
   });
 }
 
