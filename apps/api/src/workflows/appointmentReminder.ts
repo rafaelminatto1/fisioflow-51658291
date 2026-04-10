@@ -85,7 +85,7 @@ export class AppointmentReminderWorkflow extends WorkflowEntrypoint<Env, Appoint
         : `Olá ${patientName}! Lembrete: sua consulta com ${therapistName} é ${daysAhead === 1 ? 'amanhã' : 'em 3 dias'} (${dateStr}). Confirme sua presença respondendo SIM.`;
 
     await fetch(
-      `https://graph.facebook.com/v19.0/${this.env.WHATSAPP_PHONE_NUMBER_ID}/messages`,
+      `https://graph.facebook.com/v21.0/${this.env.WHATSAPP_PHONE_NUMBER_ID}/messages`,
       {
         method: 'POST',
         headers: {

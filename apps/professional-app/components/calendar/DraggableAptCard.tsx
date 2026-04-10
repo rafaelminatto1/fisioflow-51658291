@@ -178,11 +178,23 @@ export const DraggableAptCard = ({
               </Text>
             </Animated.View>
             <Text style={styles.aptTitle} numberOfLines={1}>
-              {apt.patientName || 'Paciente'}
+              {apt.isGroup ? 'Sessão de Grupo' : (apt.patientName || 'Paciente')}
             </Text>
-            <Text style={styles.aptTime}>
-              {apt.time || format(new Date(apt.date), 'HH:mm')}
-            </Text>
+            {apt.additionalNames ? (
+              <Text style={styles.additionalPatients} numberOfLines={1}>
+                + {apt.additionalNames}
+              </Text>
+            ) : null}
+            <View style={styles.cardFooter}>
+              <Text style={styles.aptTime}>
+                {apt.time || format(new Date(apt.date), 'HH:mm')}
+              </Text>
+              {apt.isUnlimited && (
+                <View style={[styles.badge, { backgroundColor: cardColors.text + '20' }]}>
+                  <Text style={[styles.badgeText, { color: cardColors.text }]}>∞ ILIMITADO</Text>
+                </View>
+              )}
+            </View>
           </Animated.View>
         </Animated.View>
       </GestureDetector>
@@ -232,6 +244,27 @@ const styles = StyleSheet.create({
   aptTime: {
     fontSize: 12,
     color: '#64748b', // text-slate-500
+  },
+  cardFooter: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
     marginTop: 4,
+  },
+  additionalPatients: {
+    fontSize: 11,
+    color: '#64748b',
+    marginTop: -2,
+    fontStyle: 'italic',
+  },
+  badge: {
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+    borderRadius: 4,
+  },
+  badgeText: {
+    fontSize: 9,
+    fontWeight: '900',
+    letterSpacing: 0.5,
   },
 });
