@@ -38,6 +38,9 @@ export interface AppointmentBase {
   type: string;
   status: AppointmentStatus;
   notes?: string;
+  isGroup?: boolean;
+  additionalNames?: string;
+  isUnlimited?: boolean;
   createdAt: Date | string;
   updatedAt: Date | string;
 }

@@ -14,12 +14,13 @@ dotenv.config({ path: '.env.production' });
  */
 
 const NEON_API_KEY = process.env.NEON_API_KEY;
-const PROJECT_ID = 'ep-wandering-bonus-acj4zwvo'; // ID detectado na connection string
+const PROJECT_ID = 'ep-wandering-bonus-acj4zwvo'; // ID detectado na connection string de produção
 const PARENT_BRANCH_ID = 'main';
 const RETENTION_DAYS = 7;
 
 if (!NEON_API_KEY) {
-  console.error('❌ ERRO: NEON_API_KEY não encontrada no .env.production');
+  console.error('\n❌ ERRO: NEON_API_KEY não encontrada no .env.production');
+  console.error('Por favor, configure sua chave de API do console Neon para continuar.');
   process.exit(1);
 }
 
@@ -36,11 +37,12 @@ async function runBackup() {
   const timestamp = format(new Date(), 'yyyy-MM-dd-HHmm');
   const backupName = `backup-${timestamp}`;
 
-  console.log(`🚀 Iniciando backup automatizado para o projeto ${PROJECT_ID}...`);
+  console.log('\n--- FisioFlow Infrastructure: Database Backup ---');
+  console.log(`🚀 Iniciando backup para o projeto ${PROJECT_ID}...`);
 
   try {
     // 1. Criar novo branch (Snapshot)
-    console.log(`📦 Criando branch de backup: ${backupName}...`);
+    console.log(`📦 Criando snapshot branch: ${backupName}...`);
     const createRes = await client.post(`/projects/${PROJECT_ID}/branches`, {
       branch: {
         parent_id: PARENT_BRANCH_ID,
@@ -48,15 +50,15 @@ async function runBackup() {
       },
     });
 
-    console.log(`✅ Backup criado com sucesso! Branch ID: ${createRes.data.branch.id}`);
+    console.log(`✅ Snapshot criado com sucesso! (ID: ${createRes.data.branch.id})`);
 
     // 2. Limpar backups antigos (Retention)
-    console.log('🧹 Verificando backups antigos para limpeza...');
+    console.log('🧹 Verificando política de retenção (7 dias)...');
     const listRes = await client.get(`/projects/${PROJECT_ID}/branches`);
     const branches = listRes.data.branches;
 
     const backupBranches = branches.filter((b: any) => 
-      b.name.startsWith('backup-') && b.id !== createRes.data.branch.id
+      b.name.startsWith('backup-') && (createRes.data.branch? b.id !== createRes.data.branch.id : true)
     );
 
     // Ordenar por data de criação (mais antigos primeiro)
@@ -66,17 +68,24 @@ async function runBackup() {
 
     if (backupBranches.length > RETENTION_DAYS) {
       const toDelete = backupBranches.slice(0, backupBranches.length - RETENTION_DAYS);
-      console.log(`♻️ Removendo ${toDelete.length} backups antigos...`);
+      console.log(`♻️ Removendo ${toDelete.length} snapshots antigos da fila...`);
 
       for (const b of toDelete) {
-        console.log(`🗑️ Deletando branch: ${b.name} (${b.id})...`);
+        process.stdout.write(`🗑️ Deletando branch: ${b.name}... `);
         await client.delete(`/projects/${PROJECT_ID}/branches/${b.id}`);
+        console.log('OK');
       }
     }
 
-    console.log('✨ Operação de backup concluída!');
+    console.log('✨ Operação de backup concluída com sucesso!');
+    console.log('--------------------------------------------------\n');
   } catch (error: any) {
-    console.error('❌ Falha no backup:', error.response?.data || error.message);
+    console.error('\n❌ Falha Crítica no Backup fisioflow_db:');
+    if (error.response?.data) {
+      console.dir(error.response.data, { depth: null });
+    } else {
+      console.error(error.message);
+    }
     process.exit(1);
   }
 }

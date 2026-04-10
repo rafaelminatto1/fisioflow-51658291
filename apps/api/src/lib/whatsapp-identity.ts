@@ -71,7 +71,7 @@ export async function resolveOrCreateContact(
 
 				if (Object.keys(changes).length > 0) {
 					await pool.query(
-						`INSERT INTO identity_history (contact_id, org_id, changes) VALUES ($1, $2, $3)`,
+						`INSERT INTO identity_history (contact_id, organization_id, changes) VALUES ($1, $2, $3)`,
 						[contact.id, orgId, JSON.stringify(changes)],
 					);
 				}
@@ -87,7 +87,7 @@ export async function resolveOrCreateContact(
 		}
 
 		const insertResult = await pool.query(
-			`INSERT INTO whatsapp_contacts (org_id, wa_id, bsuid, parent_bsuid, username, display_name)
+			`INSERT INTO whatsapp_contacts (organization_id, wa_id, bsuid, parent_bsuid, username, display_name)
        VALUES ($1, $2, $3, $4, $5, $6)
        RETURNING *`,
 			[orgId, waId, bsuid, parentBsuid, username, displayName],
@@ -125,7 +125,7 @@ export async function findContactByPhone(
 	try {
 		const cleaned = phone.replace(/\D/g, "");
 		const result = await pool.query(
-			`SELECT * FROM whatsapp_contacts WHERE org_id = $1 AND wa_id = $2 LIMIT 1`,
+			`SELECT * FROM whatsapp_contacts WHERE organization_id = $1 AND wa_id = $2 LIMIT 1`,
 			[orgId, cleaned],
 		);
 		return result.rows[0] ?? null;
@@ -143,7 +143,7 @@ export async function findContactByBsuid(
 	if (!bsuid) return null;
 	try {
 		const result = await pool.query(
-			`SELECT * FROM whatsapp_contacts WHERE org_id = $1 AND bsuid = $2 LIMIT 1`,
+			`SELECT * FROM whatsapp_contacts WHERE organization_id = $1 AND bsuid = $2 LIMIT 1`,
 			[orgId, bsuid],
 		);
 		return result.rows[0] ?? null;

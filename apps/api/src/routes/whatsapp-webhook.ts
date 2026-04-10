@@ -128,8 +128,8 @@ async function storeRawEvent(
 	try {
 		const idempotencyKey = (body as any).entry?.[0]?.id ?? `evt_${Date.now()}`;
 		await pool.query(
-			`INSERT INTO wa_raw_events (org_id, payload, idempotency_key, created_at)
-       VALUES ($1, $2, $3, now())
+			`INSERT INTO wa_raw_events (organization_id, raw_payload, idempotency_key, created_at)
+       VALUES ($1::uuid, $2, $3, now())
        ON CONFLICT (idempotency_key) DO NOTHING`,
 			[orgId, rawBody, idempotencyKey],
 		);
@@ -309,7 +309,7 @@ async function handleStatus(
 		const mapped = statusMap[newStatus] ?? newStatus;
 
 		await pool.query(
-			`UPDATE wa_messages SET status = $1, updated_at = now() WHERE meta_message_id = $2`,
+			`UPDATE wa_messages SET status = $1 WHERE meta_message_id = $2`,
 			[mapped, metaMessageId],
 		);
 
@@ -320,7 +320,7 @@ async function handleStatus(
 		if (recipientUserId) {
 			try {
 				const contactResult = await pool.query(
-					`SELECT id, bsuid, parent_bsuid FROM whatsapp_contacts WHERE org_id = $1 AND wa_id = $2 LIMIT 1`,
+					`SELECT id, bsuid, parent_bsuid FROM whatsapp_contacts WHERE organization_id = $1::uuid AND wa_id = $2 LIMIT 1`,
 					[orgId, recipientId],
 				);
 				if (contactResult.rows.length > 0) {
@@ -374,7 +374,7 @@ async function handleSystem(
 		if (!waId) return;
 
 		const contactResult = await pool.query(
-			`SELECT id FROM whatsapp_contacts WHERE org_id = $1 AND wa_id = $2 LIMIT 1`,
+			`SELECT id FROM whatsapp_contacts WHERE organization_id = $1::uuid AND wa_id = $2 LIMIT 1`,
 			[orgId, waId],
 		);
 

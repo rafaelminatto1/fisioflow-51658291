@@ -10,7 +10,7 @@ export async function findOrCreateConversation(
 	try {
 		const existing = await pool.query(
 			`SELECT * FROM wa_conversations
-       WHERE org_id = $1 AND contact_id = $2 AND status IN ('open', 'pending')
+       WHERE organization_id = $1 AND contact_id = $2 AND status IN ('open', 'pending')
        ORDER BY updated_at DESC LIMIT 1`,
 			[orgId, contactId],
 		);
@@ -20,7 +20,7 @@ export async function findOrCreateConversation(
 		}
 
 		const created = await pool.query(
-			`INSERT INTO wa_conversations (org_id, contact_id, status, priority)
+			`INSERT INTO wa_conversations (organization_id, contact_id, status, priority)
        VALUES ($1, $2, 'open', 'normal')
        RETURNING *`,
 			[orgId, contactId],
@@ -110,7 +110,7 @@ export async function addInternalNote(
 ) {
 	try {
 		const result = await pool.query(
-			`INSERT INTO wa_messages (conversation_id, org_id, direction, sender_type, sender_id, message_type, content)
+			`INSERT INTO wa_messages (conversation_id, organization_id, direction, sender_type, sender_id, message_type, content)
        VALUES ($1, $2, 'internal', 'agent', $3, 'note', $4)
        RETURNING *`,
 			[conversationId, orgId, authorId, content],
@@ -218,7 +218,7 @@ export async function getInboxConversations(
 	} = {},
 ) {
 	try {
-		const conditions: string[] = ["c.org_id = $1"];
+		const conditions: string[] = ["c.organization_id = $1"];
 		const params: any[] = [orgId];
 		let idx = 2;
 
@@ -310,12 +310,14 @@ export async function addMessage(
 	},
 ) {
 	try {
-		const contentStr =
-			typeof content === "string" ? content : JSON.stringify(content);
+		const contentJson =
+			typeof content === "string"
+				? JSON.stringify(content)
+				: JSON.stringify(content);
 
 		const result = await pool.query(
-			`INSERT INTO wa_messages (conversation_id, org_id, contact_id, direction, sender_type, sender_id, message_type, content, meta_message_id, media_url, media_type, template_name, reply_to)
-       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13)
+			`INSERT INTO wa_messages (conversation_id, organization_id, contact_id, direction, sender_type, sender_id, message_type, content, meta_message_id, media_url, media_type, template_name, reply_to)
+       VALUES ($1, $2::uuid, $3::uuid, $4, $5, $6, $7, $8::jsonb, $9, $10, $11, $12, $13)
        RETURNING *`,
 			[
 				conversationId,
@@ -325,7 +327,7 @@ export async function addMessage(
 				senderType,
 				senderId,
 				messageType,
-				contentStr,
+				contentJson,
 				metaMessageId ?? null,
 				options?.mediaUrl ?? null,
 				options?.mediaType ?? null,
@@ -351,7 +353,7 @@ export async function getConversationMetrics(pool: Pool, orgId: string) {
 		const statusResult = await pool.query(
 			`SELECT status, COUNT(*)::int AS count
        FROM wa_conversations
-       WHERE org_id = $1
+       WHERE organization_id = $1
        GROUP BY status`,
 			[orgId],
 		);
@@ -373,7 +375,7 @@ export async function getConversationMetrics(pool: Pool, orgId: string) {
            m.created_at
          FROM wa_conversations c
          JOIN wa_messages m ON m.conversation_id = c.id
-         WHERE c.org_id = $1 AND m.direction = 'inbound'
+         WHERE c.organization_id = $1 AND m.direction = 'inbound'
          ORDER BY c.id, m.created_at ASC
        ) first_inbound
        JOIN LATERAL (

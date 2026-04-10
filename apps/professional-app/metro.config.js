@@ -101,9 +101,12 @@ config.resolver.blockList = [
 // toda a pasta node_modules/.pnpm/ como watchFolder.
 config.resolver.unstable_enableSymlinks = true;
 
-// watchFolders: apenas o app. Pacotes do monorepo devem ser declarados
-// explicitamente no package.json para ficarem no node_modules local.
-config.watchFolders = [projectRoot];
+// watchFolders: Adicionamos apenas o que é estritamente necessário para o pnpm.
+// Em vez de monorepoRoot (tudo), focamos no node_modules da raiz.
+config.watchFolders = [
+	projectRoot,
+	path.resolve(monorepoRoot, "node_modules"),
+];
 
 // Resolução de módulos: local primeiro, depois raiz (pnpm hoist)
 config.resolver.nodeModulesPaths = [
@@ -112,5 +115,10 @@ config.resolver.nodeModulesPaths = [
 ];
 
 config.server.port = 8081;
+
+// Define o root do servidor como a raiz do monorepo.
+// Isso garante que a URL /apps/professional-app/... funcione corretamente
+// tanto localmente quanto via Tunnel.
+config.server.unstable_serverRoot = monorepoRoot;
 
 module.exports = config;

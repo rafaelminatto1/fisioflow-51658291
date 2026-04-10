@@ -50,6 +50,9 @@ export interface Appointment {
   type: string;
   status: 'scheduled' | 'confirmed' | 'completed' | 'cancelled' | 'no_show';
   notes?: string;
+  isGroup?: boolean;
+  additionalNames?: string;
+  isUnlimited?: boolean;
   location?: string;
 }
 
