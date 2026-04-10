@@ -761,6 +761,37 @@ export function NewExerciseModal({
 										</FormItem>
 									)}
 								/>
+								<FormField
+									control={form.control}
+									name="alternativeEquipment"
+									render={({ field }) => (
+										<FormItem>
+											<FormLabel>
+												Equipamentos Alternativos (separar por vírgula)
+											</FormLabel>
+											<FormControl>
+												<Input
+													placeholder="Ex: Vassoura, Toalha, Garrafa PET"
+													{...field}
+													value={
+														Array.isArray(field.value)
+															? field.value.join(", ")
+															: field.value || ""
+													}
+													onChange={(e) =>
+														field.onChange(
+															e.target.value
+																.split(",")
+																.map((s) => s.trim())
+																.filter(Boolean),
+														)
+													}
+												/>
+											</FormControl>
+											<FormMessage />
+										</FormItem>
+									)}
+								/>
 							</div>
 						</form>
 					</Form>

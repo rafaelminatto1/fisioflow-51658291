@@ -9,19 +9,14 @@ import Animated, {
 import { Gesture, GestureDetector } from "react-native-gesture-handler";
 import { AppointmentBase } from "@/types";
 import { formatAppointmentTime } from "./utils";
+import { isSameDay } from "date-fns";
 
-const HOUR_HEIGHT = 60;
-const SNAP_PX = 15; // 15 minutes = 15px at 60px/hr
+const SNAP_MINUTES = 15;
 
-function snapToGrid(rawTop: number): number {
-	"worklet";
-	return Math.round(rawTop / SNAP_PX) * SNAP_PX;
-}
-
-function topToTime(snappedTop: number, startHour: number): string {
+function topToTime(snappedTop: number, startHour: number, hourHeight: number): string {
 	"worklet";
 	const totalMinutes =
-		Math.round((snappedTop / HOUR_HEIGHT) * 60) + startHour * 60;
+		Math.round((snappedTop / hourHeight) * 60) + startHour * 60;
 	const h = Math.floor(totalMinutes / 60) % 24;
 	const m = totalMinutes % 60;
 	return `${String(h).padStart(2, "0")}:${String(m).padStart(2, "0")}`;
@@ -102,6 +97,7 @@ export interface DraggableAptCardProps {
 	pos: { left: number; width: number };
 	startHour: number;
 	endHour: number;
+	hourHeight?: number;
 	targetDay: Date;
 	allDays: Date[];
 	columnWidth: number;
@@ -123,6 +119,7 @@ export const DraggableAptCard = ({
 	pos,
 	startHour,
 	endHour,
+	hourHeight = 60,
 	targetDay,
 	allDays,
 	columnWidth,
@@ -140,18 +137,40 @@ export const DraggableAptCard = ({
 	const isTiny = apt.height < 48;
 	const isCompact = apt.height >= 48 && apt.height < 72;
 
-	const maxTop = (endHour - startHour) * HOUR_HEIGHT - apt.height;
+	const snapPx = (SNAP_MINUTES / 60) * hourHeight;
+	const maxTop = (endHour - startHour) * hourHeight - apt.height;
 	const cardColors = getCardColors(apt, colors.primary);
 	const displayTime = formatAppointmentTime(apt.time, apt.date);
 	const titleLines = isTiny ? 1 : 2;
 
 	const currentColumnIndex = allDays.findIndex(
-		(d) => d.toDateString() === targetDay.toDateString(),
+		(d) => isSameDay(d, targetDay),
 	);
 
 	const handleConfirm = (confirm: boolean, newDay: Date, newTime: string) => {
 		if (confirm && onReschedule) {
 			onReschedule(apt.id, newDay, newTime);
+		}
+	};
+
+	const handleReschedule = (newColumnIndex: number, newTime: string) => {
+		const newDay = allDays[newColumnIndex];
+		if (!newDay || !newTime) return;
+
+		const hasChangedDay = !isSameDay(newDay, targetDay);
+		const hasChangedTime = newTime !== apt.time;
+
+		if (hasChangedDay || hasChangedTime) {
+			if (onRescheduleRequest) {
+				onRescheduleRequest(
+					apt.id,
+					newDay,
+					newTime,
+					(confirm: boolean) => handleConfirm(confirm, newDay, newTime),
+				);
+			} else if (onReschedule) {
+				onReschedule(apt.id, newDay, newTime);
+			}
 		}
 	};
 
@@ -168,7 +187,7 @@ export const DraggableAptCard = ({
 
 			const rawTop = apt.top + e.translationY;
 			const clamped = Math.max(0, Math.min(rawTop, maxTop));
-			ghostTop.value = snapToGrid(clamped);
+			ghostTop.value = Math.round(clamped / snapPx) * snapPx;
 
 			const rawColumn =
 				currentColumnIndex + Math.round(e.translationX / columnWidth);
@@ -176,33 +195,15 @@ export const DraggableAptCard = ({
 			ghostColumnIndex.value = newColumn;
 		})
 		.onEnd(() => {
-			const newTime = topToTime(ghostTop.value, startHour);
+			const newTime = topToTime(ghostTop.value, startHour, hourHeight);
 			const newColumnIndex = ghostColumnIndex.value;
-			const newDay = allDays[newColumnIndex];
 
 			translateX.value = withSpring(0);
 			translateY.value = withSpring(0);
 			isDragging.value = false;
 			runOnJS(onScrollEnable)(true);
 
-			if (newDay && newTime) {
-				const hasChangedDay =
-					newDay.toDateString() !== targetDay.toDateString();
-				const hasChangedTime = newTime !== apt.time;
-
-				if (hasChangedDay || hasChangedTime) {
-					if (onRescheduleRequest) {
-						runOnJS(onRescheduleRequest)(
-							apt.id,
-							newDay,
-							newTime,
-							(confirm: boolean) => handleConfirm(confirm, newDay, newTime),
-						);
-					} else if (onReschedule) {
-						runOnJS(onReschedule)(apt.id, newDay, newTime);
-					}
-				}
-			}
+			runOnJS(handleReschedule)(newColumnIndex, newTime);
 		})
 		.onFinalize((_e, success) => {
 			if (!success) {
@@ -318,15 +319,6 @@ export const DraggableAptCard = ({
 								isTiny && styles.cardFooterTiny,
 							]}
 						>
-							<Text
-								style={[
-									styles.aptTime,
-									isCompact && styles.aptTimeCompact,
-									isTiny && styles.aptTimeTiny,
-								]}
-							>
-								{displayTime}
-							</Text>
 							{!isTiny && apt.isUnlimited && (
 								<View
 									style={[
@@ -390,31 +382,31 @@ const styles = StyleSheet.create({
 		marginBottom: 2,
 	},
 	aptType: {
-		fontSize: 9,
+		fontSize: 7,
 		fontWeight: "700",
-		paddingHorizontal: 6,
-		paddingVertical: 2,
+		paddingHorizontal: 4,
+		paddingVertical: 1,
 		borderRadius: 999,
 		overflow: "hidden",
 	},
 	aptTypeTiny: {
-		fontSize: 8,
-		paddingHorizontal: 5,
+		fontSize: 6,
+		paddingHorizontal: 3,
 		paddingVertical: 1,
 	},
 	aptTitle: {
-		fontSize: 12,
+		fontSize: 10,
 		fontWeight: "700",
 		color: "#0f172a",
-		lineHeight: 15,
+		lineHeight: 12,
 	},
 	aptTitleCompact: {
-		fontSize: 11,
-		lineHeight: 13,
+		fontSize: 9,
+		lineHeight: 11,
 	},
 	aptTitleTiny: {
-		fontSize: 10,
-		lineHeight: 12,
+		fontSize: 8,
+		lineHeight: 10,
 	},
 	aptTime: {
 		fontSize: 10,
