@@ -47,8 +47,14 @@ interface ClinicalTest
 	id?: string;
 	purpose: string | null;
 	execution: string | null;
+	reference?: string | null;
+	sensitivity_specificity?: string | null;
 	fields_definition?: MetricField[];
 	organization_id?: string;
+	regularity_sessions?: number | null;
+	layout_type?: string | null;
+	is_builtin?: boolean;
+	is_custom?: boolean;
 }
 
 interface ClinicalTestFormModalProps {
@@ -89,6 +95,7 @@ export function ClinicalTestFormModal({
 	const isMobile = useIsMobile();
 	const { user, organizationId } = useAuth();
 	const queryClient = useQueryClient();
+	const isLibraryEdit = mode === "create" && !!test?.is_builtin;
 
 	const [formData, setFormData] = useState<ClinicalTest>({
 		name: "",
@@ -184,11 +191,13 @@ export function ClinicalTestFormModal({
 			return await clinicalTestsApi.create(payload);
 		},
 		onSuccess: () => {
-			toast.success(
-				mode === "create"
+			const successMessage = isLibraryEdit
+				? "Teste clínico salvo como versão editável!"
+				: mode === "create"
 					? "Teste clínico criado com sucesso!"
-					: "Teste clínico atualizado!",
-			);
+					: "Teste clínico atualizado!";
+
+			toast.success(successMessage);
 			queryClient.invalidateQueries({ queryKey: ["clinical-tests-library"] });
 			onOpenChange(false);
 		},
@@ -208,6 +217,14 @@ export function ClinicalTestFormModal({
 	};
 
 	const isPending = mutation.isPending;
+	const modalTitle =
+		isLibraryEdit || mode === "edit"
+			? "Editar Teste Clínico"
+			: test
+				? "Duplicar Teste Clínico"
+				: "Novo Teste Clínico";
+	const submitLabel =
+		isLibraryEdit || mode === "edit" ? "Salvar Alterações" : "Criar Teste";
 
 	return (
 		<CustomModal
@@ -223,11 +240,7 @@ export function ClinicalTestFormModal({
 					) : (
 						<Settings className="h-5 w-5 text-teal-600" />
 					)}
-					{mode === "create"
-						? test
-							? "Duplicar Teste Clínico"
-							: "Novo Teste Clínico"
-						: "Editar Teste Clínico"}
+					{modalTitle}
 				</CustomModalTitle>
 			</CustomModalHeader>
 
@@ -632,7 +645,7 @@ export function ClinicalTestFormModal({
 					) : (
 						<Save className="h-4 w-4" />
 					)}
-					{mode === "create" ? "Criar Teste" : "Salvar Alterações"}
+					{submitLabel}
 				</Button>
 			</CustomModalFooter>
 		</CustomModal>

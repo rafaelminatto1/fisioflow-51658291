@@ -268,7 +268,7 @@ export function DayFlowCalendarWrapper(props: DayFlowCalendarWrapperProps) {
 											</span>
 											<div class="dayflow-event-card__dot ${statusConfig.calendarAccent}"></div>
 										</div>
-										<div class="dayflow-event-card__title">
+										<div class="dayflow-event-card__title" style="display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;white-space:normal;word-break:break-word;line-height:1.2;">
 											${appointment.title}
 										</div>
 									</div>
@@ -319,9 +319,6 @@ export function DayFlowCalendarWrapper(props: DayFlowCalendarWrapperProps) {
 								const startStr = format(roundedStart, "yyyy-MM-dd'T'HH:mm");
 								const endStr = format(roundedEnd, "yyyy-MM-dd'T'HH:mm");
 
-								info.event.setStart(roundedStart);
-								info.event.setEnd(roundedEnd);
-								
 								// Use optimistic update to keep UI in sync immediately
 								startTransition(() => {
 									addOptimisticAppointment({
