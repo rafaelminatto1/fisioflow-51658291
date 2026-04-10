@@ -526,6 +526,7 @@ export const createExerciseSchema = z.object({
 	reps: z.number().int().min(0).max(100).optional(),
 	durationSeconds: z.number().int().min(0).max(3600).optional(),
 	restSeconds: z.number().int().min(0).max(600).optional(),
+	alternativeEquipment: z.array(z.string().max(100)).max(20).optional(),
 	tags: z.array(z.string().max(50)).max(20).optional(),
 });
 
