@@ -21,6 +21,36 @@ import {
   normalizeTextArray,
 } from './shared';
 
+function normalizeClinicalTestTemplateRow(row: Record<string, any>) {
+  const organizationId = row.organization_id ?? row.organizationId ?? null;
+
+  return {
+    ...row,
+    organization_id: organizationId,
+    created_by: row.created_by ?? row.createdBy ?? null,
+    name_en: row.name_en ?? row.nameEn ?? null,
+    target_joint: row.target_joint ?? row.targetJoint ?? null,
+    instructions: row.instructions ?? row.execution ?? null,
+    execution: row.execution ?? row.instructions ?? null,
+    positive_criteria: row.positive_criteria ?? row.positiveCriteria ?? null,
+    positive_sign: row.positive_sign ?? row.positiveSign ?? null,
+    fields_definition: normalizeJsonArray(
+      row.fields_definition ?? row.fieldsDefinition,
+    ),
+    regularity_sessions: row.regularity_sessions ?? row.regularitySessions ?? null,
+    layout_type: row.layout_type ?? row.layoutType ?? null,
+    image_url: row.image_url ?? row.imageUrl ?? null,
+    initial_position_image_url:
+      row.initial_position_image_url ?? row.initialPositionImageUrl ?? null,
+    final_position_image_url:
+      row.final_position_image_url ?? row.finalPositionImageUrl ?? null,
+    media_urls: normalizeTextArray(row.media_urls ?? row.mediaUrls),
+    is_custom: row.is_custom ?? row.isCustom ?? Boolean(organizationId),
+    created_at: row.created_at ?? row.createdAt ?? null,
+    updated_at: row.updated_at ?? row.updatedAt ?? null,
+  };
+}
+
 export function registerClinicalResourceRoutes(app: ClinicalRouteApp) {
   // ===== CONDUCT LIBRARY =====
   
@@ -165,7 +195,11 @@ export function registerClinicalResourceRoutes(app: ClinicalRouteApp) {
       .where(and(...conditions))
       .orderBy(asc(clinicalTestTemplates.name));
 
-    return c.json({ data: result });
+    const data = result.map((row) =>
+      normalizeClinicalTestTemplateRow(row as any),
+    );
+
+    return c.json({ data });
   });
 
   app.get('/test-templates/:id', requireAuth, async (c) => {
@@ -188,7 +222,8 @@ export function registerClinicalResourceRoutes(app: ClinicalRouteApp) {
       .limit(1);
 
     if (!result) return c.json({ error: 'Teste clínico não encontrado' }, 404);
-    return c.json({ data: result });
+
+    return c.json({ data: normalizeClinicalTestTemplateRow(result as any) });
   });
 
   app.post('/test-templates', requireAuth, async (c) => {
@@ -220,12 +255,14 @@ export function registerClinicalResourceRoutes(app: ClinicalRouteApp) {
         regularitySessions: body.regularity_sessions != null ? Number(body.regularity_sessions) : null,
         layoutType: body.layout_type ?? null,
         imageUrl: body.image_url ?? null,
+        initialPositionImageUrl: body.initial_position_image_url ?? null,
+        finalPositionImageUrl: body.final_position_image_url ?? null,
         mediaUrls: Array.isArray(body.media_urls) ? body.media_urls : [],
         isCustom: body.is_custom === true,
       })
       .returning();
 
-    return c.json({ data: result }, 201);
+    return c.json({ data: normalizeClinicalTestTemplateRow(result as any) }, 201);
   });
 
   app.put('/test-templates/:id', requireAuth, async (c) => {
@@ -252,6 +289,14 @@ export function registerClinicalResourceRoutes(app: ClinicalRouteApp) {
         regularitySessions: body.regularity_sessions !== undefined ? (body.regularity_sessions != null ? Number(body.regularity_sessions) : null) : undefined,
         layoutType: body.layout_type !== undefined ? (body.layout_type || null) : undefined,
         imageUrl: body.image_url !== undefined ? (body.image_url || null) : undefined,
+        initialPositionImageUrl:
+          body.initial_position_image_url !== undefined
+            ? (body.initial_position_image_url || null)
+            : undefined,
+        finalPositionImageUrl:
+          body.final_position_image_url !== undefined
+            ? (body.final_position_image_url || null)
+            : undefined,
         mediaUrls: body.media_urls !== undefined ? (Array.isArray(body.media_urls) ? body.media_urls : []) : undefined,
         isCustom: body.is_custom !== undefined ? (body.is_custom === true) : undefined,
         updatedAt: new Date(),
@@ -268,7 +313,8 @@ export function registerClinicalResourceRoutes(app: ClinicalRouteApp) {
       .returning();
 
     if (!result) return c.json({ error: 'Teste clínico não encontrado' }, 404);
-    return c.json({ data: result });
+
+    return c.json({ data: normalizeClinicalTestTemplateRow(result as any) });
   });
 
   app.delete('/test-templates/:id', requireAuth, async (c) => {

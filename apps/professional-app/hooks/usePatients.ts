@@ -141,12 +141,15 @@ export function usePatients(options?: UsePatientsOptions) {
   };
 }
 
-// Additional function to get a single patient
-export async function getPatientByIdHook(id: string): Promise<Patient | null> {
-  try {
-    const apiPatient = await getPatientById(id);
-    return apiPatient ? mapApiPatient(apiPatient) : null;
-  } catch {
-    return null;
-  }
+export function usePatient(id?: string) {
+  return useQuery({
+    queryKey: ['patient', id],
+    queryFn: async () => {
+      if (!id) return null;
+      const apiPatient = await getPatientById(id);
+      return apiPatient ? mapApiPatient(apiPatient) : null;
+    },
+    enabled: !!id,
+    staleTime: 1000 * 60 * 5,
+  });
 }

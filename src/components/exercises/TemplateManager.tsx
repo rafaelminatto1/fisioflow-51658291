@@ -1,4 +1,5 @@
 import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useState } from "react";
 import { templatesApi } from "@/api/v2";
 import { useTemplateUIStore } from "@/stores/useTemplateUIStore";
 import { TemplateSidebar } from "./TemplateSidebar";
@@ -49,6 +50,8 @@ function EmptyStateCTA({ onExploreSystem, onCreateFirst }: EmptyStateCTAProps) {
 
 export function TemplateManager() {
   const queryClient = useQueryClient();
+  const [editFlowOpen, setEditFlowOpen] = useState(false);
+  const [editingTemplate, setEditingTemplate] = useState<ExerciseTemplate | null>(null);
   const {
     selectedTemplateId,
     activeProfile,
@@ -95,7 +98,10 @@ export function TemplateManager() {
       });
       return;
     }
-    // TODO: task 13 — open TemplateCreateFlow in edit mode
+    if (selectedTemplate) {
+      setEditingTemplate(selectedTemplate);
+      setEditFlowOpen(true);
+    }
   };
   const handleDelete = () => {
     // TODO: task 13 — open delete confirmation dialog
@@ -198,6 +204,18 @@ export function TemplateManager() {
         open={createFlowOpen}
         onOpenChange={(open) => { if (!open) closeCreateFlow(); }}
         sourceTemplate={createFlowSourceTemplate}
+        onSuccess={() => {
+          queryClient.invalidateQueries({ queryKey: ["templates"] });
+        }}
+      />
+
+      <TemplateCreateFlow
+        open={editFlowOpen}
+        onOpenChange={(open) => {
+          setEditFlowOpen(open);
+          if (!open) setEditingTemplate(null);
+        }}
+        editTemplate={editingTemplate ?? undefined}
         onSuccess={() => {
           queryClient.invalidateQueries({ queryKey: ["templates"] });
         }}
