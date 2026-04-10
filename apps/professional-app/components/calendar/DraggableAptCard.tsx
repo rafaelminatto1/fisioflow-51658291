@@ -106,6 +106,12 @@ export interface DraggableAptCardProps {
 	allDays: Date[];
 	columnWidth: number;
 	onReschedule?: (id: string, newDate: Date, time: string) => void;
+	onRescheduleRequest?: (
+		id: string,
+		newDate: Date,
+		time: string,
+		confirm: (confirm: boolean) => void,
+	) => void;
 	onScrollEnable: (enabled: boolean) => void;
 	colors: DraggableAptCardColors;
 	/** Optional onPress for navigating to appointment detail */
@@ -121,6 +127,7 @@ export const DraggableAptCard = ({
 	allDays,
 	columnWidth,
 	onReschedule,
+	onRescheduleRequest,
 	onScrollEnable,
 	colors,
 	onPress,
@@ -141,6 +148,12 @@ export const DraggableAptCard = ({
 	const currentColumnIndex = allDays.findIndex(
 		(d) => d.toDateString() === targetDay.toDateString(),
 	);
+
+	const handleConfirm = (confirm: boolean, newDay: Date, newTime: string) => {
+		if (confirm && onReschedule) {
+			onReschedule(apt.id, newDay, newTime);
+		}
+	};
 
 	const panGesture = Gesture.Pan()
 		.activateAfterLongPress(500)
@@ -172,8 +185,23 @@ export const DraggableAptCard = ({
 			isDragging.value = false;
 			runOnJS(onScrollEnable)(true);
 
-			if (onReschedule && newDay) {
-				runOnJS(onReschedule)(apt.id, newDay, newTime);
+			if (newDay && newTime) {
+				const hasChangedDay =
+					newDay.toDateString() !== targetDay.toDateString();
+				const hasChangedTime = newTime !== apt.time;
+
+				if (hasChangedDay || hasChangedTime) {
+					if (onRescheduleRequest) {
+						runOnJS(onRescheduleRequest)(
+							apt.id,
+							newDay,
+							newTime,
+							(confirm: boolean) => handleConfirm(confirm, newDay, newTime),
+						);
+					} else if (onReschedule) {
+						runOnJS(onReschedule)(apt.id, newDay, newTime);
+					}
+				}
 			}
 		})
 		.onFinalize((_e, success) => {
