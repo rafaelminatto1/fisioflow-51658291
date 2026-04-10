@@ -84,7 +84,7 @@ export async function registerForPushNotificationsAsync(): Promise<string | unde
 
     try {
       // Get Expo push token - only if valid projectId is configured
-      const projectId = process.env.EXPO_PUBLIC_PROJECT_ID;
+      const projectId = process.env.EXPO_PUBLIC_EXPO_PROJECT_ID || process.env.EXPO_PUBLIC_PROJECT_ID;
       
       if (projectId && projectId !== 'fisioflow-professional') {
         // Validate UUID format

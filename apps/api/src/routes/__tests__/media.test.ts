@@ -79,7 +79,7 @@ describe('media routes', () => {
     const app = await buildApp();
     const res = await app.fetch(
       makeRequest('POST', '/api/media/upload-url', {
-        contentType: 'application/pdf',
+        contentType: 'application/zip',
         folder: 'patient-exams',
       }),
       BASE_ENV as any,
@@ -90,6 +90,22 @@ describe('media routes', () => {
       error: 'Tipo de arquivo não suportado',
     });
     expect(mockGetSignedUrl).not.toHaveBeenCalled();
+  });
+
+  it('POST /api/media/upload-url accepts application/pdf', async () => {
+    const app = await buildApp();
+    const res = await app.fetch(
+      makeRequest('POST', '/api/media/upload-url', {
+        contentType: 'application/pdf',
+        folder: 'patient-exams',
+      }),
+      BASE_ENV as any,
+    );
+
+    expect(res.status).toBe(200);
+    const json = await res.json() as any;
+    expect(json.data.key).toContain('.pdf');
+    expect(mockGetSignedUrl).toHaveBeenCalledTimes(1);
   });
 
   it('POST /api/media/upload-url sanitizes folder and returns signed upload metadata', async () => {

@@ -155,7 +155,7 @@ const BentoWidget = ({
 			className
 		)}
 	>
-		<div className={cn("px-8 pt-7 pb-4 flex items-center justify-between", headerClassName)}>
+		<div className={cn("px-6 pt-4 pb-2.5 flex items-center justify-between", headerClassName)}>
 			<div className="flex items-center gap-3">
 				{icon && <div className="p-2 rounded-2xl bg-white/50 dark:bg-slate-800/50 shadow-sm">{icon}</div>}
 				<h4 className="font-display text-[11px] font-black uppercase tracking-[0.2em] text-slate-400">
@@ -235,11 +235,11 @@ const SOAPSectionWidget = React.memo(
 						placeholder={section.placeholder}
 						disabled={disabled}
 						variant="ghost"
-						className="flex-1 p-4 pt-2 text-base font-medium bg-transparent border-none focus-visible:ring-0"
+						className="flex-1 px-5 py-2 text-base font-medium bg-transparent border-none focus-visible:ring-0"
 						showStats={false}
 						compact={true}
 					/>
-					<div className="px-6 py-4 flex justify-between items-center text-[9px] font-black uppercase tracking-widest text-slate-400 border-t border-slate-50 dark:border-slate-800/50">
+					<div className="px-5 py-2.5 flex justify-between items-center text-[9px] font-black uppercase tracking-widest text-slate-400 border-t border-slate-50 dark:border-slate-800/50">
 						<span className="flex items-center gap-2">
 							<span className={cn("w-1 h-1 rounded-full", section.color.replace("text-", "bg-"))} />
 							{wordCount} palavras
@@ -386,7 +386,7 @@ export const EvolutionDraggableGrid: React.FC<EvolutionDraggableGridProps> = ({
 
 				{/* ROW 2: SOAP FIELDS (Grid 2x2 on desktop) */}
 				{SOAP_SECTIONS.map((section) => (
-					<div key={section.key} className="md:col-span-6 h-[280px]">
+					<div key={section.key} className="md:col-span-6 h-[340px]">
 						<SOAPSectionWidget
 							section={section}
 							value={soapData[section.key]}

@@ -17,6 +17,9 @@ const ALLOWED_TYPES: Record<string, string> = {
     'video/mp4': '.mp4',
     'video/webm': '.webm',
     'video/quicktime': '.mov',
+    'application/pdf': '.pdf',
+    'application/msword': '.doc',
+    'application/vnd.openxmlformats-officedocument.wordprocessingml.document': '.docx',
 };
 
 app.get('/annotations', requireAuth, async (c) => {
