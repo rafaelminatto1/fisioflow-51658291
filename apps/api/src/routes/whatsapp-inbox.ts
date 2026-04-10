@@ -6,8 +6,8 @@ import {
 	getInboxConversations,
 	getConversationWithMessages,
 	addMessage,
-	assignConversation,
-	transferConversation,
+	assignConversation as assignConversationSvc,
+	transferConversation as transferConversationSvc,
 	addInternalNote,
 	updateConversationStatus,
 	getConversationMetrics,
@@ -20,6 +20,58 @@ import {
 import type { Env } from "../types/env";
 
 const app = new Hono<{ Bindings: Env; Variables: { user: AuthUser } }>();
+
+function mapConversationRow(row: any) {
+	return {
+		id: row.id,
+		contactId: row.contact_id,
+		contactName:
+			row.display_name || row.username || row.wa_id || "Desconhecido",
+		contactPhone: row.wa_id || "",
+		patientId: row.patient_id || undefined,
+		patientName: undefined,
+		status: row.status,
+		assignedTo: row.assigned_to || undefined,
+		assignedToName: row.assigned_to_name || undefined,
+		team: row.team || undefined,
+		lastMessage: row.last_message || undefined,
+		lastMessageAt: row.last_message_at || undefined,
+		lastMessageDirection: row.last_message_direction || undefined,
+		unreadCount: row.unread_count || 0,
+		tags: row.tags || [],
+		priority: row.priority || undefined,
+		slaDeadline: row.sla_deadline || undefined,
+		slaBreached: row.sla_breached || false,
+		createdAt: row.created_at,
+		updatedAt: row.updated_at,
+	};
+}
+
+function mapMessageRow(row: any): any {
+	return {
+		id: row.id,
+		conversationId: row.conversation_id,
+		direction: row.direction === "internal" ? "outbound" : row.direction,
+		type: row.message_type || "text",
+		content:
+			typeof row.content === "string"
+				? (() => {
+						try {
+							return JSON.parse(row.content);
+						} catch {
+							return row.content;
+						}
+					})()
+				: row.content,
+		senderId: row.sender_id || undefined,
+		senderName: row.sender_name || undefined,
+		timestamp: row.created_at,
+		status: row.status || undefined,
+		interactiveData: row.interactive_data || undefined,
+		templateName: row.template_name || undefined,
+		templateParams: undefined,
+	};
+}
 
 app.get("/conversations", requireAuth, async (c) => {
 	const user = c.get("user");
@@ -53,12 +105,21 @@ app.get("/conversations", requireAuth, async (c) => {
 			},
 		);
 
+		const totalResult = await pool.query(
+			`SELECT COUNT(*)::int AS total FROM wa_conversations c
+       LEFT JOIN whatsapp_contacts wc ON wc.id = c.contact_id
+       WHERE c.organization_id = $1${status ? " AND c.status = $2" : ""}`,
+			status ? [user.organizationId, status] : [user.organizationId],
+		);
+		const total = totalResult.rows[0]?.total ?? conversations.length;
+
 		return c.json({
-			data: conversations,
+			data: conversations.map(mapConversationRow),
 			pagination: {
 				page: pageNum,
 				limit: limitNum,
-				offset,
+				total,
+				totalPages: Math.ceil(total / limitNum),
 			},
 		});
 	} catch (err) {
@@ -84,7 +145,10 @@ app.get("/conversations/:id", requireAuth, async (c) => {
 			return c.json({ error: "Conversation not found" }, 404);
 		}
 
-		return c.json({ data: result });
+		return c.json({
+			conversation: mapConversationRow(result),
+			messages: (result.messages || []).map(mapMessageRow),
+		});
 	} catch (err) {
 		console.error("[WhatsApp Inbox] GET /conversations/:id error:", err);
 		return c.json({ error: "Failed to fetch conversation" }, 500);
@@ -203,7 +267,7 @@ app.post("/conversations/:id/messages", requireAuth, async (c) => {
 			message: savedMsg,
 		});
 
-		return c.json({ data: savedMsg }, 201);
+		return c.json(mapMessageRow(savedMsg), 201);
 	} catch (err) {
 		console.error(
 			"[WhatsApp Inbox] POST /conversations/:id/messages error:",
@@ -317,7 +381,7 @@ app.post("/conversations/:id/interactive", requireAuth, async (c) => {
 			message: savedMsg,
 		});
 
-		return c.json({ data: savedMsg }, 201);
+		return c.json(mapMessageRow(savedMsg), 201);
 	} catch (err) {
 		console.error(
 			"[WhatsApp Inbox] POST /conversations/:id/interactive error:",
@@ -342,7 +406,7 @@ app.post("/conversations/:id/assign", requireAuth, async (c) => {
 	}
 
 	try {
-		const result = await assignConversation(
+		const result = await assignConversationSvc(
 			pool,
 			id,
 			body.assignedTo,
@@ -352,9 +416,10 @@ app.post("/conversations/:id/assign", requireAuth, async (c) => {
 		);
 
 		const convResult = await pool.query(
-			`SELECT organization_id FROM wa_conversations WHERE id = $1`,
+			`SELECT c.*, wc.wa_id, wc.display_name, wc.username, wc.bsuid, wc.patient_id FROM wa_conversations c LEFT JOIN whatsapp_contacts wc ON wc.id = c.contact_id WHERE c.id = $1`,
 			[id],
 		);
+
 		if (convResult.rows.length > 0) {
 			await broadcastToOrg(c.env, convResult.rows[0].organization_id, {
 				type: "whatsapp_assignment",
@@ -362,6 +427,7 @@ app.post("/conversations/:id/assign", requireAuth, async (c) => {
 				assignedTo: body.assignedTo,
 				assignedBy: user.uid,
 			});
+			return c.json(mapConversationRow(convResult.rows[0]));
 		}
 
 		return c.json({ data: result });
@@ -389,7 +455,7 @@ app.post("/conversations/:id/transfer", requireAuth, async (c) => {
 	}
 
 	try {
-		const result = await transferConversation(
+		const result = await transferConversationSvc(
 			pool,
 			id,
 			body.newAssignee,
@@ -399,9 +465,10 @@ app.post("/conversations/:id/transfer", requireAuth, async (c) => {
 		);
 
 		const convResult = await pool.query(
-			`SELECT organization_id FROM wa_conversations WHERE id = $1`,
+			`SELECT c.*, wc.wa_id, wc.display_name, wc.username, wc.bsuid, wc.patient_id FROM wa_conversations c LEFT JOIN whatsapp_contacts wc ON wc.id = c.contact_id WHERE c.id = $1`,
 			[id],
 		);
+
 		if (convResult.rows.length > 0) {
 			await broadcastToOrg(c.env, convResult.rows[0].organization_id, {
 				type: "whatsapp_transfer",
@@ -409,6 +476,7 @@ app.post("/conversations/:id/transfer", requireAuth, async (c) => {
 				newAssignee: body.newAssignee,
 				transferredBy: user.uid,
 			});
+			return c.json(mapConversationRow(convResult.rows[0]));
 		}
 
 		return c.json({ data: result });
@@ -446,7 +514,7 @@ app.post("/conversations/:id/notes", requireAuth, async (c) => {
 			note: result,
 		});
 
-		return c.json({ data: result }, 201);
+		return c.json(mapMessageRow(result), 201);
 	} catch (err) {
 		console.error("[WhatsApp Inbox] POST /conversations/:id/notes error:", err);
 		return c.json({ error: "Failed to add note" }, 500);
@@ -480,7 +548,14 @@ app.put("/conversations/:id/status", requireAuth, async (c) => {
 			status: body.status,
 		});
 
-		return c.json({ data: result });
+		const convResult = await pool.query(
+			`SELECT c.*, wc.wa_id, wc.display_name, wc.username, wc.bsuid, wc.patient_id FROM wa_conversations c LEFT JOIN whatsapp_contacts wc ON wc.id = c.contact_id WHERE c.id = $1`,
+			[id],
+		);
+		if (convResult.rows.length > 0) {
+			return c.json(mapConversationRow(convResult.rows[0]));
+		}
+		return c.json(mapConversationRow(result));
 	} catch (err) {
 		console.error("[WhatsApp Inbox] PUT /conversations/:id/status error:", err);
 		return c.json({ error: "Failed to update status" }, 500);
