@@ -7,10 +7,12 @@ on:
         description: 'App'
         required: true
         default: 'professional-app'
+        type: string
       profile:
         description: 'Profile'
         required: true
         default: 'development'
+        type: string
 
 env:
   NODE_VERSION: '22'
