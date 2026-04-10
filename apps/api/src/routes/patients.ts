@@ -443,7 +443,7 @@ app.get("/", async (c) => {
 	const requestedStatus = trimmedString(c.req.query("status"));
 	const sortBy = trimmedString(c.req.query("sortBy"));
 	const limit = Math.min(
-		500,
+		200,
 		Math.max(1, Number.parseInt(c.req.query("limit") ?? "100", 10) || 100),
 	);
 	const offset = Math.max(
@@ -479,9 +479,9 @@ app.get("/", async (c) => {
 			)!;
 		}
 
-		// Count total
+		// Count total using sql<number> for consistency
 		const totalResult = await db
-			.select({ count: count() })
+			.select({ count: sql<number>`count(*)` })
 			.from(patients)
 			.where(conditions);
 		const total = Number(totalResult[0]?.count ?? 0);
@@ -512,8 +512,8 @@ app.get("/", async (c) => {
 			{
 				data: [],
 				total: 0,
-				error:
-					error instanceof Error ? error.message : "Erro ao listar pacientes",
+				error: "Erro ao listar pacientes",
+				details: error instanceof Error ? error.message : String(error),
 			},
 			500,
 		);
