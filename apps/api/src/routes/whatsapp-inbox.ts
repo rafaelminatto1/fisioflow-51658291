@@ -166,10 +166,11 @@ app.post("/conversations/:id/messages", requireAuth, async (c) => {
 		templateLanguage?: string;
 		interactiveType?: string;
 		sentVia?: string;
+		attachmentUrl?: string;
 	};
 
-	if (!body.content) {
-		return c.json({ error: "content is required" }, 400);
+	if (!body.content && !body.attachmentUrl) {
+		return c.json({ error: "content or attachmentUrl is required" }, 400);
 	}
 
 	try {
@@ -187,6 +188,8 @@ app.post("/conversations/:id/messages", requireAuth, async (c) => {
 		const token = c.env.WHATSAPP_ACCESS_TOKEN;
 		let metaMessageId: string | null = null;
 		let status = "pending";
+		const messageType =
+			body.messageType || (body.attachmentUrl ? "image" : "text");
 
 		if (phoneId && token && to) {
 			try {
@@ -207,6 +210,18 @@ app.post("/conversations/:id/messages", requireAuth, async (c) => {
 									parameters: [],
 								},
 							],
+						},
+					};
+					if (targetBsuid) (metaPayload as any).recipient = targetBsuid;
+				} else if (body.attachmentUrl) {
+					const mediaType = messageType === "image" ? "image" : "document";
+					metaPayload = {
+						messaging_product: "whatsapp",
+						to: to.replace(/\D/g, ""),
+						type: mediaType,
+						[mediaType]: {
+							link: body.attachmentUrl,
+							caption: body.content || undefined,
 						},
 					};
 					if (targetBsuid) (metaPayload as any).recipient = targetBsuid;
@@ -248,10 +263,13 @@ app.post("/conversations/:id/messages", requireAuth, async (c) => {
 			"outbound",
 			"agent",
 			user.uid,
-			body.messageType ?? "text",
-			body.content,
+			messageType,
+			body.content || "",
 			metaMessageId ?? undefined,
-			{ templateName: body.templateName },
+			{
+				templateName: body.templateName,
+				mediaUrl: body.attachmentUrl,
+			},
 		);
 
 		if (status === "sent") {
