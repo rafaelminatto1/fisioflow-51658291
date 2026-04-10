@@ -21,7 +21,6 @@ import {
 	SelectValue,
 } from "@/components/ui/select";
 
-
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import {
 	User,
@@ -83,8 +82,6 @@ export const PatientForm = forwardRef<HTMLFormElement, PatientFormProps>(
 			"basic" | "medical" | "address" | "additional"
 		>("basic");
 
-		
-
 		const form = useForm<PatientFormData>({
 			resolver: zodResolver(PatientFormSchema),
 			defaultValues: {
@@ -130,7 +127,7 @@ export const PatientForm = forwardRef<HTMLFormElement, PatientFormProps>(
 		const watchedBirthDate = watch("birth_date");
 		const watchedCpf = watch("cpf");
 		const watchedPhone = watch("phone");
-		
+
 		const watchedZipCode = watch("zip_code");
 
 		// handlers
@@ -164,15 +161,21 @@ export const PatientForm = forwardRef<HTMLFormElement, PatientFormProps>(
 
 		const onFormSubmit = async (data: PatientFormData) => {
 			try {
+				console.log("[PatientForm] onFormSubmit called with data:", data);
+
 				const submitData: PatientCreateInput | PatientUpdateInput = {
 					...data,
 					status: (data.status as any) || (patient?.status as any) || "Inicial",
 					organization_id: organizationId,
 				};
 
+				if (!submitData.full_name) {
+					toast.error("Nome é obrigatório");
+					return;
+				}
+
 				console.info("[PatientForm] Submit payload ready", {
 					full_name: submitData.full_name,
-					birth_date: submitData.birth_date,
 					organization_id: submitData.organization_id,
 				});
 
@@ -182,19 +185,23 @@ export const PatientForm = forwardRef<HTMLFormElement, PatientFormProps>(
 				}
 
 				if (onSubmit) {
+					console.log("[PatientForm] Calling onSubmit prop...");
 					await onSubmit(submitData as any);
+					console.log("[PatientForm] onSubmit completed");
 				} else {
 					// Native submission logic for React Router actions
 					const formData = new FormData();
 					formData.append("intent", intent);
 					if (patient?.id) formData.append("id", patient.id);
 					formData.append("data", JSON.stringify(submitData));
-					
-					// This relies on the parent component triggering requestSubmit() 
+
+					// This relies on the parent component triggering requestSubmit()
 					// which is already handled via handleExternalSubmit in Modals
 					// and for direct form submission we need to ensure the values are in the form
-					
-					const dataInput = (ref as any)?.current?.querySelector('input[name="data"]');
+
+					const dataInput = (ref as any)?.current?.querySelector(
+						'input[name="data"]',
+					);
 					if (dataInput) {
 						dataInput.value = JSON.stringify(submitData);
 					}
@@ -504,7 +511,9 @@ export const PatientForm = forwardRef<HTMLFormElement, PatientFormProps>(
 											id="medical_history"
 											placeholder="Descreva o histórico de saúde, cirurgias anteriores, etc."
 											value={watch("medical_history") || ""}
-											onValueChange={(val: string) => setValue("medical_history", val)}
+											onValueChange={(val: string) =>
+												setValue("medical_history", val)
+											}
 										/>
 									</div>
 
@@ -737,7 +746,9 @@ export const PatientForm = forwardRef<HTMLFormElement, PatientFormProps>(
 										id="observations"
 										placeholder="Anotações importantes sobre o paciente, preferências, etc."
 										value={watch("observations") || ""}
-										onValueChange={(val: string) => setValue("observations", val)}
+										onValueChange={(val: string) =>
+											setValue("observations", val)
+										}
 									/>
 								</div>
 							</CardContent>

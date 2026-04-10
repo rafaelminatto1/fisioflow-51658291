@@ -31,7 +31,7 @@ export const generateTransactionsCSV = (
 	];
 	const rows = transactions.map((t) => {
 		const date = t.created_at
-			? format(new Date(t.created_at), "dd/MM/yyyy HH:mm:ss")
+			? format(new Date(t.created_at), "dd/MM/yyyy HH:mm")
 			: "";
 		const patientName = (t.metadata?.patient_name as string | undefined) || "";
 		const source = (t.metadata?.source as string | undefined) || "";

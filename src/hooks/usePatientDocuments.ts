@@ -13,6 +13,8 @@ export interface UploadDocumentData {
 	file: File;
 	category: "laudo" | "exame" | "receita" | "termo" | "outro";
 	description?: string;
+	extracted_text?: string;
+	ai_summary?: string;
 }
 
 export const usePatientDocuments = (patientId: string) => {
@@ -36,6 +38,8 @@ export const useUploadDocument = () => {
 			file,
 			category,
 			description,
+			extracted_text,
+			ai_summary,
 		}: UploadDocumentData) => {
 			const { publicUrl, key } = await uploadToR2(file, "patient-documents");
 			const res = await documentsApi.create({
@@ -47,6 +51,8 @@ export const useUploadDocument = () => {
 				category,
 				description,
 				storage_url: publicUrl,
+				extracted_text,
+				ai_summary,
 			});
 			return res.data;
 		},

@@ -1,5 +1,7 @@
-import { useState, useMemo } from "react";
+import { useMemo, useState } from "react";
 import {
+	ActivityIndicator,
+	Alert,
 	View,
 	Text,
 	StyleSheet,
@@ -8,19 +10,28 @@ import {
 	TouchableOpacity,
 	RefreshControl,
 	ScrollView,
+	KeyboardAvoidingView,
+	Modal,
+	Platform,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import { useColors } from "@/hooks/useColorScheme";
 import { useHaptics } from "@/hooks/useHaptics";
-import { useWhatsAppConversations } from "@/hooks/useWhatsApp";
+import {
+	useWhatsAppConversations,
+	useWhatsAppOpenConversation,
+	useWhatsAppResolveContact,
+} from "@/hooks/useWhatsApp";
+import { usePatients } from "@/hooks/usePatients";
 import {
 	WaConversation,
 	getContactName,
 	getContactPhone,
 	getMessageTextPreview,
 } from "@/services/whatsapp-api";
+import type { Patient } from "@/types";
 
 const WA_GREEN = "#25D366";
 
@@ -72,7 +83,13 @@ function getStatusColor(status: string): string {
 
 function ConversationSkeleton({ colors }: { colors: ReturnType<typeof useColors> }) {
 	return (
-		<View style={[styles.convItem, { borderBottomColor: colors.border }]}>
+		<View
+			style={[
+				styles.convItem,
+				styles.convCard,
+				{ borderColor: colors.border, backgroundColor: colors.surface },
+			]}
+		>
 			<View style={[styles.avatar, { backgroundColor: colors.border, opacity: 0.4 }]} />
 			<View style={{ flex: 1, gap: 8 }}>
 				<View style={[styles.skeletonLine, { width: "55%", backgroundColor: colors.border }]} />
@@ -102,7 +119,11 @@ function ConversationItem({
 
 	return (
 		<TouchableOpacity
-			style={[styles.convItem, { borderBottomColor: colors.border }]}
+			style={[
+				styles.convItem,
+				styles.convCard,
+				{ borderColor: colors.border, backgroundColor: colors.surface },
+			]}
 			onPress={onPress}
 			activeOpacity={0.7}
 		>
@@ -185,6 +206,12 @@ export default function WhatsAppScreen() {
 	const [statusFilter, setStatusFilter] = useState<StatusFilter>("all");
 	const [search, setSearch] = useState("");
 	const [refreshing, setRefreshing] = useState(false);
+	const [isComposerOpen, setIsComposerOpen] = useState(false);
+	const [composerMode, setComposerMode] = useState<"patient" | "manual">("patient");
+	const [patientSearch, setPatientSearch] = useState("");
+	const [selectedPatient, setSelectedPatient] = useState<Patient | null>(null);
+	const [manualPhone, setManualPhone] = useState("");
+	const [manualName, setManualName] = useState("");
 
 	const queryFilters = useMemo(() => {
 		if (statusFilter === "all") return {};
@@ -192,6 +219,12 @@ export default function WhatsAppScreen() {
 	}, [statusFilter]);
 
 	const { data, isLoading, refetch } = useWhatsAppConversations(queryFilters);
+	const { data: patients, isLoading: isPatientsLoading } = usePatients({
+		search: patientSearch.trim() || undefined,
+		limit: 12,
+	});
+	const resolveContactMutation = useWhatsAppResolveContact();
+	const openConversationMutation = useWhatsAppOpenConversation();
 
 	const conversations = useMemo(() => {
 		const list = data?.data ?? [];
@@ -208,6 +241,18 @@ export default function WhatsAppScreen() {
 		() => (data?.data ?? []).reduce((sum, c) => sum + (c.unreadCount ?? 0), 0),
 		[data],
 	);
+	const summary = useMemo(() => {
+		const list = data?.data ?? [];
+		return {
+			total: list.length,
+			open: list.filter((item) => item.status === "open").length,
+			pending: list.filter((item) => item.status === "pending").length,
+			unread: totalUnread,
+		};
+	}, [data, totalUnread]);
+	const isCreatingConversation =
+		resolveContactMutation.isPending || openConversationMutation.isPending;
+	const canSubmitManual = manualPhone.replace(/\D/g, "").length >= 10;
 
 	const handleRefresh = async () => {
 		setRefreshing(true);
@@ -220,6 +265,61 @@ export default function WhatsAppScreen() {
 		router.push(`/whatsapp-chat/${conv.id}` as any);
 	};
 
+	const resetComposer = () => {
+		setComposerMode("patient");
+		setPatientSearch("");
+		setSelectedPatient(null);
+		setManualPhone("");
+		setManualName("");
+	};
+
+	const handleOpenComposer = () => {
+		resetComposer();
+		setIsComposerOpen(true);
+	};
+
+	const handleCloseComposer = () => {
+		if (isCreatingConversation) return;
+		setIsComposerOpen(false);
+		resetComposer();
+	};
+
+	const handleCreateConversation = async () => {
+		try {
+			const input =
+				composerMode === "patient"
+					? selectedPatient
+						? {
+								patientId: selectedPatient.id,
+								displayName: selectedPatient.name,
+							}
+						: null
+					: {
+							phone: manualPhone,
+							displayName: manualName.trim() || undefined,
+						};
+
+			if (!input) {
+				Alert.alert("Paciente obrigatório", "Selecione um paciente para iniciar a conversa.");
+				return;
+			}
+
+			if (composerMode === "manual" && !canSubmitManual) {
+				Alert.alert("Número inválido", "Digite um número com DDD para continuar.");
+				return;
+			}
+
+			const contact = await resolveContactMutation.mutateAsync(input);
+			const conversation = await openConversationMutation.mutateAsync(contact.id);
+			handleCloseComposer();
+			handleOpenChat(conversation);
+		} catch (error) {
+			const message =
+				error instanceof Error ? error.message : "Não foi possível iniciar a conversa.";
+			Alert.alert("Erro ao criar conversa", message);
+		}
+	};
+
 	return (
 		<SafeAreaView
 			style={[styles.container, { backgroundColor: colors.background }]}
@@ -229,17 +329,32 @@ export default function WhatsAppScreen() {
 			<View style={styles.header}>
 				<View style={styles.headerLeft}>
 					<Ionicons name="logo-whatsapp" size={26} color={WA_GREEN} />
-					<Text style={[styles.headerTitle, { color: colors.text }]}>
-						WhatsApp
-					</Text>
-					{totalUnread > 0 && (
-						<View style={[styles.headerBadge, { backgroundColor: WA_GREEN }]}>
-							<Text style={styles.headerBadgeText}>
-								{totalUnread > 99 ? "99+" : totalUnread}
+					<View>
+						<View style={styles.headerTitleRow}>
+							<Text style={[styles.headerTitle, { color: colors.text }]}>
+								WhatsApp
 							</Text>
+							{totalUnread > 0 && (
+								<View style={[styles.headerBadge, { backgroundColor: WA_GREEN }]}>
+									<Text style={styles.headerBadgeText}>
+										{totalUnread > 99 ? "99+" : totalUnread}
+									</Text>
+								</View>
+							)}
 						</View>
-					)}
+						<Text style={[styles.headerSubtitle, { color: colors.textSecondary }]}>
+							Central de conversas e acompanhamento
+						</Text>
+					</View>
 				</View>
+				<TouchableOpacity
+					style={[styles.primaryCta, { backgroundColor: WA_GREEN }]}
+					onPress={handleOpenComposer}
+					activeOpacity={0.85}
+				>
+					<Ionicons name="add" size={16} color="#fff" />
+					<Text style={styles.primaryCtaText}>Nova</Text>
+				</TouchableOpacity>
 			</View>
 
 			{/* Search */}
@@ -300,6 +415,42 @@ export default function WhatsAppScreen() {
 				})}
 			</ScrollView>
 
+			<View style={styles.summaryRow}>
+				<View
+					style={[
+						styles.summaryCard,
+						{ backgroundColor: colors.surface, borderColor: colors.border },
+					]}
+				>
+					<Text style={[styles.summaryValue, { color: colors.text }]}>{summary.open}</Text>
+					<Text style={[styles.summaryLabel, { color: colors.textSecondary }]}>
+						Em andamento
+					</Text>
+				</View>
+				<View
+					style={[
+						styles.summaryCard,
+						{ backgroundColor: colors.surface, borderColor: colors.border },
+					]}
+				>
+					<Text style={[styles.summaryValue, { color: colors.text }]}>{summary.pending}</Text>
+					<Text style={[styles.summaryLabel, { color: colors.textSecondary }]}>
+						Pendentes
+					</Text>
+				</View>
+				<View
+					style={[
+						styles.summaryCard,
+						{ backgroundColor: colors.surface, borderColor: colors.border },
+					]}
+				>
+					<Text style={[styles.summaryValue, { color: colors.text }]}>{summary.unread}</Text>
+					<Text style={[styles.summaryLabel, { color: colors.textSecondary }]}>
+						Não lidas
+					</Text>
+				</View>
+			</View>
+
 			{/* Conversation list */}
 			{isLoading && !data ? (
 				<>
@@ -344,10 +495,239 @@ export default function WhatsAppScreen() {
 									? "Nenhuma conversa atribuída a você"
 									: "Nenhuma conversa encontrada"}
 							</Text>
+							<TouchableOpacity
+								style={[styles.emptyAction, { backgroundColor: WA_GREEN }]}
+								onPress={handleOpenComposer}
+								activeOpacity={0.85}
+							>
+								<Text style={styles.emptyActionText}>Iniciar nova conversa</Text>
+							</TouchableOpacity>
 						</View>
 					}
 				/>
 			)}
+
+			<Modal
+				visible={isComposerOpen}
+				transparent
+				animationType="fade"
+				onRequestClose={handleCloseComposer}
+			>
+				<View style={styles.modalOverlay}>
+					<KeyboardAvoidingView
+						behavior={Platform.OS === "ios" ? "padding" : undefined}
+						style={styles.modalKeyboard}
+					>
+						<View
+							style={[
+								styles.modalCard,
+								{ backgroundColor: colors.background, borderColor: colors.border },
+							]}
+						>
+							<View style={styles.modalHeader}>
+								<View>
+									<Text style={[styles.modalTitle, { color: colors.text }]}>
+										Nova conversa
+									</Text>
+									<Text
+										style={[styles.modalSubtitle, { color: colors.textSecondary }]}
+									>
+										Escolha um paciente ou digite um número manualmente.
+									</Text>
+								</View>
+								<TouchableOpacity
+									onPress={handleCloseComposer}
+									hitSlop={{ top: 8, right: 8, bottom: 8, left: 8 }}
+								>
+									<Ionicons name="close" size={22} color={colors.textMuted} />
+								</TouchableOpacity>
+							</View>
+
+							<View
+								style={[
+									styles.modeSwitch,
+									{ backgroundColor: colors.surface, borderColor: colors.border },
+								]}
+							>
+								{[
+									{ key: "patient", label: "Paciente" },
+									{ key: "manual", label: "Número" },
+								].map((option) => {
+									const active = composerMode === option.key;
+									return (
+										<TouchableOpacity
+											key={option.key}
+											style={[
+												styles.modeChip,
+												active && { backgroundColor: WA_GREEN },
+											]}
+											onPress={() => setComposerMode(option.key as "patient" | "manual")}
+											activeOpacity={0.85}
+										>
+											<Text
+												style={[
+													styles.modeChipText,
+													{ color: active ? "#fff" : colors.textSecondary },
+												]}
+											>
+												{option.label}
+											</Text>
+										</TouchableOpacity>
+									);
+								})}
+							</View>
+
+							{composerMode === "patient" ? (
+								<View style={styles.modalSection}>
+									<View
+										style={[
+											styles.modalInputWrap,
+											{ backgroundColor: colors.surface, borderColor: colors.border },
+										]}
+									>
+										<Ionicons name="search" size={16} color={colors.textMuted} />
+										<TextInput
+											style={[styles.modalInput, { color: colors.text }]}
+											placeholder="Buscar paciente por nome ou telefone"
+											placeholderTextColor={colors.textMuted}
+											value={patientSearch}
+											onChangeText={setPatientSearch}
+										/>
+									</View>
+
+									<ScrollView
+										style={styles.patientResults}
+										showsVerticalScrollIndicator={false}
+										keyboardShouldPersistTaps="handled"
+									>
+										{isPatientsLoading ? (
+											<View style={styles.loadingBlock}>
+												<ActivityIndicator color={WA_GREEN} />
+											</View>
+										) : patients.length === 0 ? (
+											<Text
+												style={[styles.helperText, { color: colors.textSecondary }]}
+											>
+												Nenhum paciente encontrado.
+											</Text>
+										) : (
+											patients.map((patient) => {
+												const active = selectedPatient?.id === patient.id;
+												return (
+													<TouchableOpacity
+														key={patient.id}
+														style={[
+															styles.patientOption,
+															{
+																backgroundColor: active
+																	? WA_GREEN + "14"
+																	: colors.surface,
+																borderColor: active ? WA_GREEN : colors.border,
+															},
+														]}
+														onPress={() => setSelectedPatient(patient)}
+														activeOpacity={0.85}
+													>
+														<View style={{ flex: 1 }}>
+															<Text
+																style={[styles.patientName, { color: colors.text }]}
+																numberOfLines={1}
+															>
+																{patient.name}
+															</Text>
+															<Text
+																style={[
+																	styles.patientPhone,
+																	{ color: colors.textSecondary },
+																]}
+																numberOfLines={1}
+															>
+																{patient.phone || "Sem telefone cadastrado"}
+															</Text>
+														</View>
+														{active ? (
+															<Ionicons
+																name="checkmark-circle"
+																size={20}
+																color={WA_GREEN}
+															/>
+														) : null}
+													</TouchableOpacity>
+												);
+											})
+										)}
+									</ScrollView>
+								</View>
+							) : (
+								<View style={styles.modalSection}>
+									<View
+										style={[
+											styles.modalInputWrap,
+											{ backgroundColor: colors.surface, borderColor: colors.border },
+										]}
+									>
+										<Ionicons name="person-outline" size={16} color={colors.textMuted} />
+										<TextInput
+											style={[styles.modalInput, { color: colors.text }]}
+											placeholder="Nome do contato opcional"
+											placeholderTextColor={colors.textMuted}
+											value={manualName}
+											onChangeText={setManualName}
+										/>
+									</View>
+									<View
+										style={[
+											styles.modalInputWrap,
+											{ backgroundColor: colors.surface, borderColor: colors.border },
+										]}
+									>
+										<Ionicons name="call-outline" size={16} color={colors.textMuted} />
+										<TextInput
+											style={[styles.modalInput, { color: colors.text }]}
+											placeholder="Número com DDD"
+											placeholderTextColor={colors.textMuted}
+											value={manualPhone}
+											onChangeText={setManualPhone}
+											keyboardType="phone-pad"
+										/>
+									</View>
+									<Text style={[styles.helperText, { color: colors.textSecondary }]}>
+										Use o formato que já costuma receber mensagens no WhatsApp.
+									</Text>
+								</View>
+							)}
+
+							<TouchableOpacity
+								style={[
+									styles.submitButton,
+									{
+										backgroundColor:
+											composerMode === "patient"
+												? selectedPatient
+													? WA_GREEN
+													: colors.border
+												: canSubmitManual
+												? WA_GREEN
+												: colors.border,
+									},
+								]}
+								onPress={handleCreateConversation}
+								disabled={
+									isCreatingConversation ||
+									(composerMode === "patient" ? !selectedPatient : !canSubmitManual)
+								}
+								activeOpacity={0.85}
+							>
+								{isCreatingConversation ? (
+									<ActivityIndicator color="#fff" />
+								) : (
+									<Text style={styles.submitButtonText}>Abrir conversa</Text>
+								)}
+							</TouchableOpacity>
+						</View>
+					</KeyboardAvoidingView>
+				</View>
+			</Modal>
 		</SafeAreaView>
 	);
 }
@@ -366,12 +746,22 @@ const styles = StyleSheet.create({
 	},
 	headerLeft: {
 		flexDirection: "row",
-		alignItems: "center",
+		alignItems: "flex-start",
 		gap: 10,
+		flex: 1,
+	},
+	headerTitleRow: {
+		flexDirection: "row",
+		alignItems: "center",
+		gap: 8,
 	},
 	headerTitle: {
 		fontSize: 22,
 		fontWeight: "700",
+	},
+	headerSubtitle: {
+		fontSize: 13,
+		marginTop: 2,
 	},
 	headerBadge: {
 		minWidth: 20,
@@ -384,6 +774,20 @@ const styles = StyleSheet.create({
 	headerBadgeText: {
 		color: "#fff",
 		fontSize: 11,
+		fontWeight: "700",
+	},
+	primaryCta: {
+		height: 38,
+		borderRadius: 19,
+		paddingHorizontal: 14,
+		alignItems: "center",
+		justifyContent: "center",
+		flexDirection: "row",
+		gap: 6,
+	},
+	primaryCtaText: {
+		color: "#fff",
+		fontSize: 14,
 		fontWeight: "700",
 	},
 	searchBar: {
@@ -411,6 +815,27 @@ const styles = StyleSheet.create({
 		gap: 8,
 		alignItems: "center",
 	},
+	summaryRow: {
+		flexDirection: "row",
+		gap: 10,
+		paddingHorizontal: 16,
+		marginBottom: 12,
+	},
+	summaryCard: {
+		flex: 1,
+		borderRadius: 18,
+		borderWidth: StyleSheet.hairlineWidth,
+		paddingHorizontal: 12,
+		paddingVertical: 14,
+	},
+	summaryValue: {
+		fontSize: 24,
+		fontWeight: "800",
+	},
+	summaryLabel: {
+		fontSize: 12,
+		marginTop: 4,
+	},
 	filterChip: {
 		paddingHorizontal: 12,
 		paddingVertical: 4,
@@ -423,20 +848,25 @@ const styles = StyleSheet.create({
 	},
 	listContent: {
 		flexGrow: 1,
-		paddingBottom: 20,
+		paddingHorizontal: 16,
+		paddingBottom: 28,
 	},
 	convItem: {
 		flexDirection: "row",
-		alignItems: "center",
-		paddingVertical: 12,
-		paddingHorizontal: 16,
-		borderBottomWidth: StyleSheet.hairlineWidth,
+		alignItems: "flex-start",
+		paddingVertical: 14,
+		paddingHorizontal: 14,
 		gap: 12,
 	},
+	convCard: {
+		borderRadius: 20,
+		borderWidth: StyleSheet.hairlineWidth,
+		marginBottom: 12,
+	},
 	avatar: {
-		width: 50,
-		height: 50,
-		borderRadius: 25,
+		width: 52,
+		height: 52,
+		borderRadius: 18,
 		alignItems: "center",
 		justifyContent: "center",
 		flexShrink: 0,
@@ -491,7 +921,8 @@ const styles = StyleSheet.create({
 		gap: 8,
 	},
 	convPreview: {
-		fontSize: 14,
+		fontSize: 13,
+		lineHeight: 18,
 		flex: 1,
 	},
 	unreadBadge: {
@@ -526,5 +957,123 @@ const styles = StyleSheet.create({
 		fontSize: 14,
 		textAlign: "center",
 		lineHeight: 20,
+	},
+	emptyAction: {
+		marginTop: 6,
+		borderRadius: 16,
+		paddingHorizontal: 18,
+		paddingVertical: 12,
+	},
+	emptyActionText: {
+		color: "#fff",
+		fontSize: 14,
+		fontWeight: "700",
+	},
+	modalOverlay: {
+		flex: 1,
+		backgroundColor: "rgba(0,0,0,0.38)",
+		justifyContent: "flex-end",
+	},
+	modalKeyboard: {
+		justifyContent: "flex-end",
+	},
+	modalCard: {
+		borderTopLeftRadius: 28,
+		borderTopRightRadius: 28,
+		paddingHorizontal: 20,
+		paddingTop: 20,
+		paddingBottom: 28,
+		borderWidth: StyleSheet.hairlineWidth,
+	},
+	modalHeader: {
+		flexDirection: "row",
+		justifyContent: "space-between",
+		alignItems: "flex-start",
+		gap: 12,
+		marginBottom: 16,
+	},
+	modalTitle: {
+		fontSize: 22,
+		fontWeight: "700",
+	},
+	modalSubtitle: {
+		fontSize: 13,
+		marginTop: 4,
+		lineHeight: 18,
+	},
+	modeSwitch: {
+		flexDirection: "row",
+		borderRadius: 16,
+		borderWidth: StyleSheet.hairlineWidth,
+		padding: 4,
+		marginBottom: 16,
+		gap: 6,
+	},
+	modeChip: {
+		flex: 1,
+		borderRadius: 12,
+		paddingVertical: 10,
+		alignItems: "center",
+	},
+	modeChipText: {
+		fontSize: 13,
+		fontWeight: "700",
+	},
+	modalSection: {
+		gap: 12,
+	},
+	modalInputWrap: {
+		flexDirection: "row",
+		alignItems: "center",
+		borderRadius: 16,
+		borderWidth: StyleSheet.hairlineWidth,
+		paddingHorizontal: 12,
+		gap: 8,
+	},
+	modalInput: {
+		flex: 1,
+		fontSize: 15,
+		paddingVertical: 14,
+	},
+	patientResults: {
+		maxHeight: 280,
+	},
+	patientOption: {
+		borderRadius: 16,
+		borderWidth: StyleSheet.hairlineWidth,
+		paddingHorizontal: 14,
+		paddingVertical: 13,
+		marginBottom: 10,
+		flexDirection: "row",
+		alignItems: "center",
+		gap: 10,
+	},
+	patientName: {
+		fontSize: 15,
+		fontWeight: "600",
+	},
+	patientPhone: {
+		fontSize: 13,
+		marginTop: 3,
+	},
+	helperText: {
+		fontSize: 12,
+		lineHeight: 17,
+	},
+	loadingBlock: {
+		paddingVertical: 24,
+		alignItems: "center",
+	},
+	submitButton: {
+		marginTop: 18,
+		borderRadius: 18,
+		paddingVertical: 14,
+		alignItems: "center",
+		justifyContent: "center",
+	},
+	submitButtonText: {
+		color: "#fff",
+		fontSize: 15,
+		fontWeight: "700",
 	},
 });

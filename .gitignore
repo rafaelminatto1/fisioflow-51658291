@@ -245,3 +245,7 @@ apps/jules-bot/.dev.vars
 *.cer
 *.mobileprovision
 *.csr
+
+# Local test scripts (contém credenciais)
+scripts/seed-prod-test.mjs
+

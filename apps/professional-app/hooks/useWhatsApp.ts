@@ -6,7 +6,14 @@ import {
 	addNote,
 	updateConversationStatus,
 	fetchQuickReplies,
+	fetchContacts,
+	resolveContact,
+	openConversation,
 	ConversationFilters,
+	ResolveContactInput,
+	WaContact,
+	WaConversation,
+	WaConversationDetailResponse,
 	WaMessage,
 } from "@/services/whatsapp-api";
 
@@ -37,21 +44,30 @@ export function useWhatsAppQuickReplies() {
 	});
 }
 
+export function useWhatsAppContacts(search?: string) {
+	return useQuery({
+		queryKey: ["whatsapp-contacts", search],
+		queryFn: () => fetchContacts(search),
+		enabled: !!search?.trim(),
+		staleTime: 30_000,
+	});
+}
+
 export function useWhatsAppSendMessage(conversationId: string) {
 	const queryClient = useQueryClient();
-	return useMutation({
+	return useMutation<WaMessage, unknown, string, { previous?: WaConversationDetailResponse }>({
 		mutationFn: (content: string) => sendMessage(conversationId, content),
 		onMutate: async (content: string) => {
 			await queryClient.cancelQueries({
 				queryKey: ["whatsapp-messages", conversationId],
 			});
-			const previous = queryClient.getQueryData([
+			const previous = queryClient.getQueryData<WaConversationDetailResponse>([
 				"whatsapp-messages",
 				conversationId,
 			]);
 			queryClient.setQueryData(
 				["whatsapp-messages", conversationId],
-				(old: any) => ({
+				(old: WaConversationDetailResponse | undefined) => ({
 					...old,
 					messages: [
 						...(old?.messages || []),
@@ -71,7 +87,7 @@ export function useWhatsAppSendMessage(conversationId: string) {
 			);
 			return { previous };
 		},
-		onError: (_err: unknown, _vars: unknown, ctx: any) => {
+		onError: (_err, _vars, ctx) => {
 			queryClient.setQueryData(
 				["whatsapp-messages", conversationId],
 				ctx?.previous,
@@ -88,7 +104,7 @@ export function useWhatsAppSendMessage(conversationId: string) {
 
 export function useWhatsAppAddNote(conversationId: string) {
 	const queryClient = useQueryClient();
-	return useMutation({
+	return useMutation<WaMessage, unknown, string>({
 		mutationFn: (content: string) => addNote(conversationId, content),
 		onSettled: () => {
 			queryClient.invalidateQueries({
@@ -111,6 +127,22 @@ export function useWhatsAppUpdateStatus() {
 		onSettled: () => {
 			queryClient.invalidateQueries({ queryKey: ["whatsapp-conversations"] });
 			queryClient.invalidateQueries({ queryKey: ["whatsapp-messages"] });
+		},
+	});
+}
+
+export function useWhatsAppResolveContact() {
+	return useMutation<WaContact, unknown, ResolveContactInput>({
+		mutationFn: (input) => resolveContact(input),
+	});
+}
+
+export function useWhatsAppOpenConversation() {
+	const queryClient = useQueryClient();
+	return useMutation<WaConversation, unknown, string>({
+		mutationFn: (contactId) => openConversation(contactId),
+		onSettled: () => {
+			queryClient.invalidateQueries({ queryKey: ["whatsapp-conversations"] });
 		},
 	});
 }
