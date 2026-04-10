@@ -16,6 +16,7 @@ import type {
 	ExercisePrescription,
 	PrescribedExercise,
 	StandardizedTestResultRow,
+	GeneratedReport,
 } from "@/types/workers";
 
 const clin = (path: string, opts?: RequestInit) =>
@@ -558,6 +559,15 @@ export const clinicalApi = {
 			clin(`/standardized-tests?patientId=${encodeURIComponent(patientId)}`),
 		create: (data: Partial<StandardizedTestResultRow>) =>
 			clin("/standardized-tests", {
+				method: "POST",
+				body: JSON.stringify(data),
+			}),
+	},
+	generatedReports: {
+		list: (params: { patientId: string }) =>
+			clin(`/generated-reports?patientId=${encodeURIComponent(params.patientId)}`),
+		create: (data: Partial<GeneratedReport>) =>
+			clin("/generated-reports", {
 				method: "POST",
 				body: JSON.stringify(data),
 			}),

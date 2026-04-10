@@ -6,11 +6,10 @@ import {
 	StyleSheet,
 	GestureResponderEvent,
 	Image,
-	ImageStyle,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { useColors } from "@/hooks/useColorScheme";
-import { Badge, BadgeCounter } from "@/components/ui/Badge";
+import { Badge } from "@/components/ui/Badge";
 import { Card } from "@/components";
 import { format } from "date-fns";
 
@@ -72,7 +71,6 @@ interface TransactionCardProps {
 }
 
 export function TransactionCard({
-	id,
 	patientName,
 	patientAvatar,
 	amount,
@@ -90,10 +88,6 @@ export function TransactionCard({
 	const methodIcon = (PAYMENT_METHOD_ICONS[paymentMethod || ""] ||
 		"wallet-outline") as keyof typeof Ionicons.prototype.props.name;
 
-	const handlePress = (event: GestureResponderEvent) => {
-		if (onPress) onPress();
-	};
-
 	const getStatusColor = () => {
 		if (statusConfig.variant === "destructive") return colors.error;
 		if (statusConfig.variant === "success") return colors.success;
@@ -102,127 +96,110 @@ export function TransactionCard({
 	};
 
 	return (
-		<TouchableOpacity onPress={handlePress} activeOpacity={0.7}>
-			<Card style={{ ...styles.card, ...style }} padding="none">
+		<TouchableOpacity onPress={onPress} activeOpacity={0.7} style={styles.container}>
+			<Card style={[styles.card, style]} padding="none">
 				<View style={styles.cardContent}>
-					<View style={styles.mainContent}>
-						<View style={styles.avatarContainer}>
-							{patientAvatar ? (
-								<Image source={{ uri: patientAvatar }} style={styles.avatar} />
-							) : (
-								<View
-									style={[
-										styles.avatarPlaceholder,
-										{ backgroundColor: colors.primary + "20" },
-									]}
-								>
-									<Text
-										style={[styles.avatarInitials, { color: colors.primary }]}
+					<View style={styles.topRow}>
+						<View style={styles.patientInfo}>
+							<View style={styles.avatarContainer}>
+								{patientAvatar ? (
+									<Image source={{ uri: patientAvatar }} style={styles.avatar} />
+								) : (
+									<View
+										style={[
+											styles.avatarPlaceholder,
+											{ backgroundColor: colors.primary + "15" },
+										]}
 									>
-										{patientName.charAt(0).toUpperCase()}
-									</Text>
-								</View>
-							)}
-						</View>
-
-						<View style={styles.content}>
-							<View style={styles.header}>
-								<Text style={[styles.patientName, { color: colors.text }]}>
+										<Text
+											style={[styles.avatarInitials, { color: colors.primary }]}
+										>
+											{patientName.charAt(0).toUpperCase()}
+										</Text>
+									</View>
+								)}
+							</View>
+							<View style={styles.nameContainer}>
+								<Text style={[styles.patientName, { color: colors.text }]} numberOfLines={1}>
 									{patientName}
 								</Text>
-								<Badge
-									variant={statusConfig.variant}
-									icon={
-										<Ionicons
-											name={statusConfig.icon as any}
-											size={12}
-											color={getStatusColor()}
-										/>
-									}
-								>
-									{statusConfig.label}
-								</Badge>
-							</View>
-
-							<View style={styles.subheader}>
 								<Text style={[styles.date, { color: colors.textSecondary }]}>
 									{format(new Date(date), "dd/MM/yyyy")}
 								</Text>
-								<View
-									style={[styles.separator, { backgroundColor: colors.border }]}
-								/>
-								<View style={styles.method}>
+							</View>
+						</View>
+						
+						<View style={styles.statusContainer}>
+							<Badge
+								variant={statusConfig.variant}
+								icon={
 									<Ionicons
-										name={methodIcon as any}
-										size={14}
-										color={colors.textSecondary}
+										name={statusConfig.icon as any}
+										size={12}
+										color={getStatusColor()}
 									/>
-									<Text
-										style={[styles.methodText, { color: colors.textSecondary }]}
-									>
-										{paymentMethod || "Outro"}
-									</Text>
-								</View>
-							</View>
-
-							<View style={styles.amountContainer}>
-								<Text style={[styles.amount, { color: colors.text }]}>
-									R${" "}
-									{amount.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}
-								</Text>
-							</View>
+								}
+							>
+								{statusConfig.label}
+							</Badge>
 						</View>
 					</View>
 
-					<View style={[styles.actions, { borderTopColor: colors.border }]}>
-						{status === "paid" && onReceipt && (
-							<TouchableOpacity
-								onPress={(e) => {
-									e.stopPropagation();
-									onReceipt(e);
-								}}
-								style={styles.actionButton}
-							>
-								<Ionicons
-									name="document-text-outline"
-									size={20}
-									color={colors.primary}
-								/>
-							</TouchableOpacity>
-						)}
-						{onEdit && (
-							<TouchableOpacity
-								onPress={(e) => {
-									e.stopPropagation();
-									onEdit(e);
-								}}
-								style={styles.actionButton}
-							>
-								<Ionicons
-									name="pencil-outline"
-									size={20}
-									color={colors.textSecondary}
-								/>
-							</TouchableOpacity>
-						)}
+					<View style={styles.middleRow}>
+						<View style={styles.methodContainer}>
+							<Ionicons
+								name={methodIcon as any}
+								size={14}
+								color={colors.textSecondary}
+							/>
+							<Text style={[styles.methodText, { color: colors.textSecondary }]}>
+								{paymentMethod || "Outro"}
+							</Text>
+						</View>
+						<Text style={[styles.amount, { color: colors.text }]}>
+							R$ {amount.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}
+						</Text>
+					</View>
+
+					<View style={[styles.actionsRow, { borderTopColor: colors.border + "50" }]}>
+						<View style={styles.mainActions}>
+							{status === "paid" && onReceipt && (
+								<TouchableOpacity
+									onPress={(e) => {
+										e.stopPropagation();
+										onReceipt(e);
+									}}
+									style={[styles.actionBtn, { backgroundColor: colors.primary + "10" }]}
+								>
+									<Ionicons name="document-text" size={18} color={colors.primary} />
+									<Text style={[styles.actionBtnText, { color: colors.primary }]}>Recibo</Text>
+								</TouchableOpacity>
+							)}
+							{onEdit && (
+								<TouchableOpacity
+									onPress={(e) => {
+										e.stopPropagation();
+										onEdit(e);
+									}}
+									style={[styles.actionBtn, { backgroundColor: colors.surface }]}
+								>
+									<Ionicons name="pencil" size={18} color={colors.textSecondary} />
+									<Text style={[styles.actionBtnText, { color: colors.textSecondary }]}>Editar</Text>
+								</TouchableOpacity>
+							)}
+						</View>
+						
 						{onDelete && (
 							<TouchableOpacity
 								onPress={(e) => {
 									e.stopPropagation();
 									onDelete(e);
 								}}
-								style={styles.actionButton}
+								style={styles.deleteBtn}
 							>
-								<Ionicons name="trash-outline" size={20} color={colors.error} />
+								<Ionicons name="trash-outline" size={18} color={colors.error} />
 							</TouchableOpacity>
 						)}
-						<View style={[styles.chevron, { borderColor: colors.border }]}>
-							<Ionicons
-								name="chevron-forward"
-								size={20}
-								color={colors.textMuted}
-							/>
-						</View>
 					</View>
 				</View>
 			</Card>
@@ -230,198 +207,120 @@ export function TransactionCard({
 	);
 }
 
-interface TransactionCardCompactProps {
-	patientName: string;
-	amount: number;
-	date: string;
-	status: string;
-	onPress?: () => void;
-}
-
-export function TransactionCardCompact({
-	patientName,
-	amount,
-	date,
-	status,
-	onPress,
-}: TransactionCardCompactProps) {
-	const colors = useColors();
-	const statusConfig = STATUS_CONFIG[status] || STATUS_CONFIG.pending;
-
-	return (
-		<TouchableOpacity onPress={onPress} activeOpacity={0.7}>
-			<View style={[styles.compactCard, { borderBottomColor: colors.border }]}>
-				<View style={styles.compactContent}>
-					<View
-						style={[
-							styles.compactAvatarPlaceholder,
-							{ backgroundColor: colors.primary + "20" },
-						]}
-					>
-						<Text
-							style={[styles.compactAvatarInitials, { color: colors.primary }]}
-						>
-							{patientName.charAt(0).toUpperCase()}
-						</Text>
-					</View>
-
-					<View style={styles.compactText}>
-						<Text style={[styles.compactName, { color: colors.text }]}>
-							{patientName}
-						</Text>
-						<Text style={[styles.compactDate, { color: colors.textSecondary }]}>
-							{format(new Date(date), "dd/MM/yyyy")}
-						</Text>
-					</View>
-				</View>
-
-				<View style={styles.compactRight}>
-					<Text style={[styles.compactAmount, { color: colors.text }]}>
-						R$ {amount.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}
-					</Text>
-					<Badge variant={statusConfig.variant} style={styles.compactBadge}>
-						{statusConfig.label}
-					</Badge>
-				</View>
-			</View>
-		</TouchableOpacity>
-	);
-}
-
 const styles = StyleSheet.create({
-	card: {
+	container: {
 		marginBottom: 12,
+	},
+	card: {
+		borderRadius: 16,
+		borderWidth: 1,
+		borderColor: "#f1f5f9",
+		shadowColor: "#000",
+		shadowOffset: { width: 0, height: 2 },
+		shadowOpacity: 0.03,
+		shadowRadius: 8,
+		elevation: 2,
 	},
 	cardContent: {
-		padding: 16,
+		padding: 14,
 	},
-	mainContent: {
+	topRow: {
 		flexDirection: "row",
+		justifyContent: "space-between",
+		alignItems: "flex-start",
 		marginBottom: 12,
 	},
-	avatarContainer: {
+	patientInfo: {
+		flexDirection: "row",
+		alignItems: "center",
+		flex: 1,
 		marginRight: 12,
 	},
+	avatarContainer: {
+		marginRight: 10,
+	},
 	avatar: {
-		width: 48,
-		height: 48,
-		borderRadius: 24,
+		width: 36,
+		height: 36,
+		borderRadius: 18,
 	},
 	avatarPlaceholder: {
-		width: 48,
-		height: 48,
-		borderRadius: 24,
+		width: 36,
+		height: 36,
+		borderRadius: 18,
 		alignItems: "center",
 		justifyContent: "center",
 	},
 	avatarInitials: {
-		fontSize: 20,
+		fontSize: 14,
 		fontWeight: "700",
 	},
-	content: {
+	nameContainer: {
 		flex: 1,
-	},
-	header: {
-		flexDirection: "row",
-		justifyContent: "space-between",
-		alignItems: "flex-start",
-		marginBottom: 6,
 	},
 	patientName: {
-		fontSize: 16,
-		fontWeight: "600",
-		flex: 1,
-	},
-	subheader: {
-		flexDirection: "row",
-		alignItems: "center",
-		marginBottom: 8,
+		fontSize: 15,
+		fontWeight: "700",
+		marginBottom: 2,
 	},
 	date: {
-		fontSize: 13,
+		fontSize: 12,
+		fontWeight: "500",
 	},
-	separator: {
-		width: 1,
-		height: 12,
-		marginHorizontal: 8,
+	statusContainer: {
+		alignItems: "flex-end",
 	},
-	method: {
+	middleRow: {
+		flexDirection: "row",
+		justifyContent: "space-between",
+		alignItems: "center",
+		marginBottom: 14,
+	},
+	methodContainer: {
 		flexDirection: "row",
 		alignItems: "center",
-		gap: 4,
+		gap: 6,
+		backgroundColor: "#f8fafc",
+		paddingHorizontal: 8,
+		paddingVertical: 4,
+		borderRadius: 6,
 	},
 	methodText: {
-		fontSize: 13,
-	},
-	amountContainer: {
-		marginTop: 4,
+		fontSize: 12,
+		fontWeight: "600",
 	},
 	amount: {
-		fontSize: 24,
-		fontWeight: "700",
+		fontSize: 18,
+		fontWeight: "800",
+		letterSpacing: -0.5,
 	},
-	actions: {
+	actionsRow: {
 		flexDirection: "row",
+		justifyContent: "space-between",
 		alignItems: "center",
 		paddingTop: 12,
 		borderTopWidth: 1,
+	},
+	mainActions: {
+		flexDirection: "row",
 		gap: 8,
 	},
-	actionButton: {
-		padding: 8,
-		borderRadius: 8,
-	},
-	chevron: {
-		marginLeft: "auto",
-		padding: 8,
+	actionBtn: {
+		flexDirection: "row",
+		alignItems: "center",
+		gap: 6,
+		paddingHorizontal: 10,
+		paddingVertical: 6,
 		borderRadius: 8,
 		borderWidth: 1,
+		borderColor: "rgba(0,0,0,0.03)",
 	},
-	compactCard: {
-		flexDirection: "row",
-		alignItems: "center",
-		justifyContent: "space-between",
-		paddingVertical: 12,
-		borderBottomWidth: 1,
-	},
-	compactContent: {
-		flexDirection: "row",
-		alignItems: "center",
-		flex: 1,
-	},
-	compactAvatarPlaceholder: {
-		width: 40,
-		height: 40,
-		borderRadius: 20,
-		alignItems: "center",
-		justifyContent: "center",
-		marginRight: 12,
-	},
-	compactAvatarInitials: {
-		fontSize: 16,
-		fontWeight: "700",
-	},
-	compactText: {
-		flex: 1,
-	},
-	compactName: {
-		fontSize: 14,
-		fontWeight: "600",
-		marginBottom: 2,
-	},
-	compactDate: {
+	actionBtnText: {
 		fontSize: 12,
-	},
-	compactRight: {
-		alignItems: "flex-end",
-	},
-	compactAmount: {
-		fontSize: 16,
 		fontWeight: "700",
-		marginBottom: 4,
 	},
-	compactBadge: {
-		paddingVertical: 2,
-		paddingHorizontal: 8,
+	deleteBtn: {
+		padding: 8,
+		borderRadius: 8,
 	},
 });

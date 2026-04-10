@@ -20,6 +20,9 @@ import { useEvolutions, useEvolution } from '@/hooks';
 import { SOAPForm } from '@/components/evolution/SOAPForm';
 import { PainLevelSlider } from '@/components/evolution/PainLevelSlider';
 import { PhotoUpload } from '@/components/evolution/PhotoUpload';
+import { useAuthStore } from '@/store/auth';
+import { usePatient } from '@/hooks/usePatients';
+import { reportSharingService } from '@/lib/services/reportSharingService';
 
 export default function EvolutionDetailScreen() {
   const colors = useColors();
@@ -40,7 +43,11 @@ export default function EvolutionDetailScreen() {
     isDeleting,
   } = useEvolutions(patientId);
 
+  const { user } = useAuthStore();
+  const { data: patient } = usePatient(patientId);
+
   const [isEditing, setIsEditing] = useState(false);
+  const [isSharing, setIsSharing] = useState(false);
   const [subjective, setSubjective] = useState('');
   const [objective, setObjective] = useState('');
   const [assessment, setAssessment] = useState('');
@@ -88,6 +95,83 @@ export default function EvolutionDetailScreen() {
     } catch (err: any) {
       hapticError();
       Alert.alert('Erro', err.message || 'Não foi possível atualizar a evolução.');
+    }
+  };
+
+  const handleSaveAndIssue = async () => {
+    medium();
+    
+    if (!patient || !user) {
+      Alert.alert('Erro', 'Dados do paciente ou profissional não carregados.');
+      return;
+    }
+
+    const hasContent = subjective.trim() || objective.trim() || assessment.trim() || plan.trim();
+    if (!hasContent) {
+      Alert.alert('Atenção', 'Preencha o SOAP antes de emitir o relatório.');
+      hapticError();
+      return;
+    }
+
+    setIsSharing(true);
+    try {
+      // 1. Update evolution first
+      const updatedEvolution = {
+        id: evolutionId,
+        subjective: subjective.trim(),
+        objective: objective.trim(),
+        assessment: assessment.trim(),
+        plan: plan.trim(),
+        painLevel,
+        attachments: photos,
+        date: evolution?.date || new Date().toISOString(),
+      } as any;
+
+      await updateEvolutionAsync({
+        id: evolutionId,
+        data: updatedEvolution,
+      });
+
+      // 2. Process and share via WhatsApp
+      await reportSharingService.shareEvolutionViaWhatsApp(
+        patient,
+        updatedEvolution,
+        user.id
+      );
+
+      success();
+      setIsEditing(false);
+      Alert.alert('Sucesso', 'Relatório salvo e enviado via WhatsApp com sucesso!');
+    } catch (err: any) {
+      hapticError();
+      Alert.alert('Erro', err.message || 'Não foi possível salvar ou enviar o relatório.');
+    } finally {
+      setIsSharing(false);
+    }
+  };
+
+  const handleIssueExisting = async () => {
+    medium();
+    
+    if (!patient || !user || !evolution) {
+      Alert.alert('Erro', 'Dados incompletos para emissão.');
+      return;
+    }
+
+    setIsSharing(true);
+    try {
+      await reportSharingService.shareEvolutionViaWhatsApp(
+        patient,
+        evolution as any,
+        user.id
+      );
+      success();
+      Alert.alert('Sucesso', 'Relatório enviado com sucesso via WhatsApp!');
+    } catch (err: any) {
+      hapticError();
+      Alert.alert('Erro', err.message || 'Não foi possível enviar o relatório.');
+    } finally {
+      setIsSharing(false);
     }
   };
 
@@ -216,9 +300,24 @@ export default function EvolutionDetailScreen() {
             {/* Action Buttons */}
             <View style={styles.actions}>
               <TouchableOpacity
+                style={[styles.saveAndIssueButton, { backgroundColor: colors.success }]}
+                onPress={handleSaveAndIssue}
+                disabled={isUpdating || isSharing}
+              >
+                {isSharing ? (
+                  <ActivityIndicator color="#fff" />
+                ) : (
+                  <>
+                    <Ionicons name="logo-whatsapp" size={20} color="#fff" />
+                    <Text style={styles.saveButtonText}>Salvar e Emitir</Text>
+                  </>
+                )}
+              </TouchableOpacity>
+
+              <TouchableOpacity
                 style={[styles.saveButton, { backgroundColor: colors.primary }]}
                 onPress={handleSave}
-                disabled={isUpdating}
+                disabled={isUpdating || isSharing}
               >
                 {isUpdating ? (
                   <ActivityIndicator color="#fff" />
@@ -340,6 +439,24 @@ export default function EvolutionDetailScreen() {
                 </ScrollView>
               </View>
             )}
+
+            {/* View Mode Share Button */}
+            <View style={styles.viewModeActions}>
+              <TouchableOpacity
+                style={[styles.issueButton, { backgroundColor: colors.success + '20', borderColor: colors.success }]}
+                onPress={handleIssueExisting}
+                disabled={isSharing}
+              >
+                {isSharing ? (
+                  <ActivityIndicator color={colors.success} />
+                ) : (
+                  <>
+                    <Ionicons name="logo-whatsapp" size={22} color={colors.success} />
+                    <Text style={[styles.issueButtonText, { color: colors.success }]}>Emitir Relatório via WhatsApp</Text>
+                  </>
+                )}
+              </TouchableOpacity>
+            </View>
           </>
         )}
       </ScrollView>
@@ -479,6 +596,38 @@ const styles = StyleSheet.create({
     color: '#fff',
     fontSize: 16,
     fontWeight: '600',
+  },
+  saveAndIssueButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    padding: 16,
+    borderRadius: 12,
+    gap: 8,
+    elevation: 2,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+  },
+  viewModeActions: {
+    marginTop: 8,
+    marginBottom: 24,
+  },
+  issueButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    padding: 18,
+    borderRadius: 16,
+    borderWidth: 1.5,
+    borderStyle: 'dashed',
+    gap: 10,
+  },
+  issueButtonText: {
+    fontSize: 16,
+    fontWeight: '700',
+    letterSpacing: 0.3,
   },
   loadingContainer: {
     flex: 1,

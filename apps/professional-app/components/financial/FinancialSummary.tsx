@@ -3,7 +3,6 @@ import { View, Text, StyleSheet, TouchableOpacity } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { useColors } from "@/hooks/useColorScheme";
 import { Card } from "@/components";
-import { Badge } from "@/components/ui/Badge";
 
 interface FinancialSummaryCardProps {
 	title: string;
@@ -34,27 +33,31 @@ export function FinancialSummaryCard({
 		switch (variant) {
 			case "success":
 				return {
-					backgroundColor: colors.success + "10",
+					backgroundColor: colors.success + "08",
 					iconColor: colors.success,
-					borderColor: colors.success + "20",
+					borderColor: colors.success + "15",
+					iconBg: colors.success + "15",
 				};
 			case "warning":
 				return {
-					backgroundColor: colors.warning + "10",
+					backgroundColor: colors.warning + "08",
 					iconColor: colors.warning,
-					borderColor: colors.warning + "20",
+					borderColor: colors.warning + "15",
+					iconBg: colors.warning + "15",
 				};
 			case "info":
 				return {
-					backgroundColor: colors.info + "10",
+					backgroundColor: colors.info + "08",
 					iconColor: colors.info,
-					borderColor: colors.info + "20",
+					borderColor: colors.info + "15",
+					iconBg: colors.info + "15",
 				};
 			default:
 				return {
-					backgroundColor: colors.primary + "10",
+					backgroundColor: colors.primary + "08",
 					iconColor: colors.primary,
-					borderColor: colors.primary + "20",
+					borderColor: colors.primary + "15",
+					iconBg: colors.primary + "15",
 				};
 		}
 	};
@@ -62,33 +65,42 @@ export function FinancialSummaryCard({
 	const variantStyles = getVariantStyles();
 
 	return (
-		<TouchableOpacity onPress={onPress} activeOpacity={0.7} disabled={!onPress}>
+		<TouchableOpacity
+			onPress={onPress}
+			activeOpacity={0.7}
+			disabled={!onPress}
+			style={styles.gridCard}
+		>
 			<Card
-				style={{
-					...styles.card,
-					backgroundColor: variantStyles.backgroundColor,
-					borderColor: variantStyles.borderColor,
-				}}
-				padding="md"
+				style={[
+					styles.card,
+					{
+						backgroundColor: colors.surface,
+						borderColor: variantStyles.borderColor,
+					},
+				]}
+				padding="none"
 			>
-				<View style={styles.content}>
-					<View
-						style={[
-							styles.iconContainer,
-							{ backgroundColor: variantStyles.backgroundColor },
-						]}
-					>
-						<Ionicons
-							name={icon as any}
-							size={24}
-							color={variantStyles.iconColor}
-						/>
-					</View>
-
-					<View style={styles.textContainer}>
+				<View style={styles.cardInner}>
+					<View style={styles.contentHeader}>
+						<View
+							style={[
+								styles.iconContainer,
+								{ backgroundColor: variantStyles.iconBg },
+							]}
+						>
+							<Ionicons
+								name={icon as any}
+								size={20}
+								color={variantStyles.iconColor}
+							/>
+						</View>
 						<Text style={[styles.title, { color: colors.textSecondary }]}>
 							{title}
 						</Text>
+					</View>
+
+					<View style={styles.amountContainer}>
 						<Text style={[styles.amount, { color: colors.text }]}>
 							R$ {amount.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}
 						</Text>
@@ -101,26 +113,38 @@ export function FinancialSummaryCard({
 
 					{trend && (
 						<View style={styles.trendContainer}>
-							<Ionicons
-								name={
-									trend.positive !== false ? "trending-up" : "trending-down"
-								}
-								size={16}
-								color={trend.positive !== false ? colors.success : colors.error}
-							/>
-							<Text
+							<View
 								style={[
-									styles.trendValue,
+									styles.trendBadge,
 									{
-										color:
-											trend.positive !== false ? colors.success : colors.error,
+										backgroundColor:
+											(trend.positive !== false ? colors.success : colors.error) +
+											"15",
 									},
 								]}
 							>
-								{Math.abs(trend.value).toFixed(1)}%
-							</Text>
+								<Ionicons
+									name={
+										trend.positive !== false ? "trending-up" : "trending-down"
+									}
+									size={12}
+									color={trend.positive !== false ? colors.success : colors.error}
+								/>
+								<Text
+									style={[
+										styles.trendValue,
+										{
+											color:
+												trend.positive !== false ? colors.success : colors.error,
+										},
+									]}
+								>
+									{Math.abs(trend.value).toFixed(1)}%
+								</Text>
+							</View>
 							<Text
-								style={[styles.trendLabel, { color: colors.textSecondary }]}
+								style={[styles.trendLabel, { color: colors.textMuted }]}
+								numberOfLines={1}
 							>
 								{trend.label}
 							</Text>
@@ -149,8 +173,6 @@ interface FinancialSummaryGridProps {
 }
 
 export function FinancialSummaryGrid({ cards }: FinancialSummaryGridProps) {
-	const colors = useColors();
-
 	return (
 		<View style={styles.grid}>
 			{cards.map((card, index) => (
@@ -209,17 +231,26 @@ export function StatCard({
 const styles = StyleSheet.create({
 	card: {
 		borderWidth: 1,
-		borderRadius: 16,
+		borderRadius: 20,
+		shadowColor: "#000",
+		shadowOffset: { width: 0, height: 4 },
+		shadowOpacity: 0.03,
+		shadowRadius: 10,
+		elevation: 2,
 	},
-	content: {
+	cardInner: {
+		padding: 16,
+	},
+	contentHeader: {
 		flexDirection: "row",
 		alignItems: "center",
-		gap: 12,
+		gap: 10,
+		marginBottom: 12,
 	},
 	iconContainer: {
-		width: 48,
-		height: 48,
-		borderRadius: 12,
+		width: 36,
+		height: 36,
+		borderRadius: 10,
 		alignItems: "center",
 		justifyContent: "center",
 	},
@@ -228,28 +259,43 @@ const styles = StyleSheet.create({
 	},
 	title: {
 		fontSize: 13,
-		fontWeight: "500",
-		marginBottom: 4,
+		fontWeight: "600",
+		letterSpacing: 0.1,
+	},
+	amountContainer: {
+		marginBottom: 12,
 	},
 	amount: {
-		fontSize: 24,
-		fontWeight: "700",
-		marginBottom: 2,
+		fontSize: 22,
+		fontWeight: "800",
+		letterSpacing: -0.5,
 	},
 	subtitle: {
-		fontSize: 12,
+		fontSize: 11,
+		fontWeight: "500",
+		marginTop: 2,
 	},
 	trendContainer: {
 		flexDirection: "row",
 		alignItems: "center",
+		gap: 8,
+	},
+	trendBadge: {
+		flexDirection: "row",
+		alignItems: "center",
 		gap: 4,
+		paddingHorizontal: 6,
+		paddingVertical: 3,
+		borderRadius: 6,
 	},
 	trendValue: {
-		fontSize: 14,
+		fontSize: 11,
 		fontWeight: "700",
 	},
 	trendLabel: {
-		fontSize: 12,
+		fontSize: 10,
+		fontWeight: "500",
+		flex: 1,
 	},
 	grid: {
 		flexDirection: "row",

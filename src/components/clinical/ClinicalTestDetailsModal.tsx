@@ -2,7 +2,6 @@ import { useEffect, useState } from "react";
 import {
 	CalendarCheck,
 	CheckSquare,
-	Copy,
 	Download,
 	Edit3,
 	ExternalLink,
@@ -139,8 +138,8 @@ export function ClinicalTestDetailsModal({
 							className="rounded-xl border-teal-200 text-teal-700 hover:bg-teal-50"
 							onClick={() => onEdit(test)}
 						>
-							<Copy className="mr-2 h-4 w-4" />
-							Duplicar
+							<Edit3 className="mr-2 h-4 w-4" />
+							Editar
 						</Button>
 					) : (
 						<>

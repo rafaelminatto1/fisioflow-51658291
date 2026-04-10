@@ -3,12 +3,17 @@ import { ptBR } from "date-fns/locale";
 import {
 	AlertTriangle,
 	ArrowRightLeft,
+	BarChart3,
+	BellRing,
+	Calendar,
+	CalendarCheck,
 	CheckCircle2,
 	ChevronDown,
 	Clock,
 	Filter,
 	Hash,
 	Loader2,
+	Megaphone,
 	MessageCircle,
 	MessageSquare,
 	MoreVertical,
@@ -20,6 +25,7 @@ import {
 	Send,
 	StickyNote,
 	Tag,
+	Target,
 	User,
 	UserPlus,
 	X,
@@ -59,16 +65,23 @@ import type {
 	Conversation,
 	Contact,
 	Message,
+	Metrics,
 	QuickReply,
 	Tag as TagType,
 } from "@/services/whatsapp-api";
 import {
 	addTags,
+	fetchMetrics,
+	fetchPendingConfirmations,
 	removeTag as apiRemoveTag,
 	fetchContacts,
 	fetchQuickReplies,
 	fetchTags,
 	findOrCreateConversation,
+	resolveContact,
+	sendBroadcast,
+	sendMessage as apiSendMessage,
+	updatePriority,
 } from "@/services/whatsapp-api";
 
 const STATUS_TABS = [
@@ -95,6 +108,369 @@ const PRIORITY_COLORS: Record<string, string> = {
 	high: "text-orange-500",
 	urgent: "text-red-500",
 };
+
+const PRIORITY_LABELS: Record<string, string> = {
+	low: "Baixa",
+	medium: "Média",
+	high: "Alta",
+	urgent: "Urgente",
+};
+
+function MetricsStrip({ metrics }: { metrics: Metrics | null }) {
+	if (!metrics) return null;
+
+	const open = metrics.openConversations ?? (metrics as any).byStatus?.open ?? 0;
+	const pending = metrics.pendingConversations ?? (metrics as any).byStatus?.pending ?? 0;
+	const slaBreached = metrics.slaBreached ?? 0;
+	const avgMin = metrics.avgFirstResponseTime
+		? Math.round(metrics.avgFirstResponseTime / 60)
+		: ((metrics as any).avgResponseSeconds
+			? Math.round((metrics as any).avgResponseSeconds / 60)
+			: 0);
+
+	return (
+		<div className="flex items-center gap-2 px-3 py-2 bg-muted/30 border-b text-xs">
+			<div className="flex items-center gap-1.5 px-2 py-1 rounded-lg bg-green-50 dark:bg-green-900/20 text-green-700 dark:text-green-400 font-medium">
+				<MessageCircle className="h-3 w-3" />
+				<span>{open} abertas</span>
+			</div>
+			<div className="flex items-center gap-1.5 px-2 py-1 rounded-lg bg-yellow-50 dark:bg-yellow-900/20 text-yellow-700 dark:text-yellow-400 font-medium">
+				<Clock className="h-3 w-3" />
+				<span>{pending} pendentes</span>
+			</div>
+			{slaBreached > 0 && (
+				<div className="flex items-center gap-1.5 px-2 py-1 rounded-lg bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400 font-medium">
+					<AlertTriangle className="h-3 w-3" />
+					<span>{slaBreached} SLA</span>
+				</div>
+			)}
+			{avgMin > 0 && (
+				<div className="flex items-center gap-1.5 ml-auto text-muted-foreground">
+					<BarChart3 className="h-3 w-3" />
+					<span>~{avgMin}min resposta</span>
+				</div>
+			)}
+		</div>
+	);
+}
+
+function BroadcastModal({
+	open,
+	onClose,
+}: {
+	open: boolean;
+	onClose: () => void;
+}) {
+	const [step, setStep] = useState<1 | 2 | 3>(1);
+	const [contactSearch, setContactSearch] = useState("");
+	const [contacts, setContacts] = useState<Contact[]>([]);
+	const [loadingContacts, setLoadingContacts] = useState(false);
+	const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+	const [message, setMessage] = useState("");
+	const [sending, setSending] = useState(false);
+	const [result, setResult] = useState<{ sent: number; failed: number; total: number } | null>(null);
+
+	useEffect(() => {
+		if (!open) return;
+		let active = true;
+		const t = window.setTimeout(async () => {
+			setLoadingContacts(true);
+			try {
+				const res = await fetchContacts({ search: contactSearch || undefined, limit: 50 });
+				if (active) setContacts(res.data);
+			} catch {
+				if (active) setContacts([]);
+			} finally {
+				if (active) setLoadingContacts(false);
+			}
+		}, 250);
+		return () => { active = false; window.clearTimeout(t); };
+	}, [open, contactSearch]);
+
+	const handleClose = () => {
+		setStep(1);
+		setSelectedIds(new Set());
+		setMessage("");
+		setResult(null);
+		setContactSearch("");
+		onClose();
+	};
+
+	const toggleContact = (id: string) => {
+		setSelectedIds((prev) => {
+			const next = new Set(prev);
+			if (next.has(id)) next.delete(id);
+			else next.add(id);
+			return next;
+		});
+	};
+
+	const handleSend = async () => {
+		if (!message.trim() || selectedIds.size === 0) return;
+		setSending(true);
+		try {
+			const res = await sendBroadcast([...selectedIds], message.trim());
+			setResult(res);
+			setStep(3);
+		} catch {
+			// ignore
+		} finally {
+			setSending(false);
+		}
+	};
+
+	return (
+		<Dialog open={open} onOpenChange={(v) => { if (!v) handleClose(); }}>
+			<DialogContent className="sm:max-w-[520px]">
+				<DialogHeader>
+					<DialogTitle className="flex items-center gap-2 text-primary">
+						<Megaphone className="h-5 w-5" />
+						Campanha WhatsApp
+					</DialogTitle>
+				</DialogHeader>
+
+				{step === 1 && (
+					<div className="space-y-4 py-2">
+						<div className="flex items-center gap-2">
+							<div className="flex-1 h-1.5 rounded-full bg-primary" />
+							<div className="flex-1 h-1.5 rounded-full bg-muted" />
+							<div className="flex-1 h-1.5 rounded-full bg-muted" />
+						</div>
+						<p className="text-sm text-muted-foreground">
+							Selecione os contatos que receberão a mensagem ({selectedIds.size} selecionados)
+						</p>
+						<Input
+							placeholder="Buscar contato..."
+							value={contactSearch}
+							onChange={(e) => setContactSearch(e.target.value)}
+							className="rounded-full bg-muted/50"
+						/>
+						<ScrollArea className="h-[280px] border rounded-xl bg-muted/10 px-2 py-2">
+							{loadingContacts ? (
+								<div className="flex justify-center py-8">
+									<Loader2 className="h-5 w-5 animate-spin text-primary" />
+								</div>
+							) : contacts.length === 0 ? (
+								<div className="text-sm text-muted-foreground text-center py-8">
+									Nenhum contato encontrado
+								</div>
+							) : (
+								<div className="space-y-1">
+									{contacts.map((c) => {
+										const sel = selectedIds.has(c.id);
+										return (
+											<button
+												key={c.id}
+												type="button"
+												onClick={() => toggleContact(c.id)}
+												className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-left transition-colors ${sel ? "bg-primary/10 border border-primary/20" : "hover:bg-muted/60"}`}
+											>
+												<div className={`h-4 w-4 rounded border-2 flex items-center justify-center shrink-0 ${sel ? "bg-primary border-primary" : "border-border"}`}>
+													{sel && <CheckCircle2 className="h-3 w-3 text-primary-foreground" />}
+												</div>
+												<div className="flex-1 min-w-0">
+													<p className="text-sm font-medium truncate">{c.name}</p>
+													<p className="text-xs text-muted-foreground truncate">{c.phone || "Sem telefone"}</p>
+												</div>
+											</button>
+										);
+									})}
+								</div>
+							)}
+						</ScrollArea>
+						<DialogFooter>
+							<DialogClose asChild>
+								<Button variant="ghost" onClick={handleClose}>Cancelar</Button>
+							</DialogClose>
+							<Button onClick={() => setStep(2)} disabled={selectedIds.size === 0}>
+								Próximo ({selectedIds.size})
+							</Button>
+						</DialogFooter>
+					</div>
+				)}
+
+				{step === 2 && (
+					<div className="space-y-4 py-2">
+						<div className="flex items-center gap-2">
+							<div className="flex-1 h-1.5 rounded-full bg-primary" />
+							<div className="flex-1 h-1.5 rounded-full bg-primary" />
+							<div className="flex-1 h-1.5 rounded-full bg-muted" />
+						</div>
+						<p className="text-sm text-muted-foreground">
+							Escreva a mensagem para enviar a <strong>{selectedIds.size} contato(s)</strong>
+						</p>
+						<Textarea
+							placeholder="Digite a mensagem da campanha..."
+							value={message}
+							onChange={(e) => setMessage(e.target.value)}
+							rows={6}
+							className="resize-none"
+						/>
+						<p className="text-xs text-muted-foreground">
+							A mensagem será enviada individualmente para cada contato selecionado.
+						</p>
+						<DialogFooter>
+							<Button variant="outline" onClick={() => setStep(1)}>Voltar</Button>
+							<Button onClick={handleSend} disabled={!message.trim() || sending}>
+								{sending ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <Send className="h-4 w-4 mr-2" />}
+								Enviar campanha
+							</Button>
+						</DialogFooter>
+					</div>
+				)}
+
+				{step === 3 && result && (
+					<div className="space-y-4 py-4 text-center">
+						<div className="flex items-center gap-2 justify-center">
+							<div className="flex-1 h-1.5 rounded-full bg-primary" />
+							<div className="flex-1 h-1.5 rounded-full bg-primary" />
+							<div className="flex-1 h-1.5 rounded-full bg-primary" />
+						</div>
+						<div className="w-16 h-16 bg-green-100 dark:bg-green-900/30 rounded-full flex items-center justify-center mx-auto">
+							<CheckCircle2 className="h-8 w-8 text-green-600 dark:text-green-400" />
+						</div>
+						<div>
+							<h3 className="font-semibold text-lg">Campanha enviada!</h3>
+							<p className="text-sm text-muted-foreground mt-1">
+								{result.sent} enviadas · {result.failed} falhas · {result.total} total
+							</p>
+						</div>
+						<Button className="w-full" onClick={handleClose}>Concluir</Button>
+					</div>
+				)}
+			</DialogContent>
+		</Dialog>
+	);
+}
+
+function ConfirmationsModal({
+	open,
+	onClose,
+	onSendConfirmation,
+}: {
+	open: boolean;
+	onClose: () => void;
+	onSendConfirmation: (phone: string, patientName: string, date: string, time: string) => Promise<void>;
+}) {
+	const [confirmations, setConfirmations] = useState<any[]>([]);
+	const [loading, setLoading] = useState(false);
+	const [sending, setSending] = useState<string | null>(null);
+	const [sent, setSent] = useState<Set<string>>(new Set());
+
+	useEffect(() => {
+		if (!open) return;
+		setLoading(true);
+		fetchPendingConfirmations(50)
+			.then(setConfirmations)
+			.catch(() => setConfirmations([]))
+			.finally(() => setLoading(false));
+	}, [open]);
+
+	const handleSend = async (appt: any) => {
+		const phone = appt.patient?.phone;
+		if (!phone || sending) return;
+		setSending(appt.appointment_id);
+		try {
+			await onSendConfirmation(
+				phone,
+				appt.patient?.name || "Paciente",
+				appt.appointment_date || "",
+				appt.appointment_time || "",
+			);
+			setSent((prev) => new Set([...prev, appt.appointment_id]));
+		} finally {
+			setSending(null);
+		}
+	};
+
+	return (
+		<Dialog open={open} onOpenChange={(v) => { if (!v) { setSent(new Set()); onClose(); } }}>
+			<DialogContent className="sm:max-w-[520px]">
+				<DialogHeader>
+					<DialogTitle className="flex items-center gap-2 text-primary">
+						<CalendarCheck className="h-5 w-5" />
+						Confirmar Consultas
+					</DialogTitle>
+				</DialogHeader>
+				<div className="py-2">
+					{loading ? (
+						<div className="flex justify-center py-10">
+							<Loader2 className="h-6 w-6 animate-spin text-primary" />
+						</div>
+					) : confirmations.length === 0 ? (
+						<div className="text-center py-10 text-muted-foreground">
+							<CalendarCheck className="h-10 w-10 mx-auto mb-3 opacity-30" />
+							<p className="text-sm font-medium text-foreground">Nenhuma consulta pendente</p>
+							<p className="text-xs mt-1">Não há consultas aguardando confirmação.</p>
+						</div>
+					) : (
+						<ScrollArea className="h-[360px]">
+							<div className="space-y-2 pr-2">
+								{confirmations.map((appt) => {
+									const isAlreadySent = sent.has(appt.appointment_id);
+									const isSending = sending === appt.appointment_id;
+									const hasPhone = !!appt.patient?.phone;
+									return (
+										<div
+											key={appt.appointment_id}
+											className="flex items-start gap-3 p-3 rounded-xl border bg-card hover:bg-muted/30 transition-colors"
+										>
+											<div className="h-9 w-9 rounded-full bg-primary/10 flex items-center justify-center shrink-0">
+												<Calendar className="h-4 w-4 text-primary" />
+											</div>
+											<div className="flex-1 min-w-0">
+												<p className="text-sm font-medium truncate">
+													{appt.patient?.name || "Paciente desconhecido"}
+												</p>
+												<p className="text-xs text-muted-foreground">
+													{appt.appointment_date
+														? new Date(appt.appointment_date + "T00:00:00").toLocaleDateString("pt-BR", {
+																weekday: "short",
+																day: "numeric",
+																month: "short",
+															})
+														: "—"}{" "}
+													às {appt.appointment_time || "—"}
+												</p>
+												{!hasPhone && (
+													<p className="text-[11px] text-orange-500 mt-0.5">Sem número cadastrado</p>
+												)}
+											</div>
+											<Button
+												size="sm"
+												variant={isAlreadySent ? "ghost" : "outline"}
+												className={`h-8 text-xs shrink-0 ${isAlreadySent ? "text-green-600 dark:text-green-400" : ""}`}
+												disabled={!hasPhone || isSending || isAlreadySent}
+												onClick={() => handleSend(appt)}
+											>
+												{isSending ? (
+													<Loader2 className="h-3 w-3 animate-spin" />
+												) : isAlreadySent ? (
+													<>
+														<CheckCircle2 className="h-3 w-3 mr-1" /> Enviado
+													</>
+												) : (
+													<>
+														<BellRing className="h-3 w-3 mr-1" /> Confirmar
+													</>
+												)}
+											</Button>
+										</div>
+									);
+								})}
+							</div>
+						</ScrollArea>
+					)}
+				</div>
+				<DialogFooter>
+					<Button variant="ghost" onClick={() => { setSent(new Set()); onClose(); }}>
+						Fechar
+					</Button>
+				</DialogFooter>
+			</DialogContent>
+		</Dialog>
+	);
+}
 
 function ConversationListItem({
 	conversation,
@@ -294,8 +670,10 @@ function ConversationDetailPanel({
 	onAddTag,
 	onRemoveTag,
 	onQuickReply,
+	onPriorityChange,
 }: {
 	conversation: Conversation;
+	onPriorityChange?: (priority: "low" | "medium" | "high" | "urgent") => void;
 	onAssign: () => void;
 	onTransfer: () => void;
 	onResolve: () => void;
@@ -342,13 +720,22 @@ function ConversationDetailPanel({
 						</div>
 
 						{conversation.patientId && (
-							<Link
-								to={`/patients/${conversation.patientId}`}
-								className="mt-3 inline-flex items-center gap-1.5 px-3 py-1.5 bg-primary/10 text-primary rounded-full text-xs font-medium hover:bg-primary/20 transition-colors"
-							>
-								<User className="h-3.5 w-3.5" />
-								{conversation.patientName || "Ver perfil do paciente"}
-							</Link>
+							<div className="flex flex-col items-center gap-2 mt-3">
+								<Link
+									to={`/patients/${conversation.patientId}`}
+									className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-primary/10 text-primary rounded-full text-xs font-medium hover:bg-primary/20 transition-colors"
+								>
+									<User className="h-3.5 w-3.5" />
+									{conversation.patientName || "Ver perfil do paciente"}
+								</Link>
+								<Link
+									to={`/schedule?patientId=${conversation.patientId}`}
+									className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-green-50 dark:bg-green-900/20 text-green-700 dark:text-green-400 rounded-full text-xs font-medium hover:bg-green-100 dark:hover:bg-green-900/30 transition-colors"
+								>
+									<Calendar className="h-3.5 w-3.5" />
+									Agendar consulta
+								</Link>
+							</div>
 						)}
 					</div>
 
@@ -440,26 +827,38 @@ function ConversationDetailPanel({
 							</div>
 						</div>
 
-						{(conversation.priority || conversation.slaBreached) && (
+						<div>
+							<h4 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-2 flex items-center gap-1.5">
+								<Target className="h-3.5 w-3.5" /> Prioridade
+							</h4>
+							<DropdownMenu>
+								<DropdownMenuTrigger asChild>
+									<Button variant="outline" size="sm" className={`h-7 text-xs gap-1.5 ${conversation.priority ? PRIORITY_COLORS[conversation.priority] : "text-muted-foreground"}`}>
+										<AlertTriangle className="h-3 w-3" />
+										{conversation.priority ? PRIORITY_LABELS[conversation.priority] : "Definir"}
+										<ChevronDown className="h-3 w-3 ml-auto" />
+									</Button>
+								</DropdownMenuTrigger>
+								<DropdownMenuContent align="start" className="w-36">
+									{(["low", "medium", "high", "urgent"] as const).map((p) => (
+										<DropdownMenuItem
+											key={p}
+											className={`text-xs ${PRIORITY_COLORS[p]}`}
+											onClick={() => onPriorityChange?.(p)}
+										>
+											{PRIORITY_LABELS[p]}
+										</DropdownMenuItem>
+									))}
+								</DropdownMenuContent>
+							</DropdownMenu>
+						</div>
+
+						{(conversation.slaBreached) && (
 							<div>
 								<h4 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-2">
 									Atenção
 								</h4>
 								<div className="flex flex-wrap gap-2">
-									{conversation.priority && (
-										<Badge
-											variant="outline"
-											className={`text-xs ${PRIORITY_COLORS[conversation.priority]}`}
-										>
-											{conversation.priority === "urgent"
-												? "Urgente"
-												: conversation.priority === "high"
-													? "Alta"
-													: conversation.priority === "medium"
-														? "Média"
-														: "Baixa"}
-										</Badge>
-									)}
 									{conversation.slaBreached && (
 										<Badge
 											variant="outline"
@@ -911,6 +1310,7 @@ function ChatPanel({
 
 export default function WhatsAppInboxPage() {
 	const [statusFilter, setStatusFilter] = useState("all");
+	const [priorityFilter, setPriorityFilter] = useState<string | undefined>();
 	const [search, setSearch] = useState("");
 	const [selectedId, setSelectedId] = useState<string | null>(null);
 	const [showNewConversationDialog, setShowNewConversationDialog] =
@@ -927,6 +1327,23 @@ export default function WhatsAppInboxPage() {
 	const [teamMembers, setTeamMembers] = useState<any[]>([]);
 	const [memberSearch, setMemberSearch] = useState("");
 	const [assigning, setAssigning] = useState(false);
+	const [showBroadcastModal, setShowBroadcastModal] = useState(false);
+	const [showConfirmationsModal, setShowConfirmationsModal] = useState(false);
+	const [metrics, setMetrics] = useState<Metrics | null>(null);
+
+	const [showAddNumberDialog, setShowAddNumberDialog] = useState(false);
+	const [selectedPatientForNumber, setSelectedPatientForNumber] =
+		useState<Contact | null>(null);
+	const [newPhoneNumber, setNewPhoneNumber] = useState("");
+	const [showAttachToPatientDialog, setShowAttachToPatientDialog] =
+		useState(false);
+	const [manualPhoneNumber, setManualPhoneNumber] = useState("");
+
+	useEffect(() => {
+		fetchMetrics()
+			.then((m) => setMetrics(m as Metrics))
+			.catch(() => {});
+	}, []);
 
 	const inboxFilters = useMemo(
 		() => ({
@@ -936,9 +1353,10 @@ export default function WhatsAppInboxPage() {
 					: statusFilter === "mine"
 						? undefined
 						: statusFilter,
+			priority: priorityFilter,
 			search: search || undefined,
 		}),
-		[statusFilter, search],
+		[statusFilter, priorityFilter, search],
 	);
 
 	const { conversations, loading, pagination, refetch } = useWhatsAppInbox(
@@ -1022,11 +1440,31 @@ export default function WhatsAppInboxPage() {
 		}
 	};
 
-	const handleCreateConversation = async (contactId: string) => {
+	const handleCreateConversation = async (contact: Contact) => {
 		if (creatingConversationId) return;
 
-		setCreatingConversationId(contactId);
+		// Se o paciente não tiver o número cadastrado, abre um modal para cadastrar
+		if (!contact.phone && contact.patientId) {
+			setSelectedPatientForNumber(contact);
+			setNewPhoneNumber("");
+			setShowAddNumberDialog(true);
+			return;
+		}
+
+		setCreatingConversationId(contact.id);
 		try {
+			let contactId = contact.id;
+
+			// Se for um paciente sem registro de contato no WhatsApp (isPatientOnly), resolve primeiro
+			if ((contact as any).isPatientOnly) {
+				const resolved = await resolveContact({
+					patientId: contact.patientId,
+					phone: contact.phone,
+					displayName: contact.name,
+				});
+				contactId = resolved.id;
+			}
+
 			const openedConversation = await findOrCreateConversation(contactId);
 			const shouldRefetchManually = statusFilter === "all";
 			setStatusFilter("all");
@@ -1044,30 +1482,104 @@ export default function WhatsAppInboxPage() {
 		}
 	};
 
+	const handleCreateWithNumber = async (
+		phoneNumber: string,
+		patientId?: string,
+	) => {
+		if (creatingConversationId) return;
+
+		setCreatingConversationId("manual");
+		try {
+			const resolved = await resolveContact({
+				phone: phoneNumber,
+				patientId,
+			});
+
+			const openedConversation = await findOrCreateConversation(resolved.id);
+			setStatusFilter("all");
+			setSelectedId(openedConversation.id);
+			setShowNewConversationDialog(false);
+			setShowAttachToPatientDialog(false);
+			setContactSearch("");
+			setContacts([]);
+			await refetch();
+		} catch (error) {
+			console.error("Failed to open WhatsApp conversation with number:", error);
+		} finally {
+			setCreatingConversationId(null);
+		}
+	};
+
 	const filteredMembers = teamMembers.filter(
 		(m) =>
 			m.user?.name?.toLowerCase().includes(memberSearch.toLowerCase()) ||
 			m.user?.email?.toLowerCase().includes(memberSearch.toLowerCase()),
 	);
 
+	const handlePriorityChange = async (priority: "low" | "medium" | "high" | "urgent") => {
+		if (!selectedId) return;
+		try {
+			await updatePriority(selectedId, priority);
+			await refetch();
+		} catch {
+			// ignore
+		}
+	};
+
+	const handleSendConfirmation = async (
+		phone: string,
+		patientName: string,
+		date: string,
+		time: string,
+	) => {
+		const msg = `Olá ${patientName}! 👋\n\nLembramos que você tem uma consulta agendada:\n📅 ${date ? new Date(date + "T00:00:00").toLocaleDateString("pt-BR", { weekday: "long", day: "numeric", month: "long" }) : date}\n⏰ ${time}\n\nPor favor, confirme sua presença respondendo SIM ou CONFIRMAR. Caso precise remarcar, entre em contato conosco. 🙏`;
+		try {
+			const resolved = await resolveContact({ phone });
+			const conv = await findOrCreateConversation(resolved.id);
+			await apiSendMessage(conv.id, msg);
+		} catch {
+			// ignore
+		}
+	};
+
 	return (
 		<MainLayout fullWidth noPadding>
 			<div className="flex h-[calc(100vh-4rem)] bg-background">
 				<div className="w-[340px] border-r flex flex-col shrink-0 bg-background/50 z-20 shadow-[1px_0_10px_rgba(0,0,0,0.02)]">
 					<div className="p-4 border-b bg-background">
-						<div className="mb-4 flex items-center justify-between gap-3">
+						<div className="mb-3 flex items-center justify-between gap-2">
 							<h2 className="text-xl font-bold flex items-center gap-2 min-w-0">
 								<MessageCircle className="h-6 w-6 text-primary shrink-0" />
 								<span className="truncate">Inbox</span>
 							</h2>
-							<Button
-								size="sm"
-								className="h-9 rounded-full px-3.5 shadow-sm shrink-0"
-								onClick={() => setShowNewConversationDialog(true)}
-							>
-								<Plus className="h-4 w-4 mr-1.5" />
-								Nova conversa
-							</Button>
+							<div className="flex items-center gap-1.5 shrink-0">
+								<Button
+									size="icon"
+									variant="ghost"
+									className="h-8 w-8 text-muted-foreground hover:text-foreground"
+									title="Confirmar consultas"
+									onClick={() => setShowConfirmationsModal(true)}
+								>
+									<CalendarCheck className="h-4 w-4" />
+								</Button>
+								<Button
+									size="icon"
+									variant="ghost"
+									className="h-8 w-8 text-muted-foreground hover:text-foreground"
+									title="Campanha"
+									onClick={() => setShowBroadcastModal(true)}
+								>
+									<Megaphone className="h-4 w-4" />
+								</Button>
+								<Button
+									size="sm"
+									className="h-8 rounded-full px-3 shadow-sm"
+									onClick={() => setShowNewConversationDialog(true)}
+								>
+									<Plus className="h-4 w-4 mr-1" />
+									Nova
+								</Button>
+							</div>
 						</div>
 						<div className="relative">
 							<Search className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
@@ -1075,8 +1587,38 @@ export default function WhatsAppInboxPage() {
 								placeholder="Buscar conversas, pacientes..."
 								value={search}
 								onChange={(e) => setSearch(e.target.value)}
-								className="pl-9 h-9 bg-muted/50 border-transparent focus-visible:border-primary/50 focus-visible:bg-background rounded-full text-sm"
+								className="pl-9 h-9 bg-muted/50 border-transparent focus-visible:border-primary/50 focus-visible:bg-background rounded-full text-sm pr-10"
 							/>
+							<DropdownMenu>
+								<DropdownMenuTrigger asChild>
+									<Button
+										variant="ghost"
+										size="icon"
+										className={`absolute right-1 top-0.5 h-8 w-8 rounded-full ${priorityFilter ? "text-primary" : "text-muted-foreground"}`}
+										title="Filtrar por prioridade"
+									>
+										<Target className="h-4 w-4" />
+									</Button>
+								</DropdownMenuTrigger>
+								<DropdownMenuContent align="end" className="w-40">
+									<DropdownMenuItem
+										className="text-xs"
+										onClick={() => setPriorityFilter(undefined)}
+									>
+										Todas as prioridades
+									</DropdownMenuItem>
+									<DropdownMenuSeparator />
+									{(["urgent", "high", "medium", "low"] as const).map((p) => (
+										<DropdownMenuItem
+											key={p}
+											className={`text-xs ${PRIORITY_COLORS[p]}`}
+											onClick={() => setPriorityFilter(p)}
+										>
+											{PRIORITY_LABELS[p]}
+										</DropdownMenuItem>
+									))}
+								</DropdownMenuContent>
+							</DropdownMenu>
 						</div>
 					</div>
 
@@ -1101,6 +1643,8 @@ export default function WhatsAppInboxPage() {
 							<ScrollBar orientation="horizontal" className="hidden" />
 						</ScrollArea>
 					</div>
+
+					<MetricsStrip metrics={metrics} />
 
 					<ScrollArea className="flex-1 bg-background">
 						{loading ? (
@@ -1176,6 +1720,7 @@ export default function WhatsAppInboxPage() {
 								await apiRemoveTag(conversation.id, tagId);
 							}}
 							onQuickReply={(content) => setQuickReplyText(content)}
+							onPriorityChange={handlePriorityChange}
 						/>
 					)}
 				</div>
@@ -1219,9 +1764,24 @@ export default function WhatsAppInboxPage() {
 									<p className="text-sm font-medium text-foreground">
 										Nenhum contato encontrado
 									</p>
-									<p className="text-xs mt-1">
-										Tente buscar pelo nome ou número do WhatsApp.
-									</p>
+									{/^\d+$/.test(contactSearch.replace(/\D/g, "")) &&
+									contactSearch.length >= 8 ? (
+										<Button
+											variant="outline"
+											className="mt-4 rounded-full border-primary text-primary hover:bg-primary/5"
+											onClick={() => {
+												setManualPhoneNumber(contactSearch);
+												setShowAttachToPatientDialog(true);
+											}}
+										>
+											<MessageSquare className="h-4 w-4 mr-2" />
+											Iniciar com {contactSearch}
+										</Button>
+									) : (
+										<p className="text-xs mt-1">
+											Tente buscar pelo nome ou número do WhatsApp.
+										</p>
+									)}
 								</div>
 							) : (
 								<div className="space-y-1.5">
@@ -1230,7 +1790,7 @@ export default function WhatsAppInboxPage() {
 											key={contact.id}
 											type="button"
 											className="w-full flex items-center gap-3 rounded-xl border border-transparent bg-background px-3 py-3 text-left transition-colors hover:bg-muted/60 hover:border-border disabled:opacity-60"
-											onClick={() => handleCreateConversation(contact.id)}
+											onClick={() => handleCreateConversation(contact)}
 											disabled={creatingConversationId !== null}
 										>
 											<Avatar className="h-10 w-10 border">
@@ -1249,6 +1809,11 @@ export default function WhatsAppInboxPage() {
 													<p className="text-[11px] text-primary truncate mt-0.5">
 														Paciente: {contact.patientName}
 													</p>
+												)}
+												{(contact as any).isPatientOnly && (
+													<span className="inline-flex items-center rounded-full bg-blue-50 px-1.5 py-0.5 text-[10px] font-medium text-blue-700 ring-1 ring-inset ring-blue-700/10 mt-1">
+														Novo contato
+													</span>
 												)}
 											</div>
 											{creatingConversationId === contact.id ? (
@@ -1270,6 +1835,84 @@ export default function WhatsAppInboxPage() {
 						<DialogClose asChild>
 							<Button variant="ghost">Cancelar</Button>
 						</DialogClose>
+					</DialogFooter>
+				</DialogContent>
+			</Dialog>
+
+			<Dialog open={showAddNumberDialog} onOpenChange={setShowAddNumberDialog}>
+				<DialogContent className="sm:max-w-[400px]">
+					<DialogHeader>
+						<DialogTitle>Adicionar Telefone</DialogTitle>
+					</DialogHeader>
+					<div className="space-y-4 py-4">
+						<p className="text-sm text-muted-foreground">
+							O paciente <strong>{selectedPatientForNumber?.name}</strong> não
+							possui número cadastrado. Informe o número do WhatsApp:
+						</p>
+						<Input
+							placeholder="Ex: 11999999999"
+							value={newPhoneNumber}
+							onChange={(e) => setNewPhoneNumber(e.target.value)}
+						/>
+					</div>
+					<DialogFooter>
+						<Button
+							variant="ghost"
+							onClick={() => setShowAddNumberDialog(false)}
+						>
+							Cancelar
+						</Button>
+						<Button
+							onClick={() => {
+								if (selectedPatientForNumber) {
+									handleCreateWithNumber(
+										newPhoneNumber,
+										selectedPatientForNumber.patientId,
+									);
+									setShowAddNumberDialog(false);
+								}
+							}}
+							disabled={!newPhoneNumber || newPhoneNumber.length < 8}
+						>
+							Confirmar e Iniciar
+						</Button>
+					</DialogFooter>
+				</DialogContent>
+			</Dialog>
+
+			<Dialog
+				open={showAttachToPatientDialog}
+				onOpenChange={setShowAttachToPatientDialog}
+			>
+				<DialogContent className="sm:max-w-[440px]">
+					<DialogHeader>
+						<DialogTitle>Nova conversa com {manualPhoneNumber}</DialogTitle>
+					</DialogHeader>
+					<div className="space-y-4 py-4">
+						<p className="text-sm text-muted-foreground">
+							Deseja vincular este número a um paciente existente ou iniciar sem
+							nome por enquanto?
+						</p>
+					</div>
+					<DialogFooter className="flex-col sm:flex-row gap-2">
+						<Button
+							variant="outline"
+							className="w-full sm:w-auto"
+							onClick={() => handleCreateWithNumber(manualPhoneNumber)}
+						>
+							Manter sem nome
+						</Button>
+						<Button
+							className="w-full sm:w-auto"
+							onClick={() => {
+								// Reabre a busca original para o usuário selecionar o paciente
+								setShowAttachToPatientDialog(false);
+								setShowNewConversationDialog(true);
+								setContactSearch(manualPhoneNumber);
+							}}
+						>
+							Vincular a Paciente
+						</Button>
 					</DialogFooter>
 				</DialogContent>
 			</Dialog>
@@ -1385,6 +2028,16 @@ export default function WhatsAppInboxPage() {
 					</DialogFooter>
 				</DialogContent>
 			</Dialog>
+		<BroadcastModal
+				open={showBroadcastModal}
+				onClose={() => setShowBroadcastModal(false)}
+			/>
+
+			<ConfirmationsModal
+				open={showConfirmationsModal}
+				onClose={() => setShowConfirmationsModal(false)}
+				onSendConfirmation={handleSendConfirmation}
+			/>
 		</MainLayout>
 	);
 }

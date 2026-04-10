@@ -4,6 +4,8 @@ import { router } from 'expo-router';
 import { TarefaPriorityBadge } from './TarefaPriorityBadge';
 import { formatDateShort, isOverdue } from '@/lib/tarefas';
 import type { ApiTarefa, TarefaStatus } from '@/lib/api';
+import { Ionicons } from '@expo/vector-icons';
+import { useColors } from '@/hooks/useColorScheme';
 
 const COLUMN_MOVE_OPTIONS: { label: string; status: TarefaStatus }[] = [
   { label: 'Backlog',      status: 'BACKLOG' },
@@ -31,6 +33,7 @@ interface Props {
 }
 
 export function TarefaCard({ tarefa, onMoveCard }: Props) {
+  const colors = useColors();
   const overdue = isOverdue(tarefa.data_vencimento ?? undefined);
   const { total, done } = checklistSummary(tarefa);
   const tags = tarefa.tags ?? [];
@@ -56,47 +59,72 @@ export function TarefaCard({ tarefa, onMoveCard }: Props) {
 
   return (
     <TouchableOpacity
-      style={styles.card}
+      style={[styles.card, { borderColor: colors.border }]}
       activeOpacity={0.75}
       onPress={() => router.push(`/tarefa-detail?id=${tarefa.id}`)}
       onLongPress={handleLongPress}
       delayLongPress={400}
     >
-      <Text style={styles.titulo} numberOfLines={2}>
-        {tarefa.titulo}
-      </Text>
+      <View style={styles.header}>
+        <Text style={[styles.titulo, { color: colors.text }]} numberOfLines={2}>
+          {tarefa.titulo}
+        </Text>
+        <TarefaPriorityBadge prioridade={tarefa.prioridade} showLabel={false} />
+      </View>
 
       <View style={styles.meta}>
-        <TarefaPriorityBadge prioridade={tarefa.prioridade} showLabel={false} />
         {tarefa.data_vencimento ? (
-          <Text style={[styles.date, overdue && styles.dateOverdue]}>
-            {overdue ? '⚠ ' : ''}{formatDateShort(tarefa.data_vencimento ?? undefined)}
-          </Text>
+          <View style={styles.dateContainer}>
+            <Ionicons 
+              name="calendar-outline" 
+              size={12} 
+              color={overdue ? colors.error : colors.textSecondary} 
+            />
+            <Text style={[styles.date, overdue && { color: colors.error, fontWeight: '700' }]}>
+              {formatDateShort(tarefa.data_vencimento ?? undefined)}
+            </Text>
+          </View>
         ) : null}
+        
+        {total > 0 && (
+          <View style={styles.checklistContainer}>
+            <Ionicons 
+              name="checkbox-outline" 
+              size={12} 
+              color={done === total ? colors.success : colors.textSecondary} 
+            />
+            <Text style={[styles.checklist, done === total && { color: colors.success, fontWeight: '700' }]}>
+              {done}/{total}
+            </Text>
+          </View>
+        )}
       </View>
 
       {progress > 0 && (
-        <View style={styles.progressBg}>
-          <View style={[styles.progressFill, { width: `${Math.min(progress, 100)}%` as any }]} />
+        <View style={[styles.progressBg, { backgroundColor: colors.border + '50' }]}>
+          <View 
+            style={[
+              styles.progressFill, 
+              { 
+                width: `${Math.min(progress, 100)}%` as any,
+                backgroundColor: colors.primary 
+              }
+            ]} 
+          />
         </View>
       )}
 
-      {(total > 0 || visibleTags.length > 0) && (
+      {visibleTags.length > 0 && (
         <View style={styles.footer}>
-          {total > 0 && (
-            <Text style={[styles.checklist, done === total && styles.checklistDone]}>
-              ✓ {done}/{total}
-            </Text>
-          )}
           <View style={styles.tags}>
             {visibleTags.map((tag: string) => (
-              <View key={tag} style={styles.tag}>
-                <Text style={styles.tagText}>{tag}</Text>
+              <View key={tag} style={[styles.tag, { backgroundColor: colors.primary + '10' }]}>
+                <Text style={[styles.tagText, { color: colors.primary }]}>{tag}</Text>
               </View>
             ))}
             {hiddenTagsCount > 0 && (
-              <View style={styles.tagMore}>
-                <Text style={styles.tagMoreText}>+{hiddenTagsCount}</Text>
+              <View style={[styles.tagMore, { backgroundColor: colors.border + '50' }]}>
+                <Text style={[styles.tagMoreText, { color: colors.textSecondary }]}>+{hiddenTagsCount}</Text>
               </View>
             )}
           </View>
@@ -109,90 +137,90 @@ export function TarefaCard({ tarefa, onMoveCard }: Props) {
 const styles = StyleSheet.create({
   card: {
     backgroundColor: '#fff',
-    borderRadius: 10,
-    padding: 12,
-    marginBottom: 10,
+    borderRadius: 16,
+    padding: 16,
+    marginBottom: 12,
     borderWidth: 1,
-    borderColor: '#e5e7eb',
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.06,
-    shadowRadius: 3,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.04,
+    shadowRadius: 8,
     elevation: 2,
   },
+  header: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'flex-start',
+    gap: 12,
+    marginBottom: 10,
+  },
   titulo: {
-    fontSize: 14,
-    fontWeight: '600',
-    color: '#111827',
-    marginBottom: 8,
+    fontSize: 15,
+    fontWeight: '700',
+    flex: 1,
     lineHeight: 20,
   },
   meta: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 8,
-    marginBottom: 6,
+    gap: 16,
+    marginBottom: 12,
+  },
+  dateContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
   },
   date: {
     fontSize: 12,
-    color: '#6b7280',
+    color: '#64748b',
   },
-  dateOverdue: {
-    color: '#dc2626',
-    fontWeight: '600',
+  checklistContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+  },
+  checklist: {
+    fontSize: 12,
+    color: '#64748b',
   },
   progressBg: {
-    height: 3,
-    backgroundColor: '#e5e7eb',
-    borderRadius: 999,
-    marginBottom: 8,
+    height: 4,
+    borderRadius: 2,
+    marginBottom: 12,
     overflow: 'hidden',
   },
   progressFill: {
     height: '100%',
-    backgroundColor: '#3b82f6',
-    borderRadius: 999,
+    borderRadius: 2,
   },
   footer: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 6,
-    marginTop: 4,
-    flexWrap: 'wrap',
-  },
-  checklist: {
-    fontSize: 11,
-    color: '#6b7280',
-    fontVariant: ['tabular-nums'],
-  },
-  checklistDone: {
-    color: '#16a34a',
+    marginTop: 2,
   },
   tags: {
     flexDirection: 'row',
-    gap: 4,
+    gap: 6,
     flex: 1,
     flexWrap: 'wrap',
   },
   tag: {
-    backgroundColor: '#f1f5f9',
-    borderRadius: 999,
-    paddingHorizontal: 6,
-    paddingVertical: 2,
+    borderRadius: 6,
+    paddingHorizontal: 8,
+    paddingVertical: 3,
   },
   tagText: {
-    fontSize: 10,
-    color: '#64748b',
+    fontSize: 11,
+    fontWeight: '600',
   },
   tagMore: {
-    backgroundColor: '#e2e8f0',
-    borderRadius: 999,
+    borderRadius: 6,
     paddingHorizontal: 6,
-    paddingVertical: 2,
+    paddingVertical: 3,
   },
   tagMoreText: {
-    fontSize: 10,
-    color: '#475569',
+    fontSize: 11,
     fontWeight: '600',
   },
 });

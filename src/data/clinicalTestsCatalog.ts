@@ -1102,6 +1102,9 @@ export function mergeClinicalTestsCatalog(
 	for (const remoteTest of remoteTests) {
 		const key = normalizeClinicalTestName(remoteTest.name);
 		const builtin = merged.get(key);
+		const remoteIsCustom =
+			(remoteTest as ClinicalTestCatalogRecord).is_custom ??
+			Boolean(remoteTest.organization_id);
 
 		merged.set(key, {
 			...builtin,
@@ -1147,8 +1150,8 @@ export function mergeClinicalTestsCatalog(
 				(remoteTest as ClinicalTestCatalogRecord).layout_type ??
 				builtin?.layout_type ??
 				null,
-			is_custom: (remoteTest as ClinicalTestCatalogRecord).is_custom ?? true,
-			is_builtin: builtin?.is_builtin ?? false,
+			is_custom: remoteIsCustom,
+			is_builtin: builtin ? !remoteIsCustom : false,
 			aliases_pt: remoteTest.aliases_pt ?? builtin?.aliases_pt ?? [],
 			aliases_en: remoteTest.aliases_en ?? builtin?.aliases_en ?? [],
 			dictionary_id: remoteTest.dictionary_id ?? builtin?.dictionary_id ?? null,
