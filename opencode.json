@@ -18,6 +18,11 @@
 			"headers": {
 				"x-api-key": "d12af1da-4c1d-4665-a952-2bdfa6283d11"
 			}
+		},
+		"chrome-devtools": {
+			"type": "local",
+			"command": ["npx", "-y", "chrome-devtools-mcp@latest"],
+			"enabled": true
 		}
 	}
 }

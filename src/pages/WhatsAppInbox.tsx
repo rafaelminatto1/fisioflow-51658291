@@ -26,7 +26,7 @@ import {
 	XCircle,
 	Zap,
 } from "lucide-react";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { Link } from "react-router-dom";
 import { MainLayout } from "@/components/layout/MainLayout";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
@@ -57,6 +57,7 @@ import { organizationMembersApi } from "@/api/v2/system";
 import { uploadFile } from "@/lib/storage/upload";
 import type {
 	Conversation,
+	Contact,
 	Message,
 	QuickReply,
 	Tag as TagType,
@@ -64,8 +65,10 @@ import type {
 import {
 	addTags,
 	removeTag as apiRemoveTag,
+	fetchContacts,
 	fetchQuickReplies,
 	fetchTags,
+	findOrCreateConversation,
 } from "@/services/whatsapp-api";
 
 const STATUS_TABS = [
@@ -910,6 +913,14 @@ export default function WhatsAppInboxPage() {
 	const [statusFilter, setStatusFilter] = useState("all");
 	const [search, setSearch] = useState("");
 	const [selectedId, setSelectedId] = useState<string | null>(null);
+	const [showNewConversationDialog, setShowNewConversationDialog] =
+		useState(false);
+	const [contactSearch, setContactSearch] = useState("");
+	const [contacts, setContacts] = useState<Contact[]>([]);
+	const [contactsLoading, setContactsLoading] = useState(false);
+	const [creatingConversationId, setCreatingConversationId] = useState<
+		string | null
+	>(null);
 	const [showAssignDialog, setShowAssignDialog] = useState(false);
 	const [showTransferDialog, setShowTransferDialog] = useState(false);
 	const [quickReplyText, setQuickReplyText] = useState<string | null>(null);
@@ -917,15 +928,22 @@ export default function WhatsAppInboxPage() {
 	const [memberSearch, setMemberSearch] = useState("");
 	const [assigning, setAssigning] = useState(false);
 
-	const { conversations, loading, pagination } = useWhatsAppInbox({
-		status:
-			statusFilter === "all"
-				? undefined
-				: statusFilter === "mine"
+	const inboxFilters = useMemo(
+		() => ({
+			status:
+				statusFilter === "all"
 					? undefined
-					: statusFilter,
-		search: search || undefined,
-	});
+					: statusFilter === "mine"
+						? undefined
+						: statusFilter,
+			search: search || undefined,
+		}),
+		[statusFilter, search],
+	);
+
+	const { conversations, loading, pagination, refetch } = useWhatsAppInbox(
+		inboxFilters,
+	);
 
 	const { conversation, addNote, assign, transfer, updateStatus } =
 		useWhatsAppConversation(selectedId);
@@ -934,6 +952,38 @@ export default function WhatsAppInboxPage() {
 		statusFilter === "mine"
 			? conversations.filter((c) => c.assignedTo)
 			: conversations;
+
+	useEffect(() => {
+		if (!showNewConversationDialog) return;
+
+		let active = true;
+		const timeoutId = window.setTimeout(async () => {
+			setContactsLoading(true);
+			try {
+				const result = await fetchContacts({
+					search: contactSearch || undefined,
+					limit: 20,
+				});
+				if (active) {
+					setContacts(result.data);
+				}
+			} catch (error) {
+				console.error("Failed to load WhatsApp contacts:", error);
+				if (active) {
+					setContacts([]);
+				}
+			} finally {
+				if (active) {
+					setContactsLoading(false);
+				}
+			}
+		}, 200);
+
+		return () => {
+			active = false;
+			window.clearTimeout(timeoutId);
+		};
+	}, [showNewConversationDialog, contactSearch]);
 
 	useEffect(() => {
 		if (showAssignDialog || showTransferDialog) {
@@ -972,6 +1022,28 @@ export default function WhatsAppInboxPage() {
 		}
 	};
 
+	const handleCreateConversation = async (contactId: string) => {
+		if (creatingConversationId) return;
+
+		setCreatingConversationId(contactId);
+		try {
+			const openedConversation = await findOrCreateConversation(contactId);
+			const shouldRefetchManually = statusFilter === "all";
+			setStatusFilter("all");
+			setSelectedId(openedConversation.id);
+			setShowNewConversationDialog(false);
+			setContactSearch("");
+			setContacts([]);
+			if (shouldRefetchManually) {
+				await refetch();
+			}
+		} catch (error) {
+			console.error("Failed to open WhatsApp conversation:", error);
+		} finally {
+			setCreatingConversationId(null);
+		}
+	};
+
 	const filteredMembers = teamMembers.filter(
 		(m) =>
 			m.user?.name?.toLowerCase().includes(memberSearch.toLowerCase()) ||
@@ -983,10 +1055,20 @@ export default function WhatsAppInboxPage() {
 			<div className="flex h-[calc(100vh-4rem)] bg-background">
 				<div className="w-[340px] border-r flex flex-col shrink-0 bg-background/50 z-20 shadow-[1px_0_10px_rgba(0,0,0,0.02)]">
 					<div className="p-4 border-b bg-background">
-						<h2 className="text-xl font-bold mb-4 flex items-center gap-2">
-							<MessageCircle className="h-6 w-6 text-primary" />
-							Inbox
-						</h2>
+						<div className="mb-4 flex items-center justify-between gap-3">
+							<h2 className="text-xl font-bold flex items-center gap-2 min-w-0">
+								<MessageCircle className="h-6 w-6 text-primary shrink-0" />
+								<span className="truncate">Inbox</span>
+							</h2>
+							<Button
+								size="sm"
+								className="h-9 rounded-full px-3.5 shadow-sm shrink-0"
+								onClick={() => setShowNewConversationDialog(true)}
+							>
+								<Plus className="h-4 w-4 mr-1.5" />
+								Nova conversa
+							</Button>
+						</div>
 						<div className="relative">
 							<Search className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
 							<Input
@@ -1098,6 +1180,99 @@ export default function WhatsAppInboxPage() {
 					)}
 				</div>
 			</div>
+
+			<Dialog
+				open={showNewConversationDialog}
+				onOpenChange={(open) => {
+					setShowNewConversationDialog(open);
+					if (!open) {
+						setContactSearch("");
+						setContacts([]);
+					}
+				}}
+			>
+				<DialogContent className="sm:max-w-[440px]">
+					<DialogHeader>
+						<DialogTitle className="flex items-center gap-2">
+							<MessageSquare className="h-5 w-5 text-primary" />
+							Nova conversa
+						</DialogTitle>
+					</DialogHeader>
+					<div className="space-y-4 py-4">
+						<Input
+							placeholder="Buscar por nome ou telefone..."
+							value={contactSearch}
+							onChange={(e) => setContactSearch(e.target.value)}
+							className="rounded-full bg-muted/50"
+						/>
+						<ScrollArea className="h-[320px] rounded-2xl border bg-muted/10 px-2 py-2">
+							{contactsLoading ? (
+								<div className="flex flex-col items-center justify-center h-full gap-3 text-muted-foreground">
+									<Loader2 className="h-5 w-5 animate-spin text-primary" />
+									<span className="text-sm">Buscando contatos...</span>
+								</div>
+							) : contacts.length === 0 ? (
+								<div className="flex flex-col items-center justify-center h-full text-center px-6 text-muted-foreground">
+									<div className="h-12 w-12 rounded-full bg-muted flex items-center justify-center mb-3">
+										<User className="h-5 w-5 opacity-60" />
+									</div>
+									<p className="text-sm font-medium text-foreground">
+										Nenhum contato encontrado
+									</p>
+									<p className="text-xs mt-1">
+										Tente buscar pelo nome ou número do WhatsApp.
+									</p>
+								</div>
+							) : (
+								<div className="space-y-1.5">
+									{contacts.map((contact) => (
+										<button
+											key={contact.id}
+											type="button"
+											className="w-full flex items-center gap-3 rounded-xl border border-transparent bg-background px-3 py-3 text-left transition-colors hover:bg-muted/60 hover:border-border disabled:opacity-60"
+											onClick={() => handleCreateConversation(contact.id)}
+											disabled={creatingConversationId !== null}
+										>
+											<Avatar className="h-10 w-10 border">
+												<AvatarFallback className="text-xs font-medium bg-primary/10 text-primary">
+													{contact.name.slice(0, 2).toUpperCase()}
+												</AvatarFallback>
+											</Avatar>
+											<div className="min-w-0 flex-1">
+												<p className="text-sm font-medium text-foreground truncate">
+													{contact.name}
+												</p>
+												<p className="text-xs text-muted-foreground truncate">
+													{contact.phone || "Sem número cadastrado"}
+												</p>
+												{contact.patientName && (
+													<p className="text-[11px] text-primary truncate mt-0.5">
+														Paciente: {contact.patientName}
+													</p>
+												)}
+											</div>
+											{creatingConversationId === contact.id ? (
+												<Loader2 className="h-4 w-4 animate-spin text-primary shrink-0" />
+											) : (
+												<Plus className="h-4 w-4 text-muted-foreground shrink-0" />
+											)}
+										</button>
+									))}
+								</div>
+							)}
+						</ScrollArea>
+						<p className="text-xs text-muted-foreground">
+							Selecione um contato para abrir uma nova conversa ou retomar uma
+							conversa já existente.
+						</p>
+					</div>
+					<DialogFooter>
+						<DialogClose asChild>
+							<Button variant="ghost">Cancelar</Button>
+						</DialogClose>
+					</DialogFooter>
+				</DialogContent>
+			</Dialog>
 
 			<Dialog open={showAssignDialog} onOpenChange={setShowAssignDialog}>
 				<DialogContent className="sm:max-w-[400px]">

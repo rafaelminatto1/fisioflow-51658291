@@ -19,12 +19,14 @@ import { appointmentsApi, documentsApi } from "@/api/v2";
 // Tipos
 export type ProfileTab =
 	| "overview"
-	| "evolucao"
-	| "exames"
-	| "financeiro"
+	| "timeline"
+	| "analytics"
+	| "personal"
+	| "clinical"
+	| "activity-lab"
+	| "financial"
 	| "gamification"
-	| "documentos"
-	| "analytics";
+	| "documents";
 
 export interface PatientProfileOptions {
 	patientId: string;
@@ -191,7 +193,7 @@ export function usePatientProfileOptimized(options: PatientProfileOptions) {
 		shouldLoadAppointments,
 	);
 
-	const shouldLoadDocuments = activeTab === "documentos";
+	const shouldLoadDocuments = activeTab === "documents";
 	const documentsQuery = usePatientDocuments(patientId, shouldLoadDocuments);
 
 	const shouldLoadGamification =
@@ -207,12 +209,14 @@ export function usePatientProfileOptimized(options: PatientProfileOptions) {
 
 		const tabs: ProfileTab[] = [
 			"overview",
-			"evolucao",
-			"exames",
-			"financeiro",
-			"gamification",
-			"documentos",
+			"timeline",
 			"analytics",
+			"personal",
+			"clinical",
+			"activity-lab",
+			"financial",
+			"gamification",
+			"documents",
 		];
 		const currentIdx = tabs.indexOf(activeTab);
 		const adjacentTabs = [tabs[currentIdx - 1], tabs[currentIdx + 1]].filter(
@@ -227,19 +231,22 @@ export function usePatientProfileOptimized(options: PatientProfileOptions) {
 			startTransition(() => {
 				switch (tab) {
 					case "overview":
-					case "evolucao":
+					case "timeline":
+					case "clinical":
+					case "personal":
 						queryClient.prefetchQuery({
 							queryKey: patientProfileKeys.appointments(patientId),
 							staleTime: PATIENT_PROFILE_CACHE_CONFIG.EVOLUTION.staleTime,
 						});
 						break;
-					case "documentos":
+					case "documents":
 						queryClient.prefetchQuery({
 							queryKey: patientProfileKeys.documents(patientId),
 							staleTime: PATIENT_PROFILE_CACHE_CONFIG.DOCUMENTS.staleTime,
 						});
 						break;
 					case "gamification":
+					case "activity-lab":
 						queryClient.prefetchQuery({
 							queryKey: patientProfileKeys.gamification(patientId),
 							staleTime: PATIENT_PROFILE_CACHE_CONFIG.GAMIFICATION.staleTime,

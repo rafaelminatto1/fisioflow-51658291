@@ -1,6 +1,6 @@
 import { Hono } from "hono";
 import { eq, and, or, count, sql, desc, asc, isNull } from "drizzle-orm";
-import { patients } from "@fisioflow/db";
+import { patients, sessions } from "@fisioflow/db";
 import type { Env } from "../types/env";
 import { requireAuth, type AuthVariables } from "../lib/auth";
 import { createDb } from "../lib/db";
@@ -23,18 +23,27 @@ const app = new Hono<{ Bindings: Env; Variables: AuthVariables }>();
 // Removed tableColumnsCache and helpers as we shift to Drizzle ORM
 
 /** Extracts a user-friendly message from Neon/Postgres DB errors. */
-function dbErrorResponse(error: unknown): { message: string; status: 409 | 500 } {
+function dbErrorResponse(error: unknown): {
+	message: string;
+	status: 409 | 500;
+} {
 	const err = error as any;
 	// NeonDbError exposes Postgres error code in `err.code`
 	if (err?.code === "23505") {
 		const constraint: string = err.constraint ?? "";
 		if (constraint.includes("email")) {
-			return { message: "Já existe um paciente com este e-mail nesta clínica.", status: 409 };
+			return {
+				message: "Já existe um paciente com este e-mail nesta clínica.",
+				status: 409,
+			};
 		}
 		if (constraint.includes("cpf")) {
 			return { message: "Já existe um paciente com este CPF.", status: 409 };
 		}
-		return { message: "Registro duplicado: já existe um paciente com esses dados.", status: 409 };
+		return {
+			message: "Registro duplicado: já existe um paciente com esses dados.",
+			status: 409,
+		};
 	}
 	const raw = err instanceof Error ? err.message : "Erro desconhecido";
 	return { message: raw, status: 500 };
@@ -98,6 +107,16 @@ function normalizePatientStatus(value: unknown): string {
 		return "Arquivado";
 	}
 	return trimmedString(value) ?? "Inicial";
+}
+
+function jsonbTextToString(value: unknown): string | undefined {
+	if (value == null) return undefined;
+	if (typeof value === "string") return value;
+	if (typeof value === "object") {
+		const text = (value as Record<string, unknown>).text;
+		return text != null ? String(text) : undefined;
+	}
+	return undefined;
 }
 
 function deriveIsActive(body: PatientPayload): boolean {
@@ -219,8 +238,10 @@ function normalizePatientRow(row: DbRow) {
 	const sessionValue = row.session_value ?? row.sessionValue;
 	const consentData = row.consent_data ?? row.consentData;
 	const consentImage = row.consent_image ?? row.consentImage;
-	const incompleteReg = row.incomplete_registration ?? row.incompleteRegistration;
-	const birthDate = row.birth_date ?? row.legacyDateOfBirth ?? row.date_of_birth;
+	const incompleteReg =
+		row.incomplete_registration ?? row.incompleteRegistration;
+	const birthDate =
+		row.birth_date ?? row.legacyDateOfBirth ?? row.date_of_birth;
 	const createdAt = row.created_at ?? row.createdAt;
 	const updatedAt = row.updated_at ?? row.updatedAt;
 	const rawEmergencyContact = row.emergency_contact ?? row.emergencyContact;
@@ -407,7 +428,9 @@ function buildPatientWritePayload(
 		payload.consentImage = nullableBoolean(body.consent_image);
 	}
 	if (body.incomplete_registration !== undefined) {
-		payload.incompleteRegistration = nullableBoolean(body.incomplete_registration);
+		payload.incompleteRegistration = nullableBoolean(
+			body.incomplete_registration,
+		);
 	}
 
 	if (body.origin !== undefined) {
@@ -528,9 +551,7 @@ app.get("/last-updated", async (c) => {
 		const result = await db
 			.select({ last_updated_at: sql<string>`MAX(${patients.updatedAt})` })
 			.from(patients)
-			.where(
-				withTenant(patients, user.organizationId)
-			);
+			.where(withTenant(patients, user.organizationId));
 
 		const lastUpdated = result[0]?.last_updated_at;
 		return c.json({
@@ -555,8 +576,8 @@ app.get("/by-profile/:profileId", async (c) => {
 				withTenant(
 					patients,
 					user.organizationId,
-					eq(patients.profileId, profileId)
-				)
+					eq(patients.profileId, profileId),
+				),
 			)
 			.limit(1);
 
@@ -571,12 +592,23 @@ app.get("/by-profile/:profileId", async (c) => {
 app.post("/", async (c) => {
 	const user = c.get("user");
 	const db = createDb(c.env);
+
+	console.log("[Patients/Create] Request received", {
+		organizationId: user.organizationId,
+		userId: user.uid,
+	});
+
 	const body = (await c.req.json()) as PatientPayload;
+	console.log("[Patients/Create] Body received:", body);
 
 	const fullName = trimmedString(body.full_name ?? body.name);
-	if (!fullName) return c.json({ error: "Nome é obrigatório" }, 400);
+	if (!fullName) {
+		console.log("[Patients/Create] Validation failed: missing fullName");
+		return c.json({ error: "Nome é obrigatório" }, 400);
+	}
 
 	try {
+		console.log("[Patients/Create] Building insert values...");
 		const insertValues = buildPatientWritePayload(
 			body,
 			user.organizationId,
@@ -584,17 +616,23 @@ app.post("/", async (c) => {
 		);
 		insertValues.fullName = fullName;
 
+		console.log("[Patients/Create] Insert values:", insertValues);
+		console.log("[Patients/Create] Executing DB insert...");
+
 		const result = await db
 			.insert(patients)
 			.values(insertValues as any)
 			.returning();
 		const row = result[0];
+		console.log("[Patients/Create] DB insert successful:", row?.id);
 
 		if (!row) {
+			console.log("[Patients/Create] Error: no row returned");
 			return c.json({ error: "Falha ao criar paciente" }, 500);
 		}
 
 		const patient = normalizePatientRow(row as DbRow);
+		console.log("[Patients/Create] Patient created:", patient.id);
 
 		// Inngest Event: Patient Created (Sequência de Boas-vindas)
 		triggerInngestEvent(
@@ -613,8 +651,18 @@ app.post("/", async (c) => {
 		return c.json({ data: patient }, 201);
 	} catch (error) {
 		console.error("[Patients/Create] Error:", error);
+		console.error(
+			"[Patients/Create] Stack:",
+			error instanceof Error ? error.stack : "N/A",
+		);
 		const { message, status } = dbErrorResponse(error);
-		return c.json({ error: status === 409 ? message : "Erro ao criar paciente", details: message }, status);
+		return c.json(
+			{
+				error: status === 409 ? message : "Erro ao criar paciente",
+				details: message,
+			},
+			status,
+		);
 	}
 });
 
@@ -638,7 +686,7 @@ app.get("/:id/stats", async (c) => {
 				and(
 					sql`patient_id = ${id}::uuid`,
 					sql`organization_id = ${user.organizationId}::uuid`,
-					sql`deleted_at IS NULL`
+					sql`deleted_at IS NULL`,
 				),
 			);
 
@@ -673,13 +721,7 @@ app.get("/:id", async (c) => {
 		const result = await db
 			.select()
 			.from(patients)
-			.where(
-				withTenant(
-					patients,
-					user.organizationId,
-					eq(patients.id, id)
-				),
-			)
+			.where(withTenant(patients, user.organizationId, eq(patients.id, id)))
 			.limit(1);
 
 		const row = result[0];
@@ -692,7 +734,6 @@ app.get("/:id", async (c) => {
 	}
 });
 
-
 const updatePatientHandler = async (c: any) => {
 	const user = c.get("user");
 	const db = createDb(c.env);
@@ -701,7 +742,11 @@ const updatePatientHandler = async (c: any) => {
 	const body = (await c.req.json()) as PatientPayload;
 
 	try {
-		const updateValues = buildPatientWritePayload(body, user.organizationId, false);
+		const updateValues = buildPatientWritePayload(
+			body,
+			user.organizationId,
+			false,
+		);
 		if (Object.keys(updateValues).length === 0) {
 			return c.json({ error: "Nenhum campo para atualizar" }, 400);
 		}
@@ -709,13 +754,7 @@ const updatePatientHandler = async (c: any) => {
 		const result = await db
 			.update(patients)
 			.set(updateValues as any)
-			.where(
-				withTenant(
-					patients,
-					user.organizationId,
-					eq(patients.id, id)
-				),
-			)
+			.where(withTenant(patients, user.organizationId, eq(patients.id, id)))
 			.returning();
 
 		const row = result[0];
@@ -749,13 +788,7 @@ app.delete("/:id", async (c) => {
 		const result = await db
 			.update(patients)
 			.set({ isActive: false, deletedAt: new Date(), updatedAt: new Date() })
-			.where(
-				withTenant(
-					patients,
-					user.organizationId,
-					eq(patients.id, id)
-				),
-			)
+			.where(withTenant(patients, user.organizationId, eq(patients.id, id)))
 			.returning({ id: patients.id });
 
 		const row = result[0];
@@ -773,7 +806,6 @@ app.delete("/:id", async (c) => {
 	}
 });
 
-
 app.get("/:id/timeline", async (c) => {
 	const user = c.get("user");
 	const db = createDb(c.env);
@@ -781,7 +813,7 @@ app.get("/:id/timeline", async (c) => {
 
 	try {
 		// Drizzle approach for timeline: using multiple queries for different tables
-		// In a real refactor, we would use Drizzle's `union` if tables are compatible, 
+		// In a real refactor, we would use Drizzle's `union` if tables are compatible,
 		// but since they have different structures, we keep separate queries.
 
 		// 1. Fetch Communication Logs
@@ -822,35 +854,44 @@ app.get("/:id/timeline", async (c) => {
 				),
 			);
 
-		// 3. Fetch Evolutions (SOAP) — D1 edge index (fast) com fallback para Neon
-		let evolutions: any[] = [];
-		if (c.env.DB) {
-			try {
-				const d1Result = await c.env.DB.prepare(
-					`SELECT id, 'evolution' AS entry_type, 'clinical' AS category,
-					        preview_text AS body, created_at
-					 FROM evolution_index
-					 WHERE patient_id = ? AND (organization_id = ? OR organization_id IS NULL)
-					 ORDER BY created_at DESC LIMIT 50`
-				).bind(id, user.organizationId).all<{
-					id: string; entry_type: string; category: string; body: string; created_at: string;
-				}>();
-				evolutions = d1Result.results;
-			} catch {
-				// D1 falhou — fallback silencioso para Neon
-				evolutions = await db
-					.select({ id: sql`id`, entry_type: sql`'evolution'`, category: sql`'clinical'`, body: sql`preview_text`, created_at: sql`created_at` })
-					.from(sql`evolution_index`)
-					.where(and(sql`patient_id = ${id}::uuid`, sql`organization_id = ${user.organizationId}::uuid`))
-					.catch(() => []) as any[];
-			}
-		} else {
-			evolutions = await db
-				.select({ id: sql`id`, entry_type: sql`'evolution'`, category: sql`'clinical'`, body: sql`preview_text`, created_at: sql`created_at` })
-				.from(sql`evolution_index`)
-				.where(and(sql`patient_id = ${id}::uuid`, sql`organization_id = ${user.organizationId}::uuid`))
-				.catch(() => []) as any[];
-		}
+		// 3. Fetch Evolutions (SOAP) from real session records so the timeline can
+		// expose the complete clinical content instead of only an index preview.
+		const sessionRows = await db
+			.select()
+			.from(sessions)
+			.where(
+				withTenant(sessions, user.organizationId, eq(sessions.patientId, id)),
+			)
+			.orderBy(desc(sessions.createdAt))
+			.limit(50);
+
+		const evolutions = sessionRows.map((row) => {
+			const subjective = jsonbTextToString(row.subjective);
+			const objective = jsonbTextToString(row.objective);
+			const assessment = jsonbTextToString(row.assessment);
+			const plan = jsonbTextToString(row.plan);
+			const bodyPreview =
+				[subjective, objective, assessment, plan]
+					.filter(Boolean)
+					.join("\n\n") || undefined;
+
+			return {
+				id: row.id,
+				entry_type: "evolution",
+				category: "clinical",
+				status: String(row.status ?? "draft"),
+				created_at: new Date(row.createdAt).toISOString(),
+				appointment_id: row.appointmentId ?? undefined,
+				record_date: row.date
+					? new Date(row.date).toISOString().split("T")[0]
+					: undefined,
+				subjective,
+				objective,
+				assessment,
+				plan,
+				body: bodyPreview,
+			};
+		});
 
 		// Combine and Sort
 		const timeline = [...comms, ...appointments, ...evolutions].sort(
@@ -870,7 +911,6 @@ app.get("/:id/timeline", async (c) => {
 		);
 	}
 });
-
 
 registerPatientClinicalDetailRoutes(app);
 

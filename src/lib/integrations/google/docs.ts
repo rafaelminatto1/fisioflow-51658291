@@ -264,7 +264,10 @@ export class DocsService {
 
 			// Data atual
 			DATA_RELATORIO: new Date().toLocaleDateString("pt-BR"),
-			HORA_RELATORIO: new Date().toLocaleTimeString("pt-BR"),
+			HORA_RELATORIO: new Date().toLocaleTimeString("pt-BR", {
+				hour: "2-digit",
+				minute: "2-digit",
+			}),
 		};
 
 		return this.generateReport(templateId, reportName, data, options);

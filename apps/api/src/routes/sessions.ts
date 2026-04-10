@@ -554,10 +554,11 @@ app.post('/:id/attachments', requireAuth, async (c) => {
 
 app.delete('/:id/attachments/:attachmentId', requireAuth, async (c) => {
   const db = createDb(c.env);
+  const id = c.req.param('id');
   const attachmentId = c.req.param('attachmentId');
 
-  const [deleted] = await db.update(sessionAttachments).set({ deletedAt: new Date() })
-    .where(eq(sessionAttachments.id, attachmentId))
+  const [deleted] = await db.delete(sessionAttachments)
+    .where(and(eq(sessionAttachments.id, attachmentId), eq(sessionAttachments.sessionId, id)))
     .returning();
 
   if (!deleted) return c.json({ error: 'Anexo não encontrado' }, 404);

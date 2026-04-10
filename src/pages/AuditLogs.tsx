@@ -605,7 +605,7 @@ export default function AuditLogs() {
 															<TableCell className="whitespace-nowrap text-xs">
 																{format(
 																	new Date(log.timestamp),
-																	"dd/MM/yyyy HH:mm:ss",
+																	"dd/MM/yyyy HH:mm",
 																	{ locale: ptBR },
 																)}
 															</TableCell>
