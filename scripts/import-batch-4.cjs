@@ -37,7 +37,20 @@ const batch = [
     { suffix: 'coordenacao_cruzada_illustration_batch4_1775873126043.png', slug: 'coordenacao-cruzada-cross-crawl' },
     { suffix: 'coordenacao_digital_illustration_batch4_1775873159487.png', slug: 'coordenacao-digital-dedos' },
     { suffix: 'coordenacao_oculo_manual_illustration_batch4b_1_1775916773051.png', slug: 'coordenacao-oculo-manual' },
-    { suffix: 'copenhagen_plank_illustration_batch4b_2_1775916788276.png', slug: 'copenhagen-plank' }
+    { suffix: 'copenhagen_plank_illustration_batch4b_2_1775916788276.png', slug: 'copenhagen-plank' },
+    { suffix: 'depth_jump_illustration_exercise_batch4_final_1775919600000_1775936422614.png', slug: 'depth-jump-salto-profundo' },
+    { suffix: 'step_down_illustration_exercise_batch4_final_1775920000000_1775936443975.png', slug: 'descida-controlada-de-degrau' },
+    { suffix: 'descida_de_escada_illustration_exercise_v2_1775936481890.png', slug: 'descida-de-escada' },
+    { suffix: 'deslizamento_de_tendoes_tendon_glides_illustration_exercise_v2_1775936495429.png', slug: 'deslizamento-de-tendoes-tendon-glides' },
+    { suffix: 'deslocamento_lateral_shuffle_illustration_exercise_v2_1775936508874.png', slug: 'deslocamento-lateral-shuffle' },
+    { suffix: 'desvio_radial_de_punho_illustration_exercise_v2_1775936535046.png', slug: 'desvio-radial-de-punho' },
+    { suffix: 'elevacao_frontal_de_ombro_illustration_exercise_v2_1775936547317.png', slug: 'elevacao-frontal-de-ombro' },
+    { suffix: 'elevacao_lateral_de_ombro_0_90_illustration_exercise_v2_1775936559929.png', slug: 'elevacao-lateral-de-ombro-0-90' },
+    { suffix: 'elevacao_de_panturrilha_sentado_illustration_exercise_v2_1775936594044.png', slug: 'elevacao-de-panturrilha-sentado' },
+    { suffix: 'elevacao_de_panturrilha_em_degrau_illustration_exercise_v2_1775936606364.png', slug: 'elevacao-de-panturrilha-em-degrau' },
+    { suffix: 'elevacao_de_panturrilha_em_pe_illustration_exercise_v2_1775936619525.png', slug: 'elevacao-de-panturrilha-em-pe' },
+    { suffix: 'equilibrio_unipodal_em_discoespuma_illustration_exercise_v2_1775936656069.png', slug: 'equilibrio-unipodal-em-discoespuma' },
+    { suffix: 'equilibrio_em_disco_instavel_illustration_exercise_v2_1775936667718.png', slug: 'equilibrio-em-disco-instavel' }
 ];
 
 async function run() {
@@ -47,7 +60,7 @@ async function run() {
         }
 
         await client.connect();
-        console.log('🚀 Starting import of Batch 4 (6 exercises)...');
+        console.log('🚀 Starting import of Batch 4 (36 exercises)...');
 
         for (const item of batch) {
             const sourcePath = path.join(SOURCE_DIR, item.suffix);

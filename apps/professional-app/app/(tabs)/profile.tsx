@@ -35,6 +35,10 @@ export default function ProfileScreen() {
 	const { light, medium, success, error } = useHaptics();
 	const [isLoggingOut, setIsLoggingOut] = useState(false);
 
+	const [pushEnabled, setPushEnabled] = useState(true);
+	const [remindersEnabled, setRemindersEnabled] = useState(true);
+	const [darkModeEnabled, setDarkModeEnabled] = useState(false);
+
 	const { data: stats } = useQuery({
 		queryKey: ["professionalStats"],
 		queryFn: () => getDashboardStats("current-professional"),
@@ -98,6 +102,14 @@ export default function ProfileScreen() {
 			<ProfileHeader
 				name={user?.name || "Profissional"}
 				email={user?.email}
+				onAvatarPress={() => {
+					medium();
+					router.push("/profile-edit" as any);
+				}}
+				onSettingsPress={() => {
+					medium();
+					router.push("/(settings)/notification-preferences" as any);
+				}}
 				stats={{
 					patients: stats?.activePatients ?? 0,
 					appointments: stats?.todayAppointments ?? 0,
@@ -120,7 +132,8 @@ export default function ProfileScreen() {
 						label="Dados da Clínica"
 						onPress={() => {
 							medium();
-							router.push("/clinic-settings" as any);
+							Alert.alert("Dados da Clínica", "As configurações avançadas da clínica devem ser realizadas via painel web. Editando dados pessoais.");
+							router.push("/profile-edit" as any);
 						}}
 					/>
 					<ProfileMenuItem
@@ -136,7 +149,7 @@ export default function ProfileScreen() {
 						label="Horários de Atendimento"
 						onPress={() => {
 							medium();
-							router.push("/working-hours" as any);
+							router.push("/(settings)/working-hours" as any);
 						}}
 					/>
 					<ProfileMenuItem
@@ -144,7 +157,7 @@ export default function ProfileScreen() {
 						label="Notificações"
 						onPress={() => {
 							medium();
-							router.push("/notification-preferences" as any);
+							router.push("/(settings)/notification-preferences" as any);
 						}}
 					/>
 					<ProfileMenuItem
@@ -173,7 +186,7 @@ export default function ProfileScreen() {
 						label="Ajuda e Suporte"
 						onPress={() => {
 							medium();
-							router.push("/help" as any);
+							router.push("/(settings)/help" as any);
 						}}
 					/>
 				</ProfileSection>
@@ -215,18 +228,28 @@ export default function ProfileScreen() {
 				<ProfileSection title="Opções">
 					<SettingsItem
 						label="Notificações Push"
-						value={true}
-						onToggle={() => medium()}
+						value={pushEnabled}
+						onToggle={(val) => {
+							medium();
+							setPushEnabled(val);
+						}}
 					/>
 					<SettingsItem
 						label="Lembrete de atividades"
-						value={true}
-						onToggle={() => medium()}
+						value={remindersEnabled}
+						onToggle={(val) => {
+							medium();
+							setRemindersEnabled(val);
+						}}
 					/>
 					<SettingsItem
 						label="Modo Escuro"
-						value={false}
-						onToggle={() => medium()}
+						value={darkModeEnabled}
+						onToggle={(val) => {
+							medium();
+							setDarkModeEnabled(val);
+							Alert.alert("Aviso", "A alteração do modo escuro requer reinicialização ou atualização do sistema de cores.");
+						}}
 					/>
 				</ProfileSection>
 
