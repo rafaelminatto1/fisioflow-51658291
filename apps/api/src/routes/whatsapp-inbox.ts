@@ -551,10 +551,10 @@ app.post("/conversations/:id/messages", requireAuth, async (c) => {
 
 			return c.json(
 				{
+					...mapMessageRow(savedMsg),
 					error: "Mensagem nao enviada pelo WhatsApp",
 					details: sendError.message,
 					requestId,
-					messageId: savedMsg.id,
 				},
 				502,
 			);
