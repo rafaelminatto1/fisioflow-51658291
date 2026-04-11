@@ -2,6 +2,7 @@ import { Hono } from "hono";
 import { createPool } from "../lib/db";
 import { requireAuth, type AuthUser } from "../lib/auth";
 import { broadcastToOrg } from "../lib/realtime";
+import { logToAxiom } from "../lib/axiom";
 import {
 	getInboxConversations,
 	getConversationWithMessages,
@@ -91,6 +92,55 @@ function mapContactRow(row: any) {
 		createdAt: row.created_at,
 		updatedAt: row.updated_at,
 	};
+}
+
+function maskPhone(phone?: string | null) {
+	const digits = String(phone ?? "").replace(/\D/g, "");
+	if (!digits) return undefined;
+	return `${digits.slice(0, 4)}...${digits.slice(-4)}`;
+}
+
+function serializeError(error: unknown) {
+	if (error instanceof Error) {
+		return { name: error.name, message: error.message, stack: error.stack };
+	}
+	return { message: String(error) };
+}
+
+function getMetaError(metaData: any) {
+	const metaError = metaData?.error;
+	if (!metaError) return undefined;
+	return {
+		type: metaError.type,
+		code: metaError.code,
+		errorSubcode: metaError.error_subcode,
+		message: metaError.message,
+		traceId: metaError.fbtrace_id,
+	};
+}
+
+function logWhatsAppInboxEvent(
+	c: any,
+	level: "info" | "warn" | "error",
+	message: string,
+	data: Record<string, unknown>,
+) {
+	const payload = {
+		level,
+		message,
+		type: "whatsapp_inbox_send",
+		...data,
+	};
+
+	if (level === "error") {
+		console.error(`[WhatsApp Inbox] ${message}`, payload);
+	} else if (level === "warn") {
+		console.warn(`[WhatsApp Inbox] ${message}`, payload);
+	} else {
+		console.info(`[WhatsApp Inbox] ${message}`, payload);
+	}
+
+	logToAxiom(c.env, c.executionCtx, payload);
 }
 
 app.get("/conversations", requireAuth, async (c) => {
@@ -284,11 +334,13 @@ app.get("/conversations/:id", requireAuth, async (c) => {
 });
 
 app.post("/conversations/:id/messages", requireAuth, async (c) => {
+	const requestId = crypto.randomUUID();
 	const user = c.get("user");
 	const { id } = c.req.param();
 	const pool = await createPool(c.env);
 	const body = (await c.req.json()) as {
 		content: string;
+		type?: string;
 		messageType?: string;
 		templateName?: string;
 		templateLanguage?: string;
@@ -298,35 +350,83 @@ app.post("/conversations/:id/messages", requireAuth, async (c) => {
 	};
 
 	if (!body.content && !body.attachmentUrl) {
-		return c.json({ error: "content or attachmentUrl is required" }, 400);
+		logWhatsAppInboxEvent(c, "warn", "send validation failed", {
+			requestId,
+			conversationId: id,
+			organizationId: user.organizationId,
+			userId: user.uid,
+			reason: "missing_content_or_attachment",
+		});
+		return c.json({ error: "content or attachmentUrl is required", requestId }, 400);
 	}
 
 	try {
 		const convResult = await pool.query(
-			`SELECT c.*, wc.wa_id, wc.bsuid FROM wa_conversations c LEFT JOIN whatsapp_contacts wc ON wc.id = c.contact_id WHERE c.id = $1`,
-			[id],
+			`SELECT c.*, wc.wa_id, wc.bsuid
+			 FROM wa_conversations c
+			 LEFT JOIN whatsapp_contacts wc ON wc.id = c.contact_id
+			 WHERE c.id = $1 AND c.organization_id = $2`,
+			[id, user.organizationId],
 		);
 		if (convResult.rows.length === 0) {
-			return c.json({ error: "Conversation not found" }, 404);
+			logWhatsAppInboxEvent(c, "warn", "conversation not found for send", {
+				requestId,
+				conversationId: id,
+				organizationId: user.organizationId,
+				userId: user.uid,
+			});
+			return c.json({ error: "Conversation not found", requestId }, 404);
 		}
 
 		const conv = convResult.rows[0];
 		const to = conv.wa_id;
 		const phoneId = c.env.WHATSAPP_PHONE_NUMBER_ID;
 		const token = c.env.WHATSAPP_ACCESS_TOKEN;
-		let metaMessageId: string | null = null;
-		let status = "pending";
 		const messageType =
-			body.messageType || (body.attachmentUrl ? "image" : "text");
+			body.messageType || body.type || (body.attachmentUrl ? "image" : "text");
+		const logContext = {
+			requestId,
+			conversationId: id,
+			organizationId: conv.organization_id,
+			contactId: conv.contact_id,
+			userId: user.uid,
+			messageType,
+			hasAttachment: Boolean(body.attachmentUrl),
+			recipient: maskPhone(to),
+			contentLength: body.content?.length ?? 0,
+		};
 
-		if (phoneId && token && to) {
+		let metaMessageId: string | null = null;
+		let metaStatusCode: number | undefined;
+		let metaData: any;
+		let sendError:
+			| {
+					kind: string;
+					message: string;
+					statusCode?: number;
+					metaError?: ReturnType<typeof getMetaError>;
+					cause?: ReturnType<typeof serializeError>;
+				}
+			| null = null;
+
+		if (!to) {
+			sendError = {
+				kind: "missing_recipient",
+				message: "Contato sem numero de WhatsApp cadastrado",
+			};
+		} else if (!phoneId || !token) {
+			sendError = {
+				kind: "missing_credentials",
+				message: "Credenciais do WhatsApp Business nao configuradas",
+			};
+		} else {
 			try {
-				const targetBsuid = conv.bsuid;
 				let metaPayload: Record<string, unknown>;
 
-				if (body.messageType === "template" && body.templateName) {
+				if (messageType === "template" && body.templateName) {
 					metaPayload = {
 						messaging_product: "whatsapp",
+						recipient_type: "individual",
 						to: to.replace(/\D/g, ""),
 						type: "template",
 						template: {
@@ -340,11 +440,11 @@ app.post("/conversations/:id/messages", requireAuth, async (c) => {
 							],
 						},
 					};
-					if (targetBsuid) (metaPayload as any).recipient = targetBsuid;
 				} else if (body.attachmentUrl) {
 					const mediaType = messageType === "image" ? "image" : "document";
 					metaPayload = {
 						messaging_product: "whatsapp",
+						recipient_type: "individual",
 						to: to.replace(/\D/g, ""),
 						type: mediaType,
 						[mediaType]: {
@@ -352,15 +452,14 @@ app.post("/conversations/:id/messages", requireAuth, async (c) => {
 							caption: body.content || undefined,
 						},
 					};
-					if (targetBsuid) (metaPayload as any).recipient = targetBsuid;
 				} else {
 					metaPayload = {
 						messaging_product: "whatsapp",
+						recipient_type: "individual",
 						to: to.replace(/\D/g, ""),
 						type: "text",
 						text: { body: body.content },
 					};
-					if (targetBsuid) (metaPayload as any).recipient = targetBsuid;
 				}
 
 				const metaRes = await fetch(
@@ -374,15 +473,30 @@ app.post("/conversations/:id/messages", requireAuth, async (c) => {
 						body: JSON.stringify(metaPayload),
 					},
 				);
-				const metaData = (await metaRes.json()) as any;
-				metaMessageId = metaData.messages?.[0]?.id ?? null;
-				status = metaRes.ok ? "sent" : "failed";
-			} catch (e) {
-				console.error("[WhatsApp Inbox] Send error:", e);
-				status = "failed";
+				metaStatusCode = metaRes.status;
+				metaData = await metaRes.json().catch(() => undefined);
+				metaMessageId = metaData?.messages?.[0]?.id ?? null;
+
+				if (!metaRes.ok) {
+					sendError = {
+						kind: "meta_api_error",
+						message:
+							metaData?.error?.message ??
+							`Meta Graph API returned HTTP ${metaRes.status}`,
+						statusCode: metaRes.status,
+						metaError: getMetaError(metaData),
+					};
+				}
+			} catch (error) {
+				sendError = {
+					kind: "network_or_runtime_error",
+					message: error instanceof Error ? error.message : "Erro desconhecido",
+					cause: serializeError(error),
+				};
 			}
 		}
 
+		const sendStatus = sendError ? "failed" : "sent";
 		const savedMsg = await addMessage(
 			pool,
 			id,
@@ -397,29 +511,76 @@ app.post("/conversations/:id/messages", requireAuth, async (c) => {
 			{
 				templateName: body.templateName,
 				mediaUrl: body.attachmentUrl,
+				mediaType: body.attachmentUrl ? messageType : undefined,
+				status: sendStatus,
+				metadata: {
+					requestId,
+					sentVia: body.sentVia ?? "inbox",
+					whatsappSend: {
+						status: sendStatus,
+						metaStatusCode,
+						metaMessageId,
+						error: sendError,
+					},
+				},
 			},
 		);
-
-		if (status === "sent") {
-			await pool.query(`UPDATE wa_messages SET status = 'sent' WHERE id = $1`, [
-				savedMsg.id,
-			]);
-			savedMsg.status = "sent";
-		}
+		savedMsg.status = sendStatus;
 
 		await broadcastToOrg(c.env, conv.organization_id, {
-			type: "whatsapp_message",
+			type: sendError ? "whatsapp_message_failed" : "whatsapp_message",
 			conversationId: id,
 			message: savedMsg,
+			requestId,
+		});
+
+		if (sendError) {
+			logWhatsAppInboxEvent(c, "error", "message send failed", {
+				...logContext,
+				messageId: savedMsg.id,
+				metaMessageId,
+				metaStatusCode,
+				sendError,
+			});
+
+			return c.json(
+				{
+					error: "Mensagem nao enviada pelo WhatsApp",
+					details: sendError.message,
+					requestId,
+					messageId: savedMsg.id,
+				},
+				502,
+			);
+		}
+
+		await pool.query(
+			`UPDATE wa_conversations
+			 SET status = CASE WHEN status IN ('open', 'assigned') THEN 'pending' ELSE status END,
+			     last_message_at = now(),
+			     last_message_out_at = now(),
+			     updated_at = now()
+			 WHERE id = $1 AND organization_id = $2`,
+			[id, conv.organization_id],
+		);
+
+		logWhatsAppInboxEvent(c, "info", "message sent successfully", {
+			...logContext,
+			messageId: savedMsg.id,
+			metaMessageId,
+			metaStatusCode,
 		});
 
 		return c.json(mapMessageRow(savedMsg), 201);
 	} catch (err) {
-		console.error(
-			"[WhatsApp Inbox] POST /conversations/:id/messages error:",
-			err,
-		);
-		return c.json({ error: "Failed to send message" }, 500);
+		logWhatsAppInboxEvent(c, "error", "message send route crashed", {
+			requestId,
+			conversationId: id,
+			organizationId: user.organizationId,
+			userId: user.uid,
+			error: serializeError(err),
+		});
+		return c.json({ error: "Failed to send message", requestId }, 500);
 	}
 });
 

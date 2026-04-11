@@ -315,6 +315,8 @@ export async function addMessage(
 		mediaType?: string;
 		templateName?: string;
 		replyTo?: string;
+		status?: string;
+		metadata?: Record<string, unknown>;
 	},
 ) {
 	try {
@@ -324,8 +326,8 @@ export async function addMessage(
 				: JSON.stringify(content);
 
 		const result = await pool.query(
-			`INSERT INTO wa_messages (conversation_id, organization_id, contact_id, direction, sender_type, sender_id, message_type, content, meta_message_id, media_url, media_type, template_name, reply_to)
-       VALUES ($1, $2::uuid, $3::uuid, $4, $5, $6, $7, $8::jsonb, $9, $10, $11, $12, $13)
+			`INSERT INTO wa_messages (conversation_id, organization_id, contact_id, direction, sender_type, sender_id, message_type, content, meta_message_id, media_url, media_type, template_name, reply_to, status, metadata)
+       VALUES ($1, $2::uuid, $3::uuid, $4, $5, $6, $7, $8::jsonb, $9, $10, $11, $12, $13, $14, $15::jsonb)
        RETURNING *`,
 			[
 				conversationId,
@@ -341,6 +343,8 @@ export async function addMessage(
 				options?.mediaType ?? null,
 				options?.templateName ?? null,
 				options?.replyTo ?? null,
+				options?.status ?? "pending",
+				options?.metadata ? JSON.stringify(options.metadata) : null,
 			],
 		);
 
