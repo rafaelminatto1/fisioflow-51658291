@@ -7,7 +7,11 @@
 import { initPerformanceMonitoring } from "@/lib/monitoring/performance";
 import { initRemoteConfig } from "@/lib/config/remote-config";
 import { initAnalytics } from "@/lib/analytics/events";
-import { initSentry, setUser } from "@/lib/monitoring/sentry";
+import {
+	clearUser as clearSentryUser,
+	initSentry,
+	setUser,
+} from "@/lib/monitoring/sentry";
 import { logger } from "@/lib/errors/logger";
 
 /**
@@ -67,10 +71,7 @@ export function setupUserTracking(user: {
  */
 export function clearUserTracking() {
 	try {
-		// Sentry - import dinâmico para evitar erro de build
-		import("@/lib/monitoring/sentry").then(({ clearUser: sentryClearUser }) => {
-			sentryClearUser();
-		});
+		clearSentryUser();
 
 		logger.debug("[Init] Tracking do usuário limpo");
 	} catch (error) {
