@@ -46,9 +46,8 @@ export function RelatorioTemplateManager({
 					<div className="space-y-3">
 						{templates.map((template) => {
 							const isBuiltin = template.organization_id === "__builtin__";
-							const handleEditOrCopy = () =>
+							const handleEdit = () =>
 								isBuiltin ? duplicateTemplate(template) : startEditTemplate(template);
-							const editLabel = isBuiltin ? "Copiar" : "Editar";
 							return (
 								<div
 									key={template.id}
@@ -88,17 +87,19 @@ export function RelatorioTemplateManager({
 										<Button size="sm" onClick={() => applyTemplate(template)}>
 											Aplicar
 										</Button>
-										<Button size="sm" variant="outline" onClick={handleEditOrCopy}>
-											{editLabel}
+										<Button size="sm" variant="outline" onClick={handleEdit}>
+											Editar
 										</Button>
-										<Button
-											size="sm"
-											variant="destructive"
-											onClick={() => onDeleteTemplate(template.id)}
-											disabled={deleteTemplatePending}
-										>
-											Excluir
-										</Button>
+										{!isBuiltin && (
+											<Button
+												size="sm"
+												variant="destructive"
+												onClick={() => onDeleteTemplate(template.id)}
+												disabled={deleteTemplatePending}
+											>
+												Excluir
+											</Button>
+										)}
 									</div>
 								</div>
 							);

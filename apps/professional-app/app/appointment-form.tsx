@@ -10,6 +10,7 @@ import {
   Platform,
   Modal,
   TextInput,
+  Switch,
 } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -131,6 +132,9 @@ export default function AppointmentFormScreen() {
           duration: data.duration,
           status: data.status as any,
           notes: data.notes || '',
+          isGroup: data.isGroup || false,
+          additionalNames: data.additionalNames || '',
+          isUnlimited: data.isUnlimited || false,
         });
       }
     } catch  {
@@ -549,6 +553,73 @@ export default function AppointmentFormScreen() {
           </View>
         </View>
 
+        {/* Group Session Selection */}
+        <View style={[styles.groupSection, { borderColor: colors.border, backgroundColor: colors.surface }]}>
+          <View style={styles.groupRow}>
+            <View style={{ flex: 1 }}>
+              <Text style={[styles.groupLabel, { color: colors.text }]}>Sessão de Grupo</Text>
+              <Text style={[styles.groupDesc, { color: colors.textSecondary }]}>Adicionar múltiplos participantes ao mesmo horário</Text>
+            </View>
+            <Controller
+              control={control}
+              name="isGroup"
+              render={({ field: { value, onChange } }) => (
+                <Switch
+                  value={value}
+                  onValueChange={onChange}
+                  trackColor={{ false: colors.border, true: colors.primary }}
+                  thumbColor={Platform.OS === 'android' ? (value ? colors.primary : '#f4f3f4') : undefined}
+                />
+              )}
+            />
+          </View>
+
+          {watch('isGroup') && (
+            <View style={{ marginTop: 8, paddingTop: 12, borderTopWidth: 1, borderTopColor: colors.border }}>
+              <View style={styles.groupRow}>
+                <View style={{ flex: 1 }}>
+                  <Text style={[styles.groupLabel, { color: colors.text }]}>Capacidade Ilimitada</Text>
+                  <Text style={[styles.groupDesc, { color: colors.textSecondary }]}>Não limitar número de participantes</Text>
+                </View>
+                <Controller
+                  control={control}
+                  name="isUnlimited"
+                  render={({ field: { value, onChange } }) => (
+                    <Switch
+                      value={value}
+                      onValueChange={onChange}
+                      trackColor={{ false: colors.border, true: colors.primary }}
+                    />
+                  )}
+                />
+              </View>
+
+              {!watch('isUnlimited') && (
+                <View style={{ marginTop: 12 }}>
+                  <Text style={[styles.label, { color: colors.textSecondary }]}>Nomes dos Participantes</Text>
+                  <Controller
+                    control={control}
+                    name="additionalNames"
+                    render={({ field: { value, onChange } }) => (
+                      <Input
+                        placeholder="Ex: João Silva, Maria Oliveira..."
+                        value={value}
+                        onChangeText={onChange}
+                        multiline
+                        numberOfLines={2}
+                        style={{ minHeight: 60 }}
+                      />
+                    )}
+                  />
+                  <Text style={[styles.groupDesc, { color: colors.textSecondary, marginTop: 4 }]}>
+                    Separe os nomes por vírgula
+                  </Text>
+                </View>
+              )}
+            </View>
+          )}
+        </View>
+
         <Text style={[styles.label, { color: colors.textSecondary }]}>Observações</Text>
         <Controller
           control={control}
@@ -773,6 +844,28 @@ const styles = StyleSheet.create({
   saveButton: { marginTop: 8 },
   startButton: { marginTop: 12 },
   deleteButton: { marginTop: 12, borderWidth: 1 },
+  // Group Section Styles
+  groupSection: {
+    marginTop: 8,
+    marginBottom: 16,
+    padding: 16,
+    borderRadius: 16,
+    borderWidth: 1,
+  },
+  groupRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+  },
+  groupLabel: {
+    fontSize: 15,
+    fontWeight: '600',
+  },
+  groupDesc: {
+    fontSize: 12,
+    marginTop: 2,
+    maxWidth: '85%',
+  },
   errorText: { color: '#ef4444', fontSize: 12, marginTop: -12, marginBottom: 12 },
   // Payment Section Styles
   paymentSection: {

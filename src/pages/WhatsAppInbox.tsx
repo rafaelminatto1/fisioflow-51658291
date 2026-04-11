@@ -1,23 +1,28 @@
 import { formatDistanceToNow } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import {
+	Activity,
+	AlarmClock,
 	AlertTriangle,
 	ArrowRightLeft,
 	BarChart3,
 	BellRing,
 	Calendar,
 	CalendarCheck,
+	Check,
 	CheckCircle2,
 	ChevronDown,
 	Clock,
 	Filter,
 	Hash,
+	ListChecks,
 	Loader2,
+	MapPin,
 	Megaphone,
 	MessageCircle,
 	MessageSquare,
+	Mic,
 	MoreVertical,
-	NotebookPen,
 	Paperclip,
 	Phone,
 	Plus,
@@ -28,7 +33,6 @@ import {
 	Target,
 	User,
 	UserPlus,
-	X,
 	XCircle,
 	Zap,
 } from "lucide-react";
@@ -71,6 +75,9 @@ import type {
 } from "@/services/whatsapp-api";
 import {
 	addTags,
+	bulkAction,
+	fetchAgentsWorkload,
+	fetchConversationActivity,
 	fetchMetrics,
 	fetchPendingConfirmations,
 	removeTag as apiRemoveTag,
@@ -81,6 +88,7 @@ import {
 	resolveContact,
 	sendBroadcast,
 	sendMessage as apiSendMessage,
+	snoozeConversation,
 	updatePriority,
 } from "@/services/whatsapp-api";
 
@@ -115,6 +123,17 @@ const PRIORITY_LABELS: Record<string, string> = {
 	high: "Alta",
 	urgent: "Urgente",
 };
+
+const STATUS_LABELS: Record<string, string> = {
+	open: "Aberta",
+	pending: "Pendente",
+	resolved: "Resolvida",
+	closed: "Fechada",
+};
+
+function statusLabel(status: string): string {
+	return STATUS_LABELS[status] ?? status;
+}
 
 function MetricsStrip({ metrics }: { metrics: Metrics | null }) {
 	if (!metrics) return null;
@@ -472,14 +491,40 @@ function ConfirmationsModal({
 	);
 }
 
+function getSlaLabel(
+	deadline: string | undefined,
+	breached: boolean | undefined,
+): { label: string; color: string } | null {
+	if (!deadline) return null;
+	const now = Date.now();
+	const end = new Date(deadline).getTime();
+	const diffMs = end - now;
+	if (breached || diffMs <= 0)
+		return {
+			label: "SLA vencido",
+			color: "text-red-500 bg-red-50 dark:bg-red-900/20",
+		};
+	const diffMin = Math.floor(diffMs / 60000);
+	if (diffMin < 10)
+		return { label: `${diffMin}min`, color: "text-red-500 bg-red-50" };
+	if (diffMin < 60)
+		return { label: `${diffMin}min`, color: "text-orange-500 bg-orange-50" };
+	const diffH = Math.floor(diffMin / 60);
+	return { label: `${diffH}h`, color: "text-green-600 bg-green-50" };
+}
+
 function ConversationListItem({
 	conversation,
 	isSelected,
 	onClick,
+	bulkMode,
+	isSelectedBulk,
 }: {
 	conversation: Conversation;
 	isSelected: boolean;
 	onClick: () => void;
+	bulkMode?: boolean;
+	isSelectedBulk?: boolean;
 }) {
 	const timeAgo = conversation.lastMessageAt
 		? formatDistanceToNow(new Date(conversation.lastMessageAt), {
@@ -487,6 +532,8 @@ function ConversationListItem({
 				locale: ptBR,
 			})
 		: "";
+
+	const sla = getSlaLabel(conversation.slaDeadline, conversation.slaBreached);
 
 	return (
 		<button
@@ -499,6 +546,15 @@ function ConversationListItem({
 			}`}
 		>
 			<div className="flex items-start gap-3">
+				{bulkMode && (
+					<div
+						className={`h-5 w-5 rounded border-2 flex items-center justify-center mt-3.5 shrink-0 ${isSelectedBulk ? "bg-primary border-primary" : "border-border"}`}
+					>
+						{isSelectedBulk && (
+							<Check className="h-3 w-3 text-primary-foreground" />
+						)}
+					</div>
+				)}
 				<Avatar className="h-12 w-12 shrink-0 border border-border/50 shadow-sm">
 					<AvatarFallback className="text-sm bg-primary/5 text-primary font-medium">
 						{conversation.contactName?.slice(0, 2).toUpperCase() || "??"}
@@ -533,21 +589,20 @@ function ConversationListItem({
 						<span
 							className={`inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-medium border ${STATUS_COLORS[conversation.status] || ""}`}
 						>
-							{conversation.status === "open"
-								? "Aberta"
-								: conversation.status === "pending"
-									? "Pendente"
-									: conversation.status === "resolved"
-										? "Resolvida"
-										: "Fechada"}
+							{statusLabel(conversation.status)}
 						</span>
 						{conversation.priority && conversation.priority !== "low" && (
 							<AlertTriangle
 								className={`h-3 w-3 ${PRIORITY_COLORS[conversation.priority] || ""}`}
 							/>
 						)}
-						{conversation.slaBreached && (
-							<Clock className="h-3 w-3 text-red-500" />
+						{sla && (
+							<span
+								className={`inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded text-[10px] font-medium ${sla.color}`}
+							>
+								<Clock className="h-2.5 w-2.5" />
+								{sla.label}
+							</span>
 						)}
 						{conversation.assignedToName && (
 							<Avatar className="h-4 w-4 ml-auto">
@@ -563,6 +618,107 @@ function ConversationListItem({
 				</div>
 			</div>
 		</button>
+	);
+}
+
+function renderMessageContent(message: Message) {
+	let parsed: any = null;
+	if (typeof message.content === "string") {
+		try {
+			parsed = JSON.parse(message.content);
+		} catch {
+			parsed = null;
+		}
+	} else {
+		parsed = message.content;
+	}
+
+	const type = message.type;
+
+	if (type === "image" || parsed?.type === "image") {
+		const url =
+			parsed?.url ||
+			parsed?.link ||
+			(typeof message.content === "string" &&
+			message.content.startsWith("http")
+				? message.content
+				: null);
+		if (url) {
+			return (
+				<div className="mt-1">
+					<img
+						src={url}
+						alt="Imagem"
+						className="rounded-lg max-w-full max-h-64 object-cover cursor-pointer"
+						onClick={() => window.open(url, "_blank")}
+					/>
+					{parsed?.caption && (
+						<p className="text-sm mt-1">{parsed.caption}</p>
+					)}
+				</div>
+			);
+		}
+	}
+
+	if (type === "audio" || (type as string) === "voice") {
+		const url = parsed?.url || parsed?.link;
+		if (url) {
+			return <audio controls src={url} className="mt-1 max-w-full h-10" />;
+		}
+		return (
+			<div className="flex items-center gap-2 mt-1 text-xs opacity-75">
+				<Mic className="h-4 w-4" /> Mensagem de voz
+			</div>
+		);
+	}
+
+	if (type === "document") {
+		const url = parsed?.url || parsed?.link;
+		const filename = parsed?.filename || parsed?.name || "Documento";
+		return (
+			<div className="flex items-center gap-2 mt-1 p-2 rounded-lg bg-black/10 dark:bg-white/10">
+				<Paperclip className="h-4 w-4 shrink-0" />
+				<span className="text-sm truncate flex-1">{filename}</span>
+				{url && (
+					<a
+						href={url}
+						target="_blank"
+						rel="noopener noreferrer"
+						className="text-xs underline shrink-0"
+					>
+						Baixar
+					</a>
+				)}
+			</div>
+		);
+	}
+
+	if (type === "location") {
+		const lat = parsed?.latitude;
+		const lng = parsed?.longitude;
+		const name = parsed?.name || "Localização";
+		if (lat && lng) {
+			return (
+				<a
+					href={`https://maps.google.com/?q=${lat},${lng}`}
+					target="_blank"
+					rel="noopener noreferrer"
+					className="flex items-center gap-2 mt-1 text-sm underline"
+				>
+					<MapPin className="h-4 w-4 shrink-0" /> {name}
+				</a>
+			);
+		}
+	}
+
+	const text =
+		typeof message.content === "string"
+			? message.content
+			: JSON.stringify(message.content);
+	return (
+		<p className="text-[14px] leading-relaxed whitespace-pre-wrap break-words">
+			{text}
+		</p>
 	);
 }
 
@@ -613,9 +769,7 @@ function MessageBubble({ message }: { message: Message }) {
 						: "bg-background border border-border/50 text-foreground rounded-tl-sm"
 				}`}
 			>
-				<p className="text-[14px] leading-relaxed whitespace-pre-wrap break-words">
-					{message.content}
-				</p>
+				{renderMessageContent(message)}
 				{message.interactiveData && (
 					<div className="mt-2 space-y-1.5">
 						{message.interactiveData.buttons?.map((btn) => (
@@ -671,6 +825,7 @@ function ConversationDetailPanel({
 	onRemoveTag,
 	onQuickReply,
 	onPriorityChange,
+	onSnooze,
 }: {
 	conversation: Conversation;
 	onPriorityChange?: (priority: "low" | "medium" | "high" | "urgent") => void;
@@ -681,9 +836,13 @@ function ConversationDetailPanel({
 	onAddTag: (tagId: string) => void;
 	onRemoveTag: (tagId: string) => void;
 	onQuickReply: (content: string) => void;
+	onSnooze: () => void;
 }) {
 	const [allTags, setAllTags] = useState<TagType[]>([]);
 	const [quickReplies, setQuickReplies] = useState<QuickReply[]>([]);
+	const [showActivity, setShowActivity] = useState(false);
+	const [activity, setActivity] = useState<any[]>([]);
+	const [activityLoading, setActivityLoading] = useState(false);
 
 	useEffect(() => {
 		fetchTags()
@@ -693,6 +852,17 @@ function ConversationDetailPanel({
 			.then(setQuickReplies)
 			.catch(() => {});
 	}, []);
+
+	const loadActivity = async () => {
+		if (!conversation.id) return;
+		setActivityLoading(true);
+		try {
+			const data = await fetchConversationActivity(conversation.id);
+			setActivity(data);
+		} finally {
+			setActivityLoading(false);
+		}
+	};
 
 	const availableTags = allTags.filter(
 		(t) => !conversation.tags.some((ct) => ct.id === t.id),
@@ -911,6 +1081,14 @@ function ConversationDetailPanel({
 							>
 								<XCircle className="h-3.5 w-3.5 mr-1.5" /> Fechar
 							</Button>
+							<Button
+								variant="outline"
+								size="sm"
+								className="text-xs h-9 col-span-2"
+								onClick={onSnooze}
+							>
+								<AlarmClock className="h-3.5 w-3.5 mr-1.5" /> Snooze
+							</Button>
 						</div>
 					</div>
 
@@ -952,6 +1130,61 @@ function ConversationDetailPanel({
 							</DropdownMenu>
 						</div>
 					)}
+
+					<Separator className="opacity-50" />
+
+					<div>
+						<button
+							type="button"
+							className="flex items-center justify-between w-full text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-2"
+							onClick={() => {
+								setShowActivity((v) => !v);
+								if (!showActivity) loadActivity();
+							}}
+						>
+							<span className="flex items-center gap-1.5">
+								<Activity className="h-3.5 w-3.5" /> Histórico
+							</span>
+							<ChevronDown
+								className={`h-3.5 w-3.5 transition-transform ${showActivity ? "rotate-180" : ""}`}
+							/>
+						</button>
+						{showActivity && (
+							<div className="space-y-2">
+								{activityLoading ? (
+									<div className="flex justify-center py-3">
+										<Loader2 className="h-4 w-4 animate-spin text-primary" />
+									</div>
+								) : activity.length === 0 ? (
+									<p className="text-xs text-muted-foreground text-center py-3">
+										Sem histórico de ações
+									</p>
+								) : (
+									activity.map((item) => (
+										<div key={item.id} className="flex gap-2 text-xs">
+											<div className="h-1.5 w-1.5 rounded-full bg-primary/40 mt-1.5 shrink-0" />
+											<div>
+												<p className="text-foreground/80">{item.description}</p>
+												{item.by && (
+													<p className="text-muted-foreground text-[10px]">
+														{item.by}
+													</p>
+												)}
+												<p className="text-muted-foreground text-[10px]">
+													{item.timestamp
+														? formatDistanceToNow(new Date(item.timestamp), {
+																addSuffix: true,
+																locale: ptBR,
+															})
+														: ""}
+												</p>
+											</div>
+										</div>
+									))
+								)}
+							</div>
+						)}
+					</div>
 				</div>
 			</ScrollArea>
 		</div>
@@ -983,9 +1216,31 @@ function ChatPanel({
 	const messagesEndRef = useRef<HTMLDivElement>(null);
 	const fileInputRef = useRef<HTMLInputElement>(null);
 
+	// Slash command state
+	const [slashQuery, setSlashQuery] = useState("");
+	const [showSlashMenu, setShowSlashMenu] = useState(false);
+	const [slashIndex, setSlashIndex] = useState(0);
+	const [allQuickReplies, setAllQuickReplies] = useState<QuickReply[]>([]);
+
+	useEffect(() => {
+		fetchQuickReplies()
+			.then(setAllQuickReplies)
+			.catch(() => {});
+	}, []);
+
+	const slashFiltered = slashQuery
+		? allQuickReplies
+				.filter(
+					(qr) =>
+						qr.name.toLowerCase().includes(slashQuery.toLowerCase()) ||
+						qr.content.toLowerCase().includes(slashQuery.toLowerCase()),
+				)
+				.slice(0, 5)
+		: allQuickReplies.slice(0, 5);
+
 	useEffect(() => {
 		messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
-	});
+	}, [messages]);
 
 	useEffect(() => {
 		if (quickReplyText) {
@@ -1073,6 +1328,55 @@ function ChatPanel({
 		onAddNote(noteContent.trim());
 		setNoteContent("");
 		setShowNoteDialog(false);
+	};
+
+	const handleInputChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+		const val = e.target.value;
+		setInput(val);
+		const lastSegment = val.split(/[\s\n]/).pop() ?? "";
+		if (lastSegment.startsWith("/")) {
+			setSlashQuery(lastSegment.slice(1));
+			setShowSlashMenu(true);
+			setSlashIndex(0);
+		} else {
+			setShowSlashMenu(false);
+			setSlashQuery("");
+		}
+	};
+
+	const applySlashReply = (content: string) => {
+		const lastIdx = Math.max(
+			input.lastIndexOf(" "),
+			input.lastIndexOf("\n"),
+		);
+		const newInput =
+			lastIdx >= 0 ? input.slice(0, lastIdx + 1) + content : content;
+		setInput(newInput);
+		setShowSlashMenu(false);
+		setSlashQuery("");
+	};
+
+	const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
+		if (showSlashMenu) {
+			if (e.key === "ArrowDown") {
+				e.preventDefault();
+				setSlashIndex((i) => Math.min(i + 1, slashFiltered.length - 1));
+			} else if (e.key === "ArrowUp") {
+				e.preventDefault();
+				setSlashIndex((i) => Math.max(i - 1, 0));
+			} else if (e.key === "Enter") {
+				e.preventDefault();
+				if (slashFiltered[slashIndex])
+					applySlashReply(slashFiltered[slashIndex].content);
+			} else if (e.key === "Escape") {
+				setShowSlashMenu(false);
+			}
+			return;
+		}
+		if (e.key === "Enter" && !e.shiftKey) {
+			e.preventDefault();
+			handleSend();
+		}
 	};
 
 	return (
@@ -1235,20 +1539,40 @@ function ChatPanel({
 							<StickyNote className="h-5 w-5" />
 						</Button>
 					</div>
-					<div className="flex-1 bg-muted/60 dark:bg-muted/40 rounded-3xl border border-transparent focus-within:border-primary/30 focus-within:bg-background transition-colors flex items-end min-h-[44px]">
-						<Textarea
-							placeholder="Digite uma mensagem..."
-							value={input}
-							onChange={(e) => setInput(e.target.value)}
-							onKeyDown={(e) => {
-								if (e.key === "Enter" && !e.shiftKey) {
-									e.preventDefault();
-									handleSend();
-								}
-							}}
-							className="min-h-[44px] max-h-[120px] bg-transparent border-none resize-none py-3 px-4 shadow-none focus-visible:ring-0 text-[15px]"
-							rows={1}
-						/>
+					<div className="flex-1 relative">
+						{showSlashMenu && slashFiltered.length > 0 && (
+							<div className="absolute bottom-full left-0 right-0 mb-2 z-50 bg-background border border-border rounded-xl shadow-lg overflow-hidden">
+								<div className="px-3 py-1.5 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground border-b bg-muted/30">
+									Respostas rápidas —{" "}
+									<kbd className="bg-border px-1 rounded">↑↓</kbd> navegar ·{" "}
+									<kbd className="bg-border px-1 rounded">Enter</kbd> inserir
+								</div>
+								{slashFiltered.map((qr, i) => (
+									<button
+										key={qr.id}
+										type="button"
+										className={`w-full text-left px-3 py-2.5 transition-colors ${i === slashIndex ? "bg-primary/10" : "hover:bg-muted/50"}`}
+										onClick={() => applySlashReply(qr.content)}
+										onMouseEnter={() => setSlashIndex(i)}
+									>
+										<div className="font-medium text-xs">/{qr.name}</div>
+										<div className="text-xs text-muted-foreground truncate">
+											{qr.content}
+										</div>
+									</button>
+								))}
+							</div>
+						)}
+						<div className="bg-muted/60 dark:bg-muted/40 rounded-3xl border border-transparent focus-within:border-primary/30 focus-within:bg-background transition-colors flex items-end min-h-[44px]">
+							<Textarea
+								placeholder="Digite uma mensagem... (/ para respostas rápidas)"
+								value={input}
+								onChange={handleInputChange}
+								onKeyDown={handleKeyDown}
+								className="min-h-[44px] max-h-[120px] bg-transparent border-none resize-none py-3 px-4 shadow-none focus-visible:ring-0 text-[15px]"
+								rows={1}
+							/>
+						</div>
 					</div>
 					<Button
 						size="icon"
@@ -1311,8 +1635,14 @@ function ChatPanel({
 export default function WhatsAppInboxPage() {
 	const [statusFilter, setStatusFilter] = useState("all");
 	const [priorityFilter, setPriorityFilter] = useState<string | undefined>();
+	const [tagFilter, setTagFilter] = useState<string | undefined>();
+	const [availableTags, setAvailableTags] = useState<TagType[]>([]);
 	const [search, setSearch] = useState("");
 	const [selectedId, setSelectedId] = useState<string | null>(null);
+	const [bulkMode, setBulkMode] = useState(false);
+	const [selectedConvIds, setSelectedConvIds] = useState<Set<string>>(new Set());
+	const [bulkAssigning, setBulkAssigning] = useState(false);
+	const [showSnoozeDialog, setShowSnoozeDialog] = useState(false);
 	const [showNewConversationDialog, setShowNewConversationDialog] =
 		useState(false);
 	const [contactSearch, setContactSearch] = useState("");
@@ -1326,6 +1656,7 @@ export default function WhatsAppInboxPage() {
 	const [quickReplyText, setQuickReplyText] = useState<string | null>(null);
 	const [teamMembers, setTeamMembers] = useState<any[]>([]);
 	const [memberSearch, setMemberSearch] = useState("");
+	const [agentsWorkload, setAgentsWorkload] = useState<any[]>([]);
 	const [assigning, setAssigning] = useState(false);
 	const [showBroadcastModal, setShowBroadcastModal] = useState(false);
 	const [showConfirmationsModal, setShowConfirmationsModal] = useState(false);
@@ -1343,6 +1674,9 @@ export default function WhatsAppInboxPage() {
 		fetchMetrics()
 			.then((m) => setMetrics(m as Metrics))
 			.catch(() => {});
+		fetchTags()
+			.then((tags) => setAvailableTags(tags as TagType[]))
+			.catch(() => {});
 	}, []);
 
 	const inboxFilters = useMemo(
@@ -1355,8 +1689,9 @@ export default function WhatsAppInboxPage() {
 						: statusFilter,
 			priority: priorityFilter,
 			search: search || undefined,
+			tagId: tagFilter,
 		}),
-		[statusFilter, priorityFilter, search],
+		[statusFilter, priorityFilter, search, tagFilter],
 	);
 
 	const { conversations, loading, pagination, refetch } = useWhatsAppInbox(
@@ -1411,6 +1746,9 @@ export default function WhatsAppInboxPage() {
 					setTeamMembers(res.data || []);
 				})
 				.catch(() => setTeamMembers([]));
+			fetchAgentsWorkload()
+				.then(setAgentsWorkload)
+				.catch(() => {});
 		}
 	}, [showAssignDialog, showTransferDialog]);
 
@@ -1526,6 +1864,47 @@ export default function WhatsAppInboxPage() {
 		}
 	};
 
+	const toggleBulkSelect = (id: string) => {
+		setSelectedConvIds((prev) => {
+			const next = new Set(prev);
+			if (next.has(id)) next.delete(id);
+			else next.add(id);
+			return next;
+		});
+	};
+
+	const handleBulkAction = async (action: "resolve" | "close") => {
+		if (!selectedConvIds.size) return;
+		setBulkAssigning(true);
+		try {
+			await bulkAction([...selectedConvIds], action);
+			setSelectedConvIds(new Set());
+			setBulkMode(false);
+			await refetch();
+		} finally {
+			setBulkAssigning(false);
+		}
+	};
+
+	const SNOOZE_OPTIONS = [
+		{ label: "1 hora", hours: 1 },
+		{ label: "4 horas", hours: 4 },
+		{ label: "Amanhã (8h)", hours: 24 },
+		{ label: "Próxima semana", hours: 168 },
+	];
+
+	const handleSnoozeOption = async (hours: number) => {
+		if (!selectedId) return;
+		const until = new Date(Date.now() + hours * 3600000).toISOString();
+		try {
+			await snoozeConversation(selectedId, until);
+			setShowSnoozeDialog(false);
+			await refetch();
+		} catch {
+			// ignore
+		}
+	};
+
 	const handleSendConfirmation = async (
 		phone: string,
 		patientName: string,
@@ -1570,6 +1949,18 @@ export default function WhatsAppInboxPage() {
 									onClick={() => setShowBroadcastModal(true)}
 								>
 									<Megaphone className="h-4 w-4" />
+								</Button>
+								<Button
+									variant={bulkMode ? "secondary" : "ghost"}
+									size="icon"
+									className="h-8 w-8"
+									onClick={() => {
+										setBulkMode((b) => !b);
+										setSelectedConvIds(new Set());
+									}}
+									title={bulkMode ? "Cancelar seleção" : "Selecionar em lote"}
+								>
+									<ListChecks className="h-4 w-4" />
 								</Button>
 								<Button
 									size="sm"
@@ -1620,6 +2011,47 @@ export default function WhatsAppInboxPage() {
 								</DropdownMenuContent>
 							</DropdownMenu>
 						</div>
+						{availableTags.length > 0 && (
+							<div className="mt-2 flex items-center gap-1.5">
+								<DropdownMenu>
+									<DropdownMenuTrigger asChild>
+										<Button
+											variant="ghost"
+											size="sm"
+											className={`h-7 text-xs gap-1 rounded-full px-2.5 ${tagFilter ? "bg-primary/10 text-primary" : "text-muted-foreground"}`}
+										>
+											<Tag className="h-3 w-3" />
+											{tagFilter
+												? (availableTags.find((t) => t.id === tagFilter)?.name ?? "Tag")
+												: "Tag"}
+											<ChevronDown className="h-3 w-3" />
+										</Button>
+									</DropdownMenuTrigger>
+									<DropdownMenuContent align="start" className="w-44">
+										<DropdownMenuItem
+											className="text-xs"
+											onClick={() => setTagFilter(undefined)}
+										>
+											Todas as tags
+										</DropdownMenuItem>
+										<DropdownMenuSeparator />
+										{availableTags.map((tag) => (
+											<DropdownMenuItem
+												key={tag.id}
+												className="text-xs"
+												onClick={() => setTagFilter(tag.id)}
+											>
+												<div
+													className="h-2 w-2 rounded-full mr-2"
+													style={{ backgroundColor: tag.color }}
+												/>
+												{tag.name}
+											</DropdownMenuItem>
+										))}
+									</DropdownMenuContent>
+								</DropdownMenu>
+							</div>
+						)}
 					</div>
 
 					<div className="px-2 py-2 bg-background border-b shadow-sm z-10">
@@ -1673,7 +2105,15 @@ export default function WhatsAppInboxPage() {
 										key={conv.id}
 										conversation={conv}
 										isSelected={selectedId === conv.id}
-										onClick={() => setSelectedId(conv.id)}
+										onClick={() => {
+											if (bulkMode) {
+												toggleBulkSelect(conv.id);
+											} else {
+												setSelectedId(conv.id);
+											}
+										}}
+										bulkMode={bulkMode}
+										isSelectedBulk={selectedConvIds.has(conv.id)}
 									/>
 								))}
 							</div>
@@ -1682,6 +2122,34 @@ export default function WhatsAppInboxPage() {
 					{pagination.totalPages > 1 && (
 						<div className="p-3 border-t text-center text-xs text-muted-foreground bg-muted/20 font-medium">
 							Página {pagination.page} de {pagination.totalPages}
+						</div>
+					)}
+					{bulkMode && selectedConvIds.size > 0 && (
+						<div className="p-3 border-t bg-primary/5 flex items-center gap-2">
+							<span className="text-xs font-medium flex-1">
+								{selectedConvIds.size} selecionadas
+							</span>
+							{bulkAssigning && (
+								<Loader2 className="h-4 w-4 animate-spin text-primary shrink-0" />
+							)}
+							<Button
+								size="sm"
+								variant="outline"
+								className="h-7 text-xs"
+								onClick={() => handleBulkAction("resolve")}
+								disabled={bulkAssigning}
+							>
+								<CheckCircle2 className="h-3 w-3 mr-1" /> Resolver
+							</Button>
+							<Button
+								size="sm"
+								variant="ghost"
+								className="h-7 text-xs text-destructive"
+								onClick={() => handleBulkAction("close")}
+								disabled={bulkAssigning}
+							>
+								<XCircle className="h-3 w-3 mr-1" /> Fechar
+							</Button>
 						</div>
 					)}
 				</div>
@@ -1721,6 +2189,7 @@ export default function WhatsAppInboxPage() {
 							}}
 							onQuickReply={(content) => setQuickReplyText(content)}
 							onPriorityChange={handlePriorityChange}
+							onSnooze={() => setShowSnoozeDialog(true)}
 						/>
 					)}
 				</div>
@@ -1939,28 +2408,48 @@ export default function WhatsAppInboxPage() {
 								</div>
 							) : (
 								<div className="space-y-1">
-									{filteredMembers.map((member) => (
-										<button
-											key={member.id}
-											type="button"
-											className="w-full flex items-center gap-3 p-2 hover:bg-muted rounded-lg transition-colors text-left"
-											onClick={() => handleAssign(member.userId)}
-										>
-											<Avatar className="h-8 w-8">
-												<AvatarFallback className="text-xs">
-													{member.user?.name?.slice(0, 2).toUpperCase() || "??"}
-												</AvatarFallback>
-											</Avatar>
-											<div className="flex-1">
-												<p className="text-sm font-medium">
-													{member.user?.name || "Membro"}
-												</p>
-												<p className="text-xs text-muted-foreground">
-													{member.role}
-												</p>
-											</div>
-										</button>
-									))}
+									{filteredMembers.map((member) => {
+										const wl = agentsWorkload.find(
+											(w) => w.agentId === member.userId,
+										);
+										return (
+											<button
+												key={member.id}
+												type="button"
+												className="w-full flex items-center gap-3 p-2 hover:bg-muted rounded-lg transition-colors text-left"
+												onClick={() => handleAssign(member.userId)}
+											>
+												<Avatar className="h-8 w-8">
+													<AvatarFallback className="text-xs">
+														{member.user?.name?.slice(0, 2).toUpperCase() || "??"}
+													</AvatarFallback>
+												</Avatar>
+												<div className="flex-1">
+													<p className="text-sm font-medium">
+														{member.user?.name || "Membro"}
+													</p>
+													<p className="text-xs text-muted-foreground">
+														{member.role}
+													</p>
+												</div>
+												{wl && (
+													<div className="text-right shrink-0">
+														<span
+															className={`text-[10px] font-medium px-1.5 py-0.5 rounded-full ${
+																wl.openConversations > 10
+																	? "bg-red-50 text-red-600"
+																	: wl.openConversations > 5
+																		? "bg-orange-50 text-orange-600"
+																		: "bg-green-50 text-green-600"
+															}`}
+														>
+															{wl.openConversations} ativas
+														</span>
+													</div>
+												)}
+											</button>
+										);
+									})}
 								</div>
 							)}
 						</ScrollArea>
@@ -2028,7 +2517,39 @@ export default function WhatsAppInboxPage() {
 					</DialogFooter>
 				</DialogContent>
 			</Dialog>
-		<BroadcastModal
+		<Dialog open={showSnoozeDialog} onOpenChange={setShowSnoozeDialog}>
+				<DialogContent className="sm:max-w-[340px]">
+					<DialogHeader>
+						<DialogTitle className="flex items-center gap-2">
+							<AlarmClock className="h-5 w-5 text-primary" />
+							Snooze da conversa
+						</DialogTitle>
+					</DialogHeader>
+					<div className="py-3 space-y-2">
+						<p className="text-sm text-muted-foreground">
+							Selecione por quanto tempo adiar esta conversa:
+						</p>
+						{SNOOZE_OPTIONS.map((opt) => (
+							<Button
+								key={opt.hours}
+								variant="outline"
+								className="w-full justify-start text-sm"
+								onClick={() => handleSnoozeOption(opt.hours)}
+							>
+								<AlarmClock className="h-4 w-4 mr-2 text-muted-foreground" />
+								{opt.label}
+							</Button>
+						))}
+					</div>
+					<DialogFooter>
+						<DialogClose asChild>
+							<Button variant="ghost">Cancelar</Button>
+						</DialogClose>
+					</DialogFooter>
+				</DialogContent>
+			</Dialog>
+
+			<BroadcastModal
 				open={showBroadcastModal}
 				onClose={() => setShowBroadcastModal(false)}
 			/>

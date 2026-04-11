@@ -88,6 +88,8 @@ export const appointments = pgTable(
 		maxParticipants: integer("max_participants").default(1),
 		currentParticipants: integer("current_participants").default(1),
 		groupId: uuid("group_id"), // Links multiple appointments as a group
+		additionalNames: text("additional_names"),
+		isUnlimited: boolean("is_unlimited").default(false),
 
 		// Room/Resource (for conflict detection)
 		roomId: uuid("room_id"),

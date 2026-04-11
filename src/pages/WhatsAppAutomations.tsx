@@ -7,9 +7,11 @@ import {
 	PowerOff,
 	Trash2,
 	Edit,
-	AlertCircle,
 	Variable,
+	ChevronDown,
+	ChevronUp,
 } from "lucide-react";
+
 import { MainLayout } from "@/components/layout/MainLayout";
 import { Button } from "@/components/ui/button";
 import {
@@ -84,6 +86,9 @@ function AutomationRuleCard({
 		TRIGGER_TYPES.find((t) => t.value === rule.triggerType)?.label ||
 		rule.triggerType;
 
+	// executionCount may be present on runtime data even if not in type
+	const executionCount = (rule as any).executionCount as number | undefined;
+
 	return (
 		<Card className={rule.active ? "" : "opacity-60"}>
 			<CardHeader className="pb-3">
@@ -125,7 +130,7 @@ function AutomationRuleCard({
 				</div>
 			</CardHeader>
 			<CardContent>
-				<div className="flex items-center gap-4 text-xs text-muted-foreground">
+				<div className="flex flex-wrap items-center gap-3 text-xs text-muted-foreground">
 					<span>
 						Gatilho:{" "}
 						<Badge variant="outline" className="text-[10px]">
@@ -134,6 +139,11 @@ function AutomationRuleCard({
 					</span>
 					<span>Ações: {rule.actions.length}</span>
 					{rule.team && <span>Equipe: {rule.team}</span>}
+					{executionCount !== undefined && (
+						<Badge variant="secondary" className="text-[10px]">
+							Executada {executionCount}x
+						</Badge>
+					)}
 					<Badge
 						variant={rule.active ? "default" : "secondary"}
 						className="text-[10px]"
@@ -159,6 +169,8 @@ export default function WhatsAppAutomationsPage() {
 	const [loading, setLoading] = useState(true);
 	const [showDialog, setShowDialog] = useState(false);
 	const [editingRule, setEditingRule] = useState<AutomationRule | null>(null);
+	const [ruleToDelete, setRuleToDelete] = useState<AutomationRule | null>(null);
+	const [deleting, setDeleting] = useState(false);
 	const [form, setForm] = useState({
 		name: "",
 		description: "",
@@ -169,6 +181,15 @@ export default function WhatsAppAutomationsPage() {
 		team: "",
 	});
 	const [saving, setSaving] = useState(false);
+
+	// Friendly condition fields
+	const [keywordsInput, setKeywordsInput] = useState("");
+	const [noResponseHours, setNoResponseHours] = useState(24);
+	// Friendly action fields
+	const [actionType, setActionType] = useState("send_message");
+	const [actionMessage, setActionMessage] = useState("");
+	// Advanced JSON panel
+	const [showAdvanced, setShowAdvanced] = useState(false);
 
 	const loadRules = async () => {
 		try {
@@ -182,10 +203,19 @@ export default function WhatsAppAutomationsPage() {
 
 	useEffect(() => {
 		loadRules();
-	});
+	}, []); // Fixed: added [] to prevent infinite re-render loop
+
+	const resetFriendlyFields = () => {
+		setKeywordsInput("");
+		setNoResponseHours(24);
+		setActionType("send_message");
+		setActionMessage("");
+		setShowAdvanced(false);
+	};
 
 	const openCreate = () => {
 		setEditingRule(null);
+		resetFriendlyFields();
 		setForm({
 			name: "",
 			description: "",
@@ -200,6 +230,26 @@ export default function WhatsAppAutomationsPage() {
 
 	const openEdit = (rule: AutomationRule) => {
 		setEditingRule(rule);
+		resetFriendlyFields();
+
+		// Try to pre-populate friendly fields from existing rule data
+		const cond = rule.conditions as any;
+		if (rule.triggerType === "keyword_match" && cond?.keywords) {
+			setKeywordsInput(
+				Array.isArray(cond.keywords) ? cond.keywords.join(", ") : "",
+			);
+		}
+		if (rule.triggerType === "no_response" && cond?.hours) {
+			setNoResponseHours(Number(cond.hours));
+		}
+		const firstAction = rule.actions[0] as any;
+		if (firstAction?.type) {
+			setActionType(firstAction.type);
+		}
+		if (firstAction?.params?.content) {
+			setActionMessage(firstAction.params.content as string);
+		}
+
 		setForm({
 			name: rule.name,
 			description: rule.description || "",
@@ -252,9 +302,51 @@ export default function WhatsAppAutomationsPage() {
 		loadRules();
 	};
 
-	const handleDelete = async (rule: AutomationRule) => {
-		await deleteAutomationRule(rule.id);
-		loadRules();
+	const handleDelete = async () => {
+		if (!ruleToDelete) return;
+		setDeleting(true);
+		try {
+			await deleteAutomationRule(ruleToDelete.id);
+			setRuleToDelete(null);
+			loadRules();
+		} finally {
+			setDeleting(false);
+		}
+	};
+
+	// Sync friendly keyword field → JSON conditions
+	const handleKeywordsChange = (value: string) => {
+		setKeywordsInput(value);
+		const keywords = value
+			.split(",")
+			.map((k) => k.trim())
+			.filter(Boolean);
+		setForm((f) => ({ ...f, conditions: JSON.stringify({ keywords }) }));
+	};
+
+	// Sync no_response hours → JSON conditions
+	const handleNoResponseHoursChange = (hours: number) => {
+		setNoResponseHours(hours);
+		setForm((f) => ({ ...f, conditions: JSON.stringify({ hours }) }));
+	};
+
+	// Sync friendly action fields → JSON actions
+	const handleActionTypeChange = (type: string) => {
+		setActionType(type);
+		setForm((f) => ({
+			...f,
+			actions: JSON.stringify([{ type, params: {} }]),
+		}));
+	};
+
+	const handleActionMessageChange = (content: string) => {
+		setActionMessage(content);
+		setForm((f) => ({
+			...f,
+			actions: JSON.stringify([
+				{ type: "send_message", params: { content } },
+			]),
+		}));
 	};
 
 	return (
@@ -300,7 +392,7 @@ export default function WhatsAppAutomationsPage() {
 								rule={rule}
 								onToggle={() => handleToggle(rule)}
 								onEdit={() => openEdit(rule)}
-								onDelete={() => handleDelete(rule)}
+								onDelete={() => setRuleToDelete(rule)}
 							/>
 						))}
 					</div>
@@ -337,7 +429,7 @@ export default function WhatsAppAutomationsPage() {
 			</div>
 
 			<Dialog open={showDialog} onOpenChange={setShowDialog}>
-				<DialogContent className="max-w-2xl">
+				<DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
 					<DialogHeader>
 						<DialogTitle>
 							{editingRule ? "Editar automação" : "Nova automação"}
@@ -399,30 +491,127 @@ export default function WhatsAppAutomationsPage() {
 								placeholder="Equipe (opcional)"
 							/>
 						</div>
-						<div className="space-y-2">
-							<Label htmlFor="wa-auto-conditions">Condições (JSON)</Label>
-							<Textarea
-								id="wa-auto-conditions"
-								value={form.conditions}
-								onChange={(e) =>
-									setForm((f) => ({ ...f, conditions: e.target.value }))
-								}
-								rows={4}
-								className="font-mono text-xs"
-							/>
+
+						<Separator />
+
+						{/* Friendly condition fields */}
+						<div className="space-y-3">
+							<p className="text-sm font-medium">Condições</p>
+							{form.triggerType === "keyword_match" && (
+								<div className="space-y-2">
+									<Label>Palavras-chave</Label>
+									<Input
+										placeholder="olá, oi, bom dia (separadas por vírgula)"
+										value={keywordsInput}
+										onChange={(e) => handleKeywordsChange(e.target.value)}
+									/>
+								</div>
+							)}
+							{form.triggerType === "no_response" && (
+								<div className="space-y-2">
+									<Label>Sem resposta após (horas)</Label>
+									<Input
+										type="number"
+										min="1"
+										max="72"
+										value={noResponseHours}
+										onChange={(e) =>
+											handleNoResponseHoursChange(Number(e.target.value))
+										}
+									/>
+								</div>
+							)}
+							{form.triggerType !== "keyword_match" &&
+								form.triggerType !== "no_response" && (
+									<p className="text-xs text-muted-foreground">
+										Nenhuma condição adicional necessária para este gatilho.
+									</p>
+								)}
 						</div>
-						<div className="space-y-2">
-							<Label htmlFor="wa-auto-actions">Ações (JSON)</Label>
-							<Textarea
-								id="wa-auto-actions"
-								value={form.actions}
-								onChange={(e) =>
-									setForm((f) => ({ ...f, actions: e.target.value }))
-								}
-								rows={6}
-								className="font-mono text-xs"
-							/>
+
+						<Separator />
+
+						{/* Friendly action fields */}
+						<div className="space-y-3">
+							<p className="text-sm font-medium">Ação</p>
+							<div className="space-y-2">
+								<Label>Tipo de ação</Label>
+								<Select
+									value={actionType}
+									onValueChange={handleActionTypeChange}
+								>
+									<SelectTrigger>
+										<SelectValue />
+									</SelectTrigger>
+									<SelectContent>
+										<SelectItem value="send_message">
+											Enviar mensagem
+										</SelectItem>
+										<SelectItem value="assign_agent">Atribuir agente</SelectItem>
+										<SelectItem value="add_tag">Adicionar tag</SelectItem>
+										<SelectItem value="change_status">Mudar status</SelectItem>
+									</SelectContent>
+								</Select>
+							</div>
+							{actionType === "send_message" && (
+								<div className="space-y-2">
+									<Label>Mensagem</Label>
+									<Textarea
+										placeholder="Olá {{contact.name}}! Como posso ajudá-lo?"
+										value={actionMessage}
+										onChange={(e) => handleActionMessageChange(e.target.value)}
+										rows={3}
+									/>
+								</div>
+							)}
 						</div>
+
+						<Separator />
+
+						{/* Advanced JSON — collapsible */}
+						<div>
+							<button
+								type="button"
+								className="flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground transition-colors"
+								onClick={() => setShowAdvanced((v) => !v)}
+							>
+								{showAdvanced ? (
+									<ChevronUp className="h-3 w-3" />
+								) : (
+									<ChevronDown className="h-3 w-3" />
+								)}
+								Configuração avançada (JSON)
+							</button>
+							{showAdvanced && (
+								<div className="space-y-3 mt-3">
+									<div className="space-y-2">
+										<Label htmlFor="wa-auto-conditions">Condições (JSON)</Label>
+										<Textarea
+											id="wa-auto-conditions"
+											value={form.conditions}
+											onChange={(e) =>
+												setForm((f) => ({ ...f, conditions: e.target.value }))
+											}
+											rows={4}
+											className="font-mono text-xs"
+										/>
+									</div>
+									<div className="space-y-2">
+										<Label htmlFor="wa-auto-actions">Ações (JSON)</Label>
+										<Textarea
+											id="wa-auto-actions"
+											value={form.actions}
+											onChange={(e) =>
+												setForm((f) => ({ ...f, actions: e.target.value }))
+											}
+											rows={6}
+											className="font-mono text-xs"
+										/>
+									</div>
+								</div>
+							)}
+						</div>
+
 						<div className="flex items-center gap-2">
 							<Switch
 								checked={form.active}
@@ -440,6 +629,33 @@ export default function WhatsAppAutomationsPage() {
 								<Loader2 className="h-4 w-4 animate-spin mr-2" />
 							) : null}
 							{editingRule ? "Salvar" : "Criar"}
+						</Button>
+					</DialogFooter>
+				</DialogContent>
+			</Dialog>
+
+			{/* Delete confirmation dialog */}
+			<Dialog open={!!ruleToDelete} onOpenChange={(v) => { if (!v) setRuleToDelete(null); }}>
+				<DialogContent className="sm:max-w-[400px]">
+					<DialogHeader>
+						<DialogTitle className="flex items-center gap-2 text-destructive">
+							<Trash2 className="h-5 w-5" /> Deletar automação
+						</DialogTitle>
+					</DialogHeader>
+					<p className="text-sm text-muted-foreground py-2">
+						Tem certeza que deseja deletar <strong>"{ruleToDelete?.name}"</strong>? Esta ação não pode ser desfeita.
+					</p>
+					<DialogFooter>
+						<DialogClose asChild>
+							<Button variant="outline">Cancelar</Button>
+						</DialogClose>
+						<Button
+							variant="destructive"
+							onClick={handleDelete}
+							disabled={deleting}
+						>
+							{deleting && <Loader2 className="h-4 w-4 animate-spin mr-2" />}
+							Deletar
 						</Button>
 					</DialogFooter>
 				</DialogContent>

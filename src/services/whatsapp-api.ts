@@ -5,12 +5,14 @@ const BASE = "/api/whatsapp/inbox";
 export interface ConversationFilters {
 	status?: string;
 	assignedTo?: string;
+	priority?: string;
 	team?: string;
 	page?: number;
 	limit?: number;
 	search?: string;
 	sortBy?: string;
 	sortOrder?: "asc" | "desc";
+	tagId?: string;
 }
 
 export interface Conversation {
@@ -169,12 +171,14 @@ export async function fetchConversations(filters?: ConversationFilters) {
 	if (filters) {
 		if (filters.status) params.set("status", filters.status);
 		if (filters.assignedTo) params.set("assignedTo", filters.assignedTo);
+		if (filters.priority) params.set("priority", filters.priority);
 		if (filters.team) params.set("team", filters.team);
 		if (filters.page) params.set("page", String(filters.page));
 		if (filters.limit) params.set("limit", String(filters.limit));
 		if (filters.search) params.set("search", filters.search);
 		if (filters.sortBy) params.set("sortBy", filters.sortBy);
 		if (filters.sortOrder) params.set("sortOrder", filters.sortOrder);
+		if (filters.tagId) params.set("tagId", filters.tagId);
 	}
 	const qs = params.toString();
 	return request<{
@@ -496,4 +500,68 @@ export async function updateTemplate(id: string, data: Partial<Template>) {
 		},
 	);
 	return "data" in (res as any) ? (res as any).data : res;
+}
+
+export async function createTemplate(data: {
+	name: string;
+	category: "MARKETING" | "UTILITY" | "AUTHENTICATION";
+	language?: string;
+	headerText?: string;
+	body: string;
+	footer?: string;
+	buttons?: Array<{ type: string; text: string; url?: string }>;
+}) {
+	const res = await request<{ data: unknown }>(`${BASE}/templates`, {
+		method: "POST",
+		body: JSON.stringify(data),
+	});
+	return (res as any).data ?? res;
+}
+
+export async function bulkAction(
+	ids: string[],
+	action: "resolve" | "close" | "assign" | "tag" | "snooze",
+	payload?: { assignedTo?: string; tagId?: string; until?: string },
+) {
+	const res = await request<{ data: { affected: number } }>(
+		`${BASE}/conversations/bulk`,
+		{
+			method: "POST",
+			body: JSON.stringify({ ids, action, payload }),
+		},
+	);
+	return (res as any).data ?? res;
+}
+
+export async function snoozeConversation(
+	conversationId: string,
+	until: string,
+) {
+	const res = await request<{ data: unknown }>(
+		`${BASE}/conversations/${conversationId}/snooze`,
+		{
+			method: "POST",
+			body: JSON.stringify({ until }),
+		},
+	);
+	return (res as any).data ?? res;
+}
+
+export async function fetchConversationActivity(conversationId: string) {
+	const res = await request<{ data: any[] }>(
+		`${BASE}/conversations/${conversationId}/activity`,
+	);
+	return (res as any).data ?? [];
+}
+
+export async function fetchAgentsWorkload() {
+	const res = await request<{
+		data: Array<{
+			agentId: string;
+			agentName: string;
+			openConversations: number;
+			resolvedToday: number;
+		}>;
+	}>(`${BASE}/agents/workload`);
+	return (res as any).data ?? [];
 }

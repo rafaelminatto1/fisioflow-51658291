@@ -102,6 +102,7 @@ app.get("/conversations", requireAuth, async (c) => {
 		priority,
 		team,
 		search,
+		tagId,
 		page = "1",
 		limit = "50",
 	} = c.req.query();
@@ -120,6 +121,7 @@ app.get("/conversations", requireAuth, async (c) => {
 				priority: priority ?? undefined,
 				team: team ?? undefined,
 				search: search ?? undefined,
+				tagId: tagId ?? undefined,
 				limit: limitNum,
 				offset,
 			},
@@ -190,6 +192,67 @@ app.post("/conversations", requireAuth, async (c) => {
 	} catch (err) {
 		console.error("[WhatsApp Inbox] POST /conversations error:", err);
 		return c.json({ error: "Failed to open conversation" }, 500);
+	}
+});
+
+app.post("/conversations/bulk", requireAuth, async (c) => {
+	const user = c.get("user");
+	const pool = await createPool(c.env);
+	const body = (await c.req.json()) as {
+		ids: string[];
+		action: "resolve" | "close" | "assign" | "tag" | "snooze";
+		payload?: { assignedTo?: string; tagId?: string; until?: string };
+	};
+
+	if (!body.ids?.length || !body.action) {
+		return c.json({ error: "ids and action are required" }, 400);
+	}
+	if (body.ids.length > 100) {
+		return c.json({ error: "Maximum 100 conversations per bulk action" }, 400);
+	}
+
+	const placeholders = body.ids.map((_, i) => `$${i + 2}`).join(", ");
+
+	try {
+		if (body.action === "resolve") {
+			await pool.query(
+				`UPDATE wa_conversations SET status = 'resolved', resolved_at = NOW(), updated_at = NOW()
+         WHERE id IN (${placeholders}) AND organization_id = $1`,
+				[user.organizationId, ...body.ids],
+			);
+		} else if (body.action === "close") {
+			await pool.query(
+				`UPDATE wa_conversations SET status = 'closed', closed_at = NOW(), updated_at = NOW()
+         WHERE id IN (${placeholders}) AND organization_id = $1`,
+				[user.organizationId, ...body.ids],
+			);
+		} else if (body.action === "assign" && body.payload?.assignedTo) {
+			await pool.query(
+				`UPDATE wa_conversations SET assigned_to = $2, status = 'assigned', updated_at = NOW()
+         WHERE id IN (${placeholders}) AND organization_id = $1`,
+				[user.organizationId, body.payload.assignedTo, ...body.ids],
+			);
+		} else if (body.action === "tag" && body.payload?.tagId) {
+			for (const id of body.ids) {
+				await pool.query(
+					`INSERT INTO wa_conversation_tags (conversation_id, tag_id) VALUES ($1, $2) ON CONFLICT DO NOTHING`,
+					[id, body.payload.tagId],
+				);
+			}
+		} else if (body.action === "snooze" && body.payload?.until) {
+			await pool.query(
+				`UPDATE wa_conversations SET snoozed_until = $2, status = 'pending', updated_at = NOW()
+         WHERE id IN (${placeholders}) AND organization_id = $1`,
+				[user.organizationId, body.payload.until, ...body.ids],
+			);
+		} else {
+			return c.json({ error: "Invalid action or missing payload" }, 400);
+		}
+
+		return c.json({ data: { affected: body.ids.length, action: body.action } });
+	} catch (err) {
+		console.error("[WhatsApp Inbox] POST /conversations/bulk error:", err);
+		return c.json({ error: "Bulk action failed" }, 500);
 	}
 });
 
@@ -1148,6 +1211,138 @@ app.post("/broadcast", requireAuth, async (c) => {
 	const failed = results.filter((r) => r.status === "failed").length;
 
 	return c.json({ data: { sent, failed, total: results.length, results } });
+});
+
+app.post("/conversations/:id/snooze", requireAuth, async (c) => {
+	const user = c.get("user");
+	const { id } = c.req.param();
+	const pool = await createPool(c.env);
+	const body = (await c.req.json()) as { until: string };
+
+	if (!body.until) {
+		return c.json({ error: "until (ISO date) is required" }, 400);
+	}
+
+	try {
+		const result = await pool.query(
+			`UPDATE wa_conversations
+       SET snoozed_until = $1, status = 'pending', updated_at = NOW()
+       WHERE id = $2 AND organization_id = $3
+       RETURNING id, snoozed_until, status`,
+			[body.until, id, user.organizationId],
+		);
+
+		if (result.rows.length === 0) {
+			return c.json({ error: "Conversation not found" }, 404);
+		}
+
+		return c.json({ data: result.rows[0] });
+	} catch (err) {
+		console.error("[WhatsApp Inbox] POST /conversations/:id/snooze error:", err);
+		return c.json({ error: "Failed to snooze conversation" }, 500);
+	}
+});
+
+app.get("/conversations/:id/activity", requireAuth, async (c) => {
+	const { id } = c.req.param();
+	const pool = await createPool(c.env);
+
+	try {
+		const [assignments, messages] = await Promise.all([
+			pool.query(
+				`SELECT
+           a.id,
+           a.created_at,
+           'assignment' AS activity_type,
+           a.assigned_to,
+           a.assigned_by,
+           a.team,
+           a.reason,
+           COALESCE(u_to.name, a.assigned_to) AS assigned_to_name,
+           COALESCE(u_by.name, a.assigned_by) AS assigned_by_name
+         FROM wa_assignments a
+         LEFT JOIN users u_to ON u_to.id = a.assigned_to
+         LEFT JOIN users u_by ON u_by.id = a.assigned_by
+         WHERE a.conversation_id = $1
+         ORDER BY a.created_at DESC
+         LIMIT 50`,
+				[id],
+			),
+			pool.query(
+				`SELECT id, created_at, direction, message_type, sender_id, sender_name, status
+         FROM wa_messages
+         WHERE conversation_id = $1 AND (is_internal_note = true OR message_type = 'template')
+         ORDER BY created_at DESC
+         LIMIT 20`,
+				[id],
+			),
+		]);
+
+		const activities = [
+			...assignments.rows.map((r) => ({
+				id: r.id,
+				type: "assignment",
+				timestamp: r.created_at,
+				description: `Atribuído para ${r.assigned_to_name || r.assigned_to}${r.reason ? ` — ${r.reason}` : ""}`,
+				by: r.assigned_by_name || r.assigned_by,
+			})),
+			...messages.rows.map((r) => ({
+				id: r.id,
+				type: r.message_type === "template" ? "template_sent" : "internal_note",
+				timestamp: r.created_at,
+				description:
+					r.message_type === "template"
+						? "Template enviado"
+						: "Nota interna adicionada",
+				by: r.sender_name || r.sender_id,
+			})),
+		].sort(
+			(a, b) =>
+				new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime(),
+		);
+
+		return c.json({ data: activities });
+	} catch (err) {
+		console.error(
+			"[WhatsApp Inbox] GET /conversations/:id/activity error:",
+			err,
+		);
+		return c.json({ error: "Failed to fetch activity log" }, 500);
+	}
+});
+
+app.get("/agents/workload", requireAuth, async (c) => {
+	const user = c.get("user");
+	const pool = await createPool(c.env);
+
+	try {
+		const result = await pool.query(
+			`SELECT
+         om.user_id,
+         COALESCE(u.name, om.user_id) AS agent_name,
+         COUNT(CASE WHEN c.status IN ('open', 'assigned', 'pending') THEN 1 END)::int AS open_conversations,
+         COUNT(CASE WHEN c.status = 'resolved' AND DATE(c.resolved_at) = CURRENT_DATE THEN 1 END)::int AS resolved_today
+       FROM organization_members om
+       LEFT JOIN users u ON u.id = om.user_id
+       LEFT JOIN wa_conversations c ON c.assigned_to = om.user_id AND c.organization_id = $1
+       WHERE om.organization_id = $1
+       GROUP BY om.user_id, u.name
+       ORDER BY open_conversations DESC`,
+			[user.organizationId],
+		);
+
+		return c.json({
+			data: result.rows.map((r) => ({
+				agentId: r.user_id,
+				agentName: r.agent_name,
+				openConversations: r.open_conversations,
+				resolvedToday: r.resolved_today,
+			})),
+		});
+	} catch (err) {
+		console.error("[WhatsApp Inbox] GET /agents/workload error:", err);
+		return c.json({ error: "Failed to fetch workload" }, 500);
+	}
 });
 
 export { app as whatsappInboxRoutes };

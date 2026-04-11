@@ -378,8 +378,8 @@ export function ClinicalTestDetailsModal({
 						className="h-11 rounded-xl bg-slate-900 px-8 font-bold uppercase tracking-wider text-white shadow-lg shadow-slate-900/10 transition-all hover:scale-105 hover:bg-slate-800 active:scale-95"
 						onClick={() => onEdit(test)}
 					>
-						<Copy className="mr-2 h-4 w-4" />
-						Duplicar como teste da clínica
+						<Edit3 className="mr-2 h-4 w-4" />
+						Editar teste
 					</Button>
 				) : (
 					<Button

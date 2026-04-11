@@ -203,8 +203,11 @@ export default function Templates() {
 
 	const handleDuplicate = async (id: string) => {
 		try {
-			await duplicateForm.mutateAsync(id);
-			toast.success("Template duplicado com sucesso");
+			const duplicatedTemplate = await duplicateForm.mutateAsync(id);
+			toast.success("Cópia editável criada com sucesso");
+			if (duplicatedTemplate?.id) {
+				navigate(`/templates/${duplicatedTemplate.id}/edit`);
+			}
 		} catch (error) {
 			console.error("Erro ao duplicar template:", error);
 			toast.error("Erro ao duplicar template");
@@ -459,9 +462,9 @@ export default function Templates() {
 												size="icon"
 												className="h-9 w-9 gap-2 rounded-xl text-slate-400 hover:text-primary hover:bg-primary/5 px-2 transition-all"
 												onClick={() => handleDuplicate(template.id)}
-												title="Duplicar para meus modelos"
+												title="Editar cópia nos meus modelos"
 											>
-												<Copy className="w-4 h-4" />
+												<Pencil className="w-4 h-4" />
 											</Button>
 										)}
 
@@ -558,12 +561,12 @@ export default function Templates() {
 												) : (
 													<DropdownMenuItem
 														onClick={() => handleDuplicate(template.id)}
-														className="rounded-lg gap-2 cursor-pointer font-medium"
-													>
-														<Copy className="w-4 h-4 text-slate-400" />
-														Duplicar para meus modelos
-													</DropdownMenuItem>
-												)}
+													className="rounded-lg gap-2 cursor-pointer font-medium"
+												>
+													<Pencil className="w-4 h-4 text-slate-400" />
+													Editar cópia
+												</DropdownMenuItem>
+											)}
 											</DropdownMenuContent>
 										</DropdownMenu>
 									</div>
