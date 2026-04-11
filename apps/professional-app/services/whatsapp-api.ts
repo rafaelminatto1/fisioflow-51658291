@@ -197,7 +197,7 @@ export async function sendMessage(
 		`${BASE}/conversations/${conversationId}/messages`,
 		{
 			method: "POST",
-			data: { content, type: "text" },
+			data: { content, messageType: "text" },
 		},
 	);
 	return response.data;
