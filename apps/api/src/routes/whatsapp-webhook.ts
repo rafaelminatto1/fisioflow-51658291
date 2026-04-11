@@ -126,7 +126,13 @@ async function storeRawEvent(
 	rawBody: string,
 ): Promise<void> {
 	try {
-		const idempotencyKey = (body as any).entry?.[0]?.id ?? `evt_${Date.now()}`;
+		// id é o business account id e será sempre o mesmo, então não use apenas ele.
+		const entryId = (body as any).entry?.[0]?.id ?? '';
+		const wamid = (body as any).entry?.[0]?.changes?.[0]?.value?.messages?.[0]?.id 
+		           ?? (body as any).entry?.[0]?.changes?.[0]?.value?.statuses?.[0]?.id
+		           ?? `ts_${Date.now()}`;
+		const idempotencyKey = `evt_${entryId}_${wamid}_${Math.random().toString(36).substring(7)}`;
+
 		await pool.query(
 			`INSERT INTO wa_raw_events (organization_id, raw_payload, idempotency_key, created_at)
        VALUES ($1::uuid, $2, $3, now())
@@ -307,6 +313,10 @@ async function handleStatus(
 			failed: "failed",
 		};
 		const mapped = statusMap[newStatus] ?? newStatus;
+
+		if (newStatus === "failed") {
+			console.error(`[WhatsApp Webhook] Message ${metaMessageId} failed. Errors:`, JSON.stringify(statusObj.errors, null, 2));
+		}
 
 		await pool.query(
 			`UPDATE wa_messages SET status = $1 WHERE meta_message_id = $2`,
