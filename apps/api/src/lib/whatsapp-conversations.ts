@@ -213,6 +213,7 @@ export async function getInboxConversations(
 		priority?: string;
 		team?: string;
 		search?: string;
+		tagId?: string;
 		limit?: number;
 		offset?: number;
 	} = {},
@@ -246,6 +247,13 @@ export async function getInboxConversations(
 				`(wc.display_name ILIKE $${idx} OR wc.wa_id ILIKE $${idx} OR wc.username ILIKE $${idx})`,
 			);
 			params.push(`%${filters.search}%`);
+			idx++;
+		}
+		if (filters.tagId) {
+			conditions.push(
+				`EXISTS (SELECT 1 FROM wa_conversation_tags wct WHERE wct.conversation_id = c.id AND wct.tag_id = $${idx})`,
+			);
+			params.push(filters.tagId);
 			idx++;
 		}
 

@@ -203,92 +203,92 @@ describe("TemplateManager — visibilidade de System_Templates", () => {
   });
 });
 
-// ─── Requirement 5.5: bloqueio de edição direta de System_Templates ──────────
+// ─── Requirement 5.5: edição de System_Templates cria versão custom ──────────
 
-describe("TemplateManager — bloqueio de edição de System_Templates (Req 5.5)", () => {
+describe("TemplateManager — edição de System_Templates (Req 5.5)", () => {
   /**
-   * The handleEdit guard logic: if the selected template is a system template,
-   * it must NOT proceed to edit mode. We test the pure guard condition here.
+   * The handleEdit routing logic: system templates enter the customize flow,
+   * while custom templates enter direct edit mode.
    */
 
   function simulateHandleEdit(
     templateType: "system" | "custom",
     editFn: () => void,
-    toastFn: () => void,
+    customizeFn: () => void,
   ): void {
     if (templateType === "system") {
-      toastFn();
+      customizeFn();
       return;
     }
     editFn();
   }
 
-  it("exibe toast e não chama editFn quando template é do tipo system", () => {
-    let toastCalled = false;
+  it("chama customizeFn e não chama editFn quando template é do tipo system", () => {
+    let customizeCalled = false;
     let editCalled = false;
 
     simulateHandleEdit(
       "system",
       () => { editCalled = true; },
-      () => { toastCalled = true; },
+      () => { customizeCalled = true; },
     );
 
-    expect(toastCalled).toBe(true);
+    expect(customizeCalled).toBe(true);
     expect(editCalled).toBe(false);
   });
 
-  it("chama editFn e não exibe toast quando template é do tipo custom", () => {
-    let toastCalled = false;
+  it("chama editFn e não chama customizeFn quando template é do tipo custom", () => {
+    let customizeCalled = false;
     let editCalled = false;
 
     simulateHandleEdit(
       "custom",
       () => { editCalled = true; },
-      () => { toastCalled = true; },
+      () => { customizeCalled = true; },
     );
 
-    expect(toastCalled).toBe(false);
+    expect(customizeCalled).toBe(false);
     expect(editCalled).toBe(true);
   });
 
-  it("Property: para qualquer system template, o fluxo de edição nunca é iniciado", () => {
+  it("Property: para qualquer system template, o fluxo de versão custom é iniciado", () => {
     // Validates: Requirements 5.5
     fc.assert(
       fc.property(
         arbitrarySystemTemplate(),
         (systemTemplate) => {
           let editCalled = false;
-          let toastCalled = false;
+          let customizeCalled = false;
 
           simulateHandleEdit(
             systemTemplate.templateType as "system" | "custom",
             () => { editCalled = true; },
-            () => { toastCalled = true; },
+            () => { customizeCalled = true; },
           );
 
-          return toastCalled === true && editCalled === false;
+          return customizeCalled === true && editCalled === false;
         },
       ),
       { numRuns: 100 },
     );
   });
 
-  it("Property: para qualquer custom template, o fluxo de edição é sempre iniciado sem toast", () => {
+  it("Property: para qualquer custom template, o fluxo de edição direta é iniciado", () => {
     // Validates: Requirements 5.5 (inverse — custom templates can be edited)
     fc.assert(
       fc.property(
         arbitraryCustomTemplate(),
         (customTemplate) => {
           let editCalled = false;
-          let toastCalled = false;
+          let customizeCalled = false;
 
           simulateHandleEdit(
             customTemplate.templateType as "system" | "custom",
             () => { editCalled = true; },
-            () => { toastCalled = true; },
+            () => { customizeCalled = true; },
           );
 
-          return editCalled === true && toastCalled === false;
+          return editCalled === true && customizeCalled === false;
         },
       ),
       { numRuns: 100 },
