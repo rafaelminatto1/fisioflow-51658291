@@ -1,0 +1,1 @@
+ALTER TABLE "exercises" ADD COLUMN "alternative_equipment" text[] DEFAULT '{}';

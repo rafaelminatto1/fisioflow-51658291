@@ -10,9 +10,97 @@ import { eq, and, ilike, isNull, sql } from 'drizzle-orm';
 import { createDb, createPool } from '../lib/db';
 import { requireAuth, verifyToken, type AuthVariables } from '../lib/auth';
 import type { Env } from '../types/env';
-import { wikiPages, wikiPageVersions } from '@fisioflow/db';
+import { wikiPages, wikiPageVersions, wikiDictionary } from '@fisioflow/db';
 
 const app = new Hono<{ Bindings: Env; Variables: AuthVariables }>();
+
+// ===== DICIONÁRIO =====
+app.get('/dictionary', async (c) => {
+  await verifyToken(c, c.env);
+  const db = await createDb(c.env);
+  const { q, category } = c.req.query();
+
+  const conditions = [isNull(wikiDictionary.deletedAt)];
+  
+  // Se tiver busca, filtra por PT, EN ou Aliases
+  if (q) {
+    const search = `%${q}%`;
+    conditions.push(sql`(${wikiDictionary.pt} ILIKE ${search} OR ${wikiDictionary.en} ILIKE ${search} OR EXISTS (SELECT 1 FROM unnest(${wikiDictionary.aliasesPt}) AS a WHERE a ILIKE ${search}) OR EXISTS (SELECT 1 FROM unnest(${wikiDictionary.aliasesEn}) AS a WHERE a ILIKE ${search}))`);
+  }
+  
+  if (category && category !== 'all') {
+    conditions.push(eq(wikiDictionary.category, category));
+  }
+
+  const rows = await db
+    .select()
+    .from(wikiDictionary)
+    .where(and(...conditions))
+    .orderBy(wikiDictionary.pt);
+
+  return c.json({ data: rows });
+});
+
+app.post('/dictionary', requireAuth, async (c) => {
+  const user = c.get('user');
+  const db = await createDb(c.env);
+  const body = await c.req.json();
+
+  const [row] = await db
+    .insert(wikiDictionary)
+    .values({
+      ...body,
+      organizationId: user.organizationId,
+      createdBy: user.uid,
+      updatedAt: new Date(),
+    })
+    .returning();
+
+  return c.json({ data: row }, 201);
+});
+
+app.put('/dictionary/:id', requireAuth, async (c) => {
+  const user = c.get('user');
+  const db = await createDb(c.env);
+  const { id } = c.req.param();
+  const body = await c.req.json();
+
+  delete body.id;
+  delete body.createdAt;
+  delete body.createdBy;
+
+  const [row] = await db
+    .update(wikiDictionary)
+    .set({
+      ...body,
+      updatedBy: user.uid,
+      updatedAt: new Date(),
+    })
+    .where(eq(wikiDictionary.id, id))
+    .returning();
+
+  if (!row) return c.json({ error: 'Termo não encontrado' }, 404);
+
+  return c.json({ data: row });
+});
+
+app.delete('/dictionary/:id', requireAuth, async (c) => {
+  const db = await createDb(c.env);
+  const { id } = c.req.param();
+
+  const [row] = await db
+    .update(wikiDictionary)
+    .set({
+      deletedAt: new Date(),
+      updatedAt: new Date(),
+    })
+    .where(eq(wikiDictionary.id, id))
+    .returning();
+
+  if (!row) return c.json({ error: 'Termo não encontrado' }, 404);
+
+  return c.json({ ok: true });
+});
 
 // ===== CATEGORIAS (ANTES de /:slug para evitar conflito de rota) =====
 app.get('/categories', requireAuth, async (c) => {

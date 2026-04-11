@@ -7,7 +7,7 @@
  */
 
 import { describe, it, expect } from "vitest";
-import { render, within } from "@testing-library/react";
+import { fireEvent, render, within } from "@testing-library/react";
 import * as fc from "fast-check";
 import { TemplateDetailPanel } from "./TemplateDetailPanel";
 import type { ExerciseTemplate, PatientProfileCategory } from "@/types/workers";
@@ -101,9 +101,9 @@ describe("TemplateDetailPanel — testes de propriedade", () => {
     },
   );
 
-  // Feature: exercise-templates-refactor, Property 4: Renderização condicional — botão Personalizar
+  // Feature: exercise-templates-refactor, Property 4: Renderização condicional — botão Editar
   it(
-    "Property 4b: botão 'Personalizar' aparece se e somente se templateType = 'system'",
+    "Property 4b: botão 'Editar' aparece para templates system e custom",
     () => {
       // Validates: Requirements 4.6
       fc.assert(
@@ -121,12 +121,9 @@ describe("TemplateDetailPanel — testes de propriedade", () => {
             );
 
             const q = within(container);
-            const customizeBtn = q.queryByRole("button", { name: /personalizar/i });
+            const editBtn = q.queryByRole("button", { name: /editar/i });
 
-            const shouldShow = template.templateType === "system";
-            const result = shouldShow
-              ? customizeBtn !== null
-              : customizeBtn === null;
+            const result = editBtn !== null;
 
             unmount();
             return result;
@@ -137,9 +134,9 @@ describe("TemplateDetailPanel — testes de propriedade", () => {
     },
   );
 
-  // Feature: exercise-templates-refactor, Property 4: Renderização condicional — botões Editar e Excluir
+  // Feature: exercise-templates-refactor, Property 4: Renderização condicional — botão Excluir
   it(
-    "Property 4c: botões 'Editar' e 'Excluir' aparecem se e somente se templateType = 'custom'",
+    "Property 4c: botão 'Excluir' aparece se e somente se templateType = 'custom'",
     () => {
       // Validates: Requirements 4.6
       fc.assert(
@@ -164,7 +161,7 @@ describe("TemplateDetailPanel — testes de propriedade", () => {
 
             const result = shouldShow
               ? editBtn !== null && deleteBtn !== null
-              : editBtn === null && deleteBtn === null;
+              : editBtn !== null && deleteBtn === null;
 
             unmount();
             return result;
@@ -175,9 +172,9 @@ describe("TemplateDetailPanel — testes de propriedade", () => {
     },
   );
 
-  // Feature: exercise-templates-refactor, Property 4: Personalizar e Editar/Excluir são mutuamente exclusivos
+  // Feature: exercise-templates-refactor, Property 4: ações de sistema e custom são distintas
   it(
-    "Property 4d: 'Personalizar' e 'Editar'/'Excluir' nunca aparecem ao mesmo tempo",
+    "Property 4d: 'Personalizar' nunca aparece e 'Excluir' só aparece em custom",
     () => {
       // Validates: Requirements 2.4, 4.6
       fc.assert(
@@ -196,14 +193,15 @@ describe("TemplateDetailPanel — testes de propriedade", () => {
 
             const q = within(container);
             const customizeBtn = q.queryByRole("button", { name: /personalizar/i });
-            const editBtn = q.queryByRole("button", { name: /editar/i });
             const deleteBtn = q.queryByRole("button", { name: /excluir/i });
 
             const hasCustomize = customizeBtn !== null;
-            const hasEditOrDelete = editBtn !== null || deleteBtn !== null;
+            const deleteVisibilityMatchesType =
+              template.templateType === "custom"
+                ? deleteBtn !== null
+                : deleteBtn === null;
 
-            // They must never both be present simultaneously
-            const result = !(hasCustomize && hasEditOrDelete);
+            const result = !hasCustomize && deleteVisibilityMatchesType;
 
             unmount();
             return result;
@@ -261,7 +259,7 @@ describe("TemplateDetailPanel — testes unitários", () => {
     expect(getByText("Nenhum exercício cadastrado")).toBeTruthy();
   });
 
-  it("ausência do botão Personalizar para Custom_Template", () => {
+  it("não exibe botão Personalizar", () => {
     const template = makeTemplate({ templateType: "custom" });
     const { queryByRole } = render(
       <TemplateDetailPanel
@@ -273,6 +271,48 @@ describe("TemplateDetailPanel — testes unitários", () => {
       />,
     );
     expect(queryByRole("button", { name: /personalizar/i })).toBeNull();
+  });
+
+  it("botão Editar em System_Template chama fluxo de versão editável", () => {
+    const template = makeTemplate({ templateType: "system" });
+    let customizeCalled = false;
+    let editCalled = false;
+
+    const { getByRole } = render(
+      <TemplateDetailPanel
+        template={template}
+        onApply={noop}
+        onCustomize={() => { customizeCalled = true; }}
+        onEdit={() => { editCalled = true; }}
+        onDelete={noop}
+      />,
+    );
+
+    fireEvent.click(getByRole("button", { name: /editar/i }));
+
+    expect(customizeCalled).toBe(true);
+    expect(editCalled).toBe(false);
+  });
+
+  it("botão Editar em Custom_Template chama edição direta", () => {
+    const template = makeTemplate({ templateType: "custom" });
+    let customizeCalled = false;
+    let editCalled = false;
+
+    const { getByRole } = render(
+      <TemplateDetailPanel
+        template={template}
+        onApply={noop}
+        onCustomize={() => { customizeCalled = true; }}
+        onEdit={() => { editCalled = true; }}
+        onDelete={noop}
+      />,
+    );
+
+    fireEvent.click(getByRole("button", { name: /editar/i }));
+
+    expect(customizeCalled).toBe(false);
+    expect(editCalled).toBe(true);
   });
 
   it("exibição de timeline apenas para pos_operatorio", () => {

@@ -3,13 +3,13 @@ import {
 	FileText,
 	RefreshCw,
 	Loader2,
-	Eye,
 	Edit,
 	CheckCircle2,
 	XCircle,
 	Clock,
 	Pause,
 	Variable,
+	Plus,
 } from "lucide-react";
 import { MainLayout } from "@/components/layout/MainLayout";
 import { Button } from "@/components/ui/button";
@@ -33,11 +33,19 @@ import {
 	DialogHeader,
 	DialogTitle,
 } from "@/components/ui/dialog";
+import {
+	Select,
+	SelectContent,
+	SelectItem,
+	SelectTrigger,
+	SelectValue,
+} from "@/components/ui/select";
 import { EmptyState } from "@/components/ui/empty-state";
 import {
 	fetchTemplates,
 	syncTemplatesWithMeta,
 	updateTemplate,
+	createTemplate,
 	type Template,
 } from "@/services/whatsapp-api";
 
@@ -229,6 +237,23 @@ export default function WhatsAppTemplatesPage() {
 	const [editBody, setEditBody] = useState("");
 	const [saving, setSaving] = useState(false);
 
+	// Create template state
+	const [showCreateDialog, setShowCreateDialog] = useState(false);
+	const [creating, setCreating] = useState(false);
+	const [createForm, setCreateForm] = useState({
+		name: "",
+		category: "UTILITY" as "MARKETING" | "UTILITY" | "AUTHENTICATION",
+		language: "pt_BR",
+		headerText: "",
+		body: "",
+		footer: "",
+		buttons: [] as Array<{
+			type: "QUICK_REPLY" | "URL";
+			text: string;
+			url?: string;
+		}>,
+	});
+
 	const loadTemplates = async () => {
 		try {
 			const data = await fetchTemplates();
@@ -241,7 +266,7 @@ export default function WhatsAppTemplatesPage() {
 
 	useEffect(() => {
 		loadTemplates();
-	});
+	}, []); // Fixed: added [] to prevent infinite loop
 
 	const handleSync = async () => {
 		setSyncing(true);
@@ -278,6 +303,47 @@ export default function WhatsAppTemplatesPage() {
 		}
 	};
 
+	const handleCreate = async () => {
+		if (!createForm.name || !createForm.body) return;
+		setCreating(true);
+		try {
+			await createTemplate(createForm);
+			setShowCreateDialog(false);
+			setCreateForm({
+				name: "",
+				category: "UTILITY",
+				language: "pt_BR",
+				headerText: "",
+				body: "",
+				footer: "",
+				buttons: [],
+			});
+			await loadTemplates();
+		} catch (err) {
+			console.error("Failed to create template:", err);
+		} finally {
+			setCreating(false);
+		}
+	};
+
+	// Build a preview Template object from createForm
+	const previewTemplate: Template = {
+		id: "preview",
+		name: createForm.name || "preview",
+		category: createForm.category,
+		status: "PENDING",
+		language: createForm.language,
+		header: createForm.headerText
+			? { type: "TEXT", text: createForm.headerText }
+			: undefined,
+		body: createForm.body || "Escreva o corpo da mensagem...",
+		footer: createForm.footer || undefined,
+		buttons: createForm.buttons
+			.filter((b) => b.text)
+			.map((b) => ({ type: b.type, text: b.text, url: b.url })),
+		createdAt: new Date().toISOString(),
+	};
+
 	return (
 		<MainLayout>
 			<div className="space-y-6">
@@ -291,14 +357,22 @@ export default function WhatsAppTemplatesPage() {
 							Gerencie templates de mensagem aprovados pelo Meta
 						</p>
 					</div>
-					<Button onClick={handleSync} disabled={syncing}>
-						{syncing ? (
-							<Loader2 className="h-4 w-4 animate-spin mr-2" />
-						) : (
-							<RefreshCw className="h-4 w-4 mr-2" />
-						)}
-						Sincronizar com Meta
-					</Button>
+					<div className="flex items-center gap-2">
+						<Button
+							variant="outline"
+							onClick={() => setShowCreateDialog(true)}
+						>
+							<Plus className="h-4 w-4 mr-2" /> Novo Template
+						</Button>
+						<Button onClick={handleSync} disabled={syncing}>
+							{syncing ? (
+								<Loader2 className="h-4 w-4 animate-spin mr-2" />
+							) : (
+								<RefreshCw className="h-4 w-4 mr-2" />
+							)}
+							Sincronizar com Meta
+						</Button>
+					</div>
 				</div>
 
 				{loading ? (
@@ -405,6 +479,223 @@ export default function WhatsAppTemplatesPage() {
 						</DialogContent>
 					</Dialog>
 				)}
+
+				{/* Create Template Dialog */}
+				<Dialog open={showCreateDialog} onOpenChange={setShowCreateDialog}>
+					<DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
+						<DialogHeader>
+							<DialogTitle className="flex items-center gap-2">
+								<Plus className="h-5 w-5 text-primary" /> Novo Template WhatsApp
+							</DialogTitle>
+						</DialogHeader>
+						<div className="grid grid-cols-2 gap-6">
+							{/* Form — left column */}
+							<div className="space-y-4">
+								<div className="space-y-2">
+									<Label>Nome do template</Label>
+									<Input
+										placeholder="ex: confirmacao_consulta"
+										value={createForm.name}
+										onChange={(e) =>
+											setCreateForm((f) => ({
+												...f,
+												name: e.target.value
+													.toLowerCase()
+													.replace(/\s+/g, "_"),
+											}))
+										}
+									/>
+									<p className="text-[11px] text-muted-foreground">
+										Letras minúsculas, números e underscores
+									</p>
+								</div>
+								<div className="grid grid-cols-2 gap-3">
+									<div className="space-y-2">
+										<Label>Categoria</Label>
+										<Select
+											value={createForm.category}
+											onValueChange={(v) =>
+												setCreateForm((f) => ({
+													...f,
+													category: v as
+														| "MARKETING"
+														| "UTILITY"
+														| "AUTHENTICATION",
+												}))
+											}
+										>
+											<SelectTrigger>
+												<SelectValue />
+											</SelectTrigger>
+											<SelectContent>
+												<SelectItem value="MARKETING">Marketing</SelectItem>
+												<SelectItem value="UTILITY">Utilidade</SelectItem>
+												<SelectItem value="AUTHENTICATION">
+													Autenticação
+												</SelectItem>
+											</SelectContent>
+										</Select>
+									</div>
+									<div className="space-y-2">
+										<Label>Idioma</Label>
+										<Select
+											value={createForm.language}
+											onValueChange={(v) =>
+												setCreateForm((f) => ({ ...f, language: v }))
+											}
+										>
+											<SelectTrigger>
+												<SelectValue />
+											</SelectTrigger>
+											<SelectContent>
+												<SelectItem value="pt_BR">Português (BR)</SelectItem>
+												<SelectItem value="en_US">English (US)</SelectItem>
+												<SelectItem value="es">Español</SelectItem>
+											</SelectContent>
+										</Select>
+									</div>
+								</div>
+								<div className="space-y-2">
+									<Label>Cabeçalho (opcional)</Label>
+									<Input
+										placeholder="Texto do cabeçalho"
+										value={createForm.headerText}
+										onChange={(e) =>
+											setCreateForm((f) => ({
+												...f,
+												headerText: e.target.value,
+											}))
+										}
+									/>
+								</div>
+								<div className="space-y-2">
+									<Label>Corpo da mensagem *</Label>
+									<Textarea
+										placeholder="Olá {{1}}, sua consulta está confirmada para {{2}}."
+										value={createForm.body}
+										onChange={(e) =>
+											setCreateForm((f) => ({ ...f, body: e.target.value }))
+										}
+										rows={5}
+									/>
+									<p className="text-[11px] text-muted-foreground">
+										Use {"{{1}}"}, {"{{2}}"} para variáveis
+									</p>
+								</div>
+								<div className="space-y-2">
+									<Label>Rodapé (opcional)</Label>
+									<Input
+										placeholder="FisioFlow Clínica"
+										value={createForm.footer}
+										onChange={(e) =>
+											setCreateForm((f) => ({ ...f, footer: e.target.value }))
+										}
+									/>
+								</div>
+								<div className="space-y-2">
+									<div className="flex items-center justify-between">
+										<Label>Botões (opcional)</Label>
+										<Button
+											variant="ghost"
+											size="sm"
+											type="button"
+											className="h-7 text-xs"
+											onClick={() =>
+												setCreateForm((f) => ({
+													...f,
+													buttons: [
+														...f.buttons,
+														{ type: "QUICK_REPLY", text: "" },
+													],
+												}))
+											}
+											disabled={createForm.buttons.length >= 3}
+										>
+											<Plus className="h-3 w-3 mr-1" /> Botão
+										</Button>
+									</div>
+									{createForm.buttons.map((btn, i) => (
+										<div key={i} className="flex gap-2">
+											<Select
+												value={btn.type}
+												onValueChange={(v) =>
+													setCreateForm((f) => ({
+														...f,
+														buttons: f.buttons.map((b, j) =>
+															j === i
+																? { ...b, type: v as "QUICK_REPLY" | "URL" }
+																: b,
+														),
+													}))
+												}
+											>
+												<SelectTrigger className="w-32">
+													<SelectValue />
+												</SelectTrigger>
+												<SelectContent>
+													<SelectItem value="QUICK_REPLY">Resposta</SelectItem>
+													<SelectItem value="URL">Link</SelectItem>
+												</SelectContent>
+											</Select>
+											<Input
+												placeholder="Texto do botão"
+												value={btn.text}
+												onChange={(e) =>
+													setCreateForm((f) => ({
+														...f,
+														buttons: f.buttons.map((b, j) =>
+															j === i ? { ...b, text: e.target.value } : b,
+														),
+													}))
+												}
+												className="flex-1"
+											/>
+											<Button
+												variant="ghost"
+												size="icon"
+												type="button"
+												className="h-9 w-9 text-destructive"
+												onClick={() =>
+													setCreateForm((f) => ({
+														...f,
+														buttons: f.buttons.filter((_, j) => j !== i),
+													}))
+												}
+											>
+												<XCircle className="h-4 w-4" />
+											</Button>
+										</div>
+									))}
+								</div>
+							</div>
+
+							{/* Preview — right column */}
+							<div>
+								<p className="text-xs font-medium text-muted-foreground mb-3">
+									Preview
+								</p>
+								<TemplatePreview template={previewTemplate} />
+								<p className="text-[11px] text-muted-foreground mt-3 text-center">
+									O template precisa ser aprovado pelo Meta antes de ser usado
+								</p>
+							</div>
+						</div>
+						<DialogFooter>
+							<DialogClose asChild>
+								<Button variant="ghost">Cancelar</Button>
+							</DialogClose>
+							<Button
+								onClick={handleCreate}
+								disabled={creating || !createForm.name || !createForm.body}
+							>
+								{creating && (
+									<Loader2 className="h-4 w-4 animate-spin mr-2" />
+								)}
+								Enviar para aprovação
+							</Button>
+						</DialogFooter>
+					</DialogContent>
+				</Dialog>
 			</div>
 		</MainLayout>
 	);

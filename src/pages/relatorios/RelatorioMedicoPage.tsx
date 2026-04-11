@@ -760,7 +760,9 @@ export default function RelatorioMedicoPage() {
 			created_at: new Date().toISOString(),
 			updated_at: new Date().toISOString(),
 		};
-		saveTemplateMutation.mutate(clone);
+		setEditingTemplate(null);
+		setTemplateForm(clone);
+		setTemplateDialogOpen(true);
 	};
 
 	const handleTemplateSubmit = () => {

@@ -106,3 +106,27 @@ export const wikiPageVersionsRelations = relations(
 		}),
 	}),
 );
+
+// ===== WIKI DICTIONARY =====
+export const wikiDictionary = pgTable("wiki_dictionary", {
+	id: uuid("id").primaryKey().defaultRandom(),
+	pt: varchar("pt", { length: 500 }).notNull(),
+	en: varchar("en", { length: 500 }).notNull(),
+	category: varchar("category", { length: 100 }).notNull(), // muscle, joint, etc.
+	subcategory: varchar("subcategory", { length: 200 }),
+	aliasesPt: text("aliases_pt").array().default([]),
+	aliasesEn: text("aliases_en").array().default([]),
+	descriptionPt: text("description_pt"),
+	descriptionEn: text("description_en"),
+
+	// Controle de acesso e organização
+	organizationId: uuid("organization_id"), // null = termo global do sistema
+	isGlobal: boolean("is_global").default(false).notNull(),
+
+	// Metadados
+	createdBy: text("created_by"),
+	updatedBy: text("updated_by"),
+	createdAt: timestamp("created_at").defaultNow().notNull(),
+	updatedAt: timestamp("updated_at").defaultNow().notNull(),
+	deletedAt: timestamp("deleted_at"), // soft delete
+});
