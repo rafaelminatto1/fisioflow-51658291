@@ -462,8 +462,10 @@ app.post("/conversations/:id/messages", requireAuth, async (c) => {
 					};
 				}
 
+				console.info(`[WhatsApp] Sending message to ${to.replace(/\D/g, "")} via PhoneID ${phoneId}`);
+
 				const metaRes = await fetch(
-					`https://graph.facebook.com/v21.0/${phoneId}/messages`,
+					`https://graph.facebook.com/v22.0/${phoneId}/messages`,
 					{
 						method: "POST",
 						headers: {
@@ -474,10 +476,11 @@ app.post("/conversations/:id/messages", requireAuth, async (c) => {
 					},
 				);
 				metaStatusCode = metaRes.status;
-				metaData = await metaRes.json().catch(() => undefined);
+				metaData = await metaRes.json().catch(() => ({}));
 				metaMessageId = metaData?.messages?.[0]?.id ?? null;
 
 				if (!metaRes.ok) {
+					console.error("[WhatsApp] Meta API Error Details:", JSON.stringify(metaData, null, 2));
 					sendError = {
 						kind: "meta_api_error",
 						message:
@@ -486,8 +489,11 @@ app.post("/conversations/:id/messages", requireAuth, async (c) => {
 						statusCode: metaRes.status,
 						metaError: getMetaError(metaData),
 					};
+				} else {
+					console.info(`[WhatsApp] Message sent successfully. MetaID: ${metaMessageId}`);
 				}
 			} catch (error) {
+				console.error("[WhatsApp] Runtime error during send:", error);
 				sendError = {
 					kind: "network_or_runtime_error",
 					message: error instanceof Error ? error.message : "Erro desconhecido",
