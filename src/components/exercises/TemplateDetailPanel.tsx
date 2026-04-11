@@ -16,7 +16,6 @@ import {
   Dumbbell,
   FlaskConical,
   Play,
-  Copy,
   Edit,
   Trash2,
   FileText,
@@ -231,8 +230,8 @@ export function TemplateDetailPanel({
         {/* System only */}
         {isSystem && (
           <Button size="sm" variant="outline" onClick={onCustomize} className="gap-1.5">
-            <Copy className="h-3.5 w-3.5" />
-            Personalizar
+            <Edit className="h-3.5 w-3.5" />
+            Editar
           </Button>
         )}
 
