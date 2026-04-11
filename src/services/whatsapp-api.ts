@@ -221,7 +221,11 @@ export async function sendMessage(
 		`${BASE}/conversations/${conversationId}/messages`,
 		{
 			method: "POST",
-			body: JSON.stringify({ content, ...options }),
+			body: JSON.stringify({
+				content,
+				messageType: options?.type,
+				attachmentUrl: options?.attachmentUrl,
+			}),
 		},
 	);
 	return "data" in (res as any) ? (res as any).data : res;
