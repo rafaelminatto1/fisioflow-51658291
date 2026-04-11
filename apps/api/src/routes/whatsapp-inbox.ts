@@ -579,6 +579,7 @@ app.post("/conversations/:id/messages", requireAuth, async (c) => {
 
 		return c.json(mapMessageRow(savedMsg), 201);
 	} catch (err) {
+		console.error("[WhatsApp Inbox] Route Crash Error:", err);
 		logWhatsAppInboxEvent(c, "error", "message send route crashed", {
 			requestId,
 			conversationId: id,
@@ -586,7 +587,11 @@ app.post("/conversations/:id/messages", requireAuth, async (c) => {
 			userId: user.uid,
 			error: serializeError(err),
 		});
-		return c.json({ error: "Failed to send message", requestId }, 500);
+		return c.json({ 
+			error: "Failed to send message", 
+			message: err instanceof Error ? err.message : String(err),
+			requestId 
+		}, 500);
 	}
 });
 
