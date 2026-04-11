@@ -122,9 +122,30 @@ export function useWhatsAppConversation(id: string | null) {
 			options?: { type?: string; attachmentUrl?: string },
 		) => {
 			if (!id) return;
-			const msg = await apiSendMessage(id, content, options);
-			setMessages((prev) => [...prev, msg]);
-			return msg;
+			const context = {
+				conversationId: id,
+				messageLength: content.length,
+				messageType: options?.type ?? "text",
+				hasAttachment: Boolean(options?.attachmentUrl),
+			};
+
+			try {
+				const msg = await apiSendMessage(id, content, options);
+				if (msg.status === "failed") {
+					console.error("[WhatsAppConversation] Message returned failed status", {
+						...context,
+						messageId: msg.id,
+					});
+				}
+				setMessages((prev) => [...prev, msg]);
+				return msg;
+			} catch (err) {
+				console.error("[WhatsAppConversation] Failed to send message", {
+					...context,
+					error: err,
+				});
+				throw err;
+			}
 		},
 		[id],
 	);
