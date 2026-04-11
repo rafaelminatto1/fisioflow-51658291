@@ -321,9 +321,7 @@ export async function addMessage(
 ) {
 	try {
 		const contentJson =
-			typeof content === "string"
-				? JSON.stringify(content)
-				: JSON.stringify(content);
+			typeof content === "string" ? content : JSON.stringify(content);
 
 		const result = await pool.query(
 			`INSERT INTO wa_messages (conversation_id, organization_id, contact_id, direction, sender_type, sender_id, message_type, content, meta_message_id, media_url, media_type, template_name, reply_to, status, metadata)
