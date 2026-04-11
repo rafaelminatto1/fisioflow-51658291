@@ -117,11 +117,10 @@ const GamificationMiniProfile = ({ collapsed }: { collapsed: boolean }) => {
 const mainMenuItems = [
 	{
 		icon: Calendar,
-		label: "Agenda de Hoje",
+		label: "AGENDA",
 		href: APP_ROUTES.AGENDA,
-		badge: "Hoje",
 	},
-	{ icon: Users, label: "Meus Pacientes", href: APP_ROUTES.PATIENTS },
+	{ icon: Users, label: "Pacientes", href: APP_ROUTES.PATIENTS },
 	{ icon: MessageCircle, label: "WhatsApp", href: "/whatsapp/inbox" },
 ];
 
@@ -358,7 +357,9 @@ export function Sidebar() {
 								variant="ghost"
 								size="icon"
 								onClick={() => setCollapsed(true)}
-								className="h-8 w-8 rounded-xl opacity-0 group-hover:opacity-100 transition-opacity"
+								className="h-8 w-8 shrink-0 rounded-xl transition-opacity"
+								aria-label="Minimizar sidebar"
+								title="Minimizar sidebar"
 							>
 								<ChevronLeft className="w-4 h-4" />
 							</Button>
@@ -370,6 +371,8 @@ export function Sidebar() {
 							size="icon"
 							onClick={() => setCollapsed(false)}
 							className="absolute -right-4 top-1/2 -translate-y-1/2 h-8 w-8 rounded-full bg-white dark:bg-slate-900 shadow-premium-md border border-border/40 z-50"
+							aria-label="Expandir sidebar"
+							title="Expandir sidebar"
 						>
 							<ChevronRight className="w-4 h-4" />
 						</Button>

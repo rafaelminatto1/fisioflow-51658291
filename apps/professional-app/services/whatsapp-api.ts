@@ -136,99 +136,101 @@ export async function fetchConversations(
 		params.assignedTo = "me";
 		delete params.status;
 	}
-	const result = await fetchApi<any>(
+	const response = await fetchApi<any>(
 		`${BASE}/conversations`,
 		{ params },
 	);
 
-	// The API returns { data: ConversationsResponse | WaConversation[] }
-	const data = result.data || result;
+	// Handle potential .data wrapper or direct response
+	const result = response.data || response;
 
 	// Handle both paginated and array responses
-	if (Array.isArray(data)) {
-		return { data, pagination: { page: 1, limit: 50, total: data.length, totalPages: 1 } };
+	if (Array.isArray(result)) {
+		return { data: result, pagination: { page: 1, limit: 50, total: result.length, totalPages: 1 } };
 	}
-	return data as ConversationsResponse;
+	return result as ConversationsResponse;
 }
 
 export async function fetchConversationDetail(
 	id: string,
 ): Promise<WaConversationDetailResponse> {
-	const response = await fetchApi<{ data: WaConversationDetailResponse }>(
+	const response = await fetchApi<any>(
 		`${BASE}/conversations/${id}`,
 		{ params: { includeMessages: "true", messageLimit: 100 } },
 	);
-	return response.data;
+	return response.data || response;
 }
 
 export async function fetchContacts(search?: string): Promise<WaContact[]> {
-	const response = await fetchApi<{ data?: WaContact[] }>(`${BASE}/contacts`, {
+	const response = await fetchApi<any>(`${BASE}/contacts`, {
 		params: { search, limit: 20 },
 	});
-	return response.data ?? [];
+	const result = response.data || response;
+	return Array.isArray(result) ? result : (result?.data || []);
 }
 
 export async function resolveContact(
 	input: ResolveContactInput,
 ): Promise<WaContact> {
-	const response = await fetchApi<{ data?: WaContact }>(`${BASE}/contacts/resolve`, {
+	const response = await fetchApi<any>(`${BASE}/contacts/resolve`, {
 		method: "POST",
 		data: input,
 	});
-	if (!response.data) {
+	const result = response.data || response;
+	if (!result) {
 		throw new Error("Não foi possível resolver o contato.");
 	}
-	return response.data;
+	return result;
 }
 
 export async function openConversation(contactId: string): Promise<WaConversation> {
-	const response = await fetchApi<{ data: WaConversation }>(`${BASE}/conversations`, {
+	const response = await fetchApi<any>(`${BASE}/conversations`, {
 		method: "POST",
 		data: { contactId },
 	});
-	return response.data;
+	return response.data || response;
 }
 
 export async function sendMessage(
 	conversationId: string,
 	content: string,
 ): Promise<WaMessage> {
-	const response = await fetchApi<{ data: WaMessage }>(
+	const response = await fetchApi<any>(
 		`${BASE}/conversations/${conversationId}/messages`,
 		{
 			method: "POST",
 			data: { content, messageType: "text" },
 		},
 	);
-	return response.data;
+	return response.data || response;
 }
 
 export async function addNote(
 	conversationId: string,
 	content: string,
 ): Promise<WaMessage> {
-	const response = await fetchApi<{ data: WaMessage }>(
+	const response = await fetchApi<any>(
 		`${BASE}/conversations/${conversationId}/notes`,
 		{
 			method: "POST",
 			data: { content },
 		},
 	);
-	return response.data;
+	return response.data || response;
 }
 
 export async function updateConversationStatus(
 	conversationId: string,
 	status: string,
 ): Promise<WaConversation> {
-	const response = await fetchApi<{ data: WaConversation }>(
+	const response = await fetchApi<any>(
 		`${BASE}/conversations/${conversationId}/status`,
 		{
 			method: "PUT",
 			data: { status },
 		},
 	);
-	return response.data;
+	return response.data || response;
 }
 
 export async function assignConversation(
@@ -237,17 +239,18 @@ export async function assignConversation(
 	team?: string,
 	reason?: string,
 ): Promise<WaConversation> {
-	const response = await fetchApi<{ data: WaConversation }>(
+	const response = await fetchApi<any>(
 		`${BASE}/conversations/${conversationId}/assign`,
 		{
 			method: "POST",
 			data: { assignedTo, team, reason },
 		},
 	);
-	return response.data;
+	return response.data || response;
 }
 
 export async function fetchQuickReplies(): Promise<WaQuickReply[]> {
-	const response = await fetchApi<{ data?: WaQuickReply[] }>(`${BASE}/quick-replies`);
-	return response.data ?? [];
+	const response = await fetchApi<any>(`${BASE}/quick-replies`);
+	const result = response.data || response;
+	return Array.isArray(result) ? result : (result?.data || []);
 }
