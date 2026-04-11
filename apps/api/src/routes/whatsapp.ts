@@ -495,4 +495,307 @@ app.post("/send-template", requireAuth, async (c) => {
 	return c.json({ success: status === "sent", content, messageId });
 });
 
+// CRUD de automações persistidas
+app.get("/automations", requireAuth, async (c) => {
+	const user = c.get("user");
+	const pool = await createPool(c.env);
+	try {
+		const result = await pool.query(
+			`SELECT * FROM wa_automation_rules WHERE organization_id = $1 ORDER BY created_at DESC`,
+			[user.organizationId],
+		);
+		return c.json({
+			data: result.rows.map((r) => ({
+				id: r.id,
+				name: r.name,
+				description: r.description,
+				triggerType: r.trigger_type,
+				conditions:
+					typeof r.conditions === "string"
+						? JSON.parse(r.conditions)
+						: r.conditions,
+				actions:
+					typeof r.actions === "string" ? JSON.parse(r.actions) : r.actions,
+				active: r.is_active,
+				team: r.team,
+				createdAt: r.created_at,
+				updatedAt: r.updated_at,
+			})),
+		});
+	} catch (err) {
+		console.error("[WhatsApp] GET /automations error:", err);
+		return c.json({ error: "Failed to fetch automations" }, 500);
+	}
+});
+
+app.post("/automations", requireAuth, async (c) => {
+	const user = c.get("user");
+	const pool = await createPool(c.env);
+	const body = (await c.req.json()) as {
+		name: string;
+		description?: string;
+		triggerType: string;
+		conditions: Record<string, unknown>;
+		actions: Array<{ type: string; params: Record<string, unknown> }>;
+		active?: boolean;
+		team?: string;
+	};
+
+	if (!body.name || !body.triggerType) {
+		return c.json({ error: "name and triggerType are required" }, 400);
+	}
+
+	try {
+		const result = await pool.query(
+			`INSERT INTO wa_automation_rules
+       (organization_id, name, description, trigger_type, conditions, actions, is_active, team, created_by)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
+       RETURNING *`,
+			[
+				user.organizationId,
+				body.name,
+				body.description ?? null,
+				body.triggerType,
+				JSON.stringify(body.conditions ?? {}),
+				JSON.stringify(body.actions ?? []),
+				body.active !== false,
+				body.team ?? null,
+				user.uid,
+			],
+		);
+		const r = result.rows[0];
+		return c.json(
+			{
+				data: {
+					id: r.id,
+					name: r.name,
+					description: r.description,
+					triggerType: r.trigger_type,
+					conditions:
+						typeof r.conditions === "string"
+							? JSON.parse(r.conditions)
+							: r.conditions,
+					actions:
+						typeof r.actions === "string" ? JSON.parse(r.actions) : r.actions,
+					active: r.is_active,
+					team: r.team,
+					createdAt: r.created_at,
+					updatedAt: r.updated_at,
+				},
+			},
+			201,
+		);
+	} catch (err) {
+		console.error("[WhatsApp] POST /automations error:", err);
+		return c.json({ error: "Failed to create automation" }, 500);
+	}
+});
+
+app.put("/automations/:id", requireAuth, async (c) => {
+	const user = c.get("user");
+	const { id } = c.req.param();
+	const pool = await createPool(c.env);
+	const body = (await c.req.json()) as Partial<{
+		name: string;
+		description: string;
+		triggerType: string;
+		conditions: Record<string, unknown>;
+		actions: Array<unknown>;
+		active: boolean;
+		team: string;
+	}>;
+
+	try {
+		const sets: string[] = [];
+		const params: unknown[] = [id, user.organizationId];
+		let idx = 3;
+
+		if (body.name !== undefined) {
+			sets.push(`name = $${idx++}`);
+			params.push(body.name);
+		}
+		if (body.description !== undefined) {
+			sets.push(`description = $${idx++}`);
+			params.push(body.description);
+		}
+		if (body.triggerType !== undefined) {
+			sets.push(`trigger_type = $${idx++}`);
+			params.push(body.triggerType);
+		}
+		if (body.conditions !== undefined) {
+			sets.push(`conditions = $${idx++}`);
+			params.push(JSON.stringify(body.conditions));
+		}
+		if (body.actions !== undefined) {
+			sets.push(`actions = $${idx++}`);
+			params.push(JSON.stringify(body.actions));
+		}
+		if (body.active !== undefined) {
+			sets.push(`is_active = $${idx++}`);
+			params.push(body.active);
+		}
+		if (body.team !== undefined) {
+			sets.push(`team = $${idx++}`);
+			params.push(body.team || null);
+		}
+		sets.push(`updated_at = NOW()`);
+
+		if (sets.length === 1) return c.json({ error: "No fields to update" }, 400);
+
+		const result = await pool.query(
+			`UPDATE wa_automation_rules SET ${sets.join(", ")}
+       WHERE id = $1 AND organization_id = $2 RETURNING *`,
+			params,
+		);
+
+		if (result.rows.length === 0)
+			return c.json({ error: "Automation not found" }, 404);
+		const r = result.rows[0];
+		return c.json({
+			data: {
+				id: r.id,
+				name: r.name,
+				description: r.description,
+				triggerType: r.trigger_type,
+				conditions:
+					typeof r.conditions === "string"
+						? JSON.parse(r.conditions)
+						: r.conditions,
+				actions:
+					typeof r.actions === "string" ? JSON.parse(r.actions) : r.actions,
+				active: r.is_active,
+				team: r.team,
+				createdAt: r.created_at,
+				updatedAt: r.updated_at,
+			},
+		});
+	} catch (err) {
+		console.error("[WhatsApp] PUT /automations/:id error:", err);
+		return c.json({ error: "Failed to update automation" }, 500);
+	}
+});
+
+app.delete("/automations/:id", requireAuth, async (c) => {
+	const user = c.get("user");
+	const { id } = c.req.param();
+	const pool = await createPool(c.env);
+	try {
+		const result = await pool.query(
+			`DELETE FROM wa_automation_rules WHERE id = $1 AND organization_id = $2 RETURNING id`,
+			[id, user.organizationId],
+		);
+		if (result.rows.length === 0)
+			return c.json({ error: "Automation not found" }, 404);
+		return c.json({ data: { deleted: true } });
+	} catch (err) {
+		console.error("[WhatsApp] DELETE /automations/:id error:", err);
+		return c.json({ error: "Failed to delete automation" }, 500);
+	}
+});
+
+app.post("/templates", requireAuth, async (c) => {
+	const user = c.get("user");
+	const body = (await c.req.json()) as {
+		name: string;
+		category: "MARKETING" | "UTILITY" | "AUTHENTICATION";
+		language: string;
+		headerText?: string;
+		body: string;
+		footer?: string;
+		buttons?: Array<{
+			type: "QUICK_REPLY" | "URL" | "PHONE_NUMBER";
+			text: string;
+			url?: string;
+			phone?: string;
+		}>;
+	};
+
+	if (!body.name || !body.category || !body.body) {
+		return c.json({ error: "name, category and body are required" }, 400);
+	}
+
+	const phoneId = c.env.WHATSAPP_PHONE_NUMBER_ID;
+	const token = c.env.WHATSAPP_ACCESS_TOKEN;
+
+	if (!phoneId || !token) {
+		return c.json({ error: "WhatsApp credentials not configured" }, 503);
+	}
+
+	const components: Record<string, unknown>[] = [];
+
+	if (body.headerText) {
+		components.push({ type: "HEADER", format: "TEXT", text: body.headerText });
+	}
+
+	components.push({ type: "BODY", text: body.body });
+
+	if (body.footer) {
+		components.push({ type: "FOOTER", text: body.footer });
+	}
+
+	if (body.buttons?.length) {
+		components.push({
+			type: "BUTTONS",
+			buttons: body.buttons.map((btn) => {
+				if (btn.type === "QUICK_REPLY")
+					return { type: "QUICK_REPLY", text: btn.text };
+				if (btn.type === "URL")
+					return { type: "URL", text: btn.text, url: btn.url };
+				return { type: "PHONE_NUMBER", text: btn.text, phone_number: btn.phone };
+			}),
+		});
+	}
+
+	try {
+		const pool = await createPool(c.env);
+		const settings = await pool.query(
+			`SELECT settings FROM organizations WHERE id = $1 LIMIT 1`,
+			[user.organizationId],
+		);
+		const wabaId = (
+			settings.rows[0]?.settings as Record<string, unknown> | null
+		)?.whatsapp_business_account_id as string | undefined;
+
+		const targetId = wabaId || phoneId;
+
+		const metaRes = await fetch(
+			`https://graph.facebook.com/v21.0/${targetId}/message_templates`,
+			{
+				method: "POST",
+				headers: {
+					"Content-Type": "application/json",
+					Authorization: `Bearer ${token}`,
+				},
+				body: JSON.stringify({
+					name: body.name.toLowerCase().replace(/\s+/g, "_"),
+					category: body.category,
+					language: body.language || "pt_BR",
+					components,
+				}),
+			},
+		);
+
+		const metaData = (await metaRes.json()) as Record<string, unknown>;
+
+		if (!metaRes.ok) {
+			const metaError = metaData.error as
+				| { message?: string }
+				| undefined;
+			return c.json(
+				{
+					error:
+						metaError?.message || "Failed to create template on Meta",
+					details: metaData,
+				},
+				metaRes.status as 400 | 401 | 403 | 404 | 422 | 500,
+			);
+		}
+
+		return c.json({ data: metaData }, 201);
+	} catch (err) {
+		console.error("[WhatsApp] POST /templates error:", err);
+		return c.json({ error: "Failed to create template" }, 500);
+	}
+});
+
 export { app as whatsappRoutes };
