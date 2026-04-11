@@ -44,7 +44,6 @@ import { useRichTextContext } from "@/contexts/RichTextContext";
 import { cn } from "@/lib/utils";
 import { uploadFile, STORAGE_FOLDERS } from "@/lib/storage/upload";
 import { Button } from "@/components/ui/button";
-import { Progress } from "@/components/ui/progress";
 import {
 	DropdownMenu,
 	DropdownMenuContent,
@@ -65,6 +64,7 @@ import {
 	PopoverContent,
 	PopoverTrigger,
 } from "@/components/ui/popover";
+import { ImageEditDialog } from "@/components/ui/rich-text/ImageEditDialog";
 import "./rich-text-editor.css";
 
 interface ToolbarButtonProps {
@@ -152,9 +152,6 @@ export const RichTextToolbar: React.FC<RichTextToolbarProps> = ({
 	const MAX_IMAGE_DIMENSION = 1400;
 	const INITIAL_QUALITY = 0.8;
 	const [pendingImageFile, setPendingImageFile] = useState<File | null>(null);
-	const [previewUrl, setPreviewUrl] = useState<string | null>(null);
-	const [isUploading, setIsUploading] = useState(false);
-	const [uploadProgress, setUploadProgress] = useState(0);
 	const [lineHeightMode, setLineHeightMode] = useState<
 		"compact" | "normal" | "comfortable"
 	>("normal");
@@ -166,7 +163,11 @@ export const RichTextToolbar: React.FC<RichTextToolbarProps> = ({
 	const addImage = () => {
 		const url = window.prompt("URL da Imagem:");
 		if (url) {
-			editor.chain().focus().setImage({ src: url }).run();
+			editor
+				.chain()
+				.focus()
+				.setImage({ src: url, width: "100%", align: "center" } as any)
+				.run();
 		}
 	};
 
@@ -254,9 +255,107 @@ export const RichTextToolbar: React.FC<RichTextToolbarProps> = ({
 			return;
 		}
 
-		const objectUrl = URL.createObjectURL(file);
 		setPendingImageFile(file);
-		setPreviewUrl(objectUrl);
+	};
+
+	const insertDefaultTable = () => {
+		editor
+			.chain()
+			.focus()
+			.insertContent({
+				type: "table",
+				content: [
+					{
+						type: "tableRow",
+						content: [
+							{
+								type: "tableHeader",
+								content: [
+									{ type: "paragraph", content: [{ type: "text", text: "Campo" }] },
+								],
+							},
+							{
+								type: "tableHeader",
+								content: [
+									{
+										type: "paragraph",
+										content: [{ type: "text", text: "Registro" }],
+									},
+								],
+							},
+							{
+								type: "tableHeader",
+								content: [
+									{
+										type: "paragraph",
+										content: [{ type: "text", text: "Observação" }],
+									},
+								],
+							},
+						],
+					},
+					{
+						type: "tableRow",
+						content: [
+							{
+								type: "tableCell",
+								content: [
+									{ type: "paragraph", content: [{ type: "text", text: "Dor" }] },
+								],
+							},
+							{
+								type: "tableCell",
+								content: [
+									{ type: "paragraph", content: [{ type: "text", text: "EVA /10" }] },
+								],
+							},
+							{
+								type: "tableCell",
+								content: [
+									{
+										type: "paragraph",
+										content: [{ type: "text", text: "Durante a sessão" }],
+									},
+								],
+							},
+						],
+					},
+					{
+						type: "tableRow",
+						content: [
+							{
+								type: "tableCell",
+								content: [
+									{
+										type: "paragraph",
+										content: [{ type: "text", text: "Conduta" }],
+									},
+								],
+							},
+							{
+								type: "tableCell",
+								content: [
+									{
+										type: "paragraph",
+										content: [{ type: "text", text: "Exercício / técnica" }],
+									},
+								],
+							},
+							{
+								type: "tableCell",
+								content: [
+									{
+										type: "paragraph",
+										content: [{ type: "text", text: "Resposta clínica" }],
+									},
+								],
+							},
+						],
+					},
+				],
+			})
+			.insertContent({ type: "paragraph" })
+			.run();
 	};
 
 	const setLineHeight = (mode: "compact" | "normal" | "comfortable") => {
@@ -362,12 +461,7 @@ export const RichTextToolbar: React.FC<RichTextToolbarProps> = ({
 			description: "Tabela 3x3.",
 			preview:
 				'<table class="notion-table"><tr><th>Coluna</th><th>Coluna</th><th>Coluna</th></tr><tr><td>...</td><td>...</td><td>...</td></tr></table>',
-			action: () =>
-				editor
-					.chain()
-					.focus()
-					.insertTable({ rows: 3, cols: 3, withHeaderRow: true })
-					.run(),
+			action: insertDefaultTable,
 		},
 		{
 			id: "divider",
@@ -429,44 +523,42 @@ export const RichTextToolbar: React.FC<RichTextToolbarProps> = ({
 		commandItems[0];
 
 	const handleClosePreview = () => {
-		if (previewUrl) URL.revokeObjectURL(previewUrl);
-		setPreviewUrl(null);
 		setPendingImageFile(null);
-		setIsUploading(false);
-		setUploadProgress(0);
 	};
 
-	const handleConfirmInsert = async () => {
-		if (!pendingImageFile) return;
-		if (pendingImageFile.size > MAX_IMAGE_BYTES) {
+	const handleConfirmInsert = async (editedFile: File) => {
+		if (editedFile.size > MAX_IMAGE_BYTES) {
 			toast.info(
 				"Imagem maior que 5 MB. O sistema vai compactar para ficar abaixo de 5 MB.",
 			);
 		}
 
-		setIsUploading(true);
-		setUploadProgress(0);
-
 		let processedFile: File;
 		try {
-			processedFile = await resizeAndCompressImage(pendingImageFile);
+			processedFile = await resizeAndCompressImage(editedFile);
 		} catch  {
 			toast.error("Não foi possível processar a imagem.");
-			setIsUploading(false);
 			return;
 		}
 
 		try {
 			const result = await uploadFile(processedFile, {
 				folder: imageUploadFolder || STORAGE_FOLDERS.IMAGES,
-				onProgress: (progress) => setUploadProgress(progress),
 			});
-			editor.chain().focus().setImage({ src: result.url }).run();
+			editor
+				.chain()
+				.focus()
+				.setImage({
+					src: result.url,
+					alt: processedFile.name,
+					width: "100%",
+					align: "center",
+				} as any)
+				.run();
 			toast.success("Imagem inserida.");
 			handleClosePreview();
 		} catch  {
 			toast.error("Erro ao enviar imagem.");
-			setIsUploading(false);
 		}
 	};
 
@@ -511,52 +603,14 @@ export const RichTextToolbar: React.FC<RichTextToolbarProps> = ({
 					e.currentTarget.value = "";
 				}}
 			/>
-			<Dialog
-				open={!!previewUrl}
-				onOpenChange={(open) => !open && handleClosePreview()}
-			>
-				<DialogContent className="max-w-2xl">
-					<DialogHeader>
-						<DialogTitle>Pré-visualização da imagem</DialogTitle>
-					</DialogHeader>
-					{previewUrl && (
-						<div className="space-y-3">
-							<img
-								src={previewUrl}
-								alt="Pré-visualização"
-								className="w-full max-h-[55vh] object-contain rounded-md border"
-							/>
-							{pendingImageFile?.size &&
-								pendingImageFile.size > MAX_IMAGE_BYTES && (
-									<p className="text-xs text-amber-600">
-										A imagem passa de 5 MB. Vamos compactar para ficar abaixo de
-										5 MB antes do envio.
-									</p>
-								)}
-							{isUploading && (
-								<div className="space-y-2">
-									<Progress value={uploadProgress} className="h-2" />
-									<p className="text-xs text-muted-foreground">
-										Enviando: {Math.round(uploadProgress)}%
-									</p>
-								</div>
-							)}
-						</div>
-					)}
-					<DialogFooter>
-						<Button
-							variant="outline"
-							onClick={handleClosePreview}
-							disabled={isUploading}
-						>
-							Cancelar
-						</Button>
-						<Button onClick={handleConfirmInsert} disabled={isUploading}>
-							{isUploading ? "Enviando..." : "Inserir"}
-						</Button>
-					</DialogFooter>
-				</DialogContent>
-			</Dialog>
+			<ImageEditDialog
+				open={!!pendingImageFile}
+				sourceFile={pendingImageFile}
+				fileName={pendingImageFile?.name}
+				title="Cortar e marcar imagem"
+				onClose={handleClosePreview}
+				onSaveImage={handleConfirmInsert}
+			/>
 			<Dialog open={commandModalOpen} onOpenChange={setCommandModalOpen}>
 				<DialogContent className="max-w-4xl">
 					<DialogHeader>
@@ -949,13 +1003,7 @@ export const RichTextToolbar: React.FC<RichTextToolbarProps> = ({
 							</DropdownMenuItem>
 							<DropdownMenuSeparator />
 							<DropdownMenuItem
-								onClick={() =>
-									editor
-										.chain()
-										.focus()
-										.insertTable({ rows: 3, cols: 3, withHeaderRow: true })
-										.run()
-								}
+								onClick={insertDefaultTable}
 							>
 								<TableIcon className="h-4 w-4 mr-2 text-emerald-500" /> Tabela
 							</DropdownMenuItem>
@@ -1030,13 +1078,7 @@ export const RichTextToolbar: React.FC<RichTextToolbarProps> = ({
 						<CheckSquare className="h-4 w-4" />
 					</ToolbarButton>
 					<ToolbarButton
-						onClick={() =>
-							editor
-								.chain()
-								.focus()
-								.insertTable({ rows: 3, cols: 3, withHeaderRow: true })
-								.run()
-						}
+						onClick={insertDefaultTable}
 						title="Tabela"
 					>
 						<TableIcon className="h-4 w-4" />

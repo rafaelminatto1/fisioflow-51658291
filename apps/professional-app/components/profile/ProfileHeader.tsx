@@ -12,6 +12,7 @@ interface ProfileHeaderProps {
 	avatar?: string | number;
 	role?: string;
 	onAvatarPress?: () => void;
+	onSettingsPress?: () => void;
 	stats?: {
 		patients: number;
 		appointments: number;
@@ -25,6 +26,7 @@ export function ProfileHeader({
 	avatar,
 	role = "Profissional",
 	onAvatarPress,
+	onSettingsPress,
 	stats,
 }: ProfileHeaderProps) {
 	const colors = useColors();
@@ -37,7 +39,9 @@ export function ProfileHeader({
 						Bem-vindo(a)
 					</Text>
 					<TouchableOpacity
+						onPress={onSettingsPress}
 						style={[styles.settingsButton, { backgroundColor: colors.surface }]}
+						activeOpacity={0.7}
 					>
 						<Ionicons name="settings-outline" size={24} color={colors.text} />
 					</TouchableOpacity>
