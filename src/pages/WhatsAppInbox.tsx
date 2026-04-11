@@ -38,6 +38,7 @@ import {
 } from "lucide-react";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Link } from "react-router-dom";
+import { toast } from "sonner";
 import { MainLayout } from "@/components/layout/MainLayout";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
@@ -797,16 +798,20 @@ function MessageBubble({ message }: { message: Message }) {
 					{isOutbound && message.status && (
 						<span
 							className={`text-[10px] flex items-center ${
-								message.status === "read"
-									? "text-blue-300" // blue ticks for read in primary bg
-									: "text-primary-foreground/70"
+								message.status === "failed"
+									? "text-red-200 font-semibold"
+									: message.status === "read"
+										? "text-blue-300"
+										: "text-primary-foreground/70"
 							}`}
 						>
-							{message.status === "read"
-								? "✓✓"
-								: message.status === "delivered"
+							{message.status === "failed"
+								? "Falha"
+								: message.status === "read"
 									? "✓✓"
-									: "✓"}
+									: message.status === "delivered"
+										? "✓✓"
+										: "✓"}
 						</span>
 					)}
 				</div>
@@ -1196,13 +1201,15 @@ function ChatPanel({
 	onAddNote,
 	quickReplyText,
 	onQuickReplyUsed,
+	onMessageSent,
 }: {
 	selectedId: string | null;
 	onAddNote: (content: string) => void;
 	quickReplyText: string | null;
 	onQuickReplyUsed: () => void;
+	onMessageSent?: () => Promise<void> | void;
 }) {
-	const { conversation, messages, loading, sendMessage } =
+	const { conversation, messages, loading, sendMessage, refetch } =
 		useWhatsAppConversation(selectedId);
 	const [input, setInput] = useState("");
 	const [sending, setSending] = useState(false);
@@ -1316,8 +1323,21 @@ function ChatPanel({
 			}
 			setInput("");
 			setAttachment(null);
-		} catch {
+			await onMessageSent?.();
+		} catch (error) {
+			const errorMessage =
+				error instanceof Error ? error.message : "Erro desconhecido";
+			console.error("[WhatsAppInbox] Failed to send message from chat panel", {
+				conversationId: selectedId,
+				hasAttachment: Boolean(attachment),
+				messageLength: input.trim().length,
+				error,
+			});
+			toast.error("Mensagem não enviada", {
+				description: errorMessage,
+			});
 			setUploading(false);
+			void refetch();
 		} finally {
 			setSending(false);
 		}
@@ -2161,6 +2181,7 @@ export default function WhatsAppInboxPage() {
 					}}
 					quickReplyText={quickReplyText}
 					onQuickReplyUsed={() => setQuickReplyText(null)}
+					onMessageSent={refetch}
 				/>
 
 				<div
