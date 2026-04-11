@@ -14,6 +14,33 @@ import { wikiPages, wikiPageVersions, wikiDictionary } from '@fisioflow/db';
 
 const app = new Hono<{ Bindings: Env; Variables: AuthVariables }>();
 
+const wikiPageListColumns = {
+  id: wikiPages.id,
+  slug: wikiPages.slug,
+  title: wikiPages.title,
+  icon: wikiPages.icon,
+  category: wikiPages.category,
+  tags: wikiPages.tags,
+  viewCount: wikiPages.viewCount,
+  version: wikiPages.version,
+  updatedAt: wikiPages.updatedAt,
+};
+
+const wikiPageFullColumns = {
+  ...wikiPageListColumns,
+  content: wikiPages.content,
+  htmlContent: wikiPages.htmlContent,
+  coverImage: wikiPages.coverImage,
+  parentId: wikiPages.parentId,
+  isPublished: wikiPages.isPublished,
+  isPublic: wikiPages.isPublic,
+  organizationId: wikiPages.organizationId,
+  createdBy: wikiPages.createdBy,
+  updatedBy: wikiPages.updatedBy,
+  createdAt: wikiPages.createdAt,
+  deletedAt: wikiPages.deletedAt,
+};
+
 // ===== DICIONÁRIO =====
 app.get('/dictionary', async (c) => {
   await verifyToken(c, c.env);
@@ -159,17 +186,7 @@ app.get('/', async (c) => {
 
   const [rows, countResult] = await Promise.all([
     db
-      .select({
-        id: wikiPages.id,
-        slug: wikiPages.slug,
-        title: wikiPages.title,
-        icon: wikiPages.icon,
-        category: wikiPages.category,
-        tags: wikiPages.tags,
-        viewCount: wikiPages.viewCount,
-        version: wikiPages.version,
-        updatedAt: wikiPages.updatedAt,
-      })
+      .select(wikiPageListColumns)
       .from(wikiPages)
       .where(where)
       .orderBy(wikiPages.title)
@@ -196,7 +213,7 @@ app.get('/:slug', async (c) => {
   const { slug } = c.req.param();
 
   const row = await db
-    .select()
+    .select(wikiPageFullColumns)
     .from(wikiPages)
     .where(
       and(
@@ -236,14 +253,7 @@ app.get('/:slug/children', async (c) => {
   if (!parent.length) return c.json({ error: 'Página não encontrada' }, 404);
 
   const children = await db
-    .select({
-      id: wikiPages.id,
-      slug: wikiPages.slug,
-      title: wikiPages.title,
-      icon: wikiPages.icon,
-      viewCount: wikiPages.viewCount,
-      updatedAt: wikiPages.updatedAt,
-    })
+    .select(wikiPageListColumns)
     .from(wikiPages)
     .where(
       and(
@@ -300,7 +310,7 @@ app.get('/org/list', requireAuth, async (c) => {
   if (category) conditions.push(eq(wikiPages.category, category));
 
   const rows = await db
-    .select()
+    .select(wikiPageFullColumns)
     .from(wikiPages)
     .where(and(...conditions))
     .orderBy(sql`${wikiPages.updatedAt} DESC`);
@@ -315,7 +325,7 @@ app.get('/by-id/:id', requireAuth, async (c) => {
   const db = await createDb(c.env);
 
   const rows = await db
-    .select()
+    .select(wikiPageFullColumns)
     .from(wikiPages)
     .where(and(eq(wikiPages.id, id), isNull(wikiPages.deletedAt)))
     .limit(1);
@@ -372,7 +382,7 @@ app.post('/', requireAuth, async (c) => {
       createdBy: user.uid,
       version: 1,
     })
-    .returning();
+    .returning(wikiPageFullColumns);
 
   // Save first version
   await db.insert(wikiPageVersions).values({
@@ -422,7 +432,7 @@ app.put('/:slug', requireAuth, async (c) => {
       updatedAt: new Date(),
     })
     .where(eq(wikiPages.id, currentPage.id))
-    .returning();
+    .returning(wikiPageFullColumns);
 
   // Salva o histórico
   await db.insert(wikiPageVersions).values({
@@ -450,7 +460,7 @@ app.delete('/:slug', requireAuth, async (c) => {
       updatedAt: new Date(),
     })
     .where(eq(wikiPages.slug, slug))
-    .returning();
+    .returning({ id: wikiPages.id });
 
   if (!row) return c.json({ error: 'Página não encontrada' }, 404);
 
