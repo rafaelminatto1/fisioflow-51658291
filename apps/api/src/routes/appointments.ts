@@ -40,6 +40,9 @@ function normalizeAppointmentRow(row: any) {
     patient_phone: row.patient?.phone ?? row.patient_phone ?? null,
     created_at: row.createdAt ? String(row.createdAt) : null,
     updated_at: row.updatedAt ? String(row.updatedAt) : null,
+    is_group: row.isGroup,
+    is_unlimited: row.isUnlimited,
+    additional_names: row.additionalNames,
   };
 }
 
@@ -84,6 +87,9 @@ app.get('/', requireAuth, async (c) => {
         paymentAmount: appointments.paymentAmount,
         createdAt: appointments.createdAt,
         updatedAt: appointments.updatedAt,
+        isGroup: appointments.isGroup,
+        isUnlimited: appointments.isUnlimited,
+        additionalNames: appointments.additionalNames,
         patient_name: patients.fullName,
         patient_phone: patients.phone,
       })
@@ -240,6 +246,9 @@ app.post('/', requireAuth, rateLimit({ limit: 20, windowSeconds: 3600, endpoint:
     const type        = normalizeAppointmentType(body.type ?? body.session_type);
     const status      = normalizeStatus(body.status);
     const ignoreCapacity = body.ignoreCapacity === true;
+    const isGroup     = body.isGroup ?? body.is_group ?? false;
+    const isUnlimited = body.isUnlimited ?? body.is_unlimited ?? false;
+    const additionalNames = body.additionalNames ?? body.additional_names ?? null;
 
     // Fallback para organizationId se vier o default ou nulo
     let organizationId = user.organizationId;
@@ -306,6 +315,9 @@ app.post('/', requireAuth, rateLimit({ limit: 20, windowSeconds: 3600, endpoint:
       status,
       type,
       notes,
+      isGroup,
+      isUnlimited,
+      additionalNames,
       createdAt: new Date(),
       updatedAt: new Date(),
       createdBy: therapistId,
@@ -367,6 +379,9 @@ app.get('/:id', requireAuth, async (c) => {
         paymentAmount: appointments.paymentAmount,
         createdAt: appointments.createdAt,
         updatedAt: appointments.updatedAt,
+        isGroup: appointments.isGroup,
+        isUnlimited: appointments.isUnlimited,
+        additionalNames: appointments.additionalNames,
         patient_name: patients.fullName,
       })
       .from(appointments)
@@ -481,6 +496,9 @@ const updateAppointmentHandler: MiddlewareHandler<{ Bindings: Env; Variables: Au
     if (room !== undefined) updatePayload.roomId = isUuid(room) ? room : null;
     if (paymentStatus !== undefined) updatePayload.paymentStatus = paymentStatus;
     if (paymentAmount !== undefined) updatePayload.paymentAmount = paymentAmount;
+    if (body.isGroup !== undefined || body.is_group !== undefined) updatePayload.isGroup = body.isGroup ?? body.is_group;
+    if (body.isUnlimited !== undefined || body.is_unlimited !== undefined) updatePayload.isUnlimited = body.isUnlimited ?? body.is_unlimited;
+    if (body.additionalNames !== undefined || body.additional_names !== undefined) updatePayload.additionalNames = body.additionalNames ?? body.additional_names;
 
     if (Object.keys(updatePayload).length === 1) { // only updatedAt
         return c.json({ error: 'Nenhum campo para atualizar' }, 400);

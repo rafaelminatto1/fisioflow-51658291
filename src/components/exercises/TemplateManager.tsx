@@ -8,7 +8,6 @@ import { TemplateApplyFlow } from "./TemplateApplyFlow";
 import { TemplateCreateFlow } from "./TemplateCreateFlow";
 import { Button } from "@/components/ui/button";
 import { ChevronLeft, LayoutTemplate, Sparkles, Plus } from "lucide-react";
-import { toast } from "@/hooks/use-toast";
 import type { ExerciseTemplate } from "@/types/workers";
 
 // ─── Empty state CTA (shown when org has no custom templates) ─────────────────
@@ -88,20 +87,15 @@ export function TemplateManager() {
     if (selectedTemplate) openCreateFlow(selectedTemplate.id);
   };
   const handleEdit = () => {
-    // Requirement 5.5: block direct editing of system templates
+    if (!selectedTemplate) return;
+
     if (selectedTemplate?.templateType === "system") {
-      toast({
-        title: "Templates do sistema não podem ser editados",
-        description:
-          "Templates do sistema não podem ser editados diretamente. Use 'Personalizar' para criar sua própria versão.",
-        variant: "default",
-      });
+      openCreateFlow(selectedTemplate.id);
       return;
     }
-    if (selectedTemplate) {
-      setEditingTemplate(selectedTemplate);
-      setEditFlowOpen(true);
-    }
+
+    setEditingTemplate(selectedTemplate);
+    setEditFlowOpen(true);
   };
   const handleDelete = () => {
     // TODO: task 13 — open delete confirmation dialog

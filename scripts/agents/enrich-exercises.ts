@@ -39,9 +39,7 @@ const db = drizzle(sql, { schema });
 // Inicialização AI
 const genAI = new GoogleGenerativeAI(GOOGLE_AI_KEY);
 const model = genAI.getGenerativeModel({ 
-  model: "gemini-1.5-pro",
-  // O Gemini 1.5 Pro suporta ferramentas de busca se configurado, 
-  // mas aqui usaremos um prompt otimizado para que ele use seu conhecimento interno e pesquisa se disponível via API.
+  model: "gemini-2.5-flash",
 });
 
 async function enrichExercise(exercise: any) {
@@ -75,7 +73,19 @@ async function enrichExercise(exercise: any) {
     const text = response.text();
     
     // Limpar markdown do JSON se houver
-    const jsonStr = text.replace(/```json/g, '').replace(/```/g, '').trim();
+    let jsonStr = text.trim();
+    if (jsonStr.includes('```')) {
+      jsonStr = jsonStr.split('```')[1];
+      if (jsonStr.startsWith('json')) jsonStr = jsonStr.substring(4);
+    }
+    
+    // Garantir que pegamos apenas o objeto JSON entre as chaves
+    const start = jsonStr.indexOf('{');
+    const end = jsonStr.lastIndexOf('}');
+    if (start !== -1 && end !== -1) {
+      jsonStr = jsonStr.substring(start, end + 1);
+    }
+
     const data = JSON.parse(jsonStr);
 
     console.log(`✅ Dados obtidos com sucesso para ${exercise.name}`);
@@ -109,14 +119,15 @@ async function enrichExercise(exercise: any) {
 async function main() {
   console.log('🚀 Iniciando Agente de Enriquecimento de Exercícios...');
 
-  // Buscar exercícios que precisam de preenchimento (ex: sem instruções ou sem músculos)
+  // Buscar exercícios que precisam de preenchimento
   const pendingExercises = await db.query.exercises.findMany({
-    where: or(
-      isNull(exercises.instructions),
-      isNull(exercises.musclesPrimary),
-      isNull(exercises.alternativeEquipment)
+    where: (table, { or, isNull, sql }) => or(
+      isNull(table.instructions),
+      isNull(table.musclesPrimary),
+      sql`cardinality(${table.alternativeEquipment}) = 0`,
+      sql`${table.description} = ''`
     ),
-    limit: 50 // Processar em lotes para evitar timeouts
+    limit: 100
   });
 
   console.log(`📦 Encontrados ${pendingExercises.length} exercícios para enriquecer.`);
