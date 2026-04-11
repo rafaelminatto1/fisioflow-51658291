@@ -1,5 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
+import { wikiApi } from "@/api/v2/knowledge";
 
 export interface DictionaryTerm {
 	id: string;
@@ -23,26 +24,17 @@ export function useDictionary(q?: string, category?: string) {
 	const { data: terms = [], isLoading, error } = useQuery<DictionaryTerm[]>({
 		queryKey: ["dictionary", q, category],
 		queryFn: async () => {
-			const searchParams = new URLSearchParams();
-			if (q) searchParams.append("q", q);
-			if (category) searchParams.append("category", category);
-			
-			const res = await fetch(`/api/wiki/dictionary?${searchParams.toString()}`);
-			if (!res.ok) throw new Error("Erro ao buscar dicionário");
-			const json = await res.json();
-			return json.data;
+			const result = await wikiApi.listDictionary({
+				q,
+				category,
+			});
+			return result.data as DictionaryTerm[];
 		},
 	});
 
 	const createMutation = useMutation({
 		mutationFn: async (newTerm: Partial<DictionaryTerm>) => {
-			const res = await fetch("/api/wiki/dictionary", {
-				method: "POST",
-				headers: { "Content-Type": "application/json" },
-				body: JSON.stringify(newTerm),
-			});
-			if (!res.ok) throw new Error("Erro ao criar termo");
-			return res.json();
+			return wikiApi.createDictionaryTerm(newTerm as Record<string, unknown>);
 		},
 		onSuccess: () => {
 			queryClient.invalidateQueries({ queryKey: ["dictionary"] });
@@ -55,13 +47,10 @@ export function useDictionary(q?: string, category?: string) {
 
 	const updateMutation = useMutation({
 		mutationFn: async ({ id, ...data }: Partial<DictionaryTerm> & { id: string }) => {
-			const res = await fetch(`/api/wiki/dictionary/${id}`, {
-				method: "PUT",
-				headers: { "Content-Type": "application/json" },
-				body: JSON.stringify(data),
-			});
-			if (!res.ok) throw new Error("Erro ao atualizar termo");
-			return res.json();
+			return wikiApi.updateDictionaryTerm(
+				id,
+				data as Record<string, unknown>,
+			);
 		},
 		onSuccess: () => {
 			queryClient.invalidateQueries({ queryKey: ["dictionary"] });
@@ -74,11 +63,7 @@ export function useDictionary(q?: string, category?: string) {
 
 	const deleteMutation = useMutation({
 		mutationFn: async (id: string) => {
-			const res = await fetch(`/api/wiki/dictionary/${id}`, {
-				method: "DELETE",
-			});
-			if (!res.ok) throw new Error("Erro ao excluir termo");
-			return res.json();
+			return wikiApi.deleteDictionaryTerm(id);
 		},
 		onSuccess: () => {
 			queryClient.invalidateQueries({ queryKey: ["dictionary"] });

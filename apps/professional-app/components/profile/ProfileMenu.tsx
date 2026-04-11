@@ -50,7 +50,9 @@ export function ProfileMenuItem({
 	const colors = useColors();
 
 	return (
-		<View
+		<TouchableOpacity
+			onPress={onPress}
+			activeOpacity={0.7}
 			style={[
 				styles.menuItem,
 				{
@@ -95,7 +97,7 @@ export function ProfileMenuItem({
 			{chevron && (
 				<Ionicons name="chevron-forward" size={20} color={colors.textMuted} />
 			)}
-		</View>
+		</TouchableOpacity>
 	);
 }
 

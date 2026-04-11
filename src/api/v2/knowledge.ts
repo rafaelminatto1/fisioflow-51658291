@@ -254,4 +254,37 @@ export const wikiApi = {
 		request<{ ok: boolean }>(`/api/wiki/comments/${commentId}/resolve`, {
 			method: "PATCH",
 		}),
+
+	listDictionary: (params?: { q?: string; category?: string }) => {
+		const qs = new URLSearchParams(
+			Object.fromEntries(
+				Object.entries(params ?? {})
+					.filter(([, v]) => v != null && v !== "")
+					.map(([k, v]) => [k, String(v)]),
+			),
+		).toString();
+		return request<{ data: unknown[] }>(
+			`/api/wiki/dictionary${qs ? `?${qs}` : ""}`,
+		);
+	},
+
+	createDictionaryTerm: (data: Record<string, unknown>) =>
+		request<{ data: unknown }>("/api/wiki/dictionary", {
+			method: "POST",
+			body: JSON.stringify(data),
+		}),
+
+	updateDictionaryTerm: (id: string, data: Record<string, unknown>) =>
+		request<{ data: unknown }>(
+			`/api/wiki/dictionary/${encodeURIComponent(id)}`,
+			{
+				method: "PUT",
+				body: JSON.stringify(data),
+			},
+		),
+
+	deleteDictionaryTerm: (id: string) =>
+		request<{ ok: boolean }>(`/api/wiki/dictionary/${encodeURIComponent(id)}`, {
+			method: "DELETE",
+		}),
 };
