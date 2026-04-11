@@ -42,6 +42,7 @@ import {
 } from "@/contexts/RichTextContext";
 import { RichTextToolbar } from "@/components/ui/RichTextToolbar";
 import { RichTextEditor } from "@/components/ui/RichTextEditor";
+import { ImageEditDialog } from "@/components/ui/rich-text/ImageEditDialog";
 import { uploadFile } from "@/lib/storage/upload";
 import type { Exercise } from "./ExerciseQuickAdd";
 import type { EvolutionV2Data } from "../v2-improved/types";
@@ -148,6 +149,7 @@ const NotionEvolutionPanel: React.FC<NotionEvolutionPanelProps> = ({
 	const resolvedAutoSaveEnabled = autoSaveEnabled ?? true;
 	const attachmentInputRef = useRef<HTMLInputElement | null>(null);
 	const scanInputRef = useRef<HTMLInputElement | null>(null);
+	const [quickImageFile, setQuickImageFile] = useState<File | null>(null);
 	const richTextCtx = useRichTextContext();
 	const activeEditor = richTextCtx?.activeEditor ?? null;
 
@@ -388,6 +390,11 @@ const NotionEvolutionPanel: React.FC<NotionEvolutionPanelProps> = ({
 		}
 
 		const isImage = file.type.startsWith("image/");
+		if (isImage && !activeEditor) {
+			toast.error("Clique no ponto do editor onde deseja inserir a imagem.");
+			return;
+		}
+
 		const folder = isImage
 			? `patients/${patientId}/evolutions/${safeEvolutionId}`
 			: `patients/${patientId}/documents/${safeEvolutionId}`;
@@ -397,7 +404,16 @@ const NotionEvolutionPanel: React.FC<NotionEvolutionPanelProps> = ({
 				folder,
 			});
 			if (isImage) {
-				activeEditor?.chain().focus().setImage({ src: result.url }).run();
+				activeEditor
+					?.chain()
+					.focus()
+					.setImage({
+						src: result.url,
+						alt: file.name,
+						width: "100%",
+						align: "center",
+					} as any)
+					.run();
 			} else {
 				const linkHtml = `<p><a href="${result.url}" target="_blank" rel="noopener noreferrer">Anexo: ${file.name}</a></p>`;
 				activeEditor?.chain().focus().insertContent(linkHtml).run();
@@ -527,8 +543,19 @@ const NotionEvolutionPanel: React.FC<NotionEvolutionPanelProps> = ({
 						className="hidden"
 						onChange={(e) => {
 							const file = e.currentTarget.files?.[0];
-							if (file) handleQuickUpload(file, "scan");
+							if (file) setQuickImageFile(file);
 							e.currentTarget.value = "";
+						}}
+					/>
+					<ImageEditDialog
+						open={!!quickImageFile}
+						sourceFile={quickImageFile}
+						fileName={quickImageFile?.name}
+						title="Cortar e marcar imagem"
+						onClose={() => setQuickImageFile(null)}
+						onSaveImage={async (editedFile) => {
+							await handleQuickUpload(editedFile, "scan");
+							setQuickImageFile(null);
 						}}
 					/>
 					<Button

@@ -41,8 +41,8 @@ const menuGroups = [
 	{
 		label: "Atendimento",
 		items: [
-			{ icon: Calendar, label: "Agenda de Hoje", href: "/agenda" },
-			{ icon: Users, label: "Meus Pacientes", href: "/patients" },
+			{ icon: Calendar, label: "AGENDA", href: "/agenda" },
+			{ icon: Users, label: "Pacientes", href: "/patients" },
 		],
 	},
 	{

@@ -17,7 +17,6 @@ import { TextAlign } from "@tiptap/extension-text-align";
 import { Highlight } from "@tiptap/extension-highlight";
 import { TaskList } from "@tiptap/extension-task-list";
 import { CustomTaskItem } from "./CustomTaskItem";
-import { Image } from "@tiptap/extension-image";
 import { Link } from "@tiptap/extension-link";
 import { Table } from "@tiptap/extension-table";
 import { TableRow } from "@tiptap/extension-table-row";
@@ -67,7 +66,10 @@ import {
 } from "@/components/ui/command";
 import { Button } from "@/components/ui/button";
 import { withImageParams } from "@/lib/storageProxy";
+import { uploadFile, STORAGE_FOLDERS } from "@/lib/storage/upload";
 import { toast } from "sonner";
+import { ImageEditDialog } from "@/components/ui/rich-text/ImageEditDialog";
+import { ResizableImage } from "@/components/ui/rich-text/ResizableImageExtension";
 import "./rich-text-editor.css";
 
 const lowlight = createLowlight(common);
@@ -139,6 +141,12 @@ export const RichTextEditor: React.FC<RichTextEditorProps> = ({
 	const [libraryOpen, setLibraryOpen] = useState(false);
 	const [librarySearch, setLibrarySearch] = useState("");
 	const [testsOpen, setTestsOpen] = useState(false);
+	const [editingExistingImage, setEditingExistingImage] = useState<{
+		src: string;
+		alt?: string;
+		title?: string;
+		updateAttributes: (attrs: Record<string, unknown>) => void;
+	} | null>(null);
 
 	const handleInput = useCallback(() => {
 		setIsTyping(true);
@@ -177,7 +185,7 @@ export const RichTextEditor: React.FC<RichTextEditorProps> = ({
 				openOnClick: false,
 				HTMLAttributes: { class: "text-primary underline cursor-pointer" },
 			}),
-			Image.configure({
+			ResizableImage.configure({
 				allowBase64: true,
 				HTMLAttributes: {
 					class: "rounded-lg max-w-full h-auto my-4 mx-auto block",
@@ -357,6 +365,53 @@ export const RichTextEditor: React.FC<RichTextEditorProps> = ({
 		if (editor) editor.setEditable(!disabled);
 	}, [disabled, editor]);
 
+	useEffect(() => {
+		const handleEditExistingImage = (event: Event) => {
+			const detail = (event as CustomEvent).detail;
+			if (!detail?.src || typeof detail.updateAttributes !== "function") return;
+			setEditingExistingImage({
+				src: detail.src,
+				alt: detail.alt,
+				title: detail.title,
+				updateAttributes: detail.updateAttributes,
+			});
+		};
+
+		window.addEventListener(
+			"rich-text-edit-existing-image",
+			handleEditExistingImage,
+		);
+
+		return () => {
+			window.removeEventListener(
+				"rich-text-edit-existing-image",
+				handleEditExistingImage,
+			);
+		};
+	}, []);
+
+	const handleSaveEditedExistingImage = async (file: File) => {
+		if (!editingExistingImage) return;
+		const toastId = toast.loading("Atualizando imagem...");
+
+		try {
+			const result = await uploadFile(file, {
+				folder: imageUploadFolder || STORAGE_FOLDERS.IMAGES,
+			});
+
+			editingExistingImage.updateAttributes({
+				src: result.url,
+				alt: file.name,
+				title: editingExistingImage.title,
+			});
+			toast.success("Imagem atualizada.", { id: toastId });
+			setEditingExistingImage(null);
+		} catch (error) {
+			console.error("Image update error:", error);
+			toast.error("Erro ao atualizar imagem.", { id: toastId });
+		}
+	};
+
 	const filteredExercises = useMemo(() => {
 		if (!librarySearch) return exercises.slice(0, 10);
 		const q = librarySearch.toLowerCase();
@@ -423,6 +478,14 @@ export const RichTextEditor: React.FC<RichTextEditorProps> = ({
 			}
 		>
 			<EditorContent editor={editor} onInput={handleInput} />
+			<ImageEditDialog
+				open={!!editingExistingImage}
+				sourceUrl={editingExistingImage?.src}
+				fileName={editingExistingImage?.alt || "imagem"}
+				title="Editar imagem da evolução"
+				onClose={() => setEditingExistingImage(null)}
+				onSaveImage={handleSaveEditedExistingImage}
+			/>
 
 			{/* ── Exercise Library Dialog ── */}
 			<Dialog open={libraryOpen} onOpenChange={setLibraryOpen}>
