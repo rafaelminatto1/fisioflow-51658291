@@ -136,24 +136,29 @@ export async function fetchConversations(
 		params.assignedTo = "me";
 		delete params.status;
 	}
-	const result = await fetchApi<ConversationsResponse | WaConversation[]>(
+	const result = await fetchApi<any>(
 		`${BASE}/conversations`,
 		{ params },
 	);
+
+	// The API returns { data: ConversationsResponse | WaConversation[] }
+	const data = result.data || result;
+
 	// Handle both paginated and array responses
-	if (Array.isArray(result)) {
-		return { data: result, pagination: { page: 1, limit: 50, total: result.length, totalPages: 1 } };
+	if (Array.isArray(data)) {
+		return { data, pagination: { page: 1, limit: 50, total: data.length, totalPages: 1 } };
 	}
-	return result as ConversationsResponse;
+	return data as ConversationsResponse;
 }
 
 export async function fetchConversationDetail(
 	id: string,
 ): Promise<WaConversationDetailResponse> {
-	return fetchApi<WaConversationDetailResponse>(
+	const response = await fetchApi<{ data: WaConversationDetailResponse }>(
 		`${BASE}/conversations/${id}`,
 		{ params: { includeMessages: "true", messageLimit: 100 } },
 	);
+	return response.data;
 }
 
 export async function fetchContacts(search?: string): Promise<WaContact[]> {
@@ -177,49 +182,53 @@ export async function resolveContact(
 }
 
 export async function openConversation(contactId: string): Promise<WaConversation> {
-	return fetchApi<WaConversation>(`${BASE}/conversations`, {
+	const response = await fetchApi<{ data: WaConversation }>(`${BASE}/conversations`, {
 		method: "POST",
 		data: { contactId },
 	});
+	return response.data;
 }
 
 export async function sendMessage(
 	conversationId: string,
 	content: string,
 ): Promise<WaMessage> {
-	return fetchApi<WaMessage>(
+	const response = await fetchApi<{ data: WaMessage }>(
 		`${BASE}/conversations/${conversationId}/messages`,
 		{
 			method: "POST",
 			data: { content, type: "text" },
 		},
 	);
+	return response.data;
 }
 
 export async function addNote(
 	conversationId: string,
 	content: string,
 ): Promise<WaMessage> {
-	return fetchApi<WaMessage>(
+	const response = await fetchApi<{ data: WaMessage }>(
 		`${BASE}/conversations/${conversationId}/notes`,
 		{
 			method: "POST",
 			data: { content },
 		},
 	);
+	return response.data;
 }
 
 export async function updateConversationStatus(
 	conversationId: string,
 	status: string,
 ): Promise<WaConversation> {
-	return fetchApi<WaConversation>(
+	const response = await fetchApi<{ data: WaConversation }>(
 		`${BASE}/conversations/${conversationId}/status`,
 		{
 			method: "PUT",
 			data: { status },
 		},
 	);
+	return response.data;
 }
 
 export async function assignConversation(
@@ -228,13 +237,14 @@ export async function assignConversation(
 	team?: string,
 	reason?: string,
 ): Promise<WaConversation> {
-	return fetchApi<WaConversation>(
+	const response = await fetchApi<{ data: WaConversation }>(
 		`${BASE}/conversations/${conversationId}/assign`,
 		{
 			method: "POST",
 			data: { assignedTo, team, reason },
 		},
 	);
+	return response.data;
 }
 
 export async function fetchQuickReplies(): Promise<WaQuickReply[]> {
