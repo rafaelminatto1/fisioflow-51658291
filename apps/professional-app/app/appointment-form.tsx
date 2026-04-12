@@ -594,28 +594,26 @@ export default function AppointmentFormScreen() {
                 />
               </View>
 
-              {!watch('isUnlimited') && (
-                <View style={{ marginTop: 12 }}>
-                  <Text style={[styles.label, { color: colors.textSecondary }]}>Nomes dos Participantes</Text>
-                  <Controller
-                    control={control}
-                    name="additionalNames"
-                    render={({ field: { value, onChange } }) => (
-                      <Input
-                        placeholder="Ex: João Silva, Maria Oliveira..."
-                        value={value}
-                        onChangeText={onChange}
-                        multiline
-                        numberOfLines={2}
-                        style={{ minHeight: 60 }}
-                      />
-                    )}
-                  />
-                  <Text style={[styles.groupDesc, { color: colors.textSecondary, marginTop: 4 }]}>
-                    Separe os nomes por vírgula
-                  </Text>
-                </View>
-              )}
+              <View style={{ marginTop: 12 }}>
+                <Text style={[styles.label, { color: colors.textSecondary }]}>Nomes dos Participantes</Text>
+                <Controller
+                  control={control}
+                  name="additionalNames"
+                  render={({ field: { value, onChange } }) => (
+                    <Input
+                      placeholder="Ex: João Silva, Maria Oliveira..."
+                      value={value}
+                      onChangeText={onChange}
+                      multiline
+                      numberOfLines={2}
+                      style={{ minHeight: 60 }}
+                    />
+                  )}
+                />
+                <Text style={[styles.groupDesc, { color: colors.textSecondary, marginTop: 4 }]}>
+                  Separe os nomes por vírgula
+                </Text>
+              </View>
             </View>
           )}
         </View>
