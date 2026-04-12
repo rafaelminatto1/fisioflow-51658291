@@ -37,6 +37,7 @@ import {
 	FornecedorFormData,
 } from "@/hooks/useFornecedores";
 import { useForm } from "react-hook-form";
+import { accentIncludes } from "@/lib/utils/bilingualSearch";
 
 const categorias = [
 	"Materiais",
@@ -84,8 +85,8 @@ export function FornecedoresContent() {
 	const filteredFornecedores =
 		fornecedores?.filter(
 			(f) =>
-				f.razao_social.toLowerCase().includes(searchQuery.toLowerCase()) ||
-				f.nome_fantasia?.toLowerCase().includes(searchQuery.toLowerCase()),
+				accentIncludes(f.razao_social, searchQuery) ||
+				accentIncludes(f.nome_fantasia || "", searchQuery),
 		) || [];
 
 	const openCreateModal = () => {
