@@ -43,12 +43,14 @@ const MAPPING_RULES = [
 ];
 
 async function enrich() {
-  console.log('--- Starting Clinical Data Enrichment ---');
+  const isDryRun = process.argv.includes('--dry-run');
+  console.log(`--- Starting Clinical Data Enrichment ${isDryRun ? '(DRY RUN)' : ''} ---`);
   
-    const exercises = await sql`SELECT id, name, slug FROM exercises WHERE category_id IS NULL`;
-  console.log(`Found ${exercises.length} exercises missing categories.`);
+  const exercises = await sql`SELECT id, name, slug, category_id FROM exercises`;
+  console.log(`Analyzing ${exercises.length} exercises.`);
 
   let updatedCount = 0;
+  let preservedCount = 0;
   let skippedCount = 0;
 
   for (const exercise of exercises) {
@@ -56,30 +58,39 @@ async function enrich() {
     const slugLower = exercise.slug.toLowerCase();
     const combined = `${nameLower} ${slugLower}`;
 
-    let categoryId = null;
+    let clinicalCategoryId = null;
 
     // Apply rules in order of specificity
     for (const rule of MAPPING_RULES) {
       if (rule.keywords.some(k => combined.includes(k))) {
-        categoryId = rule.category;
+        clinicalCategoryId = rule.category;
         break;
       }
     }
 
-    if (categoryId) {
-      await sql`UPDATE exercises SET category_id = ${categoryId}, updated_at = NOW() WHERE id = ${exercise.id}`;
-      console.log(`[UPDATED] ${exercise.name} -> ${categoryId}`);
+    if (clinicalCategoryId && clinicalCategoryId !== exercise.category_id) {
+      if (!isDryRun) {
+        await sql`UPDATE exercises SET category_id = ${clinicalCategoryId}, updated_at = NOW() WHERE id = ${exercise.id}`;
+      }
+      console.log(`[CLINICAL] ${exercise.name}: ${exercise.category_id} -> ${clinicalCategoryId}`);
       updatedCount++;
-    } else {
-      console.log(`[SKIPPED] ${exercise.name} (No matching rule)`);
+    } else if (clinicalCategoryId === exercise.category_id) {
+      // Already matches or already clinical
       skippedCount++;
+    } else {
+      // console.log(`[PRESERVED] ${exercise.name} (Body part category kept)`);
+      preservedCount++;
     }
   }
 
   console.log('--- Summary ---');
-  console.log(`Total Updated: ${updatedCount}`);
-  console.log(`Total Skipped: ${skippedCount}`);
+  console.log(`Total Recategorized to Clinical: ${updatedCount}`);
+  console.log(`Total Preserved (Body Part): ${preservedCount}`);
+  console.log(`Total Already Correct/Skipped: ${skippedCount}`);
   console.log('----------------');
+  if (isDryRun) {
+    console.log('NOTE: This was a dry run. No changes were made to the database.');
+  }
 }
 
 enrich().catch(err => {
