@@ -29,6 +29,7 @@ import {
 import { CommandList } from "./CommandList";
 import { withImageParams } from "@/lib/storageProxy";
 import { cn } from "@/lib/utils";
+import { accentIncludes } from "@/lib/utils/bilingualSearch";
 
 // ── Suggestion Logic ──────────────────────────────────
 
@@ -89,7 +90,6 @@ export const getSuggestionItems = ({
 	exercises?: any[];
 	options?: SuggestionRuntimeOptions;
 }) => {
-	
 	const items: SlashSuggestionItem[] = [
 		// ── Formatação ──
 		{
@@ -365,12 +365,11 @@ export const getSuggestionItems = ({
 
 	if (!query) return items;
 
-	const q = query.toLowerCase();
 	return items.filter(
 		(item) =>
-			item.title.toLowerCase().includes(q) ||
-			item.description.toLowerCase().includes(q) ||
-			item.keywords?.some((k) => k.toLowerCase().includes(q)),
+			accentIncludes(item.title, query) ||
+			accentIncludes(item.description, query) ||
+			item.keywords?.some((k) => accentIncludes(k, query)),
 	);
 };
 
@@ -382,9 +381,8 @@ export const getExerciseSuggestionItems = ({
 	exercises: any[];
 }) => {
 	if (!query || query.length < 2) return [];
-	const q = query.toLowerCase();
 	return exercises
-		.filter((ex) => ex.name.toLowerCase().includes(q))
+		.filter((ex) => accentIncludes(ex.name, query))
 		.slice(0, 8)
 		.map((ex) => ({
 			title: ex.name,
