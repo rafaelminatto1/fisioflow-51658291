@@ -10,6 +10,7 @@ import { motion } from "framer-motion";
 import GamificationHeader from "@/components/gamification/GamificationHeader";
 import AchievementModal from "@/components/gamification/AchievementModal";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { accentIncludes } from "@/lib/utils/bilingualSearch";
 
 const container = {
 	hidden: { opacity: 0 },
@@ -58,8 +59,8 @@ export default function GamificationAchievementsPage() {
 		// Search filter
 		if (
 			search &&
-			!achievement.title.toLowerCase().includes(search.toLowerCase()) &&
-			!achievement.description.toLowerCase().includes(search.toLowerCase())
+			!accentIncludes(achievement.title, search) &&
+			!accentIncludes(achievement.description, search)
 		) {
 			return false;
 		}

@@ -119,7 +119,7 @@ export function useWhatsAppConversation(id: string | null) {
 	const sendMessage = useCallback(
 		async (
 			content: string,
-			options?: { type?: string; attachmentUrl?: string },
+			options?: { type?: string; attachmentUrl?: string; templateName?: string; templateLanguage?: string },
 		) => {
 			if (!id) return;
 			const context = {

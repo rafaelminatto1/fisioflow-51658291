@@ -82,6 +82,7 @@ import { useTarefas, useDeleteTarefa } from "@/hooks/useTarefas";
 import { useTeamMembers } from "@/hooks/useTeamMembers";
 import { useAuth } from "@/contexts/AuthContext";
 import { safeFormat } from "@/lib/utils";
+import { accentIncludes } from "@/lib/utils/bilingualSearch";
 // Recharts imports removed - moved to TaskInsights
 
 const TaskInsights = lazy(() => import("@/components/tarefas/v2/TaskInsights"));
@@ -227,12 +228,11 @@ export default function TarefasV2() {
 
 		// Filter by search term
 		if (searchTerm) {
-			const search = searchTerm.toLowerCase();
 			result = result.filter(
 				(t) =>
-					t.titulo.toLowerCase().includes(search) ||
-					(t.descricao && t.descricao.toLowerCase().includes(search)) ||
-					(t.tags && t.tags.some((tag) => tag.toLowerCase().includes(search))),
+					accentIncludes(t.titulo, searchTerm) ||
+					(t.descricao && accentIncludes(t.descricao, searchTerm)) ||
+					(t.tags && t.tags.some((tag) => accentIncludes(tag, searchTerm))),
 			);
 		}
 
