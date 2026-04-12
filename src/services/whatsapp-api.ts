@@ -482,14 +482,14 @@ export async function deleteAutomationRule(id: string) {
 
 export async function fetchTemplates() {
 	const res = await request<{ data: Template[] } | Template[]>(
-		`${BASE}/templates`,
+		"/api/whatsapp/templates",
 	);
 	return Array.isArray(res) ? res : ((res as any).data ?? res);
 }
 
 export async function syncTemplatesWithMeta() {
 	const res = await request<{ data: { synced: number } } | { synced: number }>(
-		`${BASE}/templates/sync`,
+		"/api/whatsapp/templates/sync",
 		{
 			method: "POST",
 		},
@@ -499,7 +499,7 @@ export async function syncTemplatesWithMeta() {
 
 export async function updateTemplate(id: string, data: Partial<Template>) {
 	const res = await request<{ data: Template } | Template>(
-		`${BASE}/templates/${id}`,
+		`/api/whatsapp/templates/${id}`,
 		{
 			method: "PUT",
 			body: JSON.stringify(data),
@@ -517,7 +517,7 @@ export async function createTemplate(data: {
 	footer?: string;
 	buttons?: Array<{ type: string; text: string; url?: string }>;
 }) {
-	const res = await request<{ data: unknown }>(`${BASE}/templates`, {
+	const res = await request<{ data: unknown }>("/api/whatsapp/templates", {
 		method: "POST",
 		body: JSON.stringify(data),
 	});
