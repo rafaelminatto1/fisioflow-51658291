@@ -38,7 +38,7 @@ import {
 	TooltipProvider,
 	TooltipTrigger,
 } from "@/components/ui/tooltip";
-import { EmptyState } from "@/components/ui/EmptyState";
+import { PatientCombobox } from "@/components/ui/patient-combobox";
 import {
 	Dumbbell,
 	AlertCircle,
@@ -49,7 +49,6 @@ import {
 	Loader2,
 	Copy,
 	BookOpen,
-	Users,
 	Calendar,
 	Zap,
 	MessageSquare,
@@ -70,7 +69,7 @@ import {
 } from "@/services/ai/geminiAiService";
 
 const NO_PATIENT_ERROR_MSG =
-	"Abra a IA Assistente no perfil de um paciente para recomendações personalizadas.";
+	"Selecione um paciente para liberar recomendações personalizadas.";
 
 // ============================================================================
 // TYPES
@@ -112,6 +111,14 @@ export interface ExerciseAIProps {
 	onExerciseSelect?: (exerciseIds: string[]) => void;
 	/** Optional callback when chat export is generated */
 	onChatExport?: (content: string) => void;
+	/** Patient list used by the Exercises page autocomplete */
+	patientOptions?: Patient[];
+	/** Controlled selected patient ID for the autocomplete */
+	selectedPatientId?: string;
+	/** Controlled patient change handler for the autocomplete */
+	onPatientChange?: (patientId: string) => void;
+	/** Loading state for patient options */
+	isLoadingPatients?: boolean;
 }
 
 interface ExerciseRecommendation {
@@ -161,6 +168,10 @@ export function ExerciseAI({
 	_exerciseLibrary = [],
 	onExerciseSelect,
 	onChatExport,
+	patientOptions = [],
+	selectedPatientId,
+	onPatientChange,
+	isLoadingPatients = false,
 }: ExerciseAIProps) {
 	const navigate = useNavigate();
 	const patientName = useMemo(
@@ -169,6 +180,9 @@ export function ExerciseAI({
 	);
 	const patientId = patient?.id;
 	const hasPatient = Boolean(patientId);
+	const canSelectPatient = typeof onPatientChange === "function";
+	const selectedPatientValue = selectedPatientId ?? patientId ?? "";
+	const isChatLocked = !hasPatient;
 	const chatStorageKey = useMemo(
 		() => `exercise-ai-chat:${patientId ?? "sem-paciente"}`,
 		[patientId],
@@ -413,7 +427,7 @@ export function ExerciseAI({
 			role: "assistant",
 			text: hasPatient
 				? `Olá! Posso montar um plano para ${patientName}. Fase ${treatmentPhase}, sessão ${sessionCount}. Descreva dor, objetivo e limitações para começarmos.`
-				: "Abra um paciente para recomendações personalizadas. Posso ajudar com plano rápido, progressão e precauções.",
+				: "Selecione um paciente para liberar recomendações personalizadas, plano rápido, progressão e precauções.",
 		};
 	}, [hasPatient, patientName, treatmentPhase, sessionCount]);
 
@@ -432,6 +446,16 @@ export function ExerciseAI({
 		const text = chatInput.trim();
 		if (!text) return;
 
+		if (!hasPatient) {
+			toast({
+				title: "Selecione um paciente",
+				description:
+					"O chat clínico precisa de um paciente para usar contexto e histórico.",
+				variant: "destructive",
+			});
+			return;
+		}
+
 		setChatMessages((prev) => [
 			...prev,
 			{
@@ -443,13 +467,6 @@ export function ExerciseAI({
 		setChatInput("");
 
 		const normalized = text.toLowerCase();
-		if (!hasPatient) {
-			pushAssistantMessage(
-				"Sem paciente selecionado. Abra a lista de pacientes para liberar recomendações personalizadas.",
-			);
-			return;
-		}
-
 		if (
 			normalized.includes("contexto") ||
 			normalized.includes("resumo") ||
@@ -752,37 +769,56 @@ ${finalResult.redFlags.map((r) => `- ${r}`).join("\n")}
 				</div>
 
 				<TabsContent value="suggestions" className="space-y-6">
-					{!hasPatient && (
-						<Card className="border-2 border-dashed border-muted">
-							<CardContent className="p-6">
-								<EmptyState
-									icon={Users}
-									title="Assistente Clínico de Exercícios"
-									description="Para personalizar recomendações, abra o perfil de um paciente e use a IA Assistente."
-									actionLabel="Ver Pacientes"
-									onAction={() => navigate("/patients")}
-								/>
-							</CardContent>
-						</Card>
-					)}
-
 					<div className="grid grid-cols-1 xl:grid-cols-12 gap-6">
 						<Card className="xl:col-span-8 border border-blue-100 bg-gradient-to-b from-blue-50/40 to-white">
 							<CardHeader className="pb-3">
-								<div className="flex items-center gap-3">
-									<div className="p-2.5 rounded-xl bg-blue-600 text-white shadow-sm">
-										<MessageSquare className="h-5 w-5" />
+								<div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
+									<div className="flex min-w-0 items-center gap-3">
+										<div className="p-2.5 rounded-xl bg-blue-600 text-white shadow-sm">
+											<MessageSquare className="h-5 w-5" />
+										</div>
+										<div className="min-w-0">
+											<CardTitle className="text-xl">
+												Chat de Prescrição Assistida
+											</CardTitle>
+											<CardDescription>
+												{hasPatient
+													? `Converse com a IA para montar exercícios para ${patientName}.`
+													: "Selecione um paciente para conversar com a IA."}
+											</CardDescription>
+										</div>
 									</div>
-									<div className="min-w-0">
-										<CardTitle className="text-xl">
-											Chat de Prescrição Assistida
-										</CardTitle>
-										<CardDescription>
-											{hasPatient
-												? `Converse com a IA para montar exercícios para ${patientName}.`
-												: "Sem paciente ativo. Você pode explorar o fluxo e abrir pacientes quando quiser."}
-										</CardDescription>
-									</div>
+
+									{canSelectPatient && (
+										<div className="w-full lg:max-w-md">
+											<div className="mb-2 flex items-center justify-between gap-2">
+												<span className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+													Paciente do chat
+												</span>
+												{!hasPatient && (
+													<Badge
+														variant="outline"
+														className="border-amber-300 text-amber-700"
+													>
+														Obrigatório
+													</Badge>
+												)}
+											</div>
+											<PatientCombobox
+												patients={patientOptions}
+												value={selectedPatientValue}
+												onValueChange={(value) => onPatientChange?.(value)}
+												disabled={isLoadingPatients || loading}
+												className="min-h-[52px]"
+											/>
+											{!hasPatient && (
+												<p className="mt-2 text-xs text-muted-foreground">
+													O envio e as ações clínicas ficam bloqueados até
+													selecionar um paciente.
+												</p>
+											)}
+										</div>
+									)}
 								</div>
 							</CardHeader>
 							<CardContent className="space-y-4">
@@ -790,6 +826,7 @@ ${finalResult.redFlags.map((r) => `- ${r}`).join("\n")}
 									<Button
 										size="sm"
 										variant="outline"
+										disabled={isChatLocked || loading}
 										onClick={() =>
 											setChatInput(
 												"Gerar plano inicial para dor lombar com foco em mobilidade e controle motor.",
@@ -801,6 +838,7 @@ ${finalResult.redFlags.map((r) => `- ${r}`).join("\n")}
 									<Button
 										size="sm"
 										variant="outline"
+										disabled={isChatLocked || loading}
 										onClick={() =>
 											setChatInput(
 												"Sugerir progressão para fortalecimento de joelho em fase intermediária.",
@@ -812,6 +850,7 @@ ${finalResult.redFlags.map((r) => `- ${r}`).join("\n")}
 									<Button
 										size="sm"
 										variant="outline"
+										disabled={isChatLocked || loading}
 										onClick={() =>
 											setChatInput(
 												"Quais precauções devo priorizar para ombro doloroso?",
@@ -823,12 +862,18 @@ ${finalResult.redFlags.map((r) => `- ${r}`).join("\n")}
 									<Button
 										size="sm"
 										variant="ghost"
+										disabled={isChatLocked || chatMessages.length === 0}
 										onClick={exportChatToProntuario}
 									>
 										<Download className="h-4 w-4 mr-1" />
 										Exportar chat
 									</Button>
-									<Button size="sm" variant="ghost" onClick={clearConversation}>
+									<Button
+										size="sm"
+										variant="ghost"
+										disabled={isChatLocked}
+										onClick={clearConversation}
+									>
 										<Trash2 className="h-4 w-4 mr-1" />
 										Limpar conversa
 									</Button>
@@ -886,12 +931,17 @@ ${finalResult.redFlags.map((r) => `- ${r}`).join("\n")}
 												void sendChatMessage();
 											}
 										}}
-										placeholder="Ex: gerar plano para lombalgia com dor 7/10"
+										placeholder={
+											isChatLocked
+												? "Selecione um paciente para conversar com a IA"
+												: "Ex: gerar plano para lombalgia com dor 7/10"
+										}
+										disabled={loading || isChatLocked}
 										className="flex-1 h-11 rounded-lg border bg-background px-3 text-sm outline-none ring-offset-background focus:ring-2 focus:ring-blue-500"
 									/>
 									<Button
 										onClick={() => void sendChatMessage()}
-										disabled={loading}
+										disabled={loading || isChatLocked || !chatInput.trim()}
 										className="h-11 px-4"
 									>
 										<SendHorizontal className="h-4 w-4" />
@@ -957,7 +1007,7 @@ ${finalResult.redFlags.map((r) => `- ${r}`).join("\n")}
 											</TooltipTrigger>
 											<TooltipContent side="top" className="max-w-xs">
 												{!hasPatient
-													? "Abra a IA Assistente no perfil de um paciente para gerar recomendações."
+													? "Selecione um paciente para gerar recomendações."
 													: "Gera exercícios com base no perfil e evolução."}
 											</TooltipContent>
 										</Tooltip>

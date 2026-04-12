@@ -215,7 +215,7 @@ export async function fetchConversation(
 export async function sendMessage(
 	conversationId: string,
 	content: string,
-	options?: { type?: string; attachmentUrl?: string },
+	options?: { type?: string; attachmentUrl?: string; templateName?: string; templateLanguage?: string },
 ) {
 	const res = await request<Message | { data: Message }>(
 		`${BASE}/conversations/${conversationId}/messages`,
@@ -225,6 +225,8 @@ export async function sendMessage(
 				content,
 				messageType: options?.type,
 				attachmentUrl: options?.attachmentUrl,
+				templateName: options?.templateName,
+				templateLanguage: options?.templateLanguage,
 			}),
 		},
 	);

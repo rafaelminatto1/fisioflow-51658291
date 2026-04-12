@@ -25,6 +25,7 @@ import { useToast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
 import { generateMarketingContent } from "@/services/ai/marketingAITemplateService";
 import { integrationsApi, type GoogleBusinessReviewRecord } from "@/api/v2";
+import { accentIncludes } from "@/lib/utils/bilingualSearch";
 
 type GoogleReview = GoogleBusinessReviewRecord;
 
@@ -67,7 +68,7 @@ export function ReviewsContent() {
 					description: "A resposta foi copiada para sua área de transferência.",
 				});
 			}
-		} catch  {
+		} catch {
 			toast({
 				variant: "destructive",
 				title: "Erro na IA",
@@ -125,8 +126,8 @@ export function ReviewsContent() {
 		if (searchTerm) {
 			filtered = filtered.filter(
 				(r) =>
-					r.author.toLowerCase().includes(searchTerm.toLowerCase()) ||
-					r.comment.toLowerCase().includes(searchTerm.toLowerCase()),
+					accentIncludes(r.author, searchTerm) ||
+					accentIncludes(r.comment, searchTerm),
 			);
 		}
 
@@ -160,7 +161,7 @@ export function ReviewsContent() {
 	}, [reviews, searchTerm, filterRating, sortBy]);
 
 	// Pagination
-	
+
 	const paginatedReviews = filteredReviews.slice(
 		(currentPage - 1) * reviewsPerPage,
 		currentPage * reviewsPerPage,
@@ -169,8 +170,6 @@ export function ReviewsContent() {
 	useEffect(() => {
 		setCurrentPage(1);
 	}, [searchTerm, filterRating, sortBy]);
-
-	
 
 	const getRatingColor = (rating: number) => {
 		if (rating >= 4.5)

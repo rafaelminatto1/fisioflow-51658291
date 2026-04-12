@@ -20,7 +20,19 @@ const mappings = [
   { name: "Escalada na Parede (Wall Climber)", category: "Ombro" },
   { name: "Step Down", category: "Joelho" },
   { name: "Pronação e Supinação de Punho", category: "Funcional / AVDs" },
-  { name: "Marcha com Padrões Cruzados", category: "Neurologia" }
+  { name: "Marcha com Padrões Cruzados", category: "Neurologia" },
+  { name: "Avanço Isométrico", category: "Joelho" },
+  { name: "Avanço Reverso com Halteres", category: "Joelho" },
+  { name: "Avanço com Halteres", category: "Joelho" },
+  { name: "Avanço com Salto", category: "Joelho" },
+  { name: "BOSU Ball Squat", category: "Joelho" },
+  { name: "Extensão de joelho em cadeia cinética aberta", category: "Joelho" },
+  { name: "Isometria de Quadríceps (Quad Sets)", category: "Joelho" },
+  { name: "Isometria de Inversão de Tornozelo", category: "Tornozelo / Pé" },
+  { name: "Panturrilha Unilateral", category: "Tornozelo / Pé" },
+  { name: "SLR com Dorsiflexão Automática", category: "Joelho" },
+  { name: "Extensão de Punho", category: "Funcional / AVDs" },
+  { name: "Flexão de Punho", category: "Funcional / AVDs" }
 ];
 
 async function finalizeCategorization() {
@@ -38,7 +50,7 @@ async function finalizeCategorization() {
       const result = await sql`
         UPDATE exercises 
         SET category_id = ${categoryId} 
-        WHERE name = ${m.name} AND category_id IS NULL
+        WHERE name = ${m.name}
       `;
       console.log(`- Atualizado: ${m.name} -> ${m.category}`);
     } else {
