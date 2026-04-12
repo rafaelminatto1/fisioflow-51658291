@@ -15,6 +15,7 @@ import {
 } from "@/components/ui/table";
 import { EmptyState } from "@/components/ui/empty-state";
 import { Skeleton } from "@/components/ui/skeleton";
+import { accentIncludes } from "@/lib/utils/bilingualSearch";
 import {
 	useSatisfactionSurveys,
 	useSurveyStats,
@@ -61,11 +62,10 @@ export default function Surveys() {
 
 	const filteredSurveys = surveys.filter((survey) => {
 		if (!searchTerm) return true;
-		const search = searchTerm.toLowerCase();
 		return (
-			survey.patient?.full_name?.toLowerCase().includes(search) ||
-			survey.therapist?.name?.toLowerCase().includes(search) ||
-			survey.comments?.toLowerCase().includes(search)
+			accentIncludes(survey.patient?.full_name || "", searchTerm) ||
+			accentIncludes(survey.therapist?.name || "", searchTerm) ||
+			accentIncludes(survey.comments || "", searchTerm)
 		);
 	});
 
