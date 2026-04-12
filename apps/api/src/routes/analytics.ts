@@ -24,6 +24,35 @@ type PainRegionRow = {
   value: number | string | null;
 };
 
+type BiRevenueRow = {
+  month: string | null;
+  sessions: number | string | null;
+  revenue: number | string | null;
+};
+
+type BiOccupancyRow = {
+  booked: number | string | null;
+  total: number | string | null;
+};
+
+type BiRetentionRow = {
+  retained: number | string | null;
+  total: number | string | null;
+};
+
+type BiTherapistRow = {
+  therapist_id: string | null;
+  name: string | null;
+  sessions_completed: number | string | null;
+  no_shows: number | string | null;
+  revenue: number | string | null;
+};
+
+type BiStatusRow = {
+  status: string | null;
+  count: number | string | null;
+};
+
 type QueryResultLike<T> = {
   rows: T[];
 };
@@ -439,32 +468,45 @@ app.get('/bi', requireAuth, async (c) => {
 
   const [revenueRes, occupancyRes, retentionRes, topTherapistsRes, statusBreakdownRes] = await Promise.all([
     // Revenue trend — monthly
-    pool.query(
+    queryWithFallback<BiRevenueRow>(
+      pool,
+      'bi.revenueTrend',
       `SELECT
          TO_CHAR(date_trunc('month', a.date), 'YYYY-MM') AS month,
-         COUNT(*) FILTER (WHERE a.status IN ('completed','realizado'))::int AS sessions,
-         COALESCE(SUM(a.price) FILTER (WHERE a.status IN ('completed','realizado')), 0)::numeric(12,2) AS revenue
+         COUNT(*) FILTER (WHERE a.status::text IN ('completed','realizado','atendido'))::int AS sessions,
+         COALESCE(SUM(a.payment_amount) FILTER (WHERE a.status::text IN ('completed','realizado','atendido')), 0)::numeric(12,2) AS revenue
        FROM appointments a
        WHERE a.organization_id = $1
          AND a.date >= date_trunc('month', NOW()) - ($2 - 1) * INTERVAL '1 month'
        GROUP BY 1 ORDER BY 1`,
       [user.organizationId, months],
+      [],
     ),
 
     // Occupancy rate — current month completed vs total slots
-    pool.query(
+    queryWithFallback<BiOccupancyRow>(
+      pool,
+      'bi.occupancy',
       `SELECT
-         COUNT(*) FILTER (WHERE status IN ('completed','realizado','scheduled','confirmed'))::numeric AS booked,
+         COUNT(*) FILTER (
+           WHERE status::text IN (
+             'completed','realizado','atendido',
+             'scheduled','confirmed','agendado','presenca_confirmada','avaliacao'
+           )
+         )::numeric AS booked,
          COUNT(*)::numeric AS total
        FROM appointments
        WHERE organization_id = $1
          AND date >= date_trunc('month', NOW())
          AND date < date_trunc('month', NOW()) + INTERVAL '1 month'`,
       [user.organizationId],
+      [{ booked: 0, total: 0 }],
     ),
 
     // Patient retention — returned after first visit
-    pool.query(
+    queryWithFallback<BiRetentionRow>(
+      pool,
+      'bi.retention',
       `SELECT
          COUNT(DISTINCT patient_id) FILTER (WHERE visit_count >= 2)::int AS retained,
          COUNT(DISTINCT patient_id)::int AS total
@@ -472,40 +514,54 @@ app.get('/bi', requireAuth, async (c) => {
          SELECT patient_id, COUNT(*) AS visit_count
          FROM appointments
          WHERE organization_id = $1
-           AND status IN ('completed','realizado')
+           AND status::text IN ('completed','realizado','atendido')
            AND date >= NOW() - INTERVAL '90 days'
          GROUP BY patient_id
        ) t`,
       [user.organizationId],
+      [{ retained: 0, total: 0 }],
     ),
 
     // Top therapists by sessions (last 30 days)
-    pool.query(
+    queryWithFallback<BiTherapistRow>(
+      pool,
+      'bi.topTherapists',
       `SELECT
-         a.therapist_id,
-         COALESCE(p.full_name, a.therapist_id) AS name,
-         COUNT(*) FILTER (WHERE a.status IN ('completed','realizado'))::int AS sessions_completed,
-         COUNT(*) FILTER (WHERE a.status = 'no_show')::int AS no_shows,
-         COALESCE(SUM(a.price) FILTER (WHERE a.status IN ('completed','realizado')), 0)::numeric(12,2) AS revenue
+         a.therapist_id::text AS therapist_id,
+         COALESCE(NULLIF(p.full_name, ''), NULLIF(p.name, ''), a.therapist_id::text) AS name,
+         COUNT(*) FILTER (WHERE a.status::text IN ('completed','realizado','atendido'))::int AS sessions_completed,
+         COUNT(*) FILTER (
+           WHERE a.status::text IN (
+             'no_show','faltou','faltou_com_aviso','faltou_sem_aviso',
+             'nao_atendido','nao_atendido_sem_cobranca'
+           )
+         )::int AS no_shows,
+         COALESCE(SUM(a.payment_amount) FILTER (WHERE a.status::text IN ('completed','realizado','atendido')), 0)::numeric(12,2) AS revenue
        FROM appointments a
-       LEFT JOIN patients p ON p.id = a.therapist_id::uuid AND p.organization_id = $1
+       LEFT JOIN profiles p
+         ON (p.id = a.therapist_id OR p.user_id = a.therapist_id::text)
+        AND p.organization_id = $1
        WHERE a.organization_id = $1
          AND a.date >= NOW() - INTERVAL '30 days'
          AND a.therapist_id IS NOT NULL
-       GROUP BY a.therapist_id, p.full_name
+       GROUP BY a.therapist_id, p.full_name, p.name
        ORDER BY sessions_completed DESC
        LIMIT 10`,
       [user.organizationId],
+      [],
     ),
 
     // Status breakdown — last 30 days
-    pool.query(
-      `SELECT status, COUNT(*)::int AS count
+    queryWithFallback<BiStatusRow>(
+      pool,
+      'bi.statusBreakdown',
+      `SELECT status::text AS status, COUNT(*)::int AS count
        FROM appointments
        WHERE organization_id = $1
          AND date >= NOW() - INTERVAL '30 days'
-       GROUP BY status`,
+       GROUP BY status::text`,
       [user.organizationId],
+      [],
     ),
   ]);
 
@@ -517,20 +573,26 @@ app.get('/bi', requireAuth, async (c) => {
   const totalPatients = Number(retentionRes.rows[0]?.total ?? 1);
   const retentionRate = totalPatients > 0 ? Math.round((retained / totalPatients) * 100) : 0;
 
-  const totalRevenue = revenueRes.rows.reduce((s, r) => s + Number(r.revenue), 0);
-  const currentMonth = revenueRes.rows.at(-1);
-  const prevMonth = revenueRes.rows.at(-2);
-  const revenueTrend = prevMonth && Number(prevMonth.revenue) > 0
+  const revenueTrendRows = revenueRes.rows.map((row) => ({
+    month: String(row.month ?? ''),
+    sessions: Number(row.sessions ?? 0),
+    revenue: Number(Number(row.revenue ?? 0).toFixed(2)),
+  }));
+
+  const totalRevenue = revenueTrendRows.reduce((s, r) => s + Number(r.revenue), 0);
+  const currentMonth = revenueTrendRows.at(-1);
+  const prevMonth = revenueTrendRows.at(-2);
+  const revenueTrendPct = prevMonth && Number(prevMonth.revenue) > 0
     ? Math.round(((Number(currentMonth?.revenue ?? 0) - Number(prevMonth.revenue)) / Number(prevMonth.revenue)) * 100)
     : 0;
 
   return c.json({
     data: {
       revenue: {
-        trend: revenueRes.rows,
+        trend: revenueTrendRows,
         total_period: Number(totalRevenue.toFixed(2)),
         current_month: Number(Number(currentMonth?.revenue ?? 0).toFixed(2)),
-        trend_pct: revenueTrend,
+        trend_pct: revenueTrendPct,
       },
       occupancy: {
         rate: occupancyRate,
@@ -542,8 +604,17 @@ app.get('/bi', requireAuth, async (c) => {
         retained_patients: retained,
         total_active_patients: totalPatients,
       },
-      top_therapists: topTherapistsRes.rows,
-      status_breakdown: statusBreakdownRes.rows,
+      top_therapists: topTherapistsRes.rows.map((row) => ({
+        therapist_id: String(row.therapist_id ?? ''),
+        name: String(row.name ?? 'Nao atribuido'),
+        sessions_completed: Number(row.sessions_completed ?? 0),
+        no_shows: Number(row.no_shows ?? 0),
+        revenue: Number(Number(row.revenue ?? 0).toFixed(2)),
+      })),
+      status_breakdown: statusBreakdownRes.rows.map((row) => ({
+        status: String(row.status ?? 'unknown'),
+        count: Number(row.count ?? 0),
+      })),
     },
   });
 });

@@ -20,6 +20,7 @@ import { useQuery } from "@tanstack/react-query";
 import { patientsApi, type PatientRow } from "@/api/v2";
 import { MainLayout } from "@/components/layout/MainLayout";
 import { cn } from "@/lib/utils";
+import { accentIncludes } from "@/lib/utils/bilingualSearch";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 
@@ -70,7 +71,7 @@ export function AniversariantesContent() {
 	});
 
 	const filteredAniversariantes = aniversariantes.filter((a) =>
-		a.name.toLowerCase().includes(search.toLowerCase()),
+		accentIncludes(a.name, search),
 	);
 
 	const meses = [

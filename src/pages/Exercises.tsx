@@ -29,8 +29,10 @@ import { useExercises, type Exercise } from "@/hooks/useExercises";
 import { useExerciseFavorites } from "@/hooks/useExerciseFavorites";
 import { useExerciseProtocols } from "@/hooks/useExerciseProtocols";
 import { useExerciseTemplates } from "@/hooks/useExerciseTemplates";
+import { useActivePatients } from "@/hooks/patients/usePatients";
 import { Skeleton } from "@/components/ui/skeleton";
 import { fisioLogger as logger } from "@/lib/errors/logger";
+import type { Patient } from "@/types";
 
 // Lazy load heavy components for better performance
 const TemplateManager = lazy(() =>
@@ -73,6 +75,41 @@ const TabFallback = () => (
 	</div>
 );
 
+function calculateAge(birthDate?: string | null): number {
+	if (!birthDate) return 0;
+
+	const parsedBirthDate = new Date(birthDate);
+	if (Number.isNaN(parsedBirthDate.getTime())) return 0;
+
+	const today = new Date();
+	let age = today.getFullYear() - parsedBirthDate.getFullYear();
+	const monthDiff = today.getMonth() - parsedBirthDate.getMonth();
+	const dayDiff = today.getDate() - parsedBirthDate.getDate();
+
+	if (monthDiff < 0 || (monthDiff === 0 && dayDiff < 0)) {
+		age -= 1;
+	}
+
+	return Math.max(age, 0);
+}
+
+function toExerciseAIPatient(patient?: Patient) {
+	if (!patient) return undefined;
+
+	const birthDate = patient.birthDate || patient.birth_date || "";
+
+	return {
+		id: patient.id,
+		name: patient.name || patient.full_name || "Paciente sem nome",
+		birthDate,
+		gender: patient.gender || "outro",
+		mainCondition:
+			patient.mainCondition || patient.status || "Condição não especificada",
+		medicalHistory: patient.medicalHistory || patient.observations || "",
+		age: calculateAge(birthDate),
+	};
+}
+
 export default function Exercises() {
 	const {
 		exercises,
@@ -91,6 +128,13 @@ export default function Exercises() {
 	const [activeTab, setActiveTabState] = useState(
 		() => searchParams.get("tab") || "library",
 	);
+	const [selectedPatientId, setSelectedPatientId] = useState(
+		() => searchParams.get("patientId") || "",
+	);
+	const shouldLoadPatientsForAI = activeTab === "ai" || Boolean(selectedPatientId);
+	const { data: patients = [], isLoading: loadingPatients } = useActivePatients({
+		enabled: shouldLoadPatientsForAI,
+	});
 
 	// Sync state from URL
 	useEffect(() => {
@@ -102,6 +146,13 @@ export default function Exercises() {
 		}
 	}, [searchParams, activeTab]);
 
+	useEffect(() => {
+		const patientIdFromUrl = searchParams.get("patientId") || "";
+		if (patientIdFromUrl !== selectedPatientId) {
+			setSelectedPatientId(patientIdFromUrl);
+		}
+	}, [searchParams, selectedPatientId]);
+
 	const handleTabChange = useCallback(
 		(v: string) => {
 			setActiveTabState(v);
@@ -109,6 +160,25 @@ export default function Exercises() {
 				(prev) => {
 					const newParams = new URLSearchParams(prev);
 					newParams.set("tab", v);
+					return newParams;
+				},
+				{ replace: true },
+			);
+		},
+		[setSearchParams],
+	);
+
+	const handlePatientChange = useCallback(
+		(patientId: string) => {
+			setSelectedPatientId(patientId);
+			setSearchParams(
+				(prev) => {
+					const newParams = new URLSearchParams(prev);
+					if (patientId) {
+						newParams.set("patientId", patientId);
+					} else {
+						newParams.delete("patientId");
+					}
 					return newParams;
 				},
 				{ replace: true },
@@ -178,6 +248,14 @@ export default function Exercises() {
 	}, []);
 
 	const isLoading = loadingExercises || loadingProtocols || loadingTemplates;
+	const selectedPatient = useMemo(
+		() => patients.find((patient) => patient.id === selectedPatientId),
+		[patients, selectedPatientId],
+	);
+	const exerciseAIPatient = useMemo(
+		() => toExerciseAIPatient(selectedPatient),
+		[selectedPatient],
+	);
 
 	return (
 		<MainLayout>
@@ -388,6 +466,11 @@ export default function Exercises() {
 							<ComponentErrorBoundary componentName="ExerciseAI">
 								<Suspense fallback={<TabFallback />}>
 									<ExerciseAI
+										patient={exerciseAIPatient}
+										patientOptions={patients}
+										selectedPatientId={selectedPatientId}
+										onPatientChange={handlePatientChange}
+										isLoadingPatients={loadingPatients}
 										exerciseLibrary={exercises}
 										onExerciseSelect={(selectedExercises) => {
 											logger.debug(

@@ -38,6 +38,7 @@ import {
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { useToast } from "@/hooks/use-toast";
+import { accentIncludes } from "@/lib/utils/bilingualSearch";
 import {
 	deleteMarketingExport,
 	getOrganizationMarketingExports,
@@ -112,8 +113,8 @@ export default function MarketingExportsPage() {
 
 	const filteredExports = exports.filter((exp) => {
 		const matchesSearch =
-			exp.patient_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-			exp.export_type.toLowerCase().includes(searchTerm.toLowerCase());
+			accentIncludes(exp.patient_name || "", searchTerm) ||
+			accentIncludes(exp.export_type, searchTerm);
 
 		const matchesAnonymized =
 			filterAnonymized === "all" ||

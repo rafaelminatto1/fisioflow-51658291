@@ -1120,10 +1120,15 @@ export interface PendingConfirmation {
 
 export interface WhatsAppTemplateRecord {
 	id: string;
-	organization_id: string;
+	organization_id?: string;
 	name: string;
+	template_key?: string;
 	content: string;
+	variables?: string[];
+	category?: string;
 	status: string;
+	created_at?: string;
+	updated_at?: string;
 }
 
 export interface WhatsAppWebhookLog {

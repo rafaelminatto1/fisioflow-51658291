@@ -174,10 +174,37 @@ export const whatsappApi = {
 		request<{ data: Record<string, unknown> }>("/api/whatsapp/config"),
 	listTemplates: () =>
 		request<{ data: WhatsAppTemplateRecord[] }>("/api/whatsapp/templates"),
-	updateTemplate: (id: string, data: { content?: string; status?: string }) =>
+	createTemplate: (data: {
+		name: string;
+		content: string;
+		category?: string;
+		status?: string;
+		template_key?: string;
+		variables?: string[];
+		localOnly?: boolean;
+	}) =>
+		request<{ data: WhatsAppTemplateRecord }>("/api/whatsapp/templates", {
+			method: "POST",
+			body: JSON.stringify(data),
+		}),
+	updateTemplate: (
+		id: string,
+		data: {
+			name?: string;
+			content?: string;
+			category?: string;
+			status?: string;
+			template_key?: string;
+			variables?: string[];
+		},
+	) =>
 		request<{ data: WhatsAppTemplateRecord }>(`/api/whatsapp/templates/${id}`, {
 			method: "PUT",
 			body: JSON.stringify(data),
+		}),
+	deleteTemplate: (id: string) =>
+		request<{ ok: boolean }>(`/api/whatsapp/templates/${id}`, {
+			method: "DELETE",
 		}),
 	listWebhookLogs: (params?: { limit?: number }) =>
 		request<{ data: WhatsAppWebhookLog[] }>(

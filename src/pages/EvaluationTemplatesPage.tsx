@@ -28,6 +28,7 @@ import { useDeleteEvaluationForm } from "@/hooks/useEvaluationForms";
 import { useDuplicateEvaluationForm } from "@/hooks/useEvaluationForms";
 import { useToggleFavorite } from "@/hooks/useTemplateFavorites";
 import { useIncrementTemplateUsage } from "@/hooks/useTemplateStats";
+import { accentIncludes } from "@/lib/utils/bilingualSearch";
 import {
 	Popover,
 	PopoverContent,
@@ -65,9 +66,8 @@ export default function EvaluationTemplatesPage() {
 
 	const filteredTemplates = templates.filter((template) => {
 		const matchesSearch =
-			template.nome.toLowerCase().includes(searchQuery.toLowerCase()) ||
-			(template.descricao?.toLowerCase().includes(searchQuery.toLowerCase()) ??
-				false);
+			accentIncludes(template.nome, searchQuery) ||
+			(accentIncludes(template.descricao || "", searchQuery) ?? false);
 		const matchesCategory =
 			selectedCategory === "all" || template.tipo === selectedCategory;
 		const matchesFavorites = !favoritesOnly || template.is_favorite;
