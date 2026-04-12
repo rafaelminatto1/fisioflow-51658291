@@ -1,6 +1,10 @@
 const { Client } = require('pg');
 
-const DATABASE_URL = 'postgresql://neondb_owner:REDACTED-NEON-PASSWORD@ep-wandering-bonus-acj4zwvo-pooler.sa-east-1.aws.neon.tech/neondb?channel_binding=require&sslmode=require';
+const DATABASE_URL = process.env.DATABASE_URL;
+if (!DATABASE_URL) {
+    console.error('DATABASE_URL is not set');
+    process.exit(1);
+}
 
 const mappings = [
     { id: '205ef2f5-83b5-41c0-932b-d6e8b8a53f29', path: '/exercises/illustrations/jump-squat.avif' }, // Squat Jump
