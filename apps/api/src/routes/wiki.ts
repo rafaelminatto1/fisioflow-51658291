@@ -6,7 +6,7 @@
  * GET /api/wiki/:slug/versions — histórico de versões (auth)
  */
 import { Hono } from "hono";
-import { eq, and, isNull, sql } from "drizzle-orm";
+import { eq, and, isNull, sql, ilike } from "drizzle-orm";
 import { createDb, createPool } from "../lib/db";
 import { requireAuth, verifyToken, type AuthVariables } from "../lib/auth";
 import type { Env } from "../types/env";

@@ -24,7 +24,6 @@ import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { Separator } from "@/components/ui/separator";
 import {
 	Dialog,
 	DialogClose,
@@ -78,10 +77,15 @@ const STATUS_CONFIG: Record<
 		icon: XCircle,
 		color: "text-gray-400 bg-gray-50 border-gray-200",
 	},
+	ACTIVE: {
+		label: "Ativo",
+		icon: CheckCircle2,
+		color: "text-green-600 bg-green-50 border-green-200",
+	},
 };
 
-function highlightVariables(text: string) {
-	const parts = text.split(/(\{\{[^}]+\}\})/g);
+function highlightVariables(text?: string | null) {
+	const parts = (text ?? "").split(/(\{\{[^}]+\}\})/g);
 	return parts.filter(Boolean).map((part) => {
 		if (/^\{\{[^}]+\}\}$/.test(part)) {
 			return (
@@ -106,6 +110,8 @@ function TemplateCard({
 }) {
 	const status = STATUS_CONFIG[template.status] || STATUS_CONFIG.DISABLED;
 	const StatusIcon = status.icon;
+	const categoryLabel = template.category || "general";
+	const languageLabel = (template.language || "pt_BR").toUpperCase();
 
 	return (
 		<Card className="hover:shadow-md transition-shadow">
@@ -128,7 +134,7 @@ function TemplateCard({
 					</div>
 				</div>
 				<CardDescription className="text-xs">
-					{template.category} · {template.language.toUpperCase()}
+					{categoryLabel} · {languageLabel}
 				</CardDescription>
 			</CardHeader>
 			<CardContent>
@@ -283,11 +289,6 @@ export default function WhatsAppTemplatesPage() {
 		setSelectedTemplate(template);
 		setEditBody(template.body);
 		setShowEditDialog(true);
-	};
-
-	const openPreview = (template: Template) => {
-		setSelectedTemplate(template);
-		setShowPreviewDialog(true);
 	};
 
 	const handleSave = async () => {
