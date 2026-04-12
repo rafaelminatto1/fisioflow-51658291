@@ -23,7 +23,6 @@ import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Textarea } from "@/components/ui/textarea";
 
-
 import { Separator } from "@/components/ui/separator";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import {
@@ -72,9 +71,7 @@ import {
 } from "@/components/ui/alert-dialog";
 import { useNavigate } from "react-router-dom";
 import { StandardFormsManager } from "@/components/clinical/StandardFormsManager";
-import {
-	useImportEvaluationForm,
-} from "@/hooks/useEvaluationForms";
+import { useImportEvaluationForm } from "@/hooks/useEvaluationForms";
 import { DynamicFieldRenderer } from "@/components/evaluation/DynamicFieldRenderer";
 // New components
 import { PageHeader } from "@/components/evaluation/PageHeader";
@@ -85,6 +82,7 @@ import { useTemplateStats } from "@/hooks/useTemplateStats";
 import { fisioLogger as logger } from "@/lib/errors/logger";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { cn } from "@/lib/utils";
+import { accentIncludes } from "@/lib/utils/bilingualSearch";
 
 interface EvaluationFormField {
 	tipo_campo: string;
@@ -154,11 +152,10 @@ export default function EvaluationFormsPage() {
 	const filteredForms = useMemo(() => {
 		let result = [...forms];
 		if (filters.search) {
-			const searchLower = filters.search.toLowerCase();
 			result = result.filter(
 				(f) =>
-					f.nome.toLowerCase().includes(searchLower) ||
-					f.descricao?.toLowerCase().includes(searchLower),
+					accentIncludes(f.nome, filters.search) ||
+					accentIncludes(f.descricao || "", filters.search),
 			);
 		}
 		if (filters.favorites) {
@@ -257,8 +254,6 @@ export default function EvaluationFormsPage() {
 			});
 		}
 	};
-
-	
 
 	const handleImportFile = async (e: React.ChangeEvent<HTMLInputElement>) => {
 		const file = e.target.files?.[0];
