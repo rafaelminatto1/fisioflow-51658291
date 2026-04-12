@@ -39,6 +39,7 @@ import { ptBR } from "date-fns/locale";
 import { VoucherModal } from "@/components/vouchers/VoucherModal";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { accentIncludes } from "@/lib/utils/bilingualSearch";
 import {
 	DropdownMenu,
 	DropdownMenuContent,
@@ -92,8 +93,8 @@ export default function Vouchers() {
 
 	const filteredAllVouchers = (allVouchers || []).filter(
 		(v) =>
-			v.nome.toLowerCase().includes(searchTerm.toLowerCase()) ||
-			v.descricao?.toLowerCase().includes(searchTerm.toLowerCase()),
+			accentIncludes(v.nome, searchTerm) ||
+			accentIncludes(v.descricao || "", searchTerm),
 	);
 
 	const handleEdit = (voucher: Voucher) => {
