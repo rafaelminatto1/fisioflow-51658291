@@ -963,4 +963,81 @@ app.post("/templates", requireAuth, async (c) => {
 	}
 });
 
+app.post("/templates/sync", requireAuth, async (c) => {
+	const user = c.get("user");
+	const phoneId = c.env.WHATSAPP_PHONE_NUMBER_ID;
+	const token = c.env.WHATSAPP_ACCESS_TOKEN;
+
+	if (!phoneId || !token) {
+		return c.json({ error: "WhatsApp credentials not configured" }, 503);
+	}
+
+	try {
+		const pool = await createPool(c.env);
+		const settingsRes = await pool.query(
+			`SELECT settings FROM organizations WHERE id = $1 LIMIT 1`,
+			[user.organizationId],
+		);
+		const settings = settingsRes.rows[0]?.settings as Record<string, any> || {};
+		const wabaId = settings.whatsapp_business_account_id as string | undefined;
+		const targetId = wabaId || phoneId;
+
+		const metaRes = await fetch(
+			`https://graph.facebook.com/v22.0/${targetId}/message_templates`,
+			{
+				headers: { Authorization: `Bearer ${token}` },
+			},
+		);
+
+		if (!metaRes.ok) {
+			const error = await metaRes.json();
+			return c.json({ error: "Failed to fetch from Meta", details: error }, 502);
+		}
+
+		const metaData = (await metaRes.json()) as { data: any[] };
+		const localTemplates = settings.whatsapp_templates || [];
+
+		// Atualizar status dos locais com base nos da Meta
+		const updatedTemplates = localTemplates.map((local: any) => {
+			const meta = metaData.data.find((m) => m.name === local.name);
+			if (meta) {
+				return {
+					...local,
+					status: meta.status, // APPROVED, REJECTED, PENDING
+					category: meta.category,
+					components: meta.components,
+					last_sync: new Date().toISOString(),
+				};
+			}
+			return local;
+		});
+
+		// Adicionar templates da Meta que não existem localmente
+		for (const meta of metaData.data) {
+			if (!localTemplates.some((l: any) => l.name === meta.name)) {
+				updatedTemplates.push({
+					id: crypto.randomUUID(),
+					name: meta.name,
+					status: meta.status,
+					category: meta.category,
+					language: meta.language,
+					components: meta.components,
+					created_at: new Date().toISOString(),
+					updated_at: new Date().toISOString(),
+				});
+			}
+		}
+
+		await pool.query(
+			`UPDATE organizations SET settings = $1::jsonb WHERE id = $2`,
+			[JSON.stringify({ ...settings, whatsapp_templates: updatedTemplates }), user.organizationId]
+		);
+
+		return c.json({ data: { synced: metaData.data.length } });
+	} catch (err) {
+		console.error("[WhatsApp] POST /templates/sync error:", err);
+		return c.json({ error: "Sync failed" }, 500);
+	}
+});
+
 export { app as whatsappRoutes };
