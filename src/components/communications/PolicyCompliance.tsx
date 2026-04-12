@@ -18,18 +18,29 @@ import {
 	FileSignature,
 	CheckCircle2,
 	FileText,
+	Pencil,
 	Plus,
+	Trash2,
 	Users,
 	Shield,
 } from "lucide-react";
 import { format } from "date-fns";
 import { useToast } from "@/hooks/use-toast";
 import {
+	AlertDialog,
+	AlertDialogAction,
+	AlertDialogCancel,
+	AlertDialogContent,
+	AlertDialogDescription,
+	AlertDialogFooter,
+	AlertDialogHeader,
+	AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+import {
 	Dialog,
 	DialogContent,
 	DialogHeader,
 	DialogTitle,
-	DialogTrigger,
 } from "@/components/ui/dialog";
 import { motion, AnimatePresence } from "framer-motion";
 import { cn } from "@/lib/utils";
@@ -70,6 +81,8 @@ export function PolicyCompliance() {
 	const { toast } = useToast();
 	const queryClient = useQueryClient();
 	const [isDialogOpen, setIsDialogOpen] = useState(false);
+	const [editingPolicy, setEditingPolicy] = useState<Policy | null>(null);
+	const [deleteTarget, setDeleteTarget] = useState<Policy | null>(null);
 	const [newTitle, setNewTitle] = useState("");
 	const [newContent, setNewContent] = useState("");
 
@@ -112,6 +125,40 @@ export function PolicyCompliance() {
 		},
 	});
 
+	const updateMutation = useMutation({
+		mutationFn: async ({ id, data }: { id: string; data: any }) => {
+			const res = await request(`/api/announcements/${id}`, {
+				method: "PUT",
+				body: JSON.stringify(data),
+			});
+			return res;
+		},
+		onSuccess: () => {
+			queryClient.invalidateQueries({ queryKey: ["announcements"] });
+			toast({ title: "Política atualizada com sucesso!" });
+			resetDialog();
+		},
+		onError: () => {
+			toast({ title: "Erro ao atualizar política", variant: "destructive" });
+		},
+	});
+
+	const deleteMutation = useMutation({
+		mutationFn: async (id: string) => {
+			return await request(`/api/announcements/${id}`, {
+				method: "DELETE",
+			});
+		},
+		onSuccess: () => {
+			queryClient.invalidateQueries({ queryKey: ["announcements"] });
+			toast({ title: "Política excluída com sucesso!" });
+			setDeleteTarget(null);
+		},
+		onError: () => {
+			toast({ title: "Erro ao excluir política", variant: "destructive" });
+		},
+	});
+
 	const markReadMutation = useMutation({
 		mutationFn: async (id: string) => {
 			return await request(`/api/announcements/${id}/read`, {
@@ -124,15 +171,45 @@ export function PolicyCompliance() {
 		},
 	});
 
-	const handleCreate = () => {
+	const resetDialog = () => {
+		setIsDialogOpen(false);
+		setEditingPolicy(null);
+		setNewTitle("");
+		setNewContent("");
+	};
+
+	const openCreateDialog = () => {
+		setEditingPolicy(null);
+		setNewTitle("");
+		setNewContent("");
+		setIsDialogOpen(true);
+	};
+
+	const openEditDialog = (policy: Policy) => {
+		setEditingPolicy(policy);
+		setNewTitle(policy.title);
+		setNewContent(policy.content);
+		setIsDialogOpen(true);
+	};
+
+	const handleSubmit = () => {
 		if (!newTitle.trim() || !newContent.trim()) return;
-		createMutation.mutate({
+		const payload = {
 			title: newTitle,
 			content: newContent,
 			type: "policy",
 			isMandatory: true,
-		});
+		};
+
+		if (editingPolicy) {
+			updateMutation.mutate({ id: editingPolicy.id, data: payload });
+			return;
+		}
+
+		createMutation.mutate(payload);
 	};
+
+	const isSaving = createMutation.isPending || updateMutation.isPending;
 
 	const mandatoryPolicies = policies.filter((p) => p.is_mandatory);
 	const readPolicies = mandatoryPolicies.filter((p) => p.is_read);
@@ -190,16 +267,27 @@ export function PolicyCompliance() {
 				</div>
 
 				{isAdmin && (
-					<Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-						<DialogTrigger asChild>
-							<Button className="gap-2 shadow-premium-sm">
-								<Plus className="w-4 h-4" /> Nova Política
-							</Button>
-						</DialogTrigger>
+					<Button className="gap-2 shadow-premium-sm" onClick={openCreateDialog}>
+						<Plus className="w-4 h-4" /> Nova Política
+					</Button>
+				)}
+				{isAdmin && (
+					<Dialog
+						open={isDialogOpen}
+						onOpenChange={(open) => {
+							if (open) {
+								setIsDialogOpen(true);
+								return;
+							}
+							resetDialog();
+						}}
+					>
 						<DialogContent className="sm:max-w-xl">
 							<DialogHeader>
 								<DialogTitle className="text-xl font-bold">
-									Publicar Política Obrigatória
+									{editingPolicy
+										? "Editar Política Obrigatória"
+										: "Publicar Política Obrigatória"}
 								</DialogTitle>
 							</DialogHeader>
 							<div className="space-y-4 py-4">
@@ -235,12 +323,14 @@ export function PolicyCompliance() {
 								</div>
 								<Button
 									className="w-full py-6 rounded-xl font-bold text-lg"
-									onClick={handleCreate}
-									disabled={createMutation.isPending}
+									onClick={handleSubmit}
+									disabled={isSaving}
 								>
-									{createMutation.isPending
-										? "Publicando..."
-										: "Publicar e Exigir Leitura"}
+									{isSaving
+										? "Salvando..."
+										: editingPolicy
+											? "Salvar Alterações"
+											: "Publicar e Exigir Leitura"}
 								</Button>
 							</div>
 						</DialogContent>
@@ -321,18 +411,40 @@ export function PolicyCompliance() {
 										</div>
 									)}
 									<CardHeader className="pb-4">
-										<div className="space-y-1">
-											<div className="flex items-center gap-2 mb-1">
-												<div className="p-2 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-500 group-hover:bg-primary/10 group-hover:text-primary transition-colors">
-													<FileText className="w-4 h-4" />
+										<div className="flex items-start justify-between gap-3">
+											<div className="space-y-1">
+												<div className="flex items-center gap-2 mb-1">
+													<div className="p-2 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-500 group-hover:bg-primary/10 group-hover:text-primary transition-colors">
+														<FileText className="w-4 h-4" />
+													</div>
+													<Badge variant="outline" className="text-[9px]">
+														Documento Oficial
+													</Badge>
 												</div>
-												<Badge variant="outline" className="text-[9px]">
-													Documento Oficial
-												</Badge>
+												<CardTitle className="text-lg font-bold tracking-tight group-hover:text-primary transition-colors">
+													{policy.title}
+												</CardTitle>
 											</div>
-											<CardTitle className="text-lg font-bold tracking-tight group-hover:text-primary transition-colors">
-												{policy.title}
-											</CardTitle>
+											{isAdmin && (
+												<div className="flex gap-1 shrink-0">
+													<Button
+														variant="ghost"
+														size="sm"
+														className="h-8 rounded-lg gap-1.5 font-bold text-[11px]"
+														onClick={() => openEditDialog(policy)}
+													>
+														<Pencil className="w-3.5 h-3.5" /> Editar
+													</Button>
+													<Button
+														variant="ghost"
+														size="sm"
+														className="h-8 rounded-lg gap-1.5 font-bold text-[11px] text-destructive hover:text-destructive"
+														onClick={() => setDeleteTarget(policy)}
+													>
+														<Trash2 className="w-3.5 h-3.5" /> Excluir
+													</Button>
+												</div>
+											)}
 										</div>
 									</CardHeader>
 									<CardContent className="flex-1">
@@ -380,6 +492,36 @@ export function PolicyCompliance() {
 					</AnimatePresence>
 				)}
 			</div>
+			<AlertDialog
+				open={!!deleteTarget}
+				onOpenChange={(open) => {
+					if (!open) setDeleteTarget(null);
+				}}
+			>
+				<AlertDialogContent>
+					<AlertDialogHeader>
+						<AlertDialogTitle>Excluir política?</AlertDialogTitle>
+						<AlertDialogDescription>
+							Esta ação remove a política e apaga seus registros de confirmação
+							de leitura.
+						</AlertDialogDescription>
+					</AlertDialogHeader>
+					<AlertDialogFooter>
+						<AlertDialogCancel disabled={deleteMutation.isPending}>
+							Cancelar
+						</AlertDialogCancel>
+						<AlertDialogAction
+							onClick={() => {
+								if (deleteTarget) deleteMutation.mutate(deleteTarget.id);
+							}}
+							disabled={deleteMutation.isPending}
+							className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+						>
+							{deleteMutation.isPending ? "Excluindo..." : "Excluir"}
+						</AlertDialogAction>
+					</AlertDialogFooter>
+				</AlertDialogContent>
+			</AlertDialog>
 		</div>
 	);
 }

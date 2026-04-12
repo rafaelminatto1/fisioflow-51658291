@@ -52,6 +52,7 @@ import {
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { toast } from "sonner";
+import { accentIncludes } from "@/lib/utils/bilingualSearch";
 
 const CATEGORIES = [
 	"Equipamentos",
@@ -97,9 +98,7 @@ export default function Inventory() {
 
 	const filteredInventory = useMemo(() => {
 		return inventory.filter((item) => {
-			const matchesSearch = item.item_name
-				.toLowerCase()
-				.includes(searchTerm.toLowerCase());
+			const matchesSearch = accentIncludes(item.item_name, searchTerm);
 			const matchesCategory =
 				!categoryFilter || item.category === categoryFilter;
 			return matchesSearch && matchesCategory;
@@ -193,7 +192,9 @@ export default function Inventory() {
 	};
 
 	const handleDeleteItem = async (item: InventoryItem) => {
-		if (!confirm(`Tem certeza que deseja remover "${item.item_name}" do estoque?`)) {
+		if (
+			!confirm(`Tem certeza que deseja remover "${item.item_name}" do estoque?`)
+		) {
 			return;
 		}
 

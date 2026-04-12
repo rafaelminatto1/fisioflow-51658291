@@ -58,6 +58,7 @@ import { useIsMobile } from "@/hooks/use-mobile";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Badge } from "@/components/ui/badge";
 import { MainLayout } from "@/components/layout/MainLayout";
+import { accentIncludes } from "@/lib/utils/bilingualSearch";
 
 interface PatientSelect {
 	id: string;
@@ -118,7 +119,7 @@ export function RecibosContent() {
 
 		if (data.nome && !data.patientId) {
 			const match = pacientes.find((p) =>
-				p.full_name.toLowerCase().includes(data.nome!.toLowerCase()),
+				accentIncludes(p.full_name, data.nome!),
 			);
 			if (match) {
 				setFormData((prev) => ({ ...prev, patient_id: match.id }));
@@ -163,8 +164,7 @@ export function RecibosContent() {
 	const filteredRecibos = recibos.filter(
 		(r) =>
 			r.numero_recibo.toString().includes(searchTerm) ||
-			(r.referente &&
-				r.referente.toLowerCase().includes(searchTerm.toLowerCase())),
+			(r.referente && accentIncludes(r.referente, searchTerm)),
 	);
 
 	const handleSubmit = async (e?: React.FormEvent) => {
