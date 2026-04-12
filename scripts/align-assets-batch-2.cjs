@@ -1,6 +1,10 @@
 const { Client } = require('pg');
 
-const DATABASE_URL = 'postgresql://neondb_owner:REDACTED-NEON-PASSWORD@ep-wandering-bonus-acj4zwvo-pooler.sa-east-1.aws.neon.tech/neondb?channel_binding=require&sslmode=require';
+const DATABASE_URL = process.env.DATABASE_URL;
+if (!DATABASE_URL) {
+    console.error('DATABASE_URL is not set');
+    process.exit(1);
+}
 
 const mappings = [
     { id: 'b2a513c5-5da4-4d17-b0f8-ec63381a49a6', path: '/exercises/illustrations/ponte-gluteo.avif' },
