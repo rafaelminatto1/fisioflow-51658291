@@ -1678,10 +1678,14 @@ function ChatPanel({
 								<div className="px-2 py-1.5 text-xs font-semibold text-muted-foreground">
 									Templates Aprovados
 								</div>
-								{templates.filter((t: any) => String(t.status).toUpperCase() === 'APPROVED').length === 0 ? (
+								{templates.filter((t: any) => (t?.status || "").toString().toUpperCase() === "APPROVED").length === 0 ? (
 									<DropdownMenuItem disabled>Nenhum template aprovado</DropdownMenuItem>
 								) : (
-									templates.filter((t: any) => String(t.status).toUpperCase() === 'APPROVED').map((t: any) => (
+									templates
+										.filter(
+											(t: any) => (t?.status || "").toString().toUpperCase() === "APPROVED",
+										)
+										.map((t: any) => (
 										<DropdownMenuItem key={t.id} onClick={() => handleSendTemplate(t.name, t.language)}>
 											<div className="flex flex-col gap-1 w-full">
 												<span className="font-medium">{t.name}</span>
