@@ -80,6 +80,42 @@ function extractTemplateVariables(content: string) {
 		.filter((value, index, values) => values.indexOf(value) === index);
 }
 
+function getString(value: unknown): string | undefined {
+	return typeof value === "string" && value.trim() ? value : undefined;
+}
+
+function normalizeStoredTemplateForResponse(
+	template: Record<string, unknown>,
+) {
+	const content = getString(template.body) ?? getString(template.content) ?? "";
+	const templateKey = getString(template.template_key);
+	const name = getString(template.name) ?? templateKey ?? "Template sem nome";
+	const variables = Array.isArray(template.variables)
+		? template.variables.filter(
+				(variable): variable is string => typeof variable === "string",
+			)
+		: extractTemplateVariables(content);
+
+	return {
+		...template,
+		id: getString(template.id) ?? templateKey ?? name,
+		name,
+		template_key: templateKey,
+		content,
+		body: content,
+		variables,
+		category: getString(template.category) ?? "general",
+		status: getString(template.status) ?? "ativo",
+		language: getString(template.language) ?? "pt_BR",
+		isLocal:
+			Boolean(template.isLocal) ||
+			Boolean(template.localOnly) ||
+			Boolean(templateKey),
+		createdAt: getString(template.createdAt) ?? getString(template.created_at),
+		updatedAt: getString(template.updatedAt) ?? getString(template.updated_at),
+	};
+}
+
 function slugifyTemplateKey(name: string) {
 	const slug = name
 		.normalize("NFD")
@@ -134,7 +170,9 @@ app.get("/templates", requireAuth, async (c) => {
 	const user = c.get("user");
 	const pool = await createPool(c.env);
 	const settings = await loadOrganizationSettings(pool, user.organizationId);
-	const templates = getStoredTemplates(settings);
+	const templates = getStoredTemplates(settings).map(
+		normalizeStoredTemplateForResponse,
+	);
 	return c.json({ data: templates });
 });
 
@@ -198,7 +236,9 @@ app.put("/templates/:id", requireAuth, async (c) => {
 
 	await saveOrganizationSettings(pool, user.organizationId, nextSettings);
 
-	return c.json({ data: existingTemplates[currentIndex] });
+	return c.json({
+		data: normalizeStoredTemplateForResponse(existingTemplates[currentIndex]),
+	});
 });
 
 app.delete("/templates/:id", requireAuth, async (c) => {
@@ -832,7 +872,7 @@ app.post("/templates", requireAuth, async (c) => {
 			whatsapp_templates: nextTemplates,
 		});
 
-		return c.json({ data: newTemplate }, 201);
+		return c.json({ data: normalizeStoredTemplateForResponse(newTemplate) }, 201);
 	}
 
 	if (!body.name || !body.category || !body.body) {

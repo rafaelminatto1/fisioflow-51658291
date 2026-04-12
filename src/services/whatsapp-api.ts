@@ -150,7 +150,13 @@ export interface Template {
 	id: string;
 	name: string;
 	category: string;
-	status: "APPROVED" | "PENDING" | "REJECTED" | "PAUSED" | "DISABLED";
+	status:
+		| "APPROVED"
+		| "PENDING"
+		| "REJECTED"
+		| "PAUSED"
+		| "DISABLED"
+		| "ACTIVE";
 	language: string;
 	header?: { type: string; text?: string };
 	body: string;
@@ -164,6 +170,98 @@ export interface Template {
 	variables?: string[];
 	isLocal?: boolean;
 	createdAt: string;
+}
+
+type RawTemplate = Record<string, unknown> & Partial<Template>;
+
+const DEFAULT_TEMPLATE_LANGUAGE = "pt_BR";
+
+function stringValue(value: unknown): string | undefined {
+	return typeof value === "string" && value.trim() ? value : undefined;
+}
+
+function normalizeTemplateStatus(value: unknown): Template["status"] {
+	const status = stringValue(value)?.toUpperCase();
+
+	switch (status) {
+		case "APPROVED":
+			return "APPROVED";
+		case "PENDING":
+			return "PENDING";
+		case "REJECTED":
+			return "REJECTED";
+		case "PAUSED":
+			return "PAUSED";
+		case "ACTIVE":
+		case "ATIVO":
+		case "ENABLED":
+			return "ACTIVE";
+		case "DISABLED":
+		case "INACTIVE":
+		case "INATIVO":
+			return "DISABLED";
+		default:
+			return "DISABLED";
+	}
+}
+
+function extractTemplateVariables(content: string): string[] {
+	return Array.from(content.matchAll(/\{\{([^}]+)\}\}/g))
+		.map((match) => match[1]?.trim())
+		.filter((value): value is string => Boolean(value))
+		.filter((value, index, values) => values.indexOf(value) === index);
+}
+
+function normalizeButtons(value: unknown): Template["buttons"] {
+	if (!Array.isArray(value)) return undefined;
+
+	return value
+		.map((button) => {
+			if (!button || typeof button !== "object") return null;
+			const rawButton = button as Record<string, unknown>;
+			const text = stringValue(rawButton.text);
+			if (!text) return null;
+			return {
+				type: stringValue(rawButton.type) ?? "QUICK_REPLY",
+				text,
+				url: stringValue(rawButton.url),
+				phoneNumber:
+					stringValue(rawButton.phoneNumber) ??
+					stringValue(rawButton.phone_number),
+			};
+		})
+		.filter((button): button is NonNullable<typeof button> => Boolean(button));
+}
+
+export function normalizeTemplate(template: RawTemplate): Template {
+	const content =
+		stringValue(template.body) ?? stringValue(template.content) ?? "";
+	const templateKey = stringValue(template.template_key);
+	const name = stringValue(template.name) ?? templateKey ?? "Template sem nome";
+	const variables = Array.isArray(template.variables)
+		? template.variables.filter(
+				(variable): variable is string => typeof variable === "string",
+			)
+		: extractTemplateVariables(content);
+
+	return {
+		id: stringValue(template.id) ?? templateKey ?? name,
+		name,
+		category: stringValue(template.category) ?? "general",
+		status: normalizeTemplateStatus(template.status),
+		language: stringValue(template.language) ?? DEFAULT_TEMPLATE_LANGUAGE,
+		header: template.header,
+		body: content,
+		footer: stringValue(template.footer),
+		buttons: normalizeButtons(template.buttons),
+		variables,
+		isLocal:
+			Boolean(template.isLocal) ||
+			Boolean(template.localOnly) ||
+			Boolean(templateKey),
+		createdAt:
+			stringValue(template.createdAt) ?? stringValue(template.created_at) ?? "",
+	};
 }
 
 export async function fetchConversations(filters?: ConversationFilters) {
@@ -484,7 +582,8 @@ export async function fetchTemplates() {
 	const res = await request<{ data: Template[] } | Template[]>(
 		"/api/whatsapp/templates",
 	);
-	return Array.isArray(res) ? res : ((res as any).data ?? res);
+	const templates = Array.isArray(res) ? res : ((res as any).data ?? res);
+	return Array.isArray(templates) ? templates.map(normalizeTemplate) : [];
 }
 
 export async function syncTemplatesWithMeta() {
