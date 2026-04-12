@@ -28,6 +28,7 @@ import {
 	TableRow,
 } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
+import { accentIncludes } from "@/lib/utils/bilingualSearch";
 import { Target, Plus, Pencil, Trash2, Search } from "lucide-react";
 import {
 	usePatientObjectives,
@@ -82,7 +83,7 @@ export default function PatientObjectivesPage() {
 	const deleteMutation = useDeletePatientObjective();
 
 	const filteredObjectives = objectives.filter((o) => {
-		const matchesSearch = o.nome.toLowerCase().includes(search.toLowerCase());
+		const matchesSearch = accentIncludes(o.nome, search);
 		const matchesCategoria =
 			!selectedCategoria || o.categoria === selectedCategoria;
 		return matchesSearch && matchesCategoria;

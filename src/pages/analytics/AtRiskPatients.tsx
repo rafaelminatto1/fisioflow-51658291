@@ -28,6 +28,7 @@ import { ptBR } from "date-fns/locale";
 import { cn } from "@/lib/utils";
 import { useToast } from "@/hooks/use-toast";
 import { usePatientsAtRisk } from "@/hooks/usePatientRetention";
+import { accentIncludes } from "@/lib/utils/bilingualSearch";
 
 interface AtRiskPatient {
 	id: string;
@@ -115,8 +116,8 @@ export default function AtRiskPatientsPage() {
 				riskFilter === "all" || patient.risk_level === riskFilter;
 			const matchesSearch =
 				!searchTerm ||
-				patient.patient_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-				patient.email?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+				accentIncludes(patient.patient_name, searchTerm) ||
+				accentIncludes(patient.email || "", searchTerm) ||
 				patient.phone?.includes(searchTerm);
 			return matchesRisk && matchesSearch;
 		});
