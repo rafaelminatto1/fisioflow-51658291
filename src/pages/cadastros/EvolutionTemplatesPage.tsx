@@ -49,6 +49,7 @@ import {
 	AlertDialogHeader,
 	AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
+import { accentIncludes } from "@/lib/utils/bilingualSearch";
 
 const TIPOS_EVOLUCAO = [
 	{ value: "fisioterapia", label: "Fisioterapia" },
@@ -91,7 +92,7 @@ export default function EvolutionTemplatesPage() {
 	const deleteMutation = useDeleteEvolutionTemplate();
 
 	const filteredTemplates = templates.filter((t) =>
-		t.nome.toLowerCase().includes(search.toLowerCase()),
+		accentIncludes(t.nome, search),
 	);
 
 	const handleOpenDialog = (template?: EvolutionTemplate) => {

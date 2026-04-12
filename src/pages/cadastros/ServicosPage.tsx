@@ -40,6 +40,7 @@ import {
 	useUpdateServico,
 } from "@/hooks/useServicos";
 import { cn } from "@/lib/utils";
+import { accentIncludes } from "@/lib/utils/bilingualSearch";
 
 const tipoCobrancaLabels = {
 	unitario: "Unitário",
@@ -116,8 +117,8 @@ export function ServicosContent() {
 
 	const filteredServicos = servicos?.filter(
 		(s) =>
-			s.nome.toLowerCase().includes(searchQuery.toLowerCase()) ||
-			s.descricao?.toLowerCase().includes(searchQuery.toLowerCase()),
+			accentIncludes(s.nome, searchQuery) ||
+			accentIncludes(s.descricao || "", searchQuery),
 	);
 
 	return (
