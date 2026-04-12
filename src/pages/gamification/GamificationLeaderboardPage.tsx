@@ -12,6 +12,7 @@ import { useQuery } from "@tanstack/react-query";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Skeleton } from "@/components/ui/skeleton";
 import { gamificationApi } from "@/api/v2";
+import { accentIncludes } from "@/lib/utils/bilingualSearch";
 
 interface LeaderboardEntry {
 	patient_id: string;
@@ -69,7 +70,7 @@ export default function GamificationLeaderboardPage() {
 
 	// Filter by search
 	const filteredLeaderboard = leaderboard.filter((entry) =>
-		entry.patient_name?.toLowerCase().includes(search.toLowerCase()),
+		accentIncludes(entry.patient_name || "", search),
 	);
 
 	// Find current user's rank
