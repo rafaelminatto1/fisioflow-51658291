@@ -3,6 +3,7 @@ import { Search, Plus, Dumbbell } from "lucide-react";
 import { useExercises, type Exercise } from "@/hooks/useExercises";
 import { cn } from "@/lib/utils";
 import { withImageParams } from "@/lib/storageProxy";
+import { accentIncludes } from "@/lib/utils/bilingualSearch";
 import {
 	Command,
 	CommandEmpty,
@@ -34,7 +35,7 @@ export const ExerciseAutocomplete: React.FC<ExerciseAutocompleteProps> = ({
 	const filteredExercises = useMemo(() => {
 		if (!searchValue) return exercises.slice(0, 10);
 		return exercises
-			.filter((ex) => ex.name.toLowerCase().includes(searchValue.toLowerCase()))
+			.filter((ex) => accentIncludes(ex.name, searchValue))
 			.slice(0, 10);
 	}, [exercises, searchValue]);
 

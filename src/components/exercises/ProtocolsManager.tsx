@@ -193,7 +193,7 @@ export const ProtocolsManager = memo(function ProtocolsManager() {
 			{/* Main Content Area - Better Distribution */}
 			<div className="space-y-8 pb-20">
 				{loading ? (
-					<div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+					<div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
 						{[1, 2, 3, 4, 5, 6, 7, 8].map((i) => (
 							<div key={i} className="bg-white p-6 rounded-2xl border border-border shadow-sm h-48 space-y-4">
 								<Skeleton className="h-6 w-3/4 bg-muted" />
@@ -249,7 +249,7 @@ export const ProtocolsManager = memo(function ProtocolsManager() {
 											<div className="h-px grow bg-border/50" />
 										</div>
 
-										<div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+										<div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
 											{protocols.map((protocol) => (
 												<motion.div
 													key={protocol.id}

@@ -14,16 +14,25 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
-import { CheckCircle2, Megaphone, Plus } from "lucide-react";
+import { CheckCircle2, Megaphone, Pencil, Plus, Trash2 } from "lucide-react";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { useToast } from "@/hooks/use-toast";
+import {
+	AlertDialog,
+	AlertDialogAction,
+	AlertDialogCancel,
+	AlertDialogContent,
+	AlertDialogDescription,
+	AlertDialogFooter,
+	AlertDialogHeader,
+	AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import {
 	Dialog,
 	DialogContent,
 	DialogHeader,
 	DialogTitle,
-	DialogTrigger,
 } from "@/components/ui/dialog";
 import { motion, AnimatePresence } from "framer-motion";
 import { cn } from "@/lib/utils";
@@ -57,6 +66,9 @@ export function CompanyAnnouncements() {
 	const { toast } = useToast();
 	const queryClient = useQueryClient();
 	const [isDialogOpen, setIsDialogOpen] = useState(false);
+	const [editingAnnouncement, setEditingAnnouncement] =
+		useState<Announcement | null>(null);
+	const [deleteTarget, setDeleteTarget] = useState<Announcement | null>(null);
 	const [newTitle, setNewTitle] = useState("");
 	const [newContent, setNewContent] = useState("");
 	const [pushNotify, setPushNotify] = useState(true);
@@ -91,6 +103,40 @@ export function CompanyAnnouncements() {
 		},
 	});
 
+	const updateMutation = useMutation({
+		mutationFn: async ({ id, data }: { id: string; data: any }) => {
+			const res = await request(`/api/announcements/${id}`, {
+				method: "PUT",
+				body: JSON.stringify(data),
+			});
+			return res;
+		},
+		onSuccess: () => {
+			queryClient.invalidateQueries({ queryKey: ["announcements"] });
+			toast({ title: "Comunicado atualizado com sucesso!" });
+			resetDialog();
+		},
+		onError: () => {
+			toast({ title: "Erro ao atualizar comunicado", variant: "destructive" });
+		},
+	});
+
+	const deleteMutation = useMutation({
+		mutationFn: async (id: string) => {
+			return await request(`/api/announcements/${id}`, {
+				method: "DELETE",
+			});
+		},
+		onSuccess: () => {
+			queryClient.invalidateQueries({ queryKey: ["announcements"] });
+			toast({ title: "Comunicado excluído com sucesso!" });
+			setDeleteTarget(null);
+		},
+		onError: () => {
+			toast({ title: "Erro ao excluir comunicado", variant: "destructive" });
+		},
+	});
+
 	const markReadMutation = useMutation({
 		mutationFn: async (id: string) => {
 			return await request(`/api/announcements/${id}/read`, {
@@ -102,15 +148,48 @@ export function CompanyAnnouncements() {
 		},
 	});
 
-	const handleCreate = () => {
+	const resetDialog = () => {
+		setIsDialogOpen(false);
+		setEditingAnnouncement(null);
+		setNewTitle("");
+		setNewContent("");
+		setPushNotify(true);
+	};
+
+	const openCreateDialog = () => {
+		setEditingAnnouncement(null);
+		setNewTitle("");
+		setNewContent("");
+		setPushNotify(true);
+		setIsDialogOpen(true);
+	};
+
+	const openEditDialog = (announcement: Announcement) => {
+		setEditingAnnouncement(announcement);
+		setNewTitle(announcement.title);
+		setNewContent(announcement.content);
+		setPushNotify(false);
+		setIsDialogOpen(true);
+	};
+
+	const handleSubmit = () => {
 		if (!newTitle.trim() || !newContent.trim()) return;
-		createMutation.mutate({
+		const payload = {
 			title: newTitle,
 			content: newContent,
 			type: "announcement",
 			isMandatory: false,
-		});
+		};
+
+		if (editingAnnouncement) {
+			updateMutation.mutate({ id: editingAnnouncement.id, data: payload });
+			return;
+		}
+
+		createMutation.mutate(payload);
 	};
+
+	const isSaving = createMutation.isPending || updateMutation.isPending;
 
 	if (isLoading) {
 		return (
@@ -131,16 +210,27 @@ export function CompanyAnnouncements() {
 				</div>
 
 				{isAdmin && (
-					<Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-						<DialogTrigger asChild>
-							<Button className="gap-2 shadow-premium-sm">
-								<Plus className="w-4 h-4" /> Novo Comunicado
-							</Button>
-						</DialogTrigger>
+					<Button className="gap-2 shadow-premium-sm" onClick={openCreateDialog}>
+						<Plus className="w-4 h-4" /> Novo Comunicado
+					</Button>
+				)}
+				{isAdmin && (
+					<Dialog
+						open={isDialogOpen}
+						onOpenChange={(open) => {
+							if (open) {
+								setIsDialogOpen(true);
+								return;
+							}
+							resetDialog();
+						}}
+					>
 						<DialogContent className="sm:max-w-lg">
 							<DialogHeader>
 								<DialogTitle className="text-xl font-bold">
-									Criar Novo Comunicado
+									{editingAnnouncement
+										? "Editar Comunicado"
+										: "Criar Novo Comunicado"}
 								</DialogTitle>
 							</DialogHeader>
 							<div className="space-y-4 py-4">
@@ -187,12 +277,14 @@ export function CompanyAnnouncements() {
 								</div>
 								<Button
 									className="w-full py-6 rounded-xl font-bold text-lg"
-									onClick={handleCreate}
-									disabled={createMutation.isPending}
+									onClick={handleSubmit}
+									disabled={isSaving}
 								>
-									{createMutation.isPending
-										? "Enviando..."
-										: "Publicar Comunicado"}
+									{isSaving
+										? "Salvando..."
+										: editingAnnouncement
+											? "Salvar Alterações"
+											: "Publicar Comunicado"}
 								</Button>
 							</div>
 						</DialogContent>
@@ -258,6 +350,26 @@ export function CompanyAnnouncements() {
 												</CardDescription>
 											</div>
 											<div className="flex gap-2 shrink-0">
+												{isAdmin && (
+													<>
+														<Button
+															variant="ghost"
+															size="sm"
+															className="h-8 rounded-lg gap-1.5 font-bold text-[11px]"
+															onClick={() => openEditDialog(announcement)}
+														>
+															<Pencil className="w-3.5 h-3.5" /> Editar
+														</Button>
+														<Button
+															variant="ghost"
+															size="sm"
+															className="h-8 rounded-lg gap-1.5 font-bold text-[11px] text-destructive hover:text-destructive"
+															onClick={() => setDeleteTarget(announcement)}
+														>
+															<Trash2 className="w-3.5 h-3.5" /> Excluir
+														</Button>
+													</>
+												)}
 												{!announcement.is_read && !isAdmin && (
 													<Button
 														variant="secondary"
@@ -289,6 +401,36 @@ export function CompanyAnnouncements() {
 					</AnimatePresence>
 				)}
 			</div>
+			<AlertDialog
+				open={!!deleteTarget}
+				onOpenChange={(open) => {
+					if (!open) setDeleteTarget(null);
+				}}
+			>
+				<AlertDialogContent>
+					<AlertDialogHeader>
+						<AlertDialogTitle>Excluir comunicado?</AlertDialogTitle>
+						<AlertDialogDescription>
+							Esta ação remove o aviso do mural e apaga seus registros de
+							leitura.
+						</AlertDialogDescription>
+					</AlertDialogHeader>
+					<AlertDialogFooter>
+						<AlertDialogCancel disabled={deleteMutation.isPending}>
+							Cancelar
+						</AlertDialogCancel>
+						<AlertDialogAction
+							onClick={() => {
+								if (deleteTarget) deleteMutation.mutate(deleteTarget.id);
+							}}
+							disabled={deleteMutation.isPending}
+							className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+						>
+							{deleteMutation.isPending ? "Excluindo..." : "Excluir"}
+						</AlertDialogAction>
+					</AlertDialogFooter>
+				</AlertDialogContent>
+			</AlertDialog>
 		</div>
 	);
 }

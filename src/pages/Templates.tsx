@@ -68,6 +68,7 @@ import {
 import { cn } from "@/lib/utils";
 import { builtinEvaluationTemplates } from "@/data/defaultEvaluationTemplates";
 import { toast } from "sonner";
+import { accentIncludes } from "@/lib/utils/bilingualSearch";
 
 const CATEGORY_CONFIG: Record<
 	string,
@@ -167,8 +168,8 @@ export default function Templates() {
 	const filteredTemplates = useMemo(() => {
 		return allTemplates.filter((t) => {
 			const matchesSearch =
-				t.nome.toLowerCase().includes(search.toLowerCase()) ||
-				(t.descricao || "").toLowerCase().includes(search.toLowerCase());
+				accentIncludes(t.nome, search) ||
+				accentIncludes(t.descricao || "", search);
 			const matchesCategory = activeCategory
 				? t.category === activeCategory
 				: true;
@@ -562,12 +563,12 @@ export default function Templates() {
 												) : (
 													<DropdownMenuItem
 														onClick={() => handleDuplicate(template.id)}
-													className="rounded-lg gap-2 cursor-pointer font-medium"
-												>
-													<Pencil className="w-4 h-4 text-slate-400" />
-													Editar cópia
-												</DropdownMenuItem>
-											)}
+														className="rounded-lg gap-2 cursor-pointer font-medium"
+													>
+														<Pencil className="w-4 h-4 text-slate-400" />
+														Editar cópia
+													</DropdownMenuItem>
+												)}
 											</DropdownMenuContent>
 										</DropdownMenu>
 									</div>

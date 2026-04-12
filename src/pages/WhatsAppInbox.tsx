@@ -17,6 +17,8 @@ import {
 	Hash,
 	ListChecks,
 	Loader2,
+	LayoutTemplate,
+	Info,
 	MapPin,
 	Megaphone,
 	MessageCircle,
@@ -64,6 +66,7 @@ import { Separator } from "@/components/ui/separator";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Textarea } from "@/components/ui/textarea";
 import { useWhatsAppConversation, useWhatsAppInbox } from "@/hooks/useWhatsApp";
+import { useWhatsAppTemplates } from "@/hooks/useWhatsAppTemplates";
 import { organizationMembersApi } from "@/api/v2/system";
 import { uploadFile } from "@/lib/storage/upload";
 import type {
@@ -92,6 +95,7 @@ import {
 	snoozeConversation,
 	updatePriority,
 } from "@/services/whatsapp-api";
+import { accentIncludes } from "@/lib/utils/bilingualSearch";
 
 const STATUS_TABS = [
 	{ value: "all", label: "Todas" },
@@ -139,14 +143,16 @@ function statusLabel(status: string): string {
 function MetricsStrip({ metrics }: { metrics: Metrics | null }) {
 	if (!metrics) return null;
 
-	const open = metrics.openConversations ?? (metrics as any).byStatus?.open ?? 0;
-	const pending = metrics.pendingConversations ?? (metrics as any).byStatus?.pending ?? 0;
+	const open =
+		metrics.openConversations ?? (metrics as any).byStatus?.open ?? 0;
+	const pending =
+		metrics.pendingConversations ?? (metrics as any).byStatus?.pending ?? 0;
 	const slaBreached = metrics.slaBreached ?? 0;
 	const avgMin = metrics.avgFirstResponseTime
 		? Math.round(metrics.avgFirstResponseTime / 60)
-		: ((metrics as any).avgResponseSeconds
+		: (metrics as any).avgResponseSeconds
 			? Math.round((metrics as any).avgResponseSeconds / 60)
-			: 0);
+			: 0;
 
 	return (
 		<div className="flex items-center gap-2 px-3 py-2 bg-muted/30 border-b text-xs">
@@ -188,7 +194,11 @@ function BroadcastModal({
 	const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
 	const [message, setMessage] = useState("");
 	const [sending, setSending] = useState(false);
-	const [result, setResult] = useState<{ sent: number; failed: number; total: number } | null>(null);
+	const [result, setResult] = useState<{
+		sent: number;
+		failed: number;
+		total: number;
+	} | null>(null);
 
 	useEffect(() => {
 		if (!open) return;
@@ -196,7 +206,10 @@ function BroadcastModal({
 		const t = window.setTimeout(async () => {
 			setLoadingContacts(true);
 			try {
-				const res = await fetchContacts({ search: contactSearch || undefined, limit: 50 });
+				const res = await fetchContacts({
+					search: contactSearch || undefined,
+					limit: 50,
+				});
 				if (active) setContacts(res.data);
 			} catch {
 				if (active) setContacts([]);
@@ -204,7 +217,10 @@ function BroadcastModal({
 				if (active) setLoadingContacts(false);
 			}
 		}, 250);
-		return () => { active = false; window.clearTimeout(t); };
+		return () => {
+			active = false;
+			window.clearTimeout(t);
+		};
 	}, [open, contactSearch]);
 
 	const handleClose = () => {
@@ -240,7 +256,12 @@ function BroadcastModal({
 	};
 
 	return (
-		<Dialog open={open} onOpenChange={(v) => { if (!v) handleClose(); }}>
+		<Dialog
+			open={open}
+			onOpenChange={(v) => {
+				if (!v) handleClose();
+			}}
+		>
 			<DialogContent className="sm:max-w-[520px]">
 				<DialogHeader>
 					<DialogTitle className="flex items-center gap-2 text-primary">
@@ -257,7 +278,8 @@ function BroadcastModal({
 							<div className="flex-1 h-1.5 rounded-full bg-muted" />
 						</div>
 						<p className="text-sm text-muted-foreground">
-							Selecione os contatos que receberão a mensagem ({selectedIds.size} selecionados)
+							Selecione os contatos que receberão a mensagem ({selectedIds.size}{" "}
+							selecionados)
 						</p>
 						<Input
 							placeholder="Buscar contato..."
@@ -285,12 +307,20 @@ function BroadcastModal({
 												onClick={() => toggleContact(c.id)}
 												className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-left transition-colors ${sel ? "bg-primary/10 border border-primary/20" : "hover:bg-muted/60"}`}
 											>
-												<div className={`h-4 w-4 rounded border-2 flex items-center justify-center shrink-0 ${sel ? "bg-primary border-primary" : "border-border"}`}>
-													{sel && <CheckCircle2 className="h-3 w-3 text-primary-foreground" />}
+												<div
+													className={`h-4 w-4 rounded border-2 flex items-center justify-center shrink-0 ${sel ? "bg-primary border-primary" : "border-border"}`}
+												>
+													{sel && (
+														<CheckCircle2 className="h-3 w-3 text-primary-foreground" />
+													)}
 												</div>
 												<div className="flex-1 min-w-0">
-													<p className="text-sm font-medium truncate">{c.name}</p>
-													<p className="text-xs text-muted-foreground truncate">{c.phone || "Sem telefone"}</p>
+													<p className="text-sm font-medium truncate">
+														{c.name}
+													</p>
+													<p className="text-xs text-muted-foreground truncate">
+														{c.phone || "Sem telefone"}
+													</p>
 												</div>
 											</button>
 										);
@@ -300,9 +330,14 @@ function BroadcastModal({
 						</ScrollArea>
 						<DialogFooter>
 							<DialogClose asChild>
-								<Button variant="ghost" onClick={handleClose}>Cancelar</Button>
+								<Button variant="ghost" onClick={handleClose}>
+									Cancelar
+								</Button>
 							</DialogClose>
-							<Button onClick={() => setStep(2)} disabled={selectedIds.size === 0}>
+							<Button
+								onClick={() => setStep(2)}
+								disabled={selectedIds.size === 0}
+							>
 								Próximo ({selectedIds.size})
 							</Button>
 						</DialogFooter>
@@ -317,7 +352,8 @@ function BroadcastModal({
 							<div className="flex-1 h-1.5 rounded-full bg-muted" />
 						</div>
 						<p className="text-sm text-muted-foreground">
-							Escreva a mensagem para enviar a <strong>{selectedIds.size} contato(s)</strong>
+							Escreva a mensagem para enviar a{" "}
+							<strong>{selectedIds.size} contato(s)</strong>
 						</p>
 						<Textarea
 							placeholder="Digite a mensagem da campanha..."
@@ -327,12 +363,22 @@ function BroadcastModal({
 							className="resize-none"
 						/>
 						<p className="text-xs text-muted-foreground">
-							A mensagem será enviada individualmente para cada contato selecionado.
+							A mensagem será enviada individualmente para cada contato
+							selecionado.
 						</p>
 						<DialogFooter>
-							<Button variant="outline" onClick={() => setStep(1)}>Voltar</Button>
-							<Button onClick={handleSend} disabled={!message.trim() || sending}>
-								{sending ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <Send className="h-4 w-4 mr-2" />}
+							<Button variant="outline" onClick={() => setStep(1)}>
+								Voltar
+							</Button>
+							<Button
+								onClick={handleSend}
+								disabled={!message.trim() || sending}
+							>
+								{sending ? (
+									<Loader2 className="h-4 w-4 animate-spin mr-2" />
+								) : (
+									<Send className="h-4 w-4 mr-2" />
+								)}
 								Enviar campanha
 							</Button>
 						</DialogFooter>
@@ -352,10 +398,13 @@ function BroadcastModal({
 						<div>
 							<h3 className="font-semibold text-lg">Campanha enviada!</h3>
 							<p className="text-sm text-muted-foreground mt-1">
-								{result.sent} enviadas · {result.failed} falhas · {result.total} total
+								{result.sent} enviadas · {result.failed} falhas · {result.total}{" "}
+								total
 							</p>
 						</div>
-						<Button className="w-full" onClick={handleClose}>Concluir</Button>
+						<Button className="w-full" onClick={handleClose}>
+							Concluir
+						</Button>
 					</div>
 				)}
 			</DialogContent>
@@ -370,7 +419,12 @@ function ConfirmationsModal({
 }: {
 	open: boolean;
 	onClose: () => void;
-	onSendConfirmation: (phone: string, patientName: string, date: string, time: string) => Promise<void>;
+	onSendConfirmation: (
+		phone: string,
+		patientName: string,
+		date: string,
+		time: string,
+	) => Promise<void>;
 }) {
 	const [confirmations, setConfirmations] = useState<any[]>([]);
 	const [loading, setLoading] = useState(false);
@@ -404,7 +458,15 @@ function ConfirmationsModal({
 	};
 
 	return (
-		<Dialog open={open} onOpenChange={(v) => { if (!v) { setSent(new Set()); onClose(); } }}>
+		<Dialog
+			open={open}
+			onOpenChange={(v) => {
+				if (!v) {
+					setSent(new Set());
+					onClose();
+				}
+			}}
+		>
 			<DialogContent className="sm:max-w-[520px]">
 				<DialogHeader>
 					<DialogTitle className="flex items-center gap-2 text-primary">
@@ -420,8 +482,12 @@ function ConfirmationsModal({
 					) : confirmations.length === 0 ? (
 						<div className="text-center py-10 text-muted-foreground">
 							<CalendarCheck className="h-10 w-10 mx-auto mb-3 opacity-30" />
-							<p className="text-sm font-medium text-foreground">Nenhuma consulta pendente</p>
-							<p className="text-xs mt-1">Não há consultas aguardando confirmação.</p>
+							<p className="text-sm font-medium text-foreground">
+								Nenhuma consulta pendente
+							</p>
+							<p className="text-xs mt-1">
+								Não há consultas aguardando confirmação.
+							</p>
 						</div>
 					) : (
 						<ScrollArea className="h-[360px]">
@@ -444,7 +510,9 @@ function ConfirmationsModal({
 												</p>
 												<p className="text-xs text-muted-foreground">
 													{appt.appointment_date
-														? new Date(appt.appointment_date + "T00:00:00").toLocaleDateString("pt-BR", {
+														? new Date(
+																appt.appointment_date + "T00:00:00",
+															).toLocaleDateString("pt-BR", {
 																weekday: "short",
 																day: "numeric",
 																month: "short",
@@ -453,7 +521,9 @@ function ConfirmationsModal({
 													às {appt.appointment_time || "—"}
 												</p>
 												{!hasPhone && (
-													<p className="text-[11px] text-orange-500 mt-0.5">Sem número cadastrado</p>
+													<p className="text-[11px] text-orange-500 mt-0.5">
+														Sem número cadastrado
+													</p>
 												)}
 											</div>
 											<Button
@@ -483,7 +553,13 @@ function ConfirmationsModal({
 					)}
 				</div>
 				<DialogFooter>
-					<Button variant="ghost" onClick={() => { setSent(new Set()); onClose(); }}>
+					<Button
+						variant="ghost"
+						onClick={() => {
+							setSent(new Set());
+							onClose();
+						}}
+					>
 						Fechar
 					</Button>
 				</DialogFooter>
@@ -640,8 +716,7 @@ function renderMessageContent(message: Message) {
 		const url =
 			parsed?.url ||
 			parsed?.link ||
-			(typeof message.content === "string" &&
-			message.content.startsWith("http")
+			(typeof message.content === "string" && message.content.startsWith("http")
 				? message.content
 				: null);
 		if (url) {
@@ -653,9 +728,7 @@ function renderMessageContent(message: Message) {
 						className="rounded-lg max-w-full max-h-64 object-cover cursor-pointer"
 						onClick={() => window.open(url, "_blank")}
 					/>
-					{parsed?.caption && (
-						<p className="text-sm mt-1">{parsed.caption}</p>
-					)}
+					{parsed?.caption && <p className="text-sm mt-1">{parsed.caption}</p>}
 				</div>
 			);
 		}
@@ -1008,9 +1081,15 @@ function ConversationDetailPanel({
 							</h4>
 							<DropdownMenu>
 								<DropdownMenuTrigger asChild>
-									<Button variant="outline" size="sm" className={`h-7 text-xs gap-1.5 ${conversation.priority ? PRIORITY_COLORS[conversation.priority] : "text-muted-foreground"}`}>
+									<Button
+										variant="outline"
+										size="sm"
+										className={`h-7 text-xs gap-1.5 ${conversation.priority ? PRIORITY_COLORS[conversation.priority] : "text-muted-foreground"}`}
+									>
 										<AlertTriangle className="h-3 w-3" />
-										{conversation.priority ? PRIORITY_LABELS[conversation.priority] : "Definir"}
+										{conversation.priority
+											? PRIORITY_LABELS[conversation.priority]
+											: "Definir"}
 										<ChevronDown className="h-3 w-3 ml-auto" />
 									</Button>
 								</DropdownMenuTrigger>
@@ -1028,7 +1107,7 @@ function ConversationDetailPanel({
 							</DropdownMenu>
 						</div>
 
-						{(conversation.slaBreached) && (
+						{conversation.slaBreached && (
 							<div>
 								<h4 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-2">
 									Atenção
@@ -1211,6 +1290,7 @@ function ChatPanel({
 }) {
 	const { conversation, messages, loading, sendMessage, refetch } =
 		useWhatsAppConversation(selectedId);
+	const { data: templates = [] } = useWhatsAppTemplates();
 	const [input, setInput] = useState("");
 	const [sending, setSending] = useState(false);
 	const [showNoteDialog, setShowNoteDialog] = useState(false);
@@ -1222,6 +1302,34 @@ function ChatPanel({
 	const [uploading, setUploading] = useState(false);
 	const messagesEndRef = useRef<HTMLDivElement>(null);
 	const fileInputRef = useRef<HTMLInputElement>(null);
+
+	const is24hWindowOpen = useMemo(() => {
+		if (!messages || messages.length === 0) return false;
+		const lastInboundMsg = [...messages]
+			.reverse()
+			.find((m) => m.direction === "inbound");
+		if (!lastInboundMsg) return false;
+		const diff = new Date().getTime() - new Date(lastInboundMsg.timestamp).getTime();
+		return diff <= 24 * 60 * 60 * 1000;
+	}, [messages]);
+
+	const handleSendTemplate = async (templateName: string, templateLanguage: string = "pt_BR") => {
+		if (sending) return;
+		setSending(true);
+		try {
+			await sendMessage(`[Template: ${templateName}]`, {
+				type: "template",
+				templateName,
+				templateLanguage,
+			});
+			toast.success("Template enviado com sucesso");
+			await onMessageSent?.();
+		} catch (error) {
+			toast.error("Erro ao enviar template");
+		} finally {
+			setSending(false);
+		}
+	};
 
 	// Slash command state
 	const [slashQuery, setSlashQuery] = useState("");
@@ -1239,8 +1347,8 @@ function ChatPanel({
 		? allQuickReplies
 				.filter(
 					(qr) =>
-						qr.name.toLowerCase().includes(slashQuery.toLowerCase()) ||
-						qr.content.toLowerCase().includes(slashQuery.toLowerCase()),
+						accentIncludes(qr.name, slashQuery) ||
+						accentIncludes(qr.content, slashQuery),
 				)
 				.slice(0, 5)
 		: allQuickReplies.slice(0, 5);
@@ -1365,10 +1473,7 @@ function ChatPanel({
 	};
 
 	const applySlashReply = (content: string) => {
-		const lastIdx = Math.max(
-			input.lastIndexOf(" "),
-			input.lastIndexOf("\n"),
-		);
+		const lastIdx = Math.max(input.lastIndexOf(" "), input.lastIndexOf("\n"));
 		const newInput =
 			lastIdx >= 0 ? input.slice(0, lastIdx + 1) + content : content;
 		setInput(newInput);
@@ -1558,6 +1663,37 @@ function ChatPanel({
 						>
 							<StickyNote className="h-5 w-5" />
 						</Button>
+						<DropdownMenu>
+							<DropdownMenuTrigger asChild>
+								<Button
+									variant="ghost"
+									size="icon"
+									className="h-9 w-9 rounded-full text-blue-600 hover:text-blue-700 hover:bg-blue-50 dark:hover:bg-blue-900/20"
+									title="Enviar Template"
+								>
+									<LayoutTemplate className="h-5 w-5" />
+								</Button>
+							</DropdownMenuTrigger>
+							<DropdownMenuContent align="start" className="w-80 mb-2">
+								<div className="px-2 py-1.5 text-xs font-semibold text-muted-foreground">
+									Templates Aprovados
+								</div>
+								{templates.filter((t: any) => String(t.status).toUpperCase() === 'APPROVED').length === 0 ? (
+									<DropdownMenuItem disabled>Nenhum template aprovado</DropdownMenuItem>
+								) : (
+									templates.filter((t: any) => String(t.status).toUpperCase() === 'APPROVED').map((t: any) => (
+										<DropdownMenuItem key={t.id} onClick={() => handleSendTemplate(t.name, t.language)}>
+											<div className="flex flex-col gap-1 w-full">
+												<span className="font-medium">{t.name}</span>
+												<span className="text-[10px] text-muted-foreground truncate w-full block">
+													{Array.isArray(t.components) ? t.components.find((c: any) => c.type === 'BODY')?.text : (t.content || '...')}
+												</span>
+											</div>
+										</DropdownMenuItem>
+									))
+								)}
+							</DropdownMenuContent>
+						</DropdownMenu>
 					</div>
 					<div className="flex-1 relative">
 						{showSlashMenu && slashFiltered.length > 0 && (
@@ -1583,16 +1719,29 @@ function ChatPanel({
 								))}
 							</div>
 						)}
-						<div className="bg-muted/60 dark:bg-muted/40 rounded-3xl border border-transparent focus-within:border-primary/30 focus-within:bg-background transition-colors flex items-end min-h-[44px]">
-							<Textarea
-								placeholder="Digite uma mensagem... (/ para respostas rápidas)"
-								value={input}
-								onChange={handleInputChange}
-								onKeyDown={handleKeyDown}
-								className="min-h-[44px] max-h-[120px] bg-transparent border-none resize-none py-3 px-4 shadow-none focus-visible:ring-0 text-[15px]"
-								rows={1}
-							/>
-						</div>
+						
+						{!is24hWindowOpen ? (
+							<div className="w-full bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-900 rounded-xl p-3 text-sm text-amber-800 dark:text-amber-500 flex flex-col gap-2">
+								<div className="flex items-center gap-2 font-semibold">
+									<AlertTriangle className="h-4 w-4" />
+									Janela de 24h Fechada
+								</div>
+								<p className="text-xs opacity-90">
+									O paciente não interagiu nas últimas 24h. Para retomar o contato, você precisa enviar um modelo aprovado pela Meta.
+								</p>
+							</div>
+						) : (
+							<div className="bg-muted/60 dark:bg-muted/40 rounded-3xl border border-transparent focus-within:border-primary/30 focus-within:bg-background transition-colors flex items-end min-h-[44px]">
+								<Textarea
+									placeholder="Digite uma mensagem... (/ para respostas rápidas)"
+									value={input}
+									onChange={handleInputChange}
+									onKeyDown={handleKeyDown}
+									className="min-h-[44px] max-h-[120px] bg-transparent border-none resize-none py-3 px-4 shadow-none focus-visible:ring-0 text-[15px]"
+									rows={1}
+								/>
+							</div>
+						)}
 					</div>
 					<Button
 						size="icon"
@@ -1602,7 +1751,7 @@ function ChatPanel({
 								: "bg-muted text-muted-foreground"
 						}`}
 						onClick={handleSend}
-						disabled={sending || (!input.trim() && !attachment) || uploading}
+						disabled={(!is24hWindowOpen) || sending || (!input.trim() && !attachment) || uploading}
 					>
 						{sending || uploading ? (
 							<Loader2 className="h-5 w-5 animate-spin" />
@@ -1660,7 +1809,9 @@ export default function WhatsAppInboxPage() {
 	const [search, setSearch] = useState("");
 	const [selectedId, setSelectedId] = useState<string | null>(null);
 	const [bulkMode, setBulkMode] = useState(false);
-	const [selectedConvIds, setSelectedConvIds] = useState<Set<string>>(new Set());
+	const [selectedConvIds, setSelectedConvIds] = useState<Set<string>>(
+		new Set(),
+	);
 	const [bulkAssigning, setBulkAssigning] = useState(false);
 	const [showSnoozeDialog, setShowSnoozeDialog] = useState(false);
 	const [showNewConversationDialog, setShowNewConversationDialog] =
@@ -1714,9 +1865,8 @@ export default function WhatsAppInboxPage() {
 		[statusFilter, priorityFilter, search, tagFilter],
 	);
 
-	const { conversations, loading, pagination, refetch } = useWhatsAppInbox(
-		inboxFilters,
-	);
+	const { conversations, loading, pagination, refetch } =
+		useWhatsAppInbox(inboxFilters);
 
 	const { conversation, addNote, assign, transfer, updateStatus } =
 		useWhatsAppConversation(selectedId);
@@ -1870,11 +2020,13 @@ export default function WhatsAppInboxPage() {
 
 	const filteredMembers = teamMembers.filter(
 		(m) =>
-			m.user?.name?.toLowerCase().includes(memberSearch.toLowerCase()) ||
-			m.user?.email?.toLowerCase().includes(memberSearch.toLowerCase()),
+			accentIncludes(m.user?.name || "", memberSearch) ||
+			accentIncludes(m.user?.email || "", memberSearch),
 	);
 
-	const handlePriorityChange = async (priority: "low" | "medium" | "high" | "urgent") => {
+	const handlePriorityChange = async (
+		priority: "low" | "medium" | "high" | "urgent",
+	) => {
 		if (!selectedId) return;
 		try {
 			await updatePriority(selectedId, priority);
@@ -2042,7 +2194,8 @@ export default function WhatsAppInboxPage() {
 										>
 											<Tag className="h-3 w-3" />
 											{tagFilter
-												? (availableTags.find((t) => t.id === tagFilter)?.name ?? "Tag")
+												? (availableTags.find((t) => t.id === tagFilter)
+														?.name ?? "Tag")
 												: "Tag"}
 											<ChevronDown className="h-3 w-3" />
 										</Button>
@@ -2442,7 +2595,8 @@ export default function WhatsAppInboxPage() {
 											>
 												<Avatar className="h-8 w-8">
 													<AvatarFallback className="text-xs">
-														{member.user?.name?.slice(0, 2).toUpperCase() || "??"}
+														{member.user?.name?.slice(0, 2).toUpperCase() ||
+															"??"}
 													</AvatarFallback>
 												</Avatar>
 												<div className="flex-1">
@@ -2538,7 +2692,7 @@ export default function WhatsAppInboxPage() {
 					</DialogFooter>
 				</DialogContent>
 			</Dialog>
-		<Dialog open={showSnoozeDialog} onOpenChange={setShowSnoozeDialog}>
+			<Dialog open={showSnoozeDialog} onOpenChange={setShowSnoozeDialog}>
 				<DialogContent className="sm:max-w-[340px]">
 					<DialogHeader>
 						<DialogTitle className="flex items-center gap-2">

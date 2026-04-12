@@ -65,6 +65,43 @@ const DEFAULT_TEMPLATES = [
 	},
 ] as const;
 
+function getStoredTemplates(settings: Record<string, unknown>) {
+	const rawTemplates = settings.whatsapp_templates;
+	if (Array.isArray(rawTemplates) && rawTemplates.length > 0) {
+		return [...(rawTemplates as Array<Record<string, unknown>>)];
+	}
+	return DEFAULT_TEMPLATES.map((template) => ({ ...template }));
+}
+
+function extractTemplateVariables(content: string) {
+	return Array.from(content.matchAll(/\{\{([^}]+)\}\}/g))
+		.map((match) => match[1]?.trim())
+		.filter((value): value is string => Boolean(value))
+		.filter((value, index, values) => values.indexOf(value) === index);
+}
+
+function slugifyTemplateKey(name: string) {
+	const slug = name
+		.normalize("NFD")
+		.replace(/[\u0300-\u036f]/g, "")
+		.toLowerCase()
+		.replace(/[^a-z0-9]+/g, "_")
+		.replace(/^_+|_+$/g, "");
+
+	return slug || `template_${Date.now()}`;
+}
+
+async function saveOrganizationSettings(
+	pool: ReturnType<typeof createPool>,
+	organizationId: string,
+	settings: Record<string, unknown>,
+) {
+	await pool.query(
+		`UPDATE organizations SET settings = $1::jsonb, updated_at = NOW() WHERE id = $2`,
+		[JSON.stringify(settings), organizationId],
+	);
+}
+
 async function loadOrganizationSettings(
 	pool: ReturnType<typeof createPool>,
 	organizationId: string,
@@ -97,12 +134,7 @@ app.get("/templates", requireAuth, async (c) => {
 	const user = c.get("user");
 	const pool = await createPool(c.env);
 	const settings = await loadOrganizationSettings(pool, user.organizationId);
-	const rawTemplates =
-		(settings.whatsapp_templates as unknown[]) ?? DEFAULT_TEMPLATES;
-	const templates =
-		Array.isArray(rawTemplates) && rawTemplates.length > 0
-			? rawTemplates
-			: DEFAULT_TEMPLATES;
+	const templates = getStoredTemplates(settings);
 	return c.json({ data: templates });
 });
 
@@ -110,15 +142,30 @@ app.put("/templates/:id", requireAuth, async (c) => {
 	const user = c.get("user");
 	const pool = await createPool(c.env);
 	const { id } = c.req.param();
-	const body = (await c.req.json()) as { content?: string; status?: string };
-	if (!body.content && !body.status) {
+	const body = (await c.req.json()) as {
+		name?: string;
+		content?: string;
+		body?: string;
+		category?: string;
+		status?: string;
+		template_key?: string;
+		variables?: string[];
+	};
+	const nextContent = body.content ?? body.body;
+
+	if (
+		body.name === undefined &&
+		nextContent === undefined &&
+		body.category === undefined &&
+		body.status === undefined &&
+		body.template_key === undefined &&
+		body.variables === undefined
+	) {
 		return c.json({ error: "Nenhum campo para atualizar" }, 400);
 	}
 
 	const settings = await loadOrganizationSettings(pool, user.organizationId);
-	const existingTemplates = Array.isArray(settings.whatsapp_templates)
-		? [...(settings.whatsapp_templates as Array<Record<string, unknown>>)]
-		: DEFAULT_TEMPLATES.map((template) => ({ ...template }));
+	const existingTemplates = getStoredTemplates(settings);
 
 	const currentIndex = existingTemplates.findIndex(
 		(template) => String(template.id) === id,
@@ -129,8 +176,18 @@ app.put("/templates/:id", requireAuth, async (c) => {
 
 	existingTemplates[currentIndex] = {
 		...existingTemplates[currentIndex],
-		...(body.content !== undefined ? { content: body.content } : {}),
+		...(body.name !== undefined ? { name: body.name.trim() } : {}),
+		...(nextContent !== undefined ? { content: nextContent } : {}),
+		...(body.category !== undefined ? { category: body.category } : {}),
 		...(body.status !== undefined ? { status: body.status } : {}),
+		...(body.template_key !== undefined
+			? { template_key: body.template_key.trim() }
+			: {}),
+		...(body.variables !== undefined
+			? { variables: body.variables }
+			: nextContent !== undefined
+				? { variables: extractTemplateVariables(nextContent) }
+				: {}),
 		updated_at: new Date().toISOString(),
 	};
 
@@ -139,12 +196,31 @@ app.put("/templates/:id", requireAuth, async (c) => {
 		whatsapp_templates: existingTemplates,
 	};
 
-	await pool.query(
-		`UPDATE organizations SET settings = $1::jsonb, updated_at = NOW() WHERE id = $2`,
-		[JSON.stringify(nextSettings), user.organizationId],
-	);
+	await saveOrganizationSettings(pool, user.organizationId, nextSettings);
 
 	return c.json({ data: existingTemplates[currentIndex] });
+});
+
+app.delete("/templates/:id", requireAuth, async (c) => {
+	const user = c.get("user");
+	const pool = await createPool(c.env);
+	const { id } = c.req.param();
+	const settings = await loadOrganizationSettings(pool, user.organizationId);
+	const existingTemplates = getStoredTemplates(settings);
+	const nextTemplates = existingTemplates.filter(
+		(template) => String(template.id) !== id,
+	);
+
+	if (nextTemplates.length === existingTemplates.length) {
+		return c.json({ error: "Template nao encontrado" }, 404);
+	}
+
+	await saveOrganizationSettings(pool, user.organizationId, {
+		...settings,
+		whatsapp_templates: nextTemplates,
+	});
+
+	return c.json({ ok: true });
 });
 
 const parseMetadata = (value: unknown): Record<string, unknown> => {
@@ -701,6 +777,11 @@ app.post("/templates", requireAuth, async (c) => {
 		language: string;
 		headerText?: string;
 		body: string;
+		content?: string;
+		status?: string;
+		template_key?: string;
+		variables?: string[];
+		localOnly?: boolean;
 		footer?: string;
 		buttons?: Array<{
 			type: "QUICK_REPLY" | "URL" | "PHONE_NUMBER";
@@ -709,6 +790,50 @@ app.post("/templates", requireAuth, async (c) => {
 			phone?: string;
 		}>;
 	};
+
+	if (body.localOnly || body.content !== undefined) {
+		const name = String(body.name ?? "").trim();
+		const content = String(body.content ?? body.body ?? "").trim();
+
+		if (!name || !content) {
+			return c.json({ error: "name and content are required" }, 400);
+		}
+
+		const pool = await createPool(c.env);
+		const settings = await loadOrganizationSettings(pool, user.organizationId);
+		const existingTemplates = getStoredTemplates(settings);
+		const now = new Date().toISOString();
+		const templateKey = body.template_key?.trim() || slugifyTemplateKey(name);
+		const newTemplate = {
+			id: crypto.randomUUID(),
+			organization_id: user.organizationId,
+			name,
+			template_key: templateKey,
+			content,
+			variables: body.variables ?? extractTemplateVariables(content),
+			category: body.category || "general",
+			status: body.status || "ativo",
+			created_at: now,
+			updated_at: now,
+		};
+
+		if (
+			existingTemplates.some(
+				(template) => String(template.template_key) === templateKey,
+			)
+		) {
+			return c.json({ error: "Já existe um template com esta chave" }, 409);
+		}
+
+		const nextTemplates = [newTemplate, ...existingTemplates];
+
+		await saveOrganizationSettings(pool, user.organizationId, {
+			...settings,
+			whatsapp_templates: nextTemplates,
+		});
+
+		return c.json({ data: newTemplate }, 201);
+	}
 
 	if (!body.name || !body.category || !body.body) {
 		return c.json({ error: "name, category and body are required" }, 400);
