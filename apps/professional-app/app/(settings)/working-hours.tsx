@@ -32,17 +32,22 @@ const DAYS = [
 
 const DEFAULT_OPEN = '08:00';
 const DEFAULT_CLOSE = '18:00';
+const DEFAULT_BREAK_START = '12:00';
+const DEFAULT_BREAK_END = '13:00';
 
 type DayHours = {
 	day_of_week: number;
 	is_open: boolean;
 	open_time: string;
 	close_time: string;
+	has_break?: boolean;
+	break_start?: string;
+	break_end?: string;
 };
 
 type PickerTarget = {
 	day_of_week: number;
-	field: 'open_time' | 'close_time';
+	field: 'open_time' | 'close_time' | 'break_start' | 'break_end';
 };
 
 function timeToDate(timeStr: string): Date {
@@ -64,6 +69,9 @@ function buildDefaults(): DayHours[] {
 		is_open: key >= 1 && key <= 5,
 		open_time: DEFAULT_OPEN,
 		close_time: DEFAULT_CLOSE,
+		has_break: false,
+		break_start: DEFAULT_BREAK_START,
+		break_end: DEFAULT_BREAK_END,
 	}));
 }
 
@@ -91,6 +99,9 @@ export default function WorkingHoursScreen() {
 							is_open: row ? (row.is_open ?? !row.is_closed) : key >= 1 && key <= 5,
 							open_time: row?.open_time || row?.start_time || DEFAULT_OPEN,
 							close_time: row?.close_time || row?.end_time || DEFAULT_CLOSE,
+							has_break: !!(row?.break_start && row?.break_end),
+							break_start: row?.break_start || DEFAULT_BREAK_START,
+							break_end: row?.break_end || DEFAULT_BREAK_END,
 						};
 					}),
 				);
@@ -113,9 +124,9 @@ export default function WorkingHoursScreen() {
 		);
 	};
 
-	const openPicker = (dayKey: number, field: 'open_time' | 'close_time') => {
+	const openPicker = (dayKey: number, field: 'open_time' | 'close_time' | 'break_start' | 'break_end') => {
 		const day = hours.find((h) => h.day_of_week === dayKey);
-		const currentTime = day?.[field] ?? DEFAULT_OPEN;
+		const currentTime = day?.[field] ?? (field.includes('break') ? DEFAULT_BREAK_START : DEFAULT_OPEN);
 		setPickerDate(timeToDate(currentTime));
 		setPickerTarget({ day_of_week: dayKey, field });
 	};
@@ -134,12 +145,44 @@ export default function WorkingHoursScreen() {
 
 	const closePicker = () => setPickerTarget(null);
 
+	const validateHours = () => {
+		for (const day of hours) {
+			if (!day.is_open) continue;
+			if (day.open_time >= day.close_time) {
+				const label = DAYS.find(d => d.key === day.day_of_week)?.label;
+				Alert.alert('Erro', `Em ${label}, o horário de abertura deve ser menor que o de fechamento.`);
+				return false;
+			}
+			if (day.has_break) {
+				if (!day.break_start || !day.break_end || day.break_start >= day.break_end) {
+					const label = DAYS.find(d => d.key === day.day_of_week)?.label;
+					Alert.alert('Erro', `Em ${label}, o início da pausa deve ser menor que o fim da pausa.`);
+					return false;
+				}
+				if (day.break_start <= day.open_time || day.break_end >= day.close_time) {
+					const label = DAYS.find(d => d.key === day.day_of_week)?.label;
+					Alert.alert('Erro', `Em ${label}, o intervalo de pausa deve estar dentro do horário de atendimento.`);
+					return false;
+				}
+			}
+		}
+		return true;
+	};
+
 	const handleSave = async () => {
+		if (!validateHours()) return;
+
 		setSaving(true);
 		try {
+			const dataToSend = hours.map(h => ({
+				...h,
+				break_start: h.has_break ? h.break_start : null,
+				break_end: h.has_break ? h.break_end : null,
+			}));
+
 			await fetchApi('/api/scheduling/settings/business-hours', {
 				method: 'POST',
-				data: hours,
+				data: dataToSend,
 			});
 			successHaptic();
 			Alert.alert('Salvo', 'Horários de atendimento atualizados com sucesso.', [
@@ -156,7 +199,12 @@ export default function WorkingHoursScreen() {
 	const currentDay = pickerTarget
 		? hours.find((h) => h.day_of_week === pickerTarget.day_of_week)
 		: null;
-	const pickerLabel = pickerTarget?.field === 'open_time' ? 'Abertura' : 'Fechamento';
+	
+	let pickerLabel = '';
+	if (pickerTarget?.field === 'open_time') pickerLabel = 'Abertura';
+	else if (pickerTarget?.field === 'close_time') pickerLabel = 'Fechamento';
+	else if (pickerTarget?.field === 'break_start') pickerLabel = 'Início Pausa';
+	else if (pickerTarget?.field === 'break_end') pickerLabel = 'Fim Pausa';
 
 	return (
 		<SafeAreaView style={[styles.container, { backgroundColor: colors.background }]} edges={['top']}>
@@ -196,34 +244,108 @@ export default function WorkingHoursScreen() {
 								</View>
 
 								{day.is_open && (
-									<View style={styles.timesRow}>
-										<View style={styles.timeGroup}>
-											<Text style={[styles.timeLabel, { color: colors.textSecondary }]}>Abertura</Text>
-											<TouchableOpacity
-												style={[styles.timeButton, { backgroundColor: colors.surfaceHover, borderColor: colors.border }]}
-												onPress={() => openPicker(key, 'open_time')}
-											>
-												<Ionicons name="time-outline" size={14} color={colors.textSecondary} />
-												<Text style={[styles.timeText, { color: colors.text }]}>{day.open_time}</Text>
-											</TouchableOpacity>
+									<>
+										<View style={styles.timesRow}>
+											<View style={styles.timeGroup}>
+												<Text style={[styles.timeLabel, { color: colors.textSecondary }]}>Abertura</Text>
+												<TouchableOpacity
+													style={[styles.timeButton, { backgroundColor: colors.surfaceHover, borderColor: colors.border }]}
+													onPress={() => openPicker(key, 'open_time')}
+												>
+													<Ionicons name="time-outline" size={14} color={colors.textSecondary} />
+													<Text style={[styles.timeText, { color: colors.text }]}>{day.open_time}</Text>
+												</TouchableOpacity>
+											</View>
+											<Ionicons
+												name="arrow-forward"
+												size={16}
+												color={colors.textMuted}
+												style={{ marginTop: 22 }}
+											/>
+											<View style={styles.timeGroup}>
+												<Text style={[styles.timeLabel, { color: colors.textSecondary }]}>Fechamento</Text>
+												<TouchableOpacity
+													style={[styles.timeButton, { backgroundColor: colors.surfaceHover, borderColor: colors.border }]}
+													onPress={() => openPicker(key, 'close_time')}
+												>
+													<Ionicons name="time-outline" size={14} color={colors.textSecondary} />
+													<Text style={[styles.timeText, { color: colors.text }]}>{day.close_time}</Text>
+												</TouchableOpacity>
+											</View>
 										</View>
-										<Ionicons
-											name="arrow-forward"
-											size={16}
-											color={colors.textMuted}
-											style={{ marginTop: 22 }}
-										/>
-										<View style={styles.timeGroup}>
-											<Text style={[styles.timeLabel, { color: colors.textSecondary }]}>Fechamento</Text>
-											<TouchableOpacity
-												style={[styles.timeButton, { backgroundColor: colors.surfaceHover, borderColor: colors.border }]}
-												onPress={() => openPicker(key, 'close_time')}
-											>
-												<Ionicons name="time-outline" size={14} color={colors.textSecondary} />
-												<Text style={[styles.timeText, { color: colors.text }]}>{day.close_time}</Text>
-											</TouchableOpacity>
+
+										<View style={styles.breakToggleRow}>
+											<Text style={[styles.timeLabel, { color: colors.textSecondary, marginBottom: 0 }]}>
+												Adicionar pausa/almoço
+											</Text>
+											<Switch
+												value={day.has_break ?? false}
+												onValueChange={() => {
+													light();
+													setHours(prev => prev.map(d => d.day_of_week === key ? { ...d, has_break: !d.has_break } : d));
+												}}
+												trackColor={{ false: colors.border, true: colors.primary + '66' }}
+												thumbColor={day.has_break ? colors.primary : colors.textMuted}
+											/>
 										</View>
-									</View>
+
+										{day.has_break && (
+											<View style={[styles.timesRow, { marginTop: 12 }]}>
+												<View style={styles.timeGroup}>
+													<Text style={[styles.timeLabel, { color: colors.textSecondary }]}>Início Pausa</Text>
+													<TouchableOpacity
+														style={[styles.timeButton, { backgroundColor: colors.surfaceHover, borderColor: colors.border }]}
+														onPress={() => openPicker(key, 'break_start')}
+													>
+														<Ionicons name="time-outline" size={14} color={colors.textSecondary} />
+														<Text style={[styles.timeText, { color: colors.text }]}>{day.break_start}</Text>
+													</TouchableOpacity>
+												</View>
+												<Ionicons
+													name="arrow-forward"
+													size={16}
+													color={colors.textMuted}
+													style={{ marginTop: 22 }}
+												/>
+												<View style={styles.timeGroup}>
+													<Text style={[styles.timeLabel, { color: colors.textSecondary }]}>Fim Pausa</Text>
+													<TouchableOpacity
+														style={[styles.timeButton, { backgroundColor: colors.surfaceHover, borderColor: colors.border }]}
+														onPress={() => openPicker(key, 'break_end')}
+													>
+														<Ionicons name="time-outline" size={14} color={colors.textSecondary} />
+														<Text style={[styles.timeText, { color: colors.text }]}>{day.break_end}</Text>
+													</TouchableOpacity>
+												</View>
+											</View>
+										)}
+
+										{key >= 1 && key <= 5 && (
+											<TouchableOpacity
+												style={styles.copyButton}
+												onPress={() => {
+													light();
+													setHours(prev => prev.map(d => 
+														(d.day_of_week >= 1 && d.day_of_week <= 5)
+															? { 
+																...d, 
+																is_open: day.is_open, 
+																open_time: day.open_time, 
+																close_time: day.close_time, 
+																has_break: day.has_break, 
+																break_start: day.break_start, 
+																break_end: day.break_end 
+															}
+															: d
+													));
+													Alert.alert('Copiado', 'Horários copiados para todos os dias úteis (Seg-Sex).');
+												}}
+											>
+												<Ionicons name="copy-outline" size={14} color={colors.primary} />
+												<Text style={[styles.copyButtonText, { color: colors.primary }]}>Copiar para Seg-Sex</Text>
+											</TouchableOpacity>
+										)}
+									</>
 								)}
 							</Card>
 						);
@@ -308,6 +430,24 @@ const styles = StyleSheet.create({
 	dayLabel: { fontSize: 16, fontWeight: '600' },
 	closedLabel: { fontSize: 12, marginTop: 2 },
 	timesRow: { flexDirection: 'row', alignItems: 'center', gap: 12, marginTop: 12 },
+	breakToggleRow: { 
+		flexDirection: 'row', 
+		alignItems: 'center', 
+		justifyContent: 'space-between', 
+		marginTop: 16, 
+		borderTopWidth: StyleSheet.hairlineWidth, 
+		paddingTop: 16, 
+		borderTopColor: 'rgba(150,150,150,0.2)' 
+	},
+	copyButton: { 
+		flexDirection: 'row', 
+		alignItems: 'center', 
+		gap: 6, 
+		marginTop: 16, 
+		alignSelf: 'flex-start', 
+		paddingVertical: 4 
+	},
+	copyButtonText: { fontSize: 13, fontWeight: '600' },
 	timeGroup: { flex: 1 },
 	timeLabel: { fontSize: 12, marginBottom: 6 },
 	timeButton: {

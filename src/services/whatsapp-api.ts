@@ -65,6 +65,9 @@ export interface Message {
 	deletedBy?: string;
 	deleteScope?: "local" | "everyone";
 	deletedForEveryone?: boolean;
+	canDeleteForEveryone?: boolean;
+	deleteForEveryoneExpiresAt?: string;
+	deleteForEveryoneWindowHours?: number;
 	metadata?: Record<string, unknown>;
 	interactiveData?: {
 		type: "button" | "list";

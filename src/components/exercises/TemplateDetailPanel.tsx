@@ -298,6 +298,29 @@ export function TemplateDetailPanel({
                 {template.patientProfile === "pos_operatorio" && (
                   <ExerciseTimeline />
                 )}
+
+                <div className="space-y-2 mt-4">
+                  {template.items?.map((item, idx) => (
+                    <div
+                      key={item.id || idx}
+                      className="flex items-center gap-3 p-3 rounded-lg border bg-card hover:bg-accent/5 transition-colors"
+                    >
+                      <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-primary/10 text-primary text-xs font-bold">
+                        {idx + 1}
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm font-semibold truncate text-foreground">
+                          {item.exercise?.name || "Exercício sem nome"}
+                        </p>
+                        <div className="flex items-center gap-2 mt-0.5 text-[11px] text-muted-foreground">
+                          {item.sets && <span>{item.sets} séries</span>}
+                          {item.repetitions && <span>{item.repetitions} reps</span>}
+                          {item.duration && <span>{item.duration}s</span>}
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
               </div>
             )}
           </TabsContent>
