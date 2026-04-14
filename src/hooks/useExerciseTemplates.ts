@@ -18,6 +18,10 @@ export interface ExerciseTemplate {
 	description?: string;
 	category: string;
 	condition_name: string;
+	difficulty_level?: string;
+	treatment_phase?: string;
+	body_part?: string;
+	estimated_duration?: number;
 	template_variant?: string;
 	organization_id?: string;
 	created_by?: string;
@@ -65,6 +69,10 @@ const mapWorkerToAppTemplate = (t: WorkersTemplate): ExerciseTemplate => ({
 	description: t.description || undefined,
 	category: t.category || "",
 	condition_name: t.conditionName || "",
+	difficulty_level: t.difficultyLevel || undefined,
+	treatment_phase: t.treatmentPhase || undefined,
+	body_part: t.bodyPart || undefined,
+	estimated_duration: t.estimatedDuration || undefined,
 	template_variant: t.templateVariant || undefined,
 	organization_id: t.organizationId || undefined,
 	created_by: t.createdBy || undefined,
