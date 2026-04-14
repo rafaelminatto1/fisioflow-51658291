@@ -166,19 +166,20 @@ export default function PatientDetailScreen() {
       >
         {/* Patient Header */}
         <View style={styles.header}>
-          <View style={[styles.avatar, { backgroundColor: colors.primary }]}>
-            <Text style={styles.avatarText}>
+          <View style={[styles.avatar, { backgroundColor: colors.primary + '20', borderColor: colors.primary + '40', borderWidth: 2 }]}>
+            <Text style={[styles.avatarText, { color: colors.primary }]}>
               {name.charAt(0).toUpperCase()}
             </Text>
           </View>
           <View style={styles.headerInfo}>
-            <Text style={[styles.name, { color: colors.text }]}>{name}</Text>
+            <Text style={[styles.name, { color: colors.text, letterSpacing: -0.5 }]}>{name}</Text>
             <View
               style={[
                 styles.statusBadge,
-                { backgroundColor: colors.successLight },
+                { backgroundColor: colors.success + '15', borderColor: colors.success + '30', borderWidth: 1 },
               ]}
             >
+              <View style={[styles.statusDot, { backgroundColor: colors.success }]} />
               <Text style={[styles.statusText, { color: colors.success }]}>
                 Ativo
               </Text>
@@ -189,73 +190,53 @@ export default function PatientDetailScreen() {
         {/* Quick Actions */}
         <View style={styles.actionsRow}>
           <TouchableOpacity
-            style={[styles.actionBtn, { backgroundColor: '#25D366' }]}
+            style={[styles.actionBtn, { backgroundColor: '#25D366' + 'E0' }]}
             onPress={handleWhatsApp}
           >
-            <Ionicons name="logo-whatsapp" size={20} color="#FFFFFF" />
+            <Ionicons name="logo-whatsapp" size={18} color="#FFFFFF" />
             <Text style={styles.actionBtnText}>WhatsApp</Text>
           </TouchableOpacity>
 
           <TouchableOpacity
-            style={[styles.actionBtn, { backgroundColor: colors.primary }]}
+            style={[styles.actionBtn, { backgroundColor: colors.primary + 'E0' }]}
             onPress={() => {
               medium();
               router.push(`/appointment-form?patientId=${id}&patientName=${name}`);
             }}
           >
-            <Ionicons name="calendar" size={20} color="#FFFFFF" />
+            <Ionicons name="calendar-outline" size={18} color="#FFFFFF" />
             <Text style={styles.actionBtnText}>Agendar</Text>
           </TouchableOpacity>
           <TouchableOpacity
-            style={[styles.actionBtn, { backgroundColor: colors.success }]}
+            style={[styles.actionBtn, { backgroundColor: colors.success + 'E0' }]}
             onPress={() => {
               medium();
               router.push(`/exercises?patientId=${id}&patientName=${name}`);
             }}
           >
-            <Ionicons name="fitness" size={20} color="#FFFFFF" />
-            <Text style={styles.actionBtnText}>Exercicios</Text>
+            <Ionicons name="fitness-outline" size={18} color="#FFFFFF" />
+            <Text style={styles.actionBtnText}>Planos</Text>
           </TouchableOpacity>
           <TouchableOpacity
-            style={[styles.actionBtn, { backgroundColor: colors.info }]}
+            style={[styles.actionBtn, { backgroundColor: colors.info + 'E0' }]}
             onPress={() => {
               medium();
               router.push(`/evolution-form?patientId=${id}&patientName=${name}` as any);
             }}
           >
-            <Ionicons name="document-text" size={20} color="#FFFFFF" />
-            <Text style={styles.actionBtnText}>Evolucao</Text>
-          </TouchableOpacity>
-          <TouchableOpacity
-            style={[styles.actionBtn, { backgroundColor: '#8B5CF6' }]}
-            onPress={() => {
-              medium();
-              router.push({ pathname: '/proms', params: { patientId: id as string, patientName: name } });
-            }}
-          >
-            <Ionicons name="clipboard" size={20} color="#FFFFFF" />
-            <Text style={styles.actionBtnText}>Escalas</Text>
-          </TouchableOpacity>
-          <TouchableOpacity
-            style={[styles.actionBtn, { backgroundColor: '#059669' }]}
-            onPress={() => {
-              medium();
-              router.push({ pathname: '/hep-compliance', params: { patientId: id as string, patientName: name } });
-            }}
-          >
-            <Ionicons name="stats-chart" size={20} color="#FFFFFF" />
-            <Text style={styles.actionBtnText}>HEP</Text>
+            <Ionicons name="document-text-outline" size={18} color="#FFFFFF" />
+            <Text style={styles.actionBtnText}>Evoluir</Text>
           </TouchableOpacity>
         </View>
 
         {/* Tab Selector */}
-        <View style={[styles.tabContainer, { backgroundColor: colors.surface, borderColor: colors.border }]}>
+        <View style={[styles.tabContainer, { backgroundColor: colors.surface + '80', borderColor: colors.border + '30' }]}>
           {(['info', 'financial', 'evolutions', 'biofeedback'] as const).map((tabKey) => (
             <TouchableOpacity
               key={tabKey}
               style={[
                 styles.tab,
-                selectedTab === tabKey && { backgroundColor: colors.primary },
+                selectedTab === tabKey && { backgroundColor: colors.primary + 'E0', ...styles.activeTabShadow },
               ]}
               onPress={() => {
                 medium();
@@ -268,7 +249,7 @@ export default function PatientDetailScreen() {
                   { color: selectedTab === tabKey ? '#FFFFFF' : colors.textSecondary },
                 ]}
               >
-                {tabKey === 'info' ? 'Info' : tabKey === 'financial' ? 'Fin.' : tabKey === 'evolutions' ? 'Evol.' : 'IA'}
+                {tabKey === 'info' ? 'Info' : tabKey === 'financial' ? 'Financeiro' : tabKey === 'evolutions' ? 'Evolução' : 'IA'}
               </Text>
             </TouchableOpacity>
           ))}
@@ -316,7 +297,7 @@ export default function PatientDetailScreen() {
             <View style={styles.infoSection}>
                 <PainProgressChart evolutions={evolutions} />
                 {/* Personal Information */}
-                <Card style={styles.infoCard}>
+                <Card style={[styles.infoCard, { backgroundColor: colors.surface + 'B0', borderColor: colors.border + '40', borderWidth: 1.2 }]}>
                     <View style={styles.infoCardHeader}>
                         <Ionicons name="person-circle-outline" size={20} color={colors.primary} />
                         <Text style={[styles.infoSectionTitle, { color: colors.text }]}>Informações Pessoais</Text>
@@ -335,8 +316,7 @@ export default function PatientDetailScreen() {
                     )}
                 </Card>
 
-                {/* Contact Information */}
-                <Card style={styles.infoCard}>
+                <Card style={[styles.infoCard, { backgroundColor: colors.surface + 'B0', borderColor: colors.border + '40', borderWidth: 1.2 }]}>
                     <View style={styles.infoCardHeader}>
                         <Ionicons name="call-outline" size={20} color={colors.primary} />
                         <Text style={[styles.infoSectionTitle, { color: colors.text }]}>Contato</Text>
@@ -355,8 +335,7 @@ export default function PatientDetailScreen() {
                     )}
                 </Card>
 
-                {/* Clinical Data */}
-                <Card style={styles.infoCard}>
+                <Card style={[styles.infoCard, { backgroundColor: colors.surface + 'B0', borderColor: colors.border + '40', borderWidth: 1.2 }]}>
                     <View style={styles.infoCardHeader}>
                         <Ionicons name="pulse-outline" size={20} color={colors.primary} />
                         <Text style={[styles.infoSectionTitle, { color: colors.text }]}>Dados Clínicos</Text>
@@ -375,9 +354,8 @@ export default function PatientDetailScreen() {
                     )}
                 </Card>
 
-                {/* Observations */}
                 {patient?.notes && (
-                    <Card style={styles.infoCard}>
+                    <Card style={[styles.infoCard, { backgroundColor: colors.surface + 'B0', borderColor: colors.border + '40', borderWidth: 1.2 }]}>
                         <View style={styles.infoCardHeader}>
                             <Ionicons name="document-text-outline" size={20} color={colors.primary} />
                             <Text style={[styles.infoSectionTitle, { color: colors.text }]}>Observações</Text>
@@ -476,48 +454,32 @@ export default function PatientDetailScreen() {
                     router.push(`/evolution-detail?evolutionId=${evolution.id}&patientId=${id}&patientName=${name}` as any);
                   }}
                 >
-                  <Card style={styles.evolutionCard}>
+                  <Card style={[styles.evolutionCard, { backgroundColor: colors.surface + 'B0', borderColor: colors.border + '40', borderWidth: 1.2 }]}>
                     <View style={styles.evolutionHeader}>
                       <Text style={[styles.evolutionDate, { color: colors.text }]}>
                         {evolution.date ? format(new Date(evolution.date), 'dd/MM/yyyy HH:mm') : 'Data não disponível'}
                       </Text>
                       {evolution.painLevel !== undefined && (
-                        <View style={[styles.painBadge, { backgroundColor: evolution.painLevel > 5 ? colors.errorLight : colors.successLight }]}>
+                        <View style={[styles.painBadge, { backgroundColor: evolution.painLevel > 5 ? colors.error + '15' : colors.success + '15' }]}>
                           <Text style={[styles.painText, { color: evolution.painLevel > 5 ? colors.error : colors.success }]}>
                             Dor: {evolution.painLevel}
                           </Text>
                         </View>
                       )}
-                       {evolution.attachments && evolution.attachments.length > 0 && (
-                        <View style={[styles.attachmentsBadge, { backgroundColor: colors.infoLight }]}>
-                            <Ionicons name="attach" size={14} color={colors.info} />
-                            <Text style={[styles.attachmentsText, { color: colors.info }]}>{evolution.attachments.length}</Text>
-                        </View>
-                      )}
                     </View>
                     <View style={styles.soapPreview}>
                       {evolution.subjective && (
-                        <Text style={[styles.soapItem, { color: colors.text }]} numberOfLines={1}>
-                          <Text style={{ fontWeight: 'bold' }}>S: </Text>{evolution.subjective}
+                        <Text style={[styles.soapItem, { color: colors.textSecondary }]} numberOfLines={1}>
+                          <Text style={{ fontWeight: '700', color: colors.primary }}>S: </Text>{evolution.subjective}
                         </Text>
                       )}
                       {evolution.objective && (
-                        <Text style={[styles.soapItem, { color: colors.text }]} numberOfLines={1}>
-                          <Text style={{ fontWeight: 'bold' }}>O: </Text>{evolution.objective}
-                        </Text>
-                      )}
-                       {evolution.assessment && (
-                        <Text style={[styles.soapItem, { color: colors.text }]} numberOfLines={1}>
-                          <Text style={{ fontWeight: 'bold' }}>A: </Text>{evolution.assessment}
-                        </Text>
-                      )}
-                       {evolution.plan && (
-                        <Text style={[styles.soapItem, { color: colors.text }]} numberOfLines={1}>
-                          <Text style={{ fontWeight: 'bold' }}>P: </Text>{evolution.plan}
+                        <Text style={[styles.soapItem, { color: colors.textSecondary }]} numberOfLines={1}>
+                          <Text style={{ fontWeight: '700', color: colors.primary }}>O: </Text>{evolution.objective}
                         </Text>
                       )}
                     </View>
-                    <Ionicons name="chevron-forward" size={20} color={colors.textMuted} style={styles.evolutionArrow} />
+                    <Ionicons name="chevron-forward" size={18} color={colors.textMuted} style={styles.evolutionArrow} />
                   </Card>
                 </TouchableOpacity>
               ))
@@ -1442,5 +1404,18 @@ const styles = StyleSheet.create({
   exportPdfBtnText: {
     fontSize: 14,
     fontWeight: '600',
+  },
+  statusDot: {
+    width: 6,
+    height: 6,
+    borderRadius: 3,
+    marginRight: 4,
+  },
+  activeTabShadow: {
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 2,
   },
 });

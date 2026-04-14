@@ -141,32 +141,36 @@ function addMinutesToTime(time: string, minutes: number): string {
   return `${String(newH).padStart(2, '0')}:${String(newM).padStart(2, '0')}`;
 }
 
+function parseLocalDate(dateStr: string): Date {
+  const [year, month, day] = dateStr.split('-').map(Number);
+  return new Date(year, month - 1, day);
+}
+
 export function useAppointments(options?: UseAppointmentsOptions) {
   const { user } = useAuthStore();
   const queryClient = useQueryClient();
 
   console.log('[useAppointments] user:', user?.id, 'organizationId:', user?.organizationId, 'options:', options);
 
+  const dateFromStr = options?.startDate ? formatDateForAPI(options.startDate) : undefined;
+  const dateToStr = options?.endDate ? formatDateForAPI(options.endDate) : undefined;
+
   const appointments = useQuery({
-    queryKey: ['appointments_v2', user?.id, options],
+    queryKey: ['appointments_v2', user?.id, dateFromStr, dateToStr, options?.status, options?.patientId, options?.limit],
     queryFn: async () => {
       if (!user?.id) {
         console.log('[useAppointments] No user, returning empty array');
         return [];
       }
 
-      const dateFrom = options?.startDate ? formatDateForAPI(options.startDate) : undefined;
-      const dateTo = options?.endDate ? formatDateForAPI(options.endDate) : undefined;
-
       // Map frontend status (e.g. 'scheduled') to backend status (e.g. 'agendado')
-      // If passing undefined, it fetches all statuses
       const statusParam = options?.status ? mapToApiStatus(options.status as any) : undefined;
 
-      console.log('[useAppointments] Fetching appointments for org:', user.organizationId, 'therapistId:', user.id);
+      console.log('[useAppointments] Fetching appointments for org:', user.organizationId, 'therapistId:', user.id, 'from:', dateFromStr, 'to:', dateToStr);
       try {
         const data = await getAppointments(user.organizationId, {
-          dateFrom,
-          dateTo,
+          dateFrom: dateFromStr,
+          dateTo: dateToStr,
           therapistId: user.id,
           status: statusParam,
           patientId: options?.patientId,
@@ -174,7 +178,6 @@ export function useAppointments(options?: UseAppointmentsOptions) {
         });
         console.log('[useAppointments] Raw API response:', data?.length, 'appointments');
         const mapped = data.map(mapApiAppointment);
-        console.log('[useAppointments] Mapped appointments:', mapped.length);
         return mapped;
       } catch (error) {
         console.error('[useAppointments] Error:', error);
@@ -182,16 +185,16 @@ export function useAppointments(options?: UseAppointmentsOptions) {
       }
     },
     enabled: !!user,
-    staleTime: 1000 * 60 * 5, // 5 minutes
+    staleTime: 1000 * 60 * 2, // 2 minutes
     refetchInterval: options?.refetchInterval,
-    initialData: options?.initialData,
+    refetchOnWindowFocus: true,
   });
 
   const createMutation = useMutation({
     mutationFn: async (data: Omit<Appointment, 'id' | 'createdAt' | 'updatedAt'>) => {
       if (!user?.id) throw new Error('User not authenticated');
 
-      const dateStr = formatDateForAPI(new Date(data.date));
+      const dateStr = typeof data.date === 'string' ? data.date : formatDateForAPI(new Date(data.date));
       const startTime = data.time || '09:00';
       const endTime = addMinutesToTime(startTime, data.duration);
 
@@ -229,8 +232,18 @@ export function useAppointments(options?: UseAppointmentsOptions) {
       if (data.isUnlimited !== undefined) (updateData as any).isUnlimited = data.isUnlimited;
 
       if (data.date || data.time || data.duration) {
-        const date = data.date ? new Date(data.date) : new Date();
-        updateData.date = formatDateForAPI(date);
+        let dateObj: Date;
+        if (data.date) {
+          if (typeof data.date === 'string' && data.date.includes('-')) {
+            dateObj = parseLocalDate(data.date);
+          } else {
+            dateObj = new Date(data.date);
+          }
+        } else {
+          dateObj = new Date();
+        }
+        
+        updateData.date = formatDateForAPI(dateObj);
         const time = data.time || '09:00';
         updateData.startTime = time;
         updateData.endTime = addMinutesToTime(time, data.duration || 45);

@@ -51,7 +51,6 @@ import { whatsappInboxRoutes } from "./routes/whatsapp-inbox";
 import { precadastroRoutes } from "./routes/precadastro";
 import { telemedicineRoutes } from "./routes/telemedicine";
 import { imageProcessorRoutes } from "./routes/imageProcessor";
-import { inngestRoutes } from "./routes/inngest";
 import { calendarRoutes } from "./routes/calendar";
 import { projectsRoutes } from "./routes/projects";
 import { reportsRoutes } from "./routes/reports";
@@ -96,11 +95,33 @@ import { cors } from "hono/cors";
 
 const app = new Hono<{ Bindings: Env; Variables: CustomVariables }>();
 
-// CORS: Permitir todos os origins em produção para debug, depois restricting
+function parseAllowedOrigins(value?: string): string[] {
+	return (value ?? "")
+		.split(",")
+		.map((origin) => origin.trim())
+		.filter(Boolean);
+}
+
+function resolveCorsOrigin(
+	origin: string | undefined,
+	env: Env,
+): string | undefined {
+	const allowedOrigins = parseAllowedOrigins(env.ALLOWED_ORIGINS);
+	if (allowedOrigins.length === 0) return undefined;
+
+	if (allowedOrigins.includes("*")) {
+		return env.ENVIRONMENT === "production" ? undefined : origin;
+	}
+
+	if (!origin) return undefined;
+	return allowedOrigins.includes(origin) ? origin : undefined;
+}
+
+// CORS: usa allowlist de ambiente; wildcard só é aceito fora de produção.
 app.use(
 	"*",
 	cors({
-		origin: "*",
+		origin: (origin, c) => resolveCorsOrigin(origin, c.env),
 		allowMethods: ["GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"],
 		allowHeaders: [
 			"Content-Type",
@@ -197,7 +218,6 @@ const apiRoutes = [
 	["/api/precadastro", precadastroRoutes],
 	["/api/telemedicine", telemedicineRoutes],
 	["/api/image-processor", imageProcessorRoutes],
-	["/api/inngest", inngestRoutes],
 	["/api/calendar", calendarRoutes],
 	["/api/projects", projectsRoutes],
 	["/api/reports", reportsRoutes],

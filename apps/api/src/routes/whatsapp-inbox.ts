@@ -13,6 +13,7 @@ import {
 	addInternalNote,
 	updateConversationStatus,
 	getConversationMetrics,
+	resolveProfileUuid,
 } from "../lib/whatsapp-conversations";
 import {
 	sendReplyButtons,
@@ -23,11 +24,32 @@ import {
 	resolveOrCreateContact,
 	linkContactToPatient,
 } from "../lib/whatsapp-identity";
+import { isUuid } from "../lib/validators";
 import type { Env } from "../types/env";
 
 const app = new Hono<{ Bindings: Env; Variables: { user: AuthUser } }>();
 
+const DEFAULT_WHATSAPP_TAGS = [
+	{ name: "Agendamento", color: "#0A84FF" },
+	{ name: "Retorno", color: "#34C759" },
+	{ name: "Financeiro", color: "#AF52DE" },
+	{ name: "Exames", color: "#5856D6" },
+	{ name: "Pós-sessão", color: "#32ADE6" },
+	{ name: "Lead", color: "#FF9500" },
+	{ name: "Urgente", color: "#FF3B30" },
+	{ name: "Dúvida clínica", color: "#8E8E93" },
+];
+
 function mapConversationRow(row: any) {
+	const lastMessageType = row.last_message_type || row.message_type;
+	const lastMessageContent = row.last_message ?? undefined;
+	const lastMessage =
+		typeof lastMessageContent === "string"
+			? lastMessageContent
+			: lastMessageContent?.text ||
+				lastMessageContent?.body ||
+				(lastMessageType ? `[${lastMessageType}]` : undefined);
+
 	return {
 		id: row.id,
 		contactId: row.contact_id,
@@ -40,7 +62,9 @@ function mapConversationRow(row: any) {
 		assignedTo: row.assigned_to || undefined,
 		assignedToName: row.assigned_to_name || undefined,
 		team: row.team || undefined,
-		lastMessage: row.last_message || undefined,
+		lastMessage,
+		lastMessageContent,
+		lastMessageType: lastMessageType || undefined,
 		lastMessageAt: row.last_message_at || undefined,
 		lastMessageDirection: row.last_message_direction || undefined,
 		unreadCount: row.unread_count || 0,
@@ -54,25 +78,37 @@ function mapConversationRow(row: any) {
 }
 
 function mapMessageRow(row: any): any {
+	const messageType = row.message_type || row.type || "text";
+	const timestamp = row.created_at || row.timestamp;
+	const isInternalNote =
+		row.is_internal_note === true ||
+		messageType === "note" ||
+		row.direction === "internal";
+	const content =
+		typeof row.content === "string"
+			? (() => {
+					try {
+						return JSON.parse(row.content);
+					} catch {
+						return row.content;
+					}
+				})()
+			: row.content;
+
 	return {
 		id: row.id,
 		conversationId: row.conversation_id,
 		direction: row.direction === "internal" ? "outbound" : row.direction,
-		type: row.message_type || "text",
-		content:
-			typeof row.content === "string"
-				? (() => {
-						try {
-							return JSON.parse(row.content);
-						} catch {
-							return row.content;
-						}
-					})()
-				: row.content,
+		type: messageType,
+		messageType,
+		content,
 		senderId: row.sender_id || undefined,
 		senderName: row.sender_name || undefined,
-		timestamp: row.created_at,
+		senderType: row.sender_type || undefined,
+		timestamp,
+		createdAt: timestamp,
 		status: row.status || undefined,
+		isInternalNote,
 		interactiveData: row.interactive_data || undefined,
 		templateName: row.template_name || undefined,
 		templateParams: undefined,
@@ -155,19 +191,26 @@ app.get("/conversations", requireAuth, async (c) => {
 		tagId,
 		page = "1",
 		limit = "50",
-	} = c.req.query();
+		} = c.req.query();
 
 	const pageNum = Math.max(1, parseInt(page) || 1);
 	const limitNum = Math.min(100, Math.max(1, parseInt(limit) || 50));
 	const offset = (pageNum - 1) * limitNum;
 
 	try {
-		const conversations = await getInboxConversations(
+		const resolvedAssignedTo =
+			assignedTo === "me"
+				? user.uid
+				: assignedTo === "unassigned"
+					? "unassigned"
+					: assignedTo ?? undefined;
+
+		const { data: conversations, total } = await getInboxConversations(
 			pool,
 			user.organizationId,
 			{
 				status: status ?? undefined,
-				assignedTo: assignedTo ?? undefined,
+				assignedTo: resolvedAssignedTo,
 				priority: priority ?? undefined,
 				team: team ?? undefined,
 				search: search ?? undefined,
@@ -176,14 +219,6 @@ app.get("/conversations", requireAuth, async (c) => {
 				offset,
 			},
 		);
-
-		const totalResult = await pool.query(
-			`SELECT COUNT(*)::int AS total FROM wa_conversations c
-       LEFT JOIN whatsapp_contacts wc ON wc.id = c.contact_id
-       WHERE c.organization_id = $1${status ? " AND c.status = $2" : ""}`,
-			status ? [user.organizationId, status] : [user.organizationId],
-		);
-		const total = totalResult.rows[0]?.total ?? conversations.length;
 
 		return c.json({
 			data: conversations.map(mapConversationRow),
@@ -196,7 +231,15 @@ app.get("/conversations", requireAuth, async (c) => {
 		});
 	} catch (err) {
 		console.error("[WhatsApp Inbox] GET /conversations error:", err);
-		return c.json({ error: "Failed to fetch conversations" }, 500);
+		const isProd = c.env.ENVIRONMENT === "production";
+		return c.json(
+			{
+				error: "Failed to fetch conversations",
+				message: err instanceof Error ? err.message : String(err),
+				stack: !isProd ? (err instanceof Error ? err.stack : undefined) : undefined,
+			},
+			500,
+		);
 	}
 });
 
@@ -261,40 +304,56 @@ app.post("/conversations/bulk", requireAuth, async (c) => {
 		return c.json({ error: "Maximum 100 conversations per bulk action" }, 400);
 	}
 
-	const placeholders = body.ids.map((_, i) => `$${i + 2}`).join(", ");
-
 	try {
-		if (body.action === "resolve") {
-			await pool.query(
-				`UPDATE wa_conversations SET status = 'resolved', resolved_at = NOW(), updated_at = NOW()
-         WHERE id IN (${placeholders}) AND organization_id = $1`,
-				[user.organizationId, ...body.ids],
-			);
-		} else if (body.action === "close") {
-			await pool.query(
-				`UPDATE wa_conversations SET status = 'closed', closed_at = NOW(), updated_at = NOW()
-         WHERE id IN (${placeholders}) AND organization_id = $1`,
-				[user.organizationId, ...body.ids],
-			);
+			if (body.action === "resolve") {
+				const idPlaceholders = body.ids.map((_, i) => `$${i + 2}`).join(", ");
+				await pool.query(
+					`UPDATE wa_conversations SET status = 'resolved', resolved_at = NOW(), updated_at = NOW()
+	         WHERE id IN (${idPlaceholders}) AND organization_id = $1`,
+					[user.organizationId, ...body.ids],
+				);
+			} else if (body.action === "close") {
+				const idPlaceholders = body.ids.map((_, i) => `$${i + 2}`).join(", ");
+				await pool.query(
+					`UPDATE wa_conversations SET status = 'closed', closed_at = NOW(), updated_at = NOW()
+	         WHERE id IN (${idPlaceholders}) AND organization_id = $1`,
+					[user.organizationId, ...body.ids],
+				);
 		} else if (body.action === "assign" && body.payload?.assignedTo) {
+			const targetAssignee = await resolveProfileUuid(
+				pool,
+				body.payload.assignedTo,
+				user.organizationId,
+			);
+
+			if (!targetAssignee) {
+				return c.json({ error: "Invalid assignee ID or profile not found" }, 400);
+			}
+
+			const idPlaceholders = body.ids.map((_, i) => `$${i + 3}`).join(", ");
 			await pool.query(
 				`UPDATE wa_conversations SET assigned_to = $2, status = 'assigned', updated_at = NOW()
-         WHERE id IN (${placeholders}) AND organization_id = $1`,
-				[user.organizationId, body.payload.assignedTo, ...body.ids],
+	         WHERE id IN (${idPlaceholders}) AND organization_id = $1`,
+				[user.organizationId, targetAssignee, ...body.ids],
 			);
-		} else if (body.action === "tag" && body.payload?.tagId) {
-			for (const id of body.ids) {
+			} else if (body.action === "tag" && body.payload?.tagId) {
+				for (const id of body.ids) {
+					await pool.query(
+						`INSERT INTO wa_conversation_tags (conversation_id, tag_id, organization_id)
+						 SELECT c.id, $2, c.organization_id
+						 FROM wa_conversations c
+						 WHERE c.id = $1 AND c.organization_id = $3
+						 ON CONFLICT DO NOTHING`,
+						[id, body.payload.tagId, user.organizationId],
+					);
+				}
+			} else if (body.action === "snooze" && body.payload?.until) {
+				const idPlaceholders = body.ids.map((_, i) => `$${i + 3}`).join(", ");
 				await pool.query(
-					`INSERT INTO wa_conversation_tags (conversation_id, tag_id) VALUES ($1, $2) ON CONFLICT DO NOTHING`,
-					[id, body.payload.tagId],
+					`UPDATE wa_conversations SET snoozed_until = $2, status = 'pending', updated_at = NOW()
+	         WHERE id IN (${idPlaceholders}) AND organization_id = $1`,
+					[user.organizationId, body.payload.until, ...body.ids],
 				);
-			}
-		} else if (body.action === "snooze" && body.payload?.until) {
-			await pool.query(
-				`UPDATE wa_conversations SET snoozed_until = $2, status = 'pending', updated_at = NOW()
-         WHERE id IN (${placeholders}) AND organization_id = $1`,
-				[user.organizationId, body.payload.until, ...body.ids],
-			);
 		} else {
 			return c.json({ error: "Invalid action or missing payload" }, 400);
 		}
@@ -307,17 +366,19 @@ app.post("/conversations/bulk", requireAuth, async (c) => {
 });
 
 app.get("/conversations/:id", requireAuth, async (c) => {
+	const user = c.get("user");
 	const { id } = c.req.param();
 	const { beforeId, limit = "50" } = c.req.query();
 	const pool = await createPool(c.env);
 
 	try {
-		const result = await getConversationWithMessages(
-			pool,
-			id,
-			Math.min(100, parseInt(limit) || 50),
-			beforeId ?? undefined,
-		);
+			const result = await getConversationWithMessages(
+				pool,
+				id,
+				user.organizationId,
+				Math.min(100, parseInt(limit) || 50),
+				beforeId ?? undefined,
+			);
 
 		if (!result) {
 			return c.json({ error: "Conversation not found" }, 404);
@@ -724,6 +785,16 @@ app.post("/conversations/:id/assign", requireAuth, async (c) => {
 	}
 
 	try {
+		const existing = await getConversationWithMessages(
+			pool,
+			id,
+			user.organizationId,
+			0,
+		);
+		if (!existing) {
+			return c.json({ error: "Conversation not found" }, 404);
+		}
+
 		const result = await assignConversationSvc(
 			pool,
 			id,
@@ -733,19 +804,21 @@ app.post("/conversations/:id/assign", requireAuth, async (c) => {
 			body.reason,
 		);
 
-		const convResult = await pool.query(
-			`SELECT c.*, wc.wa_id, wc.display_name, wc.username, wc.bsuid, wc.patient_id FROM wa_conversations c LEFT JOIN whatsapp_contacts wc ON wc.id = c.contact_id WHERE c.id = $1`,
-			[id],
+		const updated = await getConversationWithMessages(
+			pool,
+			id,
+			user.organizationId,
+			0,
 		);
 
-		if (convResult.rows.length > 0) {
-			await broadcastToOrg(c.env, convResult.rows[0].organization_id, {
+		if (updated) {
+			await broadcastToOrg(c.env, user.organizationId, {
 				type: "whatsapp_assignment",
 				conversationId: id,
 				assignedTo: body.assignedTo,
 				assignedBy: user.uid,
 			});
-			return c.json(mapConversationRow(convResult.rows[0]));
+			return c.json(mapConversationRow(updated));
 		}
 
 		return c.json({ data: result });
@@ -773,6 +846,16 @@ app.post("/conversations/:id/transfer", requireAuth, async (c) => {
 	}
 
 	try {
+		const existing = await getConversationWithMessages(
+			pool,
+			id,
+			user.organizationId,
+			0,
+		);
+		if (!existing) {
+			return c.json({ error: "Conversation not found" }, 404);
+		}
+
 		const result = await transferConversationSvc(
 			pool,
 			id,
@@ -782,19 +865,21 @@ app.post("/conversations/:id/transfer", requireAuth, async (c) => {
 			body.reason,
 		);
 
-		const convResult = await pool.query(
-			`SELECT c.*, wc.wa_id, wc.display_name, wc.username, wc.bsuid, wc.patient_id FROM wa_conversations c LEFT JOIN whatsapp_contacts wc ON wc.id = c.contact_id WHERE c.id = $1`,
-			[id],
+		const updated = await getConversationWithMessages(
+			pool,
+			id,
+			user.organizationId,
+			0,
 		);
 
-		if (convResult.rows.length > 0) {
-			await broadcastToOrg(c.env, convResult.rows[0].organization_id, {
+		if (updated) {
+			await broadcastToOrg(c.env, user.organizationId, {
 				type: "whatsapp_transfer",
 				conversationId: id,
 				newAssignee: body.newAssignee,
 				transferredBy: user.uid,
 			});
-			return c.json(mapConversationRow(convResult.rows[0]));
+			return c.json(mapConversationRow(updated));
 		}
 
 		return c.json({ data: result });
@@ -818,15 +903,19 @@ app.post("/conversations/:id/notes", requireAuth, async (c) => {
 	}
 
 	try {
-		const result = await addInternalNote(
-			pool,
-			id,
-			user.organizationId,
-			user.uid,
-			body.content,
-		);
+			const result = await addInternalNote(
+				pool,
+				id,
+				user.organizationId,
+				user.uid,
+				body.content,
+			);
 
-		await broadcastToOrg(c.env, user.organizationId, {
+			if (!result) {
+				return c.json({ error: "Conversation not found" }, 404);
+			}
+
+			await broadcastToOrg(c.env, user.organizationId, {
 			type: "whatsapp_note",
 			conversationId: id,
 			note: result,
@@ -854,6 +943,16 @@ app.put("/conversations/:id/status", requireAuth, async (c) => {
 	}
 
 	try {
+		const existing = await getConversationWithMessages(
+			pool,
+			id,
+			user.organizationId,
+			0,
+		);
+		if (!existing) {
+			return c.json({ error: "Conversation not found" }, 404);
+		}
+
 		const result = await updateConversationStatus(pool, id, body.status);
 
 		if (!result) {
@@ -866,12 +965,14 @@ app.put("/conversations/:id/status", requireAuth, async (c) => {
 			status: body.status,
 		});
 
-		const convResult = await pool.query(
-			`SELECT c.*, wc.wa_id, wc.display_name, wc.username, wc.bsuid, wc.patient_id FROM wa_conversations c LEFT JOIN whatsapp_contacts wc ON wc.id = c.contact_id WHERE c.id = $1`,
-			[id],
+		const updated = await getConversationWithMessages(
+			pool,
+			id,
+			user.organizationId,
+			0,
 		);
-		if (convResult.rows.length > 0) {
-			return c.json(mapConversationRow(convResult.rows[0]));
+		if (updated) {
+			return c.json(mapConversationRow(updated));
 		}
 		return c.json(mapConversationRow(result));
 	} catch (err) {
@@ -1053,10 +1154,23 @@ app.get("/tags", requireAuth, async (c) => {
 	const pool = await createPool(c.env);
 
 	try {
-		const result = await pool.query(
+		let result = await pool.query(
 			`SELECT * FROM wa_tags WHERE organization_id = $1 ORDER BY name`,
 			[user.organizationId],
 		);
+		if (result.rows.length === 0) {
+			for (const tag of DEFAULT_WHATSAPP_TAGS) {
+				await pool.query(
+					`INSERT INTO wa_tags (organization_id, name, color)
+					 VALUES ($1, $2, $3)`,
+					[user.organizationId, tag.name, tag.color],
+				);
+			}
+			result = await pool.query(
+				`SELECT * FROM wa_tags WHERE organization_id = $1 ORDER BY name`,
+				[user.organizationId],
+			);
+		}
 		return c.json({ data: result.rows });
 	} catch (err) {
 		console.error("[WhatsApp Inbox] GET /tags error:", err);
@@ -1098,8 +1212,12 @@ app.post("/conversations/:id/tags", requireAuth, async (c) => {
 	try {
 		for (const tagId of body.tagIds) {
 			await pool.query(
-				`INSERT INTO wa_conversation_tags (conversation_id, tag_id) VALUES ($1, $2) ON CONFLICT DO NOTHING`,
-				[id, tagId],
+				`INSERT INTO wa_conversation_tags (conversation_id, tag_id, organization_id)
+				 SELECT c.id, $2, c.organization_id
+				 FROM wa_conversations c
+				 WHERE c.id = $1 AND c.organization_id = $3
+				 ON CONFLICT DO NOTHING`,
+				[id, tagId, user.organizationId],
 			);
 		}
 		return c.json({ data: { conversationId: id, tagIds: body.tagIds } });
@@ -1110,13 +1228,17 @@ app.post("/conversations/:id/tags", requireAuth, async (c) => {
 });
 
 app.delete("/conversations/:id/tags/:tagId", requireAuth, async (c) => {
+	const user = c.get("user");
 	const { id, tagId } = c.req.param();
 	const pool = await createPool(c.env);
 
 	try {
 		await pool.query(
-			`DELETE FROM wa_conversation_tags WHERE conversation_id = $1 AND tag_id = $2`,
-			[id, tagId],
+			`DELETE FROM wa_conversation_tags
+			 WHERE conversation_id = $1
+			   AND tag_id = $2
+			   AND (organization_id = $3 OR organization_id IS NULL)`,
+			[id, tagId, user.organizationId],
 		);
 		return c.json({ data: { removed: true } });
 	} catch (err) {
@@ -1416,38 +1538,48 @@ app.post("/conversations/:id/snooze", requireAuth, async (c) => {
 });
 
 app.get("/conversations/:id/activity", requireAuth, async (c) => {
+	const user = c.get("user");
 	const { id } = c.req.param();
 	const pool = await createPool(c.env);
 
-	try {
-		const [assignments, messages] = await Promise.all([
-			pool.query(
-				`SELECT
-           a.id,
-           a.created_at,
-           'assignment' AS activity_type,
-           a.assigned_to,
-           a.assigned_by,
-           a.team,
-           a.reason,
-           COALESCE(u_to.name, a.assigned_to) AS assigned_to_name,
-           COALESCE(u_by.name, a.assigned_by) AS assigned_by_name
-         FROM wa_assignments a
-         LEFT JOIN users u_to ON u_to.id = a.assigned_to
-         LEFT JOIN users u_by ON u_by.id = a.assigned_by
-         WHERE a.conversation_id = $1
-         ORDER BY a.created_at DESC
-         LIMIT 50`,
-				[id],
-			),
-			pool.query(
-				`SELECT id, created_at, direction, message_type, sender_id, sender_name, status
-         FROM wa_messages
-         WHERE conversation_id = $1 AND (is_internal_note = true OR message_type = 'template')
-         ORDER BY created_at DESC
-         LIMIT 20`,
-				[id],
-			),
+		try {
+			const [assignments, messages] = await Promise.all([
+				pool.query(
+					`SELECT
+	           a.id,
+	           a.created_at,
+	           'assignment' AS activity_type,
+	           a.assigned_to,
+	           a.assigned_by,
+	           a.assigned_team AS team,
+	           a.reason,
+	           COALESCE(p_to.full_name, p_to.name, p_to.email, a.assigned_to::text) AS assigned_to_name,
+	           COALESCE(p_by.full_name, p_by.name, p_by.email, a.assigned_by::text) AS assigned_by_name
+	         FROM wa_assignments a
+	         LEFT JOIN profiles p_to ON p_to.user_id = a.assigned_to::text
+	         LEFT JOIN profiles p_by ON p_by.user_id = a.assigned_by::text
+	         WHERE a.conversation_id = $1 AND a.organization_id = $2
+	         ORDER BY a.created_at DESC
+	         LIMIT 50`,
+					[id, user.organizationId],
+				),
+				pool.query(
+					`SELECT m.id,
+					        m.created_at,
+					        m.direction,
+					        m.message_type,
+					        m.sender_id,
+					        COALESCE(p.full_name, p.name, p.email, m.sender_id) AS sender_name,
+					        m.status
+	         FROM wa_messages m
+	         LEFT JOIN profiles p ON p.user_id = m.sender_id
+	         WHERE m.conversation_id = $1
+	           AND m.organization_id = $2
+	           AND (m.is_internal_note = true OR m.message_type = 'template')
+	         ORDER BY m.created_at DESC
+	         LIMIT 20`,
+					[id, user.organizationId],
+				),
 		]);
 
 		const activities = [
@@ -1488,18 +1620,18 @@ app.get("/agents/workload", requireAuth, async (c) => {
 	const pool = await createPool(c.env);
 
 	try {
-		const result = await pool.query(
-			`SELECT
-         om.user_id,
-         COALESCE(u.name, om.user_id) AS agent_name,
-         COUNT(CASE WHEN c.status IN ('open', 'assigned', 'pending') THEN 1 END)::int AS open_conversations,
-         COUNT(CASE WHEN c.status = 'resolved' AND DATE(c.resolved_at) = CURRENT_DATE THEN 1 END)::int AS resolved_today
-       FROM organization_members om
-       LEFT JOIN users u ON u.id = om.user_id
-       LEFT JOIN wa_conversations c ON c.assigned_to = om.user_id AND c.organization_id = $1
-       WHERE om.organization_id = $1
-       GROUP BY om.user_id, u.name
-       ORDER BY open_conversations DESC`,
+			const result = await pool.query(
+				`SELECT
+	         om.user_id,
+	         COALESCE(p.full_name, p.name, p.email, om.user_id) AS agent_name,
+	         COUNT(CASE WHEN c.status IN ('open', 'assigned', 'pending') THEN 1 END)::int AS open_conversations,
+	         COUNT(CASE WHEN c.status = 'resolved' AND DATE(c.resolved_at) = CURRENT_DATE THEN 1 END)::int AS resolved_today
+	       FROM organization_members om
+	       LEFT JOIN profiles p ON p.user_id = om.user_id
+	       LEFT JOIN wa_conversations c ON c.assigned_to::text = om.user_id AND c.organization_id = $1
+	       WHERE om.organization_id = $1
+	       GROUP BY om.user_id, p.full_name, p.name, p.email
+	       ORDER BY open_conversations DESC`,
 			[user.organizationId],
 		);
 

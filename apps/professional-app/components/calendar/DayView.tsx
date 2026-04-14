@@ -34,7 +34,7 @@ export const DayView = ({
 	date,
 	appointments,
 	startHour = 7,
-	endHour = 20,
+	endHour = 22,
 	onReschedule,
 	onRescheduleRequest,
 }: DayViewProps) => {

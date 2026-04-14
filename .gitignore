@@ -29,6 +29,7 @@ build
 .env.production
 
 # Wrangler local dev secrets (contém credenciais)
+apps/api/.dev.vars
 workers/.dev.vars.local
 *.dev.vars.local
 
@@ -248,4 +249,3 @@ apps/jules-bot/.dev.vars
 
 # Local test scripts (contém credenciais)
 scripts/seed-prod-test.mjs
-
