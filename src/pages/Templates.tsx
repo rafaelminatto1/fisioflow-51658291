@@ -11,7 +11,6 @@ import {
 	ArrowRight,
 	Info,
 	Star,
-	Plus,
 	Pencil,
 	Trash2,
 	Archive,
@@ -19,12 +18,11 @@ import {
 	Eye,
 	Play,
 	Copy,
-	Check,
-	UserPlus,
-	CirclePlus,
+	CalendarClock,
+	Loader2,
 	type LucideIcon,
 } from "lucide-react";
-import { useState, useMemo } from "react";
+import { useRef, useState, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import MainLayout from "@/components/layout/MainLayout";
 import { Button } from "@/components/ui/button";
@@ -36,8 +34,10 @@ import {
 	useDeleteEvaluationForm,
 	useUpdateEvaluationForm,
 	useDuplicateEvaluationForm,
+	useCreatePatientEvaluationResponse,
 } from "@/hooks/useEvaluationForms";
 import { usePatientsPageData } from "@/hooks/usePatientsPage";
+import { evaluationFormsApi } from "@/api/v2";
 import {
 	DropdownMenu,
 	DropdownMenuContent,
@@ -54,6 +54,8 @@ import {
 	DialogFooter,
 } from "@/components/ui/dialog";
 import { PatientCombobox } from "@/components/ui/patient-combobox";
+import { Label } from "@/components/ui/label";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import {
 	AlertDialog,
 	AlertDialogAction,
@@ -129,13 +131,14 @@ export default function Templates() {
 	const [search, setSearch] = useState("");
 	const [activeCategory, setActiveCategory] = useState<string | null>(null);
 
-	const { data: userTemplates, isLoading } = useEvaluationForms();
+	const { data: userTemplates } = useEvaluationForms();
 	const { data: patientsData } = usePatientsPageData();
 	const patients = patientsData?.patients || [];
 
 	const deleteForm = useDeleteEvaluationForm();
 	const updateForm = useUpdateEvaluationForm();
 	const duplicateForm = useDuplicateEvaluationForm();
+	const createEvaluationResponse = useCreatePatientEvaluationResponse();
 
 	// Use Template State
 	const [selectedTemplateForUse, setSelectedTemplateForUse] = useState<{
@@ -143,6 +146,12 @@ export default function Templates() {
 		nome: string;
 	} | null>(null);
 	const [selectedPatientId, setSelectedPatientId] = useState<string>("");
+	const [evaluationTiming, setEvaluationTiming] = useState<"now" | "scheduled">(
+		"now",
+	);
+	const [scheduledFor, setScheduledFor] = useState("");
+	const [isApplyingTemplate, setIsApplyingTemplate] = useState(false);
+	const persistedBuiltinTemplates = useRef<Record<string, string>>({});
 
 	// Preview State
 	const [previewTemplate, setPreviewTemplate] = useState<any | null>(null);
@@ -216,13 +225,119 @@ export default function Templates() {
 		}
 	};
 
-	const handleApplyTemplate = () => {
-		if (selectedTemplateForUse && selectedPatientId) {
-			navigate(
-				`/patients/${selectedPatientId}/evaluations/new/${selectedTemplateForUse.id}`,
-			);
-			setSelectedTemplateForUse(null);
-			setSelectedPatientId("");
+	const resetUseTemplateModal = () => {
+		setSelectedTemplateForUse(null);
+		setSelectedPatientId("");
+		setEvaluationTiming("now");
+		setScheduledFor("");
+	};
+
+	const ensurePersistedTemplate = async (templateId: string) => {
+		if (!templateId.startsWith("builtin-")) return templateId;
+		if (persistedBuiltinTemplates.current[templateId]) {
+			return persistedBuiltinTemplates.current[templateId];
+		}
+
+		const template = allTemplates.find((item) => item.id === templateId);
+		if (!template) throw new Error("Template não encontrado");
+
+		const existing = (userTemplates || []).find(
+			(item) =>
+				item.nome === template.nome &&
+				item.tipo === template.tipo &&
+				item.referencias === template.referencias,
+		);
+		if (existing?.id) {
+			persistedBuiltinTemplates.current[templateId] = existing.id;
+			return existing.id;
+		}
+
+		const formResponse = await evaluationFormsApi.create({
+			nome: template.nome,
+			descricao: template.descricao,
+			referencias: template.referencias,
+			tipo: template.tipo || template.category || "geral",
+			ativo: true,
+		});
+		const form = formResponse?.data ?? formResponse;
+		const formId = String(form.id);
+
+		await Promise.all(
+			(template.fields || []).map((field: any, index: number) =>
+				evaluationFormsApi.addField(formId, {
+					tipo_campo: field.tipo_campo || "texto_curto",
+					label: field.label,
+					placeholder: field.placeholder ?? null,
+					opcoes: field.opcoes ?? null,
+					ordem: field.ordem ?? index,
+					obrigatorio: Boolean(field.obrigatorio),
+					grupo: field.grupo ?? field.section ?? null,
+					descricao: field.descricao ?? field.description ?? null,
+					minimo: field.minimo ?? field.min ?? null,
+					maximo: field.maximo ?? field.max ?? null,
+				}),
+			),
+		);
+
+		persistedBuiltinTemplates.current[templateId] = formId;
+		return formId;
+	};
+
+	const handleApplyTemplate = async () => {
+		if (!selectedTemplateForUse || !selectedPatientId) return;
+
+		if (evaluationTiming === "scheduled" && !scheduledFor) {
+			toast.error("Informe a data e hora da avaliação");
+			return;
+		}
+
+		const scheduledDate =
+			evaluationTiming === "scheduled" ? new Date(scheduledFor) : null;
+
+		if (scheduledDate && Number.isNaN(scheduledDate.getTime())) {
+			toast.error("Data da avaliação inválida");
+			return;
+		}
+
+		if (scheduledDate && scheduledDate.getTime() < Date.now() - 60_000) {
+			toast.error("A data da avaliação não pode estar no passado");
+			return;
+		}
+
+		setIsApplyingTemplate(true);
+		try {
+			const timing = evaluationTiming;
+			const formId = await ensurePersistedTemplate(selectedTemplateForUse.id);
+			const now = new Date().toISOString();
+			const evaluation = await createEvaluationResponse.mutateAsync({
+				formId,
+				patient_id: selectedPatientId,
+				responses: {},
+				status: timing === "now" ? "in_progress" : "scheduled",
+				started_at: timing === "now" ? now : null,
+				scheduled_for:
+					timing === "scheduled" && scheduledDate
+						? scheduledDate.toISOString()
+						: null,
+			});
+
+			const patientId = selectedPatientId;
+			resetUseTemplateModal();
+
+			if (timing === "now") {
+				navigate(
+					`/patients/${patientId}/evaluations/new/${formId}?evaluationId=${evaluation.id}`,
+				);
+				return;
+			}
+
+			toast.success("Avaliação agendada no perfil do paciente");
+			navigate(`/patients/${patientId}?tab=clinical`);
+		} catch (error) {
+			console.error("Erro ao criar avaliação:", error);
+			toast.error("Não foi possível criar a avaliação");
+		} finally {
+			setIsApplyingTemplate(false);
 		}
 	};
 
@@ -320,7 +435,7 @@ export default function Templates() {
 
 				{/* Bento Grid */}
 				<div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-					{filteredTemplates.map((template, idx) => {
+					{filteredTemplates.map((template) => {
 						const categoryKey = template.category || "geral";
 						const config =
 							CATEGORY_CONFIG[categoryKey] ||
@@ -625,7 +740,7 @@ export default function Templates() {
 			{/* Use Template Modal */}
 			<Dialog
 				open={!!selectedTemplateForUse}
-				onOpenChange={(open) => !open && setSelectedTemplateForUse(null)}
+				onOpenChange={(open) => !open && resetUseTemplateModal()}
 			>
 				<DialogContent className="max-w-md rounded-[2.5rem] border-0 shadow-premium-2xl p-8">
 					<DialogHeader className="space-y-4">
@@ -634,11 +749,11 @@ export default function Templates() {
 						</div>
 						<div>
 							<DialogTitle className="text-2xl font-black tracking-tight">
-								Aplicar Template
+								Nova Avaliação
 							</DialogTitle>
 							<DialogDescription className="text-slate-500 font-medium text-base mt-2">
-								Selecione um paciente para iniciar o atendimento usando o
-								protocolo{" "}
+								Selecione um paciente e quando a avaliação será realizada usando
+								o template{" "}
 								<span className="text-slate-900 font-bold">
 									"{selectedTemplateForUse?.nome}"
 								</span>
@@ -658,25 +773,109 @@ export default function Templates() {
 								onValueChange={setSelectedPatientId}
 								placeholder="Digite o nome do paciente..."
 								className="h-14 rounded-2xl text-base font-medium"
+								disabled={isApplyingTemplate}
 							/>
 						</div>
+
+						<div className="space-y-3 pt-2">
+							<p className="text-[10px] font-black uppercase tracking-widest text-slate-400 ml-1">
+								Quando realizar
+							</p>
+							<RadioGroup
+								value={evaluationTiming}
+								onValueChange={(value) =>
+									setEvaluationTiming(value as "now" | "scheduled")
+								}
+								className="grid grid-cols-1 gap-2"
+								disabled={isApplyingTemplate}
+							>
+								<Label
+									htmlFor="evaluation-now"
+									className="flex cursor-pointer items-center gap-3 rounded-2xl border border-border/50 p-4 hover:bg-slate-50"
+								>
+									<RadioGroupItem value="now" id="evaluation-now" />
+									<div>
+										<p className="text-sm font-bold">Realizar agora</p>
+										<p className="text-xs text-slate-500">
+											A ficha será aberta para preenchimento.
+										</p>
+									</div>
+								</Label>
+								<Label
+									htmlFor="evaluation-scheduled"
+									className="flex cursor-pointer items-center gap-3 rounded-2xl border border-border/50 p-4 hover:bg-slate-50"
+								>
+									<RadioGroupItem
+										value="scheduled"
+										id="evaluation-scheduled"
+									/>
+									<div>
+										<p className="text-sm font-bold">Agendar para depois</p>
+										<p className="text-xs text-slate-500">
+											A avaliação ficará visível no perfil do paciente.
+										</p>
+									</div>
+								</Label>
+							</RadioGroup>
+						</div>
+
+						{evaluationTiming === "scheduled" && (
+							<div className="space-y-3 pt-2">
+								<Label
+									htmlFor="scheduled-for"
+									className="text-[10px] font-black uppercase tracking-widest text-slate-400 ml-1"
+								>
+									Data e hora da avaliação
+								</Label>
+								<div className="relative">
+									<CalendarClock className="absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
+									<Input
+										id="scheduled-for"
+										type="datetime-local"
+										value={scheduledFor}
+										onChange={(event) => setScheduledFor(event.target.value)}
+										className="h-12 rounded-xl pl-11 font-medium"
+										disabled={isApplyingTemplate}
+									/>
+								</div>
+							</div>
+						)}
 					</div>
 
 					<DialogFooter className="flex-col sm:flex-row gap-2">
 						<Button
 							variant="outline"
 							className="rounded-xl flex-1 font-bold h-12"
-							onClick={() => setSelectedTemplateForUse(null)}
+							onClick={resetUseTemplateModal}
+							disabled={isApplyingTemplate}
 						>
 							Cancelar
 						</Button>
 						<Button
 							className="rounded-xl flex-1 font-bold h-12 gap-2"
-							disabled={!selectedPatientId}
+							disabled={
+								isApplyingTemplate ||
+								!selectedPatientId ||
+								(evaluationTiming === "scheduled" && !scheduledFor)
+							}
 							onClick={handleApplyTemplate}
 						>
-							Iniciar Atendimento
-							<ArrowRight className="w-4 h-4" />
+							{isApplyingTemplate ? (
+								<>
+									<Loader2 className="w-4 h-4 animate-spin" />
+									Criando...
+								</>
+							) : evaluationTiming === "now" ? (
+								<>
+									Criar e Preencher
+									<ArrowRight className="w-4 h-4" />
+								</>
+							) : (
+								<>
+									Agendar Avaliação
+									<ArrowRight className="w-4 h-4" />
+								</>
+							)}
 						</Button>
 					</DialogFooter>
 				</DialogContent>
@@ -687,9 +886,9 @@ export default function Templates() {
 				open={!!previewTemplate}
 				onOpenChange={(open) => !open && setPreviewTemplate(null)}
 			>
-				<DialogContent className="max-w-3xl max-h-[85vh] overflow-y-auto rounded-[2.5rem] border-0 shadow-premium-2xl p-8 p-b-10">
+				<DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto rounded-[2.5rem] border-0 shadow-premium-2xl p-8 pb-10">
 					{previewTemplate && (
-						<div className="space-y-8">
+						<div className="space-y-6">
 							<DialogHeader className="space-y-4 text-left">
 								<div className="flex items-center justify-between">
 									<div
@@ -728,25 +927,43 @@ export default function Templates() {
 									</Badge>
 								</div>
 
-								<div>
-									<DialogTitle className="text-3xl font-black tracking-tight">
-										{previewTemplate.nome}
-									</DialogTitle>
-									<DialogDescription className="text-slate-500 font-medium text-lg mt-2 leading-relaxed">
-										{previewTemplate.descricao}
-									</DialogDescription>
+								<div className="flex items-start justify-between gap-4">
+									<div className="space-y-2">
+										<DialogTitle className="text-3xl font-black tracking-tight">
+											{previewTemplate.nome}
+										</DialogTitle>
+										<DialogDescription className="text-slate-500 font-medium text-lg leading-relaxed">
+											{previewTemplate.descricao}
+										</DialogDescription>
+									</div>
+
+									<Button
+										variant="ghost"
+										size="icon"
+										className="h-10 w-10 rounded-xl text-slate-400 hover:text-primary hover:bg-primary/5 transition-all shrink-0"
+										onClick={() => {
+											if (previewTemplate.isCustom) {
+												navigate(`/templates/${previewTemplate.id}/edit`);
+											} else {
+												handleDuplicate(previewTemplate.id);
+											}
+										}}
+										title={previewTemplate.isCustom ? "Editar Modelo" : "Personalizar Cópia"}
+									>
+										<Pencil className="w-5 h-5" />
+									</Button>
 								</div>
 							</DialogHeader>
 
 							{previewTemplate.referencias && (
-								<div className="p-4 rounded-2xl bg-slate-50 dark:bg-slate-800/50 border border-slate-100 dark:border-slate-800">
-									<div className="flex items-center gap-2 mb-2">
-										<Info className="w-4 h-4 text-primary" />
-										<span className="text-[10px] font-black uppercase tracking-widest text-slate-500">
-											Referências Clínicas
+								<div className="p-3 px-4 rounded-xl bg-slate-50 dark:bg-slate-800/50 border border-slate-100 dark:border-slate-800 flex items-center gap-4">
+									<div className="flex items-center gap-2 shrink-0">
+										<Info className="w-3.5 h-3.5 text-primary" />
+										<span className="text-[9px] font-black uppercase tracking-widest text-slate-500">
+											Referências
 										</span>
 									</div>
-									<p className="text-sm text-slate-600 dark:text-slate-400 italic">
+									<p className="text-xs text-slate-500 dark:text-slate-400 italic line-clamp-2">
 										{previewTemplate.referencias}
 									</p>
 								</div>
@@ -765,33 +982,28 @@ export default function Templates() {
 									</Badge>
 								</div>
 
-								<div className="grid grid-cols-1 gap-3">
+								<div className="grid grid-cols-1 md:grid-cols-2 gap-2">
 									{(previewTemplate.fields || []).map(
 										(field: any, fidx: number) => (
 											<div
 												key={fidx}
-												className="flex items-center justify-between p-4 rounded-2xl border border-border/40 hover:bg-slate-50 dark:hover:bg-slate-800/30 transition-colors"
+												className="flex items-center justify-between p-3 rounded-xl border border-border/30 hover:bg-slate-50 dark:hover:bg-slate-800/30 transition-colors"
 											>
-												<div className="flex items-center gap-4">
-													<div className="w-8 h-8 rounded-lg bg-slate-100 dark:bg-slate-800 flex items-center justify-center text-xs font-bold text-slate-400">
+												<div className="flex items-center gap-3">
+													<div className="w-7 h-7 rounded-lg bg-slate-100 dark:bg-slate-800 flex items-center justify-center text-[10px] font-bold text-slate-400">
 														{fidx + 1}
 													</div>
 													<div>
-														<p className="text-sm font-bold text-slate-900 dark:text-white">
+														<p className="text-xs font-bold text-slate-900 dark:text-white line-clamp-1">
 															{field.label}
 														</p>
-														<p className="text-[10px] text-slate-400 uppercase font-bold tracking-widest">
-															{field.tipo_campo}
+														<p className="text-[9px] text-slate-400 uppercase font-bold tracking-widest">
+															{field.tipo_campo?.replace(/_/g, " ")}
 														</p>
 													</div>
 												</div>
 												{field.obrigatorio && (
-													<Badge
-														variant="outline"
-														className="text-red-500 border-red-200 bg-red-50/50 text-[9px] uppercase font-black tracking-tighter"
-													>
-														Obrigatório
-													</Badge>
+													<div className="w-1.5 h-1.5 rounded-full bg-red-500 shadow-sm" title="Obrigatório" />
 												)}
 											</div>
 										),
@@ -802,11 +1014,32 @@ export default function Templates() {
 							<div className="flex gap-3 pt-6 border-t border-border/40">
 								<Button
 									variant="outline"
-									className="rounded-2xl flex-1 font-bold h-12"
+									className="rounded-2xl px-6 font-bold h-12"
 									onClick={() => setPreviewTemplate(null)}
 								>
-									Fechar Visualização
+									Fechar
 								</Button>
+
+								{previewTemplate.isCustom ? (
+									<Button
+										variant="outline"
+										className="rounded-2xl px-6 font-bold h-12 gap-2 text-slate-600 border-border/40 hover:bg-amber-50 hover:text-amber-600 hover:border-amber-200 transition-all"
+										onClick={() => navigate(`/templates/${previewTemplate.id}/edit`)}
+									>
+										<Pencil className="w-4 h-4" />
+										Editar Modelo
+									</Button>
+								) : (
+									<Button
+										variant="outline"
+										className="rounded-2xl px-6 font-bold h-12 gap-2 text-slate-600 border-border/40 hover:bg-blue-50 hover:text-blue-600 hover:border-blue-200 transition-all"
+										onClick={() => handleDuplicate(previewTemplate.id)}
+									>
+										<Pencil className="w-4 h-4" />
+										Personalizar Cópia
+									</Button>
+								)}
+
 								<Button
 									className="rounded-2xl flex-1 font-bold h-12 gap-2 shadow-premium-md"
 									onClick={() => {
@@ -818,7 +1051,7 @@ export default function Templates() {
 									}}
 								>
 									<Play className="w-4 h-4 fill-current" />
-									Usar este Protocolo
+									Usar Template
 								</Button>
 							</div>
 						</div>
