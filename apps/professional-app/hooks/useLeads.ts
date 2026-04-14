@@ -1,53 +1,74 @@
-import { useState, useEffect, useCallback } from 'react';
-import { ApiLead, getLeads, updateLead } from '../lib/api';
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import {
+	getLeads,
+	createLead,
+	updateLead,
+	deleteLead,
+	ApiLead,
+} from "../lib/api";
 
 export function useLeads() {
-  const [leads, setLeads] = useState<ApiLead[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [refreshing, setRefreshing] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+	const queryClient = useQueryClient();
 
-  const fetchLeads = useCallback(async () => {
-    try {
-      setLoading(true);
-      const data = await getLeads();
-      setLeads(data);
-      setError(null);
-    } catch (err) {
-      console.error('[useLeads] Error fetching:', err);
-      setError('Erro ao carregar leads');
-    } finally {
-      setLoading(false);
-    }
-  }, []);
+	const {
+		data: leads = [],
+		isLoading,
+		isFetching,
+		refetch,
+		error,
+	} = useQuery({
+		queryKey: ["leads"],
+		queryFn: () => getLeads(),
+		staleTime: 1000 * 60 * 2,
+	});
 
-  const refresh = useCallback(async () => {
-    setRefreshing(true);
-    await fetchLeads();
-    setRefreshing(false);
-  }, [fetchLeads]);
+	const createMutation = useMutation({
+		mutationFn: (data: Partial<ApiLead>) => createLead(data),
+		onSuccess: () => {
+			queryClient.invalidateQueries({ queryKey: ["leads"] });
+		},
+	});
 
-  const updateLeadStatus = useCallback(async (id: string, estagio: ApiLead['estagio']) => {
-    try {
-      const updated = await updateLead(id, { estagio });
-      setLeads(prev => prev.map(l => l.id === id ? updated : l));
-      return updated;
-    } catch (err) {
-      console.error('[useLeads] Error updating status:', err);
-      throw err;
-    }
-  }, []);
+	const updateMutation = useMutation({
+		mutationFn: ({ id, data }: { id: string; data: Partial<ApiLead> }) =>
+			updateLead(id, data),
+		onMutate: async ({ id, data }) => {
+			await queryClient.cancelQueries({ queryKey: ["leads"] });
+			const previousLeads = queryClient.getQueryData<ApiLead[]>(["leads"]);
+			queryClient.setQueryData<ApiLead[]>(["leads"], (old) =>
+				old?.map((lead) => (lead.id === id ? { ...lead, ...data } : lead)),
+			);
+			return { previousLeads };
+		},
+		onError: (_err, { id }, context) => {
+			if (context?.previousLeads) {
+				queryClient.setQueryData(["leads"], context.previousLeads);
+			}
+		},
+		onSettled: () => {
+			queryClient.invalidateQueries({ queryKey: ["leads"] });
+		},
+	});
 
-  useEffect(() => {
-    fetchLeads();
-  }, [fetchLeads]);
+	const deleteMutation = useMutation({
+		mutationFn: (id: string) => deleteLead(id),
+		onSuccess: () => {
+			queryClient.invalidateQueries({ queryKey: ["leads"] });
+		},
+	});
 
-  return {
-    leads,
-    loading,
-    refreshing,
-    error,
-    refresh,
-    updateLeadStatus,
-  };
+	return {
+		leads,
+		isLoading,
+		isFetching,
+		refreshing: isFetching,
+		error,
+		refresh: refetch,
+		createLead: createMutation.mutateAsync,
+		updateLead: updateMutation.mutateAsync,
+		deleteLead: deleteMutation.mutateAsync,
+		isCreating: createMutation.isPending,
+		isUpdating: updateMutation.isPending,
+		isDeleting: deleteMutation.isPending,
+	};
 }
