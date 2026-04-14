@@ -1,6 +1,25 @@
 import { createPool } from "./db";
+import { isUuid } from "./validators";
 
 type Pool = ReturnType<typeof createPool>;
+
+/**
+ * Ensures we are using a UUID for columns like assigned_to.
+ * Handles cases where userId is an Auth ID (text) by resolving to profile.id (UUID).
+ */
+export async function resolveProfileUuid(
+	pool: Pool,
+	userIdOrUuid: string,
+	orgId: string,
+): Promise<string | null> {
+	if (isUuid(userIdOrUuid)) return userIdOrUuid;
+
+	const result = await pool.query(
+		`SELECT id FROM profiles WHERE user_id = $1 AND organization_id = $2 LIMIT 1`,
+		[userIdOrUuid, orgId],
+	);
+	return result.rows[0]?.id || null;
+}
 
 export async function findOrCreateConversation(
 	pool: Pool,
@@ -45,16 +64,34 @@ export async function assignConversation(
 	reason?: string,
 ) {
 	try {
+		// Get organization_id for resolving profile UUID
+		const convResult = await pool.query(
+			"SELECT organization_id FROM wa_conversations WHERE id = $1",
+			[conversationId],
+		);
+		const orgId = convResult.rows[0]?.organization_id;
+
+		const targetUuid = orgId
+			? await resolveProfileUuid(pool, assignedTo, orgId)
+			: assignedTo;
+
 		await pool.query(
-			`UPDATE wa_conversations SET assigned_to = $1, status = 'assigned', updated_at = now() WHERE id = $2`,
-			[assignedTo, conversationId],
+			`UPDATE wa_conversations
+			 SET assigned_to = $1,
+			     assigned_team = $3,
+			     status = CASE WHEN status IN ('open', 'pending', 'assigned') THEN 'assigned' ELSE status END,
+			     updated_at = now()
+			 WHERE id = $2`,
+			[targetUuid, conversationId, team],
 		);
 
 		const assignment = await pool.query(
-			`INSERT INTO wa_assignments (conversation_id, assigned_to, assigned_by, team, reason)
-       VALUES ($1, $2, $3, $4, $5)
-       RETURNING *`,
-			[conversationId, assignedTo, assignedBy, team, reason ?? null],
+			`INSERT INTO wa_assignments (conversation_id, organization_id, assigned_to, assigned_by, assigned_team, reason)
+	       SELECT id, organization_id, $2, $3, $4, $5
+	       FROM wa_conversations
+	       WHERE id = $1
+	       RETURNING *`,
+			[conversationId, targetUuid, assignedBy, team, reason ?? null],
 		);
 
 		return assignment.rows[0];
@@ -73,18 +110,35 @@ export async function transferConversation(
 	reason?: string,
 ) {
 	try {
+		const convResult = await pool.query(
+			"SELECT organization_id FROM wa_conversations WHERE id = $1",
+			[conversationId],
+		);
+		const orgId = convResult.rows[0]?.organization_id;
+
+		const targetUuid = orgId
+			? await resolveProfileUuid(pool, newAssignee, orgId)
+			: newAssignee;
+
 		await pool.query(
-			`UPDATE wa_conversations SET assigned_to = $1, updated_at = now() WHERE id = $2`,
-			[newAssignee, conversationId],
+			`UPDATE wa_conversations
+			 SET assigned_to = $1,
+			     assigned_team = $3,
+			     status = CASE WHEN status IN ('open', 'pending', 'assigned') THEN 'assigned' ELSE status END,
+			     updated_at = now()
+			 WHERE id = $2`,
+			[targetUuid, conversationId, team ?? null],
 		);
 
 		const transfer = await pool.query(
-			`INSERT INTO wa_assignments (conversation_id, assigned_to, assigned_by, team, reason, action)
-       VALUES ($1, $2, $3, $4, $5, 'transfer')
-       RETURNING *`,
+			`INSERT INTO wa_assignments (conversation_id, organization_id, assigned_to, assigned_by, assigned_team, reason)
+	       SELECT id, organization_id, $2, $3, $4, $5
+	       FROM wa_conversations
+	       WHERE id = $1
+	       RETURNING *`,
 			[
 				conversationId,
-				newAssignee,
+				targetUuid,
 				transferredBy,
 				team ?? null,
 				reason ?? null,
@@ -110,9 +164,21 @@ export async function addInternalNote(
 ) {
 	try {
 		const result = await pool.query(
-			`INSERT INTO wa_messages (conversation_id, organization_id, direction, sender_type, sender_id, message_type, content)
-       VALUES ($1, $2, 'internal', 'agent', $3, 'note', $4)
-       RETURNING *`,
+			`INSERT INTO wa_messages (conversation_id, organization_id, contact_id, direction, sender_type, sender_id, message_type, content, status, is_internal_note)
+	       SELECT id, organization_id, contact_id, 'internal', 'agent', $3, 'note', $4::jsonb, 'sent', true
+	       FROM wa_conversations
+	       WHERE id = $1 AND organization_id = $2
+	       RETURNING *`,
+			[conversationId, orgId, authorId, JSON.stringify(content)],
+		);
+
+		if (result.rows.length === 0) {
+			return null;
+		}
+
+		await pool.query(
+			`INSERT INTO wa_internal_notes (conversation_id, organization_id, author_id, content)
+			 VALUES ($1, $2, $3, $4)`,
 			[conversationId, orgId, authorId, content],
 		);
 
@@ -164,16 +230,27 @@ export async function updateConversationStatus(
 export async function getConversationWithMessages(
 	pool: Pool,
 	conversationId: string,
+	orgId?: string,
 	limit: number = 50,
 	beforeId?: string,
 ) {
 	try {
+		const convParams = orgId ? [conversationId, orgId] : [conversationId];
 		const convResult = await pool.query(
-			`SELECT c.*, wc.wa_id, wc.display_name, wc.username, wc.bsuid, wc.patient_id
-       FROM wa_conversations c
-       LEFT JOIN whatsapp_contacts wc ON wc.id = c.contact_id
-       WHERE c.id = $1`,
-			[conversationId],
+			`SELECT c.*, wc.wa_id, wc.display_name, wc.username, wc.bsuid, wc.patient_id,
+			        c.assigned_team AS team,
+			        COALESCE(assignee.full_name, assignee.name, assignee.email, c.assigned_to::text) AS assigned_to_name,
+			        COALESCE((
+			          SELECT json_agg(json_build_object('id', t.id, 'name', t.name, 'color', t.color) ORDER BY t.name)
+			          FROM wa_conversation_tags wct
+			          JOIN wa_tags t ON t.id = wct.tag_id
+			          WHERE wct.conversation_id = c.id
+			        ), '[]'::json) AS tags
+	       FROM wa_conversations c
+	       LEFT JOIN whatsapp_contacts wc ON wc.id = c.contact_id
+	       LEFT JOIN profiles assignee ON assignee.user_id = c.assigned_to::text
+	       WHERE c.id = $1${orgId ? " AND c.organization_id = $2" : ""}`,
+			convParams,
 		);
 
 		if (convResult.rows.length === 0) return null;
@@ -217,7 +294,7 @@ export async function getInboxConversations(
 		limit?: number;
 		offset?: number;
 	} = {},
-) {
+): Promise<{ data: any[]; total: number }> {
 	try {
 		const conditions: string[] = ["c.organization_id = $1"];
 		const params: any[] = [orgId];
@@ -228,8 +305,12 @@ export async function getInboxConversations(
 			params.push(filters.status);
 		}
 		if (filters.assignedTo) {
-			conditions.push(`c.assigned_to = $${idx++}`);
-			params.push(filters.assignedTo);
+			if (filters.assignedTo === "unassigned") {
+				conditions.push("c.assigned_to IS NULL");
+			} else {
+				conditions.push(`c.assigned_to::text = $${idx++}`);
+				params.push(filters.assignedTo);
+			}
 		}
 		if (filters.priority) {
 			conditions.push(`c.priority = $${idx++}`);
@@ -237,28 +318,33 @@ export async function getInboxConversations(
 		}
 		if (filters.team) {
 			conditions.push(
-				`EXISTS (SELECT 1 FROM wa_assignments wa WHERE wa.conversation_id = c.id AND wa.team = $${idx})`,
+				`EXISTS (SELECT 1 FROM wa_assignments wa WHERE wa.conversation_id = c.id AND wa.assigned_team = $${idx++})`,
 			);
 			params.push(filters.team);
-			idx++;
-		}
-		if (filters.search) {
-			conditions.push(
-				`(wc.display_name ILIKE $${idx} OR wc.wa_id ILIKE $${idx} OR wc.username ILIKE $${idx})`,
-			);
-			params.push(`%${filters.search}%`);
-			idx++;
 		}
 		if (filters.tagId) {
 			conditions.push(
-				`EXISTS (SELECT 1 FROM wa_conversation_tags wct WHERE wct.conversation_id = c.id AND wct.tag_id = $${idx})`,
+				`EXISTS (SELECT 1 FROM wa_conversation_tags wct WHERE wct.conversation_id = c.id AND wct.tag_id::text = $${idx++})`,
 			);
 			params.push(filters.tagId);
+		}
+		if (filters.search) {
+			conditions.push(
+				`EXISTS (SELECT 1 FROM whatsapp_contacts wc WHERE wc.id = c.contact_id AND (wc.display_name ILIKE $${idx} OR wc.wa_id ILIKE $${idx} OR wc.username ILIKE $${idx}))`,
+			);
+			params.push(`%${filters.search}%`);
 			idx++;
 		}
 
 		const where =
 			conditions.length > 0 ? `WHERE ${conditions.join(" AND ")}` : "";
+
+		// Total count with same conditions
+		const countResult = await pool.query(
+			`SELECT COUNT(*)::int as total FROM wa_conversations c ${where}`,
+			params,
+		);
+		const total = countResult.rows[0]?.total ?? 0;
 
 		const limit = filters.limit ?? 50;
 		const offset = filters.offset ?? 0;
@@ -266,9 +352,11 @@ export async function getInboxConversations(
 
 		const result = await pool.query(
 			`SELECT c.*, wc.wa_id, wc.display_name, wc.username, wc.bsuid, wc.patient_id,
-              (
-                SELECT m.content FROM wa_messages m
-                WHERE m.conversation_id = c.id AND m.direction != 'internal'
+			        c.assigned_team AS team,
+			        COALESCE(assignee.full_name, assignee.name, assignee.email, c.assigned_to::text) AS assigned_to_name,
+	              (
+	                SELECT m.content FROM wa_messages m
+	                WHERE m.conversation_id = c.id AND m.direction != 'internal'
                 ORDER BY m.created_at DESC LIMIT 1
               ) AS last_message,
               (
@@ -276,20 +364,32 @@ export async function getInboxConversations(
                 WHERE m.conversation_id = c.id AND m.direction != 'internal'
                 ORDER BY m.created_at DESC LIMIT 1
               ) AS last_message_type,
-              (
-                SELECT m.created_at FROM wa_messages m
-                WHERE m.conversation_id = c.id AND m.direction != 'internal'
-                ORDER BY m.created_at DESC LIMIT 1
-              ) AS last_message_at
-       FROM wa_conversations c
-       LEFT JOIN whatsapp_contacts wc ON wc.id = c.contact_id
-       ${where}
+	              (
+	                SELECT m.created_at FROM wa_messages m
+	                WHERE m.conversation_id = c.id AND m.direction != 'internal'
+	                ORDER BY m.created_at DESC LIMIT 1
+	              ) AS last_message_at,
+	              (
+	                SELECT m.direction FROM wa_messages m
+	                WHERE m.conversation_id = c.id AND m.direction != 'internal'
+	                ORDER BY m.created_at DESC LIMIT 1
+	              ) AS last_message_direction,
+	              COALESCE((
+	                SELECT json_agg(json_build_object('id', t.id, 'name', t.name, 'color', t.color) ORDER BY t.name)
+	                FROM wa_conversation_tags wct
+	                JOIN wa_tags t ON t.id = wct.tag_id
+	                WHERE wct.conversation_id = c.id
+	              ), '[]'::json) AS tags
+	       FROM wa_conversations c
+	       LEFT JOIN whatsapp_contacts wc ON wc.id = c.contact_id
+	       LEFT JOIN profiles assignee ON assignee.user_id = c.assigned_to::text
+	       ${where}
        ORDER BY c.updated_at DESC
        LIMIT $${idx++} OFFSET $${idx++}`,
 			params,
 		);
 
-		return result.rows;
+		return { data: result.rows, total };
 	} catch (error) {
 		console.error(
 			"[whatsapp-conversations] getInboxConversations error:",

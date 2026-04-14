@@ -32,6 +32,8 @@ export default function EvolutionDetailScreen() {
   const evolutionId = params.evolutionId as string;
   const patientId = params.patientId as string;
   const patientName = params.patientName as string || 'Paciente';
+  // 'startEditing=true' passed from the quick-edit button in evolutions-list
+  const startEditing = params.startEditing === 'true';
 
   const { medium, success, error: hapticError } = useHaptics();
   
@@ -46,7 +48,8 @@ export default function EvolutionDetailScreen() {
   const { user } = useAuthStore();
   const { data: patient } = usePatient(patientId);
 
-  const [isEditing, setIsEditing] = useState(false);
+  const [isEditing, setIsEditing] = useState(startEditing);
+
   const [isSharing, setIsSharing] = useState(false);
   const [subjective, setSubjective] = useState('');
   const [objective, setObjective] = useState('');

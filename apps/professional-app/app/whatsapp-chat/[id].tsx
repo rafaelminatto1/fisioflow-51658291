@@ -21,10 +21,15 @@ import { useHaptics } from "@/hooks/useHaptics";
 import {
 	useWhatsAppMessages,
 	useWhatsAppSendMessage,
-	useWhatsAppUpdateStatus,
-	useWhatsAppAddNote,
-	useWhatsAppQuickReplies,
-} from "@/hooks/useWhatsApp";
+		useWhatsAppUpdateStatus,
+		useWhatsAppAddNote,
+		useWhatsAppQuickReplies,
+		useWhatsAppAssignConversation,
+		useWhatsAppTags,
+		useWhatsAppTeamMembers,
+		useWhatsAppAddTags,
+		useWhatsAppRemoveTag,
+	} from "@/hooks/useWhatsApp";
 import { WaMessage, getContactName, getContactPhone, getMessageText } from "@/services/whatsapp-api";
 
 const WA_GREEN = "#25D366";
@@ -195,6 +200,8 @@ export default function WhatsAppChatScreen() {
 	const [showActions, setShowActions] = useState(false);
 	const [noteText, setNoteText] = useState("");
 	const [showNoteInput, setShowNoteInput] = useState(false);
+	const [showAssignSheet, setShowAssignSheet] = useState(false);
+	const [showTagSheet, setShowTagSheet] = useState(false);
 
 	const flatListRef = useRef<FlatList>(null);
 
@@ -202,11 +209,21 @@ export default function WhatsAppChatScreen() {
 	const sendMutation = useWhatsAppSendMessage(safeId);
 	const updateStatusMutation = useWhatsAppUpdateStatus();
 	const addNoteMutation = useWhatsAppAddNote(safeId);
+	const assignMutation = useWhatsAppAssignConversation();
+	const addTagsMutation = useWhatsAppAddTags();
+	const removeTagMutation = useWhatsAppRemoveTag();
 	const { data: quickReplies } = useWhatsAppQuickReplies();
+	const { data: teamMembers = [] } = useWhatsAppTeamMembers();
+	const { data: allTags = [] } = useWhatsAppTags();
 
 	const conversation = data?.conversation;
 	const messages = data?.messages ?? [];
 	const hasQuickReplies = (quickReplies?.length ?? 0) > 0;
+	const conversationTags = conversation?.tags ?? [];
+	const availableTags = useMemo(
+		() => allTags.filter((tag) => !conversationTags.some((item) => item.id === tag.id)),
+		[allTags, conversationTags],
+	);
 
 	const listData = useMemo(() => buildListData(messages), [messages]);
 
@@ -257,6 +274,44 @@ export default function WhatsAppChatScreen() {
 		}
 	}, [noteText, addNoteMutation]);
 
+	const handleAssignTo = useCallback(
+		async (assignedTo: string) => {
+			setShowAssignSheet(false);
+			try {
+				await assignMutation.mutateAsync({
+					conversationId: safeId,
+					assignedTo,
+					reason: "Atribuição pelo app profissional",
+				});
+			} catch {
+				Alert.alert("Erro", "Não foi possível atribuir a conversa.");
+			}
+		},
+		[assignMutation, safeId],
+	);
+
+	const handleAddTag = useCallback(
+		async (tagId: string) => {
+			try {
+				await addTagsMutation.mutateAsync({ conversationId: safeId, tagIds: [tagId] });
+			} catch {
+				Alert.alert("Erro", "Não foi possível categorizar a conversa.");
+			}
+		},
+		[addTagsMutation, safeId],
+	);
+
+	const handleRemoveTag = useCallback(
+		async (tagId: string) => {
+			try {
+				await removeTagMutation.mutateAsync({ conversationId: safeId, tagId });
+			} catch {
+				Alert.alert("Erro", "Não foi possível remover a categoria.");
+			}
+		},
+		[removeTagMutation, safeId],
+	);
+
 	// ── derived values ──
 
 	const contactName = conversation ? getContactName(conversation) : "";
@@ -264,6 +319,7 @@ export default function WhatsAppChatScreen() {
 	const status = conversation?.status ?? "";
 	const statusColor = getStatusColor(status);
 	const isResolved = status === "resolved" || status === "closed";
+	const assignedLabel = conversation?.assignedToName || "Sem responsável";
 
 	// ── render item ──
 
@@ -314,17 +370,34 @@ export default function WhatsAppChatScreen() {
 						<Text style={[styles.headerName, { color: colors.text }]} numberOfLines={1}>
 							{contactName || "Carregando..."}
 						</Text>
-						{contactPhone ? (
-							<Text style={[styles.headerPhone, { color: colors.textMuted }]} numberOfLines={1}>
-								{contactPhone}
-							</Text>
-						) : status ? (
-							<Text style={[styles.headerStatus, { color: statusColor }]}>
-								{getStatusLabel(status)}
-							</Text>
-						) : null}
+							{contactPhone ? (
+								<Text style={[styles.headerPhone, { color: colors.textMuted }]} numberOfLines={1}>
+									{contactPhone}
+								</Text>
+							) : null}
+							{status ? (
+								<View style={styles.headerMetaRow}>
+									<Text style={[styles.headerStatus, { color: statusColor }]}>
+										{getStatusLabel(status)}
+									</Text>
+									<Text style={[styles.headerMetaText, { color: colors.textMuted }]} numberOfLines={1}>
+										{assignedLabel}
+									</Text>
+									{conversationTags[0] ? (
+										<Text
+											style={[
+												styles.headerMetaText,
+												{ color: conversationTags[0].color ?? colors.textMuted },
+											]}
+											numberOfLines={1}
+										>
+											{conversationTags[0].name}
+										</Text>
+									) : null}
+								</View>
+							) : null}
+						</View>
 					</View>
-				</View>
 
 				<View style={styles.headerActions}>
 					<TouchableOpacity
@@ -573,10 +646,10 @@ export default function WhatsAppChatScreen() {
 							</TouchableOpacity>
 						)}
 
-						<TouchableOpacity
-							style={[styles.actionItem, { borderBottomColor: colors.border }]}
-							onPress={() => {
-								setShowActions(false);
+							<TouchableOpacity
+								style={[styles.actionItem, { borderBottomColor: colors.border }]}
+								onPress={() => {
+									setShowActions(false);
 								setShowNoteInput(true);
 								setShowQuickReplies(false);
 							}}
@@ -584,11 +657,37 @@ export default function WhatsAppChatScreen() {
 							<Ionicons name="lock-closed-outline" size={20} color="#856404" />
 							<Text style={[styles.actionLabel, { color: colors.text }]}>
 								Adicionar nota interna
-							</Text>
-						</TouchableOpacity>
+								</Text>
+							</TouchableOpacity>
 
-						<TouchableOpacity
-							style={[styles.actionItem, { borderBottomColor: "transparent" }]}
+							<TouchableOpacity
+								style={[styles.actionItem, { borderBottomColor: colors.border }]}
+								onPress={() => {
+									setShowActions(false);
+									setShowAssignSheet(true);
+								}}
+							>
+								<Ionicons name="person-add-outline" size={20} color={WA_GREEN} />
+								<Text style={[styles.actionLabel, { color: colors.text }]}>
+									Atribuir responsável
+								</Text>
+							</TouchableOpacity>
+
+							<TouchableOpacity
+								style={[styles.actionItem, { borderBottomColor: colors.border }]}
+								onPress={() => {
+									setShowActions(false);
+									setShowTagSheet(true);
+								}}
+							>
+								<Ionicons name="pricetags-outline" size={20} color="#0A84FF" />
+								<Text style={[styles.actionLabel, { color: colors.text }]}>
+									Categorizar conversa
+								</Text>
+							</TouchableOpacity>
+
+							<TouchableOpacity
+								style={[styles.actionItem, { borderBottomColor: "transparent" }]}
 							onPress={() => setShowActions(false)}
 						>
 							<Ionicons name="close" size={20} color={colors.textSecondary} />
@@ -597,11 +696,141 @@ export default function WhatsAppChatScreen() {
 							</Text>
 						</TouchableOpacity>
 					</View>
-				</TouchableOpacity>
-			</Modal>
-		</SafeAreaView>
-	);
-}
+					</TouchableOpacity>
+				</Modal>
+
+				<Modal
+					visible={showAssignSheet}
+					transparent
+					animationType="slide"
+					onRequestClose={() => setShowAssignSheet(false)}
+				>
+					<TouchableOpacity
+						style={styles.modalOverlay}
+						activeOpacity={1}
+						onPress={() => setShowAssignSheet(false)}
+					>
+						<View
+							style={[styles.actionsSheet, { backgroundColor: colors.surface }]}
+							onStartShouldSetResponder={() => true}
+						>
+							<View style={[styles.sheetHandle, { backgroundColor: colors.border }]} />
+							<Text style={[styles.sheetTitle, { color: colors.text }]}>
+								Atribuir conversa
+							</Text>
+							<ScrollView style={styles.sheetList} keyboardShouldPersistTaps="handled">
+								{teamMembers.length === 0 ? (
+									<Text style={[styles.sheetEmptyText, { color: colors.textMuted }]}>
+										Nenhum membro da equipe encontrado.
+									</Text>
+								) : (
+									teamMembers.map((member) => {
+										const active = conversation?.assignedTo === member.userId;
+										return (
+											<TouchableOpacity
+												key={member.userId}
+												style={[styles.sheetOption, { borderBottomColor: colors.border }]}
+												onPress={() => handleAssignTo(member.userId)}
+												disabled={assignMutation.isPending}
+											>
+												<View style={[styles.memberAvatar, { backgroundColor: WA_GREEN + "18" }]}>
+													<Text style={[styles.memberAvatarText, { color: WA_GREEN }]}>
+														{member.name.slice(0, 2).toUpperCase()}
+													</Text>
+												</View>
+												<View style={{ flex: 1, minWidth: 0 }}>
+													<Text style={[styles.sheetOptionTitle, { color: colors.text }]} numberOfLines={1}>
+														{member.name}
+													</Text>
+													<Text style={[styles.sheetOptionSubtitle, { color: colors.textMuted }]} numberOfLines={1}>
+														{member.email || member.role || "Equipe"}
+													</Text>
+												</View>
+												{active ? <Ionicons name="checkmark-circle" size={20} color={WA_GREEN} /> : null}
+											</TouchableOpacity>
+										);
+									})
+								)}
+							</ScrollView>
+						</View>
+					</TouchableOpacity>
+				</Modal>
+
+				<Modal
+					visible={showTagSheet}
+					transparent
+					animationType="slide"
+					onRequestClose={() => setShowTagSheet(false)}
+				>
+					<TouchableOpacity
+						style={styles.modalOverlay}
+						activeOpacity={1}
+						onPress={() => setShowTagSheet(false)}
+					>
+						<View
+							style={[styles.actionsSheet, { backgroundColor: colors.surface }]}
+							onStartShouldSetResponder={() => true}
+						>
+							<View style={[styles.sheetHandle, { backgroundColor: colors.border }]} />
+							<Text style={[styles.sheetTitle, { color: colors.text }]}>
+								Categorias da conversa
+							</Text>
+							<ScrollView style={styles.sheetList} keyboardShouldPersistTaps="handled">
+								{conversationTags.length > 0 && (
+									<View style={styles.currentTagsBlock}>
+										<Text style={[styles.sheetSectionLabel, { color: colors.textMuted }]}>
+											Aplicadas
+										</Text>
+										{conversationTags.map((tag) => (
+											<TouchableOpacity
+												key={tag.id}
+												style={[styles.sheetOption, { borderBottomColor: colors.border }]}
+												onPress={() => handleRemoveTag(tag.id)}
+												disabled={removeTagMutation.isPending}
+											>
+												<View
+													style={[styles.tagDotLarge, { backgroundColor: tag.color ?? WA_GREEN }]}
+												/>
+												<Text style={[styles.sheetOptionTitle, { color: colors.text }]}>
+													{tag.name}
+												</Text>
+												<Ionicons name="close-circle-outline" size={18} color={colors.textMuted} />
+											</TouchableOpacity>
+										))}
+									</View>
+								)}
+								<Text style={[styles.sheetSectionLabel, { color: colors.textMuted }]}>
+									Adicionar
+								</Text>
+								{availableTags.length === 0 ? (
+									<Text style={[styles.sheetEmptyText, { color: colors.textMuted }]}>
+										Todas as categorias disponíveis já estão aplicadas.
+									</Text>
+								) : (
+									availableTags.map((tag) => (
+										<TouchableOpacity
+											key={tag.id}
+											style={[styles.sheetOption, { borderBottomColor: colors.border }]}
+											onPress={() => handleAddTag(tag.id)}
+											disabled={addTagsMutation.isPending}
+										>
+											<View
+												style={[styles.tagDotLarge, { backgroundColor: tag.color ?? WA_GREEN }]}
+											/>
+											<Text style={[styles.sheetOptionTitle, { color: colors.text }]}>
+												{tag.name}
+											</Text>
+											<Ionicons name="add-circle-outline" size={18} color={WA_GREEN} />
+										</TouchableOpacity>
+									))
+								)}
+							</ScrollView>
+						</View>
+					</TouchableOpacity>
+				</Modal>
+			</SafeAreaView>
+		);
+	}
 
 // ─── styles ───────────────────────────────────────────────────────────────────
 
@@ -634,11 +863,24 @@ const styles = StyleSheet.create({
 		flexShrink: 0,
 	},
 	headerAvatarText: { fontSize: 15, fontWeight: "700" },
-	headerText: { flex: 1, minWidth: 0 },
-	headerName: { fontSize: 16, fontWeight: "600" },
-	headerPhone: { fontSize: 12, marginTop: 1 },
-	headerStatus: { fontSize: 12, fontWeight: "500", marginTop: 1 },
-	headerActions: { flexDirection: "row", gap: 6 },
+		headerText: { flex: 1, minWidth: 0 },
+		headerName: { fontSize: 16, fontWeight: "600" },
+		headerPhone: { fontSize: 12, marginTop: 1 },
+		headerStatus: { fontSize: 12, fontWeight: "500", marginTop: 1 },
+		headerMetaRow: {
+			flexDirection: "row",
+			alignItems: "center",
+			gap: 6,
+			marginTop: 1,
+			minWidth: 0,
+		},
+		headerMetaText: {
+			fontSize: 11,
+			fontWeight: "500",
+			flexShrink: 1,
+			maxWidth: 120,
+		},
+		headerActions: { flexDirection: "row", gap: 6 },
 	headerBtn: {
 		width: 34,
 		height: 34,
@@ -815,9 +1057,58 @@ const styles = StyleSheet.create({
 		alignSelf: "center",
 		marginBottom: 16,
 	},
-	sheetTitle: { fontSize: 16, fontWeight: "700", marginBottom: 16 },
-	actionItem: {
-		flexDirection: "row",
+		sheetTitle: { fontSize: 16, fontWeight: "700", marginBottom: 16 },
+		sheetList: { maxHeight: 360 },
+		sheetOption: {
+			flexDirection: "row",
+			alignItems: "center",
+			paddingVertical: 12,
+			borderBottomWidth: StyleSheet.hairlineWidth,
+			gap: 12,
+		},
+		sheetOptionTitle: {
+			fontSize: 15,
+			fontWeight: "600",
+			flex: 1,
+		},
+		sheetOptionSubtitle: {
+			fontSize: 12,
+			marginTop: 2,
+		},
+		sheetEmptyText: {
+			fontSize: 13,
+			lineHeight: 18,
+			paddingVertical: 12,
+		},
+		sheetSectionLabel: {
+			fontSize: 11,
+			fontWeight: "700",
+			textTransform: "uppercase",
+			letterSpacing: 0,
+			marginTop: 4,
+			marginBottom: 4,
+		},
+		currentTagsBlock: {
+			marginBottom: 10,
+		},
+		memberAvatar: {
+			width: 34,
+			height: 34,
+			borderRadius: 17,
+			alignItems: "center",
+			justifyContent: "center",
+		},
+		memberAvatarText: {
+			fontSize: 12,
+			fontWeight: "800",
+		},
+		tagDotLarge: {
+			width: 12,
+			height: 12,
+			borderRadius: 6,
+		},
+		actionItem: {
+			flexDirection: "row",
 		alignItems: "center",
 		paddingVertical: 14,
 		borderBottomWidth: StyleSheet.hairlineWidth,

@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import {
   View,
   Text,
@@ -70,8 +70,8 @@ export default function AppointmentFormScreen() {
 
   const [showDatePicker, setShowDatePicker] = useState(false);
   const [showTimePicker, setShowTimePicker] = useState(false);
+  const [sessionValueRaw, setSessionValueRaw] = useState('');
   const [showPaymentModal, setShowPaymentModal] = useState(false);
-  const [sessionValue, setSessionValue] = useState('');
   const [isPaid, setIsPaid] = useState(false);
   const [,setFinancialRecordId] = useState<string | null>(null);
 
@@ -293,21 +293,23 @@ export default function AppointmentFormScreen() {
 
   const [selectedPaymentMethod, setSelectedPaymentMethod] = useState('pix');
 
-  
-
   const handleAmountChange = (text: string) => {
     const rawText = text.replace(/\D/g, '');
-    setSessionValue(rawText);
+    setSessionValueRaw(rawText);
   };
 
-  const getDisplayAmount = () => {
-    if (!sessionValue) return '';
-    const val = parseFloat(sessionValue) / 100;
-    return val.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
-  };
+  const displayAmount = useMemo(() => {
+    if (!sessionValueRaw) return '';
+    const val = parseFloat(sessionValueRaw) / 100;
+    return val.toLocaleString('pt-BR', { 
+      style: 'currency', 
+      currency: 'BRL',
+      minimumFractionDigits: 2 
+    });
+  }, [sessionValueRaw]);
 
   const handlePayment = async () => {
-    if (!sessionValue || parseFloat(sessionValue) <= 0) {
+    if (!sessionValueRaw || parseFloat(sessionValueRaw) <= 0) {
       Alert.alert('Erro', 'Informe o valor da sessão.');
       return;
     }
@@ -316,7 +318,7 @@ export default function AppointmentFormScreen() {
     try {
       const [day, month, year] = watch('date').split('/');
       const sessionDate = `${year}-${month}-${day}`;
-      const finalAmount = parseFloat(sessionValue) / 100;
+      const finalAmount = parseFloat(sessionValueRaw) / 100;
 
       // Create financial record
       const record = await createFinancialMutation.mutateAsync({
@@ -553,71 +555,6 @@ export default function AppointmentFormScreen() {
           </View>
         </View>
 
-        {/* Group Session Selection */}
-        <View style={[styles.groupSection, { borderColor: colors.border, backgroundColor: colors.surface }]}>
-          <View style={styles.groupRow}>
-            <View style={{ flex: 1 }}>
-              <Text style={[styles.groupLabel, { color: colors.text }]}>Sessão de Grupo</Text>
-              <Text style={[styles.groupDesc, { color: colors.textSecondary }]}>Adicionar múltiplos participantes ao mesmo horário</Text>
-            </View>
-            <Controller
-              control={control}
-              name="isGroup"
-              render={({ field: { value, onChange } }) => (
-                <Switch
-                  value={value}
-                  onValueChange={onChange}
-                  trackColor={{ false: colors.border, true: colors.primary }}
-                  thumbColor={Platform.OS === 'android' ? (value ? colors.primary : '#f4f3f4') : undefined}
-                />
-              )}
-            />
-          </View>
-
-          {watch('isGroup') && (
-            <View style={{ marginTop: 8, paddingTop: 12, borderTopWidth: 1, borderTopColor: colors.border }}>
-              <View style={styles.groupRow}>
-                <View style={{ flex: 1 }}>
-                  <Text style={[styles.groupLabel, { color: colors.text }]}>Capacidade Ilimitada</Text>
-                  <Text style={[styles.groupDesc, { color: colors.textSecondary }]}>Não limitar número de participantes</Text>
-                </View>
-                <Controller
-                  control={control}
-                  name="isUnlimited"
-                  render={({ field: { value, onChange } }) => (
-                    <Switch
-                      value={value}
-                      onValueChange={onChange}
-                      trackColor={{ false: colors.border, true: colors.primary }}
-                    />
-                  )}
-                />
-              </View>
-
-              <View style={{ marginTop: 12 }}>
-                <Text style={[styles.label, { color: colors.textSecondary }]}>Nomes dos Participantes</Text>
-                <Controller
-                  control={control}
-                  name="additionalNames"
-                  render={({ field: { value, onChange } }) => (
-                    <Input
-                      placeholder="Ex: João Silva, Maria Oliveira..."
-                      value={value}
-                      onChangeText={onChange}
-                      multiline
-                      numberOfLines={2}
-                      style={{ minHeight: 60 }}
-                    />
-                  )}
-                />
-                <Text style={[styles.groupDesc, { color: colors.textSecondary, marginTop: 4 }]}>
-                  Separe os nomes por vírgula
-                </Text>
-              </View>
-            </View>
-          )}
-        </View>
-
         <Text style={[styles.label, { color: colors.textSecondary }]}>Observações</Text>
         <Controller
           control={control}
@@ -734,14 +671,19 @@ export default function AppointmentFormScreen() {
             <ScrollView style={styles.modalBody} keyboardShouldPersistTaps="handled">
               {/* Valor */}
               <Text style={[styles.label, { color: colors.textSecondary }]}>Valor da Sessão *</Text>
-              <TextInput
-                style={[styles.valueInput, { borderColor: colors.border, backgroundColor: colors.surface, color: colors.text }]}
-                value={getDisplayAmount()}
-                onChangeText={handleAmountChange}
-                placeholder="R$ 0,00"
-                placeholderTextColor={colors.textMuted}
-                keyboardType="numeric"
-              />
+              <View style={[styles.valueInputContainer, { borderColor: colors.border, backgroundColor: colors.surface }]}>
+                <Text style={[styles.currencyPrefix, { color: colors.textSecondary }]}>R$</Text>
+                <TextInput
+                  key="payment-value-input"
+                  style={[styles.valueInput, { color: colors.text }]}
+                  value={displayAmount.replace('R$', '').trim()}
+                  onChangeText={handleAmountChange}
+                  placeholder="0,00"
+                  placeholderTextColor={colors.textMuted}
+                  keyboardType="numeric"
+                />
+              </View>
+              <Text style={styles.inputHint}>Toque para digitar o valor em centavos</Text>
 
               {/* Payment Method */}
               <Text style={[styles.label, { color: colors.textSecondary, marginTop: 16 }]}>Forma de Pagamento</Text>
@@ -842,28 +784,6 @@ const styles = StyleSheet.create({
   saveButton: { marginTop: 8 },
   startButton: { marginTop: 12 },
   deleteButton: { marginTop: 12, borderWidth: 1 },
-  // Group Section Styles
-  groupSection: {
-    marginTop: 8,
-    marginBottom: 16,
-    padding: 16,
-    borderRadius: 16,
-    borderWidth: 1,
-  },
-  groupRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-  },
-  groupLabel: {
-    fontSize: 15,
-    fontWeight: '600',
-  },
-  groupDesc: {
-    fontSize: 12,
-    marginTop: 2,
-    maxWidth: '85%',
-  },
   errorText: { color: '#ef4444', fontSize: 12, marginTop: -12, marginBottom: 12 },
   // Payment Section Styles
   paymentSection: {
@@ -955,14 +875,29 @@ const styles = StyleSheet.create({
   modalBody: {
     padding: 20,
   },
-  valueInput: {
+  valueInputContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
     borderWidth: 1,
     borderRadius: 12,
     paddingHorizontal: 16,
-    paddingVertical: 14,
+    height: 56,
+  },
+  currencyPrefix: {
+    fontSize: 18,
+    fontWeight: '700',
+    marginRight: 8,
+  },
+  valueInput: {
+    flex: 1,
     fontSize: 20,
     fontWeight: '600',
-    textAlign: 'center',
+  },
+  inputHint: {
+    fontSize: 11,
+    color: '#94a3b8',
+    marginLeft: 4,
+    marginTop: 4,
   },
   paymentMethodsGrid: {
     flexDirection: 'row',
