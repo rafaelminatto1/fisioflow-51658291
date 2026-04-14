@@ -42,6 +42,7 @@ import {
 	TIPO_COLORS,
 } from "@/types/tarefas";
 import { memo, useMemo } from "react";
+import { useBoardLabels } from "@/contexts/BoardLabelsContext";
 
 interface KanbanCardContentProps {
 	tarefa: Tarefa;
@@ -101,6 +102,8 @@ const KanbanCardContent = memo(function KanbanCardContent({
 		() => daysUntilDue !== null && daysUntilDue > 0 && daysUntilDue <= 3,
 		[daysUntilDue],
 	);
+
+	const { labelsMap } = useBoardLabels();
 
 	const checklistProgress = useMemo(() => {
 		if (!tarefa.checklists || tarefa.checklists.length === 0) return null;
@@ -238,22 +241,56 @@ const KanbanCardContent = memo(function KanbanCardContent({
 					</div>
 				)}
 
-				{tarefa.tags && tarefa.tags.length > 0 && (
+				{/* Colored labels (label_ids) + legacy string tags */}
+				{((tarefa.label_ids && tarefa.label_ids.length > 0) ||
+					(tarefa.tags && tarefa.tags.length > 0)) && (
 					<div className="flex flex-wrap gap-1 mb-2">
-						{tarefa.tags.slice(0, 3).map((tag, i) => (
-							<Badge
-								key={i}
-								variant="secondary"
-								className="text-[10px] px-1.5 py-0 bg-primary/10 text-primary"
-							>
-								{tag}
-							</Badge>
-						))}
-						{tarefa.tags.length > 3 && (
-							<Badge variant="secondary" className="text-[10px] px-1.5 py-0">
-								+{tarefa.tags.length - 3}
-							</Badge>
-						)}
+						{/* Managed labels with colors */}
+						{tarefa.label_ids?.slice(0, 4).map((labelId) => {
+							const label = labelsMap.get(labelId);
+							if (!label) return null;
+							return (
+								<Badge
+									key={labelId}
+									className="text-[10px] px-1.5 py-0 border"
+									style={{
+										backgroundColor: label.color + "22",
+										color: label.color,
+										borderColor: label.color + "44",
+									}}
+								>
+									{label.name}
+								</Badge>
+							);
+						})}
+						{/* Legacy string tags (retrocompatibilidade) */}
+						{!tarefa.label_ids?.length &&
+							tarefa.tags?.slice(0, 3).map((tag, i) => (
+								<Badge
+									key={i}
+									variant="secondary"
+									className="text-[10px] px-1.5 py-0 bg-primary/10 text-primary"
+								>
+									{tag}
+								</Badge>
+							))}
+						{/* Overflow counter */}
+						{(() => {
+							const total =
+								(tarefa.label_ids?.length ?? 0) + (tarefa.tags?.length ?? 0);
+							const shown = tarefa.label_ids?.length
+								? Math.min(tarefa.label_ids.length, 4)
+								: Math.min(tarefa.tags?.length ?? 0, 3);
+							const overflow = total - shown;
+							return overflow > 0 ? (
+								<Badge
+									variant="secondary"
+									className="text-[10px] px-1.5 py-0"
+								>
+									+{overflow}
+								</Badge>
+							) : null;
+						})()}
 					</div>
 				)}
 
