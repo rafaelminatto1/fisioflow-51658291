@@ -376,27 +376,55 @@ export function getStatusConfig(status: string): AppointmentStatusConfig {
 	);
 }
 
-/**
- * Get status color for mobile/external use
- *
- * @param status - Appointment status
- * @returns Hex color code
- */
+const STATUS_HEX_COLORS: Record<string, string> = {
+	agendado: "#3b82f6",
+	atendido: "#10b981",
+	avaliacao: "#8b5cf6",
+	cancelado: "#64748b",
+	aguardando_confirmacao: "#f59e0b",
+	faltou: "#ef4444",
+	faltou_com_aviso: "#2dd4bf",
+	faltou_sem_aviso: "#f97316",
+	nao_atendido: "#4b5563",
+	nao_atendido_sem_cobranca: "#64748b",
+	presenca_confirmada: "#1e3a8a",
+	remarcar: "#94a3b8",
+};
+
 export function getStatusColor(status: string): string {
 	const normalized = normalizeStatus(status);
-	const colors: Record<string, string> = {
-		agendado: "#3b82f6",
-		atendido: "#10b981",
-		avaliacao: "#8b5cf6",
-		cancelado: "#000000",
-		aguardando_confirmacao: "#f59e0b",
-		faltou: "#ef4444",
-		faltou_com_aviso: "#2dd4bf",
-		faltou_sem_aviso: "#f97316",
-		nao_atendido: "#4b5563",
-		nao_atendido_sem_cobranca: "#000000",
-		presenca_confirmada: "#1e3a8a",
-		remarcar: "#64748b",
-	};
-	return colors[normalized] || colors.agendado;
+	return STATUS_HEX_COLORS[normalized] || STATUS_HEX_COLORS.agendado;
+}
+
+export function getStatusHexColors(): Record<string, string> {
+	return { ...STATUS_HEX_COLORS };
+}
+
+export function lightenColor(hex: string, amount: number = 0.9): string {
+	const num = parseInt(hex.replace("#", ""), 16);
+	const r = Math.min(
+		255,
+		((num >> 16) & 0xff) + Math.round((255 - ((num >> 16) & 0xff)) * amount),
+	);
+	const g = Math.min(
+		255,
+		((num >> 8) & 0xff) + Math.round((255 - ((num >> 8) & 0xff)) * amount),
+	);
+	const b = Math.min(
+		255,
+		(num & 0xff) + Math.round((255 - (num & 0xff)) * amount),
+	);
+	return `#${((r << 16) | (g << 8) | b).toString(16).padStart(6, "0")}`;
+}
+
+export function getCalendarCardColors(status: string): {
+	accent: string;
+	background: string;
+	text: string;
+} {
+	const normalized = normalizeStatus(status);
+	const accent = STATUS_HEX_COLORS[normalized] || STATUS_HEX_COLORS.agendado;
+	const background = lightenColor(accent, 0.88);
+	const text = accent;
+	return { accent, background, text };
 }

@@ -16,6 +16,7 @@ import {
 	Archive,
 	Flag,
 	ShieldAlert,
+	Lock,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -349,6 +350,23 @@ const KanbanCardContent = memo(function KanbanCardContent({
 										: isDueToday
 											? "Vence hoje"
 											: `Vence em ${daysUntilDue} dias`}
+								</TooltipContent>
+							</Tooltip>
+						)}
+
+						{tarefa.dependencies && tarefa.dependencies.length > 0 && tarefa.status !== "CONCLUIDO" && (
+							<Tooltip>
+								<TooltipTrigger>
+									<Badge
+										variant="outline"
+										className="text-[10px] px-1.5 py-0 border-orange-300 bg-orange-50 text-orange-600 gap-0.5"
+									>
+										<Lock className="h-2.5 w-2.5" />
+										Bloqueada
+									</Badge>
+								</TooltipTrigger>
+								<TooltipContent>
+									{tarefa.dependencies.length} dependência{tarefa.dependencies.length > 1 ? "s" : ""} pendente{tarefa.dependencies.length > 1 ? "s" : ""}
 								</TooltipContent>
 							</Tooltip>
 						)}

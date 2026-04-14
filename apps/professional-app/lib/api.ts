@@ -300,11 +300,18 @@ async function getAuthToken(): Promise<string> {
 // FETCH HELPERS
 // ============================================================
 
-function cleanRequestData(data: Record<string, any>): Record<string, any> {
+function cleanRequestData(data: any): any {
+	if (Array.isArray(data)) {
+		return data.map((item) => cleanRequestData(item));
+	}
+	if (typeof data !== "object" || data === null) {
+		return data;
+	}
 	const cleaned: Record<string, any> = {};
 	for (const [key, value] of Object.entries(data)) {
 		if (value !== undefined) {
-			cleaned[key] = value;
+			cleaned[key] =
+				typeof value === "object" && value !== null ? cleanRequestData(value) : value;
 		}
 	}
 	return cleaned;

@@ -92,4 +92,34 @@ export class WhatsAppService {
 
     return this.sendTemplateMessage(to, templateName, 'pt_BR', components);
   }
+
+  /**
+   * Delete a message for everyone
+   * Note: Only works for outbound messages within the delete window (~60h).
+   * @param messageId - The wamid (meta_message_id) of the message to delete.
+   */
+  async deleteMessage(messageId: string) {
+    const token = this.env.WHATSAPP_ACCESS_TOKEN;
+
+    if (!token) {
+      console.warn('[WhatsApp] Token não configurado para exclusão');
+      return { error: 'Credentials missing' };
+    }
+
+    // Endpoint: DELETE /v21.0/<MESSAGE_ID>
+    const endpoint = `${this.baseUrl}/${messageId}`;
+
+    const response = await fetch(endpoint, {
+      method: 'DELETE',
+      headers: {
+        'Authorization': `Bearer ${token}`,
+      },
+    });
+
+    const result = await response.json();
+    if (!response.ok) {
+      console.error('[WhatsApp Delete Error]', result);
+    }
+    return result;
+  }
 }

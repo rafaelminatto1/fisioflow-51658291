@@ -6,6 +6,10 @@ import { BoardCalendarView } from "@/components/boards/BoardCalendarView";
 import { BoardListView } from "@/components/boards/BoardListView";
 import { BoardWorkspaceSidebar } from "@/components/boards/BoardWorkspaceSidebar";
 import { KanbanFull } from "@/components/boards/KanbanFull";
+import { BoardLabelsContext } from "@/contexts/BoardLabelsContext";
+import { boardLabelsApi } from "@/api/v2";
+import { useQuery } from "@tanstack/react-query";
+import type { BoardLabel } from "@/types/boards";
 import { Button } from "@/components/ui/button";
 import { LoadingSkeleton } from "@/components/ui/loading-skeleton";
 import {
@@ -50,6 +54,16 @@ export default function BoardDetail() {
 	const { data: board, isLoading, error, refetch } = useBoard(boardId);
 	const { data: tarefasRaw, refetch: refetchTarefas } =
 		useBoardTarefas(boardId);
+	const { data: labelsData } = useQuery({
+		queryKey: ["boards", boardId, "labels"],
+		queryFn: () => boardLabelsApi.list(boardId!),
+		enabled: !!boardId,
+	});
+	const labels: BoardLabel[] = (labelsData?.data ?? []) as BoardLabel[];
+	const labelsMap = useMemo(
+		() => new Map(labels.map((l) => [l.id, l])),
+		[labels],
+	);
 	const { data: teamMembers } = useTeamMembers();
 	const updateBoard = useUpdateBoard();
 	const deleteBoard = useDeleteBoard();
@@ -143,6 +157,7 @@ export default function BoardDetail() {
 	);
 
 	return (
+		<BoardLabelsContext.Provider value={{ labels, labelsMap }}>
 		<div className="min-h-screen bg-[radial-gradient(circle_at_top_left,rgba(148,163,184,0.10),transparent_26%),linear-gradient(180deg,rgba(248,250,252,0.98),rgba(248,250,252,1))]">
 			<BoardHeader
 				board={board}
@@ -277,5 +292,6 @@ export default function BoardDetail() {
 				</AlertDialogContent>
 			</AlertDialog>
 		</div>
+		</BoardLabelsContext.Provider>
 	);
 }
