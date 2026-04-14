@@ -7,6 +7,7 @@ export interface ConversationFilters {
 	assignedTo?: string;
 	priority?: string;
 	team?: string;
+	includeDeleted?: boolean;
 	page?: number;
 	limit?: number;
 	search?: string;
@@ -34,6 +35,9 @@ export interface Conversation {
 	priority?: "low" | "medium" | "high" | "urgent";
 	slaDeadline?: string;
 	slaBreached?: boolean;
+	deletedAt?: string;
+	deletedBy?: string;
+	metadata?: Record<string, unknown>;
 	createdAt: string;
 	updatedAt: string;
 }
@@ -54,7 +58,14 @@ export interface Message {
 	senderId?: string;
 	senderName?: string;
 	timestamp: string;
-	status?: "sent" | "delivered" | "read" | "failed";
+	status?: "sent" | "delivered" | "read" | "failed" | "deleted";
+	editedAt?: string;
+	editedBy?: string;
+	deletedAt?: string;
+	deletedBy?: string;
+	deleteScope?: "local" | "everyone";
+	deletedForEveryone?: boolean;
+	metadata?: Record<string, unknown>;
 	interactiveData?: {
 		type: "button" | "list";
 		buttons?: Array<{ id: string; title: string }>;
@@ -271,6 +282,7 @@ export async function fetchConversations(filters?: ConversationFilters) {
 		if (filters.assignedTo) params.set("assignedTo", filters.assignedTo);
 		if (filters.priority) params.set("priority", filters.priority);
 		if (filters.team) params.set("team", filters.team);
+		if (filters.includeDeleted) params.set("includeDeleted", "true");
 		if (filters.page) params.set("page", String(filters.page));
 		if (filters.limit) params.set("limit", String(filters.limit));
 		if (filters.search) params.set("search", filters.search);
@@ -310,6 +322,51 @@ export async function fetchConversation(
 	return res;
 }
 
+export async function updateConversation(
+	conversationId: string,
+	data: {
+		status?: string;
+		priority?: string;
+		assignedTo?: string | null;
+		team?: string | null;
+		patientId?: string | null;
+		metadata?: Record<string, unknown>;
+	},
+) {
+	const res = await request<Conversation | { data: Conversation }>(
+		`${BASE}/conversations/${conversationId}`,
+		{
+			method: "PATCH",
+			body: JSON.stringify(data),
+		},
+	);
+	return "data" in (res as any) ? (res as any).data : res;
+}
+
+export async function deleteConversation(
+	conversationId: string,
+	reason?: string,
+) {
+	const res = await request<Conversation | { data: Conversation }>(
+		`${BASE}/conversations/${conversationId}`,
+		{
+			method: "DELETE",
+			body: JSON.stringify({ reason }),
+		},
+	);
+	return "data" in (res as any) ? (res as any).data : res;
+}
+
+export async function restoreConversation(conversationId: string) {
+	const res = await request<Conversation | { data: Conversation }>(
+		`${BASE}/conversations/${conversationId}/restore`,
+		{
+			method: "POST",
+		},
+	);
+	return "data" in (res as any) ? (res as any).data : res;
+}
+
 export async function sendMessage(
 	conversationId: string,
 	content: string,
@@ -328,6 +385,44 @@ export async function sendMessage(
 			}),
 		},
 	);
+	return "data" in (res as any) ? (res as any).data : res;
+}
+
+export async function updateMessage(
+	conversationId: string,
+	messageId: string,
+	content: string | Record<string, unknown>,
+) {
+	const res = await request<Message | { data: Message }>(
+		`${BASE}/conversations/${conversationId}/messages/${messageId}`,
+		{
+			method: "PATCH",
+			body: JSON.stringify({ content }),
+		},
+	);
+	return "data" in (res as any) ? (res as any).data : res;
+}
+
+export async function deleteMessage(
+	conversationId: string,
+	messageId: string,
+	options?: { scope?: "local" | "everyone"; reason?: string },
+) {
+	const res = await request<
+		| Message
+		| {
+				data: Message;
+				provider?: {
+					attempted: boolean;
+					status: string;
+					reason?: string;
+					metaMessageId?: string | null;
+				};
+		  }
+	>(`${BASE}/conversations/${conversationId}/messages/${messageId}`, {
+		method: "DELETE",
+		body: JSON.stringify(options ?? {}),
+	});
 	return "data" in (res as any) ? (res as any).data : res;
 }
 

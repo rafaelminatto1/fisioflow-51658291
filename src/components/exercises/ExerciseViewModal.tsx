@@ -34,6 +34,7 @@ import { useToast } from "@/hooks/use-toast";
 import type { Exercise } from "@/hooks/useExercises";
 import { getBestImageUrl } from "@/lib/imageUtils";
 import { OptimizedImage } from "@/components/ui/OptimizedImage";
+import { ShareExerciseToWhatsAppModal } from "./ShareExerciseToWhatsAppModal";
 import "@/styles/print.css";
 
 interface ExerciseViewModalProps {
@@ -88,6 +89,7 @@ export function ExerciseViewModal({
 }: ExerciseViewModalProps) {
 	const { isFavorite, toggleFavorite } = useExerciseFavorites();
 	const { toast } = useToast();
+	const [shareWhatsAppOpen, setShareWhatsAppOpen] = React.useState(false);
 
 	if (!exercise) return null;
 
@@ -101,37 +103,8 @@ export function ExerciseViewModal({
 
 	const defaultTab = hasVideo ? "video" : "image";
 
-	const handleShare = async () => {
-		try {
-			const shareData = {
-				title: exercise?.name ?? "Exercício",
-				text: exercise.description || "",
-				url: window.location.href,
-			};
-
-			if (navigator.share) {
-				await navigator.share(shareData);
-				toast({
-					title: "Compartilhado com sucesso!",
-					description: "O exercício foi compartilhado.",
-				});
-			} else {
-				await navigator.clipboard.writeText(shareData.url);
-				toast({
-					title: "Link copiado!",
-					description: "O link foi copiado para a área de transferência.",
-				});
-			}
-		} catch (error) {
-			if (error instanceof Error && error.name !== "AbortError") {
-				toast({
-					title: "Erro ao compartilhar",
-					description:
-						"Não foi possível compartilhar o exercício. Tente novamente.",
-					variant: "destructive",
-				});
-			}
-		}
+	const handleShare = () => {
+		setShareWhatsAppOpen(true);
 	};
 
 	const handlePrint = () => {
@@ -147,330 +120,338 @@ export function ExerciseViewModal({
 	};
 
 	return (
-		<Dialog open={open} onOpenChange={onOpenChange}>
-			<DialogContent
-				className="fixed left-[50%] top-[50%] z-50 !-translate-x-1/2 !-translate-y-1/2 w-[90vw] md:w-[80vw] lg:w-[85vw] max-w-6xl max-h-[85vh] p-0 gap-0 overflow-hidden flex flex-col bg-background/95 backdrop-blur-xl border-border/50 shadow-2xl rounded-lg exercise-print-layout"
-				onInteractOutside={(e) => e.preventDefault()}
-				onEscapeKeyDown={(e) => {
-					e.preventDefault();
-					onOpenChange(false);
-				}}
-			>
-				{/* Header */}
-				<div className="flex-none p-4 sm:p-6 border-b bg-background/50 backdrop-blur-sm z-10 flex items-start justify-between gap-4 exercise-print-header">
-					<div className="space-y-1.5 pt-1">
-						<DialogTitle className="text-2xl font-bold tracking-tight text-foreground flex items-center gap-2 exercise-print-title">
-							{exercise?.name ?? "Exercício"}
-						</DialogTitle>
-						<DialogDescription className="sr-only">
-							Visualização detalhada do exercício {exercise?.name}
-						</DialogDescription>
-						<div className="flex items-center gap-2 flex-wrap exercise-print-badges no-print">
-							{exercise.category && (
-								<Badge
-									variant="secondary"
-									className="bg-primary/5 text-primary hover:bg-primary/10 border-primary/10 transition-colors exercise-print-badge"
-								>
-									{exercise.category}
-								</Badge>
-							)}
-							{exercise.difficulty && (
-								<Badge
-									variant="outline"
-									className={cn(
-										"border bg-background/50",
-										difficultyColors[exercise.difficulty],
-										"exercise-print-badge",
-									)}
-								>
-									{exercise.difficulty}
-								</Badge>
-							)}
-						</div>
-					</div>
-
-					<div className="flex items-center gap-2">
-						<div className="flex items-center gap-1 bg-muted/50 p-1 rounded-lg border border-border/50">
-							<Button
-								variant="ghost"
-								size="icon"
-								className={cn(
-									"h-8 w-8 rounded-md transition-all",
-									isFavorite(exercise.id)
-										? "bg-rose-500/10 text-rose-500 hover:bg-rose-500/20 hover:text-rose-600"
-										: "text-muted-foreground hover:text-rose-500",
+		<>
+			<Dialog open={open} onOpenChange={onOpenChange}>
+				<DialogContent
+					className="fixed left-[50%] top-[50%] z-50 !-translate-x-1/2 !-translate-y-1/2 w-[90vw] md:w-[80vw] lg:w-[85vw] max-w-6xl max-h-[85vh] p-0 gap-0 overflow-hidden flex flex-col bg-background/95 backdrop-blur-xl border-border/50 shadow-2xl rounded-lg exercise-print-layout"
+					onInteractOutside={(e) => e.preventDefault()}
+					onEscapeKeyDown={(e) => {
+						e.preventDefault();
+						onOpenChange(false);
+					}}
+				>
+					{/* Header */}
+					<div className="flex-none p-4 sm:p-6 border-b bg-background/50 backdrop-blur-sm z-10 flex items-start justify-between gap-4 exercise-print-header">
+						<div className="space-y-1.5 pt-1">
+							<DialogTitle className="text-2xl font-bold tracking-tight text-foreground flex items-center gap-2 exercise-print-title">
+								{exercise?.name ?? "Exercício"}
+							</DialogTitle>
+							<DialogDescription className="sr-only">
+								Visualização detalhada do exercício {exercise?.name}
+							</DialogDescription>
+							<div className="flex items-center gap-2 flex-wrap exercise-print-badges no-print">
+								{exercise.category && (
+									<Badge
+										variant="secondary"
+										className="bg-primary/5 text-primary hover:bg-primary/10 border-primary/10 transition-colors exercise-print-badge"
+									>
+										{exercise.category}
+									</Badge>
 								)}
-								onClick={() => toggleFavorite(exercise.id)}
-								title={
-									isFavorite(exercise.id)
-										? "Remover dos favoritos"
-										: "Adicionar aos favoritos"
-								}
-							>
-								<Heart
-									className={cn(
-										"h-4 w-4",
-										isFavorite(exercise.id) && "fill-current",
-									)}
-								/>
-							</Button>
-
-							<Separator orientation="vertical" className="h-4" />
-
-							<Button
-								variant="ghost"
-								size="icon"
-								className="h-8 w-8 text-muted-foreground hover:text-primary"
-								onClick={handleShare}
-								title="Compartilhar"
-							>
-								<Share2 className="h-4 w-4" />
-							</Button>
-							<Button
-								variant="ghost"
-								size="icon"
-								className="h-8 w-8 text-muted-foreground hover:text-primary"
-								onClick={handlePrint}
-								title="Imprimir"
-							>
-								<Printer className="h-4 w-4" />
-							</Button>
-
-							{onEdit && (
-								<>
-									<Separator orientation="vertical" className="h-4" />
-									<Button
-										variant="ghost"
-										size="icon"
-										className="h-8 w-8 text-muted-foreground hover:text-primary"
-										onClick={() => {
-											onOpenChange(false);
-											onEdit(exercise);
-										}}
-										title="Editar"
+								{exercise.difficulty && (
+									<Badge
+										variant="outline"
+										className={cn(
+											"border bg-background/50",
+											difficultyColors[exercise.difficulty],
+											"exercise-print-badge",
+										)}
 									>
-										<Edit className="h-4 w-4" />
-									</Button>
-								</>
-							)}
-						</div>
-						<DialogClose asChild>
-							<Button
-								variant="ghost"
-								size="icon"
-								className="h-9 w-9 rounded-full hover:bg-muted ml-2"
-							>
-								<X className="h-5 w-5" />
-							</Button>
-						</DialogClose>
-					</div>
-				</div>
-
-				{/* Content - Scrollable */}
-				<div className="flex-1 min-h-0 overflow-hidden grid grid-cols-1 lg:grid-cols-12">
-					{/* Left Column - Media (8 cols) */}
-					<div className="lg:col-span-8 bg-muted/10 h-full flex flex-col border-r border-border/50 overflow-hidden relative exercise-print-media">
-						<div className="absolute inset-0 bg-gradient-to-br from-background via-muted/20 to-muted/40 pointer-events-none" />
-
-						<Tabs
-							defaultValue={defaultTab}
-							className="flex-1 flex flex-col relative z-0"
-						>
-							<div className="px-6 pt-4 flex-none z-10">
-								<TabsList className="bg-background/80 backdrop-blur border w-auto inline-flex shadow-sm">
-									<TabsTrigger
-										value="video"
-										disabled={!hasVideo}
-										className="gap-2 px-4"
-									>
-										<Video className="h-4 w-4" /> Vídeo
-									</TabsTrigger>
-									<TabsTrigger
-										value="image"
-										disabled={!hasImage}
-										className="gap-2 px-4"
-									>
-										<ImageIcon className="h-4 w-4" /> Imagem
-									</TabsTrigger>
-								</TabsList>
+										{exercise.difficulty}
+									</Badge>
+								)}
 							</div>
+						</div>
 
-							<div className="flex-1 p-3 sm:p-6 flex items-center justify-center min-h-0">
-								<TabsContent
-									value="video"
-									className="w-full h-full mt-0 data-[state=active]:flex data-[state=active]:items-center data-[state=active]:justify-center"
+						<div className="flex items-center gap-2">
+							<div className="flex items-center gap-1 bg-muted/50 p-1 rounded-lg border border-border/50">
+								<Button
+									variant="ghost"
+									size="icon"
+									className={cn(
+										"h-8 w-8 rounded-md transition-all",
+										isFavorite(exercise.id)
+											? "bg-rose-500/10 text-rose-500 hover:bg-rose-500/20 hover:text-rose-600"
+											: "text-muted-foreground hover:text-rose-500",
+									)}
+									onClick={() => toggleFavorite(exercise.id)}
+									title={
+										isFavorite(exercise.id)
+											? "Remover dos favoritos"
+											: "Adicionar aos favoritos"
+									}
 								>
-									{hasVideo ? (
-										<div className="w-full aspect-video bg-black rounded-xl overflow-hidden shadow-2xl border border-white/10 ring-1 ring-black/5 relative group">
-											{embedUrl ? (
-												isDirectVideo ? (
-													<video
-														controls
-														className="w-full h-full"
-														src={embedUrl}
-													>
-														Seu navegador não suporta vídeos.
-													</video>
+									<Heart
+										className={cn(
+											"h-4 w-4",
+											isFavorite(exercise.id) && "fill-current",
+										)}
+									/>
+								</Button>
+
+								<Separator orientation="vertical" className="h-4" />
+
+								<Button
+									variant="ghost"
+									size="icon"
+									className="h-8 w-8 text-green-600 hover:text-green-700"
+									onClick={handleShare}
+									title="Enviar via WhatsApp"
+								>
+									<Share2 className="h-4 w-4" />
+								</Button>
+								<Button
+									variant="ghost"
+									size="icon"
+									className="h-8 w-8 text-muted-foreground hover:text-primary"
+									onClick={handlePrint}
+									title="Imprimir"
+								>
+									<Printer className="h-4 w-4" />
+								</Button>
+
+								{onEdit && (
+									<>
+										<Separator orientation="vertical" className="h-4" />
+										<Button
+											variant="ghost"
+											size="icon"
+											className="h-8 w-8 text-muted-foreground hover:text-primary"
+											onClick={() => {
+												onOpenChange(false);
+												onEdit(exercise);
+											}}
+											title="Editar"
+										>
+											<Edit className="h-4 w-4" />
+										</Button>
+									</>
+								)}
+							</div>
+							<DialogClose asChild>
+								<Button
+									variant="ghost"
+									size="icon"
+									className="h-9 w-9 rounded-full hover:bg-muted ml-2"
+								>
+									<X className="h-5 w-5" />
+								</Button>
+							</DialogClose>
+						</div>
+					</div>
+
+					{/* Content - Scrollable */}
+					<div className="flex-1 min-h-0 overflow-hidden grid grid-cols-1 lg:grid-cols-12">
+						{/* Left Column - Media (8 cols) */}
+						<div className="lg:col-span-8 bg-muted/10 h-full flex flex-col border-r border-border/50 overflow-hidden relative exercise-print-media">
+							<div className="absolute inset-0 bg-gradient-to-br from-background via-muted/20 to-muted/40 pointer-events-none" />
+
+							<Tabs
+								defaultValue={defaultTab}
+								className="flex-1 flex flex-col relative z-0"
+							>
+								<div className="px-6 pt-4 flex-none z-10">
+									<TabsList className="bg-background/80 backdrop-blur border w-auto inline-flex shadow-sm">
+										<TabsTrigger
+											value="video"
+											disabled={!hasVideo}
+											className="gap-2 px-4"
+										>
+											<Video className="h-4 w-4" /> Vídeo
+										</TabsTrigger>
+										<TabsTrigger
+											value="image"
+											disabled={!hasImage}
+											className="gap-2 px-4"
+										>
+											<ImageIcon className="h-4 w-4" /> Imagem
+										</TabsTrigger>
+									</TabsList>
+								</div>
+
+								<div className="flex-1 p-3 sm:p-6 flex items-center justify-center min-h-0">
+									<TabsContent
+										value="video"
+										className="w-full h-full mt-0 data-[state=active]:flex data-[state=active]:items-center data-[state=active]:justify-center"
+									>
+										{hasVideo ? (
+											<div className="w-full aspect-video bg-black rounded-xl overflow-hidden shadow-2xl border border-white/10 ring-1 ring-black/5 relative group">
+												{embedUrl ? (
+													isDirectVideo ? (
+														<video
+															controls
+															className="w-full h-full"
+															src={embedUrl}
+														>
+															Seu navegador não suporta vídeos.
+														</video>
+													) : (
+														<iframe
+															src={embedUrl}
+															className="w-full h-full"
+															allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+															allowFullScreen
+														/>
+													)
 												) : (
-													<iframe
-														src={embedUrl}
-														className="w-full h-full"
-														allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-														allowFullScreen
-													/>
-												)
+													<div className="flex flex-col items-center justify-center h-full text-muted-foreground gap-4">
+														<AlertTriangle className="h-12 w-12 opacity-50" />
+														<p>Erro ao carregar vídeo</p>
+														<Button
+															variant="outline"
+															size="sm"
+															onClick={() =>
+																window.open(exercise.video_url, "_blank")
+															}
+														>
+															<ExternalLink className="h-4 w-4 mr-2" />
+															Abrir externo
+														</Button>
+													</div>
+												)}
+											</div>
+										) : (
+											<div className="text-center p-12 rounded-xl bg-muted/30 border border-dashed border-muted-foreground/20">
+												<VideoOffState />
+											</div>
+										)}
+									</TabsContent>
+
+									<TabsContent
+										value="image"
+										className="w-full h-full mt-0 data-[state=active]:flex data-[state=active]:items-center data-[state=active]:justify-center"
+									>
+										{hasImage && imageUrl ? (
+											<div className="relative w-full h-full flex items-center justify-center bg-white/5 rounded-xl overflow-hidden shadow-lg border border-border/50">
+												<OptimizedImage
+													src={imageUrl}
+													alt={exercise?.name ?? "Exercício"}
+													className="max-w-full max-h-full object-contain"
+													aspectRatio="auto"
+													priority={true}
+													sizes="(max-width: 768px) 100vw, (max-width: 1024px) 70vw, 60vw"
+												/>
+											</div>
+										) : (
+											<div className="text-center p-12 rounded-xl bg-muted/30 border border-dashed border-muted-foreground/20">
+												<ImageIcon className="h-12 w-12 mx-auto mb-4 text-muted-foreground/30" />
+												<p className="text-muted-foreground">Sem imagem</p>
+											</div>
+										)}
+									</TabsContent>
+								</div>
+							</Tabs>
+						</div>
+
+						{/* Right Column - Information (4 cols) */}
+						<div className="lg:col-span-4 h-full min-h-0 bg-background flex flex-col">
+							<ScrollArea className="flex-1 h-full min-h-0">
+								<div className="p-4 sm:p-6 space-y-6 sm:space-y-8">
+									{/* Metrics / Parameters */}
+									<div className="grid grid-cols-3 gap-4 exercise-print-metrics">
+										<MetricCard
+											icon={Repeat}
+											label="Séries"
+											value={exercise.sets}
+											subLabel={exercise.sets ? "séries" : undefined}
+										/>
+										<MetricCard
+											icon={Dumbbell}
+											label="Repetições"
+											value={exercise.repetitions}
+											subLabel={exercise.repetitions ? "reps" : undefined}
+										/>
+										<MetricCard
+											icon={Clock}
+											label="Duração"
+											value={exercise.duration}
+											subLabel={exercise.duration ? "segundos" : undefined}
+										/>
+									</div>
+
+									<Separator />
+
+									{/* Description */}
+									<div className="space-y-3 exercise-print-section">
+										<div className="flex items-center gap-2 text-primary font-medium exercise-print-section-title no-print">
+											<div className="p-1.5 rounded-md bg-primary/10">
+												<FileText className="h-4 w-4" />
+											</div>
+											Descrição
+										</div>
+										<div className="bg-muted/30 p-4 rounded-lg border border-border/40 exercise-print-section-content">
+											{exercise.description ? (
+												<p className="text-sm text-muted-foreground leading-relaxed text-pretty">
+													{exercise.description}
+												</p>
 											) : (
-												<div className="flex flex-col items-center justify-center h-full text-muted-foreground gap-4">
-													<AlertTriangle className="h-12 w-12 opacity-50" />
-													<p>Erro ao carregar vídeo</p>
-													<Button
-														variant="outline"
-														size="sm"
-														onClick={() =>
-															window.open(exercise.video_url, "_blank")
-														}
-													>
-														<ExternalLink className="h-4 w-4 mr-2" />
-														Abrir externo
-													</Button>
+												<span className="text-sm text-muted-foreground/50 italic">
+													Nenhuma descrição fornecida.
+												</span>
+											)}
+										</div>
+									</div>
+
+									{/* Instructions */}
+									<div className="space-y-3 exercise-print-section">
+										<div className="flex items-center gap-2 text-primary font-medium exercise-print-section-title no-print">
+											<div className="p-1.5 rounded-md bg-primary/10">
+												<CheckCircle2 className="h-4 w-4" />
+											</div>
+											Instruções de Execução
+										</div>
+										<div className="bg-muted/30  rounded-lg border border-border/40 overflow-hidden exercise-print-section-content">
+											{exercise.instructions ? (
+												<div className="p-4 text-sm text-muted-foreground leading-relaxed whitespace-pre-wrap">
+													{exercise.instructions}
+												</div>
+											) : (
+												<div className="p-4 text-sm text-muted-foreground/50 italic">
+													Nenhuma instrução adicional.
 												</div>
 											)}
 										</div>
-									) : (
-										<div className="text-center p-12 rounded-xl bg-muted/30 border border-dashed border-muted-foreground/20">
-											<VideoOffState />
+									</div>
+
+									{/* Related (Optional - keeping simplified for now) */}
+									{exercise.category && (
+										<div className="pt-4 mt-auto no-print">
+											<h4 className="text-xs font-semibold uppercase text-muted-foreground tracking-wider mb-3">
+												Relacionados
+											</h4>
+											<Button
+												variant="outline"
+												className="w-full justify-between group h-auto py-3 border-dashed"
+												disabled
+											>
+												<span className="text-muted-foreground group-hover:text-foreground transition-colors text-sm">
+													Ver mais exercícios de {exercise.category}
+												</span>
+												<ChevronRight className="h-4 w-4 text-muted-foreground/50" />
+											</Button>
 										</div>
 									)}
-								</TabsContent>
 
-								<TabsContent
-									value="image"
-									className="w-full h-full mt-0 data-[state=active]:flex data-[state=active]:items-center data-[state=active]:justify-center"
-								>
-									{hasImage && imageUrl ? (
-										<div className="relative w-full h-full flex items-center justify-center bg-white/5 rounded-xl overflow-hidden shadow-lg border border-border/50">
-											<OptimizedImage
-												src={imageUrl}
-												alt={exercise?.name ?? "Exercício"}
-												className="max-w-full max-h-full object-contain"
-												aspectRatio="auto"
-												priority={true}
-												sizes="(max-width: 768px) 100vw, (max-width: 1024px) 70vw, 60vw"
-											/>
-										</div>
-									) : (
-										<div className="text-center p-12 rounded-xl bg-muted/30 border border-dashed border-muted-foreground/20">
-											<ImageIcon className="h-12 w-12 mx-auto mb-4 text-muted-foreground/30" />
-											<p className="text-muted-foreground">Sem imagem</p>
-										</div>
-									)}
-								</TabsContent>
-							</div>
-						</Tabs>
+									{/* Print Footer */}
+									<div className="exercise-print-footer hidden print:block">
+										<p>
+											Gerado pelo FisioFlow - Sistema de Gerenciamento de
+											Fisioterapia
+										</p>
+									</div>
+								</div>
+							</ScrollArea>
+						</div>
 					</div>
-
-					{/* Right Column - Information (4 cols) */}
-					<div className="lg:col-span-4 h-full min-h-0 bg-background flex flex-col">
-						<ScrollArea className="flex-1 h-full min-h-0">
-							<div className="p-4 sm:p-6 space-y-6 sm:space-y-8">
-								{/* Metrics / Parameters */}
-								<div className="grid grid-cols-3 gap-4 exercise-print-metrics">
-									<MetricCard
-										icon={Repeat}
-										label="Séries"
-										value={exercise.sets}
-										subLabel={exercise.sets ? "séries" : undefined}
-									/>
-									<MetricCard
-										icon={Dumbbell}
-										label="Repetições"
-										value={exercise.repetitions}
-										subLabel={exercise.repetitions ? "reps" : undefined}
-									/>
-									<MetricCard
-										icon={Clock}
-										label="Duração"
-										value={exercise.duration}
-										subLabel={exercise.duration ? "segundos" : undefined}
-									/>
-								</div>
-
-								<Separator />
-
-								{/* Description */}
-								<div className="space-y-3 exercise-print-section">
-									<div className="flex items-center gap-2 text-primary font-medium exercise-print-section-title no-print">
-										<div className="p-1.5 rounded-md bg-primary/10">
-											<FileText className="h-4 w-4" />
-										</div>
-										Descrição
-									</div>
-									<div className="bg-muted/30 p-4 rounded-lg border border-border/40 exercise-print-section-content">
-										{exercise.description ? (
-											<p className="text-sm text-muted-foreground leading-relaxed text-pretty">
-												{exercise.description}
-											</p>
-										) : (
-											<span className="text-sm text-muted-foreground/50 italic">
-												Nenhuma descrição fornecida.
-											</span>
-										)}
-									</div>
-								</div>
-
-								{/* Instructions */}
-								<div className="space-y-3 exercise-print-section">
-									<div className="flex items-center gap-2 text-primary font-medium exercise-print-section-title no-print">
-										<div className="p-1.5 rounded-md bg-primary/10">
-											<CheckCircle2 className="h-4 w-4" />
-										</div>
-										Instruções de Execução
-									</div>
-									<div className="bg-muted/30  rounded-lg border border-border/40 overflow-hidden exercise-print-section-content">
-										{exercise.instructions ? (
-											<div className="p-4 text-sm text-muted-foreground leading-relaxed whitespace-pre-wrap">
-												{exercise.instructions}
-											</div>
-										) : (
-											<div className="p-4 text-sm text-muted-foreground/50 italic">
-												Nenhuma instrução adicional.
-											</div>
-										)}
-									</div>
-								</div>
-
-								{/* Related (Optional - keeping simplified for now) */}
-								{exercise.category && (
-									<div className="pt-4 mt-auto no-print">
-										<h4 className="text-xs font-semibold uppercase text-muted-foreground tracking-wider mb-3">
-											Relacionados
-										</h4>
-										<Button
-											variant="outline"
-											className="w-full justify-between group h-auto py-3 border-dashed"
-											disabled
-										>
-											<span className="text-muted-foreground group-hover:text-foreground transition-colors text-sm">
-												Ver mais exercícios de {exercise.category}
-											</span>
-											<ChevronRight className="h-4 w-4 text-muted-foreground/50" />
-										</Button>
-									</div>
-								)}
-
-								{/* Print Footer */}
-								<div className="exercise-print-footer hidden print:block">
-									<p>
-										Gerado pelo FisioFlow - Sistema de Gerenciamento de
-										Fisioterapia
-									</p>
-								</div>
-							</div>
-						</ScrollArea>
-					</div>
-				</div>
-			</DialogContent>
-		</Dialog>
+				</DialogContent>
+			</Dialog>
+			{/* Share to WhatsApp Modal */}
+			<ShareExerciseToWhatsAppModal
+				open={shareWhatsAppOpen}
+				onOpenChange={setShareWhatsAppOpen}
+				exercise={exercise}
+			/>
+		</>
 	);
 }
 

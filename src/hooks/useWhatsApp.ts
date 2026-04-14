@@ -4,9 +4,13 @@ import {
 	fetchConversation,
 	sendMessage as apiSendMessage,
 	sendInteractiveMessage as apiSendInteractive,
+	updateMessage as apiUpdateMessage,
+	deleteMessage as apiDeleteMessage,
 	addNote as apiAddNote,
 	assignConversation as apiAssign,
 	transferConversation as apiTransfer,
+	updateConversation as apiUpdateConversation,
+	deleteConversation as apiDeleteConversation,
 	updateStatus as apiUpdateStatus,
 	type Conversation,
 	type ConversationFilters,
@@ -170,6 +174,33 @@ export function useWhatsAppConversation(id: string | null) {
 		[id],
 	);
 
+	const updateMessage = useCallback(
+		async (messageId: string, content: string | Record<string, unknown>) => {
+			if (!id) return;
+			const updated = await apiUpdateMessage(id, messageId, content);
+			setMessages((prev) =>
+				prev.map((message) => (message.id === messageId ? updated : message)),
+			);
+			return updated;
+		},
+		[id],
+	);
+
+	const deleteMessage = useCallback(
+		async (
+			messageId: string,
+			options?: { scope?: "local" | "everyone"; reason?: string },
+		) => {
+			if (!id) return;
+			const updated = await apiDeleteMessage(id, messageId, options);
+			setMessages((prev) =>
+				prev.map((message) => (message.id === messageId ? updated : message)),
+			);
+			return updated;
+		},
+		[id],
+	);
+
 	const assign = useCallback(
 		async (assignedTo: string, team?: string, reason?: string) => {
 			if (!id) return;
@@ -200,6 +231,26 @@ export function useWhatsAppConversation(id: string | null) {
 		[id],
 	);
 
+	const updateConversation = useCallback(
+		async (data: Partial<Conversation>) => {
+			if (!id) return;
+			const updated = await apiUpdateConversation(id, data);
+			setConversation(updated);
+			return updated;
+		},
+		[id],
+	);
+
+	const deleteConversation = useCallback(
+		async (reason?: string) => {
+			if (!id) return;
+			const deleted = await apiDeleteConversation(id, reason);
+			setConversation(deleted);
+			return deleted;
+		},
+		[id],
+	);
+
 	return {
 		conversation,
 		messages,
@@ -207,10 +258,14 @@ export function useWhatsAppConversation(id: string | null) {
 		error,
 		sendMessage,
 		sendInteractive,
+		updateMessage,
+		deleteMessage,
 		addNote,
 		assign,
 		transfer,
 		updateStatus: updateConversationStatus,
+		updateConversation,
+		deleteConversation,
 		refetch: load,
 	};
 }
