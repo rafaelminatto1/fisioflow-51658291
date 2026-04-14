@@ -2,7 +2,7 @@ import "dotenv/config";
 import { neon } from "@neondatabase/serverless";
 import { drizzle } from "drizzle-orm/neon-http";
 import { exerciseTemplates, exerciseTemplateItems } from "../src/server/db/schema/templates";
-import { ilike } from "drizzle-orm";
+import { ilike, eq } from "drizzle-orm";
 
 async function main() {
   const sql = neon(process.env.DATABASE_URL!);
@@ -18,8 +18,8 @@ async function main() {
 
   console.log(`Found ${e2eTemplates.length} E2E templates. Deleting...`);
   for (const t of e2eTemplates) {
-    await db.delete(exerciseTemplateItems).where(ilike(exerciseTemplateItems.templateId, t.id));
-    await db.delete(exerciseTemplates).where(ilike(exerciseTemplates.id, t.id));
+    await db.delete(exerciseTemplateItems).where(eq(exerciseTemplateItems.templateId, t.id));
+    await db.delete(exerciseTemplates).where(eq(exerciseTemplates.id, t.id));
   }
   console.log("Done.");
   process.exit(0);
