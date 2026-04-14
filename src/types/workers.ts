@@ -116,6 +116,7 @@ export interface ExerciseTemplate {
 	sourceTemplateId: string | null;
 	isDraft: boolean;
 	exerciseCount: number;
+	items?: ExerciseTemplateItem[];
 }
 
 export interface ExerciseTemplateItem {
@@ -134,6 +135,15 @@ export interface ExerciseTemplateItem {
 	purpose: string | null;
 	createdAt: string;
 	updatedAt: string;
+	exercise?: {
+		id: string;
+		name: string;
+		description?: string | null;
+		category?: string | null;
+		difficulty?: string | null;
+		imageUrl?: string | null;
+		videoUrl?: string | null;
+	};
 }
 
 export interface ExerciseTemplateRecord {

@@ -19,6 +19,9 @@ import {
 	restoreConversation,
 	editMessageContent,
 	markMessageDeleted,
+	getDeleteForEveryoneDeadline,
+	canDeleteForEveryone,
+	WHATSAPP_DELETE_FOR_EVERYONE_WINDOW_HOURS,
 } from "../lib/whatsapp-conversations";
 import {
 	sendReplyButtons,
@@ -124,6 +127,7 @@ function mapMessageRow(row: any): any {
 			: row.content;
 	const isDeleted = Boolean(metadata.deleted_at || metadata.deleted_for_everyone_at);
 	const deleteScope = metadata.delete_scope as string | undefined;
+	const deleteForEveryoneDeadline = getDeleteForEveryoneDeadline(row.created_at);
 	const mappedContent = isDeleted
 		? deleteScope === "everyone"
 			? "Mensagem apagada para todos"
@@ -150,6 +154,10 @@ function mapMessageRow(row: any): any {
 		deletedBy: metadata.deleted_by || undefined,
 		deleteScope,
 		deletedForEveryone: deleteScope === "everyone",
+		canDeleteForEveryone: canDeleteForEveryone(row),
+		deleteForEveryoneExpiresAt:
+			deleteForEveryoneDeadline?.toISOString() || undefined,
+		deleteForEveryoneWindowHours: WHATSAPP_DELETE_FOR_EVERYONE_WINDOW_HOURS,
 		metadata,
 		interactiveData: row.interactive_data || undefined,
 		templateName: row.template_name || undefined,
@@ -960,11 +968,28 @@ app.delete("/conversations/:id/messages/:messageId", requireAuth, async (c) => {
 			user.organizationId,
 			user.uid,
 			scope,
+			c.env,
 			body.reason,
 		);
 
 		if (result.error === "not_found") {
 			return c.json({ error: "Message not found" }, 404);
+		}
+		if (result.error === "not_outbound") {
+			return c.json(
+				{ error: "Only outbound messages can be deleted for everyone" },
+				400,
+			);
+		}
+		if (result.error === "delete_for_everyone_window_expired") {
+			return c.json(
+				{
+					error: "Delete for everyone window expired",
+					deleteForEveryoneExpiresAt: result.deleteForEveryoneExpiresAt,
+					windowHours: WHATSAPP_DELETE_FOR_EVERYONE_WINDOW_HOURS,
+				},
+				409,
+			);
 		}
 		if (!result.row) {
 			return c.json({ error: "Message not found" }, 404);

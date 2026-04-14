@@ -20,11 +20,12 @@ import "@event-calendar/core/index.css";
 import { format, isValid, addMinutes, addDays, startOfWeek } from "date-fns";
 import { ScheduleToolbar } from "./ScheduleToolbar";
 import { AppointmentQuickView } from "./AppointmentQuickView";
-import { getStatusConfig } from "./shared/appointment-status";
 import {
-	formatTime,
-	roundDateToNearestInterval,
-} from "@/utils/dateUtils";
+	normalizeStatus,
+	getCalendarCardColors,
+} from "./shared/appointment-status";
+import { useStatusConfig } from "@/hooks/useStatusConfig";
+import { formatTime, roundDateToNearestInterval } from "@/utils/dateUtils";
 
 type ViewType = "day" | "week" | "month";
 
@@ -75,7 +76,8 @@ export function DayFlowCalendarWrapper(props: DayFlowCalendarWrapperProps) {
 	const slotHeight = isWeekView ? weekSlotHeight : 14;
 	const slotDuration = "00:15:00";
 	const slotLabelFormat = useMemo(
-		() => (time: Date) => (time.getMinutes() === 0 ? format(time, "HH:mm") : ""),
+		() => (time: Date) =>
+			time.getMinutes() === 0 ? format(time, "HH:mm") : "",
 		[],
 	);
 
@@ -84,27 +86,75 @@ export function DayFlowCalendarWrapper(props: DayFlowCalendarWrapperProps) {
 	const calendarInstance = useRef<any>(null);
 	const propsRef = useRef(props);
 	const isDraggingRef = useRef(false);
-	
+
 	// State for the globally floating Popover, totally detached from calendar DOM nodes
-	const [activePopover, setActivePopover] = useState<{ event: any, rect: DOMRect } | null>(null);
+	const [activePopover, setActivePopover] = useState<{
+		event: any;
+		rect: DOMRect;
+	} | null>(null);
+	const { getStatusConfig: getSharedStatusConfig, getStatusColors } =
+		useStatusConfig();
+
+	const cardColorsMapRef = useRef<
+		Record<string, { accent: string; background: string; text: string }>
+	>({});
+	const [colorVersion, setColorVersion] = useState(0);
+
+	useEffect(() => {
+		const map: Record<
+			string,
+			{ accent: string; background: string; text: string }
+		> = {};
+		const allStatuses = [
+			"agendado",
+			"atendido",
+			"avaliacao",
+			"cancelado",
+			"aguardando_confirmacao",
+			"faltou",
+			"faltou_com_aviso",
+			"faltou_sem_aviso",
+			"nao_atendido",
+			"nao_atendido_sem_cobranca",
+			"presenca_confirmada",
+			"remarcar",
+		];
+		allStatuses.forEach((status) => {
+			const config = getSharedStatusConfig(status);
+			if (config?.calendarCardColors) {
+				map[status] = config.calendarCardColors;
+			} else {
+				map[status] = getCalendarCardColors(status);
+			}
+		});
+		cardColorsMapRef.current = map;
+		setColorVersion((v) => v + 1);
+	}, [getSharedStatusConfig]);
 
 	useEffect(() => {
 		propsRef.current = props;
 	}, [props]);
 
 	useEffect(() => {
-		if (!isWeekView || !containerRef.current || typeof ResizeObserver === "undefined") {
+		if (
+			!isWeekView ||
+			!containerRef.current ||
+			typeof ResizeObserver === "undefined"
+		) {
 			return;
 		}
 
 		const updateWeekSlotHeight = () => {
-			const availableHeight = containerRef.current?.getBoundingClientRect().height ?? 0;
+			const availableHeight =
+				containerRef.current?.getBoundingClientRect().height ?? 0;
 			if (!availableHeight) return;
 			const nextSlotHeight = Math.max(
 				16,
 				Math.floor((availableHeight - WEEK_HEADER_HEIGHT) / WEEK_SLOT_COUNT),
 			);
-			setWeekSlotHeight((current) => (current === nextSlotHeight ? current : nextSlotHeight));
+			setWeekSlotHeight((current) =>
+				current === nextSlotHeight ? current : nextSlotHeight,
+			);
 		};
 
 		updateWeekSlotHeight();
@@ -148,9 +198,9 @@ export function DayFlowCalendarWrapper(props: DayFlowCalendarWrapperProps) {
 								: String(a.date || "").slice(0, 10);
 						const startTime = String(a.start_time).slice(0, 5);
 						const endTime = String(a.end_time).slice(0, 5);
-						
+
 						if (rawDate.length < 10 || !startTime.includes(":")) return [];
-						
+
 						startDate = new Date(`${rawDate}T${startTime}:00`);
 						endDate = new Date(`${rawDate}T${endTime}:00`);
 					} else if (a.date && a.time) {
@@ -176,13 +226,13 @@ export function DayFlowCalendarWrapper(props: DayFlowCalendarWrapperProps) {
 							title: a.patient_name || a.patientName || "Consulta",
 							start: startDate,
 							end: endDate,
-							backgroundColor: 'transparent',
-							borderColor: 'transparent',
+							backgroundColor: "transparent",
+							borderColor: "transparent",
 							extendedProps: {
 								...a,
 								id: String(a.id || a.tempId),
 								title: a.patient_name || a.patientName || "Consulta",
-							}
+							},
 						},
 					];
 				} catch (err) {
@@ -241,34 +291,42 @@ export function DayFlowCalendarWrapper(props: DayFlowCalendarWrapperProps) {
 						editable: true,
 						droppable: true,
 						selectable: true,
-						headerToolbar: { start: '', center: '', end: '' },
-						locale: 'pt-br',
+						headerToolbar: { start: "", center: "", end: "" },
+						locale: "pt-br",
 						firstDay: 1,
 						allDaySlot: false,
 						eventContent: (info: any) => {
-							// Background events (ex: closed-saturday) não renderizam card
-							if (info.event.display === 'background' || info.event.id?.startsWith('closed-')) {
-								return { html: '' };
+							if (
+								info.event.display === "background" ||
+								info.event.id?.startsWith("closed-")
+							) {
+								return { html: "" };
 							}
 							const appointment = info.event.extendedProps;
 							const formattedTime = format(info.event.start, "HH:mm");
-							const statusConfig = getStatusConfig(appointment.status);
-							const isCancelled = appointment.status === "cancelled";
+							const normalizedStatusName = normalizeStatus(
+								appointment.status || "agendado",
+							);
+							const isCancelled =
+								appointment.status === "cancelled" ||
+								normalizedStatusName === "cancelado";
 							const cardDensityClass = isWeekView
 								? "dayflow-event-card--compact"
 								: "dayflow-event-card--default";
-							
-							// Render raw HTML. No React reconciliation, completely immune to drag-and-drop cloning crashes.
+							const colors =
+								cardColorsMapRef.current[normalizedStatusName] ||
+								getCalendarCardColors(normalizedStatusName);
+
 							const html = `
-								<div class="dayflow-event-shell ${cardDensityClass} ${isCancelled ? "dayflow-event-shell--cancelled" : ""} ${statusConfig.bg} ${statusConfig.calendarClassName}">
-									<div class="dayflow-event-card ${statusConfig.text} ${statusConfig.bg} ${statusConfig.borderColor}">
+								<div class="dayflow-event-shell ${cardDensityClass} ${isCancelled ? "dayflow-event-shell--cancelled" : ""}" style="background-color:${colors.background};border-left:3px solid ${colors.accent};border-radius:6px;">
+									<div class="dayflow-event-card" style="border-left:none;">
 										<div class="dayflow-event-card__meta">
-											<span class="dayflow-event-card__time">
+											<span class="dayflow-event-card__time" style="color:${colors.text};">
 												${formattedTime}
 											</span>
-											<div class="dayflow-event-card__dot ${statusConfig.calendarAccent}"></div>
+											<div class="dayflow-event-card__dot" style="background-color:${colors.accent};"></div>
 										</div>
-										<div class="dayflow-event-card__title" style="display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;white-space:normal;word-break:break-word;line-height:1.2;">
+										<div class="dayflow-event-card__title" style="color:${colors.text};display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;white-space:normal;word-break:break-word;line-height:1.2;">
 											${appointment.title}
 										</div>
 									</div>
@@ -312,7 +370,9 @@ export function DayFlowCalendarWrapper(props: DayFlowCalendarWrapperProps) {
 								const durationInMinutes = Math.max(
 									15,
 									Math.round(
-										(info.event.end.getTime() - info.event.start.getTime()) / 60000 / 15,
+										(info.event.end.getTime() - info.event.start.getTime()) /
+											60000 /
+											15,
 									) * 15,
 								);
 								const roundedEnd = addMinutes(roundedStart, durationInMinutes);
@@ -333,14 +393,14 @@ export function DayFlowCalendarWrapper(props: DayFlowCalendarWrapperProps) {
 									startStr,
 									endStr,
 								);
-								
+
 								if (typeof navigator !== "undefined" && navigator.vibrate) {
 									navigator.vibrate([15, 50, 15]);
 								}
 							}
 						},
-					}
-				}
+					},
+				},
 			});
 
 			calendarInstance.current = calendar;
@@ -361,23 +421,44 @@ export function DayFlowCalendarWrapper(props: DayFlowCalendarWrapperProps) {
 
 	useEffect(() => {
 		const calendar = calendarInstance.current;
+		if (!calendar || isDraggingRef.current) return;
+		try {
+			calendar.setOption("events", dfEvents);
+		} catch (e) {
+			console.warn("[DayFlow] Color sync error:", e);
+		}
+		// eslint-disable-next-line react-hooks/exhaustive-deps
+	}, [colorVersion]);
+
+	useEffect(() => {
+		const calendar = calendarInstance.current;
 		// CRITICAL: Do NOT update calendar options if a drag is in progress.
 		// Updating events list mid-drag destroys the dragging mirror and crashes the UI.
 		if (!calendar || isDraggingRef.current) return;
 
 		try {
-			calendar.setOption('view', VIEW_MAP[viewType]);
-			calendar.setOption('date', isValid(currentDate) ? currentDate : new Date());
-			calendar.setOption('slotHeight', slotHeight);
-			calendar.setOption('slotDuration', slotDuration);
-			calendar.setOption('slotLabelInterval', "00:00:00");
-			calendar.setOption('slotLabelFormat', slotLabelFormat);
-			calendar.setOption('scrollTime', "07:00:00");
-			calendar.setOption('events', dfEvents);
+			calendar.setOption("view", VIEW_MAP[viewType]);
+			calendar.setOption(
+				"date",
+				isValid(currentDate) ? currentDate : new Date(),
+			);
+			calendar.setOption("slotHeight", slotHeight);
+			calendar.setOption("slotDuration", slotDuration);
+			calendar.setOption("slotLabelInterval", "00:00:00");
+			calendar.setOption("slotLabelFormat", slotLabelFormat);
+			calendar.setOption("scrollTime", "07:00:00");
+			calendar.setOption("events", dfEvents);
 		} catch (e) {
 			console.warn("[DayFlow] Sync error:", e);
 		}
-	}, [dfEvents, currentDate, viewType, slotHeight, slotDuration, slotLabelFormat]);
+	}, [
+		dfEvents,
+		currentDate,
+		viewType,
+		slotHeight,
+		slotDuration,
+		slotLabelFormat,
+	]);
 
 	return (
 		<div className="flex-1 flex flex-col min-h-0 bg-slate-50/50 overflow-hidden relative">
@@ -394,12 +475,16 @@ export function DayFlowCalendarWrapper(props: DayFlowCalendarWrapperProps) {
 				onClearFilters={props.onClearFilters || (() => {})}
 			/>
 
-			<div 
+			<div
 				className="flex-1 p-1 md:p-2 min-h-0 overflow-hidden"
 				onClick={(e) => {
 					// Close popover if user clicks outside of an event
 					const target = e.target as HTMLElement;
-					if (activePopover && !target.closest('.ec-event') && !target.closest('[role="dialog"]')) {
+					if (
+						activePopover &&
+						!target.closest(".ec-event") &&
+						!target.closest('[role="dialog"]')
+					) {
 						setActivePopover(null);
 					}
 				}}
@@ -407,7 +492,10 @@ export function DayFlowCalendarWrapper(props: DayFlowCalendarWrapperProps) {
 				<div
 					className={`flex-1 h-full min-h-0 bg-white border border-slate-200 shadow-sm rounded-xl overflow-hidden relative ${isWeekView ? "dayflow-week-view" : "dayflow-regular-view"}`}
 				>
-					<div ref={containerRef} className="h-full w-full dayflow-vanilla-mount" />
+					<div
+						ref={containerRef}
+						className="h-full w-full dayflow-vanilla-mount"
+					/>
 				</div>
 			</div>
 
@@ -423,7 +511,9 @@ export function DayFlowCalendarWrapper(props: DayFlowCalendarWrapperProps) {
 							activePopover.event.start.getHours(),
 							activePopover.event.start.getMinutes(),
 						),
-						duration: Math.round((activePopover.event.end - activePopover.event.start) / 60000),
+						duration: Math.round(
+							(activePopover.event.end - activePopover.event.start) / 60000,
+						),
 					}}
 					onEdit={() => {
 						setActivePopover(null);
@@ -434,15 +524,15 @@ export function DayFlowCalendarWrapper(props: DayFlowCalendarWrapperProps) {
 						propsRef.current.onDeleteAppointment?.(activePopover.event.id);
 					}}
 				>
-					<div 
+					<div
 						style={{
-							position: 'fixed',
+							position: "fixed",
 							top: activePopover.rect.top,
 							left: activePopover.rect.left,
 							width: activePopover.rect.width,
 							height: activePopover.rect.height,
-							pointerEvents: 'none',
-							visibility: 'hidden'
+							pointerEvents: "none",
+							visibility: "hidden",
 						}}
 					/>
 				</AppointmentQuickView>

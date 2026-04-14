@@ -34,6 +34,8 @@ export interface ExerciseTemplate {
 	progression_notes?: string;
 	evidence_level?: "A" | "B" | "C" | "D";
 	bibliographic_references?: string[];
+	items?: ExerciseTemplateItem[];
+	exerciseCount?: number;
 }
 
 export interface ExerciseTemplateItem {
@@ -84,6 +86,8 @@ const mapWorkerToAppTemplate = (t: WorkersTemplate): ExerciseTemplate => ({
 	progression_notes: t.progressionNotes || undefined,
 	evidence_level: t.evidenceLevel || undefined,
 	bibliographic_references: t.bibliographicReferences,
+	exerciseCount: t.exerciseCount || 0,
+	items: t.items?.map(mapWorkerToAppTemplateItem),
 });
 
 const mapWorkerToAppTemplateItem = (
@@ -102,6 +106,15 @@ const mapWorkerToAppTemplateItem = (
 	clinical_notes: i.clinicalNotes || undefined,
 	focus_muscles: i.focusMuscles,
 	purpose: i.purpose || undefined,
+	exercise: i.exercise
+		? {
+				id: i.exercise.id,
+				name: i.exercise.name,
+				description: i.exercise.description || undefined,
+				category: i.exercise.category || undefined,
+				difficulty: i.exercise.difficulty || undefined,
+			}
+		: undefined,
 });
 
 export const useWorkersTemplates = (filters?: {
@@ -121,6 +134,7 @@ export const useWorkersTemplates = (filters?: {
 		q,
 		patientProfile: patientProfile === 'all' ? undefined : patientProfile,
 		templateType,
+		limit: filters?.limit ?? 100, // Increase default limit to show all templates
 	};
 
 	const { data, isLoading, error, refetch } = useQuery({

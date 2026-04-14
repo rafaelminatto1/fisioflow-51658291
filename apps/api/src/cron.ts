@@ -38,6 +38,10 @@ export async function handleScheduled(event: ScheduledEvent, env: Env, ctx: Exec
         }
         break;
 
+      case "0 12 * * *": // UTC 12h = BRT 09h — Automações por vencimento de tarefa
+        await processDueDateAutomations(pool);
+        break;
+
       default:
         console.warn(`[Cron] No handler defined for schedule: ${cron}`);
     }
@@ -179,6 +183,100 @@ async function performDatabaseCleanup(pool: any, _env: Env) {
 
   } catch (error) {
     console.error('[Cleanup] Error during database maintenance:', error);
+  }
+}
+
+async function processDueDateAutomations(pool: any) {
+  console.log('[Cron] Processing due_date_approaching automations...');
+  try {
+    // Find tasks vencendo em 1 ou 2 dias (janela: amanhã e depois de amanhã)
+    const tasksRes = await pool.query(`
+      SELECT t.id, t.titulo, t.board_id, t.column_id, t.organization_id,
+             t.responsavel_id, t.created_by, t.status, t.label_ids, t.checklists, t.data_vencimento
+      FROM tarefas t
+      WHERE t.board_id IS NOT NULL
+        AND t.status NOT IN ('CONCLUIDO', 'ARQUIVADO')
+        AND t.data_vencimento::date IN (
+          CURRENT_DATE + INTERVAL '1 day',
+          CURRENT_DATE + INTERVAL '2 days'
+        )
+    `);
+
+    if (tasksRes.rows.length === 0) return;
+
+    // Group by board_id to fetch automations once per board
+    const byBoard = new Map<string, typeof tasksRes.rows>();
+    for (const task of tasksRes.rows) {
+      const list = byBoard.get(task.board_id) ?? [];
+      list.push(task);
+      byBoard.set(task.board_id, list);
+    }
+
+    for (const [boardId, tasks] of byBoard) {
+      const orgId = tasks[0].organization_id;
+      const autoRes = await pool.query(
+        `SELECT id, trigger, actions FROM board_automations
+         WHERE board_id = $1 AND organization_id = $2 AND is_active = true
+           AND (trigger->>'type') = 'due_date_approaching'`,
+        [boardId, orgId],
+      );
+      if (!autoRes.rows.length) continue;
+
+      for (const task of tasks) {
+        const daysUntilDue = Math.ceil(
+          (new Date(task.data_vencimento).getTime() - Date.now()) / (1000 * 60 * 60 * 24),
+        );
+
+        for (const automation of autoRes.rows) {
+          const triggerDays = automation.trigger?.days ?? 1;
+          if (daysUntilDue !== triggerDays) continue;
+
+          for (const action of automation.actions) {
+            try {
+              if (action.type === 'send_notification') {
+                const targetUserId = task.responsavel_id ?? task.created_by;
+                if (!targetUserId) continue;
+                await pool.query(
+                  `INSERT INTO notifications (organization_id, user_id, type, title, message, link, metadata)
+                   VALUES ($1,$2,'automation',$3,$4,$5,$6::jsonb)
+                   ON CONFLICT DO NOTHING`,
+                  [
+                    orgId,
+                    targetUserId,
+                    action.message ?? 'Tarefa vencendo em breve',
+                    `"${task.titulo}" vence em ${daysUntilDue} dia(s).`,
+                    `/boards/${boardId}`,
+                    JSON.stringify({ task_id: task.id, automation_id: automation.id }),
+                  ],
+                );
+              } else if (action.type === 'assign_label' && action.label_id) {
+                await pool.query(
+                  `UPDATE tarefas SET label_ids = array_append(label_ids, $1::uuid), updated_at = NOW()
+                   WHERE id = $2 AND NOT ($1::uuid = ANY(label_ids))`,
+                  [action.label_id, task.id],
+                );
+              } else if (action.type === 'change_status' && action.status) {
+                await pool.query(
+                  `UPDATE tarefas SET status = $1, updated_at = NOW() WHERE id = $2`,
+                  [action.status, task.id],
+                );
+              }
+            } catch (err) {
+              console.error(`[Cron][Automation] action ${action.type} failed for task ${task.id}:`, err);
+            }
+          }
+
+          await pool.query(
+            `UPDATE board_automations SET execution_count = execution_count + 1, last_executed_at = NOW() WHERE id = $1`,
+            [automation.id],
+          ).catch(() => null);
+        }
+      }
+    }
+
+    console.log(`[Cron] due_date_approaching: checked ${tasksRes.rows.length} tasks.`);
+  } catch (error) {
+    console.error('[Cron] processDueDateAutomations error:', error);
   }
 }
 

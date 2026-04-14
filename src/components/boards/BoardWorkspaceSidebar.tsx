@@ -28,6 +28,7 @@ import { cn } from "@/lib/utils";
 import type { Board, BoardColumn } from "@/types/boards";
 import { PRIORIDADE_LABELS, STATUS_LABELS, type Tarefa } from "@/types/tarefas";
 import type { BoardView } from "./BoardHeader";
+import { useBoardLabels } from "@/contexts/BoardLabelsContext";
 
 interface BoardWorkspaceSidebarProps {
 	board: Board;
@@ -100,6 +101,18 @@ export function BoardWorkspaceSidebar({
 	const completionRate = tarefas.length
 		? Math.round((doneTasks.length / tarefas.length) * 100)
 		: 0;
+
+	const { labels } = useBoardLabels();
+
+	// Label usage stats: count tasks per label_id
+	const labelStats = labels
+		.map((label) => ({
+			label,
+			count: tarefas.filter((t) => t.label_ids?.includes(label.id)).length,
+		}))
+		.filter((s) => s.count > 0)
+		.sort((a, b) => b.count - a.count)
+		.slice(0, 6);
 
 	const assigneeMap = new Map(teamMembers.map((member) => [member.id, member]));
 
@@ -313,6 +326,40 @@ export function BoardWorkspaceSidebar({
 						))}
 					</CardContent>
 				</Card>
+
+				{labelStats.length > 0 && (
+					<Card className="border-border/60 bg-card/90 shadow-sm">
+						<CardHeader className="pb-3">
+							<CardTitle className="text-sm font-semibold">Etiquetas</CardTitle>
+						</CardHeader>
+						<CardContent className="space-y-2">
+							{labelStats.map(({ label, count }) => (
+								<div
+									key={label.id}
+									className="flex items-center justify-between gap-2"
+								>
+									<div className="flex items-center gap-2 min-w-0">
+										<span
+											className="h-2.5 w-2.5 rounded-full shrink-0"
+											style={{ backgroundColor: label.color }}
+										/>
+										<span className="truncate text-sm">{label.name}</span>
+									</div>
+									<Badge
+										variant="outline"
+										className="shrink-0 text-[10px] px-1.5 border-0"
+										style={{
+											backgroundColor: `${label.color}20`,
+											color: label.color,
+										}}
+									>
+										{count}
+									</Badge>
+								</div>
+							))}
+						</CardContent>
+					</Card>
+				)}
 
 				<Card className="border-border/60 bg-card/90 shadow-sm">
 					<CardHeader className="pb-3">

@@ -101,11 +101,20 @@ export const CustomModal: React.FC<CustomModalProps> = ({
 			<div className={modalContainerClass}>
 				<div
 					ref={contentRef}
-					className={cn(modalContentClass, contentClassName)}
+					className={cn(modalContentClass, contentClassName, "relative")}
 					onClick={(e) => e.stopPropagation()}
 					role="dialog"
 					aria-modal="true"
 				>
+					{/* Standardized Close Button - Top Right */}
+					<button
+						onClick={() => onOpenChangeRef.current(false)}
+						className="absolute right-4 top-4 z-[60] text-gray-400 hover:text-gray-600 p-2 hover:bg-gray-100 rounded-lg transition-colors md:block hidden"
+						type="button"
+						aria-label="Fechar"
+					>
+						<X className="w-5 h-5" />
+					</button>
 					{children}
 				</div>
 			</div>
@@ -130,7 +139,7 @@ export const CustomModalHeader: React.FC<{
 	return (
 		<div
 			className={cn(
-				"flex items-center justify-between px-6 py-4 bg-blue-50/50 border-b shrink-0",
+				"flex items-center justify-between px-6 py-4 border-b shrink-0",
 				className,
 			)}
 		>
@@ -138,7 +147,7 @@ export const CustomModalHeader: React.FC<{
 			{onClose && (
 				<button
 					onClick={onClose}
-					className="text-gray-500 hover:text-gray-700 p-2 -mr-2 hover:bg-gray-100 rounded-lg transition-colors"
+					className="text-gray-400 hover:text-gray-600 p-2 -mr-2 hover:bg-gray-100 rounded-lg transition-colors md:hidden"
 					type="button"
 					aria-label="Fechar"
 				>

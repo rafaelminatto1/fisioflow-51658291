@@ -819,9 +819,27 @@ function renderMessageContent(message: Message) {
 	);
 }
 
-function MessageBubble({ message }: { message: Message }) {
+function MessageBubble({
+	message,
+	onEdit,
+	onDelete,
+}: {
+	message: Message;
+	onEdit?: (message: Message) => void;
+	onDelete?: (message: Message, scope: "local" | "everyone") => void;
+}) {
 	const isOutbound = message.direction === "outbound";
 	const isNote = message.type === "note";
+	const isDeleted = Boolean(message.deletedAt);
+	const canEdit = Boolean(onEdit) && !isDeleted;
+	const canDelete = Boolean(onDelete) && !isDeleted;
+	const canDeleteForEveryone =
+		canDelete && isOutbound && message.canDeleteForEveryone === true;
+	const deleteForEveryoneExpired =
+		canDelete &&
+		isOutbound &&
+		message.canDeleteForEveryone === false &&
+		Boolean(message.deleteForEveryoneExpiresAt);
 	const time = message.timestamp
 		? formatDistanceToNow(new Date(message.timestamp), {
 				addSuffix: true,
@@ -849,7 +867,65 @@ function MessageBubble({ message }: { message: Message }) {
 					</p>
 					<span className="text-[10px] text-amber-500/80 dark:text-amber-600 mt-2 block font-medium">
 						{time}
+						{message.editedAt ? " · editada" : ""}
 					</span>
+					{(canEdit || canDelete) && (
+						<div className="mt-2 flex justify-end">
+							<DropdownMenu>
+								<DropdownMenuTrigger asChild>
+									<Button
+										variant="ghost"
+										size="sm"
+										className="h-6 px-2 text-[11px] text-amber-700 hover:text-amber-900"
+									>
+										<MoreVertical className="h-3.5 w-3.5" />
+									</Button>
+								</DropdownMenuTrigger>
+								<DropdownMenuContent align="end">
+									{canEdit && (
+										<DropdownMenuItem onClick={() => onEdit?.(message)}>
+											<Edit3 className="h-4 w-4 mr-2" />
+											Editar nota
+										</DropdownMenuItem>
+									)}
+									{canDelete && (
+										<DropdownMenuItem onClick={() => onDelete?.(message, "local")}>
+											<Trash2 className="h-4 w-4 mr-2" />
+											Apagar nota
+										</DropdownMenuItem>
+									)}
+								</DropdownMenuContent>
+							</DropdownMenu>
+						</div>
+					)}
+				</div>
+			</div>
+		);
+	}
+
+	if (isDeleted) {
+		return (
+			<div
+				className={`flex ${isOutbound ? "justify-end" : "justify-start"} mb-3`}
+			>
+				<div
+					className={`max-w-[75%] rounded-2xl px-3.5 py-2.5 shadow-sm relative ${
+						isOutbound
+							? "bg-muted/30 text-muted-foreground rounded-tr-sm border border-border/20"
+							: "bg-muted/10 text-muted-foreground rounded-tl-sm border border-border/20"
+					}`}
+				>
+					<div className="flex items-center gap-2 text-[13px] italic opacity-80">
+						<Trash2 className="h-3.5 w-3.5 opacity-60" />
+						<span>
+							{message.deleteScope === "everyone"
+								? "Esta mensagem foi apagada para todos"
+								: "Esta mensagem foi apagada"}
+						</span>
+					</div>
+					<div className="text-[10px] mt-1 text-muted-foreground/60 text-right">
+						{time}
+					</div>
 				</div>
 			</div>
 		);
@@ -867,6 +943,48 @@ function MessageBubble({ message }: { message: Message }) {
 				}`}
 			>
 				{renderMessageContent(message)}
+				{(canEdit || canDelete) && (
+					<div className="absolute -top-2 -right-2 opacity-0 group-hover:opacity-100 focus-within:opacity-100 transition-opacity">
+						<DropdownMenu>
+							<DropdownMenuTrigger asChild>
+								<Button
+									variant="secondary"
+									size="icon"
+									className="h-7 w-7 rounded-full shadow-sm"
+								>
+									<MoreVertical className="h-3.5 w-3.5" />
+								</Button>
+							</DropdownMenuTrigger>
+							<DropdownMenuContent align="end">
+								{canEdit && (
+									<DropdownMenuItem onClick={() => onEdit?.(message)}>
+										<Edit3 className="h-4 w-4 mr-2" />
+										Editar mensagem
+									</DropdownMenuItem>
+								)}
+								{canDelete && (
+									<DropdownMenuItem onClick={() => onDelete?.(message, "local")}>
+										<Trash2 className="h-4 w-4 mr-2" />
+										Apagar no FisioFlow
+									</DropdownMenuItem>
+								)}
+								{canDeleteForEveryone && (
+									<DropdownMenuItem
+										onClick={() => onDelete?.(message, "everyone")}
+									>
+										<Trash2 className="h-4 w-4 mr-2" />
+										Apagar para todos
+									</DropdownMenuItem>
+								)}
+								{deleteForEveryoneExpired && (
+									<DropdownMenuItem disabled>
+										Prazo para todos expirado
+									</DropdownMenuItem>
+								)}
+							</DropdownMenuContent>
+						</DropdownMenu>
+					</div>
+				)}
 				{message.interactiveData && (
 					<div className="mt-2 space-y-1.5">
 						{message.interactiveData.buttons?.map((btn) => (
@@ -890,6 +1008,7 @@ function MessageBubble({ message }: { message: Message }) {
 						className={`text-[10px] font-medium ${isOutbound ? "text-primary-foreground/70" : "text-muted-foreground/70"}`}
 					>
 						{time}
+						{message.editedAt ? " · editada" : ""}
 					</span>
 					{isOutbound && message.status && (
 						<span
@@ -1304,20 +1423,34 @@ function ChatPanel({
 	quickReplyText,
 	onQuickReplyUsed,
 	onMessageSent,
+	onConversationDeleted,
 	}: {
 		selectedId: string | null;
 		onAddNote: (content: string) => Promise<void> | void;
 		quickReplyText: string | null;
 		onQuickReplyUsed: () => void;
 		onMessageSent?: () => Promise<void> | void;
+		onConversationDeleted?: () => Promise<void> | void;
 }) {
-	const { conversation, messages, loading, sendMessage, refetch } =
+	const {
+		conversation,
+		messages,
+		loading,
+		sendMessage,
+		updateMessage,
+		deleteMessage,
+		deleteConversation,
+		refetch,
+	} =
 		useWhatsAppConversation(selectedId);
 	const { data: templates = [] } = useWhatsAppTemplates();
 	const [input, setInput] = useState("");
 	const [sending, setSending] = useState(false);
 	const [showNoteDialog, setShowNoteDialog] = useState(false);
 	const [noteContent, setNoteContent] = useState("");
+	const [editingMessage, setEditingMessage] = useState<Message | null>(null);
+	const [editContent, setEditContent] = useState("");
+	const [savingEdit, setSavingEdit] = useState(false);
 	const [attachment, setAttachment] = useState<{
 		file: File;
 		preview: string;
@@ -1489,6 +1622,78 @@ function ChatPanel({
 		}
 	};
 
+	const openEditMessage = (messageToEdit: Message) => {
+		const currentContent =
+			typeof messageToEdit.content === "string"
+				? messageToEdit.content
+				: JSON.stringify(messageToEdit.content);
+		setEditingMessage(messageToEdit);
+		setEditContent(currentContent);
+	};
+
+	const handleSaveMessageEdit = async () => {
+		if (!editingMessage || !editContent.trim() || savingEdit) return;
+		setSavingEdit(true);
+		try {
+			await updateMessage(editingMessage.id, editContent.trim());
+			setEditingMessage(null);
+			setEditContent("");
+			toast.success("Mensagem editada");
+			await onMessageSent?.();
+		} catch (error) {
+			toast.error("Não foi possível editar a mensagem", {
+				description: error instanceof Error ? error.message : undefined,
+			});
+		} finally {
+			setSavingEdit(false);
+		}
+	};
+
+	const handleDeleteMessage = async (
+		messageToDelete: Message,
+		scope: "local" | "everyone",
+	) => {
+		const confirmText =
+			scope === "everyone"
+				? "Apagar esta mensagem para todos no atendimento? O WhatsApp permite essa ação apenas dentro do prazo padrão."
+				: "Apagar esta mensagem no FisioFlow?";
+		if (!window.confirm(confirmText)) return;
+
+		try {
+			await deleteMessage(messageToDelete.id, { scope });
+			toast.success(
+				scope === "everyone"
+					? "Mensagem marcada como apagada para todos"
+					: "Mensagem apagada",
+			);
+			await onMessageSent?.();
+		} catch (error) {
+			toast.error("Não foi possível apagar a mensagem", {
+				description: error instanceof Error ? error.message : undefined,
+			});
+		}
+	};
+
+	const handleDeleteConversation = async () => {
+		if (
+			!window.confirm(
+				"Excluir esta conversa da inbox? O histórico será preservado para auditoria.",
+			)
+		) {
+			return;
+		}
+
+		try {
+			await deleteConversation("Excluida pela inbox");
+			toast.success("Conversa excluída da inbox");
+			await onConversationDeleted?.();
+		} catch (error) {
+			toast.error("Não foi possível excluir a conversa", {
+				description: error instanceof Error ? error.message : undefined,
+			});
+		}
+	};
+
 	const handleInputChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
 		const val = e.target.value;
 		setInput(val);
@@ -1586,13 +1791,23 @@ function ChatPanel({
 									? "Resolvida"
 									: "Fechada"}
 					</Badge>
-					<Button
-						variant="ghost"
-						size="icon"
-						className="h-8 w-8 text-muted-foreground"
-					>
-						<MoreVertical className="h-4 w-4" />
-					</Button>
+					<DropdownMenu>
+						<DropdownMenuTrigger asChild>
+							<Button
+								variant="ghost"
+								size="icon"
+								className="h-8 w-8 text-muted-foreground"
+							>
+								<MoreVertical className="h-4 w-4" />
+							</Button>
+						</DropdownMenuTrigger>
+						<DropdownMenuContent align="end">
+							<DropdownMenuItem onClick={handleDeleteConversation}>
+								<Trash2 className="h-4 w-4 mr-2" />
+								Excluir conversa
+							</DropdownMenuItem>
+						</DropdownMenuContent>
+					</DropdownMenu>
 				</div>
 			</div>
 
@@ -1631,7 +1846,11 @@ function ChatPanel({
 												</span>
 											</div>
 										)}
-										<MessageBubble message={msg} />
+										<MessageBubble
+											message={msg}
+											onEdit={openEditMessage}
+											onDelete={handleDeleteMessage}
+										/>
 									</div>
 								);
 							})}
@@ -1804,6 +2023,9 @@ function ChatPanel({
 							<StickyNote className="h-5 w-5" />
 							Adicionar nota interna
 						</DialogTitle>
+						<DialogDescription>
+							Registre uma observação privada para a equipe nesta conversa.
+						</DialogDescription>
 					</DialogHeader>
 					<div className="py-3">
 						<Textarea
@@ -1828,6 +2050,58 @@ function ChatPanel({
 							className="bg-amber-600 hover:bg-amber-700 text-white"
 						>
 							Salvar nota
+						</Button>
+					</DialogFooter>
+				</DialogContent>
+			</Dialog>
+
+			<Dialog
+				open={Boolean(editingMessage)}
+				onOpenChange={(open) => {
+					if (!open && !savingEdit) {
+						setEditingMessage(null);
+						setEditContent("");
+					}
+				}}
+			>
+				<DialogContent className="sm:max-w-[480px]">
+					<DialogHeader>
+						<DialogTitle className="flex items-center gap-2">
+							<Edit3 className="h-5 w-5" />
+							Editar mensagem
+						</DialogTitle>
+						<DialogDescription>
+							A edição será salva no histórico da mensagem para auditoria.
+						</DialogDescription>
+					</DialogHeader>
+					<div className="py-3">
+						<Textarea
+							placeholder="Digite o novo conteúdo da mensagem..."
+							value={editContent}
+							onChange={(e) => setEditContent(e.target.value)}
+							rows={5}
+							className="resize-none"
+						/>
+					</div>
+					<DialogFooter>
+						<Button
+							variant="ghost"
+							onClick={() => {
+								setEditingMessage(null);
+								setEditContent("");
+							}}
+							disabled={savingEdit}
+						>
+							Cancelar
+						</Button>
+						<Button
+							onClick={handleSaveMessageEdit}
+							disabled={!editContent.trim() || savingEdit}
+						>
+							{savingEdit ? (
+								<Loader2 className="h-4 w-4 mr-2 animate-spin" />
+							) : null}
+							Salvar edição
 						</Button>
 					</DialogFooter>
 				</DialogContent>
@@ -2382,6 +2656,10 @@ export default function WhatsAppInboxPage() {
 					quickReplyText={quickReplyText}
 					onQuickReplyUsed={() => setQuickReplyText(null)}
 					onMessageSent={refetch}
+					onConversationDeleted={async () => {
+						setSelectedId(null);
+						await refetch();
+					}}
 				/>
 
 				<div

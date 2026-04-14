@@ -1,6 +1,9 @@
 import React, { useState, forwardRef } from "react";
 import { Appointment } from "@/types/appointment";
-import { normalizeStatus, getStatusColor } from "./shared/appointment-status";
+import {
+	normalizeStatus,
+	getCalendarCardColors,
+} from "./shared/appointment-status";
 import { cn } from "@/lib/utils";
 import { MoreVertical } from "lucide-react";
 import { AppointmentQuickView } from "./AppointmentQuickView";
@@ -77,7 +80,8 @@ const CalendarAppointmentCardBase = forwardRef<
 		const reducedMotion = useReducedMotion();
 		const [isHovered, setIsHovered] = useState(false);
 
-		const { getStatusConfig: getSharedStatusConfig } = useStatusConfig();
+		const { getStatusConfig: getSharedStatusConfig, getStatusColors } =
+			useStatusConfig();
 		const isCompact = density === "compact";
 		const isOverbooked = isMarkedOverbooked(
 			appointment.notes,
@@ -85,12 +89,11 @@ const CalendarAppointmentCardBase = forwardRef<
 		);
 		const normalizedStatus = normalizeStatus(appointment.status || "agendado");
 		const statusConfig = getSharedStatusConfig(normalizedStatus);
-
-		// Use centralized calendar-specific styles
-		const calendarClassName = isOverbooked
-			? "calendar-card-excedente"
-			: statusConfig.calendarClassName;
-		
+		const customColors = getStatusColors(normalizedStatus);
+		const cardColors = isOverbooked
+			? { accent: "#dc2626", background: "#fef2f2", text: "#7f1d1d" }
+			: statusConfig.calendarCardColors ||
+				getCalendarCardColors(normalizedStatus);
 
 		const handleMouseEnter = () => setIsHovered(true);
 		const handleMouseLeave = () => setIsHovered(false);
@@ -138,7 +141,9 @@ const CalendarAppointmentCardBase = forwardRef<
 					isSelected={isSelected}
 					compact={isCompact}
 					statusConfig={{
-						color: isOverbooked ? "#dc2626" : getStatusColor(normalizedStatus),
+						color: isOverbooked
+							? "#dc2626"
+							: customColors.color || cardColors.accent,
 						icon: statusConfig.icon,
 					}}
 					data-appointment-popover-anchor={dataAnchor}
@@ -194,7 +199,6 @@ const CalendarAppointmentCardBase = forwardRef<
 					onClick={handleClick}
 					className={cn(
 						"absolute",
-						calendarClassName,
 						draggable && "cursor-grab active:cursor-grabbing",
 					)}
 					style={{
@@ -202,6 +206,9 @@ const CalendarAppointmentCardBase = forwardRef<
 						pointerEvents:
 							isDragging && hideGhostWhenSiblings ? "none" : undefined,
 						borderRadius: "12px",
+						backgroundColor: cardColors.background,
+						borderLeft: `3px solid ${cardColors.accent}`,
+						color: cardColors.text,
 					}}
 					tabIndex={0}
 					role="button"
@@ -210,6 +217,7 @@ const CalendarAppointmentCardBase = forwardRef<
 					{!isMobile && isHovered && !isDragging && !selectionMode && (
 						<div className="absolute top-1 right-1 flex items-center gap-1 z-50">
 							<button
+								type="button"
 								className="p-1 rounded-full hover:bg-black/5 dark:hover:bg-white/10 transition-colors"
 								onClick={(e) => {
 									e.stopPropagation();

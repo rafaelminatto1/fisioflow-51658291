@@ -25,6 +25,8 @@ export interface ReciboData {
 	};
 	assinado?: boolean;
 	logoUrl?: string;
+	disclaimer?: string;
+	showDisclaimer?: boolean;
 }
 
 interface ReciboPDFProps {
@@ -114,10 +116,15 @@ export const ReciboPreview: React.FC<{ data: ReciboData }> = ({ data }) => {
 
 			{/* Número */}
 			<div className="bg-gray-100 rounded p-3 text-center text-sm mb-6">
-				Nº {data.numero.toString().padStart(6, "0")} - Emitido em{" "}
-				{format(new Date(data.dataEmissao), "dd/MM/yyyy 'às' HH:mm", {
-					locale: ptBR,
-				})}
+				Nº {data.numero.toString().padStart(6, "0")}
+				{data.dataEmissao && (
+					<>
+						{" "} - Emitido em{" "}
+						{format(new Date(data.dataEmissao), "dd/MM/yyyy 'às' HH:mm", {
+							locale: ptBR,
+						})}
+					</>
+				)}
 			</div>
 
 			{/* Pagador */}
@@ -201,11 +208,12 @@ export const ReciboPreview: React.FC<{ data: ReciboData }> = ({ data }) => {
 				</div>
 			)}
 
-			<div className="text-center text-xs text-gray-500 border-t pt-4">
-				Este recibo serve como comprovante de pagamento para todos os fins de
-				direito. Documento emitido eletronicamente conforme Lei nº 14.063/2020
-				(Brasil).
-			</div>
+			{data.showDisclaimer !== false && (
+				<div className="text-center text-xs text-gray-500 border-t pt-4">
+					{data.disclaimer ||
+						"Este recibo serve como comprovante de pagamento para todos os fins de direito. Documento emitido eletronicamente conforme Lei nº 14.063/2020 (Brasil)."}
+				</div>
+			)}
 		</div>
 	);
 };

@@ -2,10 +2,12 @@ import { useState, useCallback, useMemo } from "react";
 import {
 	APPOINTMENT_STATUS_CONFIG,
 	getStatusColor,
+	getCalendarCardColors,
+	lightenColor,
 	normalizeStatus,
 	type AppointmentStatusConfig,
 } from "@/components/schedule/shared/appointment-status";
-import { getTextColorClass } from "@/utils/colorContrast";
+import { getOptimalTextColor, getTextColorClass } from "@/utils/colorContrast";
 import { fisioLogger as logger } from "@/lib/errors/logger";
 
 const STORAGE_KEY = "fisioflow_status_config";
@@ -132,11 +134,18 @@ export function useStatusConfig() {
 	const statusConfig = useMemo(() => {
 		const merged: Record<string, any> = {};
 
-		// Use APPOINTMENT_STATUS_CONFIG as base
 		Object.entries(APPOINTMENT_STATUS_CONFIG).forEach(([key, value]) => {
 			const customColor = storedConfig.customColors[key];
 			if (customColor) {
 				const textColorClass = getTextColorClass(customColor.bgColor);
+				const calendarColors = {
+					accent: customColor.borderColor || customColor.color,
+					background: lightenColor(
+						customColor.bgColor || customColor.color,
+						0.88,
+					),
+					text: customColor.color,
+				};
 				merged[key] = {
 					...value,
 					color: customColor.color,
@@ -144,24 +153,32 @@ export function useStatusConfig() {
 					bg: customColor.bgColor,
 					borderColor: customColor.borderColor,
 					text: textColorClass,
+					calendarCardColors: calendarColors,
 				};
 			} else {
 				const defaultColors = getDefaultStatusColors(key);
+				const calendarColors = getCalendarCardColors(key);
 				merged[key] = {
 					...value,
 					color: defaultColors.color,
 					bgColor: defaultColors.bgColor,
+					calendarCardColors: calendarColors,
 				};
 			}
 		});
 
-		// Add custom statuses
 		storedConfig.customStatuses.forEach((custom) => {
 			const textColorClass = getTextColorClass(custom.bgColor);
+			const calendarColors = {
+				accent: custom.borderColor || custom.color,
+				background: lightenColor(custom.bgColor || custom.color, 0.88),
+				text: custom.color,
+			};
 			merged[custom.id] = {
-				...APPOINTMENT_STATUS_CONFIG.agendado, // base for custom ones
+				...APPOINTMENT_STATUS_CONFIG.agendado,
 				...custom,
 				text: textColorClass,
+				calendarCardColors: calendarColors,
 			};
 		});
 

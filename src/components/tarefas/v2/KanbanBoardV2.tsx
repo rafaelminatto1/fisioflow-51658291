@@ -13,6 +13,7 @@ import {
 	X,
 	RefreshCw,
 	ShieldAlert,
+	CheckSquare,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -119,13 +120,17 @@ export function KanbanBoardV2({
 		if (!tarefas) return {};
 
 		const filtered = tarefas.filter((t) => {
-			// Text search
+			// Text search (includes checklist item text)
 			if (filters.search) {
 				const searchLower = filters.search.toLowerCase();
+				const checklistText = t.checklists?.flatMap((c) =>
+					c.items?.map((i) => i.text?.toLowerCase() ?? "") ?? [],
+				) ?? [];
 				const matchesSearch =
 					t.titulo.toLowerCase().includes(searchLower) ||
 					t.descricao?.toLowerCase().includes(searchLower) ||
-					t.tags?.some((tag) => tag.toLowerCase().includes(searchLower));
+					t.tags?.some((tag) => tag.toLowerCase().includes(searchLower)) ||
+					checklistText.some((txt) => txt.includes(searchLower));
 				if (!matchesSearch) return false;
 			}
 
@@ -184,6 +189,13 @@ export function KanbanBoardV2({
 				if (!isOverdue) return false;
 			}
 
+			// Pending checklist filter
+			if (filters.has_pending_checklist) {
+				const allItems = t.checklists?.flatMap((c) => c.items ?? []) ?? [];
+				const hasPending = allItems.length > 0 && allItems.some((i) => !i.checked);
+				if (!hasPending) return false;
+			}
+
 			// Pending Acknowledgment filter (Super Premium)
 			if (filters.pendingAcknowledgment && user) {
 				const isPending =
@@ -232,6 +244,7 @@ export function KanbanBoardV2({
 		if (filters.assignees?.length) count++;
 		if (filters.tags?.length) count++;
 		if (filters.is_overdue) count++;
+		if (filters.has_pending_checklist) count++;
 		return count;
 	}, [filters]);
 
@@ -513,6 +526,32 @@ export function KanbanBoardV2({
 								)}
 							/>
 							<span className="hidden md:inline">Aguardando Ciente</span>
+						</Button>
+
+						{/* Pending Checklist Filter */}
+						<Button
+							variant={filters.has_pending_checklist ? "secondary" : "outline"}
+							className={cn(
+								"gap-2 transition-all duration-300",
+								filters.has_pending_checklist &&
+									"bg-blue-100 text-blue-700 border-blue-200 hover:bg-blue-200",
+							)}
+							onClick={() =>
+								setFilters((f) => ({
+									...f,
+									has_pending_checklist: !f.has_pending_checklist,
+								}))
+							}
+						>
+							<CheckSquare
+								className={cn(
+									"h-4 w-4",
+									filters.has_pending_checklist
+										? "text-blue-600"
+										: "text-slate-400",
+								)}
+							/>
+							<span className="hidden md:inline">Checklist pendente</span>
 						</Button>
 
 						{/* Assignee Filter */}

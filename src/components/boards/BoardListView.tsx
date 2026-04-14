@@ -34,6 +34,7 @@ export function BoardListView({
 	onViewTask,
 }: BoardListViewProps) {
 	const [collapsed, setCollapsed] = useState<Set<string>>(new Set());
+	const { labelsMap } = useBoardLabels();
 
 	const sortedCols = [...columns].sort((a, b) => a.order_index - b.order_index);
 
@@ -134,7 +135,24 @@ export function BoardListView({
 												})}
 											</span>
 										)}
-										{tarefa.tags?.slice(0, 2).map((tag) => (
+										{tarefa.label_ids?.slice(0, 2).map((id) => {
+											const label = labelsMap.get(id);
+											if (!label) return null;
+											return (
+												<Badge
+													key={id}
+													variant="outline"
+													className="text-xs px-1.5 py-0 border-0"
+													style={{
+														backgroundColor: `${label.color}25`,
+														color: label.color,
+													}}
+												>
+													{label.name}
+												</Badge>
+											);
+										})}
+										{(!tarefa.label_ids?.length) && tarefa.tags?.slice(0, 2).map((tag) => (
 											<Badge
 												key={tag}
 												variant="outline"

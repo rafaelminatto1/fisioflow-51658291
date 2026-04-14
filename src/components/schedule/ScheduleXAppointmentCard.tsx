@@ -10,7 +10,10 @@ import { useStatusConfig } from "@/hooks/useStatusConfig";
 import { cn } from "@/lib/utils";
 import type { Appointment } from "@/types/appointment";
 import { AppointmentContextMenu } from "./AppointmentContextMenu";
-import { normalizeStatus } from "./shared/appointment-status";
+import {
+	normalizeStatus,
+	getCalendarCardColors,
+} from "./shared/appointment-status";
 import { calculateEndTime, normalizeTime } from "./shared/utils";
 
 interface ScheduleXAppointmentCardProps {
@@ -38,6 +41,8 @@ export function ScheduleXAppointmentCard({
 	const duration = appointment.duration || 60;
 	const time = normalizeTime(appointment.time);
 	const endTime = calculateEndTime(time, duration);
+	const colors =
+		statusConfig.calendarCardColors || getCalendarCardColors(normalizedStatus);
 
 	const handleClick = (e: React.MouseEvent) => {
 		e.stopPropagation();
@@ -74,13 +79,13 @@ export function ScheduleXAppointmentCard({
 					"cursor-pointer select-none outline-none",
 					"focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-1",
 					isSelected && "ring-2 ring-primary ring-offset-1",
-					normalizedStatus === 'confirmado' && "border-emerald-500 bg-emerald-50 text-emerald-950",
-					normalizedStatus === 'agendado' && "border-blue-500 bg-blue-50 text-blue-950",
-					normalizedStatus === 'atendido' && "border-emerald-600 bg-emerald-100 text-emerald-950",
-					normalizedStatus === 'cancelado' && "border-red-500 bg-red-50 text-red-950 opacity-70",
-					normalizedStatus === 'faltou' && "border-rose-500 bg-rose-50 text-rose-950",
-					!['confirmado', 'agendado', 'atendido', 'cancelado', 'faltou'].includes(normalizedStatus) && "border-slate-400 bg-slate-100 text-slate-900"
+					normalizedStatus === "cancelado" && "opacity-70",
 				)}
+				style={{
+					backgroundColor: colors.background,
+					borderLeftColor: colors.accent,
+					color: colors.text,
+				}}
 			>
 				<div className="flex items-center justify-between gap-1 mb-0.5">
 					<span className="font-bold text-[10px] uppercase tracking-wider opacity-70">
