@@ -56,6 +56,12 @@ export const exerciseTemplates = pgTable(
 		// NEW: Patient profile category
 		patientProfile: text("patient_profile"),
 
+		// NEW: Attributes for better filtering
+		difficultyLevel: text("difficulty_level"), // 'iniciante', 'intermediario', 'avancado'
+		treatmentPhase: text("treatment_phase"), // 'fase_aguda', 'fase_subaguda', 'remodelacao', 'retorno_ao_esporte'
+		bodyPart: text("body_part"), // 'ombro', 'joelho', 'quadril', 'coluna_cervical', 'coluna_lombar', 'tornozelo'
+		estimatedDuration: integer("estimated_duration"), // minutes
+
 		// NEW: Reference to the System_Template this was customized from
 		sourceTemplateId: uuid("source_template_id"),
 
@@ -82,6 +88,14 @@ export const exerciseTemplates = pgTable(
 		check(
 			"chk_patient_profile",
 			sql`${table.patientProfile} IS NULL OR ${table.patientProfile} IN ('ortopedico', 'esportivo', 'pos_operatorio', 'prevencao', 'idosos')`,
+		),
+		check(
+			"chk_difficulty_level",
+			sql`${table.difficultyLevel} IS NULL OR ${table.difficultyLevel} IN ('iniciante', 'intermediario', 'avancado')`,
+		),
+		check(
+			"chk_treatment_phase",
+			sql`${table.treatmentPhase} IS NULL OR ${table.treatmentPhase} IN ('fase_aguda', 'fase_subaguda', 'remodelacao', 'retorno_ao_esporte')`,
 		),
 	],
 );
