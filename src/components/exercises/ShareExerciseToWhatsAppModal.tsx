@@ -21,7 +21,7 @@ import {
 	Activity,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { usePatients } from "@/hooks/usePatients";
+import { usePatients } from "@/hooks/patients/usePatients";
 import type { Exercise } from "@/hooks/useExercises";
 import { useToast } from "@/hooks/use-toast";
 import { getBestImageUrl } from "@/lib/imageUtils";

@@ -9,7 +9,7 @@
 import pg from 'pg';
 
 const { Client } = pg;
-const DB_URL = 'process.env.DATABASE_URL
+const DB_URL = process.env.DATABASE_URL;
 
 const SQL = `
 -- ═══════════════════════════════════════════════════════
