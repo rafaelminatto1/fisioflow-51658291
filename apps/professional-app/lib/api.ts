@@ -501,18 +501,36 @@ export async function cancelAppointment(id: string, reason?: string): Promise<{ 
 // ============================================================
 
 export async function getExercises(
-  options?: { category?: string; difficulty?: string; search?: string; limit?: number }
-): Promise<ApiExercise[]> {
-  const response = await fetchApi<ApiResponse<ApiExercise[]>>('/api/exercises', {
+  options?: {
+    category?: string;
+    difficulty?: string;
+    search?: string;
+    bodyPart?: string;
+    equipment?: string;
+    page?: number;
+    limit?: number;
+    favorites?: string;
+  }
+): Promise<{ data: ApiExercise[]; meta: { total: number; pages: number; page: number; limit: number } }> {
+  const response = await fetchApi<ApiResponse<{ data: ApiExercise[]; meta: any }>>('/api/exercises', {
       params: { 
           category: options?.category,
           difficulty: options?.difficulty,
+          bodyPart: options?.bodyPart,
+          equipment: options?.equipment,
           q: options?.search,
-          limit: options?.limit || 100 
+          page: options?.page,
+          limit: options?.limit || 100,
+          favorites: options?.favorites
       }
   });
-  return (response.data || []).map(normalizeExercise);
+
+  const data = (response.data?.data || []).map(normalizeExercise);
+  const meta = response.data?.meta || { total: data.length, pages: 1, page: options?.page || 1, limit: options?.limit || 100 };
+
+  return { data, meta };
 }
+
 
 export async function getExerciseById(id: string): Promise<ApiExercise> {
   const response = await fetchApi<ApiResponse<ApiExercise>>(`/api/exercises/${encodeURIComponent(id)}`);
@@ -646,6 +664,25 @@ export async function deleteEvolution(id: string): Promise<{ ok: boolean }> {
   );
   evolutionCache.delete(id);
   return { ok: Boolean(response.ok) };
+}
+
+export async function duplicateEvolution(id: string): Promise<ApiEvolution> {
+  const source = await getEvolutionById(id);
+  if (!source || !source.patient_id) {
+    throw new Error('Evolução original não encontrada');
+  }
+
+  return createEvolution({
+    patient_id: source.patient_id,
+    date: new Date().toISOString(),
+    subjective: source.subjective,
+    objective: source.objective,
+    assessment: source.assessment,
+    plan: source.plan,
+    pain_level: source.pain_level,
+    attachments: source.attachments ?? [],
+    exercises_performed: source.exercises_performed ?? [],
+  });
 }
 
 // ============================================================

@@ -1,6 +1,5 @@
 import { Agent, callable } from "agents";
 import type { Env } from "../types/env";
-import { callGemini } from "../lib/ai-gemini";
 
 type RetentionState = {
   patientId: string;
@@ -19,7 +18,7 @@ type RetentionState = {
 
 /**
  * PatientAgent - Agente Autônomo de Retenção de Pacientes
- * Vive no Edge da Cloudflare e monitora o ciclo de vida do paciente.
+ * Vive no Edge da Cloudflare e monitora o ciclo de vida do paciente usando Workers AI.
  */
 export class PatientAgent extends Agent<Env, RetentionState> {
   initialState: RetentionState = {
@@ -48,7 +47,7 @@ export class PatientAgent extends Agent<Env, RetentionState> {
     if (data.painLevel !== undefined) lastPainLevel = data.painLevel;
     if (data.missedSession) missedSessions += 1;
 
-    // Lógica de Risco Simplificada
+    // Lógica de Risco Baseada em Dados
     let riskScore = (missedSessions * 30) + (lastPainLevel > 7 ? 20 : 0);
     riskScore = Math.min(100, riskScore);
 
@@ -66,7 +65,7 @@ export class PatientAgent extends Agent<Env, RetentionState> {
       status: nextStatus,
     });
 
-    // Se o risco for alto e o autoDraft estiver ativo, gera o rascunho via IA
+    // Gatilho de Automação: Se o risco for alto e o autoDraft estiver ativo, gera o rascunho via Workers AI
     if (nextStatus === "action_needed" && this.state.settings.autoDraft && !this.state.draftMessage) {
       await this.generateRetentionDraft();
     }
@@ -75,39 +74,42 @@ export class PatientAgent extends Agent<Env, RetentionState> {
   }
 
   /**
-   * Gera um rascunho de mensagem de WhatsApp hiper-personalizado usando IA
+   * Gera um rascunho de mensagem de WhatsApp hiper-personalizado usando Workers AI (Llama 3.1)
    */
   @callable()
   async generateRetentionDraft() {
     this.setState({
       ...this.state,
-      suggestedAction: "Gerando rascunho via IA...",
+      suggestedAction: "Gerando rascunho com Workers AI...",
     });
 
-    const prompt = `Você é o Agente de Retenção da clínica Mooca Fisio. 
-    Paciente: ${this.state.patientName}
-    Status: ${this.state.missedSessions} sessões faltadas, nível de dor recente ${this.state.lastPainLevel}/10.
-    Tarefa: Escreva uma mensagem curta, empática e profissional para o WhatsApp. 
-    O objetivo é mostrar preocupação com a dor dele e incentivar o retorno ao tratamento.
-    Não use emojis em excesso. Retorne apenas o texto da mensagem.`;
-
     try {
-      const message = await callGemini(
-        this.env.GOOGLE_AI_API_KEY, 
-        prompt, 
-        'gemini-1.5-flash',
-        this.env.FISIOFLOW_AI_GATEWAY_URL
-      );
+      // Uso do Workers AI nativo da Cloudflare (Llama 3.1 8B Instruct)
+      const response = await this.env.AI.run("@cf/meta/llama-3.1-8b-instruct", {
+        messages: [
+          {
+            role: "system",
+            content: "Você é um Agente de Retenção empático da clínica FisioFlow. Sua missão é reengajar pacientes em risco de evasão. Escreva em português do Brasil, de forma curta, acolhedora e profissional. Não use emojis em excesso."
+          },
+          {
+            role: "user",
+            content: `Paciente: ${this.state.patientName}. Status: ${this.state.missedSessions} sessões faltadas. Último nível de dor: ${this.state.lastPainLevel}/10. Escreva uma mensagem de WhatsApp para incentivá-lo a retomar o tratamento.`
+          }
+        ],
+        max_tokens: 256,
+        temperature: 0.7,
+      });
 
       this.setState({
         ...this.state,
-        draftMessage: message,
+        draftMessage: response.response || "Olá! Notamos sua ausência e gostaríamos de saber como você está se sentindo em relação à dor.",
         suggestedAction: "Rascunho pronto para revisão.",
       });
-    } catch  {
+    } catch (error) {
+      console.error("Erro Workers AI:", error);
       this.setState({
         ...this.state,
-        suggestedAction: "Erro ao gerar rascunho via IA.",
+        suggestedAction: "Erro ao gerar rascunho. Tente novamente mais tarde.",
       });
     }
   }

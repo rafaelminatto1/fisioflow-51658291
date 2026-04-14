@@ -21,7 +21,8 @@ routes = [
 binding = "HYPERDRIVE"
 id = "12b9fefcfbc04074a63342a9212e1b4f"
 # Query caching is configured on the Hyperdrive resource itself via:
-#   wrangler hyperdrive update <id> --max-age <seconds> --swr <seconds>
+# Cache de 1h para queries estáticas (Wiki/Protocolos)
+# wrangler hyperdrive update 12b9fefcfbc04074a63342a9212e1b4f --max-age 3600 --swr 300
 # Cloudflare requires `--swr` to be lower than `--max-age`.
 
 # ===== CLOUDFLARE R2 (Media Storage) =====
@@ -159,7 +160,7 @@ ENVIRONMENT = "production"
 IMAGE_TRANSFORMATIONS = "enabled"
 R2_PUBLIC_URL = "https://media.moocafisio.com.br"
 # Turnstile (anti-bot para rotas públicas) — sitekey pública, secret via wrangler secret put
-TURNSTILE_SITE_KEY = ""
+TURNSTILE_SITE_KEY = "0x4AAAAAAC813j31sbl6IHX3"
 # CORS: domínio do frontend em Cloudflare Pages
 ALLOWED_ORIGINS = "https://moocafisio.com.br,https://www.moocafisio.com.br,https://minatto-fisio.pages.dev,https://fisioflow.pages.dev,https://minatto.moocafisio.com.br,https://media.moocafisio.com.br,http://localhost:5173,https://7d2bdf7d.fisioflow.pages.dev,https://fisioflow-web.rafalegollas.workers.dev,https://fisioflow-api.rafalegollas.workers.dev"
 GOOGLE_MAPS_API_KEY = ""
@@ -200,12 +201,13 @@ NEON_AUTH_URL = "https://ep-wandering-bonus-acj4zwvo.neonauth.sa-east-1.aws.neon
 NEON_AUTH_JWKS_URL = "https://ep-wandering-bonus-acj4zwvo.neonauth.sa-east-1.aws.neon.tech/neondb/auth/.well-known/jwks.json"
 NEON_AUTH_ISSUER = "https://ep-wandering-bonus-acj4zwvo.neonauth.sa-east-1.aws.neon.tech"
 NEON_AUTH_AUDIENCE = "https://ep-wandering-bonus-acj4zwvo.neonauth.sa-east-1.aws.neon.tech"
+NEON_DATA_API_URL = "https://ep-wandering-bonus-acj4zwvo.apirest.sa-east-1.aws.neon.tech/neondb/rest/v1"
 VITE_HASURA_PROJECT_URL = "https://capital-duckling-42.hasura.app/v1/graphql"
 AXIOM_ORG_ID = "activity-dbyc"
 AXIOM_DATASET = "fisioflow-logs"
 FISIOFLOW_AI_GATEWAY_URL = "https://gateway.ai.cloudflare.com/v1/32156f9a72a32d1ece28ab74bcd398fb/fisioflow-gateway"
 # Turnstile (anti-bot) — sitekey pública, secret via wrangler secret put TURNSTILE_SECRET_KEY
-TURNSTILE_SITE_KEY = ""
+TURNSTILE_SITE_KEY = "0x4AAAAAAC813j31sbl6IHX3"
 
 [[env.production.kv_namespaces]]
 binding = "FISIOFLOW_CONFIG"
@@ -314,7 +316,8 @@ NEON_AUTH_URL = "https://ep-withered-glade-acrv7il7.neonauth.sa-east-1.aws.neon.
 NEON_AUTH_JWKS_URL = "https://ep-withered-glade-acrv7il7.neonauth.sa-east-1.aws.neon.tech/neondb/auth/.well-known/jwks.json"
 NEON_AUTH_ISSUER = "https://ep-withered-glade-acrv7il7.neonauth.sa-east-1.aws.neon.tech"
 NEON_AUTH_AUDIENCE = "https://ep-withered-glade-acrv7il7.neonauth.sa-east-1.aws.neon.tech"
-FISIOFLOW_AI_GATEWAY_URL = "https://gateway.ai.cloudflare.com/v1/32156f9a72a32d1ece28ab74bcd398fb/fisioflow-gateway-staging"
+  FISIOFLOW_AI_GATEWAY_URL = "https://gateway.ai.cloudflare.com/v1/32156f9a72a32d1ece28ab74bcd398fb/fisioflow-gateway-staging"
+  TURNSTILE_SITE_KEY = "0x4AAAAAAC813j31sbl6IHX3"
 
 # Hasura (Staging)
 VITE_HASURA_PROJECT_URL = ""
@@ -328,7 +331,7 @@ AXIOM_DATASET = "fisioflow-logs-staging"
 
 [[env.staging.kv_namespaces]]
 binding = "FISIOFLOW_CONFIG"
-id = "0efd6e0e5f144b25a32ff31f70946a94"
+id = "774bb5738e634d7ea9dc53d410a13218"
 
 [[env.staging.hyperdrive]]
 binding = "HYPERDRIVE"
@@ -342,8 +345,29 @@ bucket_name = "fisioflow-media-staging"
 
 [env.staging.durable_objects]
 bindings = [
-  { name = "ORGANIZATION_STATE", class_name = "OrganizationState" }
+  { name = "ORGANIZATION_STATE", class_name = "OrganizationState" },
+  { name = "PATIENT_AGENT", class_name = "PatientAgent" }
 ]
+
+[[env.staging.migrations]]
+tag = "v1"
+new_classes = ["OrganizationState"]
+
+[[env.staging.migrations]]
+tag = "v2"
+
+[[env.staging.migrations]]
+tag = "v3"
+
+[[env.staging.migrations]]
+tag = "v4"
+
+[[env.staging.migrations]]
+tag = "v5"
+
+[[env.staging.migrations]]
+tag = "v6"
+new_classes = ["PatientAgent"]
 
 [env.staging.ai]
 binding = "AI"
@@ -362,6 +386,63 @@ max_batch_timeout = 30
 max_retries = 3
 dead_letter_queue = "fisioflow-tasks-dlq-staging"
 
+# Staging D1 databases
+[[env.staging.d1_databases]]
+binding = "DB"
+database_name = "fisioflow-db-staging"
+database_id = "bf781be2-527d-471d-9cf2-dd18f8e6c2b2"
+
+[[env.staging.d1_databases]]
+binding = "EDGE_CACHE"
+database_name = "fisioflow-edge-cache-staging"
+database_id = "9eba3eb7-5486-49d0-9684-c325f8b1ddc2"
+
+# Staging Analytics Engine
+[[env.staging.analytics_engine_datasets]]
+binding = "ANALYTICS"
+dataset = "fisioflow_events_staging"
+
+# Staging Vectorize
+[[env.staging.vectorize]]
+binding = "CLINICAL_KNOWLEDGE"
+index_name = "fisioflow-clinical"
+
+# Staging Pipelines
+[[env.staging.pipelines]]
+binding = "EVENTS_PIPELINE"
+pipeline = "701aff68d26e4c45a29f090389bcd4f2"
+
+# Staging Workflows
+[[env.staging.workflows]]
+name = "appointment-reminder"
+binding = "WORKFLOW_APPOINTMENT_REMINDER"
+class_name = "AppointmentReminderWorkflow"
+
+[[env.staging.workflows]]
+name = "patient-onboarding"
+binding = "WORKFLOW_PATIENT_ONBOARDING"
+class_name = "PatientOnboardingWorkflow"
+
+[[env.staging.workflows]]
+name = "nfse-emission"
+binding = "WORKFLOW_NFSE"
+class_name = "NFSeWorkflow"
+
+[[env.staging.workflows]]
+name = "hep-compliance"
+binding = "WORKFLOW_HEP_COMPLIANCE"
+class_name = "HEPComplianceWorkflow"
+
+[[env.staging.workflows]]
+name = "patient-discharge"
+binding = "WORKFLOW_DISCHARGE"
+class_name = "PatientDischargeWorkflow"
+
+[[env.staging.workflows]]
+name = "patient-reengagement"
+binding = "WORKFLOW_REENGAGEMENT"
+class_name = "PatientReengagementWorkflow"
+
 # ===== CRON TRIGGERS =====
 [triggers]
 crons = [
@@ -372,3 +453,10 @@ crons = [
 # ===== OBSERVABILIDADE =====
 [observability]
 enabled = true
+
+[observability.logs]
+head_sampling_rate = 1
+
+[observability.traces]
+enabled = true
+head_sampling_rate = 1

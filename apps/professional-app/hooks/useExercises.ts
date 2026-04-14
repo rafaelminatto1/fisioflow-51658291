@@ -1,4 +1,4 @@
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useInfiniteQuery, useMutation, useQueryClient, useQuery } from '@tanstack/react-query';
 import { getExercises as apiGetExercises, createExercise as apiCreateExercise, updateExercise as apiUpdateExercise, deleteExercise as apiDeleteExercise, type ApiExercise } from '@/lib/api';
 import type { Exercise, ExerciseAssignment } from '@/types';
 
@@ -6,7 +6,10 @@ export interface UseExercisesLibraryOptions {
   category?: string;
   difficulty?: string;
   search?: string;
+  bodyPart?: string;
+  equipment?: string;
   limit?: number;
+  favorites?: boolean;
 }
 
 // Map API exercise type to app Exercise type
@@ -17,7 +20,7 @@ function mapApiExercise(apiExercise: ApiExercise): Exercise {
     description: apiExercise.description || '',
     instructions: apiExercise.instructions || [],
     category: apiExercise.category || 'Geral',
-    difficulty: (apiExercise.difficulty === 'easy' ? 'easy' : apiExercise.difficulty === 'medium' ? 'medium' : 'hard') as Exercise['difficulty'],
+    difficulty: (apiExercise.difficulty === 'iniciante' || apiExercise.difficulty === 'easy' ? 'easy' : apiExercise.difficulty === 'intermediario' || apiExercise.difficulty === 'medium' ? 'medium' : 'hard') as Exercise['difficulty'],
     videoUrl: apiExercise.videoUrl,
     imageUrl: apiExercise.imageUrl,
     sets: apiExercise.sets,
@@ -28,23 +31,43 @@ function mapApiExercise(apiExercise: ApiExercise): Exercise {
   };
 }
 
+
 export function useExercisesLibrary(options?: UseExercisesLibraryOptions) {
-  const exercises = useQuery({
+  const query = useInfiniteQuery({
     queryKey: ['exercises', 'library', options],
-    queryFn: async () => {
-      const apiExercises = await apiGetExercises(options);
-      return apiExercises.map(mapApiExercise);
+    queryFn: async ({ pageParam = 1 }) => {
+      const response = await apiGetExercises({
+        ...options,
+        favorites: options?.favorites ? 'true' : undefined,
+        page: pageParam as number,
+        limit: options?.limit || 20,
+      });
+      return response;
     },
+    getNextPageParam: (lastPage) => {
+      if (lastPage.meta.page < lastPage.meta.pages) {
+        return lastPage.meta.page + 1;
+      }
+      return undefined;
+    },
+    initialPageParam: 1,
     staleTime: 1000 * 60 * 10, // 10 minutes
   });
 
+  const data = query.data?.pages.flatMap((page) => page.data) || [];
+
   return {
-    data: exercises.data || [],
-    isLoading: exercises.isLoading,
-    error: exercises.error,
-    refetch: exercises.refetch,
+    data,
+    isLoading: query.isLoading,
+    isFetchingNextPage: query.isFetchingNextPage,
+    hasNextPage: query.hasNextPage,
+    fetchNextPage: query.fetchNextPage,
+    error: query.error,
+    refetch: query.refetch,
+    total: query.data?.pages[0]?.meta.total || 0,
   };
 }
+
 
 export function useExerciseCreate() {
   const queryClient = useQueryClient();
