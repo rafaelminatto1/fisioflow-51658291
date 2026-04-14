@@ -18,8 +18,6 @@ import { Button, SyncStatus } from "@/components";
 import { useSyncStatus } from "@/hooks/useSyncStatus";
 import { useQuery } from "@tanstack/react-query";
 import { getDashboardStats } from "@/lib/api";
-import { useAppointments } from "@/hooks/useAppointments";
-import { usePatients } from "@/hooks/usePatients";
 import { fetchApi } from "@/lib/api";
 import {
 	ProfileHeader,
@@ -43,9 +41,6 @@ export default function ProfileScreen() {
 		queryKey: ["professionalStats"],
 		queryFn: () => getDashboardStats("current-professional"),
 	});
-
-	const { data: appointments } = useAppointments();
-	const { data: patients } = usePatients({ status: "active" });
 
 	const { data: surveysData } = useQuery({
 		queryKey: ["satisfactionSurveysRating"],
@@ -97,188 +92,181 @@ export default function ProfileScreen() {
 	return (
 		<SafeAreaView
 			style={[styles.container, { backgroundColor: colors.background }]}
-			edges={["left", "right"]}
+			edges={["top", "left", "right"]}
 		>
-			<ProfileHeader
-				name={user?.name || "Profissional"}
-				email={user?.email}
-				onAvatarPress={() => {
-					medium();
-					router.push("/profile-edit" as any);
-				}}
-				onSettingsPress={() => {
-					medium();
-					router.push("/(settings)/notification-preferences" as any);
-				}}
-				stats={{
-					patients: stats?.activePatients ?? 0,
-					appointments: stats?.todayAppointments ?? 0,
-					completed: stats?.completedAppointments ?? 0,
-				}}
-			/>
+			<ScrollView
+				contentContainerStyle={styles.scrollContent}
+				showsVerticalScrollIndicator={false}
+			>
+				<ProfileHeader
+					name={user?.name || "Profissional"}
+					email={user?.email}
+					onAvatarPress={() => {
+						medium();
+						router.push("/profile-edit" as any);
+					}}
+					onSettingsPress={() => {
+						medium();
+						router.push("/(settings)/notification-preferences" as any);
+					}}
+					stats={{
+						patients: stats?.activePatients ?? 0,
+						appointments: stats?.todayAppointments ?? 0,
+						completed: stats?.completedAppointments ?? 0,
+					}}
+				/>
 
-			<ScrollView contentContainerStyle={styles.scrollContent}>
-				<ProfileSection title="Menu Principal">
-					<ProfileMenuItem
-						icon="person-outline"
-						label="Dados Pessoais"
-						onPress={() => {
-							medium();
-							router.push("/profile-edit" as any);
-						}}
-					/>
-					<ProfileMenuItem
-						icon="business-outline"
-						label="Dados da Clínica"
-						onPress={() => {
-							medium();
-							Alert.alert("Dados da Clínica", "As configurações avançadas da clínica devem ser realizadas via painel web. Editando dados pessoais.");
-							router.push("/profile-edit" as any);
-						}}
-					/>
-					<ProfileMenuItem
-						icon="clipboard-outline"
-						label="Protocolos de Tratamento"
-						onPress={() => {
-							medium();
-							router.push("/protocols" as any);
-						}}
-					/>
-					<ProfileMenuItem
-						icon="time-outline"
-						label="Horários de Atendimento"
-						onPress={() => {
-							medium();
-							router.push("/(settings)/working-hours" as any);
-						}}
-					/>
-					<ProfileMenuItem
-						icon="notifications-outline"
-						label="Notificações"
-						onPress={() => {
-							medium();
-							router.push("/(settings)/notification-preferences" as any);
-						}}
-					/>
-					<ProfileMenuItem
-						icon="lock-closed-outline"
-						label="Alterar Senha"
-						onPress={() => {
-							medium();
-							router.push("/change-password" as any);
-						}}
-					/>
-				</ProfileSection>
+				<View style={styles.menuWrapper}>
+					<ProfileSection title="Configurações de Perfil">
+						<ProfileMenuItem
+							icon="person-outline"
+							label="Meus Dados"
+							onPress={() => {
+								medium();
+								router.push("/profile-edit" as any);
+							}}
+						/>
+						<ProfileMenuItem
+							icon="notifications-outline"
+							label="Preferências de Notificação"
+							onPress={() => {
+								medium();
+								router.push("/(settings)/notification-preferences" as any);
+							}}
+						/>
+						<ProfileMenuItem
+							icon="business-outline"
+							label="Clínica / Consultório"
+							onPress={() => {
+								medium();
+								Alert.alert(
+									"Painel Web",
+									"As configurações avançadas da clínica devem ser realizadas via painel web.",
+								);
+							}}
+						/>
+						<ProfileMenuItem
+							icon="time-outline"
+							label="Horários de Atendimento"
+							onPress={() => {
+								medium();
+								router.push("/(settings)/working-hours" as any);
+							}}
+						/>
+						<ProfileMenuItem
+							icon="lock-closed-outline"
+							label="Segurança e Senha"
+							onPress={() => {
+								medium();
+								router.push("/change-password" as any);
+							}}
+							showDivider={false}
+						/>
+					</ProfileSection>
 
-				<ProfileSection title="Sistema">
-					<ProfileMenuItem
-						icon="card-outline"
-						label="Plano e Faturamento"
-						onPress={() => {
-							light();
-							Linking.openURL("https://fisioflow.pages.dev/financial").catch(
-								() => Alert.alert("Erro", "Não foi possível abrir o link."),
-							);
-						}}
-					/>
-					<ProfileMenuItem
-						icon="help-circle-outline"
-						label="Ajuda e Suporte"
-						onPress={() => {
-							medium();
-							router.push("/(settings)/help" as any);
-						}}
-					/>
-				</ProfileSection>
+					<ProfileSection title="Recursos e Ferramentas">
+						<ProfileMenuItem
+							icon="clipboard-outline"
+							label="Protocolos Clínicos"
+							iconColor={colors.info}
+							onPress={() => {
+								medium();
+								router.push("/protocols" as any);
+							}}
+						/>
+						<ProfileMenuItem
+							icon="card-outline"
+							label="Plano e Assinatura"
+							iconColor={colors.success}
+							onPress={() => {
+								light();
+								Linking.openURL("https://fisioflow.pages.dev/financial").catch(
+									() => Alert.alert("Erro", "Não foi possível abrir o link."),
+								);
+							}}
+						/>
+						<ProfileMenuItem
+							icon="help-circle-outline"
+							label="Central de Ajuda"
+							iconColor={colors.warning}
+							onPress={() => {
+								medium();
+								router.push("/(settings)/help" as any);
+							}}
+							showDivider={false}
+						/>
+					</ProfileSection>
 
-				<ProfileSection title="Sincronização">
-					<View style={styles.syncInfo}>
-						<View
-							style={[
-								styles.syncStatus,
-								{
-									backgroundColor: isOnline
-										? colors.successLight
-										: colors.errorLight,
-								},
-							]}
-						>
-							<Ionicons
-								name={isOnline ? "checkmark-circle" : "cloud-offline-outline"}
-								size={16}
-								color={isOnline ? colors.success : colors.error}
+					<ProfileSection title="Preferências">
+						<SettingsItem
+							label="Notificações Push"
+							value={pushEnabled}
+							onToggle={(val) => {
+								medium();
+								setPushEnabled(val);
+							}}
+						/>
+						<SettingsItem
+							label="Lembretes de Agenda"
+							value={remindersEnabled}
+							onToggle={(val) => {
+								medium();
+								setRemindersEnabled(val);
+							}}
+						/>
+						<SettingsItem
+							label="Modo Escuro"
+							value={darkModeEnabled}
+							onToggle={(val) => {
+								medium();
+								setDarkModeEnabled(val);
+								Alert.alert(
+									"Aviso",
+									"O suporte ao modo escuro dinâmico será aplicado na próxima reinicialização.",
+								);
+							}}
+						/>
+					</ProfileSection>
+
+					{/* Connection Status Card */}
+					<View
+						style={[
+							styles.statusCard,
+							{ backgroundColor: colors.surface, borderColor: colors.border },
+						]}
+					>
+						<View style={styles.statusRow}>
+							<View
+								style={[
+									styles.statusIndicator,
+									{ backgroundColor: isOnline ? colors.success : colors.error },
+								]}
 							/>
-						</View>
-						<Text style={[styles.syncText, { color: colors.text }]}>
-							{isOnline ? "Sincronização ativa" : "Sem conexão"}
-						</Text>
-					</View>
-					{averageRating && (
-						<View style={styles.ratingInfo}>
-							<View style={styles.ratingIcon}>
-								<Ionicons name="star" size={16} color={colors.warning} />
-							</View>
-							<Text style={[styles.ratingText, { color: colors.text }]}>
-								{averageRating.toFixed(1)} média de satisfação
+							<Text style={[styles.statusText, { color: colors.text }]}>
+								{isOnline ? "Conectado ao servidor" : "Modo offline ativo"}
 							</Text>
 						</View>
-					)}
-				</ProfileSection>
+						<SyncStatus status={syncStatus} isOnline={isOnline} />
+					</View>
 
-				<ProfileSection title="Opções">
-					<SettingsItem
-						label="Notificações Push"
-						value={pushEnabled}
-						onToggle={(val) => {
-							medium();
-							setPushEnabled(val);
-						}}
-					/>
-					<SettingsItem
-						label="Lembrete de atividades"
-						value={remindersEnabled}
-						onToggle={(val) => {
-							medium();
-							setRemindersEnabled(val);
-						}}
-					/>
-					<SettingsItem
-						label="Modo Escuro"
-						value={darkModeEnabled}
-						onToggle={(val) => {
-							medium();
-							setDarkModeEnabled(val);
-							Alert.alert("Aviso", "A alteração do modo escuro requer reinicialização ou atualização do sistema de cores.");
-						}}
-					/>
-				</ProfileSection>
-
-				<View style={styles.logoutSection}>
-					<Button
-						title={isLoggingOut ? "Saindo..." : "Sair da Conta"}
+					<TouchableOpacity
+						style={[styles.logoutBtn, { borderColor: colors.error + "30" }]}
 						onPress={handleLogout}
-						variant="destructive"
-						size="lg"
-						leftIcon="log-out-outline"
-						loading={isLoggingOut}
-					/>
-				</View>
+						activeOpacity={0.7}
+					>
+						<Ionicons name="log-out-outline" size={20} color={colors.error} />
+						<Text style={[styles.logoutText, { color: colors.error }]}>
+							{isLoggingOut ? "Saindo..." : "Sair da Conta"}
+						</Text>
+					</TouchableOpacity>
 
-				<View style={styles.version}>
-					<Text style={[styles.versionText, { color: colors.textMuted }]}>
-						FisioFlow v1.0.0
-					</Text>
+					<View style={styles.version}>
+						<Text style={[styles.versionText, { color: colors.textMuted }]}>
+							FISIOFLOW • Versão 1.0.0
+						</Text>
+					</View>
 				</View>
 			</ScrollView>
-
-			<View
-				style={[
-					styles.bottomBar,
-					{ backgroundColor: colors.background, borderTopColor: colors.border },
-				]}
-			>
-				<SyncStatus status={syncStatus} isOnline={isOnline} />
-			</View>
 		</SafeAreaView>
 	);
 }
@@ -288,63 +276,56 @@ const styles = StyleSheet.create({
 		flex: 1,
 	},
 	scrollContent: {
-		padding: 14,
-		paddingBottom: 100,
+		paddingBottom: 40,
 	},
-	syncInfo: {
+	menuWrapper: {
+		paddingHorizontal: 20,
+		marginTop: 10,
+	},
+	statusCard: {
+		padding: 16,
+		borderRadius: 24,
+		borderWidth: 1,
+		marginBottom: 24,
+	},
+	statusRow: {
 		flexDirection: "row",
 		alignItems: "center",
+		gap: 8,
+		marginBottom: 12,
+	},
+	statusIndicator: {
+		width: 8,
+		height: 8,
+		borderRadius: 4,
+	},
+	statusText: {
+		fontSize: 13,
+		fontWeight: "700",
+	},
+	logoutBtn: {
+		flexDirection: "row",
+		alignItems: "center",
+		justifyContent: "center",
 		gap: 10,
-		marginBottom: 6,
+		paddingVertical: 16,
+		borderRadius: 20,
+		borderWidth: 1,
+		marginTop: 10,
 	},
-	syncStatus: {
-		width: 28,
-		height: 28,
-		borderRadius: 14,
-		alignItems: "center",
-		justifyContent: "center",
-	},
-	syncText: {
-		fontSize: 13,
-		fontWeight: "500",
-	},
-	ratingInfo: {
-		flexDirection: "row",
-		alignItems: "center",
-		gap: 6,
-		paddingVertical: 10,
-	},
-	ratingIcon: {
-		width: 22,
-		height: 22,
-		borderRadius: 11,
-		alignItems: "center",
-		justifyContent: "center",
-		backgroundColor: "rgba(251, 191, 36, 0.1)",
-	},
-	ratingText: {
-		fontSize: 13,
-	},
-	logoutSection: {
-		marginTop: 24,
-		marginBottom: 14,
+	logoutText: {
+		fontSize: 15,
+		fontWeight: "700",
 	},
 	version: {
 		alignItems: "center",
-		paddingVertical: 20,
+		marginTop: 30,
+		marginBottom: 20,
 	},
 	versionText: {
-		fontSize: 11,
-	},
-	bottomBar: {
-		position: "absolute",
-		bottom: 0,
-		left: 0,
-		right: 0,
-		padding: 10,
-		flexDirection: "row",
-		alignItems: "center",
-		justifyContent: "space-between",
-		borderTopWidth: 1,
+		fontSize: 10,
+		fontWeight: "800",
+		letterSpacing: 1,
+		opacity: 0.5,
 	},
 });

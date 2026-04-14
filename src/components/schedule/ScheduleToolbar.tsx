@@ -4,32 +4,32 @@
  * (Google Calendar, Cron, Akiflow, Notion Calendar)
  */
 
-import React from "react";
-import { format, startOfWeek, endOfWeek } from "date-fns";
+import { endOfWeek, format, startOfWeek } from "date-fns";
 import { ptBR } from "date-fns/locale";
-import { Button } from "@/components/ui/button";
-import { Link } from "react-router-dom";
 import {
+	CheckSquare,
 	ChevronLeft,
 	ChevronRight,
-	CheckSquare,
-	Plus,
-	Stethoscope,
-	Sparkles,
 	MoreVertical,
+	Plus,
+	Sparkles,
+	Stethoscope,
 	Zap,
 } from "lucide-react";
+import React from "react";
+import { Link } from "react-router-dom";
+import { Button } from "@/components/ui/button";
 import {
 	DropdownMenu,
 	DropdownMenuContent,
 	DropdownMenuItem,
 	DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { AdvancedFilters } from "./AdvancedFilters";
-import { ScheduleConfigIconButton } from "./ScheduleConfigButton";
+import { SmartDatePicker } from "@/components/ui/smart-date-picker";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { cn } from "@/lib/utils";
-import { SmartDatePicker } from "@/components/ui/smart-date-picker";
+import { AdvancedFilters } from "./AdvancedFilters";
+import { ScheduleConfigIconButton } from "./ScheduleConfigButton";
 
 export interface ScheduleToolbarProps {
 	currentDate: Date;
@@ -113,7 +113,10 @@ export const ScheduleToolbar: React.FC<ScheduleToolbarProps> = ({
 		<div className="flex items-center justify-between px-8 py-5 border-b border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 sticky top-0 z-40">
 			{/* Left Group: Brand Logo (Stitch style: 'WORKBENCH' equivalent) */}
 			<div className="flex items-center gap-6">
-				<Link to="/agenda" className="flex items-center gap-2 hover:opacity-80 transition-all">
+				<Link
+					to="/agenda"
+					className="flex items-center gap-2 hover:opacity-80 transition-all"
+				>
 					<div className="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center shadow-lg shadow-blue-500/20">
 						<Stethoscope className="w-4 h-4 text-white" />
 					</div>
@@ -126,6 +129,15 @@ export const ScheduleToolbar: React.FC<ScheduleToolbarProps> = ({
 
 				{/* Date Navigation Block */}
 				<div className="flex items-center gap-3">
+					<Button
+						variant="outline"
+						size="sm"
+						onClick={() => onDateChange(new Date())}
+						className="h-8 px-3 rounded-lg font-bold text-[10px] uppercase tracking-widest border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-900"
+					>
+						Hoje
+					</Button>
+
 					<div className="flex items-center gap-1 bg-slate-50 dark:bg-slate-900 p-1 rounded-lg border border-slate-200/60 dark:border-slate-800/60">
 						<Button
 							variant="ghost"
@@ -144,13 +156,35 @@ export const ScheduleToolbar: React.FC<ScheduleToolbarProps> = ({
 							<ChevronRight className="w-4 h-4" />
 						</Button>
 					</div>
-					
+
 					<SmartDatePicker
 						date={currentDate}
 						onChange={(date) => date && onDateChange(date)}
 						className="h-9 px-3 border-none bg-transparent hover:bg-slate-50 dark:hover:bg-slate-900 font-bold text-sm tracking-tight min-w-[160px]"
 						placeholder={formattedDateRange}
 					/>
+				</div>
+
+				<div className="h-6 w-[1px] bg-slate-200 dark:bg-slate-800" />
+
+				{/* View Switcher Block */}
+				<div className="flex items-center gap-1 bg-slate-100/50 dark:bg-slate-900/50 p-1 rounded-xl border border-slate-200/50 dark:border-slate-800/50">
+					{(["day", "week", "month"] as const).map((view) => (
+						<Button
+							key={view}
+							variant={viewType === view ? "default" : "ghost"}
+							size="sm"
+							onClick={() => onViewChange(view)}
+							className={cn(
+								"h-7 px-4 rounded-lg font-bold text-[10px] uppercase tracking-widest transition-all",
+								viewType === view
+									? "bg-white dark:bg-slate-800 text-slate-900 dark:text-white shadow-sm ring-1 ring-slate-200 dark:ring-slate-700"
+									: "text-slate-500 hover:text-slate-900 dark:hover:text-slate-200",
+							)}
+						>
+							{VIEW_LABELS[view]}
+						</Button>
+					))}
 				</div>
 			</div>
 
@@ -177,7 +211,7 @@ export const ScheduleToolbar: React.FC<ScheduleToolbarProps> = ({
 
 					{/* Engrenagem Button (Prominent as requested) */}
 					<ScheduleConfigIconButton className="h-9 w-9 rounded-full bg-slate-50 dark:bg-slate-900 text-slate-600 dark:text-slate-400 border border-slate-200 dark:border-slate-800 hover:bg-slate-100 dark:hover:bg-slate-800 hover:text-blue-600 transition-all" />
-					
+
 					<Button
 						onClick={onCreateAppointment}
 						className="h-9 px-4 gap-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg shadow-lg shadow-blue-500/10 font-bold text-[11px] uppercase tracking-widest ml-2"
@@ -204,7 +238,10 @@ export const ScheduleToolbar: React.FC<ScheduleToolbarProps> = ({
 								<Sparkles className="w-4 h-4 text-amber-500" />
 								Otimizar Agenda (AI)
 							</DropdownMenuItem>
-							<DropdownMenuItem className="rounded-xl gap-2 font-medium" onClick={onToggleSelection}>
+							<DropdownMenuItem
+								className="rounded-xl gap-2 font-medium"
+								onClick={onToggleSelection}
+							>
 								<CheckSquare className="w-4 h-4 text-blue-500" />
 								{isSelectionMode ? "Sair do modo seleção" : "Seleção em massa"}
 							</DropdownMenuItem>
@@ -220,6 +257,15 @@ export const ScheduleToolbar: React.FC<ScheduleToolbarProps> = ({
 		<div className="flex flex-col gap-4 px-4 py-4 bg-white dark:bg-slate-950 border-b border-slate-200 dark:border-slate-800">
 			<div className="flex items-center justify-between">
 				<div className="flex items-center gap-2">
+					<Button
+						variant="outline"
+						size="sm"
+						onClick={() => onDateChange(new Date())}
+						className="h-8 px-3 rounded-lg font-bold text-[10px] uppercase tracking-widest border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-400"
+					>
+						Hoje
+					</Button>
+
 					<Button
 						variant="ghost"
 						size="icon"

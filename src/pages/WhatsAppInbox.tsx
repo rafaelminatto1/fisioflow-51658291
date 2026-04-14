@@ -140,6 +140,26 @@ function statusLabel(status: string): string {
 	return STATUS_LABELS[status] ?? status;
 }
 
+function getMemberUserId(member: any): string {
+	return member.userId ?? member.user_id ?? member.user?.id ?? member.id;
+}
+
+function getMemberName(member: any): string {
+	return (
+		member.user?.name ??
+		member.profiles?.full_name ??
+		member.profiles?.name ??
+		member.name ??
+		member.profiles?.email ??
+		member.user?.email ??
+		"Membro"
+	);
+}
+
+function getMemberEmail(member: any): string {
+	return member.user?.email ?? member.profiles?.email ?? member.email ?? "";
+}
+
 function MetricsStrip({ metrics }: { metrics: Metrics | null }) {
 	if (!metrics) return null;
 
@@ -1281,12 +1301,12 @@ function ChatPanel({
 	quickReplyText,
 	onQuickReplyUsed,
 	onMessageSent,
-}: {
-	selectedId: string | null;
-	onAddNote: (content: string) => void;
-	quickReplyText: string | null;
-	onQuickReplyUsed: () => void;
-	onMessageSent?: () => Promise<void> | void;
+	}: {
+		selectedId: string | null;
+		onAddNote: (content: string) => Promise<void> | void;
+		quickReplyText: string | null;
+		onQuickReplyUsed: () => void;
+		onMessageSent?: () => Promise<void> | void;
 }) {
 	const { conversation, messages, loading, sendMessage, refetch } =
 		useWhatsAppConversation(selectedId);
@@ -1451,11 +1471,19 @@ function ChatPanel({
 		}
 	};
 
-	const handleNote = () => {
+	const handleNote = async () => {
 		if (!noteContent.trim()) return;
-		onAddNote(noteContent.trim());
-		setNoteContent("");
-		setShowNoteDialog(false);
+		try {
+			await onAddNote(noteContent.trim());
+			setNoteContent("");
+			setShowNoteDialog(false);
+			toast.success("Nota interna adicionada");
+			void refetch();
+		} catch (error) {
+			toast.error("Não foi possível adicionar a nota", {
+				description: error instanceof Error ? error.message : undefined,
+			});
+		}
 	};
 
 	const handleInputChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
@@ -1854,31 +1882,35 @@ export default function WhatsAppInboxPage() {
 			.catch(() => {});
 	}, []);
 
-	const inboxFilters = useMemo(
-		() => ({
-			status:
-				statusFilter === "all"
-					? undefined
-					: statusFilter === "mine"
+		const inboxFilters = useMemo(
+			() => ({
+				status:
+					statusFilter === "all"
 						? undefined
-						: statusFilter,
-			priority: priorityFilter,
-			search: search || undefined,
-			tagId: tagFilter,
+						: statusFilter === "mine"
+							? undefined
+							: statusFilter,
+				assignedTo: statusFilter === "mine" ? "me" : undefined,
+				priority: priorityFilter,
+				search: search || undefined,
+				tagId: tagFilter,
 		}),
 		[statusFilter, priorityFilter, search, tagFilter],
 	);
 
-	const { conversations, loading, pagination, refetch } =
-		useWhatsAppInbox(inboxFilters);
+		const { conversations, loading, pagination, refetch } =
+			useWhatsAppInbox(inboxFilters);
 
-	const { conversation, addNote, assign, transfer, updateStatus } =
-		useWhatsAppConversation(selectedId);
+		const {
+			conversation,
+			addNote,
+			assign,
+			transfer,
+			updateStatus,
+			refetch: refetchConversation,
+		} = useWhatsAppConversation(selectedId);
 
-	const filteredConversations =
-		statusFilter === "mine"
-			? conversations.filter((c) => c.assignedTo)
-			: conversations;
+		const filteredConversations = conversations;
 
 	useEffect(() => {
 		if (!showNewConversationDialog) return;
@@ -1926,30 +1958,36 @@ export default function WhatsAppInboxPage() {
 		}
 	}, [showAssignDialog, showTransferDialog]);
 
-	const handleAssign = async (userId: string) => {
-		if (!selectedId || assigning) return;
-		setAssigning(true);
-		try {
-			await assign(userId);
-			setShowAssignDialog(false);
-		} catch (e) {
-			console.error("Assign failed:", e);
-		} finally {
-			setAssigning(false);
-		}
+		const handleAssign = async (userId: string) => {
+			if (!selectedId || assigning) return;
+			setAssigning(true);
+			try {
+				await assign(userId);
+				setShowAssignDialog(false);
+				await Promise.all([refetch(), refetchConversation()]);
+				toast.success("Conversa atribuída");
+			} catch (e) {
+				console.error("Assign failed:", e);
+				toast.error("Não foi possível atribuir a conversa");
+			} finally {
+				setAssigning(false);
+			}
 	};
 
 	const handleTransfer = async (userId: string) => {
 		if (!selectedId || assigning) return;
-		setAssigning(true);
-		try {
-			await transfer(userId);
-			setShowTransferDialog(false);
-		} catch (e) {
-			console.error("Transfer failed:", e);
-		} finally {
-			setAssigning(false);
-		}
+			setAssigning(true);
+			try {
+				await transfer(userId);
+				setShowTransferDialog(false);
+				await Promise.all([refetch(), refetchConversation()]);
+				toast.success("Conversa transferida");
+			} catch (e) {
+				console.error("Transfer failed:", e);
+				toast.error("Não foi possível transferir a conversa");
+			} finally {
+				setAssigning(false);
+			}
 	};
 
 	const handleCreateConversation = async (contact: Contact) => {
@@ -2022,23 +2060,24 @@ export default function WhatsAppInboxPage() {
 		}
 	};
 
-	const filteredMembers = teamMembers.filter(
-		(m) =>
-			accentIncludes(m.user?.name || "", memberSearch) ||
-			accentIncludes(m.user?.email || "", memberSearch),
-	);
+		const filteredMembers = teamMembers.filter(
+			(m) =>
+				accentIncludes(getMemberName(m), memberSearch) ||
+				accentIncludes(getMemberEmail(m), memberSearch),
+		);
 
-	const handlePriorityChange = async (
-		priority: "low" | "medium" | "high" | "urgent",
-	) => {
-		if (!selectedId) return;
-		try {
-			await updatePriority(selectedId, priority);
-			await refetch();
-		} catch {
-			// ignore
-		}
-	};
+		const handlePriorityChange = async (
+			priority: "low" | "medium" | "high" | "urgent",
+		) => {
+			if (!selectedId) return;
+			try {
+				await updatePriority(selectedId, priority);
+				await Promise.all([refetch(), refetchConversation()]);
+				toast.success("Prioridade atualizada");
+			} catch {
+				toast.error("Não foi possível atualizar a prioridade");
+			}
+		};
 
 	const toggleBulkSelect = (id: string) => {
 		setSelectedConvIds((prev) => {
@@ -2332,10 +2371,11 @@ export default function WhatsAppInboxPage() {
 				</div>
 
 				<ChatPanel
-					selectedId={selectedId}
-					onAddNote={async (content) => {
-						await addNote(content);
-					}}
+						selectedId={selectedId}
+						onAddNote={async (content) => {
+							await addNote(content);
+							await Promise.all([refetch(), refetchConversation()]);
+						}}
 					quickReplyText={quickReplyText}
 					onQuickReplyUsed={() => setQuickReplyText(null)}
 					onMessageSent={refetch}
@@ -2353,18 +2393,40 @@ export default function WhatsAppInboxPage() {
 							conversation={conversation}
 							onAssign={() => setShowAssignDialog(true)}
 							onTransfer={() => setShowTransferDialog(true)}
-							onResolve={async () => {
-								await updateStatus("resolved");
-							}}
-							onClose={async () => {
-								await updateStatus("closed");
-							}}
-							onAddTag={async (tagId) => {
-								await addTags(conversation.id, [tagId]);
-							}}
-							onRemoveTag={async (tagId) => {
-								await apiRemoveTag(conversation.id, tagId);
-							}}
+								onResolve={async () => {
+									try {
+										await updateStatus("resolved");
+										await Promise.all([refetch(), refetchConversation()]);
+									} catch {
+										toast.error("Não foi possível resolver a conversa");
+									}
+								}}
+								onClose={async () => {
+									try {
+										await updateStatus("closed");
+										await Promise.all([refetch(), refetchConversation()]);
+									} catch {
+										toast.error("Não foi possível fechar a conversa");
+									}
+								}}
+								onAddTag={async (tagId) => {
+									try {
+										await addTags(conversation.id, [tagId]);
+										await Promise.all([refetch(), refetchConversation()]);
+										toast.success("Categoria adicionada");
+									} catch {
+										toast.error("Não foi possível adicionar a categoria");
+									}
+								}}
+								onRemoveTag={async (tagId) => {
+									try {
+										await apiRemoveTag(conversation.id, tagId);
+										await Promise.all([refetch(), refetchConversation()]);
+										toast.success("Categoria removida");
+									} catch {
+										toast.error("Não foi possível remover a categoria");
+									}
+								}}
 							onQuickReply={(content) => setQuickReplyText(content)}
 							onPriorityChange={handlePriorityChange}
 							onSnooze={() => setShowSnoozeDialog(true)}
@@ -2585,32 +2647,33 @@ export default function WhatsAppInboxPage() {
 									Nenhum membro encontrado
 								</div>
 							) : (
-								<div className="space-y-1">
-									{filteredMembers.map((member) => {
-										const wl = agentsWorkload.find(
-											(w) => w.agentId === member.userId,
-										);
-										return (
-											<button
-												key={member.id}
-												type="button"
-												className="w-full flex items-center gap-3 p-2 hover:bg-muted rounded-lg transition-colors text-left"
-												onClick={() => handleAssign(member.userId)}
-											>
-												<Avatar className="h-8 w-8">
-													<AvatarFallback className="text-xs">
-														{member.user?.name?.slice(0, 2).toUpperCase() ||
-															"??"}
-													</AvatarFallback>
-												</Avatar>
-												<div className="flex-1">
-													<p className="text-sm font-medium">
-														{member.user?.name || "Membro"}
-													</p>
-													<p className="text-xs text-muted-foreground">
-														{member.role}
-													</p>
-												</div>
+									<div className="space-y-1">
+										{filteredMembers.map((member) => {
+											const memberName = getMemberName(member);
+											const memberUserId = getMemberUserId(member);
+											const wl = agentsWorkload.find(
+												(w) => w.agentId === memberUserId,
+											);
+											return (
+												<button
+													key={member.id}
+													type="button"
+													className="w-full flex items-center gap-3 p-2 hover:bg-muted rounded-lg transition-colors text-left"
+													onClick={() => handleAssign(memberUserId)}
+												>
+													<Avatar className="h-8 w-8">
+														<AvatarFallback className="text-xs">
+															{memberName.slice(0, 2).toUpperCase()}
+														</AvatarFallback>
+													</Avatar>
+													<div className="flex-1">
+														<p className="text-sm font-medium">
+															{memberName}
+														</p>
+														<p className="text-xs text-muted-foreground">
+															{member.role || getMemberEmail(member) || "Equipe"}
+														</p>
+													</div>
 												{wl && (
 													<div className="text-right shrink-0">
 														<span
@@ -2661,32 +2724,36 @@ export default function WhatsAppInboxPage() {
 								<div className="text-sm text-muted-foreground text-center py-6">
 									Nenhum membro encontrado
 								</div>
-							) : (
-								<div className="space-y-1">
-									{filteredMembers.map((member) => (
-										<button
-											key={member.id}
-											type="button"
-											className="w-full flex items-center gap-3 p-2 hover:bg-muted rounded-lg transition-colors text-left"
-											onClick={() => handleTransfer(member.userId)}
-										>
-											<Avatar className="h-8 w-8">
-												<AvatarFallback className="text-xs">
-													{member.user?.name?.slice(0, 2).toUpperCase() || "??"}
-												</AvatarFallback>
-											</Avatar>
-											<div className="flex-1">
-												<p className="text-sm font-medium">
-													{member.user?.name || "Membro"}
-												</p>
-												<p className="text-xs text-muted-foreground">
-													{member.role}
-												</p>
-											</div>
-										</button>
-									))}
-								</div>
-							)}
+								) : (
+									<div className="space-y-1">
+										{filteredMembers.map((member) => {
+											const memberName = getMemberName(member);
+											const memberUserId = getMemberUserId(member);
+											return (
+												<button
+													key={member.id}
+													type="button"
+													className="w-full flex items-center gap-3 p-2 hover:bg-muted rounded-lg transition-colors text-left"
+													onClick={() => handleTransfer(memberUserId)}
+												>
+													<Avatar className="h-8 w-8">
+														<AvatarFallback className="text-xs">
+															{memberName.slice(0, 2).toUpperCase()}
+														</AvatarFallback>
+													</Avatar>
+													<div className="flex-1">
+														<p className="text-sm font-medium">
+															{memberName}
+														</p>
+														<p className="text-xs text-muted-foreground">
+															{member.role || getMemberEmail(member) || "Equipe"}
+														</p>
+													</div>
+												</button>
+											);
+										})}
+									</div>
+								)}
 						</ScrollArea>
 					</div>
 					<DialogFooter>

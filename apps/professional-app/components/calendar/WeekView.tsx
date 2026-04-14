@@ -8,7 +8,6 @@ import {
 	View,
 	Text,
 	StyleSheet,
-	ScrollView,
 	TouchableOpacity,
 	useWindowDimensions,
 } from "react-native";
@@ -25,6 +24,7 @@ import {
 import { ptBR } from "date-fns/locale";
 import { DraggableAptCard } from "./DraggableAptCard";
 import { getTimeParts } from "./utils";
+import { BidirectionalScroll } from "./BidirectionalScroll";
 
 interface WeekViewProps {
 	date: Date;
@@ -43,55 +43,27 @@ interface WeekViewProps {
 const HOUR_HEIGHT = 60;
 const DAYS_VISIBLE = 3;
 const TIME_LABEL_WIDTH_LOCAL = 35;
+const HEADER_HEIGHT = 50;
 
 export const WeekView = ({
 	date,
 	appointments,
 	startHour = 7,
-	endHour = 20,
+	endHour = 22,
 	onReschedule,
 	onRescheduleRequest,
 }: WeekViewProps) => {
-	const { width: screenWidth } = useWindowDimensions();
+	const { width: screenWidth, height: screenHeight } = useWindowDimensions();
 	const colors = useColors();
-	const headerScrollRef = useRef<ScrollView>(null);
-	const contentScrollRef = useRef<ScrollView>(null);
-	const verticalScrollRef = useRef<ScrollView>(null);
 
 	const dayWidth = (screenWidth - TIME_LABEL_WIDTH_LOCAL) / DAYS_VISIBLE;
-
 	const [scrollEnabled, setScrollEnabled] = useState(true);
 
 	const weekStart = startOfWeek(date, { weekStartsOn: 1 });
 
-	// We render 7 days (Monday to Sunday)
 	const days = useMemo(() => {
 		return Array.from({ length: 7 }, (_, idx) => addDays(weekStart, idx));
 	}, [weekStart]);
-
-	// Initial scroll
-	useEffect(() => {
-		const diff = differenceInDays(date, weekStart);
-		if (diff >= 0 && diff < 7) {
-			const scrollX = diff * dayWidth;
-			const timer = setTimeout(() => {
-				headerScrollRef.current?.scrollTo({ x: scrollX, animated: false });
-				contentScrollRef.current?.scrollTo({ x: scrollX, animated: false });
-			}, 100);
-			return () => clearTimeout(timer);
-		}
-	}, [weekStart, date, dayWidth]);
-
-	// Synchronize horizontal scrolls
-	const onHeaderScroll = (event: any) => {
-		const x = event.nativeEvent.contentOffset.x;
-		contentScrollRef.current?.scrollTo({ x, animated: false });
-	};
-
-	const onContentScroll = (event: any) => {
-		const x = event.nativeEvent.contentOffset.x;
-		headerScrollRef.current?.scrollTo({ x, animated: false });
-	};
 
 	const handleGridPress = (day: Date, hour: number) => {
 		const dateStr = format(day, "dd/MM/yyyy");
@@ -111,152 +83,149 @@ export const WeekView = ({
 		(_, i) => startHour + i,
 	);
 
+  const contentHeight = hours.length * HOUR_HEIGHT + HEADER_HEIGHT;
+  const contentWidth = dayWidth * 7 + TIME_LABEL_WIDTH_LOCAL;
+
+  const renderFixedHeader = () => (
+    <View style={{ flexDirection: 'row', height: HEADER_HEIGHT, backgroundColor: colors.background, paddingLeft: TIME_LABEL_WIDTH_LOCAL }}>
+      {days.map((day) => (
+        <View
+          key={`header-${day.toISOString()}`}
+          style={[styles.dayHeader, { width: dayWidth, borderBottomWidth: 1, borderBottomColor: colors.border }]}
+        >
+          <Text style={[styles.dayName, { color: colors.textSecondary }]}>
+            {format(day, "EEE", { locale: ptBR }).toUpperCase()}
+          </Text>
+          <Text
+            style={[
+              styles.dayNumber,
+              {
+                color: isSameDay(day, new Date())
+                  ? colors.primary
+                  : colors.text,
+              },
+            ]}
+          >
+            {format(day, "d")}
+          </Text>
+        </View>
+      ))}
+    </View>
+  );
+
+  const renderFixedColumn = () => (
+    <View style={{ width: TIME_LABEL_WIDTH_LOCAL, backgroundColor: colors.background, paddingTop: HEADER_HEIGHT }}>
+      {hours.map((hour) => (
+        <View key={hour} style={[styles.timeSlot, { height: HOUR_HEIGHT, borderRightWidth: 1, borderRightColor: colors.border }]}>
+          <Text style={[styles.timeText, { color: colors.textSecondary }]}>
+            {hour.toString().padStart(2, "0")}
+          </Text>
+        </View>
+      ))}
+    </View>
+  );
+
+  const renderCorner = () => (
+    <View style={{ 
+      width: TIME_LABEL_WIDTH_LOCAL, 
+      height: HEADER_HEIGHT, 
+      backgroundColor: colors.background, 
+      borderBottomWidth: 1, 
+      borderRightWidth: 1,
+      borderColor: colors.border 
+    }} />
+  );
+
 	return (
 		<View style={styles.container}>
-			{/* Sticky Header with horizontal sync */}
-			<View style={styles.stickyHeaderContainer}>
-				<View style={[styles.timeColumnSpacer, { width: TIME_LABEL_WIDTH_LOCAL }]} />
-				<ScrollView
-					ref={headerScrollRef}
-					horizontal
-					showsHorizontalScrollIndicator={false}
-					onScroll={onHeaderScroll}
-					scrollEventThrottle={16}
-					style={styles.horizontalScroll}
-				>
-					<View style={styles.daysHeaderRow}>
-						{days.map((day) => (
-							<View
-								key={`header-${day.toISOString()}`}
-								style={[styles.dayHeader, { width: dayWidth }]}
-							>
-								<Text style={[styles.dayName, { color: colors.textSecondary }]}>
-									{format(day, "EEE", { locale: ptBR }).toUpperCase()}
-								</Text>
-								<Text
-									style={[
-										styles.dayNumber,
-										{
-											color: isSameDay(day, new Date())
-												? colors.primary
-												: colors.text,
-										},
-									]}
-								>
-									{format(day, "d")}
-								</Text>
-							</View>
-						))}
-					</View>
-				</ScrollView>
-			</View>
+      <BidirectionalScroll
+        width={screenWidth}
+        height={screenHeight - 180} // Approx height adjustment for header/tabs
+        contentWidth={contentWidth}
+        contentHeight={contentHeight}
+        renderFixedHeader={renderFixedHeader}
+        renderFixedColumn={renderFixedColumn}
+        renderCorner={renderCorner}
+      >
+        <View style={{ paddingTop: HEADER_HEIGHT, paddingLeft: TIME_LABEL_WIDTH_LOCAL }}>
+          <View style={[styles.gridRow, { width: dayWidth * 7 }]}>
+            {/* Horizontal Grid Lines */}
+            <View style={styles.absoluteLines}>
+              {hours.map((hour) => (
+                <View
+                  key={`line-${hour}`}
+                  style={[
+                    styles.horizontalLine,
+                    { height: HOUR_HEIGHT, borderBottomColor: colors.border },
+                  ]}
+                />
+              ))}
+            </View>
 
-			<ScrollView
-				ref={verticalScrollRef}
-				style={styles.container}
-				contentContainerStyle={styles.verticalContent}
-				scrollEnabled={scrollEnabled}
-			>
-				<View style={styles.mainRow}>
-					{/* Fixed Time Column (moves vertically with scroll) */}
-					<View style={[styles.timeColumn, { width: TIME_LABEL_WIDTH_LOCAL }]}>
-						{hours.map((hour) => (
-							<View key={hour} style={[styles.timeSlot, { height: HOUR_HEIGHT }]}>
-								<Text style={[styles.timeText, { color: colors.textSecondary }]}>
-									{hour.toString().padStart(2, "0")}
-								</Text>
-							</View>
-						))}
-					</View>
+            {/* Columns */}
+            <View style={styles.columnsContainer}>
+              {days.map((day) => (
+                <View
+                  key={`col-${day.toISOString()}`}
+                  style={[
+                    styles.dayColumn,
+                    {
+                      width: dayWidth,
+                      borderRightWidth: 1,
+                      borderRightColor: colors.border,
+                    },
+                  ]}
+                >
+                  {/* Touchable slots */}
+                  {hours.map((hour) => (
+                    <TouchableOpacity
+                      key={`slot-${day.toISOString()}-${hour}`}
+                      style={{ height: HOUR_HEIGHT, width: "100%" }}
+                      onPress={() => handleGridPress(day, hour)}
+                    />
+                  ))}
 
-					{/* Horizontal Scrollable Grid */}
-					<ScrollView
-						ref={contentScrollRef}
-						horizontal
-						showsHorizontalScrollIndicator={false}
-						onScroll={onContentScroll}
-						scrollEventThrottle={16}
-						style={styles.horizontalScroll}
-					>
-						<View style={[styles.gridRow, { width: dayWidth * 7 }]}>
-							{/* Horizontal Grid Lines */}
-							<View style={styles.absoluteLines}>
-								{hours.map((hour) => (
-									<View
-										key={`line-${hour}`}
-										style={[
-											styles.horizontalLine,
-											{ height: HOUR_HEIGHT, borderBottomColor: colors.border },
-										]}
-									/>
-								))}
-							</View>
+                  {/* Appointments */}
+                  {getAppointmentsForDay(day).map((apt) => {
+                    const { hour, minutes } = getTimeParts(apt.time, apt.date);
+                    if (hour < startHour || hour > endHour) return null;
 
-							{/* Columns */}
-							<View style={styles.columnsContainer}>
-								{days.map((day) => (
-									<View
-										key={`col-${day.toISOString()}`}
-										style={[
-											styles.dayColumn,
-											{
-												width: dayWidth,
-												borderRightWidth: 1,
-												borderRightColor: colors.border,
-											},
-										]}
-									>
-										{/* Touchable slots */}
-										{hours.map((hour) => (
-											<TouchableOpacity
-												key={`slot-${day.toISOString()}-${hour}`}
-												style={{ height: HOUR_HEIGHT, width: "100%" }}
-												onPress={() => handleGridPress(day, hour)}
-											/>
-										))}
+                    const top =
+                      (hour - startHour) * HOUR_HEIGHT +
+                      (minutes / 60) * HOUR_HEIGHT;
+                    const height = (apt.duration / 60) * HOUR_HEIGHT;
+                    const aptWithPos = { ...apt, top, height };
 
-										{/* Appointments */}
-										{getAppointmentsForDay(day).map((apt) => {
-											const { hour, minutes } = getTimeParts(apt.time, apt.date);
-											if (hour < startHour || hour > endHour) return null;
-
-											const top =
-												(hour - startHour) * HOUR_HEIGHT +
-												(minutes / 60) * HOUR_HEIGHT;
-											const height = (apt.duration / 60) * HOUR_HEIGHT;
-											const aptWithPos = { ...apt, top, height };
-
-											return (
-												<DraggableAptCard
-													key={apt.id}
-													apt={aptWithPos}
-													pos={{ left: 2, width: dayWidth - 4 }}
-													startHour={startHour}
-													endHour={endHour}
-													hourHeight={HOUR_HEIGHT}
-													targetDay={day}
-													allDays={days}
-													columnWidth={dayWidth}
-													onReschedule={onReschedule}
-													onRescheduleRequest={onRescheduleRequest}
-													onScrollEnable={setScrollEnabled}
-													colors={{
-														primary: colors.primary,
-														textSecondary: colors.textSecondary,
-													}}
-													onPress={() =>
-														router.push(`/appointment-form?id=${apt.id}` as any)
-													}
-												/>
-											);
-										})}
-									</View>
-								))}
-							</View>
-						</View>
-					</ScrollView>
-				</View>
-			</ScrollView>
+                    return (
+                      <DraggableAptCard
+                        key={apt.id}
+                        apt={aptWithPos}
+                        pos={{ left: 2, width: dayWidth - 4 }}
+                        startHour={startHour}
+                        endHour={endHour}
+                        hourHeight={HOUR_HEIGHT}
+                        targetDay={day}
+                        allDays={days}
+                        columnWidth={dayWidth}
+                        onReschedule={onReschedule}
+                        onRescheduleRequest={onRescheduleRequest}
+                        onScrollEnable={setScrollEnabled}
+                        colors={{
+                          primary: colors.primary,
+                          textSecondary: colors.textSecondary,
+                        }}
+                        onPress={() =>
+                          router.push(`/appointment-form?id=${apt.id}` as any)
+                        }
+                      />
+                    );
+                  })}
+                </View>
+              ))}
+            </View>
+          </View>
+        </View>
+      </BidirectionalScroll>
 		</View>
 	);
 };
@@ -266,28 +235,6 @@ const styles = StyleSheet.create({
 		flex: 1,
 		backgroundColor: "#fff",
 	},
-	stickyHeaderContainer: {
-		flexDirection: "row",
-		borderBottomWidth: 1,
-		borderColor: "#e5e5e5",
-		backgroundColor: "#fff",
-		zIndex: 20,
-	},
-	timeColumnSpacer: {
-		borderRightWidth: 1,
-		borderColor: "#e5e5e5",
-	},
-	verticalContent: {
-		paddingBottom: 40,
-	},
-	mainRow: {
-		flexDirection: "row",
-	},
-	timeColumn: {
-		backgroundColor: "#fff",
-		borderRightWidth: 1,
-		borderColor: "#e5e5e5",
-	},
 	timeSlot: {
 		justifyContent: "center",
 		alignItems: "center",
@@ -295,13 +242,6 @@ const styles = StyleSheet.create({
 	timeText: {
 		fontSize: 9,
 		fontWeight: "600",
-	},
-	horizontalScroll: {
-		flex: 1,
-	},
-	daysHeaderRow: {
-		flexDirection: "row",
-		height: 50,
 	},
 	dayHeader: {
 		alignItems: "center",
@@ -338,4 +278,3 @@ const styles = StyleSheet.create({
 		position: "relative",
 	},
 });
-

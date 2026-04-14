@@ -5,9 +5,167 @@ import type { Env } from "../types/env";
 
 const app = new Hono<{ Bindings: Env; Variables: AuthVariables }>();
 
+const PROFILE_SELECT_COLUMNS = [
+	"id",
+	"user_id",
+	"name",
+	"email",
+	"full_name",
+	"phone",
+	"role",
+	"crefito",
+	"specialties",
+	"bio",
+	"avatar_url",
+	"address",
+	"birth_date",
+	"slug",
+	"organization_id",
+	"email_verified",
+	"preferences",
+	"created_at",
+	"updated_at",
+] as const;
+
+const PROFILE_SELECT_COLUMN_SQL = PROFILE_SELECT_COLUMNS.map(
+	(column) => `'${column}'`,
+).join(", ");
+
+type ProfileColumn = (typeof PROFILE_SELECT_COLUMNS)[number];
+type ProfileColumnMap = Partial<
+	Record<ProfileColumn, { dataType: string; udtName: string }>
+>;
+
+async function getProfileColumns(
+	pool: ReturnType<typeof createPool>,
+): Promise<ProfileColumnMap> {
+	const result = await pool.query(
+		`
+      SELECT column_name, data_type, udt_name
+      FROM information_schema.columns
+      WHERE table_schema = 'public'
+        AND table_name = 'profiles'
+        AND column_name IN (${PROFILE_SELECT_COLUMN_SQL})
+    `,
+	);
+
+	return Object.fromEntries(
+		result.rows.map(
+			(row: {
+				column_name?: unknown;
+				data_type?: unknown;
+				udt_name?: unknown;
+			}) => [
+				row.column_name as ProfileColumn,
+				{
+					dataType: String(row.data_type ?? ""),
+					udtName: String(row.udt_name ?? ""),
+				},
+			],
+		),
+	) as ProfileColumnMap;
+}
+
+function hasProfileColumn(
+	columns: ProfileColumnMap,
+	column: ProfileColumn,
+): boolean {
+	return Boolean(columns[column]);
+}
+
+function selectColumnOrNull(
+	columns: ProfileColumnMap,
+	column: ProfileColumn,
+	pgType: string,
+): string {
+	return hasProfileColumn(columns, column)
+		? `"${column}"`
+		: `NULL::${pgType} AS "${column}"`;
+}
+
+function buildFullNameSelect(columns: ProfileColumnMap): string {
+	const fallbacks: string[] = [];
+	if (hasProfileColumn(columns, "full_name")) {
+		fallbacks.push(`NULLIF("full_name", '')`);
+	}
+	if (hasProfileColumn(columns, "name")) {
+		fallbacks.push(`NULLIF("name", '')`);
+	}
+	if (hasProfileColumn(columns, "email")) {
+		fallbacks.push(`NULLIF(split_part("email", '@', 1), '')`);
+	}
+	fallbacks.push(`'Usuário'`);
+
+	return `COALESCE(${fallbacks.join(", ")}) AS "full_name"`;
+}
+
+function buildAddressSelect(columns: ProfileColumnMap): string {
+	const address = columns.address;
+	if (!address) return `NULL::text AS "address"`;
+
+	if (address.dataType === "jsonb" || address.dataType === "json") {
+		return `
+      CASE
+        WHEN "address" IS NULL THEN NULL
+        WHEN jsonb_typeof("address"::jsonb) = 'string' THEN "address"::jsonb #>> '{}'
+        WHEN "address"::jsonb ? 'formatted' THEN "address"::jsonb ->> 'formatted'
+        ELSE "address"::text
+      END AS "address"
+    `;
+	}
+
+	return `"address"::text AS "address"`;
+}
+
+function buildSpecialtySelects(columns: ProfileColumnMap): string[] {
+	const specialties = columns.specialties;
+	if (!specialties) {
+		return [`NULL::jsonb AS "specialties"`, `NULL::text AS "specialty"`];
+	}
+
+	if (specialties.dataType === "jsonb" || specialties.dataType === "json") {
+		return [
+			`"specialties"`,
+			`
+        CASE
+          WHEN "specialties" IS NULL THEN NULL
+          WHEN jsonb_typeof("specialties"::jsonb) = 'array' THEN "specialties"::jsonb ->> 0
+          WHEN jsonb_typeof("specialties"::jsonb) = 'string' THEN "specialties"::jsonb #>> '{}'
+          ELSE NULL
+        END AS "specialty"
+      `,
+		];
+	}
+
+	return [`"specialties"`, `"specialties"::text AS "specialty"`];
+}
+
+function buildProfileSelectList(columns: ProfileColumnMap): string {
+	return [
+		selectColumnOrNull(columns, "id", "uuid"),
+		selectColumnOrNull(columns, "user_id", "text"),
+		selectColumnOrNull(columns, "email", "text"),
+		buildFullNameSelect(columns),
+		selectColumnOrNull(columns, "phone", "text"),
+		selectColumnOrNull(columns, "role", "text"),
+		selectColumnOrNull(columns, "crefito", "text"),
+		...buildSpecialtySelects(columns),
+		selectColumnOrNull(columns, "bio", "text"),
+		selectColumnOrNull(columns, "avatar_url", "text"),
+		buildAddressSelect(columns),
+		selectColumnOrNull(columns, "birth_date", "date"),
+		selectColumnOrNull(columns, "slug", "text"),
+		selectColumnOrNull(columns, "organization_id", "uuid"),
+		selectColumnOrNull(columns, "email_verified", "boolean"),
+		selectColumnOrNull(columns, "preferences", "jsonb"),
+		selectColumnOrNull(columns, "created_at", "timestamp"),
+		selectColumnOrNull(columns, "updated_at", "timestamp"),
+	].join(",\n        ");
+}
+
 app.get("/me", requireAuth, async (c) => {
 	const user = c.get("user");
-	const db = createDb(c.env);
+	const pool = createPool(c.env);
 
 	const fallbackProfile = {
 		id: user.uid,
@@ -20,24 +178,44 @@ app.get("/me", requireAuth, async (c) => {
 	};
 
 	try {
-		const profile = await db.query.profiles.findFirst({
-			where: (profiles, { eq }) => eq(profiles.userId, user.uid),
-		});
+		const columns = await getProfileColumns(pool);
+		const whereColumn = hasProfileColumn(columns, "user_id")
+			? "user_id"
+			: hasProfileColumn(columns, "id")
+				? "id"
+				: null;
 
-		if (!profile) return c.json({ data: fallbackProfile });
+		if (!whereColumn) return c.json({ data: fallbackProfile });
+
+		const profile = await pool.query(
+			`
+        SELECT
+        ${buildProfileSelectList(columns)}
+        FROM profiles
+        WHERE "${whereColumn}"::text = $1
+        LIMIT 1
+      `,
+			[user.uid],
+		);
+
+		if (!profile.rows.length) return c.json({ data: fallbackProfile });
+		const row = profile.rows[0];
 
 		return c.json({
 			data: {
-				id: profile.id,
-				user_id: profile.userId,
-				email: profile.email,
-				full_name: profile.fullName,
-				role: profile.role,
-				organization_id: profile.organizationId,
+				...fallbackProfile,
+				...row,
+				id: row.id ?? fallbackProfile.id,
+				user_id: row.user_id ?? fallbackProfile.user_id,
+				email: row.email ?? fallbackProfile.email,
+				full_name: row.full_name ?? fallbackProfile.full_name,
+				role: row.role ?? fallbackProfile.role,
+				organization_id: row.organization_id ?? fallbackProfile.organization_id,
+				email_verified: Boolean(row.email_verified),
 			},
 		});
 	} catch (error) {
-		console.error("[Profile/Me] Drizzle error:", error);
+		console.error("[Profile/Me] error:", error);
 		return c.json({ data: fallbackProfile });
 	}
 });

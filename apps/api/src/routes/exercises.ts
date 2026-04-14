@@ -1,13 +1,5 @@
-/**
- * Rotas: Exercícios e Categorias
- * GET /api/exercises          — lista com filtros
- * GET /api/exercises/:id      — detalhe
- * GET /api/exercises/categories — categorias
- * POST /api/exercises/:id/favorite  — favoritar (auth)
- * DELETE /api/exercises/:id/favorite — desfavoritar (auth)
- */
 import { Hono } from 'hono';
-import { eq, and, ilike, inArray, sql } from 'drizzle-orm';
+import { eq, and, inArray, sql } from 'drizzle-orm';
 import { createDb } from '../lib/db';
 import { requireAuth, type AuthVariables } from '../lib/auth';
 import type { Env } from '../types/env';
@@ -16,6 +8,7 @@ import {
   exerciseCategories,
   exerciseFavorites,
 } from '@fisioflow/db';
+import { generateEmbedding } from '../lib/ai-native';
 
 const app = new Hono<{ Bindings: Env; Variables: AuthVariables }>();
 
@@ -44,6 +37,18 @@ async function kvDelete(env: Env, ...keys: string[]): Promise<void> {
   await Promise.allSettled(keys.map((k) => kv.delete(k)));
 }
 
+async function invalidateListCache(env: Env): Promise<void> {
+  // Invalida as primeiras 5 páginas dos limites padrão
+  const commonLimits = ['20', '50', '500'];
+  const keys: string[] = [];
+  for (const limit of commonLimits) {
+    for (let p = 1; p <= 5; p++) {
+      keys.push(`${KV_LIST_PREFIX}p${p}:l${limit}`);
+    }
+  }
+  await kvDelete(env, ...keys);
+}
+
 // ===== CATEGORIAS =====
 app.get('/categories', async (c) => {
   const cached = await kvGet(c.env, KV_CATEGORIES);
@@ -61,10 +66,19 @@ app.get('/categories', async (c) => {
 
 // ===== LISTA DE EXERCÍCIOS =====
 app.get('/', async (c) => {
-  const { q, category, difficulty, page = '1', limit = '20' } = c.req.query();
+  const {
+    q,
+    category,
+    difficulty,
+    bodyPart,
+    equipment,
+    page = '1',
+    limit = '20',
+    favorites,
+  } = c.req.query();
 
   // Cache only unfiltered requests (most common: browsing the library)
-  const isDefaultQuery = !q && !category && !difficulty;
+  const isDefaultQuery = !q && !category && !difficulty && !bodyPart && !equipment;
   const cacheKey = isDefaultQuery ? `${KV_LIST_PREFIX}p${page}:l${limit}` : null;
 
   if (cacheKey) {
@@ -80,29 +94,60 @@ app.get('/', async (c) => {
 
   const conditions = [eq(exercises.isActive, true), eq(exercises.isPublic, true)];
 
-  if (q) conditions.push(ilike(exercises.name, `%${q}%`));
-  if (difficulty) {
+  if (q && q.trim().length > 0) {
+    // Usando Full-Text Search unificado com websearch_to_tsquery para busca mais natural
     conditions.push(
-      eq(exercises.difficulty, difficulty as 'iniciante' | 'intermediario' | 'avancado'),
+      sql`to_tsvector('portuguese', 
+        ${exercises.name} || ' ' || 
+        coalesce(${exercises.description}, '') || ' ' || 
+        array_to_string(${exercises.tags}, ' ') || ' ' || 
+        array_to_string(${exercises.bodyParts}, ' ')
+      ) @@ websearch_to_tsquery('portuguese', ${q})`,
     );
   }
 
-  // Filtros por categoryId (busca slug da categoria primeiro)
-  let categoryCondition = null;
-  if (category) {
-    const cat = await db
-      .select({ id: exerciseCategories.id })
-      .from(exerciseCategories)
-      .where(eq(exerciseCategories.slug, category))
-      .limit(1);
-    if (cat.length > 0) {
-      categoryCondition = eq(exercises.categoryId, cat[0].id);
+  if (difficulty) {
+    // Suporte a aliases EN/PT para dificuldade
+    const difficultyMap: Record<string, "iniciante" | "intermediario" | "avancado"> = {
+      easy: 'iniciante',
+      iniciante: 'iniciante',
+      medium: 'intermediario',
+      intermediario: 'intermediario',
+      hard: 'avancado',
+      avancado: 'avancado',
+    };
+    const mapped = difficultyMap[difficulty.toLowerCase()];
+    if (mapped) {
+      conditions.push(eq(exercises.difficulty, mapped));
     }
   }
 
-  const where = categoryCondition
-    ? and(...conditions, categoryCondition)
-    : and(...conditions);
+  if (bodyPart) {
+    conditions.push(sql`${bodyPart} = ANY(${exercises.bodyParts})`);
+  }
+
+  if (equipment) {
+    conditions.push(sql`${equipment} = ANY(${exercises.equipment})`);
+  }
+
+  if (category && category !== "Todos") {
+    conditions.push(eq(exerciseCategories.slug, category));
+  }
+
+  if (favorites === 'true') {
+    const authUser = c.get('user');
+    if (authUser) {
+      conditions.push(
+        sql`EXISTS (
+          SELECT 1 FROM ${exerciseFavorites}
+          WHERE ${exerciseFavorites.exerciseId} = ${exercises.id}
+          AND ${exerciseFavorites.userId} = ${authUser.uid}
+        )`,
+      );
+    }
+  }
+
+  const where = and(...conditions);
 
   const [rows, countResult] = await Promise.all([
     db
@@ -111,6 +156,7 @@ app.get('/', async (c) => {
         slug: exercises.slug,
         name: exercises.name,
         categoryId: exercises.categoryId,
+        categoryName: exerciseCategories.name,
         difficulty: exercises.difficulty,
         imageUrl: exercises.imageUrl,
         thumbnailUrl: exercises.thumbnailUrl,
@@ -120,13 +166,25 @@ app.get('/', async (c) => {
         equipment: exercises.equipment,
         durationSeconds: exercises.durationSeconds,
         description: exercises.description,
+        tags: exercises.tags,
       })
       .from(exercises)
+      .leftJoin(
+        exerciseCategories,
+        eq(exercises.categoryId, exerciseCategories.id),
+      )
       .where(where)
       .orderBy(exercises.name)
       .limit(limitNum)
       .offset(offset),
-    db.select({ count: sql<number>`count(*)` }).from(exercises).where(where),
+    db
+      .select({ count: sql<number>`count(*)` })
+      .from(exercises)
+      .leftJoin(
+        exerciseCategories,
+        eq(exercises.categoryId, exerciseCategories.id),
+      )
+      .where(where),
   ]);
 
   const total = Number(countResult[0]?.count ?? 0);
@@ -146,6 +204,7 @@ app.get('/', async (c) => {
 
   return c.json(response);
 });
+
 
 // ===== DETALHE DO EXERCÍCIO =====
 app.get('/:id', async (c) => {
@@ -202,18 +261,24 @@ app.get('/favorites/me', requireAuth, async (c) => {
   const db = await createDb(c.env);
   const user = c.get('user');
 
-  const favs = await db
-    .select({ exerciseId: exerciseFavorites.exerciseId })
-    .from(exerciseFavorites)
-    .where(eq(exerciseFavorites.userId, user.uid));
-
-  if (!favs.length) return c.json({ data: [] });
-
-  const ids = favs.map((f) => f.exerciseId);
   const rows = await db
-    .select()
-    .from(exercises)
-    .where(and(inArray(exercises.id, ids), eq(exercises.isActive, true)));
+    .select({
+      id: exercises.id,
+      slug: exercises.slug,
+      name: exercises.name,
+      categoryId: exercises.categoryId,
+      categoryName: exerciseCategories.name,
+      difficulty: exercises.difficulty,
+      imageUrl: exercises.imageUrl,
+      thumbnailUrl: exercises.thumbnailUrl,
+      videoUrl: exercises.videoUrl,
+      durationSeconds: exercises.durationSeconds,
+      description: exercises.description,
+    })
+    .from(exerciseFavorites)
+    .innerJoin(exercises, eq(exerciseFavorites.exerciseId, exercises.id))
+    .leftJoin(exerciseCategories, eq(exercises.categoryId, exerciseCategories.id))
+    .where(and(eq(exerciseFavorites.userId, user.uid), eq(exercises.isActive, true)));
 
   return c.json({ data: rows });
 });
@@ -232,7 +297,31 @@ app.post('/', requireAuth, async (c) => {
     })
     .returning();
 
-  c.executionCtx.waitUntil(kvDelete(c.env, KV_LIST_PREFIX + 'p1:l20', KV_LIST_PREFIX + 'p1:l500'));
+  // Background tasks: Invalidate cache and update embedding/vectorize
+  c.executionCtx.waitUntil((async () => {
+    await invalidateListCache(c.env);
+    
+    // Generate embedding and update Vectorize if binding exists
+    if (c.env.CLINICAL_KNOWLEDGE) {
+      try {
+	        const categoryLabel = row.subcategory || row.categoryId || '';
+	        const textToEmbed = `${row.name} ${row.description || ''} ${categoryLabel} ${row.bodyParts?.join(' ') || ''}`.trim();
+	        const vector = await generateEmbedding(c.env, textToEmbed);
+	        if (vector.length > 0) {
+	          await c.env.CLINICAL_KNOWLEDGE.upsert([{
+	            id: row.id,
+	            values: vector,
+	            metadata: { name: row.name, category: categoryLabel }
+	          }]);
+          // Update DB embedding for hybrid search potential
+          await db.update(exercises).set({ embedding: vector }).where(eq(exercises.id, row.id));
+        }
+      } catch (e) {
+        console.error('[Exercises] Failed to update semantic index:', e);
+      }
+    }
+  })());
+
   return c.json({ data: row });
 });
 
@@ -258,7 +347,7 @@ app.put('/:id', requireAuth, async (c) => {
 
   if (!row) return c.json({ error: 'Exercício não encontrado' }, 404);
 
-  c.executionCtx.waitUntil(kvDelete(c.env, KV_LIST_PREFIX + 'p1:l20', KV_LIST_PREFIX + 'p1:l500'));
+  c.executionCtx.waitUntil(invalidateListCache(c.env));
   return c.json({ data: row });
 });
 
@@ -278,13 +367,12 @@ app.delete('/:id', requireAuth, async (c) => {
 
   if (!row) return c.json({ error: 'Exercício não encontrado' }, 404);
 
-  c.executionCtx.waitUntil(kvDelete(c.env, KV_LIST_PREFIX + 'p1:l20', KV_LIST_PREFIX + 'p1:l500'));
+  c.executionCtx.waitUntil(invalidateListCache(c.env));
   return c.json({ ok: true });
 });
 
-// ===== BUSCA SEMÂNTICA (por nome, descrição e tags) =====
+// ===== BUSCA SEMÂNTICA (AI Powered via Vectorize) =====
 app.get('/search/semantic', async (c) => {
-  const db = await createDb(c.env);
   const { q, limit = '10' } = c.req.query();
 
   if (!q || q.trim().length < 2) {
@@ -293,6 +381,38 @@ app.get('/search/semantic', async (c) => {
 
   const limitNum = Math.min(50, Math.max(1, parseInt(limit)));
 
+  // 1. If Vectorize is available, use it
+  if (c.env.CLINICAL_KNOWLEDGE) {
+    try {
+      const vector = await generateEmbedding(c.env, q);
+      const matches = await c.env.CLINICAL_KNOWLEDGE.query(vector, { 
+        limit: limitNum,
+        topK: limitNum // Vectorize query options
+      } as any);
+
+      if (matches.matches && matches.matches.length > 0) {
+        const matchedIds = matches.matches.map(m => m.id);
+        const db = await createDb(c.env);
+        const rows = await db
+          .select()
+          .from(exercises)
+          .where(and(
+            inArray(exercises.id, matchedIds),
+            eq(exercises.isActive, true)
+          ));
+        
+        // Sort rows by the original match order (relevance)
+        const sortedRows = matchedIds.map(id => rows.find(r => r.id === id)).filter(Boolean);
+        return c.json({ data: sortedRows, meta: { method: 'vector' } });
+      }
+    } catch (e) {
+      console.error('[Exercises] Semantic search error:', e);
+      // Fallback below
+    }
+  }
+
+  // 2. Fallback to optimized Text Search (websearch)
+  const db = await createDb(c.env);
   const rows = await db
     .select()
     .from(exercises)
@@ -300,17 +420,17 @@ app.get('/search/semantic', async (c) => {
       and(
         eq(exercises.isActive, true),
         eq(exercises.isPublic, true),
-        sql`(
-          ${exercises.name} ILIKE ${'%' + q + '%'}
-          OR ${exercises.description} ILIKE ${'%' + q + '%'}
-          OR ${exercises.tags}::text ILIKE ${'%' + q + '%'}
-          OR ${exercises.bodyParts}::text ILIKE ${'%' + q + '%'}
-        )`,
+        sql`to_tsvector('portuguese', 
+          ${exercises.name} || ' ' || 
+          coalesce(${exercises.description}, '') || ' ' || 
+          array_to_string(${exercises.tags}, ' ') || ' ' || 
+          array_to_string(${exercises.bodyParts}, ' ')
+        ) @@ websearch_to_tsquery('portuguese', ${q})`,
       ),
     )
     .limit(limitNum);
 
-  return c.json({ data: rows });
+  return c.json({ data: rows, meta: { method: 'text' } });
 });
 
 export { app as exercisesRoutes };

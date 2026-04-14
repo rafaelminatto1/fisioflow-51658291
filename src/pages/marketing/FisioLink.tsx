@@ -117,7 +117,7 @@ export default function FisioLinkPage() {
 			} else {
 				throw new Error(result.error || "Falha ao gerar");
 			}
-		} catch  {
+		} catch {
 			toast.error("Erro ao gerar bio com IA");
 		} finally {
 			setIsGeneratingAI(false);
@@ -133,7 +133,7 @@ export default function FisioLinkPage() {
 			});
 			setSlug(newSlug);
 			toast.success("FisioLink configurado com sucesso");
-		} catch  {
+		} catch {
 			toast.error("Erro ao salvar configuração");
 		} finally {
 			setSaving(false);
@@ -463,7 +463,7 @@ export default function FisioLinkPage() {
 										<div className="space-y-2">
 											{config.whatsapp_number && (
 												<a
-													href={`https://wa.me/${config.whatsapp_number}`}
+													href={`https://wa.me/${config.whatsapp_number.replace(/\D/g, "")}`}
 													target="_blank"
 													rel="noopener noreferrer"
 													className="flex items-center gap-3 p-3 rounded-lg bg-green-500 text-white hover:bg-green-600 transition-colors"
@@ -489,7 +489,7 @@ export default function FisioLinkPage() {
 
 											{config.phone && (
 												<a
-													href={`tel:${config.phone}`}
+													href={`tel:${config.phone.replace(/\D/g, "")}`}
 													className="flex items-center gap-3 p-3 rounded-lg bg-gray-800 text-white hover:bg-gray-700 transition-colors"
 												>
 													<Phone className="h-5 w-5" />
