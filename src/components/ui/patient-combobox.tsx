@@ -219,50 +219,49 @@ export function PatientCombobox({
 			loop
 			className={cn(
 				"relative rounded-[inherit] bg-transparent",
-				inline && "rounded-2xl border border-border/60 bg-white dark:bg-slate-950",
+				inline && "rounded-2xl border border-slate-200 bg-white shadow-sm overflow-hidden",
 			)}
 		>
-			<div className="absolute inset-x-8 top-0 h-px bg-gradient-to-r from-transparent via-white/80 to-transparent" />
 			<div
 				className={cn(
-					"border-b border-border/60 px-3 py-3.5",
+					"px-3 py-3",
 					!inline &&
-						"bg-[radial-gradient(circle_at_top_left,rgba(59,130,246,0.07),transparent_26%),linear-gradient(180deg,rgba(248,250,252,0.92),rgba(248,250,252,0.78))] dark:bg-[radial-gradient(circle_at_top_left,rgba(59,130,246,0.12),transparent_28%),linear-gradient(180deg,rgba(2,6,23,0.96),rgba(2,6,23,0.88))]",
-					inline && "bg-slate-50/50 dark:bg-slate-900/50 rounded-t-2xl",
+						"border-b border-border/60 bg-[radial-gradient(circle_at_top_left,rgba(59,130,246,0.07),transparent_26%),linear-gradient(180deg,rgba(248,250,252,0.92),rgba(248,250,252,0.78))] dark:bg-[radial-gradient(circle_at_top_left,rgba(59,130,246,0.12),transparent_28%),linear-gradient(180deg,rgba(2,6,23,0.96),rgba(2,6,23,0.88))]",
+					inline && "bg-slate-50/30",
 				)}
 			>
-				<div className="mb-3 flex items-center justify-between gap-3">
-					<div className="min-w-0">
-						<p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-primary/75">
-							Buscar paciente
-						</p>
-						<p className="truncate text-xs text-muted-foreground">
-							{inline && inputValue.length < 3
-								? "Digite 3 ou mais caracteres para buscar"
-								: "Encontre rapidamente por nome, CPF ou telefone"}
-						</p>
+				{!inline && (
+					<div className="mb-3 flex items-center justify-between gap-3">
+						<div className="min-w-0">
+							<p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-primary/75">
+								Buscar paciente
+							</p>
+							<p className="truncate text-xs text-muted-foreground">
+								Encontre rapidamente por nome, CPF ou telefone
+							</p>
+						</div>
+						{filteredPatients.length > 0 && (
+							<span className="shrink-0 rounded-full border border-white/70 bg-white/80 px-2.5 py-1 text-[11px] font-semibold text-slate-600 shadow-sm backdrop-blur dark:border-white/10 dark:bg-white/5 dark:text-slate-200">
+								{filteredPatients.length}{" "}
+								{filteredPatients.length === 1 ? "resultado" : "resultados"}
+							</span>
+						)}
 					</div>
-					{filteredPatients.length > 0 && (
-						<span className="shrink-0 rounded-full border border-white/70 bg-white/80 px-2.5 py-1 text-[11px] font-semibold text-slate-600 shadow-sm backdrop-blur dark:border-white/10 dark:bg-white/5 dark:text-slate-200">
-							{filteredPatients.length}{" "}
-							{filteredPatients.length === 1 ? "resultado" : "resultados"}
-						</span>
-					)}
-				</div>
+				)}
 
 				<CommandInput
 					ref={inputRef}
 					data-testid="patient-search"
-					placeholder="Buscar por nome, CPF ou telefone..."
+					placeholder="Digite o nome, CPF ou telefone para buscar..."
 					value={inputValue}
 					onValueChange={setInputValue}
 					autoFocus={inline}
 					wrapperClassName={cn(
-						"mx-0 mt-0 rounded-2xl border border-white/80 bg-white/85 px-3 shadow-[inset_0_1px_0_rgba(255,255,255,0.7),0_12px_24px_-20px_rgba(15,23,42,0.45)] backdrop-blur dark:border-white/10 dark:bg-white/5",
-						inline && "shadow-none border-border/60 bg-white",
+						"mx-0 mt-0 rounded-xl border border-slate-200 bg-white px-3 shadow-sm transition-all focus-within:border-blue-500/50 focus-within:ring-4 focus-within:ring-blue-500/5",
+						!inline && "border-white/80 bg-white/85 shadow-[inset_0_1px_0_rgba(255,255,255,0.7),0_12px_24px_-20px_rgba(15,23,42,0.45)] backdrop-blur dark:border-white/10 dark:bg-white/5",
 					)}
-					iconClassName="text-primary/70"
-					className="h-12 py-0 text-sm"
+					iconClassName="text-slate-400"
+					className="h-11 py-0 text-sm"
 					onKeyDown={(e) => {
 						if (e.key === "Enter") {
 							if (
@@ -276,7 +275,14 @@ export function PatientCombobox({
 						}
 					}}
 				/>
+				
+				{inline && inputValue.length > 0 && inputValue.length < 3 && (
+					<p className="mt-2 text-[10px] font-medium text-slate-400 text-center animate-in fade-in zoom-in-95 duration-200">
+						Digite pelo menos 3 caracteres para buscar...
+					</p>
+				)}
 			</div>
+
 
 			<CommandList className={cn("max-h-[22rem] overflow-y-auto px-2 pb-2 pt-1.5")}>
 				{inputValue.length >= (inline ? 3 : 0) && filteredPatients.length === 0 && (
@@ -423,12 +429,12 @@ export function PatientCombobox({
 				{(selectedPatient || hasFallbackDisplay) && (
 					<div
 						className={cn(
-							"flex h-auto min-h-[60px] w-full items-center gap-3 overflow-hidden rounded-2xl border border-primary/20 bg-primary/[0.02] px-3 py-3 shadow-sm",
+							"flex h-auto items-center gap-3 overflow-hidden rounded-2xl border border-primary/20 bg-primary/[0.03] px-4 py-3 shadow-sm animate-in fade-in slide-in-from-top-2 duration-300",
 						)}
 					>
 						<div
 							className={cn(
-								"relative flex h-11 w-11 shrink-0 items-center justify-center overflow-hidden rounded-2xl border border-primary/15 bg-gradient-to-br from-primary/20 via-primary/10 to-sky-500/10 text-[11px] font-semibold tracking-[0.16em] text-primary shadow-sm",
+								"relative flex h-10 w-10 shrink-0 items-center justify-center overflow-hidden rounded-xl border border-primary/15 bg-gradient-to-br from-primary/20 via-primary/10 to-sky-500/10 text-[10px] font-bold tracking-[0.16em] text-primary shadow-sm",
 							)}
 						>
 							<span className="relative">
@@ -441,15 +447,12 @@ export function PatientCombobox({
 						</div>
 
 						<div className="flex min-w-0 flex-1 flex-col items-start text-left leading-tight">
-							<span className="mb-1 rounded-full bg-primary/10 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-[0.18em] text-primary/80">
-								Paciente Selecionado
-							</span>
-							<span className="truncate text-sm font-semibold text-foreground">
+							<span className="truncate text-sm font-semibold text-slate-900">
 								{selectedPatient
 									? getPatientName(selectedPatient)
 									: fallbackDisplayName}
 							</span>
-							<span className="truncate text-xs text-muted-foreground">
+							<span className="truncate text-[11px] text-slate-500 font-medium">
 								{selectedPatient
 									? getPatientMeta(selectedPatient)
 									: getPatientMeta(undefined, fallbackDescription)}
@@ -460,15 +463,22 @@ export function PatientCombobox({
 							type="button"
 							variant="ghost"
 							size="sm"
-							onClick={() => onValueChange("")}
-							className="h-8 rounded-lg px-2 text-xs text-muted-foreground hover:bg-destructive/10 hover:text-destructive"
+							onClick={() => {
+								onValueChange("");
+								// Give focus back to search after clearing
+								setTimeout(() => inputRef.current?.focus(), 50);
+							}}
+							className="h-8 rounded-lg px-3 text-[11px] font-bold uppercase tracking-wider text-slate-500 hover:bg-slate-100 hover:text-slate-900 transition-colors"
 						>
 							Alterar
 						</Button>
 					</div>
 				)}
 
-				{CommandContent}
+				{!selectedPatient && !hasFallbackDisplay && CommandContent}
+				
+				{/* If selected, we can still show the search box but maybe collapsed or as a small trigger if they want to change it without clicking 'Alterar' */}
+				{/* For now, following the 'Always Visible Search' for NEW appointments, we only show CommandContent when NOT selected or when 'Alterar' is clicked */}
 			</div>
 		);
 	}

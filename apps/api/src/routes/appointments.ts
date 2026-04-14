@@ -516,38 +516,44 @@ const updateAppointmentHandler: MiddlewareHandler<{ Bindings: Env; Variables: Au
 
     if (!row) return c.json({ error: 'Agendamento não encontrado' }, 404);
 
-    // Real-time Broadcast
-    await broadcastToOrg(c.env, user.organizationId, {
-      type: 'APPOINTMENT_UPDATED',
-      payload: { id: row.id, action: 'updated', timestamp: new Date().toISOString() }
-    });
+    // Push side effects to background to keep response fast
+    c.executionCtx.waitUntil((async () => {
+      try {
+        // Real-time Broadcast
+        await broadcastToOrg(c.env, user.organizationId, {
+          type: 'APPOINTMENT_UPDATED',
+          payload: { id: row.id, action: 'updated', timestamp: new Date().toISOString() }
+        });
 
-    // Eventos Inngest baseados em mudança de status
-    try {
-      if (row.status === 'atendido') {
-        const patientRow = await db.select({
-            fullName: patients.fullName,
-            phone: patients.phone
-        }).from(patients).where(eq(patients.id, row.patientId)).limit(1).then(res => res[0]);
+        // Eventos Inngest baseasedos em mudança de status
+        if (row.status === 'atendido') {
+          const patientRow = await db.select({
+              fullName: patients.fullName,
+              phone: patients.phone
+          }).from(patients).where(eq(patients.id, row.patientId)).limit(1).then(res => res[0]);
 
-        triggerInngestEvent(c.env, c.executionCtx, 'appointment.completed', {
-          appointmentId: row.id,
-          patientId: row.patientId,
-          name: patientRow?.fullName,
-          phone: patientRow?.phone
-        }, { id: user.uid });
-      } else {
-        triggerInngestEvent(c.env, c.executionCtx, 'appointment.updated', {
-          appointmentId: row.id,
-          patientId: row.patientId,
-          date: row.date,
-          startTime: row.startTime,
-          status: row.status,
-        }, { id: user.uid });
+          await triggerInngestEvent(c.env, c.executionCtx, 'appointment.completed', {
+            appointmentId: row.id,
+            patientId: row.patientId,
+            name: patientRow?.fullName,
+            phone: patientRow?.phone
+          }, { id: user.uid });
+        } else {
+          await triggerInngestEvent(c.env, c.executionCtx, 'appointment.updated', {
+            appointmentId: row.id,
+            patientId: row.patientId,
+            date: row.date,
+            startTime: row.startTime,
+            status: row.status,
+          }, { id: user.uid });
+        }
+
+        // Audit Log placeholder (could be a DB insert or external service)
+        console.log(`[Audit] Appointment ${row.id} updated by user ${user.uid}`);
+      } catch (bgError: any) {
+        console.error('[Appointments/Update] Background Task Error:', bgError?.message ?? bgError);
       }
-    } catch (eventError: any) {
-      console.error('[Appointments/Update] Failed to trigger event:', eventError?.message ?? eventError);
-    }
+    })());
 
     return c.json({ data: normalizeAppointmentRow(row) });
   } catch (error: any) {
@@ -588,11 +594,18 @@ app.post('/:id/cancel', requireAuth, async (c) => {
 
     if (!row) return c.json({ error: 'Agendamento não encontrado' }, 404);
 
-    // Real-time Broadcast
-    await broadcastToOrg(c.env, user.organizationId, {
-      type: 'APPOINTMENT_UPDATED',
-      payload: { id, action: 'cancelado', timestamp: new Date().toISOString() }
-    });
+    // Real-time Broadcast in background
+    c.executionCtx.waitUntil((async () => {
+      try {
+        await broadcastToOrg(c.env, user.organizationId, {
+          type: 'APPOINTMENT_UPDATED',
+          payload: { id, action: 'cancelado', timestamp: new Date().toISOString() }
+        });
+        console.log(`[Audit] Appointment ${id} cancelled by user ${user.uid}`);
+      } catch (err) {
+        console.error('[Appointments/Cancel] Broadcast failed:', err);
+      }
+    })());
 
     return c.json({ success: true });
   } catch (error: any) {

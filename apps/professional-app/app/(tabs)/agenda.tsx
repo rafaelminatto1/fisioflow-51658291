@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useCallback, useMemo } from "react";
 import { View, StyleSheet, Text, TouchableOpacity, Alert } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
@@ -9,19 +9,14 @@ import {
 	startOfMonth,
 	endOfMonth,
 	format,
+	startOfDay,
+	endOfDay,
 } from "date-fns";
 import { useColors } from "@/hooks/useColorScheme";
 import { useAppointments } from "@/hooks/useAppointments";
 import { useHaptics } from "@/hooks/useHaptics";
 import { Skeleton } from "@/components";
 import { CalendarView, ViewMode } from "@/components/calendar/CalendarView";
-
-const appointmentsCache = new Map<string, { data: any[]; timestamp: number }>();
-const CACHE_TTL = 1000 * 60 * 5;
-
-function getCacheKey(startDate: Date, endDate: Date): string {
-	return `${startDate.toISOString()}-${endDate.toISOString()}`;
-}
 
 function AgendaSkeleton() {
 	const colors = useColors();
@@ -78,48 +73,52 @@ export default function AgendaScreen() {
 	const { light, success: hapticSuccess } = useHaptics();
 
 	const [viewMode, setViewMode] = useState<ViewMode>("day");
-	const [selectedDate, setSelectedDate] = useState(new Date());
 
-	const getFetchRange = useCallback(() => {
-		if (viewMode === "month") {
-			return {
-				startDate: startOfMonth(selectedDate),
-				endDate: endOfMonth(selectedDate),
-			};
+	// Lógica para iniciar na segunda-feira se hoje for domingo
+	const getInitialDate = () => {
+		const now = new Date();
+		// 0 é domingo no JavaScript
+		if (now.getDay() === 0) {
+			const nextMonday = new Date(now);
+			nextMonday.setDate(now.getDate() + 1);
+			return nextMonday;
 		}
+		return now;
+	};
+
+	const [selectedDate, setSelectedDate] = useState(getInitialDate());
+
+	const fetchRange = useMemo(() => {
+		let start: Date;
+		let end: Date;
+
+		if (viewMode === "month") {
+			start = startOfMonth(selectedDate);
+			end = endOfMonth(selectedDate);
+		} else {
+			// Para visão de dia ou semana, buscamos a semana inteira para garantir transições suaves
+			start = startOfWeek(selectedDate, { weekStartsOn: 1 }); // Começa na segunda
+			end = endOfWeek(selectedDate, { weekStartsOn: 1 });
+		}
+
 		return {
-			startDate: startOfWeek(selectedDate, { weekStartsOn: 0 }),
-			endDate: endOfWeek(selectedDate, { weekStartsOn: 0 }),
+			startDate: startOfDay(start),
+			endDate: endOfDay(end),
 		};
 	}, [viewMode, selectedDate]);
-
-	const { startDate, endDate } = getFetchRange();
-	const cacheKey = getCacheKey(startDate, endDate);
-	const cached = appointmentsCache.get(cacheKey);
-	const isCacheValid = cached && Date.now() - cached.timestamp < CACHE_TTL;
 
 	const {
 		data: appointments,
 		isLoading,
 		updateAsync,
 	} = useAppointments({
-		startDate,
-		endDate,
+		startDate: fetchRange.startDate,
+		endDate: fetchRange.endDate,
 		limit: 1000,
 		refetchInterval: 30_000,
-		initialData: isCacheValid ? cached.data : undefined,
 	});
 
-	useEffect(() => {
-		if (appointments && appointments.length > 0) {
-			appointmentsCache.set(cacheKey, {
-				data: appointments,
-				timestamp: Date.now(),
-			});
-		}
-	}, [appointments, cacheKey]);
-
-	const showLoading = isLoading && !isCacheValid && !appointments?.length;
+	const showLoading = isLoading && (!appointments || appointments.length === 0);
 
 	const handleDateChange = useCallback(
 		(date: Date) => {
@@ -208,7 +207,7 @@ export default function AgendaScreen() {
 	return (
 		<SafeAreaView
 			style={[styles.container, { backgroundColor: colors.background }]}
-			edges={["left", "right"]}
+			edges={["top", "left", "right"]}
 		>
 			{showLoading ? (
 				<AgendaSkeleton />

@@ -1,5 +1,9 @@
 import { describe, it, expect } from "vitest";
-import { formatCPF, formatPhoneInput } from "../formatInputs";
+import {
+	formatCPF,
+	formatPhoneInput,
+	shouldFormatPhoneField,
+} from "../formatInputs";
 
 describe("formatInputs", () => {
 	describe("formatCPF", () => {
@@ -82,6 +86,38 @@ describe("formatInputs", () => {
 
 		it("deve truncar para 11 dígitos se mais caracteres", () => {
 			expect(formatPhoneInput("1198765432112345")).toBe("(11) 98765-4321");
+		});
+
+		it("deve formatar telefone brasileiro com DDI 55", () => {
+			expect(formatPhoneInput("5511987654321")).toBe("+55 (11) 98765-4321");
+			expect(formatPhoneInput("+55 (11) 98765-4321")).toBe(
+				"+55 (11) 98765-4321",
+			);
+		});
+	});
+
+	describe("shouldFormatPhoneField", () => {
+		it("detecta campos de telefone por tipo, nome e id", () => {
+			expect(shouldFormatPhoneField({ type: "tel" })).toBe(true);
+			expect(shouldFormatPhoneField({ id: "telefone" })).toBe(true);
+			expect(shouldFormatPhoneField({ name: "doctor_phone" })).toBe(true);
+			expect(shouldFormatPhoneField({ name: "newPhoneNumber" })).toBe(true);
+		});
+
+		it("detecta placeholders de telefone sem afetar campos de busca ou link", () => {
+			expect(shouldFormatPhoneField({ placeholder: "(00) 00000-0000" })).toBe(
+				true,
+			);
+			expect(shouldFormatPhoneField({ placeholder: "Ex: 11999999999" })).toBe(
+				true,
+			);
+			expect(shouldFormatPhoneField({ id: "link_whatsapp" })).toBe(false);
+			expect(
+				shouldFormatPhoneField({
+					type: "search",
+					placeholder: "Buscar por telefone",
+				}),
+			).toBe(false);
 		});
 	});
 });

@@ -11,7 +11,7 @@ interface TimeGridProps {
 
 export const TimeGrid = ({
 	startHour = 7,
-	endHour = 20,
+	endHour = 22,
 	rowHeight = 60,
 }: TimeGridProps) => {
 	const _colors = useColors();
