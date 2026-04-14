@@ -94,6 +94,10 @@ export interface ExerciseTemplate {
 	description: string | null;
 	category: string | null;
 	conditionName: string | null;
+	difficultyLevel?: string | null;
+	treatmentPhase?: string | null;
+	bodyPart?: string | null;
+	estimatedDuration?: number | null;
 	templateVariant: string | null;
 	clinicalNotes: string | null;
 	contraindications: string | null;
@@ -138,6 +142,10 @@ export interface ExerciseTemplateRecord {
 	description?: string | null;
 	category?: string | null;
 	conditionName?: string | null;
+	difficultyLevel?: string | null;
+	treatmentPhase?: string | null;
+	bodyPart?: string | null;
+	estimatedDuration?: number | null;
 	templateVariant?: string | null;
 	evidenceLevel?: string | null;
 	items?: Array<{

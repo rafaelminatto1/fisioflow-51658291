@@ -66,6 +66,10 @@ const createTemplateSchema = z.object({
     { error: "Perfil de paciente é obrigatório" },
   ),
   conditionName: z.string().trim().min(1, "Condição clínica é obrigatória"),
+  difficultyLevel: z.enum(["iniciante", "intermediario", "avancado"]).optional(),
+  treatmentPhase: z.enum(["fase_aguda", "fase_subaguda", "remodelacao", "retorno_ao_esporte"]).optional(),
+  bodyPart: z.enum(["ombro", "joelho", "quadril", "coluna_cervical", "coluna_lombar", "tornozelo"]).optional(),
+  estimatedDuration: z.coerce.number().int().min(1).optional(),
   templateVariant: z.string().optional(),
   items: z.array(exerciseItemSchema).default([]),
   clinicalNotes: z.string().optional(),
@@ -203,6 +207,79 @@ function BasicInfoStep({ register, errors, watch, setValue }: Step1Props) {
         {errors.conditionName && (
           <p className="text-xs text-destructive mt-1">{errors.conditionName.message}</p>
         )}
+      </div>
+
+      <div>
+        <Label htmlFor="difficultyLevel" className="mb-1.5 block">
+          Nível de Dificuldade
+        </Label>
+        <Select
+          onValueChange={(val) => setValue("difficultyLevel", val as any)}
+          defaultValue={watch("difficultyLevel")}
+        >
+          <SelectTrigger id="difficultyLevel">
+            <SelectValue placeholder="Selecione o nível" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="iniciante">Iniciante</SelectItem>
+            <SelectItem value="intermediario">Intermediário</SelectItem>
+            <SelectItem value="avancado">Avançado</SelectItem>
+          </SelectContent>
+        </Select>
+      </div>
+
+      <div>
+        <Label htmlFor="treatmentPhase" className="mb-1.5 block">
+          Fase do Tratamento
+        </Label>
+        <Select
+          onValueChange={(val) => setValue("treatmentPhase", val as any)}
+          defaultValue={watch("treatmentPhase")}
+        >
+          <SelectTrigger id="treatmentPhase">
+            <SelectValue placeholder="Selecione a fase" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="fase_aguda">Fase Aguda</SelectItem>
+            <SelectItem value="fase_subaguda">Fase Subaguda</SelectItem>
+            <SelectItem value="remodelacao">Remodelação</SelectItem>
+            <SelectItem value="retorno_ao_esporte">Retorno ao Esporte</SelectItem>
+          </SelectContent>
+        </Select>
+      </div>
+
+      <div>
+        <Label htmlFor="bodyPart" className="mb-1.5 block">
+          Região do Corpo
+        </Label>
+        <Select
+          onValueChange={(val) => setValue("bodyPart", val as any)}
+          defaultValue={watch("bodyPart")}
+        >
+          <SelectTrigger id="bodyPart">
+            <SelectValue placeholder="Selecione a região" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="ombro">Ombro</SelectItem>
+            <SelectItem value="joelho">Joelho</SelectItem>
+            <SelectItem value="quadril">Quadril</SelectItem>
+            <SelectItem value="coluna_cervical">Coluna Cervical</SelectItem>
+            <SelectItem value="coluna_lombar">Coluna Lombar</SelectItem>
+            <SelectItem value="tornozelo">Tornozelo</SelectItem>
+          </SelectContent>
+        </Select>
+      </div>
+
+      <div>
+        <Label htmlFor="estimatedDuration" className="mb-1.5 block">
+          Duração Estimada (minutos)
+        </Label>
+        <Input
+          id="estimatedDuration"
+          type="number"
+          placeholder="Ex: 30"
+          {...register("estimatedDuration")}
+        />
       </div>
 
       <div>
@@ -520,6 +597,10 @@ export function TemplateCreateFlow({
       name: "",
       patientProfile: undefined,
       conditionName: "",
+      difficultyLevel: undefined,
+      treatmentPhase: undefined,
+      bodyPart: undefined,
+      estimatedDuration: undefined,
       templateVariant: "",
       items: [],
       clinicalNotes: "",
@@ -658,6 +739,10 @@ export function TemplateCreateFlow({
       name: values.name,
       patientProfile: values.patientProfile,
       conditionName: values.conditionName,
+      difficultyLevel: values.difficultyLevel || null,
+      treatmentPhase: values.treatmentPhase || null,
+      bodyPart: values.bodyPart || null,
+      estimatedDuration: values.estimatedDuration || null,
       templateVariant: values.templateVariant || null,
       clinicalNotes: values.clinicalNotes || null,
       contraindications: values.contraindications || null,
