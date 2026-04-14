@@ -230,57 +230,89 @@ app.get('/:id', async (c) => {
 
 // ===== FAVORITAR (auth obrigatório) =====
 app.post('/:id/favorite', requireAuth, async (c) => {
-  const db = await createDb(c.env);
-  const user = c.get('user');
-  const { id } = c.req.param();
+  try {
+    const db = await createDb(c.env);
+    const user = c.get('user');
+    const { id } = c.req.param();
 
-  await db
-    .insert(exerciseFavorites)
-    .values({ userId: user.uid, exerciseId: id })
-    .onConflictDoNothing();
+    await db
+      .insert(exerciseFavorites)
+      .values({ 
+        userId: user.uid, 
+        exerciseId: id,
+        organizationId: user.organizationId 
+      })
+      .onConflictDoNothing();
 
-  return c.json({ ok: true });
+    return c.json({ ok: true });
+  } catch (err) {
+    console.error('[exercises/:id/favorite] error:', err);
+    return c.json({ error: 'Erro ao favoritar exercício' }, 500);
+  }
 });
 
 app.delete('/:id/favorite', requireAuth, async (c) => {
-  const db = await createDb(c.env);
-  const user = c.get('user');
-  const { id } = c.req.param();
+  try {
+    const db = await createDb(c.env);
+    const user = c.get('user');
+    const { id } = c.req.param();
 
-  await db
-    .delete(exerciseFavorites)
-    .where(
-      and(eq(exerciseFavorites.userId, user.uid), eq(exerciseFavorites.exerciseId, id)),
-    );
+    await db
+      .delete(exerciseFavorites)
+      .where(
+        and(
+          eq(exerciseFavorites.userId, user.uid), 
+          eq(exerciseFavorites.exerciseId, id),
+          eq(exerciseFavorites.organizationId, user.organizationId)
+        ),
+      );
 
-  return c.json({ ok: true });
+    return c.json({ ok: true });
+  } catch (err) {
+    console.error('[exercises/:id/unfavorite] error:', err);
+    return c.json({ error: 'Erro ao remover favorito' }, 500);
+  }
 });
 
 // ===== EXERCÍCIOS FAVORITOS DO USUÁRIO =====
 app.get('/favorites/me', requireAuth, async (c) => {
-  const db = await createDb(c.env);
-  const user = c.get('user');
+  try {
+    const db = await createDb(c.env);
+    const user = c.get('user');
 
-  const rows = await db
-    .select({
-      id: exercises.id,
-      slug: exercises.slug,
-      name: exercises.name,
-      categoryId: exercises.categoryId,
-      categoryName: exerciseCategories.name,
-      difficulty: exercises.difficulty,
-      imageUrl: exercises.imageUrl,
-      thumbnailUrl: exercises.thumbnailUrl,
-      videoUrl: exercises.videoUrl,
-      durationSeconds: exercises.durationSeconds,
-      description: exercises.description,
-    })
-    .from(exerciseFavorites)
-    .innerJoin(exercises, eq(exerciseFavorites.exerciseId, exercises.id))
-    .leftJoin(exerciseCategories, eq(exercises.categoryId, exerciseCategories.id))
-    .where(and(eq(exerciseFavorites.userId, user.uid), eq(exercises.isActive, true)));
+    const rows = await db
+      .select({
+        id: exercises.id,
+        slug: exercises.slug,
+        name: exercises.name,
+        categoryId: exercises.categoryId,
+        categoryName: exerciseCategories.name,
+        difficulty: exercises.difficulty,
+        imageUrl: exercises.imageUrl,
+        thumbnailUrl: exercises.thumbnailUrl,
+        videoUrl: exercises.videoUrl,
+        durationSeconds: exercises.durationSeconds,
+        description: exercises.description,
+      })
+      .from(exerciseFavorites)
+      .innerJoin(exercises, eq(exerciseFavorites.exerciseId, exercises.id))
+      .leftJoin(exerciseCategories, eq(exercises.categoryId, exerciseCategories.id))
+      .where(
+        and(
+          eq(exerciseFavorites.userId, user.uid), 
+          eq(exercises.isActive, true),
+          eq(exerciseFavorites.organizationId, user.organizationId)
+        )
+      );
 
-  return c.json({ data: rows });
+    return c.json({ data: rows });
+  } catch (err) {
+    console.error('[exercises/favorites/me] error:', err);
+    return c.json({ 
+      error: 'Erro ao buscar favoritos',
+      details: err instanceof Error ? err.message : String(err)
+    }, 500);
+  }
 });
 
 // ===== CRIAR EXERCÍCIO =====
