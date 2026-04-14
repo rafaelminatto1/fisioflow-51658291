@@ -131,6 +131,27 @@ async function executeAutomations(
   }
 }
 
+// Get tasks linked to a specific entity (patient, appointment, session, goal, exercise_plan)
+app.get('/by-entity/:type/:entityId', requireAuth, async (c) => {
+  const entityType = c.req.param('type');
+  const entityId = c.req.param('entityId');
+  if (!isUuid(entityId)) return c.json({ error: 'ID inválido' }, 400);
+  try {
+    const user = c.get('user');
+    const db = await createPool(c.env);
+    const result = await db.query(
+      `SELECT *, task_references as references FROM tarefas
+       WHERE organization_id = $1 AND linked_entity_type = $2 AND linked_entity_id = $3
+       ORDER BY order_index ASC, created_at DESC`,
+      [user.organizationId, entityType, entityId],
+    );
+    return c.json({ data: result.rows });
+  } catch (error) {
+    console.error('[Tarefas] GET /by-entity error:', error);
+    return c.json({ error: 'Erro ao buscar tarefas', data: [] }, 500);
+  }
+});
+
 app.get('/', requireAuth, async (c) => {
   try {
     const user = c.get('user');
@@ -177,8 +198,9 @@ app.post('/', requireAuth, async (c) => {
     const result = await db.query(
       `INSERT INTO tarefas (organization_id, created_by, responsavel_id, project_id, parent_id,
          board_id, column_id, titulo, descricao, status, prioridade, tipo, data_vencimento, start_date,
-         order_index, tags, label_ids, checklists, attachments, task_references, dependencies, requires_acknowledgment, acknowledgments)
-       VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18,$19,$20,$21,$22,$23)
+         order_index, tags, label_ids, checklists, attachments, task_references, dependencies, requires_acknowledgment, acknowledgments,
+         linked_entity_type, linked_entity_id)
+       VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18,$19,$20,$21,$22,$23,$24,$25)
        RETURNING *, task_references as references`,
       [
         user.organizationId, user.uid, body.responsavel_id ?? null, body.project_id ?? null,
@@ -193,7 +215,9 @@ app.post('/', requireAuth, async (c) => {
         jsonSerialize(body.task_references ?? body.references ?? []),          // jsonb
         jsonSerialize(body.dependencies ?? []),                                // jsonb
         body.requires_acknowledgment ?? false,                                  // boolean
-        jsonSerialize(body.acknowledgments ?? [])                              // jsonb
+        jsonSerialize(body.acknowledgments ?? []),                             // jsonb
+        body.linked_entity_type ?? null,                                        // VARCHAR(50)
+        body.linked_entity_id ?? null,                                          // UUID
       ]
     );
     const createdTask = result.rows[0] as Record<string, unknown>;
@@ -227,7 +251,8 @@ app.patch('/:id', requireAuth, async (c) => {
     const allowed = ['titulo', 'descricao', 'status', 'prioridade', 'tipo', 'data_vencimento',
       'start_date', 'completed_at', 'order_index', 'tags', 'label_ids', 'checklists', 'attachments',
       'task_references', 'dependencies', 'responsavel_id', 'project_id', 'parent_id',
-      'board_id', 'column_id', 'requires_acknowledgment', 'acknowledgments'];
+      'board_id', 'column_id', 'requires_acknowledgment', 'acknowledgments',
+      'linked_entity_type', 'linked_entity_id'];
 
     const sets: string[] = [];
     const params: unknown[] = [];
@@ -268,6 +293,17 @@ app.patch('/:id', requireAuth, async (c) => {
       executeAutomations(db, user.organizationId, taskBefore, taskAfter).catch((err) =>
         console.error('[Automation] engine error:', err),
       );
+    }
+
+    // Award XP when task is completed (gamification — non-blocking)
+    if (taskBefore?.status !== 'CONCLUIDO' && taskAfter.status === 'CONCLUIDO') {
+      const completedBy = (taskAfter.responsavel_id ?? user.uid) as string;
+      db.query(
+        `INSERT INTO xp_transactions (organization_id, patient_id, user_id, type, points, description, reference_id, reference_type)
+         VALUES ($1, NULL, $2, 'task_completed', 10, 'Tarefa concluída', $3, 'tarefa')
+         ON CONFLICT DO NOTHING`,
+        [user.organizationId, completedBy, id],
+      ).catch(() => null);
     }
 
     return c.json({ data: taskAfter });
