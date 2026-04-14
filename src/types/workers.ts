@@ -1221,13 +1221,72 @@ export interface StandardizedTestResultRow {
 
 export interface EvaluationFormRow {
 	id: string;
-	name: string;
+	organization_id?: string | null;
+	created_by?: string | null;
+	nome: string;
+	name?: string;
+	descricao?: string | null;
+	referencias?: string | null;
+	tipo?: string;
+	ativo?: boolean;
+	is_favorite?: boolean;
+	usage_count?: number;
+	last_used_at?: string | null;
+	cover_image?: string | null;
+	estimated_time?: number | null;
+	created_at?: string;
+	updated_at?: string;
 }
 
 export interface EvaluationFormFieldRow {
 	id: string;
 	form_id: string;
+	tipo_campo?: string;
 	label: string;
+	placeholder?: string | null;
+	opcoes?: unknown[] | null;
+	ordem?: number;
+	obrigatorio?: boolean;
+	grupo?: string | null;
+	descricao?: string | null;
+	minimo?: number | null;
+	maximo?: number | null;
+	created_at?: string;
+	updated_at?: string;
+}
+
+export interface EvaluationFormWithFieldsRow extends EvaluationFormRow {
+	fields?: EvaluationFormFieldRow[];
+}
+
+export type PatientEvaluationResponseStatus =
+	| "scheduled"
+	| "in_progress"
+	| "completed"
+	| "cancelled";
+
+export interface PatientEvaluationResponseRow {
+	id: string;
+	organization_id: string | null;
+	patient_id: string;
+	form_id: string;
+	appointment_id?: string | null;
+	responses: Record<string, unknown>;
+	status: PatientEvaluationResponseStatus;
+	scheduled_for?: string | null;
+	started_at?: string | null;
+	completed_at?: string | null;
+	created_by?: string | null;
+	created_at: string;
+	updated_at: string;
+	form_nome?: string | null;
+	form_tipo?: string | null;
+	form_descricao?: string | null;
+	form_referencias?: string | null;
+	fields_count?: number;
+	answered_count?: number;
+	form?: Partial<EvaluationFormRow>;
+	fields?: EvaluationFormFieldRow[];
 }
 
 export interface AssetAnnotationVersionRecord {

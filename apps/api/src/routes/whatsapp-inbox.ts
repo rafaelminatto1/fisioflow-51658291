@@ -14,6 +14,11 @@ import {
 	updateConversationStatus,
 	getConversationMetrics,
 	resolveProfileUuid,
+	updateConversationFields,
+	markConversationDeleted,
+	restoreConversation,
+	editMessageContent,
+	markMessageDeleted,
 } from "../lib/whatsapp-conversations";
 import {
 	sendReplyButtons,
@@ -40,7 +45,25 @@ const DEFAULT_WHATSAPP_TAGS = [
 	{ name: "Dúvida clínica", color: "#8E8E93" },
 ];
 
+const VALID_CONVERSATION_STATUSES = [
+	"open",
+	"pending",
+	"assigned",
+	"resolved",
+	"closed",
+];
+
+const VALID_CONVERSATION_PRIORITIES = [
+	"normal",
+	"low",
+	"medium",
+	"high",
+	"urgent",
+];
+
 function mapConversationRow(row: any) {
+	const metadata =
+		row.metadata && typeof row.metadata === "object" ? row.metadata : {};
 	const lastMessageType = row.last_message_type || row.message_type;
 	const lastMessageContent = row.last_message ?? undefined;
 	const lastMessage =
@@ -72,12 +95,17 @@ function mapConversationRow(row: any) {
 		priority: row.priority || undefined,
 		slaDeadline: row.sla_deadline || undefined,
 		slaBreached: row.sla_breached || false,
+		deletedAt: metadata.deleted_at || undefined,
+		deletedBy: metadata.deleted_by || undefined,
+		metadata,
 		createdAt: row.created_at,
 		updatedAt: row.updated_at,
 	};
 }
 
 function mapMessageRow(row: any): any {
+	const metadata =
+		row.metadata && typeof row.metadata === "object" ? row.metadata : {};
 	const messageType = row.message_type || row.type || "text";
 	const timestamp = row.created_at || row.timestamp;
 	const isInternalNote =
@@ -94,6 +122,13 @@ function mapMessageRow(row: any): any {
 					}
 				})()
 			: row.content;
+	const isDeleted = Boolean(metadata.deleted_at || metadata.deleted_for_everyone_at);
+	const deleteScope = metadata.delete_scope as string | undefined;
+	const mappedContent = isDeleted
+		? deleteScope === "everyone"
+			? "Mensagem apagada para todos"
+			: "Mensagem apagada no atendimento"
+		: content;
 
 	return {
 		id: row.id,
@@ -101,7 +136,7 @@ function mapMessageRow(row: any): any {
 		direction: row.direction === "internal" ? "outbound" : row.direction,
 		type: messageType,
 		messageType,
-		content,
+		content: mappedContent,
 		senderId: row.sender_id || undefined,
 		senderName: row.sender_name || undefined,
 		senderType: row.sender_type || undefined,
@@ -109,6 +144,13 @@ function mapMessageRow(row: any): any {
 		createdAt: timestamp,
 		status: row.status || undefined,
 		isInternalNote,
+		editedAt: metadata.edited_at || undefined,
+		editedBy: metadata.edited_by || undefined,
+		deletedAt: metadata.deleted_at || undefined,
+		deletedBy: metadata.deleted_by || undefined,
+		deleteScope,
+		deletedForEveryone: deleteScope === "everyone",
+		metadata,
 		interactiveData: row.interactive_data || undefined,
 		templateName: row.template_name || undefined,
 		templateParams: undefined,
@@ -189,6 +231,7 @@ app.get("/conversations", requireAuth, async (c) => {
 		team,
 		search,
 		tagId,
+		includeDeleted,
 		page = "1",
 		limit = "50",
 		} = c.req.query();
@@ -217,6 +260,7 @@ app.get("/conversations", requireAuth, async (c) => {
 				tagId: tagId ?? undefined,
 				limit: limitNum,
 				offset,
+				includeDeleted: includeDeleted === "true",
 			},
 		);
 
@@ -391,6 +435,188 @@ app.get("/conversations/:id", requireAuth, async (c) => {
 	} catch (err) {
 		console.error("[WhatsApp Inbox] GET /conversations/:id error:", err);
 		return c.json({ error: "Failed to fetch conversation" }, 500);
+	}
+});
+
+app.patch("/conversations/:id", requireAuth, async (c) => {
+	const user = c.get("user");
+	const { id } = c.req.param();
+	const pool = await createPool(c.env);
+	const body = (await c.req.json()) as {
+		status?: string;
+		priority?: string;
+		assignedTo?: string | null;
+		team?: string | null;
+		patientId?: string | null;
+		metadata?: Record<string, unknown>;
+	};
+	const hasField = (key: keyof typeof body) =>
+		Object.prototype.hasOwnProperty.call(body, key);
+
+	if (
+		!hasField("status") &&
+		!hasField("priority") &&
+		!hasField("assignedTo") &&
+		!hasField("team") &&
+		!hasField("patientId") &&
+		!hasField("metadata")
+	) {
+		return c.json({ error: "No conversation updates provided" }, 400);
+	}
+
+	if (
+		body.status !== undefined &&
+		!VALID_CONVERSATION_STATUSES.includes(body.status)
+	) {
+		return c.json(
+			{
+				error: `status must be one of: ${VALID_CONVERSATION_STATUSES.join(", ")}`,
+			},
+			400,
+		);
+	}
+
+	if (
+		body.priority !== undefined &&
+		!VALID_CONVERSATION_PRIORITIES.includes(body.priority)
+	) {
+		return c.json(
+			{
+				error: `priority must be one of: ${VALID_CONVERSATION_PRIORITIES.join(", ")}`,
+			},
+			400,
+		);
+	}
+
+	if (body.patientId && !isUuid(body.patientId)) {
+		return c.json({ error: "patientId must be a valid UUID or null" }, 400);
+	}
+
+	if (
+		body.metadata !== undefined &&
+		(!body.metadata ||
+			typeof body.metadata !== "object" ||
+			Array.isArray(body.metadata))
+	) {
+		return c.json({ error: "metadata must be an object" }, 400);
+	}
+
+	try {
+		const existing = await getConversationWithMessages(
+			pool,
+			id,
+			user.organizationId,
+			0,
+		);
+		if (!existing) {
+			return c.json({ error: "Conversation not found" }, 404);
+		}
+
+		if (body.patientId) {
+			const patient = await pool.query(
+				`SELECT id FROM patients WHERE id = $1 AND organization_id = $2 LIMIT 1`,
+				[body.patientId, user.organizationId],
+			);
+			if (patient.rows.length === 0) {
+				return c.json({ error: "Patient not found" }, 404);
+			}
+		}
+
+		const result = await updateConversationFields(pool, id, user.organizationId, {
+			status: hasField("status") ? body.status : undefined,
+			priority: hasField("priority") ? body.priority : undefined,
+			assignedTo: hasField("assignedTo") ? (body.assignedTo ?? null) : undefined,
+			team: hasField("team") ? (body.team ?? null) : undefined,
+			patientId: hasField("patientId") ? (body.patientId ?? null) : undefined,
+			metadata: body.metadata,
+			updatedBy: user.uid,
+		});
+
+		if (result.error === "assignee_not_found") {
+			return c.json({ error: "Invalid assignee ID or profile not found" }, 400);
+		}
+		if (!result.row) {
+			return c.json({ error: "Conversation not found" }, 404);
+		}
+
+		await broadcastToOrg(c.env, user.organizationId, {
+			type: "whatsapp_conversation_updated",
+			conversationId: id,
+			updatedBy: user.uid,
+		});
+
+		const updated = await getConversationWithMessages(
+			pool,
+			id,
+			user.organizationId,
+			0,
+		);
+		return c.json(mapConversationRow(updated ?? result.row));
+	} catch (err) {
+		console.error("[WhatsApp Inbox] PATCH /conversations/:id error:", err);
+		return c.json({ error: "Failed to update conversation" }, 500);
+	}
+});
+
+app.delete("/conversations/:id", requireAuth, async (c) => {
+	const user = c.get("user");
+	const { id } = c.req.param();
+	const pool = await createPool(c.env);
+	const body = (await c.req.json().catch(() => ({}))) as { reason?: string };
+
+	try {
+		const result = await markConversationDeleted(
+			pool,
+			id,
+			user.organizationId,
+			user.uid,
+			body.reason,
+		);
+
+		if (!result) {
+			return c.json({ error: "Conversation not found" }, 404);
+		}
+
+		await broadcastToOrg(c.env, user.organizationId, {
+			type: "whatsapp_conversation_deleted",
+			conversationId: id,
+			deletedBy: user.uid,
+		});
+
+		return c.json({ data: mapConversationRow(result) });
+	} catch (err) {
+		console.error("[WhatsApp Inbox] DELETE /conversations/:id error:", err);
+		return c.json({ error: "Failed to delete conversation" }, 500);
+	}
+});
+
+app.post("/conversations/:id/restore", requireAuth, async (c) => {
+	const user = c.get("user");
+	const { id } = c.req.param();
+	const pool = await createPool(c.env);
+
+	try {
+		const result = await restoreConversation(
+			pool,
+			id,
+			user.organizationId,
+			user.uid,
+		);
+
+		if (!result) {
+			return c.json({ error: "Conversation not found" }, 404);
+		}
+
+		await broadcastToOrg(c.env, user.organizationId, {
+			type: "whatsapp_conversation_restored",
+			conversationId: id,
+			restoredBy: user.uid,
+		});
+
+		return c.json({ data: mapConversationRow(result) });
+	} catch (err) {
+		console.error("[WhatsApp Inbox] POST /conversations/:id/restore error:", err);
+		return c.json({ error: "Failed to restore conversation" }, 500);
 	}
 });
 
@@ -653,6 +879,118 @@ app.post("/conversations/:id/messages", requireAuth, async (c) => {
 			message: err instanceof Error ? err.message : String(err),
 			requestId 
 		}, 500);
+	}
+});
+
+app.patch("/conversations/:id/messages/:messageId", requireAuth, async (c) => {
+	const user = c.get("user");
+	const { id, messageId } = c.req.param();
+	const pool = await createPool(c.env);
+	const body = (await c.req.json()) as {
+		content?: string | Record<string, unknown>;
+	};
+
+	if (
+		body.content === undefined ||
+		(typeof body.content === "string" && !body.content.trim()) ||
+		(typeof body.content !== "string" &&
+			(!body.content ||
+				typeof body.content !== "object" ||
+				Array.isArray(body.content)))
+	) {
+		return c.json({ error: "content is required" }, 400);
+	}
+
+	try {
+		const result = await editMessageContent(
+			pool,
+			id,
+			messageId,
+			user.organizationId,
+			user.uid,
+			typeof body.content === "string" ? body.content.trim() : body.content,
+		);
+
+		if (result.error === "not_found") {
+			return c.json({ error: "Message not found" }, 404);
+		}
+		if (result.error === "deleted") {
+			return c.json({ error: "Deleted messages cannot be edited" }, 409);
+		}
+		if (!result.row) {
+			return c.json({ error: "Message not found" }, 404);
+		}
+
+		await broadcastToOrg(c.env, user.organizationId, {
+			type: "whatsapp_message_updated",
+			conversationId: id,
+			messageId,
+			updatedBy: user.uid,
+		});
+
+		return c.json(mapMessageRow(result.row));
+	} catch (err) {
+		console.error(
+			"[WhatsApp Inbox] PATCH /conversations/:id/messages/:messageId error:",
+			err,
+		);
+		return c.json({ error: "Failed to edit message" }, 500);
+	}
+});
+
+app.delete("/conversations/:id/messages/:messageId", requireAuth, async (c) => {
+	const user = c.get("user");
+	const { id, messageId } = c.req.param();
+	const pool = await createPool(c.env);
+	const body = (await c.req.json().catch(() => ({}))) as {
+		scope?: "local" | "everyone";
+		reason?: string;
+	};
+	const scope = body.scope ?? "local";
+
+	if (!["local", "everyone"].includes(scope)) {
+		return c.json({ error: "scope must be local or everyone" }, 400);
+	}
+
+	try {
+		const result = await markMessageDeleted(
+			pool,
+			id,
+			messageId,
+			user.organizationId,
+			user.uid,
+			scope,
+			body.reason,
+		);
+
+		if (result.error === "not_found") {
+			return c.json({ error: "Message not found" }, 404);
+		}
+		if (!result.row) {
+			return c.json({ error: "Message not found" }, 404);
+		}
+
+		await broadcastToOrg(c.env, user.organizationId, {
+			type:
+				scope === "everyone"
+					? "whatsapp_message_deleted_for_everyone"
+					: "whatsapp_message_deleted",
+			conversationId: id,
+			messageId,
+			deletedBy: user.uid,
+			scope,
+		});
+
+		return c.json({
+			data: mapMessageRow(result.row),
+			provider: result.provider,
+		});
+	} catch (err) {
+		console.error(
+			"[WhatsApp Inbox] DELETE /conversations/:id/messages/:messageId error:",
+			err,
+		);
+		return c.json({ error: "Failed to delete message" }, 500);
 	}
 });
 
@@ -934,10 +1272,11 @@ app.put("/conversations/:id/status", requireAuth, async (c) => {
 	const pool = await createPool(c.env);
 	const body = (await c.req.json()) as { status: string };
 
-	const validStatuses = ["open", "pending", "assigned", "resolved", "closed"];
-	if (!body.status || !validStatuses.includes(body.status)) {
+	if (!body.status || !VALID_CONVERSATION_STATUSES.includes(body.status)) {
 		return c.json(
-			{ error: `status must be one of: ${validStatuses.join(", ")}` },
+			{
+				error: `status must be one of: ${VALID_CONVERSATION_STATUSES.join(", ")}`,
+			},
 			400,
 		);
 	}

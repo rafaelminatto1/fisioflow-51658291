@@ -98,11 +98,11 @@ function wrapSqlWithRls(
 			.then((results: any[]) => results[1]);
 	}) as any as NeonQueryFunction<false, false>;
 
-	(wrapped as any).query = (text: string, params?: any[]) => {
+	(wrapped as any).query = (text: string, params?: any[], options?: any) => {
 		return (sql as any)
 			.transaction([
 				sql`SELECT set_config('app.org_id', ${organizationId}::text, true)`,
-				sql.query(text, params),
+				sql.query(text, params, options),
 			])
 			.then((results: any[]) => results[1]);
 	};
@@ -124,11 +124,11 @@ function wrapSqlWithRlsFull(
 			.then((results: any[]) => results[1]);
 	}) as any;
 
-	wrapped.query = (text: string, params?: any[]) => {
+	wrapped.query = (text: string, params?: any[], options?: any) => {
 		return (sql as any)
 			.transaction([
 				sql`SELECT set_config('app.org_id', ${organizationId}::text, true)`,
-				sql.query(text, params),
+				sql.query(text, params, options),
 			])
 			.then((results: any[]) => results[1]);
 	};
