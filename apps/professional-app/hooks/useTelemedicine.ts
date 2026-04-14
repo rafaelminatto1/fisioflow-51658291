@@ -1,65 +1,72 @@
-import { useState, useEffect, useCallback } from 'react';
-import { ApiTelemedicineRoom, getTelemedicineRooms, createTelemedicineRoom, startTelemedicineRoom } from '../lib/api';
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import {
+	getTelemedicineRooms,
+	createTelemedicineRoom,
+	startTelemedicineRoom,
+	type ApiTelemedicineRoom,
+} from "../lib/api";
 
 export function useTelemedicine() {
-  const [rooms, setRooms] = useState<ApiTelemedicineRoom[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [refreshing, setRefreshing] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+	const queryClient = useQueryClient();
 
-  const fetchRooms = useCallback(async () => {
-    try {
-      setLoading(true);
-      const data = await getTelemedicineRooms();
-      setRooms(data);
-      setError(null);
-    } catch (err) {
-      console.error('[useTelemedicine] Error fetching:', err);
-      setError('Erro ao carregar salas de telemedicina');
-    } finally {
-      setLoading(false);
-    }
-  }, []);
+	const {
+		data: rooms = [],
+		isLoading,
+		isFetching,
+		refetch,
+		error,
+	} = useQuery({
+		queryKey: ["telemedicine", "rooms"],
+		queryFn: () => getTelemedicineRooms(),
+		staleTime: 1000 * 60,
+	});
 
-  const refresh = useCallback(async () => {
-    setRefreshing(true);
-    await fetchRooms();
-    setRefreshing(false);
-  }, [fetchRooms]);
+	const createMutation = useMutation({
+		mutationFn: (patientId: string) => createTelemedicineRoom(patientId),
+		onSuccess: () => {
+			queryClient.invalidateQueries({ queryKey: ["telemedicine", "rooms"] });
+		},
+	});
 
-  const createRoom = useCallback(async (patientId: string) => {
-    try {
-      const newRoom = await createTelemedicineRoom(patientId);
-      setRooms(prev => [newRoom, ...prev]);
-      return newRoom;
-    } catch (err) {
-      console.error('[useTelemedicine] Error creating:', err);
-      throw err;
-    }
-  }, []);
+	const startMutation = useMutation({
+		mutationFn: (id: string) => startTelemedicineRoom(id),
+		onMutate: async (id) => {
+			await queryClient.cancelQueries({ queryKey: ["telemedicine", "rooms"] });
+			const previousRooms = queryClient.getQueryData<ApiTelemedicineRoom[]>([
+				"telemedicine",
+				"rooms",
+			]);
+			queryClient.setQueryData<ApiTelemedicineRoom[]>(
+				["telemedicine", "rooms"],
+				(old) =>
+					old?.map((room) =>
+						room.id === id ? { ...room, status: "active" as const } : room,
+					),
+			);
+			return { previousRooms };
+		},
+		onError: (_err, _id, context) => {
+			if (context?.previousRooms) {
+				queryClient.setQueryData(
+					["telemedicine", "rooms"],
+					context.previousRooms,
+				);
+			}
+		},
+		onSettled: () => {
+			queryClient.invalidateQueries({ queryKey: ["telemedicine", "rooms"] });
+		},
+	});
 
-  const startRoom = useCallback(async (id: string) => {
-    try {
-      const updated = await startTelemedicineRoom(id);
-      setRooms(prev => prev.map(r => r.id === id ? updated : r));
-      return updated;
-    } catch (err) {
-      console.error('[useTelemedicine] Error starting:', err);
-      throw err;
-    }
-  }, []);
-
-  useEffect(() => {
-    fetchRooms();
-  }, [fetchRooms]);
-
-  return {
-    rooms,
-    loading,
-    refreshing,
-    error,
-    refresh,
-    createRoom,
-    startRoom,
-  };
+	return {
+		rooms,
+		loading: isLoading,
+		refreshing: isFetching,
+		error,
+		refresh: refetch,
+		createRoom: createMutation.mutateAsync,
+		startRoom: startMutation.mutateAsync,
+		isCreating: createMutation.isPending,
+		isStarting: startMutation.isPending,
+	};
 }

@@ -145,8 +145,14 @@ async function ensureTables(env: Env): Promise<void> {
     ];
 
     for (const statement of statements) {
-      await pool.query(statement);
+      try {
+        await pool.query(statement);
+      } catch (e) {
+        console.error(`[ensureTables] Error executing DDL: ${statement.substring(0, 50)}...`, e);
+      }
     }
+  } catch (error) {
+    console.error('[ensureTables] Critical error during table verification', error);
   } finally {
     await pool.end();
   }
