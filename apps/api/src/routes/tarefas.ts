@@ -93,7 +93,7 @@ app.patch('/:id', requireAuth, async (c) => {
     if ('references' in body && !('task_references' in body)) body.task_references = body.references;
 
     const allowed = ['titulo', 'descricao', 'status', 'prioridade', 'tipo', 'data_vencimento',
-      'start_date', 'completed_at', 'order_index', 'tags', 'checklists', 'attachments',
+      'start_date', 'completed_at', 'order_index', 'tags', 'label_ids', 'checklists', 'attachments',
       'task_references', 'dependencies', 'responsavel_id', 'project_id', 'parent_id',
       'board_id', 'column_id', 'requires_acknowledgment', 'acknowledgments'];
 
@@ -102,8 +102,8 @@ app.patch('/:id', requireAuth, async (c) => {
     let idx = 1;
     for (const key of allowed) {
       if (key in body) {
-        // tags = text[] (array JS puro); demais = jsonb (JSON.stringify)
-        const val = key === 'tags'
+        // tags/label_ids = native array (text[]/uuid[]); demais = jsonb (JSON.stringify)
+        const val = (key === 'tags' || key === 'label_ids')
           ? (body[key] ?? [])
           : ['checklists', 'attachments', 'task_references', 'dependencies', 'acknowledgments'].includes(key)
             ? jsonSerialize(body[key] ?? [])

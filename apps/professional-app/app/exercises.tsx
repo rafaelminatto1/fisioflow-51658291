@@ -16,6 +16,7 @@ import { useLocalSearchParams, router } from 'expo-router';
 import { useColors } from '@/hooks/useColorScheme';
 import { Card, Button, Modal } from '@/components';
 import { useExercisesLibrary, usePatientExerciseAssignments } from '@/hooks';
+import { useExerciseFavorites } from '@/hooks/useExerciseFavorites';
 import { useHaptics } from '@/hooks/useHaptics';
 import { useDebounce } from '@/hooks/useDebounce';
 import { SkeletonExercise } from '@/components/SkeletonExercise';
@@ -71,6 +72,8 @@ export default function ExercisesScreen() {
     favorites: showFavoritesOnly,
     limit: 20,
   });
+
+  const { isFavorite, toggleFavorite, isToggling } = useExerciseFavorites();
 
   // Simplified category list - in a real app these would come from the API
   const categoryOptions = ['Todos', 'Mobilidade', 'Força', 'Equilíbrio', 'Cardio', 'Alongamento'];
@@ -554,7 +557,7 @@ const styles = StyleSheet.create({
   },
   cardImageContainer: {
     width: '100%',
-    height: 180,
+    height: 150,
     position: 'relative',
   },
   exerciseImage: {
@@ -599,7 +602,7 @@ const styles = StyleSheet.create({
     zIndex: 2,
   },
   exerciseContent: {
-    padding: 20,
+    padding: 16,
   },
   exerciseHeader: {
     flexDirection: 'row',
@@ -621,7 +624,7 @@ const styles = StyleSheet.create({
   exerciseDescription: {
     fontSize: 14,
     lineHeight: 22,
-    marginBottom: 20,
+    marginBottom: 12,
     opacity: 0.8,
   },
   exerciseFooter: {
@@ -630,7 +633,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     borderTopWidth: 1,
     borderTopColor: 'rgba(0,0,0,0.05)',
-    paddingTop: 16,
+    paddingTop: 12,
   },
   metaContainer: {
     flexDirection: 'row',

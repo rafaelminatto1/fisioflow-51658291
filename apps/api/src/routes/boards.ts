@@ -331,4 +331,380 @@ app.get('/:id/tarefas', requireAuth, async (c) => {
   }
 });
 
+// ===== BOARD LABELS =====
+
+app.get('/:id/labels', requireAuth, async (c) => {
+  try {
+    const user = c.get('user');
+    const id = c.req.param('id');
+    if (!isUuid(id)) return c.json({ error: 'ID inválido' }, 400);
+    const db = await createPool(c.env);
+
+    const boardCheck = await db.query(
+      `SELECT id FROM boards WHERE id = $1 AND organization_id = $2`,
+      [id, user.organizationId]
+    );
+    if (!boardCheck.rows.length) return c.json({ error: 'Board não encontrado' }, 404);
+
+    const result = await db.query(
+      `SELECT * FROM board_labels WHERE board_id = $1 AND is_active = true ORDER BY order_index, created_at`,
+      [id]
+    );
+    return c.json({ data: result.rows });
+  } catch (error) {
+    console.error('[BoardLabels] GET /:id/labels error:', error);
+    return c.json({ error: 'Erro ao buscar etiquetas', data: [] }, 500);
+  }
+});
+
+app.post('/:id/labels', requireAuth, async (c) => {
+  try {
+    const user = c.get('user');
+    const id = c.req.param('id');
+    if (!isUuid(id)) return c.json({ error: 'ID inválido' }, 400);
+    const body = await c.req.json();
+    const db = await createPool(c.env);
+
+    const boardCheck = await db.query(
+      `SELECT id FROM boards WHERE id = $1 AND organization_id = $2`,
+      [id, user.organizationId]
+    );
+    if (!boardCheck.rows.length) return c.json({ error: 'Board não encontrado' }, 404);
+
+    const maxResult = await db.query(
+      `SELECT COALESCE(MAX(order_index), -1) + 1 AS next_idx FROM board_labels WHERE board_id = $1`,
+      [id]
+    );
+    const nextIdx = maxResult.rows[0]?.next_idx ?? 0;
+
+    const result = await db.query(
+      `INSERT INTO board_labels (board_id, organization_id, name, color, description, order_index)
+       VALUES ($1, $2, $3, $4, $5, $6) RETURNING *`,
+      [id, user.organizationId, body.name, body.color ?? '#94A3B8', body.description ?? null, nextIdx]
+    );
+    return c.json({ data: result.rows[0] }, 201);
+  } catch (error) {
+    console.error('[BoardLabels] POST /:id/labels error:', error);
+    return c.json({ error: 'Erro ao criar etiqueta' }, 500);
+  }
+});
+
+app.patch('/labels/:labelId', requireAuth, async (c) => {
+  try {
+    const user = c.get('user');
+    const labelId = c.req.param('labelId');
+    if (!isUuid(labelId)) return c.json({ error: 'ID inválido' }, 400);
+    const body = await c.req.json();
+    const db = await createPool(c.env);
+
+    const allowed = ['name', 'color', 'description', 'is_active', 'order_index'];
+    const sets: string[] = [];
+    const params: unknown[] = [];
+    let idx = 1;
+
+    for (const key of allowed) {
+      if (key in body) {
+        sets.push(`${key} = $${idx++}`);
+        params.push(body[key]);
+      }
+    }
+    if (!sets.length) return c.json({ error: 'Nenhum campo para atualizar' }, 400);
+
+    params.push(labelId, user.organizationId);
+    const result = await db.query(
+      `UPDATE board_labels bl SET ${sets.join(', ')}
+       FROM boards b
+       WHERE bl.id = $${idx++} AND bl.board_id = b.id AND b.organization_id = $${idx++}
+       RETURNING bl.*`,
+      params
+    );
+    if (!result.rowCount) return c.json({ error: 'Etiqueta não encontrada' }, 404);
+    return c.json({ data: result.rows[0] });
+  } catch (error) {
+    console.error('[BoardLabels] PATCH /labels/:labelId error:', error);
+    return c.json({ error: 'Erro ao atualizar etiqueta' }, 500);
+  }
+});
+
+app.delete('/labels/:labelId', requireAuth, async (c) => {
+  try {
+    const user = c.get('user');
+    const labelId = c.req.param('labelId');
+    if (!isUuid(labelId)) return c.json({ error: 'ID inválido' }, 400);
+    const db = await createPool(c.env);
+
+    // Soft delete
+    await db.query(
+      `UPDATE board_labels bl SET is_active = false
+       FROM boards b
+       WHERE bl.id = $1 AND bl.board_id = b.id AND b.organization_id = $2`,
+      [labelId, user.organizationId]
+    );
+    return c.json({ ok: true });
+  } catch (error) {
+    console.error('[BoardLabels] DELETE /labels/:labelId error:', error);
+    return c.json({ error: 'Erro ao deletar etiqueta' }, 500);
+  }
+});
+
+app.post('/labels/reorder', requireAuth, async (c) => {
+  try {
+    const user = c.get('user');
+    const { updates } = await c.req.json() as { updates: Array<{ id: string; order_index: number }> };
+    const db = await createPool(c.env);
+
+    await Promise.all(
+      updates.map(({ id, order_index }) =>
+        db.query(
+          `UPDATE board_labels bl SET order_index = $1
+           FROM boards b
+           WHERE bl.id = $2 AND bl.board_id = b.id AND b.organization_id = $3`,
+          [order_index, id, user.organizationId]
+        )
+      )
+    );
+    return c.json({ ok: true });
+  } catch (error) {
+    console.error('[BoardLabels] POST /labels/reorder error:', error);
+    return c.json({ error: 'Erro ao reordenar etiquetas' }, 500);
+  }
+});
+
+// ===== CHECKLIST TEMPLATES =====
+
+app.get('/:id/checklist-templates', requireAuth, async (c) => {
+  try {
+    const user = c.get('user');
+    const id = c.req.param('id');
+    if (!isUuid(id)) return c.json({ error: 'ID inválido' }, 400);
+    const db = await createPool(c.env);
+
+    // Return board-specific + org-global templates
+    const result = await db.query(
+      `SELECT * FROM board_checklist_templates
+       WHERE organization_id = $1 AND (board_id = $2 OR board_id IS NULL)
+       ORDER BY usage_count DESC, created_at DESC`,
+      [user.organizationId, id]
+    );
+    return c.json({ data: result.rows });
+  } catch (error) {
+    console.error('[ChecklistTemplates] GET /:id/checklist-templates error:', error);
+    return c.json({ error: 'Erro ao buscar templates', data: [] }, 500);
+  }
+});
+
+app.post('/:id/checklist-templates', requireAuth, async (c) => {
+  try {
+    const user = c.get('user');
+    const id = c.req.param('id');
+    if (!isUuid(id)) return c.json({ error: 'ID inválido' }, 400);
+    const body = await c.req.json();
+    const db = await createPool(c.env);
+
+    const result = await db.query(
+      `INSERT INTO board_checklist_templates
+         (board_id, organization_id, name, description, items, category, created_by)
+       VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING *`,
+      [
+        body.is_global ? null : id,
+        user.organizationId,
+        body.name,
+        body.description ?? null,
+        JSON.stringify(body.items ?? []),
+        body.category ?? null,
+        user.uid,
+      ]
+    );
+    return c.json({ data: result.rows[0] }, 201);
+  } catch (error) {
+    console.error('[ChecklistTemplates] POST /:id/checklist-templates error:', error);
+    return c.json({ error: 'Erro ao criar template' }, 500);
+  }
+});
+
+app.patch('/checklist-templates/:templateId', requireAuth, async (c) => {
+  try {
+    const user = c.get('user');
+    const templateId = c.req.param('templateId');
+    if (!isUuid(templateId)) return c.json({ error: 'ID inválido' }, 400);
+    const body = await c.req.json();
+    const db = await createPool(c.env);
+
+    const allowed = ['name', 'description', 'items', 'category'];
+    const sets: string[] = [];
+    const params: unknown[] = [];
+    let idx = 1;
+
+    for (const key of allowed) {
+      if (key in body) {
+        sets.push(`${key} = $${idx++}`);
+        params.push(key === 'items' ? JSON.stringify(body[key]) : body[key]);
+      }
+    }
+    if (!sets.length) return c.json({ error: 'Nenhum campo para atualizar' }, 400);
+
+    params.push(templateId, user.organizationId);
+    const result = await db.query(
+      `UPDATE board_checklist_templates SET ${sets.join(', ')}
+       WHERE id = $${idx++} AND organization_id = $${idx++} RETURNING *`,
+      params
+    );
+    if (!result.rowCount) return c.json({ error: 'Template não encontrado' }, 404);
+    return c.json({ data: result.rows[0] });
+  } catch (error) {
+    console.error('[ChecklistTemplates] PATCH error:', error);
+    return c.json({ error: 'Erro ao atualizar template' }, 500);
+  }
+});
+
+app.delete('/checklist-templates/:templateId', requireAuth, async (c) => {
+  try {
+    const user = c.get('user');
+    const templateId = c.req.param('templateId');
+    if (!isUuid(templateId)) return c.json({ error: 'ID inválido' }, 400);
+    const db = await createPool(c.env);
+
+    await db.query(
+      `DELETE FROM board_checklist_templates WHERE id = $1 AND organization_id = $2`,
+      [templateId, user.organizationId]
+    );
+    return c.json({ ok: true });
+  } catch (error) {
+    console.error('[ChecklistTemplates] DELETE error:', error);
+    return c.json({ error: 'Erro ao deletar template' }, 500);
+  }
+});
+
+// Incrementa usage_count e retorna o template (para aplicar)
+app.post('/checklist-templates/:templateId/use', requireAuth, async (c) => {
+  try {
+    const user = c.get('user');
+    const templateId = c.req.param('templateId');
+    if (!isUuid(templateId)) return c.json({ error: 'ID inválido' }, 400);
+    const db = await createPool(c.env);
+
+    const result = await db.query(
+      `UPDATE board_checklist_templates SET usage_count = usage_count + 1
+       WHERE id = $1 AND organization_id = $2 RETURNING *`,
+      [templateId, user.organizationId]
+    );
+    if (!result.rowCount) return c.json({ error: 'Template não encontrado' }, 404);
+    return c.json({ data: result.rows[0] });
+  } catch (error) {
+    console.error('[ChecklistTemplates] POST /use error:', error);
+    return c.json({ error: 'Erro ao usar template' }, 500);
+  }
+});
+
+// ===== BOARD AUTOMATIONS =====
+
+app.get('/:id/automations', requireAuth, async (c) => {
+  try {
+    const user = c.get('user');
+    const id = c.req.param('id');
+    if (!isUuid(id)) return c.json({ error: 'ID inválido' }, 400);
+    const db = await createPool(c.env);
+
+    const result = await db.query(
+      `SELECT * FROM board_automations WHERE board_id = $1 AND organization_id = $2 ORDER BY created_at`,
+      [id, user.organizationId]
+    );
+    return c.json({ data: result.rows });
+  } catch (error) {
+    console.error('[BoardAutomations] GET error:', error);
+    return c.json({ error: 'Erro ao buscar automações', data: [] }, 500);
+  }
+});
+
+app.post('/:id/automations', requireAuth, async (c) => {
+  try {
+    const user = c.get('user');
+    const id = c.req.param('id');
+    if (!isUuid(id)) return c.json({ error: 'ID inválido' }, 400);
+    const body = await c.req.json();
+    const db = await createPool(c.env);
+
+    const boardCheck = await db.query(
+      `SELECT id FROM boards WHERE id = $1 AND organization_id = $2`,
+      [id, user.organizationId]
+    );
+    if (!boardCheck.rows.length) return c.json({ error: 'Board não encontrado' }, 404);
+
+    const result = await db.query(
+      `INSERT INTO board_automations
+         (board_id, organization_id, name, description, trigger, conditions, actions, created_by)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8) RETURNING *`,
+      [
+        id,
+        user.organizationId,
+        body.name,
+        body.description ?? null,
+        JSON.stringify(body.trigger),
+        JSON.stringify(body.conditions ?? []),
+        JSON.stringify(body.actions ?? []),
+        user.uid,
+      ]
+    );
+    return c.json({ data: result.rows[0] }, 201);
+  } catch (error) {
+    console.error('[BoardAutomations] POST error:', error);
+    return c.json({ error: 'Erro ao criar automação' }, 500);
+  }
+});
+
+app.patch('/automations/:automationId', requireAuth, async (c) => {
+  try {
+    const user = c.get('user');
+    const automationId = c.req.param('automationId');
+    if (!isUuid(automationId)) return c.json({ error: 'ID inválido' }, 400);
+    const body = await c.req.json();
+    const db = await createPool(c.env);
+
+    const allowed = ['name', 'description', 'is_active', 'trigger', 'conditions', 'actions'];
+    const sets: string[] = [];
+    const params: unknown[] = [];
+    let idx = 1;
+
+    for (const key of allowed) {
+      if (key in body) {
+        sets.push(`${key} = $${idx++}`);
+        const jsonKeys = ['trigger', 'conditions', 'actions'];
+        params.push(jsonKeys.includes(key) ? JSON.stringify(body[key]) : body[key]);
+      }
+    }
+    if (!sets.length) return c.json({ error: 'Nenhum campo para atualizar' }, 400);
+
+    sets.push(`updated_at = NOW()`);
+    params.push(automationId, user.organizationId);
+    const result = await db.query(
+      `UPDATE board_automations SET ${sets.join(', ')}
+       WHERE id = $${idx++} AND organization_id = $${idx++} RETURNING *`,
+      params
+    );
+    if (!result.rowCount) return c.json({ error: 'Automação não encontrada' }, 404);
+    return c.json({ data: result.rows[0] });
+  } catch (error) {
+    console.error('[BoardAutomations] PATCH error:', error);
+    return c.json({ error: 'Erro ao atualizar automação' }, 500);
+  }
+});
+
+app.delete('/automations/:automationId', requireAuth, async (c) => {
+  try {
+    const user = c.get('user');
+    const automationId = c.req.param('automationId');
+    if (!isUuid(automationId)) return c.json({ error: 'ID inválido' }, 400);
+    const db = await createPool(c.env);
+
+    await db.query(
+      `DELETE FROM board_automations WHERE id = $1 AND organization_id = $2`,
+      [automationId, user.organizationId]
+    );
+    return c.json({ ok: true });
+  } catch (error) {
+    console.error('[BoardAutomations] DELETE error:', error);
+    return c.json({ error: 'Erro ao deletar automação' }, 500);
+  }
+});
+
 export { app as boardsRoutes };

@@ -30,9 +30,11 @@ import {
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useExerciseFavorites } from "@/hooks/useExerciseFavorites";
+import { useToast } from "@/hooks/use-toast";
 import type { Exercise } from "@/hooks/useExercises";
 import { getBestImageUrl } from "@/lib/imageUtils";
 import { OptimizedImage } from "@/components/ui/OptimizedImage";
+import "@/styles/print.css";
 
 interface ExerciseViewModalProps {
 	open: boolean;
@@ -85,6 +87,7 @@ export function ExerciseViewModal({
 	onEdit,
 }: ExerciseViewModalProps) {
 	const { isFavorite, toggleFavorite } = useExerciseFavorites();
+	const { toast } = useToast();
 
 	if (!exercise) return null;
 
@@ -99,21 +102,54 @@ export function ExerciseViewModal({
 	const defaultTab = hasVideo ? "video" : "image";
 
 	const handleShare = async () => {
-		if (navigator.share) {
-			await navigator.share({
+		try {
+			const shareData = {
 				title: exercise?.name ?? "Exercício",
 				text: exercise.description || "",
 				url: window.location.href,
+			};
+
+			if (navigator.share) {
+				await navigator.share(shareData);
+				toast({
+					title: "Compartilhado com sucesso!",
+					description: "O exercício foi compartilhado.",
+				});
+			} else {
+				await navigator.clipboard.writeText(shareData.url);
+				toast({
+					title: "Link copiado!",
+					description: "O link foi copiado para a área de transferência.",
+				});
+			}
+		} catch (error) {
+			if (error instanceof Error && error.name !== "AbortError") {
+				toast({
+					title: "Erro ao compartilhar",
+					description:
+						"Não foi possível compartilhar o exercício. Tente novamente.",
+					variant: "destructive",
+				});
+			}
+		}
+	};
+
+	const handlePrint = () => {
+		try {
+			window.print();
+		} catch (error) {
+			toast({
+				title: "Erro ao imprimir",
+				description: "Não foi possível abrir o diálogo de impressão.",
+				variant: "destructive",
 			});
-		} else {
-			navigator.clipboard.writeText(window.location.href);
 		}
 	};
 
 	return (
 		<Dialog open={open} onOpenChange={onOpenChange}>
 			<DialogContent
-				className="fixed left-[50%] top-[50%] z-50 !-translate-x-1/2 !-translate-y-1/2 w-[90vw] md:w-[80vw] lg:w-[85vw] max-w-6xl max-h-[85vh] p-0 gap-0 overflow-hidden flex flex-col bg-background/95 backdrop-blur-xl border-border/50 shadow-2xl rounded-lg"
+				className="fixed left-[50%] top-[50%] z-50 !-translate-x-1/2 !-translate-y-1/2 w-[90vw] md:w-[80vw] lg:w-[85vw] max-w-6xl max-h-[85vh] p-0 gap-0 overflow-hidden flex flex-col bg-background/95 backdrop-blur-xl border-border/50 shadow-2xl rounded-lg exercise-print-layout"
 				onInteractOutside={(e) => e.preventDefault()}
 				onEscapeKeyDown={(e) => {
 					e.preventDefault();
@@ -121,19 +157,19 @@ export function ExerciseViewModal({
 				}}
 			>
 				{/* Header */}
-				<div className="flex-none p-4 sm:p-6 border-b bg-background/50 backdrop-blur-sm z-10 flex items-start justify-between gap-4">
+				<div className="flex-none p-4 sm:p-6 border-b bg-background/50 backdrop-blur-sm z-10 flex items-start justify-between gap-4 exercise-print-header">
 					<div className="space-y-1.5 pt-1">
-						<DialogTitle className="text-2xl font-bold tracking-tight text-foreground flex items-center gap-2">
+						<DialogTitle className="text-2xl font-bold tracking-tight text-foreground flex items-center gap-2 exercise-print-title">
 							{exercise?.name ?? "Exercício"}
 						</DialogTitle>
 						<DialogDescription className="sr-only">
 							Visualização detalhada do exercício {exercise?.name}
 						</DialogDescription>
-						<div className="flex items-center gap-2 flex-wrap">
+						<div className="flex items-center gap-2 flex-wrap exercise-print-badges no-print">
 							{exercise.category && (
 								<Badge
 									variant="secondary"
-									className="bg-primary/5 text-primary hover:bg-primary/10 border-primary/10 transition-colors"
+									className="bg-primary/5 text-primary hover:bg-primary/10 border-primary/10 transition-colors exercise-print-badge"
 								>
 									{exercise.category}
 								</Badge>
@@ -144,6 +180,7 @@ export function ExerciseViewModal({
 									className={cn(
 										"border bg-background/50",
 										difficultyColors[exercise.difficulty],
+										"exercise-print-badge",
 									)}
 								>
 									{exercise.difficulty}
@@ -193,7 +230,7 @@ export function ExerciseViewModal({
 								variant="ghost"
 								size="icon"
 								className="h-8 w-8 text-muted-foreground hover:text-primary"
-								onClick={() => window.print()}
+								onClick={handlePrint}
 								title="Imprimir"
 							>
 								<Printer className="h-4 w-4" />
@@ -232,7 +269,7 @@ export function ExerciseViewModal({
 				{/* Content - Scrollable */}
 				<div className="flex-1 min-h-0 overflow-hidden grid grid-cols-1 lg:grid-cols-12">
 					{/* Left Column - Media (8 cols) */}
-					<div className="lg:col-span-8 bg-muted/10 h-full flex flex-col border-r border-border/50 overflow-hidden relative">
+					<div className="lg:col-span-8 bg-muted/10 h-full flex flex-col border-r border-border/50 overflow-hidden relative exercise-print-media">
 						<div className="absolute inset-0 bg-gradient-to-br from-background via-muted/20 to-muted/40 pointer-events-none" />
 
 						<Tabs
@@ -337,7 +374,7 @@ export function ExerciseViewModal({
 						<ScrollArea className="flex-1 h-full min-h-0">
 							<div className="p-4 sm:p-6 space-y-6 sm:space-y-8">
 								{/* Metrics / Parameters */}
-								<div className="grid grid-cols-3 gap-4">
+								<div className="grid grid-cols-3 gap-4 exercise-print-metrics">
 									<MetricCard
 										icon={Repeat}
 										label="Séries"
@@ -361,14 +398,14 @@ export function ExerciseViewModal({
 								<Separator />
 
 								{/* Description */}
-								<div className="space-y-3">
-									<div className="flex items-center gap-2 text-primary font-medium">
+								<div className="space-y-3 exercise-print-section">
+									<div className="flex items-center gap-2 text-primary font-medium exercise-print-section-title no-print">
 										<div className="p-1.5 rounded-md bg-primary/10">
 											<FileText className="h-4 w-4" />
 										</div>
 										Descrição
 									</div>
-									<div className="bg-muted/30 p-4 rounded-lg border border-border/40">
+									<div className="bg-muted/30 p-4 rounded-lg border border-border/40 exercise-print-section-content">
 										{exercise.description ? (
 											<p className="text-sm text-muted-foreground leading-relaxed text-pretty">
 												{exercise.description}
@@ -382,14 +419,14 @@ export function ExerciseViewModal({
 								</div>
 
 								{/* Instructions */}
-								<div className="space-y-3">
-									<div className="flex items-center gap-2 text-primary font-medium">
+								<div className="space-y-3 exercise-print-section">
+									<div className="flex items-center gap-2 text-primary font-medium exercise-print-section-title no-print">
 										<div className="p-1.5 rounded-md bg-primary/10">
 											<CheckCircle2 className="h-4 w-4" />
 										</div>
 										Instruções de Execução
 									</div>
-									<div className="bg-muted/30  rounded-lg border border-border/40 overflow-hidden">
+									<div className="bg-muted/30  rounded-lg border border-border/40 overflow-hidden exercise-print-section-content">
 										{exercise.instructions ? (
 											<div className="p-4 text-sm text-muted-foreground leading-relaxed whitespace-pre-wrap">
 												{exercise.instructions}
@@ -404,7 +441,7 @@ export function ExerciseViewModal({
 
 								{/* Related (Optional - keeping simplified for now) */}
 								{exercise.category && (
-									<div className="pt-4 mt-auto">
+									<div className="pt-4 mt-auto no-print">
 										<h4 className="text-xs font-semibold uppercase text-muted-foreground tracking-wider mb-3">
 											Relacionados
 										</h4>
@@ -420,6 +457,14 @@ export function ExerciseViewModal({
 										</Button>
 									</div>
 								)}
+
+								{/* Print Footer */}
+								<div className="exercise-print-footer hidden print:block">
+									<p>
+										Gerado pelo FisioFlow - Sistema de Gerenciamento de
+										Fisioterapia
+									</p>
+								</div>
 							</div>
 						</ScrollArea>
 					</div>
@@ -441,11 +486,11 @@ function MetricCard({
 	subLabel?: string;
 }) {
 	return (
-		<div className="bg-muted/30 rounded-xl p-3 border border-border/50 flex flex-col items-center justify-center text-center gap-1 hover:bg-muted/50 transition-colors group">
-			<div className="p-2 rounded-full bg-background shadow-sm mb-1 group-hover:scale-110 transition-transform duration-300">
+		<div className="bg-muted/30 rounded-xl p-3 border border-border/50 flex flex-col items-center justify-center text-center gap-1 hover:bg-muted/50 transition-colors group exercise-print-metric">
+			<div className="p-2 rounded-full bg-background shadow-sm mb-1 group-hover:scale-110 transition-transform duration-300 no-print">
 				<Icon className="h-4 w-4 text-primary" />
 			</div>
-			<span className="text-[10px] items-center font-medium text-muted-foreground uppercase tracking-wider">
+			<span className="text-[10px] items-center font-medium text-muted-foreground uppercase tracking-wider exercise-print-metric-label">
 				{label}
 			</span>
 			<div className="flex items-baseline gap-1">
@@ -453,6 +498,7 @@ function MetricCard({
 					className={cn(
 						"text-lg font-bold tracking-tight",
 						!value && "text-muted-foreground/40",
+						"exercise-print-metric-value",
 					)}
 				>
 					{value || "-"}

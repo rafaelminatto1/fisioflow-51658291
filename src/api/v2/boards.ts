@@ -103,3 +103,103 @@ export const boardsApi = {
 			body: JSON.stringify({ updates }),
 		}),
 };
+
+// ============================================================
+// BOARD LABELS API
+// ============================================================
+export const boardLabelsApi = {
+	list: (boardId: string) =>
+		request<{ data: Record<string, unknown>[] }>(
+			`/api/boards/${boardId}/labels`,
+		),
+	create: (
+		boardId: string,
+		data: { name: string; color: string; description?: string },
+	) =>
+		request<{ data: Record<string, unknown> }>(
+			`/api/boards/${boardId}/labels`,
+			{ method: "POST", body: JSON.stringify(data) },
+		),
+	update: (labelId: string, data: Record<string, unknown>) =>
+		request<{ data: Record<string, unknown> }>(
+			`/api/boards/labels/${labelId}`,
+			{ method: "PATCH", body: JSON.stringify(data) },
+		),
+	delete: (labelId: string) =>
+		request<{ ok: boolean }>(`/api/boards/labels/${labelId}`, {
+			method: "DELETE",
+		}),
+	reorder: (updates: Array<{ id: string; order_index: number }>) =>
+		request<{ ok: boolean }>("/api/boards/labels/reorder", {
+			method: "POST",
+			body: JSON.stringify({ updates }),
+		}),
+};
+
+// ============================================================
+// BOARD CHECKLIST TEMPLATES API
+// ============================================================
+export const boardChecklistTemplatesApi = {
+	list: (boardId: string) =>
+		request<{ data: Record<string, unknown>[] }>(
+			`/api/boards/${boardId}/checklist-templates`,
+		),
+	create: (
+		boardId: string,
+		data: {
+			name: string;
+			description?: string;
+			items: unknown[];
+			category?: string;
+		},
+	) =>
+		request<{ data: Record<string, unknown> }>(
+			`/api/boards/${boardId}/checklist-templates`,
+			{ method: "POST", body: JSON.stringify(data) },
+		),
+	update: (templateId: string, data: Record<string, unknown>) =>
+		request<{ data: Record<string, unknown> }>(
+			`/api/boards/checklist-templates/${templateId}`,
+			{ method: "PATCH", body: JSON.stringify(data) },
+		),
+	delete: (templateId: string) =>
+		request<{ ok: boolean }>(
+			`/api/boards/checklist-templates/${templateId}`,
+			{ method: "DELETE" },
+		),
+	use: (templateId: string) =>
+		request<{ data: Record<string, unknown> }>(
+			`/api/boards/checklist-templates/${templateId}/use`,
+			{ method: "POST" },
+		),
+};
+
+// ============================================================
+// BOARD AUTOMATIONS API
+// ============================================================
+export const boardAutomationsApi = {
+	list: (boardId: string) =>
+		request<{ data: Record<string, unknown>[] }>(
+			`/api/boards/${boardId}/automations`,
+		),
+	create: (boardId: string, data: Record<string, unknown>) =>
+		request<{ data: Record<string, unknown> }>(
+			`/api/boards/${boardId}/automations`,
+			{ method: "POST", body: JSON.stringify(data) },
+		),
+	update: (automationId: string, data: Record<string, unknown>) =>
+		request<{ data: Record<string, unknown> }>(
+			`/api/boards/automations/${automationId}`,
+			{ method: "PATCH", body: JSON.stringify(data) },
+		),
+	delete: (automationId: string) =>
+		request<{ ok: boolean }>(
+			`/api/boards/automations/${automationId}`,
+			{ method: "DELETE" },
+		),
+	toggle: (automationId: string, isActive: boolean) =>
+		request<{ data: Record<string, unknown> }>(
+			`/api/boards/automations/${automationId}`,
+			{ method: "PATCH", body: JSON.stringify({ is_active: isActive }) },
+		),
+};

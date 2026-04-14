@@ -150,6 +150,7 @@ export interface Tarefa {
 
 	// Labels & Tags
 	tags: string[];
+	label_ids?: string[]; // Referências a board_labels (com cor/nome gerenciados)
 	color?: string; // Card color
 	cover_image?: string; // Card cover image
 
@@ -281,6 +282,8 @@ export interface TaskFilter {
 	tipo?: TarefaTipo[];
 	assignees?: string[];
 	tags?: string[];
+	label_ids?: string[];
+	has_pending_checklist?: boolean;
 	project_id?: string;
 	has_due_date?: boolean;
 	is_overdue?: boolean;

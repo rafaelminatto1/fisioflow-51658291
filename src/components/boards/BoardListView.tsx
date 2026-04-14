@@ -18,6 +18,7 @@ import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import type { BoardColumn } from "@/types/boards";
 import type { Tarefa } from "@/types/tarefas";
+import { useBoardLabels } from "@/contexts/BoardLabelsContext";
 
 interface BoardListViewProps {
 	columns: BoardColumn[];

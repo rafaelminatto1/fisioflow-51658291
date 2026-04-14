@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect, useMemo, useRef, useCallback } from "react";
 import { useForm, useFieldArray } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -84,6 +84,10 @@ import {
 import { useUpdateTarefa, useTarefas } from "@/hooks/useTarefas";
 import { toast } from "sonner";
 import { useIsMobile } from "@/hooks/use-mobile";
+import { useBoardLabels } from "@/contexts/BoardLabelsContext";
+import { useQuery, useMutation } from "@tanstack/react-query";
+import { boardChecklistTemplatesApi } from "@/api/v2";
+import type { BoardChecklistTemplate } from "@/types/boards";
 
 const attachmentSchema = z.object({
 	id: z.string(),
@@ -169,11 +173,50 @@ export function TaskDetailModal({
 }: TaskDetailModalProps) {
 	const isMobile = useIsMobile();
 	const updateTarefa = useUpdateTarefa();
-	
+
 	const { data: _allTarefas } = useTarefas();
+
+	// Board labels context (provided by KanbanFull or empty outside board context)
+	const { labels: boardLabels, labelsMap } = useBoardLabels();
+	const boardId = tarefa?.board_id;
+
+	// Checklist templates
+	const { data: templatesData } = useQuery({
+		queryKey: ["boards", boardId, "checklist-templates"],
+		queryFn: () => boardChecklistTemplatesApi.list(boardId!),
+		enabled: !!boardId,
+	});
+	const checklistTemplates: BoardChecklistTemplate[] = (
+		templatesData?.data ?? []
+	) as BoardChecklistTemplate[];
+
+	const useTemplateMutation = useMutation({
+		mutationFn: (templateId: string) =>
+			boardChecklistTemplatesApi.use(templateId),
+	});
+
+	const saveTemplateMutation = useMutation({
+		mutationFn: (data: { name: string; items: unknown[] }) =>
+			boardChecklistTemplatesApi.create(boardId!, {
+				name: data.name,
+				items: data.items,
+			}),
+		onSuccess: () => toast.success("Template salvo com sucesso!"),
+	});
 
 	const [activeTab, setActiveTab] = useState("details");
 	const [newChecklistTitle, setNewChecklistTitle] = useState("");
+	const [selectedLabelIds, setSelectedLabelIds] = useState<string[]>([]);
+	const [saveTemplateOpen, setSaveTemplateOpen] = useState(false);
+	const [saveTemplateName, setSaveTemplateName] = useState("");
+
+	// Stable ref to always have the latest onSubmit without stale closures
+	const onSubmitRef = useRef<(data: TarefaDetailFormData) => Promise<void>>(
+		async () => {},
+	);
+	const triggerSave = useCallback(() => {
+		form.handleSubmit((data) => onSubmitRef.current(data))();
+	}, [form]);
 
 	const form = useForm<TarefaDetailFormData>({
 		resolver: zodResolver(tarefaDetailSchema),
@@ -249,6 +292,7 @@ export function TaskDetailModal({
 				dependencies: tarefa.dependencies || [],
 				requires_acknowledgment: tarefa.requires_acknowledgment || false,
 			});
+			setSelectedLabelIds(tarefa.label_ids ?? []);
 		}
 	}, [tarefa, form]);
 
@@ -353,7 +397,7 @@ export function TaskDetailModal({
 			: null;
 	}, [checklists]);
 
-	const onSubmit = async (data: TarefaDetailFormData) => {
+	const onSubmit = useCallback(async (data: TarefaDetailFormData) => {
 		if (!tarefa) return;
 
 		try {
@@ -370,6 +414,7 @@ export function TaskDetailModal({
 				data_vencimento: data.data_vencimento?.toISOString().split("T")[0],
 				start_date: data.start_date?.toISOString().split("T")[0],
 				tags: data.tags,
+				label_ids: selectedLabelIds,
 				checklists: data.checklists,
 				attachments: data.attachments,
 				references: data.references,
@@ -382,7 +427,12 @@ export function TaskDetailModal({
 		} catch {
 			// Error handled in hook
 		}
-	};
+	}, [tarefa, updateTarefa, selectedLabelIds]);
+
+	// Keep ref always pointing to latest onSubmit (avoids stale closures)
+	useEffect(() => {
+		onSubmitRef.current = onSubmit;
+	}, [onSubmit]);
 
 	const handleAutoSave = () => {
 		if (form.formState.isDirty) {
@@ -770,36 +820,97 @@ export function TaskDetailModal({
 
 											<div className="space-y-2">
 												<Label className="font-bold text-xs text-slate-500 uppercase">
-													Etiquetas / Tags
+													Etiquetas
 												</Label>
-												<div className="flex items-center gap-2 p-2 bg-slate-50 border border-slate-200 rounded-xl min-h-[44px]">
-													<Tag className="h-4 w-4 text-slate-400 shrink-0 ml-1" />
-													<Input
-														placeholder="Add tag..."
-														onKeyDown={handleAddTag}
-														className="flex-1 border-none bg-transparent focus-visible:ring-0 h-7 text-sm"
-													/>
-												</div>
-												{tags.length > 0 && (
-													<div className="flex flex-wrap gap-1.5 mt-2">
-														{tags.map((tag, i) => (
-															<Badge
-																key={i}
-																variant="secondary"
-																className="gap-1 rounded-lg px-2 py-1 bg-white border-slate-200 text-slate-600"
-															>
-																{tag}
-																<X
-																	className="h-3 w-3 cursor-pointer hover:text-destructive"
-																	onClick={() => {
-																		handleRemoveTag(tag);
-																		handleAutoSave();
-																	}}
-																/>
-															</Badge>
-														))}
+
+												{/* Board labels (colored, managed) */}
+												{boardId && boardLabels.length > 0 && (
+													<div className="space-y-2">
+														<div className="flex flex-wrap gap-1.5">
+															{boardLabels.map((label) => {
+																const active = selectedLabelIds.includes(label.id);
+																return (
+																	<button
+																		key={label.id}
+																		type="button"
+																			onClick={() => {
+																				setSelectedLabelIds((prev) => {
+																					const next = active
+																						? prev.filter((id) => id !== label.id)
+																						: [...prev, label.id];
+																					setTimeout(() => triggerSave(), 0);
+																					return next;
+																				});
+																			}}
+																		className={cn(
+																			"flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-medium border transition-all",
+																			active ? "ring-2 ring-offset-1" : "opacity-60 hover:opacity-100",
+																		)}
+																		style={
+																			active
+																				? {
+																						backgroundColor: label.color + "22",
+																						color: label.color,
+																						borderColor: label.color + "66",
+																						ringColor: label.color,
+																					}
+																				: {
+																						backgroundColor: "transparent",
+																						color: label.color,
+																						borderColor: label.color + "44",
+																					}
+																		}
+																	>
+																		<span
+																			className="w-2.5 h-2.5 rounded-full"
+																			style={{ backgroundColor: label.color }}
+																		/>
+																		{label.name}
+																		{active && <X className="h-2.5 w-2.5 ml-0.5" />}
+																	</button>
+																);
+															})}
+														</div>
+														<p className="text-[11px] text-muted-foreground">
+															Clique para adicionar ou remover etiquetas do board.
+														</p>
 													</div>
 												)}
+
+												{/* Legacy text tags */}
+												<div>
+													<Label className="font-bold text-xs text-slate-400 uppercase">
+														Tags livres
+													</Label>
+													<div className="flex items-center gap-2 p-2 bg-slate-50 border border-slate-200 rounded-xl min-h-[44px] mt-1">
+														<Tag className="h-4 w-4 text-slate-400 shrink-0 ml-1" />
+														<Input
+															placeholder="Digite e pressione Enter para adicionar..."
+															onKeyDown={handleAddTag}
+															className="flex-1 border-none bg-transparent focus-visible:ring-0 h-7 text-sm"
+														/>
+													</div>
+													{tags.length > 0 && (
+														<div className="flex flex-wrap gap-1.5 mt-2">
+															{tags.map((tag, i) => (
+																<Badge
+																	key={i}
+																	variant="secondary"
+																	className="gap-1 rounded-lg px-2 py-1 bg-white border-slate-200 text-slate-600"
+																>
+																	{tag}
+																	<X
+																		className="h-3 w-3 cursor-pointer hover:text-destructive"
+																		onClick={() => {
+																			handleRemoveTag(tag);
+																			handleAutoSave();
+																		}}
+																	/>
+																</Badge>
+															))}
+														</div>
+													)}
+												</div>
 											</div>
 										</div>
 									</TabsContent>
@@ -827,22 +938,172 @@ export function TaskDetailModal({
 											</Card>
 										)}
 
-										<div className="flex items-center gap-2">
-											<Input
-												placeholder="Novo checklist (ex: Documentação, Testes...)"
-												value={newChecklistTitle}
-												onChange={(e) => setNewChecklistTitle(e.target.value)}
-												onKeyDown={(e) => e.key === "Enter" && addChecklist()}
-												className="rounded-xl border-slate-200"
-											/>
-											<Button
-												type="button"
-												onClick={addChecklist}
-												disabled={!newChecklistTitle.trim()}
-												className="rounded-xl px-4 bg-slate-900"
-											>
-												<Plus className="h-4 w-4" />
-											</Button>
+										<div className="space-y-2">
+											<div className="flex items-center gap-2">
+												<Input
+													placeholder="Novo checklist (ex: Documentação, Testes...)"
+													value={newChecklistTitle}
+													onChange={(e) => setNewChecklistTitle(e.target.value)}
+													onKeyDown={(e) => e.key === "Enter" && addChecklist()}
+													className="rounded-xl border-slate-200"
+												/>
+												<Button
+													type="button"
+													onClick={addChecklist}
+													disabled={!newChecklistTitle.trim()}
+													className="rounded-xl px-4 bg-slate-900"
+												>
+													<Plus className="h-4 w-4" />
+												</Button>
+											</div>
+
+											{/* Template actions (only when in board context) */}
+											{boardId && (
+												<div className="flex gap-2">
+													{checklistTemplates.length > 0 && (
+														<Popover>
+															<PopoverTrigger asChild>
+																<Button
+																	type="button"
+																	variant="outline"
+																	size="sm"
+																	className="h-8 rounded-xl gap-1.5 text-xs"
+																>
+																	<CheckCircle2 className="h-3.5 w-3.5" />
+																	Aplicar template
+																</Button>
+															</PopoverTrigger>
+															<PopoverContent className="w-64 p-2" align="start">
+																<p className="text-xs font-medium text-muted-foreground px-1 pb-1">
+																	Selecione um template
+																</p>
+																{checklistTemplates.map((tpl) => (
+																	<button
+																		key={tpl.id}
+																		type="button"
+																		onClick={() => {
+																			useTemplateMutation.mutate(tpl.id);
+																			// Apply items as a new checklist
+																			appendChecklist({
+																				id: crypto.randomUUID(),
+																				title: tpl.name,
+																				items: tpl.items.map((item) => ({
+																					id: crypto.randomUUID(),
+																					text: item.text,
+																					completed: false,
+																				})),
+																			});
+																		}}
+																		className="flex w-full items-start gap-2 rounded-md px-2 py-1.5 text-sm hover:bg-accent transition-colors text-left"
+																	>
+																		<div className="flex-1 min-w-0">
+																			<p className="font-medium truncate">
+																				{tpl.name}
+																			</p>
+																			{tpl.items.length > 0 && (
+																				<p className="text-xs text-muted-foreground">
+																					{tpl.items.length} ite
+																					{tpl.items.length === 1 ? "m" : "ns"}
+																					{tpl.usage_count > 0 &&
+																						` · usado ${tpl.usage_count}x`}
+																				</p>
+																			)}
+																		</div>
+																	</button>
+																))}
+															</PopoverContent>
+														</Popover>
+													)}
+
+													{checklistFields.length > 0 && (
+														<Popover
+															open={saveTemplateOpen}
+															onOpenChange={(o) => {
+																setSaveTemplateOpen(o);
+																if (o)
+																	setSaveTemplateName(
+																		checklistFields[0]?.title ?? "",
+																	);
+															}}
+														>
+															<PopoverTrigger asChild>
+																<Button
+																	type="button"
+																	variant="outline"
+																	size="sm"
+																	className="h-8 rounded-xl gap-1.5 text-xs"
+																	disabled={saveTemplateMutation.isPending}
+																>
+																	<Save className="h-3.5 w-3.5" />
+																	Salvar como template
+																</Button>
+															</PopoverTrigger>
+															<PopoverContent className="w-64 p-3" align="start">
+																<p className="text-xs font-medium mb-2">
+																	Nome do template
+																</p>
+																<Input
+																	placeholder="Ex: Avaliação inicial"
+																	value={saveTemplateName}
+																	onChange={(e) =>
+																		setSaveTemplateName(e.target.value)
+																	}
+																	onKeyDown={(e) => {
+																		if (e.key === "Enter" && saveTemplateName.trim()) {
+																			const items = checklistFields.flatMap(
+																				(cl) =>
+																					cl.items.map((item) => ({
+																						text: item.text,
+																					})),
+																			);
+																			saveTemplateMutation.mutate({
+																				name: saveTemplateName.trim(),
+																				items,
+																			});
+																			setSaveTemplateOpen(false);
+																		}
+																	}}
+																	autoFocus
+																	className="mb-2"
+																/>
+																<div className="flex gap-2">
+																	<Button
+																		size="sm"
+																		variant="ghost"
+																		className="flex-1 h-7 text-xs"
+																		onClick={() => setSaveTemplateOpen(false)}
+																	>
+																		Cancelar
+																	</Button>
+																	<Button
+																		size="sm"
+																		className="flex-1 h-7 text-xs"
+																		disabled={
+																			!saveTemplateName.trim() ||
+																			saveTemplateMutation.isPending
+																		}
+																		onClick={() => {
+																			const items = checklistFields.flatMap(
+																				(cl) =>
+																					cl.items.map((item) => ({
+																						text: item.text,
+																					})),
+																			);
+																			saveTemplateMutation.mutate({
+																				name: saveTemplateName.trim(),
+																				items,
+																			});
+																			setSaveTemplateOpen(false);
+																		}}
+																	>
+																		Salvar
+																	</Button>
+																</div>
+															</PopoverContent>
+														</Popover>
+													)}
+												</div>
+											)}
 										</div>
 
 										<div className="space-y-4">
