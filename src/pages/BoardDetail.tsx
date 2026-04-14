@@ -33,6 +33,7 @@ import {
 import { useBoardTarefas } from "@/hooks/useBoardColumns";
 import { useBoard, useDeleteBoard, useUpdateBoard } from "@/hooks/useBoards";
 import { useTeamMembers } from "@/hooks/useTeamMembers";
+import { useAuth } from "@/hooks/useAuth";
 import type { Tarefa } from "@/types/tarefas";
 import { LazyTaskDetailModal } from "@/components/tarefas/v2/LazyComponents";
 
@@ -45,6 +46,7 @@ export default function BoardDetail() {
 	const [archiveConfirmOpen, setArchiveConfirmOpen] = useState(false);
 	const [sidebarOpen, setSidebarOpen] = useState(false);
 
+	const { user } = useAuth();
 	const { data: board, isLoading, error, refetch } = useBoard(boardId);
 	const { data: tarefasRaw, refetch: refetchTarefas } =
 		useBoardTarefas(boardId);
@@ -164,6 +166,7 @@ export default function BoardDetail() {
 								tarefas={tarefas}
 								teamMembers={teamMembers}
 								onRefetch={handleRefreshAll}
+								currentUserId={user?.uid}
 							/>
 						)}
 
@@ -206,6 +209,7 @@ export default function BoardDetail() {
 											tarefas={tarefas}
 											teamMembers={teamMembers}
 											onRefetch={handleRefreshAll}
+											currentUserId={user?.uid}
 										/>
 									)}
 
