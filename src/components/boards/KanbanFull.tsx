@@ -49,7 +49,7 @@ import {
 	LazyTaskDetailModal,
 	LazyTaskQuickCreateModal,
 } from "@/components/tarefas/v2/LazyComponents";
-import type { BoardColumn, BoardLabel } from "@/types/boards";
+import type { BoardColumn } from "@/types/boards";
 import type { Tarefa, TarefaStatus } from "@/types/tarefas";
 import {
 	useDeleteTarefa,
@@ -61,9 +61,9 @@ import {
 	useDeleteBoardColumn,
 	useReorderBoardColumns,
 } from "@/hooks/useBoardColumns";
-import { tarefasApi, boardLabelsApi } from "@/api/v2";
-import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { BoardLabelsContext } from "@/contexts/BoardLabelsContext";
+import { tarefasApi } from "@/api/v2";
+import { useQueryClient } from "@tanstack/react-query";
+import { useBoardLabels } from "@/contexts/BoardLabelsContext";
 import { cn } from "@/lib/utils";
 
 interface KanbanFullProps {
@@ -94,22 +94,54 @@ export function KanbanFull({
 	const deleteColumn = useDeleteBoardColumn(boardId);
 	const reorderColumns = useReorderBoardColumns(boardId);
 
-	// Board labels
-	const { data: labelsData } = useQuery({
-		queryKey: ["boards", boardId, "labels"],
-		queryFn: () => boardLabelsApi.list(boardId),
-		enabled: !!boardId,
-	});
-	const labels: BoardLabel[] = (labelsData?.data ?? []) as BoardLabel[];
-	const labelsMap = useMemo(
-		() => new Map(labels.map((l) => [l.id, l])),
-		[labels],
+	// Board labels — provided by BoardDetail via BoardLabelsContext
+	const { labels, labelsMap } = useBoardLabels();
+
+	// Filters — persisted per board in localStorage
+	const storageKey = `kanban-filters-${boardId}`;
+	const savedFilters = useMemo(() => {
+		try {
+			const raw = localStorage.getItem(storageKey);
+			return raw ? JSON.parse(raw) : {};
+		} catch {
+			return {};
+		}
+	}, [storageKey]);
+
+	const [search, setSearch] = useState<string>(savedFilters.search ?? "");
+	const [filterLabelIds, setFilterLabelIds] = useState<string[]>(savedFilters.filterLabelIds ?? []);
+	const [filterPendingChecklist, setFilterPendingChecklist] = useState<boolean>(savedFilters.filterPendingChecklist ?? false);
+	const [quickFilter, setQuickFilter] = useState<string | null>(savedFilters.quickFilter ?? null);
+
+	// Persist filter changes
+	const persistFilters = useCallback(
+		(patch: Record<string, unknown>) => {
+			try {
+				const current = JSON.parse(localStorage.getItem(storageKey) ?? "{}");
+				localStorage.setItem(storageKey, JSON.stringify({ ...current, ...patch }));
+			} catch {
+				// non-critical
+			}
+		},
+		[storageKey],
 	);
 
-	const [search, setSearch] = useState("");
-	const [filterLabelIds, setFilterLabelIds] = useState<string[]>([]);
-	const [filterPendingChecklist, setFilterPendingChecklist] = useState(false);
-	const [quickFilter, setQuickFilter] = useState<string | null>(null);
+	const setSearchPersisted = useCallback(
+		(v: string) => { setSearch(v); persistFilters({ search: v }); },
+		[persistFilters],
+	);
+	const setFilterLabelIdsPersisted = useCallback(
+		(v: string[]) => { setFilterLabelIds(v); persistFilters({ filterLabelIds: v }); },
+		[persistFilters],
+	);
+	const setFilterPendingChecklistPersisted = useCallback(
+		(v: boolean) => { setFilterPendingChecklist(v); persistFilters({ filterPendingChecklist: v }); },
+		[persistFilters],
+	);
+	const setQuickFilterPersisted = useCallback(
+		(v: string | null) => { setQuickFilter(v); persistFilters({ quickFilter: v }); },
+		[persistFilters],
+	);
 	const [detailOpen, setDetailOpen] = useState(false);
 	const [createOpen, setCreateOpen] = useState(false);
 	const [selectedTarefa, setSelectedTarefa] = useState<Tarefa | null>(null);
@@ -367,7 +399,6 @@ export function KanbanFull({
 	}
 
 	return (
-		<BoardLabelsContext.Provider value={{ labels, labelsMap }}>
 		<>
 			<Card className="mb-4 overflow-hidden rounded-[24px] border-border/60 bg-[linear-gradient(180deg,rgba(255,255,255,0.9),rgba(248,250,252,0.92))] shadow-sm">
 				<CardContent className="flex flex-col gap-4 p-4">
@@ -442,12 +473,12 @@ export function KanbanFull({
 							<Input
 								placeholder="Buscar título, descrição, etiquetas ou itens de checklist..."
 								value={search}
-								onChange={(e) => setSearch(e.target.value)}
+								onChange={(e) => setSearchPersisted(e.target.value)}
 								className="h-9 rounded-xl border-border/60 bg-background pl-9 pr-8 text-sm"
 							/>
 							{search && (
 								<button
-									onClick={() => setSearch("")}
+									onClick={() => setSearchPersisted("")}
 									className="absolute right-2.5 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
 								>
 									<X className="h-3.5 w-3.5" />
@@ -483,10 +514,10 @@ export function KanbanFull({
 											<button
 												key={label.id}
 												onClick={() =>
-													setFilterLabelIds((prev) =>
+													setFilterLabelIdsPersisted(
 														active
-															? prev.filter((id) => id !== label.id)
-															: [...prev, label.id],
+															? filterLabelIds.filter((id) => id !== label.id)
+															: [...filterLabelIds, label.id],
 													)
 												}
 												className={cn(
@@ -512,7 +543,7 @@ export function KanbanFull({
 											variant="ghost"
 											size="sm"
 											className="w-full mt-1 h-7 text-xs"
-											onClick={() => setFilterLabelIds([])}
+											onClick={() => setFilterLabelIdsPersisted([])}
 										>
 											Limpar
 										</Button>
@@ -549,7 +580,7 @@ export function KanbanFull({
 							<button
 								key={qf.id}
 								onClick={() =>
-									setQuickFilter((prev) => (prev === qf.id ? null : qf.id))
+									setQuickFilterPersisted(quickFilter === qf.id ? null : qf.id)
 								}
 								className={cn(
 									"flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-medium border transition-all",
@@ -563,7 +594,7 @@ export function KanbanFull({
 							</button>
 						))}
 						<button
-							onClick={() => setFilterPendingChecklist((prev) => !prev)}
+							onClick={() => setFilterPendingChecklistPersisted(!filterPendingChecklist)}
 							className={cn(
 								"flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-medium border transition-all",
 								filterPendingChecklist
@@ -579,10 +610,10 @@ export function KanbanFull({
 						{(quickFilter || filterPendingChecklist || filterLabelIds.length > 0 || search) && (
 							<button
 								onClick={() => {
-									setQuickFilter(null);
-									setFilterPendingChecklist(false);
-									setFilterLabelIds([]);
-									setSearch("");
+									setQuickFilterPersisted(null);
+									setFilterPendingChecklistPersisted(false);
+									setFilterLabelIdsPersisted([]);
+									setSearchPersisted("");
 								}}
 								className="flex items-center gap-1 rounded-full px-2 py-1 text-xs text-muted-foreground hover:text-destructive border border-dashed border-border hover:border-destructive/40 transition-all"
 							>
@@ -714,6 +745,5 @@ export function KanbanFull({
 				labels={labels}
 			/>
 		</>
-		</BoardLabelsContext.Provider>
 	);
 }

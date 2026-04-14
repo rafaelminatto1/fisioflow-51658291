@@ -65,8 +65,12 @@ export async function exportReceiptPdf(fileName: string, data: ReciboData) {
 	doc.setFillColor(240, 240, 240);
 	doc.roundedRect(margin, y - 4, pageWidth - margin * 2, 10, 2, 2, "F");
 	doc.setFont("helvetica", "bold");
+	const dateText = data.dataEmissao 
+		? ` - Emitido em ${format(new Date(data.dataEmissao), "dd/MM/yyyy 'às' HH:mm", { locale: ptBR })}`
+		: "";
+
 	doc.text(
-		`Nº ${data.numero.toString().padStart(6, "0")} - Emitido em ${format(new Date(data.dataEmissao), "dd/MM/yyyy 'às' HH:mm", { locale: ptBR })}`,
+		`Nº ${data.numero.toString().padStart(6, "0")}${dateText}`,
 		pageWidth / 2,
 		y + 2,
 		{ align: "center" },
@@ -148,21 +152,18 @@ export async function exportReceiptPdf(fileName: string, data: ReciboData) {
 		);
 	}
 
-	y = doc.internal.pageSize.getHeight() - 18;
-	doc.setFontSize(8);
-	doc.setTextColor(153, 153, 153);
-	doc.text(
-		"Este recibo serve como comprovante de pagamento para todos os fins de direito.",
-		pageWidth / 2,
-		y,
-		{ align: "center" },
-	);
-	doc.text(
-		"Documento emitido eletronicamente conforme Lei nº 14.063/2020 (Brasil).",
-		pageWidth / 2,
-		y + 4,
-		{ align: "center" },
-	);
+	if (data.showDisclaimer !== false) {
+		y = doc.internal.pageSize.getHeight() - 18;
+		doc.setFontSize(8);
+		doc.setTextColor(153, 153, 153);
+
+		const disclaimer =
+			data.disclaimer ||
+			"Este recibo serve como comprovante de pagamento para todos os fins de direito.\nDocumento emitido eletronicamente conforme Lei nº 14.063/2020 (Brasil).";
+
+		const disclaimerLines = doc.splitTextToSize(disclaimer, pageWidth - margin * 2);
+		doc.text(disclaimerLines, pageWidth / 2, y, { align: "center" });
+	}
 
 	doc.save(fileName);
 }

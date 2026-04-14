@@ -5,6 +5,7 @@ import { ptBR } from "date-fns/locale";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 import type { Tarefa } from "@/types/tarefas";
+import { useBoardLabels } from "@/contexts/BoardLabelsContext";
 import "react-day-picker/dist/style.css";
 
 interface BoardCalendarViewProps {
@@ -17,6 +18,7 @@ export function BoardCalendarView({
 	onViewTask,
 }: BoardCalendarViewProps) {
 	const [selectedDay, setSelectedDay] = useState<Date | undefined>(new Date());
+	const { labelsMap } = useBoardLabels();
 
 	const tasksWithDueDate = tarefas.filter((t) => !!t.data_vencimento);
 
@@ -116,9 +118,30 @@ export function BoardCalendarView({
 										</p>
 									)}
 								</div>
-								<Badge variant="outline" className="text-xs">
-									{tarefa.status}
-								</Badge>
+								<div className="flex gap-1 flex-shrink-0">
+									{tarefa.label_ids?.slice(0, 2).map((id) => {
+										const label = labelsMap.get(id);
+										if (!label) return null;
+										return (
+											<Badge
+												key={id}
+												variant="outline"
+												className="text-xs px-1.5 py-0 border-0"
+												style={{
+													backgroundColor: `${label.color}25`,
+													color: label.color,
+												}}
+											>
+												{label.name}
+											</Badge>
+										);
+									})}
+									{!tarefa.label_ids?.length && (
+										<Badge variant="outline" className="text-xs">
+											{tarefa.status}
+										</Badge>
+									)}
+								</div>
 							</div>
 						))}
 					</div>
