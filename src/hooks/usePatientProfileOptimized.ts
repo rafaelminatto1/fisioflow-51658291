@@ -26,7 +26,8 @@ export type ProfileTab =
 	| "activity-lab"
 	| "financial"
 	| "gamification"
-	| "documents";
+	| "documents"
+	| "tasks";
 
 export interface PatientProfileOptions {
 	patientId: string;

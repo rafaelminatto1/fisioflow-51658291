@@ -287,6 +287,15 @@ async function handleMessage(
 				username: contact.username,
 			},
 		});
+
+		// Auto-create task from intent classification (non-blocking)
+		if (messageType === 'text' && content.length > 5 && contact?.id) {
+			maybeCreateTaskFromIntent(pool, orgId, {
+				id: String(contact.id),
+				display_name: contact.display_name as string | null ?? null,
+				patient_id: contact.patient_id as string | null ?? null,
+			}, content).catch(() => null);
+		}
 	} catch (err) {
 		console.error("[WhatsApp Webhook] handleMessage error:", err);
 		if (env.DB) {
@@ -397,6 +406,50 @@ async function handleSystem(
 	} catch (err) {
 		console.error("[WhatsApp Webhook] handleSystem error:", err);
 	}
+}
+
+// Intent classification → auto-create task
+const INTENT_PATTERNS: Array<{
+  pattern: RegExp;
+  titulo: (name: string) => string;
+  prioridade: string;
+}> = [
+  { pattern: /\b(dor|doendo|dói|doer|ardendo|latejando)\b/i, titulo: (n) => `Relato de dor — ${n}`, prioridade: 'ALTA' },
+  { pattern: /\b(piore[iu]|piorou|pioran[do]+|pior[ao]u)\b/i, titulo: (n) => `Queda na evolução — ${n}`, prioridade: 'ALTA' },
+  { pattern: /\b(exercício|treino|protocolo|plano|exerc[ií]cio)\b/i, titulo: (n) => `Dúvida sobre exercício — ${n}`, prioridade: 'MEDIA' },
+  { pattern: /\b(consulta|agendar|agendamento|marcar|remarcar|reagendar)\b/i, titulo: (n) => `Solicitação de consulta — ${n}`, prioridade: 'MEDIA' },
+  { pattern: /\b(retorno|acompanhamento|follow[ -]?up)\b/i, titulo: (n) => `Solicitação de retorno — ${n}`, prioridade: 'MEDIA' },
+  { pattern: /\b(urgente|emergência|emergencia|socorro|preciso de ajuda)\b/i, titulo: (n) => `Mensagem urgente — ${n}`, prioridade: 'URGENTE' },
+];
+
+async function maybeCreateTaskFromIntent(
+  pool: any,
+  orgId: string,
+  contact: { id: string; display_name?: string | null; patient_id?: string | null },
+  text: string,
+): Promise<void> {
+  const matched = INTENT_PATTERNS.find(({ pattern }) => pattern.test(text));
+  if (!matched) return;
+
+  const name = contact.display_name ?? 'Paciente';
+  const titulo = matched.titulo(name);
+
+  await pool.query(
+    `INSERT INTO tarefas (organization_id, created_by, titulo, descricao, status, prioridade, tipo,
+       order_index, tags, label_ids, checklists, attachments, task_references, dependencies,
+       requires_acknowledgment, acknowledgments, linked_entity_type, linked_entity_id)
+     VALUES ($1, 'whatsapp_bot', $2, $3, 'A_FAZER', $4, 'TAREFA',
+       0, '{}', '{}', '[]', '[]', '[]', '[]', false, '[]',
+       $5, $6)`,
+    [
+      orgId,
+      titulo,
+      `Gerado automaticamente a partir de mensagem WhatsApp:\n\n"${text.slice(0, 500)}"`,
+      matched.prioridade,
+      contact.patient_id ? 'patient' : 'whatsapp_contact',
+      contact.patient_id ?? contact.id,
+    ],
+  );
 }
 
 export { app as whatsappWebhookRoutes };
