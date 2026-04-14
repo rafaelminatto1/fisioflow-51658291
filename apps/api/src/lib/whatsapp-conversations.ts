@@ -3,6 +3,14 @@ import { isUuid } from "./validators";
 
 type Pool = ReturnType<typeof createPool>;
 
+type JsonRecord = Record<string, unknown>;
+
+function asRecord(value: unknown): JsonRecord {
+	return value && typeof value === "object" && !Array.isArray(value)
+		? { ...(value as JsonRecord) }
+		: {};
+}
+
 /**
  * Ensures we are using a UUID for columns like assigned_to.
  * Handles cases where userId is an Auth ID (text) by resolving to profile.id (UUID).
@@ -239,7 +247,7 @@ export async function getConversationWithMessages(
 		const convResult = await pool.query(
 			`SELECT c.*, wc.wa_id, wc.display_name, wc.username, wc.bsuid, wc.patient_id,
 			        c.assigned_team AS team,
-			        COALESCE(assignee.full_name, assignee.name, assignee.email, c.assigned_to::text) AS assigned_to_name,
+			        COALESCE(assignee.full_name, assignee.email, c.assigned_to::text) AS assigned_to_name,
 			        COALESCE((
 			          SELECT json_agg(json_build_object('id', t.id, 'name', t.name, 'color', t.color) ORDER BY t.name)
 			          FROM wa_conversation_tags wct
@@ -248,7 +256,7 @@ export async function getConversationWithMessages(
 			        ), '[]'::json) AS tags
 	       FROM wa_conversations c
 	       LEFT JOIN whatsapp_contacts wc ON wc.id = c.contact_id
-	       LEFT JOIN profiles assignee ON assignee.user_id = c.assigned_to::text
+	       LEFT JOIN profiles assignee ON assignee.id = c.assigned_to OR assignee.user_id = c.assigned_to::text
 	       WHERE c.id = $1${orgId ? " AND c.organization_id = $2" : ""}`,
 			convParams,
 		);
@@ -281,6 +289,327 @@ export async function getConversationWithMessages(
 	}
 }
 
+export async function updateConversationFields(
+	pool: Pool,
+	conversationId: string,
+	orgId: string,
+	updates: {
+		status?: string;
+		priority?: string;
+		assignedTo?: string | null;
+		team?: string | null;
+		patientId?: string | null;
+		metadata?: JsonRecord;
+		updatedBy: string;
+	},
+) {
+	try {
+		const sets: string[] = ["updated_at = now()"];
+		const params: unknown[] = [conversationId, orgId];
+		let idx = 3;
+
+		if (updates.status !== undefined) {
+			sets.push(`status = $${idx++}`);
+			params.push(updates.status);
+			if (updates.status === "resolved") {
+				sets.push("resolved_at = COALESCE(resolved_at, now())");
+			}
+			if (updates.status === "closed") {
+				sets.push("closed_at = COALESCE(closed_at, now())");
+			}
+		}
+
+		if (updates.priority !== undefined) {
+			sets.push(`priority = $${idx++}`);
+			params.push(updates.priority);
+		}
+
+		if (updates.assignedTo !== undefined) {
+			const targetUuid = updates.assignedTo
+				? await resolveProfileUuid(pool, updates.assignedTo, orgId)
+				: null;
+			if (updates.assignedTo && !targetUuid) {
+				return { error: "assignee_not_found" as const, row: null };
+			}
+			sets.push(`assigned_to = $${idx++}`);
+			params.push(targetUuid);
+		}
+
+		if (updates.team !== undefined) {
+			sets.push(`assigned_team = $${idx++}`);
+			params.push(updates.team);
+		}
+
+		if (updates.patientId !== undefined) {
+			sets.push(`patient_id = $${idx++}`);
+			params.push(updates.patientId);
+		}
+
+		const metadataPatch = {
+			...asRecord(updates.metadata),
+			last_manual_update_at: new Date().toISOString(),
+			last_manual_update_by: updates.updatedBy,
+		};
+		sets.push(`metadata = COALESCE(metadata, '{}'::jsonb) || $${idx++}::jsonb`);
+		params.push(JSON.stringify(metadataPatch));
+
+		const result = await pool.query(
+			`UPDATE wa_conversations
+			 SET ${sets.join(", ")}
+			 WHERE id = $1 AND organization_id = $2
+			 RETURNING *`,
+			params,
+		);
+
+		return { error: null, row: result.rows[0] ?? null };
+	} catch (error) {
+		console.error(
+			"[whatsapp-conversations] updateConversationFields error:",
+			error,
+		);
+		throw error;
+	}
+}
+
+export async function markConversationDeleted(
+	pool: Pool,
+	conversationId: string,
+	orgId: string,
+	deletedBy: string,
+	reason?: string,
+) {
+	try {
+		const metadataPatch = {
+			deleted_at: new Date().toISOString(),
+			deleted_by: deletedBy,
+			delete_scope: "local",
+			delete_reason: reason ?? null,
+		};
+
+		const result = await pool.query(
+			`UPDATE wa_conversations
+			 SET status = 'closed',
+			     closed_at = COALESCE(closed_at, now()),
+			     updated_at = now(),
+			     metadata = COALESCE(metadata, '{}'::jsonb) || $3::jsonb
+			 WHERE id = $1 AND organization_id = $2
+			 RETURNING *`,
+			[conversationId, orgId, JSON.stringify(metadataPatch)],
+		);
+
+		return result.rows[0] ?? null;
+	} catch (error) {
+		console.error(
+			"[whatsapp-conversations] markConversationDeleted error:",
+			error,
+		);
+		throw error;
+	}
+}
+
+export async function restoreConversation(
+	pool: Pool,
+	conversationId: string,
+	orgId: string,
+	restoredBy: string,
+) {
+	try {
+		const metadataPatch = {
+			deleted_at: null,
+			deleted_by: null,
+			delete_scope: null,
+			delete_reason: null,
+			restored_at: new Date().toISOString(),
+			restored_by: restoredBy,
+		};
+
+		const result = await pool.query(
+			`UPDATE wa_conversations
+			 SET status = CASE WHEN status = 'closed' THEN 'open' ELSE status END,
+			     updated_at = now(),
+			     metadata = COALESCE(metadata, '{}'::jsonb) || $3::jsonb
+			 WHERE id = $1 AND organization_id = $2
+			 RETURNING *`,
+			[conversationId, orgId, JSON.stringify(metadataPatch)],
+		);
+
+		return result.rows[0] ?? null;
+	} catch (error) {
+		console.error(
+			"[whatsapp-conversations] restoreConversation error:",
+			error,
+		);
+		throw error;
+	}
+}
+
+async function getMessageForMutation(
+	pool: Pool,
+	conversationId: string,
+	messageId: string,
+	orgId: string,
+) {
+	const result = await pool.query(
+		`SELECT m.*
+		 FROM wa_messages m
+		 JOIN wa_conversations c ON c.id = m.conversation_id
+		 WHERE m.id = $1
+		   AND m.conversation_id = $2
+		   AND c.organization_id = $3
+		   AND m.organization_id = $3
+		 LIMIT 1`,
+		[messageId, conversationId, orgId],
+	);
+
+	return result.rows[0] ?? null;
+}
+
+export async function editMessageContent(
+	pool: Pool,
+	conversationId: string,
+	messageId: string,
+	orgId: string,
+	editedBy: string,
+	content: string | JsonRecord,
+) {
+	try {
+		const existing = await getMessageForMutation(
+			pool,
+			conversationId,
+			messageId,
+			orgId,
+		);
+
+		if (!existing) return { error: "not_found" as const, row: null };
+
+		const metadata = asRecord(existing.metadata);
+		if (metadata.deleted_at || metadata.deleted_for_everyone_at) {
+			return { error: "deleted" as const, row: null };
+		}
+
+		const now = new Date().toISOString();
+		const editHistory = Array.isArray(metadata.edit_history)
+			? metadata.edit_history
+			: [];
+		const nextMetadata = {
+			...metadata,
+			edited_at: now,
+			edited_by: editedBy,
+			edit_scope: "local",
+			edit_history: [
+				...editHistory,
+				{
+					edited_at: now,
+					edited_by: editedBy,
+					previous_content: existing.content,
+				},
+			],
+		};
+
+		const result = await pool.query(
+			`UPDATE wa_messages
+			 SET content = $4::jsonb,
+			     metadata = $5::jsonb
+			 WHERE id = $1 AND conversation_id = $2 AND organization_id = $3
+			 RETURNING *`,
+			[
+				messageId,
+				conversationId,
+				orgId,
+				JSON.stringify(content),
+				JSON.stringify(nextMetadata),
+			],
+		);
+
+		await pool.query(
+			`UPDATE wa_conversations SET updated_at = now() WHERE id = $1 AND organization_id = $2`,
+			[conversationId, orgId],
+		);
+
+		return { error: null, row: result.rows[0] ?? null };
+	} catch (error) {
+		console.error("[whatsapp-conversations] editMessageContent error:", error);
+		throw error;
+	}
+}
+
+export async function markMessageDeleted(
+	pool: Pool,
+	conversationId: string,
+	messageId: string,
+	orgId: string,
+	deletedBy: string,
+	scope: "local" | "everyone",
+	reason?: string,
+) {
+	try {
+		const existing = await getMessageForMutation(
+			pool,
+			conversationId,
+			messageId,
+			orgId,
+		);
+
+		if (!existing) return { error: "not_found" as const, row: null };
+
+		const metadata = asRecord(existing.metadata);
+		const now = new Date().toISOString();
+		const deletionHistory = Array.isArray(metadata.deletion_history)
+			? metadata.deletion_history
+			: [];
+		const nextMetadata = {
+			...metadata,
+			deleted_at: now,
+			deleted_by: deletedBy,
+			delete_scope: scope,
+			delete_reason: reason ?? null,
+			deleted_for_everyone_at:
+				scope === "everyone"
+					? metadata.deleted_for_everyone_at ?? now
+					: metadata.deleted_for_everyone_at,
+			deletion_history: [
+				...deletionHistory,
+				{
+					deleted_at: now,
+					deleted_by: deletedBy,
+					scope,
+					reason: reason ?? null,
+					previous_status: existing.status,
+				},
+			],
+		};
+
+		const result = await pool.query(
+			`UPDATE wa_messages
+			 SET status = 'deleted',
+			     metadata = $4::jsonb
+			 WHERE id = $1 AND conversation_id = $2 AND organization_id = $3
+			 RETURNING *`,
+			[messageId, conversationId, orgId, JSON.stringify(nextMetadata)],
+		);
+
+		await pool.query(
+			`UPDATE wa_conversations SET updated_at = now() WHERE id = $1 AND organization_id = $2`,
+			[conversationId, orgId],
+		);
+
+		return {
+			error: null,
+			row: result.rows[0] ?? null,
+			provider: {
+				attempted: false,
+				status: "not_supported",
+				reason:
+					"A exclusao remota no WhatsApp depende do provedor e ainda nao esta habilitada neste Worker.",
+				metaMessageId: existing.meta_message_id ?? null,
+			},
+		};
+	} catch (error) {
+		console.error("[whatsapp-conversations] markMessageDeleted error:", error);
+		throw error;
+	}
+}
+
 export async function getInboxConversations(
 	pool: Pool,
 	orgId: string,
@@ -293,12 +622,17 @@ export async function getInboxConversations(
 		tagId?: string;
 		limit?: number;
 		offset?: number;
+		includeDeleted?: boolean;
 	} = {},
 ): Promise<{ data: any[]; total: number }> {
 	try {
 		const conditions: string[] = ["c.organization_id = $1"];
 		const params: any[] = [orgId];
 		let idx = 2;
+
+		if (!filters.includeDeleted) {
+			conditions.push("(c.metadata->>'deleted_at') IS NULL");
+		}
 
 		if (filters.status) {
 			conditions.push(`c.status = $${idx++}`);
@@ -355,7 +689,7 @@ export async function getInboxConversations(
 			        c.channel, c.assigned_to, c.assigned_team, c.created_at, c.updated_at, c.snoozed_until,
 			        wc.wa_id, wc.display_name, wc.username, wc.bsuid,
 			        c.assigned_team AS team,
-			        COALESCE(assignee.full_name, assignee.name, assignee.email, c.assigned_to::text) AS assigned_to_name,
+			        COALESCE(assignee.full_name, assignee.email, c.assigned_to::text) AS assigned_to_name,
 	              (SELECT m.content FROM wa_messages m WHERE m.conversation_id = c.id AND m.direction != 'internal' ORDER BY m.created_at DESC LIMIT 1) AS last_message,
 	              (SELECT m.message_type FROM wa_messages m WHERE m.conversation_id = c.id AND m.direction != 'internal' ORDER BY m.created_at DESC LIMIT 1) AS last_message_type,
 	              (SELECT m.created_at FROM wa_messages m WHERE m.conversation_id = c.id AND m.direction != 'internal' ORDER BY m.created_at DESC LIMIT 1) AS last_message_at,
@@ -368,7 +702,7 @@ export async function getInboxConversations(
 	              ), '[]'::json) AS tags
 	       FROM wa_conversations c
 	       LEFT JOIN whatsapp_contacts wc ON wc.id = c.contact_id
-	       LEFT JOIN profiles assignee ON assignee.user_id = c.assigned_to::text
+	       LEFT JOIN profiles assignee ON assignee.id = c.assigned_to OR assignee.user_id = c.assigned_to::text
 	       ${where}
        ORDER BY c.updated_at DESC
        LIMIT $${idx++} OFFSET $${idx++}`,
