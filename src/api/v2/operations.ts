@@ -7,6 +7,7 @@ import type {
 	EvaluationFormRow,
 	MedicalReportRecord,
 	MedicalReportTemplateRecord,
+	PatientEvaluationResponseRow,
 	Precadastro,
 	PrecadastroToken,
 	PublicBookingProfile,
@@ -48,18 +49,51 @@ export const evaluationFormsApi = {
 	responses: {
 		list: (formId: string, params?: { patientId?: string }) =>
 			evalForms(`/${formId}/responses${withQuery("", params)}`),
+		listByPatient: (patientId: string) =>
+			evalForms<{ data: PatientEvaluationResponseRow[] }>(
+				withQuery("/responses", { patientId }),
+			),
+		get: (responseId: string) =>
+			evalForms<{ data: PatientEvaluationResponseRow }>(
+				`/responses/${responseId}`,
+			),
 		create: (
 			formId: string,
 			d: {
 				patient_id: string;
 				appointment_id?: string | null;
 				responses: Record<string, unknown>;
+				status?: PatientEvaluationResponseRow["status"];
+				scheduled_for?: string | null;
+				started_at?: string | null;
+				completed_at?: string | null;
 			},
 		) =>
-			evalForms(`/${formId}/responses`, {
+			evalForms<{ data: PatientEvaluationResponseRow }>(`/${formId}/responses`, {
 				method: "POST",
 				body: JSON.stringify(d),
 			}),
+		update: (
+			responseId: string,
+			d: Partial<
+				Pick<
+					PatientEvaluationResponseRow,
+					| "appointment_id"
+					| "responses"
+					| "status"
+					| "scheduled_for"
+					| "started_at"
+					| "completed_at"
+				>
+			>,
+		) =>
+			evalForms<{ data: PatientEvaluationResponseRow }>(
+				`/responses/${responseId}`,
+				{
+					method: "PUT",
+					body: JSON.stringify(d),
+				},
+			),
 	},
 };
 

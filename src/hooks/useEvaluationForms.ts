@@ -9,6 +9,7 @@ import {
 	type EvaluationFormRow,
 	type EvaluationFormFieldRow,
 	type EvaluationFormWithFieldsRow,
+	type PatientEvaluationResponseRow,
 } from "@/api/v2";
 import {
 	EvaluationForm,
@@ -306,6 +307,98 @@ export function useImportEvaluationForm() {
 		onError: (error) => {
 			logger.error("Erro ao importar ficha", error, "useEvaluationForms");
 			toast.error("Erro ao importar ficha.");
+		},
+	});
+}
+
+export const patientEvaluationKeys = {
+	all: ["patient-evaluations"] as const,
+	byPatient: (patientId?: string) =>
+		["patient-evaluations", "patient", patientId] as const,
+	detail: (responseId?: string) =>
+		["patient-evaluations", "detail", responseId] as const,
+};
+
+export function usePatientEvaluationResponses(patientId: string | undefined) {
+	return useQuery({
+		queryKey: patientEvaluationKeys.byPatient(patientId),
+		queryFn: async () => {
+			if (!patientId) return [];
+			const res = await evaluationFormsApi.responses.listByPatient(patientId);
+			return (res?.data ?? []) as PatientEvaluationResponseRow[];
+		},
+		enabled: !!patientId,
+	});
+}
+
+export function usePatientEvaluationResponse(responseId: string | undefined) {
+	return useQuery({
+		queryKey: patientEvaluationKeys.detail(responseId),
+		queryFn: async () => {
+			if (!responseId) return null;
+			const res = await evaluationFormsApi.responses.get(responseId);
+			return (res?.data ?? null) as PatientEvaluationResponseRow | null;
+		},
+		enabled: !!responseId,
+	});
+}
+
+export function useCreatePatientEvaluationResponse() {
+	const queryClient = useQueryClient();
+
+	return useMutation({
+		mutationFn: async ({
+			formId,
+			...data
+		}: {
+			formId: string;
+			patient_id: string;
+			appointment_id?: string | null;
+			responses: Record<string, unknown>;
+			status?: PatientEvaluationResponseRow["status"];
+			scheduled_for?: string | null;
+			started_at?: string | null;
+			completed_at?: string | null;
+		}) => {
+			const res = await evaluationFormsApi.responses.create(formId, data);
+			return (res?.data ?? res) as PatientEvaluationResponseRow;
+		},
+		onSuccess: (evaluation) => {
+			queryClient.invalidateQueries({
+				queryKey: patientEvaluationKeys.byPatient(evaluation.patient_id),
+			});
+		},
+	});
+}
+
+export function useUpdatePatientEvaluationResponse() {
+	const queryClient = useQueryClient();
+
+	return useMutation({
+		mutationFn: async ({
+			id,
+			...data
+		}: Partial<
+			Pick<
+				PatientEvaluationResponseRow,
+				| "appointment_id"
+				| "responses"
+				| "status"
+				| "scheduled_for"
+				| "started_at"
+				| "completed_at"
+			>
+		> & { id: string }) => {
+			const res = await evaluationFormsApi.responses.update(id, data);
+			return (res?.data ?? res) as PatientEvaluationResponseRow;
+		},
+		onSuccess: (evaluation) => {
+			queryClient.invalidateQueries({
+				queryKey: patientEvaluationKeys.detail(evaluation.id),
+			});
+			queryClient.invalidateQueries({
+				queryKey: patientEvaluationKeys.byPatient(evaluation.patient_id),
+			});
 		},
 	});
 }

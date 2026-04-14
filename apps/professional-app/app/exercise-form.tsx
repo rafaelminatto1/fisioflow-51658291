@@ -1,7 +1,7 @@
 import { Ionicons } from "@expo/vector-icons";
 import { useQuery } from "@tanstack/react-query";
 import { Stack, useLocalSearchParams, useRouter } from "expo-router";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import {
 	ActivityIndicator,
 	Alert,
@@ -29,6 +29,10 @@ import {
 	CATEGORIES,
 	EQUIPMENT,
 } from "@/lib/constants/exerciseConstants";
+import {
+	findExactNormalizedMatch,
+	findSimilarItems,
+} from "@/lib/utils/similarity";
 import type { Exercise } from "@/types";
 import { SafeAreaView } from "react-native-safe-area-context";
 
@@ -37,6 +41,13 @@ const DIFFICULTIES = [
 	{ label: "Médio", value: "medium" },
 	{ label: "Difícil", value: "hard" },
 ];
+
+function normalizeText(text: string): string {
+	return text
+		.toLowerCase()
+		.normalize("NFD")
+		.replace(/[\u0300-\u036f]/g, "");
+}
 
 function SegmentedPicker({
 	options,
@@ -92,42 +103,189 @@ const pickerStyles = StyleSheet.create({
 	text: { fontSize: 13, fontWeight: "500" },
 });
 
-function MultiSelectModal({
+function AutocompleteMultiSelectModal({
 	visible,
 	onClose,
 	title,
+	fieldLabel,
 	options,
 	selectedValues,
 	onSelect,
-	onCreateNew,
-	allowCreateNew,
+	allExistingLabels,
 }: {
 	visible: boolean;
 	onClose: () => void;
 	title: string;
+	fieldLabel: string;
 	options: { label: string; value: string }[];
 	selectedValues: string[];
 	onSelect: (values: string[]) => void;
-	onCreateNew?: (value: string) => void;
-	allowCreateNew?: boolean;
+	allExistingLabels?: string[];
 }) {
-	const [newOption, setNewOption] = useState("");
+	const [searchQuery, setSearchQuery] = useState("");
+	const { medium, success } = useHaptics();
 
-	const handleToggle = (value: string) => {
-		const isSelected = selectedValues.includes(value);
-		onSelect(
-			isSelected
-				? selectedValues.filter((v) => v !== value)
-				: [...selectedValues, value],
+	const filteredOptions = useMemo(() => {
+		if (!searchQuery.trim()) return options;
+		const normalized = normalizeText(searchQuery);
+		return options.filter((opt) =>
+			normalizeText(opt.label).includes(normalized),
 		);
-	};
+	}, [searchQuery, options]);
 
-	const handleCreateNew = () => {
-		if (newOption.trim() && onCreateNew) {
-			onCreateNew(newOption.trim());
-			setNewOption("");
+	const noResults =
+		searchQuery.trim().length > 0 && filteredOptions.length === 0;
+
+	const handleToggle = useCallback(
+		(value: string) => {
+			medium();
+			const isSelected = selectedValues.includes(value);
+			onSelect(
+				isSelected
+					? selectedValues.filter((v) => v !== value)
+					: [...selectedValues, value],
+			);
+		},
+		[selectedValues, onSelect, medium],
+	);
+
+	const handleConfirmNew = useCallback(() => {
+		const trimmed = searchQuery.trim();
+		if (!trimmed) return;
+
+		const exactMatch = findExactNormalizedMatch(trimmed, options);
+		if (exactMatch) {
+			if (!selectedValues.includes(exactMatch.label)) {
+				onSelect([...selectedValues, exactMatch.label]);
+			}
+			setSearchQuery("");
+			success();
+			return;
 		}
-	};
+
+		const allLabels = allExistingLabels || options.map((o) => o.label);
+		const alreadySelected = selectedValues.find(
+			(s) => normalizeText(s) === normalizeText(trimmed),
+		);
+		if (alreadySelected) {
+			Alert.alert("Atenção", `"${trimmed}" já está selecionado.`);
+			setSearchQuery("");
+			return;
+		}
+
+		const exactInAll = allLabels.find(
+			(l) => normalizeText(l) === normalizeText(trimmed),
+		);
+		if (exactInAll && exactInAll !== trimmed) {
+			Alert.alert(
+				"Autocorreção",
+				`Corrigido para "${exactInAll}". Deseja adicionar?`,
+				[
+					{ text: "Cancelar", style: "cancel" },
+					{
+						text: "Sim",
+						onPress: () => {
+							if (!selectedValues.includes(exactInAll)) {
+								onSelect([...selectedValues, exactInAll]);
+							}
+							setSearchQuery("");
+							success();
+						},
+					},
+				],
+			);
+			return;
+		}
+
+		const similarItems = findSimilarItems(trimmed, options, 0.7);
+		if (similarItems.length > 0) {
+			const bestMatch = similarItems[0];
+			Alert.alert(
+				"Item Similar Encontrado",
+				`Encontramos "${bestMatch.label}" que é parecido com "${trimmed}".\n\nDeseja usar o item existente ou criar um novo?`,
+				[
+					{ text: "Cancelar", style: "cancel" },
+					{
+						text: `Criar "${trimmed}"`,
+						onPress: () => {
+							if (!selectedValues.includes(trimmed)) {
+								onSelect([...selectedValues, trimmed]);
+							}
+							setSearchQuery("");
+							success();
+						},
+					},
+					{
+						text: `Usar "${bestMatch.label}"`,
+						onPress: () => {
+							if (!selectedValues.includes(bestMatch.label)) {
+								onSelect([...selectedValues, bestMatch.label]);
+							}
+							setSearchQuery("");
+							success();
+						},
+					},
+				],
+			);
+			return;
+		}
+
+		Alert.alert(
+			"Confirmar Cadastro",
+			`Deseja adicionar "${trimmed}" como novo${fieldLabel ? " " + fieldLabel : ""}?`,
+			[
+				{ text: "Não", style: "cancel" },
+				{
+					text: "Sim",
+					onPress: () => {
+						if (!selectedValues.includes(trimmed)) {
+							onSelect([...selectedValues, trimmed]);
+						}
+						setSearchQuery("");
+						success();
+					},
+				},
+			],
+		);
+	}, [
+		searchQuery,
+		options,
+		selectedValues,
+		onSelect,
+		allExistingLabels,
+		fieldLabel,
+		success,
+		medium,
+	]);
+
+	const handleSubmitEditing = useCallback(() => {
+		const trimmed = searchQuery.trim();
+		if (!trimmed) return;
+
+		const exactMatch = options.find(
+			(o) => normalizeText(o.label) === normalizeText(trimmed),
+		);
+		if (exactMatch) {
+			if (!selectedValues.includes(exactMatch.label)) {
+				onSelect([...selectedValues, exactMatch.label]);
+			}
+			setSearchQuery("");
+			medium();
+			return;
+		}
+
+		if (noResults) {
+			handleConfirmNew();
+		}
+	}, [
+		searchQuery,
+		options,
+		selectedValues,
+		onSelect,
+		noResults,
+		handleConfirmNew,
+		medium,
+	]);
 
 	return (
 		<Modal
@@ -136,62 +294,101 @@ function MultiSelectModal({
 			transparent
 			onRequestClose={onClose}
 		>
-			<SafeAreaView style={modalStyles.overlay}>
-				<View style={modalStyles.content}>
-					<View style={modalStyles.header}>
-						<Text style={modalStyles.title}>{title}</Text>
+			<SafeAreaView style={msStyles.overlay}>
+				<View style={msStyles.content}>
+					<View style={msStyles.header}>
+						<Text style={msStyles.title}>{title}</Text>
 						<TouchableOpacity onPress={onClose}>
 							<Ionicons name="close" size={24} color="#fff" />
 						</TouchableOpacity>
 					</View>
 
-					{allowCreateNew && (
-						<View style={modalStyles.newOptionContainer}>
-							<TextInput
-								style={modalStyles.newOptionInput}
-								placeholder="Nova opção..."
-								placeholderTextColor="#999"
-								value={newOption}
-								onChangeText={setNewOption}
-							/>
+					<View style={msStyles.searchContainer}>
+						<Ionicons
+							name="search"
+							size={18}
+							color="#94a3b8"
+							style={{ marginLeft: 8 }}
+						/>
+						<TextInput
+							style={msStyles.searchInput}
+							placeholder="Buscar ou criar novo..."
+							placeholderTextColor="#64748b"
+							value={searchQuery}
+							onChangeText={setSearchQuery}
+							onSubmitEditing={handleSubmitEditing}
+							returnKeyType="done"
+							autoCapitalize="none"
+							autoCorrect={false}
+						/>
+						{searchQuery.length > 0 && (
 							<TouchableOpacity
-								style={modalStyles.newOptionBtn}
-								onPress={handleCreateNew}
+								onPress={() => setSearchQuery("")}
+								style={{ marginRight: 8 }}
 							>
-								<Ionicons name="add" size={20} color="#fff" />
+								<Ionicons name="close-circle" size={18} color="#64748b" />
 							</TouchableOpacity>
-						</View>
+						)}
+					</View>
+
+					{noResults && (
+						<TouchableOpacity
+							style={msStyles.noResultCard}
+							onPress={handleConfirmNew}
+							activeOpacity={0.7}
+						>
+							<Ionicons name="add-circle-outline" size={22} color="#60a5fa" />
+							<Text style={msStyles.noResultText}>
+								Criar "{searchQuery.trim()}"
+							</Text>
+							<Text style={msStyles.noResultSub}>Toque para adicionar</Text>
+						</TouchableOpacity>
 					)}
 
-					<ScrollView style={modalStyles.scroll}>
-						{options.map((option) => (
-							<TouchableOpacity
-								key={option.value}
-								style={[
-									modalStyles.item,
-									selectedValues.includes(option.value) &&
-										modalStyles.itemSelected,
-								]}
-								onPress={() => handleToggle(option.value)}
-							>
-								<Text
-									style={[
-										modalStyles.itemText,
-										selectedValues.includes(option.value) &&
-											modalStyles.itemTextSelected,
-									]}
+					<ScrollView
+						style={msStyles.scroll}
+						keyboardShouldPersistTaps="handled"
+					>
+						{filteredOptions.map((option) => {
+							const isSelected = selectedValues.includes(option.label);
+							return (
+								<TouchableOpacity
+									key={option.value}
+									style={[msStyles.item, isSelected && msStyles.itemSelected]}
+									onPress={() => handleToggle(option.label)}
+									activeOpacity={0.6}
 								>
-									{option.label}
-								</Text>
-								{selectedValues.includes(option.value) && (
-									<Ionicons name="checkmark" size={20} color="#4ade80" />
-								)}
-							</TouchableOpacity>
-						))}
+									<Text
+										style={[
+											msStyles.itemText,
+											isSelected && msStyles.itemTextSelected,
+										]}
+									>
+										{option.label}
+									</Text>
+									{isSelected ? (
+										<Ionicons
+											name="checkmark-circle"
+											size={22}
+											color="#4ade80"
+										/>
+									) : (
+										<Ionicons
+											name="ellipse-outline"
+											size={22}
+											color="#475569"
+										/>
+									)}
+								</TouchableOpacity>
+							);
+						})}
 					</ScrollView>
 
-					<TouchableOpacity style={modalStyles.confirmBtn} onPress={onClose}>
-						<Text style={modalStyles.confirmBtnText}>Confirmar</Text>
+					<TouchableOpacity style={msStyles.confirmBtn} onPress={onClose}>
+						<Text style={msStyles.confirmBtnText}>
+							Confirmar ({selectedValues.length} selecionado
+							{selectedValues.length !== 1 ? "s" : ""})
+						</Text>
 					</TouchableOpacity>
 				</View>
 			</SafeAreaView>
@@ -199,7 +396,7 @@ function MultiSelectModal({
 	);
 }
 
-const modalStyles = StyleSheet.create({
+const msStyles = StyleSheet.create({
 	overlay: {
 		flex: 1,
 		backgroundColor: "rgba(0,0,0,0.5)",
@@ -210,7 +407,7 @@ const modalStyles = StyleSheet.create({
 		borderTopLeftRadius: 20,
 		borderTopRightRadius: 20,
 		paddingBottom: 20,
-		maxHeight: "80%",
+		maxHeight: "85%",
 	},
 	header: {
 		flexDirection: "row",
@@ -225,26 +422,42 @@ const modalStyles = StyleSheet.create({
 		fontWeight: "600",
 		color: "#fff",
 	},
-	newOptionContainer: {
+	searchContainer: {
 		flexDirection: "row",
-		padding: 12,
-		gap: 8,
-		borderBottomWidth: 1,
-		borderBottomColor: "#334155",
+		alignItems: "center",
+		marginHorizontal: 12,
+		marginVertical: 10,
+		backgroundColor: "#0f172a",
+		borderRadius: 10,
+		borderWidth: 1,
+		borderColor: "#334155",
 	},
-	newOptionInput: {
+	searchInput: {
 		flex: 1,
-		backgroundColor: "#334155",
-		borderRadius: 8,
-		paddingHorizontal: 12,
-		paddingVertical: 10,
-		color: "#fff",
+		paddingHorizontal: 10,
+		paddingVertical: 12,
+		color: "#e2e8f0",
+		fontSize: 15,
 	},
-	newOptionBtn: {
-		backgroundColor: "#3b82f6",
-		borderRadius: 8,
-		paddingHorizontal: 16,
-		justifyContent: "center",
+	noResultCard: {
+		marginHorizontal: 12,
+		marginBottom: 8,
+		padding: 14,
+		backgroundColor: "#172554",
+		borderRadius: 10,
+		borderWidth: 1,
+		borderColor: "#1e3a5f",
+		gap: 2,
+	},
+	noResultText: {
+		color: "#60a5fa",
+		fontSize: 15,
+		fontWeight: "600",
+		marginTop: 2,
+	},
+	noResultSub: {
+		color: "#64748b",
+		fontSize: 12,
 	},
 	scroll: {
 		flex: 1,
@@ -254,19 +467,21 @@ const modalStyles = StyleSheet.create({
 		alignItems: "center",
 		justifyContent: "space-between",
 		paddingHorizontal: 16,
-		paddingVertical: 14,
+		paddingVertical: 13,
 		borderBottomWidth: 1,
-		borderBottomColor: "#334155",
+		borderBottomColor: "#1e293b",
 	},
 	itemSelected: {
 		backgroundColor: "#1e3a5f",
 	},
 	itemText: {
-		fontSize: 16,
-		color: "#e2e8f0",
+		fontSize: 15,
+		color: "#cbd5e1",
+		flex: 1,
 	},
 	itemTextSelected: {
 		color: "#fff",
+		fontWeight: "600",
 	},
 	confirmBtn: {
 		backgroundColor: "#3b82f6",
@@ -304,6 +519,7 @@ export default function ExerciseFormScreen() {
 	const [showCategoriesModal, setShowCategoriesModal] = useState(false);
 	const [showBodyPartsModal, setShowBodyPartsModal] = useState(false);
 	const [showEquipmentModal, setShowEquipmentModal] = useState(false);
+	const [showTagsModal, setShowTagsModal] = useState(false);
 
 	const [formData, setFormData] = useState<Partial<Exercise>>({
 		name: "",
@@ -408,16 +624,8 @@ export default function ExerciseFormScreen() {
 		setFormData((prev) => ({ ...prev, [field]: value }));
 	};
 
-	const addTag = () => {
-		const trimmed = tagInput.trim();
-		if (trimmed && !tags.includes(trimmed) && tags.length < 10) {
-			setTags([...tags, trimmed]);
-		}
-		setTagInput("");
-	};
-
-	const removeTag = (tag: string) => {
-		setTags(tags.filter((t) => t !== tag));
+	const handleTagSelect = (newTags: string[]) => {
+		setTags(newTags);
 	};
 
 	if (isLoadingExercise) {
@@ -441,6 +649,10 @@ export default function ExerciseFormScreen() {
 	const equipmentOptions = EQUIPMENT.map((e) => ({
 		label: e.label,
 		value: e.label,
+	}));
+	const tagOptions = tags.map((t) => ({
+		label: t,
+		value: t,
 	}));
 
 	return (
@@ -530,7 +742,9 @@ export default function ExerciseFormScreen() {
 						<Text
 							style={{
 								color: categories.length ? colors.text : colors.textMuted,
+								flex: 1,
 							}}
+							numberOfLines={1}
 						>
 							{categories.length > 0
 								? categories.join(", ")
@@ -580,10 +794,12 @@ export default function ExerciseFormScreen() {
 						<Text
 							style={{
 								color: bodyParts.length ? colors.text : colors.textMuted,
+								flex: 1,
 							}}
+							numberOfLines={1}
 						>
 							{bodyParts.length > 0
-								? `${bodyParts.length} selecionadas`
+								? bodyParts.join(", ")
 								: "Selecione partes do corpo..."}
 						</Text>
 						<Ionicons
@@ -630,10 +846,12 @@ export default function ExerciseFormScreen() {
 						<Text
 							style={{
 								color: equipment.length ? colors.text : colors.textMuted,
+								flex: 1,
 							}}
+							numberOfLines={1}
 						>
 							{equipment.length > 0
-								? `${equipment.length} selecionados`
+								? equipment.join(", ")
 								: "Selecione equipamentos..."}
 						</Text>
 						<Ionicons
@@ -668,32 +886,28 @@ export default function ExerciseFormScreen() {
 					)}
 
 					<Text style={[styles.label, { color: colors.text }]}>Tags</Text>
-					<View
+					<TouchableOpacity
 						style={[
-							styles.tagInputRow,
+							styles.multiSelectBtn,
 							{ borderColor: colors.border, backgroundColor: colors.surface },
 						]}
+						onPress={() => setShowTagsModal(true)}
 					>
-						<TextInput
-							style={[styles.tagInput, { color: colors.text }]}
-							value={tagInput}
-							onChangeText={setTagInput}
-							placeholder="Adicionar tag (Enter)..."
-							placeholderTextColor={colors.textMuted}
-							onSubmitEditing={addTag}
-							returnKeyType="done"
-							blurOnSubmit={false}
-							maxLength={30}
+						<Text
+							style={{
+								color: tags.length ? colors.text : colors.textMuted,
+								flex: 1,
+							}}
+							numberOfLines={1}
+						>
+							{tags.length > 0 ? tags.join(", ") : "Selecione ou crie tags..."}
+						</Text>
+						<Ionicons
+							name="chevron-down"
+							size={20}
+							color={colors.textSecondary}
 						/>
-						{tagInput.trim().length > 0 && (
-							<TouchableOpacity
-								style={[styles.tagAddBtn, { backgroundColor: colors.primary }]}
-								onPress={addTag}
-							>
-								<Text style={styles.tagAddBtnText}>+</Text>
-							</TouchableOpacity>
-						)}
-					</View>
+					</TouchableOpacity>
 					{tags.length > 0 && (
 						<View style={styles.chipsContainer}>
 							{tags.map((tag) => (
@@ -706,7 +920,7 @@ export default function ExerciseFormScreen() {
 											borderColor: colors.border,
 										},
 									]}
-									onPress={() => removeTag(tag)}
+									onPress={() => setTags(tags.filter((t) => t !== tag))}
 								>
 									<Text style={[styles.chipText, { color: colors.textMuted }]}>
 										{tag}
@@ -765,37 +979,44 @@ export default function ExerciseFormScreen() {
 				</ScrollView>
 			</KeyboardAvoidingView>
 
-			<MultiSelectModal
+			<AutocompleteMultiSelectModal
 				visible={showCategoriesModal}
 				onClose={() => setShowCategoriesModal(false)}
-				title="Selecione as Categorias"
+				title="Categorias"
+				fieldLabel="a categoria"
 				options={categoryOptions}
 				selectedValues={categories}
 				onSelect={setCategories}
-				allowCreateNew
-				onCreateNew={(newCat) => {
-					if (!categories.includes(newCat)) {
-						setCategories([...categories, newCat]);
-					}
-				}}
 			/>
 
-			<MultiSelectModal
+			<AutocompleteMultiSelectModal
 				visible={showBodyPartsModal}
 				onClose={() => setShowBodyPartsModal(false)}
-				title="Selecione as Partes do Corpo"
+				title="Partes do Corpo"
+				fieldLabel="a parte do corpo"
 				options={bodyPartsOptions}
 				selectedValues={bodyParts}
 				onSelect={setBodyParts}
 			/>
 
-			<MultiSelectModal
+			<AutocompleteMultiSelectModal
 				visible={showEquipmentModal}
 				onClose={() => setShowEquipmentModal(false)}
-				title="Selecione os Equipamentos"
+				title="Equipamentos"
+				fieldLabel="o equipamento"
 				options={equipmentOptions}
 				selectedValues={equipment}
 				onSelect={setEquipment}
+			/>
+
+			<AutocompleteMultiSelectModal
+				visible={showTagsModal}
+				onClose={() => setShowTagsModal(false)}
+				title="Tags"
+				fieldLabel="a tag"
+				options={tagOptions}
+				selectedValues={tags}
+				onSelect={handleTagSelect}
 			/>
 		</SafeAreaView>
 	);
@@ -865,27 +1086,5 @@ const styles = StyleSheet.create({
 	},
 	chipText: {
 		fontSize: 12,
-	},
-	tagInputRow: {
-		flexDirection: "row",
-		borderWidth: 1,
-		borderRadius: 12,
-		overflow: "hidden",
-	},
-	tagInput: {
-		flex: 1,
-		paddingHorizontal: 12,
-		paddingVertical: 10,
-		fontSize: 14,
-	},
-	tagAddBtn: {
-		paddingHorizontal: 16,
-		alignItems: "center",
-		justifyContent: "center",
-	},
-	tagAddBtnText: {
-		color: "#fff",
-		fontSize: 18,
-		fontWeight: "700",
 	},
 });
