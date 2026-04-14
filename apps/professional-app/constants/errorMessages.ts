@@ -5,6 +5,7 @@ export const ERROR_MESSAGES = {
   
   // Authentication
   INVALID_CREDENTIALS: 'Email ou senha incorretos.',
+  EMAIL_NOT_VERIFIED: 'Seu e-mail ainda não foi verificado. Verifique sua caixa de entrada.',
   SESSION_EXPIRED: 'Sua sessão expirou. Por favor, faça login novamente.',
   BIOMETRIC_FAILED: 'Autenticação biométrica falhou. Use seu PIN.',
   ACCOUNT_LOCKED: 'Conta bloqueada por 15 minutos após múltiplas tentativas.',

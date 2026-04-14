@@ -27,9 +27,27 @@ const DEFAULT_RULES: Partial<CancellationRule> = {
 };
 
 const CANCELLATION_PRESETS = [
-	{ label: "Flexível", description: "2h de antecedência", icon: "🧘", min_hours_before: 2, max_cancellations_month: 5 },
-	{ label: "Padrão", description: "24h de antecedência", icon: "⏱️", min_hours_before: 24, max_cancellations_month: 3 },
-	{ label: "Rigoroso", description: "48h de antecedência", icon: "📋", min_hours_before: 48, max_cancellations_month: 2 },
+	{
+		label: "Flexível",
+		description: "2h de antecedência",
+		icon: "🧘",
+		min_hours_before: 2,
+		max_cancellations_month: 5,
+	},
+	{
+		label: "Padrão",
+		description: "24h de antecedência",
+		icon: "⏱️",
+		min_hours_before: 24,
+		max_cancellations_month: 3,
+	},
+	{
+		label: "Rigoroso",
+		description: "48h de antecedência",
+		icon: "📋",
+		min_hours_before: 48,
+		max_cancellations_month: 2,
+	},
 ];
 
 const FEE_PRESETS = [
@@ -54,7 +72,10 @@ export function CancellationRulesManager() {
 		}
 	}, [cancellationRules]);
 
-	const updateRule = (field: keyof CancellationRule, value: number | boolean) => {
+	const updateRule = (
+		field: keyof CancellationRule,
+		value: number | boolean,
+	) => {
 		setRules({ ...rules, [field]: value });
 		setSaved(false);
 	};
@@ -70,7 +91,11 @@ export function CancellationRulesManager() {
 	};
 
 	const applyPreset = (preset: (typeof CANCELLATION_PRESETS)[0]) => {
-		setRules({ ...rules, min_hours_before: preset.min_hours_before, max_cancellations_month: preset.max_cancellations_month });
+		setRules({
+			...rules,
+			min_hours_before: preset.min_hours_before,
+			max_cancellations_month: preset.max_cancellations_month,
+		});
 		setSaved(false);
 	};
 
@@ -90,7 +115,9 @@ export function CancellationRulesManager() {
 		<div className="space-y-4">
 			{/* Presets */}
 			<div className="space-y-2">
-				<Label className="text-xs font-medium text-muted-foreground">Presets de política</Label>
+				<Label className="text-xs font-medium text-muted-foreground">
+					Presets de política
+				</Label>
 				<div className="grid grid-cols-3 gap-2">
 					{CANCELLATION_PRESETS.map((preset) => {
 						const isActive =
@@ -98,6 +125,7 @@ export function CancellationRulesManager() {
 							rules.max_cancellations_month === preset.max_cancellations_month;
 						return (
 							<button
+								type="button"
 								key={preset.label}
 								onClick={() => applyPreset(preset)}
 								className={cn(
@@ -109,7 +137,9 @@ export function CancellationRulesManager() {
 							>
 								<span className="text-2xl">{preset.icon}</span>
 								<p className="font-semibold text-xs">{preset.label}</p>
-								<p className="text-[10px] text-muted-foreground">{preset.description}</p>
+								<p className="text-[10px] text-muted-foreground">
+									{preset.description}
+								</p>
 							</button>
 						);
 					})}
@@ -156,7 +186,9 @@ export function CancellationRulesManager() {
 				</div>
 				<Slider
 					value={[maxCancellations]}
-					onValueChange={([value]) => updateRule("max_cancellations_month", value)}
+					onValueChange={([value]) =>
+						updateRule("max_cancellations_month", value)
+					}
 					min={0}
 					max={10}
 					step={1}
@@ -173,27 +205,35 @@ export function CancellationRulesManager() {
 			<div className="space-y-2">
 				<div className="flex items-center justify-between p-3 rounded-lg border bg-muted/30">
 					<div>
-						<Label className="text-sm font-medium">Permitir auto-cancelamento</Label>
+						<Label className="text-sm font-medium">
+							Permitir auto-cancelamento
+						</Label>
 						<p className="text-xs text-muted-foreground mt-0.5">
 							Pacientes cancelam via WhatsApp/portal
 						</p>
 					</div>
 					<Switch
 						checked={rules.allow_patient_cancellation ?? true}
-						onCheckedChange={(checked) => updateRule("allow_patient_cancellation", checked)}
+						onCheckedChange={(checked) =>
+							updateRule("allow_patient_cancellation", checked)
+						}
 					/>
 				</div>
 
 				<div className="flex items-center justify-between p-3 rounded-lg border bg-muted/30">
 					<div>
-						<Label className="text-sm font-medium">Cobrar cancelamento tardio</Label>
+						<Label className="text-sm font-medium">
+							Cobrar cancelamento tardio
+						</Label>
 						<p className="text-xs text-muted-foreground mt-0.5">
 							Aplicar taxa fora do prazo
 						</p>
 					</div>
 					<Switch
 						checked={rules.charge_late_cancellation ?? false}
-						onCheckedChange={(checked) => updateRule("charge_late_cancellation", checked)}
+						onCheckedChange={(checked) =>
+							updateRule("charge_late_cancellation", checked)
+						}
 					/>
 				</div>
 
@@ -201,13 +241,17 @@ export function CancellationRulesManager() {
 					<div className="p-3 rounded-lg border bg-muted/30 ml-2 animate-in slide-in-from-top-2 duration-200">
 						<div className="flex items-center gap-2 mb-2">
 							<DollarSign className="h-4 w-4 text-muted-foreground" />
-							<Label className="text-sm font-medium">Taxa de cancelamento tardio</Label>
+							<Label className="text-sm font-medium">
+								Taxa de cancelamento tardio
+							</Label>
 						</div>
 						<div className="flex items-center gap-3 mb-2">
 							<span className="text-lg font-bold">R$</span>
 							<Slider
 								value={[lateFee]}
-								onValueChange={([value]) => updateRule("late_cancellation_fee", value)}
+								onValueChange={([value]) =>
+									updateRule("late_cancellation_fee", value)
+								}
 								min={0}
 								max={200}
 								step={5}
@@ -223,7 +267,9 @@ export function CancellationRulesManager() {
 									key={preset.label}
 									size="sm"
 									variant={lateFee === preset.value ? "default" : "outline"}
-									onClick={() => updateRule("late_cancellation_fee", preset.value)}
+									onClick={() =>
+										updateRule("late_cancellation_fee", preset.value)
+									}
 									className="h-7 text-xs"
 								>
 									{preset.label}
@@ -243,11 +289,20 @@ export function CancellationRulesManager() {
 					className={cn(saved && "bg-green-600 hover:bg-green-700")}
 				>
 					{saved ? (
-						<><CheckCircle2 className="h-4 w-4 mr-1.5" />Salvo</>
+						<>
+							<CheckCircle2 className="h-4 w-4 mr-1.5" />
+							Salvo
+						</>
 					) : isSavingRules ? (
-						<><Loader2 className="h-4 w-4 mr-1.5 animate-spin" />Salvando...</>
+						<>
+							<Loader2 className="h-4 w-4 mr-1.5 animate-spin" />
+							Salvando...
+						</>
 					) : (
-						<><Save className="h-4 w-4 mr-1.5" />Salvar regras</>
+						<>
+							<Save className="h-4 w-4 mr-1.5" />
+							Salvar regras
+						</>
 					)}
 				</Button>
 			</div>

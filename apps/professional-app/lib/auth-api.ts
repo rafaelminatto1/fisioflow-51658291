@@ -7,6 +7,9 @@ export interface AuthResponse {
 	refreshToken?: string;
 }
 
+let isRefreshing = false;
+let refreshPromise: Promise<AuthResponse> | null = null;
+
 export const authApi = {
 	async login(email: string, password: string): Promise<AuthResponse> {
 		const data = await fetchApi<AuthResponse>("/api/auth/login", {
@@ -26,7 +29,6 @@ export const authApi = {
 		try {
 			const token = await getToken();
 			if (token) {
-				// Rota de logout opcional - backend pode não implementar
 				await fetchApi("/api/auth/logout", {
 					method: "POST",
 					timeout: 5000,
@@ -50,7 +52,17 @@ export const authApi = {
 			return data.user || data;
 		} catch (err: any) {
 			if (err.status === 401) {
-				await clearToken();
+				try {
+					await authApi.refreshToken();
+					const data = await fetchApi<any>("/api/profile/me", {
+						method: "GET",
+						timeout: 8000,
+					});
+					return data.user || data;
+				} catch {
+					await clearToken();
+					throw new Error("Falha ao validar sessão");
+				}
 			}
 			throw new Error("Falha ao validar sessão");
 		}
@@ -58,6 +70,14 @@ export const authApi = {
 
 	async resetPassword(email: string): Promise<void> {
 		await fetchApi("/api/auth/reset-password", {
+			method: "POST",
+			data: { email },
+			skipAuth: true,
+		});
+	},
+
+	async resendVerificationEmail(email: string): Promise<void> {
+		await fetchApi("/api/auth/send-verification-email", {
 			method: "POST",
 			data: { email },
 			skipAuth: true,
@@ -72,31 +92,39 @@ export const authApi = {
 	},
 
 	async refreshToken(): Promise<AuthResponse> {
-		const refreshToken = await getToken();
-		if (!refreshToken) {
-			throw new Error("Token não disponível");
+		if (isRefreshing && refreshPromise) {
+			return refreshPromise;
 		}
 
-		try {
-			const data = await fetchApi<AuthResponse>("/api/auth/refresh", {
-				method: "POST",
-				data: { refreshToken },
-				skipAuth: true,
-			});
-
-			if (!data.token) {
-				throw new Error("Token não recebido do servidor");
+		isRefreshing = true;
+		refreshPromise = (async () => {
+			const currentToken = await getToken();
+			if (!currentToken) {
+				throw new Error("Token não disponível");
 			}
 
-			await setToken(data.token);
-			if (data.refreshToken) {
-				await setToken(data.refreshToken);
-			}
+			try {
+				const data = await fetchApi<AuthResponse>("/api/auth/refresh", {
+					method: "POST",
+					data: { token: currentToken },
+					skipAuth: true,
+				});
 
-			return data;
-		} catch (error) {
-			await clearToken();
-			throw error;
-		}
+				if (!data.token) {
+					throw new Error("Token não recebido do servidor");
+				}
+
+				await setToken(data.token);
+				return data;
+			} catch (error) {
+				await clearToken();
+				throw error;
+			} finally {
+				isRefreshing = false;
+				refreshPromise = null;
+			}
+		})();
+
+		return refreshPromise;
 	},
 };

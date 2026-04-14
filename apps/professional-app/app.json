@@ -3,7 +3,7 @@
 		"name": "FisioFlow Pro",
 		"slug": "fisioflow-pro",
 		"version": "1.0.0",
-		"orientation": "portrait",
+		"orientation": "default",
 		"icon": "./assets/icon.png",
 		"scheme": "fisioflowpro",
 		"userInterfaceStyle": "automatic",
@@ -23,7 +23,13 @@
 				"NSPhotoLibraryUsageDescription": "O FisioFlow precisa acessar sua galeria de fotos para selecionar imagens existentes de pacientes e exercícios. Suas fotos são protegidas com criptografia.",
 				"NSLocationWhenInUseUsageDescription": "O FisioFlow usa sua localização para verificar check-in na clínica e confirmar presença em consultas. Sua localização nunca é compartilhada com terceiros.",
 				"NSFaceIDUsageDescription": "O FisioFlow usa Face ID para proteger o acesso aos dados sensíveis de saúde dos seus pacientes com autenticação biométrica segura.",
-				"UIBackgroundModes": ["remote-notification", "fetch"]
+				"UIBackgroundModes": ["remote-notification", "fetch"],
+				"UISupportedInterfaceOrientations~ipad": [
+					"UIInterfaceOrientationPortrait",
+					"UIInterfaceOrientationPortraitUpsideDown",
+					"UIInterfaceOrientationLandscapeLeft",
+					"UIInterfaceOrientationLandscapeRight"
+				]
 			},
 			"config": {
 				"usesNonExemptEncryption": false

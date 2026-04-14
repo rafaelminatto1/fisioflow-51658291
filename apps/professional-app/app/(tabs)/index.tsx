@@ -101,18 +101,45 @@ export default function DashboardScreen() {
 	const { protocols } = useProtocols();
 	const { data: exercises } = useExercisesLibrary();
 
-	if (statsError) console.error("[Dashboard] Stats error:", statsError);
-	if (appointmentsError)
-		console.error("[Dashboard] Appointments error:", appointmentsError);
-	if (patientsError)
-		console.error("[Dashboard] Patients error:", patientsError);
-
 	const onRefresh = async () => {
 		setRefreshing(true);
 		light();
 		await Promise.all([refetchStats(), refetchAppointments()]);
 		setRefreshing(false);
 	};
+
+	if (statsError || appointmentsError) {
+		return (
+			<SafeAreaView
+				style={[styles.container, { backgroundColor: colors.background }]}
+				edges={["top", "left", "right"]}
+			>
+				<View style={styles.errorContainer}>
+					<Ionicons
+						name="cloud-offline-outline"
+						size={48}
+						color={colors.textSecondary}
+					/>
+					<Text style={[styles.errorTitle, { color: colors.text }]}>
+						Não foi possível carregar
+					</Text>
+					<Text style={[styles.errorSubtitle, { color: colors.textSecondary }]}>
+						Verifique sua conexão e tente novamente
+					</Text>
+					<TouchableOpacity
+						style={[styles.retryButton, { backgroundColor: colors.primary }]}
+						onPress={onRefresh}
+					>
+						<Text style={styles.retryButtonText}>Tentar novamente</Text>
+					</TouchableOpacity>
+				</View>
+			</SafeAreaView>
+		);
+	}
+
+	if (patientsError) {
+		console.error("[Dashboard] Patients error:", patientsError);
+	}
 
 	const getGreeting = () => {
 		const hour = new Date().getHours();
@@ -1273,9 +1300,32 @@ const styles = StyleSheet.create({
 		fontWeight: "500",
 		flex: 1,
 	},
-	miniBodyPart: {
-		fontSize: 11,
+	errorContainer: {
+		flex: 1,
+		alignItems: "center",
+		justifyContent: "center",
+		paddingHorizontal: 40,
+		gap: 12,
+	},
+	errorTitle: {
+		fontSize: 20,
+		fontWeight: "700",
+		marginTop: 8,
+	},
+	errorSubtitle: {
+		fontSize: 15,
+		textAlign: "center",
+		lineHeight: 22,
+	},
+	retryButton: {
+		paddingVertical: 14,
+		paddingHorizontal: 32,
+		borderRadius: 12,
+		marginTop: 8,
+	},
+	retryButtonText: {
+		color: "#fff",
+		fontSize: 16,
 		fontWeight: "600",
-		opacity: 0.6,
 	},
 });

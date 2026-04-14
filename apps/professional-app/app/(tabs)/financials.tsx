@@ -259,7 +259,9 @@ export default function FinancialsScreen() {
 					style={[
 						styles.tab,
 						activeTab === "transactions" && styles.activeTab,
-						activeTab === "transactions" && { borderBottomColor: colors.primary },
+						activeTab === "transactions" && {
+							borderBottomColor: colors.primary,
+						},
 					]}
 					onPress={() => {
 						light();
@@ -367,11 +369,6 @@ export default function FinancialsScreen() {
 									title: "Receita",
 									amount: totalRevenue,
 									subtitle: getDatePeriodLabel(),
-									trend: {
-										value: 12.5,
-										label: "vs mês ant.",
-										positive: true,
-									},
 									icon: "arrow-up-circle" as any,
 									variant: "success",
 								},
@@ -379,11 +376,6 @@ export default function FinancialsScreen() {
 									title: "Pendente",
 									amount: totalPending,
 									subtitle: getDatePeriodLabel(),
-									trend: {
-										value: 8.3,
-										label: "vs mês ant.",
-										positive: false,
-									},
 									icon: "time" as any,
 									variant: "warning",
 								},
@@ -406,7 +398,12 @@ export default function FinancialsScreen() {
 								<Text style={[styles.listHeaderTitle, { color: colors.text }]}>
 									Lista de Transações
 								</Text>
-								<Text style={[styles.listHeaderSub, { color: colors.textSecondary }]}>
+								<Text
+									style={[
+										styles.listHeaderSub,
+										{ color: colors.textSecondary },
+									]}
+								>
 									{filteredRecords.length} registros
 								</Text>
 							</View>
@@ -470,7 +467,10 @@ export default function FinancialsScreen() {
 									key={nfse.id}
 									style={[
 										styles.nfseCard,
-										{ backgroundColor: colors.surface, borderColor: colors.border },
+										{
+											backgroundColor: colors.surface,
+											borderColor: colors.border,
+										},
 									]}
 								>
 									<View style={styles.nfseHeader}>
@@ -487,8 +487,8 @@ export default function FinancialsScreen() {
 													{ color: colors.textSecondary },
 												]}
 											>
-												{format(new Date(nfse.data_emissao), "dd/MM/yyyy")} • RPS{" "}
-												{nfse.numero_rps}
+												{format(new Date(nfse.data_emissao), "dd/MM/yyyy")} •
+												RPS {nfse.numero_rps}
 											</Text>
 										</View>
 										<View
@@ -536,7 +536,10 @@ export default function FinancialsScreen() {
 													color={colors.primary}
 												/>
 												<Text
-													style={[styles.openNfseText, { color: colors.primary }]}
+													style={[
+														styles.openNfseText,
+														{ color: colors.primary },
+													]}
 												>
 													Ver PDF
 												</Text>

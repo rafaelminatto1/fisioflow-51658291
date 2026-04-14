@@ -1,113 +1,101 @@
-import * as Haptics from 'expo-haptics';
-import { Platform } from 'react-native';
+import * as Haptics from "expo-haptics";
+import { Platform, Vibration } from "react-native";
 
-/**
- * Verifica se o dispositivo suporta haptics
- */
-export function isHapticsSupported(): boolean {
-  return Platform.OS === 'ios';
+function isHapticsSupported(): boolean {
+	return Platform.OS === "ios" || Platform.OS === "android";
 }
 
-/**
- * Impacto leve (toque suave)
- * Use para: Feedback de toques leves, scroll em listas
- */
+function androidVibrate(ms: number = 10): void {
+	if (Platform.OS === "android") {
+		try {
+			Vibration.vibrate(ms);
+		} catch {}
+	}
+}
+
 export async function hapticLight(): Promise<void> {
-  if (!isHapticsSupported()) return;
-  try {
-    await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-  } catch (error) {
-    console.error('Haptic light error:', error);
-  }
+	if (!isHapticsSupported()) return;
+	try {
+		if (Platform.OS === "ios") {
+			await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+		} else {
+			androidVibrate(5);
+		}
+	} catch {}
 }
 
-/**
- * Impacto médio (toque padrão)
- * Use para: Confirmar ações, feedback de seleção
- */
 export async function hapticMedium(): Promise<void> {
-  if (!isHapticsSupported()) return;
-  try {
-    await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
-  } catch (error) {
-    console.error('Haptic medium error:', error);
-  }
+	if (!isHapticsSupported()) return;
+	try {
+		if (Platform.OS === "ios") {
+			await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+		} else {
+			androidVibrate(10);
+		}
+	} catch {}
 }
 
-/**
- * Impacto forte (toque intenso)
- * Use para: Confirmações importantes, alertas
- */
 export async function hapticHeavy(): Promise<void> {
-  if (!isHapticsSupported()) return;
-  try {
-    await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy);
-  } catch (error) {
-    console.error('Haptic heavy error:', error);
-  }
+	if (!isHapticsSupported()) return;
+	try {
+		if (Platform.OS === "ios") {
+			await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy);
+		} else {
+			androidVibrate(20);
+		}
+	} catch {}
 }
 
-/**
- * Notificação de sucesso
- * Use para: Operações concluídas com sucesso
- */
 export async function hapticSuccess(): Promise<void> {
-  if (!isHapticsSupported()) return;
-  try {
-    await Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-  } catch (error) {
-    console.error('Haptic success error:', error);
-  }
+	if (!isHapticsSupported()) return;
+	try {
+		if (Platform.OS === "ios") {
+			await Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+		} else {
+			Vibration.vibrate([0, 30, 50, 30]);
+		}
+	} catch {}
 }
 
-/**
- * Notificação de aviso
- * Use para: Alertas, atenção necessária
- */
 export async function hapticWarning(): Promise<void> {
-  if (!isHapticsSupported()) return;
-  try {
-    await Haptics.notificationAsync(Haptics.NotificationFeedbackType.Warning);
-  } catch (error) {
-    console.error('Haptic warning error:', error);
-  }
+	if (!isHapticsSupported()) return;
+	try {
+		if (Platform.OS === "ios") {
+			await Haptics.notificationAsync(Haptics.NotificationFeedbackType.Warning);
+		} else {
+			Vibration.vibrate([0, 50, 50, 50]);
+		}
+	} catch {}
 }
 
-/**
- * Notificação de erro
- * Use para: Erros, falhas operacionais
- */
 export async function hapticError(): Promise<void> {
-  if (!isHapticsSupported()) return;
-  try {
-    await Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
-  } catch (error) {
-    console.error('Haptic error error:', error);
-  }
+	if (!isHapticsSupported()) return;
+	try {
+		if (Platform.OS === "ios") {
+			await Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
+		} else {
+			Vibration.vibrate([0, 80, 50, 80, 50, 80]);
+		}
+	} catch {}
 }
 
-/**
- * Seleção (efeito de rolagem/scroll)
- * Use para: Scroll em listas, seleção de opções
- */
 export async function hapticSelection(): Promise<void> {
-  if (!isHapticsSupported()) return;
-  try {
-    await Haptics.selectionAsync();
-  } catch (error) {
-    console.error('Haptic selection error:', error);
-  }
+	if (!isHapticsSupported()) return;
+	try {
+		if (Platform.OS === "ios") {
+			await Haptics.selectionAsync();
+		} else {
+			androidVibrate(3);
+		}
+	} catch {}
 }
 
-/**
- * Objeto com todas as funções haptic
- */
 export const haptic = {
-  light: hapticLight,
-  medium: hapticMedium,
-  heavy: hapticHeavy,
-  success: hapticSuccess,
-  warning: hapticWarning,
-  error: hapticError,
-  selection: hapticSelection,
+	light: hapticLight,
+	medium: hapticMedium,
+	heavy: hapticHeavy,
+	success: hapticSuccess,
+	warning: hapticWarning,
+	error: hapticError,
+	selection: hapticSelection,
 };

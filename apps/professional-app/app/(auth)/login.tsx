@@ -10,6 +10,7 @@ import {
 	ScrollView,
 	TouchableOpacity,
 	Image,
+	Alert,
 } from "react-native";
 import { Link, router } from "expo-router";
 import { SafeAreaView } from "react-native-safe-area-context";
@@ -18,6 +19,8 @@ import { Button, Input } from "@/components";
 import { useColors } from "@/hooks/useColorScheme";
 import { useAuthStore } from "@/store/auth";
 import { useBiometricAuth } from "@/hooks/useBiometricAuth";
+import { ERROR_MESSAGES } from "@/constants/errorMessages";
+import { authApi } from "@/lib/auth-api";
 
 export default function LoginScreen() {
 	const colors = useColors();
@@ -104,7 +107,27 @@ export default function LoginScreen() {
 		}
 	};
 
-	const displayError = localError || error;
+	const displayError = (function() {
+		if (localError) return localError;
+		if (!error) return null;
+
+		// Handle email not verified error (case insensitive and handles potential backend typo)
+		if (error.toLowerCase().includes("not verified") || error.toLowerCase().includes("verificado")) {
+			return ERROR_MESSAGES.EMAIL_NOT_VERIFIED;
+		}
+
+		return error;
+	})();
+
+	const isEmailUnverified = error?.toLowerCase().includes("not verified") || error?.toLowerCase().includes("verificado");
+
+	const handleResendVerification = async () => {
+		Alert.alert(
+			"Verificação de E-mail",
+			"Por favor, verifique sua caixa de entrada e pasta de spam para o e-mail de confirmação enviado pelo sistema. Se não encontrar, solicite ao administrador a reinicialização da sua conta.",
+			[{ text: "Entendido" }]
+		);
+	};
 
 	const getBiometricIcon = () => {
 		// Ionicons doesn't have 'face-id', use 'person' for Face ID
@@ -155,6 +178,21 @@ export default function LoginScreen() {
 								<Text style={[styles.errorText, { color: colors.error }]}>
 									{displayError}
 								</Text>
+								{isEmailUnverified && (
+									<TouchableOpacity
+										onPress={handleResendVerification}
+										style={styles.resendButton}
+									>
+										<Text
+											style={[
+												styles.resendText,
+												{ color: colors.primary, fontWeight: "bold" },
+											]}
+										>
+											Reenviar e-mail de verificação
+										</Text>
+									</TouchableOpacity>
+								)}
 							</View>
 						) : null}
 
@@ -284,6 +322,15 @@ const styles = StyleSheet.create({
 	errorText: {
 		fontSize: 14,
 		textAlign: "center",
+	},
+	resendButton: {
+		marginTop: 8,
+		alignItems: "center",
+		padding: 4,
+	},
+	resendText: {
+		fontSize: 14,
+		textDecorationLine: "underline",
 	},
 	forgotPassword: {
 		alignSelf: "flex-end",
