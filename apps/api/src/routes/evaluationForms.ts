@@ -33,6 +33,15 @@ function normalizeOptions(value: unknown): unknown[] | null {
   return null;
 }
 
+const evaluationResponseStatuses = new Set(['scheduled', 'in_progress', 'completed', 'cancelled']);
+
+function normalizeDateInput(value: unknown): string | null {
+  if (typeof value !== 'string' || !value.trim()) return null;
+  const parsed = new Date(value);
+  if (Number.isNaN(parsed.getTime())) return null;
+  return parsed.toISOString();
+}
+
 async function ensureTables(env: Env): Promise<void> {
   const pool = await createPool(env);
   try {
@@ -110,6 +119,10 @@ async function ensureTables(env: Env): Promise<void> {
         form_id UUID NOT NULL REFERENCES evaluation_forms(id),
         appointment_id UUID,
         responses JSONB NOT NULL DEFAULT '{}',
+        status TEXT NOT NULL DEFAULT 'completed',
+        scheduled_for TIMESTAMP WITH TIME ZONE,
+        started_at TIMESTAMP WITH TIME ZONE,
+        completed_at TIMESTAMP WITH TIME ZONE,
         created_by TEXT,
         created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
         updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
@@ -120,9 +133,15 @@ async function ensureTables(env: Env): Promise<void> {
         ADD COLUMN IF NOT EXISTS form_id UUID,
         ADD COLUMN IF NOT EXISTS appointment_id UUID,
         ADD COLUMN IF NOT EXISTS responses JSONB NOT NULL DEFAULT '{}',
+        ADD COLUMN IF NOT EXISTS status TEXT NOT NULL DEFAULT 'completed',
+        ADD COLUMN IF NOT EXISTS scheduled_for TIMESTAMP WITH TIME ZONE,
+        ADD COLUMN IF NOT EXISTS started_at TIMESTAMP WITH TIME ZONE,
+        ADD COLUMN IF NOT EXISTS completed_at TIMESTAMP WITH TIME ZONE,
         ADD COLUMN IF NOT EXISTS created_by TEXT,
         ADD COLUMN IF NOT EXISTS created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
         ADD COLUMN IF NOT EXISTS updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()`,
+      `CREATE INDEX IF NOT EXISTS idx_patient_evaluation_responses_patient_status_date
+        ON patient_evaluation_responses (patient_id, status, scheduled_for DESC, created_at DESC)`,
     ];
 
     for (const statement of statements) {
@@ -162,6 +181,158 @@ app.get('/', requireAuth, async (c) => {
     params,
   );
   try { return c.json({ data: result.rows || result }); } catch { return c.json({ data: [] }); }
+});
+
+app.get('/responses', requireAuth, async (c) => {
+  const user = c.get('user');
+  await ensureTables(c.env);
+  const pool = await createPool(c.env);
+  const patientId = c.req.query('patientId');
+
+  if (!patientId) return c.json({ error: 'patientId é obrigatório' }, 400);
+
+  const patientResult = await pool.query(
+    `SELECT id FROM patients WHERE id = $1 AND organization_id = $2 LIMIT 1`,
+    [patientId, user.organizationId],
+  );
+  if (!patientResult.rows.length) return c.json({ error: 'Paciente não encontrado' }, 404);
+
+  const result = await pool.query(
+    `
+      SELECT
+        r.*,
+        ef.nome AS form_nome,
+        ef.tipo AS form_tipo,
+        ef.descricao AS form_descricao,
+        COUNT(f.id)::int AS fields_count,
+        COALESCE(jsonb_object_length(r.responses), 0)::int AS answered_count
+      FROM patient_evaluation_responses r
+      JOIN evaluation_forms ef
+        ON ef.id = r.form_id
+       AND ef.organization_id = r.organization_id
+      LEFT JOIN evaluation_form_fields f
+        ON f.form_id = ef.id
+      WHERE r.organization_id = $1
+        AND r.patient_id = $2
+      GROUP BY r.id, ef.id
+      ORDER BY COALESCE(r.scheduled_for, r.completed_at, r.started_at, r.created_at) DESC
+    `,
+    [user.organizationId, patientId],
+  );
+
+  return c.json({ data: result.rows || [] });
+});
+
+app.get('/responses/:responseId', requireAuth, async (c) => {
+  const user = c.get('user');
+  await ensureTables(c.env);
+  const pool = await createPool(c.env);
+  const { responseId } = c.req.param();
+
+  const responseResult = await pool.query(
+    `
+      SELECT
+        r.*,
+        ef.nome AS form_nome,
+        ef.tipo AS form_tipo,
+        ef.descricao AS form_descricao,
+        ef.referencias AS form_referencias
+      FROM patient_evaluation_responses r
+      JOIN evaluation_forms ef
+        ON ef.id = r.form_id
+       AND ef.organization_id = r.organization_id
+      WHERE r.id = $1
+        AND r.organization_id = $2
+      LIMIT 1
+    `,
+    [responseId, user.organizationId],
+  );
+  if (!responseResult.rows.length) return c.json({ error: 'Avaliação não encontrada' }, 404);
+
+  const response = responseResult.rows[0] as Record<string, unknown>;
+  const fieldsResult = await pool.query(
+    `SELECT *
+     FROM evaluation_form_fields
+     WHERE form_id = $1
+     ORDER BY ordem ASC`,
+    [response.form_id],
+  );
+
+  return c.json({
+    data: {
+      ...response,
+      form: {
+        id: response.form_id,
+        nome: response.form_nome,
+        tipo: response.form_tipo,
+        descricao: response.form_descricao,
+        referencias: response.form_referencias,
+      },
+      fields: fieldsResult.rows || [],
+    },
+  });
+});
+
+app.put('/responses/:responseId', requireAuth, async (c) => {
+  const user = c.get('user');
+  await ensureTables(c.env);
+  const pool = await createPool(c.env);
+  const { responseId } = c.req.param();
+  const body = (await c.req.json()) as Record<string, unknown>;
+
+  const sets: string[] = ['updated_at = NOW()'];
+  const params: unknown[] = [];
+
+  if (body.responses !== undefined) {
+    params.push(JSON.stringify(body.responses ?? {}));
+    sets.push(`responses = $${params.length}::jsonb`);
+  }
+
+  if (body.status !== undefined) {
+    const status = String(body.status);
+    if (!evaluationResponseStatuses.has(status)) {
+      return c.json({ error: 'Status de avaliação inválido' }, 400);
+    }
+    params.push(status);
+    sets.push(`status = $${params.length}`);
+
+    if (status === 'in_progress' && body.started_at === undefined) {
+      sets.push('started_at = COALESCE(started_at, NOW())');
+    }
+    if (status === 'completed' && body.completed_at === undefined) {
+      sets.push('completed_at = COALESCE(completed_at, NOW())');
+    }
+  }
+
+  if (body.scheduled_for !== undefined) {
+    params.push(normalizeDateInput(body.scheduled_for));
+    sets.push(`scheduled_for = $${params.length}`);
+  }
+  if (body.started_at !== undefined) {
+    params.push(normalizeDateInput(body.started_at));
+    sets.push(`started_at = $${params.length}`);
+  }
+  if (body.completed_at !== undefined) {
+    params.push(normalizeDateInput(body.completed_at));
+    sets.push(`completed_at = $${params.length}`);
+  }
+  if (body.appointment_id !== undefined) {
+    params.push(typeof body.appointment_id === 'string' ? body.appointment_id : null);
+    sets.push(`appointment_id = $${params.length}`);
+  }
+
+  params.push(responseId, user.organizationId);
+  const result = await pool.query(
+    `UPDATE patient_evaluation_responses
+     SET ${sets.join(', ')}
+     WHERE id = $${params.length - 1}
+       AND organization_id = $${params.length}
+     RETURNING *`,
+    params,
+  );
+
+  if (!result.rows.length) return c.json({ error: 'Avaliação não encontrada' }, 404);
+  return c.json({ data: result.rows[0] });
 });
 
 app.get('/:id', requireAuth, async (c) => {
@@ -540,6 +711,26 @@ app.post('/:id/responses', requireAuth, async (c) => {
   const patientId = typeof body.patient_id === 'string' ? body.patient_id : null;
   if (!patientId) return c.json({ error: 'patient_id é obrigatório' }, 400);
 
+  const status = typeof body.status === 'string' ? body.status : 'completed';
+  if (!evaluationResponseStatuses.has(status)) {
+    return c.json({ error: 'Status de avaliação inválido' }, 400);
+  }
+
+  const scheduledFor = normalizeDateInput(body.scheduled_for);
+  if (status === 'scheduled') {
+    if (!scheduledFor) return c.json({ error: 'scheduled_for é obrigatório' }, 400);
+    if (new Date(scheduledFor).getTime() < Date.now() - 60_000) {
+      return c.json({ error: 'Data da avaliação não pode estar no passado' }, 400);
+    }
+  }
+
+  const startedAt =
+    normalizeDateInput(body.started_at) ??
+    (status === 'in_progress' ? new Date().toISOString() : null);
+  const completedAt =
+    normalizeDateInput(body.completed_at) ??
+    (status === 'completed' ? new Date().toISOString() : null);
+
   const [formResult, patientResult] = await Promise.all([
     pool.query(
       `SELECT id FROM evaluation_forms WHERE id = $1 AND organization_id = $2 LIMIT 1`,
@@ -556,8 +747,9 @@ app.post('/:id/responses', requireAuth, async (c) => {
 
   const result = await pool.query(
     `INSERT INTO patient_evaluation_responses
-       (organization_id, patient_id, form_id, appointment_id, responses, created_by, created_at, updated_at)
-     VALUES ($1, $2, $3, $4, $5::jsonb, $6, NOW(), NOW())
+       (organization_id, patient_id, form_id, appointment_id, responses, status,
+        scheduled_for, started_at, completed_at, created_by, created_at, updated_at)
+     VALUES ($1, $2, $3, $4, $5::jsonb, $6, $7, $8, $9, $10, NOW(), NOW())
      RETURNING *`,
     [
       user.organizationId,
@@ -565,6 +757,10 @@ app.post('/:id/responses', requireAuth, async (c) => {
       id,
       typeof body.appointment_id === 'string' ? body.appointment_id : null,
       JSON.stringify(body.responses ?? {}),
+      status,
+      scheduledFor,
+      startedAt,
+      completedAt,
       user.uid,
     ],
   );
