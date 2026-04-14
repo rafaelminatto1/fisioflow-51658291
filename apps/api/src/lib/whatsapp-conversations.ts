@@ -356,10 +356,10 @@ export async function getInboxConversations(
 			        wc.wa_id, wc.display_name, wc.username, wc.bsuid,
 			        c.assigned_team AS team,
 			        COALESCE(assignee.full_name, assignee.name, assignee.email, c.assigned_to::text) AS assigned_to_name,
-	              lm.content AS last_message,
-	              lm.message_type AS last_message_type,
-	              lm.created_at AS last_message_at,
-	              lm.direction AS last_message_direction,
+	              (SELECT m.content FROM wa_messages m WHERE m.conversation_id = c.id AND m.direction != 'internal' ORDER BY m.created_at DESC LIMIT 1) AS last_message,
+	              (SELECT m.message_type FROM wa_messages m WHERE m.conversation_id = c.id AND m.direction != 'internal' ORDER BY m.created_at DESC LIMIT 1) AS last_message_type,
+	              (SELECT m.created_at FROM wa_messages m WHERE m.conversation_id = c.id AND m.direction != 'internal' ORDER BY m.created_at DESC LIMIT 1) AS last_message_at,
+	              (SELECT m.direction FROM wa_messages m WHERE m.conversation_id = c.id AND m.direction != 'internal' ORDER BY m.created_at DESC LIMIT 1) AS last_message_direction,
 	              COALESCE((
 	                SELECT json_agg(json_build_object('id', t.id, 'name', t.name, 'color', t.color) ORDER BY t.name)
 	                FROM wa_conversation_tags wct
@@ -369,13 +369,6 @@ export async function getInboxConversations(
 	       FROM wa_conversations c
 	       LEFT JOIN whatsapp_contacts wc ON wc.id = c.contact_id
 	       LEFT JOIN profiles assignee ON assignee.user_id = c.assigned_to::text
-	       LEFT JOIN LATERAL (
-	         SELECT m.content, m.message_type, m.created_at, m.direction
-	         FROM wa_messages m
-	         WHERE m.conversation_id = c.id AND m.direction != 'internal'
-	         ORDER BY m.created_at DESC
-	         LIMIT 1
-	       ) lm ON true
 	       ${where}
        ORDER BY c.updated_at DESC
        LIMIT $${idx++} OFFSET $${idx++}`,
