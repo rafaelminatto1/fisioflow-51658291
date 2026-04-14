@@ -12,12 +12,12 @@
  * formatCPF('') // ''
  */
 
-import { cleanCPF, cleanPhone } from "@/lib/validations";
+const cleanInputDigits = (value: string): string => value.replace(/\D/g, "");
 
 export const formatCPF = (value: string | null | undefined): string => {
 	if (!value || typeof value !== "string") return "";
 
-	const cleaned = cleanCPF(value);
+	const cleaned = cleanInputDigits(value);
 
 	if (cleaned.length <= 3) {
 		return cleaned;
@@ -42,7 +42,22 @@ export const formatCPF = (value: string | null | undefined): string => {
 export const formatPhoneInput = (value: string | null | undefined): string => {
 	if (!value || typeof value !== "string") return "";
 
-	const cleaned = cleanPhone(value);
+	const cleaned = cleanInputDigits(value);
+	const hasBrazilCountryCode = cleaned.length > 11 && cleaned.startsWith("55");
+	const localNumber = hasBrazilCountryCode
+		? cleaned.slice(2, 13)
+		: cleaned.slice(0, 11);
+
+	const formattedLocalPhone = formatLocalBrazilianPhone(localNumber);
+	if (!formattedLocalPhone) return "";
+
+	return hasBrazilCountryCode
+		? `+55 ${formattedLocalPhone}`
+		: formattedLocalPhone;
+};
+
+const formatLocalBrazilianPhone = (cleaned: string): string => {
+	if (!cleaned) return "";
 
 	if (cleaned.length <= 2) {
 		return cleaned.length > 0 ? `(${cleaned}` : "";
@@ -55,6 +70,90 @@ export const formatPhoneInput = (value: string | null | undefined): string => {
 		// Celular: (00) 00000-0000
 		return `(${cleaned.slice(0, 2)}) ${cleaned.slice(2, 7)}-${cleaned.slice(7, 11)}`;
 	}
+};
+
+export interface PhoneFieldFormatHint {
+	type?: string;
+	inputMode?: string;
+	autoComplete?: string;
+	id?: string;
+	name?: string;
+	placeholder?: string | number | readonly string[];
+}
+
+const PHONE_FIELD_TOKENS = new Set([
+	"phone",
+	"telefone",
+	"tel",
+	"celular",
+	"mobile",
+	"whatsapp",
+	"whats",
+]);
+
+const PHONE_FIELD_EXCLUDED_TOKENS = new Set([
+	"link",
+	"url",
+	"search",
+	"busca",
+	"buscar",
+	"filter",
+	"filtro",
+]);
+
+export const shouldFormatPhoneField = ({
+	type,
+	inputMode,
+	autoComplete,
+	id,
+	name,
+	placeholder,
+}: PhoneFieldFormatHint): boolean => {
+	const normalizedType = type?.toLowerCase();
+	if (
+		["email", "password", "search", "url", "number"].includes(
+			normalizedType ?? "",
+		)
+	) {
+		return false;
+	}
+
+	if (normalizedType === "tel" || inputMode?.toLowerCase() === "tel") {
+		return true;
+	}
+
+	if (autoComplete?.toLowerCase().startsWith("tel")) {
+		return true;
+	}
+
+	const fieldTokens = [...tokenizeFieldName(id), ...tokenizeFieldName(name)];
+	if (fieldTokens.some((token) => PHONE_FIELD_EXCLUDED_TOKENS.has(token))) {
+		return false;
+	}
+
+	if (fieldTokens.some((token) => PHONE_FIELD_TOKENS.has(token))) {
+		return true;
+	}
+
+	if (typeof placeholder !== "string") return false;
+	const placeholderTokens = tokenizeFieldName(placeholder);
+	if (
+		placeholderTokens.some((token) => PHONE_FIELD_EXCLUDED_TOKENS.has(token))
+	) {
+		return false;
+	}
+
+	return /\(\d{2}\)|\(00\)|\d{10,13}|9{4,5}-9{4}|0{4,5}-0{4}/.test(placeholder);
+};
+
+const tokenizeFieldName = (value: unknown): string[] => {
+	if (typeof value !== "string") return [];
+
+	return value
+		.replace(/([a-z0-9])([A-Z])/g, "$1 $2")
+		.toLowerCase()
+		.split(/[^a-z0-9]+/)
+		.filter(Boolean);
 };
 
 /**

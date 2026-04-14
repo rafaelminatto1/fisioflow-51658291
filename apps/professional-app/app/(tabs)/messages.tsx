@@ -107,7 +107,7 @@ export default function MessagesScreen() {
 	return (
 		<SafeAreaView
 			style={[styles.container, { backgroundColor: colors.background }]}
-			edges={["left", "right"]}
+			edges={["top", "left", "right"]}
 		>
 			<View style={styles.searchContainer}>
 				<View

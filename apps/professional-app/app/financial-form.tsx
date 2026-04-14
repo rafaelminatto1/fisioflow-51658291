@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import {
   View,
   Text,
@@ -21,6 +21,7 @@ import { useHaptics } from '@/hooks/useHaptics';
 import { useCreateFinancialRecord, useUpdateFinancialRecord } from '@/hooks/usePatientFinancial';
 import { usePatients } from '@/hooks/usePatients';
 import { format } from 'date-fns';
+import { SearchablePatientPicker } from '@/components/ui/SearchablePatientPicker';
 
 export default function FinancialFormScreen() {
   const colors = useColors();
@@ -33,8 +34,16 @@ export default function FinancialFormScreen() {
   const recordId = params.id as string;
 
   // Form State
+  const [transactionType, setTransactionType] = useState<'inflow' | 'outflow'>(
+    params.amount && Number(params.amount) < 0 ? 'outflow' : 'inflow'
+  );
   const [patientId, setPatientId] = useState(params.patientId as string || '');
-  const [amount, setAmount] = useState(params.amount ? String(params.amount) : '');
+  
+  // To avoid keyboard issues, we keep the raw numeric string and only format for display
+  // We use a dedicated state for the input to avoid unwanted re-renders/blurring
+  const initialRawAmount = params.amount ? Math.abs(Number(params.amount)).toString() : '';
+  const [rawAmount, setRawAmount] = useState(initialRawAmount);
+  
   const [date, setDate] = useState(params.date ? new Date(params.date as string) : new Date());
   const [showDatePicker, setShowDatePicker] = useState(false);
   const [description, setDescription] = useState(params.description as string || '');
@@ -44,7 +53,6 @@ export default function FinancialFormScreen() {
   // Pickers State
   const [showPatientPicker, setShowPatientPicker] = useState(false);
   const [showPaymentPicker, setShowPaymentPicker] = useState(false);
-  const [, _setShowStatusPicker] = useState(false);
 
   // Hooks
   const { data: patients, isLoading: isLoadingPatients } = usePatients({ status: 'active' });
@@ -53,27 +61,28 @@ export default function FinancialFormScreen() {
 
   const isSubmitting = createMutation.isPending || updateMutation.isPending;
 
-  // Helpers
-  
-
   const handleAmountChange = (text: string) => {
-    // Keep only numbers for raw value, but display formatted
-    const rawText = text.replace(/\D/g, '');
-    setAmount(rawText);
+    // Keep only numbers
+    const cleaned = text.replace(/\D/g, '');
+    setRawAmount(cleaned);
   };
 
-  const getDisplayAmount = () => {
-    if (!amount) return '';
-    const val = parseFloat(amount) / 100;
-    return val.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
-  };
+  const displayAmount = useMemo(() => {
+    if (!rawAmount) return '';
+    const val = parseFloat(rawAmount) / 100;
+    return val.toLocaleString('pt-BR', { 
+      style: 'currency', 
+      currency: 'BRL',
+      minimumFractionDigits: 2 
+    });
+  }, [rawAmount]);
 
   const validateForm = () => {
     if (!patientId) {
       Alert.alert('Erro', 'Selecione um paciente.');
       return false;
     }
-    if (!amount || parseFloat(amount) <= 0) {
+    if (!rawAmount || parseFloat(rawAmount) <= 0) {
       Alert.alert('Erro', 'Insira um valor válido.');
       return false;
     }
@@ -89,7 +98,10 @@ export default function FinancialFormScreen() {
 
     medium();
     try {
-      const finalAmount = parseFloat(amount) / 100;
+      let finalAmount = parseFloat(rawAmount) / 100;
+      if (transactionType === 'outflow') {
+        finalAmount = -finalAmount;
+      }
       
       const payload = {
         patient_id: patientId,
@@ -107,7 +119,7 @@ export default function FinancialFormScreen() {
           recordId, 
           data: {
             ...payload,
-            final_value: finalAmount, // Ensure consistency
+            final_value: finalAmount,
           } 
         });
         Alert.alert('Sucesso', 'Registro atualizado!');
@@ -142,9 +154,8 @@ export default function FinancialFormScreen() {
     <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]} edges={['top']}>
       <Stack.Screen options={{ headerShown: false }} />
       <KeyboardAvoidingView
-        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
         style={{ flex: 1 }}
-        keyboardVerticalOffset={Platform.OS === 'ios' ? 0 : 0}
       >
         {/* Header */}
         <View style={[styles.header, { borderBottomColor: colors.border }]}>
@@ -167,7 +178,52 @@ export default function FinancialFormScreen() {
           </TouchableOpacity>
         </View>
 
-        <ScrollView contentContainerStyle={styles.content}>
+        <ScrollView 
+          contentContainerStyle={styles.content}
+          keyboardShouldPersistTaps="handled"
+        >
+          {/* Transaction Type Selector (Entrada/Saída) */}
+          <View style={styles.inputGroup}>
+            <Text style={[styles.label, { color: colors.text }]}>Tipo de Transação</Text>
+            <View style={styles.typeRow}>
+              <TouchableOpacity
+                style={[
+                  styles.typeOption,
+                  { borderColor: colors.border },
+                  transactionType === 'inflow' && { backgroundColor: colors.success + '15', borderColor: colors.success }
+                ]}
+                onPress={() => { light(); setTransactionType('inflow'); }}
+              >
+                <Ionicons 
+                  name="arrow-down-circle" 
+                  size={20} 
+                  color={transactionType === 'inflow' ? colors.success : colors.textSecondary} 
+                />
+                <Text style={[styles.typeText, { color: transactionType === 'inflow' ? colors.success : colors.textSecondary }]}>
+                  Entrada
+                </Text>
+              </TouchableOpacity>
+
+              <TouchableOpacity
+                style={[
+                  styles.typeOption,
+                  { borderColor: colors.border },
+                  transactionType === 'outflow' && { backgroundColor: colors.error + '15', borderColor: colors.error }
+                ]}
+                onPress={() => { light(); setTransactionType('outflow'); }}
+              >
+                <Ionicons 
+                  name="arrow-up-circle" 
+                  size={20} 
+                  color={transactionType === 'outflow' ? colors.error : colors.textSecondary} 
+                />
+                <Text style={[styles.typeText, { color: transactionType === 'outflow' ? colors.error : colors.textSecondary }]}>
+                  Saída
+                </Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+
           {/* Patient Selector */}
           <View style={styles.inputGroup}>
             <Text style={[styles.label, { color: colors.text }]}>Paciente</Text>
@@ -178,21 +234,27 @@ export default function FinancialFormScreen() {
               <Text style={[styles.selectorText, { color: patientId ? colors.text : colors.textMuted }]}>
                 {isLoadingPatients ? 'Carregando...' : getPatientName()}
               </Text>
-              <Ionicons name="chevron-down" size={20} color={colors.textSecondary} />
+              <Ionicons name="search-outline" size={20} color={colors.textSecondary} />
             </TouchableOpacity>
           </View>
 
           {/* Amount Input */}
           <View style={styles.inputGroup}>
-            <Text style={[styles.label, { color: colors.text }]}>Valor (R$)</Text>
-            <TextInput
-              style={[styles.input, { borderColor: colors.border, backgroundColor: colors.surface, color: colors.text, fontSize: 18, fontWeight: '600' }]}
-              value={getDisplayAmount()}
-              onChangeText={handleAmountChange}
-              placeholder="R$ 0,00"
-              placeholderTextColor={colors.textMuted}
-              keyboardType="numeric"
-            />
+            <Text style={[styles.label, { color: colors.text }]}>Valor</Text>
+            <View style={[styles.amountInputContainer, { borderColor: colors.border, backgroundColor: colors.surface }]}>
+              <Text style={[styles.currencyPrefix, { color: colors.textSecondary }]}>R$</Text>
+              <TextInput
+                key="amount-input"
+                style={[styles.amountInput, { color: colors.text }]}
+                value={displayAmount.replace('R$', '').trim()}
+                onChangeText={handleAmountChange}
+                placeholder="0,00"
+                placeholderTextColor={colors.textMuted}
+                keyboardType="numeric"
+                maxLength={15}
+              />
+            </View>
+            <Text style={styles.inputHint}>Toque para digitar o valor em centavos</Text>
           </View>
 
           {/* Date Input */}
@@ -268,6 +330,7 @@ export default function FinancialFormScreen() {
           <View style={styles.inputGroup}>
             <Text style={[styles.label, { color: colors.text }]}>Descrição (Opcional)</Text>
             <TextInput
+              key="desc-input"
               style={[styles.input, { borderColor: colors.border, backgroundColor: colors.surface, color: colors.text, height: 80, textAlignVertical: 'top' }]}
               value={description}
               onChangeText={setDescription}
@@ -307,33 +370,14 @@ export default function FinancialFormScreen() {
       )}
 
       {/* Patient Picker Modal */}
-      <Modal visible={showPatientPicker} animationType="slide" transparent>
-        <SafeAreaView style={styles.modalOverlay}>
-            <View style={[styles.modalContent, { backgroundColor: colors.background }]}>
-                <View style={[styles.modalHeader, { borderBottomColor: colors.border }]}>
-                    <Text style={[styles.modalTitle, { color: colors.text }]}>Selecione o Paciente</Text>
-                    <TouchableOpacity onPress={() => setShowPatientPicker(false)}>
-                        <Ionicons name="close" size={24} color={colors.text} />
-                    </TouchableOpacity>
-                </View>
-                <ScrollView>
-                    {patients?.map(p => (
-                        <TouchableOpacity
-                            key={p.id}
-                            style={[styles.modalItem, { borderBottomColor: colors.border }]}
-                            onPress={() => {
-                                setPatientId(p.id);
-                                setShowPatientPicker(false);
-                            }}
-                        >
-                            <Text style={[styles.modalItemText, { color: colors.text }]}>{p.name}</Text>
-                            {patientId === p.id && <Ionicons name="checkmark" size={20} color={colors.primary} />}
-                        </TouchableOpacity>
-                    ))}
-                </ScrollView>
-            </View>
-        </SafeAreaView>
-      </Modal>
+      <SearchablePatientPicker
+        visible={showPatientPicker}
+        onClose={() => setShowPatientPicker(false)}
+        onSelect={(id) => setPatientId(id)}
+        patients={patients ?? []}
+        isLoading={isLoadingPatients}
+        selectedId={patientId}
+      />
 
       {/* Payment Method Picker Modal */}
       <Modal visible={showPaymentPicker} animationType="fade" transparent>
@@ -391,13 +435,14 @@ const styles = StyleSheet.create({
   content: {
     padding: 16,
     gap: 20,
+    paddingBottom: 40,
   },
   inputGroup: {
     gap: 8,
   },
   label: {
     fontSize: 14,
-    fontWeight: '500',
+    fontWeight: '600',
   },
   input: {
     borderWidth: 1,
@@ -414,10 +459,52 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     paddingHorizontal: 16,
     paddingVertical: 12,
-    height: 50,
+    height: 52,
   },
   selectorText: {
     fontSize: 16,
+  },
+  typeRow: {
+    flexDirection: 'row',
+    gap: 12,
+  },
+  typeOption: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 8,
+    paddingVertical: 12,
+    borderWidth: 1,
+    borderRadius: 12,
+    height: 48,
+  },
+  typeText: {
+    fontWeight: '700',
+    fontSize: 14,
+  },
+  amountInputContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    borderWidth: 1,
+    borderRadius: 12,
+    paddingHorizontal: 16,
+    height: 56,
+  },
+  currencyPrefix: {
+    fontSize: 18,
+    fontWeight: '700',
+    marginRight: 8,
+  },
+  amountInput: {
+    flex: 1,
+    fontSize: 20,
+    fontWeight: '700',
+  },
+  inputHint: {
+    fontSize: 11,
+    color: '#94a3b8',
+    marginLeft: 4,
   },
   statusRow: {
     flexDirection: 'row',
@@ -432,6 +519,7 @@ const styles = StyleSheet.create({
     paddingVertical: 12,
     borderWidth: 1,
     borderRadius: 12,
+    height: 48,
   },
   statusText: {
     fontWeight: '600',
@@ -440,11 +528,6 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: 'rgba(0,0,0,0.5)',
     justifyContent: 'flex-end',
-  },
-  modalContent: {
-    borderTopLeftRadius: 20,
-    borderTopRightRadius: 20,
-    maxHeight: '70%',
   },
   modalHeader: {
     flexDirection: 'row',
@@ -456,16 +539,6 @@ const styles = StyleSheet.create({
   modalTitle: {
     fontSize: 18,
     fontWeight: '600',
-  },
-  modalItem: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    padding: 16,
-    borderBottomWidth: 1,
-  },
-  modalItemText: {
-    fontSize: 16,
   },
   pickerModalContent: {
     margin: 20,

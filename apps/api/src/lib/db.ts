@@ -1,115 +1,206 @@
-import { neon } from '@neondatabase/serverless';
-import { drizzle as drizzleHttp } from 'drizzle-orm/neon-http';
-import * as schema from '@fisioflow/db';
-import type { Env } from '../types/env';
-import { wrapQueryWithTimeout, DEFAULT_TIMEOUTS } from './dbWrapper';
+import { neon, type NeonQueryFunction } from "@neondatabase/serverless";
+import { drizzle as drizzleHttp } from "drizzle-orm/neon-http";
+import * as schema from "@fisioflow/db";
+import type { Env } from "../types/env";
+import {
+	wrapQueryWithTimeout,
+	DEFAULT_TIMEOUTS,
+} from "./dbWrapper";
+import { AsyncLocalStorage } from "node:async_hooks";
+
+const rlsContext = new AsyncLocalStorage<string>();
+
+export type DbRow = Record<string, any>;
+
+export interface DbQueryResult<Row extends DbRow = DbRow> {
+	rows: Row[];
+	rowCount?: number;
+	fields?: unknown[];
+	command?: string;
+	[key: string]: unknown;
+}
+
+export type DbQuery = <Row extends DbRow = DbRow>(
+	text: string,
+	params?: unknown[],
+) => Promise<DbQueryResult<Row>>;
+
+export type DbPool = NeonQueryFunction<false, true> & {
+	query: DbQuery;
+	end: () => Promise<void>;
+};
+
+export function runWithOrg<T>(
+	organizationId: string,
+	fn: () => Promise<T>,
+): Promise<T> {
+	return rlsContext.run(organizationId, fn);
+}
+
+export function getOrgContext(): string | undefined {
+	return rlsContext.getStore();
+}
 
 function getUrl(env: Env): string {
-  // Prioriza NEON_URL (direto ao Neon HTTP API) sobre Hyperdrive (TCP-only, não funciona com neon() HTTP)
-  const url = env.NEON_URL || process.env.DATABASE_URL || env.HYPERDRIVE?.connectionString;
-  if (!url) throw new Error('Database configuration error: URL missing');
-  return url;
+	const url =
+		env.NEON_URL ||
+		process.env.DATABASE_URL ||
+		env.HYPERDRIVE?.connectionString;
+	if (!url) throw new Error("Database configuration error: URL missing");
+	return url;
 }
 
-/**
- * Helper para executar queries com cache no Cloudflare D1.
- * Ideal para dados que mudam pouco (configurações, listas fixas).
- */
 export async function queryWithCache<T>(
-  env: Env,
-  cacheKey: string,
-  ttlSeconds: number,
-  neonQuery: () => Promise<T>
+	env: Env,
+	cacheKey: string,
+	ttlSeconds: number,
+	neonQuery: () => Promise<T>,
 ): Promise<T> {
-  if (!env.DB) return await neonQuery();
+	const d1 = env.EDGE_CACHE || env.DB;
+	if (!d1) return await neonQuery();
 
-  try {
-    // 1. Tenta buscar no D1
-    const cached = await env.DB.prepare(
-      'SELECT value, expires_at FROM query_cache WHERE id = ?'
-    ).bind(cacheKey).first<{ value: string; expires_at: number }>();
+	try {
+		const cached = await d1
+			.prepare("SELECT value, expires_at FROM query_cache WHERE id = ?")
+			.bind(cacheKey)
+			.first<{ value: string; expires_at: number }>();
 
-    if (cached && cached.expires_at > Date.now()) {
-      return JSON.parse(cached.value) as T;
-    }
+		if (cached && cached.expires_at > Date.now()) {
+			return JSON.parse(cached.value) as T;
+		}
 
-    // 2. Se não estiver no cache ou expirado, busca no Neon
-    const result = await neonQuery();
+		const result = await neonQuery();
 
-    // 3. Salva no D1 para a próxima vez
-    await env.DB.prepare(
-      'INSERT OR REPLACE INTO query_cache (id, value, expires_at) VALUES (?, ?, ?)'
-    ).bind(
-      cacheKey,
-      JSON.stringify(result),
-      Date.now() + ttlSeconds * 1000
-    ).run();
+		await d1
+			.prepare(
+				"INSERT OR REPLACE INTO query_cache (id, value, expires_at) VALUES (?, ?, ?)",
+			)
+			.bind(cacheKey, JSON.stringify(result), Date.now() + ttlSeconds * 1000)
+			.run();
 
-    return result;
-  } catch (error) {
-    console.error(`[D1 Cache Error]: ${cacheKey}`, error);
-    return await neonQuery(); // Fallback para o Neon se o D1 falhar
-  }
+		return result;
+	} catch (error) {
+		console.error(`[D1 Cache Error]: ${cacheKey}`, error);
+		return await neonQuery();
+	}
 }
 
-/**
- * Cria uma instância do Drizzle ORM via Neon HTTP driver.
- * Neon HTTP é o driver recomendado para Cloudflare Workers.
- */
+function wrapSqlWithRls(
+	sql: NeonQueryFunction<false, false>,
+	organizationId: string,
+): NeonQueryFunction<false, false> {
+	const wrapped = ((strings: TemplateStringsArray, ...values: any[]) => {
+		return (sql as any)
+			.transaction([
+				sql`SELECT set_config('app.org_id', ${organizationId}::text, true)`,
+				sql(strings, ...values),
+			])
+			.then((results: any[]) => results[1]);
+	}) as any as NeonQueryFunction<false, false>;
+
+	(wrapped as any).query = (text: string, params?: any[]) => {
+		return (sql as any)
+			.transaction([
+				sql`SELECT set_config('app.org_id', ${organizationId}::text, true)`,
+				sql.query(text, params),
+			])
+			.then((results: any[]) => results[1]);
+	};
+
+	(wrapped as any).transaction = sql.transaction.bind(sql);
+	return wrapped;
+}
+
+function wrapSqlWithRlsFull(
+	sql: NeonQueryFunction<false, true>,
+	organizationId: string,
+): any {
+	const wrapped = ((strings: TemplateStringsArray, ...values: any[]) => {
+		return (sql as any)
+			.transaction([
+				sql`SELECT set_config('app.org_id', ${organizationId}::text, true)`,
+				sql(strings, ...values),
+			])
+			.then((results: any[]) => results[1]);
+	}) as any;
+
+	wrapped.query = (text: string, params?: any[]) => {
+		return (sql as any)
+			.transaction([
+				sql`SELECT set_config('app.org_id', ${organizationId}::text, true)`,
+				sql.query(text, params),
+			])
+			.then((results: any[]) => results[1]);
+	};
+
+	wrapped.transaction = sql.transaction.bind(sql);
+	wrapped.end = async () => {};
+	return wrapped;
+}
+
 export function createDb(env: Env) {
-  return drizzleHttp(neon(getUrl(env)), { schema });
+	const sql = neon(getUrl(env));
+	const orgId = getOrgContext();
+	if (orgId) {
+		return drizzleHttp(wrapSqlWithRls(sql, orgId) as any, { schema });
+	}
+	return drizzleHttp(sql, { schema });
 }
 
-/**
- * @deprecated Use createDb(env) for Drizzle ORM instead.
- * Retorna um objeto compatível com pg.Pool.query({ rows }).
- */
-export function createPool(env: Env, defaultTimeout: number = DEFAULT_TIMEOUTS.query) {
-  const sql = neon(getUrl(env), { fullResults: true });
-  
-  const wrappedQuery = wrapQueryWithTimeout(sql.query.bind(sql), defaultTimeout);
-  const wrappedSql = Object.assign(sql, { query: wrappedQuery });
-  
-  // Compatibilidade com rotas que chamam pool.end() — no-op
-  (wrappedSql as any).end = async () => {};
-  return wrappedSql as typeof wrappedSql & { end: () => Promise<void> };
+export function createDbForOrg(env: Env, organizationId: string) {
+	const sql = neon(getUrl(env));
+	return drizzleHttp(wrapSqlWithRls(sql, organizationId) as any, { schema });
 }
 
-/**
- * @deprecated Use createDb(env) for Drizzle ORM instead.
- * Helper para SQL bruto via Neon HTTP (tagged template ou .query()).
- */
+export async function withRls<T>(
+	env: Env,
+	organizationId: string,
+	fn: (sql: any) => Promise<T>,
+): Promise<T> {
+	const sql = neon(getUrl(env));
+	await (sql as any).transaction([
+		sql`SELECT set_config('app.org_id', ${organizationId}::text, true)`,
+	]);
+	return await fn(sql);
+}
+
+export function createPool(
+	env: Env,
+	defaultTimeout: number = DEFAULT_TIMEOUTS.query,
+): DbPool {
+	const sql = neon(getUrl(env), { fullResults: true });
+	const orgId = getOrgContext();
+
+	if (orgId) {
+		const wrapped = wrapSqlWithRlsFull(sql, orgId);
+		const wrappedQuery = wrapQueryWithTimeout(wrapped.query, defaultTimeout);
+		const wrappedSql = Object.assign(wrapped, { query: wrappedQuery });
+		wrappedSql.end = async () => {};
+		return wrappedSql as DbPool;
+	}
+
+	const wrappedQuery = wrapQueryWithTimeout(
+		sql.query.bind(sql),
+		defaultTimeout,
+	);
+	const wrappedSql = Object.assign(sql, { query: wrappedQuery });
+	(wrappedSql as any).end = async () => {};
+	return wrappedSql as DbPool;
+}
+
 export function getRawSql(env: Env) {
-  return neon(getUrl(env));
+	return neon(getUrl(env));
 }
 
-/**
- * Retorna um pool com pré-configuração de RLS para organização específica.
- * Define current_setting('app.org_id') antes de cada query para compatibilidade com RLS.
- */
-export function createPoolForOrg(env: Env, organizationId: string, defaultTimeout: number = DEFAULT_TIMEOUTS.query) {
-  const sql = neon(getUrl(env), { fullResults: true });
-  
-  // Wrapper que executa SET LOCAL antes de cada query
-  const queryWithRls = async (queryText: string, params: any[] = []) => {
-    try {
-      // Executa SET LOCAL antes da query para RLS
-      await sql`SELECT set_config('app.org_id', ${organizationId}::text, true)`;
-      
-      // Apply timeout to the main query
-      const wrappedQuery = wrapQueryWithTimeout(
-        (qt: string, p: any[]) => sql.query(qt, p),
-        defaultTimeout
-      );
-      
-      return await wrappedQuery(queryText, params);
-    } catch (error) {
-      console.error('[DB Error with RLS]:', error);
-      throw error;
-    }
-  };
-  
-  (queryWithRls as any).end = async () => {};
-  (queryWithRls as any).query = queryWithRls;
-  return queryWithRls as any;
+export function createPoolForOrg(
+	env: Env,
+	organizationId: string,
+	defaultTimeout: number = DEFAULT_TIMEOUTS.query,
+): DbPool {
+	const sql = neon(getUrl(env), { fullResults: true });
+	const wrapped = wrapSqlWithRlsFull(sql, organizationId);
+	const wrappedQuery = wrapQueryWithTimeout(wrapped.query, defaultTimeout);
+	const wrappedSql = Object.assign(wrapped, { query: wrappedQuery });
+	wrappedSql.end = async () => {};
+	return wrappedSql as DbPool;
 }

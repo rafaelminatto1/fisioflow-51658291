@@ -150,9 +150,36 @@ export const AuthContextProvider: React.FC<{ children: React.ReactNode }> = ({
 		async (newUser: AuthUser | null, neonUser?: NeonUserLike) => {
 			setUser(newUser);
 			if (newUser) {
-				const profileData = buildProfile(neonUser, newUser);
-				setProfile(profileData);
-				prefetchDashboardData(profileData?.organization_id || DEFAULT_ORG_ID);
+				// 1. Inicia com perfil baseado na sessão (rápido)
+				const initialProfile = buildProfile(neonUser, newUser);
+				setProfile(initialProfile);
+
+				// 2. Tenta carregar perfil completo do banco de dados (Neon DB)
+				// Isso garante que mudanças no nome, CREFITO, etc. sejam refletidas após reload.
+				try {
+					const dbProfileRes = await profileApi.me();
+					if (dbProfileRes?.data) {
+						const dbProfile = dbProfileRes.data;
+						setProfile((prev) =>
+							prev
+								? {
+										...prev,
+										full_name: dbProfile.full_name || prev.full_name,
+										organization_id:
+											dbProfile.organization_id || prev.organization_id,
+										role: (dbProfile.role as UserRole) || prev.role,
+										// Mescla outros campos do DB se disponíveis
+										...dbProfile,
+									}
+								: null,
+						);
+					}
+				} catch (e) {
+					logger.warn("Falha ao carregar perfil completo do DB", e);
+				}
+
+				const currentOrgId = initialProfile?.organization_id || DEFAULT_ORG_ID;
+				prefetchDashboardData(currentOrgId);
 			} else {
 				setProfile(null);
 			}
@@ -376,13 +403,35 @@ export const AuthContextProvider: React.FC<{ children: React.ReactNode }> = ({
 		try {
 			if (!user) return { error: { message: "Usuário não autenticado" } };
 
-			await profileApi.updateMe({
-				full_name: updates.full_name,
-				birth_date: updates.birth_date ?? null,
-			});
+			// 1. Atualiza no banco de dados da aplicação (Neon DB)
+			const profilePayload: Record<string, unknown> = {};
+			if (updates.full_name !== undefined) {
+				profilePayload.full_name = updates.full_name;
+			}
+			if (updates.birth_date !== undefined) {
+				profilePayload.birth_date = updates.birth_date ?? null;
+			}
+
+			if (Object.keys(profilePayload).length > 0) {
+				await profileApi.updateMe(profilePayload);
+			}
+
+			// 2. Atualiza no Neon Auth (Better Auth) se o nome mudou
+			// Isso evita que o nome antigo volte em novas sessões ou reloads rápidos
+			if (updates.full_name) {
+				try {
+					await authClient.updateUser({
+						name: updates.full_name,
+					});
+				} catch (e) {
+					logger.warn("Falha ao atualizar nome no Neon Auth", e);
+				}
+			}
+
 			if (profile) setProfile({ ...profile, ...updates });
 			return { error: null };
 		} catch (err: unknown) {
+			logger.error("Erro ao atualizar perfil", err, "AuthContextProvider");
 			return { error: toAuthError(err, "Erro ao atualizar perfil") };
 		}
 	};

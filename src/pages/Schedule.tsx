@@ -13,6 +13,8 @@ import { Suspense, useCallback, useEffect, useMemo } from "react";
 import { Link, useSearchParams } from "react-router-dom";
 import { MainLayout } from "@/components/layout/MainLayout";
 import { BulkActionsBar } from "@/components/schedule/BulkActionsBar";
+// import CalendarView from "@/components/schedule/CalendarView";
+import { DayFlowCalendarWrapper } from "@/components/schedule/DayFlowCalendar";
 import { ScheduleModals } from "@/components/schedule/ScheduleModals";
 import { CalendarSkeletonEnhanced } from "@/components/schedule/skeletons/CalendarSkeletonEnhanced";
 import { Button } from "@/components/ui/button";
@@ -25,9 +27,6 @@ import { useSchedulePageData, type ViewType } from "@/hooks/useSchedulePage";
 import type { ViewType as CalendarViewType } from "@/hooks/useScheduleState";
 import { KEYBOARD_SHORTCUTS } from "@/lib/calendar/constants";
 
-// import CalendarView from "@/components/schedule/CalendarView";
-import { DayFlowCalendarWrapper } from "@/components/schedule/DayFlowCalendar";
-
 import "@/styles/schedule.css";
 
 export default function Schedule() {
@@ -35,9 +34,10 @@ export default function Schedule() {
 
 	const dateParamRaw = searchParams.get("date");
 	// Validate YYYY-MM-DD format
-	const dateParam = (dateParamRaw && /^\d{4}-\d{2}-\d{2}$/.test(dateParamRaw)) 
-		? dateParamRaw 
-		: format(new Date(), "yyyy-MM-dd");
+	const dateParam =
+		dateParamRaw && /^\d{4}-\d{2}-\d{2}$/.test(dateParamRaw)
+			? dateParamRaw
+			: format(new Date(), "yyyy-MM-dd");
 
 	const viewParam = (searchParams.get("view") || "week") as ViewType;
 	const statusParam =
@@ -67,7 +67,11 @@ export default function Schedule() {
 		staffBirthdaysToday,
 	} = data;
 
-	const currentDate = useMemo(() => new Date(dateParam), [dateParam]);
+	const currentDate = useMemo(() => {
+		const [year, month, day] = dateParam.split("-").map(Number);
+		return new Date(year, month - 1, day);
+	}, [dateParam]);
+
 	const viewType = viewParam;
 	const patientFilter = patientParam || "";
 	const filters = {
@@ -142,15 +146,18 @@ export default function Schedule() {
 		setSearchParams(newParams, { replace: true });
 	};
 
-	const handlePatientFilterChange = useCallback((val: string) => {
-		const newParams = new URLSearchParams(searchParams);
-		if (val) {
-			newParams.set("patient", val);
-		} else {
-			newParams.delete("patient");
-		}
-		setSearchParams(newParams, { replace: true });
-	}, [searchParams, setSearchParams]);
+	const handlePatientFilterChange = useCallback(
+		(val: string) => {
+			const newParams = new URLSearchParams(searchParams);
+			if (val) {
+				newParams.set("patient", val);
+			} else {
+				newParams.delete("patient");
+			}
+			setSearchParams(newParams, { replace: true });
+		},
+		[searchParams, setSearchParams],
+	);
 
 	const clearFilters = useCallback(() => {
 		const newParams = new URLSearchParams(searchParams);
@@ -161,22 +168,28 @@ export default function Schedule() {
 		setSearchParams(newParams, { replace: true });
 	}, [searchParams, setSearchParams]);
 
-	const handleTimeSlotClick = useCallback((dateTime: any) => {
-		// Ensure we have a string (Schedule-X v3+ passes Temporal objects)
-		const dtString = typeof dateTime === "string" ? dateTime : (dateTime?.toString() || "");
-		if (!dtString) return;
+	const handleTimeSlotClick = useCallback(
+		(dateTime: any) => {
+			// Ensure we have a string (Schedule-X v3+ passes Temporal objects)
+			const dtString =
+				typeof dateTime === "string" ? dateTime : dateTime?.toString() || "";
+			if (!dtString) return;
 
-		// Extract YYYY-MM-DD and optionally HH:mm regardless of "T" or space or timezone suffix
-		const match = dtString.match(/^(\d{4}-\d{2}-\d{2})(?:[T\s](\d{2}:\d{2}))?/);
-		if (match) {
-			const datePart = match[1];
-			const timePart = match[2] || "";
-			
-			const [year, month, day] = datePart.split("-").map(Number);
-			const date = new Date(year, month - 1, day);
-			actions.handleTimeSlotClick(date, timePart);
-		}
-	}, [actions]);
+			// Extract YYYY-MM-DD and optionally HH:mm regardless of "T" or space or timezone suffix
+			const match = dtString.match(
+				/^(\d{4}-\d{2}-\d{2})(?:[T\s](\d{2}:\d{2}))?/,
+			);
+			if (match) {
+				const datePart = match[1];
+				const timePart = match[2] || "";
+
+				const [year, month, day] = datePart.split("-").map(Number);
+				const date = new Date(year, month - 1, day);
+				actions.handleTimeSlotClick(date, timePart);
+			}
+		},
+		[actions],
+	);
 
 	// Keyboard Shortcuts
 	useEffect(() => {
@@ -340,7 +353,8 @@ export default function Schedule() {
 											const appointment = appointments.find(
 												(a) => a.id === event.id,
 											);
-											if (appointment) actions.handleAppointmentClick(appointment);
+											if (appointment)
+												actions.handleAppointmentClick(appointment);
 										}}
 										onTimeSlotClick={handleTimeSlotClick}
 										onAppointmentReschedule={(id: string, start: any) => {
@@ -348,15 +362,20 @@ export default function Schedule() {
 											if (!appointment) return;
 
 											// start might be a Temporal object in v3+
-											const startStr = typeof start === "string" ? start : start.toString();
+											const startStr =
+												typeof start === "string" ? start : start.toString();
 											if (!startStr) return;
 
 											// Extract YYYY-MM-DD and optionally HH:mm regardless of "T" or space or timezone suffix
-											const match = startStr.match(/^(\d{4}-\d{2}-\d{2})(?:[T\s](\d{2}:\d{2}))?/);
+											const match = startStr.match(
+												/^(\d{4}-\d{2}-\d{2})(?:[T\s](\d{2}:\d{2}))?/,
+											);
 											if (match) {
 												const datePart = match[1];
 												const timePart = match[2] || "";
-												const [year, month, day] = datePart.split("-").map(Number);
+												const [year, month, day] = datePart
+													.split("-")
+													.map(Number);
 												const date = new Date(year, month - 1, day);
 
 												actions.handleAppointmentReschedule(
@@ -368,7 +387,8 @@ export default function Schedule() {
 										}}
 										onEditAppointment={(id: string) => {
 											const appointment = appointments.find((a) => a.id === id);
-											if (appointment) actions.handleEditAppointment(appointment);
+											if (appointment)
+												actions.handleEditAppointment(appointment);
 										}}
 										onDeleteAppointment={(id: string) => {
 											const appointment = appointments.find((a) => a.id === id);

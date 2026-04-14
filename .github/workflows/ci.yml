@@ -143,7 +143,18 @@ jobs:
       pull-requests: write
     outputs:
       db_url: ${{ steps.create-branch.outputs.db_url_with_pooler }}
+      auth_url: ${{ steps.create-branch.outputs.auth_url }}
+      data_api_url: ${{ steps.create-branch.outputs.data_api_url }}
     steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup
+        uses: ./.github/actions/setup
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          pnpm-version: ${{ env.PNPM_VERSION }}
+
       - name: Create Neon Preview Branch
         id: create-branch
         uses: neondatabase/create-branch-action@v6
@@ -151,6 +162,8 @@ jobs:
           project_id: ${{ vars.NEON_PROJECT_ID }}
           branch_name: preview/pr-${{ github.event.number }}
           api_key: ${{ secrets.NEON_API_KEY }}
+          get_auth_url: true
+          get_data_api_url: true
 
       - name: Verify Migrations (Dry Run)
         run: |
@@ -158,3 +171,5 @@ jobs:
           pnpm db:audit:schema
         env:
           DATABASE_URL: ${{ steps.create-branch.outputs.db_url_with_pooler }}
+          VITE_NEON_AUTH_URL: ${{ steps.create-branch.outputs.auth_url }}
+          VITE_NEON_DATA_API_URL: ${{ steps.create-branch.outputs.data_api_url }}

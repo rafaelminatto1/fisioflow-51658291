@@ -5,6 +5,11 @@ import {
 	sendMessage,
 	addNote,
 	updateConversationStatus,
+	assignConversation,
+	addTags,
+	removeTag,
+	fetchTags,
+	fetchTeamMembers,
 	fetchQuickReplies,
 	fetchContacts,
 	resolveContact,
@@ -41,6 +46,22 @@ export function useWhatsAppQuickReplies() {
 		queryKey: ["whatsapp-quick-replies"],
 		queryFn: fetchQuickReplies,
 		staleTime: 60_000,
+	});
+}
+
+export function useWhatsAppTags() {
+	return useQuery({
+		queryKey: ["whatsapp-tags"],
+		queryFn: fetchTags,
+		staleTime: 5 * 60_000,
+	});
+}
+
+export function useWhatsAppTeamMembers() {
+	return useQuery({
+		queryKey: ["whatsapp-team-members"],
+		queryFn: fetchTeamMembers,
+		staleTime: 5 * 60_000,
 	});
 }
 
@@ -106,9 +127,54 @@ export function useWhatsAppAddNote(conversationId: string) {
 	const queryClient = useQueryClient();
 	return useMutation<WaMessage, unknown, string>({
 		mutationFn: (content: string) => addNote(conversationId, content),
-		onSettled: () => {
+			onSettled: () => {
+				queryClient.invalidateQueries({
+					queryKey: ["whatsapp-messages", conversationId],
+				});
+				queryClient.invalidateQueries({ queryKey: ["whatsapp-conversations"] });
+			},
+		});
+}
+
+export function useWhatsAppAssignConversation() {
+	const queryClient = useQueryClient();
+	return useMutation<
+		WaConversation,
+		unknown,
+		{ conversationId: string; assignedTo: string; team?: string; reason?: string }
+	>({
+		mutationFn: ({ conversationId, assignedTo, team, reason }) =>
+			assignConversation(conversationId, assignedTo, team, reason),
+		onSettled: (_data, _error, variables) => {
+			queryClient.invalidateQueries({ queryKey: ["whatsapp-conversations"] });
 			queryClient.invalidateQueries({
-				queryKey: ["whatsapp-messages", conversationId],
+				queryKey: ["whatsapp-messages", variables?.conversationId],
+			});
+		},
+	});
+}
+
+export function useWhatsAppAddTags() {
+	const queryClient = useQueryClient();
+	return useMutation<void, unknown, { conversationId: string; tagIds: string[] }>({
+		mutationFn: ({ conversationId, tagIds }) => addTags(conversationId, tagIds),
+		onSettled: (_data, _error, variables) => {
+			queryClient.invalidateQueries({ queryKey: ["whatsapp-conversations"] });
+			queryClient.invalidateQueries({
+				queryKey: ["whatsapp-messages", variables?.conversationId],
+			});
+		},
+	});
+}
+
+export function useWhatsAppRemoveTag() {
+	const queryClient = useQueryClient();
+	return useMutation<void, unknown, { conversationId: string; tagId: string }>({
+		mutationFn: ({ conversationId, tagId }) => removeTag(conversationId, tagId),
+		onSettled: (_data, _error, variables) => {
+			queryClient.invalidateQueries({ queryKey: ["whatsapp-conversations"] });
+			queryClient.invalidateQueries({
+				queryKey: ["whatsapp-messages", variables?.conversationId],
 			});
 		},
 	});

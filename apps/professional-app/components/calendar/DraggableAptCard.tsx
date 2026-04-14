@@ -359,77 +359,82 @@ const styles = StyleSheet.create({
 	},
 	cardInner: {
 		flex: 1,
-		paddingHorizontal: 10,
-		paddingVertical: 8,
+		paddingLeft: 8,
+		paddingRight: 2, // Quase sem margem na direita
+		paddingVertical: 4, // Diminuído
 	},
 	cardInnerCompact: {
-		paddingHorizontal: 8,
-		paddingVertical: 6,
+		paddingLeft: 6,
+		paddingRight: 2,
+		paddingVertical: 2,
 	},
 	cardInnerTiny: {
-		paddingHorizontal: 6,
-		paddingVertical: 4,
+		paddingLeft: 4,
+		paddingRight: 1,
+		paddingVertical: 1,
 	},
 	cardHeader: {
 		flexDirection: "row",
 		alignItems: "flex-start",
-		marginBottom: 4,
+		marginBottom: 2, // Diminuído
 	},
 	cardHeaderCompact: {
-		marginBottom: 2,
+		marginBottom: 1,
 	},
 	cardHeaderTiny: {
-		marginBottom: 2,
+		marginBottom: 1,
 	},
 	aptType: {
-		fontSize: 7,
-		fontWeight: "700",
+		fontSize: 6.5, // Diminuído
+		fontWeight: "800",
 		paddingHorizontal: 4,
-		paddingVertical: 1,
+		paddingVertical: 0.5,
 		borderRadius: 999,
 		overflow: "hidden",
+		textTransform: "uppercase", // Estilo mais limpo
 	},
 	aptTypeTiny: {
-		fontSize: 6,
+		fontSize: 5.5,
 		paddingHorizontal: 3,
-		paddingVertical: 1,
+		paddingVertical: 0.2,
 	},
 	aptTitle: {
 		fontSize: 10,
-		fontWeight: "700",
+		fontWeight: "800",
 		color: "#0f172a",
-		lineHeight: 12,
+		lineHeight: 11,
+		marginRight: 0, // Garante que use todo espaço
 	},
 	aptTitleCompact: {
 		fontSize: 9,
-		lineHeight: 11,
+		lineHeight: 10,
 	},
 	aptTitleTiny: {
 		fontSize: 8,
-		lineHeight: 10,
+		lineHeight: 9,
 	},
 	aptTime: {
-		fontSize: 10,
+		fontSize: 9,
 		fontWeight: "600",
 		color: "#64748b",
 	},
 	aptTimeCompact: {
-		fontSize: 9,
+		fontSize: 8,
 	},
 	aptTimeTiny: {
-		fontSize: 9,
+		fontSize: 8,
 	},
 	cardFooter: {
 		flexDirection: "row",
 		justifyContent: "space-between",
 		alignItems: "center",
-		marginTop: 4,
+		marginTop: 2, // Diminuído
 	},
 	cardFooterCompact: {
-		marginTop: 2,
+		marginTop: 1,
 	},
 	cardFooterTiny: {
-		marginTop: 2,
+		marginTop: 1,
 	},
 	additionalPatients: {
 		fontSize: 11,

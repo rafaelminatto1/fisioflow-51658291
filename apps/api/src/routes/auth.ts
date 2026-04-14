@@ -1,6 +1,7 @@
-import { Hono } from 'hono';
+import { Hono, type Context } from 'hono';
 import { createPool } from '../lib/db';
 import { rateLimit } from '../middleware/rateLimit';
+import { turnstileVerify } from '../middleware/turnstile';
 import type { Env } from '../types/env';
 
 const app = new Hono<{ Bindings: Env }>();
@@ -14,6 +15,25 @@ const loginRateLimit = rateLimit({
     c.req.header('CF-Connecting-IP') ??
     c.req.header('X-Forwarded-For')?.split(',')[0].trim() ??
     'unknown',
+});
+
+const publicAuthKey = (c: Context) =>
+  c.req.header('CF-Connecting-IP') ??
+  c.req.header('X-Forwarded-For')?.split(',')[0].trim() ??
+  'unknown';
+
+const signupRateLimit = rateLimit({
+  limit: 5,
+  windowSeconds: 3600,
+  endpoint: 'auth-signup',
+  keyFn: publicAuthKey,
+});
+
+const passwordResetRateLimit = rateLimit({
+  limit: 5,
+  windowSeconds: 900,
+  endpoint: 'auth-password-reset',
+  keyFn: publicAuthKey,
 });
 
 async function forwardToNeonAuth(
@@ -103,10 +123,7 @@ app.post('/login', loginRateLimit, async (c) => {
         email: userProfile?.email || neonData.user?.email || email,
         name: userProfile?.name || neonData.user?.name || email.split('@')[0],
         role: userProfile?.role || neonData.user?.role || 'fisioterapeuta',
-        organizationId:
-          userProfile?.organization_id ||
-          neonData.user?.organizationId ||
-          '00000000-0000-0000-0000-000000000001',
+        organizationId: userProfile?.organization_id || neonData.user?.organizationId || null,
       },
     });
   } catch (error: any) {
@@ -116,7 +133,7 @@ app.post('/login', loginRateLimit, async (c) => {
 });
 
 // POST /api/auth/signup
-app.post('/signup', async (c) => {
+app.post('/signup', signupRateLimit, turnstileVerify, async (c) => {
   const { email, password, name } = await c.req.json();
   if (!email || !password) {
     return c.json({ error: 'Email e senha são obrigatórios' }, 400);
@@ -148,7 +165,7 @@ app.post('/signup', async (c) => {
 });
 
 // POST /api/auth/forgot-password
-app.post('/forgot-password', async (c) => {
+app.post('/forgot-password', passwordResetRateLimit, turnstileVerify, async (c) => {
   const { email } = await c.req.json();
   if (!email) return c.json({ error: 'Email é obrigatório' }, 400);
 
@@ -172,7 +189,7 @@ app.post('/forgot-password', async (c) => {
 });
 
 // POST /api/auth/reset-password
-app.post('/reset-password', async (c) => {
+app.post('/reset-password', passwordResetRateLimit, turnstileVerify, async (c) => {
   const { token, password } = await c.req.json();
   if (!token || !password) {
     return c.json({ error: 'Token e nova senha são obrigatórios' }, 400);

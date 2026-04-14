@@ -1,27 +1,27 @@
 import React from "react";
-import { View, Text, StyleSheet, TouchableOpacity } from "react-native";
+import {
+	View,
+	Text,
+	StyleSheet,
+	TouchableOpacity,
+	Switch,
+} from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { useColors } from "@/hooks/useColorScheme";
 
 interface ProfileSectionProps {
 	title: string;
 	children: React.ReactNode;
-	style?: any;
 }
 
-export function ProfileSection({
-	title,
-	children,
-	style,
-}: ProfileSectionProps) {
+export function ProfileSection({ title, children }: ProfileSectionProps) {
 	const colors = useColors();
-
 	return (
-		<View style={[styles.container, style]}>
-			<Text style={[styles.title, { color: colors.textSecondary }]}>
+		<View style={styles.section}>
+			<Text style={[styles.sectionTitle, { color: colors.textSecondary }]}>
 				{title}
 			</Text>
-			<View style={[styles.content, { backgroundColor: colors.surface }]}>
+			<View style={[styles.sectionCard, { backgroundColor: colors.surface, borderColor: colors.border }]}>
 				{children}
 			</View>
 		</View>
@@ -31,218 +31,132 @@ export function ProfileSection({
 interface ProfileMenuItemProps {
 	icon: keyof typeof Ionicons.prototype.props.name;
 	label: string;
-	value?: string;
-	chevron?: boolean;
 	onPress: () => void;
-	style?: any;
-	danger?: boolean;
+	showDivider?: boolean;
+	value?: string;
+  iconColor?: string;
 }
 
 export function ProfileMenuItem({
 	icon,
 	label,
-	value,
-	chevron = true,
 	onPress,
-	style,
-	danger = false,
+	showDivider = true,
+	value,
+  iconColor,
 }: ProfileMenuItemProps) {
 	const colors = useColors();
-
 	return (
 		<TouchableOpacity
 			onPress={onPress}
-			activeOpacity={0.7}
-			style={[
-				styles.menuItem,
-				{
-					borderBottomColor: colors.border,
-				},
-				style,
-			]}
+			style={styles.menuItem}
+			activeOpacity={0.6}
 		>
-			<View style={styles.menuItemLeft}>
-				<View
-					style={[
-						styles.iconContainer,
-						{
-							backgroundColor: danger
-								? colors.error + "15"
-								: colors.primary + "15",
-						},
-					]}
-				>
-					<Ionicons
-						name={icon as any}
-						size={20}
-						color={danger ? colors.error : colors.primary}
-					/>
-				</View>
-				<View style={styles.textContainer}>
-					<Text
-						style={[
-							styles.label,
-							{ color: danger ? colors.error : colors.text },
-						]}
-					>
-						{label}
-					</Text>
+			<View style={[styles.iconWrapper, { backgroundColor: (iconColor || colors.primary) + "10" }]}>
+				<Ionicons name={icon as any} size={20} color={iconColor || colors.primary} />
+			</View>
+			<View style={[styles.menuItemContent, showDivider && { borderBottomWidth: 1, borderBottomColor: colors.border + "50" }]}>
+				<Text style={[styles.menuItemLabel, { color: colors.text }]}>
+					{label}
+				</Text>
+				<View style={styles.menuItemRight}>
 					{value && (
-						<Text style={[styles.value, { color: colors.textMuted }]}>
+						<Text style={[styles.menuItemValue, { color: colors.textSecondary }]}>
 							{value}
 						</Text>
 					)}
+					<Ionicons
+						name="chevron-forward"
+						size={18}
+						color={colors.textMuted}
+					/>
 				</View>
 			</View>
-			{chevron && (
-				<Ionicons name="chevron-forward" size={20} color={colors.textMuted} />
-			)}
 		</TouchableOpacity>
 	);
 }
 
 interface SettingsItemProps {
 	label: string;
-	value?: boolean;
-	onToggle?: (value: boolean) => void;
-	onPress?: () => void;
-	style?: any;
-	type?: "toggle" | "navigation";
+	value: boolean;
+	onToggle: (value: boolean) => void;
 }
 
-export function SettingsItem({
-	label,
-	value,
-	onToggle,
-	onPress,
-	style,
-	type = "toggle",
-}: SettingsItemProps) {
+export function SettingsItem({ label, value, onToggle }: SettingsItemProps) {
 	const colors = useColors();
-	const [isEnabled, setIsEnabled] = React.useState(value || false);
-
-	const handleToggle = () => {
-		const newValue = !isEnabled;
-		setIsEnabled(newValue);
-		onToggle?.(newValue);
-	};
-
 	return (
-		<View
-			style={[
-				styles.settingsItem,
-				{
-					borderBottomColor: colors.border,
-				},
-				style,
-			]}
-		>
-			<Text style={[styles.settingsLabel, { color: colors.text }]}>
-				{label}
-			</Text>
-			{type === "toggle" ? (
-				<TouchableOpacity
-					onPress={handleToggle}
-					style={[
-						styles.toggle,
-						{
-							backgroundColor: isEnabled ? colors.primary : colors.border,
-						},
-					]}
-					activeOpacity={0.7}
-				>
-					<View
-						style={[
-							styles.toggleKnob,
-							{
-								transform: [{ translateX: isEnabled ? 20 : 0 }],
-							},
-						]}
-					/>
-				</TouchableOpacity>
-			) : (
-				<Ionicons name="chevron-forward" size={20} color={colors.textMuted} />
-			)}
+		<View style={styles.menuItem}>
+			<View style={[styles.iconWrapper, { backgroundColor: colors.info + "10" }]}>
+				<Ionicons name="options-outline" size={20} color={colors.info} />
+			</View>
+			<View style={styles.menuItemContent}>
+				<Text style={[styles.menuItemLabel, { color: colors.text }]}>
+					{label}
+				</Text>
+				<Switch
+					value={value}
+					onValueChange={onToggle}
+					trackColor={{ false: colors.border, true: colors.primary + "80" }}
+					thumbColor={value ? colors.primary : "#f4f3f4"}
+				/>
+			</View>
 		</View>
 	);
 }
 
 const styles = StyleSheet.create({
-	container: {
+	section: {
 		marginBottom: 24,
 	},
-	title: {
-		fontSize: 13,
-		fontWeight: "600",
-		marginBottom: 8,
+	sectionTitle: {
+		fontSize: 12,
+		fontWeight: "800",
 		textTransform: "uppercase",
-		letterSpacing: 0.5,
+		letterSpacing: 1.5,
+		marginBottom: 12,
+		marginLeft: 4,
 	},
-	content: {
-		borderRadius: 12,
+	sectionCard: {
+		borderRadius: 24,
 		borderWidth: 1,
 		overflow: "hidden",
+		shadowColor: "#000",
+		shadowOffset: { width: 0, height: 4 },
+		shadowOpacity: 0.02,
+		shadowRadius: 10,
+		elevation: 2,
 	},
 	menuItem: {
 		flexDirection: "row",
 		alignItems: "center",
-		justifyContent: "space-between",
-		paddingVertical: 16,
-		paddingHorizontal: 16,
-		borderBottomWidth: 1,
+		paddingLeft: 16,
 	},
-	menuItemLeft: {
-		flexDirection: "row",
-		alignItems: "center",
-		flex: 1,
-		gap: 12,
-	},
-	iconContainer: {
+	iconWrapper: {
 		width: 36,
 		height: 36,
-		borderRadius: 8,
+		borderRadius: 10,
 		alignItems: "center",
 		justifyContent: "center",
 	},
-	textContainer: {
+	menuItemContent: {
 		flex: 1,
-	},
-	label: {
-		fontSize: 15,
-		fontWeight: "500",
-		marginBottom: 2,
-	},
-	value: {
-		fontSize: 13,
-	},
-	settingsItem: {
 		flexDirection: "row",
 		alignItems: "center",
 		justifyContent: "space-between",
-		paddingVertical: 12,
-		paddingHorizontal: 16,
-		borderBottomWidth: 1,
+		paddingVertical: 16,
+		paddingRight: 16,
+		marginLeft: 12,
 	},
-	settingsLabel: {
+	menuItemLabel: {
 		fontSize: 15,
-		fontWeight: "500",
+		fontWeight: "600",
 	},
-	toggle: {
-		width: 48,
-		height: 28,
-		borderRadius: 14,
-		padding: 2,
-		justifyContent: "flex-start",
+	menuItemRight: {
+		flexDirection: "row",
+		alignItems: "center",
+		gap: 8,
 	},
-	toggleKnob: {
-		width: 24,
-		height: 24,
-		borderRadius: 12,
-		backgroundColor: "#fff",
-		shadowColor: "#000",
-		shadowOffset: { width: 0, height: 2 },
-		shadowOpacity: 0.2,
-		shadowRadius: 3,
-		elevation: 2,
+	menuItemValue: {
+		fontSize: 13,
 	},
 });

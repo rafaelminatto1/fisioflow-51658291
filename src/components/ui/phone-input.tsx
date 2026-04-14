@@ -5,9 +5,10 @@
  * Valida telefone brasileiro em tempo real
  */
 
-import { forwardRef, useState, useCallback } from "react";
+import { forwardRef, useState, useCallback, useEffect } from "react";
 import { Input } from "@/components/ui/input";
 import { isValidPhone, stripNonDigits } from "@/utils/validators";
+import { formatPhoneInput } from "@/utils/formatInputs";
 
 export interface PhoneInputProps
 	extends Omit<React.ComponentProps<typeof Input>, "value" | "onChange"> {
@@ -34,41 +35,17 @@ export const PhoneInput = forwardRef<HTMLInputElement, PhoneInputProps>(
 		ref,
 	) => {
 		const [internalValue, setInternalValue] = useState(() =>
-			formatPhone(value),
+			formatPhoneInput(value),
 		);
+
+		useEffect(() => {
+			setInternalValue(formatPhoneInput(value));
+		}, [value]);
 
 		// Atualizar valor
 		const updateValue = useCallback(
 			(newValue: string) => {
-				const digits = stripNonDigits(newValue);
-				let formatted = "";
-
-				if (digits.length > 0) {
-					formatted += "(";
-
-					// DDD (sempre 2 dígitos)
-					if (digits.length > 0) {
-						formatted += digits.substring(0, 2);
-					}
-					formatted += ") ";
-
-					// Número
-					if (digits.length > 2) {
-						const remaining = digits.substring(2);
-						if (remaining.length <= 4) {
-							// Telefone fixo: (00) 0000-0000
-							formatted += remaining.substring(0, 4);
-						} else {
-							// Celular: (00) 00000-0000
-							formatted += remaining.substring(0, 5);
-							if (remaining.length > 5) {
-								formatted += "-";
-								formatted += remaining.substring(5, 9);
-							}
-						}
-					}
-				}
-
+				const formatted = formatPhoneInput(newValue);
 				setInternalValue(formatted);
 
 				if (onChange) {
@@ -95,11 +72,10 @@ export const PhoneInput = forwardRef<HTMLInputElement, PhoneInputProps>(
 		);
 
 		// Validar estilo
-		const isValid =
-			(internalValue.length === 14 || internalValue.length === 13) &&
-			isValidPhone(internalValue);
-		const isInvalid =
-			(internalValue.length === 14 || internalValue.length === 13) && !isValid;
+		const digitsCount = stripNonDigits(internalValue).length;
+		const hasCompletePhone = digitsCount === 10 || digitsCount === 11;
+		const isValid = hasCompletePhone && isValidPhone(internalValue);
+		const isInvalid = hasCompletePhone && !isValid;
 
 		return (
 			<div className="relative">
@@ -107,10 +83,11 @@ export const PhoneInput = forwardRef<HTMLInputElement, PhoneInputProps>(
 					ref={ref}
 					type="tel"
 					inputMode="tel"
+					formatPhone={false}
 					value={internalValue}
 					onChange={handleChange}
 					placeholder={placeholder}
-					maxLength={15} // (XX) XXXXX-XXXX ou (XX) XXXX-XXXX
+					maxLength={19} // +55 (XX) XXXXX-XXXX ou (XX) XXXX-XXXX
 					className={className}
 					aria-invalid={isInvalid || !!error}
 					{...props}
@@ -161,33 +138,3 @@ export const PhoneInput = forwardRef<HTMLInputElement, PhoneInputProps>(
 );
 
 PhoneInput.displayName = "PhoneInput";
-
-function formatPhone(value: string): string {
-	const digits = stripNonDigits(value);
-	let formatted = "";
-
-	if (digits.length > 0) {
-		formatted += "(";
-		formatted += digits.substring(0, 2);
-		formatted += ") ";
-
-		const remaining = digits.substring(2);
-		if (digits.length >= 11) {
-			// Celular: 9 dígitos
-			formatted += remaining.substring(0, 5);
-			if (remaining.length > 5) {
-				formatted += "-";
-				formatted += remaining.substring(5, 9);
-			}
-		} else {
-			// Fixo: 8 dígitos
-			formatted += remaining.substring(0, 4);
-			if (remaining.length > 4) {
-				formatted += "-";
-				formatted += remaining.substring(4, 8);
-			}
-		}
-	}
-
-	return formatted;
-}

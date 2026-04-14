@@ -11,6 +11,9 @@ jobs:
   backup:
     name: Create Neon Snapshot
     runs-on: ubuntu-latest
+    env:
+      NODE_VERSION: '22'
+      PNPM_VERSION: '10.33.0'
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -18,18 +21,21 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: '20'
+          node-version: ${{ env.NODE_VERSION }}
 
       - name: Install pnpm
         uses: pnpm/action-setup@v3
         with:
-          version: 9
+          version: ${{ env.PNPM_VERSION }}
 
       - name: Install dependencies
-        run: pnpm install --frozen-lock-mark || pnpm install
+        run: pnpm install --frozen-lockfile || pnpm install
 
       - name: Run Backup
         env:
           NEON_API_KEY: ${{ secrets.NEON_API_KEY }}
+          NEON_PROJECT_ID: ${{ vars.NEON_PROJECT_ID }}
+          NEON_PARENT_BRANCH: ${{ vars.NEON_PARENT_BRANCH || 'main' }}
+          NEON_BACKUP_RETENTION_DAYS: ${{ vars.NEON_BACKUP_RETENTION_DAYS || '7' }}
           DATABASE_URL: ${{ secrets.DATABASE_URL }}
         run: pnpm db:backup

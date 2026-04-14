@@ -20,11 +20,12 @@ import {
 	index,
 	customType,
 } from "drizzle-orm/pg-core";
+import { sql } from "drizzle-orm";
 
 // Vector Type
 const vector = customType<{ data: number[] }>({
 	dataType() {
-		return "vector(1536)";
+		return "vector(768)";
 	},
 });
 import { relations } from "drizzle-orm";
@@ -148,6 +149,10 @@ export const exercises = pgTable(
 			table.organizationId,
 		),
 		isActiveIdx: index("idx_exercises_is_active").on(table.isActive),
+		nameSearchIdx: index("idx_exercises_name_search").using(
+			"gin",
+			sql`to_tsvector('portuguese', ${table.name})`,
+		),
 	}),
 );
 

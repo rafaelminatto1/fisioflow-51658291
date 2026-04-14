@@ -123,6 +123,7 @@ export const CalendarView = ({
 						date={date}
 						appointments={appointments}
 						startHour={7}
+						endHour={22}
 						onReschedule={onReschedule}
 						onRescheduleRequest={onRescheduleRequest}
 					/>
@@ -132,6 +133,7 @@ export const CalendarView = ({
 						date={date}
 						appointments={appointments}
 						startHour={7}
+						endHour={22}
 						onReschedule={onReschedule}
 						onRescheduleRequest={onRescheduleRequest}
 					/>

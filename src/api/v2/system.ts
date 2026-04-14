@@ -1,4 +1,5 @@
 import { request } from "./base";
+import type { Profile } from "@/types/auth";
 import type {
 	GooglePlacePrediction,
 	GoogleIntegrationRecord,
@@ -321,7 +322,7 @@ export const healthApi = {
 
 export const profileApi = {
 	me: () =>
-		request<{ data: { organization_id?: string; organizationId?: string } }>(
+		request<{ data: Partial<Profile> }>(
 			"/api/profile/me",
 		),
 	listTherapists: () =>

@@ -1,0 +1,118 @@
+🔍 Deep Audit: Checking 265 exercises against 193 assets.
+
+💡 FOUND 23 POTENTIAL MATCHES:
+1. [Ponte de Glúteo Bilateral]
+   Slug: ponte-de-gluteo-bilateral
+   Current: /exercises/illustrations/ponte-gluteo.avif
+   Suggested: /exercises/illustrations/ponte-gluteo.avif
+---
+2. [Ponte de Glúteo]
+   Slug: ponte-de-gluteo
+   Current: /exercises/illustrations/ponte-gluteo.avif
+   Suggested: /exercises/illustrations/ponte-gluteo-v2.avif
+---
+3. [Fortalecimento de Glúteo]
+   Slug: fortalecimento-de-gluteo
+   Current: /exercises/illustrations/fortalecimento-gluteo-lateral.avif
+   Suggested: /exercises/illustrations/fortalecimento-gluteo-lateral.avif
+---
+4. [Círculos de Quadril]
+   Slug: circulos-de-quadril
+   Current: /exercises/illustrations/circulos-quadril.avif
+   Suggested: /exercises/illustrations/circulos-quadril.avif
+---
+5. [Agachamento com Suporte]
+   Slug: agachamento-com-suporte
+   Current: /exercises/illustrations/agachamento-suporte.avif
+   Suggested: /exercises/illustrations/agachamento-suporte.avif
+---
+6. [Flexão de Braço na Parede]
+   Slug: flexao-de-braco-na-parede
+   Current: /exercises/illustrations/flexao-braco.avif
+   Suggested: /exercises/illustrations/flexao-braco.avif
+---
+7. [Tuck Jump (Salto Grupard)]
+   Slug: tuck-jump-salto-grupard
+   Current: /exercises/illustrations/tuck-jump.avif
+   Suggested: /exercises/illustrations/tuck-jump.avif
+---
+8. [Alongamento de Quadríceps em Pé]
+   Slug: alongamento-de-quadriceps-em-pe
+   Current: /exercises/illustrations/alongamento-quadriceps-pe.avif
+   Suggested: /exercises/illustrations/alongamento-quadriceps.avif
+---
+9. [Ponte de Glúteo Unilateral]
+   Slug: ponte-de-gluteo-unilateral
+   Current: /exercises/illustrations/ponte-unipodal.avif
+   Suggested: /exercises/illustrations/ponte-gluteo.avif
+---
+10. [Deslizamento de Calcanhar]
+   Slug: deslizamento-de-calcanhar
+   Current: /exercises/illustrations/deslizamento-calcanhar.avif
+   Suggested: /exercises/illustrations/deslizamento-calcanhar.avif
+---
+11. [Rotação Externa de Ombro]
+   Slug: rotacao-externa-de-ombro
+   Current: /exercises/illustrations/rotacao-externa-ombro.avif
+   Suggested: /exercises/illustrations/rotacao-externa-ombro-elastico.avif
+---
+12. [Deslizamento de Nervo Mediano]
+   Slug: deslizamento-de-nervo-mediano
+   Current: /exercises/illustrations/deslizamento-nervo-mediano.avif
+   Suggested: /exercises/illustrations/deslizamento-nervo-mediano.avif
+---
+13. [Star Excursion Balance Test (SEBT)]
+   Slug: star-excursion-balance-test-sebt
+   Current: /exercises/illustrations/sebt.avif
+   Suggested: /exercises/illustrations/sebt.avif
+---
+14. [Rotação Externa de Ombro com Faixa]
+   Slug: rotacao-externa-de-ombro-com-faixa
+   Current: /exercises/illustrations/rotacao-externa-ombro-elastico.avif
+   Suggested: /exercises/illustrations/rotacao-externa-ombro.avif
+---
+15. [Mobilidade de Ombro]
+   Slug: mobilidade-de-ombro
+   Current: /exercises/illustrations/mobilidade-ombro.avif
+   Suggested: /exercises/illustrations/mobilidade-ombro.avif
+---
+16. [Rotação Interna de Ombro com Faixa]
+   Slug: rotacao-interna-de-ombro-com-faixa
+   Current: /exercises/illustrations/rotacao-interna-ombro.avif
+   Suggested: /exercises/illustrations/rotacao-interna-ombro.avif
+---
+17. [Perdigueiro (Bird Dog)]
+   Slug: perdigueiro-bird-dog
+   Current: /exercises/illustrations/bird-dog.avif
+   Suggested: /exercises/illustrations/bird-dog.avif
+---
+18. [Prancha Abdominal (Plank)]
+   Slug: prancha-abdominal-plank
+   Current: /exercises/illustrations/prancha-abdominal.avif
+   Suggested: /exercises/illustrations/prancha-abdominal.avif
+---
+19. [Side Plank (Prancha Lateral)]
+   Slug: side-plank-prancha-lateral
+   Current: /exercises/illustrations/prancha-lateral.avif
+   Suggested: /exercises/illustrations/prancha-lateral.avif
+---
+20. [Mobilização de Quadril (Capsular)]
+   Slug: mobilizacao-de-quadril-capsular
+   Current: /exercises/illustrations/mobilizacao-quadril-capsular.avif
+   Suggested: /exercises/illustrations/mobilizacao-quadril-capsular.avif
+---
+21. [Mobilização de Ombro com Bastão]
+   Slug: mobilizacao-de-ombro-com-bastao
+   Current: /exercises/illustrations/mobilizacao-ombro-bastao.avif
+   Suggested: /exercises/illustrations/mobilizacao-ombro-bastao.avif
+---
+22. [Deslizamento do Nervo Mediano]
+   Slug: deslizamento-do-nervo-mediano
+   Current: /exercises/illustrations/deslizamento-nervo-mediano.avif
+   Suggested: /exercises/illustrations/deslizamento-nervo-mediano.avif
+---
+23. [Fortalecimento de Preensão (Bolinha)]
+   Slug: fortalecimento-de-preensao-bolinha
+   Current: /exercises/illustrations/fortalecimento-preensao-bolinha.avif
+   Suggested: /exercises/illustrations/fortalecimento-preensao-bolinha.avif
+---

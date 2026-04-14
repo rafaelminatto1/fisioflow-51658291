@@ -121,10 +121,10 @@ export default function ProtocolsScreen() {
       </View>
 
       {/* Tabs */}
-      <View style={[styles.tabBar, { backgroundColor: colors.surface, borderBottomColor: colors.border }]}>
+      <View style={[styles.tabBar, { backgroundColor: colors.surface + 'B0', borderBottomColor: colors.border + '30' }]}>
         <TouchableOpacity
-          style={[styles.tab, activeTab === 'protocols' && { borderBottomColor: colors.primary, borderBottomWidth: 2 }]}
-          onPress={() => { setActiveTab('protocols'); setSearchQuery(''); }}
+          style={[styles.tab, activeTab === 'protocols' && { borderBottomColor: colors.primary, borderBottomWidth: 3 }]}
+          onPress={() => { medium(); setActiveTab('protocols'); setSearchQuery(''); }}
         >
           <Ionicons name="clipboard-outline" size={18} color={activeTab === 'protocols' ? colors.primary : colors.textMuted} />
           <Text style={[styles.tabText, { color: activeTab === 'protocols' ? colors.primary : colors.textMuted }]}>
@@ -132,8 +132,8 @@ export default function ProtocolsScreen() {
           </Text>
         </TouchableOpacity>
         <TouchableOpacity
-          style={[styles.tab, activeTab === 'tests' && { borderBottomColor: colors.primary, borderBottomWidth: 2 }]}
-          onPress={() => { setActiveTab('tests'); setSearchQuery(''); }}
+          style={[styles.tab, activeTab === 'tests' && { borderBottomColor: colors.primary, borderBottomWidth: 3 }]}
+          onPress={() => { medium(); setActiveTab('tests'); setSearchQuery(''); }}
         >
           <Ionicons name="analytics-outline" size={18} color={activeTab === 'tests' ? colors.primary : colors.textMuted} />
           <Text style={[styles.tabText, { color: activeTab === 'tests' ? colors.primary : colors.textMuted }]}>
@@ -165,10 +165,17 @@ export default function ProtocolsScreen() {
           {PROTOCOL_CATEGORIES.map((cat) => (
             <TouchableOpacity
               key={cat}
-              style={[styles.categoryChip, { backgroundColor: selectedCategory === cat ? colors.primary : colors.surface, borderColor: colors.border }]}
-              onPress={() => { light(); setSelectedCategory(cat); }}
+              style={[
+                styles.categoryChip, 
+                { 
+                  backgroundColor: selectedCategory === cat ? colors.primary : colors.surface + 'B0', 
+                  borderColor: selectedCategory === cat ? colors.primary : colors.border + '40',
+                  borderWidth: 1.2,
+                }
+              ]}
+              onPress={() => { medium(); setSelectedCategory(cat); }}
             >
-              <Text style={[styles.categoryChipText, { color: selectedCategory === cat ? '#fff' : colors.text }]}>
+              <Text style={[styles.categoryChipText, { color: selectedCategory === cat ? '#fff' : colors.textSecondary }]}>
                 {CATEGORY_LABELS[cat] ?? cat}
               </Text>
             </TouchableOpacity>
@@ -208,7 +215,7 @@ export default function ProtocolsScreen() {
             }
             renderItem={({ item: protocol }) => (
               <TouchableOpacity onPress={() => { light(); router.push(`/protocol-detail?protocolId=${protocol.id}` as any); }}>
-                <Card style={styles.protocolCard}>
+                <Card style={[styles.protocolCard, { backgroundColor: colors.surface + 'B0', borderColor: colors.border + '40', borderWidth: 1.2 }]}>
                   <View style={styles.protocolHeader}>
                     <View style={styles.protocolInfo}>
                       <Text style={[styles.protocolName, { color: colors.text }]}>{protocol.name}</Text>
@@ -217,32 +224,26 @@ export default function ProtocolsScreen() {
                       </Text>
                     </View>
                     {protocol.evidenceLevel && (
-                      <View style={[styles.evidenceBadge, { backgroundColor: evidenceColor(protocol.evidenceLevel) + '20' }]}>
+                      <View style={[styles.evidenceBadge, { backgroundColor: evidenceColor(protocol.evidenceLevel) + '15' }]}>
                         <Text style={[styles.evidenceBadgeText, { color: evidenceColor(protocol.evidenceLevel) }]}>
-                          Nível {protocol.evidenceLevel}
+                          NÍVEL {protocol.evidenceLevel}
                         </Text>
                       </View>
                     )}
                   </View>
                   <View style={styles.protocolMeta}>
-                    <View style={styles.metaItem}>
-                      <Ionicons name="folder-outline" size={14} color={colors.primary} />
+                    <View style={[styles.metaItem, { backgroundColor: colors.border + '20', paddingHorizontal: 8, paddingVertical: 4, borderRadius: 8 }]}>
+                      <Ionicons name="folder-outline" size={12} color={colors.primary} />
                       <Text style={[styles.metaText, { color: colors.textSecondary }]}>
                         {CATEGORY_LABELS[protocol.category] ?? protocol.category}
                       </Text>
                     </View>
                     {protocol.condition && (
-                      <View style={styles.metaItem}>
-                        <Ionicons name="medical-outline" size={14} color={colors.primary} />
+                      <View style={[styles.metaItem, { backgroundColor: colors.border + '20', paddingHorizontal: 8, paddingVertical: 4, borderRadius: 8 }]}>
+                        <Ionicons name="medical-outline" size={12} color={colors.primary} />
                         <Text style={[styles.metaText, { color: colors.textSecondary }]} numberOfLines={1}>
                           {protocol.condition}
                         </Text>
-                      </View>
-                    )}
-                    {protocol.duration && (
-                      <View style={styles.metaItem}>
-                        <Ionicons name="time-outline" size={14} color={colors.primary} />
-                        <Text style={[styles.metaText, { color: colors.textSecondary }]}>{protocol.duration}</Text>
                       </View>
                     )}
                   </View>
@@ -254,7 +255,9 @@ export default function ProtocolsScreen() {
                       <Ionicons name="person-add" size={14} color="#fff" />
                       <Text style={styles.applyButtonText}>Aplicar</Text>
                     </TouchableOpacity>
-                    <Ionicons name="chevron-forward" size={18} color={colors.textMuted} />
+                    <View style={[styles.footerCircle, { backgroundColor: colors.border + '15' }]}>
+                      <Ionicons name="chevron-forward" size={16} color={colors.textMuted} />
+                    </View>
                   </View>
                 </Card>
               </TouchableOpacity>
@@ -283,8 +286,8 @@ export default function ProtocolsScreen() {
                 </View>
                 <View style={styles.catalogGrid}>
                   {availableCatalogTests.map((test) => (
-                    <View key={test.id} style={[styles.catalogCard, { backgroundColor: colors.surface, borderColor: colors.border }]}>
-                      <View style={[styles.scaleTag, { backgroundColor: colors.primary + '15' }]}>
+                    <View key={test.id} style={[styles.catalogCard, { backgroundColor: colors.surface + '80', borderColor: colors.border + '35', borderWidth: 1.2 }]}>
+                      <View style={[styles.scaleTag, { backgroundColor: colors.primary + '12' }]}>
                         <Text style={[styles.scaleTagText, { color: colors.primary }]}>{test.scale}</Text>
                       </View>
                       <Text style={[styles.catalogTitle, { color: colors.text }]}>{test.title}</Text>
@@ -308,14 +311,14 @@ export default function ProtocolsScreen() {
               const scaleName = test.scale_name || test.test_type?.toUpperCase() || 'TESTE';
               const score = test.total_score ?? test.score ?? null;
               return (
-                <Card style={styles.testCard}>
+                <Card style={[styles.testCard, { backgroundColor: colors.surface + 'B0', borderColor: colors.border + '40', borderWidth: 1.2 }]}>
                   <View style={styles.testHeader}>
-                    <View style={[styles.scaleTag, { backgroundColor: colors.primary + '15' }]}>
+                    <View style={[styles.scaleTag, { backgroundColor: colors.primary + '12' }]}>
                       <Text style={[styles.scaleTagText, { color: colors.primary }]}>{scaleName}</Text>
                     </View>
                     {score !== null && (
-                      <View style={[styles.scoreBadge, { backgroundColor: colors.surface }]}>
-                        <Text style={[styles.scoreText, { color: colors.text }]}>{score} pts</Text>
+                      <View style={[styles.scoreBadge, { backgroundColor: colors.surface + 'DF', borderColor: colors.border + '20', borderWidth: 1 }]}>
+                        <Text style={[styles.scoreText, { color: colors.primary, fontWeight: '900' }]}>{score} pts</Text>
                       </View>
                     )}
                   </View>
@@ -324,22 +327,24 @@ export default function ProtocolsScreen() {
                   </Text>
                   <View style={styles.testMeta}>
                     {test.patient_name && (
-                      <View style={styles.metaItem}>
-                        <Ionicons name="person-outline" size={13} color={colors.textMuted} />
+                      <View style={styles.metaItemShort}>
+                        <Ionicons name="person-outline" size={12} color={colors.textMuted} />
                         <Text style={[styles.metaText, { color: colors.textSecondary }]}>{test.patient_name}</Text>
                       </View>
                     )}
-                    <View style={styles.metaItem}>
-                      <Ionicons name="calendar-outline" size={13} color={colors.textMuted} />
+                    <View style={styles.metaItemShort}>
+                      <Ionicons name="calendar-outline" size={12} color={colors.textMuted} />
                       <Text style={[styles.metaText, { color: colors.textSecondary }]}>
                         {test.applied_at ? new Date(test.applied_at).toLocaleDateString('pt-BR') : '—'}
                       </Text>
                     </View>
                   </View>
                   {test.interpretation && (
-                    <Text style={[styles.interpretation, { color: colors.textSecondary }]} numberOfLines={2}>
-                      {test.interpretation}
-                    </Text>
+                    <View style={[styles.interpretationBox, { backgroundColor: colors.border + '12' }]}>
+                      <Text style={[styles.interpretation, { color: colors.textSecondary }]} numberOfLines={3}>
+                        "{test.interpretation}"
+                      </Text>
+                    </View>
                   )}
                 </Card>
               );
@@ -404,6 +409,14 @@ const styles = StyleSheet.create({
   scoreBadge: { paddingHorizontal: 8, paddingVertical: 3, borderRadius: 8, marginLeft: 'auto' as any },
   scoreText: { fontSize: 13, fontWeight: '600' },
   testName: { fontSize: 15, fontWeight: '600' },
-  testMeta: { flexDirection: 'row', gap: 12 },
+  metaItemShort: { flexDirection: 'row', alignItems: 'center', gap: 4 },
+  interpretationBox: { marginTop: 4, padding: 8, borderRadius: 8, borderLeftWidth: 3, borderLeftColor: '#6366F1' },
   interpretation: { fontSize: 13, fontStyle: 'italic', lineHeight: 18 },
+  footerCircle: {
+     width: 32,
+     height: 32,
+     borderRadius: 16,
+     alignItems: 'center',
+     justifyContent: 'center',
+  },
 });

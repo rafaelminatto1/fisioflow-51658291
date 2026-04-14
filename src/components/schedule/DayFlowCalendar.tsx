@@ -33,7 +33,7 @@ const VIEW_MAP: Record<ViewType, string> = {
 	week: "timeGridWeek",
 	month: "dayGridMonth",
 };
-const WEEK_SLOT_COUNT = 28; // 14 hours * 2 slots per hour.
+const WEEK_SLOT_COUNT = 56; // 14 hours * 4 slots per hour.
 const WEEK_HEADER_HEIGHT = 28;
 
 export interface DayFlowCalendarWrapperProps {
@@ -73,7 +73,7 @@ export function DayFlowCalendarWrapper(props: DayFlowCalendarWrapperProps) {
 	const isWeekView = viewType === "week";
 	const [weekSlotHeight, setWeekSlotHeight] = useState(20);
 	const slotHeight = isWeekView ? weekSlotHeight : 14;
-	const slotDuration = isWeekView ? "00:30:00" : "00:15:00";
+	const slotDuration = "00:15:00";
 	const slotLabelFormat = useMemo(
 		() => (time: Date) => (time.getMinutes() === 0 ? format(time, "HH:mm") : ""),
 		[],
@@ -312,8 +312,8 @@ export function DayFlowCalendarWrapper(props: DayFlowCalendarWrapperProps) {
 								const durationInMinutes = Math.max(
 									15,
 									Math.round(
-										(info.event.end.getTime() - info.event.start.getTime()) / 60000,
-									),
+										(info.event.end.getTime() - info.event.start.getTime()) / 60000 / 15,
+									) * 15,
 								);
 								const roundedEnd = addMinutes(roundedStart, durationInMinutes);
 								const startStr = format(roundedStart, "yyyy-MM-dd'T'HH:mm");

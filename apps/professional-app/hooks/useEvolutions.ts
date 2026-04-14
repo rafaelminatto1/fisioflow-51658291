@@ -1,3 +1,4 @@
+import { useMemo, useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { 
     getEvolutions as apiGetEvolutions, 
@@ -5,6 +6,7 @@ import {
     updateEvolution as apiUpdateEvolution, 
     deleteEvolution as apiDeleteEvolution, 
     getEvolutionById as apiGetEvolutionById,
+    duplicateEvolution as apiDuplicateEvolution,
     ApiEvolution 
 } from '@/lib/api';
 import { useAuthStore } from '@/store/auth';
@@ -32,9 +34,12 @@ function mapApiEvolution(apiEvolution: ApiEvolution): Evolution {
     };
 }
 
-export function useEvolutions(patientId: string) {
+const DEFAULT_PAGE_SIZE = 10;
+
+export function useEvolutions(patientId: string, pageSize = DEFAULT_PAGE_SIZE) {
   const queryClient = useQueryClient();
   const { user } = useAuthStore();
+  const [currentPage, setCurrentPage] = useState(1);
 
   const query = useQuery({
     queryKey: ['patientEvolutions', patientId],
@@ -44,6 +49,27 @@ export function useEvolutions(patientId: string) {
     },
     enabled: !!patientId,
   });
+
+  // Client-side pagination derived values
+  const allEvolutions = query.data || [];
+  const totalCount = allEvolutions.length;
+  const totalPages = Math.max(1, Math.ceil(totalCount / pageSize));
+
+  // Clamp page to valid range whenever data changes
+  const safeCurrentPage = Math.min(currentPage, totalPages);
+
+  const paginatedEvolutions = useMemo(() => {
+    const start = (safeCurrentPage - 1) * pageSize;
+    return allEvolutions.slice(start, start + pageSize);
+  }, [allEvolutions, safeCurrentPage, pageSize]);
+
+  const goToPage = (page: number) => {
+    const clamped = Math.max(1, Math.min(page, totalPages));
+    setCurrentPage(clamped);
+  };
+
+  const nextPage = () => goToPage(safeCurrentPage + 1);
+  const prevPage = () => goToPage(safeCurrentPage - 1);
 
   const createMutation = useMutation({
     mutationFn: async (data: Partial<Omit<Evolution, 'id' | 'professionalId' | 'createdAt'>>) => {
@@ -113,20 +139,56 @@ export function useEvolutions(patientId: string) {
     },
   });
 
+  const duplicateMutation = useMutation({
+    mutationFn: async (id: string) => {
+      const result = await apiDuplicateEvolution(id);
+
+      // Log audit event
+      if (user?.id) {
+        await auditLogger.logPHIModification(user.id, 'create', 'evolution', result.id);
+      }
+
+      return mapApiEvolution(result);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['patientEvolutions', patientId] });
+      // Jump to page 1 so the duplicated session (newest) is visible
+      setCurrentPage(1);
+    },
+  });
+
   return {
-    evolutions: query.data || [],
+    // All evolutions (unpaginated) — kept for charts etc.
+    evolutions: allEvolutions,
+    // Paginated slice
+    paginatedEvolutions,
+    // Pagination state
+    currentPage: safeCurrentPage,
+    totalPages,
+    totalCount,
+    hasNextPage: safeCurrentPage < totalPages,
+    hasPrevPage: safeCurrentPage > 1,
+    pageSize,
+    goToPage,
+    nextPage,
+    prevPage,
+    // Loading states
     isLoading: query.isLoading,
     isError: query.isError,
     refetch: query.refetch,
+    // Mutations
     create: createMutation.mutate,
     createAsync: createMutation.mutateAsync,
     update: updateMutation.mutate,
     updateAsync: updateMutation.mutateAsync,
     delete: deleteMutation.mutate,
     deleteAsync: deleteMutation.mutateAsync,
+    duplicate: duplicateMutation.mutate,
+    duplicateAsync: duplicateMutation.mutateAsync,
     isCreating: createMutation.isPending,
     isUpdating: updateMutation.isPending,
     isDeleting: deleteMutation.isPending,
+    isDuplicating: duplicateMutation.isPending,
   };
 }
 

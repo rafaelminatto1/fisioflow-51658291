@@ -53,6 +53,7 @@ export interface ApiExercise {
   instructions?: string[];
   category?: string;
   categoryId?: string;
+  categoryName?: string;
   difficulty?: string;
   video_url?: string;
   videoUrl?: string;
@@ -70,6 +71,16 @@ export interface ApiExercise {
   createdAt?: string;
   updated_at?: string;
   updatedAt?: string;
+}
+
+export interface ApiExerciseCategory {
+  id: string;
+  slug: string;
+  name: string;
+  description?: string;
+  icon?: string;
+  color?: string;
+  orderIndex: number;
 }
 
 export interface ApiEvolution {

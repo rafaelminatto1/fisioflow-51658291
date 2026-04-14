@@ -23,6 +23,7 @@ import {
 	useWhatsAppConversations,
 	useWhatsAppOpenConversation,
 	useWhatsAppResolveContact,
+	useWhatsAppTags,
 } from "@/hooks/useWhatsApp";
 import { usePatients } from "@/hooks/usePatients";
 import {
@@ -40,6 +41,7 @@ const STATUS_FILTERS = [
 	{ key: "open", label: "Abertas" },
 	{ key: "pending", label: "Pendentes" },
 	{ key: "mine", label: "Minhas" },
+	{ key: "unassigned", label: "Sem dono" },
 	{ key: "resolved", label: "Resolvidas" },
 ] as const;
 
@@ -113,9 +115,10 @@ function ConversationItem({
 	const preview = getMessageTextPreview(item.lastMessage);
 	const time = formatRelativeTime(item.lastMessageAt || item.updatedAt);
 	const statusColor = getStatusColor(item.status);
-	const unread = item.unreadCount ?? 0;
-	const isOutbound = item.lastMessage?.direction === "outbound";
-	const isHighPriority = item.priority === "high" || item.priority === "urgent";
+		const unread = item.unreadCount ?? 0;
+		const isOutbound = item.lastMessage?.direction === "outbound";
+		const isHighPriority = item.priority === "high" || item.priority === "urgent";
+		const tags = item.tags ?? [];
 
 	return (
 		<TouchableOpacity
@@ -169,8 +172,8 @@ function ConversationItem({
 					</Text>
 				) : null}
 
-				<View style={styles.convBottomRow}>
-					<Text
+					<View style={styles.convBottomRow}>
+						<Text
 						style={[
 							styles.convPreview,
 							{
@@ -185,17 +188,45 @@ function ConversationItem({
 							: "Sem mensagens"}
 					</Text>
 
-					{unread > 0 && (
+						{unread > 0 && (
 						<View style={[styles.unreadBadge, { backgroundColor: WA_GREEN }]}>
 							<Text style={styles.unreadText}>
 								{unread > 99 ? "99+" : unread}
 							</Text>
+							</View>
+						)}
+					</View>
+					{(item.assignedToName || tags.length > 0) && (
+						<View style={styles.convMetaRow}>
+							{item.assignedToName ? (
+								<View style={[styles.ownerPill, { backgroundColor: WA_GREEN + "14" }]}>
+									<Ionicons name="person" size={10} color={WA_GREEN} />
+									<Text style={[styles.ownerText, { color: WA_GREEN }]} numberOfLines={1}>
+										{item.assignedToName}
+									</Text>
+								</View>
+							) : null}
+							{tags.slice(0, 2).map((tag) => (
+								<View
+									key={tag.id}
+									style={[
+										styles.tagPill,
+										{ borderColor: tag.color ?? colors.border },
+									]}
+								>
+									<Text
+										style={[styles.tagText, { color: tag.color ?? colors.textSecondary }]}
+										numberOfLines={1}
+									>
+										{tag.name}
+									</Text>
+								</View>
+							))}
 						</View>
 					)}
 				</View>
-			</View>
-		</TouchableOpacity>
-	);
+			</TouchableOpacity>
+		);
 }
 
 export default function WhatsAppScreen() {
@@ -203,7 +234,8 @@ export default function WhatsAppScreen() {
 	const router = useRouter();
 	const { light } = useHaptics();
 
-	const [statusFilter, setStatusFilter] = useState<StatusFilter>("all");
+		const [statusFilter, setStatusFilter] = useState<StatusFilter>("all");
+		const [selectedTagId, setSelectedTagId] = useState<string | null>(null);
 	const [search, setSearch] = useState("");
 	const [refreshing, setRefreshing] = useState(false);
 	const [isComposerOpen, setIsComposerOpen] = useState(false);
@@ -213,12 +245,15 @@ export default function WhatsAppScreen() {
 	const [manualPhone, setManualPhone] = useState("");
 	const [manualName, setManualName] = useState("");
 
-	const queryFilters = useMemo(() => {
-		if (statusFilter === "all") return {};
-		return { status: statusFilter };
-	}, [statusFilter]);
+		const queryFilters = useMemo(() => {
+			const filters: Record<string, string> = {};
+			if (statusFilter !== "all") filters.status = statusFilter;
+			if (selectedTagId) filters.tagId = selectedTagId;
+			return filters;
+		}, [selectedTagId, statusFilter]);
 
-	const { data, isLoading, refetch } = useWhatsAppConversations(queryFilters);
+		const { data, isLoading, refetch } = useWhatsAppConversations(queryFilters);
+		const { data: tags = [] } = useWhatsAppTags();
 	const { data: patients, isLoading: isPatientsLoading } = usePatients({
 		search: patientSearch.trim() || undefined,
 		limit: 12,
@@ -413,9 +448,71 @@ export default function WhatsAppScreen() {
 						</TouchableOpacity>
 					);
 				})}
-			</ScrollView>
+				</ScrollView>
 
-			<View style={styles.summaryRow}>
+				{tags.length > 0 && (
+					<ScrollView
+						horizontal
+						showsHorizontalScrollIndicator={false}
+						contentContainerStyle={styles.categoryFiltersContent}
+						style={styles.categoryFiltersScroll}
+					>
+						<TouchableOpacity
+							style={[
+								styles.categoryChip,
+								{
+									backgroundColor: selectedTagId ? colors.surface : WA_GREEN + "18",
+									borderColor: selectedTagId ? colors.border : WA_GREEN,
+								},
+							]}
+							onPress={() => setSelectedTagId(null)}
+							activeOpacity={0.75}
+						>
+							<Text
+								style={[
+									styles.categoryLabel,
+									{ color: selectedTagId ? colors.textSecondary : WA_GREEN },
+								]}
+							>
+								Todas categorias
+							</Text>
+						</TouchableOpacity>
+						{tags.map((tag) => {
+							const active = selectedTagId === tag.id;
+							return (
+								<TouchableOpacity
+									key={tag.id}
+									style={[
+										styles.categoryChip,
+										{
+											backgroundColor: active ? (tag.color ?? WA_GREEN) + "18" : colors.surface,
+											borderColor: active ? tag.color ?? WA_GREEN : colors.border,
+										},
+									]}
+									onPress={() => setSelectedTagId(active ? null : tag.id)}
+									activeOpacity={0.75}
+								>
+									<View
+										style={[
+											styles.categoryDot,
+											{ backgroundColor: tag.color ?? WA_GREEN },
+										]}
+									/>
+									<Text
+										style={[
+											styles.categoryLabel,
+											{ color: active ? tag.color ?? WA_GREEN : colors.textSecondary },
+										]}
+									>
+										{tag.name}
+									</Text>
+								</TouchableOpacity>
+							);
+						})}
+					</ScrollView>
+				)}
+
+				<View style={styles.summaryRow}>
 				<View
 					style={[
 						styles.summaryCard,
@@ -806,10 +903,10 @@ const styles = StyleSheet.create({
 		fontSize: 15,
 		paddingVertical: 0,
 	},
-	filtersScroll: {
-		height: 38,
-		marginBottom: 6,
-	},
+		filtersScroll: {
+			height: 38,
+			marginBottom: 6,
+		},
 	filtersContent: {
 		paddingHorizontal: 16,
 		gap: 8,
@@ -842,11 +939,38 @@ const styles = StyleSheet.create({
 		borderRadius: 20,
 		borderWidth: 1,
 	},
-	filterLabel: {
-		fontSize: 13,
-		fontWeight: "500",
-	},
-	listContent: {
+		filterLabel: {
+			fontSize: 13,
+			fontWeight: "500",
+		},
+		categoryFiltersScroll: {
+			maxHeight: 34,
+			marginBottom: 8,
+		},
+		categoryFiltersContent: {
+			paddingHorizontal: 16,
+			gap: 8,
+			alignItems: "center",
+		},
+		categoryChip: {
+			flexDirection: "row",
+			alignItems: "center",
+			gap: 6,
+			paddingHorizontal: 10,
+			paddingVertical: 5,
+			borderRadius: 14,
+			borderWidth: StyleSheet.hairlineWidth,
+		},
+		categoryDot: {
+			width: 7,
+			height: 7,
+			borderRadius: 4,
+		},
+		categoryLabel: {
+			fontSize: 12,
+			fontWeight: "600",
+		},
+		listContent: {
 		flexGrow: 1,
 		paddingHorizontal: 16,
 		paddingBottom: 28,
@@ -920,11 +1044,43 @@ const styles = StyleSheet.create({
 		justifyContent: "space-between",
 		gap: 8,
 	},
-	convPreview: {
-		fontSize: 13,
-		lineHeight: 18,
-		flex: 1,
-	},
+		convPreview: {
+			fontSize: 13,
+			lineHeight: 18,
+			flex: 1,
+		},
+		convMetaRow: {
+			flexDirection: "row",
+			flexWrap: "wrap",
+			alignItems: "center",
+			gap: 6,
+			marginTop: 8,
+		},
+		ownerPill: {
+			flexDirection: "row",
+			alignItems: "center",
+			gap: 4,
+			maxWidth: 150,
+			paddingHorizontal: 7,
+			paddingVertical: 3,
+			borderRadius: 10,
+		},
+		ownerText: {
+			fontSize: 11,
+			fontWeight: "600",
+			flexShrink: 1,
+		},
+		tagPill: {
+			maxWidth: 120,
+			borderWidth: StyleSheet.hairlineWidth,
+			borderRadius: 10,
+			paddingHorizontal: 7,
+			paddingVertical: 3,
+		},
+		tagText: {
+			fontSize: 11,
+			fontWeight: "600",
+		},
 	unreadBadge: {
 		minWidth: 20,
 		height: 20,
