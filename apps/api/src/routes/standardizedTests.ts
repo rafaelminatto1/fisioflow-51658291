@@ -183,7 +183,12 @@ app.post('/', requireAuth, async (c) => {
     ],
   );
 
-  return c.json({ data: normalizeStandardizedTestRow(result.rows[0] as Record<string, unknown>) }, 201);
+  const normalized = normalizeStandardizedTestRow(result.rows[0] as Record<string, unknown>);
+
+  // Auto-create task if score crosses clinical alert threshold (non-blocking)
+  checkScoreThresholdAndCreateTask(pool, user.organizationId, user.uid, normalized).catch(() => null);
+
+  return c.json({ data: normalized }, 201);
 });
 
 // DELETE /api/standardized-tests/:id
@@ -204,5 +209,72 @@ app.delete('/:id', requireAuth, async (c) => {
   if (!result.rows.length) return c.json({ error: 'Registro não encontrado' }, 404);
   return c.json({ success: true });
 });
+
+// Clinical alert thresholds — score ranges that warrant proactive follow-up tasks
+// Format: { scale, threshold, operator ('gte'|'lte'), prioridade, titulo }
+const SCORE_THRESHOLDS: Array<{
+  scale: RegExp;
+  threshold: number;
+  operator: 'gte' | 'lte';
+  prioridade: string;
+  titulo: (scale: string, score: number) => string;
+}> = [
+  // VAS pain >= 7 → high pain alert
+  { scale: /^VAS$/i, threshold: 7, operator: 'gte', prioridade: 'ALTA',
+    titulo: (s, sc) => `Dor intensa — ${s} ${sc}/10: Revisar plano` },
+  // Oswestry >= 40% → severe disability
+  { scale: /OSWESTRY/i, threshold: 40, operator: 'gte', prioridade: 'ALTA',
+    titulo: (s, sc) => `Incapacidade grave — ${s} ${sc}%: Ajustar tratamento` },
+  // NDI >= 35% → severe neck disability
+  { scale: /NDI/i, threshold: 35, operator: 'gte', prioridade: 'ALTA',
+    titulo: (s, sc) => `Incapacidade cervical grave — ${s} ${sc}%: Reavaliar` },
+  // DASH >= 50 → significant upper limb disability
+  { scale: /DASH/i, threshold: 50, operator: 'gte', prioridade: 'MEDIA',
+    titulo: (s, sc) => `Disfunção de MMSS — ${s} ${sc}: Revisar protocolo` },
+  // LEFS <= 30 → severe lower extremity functional limitation
+  { scale: /LEFS/i, threshold: 30, operator: 'lte', prioridade: 'ALTA',
+    titulo: (s, sc) => `Limitação funcional grave MMII — ${s} ${sc}: Reavaliar` },
+  // Berg Balance Scale <= 35 → high fall risk
+  { scale: /BERG/i, threshold: 35, operator: 'lte', prioridade: 'URGENTE',
+    titulo: (s, sc) => `Alto risco de queda — ${s} ${sc}/56: Prevenção urgente` },
+  // PSFS <= 3 → critical functional limitation
+  { scale: /PSFS/i, threshold: 3, operator: 'lte', prioridade: 'ALTA',
+    titulo: (s, sc) => `Funcionalidade crítica — ${s} ${sc}/10: Revisão necessária` },
+];
+
+async function checkScoreThresholdAndCreateTask(
+  pool: ReturnType<typeof createPool>,
+  orgId: string,
+  userId: string,
+  test: Record<string, unknown>,
+): Promise<void> {
+  const scaleName = String(test.scale_name ?? '');
+  const score = Number(test.score);
+  const patientId = test.patient_id as string | null;
+  const testId = test.id as string | null;
+  if (!patientId || isNaN(score)) return;
+
+  const matched = SCORE_THRESHOLDS.find(({ scale, threshold, operator }) => {
+    if (!scale.test(scaleName)) return false;
+    return operator === 'gte' ? score >= threshold : score <= threshold;
+  });
+  if (!matched) return;
+
+  await pool.query(
+    `INSERT INTO tarefas (organization_id, created_by, titulo, descricao, status, prioridade, tipo,
+       order_index, tags, label_ids, checklists, attachments, task_references, dependencies,
+       requires_acknowledgment, acknowledgments, linked_entity_type, linked_entity_id)
+     VALUES ($1, $2, $3, $4, 'A_FAZER', $5, 'TAREFA',
+       0, '{}', '{}', '[]', '[]', '[]', '[]', false, '[]', 'patient', $6)`,
+    [
+      orgId,
+      userId,
+      matched.titulo(scaleName, score),
+      `Gerado automaticamente pelo sistema de alerta clínico.\n\nEscala: ${scaleName}\nPontuação: ${score}\nID do resultado: ${testId ?? 'N/A'}`,
+      matched.prioridade,
+      patientId,
+    ],
+  );
+}
 
 export { app as standardizedTestsRoutes };
