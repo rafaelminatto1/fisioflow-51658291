@@ -15,10 +15,10 @@ describe("getWorkersApiUrl", () => {
 		expect(getWorkersApiUrl()).toBe("https://api.lab.moocafisio.com.br");
 	});
 
-	it("faz fallback para workers.dev quando a env aponta para domínio problemático", () => {
+	it("usa o domínio de produção quando ele vem da env", () => {
 		vi.stubEnv("VITE_WORKERS_API_URL", "https://api-pro.moocafisio.com.br");
 
-		expect(getWorkersApiUrl()).toBe(FALLBACK_URL);
+		expect(getWorkersApiUrl()).toBe("https://api-pro.moocafisio.com.br");
 	});
 
 	it("faz fallback para workers.dev quando a env está ausente", () => {
