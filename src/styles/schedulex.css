@@ -46,12 +46,12 @@
 /* O wrapper real do ScheduleX é .sx__calendar-wrapper, não .schedulex-calendar-wrapper */
 /* Sobrescreve o roxo padrão (#6750a4) do tema ScheduleX com azul bebê do sistema */
 .sx__calendar-wrapper {
-	--sx-color-primary: #60a5fa;        /* azul bebê — cor do logo/sistema */
+	--sx-color-primary: #60a5fa; /* azul bebê — cor do logo/sistema */
 	--sx-color-on-primary: #ffffff;
 	--sx-color-primary-container: #dbeafe;
 	--sx-color-on-primary-container: #1e3a8a;
-	--sx-font-extra-large: 0.9rem;      /* tamanho do número do dia */
-	--sx-font-extra-small: 0.65rem;     /* tamanho do nome do dia */
+	--sx-font-extra-large: 0.9rem; /* tamanho do número do dia */
+	--sx-font-extra-small: 0.65rem; /* tamanho do nome do dia */
 }
 
 /* ───────────── 3. DARK MODE ────────────────────────────────── */
@@ -92,7 +92,9 @@ html.dark .schedulex-calendar-wrapper {
 	border-radius: 8px;
 	font-size: 0.75rem;
 	cursor: pointer;
-	transition: transform 0.1s ease, box-shadow 0.1s ease;
+	transition:
+		transform 0.1s ease,
+		box-shadow 0.1s ease;
 	overflow: hidden;
 }
 
@@ -102,111 +104,142 @@ html.dark .schedulex-calendar-wrapper {
 }
 
 /* ───────────── 7. STATUS-BASED EVENT COLORS ────────────────── */
-/* Usados via: _options: { additionalClasses: ['calendar-card-{status}'] } */
+/* Default colors are applied via CSS custom properties that can be overridden
+   by inline styles from useStatusConfig(). The inline styles take precedence. */
 
 .calendar-card-agendado {
-	background-color: #fffbeb !important;
-	border-left: 3px solid #f59e0b !important;
-	color: #b45309 !important;
+	background-color: var(--status-bg, #fffbeb) !important;
+	border-left: 3px solid var(--status-accent, #3b82f6) !important;
+	color: var(--status-text, #1e40af) !important;
 }
 
 .calendar-card-atendido {
-	background-color: #ecfdf5 !important;
-	border-left: 3px solid #10b981 !important;
-	color: #047857 !important;
+	background-color: var(--status-bg, #ecfdf5) !important;
+	border-left: 3px solid var(--status-accent, #10b981) !important;
+	color: var(--status-text, #065f46) !important;
 }
 
 .calendar-card-avaliacao {
-	background-color: #ecfdf5 !important;
-	border-left: 3px solid #10b981 !important;
-	color: #047857 !important;
+	background-color: var(--status-bg, #f5f3ff) !important;
+	border-left: 3px solid var(--status-accent, #8b5cf6) !important;
+	color: var(--status-text, #5b21b6) !important;
 }
 
 .calendar-card-aguardando_confirmacao {
-	background-color: #fffbeb !important;
-	border-left: 3px solid #f59e0b !important;
-	color: #b45309 !important;
+	background-color: var(--status-bg, #fffbeb) !important;
+	border-left: 3px solid var(--status-accent, #f59e0b) !important;
+	color: var(--status-text, #92400e) !important;
 }
 
 .calendar-card-presenca_confirmada {
-	background-color: #ecfdf5 !important;
-	border-left: 3px solid #10b981 !important;
-	color: #047857 !important;
+	background-color: var(--status-bg, #dbeafe) !important;
+	border-left: 3px solid var(--status-accent, #1e3a8a) !important;
+	color: var(--status-text, #1e3a8a) !important;
 }
 
 .calendar-card-cancelado {
-	background-color: #f1f5f9 !important;
-	border-left: 3px solid #64748b !important;
-	color: #334155 !important;
+	background-color: var(--status-bg, #f1f5f9) !important;
+	border-left: 3px solid var(--status-accent, #64748b) !important;
+	color: var(--status-text, #334155) !important;
 	opacity: 0.7;
 }
 
 .calendar-card-faltou {
-	background-color: #fef2f2 !important;
-	border-left: 3px solid #ef4444 !important;
-	color: #7f1d1d !important;
+	background-color: var(--status-bg, #fef2f2) !important;
+	border-left: 3px solid var(--status-accent, #ef4444) !important;
+	color: var(--status-text, #7f1d1d) !important;
 }
 
 .calendar-card-faltou_com_aviso {
-	background-color: #f0fdfa !important;
-	border-left: 3px solid #2dd4bf !important;
-	color: #134e4a !important;
+	background-color: var(--status-bg, #f0fdfa) !important;
+	border-left: 3px solid var(--status-accent, #2dd4bf) !important;
+	color: var(--status-text, #134e4a) !important;
 }
 
 .calendar-card-faltou_sem_aviso {
-	background-color: #fff7ed !important;
-	border-left: 3px solid #f97316 !important;
-	color: #7c2d12 !important;
+	background-color: var(--status-bg, #fff7ed) !important;
+	border-left: 3px solid var(--status-accent, #f97316) !important;
+	color: var(--status-text, #7c2d12) !important;
 }
 
 .calendar-card-nao_atendido {
-	background-color: #fdf4ff !important;
-	border-left: 3px solid #a855f7 !important;
-	color: #3b0764 !important;
+	background-color: var(--status-bg, #f9fafb) !important;
+	border-left: 3px solid var(--status-accent, #4b5563) !important;
+	color: var(--status-text, #1f2937) !important;
 }
 
 .calendar-card-nao_atendido_sem_cobranca {
-	background-color: #fdf4ff !important;
-	border-left: 3px solid #a855f7 !important;
-	color: #3b0764 !important;
+	background-color: var(--status-bg, #f1f5f9) !important;
+	border-left: 3px solid var(--status-accent, #64748b) !important;
+	color: var(--status-text, #334155) !important;
 	opacity: 0.7;
 }
 
 .calendar-card-remarcar {
-	background-color: #fff8f1 !important;
-	border-left: 3px solid #fb923c !important;
-	color: #7c2d12 !important;
+	background-color: var(--status-bg, #f8fafc) !important;
+	border-left: 3px solid var(--status-accent, #94a3b8) !important;
+	color: var(--status-text, #334155) !important;
+}
+
+.calendar-card-excedente {
+	background-color: var(--status-bg, #fef2f2) !important;
+	border-left: 3px solid var(--status-accent, #dc2626) !important;
+	color: var(--status-text, #7f1d1d) !important;
 }
 
 /* ───────────── 8. DARK MODE — OVERRIDES DE STATUS ──────────── */
 html.dark .calendar-card-agendado {
-	background-color: rgb(245 158 11 / 0.15) !important;
-	border-left-color: #f59e0b !important;
-	color: #fbbf24 !important;
+	background-color: var(--status-bg, rgb(59 130 246 / 0.15)) !important;
+	border-left-color: var(--status-accent, #60a5fa) !important;
+	color: var(--status-text, #93c5fd) !important;
 }
 
 html.dark .calendar-card-atendido {
-	background-color: rgb(16 185 129 / 0.15) !important;
-	border-left-color: #10b981 !important;
-	color: #34d399 !important;
+	background-color: var(--status-bg, rgb(16 185 129 / 0.15)) !important;
+	border-left-color: var(--status-accent, #34d399) !important;
+	color: var(--status-text, #6ee7b7) !important;
 }
 
 html.dark .calendar-card-avaliacao {
-	background-color: rgb(16 185 129 / 0.15) !important;
-	border-left-color: #10b981 !important;
-	color: #34d399 !important;
+	background-color: var(--status-bg, rgb(139 92 246 / 0.15)) !important;
+	border-left-color: var(--status-accent, #a78bfa) !important;
+	color: var(--status-text, #c4b5fd) !important;
 }
 
 html.dark .calendar-card-cancelado {
-	background-color: rgb(100 116 139 / 0.15) !important;
-	border-left-color: #94a3b8 !important;
-	color: #cbd5e1 !important;
+	background-color: var(--status-bg, rgb(100 116 139 / 0.15)) !important;
+	border-left-color: var(--status-accent, #94a3b8) !important;
+	color: var(--status-text, #cbd5e1) !important;
 }
 
 html.dark .calendar-card-faltou {
-	background-color: rgb(239 68 68 / 0.2) !important;
-	border-left-color: #f87171 !important;
-	color: #fecaca !important;
+	background-color: var(--status-bg, rgb(239 68 68 / 0.2)) !important;
+	border-left-color: var(--status-accent, #f87171) !important;
+	color: var(--status-text, #fecaca) !important;
+}
+
+html.dark .calendar-card-faltou_com_aviso {
+	background-color: var(--status-bg, rgb(45 212 191 / 0.15)) !important;
+	border-left-color: var(--status-accent, #5eead4) !important;
+	color: var(--status-text, #99f6e4) !important;
+}
+
+html.dark .calendar-card-faltou_sem_aviso {
+	background-color: var(--status-bg, rgb(249 115 22 / 0.15)) !important;
+	border-left-color: var(--status-accent, #fb923c) !important;
+	color: var(--status-text, #fdba74) !important;
+}
+
+html.dark .calendar-card-nao_atendido {
+	background-color: var(--status-bg, rgb(75 85 99 / 0.15)) !important;
+	border-left-color: var(--status-accent, #9ca3af) !important;
+	color: var(--status-text, #d1d5db) !important;
+}
+
+html.dark .calendar-card-remarcar {
+	background-color: var(--status-bg, rgb(148 163 184 / 0.15)) !important;
+	border-left-color: var(--status-accent, #cbd5e1) !important;
+	color: var(--status-text, #e2e8f0) !important;
 }
 
 /* ───────────── 9. DRAG & DROP ──────────────────────────────── */
@@ -226,7 +259,8 @@ html.dark .calendar-card-faltou {
 }
 
 /* ───────────── 11. TODAY HIGHLIGHT ─────────────────────────── */
-.schedulex-calendar-wrapper .sx__month-grid-day.sx__month-grid-day--current-month.sx__is-today .sx__month-grid-day__header-date {
+.schedulex-calendar-wrapper .sx__month-grid-day.sx__month-grid-day--current-month.sx__is-today
+	.sx__month-grid-day__header-date {
 	background-color: #2563eb;
 	color: #ffffff;
 	border-radius: 50%;

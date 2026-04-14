@@ -288,17 +288,37 @@ const mapBusinessHourRow = (row: Record<string, any>) => ({
 });
 
 const normalizeBusinessHourPayload = (item: Record<string, any>) => {
+  const dayOfWeek = Number(item.day_of_week);
+  if (Number.isNaN(dayOfWeek) || dayOfWeek < 0 || dayOfWeek > 6) {
+    throw new Error(`Dia da semana inválido: ${item.day_of_week}`);
+  }
+
   const isOpen = item.is_open ?? (item.is_closed !== undefined ? !item.is_closed : true);
   const openTime = item.open_time ?? item.start_time ?? '07:00';
   const closeTime = item.close_time ?? item.end_time ?? '21:00';
+  const breakStart = item.break_start ?? null;
+  const breakEnd = item.break_end ?? null;
+
+  if (isOpen && openTime >= closeTime) {
+    throw new Error(`O horário de abertura deve ser anterior ao de fechamento (dia ${dayOfWeek}).`);
+  }
+
+  if (isOpen && breakStart && breakEnd) {
+    if (breakStart >= breakEnd) {
+      throw new Error(`O início da pausa deve ser anterior ao fim da pausa (dia ${dayOfWeek}).`);
+    }
+    if (breakStart <= openTime || breakEnd >= closeTime) {
+      throw new Error(`A pausa deve estar dentro do horário de atendimento (dia ${dayOfWeek}).`);
+    }
+  }
 
   return {
-    dayOfWeek: Number(item.day_of_week),
+    dayOfWeek,
     isOpen: Boolean(isOpen),
     openTime,
     closeTime,
-    breakStart: item.break_start ?? null,
-    breakEnd: item.break_end ?? null,
+    breakStart,
+    breakEnd,
   };
 };
 
@@ -564,11 +584,13 @@ async function handleUpsertBusinessHours(c: any) {
     const body = (await c.req.json()) as Record<string, any>[] | Record<string, any>;
     const items = Array.isArray(body) ? body : [body];
 
+    // Validar todos os itens antes de começar a deletar
+    const normalizedItems = items.map(item => normalizeBusinessHourPayload(item));
+
     await pool.query('DELETE FROM business_hours WHERE organization_id = $1', [user.organizationId]);
 
     const results = [];
-    for (const item of items) {
-      const normalized = normalizeBusinessHourPayload(item);
+    for (const normalized of normalizedItems) {
       const res = await pool.query(
         `INSERT INTO business_hours (
           organization_id, day_of_week, start_time, end_time, is_closed,
@@ -594,7 +616,8 @@ async function handleUpsertBusinessHours(c: any) {
 
     return c.json({ data: results });
   } catch (error: any) {
-    return c.json({ error: error.message }, 500);
+    console.error('[Business Hours Error]:', error);
+    return c.json({ error: error.message || 'Erro ao salvar horários de atendimento' }, 500);
   }
 }
 

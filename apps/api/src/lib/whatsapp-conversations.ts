@@ -1,14 +1,39 @@
 import { createPool } from "./db";
 import { isUuid } from "./validators";
+import { WhatsAppService } from "./whatsapp";
+import type { Env } from "../types/env";
 
 type Pool = ReturnType<typeof createPool>;
 
 type JsonRecord = Record<string, unknown>;
 
+export const WHATSAPP_DELETE_FOR_EVERYONE_WINDOW_HOURS = 60;
+
+const WHATSAPP_DELETE_FOR_EVERYONE_WINDOW_MS =
+	WHATSAPP_DELETE_FOR_EVERYONE_WINDOW_HOURS * 60 * 60 * 1000;
+
 function asRecord(value: unknown): JsonRecord {
 	return value && typeof value === "object" && !Array.isArray(value)
 		? { ...(value as JsonRecord) }
 		: {};
+}
+
+export function getDeleteForEveryoneDeadline(createdAt: unknown): Date | null {
+	const createdTime = new Date(String(createdAt)).getTime();
+	if (!Number.isFinite(createdTime)) return null;
+	return new Date(createdTime + WHATSAPP_DELETE_FOR_EVERYONE_WINDOW_MS);
+}
+
+export function canDeleteForEveryone(
+	message: { created_at?: unknown; direction?: string; metadata?: unknown },
+	now = new Date(),
+): boolean {
+	const metadata = asRecord(message.metadata);
+	if (metadata.deleted_at || metadata.deleted_for_everyone_at) return false;
+	if (message.direction !== "outbound") return false;
+
+	const deadline = getDeleteForEveryoneDeadline(message.created_at);
+	return Boolean(deadline && now.getTime() <= deadline.getTime());
 }
 
 /**
@@ -540,6 +565,7 @@ export async function markMessageDeleted(
 	orgId: string,
 	deletedBy: string,
 	scope: "local" | "everyone",
+	env?: Env,
 	reason?: string,
 ) {
 	try {
@@ -551,6 +577,22 @@ export async function markMessageDeleted(
 		);
 
 		if (!existing) return { error: "not_found" as const, row: null };
+
+		if (scope === "everyone") {
+			if (existing.direction !== "outbound") {
+				return { error: "not_outbound" as const, row: null };
+			}
+
+			if (!canDeleteForEveryone(existing)) {
+				return {
+					error: "delete_for_everyone_window_expired" as const,
+					row: null,
+					deleteForEveryoneExpiresAt:
+						getDeleteForEveryoneDeadline(existing.created_at)?.toISOString() ??
+						null,
+				};
+			}
+		}
 
 		const metadata = asRecord(existing.metadata);
 		const now = new Date().toISOString();
@@ -593,16 +635,73 @@ export async function markMessageDeleted(
 			[conversationId, orgId],
 		);
 
+		// Remote deletion if scope is 'everyone' and we have env
+		let providerResult: {
+			attempted: boolean;
+			status: string;
+			reason: string;
+			metaMessageId: string | null;
+			error?: unknown;
+		} = {
+			attempted: false,
+			status: "not_attempted",
+			reason: "Exclusão remota não solicitada (escopo local).",
+			metaMessageId: existing.meta_message_id ?? null,
+		};
+
+		if (scope === "everyone") {
+			if (env && existing.meta_message_id) {
+				try {
+					const whatsapp = new WhatsAppService(env);
+					const res = await whatsapp.deleteMessage(existing.meta_message_id);
+
+					if (res.error) {
+						providerResult = {
+							attempted: true,
+							status: "failed",
+							reason: `Falha na exclusão remota via Meta: ${JSON.stringify(res.error)}`,
+							metaMessageId: existing.meta_message_id,
+							error: res.error,
+						};
+					} else {
+						providerResult = {
+							attempted: true,
+							status: "success",
+							reason: "Exclusão remota concluída com sucesso no WhatsApp.",
+							metaMessageId: existing.meta_message_id,
+						};
+					}
+				} catch (err) {
+					console.error("[whatsapp-conversations] Remote delete error:", err);
+					providerResult = {
+						attempted: true,
+						status: "error",
+						reason: `Erro inesperado ao tentar exclusão remota: ${err instanceof Error ? err.message : String(err)}`,
+						metaMessageId: existing.meta_message_id,
+						error: err,
+					};
+				}
+			} else if (!env) {
+				providerResult = {
+					attempted: false,
+					status: "not_supported",
+					reason: "Credenciais (Env) não fornecidas para exclusão remota.",
+					metaMessageId: existing.meta_message_id ?? null,
+				};
+			} else {
+				providerResult = {
+					attempted: false,
+					status: "not_possible",
+					reason: "Mensagem não possui ID remoto (meta_message_id).",
+					metaMessageId: null,
+				};
+			}
+		}
+
 		return {
 			error: null,
 			row: result.rows[0] ?? null,
-			provider: {
-				attempted: false,
-				status: "not_supported",
-				reason:
-					"A exclusao remota no WhatsApp depende do provedor e ainda nao esta habilitada neste Worker.",
-				metaMessageId: existing.meta_message_id ?? null,
-			},
+			provider: providerResult,
 		};
 	} catch (error) {
 		console.error("[whatsapp-conversations] markMessageDeleted error:", error);

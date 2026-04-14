@@ -78,7 +78,7 @@ function DashboardSkeleton() {
 export default function DashboardScreen() {
 	const colors = useColors();
 	const { user } = useAuthStore();
-	const { light } = useHaptics();
+	const { light, medium } = useHaptics();
 	const [refreshing, setRefreshing] = useState(false);
 
 	const {
@@ -167,14 +167,14 @@ export default function DashboardScreen() {
 
 	const getDifficultyColor = (difficulty: string) => {
 		switch (difficulty?.toLowerCase()) {
-			case 'easy':
-			case 'iniciante':
+			case "easy":
+			case "iniciante":
 				return colors.success;
-			case 'medium':
-			case 'intermediario':
+			case "medium":
+			case "intermediario":
 				return colors.warning;
-			case 'hard':
-			case 'avancado':
+			case "hard":
+			case "avancado":
 				return colors.error;
 			default:
 				return colors.textSecondary;
@@ -226,21 +226,21 @@ export default function DashboardScreen() {
 					<>
 						<View style={styles.statsGrid}>
 							{statCards.map((stat, index) => (
-								<Card 
-									key={index} 
+								<Card
+									key={index}
 									style={[
-										styles.statCard, 
-										{ 
-											backgroundColor: colors.surface + 'B0', // Glass effect
-											borderColor: stat.color + '35', // Standardized low-opacity border
+										styles.statCard,
+										{
+											backgroundColor: colors.surface + "B0", // Glass effect
+											borderColor: stat.color + "35", // Standardized low-opacity border
 											borderWidth: 1.5,
-										}
+										},
 									]}
 								>
 									<View
 										style={[
 											styles.statIcon,
-											{ 
+											{
 												backgroundColor: stat.color + "15", // Softer backdrop
 												shadowColor: stat.color,
 												shadowOffset: { width: 0, height: 4 }, // Integrated glow
@@ -261,7 +261,10 @@ export default function DashboardScreen() {
 											{stat.value}
 										</Text>
 										<Text
-											style={[styles.statLabel, { color: colors.textSecondary }]}
+											style={[
+												styles.statLabel,
+												{ color: colors.textSecondary },
+											]}
 											numberOfLines={1}
 										>
 											{stat.label}
@@ -275,32 +278,52 @@ export default function DashboardScreen() {
 							{/* Hero Feature Card */}
 							<TouchableOpacity
 								style={[
-									styles.heroActionCard, 
-									{ 
-										backgroundColor: colors.primary, 
-										borderColor: 'rgba(255,255,255,0.15)',
+									styles.heroActionCard,
+									{
+										backgroundColor: colors.primary,
+										borderColor: "rgba(255,255,255,0.15)",
 										borderWidth: 1.5,
-									}
+									},
 								]}
-								onPress={() => { medium(); router.push("/biomechanics" as any); }}
+								onPress={() => {
+									medium();
+									router.push("/biomechanics" as any);
+								}}
 								activeOpacity={0.9}
 							>
 								<View style={styles.heroBackgroundPattern} />
 								<View style={styles.heroContent}>
 									<View style={styles.heroIconContainer}>
-										<View style={[styles.iconGlow, { backgroundColor: '#fff', opacity: 0.25 }]} />
+										<View
+											style={[
+												styles.iconGlow,
+												{ backgroundColor: "#fff", opacity: 0.25 },
+											]}
+										/>
 										<Ionicons name="sparkles" size={28} color="#fff" />
 									</View>
 									<View style={{ flex: 1 }}>
-										<View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+										<View
+											style={{
+												flexDirection: "row",
+												alignItems: "center",
+												gap: 6,
+											}}
+										>
 											<Text style={styles.heroTitle}>Lab. Biomecânico</Text>
 											<View style={styles.heroBadge}>
 												<Text style={styles.heroBadgeText}>PRO</Text>
 											</View>
 										</View>
-										<Text style={styles.heroSub}>Análise de movimento com IA Vision</Text>
+										<Text style={styles.heroSub}>
+											Análise de movimento com IA Vision
+										</Text>
 									</View>
-									<Ionicons name="chevron-forward" size={24} color="rgba(255,255,255,0.8)" />
+									<Ionicons
+										name="chevron-forward"
+										size={24}
+										color="rgba(255,255,255,0.8)"
+									/>
 								</View>
 							</TouchableOpacity>
 
@@ -308,81 +331,128 @@ export default function DashboardScreen() {
 							<View style={styles.quickActionsGrid}>
 								<TouchableOpacity
 									style={[
-										styles.gridActionItem, 
-										{ 
-											backgroundColor: colors.surface + 'B0', // Glass Action
-											borderColor: colors.border + '40',
-										}
+										styles.gridActionItem,
+										{
+											backgroundColor: colors.surface + "B0", // Glass Action
+											borderColor: colors.border + "40",
+										},
 									]}
-									onPress={() => { light(); router.push("/exercises" as any); }}
+									onPress={() => {
+										light();
+										router.push("/exercises" as any);
+									}}
 									activeOpacity={0.7}
 								>
-									<View style={[styles.gridIcon, { backgroundColor: colors.success + "12" }]}>
+									<View
+										style={[
+											styles.gridIcon,
+											{ backgroundColor: colors.success + "12" },
+										]}
+									>
 										<Ionicons name="fitness" size={22} color={colors.success} />
 									</View>
 									<View>
-										<Text style={[styles.gridTitle, { color: colors.text }]}>Biblioteca</Text>
-										<Text style={[styles.gridSub, { color: colors.textSecondary }]}>{exercises.length} itens</Text>
+										<Text style={[styles.gridTitle, { color: colors.text }]}>
+											Biblioteca
+										</Text>
+										<Text
+											style={[styles.gridSub, { color: colors.textSecondary }]}
+										>
+											{exercises.length} itens
+										</Text>
 									</View>
 								</TouchableOpacity>
 
 								<TouchableOpacity
 									style={[
-										styles.gridActionItem, 
-										{ 
-											backgroundColor: colors.surface + 'B0', 
-											borderColor: colors.border + '40',
-										}
+										styles.gridActionItem,
+										{
+											backgroundColor: colors.surface + "B0",
+											borderColor: colors.border + "40",
+										},
 									]}
-									onPress={() => { light(); router.push("/protocols" as any); }}
+									onPress={() => {
+										light();
+										router.push("/protocols" as any);
+									}}
 									activeOpacity={0.7}
 								>
-									<View style={[styles.gridIcon, { backgroundColor: "#6366F112" }]}>
+									<View
+										style={[styles.gridIcon, { backgroundColor: "#6366F112" }]}
+									>
 										<Ionicons name="clipboard" size={22} color="#6366F1" />
 									</View>
 									<View>
-										<Text style={[styles.gridTitle, { color: colors.text }]}>Protocolos</Text>
-										<Text style={[styles.gridSub, { color: colors.textSecondary }]}>{protocols.length} ativos</Text>
+										<Text style={[styles.gridTitle, { color: colors.text }]}>
+											Protocolos
+										</Text>
+										<Text
+											style={[styles.gridSub, { color: colors.textSecondary }]}
+										>
+											{protocols.length} ativos
+										</Text>
 									</View>
 								</TouchableOpacity>
 
 								<TouchableOpacity
 									style={[
-										styles.gridActionItem, 
-										{ 
-											backgroundColor: colors.surface + 'B0', 
-											borderColor: colors.border + '40',
-										}
+										styles.gridActionItem,
+										{
+											backgroundColor: colors.surface + "B0",
+											borderColor: colors.border + "40",
+										},
 									]}
-									onPress={() => { light(); router.push("/telemedicine" as any); }}
+									onPress={() => {
+										light();
+										router.push("/telemedicine" as any);
+									}}
 									activeOpacity={0.7}
 								>
-									<View style={[styles.gridIcon, { backgroundColor: "#10B98112" }]}>
+									<View
+										style={[styles.gridIcon, { backgroundColor: "#10B98112" }]}
+									>
 										<Ionicons name="chatbubbles" size={22} color="#10B981" />
 									</View>
 									<View>
-										<Text style={[styles.gridTitle, { color: colors.text }]}>Teleconsulta</Text>
-										<Text style={[styles.gridSub, { color: colors.textSecondary }]}>Chat & Vídeo</Text>
+										<Text style={[styles.gridTitle, { color: colors.text }]}>
+											Teleconsulta
+										</Text>
+										<Text
+											style={[styles.gridSub, { color: colors.textSecondary }]}
+										>
+											Chat & Vídeo
+										</Text>
 									</View>
 								</TouchableOpacity>
 
 								<TouchableOpacity
 									style={[
-										styles.gridActionItem, 
-										{ 
-											backgroundColor: colors.surface + 'B0', 
-											borderColor: colors.border + '40',
-										}
+										styles.gridActionItem,
+										{
+											backgroundColor: colors.surface + "B0",
+											borderColor: colors.border + "40",
+										},
 									]}
-									onPress={() => { light(); router.push("/leaderboard" as any); }}
+									onPress={() => {
+										light();
+										router.push("/leaderboard" as any);
+									}}
 									activeOpacity={0.7}
 								>
-									<View style={[styles.gridIcon, { backgroundColor: "#F59E0B12" }]}>
+									<View
+										style={[styles.gridIcon, { backgroundColor: "#F59E0B12" }]}
+									>
 										<Ionicons name="trophy" size={22} color="#F59E0B" />
 									</View>
 									<View>
-										<Text style={[styles.gridTitle, { color: colors.text }]}>Ranking</Text>
-										<Text style={[styles.gridSub, { color: colors.textSecondary }]}>Sua posição: 1º</Text>
+										<Text style={[styles.gridTitle, { color: colors.text }]}>
+											Ranking
+										</Text>
+										<Text
+											style={[styles.gridSub, { color: colors.textSecondary }]}
+										>
+											Sua posição: 1º
+										</Text>
 									</View>
 								</TouchableOpacity>
 							</View>
@@ -520,7 +590,9 @@ export default function DashboardScreen() {
 
 						{exercises.length === 0 ? (
 							<Card style={styles.emptyCard}>
-								<Text style={[styles.emptyText, { color: colors.textSecondary }]}>
+								<Text
+									style={[styles.emptyText, { color: colors.textSecondary }]}
+								>
 									Carregando biblioteca...
 								</Text>
 							</Card>
@@ -533,68 +605,101 @@ export default function DashboardScreen() {
 								{exercises.slice(0, 6).map((ex) => (
 									<TouchableOpacity
 										key={ex.id}
-										onPress={() =>
-											router.push(`/exercises/${ex.id}`)
-										}
+										onPress={() => router.push(`/exercises/${ex.id}`)}
 										activeOpacity={0.7}
 									>
 										<Card
 											style={
 												[
 													styles.exerciseMiniCard,
-													{ 
-														backgroundColor: colors.surface + 'F0',
-														borderColor: colors.border + '30',
+													{
+														backgroundColor: colors.surface + "F0",
+														borderColor: colors.border + "30",
 														borderWidth: 1,
 													},
 												] as any
 											}
 										>
-												<View style={styles.exerciseCardHeader}>
-													{ex.imageUrl ? (
-														<Image 
-															source={{ uri: ex.imageUrl }} 
-															style={styles.exerciseMiniImage} 
-															resizeMode="cover"
+											<View style={styles.exerciseCardHeader}>
+												{ex.imageUrl ? (
+													<Image
+														source={{ uri: ex.imageUrl }}
+														style={styles.exerciseMiniImage}
+														resizeMode="cover"
+													/>
+												) : (
+													<View
+														style={[
+															styles.exerciseMiniPlaceholder,
+															{ backgroundColor: colors.border + "25" },
+														]}
+													>
+														<Ionicons
+															name="fitness-outline"
+															size={24}
+															color={colors.textMuted}
 														/>
-													) : (
-														<View style={[styles.exerciseMiniPlaceholder, { backgroundColor: colors.border + '25' }]}>
-															<Ionicons name="fitness-outline" size={24} color={colors.textMuted} />
-														</View>
-													)}
-													<View style={styles.premiumOverlay} />
-													<View style={[styles.miniDifficultyBadge, { backgroundColor: 'rgba(0,0,0,0.45)' } as any]}>
-														<View style={[
-															styles.difficultyDot, 
-															{ 
-																backgroundColor: getDifficultyColor(ex.difficulty),
+													</View>
+												)}
+												<View style={styles.premiumOverlay} />
+												<View
+													style={[
+														styles.miniDifficultyBadge,
+														{ backgroundColor: "rgba(0,0,0,0.45)" } as any,
+													]}
+												>
+													<View
+														style={[
+															styles.difficultyDot,
+															{
+																backgroundColor: getDifficultyColor(
+																	ex.difficulty,
+																),
 																shadowColor: getDifficultyColor(ex.difficulty),
 																shadowOpacity: 1,
 																shadowRadius: 4,
-																elevation: 2
-															}
-														]} />
-														<Text style={styles.miniDifficultyText}>
-															{(ex.difficulty === 'easy' || ex.difficulty === 'iniciante') ? 'FÁCIL' : (ex.difficulty === 'medium' || ex.difficulty === 'intermediario') ? 'MÉDIO' : 'DIFÍCIL'}
-														</Text>
-													</View>
+																elevation: 2,
+															},
+														]}
+													/>
+													<Text style={styles.miniDifficultyText}>
+														{ex.difficulty === "easy" ||
+														ex.difficulty === "iniciante"
+															? "FÁCIL"
+															: ex.difficulty === "medium" ||
+																	ex.difficulty === "intermediario"
+																? "MÉDIO"
+																: "DIFÍCIL"}
+													</Text>
 												</View>
+											</View>
 											<View style={styles.miniCardContent}>
 												<Text
-													style={[styles.exerciseMiniName, { color: colors.text }]}
+													style={[
+														styles.exerciseMiniName,
+														{ color: colors.text },
+													]}
 													numberOfLines={1}
 												>
 													{ex.name}
 												</Text>
 												<View style={styles.miniMetadataRow}>
 													<Text
-														style={[styles.exerciseMiniCat, { color: colors.primary }]}
+														style={[
+															styles.exerciseMiniCat,
+															{ color: colors.primary },
+														]}
 														numberOfLines={1}
 													>
 														{ex.category}
 													</Text>
 													{ex.bodyParts && ex.bodyParts.length > 0 && (
-														<Text style={[styles.miniBodyPart, { color: colors.textSecondary }]}>
+														<Text
+															style={[
+																styles.miniBodyPart,
+																{ color: colors.textSecondary },
+															]}
+														>
 															• {ex.bodyParts[0]}
 														</Text>
 													)}
@@ -628,7 +733,9 @@ export default function DashboardScreen() {
 
 						{protocols.length === 0 ? (
 							<Card style={styles.emptyCard}>
-								<Text style={[styles.emptyText, { color: colors.textSecondary }]}>
+								<Text
+									style={[styles.emptyText, { color: colors.textSecondary }]}
+								>
 									Nenhum protocolo criado ainda.
 								</Text>
 							</Card>
@@ -647,26 +754,57 @@ export default function DashboardScreen() {
 										<Card
 											style={[
 												styles.protocolMiniCard,
-												{ 
-													backgroundColor: colors.surface + 'A5', // Subtly more transparent
-													borderColor: colors.border + '25',
+												{
+													backgroundColor: colors.surface + "A5", // Subtly more transparent
+													borderColor: colors.border + "25",
 													borderWidth: 1.2,
-												}
+												},
 											]}
 										>
-											<View style={[styles.protocolIconContainer, { backgroundColor: colors.primary + '12' }]}>
-												<Ionicons name="document-text-outline" size={18} color={colors.primary} />
+											<View
+												style={[
+													styles.protocolIconContainer,
+													{ backgroundColor: colors.primary + "12" },
+												]}
+											>
+												<Ionicons
+													name="document-text-outline"
+													size={18}
+													color={colors.primary}
+												/>
 											</View>
-											<Text style={[styles.protocolName, { color: colors.text }]} numberOfLines={1}>
+											<Text
+												style={[styles.protocolName, { color: colors.text }]}
+												numberOfLines={1}
+											>
 												{p.name}
 											</Text>
 											<View style={styles.protocolMeta}>
-												<Text style={[styles.protocolCategory, { color: colors.primary }]} numberOfLines={1}>
+												<Text
+													style={[
+														styles.protocolCategory,
+														{ color: colors.primary },
+													]}
+													numberOfLines={1}
+												>
 													{p.category}
 												</Text>
-												<Text style={[styles.protocolDot, { color: colors.textMuted }]}>•</Text>
-												<Text style={[styles.protocolCondition, { color: colors.textSecondary }]} numberOfLines={1}>
-													{p.condition || 'Geral'}
+												<Text
+													style={[
+														styles.protocolDot,
+														{ color: colors.textMuted },
+													]}
+												>
+													•
+												</Text>
+												<Text
+													style={[
+														styles.protocolCondition,
+														{ color: colors.textSecondary },
+													]}
+													numberOfLines={1}
+												>
+													{p.condition || "Geral"}
 												</Text>
 											</View>
 										</Card>
@@ -826,8 +964,8 @@ const styles = StyleSheet.create({
 		paddingVertical: 16,
 		borderRadius: 20,
 		borderWidth: 1,
-		flexDirection: 'row',
-		alignItems: 'center',
+		flexDirection: "row",
+		alignItems: "center",
 		gap: 12,
 		shadowColor: "#000",
 		shadowOffset: { width: 0, height: 4 },
@@ -847,7 +985,7 @@ const styles = StyleSheet.create({
 		flex: 1,
 	},
 	statValue: { fontSize: 20, fontWeight: "900", letterSpacing: -0.5 },
-	statLabel: { fontSize: 11, marginTop: 1, fontWeight: '600', opacity: 0.7 },
+	statLabel: { fontSize: 11, marginTop: 1, fontWeight: "600", opacity: 0.7 },
 	sectionHeader: {
 		flexDirection: "row",
 		justifyContent: "space-between",
@@ -1034,7 +1172,7 @@ const styles = StyleSheet.create({
 		elevation: 6,
 		marginRight: 4,
 		borderWidth: 1,
-		borderColor: 'rgba(0,0,0,0.05)',
+		borderColor: "rgba(0,0,0,0.05)",
 	},
 	exerciseMiniImage: {
 		width: "100%",
@@ -1057,13 +1195,13 @@ const styles = StyleSheet.create({
 		position: "absolute",
 		top: 10,
 		right: 10,
-		flexDirection: 'row',
-		alignItems: 'center',
+		flexDirection: "row",
+		alignItems: "center",
 		gap: 4,
 		paddingHorizontal: 8,
 		paddingVertical: 4,
 		borderRadius: 10,
-		backgroundColor: 'rgba(0,0,0,0.5)',
+		backgroundColor: "rgba(0,0,0,0.5)",
 		zIndex: 2,
 	},
 	difficultyDot: {
@@ -1072,9 +1210,9 @@ const styles = StyleSheet.create({
 		borderRadius: 3,
 	},
 	miniDifficultyText: {
-		color: '#FFF',
+		color: "#FFF",
 		fontSize: 10,
-		fontWeight: '900',
+		fontWeight: "900",
 	},
 	miniCardContent: {
 		padding: 12,
