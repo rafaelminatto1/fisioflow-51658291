@@ -81,7 +81,7 @@ import {
 	PRIORIDADE_COLORS,
 	STATUS_COLORS,
 } from "@/types/tarefas";
-import { useUpdateTarefa, useTarefas } from "@/hooks/useTarefas";
+import { useUpdateTarefa, useCreateTarefa, useTarefas } from "@/hooks/useTarefas";
 import { toast } from "sonner";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { useBoardLabels } from "@/contexts/BoardLabelsContext";
@@ -173,8 +173,9 @@ export function TaskDetailModal({
 }: TaskDetailModalProps) {
 	const isMobile = useIsMobile();
 	const updateTarefa = useUpdateTarefa();
+	const createTarefa = useCreateTarefa();
 
-	const { data: _allTarefas } = useTarefas();
+	const { data: allTarefas } = useTarefas();
 
 	// Board labels context (provided by KanbanFull or empty outside board context)
 	const { labels: boardLabels, labelsMap } = useBoardLabels();
@@ -209,6 +210,7 @@ export function TaskDetailModal({
 	const [selectedLabelIds, setSelectedLabelIds] = useState<string[]>([]);
 	const [saveTemplateOpen, setSaveTemplateOpen] = useState(false);
 	const [saveTemplateName, setSaveTemplateName] = useState("");
+	const [depSearch, setDepSearch] = useState("");
 
 	// Stable ref to always have the latest onSubmit without stale closures
 	const onSubmitRef = useRef<(data: TarefaDetailFormData) => Promise<void>>(
@@ -913,6 +915,77 @@ export function TaskDetailModal({
 												</div>
 											</div>
 										</div>
+											{/* Dependencies section */}
+											<div>
+												<Label className="font-bold text-xs text-slate-400 uppercase">
+													Dependências (bloqueadores)
+												</Label>
+												<p className="text-[11px] text-muted-foreground mt-0.5 mb-2">
+													Tarefas que precisam ser concluídas antes desta.
+												</p>
+												{form.watch("dependencies").length > 0 && (
+													<div className="flex flex-col gap-1.5 mb-2">
+														{form.watch("dependencies").map((depId) => {
+															const dep = allTarefas?.find((t) => t.id === depId);
+															return (
+																<div key={depId} className="flex items-center justify-between gap-2 rounded-xl border border-border/60 bg-slate-50/60 px-3 py-2 text-sm">
+																	<span className="truncate font-medium">{dep?.titulo ?? depId}</span>
+																	<button
+																		type="button"
+																		onClick={() => {
+																			const current = form.getValues("dependencies");
+																			form.setValue("dependencies", current.filter((id) => id !== depId));
+																			handleAutoSave();
+																		}}
+																		className="shrink-0 text-slate-400 hover:text-destructive"
+																	>
+																		<X className="h-3.5 w-3.5" />
+																	</button>
+																</div>
+															);
+														})}
+													</div>
+												)}
+												<div className="relative">
+													<Input
+														placeholder="Buscar tarefa para adicionar como dependência..."
+														value={depSearch}
+														onChange={(e) => setDepSearch(e.target.value)}
+														className="h-9 rounded-xl text-sm"
+													/>
+													{depSearch.length >= 2 && (
+														<div className="absolute z-10 mt-1 w-full rounded-xl border border-border/60 bg-popover shadow-md overflow-hidden">
+															{(allTarefas ?? []).filter((t) =>
+																t.id !== tarefa?.id &&
+																!form.getValues("dependencies").includes(t.id) &&
+																t.titulo.toLowerCase().includes(depSearch.toLowerCase())
+															).slice(0, 6).map((t) => (
+																<button
+																	key={t.id}
+																	type="button"
+																	className="flex w-full items-center gap-2 px-3 py-2 text-left text-sm hover:bg-accent/60 transition-colors"
+																	onClick={() => {
+																		const current = form.getValues("dependencies");
+																		form.setValue("dependencies", [...current, t.id]);
+																		setDepSearch("");
+																		handleAutoSave();
+																	}}
+																>
+																	<span className="truncate">{t.titulo}</span>
+																	<Badge variant="outline" className="shrink-0 text-[10px] px-1.5">{t.status}</Badge>
+																</button>
+															))}
+															{(allTarefas ?? []).filter((t) =>
+																t.id !== tarefa?.id &&
+																!form.getValues("dependencies").includes(t.id) &&
+																t.titulo.toLowerCase().includes(depSearch.toLowerCase())
+															).length === 0 && (
+																<p className="px-3 py-2 text-sm text-muted-foreground">Nenhuma tarefa encontrada.</p>
+															)}
+														</div>
+													)}
+												</div>
+											</div>
 									</TabsContent>
 
 									{/* Checklists Tab */}
@@ -1164,6 +1237,29 @@ export function TaskDetailModal({
 																	)}
 																	placeholder="O que precisa ser feito?"
 																/>
+																<Button
+																	type="button"
+																	variant="ghost"
+																	size="icon"
+																	title="Converter em tarefa"
+																	className="h-7 w-7 opacity-0 group-hover:opacity-100 transition-opacity text-slate-400 hover:text-blue-600"
+																	onClick={async () => {
+																		if (!item.text.trim()) return;
+																		await createTarefa.mutateAsync({
+																			titulo: item.text.trim(),
+																			status: "A_FAZER",
+																			prioridade: tarefa?.prioridade ?? "MEDIA",
+																			tipo: "TAREFA",
+																			board_id: tarefa?.board_id ?? undefined,
+																			column_id: tarefa?.column_id ?? undefined,
+																			parent_id: tarefa?.id,
+																		});
+																		removeChecklistItem(checklistIndex, itemIndex);
+																		handleAutoSave();
+																	}}
+																>
+																	<ExternalLink className="h-3.5 w-3.5" />
+																</Button>
 																<Button
 																	type="button"
 																	variant="ghost"

@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -21,6 +21,7 @@ import {
 	SelectValue,
 } from "@/components/ui/select";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Switch } from "@/components/ui/switch";
 import {
 	CustomModal,
 	CustomModalHeader,
@@ -36,6 +37,7 @@ import {
 	Settings,
 	Loader2,
 	BadgeCheck,
+	Save,
 } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import { format } from "date-fns";
@@ -93,10 +95,21 @@ export function RecibosContent() {
 		is_first_payment: false,
 		package_sessions: "10",
 		is_package: false,
+		data_emissao: format(new Date(), "yyyy-MM-dd'T'HH:mm"),
+		omit_date: false,
 	});
 
 	const { data: recibos = [], isLoading } = useRecibos();
 	const createRecibo = useCreateRecibo();
+	const { currentOrganization, updateOrganization, isUpdating } = useOrganizations();
+
+	const [receiptConfig, setReceiptConfig] = useState({
+		custom_issuer_name: "",
+		custom_professional_name: "",
+		disclaimer_text: "Este recibo serve como comprovante de pagamento para todos os fins de direito. Documento emitido eletronicamente conforme Lei nº 14.063/2020 (Brasil).",
+		show_disclaimer: true,
+		assinado_padrao: true,
+	});
 
 	const handleOCRExtracted = (data: {
 		valor: number;
@@ -139,14 +152,35 @@ export function RecibosContent() {
 
 	// Buscar configurações da clínica
 	const { data: clinicaConfig } = useQuery({
-		queryKey: ["clinica-config", user?.uid],
+		queryKey: ["clinica-config", user?.uid, currentOrganization?.id],
 		queryFn: async () => {
 			if (!user) return null;
 			const res = await profileApi.me();
-			return { profile: res?.data ?? null, org: orgData };
+			return { profile: res?.data ?? null, org: currentOrganization };
 		},
-		enabled: !!user,
+		enabled: !!user && !!currentOrganization,
 	});
+
+	// Sincronizar quando os dados da clínica mudarem (opcional, para garantir que as iniciais apareçam)
+	useEffect(() => {
+		if (clinicaConfig?.org?.settings?.receipt_settings) {
+			const settings = (clinicaConfig.org.settings.receipt_settings as any);
+			setReceiptConfig({
+				custom_issuer_name: settings.custom_issuer_name || currentOrganization?.name || "",
+				custom_professional_name: settings.custom_professional_name || clinicaConfig.profile?.full_name || "",
+				disclaimer_text: settings.disclaimer_text || "Este recibo serve como comprovante de pagamento para todos os fins de direito. Documento emitido eletronicamente conforme Lei nº 14.063/2020 (Brasil).",
+				show_disclaimer: settings.show_disclaimer !== false,
+				assinado_padrao: settings.assinado_padrao !== false,
+			});
+		} else if (clinicaConfig) {
+			// Fallback se não houver settings
+			setReceiptConfig(prev => ({
+				...prev,
+				custom_issuer_name: prev.custom_issuer_name || currentOrganization?.name || "",
+				custom_professional_name: prev.custom_professional_name || clinicaConfig.profile?.full_name || "",
+			}));
+		}
+	}, [clinicaConfig, currentOrganization]);
 
 	// Buscar pacientes para seleção
 	const { data: pacientes = [] } = useQuery({
@@ -160,6 +194,24 @@ export function RecibosContent() {
 			}));
 		},
 	});
+
+	const handleSaveConfig = async () => {
+		if (!currentOrganization?.id) return;
+		
+		try {
+			await updateOrganization({
+				id: currentOrganization.id,
+				settings: {
+					...currentOrganization.settings,
+					receipt_settings: receiptConfig
+				}
+			});
+			toast.success("Configurações salvas com sucesso!");
+		} catch (error) {
+			console.error("Failed to save receipt config:", error);
+			toast.error("Erro ao salvar configurações.");
+		}
+	};
 
 	const filteredRecibos = recibos.filter(
 		(r) =>
@@ -185,15 +237,17 @@ export function RecibosContent() {
 			}
 		}
 
+		const dataEmissao = formData.omit_date ? null : formData.data_emissao;
+
 		const created = await createRecibo.mutateAsync({
 			patient_id: formData.patient_id || null,
 			valor: valorNumerico,
 			valor_extenso: valorPorExtenso(valorNumerico),
 			referente: formData.referente,
-			data_emissao: new Date().toISOString(),
-			emitido_por: clinicaConfig?.profile?.full_name || "Sistema",
+			data_emissao: dataEmissao || new Date().toISOString(),
+			emitido_por: receiptConfig.custom_professional_name || clinicaConfig?.profile?.full_name || "Sistema",
 			cpf_cnpj_emitente: clinicaConfig?.profile?.cpf_cnpj,
-			assinado: true,
+			assinado: receiptConfig.assinado_padrao,
 		});
 
 		// Salvar mapeamento de cartão para automação futura
@@ -217,13 +271,16 @@ export function RecibosContent() {
 			valor: created.valor,
 			valor_extenso: created.valor_extenso ?? valorPorExtenso(valorNumerico),
 			referente: created.referente ?? formData.referente,
-			dataEmissao: created.data_emissao,
+			dataEmissao: formData.omit_date ? "" : (created.data_emissao || formData.data_emissao),
 			emitente: {
 				nome: formData.usar_dados_clinica
-					? clinicaConfig?.org?.name ||
+					? receiptConfig.custom_issuer_name ||
+						clinicaConfig?.org?.name ||
 						clinicaConfig?.profile?.full_name ||
 						"Profissional de Saúde"
-					: clinicaConfig?.profile?.full_name || "Profissional",
+					: receiptConfig.custom_professional_name ||
+						clinicaConfig?.profile?.full_name ||
+						"Profissional",
 				cpfCnpj: created.cpf_cnpj_emitente ?? clinicaConfig?.profile?.cpf_cnpj,
 				telefone: clinicaConfig?.profile?.phone,
 				email: clinicaConfig?.profile?.email,
@@ -237,6 +294,8 @@ export function RecibosContent() {
 				: undefined,
 			assinado: created.assinado,
 			logoUrl: (clinicaConfig?.org as OrganizationData | undefined)?.logo_url,
+			disclaimer: receiptConfig.disclaimer_text,
+			showDisclaimer: receiptConfig.show_disclaimer,
 		};
 
 		// Mostrar preview
@@ -252,6 +311,8 @@ export function RecibosContent() {
 			is_first_payment: false,
 			package_sessions: "10",
 			is_package: false,
+			data_emissao: format(new Date(), "yyyy-MM-dd'T'HH:mm"),
+			omit_date: false,
 		});
 	};
 
@@ -567,18 +628,27 @@ export function RecibosContent() {
 
 								<div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
 									<div className="space-y-2">
-										<Label className="text-[10px] font-black uppercase text-slate-400 tracking-widest">
-											CPF/CNPJ do Pagador
-										</Label>
+										<div className="flex items-center justify-between">
+											<Label className="text-[10px] font-black uppercase text-slate-400 tracking-widest">
+												Data/Hora de Emissão
+											</Label>
+											<div className="flex items-center gap-1.5">
+												<Switch 
+													id="omit-date"
+													checked={formData.omit_date}
+													onCheckedChange={(v) => setFormData({ ...formData, omit_date: v })}
+													className="scale-75"
+												/>
+												<Label htmlFor="omit-date" className="text-[9px] font-bold text-slate-400 uppercase cursor-pointer">
+													Omitir
+												</Label>
+											</div>
+										</div>
 										<Input
-											placeholder="000.000.000-00"
-											value={formData.cpf_cnpj_pagador}
-											onChange={(e) =>
-												setFormData({
-													...formData,
-													cpf_cnpj_pagador: e.target.value,
-												})
-											}
+											type="datetime-local"
+											disabled={formData.omit_date}
+											value={formData.data_emissao}
+											onChange={(e) => setFormData({ ...formData, data_emissao: e.target.value })}
 											className="rounded-xl border-slate-200 dark:border-slate-800 h-11"
 										/>
 									</div>
@@ -618,6 +688,23 @@ export function RecibosContent() {
 										}
 										required
 										className="rounded-xl border-slate-200 dark:border-slate-800 min-h-[100px] resize-none bg-slate-50/50 dark:bg-slate-800/20"
+									/>
+								</div>
+
+								<div className="space-y-2">
+									<Label className="text-[10px] font-black uppercase text-slate-400 tracking-widest">
+										CPF/CNPJ do Pagador (Opcional se selecionado paciente)
+									</Label>
+									<Input
+										placeholder="000.000.000-00"
+										value={formData.cpf_cnpj_pagador}
+										onChange={(e) =>
+											setFormData({
+												...formData,
+												cpf_cnpj_pagador: e.target.value,
+											})
+										}
+										className="rounded-xl border-slate-200 dark:border-slate-800 h-11"
 									/>
 								</div>
 
@@ -675,32 +762,92 @@ export function RecibosContent() {
 				</TabsContent>
 
 				<TabsContent value="config" className="mt-4">
-					{/* ... Content stays same but within Hub ... */}
 					<Card className="max-w-2xl mx-auto rounded-2xl border-none shadow-sm bg-white dark:bg-slate-900 overflow-hidden">
 						<CardHeader className="bg-slate-50/50 dark:bg-slate-800/50 border-b border-slate-100 dark:border-slate-800/50">
-							<CardTitle className="text-xl font-black tracking-tighter flex items-center gap-2">
-								<Settings className="h-5 w-5 text-primary" />
-								Configurações do Emitente
-							</CardTitle>
+							<div className="flex items-center justify-between w-full">
+								<CardTitle className="text-xl font-black tracking-tighter flex items-center gap-2">
+									<Settings className="h-5 w-5 text-primary" />
+									Configurações do Recibo
+								</CardTitle>
+								<Button 
+									onClick={handleSaveConfig} 
+									disabled={isUpdating}
+									size="sm"
+									className="rounded-xl shadow-lg gap-2"
+								>
+									{isUpdating ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}
+									Salvar
+								</Button>
+							</div>
 						</CardHeader>
 						<CardContent className="p-8 space-y-8">
-							<div className="grid grid-cols-1 sm:grid-cols-2 gap-8">
-								<div className="space-y-1">
+							<div className="grid grid-cols-1 gap-6">
+								<div className="space-y-2">
 									<Label className="text-[10px] font-black uppercase text-slate-400 tracking-widest">
-										Clínica / Empresa
+										Nome da Clínica / Empresa (No Recibo)
 									</Label>
-									<p className="font-bold text-slate-700 dark:text-slate-300">
-										{clinicaConfig?.org?.name || "Não configurado"}
-									</p>
+									<Input 
+										value={receiptConfig.custom_issuer_name}
+										onChange={(e) => setReceiptConfig({ ...receiptConfig, custom_issuer_name: e.target.value })}
+										placeholder="Nome que aparecerá como emitente"
+										className="rounded-xl border-slate-200 dark:border-slate-800 h-11"
+									/>
+									<p className="text-[10px] text-muted-foreground">Padrão: {currentOrganization?.name}</p>
 								</div>
-								<div className="space-y-1">
+								
+								<div className="space-y-2">
 									<Label className="text-[10px] font-black uppercase text-slate-400 tracking-widest">
-										Profissional Responsável
+										Profissional Responsável (Assinatura)
 									</Label>
-									<p className="font-bold text-slate-700 dark:text-slate-300">
-										{clinicaConfig?.profile?.full_name || "Não configurado"}
-									</p>
+									<Input 
+										value={receiptConfig.custom_professional_name}
+										onChange={(e) => setReceiptConfig({ ...receiptConfig, custom_professional_name: e.target.value })}
+										placeholder="Nome do profissional que assina o recibo"
+										className="rounded-xl border-slate-200 dark:border-slate-800 h-11"
+									/>
+									<p className="text-[10px] text-muted-foreground">Padrão: {clinicaConfig?.profile?.full_name}</p>
 								</div>
+
+								<div className="space-y-4 pt-4 border-t border-slate-100 dark:border-slate-800">
+									<div className="flex items-center justify-between">
+										<div className="space-y-0.5">
+											<Label className="text-sm font-bold">Assinatura Digital</Label>
+											<p className="text-xs text-muted-foreground">Incluir selo de documento assinado digitalmente</p>
+										</div>
+										<Switch 
+											checked={receiptConfig.assinado_padrao}
+											onCheckedChange={(v) => setReceiptConfig({ ...receiptConfig, assinado_padrao: v })}
+										/>
+									</div>
+
+									<div className="flex items-center justify-between">
+										<div className="space-y-0.5">
+											<Label className="text-sm font-bold">Exibir Disclaimer Legal</Label>
+											<p className="text-xs text-muted-foreground">Mostrar o texto informativo no rodapé do recibo</p>
+										</div>
+										<Switch 
+											checked={receiptConfig.show_disclaimer}
+											onCheckedChange={(v) => setReceiptConfig({ ...receiptConfig, show_disclaimer: v })}
+										/>
+									</div>
+								</div>
+
+								{receiptConfig.show_disclaimer && (
+									<div className="space-y-2 animate-in fade-in slide-in-from-top-2">
+										<Label className="text-[10px] font-black uppercase text-slate-400 tracking-widest">
+											Texto do Disclaimer
+										</Label>
+										<Textarea 
+											value={receiptConfig.disclaimer_text}
+											onChange={(e) => setReceiptConfig({ ...receiptConfig, disclaimer_text: e.target.value })}
+											rows={3}
+											className="rounded-xl border-slate-200 dark:border-slate-800 resize-none bg-slate-50/50"
+										/>
+										<p className="text-[10px] text-muted-foreground">
+											A Lei nº 14.063/2020 dispõe sobre o uso de assinaturas eletrônicas em interações com entes públicos e em questões de saúde.
+										</p>
+									</div>
+								)}
 							</div>
 						</CardContent>
 					</Card>
