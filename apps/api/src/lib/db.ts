@@ -102,7 +102,7 @@ function wrapSqlWithRls(
 		return (sql as any)
 			.transaction([
 				sql`SELECT set_config('app.org_id', ${organizationId}::text, true)`,
-				sql(text, params),
+				sql.query(text, params, options),
 			])
 			.then((results: any[]) => results[1]);
 	};
@@ -128,7 +128,7 @@ function wrapSqlWithRlsFull(
 		return (sql as any)
 			.transaction([
 				sql`SELECT set_config('app.org_id', ${organizationId}::text, true)`,
-				sql(text, params),
+				sql.query(text, params, options),
 			])
 			.then((results: any[]) => results[1]);
 	};
@@ -179,8 +179,9 @@ export function createPool(
 		return wrappedSql as DbPool;
 	}
 
+	const queryFn = (sql.query || ((text: string, params?: any[]) => sql(text, params))) as any;
 	const wrappedQuery = wrapQueryWithTimeout(
-		((text: string, params?: any[]) => sql(text, params)) as any,
+		queryFn.bind(sql),
 		defaultTimeout,
 	);
 	const wrappedSql = Object.assign(sql, { query: wrappedQuery });
