@@ -175,6 +175,10 @@ export interface Tarefa {
 	// Time Tracking
 	time_tracking?: TarefaTimeTracking;
 
+	// Entity linking (patient / appointment / session / goal / exercise_plan)
+	linked_entity_type?: string;
+	linked_entity_id?: string;
+
 	// Custom Fields
 	custom_fields?: Record<string, unknown>;
 

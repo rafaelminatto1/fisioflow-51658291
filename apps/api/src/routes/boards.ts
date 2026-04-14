@@ -707,4 +707,131 @@ app.delete('/automations/:automationId', requireAuth, async (c) => {
   }
 });
 
+// ─── Board Templates ──────────────────────────────────────────────────────────
+
+// POST /api/boards/templates/financial — create a pre-configured financial management board
+app.post('/templates/financial', requireAuth, async (c) => {
+  const user = c.get('user');
+  const db = await createPool(c.env);
+
+  const boardRes = await db.query(
+    `INSERT INTO boards (organization_id, created_by, name, description, color, icon)
+     VALUES ($1, $2, 'Gestão Financeira', 'Board para controle de cobranças, inadimplência e fluxo de caixa', '#22C55E', 'banknotes')
+     RETURNING *`,
+    [user.organizationId, user.uid],
+  );
+  const board = boardRes.rows[0] as Record<string, unknown>;
+
+  const columns = [
+    { name: 'A Cobrar', color: '#EAB308', order_index: 0 },
+    { name: 'Enviado', color: '#3B82F6', order_index: 1 },
+    { name: 'Em Atraso', color: '#EF4444', order_index: 2, wip_limit: 10 },
+    { name: 'Negociando', color: '#F97316', order_index: 3 },
+    { name: 'Pago', color: '#22C55E', order_index: 4 },
+    { name: 'Cancelado', color: '#6B7280', order_index: 5 },
+  ];
+
+  await Promise.all(
+    columns.map((col) =>
+      db.query(
+        `INSERT INTO board_columns (board_id, organization_id, name, color, order_index, wip_limit)
+         VALUES ($1, $2, $3, $4, $5, $6)`,
+        [board.id, user.organizationId, col.name, col.color, col.order_index, col.wip_limit ?? null],
+      ),
+    ),
+  );
+
+  // Seed label presets
+  const labels = [
+    { name: 'Particular', color: '#3B82F6' },
+    { name: 'Convênio', color: '#8B5CF6' },
+    { name: 'PIX', color: '#22C55E' },
+    { name: 'Boleto', color: '#EAB308' },
+    { name: 'Cartão', color: '#EC4899' },
+  ];
+  await Promise.all(
+    labels.map((l, i) =>
+      db.query(
+        `INSERT INTO board_labels (board_id, organization_id, name, color, order_index)
+         VALUES ($1, $2, $3, $4, $5)`,
+        [board.id, user.organizationId, l.name, l.color, i],
+      ),
+    ),
+  );
+
+  return c.json({ data: board }, 201);
+});
+
+// POST /api/boards/templates/goals — create a pre-configured patient goals tracking board
+app.post('/templates/goals', requireAuth, async (c) => {
+  const user = c.get('user');
+  const db = await createPool(c.env);
+
+  const boardRes = await db.query(
+    `INSERT INTO boards (organization_id, created_by, name, description, color, icon)
+     VALUES ($1, $2, 'Objetivos dos Pacientes', 'Acompanhamento de metas funcionais e reabilitação', '#8B5CF6', 'target')
+     RETURNING *`,
+    [user.organizationId, user.uid],
+  );
+  const board = boardRes.rows[0] as Record<string, unknown>;
+
+  const columns = [
+    { name: 'Definindo Metas', color: '#94A3B8', order_index: 0 },
+    { name: 'Em Tratamento', color: '#3B82F6', order_index: 1 },
+    { name: 'Progresso Parcial', color: '#F97316', order_index: 2 },
+    { name: 'Meta Atingida', color: '#22C55E', order_index: 3 },
+    { name: 'Manutenção', color: '#8B5CF6', order_index: 4 },
+    { name: 'Encerrado', color: '#6B7280', order_index: 5 },
+  ];
+
+  await Promise.all(
+    columns.map((col) =>
+      db.query(
+        `INSERT INTO board_columns (board_id, organization_id, name, color, order_index, wip_limit)
+         VALUES ($1, $2, $3, $4, $5, $6)`,
+        [board.id, user.organizationId, col.name, col.color, col.order_index, null],
+      ),
+    ),
+  );
+
+  // Seed label presets for body regions/types
+  const labels = [
+    { name: 'Coluna', color: '#EF4444' },
+    { name: 'MMII', color: '#3B82F6' },
+    { name: 'MMSS', color: '#22C55E' },
+    { name: 'Neurológico', color: '#8B5CF6' },
+    { name: 'Pós-cirúrgico', color: '#F97316' },
+    { name: 'Pediátrico', color: '#EC4899' },
+  ];
+  await Promise.all(
+    labels.map((l, i) =>
+      db.query(
+        `INSERT INTO board_labels (board_id, organization_id, name, color, order_index)
+         VALUES ($1, $2, $3, $4, $5)`,
+        [board.id, user.organizationId, l.name, l.color, i],
+      ),
+    ),
+  );
+
+  // Seed checklist template for patient goal planning
+  await db.query(
+    `INSERT INTO board_checklist_templates (board_id, organization_id, name, description, items, category, created_by)
+     VALUES ($1, $2, 'Planejamento de Meta', 'Checklist padrão para definição de objetivos funcionais', $3, 'fisioterapia', $4)`,
+    [
+      board.id,
+      user.organizationId,
+      JSON.stringify([
+        { text: 'Avaliar linha de base funcional (escala adequada)' },
+        { text: 'Definir meta SMART com o paciente' },
+        { text: 'Alinhar expectativas com familiar/cuidador' },
+        { text: 'Estabelecer prazo estimado de reavaliação' },
+        { text: 'Documentar na evolução SOAP' },
+      ]),
+      user.uid,
+    ],
+  );
+
+  return c.json({ data: board }, 201);
+});
+
 export { app as boardsRoutes };

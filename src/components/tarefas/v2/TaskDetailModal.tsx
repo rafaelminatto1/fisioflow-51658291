@@ -28,6 +28,11 @@ import {
 	Loader2,
 	Save,
 	ShieldAlert,
+	UserCircle,
+	Stethoscope,
+	ClipboardList,
+	Target,
+	Dumbbell,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
@@ -986,7 +991,26 @@ export function TaskDetailModal({
 													)}
 												</div>
 											</div>
-									</TabsContent>
+
+									{/* Entity link */}
+									{(tarefa.linked_entity_type || tarefa.linked_entity_id) && (
+										<div>
+											<Label className="font-bold text-xs text-slate-400 uppercase">
+												Entidade Vinculada
+											</Label>
+											<div className="mt-1.5 flex items-center gap-2 rounded-xl border border-border/60 bg-slate-50/60 px-3 py-2">
+												{tarefa.linked_entity_type === 'patient' && <UserCircle className="h-4 w-4 text-blue-500 shrink-0" />}
+												{tarefa.linked_entity_type === 'appointment' && <CalendarIcon className="h-4 w-4 text-purple-500 shrink-0" />}
+												{tarefa.linked_entity_type === 'session' && <Stethoscope className="h-4 w-4 text-emerald-500 shrink-0" />}
+												{tarefa.linked_entity_type === 'goal' && <Target className="h-4 w-4 text-orange-500 shrink-0" />}
+												{tarefa.linked_entity_type === 'exercise_plan' && <Dumbbell className="h-4 w-4 text-pink-500 shrink-0" />}
+												{!['patient','appointment','session','goal','exercise_plan'].includes(tarefa.linked_entity_type ?? '') && <ClipboardList className="h-4 w-4 text-slate-400 shrink-0" />}
+												<span className="text-sm font-medium capitalize">{tarefa.linked_entity_type?.replace(/_/g, ' ') ?? 'Entidade'}</span>
+												<span className="text-xs text-muted-foreground font-mono truncate">{tarefa.linked_entity_id}</span>
+											</div>
+										</div>
+									)}
+								</TabsContent>
 
 									{/* Checklists Tab */}
 									<TabsContent value="checklists" className="mt-0 space-y-6">

@@ -18,7 +18,10 @@
 .calendar-day-header {
 	background-color: #ffffff;
 	border-bottom: 1px solid #e2e8f0;
-	transition: color 200ms, background-color 200ms, border-color 200ms;
+	transition:
+		color 200ms,
+		background-color 200ms,
+		border-color 200ms;
 }
 
 .calendar-day-header.today {
@@ -56,6 +59,16 @@
 
 .sx__time-row-line {
 	border-bottom: 1px solid #f1f5f9 !important;
+}
+
+/* Mostrar apenas linhas de 30 em 30 min */
+.ec-time-grid .ec-line {
+	display: none;
+}
+
+/* Mostrar linhas pares (a cada 30 min = 2 slots de 15 min) */
+.ec-time-grid .ec-line:nth-child(2n) {
+	display: block;
 }
 
 .sx__time-grid-hour-text {

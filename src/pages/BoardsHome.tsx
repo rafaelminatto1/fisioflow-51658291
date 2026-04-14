@@ -2,6 +2,7 @@ import { useMemo, useState } from "react";
 import { formatDistanceToNow } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import {
+	Banknote,
 	Clock3,
 	LayoutGrid,
 	Plus,
@@ -9,6 +10,7 @@ import {
 	Search,
 	Sparkles,
 	Star,
+	Target,
 	TrendingUp,
 } from "lucide-react";
 import { BoardCard } from "@/components/boards/BoardCard";
@@ -36,6 +38,9 @@ import {
 	useDeleteBoard,
 	useUpdateBoard,
 } from "@/hooks/useBoards";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { boardsApi } from "@/api/v2";
+import { toast } from "sonner";
 
 type BoardCollection = "all" | "favorites" | "recent";
 
@@ -48,6 +53,16 @@ export default function BoardsHome() {
 	const createBoard = useCreateBoard();
 	const updateBoard = useUpdateBoard();
 	const deleteBoard = useDeleteBoard();
+	const queryClient = useQueryClient();
+
+	const createFromTemplate = useMutation({
+		mutationFn: (template: 'financial' | 'goals') => boardsApi.createFromTemplate(template),
+		onSuccess: () => {
+			toast.success("Board criado com sucesso a partir do template!");
+			queryClient.invalidateQueries({ queryKey: ["boards"] });
+		},
+		onError: () => toast.error("Erro ao criar board a partir do template"),
+	});
 
 	const allBoards = boards ?? [];
 	const starredBoards = allBoards.filter((board) => board.is_starred);
@@ -346,9 +361,47 @@ export default function BoardsHome() {
 									))}
 								</CardContent>
 							</Card>
-						</aside>
 
-						<div className="space-y-6">
+						<Card className="rounded-[28px] border-border/60 shadow-sm">
+							<CardHeader className="pb-3">
+								<CardTitle className="text-sm font-semibold">
+									Templates prontos
+								</CardTitle>
+							</CardHeader>
+							<CardContent className="space-y-2">
+								<button
+									type="button"
+									disabled={createFromTemplate.isPending}
+									onClick={() => createFromTemplate.mutate('financial')}
+									className="flex w-full items-start gap-3 rounded-2xl border border-border/50 bg-background px-3 py-3 text-left transition-colors hover:border-emerald-300 hover:bg-emerald-50/40 disabled:opacity-60"
+								>
+									<div className="rounded-xl bg-emerald-100 p-2">
+										<Banknote className="h-4 w-4 text-emerald-600" />
+									</div>
+									<div className="min-w-0">
+										<div className="text-sm font-medium">Gestão Financeira</div>
+										<div className="text-xs text-muted-foreground">Cobranças, inadimplência e fluxo</div>
+									</div>
+								</button>
+								<button
+									type="button"
+									disabled={createFromTemplate.isPending}
+									onClick={() => createFromTemplate.mutate('goals')}
+									className="flex w-full items-start gap-3 rounded-2xl border border-border/50 bg-background px-3 py-3 text-left transition-colors hover:border-violet-300 hover:bg-violet-50/40 disabled:opacity-60"
+								>
+									<div className="rounded-xl bg-violet-100 p-2">
+										<Target className="h-4 w-4 text-violet-600" />
+									</div>
+									<div className="min-w-0">
+										<div className="text-sm font-medium">Objetivos dos Pacientes</div>
+										<div className="text-xs text-muted-foreground">Metas funcionais e reabilitação</div>
+									</div>
+								</button>
+							</CardContent>
+						</Card>
+					</aside>
+
+					<div className="space-y-6">
 							{starredBoards.length > 0 && collection === "all" && !search && (
 								<section className="space-y-3">
 									<div className="flex items-center justify-between">

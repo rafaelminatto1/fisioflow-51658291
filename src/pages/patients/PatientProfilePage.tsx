@@ -26,7 +26,9 @@ import {
 	Sparkles,
 	History,
 	ClipboardList,
+	CheckSquare,
 } from "lucide-react";
+import { PatientTasksPanel } from "@/components/patient/PatientTasksPanel";
 import EditPatientModal from "@/components/modals/EditPatientModal";
 import { PatientQuickScheduleModal } from "@/components/patient/PatientQuickScheduleModal";
 import { useTherapists } from "@/hooks/useTherapists";
@@ -175,6 +177,7 @@ export const PatientProfilePage = () => {
 		"financial",
 		"gamification",
 		"documents",
+		"tasks",
 	] as const;
 	type TabValue = (typeof validTabs)[number];
 
@@ -351,6 +354,13 @@ export const PatientProfilePage = () => {
 							>
 								Arquivos
 							</TabsTrigger>
+							<TabsTrigger
+								value="tasks"
+								className="data-[state=active]:border-blue-600 data-[state=active]:text-blue-600 rounded-none bg-transparent border-b-2 border-transparent px-0 py-2 text-sm font-semibold gap-2 transition-all"
+							>
+								<CheckSquare className="h-4 w-4" />
+								Tarefas
+							</TabsTrigger>
 						</TabsList>
 					</div>
 
@@ -440,6 +450,13 @@ export const PatientProfilePage = () => {
 								documents={documents as any}
 								isLoading={isLoadingDocuments}
 							/>
+						</TabsContent>
+
+						<TabsContent
+							value="tasks"
+							className="mt-0 focus-visible:outline-none animate-in fade-in-50 duration-500 slide-in-from-bottom-2"
+						>
+							<PatientTasksPanel patientId={id || ""} />
 						</TabsContent>
 					</div>
 				</Tabs>

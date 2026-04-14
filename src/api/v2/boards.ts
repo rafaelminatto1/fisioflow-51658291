@@ -42,6 +42,10 @@ export const tarefasApi = {
 			method: "POST",
 			body: JSON.stringify({ updates }),
 		}),
+	getByEntity: (entityType: string, entityId: string) =>
+		request<{ data: Record<string, unknown>[] }>(
+			`/api/tarefas/by-entity/${encodeURIComponent(entityType)}/${encodeURIComponent(entityId)}`,
+		),
 };
 
 export const boardsApi = {
@@ -101,6 +105,10 @@ export const boardsApi = {
 		request<{ ok: boolean }>("/api/boards/columns/reorder", {
 			method: "POST",
 			body: JSON.stringify({ updates }),
+		}),
+	createFromTemplate: (template: 'financial' | 'goals') =>
+		request<{ data: Record<string, unknown> }>(`/api/boards/templates/${template}`, {
+			method: "POST",
 		}),
 };
 
