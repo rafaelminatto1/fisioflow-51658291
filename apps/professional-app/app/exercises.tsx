@@ -9,7 +9,6 @@ import {
 	Alert,
 	FlatList,
 	ActivityIndicator,
-	Modal,
 	Animated,
 	Dimensions,
 } from "react-native";
