@@ -35,6 +35,9 @@ function normalizeOptions(value: unknown): unknown[] | null {
 
 const evaluationResponseStatuses = new Set(['scheduled', 'in_progress', 'completed', 'cancelled']);
 
+// Global flag to avoid redundant table verification across requests within the same worker instance
+let tablesInitialized = false;
+
 function normalizeDateInput(value: unknown): string | null {
   if (typeof value !== 'string' || !value.trim()) return null;
   const parsed = new Date(value);
@@ -43,6 +46,8 @@ function normalizeDateInput(value: unknown): string | null {
 }
 
 async function ensureTables(env: Env): Promise<void> {
+  if (tablesInitialized) return;
+
   const pool = await createPool(env);
   try {
     const statements = [
@@ -148,9 +153,10 @@ async function ensureTables(env: Env): Promise<void> {
       try {
         await pool.query(statement);
       } catch (e) {
-        console.error(`[ensureTables] Error executing DDL: ${statement.substring(0, 50)}...`, e);
+        console.error(`[ensureTables] Error executing statement: ${statement.substring(0, 50)}...`, e);
       }
     }
+    tablesInitialized = true;
   } catch (error) {
     console.error('[ensureTables] Critical error during table verification', error);
   } finally {
