@@ -33,8 +33,6 @@ class ApiError extends Error {
 	}
 }
 
-const evolutionCache = new Map<string, ApiEvolution>();
-
 function normalizeExerciseDifficulty(
 	difficulty?: string,
 ): ApiExercise["difficulty"] {
@@ -155,7 +153,6 @@ function normalizeEvolution(apiEvolution: any): ApiEvolution {
 			new Date().toISOString(),
 	};
 
-	evolutionCache.set(normalized.id, normalized);
 	return normalized;
 }
 
@@ -311,7 +308,9 @@ function cleanRequestData(data: any): any {
 	for (const [key, value] of Object.entries(data)) {
 		if (value !== undefined) {
 			cleaned[key] =
-				typeof value === "object" && value !== null ? cleanRequestData(value) : value;
+				typeof value === "object" && value !== null
+					? cleanRequestData(value)
+					: value;
 		}
 	}
 	return cleaned;
@@ -715,15 +714,12 @@ export async function getEvolutions(
 export async function getEvolutionById(
 	id: string,
 ): Promise<ApiEvolution | null> {
-	if (evolutionCache.has(id)) return evolutionCache.get(id)!;
 	try {
 		const response = await fetchApi<ApiResponse<ApiEvolution>>(
 			`/api/evolution/treatment-sessions/${encodeURIComponent(id)}`,
 		);
 		if (!response.data) return null;
-		const result = normalizeEvolution(response.data);
-		evolutionCache.set(id, result);
-		return result;
+		return normalizeEvolution(response.data);
 	} catch {
 		return null;
 	}
@@ -759,9 +755,7 @@ export async function createEvolution(
 	);
 
 	if (response.error) throw new Error(response.error);
-	const result = normalizeEvolution(response.data);
-	evolutionCache.set(result.id, result);
-	return result;
+	return normalizeEvolution(response.data);
 }
 
 export async function updateEvolution(
@@ -788,22 +782,14 @@ export async function updateEvolution(
 	);
 
 	if (response.error) throw new Error(response.error);
-	const result = normalizeEvolution(response.data);
-	evolutionCache.set(id, result);
-	return result;
+	return normalizeEvolution(response.data);
 }
 
 export async function deleteEvolution(id: string): Promise<{ ok: boolean }> {
-	const existing = evolutionCache.get(id);
-	if (!existing?.patient_id || existing.appointment_id) {
-		throw new Error("Exclusão de evolução não suportada para este registro");
-	}
-
 	const response = await fetchApi<{ ok?: boolean }>(
-		`/api/patients/${encodeURIComponent(existing.patient_id)}/medical-records/${encodeURIComponent(id)}`,
+		`/api/evolution/treatment-sessions/${encodeURIComponent(id)}`,
 		{ method: "DELETE" },
 	);
-	evolutionCache.delete(id);
 	return { ok: Boolean(response.ok) };
 }
 
