@@ -49,7 +49,7 @@ const menuGroups = [
 		label: "Clínica",
 		items: [
 			{ icon: Activity, label: "Exercícios", href: "/exercises" },
-			{ icon: Target, label: "Protocolos e Fases", href: "/protocols" },
+			{ icon: Target, label: "Protocolos", href: "/protocols" },
 			{ icon: FlaskConical, label: "Testes Clínicos", href: "/clinical-tests" },
 		],
 	},
