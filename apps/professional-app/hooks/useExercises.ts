@@ -26,6 +26,8 @@ function mapApiExercise(apiExercise: ApiExercise): Exercise {
     sets: apiExercise.sets,
     reps: apiExercise.reps,
     duration: apiExercise.duration,
+    embeddingSketch: apiExercise.embeddingSketch,
+    referencePose: apiExercise.referencePose,
     createdAt: apiExercise.createdAt ? new Date(apiExercise.createdAt) : new Date(),
     updatedAt: apiExercise.updatedAt ? new Date(apiExercise.updatedAt) : new Date(),
   };
@@ -54,10 +56,10 @@ export function useExercisesLibrary(options?: UseExercisesLibraryOptions) {
     staleTime: 1000 * 60 * 10, // 10 minutes
   });
 
-  const data = query.data?.pages.flatMap((page) => page.data) || [];
+  const data = query.data?.pages.flatMap((page) => page.data).map(mapApiExercise) || [];
 
   return {
-    data,
+    data: data as Exercise[],
     isLoading: query.isLoading,
     isFetchingNextPage: query.isFetchingNextPage,
     hasNextPage: query.hasNextPage,
@@ -85,6 +87,8 @@ export function useExerciseCreate() {
         sets: data.sets,
         reps: data.reps,
         duration: data.duration,
+        embeddingSketch: data.embeddingSketch,
+        referencePose: data.referencePose,
       });
       return mapApiExercise(apiExercise);
     },
@@ -116,6 +120,8 @@ export function useExerciseUpdate() {
         sets: data.sets,
         reps: data.reps,
         duration: data.duration,
+        embeddingSketch: data.embeddingSketch,
+        referencePose: data.referencePose,
       });
       return mapApiExercise(apiExercise);
     },

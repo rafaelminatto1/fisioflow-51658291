@@ -620,7 +620,7 @@ export default function ExercisesScreen() {
 				title="Prescrever"
 			>
 				{selectedExercise && (
-					<View style={styles.modalContent}>
+					<View style={styles.assignModalContent}>
 						<View style={styles.modalHeaderInfo}>
 							<Text style={[styles.modalExerciseName, { color: colors.text }]}>
 								{selectedExercise.name}
@@ -1133,7 +1133,7 @@ const styles = StyleSheet.create({
 		paddingVertical: 20,
 		alignItems: "center",
 	},
-	modalContent: {
+	assignModalContent: {
 		paddingBottom: 10,
 	},
 	modalHeaderInfo: {

@@ -71,6 +71,8 @@ export interface ApiExercise {
   createdAt?: string;
   updated_at?: string;
   updatedAt?: string;
+  embeddingSketch?: string;
+  referencePose?: string;
 }
 
 export interface ApiExerciseCategory {

@@ -71,6 +71,7 @@ export interface Exercise {
   precautions?: string[];
   category?: string;
   difficulty?: 'easy' | 'medium' | 'hard';
+  embeddingSketch?: string;
 }
 
 export interface ExerciseAssignment {

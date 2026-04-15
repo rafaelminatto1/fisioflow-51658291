@@ -66,6 +66,7 @@ export const wikiPages = pgTable("wiki_pages", {
 			return "vector(768)";
 		},
 	})("embedding"),
+	embeddingSketch: text("embedding_sketch"),
 });
 
 export const wikiPagesRelations = relations(wikiPages, ({ one, many }) => ({

@@ -39,6 +39,7 @@ import { cn } from "@/lib/utils";
 interface SpecialTest {
 	name: string;
 	result: string;
+	results?: Record<string, string | number | boolean>;
 	notes: string;
 }
 
@@ -83,10 +84,22 @@ export const PhysicalExamForm = ({
 	const updateSpecialTest = (
 		index: number,
 		field: keyof SpecialTest,
-		value: string,
+		value: any,
 	) => {
 		const newTests = [...(data.specialTests || [])];
 		newTests[index] = { ...newTests[index], [field]: value };
+		handleChange("specialTests", newTests);
+	};
+
+	const updateSpecialTestResult = (
+		testIndex: number,
+		fieldId: string,
+		value: string | number | boolean,
+	) => {
+		const newTests = [...(data.specialTests || [])];
+		const test = { ...newTests[testIndex] };
+		test.results = { ...(test.results || {}), [fieldId]: value };
+		newTests[testIndex] = test;
 		handleChange("specialTests", newTests);
 	};
 
@@ -427,6 +440,122 @@ export const PhysicalExamForm = ({
 												</div>
 											)}
 										</div>
+
+										{/* Dynamic Fields Rendering */}
+										{evidence &&
+											evidence.fieldsDefinition &&
+											evidence.fieldsDefinition.length > 0 && (
+												<div className="mt-4 pt-4 border-t grid grid-cols-1 sm:grid-cols-2 gap-4">
+													{evidence.fieldsDefinition.map((field) => (
+														<div key={field.id} className="space-y-1.5">
+															<Label className="text-[10px] font-bold uppercase text-muted-foreground ml-1">
+																{field.label}
+															</Label>
+
+															{field.type === "nprs" && (
+																<div className="flex items-center gap-1 bg-muted/30 p-1 rounded-lg">
+																	{[0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map(
+																		(val) => (
+																			<button
+																				key={val}
+																				type="button"
+																				onClick={() =>
+																					updateSpecialTestResult(
+																						i,
+																						field.id,
+																						val,
+																					)
+																				}
+																				className={cn(
+																					"w-6 h-6 rounded-md text-[10px] font-bold transition-all",
+																					(test.results?.[field.id] ?? 0) ===
+																						val
+																						? "bg-primary text-primary-foreground shadow-sm scale-110"
+																						: "hover:bg-primary/20 bg-background text-muted-foreground",
+																				)}
+																			>
+																				{val}
+																			</button>
+																		),
+																	)}
+																</div>
+															)}
+
+															{field.type === "boolean" && (
+																<Button
+																	type="button"
+																	variant={
+																		test.results?.[field.id] === true
+																			? "destructive"
+																			: "outline"
+																	}
+																	size="sm"
+																	onClick={() =>
+																		updateSpecialTestResult(
+																			i,
+																			field.id,
+																			!test.results?.[field.id],
+																		)
+																	}
+																	className="h-8 w-full justify-start text-[11px]"
+																>
+																	{test.results?.[field.id] === true ? (
+																		<CheckCircle2 className="w-3 h-3 mr-2" />
+																	) : (
+																		<CircleDot className="w-3 h-3 mr-2" />
+																	)}
+																	{test.results?.[field.id] === true
+																		? "Presente / Positivo"
+																		: "Ausente / Negativo"}
+																</Button>
+															)}
+
+															{field.type === "select" && (
+																<select
+																	className="flex h-8 w-full rounded-md border border-input bg-background px-3 py-1 text-[11px] ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+																	value={
+																		(test.results?.[field.id] as string) || ""
+																	}
+																	onChange={(e) =>
+																		updateSpecialTestResult(
+																			i,
+																			field.id,
+																			e.target.value,
+																		)
+																	}
+																	disabled={readOnly}
+																>
+																	<option value="">Selecionar...</option>
+																	{field.options?.map((opt) => (
+																		<option key={opt} value={opt}>
+																			{opt}
+																		</option>
+																	))}
+																</select>
+															)}
+
+															{field.type === "number" && (
+																<Input
+																	type="number"
+																	size={1}
+																	className="h-8 text-[11px]"
+																	value={
+																		(test.results?.[field.id] as number) || ""
+																	}
+																	onChange={(e) =>
+																		updateSpecialTestResult(
+																			i,
+																			field.id,
+																			parseFloat(e.target.value),
+																		)
+																	}
+																	readOnly={readOnly}
+																/>
+															)}
+														</div>
+													))}
+												</div>
+											)}
 
 										{/* Expanded Evidence Box */}
 										{evidence && (

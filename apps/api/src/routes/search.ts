@@ -1,8 +1,9 @@
 import { Hono } from 'hono';
 import { requireAuth, type AuthVariables } from '../lib/auth';
 import type { Env } from '../types/env';
-import { generateEmbedding } from '../lib/ai-native';
+import { generateEmbedding, generateTurboSketch, parseTurboSketch } from '../lib/ai-native';
 import { createPool } from '../lib/db';
+import { TurboQuant } from '@fisioflow/core';
 
 const app = new Hono<{ Bindings: Env; Variables: AuthVariables }>();
 
@@ -25,6 +26,8 @@ app.get('/', requireAuth, async (c) => {
 
   const limitNum = Math.min(50, Math.max(1, parseInt(limit) || 10));
   const user = c.get('user');
+
+  let queryVector: number[] | undefined;
 
   // Tenta AI Search primeiro (gerenciado, sem setup de embeddings manual)
   if (c.env.AI_SEARCH) {
@@ -51,10 +54,11 @@ app.get('/', requireAuth, async (c) => {
   }
 
   // Vectorize: gera embedding da query e busca por similaridade
-  if (c.env.CLINICAL_KNOWLEDGE) {
-    try {
-      const queryVector = await generateEmbedding(c.env, q);
-
+  try {
+    // Generate here so we can reuse the vector or the sketch for the fallback!
+    queryVector = await generateEmbedding(c.env, q);
+    
+    if (c.env.CLINICAL_KNOWLEDGE) {
       const filter: Record<string, string> = {};
       if (type !== 'all') filter.content_type = type;
 
@@ -76,13 +80,23 @@ app.get('/', requireAuth, async (c) => {
         query: q,
         source: 'vectorize',
       });
-    } catch (err: any) {
-      console.error('[Search] Vectorize error:', err);
+    }
+  } catch (err: any) {
+    console.error('[Search] Vectorize/AI error:', err);
+  }
+
+  // Se o Vectorize falhou (ou não existe), mas temos o queryVector, geramos o Sketch
+  let querySketch: Uint8Array | undefined;
+  if (queryVector) {
+    try {
+      querySketch = parseTurboSketch(generateTurboSketch(queryVector));
+    } catch (e) {
+      console.error('[Search] Sketch Error:', e);
     }
   }
 
-  // Fallback final: busca por texto simples no Neon
-  return await fallbackTextSearch(c, q, type as SearchType, limitNum, user.organizationId);
+  // Fallback final: busca híbrida no Neon usando TurboQuant (se querySketch disponível) ou fallback burro ILIKE
+  return await fallbackTextSearch(c, q, type as SearchType, limitNum, user.organizationId, querySketch);
 });
 
 /**
@@ -212,44 +226,80 @@ app.delete('/index/:id', requireAuth, async (c) => {
   return c.json({ deleted: true });
 });
 
-// Busca textual simples no Neon como fallback
+// Busca textual/híbrida no Neon (re-ranking semântico via TurboQuant se sketch disponível)
 async function fallbackTextSearch(
   c: any,
   q: string,
   type: SearchType,
   limit: number,
   orgId: string,
+  querySketch?: Uint8Array
 ) {
   const pool = createPool(c.env);
   const results: any[] = [];
+  
+  // Se TEMOS um Query Sketch, a busca é HÍBRIDA SEMÂNTICA Edge-Native!
+  // Fazemos fetch mais amplo (500 itens) em vez da busca restrita ILIKE pra capturar real contexto!
+  const isSemantic = !!querySketch;
+  const searchTerm = isSemantic ? '%' : `%${q}%`; // coringa se semântico
+  const fetchLimit = isSemantic ? 500 : limit;
 
-  const searchTerm = `%${q}%`;
+  try {
+    if (type === 'exercises' || type === 'all') {
+      const res = await pool.query(
+        `SELECT id, name, description, embedding_sketch, 'exercises' AS content_type
+         FROM exercises
+         WHERE (is_public = true OR organization_id = $1)
+           ${!isSemantic ? 'AND (name ILIKE $2 OR description ILIKE $2)' : ''}
+         LIMIT $${!isSemantic ? '3' : '2'}`,
+        !isSemantic ? [orgId, searchTerm, fetchLimit] : [orgId, fetchLimit],
+      );
+      results.push(...res.rows.map(r => ({ ...r, source: isSemantic ? 'turboquant_hybrid' : 'text_search' })));
+    }
 
-  if (type === 'exercises' || type === 'all') {
-    const res = await pool.query(
-      `SELECT id, name, description, 'exercises' AS content_type
-       FROM exercises
-       WHERE (is_public = true OR organization_id = $1)
-         AND (name ILIKE $2 OR description ILIKE $2)
-       LIMIT $3`,
-      [orgId, searchTerm, limit],
-    );
-    results.push(...res.rows.map((r) => ({ ...r, score: 0.5, source: 'text_search' })));
+    if (type === 'wiki' || type === 'all') {
+      const res = await pool.query(
+        `SELECT id, title AS name, LEFT(content, 300) AS description, embedding_sketch, 'wiki' AS content_type
+         FROM wiki_pages
+         WHERE (organization_id = $1 OR is_public = true)
+           ${!isSemantic ? 'AND (title ILIKE $2 OR content ILIKE $2)' : ''}
+         LIMIT $${!isSemantic ? '3' : '2'}`,
+        !isSemantic ? [orgId, searchTerm, fetchLimit] : [orgId, fetchLimit],
+      );
+      results.push(...res.rows.map((r) => ({ ...r, source: isSemantic ? 'turboquant_hybrid' : 'text_search' })));
+    }
+    
+    // Se a busca for Semântica (TurboQuant Mapped), vamos aplicar a Distância L2 nos Nibbles e Re-ordenar (Memory Sorting O(n))
+    if (isSemantic) {
+      for (const row of results) {
+        if (row.embedding_sketch) {
+          const rowSketch = parseTurboSketch(row.embedding_sketch);
+          // A similaridade retorna um scalar contínuo aproximado da proximidade Cosseno (~1 = perfeito, -1 = opsoto)
+          row.score = TurboQuant.similarity(querySketch, rowSketch);
+        } else {
+          row.score = -1; // Joga pra baixo quem não tem embedding
+        }
+        // Remove the raw string to save edge payload weight
+        delete row.embedding_sketch;
+      }
+      
+      // Order DESC (maior score primeiro) e aplica o Limite real
+      results.sort((a, b) => b.score - a.score);
+      return c.json({ results: results.slice(0, limit), query: q, source: 'turboquant_hybrid' });
+    }
+
+    // Se nçao tínhamos sketch, aplica o bypass de fallback texto flat
+    return c.json({ 
+      results: results.map((r) => ({ id: r.id, name: r.name, description: r.description, type: r.content_type, score: 0.5, source: 'text_fallback' })),
+      query: q, 
+      source: 'text_fallback' 
+    });
+
+  } catch (err: any) {
+    console.error('Hybrid Fallback Query failed', err);
+    return c.json({ error: 'Hybrid / Text search failed' }, 500);
   }
-
-  if (type === 'wiki' || type === 'all') {
-    const res = await pool.query(
-      `SELECT id, title AS name, LEFT(content, 300) AS description, 'wiki' AS content_type
-       FROM wiki_pages
-       WHERE (organization_id = $1 OR is_public = true)
-         AND (title ILIKE $2 OR content ILIKE $2)
-       LIMIT $3`,
-      [orgId, searchTerm, limit],
-    );
-    results.push(...res.rows.map((r) => ({ ...r, score: 0.5, source: 'text_search' })));
-  }
-
-  return c.json({ results, query: q, source: 'text_fallback' });
 }
 
 export const searchRoutes = app;
+

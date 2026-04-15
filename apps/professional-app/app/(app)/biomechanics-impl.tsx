@@ -5,7 +5,7 @@ import {
   Image, ActivityIndicator, TextInput,
 } from "react-native";
 import { Stack, useRouter, useLocalSearchParams } from "expo-router";
-import { Camera, useCameraDevice, useCameraPermission, useCameraFormat } from "react-native-vision-camera";
+import { Camera, useCameraDevice, useCameraPermission, useCameraFormat, useFrameProcessor, runAtTargetFps } from "react-native-vision-camera";
 import { Ionicons } from "@expo/vector-icons";
 import * as ImagePicker from "expo-image-picker";
 import { Accelerometer } from "expo-sensors";
@@ -13,6 +13,11 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { useColors } from "@/hooks/useColorScheme";
 import { usePatients } from "@/hooks/usePatients";
 import { fetchApi } from "@/lib/api";
+import { PoseFeedbackOverlay } from "@/components/ai/PoseFeedbackOverlay";
+import { detectPose } from "expo-vision-pose-detector";
+import { useExercisesLibrary, useExerciseUpdate, useExercise } from "@/hooks/useExercises";
+import { Exercise } from "@/types";
+import { PoseLandmark } from "@/types/pose";
 
 const { width: W } = Dimensions.get("window");
 
@@ -76,10 +81,25 @@ export default function BiomechanicsScreen() {
   const [patientSearch, setPatientSearch] = useState("");
   const [, setPlumbRotation] = useState(0);
   const camera = useRef<Camera>(null);
+  
+  const [selectedExerciseId, setSelectedExerciseId] = useState<string | null>(null);
+  const [selectedExercise, setSelectedExercise] = useState<Exercise | null>(null);
+  const [showExercisePicker, setShowExercisePicker] = useState(false);
+  const [exerciseSearch, setExerciseSearch] = useState("");
+  const [referenceLandmarks, setReferenceLandmarks] = useState<PoseLandmark[] | undefined>(undefined);
+  const [landmarks, setLandmarks] = useState<PoseLandmark[]>([]);
+  const [isSavingReference, setIsSavingReference] = useState(false);
+
+  const updateExercise = useExerciseUpdate();
 
   const { data: patients = [] } = usePatients({ status: "active", limit: 100 });
   const filteredPatients = patients.filter((patient) =>
     patient.name.toLowerCase().includes(patientSearch.trim().toLowerCase())
+  );
+
+  const { data: exercises = [] } = useExercisesLibrary({ search: exerciseSearch });
+  const filteredExercises = exercises.filter(ex => 
+    ex.name.toLowerCase().includes(exerciseSearch.trim().toLowerCase())
   );
 
   // Frame counter during recording
@@ -104,6 +124,133 @@ export default function BiomechanicsScreen() {
     }
     return () => sub?.remove();
   }, [screen, analysisType]);
+
+  // Handle exercise selection and sketch parsing
+  useEffect(() => {
+    if (selectedExercise?.embeddingSketch) {
+      try {
+        const parsed = typeof selectedExercise.embeddingSketch === 'string' 
+          ? JSON.parse(selectedExercise.embeddingSketch) 
+          : selectedExercise.embeddingSketch;
+        
+        if (Array.isArray(parsed)) {
+          setReferenceLandmarks(parsed);
+        }
+      } catch (e) {
+        console.error("Error parsing embeddingSketch:", e);
+        setReferenceLandmarks(undefined);
+      }
+    } else {
+      setReferenceLandmarks(undefined);
+    }
+  }, [selectedExercise]);
+
+  const handleCaptureReference = async () => {
+    if (!selectedExerciseId) {
+      Alert.alert("Erro", "Selecione um exercício primeiro.");
+      return;
+    }
+
+    if (landmarks.length === 0) {
+      Alert.alert("Aviso", "Nenhuma pose detectada para capturar.");
+      return;
+    }
+
+    setIsSavingReference(true);
+    try {
+      await updateExercise.mutateAsync({
+        id: selectedExerciseId,
+        referencePose: landmarks,
+      });
+      setReferenceLandmarks(landmarks);
+      Alert.alert("Sucesso", "Pose de referência salva para este exercício!");
+    } catch (error) {
+      console.error("Error saving reference pose:", error);
+      Alert.alert("Erro", "Não foi possível salvar a pose de referência.");
+    } finally {
+      setIsSavingReference(false);
+    }
+  };
+
+  const mapVisionToPoseLandmarks = useCallback((visionResults: any[]): PoseLandmark[] => {
+    if (!visionResults || visionResults.length === 0) return [];
+    
+    const result = visionResults[0]; // Take first person detected
+    const points = result.points3d || result.landmarks || {};
+    const is3d = result.is3d;
+    
+    // MediaPipe index mapping (33 landmarks)
+    const landmarks: PoseLandmark[] = Array(33).fill(null).map(() => ({ x: 0, y: 0, z: 0, visibility: 0 }));
+    
+    const mapping: Record<string, number> = {
+      "nose": 0,
+      "left_eye": 2,
+      "right_eye": 5,
+      "left_shoulder_1_joint": 11,
+      "right_shoulder_1_joint": 12,
+      "left_elbow_joint": 13,
+      "right_elbow_joint": 14,
+      "left_wrist_joint": 15,
+      "right_wrist_joint": 16,
+      "left_hip_joint": 23,
+      "right_hip_joint": 24,
+      "left_knee_joint": 25,
+      "right_knee_joint": 26,
+      "left_ankle_joint": 27,
+      "right_ankle_joint": 28,
+      "left_heel_joint": 29,
+      "right_heel_joint": 30,
+      "left_toe_joint": 31,
+      "right_toe_joint": 32
+    };
+    
+    for (const [key, idx] of Object.entries(mapping)) {
+      const pt = points[key];
+      if (pt) {
+        // Apply coordinate space transformation if needed
+        // For 3D Vision landmarks, they are camera-relative.
+        // For 2D they are normalized 0-1.
+        landmarks[idx] = {
+          x: pt.x,
+          y: pt.y,
+          z: pt.z || 0,
+          visibility: pt.confidence || 0.8
+        };
+      }
+    }
+    
+    return landmarks;
+  }, []);
+
+  const frameProcessor = useFrameProcessor((frame) => {
+    'worklet';
+    runAtTargetFps(30, () => {
+      'worklet';
+      const results = detectPose(frame);
+      // Since mapVisionToPoseLandmarks is not a worklet, we need to pass data back to JS
+      // In Vision Camera v4/Worklets-Core, we use runOnJS
+    });
+  }, [detectPose]);
+
+  // Update landmarks from native plugin
+  // Actually, we should use a simpler approach for the demo: 
+  // expose the setter and call it via runOnJS
+  const updatePose = useCallback((visionResults: any[]) => {
+    const lms = mapVisionToPoseLandmarks(visionResults);
+    if (lms.length > 0) setLandmarks(lms);
+  }, [mapVisionToPoseLandmarks]);
+
+  const realFrameProcessor = useFrameProcessor((frame) => {
+    'worklet';
+    runAtTargetFps(30, () => {
+      'worklet';
+      const results = detectPose(frame);
+      if (results && results.length > 0) {
+        // @ts-ignore - runOnJS is injected by worklets
+        runOnJS(updatePose)(results);
+      }
+    });
+  }, [updatePose]);
 
   // ── Conditional renders AFTER all hooks ──
   if (!hasPermission && screen === "capture" && analysisMode === "live") {
@@ -269,6 +416,21 @@ export default function BiomechanicsScreen() {
             <Ionicons name="chevron-forward" size={20} color={colors.textSecondary} />
           </TouchableOpacity>
 
+          {/* Exercício de Referência (Opcional) */}
+          <TouchableOpacity
+            style={[styles.patientCard, { backgroundColor: colors.surface, borderColor: colors.border, marginTop: 12 }]}
+            onPress={() => setShowExercisePicker(true)}
+          >
+            <Ionicons name="fitness" size={32} color={selectedExerciseId ? colors.primary : colors.textSecondary} />
+            <View style={styles.patientInfo}>
+              <Text style={[styles.patientLabel, { color: colors.textSecondary }]}>Exercício de Referência (Ghost Skeleton)</Text>
+              <Text style={[styles.patientName, { color: colors.text }]}>
+                {selectedExercise?.name || "Selecionar exercício (opcional)"}
+              </Text>
+            </View>
+            <Ionicons name="chevron-forward" size={20} color={colors.textSecondary} />
+          </TouchableOpacity>
+
           {/* Tipos de análise */}
           <Text style={[styles.sectionTitle, { color: colors.text }]}>Tipo de Análise</Text>
           {ANALYSIS_TYPES.map(t => (
@@ -366,6 +528,60 @@ export default function BiomechanicsScreen() {
                 >
                   <Ionicons name="person" size={20} color={colors.primary} />
                   <Text style={[styles.patientRowName, { color: colors.text }]}>{p.name}</Text>
+                </TouchableOpacity>
+              )}
+            />
+          </SafeAreaView>
+        </Modal>
+
+        {/* Exercise picker modal */}
+        <Modal visible={showExercisePicker} animationType="slide" onRequestClose={() => setShowExercisePicker(false)}>
+          <SafeAreaView style={[styles.safe, { backgroundColor: colors.background }]} edges={["top", "left", "right", "bottom"]}>
+            <View style={[styles.header, { borderBottomColor: colors.border }]}>
+              <Text style={[styles.headerTitle, { color: colors.text }]}>Selecionar Exercício de Referência</Text>
+              <TouchableOpacity onPress={() => setShowExercisePicker(false)}>
+                <Ionicons name="close" size={24} color={colors.text} />
+              </TouchableOpacity>
+            </View>
+            <View style={[styles.searchInputWrap, { borderColor: colors.border, backgroundColor: colors.surface }]}>
+              <Ionicons name="search" size={18} color={colors.textSecondary} />
+              <TextInput
+                style={[styles.searchInput, { color: colors.text }]}
+                placeholder="Buscar exercício..."
+                placeholderTextColor={colors.textSecondary}
+                value={exerciseSearch}
+                onChangeText={setExerciseSearch}
+              />
+            </View>
+            <FlatList
+              data={filteredExercises}
+              keyExtractor={p => p.id}
+              ListEmptyComponent={
+                <View style={styles.emptyPatientContainer}>
+                  <Ionicons name="fitness-outline" size={42} color={colors.textSecondary} />
+                  <Text style={[styles.emptyPatientText, { color: colors.textSecondary }]}>
+                    Nenhum exercício encontrado
+                  </Text>
+                </View>
+              }
+              renderItem={({ item: ex }) => (
+                <TouchableOpacity
+                  style={[styles.patientRow, { borderBottomColor: colors.border }]}
+                  onPress={() => {
+                    setSelectedExerciseId(ex.id!);
+                    setSelectedExercise(ex);
+                    setExerciseSearch("");
+                    setShowExercisePicker(false);
+                  }}
+                >
+                  <Ionicons name="fitness" size={20} color={colors.primary} />
+                  <View style={{ flex: 1, marginLeft: 12 }}>
+                    <Text style={[styles.patientRowName, { color: colors.text }]}>{ex.name}</Text>
+                    <Text style={{ fontSize: 12, color: colors.textSecondary }}>{ex.category}</Text>
+                  </View>
+                  {ex.embeddingSketch && (
+                    <Ionicons name="body-outline" size={16} color={colors.primary} />
+                  )}
                 </TouchableOpacity>
               )}
             />
@@ -471,6 +687,7 @@ export default function BiomechanicsScreen() {
           video={true}
           audio={false}
           photo={true}
+          frameProcessor={realFrameProcessor}
         />
 
         {/* Top bar */}
@@ -478,6 +695,15 @@ export default function BiomechanicsScreen() {
           <TouchableOpacity style={styles.captureBack} onPress={() => setScreen("home")}>
             <Ionicons name="arrow-back" size={24} color="#fff" />
           </TouchableOpacity>
+
+          <PoseFeedbackOverlay 
+            landmarks={landmarks}
+            referenceLandmarks={referenceLandmarks}
+            width={W}
+            height={Dimensions.get("window").height}
+            showSkeleton={true}
+          />
+
           <View style={styles.captureBadge}>
             <Text style={styles.captureBadgeText}>{ANALYSIS_TYPES.find(t => t.id === analysisType)?.label}</Text>
           </View>
@@ -501,10 +727,25 @@ export default function BiomechanicsScreen() {
           </View>
         )}
 
-        {/* Bottom controls */}
         <View style={styles.captureBottom}>
-          {!isRecording ? (
-            <TouchableOpacity style={styles.recBtn} onPress={() => setIsRecording(true)}>
+          <View style={styles.captureActions}>
+            {/* Capture Reference Button */}
+            <TouchableOpacity 
+              style={[styles.captureActionBtn, { backgroundColor: "rgba(255,255,255,0.2)" }]} 
+              onPress={handleCaptureReference}
+              disabled={isSavingReference}
+            >
+              {isSavingReference ? (
+                <ActivityIndicator color="#fff" size="small" />
+              ) : (
+                <Ionicons name="bookmark" size={24} color="#fff" />
+              )}
+              <Text style={styles.captureActionText}>Ref.</Text>
+            </TouchableOpacity>
+
+            {/* Main Recording Button */}
+            {!isRecording ? (
+              <TouchableOpacity style={styles.recBtn} onPress={() => setIsRecording(true)}>
               <View style={styles.recBtnInner} />
             </TouchableOpacity>
           ) : (
@@ -738,6 +979,9 @@ const styles = StyleSheet.create({
   eventBtn: { paddingHorizontal: 20, paddingVertical: 14, borderRadius: 12, elevation: 8 },
   eventBtnText: { color: "#fff", fontWeight: "900", fontSize: 13 },
   captureBottom: { position: "absolute", bottom: 60, left: 0, right: 0, alignItems: "center", gap: 10 },
+  captureActions: { flexDirection: "row", alignItems: "center", gap: 24, paddingBottom: 10 },
+  captureActionBtn: { alignItems: "center", gap: 6, width: 64, height: 64, borderRadius: 32, justifyContent: "center" },
+  captureActionText: { color: "#fff", fontSize: 11, fontWeight: "600" },
   recBtn: { width: 72, height: 72, borderRadius: 36, backgroundColor: "rgba(255,255,255,0.3)", borderWidth: 4, borderColor: "#fff", alignItems: "center", justifyContent: "center" },
   recBtnInner: { width: 48, height: 48, borderRadius: 24, backgroundColor: "#ef4444" },
   recBtnActive: { backgroundColor: "rgba(220,38,38,0.4)", borderColor: "#ef4444" },

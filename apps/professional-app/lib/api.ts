@@ -100,6 +100,8 @@ function normalizeExercise(apiExercise: any): ApiExercise {
 		instructions: Array.isArray(apiExercise.instructions)
 			? apiExercise.instructions
 			: [],
+		embeddingSketch: apiExercise.embeddingSketch ?? apiExercise.embedding_sketch,
+		referencePose: apiExercise.referencePose ?? apiExercise.reference_pose,
 	};
 }
 
