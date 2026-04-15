@@ -142,6 +142,7 @@ export interface ExerciseTemplateItem {
 		category?: string | null;
 		difficulty?: string | null;
 		imageUrl?: string | null;
+		thumbnailUrl?: string | null;
 		videoUrl?: string | null;
 	};
 }
