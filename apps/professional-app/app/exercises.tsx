@@ -53,7 +53,14 @@ export default function ExercisesScreen() {
 	const [selectedDifficulty, setSelectedDifficulty] = useState<string | null>(
 		null,
 	);
+	const [selectedEquipment, setSelectedEquipment] = useState<string | null>(
+		null,
+	);
+	const [selectedBodyPart, setSelectedBodyPart] = useState<string | null>(
+		null,
+	);
 	const [showFavoritesOnly, setShowFavoritesOnly] = useState(false);
+	const [showFiltersModal, setShowFiltersModal] = useState(false);
 	const [selectedExercise, setSelectedExercise] = useState<Exercise | null>(
 		null,
 	);
@@ -78,6 +85,8 @@ export default function ExercisesScreen() {
 		search: debouncedSearch.trim() || undefined,
 		category: selectedCategory === "Todos" ? undefined : selectedCategory,
 		difficulty: selectedDifficulty || undefined,
+		bodyPart: selectedBodyPart || undefined,
+		equipment: selectedEquipment || undefined,
 		favorites: showFavoritesOnly,
 		limit: 20,
 	});
@@ -87,11 +96,13 @@ export default function ExercisesScreen() {
 	// Simplified category list - in a real app these would come from the API
 	const categoryOptions = [
 		"Todos",
-		"Mobilidade",
-		"Força",
-		"Equilíbrio",
-		"Cardio",
+		"Fortalecimento",
 		"Alongamento",
+		"Mobilidade",
+		"Equilíbrio",
+		"Propriocepção",
+		"Cardio",
+		"Funcional",
 	];
 
 	const { assignExercise, isAssigning } = usePatientExerciseAssignments();
@@ -442,6 +453,40 @@ export default function ExercisesScreen() {
 									clearButtonMode="while-editing"
 									onFocus={() => medium()}
 								/>
+								<TouchableOpacity
+									style={[
+										styles.filterButton,
+										{
+											backgroundColor:
+												showFiltersModal ||
+												selectedEquipment ||
+												selectedBodyPart ||
+												selectedDifficulty
+													? colors.primary
+													: colors.border + "40",
+										},
+									]}
+									onPress={() => {
+										medium();
+										setShowFiltersModal(true);
+									}}
+								>
+									<Ionicons
+										name="options-outline"
+										size={20}
+										color={
+											showFiltersModal ||
+											selectedEquipment ||
+											selectedBodyPart ||
+											selectedDifficulty
+												? "#FFFFFF"
+												: colors.text
+										}
+									/>
+									{(selectedEquipment || selectedBodyPart || selectedDifficulty) && (
+										<View style={styles.activeFilterDot} />
+									)}
+								</TouchableOpacity>
 							</View>
 						</View>
 
@@ -462,7 +507,7 @@ export default function ExercisesScreen() {
 											backgroundColor:
 												selectedCategory === category
 													? colors.primary
-													: colors.surface + "B0", // Glass chip
+													: colors.surface + "B0",
 											borderColor:
 												selectedCategory === category
 													? colors.primary
@@ -471,12 +516,8 @@ export default function ExercisesScreen() {
 										},
 									]}
 									onPress={() => {
-										medium(); // More distinct feedback for categories
+										medium();
 										setSelectedCategory(category);
-										if (category === "Todos") {
-											setSelectedDifficulty(null);
-											setShowFavoritesOnly(false);
-										}
 									}}
 								>
 									<Ionicons
@@ -493,48 +534,11 @@ export default function ExercisesScreen() {
 										style={[
 											styles.filterText,
 											selectedCategory === category
-												? { color: "#FFFFFF" }
+												? { color: "#FFFFFF", fontWeight: "600" }
 												: { color: colors.textSecondary },
 										]}
 									>
 										{category}
-									</Text>
-								</TouchableOpacity>
-							)}
-						/>
-
-						<Text style={[styles.sectionTitle, { color: colors.text }]}>
-							Dificuldade
-						</Text>
-						<FlatList
-							horizontal
-							showsHorizontalScrollIndicator={false}
-							data={DIFFICULTIES}
-							contentContainerStyle={styles.filterScrollContent}
-							renderItem={({ item: difficulty }) => (
-								<TouchableOpacity
-									style={[
-										styles.filterChip,
-										{ borderColor: colors.border },
-										selectedDifficulty === difficulty.value && {
-											backgroundColor: colors.primary,
-											borderColor: colors.primary,
-										},
-									]}
-									onPress={() => {
-										light();
-										setSelectedDifficulty(difficulty.value);
-									}}
-								>
-									<Text
-										style={[
-											styles.filterText,
-											selectedDifficulty === difficulty.value
-												? { color: "#FFFFFF" }
-												: { color: colors.textSecondary },
-										]}
-									>
-										{difficulty.label}
 									</Text>
 								</TouchableOpacity>
 							)}
