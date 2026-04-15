@@ -231,44 +231,58 @@ export function ClinicalTestFormModal({
 			open={open}
 			onOpenChange={onOpenChange}
 			isMobile={isMobile}
-			contentClassName="max-w-2xl h-[90vh]"
+			contentClassName="max-w-3xl h-[90vh] bg-white/70 backdrop-blur-2xl border-white/20 shadow-2xl overflow-hidden rounded-3xl"
 		>
-			<CustomModalHeader onClose={() => onOpenChange(false)}>
-				<CustomModalTitle className="text-xl font-bold flex items-center gap-2">
-					{mode === "create" ? (
-						<Plus className="h-5 w-5 text-teal-600" />
-					) : (
-						<Settings className="h-5 w-5 text-teal-600" />
-					)}
+			<CustomModalHeader onClose={() => onOpenChange(false)} className="border-b border-black/5 pb-4">
+				<CustomModalTitle className="text-2xl font-black flex items-center gap-3 text-slate-900 tracking-tight">
+					<div className="p-2 bg-teal-500/10 rounded-2xl">
+						{mode === "create" ? (
+							<Plus className="h-6 w-6 text-teal-600" />
+						) : (
+							<Settings className="h-6 w-6 text-teal-600" />
+						)}
+					</div>
 					{modalTitle}
 				</CustomModalTitle>
 			</CustomModalHeader>
 
 			<Tabs
 				defaultValue="basic"
-				className="flex-1 flex flex-col overflow-hidden"
+				className="flex-1 flex flex-col overflow-hidden bg-transparent"
 			>
-				<TabsList className="px-6 py-2 bg-slate-50 border-b justify-start rounded-none shrink-0 overflow-x-auto scrollbar-hide">
-					<TabsTrigger value="basic" className="gap-1.5">
+				<TabsList className="px-6 py-8 bg-transparent border-b border-black/5 justify-start rounded-none shrink-0 overflow-x-auto scrollbar-hide gap-6">
+					<TabsTrigger 
+						value="basic" 
+						className="gap-2 px-0 pb-3 border-b-2 border-transparent data-[state=active]:border-teal-600 data-[state=active]:bg-transparent data-[state=active]:text-teal-600 rounded-none font-bold transition-all"
+					>
 						<BookOpen className="h-4 w-4" /> Básico
 					</TabsTrigger>
-					<TabsTrigger value="metrics" className="gap-1.5">
+					<TabsTrigger 
+						value="metrics" 
+						className="gap-2 px-0 pb-3 border-b-2 border-transparent data-[state=active]:border-teal-600 data-[state=active]:bg-transparent data-[state=active]:text-teal-600 rounded-none font-bold transition-all"
+					>
 						<BarChart3 className="h-4 w-4" /> Métricas
 					</TabsTrigger>
-					<TabsTrigger value="settings" className="gap-1.5">
+					<TabsTrigger 
+						value="settings" 
+						className="gap-2 px-0 pb-3 border-b-2 border-transparent data-[state=active]:border-teal-600 data-[state=active]:bg-transparent data-[state=active]:text-teal-600 rounded-none font-bold transition-all"
+					>
 						<Settings className="h-4 w-4" /> Configurações
 					</TabsTrigger>
-					<TabsTrigger value="media" className="gap-1.5">
+					<TabsTrigger 
+						value="media" 
+						className="gap-2 px-0 pb-3 border-b-2 border-transparent data-[state=active]:border-teal-600 data-[state=active]:bg-transparent data-[state=active]:text-teal-600 rounded-none font-bold transition-all"
+					>
 						<Video className="h-4 w-4" /> Mídia
 					</TabsTrigger>
 				</TabsList>
 
 				<CustomModalBody className="p-0 sm:p-0">
 					<div className="p-6">
-						<TabsContent value="basic" className="mt-0 space-y-4">
-							<div className="grid grid-cols-2 gap-4">
-								<div className="col-span-2 md:col-span-1">
-									<Label htmlFor="name">Nome do Teste *</Label>
+						<TabsContent value="basic" className="mt-0 space-y-6 focus-visible:ring-0">
+							<div className="grid grid-cols-2 gap-6">
+								<div className="col-span-2 md:col-span-1 space-y-2">
+									<Label htmlFor="name" className="text-xs font-black uppercase tracking-wider text-slate-500 ml-1">Nome do Teste *</Label>
 									<Input
 										id="name"
 										value={formData.name}
@@ -277,10 +291,11 @@ export function ClinicalTestFormModal({
 										}
 										placeholder="Ex: Teste de Lachman"
 										required
+										className="h-12 bg-white/50 border-white/40 focus:bg-white focus:border-teal-500/50 rounded-xl transition-all shadow-sm"
 									/>
 								</div>
-								<div className="col-span-2 md:col-span-1">
-									<Label htmlFor="name_en">Nome (Inglês)</Label>
+								<div className="col-span-2 md:col-span-1 space-y-2">
+									<Label htmlFor="name_en" className="text-xs font-black uppercase tracking-wider text-slate-500 ml-1">Nome (Inglês)</Label>
 									<Input
 										id="name_en"
 										value={formData.name_en || ""}
@@ -288,23 +303,24 @@ export function ClinicalTestFormModal({
 											setFormData({ ...formData, name_en: e.target.value })
 										}
 										placeholder="Ex: Lachman Test"
+										className="h-12 bg-white/50 border-white/40 focus:bg-white focus:border-teal-500/50 rounded-xl transition-all shadow-sm"
 									/>
 								</div>
 							</div>
 
-							<div className="grid grid-cols-2 gap-4">
-								<div>
-									<Label htmlFor="category">Categoria</Label>
+							<div className="grid grid-cols-2 gap-6">
+								<div className="space-y-2">
+									<Label htmlFor="category" className="text-xs font-black uppercase tracking-wider text-slate-500 ml-1">Categoria</Label>
 									<Select
 										value={formData.category}
 										onValueChange={(value) =>
 											setFormData({ ...formData, category: value })
 										}
 									>
-										<SelectTrigger id="category">
+										<SelectTrigger id="category" className="h-12 bg-white/50 border-white/40 focus:bg-white focus:border-teal-500/50 rounded-xl transition-all shadow-sm">
 											<SelectValue placeholder="Selecione..." />
 										</SelectTrigger>
-										<SelectContent>
+										<SelectContent className="rounded-xl border-white/20 backdrop-blur-xl">
 											{CATEGORIES.map((cat) => (
 												<SelectItem key={cat} value={cat}>
 													{cat}
@@ -313,18 +329,18 @@ export function ClinicalTestFormModal({
 										</SelectContent>
 									</Select>
 								</div>
-								<div>
-									<Label htmlFor="target_joint">Articulação/Região</Label>
+								<div className="space-y-2">
+									<Label htmlFor="target_joint" className="text-xs font-black uppercase tracking-wider text-slate-500 ml-1">Articulação/Região</Label>
 									<Select
 										value={formData.target_joint}
 										onValueChange={(value) =>
 											setFormData({ ...formData, target_joint: value })
 										}
 									>
-										<SelectTrigger id="target_joint">
+										<SelectTrigger id="target_joint" className="h-12 bg-white/50 border-white/40 focus:bg-white focus:border-teal-500/50 rounded-xl transition-all shadow-sm">
 											<SelectValue placeholder="Selecione..." />
 										</SelectTrigger>
-										<SelectContent>
+										<SelectContent className="rounded-xl border-white/20 backdrop-blur-xl">
 											{TARGET_JOINTS.map((joint) => (
 												<SelectItem key={joint} value={joint}>
 													{joint}
@@ -336,54 +352,57 @@ export function ClinicalTestFormModal({
 							</div>
 
 							{/* Purpose */}
-							<div>
-								<Label htmlFor="purpose">Propósito</Label>
+							<div className="space-y-2">
+								<Label htmlFor="purpose" className="text-xs font-black uppercase tracking-wider text-slate-500 ml-1">Propósito</Label>
 								<MagicTextarea
 									id="purpose"
+									showMic={false}
 									value={formData.purpose || ""}
 									onValueChange={(val) =>
 										setFormData({ ...formData, purpose: val })
 									}
 									placeholder="Descreva o objetivo clínico do teste..."
 									rows={2}
-									className="bg-muted/30 border-transparent focus:bg-background focus:border-input transition-all"
+									className="bg-white/50 border-white/40 focus:bg-white focus:border-teal-500/50 rounded-2xl transition-all shadow-sm min-h-[80px]"
 								/>
 							</div>
 
 							{/* Execution */}
-							<div>
-								<Label htmlFor="execution">Execução</Label>
+							<div className="space-y-2">
+								<Label htmlFor="execution" className="text-xs font-black uppercase tracking-wider text-slate-500 ml-1">Execução</Label>
 								<MagicTextarea
 									id="execution"
+									showMic={false}
 									value={formData.execution || ""}
 									onValueChange={(val) =>
 										setFormData({ ...formData, execution: val })
 									}
 									placeholder="Descreva passo a passo como realizar o teste..."
 									rows={3}
-									className="bg-muted/30 border-transparent focus:bg-background focus:border-input transition-all"
+									className="bg-white/50 border-white/40 focus:bg-white focus:border-teal-500/50 rounded-2xl transition-all shadow-sm min-h-[100px]"
 								/>
 							</div>
 
 							{/* Positive Sign */}
-							<div>
-								<Label htmlFor="positive_sign">Interpretação Positiva</Label>
+							<div className="space-y-2">
+								<Label htmlFor="positive_sign" className="text-xs font-black uppercase tracking-wider text-slate-500 ml-1">Interpretação Positiva</Label>
 								<MagicTextarea
 									id="positive_sign"
+									showMic={false}
 									value={formData.positive_sign || ""}
 									onValueChange={(val) =>
 										setFormData({ ...formData, positive_sign: val })
 									}
 									placeholder="O que indica um resultado positivo..."
 									rows={2}
-									className="bg-muted/30 border-transparent focus:bg-background focus:border-input transition-all"
+									className="bg-white/50 border-white/40 focus:bg-white focus:border-teal-500/50 rounded-2xl transition-all shadow-sm min-h-[80px]"
 								/>
 							</div>
 
 							{/* Reference and Sensitivity */}
-							<div className="grid grid-cols-2 gap-4">
-								<div>
-									<Label htmlFor="reference">Referência Bibliográfica</Label>
+							<div className="grid grid-cols-2 gap-6">
+								<div className="space-y-2">
+									<Label htmlFor="reference" className="text-xs font-black uppercase tracking-wider text-slate-500 ml-1">Referência Bibliográfica</Label>
 									<Input
 										id="reference"
 										value={formData.reference || ""}
@@ -391,10 +410,11 @@ export function ClinicalTestFormModal({
 											setFormData({ ...formData, reference: e.target.value })
 										}
 										placeholder="Ex: Magee, 2014"
+										className="h-12 bg-white/50 border-white/40 focus:bg-white focus:border-teal-500/50 rounded-xl shadow-sm"
 									/>
 								</div>
-								<div>
-									<Label htmlFor="sensitivity">
+								<div className="space-y-2">
+									<Label htmlFor="sensitivity" className="text-xs font-black uppercase tracking-wider text-slate-500 ml-1">
 										Sensibilidade/Especificidade
 									</Label>
 									<Input
@@ -407,18 +427,20 @@ export function ClinicalTestFormModal({
 											})
 										}
 										placeholder="Ex: 85% sens, 94% espec"
+										className="h-12 bg-white/50 border-white/40 focus:bg-white focus:border-teal-500/50 rounded-xl shadow-sm"
 									/>
 								</div>
 							</div>
 
 							{/* Tags */}
-							<div>
-								<Label htmlFor="tags">Tags (separadas por vírgula)</Label>
+							<div className="space-y-2">
+								<Label htmlFor="tags" className="text-xs font-black uppercase tracking-wider text-slate-500 ml-1">Tags (separadas por vírgula)</Label>
 								<Input
 									id="tags"
 									value={tagsInput}
 									onChange={(e) => setTagsInput(e.target.value)}
 									placeholder="Ex: Ortopedia, Joelho, LCA"
+									className="h-12 bg-white/50 border-white/40 focus:bg-white focus:border-teal-500/50 rounded-xl shadow-sm"
 								/>
 							</div>
 						</TabsContent>
@@ -531,13 +553,13 @@ export function ClinicalTestFormModal({
 
 						<TabsContent value="media" className="mt-0 space-y-6">
 							{/* YouTube/Video URL */}
-							<div>
-								<Label htmlFor="media_urls" className="flex items-center gap-2">
-									<Video className="h-4 w-4" /> Vídeos (URLs, separadas por
-									vírgula)
+							<div className="space-y-2">
+								<Label htmlFor="media_urls" className="flex items-center gap-2 text-xs font-black uppercase tracking-wider text-slate-500 ml-1">
+									<Video className="h-4 w-4" /> Vídeos (URLs, separadas por vírgula)
 								</Label>
 								<MagicTextarea
 									id="media_urls"
+									showMic={false}
 									value={formData.media_urls?.join(", ") || ""}
 									onValueChange={(val) => {
 										const urls = val
@@ -548,9 +570,9 @@ export function ClinicalTestFormModal({
 									}}
 									placeholder="https://www.youtube.com/watch?v=..., https://vimeo.com/..."
 									rows={3}
-									className="bg-muted/30 border-transparent focus:bg-background focus:border-input transition-all"
+									className="bg-white/50 border-white/40 focus:bg-white focus:border-teal-500/50 rounded-2xl shadow-sm"
 								/>
-								<p className="text-xs text-slate-500 mt-1">
+								<p className="text-xs text-slate-400 mt-1 italic pl-1">
 									Adicione links de vídeos demonstrativos da execução do teste.
 								</p>
 							</div>
@@ -625,19 +647,20 @@ export function ClinicalTestFormModal({
 				</CustomModalBody>
 			</Tabs>
 
-			<CustomModalFooter isMobile={isMobile}>
+			<CustomModalFooter isMobile={isMobile} className="bg-transparent border-t border-black/5 py-4">
 				<Button
 					type="button"
-					variant="outline"
+					variant="ghost"
 					onClick={() => onOpenChange(false)}
 					disabled={isPending}
+					className="hover:bg-black/5 text-slate-600 font-bold px-8 rounded-xl transition-all"
 				>
 					Cancelar
 				</Button>
 				<Button
 					type="button"
 					onClick={handleSubmit}
-					className="bg-teal-600 hover:bg-teal-700 text-white gap-2"
+					className="bg-teal-600 hover:bg-teal-700 text-white font-black px-10 rounded-xl gap-2 shadow-lg shadow-teal-500/20 transition-all transform active:scale-95"
 					disabled={isPending || !formData.name}
 				>
 					{isPending ? (

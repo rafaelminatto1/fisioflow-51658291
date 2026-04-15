@@ -5,6 +5,11 @@ import { SettingsSectionCard } from "@/components/schedule/settings/shared/Setti
 
 export function ScheduleCapacityHoursTab() {
 	return (
+		<div className="space-y-4">
+		<div>
+			<h2 className="text-base font-bold">Horários</h2>
+			<p className="text-sm text-muted-foreground">Capacidade de atendimento e horários de funcionamento</p>
+		</div>
 		<div className="grid gap-4 lg:grid-cols-2 lg:items-start">
 			<SettingsSectionCard
 				icon={
@@ -25,6 +30,7 @@ export function ScheduleCapacityHoursTab() {
 			>
 				<BusinessHoursManager />
 			</SettingsSectionCard>
+		</div>
 		</div>
 	);
 }

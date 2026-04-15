@@ -5,6 +5,11 @@ import { SettingsSectionCard } from "@/components/schedule/settings/shared/Setti
 
 export function SchedulePoliciesTab() {
 	return (
+		<div className="space-y-4">
+		<div>
+			<h2 className="text-base font-bold">Políticas</h2>
+			<p className="text-sm text-muted-foreground">Regras de cancelamento e notificações automáticas</p>
+		</div>
 		<div className="grid gap-4 lg:grid-cols-2 lg:items-start">
 			<SettingsSectionCard
 				icon={
@@ -25,6 +30,7 @@ export function SchedulePoliciesTab() {
 			>
 				<NotificationSettingsManager />
 			</SettingsSectionCard>
+		</div>
 		</div>
 	);
 }

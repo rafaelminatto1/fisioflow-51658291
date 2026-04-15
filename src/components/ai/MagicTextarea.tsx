@@ -17,11 +17,13 @@ interface MagicTextareaProps
 	extends React.TextareaHTMLAttributes<HTMLTextAreaElement> {
 	value: string;
 	onValueChange: (value: string) => void;
+	showMic?: boolean;
 }
 
 export function MagicTextarea({
 	value,
 	onValueChange,
+	showMic = true,
 	className,
 	...props
 }: MagicTextareaProps) {
@@ -120,43 +122,45 @@ export function MagicTextarea({
 				onChange={(e) => onValueChange(e.target.value)}
 				onKeyDown={handleKeyDown}
 				className={cn(
-					"pr-24 transition-all focus:ring-purple-500/20",
+					"pr-28 transition-all focus:ring-2 focus:ring-teal-500/20 focus:border-teal-500/50 min-h-[100px] resize-none scrollbar-hide",
 					className,
 				)}
 				{...props}
 			/>
 
-			<div className="absolute bottom-2 right-2 flex gap-1 opacity-50 group-hover:opacity-100 transition-opacity">
+			<div className="absolute bottom-2 right-2 flex gap-1.5 p-1 rounded-full bg-white/40 backdrop-blur-sm border border-white/20 opacity-0 group-hover:opacity-100 transition-all duration-300 transform translate-y-1 group-hover:translate-y-0">
 				<TooltipProvider>
 					{/* Botão de Microfone */}
-					<Tooltip>
-						<TooltipTrigger asChild>
-							<Button
-								type="button"
-								size="icon"
-								variant="ghost"
-								className={cn(
-									"h-8 w-8 rounded-full transition-colors",
-									isRecording
-										? "bg-red-100 text-red-600 hover:bg-red-200 animate-pulse"
-										: "hover:bg-blue-100 text-blue-600",
-								)}
-								onClick={handleMicClick}
-								disabled={loading && !isRecording}
-							>
-								{isRecording ? (
-									<StopCircle className="h-4 w-4" />
-								) : (
-									<Mic className="h-4 w-4" />
-								)}
-							</Button>
-						</TooltipTrigger>
-						<TooltipContent>
-							<p>
-								{isRecording ? "Parar e Transcrever" : "Ditar (Google Speech)"}
-							</p>
-						</TooltipContent>
-					</Tooltip>
+					{showMic && (
+						<Tooltip>
+							<TooltipTrigger asChild>
+								<Button
+									type="button"
+									size="icon"
+									variant="ghost"
+									className={cn(
+										"h-8 w-8 rounded-full transition-all duration-200",
+										isRecording
+											? "bg-red-500 text-white hover:bg-red-600 animate-pulse shadow-lg shadow-red-500/20"
+											: "hover:bg-blue-50 text-blue-600 hover:text-blue-700",
+									)}
+									onClick={handleMicClick}
+									disabled={loading && !isRecording}
+								>
+									{isRecording ? (
+										<StopCircle className="h-4 w-4" />
+									) : (
+										<Mic className="h-4 w-4" />
+									)}
+								</Button>
+							</TooltipTrigger>
+							<TooltipContent side="top">
+								<p>
+									{isRecording ? "Parar e Transcrever" : "Ditar texto"}
+								</p>
+							</TooltipContent>
+						</Tooltip>
+					)}
 
 					{/* Botão de Magia (Groq) */}
 					<Tooltip>
@@ -165,19 +169,24 @@ export function MagicTextarea({
 								type="button"
 								size="icon"
 								variant="ghost"
-								className="h-8 w-8 hover:bg-purple-100 text-purple-600 rounded-full"
+								className={cn(
+									"h-8 w-8 rounded-full transition-all duration-200",
+									loading && !isRecording
+										? "bg-teal-50 text-teal-600"
+										: "hover:bg-teal-50 text-teal-600 hover:text-teal-700 hover:shadow-lg hover:shadow-teal-500/10"
+								)}
 								onClick={handleMagicFix}
 								disabled={loading || !value || isRecording}
 							>
 								{loading && !isRecording ? (
 									<Loader2 className="h-4 w-4 animate-spin" />
 								) : (
-									<Sparkles className="h-4 w-4" />
+									<Sparkles className="h-4 w-4 fill-current opacity-70" />
 								)}
 							</Button>
 						</TooltipTrigger>
-						<TooltipContent>
-							<p>Melhorar texto com IA (Groq)</p>
+						<TooltipContent side="top">
+							<p>Refinar texto com IA</p>
 						</TooltipContent>
 					</Tooltip>
 
@@ -188,15 +197,15 @@ export function MagicTextarea({
 								type="button"
 								size="icon"
 								variant="ghost"
-								className="h-8 w-8 hover:bg-blue-100 text-blue-600 rounded-full"
+								className="h-8 w-8 hover:bg-blue-50 text-blue-600 hover:text-blue-700 rounded-full transition-all duration-200"
 								onClick={() => setIsSearchOpen(true)}
 								disabled={isRecording}
 							>
 								<BookOpen className="h-4 w-4" />
 							</Button>
 						</TooltipTrigger>
-						<TooltipContent>
-							<p>Dicionário Clínico Bilingue (/sugestoes)</p>
+						<TooltipContent side="top">
+							<p>Dicionário Clínico (/sugestoes)</p>
 						</TooltipContent>
 					</Tooltip>
 				</TooltipProvider>

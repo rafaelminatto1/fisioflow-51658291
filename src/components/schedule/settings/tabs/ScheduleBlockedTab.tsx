@@ -16,6 +16,10 @@ export function ScheduleBlockedTab() {
 
 	return (
 		<div className="space-y-4">
+			<div>
+				<h2 className="text-base font-bold">Bloqueios</h2>
+				<p className="text-sm text-muted-foreground">Ausências, feriados e indisponibilidades</p>
+			</div>
 			<div className="flex items-center gap-1.5 flex-wrap">
 				{FILTERS.map((f) => (
 					<button
@@ -37,3 +41,4 @@ export function ScheduleBlockedTab() {
 		</div>
 	);
 }
+

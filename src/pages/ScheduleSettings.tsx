@@ -3,10 +3,12 @@ import { MainLayout } from "@/components/layout/MainLayout";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
 	ArrowLeft,
+	CalendarClock,
 	CalendarOff,
 	Clock,
 	Eye,
 	LayoutDashboard,
+	Menu,
 	Palette,
 	Shield,
 } from "lucide-react";
@@ -162,33 +164,32 @@ export default function ScheduleSettings() {
 	return (
 		<MainLayout compactPadding>
 			<div className="space-y-4">
-				<div className="flex items-center justify-between">
-					<div className="flex items-center gap-3">
+				<div className="flex items-center justify-between gap-3">
+					<div className="flex items-center gap-2.5">
 						<Link to="/agenda">
 							<Button
 								variant="ghost"
 								size="icon"
-								className="rounded-xl h-9 w-9"
+								className="rounded-xl h-9 w-9 shrink-0"
 							>
 								<ArrowLeft className="h-4 w-4" />
 							</Button>
 						</Link>
-						<div>
-							<div className="flex items-center gap-2 mb-0.5">
-								<Badge
-									variant="outline"
-									className="gap-1 rounded-full text-xs px-2 py-0.5"
-								>
-									<Clock className="h-3 w-3" />
-									Agenda
-								</Badge>
+						<div className="flex items-center gap-2.5">
+							<div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary">
+								<CalendarClock className="h-4 w-4" />
 							</div>
-							<h1 className="text-lg font-bold tracking-tight leading-none">
-								Configurações da Agenda
-							</h1>
+							<div>
+								<h1 className="text-base font-bold leading-none">
+									Configurações da Agenda
+								</h1>
+								<p className="mt-0.5 text-xs text-muted-foreground">
+									Horários, aparência e políticas
+								</p>
+							</div>
 						</div>
 					</div>
-					<Button asChild variant="outline" size="sm" className="rounded-xl">
+					<Button asChild variant="outline" size="sm" className="rounded-xl shrink-0">
 						<Link to="/agenda">Ver agenda</Link>
 					</Button>
 				</div>
@@ -214,13 +215,13 @@ export default function ScheduleSettings() {
 											const Icon = t.icon;
 											return (
 												<>
-													<Icon className="h-4 w-4" />
-													{t.label}
+													<Icon className="h-4 w-4 text-muted-foreground" />
+													<span className="font-medium">{t.label}</span>
 												</>
 											);
 										})()}
 									</span>
-									<LayoutDashboard className="h-4 w-4 text-muted-foreground" />
+									<Menu className="h-4 w-4 text-muted-foreground" />
 								</Button>
 							</SheetTrigger>
 							<SheetContent side="left" className="w-72 p-0">
