@@ -61,14 +61,17 @@
 	border-bottom: 1px solid #f1f5f9 !important;
 }
 
-/* Mostrar apenas linhas de 30 em 30 min */
+/* Grid visibility for all hours */
 .ec-time-grid .ec-line {
-	display: none;
+	display: block !important;
+	border-bottom: 1px solid #f1f5f9 !important;
+	opacity: 1 !important;
+	visibility: visible !important;
 }
 
-/* Mostrar linhas pares (a cada 30 min = 2 slots de 15 min) */
-.ec-time-grid .ec-line:nth-child(2n) {
-	display: block;
+/* Make full-hour lines slightly more visible */
+.ec-time-grid .ec-line:nth-child(4n) {
+	border-bottom: 1px solid #e2e8f0 !important;
 }
 
 .sx__time-grid-hour-text {
