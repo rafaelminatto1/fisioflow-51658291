@@ -13,12 +13,8 @@ import { patientsApi } from "@/api/v2";
 import { PatientHelpers } from "@/types";
 
 // Lazy loads - AI Features
-const SmartDashboard = lazy(
-	() =>
-		import(/* webpackChunkName: "smart-dashboard" */ "@/pages/SmartDashboard"),
-);
-const SmartAI = lazy(
-	() => import(/* webpackChunkName: "ai-smart" */ "@/pages/SmartAI"),
+const IntelligenceHub = lazy(
+	() => import(/* webpackChunkName: "intelligence-hub" */ "@/pages/IntelligenceHub")
 );
 const ClinicalAnalysisPage = lazy(
 	() =>
@@ -101,24 +97,32 @@ function IntelligentReportsRoute() {
 
 export const aiRoutes = (
 	<>
-		{/* Smart Dashboard */}
+		{/* Intelligence Hub & Legacy Redirects */}
 		<Route
-			path="/smart-dashboard"
+			path="/inteligencia"
 			element={
-				<RouteErrorBoundary routeName="SmartDashboard">
+				<RouteErrorBoundary routeName="IntelligenceHub">
 					<ProtectedRoute>
-						<SmartDashboard />
+						<IntelligenceHub />
 					</ProtectedRoute>
 				</RouteErrorBoundary>
 			}
 		/>
 		<Route
+			path="/smart-dashboard"
+			element={<Navigate to="/inteligencia?tab=dashboard" replace />}
+		/>
+		<Route
 			path="/smart-ai"
-			element={
-				<ProtectedRoute>
-					<SmartAI />
-				</ProtectedRoute>
-			}
+			element={<Navigate to="/inteligencia?tab=ai" replace />}
+		/>
+		<Route
+			path="/analytics"
+			element={<Navigate to="/inteligencia?tab=analytics" replace />}
+		/>
+		<Route
+			path="/bi"
+			element={<Navigate to="/inteligencia?tab=bi" replace />}
 		/>
 
 		{/* Google AI Suite */}
