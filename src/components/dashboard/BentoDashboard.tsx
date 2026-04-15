@@ -4,7 +4,6 @@ import {
 	ChevronRight,
 	ClipboardCheck,
 	DollarSign,
-	TrendingUp,
 	Users,
 } from "lucide-react";
 import type React from "react";
@@ -15,8 +14,6 @@ import {
 	CartesianGrid,
 	Tooltip,
 	XAxis,
-	BarChart,
-	Bar,
 } from "recharts";
 import { SafeResponsiveContainer } from "@/components/charts/SafeResponsiveContainer";
 import { Badge } from "@/components/ui/badge";
@@ -27,12 +24,12 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { cn } from "@/lib/utils";
 import type { DashboardViewMode } from "@/hooks/useSmartDashboard";
 import { useSmartDashboardData } from "@/hooks/useSmartDashboard";
-import { RagSearchWidget } from "./RagSearchWidget";
+
 interface BentoDashboardProps {
 	viewMode?: DashboardViewMode;
 }
 
-export const BentoDashboard: React.FC<BentoDashboardProps> = ({ viewMode = "month" }) => {
+export const BentoDashboard: React.FC<BentoDashboardProps> = ({ viewMode = "today" }) => {
 	const navigate = useNavigate();
 
 	const { data, isLoading: metricsLoading } = useSmartDashboardData(viewMode);
@@ -41,8 +38,8 @@ export const BentoDashboard: React.FC<BentoDashboardProps> = ({ viewMode = "mont
 
 	if (metricsLoading) {
 		return (
-			<div className="grid grid-cols-1 md:grid-cols-4 gap-4 p-4">
-				{[1, 2, 3, 4, 5, 6, 7, 8].map((i) => (
+			<div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+				{[1, 2, 3, 4, 5].map((i) => (
 					<Skeleton key={i} className="h-32 w-full rounded-3xl" />
 				))}
 			</div>
@@ -51,8 +48,8 @@ export const BentoDashboard: React.FC<BentoDashboardProps> = ({ viewMode = "mont
 
 	return (
 		<div className="space-y-6 md:space-y-8 animate-fade-in pb-10 max-w-[1600px] mx-auto">
-			{/* Top command metrics - 4 priority cards */}
-			<div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+			{/* Top 3 operational KPIs */}
+			<div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
 				{/* Agenda & Ocupação */}
 				<Card
 					className="rounded-[2.5rem] border-none shadow-[0_4px_20px_rgba(0,0,0,0.04)] bg-white dark:bg-slate-900 overflow-hidden relative group cursor-pointer"
@@ -80,30 +77,6 @@ export const BentoDashboard: React.FC<BentoDashboardProps> = ({ viewMode = "mont
 								<Progress value={metrics?.occupancyRate || 0} className="h-1 bg-slate-100" />
 							</div>
 						</div>
-					</CardContent>
-				</Card>
-				
-				{/* Retenção */}
-				<Card
-					className="rounded-[2.5rem] border-none shadow-[0_4px_20px_rgba(0,0,0,0.04)] bg-white dark:bg-slate-900 overflow-hidden relative group cursor-pointer"
-					onClick={() => navigate("/atendimentos")}
-				>
-					<div className="absolute -top-4 -right-4 p-8 opacity-[0.03] group-hover:opacity-[0.08] transition-opacity duration-700">
-						<Users className="w-24 h-24 text-emerald-500" />
-					</div>
-					<CardContent className="p-7 relative z-10">
-						<p className="font-display text-[10px] font-bold uppercase tracking-[0.2em] text-slate-400 mb-1">
-							Taxa de Retenção
-						</p>
-						<div className="flex items-baseline gap-2">
-							<h3 className="font-display text-4xl font-extrabold tracking-tighter text-slate-900 dark:text-white">
-								{metrics?.retentionRate || 0}%
-							</h3>
-							<TrendingUp className="w-4 h-4 text-emerald-500 mb-1" />
-						</div>
-						<p className="text-[9px] font-bold text-emerald-600 bg-emerald-50 dark:bg-emerald-900/20 px-3 py-1 rounded-full w-fit mt-3 uppercase tracking-wider">
-							Procura em alta
-						</p>
 					</CardContent>
 				</Card>
 
@@ -182,7 +155,7 @@ export const BentoDashboard: React.FC<BentoDashboardProps> = ({ viewMode = "mont
 				</Card>
 			</div>
 
-			{/* Bento Grid Main Layout */}
+			{/* Bento Grid */}
 			<div className="grid grid-cols-1 lg:grid-cols-12 gap-6 auto-rows-[240px]">
 				{/* Agenda do Dia */}
 				<Card className="lg:col-span-8 lg:row-span-2 rounded-[3.5rem] border-none shadow-[0_4px_24px_rgba(0,0,0,0.02)] bg-white dark:bg-slate-950 overflow-hidden group">
@@ -275,6 +248,7 @@ export const BentoDashboard: React.FC<BentoDashboardProps> = ({ viewMode = "mont
 										</linearGradient>
 									</defs>
 									<CartesianGrid vertical={false} stroke="#E5E7EB" strokeDasharray="3 3" />
+									<XAxis dataKey="week" axisLine={false} tickLine={false} tick={{ fontSize: 9, fill: "#94a3b8" }} />
 									<Tooltip
 										contentStyle={{
 											backgroundColor: "rgba(255, 255, 255, 0.9)",
@@ -290,7 +264,7 @@ export const BentoDashboard: React.FC<BentoDashboardProps> = ({ viewMode = "mont
 										strokeWidth={3}
 										fillOpacity={1}
 										fill="url(#colorPain)"
-										name="Pain"
+										name="Dor"
 									/>
 									<Area
 										type="monotone"
@@ -299,106 +273,41 @@ export const BentoDashboard: React.FC<BentoDashboardProps> = ({ viewMode = "mont
 										strokeWidth={3}
 										fillOpacity={1}
 										fill="url(#colorMobility)"
-										name="Mobility"
+										name="Mobilidade"
 									/>
 								</AreaChart>
 							</SafeResponsiveContainer>
 						</div>
-						<div className="mt-8 p-6 rounded-[2.5rem] bg-[#f7f9fb] dark:bg-slate-900/50">
-							<p className="text-[10px] font-black uppercase tracking-widest text-primary mb-2">FisioAI Assessment</p>
+
+						<div className="mt-6 flex items-center gap-4">
+							<div className="flex items-center gap-1.5">
+								<span className="w-3 h-3 rounded-full bg-red-400" />
+								<span className="text-[10px] font-bold text-slate-400 uppercase">Dor</span>
+							</div>
+							<div className="flex items-center gap-1.5">
+								<span className="w-3 h-3 rounded-full bg-emerald-400" />
+								<span className="text-[10px] font-bold text-slate-400 uppercase">Mobilidade</span>
+							</div>
+						</div>
+
+						<div className="mt-6 p-5 rounded-[2rem] bg-[#f7f9fb] dark:bg-slate-900/50">
+							<div className="flex items-center gap-2 mb-1">
+								<Users className="w-3 h-3 text-primary" />
+								<p className="text-[10px] font-black uppercase tracking-widest text-primary">Pacientes em Evolução</p>
+							</div>
 							<p className="text-xs text-slate-500 font-medium leading-relaxed">
-								Trend suggests recovery is <span className="text-emerald-500 font-bold">8% faster</span> than baseline.
+								Acompanhe a evolução clínica dos seus pacientes em{" "}
+								<span
+									className="text-primary font-bold cursor-pointer underline-offset-2 hover:underline"
+									onClick={() => navigate("/pacientes")}
+								>
+									Pacientes
+								</span>
 							</p>
 						</div>
 					</CardContent>
 				</Card>
-
-				{/* Financial Alignment / Forecast */}
-				<Card className="lg:col-span-6 rounded-[3.5rem] border-none shadow-[0_4px_24px_rgba(0,0,0,0.02)] bg-white dark:bg-slate-950 overflow-hidden group">
-					<CardHeader className="px-10 pt-10 pb-2">
-						<p className="font-display text-[10px] font-bold uppercase tracking-[0.2em] text-slate-400 mb-1">
-							Previsão Financeira (Mensal)
-						</p>
-						<CardTitle className="font-display text-2xl font-extrabold tracking-tighter text-slate-900 dark:text-white">
-							Revenue Alignment
-						</CardTitle>
-					</CardHeader>
-					<CardContent className="px-10 pb-10 flex items-end justify-between gap-10">
-						<div className="flex-1 h-[140px]">
-							<SafeResponsiveContainer className="h-full" minHeight={140}>
-								<BarChart
-									data={[
-										{ name: "Realizado", value: metrics?.revenue || 0, fill: "#3b82f6" },
-										{ name: "Target", value: metrics?.targetRevenue || (metrics?.revenue || 0) * 1.1, fill: "#e2e8f0" },
-									]}
-									barSize={60}
-								>
-									<CartesianGrid vertical={false} strokeDasharray="3 3" stroke="#f1f5f9" />
-									<XAxis dataKey="name" axisLine={false} tickLine={false} tick={{ fontSize: 10, fill: '#94a3b8' }} />
-									<Bar dataKey="value" radius={[10, 10, 0, 0]} />
-								</BarChart>
-							</SafeResponsiveContainer>
-						</div>
-						<div className="w-1/3 flex flex-col gap-2">
-							<div className="p-5 rounded-3xl bg-blue-50 dark:bg-blue-900/20">
-								<p className="text-[9px] font-black uppercase tracking-widest text-blue-600 mb-1">Gap Alômico</p>
-								<p className="text-xl font-black text-blue-700">
-									R$ {Math.max(0, (metrics?.targetRevenue || 0) - (metrics?.revenue || 0)).toLocaleString()}
-								</p>
-							</div>
-						</div>
-					</CardContent>
-				</Card>
-
-				{/* AI Search / Clinical Knowledge */}
-				<div className="lg:col-span-6 rounded-[3.5rem] overflow-hidden">
-					<RagSearchWidget />
-				</div>
-			</div>
-
-			{/* Footbar */}
-			<div className="fixed bottom-10 left-1/2 -translate-x-1/2 z-50 bg-white/80 dark:bg-slate-950/80 backdrop-blur-2xl px-6 py-4 rounded-[3rem] shadow-[0_20px_50px_rgba(0,0,0,0.15)] flex items-center gap-4">
-				<Button
-					className="rounded-full bg-primary text-white font-display text-[11px] font-extrabold uppercase tracking-widest px-8 h-14"
-					onClick={() => navigate("/pacientes/novo")}
-				>
-					<Plus className="w-4 h-4 mr-2" /> Novo Paciente
-				</Button>
-				<div className="flex items-center gap-2">
-					{[
-						{ icon: Calendar, path: "/agenda", label: "Agenda" },
-						{ icon: DollarSign, path: "/financeiro", label: "Finance" },
-					].map((item, idx) => (
-						<Button
-							key={idx}
-							variant="ghost"
-							className="rounded-full text-slate-500 hover:text-primary font-display text-[10px] font-bold uppercase tracking-widest px-4 h-14"
-							onClick={() => navigate(item.path)}
-						>
-							<item.icon className="w-4 h-4 mr-2" />
-							{item.label}
-						</Button>
-					))}
-				</div>
 			</div>
 		</div>
 	);
 };
-
-const Plus = ({ className }: { className?: string }) => (
-	<svg
-		className={className}
-		xmlns="http://www.w3.org/2000/svg"
-		width="24"
-		height="24"
-		viewBox="0 0 24 24"
-		fill="none"
-		stroke="currentColor"
-		strokeWidth="2"
-		strokeLinecap="round"
-		strokeLinejoin="round"
-	>
-		<path d="M5 12h14" />
-		<path d="M12 5v14" />
-	</svg>
-);
