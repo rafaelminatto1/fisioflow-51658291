@@ -270,12 +270,27 @@ export function TemplateDetailPanel({
                   {template.items?.map((item, idx) => (
                     <div key={item.id || idx} className="group flex flex-col p-4 rounded-2xl border-2 border-muted hover:border-primary/20 bg-card transition-all">
                       <div className="flex items-start gap-4">
-                        <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-muted font-black text-sm group-hover:bg-primary group-hover:text-primary-foreground transition-colors">
-                          {idx + 1}
+                        <div className="relative">
+                          <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-muted font-black text-sm group-hover:bg-primary group-hover:text-primary-foreground transition-colors overflow-hidden">
+                            {item.exercise?.imageUrl ? (
+                              <img 
+                                src={item.exercise.imageUrl} 
+                                alt={item.exercise.name}
+                                className="h-full w-full object-cover"
+                              />
+                            ) : (
+                              idx + 1
+                            )}
+                          </div>
+                          {item.exercise?.imageUrl && (
+                            <div className="absolute -top-1 -right-1 flex h-4 w-4 items-center justify-center rounded-full bg-primary text-[10px] font-bold text-white ring-2 ring-white">
+                              {idx + 1}
+                            </div>
+                          )}
                         </div>
                         <div className="flex-1 min-w-0">
                           <h5 className="text-sm font-black uppercase leading-tight tracking-tight text-foreground line-clamp-2">
-                            {item.exercise?.name || "Exercício sem nome"}
+                            {item.exercise?.name || item.exercise_id || "Exercício"}
                           </h5>
                           <div className="flex flex-wrap items-center gap-x-4 gap-y-2 mt-3">
                             {item.sets && (

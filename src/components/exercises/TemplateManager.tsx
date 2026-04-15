@@ -1,5 +1,5 @@
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { templatesApi } from "@/api/v2";
 import { useTemplateUIStore } from "@/stores/useTemplateUIStore";
 import { TemplateSidebar } from "./TemplateSidebar";
@@ -89,8 +89,19 @@ export function TemplateManager() {
   const rawTemplates = data?.data ?? [];
   const templates: ExerciseTemplate[] = rawTemplates;
 
-  const selectedTemplate: ExerciseTemplate | null =
-    templates.find((t) => t.id === selectedTemplateId) ?? null;
+  const { data: detailData, isLoading: detailLoading } = useQuery({
+    queryKey: ["template-detail", selectedTemplateId],
+    queryFn: () => templatesApi.get(selectedTemplateId!),
+    enabled: !!selectedTemplateId,
+  });
+
+  const selectedTemplate: ExerciseTemplate | null = useMemo(() => {
+    if (!selectedTemplateId) return null;
+    if (detailData?.data) {
+      return detailData.data as unknown as ExerciseTemplate;
+    }
+    return templates.find((t) => t.id === selectedTemplateId) ?? null;
+  }, [detailData, templates, selectedTemplateId]);
 
   const hasCustomTemplates = templates.some((t) => t.templateType === "custom");
 
