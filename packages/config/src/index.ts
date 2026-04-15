@@ -11,7 +11,7 @@ export const APP_CONFIGS = {
     slug: 'fisioflow-professional',
     bundleId: 'com.fisioflow.professional',
     version: '1.0.0',
-    easProjectId: '8e006901-c021-464d-bbcd-96d821ab62d0',
+    easProjectId: 'ca7042a7-03d4-4731-b4e5-6f5de3b48300',
   },
   patient: {
     name: 'FisioFlow Paciente',
