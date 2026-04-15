@@ -16,7 +16,7 @@ import { cn } from "@/lib/utils";
 // --- Types & Constants ---
 type ViewMode = "today" | "week" | "month" | "custom";
 
-export default function SmartDashboard() {
+export function SmartDashboardContent() {
 	const [searchParams, setSearchParams] = useSearchParams();
 	const viewMode = (searchParams.get("view") || "today") as ViewMode;
 
@@ -32,11 +32,10 @@ export default function SmartDashboard() {
 	};
 
 	return (
-		<MainLayout maxWidth="7xl">
-			<div
-				className="space-y-6 pb-20 px-4 md:px-8"
-				data-testid="smart-dashboard-page"
-			>
+		<div
+			className="space-y-6 pb-20 w-full"
+			data-testid="smart-dashboard-page"
+		>
 				{/* Modern Header */}
 				<div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-6 pt-4">
 					<div className="flex items-center gap-5">
@@ -128,6 +127,5 @@ export default function SmartDashboard() {
 
 				<BentoDashboard viewMode={viewMode} />
 			</div>
-		</MainLayout>
 	);
 }

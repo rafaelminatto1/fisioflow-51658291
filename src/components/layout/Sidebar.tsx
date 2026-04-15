@@ -126,7 +126,7 @@ const mainMenuItems = [
 
 const clinicaMenuItems = [
 	{ icon: Activity, label: "Exercícios", href: APP_ROUTES.EXERCISES },
-	{ icon: Target, label: "Protocolos e Fases", href: "/protocols" },
+	{ icon: Target, label: "Protocolos", href: "/protocols" },
 ];
 
 const avaliacoesSubmenu = [
@@ -159,13 +159,10 @@ const biomecanicaSubmenu = [
 
 const inteligenciaMenuItems = [
 	{
-		icon: LayoutDashboard,
-		label: "Smart Dashboard",
-		href: APP_ROUTES.SMART_DASHBOARD,
+		icon: Brain,
+		label: "Hub de Inteligência",
+		href: "/inteligencia",
 	},
-	{ icon: Brain, label: "Assistente IA", href: "/smart-ai" },
-	{ icon: BarChart3, label: "Analytics Avançado", href: "/analytics" },
-	{ icon: BarChart3, label: "Dashboard BI", href: "/bi" },
 ];
 
 const operacionalMenuItems = [

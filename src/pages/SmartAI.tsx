@@ -36,7 +36,7 @@ interface Message {
 	sources?: AiSource[];
 }
 
-const SmartAI = () => {
+export const SmartAIContent = () => {
 	const location = useLocation();
 	const state = location.state as { 
 		initialQuery?: string; 
@@ -308,8 +308,7 @@ const SmartAI = () => {
 	};
 
 	return (
-		<MainLayout>
-			<div className="h-[calc(100vh-120px)] flex flex-col space-y-4">
+		<div className="flex flex-col space-y-4 h-full">
 				<section className="flex items-center justify-between">
 					<div className="flex items-center gap-3">
 						<div className="w-10 h-10 rounded-lg bg-gradient-primary grid place-items-center shadow-medical">
@@ -639,8 +638,5 @@ const SmartAI = () => {
 					</CardContent>
 				</Card>
 			</div>
-		</MainLayout>
 	);
 };
-
-export default SmartAI;
