@@ -65,6 +65,13 @@ const exerciseTemplateItems = pgTable('exercise_template_items', {
   updatedAt: timestamp('updated_at').defaultNow().notNull(),
 });
 
+const exercises = pgTable('exercises', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  name: varchar('name', { length: 250 }).notNull(),
+  imageUrl: text('image_url'),
+  thumbnailUrl: text('thumbnail_url'),
+});
+
 // ===== CATEGORIAS =====
 app.get('/categories', async (c) => {
   const db = await createDb(c.env);
@@ -311,8 +318,27 @@ app.get('/:id', async (c) => {
   if (!template) return c.json({ error: 'Template não encontrado' }, 404);
 
   const items = await db
-    .select()
+    .select({
+      id: exerciseTemplateItems.id,
+      templateId: exerciseTemplateItems.templateId,
+      exerciseId: exerciseTemplateItems.exerciseId,
+      orderIndex: exerciseTemplateItems.orderIndex,
+      sets: exerciseTemplateItems.sets,
+      repetitions: exerciseTemplateItems.repetitions,
+      duration: exerciseTemplateItems.duration,
+      notes: exerciseTemplateItems.notes,
+      weekStart: exerciseTemplateItems.weekStart,
+      weekEnd: exerciseTemplateItems.weekEnd,
+      clinicalNotes: exerciseTemplateItems.clinicalNotes,
+      exercise: {
+        id: exercises.id,
+        name: exercises.name,
+        imageUrl: exercises.imageUrl,
+        thumbnailUrl: exercises.thumbnailUrl,
+      },
+    })
     .from(exerciseTemplateItems)
+    .leftJoin(exercises, eq(sql`CAST(${exerciseTemplateItems.exerciseId} AS UUID)`, exercises.id))
     .where(eq(exerciseTemplateItems.templateId, template.id))
     .orderBy(exerciseTemplateItems.orderIndex);
 

@@ -212,7 +212,10 @@ export function filterTemplates(
       (t) =>
         t.name?.toLowerCase().includes(q) ||
         t.conditionName?.toLowerCase().includes(q) ||
-        t.templateVariant?.toLowerCase().includes(q),
+        t.condition_name?.toLowerCase().includes(q) ||
+        t.templateVariant?.toLowerCase().includes(q) ||
+        t.bodyPart?.toLowerCase().includes(q) ||
+        t.body_part?.toLowerCase().includes(q)
     );
   }
 
