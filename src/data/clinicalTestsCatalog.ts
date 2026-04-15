@@ -801,28 +801,7 @@ export const builtinClinicalTestsCatalog: ClinicalTestCatalogRecord[] = [
 			{ id: 'dyskinesis_type', label: 'Tipo', type: 'select', options: ['Tipo I', 'Tipo II', 'Tipo III', 'Normal'] }
 		]
 	}),
-	createBuiltinTest({
-		id: "builtin-hamstring-bamic-clinical",
-		name: "Hamstring BAMIC",
-		name_en: "Hamstring BAMIC",
-		category: "Esportiva",
-		target_joint: "Coxa",
-		type: "special_test",
-		purpose: "Graduar lesões de isquiotibiais.",
-		execution: "Avaliar dor, contração e flexibilidade.",
-		positive_sign: "Dor localizada.",
-		reference: "Pollock N et al. 2014.",
-		tags: ["isquiotibiais", "esportiva"],
-		evidence_label: "Classificação Profissional",
-		evidence_summary: "Classificação profissional para retorno ao esporte.",
-		source_label: "Curadoria FisioFlow",
-		sort_order: 125,
-		illustration: "knee-stability",
-		imageUrl: "/clinical-tests/illustrations/hamstring-bamic.png",
-		fieldsDefinition: [
-			{ id: 'grade', label: 'Grau BAMIC', type: 'select', options: ['0a/b', '1a/b/c', '2a/b/c', '3a/b/c', '4'] }
-		]
-	}),
+
 	createBuiltinTest({
 		id: "builtin-mcmurray-test",
 		name: "Teste de McMurray",
@@ -1436,6 +1415,129 @@ export const builtinClinicalTestsCatalog: ClinicalTestCatalogRecord[] = [
 		illustration: "hip-rotation",
 		fieldsDefinition: [
 			{ id: 'clicking', label: 'Presença de Click', type: 'boolean' },
+			{ id: 'pain_nprs', label: 'Dor (0-10)', type: 'nprs' }
+		]
+	}),
+	createBuiltinTest({
+		id: "builtin-10mwt",
+		name: "10 Meter Walk Test",
+		name_en: "10 Meter Walk Test",
+		category: "Pós-Operatório",
+		target_joint: "Geral",
+		type: "performance_test",
+		purpose: "Avaliar a velocidade da marcha e funcionalidade.",
+		execution: "O paciente caminha 10 metros em velocidade confortável/máxima. O tempo é cronometrado nos 6 metros centrais.",
+		positive_sign: "Valores abaixo da norma para a idade.",
+		reference: "Bohannon RW (1997).",
+		tags: ["marcha", "funcionalidade", "pos-op", "idoso"],
+		evidence_label: "Padrão Ouro",
+		evidence_summary: "Teste amplamente validado para mensurar mobilidade funcional.",
+		source_label: "Curadoria FisioFlow",
+		sort_order: 10,
+		fieldsDefinition: [
+			{ id: 'time_seconds', label: 'Tempo (segundos)', type: 'number' },
+			{ id: 'speed', label: 'Velocidade calculada (m/s)', type: 'number' }
+		]
+	}),
+	createBuiltinTest({
+		id: "builtin-single-leg-stance",
+		name: "Single Leg Stance Test",
+		name_en: "Single Leg Stance Test",
+		category: "Pós-Operatório",
+		target_joint: "Membro Inferior",
+		type: "performance_test",
+		purpose: "Avaliar o equilíbrio estático unipodal.",
+		execution: "O paciente permanece em apoio unipodal com braços cruzados pelo maior tempo possível (limite 30-60s).",
+		positive_sign: "Inabilidade de manter a posição por > 10-30s dependendo da idade.",
+		reference: "Springer et al. (2007).",
+		tags: ["equilibrio", "unipodal", "propriocepcao"],
+		evidence_label: "Evidência Clínica",
+		evidence_summary: "Preditor de risco de quedas em idosos e estabilidade em atletas.",
+		source_label: "Curadoria FisioFlow",
+		sort_order: 15,
+		fieldsDefinition: [
+			{ id: 'time_seconds', label: 'Tempo de Permanência (s)', type: 'number' },
+			{ id: 'side', label: 'Lado Testado', type: 'select', options: ['Direito', 'Esquerdo'] }
+		]
+	}),
+	createBuiltinTest({
+		id: "builtin-vmo-activation",
+		name: "Ativação do VMO",
+		name_en: "VMO Activation",
+		category: "Pós-Operatório",
+		target_joint: "Joelho",
+		type: "performance_test",
+		purpose: "Avaliar a capacidade de recrutamento voluntário do vasto medial oblíquo.",
+		execution: "Paciente em decúbito dorsal com joelho em extensão. Solicitar contração isométrica do quadríceps e palpar o VMO.",
+		positive_sign: "Atraso no recrutamento ou contração fraca/ausente comparada ao VL.",
+		reference: "Prática Clínica.",
+		tags: ["quadriceps", "vmo", "patelofemoral", "pos-op"],
+		evidence_label: "Prática Clínica",
+		evidence_summary: "Essencial na reabilitação de cirurgias de joelho e dor patelofemoral.",
+		source_label: "Curadoria FisioFlow",
+		sort_order: 20,
+		fieldsDefinition: [
+			{ id: 'activation_quality', label: 'Qualidade da Contração', type: 'select', options: ['Ótima', 'Regular', 'Pobre', 'Ausente'] }
+		]
+	}),
+	createBuiltinTest({
+		id: "builtin-crank-test",
+		name: "Crank Test",
+		name_en: "Crank Test",
+		category: "Ortopedia",
+		target_joint: "Ombro",
+		type: "special_test",
+		purpose: "Avaliar lesão labral (SLAP).",
+		execution: "Braço em 160° de abdução. Aplicar carga axial no úmero enquanto realiza rotação interna e externa.",
+		positive_sign: "Dor, click ou reprodução dos sintomas.",
+		reference: "Liu et al. (1996).",
+		tags: ["ombro", "slap", "labrum"],
+		evidence_label: "Evidência Moderada",
+		evidence_summary: "Sensibilidade de 91% e Especificidade de 93% no estudo original.",
+		source_label: "Curadoria FisioFlow",
+		sort_order: 55,
+		fieldsDefinition: [
+			{ id: 'clicking', label: 'Presença de Click', type: 'boolean' },
+			{ id: 'pain_levels', label: 'Nível de Dor', type: 'nprs' }
+		]
+	createBuiltinTest({
+		id: "builtin-ludington-sign",
+		name: "Sinal de Ludington",
+		name_en: "Ludington's Sign",
+		category: "Ortopedia",
+		target_joint: "Ombro",
+		type: "special_test",
+		purpose: "Avaliar ruptura do tendão da cabeça longa do bíceps.",
+		execution: "Paciente coloca as mãos na cabeça com dedos entrelaçados. Solicitar contração do bíceps enquanto o examinador palpa o tendão.",
+		positive_sign: "Ausência de contração do tendão no sulco bicipital.",
+		reference: "Ludington (1923).",
+		tags: ["ombro", "biceps", "ruptura"],
+		evidence_label: "Evidência Limitada",
+		evidence_summary: "Teste clássico para rupturas completas.",
+		source_label: "Curadoria FisioFlow",
+		sort_order: 60,
+		fieldsDefinition: [
+			{ id: 'palpation', label: 'Tendão Palpável', type: 'boolean' }
+		]
+	}),
+	createBuiltinTest({
+		id: "builtin-thumb-grind",
+		name: "Teste de Grind (Polegar)",
+		name_en: "Thumb Grind Test",
+		category: "Ortopedia",
+		target_joint: "Punho",
+		type: "special_test",
+		purpose: "Avaliar osteoartrite da articulação carpometacarpal (CMC) do polegar.",
+		execution: "Examinador aplica carga axial e rotação (moagem) no primeiro metacarpo sobre o trapézio.",
+		positive_sign: "Dor ou crepitação na base do polegar.",
+		reference: "Glickel (1987).",
+		tags: ["punho", "polegar", "rizartrose", "cmc"],
+		evidence_label: "Evidência Moderada",
+		evidence_summary: "Sensibilidade de 42% e Especificidade de 80% para rizartrose.",
+		source_label: "Curadoria FisioFlow",
+		sort_order: 65,
+		fieldsDefinition: [
+			{ id: 'crepitus', label: 'Presença de Creptação', type: 'boolean' },
 			{ id: 'pain_nprs', label: 'Dor (0-10)', type: 'nprs' }
 		]
 	}),
