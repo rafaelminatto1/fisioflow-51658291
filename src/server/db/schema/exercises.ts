@@ -134,6 +134,8 @@ export const exercises = pgTable(
 
 		// Controle
 		embedding: vector("embedding"),
+		embeddingSketch: text("embedding_sketch"),
+		referencePose: text("reference_pose"),
 		isActive: boolean("is_active").default(true).notNull(),
 		isPublic: boolean("is_public").default(true).notNull(), // false = privado da organização
 		organizationId: uuid("organization_id"), // null = padrão da plataforma

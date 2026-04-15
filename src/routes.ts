@@ -68,9 +68,8 @@ export default [
 			route("whatsapp/automations", "pages/WhatsAppAutomations.tsx"),
 			route("whatsapp/templates", "pages/WhatsAppTemplates.tsx"),
 
-			// Analytics & BI
+			// Analytics
 			route("analytics", "pages/AdvancedAnalytics.tsx"),
-			route("bi", "pages/BIDashboard.tsx"),
 
 			// Telemedicina
 			route("telemedicine", "pages/Telemedicine.tsx"),

@@ -83,6 +83,8 @@ export interface Exercise {
 		targetAngleMax?: number;
 		primaryJoint?: string;
 	};
+	embeddingSketch?: string;
+	referencePose?: string;
 	createdAt: Date;
 	updatedAt: Date;
 }
