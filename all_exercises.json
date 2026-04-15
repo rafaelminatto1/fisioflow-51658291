@@ -1,0 +1,1082 @@
+[
+  {
+    "name": "Extensão de joelho em cadeia cinética aberta",
+    "slug": "extensao-joelho-cadeia-aberta"
+  },
+  {
+    "name": "Agachamento Sumô",
+    "slug": "agachamento-sumo"
+  },
+  {
+    "name": "Nordic Hamstring (Iniciante)",
+    "slug": "nordic-hamstring-beginner"
+  },
+  {
+    "name": "Ponte de Glúteo Bilateral",
+    "slug": "ponte-de-gluteo-bilateral"
+  },
+  {
+    "name": "Elevação Lateral de Ombro (0-90°)",
+    "slug": "elevacao-lateral-de-ombro-0-90"
+  },
+  {
+    "name": "Ponte Unilateral",
+    "slug": "ponte-unilateral"
+  },
+  {
+    "name": "Círculos de Quadril",
+    "slug": "circulos-de-quadril"
+  },
+  {
+    "name": "Ponte de Glúteo Unilateral",
+    "slug": "ponte-de-gluteo-unilateral"
+  },
+  {
+    "name": "Monster Walk (Caminhada Monster)",
+    "slug": "monster-walk-caminhada-monster"
+  },
+  {
+    "name": "Mobilização de Escápula (Wall Slides)",
+    "slug": "mobilizacao-de-escapula-wall-slides"
+  },
+  {
+    "name": "Alongamento de Romboides Sentado",
+    "slug": "alongamento-romboides-sentado"
+  },
+  {
+    "name": "Contrações de Kegel",
+    "slug": "contracoes-kegel"
+  },
+  {
+    "name": "Perdigueiro (Bird Dog)",
+    "slug": "perdigueiro-bird-dog"
+  },
+  {
+    "name": "Ponte de Glúteo",
+    "slug": "ponte-de-gluteo"
+  },
+  {
+    "name": "Elevação de Panturrilha em Pé",
+    "slug": "elevacao-de-panturrilha-em-pe"
+  },
+  {
+    "name": "Rosca Martelo",
+    "slug": "bicep-curl-martelo"
+  },
+  {
+    "name": "Mobilidade de Coluna",
+    "slug": "mobilidade-coluna-sentado"
+  },
+  {
+    "name": "Abdominal Crupeado",
+    "slug": "abdominal-crupeado"
+  },
+  {
+    "name": "Elevação de Perna Reta (SLR)",
+    "slug": "elevacao-perna-reta"
+  },
+  {
+    "name": "Elevação de Calcanhares (Heel Raises)",
+    "slug": "elevacao-calcanhares"
+  },
+  {
+    "name": "Rotação externa de ombro com elástico",
+    "slug": "rotacao-externa-ombro-elastico"
+  },
+  {
+    "name": "Afundo Reverso",
+    "slug": "afundo-reverso"
+  },
+  {
+    "name": "4 Apoios (Four Point kneeling)",
+    "slug": "4-apoios-four-point-kneeling"
+  },
+  {
+    "name": "Spanish Squat (Agachamento Espanhol)",
+    "slug": "spanish-squat"
+  },
+  {
+    "name": "Agachamento na Cadeira",
+    "slug": "agachamento-na-cadeira"
+  },
+  {
+    "name": "Prancha Lateral",
+    "slug": "prancha-lateral"
+  },
+  {
+    "name": "Elevação de Calcanhar Sentado",
+    "slug": "calf-raise-seated"
+  },
+  {
+    "name": "Desvio Radial",
+    "slug": "radial-deviation-wrist"
+  },
+  {
+    "name": "Side Plank (Prancha Lateral)",
+    "slug": "side-plank-prancha-lateral"
+  },
+  {
+    "name": "Ponte de Glúteo (Glute Bridge)",
+    "slug": "ponte-gluteo"
+  },
+  {
+    "name": "Panturrilha em Pé",
+    "slug": "panturrilha-em-pe"
+  },
+  {
+    "name": "Afundo",
+    "slug": "afundo"
+  },
+  {
+    "name": "Alongamento Subescapular",
+    "slug": "alongamento-subescapular"
+  },
+  {
+    "name": "Alongamento de Tensor da Fáscia Lata",
+    "slug": "alongamento-tensor-fascia-lata"
+  },
+  {
+    "name": "Alongamento de Tríceps Sentado",
+    "slug": "alongamento-triceps-sentado"
+  },
+  {
+    "name": "Alongamento de Tríceps com Toalha",
+    "slug": "alongamento-triceps-toalha"
+  },
+  {
+    "name": "Flexão de Punho com Halter",
+    "slug": "flexao-de-punho-com-halter"
+  },
+  {
+    "name": "Barra Fixa Pronada",
+    "slug": "barra-fixa-pronada"
+  },
+  {
+    "name": "Avanço com Salto",
+    "slug": "avanco-com-salto"
+  },
+  {
+    "name": "Alongamento da Fáscia Plantar",
+    "slug": "alongamento-fascia-plantar"
+  },
+  {
+    "name": "Avanço Reverso com Halteres",
+    "slug": "avanco-reverso-halteres"
+  },
+  {
+    "name": "Avanço com Halteres",
+    "slug": "avanco-com-halteres"
+  },
+  {
+    "name": "Alongamento de Tríceps na Parede",
+    "slug": "alongamento-triceps-parede"
+  },
+  {
+    "name": "Rosca Bíceps Alternada",
+    "slug": "bicep-curl-alternado"
+  },
+  {
+    "name": "Isometria de Inversão de Tornozelo",
+    "slug": "ankle-inversion-isometric"
+  },
+  {
+    "name": "Barra Fixa Supinada",
+    "slug": "barra-fixa-supinada"
+  },
+  {
+    "name": "Huff Cough",
+    "slug": "huff-cough"
+  },
+  {
+    "name": "Avanço Isométrico",
+    "slug": "avanco-isometrico"
+  },
+  {
+    "name": "Levantamento Terra",
+    "slug": "levantamento-terra"
+  },
+  {
+    "name": "Oposição de Dedos",
+    "slug": "oposicao-de-dedos"
+  },
+  {
+    "name": "Fortalecimento de Intrínsecos do Pé (Toalha)",
+    "slug": "fortalecimento-intrinsecos-pe"
+  },
+  {
+    "name": "Alongamento 90-90",
+    "slug": "alongamento-90-90"
+  },
+  {
+    "name": "Respiração Labial Franzida",
+    "slug": "respiracao-labial-franzida"
+  },
+  {
+    "name": "Afundo ou Passada",
+    "slug": "afundo-passada"
+  },
+  {
+    "name": "Afundo Lateral",
+    "slug": "afundo-lateral"
+  },
+  {
+    "name": "Retração Escapular",
+    "slug": "retracao-escapular"
+  },
+  {
+    "name": "Agachamento na Parede (Wall Squat)",
+    "slug": "agachamento-parede"
+  },
+  {
+    "name": "Hollow Rock (Canoa)",
+    "slug": "hollow-rock-canoa"
+  },
+  {
+    "name": "Terminal Knee Extension (TKE) com Thera-Band",
+    "slug": "tke-thera-band"
+  },
+  {
+    "name": "Alongamento de Glúteo Supino",
+    "slug": "alongamento-de-gluteo-supino"
+  },
+  {
+    "name": "Supino com halter",
+    "slug": "supino-halter"
+  },
+  {
+    "name": "Auto-correção 3D (Escoliose)",
+    "slug": "autocorrecao-3d"
+  },
+  {
+    "name": "Deslizamento de Nervo Mediano",
+    "slug": "deslizamento-de-nervo-mediano"
+  },
+  {
+    "name": "Tapete de Pisos Diferentes",
+    "slug": "tapete-propriocepcao"
+  },
+  {
+    "name": "Ab Wheel Rollout",
+    "slug": "ab-wheel-rollout"
+  },
+  {
+    "name": "Agachamento Goblet",
+    "slug": "agachamento-goblet"
+  },
+  {
+    "name": "Exercício do Pé Curto (Short Foot)",
+    "slug": "short-foot"
+  },
+  {
+    "name": "Caminhada com Amplitude (Big Steps)",
+    "slug": "caminhada-com-amplitude-big-steps"
+  },
+  {
+    "name": "Alongamento de Rombóides na Parede",
+    "slug": "alongamento-de-romboides-na-parede"
+  },
+  {
+    "name": "Agachamento com peso corporal",
+    "slug": "agachamento-peso-corporal"
+  },
+  {
+    "name": "Panturrilha Unilateral",
+    "slug": "panturrilha-unilateral"
+  },
+  {
+    "name": "Serrote com halter (Remada Unilateral)",
+    "slug": "serrote-halter"
+  },
+  {
+    "name": "Leg Press 45°",
+    "slug": "leg-press-45"
+  },
+  {
+    "name": "Abdução de Quadril Deitado",
+    "slug": "abducao-quadril-deitado"
+  },
+  {
+    "name": "McKenzie - Extensão Lombar deitado",
+    "slug": "mckenzie-extensao-lombar-deitado"
+  },
+  {
+    "name": "Rolling com Foam Roller",
+    "slug": "rolling-com-foam-roller"
+  },
+  {
+    "name": "Alongamento de Quadríceps",
+    "slug": "alongamento-quadriceps"
+  },
+  {
+    "name": "Alongamento de Panturrilha na Parede",
+    "slug": "alongamento-de-panturrilha-na-parede"
+  },
+  {
+    "name": "Extensão de Quadril (4 Apoios)",
+    "slug": "extensao-quadril-quatro-apoios"
+  },
+  {
+    "name": "Agachamento Livre",
+    "slug": "agachamento-livre"
+  },
+  {
+    "name": "Equilíbrio em Tandem",
+    "slug": "equilibrio-em-tandem"
+  },
+  {
+    "name": "Alongamento Trapézio Superior",
+    "slug": "alongamento-trapezio-superior"
+  },
+  {
+    "name": "Salto Horizontal (Broad Jump)",
+    "slug": "salto-horizontal-broad-jump"
+  },
+  {
+    "name": "Single Leg Stance com Movimento de Braço",
+    "slug": "single-leg-stance-com-movimento-de-braco"
+  },
+  {
+    "name": "Agachamento com Soco",
+    "slug": "agachamento-com-soco"
+  },
+  {
+    "name": "RDL (Romanian Deadlift)",
+    "slug": "rdl-romanian-deadlift"
+  },
+  {
+    "name": "BOSU Ball Squat",
+    "slug": "bosu-ball-squat"
+  },
+  {
+    "name": "Flexão de Braço (Push-up)",
+    "slug": "flexao-braco"
+  },
+  {
+    "name": "Apoio Unipodal Olhos Fechados",
+    "slug": "apoio-unipodal-olhos-fechados"
+  },
+  {
+    "name": "Corner Stretch (Alongamento no Canto)",
+    "slug": "corner-stretch-alongamento-no-canto"
+  },
+  {
+    "name": "Prone Y-T-W",
+    "slug": "prone-y-t-w"
+  },
+  {
+    "name": "Salto Unilateral na Caixa",
+    "slug": "salto-unilateral-na-caixa"
+  },
+  {
+    "name": "Fortalecimento de Glúteo",
+    "slug": "fortalecimento-de-gluteo"
+  },
+  {
+    "name": "Copenhagen Adduction (Nível 1)",
+    "slug": "copenhagen-adduction-lvl1"
+  },
+  {
+    "name": "Chin Tuck com Elevação (Head Lift)",
+    "slug": "chin-tuck-com-elevacao-head-lift"
+  },
+  {
+    "name": "Rotação Externa de Ombro com Thera-Band",
+    "slug": "rotacao-externa-ombro"
+  },
+  {
+    "name": "Extensão de Cotovelo (Tricep)",
+    "slug": "extensao-de-cotovelo-tricep"
+  },
+  {
+    "name": "V-Up (Abdominal Canivete)",
+    "slug": "v-up-abdominal-canivete"
+  },
+  {
+    "name": "Prancha Abdominal (Plank)",
+    "slug": "prancha-abdominal-plank"
+  },
+  {
+    "name": "Caminhada nos Calcanhares",
+    "slug": "caminhada-nos-calcanhares"
+  },
+  {
+    "name": "Heel Flicks (Calcanhar no Glúteo)",
+    "slug": "heel-flicks-calcanhar-no-gluteo"
+  },
+  {
+    "name": "Mobilização Cervical com Toalha",
+    "slug": "mobilizacao-cervical-com-toalha"
+  },
+  {
+    "name": "Alongamento de Quadríceps com Toalha",
+    "slug": "alongamento-de-quadriceps-com-toalha"
+  },
+  {
+    "name": "Polichinelo Adaptado",
+    "slug": "polichinelo-adaptado"
+  },
+  {
+    "name": "Agachamento com Suporte",
+    "slug": "agachamento-com-suporte"
+  },
+  {
+    "name": "Alongamento de Adutores",
+    "slug": "alongamento-de-adutores"
+  },
+  {
+    "name": "Elevação Pélvica (Ponte)",
+    "slug": "elevacao-pelvica"
+  },
+  {
+    "name": "Apoio Unipodal",
+    "slug": "apoio-unipodal"
+  },
+  {
+    "name": "Gato-Vaca (Cat-Cow)",
+    "slug": "gato-vaca"
+  },
+  {
+    "name": "Carregamento Lateral",
+    "slug": "carregamento-lateral"
+  },
+  {
+    "name": "Salto Unipodal com Aterrissagem",
+    "slug": "salto-unipodal-com-aterrissagem"
+  },
+  {
+    "name": "Remada Sentada com Faixa",
+    "slug": "remada-sentada-com-faixa"
+  },
+  {
+    "name": "Propriocepção em Disco",
+    "slug": "propriocepcao-em-disco"
+  },
+  {
+    "name": "SLR com Dorsiflexão Automática",
+    "slug": "slr-com-dorsiflexao-automatica"
+  },
+  {
+    "name": "Flexão de Braço na Parede",
+    "slug": "flexao-de-braco-na-parede"
+  },
+  {
+    "name": "Elevação de Panturrilha em Degrau",
+    "slug": "elevacao-de-panturrilha-em-degrau"
+  },
+  {
+    "name": "Saltos Laterais (Skater Hops)",
+    "slug": "saltos-laterais-skater-hops"
+  },
+  {
+    "name": "Gait Training com Obstáculos",
+    "slug": "gait-training-com-obstaculos"
+  },
+  {
+    "name": "Depth Jump (Salto Profundo)",
+    "slug": "depth-jump-salto-profundo"
+  },
+  {
+    "name": "Respiração com Labios Franzidos (Pursed Lip)",
+    "slug": "respiracao-com-labios-franzidos-pursed-lip"
+  },
+  {
+    "name": "Quadríceps Arco Curto",
+    "slug": "quadriceps-arco-curto"
+  },
+  {
+    "name": "Alongamento de Panturrilha Sentado (Sóleo)",
+    "slug": "alongamento-de-panturrilha-sentado-soleo"
+  },
+  {
+    "name": "Bird-dog (Cachorro e Pássaro)",
+    "slug": "bird-dog-cachorro-e-passaro"
+  },
+  {
+    "name": "Flexão de Joelho em Pronação",
+    "slug": "flexao-de-joelho-em-pronacao"
+  },
+  {
+    "name": "Tuck Jump (Salto Grupard)",
+    "slug": "tuck-jump-salto-grupard"
+  },
+  {
+    "name": "Inversão de Tornozelo com Faixa",
+    "slug": "inversao-de-tornozelo-com-faixa"
+  },
+  {
+    "name": "Ankle Pumps (Bombinha)",
+    "slug": "ankle-pumps-bombinha"
+  },
+  {
+    "name": "Isometria Cervical (Extensão)",
+    "slug": "isometria-cervical-extensao"
+  },
+  {
+    "name": "Coordenação Digital (Dedos)",
+    "slug": "coordenacao-digital-dedos"
+  },
+  {
+    "name": "Boxe de Sombra (Shadow Boxing)",
+    "slug": "boxe-de-sombra-shadow-boxing"
+  },
+  {
+    "name": "Ponte com Uma Perna",
+    "slug": "ponte-com-uma-perna"
+  },
+  {
+    "name": "Isometria Cervical (Inclinção Lateral)",
+    "slug": "isometria-cervical-inclincao-lateral"
+  },
+  {
+    "name": "Alongamento de Quadríceps em Pé",
+    "slug": "alongamento-de-quadriceps-em-pe"
+  },
+  {
+    "name": "Coordenação Óculo-Manual",
+    "slug": "coordenacao-oculo-manual"
+  },
+  {
+    "name": "Alongamento de Peitoral na Porta (Variação)",
+    "slug": "alongamento-de-peitoral-na-porta-variacao"
+  },
+  {
+    "name": "Alongamento de Tríceps por Trás",
+    "slug": "alongamento-de-triceps-por-tras"
+  },
+  {
+    "name": "Superman",
+    "slug": "superman"
+  },
+  {
+    "name": "Alongamento Levantador da Escápula",
+    "slug": "alongamento-levantador-da-escapula"
+  },
+  {
+    "name": "Salto Lateral (Lateral Bound)",
+    "slug": "salto-lateral-lateral-bound"
+  },
+  {
+    "name": "Box Jump",
+    "slug": "box-jump"
+  },
+  {
+    "name": "Isometria de Quadríceps (Quad Sets)",
+    "slug": "isometria-de-quadriceps-quad-sets"
+  },
+  {
+    "name": "Mobilidade de Tornozelo",
+    "slug": "mobilidade-de-tornozelo"
+  },
+  {
+    "name": "Rotação Interna de Ombro com Thera-Band",
+    "slug": "rotacao-interna-ombro"
+  },
+  {
+    "name": "Hip Airplane",
+    "slug": "hip-airplane"
+  },
+  {
+    "name": "Flexão de Quadril com Vassoura",
+    "slug": "flexao-de-quadril-com-vassoura"
+  },
+  {
+    "name": "Alongamento de Bíceps na Parede",
+    "slug": "alongamento-de-biceps-na-parede"
+  },
+  {
+    "name": "Pallof Press",
+    "slug": "pallof-press"
+  },
+  {
+    "name": "Nordic Hamstring Curl",
+    "slug": "nordic-hamstring-curl"
+  },
+  {
+    "name": "Respiração Costal Inferior",
+    "slug": "respiracao-costal-inferior"
+  },
+  {
+    "name": "Mobilização Patelar",
+    "slug": "mobilizacao-patelar"
+  },
+  {
+    "name": "Mobilização de Coluna Thorácica com Foam Roller",
+    "slug": "mobilizacao-de-coluna-thoracica-com-foam-roller"
+  },
+  {
+    "name": "Elevação de Pernas na Barra",
+    "slug": "elevacao-de-pernas-na-barra"
+  },
+  {
+    "name": "Alongamento Isquiotibiais com Toalha",
+    "slug": "alongamento-isquiotibiais-com-toalha"
+  },
+  {
+    "name": "Exercício Pêndulo de Codman",
+    "slug": "pendulo-codman"
+  },
+  {
+    "name": "Rotação Torácica em 4 Apoios",
+    "slug": "rotacao-toracica-em-4-apoios"
+  },
+  {
+    "name": "Alongamento Lateral de Pescoço",
+    "slug": "alongamento-lateral-de-pescoco"
+  },
+  {
+    "name": "Clock Reach (Alcance do Relógio)",
+    "slug": "clock-reach"
+  },
+  {
+    "name": "Flexão Inclinada",
+    "slug": "flexao-inclinada"
+  },
+  {
+    "name": "Mobilização de Tornozelo em DF",
+    "slug": "mobilizacao-de-tornozelo-em-df"
+  },
+  {
+    "name": "Passos Laterais com Faixa",
+    "slug": "passos-laterais-com-faixa"
+  },
+  {
+    "name": "Agachamento Búlgaro",
+    "slug": "agachamento-bulgaro"
+  },
+  {
+    "name": "Alongamento de Psoas (Ilíaco)",
+    "slug": "alongamento-de-psoas-iliaco"
+  },
+  {
+    "name": "Chin Tucks",
+    "slug": "chin-tucks"
+  },
+  {
+    "name": "Abdução de Quadril em Pé com Thera-Band",
+    "slug": "abducao-quadril-pe"
+  },
+  {
+    "name": "Escalada na Parede (Wall Climber)",
+    "slug": "escalada-na-parede-wall-climber"
+  },
+  {
+    "name": "Alongamento de Peitoral na Porta",
+    "slug": "alongamento-de-peitoral-na-porta"
+  },
+  {
+    "name": "Step Down",
+    "slug": "step-down"
+  },
+  {
+    "name": "Wall Angels (Anjos na Parede)",
+    "slug": "wall-angels"
+  },
+  {
+    "name": "Face Pull",
+    "slug": "face-pull"
+  },
+  {
+    "name": "Postura da Criança",
+    "slug": "postura-da-crianca"
+  },
+  {
+    "name": "Pronação e Supinação com Peso",
+    "slug": "pronacao-e-supinacao-com-peso"
+  },
+  {
+    "name": "Prancha na Parede",
+    "slug": "prancha-na-parede"
+  },
+  {
+    "name": "Deslizamento de Calcanhar",
+    "slug": "deslizamento-de-calcanhar"
+  },
+  {
+    "name": "Farmer's Carry (Caminhada do Fazendeiro)",
+    "slug": "farmers-carry-caminhada-do-fazendeiro"
+  },
+  {
+    "name": "Codman Pendular",
+    "slug": "codman-pendular"
+  },
+  {
+    "name": "Step Up Frontal",
+    "slug": "step-up-frontal"
+  },
+  {
+    "name": "Preensão de Toalha com os Dedos",
+    "slug": "preensao-de-toalha-com-os-dedos"
+  },
+  {
+    "name": "Rotação Externa de Ombro",
+    "slug": "rotacao-externa-de-ombro"
+  },
+  {
+    "name": "Remada Curvada (Barbell Row)",
+    "slug": "remada-curvada-barbell-row"
+  },
+  {
+    "name": "Rotação Torácica Sentado",
+    "slug": "rotacao-toracica-sentado"
+  },
+  {
+    "name": "Cobra Prona",
+    "slug": "cobra-prona"
+  },
+  {
+    "name": "Mobilização de Nervo Ciático (Slump)",
+    "slug": "mobilizacao-de-nervo-ciatico-slump"
+  },
+  {
+    "name": "Alcance em Y (Y-Balance Practice)",
+    "slug": "alcance-em-y-y-balance-practice"
+  },
+  {
+    "name": "Deadlift (Levantamento Terra) com Halteres",
+    "slug": "deadlift-levantamento-terra-com-halteres"
+  },
+  {
+    "name": "Alongamento de Isquiotibiais",
+    "slug": "alongamento-de-isquiotibiais"
+  },
+  {
+    "name": "Mobilização de Nervo Mediano (Tinel e Phalen)",
+    "slug": "nervo-mediano-mobilizacao"
+  },
+  {
+    "name": "Star Excursion Balance Test (SEBT)",
+    "slug": "star-excursion-balance-test-sebt"
+  },
+  {
+    "name": "Rotação Externa de Ombro com Faixa",
+    "slug": "rotacao-externa-de-ombro-com-faixa"
+  },
+  {
+    "name": "Squat Jump",
+    "slug": "squat-jump"
+  },
+  {
+    "name": "Caminhada na Ponta dos Pés",
+    "slug": "caminhada-na-ponta-dos-pes"
+  },
+  {
+    "name": "Afundo Frontal (Lunge)",
+    "slug": "afundo-frontal-lunge"
+  },
+  {
+    "name": "Clamshell (Concha do Mar)",
+    "slug": "clamshell"
+  },
+  {
+    "name": "Deslizamento de Tendões (Tendon Glides)",
+    "slug": "deslizamento-de-tendoes-tendon-glides"
+  },
+  {
+    "name": "Bird-Dog (Cachorro-Passarinho)",
+    "slug": "bird-dog"
+  },
+  {
+    "name": "Agachamento em Disco Instável",
+    "slug": "agachamento-disco-instavel"
+  },
+  {
+    "name": "Abdução de Quadril em Pé",
+    "slug": "abducao-de-quadril-em-pe"
+  },
+  {
+    "name": "Pular Corda Imaginária",
+    "slug": "pular-corda-imaginaria"
+  },
+  {
+    "name": "Alongamento de Isquiotibiais em Pé",
+    "slug": "alongamento-de-isquiotibiais-em-pe"
+  },
+  {
+    "name": "Abdominal Oblíquo",
+    "slug": "abdominal-obliquo"
+  },
+  {
+    "name": "Alongamento de Piriforme (4 Supino)",
+    "slug": "alongamento-de-piriforme-4-supino"
+  },
+  {
+    "name": "Agachamento Parelde (Wall Sit)",
+    "slug": "agachamento-parelde-wall-sit"
+  },
+  {
+    "name": "Prancha Abdominal",
+    "slug": "prancha-abdominal"
+  },
+  {
+    "name": "Respiração Diafragmática",
+    "slug": "respiracao-diafragmatica"
+  },
+  {
+    "name": "Dead Bug",
+    "slug": "dead-bug"
+  },
+  {
+    "name": "Tandem Walk (Caminhada em Tandem)",
+    "slug": "tandem-walk-caminhada-em-tandem"
+  },
+  {
+    "name": "Mobilidade de Ombro",
+    "slug": "mobilidade-de-ombro"
+  },
+  {
+    "name": "Cat-Camel (Mobilização Lombar)",
+    "slug": "cat-camel"
+  },
+  {
+    "name": "Rowing com Faixa Elástica",
+    "slug": "rowing-com-faixa-elastica"
+  },
+  {
+    "name": "Respiração 4-7-8",
+    "slug": "respiracao-4-7-8"
+  },
+  {
+    "name": "Medicine Ball Slam",
+    "slug": "medicine-ball-slam"
+  },
+  {
+    "name": "Sentar e Levantar da Cadeira (Sit-to-Stand)",
+    "slug": "sentar-levantar"
+  },
+  {
+    "name": "Subida de Escada",
+    "slug": "subida-de-escada"
+  },
+  {
+    "name": "Extensão de Ombro em Pronação",
+    "slug": "extensao-de-ombro-em-pronacao"
+  },
+  {
+    "name": "Burpee Modificado",
+    "slug": "burpee-modificado"
+  },
+  {
+    "name": "Prancha Frontal (Plank)",
+    "slug": "prancha-frontal"
+  },
+  {
+    "name": "Treino de Marcha na Barra Paralela",
+    "slug": "marcha-paralela"
+  },
+  {
+    "name": "Marcha com Padrões Cruzados",
+    "slug": "marcha-com-padroes-cruzados"
+  },
+  {
+    "name": "Lunge com Rotação",
+    "slug": "lunge-com-rotacao"
+  },
+  {
+    "name": "Step Touch com Braços",
+    "slug": "step-touch-com-bracos"
+  },
+  {
+    "name": "Scorpion Stretch",
+    "slug": "scorpion-stretch"
+  },
+  {
+    "name": "Relaxamento Progressivo de Jacobson",
+    "slug": "relaxamento-progressivo-de-jacobson"
+  },
+  {
+    "name": "Rotação Interna de Ombro com Faixa",
+    "slug": "rotacao-interna-de-ombro-com-faixa"
+  },
+  {
+    "name": "Step Up",
+    "slug": "step-up"
+  },
+  {
+    "name": "Marcha Supina de Quadril",
+    "slug": "marcha-supina-de-quadril"
+  },
+  {
+    "name": "Carrying de Carga (Farmer Walk)",
+    "slug": "carrying-de-carga-farmer-walk"
+  },
+  {
+    "name": "L-Sit (Sustentação em L)",
+    "slug": "l-sit-sustentacao-em-l"
+  },
+  {
+    "name": "Sit-to-Stand",
+    "slug": "sit-to-stand"
+  },
+  {
+    "name": "Clamshell (Concha)",
+    "slug": "clamshell-concha"
+  },
+  {
+    "name": "Extensão de Punho com Halter",
+    "slug": "extensao-de-punho-com-halter"
+  },
+  {
+    "name": "Coordenação Cruzada (Cross Crawl)",
+    "slug": "coordenacao-cruzada-cross-crawl"
+  },
+  {
+    "name": "Copenhagen Plank",
+    "slug": "copenhagen-plank"
+  },
+  {
+    "name": "Descida Controlada de Degrau",
+    "slug": "descida-controlada-de-degrau"
+  },
+  {
+    "name": "Descida de Escada",
+    "slug": "descida-de-escada"
+  },
+  {
+    "name": "Desvio Radial de Punho",
+    "slug": "desvio-radial-de-punho"
+  },
+  {
+    "name": "Deslocamento Lateral (Shuffle)",
+    "slug": "deslocamento-lateral-shuffle"
+  },
+  {
+    "name": "Elevação Frontal de Ombro",
+    "slug": "elevacao-frontal-de-ombro"
+  },
+  {
+    "name": "Elevação de Panturrilha Sentado",
+    "slug": "elevacao-de-panturrilha-sentado"
+  },
+  {
+    "name": "Equilíbrio Unipodal em Disco/Espuma",
+    "slug": "equilibrio-unipodal-em-discoespuma"
+  },
+  {
+    "name": "Equilíbrio em Disco Instável",
+    "slug": "equilibrio-em-disco-instavel"
+  },
+  {
+    "name": "Torção de Toalha (Grip)",
+    "slug": "towel-wring-grip"
+  },
+  {
+    "name": "Marcha Estacionária Alta",
+    "slug": "marcha-estacionaria-alta"
+  },
+  {
+    "name": "Pronação e Supinação de Punho",
+    "slug": "pronacao-e-supinacao-de-punho"
+  },
+  {
+    "name": "Flexão de Punho",
+    "slug": "flexao-de-punho"
+  },
+  {
+    "name": "Mergulho no Banco (Tríceps)",
+    "slug": "mergulho-no-banco-triceps"
+  },
+  {
+    "name": "Stiff Unilateral",
+    "slug": "stiff-unilateral"
+  },
+  {
+    "name": "Mobilização de Nervo Ulnar",
+    "slug": "mobilizacao-de-nervo-ulnar"
+  },
+  {
+    "name": "Rotação de Ombro com Toalha",
+    "slug": "rotacao-de-ombro-com-toalha"
+  },
+  {
+    "name": "Mini-Landing Protocol",
+    "slug": "mini-landing-protocol"
+  },
+  {
+    "name": "Squeeze de Bola (Espalmar)",
+    "slug": "squeeze-de-bola-espalmar"
+  },
+  {
+    "name": "Extensão de Punho",
+    "slug": "extensao-de-punho"
+  },
+  {
+    "name": "Alongamento de Sóleo na Parede",
+    "slug": "alongamento-de-soleo-na-parede"
+  },
+  {
+    "name": "Mobilidade do Hálux",
+    "slug": "mobilidade-do-halux"
+  },
+  {
+    "name": "Mobilização de Quadril (Capsular)",
+    "slug": "mobilizacao-de-quadril-capsular"
+  },
+  {
+    "name": "Thomas Test Stretch",
+    "slug": "thomas-test-stretch"
+  },
+  {
+    "name": "World's Greatest Stretch",
+    "slug": "worlds-greatest-stretch"
+  },
+  {
+    "name": "Gato-Camelo",
+    "slug": "gato-camelo"
+  },
+  {
+    "name": "Alongamento de Peitoral no Canto",
+    "slug": "alongamento-de-peitoral-no-canto"
+  },
+  {
+    "name": "Push-up Plus",
+    "slug": "push-up-plus"
+  },
+  {
+    "name": "Mobilização de Ombro com Bastão",
+    "slug": "mobilizacao-de-ombro-com-bastao"
+  },
+  {
+    "name": "Deslizamento do Nervo Mediano",
+    "slug": "deslizamento-do-nervo-mediano"
+  },
+  {
+    "name": "Fortalecimento de Preensão (Bolinha)",
+    "slug": "fortalecimento-de-preensao-bolinha"
+  },
+  {
+    "name": "Flexão de Cotovelo (Bicep Curl)",
+    "slug": "flexao-de-cotovelo-bicep-curl"
+  },
+  {
+    "name": "Stretching Global Ativo",
+    "slug": "stretching-global-ativo"
+  },
+  {
+    "name": "Equilíbrio Unipodal Solo",
+    "slug": "equilibrio-unipodal-solo"
+  },
+  {
+    "name": "Espirometria Incentivada",
+    "slug": "espirometria-incentivada"
+  },
+  {
+    "name": "Eversão de Tornozelo com Faixa",
+    "slug": "eversao-de-tornozelo-com-faixa"
+  },
+  {
+    "name": "Exercício de Parede para Ombro",
+    "slug": "exercicio-de-parede-para-ombro"
+  },
+  {
+    "name": "Expansão Torácica unilateral",
+    "slug": "expansao-toracica-unilateral"
+  },
+  {
+    "name": "Extensão de Cotovelo com Garrafa",
+    "slug": "extensao-de-cotovelo-com-garrafa"
+  },
+  {
+    "name": "Extensão de Dedos",
+    "slug": "extensao-de-dedos"
+  }
+]
