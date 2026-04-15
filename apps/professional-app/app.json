@@ -91,13 +91,13 @@
 				"origin": false
 			},
 			"eas": {
-				"projectId": "8e006901-c021-464d-bbcd-96d821ab62d0"
+				"projectId": "ca7042a7-03d4-4731-b4e5-6f5de3b48300"
 			}
 		},
 		"owner": "rafaelminatto",
 		"updates": {
 			"enabled": true,
-			"url": "https://u.expo.dev/8e006901-c021-464d-bbcd-96d821ab62d0",
+			"url": "https://u.expo.dev/ca7042a7-03d4-4731-b4e5-6f5de3b48300",
 			"enableBsdiffPatchSupport": true
 		},
 		"runtimeVersion": {
