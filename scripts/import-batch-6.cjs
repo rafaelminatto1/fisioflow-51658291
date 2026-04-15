@@ -16,12 +16,12 @@ const client = new Client({
 });
 
 const TARGET_DIR = 'public/exercises/illustrations/';
-const SOURCE_DIR = '/home/rafael/.gemini/antigravity/brain/655072bd-9231-456b-8d0b-b49767e6aa17/';
+const SOURCE_DIR = '/home/rafael/.gemini/antigravity/brain/2902e7c3-b382-4156-bd01-f7ac96229515/';
 
 // Lista de exercícios para o Batch 6
 // O 'suffix' deve ser preenchido com o nome do arquivo PNG gerado pela IA (ou manualmente)
 const batch = [
-    { slug: 'alongamento-de-gluteo-sentado', suffix: '' },
+    { slug: 'alongamento-de-gluteo-sentado', suffix: 'alongamento_gluteo_sentado_batch6_1776250893558.png' },
     { slug: 'desenvolvimento-de-ombro', suffix: '' },
     { slug: 'elevacao-pelvica-unilateral', suffix: '' },
     { slug: 'elevacao-de-escapula', suffix: '' },
