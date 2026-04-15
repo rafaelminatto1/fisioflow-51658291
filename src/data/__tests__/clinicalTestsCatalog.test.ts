@@ -50,4 +50,12 @@ describe("clinicalTestsCatalog", () => {
 		expect(lachman?.evidence_resources?.length).toBeGreaterThan(0);
 		expect(lachman?.reference).toContain("Huang");
 	});
+
+	it("valida que todos os testes built-in possuem resumo de evidência e referência", () => {
+		for (const test of builtinClinicalTestsCatalog) {
+			expect(test.evidence_summary, `Teste ${test.name} não possui evidence_summary`).toBeDefined();
+			expect(test.evidence_summary.length, `Teste ${test.name} tem evidence_summary vazio`).toBeGreaterThan(10);
+			expect(test.reference, `Teste ${test.name} não possui reference`).toBeDefined();
+		}
+	});
 });

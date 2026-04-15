@@ -1,4 +1,5 @@
 import type { Env } from '../types/env';
+import { TurboQuant } from '@fisioflow/core';
 
 /**
  * Utilitários para usar o Cloudflare Workers AI (Modelos Nativos).
@@ -224,3 +225,34 @@ export async function generateEmbedding(env: Env, text: string): Promise<number[
   );
   return ((response as any).data?.[0] ?? []) as number[];
 }
+
+/**
+ * Gera um sketch TurboQuant comprimido (hex string) a partir de um vetor de embedding.
+ * Útil para armazenamento ultra-eficiente e busca offline.
+ */
+export function generateTurboSketch(embedding: number[]): string {
+  if (!embedding || embedding.length === 0) return '';
+  
+  const tq = new TurboQuant({ dimension: embedding.length });
+  const sketch = tq.compress(embedding);
+  
+  // Converte Uint8Array para hex string para armazenamento simples no Postgres
+  return Array.from(sketch)
+    .map((b: number) => b.toString(16).padStart(2, '0'))
+    .join('');
+}
+
+/**
+ * Converte a string hexadecimal devolvida pelo banco de volta para o Array de bytes nativo.
+ * Necessário para alimentar o calculador de similaridade O(1) do TurboQuant.
+ */
+export function parseTurboSketch(hex: string): Uint8Array {
+  if (!hex) return new Uint8Array(0);
+  
+  const sketch = new Uint8Array(hex.length / 2);
+  for (let i = 0; i < hex.length; i += 2) {
+    sketch[i / 2] = parseInt(hex.substring(i, i + 2), 16);
+  }
+  return sketch;
+}
+

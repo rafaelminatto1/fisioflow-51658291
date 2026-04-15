@@ -27,7 +27,6 @@ try {
 // Para pacotes que EXISTEM mas têm módulos nativos ausentes no dev build,
 // usamos resolveRequest para interceptar e redirecionar para stubs.
 const moduleStubs = {
-	"react-native-vision-camera": path.resolve(projectRoot, "stubs/vision-camera.js"),
 };
 
 config.resolver.resolveRequest = (context, moduleName, platform) => {

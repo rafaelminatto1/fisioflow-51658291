@@ -8,7 +8,7 @@ import {
   exerciseCategories,
   exerciseFavorites,
 } from '@fisioflow/db';
-import { generateEmbedding } from '../lib/ai-native';
+import { generateEmbedding, generateTurboSketch } from '../lib/ai-native';
 
 const app = new Hono<{ Bindings: Env; Variables: AuthVariables }>();
 
@@ -167,6 +167,8 @@ app.get('/', async (c) => {
         durationSeconds: exercises.durationSeconds,
         description: exercises.description,
         tags: exercises.tags,
+        embeddingSketch: exercises.embeddingSketch,
+        referencePose: exercises.referencePose,
       })
       .from(exercises)
       .leftJoin(
@@ -340,13 +342,17 @@ app.post('/', requireAuth, async (c) => {
 	        const textToEmbed = `${row.name} ${row.description || ''} ${categoryLabel} ${row.bodyParts?.join(' ') || ''}`.trim();
 	        const vector = await generateEmbedding(c.env, textToEmbed);
 	        if (vector.length > 0) {
+            const sketch = generateTurboSketch(vector);
 	          await c.env.CLINICAL_KNOWLEDGE.upsert([{
 	            id: row.id,
 	            values: vector,
-	            metadata: { name: row.name, category: categoryLabel }
+	            metadata: { name: row.name, category: categoryLabel, sketch }
 	          }]);
-          // Update DB embedding for hybrid search potential
-          await db.update(exercises).set({ embedding: vector }).where(eq(exercises.id, row.id));
+          // Update DB embedding and sketch for hybrid search potential
+          await db.update(exercises).set({ 
+            embedding: vector,
+            embeddingSketch: sketch 
+          }).where(eq(exercises.id, row.id));
         }
       } catch (e) {
         console.error('[Exercises] Failed to update semantic index:', e);
@@ -379,7 +385,35 @@ app.put('/:id', requireAuth, async (c) => {
 
   if (!row) return c.json({ error: 'Exercício não encontrado' }, 404);
 
-  c.executionCtx.waitUntil(invalidateListCache(c.env));
+  // Background tasks: Invalidate cache and update embedding/vectorize
+  c.executionCtx.waitUntil((async () => {
+    await invalidateListCache(c.env);
+    
+    // Only regenerate if relevant fields changed (simple check for now)
+    if (c.env.CLINICAL_KNOWLEDGE) {
+      try {
+        const categoryLabel = row.subcategory || row.categoryId || '';
+        const textToEmbed = `${row.name} ${row.description || ''} ${categoryLabel} ${row.bodyParts?.join(' ') || ''}`.trim();
+        const vector = await generateEmbedding(c.env, textToEmbed);
+        if (vector.length > 0) {
+          const sketch = generateTurboSketch(vector);
+          await c.env.CLINICAL_KNOWLEDGE.upsert([{
+            id: row.id,
+            values: vector,
+            metadata: { name: row.name, category: categoryLabel, sketch }
+          }]);
+          // Update DB embedding and sketch
+          await db.update(exercises).set({ 
+            embedding: vector,
+            embeddingSketch: sketch 
+          }).where(eq(exercises.id, row.id));
+        }
+      } catch (e) {
+        console.error('[Exercises] Failed to update semantic index on update:', e);
+      }
+    }
+  })());
+
   return c.json({ data: row });
 });
 

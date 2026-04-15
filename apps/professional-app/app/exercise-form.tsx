@@ -529,6 +529,7 @@ export default function ExerciseFormScreen() {
 		instructions: [],
 		videoUrl: "",
 		imageUrl: "",
+		embeddingSketch: "",
 	});
 
 	const { data: exercise, isLoading: isLoadingExercise } = useQuery({
@@ -551,6 +552,7 @@ export default function ExerciseFormScreen() {
 				instructions: exercise.instructions || [],
 				videoUrl: exercise.videoUrl || "",
 				imageUrl: exercise.imageUrl || "",
+				embeddingSketch: exercise.embeddingSketch || "",
 			});
 			setCategories(exercise.category ? [exercise.category] : []);
 		}
@@ -967,6 +969,28 @@ export default function ExerciseFormScreen() {
 						placeholder="https://youtube.com/watch?v=..."
 						placeholderTextColor={colors.textMuted}
 						keyboardType="url"
+					/>
+
+					<Text style={[styles.label, { color: colors.text }]}>
+						Esboço do Esqueleto (JSON)
+					</Text>
+					<TextInput
+						style={[
+							styles.input,
+							styles.textArea,
+							{
+								borderColor: colors.border,
+								backgroundColor: colors.surface,
+								color: colors.text,
+							},
+						]}
+						value={formData.embeddingSketch}
+						onChangeText={(v) => updateField("embeddingSketch", v)}
+						placeholder='[{"x": 0.5, "y": 0.5, "visibility": 1}, ...]'
+						placeholderTextColor={colors.textMuted}
+						multiline
+						numberOfLines={6}
+						textAlignVertical="top"
 					/>
 
 					<Button
