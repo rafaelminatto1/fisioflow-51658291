@@ -8,7 +8,7 @@
  */
 export const APP_NAME = 'FisioFlow';
 export const APP_VERSION = '1.0.0';
-export const EAS_PROJECT_ID = '8e006901-c021-464d-bbcd-96d821ab62d0';
+export const EAS_PROJECT_ID = 'ca7042a7-03d4-4731-b4e5-6f5de3b48300';
 
 /**
  * Storage keys
