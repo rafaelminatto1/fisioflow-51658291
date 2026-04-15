@@ -86,7 +86,11 @@ import {
 	PRIORIDADE_COLORS,
 	STATUS_COLORS,
 } from "@/types/tarefas";
-import { useUpdateTarefa, useCreateTarefa, useTarefas } from "@/hooks/useTarefas";
+import {
+	useUpdateTarefa,
+	useCreateTarefa,
+	useTarefas,
+} from "@/hooks/useTarefas";
 import { toast } from "sonner";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { useBoardLabels } from "@/contexts/BoardLabelsContext";
@@ -138,8 +142,8 @@ const tarefaDetailSchema = z.object({
 		"REVISAO",
 		"CONCLUIDO",
 		"ARQUIVADO",
-	] as const),
-	prioridade: z.enum(["BAIXA", "MEDIA", "ALTA", "URGENTE"] as const),
+	]),
+	prioridade: z.enum(["BAIXA", "MEDIA", "ALTA", "URGENTE"]),
 	tipo: z.enum([
 		"TAREFA",
 		"BUG",
@@ -147,7 +151,7 @@ const tarefaDetailSchema = z.object({
 		"MELHORIA",
 		"DOCUMENTACAO",
 		"REUNIAO",
-	] as const),
+	]),
 	data_vencimento: z.date().optional().nullable(),
 	start_date: z.date().optional().nullable(),
 	tags: z.array(z.string()).default([]),
@@ -192,9 +196,8 @@ export function TaskDetailModal({
 		queryFn: () => boardChecklistTemplatesApi.list(boardId!),
 		enabled: !!boardId,
 	});
-	const checklistTemplates: BoardChecklistTemplate[] = (
-		templatesData?.data ?? []
-	) as BoardChecklistTemplate[];
+	const checklistTemplates: BoardChecklistTemplate[] = (templatesData?.data ??
+		[]) as BoardChecklistTemplate[];
 
 	const useTemplateMutation = useMutation({
 		mutationFn: (templateId: string) =>
@@ -404,37 +407,40 @@ export function TaskDetailModal({
 			: null;
 	}, [checklists]);
 
-	const onSubmit = useCallback(async (data: TarefaDetailFormData) => {
-		if (!tarefa) return;
+	const onSubmit = useCallback(
+		async (data: TarefaDetailFormData) => {
+			if (!tarefa) return;
 
-		try {
-			await updateTarefa.mutateAsync({
-				id: tarefa.id,
-				titulo: data.titulo,
-				descricao: data.descricao,
-				status: data.status,
-				prioridade: data.prioridade,
-				tipo: data.tipo,
-				project_id: data.project_id,
-				parent_id: data.parent_id,
-				responsavel_id: data.responsavel_id,
-				data_vencimento: data.data_vencimento?.toISOString().split("T")[0],
-				start_date: data.start_date?.toISOString().split("T")[0],
-				tags: data.tags,
-				label_ids: selectedLabelIds,
-				checklists: data.checklists,
-				attachments: data.attachments,
-				references: data.references,
-				dependencies: data.dependencies,
-				...(data.status === "CONCLUIDO" && !tarefa.completed_at
-					? { completed_at: new Date().toISOString() }
-					: {}),
-			});
-			toast.success("Tarefa atualizada com sucesso!");
-		} catch {
-			// Error handled in hook
-		}
-	}, [tarefa, updateTarefa, selectedLabelIds]);
+			try {
+				await updateTarefa.mutateAsync({
+					id: tarefa.id,
+					titulo: data.titulo,
+					descricao: data.descricao,
+					status: data.status,
+					prioridade: data.prioridade,
+					tipo: data.tipo,
+					project_id: data.project_id,
+					parent_id: data.parent_id,
+					responsavel_id: data.responsavel_id,
+					data_vencimento: data.data_vencimento?.toISOString().split("T")[0],
+					start_date: data.start_date?.toISOString().split("T")[0],
+					tags: data.tags,
+					label_ids: selectedLabelIds,
+					checklists: data.checklists,
+					attachments: data.attachments,
+					references: data.references,
+					dependencies: data.dependencies,
+					...(data.status === "CONCLUIDO" && !tarefa.completed_at
+						? { completed_at: new Date().toISOString() }
+						: {}),
+				});
+				toast.success("Tarefa atualizada com sucesso!");
+			} catch {
+				// Error handled in hook
+			}
+		},
+		[tarefa, updateTarefa, selectedLabelIds],
+	);
 
 	// Keep ref always pointing to latest onSubmit (avoids stale closures)
 	useEffect(() => {
@@ -835,23 +841,27 @@ export function TaskDetailModal({
 													<div className="space-y-2">
 														<div className="flex flex-wrap gap-1.5">
 															{boardLabels.map((label) => {
-																const active = selectedLabelIds.includes(label.id);
+																const active = selectedLabelIds.includes(
+																	label.id,
+																);
 																return (
 																	<button
 																		key={label.id}
 																		type="button"
-																			onClick={() => {
-																				setSelectedLabelIds((prev) => {
-																					const next = active
-																						? prev.filter((id) => id !== label.id)
-																						: [...prev, label.id];
-																					setTimeout(() => triggerSave(), 0);
-																					return next;
-																				});
-																			}}
+																		onClick={() => {
+																			setSelectedLabelIds((prev) => {
+																				const next = active
+																					? prev.filter((id) => id !== label.id)
+																					: [...prev, label.id];
+																				setTimeout(() => triggerSave(), 0);
+																				return next;
+																			});
+																		}}
 																		className={cn(
 																			"flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-medium border transition-all",
-																			active ? "ring-2 ring-offset-1" : "opacity-60 hover:opacity-100",
+																			active
+																				? "ring-2 ring-offset-1"
+																				: "opacity-60 hover:opacity-100",
 																		)}
 																		style={
 																			active
@@ -873,13 +883,16 @@ export function TaskDetailModal({
 																			style={{ backgroundColor: label.color }}
 																		/>
 																		{label.name}
-																		{active && <X className="h-2.5 w-2.5 ml-0.5" />}
+																		{active && (
+																			<X className="h-2.5 w-2.5 ml-0.5" />
+																		)}
 																	</button>
 																);
 															})}
 														</div>
 														<p className="text-[11px] text-muted-foreground">
-															Clique para adicionar ou remover etiquetas do board.
+															Clique para adicionar ou remover etiquetas do
+															board.
 														</p>
 													</div>
 												)}
@@ -920,97 +933,153 @@ export function TaskDetailModal({
 												</div>
 											</div>
 										</div>
-											{/* Dependencies section */}
-											<div>
-												<Label className="font-bold text-xs text-slate-400 uppercase">
-													Dependências (bloqueadores)
-												</Label>
-												<p className="text-[11px] text-muted-foreground mt-0.5 mb-2">
-													Tarefas que precisam ser concluídas antes desta.
-												</p>
-												{form.watch("dependencies").length > 0 && (
-													<div className="flex flex-col gap-1.5 mb-2">
-														{form.watch("dependencies").map((depId) => {
-															const dep = allTarefas?.find((t) => t.id === depId);
-															return (
-																<div key={depId} className="flex items-center justify-between gap-2 rounded-xl border border-border/60 bg-slate-50/60 px-3 py-2 text-sm">
-																	<span className="truncate font-medium">{dep?.titulo ?? depId}</span>
-																	<button
-																		type="button"
-																		onClick={() => {
-																			const current = form.getValues("dependencies");
-																			form.setValue("dependencies", current.filter((id) => id !== depId));
-																			handleAutoSave();
-																		}}
-																		className="shrink-0 text-slate-400 hover:text-destructive"
-																	>
-																		<X className="h-3.5 w-3.5" />
-																	</button>
-																</div>
-															);
-														})}
-													</div>
-												)}
-												<div className="relative">
-													<Input
-														placeholder="Buscar tarefa para adicionar como dependência..."
-														value={depSearch}
-														onChange={(e) => setDepSearch(e.target.value)}
-														className="h-9 rounded-xl text-sm"
-													/>
-													{depSearch.length >= 2 && (
-														<div className="absolute z-10 mt-1 w-full rounded-xl border border-border/60 bg-popover shadow-md overflow-hidden">
-															{(allTarefas ?? []).filter((t) =>
-																t.id !== tarefa?.id &&
-																!form.getValues("dependencies").includes(t.id) &&
-																t.titulo.toLowerCase().includes(depSearch.toLowerCase())
-															).slice(0, 6).map((t) => (
+										{/* Dependencies section */}
+										<div>
+											<Label className="font-bold text-xs text-slate-400 uppercase">
+												Dependências (bloqueadores)
+											</Label>
+											<p className="text-[11px] text-muted-foreground mt-0.5 mb-2">
+												Tarefas que precisam ser concluídas antes desta.
+											</p>
+											{form.watch("dependencies").length > 0 && (
+												<div className="flex flex-col gap-1.5 mb-2">
+													{form.watch("dependencies").map((depId) => {
+														const dep = allTarefas?.find((t) => t.id === depId);
+														return (
+															<div
+																key={depId}
+																className="flex items-center justify-between gap-2 rounded-xl border border-border/60 bg-slate-50/60 px-3 py-2 text-sm"
+															>
+																<span className="truncate font-medium">
+																	{dep?.titulo ?? depId}
+																</span>
+																<button
+																	type="button"
+																	onClick={() => {
+																		const current =
+																			form.getValues("dependencies");
+																		form.setValue(
+																			"dependencies",
+																			current.filter((id) => id !== depId),
+																		);
+																		handleAutoSave();
+																	}}
+																	className="shrink-0 text-slate-400 hover:text-destructive"
+																>
+																	<X className="h-3.5 w-3.5" />
+																</button>
+															</div>
+														);
+													})}
+												</div>
+											)}
+											<div className="relative">
+												<Input
+													placeholder="Buscar tarefa para adicionar como dependência..."
+													value={depSearch}
+													onChange={(e) => setDepSearch(e.target.value)}
+													className="h-9 rounded-xl text-sm"
+												/>
+												{depSearch.length >= 2 && (
+													<div className="absolute z-10 mt-1 w-full rounded-xl border border-border/60 bg-popover shadow-md overflow-hidden">
+														{(allTarefas ?? [])
+															.filter(
+																(t) =>
+																	t.id !== tarefa?.id &&
+																	!form
+																		.getValues("dependencies")
+																		.includes(t.id) &&
+																	t.titulo
+																		.toLowerCase()
+																		.includes(depSearch.toLowerCase()),
+															)
+															.slice(0, 6)
+															.map((t) => (
 																<button
 																	key={t.id}
 																	type="button"
 																	className="flex w-full items-center gap-2 px-3 py-2 text-left text-sm hover:bg-accent/60 transition-colors"
 																	onClick={() => {
-																		const current = form.getValues("dependencies");
-																		form.setValue("dependencies", [...current, t.id]);
+																		const current =
+																			form.getValues("dependencies");
+																		form.setValue("dependencies", [
+																			...current,
+																			t.id,
+																		]);
 																		setDepSearch("");
 																		handleAutoSave();
 																	}}
 																>
 																	<span className="truncate">{t.titulo}</span>
-																	<Badge variant="outline" className="shrink-0 text-[10px] px-1.5">{t.status}</Badge>
+																	<Badge
+																		variant="outline"
+																		className="shrink-0 text-[10px] px-1.5"
+																	>
+																		{t.status}
+																	</Badge>
 																</button>
 															))}
-															{(allTarefas ?? []).filter((t) =>
+														{(allTarefas ?? []).filter(
+															(t) =>
 																t.id !== tarefa?.id &&
-																!form.getValues("dependencies").includes(t.id) &&
-																t.titulo.toLowerCase().includes(depSearch.toLowerCase())
-															).length === 0 && (
-																<p className="px-3 py-2 text-sm text-muted-foreground">Nenhuma tarefa encontrada.</p>
-															)}
-														</div>
-													)}
-												</div>
-											</div>
-
-									{/* Entity link */}
-									{(tarefa.linked_entity_type || tarefa.linked_entity_id) && (
-										<div>
-											<Label className="font-bold text-xs text-slate-400 uppercase">
-												Entidade Vinculada
-											</Label>
-											<div className="mt-1.5 flex items-center gap-2 rounded-xl border border-border/60 bg-slate-50/60 px-3 py-2">
-												{tarefa.linked_entity_type === 'patient' && <UserCircle className="h-4 w-4 text-blue-500 shrink-0" />}
-												{tarefa.linked_entity_type === 'appointment' && <CalendarIcon className="h-4 w-4 text-purple-500 shrink-0" />}
-												{tarefa.linked_entity_type === 'session' && <Stethoscope className="h-4 w-4 text-emerald-500 shrink-0" />}
-												{tarefa.linked_entity_type === 'goal' && <Target className="h-4 w-4 text-orange-500 shrink-0" />}
-												{tarefa.linked_entity_type === 'exercise_plan' && <Dumbbell className="h-4 w-4 text-pink-500 shrink-0" />}
-												{!['patient','appointment','session','goal','exercise_plan'].includes(tarefa.linked_entity_type ?? '') && <ClipboardList className="h-4 w-4 text-slate-400 shrink-0" />}
-												<span className="text-sm font-medium capitalize">{tarefa.linked_entity_type?.replace(/_/g, ' ') ?? 'Entidade'}</span>
-												<span className="text-xs text-muted-foreground font-mono truncate">{tarefa.linked_entity_id}</span>
+																!form
+																	.getValues("dependencies")
+																	.includes(t.id) &&
+																t.titulo
+																	.toLowerCase()
+																	.includes(depSearch.toLowerCase()),
+														).length === 0 && (
+															<p className="px-3 py-2 text-sm text-muted-foreground">
+																Nenhuma tarefa encontrada.
+															</p>
+														)}
+													</div>
+												)}
 											</div>
 										</div>
-									)}
-								</TabsContent>
+
+										{/* Entity link */}
+										{(tarefa.linked_entity_type || tarefa.linked_entity_id) && (
+											<div>
+												<Label className="font-bold text-xs text-slate-400 uppercase">
+													Entidade Vinculada
+												</Label>
+												<div className="mt-1.5 flex items-center gap-2 rounded-xl border border-border/60 bg-slate-50/60 px-3 py-2">
+													{tarefa.linked_entity_type === "patient" && (
+														<UserCircle className="h-4 w-4 text-blue-500 shrink-0" />
+													)}
+													{tarefa.linked_entity_type === "appointment" && (
+														<CalendarIcon className="h-4 w-4 text-purple-500 shrink-0" />
+													)}
+													{tarefa.linked_entity_type === "session" && (
+														<Stethoscope className="h-4 w-4 text-emerald-500 shrink-0" />
+													)}
+													{tarefa.linked_entity_type === "goal" && (
+														<Target className="h-4 w-4 text-orange-500 shrink-0" />
+													)}
+													{tarefa.linked_entity_type === "exercise_plan" && (
+														<Dumbbell className="h-4 w-4 text-pink-500 shrink-0" />
+													)}
+													{![
+														"patient",
+														"appointment",
+														"session",
+														"goal",
+														"exercise_plan",
+													].includes(tarefa.linked_entity_type ?? "") && (
+														<ClipboardList className="h-4 w-4 text-slate-400 shrink-0" />
+													)}
+													<span className="text-sm font-medium capitalize">
+														{tarefa.linked_entity_type?.replace(/_/g, " ") ??
+															"Entidade"}
+													</span>
+													<span className="text-xs text-muted-foreground font-mono truncate">
+														{tarefa.linked_entity_id}
+													</span>
+												</div>
+											</div>
+										)}
+									</TabsContent>
 
 									{/* Checklists Tab */}
 									<TabsContent value="checklists" className="mt-0 space-y-6">
@@ -1070,7 +1139,10 @@ export function TaskDetailModal({
 																	Aplicar template
 																</Button>
 															</PopoverTrigger>
-															<PopoverContent className="w-64 p-2" align="start">
+															<PopoverContent
+																className="w-64 p-2"
+																align="start"
+															>
 																<p className="text-xs font-medium text-muted-foreground px-1 pb-1">
 																	Selecione um template
 																</p>
@@ -1135,7 +1207,10 @@ export function TaskDetailModal({
 																	Salvar como template
 																</Button>
 															</PopoverTrigger>
-															<PopoverContent className="w-64 p-3" align="start">
+															<PopoverContent
+																className="w-64 p-3"
+																align="start"
+															>
 																<p className="text-xs font-medium mb-2">
 																	Nome do template
 																</p>
@@ -1146,7 +1221,10 @@ export function TaskDetailModal({
 																		setSaveTemplateName(e.target.value)
 																	}
 																	onKeyDown={(e) => {
-																		if (e.key === "Enter" && saveTemplateName.trim()) {
+																		if (
+																			e.key === "Enter" &&
+																			saveTemplateName.trim()
+																		) {
 																			const items = checklistFields.flatMap(
 																				(cl) =>
 																					cl.items.map((item) => ({
@@ -1278,7 +1356,10 @@ export function TaskDetailModal({
 																			column_id: tarefa?.column_id ?? undefined,
 																			parent_id: tarefa?.id,
 																		});
-																		removeChecklistItem(checklistIndex, itemIndex);
+																		removeChecklistItem(
+																			checklistIndex,
+																			itemIndex,
+																		);
 																		handleAutoSave();
 																	}}
 																>
