@@ -3,6 +3,10 @@
  * A lightweight, highly performant Vanilla JS calendar engine for Vite/Rolldown.
  */
 
+import Calendar from "@event-calendar/core";
+import DayGrid from "@event-calendar/day-grid";
+import Interaction from "@event-calendar/interaction";
+import TimeGrid from "@event-calendar/time-grid";
 import {
 	useEffect,
 	useLayoutEffect,
@@ -12,20 +16,16 @@ import {
 	useState,
 	useTransition,
 } from "react";
-import Calendar from "@event-calendar/core";
-import TimeGrid from "@event-calendar/time-grid";
-import DayGrid from "@event-calendar/day-grid";
-import Interaction from "@event-calendar/interaction";
 import "@event-calendar/core/index.css";
-import { format, isValid, addMinutes, addDays, startOfWeek } from "date-fns";
-import { ScheduleToolbar } from "./ScheduleToolbar";
-import { AppointmentQuickView } from "./AppointmentQuickView";
-import {
-	normalizeStatus,
-	getCalendarCardColors,
-} from "./shared/appointment-status";
+import { addDays, addMinutes, format, isValid, startOfWeek } from "date-fns";
 import { useStatusConfig } from "@/hooks/useStatusConfig";
 import { formatTime, roundDateToNearestInterval } from "@/utils/dateUtils";
+import { AppointmentQuickView } from "./AppointmentQuickView";
+import { ScheduleToolbar } from "./ScheduleToolbar";
+import {
+	getCalendarCardColors,
+	normalizeStatus,
+} from "./shared/appointment-status";
 
 type ViewType = "day" | "week" | "month";
 
@@ -570,10 +570,22 @@ export function DayFlowCalendarWrapper(props: DayFlowCalendarWrapperProps) {
 					overflow: hidden !important;
 					visibility: hidden !important;
 				}
+				.ec-sidebar {
+					width: 40px !important;
+					flex-shrink: 0 !important;
+					flex-grow: 0 !important;
+				}
 				.dayflow-week-view .ec-body .ec-time {
-					font-size: 9px !important;
+					font-size: 10px !important;
 					line-height: ${slotHeight}px !important;
 					top: 0 !important;
+					text-align: center !important;
+					width: 100% !important;
+					color: #64748b !important;
+					font-weight: 700 !important;
+					display: flex !important;
+					align-items: center !important;
+					justify-content: center !important;
 				}
 				.dayflow-event-shell {
 					width: 100%;

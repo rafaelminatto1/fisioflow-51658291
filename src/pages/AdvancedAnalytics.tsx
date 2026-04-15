@@ -12,7 +12,7 @@ import { useAnalyticsSummary } from "@/hooks/useAnalyticsSummary";
 import { AnalyticsFiltersProvider } from "@/contexts/AnalyticsFiltersContext";
 import { AnalyticsFilters } from "@/components/analytics/AnalyticsFilters";
 
-function AdvancedAnalyticsContent() {
+function AdvancedAnalyticsContentInternal() {
 	const { summary, isLoading } = useAnalyticsSummary();
 
 	return (
@@ -190,12 +190,10 @@ function AdvancedAnalyticsContent() {
 	);
 }
 
-export default function AdvancedAnalytics() {
+export function AdvancedAnalyticsContent() {
 	return (
-		<MainLayout fullWidth>
-			<AnalyticsFiltersProvider>
-				<AdvancedAnalyticsContent />
-			</AnalyticsFiltersProvider>
-		</MainLayout>
+		<AnalyticsFiltersProvider>
+			<AdvancedAnalyticsContentInternal />
+		</AnalyticsFiltersProvider>
 	);
 }
