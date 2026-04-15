@@ -113,6 +113,8 @@ const mapWorkerToAppTemplateItem = (
 				description: i.exercise.description || undefined,
 				category: i.exercise.category || undefined,
 				difficulty: i.exercise.difficulty || undefined,
+				imageUrl: i.exercise.imageUrl || undefined,
+				thumbnailUrl: i.exercise.thumbnailUrl || undefined,
 			}
 		: undefined,
 });
