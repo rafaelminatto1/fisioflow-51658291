@@ -24,20 +24,29 @@ import { useDebounce } from "@/hooks/useDebounce";
 import { SkeletonExercise } from "@/components/SkeletonExercise";
 import type { Exercise } from "@/types";
 
-const DIFFICULTIES = [
+import { 
+	BODY_PARTS, 
+	EQUIPMENT, 
+	CATEGORIES, 
+	DIFFICULTY_LEVELS 
+} from "@/lib/constants/exerciseConstants";
+
+const DIFFICULTY_OPTIONS = [
 	{ label: "Todas", value: null },
-	{ label: "Fácil", value: "iniciante" },
-	{ label: "Médio", value: "intermediario" },
-	{ label: "Difícil", value: "avancado" },
+	{ label: "Iniciante", value: "iniciante" },
+	{ label: "Intermediário", value: "intermediario" },
+	{ label: "Avançado", value: "avancado" },
 ];
 
 const CATEGORY_ICONS: Record<string, keyof typeof Ionicons.glyphMap> = {
 	Todos: "list-outline",
-	Mobilidade: "move-outline",
-	Força: "fitness-outline",
-	Equilíbrio: "body-outline",
-	Cardio: "heart-outline",
+	Fortalecimento: "barbell-outline",
 	Alongamento: "accessibility-outline",
+	Mobilidade: "move-outline",
+	Equilíbrio: "body-outline",
+	Propriocepção: "radio-outline",
+	Cardio: "heart-outline",
+	Funcional: "flash-outline",
 };
 
 export default function ExercisesScreen() {
@@ -359,6 +368,23 @@ export default function ExercisesScreen() {
 			style={[styles.container, { backgroundColor: colors.background }]}
 			edges={["top", "left", "right"]}
 		>
+			<FiltersModal
+				visible={showFiltersModal}
+				onClose={() => setShowFiltersModal(false)}
+				selectedDifficulty={selectedDifficulty}
+				setSelectedDifficulty={setSelectedDifficulty}
+				selectedEquipment={selectedEquipment}
+				setSelectedEquipment={setSelectedEquipment}
+				selectedBodyPart={selectedBodyPart}
+				setSelectedBodyPart={setSelectedBodyPart}
+				onReset={() => {
+					setSelectedDifficulty(null);
+					setSelectedEquipment(null);
+					setSelectedBodyPart(null);
+					setSelectedCategory("Todos");
+				}}
+			/>
+
 			{/* Header */}
 			<View style={[styles.header, { borderBottomColor: colors.border }]}>
 				<TouchableOpacity
@@ -573,6 +599,8 @@ export default function ExercisesScreen() {
 									setSearchQuery("");
 									setSelectedCategory("Todos");
 									setSelectedDifficulty(null);
+									setSelectedEquipment(null);
+									setSelectedBodyPart(null);
 									setShowFavoritesOnly(false);
 								}}
 								variant="outline"
@@ -736,6 +764,119 @@ export default function ExercisesScreen() {
 				</TouchableOpacity>
 			)}
 		</SafeAreaView>
+	);
+}
+
+function FiltersModal({
+	visible,
+	onClose,
+	selectedDifficulty,
+	setSelectedDifficulty,
+	selectedEquipment,
+	setSelectedEquipment,
+	selectedBodyPart,
+	setSelectedBodyPart,
+	onReset,
+}) {
+	const colors = useColors();
+	const { light, medium } = useHaptics();
+
+	const renderOption = (label, value, current, setter) => (
+		<TouchableOpacity
+			key={String(value)}
+			style={[
+				styles.filterChip,
+				{
+					backgroundColor:
+						current === value ? colors.primary : colors.surface + "B0",
+					borderColor: current === value ? colors.primary : colors.border + "40",
+					borderWidth: 1.2,
+					marginRight: 8,
+					marginBottom: 8,
+				},
+			]}
+			onPress={() => {
+				light();
+				setter(current === value ? null : value);
+			}}
+		>
+			<Text
+				style={[
+					styles.filterText,
+					current === value
+						? { color: "#FFFFFF", fontWeight: "600" }
+						: { color: colors.textSecondary },
+				]}
+			>
+				{label}
+			</Text>
+		</TouchableOpacity>
+	);
+
+	return (
+		<Modal
+			visible={visible}
+			onClose={onClose}
+			title="Filtros Avançados"
+			footer={
+				<View style={styles.modalFooter}>
+					<Button
+						title="Limpar"
+						variant="outline"
+						onPress={() => {
+							medium();
+							onReset();
+						}}
+						style={{ flex: 1, marginRight: 8 }}
+					/>
+					<Button
+						title="Ver Exercícios"
+						onPress={onClose}
+						style={{ flex: 2 }}
+					/>
+				</View>
+			}
+		>
+			<View style={styles.modalContent}>
+				<Text style={[styles.modalLabel, { color: colors.text }]}>
+					Dificuldade
+				</Text>
+				<View style={styles.filterGrid}>
+					{DIFFICULTY_OPTIONS.filter((d) => d.value !== null).map((d) =>
+						renderOption(d.label, d.value, selectedDifficulty, setSelectedDifficulty),
+					)}
+				</View>
+
+				<Text
+					style={[styles.modalLabel, { color: colors.text, marginTop: 16 }]}
+				>
+					Parte do Corpo
+				</Text>
+				<View style={styles.filterGrid}>
+					{BODY_PARTS.slice(0, 8).map((bp) =>
+						renderOption(bp.label, bp.label, selectedBodyPart, setSelectedBodyPart),
+					)}
+				</View>
+
+				<Text
+					style={[styles.modalLabel, { color: colors.text, marginTop: 16 }]}
+				>
+					Equipamento
+				</Text>
+				<View style={styles.filterGrid}>
+					{[
+						"Peso Corporal",
+						"Halter",
+						"Faixa Elástica",
+						"Bola Suíça",
+						"Cadeira",
+						"Parede",
+					].map((eq) =>
+						renderOption(eq, eq, selectedEquipment, setSelectedEquipment),
+					)}
+				</View>
+			</View>
+		</Modal>
 	);
 }
 
@@ -920,6 +1061,57 @@ const styles = StyleSheet.create({
 		marginLeft: 8,
 		fontSize: 16,
 		fontWeight: "600",
+	},
+	filterButton: {
+		width: 42,
+		height: 42,
+		borderRadius: 12,
+		justifyContent: "center",
+		alignItems: "center",
+		marginLeft: 8,
+	},
+	activeFilterDot: {
+		position: "absolute",
+		top: 8,
+		right: 8,
+		width: 8,
+		height: 8,
+		borderRadius: 4,
+		backgroundColor: "#FF3B30",
+		borderWidth: 1.5,
+		borderColor: "#FFFFFF",
+	},
+	filterScrollContent: {
+		paddingHorizontal: 20,
+		paddingBottom: 15,
+	},
+	filterChip: {
+		flexDirection: "row",
+		alignItems: "center",
+		paddingHorizontal: 16,
+		paddingVertical: 10,
+		borderRadius: 12,
+		marginRight: 10,
+	},
+	filterText: {
+		fontSize: 14,
+		fontWeight: "500",
+	},
+	modalContent: {
+		paddingVertical: 10,
+	},
+	modalLabel: {
+		fontSize: 16,
+		fontWeight: "700",
+		marginBottom: 12,
+	},
+	filterGrid: {
+		flexDirection: "row",
+		flexWrap: "wrap",
+	},
+	modalFooter: {
+		flexDirection: "row",
+		paddingTop: 16,
 	},
 	emptyContainer: {
 		alignItems: "center",

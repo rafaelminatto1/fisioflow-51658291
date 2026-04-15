@@ -27,7 +27,7 @@ export function useBilingualSearch() {
         const expandedQueries = expandSearchQuery(query);
         const normalizedQueries = expandedQueries.map(normalizeForSearch);
         
-        // 1. Search in local static dictionary
+        // 1. Search in local static dictionary (Synchronous)
         const dictionaryResults = physioDictionary.filter(entry => {
           const entryTerms = [
             normalizeForSearch(entry.pt),
@@ -38,74 +38,107 @@ export function useBilingualSearch() {
           return normalizedQueries.some(nq => entryTerms.some(term => term.includes(nq)));
         });
 
-        // 2. Search in Database (Exercises)
-        const exerciseRes = await exercisesApi.list({ q: query, limit: 10 });
-        const exerciseResults: PhysioDictionaryEntry[] = (exerciseRes.data || []).map(ex => ({
-          id: ex.id,
-          pt: ex.name,
-          en: (ex.aliases_en || [])[0] || "",
-          aliases_pt: ex.aliases_pt || [],
-          aliases_en: ex.aliases_en || [],
-          category: 'exercise',
-          subcategory: ex.subcategory || "",
-          description_pt: ex.description || ""
-        }));
+        // 2-5. Fetch from Database APIs in parallel
+        const fetchExercises = async () => {
+          try {
+            const res = await exercisesApi.list({ q: query, limit: 10 });
+            return (res.data || []).map(ex => ({
+              id: ex.id,
+              pt: ex.name,
+              en: (ex.aliases_en || [])[0] || "",
+              aliases_pt: ex.aliases_pt || [],
+              aliases_en: ex.aliases_en || [],
+              category: 'exercise' as const,
+              subcategory: ex.subcategory || "",
+              description_pt: ex.description || ""
+            }));
+          } catch (e) {
+            console.error("Exercises search failed:", e);
+            return [];
+          }
+        };
 
-        // 3. Search in Database (Clinical Tests)
-        const testRes = await clinicalTestsApi.list(); 
-        const testResults: PhysioDictionaryEntry[] = (testRes.data || [])
-          .filter(t => {
-            const terms = [
-              normalizeForSearch(t.name),
-              ...(t.aliases_pt || []).map(normalizeForSearch),
-              ...(t.aliases_en || []).map(normalizeForSearch)
-            ];
-            return normalizedQueries.some(nq => terms.some(term => term.includes(nq)));
-          })
-          .map(t => ({
-            id: t.id,
-            pt: t.name,
-            en: (t.aliases_en || [])[0] || "",
-            aliases_pt: t.aliases_pt || [],
-            aliases_en: t.aliases_en || [],
-            category: 'test',
-            description_pt: t.purpose || ""
-          }));
+        const fetchTests = async () => {
+          try {
+            const res = await clinicalTestsApi.list(); 
+            return (res.data || [])
+              .filter(t => {
+                const terms = [
+                  normalizeForSearch(t.name),
+                  ...(t.aliases_pt || []).map(normalizeForSearch),
+                  ...(t.aliases_en || []).map(normalizeForSearch)
+                ];
+                return normalizedQueries.some(nq => terms.some(term => term.includes(nq)));
+              })
+              .map(t => ({
+                id: t.id,
+                pt: t.name,
+                en: (t.aliases_en || [])[0] || "",
+                aliases_pt: t.aliases_pt || [],
+                aliases_en: t.aliases_en || [],
+                category: 'test' as const,
+                description_pt: t.purpose || ""
+              }));
+          } catch (e) {
+            console.error("Tests search failed:", e);
+            return [];
+          }
+        };
 
-        // 4. Search in Database (Protocols)
-        const protocolRes = await protocolsApi.list({ q: query, limit: 10 });
-        const protocolResults: PhysioDictionaryEntry[] = (protocolRes.data || []).map(p => ({
-          id: p.id,
-          pt: p.name,
-          en: (p.aliases_en || [])[0] || "",
-          aliases_pt: p.aliases_pt || [],
-          aliases_en: p.aliases_en || [],
-          category: 'procedure', // Map protocols to procedure category
-          subcategory: 'Protocolo',
-          description_pt: p.description || ""
-        }));
+        const fetchProtocols = async () => {
+          try {
+            const res = await protocolsApi.list({ q: query, limit: 10 });
+            return (res.data || []).map(p => ({
+              id: p.id,
+              pt: p.name,
+              en: (p.aliases_en || [])[0] || "",
+              aliases_pt: p.aliases_pt || [],
+              aliases_en: p.aliases_en || [],
+              category: 'procedure' as const,
+              subcategory: 'Protocolo',
+              description_pt: p.description || ""
+            }));
+          } catch (e) {
+            console.error("Protocols search failed:", e);
+            return [];
+          }
+        };
 
-        // 5. Search in Database (Evaluation Templates)
-        const templateRes = await clinicalApi.evolutionTemplates.list({ ativo: true });
-        const templateResults: PhysioDictionaryEntry[] = (templateRes.data || [])
-          .filter(t => {
-            const terms = [
-              normalizeForSearch(t.name),
-              ...(t.aliases_pt || []).map(normalizeForSearch),
-              ...(t.aliases_en || []).map(normalizeForSearch)
-            ];
-            return normalizedQueries.some(nq => terms.some(term => term.includes(nq)));
-          })
-          .map(t => ({
-            id: t.id,
-            pt: t.name,
-            en: (t.aliases_en || [])[0] || "",
-            aliases_pt: t.aliases_pt || [],
-            aliases_en: t.aliases_en || [],
-            category: 'assessment', // Map templates to assessment category
-            subcategory: 'Modelo de Avaliação',
-            description_pt: t.description || ""
-          }));
+        const fetchTemplates = async () => {
+          try {
+            const res = await clinicalApi.evolutionTemplates.list({ ativo: true });
+            return (res.data || [])
+              .filter(t => {
+                const terms = [
+                  normalizeForSearch(t.name),
+                  ...(t.aliases_pt || []).map(normalizeForSearch),
+                  ...(t.aliases_en || []).map(normalizeForSearch)
+                ];
+                return normalizedQueries.some(nq => terms.some(term => term.includes(nq)));
+              })
+              .map(t => ({
+                id: t.id,
+                pt: t.name,
+                en: (t.aliases_en || [])[0] || "",
+                aliases_pt: t.aliases_pt || [],
+                aliases_en: t.aliases_en || [],
+                category: 'assessment' as const,
+                subcategory: 'Modelo de Avaliação',
+                description_pt: t.description || ""
+              }));
+          } catch (e) {
+            console.error("Templates search failed:", e);
+            return [];
+          }
+        };
+
+        // Run all DB searches in parallel
+        const [exerciseResults, testResults, protocolResults, templateResults] = await Promise.all([
+          fetchExercises(),
+          fetchTests(),
+          fetchProtocols(),
+          fetchTemplates()
+        ]);
 
         // 6. Combine and deduplicate by name
         const combined = [
@@ -115,8 +148,8 @@ export function useBilingualSearch() {
           ...protocolResults,
           ...templateResults
         ];
-        const unique = new Map<string, PhysioDictionaryEntry>();
         
+        const unique = new Map<string, PhysioDictionaryEntry>();
         for (const item of combined) {
           const key = normalizeForSearch(item.pt);
           if (!unique.has(key)) {
@@ -126,7 +159,7 @@ export function useBilingualSearch() {
 
         setResults(Array.from(unique.values()).slice(0, 15));
       } catch (err) {
-        console.error("Clinical search error:", err);
+        console.error("Clinical search critical error:", err);
       } finally {
         setLoading(false);
       }
