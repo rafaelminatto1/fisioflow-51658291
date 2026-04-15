@@ -131,6 +131,7 @@ export const exerciseProtocols = pgTable(
 				return "vector(768)";
 			},
 		})("embedding"),
+		embeddingSketch: text("embedding_sketch"),
 		createdBy: text("created_by"),
 
 		createdAt: timestamp("created_at").defaultNow().notNull(),

@@ -110,7 +110,7 @@ export const aiRoutes = (
 		/>
 		<Route
 			path="/smart-dashboard"
-			element={<Navigate to="/inteligencia?tab=dashboard" replace />}
+			element={<Navigate to="/inteligencia?tab=clinica" replace />}
 		/>
 		<Route
 			path="/smart-ai"
@@ -118,11 +118,11 @@ export const aiRoutes = (
 		/>
 		<Route
 			path="/analytics"
-			element={<Navigate to="/inteligencia?tab=analytics" replace />}
+			element={<Navigate to="/inteligencia?tab=analise" replace />}
 		/>
 		<Route
 			path="/bi"
-			element={<Navigate to="/inteligencia?tab=bi" replace />}
+			element={<Navigate to="/inteligencia?tab=analise" replace />}
 		/>
 
 		{/* Google AI Suite */}

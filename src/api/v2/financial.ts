@@ -19,6 +19,25 @@ import type {
 const fin = (path: string, opts?: RequestInit) =>
 	request<any>(`/api/financial${path}`, opts);
 
+export interface PatientPackageRow {
+	id: string;
+	patient_id: string;
+	package_template_id?: string | null;
+	name: string;
+	total_sessions: number | string;
+	used_sessions: number | string;
+	remaining_sessions?: number | string | null;
+	price?: number | string | null;
+	payment_method?: string | null;
+	purchased_at?: string | null;
+	expires_at?: string | null;
+	last_used_at?: string | null;
+	created_at: string;
+	patient_name?: string | null;
+	patient_phone?: string | null;
+	organization_id?: string;
+}
+
 export const financialApi = {
 	transacoes: {
 		list: (p?: {
