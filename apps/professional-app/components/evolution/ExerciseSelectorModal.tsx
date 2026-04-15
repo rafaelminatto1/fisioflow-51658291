@@ -13,6 +13,7 @@ import {
 import { Ionicons } from '@expo/vector-icons';
 import { useExercisesLibrary } from '@/hooks/useExercises';
 import type { Exercise } from '@/types';
+import { performTextOfflineSearch } from '@/lib/semanticSearch';
 
 interface ExerciseSelectorModalProps {
   isVisible: boolean;
@@ -30,9 +31,10 @@ export function ExerciseSelectorModal({
   const [searchQuery, setSearchQuery] = useState('');
   const { data: exercises, isLoading } = useExercisesLibrary();
 
-  const filteredExercises = exercises.filter((ex) =>
-    ex.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    ex.category.toLowerCase().includes(searchQuery.toLowerCase())
+  const filteredExercises = performTextOfflineSearch(
+    searchQuery,
+    exercises || [],
+    ['name', 'category', 'description', 'bodyParts', 'tags'] as any
   );
 
   return (

@@ -9,6 +9,7 @@ import {
 	RefreshControl,
 	ActivityIndicator,
 	Alert,
+	TextInput,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
@@ -27,6 +28,7 @@ import { GamificationService } from "@/services/GamificationService";
 import { useExercises, useCompleteExercise } from "@/hooks/useExercises";
 import { ExerciseAssignment } from "@/types/api";
 import { log } from "@/lib/logger";
+import { performTextOfflineSearch, findSimilarOffline } from "@/lib/semanticSearch";
 
 export default function ExercisesScreen() {
 	const colors = useColors();
@@ -48,6 +50,25 @@ export default function ExercisesScreen() {
 		refetch,
 	} = useExercises();
 	const completeMutation = useCompleteExercise();
+
+	const [searchQuery, setSearchQuery] = useState("");
+	const [similarTo, setSimilarTo] = useState<ExerciseAssignment | null>(null);
+
+	const filteredExercises = searchQuery 
+		? exercises.filter(e => 
+				e.exercise.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+				e.exercise.category?.toLowerCase().includes(searchQuery.toLowerCase())
+			)
+		: exercises;
+
+	const similarExercises = similarTo 
+		? findSimilarOffline(
+				similarTo, 
+				exercises, 
+				(e) => e.exercise.embeddingSketch,
+				3
+			)
+		: [];
 
 	const onRefresh = async () => {
 		await refetch();
@@ -209,6 +230,56 @@ export default function ExercisesScreen() {
 				</Text>
 			</View>
 
+			{/* Search Bar */}
+			<View style={styles.searchContainer}>
+				<View style={[styles.searchInputWrapper, { backgroundColor: colors.surfaceHover }]}>
+					<Ionicons name="search" size={20} color={colors.textSecondary} />
+					<TextInput
+						placeholder="Buscar nos meus exercícios..."
+						placeholderTextColor={colors.textMuted}
+						style={[styles.searchInput, { color: colors.text }]}
+						value={searchQuery}
+						onChangeText={setSearchQuery}
+					/>
+					{searchQuery !== "" && (
+						<TouchableOpacity onPress={() => setSearchQuery("")}>
+							<Ionicons name="close-circle" size={18} color={colors.textSecondary} />
+						</TouchableOpacity>
+					)}
+				</View>
+			</View>
+
+			{/* Similar Exercises (TurboQuant Demo) */}
+			{similarExercises.length > 0 && (
+				<View style={styles.similarSection}>
+					<View style={styles.similarHeader}>
+						<Ionicons name="sparkles" size={16} color={colors.primary} />
+						<Text style={[styles.similarTitle, { color: colors.text }]}>
+							Sugeridos (Baseado em {similarTo?.exercise.name})
+						</Text>
+						<TouchableOpacity onPress={() => setSimilarTo(null)}>
+							<Text style={{ color: colors.primary, fontSize: 12 }}>Limpar</Text>
+						</TouchableOpacity>
+					</View>
+					<ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.similarScroll}>
+						{similarExercises.map(similar => (
+							<TouchableOpacity 
+								key={`similar-${similar.id}`} 
+								style={[styles.similarCard, { backgroundColor: colors.surface, borderColor: colors.border }]}
+								onPress={() => setSimilarTo(similar)}
+							>
+								<Text style={[styles.similarCardTitle, { color: colors.text }]} numberOfLines={1}>
+									{similar.exercise.name}
+								</Text>
+								<Text style={[styles.similarCardCategory, { color: colors.textSecondary }]}>
+									{similar.exercise.category || 'Recomendado'}
+								</Text>
+							</TouchableOpacity>
+						))}
+					</ScrollView>
+				</View>
+			)}
+
 			{/* Sync Indicator */}
 			<SyncIndicator />
 
@@ -251,13 +322,17 @@ export default function ExercisesScreen() {
 
 				{/* Exercise List */}
 				<Text style={[styles.sectionTitle, { color: colors.text }]}>
-					Meus Exercícios
+					{searchQuery ? 'Resultados da busca' : 'Meus Exercícios'}
 				</Text>
 
-				{exercises.map((assignment, index) => (
+				{filteredExercises.map((assignment, index) => (
 					<TouchableOpacity
 						key={assignment.id}
-						onPress={() => toggleExercise(assignment)}
+						onPress={() => {
+							// Se clicar no texto, foca em similares (demo TurboQuant)
+							setSimilarTo(assignment);
+						}}
+						onLongPress={() => toggleExercise(assignment)}
 						activeOpacity={0.7}
 						disabled={
 							completeMutation.isPending &&
@@ -430,6 +505,56 @@ const styles = StyleSheet.create({
 	pageTitle: {
 		fontSize: 28,
 		fontWeight: "700",
+	},
+	searchContainer: {
+		paddingHorizontal: Spacing.screen,
+		marginBottom: 12,
+	},
+	searchInputWrapper: {
+		flexDirection: 'row',
+		alignItems: 'center',
+		paddingHorizontal: 12,
+		height: 44,
+		borderRadius: 12,
+		gap: 10,
+	},
+	searchInput: {
+		flex: 1,
+		fontSize: 15,
+		fontWeight: '500',
+	},
+	similarSection: {
+		marginBottom: 16,
+	},
+	similarHeader: {
+		flexDirection: 'row',
+		alignItems: 'center',
+		paddingHorizontal: Spacing.screen,
+		marginBottom: 8,
+		gap: 6,
+	},
+	similarTitle: {
+		fontSize: 13,
+		fontWeight: '600',
+		flex: 1,
+	},
+	similarScroll: {
+		paddingHorizontal: Spacing.screen,
+		gap: 10,
+	},
+	similarCard: {
+		width: 160,
+		padding: 12,
+		borderRadius: 12,
+		borderWidth: 1,
+	},
+	similarCardTitle: {
+		fontSize: 14,
+		fontWeight: '600',
+		marginBottom: 2,
+	},
+	similarCardCategory: {
+		fontSize: 11,
 	},
 	loadingContainer: {
 		flex: 1,

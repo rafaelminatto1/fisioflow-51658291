@@ -87,6 +87,7 @@ export const Mappers = {
       precautions: data.precautions,
       category: data.category,
       difficulty: data.difficulty,
+      embeddingSketch: data.embedding_sketch || data.embeddingSketch,
     };
   },
 
@@ -106,6 +107,7 @@ export const Mappers = {
       precautions: data.precautions,
       category: data.category,
       difficulty: data.difficulty,
+      embedding_sketch: data.embedding_sketch || data.embeddingSketch,
     });
 
     return {
