@@ -51,6 +51,7 @@ type Step = 1 | 2 | 3;
 const exerciseItemSchema = z.object({
   exerciseId: z.string().min(1),
   exerciseName: z.string(),
+  exerciseImageUrl: z.string().optional().nullable(),
   sets: z.coerce.number().int().min(1).optional(),
   reps: z.coerce.number().int().min(1).optional(),
   duration: z.coerce.number().int().min(1).optional(),
@@ -385,8 +386,21 @@ function ExercisesStep({ fields, isPosOperatorio, onAdd, onRemove, onUpdate }: S
           {fields.map((item, index) => (
             <div key={item.exerciseId} className="border rounded-md p-3 space-y-2">
               <div className="flex items-center justify-between gap-2">
-                <div className="flex items-center gap-2 flex-1 min-w-0">
+                <div className="flex items-center gap-3 flex-1 min-w-0">
                   <GripVertical className="h-4 w-4 text-muted-foreground shrink-0" />
+                  <div className="h-8 w-8 rounded bg-muted overflow-hidden shrink-0">
+                    {(item as any).exerciseImageUrl ? (
+                      <img 
+                        src={(item as any).exerciseImageUrl} 
+                        alt={item.exerciseName}
+                        className="h-full w-full object-cover"
+                      />
+                    ) : (
+                      <div className="h-full w-full flex items-center justify-center text-[10px] font-bold text-muted-foreground">
+                        {index + 1}
+                      </div>
+                    )}
+                  </div>
                   <span className="text-sm font-medium truncate">{item.exerciseName}</span>
                 </div>
                 <Button
@@ -646,7 +660,8 @@ export function TemplateCreateFlow({
           .sort((a, b) => (a.orderIndex ?? 0) - (b.orderIndex ?? 0))
           .map((item) => ({
             exerciseId: item.exerciseId,
-            exerciseName: item.exerciseId, // will show id until exercise name resolves
+            exerciseName: (item as any).exercise?.name || item.exerciseId,
+            exerciseImageUrl: (item as any).exercise?.imageUrl || undefined,
             sets: item.sets ?? undefined,
             reps: item.repetitions ?? undefined,
             duration: item.duration ?? undefined,
@@ -701,6 +716,7 @@ export function TemplateCreateFlow({
         {
           exerciseId: exercise.id,
           exerciseName: exercise.name,
+          exerciseImageUrl: exercise.imageUrl,
           sets: undefined,
           reps: undefined,
           duration: undefined,
