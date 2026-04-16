@@ -344,45 +344,38 @@ async function handleUpsertBusinessHours(c: any) {
     const items = Array.isArray(body) ? body : [body];
     const normalizedItems = items.map(item => normalizeBusinessHourPayload(item));
 
-    await pool.query('BEGIN');
-    try {
-        await pool.query('DELETE FROM business_hours WHERE organization_id = $1', [user.organizationId]);
+    await pool.query('DELETE FROM business_hours WHERE organization_id = $1', [user.organizationId]);
 
-        const results = [];
-        for (const normalized of normalizedItems) {
-            const res = await pool.query(
-                `INSERT INTO business_hours (
-                organization_id, day_of_week, open_time, close_time, is_open,
-                break_start, break_end, updated_at
-                )
-                VALUES ($1, $2, $3, $4, $5, $6, $7, NOW())
-                RETURNING *`,
-                [
-                user.organizationId,
-                normalized.dayOfWeek,
-                normalized.openTime,
-                normalized.closeTime,
-                normalized.isOpen,
-                normalized.breakStart,
-                normalized.breakEnd,
-                ]
-            );
-            results.push(mapBusinessHourRow(res.rows[0]));
-        }
-        await pool.query('COMMIT');
-
-        // Clear cache
-        const d1 = c.env.EDGE_CACHE || c.env.DB;
-        if (d1) {
-            const cacheKey = `business-hours:${user.organizationId}`;
-            await d1.prepare('DELETE FROM query_cache WHERE id = ?').bind(cacheKey).run().catch(() => {});
-        }
-
-        return c.json({ data: results });
-    } catch (e) {
-        await pool.query('ROLLBACK');
-        throw e;
+    const results = [];
+    for (const normalized of normalizedItems) {
+        const res = await pool.query(
+            `INSERT INTO business_hours (
+            organization_id, day_of_week, open_time, close_time, is_open,
+            break_start, break_end, updated_at
+            )
+            VALUES ($1, $2, $3, $4, $5, $6, $7, NOW())
+            RETURNING *`,
+            [
+            user.organizationId,
+            normalized.dayOfWeek,
+            normalized.openTime,
+            normalized.closeTime,
+            normalized.isOpen,
+            normalized.breakStart,
+            normalized.breakEnd,
+            ]
+        );
+        results.push(mapBusinessHourRow(res.rows[0]));
     }
+
+    // Clear cache
+    const d1 = c.env.EDGE_CACHE || c.env.DB;
+    if (d1) {
+        const cacheKey = `business-hours:${user.organizationId}`;
+        await d1.prepare('DELETE FROM query_cache WHERE id = ?').bind(cacheKey).run().catch(() => {});
+    }
+
+    return c.json({ data: results });
   } catch (error: any) {
     console.error('[Business Hours Error]:', error);
     return c.json({ error: error.message || 'Erro ao salvar horários de atendimento' }, 500);
