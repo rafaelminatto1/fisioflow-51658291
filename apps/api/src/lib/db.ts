@@ -179,7 +179,7 @@ export function createPool(
 		return wrappedSql as DbPool;
 	}
 
-	const queryFn = (sql.query || ((text: string, params?: any[]) => sql(text, params))) as any;
+	const queryFn = (sql.query || ((text: string, params?: any[]) => sql(text as unknown as TemplateStringsArray, params))) as any;
 	const wrappedQuery = wrapQueryWithTimeout(
 		queryFn.bind(sql),
 		defaultTimeout,

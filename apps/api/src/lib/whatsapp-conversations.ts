@@ -653,7 +653,7 @@ export async function markMessageDeleted(
 			if (env && existing.meta_message_id) {
 				try {
 					const whatsapp = new WhatsAppService(env);
-					const res = await whatsapp.deleteMessage(existing.meta_message_id);
+					const res: any = await whatsapp.deleteMessage(existing.meta_message_id);
 
 					if (res.error) {
 						providerResult = {
