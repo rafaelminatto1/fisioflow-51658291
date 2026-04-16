@@ -1,0 +1,7 @@
+scratch/
+node_modules/
+dist/
+.claude/
+.gemini/
+.git/
+pnpm-lock.yaml

@@ -758,6 +758,7 @@ export default function BiomechanicsScreen() {
           </Text>
         </View>
       </View>
+    </View>
     );
   }
 

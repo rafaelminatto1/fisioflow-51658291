@@ -23,7 +23,9 @@ export interface PhysioDictionaryEntry {
 	subcategory?: string;
 	description_pt?: string;
 	description_en?: string;
+	image_url?: string;
 }
+
 
 export const physioDictionary: PhysioDictionaryEntry[] = [
 	// ==========================================
@@ -343,6 +345,9 @@ export const physioDictionary: PhysioDictionaryEntry[] = [
 		aliases_en: ['lachman\'s test'],
 		category: 'test',
 		subcategory: 'Joelho',
+		image_url: '/src/assets/images/tests/lachman.png',
+		description_pt: 'O padrão-ouro para avaliação do LCA. Com o joelho em 30° de flexão, aplica-se uma translação anterior súbita na tíbia enquanto o fêmur é estabilizado. Positivo se houver ausência de "end-feel" firme ou translação excessiva.',
+		description_en: 'The gold standard for ACL assessment. With the knee in 30° of flexion, a sudden anterior translation is applied to the tibia while the femur is stabilized. Positive if there is a soft end-feel or excessive translation.',
 	},
 	{
 		id: 'tst_anterior_drawer',
@@ -352,6 +357,9 @@ export const physioDictionary: PhysioDictionaryEntry[] = [
 		aliases_en: ['anterior drawer'],
 		category: 'test',
 		subcategory: 'Joelho / Tornozelo',
+		image_url: '/src/assets/images/tests/anterior_drawer.png',
+		description_pt: 'Utilizado para avaliar a integridade do LCA. Com o joelho em 90° de flexão, o terapeuta fixa o pé do paciente e traciona a tíbia anteriormente. Complementar ao teste de Lachman.',
+		description_en: 'Used to assess ACL integrity. With the knee in 90° of flexion, the therapist fixes the patient\'s foot and pulls the tibia anteriorly. Complementary to the Lachman test.',
 	},
 	{
 		id: 'tst_slr',
@@ -361,6 +369,9 @@ export const physioDictionary: PhysioDictionaryEntry[] = [
 		aliases_en: ['slr test', 'lasegue test'],
 		category: 'test',
 		subcategory: 'Coluna Lombar',
+		image_url: '/src/assets/images/tests/lasegue.png',
+		description_pt: 'Teste neurodinâmico para radiculopatia lombar. A perna é elevada passivamente com joelho estendido. Positivo se houver reprodução de dor radicular entre 30° e 70° de elevação.',
+		description_en: 'Neurodynamic test for lumbar radiculopathy. The leg is passively raised with knee extended. Positive if radicular pain is reproduced between 30° and 70° of elevation.',
 	},
 	{
 		id: 'tst_hawkins',
@@ -370,5 +381,10 @@ export const physioDictionary: PhysioDictionaryEntry[] = [
 		aliases_en: ['hawkins test', 'hawkins impingement test'],
 		category: 'test',
 		subcategory: 'Ombro',
+		image_url: '/src/assets/images/tests/hawkins.png',
+		description_pt: 'Avalia o impacto subacromial. O braço do paciente é colocado em 90° de flexão e aplica-se uma rotação interna passiva vigorosa, comprimindo o tendão do supraespinal contra o ligamento coracoacromial.',
+		description_en: 'Assesses subacromial impingement. The patient\'s arm is placed in 90° of flexion and a vigorous passive internal rotation is applied, compressing the supraspinatus tendon against the coracoacromial ligament.',
 	}
+
+
 ];
