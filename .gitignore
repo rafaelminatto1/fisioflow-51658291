@@ -249,3 +249,6 @@ apps/jules-bot/.dev.vars
 
 # Local test scripts (contém credenciais)
 scripts/seed-prod-test.mjs
+
+# Local Test Files (with credentials)
+*.spec.ts

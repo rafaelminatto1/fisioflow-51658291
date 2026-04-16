@@ -26,7 +26,11 @@ export function useEventos(filtros?: {
 						? filtros.categoria
 						: undefined,
 			});
-			let eventos = (res?.data ?? []) as Evento[];
+			let eventos = ((res?.data ?? []) as Evento[]).map((e) => ({
+				...e,
+				hora_inicio: e.hora_inicio?.slice(0, 5),
+				hora_fim: e.hora_fim?.slice(0, 5),
+			}));
 
 			if (filtros?.busca) {
 				const busca = filtros.busca.toLowerCase();
@@ -47,7 +51,15 @@ export function useEvento(id: string) {
 		queryKey: ["evento", id],
 		queryFn: async () => {
 			const res = await eventosApi.get(id);
-			return (res?.data ?? null) as Evento | null;
+			const evento = (res?.data ?? null) as Evento | null;
+			if (evento) {
+				return {
+					...evento,
+					hora_inicio: evento.hora_inicio?.slice(0, 5),
+					hora_fim: evento.hora_fim?.slice(0, 5),
+				};
+			}
+			return null;
 		},
 		enabled: !!id,
 	});

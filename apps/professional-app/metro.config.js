@@ -15,75 +15,20 @@ config.resolver.sourceExts = [
 	"mjs",
 ];
 
-try {
-	config.resolver.extraNodeModules = {
-		...config.resolver.extraNodeModules,
-		"framer-motion": path.resolve(projectRoot, "stubs/framer-motion.js"),
-		"@radix-ui/react-slot": path.resolve(projectRoot, "stubs/radix-slot.js"),
-	};
-} catch {}
-
-// extraNodeModules só funciona para pacotes não encontrados no node_modules.
-// Para pacotes que EXISTEM mas têm módulos nativos ausentes no dev build,
-// usamos resolveRequest para interceptar e redirecionar para stubs.
-const moduleStubs = {
+// Stubs para bibliotecas web que não funcionam no Native
+config.resolver.extraNodeModules = {
+	...config.resolver.extraNodeModules,
+	"framer-motion": path.resolve(projectRoot, "stubs/framer-motion.js"),
+	"@radix-ui/react-slot": path.resolve(projectRoot, "stubs/radix-slot.js"),
 };
 
-config.resolver.resolveRequest = (context, moduleName, platform) => {
-	if (moduleStubs[moduleName]) {
-		return { filePath: moduleStubs[moduleName], type: "sourceFile" };
-	}
-	return context.resolveRequest(context, moduleName, platform);
-};
-
-// Helper para converter path em regex de blockList/ignored
-function blockPath(p) {
-	return new RegExp(p.replace(/[/\\]/g, "[/\\\\]") + ".*");
-}
-
-// Diretórios do monorepo raiz que devem ser ignorados
-const monorepoBlocks = [
-	"apps/web",
-	"apps/api",
-	"apps/patient-app",
-	"apps/vinext-poc",
-	"apps/jules-bot",
-	"apps/mobile-ios",
-	"src",
-	"packages/jules",
-	"e2e",
-	"cloudflare-worker",
-	"docker",
-	"scripts",
-	"testsprite_tests",
-	"docs",
-	"docs2026",
-	"playwright",
-	".storybook",
-	"workers",
-].map((p) => blockPath(path.resolve(monorepoRoot, p)));
-
-// Diretórios dentro do próprio professional-app que devem ser ignorados
-const localBlocks = [
-	"apps",      // apps/api/node_modules, apps/web/node_modules
-	"packages",  // packages/jules/node_modules
-	"worker",    // Cloudflare worker local
-	"dist",
-	"e2e",
-	"drizzle",
-	"db",
-	"playwright-logs",
-	"playwright-screenshots",
-	"playwright-video",
-	"claude-skills",
-].map((p) => blockPath(path.resolve(projectRoot, p)));
-
+// blockList: Bloqueia apenas o que é estritamente necessário para evitar conflitos.
+// Com unstable_enableSymlinks, o Metro segue os links do pnpm de forma eficiente.
 config.resolver.blockList = [
 	/.*\.cache.*/,
 	/\.git\/.*/,
 	/.*\.md$/,
-	// Bloqueia .pnpm — Metro segue os symlinks de node_modules sem indexar os 4GB
-	/node_modules\/\.pnpm\/.*/,
+	// Bloqueia pacotes pesados ou problemáticos na raiz
 	/node_modules\/@aws-sdk\/.*/,
 	/node_modules\/@sentry\/vite-plugin\/.*/,
 	/node_modules\/@playwright\/.*/,
@@ -91,23 +36,22 @@ config.resolver.blockList = [
 	/node_modules\/workerd\/.*/,
 	/node_modules\/esbuild\/.*/,
 	/node_modules\/sharp\/.*/,
-	...monorepoBlocks,
-	...localBlocks,
 ];
 
-// pnpm usa symlinks: node_modules/expo-router → ../../../.pnpm/expo-router@x/node_modules/expo-router
-// unstable_enableSymlinks permite Metro seguir esses symlinks sem precisar assistir
-// toda a pasta node_modules/.pnpm/ como watchFolder.
+// pnpm usa symlinks intensamente.
+// unstable_enableSymlinks permite que o Metro siga esses symlinks sem precisar
+// assistir a gigantesca pasta .pnpm/ ou o node_modules da raiz inteira.
 config.resolver.unstable_enableSymlinks = true;
 
-// watchFolders: Adicionamos apenas o que é estritamente necessário para o pnpm.
-// Em vez de monorepoRoot (tudo), focamos no node_modules da raiz.
+// watchFolders: Assistimos apenas a pasta do projeto e as pastas de pacotes locais necessárias.
+// NÃO incluímos o node_modules da raiz (8GB+) para evitar lentidão extrema no Metro.
 config.watchFolders = [
 	projectRoot,
-	path.resolve(monorepoRoot, "node_modules"),
+	// Se houver pacotes locais em /packages que este app usa, adicione-os aqui.
+	// O pnpm fará o link para eles em node_modules/@fisioflow/xxx.
 ];
 
-// Resolução de módulos: local primeiro, depois raiz (pnpm hoist)
+// Resolução de módulos: garante que o Metro encontre pacotes "hoisted" no monorepo.
 config.resolver.nodeModulesPaths = [
 	path.resolve(projectRoot, "node_modules"),
 	path.resolve(monorepoRoot, "node_modules"),
@@ -115,9 +59,7 @@ config.resolver.nodeModulesPaths = [
 
 config.server.port = 8081;
 
-// Define o root do servidor como a raiz do monorepo.
-// Isso garante que a URL /apps/professional-app/... funcione corretamente
-// tanto localmente quanto via Tunnel.
+// Define o root do servidor como a raiz do monorepo para URLs consistentes.
 config.server.unstable_serverRoot = monorepoRoot;
 
 module.exports = config;
