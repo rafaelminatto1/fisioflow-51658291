@@ -238,8 +238,8 @@ export function useScheduleSettings() {
 					reason: blocked.reason ?? undefined,
 					start_date: String(blocked.start_date),
 					end_date: String(blocked.end_date),
-					start_time: blocked.start_time ?? undefined,
-					end_time: blocked.end_time ?? undefined,
+					start_time: blocked.start_time?.slice(0, 5) ?? undefined,
+					end_time: blocked.end_time?.slice(0, 5) ?? undefined,
 					is_all_day: blocked.is_all_day !== false,
 					is_recurring: blocked.is_recurring === true,
 					recurring_days: Array.isArray(blocked.recurring_days)

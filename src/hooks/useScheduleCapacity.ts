@@ -56,8 +56,8 @@ export function useScheduleCapacity() {
 				.map((row) => ({
 					id: String(row.id),
 					day_of_week: Number(row.day_of_week ?? 0),
-					start_time: String(row.start_time ?? "07:00"),
-					end_time: String(row.end_time ?? "19:00"),
+					start_time: String(row.start_time ?? "07:00").slice(0, 5),
+					end_time: String(row.end_time ?? "19:00").slice(0, 5),
 					max_patients: Number(row.max_patients ?? 1),
 					created_at: String(row.created_at ?? ""),
 					updated_at: String(row.updated_at ?? ""),

@@ -113,7 +113,11 @@ export function useRecurringSeries(params?: {
 				patientId: params?.patient_id,
 				isActive: params?.is_active,
 			});
-			return (res?.data ?? res ?? []) as RecurringAppointmentSeries[];
+			const data = (res?.data ?? res ?? []) as RecurringAppointmentSeries[];
+			return data.map((s) => ({
+				...s,
+				appointment_time: s.appointment_time?.slice(0, 5),
+			}));
 		},
 	});
 }
@@ -125,7 +129,11 @@ export function useRecurringSeriesById(id: string) {
 			// The API doesn't expose a single-series GET, so filter from list
 			const res = await schedulingApi.recurringSeries.list();
 			const list = (res?.data ?? res ?? []) as RecurringAppointmentSeries[];
-			return list.find((s) => s.id === id) ?? null;
+			const series = list.find((s) => s.id === id) ?? null;
+			if (series) {
+				series.appointment_time = series.appointment_time?.slice(0, 5);
+			}
+			return series;
 		},
 		enabled: !!id,
 	});
@@ -136,7 +144,11 @@ export function useSeriesOccurrences(seriesId: string) {
 		queryKey: RECURRING_QUERY_KEYS.occurrences(seriesId),
 		queryFn: async () => {
 			const res = await schedulingApi.recurringSeries.occurrences(seriesId);
-			return (res?.data ?? res ?? []) as RecurringAppointmentOccurrence[];
+			const data = (res?.data ?? res ?? []) as RecurringAppointmentOccurrence[];
+			return data.map((o) => ({
+				...o,
+				occurrence_time: o.occurrence_time?.slice(0, 5),
+			}));
 		},
 		enabled: !!seriesId,
 	});

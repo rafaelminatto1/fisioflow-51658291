@@ -34,6 +34,9 @@ import {
 } from "@/services/whatsapp-api";
 import type { Patient } from "@/types";
 
+import { format, isToday, isYesterday, differenceInDays, parseISO } from "date-fns";
+import { ptBR } from "date-fns/locale";
+
 const WA_GREEN = "#25D366";
 
 const STATUS_FILTERS = [
@@ -47,30 +50,28 @@ const STATUS_FILTERS = [
 
 type StatusFilter = (typeof STATUS_FILTERS)[number]["key"];
 
-function safeParseDate(raw?: string | null): Date {
-	if (!raw) return new Date(NaN);
-	const normalized = raw.replace(/^(\d{4}-\d{2}-\d{2}) /, "$1T");
-	return new Date(normalized);
-}
-
 function formatRelativeTime(dateStr?: string): string {
 	if (!dateStr) return "";
-	const date = safeParseDate(dateStr);
-	if (Number.isNaN(date.getTime())) return "";
-	const now = new Date();
-	const diffMs = now.getTime() - date.getTime();
-	const diffMins = Math.floor(diffMs / 60_000);
-	const diffHours = Math.floor(diffMs / 3_600_000);
-	const diffDays = Math.floor(diffMs / 86_400_000);
-
-	if (diffMins < 1) return "agora";
-	if (diffMins < 60) return `${diffMins}min`;
-	if (diffHours < 24)
-		return date.toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" });
-	if (diffDays === 1) return "ontem";
-	if (diffDays < 7)
-		return date.toLocaleDateString("pt-BR", { weekday: "short" });
-	return date.toLocaleDateString("pt-BR", { day: "2-digit", month: "2-digit" });
+	try {
+		const date = parseISO(dateStr);
+		if (Number.isNaN(date.getTime())) return "";
+		
+		if (isToday(date)) {
+			return format(date, "HH:mm");
+		}
+		
+		if (isYesterday(date)) {
+			return "ontem";
+		}
+		
+		if (differenceInDays(new Date(), date) < 7) {
+			return format(date, "EEE", { locale: ptBR });
+		}
+		
+		return format(date, "dd/MM");
+	} catch (e) {
+		return "";
+	}
 }
 
 function getStatusColor(status: string): string {

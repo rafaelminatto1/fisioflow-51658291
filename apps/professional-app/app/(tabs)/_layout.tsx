@@ -8,13 +8,26 @@ import { getConversations } from "@/lib/api";
 
 function useUnreadBadge() {
 	const { user } = useAuthStore();
-	const { data: conversations } = useQuery({
+	
+	// Internal messages unread count
+	const { data: internalConversations } = useQuery({
 		queryKey: ["conversations"],
 		queryFn: () => getConversations(),
 		enabled: !!user?.organizationId,
 		staleTime: 1000 * 30,
 	});
-	return conversations?.filter((c) => (c.unreadCount ?? 0) > 0).length ?? 0;
+	const internalUnread = internalConversations?.filter((c) => (c.unreadCount ?? 0) > 0).length ?? 0;
+
+	// WhatsApp unread count
+	const { data: waResponse } = useQuery({
+		queryKey: ["whatsapp-conversations", { status: "all", limit: 100 }],
+		queryFn: () => fetchConversations({ status: "all", limit: 100 }),
+		enabled: !!user?.organizationId,
+		staleTime: 1000 * 30,
+	});
+	const waUnread = waResponse?.data?.filter((c) => (c.unreadCount ?? 0) > 0).length ?? 0;
+
+	return internalUnread + waUnread;
 }
 
 export default function TabsLayout() {
