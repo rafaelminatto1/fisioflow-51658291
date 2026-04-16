@@ -55,7 +55,7 @@ export function checkAppointmentConflict({
 	// Used for checking max capacity per slot
 	const totalConflictingAppointments = appointments.filter((apt) => {
 		// Skip self
-		if (excludeId && apt.id === excludeId) return false;
+		if (excludeId && String(apt.id) === String(excludeId)) return false;
 
 		// Skip cancelled
 		if (apt.status === "cancelado") return false;

@@ -37,10 +37,12 @@ import {
 	Brain,
 	Wind,
 	Keyboard,
+	ThumbsUp,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
 import { useIsMobile } from "@/hooks/use-mobile";
+import { diagnosticClusters } from "@/data/clinicalClusters";
 
 export type ClinicalTest = ClinicalTestTemplateRecord;
 
@@ -729,6 +731,58 @@ export function TestLibraryModal({
 							</div>
 
 							<ScrollArea className="flex-1">
+								{/* Cluster Info (Sticky-like at top of scroll if exists) */}
+								{selectedTest.cluster_id && (
+									(() => {
+										const cluster = diagnosticClusters.find(c => c.id === selectedTest.cluster_id);
+										if (!cluster) return null;
+										const otherTests = cluster.tests.filter(id => id !== selectedTest.id);
+										
+										return (
+											<div className="mx-4 mt-4 rounded-2xl border border-amber-100 bg-amber-50/50 p-4">
+												<div className="flex items-center gap-2 mb-2">
+													<Sparkles className="h-4 w-4 text-amber-600" />
+													<h4 className="text-[11px] font-black uppercase tracking-wider text-amber-600">
+														Refinar Diagnóstico
+													</h4>
+												</div>
+												<p className="text-xs font-semibold text-amber-900 mb-3">
+													{cluster.name}
+												</p>
+												<p className="text-[11px] text-amber-800 leading-relaxed mb-4 opacity-80">
+													{cluster.interpretation}
+												</p>
+												
+												{otherTests.length > 0 && (
+													<div className="space-y-2">
+														<p className="text-[10px] font-bold text-amber-600/70 uppercase tracking-widest">
+															Testes Sugeridos:
+														</p>
+														<div className="flex flex-wrap gap-1.5">
+															{otherTests.map(testId => {
+																const label = testId.replace('builtin-', '').replace(/-/g, ' ');
+																return (
+																	<button
+																		key={testId}
+																		type="button"
+																		onClick={() => {
+																			const found = tests.find(t => t.id === testId);
+																			if (found) setSelectedTest(found);
+																		}}
+																		className="rounded-full bg-white px-2.5 py-1 text-[10px] font-bold text-amber-700 border border-amber-200/50 shadow-sm transition-all hover:bg-amber-100 hover:border-amber-300 active:scale-95"
+																	>
+																		{label}
+																	</button>
+																);
+															})}
+														</div>
+													</div>
+												)}
+											</div>
+										);
+									})()
+								)}
+
 								<div className="p-4 space-y-4">
 									{/* Image */}
 									{(selectedTest.image_url || selectedTest.media_urls?.[0]) && (
@@ -820,6 +874,61 @@ export function TestLibraryModal({
 													</span>
 												))}
 											</div>
+										</div>
+									)}
+
+									{/* Evidence Accuracy */}
+									{(selectedTest.lr_positive || selectedTest.lr_negative) && (
+										<div className="rounded-2xl border border-slate-100 bg-white p-4 shadow-sm">
+											<h4 className="text-[11px] font-bold text-slate-500 uppercase tracking-widest mb-3 flex items-center gap-2">
+												<Activity className="h-3.5 w-3.5" />
+												Acurácia (EBP)
+											</h4>
+											<div className="grid grid-cols-2 gap-3">
+												{selectedTest.lr_positive && (
+													<div className={cn(
+														"rounded-xl p-2.5 border transition-colors",
+														selectedTest.lr_positive >= 10 ? "bg-emerald-50 border-emerald-100" :
+														selectedTest.lr_positive >= 5 ? "bg-teal-50 border-teal-100" :
+														selectedTest.lr_positive > 2 ? "bg-blue-50 border-blue-100" :
+														"bg-slate-50 border-slate-100"
+													)}>
+														<p className={cn(
+															"text-[9px] font-black uppercase tracking-tighter",
+															selectedTest.lr_positive >= 5 ? "text-teal-600" : "text-slate-500"
+														)}>LR+</p>
+														<p className={cn(
+															"text-base font-black",
+															selectedTest.lr_positive >= 5 ? "text-teal-700" : "text-slate-700"
+														)}>{selectedTest.lr_positive}</p>
+													</div>
+												)}
+												{selectedTest.lr_negative && (
+													<div className={cn(
+														"rounded-xl p-2.5 border transition-colors",
+														selectedTest.lr_negative <= 0.1 ? "bg-emerald-50 border-emerald-100" :
+														selectedTest.lr_negative <= 0.2 ? "bg-teal-50 border-teal-100" :
+														selectedTest.lr_negative < 0.5 ? "bg-blue-50 border-blue-100" :
+														"bg-slate-50 border-slate-100"
+													)}>
+														<p className={cn(
+															"text-[9px] font-black uppercase tracking-tighter",
+															selectedTest.lr_negative <= 0.2 ? "text-teal-600" : "text-slate-500"
+														)}>LR-</p>
+														<p className={cn(
+															"text-base font-black",
+															selectedTest.lr_negative <= 0.2 ? "text-teal-700" : "text-slate-700"
+														)}>{selectedTest.lr_negative}</p>
+													</div>
+												)}
+											</div>
+											
+											{selectedTest.lr_positive && selectedTest.lr_positive > 5 && (
+												<div className="mt-3 flex items-center gap-2 rounded-lg bg-teal-500/10 p-2 text-[10px] font-bold text-teal-700">
+													<ThumbsUp className="h-3 w-3" />
+													Forte poder confirmatório
+												</div>
+											)}
 										</div>
 									)}
 
