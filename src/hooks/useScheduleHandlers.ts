@@ -152,6 +152,7 @@ export function useScheduleHandlers(
 					description: `Atendimento de ${appointment.patientName} movido para ${formatDateToBrazilian(newDate)} às ${newTime}.`,
 				});
 				setRescheduleSuccessMessage("Reagendado com sucesso");
+				refetchAppointments();
 			} catch (error) {
 				if (isAppointmentConflictError(error)) {
 					toast({

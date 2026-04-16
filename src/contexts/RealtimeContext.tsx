@@ -257,8 +257,10 @@ export const RealtimeProvider: React.FC<{ children: React.ReactNode }> = ({
 						data.type === "REFRESH_DATA"
 					) {
 						loadInitialAppointments();
-						// Invalida via React Query (moderno)
-						queryClient.invalidateQueries({ queryKey: ["appointments_v2"] });
+						// Invalida via React Query de forma abrangente
+						import("@/utils/cacheInvalidation").then(({ invalidateAppointmentsComprehensive }) => {
+							invalidateAppointmentsComprehensive(queryClient, undefined, organizationId);
+						});
 					} else if (data.type === "NOTIFICATION_RECEIVED") {
 						queryClient.invalidateQueries({ queryKey: ["notifications"] });
 					} else if (data.type === "PRESENCE_UPDATE") {
