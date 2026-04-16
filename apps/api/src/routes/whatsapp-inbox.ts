@@ -389,16 +389,14 @@ app.post("/conversations/bulk", requireAuth, async (c) => {
 				[user.organizationId, targetAssignee, ...body.ids],
 			);
 			} else if (body.action === "tag" && body.payload?.tagId) {
-				for (const id of body.ids) {
-					await pool.query(
-						`INSERT INTO wa_conversation_tags (conversation_id, tag_id, organization_id)
-						 SELECT c.id, $2, c.organization_id
-						 FROM wa_conversations c
-						 WHERE c.id = $1 AND c.organization_id = $3
-						 ON CONFLICT DO NOTHING`,
-						[id, body.payload.tagId, user.organizationId],
-					);
-				}
+				await pool.query(
+					`INSERT INTO wa_conversation_tags (conversation_id, tag_id, organization_id)
+					 SELECT c.id, $2, c.organization_id
+					 FROM wa_conversations c
+					 WHERE c.id = ANY($1) AND c.organization_id = $3
+					 ON CONFLICT DO NOTHING`,
+					[body.ids, body.payload.tagId, user.organizationId],
+				);
 			} else if (body.action === "snooze" && body.payload?.until) {
 				const idPlaceholders = body.ids.map((_, i) => `$${i + 3}`).join(", ");
 				await pool.query(

@@ -15,7 +15,10 @@ import type {
 	AppointmentStatus,
 } from "@/types/appointment";
 import { isAppointmentConflictError } from "@/utils/appointmentErrors";
-import { invalidateAffectedPeriods } from "@/utils/cacheInvalidation";
+import {
+	invalidateAffectedPeriods,
+	invalidateAppointmentsComprehensive,
+} from "@/utils/cacheInvalidation";
 import { formatDateToLocalISO } from "@/utils/dateUtils";
 import { requireUserOrganizationId } from "@/utils/userHelpers";
 import { parseUpdatesToAppointment } from "../appointmentOptimistic";
@@ -92,10 +95,11 @@ export function useCreateAppointment() {
 				}),
 			);
 
-			await queryClient.invalidateQueries({
-				queryKey: appointmentPeriodKeys.all,
-			});
-			queryClient.invalidateQueries({ queryKey: appointmentKeys.lists() });
+			await invalidateAppointmentsComprehensive(
+				queryClient,
+				data.date,
+				profile?.organization_id,
+			);
 
 			toast({
 				title: "Sucesso",
@@ -195,30 +199,12 @@ export function useUpdateAppointment() {
 		},
 		onSuccess: async (data, variables) => {
 			const organizationId = profile?.organization_id || "";
-			const newDate = formatDateToLocalISO(data.date);
-			await invalidateAffectedPeriods(newDate, queryClient, organizationId);
-
-			if (variables.updates.appointment_date || variables.updates.date) {
-				await queryClient.invalidateQueries({
-					queryKey: appointmentPeriodKeys.all,
-				});
-			}
-
-			queryClient.invalidateQueries({
-				queryKey: appointmentKeys.list(organizationId),
-				exact: false,
-			});
-			queryClient.invalidateQueries({
-				queryKey: appointmentKeys.detail(data.id),
-			});
-			queryClient.invalidateQueries({
-				queryKey: ["schedule-appointments"],
-			});
-
-			await queryClient.refetchQueries({
-				queryKey: appointmentPeriodKeys.all,
-				type: "active",
-			});
+			
+			await invalidateAppointmentsComprehensive(
+				queryClient,
+				data.date,
+				organizationId,
+			);
 
 			if (!variables.suppressSuccessToast) {
 				toast({
@@ -268,19 +254,17 @@ export function useDeleteAppointment() {
 			return { appointmentId, appointment };
 		},
 		onSuccess: async ({ appointmentId, appointment }) => {
-			if (appointment) {
-				const appointmentDate = formatDateToLocalISO(appointment.date);
-				await invalidateAffectedPeriods(
-					appointmentDate,
-					queryClient,
-					profile?.organization_id || "",
-				);
-			}
-			queryClient.invalidateQueries({ queryKey: appointmentKeys.all });
+			const organizationId = profile?.organization_id || "";
+			
+			await invalidateAppointmentsComprehensive(
+				queryClient,
+				appointment?.date,
+				organizationId,
+			);
+
 			queryClient.removeQueries({
 				queryKey: appointmentKeys.detail(appointmentId),
 			});
-			await queryClient.refetchQueries({ queryKey: appointmentPeriodKeys.all });
 
 			toast({
 				title: "Sucesso",
@@ -373,12 +357,11 @@ export function useUpdateAppointmentStatus() {
 				);
 			}
 
-			queryClient.invalidateQueries({
-				queryKey: appointmentKeys.list(organizationId),
-				exact: false,
-			});
-			queryClient.invalidateQueries({ queryKey: appointmentPeriodKeys.all });
-			queryClient.invalidateQueries({ queryKey: ["schedule-appointments"] });
+			invalidateAppointmentsComprehensive(
+				queryClient,
+				updatedData?.date,
+				organizationId,
+			);
 
 			toast({
 				title: "Status atualizado",
