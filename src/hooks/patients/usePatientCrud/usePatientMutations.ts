@@ -3,6 +3,7 @@ import { patientsApi } from "@/api/v2/patients";
 import { PatientService } from "@/services/patientService";
 import { toast } from "@/hooks/use-toast";
 import { fisioLogger as logger } from "@/lib/errors/logger";
+import { invalidatePatientsComprehensive } from "@/utils/cacheInvalidation";
 import {
 	sanitizeString,
 	sanitizeEmail,
@@ -80,7 +81,7 @@ export const useCreatePatient = () => {
 			);
 			return PatientService.mapToApp(response.data) as unknown as Patient;
 		},
-		onSuccess: (data) => {
+		onSuccess: async (data) => {
 			// Dado sensível removido: nome completo mascarado para logs (LGPD)
 			const firstName = data.full_name ? data.full_name.split(" ")[0] : "***";
 			logger.info(
@@ -88,7 +89,7 @@ export const useCreatePatient = () => {
 				{ id: data.id, name: firstName },
 				"useCreatePatient",
 			);
-			queryClient.invalidateQueries({ queryKey: ["patients"] });
+			await invalidatePatientsComprehensive(queryClient);
 			toast({
 				title: "Paciente cadastrado!",
 				description: `${data.full_name} foi adicionado com sucesso.`,
@@ -233,14 +234,13 @@ export const useUpdatePatient = () => {
 			);
 			return PatientService.mapToApp(response.data) as unknown as Patient;
 		},
-		onSuccess: (data) => {
+		onSuccess: async (data) => {
 			logger.info(
 				"Paciente atualizado com sucesso",
 				{ id: data.id },
 				"useUpdatePatient",
 			);
-			queryClient.invalidateQueries({ queryKey: ["patients"] });
-			queryClient.invalidateQueries({ queryKey: ["patient", data.id] });
+			await invalidatePatientsComprehensive(queryClient, data.id);
 			toast({
 				title: "Paciente atualizado!",
 				description: `As informações de ${data.full_name} foram atualizadas.`,
@@ -267,10 +267,9 @@ export const useDeletePatient = () => {
 		mutationFn: async (id: string): Promise<void> => {
 			await patientsApi.delete(id);
 		},
-		onSuccess: (_, id) => {
+		onSuccess: async (_, id) => {
 			logger.info("Paciente deletado com sucesso", { id }, "useDeletePatient");
-			queryClient.invalidateQueries({ queryKey: ["patients"] });
-			queryClient.invalidateQueries({ queryKey: ["patient", id] });
+			await invalidatePatientsComprehensive(queryClient, id);
 			toast.success("Paciente excluído", {
 				description: "O paciente foi removido com sucesso.",
 			});
@@ -305,9 +304,8 @@ export const useUpdatePatientStatus = () => {
 			} as Partial<PatientRow>);
 			return PatientService.mapToApp(response.data) as unknown as Patient;
 		},
-		onSuccess: (data) => {
-			queryClient.invalidateQueries({ queryKey: ["patients"] });
-			queryClient.invalidateQueries({ queryKey: ["patient", data.id] });
+		onSuccess: async (data) => {
+			await invalidatePatientsComprehensive(queryClient, data.id);
 			toast({
 				title: "Status atualizado",
 				description: `O status do paciente foi alterado para ${data.status}.`,
