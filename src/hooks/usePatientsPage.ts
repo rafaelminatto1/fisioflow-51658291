@@ -130,8 +130,8 @@ export function usePatientsPageData(filters: PatientsFilters = {}) {
 			const res = await patientsApi.create(data);
 			return res?.data ?? res;
 		},
-		onSuccess: () => {
-			queryClient.invalidateQueries({ queryKey: ["patients-list"] });
+		onSuccess: async () => {
+			await invalidatePatientsComprehensive(queryClient);
 			toast.success("Paciente criado com sucesso");
 		},
 		onError: (error) => {
@@ -145,9 +145,8 @@ export function usePatientsPageData(filters: PatientsFilters = {}) {
 			const res = await patientsApi.update(data.id, data.patient);
 			return res?.data ?? res;
 		},
-		onSuccess: () => {
-			queryClient.invalidateQueries({ queryKey: ["patients-list"] });
-			queryClient.invalidateQueries({ queryKey: ["patients-stats"] });
+		onSuccess: async (_, variables) => {
+			await invalidatePatientsComprehensive(queryClient, variables.id);
 			toast.success("Paciente atualizado com sucesso");
 		},
 		onError: (error) => {
@@ -160,8 +159,8 @@ export function usePatientsPageData(filters: PatientsFilters = {}) {
 		mutationFn: async (id: string) => {
 			await patientsApi.delete(id);
 		},
-		onSuccess: () => {
-			queryClient.invalidateQueries({ queryKey: ["patients-list"] });
+		onSuccess: async (_, variables) => {
+			await invalidatePatientsComprehensive(queryClient, variables);
 			toast.success("Paciente excluído com sucesso");
 		},
 		onError: (error) => {
@@ -187,8 +186,7 @@ export function usePatientsPageData(filters: PatientsFilters = {}) {
 		isLoading,
 		error: patientsError,
 		refetch: () => {
-			queryClient.invalidateQueries({ queryKey: ["patients-list"] });
-			queryClient.invalidateQueries({ queryKey: ["patients-stats"] });
+			invalidatePatientsComprehensive(queryClient);
 		},
 	};
 }
