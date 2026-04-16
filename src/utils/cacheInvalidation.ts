@@ -145,6 +145,64 @@ export async function invalidatePatientsComprehensive(
 }
 
 /**
+ * Invalidates all financial-related caches.
+ * Ensures that when a transaction is modified, all analytics and reports are updated.
+ */
+export async function invalidateFinancialComprehensive(
+	queryClient: QueryClient,
+): Promise<void> {
+	logger.info("Performing comprehensive financial cache invalidation");
+
+	const keysToInvalidate = [
+		["financial-transactions"],
+		["financial-transactions-dre"],
+		["financial-by-month"],
+		["financial-revenue-analytics"],
+		["financial-payment-methods"],
+		["patient-analytics"], // Financial changes often affect patient value metrics
+	];
+
+	await Promise.all(
+		keysToInvalidate.map((key) =>
+			queryClient.invalidateQueries({ queryKey: key, exact: false }),
+		),
+	);
+
+	await queryClient.refetchQueries({
+		type: "active",
+		predicate: (query) => String(query.queryKey[0]).startsWith("financial-"),
+	});
+}
+
+/**
+ * Invalidates all evaluation and clinical form caches.
+ */
+export async function invalidateEvaluationsComprehensive(
+	queryClient: QueryClient,
+	formId?: string,
+	patientId?: string,
+): Promise<void> {
+	logger.info("Performing comprehensive evaluation cache invalidation", {
+		formId,
+		patientId,
+	});
+
+	const keysToInvalidate = [
+		["evaluation-forms"],
+		["evaluation-templates-with-fields"],
+	];
+
+	if (formId) keysToInvalidate.push(["evaluation-form", formId]);
+	if (patientId) keysToInvalidate.push(["patient-evaluations", "patient", patientId]);
+
+	await Promise.all(
+		keysToInvalidate.map((key) =>
+			queryClient.invalidateQueries({ queryKey: key, exact: false }),
+		),
+	);
+}
+
+/**
  * Invalidates only the cache entries that contain the specified appointment date.
  *
  * This function:
