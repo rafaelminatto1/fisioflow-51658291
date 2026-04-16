@@ -26,232 +26,13 @@ type SchedulingSchemaSection = keyof typeof schedulingSchemaRanges;
 const schedulingSchemaReady = new Map<SchedulingSchemaSection, Promise<void>>();
 
 async function ensureSchedulingSchema(pool: Pool, section: SchedulingSchemaSection) {
+  // Comentado para evitar erros de permissão (must be owner of table)
+  // Mudanças de schema devem ser feitas via migrações Drizzle.
+  /*
   let ready = schedulingSchemaReady.get(section);
-
-  if (!ready) {
-    ready = (async () => {
-      const statements = [
-        `CREATE TABLE IF NOT EXISTS business_hours (
-          id TEXT PRIMARY KEY DEFAULT md5(random()::text || clock_timestamp()::text),
-          organization_id TEXT NOT NULL,
-          day_of_week INTEGER NOT NULL CHECK (day_of_week BETWEEN 0 AND 6),
-          start_time TIME,
-          end_time TIME,
-          is_closed BOOLEAN DEFAULT FALSE,
-          open_time TIME,
-          close_time TIME,
-          is_open BOOLEAN DEFAULT TRUE,
-          break_start TIME,
-          break_end TIME,
-          created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-          updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
-        )`,
-        `ALTER TABLE IF EXISTS business_hours ADD COLUMN IF NOT EXISTS start_time TIME`,
-        `ALTER TABLE IF EXISTS business_hours ADD COLUMN IF NOT EXISTS end_time TIME`,
-        `ALTER TABLE IF EXISTS business_hours ADD COLUMN IF NOT EXISTS is_closed BOOLEAN DEFAULT FALSE`,
-        `ALTER TABLE IF EXISTS business_hours ADD COLUMN IF NOT EXISTS open_time TIME`,
-        `ALTER TABLE IF EXISTS business_hours ADD COLUMN IF NOT EXISTS close_time TIME`,
-        `ALTER TABLE IF EXISTS business_hours ADD COLUMN IF NOT EXISTS is_open BOOLEAN DEFAULT TRUE`,
-        `ALTER TABLE IF EXISTS business_hours ADD COLUMN IF NOT EXISTS break_start TIME`,
-        `ALTER TABLE IF EXISTS business_hours ADD COLUMN IF NOT EXISTS break_end TIME`,
-        `ALTER TABLE IF EXISTS business_hours ADD COLUMN IF NOT EXISTS created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()`,
-        `ALTER TABLE IF EXISTS business_hours ADD COLUMN IF NOT EXISTS updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()`,
-        `CREATE TABLE IF NOT EXISTS blocked_times (
-          id TEXT PRIMARY KEY DEFAULT md5(random()::text || clock_timestamp()::text),
-          organization_id TEXT NOT NULL,
-          therapist_id TEXT,
-          title TEXT NOT NULL DEFAULT 'Bloqueio',
-          reason TEXT,
-          start_date DATE NOT NULL DEFAULT CURRENT_DATE,
-          end_date DATE NOT NULL DEFAULT CURRENT_DATE,
-          start_time TIME,
-          end_time TIME,
-          is_all_day BOOLEAN NOT NULL DEFAULT TRUE,
-          is_recurring BOOLEAN NOT NULL DEFAULT FALSE,
-          recurring_days JSONB NOT NULL DEFAULT '[]'::jsonb,
-          created_by TEXT,
-          created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-          updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
-        )`,
-        `ALTER TABLE IF EXISTS blocked_times ADD COLUMN IF NOT EXISTS therapist_id TEXT`,
-        `ALTER TABLE IF EXISTS blocked_times ADD COLUMN IF NOT EXISTS title TEXT NOT NULL DEFAULT 'Bloqueio'`,
-        `ALTER TABLE IF EXISTS blocked_times ADD COLUMN IF NOT EXISTS start_date DATE NOT NULL DEFAULT CURRENT_DATE`,
-        `ALTER TABLE IF EXISTS blocked_times ADD COLUMN IF NOT EXISTS end_date DATE NOT NULL DEFAULT CURRENT_DATE`,
-        `ALTER TABLE IF EXISTS blocked_times ADD COLUMN IF NOT EXISTS is_all_day BOOLEAN NOT NULL DEFAULT TRUE`,
-        `ALTER TABLE IF EXISTS blocked_times ADD COLUMN IF NOT EXISTS is_recurring BOOLEAN NOT NULL DEFAULT FALSE`,
-        `ALTER TABLE IF EXISTS blocked_times ADD COLUMN IF NOT EXISTS recurring_days JSONB NOT NULL DEFAULT '[]'::jsonb`,
-        `ALTER TABLE IF EXISTS blocked_times ADD COLUMN IF NOT EXISTS updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()`,
-        `CREATE TABLE IF NOT EXISTS cancellation_rules (
-          id TEXT PRIMARY KEY DEFAULT md5(random()::text || clock_timestamp()::text),
-          organization_id TEXT NOT NULL,
-          min_hours_notice INTEGER DEFAULT 24,
-          allow_reschedule BOOLEAN DEFAULT TRUE,
-          cancellation_fee NUMERIC(10,2) DEFAULT 0,
-          min_hours_before INTEGER DEFAULT 24,
-          allow_patient_cancellation BOOLEAN DEFAULT TRUE,
-          max_cancellations_month INTEGER DEFAULT 3,
-          charge_late_cancellation BOOLEAN DEFAULT FALSE,
-          late_cancellation_fee NUMERIC(10,2) DEFAULT 0,
-          created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-          updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
-        )`,
-        `ALTER TABLE IF EXISTS cancellation_rules ADD COLUMN IF NOT EXISTS min_hours_notice INTEGER DEFAULT 24`,
-        `ALTER TABLE IF EXISTS cancellation_rules ADD COLUMN IF NOT EXISTS allow_reschedule BOOLEAN DEFAULT TRUE`,
-        `ALTER TABLE IF EXISTS cancellation_rules ADD COLUMN IF NOT EXISTS cancellation_fee NUMERIC(10,2) DEFAULT 0`,
-        `ALTER TABLE IF EXISTS cancellation_rules ADD COLUMN IF NOT EXISTS min_hours_before INTEGER DEFAULT 24`,
-        `ALTER TABLE IF EXISTS cancellation_rules ADD COLUMN IF NOT EXISTS allow_patient_cancellation BOOLEAN DEFAULT TRUE`,
-        `ALTER TABLE IF EXISTS cancellation_rules ADD COLUMN IF NOT EXISTS max_cancellations_month INTEGER DEFAULT 3`,
-        `ALTER TABLE IF EXISTS cancellation_rules ADD COLUMN IF NOT EXISTS charge_late_cancellation BOOLEAN DEFAULT FALSE`,
-        `ALTER TABLE IF EXISTS cancellation_rules ADD COLUMN IF NOT EXISTS late_cancellation_fee NUMERIC(10,2) DEFAULT 0`,
-        `ALTER TABLE IF EXISTS cancellation_rules ADD COLUMN IF NOT EXISTS created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()`,
-        `ALTER TABLE IF EXISTS cancellation_rules ADD COLUMN IF NOT EXISTS updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()`,
-        `CREATE TABLE IF NOT EXISTS scheduling_notification_settings (
-          id TEXT PRIMARY KEY DEFAULT md5(random()::text || clock_timestamp()::text),
-          organization_id TEXT NOT NULL,
-          enable_reminders BOOLEAN DEFAULT TRUE,
-          reminder_hours_before INTEGER DEFAULT 24,
-          enable_confirmation BOOLEAN DEFAULT TRUE,
-          send_confirmation_email BOOLEAN DEFAULT TRUE,
-          send_confirmation_whatsapp BOOLEAN DEFAULT TRUE,
-          send_reminder_24h BOOLEAN DEFAULT TRUE,
-          send_reminder_2h BOOLEAN DEFAULT TRUE,
-          send_cancellation_notice BOOLEAN DEFAULT TRUE,
-          custom_confirmation_message TEXT,
-          custom_reminder_message TEXT,
-          created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-          updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
-        )`,
-        `ALTER TABLE IF EXISTS scheduling_notification_settings ADD COLUMN IF NOT EXISTS enable_reminders BOOLEAN DEFAULT TRUE`,
-        `ALTER TABLE IF EXISTS scheduling_notification_settings ADD COLUMN IF NOT EXISTS reminder_hours_before INTEGER DEFAULT 24`,
-        `ALTER TABLE IF EXISTS scheduling_notification_settings ADD COLUMN IF NOT EXISTS enable_confirmation BOOLEAN DEFAULT TRUE`,
-        `ALTER TABLE IF EXISTS scheduling_notification_settings ADD COLUMN IF NOT EXISTS send_confirmation_email BOOLEAN DEFAULT TRUE`,
-        `ALTER TABLE IF EXISTS scheduling_notification_settings ADD COLUMN IF NOT EXISTS send_confirmation_whatsapp BOOLEAN DEFAULT TRUE`,
-        `ALTER TABLE IF EXISTS scheduling_notification_settings ADD COLUMN IF NOT EXISTS send_reminder_24h BOOLEAN DEFAULT TRUE`,
-        `ALTER TABLE IF EXISTS scheduling_notification_settings ADD COLUMN IF NOT EXISTS send_reminder_2h BOOLEAN DEFAULT TRUE`,
-        `ALTER TABLE IF EXISTS scheduling_notification_settings ADD COLUMN IF NOT EXISTS send_cancellation_notice BOOLEAN DEFAULT TRUE`,
-        `ALTER TABLE IF EXISTS scheduling_notification_settings ADD COLUMN IF NOT EXISTS custom_confirmation_message TEXT`,
-        `ALTER TABLE IF EXISTS scheduling_notification_settings ADD COLUMN IF NOT EXISTS custom_reminder_message TEXT`,
-        `ALTER TABLE IF EXISTS scheduling_notification_settings ADD COLUMN IF NOT EXISTS created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()`,
-        `ALTER TABLE IF EXISTS scheduling_notification_settings ADD COLUMN IF NOT EXISTS updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()`,
-        `CREATE TABLE IF NOT EXISTS schedule_capacity (
-          id TEXT PRIMARY KEY DEFAULT md5(random()::text || clock_timestamp()::text),
-          organization_id TEXT NOT NULL,
-          day_of_week INTEGER NOT NULL CHECK (day_of_week BETWEEN 0 AND 6),
-          start_time TIME NOT NULL,
-          end_time TIME NOT NULL,
-          max_patients INTEGER NOT NULL CHECK (max_patients >= 1),
-          created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-          updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
-        )`,
-        `ALTER TABLE IF EXISTS schedule_capacity ADD COLUMN IF NOT EXISTS created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()`,
-        `ALTER TABLE IF EXISTS schedule_capacity ADD COLUMN IF NOT EXISTS updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()`,
-        `CREATE TABLE IF NOT EXISTS waitlist (
-          id TEXT PRIMARY KEY DEFAULT md5(random()::text || clock_timestamp()::text),
-          organization_id TEXT NOT NULL,
-          patient_id TEXT NOT NULL,
-          preferred_days JSONB NOT NULL DEFAULT '[]'::jsonb,
-          preferred_periods JSONB NOT NULL DEFAULT '[]'::jsonb,
-          preferred_therapist_id TEXT,
-          priority TEXT NOT NULL DEFAULT 'normal',
-          status TEXT NOT NULL DEFAULT 'waiting',
-          notes TEXT,
-          refusal_count INTEGER NOT NULL DEFAULT 0,
-          offered_slot TEXT,
-          offered_at TIMESTAMPTZ,
-          offer_expires_at TIMESTAMPTZ,
-          created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-          updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
-        )`,
-        `ALTER TABLE IF EXISTS waitlist ADD COLUMN IF NOT EXISTS preferred_days JSONB NOT NULL DEFAULT '[]'::jsonb`,
-        `ALTER TABLE IF EXISTS waitlist ADD COLUMN IF NOT EXISTS preferred_periods JSONB NOT NULL DEFAULT '[]'::jsonb`,
-        `ALTER TABLE IF EXISTS waitlist ADD COLUMN IF NOT EXISTS preferred_therapist_id TEXT`,
-        `ALTER TABLE IF EXISTS waitlist ADD COLUMN IF NOT EXISTS priority TEXT NOT NULL DEFAULT 'normal'`,
-        `ALTER TABLE IF EXISTS waitlist ADD COLUMN IF NOT EXISTS status TEXT NOT NULL DEFAULT 'waiting'`,
-        `ALTER TABLE IF EXISTS waitlist ADD COLUMN IF NOT EXISTS notes TEXT`,
-        `ALTER TABLE IF EXISTS waitlist ADD COLUMN IF NOT EXISTS refusal_count INTEGER NOT NULL DEFAULT 0`,
-        `ALTER TABLE IF EXISTS waitlist ADD COLUMN IF NOT EXISTS offered_slot TEXT`,
-        `ALTER TABLE IF EXISTS waitlist ADD COLUMN IF NOT EXISTS offered_at TIMESTAMPTZ`,
-        `ALTER TABLE IF EXISTS waitlist ADD COLUMN IF NOT EXISTS offer_expires_at TIMESTAMPTZ`,
-        `ALTER TABLE IF EXISTS waitlist ADD COLUMN IF NOT EXISTS created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()`,
-        `ALTER TABLE IF EXISTS waitlist ADD COLUMN IF NOT EXISTS updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()`,
-        `CREATE TABLE IF NOT EXISTS waitlist_offers (
-          id TEXT PRIMARY KEY DEFAULT md5(random()::text || clock_timestamp()::text),
-          organization_id TEXT NOT NULL,
-          waitlist_id TEXT NOT NULL,
-          offered_slot TEXT NOT NULL,
-          response TEXT NOT NULL DEFAULT 'pending',
-          status TEXT NOT NULL DEFAULT 'pending',
-          expiration_time TIMESTAMPTZ,
-          responded_at TIMESTAMPTZ,
-          created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-          updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
-        )`,
-        `ALTER TABLE IF EXISTS waitlist_offers ADD COLUMN IF NOT EXISTS organization_id TEXT`,
-        `ALTER TABLE IF EXISTS waitlist_offers ADD COLUMN IF NOT EXISTS response TEXT NOT NULL DEFAULT 'pending'`,
-        `ALTER TABLE IF EXISTS waitlist_offers ADD COLUMN IF NOT EXISTS status TEXT NOT NULL DEFAULT 'pending'`,
-        `ALTER TABLE IF EXISTS waitlist_offers ADD COLUMN IF NOT EXISTS expiration_time TIMESTAMPTZ`,
-        `ALTER TABLE IF EXISTS waitlist_offers ADD COLUMN IF NOT EXISTS responded_at TIMESTAMPTZ`,
-        `ALTER TABLE IF EXISTS waitlist_offers ADD COLUMN IF NOT EXISTS created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()`,
-        `ALTER TABLE IF EXISTS waitlist_offers ADD COLUMN IF NOT EXISTS updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()`,
-        `CREATE TABLE IF NOT EXISTS recurring_series (
-          id TEXT PRIMARY KEY DEFAULT md5(random()::text || clock_timestamp()::text),
-          organization_id TEXT NOT NULL,
-          patient_id TEXT NOT NULL,
-          therapist_id TEXT,
-          recurrence_type TEXT NOT NULL DEFAULT 'weekly',
-          recurrence_interval INTEGER NOT NULL DEFAULT 1,
-          recurrence_days_of_week JSONB,
-          appointment_date DATE NOT NULL,
-          appointment_time TIME NOT NULL,
-          duration INTEGER,
-          appointment_type TEXT,
-          notes TEXT,
-          auto_confirm BOOLEAN NOT NULL DEFAULT FALSE,
-          is_active BOOLEAN NOT NULL DEFAULT TRUE,
-          canceled_at TIMESTAMPTZ,
-          created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-          updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
-        )`,
-        `ALTER TABLE IF EXISTS recurring_series ADD COLUMN IF NOT EXISTS therapist_id TEXT`,
-        `ALTER TABLE IF EXISTS recurring_series ADD COLUMN IF NOT EXISTS recurrence_type TEXT NOT NULL DEFAULT 'weekly'`,
-        `ALTER TABLE IF EXISTS recurring_series ADD COLUMN IF NOT EXISTS recurrence_interval INTEGER NOT NULL DEFAULT 1`,
-        `ALTER TABLE IF EXISTS recurring_series ADD COLUMN IF NOT EXISTS recurrence_days_of_week JSONB`,
-        `ALTER TABLE IF EXISTS recurring_series ADD COLUMN IF NOT EXISTS appointment_date DATE`,
-        `ALTER TABLE IF EXISTS recurring_series ADD COLUMN IF NOT EXISTS appointment_time TIME`,
-        `ALTER TABLE IF EXISTS recurring_series ADD COLUMN IF NOT EXISTS duration INTEGER`,
-        `ALTER TABLE IF EXISTS recurring_series ADD COLUMN IF NOT EXISTS appointment_type TEXT`,
-        `ALTER TABLE IF EXISTS recurring_series ADD COLUMN IF NOT EXISTS notes TEXT`,
-        `ALTER TABLE IF EXISTS recurring_series ADD COLUMN IF NOT EXISTS auto_confirm BOOLEAN NOT NULL DEFAULT FALSE`,
-        `ALTER TABLE IF EXISTS recurring_series ADD COLUMN IF NOT EXISTS is_active BOOLEAN NOT NULL DEFAULT TRUE`,
-        `ALTER TABLE IF EXISTS recurring_series ADD COLUMN IF NOT EXISTS canceled_at TIMESTAMPTZ`,
-        `ALTER TABLE IF EXISTS recurring_series ADD COLUMN IF NOT EXISTS created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()`,
-        `ALTER TABLE IF EXISTS recurring_series ADD COLUMN IF NOT EXISTS updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()`,
-        `CREATE INDEX IF NOT EXISTS idx_business_hours_org_day ON business_hours (organization_id, day_of_week)`,
-        `CREATE INDEX IF NOT EXISTS idx_blocked_times_org_dates ON blocked_times (organization_id, start_date, end_date)`,
-        `CREATE INDEX IF NOT EXISTS idx_cancellation_rules_org ON cancellation_rules (organization_id)`,
-        `CREATE INDEX IF NOT EXISTS idx_scheduling_notification_settings_org ON scheduling_notification_settings (organization_id)`,
-        `CREATE INDEX IF NOT EXISTS idx_schedule_capacity_org_day ON schedule_capacity (organization_id, day_of_week, start_time)`,
-        `CREATE INDEX IF NOT EXISTS idx_waitlist_org_status ON waitlist (organization_id, status, created_at)`,
-        `CREATE INDEX IF NOT EXISTS idx_waitlist_offers_org_waitlist ON waitlist_offers (organization_id, waitlist_id, created_at)`,
-        `CREATE INDEX IF NOT EXISTS idx_recurring_series_org_patient ON recurring_series (organization_id, patient_id, is_active)`,
-      ];
-
-      const selectedStatements = schedulingSchemaRanges[section].flatMap(([start, end]) =>
-        statements.slice(start, end),
-      );
-
-      for (const statement of selectedStatements) {
-        await pool.query(statement);
-      }
-    })().catch((error) => {
-      schedulingSchemaReady.delete(section);
-      throw error;
-    });
-
-    schedulingSchemaReady.set(section, ready);
-  }
-
-  await ready;
+  ...
+  */
+  return;
 }
 
 const parseRecurringDays = (value: unknown): number[] => {
@@ -280,11 +61,19 @@ const parseStringArray = (value: unknown): string[] => {
   return [];
 };
 
+const formatTime = (time: any): string | null => {
+  if (!time) return null;
+  const s = String(time);
+  return s.length >= 5 ? s.slice(0, 5) : s;
+};
+
 const mapBusinessHourRow = (row: Record<string, any>) => ({
   ...row,
   is_open: row.is_open ?? !(row.is_closed ?? false),
-  open_time: row.open_time ?? row.start_time,
-  close_time: row.close_time ?? row.end_time,
+  open_time: formatTime(row.open_time ?? row.start_time),
+  close_time: formatTime(row.close_time ?? row.end_time),
+  break_start: formatTime(row.break_start),
+  break_end: formatTime(row.break_end),
 });
 
 const normalizeBusinessHourPayload = (item: Record<string, any>) => {
@@ -389,6 +178,8 @@ const mapBlockedTimeRow = (row: Record<string, any>) => ({
   title: row.title ?? 'Bloqueio',
   start_date: row.start_date,
   end_date: row.end_date,
+  start_time: formatTime(row.start_time),
+  end_time: formatTime(row.end_time),
   is_all_day: row.is_all_day ?? true,
   is_recurring: row.is_recurring ?? false,
   recurring_days: parseRecurringDays(row.recurring_days),
@@ -405,6 +196,12 @@ const normalizeBlockedTimePayload = (body: Record<string, any>) => ({
   isAllDay: body.is_all_day !== false,
   isRecurring: body.is_recurring === true,
   recurringDays: JSON.stringify(parseRecurringDays(body.recurring_days)),
+});
+
+const mapCapacityRow = (row: Record<string, any>) => ({
+  ...row,
+  start_time: formatTime(row.start_time),
+  end_time: formatTime(row.end_time),
 });
 
 const normalizeCapacityPayload = (body: Record<string, any>) => {
@@ -435,6 +232,7 @@ const mapWaitlistRow = (row: Record<string, any>) => ({
   ...row,
   preferred_days: parseStringArray(row.preferred_days),
   preferred_periods: parseStringArray(row.preferred_periods),
+  offered_slot: formatTime(row.offered_slot),
   refusal_count: Number(row.refusal_count ?? 0),
 });
 
@@ -459,6 +257,7 @@ const mapWaitlistOfferRow = (row: Record<string, any>) => ({
 
 const mapRecurringSeriesRow = (row: Record<string, any>) => ({
   ...row,
+  appointment_time: formatTime(row.appointment_time),
   recurrence_interval: Number(row.recurrence_interval ?? 1),
   recurrence_days_of_week: row.recurrence_days_of_week == null
     ? null
@@ -587,23 +386,26 @@ async function handleUpsertBusinessHours(c: any) {
     // Validar todos os itens antes de começar a deletar
     const normalizedItems = items.map(item => normalizeBusinessHourPayload(item));
 
-    await pool.query('DELETE FROM business_hours WHERE organization_id = $1', [user.organizationId]);
-
+    // Usar INSERT ON CONFLICT para maior atomicidade e evitar perda de dados se o loop falhar no meio
     const results = [];
     for (const normalized of normalizedItems) {
       const res = await pool.query(
         `INSERT INTO business_hours (
-          organization_id, day_of_week, start_time, end_time, is_closed,
-          open_time, close_time, is_open, break_start, break_end, updated_at
+          organization_id, day_of_week, open_time, close_time, is_open,
+          break_start, break_end, updated_at
         )
-         VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, NOW())
+         VALUES ($1, $2, $3, $4, $5, $6, $7, NOW())
+         ON CONFLICT (organization_id, day_of_week) DO UPDATE SET
+          open_time = EXCLUDED.open_time,
+          close_time = EXCLUDED.close_time,
+          is_open = EXCLUDED.is_open,
+          break_start = EXCLUDED.break_start,
+          break_end = EXCLUDED.break_end,
+          updated_at = NOW()
          RETURNING *`,
         [
           user.organizationId,
           normalized.dayOfWeek,
-          normalized.openTime,
-          normalized.closeTime,
-          !normalized.isOpen,
           normalized.openTime,
           normalized.closeTime,
           normalized.isOpen,
@@ -612,6 +414,13 @@ async function handleUpsertBusinessHours(c: any) {
         ]
       );
       results.push(mapBusinessHourRow(res.rows[0]));
+    }
+
+    // Invalidação agressiva do cache D1
+    const d1 = c.env.EDGE_CACHE || c.env.DB;
+    if (d1) {
+      const cacheKey = `business-hours:${user.organizationId}`;
+      await d1.prepare('DELETE FROM query_cache WHERE id = ?').bind(cacheKey).run().catch(() => {});
     }
 
     return c.json({ data: results });
@@ -1109,7 +918,7 @@ app.get('/capacity-config', requireAuth, async (c) => {
       `SELECT * FROM schedule_capacity WHERE organization_id = $1 ORDER BY day_of_week ASC, start_time ASC`,
       [user.organizationId]
     );
-    return c.json({ data: result.rows });
+    return c.json({ data: result.rows.map(mapCapacityRow) });
   } catch {
     return c.json(emptyData());
   }
@@ -1138,7 +947,7 @@ app.post('/capacity-config', requireAuth, async (c) => {
           normalized.maxPatients,
         ]
       );
-      results.push(res.rows[0]);
+      results.push(mapCapacityRow(res.rows[0]));
     }
 
     return c.json({ data: results });
@@ -1186,7 +995,7 @@ app.put('/capacity-config/:id', requireAuth, async (c) => {
       ]
     );
 
-    return c.json({ data: res.rows[0] });
+    return c.json({ data: mapCapacityRow(res.rows[0]) });
   } catch (error: any) {
     return c.json({ error: error.message }, 500);
   }
