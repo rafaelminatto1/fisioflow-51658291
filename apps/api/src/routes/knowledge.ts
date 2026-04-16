@@ -514,43 +514,45 @@ app.put('/annotations/:articleId', async (c) => {
   const scope = body.scope === 'user' ? 'user' : 'organization';
   const scopeKey = scope === 'user' ? user.uid : 'org';
 
-  const result = await pool.query(
-    `
-      INSERT INTO knowledge_annotations (
-        organization_id, article_id, scope, scope_key, user_id, highlights, observations,
-        status, evidence, created_by, updated_by, created_at, updated_at
-      ) VALUES (
-        $1, $2, $3, $4, $5, $6::jsonb, $7::jsonb,
-        $8, $9, $10, $11, NOW(), NOW()
-      )
-      ON CONFLICT (organization_id, article_id, scope, scope_key)
-      DO UPDATE SET
-        highlights = EXCLUDED.highlights,
-        observations = EXCLUDED.observations,
-        status = EXCLUDED.status,
-        evidence = EXCLUDED.evidence,
-        updated_by = EXCLUDED.updated_by,
-        updated_at = NOW()
-      RETURNING *
-    `,
-    [
-      user.organizationId,
-      articleId,
-      scope,
-      scopeKey,
-      scope === 'user' ? user.uid : null,
-      JSON.stringify(Array.isArray(body.highlights) ? body.highlights : []),
-      JSON.stringify(Array.isArray(body.observations) ? body.observations : []),
-      body.status ? String(body.status) : null,
-      body.evidence ? String(body.evidence) : null,
-      user.uid,
-      user.uid,
-    ],
-  );
+  const queries = [
+    {
+      text: `
+        INSERT INTO knowledge_annotations (
+          organization_id, article_id, scope, scope_key, user_id, highlights, observations,
+          status, evidence, created_by, updated_by, created_at, updated_at
+        ) VALUES (
+          $1, $2, $3, $4, $5, $6::jsonb, $7::jsonb,
+          $8, $9, $10, $11, NOW(), NOW()
+        )
+        ON CONFLICT (organization_id, article_id, scope, scope_key)
+        DO UPDATE SET
+          highlights = EXCLUDED.highlights,
+          observations = EXCLUDED.observations,
+          status = EXCLUDED.status,
+          evidence = EXCLUDED.evidence,
+          updated_by = EXCLUDED.updated_by,
+          updated_at = NOW()
+        RETURNING *
+      `,
+      values: [
+        user.organizationId,
+        articleId,
+        scope,
+        scopeKey,
+        scope === 'user' ? user.uid : null,
+        JSON.stringify(Array.isArray(body.highlights) ? body.highlights : []),
+        JSON.stringify(Array.isArray(body.observations) ? body.observations : []),
+        body.status ? String(body.status) : null,
+        body.evidence ? String(body.evidence) : null,
+        user.uid,
+        user.uid,
+      ],
+    }
+  ];
 
   if (scope === 'organization') {
-    await pool.query(
-      `
+    queries.push({
+      text: `
         UPDATE knowledge_articles
         SET highlights = $3::jsonb,
             observations = $4::jsonb,
@@ -558,17 +560,24 @@ app.put('/annotations/:articleId', async (c) => {
             updated_at = NOW()
         WHERE organization_id = $1 AND article_id = $2
       `,
-      [
+      values: [
         user.organizationId,
         articleId,
         JSON.stringify(Array.isArray(body.highlights) ? body.highlights : []),
         JSON.stringify(Array.isArray(body.observations) ? body.observations : []),
         user.uid,
       ],
-    );
+    });
   }
 
-  return c.json({ data: normalizeAnnotation(result.rows[0]) });
+  try {
+    const results = await pool.transaction(queries);
+    const annotationRow = results[0].rows[0];
+    return c.json({ data: normalizeAnnotation(annotationRow) });
+  } catch (err) {
+    console.error("[Knowledge] Transaction error:", err);
+    return c.json({ error: "Failed to update annotation", details: String(err) }, 500);
+  }
 });
 
 app.get('/curation', async (c) => {

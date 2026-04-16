@@ -118,9 +118,10 @@ async function getIntervalCapacity(
   date: string,
   startTime: string,
   endTime: string,
+  useLock: boolean = false
 ): Promise<number> {
   try {
-    // schedule_capacity table might not be in schema, use sql fallback
+    const lockClause = useLock ? sql`FOR UPDATE` : sql``;
     const result = await db.execute(sql`
       SELECT MIN(max_patients)::int AS capacity
       FROM schedule_capacity
@@ -128,6 +129,7 @@ async function getIntervalCapacity(
         AND day_of_week = EXTRACT(DOW FROM ${date}::date)
         AND start_time < ${endTime}::time
         AND end_time > ${startTime}::time
+      ${lockClause}
     `);
 
     const capacity = Number(result.rows?.[0]?.capacity ?? 1);
@@ -187,6 +189,7 @@ async function enforceCapacity(
     status: string;
     ignoreCapacity?: boolean;
     excludeAppointmentId?: string;
+    useLock?: boolean;
   },
 ) {
 
@@ -194,7 +197,14 @@ async function enforceCapacity(
     return null;
   }
 
-  const capacity = await getIntervalCapacity(db, organizationId, payload.date, payload.startTime, payload.endTime);
+  const capacity = await getIntervalCapacity(
+    db, 
+    organizationId, 
+    payload.date, 
+    payload.startTime, 
+    payload.endTime,
+    payload.useLock
+  );
   const conflicts = await getOverlappingAppointments(
     db,
     organizationId,
@@ -293,57 +303,49 @@ app.post('/', requireAuth, rateLimit({ limit: 20, windowSeconds: 3600, endpoint:
       }, 400);
     }
 
-    const capacityError = await enforceCapacity(db, organizationId, {
-      date,
-      startTime,
-      endTime,
-      status,
-      ignoreCapacity,
-    });
-    if (capacityError) {
-      return c.json(capacityError, 409);
-    }
+    const response = await db.transaction(async (tx) => {
+      const capacityError = await enforceCapacity(tx, organizationId, {
+        date,
+        startTime,
+        endTime,
+        status,
+        ignoreCapacity,
+        useLock: true,
+      });
+      if (capacityError) {
+        return { status: 409, data: capacityError };
+      }
 
-    const insertValues: any = {
-      patientId,
-      therapistId,
-      date,
-      startTime: startTime.length === 5 ? `${startTime}:00` : startTime,
-      endTime: endTime.length === 5 ? `${endTime}:00` : endTime,
-      durationMinutes,
-      organizationId,
-      status,
-      type,
-      notes,
-      isGroup,
-      isUnlimited,
-      additionalNames,
-      createdAt: new Date(),
-      updatedAt: new Date(),
-      createdBy: therapistId,
-    };
-    try {
+      const insertValues: any = {
+        patientId,
+        therapistId,
+        date,
+        startTime: startTime.length === 5 ? `${startTime}:00` : startTime,
+        endTime: endTime.length === 5 ? `${endTime}:00` : endTime,
+        durationMinutes,
+        organizationId,
+        status,
+        type,
+        notes,
+        isGroup,
+        isUnlimited,
+        additionalNames,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+        createdBy: therapistId,
+      };
+
       console.log('[Appointments/Create] Final Insert Values:', JSON.stringify(insertValues));
-      const result = await db.insert(appointments).values(insertValues).returning();
+      const result = await tx.insert(appointments).values(insertValues).returning();
       const row = result[0];
       if (!row) {
         throw new Error('Database insertion returned no rows');
       }
       console.log('[Appointments/Create] Success! Row ID:', row.id);
-      return c.json({ data: normalizeAppointmentRow(row) }, 201);
-    } catch (dbError: any) {
-      console.error('[Appointments/Create] DB Insert Error Detail:', {
-        name: dbError.name,
-        message: dbError.message,
-        code: dbError.code,
-        detail: dbError.detail,
-        table: dbError.table,
-        constraint: dbError.constraint,
-        stack: dbError.stack
-      });
-      // Importante: re-lançar para o catch externo capturar e retornar 500 ou 409
-      throw dbError; 
-    }
+      return { status: 201, data: { data: normalizeAppointmentRow(row) } };
+    });
+
+    return c.json(response.data, response.status as any);
   } catch (error: any) {
     if (isConflictError(error)) {
       return c.json({ error: 'Conflito de horário: o terapeuta já possui um agendamento neste período.' }, 409);
@@ -407,114 +409,118 @@ const updateAppointmentHandler: MiddlewareHandler<{ Bindings: Env; Variables: Au
   if (!id) return c.json({ error: 'ID é obrigatório' }, 400);
   if (!isUuid(id)) return c.json({ error: 'ID inválido' }, 400);
   try {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const body = await c.req.json() as Record<string, any>;
-    const currentResult = await db
-      .select({
-        id: appointments.id,
-        patientId: appointments.patientId, // needed for events
-        date: appointments.date,
-        startTime: appointments.startTime,
-        endTime: appointments.endTime,
-        durationMinutes: appointments.durationMinutes,
-        status: appointments.status,
-      })
-      .from(appointments)
-      .where(
-        withTenant(appointments, user.organizationId, eq(appointments.id, id as string))
-      )
-      .limit(1);
+    
+    const response = await db.transaction(async (tx) => {
+      const currentResult = await tx
+        .select({
+          id: appointments.id,
+          patientId: appointments.patientId,
+          date: appointments.date,
+          startTime: appointments.startTime,
+          endTime: appointments.endTime,
+          durationMinutes: appointments.durationMinutes,
+          status: appointments.status,
+        })
+        .from(appointments)
+        .where(
+          withTenant(appointments, user.organizationId, eq(appointments.id, id as string))
+        )
+        .limit(1);
 
-    const current = currentResult[0];
+      const current = currentResult[0];
+      if (!current) return { status: 404, data: { error: 'Agendamento não encontrado' } };
 
-    if (!current) return c.json({ error: 'Agendamento não encontrado' }, 404);
+      const date = body.date ?? body.appointment_date;
+      const startTime = body.startTime ?? body.start_time ?? body.appointment_time;
+      const explicitEndTime = body.endTime ?? body.end_time;
+      const status = body.status;
+      const notes = body.notes;
+      const therapistIdInput = body.therapist_id ?? body.therapistId;
+      const rawDuration = body.duration ?? body.duration_minutes;
+      const type = body.type !== undefined ? normalizeAppointmentType(body.type) : undefined;
+      const room = body.room ?? body.room_id;
+      const paymentStatus = body.payment_status ?? body.paymentStatus;
+      const paymentAmount = body.payment_amount ?? body.paymentAmount;
+      const ignoreCapacity = body.ignoreCapacity === true;
 
-    const date = body.date ?? body.appointment_date;
-    const startTime = body.startTime ?? body.start_time ?? body.appointment_time;
-    const explicitEndTime = body.endTime ?? body.end_time;
-    const status = body.status;
-    const notes = body.notes;
-    const therapistIdInput = body.therapist_id ?? body.therapistId;
-    const rawDuration = body.duration ?? body.duration_minutes;
-    const type = body.type !== undefined ? normalizeAppointmentType(body.type) : undefined;
-    const room = body.room ?? body.room_id;
-    const paymentStatus = body.payment_status ?? body.paymentStatus;
-    const paymentAmount = body.payment_amount ?? body.paymentAmount;
-    const ignoreCapacity = body.ignoreCapacity === true;
+      const parsedDuration = rawDuration !== undefined ? parseInt(String(rawDuration), 10) : undefined;
+      const normalizedStatus = status !== undefined ? normalizeStatus(status) : String(current.status ?? 'scheduled');
 
-    const parsedDuration = rawDuration !== undefined ? parseInt(String(rawDuration), 10) : undefined;
-    const normalizedStatus = status !== undefined ? normalizeStatus(status) : String(current.status ?? 'scheduled');
+      const effectiveDate = date ?? current.date;
+      const effectiveStartTime = startTime ?? current.startTime;
+      const effectiveDuration = parsedDuration ?? Number(current.durationMinutes ?? 60);
+      const calculatedEndTime = (startTime !== undefined || parsedDuration !== undefined)
+          ? calculateEndTime(effectiveStartTime, effectiveDuration)
+          : undefined;
 
-    if (parsedDuration !== undefined && (!Number.isFinite(parsedDuration) || parsedDuration <= 0)) {
-      return c.json({ error: 'duration inválida' }, 400);
-    }
+      const finalEndTime = explicitEndTime ?? calculatedEndTime ?? current.endTime;
+      const shouldRecheckCapacity =
+        !ignoreCapacity &&
+        (
+          date !== undefined ||
+          startTime !== undefined ||
+          parsedDuration !== undefined ||
+          explicitEndTime !== undefined ||
+          (status !== undefined && countsTowardCapacity(normalizedStatus))
+        );
 
-    const effectiveDate = date ?? current.date;
-    const effectiveStartTime = startTime ?? current.startTime;
-    const effectiveDuration = parsedDuration ?? Number(current.durationMinutes ?? 60);
-    const calculatedEndTime = (startTime !== undefined || parsedDuration !== undefined)
-        ? calculateEndTime(effectiveStartTime, effectiveDuration)
-        : undefined;
-
-    const finalEndTime = explicitEndTime ?? calculatedEndTime ?? current.endTime;
-    const shouldRecheckCapacity =
-      !ignoreCapacity &&
-      (
-        date !== undefined ||
-        startTime !== undefined ||
-        parsedDuration !== undefined ||
-        explicitEndTime !== undefined ||
-        (status !== undefined && countsTowardCapacity(normalizedStatus))
-      );
-
-    if (shouldRecheckCapacity) {
-      const capacityError = await enforceCapacity(db, user.organizationId, {
-        date: effectiveDate,
-        startTime: effectiveStartTime,
-        endTime: finalEndTime,
-        status: normalizedStatus,
-        ignoreCapacity,
-        excludeAppointmentId: id as string,
-      });
-      if (capacityError) {
-        return c.json(capacityError, 409);
+      if (shouldRecheckCapacity) {
+        const capacityError = await enforceCapacity(tx, user.organizationId, {
+          date: effectiveDate,
+          startTime: effectiveStartTime,
+          endTime: finalEndTime,
+          status: normalizedStatus,
+          ignoreCapacity,
+          excludeAppointmentId: id as string,
+          useLock: true,
+        });
+        if (capacityError) {
+          return { status: 409, data: capacityError };
+        }
       }
+
+      const updatePayload: any = {
+        updatedAt: new Date(),
+      };
+
+      if (date !== undefined) updatePayload.date = date;
+      if (startTime !== undefined) updatePayload.startTime = startTime;
+      if (finalEndTime !== undefined) updatePayload.endTime = finalEndTime;
+      if (status !== undefined) updatePayload.status = normalizedStatus;
+      if (notes !== undefined) updatePayload.notes = notes;
+      if (therapistIdInput !== undefined) updatePayload.therapistId = therapistIdInput || null;
+      if (parsedDuration !== undefined) updatePayload.durationMinutes = parsedDuration;
+      if (type !== undefined) updatePayload.type = type;
+      if (room !== undefined) updatePayload.roomId = isUuid(room) ? room : null;
+      if (paymentStatus !== undefined) updatePayload.paymentStatus = paymentStatus;
+      if (paymentAmount !== undefined) updatePayload.paymentAmount = paymentAmount;
+      if (body.isGroup !== undefined || body.is_group !== undefined) updatePayload.isGroup = body.isGroup ?? body.is_group;
+      if (body.isUnlimited !== undefined || body.is_unlimited !== undefined) updatePayload.isUnlimited = body.isUnlimited ?? body.is_unlimited;
+      if (body.additionalNames !== undefined || body.additional_names !== undefined) updatePayload.additionalNames = body.additionalNames ?? body.additional_names;
+
+      if (Object.keys(updatePayload).length === 1) { 
+        return { status: 400, data: { error: 'Nenhum campo para atualizar' } };
+      }
+
+      const result = await tx
+        .update(appointments)
+        .set(updatePayload)
+        .where(
+          withTenant(appointments, user.organizationId, eq(appointments.id, id as string))
+        )
+        .returning();
+
+      const row = result[0];
+      if (!row) return { status: 404, data: { error: 'Agendamento não encontrado' } };
+      return { status: 200, data: { data: normalizeAppointmentRow(row) } };
+    });
+
+    if (response.status >= 400) {
+      return c.json(response.data, response.status as any);
     }
 
-    const updatePayload: any = {
-      updatedAt: new Date(),
-    };
-
-    if (date !== undefined) updatePayload.date = date;
-    if (startTime !== undefined) updatePayload.startTime = startTime;
-    if (finalEndTime !== undefined) updatePayload.endTime = finalEndTime;
-    if (status !== undefined) updatePayload.status = normalizedStatus;
-    if (notes !== undefined) updatePayload.notes = notes;
-    if (therapistIdInput !== undefined) updatePayload.therapistId = therapistIdInput || null;
-    if (parsedDuration !== undefined) updatePayload.durationMinutes = parsedDuration;
-    if (type !== undefined) updatePayload.type = type;
-    if (room !== undefined) updatePayload.roomId = isUuid(room) ? room : null;
-    if (paymentStatus !== undefined) updatePayload.paymentStatus = paymentStatus;
-    if (paymentAmount !== undefined) updatePayload.paymentAmount = paymentAmount;
-    if (body.isGroup !== undefined || body.is_group !== undefined) updatePayload.isGroup = body.isGroup ?? body.is_group;
-    if (body.isUnlimited !== undefined || body.is_unlimited !== undefined) updatePayload.isUnlimited = body.isUnlimited ?? body.is_unlimited;
-    if (body.additionalNames !== undefined || body.additional_names !== undefined) updatePayload.additionalNames = body.additionalNames ?? body.additional_names;
-
-    if (Object.keys(updatePayload).length === 1) { // only updatedAt
-        return c.json({ error: 'Nenhum campo para atualizar' }, 400);
-    }
-
-    const result = await db
-      .update(appointments)
-      .set(updatePayload)
-      .where(
-        withTenant(appointments, user.organizationId, eq(appointments.id, id as string))
-      )
-      .returning();
-
-    const row = result[0];
-
-    if (!row) return c.json({ error: 'Agendamento não encontrado' }, 404);
+    const row = response.data.data;
 
     // Push side effects to background to keep response fast
     c.executionCtx.waitUntil((async () => {

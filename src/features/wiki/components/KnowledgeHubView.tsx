@@ -34,8 +34,10 @@ import {
 	UserCheck,
 	Calendar,
 	AlertCircle,
+	Eye,
 } from "lucide-react";
 import { toast } from "sonner";
+import { useNavigate } from "react-router-dom";
 import {
 	knowledgeGroups,
 	knowledgeEvidenceLabels,
@@ -71,7 +73,7 @@ function KnowledgeCard({
 	auditProfiles,
 	score: _score,
 }: KnowledgeCardProps) {
-	
+	const navigate = useNavigate();
 
 	const curation = curationMap?.get(item.id);
 	const reviewerName = curation?.assigned_to
@@ -112,6 +114,15 @@ function KnowledgeCard({
 							</div>
 						</div>
 						<div className="flex items-center gap-0.5 shrink-0 opacity-0 group-hover:opacity-100 transition-opacity">
+							<Button
+								variant="ghost"
+								size="icon"
+								onClick={() => navigate(`/wiki/article/${item.id}`)}
+								className="h-7 w-7 text-primary hover:bg-primary/10"
+								title="Ver Detalhes"
+							>
+								<Eye className="h-3.5 w-3.5" />
+							</Button>
 							<Button
 								variant="ghost"
 								size="icon"

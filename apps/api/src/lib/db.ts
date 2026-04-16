@@ -13,6 +13,9 @@ import { AsyncLocalStorage } from "node:async_hooks";
 
 const rlsContext = new AsyncLocalStorage<string>();
 
+// Singleton pool to reuse across requests in the same isolate
+let globalPool: Pool | null = null;
+
 export type DbRow = any;
 
 export interface DbQueryResult<Row extends DbRow = DbRow> {
@@ -32,6 +35,7 @@ export type DbQuery = {
  */
 export interface DbPool {
 	query: DbQuery;
+	transaction: (queries: { text: string; values?: any[] }[]) => Promise<any[]>;
 	end: () => Promise<void>;
 }
 
@@ -110,16 +114,48 @@ export type FisioDb = PgDatabase<any, typeof schema>;
 
 /**
  * Cria uma instância do Drizzle configurada para o ambiente atual.
+ * @param mode 'write' para transações e escritas (usa TCP/Hyperdrive), 'read' para consultas rápidas (usa HTTP).
  */
-export function createDb(env: Env): FisioDb {
+export function createDb(env: Env, mode: 'read' | 'write' = 'write'): FisioDb {
 	const url = getUrl(env);
 	const orgId = getOrgContext();
 
-	if (isTcpConnection(env)) {
-		const pool = new Pool({ connectionString: url });
-		return drizzlePg(pool, { schema }) as any; // Cast necessário para união de drivers
+	if (isTcpConnection(env) && mode === 'write') {
+		if (!globalPool) {
+			globalPool = new Pool({ 
+				connectionString: url,
+				max: 10, // Optimize for Worker environment
+				idleTimeoutMillis: 10000 
+			});
+		}
+		
+		const pool = globalPool;
+		if (orgId) {
+			// Intercepta conexões do Drizzle para injetar o contexto RLS (app.org_id)
+			const originalConnect = pool.connect.bind(pool);
+			pool.connect = (async () => {
+				const client = await originalConnect();
+				await client.query(`SELECT set_config('app.org_id', $1, true)`, [orgId]);
+				return client;
+			}) as any;
+
+			// Intercepta queries diretas do pool
+			const originalQuery = pool.query.bind(pool);
+			pool.query = (async (text: any, params: any) => {
+				const client = await originalConnect();
+				try {
+					await client.query(`SELECT set_config('app.org_id', $1, true)`, [orgId]);
+					return await client.query(text, params);
+				} finally {
+					client.release();
+				}
+			}) as any;
+		}
+		return drizzlePg(pool, { schema }) as any;
 	}
 
+	// For read mode or when TCP is not forced/available, we use the Neon HTTP driver
+	// which is much faster for one-off reads as it avoids TCP handshakes
 	const sql = neon(url);
 	if (orgId) {
 		const rlsSql = wrapSqlWithRls(sql, orgId);
@@ -153,8 +189,10 @@ export async function withRls<T>(
 	const url = getUrl(env);
 	
 	if (isTcpConnection(env)) {
-		const pool = new Pool({ connectionString: url });
-		const client = await pool.connect();
+		if (!globalPool) {
+			globalPool = new Pool({ connectionString: url });
+		}
+		const client = await globalPool.connect();
 		try {
 			await client.query(`SELECT set_config('app.org_id', $1, true)`, [organizationId]);
 			return await fn(client);
@@ -181,7 +219,14 @@ export function createPool(
 	const orgId = getOrgContext();
 
 	if (isTcpConnection(env)) {
-		const pool = new Pool({ connectionString: url });
+		if (!globalPool) {
+			globalPool = new Pool({ 
+				connectionString: url,
+				max: 10,
+				idleTimeoutMillis: 10000 
+			});
+		}
+		const pool = globalPool;
 		
 		const queryProxy = async <Row extends DbRow = any>(
 			textOrStrings: string | TemplateStringsArray,
@@ -222,6 +267,27 @@ export function createPool(
 		
 		return {
 			query: wrappedQuery,
+			transaction: async (queries: { text: string; values?: any[] }[]) => {
+				const client = await pool.connect();
+				try {
+					await client.query('BEGIN');
+					if (orgId) {
+						await client.query(`SELECT set_config('app.org_id', $1, true)`, [orgId]);
+					}
+					const results = [];
+					for (const q of queries) {
+						const res = await client.query(q.text, q.values);
+						results.push(res);
+					}
+					await client.query('COMMIT');
+					return results;
+				} catch (error) {
+					await client.query('ROLLBACK');
+					throw error;
+				} finally {
+					client.release();
+				}
+			},
 			end: () => pool.end(),
 		};
 	}
@@ -234,9 +300,9 @@ export function createPool(
 		): Promise<DbQueryResult<Row>> => {
 			const orgId = getOrgContext();
 			if (orgId) {
-				const results = await Promise.all([
+				const results = await (sql as any).transaction([
 					sql`SELECT set_config('app.org_id', ${orgId}::text, true)`,
-					sql.query(text, params),
+					(sql as any).query(text, params),
 				]);
 				return results[1] as DbQueryResult<Row>;
 			}
@@ -253,6 +319,15 @@ export function createPool(
 
 	return {
 		query: wrappedQuery,
+		transaction: async (queries: { text: string; values?: any[] }[]) => {
+			const orgId = getOrgContext();
+			const neonQueries = queries.map(q => (sql as any).query(q.text, q.values));
+			const allQueries = orgId
+				? [(sql as any).query(`SELECT set_config('app.org_id', $1, true)`, [orgId]), ...neonQueries]
+				: neonQueries;
+			const results = await (sql as any).transaction(allQueries);
+			return orgId ? results.slice(1) : results;
+		},
 		end: async () => {
 			if (isTcpConnection(env)) {
 				const pool = await (env.HYPERDRIVE as any)?.connect() || new Pool({ connectionString: getUrl(env) });
@@ -262,7 +337,7 @@ export function createPool(
 	} as DbPool;
 }
 
-export function getRawSql(env: Env): DbQuery {
+export function getRawSql(env: Env, mode: 'read' | 'write' = 'write'): DbQuery {
 	const url = getUrl(env);
 	const orgId = getOrgContext();
 
@@ -285,37 +360,20 @@ export function getRawSql(env: Env): DbQuery {
 			}
 		}
 
-		if (isTcpConnection(env)) {
-			const pool = new Pool({ connectionString: url });
-			const client = await pool.connect();
-			try {
-				if (orgId) {
-					await client.query(`SELECT set_config('app.org_id', $1, true)`, [orgId]);
-				}
-				const res = await client.query(text, params);
-				return res as DbQueryResult<Row>;
-			} finally {
-				client.release();
-				// Em produção/Cloudflare o pool deve ser persistente, mas 
-				// aqui estamos em modo compatível. Idealmente o pool estaria fora.
-			}
-		}
-
+		// HTTP Driver (Neon) - Used for 'read' mode or fallback
 		const sql = neon(url, { fullResults: true });
-		if (orgId) {
-			const results = await Promise.all([
-				(sql as any)`SELECT set_config('app.org_id', ${orgId}::text, true)`,
-				(sql as any).query(text, params),
-			]);
-			return results[1] as DbQueryResult<Row>;
-		}
-		const res = await (sql as any).query(text, params);
-		return {
-			rows: res.rows as any[],
-			rowCount: res.rowCount ?? null,
-			fields: res.fields as any[],
-			command: res.command ?? "SELECT",
-		} as DbQueryResult<Row>;
+		const neonProcess = async (text: string, params: any[]) => {
+			if (orgId) {
+				const results = await (sql as any).transaction([
+					sql`SELECT set_config('app.org_id', ${orgId}::text, true)`,
+					(sql as any).query(text, params),
+				]);
+				return results[1];
+			}
+			return await sql.query(text, params);
+		};
+
+		return await neonProcess(text, params) as DbQueryResult<Row>;
 	};
 
 	return processQuery as DbQuery;
