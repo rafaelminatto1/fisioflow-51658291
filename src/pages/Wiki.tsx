@@ -4,7 +4,7 @@
  */
 
 import { useState, useMemo, useEffect } from "react";
-import { useNavigate, useParams } from "react-router-dom";
+import { useNavigate, useParams, useSearchParams } from "react-router-dom";
 import { useQueryClient } from "@tanstack/react-query";
 import {
 	Search,
@@ -86,12 +86,13 @@ export default function WikiPage() {
 	const currentUserId = user?.uid ?? profile?.user_id ?? profile?.id;
 	const navigate = useNavigate();
 	const queryClient = useQueryClient();
+	const [searchParams] = useSearchParams();
 
 	// Estados Locais
 	const [activeView, setActiveView] = useState<
 		"dashboard" | "knowledge-hub" | "dictionary" | "page"
-	>("dashboard");
-	const [searchQuery, setSearchQuery] = useState("");
+	>((searchParams.get("view") as any) || "dashboard");
+	const [searchQuery, setSearchQuery] = useState(searchParams.get("search") || "");
 	const [isEditing, setIsEditing] = useState(false);
 	const [selectedPage, setSelectedPage] = useState<WikiPage | null>(null);
 	const [draftPage, setDraftPage] = useState<Partial<WikiPage> | null>(null);
@@ -204,6 +205,13 @@ export default function WikiPage() {
 	}, [filteredKnowledge]);
 
 	// Efeitos
+	useEffect(() => {
+		const view = searchParams.get("view");
+		const search = searchParams.get("search");
+		if (view) setActiveView(view as any);
+		if (search) setSearchQuery(search);
+	}, [searchParams]);
+
 	useEffect(() => {
 		if (!slug) {
 			if (activeView === "page") setActiveView("dashboard");
