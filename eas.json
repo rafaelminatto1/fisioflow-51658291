@@ -11,10 +11,10 @@
     "professional-dev": {
       "extends": "development",
       "ios": {
-        "scheme": "professional-ios"
+        "scheme": "fisioflowpro"
       },
       "android": {
-        "gradleCommand": ":apps:professional-ios:assembleDebug"
+        "gradleCommand": ":apps:professional-app:assembleDebug"
       }
     },
     "preview": {

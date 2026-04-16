@@ -71,6 +71,13 @@
 					"enableBackgroundRemoteNotifications": true
 				}
 			],
+			[
+				"react-native-vision-camera",
+				{
+					"cameraPermissionText": "O FisioFlow precisa acessar sua câmera para análise biomecânica.",
+					"enableMicrophonePermission": true
+				}
+			],
 			"expo-font",
 			"@react-native-community/datetimepicker",
 			[
