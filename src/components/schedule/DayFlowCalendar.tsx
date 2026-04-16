@@ -19,6 +19,7 @@ import {
 import "@event-calendar/core/index.css";
 import { addDays, addMinutes, format, isValid, startOfWeek } from "date-fns";
 import { useStatusConfig } from "@/hooks/useStatusConfig";
+import { useCardSize } from "@/hooks/useCardSize";
 import { formatTime, roundDateToNearestInterval } from "@/utils/dateUtils";
 import { AppointmentQuickView } from "./AppointmentQuickView";
 import { ScheduleToolbar } from "./ScheduleToolbar";
@@ -71,9 +72,10 @@ export function DayFlowCalendarWrapper(props: DayFlowCalendarWrapperProps) {
 		onDateChange,
 		onViewTypeChange,
 	} = props;
+	const { cssVariables, heightMultiplier } = useCardSize();
 	const isWeekView = viewType === "week";
 	const [weekSlotHeight, setWeekSlotHeight] = useState(20);
-	const slotHeight = isWeekView ? weekSlotHeight : 14;
+	const slotHeight = isWeekView ? weekSlotHeight : Math.round(24 * heightMultiplier);
 	const slotDuration = "00:15:00";
 	const slotLabelFormat = useMemo(
 		() => (time: Date) =>
@@ -92,7 +94,7 @@ export function DayFlowCalendarWrapper(props: DayFlowCalendarWrapperProps) {
 		event: any;
 		rect: DOMRect;
 	} | null>(null);
-	const { getStatusConfig: getSharedStatusConfig, getStatusColors } =
+	const { getStatusConfig: getSharedStatusConfig } =
 		useStatusConfig();
 
 	const cardColorsMapRef = useRef<
@@ -318,15 +320,15 @@ export function DayFlowCalendarWrapper(props: DayFlowCalendarWrapperProps) {
 								getCalendarCardColors(normalizedStatusName);
 
 							const html = `
-								<div class="dayflow-event-shell ${cardDensityClass} ${isCancelled ? "dayflow-event-shell--cancelled" : ""}" style="background-color:${colors.background};border-left:3px solid ${colors.accent};border-radius:6px;">
+								<div class="dayflow-event-shell ${cardDensityClass} ${isCancelled ? "dayflow-event-shell--cancelled" : ""}" style="background-color:${colors.background};border-left:3px solid ${colors.accent};border-radius:6px; font-size: var(--agenda-card-font-scale, 11px); opacity: var(--agenda-card-opacity, 1);">
 									<div class="dayflow-event-card" style="border-left:none;">
-										<div class="dayflow-event-card__meta">
-											<span class="dayflow-event-card__time" style="color:${colors.text};">
+										<div class="dayflow-event-card__meta" style="font-size: 0.8em;">
+											<span class="dayflow-event-card__time" style="color:${colors.text}; font-size: 1em;">
 												${formattedTime}
 											</span>
 											<div class="dayflow-event-card__dot" style="background-color:${colors.accent};"></div>
 										</div>
-										<div class="dayflow-event-card__title" style="color:${colors.text};display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;white-space:normal;word-break:break-word;line-height:1.2;">
+										<div class="dayflow-event-card__title" style="color:${colors.text}; display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden; white-space:normal; word-break:break-word; line-height:1.2; font-size: 1em;">
 											${appointment.title}
 										</div>
 									</div>
@@ -461,7 +463,10 @@ export function DayFlowCalendarWrapper(props: DayFlowCalendarWrapperProps) {
 	]);
 
 	return (
-		<div className="flex-1 flex flex-col min-h-0 bg-slate-50/50 overflow-hidden relative">
+		<div
+			className="flex-1 flex flex-col min-h-0 bg-slate-50/50 overflow-hidden relative"
+			style={cssVariables}
+		>
 			<ScheduleToolbar
 				currentDate={currentDate}
 				viewType={viewType}
@@ -557,7 +562,7 @@ export function DayFlowCalendarWrapper(props: DayFlowCalendarWrapperProps) {
 				}
 				.dayflow-week-view .ec-body .ec-time,
 				.dayflow-week-view .ec-body .ec-line {
-					height: ${slotHeight}px !important;
+					height: var(--agenda-slot-height, 20px) !important;
 				}
 				.dayflow-week-view .ec-header .ec-time,
 				.dayflow-week-view .ec-header .ec-sidebar-title,
@@ -577,7 +582,7 @@ export function DayFlowCalendarWrapper(props: DayFlowCalendarWrapperProps) {
 				}
 				.dayflow-week-view .ec-body .ec-time {
 					font-size: 10px !important;
-					line-height: ${slotHeight}px !important;
+					line-height: var(--agenda-slot-height, 20px) !important;
 					top: 0 !important;
 					text-align: center !important;
 					width: 100% !important;
@@ -595,6 +600,7 @@ export function DayFlowCalendarWrapper(props: DayFlowCalendarWrapperProps) {
 					cursor: pointer;
 					border-radius: 6px;
 					text-align: left;
+					transition: opacity 0.2s ease;
 				}
 				.dayflow-event-shell--cancelled {
 					opacity: 0.5;
@@ -640,7 +646,6 @@ export function DayFlowCalendarWrapper(props: DayFlowCalendarWrapperProps) {
 					gap: 4px;
 				}
 				.dayflow-event-card__time {
-					font-size: 8px;
 					line-height: 1;
 					font-weight: 700;
 					letter-spacing: 0.02em;
@@ -654,7 +659,6 @@ export function DayFlowCalendarWrapper(props: DayFlowCalendarWrapperProps) {
 				}
 				.dayflow-event-card__title {
 					margin-top: 2px;
-					font-size: 10px;
 					line-height: 1.05;
 					font-weight: 600;
 					letter-spacing: -0.01em;
@@ -662,15 +666,6 @@ export function DayFlowCalendarWrapper(props: DayFlowCalendarWrapperProps) {
 					overflow: hidden;
 					text-overflow: ellipsis;
 					text-transform: none;
-				}
-				.dayflow-event-card--compact .dayflow-event-card__time {
-					font-size: 7px;
-				}
-				.dayflow-event-card--compact .dayflow-event-card__title {
-					margin-top: 1px;
-					font-size: 10px;
-					line-height: 1.08;
-					font-weight: 500;
 				}
 			`}</style>
 		</div>
