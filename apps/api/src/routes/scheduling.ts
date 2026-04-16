@@ -344,29 +344,38 @@ async function handleUpsertBusinessHours(c: any) {
     const items = Array.isArray(body) ? body : [body];
     const normalizedItems = items.map(item => normalizeBusinessHourPayload(item));
 
-    await pool.query('DELETE FROM business_hours WHERE organization_id = $1', [user.organizationId]);
+    // Atomic transaction for business hours update
+    const queries = [
+      {
+        text: 'DELETE FROM business_hours WHERE organization_id = $1',
+        values: [user.organizationId]
+      }
+    ];
 
-    const results = [];
     for (const normalized of normalizedItems) {
-        const res = await pool.query(
-            `INSERT INTO business_hours (
-            organization_id, day_of_week, open_time, close_time, is_open,
-            break_start, break_end, updated_at
-            )
-            VALUES ($1, $2, $3, $4, $5, $6, $7, NOW())
-            RETURNING *`,
-            [
-            user.organizationId,
-            normalized.dayOfWeek,
-            normalized.openTime,
-            normalized.closeTime,
-            normalized.isOpen,
-            normalized.breakStart,
-            normalized.breakEnd,
-            ]
-        );
-        results.push(mapBusinessHourRow(res.rows[0]));
+      queries.push({
+        text: `INSERT INTO business_hours (
+          organization_id, day_of_week, open_time, close_time, is_open,
+          break_start, break_end, updated_at
+        )
+        VALUES ($1, $2, $3, $4, $5, $6, $7, NOW())`,
+        values: [
+          user.organizationId,
+          normalized.dayOfWeek,
+          normalized.openTime,
+          normalized.closeTime,
+          normalized.isOpen,
+          normalized.breakStart,
+          normalized.breakEnd,
+        ]
+      });
     }
+
+    await pool.transaction(queries);
+
+    // Fetch updated results to return
+    const res = await pool.query('SELECT * FROM business_hours WHERE organization_id = $1 ORDER BY day_of_week ASC', [user.organizationId]);
+    const results = res.rows.map(mapBusinessHourRow);
 
     // Clear cache
     const d1 = c.env.EDGE_CACHE || c.env.DB;
@@ -389,11 +398,6 @@ async function handleUpsertCancellationRules(c: any) {
   try {
     const body = await c.req.json();
     const normalized = normalizeCancellationRulePayload(body);
-    const existing = await pool.query(
-      'SELECT id FROM cancellation_rules WHERE organization_id = $1 LIMIT 1',
-      [user.organizationId]
-    );
-
     const params = [
       normalized.minHoursBefore,
       normalized.allowPatientCancellation,
@@ -403,35 +407,27 @@ async function handleUpsertCancellationRules(c: any) {
       user.organizationId,
     ];
 
-    let res;
-    if (existing.rows[0]?.id) {
-      res = await pool.query(
-        `UPDATE cancellation_rules
-         SET min_hours_notice = $1,
-             allow_reschedule = $2,
-             cancellation_fee = $5,
-             min_hours_before = $1,
-             allow_patient_cancellation = $2,
-             max_cancellations_month = $3,
-             charge_late_cancellation = $4,
-             late_cancellation_fee = $5,
-             updated_at = NOW()
-         WHERE organization_id = $6
-         RETURNING *`,
-        params
-      );
-    } else {
-      res = await pool.query(
-        `INSERT INTO cancellation_rules (
-          min_hours_notice, allow_reschedule, cancellation_fee,
-          min_hours_before, allow_patient_cancellation, max_cancellations_month,
-          charge_late_cancellation, late_cancellation_fee, organization_id, updated_at
-        )
-         VALUES ($1, $2, $5, $1, $2, $3, $4, $5, $6, NOW())
-         RETURNING *`,
-        params
-      );
-    }
+    const res = await pool.query(
+      `INSERT INTO cancellation_rules (
+        min_hours_notice, allow_reschedule, cancellation_fee,
+        min_hours_before, allow_patient_cancellation, max_cancellations_month,
+        charge_late_cancellation, late_cancellation_fee, organization_id, updated_at
+      )
+      VALUES ($1, $2, $5, $1, $2, $3, $4, $5, $6, NOW())
+      ON CONFLICT (organization_id) 
+      DO UPDATE SET
+        min_hours_notice = EXCLUDED.min_hours_notice,
+        allow_reschedule = EXCLUDED.allow_reschedule,
+        cancellation_fee = EXCLUDED.cancellation_fee,
+        min_hours_before = EXCLUDED.min_hours_before,
+        allow_patient_cancellation = EXCLUDED.allow_patient_cancellation,
+        max_cancellations_month = EXCLUDED.max_cancellations_month,
+        charge_late_cancellation = EXCLUDED.charge_late_cancellation,
+        late_cancellation_fee = EXCLUDED.late_cancellation_fee,
+        updated_at = EXCLUDED.updated_at
+      RETURNING *`,
+      params
+    );
 
     return c.json({ data: mapCancellationRuleRow(res.rows[0]) });
   } catch (error: any) {
@@ -446,11 +442,6 @@ async function handleUpsertNotificationSettings(c: any) {
   try {
     const body = await c.req.json();
     const normalized = normalizeNotificationSettingsPayload(body);
-    const existing = await pool.query(
-      'SELECT id FROM scheduling_notification_settings WHERE organization_id = $1 LIMIT 1',
-      [user.organizationId]
-    );
-
     const params = [
       normalized.enableReminders,
       normalized.reminderHoursBefore,
@@ -465,39 +456,30 @@ async function handleUpsertNotificationSettings(c: any) {
       user.organizationId,
     ];
 
-    let res;
-    if (existing.rows[0]?.id) {
-      res = await pool.query(
-        `UPDATE scheduling_notification_settings
-         SET enable_reminders = $1,
-             reminder_hours_before = $2,
-             enable_confirmation = $3,
-             send_confirmation_email = $4,
-             send_confirmation_whatsapp = $5,
-             send_reminder_24h = $6,
-             send_reminder_2h = $7,
-             send_cancellation_notice = $8,
-             custom_confirmation_message = $9,
-             custom_reminder_message = $10,
-             updated_at = NOW()
-         WHERE organization_id = $11
-         RETURNING *`,
-        params
-      );
-    } else {
-      res = await pool.query(
-        `INSERT INTO scheduling_notification_settings (
-          enable_reminders, reminder_hours_before, enable_confirmation,
-          send_confirmation_email, send_confirmation_whatsapp,
-          send_reminder_24h, send_reminder_2h, send_cancellation_notice,
-          custom_confirmation_message, custom_reminder_message,
-          organization_id, updated_at
-        )
-         VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, NOW())
-         RETURNING *`,
-        params
-      );
-    }
+    const res = await pool.query(
+      `INSERT INTO scheduling_notification_settings (
+        enable_reminders, reminder_hours_before, enable_confirmation,
+        send_confirmation_email, send_confirmation_whatsapp, send_reminder_24h,
+        send_reminder_2h, send_cancellation_notice, custom_confirmation_message,
+        custom_reminder_message, organization_id, updated_at
+      )
+      VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, NOW())
+      ON CONFLICT (organization_id)
+      DO UPDATE SET
+        enable_reminders = EXCLUDED.enable_reminders,
+        reminder_hours_before = EXCLUDED.reminder_hours_before,
+        enable_confirmation = EXCLUDED.enable_confirmation,
+        send_confirmation_email = EXCLUDED.send_confirmation_email,
+        send_confirmation_whatsapp = EXCLUDED.send_confirmation_whatsapp,
+        send_reminder_24h = EXCLUDED.send_reminder_24h,
+        send_reminder_2h = EXCLUDED.send_reminder_2h,
+        send_cancellation_notice = EXCLUDED.send_cancellation_notice,
+        custom_confirmation_message = EXCLUDED.custom_confirmation_message,
+        custom_reminder_message = EXCLUDED.custom_reminder_message,
+        updated_at = EXCLUDED.updated_at
+      RETURNING *`,
+      params
+    );
 
     return c.json({ data: mapNotificationSettingsRow(res.rows[0]) });
   } catch (error: any) {

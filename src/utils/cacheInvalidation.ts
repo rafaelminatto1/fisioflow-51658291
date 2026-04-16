@@ -20,6 +20,129 @@ import {
 } from "./periodCalculations";
 import { appointmentPeriodKeys } from "@/hooks/useAppointmentsByPeriod";
 import { fisioLogger as logger } from "@/lib/errors/logger";
+import { formatDateToLocalISO } from "@/utils/dateUtils";
+
+/**
+ * Invalidates all known appointment query keys to ensure consistency across the application.
+ * This unifies different key patterns used by different hooks:
+ * - ["appointments_v2"] (used by useAppointmentsData)
+ * - ["schedule-appointments"] (used by useSchedulePageData)
+ * - ["appointments", "period"] (used by useAppointmentsByPeriod)
+ * - ["appointments"] (legacy/direct)
+ *
+ * @param queryClient - TanStack Query client instance
+ * @param date - Optional date to prioritize specific period refetching
+ * @param organizationId - Optional organization ID for targeted invalidation
+ */
+export async function invalidateAppointmentsComprehensive(
+	queryClient: QueryClient,
+	date?: string | Date,
+	organizationId?: string,
+): Promise<void> {
+	logger.info("Performing comprehensive appointment cache invalidation", {
+		date,
+		organizationId,
+	});
+
+	const keysToInvalidate = [
+		["appointments_v2"],
+		["schedule-appointments"],
+		["appointments", "period"],
+		["appointments"],
+	];
+
+	// 1. Basic Invalidation for all known patterns
+	const invalidationPromises = keysToInvalidate.map((key) =>
+		queryClient.invalidateQueries({
+			queryKey: key,
+			exact: false,
+		}),
+	);
+
+	// 2. If a specific date is provided, prioritize invalidating affected periods
+	if (date) {
+		const dateStr = typeof date === "string" ? date : formatDateToLocalISO(date);
+		if (organizationId) {
+			invalidationPromises.push(
+				invalidateAffectedPeriods(dateStr, queryClient, organizationId),
+			);
+		}
+	}
+
+	await Promise.all(invalidationPromises);
+
+	// 3. Force refetch of active queries to ensure immediate UI update
+	await queryClient.refetchQueries({
+		type: "active",
+		predicate: (query) => {
+			const key = query.queryKey as any[];
+			return (
+				key[0] === "appointments_v2" ||
+				key[0] === "schedule-appointments" ||
+				(key[0] === "appointments" && key[1] === "period") ||
+				key[0] === "appointments"
+			);
+		},
+	});
+
+	logger.debug("Comprehensive invalidation completed");
+}
+
+/**
+ * Invalidates all known patient query keys to ensure consistency across the application.
+ * This unifies different key patterns used by different hooks:
+ * - ["patients"] (legacy/direct)
+ * - ["patients-list"] (paginated list)
+ * - ["patients-stats"] (patient statistics)
+ * - ["patient", patientId] (individual profile)
+ *
+ * @param queryClient - TanStack Query client instance
+ * @param patientId - Optional specific patient ID to invalidate
+ */
+export async function invalidatePatientsComprehensive(
+	queryClient: QueryClient,
+	patientId?: string,
+): Promise<void> {
+	logger.info("Performing comprehensive patient cache invalidation", {
+		patientId,
+	});
+
+	const keysToInvalidate = [
+		["patients"],
+		["patients-list"],
+		["patients-stats"],
+	];
+
+	if (patientId) {
+		keysToInvalidate.push(["patient", patientId]);
+	}
+
+	// Invalidate all related lists
+	const invalidationPromises = keysToInvalidate.map((key) =>
+		queryClient.invalidateQueries({
+			queryKey: key,
+			exact: false,
+		}),
+	);
+
+	await Promise.all(invalidationPromises);
+
+	// Force immediate refetch of active queries
+	await queryClient.refetchQueries({
+		type: "active",
+		predicate: (query) => {
+			const key = query.queryKey as any[];
+			return (
+				key[0] === "patients" ||
+				key[0] === "patients-list" ||
+				key[0] === "patients-stats" ||
+				(key[0] === "patient" && key[1] === patientId)
+			);
+		},
+	});
+
+	logger.debug("Comprehensive patient invalidation completed");
+}
 
 /**
  * Invalidates only the cache entries that contain the specified appointment date.

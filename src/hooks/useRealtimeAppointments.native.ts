@@ -25,7 +25,9 @@ export const useRealtimeAppointments = () => {
 				const next = res?.data?.last_updated_at ?? null;
 				if (next && next !== lastTimestampRef.current) {
 					lastTimestampRef.current = next;
-					queryClient.invalidateQueries({ queryKey: ["appointments_v2"] });
+					import("@/utils/cacheInvalidation").then(({ invalidateAppointmentsComprehensive }) => {
+						invalidateAppointmentsComprehensive(queryClient);
+					});
 					logger.info(
 						"[Realtime Native] Agenda synced",
 						{ timestamp: next },

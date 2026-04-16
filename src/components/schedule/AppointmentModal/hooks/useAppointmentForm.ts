@@ -30,6 +30,7 @@ import {
 } from "@/utils/appointmentErrors";
 import { checkAppointmentConflict } from "@/utils/appointmentValidation";
 import { useScheduleCapacity } from "@/hooks/useScheduleCapacity";
+import { invalidateAppointmentsComprehensive } from "@/utils/cacheInvalidation";
 import type { DuplicateConfig } from "../DuplicateAppointmentDialog";
 
 interface UseAppointmentFormProps {
@@ -288,7 +289,11 @@ export const useAppointmentForm = ({
 						ignoreCapacity,
 					});
 				}
-				queryClient.invalidateQueries({ queryKey: ["schedule-appointments"] });
+				await invalidateAppointmentsComprehensive(
+					queryClient,
+					appointmentData.appointment_date,
+					currentOrganization?.id,
+				);
 			} finally {
 				setIsCreating(false);
 			}
@@ -305,7 +310,11 @@ export const useAppointmentForm = ({
 					organizationId: currentOrganization?.id,
 					ignoreCapacity 
 				} as any);
-				queryClient.invalidateQueries({ queryKey: ["schedule-appointments"] });
+				await invalidateAppointmentsComprehensive(
+					queryClient,
+					appointmentData.appointment_date,
+					currentOrganization?.id,
+				);
 			} finally {
 				setIsUpdating(false);
 			}
@@ -317,7 +326,11 @@ export const useAppointmentForm = ({
 					organizationId: currentOrganization?.id,
 					ignoreCapacity 
 				});
-				queryClient.invalidateQueries({ queryKey: ["schedule-appointments"] });
+				await invalidateAppointmentsComprehensive(
+					queryClient,
+					appointmentData.appointment_date,
+					currentOrganization?.id,
+				);
 			} finally {
 				setIsCreating(false);
 			}
@@ -444,7 +457,11 @@ export const useAppointmentForm = ({
 		if (appointment?.id) {
 			try {
 				await appointmentsApi.cancel(appointment.id);
-				queryClient.invalidateQueries({ queryKey: ["appointments"] });
+				await invalidateAppointmentsComprehensive(
+					queryClient,
+					appointment.date,
+					currentOrganization?.id,
+				);
 			} catch (err) {
 				logger.error("Error deleting appointment", err, "useAppointmentForm");
 				toast({ variant: "destructive", description: "Erro ao excluir agendamento." });
@@ -482,7 +499,11 @@ export const useAppointmentForm = ({
 					await appointmentsApi.create(duplicateData);
 				}
 
-				queryClient.invalidateQueries({ queryKey: ["appointments"] });
+				await invalidateAppointmentsComprehensive(
+					queryClient,
+					config.dates[0],
+					currentOrganization?.id,
+				);
 				toast({
 					title: "Agendamentos duplicados",
 					description: `${config.dates.length} agendamento(s) duplicado(s) com sucesso.`,

@@ -877,7 +877,10 @@ export function useOfflineSync(config?: SyncConfig) {
 			) {
 				queryClient.invalidateQueries({ queryKey: ["patient-analytics"] });
 				queryClient.invalidateQueries({ queryKey: ["patients"] });
-				queryClient.invalidateQueries({ queryKey: ["appointments"] });
+				
+				import("@/utils/cacheInvalidation").then(({ invalidateAppointmentsComprehensive }) => {
+					invalidateAppointmentsComprehensive(queryClient);
+				});
 			}
 		});
 

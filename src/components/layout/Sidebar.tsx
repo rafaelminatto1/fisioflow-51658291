@@ -328,7 +328,7 @@ export function Sidebar() {
 			<div
 				className={cn(
 					"hidden md:flex bg-white/80 dark:bg-slate-950/80 backdrop-blur-2xl border-r border-border/40 transition-all duration-500 ease-in-out flex-col h-screen sticky top-0 shadow-premium-lg z-50",
-					collapsed ? "w-[84px]" : "w-[280px]",
+					collapsed ? "w-[84px]" : "w-[240px]",
 				)}
 			>
 				{/* Premium Header */}

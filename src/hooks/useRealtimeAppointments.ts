@@ -29,7 +29,9 @@ export const useRealtimeAppointments = (enabled = true) => {
 
 				if (next && next !== lastTimestampRef.current) {
 					lastTimestampRef.current = next;
-					queryClient.invalidateQueries({ queryKey: ["appointments_v2"] });
+					import("@/utils/cacheInvalidation").then(({ invalidateAppointmentsComprehensive }) => {
+						invalidateAppointmentsComprehensive(queryClient);
+					});
 					if (!initialRunRef.current) {
 						toast({
 							title: "Agenda atualizada",

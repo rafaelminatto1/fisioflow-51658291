@@ -22,6 +22,9 @@ const Integrations = lazy(
 const WikiWorkspacePage = lazy(
 	() => import(/* webpackChunkName: "wiki" */ "@/pages/Wiki"),
 );
+const KnowledgeArticleDetailPage = lazy(
+	() => import(/* webpackChunkName: "knowledge-article-detail" */ "@/pages/KnowledgeArticleDetail"),
+);
 const TemplateAnalyticsPage = lazy(
 	() =>
 		import(
@@ -227,6 +230,14 @@ export const enterpriseRoutes = (
 			element={
 				<ProtectedRoute>
 					<TemplateAnalyticsPage />
+				</ProtectedRoute>
+			}
+		/>
+		<Route
+			path="/wiki/article/:id"
+			element={
+				<ProtectedRoute>
+					<KnowledgeArticleDetailPage />
 				</ProtectedRoute>
 			}
 		/>

@@ -11,6 +11,7 @@ import { useMemo } from "react";
 import { toast } from "sonner";
 import { patientsApi } from "@/api/v2/patients";
 import { useAuth } from "@/hooks/useAuth";
+import { invalidatePatientsComprehensive } from "@/utils/cacheInvalidation";
 import {
 	calculatePatientStats,
 	classifyPatient,

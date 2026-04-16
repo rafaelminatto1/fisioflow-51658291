@@ -62,13 +62,11 @@ app.post('/', requireAuth, async (c) => {
       { name: 'Concluído', color: '#C6F6D5', order_index: 2 },
     ];
 
-    await Promise.all(
-      defaultColumns.map(col =>
-        db.query(
-          `INSERT INTO board_columns (board_id, name, color, order_index) VALUES ($1, $2, $3, $4)`,
-          [board.id, col.name, col.color, col.order_index]
-        )
-      )
+    await db.transaction(
+      defaultColumns.map(col => ({
+        text: `INSERT INTO board_columns (board_id, name, color, order_index) VALUES ($1, $2, $3, $4)`,
+        values: [board.id, col.name, col.color, col.order_index]
+      }))
     );
 
     const colsResult = await db.query(
@@ -293,15 +291,13 @@ app.post('/columns/reorder', requireAuth, async (c) => {
     const { updates } = await c.req.json() as { updates: Array<{ id: string; order_index: number }> };
     const db = await createPool(c.env);
 
-    await Promise.all(
-      updates.map(({ id, order_index }) =>
-        db.query(
-          `UPDATE board_columns bc SET order_index = $1
-           FROM boards b
-           WHERE bc.id = $2 AND bc.board_id = b.id AND b.organization_id = $3`,
-          [order_index, id, user.organizationId]
-        )
-      )
+    await db.transaction(
+      updates.map(({ id, order_index }) => ({
+        text: `UPDATE board_columns bc SET order_index = $1
+               FROM boards b
+               WHERE bc.id = $2 AND bc.board_id = b.id AND b.organization_id = $3`,
+        values: [order_index, id, user.organizationId]
+      }))
     );
     return c.json({ ok: true });
   } catch (error) {
@@ -453,15 +449,13 @@ app.post('/labels/reorder', requireAuth, async (c) => {
     const { updates } = await c.req.json() as { updates: Array<{ id: string; order_index: number }> };
     const db = await createPool(c.env);
 
-    await Promise.all(
-      updates.map(({ id, order_index }) =>
-        db.query(
-          `UPDATE board_labels bl SET order_index = $1
-           FROM boards b
-           WHERE bl.id = $2 AND bl.board_id = b.id AND b.organization_id = $3`,
-          [order_index, id, user.organizationId]
-        )
-      )
+    await db.transaction(
+      updates.map(({ id, order_index }) => ({
+        text: `UPDATE board_labels bl SET order_index = $1
+               FROM boards b
+               WHERE bl.id = $2 AND bl.board_id = b.id AND b.organization_id = $3`,
+        values: [order_index, id, user.organizationId]
+      }))
     );
     return c.json({ ok: true });
   } catch (error) {
@@ -731,17 +725,6 @@ app.post('/templates/financial', requireAuth, async (c) => {
     { name: 'Cancelado', color: '#6B7280', order_index: 5 },
   ];
 
-  await Promise.all(
-    columns.map((col) =>
-      db.query(
-        `INSERT INTO board_columns (board_id, organization_id, name, color, order_index, wip_limit)
-         VALUES ($1, $2, $3, $4, $5, $6)`,
-        [board.id, user.organizationId, col.name, col.color, col.order_index, col.wip_limit ?? null],
-      ),
-    ),
-  );
-
-  // Seed label presets
   const labels = [
     { name: 'Particular', color: '#3B82F6' },
     { name: 'Convênio', color: '#8B5CF6' },
@@ -749,15 +732,21 @@ app.post('/templates/financial', requireAuth, async (c) => {
     { name: 'Boleto', color: '#EAB308' },
     { name: 'Cartão', color: '#EC4899' },
   ];
-  await Promise.all(
-    labels.map((l, i) =>
-      db.query(
-        `INSERT INTO board_labels (board_id, organization_id, name, color, order_index)
-         VALUES ($1, $2, $3, $4, $5)`,
-        [board.id, user.organizationId, l.name, l.color, i],
-      ),
-    ),
-  );
+
+  const childrenQueries = [
+    ...columns.map((col) => ({
+      text: `INSERT INTO board_columns (board_id, organization_id, name, color, order_index, wip_limit)
+             VALUES ($1, $2, $3, $4, $5, $6)`,
+      values: [board.id, user.organizationId, col.name, col.color, col.order_index, col.wip_limit ?? null],
+    })),
+    ...labels.map((l, i) => ({
+      text: `INSERT INTO board_labels (board_id, organization_id, name, color, order_index)
+             VALUES ($1, $2, $3, $4, $5)`,
+      values: [board.id, user.organizationId, l.name, l.color, i],
+    }))
+  ];
+
+  await db.transaction(childrenQueries);
 
   return c.json({ data: board }, 201);
 });
@@ -784,17 +773,6 @@ app.post('/templates/goals', requireAuth, async (c) => {
     { name: 'Encerrado', color: '#6B7280', order_index: 5 },
   ];
 
-  await Promise.all(
-    columns.map((col) =>
-      db.query(
-        `INSERT INTO board_columns (board_id, organization_id, name, color, order_index, wip_limit)
-         VALUES ($1, $2, $3, $4, $5, $6)`,
-        [board.id, user.organizationId, col.name, col.color, col.order_index, null],
-      ),
-    ),
-  );
-
-  // Seed label presets for body regions/types
   const labels = [
     { name: 'Coluna', color: '#EF4444' },
     { name: 'MMII', color: '#3B82F6' },
@@ -803,33 +781,40 @@ app.post('/templates/goals', requireAuth, async (c) => {
     { name: 'Pós-cirúrgico', color: '#F97316' },
     { name: 'Pediátrico', color: '#EC4899' },
   ];
-  await Promise.all(
-    labels.map((l, i) =>
-      db.query(
-        `INSERT INTO board_labels (board_id, organization_id, name, color, order_index)
-         VALUES ($1, $2, $3, $4, $5)`,
-        [board.id, user.organizationId, l.name, l.color, i],
-      ),
-    ),
-  );
 
-  // Seed checklist template for patient goal planning
-  await db.query(
-    `INSERT INTO board_checklist_templates (board_id, organization_id, name, description, items, category, created_by)
-     VALUES ($1, $2, 'Planejamento de Meta', 'Checklist padrão para definição de objetivos funcionais', $3, 'fisioterapia', $4)`,
-    [
-      board.id,
-      user.organizationId,
-      JSON.stringify([
-        { text: 'Avaliar linha de base funcional (escala adequada)' },
-        { text: 'Definir meta SMART com o paciente' },
-        { text: 'Alinhar expectativas com familiar/cuidador' },
-        { text: 'Estabelecer prazo estimado de reavaliação' },
-        { text: 'Documentar na evolução SOAP' },
-      ]),
-      user.uid,
-    ],
-  );
+  const childrenQueries = [
+    ...columns.map((col) => ({
+      text: `INSERT INTO board_columns (board_id, organization_id, name, color, order_index, wip_limit)
+             VALUES ($1, $2, $3, $4, $5, $6)`,
+      values: [board.id, user.organizationId, col.name, col.color, col.order_index, null],
+    })),
+    ...labels.map((l, i) => ({
+      text: `INSERT INTO board_labels (board_id, organization_id, name, color, order_index)
+             VALUES ($1, $2, $3, $4, $5)`,
+      values: [board.id, user.organizationId, l.name, l.color, i],
+    })),
+    {
+      text: `INSERT INTO board_checklist_templates (board_id, organization_id, name, description, items, category, created_by)
+             VALUES ($1, $2, $3, $4, $5, $6, $7)`,
+      values: [
+        board.id,
+        user.organizationId,
+        'Planejamento de Meta',
+        'Checklist padrão para definição de objetivos funcionais',
+        JSON.stringify([
+          { text: 'Avaliar linha de base funcional (escala adequada)' },
+          { text: 'Definir meta SMART com o paciente' },
+          { text: 'Alinhar expectativas com familiar/cuidador' },
+          { text: 'Estabelecer prazo estimado de reavaliação' },
+          { text: 'Documentar na evolução SOAP' },
+        ]),
+        'fisioterapia',
+        user.uid,
+      ]
+    }
+  ];
+
+  await db.transaction(childrenQueries);
 
   return c.json({ data: board }, 201);
 });

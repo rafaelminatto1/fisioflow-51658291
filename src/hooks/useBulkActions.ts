@@ -90,7 +90,9 @@ export function useBulkActions() {
 				});
 			}
 
-			queryClient.invalidateQueries({ queryKey: ["appointments"] });
+			import("@/utils/cacheInvalidation").then(({ invalidateAppointmentsComprehensive }) => {
+				invalidateAppointmentsComprehensive(queryClient);
+			});
 			clearSelection();
 			setIsSelectionMode(false);
 		} catch (error) {
@@ -146,10 +148,13 @@ export function useBulkActions() {
 					});
 				}
 
-				queryClient.invalidateQueries({ queryKey: ["appointments"] });
+				import("@/utils/cacheInvalidation").then(({ invalidateAppointmentsComprehensive }) => {
+					invalidateAppointmentsComprehensive(queryClient);
+				});
 				clearSelection();
 				setIsSelectionMode(false);
-			} catch (error) {
+				} catch (error) {
+
 				logger.error(
 					"Erro ao atualizar status em massa",
 					error,

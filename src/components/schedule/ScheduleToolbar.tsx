@@ -162,6 +162,7 @@ export const ScheduleToolbar: React.FC<ScheduleToolbarProps> = ({
 						onChange={(date) => date && onDateChange(date)}
 						className="h-9 px-3 border-none bg-transparent hover:bg-slate-50 dark:hover:bg-slate-900 font-bold text-sm tracking-tight min-w-[160px]"
 						placeholder={formattedDateRange}
+						enableManualInput={false}
 					/>
 				</div>
 
@@ -280,6 +281,7 @@ export const ScheduleToolbar: React.FC<ScheduleToolbarProps> = ({
 						onChange={(date) => date && onDateChange(date)}
 						className="h-9 min-w-[120px] border-none bg-transparent font-black text-sm px-1"
 						placeholder={format(currentDate, "MMM yyyy", { locale: ptBR })}
+						enableManualInput={false}
 					/>
 
 					<Button

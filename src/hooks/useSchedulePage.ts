@@ -360,8 +360,8 @@ export function useSchedulePageData(
 		isLoading,
 		error: appointmentsError,
 		refetch: () => {
-			queryClient.invalidateQueries({
-				queryKey: ["schedule-appointments"],
+			import("@/utils/cacheInvalidation").then(({ invalidateAppointmentsComprehensive }) => {
+				invalidateAppointmentsComprehensive(queryClient, date, authOrgId || "");
 			});
 		},
 	};
