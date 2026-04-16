@@ -9,29 +9,82 @@ yarn.lock
 package-lock.json
 npm-shrinkwrap.json
 
-# Ignorar pasta de UI do web para monorepo
+# --- Outras apps do monorepo (não usadas no build EAS de uma app específica) ---
+apps/web/
+apps/api/
+apps/patient-app/
+apps/jules-bot/
+apps/vinext-poc/
+apps/mobile-ios/
+apps/vinext/
+
+# --- Pacotes e UI ---
 packages/ui/dist
 packages/ui/node_modules
 packages/ui/.next
+packages/jules/
 
-# Ignorar arquivos temporários
+# --- Artefatos de teste e logs ---
+e2e/
+playwright/
+playwright-profile/
+playwright-profile-auto/
+playwright-report/
+test-results/
+coverage/
+testsprite_tests/
+*.log
+tail.log
+
+# --- Builds e temporários ---
+.expo
+dist
+build
+.turbo
 .vscode
 .idea
 *.swp
 *.swo
 *~
-
-# Ignorar builds locais
-.expo
-dist
-build
 *.tgz
 *.ipa
 *.apk
 
-# Ignorar testes e docs
-__tests__
-*.test.ts
-*.test.tsx
-*.spec.ts
-*.spec.tsx
+# --- Documentação e assets pesados ---
+docs/
+docs2026/
+logo/
+homebrew/
+temp-avif-conversion/
+temp-webp-conversion/
+all_exercises.json
+all_images.txt
+used_images.txt
+
+# --- Cloudflare / Backend ---
+cloudflare-worker/
+workers/
+functions/
+drizzle/
+schemas/
+.neon/
+.genkit/
+
+# --- Scripts e ferramentas ---
+scripts/
+scratch/
+homebrew/
+.opencode/
+.gemini/
+.claude/
+.cursor/
+.trae/
+.jules/
+.kiro/
+mcp.json
+.mcp.json
+skills-lock.json
+opencode.json
+biome.json
+turbo.json
+tsconfig.*.tsbuildinfo
