@@ -160,7 +160,7 @@ async function getOverlappingAppointments(
       FROM appointments
       WHERE organization_id = ${safeOrgId}::uuid
         AND date = ${date}::date
-        AND status NOT IN ('cancelled', 'no_show', 'rescheduled')
+        AND status NOT IN ('cancelado', 'faltou', 'faltou_com_aviso', 'faltou_sem_aviso', 'remarcar')
         AND deleted_at IS NULL
         AND start_time < ${endTime}::time
         AND end_time > ${startTime}::time
