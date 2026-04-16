@@ -289,6 +289,7 @@ export const AppointmentQuickEditModal: React.FC<
 				time: formData.appointment_time,
 				duration: formData.duration,
 				excludeId: appointment?.id,
+				therapistId: formData.therapist_id,
 				appointments: appointments,
 			});
 

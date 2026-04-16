@@ -131,7 +131,7 @@ async function storeRawEvent(
 		const wamid = (body as any).entry?.[0]?.changes?.[0]?.value?.messages?.[0]?.id 
 		           ?? (body as any).entry?.[0]?.changes?.[0]?.value?.statuses?.[0]?.id
 		           ?? `ts_${Date.now()}`;
-		const idempotencyKey = `evt_${entryId}_${wamid}_${Math.random().toString(36).substring(7)}`;
+		const idempotencyKey = `evt_${entryId}_${wamid}_${crypto.randomUUID().substring(0, 8)}`;
 
 		await pool.query(
 			`INSERT INTO wa_raw_events (organization_id, raw_payload, idempotency_key, created_at)
