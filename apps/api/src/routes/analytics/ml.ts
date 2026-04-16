@@ -1,5 +1,5 @@
 import { requireAuth } from '../../lib/auth';
-import { createPool } from '../../lib/db';
+import { createPool, getRawSql, type DbRow } from "../../lib/db";
 import { determineOutcomeCategory, getAgeGroup, hashPatientId, roundTo } from '../mlHelpers';
 import { parseDate, type AnalyticsRouteApp } from './shared';
 
@@ -29,7 +29,13 @@ export const registerMlAnalyticsRoutes = (app: AnalyticsRouteApp) => {
     const pool = await createPool(c.env);
     const salt = c.env.ML_SALT ?? c.env.VITE_ML_SALT ?? 'fisioflow-ml-salt';
 
-    const patientRes = await pool.query(
+    interface PatientRow extends DbRow {
+      birth_date: string | Date | null;
+      gender: string | null;
+      created_at: string | Date | null;
+    }
+
+    const patientRes = await pool.query<PatientRow>(
       `
         SELECT birth_date, gender, created_at
         FROM patients
@@ -43,7 +49,16 @@ export const registerMlAnalyticsRoutes = (app: AnalyticsRouteApp) => {
     }
 
     const patient = patientRes.rows[0];
-    const sessionsRes = await pool.query(
+    interface MetricRow extends DbRow {
+      pain_level_before: number | null;
+      pain_level_after: number | null;
+      functional_score_before: number | null;
+      functional_score_after: number | null;
+      patient_satisfaction: number | null;
+      session_date: string | Date | null;
+    }
+
+    const sessionsRes = await pool.query<MetricRow>(
       `
         SELECT pain_level_before, pain_level_after, functional_score_before, functional_score_after,
                patient_satisfaction, session_date
