@@ -264,6 +264,9 @@ export const physioDictionary: PhysioDictionaryEntry[] = [
 		aliases_pt: ['agachar'],
 		aliases_en: ['squats'],
 		category: 'exercise',
+		image_url: '/src/assets/images/exercises/squat.png',
+		description_pt: 'Exercício multiarticular de membros inferiores. Foco em manter a coluna neutra, iniciar com o quadril (hip hinge) e garantir o alinhamento do joelho com a ponta dos pés. Essencial para força funcional e mobilidade de quadril.',
+		description_en: 'Multi-joint lower limb exercise. Focus on maintaining a neutral spine, initiating with the hip hinge, and ensuring knee alignment with the toes. Essential for functional strength and hip mobility.',
 	},
 	{
 		id: 'exe_deadlift',
@@ -272,6 +275,9 @@ export const physioDictionary: PhysioDictionaryEntry[] = [
 		aliases_pt: ['terra'],
 		aliases_en: ['deadlifts'],
 		category: 'exercise',
+		image_url: '/src/assets/images/exercises/deadlift.png',
+		description_pt: 'Exercício fundamental de cadeia posterior. Requer articulação do quadril estável, costas planas e trajetória da barra próxima às canelas. Ativa glúteos, isquiotibiais e eretores da espinha.',
+		description_en: 'Fundamental posterior chain exercise. Requires stable hip hinging, a flat back, and bar path close to the shins. Activates glutes, hamstrings, and erector spinae.',
 	},
 	{
 		id: 'exe_bridge',
@@ -280,6 +286,9 @@ export const physioDictionary: PhysioDictionaryEntry[] = [
 		aliases_pt: ['ponte glútea', 'elevação pélvica'],
 		aliases_en: ['glute bridge', 'pelvic bridge'],
 		category: 'exercise',
+		image_url: '/src/assets/images/exercises/bridge.png',
+		description_pt: 'Excelente para ativação isolada de glúteos e estabilidade pélvica. O paciente deve elevar a pelve mantendo os pés firmes no chão, evitando a hiperestensão lombar.',
+		description_en: 'Excellent for isolated glute activation and pelvic stability. The patient should elevate the pelvis while keeping feet firm on the floor, avoiding lumbar hyperextension.',
 	},
 	{
 		id: 'exe_plank',
@@ -288,6 +297,9 @@ export const physioDictionary: PhysioDictionaryEntry[] = [
 		aliases_pt: ['prancha abdominal'],
 		aliases_en: ['front plank', 'plank hold'],
 		category: 'exercise',
+		image_url: '/src/assets/images/exercises/plank.png',
+		description_pt: 'Exercício de estabilidade isométrica do core. Requer alinhamento da cabeça aos calcanhares, estabilização escapular e ativação do transverso do abdome. Essencial para controle lombopélvico.',
+		description_en: 'Isometric core stability exercise. Requires alignment from head to heels, scapular stabilization, and transverse abdominis activation. Essential for lumbopelvic control.',
 	},
 	{
 		id: 'exe_lunge',
@@ -296,7 +308,12 @@ export const physioDictionary: PhysioDictionaryEntry[] = [
 		aliases_pt: ['passada', 'afundo'],
 		aliases_en: ['lunges', 'split squat'],
 		category: 'exercise',
-	},
+		image_url: '/src/assets/images/exercises/lunge.png',
+		description_pt: 'Exercício de base instável para força e equilíbrio. Manter ângulos de 90° em ambos os joelhos, tronco ereto e base estável. Foco em quadríceps e glúteos.',
+		description_en: 'Unstable base exercise for strength and balance. Maintain 90-degree angles in both knees, an upright torso, and a stable base. Focus on quadriceps and glutes.',
+	}
+,
+
 
 	// ==========================================
 	// MOVIMENTOS
