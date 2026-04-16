@@ -2,6 +2,7 @@ import { neon, type NeonQueryFunction } from "@neondatabase/serverless";
 import { drizzle as drizzleHttp } from "drizzle-orm/neon-http";
 import { drizzle as drizzlePg } from "drizzle-orm/node-postgres";
 import { Pool } from "pg";
+import { type PgDatabase } from "drizzle-orm/pg-core";
 import * as schema from "@fisioflow/db";
 import type { Env } from "../types/env";
 import {
@@ -12,20 +13,19 @@ import { AsyncLocalStorage } from "node:async_hooks";
 
 const rlsContext = new AsyncLocalStorage<string>();
 
-export type DbRow = Record<string, any>;
+export type DbRow = any;
 
 export interface DbQueryResult<Row extends DbRow = DbRow> {
 	rows: Row[];
-	rowCount?: number;
-	fields?: unknown[];
-	command?: string;
-	[key: string]: unknown;
+	rowCount: number | null;
+	fields: unknown[];
+	command: string;
 }
 
-export type DbQuery = <Row extends DbRow = DbRow>(
-	text: string,
-	params?: unknown[],
-) => Promise<DbQueryResult<Row>>;
+export type DbQuery = {
+	<Row extends DbRow = DbRow>(text: string, params?: unknown[]): Promise<DbQueryResult<Row>>;
+	<Row extends DbRow = DbRow>(strings: TemplateStringsArray, ...values: any[]): Promise<DbQueryResult<Row>>;
+};
 
 /**
  * Interface unificada para o Pool, compatível com pg e neon-http (emulado)
@@ -104,22 +104,28 @@ export async function queryWithCache<T>(
 }
 
 /**
+ * Tipo unificado para o banco de dados FisioFlow, suportando drivers HTTP e TCP.
+ */
+export type FisioDb = PgDatabase<any, typeof schema>;
+
+/**
  * Cria uma instância do Drizzle configurada para o ambiente atual.
  */
-export function createDb(env: Env) {
+export function createDb(env: Env): FisioDb {
 	const url = getUrl(env);
 	const orgId = getOrgContext();
 
 	if (isTcpConnection(env)) {
 		const pool = new Pool({ connectionString: url });
-		return drizzlePg(pool, { schema });
+		return drizzlePg(pool, { schema }) as any; // Cast necessário para união de drivers
 	}
 
 	const sql = neon(url);
 	if (orgId) {
-		return drizzleHttp(wrapSqlWithRls(sql, orgId) as any, { schema });
+		const rlsSql = wrapSqlWithRls(sql, orgId);
+		return drizzleHttp(rlsSql as any, { schema }) as any;
 	}
-	return drizzleHttp(sql, { schema });
+	return drizzleHttp(sql, { schema }) as any;
 }
 
 function wrapSqlWithRls(
@@ -177,20 +183,42 @@ export function createPool(
 	if (isTcpConnection(env)) {
 		const pool = new Pool({ connectionString: url });
 		
-		const queryProxy: DbQuery = async (text, params) => {
+		const queryProxy = async <Row extends DbRow = any>(
+			textOrStrings: string | TemplateStringsArray,
+			...paramsOrValues: any[]
+		): Promise<DbQueryResult<Row>> => {
+			let text = "";
+			let params: any[] = [];
+
+			if (typeof textOrStrings === "string") {
+				text = textOrStrings;
+				params = paramsOrValues[0] ?? [];
+			} else {
+				text = textOrStrings[0];
+				for (let i = 0; i < paramsOrValues.length; i++) {
+					text += `$${i + 1}${textOrStrings[i + 1]}`;
+					params.push(paramsOrValues[i]);
+				}
+			}
+
 			const client = await pool.connect();
 			try {
 				if (orgId) {
 					await client.query(`SELECT set_config('app.org_id', $1, true)`, [orgId]);
 				}
 				const res = await client.query(text, params);
-				return res as DbQueryResult;
+				return {
+					rows: res.rows as any[],
+					rowCount: res.rowCount,
+					fields: res.fields as any[],
+					command: res.command,
+				} as DbQueryResult<Row>;
 			} finally {
 				client.release();
 			}
 		};
 
-		const wrappedQuery = wrapQueryWithTimeout(queryProxy, defaultTimeout);
+		const wrappedQuery = wrapQueryWithTimeout(queryProxy as any, defaultTimeout);
 		
 		return {
 			query: wrappedQuery,
@@ -200,42 +228,103 @@ export function createPool(
 
 	// Fallback HTTP (Neon)
 	const sql = neon(url, { fullResults: true });
-	
-	const queryProxy: DbQuery = async (text, params) => {
-		if (orgId) {
-			const results = await (sql as any).transaction([
-				sql`SELECT set_config('app.org_id', ${orgId}::text, true)`,
-				sql.query(text, params),
-			]);
-			return results[1] as DbQueryResult;
-		}
-		return (await sql.query(text, params)) as DbQueryResult;
-	};
+		const queryProxy = async <Row extends DbRow = DbRow>(
+			text: string,
+			params?: unknown[],
+		): Promise<DbQueryResult<Row>> => {
+			const orgId = getOrgContext();
+			if (orgId) {
+				const results = await Promise.all([
+					sql`SELECT set_config('app.org_id', ${orgId}::text, true)`,
+					sql.query(text, params),
+				]);
+				return results[1] as DbQueryResult<Row>;
+			}
+			const res = await sql.query(text, params);
+			return {
+				rows: res.rows as any[],
+				rowCount: res.rowCount ?? null,
+				fields: res.fields as any[],
+				command: res.command ?? "SELECT",
+			} as DbQueryResult<Row>;
+		};
 
 	const wrappedQuery = wrapQueryWithTimeout(queryProxy, defaultTimeout);
 
 	return {
 		query: wrappedQuery,
-		end: async () => {},
-	};
+		end: async () => {
+			if (isTcpConnection(env)) {
+				const pool = await (env.HYPERDRIVE as any)?.connect() || new Pool({ connectionString: getUrl(env) });
+				await pool.end();
+			}
+		},
+	} as DbPool;
 }
 
-export function getRawSql(env: Env) {
+export function getRawSql(env: Env): DbQuery {
 	const url = getUrl(env);
-	if (isTcpConnection(env)) {
-		return new Pool({ connectionString: url });
-	}
-	return neon(url);
+	const orgId = getOrgContext();
+
+	const processQuery = async <Row extends DbRow = DbRow>(
+		textOrStrings: string | TemplateStringsArray,
+		...paramsOrValues: any[]
+	): Promise<DbQueryResult<Row>> => {
+		let text = "";
+		let params: any[] = [];
+
+		if (typeof textOrStrings === "string") {
+			text = textOrStrings;
+			params = paramsOrValues[0] ?? [];
+		} else {
+			// Handle template literal
+			text = textOrStrings[0];
+			for (let i = 0; i < paramsOrValues.length; i++) {
+				text += `$${i + 1}${textOrStrings[i + 1]}`;
+				params.push(paramsOrValues[i]);
+			}
+		}
+
+		if (isTcpConnection(env)) {
+			const pool = new Pool({ connectionString: url });
+			const client = await pool.connect();
+			try {
+				if (orgId) {
+					await client.query(`SELECT set_config('app.org_id', $1, true)`, [orgId]);
+				}
+				const res = await client.query(text, params);
+				return res as DbQueryResult<Row>;
+			} finally {
+				client.release();
+				// Em produção/Cloudflare o pool deve ser persistente, mas 
+				// aqui estamos em modo compatível. Idealmente o pool estaria fora.
+			}
+		}
+
+		const sql = neon(url, { fullResults: true });
+		if (orgId) {
+			const results = await Promise.all([
+				(sql as any)`SELECT set_config('app.org_id', ${orgId}::text, true)`,
+				(sql as any).query(text, params),
+			]);
+			return results[1] as DbQueryResult<Row>;
+		}
+		const res = await (sql as any).query(text, params);
+		return {
+			rows: res.rows as any[],
+			rowCount: res.rowCount ?? null,
+			fields: res.fields as any[],
+			command: res.command ?? "SELECT",
+		} as DbQueryResult<Row>;
+	};
+
+	return processQuery as DbQuery;
 }
 
-export function createPoolForOrg(
-	env: Env,
-	organizationId: string,
-	defaultTimeout: number = DEFAULT_TIMEOUTS.query,
-): DbPool {
-	return runWithOrg(organizationId, () => createPool(env, defaultTimeout));
+export async function createPoolForOrg(env: Env, organizationId: string, defaultTimeout?: number) {
+	return await runWithOrg(organizationId, async () => createPool(env, defaultTimeout));
 }
 
-export function createDbForOrg(env: Env, organizationId: string) {
-	return runWithOrg(organizationId, () => createDb(env));
+export async function getDbForOrg(organizationId: string, env: Env) {
+	return await runWithOrg(organizationId, async () => createDb(env));
 }

@@ -21,7 +21,7 @@ app.post('/', requireAuth, async (c) => {
 
   try {
     const db = createDb(c.env);
-    const inserted = await seedExerciseTemplates(db);
+    const inserted = await seedExerciseTemplates(db as any);
 
     return c.json({ success: true, inserted });
   } catch (error) {

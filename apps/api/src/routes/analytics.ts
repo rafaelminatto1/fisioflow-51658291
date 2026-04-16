@@ -1,7 +1,7 @@
 import { Hono } from 'hono';
 import type { Env } from '../types/env';
 import { requireAuth, type AuthVariables } from '../lib/auth';
-import { createPool } from '../lib/db';
+import { createPool, type DbRow } from '../lib/db';
 import { registerPatientAnalyticsRoutes } from './analytics/patient';
 import { registerMlAnalyticsRoutes } from './analytics/ml';
 import { parseDate } from './analytics/shared';
@@ -235,7 +235,13 @@ app.get('/financial', requireAuth, async (c) => {
 
   const paymentsRes = { rows: [] as FinancialPaymentRow[] };
 
-  const sessionsRes = await pool.query(
+  interface SessionRow extends DbRow {
+    therapist_id: string | null;
+    status: string | null;
+    started_at: string | Date | null;
+  }
+
+  const sessionsRes = await pool.query<SessionRow>(
     `SELECT therapist_id, status, started_at
      FROM sessions
      WHERE organization_id = $1
