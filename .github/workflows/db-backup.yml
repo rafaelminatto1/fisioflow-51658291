@@ -27,8 +27,6 @@ jobs:
 
       - name: Install pnpm
         uses: pnpm/action-setup@v4
-        with:
-          version: ${{ env.PNPM_VERSION }}
 
       - name: Install dependencies (Backup Script Only)
         run: pnpm install --filter . --frozen-lockfile || pnpm install --filter .
