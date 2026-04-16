@@ -111,7 +111,9 @@ export function useOfflineSync(
 			clearQueue();
 
 			// Invalidate common queries to refetch fresh data
-			await queryClient.invalidateQueries({ queryKey: ["appointments"] });
+			import("@/utils/cacheInvalidation").then(({ invalidateAppointmentsComprehensive }) => {
+				invalidateAppointmentsComprehensive(queryClient);
+			});
 			await queryClient.invalidateQueries({ queryKey: ["patients"] });
 			await queryClient.invalidateQueries({ queryKey: ["eventos"] });
 

@@ -237,33 +237,76 @@ export function appointmentsOverlap(
 
 /**
  * Retorna índice e quantidade de appointments que se sobrepõem no tempo com o dado,
- * ordenados por horário de início. Usado para dimensionar cards lateralmente (lado a lado).
+ * agrupando-os em colunas para evitar sobreposição visual (um em cima do outro).
+ * Utiliza um algoritmo de clustering para garantir que o layout seja consistente.
  *
- * @param sameDayAppointments - Lista de agendamentos do mesmo dia (ex.: filtrados por data).
- * @param appointment - Agendamento para o qual obter a posição no grupo de sobreposição.
- * @returns `{ index, count }`: index é a posição (0-based) entre os que se sobrepõem; count é o total.
- *          count é sempre >= 1 para evitar divisão por zero nos consumidores.
- *
- * @example
- * // Dia com 08:30 (60 min) e 09:00 (60 min) → ambos se sobrepõem
- * getOverlapStackPosition(dayAppointments, apt0830) // { index: 0, count: 2 }
- * getOverlapStackPosition(dayAppointments, apt0900) // { index: 1, count: 2 }
+ * @param sameDayAppointments - Lista de agendamentos do mesmo dia.
+ * @param appointment - Agendamento para o qual obter a posição.
+ * @returns `{ index, count }`: index é a coluna (0-based); count é o total de colunas necessárias.
  */
 export function getOverlapStackPosition(
 	sameDayAppointments: AppointmentLike[],
 	appointment: AppointmentLike,
 ): { index: number; count: number } {
-	const overlapping = sameDayAppointments.filter((other) =>
-		appointmentsOverlap(appointment, other),
-	);
-	overlapping.sort(
-		(x, y) => appointmentTimeToMinutes(x) - appointmentTimeToMinutes(y),
-	);
-	const index = overlapping.findIndex((a) => a.id === appointment.id);
-	const count = Math.max(1, overlapping.length);
+	// Filtrar apenas agendamentos com horário válido
+	const validAppointments = sameDayAppointments.filter((a) => a.time);
+
+	// 1. Identificar o "cluster" (grupo de agendamentos que se sobrepõem direta ou indiretamente)
+	let cluster: AppointmentLike[] = [appointment];
+	let added = true;
+	while (added) {
+		added = false;
+		for (const apt of validAppointments) {
+			if (!cluster.find((c) => c.id === apt.id)) {
+				if (cluster.some((c) => appointmentsOverlap(apt, c))) {
+					cluster.push(apt);
+					added = true;
+				}
+			}
+		}
+	}
+
+	// 2. Ordenar o cluster por horário de início e depois por duração (mais longos primeiro)
+	cluster.sort((a, b) => {
+		const startA = appointmentTimeToMinutes(a);
+		const startB = appointmentTimeToMinutes(b);
+		if (startA !== startB) return startA - startB;
+
+		const durA = a.duration || DEFAULT_APPOINTMENT_DURATION_MINUTES;
+		const durB = b.duration || DEFAULT_APPOINTMENT_DURATION_MINUTES;
+		return durB - durA; // Mais longos primeiro
+	});
+
+	// 3. Atribuir cada agendamento a uma coluna onde não haja sobreposição
+	const columns: AppointmentLike[][] = [];
+	for (const apt of cluster) {
+		let placed = false;
+		for (let i = 0; i < columns.length; i++) {
+			const col = columns[i];
+			const lastInCol = col[col.length - 1];
+			if (!appointmentsOverlap(lastInCol, apt)) {
+				col.push(apt);
+				placed = true;
+				break;
+			}
+		}
+		if (!placed) {
+			columns.push([apt]);
+		}
+	}
+
+	// 4. Encontrar em qual coluna o nosso agendamento foi colocado
+	let colIndex = 0;
+	for (let i = 0; i < columns.length; i++) {
+		if (columns[i].find((a) => a.id === appointment.id)) {
+			colIndex = i;
+			break;
+		}
+	}
+
 	return {
-		index: index >= 0 ? index : 0,
-		count,
+		index: colIndex,
+		count: Math.max(1, columns.length),
 	};
 }
 
