@@ -39,7 +39,7 @@
   "devDependencies": {
     "@cloudflare/puppeteer": "^1.0.6",
     "@cloudflare/workers-types": "^4.20260410.1",
-    "@types/pg": "^8.11.10",
+    "@types/pg": "8.11.10",
     "drizzle-kit": "^0.31.10",
     "typescript": "^6.0.2",
     "vitest": "^4.0.18",
