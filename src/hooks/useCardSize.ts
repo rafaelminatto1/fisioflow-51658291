@@ -1,53 +1,21 @@
-import { useState } from "react";
+import { useState, useEffect, useCallback } from "react";
 import type { CardSize } from "@/types/agenda";
 import { DEFAULT_CARD_SIZE } from "@/lib/config/agenda";
-import { toast } from "@/hooks/use-toast";
 
 const CARD_SIZE_STORAGE_KEY = "agenda_card_size";
 const CARD_HEIGHT_KEY = "agenda_card_height_multiplier";
 const CARD_FONT_SCALE_KEY = "agenda_card_font_scale";
+const CARD_OPACITY_KEY = "agenda_card_opacity";
 
-const DEFAULT_HEIGHT_MULTIPLIER = 6; // 0-10 scale, 6 = ~84px/slot de 30min (~168px/hora)
-const DEFAULT_FONT_SCALE = 5; // 0-10 scale, 5 is default (100%)
+const DEFAULT_HEIGHT_SCALE = 6; // 0-10
+const DEFAULT_FONT_SCALE = 5; // 0-10
+const DEFAULT_OPACITY = 100; // 0-100
 
-/**
- * Convert 0-10 scale to height multiplier (0.5 to 2.0)
- */
-export function scaleToMultiplier(scale: number): number {
-	return 0.5 + (scale / 10) * 1.5; // 0 -> 0.5, 5 -> 1.0, 10 -> 2.0
-}
-
-/**
- * Convert 0-10 scale to font percentage (50% to 150%)
- */
-export function scaleToFontPercentage(scale: number): number {
-	return 50 + (scale / 10) * 100; // 0 -> 50%, 5 -> 100%, 10 -> 150%
-}
-
-/**
- * Convert height multiplier to 0-10 scale
- */
-export function multiplierToScale(multiplier: number): number {
-	return Math.round(((multiplier - 0.5) / 1.5) * 10);
-}
-
-/**
- * Hook for managing agenda card size preferences
- * Persists to localStorage
- */
 export function useCardSize() {
 	const [cardSize, setCardSizeState] = useState<CardSize>(() => {
 		if (typeof window !== "undefined") {
 			const saved = localStorage.getItem(CARD_SIZE_STORAGE_KEY);
-			if (
-				saved &&
-				(saved === "extra_small" ||
-					saved === "small" ||
-					saved === "medium" ||
-					saved === "large")
-			) {
-				return saved as CardSize;
-			}
+			return (saved as CardSize) || DEFAULT_CARD_SIZE;
 		}
 		return DEFAULT_CARD_SIZE;
 	});
@@ -55,81 +23,100 @@ export function useCardSize() {
 	const [heightScale, setHeightScaleState] = useState<number>(() => {
 		if (typeof window !== "undefined") {
 			const saved = localStorage.getItem(CARD_HEIGHT_KEY);
-			if (saved) {
-				const parsed = parseInt(saved, 10);
-				if (!isNaN(parsed) && parsed >= 0 && parsed <= 10) {
-					return parsed;
-				}
-			}
+			return saved ? parseInt(saved, 10) : DEFAULT_HEIGHT_SCALE;
 		}
-		return DEFAULT_HEIGHT_MULTIPLIER;
+		return DEFAULT_HEIGHT_SCALE;
 	});
 
 	const [fontScale, setFontScaleState] = useState<number>(() => {
 		if (typeof window !== "undefined") {
 			const saved = localStorage.getItem(CARD_FONT_SCALE_KEY);
-			if (saved) {
-				const parsed = parseInt(saved, 10);
-				if (!isNaN(parsed) && parsed >= 0 && parsed <= 10) {
-					return parsed;
-				}
-			}
+			return saved ? parseInt(saved, 10) : DEFAULT_FONT_SCALE;
 		}
 		return DEFAULT_FONT_SCALE;
 	});
 
-	const setCardSize = (size: CardSize) => {
+	const [opacity, setOpacityState] = useState<number>(() => {
+		if (typeof window !== "undefined") {
+			const saved = localStorage.getItem(CARD_OPACITY_KEY);
+			return saved ? parseInt(saved, 10) : DEFAULT_OPACITY;
+		}
+		return DEFAULT_OPACITY;
+	});
+
+	// Synchronize between tabs
+	useEffect(() => {
+		const handleStorageChange = (e: StorageEvent) => {
+			if (e.key === CARD_SIZE_STORAGE_KEY && e.newValue) {
+				setCardSizeState(e.newValue as CardSize);
+			}
+			if (e.key === CARD_HEIGHT_KEY && e.newValue) {
+				setHeightScaleState(parseInt(e.newValue, 10));
+			}
+			if (e.key === CARD_FONT_SCALE_KEY && e.newValue) {
+				setFontScaleState(parseInt(e.newValue, 10));
+			}
+			if (e.key === CARD_OPACITY_KEY && e.newValue) {
+				setOpacityState(parseInt(e.newValue, 10));
+			}
+		};
+
+		window.addEventListener("storage", handleStorageChange);
+		return () => window.removeEventListener("storage", handleStorageChange);
+	}, []);
+
+	const setCardSize = useCallback((size: CardSize) => {
 		setCardSizeState(size);
-		if (typeof window !== "undefined") {
-			localStorage.setItem(CARD_SIZE_STORAGE_KEY, size);
-		}
-	};
+		localStorage.setItem(CARD_SIZE_STORAGE_KEY, size);
+	}, []);
 
-	const setHeightScale = (scale: number) => {
-		if (scale < 0 || scale > 10) {
-			toast({
-				title: "Valor inválido",
-				description: "A altura deve estar entre 0 e 10",
-				variant: "destructive",
-			});
-			return;
-		}
-		setHeightScaleState(scale);
-		if (typeof window !== "undefined") {
-			localStorage.setItem(CARD_HEIGHT_KEY, scale.toString());
-		}
-	};
+	const setHeightScale = useCallback((scale: number) => {
+		const safe = Math.min(10, Math.max(0, scale));
+		setHeightScaleState(safe);
+		localStorage.setItem(CARD_HEIGHT_KEY, safe.toString());
+	}, []);
 
-	const setFontScale = (scale: number) => {
-		if (scale < 0 || scale > 10) {
-			toast({
-				title: "Valor inválido",
-				description: "O tamanho da fonte deve estar entre 0 e 10",
-				variant: "destructive",
-			});
-			return;
-		}
-		setFontScaleState(scale);
-		if (typeof window !== "undefined") {
-			localStorage.setItem(CARD_FONT_SCALE_KEY, scale.toString());
-		}
-	};
+	const setFontScale = useCallback((scale: number) => {
+		const safe = Math.min(10, Math.max(0, scale));
+		setFontScaleState(safe);
+		localStorage.setItem(CARD_FONT_SCALE_KEY, safe.toString());
+	}, []);
 
-	const resetToDefault = () => {
+	const setOpacity = useCallback((value: number) => {
+		const safe = Math.min(100, Math.max(0, value));
+		setOpacityState(safe);
+		localStorage.setItem(CARD_OPACITY_KEY, safe.toString());
+	}, []);
+
+	const resetToDefault = useCallback(() => {
 		setCardSize(DEFAULT_CARD_SIZE);
-		setHeightScale(DEFAULT_HEIGHT_MULTIPLIER);
+		setHeightScale(DEFAULT_HEIGHT_SCALE);
 		setFontScale(DEFAULT_FONT_SCALE);
-	};
+		setOpacity(DEFAULT_OPACITY);
+	}, [setCardSize, setHeightScale, setFontScale, setOpacity]);
+
+	// Computations for CSS variables
+	const fontPercentage = 80 + (fontScale / 10) * 70; // 80% to 150%
+	const heightMultiplier = 0.5 + (heightScale / 10) * 1.5; // 0.5x to 2.0x
+
+	const cssVariables = {
+		"--agenda-card-font-scale": `${fontPercentage}%`,
+		"--agenda-slot-height": `${Math.round(24 * heightMultiplier)}px`,
+		"--agenda-card-opacity": `${opacity / 100}`,
+	} as React.CSSProperties;
 
 	return {
 		cardSize,
 		setCardSize,
 		heightScale,
 		setHeightScale,
-		heightMultiplier: scaleToMultiplier(heightScale),
+		heightMultiplier,
 		fontScale,
 		setFontScale,
-		fontPercentage: scaleToFontPercentage(fontScale),
+		fontPercentage,
+		opacity,
+		setOpacity,
 		resetToDefault,
+		cssVariables,
 	};
 }

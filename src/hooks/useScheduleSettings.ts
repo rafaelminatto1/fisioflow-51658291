@@ -90,10 +90,10 @@ export function useScheduleSettings() {
 					id: String(hour.id),
 					day_of_week: Number(hour.day_of_week ?? 0),
 					is_open: hour.is_open !== false,
-					open_time: String(hour.open_time ?? "07:00"),
-					close_time: String(hour.close_time ?? "21:00"),
-					break_start: hour.break_start ?? undefined,
-					break_end: hour.break_end ?? undefined,
+					open_time: String(hour.open_time ?? "07:00").slice(0, 5),
+					close_time: String(hour.close_time ?? "21:00").slice(0, 5),
+					break_start: hour.break_start?.slice(0, 5) ?? undefined,
+					break_end: hour.break_end?.slice(0, 5) ?? undefined,
 				}))
 				.sort((a, b) => a.day_of_week - b.day_of_week) as BusinessHour[];
 		},

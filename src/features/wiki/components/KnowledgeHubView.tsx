@@ -16,6 +16,8 @@ import {
 	SelectValue,
 } from "@/components/ui/select";
 import { ClinicalImportIA } from "./ClinicalImportIA";
+import { KnowledgeActionBridge } from "./KnowledgeActionBridge";
+
 import {
 	ShieldCheck,
 	LayoutGrid,
@@ -208,7 +210,20 @@ function KnowledgeCard({
 								))}
 							</div>
 						</div>
+
+						{/* Action Bridge - Evidence to Action */}
+						<KnowledgeActionBridge 
+							article={item}
+							onActionSelect={(type, id) => {
+								if (type === 'test') {
+									toast.info(`Explorando técnica do teste: ${id}`);
+								} else {
+									toast.info(`Visualizando protocolo de exercício: ${id}`);
+								}
+							}}
+						/>
 					</div>
+
 
 					<div className="pt-3 border-t border-slate-100 dark:border-slate-800 mt-auto flex items-center justify-between">
 						<div className="flex flex-wrap gap-1">

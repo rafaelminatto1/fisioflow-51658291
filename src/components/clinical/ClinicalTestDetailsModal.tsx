@@ -29,6 +29,8 @@ import type { ClinicalTestCatalogRecord } from "@/data/clinicalTestsCatalog";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { fisioLogger as logger } from "@/lib/errors/logger";
 import { cn } from "@/lib/utils";
+import { Skeleton } from "@/components/ui/skeleton";
+import { diagnosticClusters } from "@/data/clinicalClusters";
 
 interface ClinicalTestDetailsModalProps {
 	test: ClinicalTestCatalogRecord | null;
@@ -37,6 +39,7 @@ interface ClinicalTestDetailsModalProps {
 	onEdit: (test: ClinicalTestCatalogRecord) => void;
 	onDelete: (test: ClinicalTestCatalogRecord) => void;
 	onAddToProtocol: (test: ClinicalTestCatalogRecord) => void;
+	onNavigateToTest?: (testId: string) => void;
 }
 
 const MediaPlaceholder = ({ label }: { label: string }) => (
@@ -57,9 +60,23 @@ export function ClinicalTestDetailsModal({
 	onEdit,
 	onDelete,
 	onAddToProtocol,
+	onNavigateToTest,
 }: ClinicalTestDetailsModalProps) {
 	const isMobile = useIsMobile();
 	const [previewImage, setPreviewImage] = useState<string | null>(null);
+	const [imageLoaded, setImageLoaded] = useState<Record<string, boolean>>({});
+
+	// Lógica de Clusters
+	const currentCluster = diagnosticClusters.find(
+		(c) => c.id === test?.cluster_id,
+	);
+	const relatedTestIds = (currentCluster?.tests || []).filter(
+		(id) => id !== test?.id,
+	);
+
+	const handleImageLoad = (url: string) => {
+		setImageLoaded((prev) => ({ ...prev, [url]: true }));
+	};
 
 	useEffect(() => {
 		if (!previewImage) return;
@@ -176,11 +193,18 @@ export function ClinicalTestDetailsModal({
 								className="group relative w-full cursor-zoom-in overflow-hidden rounded-3xl border border-slate-100 bg-slate-50 text-left shadow-sm"
 								aria-label={`Ampliar imagem do teste ${test.name}`}
 							>
+								{!imageLoaded[primaryImage] && (
+									<Skeleton className="absolute inset-0 h-full w-full rounded-3xl" />
+								)}
 								<div className="aspect-video">
 									<img
 										src={primaryImage}
 										alt={`Execução: ${test.name}`}
-										className="h-full w-full object-contain transition-transform duration-300 group-hover:scale-[1.02]"
+										onLoad={() => handleImageLoad(primaryImage)}
+										className={cn(
+											"h-full w-full object-contain transition-all duration-500 group-hover:scale-[1.02]",
+											!imageLoaded[primaryImage] ? "opacity-0" : "opacity-100",
+										)}
 									/>
 								</div>
 								<div className="pointer-events-none absolute inset-0 bg-black/0 transition-colors group-hover:bg-black/10" />
@@ -288,17 +312,91 @@ export function ClinicalTestDetailsModal({
 							</div>
 						) : null}
 
-						{test.sensitivity_specificity ? (
-							<div>
-								<h3 className="mb-2 flex items-center gap-2 text-[11px] font-bold uppercase tracking-[0.18em] text-slate-500">
+						{test.sensitivity_specificity || test.lr_positive ? (
+							<div className="rounded-3xl border border-slate-100 bg-white/50 p-5 shadow-sm backdrop-blur-sm">
+								<h3 className="mb-4 flex items-center gap-2 text-[11px] font-black uppercase tracking-[0.2em] text-slate-500">
 									<Info className="h-3.5 w-3.5" />
-									Sensibilidade e especificidade
+									Acurácia Diagnóstica
 								</h3>
-								<p className="rounded-2xl border border-slate-100 bg-white p-4 text-sm leading-relaxed text-slate-600">
-									{test.sensitivity_specificity}
-								</p>
+
+								<div className="grid grid-cols-2 gap-4">
+									{test.sensitivity_specificity && (
+										<div className="col-span-2 mb-2">
+											<p className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-1">
+												Evidência Geral
+											</p>
+											<p className="text-sm font-medium text-slate-700">
+												{test.sensitivity_specificity}
+											</p>
+										</div>
+									)}
+
+									{test.lr_positive && (
+										<div className="rounded-2xl bg-teal-50/50 p-3 border border-teal-100/50">
+											<p className="text-[10px] font-black text-teal-600 uppercase tracking-wider mb-1">
+												LR+
+											</p>
+											<p className="text-lg font-black text-teal-700">
+												{test.lr_positive}
+											</p>
+											<p className="text-[10px] text-teal-600/70 font-medium">
+												Likelihood Ratio Positivo
+											</p>
+										</div>
+									)}
+
+									{test.lr_negative && (
+										<div className="rounded-2xl bg-slate-50 p-3 border border-slate-100">
+											<p className="text-[10px] font-black text-slate-500 uppercase tracking-wider mb-1">
+												LR-
+											</p>
+											<p className="text-lg font-black text-slate-700">
+												{test.lr_negative}
+											</p>
+											<p className="text-[10px] text-slate-500/70 font-medium">
+												Likelihood Ratio Negativo
+											</p>
+										</div>
+									)}
+								</div>
+
+								{test.lr_positive && test.lr_positive > 5 && (
+									<div className="mt-4 flex items-center gap-2 rounded-xl bg-teal-500/10 p-3 text-[11px] font-bold text-teal-700">
+										<ThumbsUp className="h-3.5 w-3.5" />
+										Teste com forte poder confirmatório (LR+ &gt; 5)
+									</div>
+								)}
 							</div>
 						) : null}
+
+						{currentCluster && relatedTestIds.length > 0 && (
+							<div className="rounded-3xl border border-amber-100 bg-amber-50/30 p-5">
+								<h3 className="mb-3 flex items-center gap-2 text-[11px] font-black uppercase tracking-[0.2em] text-amber-600">
+									<Sparkles className="h-3.5 w-3.5" />
+									Refinar Diagnóstico (Cluster)
+								</h3>
+								<p className="mb-4 text-xs font-medium text-amber-800 leading-relaxed">
+									{currentCluster.interpretation}
+								</p>
+								<div className="space-y-2">
+									<p className="text-[10px] font-bold uppercase tracking-widest text-amber-500/70">
+										Testes Complementares:
+									</p>
+									<div className="flex flex-wrap gap-2">
+										{relatedTestIds.map((testId) => (
+											<button
+												key={testId}
+												type="button"
+												onClick={() => onNavigateToTest?.(testId)}
+												className="rounded-full bg-white px-3 py-1.5 text-[10px] font-bold text-amber-700 shadow-sm border border-amber-100 transition-all hover:scale-105 hover:bg-amber-100 active:scale-95"
+											>
+												{testId.replace("builtin-", "").replace(/-/g, " ")}
+											</button>
+										))}
+									</div>
+								</div>
+							</div>
+						)}
 
 						{test.reference ? (
 							<div>

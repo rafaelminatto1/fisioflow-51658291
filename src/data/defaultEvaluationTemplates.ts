@@ -505,6 +505,15 @@ export const builtinEvaluationTemplates: EvaluationTemplate[] = [
 				section: "O - Objetivo",
 			},
 			{
+				id: "soap-obj-clinical-selector",
+				label: "Vincular Testes do Catálogo",
+				tipo_campo: "clinical_test_selector",
+				description: "Selecione testes do catálogo para registrar resultados estruturados.",
+				ordem: 2.1,
+				obrigatorio: false,
+				section: "O - Objetivo",
+			},
+			{
 				id: uuidv4(),
 				label: "Avaliação: Diagnóstico Fisioterapêutico",
 				tipo_campo: "textarea",

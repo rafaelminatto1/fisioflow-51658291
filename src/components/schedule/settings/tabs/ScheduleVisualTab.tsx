@@ -1,18 +1,13 @@
 import type React from "react";
-import { CardSizeManager } from "@/components/schedule/settings/CardSizeManager";
+import { AgendaVisualConfiguration } from "@/components/schedule/settings/AgendaVisualConfiguration";
 import { StatusColorManager } from "@/components/schedule/settings/StatusColorManager";
 import { useCardSize } from "@/hooks/useCardSize";
-import { useStatusConfig } from "@/hooks/useStatusConfig";
 import { cn } from "@/lib/utils";
 import {
 	CheckCircle2,
-	Clock,
 	Eye,
-	Frame,
 	Palette,
 	Sparkles,
-	Type,
-	User,
 	Zap,
 	Monitor,
 } from "lucide-react";
@@ -25,7 +20,7 @@ interface ViewPreset {
 	name: string;
 	description: string;
 	icon: LucideIcon;
-	config: { cardSize: CardSize; heightScale: number };
+	config: { cardSize: CardSize; heightScale: number; opacity: number };
 }
 
 const PRESETS: ViewPreset[] = [
@@ -34,78 +29,39 @@ const PRESETS: ViewPreset[] = [
 		name: "Alta Produtividade",
 		description: "Slots compactos",
 		icon: Zap,
-		config: { cardSize: "extra_small", heightScale: 2 },
+		config: { cardSize: "extra_small", heightScale: 2, opacity: 100 },
 	},
 	{
 		id: "balanced",
 		name: "Equilíbrio",
 		description: "Info e espaço",
 		icon: Monitor,
-		config: { cardSize: "medium", heightScale: 5 },
+		config: { cardSize: "medium", heightScale: 5, opacity: 100 },
 	},
 	{
 		id: "comfortable",
 		name: "Confortável",
 		description: "Mais espaço",
 		icon: Eye,
-		config: { cardSize: "large", heightScale: 8 },
+		config: { cardSize: "large", heightScale: 8, opacity: 100 },
 	},
 	{
-		id: "accessibility",
-		name: "Acessibilidade",
-		description: "Máxima visibilidade",
-		icon: Type,
-		config: { cardSize: "large", heightScale: 10 },
+		id: "glass",
+		name: "Glassmorphism",
+		description: "Design moderno",
+		icon: Sparkles,
+		config: { cardSize: "medium", heightScale: 6, opacity: 60 },
 	},
 ];
 
-function CardPreviewInline() {
-	const { cardSize } = useCardSize();
-	const { getStatusConfig } = useStatusConfig();
-	const status = getStatusConfig("agendado");
-
-	const sizeClass =
-		cardSize === "extra_small"
-			? "text-[9px] p-1 gap-0.5"
-			: cardSize === "small"
-				? "text-[10px] p-1.5 gap-1"
-				: cardSize === "large"
-					? "text-sm p-3 gap-2"
-					: "text-xs p-2 gap-1.5";
-
-	return (
-		<div
-			className={cn("rounded-lg border-l-4 flex flex-col", sizeClass)}
-			style={{
-				backgroundColor: status?.bgColor || "#dbeafe",
-				borderLeftColor: status?.color || "#3b82f6",
-			}}
-		>
-			<div className="flex items-center gap-1">
-				<User className="h-3 w-3 shrink-0 opacity-60" />
-				<span className="font-semibold truncate">Maria Santos</span>
-			</div>
-			<span className="opacity-70 truncate">Fisioterapia</span>
-			<div className="flex items-center gap-1 opacity-70">
-				<Clock className="h-3 w-3 shrink-0" />
-				<span>14:30 - 15:30</span>
-			</div>
-		</div>
-	);
-}
-
 function PresetsRow() {
-	const { cardSize, setCardSize, heightScale, setHeightScale } = useCardSize();
+	const { cardSize, setCardSize, heightScale, setHeightScale, setOpacity } = useCardSize();
 	const [appliedPreset, setAppliedPreset] = useState<string | null>(null);
-
-	const currentPreset = PRESETS.find(
-		(p) =>
-			p.config.cardSize === cardSize && p.config.heightScale === heightScale,
-	);
 
 	const applyPreset = (preset: ViewPreset) => {
 		setCardSize(preset.config.cardSize);
 		setHeightScale(preset.config.heightScale);
+		setOpacity(preset.config.opacity);
 		setAppliedPreset(preset.id);
 		setTimeout(() => setAppliedPreset(null), 2000);
 	};
@@ -114,7 +70,7 @@ function PresetsRow() {
 		<div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
 			{PRESETS.map((preset) => {
 				const Icon = preset.icon;
-				const isActive = currentPreset?.id === preset.id;
+				const isActive = cardSize === preset.config.cardSize && heightScale === preset.config.heightScale;
 				const wasApplied = appliedPreset === preset.id;
 				return (
 					<button
@@ -187,48 +143,36 @@ export function ScheduleVisualTab() {
 		<div className="space-y-6">
 			{/* Header */}
 			<div>
-				<h2 className="text-base font-bold">Aparência</h2>
-				<p className="text-sm text-muted-foreground">
-					Personalize os cards e cores da agenda
+				<h2 className="text-base font-bold text-slate-900">Configuração Visual Pro Max</h2>
+				<p className="text-sm text-slate-500">
+					Personalize cada detalhe da experiência visual da sua agenda
 				</p>
 			</div>
 
 			{/* Presets rápidos */}
-			<div className="rounded-xl border bg-muted/10 p-4">
+			<div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
 				<SectionHeader
-					iconBg="bg-fuchsia-100 dark:bg-fuchsia-900/30"
+					iconBg="bg-fuchsia-50"
 					icon={
-						<Sparkles className="h-4 w-4 text-fuchsia-600 dark:text-fuchsia-400" />
+						<Sparkles className="h-4 w-4 text-fuchsia-600" />
 					}
-					title="Presets Rápidos"
-					description="Aplique uma configuração pronta com um clique"
+					title="Configurações Rápidas"
+					description="Aplique layouts otimizados instantaneamente"
 				/>
 				<PresetsRow />
 			</div>
 
-			{/* Cards e Layout + Preview lado a lado */}
-			<div className="rounded-xl border bg-muted/10 p-4">
-				<SectionHeader
-					iconBg="bg-sky-100 dark:bg-sky-900/30"
-					icon={<Frame className="h-4 w-4 text-sky-600 dark:text-sky-400" />}
-					title="Cards e Layout"
-					description="Tamanho, altura de slots e escala de fonte"
-				/>
-				<div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_180px]">
-					<CardSizeManager />
-					<div className="space-y-2">
-						<p className="text-xs font-medium text-muted-foreground">Preview</p>
-						<CardPreviewInline />
-					</div>
-				</div>
+			{/* Premium Layout Controls */}
+			<div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+				<AgendaVisualConfiguration />
 			</div>
 
 			{/* Cores de Status */}
-			<div className="rounded-xl border bg-muted/10 p-4">
+			<div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
 				<SectionHeader
-					iconBg="bg-pink-100 dark:bg-pink-900/30"
+					iconBg="bg-pink-50"
 					icon={
-						<Palette className="h-4 w-4 text-pink-600 dark:text-pink-400" />
+						<Palette className="h-4 w-4 text-pink-600" />
 					}
 					title="Cores de Status"
 					description="Personalize as cores por tipo de agendamento"

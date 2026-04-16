@@ -97,11 +97,9 @@ When auto-applying an agent, inform the user:
 
 ### 🌐 Language Handling
 
-When user's prompt is NOT in English:
-
-1. **Internally translate** for better comprehension
-2. **Respond in user's language** - match their communication
-3. **Code comments/variables** remain in English
+1. **Sempre responder em português** - independentemente do idioma do prompt do usuário.
+2. **Tradução interna**: Se o prompt não estiver em português, traduzir internamente para melhor compreensão.
+3. **Código e Variáveis**: Nomes de variáveis, comentários de código e logs devem permanecer em English (Padrão de Engenharia).
 
 ### 🧹 Clean Code (Global Mandatory)
 

@@ -395,12 +395,21 @@ export const useAppointmentForm = ({
 		const selectedTime = normalizedData.appointment_time;
 		const selectedDuration = normalizedData.duration || 60;
 
+		const isSameSlot =
+			appointment &&
+			normalizedData.appointment_date ===
+				(typeof appointment.date === "string"
+					? appointment.date
+					: format(appointment.date, "yyyy-MM-dd")) &&
+			normalizedData.appointment_time === normalizeTime(appointment.time) &&
+			normalizedData.duration === appointment.duration;
+
 		const freshConflictCheck = checkAppointmentConflict({
 			date: selectedDate,
 			time: selectedTime,
 			duration: selectedDuration,
 			excludeId: appointment?.id,
-			therapistId: effectiveTherapistId,
+			therapistId: normalizedData.therapist_id || effectiveTherapistId,
 			appointments: appointmentsRef.current,
 		});
 
@@ -411,7 +420,8 @@ export const useAppointmentForm = ({
 		);
 		const currentCount = freshConflictCheck.totalConflictCount || 0;
 
-		if (currentCount >= maxCapacity) {
+		// Solo abre el diálogo de capacidad si no es el mismo horario o si realmente hay un nuevo conflicto
+		if (!isSameSlot && currentCount >= maxCapacity) {
 			onOpenCapacityDialog(normalizedData, freshConflictCheck);
 			return;
 		}

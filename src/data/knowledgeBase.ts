@@ -29,6 +29,8 @@ export interface KnowledgeArticle {
 	observations: string[];
 	keyQuestions: string[];
 	summary?: string;
+	recommended_tests_ids?: string[]; // IDs do catálogo de testes clínicos
+	suggested_exercise_ids?: string[]; // IDs do dicionário de exercícios
 	metadata?: {
 		attachments?: Array<{
 			name: string;
@@ -107,6 +109,8 @@ export const knowledgeBase: KnowledgeArticle[] = [
 		],
 		observations: ["Usar como base para triagem e estratificacao de risco."],
 		keyQuestions: ["Quais intervencoes evitar em dor lombar nao especifica?"],
+		recommended_tests_ids: ["tst_slr"],
+		suggested_exercise_ids: ["exd-cat-cow", "exd-dead-bug", "exd-child-pose", "exd-mckenzie"],
 		metadata: {
 			attachments: [
 				{
@@ -136,6 +140,7 @@ export const knowledgeBase: KnowledgeArticle[] = [
 		],
 		observations: ["Alinhar progressao com tolerancia a carga e funcao."],
 		keyQuestions: ["Quais testes funcionais priorizar no retorno ao esporte?"],
+		suggested_exercise_ids: ["exd-agachamento-parede", "exd-step-down", "exd-clamshell", "exd-monster-walk"],
 		metadata: {
 			attachments: [
 				{

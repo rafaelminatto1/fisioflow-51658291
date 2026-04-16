@@ -28,7 +28,10 @@ import {
 	Lightbulb,
 	Image,
 	BookOpen,
+	Stethoscope,
+	Dumbbell,
 } from "lucide-react";
+
 import {
 	knowledgeGroups,
 	knowledgeEvidenceLabels,
@@ -68,8 +71,14 @@ export function KnowledgeArticleDialog({
 		highlights: [],
 		observations: [],
 		keyQuestions: [],
+		recommended_tests_ids: [],
+		suggested_exercise_ids: [],
 		metadata: { attachments: [] },
 	});
+
+	const [testInput, setTestInput] = useState("");
+	const [exerciseInput, setExerciseInput] = useState("");
+
 
 	const [tagInput, setTagInput] = useState("");
 	const [highlightInput, setHighlightInput] = useState("");
@@ -103,8 +112,11 @@ export function KnowledgeArticleDialog({
 				highlights: [],
 				observations: [],
 				keyQuestions: [],
+				recommended_tests_ids: [],
+				suggested_exercise_ids: [],
 				metadata: { attachments: [] },
 			});
+
 			setIsQuickAdd(true);
 		}
 	}, [article, open]);
@@ -126,10 +138,11 @@ export function KnowledgeArticleDialog({
 	};
 
 	const addItem = (
-		field: "tags" | "highlights" | "observations" | "keyQuestions",
+		field: "tags" | "highlights" | "observations" | "keyQuestions" | "recommended_tests_ids" | "suggested_exercise_ids",
 		value: string,
 		setter: (v: string) => void,
 	) => {
+
 		if (!value.trim()) return;
 		setFormData((prev) => ({
 			...prev,
@@ -139,9 +152,10 @@ export function KnowledgeArticleDialog({
 	};
 
 	const removeItem = (
-		field: "tags" | "highlights" | "observations" | "keyQuestions",
+		field: "tags" | "highlights" | "observations" | "keyQuestions" | "recommended_tests_ids" | "suggested_exercise_ids",
 		index: number,
 	) => {
+
 		setFormData((prev) => ({
 			...prev,
 			[field]: (prev[field] || []).filter((_, i) => i !== index),
@@ -613,6 +627,107 @@ export function KnowledgeArticleDialog({
 									))}
 								</div>
 							</div>
+
+							<div className="grid gap-4 md:grid-cols-2">
+								<div className="space-y-3">
+									<Label className="font-bold text-sm uppercase tracking-wider text-slate-500 flex items-center gap-2">
+										<Stethoscope className="h-3.5 w-3.5" /> Testes Clínicos (IDs)
+									</Label>
+									<div className="flex gap-2">
+										<Input
+											value={testInput}
+											onChange={(e) => setTestInput(e.target.value)}
+											placeholder="Ex: lasegue-test"
+											className="h-10 text-sm"
+											onKeyDown={(e) =>
+												e.key === "Enter" &&
+												(e.preventDefault(),
+												addItem("recommended_tests_ids", testInput, setTestInput))
+											}
+										/>
+										<Button
+											type="button"
+											size="icon"
+											variant="secondary"
+											className="h-10 w-10 shrink-0"
+											onClick={() =>
+												addItem("recommended_tests_ids", testInput, setTestInput)
+											}
+										>
+											<Plus className="h-4 w-4" />
+										</Button>
+									</div>
+									<div className="flex flex-wrap gap-2">
+										{formData.recommended_tests_ids?.map((id, idx) => (
+											<Badge
+												key={idx}
+												variant="outline"
+												className="pr-1 text-xs h-7 border-sky-200 bg-sky-50 text-sky-700 font-bold"
+											>
+												{id}
+												<Button
+													variant="ghost"
+													size="icon"
+													className="h-4 w-4 ml-1 hover:bg-transparent"
+													onClick={() => removeItem("recommended_tests_ids", idx)}
+												>
+													<X className="h-3 w-3" />
+												</Button>
+											</Badge>
+										))}
+									</div>
+								</div>
+
+								<div className="space-y-3">
+									<Label className="font-bold text-sm uppercase tracking-wider text-slate-500 flex items-center gap-2">
+										<Dumbbell className="h-3.5 w-3.5" /> Exercícios Sugeridos (IDs)
+									</Label>
+									<div className="flex gap-2">
+										<Input
+											value={exerciseInput}
+											onChange={(e) => setExerciseInput(e.target.value)}
+											placeholder="Ex: pelvic-tilt"
+											className="h-10 text-sm"
+											onKeyDown={(e) =>
+												e.key === "Enter" &&
+												(e.preventDefault(),
+												addItem("suggested_exercise_ids", exerciseInput, setExerciseInput))
+											}
+										/>
+										<Button
+											type="button"
+											size="icon"
+											variant="secondary"
+											className="h-10 w-10 shrink-0"
+											onClick={() =>
+												addItem("suggested_exercise_ids", exerciseInput, setExerciseInput)
+											}
+										>
+											<Plus className="h-4 w-4" />
+										</Button>
+									</div>
+									<div className="flex flex-wrap gap-2">
+										{formData.suggested_exercise_ids?.map((id, idx) => (
+											<Badge
+												key={idx}
+												variant="outline"
+												className="pr-1 text-xs h-7 border-emerald-200 bg-emerald-50 text-emerald-700 font-bold"
+											>
+												{id}
+												<Button
+													variant="ghost"
+													size="icon"
+													className="h-4 w-4 ml-1 hover:bg-transparent"
+													onClick={() => removeItem("suggested_exercise_ids", idx)}
+												>
+													<X className="h-3 w-3" />
+												</Button>
+											</Badge>
+										))}
+									</div>
+								</div>
+							</div>
+
 
 							<div className="space-y-3">
 								<Label className="font-bold text-sm uppercase tracking-wider text-slate-500">

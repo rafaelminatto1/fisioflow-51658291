@@ -4,25 +4,54 @@
  * This is a FREE, LOCAL dictionary — no external APIs needed.
  */
 
-import type { PhysioDictionaryEntry } from "./physioDictionary";
+export interface ExerciseEntry extends PhysioDictionaryEntry {
+	category: "exercise";
+	target_outcome?: Array<"Analgesia" | "Mobilidade" | "Estabilidade" | "Força" | "Potência" | "Cardio">;
+	intensity_level?: 1 | 2 | 3 | 4 | 5; // 1: Inicial/Pós-Op, 5: Elite
+	required_equipment?: string[];
+	progression_suggestion?: string; // ID do próximo exercício na cadeia
+}
 
 function ex(
 	id: string, pt: string, en: string,
 	aliases_pt: string[] = [], aliases_en: string[] = [],
 	subcategory = "", description_pt = "", description_en = "",
-): PhysioDictionaryEntry {
-	return { id, pt, en, aliases_pt, aliases_en, category: "exercise", subcategory, description_pt, description_en };
+	metadata: Partial<Omit<ExerciseEntry, keyof PhysioDictionaryEntry>> = {}
+): ExerciseEntry {
+	return { 
+		id, pt, en, aliases_pt, aliases_en, 
+		category: "exercise", subcategory, description_pt, description_en,
+		...metadata
+	};
 }
 
 // ─── MEMBROS INFERIORES ─────────────────────────────────────
 const lowerBody: PhysioDictionaryEntry[] = [
 	// Joelho
-	ex("exd-agachamento", "Agachamento", "Squat", ["agachamento livre", "agachamento bilateral"], ["bodyweight squat", "air squat"], "Joelho / Quadril", "Exercício multiarticular para quadríceps, glúteos e core.", "Multi-joint exercise targeting quads, glutes, and core."),
-	ex("exd-agachamento-bulgaro", "Agachamento Búlgaro", "Bulgarian Split Squat", ["split squat com elevação"], ["rear foot elevated split squat", "rfess"], "Joelho / Quadril"),
+	ex("exd-agachamento", "Agachamento", "Squat", ["agachamento livre", "agachamento bilateral"], ["bodyweight squat", "air squat"], "Joelho / Quadril", "Exercício multiarticular para quadríceps, glúteos e core.", "Multi-joint exercise targeting quads, glutes, and core.", { 
+		intensity_level: 2, 
+		target_outcome: ["Força", "Mobilidade"], 
+		progression_suggestion: "exd-agachamento-pistol" 
+	}),
+	ex("exd-agachamento-bulgaro", "Agachamento Búlgaro", "Bulgarian Split Squat", ["split squat com elevação"], ["rear foot elevated split squat", "rfess"], "Joelho / Quadril", "", "", {
+		intensity_level: 4,
+		target_outcome: ["Força", "Estabilidade"],
+		required_equipment: ["Banco", "Halter"]
+	}),
 	ex("exd-agachamento-sumô", "Agachamento Sumô", "Sumo Squat", ["agachamento amplo"], ["wide stance squat"], "Joelho / Quadril"),
-	ex("exd-agachamento-goblet", "Agachamento Goblet", "Goblet Squat", [], [], "Joelho / Quadril"),
-	ex("exd-agachamento-pistol", "Agachamento Pistol", "Pistol Squat", ["agachamento unipodal"], ["single leg squat"], "Joelho / Quadril"),
-	ex("exd-agachamento-parede", "Agachamento na Parede", "Wall Sit", ["cadeirinha", "isométrico de parede"], ["wall squat"], "Joelho", "Isométrico para fortalecimento de quadríceps.", "Isometric hold for quad strengthening."),
+	ex("exd-agachamento-goblet", "Agachamento Goblet", "Goblet Squat", [], [], "Joelho / Quadril", "", "", {
+		intensity_level: 3,
+		target_outcome: ["Força", "Estabilidade"],
+		required_equipment: ["Kettlebell", "Halter"]
+	}),
+	ex("exd-agachamento-pistol", "Agachamento Pistol", "Pistol Squat", ["agachamento unipodal"], ["single leg squat"], "Joelho / Quadril", "", "", {
+		intensity_level: 5,
+		target_outcome: ["Força", "Estabilidade", "Potência"]
+	}),
+	ex("exd-agachamento-parede", "Agachamento na Parede", "Wall Sit", ["cadeirinha", "isométrico de parede"], ["wall squat"], "Joelho", "Isométrico para fortalecimento de quadríceps.", "Isometric hold for quad strengthening.", {
+		intensity_level: 1,
+		target_outcome: ["Analgesia", "Estabilidade"]
+	}),
 	ex("exd-afundo", "Afundo", "Lunge", ["avanço", "passada"], ["forward lunge"], "Joelho / Quadril"),
 	ex("exd-afundo-lateral", "Afundo Lateral", "Lateral Lunge", ["avanço lateral"], ["side lunge"], "Joelho / Quadril"),
 	ex("exd-afundo-reverso", "Afundo Reverso", "Reverse Lunge", ["avanço reverso"], ["backward lunge"], "Joelho / Quadril"),
@@ -58,7 +87,11 @@ const upperBody: PhysioDictionaryEntry[] = [
 	// Ombro
 	ex("exd-elevacao-lateral", "Elevação Lateral", "Lateral Raise", ["abdução de ombro com halter"], ["dumbbell lateral raise", "shoulder abduction"], "Ombro"),
 	ex("exd-elevacao-frontal", "Elevação Frontal", "Front Raise", ["flexão de ombro"], ["shoulder flexion"], "Ombro"),
-	ex("exd-rot-ext-ombro", "Rotação Externa de Ombro", "Shoulder External Rotation", ["rotação externa com faixa", "re de ombro"], ["banded er", "sidelying er", "cable er"], "Ombro", "Fortalecimento do manguito rotador.", "Rotator cuff strengthening."),
+	ex("exd-rot-ext-ombro", "Rotação Externa de Ombro", "Shoulder External Rotation", ["rotação externa com faixa", "re de ombro"], ["banded er", "sidelying er", "cable er"], "Ombro", "Fortalecimento do manguito rotador.", "Rotator cuff strengthening.", {
+		intensity_level: 2,
+		target_outcome: ["Estabilidade", "Força"],
+		required_equipment: ["Theraband", "Halter"]
+	}),
 	ex("exd-rot-int-ombro", "Rotação Interna de Ombro", "Shoulder Internal Rotation", ["rotação interna com faixa", "ri de ombro"], ["banded ir", "cable ir"], "Ombro"),
 	ex("exd-full-can", "Full Can", "Full Can Exercise", ["elevação no plano da escápula"], ["scaption", "scapular plane elevation"], "Ombro"),
 	ex("exd-crucifixo-reverso", "Crucifixo Reverso", "Reverse Fly", ["voador reverso", "posterior de ombro"], ["rear delt fly", "bent over reverse fly"], "Ombro"),
@@ -157,7 +190,7 @@ const respiratory: PhysioDictionaryEntry[] = [
 	ex("exd-respiracao-360", "Respiração 360", "360 Breathing", ["respiração circunferencial"], ["circumferential breathing"], "Respiratório"),
 ];
 
-export const exerciseDictionary: PhysioDictionaryEntry[] = [
+export const exerciseDictionary: ExerciseEntry[] = [
 	...lowerBody,
 	...upperBody,
 	...coreSpine,
