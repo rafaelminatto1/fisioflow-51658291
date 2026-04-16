@@ -43,7 +43,7 @@ export class NFSeService {
       console.warn('[NFSe] FOCUS_NFE_TOKEN missing, returning mock');
       return {
         status: 'authorized',
-        protocolo: 'MOCK-' + Math.random().toString(36).substring(7),
+        protocolo: 'MOCK-' + crypto.randomUUID().substring(0, 8),
         url_pdf: 'https://example.com/mock-nfse.pdf',
       };
     }

@@ -75,7 +75,7 @@ export function ScheduleXAppointmentCard({
 				aria-label={`${appointment.patientName} - ${time} - ${statusConfig.label}`}
 				aria-selected={isSelected}
 				className={cn(
-					"h-full w-full flex flex-col gap-0.5 px-2 py-1.5 text-xs overflow-hidden rounded-md border-l-4 shadow-sm transition-all",
+					"h-full w-full flex flex-col gap-0.5 px-2 py-1.5 overflow-hidden rounded-md border-l-4 shadow-sm transition-all",
 					"cursor-pointer select-none outline-none",
 					"focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-1",
 					isSelected && "ring-2 ring-primary ring-offset-1",
@@ -85,10 +85,11 @@ export function ScheduleXAppointmentCard({
 					backgroundColor: colors.background,
 					borderLeftColor: colors.accent,
 					color: colors.text,
+					fontSize: "var(--agenda-card-font-scale, 12px)",
 				}}
 			>
 				<div className="flex items-center justify-between gap-1 mb-0.5">
-					<span className="font-bold text-[10px] uppercase tracking-wider opacity-70">
+					<span className="font-bold uppercase tracking-wider opacity-70" style={{ fontSize: "0.85em" }}>
 						{time}
 						{endTime && endTime !== time && (
 							<span className="font-normal"> – {endTime}</span>
@@ -96,12 +97,12 @@ export function ScheduleXAppointmentCard({
 					</span>
 				</div>
 
-				<span className="font-bold leading-tight line-clamp-2 break-words text-xs">
+				<span className="font-bold leading-tight line-clamp-2 break-words" style={{ fontSize: "1em" }}>
 					{appointment.patientName}
 				</span>
 
 				{appointment.type && (
-					<span className="text-[10px] font-medium opacity-60 uppercase tracking-tighter mt-auto">
+					<span className="font-medium opacity-60 uppercase tracking-tighter mt-auto" style={{ fontSize: "0.80em" }}>
 						{appointment.type}
 					</span>
 				)}

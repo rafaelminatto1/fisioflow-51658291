@@ -20,7 +20,7 @@ export class WhatsAppService {
   async send(data: WhatsAppMessage) {
     if (!this.env.TWILIO_ACCOUNT_SID || !this.env.TWILIO_AUTH_TOKEN) {
       console.warn('[WhatsApp] TWILIO credentials missing, returning mock');
-      return { sid: 'MOCK-' + Math.random().toString(36).substring(7), status: 'sent' };
+      return { sid: 'MOCK-' + crypto.randomUUID().substring(0, 8), status: 'sent' };
     }
 
     const auth = btoa(`${this.env.TWILIO_ACCOUNT_SID}:${this.env.TWILIO_AUTH_TOKEN}`);
