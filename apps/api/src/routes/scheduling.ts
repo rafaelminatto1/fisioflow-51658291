@@ -10,29 +10,8 @@ const emptyObject = () => ({ data: null });
 
 type Pool = ReturnType<typeof createPool>;
 
-const schedulingSchemaRanges = {
-  businessHours: [[0, 11], [83, 84]],
-  blockedTimes: [[11, 20], [84, 85]],
-  cancellationRules: [[20, 31], [85, 86]],
-  notificationSettings: [[31, 44], [86, 87]],
-  capacity: [[44, 47], [87, 88]],
-  waitlist: [[47, 60], [88, 89]],
-  waitlistOffers: [[60, 68], [89, 90]],
-  recurringSeries: [[68, 83], [90, 91]],
-} as const;
-
-type SchedulingSchemaSection = keyof typeof schedulingSchemaRanges;
-
-const schedulingSchemaReady = new Map<SchedulingSchemaSection, Promise<void>>();
-
-async function ensureSchedulingSchema(pool: Pool, section: SchedulingSchemaSection) {
-  // Comentado para evitar erros de permissão (must be owner of table)
-  // Mudanças de schema devem ser feitas via migrações Drizzle.
-  /*
-  let ready = schedulingSchemaReady.get(section);
-  ...
-  */
-  return;
+async function ensureSchedulingSchema(pool: Pool, section: string) {
+  return; // Handled via migrations
 }
 
 const parseRecurringDays = (value: unknown): number[] => {
@@ -295,24 +274,6 @@ const normalizeRecurringSeriesPayload = (body: Record<string, any>) => {
   };
 };
 
-const addUtcDays = (date: Date, days: number) => {
-  const next = new Date(date);
-  next.setUTCDate(next.getUTCDate() + days);
-  return next;
-};
-
-const addUtcMonths = (date: Date, months: number) => {
-  const next = new Date(date);
-  next.setUTCMonth(next.getUTCMonth() + months);
-  return next;
-};
-
-const addUtcYears = (date: Date, years: number) => {
-  const next = new Date(date);
-  next.setUTCFullYear(next.getUTCFullYear() + years);
-  return next;
-};
-
 const toIsoDate = (date: Date) => date.toISOString().split('T')[0];
 
 const generateRecurringOccurrences = (row: Record<string, any>, limit = 24) => {
@@ -348,7 +309,7 @@ const generateRecurringOccurrences = (row: Record<string, any>, limit = 24) => {
           created_at: series.created_at ?? new Date().toISOString(),
         });
       }
-      current = addUtcDays(current, 1);
+      current.setUTCDate(current.getUTCDate() + 1);
       guard += 1;
     }
     return results;
@@ -365,10 +326,10 @@ const generateRecurringOccurrences = (row: Record<string, any>, limit = 24) => {
       created_at: series.created_at ?? new Date().toISOString(),
     });
 
-    if (recurrenceType === 'daily') current = addUtcDays(current, recurrenceInterval);
-    else if (recurrenceType === 'monthly') current = addUtcMonths(current, recurrenceInterval);
-    else if (recurrenceType === 'yearly') current = addUtcYears(current, recurrenceInterval);
-    else current = addUtcDays(current, 7 * recurrenceInterval);
+    if (recurrenceType === 'daily') current.setUTCDate(current.getUTCDate() + recurrenceInterval);
+    else if (recurrenceType === 'monthly') current.setUTCMonth(current.getUTCMonth() + recurrenceInterval);
+    else if (recurrenceType === 'yearly') current.setUTCFullYear(current.getUTCFullYear() + recurrenceInterval);
+    else current.setUTCDate(current.getUTCDate() + 7 * recurrenceInterval);
   }
 
   return results;
@@ -379,51 +340,49 @@ async function handleUpsertBusinessHours(c: any) {
   const pool = await createPool(c.env);
 
   try {
-    await ensureSchedulingSchema(pool, 'businessHours');
     const body = (await c.req.json()) as Record<string, any>[] | Record<string, any>;
     const items = Array.isArray(body) ? body : [body];
-
-    // Validar todos os itens antes de começar a deletar
     const normalizedItems = items.map(item => normalizeBusinessHourPayload(item));
 
-    // Usar INSERT ON CONFLICT para maior atomicidade e evitar perda de dados se o loop falhar no meio
-    const results = [];
-    for (const normalized of normalizedItems) {
-      const res = await pool.query(
-        `INSERT INTO business_hours (
-          organization_id, day_of_week, open_time, close_time, is_open,
-          break_start, break_end, updated_at
-        )
-         VALUES ($1, $2, $3, $4, $5, $6, $7, NOW())
-         ON CONFLICT (organization_id, day_of_week) DO UPDATE SET
-          open_time = EXCLUDED.open_time,
-          close_time = EXCLUDED.close_time,
-          is_open = EXCLUDED.is_open,
-          break_start = EXCLUDED.break_start,
-          break_end = EXCLUDED.break_end,
-          updated_at = NOW()
-         RETURNING *`,
-        [
-          user.organizationId,
-          normalized.dayOfWeek,
-          normalized.openTime,
-          normalized.closeTime,
-          normalized.isOpen,
-          normalized.breakStart,
-          normalized.breakEnd,
-        ]
-      );
-      results.push(mapBusinessHourRow(res.rows[0]));
-    }
+    await pool.query('BEGIN');
+    try {
+        await pool.query('DELETE FROM business_hours WHERE organization_id = $1', [user.organizationId]);
 
-    // Invalidação agressiva do cache D1
-    const d1 = c.env.EDGE_CACHE || c.env.DB;
-    if (d1) {
-      const cacheKey = `business-hours:${user.organizationId}`;
-      await d1.prepare('DELETE FROM query_cache WHERE id = ?').bind(cacheKey).run().catch(() => {});
-    }
+        const results = [];
+        for (const normalized of normalizedItems) {
+            const res = await pool.query(
+                `INSERT INTO business_hours (
+                organization_id, day_of_week, open_time, close_time, is_open,
+                break_start, break_end, updated_at
+                )
+                VALUES ($1, $2, $3, $4, $5, $6, $7, NOW())
+                RETURNING *`,
+                [
+                user.organizationId,
+                normalized.dayOfWeek,
+                normalized.openTime,
+                normalized.closeTime,
+                normalized.isOpen,
+                normalized.breakStart,
+                normalized.breakEnd,
+                ]
+            );
+            results.push(mapBusinessHourRow(res.rows[0]));
+        }
+        await pool.query('COMMIT');
 
-    return c.json({ data: results });
+        // Clear cache
+        const d1 = c.env.EDGE_CACHE || c.env.DB;
+        if (d1) {
+            const cacheKey = `business-hours:${user.organizationId}`;
+            await d1.prepare('DELETE FROM query_cache WHERE id = ?').bind(cacheKey).run().catch(() => {});
+        }
+
+        return c.json({ data: results });
+    } catch (e) {
+        await pool.query('ROLLBACK');
+        throw e;
+    }
   } catch (error: any) {
     console.error('[Business Hours Error]:', error);
     return c.json({ error: error.message || 'Erro ao salvar horários de atendimento' }, 500);
@@ -435,11 +394,10 @@ async function handleUpsertCancellationRules(c: any) {
   const pool = await createPool(c.env);
 
   try {
-    await ensureSchedulingSchema(pool, 'cancellationRules');
     const body = await c.req.json();
     const normalized = normalizeCancellationRulePayload(body);
     const existing = await pool.query(
-      `SELECT id FROM cancellation_rules WHERE organization_id = $1 LIMIT 1`,
+      'SELECT id FROM cancellation_rules WHERE organization_id = $1 LIMIT 1',
       [user.organizationId]
     );
 
@@ -493,11 +451,10 @@ async function handleUpsertNotificationSettings(c: any) {
   const pool = await createPool(c.env);
 
   try {
-    await ensureSchedulingSchema(pool, 'notificationSettings');
     const body = await c.req.json();
     const normalized = normalizeNotificationSettingsPayload(body);
     const existing = await pool.query(
-      `SELECT id FROM scheduling_notification_settings WHERE organization_id = $1 LIMIT 1`,
+      'SELECT id FROM scheduling_notification_settings WHERE organization_id = $1 LIMIT 1',
       [user.organizationId]
     );
 
@@ -559,11 +516,10 @@ app.get('/waitlist', requireAuth, async (c) => {
   const user = c.get('user');
   const pool = await createPool(c.env);
   try {
-    await ensureSchedulingSchema(pool, 'waitlist');
     const { status, priority } = c.req.query();
     const params: unknown[] = [user.organizationId];
     let idx = 2;
-    let sql = `SELECT * FROM waitlist WHERE organization_id = $1`;
+    let sql = 'SELECT * FROM waitlist WHERE organization_id = $1';
 
     if (status) {
       sql += ` AND status = $${idx++}`;
@@ -587,7 +543,6 @@ app.post('/waitlist', requireAuth, async (c) => {
   const user = c.get('user');
   const pool = await createPool(c.env);
   try {
-    await ensureSchedulingSchema(pool, 'waitlist');
     const body = await c.req.json();
     const normalized = normalizeWaitlistPayload(body);
 
@@ -630,7 +585,6 @@ app.put('/waitlist/:id', requireAuth, async (c) => {
   const pool = await createPool(c.env);
   const { id } = c.req.param();
   try {
-    await ensureSchedulingSchema(pool, 'waitlist');
     const body = await c.req.json();
     const allowed = [
       'preferred_days',
@@ -691,9 +645,8 @@ app.delete('/waitlist/:id', requireAuth, async (c) => {
   const pool = await createPool(c.env);
   const { id } = c.req.param();
   try {
-    await ensureSchedulingSchema(pool, 'waitlist');
     await pool.query(
-      `DELETE FROM waitlist WHERE id = $1 AND organization_id = $2`,
+      'DELETE FROM waitlist WHERE id = $1 AND organization_id = $2',
       [id, user.organizationId],
     );
     return c.json({ success: true });
@@ -706,10 +659,9 @@ app.get('/waitlist-offers', requireAuth, async (c) => {
   const user = c.get('user');
   const pool = await createPool(c.env);
   try {
-    await ensureSchedulingSchema(pool, 'waitlistOffers');
     const { waitlistId } = c.req.query();
     const params: unknown[] = [user.organizationId];
-    let sql = `SELECT * FROM waitlist_offers WHERE organization_id = $1`;
+    let sql = 'SELECT * FROM waitlist_offers WHERE organization_id = $1';
     if (waitlistId) {
       sql += ' AND waitlist_id = $2';
       params.push(waitlistId);
@@ -727,7 +679,6 @@ app.post('/waitlist-offers', requireAuth, async (c) => {
   const user = c.get('user');
   const pool = await createPool(c.env);
   try {
-    await ensureSchedulingSchema(pool, 'waitlistOffers');
     const body = await c.req.json();
     const waitlistId = String(body.waitlist_id ?? '').trim();
     const offeredSlot = String(body.offered_slot ?? '').trim();
@@ -765,7 +716,6 @@ app.post('/waitlist-offers/:id/respond', requireAuth, async (c) => {
   const pool = await createPool(c.env);
   const { id } = c.req.param();
   try {
-    await ensureSchedulingSchema(pool, 'waitlistOffers');
     const body = await c.req.json();
     const response = body.response ?? body.status ?? 'pending';
     const result = await pool.query(
@@ -793,9 +743,8 @@ app.get('/settings/business-hours', requireAuth, async (c) => {
   const user = c.get('user');
   const pool = await createPool(c.env);
   try {
-    await ensureSchedulingSchema(pool, 'businessHours');
     const result = await pool.query(
-      `SELECT * FROM business_hours WHERE organization_id = $1 ORDER BY day_of_week ASC`,
+      'SELECT * FROM business_hours WHERE organization_id = $1 ORDER BY day_of_week ASC',
       [user.organizationId]
     );
     return c.json({ data: result.rows.map(mapBusinessHourRow) });
@@ -811,9 +760,8 @@ app.get('/settings/blocked-times', requireAuth, async (c) => {
   const user = c.get('user');
   const pool = await createPool(c.env);
   try {
-    await ensureSchedulingSchema(pool, 'blockedTimes');
     const result = await pool.query(
-      `SELECT * FROM blocked_times WHERE organization_id = $1 ORDER BY start_date ASC, start_time ASC NULLS FIRST`,
+      'SELECT * FROM blocked_times WHERE organization_id = $1 ORDER BY start_date ASC, start_time ASC NULLS FIRST',
       [user.organizationId]
     );
     return c.json({ data: result.rows.map(mapBlockedTimeRow) });
@@ -826,7 +774,6 @@ app.post('/settings/blocked-times', requireAuth, async (c) => {
   const user = c.get('user');
   const pool = await createPool(c.env);
   try {
-    await ensureSchedulingSchema(pool, 'blockedTimes');
     const body = await c.req.json();
     const normalized = normalizeBlockedTimePayload(body);
     const result = await pool.query(
@@ -862,9 +809,8 @@ app.delete('/settings/blocked-times/:id', requireAuth, async (c) => {
   const pool = await createPool(c.env);
   const { id } = c.req.param();
   try {
-    await ensureSchedulingSchema(pool, 'blockedTimes');
     await pool.query(
-      `DELETE FROM blocked_times WHERE id = $1 AND organization_id = $2`,
+      'DELETE FROM blocked_times WHERE id = $1 AND organization_id = $2',
       [id, user.organizationId]
     );
     return c.json({ success: true });
@@ -877,9 +823,8 @@ app.get('/settings/cancellation-rules', requireAuth, async (c) => {
   const user = c.get('user');
   const pool = await createPool(c.env);
   try {
-    await ensureSchedulingSchema(pool, 'cancellationRules');
     const result = await pool.query(
-      `SELECT * FROM cancellation_rules WHERE organization_id = $1 LIMIT 1`,
+      'SELECT * FROM cancellation_rules WHERE organization_id = $1 LIMIT 1',
       [user.organizationId]
     );
     return c.json({ data: result.rows[0] ? mapCancellationRuleRow(result.rows[0]) : null });
@@ -895,9 +840,8 @@ app.get('/settings/notification-settings', requireAuth, async (c) => {
   const user = c.get('user');
   const pool = await createPool(c.env);
   try {
-    await ensureSchedulingSchema(pool, 'notificationSettings');
     const result = await pool.query(
-      `SELECT * FROM scheduling_notification_settings WHERE organization_id = $1 LIMIT 1`,
+      'SELECT * FROM scheduling_notification_settings WHERE organization_id = $1 LIMIT 1',
       [user.organizationId]
     );
     return c.json({ data: result.rows[0] ? mapNotificationSettingsRow(result.rows[0]) : null });
@@ -913,9 +857,8 @@ app.get('/capacity-config', requireAuth, async (c) => {
   const user = c.get('user');
   const pool = await createPool(c.env);
   try {
-    await ensureSchedulingSchema(pool, 'capacity');
     const result = await pool.query(
-      `SELECT * FROM schedule_capacity WHERE organization_id = $1 ORDER BY day_of_week ASC, start_time ASC`,
+      'SELECT * FROM schedule_capacity WHERE organization_id = $1 ORDER BY day_of_week ASC, start_time ASC',
       [user.organizationId]
     );
     return c.json({ data: result.rows.map(mapCapacityRow) });
@@ -928,7 +871,6 @@ app.post('/capacity-config', requireAuth, async (c) => {
   const user = c.get('user');
   const pool = await createPool(c.env);
   try {
-    await ensureSchedulingSchema(pool, 'capacity');
     const body = await c.req.json();
     const configs = Array.isArray(body) ? body : [body];
     const results = [];
@@ -961,10 +903,9 @@ app.put('/capacity-config/:id', requireAuth, async (c) => {
   const pool = await createPool(c.env);
   const { id } = c.req.param();
   try {
-    await ensureSchedulingSchema(pool, 'capacity');
     const body = await c.req.json();
     const current = await pool.query(
-      `SELECT * FROM schedule_capacity WHERE id = $1 AND organization_id = $2 LIMIT 1`,
+      'SELECT * FROM schedule_capacity WHERE id = $1 AND organization_id = $2 LIMIT 1',
       [id, user.organizationId]
     );
 
@@ -1006,9 +947,8 @@ app.delete('/capacity-config/:id', requireAuth, async (c) => {
   const pool = await createPool(c.env);
   const { id } = c.req.param();
   try {
-    await ensureSchedulingSchema(pool, 'capacity');
     await pool.query(
-      `DELETE FROM schedule_capacity WHERE id = $1 AND organization_id = $2`,
+      'DELETE FROM schedule_capacity WHERE id = $1 AND organization_id = $2',
       [id, user.organizationId]
     );
     return c.json({ success: true });
@@ -1021,11 +961,10 @@ app.get('/recurring-series', requireAuth, async (c) => {
   const user = c.get('user');
   const pool = await createPool(c.env);
   try {
-    await ensureSchedulingSchema(pool, 'recurringSeries');
     const { patientId, isActive } = c.req.query();
     const params: unknown[] = [user.organizationId];
     let idx = 2;
-    let sql = `SELECT * FROM recurring_series WHERE organization_id = $1`;
+    let sql = 'SELECT * FROM recurring_series WHERE organization_id = $1';
 
     if (patientId) {
       sql += ` AND patient_id = $${idx++}`;
@@ -1049,7 +988,6 @@ app.post('/recurring-series', requireAuth, async (c) => {
   const user = c.get('user');
   const pool = await createPool(c.env);
   try {
-    await ensureSchedulingSchema(pool, 'recurringSeries');
     const body = await c.req.json();
     const normalized = normalizeRecurringSeriesPayload(body);
     const result = await pool.query(
@@ -1090,7 +1028,6 @@ app.put('/recurring-series/:id', requireAuth, async (c) => {
   const pool = await createPool(c.env);
   const { id } = c.req.param();
   try {
-    await ensureSchedulingSchema(pool, 'recurringSeries');
     const body = await c.req.json();
     const allowed = [
       'patient_id',
@@ -1154,9 +1091,8 @@ app.delete('/recurring-series/:id', requireAuth, async (c) => {
   const pool = await createPool(c.env);
   const { id } = c.req.param();
   try {
-    await ensureSchedulingSchema(pool, 'recurringSeries');
     await pool.query(
-      `DELETE FROM recurring_series WHERE id = $1 AND organization_id = $2`,
+      'DELETE FROM recurring_series WHERE id = $1 AND organization_id = $2',
       [id, user.organizationId],
     );
     return c.json({ success: true });
@@ -1170,9 +1106,8 @@ app.get('/recurring-series/:id/occurrences', requireAuth, async (c) => {
   const pool = await createPool(c.env);
   const { id } = c.req.param();
   try {
-    await ensureSchedulingSchema(pool, 'recurringSeries');
     const result = await pool.query(
-      `SELECT * FROM recurring_series WHERE id = $1 AND organization_id = $2 LIMIT 1`,
+      'SELECT * FROM recurring_series WHERE id = $1 AND organization_id = $2 LIMIT 1',
       [id, user.organizationId],
     );
 
