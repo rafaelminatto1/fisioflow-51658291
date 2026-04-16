@@ -6,10 +6,6 @@ inputs:
     description: 'Node.js version'
     required: false
     default: '20'
-  pnpm-version:
-    description: 'pnpm version'
-    required: false
-    default: '10.33.0'
   install:
     description: 'Whether to run pnpm install'
     required: false
