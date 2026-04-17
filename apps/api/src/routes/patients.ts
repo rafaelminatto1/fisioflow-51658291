@@ -460,7 +460,7 @@ app.use("*", requireAuth);
 
 app.get("/", async (c) => {
 	const user = c.get("user");
-	const db = createDb(c.env);
+	const db = createDb(c.env, 'read');
 
 	const search = trimmedString(c.req.query("search"));
 	const requestedStatus = trimmedString(c.req.query("status"));
@@ -545,7 +545,7 @@ app.get("/", async (c) => {
 
 app.get("/last-updated", async (c) => {
 	const user = c.get("user");
-	const db = createDb(c.env);
+	const db = createDb(c.env, 'read');
 
 	try {
 		const result = await db
@@ -565,7 +565,7 @@ app.get("/last-updated", async (c) => {
 
 app.get("/by-profile/:profileId", async (c) => {
 	const user = c.get("user");
-	const db = createDb(c.env);
+	const db = createDb(c.env, 'read');
 	const { profileId } = c.req.param();
 
 	try {
@@ -668,7 +668,7 @@ app.post("/", async (c) => {
 
 app.get("/:id/stats", async (c) => {
 	const user = c.get("user");
-	const db = createDb(c.env);
+	const db = createDb(c.env, 'read');
 	const { id } = c.req.param();
 	if (!isUuid(id)) return c.json({ error: "ID inválido" }, 400);
 
@@ -713,7 +713,7 @@ app.get("/:id/stats", async (c) => {
 
 app.get("/:id", async (c) => {
 	const user = c.get("user");
-	const db = createDb(c.env);
+	const db = createDb(c.env, 'read');
 	const { id } = c.req.param();
 	if (!isUuid(id)) return c.json({ error: "ID inválido" }, 400);
 
@@ -808,7 +808,7 @@ app.delete("/:id", async (c) => {
 
 app.get("/:id/timeline", async (c) => {
 	const user = c.get("user");
-	const db = createDb(c.env);
+	const db = createDb(c.env, 'read');
 	const { id } = c.req.param();
 
 	try {
