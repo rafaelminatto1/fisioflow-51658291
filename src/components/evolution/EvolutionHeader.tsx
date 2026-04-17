@@ -260,7 +260,7 @@ export const EvolutionHeader = memo(
 
 		return (
 			<div
-				className="sticky top-0 z-30 rounded-xl border border-border/50 bg-card shadow-sm backdrop-blur-sm p-4"
+				className="sticky top-0 z-30 rounded-xl border border-primary/10 bg-white/80 shadow-sm backdrop-blur-md p-4 transition-all duration-300"
 				role="banner"
 				aria-label="Cabeçalho da evolução"
 			>
@@ -271,53 +271,40 @@ export const EvolutionHeader = memo(
 							variant="ghost"
 							size="icon"
 							onClick={() => navigate("/agenda")}
-							className="shrink-0 h-10 w-10 hover:bg-primary/10 touch-target min-h-[44px] min-w-[44px]"
+							className="shrink-0 h-10 w-10 hover:bg-primary/5 text-slate-400 hover:text-primary transition-colors"
 							aria-label="Voltar para agenda"
 						>
 							<ArrowLeft className="h-5 w-5" />
 						</Button>
 						<div
 							className="flex items-center gap-3 min-w-0 flex-1"
-							title={[
-								PatientHelpers.getName(patient),
-								appointmentDateLabel,
-								patient?.phone,
-							]
-								.filter(Boolean)
-								.join(" · ")}
 						>
-							<Avatar className="h-10 w-10 shrink-0 ring-2 ring-border/50">
+							<Avatar className="h-12 w-12 shrink-0 border-2 border-white shadow-sm ring-1 ring-primary/10">
 								{patientAvatar ? (
 									<AvatarImage
 										src={patientAvatar}
 										alt={PatientHelpers.getName(patient)}
 									/>
 								) : null}
-								<AvatarFallback className="bg-gradient-to-br from-primary/20 to-primary/10 text-primary font-semibold text-sm">
+								<AvatarFallback className="bg-slate-50 text-primary font-bold text-sm">
 									{getPatientInitials(patient)}
 								</AvatarFallback>
 							</Avatar>
 							<div className="min-w-0 flex-1">
 								<div className="flex items-center gap-2 flex-wrap">
-									<h1 className="text-xl font-bold truncate tracking-tight text-foreground">
+									<h1 className="text-xl font-extrabold tracking-tight text-slate-800">
 										{PatientHelpers.getName(patient)}
 									</h1>
 									<Badge
-										variant="outline"
-										className="text-sm px-2.5 py-0.5 shrink-0 bg-primary/5 border-primary/20 text-primary font-bold"
+										className="text-[10px] px-2 py-0.5 shrink-0 bg-primary/5 border-primary/10 text-primary font-black uppercase tracking-wider"
 									>
 										Sessão #{sessionNumber}
 									</Badge>
-									{evolutionStats.totalEvolutions > 0 && (
-										<span className="text-sm font-medium text-muted-foreground shrink-0">
-											({evolutionStats.totalEvolutions} evol. anteriores)
-										</span>
-									)}
 								</div>
-								<div className="flex items-center gap-4 mt-1 text-sm text-muted-foreground/90 flex-wrap">
+								<div className="flex items-center gap-3 mt-1 text-xs text-slate-500 font-medium flex-wrap">
 									{appointment?.appointment_date && (
-										<span className="flex items-center gap-1.5 font-medium">
-											<Calendar className="h-4 w-4 shrink-0 text-primary/70" />
+										<span className="flex items-center gap-1.5">
+											<Calendar className="h-3.5 w-3.5 text-primary/60" />
 											{format(
 												parseResponseDate(appointment.appointment_date),
 												"dd/MM HH:mm",
@@ -325,8 +312,8 @@ export const EvolutionHeader = memo(
 											)}
 										</span>
 									)}
-									<span className="flex items-center gap-1.5 font-medium">
-										<FileText className="h-4 w-4 shrink-0 text-primary/70" />
+									<span className="flex items-center gap-1.5">
+										<FileText className="h-3.5 w-3.5 text-primary/60" />
 										{treatmentDuration}
 									</span>
 								</div>
@@ -335,69 +322,49 @@ export const EvolutionHeader = memo(
 					</div>
 
 					{/* Ações primárias */}
-					<div className="flex items-center gap-3 shrink-0 flex-shrink-0">
+					<div className="flex items-center gap-3 shrink-0">
 						{showFirstEvolution && <FirstEvolutionBadge />}
-						{sessionStartLabel && (
-							<div className="hidden lg:flex items-center gap-2 rounded-lg border border-primary/15 bg-primary/5 px-3 py-2 text-sm font-semibold text-foreground shadow-sm">
-								<Calendar className="h-4 w-4 shrink-0 text-primary" />
-								<span className="whitespace-nowrap">{sessionStartLabel}</span>
-							</div>
-						)}
 						<Button
 							onClick={onSave}
 							size="sm"
 							variant="outline"
 							disabled={isSaving}
-							className="h-11 px-5 min-w-[120px] shadow-sm hover:bg-primary/5 border-primary/20 text-sm font-bold touch-target"
-							aria-label={isSaving ? "Salvando..." : "Salvar"}
-							title={
-								lastSavedAt && autoSaveEnabled
-									? `Último salvamento: ${format(lastSavedAt, "HH:mm")}`
-									: undefined
-							}
+							className="h-10 px-4 shadow-none hover:bg-slate-50 border-slate-200 text-slate-600 text-xs font-bold transition-all"
 						>
 							{isSaving ? (
-								<Loader2 className="h-4 w-4 animate-spin" />
+								<Loader2 className="h-3.5 w-3.5 animate-spin" />
 							) : (
-								<Save className="h-4 w-4" />
+								<Save className="h-3.5 w-3.5" />
 							)}
-							<span className="ml-2">
-								{isSaving ? "Salvando..." : "Salvar"}
+							<span className="ml-2 uppercase tracking-wide">
+								{isSaving ? "Salvando" : "Salvar"}
 							</span>
 						</Button>
 						<Button
 							onClick={onComplete}
 							size="sm"
 							disabled={isSaving || isCompleting}
-							className="h-11 px-5 min-w-[130px] bg-green-600 hover:bg-green-700 text-white shadow-md touch-target font-bold text-sm"
-							aria-label={isCompleting ? "Concluindo..." : "Concluir sessão"}
+							className="h-10 px-6 bg-primary hover:bg-primary/90 text-white shadow-md shadow-primary/20 font-bold text-xs uppercase tracking-widest transition-all"
 						>
 							{isCompleting ? (
-								<Loader2 className="h-4 w-4 animate-spin" />
+								<Loader2 className="h-3.5 w-3.5 animate-spin" />
 							) : (
-								<CheckCircle2 className="h-4 w-4" />
+								<CheckCircle2 className="h-3.5 w-3.5" />
 							)}
-							<span className="ml-2">
-								{isCompleting ? "Concluindo..." : "Concluir"}
-							</span>
+							<span className="ml-2">Concluir</span>
 						</Button>
 					</div>
 				</div>
 
 				{/* Linha 2: Cronômetro | Abas | Fisioterapeuta | Menu */}
-				<div className="flex items-center gap-4 mt-5 pt-5 border-t border-border/60 flex-wrap">
+				<div className="flex items-center gap-4 mt-4 pt-4 border-t border-slate-100 flex-wrap">
 					{tabsConfig.length > 0 && onTabChange && (
 						<nav
-							className="inline-flex h-10 items-center justify-center rounded-lg bg-muted/40 p-1 gap-1"
+							className="inline-flex h-9 items-center justify-center rounded-lg bg-slate-50/80 p-1 gap-1"
 							role="tablist"
-							aria-label="Abas de evolução"
 						>
 							{tabsConfig.map((tab) => {
 								const isActive = activeTab === tab.value;
-								const avaliacaoBadge =
-									tab.value === "avaliacao" && pendingRequiredMeasurements > 0;
-								const tratamentoBadge =
-									tab.value === "tratamento" && upcomingGoalsCount > 0;
 								const badgeCount =
 									tab.value === "avaliacao"
 										? pendingRequiredMeasurements
@@ -411,24 +378,23 @@ export const EvolutionHeader = memo(
 										type="button"
 										role="tab"
 										aria-selected={isActive}
-										aria-label={`${tab.label}${badgeCount > 0 ? `, ${badgeCount} pendente(s)` : ""}`}
 										onClick={() => onTabChange(tab.value)}
 										className={cn(
-											"inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md px-4 py-2 text-sm font-bold transition-all",
-											"focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2",
-											"disabled:pointer-events-none disabled:opacity-50",
+											"inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md px-4 py-1.5 text-xs font-bold transition-all",
 											isActive
-												? "bg-background text-primary shadow-sm ring-1 ring-border/50"
-												: "text-muted-foreground hover:bg-background/50 hover:text-foreground",
+												? "bg-white text-primary shadow-sm ring-1 ring-slate-200"
+												: "text-slate-500 hover:text-slate-800",
 										)}
 									>
-										<tab.icon className="h-4 w-4 shrink-0" />
-										<span className="hidden sm:inline">{tab.label}</span>
+										<tab.icon className="h-3.5 w-3.5 shrink-0" />
+										<span className="hidden sm:inline uppercase tracking-tighter">{tab.label}</span>
 										<span className="sm:hidden">{tab.shortLabel}</span>
-										{(avaliacaoBadge || tratamentoBadge) && badgeCount > 0 && (
+										{badgeCount > 0 && (
 											<Badge
-												variant={avaliacaoBadge ? "destructive" : "secondary"}
-												className="ml-1 h-5 min-w-5 px-1 text-[10px] font-black"
+												className={cn(
+													"ml-1 h-4 min-w-4 px-1 text-[9px] font-black border-none",
+													tab.value === "avaliacao" ? "bg-orange-500 text-white" : "bg-primary text-white"
+												)}
 											>
 												{badgeCount}
 											</Badge>
@@ -439,65 +405,35 @@ export const EvolutionHeader = memo(
 						</nav>
 					)}
 
-					{/* Version toggle (SOAP / Texto Livre) */}
-					{onVersionChange && (
-						<>
-							<div
-								className="h-8 w-px bg-border shrink-0 hidden sm:block"
-								aria-hidden
-							/>
-							<EvolutionVersionToggle
-								version={evolutionVersion}
-								onToggle={onVersionChange}
-							/>
-						</>
-					)}
+					<div className="h-6 w-px bg-slate-100 shrink-0 hidden sm:block" />
 
-					{/* Fisioterapeuta ao lado do toggle */}
+					{/* Fisioterapeuta */}
 					{onTherapistChange && (
-						<>
-							<div
-								className="h-8 w-px bg-border shrink-0 hidden sm:block"
-								aria-hidden
-							/>
-							<div className="flex items-center gap-2.5 shrink-0">
-								<UserCog className="h-4 w-4 text-primary shrink-0" />
-								<Select
-									value={selectedTherapistId || THERAPIST_SELECT_NONE}
-									onValueChange={(v) =>
-										onTherapistChange(v === THERAPIST_SELECT_NONE ? "" : v)
-									}
-									aria-label={THERAPIST_PLACEHOLDER}
-								>
-									<SelectTrigger className="h-10 w-[200px] text-sm font-medium bg-background/80 border-border/60 shadow-sm transition-all hover:border-primary/30">
+						<div className="flex items-center gap-2 shrink-0">
+							<Select
+								value={selectedTherapistId || THERAPIST_SELECT_NONE}
+								onValueChange={(v) =>
+									onTherapistChange(v === THERAPIST_SELECT_NONE ? "" : v)
+								}
+							>
+								<SelectTrigger className="h-9 w-[180px] text-xs font-bold bg-white/50 border-slate-200 shadow-none hover:border-primary/30 transition-all text-slate-600">
+									<div className="flex items-center gap-2 truncate">
+										<UserCog className="h-3.5 w-3.5 text-primary/60 shrink-0" />
 										<SelectValue placeholder={THERAPIST_PLACEHOLDER} />
-									</SelectTrigger>
-									<SelectContent>
-										<SelectItem value={THERAPIST_SELECT_NONE}>
-											{THERAPIST_PLACEHOLDER}
+									</div>
+								</SelectTrigger>
+								<SelectContent>
+									<SelectItem value={THERAPIST_SELECT_NONE}>
+										{THERAPIST_PLACEHOLDER}
+									</SelectItem>
+									{therapists.map((t) => (
+										<SelectItem key={t.id} value={t.id} className="text-xs font-medium">
+											{t.name}
 										</SelectItem>
-										{showTherapistFallback && (
-											<SelectItem value={selectedTherapistId}>
-												Responsável atual
-											</SelectItem>
-										)}
-										{therapists.map((t) => (
-											<SelectItem key={t.id} value={t.id}>
-												{t.crefito ? `${t.name} (${t.crefito})` : t.name}
-											</SelectItem>
-										))}
-									</SelectContent>
-								</Select>
-								{selectedTherapist?.crefito && (
-									<Badge
-										variant="secondary"
-										className="text-sm font-mono font-bold shrink-0 bg-primary/5 text-primary border-primary/20"
-									>
-										CREFITO {selectedTherapist.crefito}
-									</Badge>
-								)}
-							</div>
-						</>
+									))}
+								</SelectContent>
+							</Select>
+						</div>
 					)}
 
 					<div className="flex-1 min-w-4" />

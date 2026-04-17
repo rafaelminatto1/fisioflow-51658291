@@ -460,7 +460,7 @@ app.use("*", requireAuth);
 
 app.get("/", async (c) => {
 	const user = c.get("user");
-	const db = createDb(c.env);
+	const db = createDb(c.env, 'write');
 
 	const search = trimmedString(c.req.query("search"));
 	const requestedStatus = trimmedString(c.req.query("status"));
