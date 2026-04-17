@@ -27,6 +27,7 @@ const CATEGORIES = [
 	{ id: 'exercise', label: 'Exercícios' },
 	{ id: 'test', label: 'Testes Clínicos' },
 	{ id: 'movement', label: 'Movimentos' },
+	{ id: 'questionnaire', label: 'Questionários' },
 ];
 
 export function PhysioDictionaryView() {
