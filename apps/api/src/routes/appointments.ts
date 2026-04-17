@@ -52,17 +52,24 @@ app.get('/', requireAuth, async (c) => {
   const db = createDb(c.env);
   try {
     const { dateFrom, dateTo, therapistId, patientId, status, limit = '100' } = c.req.query();
-    
-    console.log('[Appointments/List] Filters:', { 
-      orgId: user.organizationId, 
-      dateFrom, 
-      dateTo, 
-      therapistId, 
-      patientId, 
-      status 
-    });
 
-    let conditions: any = withTenant(appointments, user.organizationId);
+    // Fallback para organizationId se vier o default ou nulo
+    let organizationId = user.organizationId;
+    if (!organizationId || organizationId === '00000000-0000-0000-0000-000000000001') {
+      console.log('[Appointments/List] Invalid/Default Org ID detected, looking up profile for uid:', user.uid);
+      try {
+        const { profiles } = await import('@fisioflow/db');
+        const profileResult = await db.select().from(profiles).where(eq(profiles.userId, user.uid)).limit(1);
+        if (profileResult[0]?.organizationId) {
+          organizationId = profileResult[0].organizationId;
+          console.log('[Appointments/List] Found correct Org ID from profile:', organizationId);
+        }
+      } catch (profileErr) {
+        console.error('[Appointments/List] Error fetching profile for org fallback:', profileErr);
+      }
+    }
+
+    let conditions: any = withTenant(appointments, organizationId);
 
     if (dateFrom) conditions = and(conditions, gte(appointments.date, dateFrom))!;
     if (dateTo)   conditions = and(conditions, lte(appointments.date, dateTo))!;
@@ -99,7 +106,7 @@ app.get('/', requireAuth, async (c) => {
       .orderBy(desc(appointments.date), desc(appointments.startTime))
       .limit(limitNum);
 
-    
+
     const sanitizedRows = result.map(normalizeAppointmentRow);
 
     c.header('Cache-Control', 'no-store');
@@ -118,10 +125,10 @@ async function getIntervalCapacity(
   date: string,
   startTime: string,
   endTime: string,
-  useLock: boolean = false
+  _useLock: boolean = false
 ): Promise<number> {
   try {
-    const lockClause = useLock ? sql`FOR UPDATE` : sql``;
+    // FOR UPDATE is not compatible with aggregate functions; capacity is read-only here
     const result = await db.execute(sql`
       SELECT MIN(max_patients)::int AS capacity
       FROM schedule_capacity
@@ -129,7 +136,6 @@ async function getIntervalCapacity(
         AND day_of_week = EXTRACT(DOW FROM ${date}::date)
         AND start_time < ${endTime}::time
         AND end_time > ${startTime}::time
-      ${lockClause}
     `);
 
     const capacity = Number(result.rows?.[0]?.capacity ?? 1);
@@ -160,7 +166,7 @@ async function getOverlappingAppointments(
       FROM appointments
       WHERE organization_id = ${safeOrgId}::uuid
         AND date = ${date}::date
-        AND status NOT IN ('cancelado', 'faltou', 'faltou_com_aviso', 'faltou_sem_aviso', 'remarcar')
+        AND status NOT IN ('cancelled', 'no_show', 'rescheduled')
         AND deleted_at IS NULL
         AND start_time < ${endTime}::time
         AND end_time > ${startTime}::time
@@ -198,10 +204,10 @@ async function enforceCapacity(
   }
 
   const capacity = await getIntervalCapacity(
-    db, 
-    organizationId, 
-    payload.date, 
-    payload.startTime, 
+    db,
+    organizationId,
+    payload.date,
+    payload.startTime,
     payload.endTime,
     payload.useLock
   );
@@ -230,7 +236,7 @@ async function enforceCapacity(
 // 20 agendamentos criados por organização por hora
 app.post('/', requireAuth, rateLimit({ limit: 20, windowSeconds: 3600, endpoint: 'appointments-create' }), async (c) => {
   const user = c.get('user');
-  const db = createDb(c.env);
+  const db = createDb(c.env, 'write');
 
   try {
     const body = await c.req.json();
@@ -297,9 +303,9 @@ app.post('/', requireAuth, rateLimit({ limit: 20, windowSeconds: 3600, endpoint:
     // Validação de UUID para therapistId
     if (!isUuid(therapistId)) {
       console.error('[Appointments/Create] Invalid therapistId (not a UUID):', therapistId);
-      return c.json({ 
-        error: 'Erro de configuração de perfil', 
-        details: `O ID do terapeuta no token (${therapistId}) não é um UUID válido. Verifique o cadastro do perfil.` 
+      return c.json({
+        error: 'Erro de configuração de perfil',
+        details: `O ID do terapeuta no token (${therapistId}) não é um UUID válido. Verifique o cadastro do perfil.`
       }, 400);
     }
 
@@ -351,8 +357,8 @@ app.post('/', requireAuth, rateLimit({ limit: 20, windowSeconds: 3600, endpoint:
       return c.json({ error: 'Conflito de horário: o terapeuta já possui um agendamento neste período.' }, 409);
     }
     console.error('[Appointments/Create] Critical Error Catch-All:', error.message, error.stack);
-    return c.json({ 
-      error: 'Erro ao criar agendamento', 
+    return c.json({
+      error: 'Erro ao criar agendamento',
       details: error.message,
       code: error.code || 'UNKNOWN_ERROR'
     }, 500);
@@ -366,6 +372,18 @@ app.get('/:id', requireAuth, async (c) => {
   if (!id) return c.json({ error: 'ID é obrigatório' }, 400);
   if (!isUuid(id)) return c.json({ error: 'ID inválido' }, 400);
   try {
+    // Fallback para organizationId
+    let organizationId = user.organizationId;
+    if (!organizationId || organizationId === '00000000-0000-0000-0000-000000000001') {
+      try {
+        const { profiles } = await import('@fisioflow/db');
+        const profileResult = await db.select().from(profiles).where(eq(profiles.userId, user.uid)).limit(1);
+        if (profileResult[0]?.organizationId) {
+          organizationId = profileResult[0].organizationId;
+        }
+      } catch (e) {}
+    }
+
     const result = await db
       .select({
         id: appointments.id,
@@ -389,7 +407,7 @@ app.get('/:id', requireAuth, async (c) => {
       .from(appointments)
       .leftJoin(patients, eq(patients.id, appointments.patientId))
       .where(
-        withTenant(appointments, user.organizationId, eq(appointments.id, id as string))
+        withTenant(appointments, organizationId, eq(appointments.id, id as string))
       )
       .limit(1);
 
@@ -404,13 +422,25 @@ app.get('/:id', requireAuth, async (c) => {
 
 const updateAppointmentHandler: MiddlewareHandler<{ Bindings: Env; Variables: AuthVariables }> = async (c) => {
   const user = c.get('user');
-  const db = createDb(c.env);
+  const db = createDb(c.env, 'write');
   const id = c.req.param('id');
   if (!id) return c.json({ error: 'ID é obrigatório' }, 400);
   if (!isUuid(id)) return c.json({ error: 'ID inválido' }, 400);
   try {
     const body = await c.req.json() as Record<string, any>;
-    
+
+    // Fallback para organizationId
+    let organizationId = user.organizationId;
+    if (!organizationId || organizationId === '00000000-0000-0000-0000-000000000001') {
+      try {
+        const { profiles } = await import('@fisioflow/db');
+        const profileResult = await db.select().from(profiles).where(eq(profiles.userId, user.uid)).limit(1);
+        if (profileResult[0]?.organizationId) {
+          organizationId = profileResult[0].organizationId;
+        }
+      } catch (e) {}
+    }
+
     const response = await db.transaction(async (tx) => {
       const currentResult = await tx
         .select({
@@ -424,7 +454,7 @@ const updateAppointmentHandler: MiddlewareHandler<{ Bindings: Env; Variables: Au
         })
         .from(appointments)
         .where(
-          withTenant(appointments, user.organizationId, eq(appointments.id, id as string))
+          withTenant(appointments, organizationId, eq(appointments.id, id as string))
         )
         .limit(1);
 
@@ -466,7 +496,7 @@ const updateAppointmentHandler: MiddlewareHandler<{ Bindings: Env; Variables: Au
         );
 
       if (shouldRecheckCapacity) {
-        const capacityError = await enforceCapacity(tx, user.organizationId, {
+        const capacityError = await enforceCapacity(tx, organizationId, {
           date: effectiveDate,
           startTime: effectiveStartTime,
           endTime: finalEndTime,
@@ -499,7 +529,7 @@ const updateAppointmentHandler: MiddlewareHandler<{ Bindings: Env; Variables: Au
       if (body.isUnlimited !== undefined || body.is_unlimited !== undefined) updatePayload.isUnlimited = body.isUnlimited ?? body.is_unlimited;
       if (body.additionalNames !== undefined || body.additional_names !== undefined) updatePayload.additionalNames = body.additionalNames ?? body.additional_names;
 
-      if (Object.keys(updatePayload).length === 1) { 
+      if (Object.keys(updatePayload).length === 1) {
         return { status: 400, data: { error: 'Nenhum campo para atualizar' } };
       }
 
@@ -507,7 +537,7 @@ const updateAppointmentHandler: MiddlewareHandler<{ Bindings: Env; Variables: Au
         .update(appointments)
         .set(updatePayload)
         .where(
-          withTenant(appointments, user.organizationId, eq(appointments.id, id as string))
+          withTenant(appointments, organizationId, eq(appointments.id, id as string))
         )
         .returning();
 
@@ -520,13 +550,13 @@ const updateAppointmentHandler: MiddlewareHandler<{ Bindings: Env; Variables: Au
       return c.json(response.data, response.status as any);
     }
 
-    const row = response.data.data;
+    const row = (response.data as any).data;
 
     // Push side effects to background to keep response fast
     c.executionCtx.waitUntil((async () => {
       try {
         // Real-time Broadcast
-        await broadcastToOrg(c.env, user.organizationId, {
+        await broadcastToOrg(c.env, organizationId, {
           type: 'APPOINTMENT_UPDATED',
           payload: { id: row.id, action: 'updated', timestamp: new Date().toISOString() }
         });
@@ -576,13 +606,26 @@ app.put('/:id', requireAuth, updateAppointmentHandler);
 
 app.post('/:id/cancel', requireAuth, async (c) => {
   const user = c.get('user');
-  const db = createDb(c.env);
+  const db = createDb(c.env, 'write');
   const id = c.req.param('id');
   if (!id) return c.json({ error: 'ID é obrigatório' }, 400);
   if (!isUuid(id)) return c.json({ error: 'ID inválido' }, 400);
 
   try {
     const body = await c.req.json().catch(() => ({}));
+
+    // Fallback para organizationId
+    let organizationId = user.organizationId;
+    if (!organizationId || organizationId === '00000000-0000-0000-0000-000000000001') {
+      try {
+        const { profiles } = await import('@fisioflow/db');
+        const profileResult = await db.select().from(profiles).where(eq(profiles.userId, user.uid)).limit(1);
+        if (profileResult[0]?.organizationId) {
+          organizationId = profileResult[0].organizationId;
+        }
+      } catch (e) {}
+    }
+
     const result = await db
       .update(appointments)
       .set({
@@ -592,7 +635,7 @@ app.post('/:id/cancel', requireAuth, async (c) => {
         updatedAt: new Date(),
       })
       .where(
-        withTenant(appointments, user.organizationId, eq(appointments.id, id))
+        withTenant(appointments, organizationId, eq(appointments.id, id))
       )
       .returning({ id: appointments.id });
 
@@ -603,7 +646,7 @@ app.post('/:id/cancel', requireAuth, async (c) => {
     // Real-time Broadcast in background
     c.executionCtx.waitUntil((async () => {
       try {
-        await broadcastToOrg(c.env, user.organizationId, {
+        await broadcastToOrg(c.env, organizationId, {
           type: 'APPOINTMENT_UPDATED',
           payload: { id, action: 'cancelado', timestamp: new Date().toISOString() }
         });
@@ -621,17 +664,29 @@ app.post('/:id/cancel', requireAuth, async (c) => {
 
 app.delete('/:id', requireAuth, async (c) => {
   const user = c.get('user');
-  const db = createDb(c.env);
+  const db = createDb(c.env, 'write');
   const id = c.req.param('id');
   if (!id) return c.json({ error: 'ID é obrigatório' }, 400);
   if (!isUuid(id)) return c.json({ error: 'ID inválido' }, 400);
 
   try {
+    // Fallback para organizationId
+    let organizationId = user.organizationId;
+    if (!organizationId || organizationId === '00000000-0000-0000-0000-000000000001') {
+      try {
+        const { profiles } = await import('@fisioflow/db');
+        const profileResult = await db.select().from(profiles).where(eq(profiles.userId, user.uid)).limit(1);
+        if (profileResult[0]?.organizationId) {
+          organizationId = profileResult[0].organizationId;
+        }
+      } catch (e) {}
+    }
+
     const result = await db
       .update(appointments)
       .set({ deletedAt: new Date(), updatedAt: new Date() })
       .where(
-        withTenant(appointments, user.organizationId, eq(appointments.id, id))
+        withTenant(appointments, organizationId, eq(appointments.id, id))
       )
       .returning({ id: appointments.id });
 
@@ -640,7 +695,7 @@ app.delete('/:id', requireAuth, async (c) => {
     if (!row) return c.json({ error: 'Agendamento não encontrado' }, 404);
 
     // Real-time Broadcast
-    await broadcastToOrg(c.env, user.organizationId, {
+    await broadcastToOrg(c.env, organizationId, {
       type: 'APPOINTMENT_UPDATED',
       payload: { id, action: 'deleted', timestamp: new Date().toISOString() }
     });

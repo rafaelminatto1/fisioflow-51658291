@@ -157,7 +157,8 @@ export const AuthContextProvider: React.FC<{ children: React.ReactNode }> = ({
 				// 2. Tenta carregar perfil completo do banco de dados (Neon DB)
 				// Isso garante que mudanças no nome, CREFITO, etc. sejam refletidas após reload.
 				try {
-					const dbProfileRes = await profileApi.me();
+					const timeout = new Promise<null>((res) => setTimeout(() => res(null), 4000));
+					const dbProfileRes = await Promise.race([profileApi.me(), timeout]);
 					if (dbProfileRes?.data) {
 						const dbProfile = dbProfileRes.data;
 						setProfile((prev) =>

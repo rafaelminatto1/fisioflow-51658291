@@ -7,7 +7,7 @@ import { createRemoteJWKSet, jwtVerify } from "jose";
 import type { MiddlewareHandler, Context } from "hono";
 import { getCookie } from "hono/cookie";
 import type { Env } from "../types/env";
-import { createPool, runWithOrg } from "./db";
+import { createPool, runWithOrg, getRawSql } from "./db";
 
 const jwksCache = new Map<string, ReturnType<typeof createRemoteJWKSet>>();
 
@@ -45,8 +45,8 @@ async function resolveAuthContext(
 	if (!candidate.uid) return null;
 
 	try {
-		const pool = createPool(env);
-		const res = await (pool as any).query(
+		const sql = getRawSql(env, 'read');
+		let res = await sql(
 			`
         SELECT user_id, email, role, organization_id
         FROM profiles
@@ -58,7 +58,42 @@ async function resolveAuthContext(
 			[candidate.uid],
 		);
 
-		const row = res.rows?.[0];
+		let row = res.rows?.[0];
+
+		// Auto-sincronização por e-mail: Se não encontrou pelo UID mas temos e-mail,
+		// tenta recuperar o perfil pelo e-mail e atualizar o UID automaticamente.
+		if (!row && candidate.email) {
+			const syncRes = await sql(
+				`
+        SELECT user_id, email, role, organization_id
+        FROM profiles
+        WHERE email = $1
+          AND organization_id IS NOT NULL
+        ORDER BY updated_at DESC NULLS LAST, created_at DESC NULLS LAST
+        LIMIT 1
+      `,
+				[candidate.email],
+			);
+
+			row = syncRes.rows?.[0];
+
+			if (row) {
+				console.log(
+					`[Auth] Perfil encontrado por e-mail (${candidate.email}). Sincronizando UID: ${row.user_id} -> ${candidate.uid}`,
+				);
+				// Atualiza o UID de forma assíncrona para não atrasar a resposta
+				sql(
+					"UPDATE profiles SET user_id = $1, updated_at = NOW() WHERE email = $2",
+					[candidate.uid, candidate.email],
+				).catch((err) =>
+					console.error("[Auth] Erro ao auto-sincronizar user_id:", err),
+				);
+
+				// Ajusta o row local para prosseguir com a autenticação
+				row.user_id = candidate.uid;
+			}
+		}
+
 		if (row?.organization_id) {
 			return {
 				uid: candidate.uid,
@@ -174,8 +209,8 @@ export async function verifyToken<E extends { Bindings: Env }>(
 
 			// Fallback B: Consulta direta ao banco de dados (mais robusto)
 			try {
-				const pool = createPool(env);
-				const res = await (pool as any).query(
+				const sql = getRawSql(env, 'read');
+				const res = await sql(
 					`
           SELECT s."userId", u.email, u.role, p.organization_id 
           FROM neon_auth.session s
@@ -265,6 +300,7 @@ export async function verifyToken<E extends { Bindings: Env }>(
 		return null;
 	}
 }
+
 
 export const requireAuth: MiddlewareHandler<{
 	Bindings: Env;

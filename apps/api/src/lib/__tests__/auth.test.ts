@@ -14,6 +14,8 @@ vi.mock('jose', () => ({
 
 vi.mock('../db', () => ({
   createPool: vi.fn(() => ({ query: mocks.query })),
+  getRawSql: vi.fn(() => mocks.query),
+  runWithOrg: vi.fn((_organizationId: string, fn: () => Promise<unknown>) => fn()),
 }));
 
 const env = {
@@ -83,7 +85,9 @@ describe('verifyToken', () => {
         email: 'missing-org@example.com',
       },
     });
-    mocks.query.mockResolvedValueOnce({ rows: [] });
+    mocks.query
+      .mockResolvedValueOnce({ rows: [] })
+      .mockResolvedValueOnce({ rows: [] });
 
     const { verifyToken, DEFAULT_ORG_ID } = await import('../auth');
     const user = await verifyToken(makeContext(), env);
