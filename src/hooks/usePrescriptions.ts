@@ -19,6 +19,7 @@ export interface PrescriptionExercise {
 	description?: string;
 	sets: number;
 	repetitions: number;
+	intensity_rpe?: string; // e.g., "8", "Até a falha", "Moderado"
 	frequency: string;
 	observations?: string;
 	video_url?: string;

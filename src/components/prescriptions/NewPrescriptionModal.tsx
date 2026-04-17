@@ -7,6 +7,8 @@ import {
 	BadgeCheck,
 } from "lucide-react";
 import { toast } from "sonner";
+import { protocolDictionary } from "@/data/protocolDictionary";
+import { exerciseDictionary } from "@/data/exerciseDictionary";
 import {
 	CustomModal,
 	CustomModalHeader,
@@ -44,6 +46,8 @@ interface NewPrescriptionModalProps {
 	patientId: string;
 	patientName: string;
 	onSuccess?: () => void;
+	initialProtocolId?: string;
+	initialPhaseIndex?: number;
 }
 
 export function NewPrescriptionModal({
@@ -52,6 +56,8 @@ export function NewPrescriptionModal({
 	patientId,
 	patientName,
 	onSuccess,
+	initialProtocolId,
+	initialPhaseIndex = 0,
 }: NewPrescriptionModalProps) {
 	const isMobile = useIsMobile();
 	const [filters, setFilters] = useState({
@@ -82,6 +88,34 @@ export function NewPrescriptionModal({
 	>([]);
 	const [selectedExerciseId, setSelectedExerciseId] = useState("");
 
+	// Auto-load from protocol if provided
+	useState(() => {
+		if (initialProtocolId) {
+			const protocol = protocolDictionary.find(p => p.id === initialProtocolId);
+			if (protocol && protocol.phases[initialPhaseIndex]) {
+				const phase = protocol.phases[initialPhaseIndex];
+				setTitle(`Prescrição: ${protocol.pt} (${phase.name})`);
+				
+				const protocolExercises = phase.exercises.map(exId => {
+					const ex = exerciseDictionary.find(e => e.id === exId);
+					if (!ex) return null;
+					return {
+						id: uuidv4(),
+						name: ex.pt,
+						description: ex.instruction_pt || ex.description_pt || "",
+						sets: ex.suggested_sets || 3,
+						repetitions: ex.suggested_reps || 10,
+						intensity_rpe: ex.suggested_rpe || "",
+						frequency: "Diariamente",
+						observations: "Focar na qualidade do movimento."
+					} as PrescriptionExercise;
+				}).filter(Boolean) as PrescriptionExercise[];
+
+				setSelectedExercises(protocolExercises);
+			}
+		}
+	});
+
 	const handleAddExercise = () => {
 		if (!selectedExerciseId) return;
 
@@ -93,9 +127,10 @@ export function NewPrescriptionModal({
 		const newExercise: PrescriptionExercise = {
 			id: uuidv4(),
 			name: exercise.name,
-			description: exercise.description,
+			description: exercise.instruction_pt || exercise.description,
 			sets: exercise.sets || 3,
 			repetitions: exercise.repetitions || 10,
+			intensity_rpe: exercise.suggested_rpe || "",
 			frequency: "Diariamente",
 			video_url: exercise.video_url,
 			image_url: exercise.image_url,
@@ -198,6 +233,19 @@ export function NewPrescriptionModal({
 								</Select>
 							</div>
 						</div>
+
+						{/* Protocol Info (if any) */}
+						{initialProtocolId && (
+							<div className="bg-primary/5 border border-primary/20 rounded-xl p-3 flex items-start gap-3">
+								<BadgeCheck className="h-5 w-5 text-primary shrink-0 mt-0.5" />
+								<div className="space-y-1">
+									<p className="text-[11px] font-bold text-primary uppercase">Carga Automática de Protocolo</p>
+									<p className="text-xs text-slate-600">
+										Os exercícios abaixo foram sugeridos com base no protocolo de <strong>{protocolDictionary.find(p => p.id === initialProtocolId)?.pt}</strong>.
+									</p>
+								</div>
+							</div>
+						)}
 
 						{/* Filters */}
 						<div className="space-y-3 p-3 bg-muted/20 rounded-lg border">
@@ -324,19 +372,24 @@ export function NewPrescriptionModal({
 												/>
 											</div>
 											<div className="space-y-1">
-												<Label className="text-xs">Repetições</Label>
-												<Input
-													type="number"
-													min={1}
-													value={exercise.repetitions}
-													onChange={(e) =>
-														handleUpdateExercise(
-															exercise.id,
-															"repetitions",
-															parseInt(e.target.value) || 1,
-														)
-													}
-												/>
+												<Label className="text-xs">Repetições / RPE</Label>
+												<div className="flex gap-2">
+													<Input
+														className="flex-1"
+														placeholder="Ex: 12 ou RPE 8"
+														value={exercise.intensity_rpe || exercise.repetitions}
+														onChange={(e) => {
+															const val = e.target.value;
+															// If it's a number, update repetitions, otherwise update RPE
+															if (/^\d+$/.test(val)) {
+																handleUpdateExercise(exercise.id, "repetitions", parseInt(val));
+																handleUpdateExercise(exercise.id, "intensity_rpe", "");
+															} else {
+																handleUpdateExercise(exercise.id, "intensity_rpe", val);
+															}
+														}}
+													/>
+												</div>
 											</div>
 											<div className="space-y-1">
 												<Label className="text-xs">Frequência</Label>
@@ -373,9 +426,24 @@ export function NewPrescriptionModal({
 										</div>
 
 										<div className="space-y-1">
-											<Label className="text-xs">Observações</Label>
+											<Label className="text-xs">Instruções para o Paciente</Label>
+											<Textarea
+												placeholder="Ex: Mantenha a coluna reta..."
+												value={exercise.description || ""}
+												className="text-xs min-h-[60px]"
+												onChange={(e) =>
+													handleUpdateExercise(
+														exercise.id,
+														"description",
+														e.target.value,
+													)
+												}
+											/>
+										</div>
+										<div className="space-y-1">
+											<Label className="text-xs">Observações do Terapeuta</Label>
 											<Input
-												placeholder="Ex: Manter coluna reta, respirar pausadamente..."
+												placeholder="Ex: Cuidado com compensações..."
 												value={exercise.observations || ""}
 												onChange={(e) =>
 													handleUpdateExercise(
