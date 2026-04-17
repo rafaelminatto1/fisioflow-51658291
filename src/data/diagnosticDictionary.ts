@@ -80,5 +80,56 @@ export const diagnosticDictionary: PhysioDictionaryEntry[] = [
     aliases_pt: ['Fascite plantar', 'Fasciopatia plantar', 'Dor no calcanhar', 'Esporão'],
     aliases_en: ['Plantar heel pain', 'Heel spur syndrome', 'Plantar fasciopathy'],
     description_pt: 'Caracterizada por dor na planta do pé devido a sobrecarga da aponeurose.'
+  },
+  {
+    id: 'diag_parkinson',
+    pt: 'Doença de Parkinson',
+    en: 'Parkinson\'s Disease',
+    category: 'condition',
+    subcategory: 'Neuro',
+    aliases_pt: ['Parkinson', 'DP', 'G20'],
+    aliases_en: ['PD', 'Parkinsons'],
+    description_pt: 'Distúrbio degenerativo do sistema nervoso central.'
+  },
+  {
+    id: 'diag_ms',
+    pt: 'Esclerose Múltipla',
+    en: 'Multiple Sclerosis',
+    category: 'condition',
+    subcategory: 'Neuro',
+    aliases_pt: ['Esclerose', 'EM', 'G35'],
+    aliases_en: ['MS', 'Multiple Sclerosis'],
+    description_pt: 'Doença desmielinizante inflamatória crônica.'
+  },
+  {
+    id: 'diag_fibromyalgia',
+    pt: 'Fibromialgia',
+    en: 'Fibromyalgia',
+    category: 'condition',
+    subcategory: 'Sistêmica',
+    aliases_pt: ['FM', 'Fibro', 'M79.7'],
+    aliases_en: ['FM', 'Fibro'],
+    description_pt: 'Dor musculoesquelética generalizada e fadiga.'
+  },
+  {
+    id: 'diag_disc_herniation_lumbar',
+    pt: 'Hérnia de Disco Lombar',
+    en: 'Lumbar Disc Herniation',
+    category: 'condition',
+    subcategory: 'Coluna',
+    aliases_pt: ['Hérnia lombar', 'Extrusão discal', 'M51.2'],
+    aliases_en: ['Lumbar HNP', 'Disc herniation'],
+    description_pt: 'Compressão radicular na região lombar.'
+  },
+  {
+    id: 'diag_carpal_tunnel',
+    pt: 'Síndrome do Túnel do Carpo',
+    en: 'Carpal Tunnel Syndrome',
+    category: 'condition',
+    subcategory: 'Punho/Mão',
+    aliases_pt: ['Túnel do carpo', 'Compressão do mediano', 'G56.0'],
+    aliases_en: ['CTS', 'Carpal tunnel'],
+    description_pt: 'Compressão do nervo mediano no punho.'
   }
 ];
+
