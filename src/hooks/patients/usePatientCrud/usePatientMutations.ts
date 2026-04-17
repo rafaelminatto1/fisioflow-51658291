@@ -268,17 +268,17 @@ export const useDeletePatient = () => {
 			await patientsApi.delete(id);
 		},
 		onSuccess: async (_, id) => {
-			logger.info("Paciente deletado com sucesso", { id }, "useDeletePatient");
+			logger.info("Paciente arquivado com sucesso", { id }, "useDeletePatient");
 			await invalidatePatientsComprehensive(queryClient, id);
-			toast.success("Paciente excluído", {
-				description: "O paciente foi removido com sucesso.",
+			toast.success("Paciente arquivado", {
+				description: "O paciente foi arquivado. Todos os dados foram preservados.",
 			});
 		},
 		onError: (error: Error) => {
-			logger.error("Erro ao deletar paciente", error, "useDeletePatient");
+			logger.error("Erro ao arquivar paciente", error, "useDeletePatient");
 			toast({
-				title: "Erro ao excluir",
-				description: error.message || "Não foi possível excluir o paciente.",
+				title: "Erro ao arquivar",
+				description: error.message || "Não foi possível arquivar o paciente.",
 				variant: "destructive",
 			});
 		},
