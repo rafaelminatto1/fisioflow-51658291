@@ -185,18 +185,26 @@ function wrapSqlWithRls(
 	organizationId: string,
 ): NeonQueryFunction<any, any> {
 	return (async (textOrStrings: any, ...values: any[]) => {
-		// Prepare the main query.
-		// Drizzle can pass either (queryText, params) or (stringsArray, ...values)
-		const queryArgs = (typeof textOrStrings === 'string')
-			? { text: textOrStrings, params: values[0] ?? [] }
-			: { text: textOrStrings[0], params: values };
+		const isStr = typeof textOrStrings === 'string';
+		const queryText = isStr ? textOrStrings : textOrStrings[0];
+		const queryParams = isStr ? (values[0] ?? []) : values;
+		// Drizzle passes { fullResults: true, arrayMode: false } as the last argument.
+		// We must forward it to preserve the result shape Drizzle expects.
+		const extraOptions = isStr && values.length > 1 && typeof values[values.length - 1] === 'object'
+			? values[values.length - 1]
+			: undefined;
 
-		return (sql as any)
-			.transaction([
-				(sql as any).query(`SELECT set_config('app.org_id', $1, true)`, [organizationId]),
-				(sql as any).query(queryArgs.text, queryArgs.params),
-			])
-			.then((results: any[]) => results[1]);
+		// Use sql() directly (not sql.query()) so we can forward extraOptions.
+		const innerQuery = extraOptions
+			? (sql as any)(queryText, queryParams, extraOptions)
+			: (sql as any).query(queryText, queryParams);
+
+		const results = await (sql as any).transaction([
+			(sql as any).query(`SELECT set_config('app.org_id', $1, true)`, [organizationId]),
+			innerQuery,
+		]);
+
+		return results[1];
 	}) as any;
 }
 
