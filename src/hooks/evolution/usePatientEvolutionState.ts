@@ -30,7 +30,7 @@ export function usePatientEvolutionState() {
 
 	// ========== UI STATE ==========
 	const [activeTab, setActiveTab] = useState<EvolutionTab>("evolucao");
-	const [evolutionVersion, setEvolutionVersion] = useState<EvolutionVersion>(
+	const [evolutionVersion, setEvolutionVersionRaw] = useState<EvolutionVersion>(
 		() => {
 			try {
 				return (
@@ -43,6 +43,10 @@ export function usePatientEvolutionState() {
 			}
 		},
 	);
+	const setEvolutionVersion = (v: EvolutionVersion) => {
+		try { localStorage.setItem("fisioflow-evolution-version", v); } catch { /* ignore */ }
+		setEvolutionVersionRaw(v);
+	};
 	const [autoSaveEnabled, setAutoSaveEnabled] = useState(true);
 	const [showApplyTemplate, setShowApplyTemplate] = useState(false);
 	const [showInsights, setShowInsights] = useState(true);
