@@ -222,7 +222,7 @@ app.get("/me", requireAuth, async (c) => {
 
 app.get("/therapists", requireAuth, async (c) => {
 	const user = c.get("user");
-	const db = createDb(c.env);
+	const db = createDb(c.env, 'read');
 	try {
 		const therapists = await db.query.profiles.findMany({
 			where: (profiles, { and, eq, inArray }) =>
