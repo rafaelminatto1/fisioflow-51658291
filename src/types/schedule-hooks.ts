@@ -20,6 +20,14 @@ export interface ScheduleModalsState {
 	isCancellingAllToday: boolean;
 	rescheduleSuccessMessage: string | null;
 	setRescheduleSuccessMessage: (message: string | null) => void;
+	capacityConfirmation: {
+		appointment: Appointment;
+		newDate: Date;
+		newTime: string;
+	} | null;
+	setCapacityConfirmation: (
+		data: { appointment: Appointment; newDate: Date; newTime: string } | null,
+	) => void;
 }
 
 export interface ScheduleActions {

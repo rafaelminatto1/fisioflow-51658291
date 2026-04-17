@@ -128,6 +128,39 @@ export const ScheduleModals: React.FC<ScheduleModalsProps> = ({
 					</AlertDialogFooter>
 				</AlertDialogContent>
 			</AlertDialog>
+
+			<AlertDialog
+				open={!!modals.capacityConfirmation}
+				onOpenChange={(open) => !open && modals.setCapacityConfirmation(null)}
+			>
+				<AlertDialogContent>
+					<AlertDialogHeader>
+						<AlertDialogTitle>Capacidade máxima atingida</AlertDialogTitle>
+						<AlertDialogDescription>
+							O horário selecionado já atingiu a capacidade máxima de pacientes.
+							Deseja agendar mesmo assim?
+						</AlertDialogDescription>
+					</AlertDialogHeader>
+					<AlertDialogFooter>
+						<AlertDialogCancel>Cancelar</AlertDialogCancel>
+						<AlertDialogAction
+							onClick={() => {
+								if (modals.capacityConfirmation) {
+									actions.handleAppointmentReschedule(
+										modals.capacityConfirmation.appointment,
+										modals.capacityConfirmation.newDate,
+										modals.capacityConfirmation.newTime,
+										true,
+									);
+								}
+							}}
+							className="bg-primary hover:bg-primary/90"
+						>
+							Confirmar Agendamento
+						</AlertDialogAction>
+					</AlertDialogFooter>
+				</AlertDialogContent>
+			</AlertDialog>
 		</>
 	);
 };

@@ -127,11 +127,8 @@ const mainMenuItems = [
 const clinicaMenuItems = [
 	{ icon: Activity, label: "Exercícios", href: APP_ROUTES.EXERCISES },
 	{ icon: Target, label: "Protocolos", href: "/protocols" },
-];
-
-const avaliacoesSubmenu = [
 	{ icon: FlaskConical, label: "Testes Clínicos", href: "/clinical-tests" },
-	{ icon: ClipboardList, label: "Modelos", href: "/templates" },
+	{ icon: ClipboardList, label: "Avaliações", href: "/templates" },
 ];
 
 const biomecanicaSubmenu = [
@@ -226,7 +223,7 @@ const SidebarSection = ({
 }) => (
 	<div className="space-y-1">
 		{!collapsed && (
-			<div className="px-4 py-2 mt-4 first:mt-0">
+			<div className="px-4 pt-2 pb-1 first:pt-0">
 				<span className="text-[10px] font-black text-muted-foreground/40 uppercase tracking-[0.2em]">
 					{label}
 				</span>
@@ -239,7 +236,6 @@ const SidebarSection = ({
 export function Sidebar() {
 	const [collapsed, setCollapsed] = useState(false);
 	const [adminOpen, setAdminOpen] = useState(false);
-	const [avaliacaoOpen, setAvaliacaoOpen] = useState(false);
 	const [biomecanicaOpen, setBiomecanicaOpen] = useState(false);
 	const [financeiroOpen, setFinanceiroOpen] = useState(false);
 	const [configuracoesOpen, setConfiguracoesOpen] = useState(false);
@@ -249,9 +245,6 @@ export function Sidebar() {
 	const { preloadRoute } = useNavPreload();
 
 	const isAdminActive = location.pathname.startsWith("/admin");
-	const isAvaliacaoActive =
-		location.pathname === "/clinical-tests" ||
-		location.pathname === "/templates";
 	const isBiomecanicaActive =
 		location.pathname.startsWith("/clinical/biomechanics") ||
 		location.pathname === "/biomechanics";
@@ -280,7 +273,9 @@ export function Sidebar() {
 
 	const renderMenuItem = (item: any) => {
 		const Icon = item.icon;
-		const isActive = location.pathname === item.href;
+		const isActive =
+			location.pathname === item.href ||
+			(item.href !== "/" && location.pathname.startsWith(`${item.href}/`));
 
 		return (
 			<Link
@@ -399,68 +394,14 @@ export function Sidebar() {
 				)}
 
 				{/* Navigation */}
-				<ScrollArea className="flex-1 px-3 py-4">
-					<div className="space-y-6">
+				<ScrollArea className="flex-1 px-3 py-2">
+					<div className="space-y-3">
 						<SidebarSection label="Atendimento" collapsed={collapsed}>
 							{mainMenuItems.map(renderMenuItem)}
 						</SidebarSection>
 
 						<SidebarSection label="Clínica" collapsed={collapsed}>
 							{clinicaMenuItems.map(renderMenuItem)}
-							<Collapsible
-								open={avaliacaoOpen || isAvaliacaoActive}
-								onOpenChange={setAvaliacaoOpen}
-							>
-								<CollapsibleTrigger asChild>
-									<button
-										className={cn(
-											"flex items-center justify-between w-full px-4 py-3 rounded-2xl transition-all duration-500 group",
-											isAvaliacaoActive
-												? "bg-slate-50 dark:bg-slate-800/30 text-slate-900 dark:text-white font-black"
-												: "text-slate-500",
-										)}
-									>
-										<div className="flex items-center gap-3">
-											<ClipboardList className="h-5 w-5" />
-											{!collapsed && (
-												<span className="text-xs font-bold uppercase tracking-widest">
-													Avaliações
-												</span>
-											)}
-										</div>
-										{!collapsed && (
-											<ChevronDown
-												className={cn(
-													"h-3.5 w-3.5 transition-transform",
-													(avaliacaoOpen || isAvaliacaoActive) && "rotate-180",
-												)}
-											/>
-										)}
-									</button>
-								</CollapsibleTrigger>
-								<CollapsibleContent className="pl-9 space-y-1 mt-1 animate-in slide-in-from-top-2">
-									{avaliacoesSubmenu.map((item) => {
-										const SubIcon = item.icon;
-										const isSubActive =
-											location.pathname + location.search === item.href;
-										return (
-											<Link
-												key={item.href}
-												to={item.href}
-												className={cn(
-													"flex items-center gap-2 px-3 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all",
-													isSubActive
-														? "text-primary bg-primary/5"
-														: "text-muted-foreground hover:text-foreground hover:pl-4",
-												)}
-											>
-												<SubIcon className="h-3.5 w-3.5 flex-shrink-0" />
-												{!collapsed && item.label}
-											</Link>
-										);
-									})}
-								</CollapsibleContent>
-							</Collapsible>
 
 							<Collapsible
 								open={biomecanicaOpen || isBiomecanicaActive}

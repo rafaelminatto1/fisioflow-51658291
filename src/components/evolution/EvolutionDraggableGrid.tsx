@@ -38,6 +38,7 @@ import { ExerciseBlockWidget } from "@/components/evolution/ExerciseBlockWidget"
 import { HomeCareWidget } from "@/components/evolution/HomeCareWidget";
 import { SessionExercise } from "@/components/evolution/SessionExercisesPanel";
 import { SessionImageUpload } from "@/components/evolution/SessionImageUpload";
+import { formatClinicalSummary, tryParseJSON } from "@/lib/evolution/formatters";
 
 // ============================================================================================
 // TYPES & INTERFACES
@@ -251,6 +252,36 @@ const SOAPSectionWidget = React.memo(
 		);
 	}
 );
+
+// ============================================================================================
+// CLINICAL HISTORY HELPERS
+// ============================================================================================
+const ClinicalHistorySummary = ({ text }: { text?: string }) => {
+	const summary = formatClinicalSummary(text);
+
+	if (Array.isArray(summary)) {
+		return (
+			<div className="flex flex-col gap-1.5">
+				{summary.map((item) => (
+					<div key={item.label} className="flex items-start gap-2">
+						<span className="text-[10px] font-black uppercase tracking-wider text-slate-500 min-w-[70px] mt-0.5">
+							{item.label}:
+						</span>
+						<span className="text-[11px] text-slate-600 dark:text-slate-400 leading-relaxed">
+							{item.value}
+						</span>
+					</div>
+				))}
+			</div>
+		);
+	}
+
+	return (
+		<p className="text-[11px] text-slate-400 line-clamp-2 leading-relaxed italic">
+			{summary || "Sem resumo disponível."}
+		</p>
+	);
+};
 
 // ============================================================================================
 // MAIN EVOLUTION GRID
@@ -468,9 +499,11 @@ export const EvolutionDraggableGrid: React.FC<EvolutionDraggableGridProps> = ({
 												</div>
 												<Copy className="h-3.5 w-3.5 text-slate-300 opacity-0 group-hover:opacity-100 transition-opacity" />
 											</div>
-											<p className="text-[11px] text-slate-400 line-clamp-2 leading-relaxed italic">
-												{evolution.subjective || evolution.objective || "Sem resumo disponível."}
-											</p>
+											<div className="mt-1">
+												<ClinicalHistorySummary 
+													text={evolution.subjective || evolution.objective || evolution.assessment} 
+												/>
+											</div>
 										</div>
 									))}
 								</div>

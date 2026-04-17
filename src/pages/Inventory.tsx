@@ -388,7 +388,7 @@ export default function Inventory() {
 														</TableCell>
 														<TableCell className="text-right">
 															{item.cost_per_unit
-																? `R$ ${item.cost_per_unit.toFixed(2)}`
+																? `R$ ${Number(item.cost_per_unit).toFixed(2)}`
 																: "-"}
 														</TableCell>
 														<TableCell>{item.location || "-"}</TableCell>
@@ -583,7 +583,8 @@ export default function Inventory() {
 								<div className="space-y-2">
 									<Label>Quantidade</Label>
 									<Input
-										type="number"
+										type="text"
+										inputMode="numeric"
 										value={itemForm.current_quantity}
 										onChange={(e) =>
 											setItemForm((prev) => ({
@@ -596,7 +597,8 @@ export default function Inventory() {
 								<div className="space-y-2">
 									<Label>Mínimo</Label>
 									<Input
-										type="number"
+										type="text"
+										inputMode="numeric"
 										value={itemForm.minimum_quantity}
 										onChange={(e) =>
 											setItemForm((prev) => ({
@@ -621,8 +623,8 @@ export default function Inventory() {
 								<div className="space-y-2">
 									<Label>Custo Unitário (R$)</Label>
 									<Input
-										type="number"
-										step="0.01"
+										type="text"
+										inputMode="decimal"
 										value={itemForm.cost_per_unit}
 										onChange={(e) =>
 											setItemForm((prev) => ({

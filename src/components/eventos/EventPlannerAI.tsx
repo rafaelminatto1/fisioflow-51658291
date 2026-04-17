@@ -14,8 +14,10 @@ import {
 	Info,
 	ChevronDown,
 	ChevronUp,
+	Edit2,
 } from "lucide-react";
 import { useAI } from "@/integrations/neon/ai";
+import { Input } from "@/components/ui/input";
 import {
 	Select,
 	SelectContent,
@@ -30,6 +32,8 @@ export const EventPlannerAI: React.FC = () => {
 	const { generate } = useAI();
 	const [category, setCategory] = useState<string>("corrida");
 	const [participants, setParticipants] = useState<string>("100");
+	const [manualParticipants, setManualParticipants] = useState<string>("");
+	const [isManual, setIsManual] = useState(false);
 	const [plan, setPlan] = useState<string | null>(null);
 	const [loading, setLoading] = useState(false);
 	const [isExpanded, setIsExpanded] = useState(false);
@@ -37,9 +41,10 @@ export const EventPlannerAI: React.FC = () => {
 	const generatePlan = async () => {
 		setLoading(true);
 		try {
+			const pCount = isManual ? manualParticipants : participants;
 			const prompt = `
         Aja como um gestor de eventos de fisioterapia.
-        Planeje o kit clínico necessário para um evento do tipo: ${category} com aproximadamente ${participants} participantes.
+        Planeje o kit clínico necessário para um evento do tipo: ${category} com aproximadamente ${pCount} participantes.
 
         Sugira:
         1. Quantidade de fisioterapeutas/estagiários.
@@ -143,17 +148,57 @@ export const EventPlannerAI: React.FC = () => {
 								<label className="text-[10px] uppercase font-black text-primary tracking-widest ml-1">
 									Participantes Est.
 								</label>
-								<Select value={participants} onValueChange={setParticipants}>
-									<SelectTrigger className="rounded-2xl h-12 bg-background/50 border-primary/10 hover:border-primary/30 transition-colors">
-										<SelectValue placeholder="Qtd" />
-									</SelectTrigger>
-									<SelectContent className="rounded-2xl border-primary/10">
-										<SelectItem value="50">Até 50</SelectItem>
-										<SelectItem value="100">50 a 150</SelectItem>
-										<SelectItem value="300">150 a 500</SelectItem>
-										<SelectItem value="1000">Acima de 500</SelectItem>
-									</SelectContent>
-								</Select>
+								{isManual ? (
+									<div className="relative flex items-center group">
+										<Input
+											type="number"
+											value={manualParticipants}
+											onChange={(e) => setManualParticipants(e.target.value)}
+											placeholder="Ex: 250"
+											className="rounded-2xl h-12 bg-background/50 border-primary/20 hover:border-primary/40 focus-visible:ring-primary/30 pr-10 transition-all"
+											autoFocus
+										/>
+										<Button
+											variant="ghost"
+											size="sm"
+											onClick={() => setIsManual(false)}
+											className="absolute right-2 h-8 w-8 p-0 rounded-full hover:bg-primary/10 text-primary/40 hover:text-primary transition-colors"
+											title="Voltar para seleção"
+										>
+											<ChevronDown className="h-4 w-4" />
+										</Button>
+									</div>
+								) : (
+									<Select
+										value={participants}
+										onValueChange={(val) => {
+											if (val === "manual") {
+												setIsManual(true);
+											} else {
+												setParticipants(val);
+											}
+										}}
+									>
+										<SelectTrigger className="rounded-2xl h-12 bg-background/50 border-primary/10 hover:border-primary/30 transition-colors">
+											<SelectValue placeholder="Qtd" />
+										</SelectTrigger>
+										<SelectContent className="rounded-2xl border-primary/10">
+											<SelectItem value="50">Até 50</SelectItem>
+											<SelectItem value="100">50 a 150</SelectItem>
+											<SelectItem value="300">150 a 500</SelectItem>
+											<SelectItem value="1000">Acima de 500</SelectItem>
+											<SelectItem
+												value="manual"
+												className="font-bold text-primary border-t border-primary/5 mt-1"
+											>
+												<span className="flex items-center gap-2">
+													<Edit2 className="h-3 w-3" />
+													Digitar manualmente...
+												</span>
+											</SelectItem>
+										</SelectContent>
+									</Select>
+								)}
 							</div>
 						</div>
 

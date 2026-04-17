@@ -30,6 +30,7 @@ import {
 	MessageSquare,
 	LogOut,
 	LayoutGrid,
+	ClipboardList,
 	FlaskConical,
 	Target,
 	CalendarDays,
@@ -51,6 +52,7 @@ const menuGroups = [
 			{ icon: Activity, label: "Exercícios", href: "/exercises" },
 			{ icon: Target, label: "Protocolos", href: "/protocols" },
 			{ icon: FlaskConical, label: "Testes Clínicos", href: "/clinical-tests" },
+			{ icon: ClipboardList, label: "Avaliações", href: "/templates" },
 		],
 	},
 	{

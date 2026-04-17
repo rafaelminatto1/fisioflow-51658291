@@ -7,6 +7,14 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { Button } from '@/components/ui/button';
 import { useDictionary, DictionaryTerm } from '@/hooks/useDictionary';
 import { DictionaryTermModal } from './DictionaryTermModal';
+import { ProtocolDetailView } from './ProtocolDetailView';
+import { protocolDictionary, ProtocolEntry } from '@/data/protocolDictionary';
+import {
+	Dialog,
+	DialogContent,
+	DialogHeader,
+	DialogTitle,
+} from '@/components/ui/dialog';
 import {
 	AlertDialog,
 	AlertDialogAction,
@@ -28,6 +36,7 @@ const CATEGORIES = [
 	{ id: 'test', label: 'Testes Clínicos' },
 	{ id: 'movement', label: 'Movimentos' },
 	{ id: 'questionnaire', label: 'Questionários' },
+	{ id: 'procedure', label: 'Protocolos' },
 ];
 
 export function PhysioDictionaryView() {
@@ -36,6 +45,7 @@ export function PhysioDictionaryView() {
 	const [showModal, setShowModal] = useState(false);
 	const [editTerm, setEditTerm] = useState<DictionaryTerm | undefined>(undefined);
 	const [deleteId, setDeleteId] = useState<string | null>(null);
+	const [selectedProtocol, setSelectedProtocol] = useState<ProtocolEntry | null>(null);
 
 	const {
 		terms,
@@ -124,7 +134,16 @@ export function PhysioDictionaryView() {
 				) : (
 					<div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
 						{terms.map((term) => (
-							<Card key={term.id} className="overflow-hidden hover:shadow-md transition-all group">
+							<Card 
+								key={term.id} 
+								className="overflow-hidden hover:shadow-md transition-all group cursor-pointer"
+								onClick={() => {
+									if (term.category === 'procedure' || term.subcategory === 'Protocolo') {
+										const proto = protocolDictionary.find(p => p.id === term.id);
+										if (proto) setSelectedProtocol(proto);
+									}
+								}}
+							>
 								<CardHeader className="p-4 pb-2 bg-muted/20 border-b relative">
 									<div className="flex justify-between items-start">
 										<CardTitle className="text-base font-bold text-primary pr-12">
@@ -215,6 +234,20 @@ export function PhysioDictionaryView() {
 				term={editTerm}
 				isLoading={isCreating || isUpdating}
 			/>
+
+			{/* Modal de Detalhes do Protocolo */}
+			<Dialog open={!!selectedProtocol} onOpenChange={(open) => !open && setSelectedProtocol(null)}>
+				<DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+					{selectedProtocol && (
+						<>
+							<DialogHeader className="sr-only">
+								<DialogTitle>{selectedProtocol.pt}</DialogTitle>
+							</DialogHeader>
+							<ProtocolDetailView protocol={selectedProtocol} />
+						</>
+					)}
+				</DialogContent>
+			</Dialog>
 
 			<AlertDialog open={!!deleteId} onOpenChange={(open) => !open && setDeleteId(null)}>
 				<AlertDialogContent>

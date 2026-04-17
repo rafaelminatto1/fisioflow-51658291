@@ -643,7 +643,7 @@ const NotionEvolutionPanel: React.FC<NotionEvolutionPanelProps> = ({
 
 			{/* Content Scrollable Container */}
 			<div className="flex-1 overflow-y-auto custom-scrollbar pb-32">
-				<div className="sticky top-0 z-30 bg-white border-b border-[#E9E9E8] shadow-sm">
+				<div className="sticky top-0 z-[50] bg-white/95 backdrop-blur-md border-b border-[#E9E9E8] shadow-sm transition-all duration-300">
 					<RichTextToolbar
 						className="border-none max-w-[1536px] mx-auto px-4 lg:px-8"
 						imageUploadFolder={

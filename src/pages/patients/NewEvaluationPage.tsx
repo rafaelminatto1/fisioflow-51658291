@@ -30,7 +30,10 @@ import {
 	DynamicFieldRenderer,
 	AddCustomFieldDialog,
 	SaveAsTemplateDialog,
+	EvaluationActionBridge,
 } from "@/components/evaluation";
+import { useActionBridge } from "@/hooks/useActionBridge";
+import { NewPrescriptionModal } from "@/components/prescriptions/NewPrescriptionModal";
 
 import type {
 	EvaluationTemplate,
@@ -138,11 +141,18 @@ export default function NewEvaluationPage() {
 	const [showAddFieldDialog, setShowAddFieldDialog] = useState(false);
 	const [showSaveTemplateDialog, setShowSaveTemplateDialog] = useState(false);
 
+	// Prescription State
+	const [isPrescriptionModalOpen, setIsPrescriptionModalOpen] = useState(false);
+	const [preselectedProtocolId, setPreselectedProtocolId] = useState<string | undefined>(undefined);
+
 	// Physical Exam State
 	const [physicalExamData, setPhysicalExamData] = useState<any>({});
 
 	// Combined fields
 	const allFields = [...(selectedTemplate?.fields || []), ...customFields];
+
+	// Action Bridge Intelligence
+	const suggestions = useActionBridge(allFields, fieldValues);
 
 	// Fetch Patient Data
 	const { data: patient, isLoading } = useQuery({
@@ -314,6 +324,11 @@ export default function NewEvaluationPage() {
 			setIsSaving(false);
 		}
 	};
+
+	const handlePrescribeProtocol = useCallback((protocolId: string) => {
+		setPreselectedProtocolId(protocolId);
+		setIsPrescriptionModalOpen(true);
+	}, []);
 
 	const isReadOnlyEvaluation =
 		isViewMode && evaluationResponse?.status === "completed";
@@ -498,13 +513,30 @@ export default function NewEvaluationPage() {
 												</div>
 											</div>
 										) : (
-											<div className="animate-in fade-in slide-in-from-bottom-2 duration-500 pt-4 print:pt-0">
-												<DynamicFieldRenderer
-													fields={allFields}
-													values={fieldValues}
-													onChange={handleFieldValueChange}
-													readOnly={isReadOnlyEvaluation}
-												/>
+											<div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+												<div className="lg:col-span-8 animate-in fade-in slide-in-from-bottom-2 duration-500 pt-4 print:pt-0">
+													<DynamicFieldRenderer
+														fields={allFields}
+														values={fieldValues}
+														onChange={handleFieldValueChange}
+														readOnly={isReadOnlyEvaluation}
+													/>
+												</div>
+												
+												{/* Painel de Inteligência Action Bridge */}
+												<div className="lg:col-span-4 sticky top-24 hidden lg:block print:hidden">
+													<EvaluationActionBridge 
+														suggestions={suggestions}
+														onProtocolSelect={(id) => {
+															toast({
+																title: "Protocolo Sugerido",
+																description: "Você pode visualizar este protocolo no dicionário clínico.",
+																variant: "default"
+															});
+														}}
+														onPrescribeProtocol={handlePrescribeProtocol}
+													/>
+												</div>
 											</div>
 										)}
 									</div>
@@ -588,6 +620,17 @@ export default function NewEvaluationPage() {
 					onOpenChange={setShowSaveTemplateDialog}
 					fields={allFields}
 				/>
+
+				{patient && (
+					<NewPrescriptionModal
+						key={preselectedProtocolId} // Force remount to reset internal state
+						open={isPrescriptionModalOpen}
+						onOpenChange={setIsPrescriptionModalOpen}
+						patientId={patientId || ""}
+						patientName={patient.name}
+						initialProtocolId={preselectedProtocolId}
+					/>
+				)}
 			</MainLayout>
 		</RichTextProvider>
 	);

@@ -10,6 +10,10 @@ export interface ExerciseEntry extends PhysioDictionaryEntry {
 	intensity_level?: 1 | 2 | 3 | 4 | 5; // 1: Inicial/Pós-Op, 5: Elite
 	required_equipment?: string[];
 	progression_suggestion?: string; // ID do próximo exercício na cadeia
+	suggested_sets?: number;
+	suggested_reps?: number;
+	suggested_rpe?: string; // e.g., "7-8"
+	instruction_pt?: string; // Humanized instruction for patient
 }
 
 function ex(
@@ -31,7 +35,11 @@ const lowerBody: PhysioDictionaryEntry[] = [
 	ex("exd-agachamento", "Agachamento", "Squat", ["agachamento livre", "agachamento bilateral"], ["bodyweight squat", "air squat"], "Joelho / Quadril", "Exercício multiarticular para quadríceps, glúteos e core.", "Multi-joint exercise targeting quads, glutes, and core.", { 
 		intensity_level: 2, 
 		target_outcome: ["Força", "Mobilidade"], 
-		progression_suggestion: "exd-agachamento-pistol" 
+		progression_suggestion: "exd-agachamento-pistol",
+		suggested_sets: 3,
+		suggested_reps: 12,
+		suggested_rpe: "7-8",
+		instruction_pt: "Mantenha os pés afastados na largura dos ombros, desça como se fosse sentar em uma cadeira invisível, mantendo o peito aberto e o peso nos calcanhares."
 	}),
 	ex("exd-agachamento-bulgaro", "Agachamento Búlgaro", "Bulgarian Split Squat", ["split squat com elevação"], ["rear foot elevated split squat", "rfess"], "Joelho / Quadril", "", "", {
 		intensity_level: 4,
@@ -50,7 +58,11 @@ const lowerBody: PhysioDictionaryEntry[] = [
 	}),
 	ex("exd-agachamento-parede", "Agachamento na Parede", "Wall Sit", ["cadeirinha", "isométrico de parede"], ["wall squat"], "Joelho", "Isométrico para fortalecimento de quadríceps.", "Isometric hold for quad strengthening.", {
 		intensity_level: 1,
-		target_outcome: ["Analgesia", "Estabilidade"]
+		target_outcome: ["Analgesia", "Estabilidade"],
+		suggested_sets: 3,
+		suggested_reps: 45, // seconds
+		suggested_rpe: "6",
+		instruction_pt: "Encoste as costas na parede e desça até que seus joelhos formem um ângulo de 90 graus. Mantenha a posição, sentindo o esforço nas coxas, sem deixar os joelhos ultrapassarem a ponta dos pés."
 	}),
 	ex("exd-afundo", "Afundo", "Lunge", ["avanço", "passada"], ["forward lunge"], "Joelho / Quadril"),
 	ex("exd-afundo-lateral", "Afundo Lateral", "Lateral Lunge", ["avanço lateral"], ["side lunge"], "Joelho / Quadril"),
@@ -63,7 +75,12 @@ const lowerBody: PhysioDictionaryEntry[] = [
 	ex("exd-step-up", "Step-Up", "Step-Up", ["subida no step", "subida em degrau"], [], "Joelho / Quadril"),
 	ex("exd-step-down", "Step-Down", "Step-Down", ["descida do step", "step down excêntrico"], ["eccentric step-down"], "Joelho", "Exercício excêntrico para controle de valgo dinâmico.", "Eccentric exercise for dynamic valgus control."),
 	ex("exd-nordico", "Nordic Hamstring", "Nordic Hamstring Curl", ["nórdico", "exercício nórdico"], ["nordic curl", "nhc"], "Posterior da Coxa", "Prevenção de lesões em isquiotibiais.", "Hamstring injury prevention exercise."),
-	ex("exd-ponte-gluteo", "Ponte de Glúteo", "Glute Bridge", ["ponte", "elevação pélvica"], ["hip bridge", "bridge"], "Quadril / Glúteo", "Ativação de glúteo máximo e estabilidade lombo-pélvica.", "Glute max activation and lumbopelvic stability."),
+	ex("exd-ponte-gluteo", "Ponte de Glúteo", "Glute Bridge", ["ponte", "elevação pélvica"], ["hip bridge", "bridge"], "Quadril / Glúteo", "Ativação de glúteo máximo e estabilidade lombo-pélvica.", "Glute max activation and lumbopelvic stability.", {
+		suggested_sets: 3,
+		suggested_reps: 15,
+		suggested_rpe: "7",
+		instruction_pt: "Deitado de costas com os joelhos dobrados, suba o quadril em direção ao teto apertando bem os glúteos. Mantenha os ombros relaxados no chão."
+	}),
 	ex("exd-hip-thrust", "Hip Thrust", "Hip Thrust", ["elevação de quadril com barra"], ["barbell hip thrust"], "Quadril / Glúteo"),
 	ex("exd-single-leg-bridge", "Ponte Unilateral", "Single Leg Bridge", ["ponte unipodal"], ["single leg glute bridge"], "Quadril / Glúteo"),
 	ex("exd-leg-raise-lateral", "Abdução de Quadril Deitado", "Side-Lying Hip Abduction", ["elevação lateral deitado"], ["side lying leg raise", "clamshell leg raise"], "Quadril"),
@@ -129,7 +146,12 @@ const coreSpine: PhysioDictionaryEntry[] = [
 	ex("exd-superman", "Superman", "Superman", ["extensão de tronco", "hiperextensão no solo"], ["back extension", "prone superman"], "Coluna"),
 	ex("exd-extensao-lombar", "Extensão Lombar", "Back Extension", ["hiperextensão", "extensão no romano"], ["hyperextension", "roman chair"], "Coluna"),
 	ex("exd-child-pose", "Postura da Criança", "Child's Pose", ["posição de oração", "repouso"], ["prayer stretch"], "Coluna", "Alongamento de eretores e relaxamento da coluna.", "Erector spinae stretch and spinal relaxation."),
-	ex("exd-mckenzie", "Extensão de McKenzie", "McKenzie Extension", ["mckenzie", "press up"], ["prone press-up", "mckenzie exercise"], "Coluna", "Protocolo de centralização para hérnia de disco.", "Centralization protocol for disc herniation."),
+	ex("exd-mckenzie", "Extensão de McKenzie", "McKenzie Extension", ["mckenzie", "press up"], ["prone press-up", "mckenzie exercise"], "Coluna", "Protocolo de centralização para hérnia de disco.", "Centralization protocol for disc herniation.", {
+		suggested_sets: 2,
+		suggested_reps: 10,
+		suggested_rpe: "Confortável",
+		instruction_pt: "Deitado de barriga para baixo, use as mãos para empurrar o tronco para cima, mantendo o quadril relaxado no chão. Sinta o alívio na coluna e retorne devagar."
+	}),
 	ex("exd-flexao-williams", "Flexão de Williams", "Williams Flexion Exercise", ["williams", "exercícios de williams"], ["williams exercise"], "Coluna"),
 	ex("exd-rotacao-tronco", "Rotação de Tronco", "Trunk Rotation", ["rotação torácica", "open book"], ["thoracic rotation", "open book stretch"], "Coluna Torácica"),
 	ex("exd-chin-tuck", "Retração Cervical", "Chin Tuck", ["retração do queixo", "chin tuck"], ["cervical retraction", "deep neck flexor"], "Cervical", "Ativação de flexores cervicais profundos.", "Deep cervical flexor activation."),
@@ -185,9 +207,40 @@ const mobility: PhysioDictionaryEntry[] = [
 
 // ─── RESPIRATÓRIO ───────────────────────────────────────────
 const respiratory: PhysioDictionaryEntry[] = [
-	ex("exd-respiracao-diafragmatica", "Respiração Diafragmática", "Diaphragmatic Breathing", ["respiração abdominal", "respiração profunda"], ["belly breathing", "deep breathing"], "Respiratório", "Padrão respiratório correto com ativação do diafragma.", "Correct breathing pattern with diaphragm activation."),
-	ex("exd-expansao-costal", "Expansão Costal", "Rib Cage Expansion", ["expansão torácica", "respiração lateral"], ["lateral costal breathing"], "Respiratório"),
-	ex("exd-respiracao-360", "Respiração 360", "360 Breathing", ["respiração circunferencial"], ["circumferential breathing"], "Respiratório"),
+	ex("exd-respiracao-diafragmatica", "Respiração Diafragmática", "Diaphragmatic Breathing", ["respiração abdominal", "respiração profunda"], ["belly breathing", "deep breathing"], "Respiratório", "Padrão respiratório correto com ativação do diafragma para estabilização central e redução de estresse.", "Correct breathing pattern with diaphragm activation for core stability and stress reduction.", {
+		intensity_level: 1,
+		target_outcome: ["Estabilidade", "Analgesia"],
+		suggested_sets: 2,
+		suggested_reps: 10
+	}),
+	ex("exd-expansao-costal", "Expansão Costal", "Rib Cage Expansion", ["expansão torácica", "respiração lateral"], ["lateral costal breathing"], "Respiratório", "Mobilização da caixa torácica e aumento da capacidade vital.", "Thoracic cage mobilization and increase in vital capacity."),
+	ex("exd-respiracao-360", "Respiração 360", "360 Breathing", ["respiração circunferencial"], ["circumferential breathing"], "Respiratório", "Expansão tridimensional do tronco para suporte lombo-pélvico.", "Three-dimensional trunk expansion for lumbo-pelvic support."),
+
+	// ─── NEUROMUSCULAR E CONTROLE MOTOR ───────────────────────
+	ex("exd-ativação-vmo", "Ativação de VMO", "VMO Activation", ["vasto medial oblíquo", "isometria de joelho"], ["vmo firing", "quad sets"], "Joelho", "Recrutamento do vasto medial oblíquo para estabilidade patelar.", "VMO recruitment for patellar stability.", {
+		intensity_level: 1,
+		target_outcome: ["Estabilidade"]
+	}),
+	ex("exd-ponte-unilateral-isom", "Ponte Unilateral Isométrica", "Single Leg Isometric Bridge", ["ponte unipodal estática"], ["static sl bridge"], "Quadril", "Isometria de glúteo e isquiotibiais para estabilidade de quadril.", "Glute and hamstring isometry for hip stability.", {
+		intensity_level: 3,
+		target_outcome: ["Estabilidade", "Força"]
+	}),
+	ex("exd-estabilizacao-olhar", "Estabilização do Olhar (VOR)", "Gaze Stabilization (VOR)", ["exercício vestibular", "vor x1"], ["vestibular ocular reflex"], "Vestibular", "Treino de reflexo vestíbulo-ocular para equilíbrio.", "Vestibular ocular reflex training for balance.", {
+		intensity_level: 1,
+		target_outcome: ["Estabilidade"]
+	}),
+
+	// ─── NEURODINÂMICA (DESLIZAMENTOS) ────────────────────────
+	ex("exd-neuro-mediano", "Deslizamento de Nervo Mediano", "Median Nerve Slider", ["mobilização neural mediano"], ["median nerve glide"], "Neurodinâmica", "Redução da mecanossensibilidade do nervo mediano.", "Reducing median nerve mechanosensitivity.", {
+		intensity_level: 2,
+		target_outcome: ["Mobilidade", "Analgesia"]
+	}),
+	ex("exd-neuro-ciatico", "Deslizamento de Nervo Ciático", "Sciatic Nerve Slider", ["mobilização neural ciático", "slump slider"], ["sciatic nerve glide"], "Neurodinâmica", "Mobilização do nervo ciático e raízes lombossacrais.", "Sciatic nerve and lumbosacral root mobilization.", {
+		intensity_level: 2,
+		target_outcome: ["Mobilidade", "Analgesia"]
+	}),
+	ex("exd-neuro-radial", "Deslizamento de Nervo Radial", "Radial Nerve Slider", ["mobilização neural radial"], ["radial nerve glide"], "Neurodinâmica"),
+	ex("exd-neuro-ulnar", "Deslizamento de Nervo Ulnar", "Ulnar Nerve Slider", ["mobilização neural ulnar"], ["ulnar nerve glide"], "Neurodinâmica"),
 ];
 
 export const exerciseDictionary: ExerciseEntry[] = [

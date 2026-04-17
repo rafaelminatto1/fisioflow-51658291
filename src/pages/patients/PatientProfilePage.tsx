@@ -27,6 +27,7 @@ import {
 	History,
 	ClipboardList,
 	CheckSquare,
+	TrendingUp,
 } from "lucide-react";
 import { PatientTasksPanel } from "@/components/patient/PatientTasksPanel";
 import EditPatientModal from "@/components/modals/EditPatientModal";
@@ -82,6 +83,11 @@ const LazyPatientEvolutionDashboard = lazy(() =>
 		default: m.PatientEvolutionDashboard,
 	})),
 );
+const LazyEvolutionDashboard = lazy(() =>
+	import("@/components/clinical/EvolutionDashboard").then((m) => ({
+		default: m.EvolutionDashboard,
+	})),
+);
 const LazyPatientActivityLabTab = lazy(() =>
 	import("@/components/patient/PatientActivityLabTab").then((m) => ({
 		default: m.PatientActivityLabTab,
@@ -97,6 +103,8 @@ const OverviewTab = ({
 	upcomingAppointments: any[];
 	invalidateTab: (tab: ProfileTab) => void;
 }) => {
+	const navigate = useNavigate();
+	const [searchParams] = useSearchParams();
 	const { data: evolutionData } = usePatientEvolutionReport(patient.id);
 
 	return (
@@ -138,25 +146,30 @@ const OverviewTab = ({
 				<LazyMetasCard patientId={patient.id} />
 			</Suspense>
 
-			{/* Evolution charts below */}
-			{evolutionData && evolutionData.sessions.length > 0 && (
-				<div className="space-y-6">
-					<Suspense fallback={<LoadingSkeleton type="card" />}>
-						<LazyProgressAnalysisCard sessions={evolutionData.sessions} />
-					</Suspense>
-					<Suspense fallback={<LoadingSkeleton type="card" />}>
-						<LazyPatientEvolutionDashboard
-							patientId={patient.id}
-							patientName={patient.full_name || patient.name}
-							sessions={evolutionData.sessions}
-							currentPainLevel={evolutionData.currentPainLevel}
-							initialPainLevel={evolutionData.initialPainLevel}
-							totalSessions={evolutionData.totalSessions}
-							averageImprovement={evolutionData.averageImprovement}
-						/>
-					</Suspense>
+			{/* Clinical Evolution Insights */}
+			<div className="space-y-4">
+				<div className="flex items-center justify-between">
+					<h3 className="text-lg font-black uppercase tracking-tight flex items-center gap-2">
+						<TrendingUp className="h-5 w-5 text-blue-600" />
+						Evolução Clínica
+					</h3>
+					<Button 
+						variant="ghost" 
+						size="sm" 
+						className="text-blue-600 font-bold hover:text-blue-700 hover:bg-blue-50"
+						onClick={() => {
+							const params = new URLSearchParams(searchParams);
+							params.set("tab", "evolution");
+							navigate(`?${params.toString()}`, { replace: true });
+						}}
+					>
+						Ver Completo →
+					</Button>
 				</div>
-			)}
+				<Suspense fallback={<LoadingSkeleton type="card" />}>
+					<LazyEvolutionDashboard patientId={patient.id} />
+				</Suspense>
+			</div>
 		</div>
 	);
 };
@@ -169,6 +182,7 @@ export const PatientProfilePage = () => {
 	// Valid tab values
 	const validTabs = [
 		"overview",
+		"evolution",
 		"timeline",
 		"analytics",
 		"personal",
@@ -187,6 +201,14 @@ export const PatientProfilePage = () => {
 			? (tabFromUrl as TabValue)
 			: "overview";
 	});
+
+	// Sync tab state with URL parameters
+	useEffect(() => {
+		const tabFromUrl = searchParams.get("tab");
+		if (tabFromUrl && validTabs.includes(tabFromUrl as TabValue) && tabFromUrl !== activeTab) {
+			setActiveTab(tabFromUrl as TabValue);
+		}
+	}, [searchParams, activeTab]);
 
 	// OTIMIZAÇÃO: Hook centralizado para carregar dados do perfil com cache inteligente e prefetch
 	const {
@@ -304,6 +326,13 @@ export const PatientProfilePage = () => {
 								Visão Geral
 							</TabsTrigger>
 							<TabsTrigger
+								value="evolution"
+								className="data-[state=active]:border-blue-600 data-[state=active]:text-blue-600 rounded-none bg-transparent border-b-2 border-transparent px-0 py-2 text-sm font-semibold gap-2 transition-all"
+							>
+								<TrendingUp className="h-4 w-4" />
+								Evolução
+							</TabsTrigger>
+							<TabsTrigger
 								value="timeline"
 								className="data-[state=active]:border-blue-600 data-[state=active]:text-blue-600 rounded-none bg-transparent border-b-2 border-transparent px-0 py-2 text-sm font-semibold gap-2 transition-all"
 							>
@@ -374,6 +403,15 @@ export const PatientProfilePage = () => {
 								upcomingAppointments={appointments}
 								invalidateTab={invalidateTab}
 							/>
+						</TabsContent>
+
+						<TabsContent
+							value="evolution"
+							className="mt-0 focus-visible:outline-none animate-in fade-in-50 duration-500 slide-in-from-bottom-2"
+						>
+							<Suspense fallback={<LoadingSkeleton type="card" />}>
+								<LazyEvolutionDashboard patientId={id || ""} />
+							</Suspense>
 						</TabsContent>
 
 						<TabsContent
