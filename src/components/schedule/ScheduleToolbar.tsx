@@ -144,6 +144,7 @@ export const ScheduleToolbar: React.FC<ScheduleToolbarProps> = ({
 							size="icon"
 							onClick={() => handleNavigate("prev")}
 							className="h-7 w-7 p-0 rounded-md hover:bg-white dark:hover:bg-slate-800"
+							aria-label="Período anterior"
 						>
 							<ChevronLeft className="w-4 h-4" />
 						</Button>
@@ -152,6 +153,7 @@ export const ScheduleToolbar: React.FC<ScheduleToolbarProps> = ({
 							size="icon"
 							onClick={() => handleNavigate("next")}
 							className="h-7 w-7 p-0 rounded-md hover:bg-white dark:hover:bg-slate-800"
+							aria-label="Próximo período"
 						>
 							<ChevronRight className="w-4 h-4" />
 						</Button>
@@ -227,6 +229,7 @@ export const ScheduleToolbar: React.FC<ScheduleToolbarProps> = ({
 								variant="ghost"
 								size="icon"
 								className="h-9 w-9 rounded-full hover:bg-slate-100 dark:hover:bg-slate-800"
+								aria-label="Mais opções"
 							>
 								<MoreVertical className="w-4 h-4" />
 							</Button>
@@ -289,6 +292,7 @@ export const ScheduleToolbar: React.FC<ScheduleToolbarProps> = ({
 						size="icon"
 						onClick={() => handleNavigate("next")}
 						className="h-9 w-9 rounded-xl border border-slate-200 dark:border-slate-800"
+						aria-label="Próximo período (Mobile)"
 					>
 						<ChevronRight className="w-5 h-5" />
 					</Button>
