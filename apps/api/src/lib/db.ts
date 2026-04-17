@@ -171,12 +171,11 @@ export function createDb(env: Env, mode: 'read' | 'write' = 'write'): FisioDb {
 		return drizzlePg(pool, { schema }) as any;
 	}
 
-	// Read mode ou fallback HTTP: driver neon (requer NEON_URL configurado como secret).
-	const sql = neon(url);
-	if (orgId) {
-		const rlsSql = wrapSqlWithRls(sql, orgId);
-		return drizzleHttp(rlsSql as any, { schema }) as any;
-	}
+	// Read mode: neon-http driver. No RLS transaction wrapping here — each route handler
+	// filters by organization_id in Drizzle WHERE clauses. wrapSqlWithRls caused
+	// "Failed query" errors in @neondatabase/serverless v1.0.2 due to deferred query
+	// incompatibility with { fullResults: true } in transaction batches.
+	const sql = neon(url, { fullResults: true });
 	return drizzleHttp(sql, { schema }) as any;
 }
 
@@ -185,23 +184,15 @@ function wrapSqlWithRls(
 	organizationId: string,
 ): NeonQueryFunction<any, any> {
 	return (async (textOrStrings: any, ...values: any[]) => {
-		const isStr = typeof textOrStrings === 'string';
-		const queryText = isStr ? textOrStrings : textOrStrings[0];
-		const queryParams = isStr ? (values[0] ?? []) : values;
-		// Drizzle passes { fullResults: true, arrayMode: false } as the last argument.
-		// We must forward it to preserve the result shape Drizzle expects.
-		const extraOptions = isStr && values.length > 1 && typeof values[values.length - 1] === 'object'
-			? values[values.length - 1]
-			: undefined;
+		// Drizzle calls this as (queryText, params) — plain string, not tagged template.
+		const queryText = typeof textOrStrings === 'string' ? textOrStrings : textOrStrings[0];
+		const queryParams = typeof textOrStrings === 'string' ? (values[0] ?? []) : values;
 
-		// Use sql() directly (not sql.query()) so we can forward extraOptions.
-		const innerQuery = extraOptions
-			? (sql as any)(queryText, queryParams, extraOptions)
-			: (sql as any).query(queryText, queryParams);
-
+		// sql.query() creates a deferred NeonQueryPromise suitable for transaction batching.
+		// fullResults is inherited from neon(url, { fullResults: true }) set in createDb.
 		const results = await (sql as any).transaction([
 			(sql as any).query(`SELECT set_config('app.org_id', $1, true)`, [organizationId]),
-			innerQuery,
+			(sql as any).query(queryText, queryParams),
 		]);
 
 		return results[1];
