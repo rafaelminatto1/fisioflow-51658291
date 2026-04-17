@@ -218,6 +218,10 @@ functions/test-token-verify.js
 functions/check_clinical_schema.js
 functions/check_token.js
 functions/decode-token.js
+apps/api/scratch/
+scratch/test_prod_api.mjs
+test-drizzle-neon.mjs
+test-neon-tx*.mjs
 functions/lib/
 functions/.env.fisioflow-migrationwhisper_env/
 functions/.env*claude-skills/repo
