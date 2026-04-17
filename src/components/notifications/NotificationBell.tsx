@@ -155,6 +155,7 @@ export const NotificationBell: React.FC<NotificationBellProps> = ({
 				<Button
 					variant="ghost"
 					size="icon"
+					aria-label="Notificações"
 					className={cn(
 						"relative hover:bg-accent/80 transition-colors",
 						className,
