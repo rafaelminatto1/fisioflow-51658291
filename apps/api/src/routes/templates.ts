@@ -74,7 +74,7 @@ const exercises = pgTable('exercises', {
 
 // ===== CATEGORIAS =====
 app.get('/categories', async (c) => {
-  const db = await createDb(c.env);
+  const db = createDb(c.env);
 
   const rows = await db
     .select()
@@ -86,7 +86,7 @@ app.get('/categories', async (c) => {
 
 // ===== LISTA =====
 app.get('/', async (c) => {
-  const db = await createDb(c.env);
+  const db = createDb(c.env);
   // Optional auth — needed to resolve organizationId for custom template filtering
   const user = await verifyToken(c, c.env);
   const { q, category, patientProfile, templateType, isDraft, page = '1', limit = '20' } = c.req.query();
@@ -162,7 +162,7 @@ app.get('/', async (c) => {
 
 // ===== APLICAR TEMPLATE A PACIENTE =====
 app.post('/:id/apply', requireAuth, async (c) => {
-  const db = await createDb(c.env);
+  const db = createDb(c.env);
   const pool = createPool(c.env);
   const user = c.get('user');
   const { id } = c.req.param();
@@ -230,7 +230,7 @@ app.post('/:id/apply', requireAuth, async (c) => {
 
 // ===== PERSONALIZAR SYSTEM TEMPLATE =====
 app.post('/:id/customize', requireAuth, async (c) => {
-  const db = await createDb(c.env);
+  const db = createDb(c.env);
   const user = c.get('user');
   const { id } = c.req.param();
 
@@ -267,7 +267,7 @@ app.post('/:id/customize', requireAuth, async (c) => {
 
   let newTemplate: typeof source;
 
-  await db.transaction(async (tx) => {
+  await (async (tx: typeof db) => {
     const [created] = await tx
       .insert(exerciseTemplates)
       .values({
@@ -294,14 +294,14 @@ app.post('/:id/customize', requireAuth, async (c) => {
         })
       );
     }
-  });
+  })(db);
 
   return c.json({ data: newTemplate! }, 201);
 });
 
 // ===== DETALHE COM ITENS =====
 app.get('/:id', async (c) => {
-  const db = await createDb(c.env);
+  const db = createDb(c.env);
   const { id } = c.req.param();
 
   const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(id);
@@ -347,7 +347,7 @@ app.get('/:id', async (c) => {
 
 // ===== CRIAR TEMPLATE =====
 app.post('/', requireAuth, async (c) => {
-  const db = await createDb(c.env);
+  const db = createDb(c.env);
   const user = c.get('user');
   const body = await c.req.json();
   const { items, ...templateData } = body;
@@ -379,7 +379,7 @@ app.post('/', requireAuth, async (c) => {
 
 // ===== ATUALIZAR TEMPLATE =====
 app.put('/:id', requireAuth, async (c) => {
-  const db = await createDb(c.env);
+  const db = createDb(c.env);
   const { id } = c.req.param();
   const body = await c.req.json();
   const { items, ...templateData } = body;
@@ -401,8 +401,8 @@ app.put('/:id', requireAuth, async (c) => {
 
   let updatedItems: Array<Record<string, unknown>> = [];
   if (items && Array.isArray(items)) {
-    // Substituição atômica dos itens dentro de uma transaction
-    await db.transaction(async (tx) => {
+    // Substituição dos itens em operações sequenciais
+    await (async (tx: typeof db) => {
       await tx
         .delete(exerciseTemplateItems)
         .where(eq(exerciseTemplateItems.templateId, template.id));
@@ -421,7 +421,7 @@ app.put('/:id', requireAuth, async (c) => {
           )
           .returning();
       }
-    });
+    })(db);
   } else {
     // Se não enviou items, recupera os existentes para retornar no objeto
     updatedItems = await db
@@ -436,7 +436,7 @@ app.put('/:id', requireAuth, async (c) => {
 
 // ===== DELETAR TEMPLATE (soft delete) =====
 app.delete('/:id', requireAuth, async (c) => {
-  const db = await createDb(c.env);
+  const db = createDb(c.env);
   const { id } = c.req.param();
 
   const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(id);

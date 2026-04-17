@@ -309,7 +309,7 @@ app.post('/', requireAuth, rateLimit({ limit: 20, windowSeconds: 3600, endpoint:
       }, 400);
     }
 
-    const response = await db.transaction(async (tx) => {
+    const response = await (async (tx: typeof db) => {
       const capacityError = await enforceCapacity(tx, organizationId, {
         date,
         startTime,
@@ -349,7 +349,7 @@ app.post('/', requireAuth, rateLimit({ limit: 20, windowSeconds: 3600, endpoint:
       }
       console.log('[Appointments/Create] Success! Row ID:', row.id);
       return { status: 201, data: { data: normalizeAppointmentRow(row) } };
-    });
+    })(db);
 
     return c.json(response.data, response.status as any);
   } catch (error: any) {
@@ -441,7 +441,7 @@ const updateAppointmentHandler: MiddlewareHandler<{ Bindings: Env; Variables: Au
       } catch (e) {}
     }
 
-    const response = await db.transaction(async (tx) => {
+    const response = await (async (tx: typeof db) => {
       const currentResult = await tx
         .select({
           id: appointments.id,
@@ -544,7 +544,7 @@ const updateAppointmentHandler: MiddlewareHandler<{ Bindings: Env; Variables: Au
       const row = result[0];
       if (!row) return { status: 404, data: { error: 'Agendamento não encontrado' } };
       return { status: 200, data: { data: normalizeAppointmentRow(row) } };
-    });
+    })(db);
 
     if (response.status >= 400) {
       return c.json(response.data, response.status as any);

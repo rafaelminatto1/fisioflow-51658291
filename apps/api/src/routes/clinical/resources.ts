@@ -450,7 +450,7 @@ export function registerClinicalResourceRoutes(app: ClinicalRouteApp) {
     const db = createDb(c.env);
     const body = (await c.req.json()) as Record<string, any>;
 
-    const result = await db.transaction(async (tx) => {
+    const result = await (async (tx: typeof db) => {
       const [painMap] = await tx
         .insert(painMaps)
         .values({
@@ -484,7 +484,7 @@ export function registerClinicalResourceRoutes(app: ClinicalRouteApp) {
         .orderBy(asc(painMapPoints.createdAt));
 
       return { ...painMap, points: pointsData };
-    });
+    })(db);
 
     return c.json({ data: result }, 201);
   });
