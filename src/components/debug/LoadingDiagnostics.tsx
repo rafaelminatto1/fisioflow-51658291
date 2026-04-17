@@ -17,7 +17,6 @@ export function LoadingDiagnostics() {
 	useEffect(() => {
 		const interval = setInterval(() => {
 			const elapsed = Date.now() - mountTime;
-			const initialLoader = document.getElementById("initial-loader");
 
 			const diag = {
 				elapsed: `${(elapsed / 1000).toFixed(1)}s`,
@@ -25,7 +24,6 @@ export function LoadingDiagnostics() {
 				initialized,
 				hasUser: !!user,
 				hasProfile: !!profile,
-				initialLoaderVisible: !!initialLoader,
 				timestamp: new Date().toISOString(),
 			};
 
@@ -46,15 +44,6 @@ export function LoadingDiagnostics() {
 				console.error("🚨 LOADING INFINITO DETECTADO!", diag);
 				console.log(
 					"💡 Tente: localStorage.clear(); sessionStorage.clear(); location.reload();",
-				);
-			}
-
-			// Alerta se initial loader ainda está visível após 5 segundos
-			if (initialLoader && elapsed > 5000) {
-				logger.warn(
-					"Initial loader ainda visível após 5s",
-					diag,
-					"LoadingDiagnostics",
 				);
 			}
 		}, 1000);
