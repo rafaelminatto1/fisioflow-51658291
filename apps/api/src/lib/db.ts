@@ -156,19 +156,47 @@ export type FisioDb = PgDatabase<any, typeof schema>;
 
 /**
  * Cria uma instância do Drizzle configurada para o ambiente atual.
- * @param mode 'read' para consultas rápidas (usa HTTP), 'write' para transações e escritas (usa TCP/Hyperdrive).
+ * @param mode 'write' usa TCP via Hyperdrive (padrão); 'read' usa HTTP Neon (requer NEON_URL).
  */
-export function createDb(env: Env, mode: 'read' | 'write' = 'read'): FisioDb {
+export function createDb(env: Env, mode: 'read' | 'write' = 'write'): FisioDb {
 	const url = getUrl(env, mode);
 	const orgId = getOrgContext();
 
 	if (mode === 'write' && isTcpConnection(env, mode)) {
-		const pool = getGlobalPool(env);
+		if (!globalPool) {
+			globalPool = new Pool({
+				connectionString: url,
+				max: 10,
+				idleTimeoutMillis: 10000,
+			});
+		}
+		const pool = globalPool;
+
+		if (orgId) {
+			// Intercepta conexões do Drizzle para injetar o contexto RLS (app.org_id)
+			const originalConnect = pool.connect.bind(pool);
+			pool.connect = (async () => {
+				const client = await originalConnect();
+				await client.query(`SELECT set_config('app.org_id', $1, true)`, [orgId]);
+				return client;
+			}) as any;
+
+			// Intercepta queries diretas do pool
+			const originalQuery = pool.query.bind(pool);
+			pool.query = (async (text: any, params: any) => {
+				const client = await originalConnect();
+				try {
+					await client.query(`SELECT set_config('app.org_id', $1, true)`, [orgId]);
+					return await client.query(text, params);
+				} finally {
+					client.release();
+				}
+			}) as any;
+		}
 		return drizzlePg(pool, { schema }) as any;
 	}
 
-	// For read mode or when TCP is not forced/available, we use the Neon HTTP driver
-	// which is much faster for one-off reads as it avoids TCP handshakes
+	// Read mode ou fallback HTTP: driver neon (requer NEON_URL configurado como secret).
 	const sql = neon(url);
 	if (orgId) {
 		const rlsSql = wrapSqlWithRls(sql, orgId);
