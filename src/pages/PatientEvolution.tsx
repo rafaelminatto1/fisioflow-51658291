@@ -271,9 +271,9 @@ const PatientEvolution = () => {
 
 	const topSectionContent = useMemo(
 		() => (
-			<div className="flex flex-col lg:flex-row gap-4 w-full items-start">
-				{/* Lado Esquerdo: Cards de Contexto (Minimizáveis) */}
-				<div className="flex-1 w-full grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+			<div className="flex flex-col gap-3 w-full">
+				{/* Cards de Contexto */}
+				<div className="w-full grid grid-cols-1 md:grid-cols-3 gap-3">
 					<MedicalReturnCard
 						patient={state.patient}
 						patientId={state.patientId}
@@ -290,10 +290,8 @@ const PatientEvolution = () => {
 					/>
 				</div>
 
-				{/* Lado Direito: Resumo (Sempre visível ou minimizável conforme a estética clean) */}
-				<div className="w-full lg:w-72 shrink-0">
-					<EvolutionSummaryCard stats={evolutionStats} />
-				</div>
+				{/* Barra de Resumo horizontal */}
+				<EvolutionSummaryCard stats={evolutionStats} />
 			</div>
 		),
 		[
