@@ -94,6 +94,7 @@ import {
 } from "@/hooks/useSoapRecords";
 import { getAffectedSideAbbreviation } from "@/lib/constants/surgery";
 import { cn } from "@/lib/utils";
+import { formatClinicalSummary } from "@/lib/evolution/formatters";
 import type {
 	AttachmentData,
 	MeasurementData,
@@ -1511,63 +1512,52 @@ export const EvolutionTimeline: React.FC<EvolutionTimelineProps> = ({
 																							.assessment ||
 																						(event.data as SoapRecord)
 																							.plan) && (
-																						<div className="mt-2 space-y-1.5">
-																							{(event.data as SoapRecord)
-																								.subjective && (
-																								<div className="text-xs bg-blue-50 dark:bg-blue-950/20 p-2 rounded-lg">
-																									<span className="font-semibold text-blue-600">
-																										S:
-																									</span>{" "}
-																									<span className="line-clamp-2">
-																										{
-																											(event.data as SoapRecord)
-																												.subjective
-																										}
-																									</span>
-																								</div>
-																							)}
-																							{(event.data as SoapRecord)
-																								.objective && (
-																								<div className="text-xs bg-green-50 dark:bg-green-950/20 p-2 rounded-lg">
-																									<span className="font-semibold text-green-600">
-																										O:
-																									</span>{" "}
-																									<span className="line-clamp-2">
-																										{
-																											(event.data as SoapRecord)
-																												.objective
-																										}
-																									</span>
-																								</div>
-																							)}
-																							{(event.data as SoapRecord)
-																								.assessment && (
-																								<div className="text-xs bg-purple-50 dark:bg-purple-950/20 p-2 rounded-lg">
-																									<span className="font-semibold text-purple-600">
-																										A:
-																									</span>{" "}
-																									<span className="line-clamp-2">
-																										{
-																											(event.data as SoapRecord)
-																												.assessment
-																										}
-																									</span>
-																								</div>
-																							)}
-																							{(event.data as SoapRecord)
-																								.plan && (
-																								<div className="text-xs bg-amber-50 dark:bg-amber-950/20 p-2 rounded-lg">
-																									<span className="font-semibold text-amber-600">
-																										P:
-																									</span>{" "}
-																									<span className="line-clamp-2">
-																										{
-																											(event.data as SoapRecord)
-																												.plan
-																										}
-																									</span>
-																								</div>
-																							)}
+																						<div className="mt-2 space-y-2">
+																							{(["subjective", "objective", "assessment", "plan"] as const).map((field) => {
+																								const content = (event.data as SoapRecord)[field];
+																								if (!content) return null;
+
+																								const summary = formatClinicalSummary(content);
+																								const fieldLabel = field.charAt(0).toUpperCase();
+																								const bgColors: Record<string, string> = {
+																									subjective: "bg-blue-50 dark:bg-blue-950/20",
+																									objective: "bg-green-50 dark:bg-green-950/20",
+																									assessment: "bg-purple-50 dark:bg-purple-950/20",
+																									plan: "bg-amber-50 dark:bg-amber-950/20",
+																								};
+																								const textColors: Record<string, string> = {
+																									subjective: "text-blue-600",
+																									objective: "text-green-600",
+																									assessment: "text-purple-600",
+																									plan: "text-amber-600",
+																								};
+
+																								return (
+																									<div key={field} className={cn("text-xs p-2 rounded-lg", bgColors[field])}>
+																										<div className="flex items-start gap-2">
+																											<span className={cn("font-bold mt-0.5", textColors[field])}>
+																												{fieldLabel}:
+																											</span>
+																											<div className="flex-1">
+																												{Array.isArray(summary) ? (
+																													<div className="space-y-1">
+																														{summary.map((item) => (
+																															<div key={item.label} className="flex gap-1.5">
+																																<span className="font-semibold text-[10px] uppercase opacity-70 min-w-[50px]">
+																																	{item.label}:
+																																</span>
+																																<span className="line-clamp-2">{item.value}</span>
+																															</div>
+																														))}
+																													</div>
+																												) : (
+																													<span className="line-clamp-2">{summary}</span>
+																												)}
+																											</div>
+																										</div>
+																									</div>
+																								);
+																							})}
 																						</div>
 																					)}
 																				</>
