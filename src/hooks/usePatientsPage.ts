@@ -161,11 +161,11 @@ export function usePatientsPageData(filters: PatientsFilters = {}) {
 		},
 		onSuccess: async (_, variables) => {
 			await invalidatePatientsComprehensive(queryClient, variables);
-			toast.success("Paciente excluído com sucesso");
+			toast.success("Paciente arquivado com sucesso");
 		},
 		onError: (error) => {
-			logger.error("Error deleting patient", { error }, "usePatientsPage");
-			toast.error("Erro ao excluir paciente");
+			logger.error("Error archiving patient", { error }, "usePatientsPage");
+			toast.error("Erro ao arquivar paciente");
 		},
 	});
 
