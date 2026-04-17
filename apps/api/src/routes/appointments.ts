@@ -49,7 +49,7 @@ function normalizeAppointmentRow(row: any) {
 
 app.get('/', requireAuth, async (c) => {
   const user = c.get('user');
-  const db = createDb(c.env);
+  const db = createDb(c.env, 'read');
   try {
     const { dateFrom, dateTo, therapistId, patientId, status, limit = '100' } = c.req.query();
 
@@ -367,7 +367,7 @@ app.post('/', requireAuth, rateLimit({ limit: 20, windowSeconds: 3600, endpoint:
 
 app.get('/:id', requireAuth, async (c) => {
   const user = c.get('user');
-  const db = createDb(c.env);
+  const db = createDb(c.env, 'read');
   const id = c.req.param('id');
   if (!id) return c.json({ error: 'ID é obrigatório' }, 400);
   if (!isUuid(id)) return c.json({ error: 'ID inválido' }, 400);
