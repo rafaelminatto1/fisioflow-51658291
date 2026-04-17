@@ -57,6 +57,7 @@ export const CalendarWeekViewHeader = memo(
 							variant="ghost"
 							onClick={onNavigatePrevious}
 							className="h-8 w-8"
+							aria-label="Período anterior"
 						>
 							<ChevronLeft className="h-4 w-4" />
 						</Button>
@@ -65,6 +66,7 @@ export const CalendarWeekViewHeader = memo(
 							variant="ghost"
 							onClick={onNavigateNext}
 							className="h-8 w-8"
+							aria-label="Próximo período"
 						>
 							<ChevronRight className="h-4 w-4" />
 						</Button>
