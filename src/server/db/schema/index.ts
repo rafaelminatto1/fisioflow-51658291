@@ -55,3 +55,6 @@ export * from "./biomechanics";
 
 // WhatsApp Shared Inbox
 export * from "./whatsapp-inbox";
+
+// Pre-cadastro (Digital Admission)
+export * from "./precadastro";
