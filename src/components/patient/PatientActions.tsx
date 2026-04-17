@@ -10,7 +10,7 @@ import {
 import {
 	MoreVertical,
 	Edit,
-	Trash2,
+	Archive,
 	FileText,
 	Calendar,
 	Phone,
@@ -177,8 +177,8 @@ export const PatientActions: React.FC<PatientActionsProps> = ({ patient }) => {
 						className="text-destructive focus:text-destructive"
 						data-testid={`patient-delete-${patient.id}`}
 					>
-						<Trash2 className="mr-2 h-4 w-4" />
-						Excluir
+						<Archive className="mr-2 h-4 w-4" />
+						Arquivar
 					</DropdownMenuItem>
 				</DropdownMenuContent>
 			</DropdownMenu>

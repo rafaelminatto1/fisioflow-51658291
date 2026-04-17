@@ -9,7 +9,7 @@ import {
 	AlertDialogHeader,
 	AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { Loader2 } from "lucide-react";
+import { Archive, Loader2 } from "lucide-react";
 
 interface DeletePatientDialogProps {
 	open: boolean;
@@ -30,15 +30,16 @@ export const DeletePatientDialog: React.FC<DeletePatientDialogProps> = ({
 		<AlertDialog open={open} onOpenChange={onOpenChange}>
 			<AlertDialogContent>
 				<AlertDialogHeader>
-					<AlertDialogTitle>Confirmar exclusão</AlertDialogTitle>
+					<AlertDialogTitle>Arquivar paciente</AlertDialogTitle>
 					<AlertDialogDescription>
-						Tem certeza que deseja excluir o paciente{" "}
+						Tem certeza que deseja arquivar o paciente{" "}
 						<span className="font-semibold text-foreground">{patientName}</span>
 						?
 						<br />
 						<br />
-						Esta ação não pode ser desfeita. Todos os dados, histórico de
-						atendimentos e evoluções serão permanentemente removidos.
+						O paciente ficará inativo e não aparecerá nas listagens. Todos os
+						dados e histórico clínico serão{" "}
+						<strong>preservados</strong> conforme a legislação (CFisio / LGPD).
 					</AlertDialogDescription>
 				</AlertDialogHeader>
 				<AlertDialogFooter>
@@ -46,15 +47,18 @@ export const DeletePatientDialog: React.FC<DeletePatientDialogProps> = ({
 					<AlertDialogAction
 						onClick={onConfirm}
 						disabled={isDeleting}
-						className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+						className="bg-primary text-primary-foreground hover:bg-primary/90"
 					>
 						{isDeleting ? (
 							<>
 								<Loader2 className="mr-2 h-4 w-4 animate-spin" />
-								Excluindo...
+								Arquivando...
 							</>
 						) : (
-							"Excluir Paciente"
+							<>
+								<Archive className="mr-2 h-4 w-4" />
+								Arquivar Paciente
+							</>
 						)}
 					</AlertDialogAction>
 				</AlertDialogFooter>

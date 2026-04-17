@@ -324,8 +324,8 @@ export const useDeletePatient = () => {
 		onSuccess: () => {
 			queryClient.invalidateQueries({ queryKey: ["patients"] });
 			toast({
-				title: "Paciente excluído",
-				description: "O paciente foi removido com sucesso.",
+				title: "Paciente arquivado",
+				description: "O paciente foi arquivado. Todos os dados foram preservados.",
 			});
 		},
 		onError: (error: Error) => {

@@ -8,7 +8,7 @@ import {
 	AlertDialogHeader,
 	AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { AlertTriangle, Loader2 } from "lucide-react";
+import { Archive, Loader2 } from "lucide-react";
 import { useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
@@ -27,21 +27,21 @@ export const PatientDeleteDialog: React.FC<PatientDeleteDialogProps> = ({
 	patientId,
 	patientName,
 }) => {
-	const [isDeleting, setIsDeleting] = useState(false);
+	const [isArchiving, setIsArchiving] = useState(false);
 	const queryClient = useQueryClient();
 
-	const handleDelete = async () => {
-		setIsDeleting(true);
+	const handleArchive = async () => {
+		setIsArchiving(true);
 		try {
 			await patientsApi.delete(patientId);
 			queryClient.invalidateQueries({ queryKey: ["patients"] });
-			toast.success(`Paciente "${patientName}" excluído com sucesso.`);
+			toast.success(`Paciente "${patientName}" arquivado com sucesso.`);
 			onOpenChange(false);
 		} catch (err: unknown) {
-			const msg = err instanceof Error ? err.message : "Erro ao excluir paciente";
+			const msg = err instanceof Error ? err.message : "Erro ao arquivar paciente";
 			toast.error(msg);
 		} finally {
-			setIsDeleting(false);
+			setIsArchiving(false);
 		}
 	};
 
@@ -50,52 +50,46 @@ export const PatientDeleteDialog: React.FC<PatientDeleteDialogProps> = ({
 			<AlertDialogContent>
 				<AlertDialogHeader>
 					<div className="flex items-center gap-3">
-						<div className="w-12 h-12 rounded-full bg-destructive/10 flex items-center justify-center">
-							<AlertTriangle className="w-6 h-6 text-destructive" />
+						<div className="w-12 h-12 rounded-full bg-muted flex items-center justify-center">
+							<Archive className="w-6 h-6 text-muted-foreground" />
 						</div>
 						<div>
-							<AlertDialogTitle>Excluir Paciente</AlertDialogTitle>
+							<AlertDialogTitle>Arquivar Paciente</AlertDialogTitle>
 						</div>
 					</div>
 				</AlertDialogHeader>
 
 				<AlertDialogDescription className="py-4">
-					Tem certeza que deseja excluir permanentemente o paciente{" "}
+					Tem certeza que deseja arquivar o paciente{" "}
 					<span className="font-semibold text-foreground">"{patientName}"</span>
 					?
 					<br />
 					<br />
-					<strong className="text-destructive">Atenção:</strong> Esta ação não
-					pode ser desfeita. Todos os dados do paciente serão removidos
-					permanentemente, incluindo:
-					<ul className="list-disc list-inside mt-2 space-y-1 text-sm">
-						<li>Perfil e informações pessoais</li>
-						<li>Histórico de atendimentos e evoluções</li>
-						<li>Registros SOAP (anotações clínicas)</li>
-						<li>Agendamentos futuros</li>
-						<li>Documentos e anexos</li>
-						<li>Registros financeiros</li>
-					</ul>
+					O paciente será marcado como <strong>Arquivado</strong> e não
+					aparecerá nas listagens ativas. Todos os dados, histórico clínico e
+					evoluções serão{" "}
+					<strong className="text-foreground">preservados</strong> conforme
+					exigido pela legislação vigente (CFisio / LGPD).
 				</AlertDialogDescription>
 
 				<AlertDialogFooter className="gap-2">
-					<AlertDialogCancel disabled={isDeleting}>Cancelar</AlertDialogCancel>
+					<AlertDialogCancel disabled={isArchiving}>Cancelar</AlertDialogCancel>
 					<AlertDialogAction
-						onClick={handleDelete}
-						disabled={isDeleting}
-						className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-						data-testid={`patient-delete-confirm-${patientId}`}
+						onClick={handleArchive}
+						disabled={isArchiving}
+						className="bg-primary text-primary-foreground hover:bg-primary/90"
+						data-testid={`patient-archive-confirm-${patientId}`}
 						data-patient-id={patientId}
 					>
-						{isDeleting ? (
+						{isArchiving ? (
 							<>
 								<Loader2 className="mr-2 h-4 w-4 animate-spin" />
-								Excluindo...
+								Arquivando...
 							</>
 						) : (
 							<>
-								<AlertTriangle className="mr-2 h-4 w-4" />
-								Sim, Excluir Permanentemente
+								<Archive className="mr-2 h-4 w-4" />
+								Sim, Arquivar Paciente
 							</>
 						)}
 					</AlertDialogAction>

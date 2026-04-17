@@ -784,21 +784,21 @@ app.delete("/:id", async (c) => {
 	if (!isUuid(id)) return c.json({ error: "ID inválido" }, 400);
 
 	try {
-		// Logically delete by setting isActive = false
+		// Archive: preserves all data per healthcare legal requirements (CFisio/LGPD)
 		const result = await db
 			.update(patients)
-			.set({ isActive: false, deletedAt: new Date(), updatedAt: new Date() })
+			.set({ isActive: false, status: "Arquivado", deletedAt: new Date(), updatedAt: new Date() })
 			.where(withTenant(patients, user.organizationId, eq(patients.id, id)))
 			.returning({ id: patients.id });
 
 		const row = result[0];
 		if (!row) return c.json({ error: "Paciente não encontrado" }, 404);
-		return c.json({ success: true });
+		return c.json({ success: true, archived: true });
 	} catch (error) {
-		console.error("[Patients/Delete] Error:", error);
+		console.error("[Patients/Archive] Error:", error);
 		return c.json(
 			{
-				error: "Erro ao excluir paciente",
+				error: "Erro ao arquivar paciente",
 				details: error instanceof Error ? error.message : "Erro desconhecido",
 			},
 			500,
