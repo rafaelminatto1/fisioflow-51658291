@@ -407,6 +407,15 @@ export const EvolutionHeader = memo(
 
 					<div className="h-6 w-px bg-slate-100 shrink-0 hidden sm:block" />
 
+					{/* Seletor de tipo de visualização de evolução */}
+					{onVersionChange && activeTab === "evolucao" && (
+						<EvolutionVersionToggle
+							version={evolutionVersion}
+							onToggle={onVersionChange}
+							className="shrink-0"
+						/>
+					)}
+
 					{/* Fisioterapeuta */}
 					{onTherapistChange && (
 						<div className="flex items-center gap-2 shrink-0">
