@@ -17,6 +17,7 @@ import { Hono } from 'hono';
 import { createPool } from '../lib/db';
 import { requireAuth, type AuthVariables } from '../lib/auth';
 import type { Env } from '../types/env';
+import { isUuid } from '../lib/validators';
 
 const app = new Hono<{ Bindings: Env; Variables: AuthVariables }>();
 
@@ -241,6 +242,8 @@ app.get('/responses/:responseId', requireAuth, async (c) => {
   const pool = await createPool(c.env);
   const { responseId } = c.req.param();
 
+  if (!isUuid(responseId)) return c.json({ error: 'Avaliação não encontrada' }, 404);
+
   const responseResult = await pool.query(
     `
       SELECT
@@ -290,6 +293,9 @@ app.put('/responses/:responseId', requireAuth, async (c) => {
   await ensureTables(c.env);
   const pool = await createPool(c.env);
   const { responseId } = c.req.param();
+
+  if (!isUuid(responseId)) return c.json({ error: 'Avaliação não encontrada' }, 404);
+
   const body = (await c.req.json()) as Record<string, unknown>;
 
   const sets: string[] = ['updated_at = NOW()'];
@@ -353,6 +359,8 @@ app.get('/:id', requireAuth, async (c) => {
   const pool = await createPool(c.env);
   const { id } = c.req.param();
 
+  if (!isUuid(id)) return c.json({ error: 'Ficha não encontrada' }, 404);
+
   const formResult = await pool.query(
     `SELECT * FROM evaluation_forms
      WHERE id = $1 AND organization_id = $2
@@ -412,6 +420,9 @@ app.put('/:id', requireAuth, async (c) => {
   await ensureTables(c.env);
   const pool = await createPool(c.env);
   const { id } = c.req.param();
+
+  if (!isUuid(id)) return c.json({ error: 'Ficha não encontrada' }, 404);
+
   const body = (await c.req.json()) as Record<string, unknown>;
 
   const sets: string[] = ['updated_at = NOW()'];
@@ -475,6 +486,8 @@ app.delete('/:id', requireAuth, async (c) => {
   const pool = await createPool(c.env);
   const { id } = c.req.param();
 
+  if (!isUuid(id)) return c.json({ error: 'Ficha não encontrada' }, 404);
+
   const result = await pool.query(
     `UPDATE evaluation_forms
      SET ativo = false, updated_at = NOW()
@@ -492,6 +505,8 @@ app.post('/:id/duplicate', requireAuth, async (c) => {
   await ensureTables(c.env);
   const pool = await createPool(c.env);
   const { id } = c.req.param();
+
+  if (!isUuid(id)) return c.json({ error: 'Ficha não encontrada' }, 404);
 
   const originalFormResult = await pool.query(
     `SELECT * FROM evaluation_forms
@@ -560,6 +575,9 @@ app.post('/:id/fields', requireAuth, async (c) => {
   await ensureTables(c.env);
   const pool = await createPool(c.env);
   const { id } = c.req.param();
+
+  if (!isUuid(id)) return c.json({ error: 'Ficha não encontrada' }, 404);
+
   const body = (await c.req.json()) as Record<string, unknown>;
 
   const formCheck = await pool.query(
@@ -597,6 +615,9 @@ app.put('/fields/:fieldId', requireAuth, async (c) => {
   await ensureTables(c.env);
   const pool = await createPool(c.env);
   const { fieldId } = c.req.param();
+
+  if (!isUuid(fieldId)) return c.json({ error: 'Campo não encontrado' }, 404);
+
   const body = (await c.req.json()) as Record<string, unknown>;
 
   const ownership = await pool.query(
@@ -673,6 +694,8 @@ app.delete('/fields/:fieldId', requireAuth, async (c) => {
   const pool = await createPool(c.env);
   const { fieldId } = c.req.param();
 
+  if (!isUuid(fieldId)) return c.json({ error: 'Campo não encontrado' }, 404);
+
   const result = await pool.query(
     `
       DELETE FROM evaluation_form_fields f
@@ -693,6 +716,9 @@ app.get('/:id/responses', requireAuth, async (c) => {
   await ensureTables(c.env);
   const pool = await createPool(c.env);
   const { id } = c.req.param();
+
+  if (!isUuid(id)) return c.json({ error: 'Ficha não encontrada' }, 404);
+
   const patientId = c.req.query('patientId');
 
   const params: unknown[] = [id, user.organizationId];
@@ -718,6 +744,9 @@ app.post('/:id/responses', requireAuth, async (c) => {
   await ensureTables(c.env);
   const pool = await createPool(c.env);
   const { id } = c.req.param();
+
+  if (!isUuid(id)) return c.json({ error: 'Ficha não encontrada' }, 404);
+
   const body = (await c.req.json()) as Record<string, unknown>;
 
   const patientId = typeof body.patient_id === 'string' ? body.patient_id : null;
