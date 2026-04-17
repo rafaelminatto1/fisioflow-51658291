@@ -656,7 +656,7 @@ app.post('/patient-packages/:id/consume', requireAuth, async (c) => {
   const body = (await c.req.json().catch(() => ({}))) as Record<string, any>;
 
   try {
-    const updated = await db.transaction(async (tx) => {
+    const updated = await (async (tx: typeof db) => {
       const [current] = await tx.select()
         .from(patientPackages)
         .where(withTenant(patientPackages, user.organizationId, eq(patientPackages.id, id)))
@@ -693,7 +693,7 @@ app.post('/patient-packages/:id/consume', requireAuth, async (c) => {
         });
 
       return updatedRecord;
-    });
+    })(db);
 
     return c.json({ data: updated });
   } catch (e: any) {
