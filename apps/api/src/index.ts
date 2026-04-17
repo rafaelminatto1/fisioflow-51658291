@@ -87,7 +87,7 @@ import { reportsPdfRoutes } from "./routes/reportsPdf";
 import { eventsRoutes as businessEventsRoutes } from "./routes/events";
 import aiSearchApp from "./routes/aiSearch";
 import { verifyToken } from "./lib/auth";
-import { createPool } from "./lib/db";
+import { getRawSql } from "./lib/db";
 import { routeAgentRequest } from "agents";
 import { analyticsMiddleware } from "./lib/analytics";
 
@@ -150,8 +150,8 @@ app.get("/api/health", (c) =>
 
 app.get("/api/health/db", async (c) => {
 	try {
-		const pool = createPool(c.env, undefined, 'write');
-		const result = await pool.query("SELECT 1 as connection_test");
+		const sql = getRawSql(c.env);
+		const result = await sql("SELECT 1 as connection_test");
 		return c.json({ status: "connected", rows: result.rows });
 	} catch (error: any) {
 		return c.json({ status: "error", message: error.message }, 500);
@@ -160,8 +160,8 @@ app.get("/api/health/db", async (c) => {
 
 app.get("/api/health/schema", async (c) => {
 	try {
-		const pool = createPool(c.env, undefined, 'write');
-		const result = await pool.query(`
+		const sql = getRawSql(c.env);
+		const result = await sql(`
 			SELECT column_name, data_type
 			FROM information_schema.columns
 			WHERE table_name = 'patients'
