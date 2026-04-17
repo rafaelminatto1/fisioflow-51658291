@@ -214,7 +214,16 @@ export default function Templates() {
 
 	const handleDuplicate = async (id: string) => {
 		try {
-			const duplicatedTemplate = await duplicateForm.mutateAsync(id);
+			let duplicatedTemplate;
+			if (id.startsWith("builtin-")) {
+				// Para templates embutidos, primeiro garantimos que ele existe no banco
+				const persistedId = await ensurePersistedTemplate(id);
+				// Agora que temos um ID real do banco, duplicamos ele para criar a versão editável do usuário
+				duplicatedTemplate = await duplicateForm.mutateAsync(persistedId);
+			} else {
+				duplicatedTemplate = await duplicateForm.mutateAsync(id);
+			}
+
 			toast.success("Cópia editável criada com sucesso");
 			if (duplicatedTemplate?.id) {
 				navigate(`/templates/${duplicatedTemplate.id}/edit`);

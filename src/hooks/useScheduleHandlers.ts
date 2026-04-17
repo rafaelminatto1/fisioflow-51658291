@@ -80,6 +80,11 @@ export function useScheduleHandlers(
 	const [rescheduleSuccessMessage, setRescheduleSuccessMessage] = useState<
 		string | null
 	>(null);
+	const [capacityConfirmation, setCapacityConfirmation] = useState<{
+		appointment: Appointment;
+		newDate: Date;
+		newTime: string;
+	} | null>(null);
 
 	const { mutateAsync: rescheduleAppointmentMutation } =
 		useRescheduleAppointment();
@@ -152,8 +157,15 @@ export function useScheduleHandlers(
 					description: `Atendimento de ${appointment.patientName} movido para ${formatDateToBrazilian(newDate)} às ${newTime}.`,
 				});
 				setRescheduleSuccessMessage("Reagendado com sucesso");
+				setCapacityConfirmation(null); // Clear confirmation if it was open
 				refetchAppointments();
 			} catch (error) {
+				if (isAppointmentConflictError(error) && !ignoreCapacity) {
+					// If it's a conflict and we haven't ignored capacity yet, show confirmation modal
+					setCapacityConfirmation({ appointment, newDate, newTime });
+					return;
+				}
+
 				if (isAppointmentConflictError(error)) {
 					toast({
 						title: APPOINTMENT_CONFLICT_TITLE,
@@ -375,6 +387,8 @@ export function useScheduleHandlers(
 		isCancellingAllToday,
 		rescheduleSuccessMessage,
 		setRescheduleSuccessMessage,
+		capacityConfirmation,
+		setCapacityConfirmation,
 	}), [
 		selectedAppointment,
 		quickEditAppointment,
@@ -388,6 +402,7 @@ export function useScheduleHandlers(
 		showCancelAllTodayDialog,
 		isCancellingAllToday,
 		rescheduleSuccessMessage,
+		capacityConfirmation,
 	]);
 
 	return {

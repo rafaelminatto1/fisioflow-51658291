@@ -6,3 +6,4 @@ export type {
 export { DynamicFieldRenderer } from "./DynamicFieldRenderer";
 export { AddCustomFieldDialog } from "./AddCustomFieldDialog";
 export { SaveAsTemplateDialog } from "./SaveAsTemplateDialog";
+export { EvaluationActionBridge } from "./EvaluationActionBridge";

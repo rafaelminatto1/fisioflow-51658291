@@ -70,6 +70,10 @@ import {
 } from "@/api/v2";
 import { Settings } from "lucide-react";
 import { BiomechanicsSessionTab } from "./BiomechanicsSessionTab";
+import { ClinicalInsightsPanel } from "./clinical-insights/ClinicalInsightsPanel";
+import { PrescriptionDraft } from "./clinical-insights/PrescriptionDraft";
+import { useActionBridge } from "@/hooks/useActionBridge";
+import { AnimatePresence } from "framer-motion";
 
 interface SessionEvolutionContainerProps {
   appointmentId?: string;
@@ -138,6 +142,93 @@ export const SessionEvolutionContainer: React.FC<SessionEvolutionContainerProps>
   // Fisioterapeuta responsável (dropdown + CREFITO)
   const [selectedTherapistId, setSelectedTherapistId] = useState("");
   const { therapists } = useTherapists();
+  
+  // Clinical Insights & Prescription State
+  const [acceptedInsights, setAcceptedInsights] = useState<any[]>([]);
+  const [dismissedInsightIds, setDismissedInsightIds] = useState<string[]>([]);
+  
+  // Action Bridge - Conecta os dados do SOAP às sugestões
+  // Mapeamos os campos do SOAP para o formato que o bridge entende
+  const soapFieldsAsTemplate = useMemo(() => [
+    { id: "subjective", label: "Subjetivo", type: "text" },
+    { id: "objective", label: "Objetivo", type: "text" },
+    { id: "assessment", label: "Avaliação", type: "text" },
+    { id: "plan", label: "Plano", type: "text" },
+    // Adicionamos labels comuns que as regras buscam
+    { id: "subjective", label: "Sinais de Alerta", type: "text" },
+    { id: "objective", label: "Testes Clínicos", type: "text" },
+  ], []);
+
+  const { suggestions, hasRedFlag: hasRedFlags } = useActionBridge(
+    soapFieldsAsTemplate as any,
+    soapData as any
+  );
+
+  const handleAcceptInsight = (insight: any) => {
+    setAcceptedInsights(prev => {
+      // Evita duplicatas no rascunho
+      if (prev.find(i => i.id === insight.id)) return prev;
+      return [...prev, insight];
+    });
+    // Remove da lista de sugestões ativas ao aceitar
+    setDismissedInsightIds(prev => [...prev, insight.id]);
+    
+    toast({
+      title: "Sugestão aceita",
+      description: `${insight.title} foi adicionado ao seu rascunho de prescrição.`,
+    });
+  };
+
+  const handleDismissInsight = (id: string) => {
+    setDismissedInsightIds(prev => [...prev, id]);
+  };
+
+  const handleFinalizePrescription = (items: any[]) => {
+    if (items.length === 0) return;
+
+    // 1. O que vai para o texto do Plano (Protocolos, Orientações, Precauções)
+    const textualItems = items.filter(i => i.type !== 'exercise');
+    const prescriptionText = textualItems
+      .map(item => `[${item.type.toUpperCase()}] ${item.title}: ${item.description}`)
+      .join("\n");
+
+    if (prescriptionText) {
+      setSoapData(prev => ({
+        ...prev,
+        plan: prev.plan 
+          ? `${prev.plan}\n\n--- Orientações Automatizadas ---\n${prescriptionText}`
+          : `--- Orientações Automatizadas ---\n${prescriptionText}`
+      }));
+    }
+
+    // 2. O que vai para a lista estruturada de Exercícios
+    const exerciseItems = items.filter(i => i.type === 'exercise');
+    if (exerciseItems.length > 0) {
+      const newExercises: SessionExercise[] = exerciseItems.map(item => ({
+        id: Math.random().toString(36).substr(2, 9),
+        exerciseId: item.action?.exerciseId || "",
+        name: item.title,
+        sets: item.action?.params?.sets || 3,
+        repetitions: item.action?.params?.reps || 10,
+        weight: "",
+        completed: false,
+        observations: item.description,
+      }));
+
+      setSessionExercises(prev => [...prev, ...newExercises]);
+      
+      // Muda para a aba de exercícios para o usuário ver o que foi adicionado
+      setActiveTab("exercises");
+    }
+
+    // Limpa o rascunho após finalizar
+    setAcceptedInsights([]);
+    
+    toast({
+      title: "Prescrição Finalizada",
+      description: `${exerciseItems.length} exercícios adicionados e orientações anexadas ao plano.`,
+    });
+  };
 
   const loadData = React.useCallback(async () => {
     if (!user) {
@@ -775,7 +866,7 @@ export const SessionEvolutionContainer: React.FC<SessionEvolutionContainerProps>
   return (
     <div className={containerClass}>
       {/* Header */}
-      <div className="sticky top-0 z-40 bg-background border-b">
+      <div className="sticky top-16 z-40 bg-background border-b">
         <div className="flex items-center justify-between px-4 py-3">
           <div className="flex items-center gap-4">
             <Button variant="ghost" size="icon" onClick={handleClose} aria-label="Voltar">
@@ -1110,12 +1201,22 @@ export const SessionEvolutionContainer: React.FC<SessionEvolutionContainerProps>
                         Patologias
                       </TabsTrigger>
                       <TabsTrigger value="insights" className="flex-1">
-                        Insights
+                        ✨ Insights
                       </TabsTrigger>
                       <TabsTrigger value="biomechanics" className="flex-1">
                         🦴 Biomec.
                       </TabsTrigger>
                     </TabsList>
+
+                    <TabsContent value="insights" className="mt-4">
+                      <ClinicalInsightsPanel 
+                        suggestions={suggestions}
+                        dismissedIds={dismissedInsightIds}
+                        onAccept={handleAcceptInsight}
+                        onDismiss={handleDismissInsight}
+                        hasRedFlags={hasRedFlags}
+                      />
+                    </TabsContent>
 
                     <TabsContent value="exercises" className="mt-4">
                       <SessionExercisesPanel
@@ -1184,6 +1285,13 @@ export const SessionEvolutionContainer: React.FC<SessionEvolutionContainerProps>
         )}
         </Suspense>
       </div>
+
+      {/* Prescription Worklist / Draft */}
+      <PrescriptionDraft 
+        items={acceptedInsights}
+        onRemove={(id) => setAcceptedInsights(prev => prev.filter(i => i.id !== id))}
+        onFinalize={handleFinalizePrescription}
+      />
 
       <EvolutionSettingsModal
         open={isSettingsOpen}

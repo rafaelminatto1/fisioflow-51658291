@@ -101,6 +101,8 @@ class AIModelFactory {
 
 // Stub for AI runtime client
 function getAiRuntime() {
+	if (typeof window !== "undefined") return null;
+
 	return {
 		model: "gemini-2.5-flash",
 		apiKey:
