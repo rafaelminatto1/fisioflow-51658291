@@ -81,6 +81,7 @@ function getGlobalPool(env: Env): Pool {
         connectionString: url,
         max: 10,
         idleTimeoutMillis: 10000,
+        connectionTimeoutMillis: 15000,
     });
 
     // Wrap connect to automatically inject RLS context from ALS

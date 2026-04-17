@@ -51,21 +51,27 @@ async function invalidateListCache(env: Env): Promise<void> {
 
 // ===== CATEGORIAS =====
 app.get('/categories', async (c) => {
-  const cached = await kvGet(c.env, KV_CATEGORIES);
-  if (cached) return c.json({ data: cached });
+  try {
+    const cached = await kvGet(c.env, KV_CATEGORIES);
+    if (cached) return c.json({ data: cached });
 
-  const db = await createDb(c.env);
-  const rows = await db
-    .select()
-    .from(exerciseCategories)
-    .orderBy(exerciseCategories.orderIndex);
+    const db = createDb(c.env, 'read');
+    const rows = await db
+      .select()
+      .from(exerciseCategories)
+      .orderBy(exerciseCategories.orderIndex);
 
-  c.executionCtx.waitUntil(kvSet(c.env, KV_CATEGORIES, rows));
-  return c.json({ data: rows });
+    c.executionCtx.waitUntil(kvSet(c.env, KV_CATEGORIES, rows));
+    return c.json({ data: rows });
+  } catch (error: any) {
+    console.error('[Exercises/Categories] Error:', error.message);
+    return c.json({ data: [] }, 500);
+  }
 });
 
 // ===== LISTA DE EXERCÍCIOS =====
 app.get('/', async (c) => {
+  try {
   const {
     q,
     category,
@@ -86,7 +92,7 @@ app.get('/', async (c) => {
     if (cached) return c.json(cached);
   }
 
-  const db = await createDb(c.env);
+  const db = createDb(c.env, 'read');
 
   const pageNum = Math.max(1, parseInt(page));
   const limitNum = Math.min(500, Math.max(1, parseInt(limit)));
@@ -205,29 +211,38 @@ app.get('/', async (c) => {
   }
 
   return c.json(response);
+  } catch (error: any) {
+    console.error('[Exercises/List] Error:', error.message);
+    return c.json({ data: [], meta: { page: 1, limit: 20, total: 0, pages: 0 } }, 500);
+  }
 });
 
 
 // ===== DETALHE DO EXERCÍCIO =====
 app.get('/:id', async (c) => {
-  const db = await createDb(c.env);
-  const { id } = c.req.param();
+  try {
+    const db = createDb(c.env, 'read');
+    const { id } = c.req.param();
 
-  // Aceita UUID ou slug
-  const isUuid = /^[0-9a-f-]{36}$/i.test(id);
-  const condition = isUuid
-    ? eq(exercises.id, id)
-    : eq(exercises.slug, id);
+    // Aceita UUID ou slug
+    const isUuid = /^[0-9a-f-]{36}$/i.test(id);
+    const condition = isUuid
+      ? eq(exercises.id, id)
+      : eq(exercises.slug, id);
 
-  const row = await db
-    .select()
-    .from(exercises)
-    .where(and(condition, eq(exercises.isActive, true)))
-    .limit(1);
+    const row = await db
+      .select()
+      .from(exercises)
+      .where(and(condition, eq(exercises.isActive, true)))
+      .limit(1);
 
-  if (!row.length) return c.json({ error: 'Exercício não encontrado' }, 404);
+    if (!row.length) return c.json({ error: 'Exercício não encontrado' }, 404);
 
-  return c.json({ data: row[0] });
+    return c.json({ data: row[0] });
+  } catch (error: any) {
+    console.error('[Exercises/Detail] Error:', error.message);
+    return c.json({ error: 'Erro ao buscar exercício' }, 500);
+  }
 });
 
 // ===== FAVORITAR (auth obrigatório) =====
