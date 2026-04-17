@@ -7,7 +7,7 @@ import { createRemoteJWKSet, jwtVerify } from "jose";
 import type { MiddlewareHandler, Context } from "hono";
 import { getCookie } from "hono/cookie";
 import type { Env } from "../types/env";
-import { createPool, runWithOrg, getRawSql } from "./db";
+import { createPool, runWithOrg } from "./db";
 
 const jwksCache = new Map<string, ReturnType<typeof createRemoteJWKSet>>();
 
@@ -45,8 +45,8 @@ async function resolveAuthContext(
 	if (!candidate.uid) return null;
 
 	try {
-		const sql = getRawSql(env, 'read');
-		let res = await sql(
+		const pool = createPool(env, undefined, 'write');
+		let res = await pool.query(
 			`
         SELECT user_id, email, role, organization_id
         FROM profiles
@@ -63,7 +63,7 @@ async function resolveAuthContext(
 		// Auto-sincronização por e-mail: Se não encontrou pelo UID mas temos e-mail,
 		// tenta recuperar o perfil pelo e-mail e atualizar o UID automaticamente.
 		if (!row && candidate.email) {
-			const syncRes = await sql(
+			const syncRes = await pool.query(
 				`
         SELECT user_id, email, role, organization_id
         FROM profiles
@@ -82,7 +82,7 @@ async function resolveAuthContext(
 					`[Auth] Perfil encontrado por e-mail (${candidate.email}). Sincronizando UID: ${row.user_id} -> ${candidate.uid}`,
 				);
 				// Atualiza o UID de forma assíncrona para não atrasar a resposta
-				sql(
+				pool.query(
 					"UPDATE profiles SET user_id = $1, updated_at = NOW() WHERE email = $2",
 					[candidate.uid, candidate.email],
 				).catch((err) =>
@@ -209,10 +209,10 @@ export async function verifyToken<E extends { Bindings: Env }>(
 
 			// Fallback B: Consulta direta ao banco de dados (mais robusto)
 			try {
-				const sql = getRawSql(env, 'read');
-				const res = await sql(
+				const pool = createPool(env, undefined, 'write');
+				const res = await pool.query(
 					`
-          SELECT s."userId", u.email, u.role, p.organization_id 
+          SELECT s."userId", u.email, u.role, p.organization_id
           FROM neon_auth.session s
           JOIN neon_auth."user" u ON s."userId" = u.id
           LEFT JOIN public.profiles p ON s."userId"::text = p.user_id
