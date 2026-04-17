@@ -35,6 +35,7 @@ type NormalizedToken = {
   expires_at: string | null;
   campos_obrigatorios: string[];
   campos_opcionais: string[];
+  ui_style: Record<string, unknown>;
   created_at?: string;
   updated_at?: string;
 };
@@ -52,6 +53,7 @@ function normalizeToken(row: Record<string, unknown>): NormalizedToken {
     expires_at: row.expires_at == null ? null : String(row.expires_at),
     campos_obrigatorios: normalizeFields(row.campos_obrigatorios, ['nome', 'email']),
     campos_opcionais: normalizeFields(row.campos_opcionais, ['telefone']),
+    ui_style: (typeof row.ui_style === 'string' ? JSON.parse(row.ui_style) : row.ui_style) || {},
     created_at: row.created_at == null ? undefined : String(row.created_at),
     updated_at: row.updated_at == null ? undefined : String(row.updated_at),
   };
@@ -240,8 +242,8 @@ app.post('/tokens', requireAuth, async (c) => {
     `
       INSERT INTO precadastro_tokens (
         organization_id, nome, descricao, token, ativo, max_usos, usos_atuais,
-        expires_at, campos_obrigatorios, campos_opcionais, created_at, updated_at
-      ) VALUES ($1,$2,$3,$4,$5,$6,0,$7,$8::text[],$9::text[],NOW(),NOW())
+        expires_at, campos_obrigatorios, campos_opcionais, ui_style, created_at, updated_at
+      ) VALUES ($1,$2,$3,$4,$5,$6,0,$7,$8::text[],$9::text[],$10,NOW(),NOW())
       RETURNING *
     `,
     [
@@ -254,6 +256,7 @@ app.post('/tokens', requireAuth, async (c) => {
       body.expires_at ? String(body.expires_at) : null,
       camposObrigatorios,
       camposOpcionais,
+      body.ui_style ? (typeof body.ui_style === 'object' ? JSON.stringify(body.ui_style) : String(body.ui_style)) : '{}',
     ],
   );
 
@@ -300,6 +303,10 @@ app.put('/tokens/:id', requireAuth, async (c) => {
   if (body.campos_opcionais !== undefined) {
     params.push(normalizeFields(body.campos_opcionais, []));
     sets.push(`campos_opcionais = $${params.length}::text[]`);
+  }
+  if (body.ui_style !== undefined) {
+    params.push(body.ui_style ? (typeof body.ui_style === 'object' ? JSON.stringify(body.ui_style) : String(body.ui_style)) : '{}');
+    sets.push(`ui_style = $${params.length}`);
   }
 
   params.push(id, user.organizationId);
