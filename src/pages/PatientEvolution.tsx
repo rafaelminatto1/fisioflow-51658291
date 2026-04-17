@@ -271,25 +271,38 @@ const PatientEvolution = () => {
 
 	const topSectionContent = useMemo(
 		() => (
-			<CardGrid>
-				<MedicalReturnCard
-					patient={state.patient}
-					patientId={state.patientId}
-					onPatientUpdated={() => state.invalidateData("all")}
-				/>
-				<SurgeriesCard patientId={state.patientId} />
-				<div className="lg:row-span-2">
+			<div className="flex flex-col lg:flex-row gap-4 w-full items-start">
+				{/* Lado Esquerdo: Cards de Contexto (Minimizáveis) */}
+				<div className="flex-1 w-full grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+					<MedicalReturnCard
+						patient={state.patient}
+						patientId={state.patientId}
+						onPatientUpdated={() => state.invalidateData("all")}
+						defaultCollapsed={state.medicalReturns.length === 0}
+					/>
+					<SurgeriesCard
+						patientId={state.patientId}
+						defaultCollapsed={state.surgeries.length === 0}
+					/>
+					<MetasCard
+						patientId={state.patientId}
+						defaultCollapsed={state.goals.length === 0}
+					/>
+				</div>
+
+				{/* Lado Direito: Resumo (Sempre visível ou minimizável conforme a estética clean) */}
+				<div className="w-full lg:w-72 shrink-0">
 					<EvolutionSummaryCard stats={evolutionStats} />
 				</div>
-				<div className="sm:col-span-2 lg:col-span-2">
-					<MetasCard patientId={state.patientId} />
-				</div>
-			</CardGrid>
+			</div>
 		),
 		[
 			state.patient,
 			state.patientId,
 			state.invalidateData,
+			state.medicalReturns.length,
+			state.surgeries.length,
+			state.goals.length,
 			evolutionStats,
 		],
 	);
@@ -384,8 +397,8 @@ const PatientEvolution = () => {
 				</div>
 			</MainLayout>
 		);
-	
-	const pendingRequiredMeasurements = state.requiredMeasurements?.filter((rm: any) => 
+
+	const pendingRequiredMeasurements = state.requiredMeasurements?.filter((rm: any) =>
 		!state.measurements?.some((m: any) => m.measurement_name === rm.measurement_name)
 	) || [];
 

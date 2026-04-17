@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
-import { createDbForOrg, createPoolForOrg, runWithOrg, getOrgContext, createDb } from "../db";
+import { getDbForOrg, createPoolForOrg, runWithOrg, getOrgContext, createDb } from "../db";
 import * as serverless from "@neondatabase/serverless";
 
 vi.mock("@neondatabase/serverless", () => ({
@@ -15,7 +15,11 @@ describe("Database Multi-tenant Audit (RLS & organizationId)", () => {
         vi.clearAllMocks();
 
         transactionMock = vi.fn().mockResolvedValue([null, { mockResult: true }]);
-        queryMock = vi.fn().mockResolvedValue({ mockQueryResult: true });
+        queryMock = vi.fn((text, params) => ({
+            text,
+            params,
+            mockQueryResult: true,
+        }));
 
         // Simulate the tagged template literal neon() call
         neonInstanceMock = vi.fn((strings, ...values) => {
@@ -30,8 +34,8 @@ describe("Database Multi-tenant Audit (RLS & organizationId)", () => {
     });
 
     it("should set app.org_id via Neon RLS config when calling createDbForOrg", async () => {
-        const env = { NEON_URL: "postgres://mock" } as any;
-        const db = createDbForOrg(env, "org-123");
+        const env = { NEON_URL: "https://mock" } as any;
+        const db = await getDbForOrg("org-123", env);
 
         // The inner sql object wrapped by wrapSqlWithRls is passed to drizzleHttp.
         // We will simulate a call that drizzle would make:
@@ -42,21 +46,19 @@ describe("Database Multi-tenant Audit (RLS & organizationId)", () => {
         await wrappedSql`SELECT * FROM users`;
 
         expect(transactionMock).toHaveBeenCalled();
-        const transactionCalls = transactionMock.mock.calls[0][0];
-        
-        // transactionCalls is an array of tagged template results.
-        // The first one should be the set_config call.
-        const setConfigCall = transactionCalls[0];
-        expect(setConfigCall.strings[0]).toContain("SELECT set_config('app.org_id'");
-        expect(setConfigCall.values[0]).toBe("org-123");
+        expect(queryMock).toHaveBeenNthCalledWith(
+            1,
+            "SELECT set_config('app.org_id', $1, true)",
+            ["org-123"],
+        );
     });
 
     it("should set app.org_id correctly when using createPoolForOrg", async () => {
-        const env = { NEON_URL: "postgres://mock" } as any;
+        const env = { NEON_URL: "https://mock" } as any;
         const pool = createPoolForOrg(env, "org-456");
         
         // Execute a direct query using the pool wrapper
-        await pool.query("SELECT * FROM patients WHERE id = $1", ["pat-123"]);
+        await (await pool).query("SELECT * FROM patients WHERE id = $1", ["pat-123"]);
         
         expect(transactionMock).toHaveBeenCalled();
         const transactionCalls = transactionMock.mock.calls[0][0];
@@ -66,11 +68,15 @@ describe("Database Multi-tenant Audit (RLS & organizationId)", () => {
         expect(setConfigCall.values[0]).toBe("org-456");
         
         const actualQueryCall = transactionCalls[1];
-        expect(await actualQueryCall).toEqual({ mockQueryResult: true }); // neon.query() mock return
+        expect(actualQueryCall).toEqual({
+            text: "SELECT * FROM patients WHERE id = $1",
+            params: ["pat-123"],
+            mockQueryResult: true,
+        });
     });
 
     it("should isolate organizationId in runWithOrg context properly", async () => {
-        const env = { NEON_URL: "postgres://mock" } as any;
+        const env = { NEON_URL: "https://mock" } as any;
 
         await runWithOrg("org-async-789", async () => {
             expect(getOrgContext()).toBe("org-async-789");
@@ -80,16 +86,16 @@ describe("Database Multi-tenant Audit (RLS & organizationId)", () => {
             await wrappedSql`SELECT * FROM appointments`;
 
             expect(transactionMock).toHaveBeenCalled();
-            const transactionCalls = transactionMock.mock.calls[0][0];
-            
-            const setConfigCall = transactionCalls[0];
-            expect(setConfigCall.strings[0]).toContain("SELECT set_config('app.org_id'");
-            expect(setConfigCall.values[0]).toBe("org-async-789");
+            expect(queryMock).toHaveBeenNthCalledWith(
+                1,
+                "SELECT set_config('app.org_id', $1, true)",
+                ["org-async-789"],
+            );
         });
     });
 
     it("createDb should not inject set_config if no org context is provided", async () => {
-        const env = { NEON_URL: "postgres://mock" } as any;
+        const env = { NEON_URL: "https://mock" } as any;
         expect(getOrgContext()).toBeUndefined();
         
         const db = createDb(env);
