@@ -560,9 +560,7 @@ export const physioDictionary: PhysioDictionaryEntry[] = [
 		image_url: '/src/assets/images/tests/tst_empty_can_technical_v1_1776422046415.png',
 		description_pt: 'Avalia a integridade do tendão supraespinal. O braço é colocado em 90° de abdução e 30° de flexão horizontal com rotação interna total ("lata vazia"). Positivo se houver dor ou fraqueza contra resistência.',
 		description_en: 'Assesses supraspinatus tendon integrity. The arm is placed in 90° of abduction and 30° of horizontal flexion with full internal rotation ("empty can"). Positive if there is pain or weakness against resistance.',
-	}
-
-
+	},
 	{
 		id: 'tst_mcmurray',
 		pt: 'Teste de McMurray',
