@@ -157,24 +157,14 @@ export type FisioDb = PgDatabase<any, typeof schema>;
 
 /**
  * Cria uma instância do Drizzle configurada para o ambiente atual.
- * @param mode 'write' usa TCP via Hyperdrive (padrão); 'read' usa HTTP Neon (requer NEON_URL).
+ * Always uses neon-http (NEON_URL) to avoid TCP cold-start hangs in Cloudflare Workers.
+ * Hyperdrive/TCP path is kept in createPool for raw SQL; all Drizzle ORM usage goes HTTP.
  */
 export function createDb(env: Env, mode: 'read' | 'write' = 'write'): FisioDb {
-	const url = getUrl(env, mode);
-	const orgId = getOrgContext();
-
-	if (mode === 'write' && isTcpConnection(env, mode)) {
-		// Use getGlobalPool: wraps pool.connect/pool.query ONCE with dynamic ALS context.
-		// Never re-wrap on each request — that accumulates wrapper layers across requests,
-		// causing multiple set_config round-trips and eventually a 10s timeout.
-		const pool = getGlobalPool(env);
-		return drizzlePg(pool, { schema }) as any;
-	}
-
-	// Read mode: neon-http driver. No RLS transaction wrapping here — each route handler
-	// filters by organization_id in Drizzle WHERE clauses. wrapSqlWithRls caused
-	// "Failed query" errors in @neondatabase/serverless v1.0.2 due to deferred query
-	// incompatibility with { fullResults: true } in transaction batches.
+	// Always use neon-http regardless of mode — TCP via Hyperdrive hangs when Neon is
+	// cold because CF Workers timer starvation prevents connectionTimeoutMillis from firing.
+	// neon-http is stateless, handles cold-starts gracefully, and supports all DML.
+	const url = getUrl(env, 'read');
 	const sql = neon(url, { fullResults: true });
 	return drizzleHttp(sql, { schema }) as any;
 }
