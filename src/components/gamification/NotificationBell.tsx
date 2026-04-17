@@ -46,7 +46,7 @@ export function NotificationBell({ patientId }: { patientId?: string }) {
 	return (
 		<DropdownMenu>
 			<DropdownMenuTrigger asChild>
-				<Button variant="ghost" size="icon" className="relative">
+				<Button variant="ghost" size="icon" className="relative" aria-label="Notificações da gamificação">
 					<Bell className="h-5 w-5" />
 					{unreadCount > 0 && (
 						<Badge
@@ -154,4 +154,6 @@ export function NotificationBell({ patientId }: { patientId?: string }) {
 			</DropdownMenuContent>
 		</DropdownMenu>
 	);
+}
+;
 }

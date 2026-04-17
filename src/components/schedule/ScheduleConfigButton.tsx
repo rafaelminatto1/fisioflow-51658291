@@ -57,7 +57,7 @@ export const ScheduleConfigIconButton = memo(
 				asChild
 				className={cn("h-8 w-8", className)}
 			>
-				<Link to="/agenda/settings">
+				<Link to="/agenda/settings" aria-label="Configurações da agenda">
 					<Settings className="w-4 h-4" />
 				</Link>
 			</Button>
