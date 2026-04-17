@@ -77,26 +77,25 @@ export const FloatingActionBar: React.FC<FloatingActionBarProps> = ({
 		<TooltipProvider>
 			<div
 				className={cn(
-					"fixed bottom-0 left-0 right-0 z-50",
-					"bg-background/80 backdrop-blur-lg border-t border-border/50",
-					"px-4 py-3 shadow-lg",
-					"safe-area-inset-bottom",
-					"animate-in slide-in-from-bottom-2 duration-200",
+					"fixed bottom-6 left-1/2 -translate-x-1/2 z-50",
+					"bg-white/90 backdrop-blur-md border border-primary/10",
+					"px-4 py-2 rounded-2xl shadow-xl shadow-primary/5",
+					"animate-in fade-in slide-in-from-bottom-4 duration-500",
 					className,
 				)}
 			>
-				<div className="max-w-7xl mx-auto flex items-center justify-between gap-3">
+				<div className="flex items-center gap-3">
 					{/* Left Section - Auto-save indicator */}
-					{autoSaveEnabled ? (
-						<div className="hidden sm:flex items-center gap-1.5">
+					{autoSaveEnabled && (
+						<div className="hidden sm:flex items-center gap-2 px-3 border-r border-slate-100">
 							<Cloud
 								className={cn(
 									"h-3.5 w-3.5",
-									lastSavedAt ? "text-green-500" : "text-muted-foreground",
+									lastSavedAt ? "text-primary" : "text-slate-300",
 								)}
 							/>
 							{lastSavedAt && (
-								<span className="text-[10px] text-muted-foreground">
+								<span className="text-[10px] text-slate-500 font-bold">
 									{lastSavedAt.toLocaleTimeString("pt-BR", {
 										hour: "2-digit",
 										minute: "2-digit",
@@ -104,8 +103,6 @@ export const FloatingActionBar: React.FC<FloatingActionBarProps> = ({
 								</span>
 							)}
 						</div>
-					) : (
-						<div className="w-0" />
 					)}
 
 					{/* Center Section - Keyboard hint */}
@@ -114,18 +111,15 @@ export const FloatingActionBar: React.FC<FloatingActionBarProps> = ({
 							<TooltipTrigger asChild>
 								<Button
 									variant="ghost"
-									size="sm"
+									size="icon"
 									onClick={onShowKeyboardHelp}
-									className="hidden md:flex h-8 px-2 text-muted-foreground hover:text-foreground"
+									className="hidden md:flex h-8 w-8 text-slate-400 hover:text-primary transition-colors"
 								>
-									<Keyboard className="h-4 w-4 mr-1.5" />
-									<kbd className="text-[10px] bg-muted/50 px-1.5 py-0.5 rounded">
-										?
-									</kbd>
+									<Keyboard className="h-4 w-4" />
 								</Button>
 							</TooltipTrigger>
-							<TooltipContent>
-								<p>Atalhos de teclado</p>
+							<TooltipContent className="bg-slate-800 text-white border-none text-[10px] font-bold">
+								<p>ATALHOS DE TECLADO</p>
 							</TooltipContent>
 						</Tooltip>
 					)}
@@ -137,24 +131,24 @@ export const FloatingActionBar: React.FC<FloatingActionBarProps> = ({
 							<Tooltip>
 								<TooltipTrigger asChild>
 									<Button
-										variant="outline"
+										variant="ghost"
 										size="sm"
 										onClick={onExportPDF}
 										disabled={disabled || isExporting}
-										className="h-9 px-3 shadow-sm hover:shadow transition-shadow"
+										className="h-9 px-3 text-slate-500 hover:text-primary hover:bg-primary/5 transition-all"
 									>
 										{isExporting ? (
 											<Loader2 className="h-4 w-4 animate-spin" />
 										) : (
 											<Download className="h-4 w-4" />
 										)}
-										<span className="hidden lg:inline ml-1.5 text-sm">
-											{isExporting ? "Gerando..." : "PDF"}
+										<span className="hidden lg:inline ml-2 text-xs font-bold uppercase tracking-wider">
+											{isExporting ? "Gerando" : "PDF"}
 										</span>
 									</Button>
 								</TooltipTrigger>
-								<TooltipContent>
-									<p>Exportar evolução em PDF</p>
+								<TooltipContent className="bg-slate-800 text-white border-none text-[10px] font-bold">
+									<p>EXPORTAR PDF</p>
 								</TooltipContent>
 							</Tooltip>
 						)}
@@ -163,29 +157,24 @@ export const FloatingActionBar: React.FC<FloatingActionBarProps> = ({
 						<Tooltip>
 							<TooltipTrigger asChild>
 								<Button
-									variant="outline"
+									variant="ghost"
 									size="sm"
 									onClick={onSave}
 									disabled={disabled || isSaving}
-									className="h-9 px-3 sm:px-4 shadow-sm hover:shadow transition-shadow"
+									className="h-9 px-3 text-slate-500 hover:text-primary hover:bg-primary/5 transition-all"
 								>
 									{isSaving ? (
 										<Loader2 className="h-4 w-4 animate-spin" />
 									) : (
 										<Save className="h-4 w-4" />
 									)}
-									<span className="hidden sm:inline ml-1.5 text-sm">
-										{isSaving ? "Salvando..." : "Salvar"}
+									<span className="hidden sm:inline ml-2 text-xs font-bold uppercase tracking-wider">
+										{isSaving ? "Salvando" : "Salvar"}
 									</span>
 								</Button>
 							</TooltipTrigger>
-							<TooltipContent>
-								<p>
-									Salvar evolução{" "}
-									<kbd className="ml-2 text-[10px] bg-muted/50 px-1 rounded">
-										Ctrl+S
-									</kbd>
-								</p>
+							<TooltipContent className="bg-slate-800 text-white border-none text-[10px] font-bold">
+								<p>SALVAR (CTRL+S)</p>
 							</TooltipContent>
 						</Tooltip>
 
@@ -197,10 +186,8 @@ export const FloatingActionBar: React.FC<FloatingActionBarProps> = ({
 									onClick={onComplete}
 									disabled={disabled || isSaving || isCompleting}
 									className={cn(
-										"h-9 px-3 sm:px-4 shadow-md hover:shadow-lg transition-all",
-										"bg-gradient-to-r from-green-600 to-emerald-600",
-										"hover:from-green-700 hover:to-emerald-700",
-										"text-white font-medium",
+										"h-9 px-5 shadow-lg shadow-primary/10 transition-all uppercase tracking-widest text-[10px] font-black",
+										"bg-primary hover:bg-primary/90 text-white",
 									)}
 								>
 									{isCompleting ? (
@@ -208,18 +195,13 @@ export const FloatingActionBar: React.FC<FloatingActionBarProps> = ({
 									) : (
 										<CheckCircle2 className="h-4 w-4" />
 									)}
-									<span className="ml-1.5 text-sm">
-										{isCompleting ? "Concluindo..." : "Concluir"}
+									<span className="ml-2">
+										{isCompleting ? "Concluindo" : "Concluir"}
 									</span>
 								</Button>
 							</TooltipTrigger>
-							<TooltipContent>
-								<p>
-									Concluir atendimento{" "}
-									<kbd className="ml-2 text-[10px] bg-muted/50 px-1 rounded">
-										Ctrl+Enter
-									</kbd>
-								</p>
+							<TooltipContent className="bg-slate-800 text-white border-none text-[10px] font-bold">
+								<p>CONCLUIR (CTRL+ENTER)</p>
 							</TooltipContent>
 						</Tooltip>
 					</div>

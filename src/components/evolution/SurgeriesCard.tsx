@@ -3,11 +3,12 @@
  * Lista cirurgias de forma compacta
  */
 
-import { useState, memo } from "react";
+import { useState, memo, useEffect } from "react";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { formatDetailedDuration } from "@/utils/dateUtils";
-import { Scissors, Plus, Edit2 } from "lucide-react";
+import { Scissors, Plus, Edit2, RefreshCw } from "lucide-react";
+import { cn } from "@/lib/utils";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -26,23 +27,37 @@ function formatTimeSinceSurgery(surgeryDate: string): string {
 
 interface SurgeriesCardProps {
 	patientId: string | undefined;
+	defaultCollapsed?: boolean;
 }
 
 export const SurgeriesCard = memo(function SurgeriesCard({
 	patientId,
+	defaultCollapsed = false,
 }: SurgeriesCardProps) {
 	const { data: surgeries = [], isLoading } = usePatientSurgeries(
 		patientId || "",
 	);
 	const [modalOpen, setModalOpen] = useState(false);
+	const [isCollapsed, setIsCollapsed] = useState(defaultCollapsed);
 	const [editingSurgery, setEditingSurgery] = useState<Surgery | null>(null);
 
-	const handleAdd = () => {
+	// Colapsar automaticamente se não houver registros
+	useEffect(() => {
+		if (!isLoading && surgeries.length === 0) {
+			setIsCollapsed(true);
+		} else if (surgeries.length > 0) {
+			setIsCollapsed(false);
+		}
+	}, [surgeries.length, isLoading]);
+
+	const handleAdd = (e: React.MouseEvent) => {
+		e.stopPropagation();
 		setEditingSurgery(null);
 		setModalOpen(true);
 	};
 
-	const handleEdit = (s: Surgery) => {
+	const handleEdit = (s: Surgery, e: React.MouseEvent) => {
+		e.stopPropagation();
 		setEditingSurgery(s);
 		setModalOpen(true);
 	};
@@ -56,116 +71,116 @@ export const SurgeriesCard = memo(function SurgeriesCard({
 
 	return (
 		<>
-			<Card className="border-primary/20 bg-primary/5 shadow-sm flex flex-col">
-				<CardHeader className="pb-2 pt-3 px-4 flex flex-row items-center justify-between flex-shrink-0">
-					<CardTitle className="text-base font-semibold flex items-center gap-2 text-foreground">
-						<Scissors className="h-5 w-5 text-primary" />
-						Cirurgias
-						{surgeries.length > 0 && (
-							<span className="ml-1 h-5 px-2 rounded-full bg-primary/10 text-primary text-xs flex items-center justify-center font-bold">
-								{surgeries.length}
-							</span>
-						)}
-					</CardTitle>
+			<Card
+				className={cn(
+					"border-primary/10 bg-white shadow-sm transition-all duration-300 flex flex-col hover:border-primary/30",
+					isCollapsed && "cursor-pointer hover:bg-slate-50/50"
+				)}
+				onClick={() => isCollapsed && setIsCollapsed(false)}
+			>
+				<CardHeader className={cn(
+					"pb-2 pt-3 px-4 flex flex-row items-center justify-between flex-shrink-0 select-none",
+					isCollapsed && "pb-3"
+				)}>
+					<div
+						className="flex items-center gap-2 flex-1 cursor-pointer"
+						onClick={(e) => {
+							if (!isCollapsed) {
+								e.stopPropagation();
+								setIsCollapsed(true);
+							}
+						}}
+					>
+						<Scissors className={cn("h-5 w-5 transition-colors", surgeries.length > 0 ? "text-primary" : "text-slate-400")} />
+						<CardTitle className="text-sm font-semibold text-slate-700 flex items-center gap-2">
+							Cirurgias
+							{surgeries.length > 0 && (
+								<Badge variant="secondary" className="bg-primary/5 text-primary border-primary/10 hover:bg-primary/10 h-5 px-1.5 font-bold">
+									{surgeries.length}
+								</Badge>
+							)}
+						</CardTitle>
+					</div>
 					<Button
 						variant="ghost"
 						size="sm"
 						onClick={handleAdd}
-						className="h-8 w-8 p-0 hover:bg-primary/10 text-muted-foreground hover:text-primary transition-colors"
+						className="h-7 w-7 p-0 hover:bg-primary/5 text-slate-400 hover:text-primary transition-colors"
 						title="Adicionar cirurgia"
 					>
-						<Plus className="h-5 w-5" />
+						<Plus className="h-4 w-4" />
 					</Button>
 				</CardHeader>
-				<CardContent className="px-4 pb-3 flex-1 min-h-0">
-					{isLoading ? (
-						<div className="flex items-center justify-center h-full">
-							<div className="w-6 h-6 border-2 border-primary border-t-transparent rounded-full animate-spin" />
-						</div>
-					) : surgeries.length === 0 ? (
-						<p className="text-sm text-muted-foreground text-center py-8">
-							Nenhuma cirurgia registrada
-						</p>
-					) : (
-						<ScrollArea className="h-full pr-2">
-							<ul className="space-y-2.5">
-								{surgeries.map((s: Surgery) => {
-									const surgeryDate = s.surgery_date;
-									const surgeryType = s.surgery_type;
-									const affectedSide = s.affected_side;
-									const timeSince = surgeryDate
-										? formatTimeSinceSurgery(surgeryDate)
-										: "—";
 
-									return (
-										<li
-											key={s.id}
-											className="flex items-center justify-between gap-3 px-3 py-2.5 rounded-md bg-card/60 border border-transparent hover:border-primary/10 hover:bg-card/80 transition-all group shadow-sm"
-										>
-											<div className="min-w-0 flex-1">
-												<p className="text-base font-medium text-foreground leading-tight">
-													{s.surgery_name}
-												</p>
-												<div className="flex items-center gap-2 mt-1.5 text-sm text-muted-foreground flex-wrap">
-													{surgeryDate && (
-														<span className="font-medium">
-															{format(new Date(surgeryDate), "dd/MM/yy", {
-																locale: ptBR,
-															})}
-														</span>
-													)}
-													<span className="text-border">•</span>
-													<span className="text-primary font-semibold">
-														{timeSince}
-													</span>
-													{surgeryType && (
-														<>
-															<span className="text-border">•</span>
-															<span className="px-2 py-0.5 rounded bg-muted text-foreground/80 font-medium">
-																{getSurgeryTypeLabel(surgeryType)}
-															</span>
-														</>
-													)}
-													{affectedSide && affectedSide !== "nao_aplicavel" && (
-														<>
-															<span className="text-border">•</span>
-															<span className="px-2 py-0.5 rounded bg-primary/10 text-primary font-medium">
-																{getAffectedSideAbbreviation(affectedSide)}
-															</span>
-														</>
-													)}
-													{s.complications && (
-														<>
-															<span className="text-border">•</span>
-															<span
-																className="px-2 py-0.5 rounded bg-destructive/10 text-destructive font-medium flex items-center gap-1"
-																title={s.complications}
-															>
-																⚠️{" "}
-																{s.complications.length > 20
-																	? `${s.complications.substring(0, 20)}...`
-																	: s.complications}
-															</span>
-														</>
-													)}
-												</div>
-											</div>
-											<Button
-												variant="ghost"
-												size="sm"
-												className="h-7 w-7 shrink-0 opacity-0 group-hover:opacity-100 transition-opacity p-0 text-muted-foreground hover:text-primary"
-												onClick={() => handleEdit(s)}
-												aria-label="Editar cirurgia"
+				{!isCollapsed && (
+					<CardContent className="px-4 pb-3 flex-1 min-h-0 animate-in fade-in slide-in-from-top-1 duration-200">
+						{isLoading ? (
+							<div className="flex items-center justify-center py-4">
+								<RefreshCw className="h-4 w-4 text-primary/40 animate-spin" />
+							</div>
+						) : surgeries.length === 0 ? (
+							<div className="text-center py-4 border-t border-slate-50 mt-1">
+								<p className="text-xs text-slate-400 italic">Nenhuma cirurgia</p>
+							</div>
+						) : (
+							<ScrollArea className="max-h-[200px] pr-2">
+								<ul className="space-y-2">
+									{surgeries.map((s: Surgery) => {
+										const surgeryDate = s.surgery_date;
+										const surgeryType = s.surgery_type;
+										const affectedSide = s.affected_side;
+										const timeSince = surgeryDate
+											? formatTimeSinceSurgery(surgeryDate)
+											: "—";
+
+										return (
+											<li
+												key={s.id}
+												className="flex items-center justify-between gap-2 p-2.5 rounded-lg bg-slate-50/50 border border-slate-100 hover:border-primary/20 hover:bg-white transition-all group relative"
 											>
-												<Edit2 className="h-4 w-4" />
-											</Button>
-										</li>
-									);
-								})}
-							</ul>
-						</ScrollArea>
-					)}
-				</CardContent>
+												<div className="min-w-0 flex-1">
+													<p className="text-sm font-bold text-slate-700 leading-tight">
+														{s.surgery_name}
+													</p>
+													<div className="flex items-center gap-1.5 mt-1 text-[11px] text-slate-500 font-medium flex-wrap">
+														{surgeryDate && (
+															<span>
+																{format(new Date(surgeryDate), "dd/MM/yy", {
+																	locale: ptBR,
+																})}
+															</span>
+														)}
+														<span className="text-slate-300">•</span>
+														<span className="text-primary font-bold">
+															{timeSince}
+														</span>
+														{surgeryType && (
+															<>
+																<span className="text-slate-300">•</span>
+																<span className="bg-slate-200/50 px-1 rounded">
+																	{getSurgeryTypeLabel(surgeryType)}
+																</span>
+															</>
+														)}
+													</div>
+												</div>
+												<Button
+													variant="ghost"
+													size="sm"
+													className="h-6 w-6 opacity-0 group-hover:opacity-100 p-0 text-slate-400 hover:text-primary transition-all"
+													onClick={(e) => handleEdit(s, e)}
+													aria-label="Editar cirurgia"
+												>
+													<Edit2 className="h-3 w-3" />
+												</Button>
+											</li>
+										);
+									})}
+								</ul>
+							</ScrollArea>
+						)}
+					</CardContent>
+				)}
 			</Card>
 
 			<SurgeryFormModal
