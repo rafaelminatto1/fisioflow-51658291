@@ -1,0 +1,104 @@
+Auditing 123 exercises for missing metadata...
+
+❌ Found 100 exercises with missing fields:
+
+[exd-kickback] Extensão de Quadril: Missing progression_suggestion
+[exd-pant-em-pe] Panturrilha em Pé: Missing progression_suggestion
+[exd-pant-sentado] Panturrilha Sentado: Missing progression_suggestion
+[exd-tibial-ant] Dorsiflexão Resistida: Missing progression_suggestion
+[exd-inversao-tornozelo] Inversão Resistida: Missing progression_suggestion
+[exd-eversao-tornozelo] Eversão Resistida: Missing progression_suggestion
+[exd-apoio-unipodal] Apoio Unipodal: Missing progression_suggestion
+[exd-bosu-balance] Equilíbrio no BOSU: Missing progression_suggestion
+[exd-disco-proprioceptivo] Disco Proprioceptivo: Missing progression_suggestion
+[exd-salto-unipodal] Salto Unipodal: Missing progression_suggestion
+[exd-ativação-vmo] Ativação de VMO: Missing progression_suggestion
+[exd-ponte-unilateral-isom] Ponte Unilateral Isométrica: Missing progression_suggestion
+[exd-elevacao-lateral] Elevação Lateral: Missing progression_suggestion
+[exd-elevacao-frontal] Elevação Frontal: Missing progression_suggestion
+[exd-rot-ext-ombro] Rotação Externa de Ombro: Missing progression_suggestion
+[exd-rot-int-ombro] Rotação Interna de Ombro: Missing progression_suggestion
+[exd-full-can] Full Can: Missing progression_suggestion
+[exd-crucifixo-reverso] Crucifixo Reverso: Missing progression_suggestion
+[exd-pendular-codman] Exercício Pendular de Codman: Missing progression_suggestion
+[exd-wall-slides] Deslizamento na Parede: Missing progression_suggestion
+[exd-serratus-punch] Serrátil Punch: Missing progression_suggestion
+[exd-retracão-escapular] Retração Escapular: Missing progression_suggestion
+[exd-rosca-biceps] Rosca Bíceps: Missing progression_suggestion
+[exd-extensao-triceps] Extensão de Tríceps: Missing progression_suggestion
+[exd-flexao-punho] Flexão de Punho: Missing progression_suggestion
+[exd-extensao-punho] Extensão de Punho: Missing progression_suggestion
+[exd-supinacao-pronacao] Supinação e Pronação: Missing progression_suggestion
+[exd-flexbar-tyler] Tyler Twist: Missing progression_suggestion
+[exd-grip-strengthening] Fortalecimento de Preensão: Missing progression_suggestion
+[exd-finger-extension] Extensão de Dedos: Missing progression_suggestion
+[exd-prancha-ventral] Prancha Ventral: Missing progression_suggestion
+[exd-prancha-lateral] Prancha Lateral: Missing progression_suggestion
+[exd-dead-bug] Dead Bug: Missing progression_suggestion
+[exd-bird-dog] Bird Dog: Missing progression_suggestion
+[exd-pallof-press] Pallof Press: Missing progression_suggestion
+[exd-stir-the-pot] Stir the Pot: Missing progression_suggestion
+[exd-abdominal-crunch] Abdominal: Missing progression_suggestion
+[exd-abdominal-reverso] Abdominal Reverso: Missing progression_suggestion
+[exd-bicycle-crunch] Abdominal Bicicleta: Missing progression_suggestion
+[exd-russian-twist] Giro Russo: Missing progression_suggestion
+[exd-leg-raise] Elevação de Pernas: Missing progression_suggestion
+[exd-cat-cow] Gato e Vaca: Missing progression_suggestion
+[exd-superman] Superman: Missing progression_suggestion
+[exd-extensao-lombar] Extensão Lombar: Missing progression_suggestion
+[exd-child-pose] Postura da Criança: Missing progression_suggestion
+[exd-mckenzie] Extensão de McKenzie: Missing progression_suggestion
+[exd-flexao-williams] Flexão de Williams: Missing progression_suggestion
+[exd-rotacao-tronco] Rotação de Tronco: Missing progression_suggestion
+[exd-chin-tuck] Retração Cervical: Missing progression_suggestion
+[exd-retração-cervical-isometrica] Isométrico Cervical: Missing progression_suggestion
+[exd-flexao-bracos] Flexão de Braços: Missing progression_suggestion
+[exd-flexao-joelho] Flexão de Braços no Joelho: Missing progression_suggestion
+[exd-flexao-inclinada] Flexão Inclinada: Missing progression_suggestion
+[exd-remada] Remada: Missing progression_suggestion
+[exd-terra] Levantamento Terra: Missing progression_suggestion
+[exd-farmer-walk] Farmer Walk: Missing progression_suggestion
+[exd-turkish-getup] Turkish Get-Up: Missing progression_suggestion
+[exd-carry-unilateral] Carregamento Unilateral: Missing progression_suggestion
+[exd-box-jump] Box Jump: Missing progression_suggestion
+[exd-jump-squat] Agachamento com Salto: Missing progression_suggestion
+[exd-drop-jump] Drop Jump: Missing progression_suggestion
+[exd-skipping] Skipping: Missing progression_suggestion
+[exd-lateral-hop] Salto Lateral: Missing progression_suggestion
+[exd-along-isquiotibiais] Alongamento de Isquiotibiais: Missing progression_suggestion
+[exd-along-quadriceps] Alongamento de Quadríceps: Missing progression_suggestion
+[exd-along-iliopsoas] Alongamento de Iliopsoas: Missing progression_suggestion
+[exd-along-piriforme] Alongamento de Piriforme: Missing progression_suggestion
+[exd-along-adutores] Alongamento de Adutores: Missing progression_suggestion
+[exd-along-panturrilha] Alongamento de Panturrilha: Missing progression_suggestion
+[exd-along-soleo] Alongamento de Sóleo: Missing progression_suggestion
+[exd-along-peitoral] Alongamento de Peitoral: Missing progression_suggestion
+[exd-along-trapezio] Alongamento de Trapézio: Missing progression_suggestion
+[exd-along-dorsal] Alongamento de Grande Dorsal: Missing progression_suggestion
+[exd-along-rotadores] Alongamento de Rotadores de Ombro: Missing progression_suggestion
+[exd-along-tfl-it] Alongamento de TFL e Banda IT: Missing progression_suggestion
+[exd-foam-rolling] Liberação Miofascial com Rolo: Missing progression_suggestion
+[exd-lacrosse-ball] Liberação com Bola de Lacrosse: Missing progression_suggestion
+[exd-mob-tornozelo] Mobilização de Tornozelo: Missing progression_suggestion
+[exd-mob-quadril] Mobilização de Quadril: Missing progression_suggestion
+[exd-mob-toracica] Mobilização Torácica: Missing progression_suggestion
+[exd-mob-ombro] Mobilização de Ombro: Missing progression_suggestion
+[exd-world-greatest] World's Greatest Stretch: Missing progression_suggestion
+[exd-hip-cars] CARs de Quadril: Missing progression_suggestion
+[exd-shoulder-cars] CARs de Ombro: Missing progression_suggestion
+[exd-respiracao-diafragmatica] Respiração Diafragmática: Missing progression_suggestion
+[exd-expansao-costal] Expansão Costal: Missing progression_suggestion
+[exd-respiracao-360] Respiração 360: Missing progression_suggestion
+[exd-y-balance] Y-Balance: Missing progression_suggestion
+[exd-rnt-squat] Agachamento RNT: Missing progression_suggestion
+[exd-sl-deadlift-balance] Stiff Unipodal com Equilíbrio: Missing progression_suggestion
+[exd-estabilizacao-olhar] Estabilização do Olhar (VOR): Missing progression_suggestion
+[exd-manobra-epley] Manobra de Epley: Missing progression_suggestion
+[exd-neuro-mediano] Deslizamento de Nervo Mediano: Missing progression_suggestion
+[exd-neuro-ciatico] Deslizamento de Nervo Ciático: Missing progression_suggestion
+[exd-neuro-radial] Deslizamento de Nervo Radial: Missing progression_suggestion
+[exd-neuro-ulnar] Deslizamento de Nervo Ulnar: Missing progression_suggestion
+[exd-sentar-levantar] Sentar e Levantar (5x STS): Missing progression_suggestion
+[exd-alcance-funcional] Alcance Funcional: Missing progression_suggestion
+[exd-caminhada-tandem] Caminhada Tandem: Missing progression_suggestion
+[exd-subida-degrau-assistida] Subida de Degrau Assistida: Missing progression_suggestion
