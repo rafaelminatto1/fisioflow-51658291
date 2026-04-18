@@ -259,7 +259,7 @@ export default function Schedule() {
 
 	return (
 		<MainLayout fullWidth noPadding showBreadcrumbs={false}>
-			<div className="flex flex-col h-[calc(100dvh-64px)] overflow-hidden bg-slate-50 dark:bg-slate-950">
+			<div className="flex flex-col h-[calc(100dvh-40px)] overflow-hidden bg-slate-50 dark:bg-slate-950">
 				<div className="flex flex-col flex-1 relative min-h-0">
 					{/* Action Banner: Birthdays & Reengagement */}
 					{(birthdaysToday.length > 0 ||
