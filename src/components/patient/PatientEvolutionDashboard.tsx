@@ -195,6 +195,64 @@ export const PatientEvolutionDashboard = ({
 				})}
 			</div>
 
+			{/* Timeline de Sessões (SOAP Evolutions) */}
+			<Card>
+				<CardHeader>
+					<CardTitle className="text-lg flex items-center gap-2">
+						<Clock className="h-5 w-5" />
+						Timeline de Evoluções SOAP
+					</CardTitle>
+				</CardHeader>
+				<CardContent>
+					<div className="space-y-4">
+						{sessions
+							.slice(0, 5)
+							.reverse()
+							.map((session, index) => (
+								<div
+									key={session.id}
+									className="flex gap-4 p-4 rounded-lg border bg-card hover:bg-accent/50 transition-colors"
+								>
+									<div className="flex flex-col items-center">
+										<div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center">
+											<span className="text-sm font-bold text-primary">
+												{sessions.length - index}
+											</span>
+										</div>
+										{index < 4 && (
+											<div className="w-px h-full bg-border mt-2" />
+										)}
+									</div>
+									<div className="flex-1 space-y-1">
+										<div className="flex items-center justify-between">
+											<p className="font-medium">
+												{format(new Date(session.date), "dd/MM/yyyy", {
+													locale: ptBR,
+												})}
+											</p>
+											<div className="flex gap-2">
+												<Badge variant="outline">
+													Dor: {session.painLevel}/10
+												</Badge>
+												<Badge variant="outline">
+													Mobilidade: {session.mobilityScore}%
+												</Badge>
+											</div>
+										</div>
+										<p className="text-sm text-muted-foreground">
+											{session.observations || "Sem observações"}
+										</p>
+										<p className="text-xs text-muted-foreground">
+											Terapeuta: {session.therapist} • Duração:{" "}
+											{session.duration}min
+										</p>
+									</div>
+								</div>
+							))}
+					</div>
+				</CardContent>
+			</Card>
+
 			{/* Charts */}
 			<Tabs defaultValue="pain" className="w-full">
 				<TabsList className="grid w-full grid-cols-3">
@@ -311,64 +369,6 @@ export const PatientEvolutionDashboard = ({
 					/>
 				</TabsContent>
 			</Tabs>
-
-			{/* Timeline de Sessões */}
-			<Card>
-				<CardHeader>
-					<CardTitle className="text-lg flex items-center gap-2">
-						<Clock className="h-5 w-5" />
-						Timeline de Sessões
-					</CardTitle>
-				</CardHeader>
-				<CardContent>
-					<div className="space-y-4">
-						{sessions
-							.slice(0, 5)
-							.reverse()
-							.map((session, index) => (
-								<div
-									key={session.id}
-									className="flex gap-4 p-4 rounded-lg border bg-card hover:bg-accent/50 transition-colors"
-								>
-									<div className="flex flex-col items-center">
-										<div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center">
-											<span className="text-sm font-bold text-primary">
-												{sessions.length - index}
-											</span>
-										</div>
-										{index < 4 && (
-											<div className="w-px h-full bg-border mt-2" />
-										)}
-									</div>
-									<div className="flex-1 space-y-1">
-										<div className="flex items-center justify-between">
-											<p className="font-medium">
-												{format(new Date(session.date), "dd/MM/yyyy", {
-													locale: ptBR,
-												})}
-											</p>
-											<div className="flex gap-2">
-												<Badge variant="outline">
-													Dor: {session.painLevel}/10
-												</Badge>
-												<Badge variant="outline">
-													Mobilidade: {session.mobilityScore}%
-												</Badge>
-											</div>
-										</div>
-										<p className="text-sm text-muted-foreground">
-											{session.observations || "Sem observações"}
-										</p>
-										<p className="text-xs text-muted-foreground">
-											Terapeuta: {session.therapist} • Duração:{" "}
-											{session.duration}min
-										</p>
-									</div>
-								</div>
-							))}
-					</div>
-				</CardContent>
-			</Card>
 		</div>
 	);
 };
