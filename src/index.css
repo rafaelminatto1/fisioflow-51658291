@@ -1,6 +1,6 @@
+@import url('https://fonts.googleapis.com/css2?family=Figtree:wght@300;400;500;600;700&family=Noto+Sans:wght@300;400;500;700&display=swap');
 @import "tailwindcss";
 @import "./styles/schedulex.css";
-@import url('https://fonts.googleapis.com/css2?family=Figtree:wght@300;400;500;600;700&family=Noto+Sans:wght@300;400;500;700&display=swap');
 @source "./**/*.{ts,tsx,js,jsx}";
 @source "../packages/**/*.{ts,tsx,js,jsx}";
 @plugin "tailwindcss-animate";
