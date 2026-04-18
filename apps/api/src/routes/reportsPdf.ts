@@ -1,6 +1,7 @@
 import { Hono } from 'hono';
 import { requireAuth, type AuthVariables } from '../lib/auth';
 import type { Env } from '../types/env';
+import { R2Service } from '../lib/storage/R2Service';
 
 const app = new Hono<{ Bindings: Env; Variables: AuthVariables }>();
 
@@ -13,6 +14,7 @@ type PdfRequest = {
   patientId: string;
   data: Record<string, unknown>;
   saveToR2?: boolean; // se true, salva em R2 e retorna URL; se false, retorna binário
+  includeHtml?: boolean; // se true, também salva a versão HTML no R2
 };
 
 /**
@@ -20,13 +22,6 @@ type PdfRequest = {
  *
  * Gera PDF server-side via Cloudflare Browser Rendering (Puppeteer).
  * Recebe dados clínicos, renderiza HTML estilizado, converte para PDF.
- *
- * Tipos suportados:
- *  - soap: nota SOAP de sessão
- *  - progress: relatório de progresso do paciente
- *  - prescription: prescrição / pedido médico
- *  - discharge: relatório de alta
- *  - exam: laudo de exame
  */
 app.post('/', requireAuth, async (c) => {
   if (!c.env.BROWSER) {
@@ -41,6 +36,7 @@ app.post('/', requireAuth, async (c) => {
   }
 
   const html = buildHtml(body);
+  const r2 = new R2Service(c.env);
 
   try {
     // Cloudflare Browser Rendering — Puppeteer API
@@ -59,27 +55,28 @@ app.post('/', requireAuth, async (c) => {
 
     await browser.close();
 
-    // Salvar em R2 e retornar URL assinada
+    // Salvar em R2 e retornar URLs
     if (body.saveToR2 !== false) {
-      const key = `reports/${user.organizationId}/${body.patientId}/${body.type}-${Date.now()}.pdf`;
+      const timestamp = Date.now();
+      const baseKey = `reports/${user.organizationId}/${body.patientId}/${body.type}-${timestamp}`;
+      const pdfKey = `${baseKey}.pdf`;
+      const fileName = `${body.type}-${body.patientName.replace(/\s+/g, '_')}`;
 
-      await c.env.MEDIA_BUCKET.put(key, new Uint8Array(pdfBuffer as any), {
-        httpMetadata: {
-          contentType: 'application/pdf',
-          contentDisposition: `attachment; filename="${body.type}-${body.patientName.replace(/\s+/g, '_')}.pdf"`,
-        },
-        customMetadata: {
-          patientId: body.patientId,
-          organizationId: user.organizationId,
-          type: body.type,
-          generatedBy: user.uid,
-        },
+      // Upload PDF
+      await r2.uploadFile(pdfKey, new Uint8Array(pdfBuffer as any), 'application/pdf', `${fileName}.pdf`);
+
+      let htmlKey: string | undefined;
+      if (body.includeHtml) {
+        htmlKey = `${baseKey}.html`;
+        await r2.uploadFile(htmlKey, new TextEncoder().encode(html), 'text/html', `${fileName}.html`);
+      }
+
+      return c.json({ 
+        pdfUrl: `${c.env.R2_PUBLIC_URL}/${pdfKey}`, 
+        pdfKey,
+        htmlUrl: htmlKey ? `${c.env.R2_PUBLIC_URL}/${htmlKey}` : undefined,
+        htmlKey
       });
-
-      // URL assinada com validade de 1h para download
-      const signedUrl = `${c.env.R2_PUBLIC_URL}/${key}`;
-
-      return c.json({ url: signedUrl, key });
     }
 
     // Retornar binário direto
@@ -93,6 +90,25 @@ app.post('/', requireAuth, async (c) => {
   } catch (error: any) {
     console.error('[PDF] Error generating PDF:', error);
     return c.json({ error: 'Erro ao gerar PDF', details: error.message }, 500);
+  }
+});
+
+/**
+ * POST /api/reports/pdf/share
+ * Gera um link temporário (URL assinada) para um relatório existente.
+ */
+app.post('/share', requireAuth, async (c) => {
+  const r2 = new R2Service(c.env);
+  const { key, expiresIn } = (await c.req.json()) as { key: string; expiresIn?: number };
+
+  if (!key) return c.json({ error: 'key é obrigatória' }, 400);
+
+  try {
+    // Gera link temporário (default 24h se não especificado)
+    const signedUrl = await r2.getDownloadUrl(key, expiresIn || 86400);
+    return c.json({ url: signedUrl });
+  } catch (error: any) {
+    return c.json({ error: 'Erro ao gerar link temporário', details: error.message }, 500);
   }
 });
 

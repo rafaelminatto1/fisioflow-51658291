@@ -33,15 +33,31 @@ export class R2Service {
   }
 
   /**
-   * Generates a signed URL for viewing a recording
+   * Generates a signed URL for viewing/downloading an object
+   * @param key The R2 object key
+   * @param expiresIn Expiration time in seconds (default 24h)
    */
-  async getDownloadUrl(key: string) {
+  async getDownloadUrl(key: string, expiresIn = 86400) {
     const command = new GetObjectCommand({
       Bucket: this.env.MEDIA_BUCKET.toString(),
       Key: key,
     });
 
-    return await getSignedUrl(this.client, command, { expiresIn: 86400 }); // 24h
+    return await getSignedUrl(this.client, command, { expiresIn });
+  }
+
+  /**
+   * Uploads a file buffer directly to R2
+   */
+  async uploadFile(key: string, body: Uint8Array, contentType: string, filename?: string) {
+    const command = new PutObjectCommand({
+      Bucket: this.env.MEDIA_BUCKET.toString(),
+      Key: key,
+      ContentType: contentType,
+      ContentDisposition: filename ? `attachment; filename="${filename}"` : undefined,
+    });
+
+    return await this.client.send(command);
   }
 
   /**
