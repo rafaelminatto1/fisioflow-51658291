@@ -15,10 +15,12 @@ export function PredictiveRetentionWidget() {
 	const navigate = useNavigate();
 	const { data: atRisk = [], isLoading } = useQuery({
 		queryKey: ["analytics", "retention", "risk"],
+		staleTime: 30 * 60 * 1000,
+		gcTime: 60 * 60 * 1000,
 		queryFn: async () => {
 			const res = await (analyticsApi as any).retentionRisk();
 			return res.data || [];
-		}
+		},
 	});
 
 	if (isLoading) {

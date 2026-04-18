@@ -9,6 +9,7 @@ import { APP_ROUTES } from "@/lib/routing/appRoutes";
 // Mapa de componentes para prefetch manual
 // Usamos a função de import que o React.lazy usa internamente
 const routeImports: Record<string, () => Promise<unknown>> = {
+	// Core pages
 	[APP_ROUTES.AGENDA]: () => import("@/pages/Schedule"),
 	[APP_ROUTES.PATIENTS]: () => import("@/pages/Patients"),
 	[APP_ROUTES.EXERCISES]: () => import("@/pages/Exercises"),
@@ -18,25 +19,58 @@ const routeImports: Record<string, () => Promise<unknown>> = {
 	[APP_ROUTES.REPORTS]: () => import("@/pages/Reports"),
 	[APP_ROUTES.SETTINGS]: () =>
 		import("@/pages/Profile").then((m) => ({ default: m.Profile })),
+
+	// IA & Inteligência
+	"/inteligencia": () => import("@/pages/IntelligenceHub"),
+
+	// Biomecânica submenu
+	"/biomechanics": () => import("@/pages/clinical/BiomechanicsAnalysisPage"),
+	"/clinical/biomechanics/posture": () => import("@/pages/clinical/BiomechanicsAnalysisPage"),
+	"/clinical/biomechanics/gait": () => import("@/pages/clinical/BiomechanicsAnalysisPage"),
+	"/clinical/biomechanics/jump": () => import("@/pages/clinical/BiomechanicsAnalysisPage"),
+	"/clinical/biomechanics/functional": () => import("@/pages/clinical/BiomechanicsAnalysisPage"),
+
+	// Financeiro submenu
+	"/financeiro/recibos": () => import("@/pages/financeiro/RecibosPage"),
+	"/financeiro/simulador": () => import("@/pages/financeiro/SimuladorReceitasPage"),
+	"/financeiro/comissoes": () =>
+		import("@/components/financial/CommissionsDashboard").then((m) => ({ default: m.CommissionsDashboard })),
+	"/financeiro/demonstrativo": () => import("@/pages/financeiro/DemonstrativoMensalPage"),
+
+	// Configurações submenu
+	"/configuracoes/calendario": () => import("@/pages/Profile").then((m) => ({ default: m.Profile })),
+	"/integrations": () => import("@/pages/Integrations"),
+
+	// Admin submenu
+	"/admin/analytics": () => import("@/pages/Admin"),
+	"/admin/security": () => import("@/pages/SecurityMonitoring"),
+	"/admin/audit-logs": () => import("@/pages/AuditLogs"),
+
+	// Operacional
+	"/wiki": () => import("@/pages/Wiki"),
+	"/inventory": () => import("@/pages/Inventory"),
+	"/telemedicine": () => import("@/pages/Telemedicine"),
+	"/communications": () => import("@/pages/Communications"),
 };
 
 export const useIntelligentPreload = () => {
 	useEffect(() => {
 		const preloadRoutes = () => {
 			if ("requestIdleCallback" in window) {
+				// First idle: load the 3 most visited pages
 				requestIdleCallback(() => {
-					// Preload apenas das 3 mais prováveis inicialmente
-					[
-						APP_ROUTES.AGENDA,
-						APP_ROUTES.PATIENTS,
-						APP_ROUTES.DASHBOARD,
-					].forEach((route) => {
-						const importFn = routeImports[route];
-						if (importFn) {
-							importFn().catch(() => {}); // Preload silancioso
-						}
-					});
+					[APP_ROUTES.AGENDA, APP_ROUTES.PATIENTS, APP_ROUTES.EXERCISES].forEach(
+						(route) => routeImports[route]?.().catch(() => {}),
+					);
 				});
+				// Second idle: load secondary pages
+				requestIdleCallback(() => {
+					[
+						APP_ROUTES.FINANCIAL,
+						"/inteligencia",
+						"/communications",
+					].forEach((route) => routeImports[route]?.().catch(() => {}));
+				}, { timeout: 5000 });
 			}
 		};
 

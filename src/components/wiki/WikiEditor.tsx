@@ -1315,6 +1315,8 @@ export function WikiPageViewer({
 				? wikiService.listComments(user.organizationId, page.id)
 				: Promise.resolve([]),
 		enabled: !!user?.organizationId && !!page.id,
+		staleTime: 60 * 1000,
+		gcTime: 5 * 60 * 1000,
 	});
 
 	const { data: versions = [] } = useQuery({
@@ -1324,6 +1326,8 @@ export function WikiPageViewer({
 				? wikiService.listPageVersions(user.organizationId, page.id)
 				: Promise.resolve([]),
 		enabled: !!user?.organizationId && !!page.id,
+		staleTime: 5 * 60 * 1000,
+		gcTime: 15 * 60 * 1000,
 	});
 
 	const [activeCommentBlockId, setActiveCommentBlockId] = useState<
