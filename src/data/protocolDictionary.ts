@@ -108,5 +108,101 @@ export const protocolDictionary: ProtocolEntry[] = [
         criteria: ['Equilíbrio mantido em superfícies instáveis']
       }
     ]
+  },
+  {
+    id: 'prot_impingement_ombro',
+    pt: 'Síndrome do Impacto / Manguito Rotador',
+    en: 'Shoulder Impingement / Rotator Cuff',
+    category: 'procedure',
+    subcategory: 'Protocolo',
+    aliases_pt: ['Impacto', 'Bursite', 'Manguito'],
+    aliases_en: ['Impingement', 'Bursitis', 'Rotator Cuff'],
+    description_pt: 'Gestão conservadora focada em controle escapular e força do manguito.',
+    phases: [
+      {
+        name: 'Fase 1: Controle de Sintomas e Escápula',
+        objectives: ['Redução da dor', 'Controle motor escapular'],
+        exercises: ['exd-pendular-codman', 'exd-serratus-punch', 'exd-retracão-escapular'],
+        criteria: ['Dor < 3/10 em repouso']
+      },
+      {
+        name: 'Fase 2: Fortalecimento do Manguito',
+        objectives: ['Força de rotadores', 'Estabilidade dinâmica'],
+        exercises: ['exd-rot-ext-ombro', 'exd-rot-int-ombro', 'exd-full-can', 'exd-wall-slides'],
+        criteria: ['Elevação de ombro sem dor em arco médio']
+      }
+    ]
+  },
+  {
+    id: 'prot_epicondilite_lateral',
+    pt: 'Epicondilalgia Lateral (Cotovelo de Tenista)',
+    en: 'Lateral Epicondylalgia (Tennis Elbow)',
+    category: 'procedure',
+    subcategory: 'Protocolo',
+    aliases_pt: ['Epicondilite', 'Cotovelo de Tenista'],
+    aliases_en: ['Tennis Elbow', 'Lateral Epicondylitis'],
+    description_pt: 'Foco em carga progressiva e exercícios excêntricos.',
+    phases: [
+      {
+        name: 'Fase 1: Isometria e Analgesia',
+        objectives: ['Controle de dor', 'Início de carga'],
+        exercises: ['exd-extensao-punho', 'exd-neuro-radial'],
+        criteria: ['Capacidade de realizar isometria sem dor excessiva']
+      },
+      {
+        name: 'Fase 2: Fortalecimento Excêntrico',
+        objectives: ['Remodelamento tendíneo'],
+        exercises: ['exd-flexbar-tyler', 'exd-extensao-punho', 'exd-supinacao-pronacao'],
+        criteria: ['Aumento da força de preensão manual']
+      }
+    ]
+  },
+  {
+    id: 'prot_entorse_tornozelo',
+    pt: 'Entorse de Tornozelo (Inversão)',
+    en: 'Ankle Sprain (Inversion)',
+    category: 'procedure',
+    subcategory: 'Protocolo',
+    aliases_pt: ['Entorse', 'Torção de Tornozelo', 'Lesão de Ligamento'],
+    aliases_en: ['Ankle Sprain', 'Lateral Ligament Injury'],
+    description_pt: 'Gestão de fase aguda até retorno ao esporte com foco em estabilidade.',
+    phases: [
+      {
+        name: 'Fase 1: Proteção e Mobilidade',
+        objectives: ['Proteção tecidual', 'Ganho de dorsiflexão'],
+        exercises: ['exd-mob-tornozelo', 'exd-eversao-tornozelo', 'exd-respiracao-diafragmatica'],
+        criteria: ['Redução do edema', 'Carga tolerada']
+      },
+      {
+        name: 'Fase 2: Propriocepção e Equilíbrio',
+        objectives: ['Estabilidade reflexa', 'Fortalecimento de eversores'],
+        exercises: ['exd-apoio-unipodal', 'exd-disco-proprioceptivo', 'exd-pant-em-pe'],
+        criteria: ['Equilíbrio unipodal > 30s']
+      }
+    ]
+  },
+  {
+    id: 'prot_fascite_plantar',
+    pt: 'Fascite Plantar / Fasciopatia',
+    en: 'Plantar Fasciitis / Fasciopathy',
+    category: 'procedure',
+    subcategory: 'Protocolo',
+    aliases_pt: ['Dor no calcanhar', 'Esporão'],
+    aliases_en: ['Plantar Fasciitis', 'Heel Pain'],
+    description_pt: 'Protocolo de carga progressiva (Rathleff) e alongamento.',
+    phases: [
+      {
+        name: 'Fase 1: Alongamento e Analgesia',
+        objectives: ['Redução da tensão na fáscia', 'Melhora da dorsiflexão'],
+        exercises: ['exd-along-panturrilha', 'exd-along-soleo', 'exd-lacrosse-ball'],
+        criteria: ['Dor matinal reduzida']
+      },
+      {
+        name: 'Fase 2: Fortalecimento de Intrinsecos',
+        objectives: ['Suporte do arco medial', 'Carga progressiva'],
+        exercises: ['exd-pant-em-pe', 'exd-grip-strengthening'],
+        criteria: ['Tolerância à caminhada prolongada']
+      }
+    ]
   }
 ];

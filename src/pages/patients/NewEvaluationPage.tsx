@@ -144,6 +144,7 @@ export default function NewEvaluationPage() {
 	// Prescription State
 	const [isPrescriptionModalOpen, setIsPrescriptionModalOpen] = useState(false);
 	const [preselectedProtocolId, setPreselectedProtocolId] = useState<string | undefined>(undefined);
+	const [preselectedExerciseId, setPreselectedExerciseId] = useState<string | undefined>(undefined);
 
 	// Physical Exam State
 	const [physicalExamData, setPhysicalExamData] = useState<any>({});
@@ -326,7 +327,14 @@ export default function NewEvaluationPage() {
 	};
 
 	const handlePrescribeProtocol = useCallback((protocolId: string) => {
+		setPreselectedExerciseId(undefined);
 		setPreselectedProtocolId(protocolId);
+		setIsPrescriptionModalOpen(true);
+	}, []);
+
+	const handlePrescribeExercise = useCallback((exerciseId: string) => {
+		setPreselectedProtocolId(undefined);
+		setPreselectedExerciseId(exerciseId);
 		setIsPrescriptionModalOpen(true);
 	}, []);
 
@@ -535,6 +543,7 @@ export default function NewEvaluationPage() {
 															});
 														}}
 														onPrescribeProtocol={handlePrescribeProtocol}
+														onPrescribeExercise={handlePrescribeExercise}
 													/>
 												</div>
 											</div>
@@ -623,12 +632,13 @@ export default function NewEvaluationPage() {
 
 				{patient && (
 					<NewPrescriptionModal
-						key={preselectedProtocolId} // Force remount to reset internal state
+						key={`${preselectedProtocolId}-${preselectedExerciseId}`} // Force remount to reset internal state
 						open={isPrescriptionModalOpen}
 						onOpenChange={setIsPrescriptionModalOpen}
 						patientId={patientId || ""}
 						patientName={patient.name}
 						initialProtocolId={preselectedProtocolId}
+						initialExerciseId={preselectedExerciseId}
 					/>
 				)}
 			</MainLayout>
