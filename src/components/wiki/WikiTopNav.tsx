@@ -95,6 +95,7 @@ interface WikiTopNavProps {
 	onKnowledgeHubSelect?: () => void;
 	onDashboardSelect?: () => void;
 	onDictionarySelect?: () => void;
+	onAIHubSelect?: () => void;
 	onTagSelect?: (tag: string) => void;
 }
 
@@ -107,6 +108,7 @@ export function WikiTopNav({
 	onKnowledgeHubSelect,
 	onDashboardSelect,
 	onDictionarySelect,
+	onAIHubSelect,
 	onTagSelect,
 }: WikiTopNavProps) {
 	const [searchQuery, setSearchQuery] = React.useState("");
@@ -222,7 +224,20 @@ export function WikiTopNav({
 					<Button
 						variant="ghost"
 						size="sm"
+<<<<<<< Updated upstream
 						className="gap-2 font-bold font-display rounded-xl transition-all duration-300 hover:bg-sky-50 dark:hover:bg-sky-900/20"
+=======
+						className="gap-2 font-medium"
+						onClick={onAIHubSelect}
+					>
+						<Brain className="h-4 w-4 text-primary" />
+						<span className="hidden sm:inline">AI Hub</span>
+					</Button>
+					<Button
+						variant="ghost"
+						size="sm"
+						className="gap-2 font-medium"
+>>>>>>> Stashed changes
 						onClick={onDictionarySelect}
 					>
 						<Languages className="h-4 w-4 text-sky-500" />

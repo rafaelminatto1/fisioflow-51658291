@@ -60,6 +60,7 @@ import { KnowledgeHubView } from "@/features/wiki/components/KnowledgeHubView";
 import { WikiPageCard } from "@/features/wiki/components/WikiPageCard";
 import { KnowledgeArticleDialog } from "@/features/wiki/components/KnowledgeArticleDialog";
 import { PhysioDictionaryView } from "@/features/wiki/components/PhysioDictionaryView";
+import { AIHubView } from "@/features/wiki/components/AIHubView";
 import { bilingualFilter } from "@/lib/utils/bilingualSearch";
 import {
 	getEvidenceTree,
@@ -83,7 +84,7 @@ export default function WikiPage() {
 
 	// Estados Locais
 	const [activeView, setActiveView] = useState<
-		"dashboard" | "knowledge-hub" | "dictionary" | "page"
+		"dashboard" | "knowledge-hub" | "dictionary" | "page" | "ai-hub"
 	>((searchParams.get("view") as any) || "dashboard");
 	const [searchQuery, setSearchQuery] = useState(
 		searchParams.get("search") || "",
@@ -416,6 +417,10 @@ export default function WikiPage() {
 						setActiveView("dictionary");
 						setSelectedPage(null);
 					}}
+					onAIHubSelect={() => {
+						setActiveView("ai-hub");
+						setSelectedPage(null);
+					}}
 					onTagSelect={handleTagSelect}
 				/>
 
@@ -453,6 +458,10 @@ export default function WikiPage() {
 						</div>
 					) : activeView === "dictionary" ? (
 						<PhysioDictionaryView />
+					) : activeView === "ai-hub" ? (
+						<div className="p-4 md:p-8 animate-in slide-in-from-bottom-4 duration-500">
+							<AIHubView />
+						</div>
 					) : (
 						<div className="p-4 sm:p-6 space-y-6 animate-in fade-in duration-500">
 							{/* Compact header */}
