@@ -2,40 +2,34 @@ name: Database Backup (Neon)
 
 on:
   schedule:
-    # Runs at 03:00 UTC every day
     - cron: '0 3 * * *'
   workflow_dispatch:
-    # Allows manual triggering from GitHub UI
 
 jobs:
   backup:
     name: Create Neon Snapshot
     runs-on: ubuntu-latest
+    timeout-minutes: 10
     env:
       NODE_VERSION: '22'
       PNPM_VERSION: '10.33.0'
       FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: 'true'
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
-
-      - name: Install pnpm
-        uses: pnpm/action-setup@v4
-
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with:
+          version: ${{ env.PNPM_VERSION }}
+      - uses: actions/setup-node@v4
         with:
           node-version: ${{ env.NODE_VERSION }}
           cache: 'pnpm'
-
-      - name: Install dependencies (Backup Script Only)
-        run: pnpm install --filter . --frozen-lockfile || pnpm install --filter .
-
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
       - name: Run Backup
+        run: pnpm db:backup
         env:
           NEON_API_KEY: ${{ secrets.NEON_API_KEY }}
           NEON_PROJECT_ID: ${{ vars.NEON_PROJECT_ID }}
           NEON_PARENT_BRANCH: ${{ vars.NEON_PARENT_BRANCH || 'main' }}
           NEON_BACKUP_RETENTION_DAYS: ${{ vars.NEON_BACKUP_RETENTION_DAYS || '7' }}
           DATABASE_URL: ${{ secrets.DATABASE_URL }}
-        run: pnpm db:backup
