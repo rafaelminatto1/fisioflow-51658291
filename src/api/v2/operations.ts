@@ -265,6 +265,30 @@ export const reportsApi = {
 				method: "DELETE",
 			}),
 	},
+	pdf: {
+		generate: (data: {
+			type: string;
+			patientName: string;
+			patientId: string;
+			data: Record<string, unknown>;
+			saveToR2?: boolean;
+			includeHtml?: boolean;
+		}) =>
+			request<{
+				pdfUrl: string;
+				pdfKey: string;
+				htmlUrl?: string;
+				htmlKey?: string;
+			}>("/api/reports/pdf", {
+				method: "POST",
+				body: JSON.stringify(data),
+			}),
+		share: (data: { key: string; expiresIn?: number }) =>
+			request<{ url: string }>("/api/reports/pdf/share", {
+				method: "POST",
+				body: JSON.stringify(data),
+			}),
+	},
 };
 
 export const publicBookingApi = {

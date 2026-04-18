@@ -14,6 +14,7 @@ import {
 	TooltipProvider,
 } from "@/components/ui/tooltip";
 import type { EvolutionVersion } from "./types";
+import { preloadEditorVersion } from "@/lib/evolution/preloadEditors";
 
 interface EvolutionVersionToggleProps {
 	version: EvolutionVersion;
@@ -95,6 +96,7 @@ export const EvolutionVersionToggle: React.FC<EvolutionVersionToggleProps> = ({
 							<TooltipTrigger asChild>
 								<button
 									onClick={() => onToggle(v.key)}
+									onMouseEnter={() => preloadEditorVersion(v.key)}
 									className={cn(
 										"relative flex items-center gap-2 px-3 py-2 rounded-lg text-xs font-semibold transition-all duration-200",
 										"hover:text-foreground",
