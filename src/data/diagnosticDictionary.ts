@@ -130,6 +130,46 @@ export const diagnosticDictionary: PhysioDictionaryEntry[] = [
     aliases_pt: ['Túnel do carpo', 'Compressão do mediano', 'G56.0'],
     aliases_en: ['CTS', 'Carpal tunnel'],
     description_pt: 'Compressão do nervo mediano no punho.'
+  },
+  {
+    id: 'diag_post_op_acl',
+    pt: 'Pós-Operatório de Reconstrução de LCA',
+    en: 'Post-op ACL Reconstruction',
+    category: 'condition',
+    subcategory: 'Joelho / Pós-Op',
+    aliases_pt: ['PO de LCA', 'Reconstrução de ligamento cruzado'],
+    aliases_en: ['Post-op ACL', 'ACL recovery'],
+    description_pt: 'Fase de reabilitação após cirurgia de ligamento cruzado anterior.'
+  },
+  {
+    id: 'diag_post_op_tha',
+    pt: 'Pós-Operatório de Artroplastia de Quadril',
+    en: 'Post-op Total Hip Arthroplasty',
+    category: 'condition',
+    subcategory: 'Quadril / Pós-Op',
+    aliases_pt: ['PO de ATQ', 'Prótese de quadril'],
+    aliases_en: ['Post-op THA', 'Hip replacement recovery'],
+    description_pt: 'Fase de reabilitação após substituição protética do quadril.'
+  },
+  {
+    id: 'diag_muscle_strain',
+    pt: 'Estiramento / Lesão Muscular',
+    en: 'Muscle Strain / Tear',
+    category: 'condition',
+    subcategory: 'Esportiva',
+    aliases_pt: ['Lesão muscular', 'Ruptura muscular', 'Estiramento'],
+    aliases_en: ['Muscle tear', 'Strain', 'Muscle pull'],
+    description_pt: 'Lesão de fibras musculares por excesso de alongamento ou contração brusca.'
+  },
+  {
+    id: 'diag_pubalgia',
+    pt: 'Pubalgia / Osteíte Púbica',
+    en: 'Pubalgia / Osteitis Pubis',
+    category: 'condition',
+    subcategory: 'Esportiva / Pelve',
+    aliases_pt: ['Dor no púbis', 'Sínfise púbica'],
+    aliases_en: ['Sports hernia', 'Osteitis pubis', 'Groin pain'],
+    description_pt: 'Processo inflamatório ou degenerativo na sínfise púbica e inserções tendíneas.'
   }
 ];
 

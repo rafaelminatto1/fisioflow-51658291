@@ -49,7 +49,7 @@ export const OnlineUsersIndicator: React.FC = () => {
 						"hover:bg-muted/50 cursor-pointer group",
 						isOpen && "bg-muted/50",
 					)}
-					aria-label={`${onlineCount} usuários online`}
+					aria-label={`${onlineCount} online`}
 				>
 					<div className="relative">
 						<Users className="h-5 w-5 text-muted-foreground group-hover:text-foreground transition-colors" />

@@ -1,14 +1,14 @@
 import { neon } from "@neondatabase/serverless";
 import { drizzle } from "drizzle-orm/neon-http";
-import * as schema from "../src/server/db/schema/clinical.js"; // Note: might need to adjust based on environment
-import { builtinClinicalTestsCatalog } from "../src/data/clinicalTestsCatalog.js";
+import * as schema from "../src/server/db/schema/clinical"; 
+import { builtinClinicalTestsCatalog } from "../src/data/clinicalTestsCatalog";
 import { eq, sql } from "drizzle-orm";
 import dotenv from "dotenv";
 
 dotenv.config();
 
 async function main() {
-  const connectionString = process.env.DATABASE_URL;
+  const connectionString = "postgresql://neondb_owner:REDACTED-NEON-PASSWORD@ep-wandering-bonus-acj4zwvo-pooler.sa-east-1.aws.neon.tech/neondb?sslmode=require&channel_binding=require";
   if (!connectionString) {
     throw new Error("DATABASE_URL is not set");
   }
