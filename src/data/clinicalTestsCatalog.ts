@@ -495,6 +495,7 @@ export const builtinClinicalTestsCatalog: ClinicalTestCatalogRecord[] = [
 		source_label: "Curadoria FisioFlow",
 		sort_order: 105,
 		illustration: "shoulder-impingement",
+		imageUrl: "/clinical-tests/illustrations/painful-arc-test.png",
 		lr_positive: 3.7,
 		lr_negative: 0.5,
 		cluster_id: "cluster-subacromial-impingement"
@@ -938,6 +939,7 @@ export const builtinClinicalTestsCatalog: ClinicalTestCatalogRecord[] = [
 		source_label: "Curadoria FisioFlow",
 		sort_order: 200,
 		illustration: "sit-to-stand",
+		imageUrl: "/clinical-tests/illustrations/oxford-scale.png",
 		fieldsDefinition: [
 			{ id: 'grade', label: 'Grau (0-5)', type: 'select', options: ['0', '1', '2', '3', '4', '5'] }
 		]
@@ -1077,7 +1079,8 @@ export const builtinClinicalTestsCatalog: ClinicalTestCatalogRecord[] = [
 		evidence_summary: "Provocação de sintomas clássicos de neuroma de Morton.",
 		source_label: "Curadoria FisioFlow",
 		sort_order: 150,
-		illustration: "gait-speed"
+		illustration: "gait-speed",
+		imageUrl: "/clinical-tests/illustrations/mulder-click.png"
 	}),
 	createBuiltinTest({
 		id: "builtin-nordic-curl",
@@ -1119,6 +1122,7 @@ export const builtinClinicalTestsCatalog: ClinicalTestCatalogRecord[] = [
 		source_label: "Curadoria FisioFlow",
 		sort_order: 84,
 		illustration: "nerve-tension",
+		imageUrl: "/clinical-tests/illustrations/ultt1-median.png",
 		fieldsDefinition: [
 			{ id: 'pain_nprs', label: 'Dor (0-10)', type: 'nprs' },
 			{ id: 'angle_elbow', label: 'Ângulo Extensão (°)', type: 'number' }
@@ -1209,8 +1213,8 @@ export const builtinClinicalTestsCatalog: ClinicalTestCatalogRecord[] = [
 		evidence_summary: "Provocação de dor na origem dos flexores/pronadores.",
 		source_label: "Curadoria FisioFlow",
 		sort_order: 35,
-		sort_order: 35,
 		illustration: "elbow-test",
+		imageUrl: "/clinical-tests/illustrations/golfers-elbow.png",
 		fieldsDefinition: [
 			{ id: 'nprs_pain', label: 'Intensidade da Dor (0-10)', type: 'nprs' }
 		]
@@ -1232,6 +1236,7 @@ export const builtinClinicalTestsCatalog: ClinicalTestCatalogRecord[] = [
 		source_label: "Curadoria FisioFlow",
 		sort_order: 155,
 		illustration: "thoracic-outlet",
+		imageUrl: "/clinical-tests/illustrations/adson-test.png",
 		fieldsDefinition: [
 			{ id: 'pulse_quality', label: 'Alteração do Pulso', type: 'select', options: ['Mantido', 'Diminuído', 'Ausente'] },
 			{ id: 'paresthesia', label: 'Parestesia Associada', type: 'boolean' }
@@ -1252,6 +1257,7 @@ export const builtinClinicalTestsCatalog: ClinicalTestCatalogRecord[] = [
 		evidence_summary: "Teste clínico clássico para Síndrome do Desfiladeiro Torácico.",
 		tags: ["tos", "neurovascular", "cervical"],
 		illustration: "shoulder-impingement",
+		imageUrl: "/clinical-tests/illustrations/roos-test.png",
 		fieldsDefinition: [
 			{ id: 'time_sustained', label: 'Tempo (s)', type: 'number' }
 		]
@@ -1363,6 +1369,7 @@ export const builtinClinicalTestsCatalog: ClinicalTestCatalogRecord[] = [
 		source_label: "Curadoria FisioFlow",
 		sort_order: 46,
 		illustration: "shoulder-impingement",
+		imageUrl: "/clinical-tests/illustrations/yergason-test.png",
 		fieldsDefinition: [
 			{ id: 'nprs_pain', label: 'Dor (0-10)', type: 'nprs' },
 			{ id: 'tendon_pop', label: 'Tensão/Salto do Tendão', type: 'boolean' }
@@ -1589,6 +1596,8 @@ export const builtinClinicalTestsCatalog: ClinicalTestCatalogRecord[] = [
 		evidence_summary: "Essencial na reabilitação de cirurgias de joelho e dor patelofemoral.",
 		source_label: "Curadoria FisioFlow",
 		sort_order: 20,
+		illustration: "knee-stability",
+		imageUrl: "/clinical-tests/illustrations/vmo-activation.png",
 		fieldsDefinition: [
 			{ id: 'activation_quality', label: 'Qualidade da Contração', type: 'select', options: ['Ótima', 'Regular', 'Pobre', 'Ausente'] }
 		]
@@ -1631,6 +1640,8 @@ export const builtinClinicalTestsCatalog: ClinicalTestCatalogRecord[] = [
 		evidence_summary: "Teste clássico para rupturas completas.",
 		source_label: "Curadoria FisioFlow",
 		sort_order: 60,
+		illustration: "shoulder-impingement",
+		imageUrl: "/clinical-tests/illustrations/ludington-sign.png",
 		fieldsDefinition: [
 			{ id: 'palpation', label: 'Tendão Palpável', type: 'boolean' }
 		]
@@ -1651,6 +1662,8 @@ export const builtinClinicalTestsCatalog: ClinicalTestCatalogRecord[] = [
 		evidence_summary: "Sensibilidade de 42% e Especificidade de 80% para rizartrose.",
 		source_label: "Curadoria FisioFlow",
 		sort_order: 65,
+		illustration: "wrist-test",
+		imageUrl: "/clinical-tests/illustrations/thumb-grind.png",
 		fieldsDefinition: [
 			{ id: 'crepitus', label: 'Presença de Creptação', type: 'boolean' },
 			{ id: 'pain_nprs', label: 'Dor (0-10)', type: 'nprs' }
@@ -1672,6 +1685,8 @@ export const builtinClinicalTestsCatalog: ClinicalTestCatalogRecord[] = [
 		evidence_summary: "Alta especificidade para rupturas do manguito posterior.",
 		source_label: "Curadoria FisioFlow",
 		sort_order: 70,
+		illustration: "shoulder-impingement",
+		imageUrl: "/clinical-tests/illustrations/patte-test.png",
 		fieldsDefinition: [
 			{ id: 'weakness', label: 'Grau de Fraqueza', type: 'select', options: ['Nenhuma', 'Leve', 'Moderada', 'Grave'] }
 		]
@@ -1713,6 +1728,8 @@ export const builtinClinicalTestsCatalog: ClinicalTestCatalogRecord[] = [
 		evidence_summary: "Baixa sensibilidade e especificidade; deve ser usado apenas como rastreio inicial.",
 		source_label: "Curadoria FisioFlow",
 		sort_order: 80,
+		illustration: "foot-test",
+		imageUrl: "/clinical-tests/illustrations/homan-sign.png",
 		fieldsDefinition: [
 			{ id: 'pain_intensity', label: 'Intensidade da Dor', type: 'nprs' }
 		]
@@ -1733,6 +1750,8 @@ export const builtinClinicalTestsCatalog: ClinicalTestCatalogRecord[] = [
 		evidence_summary: "Altamente confiável para predição de risco de quedas.",
 		source_label: "Curadoria FisioFlow",
 		sort_order: 85,
+		illustration: "balance-reach",
+		imageUrl: "/clinical-tests/illustrations/berg-balance-scale.png",
 		evidence_resources: [
 			{ title: "Measuring balance in the elderly", url: "https://pubmed.ncbi.nlm.nih.gov/2704080/", kind: "link" }
 		],
@@ -1756,6 +1775,8 @@ export const builtinClinicalTestsCatalog: ClinicalTestCatalogRecord[] = [
 		evidence_summary: "Amplamente utilizado em ambientes hospitalares e de cuidados prolongados.",
 		source_label: "Curadoria FisioFlow",
 		sort_order: 90,
+		illustration: "gait-speed",
+		imageUrl: "/clinical-tests/illustrations/tinetti-index.png",
 		fieldsDefinition: [
 			{ id: 'balance_score', label: 'Equilíbrio (0-16)', type: 'number' },
 			{ id: 'gait_score', label: 'Marcha (0-12)', type: 'number' }
@@ -1777,6 +1798,8 @@ export const builtinClinicalTestsCatalog: ClinicalTestCatalogRecord[] = [
 		evidence_summary: "Forte preditor de incapacidade, hospitalização e mortalidade.",
 		source_label: "Curadoria FisioFlow",
 		sort_order: 95,
+		illustration: "sit-to-stand",
+		imageUrl: "/clinical-tests/illustrations/sppb.png",
 		evidence_resources: [
 			{ title: "A short physical performance battery", url: "https://pubmed.ncbi.nlm.nih.gov/8126356/", kind: "link" }
 		],

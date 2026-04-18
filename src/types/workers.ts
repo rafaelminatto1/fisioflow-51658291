@@ -704,6 +704,7 @@ export interface PrecadastroToken {
 	expires_at: string | null;
 	campos_obrigatorios: string[];
 	campos_opcionais: string[];
+	ui_style?: Record<string, any>;
 	created_at: string;
 	updated_at?: string;
 }

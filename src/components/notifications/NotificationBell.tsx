@@ -151,7 +151,7 @@ export const NotificationBell: React.FC<NotificationBellProps> = ({
 
 	return (
 		<Popover open={open} onOpenChange={setOpen}>
-			<PopoverTrigger asChild>
+			<PopoverTrigger aria-label="Abrir Notificações" asChild>
 				<Button
 					variant="ghost"
 					size="icon"

@@ -256,7 +256,15 @@ export const clinicalReasoningRules: ActionRule[] = [
         },
         suggestions: [
             {
+                type: 'protocol',
+                id: 'prot_impingement_ombro',
+                title: 'Protocolo de Impacto / Manguito',
+                content: 'Foco inicial em controle escapular e analgesia, progredindo para fortalecimento do manguito rotador.',
+                priority: 'high'
+            },
+            {
                 type: 'exercise',
+                id: 'exd-serratus-punch',
                 title: 'Serrátil Punch & Wall Slides',
                 content: 'Foco em controle escapular para aumentar o espaço subacromial.',
                 priority: 'medium'
@@ -281,9 +289,9 @@ export const clinicalReasoningRules: ActionRule[] = [
         suggestions: [
             {
                 type: 'protocol',
-                id: 'prot_tornozelo_estabilidade',
-                title: 'Protocolo de Estabilidade de Tornozelo',
-                content: 'Foco em fortalecimento de fibulares e propriocepção.',
+                id: 'prot_entorse_tornozelo',
+                title: 'Protocolo de Entorse de Tornozelo',
+                content: 'Foco em fortalecimento de fibulares, ganho de dorsiflexão e propriocepção.',
                 priority: 'high'
             },
             {
@@ -357,6 +365,13 @@ export const clinicalReasoningRules: ActionRule[] = [
         },
         suggestions: [
             {
+                type: 'protocol',
+                id: 'prot_epicondilite_lateral',
+                title: 'Protocolo de Epicondilite Lateral',
+                content: 'Progressão de carga isométrica para excêntrica.',
+                priority: 'high'
+            },
+            {
                 type: 'exercise',
                 id: 'exd-flexbar-tyler',
                 title: 'Tyler Twist (Excêntrico)',
@@ -390,5 +405,49 @@ export const clinicalReasoningRules: ActionRule[] = [
             }
         ],
         reasoning: 'Quando os testes de gaveta e Lachman se tornam negativos ou estáveis, o foco deve migrar da proteção para a carga funcional.'
+    },
+    {
+        id: 'rule-fascite-plantar',
+        name: 'Fasciopatia Plantar',
+        description: 'Dor no calcanhar com testes positivos.',
+        condition: {
+            fieldLabels: ['Testes de Pé/Tornozelo'],
+            matchAny: ['Teste de Windlass Positivo', 'Dor à palpação do calcâneo']
+        },
+        suggestions: [
+            {
+                type: 'protocol',
+                id: 'prot_fascite_plantar',
+                title: 'Protocolo de Fascite Plantar',
+                content: 'Carga progressiva (Rathleff) e liberação miofascial.',
+                priority: 'high'
+            }
+        ],
+        reasoning: 'O teste de Windlass e a dor no tubérculo medial do calcâneo são marcos clínicos da fasciopatia plantar.'
+    },
+    {
+        id: 'rule-vestibular-dizziness',
+        name: 'Disfunção Vestibular',
+        description: 'Tontura e desequilíbrio de origem vestibular.',
+        condition: {
+            fieldLabels: ['Testes Vestibulares'],
+            matchAny: ['Dix-Hallpike Positivo', 'VOR Alterado']
+        },
+        suggestions: [
+            {
+                type: 'exercise',
+                id: 'exd-estabilizacao-olhar',
+                title: 'Exercício de Estabilização do Olhar',
+                content: 'Treino de VOR para reduzir tontura visual e melhorar equilíbrio.',
+                priority: 'high'
+            },
+            {
+                type: 'alert',
+                title: 'Avaliação de VPPB',
+                content: 'Se Dix-Hallpike positivo, considere a Manobra de Epley.',
+                priority: 'high'
+            }
+        ],
+        reasoning: 'Disfunções vestibulares exigem reabilitação específica de reflexos oculares e manobras de reposicionamento.'
     }
 ];
