@@ -391,11 +391,11 @@ export function KnowledgeHubView({
 	return (
 		<div className="flex flex-col lg:flex-row gap-6">
 			{/* Sidebar de Filtros (Left) */}
-			<aside className="lg:w-72 shrink-0 space-y-6">
-				<div className="space-y-4">
+			<aside className="lg:w-72 shrink-0 space-y-8 animate-in slide-in-from-left duration-700 hidden lg:block">
+				<div className="space-y-5">
 					<div className="flex items-center gap-2 px-1">
-						<Filter className="h-4 w-4 text-primary" />
-						<h3 className="text-sm font-bold uppercase tracking-wider text-muted-foreground">
+						<Filter className="h-4 w-4 text-blue-500" />
+						<h3 className="text-xs font-black uppercase tracking-widest text-slate-400">
 							Filtros Avançados
 						</h3>
 					</div>
@@ -497,10 +497,15 @@ export function KnowledgeHubView({
 				</div>
 
 				{/* Estatísticas Rápidas */}
-				<div className="rounded-xl bg-slate-900 text-white p-5 space-y-4">
-					<div className="flex items-center gap-2">
-						<ShieldCheck className="h-5 w-5 text-emerald-400" />
-						<h4 className="text-sm font-bold">Base Certificada</h4>
+				<div className="rounded-2xl bg-slate-950 text-white p-6 space-y-5 shadow-xl border border-white/5 relative overflow-hidden group">
+					<div className="absolute top-0 right-0 p-4 opacity-5 group-hover:opacity-10 transition-opacity">
+						<Stethoscope className="h-20 w-20" />
+					</div>
+					<div className="flex items-center gap-2 relative z-10">
+						<div className="h-8 w-8 rounded-lg bg-emerald-500/20 flex items-center justify-center">
+							<ShieldCheck className="h-5 w-5 text-emerald-400 animate-pulse" />
+						</div>
+						<h4 className="text-sm font-black font-display uppercase tracking-wider">Base Certificada</h4>
 					</div>
 					<div className="space-y-3">
 						<div className="flex justify-between items-end">
@@ -582,7 +587,7 @@ export function KnowledgeHubView({
 				</header>
 
 				{kbFilters.view === "library" && (
-					<div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-5">
+					<div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4 gap-6 animate-in fade-in duration-700">
 						{filteredKnowledge.map((item) => (
 							<KnowledgeCard
 								key={item.id}
@@ -607,15 +612,18 @@ export function KnowledgeHubView({
 				)}
 
 				{filteredKnowledge.length === 0 && (
-					<div className="flex flex-col items-center justify-center py-20 text-center">
-						<div className="h-20 w-20 bg-muted/50 rounded-full flex items-center justify-center mb-4">
-							<Search className="h-10 w-10 text-muted-foreground/30" />
+					<div className="flex flex-col items-center justify-center py-32 text-center animate-in fade-in zoom-in duration-500">
+						<div className="h-24 w-24 bg-blue-50 dark:bg-blue-900/20 rounded-full flex items-center justify-center mb-6 relative">
+							<div className="absolute inset-0 rounded-full bg-blue-400/20 animate-ping" />
+							<Search className="h-10 w-10 text-blue-600 dark:text-blue-400 relative z-10" />
 						</div>
-						<h3 className="text-lg font-semibold">Nenhum artigo localizado</h3>
-						<p className="text-muted-foreground max-w-sm mx-auto mt-2">
-							Tente ajustar seus filtros ou termos de pesquisa para localizar a
-							diretriz desejada.
+						<h3 className="text-2xl font-bold text-slate-900 dark:text-white font-display">Nenhuma diretriz localizada</h3>
+						<p className="text-slate-500 dark:text-slate-400 max-w-sm mx-auto mt-3 font-medium">
+							Tente ajustar seus filtros de especialidade ou termos de pesquisa para localizar o recurso desejado.
 						</p>
+						<Button variant="outline" className="mt-8 rounded-xl font-bold border-slate-200" onClick={() => setKbFilters.setSearch("")}>
+							Limpar todos os filtros
+						</Button>
 					</div>
 				)}
 			</main>
