@@ -12,6 +12,7 @@ import {
 	Mail,
 	MapPin,
 	Phone,
+	Sparkles,
 } from "lucide-react";
 import { format } from "date-fns";
 
@@ -21,6 +22,7 @@ interface PatientProfileHeaderProps {
 	initials: string;
 	onBack: () => void;
 	onOpenReport: () => void;
+	onOpenPremiumReport?: () => void;
 	onOpenProntuario?: () => void;
 	onEdit: () => void;
 	onEvaluate: () => void;
@@ -40,6 +42,7 @@ export function PatientProfileHeader({
 	initials,
 	onBack,
 	onOpenReport,
+	onOpenPremiumReport,
 	onOpenProntuario,
 	onEdit,
 	onEvaluate,
@@ -118,6 +121,15 @@ export function PatientProfileHeader({
 					</div>
 
 					<div className="flex flex-wrap gap-2 w-full md:w-auto">
+						<Button
+							onClick={onOpenPremiumReport}
+							variant="default"
+							size="sm"
+							className="flex-1 md:flex-none gap-2 bg-primary text-white hover:bg-primary-hover transition-all shadow-premium-md font-bold"
+						>
+							<Sparkles className="h-4 w-4" />
+							Relatório Premium (IA)
+						</Button>
 						<Button
 							onClick={onOpenReport}
 							variant="outline"
