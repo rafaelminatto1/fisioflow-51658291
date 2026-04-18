@@ -14,6 +14,7 @@ import type {
 	KnowledgeAuditEntry,
 } from "@/types/knowledge-base";
 import { toast } from "sonner";
+import { expandSearchQuery, normalizeForSearch } from "@/lib/utils/bilingualSearch";
 
 export function useKnowledgeBase(
 	currentOrganizationId?: string | null,
@@ -165,6 +166,8 @@ export function useKnowledgeBase(
 	}, [kbUseSemantic, kbQuery, mergedKnowledge, semanticResults]);
 
 	const filteredKnowledge = useMemo(() => {
+		const expandedQueries = kbUseSemantic ? [] : expandSearchQuery(kbQuery);
+
 		return semanticOrdered.filter((item) => {
 			if (kbGroup !== "Todas" && item.group !== kbGroup) return false;
 			if (kbEvidence !== "Todas" && item.evidence !== kbEvidence) return false;
@@ -173,11 +176,16 @@ export function useKnowledgeBase(
 				if (kbStatus === "pending" && item.status === "verified") return false;
 			}
 			if (!kbQuery || kbUseSemantic) return true;
-			const query = kbQuery.toLowerCase();
-			return (
-				item.title.toLowerCase().includes(query) ||
-				item.subgroup.toLowerCase().includes(query) ||
-				item.tags.some((tag) => tag.toLowerCase().includes(query))
+
+			// Busca inteligente usando termos expandidos do dicionário (PT/EN/Sinônimos)
+			const normalizedTitle = normalizeForSearch(item.title);
+			const normalizedSubgroup = normalizeForSearch(item.subgroup);
+			const normalizedTags = item.tags.map(normalizeForSearch);
+
+			return expandedQueries.some((q) =>
+				normalizedTitle.includes(q) ||
+				normalizedSubgroup.includes(q) ||
+				normalizedTags.some((tag) => tag.includes(q)),
 			);
 		});
 	}, [semanticOrdered, kbGroup, kbEvidence, kbStatus, kbQuery, kbUseSemantic]);
