@@ -1,6 +1,6 @@
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
-import { Document, Page, StyleSheet, Text, View, Link, Font } from "@react-pdf/renderer";
+import { Document, Page, StyleSheet, Text, View, Link, Font, Image } from "@react-pdf/renderer";
 
 // Premium Styles
 const styles = StyleSheet.create({
@@ -12,11 +12,21 @@ const styles = StyleSheet.create({
 	},
 	header: {
 		marginBottom: 25,
-		borderBottom: "1 solid #e2e8f0",
+		borderBottom: "2 solid #2563eb",
 		paddingBottom: 20,
 		flexDirection: "row",
 		justifyContent: "space-between",
+		alignItems: "flex-start",
+	},
+	logoContainer: {
+		flexDirection: "row",
 		alignItems: "center",
+		gap: 12,
+	},
+	logo: {
+		width: 50,
+		height: 50,
+		borderRadius: 12,
 	},
 	clinicInfo: {
 		width: "60%",
@@ -24,20 +34,26 @@ const styles = StyleSheet.create({
 	clinicName: {
 		fontSize: 18,
 		fontWeight: "bold",
-		color: "#2563eb", // FisioFlow Primary
+		color: "#2563eb",
 		marginBottom: 4,
+	},
+	clinicDetails: {
+		fontSize: 8,
+		color: "#64748b",
+		lineHeight: 1.4,
 	},
 	reportTitle: {
 		fontSize: 12,
 		fontWeight: "bold",
 		textAlign: "right",
-		color: "#475569",
+		color: "#1e293b",
+		textTransform: "uppercase",
 	},
 	metaInfo: {
 		fontSize: 8,
 		textAlign: "right",
 		color: "#94a3b8",
-		marginTop: 2,
+		marginTop: 4,
 	},
 	section: {
 		marginBottom: 20,
@@ -50,7 +66,7 @@ const styles = StyleSheet.create({
 		borderLeft: "4 solid #2563eb",
 	},
 	sectionTitle: {
-		fontSize: 11,
+		fontSize: 10,
 		fontWeight: "bold",
 		color: "#1e293b",
 		textTransform: "uppercase",
@@ -61,13 +77,16 @@ const styles = StyleSheet.create({
 		lineHeight: 1.6,
 		color: "#334155",
 		backgroundColor: "#ffffff",
+		border: "1 solid #f1f5f9",
+		borderRadius: 8,
 	},
 	patientNarrative: {
 		fontStyle: "italic",
-		color: "#475569",
-		marginTop: 10,
-		borderTop: "1 dashed #e2e8f0",
+		color: "#64748b",
+		fontSize: 9,
+		marginTop: 12,
 		paddingTop: 10,
+		borderTop: "1 dashed #e2e8f0",
 	},
 	timelineItem: {
 		flexDirection: "row",
@@ -81,70 +100,80 @@ const styles = StyleSheet.create({
 	},
 	timelineContent: {
 		width: "80%",
-		paddingLeft: 10,
-		borderLeft: "1 solid #cbd5e1",
+		paddingLeft: 12,
+		borderLeft: "1 solid #e2e8f0",
 	},
 	soapTitle: {
 		fontSize: 9,
 		fontWeight: "bold",
+		color: "#0f172a",
 		marginBottom: 2,
 	},
 	soapText: {
 		fontSize: 9,
 		color: "#475569",
+		lineHeight: 1.4,
 	},
 	metricsGrid: {
 		flexDirection: "row",
 		flexWrap: "wrap",
-		marginTop: 10,
+		marginTop: 5,
+		gap: 10,
 	},
 	metricCard: {
 		width: "31%",
-		marginRight: "3%",
-		marginBottom: 10,
-		padding: 10,
-		backgroundColor: "#f1f5f9",
-		borderRadius: 8,
+		padding: 12,
+		backgroundColor: "#ffffff",
+		borderRadius: 10,
 		border: "1 solid #e2e8f0",
+		boxShadow: "0 2 4 rgba(0,0,0,0.05)",
 	},
 	metricLabel: {
-		fontSize: 8,
+		fontSize: 7,
+		fontWeight: "bold",
 		color: "#64748b",
+		textTransform: "uppercase",
 		marginBottom: 4,
 	},
 	metricValue: {
-		fontSize: 14,
+		fontSize: 16,
 		fontWeight: "bold",
 		color: "#0f172a",
 	},
 	improvementBadge: {
 		fontSize: 8,
-		marginTop: 4,
+		marginTop: 6,
 		color: "#16a34a",
 		fontWeight: "bold",
+		backgroundColor: "#f0fdf4",
+		padding: "2 6",
+		borderRadius: 4,
+		alignSelf: "flex-start",
 	},
 	referenceBox: {
 		marginTop: 20,
-		padding: 12,
+		padding: 15,
 		backgroundColor: "#eff6ff",
-		borderRadius: 8,
+		borderRadius: 10,
 		border: "1 solid #bfdbfe",
 	},
 	referenceTitle: {
 		fontSize: 9,
 		fontWeight: "bold",
 		color: "#1e40af",
-		marginBottom: 6,
+		marginBottom: 8,
+		textTransform: "uppercase",
 	},
 	referenceItem: {
 		fontSize: 8,
 		color: "#1e3a8a",
-		marginBottom: 4,
-		lineHeight: 1.4,
+		marginBottom: 6,
+		lineHeight: 1.5,
 	},
 	link: {
 		color: "#2563eb",
 		textDecoration: "underline",
+		fontWeight: "bold",
 	},
 	footer: {
 		position: "absolute",
@@ -152,16 +181,32 @@ const styles = StyleSheet.create({
 		left: 40,
 		right: 40,
 		borderTop: "1 solid #e2e8f0",
-		paddingTop: 10,
+		paddingTop: 15,
 		flexDirection: "row",
 		justifyContent: "space-between",
+		alignItems: "center",
 		fontSize: 8,
 		color: "#94a3b8",
 	},
+	contactInfo: {
+		flexDirection: "row",
+		gap: 15,
+	},
+	contactItem: {
+		flexDirection: "row",
+		alignItems: "center",
+		gap: 4,
+	}
 });
 
 interface RelatorioPremiumData {
-	clinica: { nome: string; endereco?: string; telefone?: string };
+	clinica: { 
+		nome: string; 
+		endereco: string; 
+		telefone: string;
+		whatsapp: string;
+		logoUrl?: string;
+	};
 	paciente: { nome: string; cpf?: string; data_nascimento?: string };
 	profissional: { nome: string; registro: string; especialidade: string };
 	data_emissao: string;
@@ -193,29 +238,38 @@ export function RelatorioPremiumPDF({ data }: { data: RelatorioPremiumData }) {
 			<Page size="A4" style={styles.page}>
 				{/* HEADER PREMIUM */}
 				<View style={styles.header}>
-					<View style={styles.clinicInfo}>
-						<Text style={styles.clinicName}>{data.clinica.nome}</Text>
-						<Text style={{ fontSize: 9, color: "#64748b" }}>{data.clinica.endereco}</Text>
+					<View style={styles.logoContainer}>
+						{data.clinica.logoUrl && (
+							<Image src={data.clinica.logoUrl} style={styles.logo} />
+						)}
+						<View style={styles.clinicInfo}>
+							<Text style={styles.clinicName}>{data.clinica.nome}</Text>
+							<Text style={styles.clinicDetails}>{data.clinica.endereco}</Text>
+							<View style={{ flexDirection: "row", gap: 10, marginTop: 4 }}>
+								<Text style={styles.clinicDetails}>Tel: {data.clinica.telefone}</Text>
+								<Text style={styles.clinicDetails}>WhatsApp: {data.clinica.whatsapp}</Text>
+							</View>
+						</View>
 					</View>
 					<View>
-						<Text style={styles.reportTitle}>RELATÓRIO DE EVOLUÇÃO CLÍNICA</Text>
+						<Text style={styles.reportTitle}>Relatório de Evolução</Text>
 						<Text style={styles.metaInfo}>
-							Emitido em: {format(new Date(data.data_emissao), "dd 'de' MMMM 'de' yyyy", { locale: ptBR })}
+							{format(new Date(data.data_emissao), "dd 'de' MMMM 'de' yyyy", { locale: ptBR })}
 						</Text>
 					</View>
 				</View>
 
 				{/* DADOS DO PACIENTE & PROFISSIONAL */}
-				<View style={{ flexDirection: "row", marginBottom: 25, gap: 20 }}>
-					<View style={{ flex: 1, padding: 10, backgroundColor: "#f8fafc", borderRadius: 8 }}>
-						<Text style={{ fontSize: 8, color: "#94a3b8", marginBottom: 4 }}>PACIENTE</Text>
-						<Text style={{ fontWeight: "bold", fontSize: 11 }}>{data.paciente.nome}</Text>
-						<Text style={{ fontSize: 9, color: "#64748b", marginTop: 2 }}>CPF: {data.paciente.cpf}</Text>
+				<View style={{ flexDirection: "row", marginBottom: 25, gap: 15 }}>
+					<View style={{ flex: 1, padding: 12, backgroundColor: "#f8fafc", borderRadius: 10, border: "1 solid #e2e8f0" }}>
+						<Text style={{ fontSize: 7, color: "#94a3b8", fontWeight: "bold", textTransform: "uppercase", marginBottom: 4 }}>Paciente</Text>
+						<Text style={{ fontWeight: "bold", fontSize: 11, color: "#0f172a" }}>{data.paciente.nome}</Text>
+						<Text style={{ fontSize: 8, color: "#64748b", marginTop: 2 }}>CPF: {data.paciente.cpf}</Text>
 					</View>
-					<View style={{ flex: 1, padding: 10, backgroundColor: "#f8fafc", borderRadius: 8 }}>
-						<Text style={{ fontSize: 8, color: "#94a3b8", marginBottom: 4 }}>FISIOTERAPEUTA RESPONSÁVEL</Text>
-						<Text style={{ fontWeight: "bold", fontSize: 11 }}>{data.profissional.nome}</Text>
-						<Text style={{ fontSize: 9, color: "#64748b", marginTop: 2 }}>
+					<View style={{ flex: 1, padding: 12, backgroundColor: "#f8fafc", borderRadius: 10, border: "1 solid #e2e8f0" }}>
+						<Text style={{ fontSize: 7, color: "#94a3b8", fontWeight: "bold", textTransform: "uppercase", marginBottom: 4 }}>Fisioterapeuta Responsável</Text>
+						<Text style={{ fontWeight: "bold", fontSize: 11, color: "#0f172a" }}>{data.profissional.nome}</Text>
+						<Text style={{ fontSize: 8, color: "#64748b", marginTop: 2 }}>
 							{data.profissional.registro} • {data.profissional.especialidade}
 						</Text>
 					</View>
@@ -224,48 +278,52 @@ export function RelatorioPremiumPDF({ data }: { data: RelatorioPremiumData }) {
 				{/* 1. SÍNTESE CLÍNICA HUMANIZADA (PARA O MÉDICO) */}
 				<View style={styles.section}>
 					<View style={styles.sectionHeader}>
-						<Text style={styles.sectionTitle}>Análise Narrativa e Conduta</Text>
+						<Text style={styles.sectionTitle}>Análise Narrativa e Conduta Clínica</Text>
 					</View>
 					<View style={styles.narrativeBox}>
-						<Text>{data.narrativa_medica}</Text>
+						<Text style={{ fontSize: 10, lineHeight: 1.6 }}>{data.narrativa_medica}</Text>
 						
-						<Text style={styles.patientNarrative}>
-							Nota para o Paciente: {data.narrativa_paciente}
-						</Text>
+						<View style={styles.patientNarrative}>
+							<Text style={{ fontWeight: "bold", fontSize: 8, marginBottom: 4, color: "#2563eb", textTransform: "uppercase" }}>Para o Paciente:</Text>
+							<Text>{data.narrativa_paciente}</Text>
+						</View>
 					</View>
 				</View>
 
 				{/* 2. TIMELINE SOAP */}
 				<View style={styles.section}>
 					<View style={styles.sectionHeader}>
-						<Text style={styles.sectionTitle}>Histórico de Evoluções (SOAP)</Text>
+						<Text style={styles.sectionTitle}>Histórico Recente de Evoluções</Text>
 					</View>
-					{data.evolucoes.slice(0, 5).map((ev, idx) => (
-						<View key={idx} style={styles.timelineItem}>
-							<Text style={styles.timelineDate}>{format(new Date(ev.data), "dd/MM/yyyy")}</Text>
-							<View style={styles.timelineContent}>
-								<Text style={styles.soapTitle}>Sessão #{data.evolucoes.length - idx}</Text>
-								<Text style={styles.soapText}>{ev.objetivo}</Text>
-								<Text style={{ fontSize: 8, color: "#94a3b8", marginTop: 4 }}>
-									Dor: {ev.dor}/10 • Mobilidade: {ev.mobilidade}%
-								</Text>
+					<View style={{ paddingLeft: 5 }}>
+						{data.evolucoes.slice(0, 5).map((ev, idx) => (
+							<View key={idx} style={styles.timelineItem}>
+								<Text style={styles.timelineDate}>{format(new Date(ev.data), "dd/MM/yyyy")}</Text>
+								<View style={styles.timelineContent}>
+									<Text style={styles.soapTitle}>Sessão #{data.evolucoes.length - idx}</Text>
+									<Text style={styles.soapText}>{ev.objetivo}</Text>
+									<View style={{ flexDirection: "row", gap: 10, marginTop: 4 }}>
+										<Text style={{ fontSize: 7, color: "#16a34a", fontWeight: "bold" }}>DOR: {ev.dor}/10</Text>
+										<Text style={{ fontSize: 7, color: "#2563eb", fontWeight: "bold" }}>MOBILIDADE: {ev.mobilidade}%</Text>
+									</View>
+								</View>
 							</View>
-						</View>
-					))}
+						))}
+					</View>
 				</View>
 
 				{/* 3. MÉTRICAS E GANHOS ARTICULARES */}
 				<View style={styles.section}>
 					<View style={styles.sectionHeader}>
-						<Text style={styles.sectionTitle}>Métricas de Amplitude e Performance</Text>
+						<Text style={styles.sectionTitle}>Métricas de Evolução Funcional</Text>
 					</View>
 					<View style={styles.metricsGrid}>
 						{data.metricas.map((m, idx) => (
 							<View key={idx} style={styles.metricCard}>
 								<Text style={styles.metricLabel}>{m.nome}</Text>
 								<Text style={styles.metricValue}>{m.atual}</Text>
-								<Text style={styles.improvementBadge}>+{m.melhora} de Ganho</Text>
-								<Text style={{ fontSize: 7, color: "#94a3b8", marginTop: 2 }}>Inicial: {m.inicial}</Text>
+								<Text style={styles.improvementBadge}>+{m.melhora} Evolução</Text>
+								<Text style={{ fontSize: 7, color: "#94a3b8", marginTop: 4 }}>Inicial: {m.inicial}</Text>
 							</View>
 						))}
 					</View>
@@ -273,14 +331,14 @@ export function RelatorioPremiumPDF({ data }: { data: RelatorioPremiumData }) {
 
 				{/* 4. EMBASAMENTO CIENTÍFICO */}
 				<View style={styles.referenceBox}>
-					<Text style={styles.referenceTitle}>REFERÊNCIAS CIENTÍFICAS E PROTOCOLOS</Text>
+					<Text style={styles.referenceTitle}>Referências e Protocolos de Evidência</Text>
 					{data.referencias.map((ref, idx) => (
-						<View key={idx} style={{ marginBottom: 6 }}>
+						<View key={idx} style={{ marginBottom: 8 }}>
 							<Text style={styles.referenceItem}>
 								• {ref.autor} ({new Date().getFullYear()}). {ref.titulo}. {ref.periodico}.
 							</Text>
 							<Link style={[styles.referenceItem, styles.link]} src={ref.url}>
-								Acessar evidência via PubMed
+								Acessar estudo completo via PubMed
 							</Link>
 						</View>
 					))}
@@ -288,8 +346,8 @@ export function RelatorioPremiumPDF({ data }: { data: RelatorioPremiumData }) {
 
 				{/* FOOTER */}
 				<View style={styles.footer}>
-					<Text>Documento gerado por FisioFlow Intelligence Hub</Text>
-					<Text>Página 1 de 1</Text>
+					<Text>FisioFlow Hub • Gestão Baseada em Dados e Evidências</Text>
+					<Text>Documento assinado digitalmente • Página 1 de 1</Text>
 				</View>
 			</Page>
 		</Document>

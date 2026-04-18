@@ -106,8 +106,11 @@ const PatientEvolutionReport = () => {
 				<RelatorioPremiumPDF
 					data={{
 						clinica: {
-							nome: "Mooca Fisio",
-							endereco: "Rua do Oratório, Mooca, São Paulo/SP",
+							nome: "Activity Fisioterapia Mooca",
+							endereco: "Rua Manuel Vieira de Sousa, 166 - Mooca, São Paulo - SP",
+							telefone: "(11) 5874-9885",
+							whatsapp: "11 93433-5858",
+							logoUrl: "/logo/logo.png",
 						},
 						paciente: {
 							nome: patientName,
