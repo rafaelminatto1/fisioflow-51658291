@@ -6,7 +6,7 @@ import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
 import { 
-    Brain, 
+    Activity, 
     MessageSquare, 
     LineChart, 
     Stethoscope, 
@@ -80,7 +80,7 @@ export function AIHubView() {
         <div className="space-y-6">
             <header className="flex items-center gap-3">
                 <div className="p-2 bg-primary/10 rounded-xl">
-                    <Brain className="h-6 w-6 text-primary" />
+                    <Activity className="h-6 w-6 text-primary" />
                 </div>
                 <div>
                     <h2 className="text-2xl font-bold tracking-tight">AI Agent Hub</h2>
