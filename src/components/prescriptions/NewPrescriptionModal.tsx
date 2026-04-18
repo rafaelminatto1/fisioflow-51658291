@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import {
 	Dumbbell,
 	GripVertical,
@@ -48,6 +48,7 @@ interface NewPrescriptionModalProps {
 	onSuccess?: () => void;
 	initialProtocolId?: string;
 	initialPhaseIndex?: number;
+	initialExerciseId?: string;
 }
 
 export function NewPrescriptionModal({
@@ -58,6 +59,7 @@ export function NewPrescriptionModal({
 	onSuccess,
 	initialProtocolId,
 	initialPhaseIndex = 0,
+	initialExerciseId,
 }: NewPrescriptionModalProps) {
 	const isMobile = useIsMobile();
 	const [filters, setFilters] = useState({
@@ -88,8 +90,10 @@ export function NewPrescriptionModal({
 	>([]);
 	const [selectedExerciseId, setSelectedExerciseId] = useState("");
 
-	// Auto-load from protocol if provided
-	useState(() => {
+	// Auto-load from protocol or exercise if provided
+	useEffect(() => {
+		if (!open) return;
+
 		if (initialProtocolId) {
 			const protocol = protocolDictionary.find(p => p.id === initialProtocolId);
 			if (protocol && protocol.phases[initialPhaseIndex]) {
@@ -113,8 +117,24 @@ export function NewPrescriptionModal({
 
 				setSelectedExercises(protocolExercises);
 			}
+		} else if (initialExerciseId) {
+			const ex = exerciseDictionary.find(e => e.id === initialExerciseId);
+			if (ex) {
+				setTitle(`Prescrição: ${ex.pt}`);
+				const newExercise: PrescriptionExercise = {
+					id: uuidv4(),
+					name: ex.pt,
+					description: ex.instruction_pt || ex.description_pt || "",
+					sets: ex.suggested_sets || 3,
+					repetitions: ex.suggested_reps || 10,
+					intensity_rpe: ex.suggested_rpe || "",
+					frequency: "Diariamente",
+					observations: "Conforme sugestão da Inteligência Clínica."
+				};
+				setSelectedExercises([newExercise]);
+			}
 		}
-	});
+	}, [initialProtocolId, initialPhaseIndex, initialExerciseId, open]);
 
 	const handleAddExercise = () => {
 		if (!selectedExerciseId) return;
@@ -340,9 +360,21 @@ export function NewPrescriptionModal({
 										className="border rounded-lg p-4 space-y-3 bg-muted/30"
 									>
 										<div className="flex items-start justify-between gap-2">
-											<div className="flex items-center gap-2">
-												<GripVertical className="h-4 w-4 text-muted-foreground" />
-												<Badge variant="outline">{index + 1}</Badge>
+											<div className="flex items-center gap-3">
+												<GripVertical className="h-4 w-4 text-muted-foreground shrink-0" />
+												<Badge variant="outline" className="shrink-0">
+													{index + 1}
+												</Badge>
+												{exercise.image_url && (
+													<div className="h-12 w-12 rounded-lg bg-white border shadow-sm overflow-hidden shrink-0 flex items-center justify-center p-0.5">
+														<img
+															src={exercise.image_url}
+															alt={exercise.name}
+															className="max-h-full max-w-full object-contain"
+															onError={(e) => (e.currentTarget.style.display = "none")}
+														/>
+													</div>
+												)}
 												<span className="font-medium">{exercise.name}</span>
 											</div>
 											<Button
