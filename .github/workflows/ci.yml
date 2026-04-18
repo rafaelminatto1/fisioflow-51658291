@@ -1,4 +1,4 @@
-name: CI
+name: CI / Deploy
 
 on:
   push:
@@ -20,6 +20,7 @@ on:
 permissions:
   contents: read
   pull-requests: write
+  deployments: write
 
 concurrency:
   group: ci-${{ github.ref }}
@@ -29,77 +30,52 @@ env:
   NODE_VERSION: '22'
   PNPM_VERSION: '10.33.0'
   FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: 'true'
-  # Default URLs for fallback; preferred via GitHub Variables
   VITE_API_BASE_URL: ${{ vars.VITE_API_BASE_URL || 'https://api-pro.moocafisio.com.br/api' }}
   VITE_WORKERS_API_URL: ${{ vars.VITE_WORKERS_API_URL || 'https://api-pro.moocafisio.com.br' }}
   VITE_NEON_AUTH_URL: ${{ vars.VITE_NEON_AUTH_URL || 'https://ep-wandering-bonus-acj4zwvo.neonauth.sa-east-1.aws.neon.tech/neondb/auth' }}
   VITE_NEON_DATA_API_URL: ${{ vars.VITE_NEON_DATA_API_URL || '' }}
 
+# ──────────────────────────────────────────────
+# CI JOBS  (run on every push and every PR)
+# ──────────────────────────────────────────────
 jobs:
-  # =====================================================================
-  # LINT
-  # =====================================================================
   lint:
     name: Lint
     runs-on: ubuntu-latest
     timeout-minutes: 10
     steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-
-      - name: Setup
-        uses: ./.github/actions/setup
+      - uses: actions/checkout@v4
+      - uses: ./.github/actions/setup
         with:
           node-version: ${{ env.NODE_VERSION }}
           pnpm-version: ${{ env.PNPM_VERSION }}
+      - run: pnpm --filter fisioflow-web lint
+      - run: pnpm --filter @fisioflow/api lint
 
-      - name: Lint (web)
-        run: pnpm --filter fisioflow-web lint
-
-      - name: Lint (api)
-        run: pnpm --filter @fisioflow/api lint
-
-  # =====================================================================
-  # TYPE CHECK
-  # =====================================================================
   type-check:
     name: Type Check
     runs-on: ubuntu-latest
-    timeout-minutes: 10
+    timeout-minutes: 15
     steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-
-      - name: Setup
-        uses: ./.github/actions/setup
+      - uses: actions/checkout@v4
+      - uses: ./.github/actions/setup
         with:
           node-version: ${{ env.NODE_VERSION }}
           pnpm-version: ${{ env.PNPM_VERSION }}
+      - run: pnpm --filter fisioflow-web type-check
+      - run: pnpm --filter @fisioflow/api type-check
 
-      - name: Type Check (web)
-        run: pnpm --filter fisioflow-web type-check
-
-      - name: Type Check (api)
-        run: pnpm --filter @fisioflow/api type-check
-
-  # =====================================================================
-  # BUILD VERIFICATION
-  # =====================================================================
   build:
     name: Build Web
     runs-on: ubuntu-latest
     timeout-minutes: 20
     steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-
-      - name: Setup
-        uses: ./.github/actions/setup
+      - uses: actions/checkout@v4
+      - uses: ./.github/actions/setup
         with:
           node-version: ${{ env.NODE_VERSION }}
           pnpm-version: ${{ env.PNPM_VERSION }}
-
-      - name: Build web
+      - name: Build
         run: pnpm --filter fisioflow-web build
         env:
           NODE_OPTIONS: --max-old-space-size=8192
@@ -109,67 +85,68 @@ jobs:
           VITE_NEON_AUTH_URL: ${{ env.VITE_NEON_AUTH_URL }}
           VITE_NEON_DATA_API_URL: ${{ env.VITE_NEON_DATA_API_URL }}
 
-  # =====================================================================
-  # UNIT TESTS
-  # =====================================================================
-  test-unit:
-    name: Unit Tests
+  test-api:
+    name: Test API (Workers)
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: ./.github/actions/setup
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          pnpm-version: ${{ env.PNPM_VERSION }}
+      - run: pnpm --filter @fisioflow/api test:unit
+
+# ──────────────────────────────────────────────
+# DEPLOY JOBS  (only on push to main, needs all CI jobs green)
+# ──────────────────────────────────────────────
+  deploy-api:
+    name: Deploy API (Workers)
+    if: (github.event_name == 'push' || github.event_name == 'workflow_dispatch') && github.ref == 'refs/heads/main'
+    needs: [lint, type-check, build, test-api]
     runs-on: ubuntu-latest
     timeout-minutes: 15
     steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-
-      - name: Setup
-        uses: ./.github/actions/setup
+      - uses: actions/checkout@v4
+      - uses: ./.github/actions/setup
         with:
           node-version: ${{ env.NODE_VERSION }}
           pnpm-version: ${{ env.PNPM_VERSION }}
+      - name: Deploy Workers
+        uses: cloudflare/wrangler-action@v3
+        with:
+          apiToken: ${{ secrets.CF_API_TOKEN }}
+          accountId: ${{ secrets.CF_ACCOUNT_ID }}
+          workingDirectory: apps/api
+          command: deploy --env production
 
-      - name: Test (web)
-        run: pnpm --filter fisioflow-web test:unit
-
-      - name: Test (api)
-        run: pnpm --filter @fisioflow/api test:unit
-
-  # =====================================================================
-  # NEON PREVIEW BRANCH (apenas em PRs)
-  # =====================================================================
-  neon-preview:
-    name: Neon Preview Branch
-    if: github.event_name == 'pull_request'
+  deploy-web:
+    name: Deploy Web
+    if: (github.event_name == 'push' || github.event_name == 'workflow_dispatch') && github.ref == 'refs/heads/main'
+    needs: [lint, type-check, build, test-api]
     runs-on: ubuntu-latest
-    permissions:
-      pull-requests: write
-    outputs:
-      db_url: ${{ steps.create-branch.outputs.db_url_with_pooler }}
-      auth_url: ${{ steps.create-branch.outputs.auth_url }}
-      data_api_url: ${{ steps.create-branch.outputs.data_api_url }}
+    timeout-minutes: 20
     steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-
-      - name: Setup
-        uses: ./.github/actions/setup
+      - uses: actions/checkout@v4
+      - uses: ./.github/actions/setup
         with:
           node-version: ${{ env.NODE_VERSION }}
           pnpm-version: ${{ env.PNPM_VERSION }}
-
-      - name: Create Neon Preview Branch
-        id: create-branch
-        uses: neondatabase/create-branch-action@v6
-        with:
-          project_id: ${{ vars.NEON_PROJECT_ID }}
-          branch_name: preview/pr-${{ github.event.number }}
-          api_key: ${{ secrets.NEON_API_KEY }}
-          get_auth_url: true
-          get_data_api_url: true
-
-      - name: Verify Migrations (Dry Run)
-        run: |
-          echo "DATABASE_URL=${{ steps.create-branch.outputs.db_url_with_pooler }}" >> $GITHUB_ENV
-          pnpm db:audit:schema
+      - name: Build
+        run: pnpm --filter fisioflow-web build
         env:
-          DATABASE_URL: ${{ steps.create-branch.outputs.db_url_with_pooler }}
-          VITE_NEON_AUTH_URL: ${{ steps.create-branch.outputs.auth_url }}
-          VITE_NEON_DATA_API_URL: ${{ steps.create-branch.outputs.data_api_url }}
+          NODE_OPTIONS: --max-old-space-size=8192
+          VITE_APP_ENV: production
+          GIT_COMMIT_SHA: ${{ github.sha }}
+          VITE_APP_VERSION: ${{ github.sha }}
+          VITE_API_BASE_URL: ${{ vars.VITE_API_BASE_URL || 'https://api-pro.moocafisio.com.br/api' }}
+          VITE_WORKERS_API_URL: ${{ vars.VITE_WORKERS_API_URL || 'https://api-pro.moocafisio.com.br' }}
+          VITE_NEON_AUTH_URL: ${{ vars.VITE_NEON_AUTH_URL || 'https://ep-wandering-bonus-acj4zwvo.neonauth.sa-east-1.aws.neon.tech/neondb/auth' }}
+          VITE_NEON_DATA_API_URL: ${{ vars.VITE_NEON_DATA_API_URL || '' }}
+          VITE_GOOGLE_AI_API_KEY: ${{ secrets.VITE_GOOGLE_AI_API_KEY }}
+      - name: Deploy Web Worker
+        uses: cloudflare/wrangler-action@v3
+        with:
+          apiToken: ${{ secrets.CF_API_TOKEN }}
+          accountId: ${{ secrets.CF_ACCOUNT_ID }}
+          command: deploy --env production

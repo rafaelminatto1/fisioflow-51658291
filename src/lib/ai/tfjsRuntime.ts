@@ -1,22 +1,17 @@
-type TfjsCore = typeof import("@tensorflow/tfjs-core");
+type TfjsCore = typeof import("@tensorflow/tfjs");
 
 let tfReadyPromise: Promise<TfjsCore> | null = null;
 
 export async function loadTfjsPoseRuntime(): Promise<TfjsCore> {
 	if (!tfReadyPromise) {
 		tfReadyPromise = (async () => {
-			const [tf] = await Promise.all([
-				import("@tensorflow/tfjs-core"),
-				import("@tensorflow/tfjs-converter"),
-				import("@tensorflow/tfjs-backend-webgl"),
-			]);
+			const tf = await import("@tensorflow/tfjs");
 
 			const currentBackend = tf.getBackend();
 			if (!currentBackend) {
 				try {
 					await tf.setBackend("webgl");
 				} catch {
-					await import("@tensorflow/tfjs-backend-cpu");
 					await tf.setBackend("cpu");
 				}
 			}
