@@ -133,22 +133,64 @@ const PreCadastro = () => {
 	}
 
 	if (submitted) {
+		const successMsg = tokenData?.ui_style?.successMessage || "Seus dados foram recebidos com sucesso. Agora é só aguardar o seu horário agendado.";
+		const isPremium = tokenData?.ui_style?.successStyle === "premium";
+
 		return (
-			<div className="min-h-screen bg-emerald-50 flex items-center justify-center p-4">
-				<div className="max-w-md w-full bg-white p-10 text-center rounded-[2.5rem] shadow-premium-xl border border-emerald-100">
-					<div className="w-20 h-20 bg-emerald-100 rounded-full flex items-center justify-center mx-auto mb-6">
-						<CheckCircle2 className="h-10 w-10 text-emerald-600" />
+			<div className={cn(
+				"min-h-screen flex items-center justify-center p-4 transition-colors duration-1000",
+				isPremium ? "bg-slate-950" : "bg-emerald-50"
+			)}>
+				<div className={cn(
+					"max-w-md w-full p-10 text-center relative overflow-hidden transition-all duration-700",
+					isPremium 
+						? "bg-slate-900 rounded-[3rem] shadow-[0_32px_64px_-12px_rgba(0,0,0,0.8)] border border-white/5" 
+						: "bg-white rounded-[2.5rem] shadow-premium-xl border border-emerald-100"
+				)}>
+					{/* Decorative Elements for Premium */}
+					{isPremium && (
+						<>
+							<div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-primary via-emerald-500 to-primary" />
+							<div className="absolute -top-24 -right-24 w-48 h-48 bg-primary/10 rounded-full blur-3xl" />
+							<div className="absolute -bottom-24 -left-24 w-48 h-48 bg-emerald-500/10 rounded-full blur-3xl" />
+						</>
+					)}
+
+					<div className={cn(
+						"w-24 h-24 rounded-full flex items-center justify-center mx-auto mb-8 animate-in zoom-in duration-700",
+						isPremium ? "bg-primary/20" : "bg-emerald-100"
+					)}>
+						<div className={cn(
+							"w-16 h-16 rounded-full flex items-center justify-center animate-pulse",
+							isPremium ? "bg-primary text-white" : "bg-emerald-600 text-white"
+						)}>
+							<CheckCircle2 className="h-8 w-8" />
+						</div>
 					</div>
-					<h2 className="text-3xl font-black tracking-tightest leading-none">
-						Tudo pronto!
+
+					<h2 className={cn(
+						"text-4xl font-black tracking-tightest leading-none mb-4 animate-in fade-in slide-in-from-bottom-4 duration-700 delay-200",
+						isPremium ? "text-white" : "text-slate-900"
+					)}>
+						{tokenData?.ui_style?.successTitle || "Tudo pronto!"}
 					</h2>
-					<p className="text-slate-500 mt-4 font-medium">
-						Seus dados foram recebidos com sucesso. Agora é só aguardar o seu
-						horário agendado.
+					
+					<p className={cn(
+						"mt-4 font-medium leading-relaxed animate-in fade-in slide-in-from-bottom-4 duration-700 delay-300",
+						isPremium ? "text-slate-400" : "text-slate-500"
+					)}>
+						{successMsg}
 					</p>
-					<div className="mt-8 pt-8 border-t border-slate-50">
-						<p className="text-[10px] font-black uppercase tracking-widest text-slate-300">
-							FisioFlow Admissão Digital
+
+					<div className={cn(
+						"mt-10 pt-8 border-t animate-in fade-in duration-1000 delay-500",
+						isPremium ? "border-white/5" : "border-slate-50"
+					)}>
+						<p className={cn(
+							"text-[10px] font-black uppercase tracking-widest",
+							isPremium ? "text-slate-600" : "text-slate-300"
+						)}>
+							{tokenData?.organization_id ? `FisioFlow Digital Admission` : "FisioFlow Admissão Digital"}
 						</p>
 					</div>
 				</div>
@@ -156,12 +198,25 @@ const PreCadastro = () => {
 		);
 	}
 
+	const theme = {
+		primary: tokenData?.ui_style?.primaryColor || "var(--primary)",
+		radius: tokenData?.ui_style?.borderRadius || "2.5rem",
+		inputRadius: tokenData?.ui_style?.inputRadius || "1rem",
+		bg: tokenData?.ui_style?.backgroundColor || "rgb(248 250 252)", // slate-50
+	};
+
 	return (
-		<div className="min-h-screen bg-slate-50 dark:bg-slate-950 py-12 px-4">
+		<div 
+			className="min-h-screen py-12 px-4 transition-colors duration-500"
+			style={{ backgroundColor: theme.bg }}
+		>
 			<div className="max-w-xl mx-auto space-y-8">
 				{/* Header */}
 				<div className="text-center space-y-2">
-					<div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-primary/10 text-primary text-[10px] font-black uppercase tracking-widest mb-2">
+					<div 
+						className="inline-flex items-center gap-2 px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest mb-2"
+						style={{ backgroundColor: `${theme.primary}20`, color: theme.primary }}
+					>
 						<ShieldCheck className="w-3 h-3" />
 						Ambiente Seguro
 					</div>
@@ -178,17 +233,23 @@ const PreCadastro = () => {
 				<div className="flex items-center justify-between px-2">
 					<div
 						className={cn(
-							"flex flex-col items-center gap-2",
-							step >= 1 ? "text-primary" : "text-slate-300",
+							"flex flex-col items-center gap-2 transition-colors duration-300",
+							step >= 1 ? "opacity-100" : "opacity-30"
 						)}
+						style={{ color: step >= 1 ? theme.primary : undefined }}
 					>
 						<div
 							className={cn(
-								"w-10 h-10 rounded-2xl flex items-center justify-center font-black transition-all",
+								"w-10 h-10 rounded-2xl flex items-center justify-center font-black transition-all duration-500",
 								step >= 1
-									? "bg-primary text-white shadow-lg"
+									? "shadow-lg scale-110"
 									: "bg-white text-slate-300 border border-slate-100",
 							)}
+							style={{ 
+								backgroundColor: step >= 1 ? theme.primary : undefined,
+								color: step >= 1 ? "#fff" : undefined,
+								borderRadius: theme.inputRadius
+							}}
 						>
 							1
 						</div>
@@ -199,17 +260,23 @@ const PreCadastro = () => {
 					<div className="h-px flex-1 bg-slate-200 mx-4 -mt-6" />
 					<div
 						className={cn(
-							"flex flex-col items-center gap-2",
-							step >= 2 ? "text-primary" : "text-slate-300",
+							"flex flex-col items-center gap-2 transition-colors duration-300",
+							step >= 2 ? "opacity-100" : "opacity-30"
 						)}
+						style={{ color: step >= 2 ? theme.primary : undefined }}
 					>
 						<div
 							className={cn(
-								"w-10 h-10 rounded-2xl flex items-center justify-center font-black transition-all",
+								"w-10 h-10 rounded-2xl flex items-center justify-center font-black transition-all duration-500",
 								step >= 2
-									? "bg-primary text-white shadow-lg"
+									? "shadow-lg scale-110"
 									: "bg-white text-slate-300 border border-slate-100",
 							)}
+							style={{ 
+								backgroundColor: step >= 2 ? theme.primary : undefined,
+								color: step >= 2 ? "#fff" : undefined,
+								borderRadius: theme.inputRadius
+							}}
 						>
 							2
 						</div>
@@ -220,17 +287,23 @@ const PreCadastro = () => {
 					<div className="h-px flex-1 bg-slate-200 mx-4 -mt-6" />
 					<div
 						className={cn(
-							"flex flex-col items-center gap-2",
-							step >= 3 ? "text-primary" : "text-slate-300",
+							"flex flex-col items-center gap-2 transition-colors duration-300",
+							step >= 3 ? "opacity-100" : "opacity-30"
 						)}
+						style={{ color: step >= 3 ? theme.primary : undefined }}
 					>
 						<div
 							className={cn(
-								"w-10 h-10 rounded-2xl flex items-center justify-center font-black transition-all",
+								"w-10 h-10 rounded-2xl flex items-center justify-center font-black transition-all duration-500",
 								step >= 3
-									? "bg-primary text-white shadow-lg"
+									? "shadow-lg scale-110"
 									: "bg-white text-slate-300 border border-slate-100",
 							)}
+							style={{ 
+								backgroundColor: step >= 3 ? theme.primary : undefined,
+								color: step >= 3 ? "#fff" : undefined,
+								borderRadius: theme.inputRadius
+							}}
 						>
 							3
 						</div>
@@ -240,13 +313,16 @@ const PreCadastro = () => {
 					</div>
 				</div>
 
-				<div className="bg-white dark:bg-slate-900 rounded-[2.5rem] shadow-premium-lg border border-white/50 p-8 md:p-12">
+				<div 
+					className="bg-white dark:bg-slate-900 shadow-premium-lg border border-white/50 p-8 md:p-12 transition-all duration-500"
+					style={{ borderRadius: theme.radius }}
+				>
 					<form onSubmit={handleSubmit} className="space-y-8">
 						{/* Step 1: Identidade */}
 						{step === 1 && (
 							<div className="space-y-6 animate-in fade-in slide-in-from-right-4 duration-500">
 								<div className="flex items-center gap-3 mb-4">
-									<User className="w-5 h-5 text-primary" />
+									<User className="w-5 h-5" style={{ color: theme.primary }} />
 									<h3 className="font-black text-xl tracking-tight">
 										Dados Pessoais
 									</h3>
@@ -263,7 +339,8 @@ const PreCadastro = () => {
 												setFormData({ ...formData, nome: e.target.value })
 											}
 											placeholder="Seu nome completo"
-											className="rounded-2xl h-12 bg-slate-50 border-none font-bold"
+											className="h-12 bg-slate-50 border-none font-bold"
+											style={{ borderRadius: theme.inputRadius }}
 										/>
 									</div>
 									<div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -315,7 +392,8 @@ const PreCadastro = () => {
 								<Button
 									type="button"
 									onClick={() => setStep(2)}
-									className="w-full rounded-2xl h-14 bg-slate-900 text-white font-black uppercase tracking-widest"
+									className="w-full h-14 text-white font-black uppercase tracking-widest shadow-lg hover:brightness-110 transition-all"
+									style={{ backgroundColor: theme.primary, borderRadius: theme.inputRadius }}
 								>
 									Próximo Passo
 								</Button>
@@ -326,7 +404,7 @@ const PreCadastro = () => {
 						{step === 2 && (
 							<div className="space-y-6 animate-in fade-in slide-in-from-right-4 duration-500">
 								<div className="flex items-center gap-3 mb-4">
-									<ClipboardList className="w-5 h-5 text-primary" />
+									<ClipboardList className="w-5 h-5" style={{ color: theme.primary }} />
 									<h3 className="font-black text-xl tracking-tight">
 										Histórico de Saúde
 									</h3>
@@ -395,7 +473,8 @@ const PreCadastro = () => {
 									<Button
 										type="button"
 										onClick={() => setStep(3)}
-										className="flex-1 rounded-2xl h-14 bg-slate-900 text-white font-black uppercase tracking-widest"
+										className="flex-1 h-14 text-white font-black uppercase tracking-widest shadow-lg hover:brightness-110 transition-all"
+										style={{ backgroundColor: theme.primary, borderRadius: theme.inputRadius }}
 									>
 										Quase lá...
 									</Button>
@@ -407,7 +486,7 @@ const PreCadastro = () => {
 						{step === 3 && (
 							<div className="space-y-6 animate-in fade-in slide-in-from-right-4 duration-500">
 								<div className="flex items-center gap-3 mb-4">
-									<ShieldCheck className="w-5 h-5 text-primary" />
+									<ShieldCheck className="w-5 h-5" style={{ color: theme.primary }} />
 									<h3 className="font-black text-xl tracking-tight">
 										Privacidade e Termos
 									</h3>
@@ -454,7 +533,12 @@ const PreCadastro = () => {
 									<Button
 										type="submit"
 										disabled={submitting || !formData.aceite_lgpd}
-										className="flex-1 rounded-2xl h-14 bg-primary text-white shadow-premium-lg font-black uppercase tracking-widest gap-2"
+										className="flex-1 h-14 text-white shadow-premium-lg font-black uppercase tracking-widest gap-2 hover:brightness-110 transition-all"
+										style={{ 
+											backgroundColor: theme.primary, 
+											borderRadius: theme.inputRadius,
+											boxShadow: `0 10px 25px -5px ${theme.primary}40`
+										}}
 									>
 										{submitting ? (
 											<Loader2 className="animate-spin" />
