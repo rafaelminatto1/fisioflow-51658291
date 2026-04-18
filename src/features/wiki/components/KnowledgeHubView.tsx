@@ -35,6 +35,7 @@ import {
 	Calendar,
 	AlertCircle,
 	Eye,
+	Stethoscope,
 } from "lucide-react";
 import { toast } from "sonner";
 import { useNavigate } from "react-router-dom";
