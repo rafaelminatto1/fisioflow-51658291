@@ -121,7 +121,8 @@ export function WikiTopNav({
 		return pages.filter(
 			(p) =>
 				normalizeText(p.title).includes(normalizedSearchQuery) ||
-				(p.content && normalizeText(p.content).includes(normalizedSearchQuery)) ||
+				(p.content &&
+					normalizeText(p.content).includes(normalizedSearchQuery)) ||
 				p.tags?.some((t) => normalizeText(t).includes(normalizedSearchQuery)),
 		);
 	}, [pages, normalizedSearchQuery]);
@@ -191,31 +192,43 @@ export function WikiTopNav({
 						variant="ghost"
 						size="sm"
 						className={cn(
-							"gap-2 font-medium",
-							!selectedPageId && "bg-muted text-primary",
+							"gap-2 font-bold font-display rounded-xl transition-all duration-300",
+							!selectedPageId
+								? "bg-blue-50 text-blue-600 dark:bg-blue-900/30 dark:text-blue-400"
+								: "hover:bg-slate-100 dark:hover:bg-slate-800",
 						)}
 						onClick={onDashboardSelect}
 					>
-						<LayoutDashboard className="h-4 w-4 text-blue-500" />
+						<LayoutDashboard
+							className={cn(
+								"h-4 w-4",
+								!selectedPageId ? "text-blue-600" : "text-slate-400",
+							)}
+						/>
 						<span className="hidden sm:inline">Dashboard</span>
 					</Button>
 					<Button
 						variant="ghost"
 						size="sm"
-						className="gap-2 font-medium"
+						className="gap-2 font-bold font-display group relative overflow-hidden rounded-xl transition-all duration-300 hover:bg-amber-50 dark:hover:bg-amber-900/20"
 						onClick={onKnowledgeHubSelect}
 					>
-						<Sparkles className="h-4 w-4 text-amber-500" />
-						<span className="hidden sm:inline">Knowledge Hub</span>
+						<div className="absolute inset-0 bg-gradient-to-r from-amber-500/0 via-amber-500/10 to-amber-500/0 translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-1000" />
+						<Sparkles className="h-4 w-4 text-amber-500 group-hover:animate-pulse" />
+						<span className="hidden sm:inline text-slate-700 dark:text-slate-300 group-hover:text-amber-600 transition-colors">
+							Knowledge Hub
+						</span>
 					</Button>
 					<Button
 						variant="ghost"
 						size="sm"
-						className="gap-2 font-medium"
+						className="gap-2 font-bold font-display rounded-xl transition-all duration-300 hover:bg-sky-50 dark:hover:bg-sky-900/20"
 						onClick={onDictionarySelect}
 					>
 						<Languages className="h-4 w-4 text-sky-500" />
-						<span className="hidden sm:inline">Dicionário</span>
+						<span className="hidden sm:inline text-slate-700 dark:text-slate-300 group-hover:text-sky-600 transition-colors">
+							Dicionário
+						</span>
 					</Button>
 				</div>
 
@@ -234,7 +247,9 @@ export function WikiTopNav({
 						<DropdownMenuContent align="start" className="w-64">
 							<DropdownMenuLabel>Trilhas de Evidência</DropdownMenuLabel>
 							<DropdownMenuSeparator />
-							<DropdownMenuItem onClick={() => onPageSelect(evidenceTree.root!)}>
+							<DropdownMenuItem
+								onClick={() => onPageSelect(evidenceTree.root!)}
+							>
 								<Library className="mr-2 h-4 w-4 text-emerald-600" />
 								{evidenceTree.root.title}
 							</DropdownMenuItem>
@@ -300,7 +315,7 @@ export function WikiTopNav({
 								</DropdownMenuSub>
 							);
 						})}
-						
+
 						{pageTree.uncategorized && pageTree.uncategorized.length > 0 && (
 							<>
 								<DropdownMenuSeparator />
@@ -350,7 +365,10 @@ export function WikiTopNav({
 									<Pin className="h-3 w-3 text-orange-500" /> Fixados
 								</DropdownMenuLabel>
 								{pinned.map((page) => (
-									<DropdownMenuItem key={page.id} onClick={() => onPageSelect(page)}>
+									<DropdownMenuItem
+										key={page.id}
+										onClick={() => onPageSelect(page)}
+									>
 										<span className="truncate">{page.title}</span>
 									</DropdownMenuItem>
 								))}
@@ -363,7 +381,10 @@ export function WikiTopNav({
 									<Star className="h-3 w-3 text-yellow-500" /> Populares
 								</DropdownMenuLabel>
 								{favorites.map((page) => (
-									<DropdownMenuItem key={page.id} onClick={() => onPageSelect(page)}>
+									<DropdownMenuItem
+										key={page.id}
+										onClick={() => onPageSelect(page)}
+									>
 										<span className="truncate">{page.title}</span>
 									</DropdownMenuItem>
 								))}
@@ -374,7 +395,10 @@ export function WikiTopNav({
 							<Clock className="h-3 w-3" /> Recentes
 						</DropdownMenuLabel>
 						{recents.map((page) => (
-							<DropdownMenuItem key={page.id} onClick={() => onPageSelect(page)}>
+							<DropdownMenuItem
+								key={page.id}
+								onClick={() => onPageSelect(page)}
+							>
 								<span className="truncate">{page.title}</span>
 							</DropdownMenuItem>
 						))}
@@ -453,4 +477,3 @@ export function WikiTopNav({
 		</div>
 	);
 }
-

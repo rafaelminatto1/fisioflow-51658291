@@ -87,8 +87,10 @@ const lowerBody: PhysioDictionaryEntry[] = [
 			target_outcome: ["Força", "Estabilidade"],
 			required_equipment: ["Banco", "Halter"],
 			suggested_sets: 3,
-			suggested_reps: 12,
+			suggested_reps: 10,
 			suggested_rpe: "8-9",
+			progression_suggestion:
+				"Aumentar a carga dos halteres ou realizar sem apoio das mãos.",
 			instruction_pt:
 				"Coloque um pé atrás em um banco e o outro à frente. Desça o quadril verticalmente mantendo o tronco levemente inclinado, focando o esforço na perna da frente.",
 			image_url: "/exercises/illustrations/agachamento-bulgaro.avif",
@@ -109,6 +111,8 @@ const lowerBody: PhysioDictionaryEntry[] = [
 			suggested_sets: 3,
 			suggested_reps: 12,
 			suggested_rpe: "7-8",
+			progression_suggestion:
+				"Aumentar a carga ou progredir para Agachamento Goblet.",
 			instruction_pt:
 				"Afaste os pés além da largura dos ombros com as pontas viradas para fora. Desça o quadril mantendo os joelhos alinhados com os pés e o tronco ereto.",
 			image_url: "/exercises/illustrations/agachamento-sumo.avif",
@@ -128,8 +132,10 @@ const lowerBody: PhysioDictionaryEntry[] = [
 			target_outcome: ["Força", "Estabilidade"],
 			required_equipment: ["Kettlebell", "Halter"],
 			suggested_sets: 3,
-			suggested_reps: 12,
+			suggested_reps: 10,
 			suggested_rpe: "7-8",
+			progression_suggestion:
+				"Aumentar a carga ou progredir para Agachamento com Barra Frontal.",
 			instruction_pt:
 				"Segure um peso junto ao peito, mantenha os cotovelos para baixo e realize o agachamento garantindo que o tronco permaneça vertical.",
 			image_url: "/exercises/illustrations/agachamento-goblet.avif",
@@ -147,9 +153,11 @@ const lowerBody: PhysioDictionaryEntry[] = [
 		{
 			intensity_level: 5,
 			target_outcome: ["Força", "Estabilidade", "Potência"],
-			suggested_sets: 4,
-			suggested_reps: 8,
-			suggested_rpe: "9",
+			suggested_sets: 3,
+			suggested_reps: 6,
+			suggested_rpe: "9-10",
+			progression_suggestion:
+				"Adicionar carga leve ou aumentar a velocidade da subida (explosão).",
 			instruction_pt:
 				"Equilibre-se em uma perna, estenda a outra à frente e desça o máximo possível com controle, mantendo o calcanhar de apoio no chão.",
 			image_url: "/exercises/illustrations/agachamento-pistol.png",
@@ -170,7 +178,9 @@ const lowerBody: PhysioDictionaryEntry[] = [
 			required_equipment: ["Parede"],
 			suggested_sets: 3,
 			suggested_reps: 45,
-			suggested_rpe: "6",
+			suggested_rpe: "6-7",
+			progression_suggestion:
+				"Aumentar o tempo de sustentação ou realizar de forma unipodal.",
 			instruction_pt:
 				"Encoste as costas na parede e desça até que seus joelhos formem um ângulo de 90 graus. Mantenha a posição, sentindo o esforço nas coxas, sem deixar os joelhos ultrapassarem a ponta dos pés.",
 			image_url: "/exercises/illustrations/agachamento-parede.avif",
@@ -191,6 +201,8 @@ const lowerBody: PhysioDictionaryEntry[] = [
 			suggested_sets: 3,
 			suggested_reps: 12,
 			suggested_rpe: "7-8",
+			progression_suggestion:
+				"Segurar halteres ou progredir para Afundo Caminhando.",
 			instruction_pt:
 				"Dê um passo à frente e desça o quadril até que ambos os joelhos estejam em cerca de 90 graus. Mantenha o tronco ereto e o joelho da frente alinhado com o pé.",
 			image_url: "/exercises/illustrations/afundo.avif",
@@ -211,6 +223,8 @@ const lowerBody: PhysioDictionaryEntry[] = [
 			suggested_sets: 3,
 			suggested_reps: 12,
 			suggested_rpe: "7-8",
+			progression_suggestion:
+				"Segurar um halter à frente (posição Goblet) ou aumentar a amplitude.",
 			instruction_pt:
 				"Dê um passo largo para o lado, dobrando o joelho da perna que moveu enquanto mantém a outra esticada. Mantenha os pés apontados para frente.",
 			image_url: "/exercises/illustrations/afundo-lateral.avif",
@@ -231,6 +245,8 @@ const lowerBody: PhysioDictionaryEntry[] = [
 			suggested_sets: 3,
 			suggested_reps: 12,
 			suggested_rpe: "7-8",
+			progression_suggestion:
+				"Segurar halteres ou realizar em uma superfície levemente instável.",
 			instruction_pt:
 				"Dê um passo para trás e desça o joelho de trás em direção ao chão, mantendo o peso na perna da frente e o tronco ereto.",
 			image_url: "/exercises/illustrations/afundo-reverso.avif",
@@ -251,6 +267,8 @@ const lowerBody: PhysioDictionaryEntry[] = [
 			suggested_sets: 3,
 			suggested_reps: 12,
 			suggested_rpe: "7-8",
+			progression_suggestion:
+				"Segurar halteres ou aumentar a distância percorrida.",
 			instruction_pt:
 				"Realize afundos sucessivos alternando as pernas enquanto se desloca para frente, mantendo o controle do equilíbrio em cada passo.",
 			image_url: "/exercises/illustrations/afundo-caminhando.avif",
@@ -271,6 +289,8 @@ const lowerBody: PhysioDictionaryEntry[] = [
 			suggested_sets: 3,
 			suggested_reps: 12,
 			suggested_rpe: "7-8",
+			progression_suggestion:
+				"Aumentar a carga gradualmente ou realizar de forma unipodal.",
 			instruction_pt:
 				"Posicione os pés na plataforma, empurre-a estendendo as pernas sem travar os joelhos e retorne de forma lenta e controlada.",
 			image_url: "/exercises/illustrations/leg-press.avif",
@@ -292,6 +312,8 @@ const lowerBody: PhysioDictionaryEntry[] = [
 			suggested_sets: 3,
 			suggested_reps: 12,
 			suggested_rpe: "7-8",
+			progression_suggestion:
+				"Realizar de forma unipodal para isolar ainda mais cada membro ou utilizar isometria no topo.",
 			instruction_pt:
 				"Sente-se no aparelho e estenda os joelhos completamente contra a resistência, controlando a descida lenta.",
 			image_url: "/exercises/illustrations/extensao-joelho-cadeira.avif",
@@ -313,6 +335,8 @@ const lowerBody: PhysioDictionaryEntry[] = [
 			suggested_sets: 3,
 			suggested_reps: 12,
 			suggested_rpe: "7-8",
+			progression_suggestion:
+				"Realizar de forma unipodal para maior desafio ou focar na fase excêntrica.",
 			instruction_pt:
 				"Sente-se ou deite-se no aparelho e flexione os joelhos puxando o rolo em direção às coxas, controlando o retorno lento.",
 			image_url: "/exercises/illustrations/flexao-joelho-cadeira.avif",
@@ -331,8 +355,10 @@ const lowerBody: PhysioDictionaryEntry[] = [
 			intensity_level: 3,
 			target_outcome: ["Força", "Mobilidade"],
 			suggested_sets: 3,
-			suggested_reps: 12,
+			suggested_reps: 10,
 			suggested_rpe: "7-8",
+			progression_suggestion:
+				"Aumentar a carga gradualmente ou realizar com uma perna (Stiff Unilateral) para equilíbrio.",
 			instruction_pt:
 				"Com os joelhos levemente flexionados, desça o tronco mantendo as costas retas e empurrando o quadril para trás até sentir o alongamento atrás das coxas.",
 			image_url: "/exercises/illustrations/deadlift_dumbbells.avif",
@@ -354,6 +380,8 @@ const lowerBody: PhysioDictionaryEntry[] = [
 			suggested_sets: 3,
 			suggested_reps: 12,
 			suggested_rpe: "7-8",
+			progression_suggestion:
+				"Segurar halteres ou aumentar a altura do banco/degrau.",
 			instruction_pt:
 				"Coloque um pé sobre o banco ou degrau e suba, estendendo o joelho completamente. Desça de forma controlada, mantendo o alinhamento do joelho de apoio.",
 			image_url: "/exercises/illustrations/step-up-frontal.avif",
@@ -375,6 +403,8 @@ const lowerBody: PhysioDictionaryEntry[] = [
 			suggested_sets: 3,
 			suggested_reps: 12,
 			suggested_rpe: "7-8",
+			progression_suggestion:
+				"Aumentar a altura do degrau ou realizar sem apoio das mãos.",
 			instruction_pt:
 				"Em cima de um degrau, desça lentamente uma perna até tocar o calcanhar no chão, mantendo o joelho de apoio alinhado e sem deixar 'cair'.",
 			image_url: "/exercises/illustrations/descida-controlada-de-degrau.avif",
@@ -392,9 +422,11 @@ const lowerBody: PhysioDictionaryEntry[] = [
 		{
 			intensity_level: 5,
 			target_outcome: ["Força", "Potência"],
-			suggested_sets: 4,
-			suggested_reps: 8,
-			suggested_rpe: "9",
+			suggested_sets: 3,
+			suggested_reps: 6,
+			suggested_rpe: "9-10",
+			progression_suggestion:
+				"Aumentar o tempo de descida (fase excêntrica) ou reduzir a assistência das mãos.",
 			instruction_pt:
 				"Ajoelhado com os calcanhares presos, desça o tronco o mais devagar possível, resistindo à queda com a parte de trás das coxas.",
 			image_url: "/exercises/illustrations/nordic-hamstring-beginner.avif",
@@ -410,11 +442,15 @@ const lowerBody: PhysioDictionaryEntry[] = [
 		"Ativação de glúteo máximo e estabilidade lombo-pélvica.",
 		"Glute max activation and lumbopelvic stability.",
 		{
+			intensity_level: 2,
+			target_outcome: ["Força", "Estabilidade"],
 			suggested_sets: 3,
 			suggested_reps: 15,
 			suggested_rpe: "7",
+			progression_suggestion:
+				"Progredir para Ponte Unilateral ou adicionar carga (Hip Thrust).",
 			instruction_pt:
-				"Deitado de costas com os joelhos dobrados, suba o quadril em direção ao teto apertando bem os glúteos. Mantenha os ombros relaxados no chão.",
+				"Deitado de costas with os joelhos dobrados, suba o quadril em direção ao teto apertando bem os glúteos. Mantenha os ombros relaxados no chão.",
 			image_url: "/exercises/illustrations/ponte-gluteo.avif",
 		},
 	),
@@ -432,8 +468,10 @@ const lowerBody: PhysioDictionaryEntry[] = [
 			target_outcome: ["Força", "Potência"],
 			required_equipment: ["Banco/Cadeira"],
 			suggested_sets: 3,
-			suggested_reps: 12,
+			suggested_reps: 10,
 			suggested_rpe: "8-9",
+			progression_suggestion:
+				"Aumentar a carga gradualmente ou realizar de forma unipodal.",
 			instruction_pt:
 				"Apoie as escápulas em um banco, mantenha os pés no chão e empurre o quadril para cima até alinhar com o tronco, contraindo os glúteos no topo.",
 			image_url: "/exercises/illustrations/elevacao-pelvica.avif",
@@ -454,6 +492,8 @@ const lowerBody: PhysioDictionaryEntry[] = [
 			suggested_sets: 3,
 			suggested_reps: 12,
 			suggested_rpe: "7-8",
+			progression_suggestion:
+				"Aumentar o tempo de sustentação no topo ou realizar com o pé em superfície instável.",
 			instruction_pt:
 				"Deitado de costas, levante uma perna e empurre o quadril para cima usando apenas o calcanhar da perna que está no chão.",
 			image_url: "/exercises/illustrations/ponte-unipodal.avif",
@@ -474,6 +514,8 @@ const lowerBody: PhysioDictionaryEntry[] = [
 			suggested_sets: 3,
 			suggested_reps: 12,
 			suggested_rpe: "7-8",
+			progression_suggestion:
+				"Adicionar uma caneleira ou faixa elástica (miniband) nos tornozelos.",
 			instruction_pt:
 				"Deitado de lado com as pernas esticadas, levante a perna de cima lateralmente sem girar o quadril para trás.",
 			image_url: "/exercises/illustrations/abducao-quadril-deitado.avif",
@@ -492,8 +534,10 @@ const lowerBody: PhysioDictionaryEntry[] = [
 			intensity_level: 2,
 			target_outcome: ["Força", "Estabilidade"],
 			suggested_sets: 3,
-			suggested_reps: 12,
+			suggested_reps: 15,
 			suggested_rpe: "7-8",
+			progression_suggestion:
+				"Adicionar uma faixa elástica (miniband) logo acima dos joelhos.",
 			instruction_pt:
 				"Deitado de lado com joelhos dobrados, mantenha os calcanhares juntos e abra o joelho de cima como uma concha.",
 			image_url: "/exercises/illustrations/clamshell.avif",
@@ -513,8 +557,10 @@ const lowerBody: PhysioDictionaryEntry[] = [
 			target_outcome: ["Força", "Estabilidade"],
 			required_equipment: ["Faixa Elástica"],
 			suggested_sets: 3,
-			suggested_reps: 12,
+			suggested_reps: 15,
 			suggested_rpe: "7-8",
+			progression_suggestion:
+				"Aumentar a resistência da faixa elástica ou descer para a posição de tornozelo.",
 			instruction_pt:
 				"Com uma faixa elástica nos tornozelos ou acima dos joelhos, dê passos para o lado mantendo uma posição de semi-agachamento e os joelhos afastados.",
 			image_url:
@@ -536,6 +582,8 @@ const lowerBody: PhysioDictionaryEntry[] = [
 			suggested_sets: 3,
 			suggested_reps: 12,
 			suggested_rpe: "7-8",
+			progression_suggestion:
+				"Adicionar caneleira ou faixa elástica para aumentar a resistência.",
 			instruction_pt:
 				"Em quatro apoios, empurre o calcanhar em direção ao teto mantendo o joelho dobrado ou esticado, sem arquear a coluna lombar.",
 			image_url: "/exercises/illustrations/extensao-quadril-quatro-apoios.avif",
@@ -555,8 +603,10 @@ const lowerBody: PhysioDictionaryEntry[] = [
 			target_outcome: ["Força"],
 			required_equipment: ["Step/Degrau"],
 			suggested_sets: 3,
-			suggested_reps: 12,
+			suggested_reps: 15,
 			suggested_rpe: "7-8",
+			progression_suggestion:
+				"Realizar de forma unipodal ou adicionar carga (halteres).",
 			instruction_pt:
 				"Fique na ponta dos pés, subindo o máximo que puder, e desça lentamente. Pode ser feito no chão ou na borda de um degrau para maior amplitude.",
 			image_url: "/exercises/illustrations/elevacao-de-panturrilha-em-pe.avif",
@@ -575,8 +625,10 @@ const lowerBody: PhysioDictionaryEntry[] = [
 			intensity_level: 2,
 			target_outcome: ["Força"],
 			suggested_sets: 3,
-			suggested_reps: 12,
+			suggested_reps: 15,
 			suggested_rpe: "7-8",
+			progression_suggestion:
+				"Aumentar a carga sobre as coxas ou realizar de forma unipodal.",
 			instruction_pt:
 				"Sentado com os joelhos dobrados e carga sobre as coxas, fique na ponta dos pés e desça de forma controlada.",
 			image_url:
@@ -597,8 +649,10 @@ const lowerBody: PhysioDictionaryEntry[] = [
 			target_outcome: ["Força", "Estabilidade"],
 			required_equipment: ["Parede"],
 			suggested_sets: 3,
-			suggested_reps: 12,
+			suggested_reps: 15,
 			suggested_rpe: "7-8",
+			progression_suggestion:
+				"Afastar mais os calcanhares da parede ou realizar de forma unipodal.",
 			instruction_pt:
 				"Encostado em uma parede com os calcanhares à frente, levante as pontas dos pés em direção às canelas e retorne devagar.",
 			image_url: "/exercises/illustrations/tibial-anterior-fortalecimento.avif",
@@ -618,8 +672,9 @@ const lowerBody: PhysioDictionaryEntry[] = [
 			target_outcome: ["Força", "Estabilidade"],
 			required_equipment: ["Faixa Elástica"],
 			suggested_sets: 3,
-			suggested_reps: 12,
+			suggested_reps: 15,
 			suggested_rpe: "7-8",
+			progression_suggestion: "Aumentar a resistência da faixa elástica.",
 			instruction_pt:
 				"Com uma faixa elástica presa no pé, puxe a planta do pé para dentro contra a resistência e retorne devagar.",
 			image_url: "/exercises/illustrations/inversao-tornozelo-elastico.avif",
@@ -639,8 +694,9 @@ const lowerBody: PhysioDictionaryEntry[] = [
 			target_outcome: ["Força", "Estabilidade"],
 			required_equipment: ["Faixa Elástica"],
 			suggested_sets: 3,
-			suggested_reps: 12,
+			suggested_reps: 15,
 			suggested_rpe: "7-8",
+			progression_suggestion: "Aumentar a resistência da faixa elástica.",
 			instruction_pt:
 				"Com uma faixa elástica presa no pé, puxe a borda lateral do pé para fora contra a resistência.",
 			image_url: "/exercises/illustrations/eversao-tornozelo-elastico.avif",
@@ -661,6 +717,8 @@ const lowerBody: PhysioDictionaryEntry[] = [
 			suggested_sets: 3,
 			suggested_reps: 30,
 			suggested_rpe: "4-5",
+			progression_suggestion:
+				"Fechar os olhos ou realizar sobre uma superfície instável (espuma/disco).",
 			instruction_pt:
 				"Fique em um pé só, mantendo a postura ereta e o quadril alinhado. Tente manter por 30 segundos ou conforme orientado.",
 			image_url: "/exercises/illustrations/apoio-unipodal.avif",
@@ -682,6 +740,8 @@ const lowerBody: PhysioDictionaryEntry[] = [
 			suggested_sets: 3,
 			suggested_reps: 30,
 			suggested_rpe: "7-8",
+			progression_suggestion:
+				"Realizar de forma unipodal ou adicionar movimentos de braço.",
 			instruction_pt:
 				"Suba no BOSU (lado macio para cima) e tente manter o equilíbrio, mantendo os joelhos levemente flexionados.",
 			image_url: "/exercises/illustrations/equilibrio-bosu.avif",
@@ -703,6 +763,7 @@ const lowerBody: PhysioDictionaryEntry[] = [
 			suggested_sets: 3,
 			suggested_reps: 30,
 			suggested_rpe: "7-8",
+			progression_suggestion: "Realizar de forma unipodal ou fechar os olhos.",
 			instruction_pt:
 				"Fique em pé sobre o disco de equilíbrio e tente manter o centro, evitando que as bordas toquem o chão.",
 			image_url: "/exercises/illustrations/disco-proprioceptivo.avif",
@@ -720,9 +781,11 @@ const lowerBody: PhysioDictionaryEntry[] = [
 		{
 			intensity_level: 4,
 			target_outcome: ["Potência", "Estabilidade"],
-			suggested_sets: 3,
+			suggested_sets: 4,
 			suggested_reps: 12,
 			suggested_rpe: "8-9",
+			progression_suggestion:
+				"Realizar saltos sobre obstáculos ou aumentar a distância e a complexidade do salto.",
 			instruction_pt:
 				"Salte para frente ou para cima com uma perna e amorteça a queda com o mesmo pé, mantendo o joelho alinhado e estável.",
 			image_url: "/exercises/illustrations/salto-unipodal-aterrissagem.avif",
@@ -743,6 +806,8 @@ const lowerBody: PhysioDictionaryEntry[] = [
 			suggested_sets: 3,
 			suggested_reps: 15,
 			suggested_rpe: "4-5",
+			progression_suggestion:
+				"Utilizar uma mini-band para resistir à adução e rotação interna durante a ativação.",
 			instruction_pt:
 				"Sente-se com as pernas esticadas. Tente 'empurrar' a parte de trás do joelho contra o chão, apertando bem o músculo da parte interna da coxa.",
 			image_url: "/exercises/illustrations/ativacao-vmo-quad-set.png",
@@ -763,6 +828,8 @@ const lowerBody: PhysioDictionaryEntry[] = [
 			suggested_sets: 3,
 			suggested_reps: 12,
 			suggested_rpe: "7-8",
+			progression_suggestion:
+				"Realizar com o calcanhar sobre uma superfície instável (BOSU ou espuma).",
 			instruction_pt:
 				"Mantenha a posição de ponte com apenas um pé no chão, mantendo o quadril nivelado e o core contraído.",
 			image_url: "/exercises/illustrations/ponte-unilateral.avif",
@@ -788,6 +855,8 @@ const upperBody: PhysioDictionaryEntry[] = [
 			suggested_sets: 3,
 			suggested_reps: 12,
 			suggested_rpe: "7-8",
+			progression_suggestion:
+				"Aumentar a carga ou realizar no plano da escápula (scaption).",
 			instruction_pt:
 				"Com halteres nas mãos, levante os braços lateralmente até a altura dos ombros, mantendo uma leve flexão nos cotovelos.",
 			image_url: "/exercises/illustrations/elevacao-lateral-de-ombro-0-90.avif",
@@ -808,6 +877,7 @@ const upperBody: PhysioDictionaryEntry[] = [
 			suggested_sets: 3,
 			suggested_reps: 12,
 			suggested_rpe: "7-8",
+			progression_suggestion: "Aumentar a carga ou alternar os braços.",
 			instruction_pt:
 				"Levante os braços à frente do corpo até a altura dos ombros, mantendo o tronco estável.",
 			image_url: "/exercises/illustrations/elevacao-frontal-de-ombro.avif",
@@ -829,6 +899,8 @@ const upperBody: PhysioDictionaryEntry[] = [
 			suggested_sets: 3,
 			suggested_reps: 12,
 			suggested_rpe: "7-8",
+			progression_suggestion:
+				"Aumentar a resistência da faixa ou realizar em posições mais desafiadoras (ex: 90/90).",
 			instruction_pt:
 				"Com o cotovelo junto ao corpo, puxe a faixa elástica para fora, rodando o ombro, e retorne devagar.",
 			image_url: "/exercises/illustrations/rotacao-externa-ombro.avif",
@@ -850,6 +922,8 @@ const upperBody: PhysioDictionaryEntry[] = [
 			suggested_sets: 3,
 			suggested_reps: 12,
 			suggested_rpe: "7-8",
+			progression_suggestion:
+				"Aumentar a resistência da faixa ou variar a velocidade do movimento.",
 			instruction_pt:
 				"Com o cotovelo junto ao corpo, puxe a faixa elástica em direção ao abdômen, rodando o ombro para dentro.",
 			image_url: "/exercises/illustrations/rotacao-interna-ombro.avif",
@@ -870,6 +944,7 @@ const upperBody: PhysioDictionaryEntry[] = [
 			suggested_sets: 3,
 			suggested_reps: 12,
 			suggested_rpe: "7-8",
+			progression_suggestion: "Aumentar a carga ou o tempo sob tensão.",
 			instruction_pt:
 				"Com os polegares virados para cima, levante os braços em um ângulo de 30 graus à frente do corpo (plano da escápula) até a altura dos ombros.",
 			image_url: "/exercises/illustrations/full-can.avif",
@@ -891,6 +966,8 @@ const upperBody: PhysioDictionaryEntry[] = [
 			suggested_sets: 3,
 			suggested_reps: 12,
 			suggested_rpe: "7-8",
+			progression_suggestion:
+				"Aumentar a resistência da faixa ou realizar em um banco inclinado com halteres.",
 			instruction_pt:
 				"Com o tronco inclinado ou em pé com faixa elástica, abra os braços para trás aproximando as escápulas.",
 			image_url: "/exercises/illustrations/crucifixo-reverso.avif",
@@ -911,6 +988,8 @@ const upperBody: PhysioDictionaryEntry[] = [
 			suggested_sets: 3,
 			suggested_reps: 15,
 			suggested_rpe: "4-5",
+			progression_suggestion:
+				"Adicionar um peso leve (halter de 1kg) para aumentar a tração na articulação.",
 			instruction_pt:
 				"Incline o corpo para frente apoiando em uma mesa e deixe o braço afetado pendurado. Faça círculos suaves e movimentos de balanço.",
 			image_url: "/exercises/illustrations/codman-pendular.avif",
@@ -932,6 +1011,8 @@ const upperBody: PhysioDictionaryEntry[] = [
 			suggested_sets: 3,
 			suggested_reps: 12,
 			suggested_rpe: "7-8",
+			progression_suggestion:
+				"Realizar com uma faixa elástica em torno dos punhos para maior ativação dos rotadores.",
 			instruction_pt:
 				"Encoste as costas e os braços na parede em posição de 'U' e deslize-os para cima e para baixo sem perder o contato com a parede.",
 			image_url: "/exercises/illustrations/wall-angels.avif",
@@ -953,6 +1034,8 @@ const upperBody: PhysioDictionaryEntry[] = [
 			suggested_sets: 3,
 			suggested_reps: 12,
 			suggested_rpe: "7-8",
+			progression_suggestion:
+				"Realizar no chão (posição de flexão) progredindo para o 'Push-up Plus'.",
 			instruction_pt:
 				"Deitado de costas ou contra a parede, empurre as mãos para frente como se quisesse afastar as escápulas da coluna, sem dobrar os cotovelos.",
 			image_url: "/exercises/illustrations/serratus-punch.png",
@@ -973,6 +1056,8 @@ const upperBody: PhysioDictionaryEntry[] = [
 			suggested_sets: 3,
 			suggested_reps: 12,
 			suggested_rpe: "7-8",
+			progression_suggestion:
+				"Segurar a contração por 5-10 segundos ou utilizar uma faixa elástica para resistência.",
 			instruction_pt:
 				"Puxe os ombros para trás, tentando 'esmagar' uma uva imaginária entre as escápulas, mantendo os ombros baixos.",
 			image_url: "/exercises/illustrations/retracao-escapular.avif",
@@ -993,6 +1078,8 @@ const upperBody: PhysioDictionaryEntry[] = [
 			suggested_sets: 3,
 			suggested_reps: 12,
 			suggested_rpe: "7-8",
+			progression_suggestion:
+				"Aumentar a carga ou utilizar uma barra para maior estabilidade.",
 			instruction_pt:
 				"Com os braços estendidos ao lado do corpo, dobre os cotovelos trazendo o peso em direção aos ombros e retorne devagar.",
 			image_url: "/exercises/illustrations/bicep-curl-alternado.avif",
@@ -1013,6 +1100,8 @@ const upperBody: PhysioDictionaryEntry[] = [
 			suggested_sets: 3,
 			suggested_reps: 12,
 			suggested_rpe: "7-8",
+			progression_suggestion:
+				"Aumentar a carga ou realizar em pé com polia (tríceps corda).",
 			instruction_pt:
 				"Estenda o braço sobre a cabeça e dobre o cotovelo levando a mão atrás da nuca, depois estenda-o completamente para cima.",
 			image_url:
@@ -1034,6 +1123,7 @@ const upperBody: PhysioDictionaryEntry[] = [
 			suggested_sets: 3,
 			suggested_reps: 12,
 			suggested_rpe: "7-8",
+			progression_suggestion: "Aumentar a carga ou o número de repetições.",
 			instruction_pt:
 				"Com o antebraço apoiado e a palma da mão para cima, dobre o punho trazendo o peso para cima e retorne devagar.",
 			image_url: "/exercises/illustrations/flexao-punho.avif",
@@ -1054,6 +1144,7 @@ const upperBody: PhysioDictionaryEntry[] = [
 			suggested_sets: 3,
 			suggested_reps: 12,
 			suggested_rpe: "7-8",
+			progression_suggestion: "Aumentar a carga ou o número de repetições.",
 			instruction_pt:
 				"Com o antebraço apoiado e a palma da mão para baixo, levante as costas da mão em direção ao teto e retorne devagar.",
 			image_url: "/exercises/illustrations/extensao-punho.avif",
@@ -1074,6 +1165,8 @@ const upperBody: PhysioDictionaryEntry[] = [
 			suggested_sets: 3,
 			suggested_reps: 12,
 			suggested_rpe: "7-8",
+			progression_suggestion:
+				"Segurar o peso por uma das extremidades para aumentar o braço de alavanca.",
 			instruction_pt:
 				"Segurando um peso (ou martelo), rode o antebraço para fora (palma para cima) e para dentro (palma para baixo) com controle.",
 			image_url: "/exercises/illustrations/supinacao-pronacao.avif",
@@ -1095,6 +1188,8 @@ const upperBody: PhysioDictionaryEntry[] = [
 			suggested_sets: 3,
 			suggested_reps: 12,
 			suggested_rpe: "7-8",
+			progression_suggestion:
+				"Utilizar uma FlexBar de maior resistência (cores mais escuras).",
 			instruction_pt:
 				"Segurando uma barra flexível (FlexBar), realize a torção com a mão não afetada e controle o desenrolar com a mão afetada.",
 			image_url: "/exercises/illustrations/tyler-twist.avif",
@@ -1115,6 +1210,8 @@ const upperBody: PhysioDictionaryEntry[] = [
 			suggested_sets: 3,
 			suggested_reps: 12,
 			suggested_rpe: "7-8",
+			progression_suggestion:
+				"Utilizar hand-grips com molas de maior tensão ou realizar a preensão sustentada por mais tempo.",
 			instruction_pt:
 				"Aperte uma bolinha de borracha ou um hand-grip com força máxima e solte lentamente.",
 			image_url:
@@ -1137,6 +1234,8 @@ const upperBody: PhysioDictionaryEntry[] = [
 			suggested_sets: 3,
 			suggested_reps: 15,
 			suggested_rpe: "4-5",
+			progression_suggestion:
+				"Utilizar elásticos mais grossos ou aumentar o tempo de sustentação na abertura.",
 			instruction_pt:
 				"Coloque um elástico ao redor dos dedos e tente abri-los contra a resistência do elástico.",
 			image_url: "/exercises/illustrations/extensao-dedos-elastico.avif",
@@ -1159,8 +1258,10 @@ const coreSpine: PhysioDictionaryEntry[] = [
 			intensity_level: 3,
 			target_outcome: ["Estabilidade"],
 			suggested_sets: 3,
-			suggested_reps: 12,
+			suggested_reps: 30,
 			suggested_rpe: "7-8",
+			progression_suggestion:
+				"Aumentar o tempo de sustentação ou realizar movimentos de pernas (marcha em prancha).",
 			instruction_pt:
 				"Apoie os antebraços e as pontas dos pés no chão, mantenha o corpo alinhado como uma tábua, contraindo abdômen e glúteos.",
 			image_url: "/exercises/illustrations/prancha-frontal.avif",
@@ -1179,8 +1280,10 @@ const coreSpine: PhysioDictionaryEntry[] = [
 			intensity_level: 3,
 			target_outcome: ["Estabilidade"],
 			suggested_sets: 3,
-			suggested_reps: 12,
+			suggested_reps: 30,
 			suggested_rpe: "7-8",
+			progression_suggestion:
+				"Aumentar o tempo ou realizar com uma perna elevada.",
 			instruction_pt:
 				"Deitado de lado, apoie o antebraço e levante o quadril do chão, mantendo uma linha reta dos pés à cabeça.",
 			image_url: "/exercises/illustrations/prancha-lateral.avif",
@@ -1201,6 +1304,8 @@ const coreSpine: PhysioDictionaryEntry[] = [
 			suggested_sets: 3,
 			suggested_reps: 12,
 			suggested_rpe: "7-8",
+			progression_suggestion:
+				"Aumentar a velocidade do movimento ou realizar com os olhos fechados.",
 			instruction_pt:
 				"Deitado de costas, levante braços e pernas. Desça o braço e a perna opostos lentamente sem deixar a coluna lombar sair do chão.",
 			image_url: "/exercises/illustrations/dead-bug.avif",
@@ -1221,6 +1326,8 @@ const coreSpine: PhysioDictionaryEntry[] = [
 			suggested_sets: 3,
 			suggested_reps: 12,
 			suggested_rpe: "7-8",
+			progression_suggestion:
+				"Desenhar pequenos círculos com o braço/perna estendidos ou realizar sobre superfície instável.",
 			instruction_pt:
 				"Em quatro apoios, estenda o braço e a perna opostos simultaneamente, mantendo a coluna neutra e o quadril nivelado.",
 			image_url: "/exercises/illustrations/bird-dog.avif",
@@ -1242,6 +1349,8 @@ const coreSpine: PhysioDictionaryEntry[] = [
 			suggested_sets: 3,
 			suggested_reps: 12,
 			suggested_rpe: "7-8",
+			progression_suggestion:
+				"Aumentar a resistência da faixa ou realizar em apoio unipodal.",
 			instruction_pt:
 				"Em pé de lado para a polia ou faixa, segure o puxador com as duas mãos e estenda os braços à frente, resistindo à força que tenta girar seu tronco.",
 			image_url: "/exercises/illustrations/pallof-press.avif",
@@ -1263,6 +1372,8 @@ const coreSpine: PhysioDictionaryEntry[] = [
 			suggested_sets: 4,
 			suggested_reps: 8,
 			suggested_rpe: "9",
+			progression_suggestion:
+				"Aumentar o diâmetro dos círculos ou realizar com as pernas mais próximas uma da outra.",
 			instruction_pt:
 				"Em posição de prancha com os antebraços sobre uma bola suíça, realize pequenos círculos com os braços mantendo o tronco imóvel.",
 			image_url: "/exercises/illustrations/stir-the-pot.avif",
@@ -1283,6 +1394,8 @@ const coreSpine: PhysioDictionaryEntry[] = [
 			suggested_sets: 3,
 			suggested_reps: 12,
 			suggested_rpe: "7-8",
+			progression_suggestion:
+				"Segurar um peso no peito ou realizar com as pernas elevadas.",
 			instruction_pt:
 				"Deitado de costas, levante levemente os ombros do chão contraindo o abdômen, mantendo a lombar apoiada.",
 			image_url: "/exercises/illustrations/abdominal-crupeado.avif",
@@ -1303,6 +1416,8 @@ const coreSpine: PhysioDictionaryEntry[] = [
 			suggested_sets: 3,
 			suggested_reps: 12,
 			suggested_rpe: "7-8",
+			progression_suggestion:
+				"Realizar com as pernas estendidas (Leg Raise) ou adicionar caneleiras.",
 			instruction_pt:
 				"Deitado de costas, traga os joelhos em direção ao peito, levantando levemente o quadril do chão, e retorne de forma controlada.",
 			image_url: "/exercises/illustrations/abdominal-reverso.avif",
@@ -1323,6 +1438,8 @@ const coreSpine: PhysioDictionaryEntry[] = [
 			suggested_sets: 3,
 			suggested_reps: 12,
 			suggested_rpe: "7-8",
+			progression_suggestion:
+				"Aumentar a velocidade do movimento ou estender completamente as pernas.",
 			instruction_pt:
 				"Deitado de costas, realize movimentos de pedalada com as pernas enquanto aproxima o cotovelo oposto do joelho que sobe.",
 			image_url: "/exercises/illustrations/abdominal-bicicleta.avif",
@@ -1343,6 +1460,8 @@ const coreSpine: PhysioDictionaryEntry[] = [
 			suggested_sets: 3,
 			suggested_reps: 12,
 			suggested_rpe: "7-8",
+			progression_suggestion:
+				"Segurar uma medicine ball ou aumentar a inclinação do tronco para trás.",
 			instruction_pt:
 				"Sentado com os joelhos dobrados e pés levemente fora do chão, gire o tronco de um lado para o outro tocando as mãos no solo.",
 			image_url: "/exercises/illustrations/rotacao-tronco-sentado.avif",
@@ -1363,6 +1482,8 @@ const coreSpine: PhysioDictionaryEntry[] = [
 			suggested_sets: 3,
 			suggested_reps: 12,
 			suggested_rpe: "7-8",
+			progression_suggestion:
+				"Realizar pendurado em uma barra (Hanging Leg Raise) ou adicionar caneleiras.",
 			instruction_pt:
 				"Deitado de costas, levante as pernas estendidas até 90 graus e desça-as devagar sem encostar no chão.",
 			image_url: "/exercises/illustrations/elevacao-pernas.avif",
@@ -1383,6 +1504,8 @@ const coreSpine: PhysioDictionaryEntry[] = [
 			suggested_sets: 3,
 			suggested_reps: 15,
 			suggested_rpe: "4-5",
+			progression_suggestion:
+				"Sincronizar o movimento com a respiração profunda para maior relaxamento.",
 			instruction_pt:
 				"Em quatro apoios, alterne entre arredondar as costas para cima (gato) e arqueá-las para baixo (camelo) de forma suave.",
 			image_url: "/exercises/illustrations/cat-cow-gato-camelo.avif",
@@ -1403,6 +1526,8 @@ const coreSpine: PhysioDictionaryEntry[] = [
 			suggested_sets: 3,
 			suggested_reps: 12,
 			suggested_rpe: "7-8",
+			progression_suggestion:
+				"Segurar a posição elevada por 3-5 segundos ou realizar alternadamente (perdigueiro no solo).",
 			instruction_pt:
 				"Deitado de bruços, levante braços e pernas simultaneamente do chão, mantendo o olhar para baixo.",
 			image_url: "/exercises/illustrations/cobra-prona.avif",
@@ -1424,6 +1549,8 @@ const coreSpine: PhysioDictionaryEntry[] = [
 			suggested_sets: 3,
 			suggested_reps: 12,
 			suggested_rpe: "7-8",
+			progression_suggestion:
+				"Segurar uma carga no peito ou aumentar o tempo sob tensão na descida.",
 			instruction_pt:
 				"Sentado ou deitado sobre uma bola/banco, realize a extensão do tronco para trás de forma controlada.",
 			image_url: "/exercises/illustrations/extensao-lombar-bola.avif",
@@ -1444,6 +1571,8 @@ const coreSpine: PhysioDictionaryEntry[] = [
 			suggested_sets: 3,
 			suggested_reps: 15,
 			suggested_rpe: "4-5",
+			progression_suggestion:
+				"Caminhar com as mãos para os lados para alongar a musculatura lateral do tronco.",
 			instruction_pt:
 				"Ajoelhado, sente sobre os calcanhares e incline o corpo para frente, esticando os braços no chão à frente.",
 			image_url: "/exercises/illustrations/postura-crianca.avif",
@@ -1459,10 +1588,14 @@ const coreSpine: PhysioDictionaryEntry[] = [
 		"Protocolo de centralização para hérnia de disco.",
 		"Centralization protocol for disc herniation.",
 		{
+			intensity_level: 1,
+			target_outcome: ["Mobilidade", "Analgesia"],
 			required_equipment: ["Disco Proprioceptivo"],
 			suggested_sets: 2,
 			suggested_reps: 10,
 			suggested_rpe: "Confortável",
+			progression_suggestion:
+				"Realizar a extensão total com os braços esticados (Cobra Pose) se não houver dor periférica.",
 			instruction_pt:
 				"Deitado de barriga para baixo, use as mãos para empurrar o tronco para cima, mantendo o quadril relaxado no chão. Sinta o alívio na coluna e retorne devagar.",
 			image_url:
@@ -1484,6 +1617,8 @@ const coreSpine: PhysioDictionaryEntry[] = [
 			suggested_sets: 3,
 			suggested_reps: 15,
 			suggested_rpe: "4-5",
+			progression_suggestion:
+				"Realizar a báscula pélvica associada para maior controle da lordose.",
 			instruction_pt:
 				"Deitado de costas, abrace os dois joelhos contra o peito e mantenha a posição para alongar a região lombar.",
 			image_url: "/exercises/illustrations/flexao-williams.avif",
@@ -1504,8 +1639,10 @@ const coreSpine: PhysioDictionaryEntry[] = [
 			suggested_sets: 3,
 			suggested_reps: 15,
 			suggested_rpe: "4-5",
+			progression_suggestion:
+				"Acompanhar o movimento da mão com o olhar para aumentar a amplitude cervical.",
 			instruction_pt:
-				"Deitado de lado com os joelhos dobrados, abra o braço de cima para o lado oposto, tentando encostar o ombro no chão.",
+				"Deitado de lado with os joelhos dobrados, abra o braço de cima para o lado oposto, tentando encostar o ombro no chão.",
 			image_url: "/exercises/illustrations/mobilidade-coluna-sentado.avif",
 		},
 	),
@@ -1524,6 +1661,8 @@ const coreSpine: PhysioDictionaryEntry[] = [
 			suggested_sets: 3,
 			suggested_reps: 15,
 			suggested_rpe: "4-5",
+			progression_suggestion:
+				"Manter a retração e realizar inclinação ou rotação lateral.",
 			instruction_pt:
 				"Leve o queixo para trás, como se quisesse fazer uma 'papada', sem inclinar a cabeça para baixo ou para cima.",
 			image_url: "/exercises/illustrations/retracao-cervical.avif",
@@ -1544,6 +1683,8 @@ const coreSpine: PhysioDictionaryEntry[] = [
 			suggested_sets: 3,
 			suggested_reps: 12,
 			suggested_rpe: "7-8",
+			progression_suggestion:
+				"Utilizar uma bola macia contra a parede para maior desafio de estabilidade.",
 			instruction_pt:
 				"Coloque a mão na lateral da cabeça e empurre contra a mão, resistindo ao movimento com o pescoço.",
 			image_url: "/exercises/illustrations/isometrico-cervical.avif",
@@ -1568,6 +1709,8 @@ const functional: PhysioDictionaryEntry[] = [
 			suggested_sets: 3,
 			suggested_reps: 12,
 			suggested_rpe: "7-8",
+			progression_suggestion:
+				"Realizar com os pés elevados ou adicionar carga (colete de peso).",
 			instruction_pt:
 				"Em posição de prancha, desça o corpo dobrando os cotovelos e empurre o chão para subir, mantendo o tronco alinhado.",
 			image_url: "/exercises/illustrations/flexao-braco.avif",
@@ -1588,6 +1731,8 @@ const functional: PhysioDictionaryEntry[] = [
 			suggested_sets: 3,
 			suggested_reps: 12,
 			suggested_rpe: "7-8",
+			progression_suggestion:
+				"Retirar os joelhos do chão para progredir para a flexão padrão.",
 			instruction_pt:
 				"Realize a flexão de braços mantendo os joelhos apoiados no chão para reduzir a dificuldade.",
 			image_url: "/exercises/illustrations/flexao-braco-joelho.png",
@@ -1609,6 +1754,8 @@ const functional: PhysioDictionaryEntry[] = [
 			suggested_sets: 3,
 			suggested_reps: 12,
 			suggested_rpe: "7-8",
+			progression_suggestion:
+				"Reduzir a inclinação utilizando superfícies cada vez mais baixas.",
 			instruction_pt:
 				"Realize a flexão de braços apoiando as mãos em uma superfície elevada (parede, mesa ou banco).",
 			image_url: "/exercises/illustrations/flexao_inclinada.avif",
@@ -1630,6 +1777,8 @@ const functional: PhysioDictionaryEntry[] = [
 			suggested_sets: 3,
 			suggested_reps: 12,
 			suggested_rpe: "7-8",
+			progression_suggestion:
+				"Realizar de forma unilateral ou aumentar a carga.",
 			instruction_pt:
 				"Incline o tronco para frente e puxe os halteres em direção ao quadril, mantendo as costas retas e apertando as escápulas.",
 			image_url: "/exercises/illustrations/serrote-halter.avif",
@@ -1650,6 +1799,8 @@ const functional: PhysioDictionaryEntry[] = [
 			suggested_sets: 3,
 			suggested_reps: 12,
 			suggested_rpe: "8-9",
+			progression_suggestion:
+				"Aumentar a carga ou realizar de forma unipodal (Stiff Unipodal).",
 			instruction_pt:
 				"Com os pés afastados, agache e segure o peso no chão. Levante-se estendendo quadril e joelhos simultaneamente, mantendo a coluna neutra.",
 			image_url: "/exercises/illustrations/deadlift_dumbbells.avif",
@@ -1670,6 +1821,8 @@ const functional: PhysioDictionaryEntry[] = [
 			suggested_sets: 3,
 			suggested_reps: 12,
 			suggested_rpe: "7-8",
+			progression_suggestion:
+				"Aumentar a carga ou caminhar sobre uma linha reta (tandem carry).",
 			instruction_pt:
 				"Segure um peso em cada mão e caminhe mantendo a postura ereta e os ombros estáveis.",
 			image_url: "/exercises/illustrations/farmer_walk.avif",
@@ -1691,6 +1844,8 @@ const functional: PhysioDictionaryEntry[] = [
 			suggested_sets: 4,
 			suggested_reps: 8,
 			suggested_rpe: "9",
+			progression_suggestion:
+				"Aumentar o peso do kettlebell ou realizar o movimento com uma pausa em cada etapa.",
 			instruction_pt:
 				"Deitado, levante um kettlebell acima da cabeça e realize a sequência para ficar em pé sem baixar o braço.",
 			image_url: "/exercises/illustrations/turkish-getup.avif",
@@ -1711,6 +1866,8 @@ const functional: PhysioDictionaryEntry[] = [
 			suggested_sets: 3,
 			suggested_reps: 12,
 			suggested_rpe: "7-8",
+			progression_suggestion:
+				"Caminhar sobre o calcanhar ou pontas dos pés enquanto carrega o peso.",
 			instruction_pt:
 				"Segure um peso em apenas uma mão e caminhe tentando não deixar o tronco inclinar para o lado do peso.",
 			image_url: "/exercises/illustrations/suitcase-carry.avif",
@@ -1731,6 +1888,8 @@ const functional: PhysioDictionaryEntry[] = [
 			suggested_sets: 4,
 			suggested_reps: 8,
 			suggested_rpe: "9",
+			progression_suggestion:
+				"Aumentar a altura da caixa ou realizar o salto partindo de uma posição sentada.",
 			instruction_pt:
 				"Salte sobre uma caixa ou plataforma firme e aterrisse suavemente com os dois pés, mantendo os joelhos alinhados.",
 			image_url: "/exercises/illustrations/box-jump.avif",
@@ -1751,6 +1910,8 @@ const functional: PhysioDictionaryEntry[] = [
 			suggested_sets: 3,
 			suggested_reps: 12,
 			suggested_rpe: "8-9",
+			progression_suggestion:
+				"Adicionar carga (colete ou halteres) ou realizar de forma unilateral.",
 			instruction_pt:
 				"Realize um agachamento e salte o mais alto possível, aterrissando suavemente e retornando à posição inicial.",
 			image_url: "/exercises/illustrations/jump-squat.avif",
@@ -1771,6 +1932,8 @@ const functional: PhysioDictionaryEntry[] = [
 			suggested_sets: 4,
 			suggested_reps: 8,
 			suggested_rpe: "9",
+			progression_suggestion:
+				"Aumentar a altura da caixa de queda ou realizar um salto para uma segunda caixa.",
 			instruction_pt:
 				"Deixe-se cair de uma caixa baixa e, ao tocar o solo, salte imediatamente para cima com o mínimo de tempo de contato.",
 			image_url: "/exercises/illustrations/drop-jump.avif",
@@ -1791,6 +1954,8 @@ const functional: PhysioDictionaryEntry[] = [
 			suggested_sets: 3,
 			suggested_reps: 12,
 			suggested_rpe: "7-8",
+			progression_suggestion:
+				"Aumentar a velocidade ou realizar com deslocamento frontal.",
 			instruction_pt:
 				"Corra sem sair do lugar, elevando os joelhos até a altura do quadril e coordenando com o movimento dos braços.",
 			image_url: "/exercises/illustrations/skipping-high-knees.png",
@@ -1811,6 +1976,8 @@ const functional: PhysioDictionaryEntry[] = [
 			suggested_sets: 3,
 			suggested_reps: 12,
 			suggested_rpe: "8-9",
+			progression_suggestion:
+				"Aumentar a distância lateral ou realizar o salto sobre um obstáculo.",
 			instruction_pt:
 				"Salte lateralmente de uma perna para a outra, mantendo o controle do equilíbrio em cada aterrissagem.",
 			image_url: "/exercises/illustrations/salto-lateral.avif",
@@ -1835,6 +2002,8 @@ const stretching: PhysioDictionaryEntry[] = [
 			suggested_sets: 3,
 			suggested_reps: 30,
 			suggested_rpe: "4-5",
+			progression_suggestion:
+				"Realizar o alongamento com o calcanhar apoiado em uma superfície elevada.",
 			instruction_pt:
 				"Sentado ou em pé, leve as mãos em direção aos pés mantendo os joelhos estendidos até sentir o alongamento atrás da coxa.",
 			image_url: "/exercises/illustrations/alongamento-de-isquiotibiais.avif",
@@ -1855,6 +2024,8 @@ const stretching: PhysioDictionaryEntry[] = [
 			suggested_sets: 3,
 			suggested_reps: 30,
 			suggested_rpe: "4-5",
+			progression_suggestion:
+				"Inclinar o corpo levemente para frente para aumentar a tensão no quadríceps.",
 			instruction_pt:
 				"Em pé, dobre o joelho e segure o pé atrás do corpo, puxando o calcanhar em direção ao glúteo.",
 			image_url: "/exercises/illustrations/alongamento-quadriceps.avif",
@@ -1875,6 +2046,8 @@ const stretching: PhysioDictionaryEntry[] = [
 			suggested_sets: 3,
 			suggested_reps: 30,
 			suggested_rpe: "4-5",
+			progression_suggestion:
+				"Elevar o braço do mesmo lado para cima e para o lado oposto (inclinação lateral).",
 			instruction_pt:
 				"Em posição de ajoelhado (um joelho no chão), projete o quadril para frente mantendo o tronco ereto.",
 			image_url:
@@ -1896,6 +2069,8 @@ const stretching: PhysioDictionaryEntry[] = [
 			suggested_sets: 3,
 			suggested_reps: 30,
 			suggested_rpe: "4-5",
+			progression_suggestion:
+				"Trazer o joelho em direção ao ombro oposto para enfatizar o piriforme.",
 			instruction_pt:
 				"Deitado de costas, cruze uma perna sobre a outra (formando um 4) e puxe a coxa de baixo em direção ao peito.",
 			image_url:
@@ -1917,6 +2092,8 @@ const stretching: PhysioDictionaryEntry[] = [
 			suggested_sets: 3,
 			suggested_reps: 30,
 			suggested_rpe: "4-5",
+			progression_suggestion:
+				"Inclinar o tronco para frente mantendo as costas retas.",
 			instruction_pt:
 				"Sentado com as plantas dos pés unidas (posição de borboleta), pressione levemente os joelhos para baixo.",
 			image_url: "/exercises/illustrations/alongamento-de-adutores.avif",
@@ -1938,6 +2115,7 @@ const stretching: PhysioDictionaryEntry[] = [
 			suggested_sets: 3,
 			suggested_reps: 30,
 			suggested_rpe: "4-5",
+			progression_suggestion: "Aumentar a distância do pé em relação à parede.",
 			instruction_pt:
 				"Com as mãos na parede, dê um passo para trás mantendo o calcanhar no chão e o joelho estendido.",
 			image_url:
@@ -1959,6 +2137,8 @@ const stretching: PhysioDictionaryEntry[] = [
 			suggested_sets: 3,
 			suggested_reps: 30,
 			suggested_rpe: "4-5",
+			progression_suggestion:
+				"Aumentar a flexão do joelho de trás sem tirar o calcanhar do solo.",
 			instruction_pt:
 				"Semelhante ao de panturrilha, mas mantenha o joelho de trás levemente flexionado para focar no músculo sóleo.",
 			image_url: "/exercises/illustrations/alongamento-de-soleo-na-parede.avif",
@@ -1979,6 +2159,8 @@ const stretching: PhysioDictionaryEntry[] = [
 			suggested_sets: 3,
 			suggested_reps: 30,
 			suggested_rpe: "4-5",
+			progression_suggestion:
+				"Variar a altura do braço no batente para focar em diferentes fibras do peitoral.",
 			instruction_pt:
 				"Apoie o antebraço em um batente de porta e gire o corpo para o lado oposto até sentir o alongamento no peito.",
 			image_url: "/exercises/illustrations/alongamento-peitoral-porta.avif",
@@ -1999,6 +2181,8 @@ const stretching: PhysioDictionaryEntry[] = [
 			suggested_sets: 3,
 			suggested_reps: 30,
 			suggested_rpe: "4-5",
+			progression_suggestion:
+				"Colocar a mão do lado alongado atrás das costas para aumentar a tensão.",
 			instruction_pt:
 				"Leve a orelha em direção ao ombro oposto, usando a mão para aplicar uma leve pressão lateral.",
 			image_url: "/exercises/illustrations/alongamento-trapezio-superior.avif",
@@ -2020,6 +2204,8 @@ const stretching: PhysioDictionaryEntry[] = [
 			suggested_sets: 3,
 			suggested_reps: 30,
 			suggested_rpe: "4-5",
+			progression_suggestion:
+				"Cruzar a perna do mesmo lado por trás da outra perna para aumentar o alongamento lateral.",
 			instruction_pt:
 				"Segure em uma barra ou batente acima da cabeça e incline o quadril para o lado oposto para alongar a lateral do tronco.",
 			image_url: "/exercises/illustrations/alongamento-dorsal.avif",
@@ -2040,6 +2226,8 @@ const stretching: PhysioDictionaryEntry[] = [
 			suggested_sets: 3,
 			suggested_reps: 30,
 			suggested_rpe: "4-5",
+			progression_suggestion:
+				"Realizar o 'Cross-body Stretch' puxando o braço esticado em direção ao ombro oposto.",
 			instruction_pt:
 				"Deitado de lado sobre o ombro a ser alongado, use a outra mão para empurrar o antebraço em direção ao chão (sleeper stretch).",
 			image_url: "/exercises/illustrations/alongamento-rotadores-ombro.avif",
@@ -2060,6 +2248,8 @@ const stretching: PhysioDictionaryEntry[] = [
 			suggested_sets: 3,
 			suggested_reps: 30,
 			suggested_rpe: "4-5",
+			progression_suggestion:
+				"Utilizar um foam roller para liberação miofascial lateral da coxa.",
 			instruction_pt:
 				"Em pé, cruze a perna a ser alongada por trás da outra e incline o tronco para o lado oposto.",
 			image_url: "/exercises/illustrations/alongamento-tfl.png",
@@ -2081,6 +2271,8 @@ const stretching: PhysioDictionaryEntry[] = [
 			suggested_sets: 3,
 			suggested_reps: 15,
 			suggested_rpe: "4-5",
+			progression_suggestion:
+				"Cruzar a perna oposta sobre a que está sendo liberada para aumentar a pressão.",
 			instruction_pt:
 				"Posicione o rolo sob o músculo e deslize o corpo sobre ele lentamente, focando nas áreas de maior tensão.",
 			image_url: "/exercises/illustrations/liberacao-foam-roller.png",
@@ -2102,6 +2294,8 @@ const stretching: PhysioDictionaryEntry[] = [
 			suggested_sets: 3,
 			suggested_reps: 12,
 			suggested_rpe: "7-8",
+			progression_suggestion:
+				"Adicionar movimentos articulares da extremidade (ex: mover o braço) enquanto mantém a pressão na bola.",
 			instruction_pt:
 				"Posicione a bola sobre o ponto de tensão (ex: glúteo ou escápula) e aplique pressão sustentada ou pequenos movimentos circulares.",
 			image_url: "/exercises/illustrations/liberacao-bola-lacrosse.avif",
@@ -2127,6 +2321,8 @@ const mobility: PhysioDictionaryEntry[] = [
 			suggested_sets: 3,
 			suggested_reps: 15,
 			suggested_rpe: "7-8",
+			progression_suggestion:
+				"Utilizar uma faixa elástica para realizar uma mobilização com tração articular posterior.",
 			instruction_pt:
 				"Em pé de frente para a parede, leve o joelho à frente sem tirar o calcanhar do chão.",
 			image_url: "/exercises/illustrations/mobilizacao-tornozelo-df.avif",
@@ -2147,6 +2343,8 @@ const mobility: PhysioDictionaryEntry[] = [
 			suggested_sets: 3,
 			suggested_reps: 15,
 			suggested_rpe: "7-8",
+			progression_suggestion:
+				"Retirar as mãos do chão e realizar a troca de posição 90/90 sem apoio dos braços.",
 			instruction_pt:
 				"Sentado no chão com os joelhos a 90 graus (posição 90/90), gire o tronco sobre a perna da frente e depois sobre a de trás.",
 			image_url: "/exercises/illustrations/mobilizacao-quadril-capsular.avif",
@@ -2168,6 +2366,8 @@ const mobility: PhysioDictionaryEntry[] = [
 			suggested_sets: 3,
 			suggested_reps: 15,
 			suggested_rpe: "7-8",
+			progression_suggestion:
+				"Segurar um peso acima da cabeça enquanto realiza a extensão no rolo.",
 			instruction_pt:
 				"Sentado ou sobre um rolo, realize a extensão da coluna torácica para trás, mantendo a lombar estável.",
 			image_url: "/exercises/illustrations/mobilidade-coluna-sentado.avif",
@@ -2188,6 +2388,8 @@ const mobility: PhysioDictionaryEntry[] = [
 			suggested_sets: 3,
 			suggested_reps: 15,
 			suggested_rpe: "7-8",
+			progression_suggestion:
+				"Realizar movimentos contra a resistência de uma mini-band para estabilidade reativa.",
 			instruction_pt:
 				"Realize movimentos circulares e amplos com o ombro ou use um bastão para auxiliar na mobilização passiva.",
 			image_url: "/exercises/illustrations/mobilidade-ombro.avif",
@@ -2208,6 +2410,8 @@ const mobility: PhysioDictionaryEntry[] = [
 			suggested_sets: 3,
 			suggested_reps: 15,
 			suggested_rpe: "7-8",
+			progression_suggestion:
+				"Adicionar uma pausa na rotação máxima ou realizar o movimento de forma dinâmica (passada com rotação).",
 			instruction_pt:
 				"Em posição de lunge, coloque a mão oposta no chão e gire o tronco levantando o outro braço para o teto.",
 			image_url: "/exercises/illustrations/worlds-greatest-stretch.avif",
@@ -2228,6 +2432,8 @@ const mobility: PhysioDictionaryEntry[] = [
 			suggested_sets: 3,
 			suggested_reps: 15,
 			suggested_rpe: "7-8",
+			progression_suggestion:
+				"Realizar em pé ou em posição de 'Bear Crawl' (joelhos fora do chão) para maior desafio de core.",
 			instruction_pt:
 				"Em quatro apoios, realize círculos lentos e amplos com o quadril, explorando toda a amplitude sem mover o tronco.",
 			image_url: "/exercises/illustrations/hip-cars.avif",
@@ -2248,6 +2454,8 @@ const mobility: PhysioDictionaryEntry[] = [
 			suggested_sets: 3,
 			suggested_reps: 15,
 			suggested_rpe: "7-8",
+			progression_suggestion:
+				"Segurar um peso leve (kettlebell pequeno) enquanto realiza a rotação controlada.",
 			instruction_pt:
 				"Em pé, realize círculos lentos e amplos com o ombro, mantendo o braço esticado e sem girar o tronco.",
 			image_url: "/exercises/illustrations/shoulder-cars.avif",
@@ -2272,6 +2480,8 @@ const respiratory: PhysioDictionaryEntry[] = [
 			suggested_sets: 2,
 			suggested_reps: 10,
 			suggested_rpe: "4-5",
+			progression_suggestion:
+				"Realizar em posição sentada ou em pé para maior desafio postural.",
 			instruction_pt:
 				"Coloque uma mão no peito e outra na barriga. Respire pelo nariz fazendo a barriga subir, sem mexer o peito. Solte o ar lentamente pela boca.",
 			image_url: "/exercises/illustrations/respiracao-diafragmatica.avif",
@@ -2292,6 +2502,8 @@ const respiratory: PhysioDictionaryEntry[] = [
 			suggested_sets: 2,
 			suggested_reps: 10,
 			suggested_rpe: "4-5",
+			progression_suggestion:
+				"Utilizar uma faixa elástica em volta das costelas para oferecer resistência à expansão.",
 			instruction_pt:
 				"Respire profundamente tentando expandir as costelas para os lados, evitando subir os ombros.",
 			image_url: "/exercises/illustrations/expansao-costal.avif",
@@ -2312,6 +2524,8 @@ const respiratory: PhysioDictionaryEntry[] = [
 			suggested_sets: 2,
 			suggested_reps: 10,
 			suggested_rpe: "4-5",
+			progression_suggestion:
+				"Adicionar movimentos de membros (Dead Bug) enquanto mantém a respiração 360.",
 			instruction_pt:
 				"Sinta a expansão da respiração em toda a circunferência do tronco (frente, lados e costas) simultaneamente.",
 			image_url: "/exercises/illustrations/respiracao-360.avif",
@@ -2320,7 +2534,75 @@ const respiratory: PhysioDictionaryEntry[] = [
 ];
 
 // ─── NEUROMUSCULAR ─────────────────────────────────────
-const neuromuscular: PhysioDictionaryEntry[] = [];
+const neuromuscular: PhysioDictionaryEntry[] = [
+	ex(
+		"exd-y-balance",
+		"Y-Balance",
+		"Y-Balance",
+		["teste y", "equilíbrio dinâmico"],
+		["y balance test", "dynamic balance"],
+		"Neuromuscular",
+		"Treino de equilíbrio dinâmico e controle motor de membros inferiores.",
+		"Dynamic balance and lower limb motor control training.",
+		{
+			intensity_level: 3,
+			target_outcome: ["Estabilidade", "Mobilidade"],
+			suggested_sets: 3,
+			suggested_reps: 8,
+			suggested_rpe: "7-8",
+			progression_suggestion:
+				"Utilizar superfícies instáveis (espuma de equilíbrio) sob o pé de apoio.",
+			instruction_pt:
+				"Em um pé só, alcance com o outro pé o mais longe possível nas três direções (frente, lateral-atrás e medial-atrás) sem perder o equilíbrio.",
+			image_url: "/exercises/illustrations/y-balance-test.avif",
+		},
+	),
+	ex(
+		"exd-rnt-squat",
+		"Agachamento RNT",
+		"RNT Squat",
+		["agachamento com tração lateral"],
+		["reactive neuromuscular training squat"],
+		"Neuromuscular",
+		"Treino neuromuscular reativo para correção de valgo dinâmico.",
+		"Reactive neuromuscular training for dynamic valgus correction.",
+		{
+			intensity_level: 3,
+			target_outcome: ["Estabilidade"],
+			required_equipment: ["Faixa Elástica"],
+			suggested_sets: 3,
+			suggested_reps: 12,
+			suggested_rpe: "7-8",
+			progression_suggestion:
+				"Aumentar a resistência da faixa elástica ou realizar de forma unilateral.",
+			instruction_pt:
+				"Realize um agachamento com uma faixa elástica puxando seu joelho para dentro. Você deve resistir à tração, mantendo o joelho alinhado.",
+			image_url: "/exercises/illustrations/rnt-squat.avif",
+		},
+	),
+	ex(
+		"exd-sl-deadlift-balance",
+		"Stiff Unipodal com Equilíbrio",
+		"Single Leg RDL with Balance",
+		["stiff unilateral", "equilíbrio em um pé"],
+		["single leg deadlift balance"],
+		"Neuromuscular",
+		"Fortalecimento de cadeia posterior com alto desafio proprioceptivo.",
+		"Posterior chain strengthening with high proprioceptive challenge.",
+		{
+			intensity_level: 4,
+			target_outcome: ["Força", "Estabilidade"],
+			suggested_sets: 3,
+			suggested_reps: 10,
+			suggested_rpe: "8-9",
+			progression_suggestion:
+				"Segurar um peso (halter ou kettlebell) na mão oposta à perna de apoio (unilateral ipsilateral).",
+			instruction_pt:
+				"Incline o tronco para frente em uma perna só, mantendo a coluna neutra e a perna de trás alinhada, focando no controle do equilíbrio.",
+			image_url: "/exercises/illustrations/single-leg-deadlift.avif",
+		},
+	),
+];
 
 // ─── VESTIBULAR ─────────────────────────────────────
 const vestibular: PhysioDictionaryEntry[] = [
@@ -2339,6 +2621,8 @@ const vestibular: PhysioDictionaryEntry[] = [
 			suggested_sets: 3,
 			suggested_reps: 60,
 			suggested_rpe: "4-5",
+			progression_suggestion:
+				"Aumentar a velocidade do movimento ou realizar a estabilização enquanto caminha.",
 			instruction_pt:
 				"Olhe para um ponto fixo à sua frente e vire a cabeça lentamente de um lado para o outro, sem tirar os olhos do ponto.",
 			image_url: "/exercises/illustrations/estabilizacao-olhar-vor.png",
@@ -2359,6 +2643,8 @@ const vestibular: PhysioDictionaryEntry[] = [
 			suggested_sets: 3,
 			suggested_reps: 60,
 			suggested_rpe: "4-5",
+			progression_suggestion:
+				"Realizar a manobra de Brandt-Daroff como complemento para habituação vestibular.",
 			instruction_pt:
 				"Sequência de movimentos de cabeça para reposicionamento de cristais no ouvido interno (deve ser orientada por profissional).",
 			image_url: "/exercises/illustrations/manobra-epley.avif",
@@ -2383,6 +2669,8 @@ const neurodynamics: PhysioDictionaryEntry[] = [
 			suggested_sets: 3,
 			suggested_reps: 12,
 			suggested_rpe: "3-4",
+			progression_suggestion:
+				"Aumentar a amplitude da inclinação lateral da cabeça para intensificar o deslizamento.",
 			instruction_pt:
 				"Estenda o braço para o lado com a palma da mão aberta. Incline a cabeça para o mesmo lado enquanto dobra o punho, e depois incline para o lado oposto enquanto estende o punho.",
 			image_url: "/exercises/illustrations/deslizamento-nervo-mediano.avif",
@@ -2403,6 +2691,8 @@ const neurodynamics: PhysioDictionaryEntry[] = [
 			suggested_sets: 3,
 			suggested_reps: 12,
 			suggested_rpe: "3-4",
+			progression_suggestion:
+				"Realizar na posição de decúbito dorsal (deitado) com elevação da perna estendida.",
 			instruction_pt:
 				"Sentado, estique o joelho e aponte os dedos do pé para cima enquanto olha para o teto. Depois, dobre o joelho e aponte o pé para baixo enquanto olha para o colo.",
 			image_url: "/exercises/illustrations/deslizamento-nervo-ciatico.png",
@@ -2423,6 +2713,8 @@ const neurodynamics: PhysioDictionaryEntry[] = [
 			suggested_sets: 3,
 			suggested_reps: 12,
 			suggested_rpe: "3-4",
+			progression_suggestion:
+				"Adicionar uma depressão escapular ativa para aumentar a tensão neural.",
 			instruction_pt:
 				"Com o braço ao lado do corpo e palma para trás, dobre o punho e gire o braço para dentro enquanto inclina a cabeça.",
 			image_url: "/exercises/illustrations/deslizamento-nervo-radial.avif",
@@ -2443,6 +2735,8 @@ const neurodynamics: PhysioDictionaryEntry[] = [
 			suggested_sets: 3,
 			suggested_reps: 12,
 			suggested_rpe: "3-4",
+			progression_suggestion:
+				"Aumentar a abdução do ombro para colocar o nervo ulnar em maior estiramento.",
 			instruction_pt:
 				"Faça um 'óculos' com a mão e leve em direção ao rosto, rodando o punho para fora e para cima.",
 			image_url: "/exercises/illustrations/deslizamento-nervo-ulnar.avif",
@@ -2468,6 +2762,8 @@ const geriatricFunctional: PhysioDictionaryEntry[] = [
 			suggested_sets: 3,
 			suggested_reps: 12,
 			suggested_rpe: "7-8",
+			progression_suggestion:
+				"Utilizar uma cadeira mais baixa ou realizar o movimento com uma carga extra no colo.",
 			instruction_pt:
 				"Sente-se em uma cadeira firme e levante-se completamente sem usar as mãos para apoio. Repita o movimento com controle.",
 			image_url: "/exercises/illustrations/sentar-levantar.avif",
@@ -2488,6 +2784,8 @@ const geriatricFunctional: PhysioDictionaryEntry[] = [
 			suggested_sets: 3,
 			suggested_reps: 15,
 			suggested_rpe: "4-5",
+			progression_suggestion:
+				"Realizar o alcance em diferentes direções (lateral e diagonal).",
 			instruction_pt:
 				"Em pé, estenda o braço para frente o máximo que conseguir sem tirar os calcanhares do chão ou perder o equilíbrio.",
 			image_url: "/exercises/illustrations/alcance-funcional.avif",
@@ -2508,6 +2806,8 @@ const geriatricFunctional: PhysioDictionaryEntry[] = [
 			suggested_sets: 3,
 			suggested_reps: 12,
 			suggested_rpe: "7-8",
+			progression_suggestion:
+				"Realizar a caminhada tandem para trás ou com movimentos de cabeça (olhar para os lados).",
 			instruction_pt:
 				"Caminhe em linha reta, colocando um pé diretamente à frente do outro (calcanhar tocando os dedos), mantendo os braços abertos para equilíbrio.",
 			image_url: "/exercises/illustrations/marcha_tandem.png",
@@ -2529,6 +2829,8 @@ const geriatricFunctional: PhysioDictionaryEntry[] = [
 			suggested_sets: 3,
 			suggested_reps: 12,
 			suggested_rpe: "7-8",
+			progression_suggestion:
+				"Reduzir gradualmente o apoio manual até realizar a subida de forma independente.",
 			instruction_pt:
 				"Suba um degrau apoiando-se em um corrimão ou suporte, mantendo o controle do joelho e do tronco.",
 			image_url: "/exercises/illustrations/subida-degrau-assistida.avif",

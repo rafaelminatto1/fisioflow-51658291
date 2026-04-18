@@ -6,14 +6,7 @@
 import { useState, useMemo, useEffect } from "react";
 import { useNavigate, useParams, useSearchParams } from "react-router-dom";
 import { useQueryClient } from "@tanstack/react-query";
-import {
-	Search,
-	Plus,
-	FileText,
-	Star,
-	History,
-	Library,
-} from "lucide-react";
+import { Search, Plus, FileText, Star, History, Library } from "lucide-react";
 
 import { MainLayout } from "@/components/layout/MainLayout";
 import { Button } from "@/components/ui/button";
@@ -92,7 +85,9 @@ export default function WikiPage() {
 	const [activeView, setActiveView] = useState<
 		"dashboard" | "knowledge-hub" | "dictionary" | "page"
 	>((searchParams.get("view") as any) || "dashboard");
-	const [searchQuery, setSearchQuery] = useState(searchParams.get("search") || "");
+	const [searchQuery, setSearchQuery] = useState(
+		searchParams.get("search") || "",
+	);
 	const [isEditing, setIsEditing] = useState(false);
 	const [selectedPage, setSelectedPage] = useState<WikiPage | null>(null);
 	const [draftPage, setDraftPage] = useState<Partial<WikiPage> | null>(null);
@@ -123,14 +118,8 @@ export default function WikiPage() {
 	);
 
 	// Hooks Customizados
-	const {
-		pages,
-		categories,
-		favorites,
-		isLoading,
-		savePage,
-		deletePage,
-	} = useWikiPages(currentOrganizationId, currentUserId);
+	const { pages, categories, favorites, isLoading, savePage, deletePage } =
+		useWikiPages(currentOrganizationId, currentUserId);
 
 	const {
 		triageBuckets,
@@ -138,7 +127,7 @@ export default function WikiPage() {
 		handleTriageDragEnd,
 		handleQuickStatusChange,
 		hasActiveTriageFilters,
-		} = useWikiTriage(pages, currentOrganizationId, currentUserId);
+	} = useWikiTriage(pages, currentOrganizationId, currentUserId);
 
 	const {
 		knowledgeStats,
@@ -175,13 +164,15 @@ export default function WikiPage() {
 		// Se a query começar com #, filtramos especificamente por tag
 		if (searchQuery.startsWith("#")) {
 			const tagName = searchQuery.slice(1).toLowerCase();
-			return pages.filter(page => page.tags.some((t) => t.toLowerCase().includes(tagName)));
+			return pages.filter((page) =>
+				page.tags.some((t) => t.toLowerCase().includes(tagName)),
+			);
 		}
 
 		if (!searchQuery) return pages;
 
 		// Utilizando a busca bilíngue (Português/Inglês) + Sinônimos
-		return bilingualFilter(pages, searchQuery, ['title', 'content', 'tags']);
+		return bilingualFilter(pages, searchQuery, ["title", "content", "tags"]);
 	}, [pages, searchQuery]);
 
 	const evidenceTree = useMemo(() => getEvidenceTree(pages), [pages]);
@@ -323,12 +314,10 @@ export default function WikiPage() {
 				setActiveView("page");
 				navigate(`/wiki/${page.slug}`);
 			}
-		} catch  {
+		} catch {
 			// Toast já exibido no hook
 		}
 	};
-
-	
 
 	const onSaveAnnotation = async () => {
 		if (!activeArticle) return;
@@ -342,7 +331,7 @@ export default function WikiPage() {
 				notes: annotationNotes,
 			});
 			setActiveArticle(null);
-		} catch  {
+		} catch {
 			// Erro já tratado no hook
 		}
 	};
@@ -678,13 +667,13 @@ export default function WikiPage() {
 										</h2>
 									</div>
 
-									<div className="relative w-full md:w-96">
-										<Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+									<div className="relative w-full md:w-96 group">
+										<Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 group-focus-within:text-blue-500 transition-colors" />
 										<Input
-											placeholder="Buscar em todas as páginas..."
+											placeholder="Buscar na base de conhecimento..."
 											value={searchQuery}
 											onChange={(e) => setSearchQuery(e.target.value)}
-											className="pl-10 h-10 shadow-sm"
+											className="pl-11 h-12 bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800 shadow-sm rounded-2xl focus:ring-blue-500/10 focus:border-blue-500 transition-all font-medium"
 										/>
 									</div>
 								</div>
@@ -698,7 +687,7 @@ export default function WikiPage() {
 												<Star className="w-4 h-4 text-yellow-500 fill-yellow-500" />{" "}
 												Mais Visitadas
 											</h3>
-											<div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+											<div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
 												{favorites.map((page) => (
 													<WikiPageCard
 														key={page.id}
@@ -725,16 +714,16 @@ export default function WikiPage() {
 										</h3>
 
 										{isLoading ? (
-											<div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
-												{[1, 2, 3].map((i) => (
+											<div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+												{[1, 2, 3, 4].map((i) => (
 													<div
 														key={i}
-														className="h-40 rounded-xl bg-muted animate-pulse"
+														className="h-64 rounded-2xl bg-slate-100 dark:bg-slate-800/50 animate-pulse border border-slate-50 dark:border-slate-800"
 													/>
 												))}
 											</div>
 										) : displayedPages.length > 0 ? (
-											<div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+											<div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
 												{displayedPages.map((page) => (
 													<WikiPageCard
 														key={page.id}
