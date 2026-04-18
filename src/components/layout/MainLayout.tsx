@@ -31,6 +31,7 @@ import { BottomNavigation } from "./BottomNavigation";
 import { MobileHeader } from "./MobileHeader";
 import { OnlineUsersIndicator } from "./OnlineUsersIndicator";
 import { Sidebar } from "./Sidebar";
+import { ThemeControls } from "@/components/ui/theme";
 
 interface MainLayoutProps {
 	children: React.ReactNode;
@@ -159,6 +160,7 @@ export const MainLayout: React.FC<MainLayoutProps> = ({
 											</Button>
 
 											<OnlineUsersIndicator />
+											<ThemeControls />
 										</div>
 
 										{/* Offline Badge */}

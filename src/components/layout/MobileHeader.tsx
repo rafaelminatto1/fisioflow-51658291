@@ -12,6 +12,7 @@ import {
 import { Menu } from "lucide-react";
 import { NotificationBell } from "@/components/notifications/NotificationBell";
 import { OnlineUsersIndicator } from "./OnlineUsersIndicator";
+import { ThemeControls } from "@/components/ui/theme";
 import { Link, useLocation } from "react-router-dom";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/contexts/AuthContext";
@@ -226,6 +227,7 @@ export function MobileHeader() {
 				{/* Notificações e Presença */}
 				<div className="flex items-center gap-1">
 					<OnlineUsersIndicator />
+					<ThemeControls />
 					<NotificationBell />
 				</div>
 			</div>

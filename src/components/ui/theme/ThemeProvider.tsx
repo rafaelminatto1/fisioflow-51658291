@@ -254,7 +254,12 @@ export const ThemeProvider: React.FC<ThemeProviderProps> = ({
 
 		// Remove todas as classes de tema
 		root.classList.remove("light", "dark", "high-contrast", "reduced-motion");
-		root.classList.remove("text-small", "text-medium", "text-large", "text-xlarge");
+		root.classList.remove(
+			"text-small",
+			"text-medium",
+			"text-large",
+			"text-xlarge",
+		);
 		root.classList.remove(
 			"anim-off",
 			"anim-reduced",
@@ -360,13 +365,7 @@ export const ThemeProvider: React.FC<ThemeProviderProps> = ({
 import { Contrast, Moon, Settings, Sun, Type, Zap } from "lucide-react";
 
 export const ThemeControls: React.FC = () => {
-	const {
-		theme,
-		toggleMode,
-		setFontSize,
-		setAnimationSpeed,
-		toggleHighContrast,
-	} = useTheme();
+	const { theme, toggleMode } = useTheme();
 
 	const resolvedMode =
 		theme.mode === "system"
@@ -376,12 +375,16 @@ export const ThemeControls: React.FC = () => {
 			: theme.mode;
 
 	return (
-		<div className="flex items-center gap-2">
+		<div className="flex items-center gap-1">
 			{/* Toggle Dark/Light */}
 			<button
 				onClick={toggleMode}
-				className="p-2 rounded-lg hover:bg-muted transition-colors"
-				title={resolvedMode === "light" ? "Modo escuro" : "Modo claro"}
+				className="p-2 rounded-xl text-slate-500 hover:text-primary hover:bg-slate-100 dark:hover:bg-slate-800 transition-all duration-300 magnetic-button glow-on-hover active:scale-95"
+				title={
+					resolvedMode === "light"
+						? "Mudar para modo escuro"
+						: "Mudar para modo claro"
+				}
 			>
 				{resolvedMode === "light" ? (
 					<Moon className="w-5 h-5" />
@@ -389,43 +392,6 @@ export const ThemeControls: React.FC = () => {
 					<Sun className="w-5 h-5" />
 				)}
 			</button>
-
-			{/* Toggle High Contrast */}
-			<button
-				onClick={toggleHighContrast}
-				className={`p-2 rounded-lg hover:bg-muted transition-colors ${
-					theme.highContrast ? "bg-primary text-primary-foreground" : ""
-				}`}
-				title="Alto contraste"
-			>
-				<Contrast className="w-5 h-5" />
-			</button>
-
-			{/* Font Size Selector */}
-			<select
-				value={theme.fontSize}
-				onChange={(e) => setFontSize(e.target.value as FontSize)}
-				className="px-3 py-2 rounded-lg border bg-background text-sm"
-				title="Tamanho da fonte"
-			>
-				<option value="sm">Pequeno</option>
-				<option value="md">Médio</option>
-				<option value="lg">Grande</option>
-				<option value="xl">Extra grande</option>
-			</select>
-
-			{/* Animation Speed Selector */}
-			<select
-				value={theme.animationSpeed}
-				onChange={(e) => setAnimationSpeed(e.target.value as AnimationSpeed)}
-				className="px-3 py-2 rounded-lg border bg-background text-sm"
-				title="Velocidade das animações"
-			>
-				<option value="off">Sem animações</option>
-				<option value="reduced">Reduzida</option>
-				<option value="normal">Normal</option>
-				<option value="fast">Rápida</option>
-			</select>
 		</div>
 	);
 };
