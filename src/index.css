@@ -1,13 +1,14 @@
 @import "tailwindcss";
 @import "./styles/schedulex.css";
+@import url('https://fonts.googleapis.com/css2?family=Figtree:wght@300;400;500;600;700&family=Noto+Sans:wght@300;400;500;700&display=swap');
 @source "./**/*.{ts,tsx,js,jsx}";
 @source "../packages/**/*.{ts,tsx,js,jsx}";
 @plugin "tailwindcss-animate";
 @custom-variant dark (&:is(.dark *));
 
 @theme {
-  --font-sans: 'Inter', 'Outfit', ui-sans-serif, system-ui, sans-serif;
-  --font-display: 'Outfit', 'Outfit', ui-sans-serif, system-ui, sans-serif;
+  --font-sans: 'Noto Sans', 'Inter', ui-sans-serif, system-ui, sans-serif;
+  --font-display: 'Figtree', 'Outfit', ui-sans-serif, system-ui, sans-serif;
   
   /* Breakpoints */
   --breakpoint-xs: 480px;

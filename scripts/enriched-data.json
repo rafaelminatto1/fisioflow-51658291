@@ -1,0 +1,3148 @@
+[
+  {
+    "id": "exd-agachamento",
+    "pt": "Agachamento",
+    "en": "Squat",
+    "aliases_pt": [
+      "agachamento livre",
+      "agachamento bilateral"
+    ],
+    "aliases_en": [
+      "bodyweight squat",
+      "air squat"
+    ],
+    "category": "exercise",
+    "subcategory": "Joelho / Quadril",
+    "description_pt": "Exercício multiarticular para quadríceps, glúteos e core.",
+    "description_en": "Multi-joint exercise targeting quads, glutes, and core.",
+    "intensity_level": 2,
+    "target_outcome": [
+      "Força",
+      "Mobilidade"
+    ],
+    "progression_suggestion": "exd-agachamento-pistol",
+    "suggested_sets": 3,
+    "suggested_reps": 12,
+    "suggested_rpe": "7-8",
+    "instruction_pt": "Mantenha os pés afastados na largura dos ombros, desça como se fosse sentar em uma cadeira invisível, mantendo o peito aberto e o peso nos calcanhares.",
+    "image_url": "/exercises/illustrations/agachamento-livre.avif",
+    "required_equipment": [
+      "Banco/Cadeira"
+    ]
+  },
+  {
+    "id": "exd-agachamento-bulgaro",
+    "pt": "Agachamento Búlgaro",
+    "en": "Bulgarian Split Squat",
+    "aliases_pt": [
+      "split squat com elevação"
+    ],
+    "aliases_en": [
+      "rear foot elevated split squat",
+      "rfess"
+    ],
+    "category": "exercise",
+    "subcategory": "Joelho / Quadril",
+    "description_pt": "Exercício unipodal avançado para força de quadríceps e glúteos com componente de estabilidade.",
+    "description_en": "Advanced single-leg exercise for quad and glute strength with stability component.",
+    "intensity_level": 4,
+    "target_outcome": [
+      "Força",
+      "Estabilidade"
+    ],
+    "required_equipment": [
+      "Banco",
+      "Halter"
+    ],
+    "instruction_pt": "Coloque um pé atrás em um banco e o outro à frente. Desça o quadril verticalmente mantendo o tronco levemente inclinado, focando o esforço na perna da frente.",
+    "image_url": "/exercises/illustrations/agachamento-bulgaro.avif",
+    "suggested_sets": 3,
+    "suggested_reps": 12,
+    "suggested_rpe": "8-9"
+  },
+  {
+    "id": "exd-agachamento-sumô",
+    "pt": "Agachamento Sumô",
+    "en": "Sumo Squat",
+    "aliases_pt": [
+      "agachamento amplo"
+    ],
+    "aliases_en": [
+      "wide stance squat"
+    ],
+    "category": "exercise",
+    "subcategory": "Joelho / Quadril",
+    "description_pt": "Variação de agachamento com base ampla para maior ativação de adutores.",
+    "description_en": "Wide-base squat variation for increased adductor activation.",
+    "intensity_level": 2,
+    "target_outcome": [
+      "Força",
+      "Mobilidade"
+    ],
+    "instruction_pt": "Afaste os pés além da largura dos ombros com as pontas viradas para fora. Desça o quadril mantendo os joelhos alinhados com os pés e o tronco ereto.",
+    "image_url": "/exercises/illustrations/agachamento-sumo.avif",
+    "suggested_sets": 3,
+    "suggested_reps": 12,
+    "suggested_rpe": "7-8"
+  },
+  {
+    "id": "exd-agachamento-goblet",
+    "pt": "Agachamento Goblet",
+    "en": "Goblet Squat",
+    "aliases_pt": [],
+    "aliases_en": [],
+    "category": "exercise",
+    "subcategory": "Joelho / Quadril",
+    "description_pt": "Agachamento com carga frontal que auxilia na manutenção da postura ereta.",
+    "description_en": "Front-loaded squat that helps maintain upright posture.",
+    "intensity_level": 3,
+    "target_outcome": [
+      "Força",
+      "Estabilidade"
+    ],
+    "required_equipment": [
+      "Kettlebell",
+      "Halter"
+    ],
+    "instruction_pt": "Segure um peso junto ao peito, mantenha os cotovelos para baixo e realize o agachamento garantindo que o tronco permaneça vertical.",
+    "image_url": "/exercises/illustrations/agachamento-goblet.avif",
+    "suggested_sets": 3,
+    "suggested_reps": 12,
+    "suggested_rpe": "7-8"
+  },
+  {
+    "id": "exd-agachamento-pistol",
+    "pt": "Agachamento Pistol",
+    "en": "Pistol Squat",
+    "aliases_pt": [
+      "agachamento unipodal"
+    ],
+    "aliases_en": [
+      "single leg squat"
+    ],
+    "category": "exercise",
+    "subcategory": "Joelho / Quadril",
+    "description_pt": "Exercício de altíssimo nível para força unipodal, equilíbrio e mobilidade de tornozelo.",
+    "description_en": "High-level exercise for single-leg strength, balance, and ankle mobility.",
+    "intensity_level": 5,
+    "target_outcome": [
+      "Força",
+      "Estabilidade",
+      "Potência"
+    ],
+    "instruction_pt": "Equilibre-se em uma perna, estenda a outra à frente e desça o máximo possível com controle, mantendo o calcanhar de apoio no chão.",
+    "image_url": "/exercises/illustrations/agachamento-pistol.png",
+    "suggested_sets": 4,
+    "suggested_reps": 8,
+    "suggested_rpe": "9"
+  },
+  {
+    "id": "exd-agachamento-parede",
+    "pt": "Agachamento na Parede",
+    "en": "Wall Sit",
+    "aliases_pt": [
+      "cadeirinha",
+      "isométrico de parede"
+    ],
+    "aliases_en": [
+      "wall squat"
+    ],
+    "category": "exercise",
+    "subcategory": "Joelho",
+    "description_pt": "Isométrico para fortalecimento de quadríceps.",
+    "description_en": "Isometric hold for quad strengthening.",
+    "intensity_level": 1,
+    "target_outcome": [
+      "Analgesia",
+      "Estabilidade"
+    ],
+    "suggested_sets": 3,
+    "suggested_reps": 45,
+    "suggested_rpe": "6",
+    "instruction_pt": "Encoste as costas na parede e desça até que seus joelhos formem um ângulo de 90 graus. Mantenha a posição, sentindo o esforço nas coxas, sem deixar os joelhos ultrapassarem a ponta dos pés.",
+    "image_url": "/exercises/illustrations/agachamento-parede.avif",
+    "required_equipment": [
+      "Parede"
+    ]
+  },
+  {
+    "id": "exd-afundo",
+    "pt": "Afundo",
+    "en": "Lunge",
+    "aliases_pt": [
+      "avanço",
+      "passada"
+    ],
+    "aliases_en": [
+      "forward lunge"
+    ],
+    "category": "exercise",
+    "subcategory": "Joelho / Quadril",
+    "description_pt": "Exercício funcional para membros inferiores com foco em quadríceps e estabilidade.",
+    "description_en": "Functional lower limb exercise focusing on quads and stability.",
+    "intensity_level": 2,
+    "target_outcome": [
+      "Força",
+      "Estabilidade"
+    ],
+    "instruction_pt": "Dê um passo à frente e desça o quadril até que ambos os joelhos estejam em cerca de 90 graus. Mantenha o tronco ereto e o joelho da frente alinhado com o pé.",
+    "image_url": "/exercises/illustrations/afundo.avif",
+    "suggested_sets": 3,
+    "suggested_reps": 12,
+    "suggested_rpe": "7-8"
+  },
+  {
+    "id": "exd-afundo-lateral",
+    "pt": "Afundo Lateral",
+    "en": "Lateral Lunge",
+    "aliases_pt": [
+      "avanço lateral"
+    ],
+    "aliases_en": [
+      "side lunge"
+    ],
+    "category": "exercise",
+    "subcategory": "Joelho / Quadril",
+    "description_pt": "Foco em adutores e estabilidade no plano frontal.",
+    "description_en": "Focus on adductors and frontal plane stability.",
+    "intensity_level": 2,
+    "target_outcome": [
+      "Força",
+      "Mobilidade"
+    ],
+    "instruction_pt": "Dê um passo largo para o lado, dobrando o joelho da perna que moveu enquanto mantém a outra esticada. Mantenha os pés apontados para frente.",
+    "image_url": "/exercises/illustrations/afundo-lateral.avif",
+    "suggested_sets": 3,
+    "suggested_reps": 12,
+    "suggested_rpe": "7-8"
+  },
+  {
+    "id": "exd-afundo-reverso",
+    "pt": "Afundo Reverso",
+    "en": "Reverse Lunge",
+    "aliases_pt": [
+      "avanço reverso"
+    ],
+    "aliases_en": [
+      "backward lunge"
+    ],
+    "category": "exercise",
+    "subcategory": "Joelho / Quadril",
+    "description_pt": "Variação que costuma ser mais confortável para o joelho do que o afundo frontal.",
+    "description_en": "Lunge variation often more knee-friendly than forward lunge.",
+    "intensity_level": 2,
+    "target_outcome": [
+      "Força",
+      "Estabilidade"
+    ],
+    "instruction_pt": "Dê um passo para trás e desça o joelho de trás em direção ao chão, mantendo o peso na perna da frente e o tronco ereto.",
+    "image_url": "/exercises/illustrations/afundo-reverso.avif",
+    "suggested_sets": 3,
+    "suggested_reps": 12,
+    "suggested_rpe": "7-8"
+  },
+  {
+    "id": "exd-afundo-caminando",
+    "pt": "Afundo Caminhando",
+    "en": "Walking Lunge",
+    "aliases_pt": [
+      "passada caminhando"
+    ],
+    "aliases_en": [
+      "walking lunge"
+    ],
+    "category": "exercise",
+    "subcategory": "Joelho / Quadril",
+    "description_pt": "Variação dinâmica do afundo para progressão funcional.",
+    "description_en": "Dynamic lunge variation for functional progression.",
+    "intensity_level": 3,
+    "target_outcome": [
+      "Força",
+      "Cardio"
+    ],
+    "instruction_pt": "Realize afundos sucessivos alternando as pernas enquanto se desloca para frente, mantendo o controle do equilíbrio em cada passo.",
+    "image_url": "/exercises/illustrations/afundo-caminhando.avif",
+    "suggested_sets": 3,
+    "suggested_reps": 12,
+    "suggested_rpe": "7-8"
+  },
+  {
+    "id": "exd-leg-press",
+    "pt": "Leg Press",
+    "en": "Leg Press",
+    "aliases_pt": [
+      "prensa de perna"
+    ],
+    "aliases_en": [],
+    "category": "exercise",
+    "subcategory": "Joelho / Quadril",
+    "description_pt": "Fortalecimento global de MMII em cadeia fechada com carga controlada.",
+    "description_en": "Global lower limb strengthening in closed chain with controlled load.",
+    "intensity_level": 2,
+    "target_outcome": [
+      "Força"
+    ],
+    "instruction_pt": "Posicione os pés na plataforma, empurre-a estendendo as pernas sem travar os joelhos e retorne de forma lenta e controlada.",
+    "image_url": "/exercises/illustrations/leg-press.avif",
+    "suggested_sets": 3,
+    "suggested_reps": 12,
+    "suggested_rpe": "7-8"
+  },
+  {
+    "id": "exd-cadeira-extensora",
+    "pt": "Cadeira Extensora",
+    "en": "Leg Extension",
+    "aliases_pt": [
+      "extensora",
+      "extensão de joelho"
+    ],
+    "aliases_en": [
+      "knee extension",
+      "quad extension"
+    ],
+    "category": "exercise",
+    "subcategory": "Joelho",
+    "description_pt": "Isolamento de quadríceps em cadeia cinética aberta.",
+    "description_en": "Quadriceps isolation in open kinetic chain.",
+    "intensity_level": 2,
+    "target_outcome": [
+      "Força"
+    ],
+    "instruction_pt": "Sente-se no aparelho e estenda os joelhos completamente contra a resistência, controlando a descida lenta.",
+    "image_url": "/exercises/illustrations/extensao-joelho-cadeira.avif",
+    "suggested_sets": 3,
+    "suggested_reps": 12,
+    "suggested_rpe": "7-8",
+    "required_equipment": [
+      "Banco/Cadeira"
+    ]
+  },
+  {
+    "id": "exd-cadeira-flexora",
+    "pt": "Cadeira Flexora",
+    "en": "Leg Curl",
+    "aliases_pt": [
+      "flexora",
+      "mesa flexora"
+    ],
+    "aliases_en": [
+      "hamstring curl",
+      "prone leg curl"
+    ],
+    "category": "exercise",
+    "subcategory": "Joelho",
+    "description_pt": "Isolamento de isquiotibiais.",
+    "description_en": "Hamstring isolation.",
+    "intensity_level": 2,
+    "target_outcome": [
+      "Força"
+    ],
+    "instruction_pt": "Sente-se ou deite-se no aparelho e flexione os joelhos puxando o rolo em direção às coxas, controlando o retorno lento.",
+    "image_url": "/exercises/illustrations/flexao-joelho-cadeira.avif",
+    "suggested_sets": 3,
+    "suggested_reps": 12,
+    "suggested_rpe": "7-8",
+    "required_equipment": [
+      "Foam Roller",
+      "Banco/Cadeira"
+    ]
+  },
+  {
+    "id": "exd-stiff",
+    "pt": "Stiff",
+    "en": "Romanian Deadlift",
+    "aliases_pt": [
+      "levantamento terra romeno",
+      "rdl"
+    ],
+    "aliases_en": [
+      "rdl",
+      "stiff leg deadlift"
+    ],
+    "category": "exercise",
+    "subcategory": "Posterior / Quadril",
+    "description_pt": "Fortalecimento de cadeia posterior com foco em isquiotibiais e glúteos.",
+    "description_en": "Posterior chain strengthening focusing on hamstrings and glutes.",
+    "intensity_level": 3,
+    "target_outcome": [
+      "Força",
+      "Mobilidade"
+    ],
+    "instruction_pt": "Com os joelhos levemente flexionados, desça o tronco mantendo as costas retas e empurrando o quadril para trás até sentir o alongamento atrás das coxas.",
+    "image_url": "/exercises/illustrations/deadlift_dumbbells.avif",
+    "suggested_sets": 3,
+    "suggested_reps": 12,
+    "suggested_rpe": "7-8"
+  },
+  {
+    "id": "exd-step-up",
+    "pt": "Step-Up",
+    "en": "Step-Up",
+    "aliases_pt": [
+      "subida no step",
+      "subida em degrau"
+    ],
+    "aliases_en": [],
+    "category": "exercise",
+    "subcategory": "Joelho / Quadril",
+    "description_pt": "Exercício funcional de subida com foco em controle motor e força unipodal.",
+    "description_en": "Functional climbing exercise focusing on single leg strength.",
+    "intensity_level": 3,
+    "target_outcome": [
+      "Força",
+      "Estabilidade"
+    ],
+    "instruction_pt": "Coloque um pé sobre o banco ou degrau e suba, estendendo o joelho completamente. Desça de forma controlada, mantendo o alinhamento do joelho de apoio.",
+    "image_url": "/exercises/illustrations/step-up-frontal.avif",
+    "suggested_sets": 3,
+    "suggested_reps": 12,
+    "suggested_rpe": "7-8",
+    "required_equipment": [
+      "Banco/Cadeira",
+      "Step/Degrau"
+    ]
+  },
+  {
+    "id": "exd-step-down",
+    "pt": "Step-Down",
+    "en": "Step-Down",
+    "aliases_pt": [
+      "descida do step",
+      "step down excêntrico"
+    ],
+    "aliases_en": [
+      "eccentric step-down"
+    ],
+    "category": "exercise",
+    "subcategory": "Joelho",
+    "description_pt": "Exercício excêntrico para controle de valgo dinâmico.",
+    "description_en": "Eccentric exercise for dynamic valgus control.",
+    "intensity_level": 3,
+    "target_outcome": [
+      "Estabilidade",
+      "Força"
+    ],
+    "instruction_pt": "Em cima de um degrau, desça lentamente uma perna até tocar o calcanhar no chão, mantendo o joelho de apoio alinhado e sem deixar 'cair'.",
+    "image_url": "/exercises/illustrations/descida-controlada-de-degrau.avif",
+    "suggested_sets": 3,
+    "suggested_reps": 12,
+    "suggested_rpe": "7-8",
+    "required_equipment": [
+      "Step/Degrau"
+    ]
+  },
+  {
+    "id": "exd-nordico",
+    "pt": "Nordic Hamstring",
+    "en": "Nordic Hamstring Curl",
+    "aliases_pt": [
+      "nórdico",
+      "exercício nórdico"
+    ],
+    "aliases_en": [
+      "nordic curl",
+      "nhc"
+    ],
+    "category": "exercise",
+    "subcategory": "Posterior da Coxa",
+    "description_pt": "Prevenção de lesões em isquiotibiais.",
+    "description_en": "Hamstring injury prevention exercise.",
+    "intensity_level": 5,
+    "target_outcome": [
+      "Força",
+      "Potência"
+    ],
+    "instruction_pt": "Ajoelhado com os calcanhares presos, desça o tronco o mais devagar possível, resistindo à queda com a parte de trás das coxas.",
+    "image_url": "/exercises/illustrations/nordic-hamstring-beginner.avif",
+    "suggested_sets": 4,
+    "suggested_reps": 8,
+    "suggested_rpe": "9"
+  },
+  {
+    "id": "exd-ponte-gluteo",
+    "pt": "Ponte de Glúteo",
+    "en": "Glute Bridge",
+    "aliases_pt": [
+      "ponte",
+      "elevação pélvica"
+    ],
+    "aliases_en": [
+      "hip bridge",
+      "bridge"
+    ],
+    "category": "exercise",
+    "subcategory": "Quadril / Glúteo",
+    "description_pt": "Ativação de glúteo máximo e estabilidade lombo-pélvica.",
+    "description_en": "Glute max activation and lumbopelvic stability.",
+    "suggested_sets": 3,
+    "suggested_reps": 15,
+    "suggested_rpe": "7",
+    "instruction_pt": "Deitado de costas com os joelhos dobrados, suba o quadril em direção ao teto apertando bem os glúteos. Mantenha os ombros relaxados no chão.",
+    "image_url": "/exercises/illustrations/ponte-gluteo.avif"
+  },
+  {
+    "id": "exd-hip-thrust",
+    "pt": "Hip Thrust",
+    "en": "Hip Thrust",
+    "aliases_pt": [
+      "elevação de quadril com barra"
+    ],
+    "aliases_en": [
+      "barbell hip thrust"
+    ],
+    "category": "exercise",
+    "subcategory": "Quadril / Glúteo",
+    "description_pt": "O padrão-ouro para isolamento e fortalecimento de glúteo máximo.",
+    "description_en": "The gold standard for gluteus maximus isolation and strengthening.",
+    "intensity_level": 4,
+    "target_outcome": [
+      "Força",
+      "Potência"
+    ],
+    "instruction_pt": "Apoie as escápulas em um banco, mantenha os pés no chão e empurre o quadril para cima até alinhar com o tronco, contraindo os glúteos no topo.",
+    "image_url": "/exercises/illustrations/elevacao-pelvica.avif",
+    "suggested_sets": 3,
+    "suggested_reps": 12,
+    "suggested_rpe": "8-9",
+    "required_equipment": [
+      "Banco/Cadeira"
+    ]
+  },
+  {
+    "id": "exd-single-leg-bridge",
+    "pt": "Ponte Unilateral",
+    "en": "Single Leg Bridge",
+    "aliases_pt": [
+      "ponte unipodal"
+    ],
+    "aliases_en": [
+      "single leg glute bridge"
+    ],
+    "category": "exercise",
+    "subcategory": "Quadril / Glúteo",
+    "description_pt": "Fortalecimento de cadeia posterior com foco em estabilidade pélvica unipodal.",
+    "description_en": "Posterior chain strengthening focusing on single-leg pelvic stability.",
+    "intensity_level": 3,
+    "target_outcome": [
+      "Força",
+      "Estabilidade"
+    ],
+    "instruction_pt": "Deitado de costas, levante uma perna e empurre o quadril para cima usando apenas o calcanhar da perna que está no chão.",
+    "image_url": "/exercises/illustrations/ponte-unipodal.avif",
+    "suggested_sets": 3,
+    "suggested_reps": 12,
+    "suggested_rpe": "7-8"
+  },
+  {
+    "id": "exd-leg-raise-lateral",
+    "pt": "Abdução de Quadril Deitado",
+    "en": "Side-Lying Hip Abduction",
+    "aliases_pt": [
+      "elevação lateral deitado"
+    ],
+    "aliases_en": [
+      "side lying leg raise",
+      "clamshell leg raise"
+    ],
+    "category": "exercise",
+    "subcategory": "Quadril",
+    "description_pt": "Fortalecimento do glúteo médio em cadeia cinética aberta.",
+    "description_en": "Gluteus medius strengthening in open kinetic chain.",
+    "intensity_level": 2,
+    "target_outcome": [
+      "Força",
+      "Estabilidade"
+    ],
+    "instruction_pt": "Deitado de lado com as pernas esticadas, levante a perna de cima lateralmente sem girar o quadril para trás.",
+    "image_url": "/exercises/illustrations/abducao-quadril-deitado.avif",
+    "suggested_sets": 3,
+    "suggested_reps": 12,
+    "suggested_rpe": "7-8"
+  },
+  {
+    "id": "exd-clamshell",
+    "pt": "Clamshell",
+    "en": "Clamshell",
+    "aliases_pt": [
+      "concha",
+      "abertura de quadril"
+    ],
+    "aliases_en": [],
+    "category": "exercise",
+    "subcategory": "Quadril",
+    "description_pt": "Fortalecimento de rotadores externos do quadril.",
+    "description_en": "Hip external rotator strengthening.",
+    "intensity_level": 2,
+    "target_outcome": [
+      "Força",
+      "Estabilidade"
+    ],
+    "instruction_pt": "Deitado de lado com joelhos dobrados, mantenha os calcanhares juntos e abra o joelho de cima como uma concha.",
+    "image_url": "/exercises/illustrations/clamshell.avif",
+    "suggested_sets": 3,
+    "suggested_reps": 12,
+    "suggested_rpe": "7-8"
+  },
+  {
+    "id": "exd-monster-walk",
+    "pt": "Monster Walk",
+    "en": "Monster Walk",
+    "aliases_pt": [
+      "caminhada com faixa",
+      "banda lateral"
+    ],
+    "aliases_en": [
+      "banded walk",
+      "lateral band walk"
+    ],
+    "category": "exercise",
+    "subcategory": "Quadril",
+    "description_pt": "Exercício dinâmico para ativação de abdutores de quadril em cadeia fechada.",
+    "description_en": "Dynamic exercise for hip abductor activation in closed chain.",
+    "intensity_level": 3,
+    "target_outcome": [
+      "Força",
+      "Estabilidade"
+    ],
+    "instruction_pt": "Com uma faixa elástica nos tornozelos ou acima dos joelhos, dê passos para o lado mantendo uma posição de semi-agachamento e os joelhos afastados.",
+    "image_url": "/exercises/illustrations/caminhada-de-lado-com-miniband-lateral-band-walk.avif",
+    "suggested_sets": 3,
+    "suggested_reps": 12,
+    "suggested_rpe": "7-8",
+    "required_equipment": [
+      "Faixa Elástica"
+    ]
+  },
+  {
+    "id": "exd-kickback",
+    "pt": "Extensão de Quadril",
+    "en": "Hip Extension Kickback",
+    "aliases_pt": [
+      "coice",
+      "glute kickback"
+    ],
+    "aliases_en": [
+      "donkey kick"
+    ],
+    "category": "exercise",
+    "subcategory": "Quadril / Glúteo",
+    "description_pt": "Fortalecimento isolado do glúteo máximo.",
+    "description_en": "Isolated gluteus maximus strengthening.",
+    "intensity_level": 2,
+    "target_outcome": [
+      "Força"
+    ],
+    "instruction_pt": "Em quatro apoios, empurre o calcanhar em direção ao teto mantendo o joelho dobrado ou esticado, sem arquear a coluna lombar.",
+    "image_url": "/exercises/illustrations/extensao-quadril-quatro-apoios.avif",
+    "suggested_sets": 3,
+    "suggested_reps": 12,
+    "suggested_rpe": "7-8"
+  },
+  {
+    "id": "exd-pant-em-pe",
+    "pt": "Panturrilha em Pé",
+    "en": "Standing Calf Raise",
+    "aliases_pt": [
+      "elevação de panturrilha",
+      "plantiflexão em carga"
+    ],
+    "aliases_en": [
+      "heel raise",
+      "calf raise"
+    ],
+    "category": "exercise",
+    "subcategory": "Tornozelo / Perna",
+    "description_pt": "Fortalecimento do complexo gastrocnêmio-sóleo.",
+    "description_en": "Gastrocnemius-soleus complex strengthening.",
+    "intensity_level": 2,
+    "target_outcome": [
+      "Força"
+    ],
+    "instruction_pt": "Fique na ponta dos pés, subindo o máximo que puder, e desça lentamente. Pode ser feito no chão ou na borda de um degrau para maior amplitude.",
+    "image_url": "/exercises/illustrations/elevacao-de-panturrilha-em-pe.avif",
+    "suggested_sets": 3,
+    "suggested_reps": 12,
+    "suggested_rpe": "7-8",
+    "required_equipment": [
+      "Step/Degrau"
+    ]
+  },
+  {
+    "id": "exd-pant-sentado",
+    "pt": "Panturrilha Sentado",
+    "en": "Seated Calf Raise",
+    "aliases_pt": [
+      "sóleo sentado"
+    ],
+    "aliases_en": [
+      "seated heel raise"
+    ],
+    "category": "exercise",
+    "subcategory": "Tornozelo / Perna",
+    "description_pt": "Foco no fortalecimento isolado do músculo sóleo.",
+    "description_en": "Focused isolation strengthening of the soleus muscle.",
+    "intensity_level": 2,
+    "target_outcome": [
+      "Força"
+    ],
+    "instruction_pt": "Sentado com os joelhos dobrados e carga sobre as coxas, fique na ponta dos pés e desça de forma controlada.",
+    "image_url": "/exercises/illustrations/elevacao-de-panturrilha-sentado.avif",
+    "suggested_sets": 3,
+    "suggested_reps": 12,
+    "suggested_rpe": "7-8"
+  },
+  {
+    "id": "exd-tibial-ant",
+    "pt": "Dorsiflexão Resistida",
+    "en": "Tibialis Anterior Raise",
+    "aliases_pt": [
+      "fortalecimento de tibial anterior",
+      "tib raise"
+    ],
+    "aliases_en": [
+      "tib bar raise",
+      "dorsiflexion exercise"
+    ],
+    "category": "exercise",
+    "subcategory": "Tornozelo / Perna",
+    "description_pt": "Fortalecimento do tibial anterior para estabilidade de tornozelo e prevenção de canelite.",
+    "description_en": "Tibialis anterior strengthening for ankle stability and shin splint prevention.",
+    "intensity_level": 2,
+    "target_outcome": [
+      "Força",
+      "Estabilidade"
+    ],
+    "instruction_pt": "Encostado em uma parede com os calcanhares à frente, levante as pontas dos pés em direção às canelas e retorne devagar.",
+    "image_url": "/exercises/illustrations/tibial-anterior-fortalecimento.avif",
+    "suggested_sets": 3,
+    "suggested_reps": 12,
+    "suggested_rpe": "7-8",
+    "required_equipment": [
+      "Parede"
+    ]
+  },
+  {
+    "id": "exd-inversao-tornozelo",
+    "pt": "Inversão Resistida",
+    "en": "Resisted Inversion",
+    "aliases_pt": [
+      "inversão com faixa"
+    ],
+    "aliases_en": [
+      "banded inversion"
+    ],
+    "category": "exercise",
+    "subcategory": "Tornozelo",
+    "description_pt": "Fortalecimento do tibial posterior em inversão.",
+    "description_en": "Tibialis posterior strengthening in inversion.",
+    "intensity_level": 2,
+    "target_outcome": [
+      "Força",
+      "Estabilidade"
+    ],
+    "instruction_pt": "Com uma faixa elástica presa no pé, puxe a planta do pé para dentro contra a resistência e retorne devagar.",
+    "image_url": "/exercises/illustrations/inversao-tornozelo-elastico.avif",
+    "suggested_sets": 3,
+    "suggested_reps": 12,
+    "suggested_rpe": "7-8",
+    "required_equipment": [
+      "Faixa Elástica"
+    ]
+  },
+  {
+    "id": "exd-eversao-tornozelo",
+    "pt": "Eversão Resistida",
+    "en": "Resisted Eversion",
+    "aliases_pt": [
+      "eversão com faixa"
+    ],
+    "aliases_en": [
+      "banded eversion"
+    ],
+    "category": "exercise",
+    "subcategory": "Tornozelo",
+    "description_pt": "Fortalecimento dos fibulares (peroneais) para estabilidade lateral.",
+    "description_en": "Fibularis (peroneals) strengthening for lateral stability.",
+    "intensity_level": 2,
+    "target_outcome": [
+      "Força",
+      "Estabilidade"
+    ],
+    "instruction_pt": "Com uma faixa elástica presa no pé, puxe a borda lateral do pé para fora contra a resistência.",
+    "image_url": "/exercises/illustrations/eversao-tornozelo-elastico.avif",
+    "suggested_sets": 3,
+    "suggested_reps": 12,
+    "suggested_rpe": "7-8",
+    "required_equipment": [
+      "Faixa Elástica"
+    ]
+  },
+  {
+    "id": "exd-apoio-unipodal",
+    "pt": "Apoio Unipodal",
+    "en": "Single Leg Stance",
+    "aliases_pt": [
+      "equilíbrio unipodal",
+      "apoio em um pé"
+    ],
+    "aliases_en": [
+      "single leg balance",
+      "one leg stand"
+    ],
+    "category": "exercise",
+    "subcategory": "Propriocepção",
+    "description_pt": "Treino de equilíbrio estático e propriocepção.",
+    "description_en": "Static balance and proprioception training.",
+    "intensity_level": 1,
+    "target_outcome": [
+      "Estabilidade"
+    ],
+    "instruction_pt": "Fique em um pé só, mantendo a postura ereta e o quadril alinhado. Tente manter por 30 segundos ou conforme orientado.",
+    "image_url": "/exercises/illustrations/apoio-unipodal.avif",
+    "suggested_sets": 3,
+    "suggested_reps": 30,
+    "suggested_rpe": "4-5"
+  },
+  {
+    "id": "exd-bosu-balance",
+    "pt": "Equilíbrio no BOSU",
+    "en": "BOSU Balance",
+    "aliases_pt": [
+      "bosu",
+      "meia esfera"
+    ],
+    "aliases_en": [],
+    "category": "exercise",
+    "subcategory": "Propriocepção",
+    "description_pt": "Treino de equilíbrio em superfície instável.",
+    "description_en": "Balance training on unstable surface.",
+    "intensity_level": 3,
+    "target_outcome": [
+      "Estabilidade"
+    ],
+    "instruction_pt": "Suba no BOSU (lado macio para cima) e tente manter o equilíbrio, mantendo os joelhos levemente flexionados.",
+    "image_url": "/exercises/illustrations/equilibrio-bosu.avif",
+    "suggested_sets": 3,
+    "suggested_reps": 30,
+    "suggested_rpe": "7-8",
+    "required_equipment": [
+      "BOSU"
+    ]
+  },
+  {
+    "id": "exd-disco-proprioceptivo",
+    "pt": "Disco Proprioceptivo",
+    "en": "Wobble Board",
+    "aliases_pt": [
+      "disco de equilíbrio",
+      "disco instável"
+    ],
+    "aliases_en": [
+      "balance disc",
+      "wobble cushion"
+    ],
+    "category": "exercise",
+    "subcategory": "Propriocepção",
+    "description_pt": "Treino de reações de equilíbrio e estabilidade de tornozelo.",
+    "description_en": "Balance reaction and ankle stability training.",
+    "intensity_level": 2,
+    "target_outcome": [
+      "Estabilidade"
+    ],
+    "instruction_pt": "Fique em pé sobre o disco de equilíbrio e tente manter o centro, evitando que as bordas toquem o chão.",
+    "image_url": "/exercises/illustrations/disco-proprioceptivo.avif",
+    "suggested_sets": 3,
+    "suggested_reps": 30,
+    "suggested_rpe": "7-8",
+    "required_equipment": [
+      "Disco Proprioceptivo"
+    ]
+  },
+  {
+    "id": "exd-salto-unipodal",
+    "pt": "Salto Unipodal",
+    "en": "Single Leg Hop",
+    "aliases_pt": [
+      "hop unilateral",
+      "pulo em uma perna"
+    ],
+    "aliases_en": [
+      "single leg hop",
+      "hop for distance"
+    ],
+    "category": "exercise",
+    "subcategory": "Pliometria / RTS",
+    "description_pt": "Treino de potência e controle de aterrissagem unipodal.",
+    "description_en": "Power training and single-leg landing control.",
+    "intensity_level": 4,
+    "target_outcome": [
+      "Potência",
+      "Estabilidade"
+    ],
+    "instruction_pt": "Salte para frente ou para cima com uma perna e amorteça a queda com o mesmo pé, mantendo o joelho alinhado e estável.",
+    "image_url": "/exercises/illustrations/salto-unipodal-aterrissagem.avif",
+    "suggested_sets": 3,
+    "suggested_reps": 12,
+    "suggested_rpe": "8-9"
+  },
+  {
+    "id": "exd-elevacao-lateral",
+    "pt": "Elevação Lateral",
+    "en": "Lateral Raise",
+    "aliases_pt": [
+      "abdução de ombro com halter"
+    ],
+    "aliases_en": [
+      "dumbbell lateral raise",
+      "shoulder abduction"
+    ],
+    "category": "exercise",
+    "subcategory": "Ombro",
+    "description_pt": "Fortalecimento de deltoide médio.",
+    "description_en": "Middle deltoid strengthening.",
+    "intensity_level": 2,
+    "target_outcome": [
+      "Força"
+    ],
+    "instruction_pt": "Com halteres nas mãos, levante os braços lateralmente até a altura dos ombros, mantendo uma leve flexão nos cotovelos.",
+    "image_url": "/exercises/illustrations/elevacao-lateral-de-ombro-0-90.avif",
+    "suggested_sets": 3,
+    "suggested_reps": 12,
+    "suggested_rpe": "7-8",
+    "required_equipment": [
+      "Halter"
+    ]
+  },
+  {
+    "id": "exd-elevacao-frontal",
+    "pt": "Elevação Frontal",
+    "en": "Front Raise",
+    "aliases_pt": [
+      "flexão de ombro"
+    ],
+    "aliases_en": [
+      "shoulder flexion"
+    ],
+    "category": "exercise",
+    "subcategory": "Ombro",
+    "description_pt": "Fortalecimento de deltoide anterior.",
+    "description_en": "Anterior deltoid strengthening.",
+    "intensity_level": 2,
+    "target_outcome": [
+      "Força"
+    ],
+    "instruction_pt": "Levante os braços à frente do corpo até a altura dos ombros, mantendo o tronco estável.",
+    "image_url": "/exercises/illustrations/elevacao-frontal-de-ombro.avif",
+    "suggested_sets": 3,
+    "suggested_reps": 12,
+    "suggested_rpe": "7-8"
+  },
+  {
+    "id": "exd-rot-ext-ombro",
+    "pt": "Rotação Externa de Ombro",
+    "en": "Shoulder External Rotation",
+    "aliases_pt": [
+      "rotação externa com faixa",
+      "re de ombro"
+    ],
+    "aliases_en": [
+      "banded er",
+      "sidelying er",
+      "cable er"
+    ],
+    "category": "exercise",
+    "subcategory": "Ombro",
+    "description_pt": "Fortalecimento do manguito rotador (infraespinhal e redondo menor).",
+    "description_en": "Rotator cuff strengthening (infraspinatus and teres minor).",
+    "intensity_level": 2,
+    "target_outcome": [
+      "Estabilidade",
+      "Força"
+    ],
+    "required_equipment": [
+      "Theraband",
+      "Halter"
+    ],
+    "instruction_pt": "Com o cotovelo junto ao corpo, puxe a faixa elástica para fora, rodando o ombro, e retorne devagar.",
+    "image_url": "/exercises/illustrations/rotacao-externa-ombro.avif",
+    "suggested_sets": 3,
+    "suggested_reps": 12,
+    "suggested_rpe": "7-8"
+  },
+  {
+    "id": "exd-rot-int-ombro",
+    "pt": "Rotação Interna de Ombro",
+    "en": "Shoulder Internal Rotation",
+    "aliases_pt": [
+      "rotação interna com faixa",
+      "ri de ombro"
+    ],
+    "aliases_en": [
+      "banded ir",
+      "cable ir"
+    ],
+    "category": "exercise",
+    "subcategory": "Ombro",
+    "description_pt": "Fortalecimento do subescapular.",
+    "description_en": "Subscapularis strengthening.",
+    "intensity_level": 2,
+    "target_outcome": [
+      "Força",
+      "Estabilidade"
+    ],
+    "instruction_pt": "Com o cotovelo junto ao corpo, puxe a faixa elástica em direção ao abdômen, rodando o ombro para dentro.",
+    "image_url": "/exercises/illustrations/rotacao-interna-ombro.avif",
+    "suggested_sets": 3,
+    "suggested_reps": 12,
+    "suggested_rpe": "7-8",
+    "required_equipment": [
+      "Faixa Elástica"
+    ]
+  },
+  {
+    "id": "exd-full-can",
+    "pt": "Full Can",
+    "en": "Full Can Exercise",
+    "aliases_pt": [
+      "elevação no plano da escápula"
+    ],
+    "aliases_en": [
+      "scaption",
+      "scapular plane elevation"
+    ],
+    "category": "exercise",
+    "subcategory": "Ombro",
+    "description_pt": "Exercício seguro para fortalecimento de supraespinhal.",
+    "description_en": "Safe exercise for supraspinatus strengthening.",
+    "intensity_level": 2,
+    "target_outcome": [
+      "Força",
+      "Estabilidade"
+    ],
+    "instruction_pt": "Com os polegares virados para cima, levante os braços em um ângulo de 30 graus à frente do corpo (plano da escápula) até a altura dos ombros.",
+    "image_url": "/exercises/illustrations/full-can.avif",
+    "suggested_sets": 3,
+    "suggested_reps": 12,
+    "suggested_rpe": "7-8"
+  },
+  {
+    "id": "exd-crucifixo-reverso",
+    "pt": "Crucifixo Reverso",
+    "en": "Reverse Fly",
+    "aliases_pt": [
+      "voador reverso",
+      "posterior de ombro"
+    ],
+    "aliases_en": [
+      "rear delt fly",
+      "bent over reverse fly"
+    ],
+    "category": "exercise",
+    "subcategory": "Ombro",
+    "description_pt": "Fortalecimento de deltoide posterior e romboides.",
+    "description_en": "Rear deltoid and rhomboid strengthening.",
+    "intensity_level": 2,
+    "target_outcome": [
+      "Força",
+      "Estabilidade"
+    ],
+    "instruction_pt": "Com o tronco inclinado ou em pé com faixa elástica, abra os braços para trás aproximando as escápulas.",
+    "image_url": "/exercises/illustrations/crucifixo-reverso.avif",
+    "suggested_sets": 3,
+    "suggested_reps": 12,
+    "suggested_rpe": "7-8",
+    "required_equipment": [
+      "Faixa Elástica"
+    ]
+  },
+  {
+    "id": "exd-pendular-codman",
+    "pt": "Exercício Pendular de Codman",
+    "en": "Codman Pendulum Exercise",
+    "aliases_pt": [
+      "pendular",
+      "exercício de codman"
+    ],
+    "aliases_en": [
+      "pendulum exercise"
+    ],
+    "category": "exercise",
+    "subcategory": "Ombro",
+    "description_pt": "Mobilização passiva de ombro para fase inicial de reabilitação.",
+    "description_en": "Passive shoulder mobilization for early rehabilitation.",
+    "intensity_level": 1,
+    "target_outcome": [
+      "Mobilidade",
+      "Analgesia"
+    ],
+    "instruction_pt": "Incline o corpo para frente apoiando em uma mesa e deixe o braço afetado pendurado. Faça círculos suaves e movimentos de balanço.",
+    "image_url": "/exercises/illustrations/codman-pendular.avif",
+    "suggested_sets": 3,
+    "suggested_reps": 15,
+    "suggested_rpe": "4-5"
+  },
+  {
+    "id": "exd-wall-slides",
+    "pt": "Deslizamento na Parede",
+    "en": "Wall Slides",
+    "aliases_pt": [
+      "wall angel",
+      "slide na parede"
+    ],
+    "aliases_en": [
+      "wall angel",
+      "wall slide"
+    ],
+    "category": "exercise",
+    "subcategory": "Ombro / Escápula",
+    "description_pt": "Treino de controle escapular e mobilidade torácica.",
+    "description_en": "Scapular control and thoracic mobility training.",
+    "intensity_level": 2,
+    "target_outcome": [
+      "Mobilidade",
+      "Estabilidade"
+    ],
+    "instruction_pt": "Encoste as costas e os braços na parede em posição de 'U' e deslize-os para cima e para baixo sem perder o contato com a parede.",
+    "image_url": "/exercises/illustrations/wall-angels.avif",
+    "suggested_sets": 3,
+    "suggested_reps": 12,
+    "suggested_rpe": "7-8",
+    "required_equipment": [
+      "Parede"
+    ]
+  },
+  {
+    "id": "exd-serratus-punch",
+    "pt": "Serrátil Punch",
+    "en": "Serratus Punch",
+    "aliases_pt": [
+      "protração de escápula",
+      "push plus"
+    ],
+    "aliases_en": [
+      "push up plus",
+      "scapular protraction"
+    ],
+    "category": "exercise",
+    "subcategory": "Escápula",
+    "description_pt": "Ativação do serrátil anterior para estabilidade escapular.",
+    "description_en": "Serratus anterior activation for scapular stability.",
+    "intensity_level": 2,
+    "target_outcome": [
+      "Estabilidade"
+    ],
+    "instruction_pt": "Deitado de costas ou contra a parede, empurre as mãos para frente como se quisesse afastar as escápulas da coluna, sem dobrar os cotovelos.",
+    "image_url": "/exercises/illustrations/serratus-punch.png",
+    "suggested_sets": 3,
+    "suggested_reps": 12,
+    "suggested_rpe": "7-8",
+    "required_equipment": [
+      "Parede"
+    ]
+  },
+  {
+    "id": "exd-retracão-escapular",
+    "pt": "Retração Escapular",
+    "en": "Scapular Retraction",
+    "aliases_pt": [
+      "adução de escápulas",
+      "squeeze"
+    ],
+    "aliases_en": [
+      "scapular squeeze",
+      "band pull apart"
+    ],
+    "category": "exercise",
+    "subcategory": "Escápula",
+    "description_pt": "Exercício para fortalecimento dos retratores da escápula (romboides e trapézio médio).",
+    "description_en": "Scapular retractor strengthening (rhomboids and middle trapezius).",
+    "intensity_level": 2,
+    "target_outcome": [
+      "Estabilidade",
+      "Força"
+    ],
+    "instruction_pt": "Puxe os ombros para trás, tentando 'esmagar' uma uva imaginária entre as escápulas, mantendo os ombros baixos.",
+    "image_url": "/exercises/illustrations/retracao-escapular.avif",
+    "suggested_sets": 3,
+    "suggested_reps": 12,
+    "suggested_rpe": "7-8"
+  },
+  {
+    "id": "exd-rosca-biceps",
+    "pt": "Rosca Bíceps",
+    "en": "Bicep Curl",
+    "aliases_pt": [
+      "rosca direta",
+      "curl de bíceps"
+    ],
+    "aliases_en": [
+      "biceps curl",
+      "dumbbell curl",
+      "barbell curl"
+    ],
+    "category": "exercise",
+    "subcategory": "Cotovelo / Braço",
+    "description_pt": "Fortalecimento isolado do bíceps braquial.",
+    "description_en": "Isolated biceps brachii strengthening.",
+    "intensity_level": 2,
+    "target_outcome": [
+      "Força"
+    ],
+    "instruction_pt": "Com os braços estendidos ao lado do corpo, dobre os cotovelos trazendo o peso em direção aos ombros e retorne devagar.",
+    "image_url": "/exercises/illustrations/bicep-curl-alternado.avif",
+    "suggested_sets": 3,
+    "suggested_reps": 12,
+    "suggested_rpe": "7-8"
+  },
+  {
+    "id": "exd-extensao-triceps",
+    "pt": "Extensão de Tríceps",
+    "en": "Triceps Extension",
+    "aliases_pt": [
+      "tríceps testa",
+      "extensão overhead"
+    ],
+    "aliases_en": [
+      "skull crusher",
+      "overhead tricep extension"
+    ],
+    "category": "exercise",
+    "subcategory": "Cotovelo / Braço",
+    "description_pt": "Fortalecimento isolado do tríceps braquial.",
+    "description_en": "Isolated triceps brachii strengthening.",
+    "intensity_level": 2,
+    "target_outcome": [
+      "Força"
+    ],
+    "instruction_pt": "Estenda o braço sobre a cabeça e dobre o cotovelo levando a mão atrás da nuca, depois estenda-o completamente para cima.",
+    "image_url": "/exercises/illustrations/extensao-de-cotovelo-com-garrafa.png",
+    "suggested_sets": 3,
+    "suggested_reps": 12,
+    "suggested_rpe": "7-8"
+  },
+  {
+    "id": "exd-flexao-punho",
+    "pt": "Flexão de Punho",
+    "en": "Wrist Curl",
+    "aliases_pt": [
+      "rosca de punho",
+      "flexor de punho"
+    ],
+    "aliases_en": [
+      "wrist flexion"
+    ],
+    "category": "exercise",
+    "subcategory": "Antebraço",
+    "description_pt": "Fortalecimento dos flexores do punho.",
+    "description_en": "Wrist flexor strengthening.",
+    "intensity_level": 2,
+    "target_outcome": [
+      "Força"
+    ],
+    "instruction_pt": "Com o antebraço apoiado e a palma da mão para cima, dobre o punho trazendo o peso para cima e retorne devagar.",
+    "image_url": "/exercises/illustrations/flexao-punho.avif",
+    "suggested_sets": 3,
+    "suggested_reps": 12,
+    "suggested_rpe": "7-8"
+  },
+  {
+    "id": "exd-extensao-punho",
+    "pt": "Extensão de Punho",
+    "en": "Reverse Wrist Curl",
+    "aliases_pt": [
+      "extensor de punho"
+    ],
+    "aliases_en": [
+      "wrist extension"
+    ],
+    "category": "exercise",
+    "subcategory": "Antebraço",
+    "description_pt": "Fortalecimento dos extensores do punho.",
+    "description_en": "Wrist extensor strengthening.",
+    "intensity_level": 2,
+    "target_outcome": [
+      "Força"
+    ],
+    "instruction_pt": "Com o antebraço apoiado e a palma da mão para baixo, levante as costas da mão em direção ao teto e retorne devagar.",
+    "image_url": "/exercises/illustrations/extensao-punho.avif",
+    "suggested_sets": 3,
+    "suggested_reps": 12,
+    "suggested_rpe": "7-8"
+  },
+  {
+    "id": "exd-supinacao-pronacao",
+    "pt": "Supinação e Pronação",
+    "en": "Supination and Pronation",
+    "aliases_pt": [
+      "giro de antebraço"
+    ],
+    "aliases_en": [
+      "forearm rotation"
+    ],
+    "category": "exercise",
+    "subcategory": "Antebraço",
+    "description_pt": "Exercício para mobilidade e força rotacional do antebraço.",
+    "description_en": "Forearm rotational mobility and strength exercise.",
+    "intensity_level": 2,
+    "target_outcome": [
+      "Mobilidade",
+      "Força"
+    ],
+    "instruction_pt": "Segurando um peso (ou martelo), rode o antebraço para fora (palma para cima) e para dentro (palma para baixo) com controle.",
+    "image_url": "/exercises/illustrations/supinacao-pronacao.avif",
+    "suggested_sets": 3,
+    "suggested_reps": 12,
+    "suggested_rpe": "7-8"
+  },
+  {
+    "id": "exd-flexbar-tyler",
+    "pt": "Tyler Twist",
+    "en": "Tyler Twist",
+    "aliases_pt": [
+      "flexbar",
+      "excêntrico de punho"
+    ],
+    "aliases_en": [
+      "flexbar exercise",
+      "reverse tyler twist"
+    ],
+    "category": "exercise",
+    "subcategory": "Cotovelo",
+    "description_pt": "Exercício excêntrico para epicondilite lateral.",
+    "description_en": "Eccentric exercise for lateral epicondylitis.",
+    "intensity_level": 3,
+    "target_outcome": [
+      "Força"
+    ],
+    "instruction_pt": "Segurando uma barra flexível (FlexBar), realize a torção com a mão não afetada e controle o desenrolar com a mão afetada.",
+    "image_url": "/exercises/illustrations/tyler-twist.avif",
+    "suggested_sets": 3,
+    "suggested_reps": 12,
+    "suggested_rpe": "7-8",
+    "required_equipment": [
+      "Barra"
+    ]
+  },
+  {
+    "id": "exd-grip-strengthening",
+    "pt": "Fortalecimento de Preensão",
+    "en": "Grip Strengthening",
+    "aliases_pt": [
+      "fortalecimento de mão",
+      "aperto de mão"
+    ],
+    "aliases_en": [
+      "hand grip",
+      "grip training"
+    ],
+    "category": "exercise",
+    "subcategory": "Mão",
+    "description_pt": "Fortalecimento da força de preensão manual.",
+    "description_en": "Hand grip strength strengthening.",
+    "intensity_level": 2,
+    "target_outcome": [
+      "Força"
+    ],
+    "instruction_pt": "Aperte uma bolinha de borracha ou um hand-grip com força máxima e solte lentamente.",
+    "image_url": "/exercises/illustrations/fortalecimento-preensao-bolinha.avif",
+    "suggested_sets": 3,
+    "suggested_reps": 12,
+    "suggested_rpe": "7-8"
+  },
+  {
+    "id": "exd-finger-extension",
+    "pt": "Extensão de Dedos",
+    "en": "Finger Extension",
+    "aliases_pt": [
+      "extensão com elástico"
+    ],
+    "aliases_en": [
+      "rubber band finger extension"
+    ],
+    "category": "exercise",
+    "subcategory": "Mão",
+    "description_pt": "Fortalecimento dos extensores de dedos e intrínsecos da mão.",
+    "description_en": "Finger extensor and hand intrinsics strengthening.",
+    "intensity_level": 1,
+    "target_outcome": [
+      "Força"
+    ],
+    "instruction_pt": "Coloque um elástico ao redor dos dedos e tente abri-los contra a resistência do elástico.",
+    "image_url": "/exercises/illustrations/extensao-dedos-elastico.avif",
+    "suggested_sets": 3,
+    "suggested_reps": 15,
+    "suggested_rpe": "4-5",
+    "required_equipment": [
+      "Faixa Elástica"
+    ]
+  },
+  {
+    "id": "exd-prancha-ventral",
+    "pt": "Prancha Ventral",
+    "en": "Front Plank",
+    "aliases_pt": [
+      "prancha abdominal",
+      "prancha isométrica"
+    ],
+    "aliases_en": [
+      "plank",
+      "forearm plank"
+    ],
+    "category": "exercise",
+    "subcategory": "Core",
+    "description_pt": "Estabilização isométrica do core.",
+    "description_en": "Isometric core stabilization.",
+    "intensity_level": 3,
+    "target_outcome": [
+      "Estabilidade"
+    ],
+    "instruction_pt": "Apoie os antebraços e as pontas dos pés no chão, mantenha o corpo alinhado como uma tábua, contraindo abdômen e glúteos.",
+    "image_url": "/exercises/illustrations/prancha-frontal.avif",
+    "suggested_sets": 3,
+    "suggested_reps": 12,
+    "suggested_rpe": "7-8"
+  },
+  {
+    "id": "exd-prancha-lateral",
+    "pt": "Prancha Lateral",
+    "en": "Side Plank",
+    "aliases_pt": [],
+    "aliases_en": [],
+    "category": "exercise",
+    "subcategory": "Core",
+    "description_pt": "Estabilização do core com foco nos oblíquos e glúteo médio.",
+    "description_en": "Core stabilization focusing on obliques and gluteus medius.",
+    "intensity_level": 3,
+    "target_outcome": [
+      "Estabilidade"
+    ],
+    "instruction_pt": "Deitado de lado, apoie o antebraço e levante o quadril do chão, mantendo uma linha reta dos pés à cabeça.",
+    "image_url": "/exercises/illustrations/prancha-lateral.avif",
+    "suggested_sets": 3,
+    "suggested_reps": 12,
+    "suggested_rpe": "7-8"
+  },
+  {
+    "id": "exd-dead-bug",
+    "pt": "Dead Bug",
+    "en": "Dead Bug",
+    "aliases_pt": [],
+    "aliases_en": [],
+    "category": "exercise",
+    "subcategory": "Core",
+    "description_pt": "Dissociação de membros com estabilização lombar.",
+    "description_en": "Limb dissociation with lumbar stabilization.",
+    "intensity_level": 2,
+    "target_outcome": [
+      "Estabilidade"
+    ],
+    "instruction_pt": "Deitado de costas, levante braços e pernas. Desça o braço e a perna opostos lentamente sem deixar a coluna lombar sair do chão.",
+    "image_url": "/exercises/illustrations/dead-bug.avif",
+    "suggested_sets": 3,
+    "suggested_reps": 12,
+    "suggested_rpe": "7-8"
+  },
+  {
+    "id": "exd-bird-dog",
+    "pt": "Bird Dog",
+    "en": "Bird Dog",
+    "aliases_pt": [
+      "cachorro-pássaro",
+      "quadrúpede"
+    ],
+    "aliases_en": [
+      "quadruped arm-leg raise"
+    ],
+    "category": "exercise",
+    "subcategory": "Core",
+    "description_pt": "Estabilização do core em quatro apoios com foco em paravertebrais e glúteos.",
+    "description_en": "Core stabilization in quadruped position focusing on paraspinals and glutes.",
+    "intensity_level": 2,
+    "target_outcome": [
+      "Estabilidade"
+    ],
+    "instruction_pt": "Em quatro apoios, estenda o braço e a perna opostos simultaneamente, mantendo a coluna neutra e o quadril nivelado.",
+    "image_url": "/exercises/illustrations/bird-dog.avif",
+    "suggested_sets": 3,
+    "suggested_reps": 12,
+    "suggested_rpe": "7-8"
+  },
+  {
+    "id": "exd-pallof-press",
+    "pt": "Pallof Press",
+    "en": "Pallof Press",
+    "aliases_pt": [
+      "anti-rotação"
+    ],
+    "aliases_en": [
+      "anti-rotation press"
+    ],
+    "category": "exercise",
+    "subcategory": "Core",
+    "description_pt": "Exercício de anti-rotação para estabilidade lombo-pélvica profunda.",
+    "description_en": "Anti-rotation exercise for deep lumbopelvic stability.",
+    "intensity_level": 3,
+    "target_outcome": [
+      "Estabilidade"
+    ],
+    "instruction_pt": "Em pé de lado para a polia ou faixa, segure o puxador com as duas mãos e estenda os braços à frente, resistindo à força que tenta girar seu tronco.",
+    "image_url": "/exercises/illustrations/pallof-press.avif",
+    "suggested_sets": 3,
+    "suggested_reps": 12,
+    "suggested_rpe": "7-8",
+    "required_equipment": [
+      "Faixa Elástica"
+    ]
+  },
+  {
+    "id": "exd-stir-the-pot",
+    "pt": "Stir the Pot",
+    "en": "Stir the Pot",
+    "aliases_pt": [
+      "mexer a panela na bola"
+    ],
+    "aliases_en": [],
+    "category": "exercise",
+    "subcategory": "Core",
+    "description_pt": "Estabilização dinâmica avançada do core em base instável.",
+    "description_en": "Advanced dynamic core stabilization on unstable base.",
+    "intensity_level": 5,
+    "target_outcome": [
+      "Estabilidade"
+    ],
+    "instruction_pt": "Em posição de prancha com os antebraços sobre uma bola suíça, realize pequenos círculos com os braços mantendo o tronco imóvel.",
+    "image_url": "/exercises/illustrations/stir-the-pot.avif",
+    "suggested_sets": 4,
+    "suggested_reps": 8,
+    "suggested_rpe": "9",
+    "required_equipment": [
+      "Bola Suíça"
+    ]
+  },
+  {
+    "id": "exd-abdominal-crunch",
+    "pt": "Abdominal",
+    "en": "Crunch",
+    "aliases_pt": [
+      "abdominal parcial",
+      "crunch"
+    ],
+    "aliases_en": [
+      "sit-up",
+      "curl-up"
+    ],
+    "category": "exercise",
+    "subcategory": "Core",
+    "description_pt": "Fortalecimento do reto abdominal com foco em flexão torácica.",
+    "description_en": "Rectus abdominis strengthening focusing on thoracic flexion.",
+    "intensity_level": 2,
+    "target_outcome": [
+      "Força"
+    ],
+    "instruction_pt": "Deitado de costas, levante levemente os ombros do chão contraindo o abdômen, mantendo a lombar apoiada.",
+    "image_url": "/exercises/illustrations/abdominal-crupeado.avif",
+    "suggested_sets": 3,
+    "suggested_reps": 12,
+    "suggested_rpe": "7-8"
+  },
+  {
+    "id": "exd-abdominal-reverso",
+    "pt": "Abdominal Reverso",
+    "en": "Reverse Crunch",
+    "aliases_pt": [],
+    "aliases_en": [],
+    "category": "exercise",
+    "subcategory": "Core",
+    "description_pt": "Foco na porção infra-abdominal e controle pélvico.",
+    "description_en": "Focus on lower abs and pelvic control.",
+    "intensity_level": 2,
+    "target_outcome": [
+      "Força",
+      "Estabilidade"
+    ],
+    "instruction_pt": "Deitado de costas, traga os joelhos em direção ao peito, levantando levemente o quadril do chão, e retorne de forma controlada.",
+    "image_url": "/exercises/illustrations/abdominal-reverso.avif",
+    "suggested_sets": 3,
+    "suggested_reps": 12,
+    "suggested_rpe": "7-8"
+  },
+  {
+    "id": "exd-bicycle-crunch",
+    "pt": "Abdominal Bicicleta",
+    "en": "Bicycle Crunch",
+    "aliases_pt": [
+      "bicicleta",
+      "abdominal cruzado"
+    ],
+    "aliases_en": [
+      "bicycle"
+    ],
+    "category": "exercise",
+    "subcategory": "Core",
+    "description_pt": "Fortalecimento de oblíquos e reto abdominal em padrão dinâmico.",
+    "description_en": "Oblique and rectus abdominis strengthening in dynamic pattern.",
+    "intensity_level": 3,
+    "target_outcome": [
+      "Força"
+    ],
+    "instruction_pt": "Deitado de costas, realize movimentos de pedalada com as pernas enquanto aproxima o cotovelo oposto do joelho que sobe.",
+    "image_url": "/exercises/illustrations/abdominal-bicicleta.avif",
+    "suggested_sets": 3,
+    "suggested_reps": 12,
+    "suggested_rpe": "7-8"
+  },
+  {
+    "id": "exd-russian-twist",
+    "pt": "Giro Russo",
+    "en": "Russian Twist",
+    "aliases_pt": [
+      "rotação de tronco sentado"
+    ],
+    "aliases_en": [
+      "seated trunk rotation"
+    ],
+    "category": "exercise",
+    "subcategory": "Core",
+    "description_pt": "Fortalecimento de oblíquos e controle rotacional.",
+    "description_en": "Oblique strengthening and rotational control.",
+    "intensity_level": 3,
+    "target_outcome": [
+      "Força",
+      "Estabilidade"
+    ],
+    "instruction_pt": "Sentado com os joelhos dobrados e pés levemente fora do chão, gire o tronco de um lado para o outro tocando as mãos no solo.",
+    "image_url": "/exercises/illustrations/rotacao-tronco-sentado.avif",
+    "suggested_sets": 3,
+    "suggested_reps": 12,
+    "suggested_rpe": "7-8"
+  },
+  {
+    "id": "exd-leg-raise",
+    "pt": "Elevação de Pernas",
+    "en": "Leg Raise",
+    "aliases_pt": [
+      "elevação de membros inferiores"
+    ],
+    "aliases_en": [
+      "hanging leg raise",
+      "lying leg raise"
+    ],
+    "category": "exercise",
+    "subcategory": "Core",
+    "description_pt": "Fortalecimento da porção inferior do reto abdominal e flexores de quadril.",
+    "description_en": "Lower rectus abdominis and hip flexor strengthening.",
+    "intensity_level": 3,
+    "target_outcome": [
+      "Força"
+    ],
+    "instruction_pt": "Deitado de costas, levante as pernas estendidas até 90 graus e desça-as devagar sem encostar no chão.",
+    "image_url": "/exercises/illustrations/elevacao-pernas.avif",
+    "suggested_sets": 3,
+    "suggested_reps": 12,
+    "suggested_rpe": "7-8"
+  },
+  {
+    "id": "exd-cat-cow",
+    "pt": "Gato e Vaca",
+    "en": "Cat-Cow",
+    "aliases_pt": [
+      "gato-camelo",
+      "flexão-extensão da coluna"
+    ],
+    "aliases_en": [
+      "cat camel",
+      "spinal flexion-extension"
+    ],
+    "category": "exercise",
+    "subcategory": "Coluna",
+    "description_pt": "Mobilidade da coluna em posição quadrúpede.",
+    "description_en": "Spinal mobility in quadruped position.",
+    "intensity_level": 1,
+    "target_outcome": [
+      "Mobilidade"
+    ],
+    "instruction_pt": "Em quatro apoios, alterne entre arredondar as costas para cima (gato) e arqueá-las para baixo (camelo) de forma suave.",
+    "image_url": "/exercises/illustrations/cat-cow-gato-camelo.avif",
+    "suggested_sets": 3,
+    "suggested_reps": 15,
+    "suggested_rpe": "4-5"
+  },
+  {
+    "id": "exd-superman",
+    "pt": "Superman",
+    "en": "Superman",
+    "aliases_pt": [
+      "extensão de tronco",
+      "hiperextensão no solo"
+    ],
+    "aliases_en": [
+      "back extension",
+      "prone superman"
+    ],
+    "category": "exercise",
+    "subcategory": "Coluna",
+    "description_pt": "Fortalecimento de eretores da espinha e glúteos.",
+    "description_en": "Strengthening of spinal erectors and glutes.",
+    "intensity_level": 2,
+    "target_outcome": [
+      "Força",
+      "Estabilidade"
+    ],
+    "instruction_pt": "Deitado de bruços, levante braços e pernas simultaneamente do chão, mantendo o olhar para baixo.",
+    "image_url": "/exercises/illustrations/cobra-prona.avif",
+    "suggested_sets": 3,
+    "suggested_reps": 12,
+    "suggested_rpe": "7-8"
+  },
+  {
+    "id": "exd-extensao-lombar",
+    "pt": "Extensão Lombar",
+    "en": "Back Extension",
+    "aliases_pt": [
+      "hiperextensão",
+      "extensão no romano"
+    ],
+    "aliases_en": [
+      "hyperextension",
+      "roman chair"
+    ],
+    "category": "exercise",
+    "subcategory": "Coluna",
+    "description_pt": "Fortalecimento da musculatura paravertebral lombar.",
+    "description_en": "Strengthening of the lumbar paraspinal musculature.",
+    "intensity_level": 3,
+    "target_outcome": [
+      "Força"
+    ],
+    "instruction_pt": "Sentado ou deitado sobre uma bola/banco, realize a extensão do tronco para trás de forma controlada.",
+    "image_url": "/exercises/illustrations/extensao-lombar-bola.avif",
+    "suggested_sets": 3,
+    "suggested_reps": 12,
+    "suggested_rpe": "7-8",
+    "required_equipment": [
+      "Bola Suíça",
+      "Banco/Cadeira"
+    ]
+  },
+  {
+    "id": "exd-child-pose",
+    "pt": "Postura da Criança",
+    "en": "Child's Pose",
+    "aliases_pt": [
+      "posição de oração",
+      "repouso"
+    ],
+    "aliases_en": [
+      "prayer stretch"
+    ],
+    "category": "exercise",
+    "subcategory": "Coluna",
+    "description_pt": "Alongamento de eretores e relaxamento da coluna.",
+    "description_en": "Erector spinae stretch and spinal relaxation.",
+    "intensity_level": 1,
+    "target_outcome": [
+      "Mobilidade",
+      "Relaxamento"
+    ],
+    "instruction_pt": "Ajoelhado, sente sobre os calcanhares e incline o corpo para frente, esticando os braços no chão à frente.",
+    "image_url": "/exercises/illustrations/postura-crianca.avif",
+    "suggested_sets": 3,
+    "suggested_reps": 15,
+    "suggested_rpe": "4-5"
+  },
+  {
+    "id": "exd-mckenzie",
+    "pt": "Extensão de McKenzie",
+    "en": "McKenzie Extension",
+    "aliases_pt": [
+      "mckenzie",
+      "press up"
+    ],
+    "aliases_en": [
+      "prone press-up",
+      "mckenzie exercise"
+    ],
+    "category": "exercise",
+    "subcategory": "Coluna",
+    "description_pt": "Protocolo de centralização para hérnia de disco.",
+    "description_en": "Centralization protocol for disc herniation.",
+    "suggested_sets": 2,
+    "suggested_reps": 10,
+    "suggested_rpe": "Confortável",
+    "instruction_pt": "Deitado de barriga para baixo, use as mãos para empurrar o tronco para cima, mantendo o quadril relaxado no chão. Sinta o alívio na coluna e retorne devagar.",
+    "image_url": "/exercises/illustrations/mckenzie-extensao-lombar-deitado.avif",
+    "required_equipment": [
+      "Disco Proprioceptivo"
+    ]
+  },
+  {
+    "id": "exd-flexao-williams",
+    "pt": "Flexão de Williams",
+    "en": "Williams Flexion Exercise",
+    "aliases_pt": [
+      "williams",
+      "exercícios de williams"
+    ],
+    "aliases_en": [
+      "williams exercise"
+    ],
+    "category": "exercise",
+    "subcategory": "Coluna",
+    "description_pt": "Protocolo de exercícios para redução de hiperlordose e dor lombar.",
+    "description_en": "Exercise protocol for reducing hyperlordosis and low back pain.",
+    "intensity_level": 1,
+    "target_outcome": [
+      "Mobilidade",
+      "Analgesia"
+    ],
+    "instruction_pt": "Deitado de costas, abrace os dois joelhos contra o peito e mantenha a posição para alongar a região lombar.",
+    "image_url": "/exercises/illustrations/flexao-williams.avif",
+    "suggested_sets": 3,
+    "suggested_reps": 15,
+    "suggested_rpe": "4-5"
+  },
+  {
+    "id": "exd-rotacao-tronco",
+    "pt": "Rotação de Tronco",
+    "en": "Trunk Rotation",
+    "aliases_pt": [
+      "rotação torácica",
+      "open book"
+    ],
+    "aliases_en": [
+      "thoracic rotation",
+      "open book stretch"
+    ],
+    "category": "exercise",
+    "subcategory": "Coluna Torácica",
+    "description_pt": "Melhora da mobilidade rotacional da coluna torácica.",
+    "description_en": "Improving rotational mobility of the thoracic spine.",
+    "intensity_level": 1,
+    "target_outcome": [
+      "Mobilidade"
+    ],
+    "instruction_pt": "Deitado de lado com os joelhos dobrados, abra o braço de cima para o lado oposto, tentando encostar o ombro no chão.",
+    "image_url": "/exercises/illustrations/mobilidade-coluna-sentado.avif",
+    "suggested_sets": 3,
+    "suggested_reps": 15,
+    "suggested_rpe": "4-5"
+  },
+  {
+    "id": "exd-chin-tuck",
+    "pt": "Retração Cervical",
+    "en": "Chin Tuck",
+    "aliases_pt": [
+      "retração do queixo",
+      "chin tuck"
+    ],
+    "aliases_en": [
+      "cervical retraction",
+      "deep neck flexor"
+    ],
+    "category": "exercise",
+    "subcategory": "Cervical",
+    "description_pt": "Ativação de flexores cervicais profundos.",
+    "description_en": "Deep cervical flexor activation.",
+    "intensity_level": 1,
+    "target_outcome": [
+      "Estabilidade",
+      "Força"
+    ],
+    "instruction_pt": "Leve o queixo para trás, como se quisesse fazer uma 'papada', sem inclinar a cabeça para baixo ou para cima.",
+    "image_url": "/exercises/illustrations/retracao-cervical.avif",
+    "suggested_sets": 3,
+    "suggested_reps": 15,
+    "suggested_rpe": "4-5"
+  },
+  {
+    "id": "exd-retração-cervical-isometrica",
+    "pt": "Isométrico Cervical",
+    "en": "Cervical Isometric",
+    "aliases_pt": [
+      "isométrico de pescoço"
+    ],
+    "aliases_en": [
+      "neck isometric"
+    ],
+    "category": "exercise",
+    "subcategory": "Cervical",
+    "description_pt": "Fortalecimento isométrico da musculatura cervical.",
+    "description_en": "Isometric strengthening of the cervical musculature.",
+    "intensity_level": 2,
+    "target_outcome": [
+      "Força",
+      "Estabilidade"
+    ],
+    "instruction_pt": "Coloque a mão na lateral da cabeça e empurre contra a mão, resistindo ao movimento com o pescoço.",
+    "image_url": "/exercises/illustrations/isometrico-cervical.avif",
+    "suggested_sets": 3,
+    "suggested_reps": 12,
+    "suggested_rpe": "7-8"
+  },
+  {
+    "id": "exd-flexao-bracos",
+    "pt": "Flexão de Braços",
+    "en": "Push-Up",
+    "aliases_pt": [
+      "apoio",
+      "flexão no solo"
+    ],
+    "aliases_en": [
+      "push up",
+      "press up"
+    ],
+    "category": "exercise",
+    "subcategory": "Funcional",
+    "description_pt": "Fortalecimento global de membros superiores e estabilidade de core.",
+    "description_en": "Global upper limb strengthening and core stability.",
+    "intensity_level": 3,
+    "target_outcome": [
+      "Força"
+    ],
+    "instruction_pt": "Em posição de prancha, desça o corpo dobrando os cotovelos e empurre o chão para subir, mantendo o tronco alinhado.",
+    "image_url": "/exercises/illustrations/flexao-braco.avif",
+    "suggested_sets": 3,
+    "suggested_reps": 12,
+    "suggested_rpe": "7-8"
+  },
+  {
+    "id": "exd-flexao-joelho",
+    "pt": "Flexão de Braços no Joelho",
+    "en": "Knee Push-Up",
+    "aliases_pt": [
+      "apoio modificado"
+    ],
+    "aliases_en": [
+      "modified push-up"
+    ],
+    "category": "exercise",
+    "subcategory": "Funcional",
+    "description_pt": "Versão adaptada da flexão de braços com menor carga.",
+    "description_en": "Adapted version of the push-up with lower load.",
+    "intensity_level": 2,
+    "target_outcome": [
+      "Força"
+    ],
+    "instruction_pt": "Realize a flexão de braços mantendo os joelhos apoiados no chão para reduzir a dificuldade.",
+    "image_url": "/exercises/illustrations/flexao-braco-joelho.png",
+    "suggested_sets": 3,
+    "suggested_reps": 12,
+    "suggested_rpe": "7-8"
+  },
+  {
+    "id": "exd-flexao-inclinada",
+    "pt": "Flexão Inclinada",
+    "en": "Incline Push-Up",
+    "aliases_pt": [
+      "apoio na parede",
+      "push-up na parede"
+    ],
+    "aliases_en": [
+      "wall push-up"
+    ],
+    "category": "exercise",
+    "subcategory": "Funcional",
+    "description_pt": "Versão facilitada da flexão de braços.",
+    "description_en": "Easier version of the push-up.",
+    "intensity_level": 2,
+    "target_outcome": [
+      "Força"
+    ],
+    "instruction_pt": "Realize a flexão de braços apoiando as mãos em uma superfície elevada (parede, mesa ou banco).",
+    "image_url": "/exercises/illustrations/flexao_inclinada.avif",
+    "suggested_sets": 3,
+    "suggested_reps": 12,
+    "suggested_rpe": "7-8",
+    "required_equipment": [
+      "Banco/Cadeira",
+      "Parede"
+    ]
+  },
+  {
+    "id": "exd-remada",
+    "pt": "Remada",
+    "en": "Row",
+    "aliases_pt": [
+      "remada curvada",
+      "remada com halter"
+    ],
+    "aliases_en": [
+      "bent over row",
+      "cable row",
+      "dumbbell row"
+    ],
+    "category": "exercise",
+    "subcategory": "Funcional",
+    "description_pt": "Fortalecimento de membros superiores com foco em retratores escapulares.",
+    "description_en": "Upper limb strengthening focusing on scapular retractors.",
+    "intensity_level": 3,
+    "target_outcome": [
+      "Força"
+    ],
+    "instruction_pt": "Incline o tronco para frente e puxe os halteres em direção ao quadril, mantendo as costas retas e apertando as escápulas.",
+    "image_url": "/exercises/illustrations/serrote-halter.avif",
+    "suggested_sets": 3,
+    "suggested_reps": 12,
+    "suggested_rpe": "7-8",
+    "required_equipment": [
+      "Halter"
+    ]
+  },
+  {
+    "id": "exd-terra",
+    "pt": "Levantamento Terra",
+    "en": "Deadlift",
+    "aliases_pt": [
+      "terra",
+      "levantamento do chão"
+    ],
+    "aliases_en": [
+      "conventional deadlift"
+    ],
+    "category": "exercise",
+    "subcategory": "Funcional",
+    "description_pt": "Exercício composto para fortalecimento de cadeia posterior.",
+    "description_en": "Compound exercise for posterior chain strengthening.",
+    "intensity_level": 4,
+    "target_outcome": [
+      "Força",
+      "Potência"
+    ],
+    "instruction_pt": "Com os pés afastados, agache e segure o peso no chão. Levante-se estendendo quadril e joelhos simultaneamente, mantendo a coluna neutra.",
+    "image_url": "/exercises/illustrations/deadlift_dumbbells.avif",
+    "suggested_sets": 3,
+    "suggested_reps": 12,
+    "suggested_rpe": "8-9"
+  },
+  {
+    "id": "exd-farmer-walk",
+    "pt": "Farmer Walk",
+    "en": "Farmer Walk",
+    "aliases_pt": [
+      "caminhada do fazendeiro",
+      "loaded carry"
+    ],
+    "aliases_en": [
+      "farmer carry"
+    ],
+    "category": "exercise",
+    "subcategory": "Funcional",
+    "description_pt": "Treino de estabilidade dinâmica de core e força de preensão.",
+    "description_en": "Dynamic core stability and grip strength training.",
+    "intensity_level": 3,
+    "target_outcome": [
+      "Estabilidade",
+      "Força"
+    ],
+    "instruction_pt": "Segure um peso em cada mão e caminhe mantendo a postura ereta e os ombros estáveis.",
+    "image_url": "/exercises/illustrations/farmer_walk.avif",
+    "suggested_sets": 3,
+    "suggested_reps": 12,
+    "suggested_rpe": "7-8"
+  },
+  {
+    "id": "exd-turkish-getup",
+    "pt": "Turkish Get-Up",
+    "en": "Turkish Get-Up",
+    "aliases_pt": [
+      "levantamento turco",
+      "tgu"
+    ],
+    "aliases_en": [
+      "tgu"
+    ],
+    "category": "exercise",
+    "subcategory": "Funcional",
+    "description_pt": "Exercício complexo de estabilidade e controle motor global.",
+    "description_en": "Complex exercise for global stability and motor control.",
+    "intensity_level": 5,
+    "target_outcome": [
+      "Estabilidade",
+      "Força"
+    ],
+    "instruction_pt": "Deitado, levante um kettlebell acima da cabeça e realize a sequência para ficar em pé sem baixar o braço.",
+    "image_url": "/exercises/illustrations/turkish-getup.avif",
+    "suggested_sets": 4,
+    "suggested_reps": 8,
+    "suggested_rpe": "9",
+    "required_equipment": [
+      "Kettlebell"
+    ]
+  },
+  {
+    "id": "exd-carry-unilateral",
+    "pt": "Carregamento Unilateral",
+    "en": "Suitcase Carry",
+    "aliases_pt": [
+      "mala",
+      "loaded carry unilateral"
+    ],
+    "aliases_en": [
+      "single arm carry"
+    ],
+    "category": "exercise",
+    "subcategory": "Funcional",
+    "description_pt": "Treino de anti-inclinação lateral do tronco.",
+    "description_en": "Core anti-lateral flexion training.",
+    "intensity_level": 3,
+    "target_outcome": [
+      "Estabilidade"
+    ],
+    "instruction_pt": "Segure um peso em apenas uma mão e caminhe tentando não deixar o tronco inclinar para o lado do peso.",
+    "image_url": "/exercises/illustrations/suitcase-carry.avif",
+    "suggested_sets": 3,
+    "suggested_reps": 12,
+    "suggested_rpe": "7-8"
+  },
+  {
+    "id": "exd-box-jump",
+    "pt": "Box Jump",
+    "en": "Box Jump",
+    "aliases_pt": [
+      "salto na caixa"
+    ],
+    "aliases_en": [],
+    "category": "exercise",
+    "subcategory": "Pliometria",
+    "description_pt": "Treino de potência explosiva e controle de aterrissagem.",
+    "description_en": "Explosive power training and landing control.",
+    "intensity_level": 5,
+    "target_outcome": [
+      "Potência"
+    ],
+    "instruction_pt": "Salte sobre uma caixa ou plataforma firme e aterrisse suavemente com os dois pés, mantendo os joelhos alinhados.",
+    "image_url": "/exercises/illustrations/box-jump.avif",
+    "suggested_sets": 4,
+    "suggested_reps": 8,
+    "suggested_rpe": "9"
+  },
+  {
+    "id": "exd-jump-squat",
+    "pt": "Agachamento com Salto",
+    "en": "Jump Squat",
+    "aliases_pt": [
+      "salto vertical"
+    ],
+    "aliases_en": [
+      "squat jump"
+    ],
+    "category": "exercise",
+    "subcategory": "Pliometria",
+    "description_pt": "Treino de potência de membros inferiores.",
+    "description_en": "Lower limb power training.",
+    "intensity_level": 4,
+    "target_outcome": [
+      "Potência"
+    ],
+    "instruction_pt": "Realize um agachamento e salte o mais alto possível, aterrissando suavemente e retornando à posição inicial.",
+    "image_url": "/exercises/illustrations/jump-squat.avif",
+    "suggested_sets": 3,
+    "suggested_reps": 12,
+    "suggested_rpe": "8-9"
+  },
+  {
+    "id": "exd-drop-jump",
+    "pt": "Drop Jump",
+    "en": "Drop Jump",
+    "aliases_pt": [
+      "salto em profundidade",
+      "depth jump"
+    ],
+    "aliases_en": [
+      "depth jump"
+    ],
+    "category": "exercise",
+    "subcategory": "Pliometria",
+    "description_pt": "Treino de ciclo alongamento-encurtamento reativo.",
+    "description_en": "Reactive stretch-shortening cycle training.",
+    "intensity_level": 5,
+    "target_outcome": [
+      "Potência"
+    ],
+    "instruction_pt": "Deixe-se cair de uma caixa baixa e, ao tocar o solo, salte imediatamente para cima com o mínimo de tempo de contato.",
+    "image_url": "/exercises/illustrations/drop-jump.avif",
+    "suggested_sets": 4,
+    "suggested_reps": 8,
+    "suggested_rpe": "9"
+  },
+  {
+    "id": "exd-skipping",
+    "pt": "Skipping",
+    "en": "Skipping",
+    "aliases_pt": [
+      "marcha alta",
+      "joelho alto"
+    ],
+    "aliases_en": [
+      "high knees",
+      "a-skip"
+    ],
+    "category": "exercise",
+    "subcategory": "Pliometria / Corrida",
+    "description_pt": "Treino de coordenação e técnica de corrida.",
+    "description_en": "Coordination and running technique training.",
+    "intensity_level": 3,
+    "target_outcome": [
+      "Potência",
+      "Estabilidade"
+    ],
+    "instruction_pt": "Corra sem sair do lugar, elevando os joelhos até a altura do quadril e coordenando com o movimento dos braços.",
+    "image_url": "/exercises/illustrations/skipping-high-knees.png",
+    "suggested_sets": 3,
+    "suggested_reps": 12,
+    "suggested_rpe": "7-8"
+  },
+  {
+    "id": "exd-lateral-hop",
+    "pt": "Salto Lateral",
+    "en": "Lateral Hop",
+    "aliases_pt": [
+      "hop lateral"
+    ],
+    "aliases_en": [],
+    "category": "exercise",
+    "subcategory": "Pliometria",
+    "description_pt": "Treino de estabilidade lateral e potência.",
+    "description_en": "Lateral stability and power training.",
+    "intensity_level": 4,
+    "target_outcome": [
+      "Potência",
+      "Estabilidade"
+    ],
+    "instruction_pt": "Salte lateralmente de uma perna para a outra, mantendo o controle do equilíbrio em cada aterrissagem.",
+    "image_url": "/exercises/illustrations/salto-lateral.avif",
+    "suggested_sets": 3,
+    "suggested_reps": 12,
+    "suggested_rpe": "8-9"
+  },
+  {
+    "id": "exd-along-isquiotibiais",
+    "pt": "Alongamento de Isquiotibiais",
+    "en": "Hamstring Stretch",
+    "aliases_pt": [
+      "alongamento posterior da coxa"
+    ],
+    "aliases_en": [
+      "hamstring stretch"
+    ],
+    "category": "exercise",
+    "subcategory": "Alongamento",
+    "description_pt": "Alongamento da musculatura posterior da coxa.",
+    "description_en": "Hamstring muscle stretch.",
+    "intensity_level": 1,
+    "target_outcome": [
+      "Mobilidade"
+    ],
+    "instruction_pt": "Sentado ou em pé, leve as mãos em direção aos pés mantendo os joelhos estendidos até sentir o alongamento atrás da coxa.",
+    "image_url": "/exercises/illustrations/alongamento-de-isquiotibiais.avif",
+    "suggested_sets": 3,
+    "suggested_reps": 30,
+    "suggested_rpe": "4-5"
+  },
+  {
+    "id": "exd-along-quadriceps",
+    "pt": "Alongamento de Quadríceps",
+    "en": "Quadriceps Stretch",
+    "aliases_pt": [
+      "alongamento de coxa anterior"
+    ],
+    "aliases_en": [
+      "quad stretch"
+    ],
+    "category": "exercise",
+    "subcategory": "Alongamento",
+    "description_pt": "Alongamento da musculatura anterior da coxa.",
+    "description_en": "Anterior thigh muscle stretch.",
+    "intensity_level": 1,
+    "target_outcome": [
+      "Mobilidade"
+    ],
+    "instruction_pt": "Em pé, dobre o joelho e segure o pé atrás do corpo, puxando o calcanhar em direção ao glúteo.",
+    "image_url": "/exercises/illustrations/alongamento-quadriceps.avif",
+    "suggested_sets": 3,
+    "suggested_reps": 30,
+    "suggested_rpe": "4-5"
+  },
+  {
+    "id": "exd-along-iliopsoas",
+    "pt": "Alongamento de Iliopsoas",
+    "en": "Hip Flexor Stretch",
+    "aliases_pt": [
+      "alongamento do psoas",
+      "lunge stretch"
+    ],
+    "aliases_en": [
+      "kneeling hip flexor stretch",
+      "thomas stretch"
+    ],
+    "category": "exercise",
+    "subcategory": "Alongamento",
+    "description_pt": "Alongamento dos flexores de quadril.",
+    "description_en": "Hip flexor stretch.",
+    "intensity_level": 1,
+    "target_outcome": [
+      "Mobilidade"
+    ],
+    "instruction_pt": "Em posição de ajoelhado (um joelho no chão), projete o quadril para frente mantendo o tronco ereto.",
+    "image_url": "/exercises/illustrations/alongamento-de-psoas-lunge-stretch.avif",
+    "suggested_sets": 3,
+    "suggested_reps": 30,
+    "suggested_rpe": "4-5"
+  },
+  {
+    "id": "exd-along-piriforme",
+    "pt": "Alongamento de Piriforme",
+    "en": "Piriformis Stretch",
+    "aliases_pt": [
+      "piriforme",
+      "posterior do quadril"
+    ],
+    "aliases_en": [
+      "figure 4 stretch"
+    ],
+    "category": "exercise",
+    "subcategory": "Alongamento",
+    "description_pt": "Alongamento do músculo piriforme e rotadores externos do quadril.",
+    "description_en": "Piriformis and hip external rotator stretch.",
+    "intensity_level": 1,
+    "target_outcome": [
+      "Mobilidade"
+    ],
+    "instruction_pt": "Deitado de costas, cruze uma perna sobre a outra (formando um 4) e puxe a coxa de baixo em direção ao peito.",
+    "image_url": "/exercises/illustrations/alongamento-de-piriforme-4-supino.avif",
+    "suggested_sets": 3,
+    "suggested_reps": 30,
+    "suggested_rpe": "4-5"
+  },
+  {
+    "id": "exd-along-adutores",
+    "pt": "Alongamento de Adutores",
+    "en": "Adductor Stretch",
+    "aliases_pt": [
+      "alongamento de virilha"
+    ],
+    "aliases_en": [
+      "groin stretch",
+      "butterfly stretch"
+    ],
+    "category": "exercise",
+    "subcategory": "Alongamento",
+    "description_pt": "Alongamento da musculatura interna da coxa.",
+    "description_en": "Inner thigh muscle stretch.",
+    "intensity_level": 1,
+    "target_outcome": [
+      "Mobilidade"
+    ],
+    "instruction_pt": "Sentado com as plantas dos pés unidas (posição de borboleta), pressione levemente os joelhos para baixo.",
+    "image_url": "/exercises/illustrations/alongamento-de-adutores.avif",
+    "suggested_sets": 3,
+    "suggested_reps": 30,
+    "suggested_rpe": "4-5"
+  },
+  {
+    "id": "exd-along-panturrilha",
+    "pt": "Alongamento de Panturrilha",
+    "en": "Calf Stretch",
+    "aliases_pt": [
+      "alongamento de gastrocnêmio"
+    ],
+    "aliases_en": [
+      "gastroc stretch",
+      "wall calf stretch"
+    ],
+    "category": "exercise",
+    "subcategory": "Alongamento",
+    "description_pt": "Alongamento do músculo gastrocnêmio.",
+    "description_en": "Gastrocnemius muscle stretch.",
+    "intensity_level": 1,
+    "target_outcome": [
+      "Mobilidade"
+    ],
+    "instruction_pt": "Com as mãos na parede, dê um passo para trás mantendo o calcanhar no chão e o joelho estendido.",
+    "image_url": "/exercises/illustrations/alongamento-de-panturrilha-na-parede.avif",
+    "suggested_sets": 3,
+    "suggested_reps": 30,
+    "suggested_rpe": "4-5",
+    "required_equipment": [
+      "Parede"
+    ]
+  },
+  {
+    "id": "exd-along-soleo",
+    "pt": "Alongamento de Sóleo",
+    "en": "Soleus Stretch",
+    "aliases_pt": [
+      "alongamento sóleo joelho flexionado"
+    ],
+    "aliases_en": [
+      "knee bent calf stretch"
+    ],
+    "category": "exercise",
+    "subcategory": "Alongamento",
+    "description_pt": "Alongamento do músculo sóleo.",
+    "description_en": "Soleus muscle stretch.",
+    "intensity_level": 1,
+    "target_outcome": [
+      "Mobilidade"
+    ],
+    "instruction_pt": "Semelhante ao de panturrilha, mas mantenha o joelho de trás levemente flexionado para focar no músculo sóleo.",
+    "image_url": "/exercises/illustrations/alongamento-de-soleo-na-parede.avif",
+    "suggested_sets": 3,
+    "suggested_reps": 30,
+    "suggested_rpe": "4-5"
+  },
+  {
+    "id": "exd-along-peitoral",
+    "pt": "Alongamento de Peitoral",
+    "en": "Pec Stretch",
+    "aliases_pt": [
+      "alongamento de peito",
+      "doorway stretch"
+    ],
+    "aliases_en": [
+      "chest stretch",
+      "doorway pec stretch"
+    ],
+    "category": "exercise",
+    "subcategory": "Alongamento",
+    "description_pt": "Alongamento da musculatura peitoral.",
+    "description_en": "Chest muscle stretch.",
+    "intensity_level": 1,
+    "target_outcome": [
+      "Mobilidade"
+    ],
+    "instruction_pt": "Apoie o antebraço em um batente de porta e gire o corpo para o lado oposto até sentir o alongamento no peito.",
+    "image_url": "/exercises/illustrations/alongamento-peitoral-porta.avif",
+    "suggested_sets": 3,
+    "suggested_reps": 30,
+    "suggested_rpe": "4-5"
+  },
+  {
+    "id": "exd-along-trapezio",
+    "pt": "Alongamento de Trapézio",
+    "en": "Upper Trapezius Stretch",
+    "aliases_pt": [
+      "alongamento cervical lateral"
+    ],
+    "aliases_en": [
+      "neck side stretch"
+    ],
+    "category": "exercise",
+    "subcategory": "Alongamento",
+    "description_pt": "Alongamento da musculatura de trapézio superior e cervical lateral.",
+    "description_en": "Upper trapezius and lateral cervical muscle stretch.",
+    "intensity_level": 1,
+    "target_outcome": [
+      "Mobilidade",
+      "Relaxamento"
+    ],
+    "instruction_pt": "Leve a orelha em direção ao ombro oposto, usando a mão para aplicar uma leve pressão lateral.",
+    "image_url": "/exercises/illustrations/alongamento-trapezio-superior.avif",
+    "suggested_sets": 3,
+    "suggested_reps": 30,
+    "suggested_rpe": "4-5"
+  },
+  {
+    "id": "exd-along-dorsal",
+    "pt": "Alongamento de Grande Dorsal",
+    "en": "Lat Stretch",
+    "aliases_pt": [
+      "alongamento de latíssimo"
+    ],
+    "aliases_en": [
+      "lat stretch",
+      "overhead lat stretch"
+    ],
+    "category": "exercise",
+    "subcategory": "Alongamento",
+    "description_pt": "Alongamento da musculatura lateral do tronco.",
+    "description_en": "Lateral trunk muscle stretch.",
+    "intensity_level": 1,
+    "target_outcome": [
+      "Mobilidade"
+    ],
+    "instruction_pt": "Segure em uma barra ou batente acima da cabeça e incline o quadril para o lado oposto para alongar a lateral do tronco.",
+    "image_url": "/exercises/illustrations/alongamento-dorsal.avif",
+    "suggested_sets": 3,
+    "suggested_reps": 30,
+    "suggested_rpe": "4-5",
+    "required_equipment": [
+      "Barra"
+    ]
+  },
+  {
+    "id": "exd-along-rotadores",
+    "pt": "Alongamento de Rotadores de Ombro",
+    "en": "Shoulder Rotator Stretch",
+    "aliases_pt": [
+      "sleeper stretch",
+      "cross body stretch"
+    ],
+    "aliases_en": [
+      "sleeper stretch",
+      "cross body posterior capsule stretch"
+    ],
+    "category": "exercise",
+    "subcategory": "Alongamento",
+    "description_pt": "Alongamento da cápsula posterior e rotadores externos de ombro.",
+    "description_en": "Shoulder posterior capsule and external rotator stretch.",
+    "intensity_level": 1,
+    "target_outcome": [
+      "Mobilidade"
+    ],
+    "instruction_pt": "Deitado de lado sobre o ombro a ser alongado, use a outra mão para empurrar o antebraço em direção ao chão (sleeper stretch).",
+    "image_url": "/exercises/illustrations/alongamento-rotadores-ombro.avif",
+    "suggested_sets": 3,
+    "suggested_reps": 30,
+    "suggested_rpe": "4-5"
+  },
+  {
+    "id": "exd-along-tfl-it",
+    "pt": "Alongamento de TFL e Banda IT",
+    "en": "IT Band Stretch",
+    "aliases_pt": [
+      "alongamento do trato iliotibial"
+    ],
+    "aliases_en": [
+      "it band foam roll"
+    ],
+    "category": "exercise",
+    "subcategory": "Alongamento",
+    "description_pt": "Alongamento do tensor da fáscia lata e trato iliotibial.",
+    "description_en": "Stretch of the tensor fasciae latae and iliotibial band.",
+    "intensity_level": 1,
+    "target_outcome": [
+      "Mobilidade"
+    ],
+    "instruction_pt": "Em pé, cruze a perna a ser alongada por trás da outra e incline o tronco para o lado oposto.",
+    "image_url": "/exercises/illustrations/alongamento-tfl.png",
+    "suggested_sets": 3,
+    "suggested_reps": 30,
+    "suggested_rpe": "4-5"
+  },
+  {
+    "id": "exd-foam-rolling",
+    "pt": "Liberação Miofascial com Rolo",
+    "en": "Foam Rolling",
+    "aliases_pt": [
+      "rolo de liberação",
+      "auto-liberação miofascial"
+    ],
+    "aliases_en": [
+      "self-myofascial release",
+      "smr"
+    ],
+    "category": "exercise",
+    "subcategory": "Liberação",
+    "description_pt": "Auto-liberação miofascial para reduzir tensão muscular.",
+    "description_en": "Self-myofascial release to reduce muscle tension.",
+    "intensity_level": 1,
+    "target_outcome": [
+      "Mobilidade",
+      "Analgesia"
+    ],
+    "instruction_pt": "Posicione o rolo sob o músculo e deslize o corpo sobre ele lentamente, focando nas áreas de maior tensão.",
+    "image_url": "/exercises/illustrations/liberacao-foam-roller.png",
+    "suggested_sets": 3,
+    "suggested_reps": 15,
+    "suggested_rpe": "4-5",
+    "required_equipment": [
+      "Foam Roller"
+    ]
+  },
+  {
+    "id": "exd-lacrosse-ball",
+    "pt": "Liberação com Bola de Lacrosse",
+    "en": "Lacrosse Ball Release",
+    "aliases_pt": [
+      "bola de liberação",
+      "trigger point release"
+    ],
+    "aliases_en": [
+      "ball release",
+      "trigger point therapy"
+    ],
+    "category": "exercise",
+    "subcategory": "Liberação",
+    "description_pt": "Liberação de pontos de gatilho com pressão focal.",
+    "description_en": "Trigger point release with focal pressure.",
+    "intensity_level": 2,
+    "target_outcome": [
+      "Analgesia",
+      "Mobilidade"
+    ],
+    "instruction_pt": "Posicione a bola sobre o ponto de tensão (ex: glúteo ou escápula) e aplique pressão sustentada ou pequenos movimentos circulares.",
+    "image_url": "/exercises/illustrations/liberacao-bola-lacrosse.avif",
+    "suggested_sets": 3,
+    "suggested_reps": 12,
+    "suggested_rpe": "7-8",
+    "required_equipment": [
+      "Bola Suíça"
+    ]
+  },
+  {
+    "id": "exd-mob-tornozelo",
+    "pt": "Mobilização de Tornozelo",
+    "en": "Ankle Mobilization",
+    "aliases_pt": [
+      "mobilidade de tornozelo",
+      "dorsiflexão em carga"
+    ],
+    "aliases_en": [
+      "ankle dorsiflexion mobilization",
+      "knee-to-wall"
+    ],
+    "category": "exercise",
+    "subcategory": "Mobilidade",
+    "description_pt": "Mobilização para ganho de amplitude de dorsiflexão.",
+    "description_en": "Mobilization for dorsiflexion range of motion gain.",
+    "intensity_level": 2,
+    "target_outcome": [
+      "Mobilidade"
+    ],
+    "instruction_pt": "Em pé de frente para a parede, leve o joelho à frente sem tirar o calcanhar do chão.",
+    "image_url": "/exercises/illustrations/mobilizacao-tornozelo-df.avif",
+    "suggested_sets": 3,
+    "suggested_reps": 15,
+    "suggested_rpe": "7-8",
+    "required_equipment": [
+      "Parede"
+    ]
+  },
+  {
+    "id": "exd-mob-quadril",
+    "pt": "Mobilização de Quadril",
+    "en": "Hip Mobilization",
+    "aliases_pt": [
+      "mobilidade de quadril",
+      "hip 90/90"
+    ],
+    "aliases_en": [
+      "hip 90/90",
+      "hip capsule mobilization"
+    ],
+    "category": "exercise",
+    "subcategory": "Mobilidade",
+    "description_pt": "Melhora da mobilidade capsular e rotacional do quadril.",
+    "description_en": "Improving hip capsular and rotational mobility.",
+    "intensity_level": 2,
+    "target_outcome": [
+      "Mobilidade"
+    ],
+    "instruction_pt": "Sentado no chão com os joelhos a 90 graus (posição 90/90), gire o tronco sobre a perna da frente e depois sobre a de trás.",
+    "image_url": "/exercises/illustrations/mobilizacao-quadril-capsular.avif",
+    "suggested_sets": 3,
+    "suggested_reps": 15,
+    "suggested_rpe": "7-8"
+  },
+  {
+    "id": "exd-mob-toracica",
+    "pt": "Mobilização Torácica",
+    "en": "Thoracic Mobilization",
+    "aliases_pt": [
+      "mobilidade torácica",
+      "foam roller torácico"
+    ],
+    "aliases_en": [
+      "thoracic spine mobility",
+      "t-spine extension"
+    ],
+    "category": "exercise",
+    "subcategory": "Mobilidade",
+    "description_pt": "Melhora da extensão e rotação da coluna torácica.",
+    "description_en": "Improving thoracic spine extension and rotation.",
+    "intensity_level": 2,
+    "target_outcome": [
+      "Mobilidade"
+    ],
+    "instruction_pt": "Sentado ou sobre um rolo, realize a extensão da coluna torácica para trás, mantendo a lombar estável.",
+    "image_url": "/exercises/illustrations/mobilidade-coluna-sentado.avif",
+    "suggested_sets": 3,
+    "suggested_reps": 15,
+    "suggested_rpe": "7-8",
+    "required_equipment": [
+      "Foam Roller"
+    ]
+  },
+  {
+    "id": "exd-mob-ombro",
+    "pt": "Mobilização de Ombro",
+    "en": "Shoulder Mobilization",
+    "aliases_pt": [
+      "mobilidade de ombro",
+      "sleeper stretch"
+    ],
+    "aliases_en": [
+      "shoulder mobility drill"
+    ],
+    "category": "exercise",
+    "subcategory": "Mobilidade",
+    "description_pt": "Mobilização articular para ganho de ADM de ombro.",
+    "description_en": "Joint mobilization for shoulder ROM gain.",
+    "intensity_level": 2,
+    "target_outcome": [
+      "Mobilidade"
+    ],
+    "instruction_pt": "Realize movimentos circulares e amplos com o ombro ou use um bastão para auxiliar na mobilização passiva.",
+    "image_url": "/exercises/illustrations/mobilidade-ombro.avif",
+    "suggested_sets": 3,
+    "suggested_reps": 15,
+    "suggested_rpe": "7-8"
+  },
+  {
+    "id": "exd-world-greatest",
+    "pt": "World's Greatest Stretch",
+    "en": "World's Greatest Stretch",
+    "aliases_pt": [
+      "maior alongamento do mundo"
+    ],
+    "aliases_en": [
+      "wgs"
+    ],
+    "category": "exercise",
+    "subcategory": "Mobilidade",
+    "description_pt": "Mobilidade global envolvendo quadril, coluna e ombros.",
+    "description_en": "Global mobility involving hip, spine, and shoulders.",
+    "intensity_level": 3,
+    "target_outcome": [
+      "Mobilidade"
+    ],
+    "instruction_pt": "Em posição de lunge, coloque a mão oposta no chão e gire o tronco levantando o outro braço para o teto.",
+    "image_url": "/exercises/illustrations/worlds-greatest-stretch.avif",
+    "suggested_sets": 3,
+    "suggested_reps": 15,
+    "suggested_rpe": "7-8"
+  },
+  {
+    "id": "exd-hip-cars",
+    "pt": "CARs de Quadril",
+    "en": "Hip CARs",
+    "aliases_pt": [
+      "rotação articular controlada",
+      "hip cars"
+    ],
+    "aliases_en": [
+      "controlled articular rotations"
+    ],
+    "category": "exercise",
+    "subcategory": "Mobilidade",
+    "description_pt": "Rotações articulares controladas para saúde articular do quadril.",
+    "description_en": "Controlled articular rotations for hip joint health.",
+    "intensity_level": 2,
+    "target_outcome": [
+      "Mobilidade"
+    ],
+    "instruction_pt": "Em quatro apoios, realize círculos lentos e amplos com o quadril, explorando toda a amplitude sem mover o tronco.",
+    "image_url": "/exercises/illustrations/hip-cars.avif",
+    "suggested_sets": 3,
+    "suggested_reps": 15,
+    "suggested_rpe": "7-8"
+  },
+  {
+    "id": "exd-shoulder-cars",
+    "pt": "CARs de Ombro",
+    "en": "Shoulder CARs",
+    "aliases_pt": [
+      "rotação articular de ombro"
+    ],
+    "aliases_en": [
+      "shoulder controlled articular rotations"
+    ],
+    "category": "exercise",
+    "subcategory": "Mobilidade",
+    "description_pt": "Rotações articulares controladas para saúde articular do ombro.",
+    "description_en": "Controlled articular rotations for shoulder joint health.",
+    "intensity_level": 2,
+    "target_outcome": [
+      "Mobilidade"
+    ],
+    "instruction_pt": "Em pé, realize círculos lentos e amplos com o ombro, mantendo o braço esticado e sem girar o tronco.",
+    "image_url": "/exercises/illustrations/shoulder-cars.avif",
+    "suggested_sets": 3,
+    "suggested_reps": 15,
+    "suggested_rpe": "7-8"
+  },
+  {
+    "id": "exd-respiracao-diafragmatica",
+    "pt": "Respiração Diafragmática",
+    "en": "Diaphragmatic Breathing",
+    "aliases_pt": [
+      "respiração abdominal",
+      "respiração profunda"
+    ],
+    "aliases_en": [
+      "belly breathing",
+      "deep breathing"
+    ],
+    "category": "exercise",
+    "subcategory": "Respiratório",
+    "description_pt": "Padrão respiratório correto com ativação do diafragma para estabilização central e redução de estresse.",
+    "description_en": "Correct breathing pattern with diaphragm activation for core stability and stress reduction.",
+    "intensity_level": 1,
+    "target_outcome": [
+      "Estabilidade",
+      "Analgesia"
+    ],
+    "suggested_sets": 2,
+    "suggested_reps": 10,
+    "instruction_pt": "Coloque uma mão no peito e outra na barriga. Respire pelo nariz fazendo a barriga subir, sem mexer o peito. Solte o ar lentamente pela boca.",
+    "image_url": "/exercises/illustrations/respiracao-diafragmatica.avif",
+    "suggested_rpe": "4-5"
+  },
+  {
+    "id": "exd-expansao-costal",
+    "pt": "Expansão Costal",
+    "en": "Rib Cage Expansion",
+    "aliases_pt": [
+      "expansão torácica",
+      "respiração lateral"
+    ],
+    "aliases_en": [
+      "lateral costal breathing"
+    ],
+    "category": "exercise",
+    "subcategory": "Respiratório",
+    "description_pt": "Mobilização da caixa torácica e aumento da capacidade vital.",
+    "description_en": "Thoracic cage mobilization and increase in vital capacity.",
+    "intensity_level": 1,
+    "target_outcome": [
+      "Mobilidade"
+    ],
+    "instruction_pt": "Respire profundamente tentando expandir as costelas para os lados, evitando subir os ombros.",
+    "image_url": "/exercises/illustrations/expansao-costal.avif",
+    "suggested_sets": 2,
+    "suggested_reps": 10,
+    "suggested_rpe": "4-5"
+  },
+  {
+    "id": "exd-respiracao-360",
+    "pt": "Respiração 360",
+    "en": "360 Breathing",
+    "aliases_pt": [
+      "respiração circunferencial"
+    ],
+    "aliases_en": [
+      "circumferential breathing"
+    ],
+    "category": "exercise",
+    "subcategory": "Respiratório",
+    "description_pt": "Expansão tridimensional do tronco para suporte lombo-pélvico.",
+    "description_en": "Three-dimensional trunk expansion for lumbo-pelvic support.",
+    "intensity_level": 1,
+    "target_outcome": [
+      "Estabilidade"
+    ],
+    "instruction_pt": "Sinta a expansão da respiração em toda a circunferência do tronco (frente, lados e costas) simultaneamente.",
+    "image_url": "/exercises/illustrations/respiracao-360.avif",
+    "suggested_sets": 2,
+    "suggested_reps": 10,
+    "suggested_rpe": "4-5"
+  },
+  {
+    "id": "exd-ativação-vmo",
+    "pt": "Ativação de VMO",
+    "en": "VMO Activation",
+    "aliases_pt": [
+      "vasto medial oblíquo",
+      "isometria de joelho"
+    ],
+    "aliases_en": [
+      "vmo firing",
+      "quad sets"
+    ],
+    "category": "exercise",
+    "subcategory": "Joelho",
+    "description_pt": "Recrutamento do vasto medial oblíquo para estabilidade patelar.",
+    "description_en": "VMO recruitment for patellar stability.",
+    "intensity_level": 1,
+    "target_outcome": [
+      "Estabilidade"
+    ],
+    "instruction_pt": "Sente-se com as pernas esticadas. Tente 'empurrar' a parte de trás do joelho contra o chão, apertando bem o músculo da parte interna da coxa.",
+    "image_url": "/exercises/illustrations/ativacao-vmo-quad-set.png",
+    "suggested_sets": 3,
+    "suggested_reps": 15,
+    "suggested_rpe": "4-5"
+  },
+  {
+    "id": "exd-ponte-unilateral-isom",
+    "pt": "Ponte Unilateral Isométrica",
+    "en": "Single Leg Isometric Bridge",
+    "aliases_pt": [
+      "ponte unipodal estática"
+    ],
+    "aliases_en": [
+      "static sl bridge"
+    ],
+    "category": "exercise",
+    "subcategory": "Quadril",
+    "description_pt": "Isometria de glúteo e isquiotibiais para estabilidade de quadril.",
+    "description_en": "Glute and hamstring isometry for hip stability.",
+    "intensity_level": 3,
+    "target_outcome": [
+      "Estabilidade",
+      "Força"
+    ],
+    "instruction_pt": "Mantenha a posição de ponte com apenas um pé no chão, mantendo o quadril nivelado e o core contraído.",
+    "image_url": "/exercises/illustrations/ponte-unilateral.avif",
+    "suggested_sets": 3,
+    "suggested_reps": 12,
+    "suggested_rpe": "7-8"
+  },
+  {
+    "id": "exd-estabilizacao-olhar",
+    "pt": "Estabilização do Olhar (VOR)",
+    "en": "Gaze Stabilization (VOR)",
+    "aliases_pt": [
+      "exercício vestibular",
+      "vor x1"
+    ],
+    "aliases_en": [
+      "vestibular ocular reflex"
+    ],
+    "category": "exercise",
+    "subcategory": "Vestibular",
+    "description_pt": "Treino de reflexo vestíbulo-ocular para equilíbrio.",
+    "description_en": "Vestibular ocular reflex training for balance.",
+    "intensity_level": 1,
+    "target_outcome": [
+      "Estabilidade"
+    ],
+    "instruction_pt": "Olhe para um ponto fixo à sua frente e vire a cabeça lentamente de um lado para o outro, sem tirar os olhos do ponto.",
+    "image_url": "/exercises/illustrations/estabilizacao-olhar-vor.png",
+    "suggested_sets": 3,
+    "suggested_reps": 60,
+    "suggested_rpe": "4-5"
+  },
+  {
+    "id": "exd-manobra-epley",
+    "pt": "Manobra de Epley",
+    "en": "Epley Maneuver",
+    "aliases_pt": [
+      "reposicionamento otoconial"
+    ],
+    "aliases_en": [
+      "canalith repositioning"
+    ],
+    "category": "exercise",
+    "subcategory": "Vestibular",
+    "description_pt": "Manobra para tratamento de VPPB.",
+    "description_en": "Maneuver for BPPV treatment.",
+    "intensity_level": 1,
+    "target_outcome": [
+      "Analgesia"
+    ],
+    "instruction_pt": "Sequência de movimentos de cabeça para reposicionamento de cristais no ouvido interno (deve ser orientada por profissional).",
+    "image_url": "/exercises/illustrations/manobra-epley.avif",
+    "suggested_sets": 3,
+    "suggested_reps": 60,
+    "suggested_rpe": "4-5"
+  },
+  {
+    "id": "exd-neuro-mediano",
+    "pt": "Deslizamento de Nervo Mediano",
+    "en": "Median Nerve Slider",
+    "aliases_pt": [
+      "mobilização neural mediano"
+    ],
+    "aliases_en": [
+      "median nerve glide"
+    ],
+    "category": "exercise",
+    "subcategory": "Neurodinâmica",
+    "description_pt": "Redução da mecanossensibilidade do nervo mediano.",
+    "description_en": "Reducing median nerve mechanosensitivity.",
+    "intensity_level": 2,
+    "target_outcome": [
+      "Mobilidade",
+      "Analgesia"
+    ],
+    "instruction_pt": "Estenda o braço para o lado com a palma da mão aberta. Incline a cabeça para o mesmo lado enquanto dobra o punho, e depois incline para o lado oposto enquanto estende o punho.",
+    "image_url": "/exercises/illustrations/deslizamento-nervo-mediano.avif",
+    "suggested_sets": 3,
+    "suggested_reps": 12,
+    "suggested_rpe": "3-4"
+  },
+  {
+    "id": "exd-neuro-ciatico",
+    "pt": "Deslizamento de Nervo Ciático",
+    "en": "Sciatic Nerve Slider",
+    "aliases_pt": [
+      "mobilização neural ciático",
+      "slump slider"
+    ],
+    "aliases_en": [
+      "sciatic nerve glide"
+    ],
+    "category": "exercise",
+    "subcategory": "Neurodinâmica",
+    "description_pt": "Mobilização do nervo ciático e raízes lombossacrais.",
+    "description_en": "Sciatic nerve and lumbosacral root mobilization.",
+    "intensity_level": 2,
+    "target_outcome": [
+      "Mobilidade",
+      "Analgesia"
+    ],
+    "instruction_pt": "Sentado, estique o joelho e aponte os dedos do pé para cima enquanto olha para o teto. Depois, dobre o joelho e aponte o pé para baixo enquanto olha para o colo.",
+    "image_url": "/exercises/illustrations/deslizamento-nervo-ciatico.png",
+    "suggested_sets": 3,
+    "suggested_reps": 12,
+    "suggested_rpe": "3-4"
+  },
+  {
+    "id": "exd-neuro-radial",
+    "pt": "Deslizamento de Nervo Radial",
+    "en": "Radial Nerve Slider",
+    "aliases_pt": [
+      "mobilização neural radial"
+    ],
+    "aliases_en": [
+      "radial nerve glide"
+    ],
+    "category": "exercise",
+    "subcategory": "Neurodinâmica",
+    "description_pt": "Mobilização para redução de tensão no nervo radial.",
+    "description_en": "Mobilization to reduce radial nerve tension.",
+    "intensity_level": 2,
+    "target_outcome": [
+      "Mobilidade",
+      "Analgesia"
+    ],
+    "instruction_pt": "Com o braço ao lado do corpo e palma para trás, dobre o punho e gire o braço para dentro enquanto inclina a cabeça.",
+    "image_url": "/exercises/illustrations/deslizamento-nervo-radial.avif",
+    "suggested_sets": 3,
+    "suggested_reps": 12,
+    "suggested_rpe": "3-4"
+  },
+  {
+    "id": "exd-neuro-ulnar",
+    "pt": "Deslizamento de Nervo Ulnar",
+    "en": "Ulnar Nerve Slider",
+    "aliases_pt": [
+      "mobilização neural ulnar"
+    ],
+    "aliases_en": [
+      "ulnar nerve glide"
+    ],
+    "category": "exercise",
+    "subcategory": "Neurodinâmica",
+    "description_pt": "Mobilização para redução de tensão no nervo ulnar.",
+    "description_en": "Mobilization to reduce ulnar nerve tension.",
+    "intensity_level": 2,
+    "target_outcome": [
+      "Mobilidade",
+      "Analgesia"
+    ],
+    "instruction_pt": "Faça um 'óculos' com a mão e leve em direção ao rosto, rodando o punho para fora e para cima.",
+    "image_url": "/exercises/illustrations/deslizamento-nervo-ulnar.avif",
+    "suggested_sets": 3,
+    "suggested_reps": 12,
+    "suggested_rpe": "3-4"
+  },
+  {
+    "id": "exd-sentar-levantar",
+    "pt": "Sentar e Levantar (5x STS)",
+    "en": "Sit-to-Stand",
+    "aliases_pt": [
+      "sts",
+      "sentar e levantar da cadeira"
+    ],
+    "aliases_en": [
+      "sit to stand"
+    ],
+    "category": "exercise",
+    "subcategory": "Geriátrico / Funcional",
+    "description_pt": "Avaliação e treino de força de MMII e independência funcional.",
+    "description_en": "Lower limb strength and functional independence training.",
+    "intensity_level": 2,
+    "target_outcome": [
+      "Força",
+      "Potência"
+    ],
+    "instruction_pt": "Sente-se em uma cadeira firme e levante-se completamente sem usar as mãos para apoio. Repita o movimento com controle.",
+    "image_url": "/exercises/illustrations/sentar-levantar.avif",
+    "suggested_sets": 3,
+    "suggested_reps": 12,
+    "suggested_rpe": "7-8",
+    "required_equipment": [
+      "Banco/Cadeira"
+    ]
+  },
+  {
+    "id": "exd-alcance-funcional",
+    "pt": "Alcance Funcional",
+    "en": "Functional Reach",
+    "aliases_pt": [
+      "alcance frontal"
+    ],
+    "aliases_en": [
+      "forward reach"
+    ],
+    "category": "exercise",
+    "subcategory": "Geriátrico / Funcional",
+    "description_pt": "Treino de equilíbrio dinâmico e limites de estabilidade.",
+    "description_en": "Dynamic balance and stability limits training.",
+    "intensity_level": 1,
+    "target_outcome": [
+      "Estabilidade"
+    ],
+    "instruction_pt": "Em pé, estenda o braço para frente o máximo que conseguir sem tirar os calcanhares do chão ou perder o equilíbrio.",
+    "image_url": "/exercises/illustrations/alcance-funcional.avif",
+    "suggested_sets": 3,
+    "suggested_reps": 15,
+    "suggested_rpe": "4-5"
+  },
+  {
+    "id": "exd-caminhada-tandem",
+    "pt": "Caminhada Tandem",
+    "en": "Tandem Walk",
+    "aliases_pt": [
+      "caminhada pé ante pé",
+      "linha reta"
+    ],
+    "aliases_en": [
+      "tandem gait"
+    ],
+    "category": "exercise",
+    "subcategory": "Geriátrico / Funcional",
+    "description_pt": "Treino de equilíbrio dinâmico with a narrow base.",
+    "description_en": "Dynamic balance training with narrow base.",
+    "intensity_level": 2,
+    "target_outcome": [
+      "Estabilidade"
+    ],
+    "instruction_pt": "Caminhe em linha reta, colocando um pé diretamente à frente do outro (calcanhar tocando os dedos), mantendo os braços abertos para equilíbrio.",
+    "image_url": "/exercises/illustrations/marcha_tandem.png",
+    "suggested_sets": 3,
+    "suggested_reps": 12,
+    "suggested_rpe": "7-8"
+  },
+  {
+    "id": "exd-subida-degrau-assistida",
+    "pt": "Subida de Degrau Assistida",
+    "en": "Assisted Step-Up",
+    "aliases_pt": [
+      "subida com apoio"
+    ],
+    "aliases_en": [
+      "assisted step up"
+    ],
+    "category": "exercise",
+    "subcategory": "Geriátrico / Funcional",
+    "description_pt": "Treino de força e funcionalidade de membros inferiores com assistência.",
+    "description_en": "Lower limb strength and functionality training with assistance.",
+    "intensity_level": 2,
+    "target_outcome": [
+      "Força",
+      "Estabilidade"
+    ],
+    "instruction_pt": "Suba um degrau apoiando-se em um corrimão ou suporte, mantendo o controle do joelho e do tronco.",
+    "image_url": "/exercises/illustrations/subida-degrau-assistida.avif",
+    "suggested_sets": 3,
+    "suggested_reps": 12,
+    "suggested_rpe": "7-8",
+    "required_equipment": [
+      "Step/Degrau"
+    ]
+  }
+]
