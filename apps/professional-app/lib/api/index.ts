@@ -118,3 +118,5 @@ export { getHEPCompliance, getPatientExercisePlans } from "./hep";
 export type { ApiHEPComplianceData } from "./hep";
 
 export { checkPatientNameDuplicate } from "./utils";
+export { reportsApi } from "./reports";
+export type { PdfReportRequest, PdfReportResponse } from "./reports";

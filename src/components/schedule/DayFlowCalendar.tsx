@@ -151,7 +151,7 @@ export function DayFlowCalendarWrapper(props: DayFlowCalendarWrapperProps) {
 				containerRef.current?.getBoundingClientRect().height ?? 0;
 			if (!availableHeight) return;
 			const nextSlotHeight = Math.max(
-				16,
+				10,
 				Math.floor((availableHeight - WEEK_HEADER_HEIGHT) / WEEK_SLOT_COUNT),
 			);
 			setWeekSlotHeight((current) =>
