@@ -120,7 +120,7 @@ export const MainLayout: React.FC<MainLayoutProps> = ({
 						? customHeader
 						: !hideDefaultHeader && (
 								<header
-									className="hidden md:flex h-16 gradient-brand-light backdrop-blur-md border-b border-primary/20 items-center justify-between px-6 sticky top-0 z-40 transition-all duration-500"
+									className="hidden md:flex h-10 gradient-brand-light backdrop-blur-md border-b border-primary/20 items-center justify-between px-6 sticky top-0 z-40 transition-all duration-500"
 									data-testid="main-header"
 								>
 									<div className="flex items-center gap-6">

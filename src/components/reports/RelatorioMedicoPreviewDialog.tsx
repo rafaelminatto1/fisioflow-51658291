@@ -10,6 +10,7 @@ import {
 } from "@/components/ui/dialog";
 import { LazyPdfDownloadButton } from "@/components/pdf/LazyPdfDownloadButton";
 import type { RelatorioMedicoData } from "@/pages/relatorios/RelatorioMedicoPage";
+import { CloudReportActions } from "./CloudReportActions";
 
 export function RelatorioMedicoPreviewDialog({
 	relatorio,
@@ -62,7 +63,15 @@ export function RelatorioMedicoPreviewDialog({
 							</div>
 						)}
 					</div>
-					<div className="flex justify-end gap-2">
+
+					<CloudReportActions 
+						reportData={relatorio}
+						patientId={relatorio.patientId || ""}
+						patientName={relatorio.paciente?.nome || ""}
+						type={relatorio.tipo_relatorio}
+					/>
+
+					<div className="flex justify-end gap-2 border-t pt-4">
 						<Button variant="outline" onClick={() => onEdit(relatorio)}>
 							<Edit className="h-4 w-4 mr-2" />
 							Editar

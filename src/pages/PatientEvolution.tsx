@@ -3,7 +3,7 @@
  * Optimized with modular hooks and components for better maintainability.
  */
 
-import { lazy, Suspense, useMemo } from "react";
+import { lazy, Suspense, useMemo, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { AlertTriangle } from "lucide-react";
 
@@ -99,6 +99,8 @@ const LazyEvolutionDraggableGrid = lazy(() =>
 	})),
 );
 
+import { preloadEditorChunks } from "@/lib/evolution/preloadEditors";
+
 export interface PainScaleData {
 	level: number;
 	location?: string;
@@ -113,6 +115,19 @@ const PatientEvolution = () => {
 	const state = usePatientEvolutionState();
 	const handlers = usePatientEvolutionHandlers(state);
 	const autoSaveMutation = useAutoSaveSoapRecord();
+
+	// Preload all editor chunks during idle time so tab switching is instant
+	useEffect(() => {
+		const load = () => {
+			Object.values(preloadEditorChunks).forEach((fn) => fn());
+		};
+		if ("requestIdleCallback" in window) {
+			const id = (window as any).requestIdleCallback(load, { timeout: 3000 });
+			return () => (window as any).cancelIdleCallback(id);
+		}
+		const t = setTimeout(load, 1500);
+		return () => clearTimeout(t);
+	}, []);
 
 	// ========== AUTO-SAVE ==========
 	const autoSaveData = useMemo(() => {
