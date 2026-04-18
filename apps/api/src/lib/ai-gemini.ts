@@ -4,7 +4,8 @@ export async function callGemini(
   model: string = 'gemini-1.5-flash-latest', 
   gatewayUrl?: string,
   gatewayToken?: string,
-  context: 'exercise' | 'clinical' | 'general' = 'clinical'
+  context: 'exercise' | 'clinical' | 'general' = 'clinical',
+  responseSchema?: any
 ) {
   // Configuração de vanguarda 2026: Cache dinâmico por tipo de uso
   const cacheTtl = context === 'exercise' ? 86400 : 3600; // 24h para exercícios, 1h para clínico
@@ -27,6 +28,16 @@ export async function callGemini(
     headers['cf-aig-metadata'] = JSON.stringify({ source: 'fisioflow-backend', context });
   }
 
+  const generationConfig: any = {
+    temperature: context === 'clinical' ? 0.4 : 0.7, // Mais determinístico para clínico
+    maxOutputTokens: 2048,
+  };
+
+  if (responseSchema) {
+    generationConfig.response_mime_type = "application/json";
+    generationConfig.response_schema = responseSchema;
+  }
+
   const response = await fetch(url, {
     method: 'POST',
     headers,
@@ -34,10 +45,7 @@ export async function callGemini(
       contents: [{
         parts: [{ text: prompt }]
       }],
-      generationConfig: {
-        temperature: context === 'clinical' ? 0.4 : 0.7, // Mais determinístico para clínico
-        maxOutputTokens: 2048,
-      }
+      generationConfig
     })
   });
 
