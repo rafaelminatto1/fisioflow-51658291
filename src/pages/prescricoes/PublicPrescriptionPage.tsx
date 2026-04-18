@@ -183,19 +183,35 @@ export default function PublicPrescriptionPage() {
 										</div>
 
 										<div className="flex-1 min-w-0">
-											<div className="flex items-start justify-between gap-2">
-												<h3
-													className={cn(
-														"font-medium",
-														isCompleted && "line-through text-muted-foreground",
+												<div className="flex items-start justify-between gap-2">
+													<h3
+														className={cn(
+															"font-bold text-lg",
+															isCompleted && "line-through text-muted-foreground",
+														)}
+													>
+														{index + 1}. {exercise.name}
+													</h3>
+													{isCompleted && (
+														<CheckCircle2 className="h-5 w-5 text-green-500 flex-shrink-0" />
 													)}
-												>
-													{index + 1}. {exercise.name}
-												</h3>
-												{isCompleted && (
-													<CheckCircle2 className="h-5 w-5 text-green-500 flex-shrink-0" />
+												</div>
+
+												{exercise.image_url && !isCompleted && (
+													<div className="mt-3 mb-4 rounded-xl border bg-white overflow-hidden aspect-[16/10] relative group shadow-sm">
+														<img
+															src={exercise.image_url}
+															alt={exercise.name}
+															className="w-full h-full object-contain p-4 transition-transform duration-500 group-hover:scale-105"
+															onError={(e) => (e.currentTarget.parentElement!.style.display = "none")}
+														/>
+														<div className="absolute top-3 right-3">
+															<Badge className="bg-white/90 text-slate-800 backdrop-blur-sm border-slate-200 shadow-sm">
+																Guia Visual
+															</Badge>
+														</div>
+													</div>
 												)}
-											</div>
 
 											{exercise.description && (
 												<p className="text-sm text-muted-foreground mt-1">

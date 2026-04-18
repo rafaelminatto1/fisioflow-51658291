@@ -81,6 +81,15 @@ export const LinkManagement = ({
 		max_usos: "",
 		campos_obrigatorios: ["nome", "email", "telefone"] as string[],
 		campos_opcionais: [] as string[],
+		ui_style: {
+			primaryColor: "#000000",
+			borderRadius: "2.5rem",
+			inputRadius: "1rem",
+			backgroundColor: "#f8fafc",
+			successStyle: "premium",
+			successTitle: "Tudo pronto!",
+			successMessage: "Seus dados foram recebidos com sucesso. Agora é só aguardar o seu horário agendado.",
+		},
 	});
 
 	const getFullLink = (token: string) =>
@@ -113,6 +122,15 @@ export const LinkManagement = ({
 			max_usos: "",
 			campos_obrigatorios: ["nome", "email", "telefone"],
 			campos_opcionais: [],
+			ui_style: {
+				primaryColor: "#000000",
+				borderRadius: "2.5rem",
+				inputRadius: "1rem",
+				backgroundColor: "#f8fafc",
+				successStyle: "premium",
+				successTitle: "Tudo pronto!",
+				successMessage: "Seus dados foram recebidos com sucesso. Agora é só aguardar o seu horário agendado.",
+			},
 		});
 	};
 
@@ -283,6 +301,106 @@ export const LinkManagement = ({
 										})}
 									</div>
 								</div>
+
+								<div className="space-y-4 border-t pt-6">
+									<div className="flex items-center gap-2">
+										<Settings2 className="h-4 w-4" />
+										<Label className="text-base font-medium">
+											Personalização Visual (Premium)
+										</Label>
+									</div>
+
+									<div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+										<div className="space-y-2">
+											<Label>Cor Principal</Label>
+											<div className="flex gap-2">
+												<Input
+													type="color"
+													value={newToken.ui_style.primaryColor}
+													onChange={(e) =>
+														setNewToken({
+															...newToken,
+															ui_style: { ...newToken.ui_style, primaryColor: e.target.value }
+														})
+													}
+													className="w-12 h-10 p-1"
+												/>
+												<Input
+													value={newToken.ui_style.primaryColor}
+													onChange={(e) =>
+														setNewToken({
+															...newToken,
+															ui_style: { ...newToken.ui_style, primaryColor: e.target.value }
+														})
+													}
+													placeholder="#000000"
+												/>
+											</div>
+										</div>
+
+										<div className="space-y-2">
+											<Label>Estilo de Sucesso</Label>
+											<div className="flex items-center gap-4 h-10">
+												<div className="flex items-center gap-2">
+													<input
+														type="radio"
+														id="style-default"
+														name="successStyle"
+														checked={newToken.ui_style.successStyle === "default"}
+														onChange={() => setNewToken({
+															...newToken,
+															ui_style: { ...newToken.ui_style, successStyle: "default" }
+														})}
+													/>
+													<Label htmlFor="style-default">Padrão</Label>
+												</div>
+												<div className="flex items-center gap-2">
+													<input
+														type="radio"
+														id="style-premium"
+														name="successStyle"
+														checked={newToken.ui_style.successStyle === "premium"}
+														onChange={() => setNewToken({
+															...newToken,
+															ui_style: { ...newToken.ui_style, successStyle: "premium" }
+														})}
+													/>
+													<Label htmlFor="style-premium">Premium ✨</Label>
+												</div>
+											</div>
+										</div>
+									</div>
+
+									<div className="space-y-2">
+										<Label>Título de Sucesso</Label>
+										<Input
+											value={newToken.ui_style.successTitle}
+											onChange={(e) =>
+												setNewToken({
+													...newToken,
+													ui_style: { ...newToken.ui_style, successTitle: e.target.value }
+												})
+											}
+											placeholder="Ex: Tudo pronto!"
+										/>
+									</div>
+
+									<div className="space-y-2">
+										<Label>Mensagem de Sucesso</Label>
+										<Textarea
+											value={newToken.ui_style.successMessage}
+											onChange={(e) =>
+												setNewToken({
+													...newToken,
+													ui_style: { ...newToken.ui_style, successMessage: e.target.value }
+												})
+											}
+											placeholder="Mensagem que aparecerá após o envio"
+											rows={2}
+										/>
+									</div>
+								</div>
+
 							</div>
 
 							<DialogFooter>

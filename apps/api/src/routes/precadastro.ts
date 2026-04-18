@@ -88,7 +88,7 @@ app.get('/public/:token', async (c) => {
   const result = await pool.query(
     `
       SELECT id, organization_id, nome, descricao, ativo, max_usos, usos_atuais, expires_at,
-             campos_obrigatorios, campos_opcionais, created_at, updated_at
+             campos_obrigatorios, campos_opcionais, ui_style, created_at, updated_at
       FROM precadastro_tokens
       WHERE token = $1 AND ativo = true
       LIMIT 1
@@ -126,7 +126,7 @@ app.post('/public/:token/submissions', async (c) => {
   const tokenResult = await pool.query(
     `
       SELECT id, organization_id, nome, descricao, ativo, max_usos, usos_atuais, expires_at,
-             campos_obrigatorios, campos_opcionais, created_at, updated_at
+             campos_obrigatorios, campos_opcionais, ui_style, created_at, updated_at
       FROM precadastro_tokens
       WHERE token = $1 AND ativo = true
       LIMIT 1
