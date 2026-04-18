@@ -128,15 +128,17 @@ export function PhysioDictionaryView() {
 
 			<ScrollArea className="flex-1 p-6">
 				{isLoading ? (
-					<div className="flex items-center justify-center h-40">
-						<div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary" />
+					<div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 p-1">
+						{[1, 2, 3, 4, 5, 6, 7, 8].map((i) => (
+							<div key={i} className="h-48 rounded-2xl bg-slate-100 dark:bg-slate-800/50 animate-pulse border border-slate-50 dark:border-slate-800" />
+						))}
 					</div>
 				) : (
-					<div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+					<div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 p-1">
 						{terms.map((term) => (
 							<Card 
 								key={term.id} 
-								className="overflow-hidden hover:shadow-md transition-all group cursor-pointer"
+								className="group relative border-slate-200/60 dark:border-slate-800/60 bg-white/70 dark:bg-slate-900/70 backdrop-blur-sm rounded-2xl transition-all duration-300 hover:shadow-xl hover:shadow-blue-500/5 hover:-translate-y-1 overflow-hidden cursor-pointer"
 								onClick={() => {
 									if (term.category === 'procedure' || term.subcategory === 'Protocolo') {
 										const proto = protocolDictionary.find(p => p.id === term.id);
@@ -144,7 +146,8 @@ export function PhysioDictionaryView() {
 									}
 								}}
 							>
-								<CardHeader className="p-4 pb-2 bg-muted/20 border-b relative">
+								<div className="absolute top-0 left-0 w-1.5 h-full bg-blue-500/10 group-hover:bg-blue-500 transition-colors" />
+								<CardHeader className="p-4 pb-2 relative">
 									<div className="flex justify-between items-start">
 										<CardTitle className="text-base font-bold text-primary pr-12">
 											{term.pt}
@@ -218,10 +221,17 @@ export function PhysioDictionaryView() {
 					</div>
 				)}
 				{!isLoading && terms.length === 0 && (
-					<div className="text-center py-20">
-						<p className="text-muted-foreground text-lg">Nenhum termo encontrado.</p>
-						<Button variant="outline" className="mt-4" onClick={handleAdd}>
-							Adicionar primeiro termo
+					<div className="flex flex-col items-center justify-center py-32 text-center animate-in fade-in zoom-in duration-500">
+						<div className="h-24 w-24 bg-slate-50 dark:bg-slate-900 rounded-full flex items-center justify-center mb-6 relative">
+							<div className="absolute inset-0 rounded-full bg-slate-200/50 dark:bg-slate-800/50 animate-ping" />
+							<BookA className="h-10 w-10 text-slate-400 dark:text-slate-600 relative z-10" />
+						</div>
+						<h3 className="text-2xl font-bold text-slate-900 dark:text-white font-display">Dicionário Vazio</h3>
+						<p className="text-slate-500 dark:text-slate-400 max-w-sm mx-auto mt-3 font-medium">
+							Não encontramos termos para sua busca. Deseja cadastrar uma nova terminologia clínica?
+						</p>
+						<Button variant="default" className="mt-8 rounded-xl font-bold shadow-lg shadow-blue-500/20 px-8" onClick={handleAdd}>
+							<Plus className="h-4 w-4 mr-2" /> Adicionar Termo
 						</Button>
 					</div>
 				)}
