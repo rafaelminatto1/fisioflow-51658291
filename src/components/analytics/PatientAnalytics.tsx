@@ -109,6 +109,8 @@ export function PatientAnalytics() {
 	// ── Distribuição por status ──────────────────────────────────────────────────
 	const { data: statusData, isLoading: loadingStatus } = useQuery({
 		queryKey: ["patient-status-analytics", professionalId],
+		staleTime: 10 * 60 * 1000,
+		gcTime: 30 * 60 * 1000,
 		queryFn: async () => {
 			const [allPatients, therapistAppointments] = await Promise.all([
 				listAllPatients(),
@@ -133,6 +135,8 @@ export function PatientAnalytics() {
 	// ── Distribuição por faixa etária ────────────────────────────────────────────
 	const { data: ageData, isLoading: loadingAge } = useQuery({
 		queryKey: ["patient-age-analytics", professionalId],
+		staleTime: 10 * 60 * 1000,
+		gcTime: 30 * 60 * 1000,
 		queryFn: async () => {
 			const [allPatients, therapistAppointments] = await Promise.all([
 				listAllPatients(),
@@ -163,6 +167,8 @@ export function PatientAnalytics() {
 	const { data: activePatientsCount, isLoading: loadingActive } = useQuery({
 		queryKey: ["active-patients-period", dateRange, professionalId],
 		enabled: !!dateRange?.from && !!dateRange?.to,
+		staleTime: 10 * 60 * 1000,
+		gcTime: 30 * 60 * 1000,
 		queryFn: async () => {
 			const from = format(dateRange!.from!, "yyyy-MM-dd");
 			const to = format(dateRange!.to!, "yyyy-MM-dd");
@@ -174,12 +180,16 @@ export function PatientAnalytics() {
 	// ── Total de pacientes ────────────────────────────────────────────────────────
 	const { data: totalPatients } = useQuery({
 		queryKey: ["total-patients-count"],
+		staleTime: 15 * 60 * 1000,
+		gcTime: 60 * 60 * 1000,
 		queryFn: async () => (await listAllPatients()).length,
 	});
 
 	// ── Pacientes inativos (sem consulta há +30 dias) ────────────────────────────
 	const { data: inactiveData, isLoading: loadingInactive } = useQuery({
 		queryKey: ["inactive-patients-list", professionalId],
+		staleTime: 15 * 60 * 1000,
+		gcTime: 30 * 60 * 1000,
 		queryFn: async () => {
 			const thirtyDaysAgo = subDays(new Date(), 30);
 			const [allPatients, recentAppointments] = await Promise.all([
@@ -209,6 +219,8 @@ export function PatientAnalytics() {
 	const { data: newPatientsData } = useQuery({
 		queryKey: ["new-patients-by-period", dateRange],
 		enabled: !!dateRange?.from && !!dateRange?.to,
+		staleTime: 10 * 60 * 1000,
+		gcTime: 30 * 60 * 1000,
 		queryFn: async () => {
 			const from = dateRange!.from!;
 			const to = dateRange!.to!;
@@ -248,6 +260,8 @@ export function PatientAnalytics() {
 	// ── Sessões disponíveis (pacotes com saldo) ──────────────────────────────────
 	const { data: patientsWithSessions, isLoading: loadingSessions } = useQuery({
 		queryKey: ["patients-with-sessions"],
+		staleTime: 5 * 60 * 1000,
+		gcTime: 15 * 60 * 1000,
 		queryFn: async () => {
 			const response = await financialApi.patientPackages.list({ status: "active", limit: 500 });
 			return ((response?.data ?? []) as PatientPackageRow[])

@@ -33,6 +33,8 @@ const buildDailyCounts = (appointments: AppointmentRow[], interval: Date[]) => {
 export function PredictiveAnalytics() {
 	const { data: predictions } = useQuery({
 		queryKey: ["predictive-analytics"],
+		staleTime: 15 * 60 * 1000,
+		gcTime: 60 * 60 * 1000,
 		queryFn: async () => {
 			const last30Days = eachDayOfInterval({
 				start: subDays(new Date(), 29),
@@ -75,6 +77,8 @@ export function PredictiveAnalytics() {
 
 	const { data: insights } = useQuery({
 		queryKey: ["predictive-insights"],
+		staleTime: 15 * 60 * 1000,
+		gcTime: 60 * 60 * 1000,
 		queryFn: async () => {
 			const thirtyDaysAgo = subDays(new Date(), 30);
 			const response = await appointmentsApi.list({

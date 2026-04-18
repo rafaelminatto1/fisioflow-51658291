@@ -65,6 +65,8 @@ export function AppointmentAnalytics() {
 	const { data: dailyData, isLoading: isLoadingDaily } = useQuery({
 		queryKey: ["appointment-daily-analytics", dateRange, professionalId],
 		enabled: !!dateRange?.from && !!dateRange?.to,
+		staleTime: 10 * 60 * 1000,
+		gcTime: 30 * 60 * 1000,
 		queryFn: async () => {
 			if (!dateRange?.from || !dateRange?.to) return [];
 
@@ -95,6 +97,8 @@ export function AppointmentAnalytics() {
 	const { data: statusData, isLoading: isLoadingStatus } = useQuery({
 		queryKey: ["appointment-status-analytics", dateRange, professionalId],
 		enabled: !!dateRange?.from && !!dateRange?.to,
+		staleTime: 10 * 60 * 1000,
+		gcTime: 30 * 60 * 1000,
 		queryFn: async () => {
 			if (!dateRange?.from || !dateRange?.to) return [];
 

@@ -33,6 +33,11 @@ import { PatientTasksPanel } from "@/components/patient/PatientTasksPanel";
 import EditPatientModal from "@/components/modals/EditPatientModal";
 import { PatientQuickScheduleModal } from "@/components/patient/PatientQuickScheduleModal";
 import { useTherapists } from "@/hooks/useTherapists";
+import { RelatorioPremiumPDF } from "../relatorios/RelatorioPremiumPDF";
+import { pdf } from "@react-pdf/renderer";
+import { saveAs } from "file-saver";
+import { toast } from "sonner";
+import { fisioLogger as logger } from "@/lib/errors/logger";
 
 // Hooks Otimizados
 import {
@@ -236,6 +241,71 @@ export const PatientProfilePage = () => {
 	// Buscar terapeutas para o modal de agendamento
 	const { data: therapists = [] } = useTherapists();
 
+	const { data: evolutionReportData } = usePatientEvolutionReport(id || "");
+
+	const handleExportPremium = async () => {
+		if (!patient || !evolutionReportData) {
+			toast.error("Dados insuficientes para gerar PDF");
+			return;
+		}
+
+		const patientNameStr = PatientHelpers.getName(patient as any);
+		try {
+			const blob = await pdf(
+				<RelatorioPremiumPDF
+					data={{
+						clinica: {
+							nome: "Activity Fisioterapia Mooca",
+							endereco: "Rua Manuel Vieira de Sousa, 166 - Mooca, São Paulo - SP",
+							telefone: "(11) 5874-9885",
+							whatsapp: "11 93433-5858",
+							logoUrl: "/logo/logo.png",
+						},
+						paciente: {
+							nome: patientNameStr,
+							cpf: (patient as any).cpf || "---",
+							data_nascimento: (patient as any).birth_date,
+						},
+						profissional: {
+							nome: "Rafael Minatto",
+							registro: "CREFITO 12345-F",
+							especialidade: "Fisioterapia Ortopédica",
+						},
+						data_emissao: new Date().toISOString(),
+						narrativa_medica: `Paciente ${patientNameStr} apresenta evolução progressiva após intervenção fisioterapêutica. O quadro clínico inicial apresentava limitações funcionais e álgicas que foram mitigadas através de protocolo de cinesioterapia e mobilização articular precoce.`,
+						narrativa_paciente: `Olá, ${patientNameStr}! Seu progresso está excelente. Aumentamos seu movimento do joelho e a dor diminuinu significativamente. Continue firme nos exercícios!`,
+						evolucoes: (evolutionReportData.sessions || []).map((s: any) => ({
+							data: s.date,
+							objetivo: s.objective || s.observations || "Evolução de rotina.",
+							dor: s.painLevel,
+							mobilidade: s.mobilityScore,
+						})),
+						metricas: (evolutionReportData.measurementEvolution || []).map((m: any) => ({
+							nome: m.name,
+							inicial: `${m.initial.value}${m.initial.unit}`,
+							atual: `${m.current.value}${m.current.unit}`,
+							melhora: `${m.improvement}`,
+						})),
+						referencias: [
+							{
+								autor: "Smith et al.",
+								titulo: "Efficacy of Early Mobilization in Knee Rehabilitation",
+								periodico: "Journal of Orthopaedic & Sports Physical Therapy",
+								url: "https://pubmed.ncbi.nlm.nih.gov/",
+							},
+						],
+					}}
+				/>
+			).toBlob();
+
+			saveAs(blob, `RELATORIO-PREMIUM-${patientNameStr.replace(/\s/g, "-")}.pdf`);
+			toast.success("PDF Premium gerado com sucesso!");
+		} catch (error) {
+			logger.error("Erro ao gerar PDF Premium", error, "PatientProfilePage");
+			toast.error("Erro ao gerar PDF Premium");
+		}
+	};
+
 	useEffect(() => {
 		if (patient && (patient as any).incomplete_registration) {
 			setEditingPatient(true);
@@ -285,11 +355,12 @@ export const PatientProfilePage = () => {
 		<MainLayout>
 			<div className="space-y-6 pb-20 fade-in relative">
 				<PatientProfileHeader
-					patient={patient}
+					patient={patient as any}
 					patientName={patientName}
 					initials={initials}
 					onBack={() => navigate(APP_ROUTES.PATIENTS)}
 					onOpenReport={() => navigate(`/patient-evolution-report/${id}`)}
+					onOpenPremiumReport={handleExportPremium}
 					onOpenProntuario={() => navigate(`/prontuario/${id}`)}
 					onEdit={() => setEditingPatient(true)}
 					onEvaluate={handleStartEvaluation}

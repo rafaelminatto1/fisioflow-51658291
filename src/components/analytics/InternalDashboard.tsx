@@ -110,6 +110,8 @@ function InternalDashboardComponent() {
 	const { data: activePatients, isLoading: loadingActive } = useQuery({
 		queryKey: ["active-patients-dashboard", dateRange, professionalId],
 		enabled: !!dateRange?.from && !!dateRange?.to,
+		staleTime: 10 * 60 * 1000,
+		gcTime: 30 * 60 * 1000,
 		queryFn: async () => {
 			const from = format(dateRange!.from!, "yyyy-MM-dd");
 			const to = format(dateRange!.to!, "yyyy-MM-dd");
@@ -125,6 +127,8 @@ function InternalDashboardComponent() {
 	// Pacientes inativos (sem consulta há mais de 30 dias - mantemos 30 como padrão de inatividade, mas filtramos por profissional)
 	const { data: inactivePatients, isLoading: loadingInactive } = useQuery({
 		queryKey: ["inactive-patients-list", professionalId],
+		staleTime: 15 * 60 * 1000,
+		gcTime: 30 * 60 * 1000,
 		queryFn: async () => {
 			const thirtyDaysAgo = subDays(new Date(), 30);
 
@@ -177,6 +181,8 @@ function InternalDashboardComponent() {
 	// Pacientes com sessões pagas disponíveis
 	const { data: patientsWithSessions, isLoading: loadingSessions } = useQuery({
 		queryKey: ["patients-with-sessions"],
+		staleTime: 5 * 60 * 1000,
+		gcTime: 15 * 60 * 1000,
 		queryFn: async () => {
 			const response = await financialApi.patientPackages.list({
 				status: "active",
@@ -202,6 +208,8 @@ function InternalDashboardComponent() {
 	const { data: newPatientsData } = useQuery({
 		queryKey: ["new-patients-by-period", dateRange],
 		enabled: !!dateRange?.from && !!dateRange?.to,
+		staleTime: 10 * 60 * 1000,
+		gcTime: 30 * 60 * 1000,
 		queryFn: async () => {
 			const from = dateRange!.from!;
 			const to = dateRange!.to!;
@@ -258,6 +266,8 @@ function InternalDashboardComponent() {
 	// Total de pacientes
 	const { data: totalPatients } = useQuery({
 		queryKey: ["total-patients-count"],
+		staleTime: 15 * 60 * 1000,
+		gcTime: 60 * 60 * 1000,
 		queryFn: async () => {
 			const patients = await listPatients();
 			return patients.length;

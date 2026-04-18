@@ -440,6 +440,7 @@ export function Sidebar() {
 								<CollapsibleContent className="pl-9 space-y-1 mt-1 animate-in slide-in-from-top-2">
 									<Link
 										to="/biomechanics"
+										onMouseEnter={() => preloadRoute("/biomechanics")}
 										className={cn(
 											"flex items-center gap-2 px-3 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all",
 											location.pathname === "/biomechanics"
@@ -458,6 +459,7 @@ export function Sidebar() {
 											<Link
 												key={item.href}
 												to={item.href}
+												onMouseEnter={() => preloadRoute(item.href)}
 												className={cn(
 													"flex items-center gap-2 px-3 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all",
 													isSubActive
@@ -519,6 +521,7 @@ export function Sidebar() {
 											<Link
 												key={item.href}
 												to={item.href}
+												onMouseEnter={() => preloadRoute(item.href)}
 												className={cn(
 													"flex items-center gap-2 px-3 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all",
 													location.pathname === item.href
@@ -575,6 +578,7 @@ export function Sidebar() {
 											<Link
 												key={item.href}
 												to={item.href}
+												onMouseEnter={() => preloadRoute(item.href)}
 												className={cn(
 													"flex items-center gap-2 px-3 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all",
 													location.pathname === item.href
@@ -622,6 +626,7 @@ export function Sidebar() {
 										<Link
 											key={item.href}
 											to={item.href}
+											onMouseEnter={() => preloadRoute(item.href)}
 											className={cn(
 												"block px-3 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all",
 												location.pathname === item.href
