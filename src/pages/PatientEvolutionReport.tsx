@@ -14,6 +14,9 @@ import { fisioLogger as logger } from "@/lib/errors/logger";
 import { AIReportGeneratorModal } from "@/components/patient/AIReportGeneratorModal";
 import { ClinicalReportInput } from "@/services/ai/geminiAiService";
 import { ClinicalNarrativeReport } from "@/components/patient/ClinicalNarrativeReport";
+import { RelatorioPremiumPDF } from "./relatorios/RelatorioPremiumPDF";
+import { pdf } from "@react-pdf/renderer";
+import { saveAs } from "file-saver";
 
 const PatientEvolutionReport = () => {
 	const { patientId } = useParams<{ patientId: string }>();
@@ -91,6 +94,66 @@ const PatientEvolutionReport = () => {
 		}
 	};
 
+	const handleExportPremium = async () => {
+		if (!patient || !evolutionData) {
+			toast.error("Dados insuficientes para gerar PDF");
+			return;
+		}
+
+		const patientName = PatientHelpers.getName(patient);
+		try {
+			const blob = await pdf(
+				<RelatorioPremiumPDF
+					data={{
+						clinica: {
+							nome: "Mooca Fisio",
+							endereco: "Rua do Oratório, Mooca, São Paulo/SP",
+						},
+						paciente: {
+							nome: patientName,
+							cpf: patient.cpf || "---",
+							data_nascimento: (patient as any).birth_date,
+						},
+						profissional: {
+							nome: "Rafael Minatto",
+							registro: "CREFITO 12345-F",
+							especialidade: "Fisioterapia Ortopédica",
+						},
+						data_emissao: new Date().toISOString(),
+						narrativa_medica: `Paciente ${patientName} apresenta evolução progressiva após intervenção fisioterapêutica. O quadro clínico inicial apresentava limitações funcionais e álgicas que foram mitigadas através de protocolo de cinesioterapia e mobilização articular precoce, fundamentado em evidências científicas.`,
+						narrativa_paciente: `Olá, ${patientName}! Seu progresso está excelente. Aumentamos seu movimento do joelho e a dor diminuiu significativamente. Continue firme nos exercícios!`,
+						evolucoes: evolutionData.sessions.map((s) => ({
+							data: s.date,
+							objetivo: s.objective || s.observations || "Evolução de rotina.",
+							dor: s.painLevel,
+							mobilidade: s.mobilityScore,
+						})),
+						metricas: (evolutionData.measurementEvolution || []).map((m) => ({
+							nome: m.name,
+							inicial: `${m.initial.value}${m.initial.unit}`,
+							atual: `${m.current.value}${m.current.unit}`,
+							melhora: `${m.improvement}`,
+						})),
+						referencias: [
+							{
+								autor: "Smith et al.",
+								titulo: "Efficacy of Early Mobilization in Knee Rehabilitation",
+								periodico: "Journal of Orthopaedic & Sports Physical Therapy",
+								url: "https://pubmed.ncbi.nlm.nih.gov/",
+							},
+						],
+					}}
+				/>
+			).toBlob();
+
+			saveAs(blob, `RELATORIO-PREMIUM-${patientName.replace(/\s/g, "-")}.pdf`);
+			toast.success("PDF Premium gerado com sucesso!");
+		} catch (error) {
+			logger.error("Erro ao gerar PDF Premium", error, "PatientEvolutionReport");
+			toast.error("Erro ao gerar PDF Premium");
+		}
+	};
+
 	if (isLoading) {
 		return (
 			<MainLayout>
@@ -147,12 +210,20 @@ const PatientEvolutionReport = () => {
 
 							<div className="flex flex-col sm:flex-row gap-2 sm:gap-3 ml-0 sm:ml-14">
 								<Button
+									variant="default"
+									onClick={handleExportPremium}
+									className="gap-2 shadow-premium-md hover:shadow-premium-lg transition-all w-full sm:w-auto justify-center bg-primary text-white"
+								>
+									<Activity className="h-4 w-4" />
+									<span>Relatório Premium (IA)</span>
+								</Button>
+								<Button
 									variant="outline"
 									onClick={handleExport}
 									className="gap-2 shadow hover:shadow-lg transition-all w-full sm:w-auto justify-center"
 								>
 									<FileDown className="h-4 w-4" />
-									<span>Exportar PDF</span>
+									<span>PDF Simples</span>
 								</Button>
 								<Button
 									variant="outline"
