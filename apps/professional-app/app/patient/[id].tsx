@@ -26,6 +26,7 @@ import { useEvolutions } from '@/hooks';
 import { useAIExerciseHistory } from '@/hooks/useAIExerciseHistory';
 import { AIExerciseHistoryCard } from '@/components/ai/AIExerciseHistoryCard';
 import { PainProgressChart } from '@/components/patient/PainProgressChart';
+import { CloudReportActions } from '@/components/patient/CloudReportActions';
 import { generateEvolutionPDF } from '@/lib/services/pdfGenerator';
 import {
   usePatientFinancialRecords,
@@ -426,6 +427,25 @@ export default function PatientDetailScreen() {
                 )}
               </TouchableOpacity>
             </View>
+
+            {/* Cloud Sharing Actions */}
+            {evolutions.length > 0 && (
+              <CloudReportActions
+                patientId={id as string}
+                patientName={name}
+                reportType="progress"
+                reportData={{
+                  summary: `Relatório de evolução clínica com ${evolutions.length} sessões registradas.`,
+                  evolutions: evolutions.slice(0, 10).map(e => ({
+                    date: e.date,
+                    subjective: e.subjective,
+                    objective: e.objective,
+                    assessment: e.assessment,
+                    plan: e.plan
+                  }))
+                }}
+              />
+            )}
 
             {/* View All Evolutions Button */}
             {evolutions.length > 0 && (
