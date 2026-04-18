@@ -155,5 +155,3 @@ export function NotificationBell({ patientId }: { patientId?: string }) {
 		</DropdownMenu>
 	);
 }
-;
-}
