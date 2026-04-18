@@ -141,7 +141,7 @@
 			"url": "https://stitch.googleapis.com/mcp",
 			"headers": {
 				"Accept": "application/json",
-				"X-Goog-Api-Key": "${STITCH_API_KEY}"
+				"Authorization": "Bearer ${STITCH_API_KEY}"
 			},
 			"disabled": false,
 			"autoApprove": []
