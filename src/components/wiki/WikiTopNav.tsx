@@ -224,20 +224,19 @@ export function WikiTopNav({
 					<Button
 						variant="ghost"
 						size="sm"
-<<<<<<< Updated upstream
-						className="gap-2 font-bold font-display rounded-xl transition-all duration-300 hover:bg-sky-50 dark:hover:bg-sky-900/20"
-=======
-						className="gap-2 font-medium"
+						className="gap-2 font-bold font-display group relative overflow-hidden rounded-xl transition-all duration-300 hover:bg-primary/5 dark:hover:bg-primary/10"
 						onClick={onAIHubSelect}
 					>
-						<Brain className="h-4 w-4 text-primary" />
-						<span className="hidden sm:inline">AI Hub</span>
+						<div className="absolute inset-0 bg-gradient-to-r from-primary/0 via-primary/5 to-primary/0 translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-1000" />
+						<Brain className="h-4 w-4 text-primary group-hover:animate-pulse" />
+						<span className="hidden sm:inline text-slate-700 dark:text-slate-300 group-hover:text-primary transition-colors">
+							AI Hub
+						</span>
 					</Button>
 					<Button
 						variant="ghost"
 						size="sm"
-						className="gap-2 font-medium"
->>>>>>> Stashed changes
+						className="gap-2 font-bold font-display rounded-xl transition-all duration-300 hover:bg-sky-50 dark:hover:bg-sky-900/20"
 						onClick={onDictionarySelect}
 					>
 						<Languages className="h-4 w-4 text-sky-500" />
