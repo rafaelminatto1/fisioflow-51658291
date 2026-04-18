@@ -13,6 +13,7 @@ import { PatientHelpers } from "@/types";
 import { fisioLogger as logger } from "@/lib/errors/logger";
 import { AIReportGeneratorModal } from "@/components/patient/AIReportGeneratorModal";
 import { ClinicalReportInput } from "@/services/ai/geminiAiService";
+import { ClinicalNarrativeReport } from "@/components/patient/ClinicalNarrativeReport";
 
 const PatientEvolutionReport = () => {
 	const { patientId } = useParams<{ patientId: string }>();
@@ -170,7 +171,25 @@ const PatientEvolutionReport = () => {
 				{/* Análise de Progresso */}
 				<ProgressAnalysisCard sessions={evolutionData.sessions} />
 
-				{/* Evolução de Medições */}
+				{/* Relatório Clínico Humanizado */}
+				<ClinicalNarrativeReport 
+					patientName={patient?.name || "Paciente"} 
+					sessions={evolutionData.sessions} 
+				/>
+
+				{/* Dashboard Principal (SOAP Timeline + Gráficos) */}
+				<PatientEvolutionDashboard
+					patientId={patientId || ""}
+					patientName={patient?.name || "Paciente"}
+					sessions={evolutionData.sessions}
+					currentPainLevel={evolutionData.currentPainLevel}
+					initialPainLevel={evolutionData.initialPainLevel}
+					totalSessions={evolutionData.totalSessions}
+					prescribedSessions={evolutionData.prescribedSessions}
+					averageImprovement={evolutionData.averageImprovement}
+				/>
+
+				{/* Evolução de Medições (Tabela) */}
 				{evolutionData.measurementEvolution &&
 					evolutionData.measurementEvolution.length > 0 && (
 						<div className="grid grid-cols-1 gap-4">
@@ -253,18 +272,6 @@ const PatientEvolutionReport = () => {
 							</div>
 						</div>
 					)}
-
-				{/* Dashboard Principal */}
-				<PatientEvolutionDashboard
-					patientId={patientId || ""}
-					patientName={patient?.name || "Paciente"}
-					sessions={evolutionData.sessions}
-					currentPainLevel={evolutionData.currentPainLevel}
-					initialPainLevel={evolutionData.initialPainLevel}
-					totalSessions={evolutionData.totalSessions}
-					prescribedSessions={evolutionData.prescribedSessions}
-					averageImprovement={evolutionData.averageImprovement}
-				/>
 
 				{/* Print Footer */}
 				<div className="hidden print:block mt-8 pt-4 border-t">
