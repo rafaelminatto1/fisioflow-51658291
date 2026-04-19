@@ -59,6 +59,7 @@ vi.mock("@/utils/appointmentErrors", () => ({
 
 vi.mock("@/utils/cacheInvalidation", () => ({
 	invalidateAffectedPeriods: vi.fn(),
+	invalidateAppointmentsComprehensive: vi.fn().mockResolvedValue(undefined),
 }));
 
 vi.mock("@/utils/dateUtils", () => ({
@@ -138,8 +139,8 @@ describe("useCreateAppointment", () => {
 			wrapper: makeWrapper(queryClient),
 		});
 
-		act(() => {
-			result.current.mutate({
+		await act(async () => {
+			const mutationPromise = result.current.mutateAsync({
 				patient_id: "p1",
 				patient_name: "Paciente Teste",
 				appointment_date: new Date().toISOString(),
@@ -148,19 +149,23 @@ describe("useCreateAppointment", () => {
 				type: "Fisioterapia",
 				status: "scheduled",
 			} as any);
+
+			// Espera um pouco para o onMutate rodar (que é async)
+			await waitFor(() => {
+				const cacheData = queryClient.getQueryData<any>([
+					"appointments_v2",
+					"list",
+					"org-001",
+				]);
+				expect(
+					cacheData?.data?.some((a: any) => a.id?.startsWith("temp-")),
+				).toBe(true);
+			});
+
+			await mutationPromise;
 		});
 
-		// Optimistic update should add a temp item immediately
-		const cacheAfterMutate = queryClient.getQueryData<any>([
-			"appointments_v2",
-			"list",
-			"org-001",
-		]);
-		expect(
-			cacheAfterMutate?.data?.some((a: any) => a.id?.startsWith("temp-")),
-		).toBe(true);
-
-		await waitFor(() => expect(result.current.isSuccess).toBe(true));
+		expect(result.current.isSuccess).toBe(true);
 	});
 
 	it("faz rollback ao erro", async () => {

@@ -25,6 +25,7 @@ import { useAutoSaveSoapRecord } from "@/hooks/useSoapRecords";
 
 // Componentes
 import { EvolutionHeader } from "@/components/evolution/EvolutionHeader";
+import { AIScribeModal } from "@/components/evolution/clinical-scribe/AIScribeModal";
 import { FloatingActionBar } from "@/components/evolution/FloatingActionBar";
 import { EvolutionKeyboardShortcuts } from "@/components/evolution/EvolutionKeyboardShortcuts";
 import { EvolutionAlerts } from "@/components/evolution/EvolutionAlerts";
@@ -191,6 +192,7 @@ const PatientEvolution = () => {
 			await handlers.handleSave();
 			state.setActiveTab("assistente");
 		},
+		() => state.setShowAIScribe(true),
 	);
 
 	// Memoized Content
@@ -321,7 +323,7 @@ const PatientEvolution = () => {
 	);
 
 	const mainGridContent = useMemo(() => {
-		if (state.evolutionVersion === "v4-tiptap") {
+		if (state.evolutionVersion === "v5-pro" || state.evolutionVersion === "v4-tiptap") {
 			return (
 				<Suspense fallback={<LoadingSkeleton type="card" />}>
 					<LazyNotionEvolutionEditor
@@ -338,6 +340,7 @@ const PatientEvolution = () => {
 						isSaving={autoSaveMutation.isPending}
 						soapData={state.soapData}
 						onAiAssist={() => state.setActiveTab("assistente")}
+						isPro={state.evolutionVersion === "v5-pro"}
 					/>
 				</Suspense>
 			);
@@ -548,6 +551,7 @@ const PatientEvolution = () => {
 						onSave={handlers.handleSave}
 						onComplete={handlers.handleCompleteSession}
 						onExportPDF={handlers.handleExportPDF}
+						onGenerateNFSe={() => navigate("/financial")}
 						isSaving={handlers.isSaving}
 					/>
 					{state.showApplyTemplate && (
@@ -563,6 +567,19 @@ const PatientEvolution = () => {
 						onOpenChange={state.setShowKeyboardHelp}
 					/>
 					<CommandPaletteComponent />
+					<AIScribeModal
+						open={state.showAIScribe}
+						onOpenChange={state.setShowAIScribe}
+						onApply={(soap) => {
+							state.setSoapData((prev: any) => ({
+								...prev,
+								subjective: prev.subjective + "\n" + soap.subjective,
+								objective: prev.objective + "\n" + soap.objective,
+								assessment: prev.assessment + "\n" + soap.assessment,
+								plan: prev.plan + "\n" + soap.plan,
+							}));
+						}}
+					/>
 				</div>
 			</MainLayout>
 		</ComponentErrorBoundary>

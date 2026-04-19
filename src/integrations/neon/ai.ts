@@ -10,6 +10,8 @@ import { initializeRemoteConfig } from "@/lib/remote-config-manager";
 import { initAppCheck } from "@/lib/app-check";
 import { fisioLogger as logger } from "@/lib/errors/logger";
 import { getServerOnlyEnv } from "@/lib/config/server-only";
+import { getWorkersApiUrl } from "@/lib/api/config";
+import { getAuth } from "firebase/auth";
 
 export enum AIModelType {
 	GEMINI_2_5_FLASH = "gemini-2.5-flash",
@@ -239,8 +241,58 @@ export class NeonAIService {
 		context: AIRequestContext,
 		options?: AIRequestOptions,
 	): Promise<AIServiceResult<string>> {
-		await this.ensureInitialized();
 		const startTime = Date.now();
+
+		// Se estiver no browser, redireciona para a API do backend
+		if (typeof window !== "undefined") {
+			try {
+				const apiUrl = getWorkersApiUrl();
+				const auth = getAuth();
+				const token = await auth.currentUser?.getIdToken();
+
+				const response = await fetch(`${apiUrl}/ai/service`, {
+					method: "POST",
+					headers: {
+						"Content-Type": "application/json",
+						Authorization: `Bearer ${token}`,
+					},
+					body: JSON.stringify({
+						action: context.feature === "clinical_analysis" ? "eventPlanning" : "clinicalChat",
+						data: {
+							prompt,
+							category: (context.metadata?.category as string) || "corrida",
+							participants: (context.metadata?.participants as string) || "100",
+							message: prompt
+						},
+					}),
+				});
+
+				if (!response.ok) {
+					throw new Error(`API error: ${response.statusText}`);
+				}
+
+				const result = await response.json();
+				const duration = Date.now() - startTime;
+
+				return {
+					content: result.data.response || result.data.result || "",
+					usage: {
+						inputTokens: 0,
+						outputTokens: 0,
+						totalTokens: 0,
+						estimatedCost: 0,
+						duration,
+					},
+					model: options?.model || AIModelType.GEMINI_1_5_FLASH,
+					timestamp: new Date(),
+				};
+			} catch (error) {
+				logger.error("AI Generation failed on client", error, "ai-service");
+				throw error;
+			}
+		}
+
+		await this.ensureInitialized();
 
 		try {
 			const modelType = options?.model || AIModelType.GEMINI_2_5_FLASH;

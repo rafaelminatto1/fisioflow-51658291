@@ -85,49 +85,34 @@ describe("TemplateCard — testes de propriedade", () => {
             );
 
             const q = within(container);
-            const bodyText = container.textContent ?? "";
 
             // Nome do template deve estar presente
-            if (!bodyText.includes(template.name.trim())) {
-              unmount();
-              return false;
-            }
+            const nameEl = q.getByTestId("template-name");
+            expect(nameEl.textContent?.trim()).toBe(template.name.trim());
 
             // Condição clínica deve estar presente (quando não nula)
-            if (template.conditionName && !bodyText.includes(template.conditionName.trim())) {
-              unmount();
-              return false;
+            if (template.conditionName) {
+              const condEl = q.getByTestId("template-condition");
+              expect(condEl.textContent?.trim()).toBe(template.conditionName.trim());
             }
 
-            // exerciseCount deve estar presente no texto
-            if (!bodyText.includes(String(template.exerciseCount))) {
-              unmount();
-              return false;
-            }
+            // exerciseCount deve estar presente no texto do elemento com data-testid="exercise-count"
+            const countEl = q.getByTestId("exercise-count");
+            expect(countEl.textContent).toContain(String(template.exerciseCount));
 
             // Badge de tipo deve estar presente
-            const typeBadge =
-              template.templateType === "system"
-                ? q.queryByText("Sistema")
-                : q.queryByText("Personalizado");
-            if (!typeBadge) {
-              unmount();
-              return false;
+            if (template.templateType === "system") {
+              expect(q.queryByText("Sistema")).toBeTruthy();
+            } else {
+              expect(q.queryByText("Personalizado")).toBeTruthy();
             }
 
             // Badge de evidência deve estar presente quando evidenceLevel não é nulo
             if (template.evidenceLevel !== null) {
-              const evidenceBadge = q.queryByText(
-                new RegExp(`Evidência\\s*${template.evidenceLevel}`),
-              );
-              if (!evidenceBadge) {
-                unmount();
-                return false;
-              }
+              expect(q.queryByText(new RegExp(`EVIDÊNCIA\\s*${template.evidenceLevel}`, "i"))).toBeTruthy();
             }
 
             unmount();
-            return true;
           },
         ),
         { numRuns: 100 },

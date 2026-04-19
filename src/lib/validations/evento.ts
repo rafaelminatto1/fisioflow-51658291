@@ -63,6 +63,13 @@ const eventoBaseSchema = z.object({
 		.nonnegative("Valor não pode ser negativo")
 		.max(999999.99, "Valor muito alto")
 		.default(0),
+	participantes_previstos: z
+		.number({
+			error: "Quantidade deve ser um número",
+		})
+		.int("Deve ser um número inteiro")
+		.nonnegative("Não pode ser negativo")
+		.default(0),
 });
 
 // Schema para criar evento com validação de datas

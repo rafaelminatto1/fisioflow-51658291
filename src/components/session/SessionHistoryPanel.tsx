@@ -5,6 +5,7 @@ import { Badge } from "@/components/ui/badge";
 import { FileText, Copy, Calendar, Loader2 } from "lucide-react";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
+import { formatClinicalText } from "@/lib/evolution/formatters";
 import {
 	Accordion,
 	AccordionContent,
@@ -101,7 +102,7 @@ export const SessionHistoryPanel = ({
 												<span className="font-semibold text-xs text-blue-600">
 													S:
 												</span>{" "}
-												{session.subjective}
+												{formatClinicalText(session.subjective)}
 											</div>
 										)}
 										{session.objective && (
@@ -109,7 +110,7 @@ export const SessionHistoryPanel = ({
 												<span className="font-semibold text-xs text-green-600">
 													O:
 												</span>{" "}
-												{session.objective}
+												{formatClinicalText(session.objective)}
 											</div>
 										)}
 										{session.assessment && (
@@ -117,7 +118,7 @@ export const SessionHistoryPanel = ({
 												<span className="font-semibold text-xs text-purple-600">
 													A:
 												</span>{" "}
-												{session.assessment}
+												{formatClinicalText(session.assessment)}
 											</div>
 										)}
 										{session.plan && (
@@ -125,7 +126,7 @@ export const SessionHistoryPanel = ({
 												<span className="font-semibold text-xs text-orange-600">
 													P:
 												</span>{" "}
-												{session.plan}
+												{formatClinicalText(session.plan)}
 											</div>
 										)}
 									</div>

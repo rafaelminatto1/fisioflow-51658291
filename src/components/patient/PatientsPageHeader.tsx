@@ -16,6 +16,7 @@ import {
 	Clock,
 	Sparkles,
 	CheckCircle2,
+	ArrowUpDown,
 } from "lucide-react";
 import type { PatientClassification } from "@/hooks/usePatientStats";
 import { cn } from "@/lib/utils";
@@ -49,6 +50,8 @@ export interface PatientsPageHeaderProps {
 	conditionFilter: string;
 	onConditionFilterChange: (value: string) => void;
 	uniqueConditions: string[];
+	sortBy: string;
+	onSortByChange: (value: string) => void;
 	activeAdvancedFiltersCount: number;
 	totalFilteredLabel?: string;
 	onClearAllFilters: () => void;
@@ -73,6 +76,8 @@ export function PatientsPageHeader({
 	conditionFilter,
 	onConditionFilterChange,
 	uniqueConditions,
+	sortBy,
+	onSortByChange,
 	activeAdvancedFiltersCount: _activeAdvancedFiltersCount,
 	totalFilteredLabel,
 	onClearAllFilters,
@@ -218,6 +223,23 @@ export function PatientsPageHeader({
 									{String(c)}
 								</SelectItem>
 							))}
+						</SelectContent>
+					</Select>
+
+					<Select value={sortBy} onValueChange={onSortByChange}>
+						<SelectTrigger className="h-9 w-[160px] text-xs rounded-lg border-slate-200 dark:border-slate-800 bg-white/50 dark:bg-slate-900/50">
+							<div className="flex items-center gap-2">
+								<ArrowUpDown className="h-3 w-3 text-slate-400" />
+								<SelectValue placeholder="Ordenar por" />
+							</div>
+						</SelectTrigger>
+						<SelectContent className="rounded-xl border-slate-200 dark:border-slate-800 shadow-xl">
+							<SelectItem value="created_at_desc">Mais recentes</SelectItem>
+							<SelectItem value="created_at_asc">Mais antigos</SelectItem>
+							<SelectItem value="name_asc">Nome (A-Z)</SelectItem>
+							<SelectItem value="name_desc">Nome (Z-A)</SelectItem>
+							<SelectItem value="main_condition_asc">Patologia (A-Z)</SelectItem>
+							<SelectItem value="main_condition_desc">Patologia (Z-A)</SelectItem>
 						</SelectContent>
 					</Select>
 				</div>

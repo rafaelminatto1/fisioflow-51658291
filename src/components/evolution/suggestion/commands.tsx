@@ -82,6 +82,55 @@ const COMMANDS_REGISTRY: Record<string, any> = {
 			window.dispatchEvent(new CustomEvent("tiptap-sugestoes-open"));
 		},
 	},
+	scribe: {
+		id: "scribe",
+		title: "AI Scribe (Ambiente)",
+		icon: Sparkles,
+		description: "Capturar áudio da sessão e gerar nota SOAP automaticamente",
+		command: ({ editor, range }: any) => {
+			editor.chain().focus().deleteRange(range).run();
+			window.dispatchEvent(new CustomEvent("tiptap-scribe-open"));
+		},
+	},
+	ortopedia: {
+		id: "ortopedia",
+		title: "Template Ortopedia",
+		icon: Activity,
+		description: "Anamnese, Red Flags, HDA e Exame Físico",
+		command: ({ editor, range }: any) => {
+			editor
+				.chain()
+				.focus()
+				.deleteRange(range)
+				.insertContent(`
+					<h2 class="text-blue-600">Avaliação Ortopédica</h2>
+					<h3>Queixa Principal & Red Flags</h3>
+					<ul><li>[ ] Perda de peso?</li><li>[ ] Dor noturna?</li></ul>
+					<h3>HDA</h3><p></p>
+					<h3>Exame Físico</h3><p></p>
+				`)
+				.run();
+		},
+	},
+	pilates: {
+		id: "pilates",
+		title: "Template Pilates",
+		icon: Star,
+		description: "Power House, Alinhamento e Progressão",
+		command: ({ editor, range }: any) => {
+			editor
+				.chain()
+				.focus()
+				.deleteRange(range)
+				.insertContent(`
+					<h2 class="text-emerald-600">Evolução Pilates</h2>
+					<h3>Power House</h3><p></p>
+					<h3>Exercícios Realizados</h3><ul data-type="taskList"><li data-checked="false"></li></ul>
+					<h3>Observações</h3><p></p>
+				`)
+				.run();
+		},
+	},
 };
 
 export const Commands = Extension.create({

@@ -465,6 +465,8 @@ app.get("/", async (c) => {
 	const search = trimmedString(c.req.query("search"));
 	const requestedStatus = trimmedString(c.req.query("status"));
 	const sortBy = trimmedString(c.req.query("sortBy"));
+	const hasSurgery = c.req.query("hasSurgery") === "true";
+	const mainCondition = trimmedString(c.req.query("condition"));
 	const limit = Math.min(
 		200,
 		Math.max(1, Number.parseInt(c.req.query("limit") ?? "100", 10) || 100),
@@ -478,14 +480,19 @@ app.get("/", async (c) => {
 		let conditions: any = withTenant(patients, user.organizationId);
 
 		const normalizedStatus = requestedStatus?.toLowerCase();
-		if (normalizedStatus) {
+		if (normalizedStatus && normalizedStatus !== "all") {
 			if (["active", "ativo"].includes(normalizedStatus)) {
 				conditions = and(conditions, eq(patients.isActive, true))!;
 			} else if (["inactive", "inativo"].includes(normalizedStatus)) {
 				conditions = and(conditions, eq(patients.isActive, false))!;
+			} else {
+				conditions = and(conditions, eq(patients.status, requestedStatus!))!;
 			}
 		} else {
-			conditions = and(conditions, eq(patients.isActive, true))!;
+			// Default to active if no status filter, or include all if status is "all"
+			if (!normalizedStatus) {
+				conditions = and(conditions, eq(patients.isActive, true))!;
+			}
 		}
 
 		if (search) {
@@ -502,6 +509,23 @@ app.get("/", async (c) => {
 			)!;
 		}
 
+		if (mainCondition && mainCondition !== "all") {
+			conditions = and(conditions, eq(patients.mainCondition, mainCondition))!;
+		}
+
+		if (hasSurgery) {
+			// Use a subquery or raw SQL to filter patients with surgeries
+			// medical_records has patientId, surgeries has medicalRecordId
+			conditions = and(
+				conditions,
+				sql`EXISTS (
+					SELECT 1 FROM surgeries s 
+					JOIN medical_records mr ON s.medical_record_id = mr.id 
+					WHERE mr.patient_id = ${patients.id}
+				)`,
+			)!;
+		}
+
 		// Count total using sql<number> for consistency
 		const totalResult = await db
 			.select({ count: sql<number>`count(*)` })
@@ -511,12 +535,47 @@ app.get("/", async (c) => {
 
 		// Order by
 		let orderBy: any = desc(patients.createdAt);
-		if (sortBy === "created_at_asc") orderBy = asc(patients.createdAt);
-		if (sortBy === "name_asc") orderBy = asc(patients.fullName);
+		switch (sortBy) {
+			case "created_at_asc":
+				orderBy = asc(patients.createdAt);
+				break;
+			case "name_asc":
+				orderBy = asc(patients.fullName);
+				break;
+			case "name_desc":
+				orderBy = desc(patients.fullName);
+				break;
+			case "main_condition_asc":
+				orderBy = asc(patients.mainCondition);
+				break;
+			case "main_condition_desc":
+				orderBy = desc(patients.mainCondition);
+				break;
+			case "created_at_desc":
+			default:
+				orderBy = desc(patients.createdAt);
+				break;
+		}
 
 		// Data query
 		const data = await db
-			.select()
+			.select({
+				id: patients.id,
+				fullName: patients.fullName,
+				nickname: patients.nickname,
+				socialName: patients.socialName,
+				photoUrl: patients.photoUrl,
+				mainCondition: patients.mainCondition,
+				status: patients.status,
+				isActive: patients.isActive,
+				createdAt: patients.createdAt,
+				updatedAt: patients.updatedAt,
+				hasSurgery: sql<boolean>`EXISTS (
+					SELECT 1 FROM surgeries s 
+					JOIN medical_records mr ON s.medical_record_id = mr.id 
+					WHERE mr.patient_id = ${patients.id}
+				)`.as("has_surgery"),
+			})
 			.from(patients)
 			.where(conditions)
 			.orderBy(orderBy)
@@ -909,6 +968,65 @@ app.get("/:id/timeline", async (c) => {
 			},
 			500,
 		);
+	}
+});
+
+app.get("/:id/export", async (c) => {
+	const user = c.get("user");
+	const db = createDb(c.env, 'read');
+	const { id } = c.req.param();
+	if (!isUuid(id)) return c.json({ error: "ID inválido" }, 400);
+
+	try {
+		// 1. Dados Básicos
+		const patientResult = await db
+			.select()
+			.from(patients)
+			.where(withTenant(patients, user.organizationId, eq(patients.id, id)))
+			.limit(1);
+		
+		const patient = patientResult[0];
+		if (!patient) return c.json({ error: "Paciente não encontrado" }, 404);
+
+		// 2. Prontuários (Medical Records) e suas sub-entidades
+		const medicalRecords = await db
+			.select()
+			.from(sql`medical_records`)
+			.where(and(sql`patient_id = ${id}::uuid`, sql`organization_id = ${user.organizationId}::uuid`));
+
+		// 3. Sessões e Evoluções (SOAP)
+		const patientSessions = await db
+			.select()
+			.from(sessions)
+			.where(withTenant(sessions, user.organizationId, eq(sessions.patientId, id)));
+
+		// 4. Agendamentos
+		const patientAppointments = await db
+			.select()
+			.from(sql`appointments`)
+			.where(and(sql`patient_id = ${id}::uuid`, sql`organization_id = ${user.organizationId}::uuid`));
+
+		// 5. Histórico Financeiro
+		const financialHistory = await db
+			.select()
+			.from(sql`financial_transactions`)
+			.where(and(sql`patient_id = ${id}::uuid`, sql`organization_id = ${user.organizationId}::uuid`));
+
+		const exportData = {
+			exportedAt: new Date().toISOString(),
+			clinicId: user.organizationId,
+			patient: normalizePatientRow(patient as DbRow),
+			medicalRecords,
+			sessions: patientSessions,
+			appointments: patientAppointments,
+			financialHistory,
+			legalNotice: "Este arquivo contém dados sensíveis protegidos pela LGPD. O uso indevido destas informações é de responsabilidade do portador."
+		};
+
+		return c.json({ data: exportData });
+	} catch (error) {
+		console.error("[Patients/Export] Error:", error);
+		return c.json({ error: "Erro ao exportar dados do paciente" }, 500);
 	}
 });
 

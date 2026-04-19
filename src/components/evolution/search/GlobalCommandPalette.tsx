@@ -8,16 +8,26 @@ import {
 	Loader2,
 	X,
 	ArrowRight,
+	Plus,
+	Calendar,
+	Settings,
+	HelpCircle,
+	Receipt,
+	Activity,
+	BookOpen,
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { patientsApi } from "@/api/v2/patients";
+import { exercisesApi, protocolsApi } from "@/api/v2/exercises";
 import { patientRoutes } from "@/lib/routing/appRoutes";
-import type { PatientRow } from "@/types/workers";
+import type { PatientRow, Exercise, Protocol } from "@/types/workers";
 
 export const GlobalCommandPalette: React.FC = () => {
 	const [open, setOpen] = useState(false);
 	const [query, setQuery] = useState("");
 	const [results, setResults] = useState<PatientRow[]>([]);
+	const [exerciseResults, setExerciseResults] = useState<Exercise[]>([]);
+	const [protocolResults, setProtocolResults] = useState<Protocol[]>([]);
 	const [isLoading, setIsLoading] = useState(false);
 	const navigate = useNavigate();
 
@@ -45,26 +55,31 @@ export const GlobalCommandPalette: React.FC = () => {
 			document.removeEventListener("open-command-palette", openPalette);
 	}, []);
 
-	const searchPatients = useCallback(async (searchQuery: string) => {
+	const performGlobalSearch = useCallback(async (searchQuery: string) => {
 		const trimmedQuery = searchQuery.trim();
 
 		if (trimmedQuery.length < 2) {
 			setResults([]);
+			setExerciseResults([]);
+			setProtocolResults([]);
 			setIsLoading(false);
 			return;
 		}
 
 		setIsLoading(true);
 		try {
-			const response = await patientsApi.list({
-				search: trimmedQuery,
-				limit: 8,
-			});
+			const [patientsRes, exercisesRes, protocolsRes] = await Promise.all([
+				patientsApi.list({ search: trimmedQuery, limit: 5 }),
+				exercisesApi.list({ q: trimmedQuery, limit: 5 }),
+				protocolsApi.list({ q: trimmedQuery, limit: 5 }),
+			]);
 
-			setResults(response.data ?? []);
+			setResults(patientsRes.data ?? []);
+			setExerciseResults(exercisesRes.data ?? []);
+			setProtocolResults(protocolsRes.data ?? []);
 		} catch (error) {
-			console.error("Patient search error:", error);
-			setResults([]);
+			console.error("Global search error:", error);
+			// Não limpamos resultados anteriores em caso de erro para não quebrar a UX
 		} finally {
 			setIsLoading(false);
 		}
@@ -72,10 +87,10 @@ export const GlobalCommandPalette: React.FC = () => {
 
 	useEffect(() => {
 		const timer = setTimeout(() => {
-			searchPatients(query);
+			performGlobalSearch(query);
 		}, 300);
 		return () => clearTimeout(timer);
-	}, [query, searchPatients]);
+	}, [query, performGlobalSearch]);
 
 	if (!open) return null;
 
@@ -143,6 +158,78 @@ export const GlobalCommandPalette: React.FC = () => {
 							</Command.Empty>
 						)}
 
+						{!isLoading && query.trim().length === 0 && (
+							<>
+								<Command.Group
+									heading={
+										<span className="px-3 py-2 text-[10px] font-black uppercase tracking-[0.2em] text-blue-600 dark:text-blue-400 block">
+											Ações Rápidas
+										</span>
+									}
+								>
+									<Command.Item
+										onSelect={() => {
+											setOpen(false);
+											navigate("/agenda");
+										}}
+										className="flex items-center gap-4 p-4 rounded-2xl cursor-pointer transition-all aria-selected:bg-blue-50 dark:aria-selected:bg-blue-900/20 group"
+									>
+										<div className="p-3 bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-100 dark:border-slate-700 group-aria-selected:border-blue-200 dark:group-aria-selected:border-blue-800 transition-all">
+											<Calendar className="w-5 h-5 text-slate-400 group-aria-selected:text-blue-600 dark:group-aria-selected:text-blue-400" />
+										</div>
+										<p className="text-sm font-black text-slate-800 dark:text-slate-100">
+											Ver Agenda Clínica
+										</p>
+									</Command.Item>
+
+									<Command.Item
+										onSelect={() => {
+											setOpen(false);
+											navigate("/pacientes/novo");
+										}}
+										className="flex items-center gap-4 p-4 rounded-2xl cursor-pointer transition-all aria-selected:bg-blue-50 dark:aria-selected:bg-blue-900/20 group"
+									>
+										<div className="p-3 bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-100 dark:border-slate-700 group-aria-selected:border-blue-200 dark:group-aria-selected:border-blue-800 transition-all">
+											<Plus className="w-5 h-5 text-slate-400 group-aria-selected:text-blue-600 dark:group-aria-selected:text-blue-400" />
+										</div>
+										<p className="text-sm font-black text-slate-800 dark:text-slate-100">
+											Cadastrar Novo Paciente
+										</p>
+									</Command.Item>
+
+									<Command.Item
+										onSelect={() => {
+											setOpen(false);
+											navigate("/financial");
+										}}
+										className="flex items-center gap-4 p-4 rounded-2xl cursor-pointer transition-all aria-selected:bg-emerald-50 dark:aria-selected:bg-emerald-900/20 group"
+									>
+										<div className="p-3 bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-100 dark:border-slate-700 group-aria-selected:border-emerald-200 dark:group-aria-selected:border-emerald-800 transition-all">
+											<Receipt className="w-5 h-5 text-slate-400 group-aria-selected:text-emerald-600 dark:group-aria-selected:text-emerald-400" />
+										</div>
+										<p className="text-sm font-black text-slate-800 dark:text-slate-100">
+											Financeiro & Faturamento (Workbench)
+										</p>
+									</Command.Item>
+
+									<Command.Item
+										onSelect={() => {
+											setOpen(false);
+											navigate("/configuracoes");
+										}}
+										className="flex items-center gap-4 p-4 rounded-2xl cursor-pointer transition-all aria-selected:bg-blue-50 dark:aria-selected:bg-blue-900/20 group"
+									>
+										<div className="p-3 bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-100 dark:border-slate-700 group-aria-selected:border-blue-200 dark:group-aria-selected:border-blue-800 transition-all">
+											<Settings className="w-5 h-5 text-slate-400 group-aria-selected:text-blue-600 dark:group-aria-selected:text-blue-400" />
+										</div>
+										<p className="text-sm font-black text-slate-800 dark:text-slate-100">
+											Configurações do Sistema
+										</p>
+									</Command.Item>
+								</Command.Group>
+							</>
+						)}
+
 						{results.length > 0 && (
 							<Command.Group
 								heading={
@@ -193,6 +280,76 @@ export const GlobalCommandPalette: React.FC = () => {
 										</div>
 										<div className="self-center opacity-0 group-aria-selected:opacity-100 transition-opacity">
 											<ArrowRight className="w-4 h-4 text-blue-600" />
+										</div>
+									</Command.Item>
+								))}
+							</Command.Group>
+						)}
+
+						{protocolResults.length > 0 && (
+							<Command.Group
+								heading={
+									<span className="px-3 py-2 text-[10px] font-black uppercase tracking-[0.2em] text-purple-600 dark:text-purple-400 block">
+										Protocolos Clínicos
+									</span>
+								}
+							>
+								{protocolResults.map((protocol) => (
+									<Command.Item
+										key={protocol.id}
+										onSelect={() => {
+											setOpen(false);
+											navigate(`/protocols/${protocol.id}`);
+										}}
+										className="flex items-start gap-4 p-4 rounded-2xl cursor-pointer transition-all aria-selected:bg-purple-50 dark:aria-selected:bg-purple-900/20 group hover:translate-x-1"
+									>
+										<div className="p-3 bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-100 dark:border-slate-700 group-aria-selected:border-purple-200 dark:group-aria-selected:border-purple-800 transition-all">
+											<BookOpen className="w-5 h-5 text-slate-400 group-aria-selected:text-purple-600 dark:group-aria-selected:text-purple-400" />
+										</div>
+										<div className="flex-1 min-w-0">
+											<div className="flex items-center gap-2 mb-1">
+												<span className="text-[10px] font-black text-purple-600 uppercase">
+													{protocol.type || "Protocolo"}
+												</span>
+											</div>
+											<p className="text-sm font-black text-slate-800 dark:text-slate-100 truncate">
+												{protocol.name}
+											</p>
+										</div>
+									</Command.Item>
+								))}
+							</Command.Group>
+						)}
+
+						{exerciseResults.length > 0 && (
+							<Command.Group
+								heading={
+									<span className="px-3 py-2 text-[10px] font-black uppercase tracking-[0.2em] text-orange-600 dark:text-orange-400 block">
+										Exercícios & Biblioteca
+									</span>
+								}
+							>
+								{exerciseResults.map((exercise) => (
+									<Command.Item
+										key={exercise.id}
+										onSelect={() => {
+											setOpen(false);
+											navigate(`/exercises/${exercise.id}`);
+										}}
+										className="flex items-start gap-4 p-4 rounded-2xl cursor-pointer transition-all aria-selected:bg-orange-50 dark:aria-selected:bg-orange-900/20 group hover:translate-x-1"
+									>
+										<div className="p-3 bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-100 dark:border-slate-700 group-aria-selected:border-orange-200 dark:group-aria-selected:border-orange-800 transition-all">
+											<Activity className="w-5 h-5 text-slate-400 group-aria-selected:text-orange-600 dark:group-aria-selected:text-orange-400" />
+										</div>
+										<div className="flex-1 min-w-0">
+											<div className="flex items-center gap-2 mb-1">
+												<span className="text-[10px] font-black text-orange-600 uppercase">
+													{exercise.category || "Exercício"}
+												</span>
+											</div>
+											<p className="text-sm font-black text-slate-800 dark:text-slate-100 truncate">
+												{exercise.name}
+											</p>
 										</div>
 									</Command.Item>
 								))}

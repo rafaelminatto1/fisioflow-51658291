@@ -98,7 +98,7 @@ export const PhysicalExamForm = ({
 	) => {
 		const newTests = [...(data.specialTests || [])];
 		const test = { ...newTests[testIndex] };
-		test.results = { ...(test.results || {}), [fieldId]: value };
+		test.results = { ...test.results, [fieldId]: value };
 		newTests[testIndex] = test;
 		handleChange("specialTests", newTests);
 	};

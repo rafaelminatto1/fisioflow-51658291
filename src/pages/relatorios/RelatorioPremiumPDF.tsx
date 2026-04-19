@@ -1,6 +1,7 @@
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { Document, Page, StyleSheet, Text, View, Link, Font, Image } from "@react-pdf/renderer";
+import { formatClinicalText } from "@/lib/evolution/formatters";
 
 // Premium Styles
 const styles = StyleSheet.create({
@@ -301,7 +302,7 @@ export function RelatorioPremiumPDF({ data }: { data: RelatorioPremiumData }) {
 								<Text style={styles.timelineDate}>{format(new Date(ev.data), "dd/MM/yyyy")}</Text>
 								<View style={styles.timelineContent}>
 									<Text style={styles.soapTitle}>Sessão #{data.evolucoes.length - idx}</Text>
-									<Text style={styles.soapText}>{ev.objetivo}</Text>
+									<Text style={styles.soapText}>{formatClinicalText(ev.objetivo)}</Text>
 									<View style={{ flexDirection: "row", gap: 10, marginTop: 4 }}>
 										<Text style={{ fontSize: 7, color: "#16a34a", fontWeight: "bold" }}>DOR: {ev.dor}/10</Text>
 										<Text style={{ fontSize: 7, color: "#2563eb", fontWeight: "bold" }}>MOBILIDADE: {ev.mobilidade}%</Text>

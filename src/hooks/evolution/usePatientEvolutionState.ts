@@ -52,6 +52,7 @@ export function usePatientEvolutionState() {
 	const [showInsights, setShowInsights] = useState(true);
 	const [showComparison, setShowComparison] = useState(false);
 	const [showKeyboardHelp, setShowKeyboardHelp] = useState(false);
+	const [showAIScribe, setShowAIScribe] = useState(false);
 	const [selectedTherapistId, setSelectedTherapistId] = useState("");
 
 	// ========== DATA STATE ==========
@@ -179,6 +180,8 @@ export function usePatientEvolutionState() {
 		setShowComparison,
 		showKeyboardHelp,
 		setShowKeyboardHelp,
+		showAIScribe,
+		setShowAIScribe,
 		selectedTherapistId,
 		setSelectedTherapistId,
 		soapData,

@@ -177,6 +177,33 @@ app.post("/service", async (c) => {
 				return c.json({ data: { success: true, data: { exercises: [] } } });
 			}
 		}
+		case "eventPlanning": {
+			const category = safeText(data.category);
+			const participants = safeText(data.participants);
+			const prompt = `
+        Aja como um gestor de eventos de fisioterapia experiente.
+        Planeje o kit clínico e logístico necessário para um evento do tipo: ${category} com aproximadamente ${participants} participantes.
+
+        Sugira detalhadamente:
+        1. Dimensionamento de Equipe: Quantidade ideal de fisioterapeutas, estagiários e pessoal de apoio.
+        2. Materiais Críticos: Lista de insumos (fitas, gel, agulhas, etc) e equipamentos (macas, aparelhos).
+        3. Dica de Ouro: Uma sugestão estratégica para garantir o sucesso deste tipo específico de evento.
+        4. Biossegurança: Cuidados essenciais para este volume de pessoas.
+
+        Retorne em Markdown elegante, usando tabelas se necessário. Responda em Português Brasileiro.
+      `;
+
+			const response = await callGemini(
+				c.env.GOOGLE_AI_API_KEY,
+				prompt,
+				"gemini-1.5-flash",
+				c.env.FISIOFLOW_AI_GATEWAY_URL,
+				c.env.FISIOFLOW_AI_GATEWAY_TOKEN,
+				"clinical",
+			);
+
+			return c.json({ data: { response } });
+		}
 		// ... other cases can be migrated similarly
 		default:
 			return c.json({ error: "Ação de IA não suportada" }, 400);

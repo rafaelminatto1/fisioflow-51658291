@@ -23,6 +23,7 @@ import { format, formatDistanceToNow } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { useSoapRecords } from "@/hooks/useSoapRecords";
 import { cn } from "@/lib/utils";
+import { formatClinicalText } from "@/lib/evolution/formatters";
 
 interface SessionHistoryPanelProps {
 	patientId: string;
@@ -199,7 +200,7 @@ export const SessionHistoryPanel: React.FC<SessionHistoryPanelProps> = ({
 																Subjetivo
 															</p>
 															<p className="text-xs text-muted-foreground bg-muted/50 p-2 rounded">
-																{record.subjective}
+																{formatClinicalText(record.subjective)}
 															</p>
 														</div>
 													)}
@@ -211,7 +212,7 @@ export const SessionHistoryPanel: React.FC<SessionHistoryPanelProps> = ({
 																Objetivo
 															</p>
 															<p className="text-xs text-muted-foreground bg-muted/50 p-2 rounded">
-																{record.objective}
+																{formatClinicalText(record.objective)}
 															</p>
 														</div>
 													)}
@@ -222,7 +223,7 @@ export const SessionHistoryPanel: React.FC<SessionHistoryPanelProps> = ({
 																Avaliação
 															</p>
 															<p className="text-xs text-muted-foreground bg-muted/50 p-2 rounded">
-																{record.assessment}
+																{formatClinicalText(record.assessment)}
 															</p>
 														</div>
 													)}
@@ -233,7 +234,7 @@ export const SessionHistoryPanel: React.FC<SessionHistoryPanelProps> = ({
 																Plano
 															</p>
 															<p className="text-xs text-muted-foreground bg-muted/50 p-2 rounded">
-																{record.plan}
+																{formatClinicalText(record.plan)}
 															</p>
 														</div>
 													)}

@@ -56,7 +56,7 @@ export const TemplateCard = memo(function TemplateCard({
       onClick={onClick}
     >
       <div className="flex items-start justify-between gap-2 mb-1.5">
-        <h4 className="font-bold text-sm leading-tight flex-1 text-foreground">
+        <h4 className="font-bold text-sm leading-tight flex-1 text-foreground" data-testid="template-name">
           {template.name}
         </h4>
         {template.templateType === "system" ? (
@@ -71,7 +71,7 @@ export const TemplateCard = memo(function TemplateCard({
       </div>
 
       {template.conditionName && (
-        <p className="text-xs text-muted-foreground mb-3 font-medium line-clamp-1">
+        <p className="text-xs text-muted-foreground mb-3 font-medium line-clamp-1" data-testid="template-condition">
           {template.conditionName}
         </p>
       )}
@@ -100,7 +100,7 @@ export const TemplateCard = memo(function TemplateCard({
 
       <div className="flex items-center justify-between mt-auto pt-2 border-t border-dashed">
         <div className="flex items-center gap-3">
-          <span className="flex items-center gap-1 text-[11px] font-medium text-muted-foreground">
+          <span className="flex items-center gap-1 text-[11px] font-medium text-muted-foreground" data-testid="exercise-count">
             <Dumbbell className="h-3 w-3 text-primary/70" />
             {template.exerciseCount}
           </span>

@@ -26,6 +26,8 @@ export interface PatientsFilters {
 	status?: string;
 	condition?: string;
 	classification?: string;
+	sortBy?: string;
+	hasSurgery?: boolean;
 	page?: number;
 	pageSize?: number;
 }
@@ -46,6 +48,8 @@ export function usePatientsPageData(filters: PatientsFilters = {}) {
 		status = "all",
 		condition = "all",
 		classification = "all",
+		sortBy = "created_at_desc",
+		hasSurgery = false,
 		page = 1,
 		pageSize = 20,
 	} = filters;
@@ -61,6 +65,8 @@ export function usePatientsPageData(filters: PatientsFilters = {}) {
 			status,
 			condition,
 			classification,
+			sortBy,
+			hasSurgery,
 			page,
 			pageSize,
 		],
@@ -69,6 +75,9 @@ export function usePatientsPageData(filters: PatientsFilters = {}) {
 				const res = await patientsApi.list({
 					status: status === "all" ? undefined : status,
 					search: search || undefined,
+					sortBy: sortBy as any,
+					condition: condition === "all" ? undefined : condition,
+					hasSurgery: hasSurgery || undefined,
 					limit: pageSize,
 					offset: (page - 1) * pageSize,
 				});
@@ -120,7 +129,7 @@ export function usePatientsPageData(filters: PatientsFilters = {}) {
 
 	const uniqueConditions = useMemo(() => {
 		const conditions = patients
-			.map((p) => p.main_condition)
+			.map((p) => p.mainCondition)
 			.filter((c): c is string => Boolean(c));
 		return Array.from(new Set(conditions));
 	}, [patients]);

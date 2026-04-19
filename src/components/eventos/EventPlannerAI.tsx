@@ -17,6 +17,7 @@ import {
 	Edit2,
 } from "lucide-react";
 import { useAI } from "@/integrations/neon/ai";
+import { useToast } from "@/hooks/use-toast";
 import { Input } from "@/components/ui/input";
 import {
 	Select,
@@ -37,6 +38,7 @@ export const EventPlannerAI: React.FC = () => {
 	const [plan, setPlan] = useState<string | null>(null);
 	const [loading, setLoading] = useState(false);
 	const [isExpanded, setIsExpanded] = useState(false);
+	const { toast } = useToast();
 
 	const generatePlan = async () => {
 		setLoading(true);
@@ -56,12 +58,29 @@ export const EventPlannerAI: React.FC = () => {
 
 			const result = await generate(prompt, {
 				userId: "event-manager",
-				feature: "clinical_analysis" as unknown,
+				feature: "clinical_analysis",
+				metadata: {
+					category,
+					participants: pCount,
+				},
 			});
 
-			setPlan(result.content);
+			if (result.content) {
+				setPlan(result.content);
+				toast({
+					title: "Planejamento Gerado",
+					description: "A IA analisou os requisitos e gerou uma sugestão logística.",
+				});
+			} else {
+				throw new Error("Resposta da IA vazia");
+			}
 		} catch (error) {
 			logger.error("Erro ao planejar evento", error, "EventPlannerAI");
+			toast({
+				title: "Erro no Planejamento",
+				description: "Não foi possível gerar o plano. Tente novamente em instantes.",
+				variant: "destructive",
+			});
 		} finally {
 			setLoading(false);
 		}

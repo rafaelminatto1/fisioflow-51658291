@@ -41,6 +41,7 @@ const updateSchema = z.object({
 	gratuito: z.boolean(),
 	link_whatsapp: z.string().optional(),
 	valor_padrao_prestador: z.number().nonnegative().default(0),
+	participantes_previstos: z.number().int().nonnegative().default(0),
 });
 
 type UpdateFormData = z.infer<typeof updateSchema>;
@@ -62,6 +63,7 @@ interface EditEventoModalProps {
 		gratuito: boolean;
 		link_whatsapp: string | null;
 		valor_padrao_prestador: number;
+		participantes_previstos?: number;
 	};
 }
 
@@ -108,6 +110,7 @@ export function EditEventoModal({
 				gratuito: evento.gratuito,
 				link_whatsapp: evento.link_whatsapp || "",
 				valor_padrao_prestador: Number(evento.valor_padrao_prestador),
+				participantes_previstos: Number(evento.participantes_previstos || 0),
 			});
 		}
 	}, [evento, reset]);
@@ -280,6 +283,15 @@ export function EditEventoModal({
 							type="number"
 							step="0.01"
 							{...register("valor_padrao_prestador", { valueAsNumber: true })}
+						/>
+					</div>
+
+					<div>
+						<Label htmlFor="participantes_previstos">Quantidade de Participantes</Label>
+						<Input
+							id="participantes_previstos"
+							type="number"
+							{...register("participantes_previstos", { valueAsNumber: true })}
 						/>
 					</div>
 

@@ -2,6 +2,7 @@ import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
+import { formatClinicalText } from "@/lib/evolution/formatters";
 
 interface PatientData {
 	name: string;
@@ -205,11 +206,11 @@ export const generateEvolutionPDF = (
 		format(new Date(s.date), "dd/MM/yyyy"),
 		s.painLevel.toString(),
 		[
-			s.subjective ? `S: ${s.subjective}` : null,
-			s.objective ? `O: ${s.objective}` : null,
-			s.assessment ? `A: ${s.assessment}` : null,
-			s.plan ? `P: ${s.plan}` : null,
-			s.observations && !s.subjective ? `Obs: ${s.observations}` : null,
+			s.subjective ? `S: ${formatClinicalText(s.subjective)}` : null,
+			s.objective ? `O: ${formatClinicalText(s.objective)}` : null,
+			s.assessment ? `A: ${formatClinicalText(s.assessment)}` : null,
+			s.plan ? `P: ${formatClinicalText(s.plan)}` : null,
+			s.observations && !s.subjective ? `Obs: ${formatClinicalText(s.observations)}` : null,
 		]
 			.filter(Boolean)
 			.join("\n"),
