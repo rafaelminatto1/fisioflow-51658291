@@ -12,6 +12,7 @@ export type PatientFilters = {
 	hasUpcoming?: boolean;
 	daysInactive?: number;
 	minSessionsCompleted?: number;
+	hasSurgery?: boolean;
 };
 
 /**
@@ -25,6 +26,7 @@ export function countActiveFilters(filters: PatientFilters): number {
 	if (filters.hasUnpaid) count++;
 	if (filters.hasNoShow) count++;
 	if (filters.hasUpcoming) count++;
+	if (filters.hasSurgery) count++;
 	if (filters.daysInactive && filters.daysInactive > 0) count++;
 	if (filters.minSessionsCompleted) count++;
 	return count;

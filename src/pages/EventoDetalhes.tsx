@@ -170,6 +170,20 @@ export default function EventoDetalhes() {
 							<p className="text-sm">{evento.gratuito ? "Gratuito" : "Pago"}</p>
 						</CardContent>
 					</Card>
+
+					<Card>
+						<CardHeader className="pb-3">
+							<CardTitle className="text-sm font-medium flex items-center gap-2">
+								<Calendar className="h-4 w-4" />
+								Participantes Previstos
+							</CardTitle>
+						</CardHeader>
+						<CardContent>
+							<p className="text-sm">
+								{evento.participantes_previstos || 0} pessoas
+							</p>
+						</CardContent>
+					</Card>
 				</div>
 
 				{/* Descrição */}

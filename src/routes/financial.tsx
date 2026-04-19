@@ -6,6 +6,7 @@
 import { lazy } from "react";
 import { Route } from "react-router-dom";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
+import { FinancialWorkbench } from "@/components/financial/FinancialWorkbench";
 
 // Lazy loads - Financeiro
 const ContasFinanceirasPage = lazy(
@@ -105,6 +106,22 @@ export const financialRoutes = (
 			element={
 				<ProtectedRoute>
 					<CommissionsPage />
+				</ProtectedRoute>
+			}
+		/>
+		<Route
+			path="/financeiro"
+			element={
+				<ProtectedRoute>
+					<FinancialWorkbench />
+				</ProtectedRoute>
+			}
+		/>
+		<Route
+			path="/financial"
+			element={
+				<ProtectedRoute>
+					<FinancialWorkbench />
 				</ProtectedRoute>
 			}
 		/>

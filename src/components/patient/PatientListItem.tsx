@@ -36,7 +36,16 @@ export const PatientListItem = ({
 		>
 			<PatientCard
 				name={patientName || "Sem Nome"}
-				condition={patient.main_condition}
+				condition={
+					<div className="flex flex-col gap-1">
+						<span>{patient.mainCondition || "Sem patologia definida"}</span>
+						{patient.hasSurgery && (
+							<span className="inline-flex items-center rounded-full bg-blue-50 dark:bg-blue-900/30 px-2 py-0.5 text-[10px] font-medium text-blue-700 dark:text-blue-300 border border-blue-100 dark:border-blue-800 w-fit">
+								Pós-cirúrgico
+							</span>
+						)}
+					</div>
+				}
 				status={patient.status}
 				stats={{
 					sessionsCompleted: stats?.sessionsCompleted || 0,
