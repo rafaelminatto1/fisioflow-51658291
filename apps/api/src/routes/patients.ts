@@ -680,6 +680,7 @@ app.post("/", async (c) => {
 		console.log("[Patients/Create] DB insert executed, looking up created patient...");
 
 		// Buscar o paciente recém criado pelo CPF (ou email se CPF nulo) para evitar erro no returning()
+		// Usamos limit 1 e garantimos a organização para segurança
 		const searchCondition = body.cpf 
 			? eq(patients.cpf, body.cpf)
 			: eq(patients.email, body.email!);
@@ -688,6 +689,7 @@ app.post("/", async (c) => {
 			.select()
 			.from(patients)
 			.where(and(searchCondition, eq(patients.organizationId, user.organizationId)))
+			.orderBy(desc(patients.createdAt))
 			.limit(1);
 
 		const row = searchResult[0];
