@@ -673,20 +673,32 @@ app.post("/", async (c) => {
 		console.log("[Patients/Create] Insert values:", insertValues);
 		console.log("[Patients/Create] Executing DB insert...");
 
-		const result = await db
+		await db
 			.insert(patients)
-			.values(insertValues as any)
-			.returning();
-		const row = result[0];
-		console.log("[Patients/Create] DB insert successful:", row?.id);
+			.values(insertValues as any);
+		
+		console.log("[Patients/Create] DB insert executed, looking up created patient...");
+
+		// Buscar o paciente recém criado pelo CPF (ou email se CPF nulo) para evitar erro no returning()
+		const searchCondition = body.cpf 
+			? eq(patients.cpf, body.cpf)
+			: eq(patients.email, body.email!);
+
+		const searchResult = await db
+			.select()
+			.from(patients)
+			.where(and(searchCondition, eq(patients.organizationId, user.organizationId)))
+			.limit(1);
+
+		const row = searchResult[0];
 
 		if (!row) {
-			console.log("[Patients/Create] Error: no row returned");
-			return c.json({ error: "Falha ao criar paciente" }, 500);
+			console.log("[Patients/Create] Error: patient not found after insert");
+			return c.json({ error: "Falha ao criar paciente (não encontrado após inserção)" }, 500);
 		}
 
+		console.log("[Patients/Create] Patient found after insert:", row.id);
 		const patient = normalizePatientRow(row as DbRow);
-		console.log("[Patients/Create] Patient created:", patient.id);
 
 		// Inngest Event: Patient Created (Sequência de Boas-vindas)
 		triggerInngestEvent(
