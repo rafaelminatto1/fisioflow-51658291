@@ -5,6 +5,12 @@ import type { Env } from "../types/env";
 import { callGemini, transcribeAudioWithGemini, streamGeminiChat } from "../lib/ai-gemini";
 import { callGeminiStructured, callGeminiThinking } from "../lib/ai-gemini-v2";
 import {
+	getOrCreatePatientCache,
+	invalidatePatientCache,
+	readPatientCacheEntry,
+} from "../lib/ai-context-cache";
+import { isUuid } from "../lib/validators";
+import {
 	runAi,
 	transcribeAudio as transcribeWithWhisper,
 	summarizeClinicalNote,
