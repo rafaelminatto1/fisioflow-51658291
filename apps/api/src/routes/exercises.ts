@@ -57,7 +57,16 @@ app.get('/categories', async (c) => {
 
     const db = createDb(c.env, 'read');
     const rows = await db
-      .select()
+      .select({
+        id: exerciseCategories.id,
+        slug: exerciseCategories.slug,
+        name: exerciseCategories.name,
+        description: exerciseCategories.description,
+        icon: exerciseCategories.icon,
+        color: exerciseCategories.color,
+        orderIndex: exerciseCategories.orderIndex,
+        parentId: exerciseCategories.parentId,
+      })
       .from(exerciseCategories)
       .orderBy(exerciseCategories.orderIndex);
 

@@ -192,6 +192,9 @@ AXIOM_DATASET = "fisioflow-logs"
 # Troque <ACCOUNT_ID> e <GATEWAY_NAME> pelos seus dados no painel da Cloudflare (AI > AI Gateway)
 FISIOFLOW_AI_GATEWAY_URL = "https://gateway.ai.cloudflare.com/v1/32156f9a72a32d1ece28ab74bcd398fb/fisioflow-gateway"
 
+# Premium AI (opt-in): habilita Gemini Live API para avaliações em tempo real (~R$1-2/avaliação)
+GOOGLE_AI_PREMIUM_ENABLED = "false"
+
 # Inngest (Produção)
 # INNGEST_EVENT_KEY e INNGEST_SIGNING_KEY devem ser setados via wrangler secret
 
@@ -202,6 +205,7 @@ name = "fisioflow-api"
 [env.production.vars]
 ENVIRONMENT = "production"
 IMAGE_TRANSFORMATIONS = "enabled"
+GOOGLE_AI_PREMIUM_ENABLED = "false"
 R2_PUBLIC_URL = "https://media.moocafisio.com.br"
 ALLOWED_ORIGINS = "https://moocafisio.com.br,https://www.moocafisio.com.br,https://minatto-fisio.pages.dev,https://fisioflow.pages.dev,https://minatto-moocafisio.com.br,https://media.moocafisio.com.br,http://localhost:5173,https://7d2bdf7d.fisioflow.pages.dev,https://fisioflow-web.rafalegollas.workers.dev,https://fisioflow-api.rafalegollas.workers.dev"
 GOOGLE_MAPS_API_KEY = ""
@@ -319,6 +323,7 @@ name = "fisioflow-api-staging"
 [env.staging.vars]
 ENVIRONMENT = "staging"
 IMAGE_TRANSFORMATIONS = "enabled"
+GOOGLE_AI_PREMIUM_ENABLED = "false"
 R2_PUBLIC_URL = "https://pub-7d7f6b6af4684fb3a18be682c4b610d9.r2.dev"
 ALLOWED_ORIGINS = "https://fisioflow-staging.pages.dev,http://localhost:5173"
 GOOGLE_MAPS_API_KEY = ""
@@ -356,7 +361,8 @@ bucket_name = "fisioflow-media-staging"
 [env.staging.durable_objects]
 bindings = [
   { name = "ORGANIZATION_STATE", class_name = "OrganizationState" },
-  { name = "PATIENT_AGENT", class_name = "PatientAgent" }
+  { name = "PATIENT_AGENT", class_name = "PatientAgent" },
+  { name = "ASSESSMENT_LIVE_SESSION", class_name = "AssessmentLiveSession" }
 ]
 
 [[env.staging.migrations]]

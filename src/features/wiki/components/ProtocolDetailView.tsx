@@ -18,9 +18,10 @@ import { cn } from "@/lib/utils";
 
 interface ProtocolDetailViewProps {
     protocol: ProtocolEntry;
+    onSelectExercise?: (id: string) => void;
 }
 
-export function ProtocolDetailView({ protocol }: ProtocolDetailViewProps) {
+export function ProtocolDetailView({ protocol, onSelectExercise }: ProtocolDetailViewProps) {
     return (
         <div className="space-y-6 max-w-4xl mx-auto p-1">
             <div className="space-y-2">
@@ -108,7 +109,11 @@ export function ProtocolDetailView({ protocol }: ProtocolDetailViewProps) {
                                             const exercise = exerciseDictionary.find(e => e.id === exId);
                                             if (!exercise) return null;
                                             return (
-                                                <Card key={i} className="border-slate-100 hover:border-primary/20 hover:shadow-sm transition-all cursor-pointer group">
+                                                <Card 
+                                                    key={i} 
+                                                    className="border-slate-100 hover:border-primary/20 hover:shadow-sm transition-all cursor-pointer group"
+                                                    onClick={() => onSelectExercise?.(exercise.id)}
+                                                >
                                                     <CardContent className="p-2 flex items-center justify-between gap-3">
                                                         <div className="flex items-center gap-3 min-w-0">
                                                             <div className="h-8 w-8 rounded bg-slate-100 flex items-center justify-center shrink-0">

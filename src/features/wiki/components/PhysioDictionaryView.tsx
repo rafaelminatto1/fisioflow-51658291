@@ -9,6 +9,9 @@ import { useDictionary, DictionaryTerm } from '@/hooks/useDictionary';
 import { DictionaryTermModal } from './DictionaryTermModal';
 import { ProtocolDetailView } from './ProtocolDetailView';
 import { protocolDictionary, ProtocolEntry } from '@/data/protocolDictionary';
+import { exerciseDictionary } from '@/data/exerciseDictionary';
+import { ExerciseViewModal } from '@/components/exercises/ExerciseViewModal';
+import { useExercises } from '@/hooks/useExercises';
 import {
 	Dialog,
 	DialogContent,
@@ -46,6 +49,10 @@ export function PhysioDictionaryView() {
 	const [editTerm, setEditTerm] = useState<DictionaryTerm | undefined>(undefined);
 	const [deleteId, setDeleteId] = useState<string | null>(null);
 	const [selectedProtocol, setSelectedProtocol] = useState<ProtocolEntry | null>(null);
+	const [selectedExerciseId, setSelectedExerciseId] = useState<string | null>(null);
+
+	const { exercises } = useExercises();
+	const selectedExercise = exercises.find(e => e.id === selectedExerciseId);
 
 	const {
 		terms,
@@ -136,13 +143,15 @@ export function PhysioDictionaryView() {
 				) : (
 					<div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 p-1">
 						{terms.map((term) => (
-							<Card 
-								key={term.id} 
+							<Card
+								key={term.id}
 								className="group relative border-slate-200/60 dark:border-slate-800/60 bg-white/70 dark:bg-slate-900/70 backdrop-blur-sm rounded-2xl transition-all duration-300 hover:shadow-xl hover:shadow-blue-500/5 hover:-translate-y-1 overflow-hidden cursor-pointer"
 								onClick={() => {
 									if (term.category === 'procedure' || term.subcategory === 'Protocolo') {
 										const proto = protocolDictionary.find(p => p.id === term.id);
 										if (proto) setSelectedProtocol(proto);
+									} else if (term.category === 'exercise') {
+										setSelectedExerciseId(term.id);
 									}
 								}}
 							>
@@ -245,6 +254,15 @@ export function PhysioDictionaryView() {
 				isLoading={isCreating || isUpdating}
 			/>
 
+			{/* Modal de Detalhes do Exercício */}
+			{selectedExercise && (
+				<ExerciseViewModal
+					exercise={selectedExercise}
+					isOpen={!!selectedExerciseId}
+					onClose={() => setSelectedExerciseId(null)}
+				/>
+			)}
+
 			{/* Modal de Detalhes do Protocolo */}
 			<Dialog open={!!selectedProtocol} onOpenChange={(open) => !open && setSelectedProtocol(null)}>
 				<DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
@@ -253,7 +271,13 @@ export function PhysioDictionaryView() {
 							<DialogHeader className="sr-only">
 								<DialogTitle>{selectedProtocol.pt}</DialogTitle>
 							</DialogHeader>
-							<ProtocolDetailView protocol={selectedProtocol} />
+							<ProtocolDetailView 
+								protocol={selectedProtocol} 
+								onSelectExercise={(id) => {
+									setSelectedProtocol(null);
+									setSelectedExerciseId(id);
+								}}
+							/>
 						</>
 					)}
 				</DialogContent>
