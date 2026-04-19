@@ -114,6 +114,10 @@ class_name = "OrganizationState"
 name = "PATIENT_AGENT"
 class_name = "PatientAgent"
 
+[[durable_objects.bindings]]
+name = "ASSESSMENT_LIVE_SESSION"
+class_name = "AssessmentLiveSession"
+
 
 [[migrations]]
 tag = "v1" # Placeholder
@@ -283,7 +287,8 @@ bucket_name = "fisioflow-media"
 [env.production.durable_objects]
 bindings = [
   { name = "ORGANIZATION_STATE", class_name = "OrganizationState" },
-  { name = "PATIENT_AGENT", class_name = "PatientAgent" }
+  { name = "PATIENT_AGENT", class_name = "PatientAgent" },
+  { name = "ASSESSMENT_LIVE_SESSION", class_name = "AssessmentLiveSession" }
 ]
 
 [env.production.ai]
@@ -369,6 +374,10 @@ tag = "v5"
 [[env.staging.migrations]]
 tag = "v6"
 new_classes = ["PatientAgent"]
+
+[[env.staging.migrations]]
+tag = "v7"
+new_classes = ["AssessmentLiveSession"]
 
 [env.staging.ai]
 binding = "AI"
