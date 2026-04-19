@@ -1065,9 +1065,11 @@ app.post("/patient-360/prime", async (c) => {
 		});
 	} catch (error: any) {
 		console.error("[AI/Patient360/prime] Error:", error);
-		await logToAxiom(c.env, "ai.patient_360.prime.error", {
+		await logToAxiom(c.env, c.executionCtx, {
+			level: "error",
+			message: "ai.patient_360.prime.error",
 			patientId: body.patientId,
-			message: error?.message,
+			error: error?.message,
 		});
 		return c.json(
 			{ success: false, error: "Erro ao preparar contexto do paciente", details: error?.message },
@@ -1124,9 +1126,11 @@ app.post("/patient-360/ask", async (c) => {
 		});
 	} catch (error: any) {
 		console.error("[AI/Patient360/ask] Error:", error);
-		await logToAxiom(c.env, "ai.patient_360.ask.error", {
+		await logToAxiom(c.env, c.executionCtx, {
+			level: "error",
+			message: "ai.patient_360.ask.error",
 			patientId: body.patientId,
-			message: error?.message,
+			error: error?.message,
 		});
 		return c.json(
 			{ success: false, error: "Erro ao consultar contexto do paciente", details: error?.message },
@@ -1181,9 +1185,11 @@ app.post("/patient-360/clinical-report", async (c) => {
 		});
 	} catch (error: any) {
 		console.error("[AI/Patient360/clinical-report] Error:", error);
-		await logToAxiom(c.env, "ai.patient_360.report.error", {
+		await logToAxiom(c.env, c.executionCtx, {
+			level: "error",
+			message: "ai.patient_360.report.error",
 			patientId: body.patientId,
-			message: error?.message,
+			error: error?.message,
 		});
 		return c.json(
 			{ success: false, error: "Erro ao gerar relatório clínico", details: error?.message },
