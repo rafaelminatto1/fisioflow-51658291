@@ -1,6 +1,7 @@
 // Patient Gamification Table
 
 import { sql } from "drizzle-orm";
+import { withOrganizationPolicy } from "./rls_helper";
 import {
 	pgTable,
 	uuid,
@@ -33,6 +34,7 @@ export const patientGamification = pgTable(
 	(t) => ({
 		uniquePatient: unique().on(t.patientId),
 	}),
+	(table) => [withOrganizationPolicy("patient_gamification", table.organizationId)],
 );
 
 // XP Transactions Table
@@ -47,7 +49,7 @@ export const xpTransactions = pgTable("xp_transactions", {
 	organizationId: uuid("organization_id"),
 	createdAt: timestamp("created_at", { withTimezone: true }).defaultNow(),
 	createdBy: uuid("created_by"), // References auth.users, keeping simplified for now
-});
+}, (table) => [withOrganizationPolicy("xp_transactions", table.organizationId)]);
 
 // Achievements Table
 export const achievements = pgTable("achievements", {
@@ -61,7 +63,7 @@ export const achievements = pgTable("achievements", {
 	requirements: jsonb("requirements"),
 	organizationId: uuid("organization_id"),
 	createdAt: timestamp("created_at", { withTimezone: true }).defaultNow(),
-});
+}, (table) => [withOrganizationPolicy("achievements", table.organizationId)]);
 
 // Achievements Log (from types.ts reference, though not explicitly in the migration file read, it was referenced in types.ts so should be here)
 export const achievementsLog = pgTable("achievements_log", {
@@ -76,7 +78,7 @@ export const achievementsLog = pgTable("achievements_log", {
 	organizationId: uuid("organization_id"),
 	unlockedAt: timestamp("unlocked_at", { withTimezone: true }),
 	xpReward: integer("xp_reward"),
-});
+}, (table) => [withOrganizationPolicy("achievements_log", table.organizationId)]);
 
 // Daily Quests Table
 export const dailyQuests = pgTable(
@@ -106,4 +108,5 @@ export const dailyQuests = pgTable(
 	(t) => ({
 		uniquePatientDate: unique().on(t.patientId, t.date),
 	}),
+	(table) => [withOrganizationPolicy("daily_quests", table.organizationId)],
 );

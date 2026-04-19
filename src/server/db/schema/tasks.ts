@@ -9,6 +9,7 @@ import {
 	jsonb,
 	pgEnum,
 } from "drizzle-orm/pg-core";
+import { withOrganizationPolicy } from "./rls_helper";
 
 export const taskPriorityEnum = pgEnum("task_priority", [
 	"low",
@@ -25,7 +26,7 @@ export const taskBoards = pgTable("task_boards", {
 	organizationId: uuid("organization_id"),
 	createdAt: timestamp("created_at").defaultNow().notNull(),
 	updatedAt: timestamp("updated_at").defaultNow().notNull(),
-});
+}, (table) => [withOrganizationPolicy("task_boards", table.organizationId)]);
 
 export const taskColumns = pgTable("task_columns", {
 	id: uuid("id").primaryKey().defaultRandom(),
@@ -37,7 +38,7 @@ export const taskColumns = pgTable("task_columns", {
 	organizationId: uuid("organization_id"),
 	createdAt: timestamp("created_at").defaultNow().notNull(),
 	updatedAt: timestamp("updated_at").defaultNow().notNull(),
-});
+}, (table) => [withOrganizationPolicy("task_columns", table.organizationId)]);
 
 export const tasks = pgTable("tasks", {
 	id: uuid("id").primaryKey().defaultRandom(),
@@ -63,7 +64,7 @@ export const tasks = pgTable("tasks", {
 	organizationId: uuid("organization_id"),
 	createdAt: timestamp("created_at").defaultNow().notNull(),
 	updatedAt: timestamp("updated_at").defaultNow().notNull(),
-});
+}, (table) => [withOrganizationPolicy("tasks", table.organizationId)]);
 
 export const taskAssignments = pgTable("task_assignments", {
 	id: uuid("id").primaryKey().defaultRandom(),
@@ -74,7 +75,7 @@ export const taskAssignments = pgTable("task_assignments", {
 	organizationId: uuid("organization_id"),
 	assignedAt: timestamp("assigned_at").defaultNow().notNull(),
 	assignedBy: varchar("assigned_by"),
-});
+}, (table) => [withOrganizationPolicy("task_assignments", table.organizationId)]);
 
 export const taskAcknowledgments = pgTable("task_acknowledgments", {
 	id: uuid("id").primaryKey().defaultRandom(),
@@ -90,7 +91,7 @@ export const taskAcknowledgments = pgTable("task_acknowledgments", {
 	organizationId: uuid("organization_id"),
 
 	createdAt: timestamp("created_at").defaultNow().notNull(),
-});
+}, (table) => [withOrganizationPolicy("task_acknowledgments", table.organizationId)]);
 
 export const taskVisibility = pgTable("task_visibility", {
 	id: uuid("id").primaryKey().defaultRandom(),
@@ -102,7 +103,7 @@ export const taskVisibility = pgTable("task_visibility", {
 	canView: boolean("can_view").default(true).notNull(),
 	organizationId: uuid("organization_id"),
 	createdAt: timestamp("created_at").defaultNow().notNull(),
-});
+}, (table) => [withOrganizationPolicy("task_visibility", table.organizationId)]);
 
 export const taskAuditLogs = pgTable("task_audit_logs", {
 	id: uuid("id").primaryKey().defaultRandom(),
@@ -114,4 +115,4 @@ export const taskAuditLogs = pgTable("task_audit_logs", {
 	details: jsonb("details"), // Optional JSON for old/new values
 	organizationId: uuid("organization_id"),
 	timestamp: timestamp("timestamp").defaultNow().notNull(),
-});
+}, (table) => [withOrganizationPolicy("task_audit_logs", table.organizationId)]);

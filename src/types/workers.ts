@@ -20,6 +20,10 @@ export interface Exercise {
 	aliasesPt?: string[] | null;
 	aliasesEn?: string[] | null;
 	dictionaryId?: string | null;
+	progressionSuggestion?: string | null;
+	suggestedSets?: string | null;
+	suggestedReps?: string | null;
+	suggestedRpe?: string | null;
 }
 
 export interface ExerciseImageAnalysisResult {

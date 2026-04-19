@@ -314,6 +314,10 @@ export interface Exercise {
 	aliases_pt?: string[];
 	aliases_en?: string[];
 	dictionary_id?: string;
+	progression_suggestion?: string;
+	suggested_sets?: string;
+	suggested_reps?: string;
+	suggested_rpe?: string;
 	created_at?: string;
 	updated_at?: string;
 }

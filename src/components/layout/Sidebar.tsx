@@ -380,6 +380,8 @@ export function Sidebar() {
 							onClick={() =>
 								document.dispatchEvent(new CustomEvent("open-command-palette"))
 							}
+							aria-label="Abrir busca global"
+							data-testid="open-global-search"
 							className="w-full h-10 px-3 rounded-xl bg-muted/50 border border-border/50 flex items-center justify-between group hover:bg-primary/5 hover:border-primary/20 transition-all"
 						>
 							<div className="flex items-center gap-2 text-muted-foreground group-hover:text-primary/70 transition-colors">

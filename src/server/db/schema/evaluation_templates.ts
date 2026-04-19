@@ -13,6 +13,7 @@ import {
 	jsonb,
 	boolean,
 } from "drizzle-orm/pg-core";
+import { withOrganizationPolicy } from "./rls_helper";
 
 export const evaluationTemplates = pgTable("evaluation_templates", {
 	id: uuid("id").primaryKey().defaultRandom(),
@@ -56,4 +57,4 @@ export const evaluationTemplates = pgTable("evaluation_templates", {
 
 	createdAt: timestamp("created_at").defaultNow().notNull(),
 	updatedAt: timestamp("updated_at").defaultNow().notNull(),
-});
+}, (table) => [withOrganizationPolicy("evaluation_templates", table.organizationId)]);

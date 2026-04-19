@@ -28,6 +28,7 @@ import {
 	doublePrecision,
 } from "drizzle-orm/pg-core";
 import { relations } from "drizzle-orm";
+import { withOrganizationPolicy } from "./rls_helper";
 import { appointments } from "./appointments";
 import { sessions } from "./sessions";
 import { patientPackages } from "./financial";
@@ -145,6 +146,7 @@ export const patients = pgTable(
 		isActiveIdx: index("idx_patients_is_active").on(table.isActive),
 		fullNameIdx: index("idx_patients_full_name").on(table.fullName),
 	}),
+	(table) => [withOrganizationPolicy("patients", table.organizationId)],
 );
 
 export const patientsRelations = relations(patients, ({ many }) => ({
@@ -245,6 +247,7 @@ export const medicalRecords = pgTable(
 	(table) => ({
 		patientIdIdx: index("idx_medical_records_patient_id").on(table.patientId),
 	}),
+	(table) => [withOrganizationPolicy("medical_records", table.organizationId)],
 );
 
 export const medicalRecordsRelations = relations(

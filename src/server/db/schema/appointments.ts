@@ -26,6 +26,7 @@ import {
 	index,
 } from "drizzle-orm/pg-core";
 import { relations } from "drizzle-orm";
+import { withOrganizationPolicy } from "./rls_helper";
 import { patients } from "./patients";
 import { sessions } from "./sessions";
 
@@ -138,6 +139,7 @@ export const appointments = pgTable(
 		statusIdx: index("idx_appointments_status").on(table.status),
 		roomIdIdx: index("idx_appointments_room_id").on(table.roomId),
 	}),
+	(table) => [withOrganizationPolicy("appointments", table.organizationId)],
 );
 
 export const appointmentsRelations = relations(appointments, ({ one }) => ({
@@ -183,6 +185,7 @@ export const rooms = pgTable(
 		),
 		isActiveIdx: index("idx_rooms_is_active").on(table.isActive),
 	}),
+	(table) => [withOrganizationPolicy("rooms", table.organizationId)],
 );
 
 // ===== BLOCKED TIME SLOTS =====
@@ -219,4 +222,5 @@ export const blockedSlots = pgTable(
 			table.date,
 		),
 	}),
+	(table) => [withOrganizationPolicy("blocked_slots", table.organizationId)],
 );
