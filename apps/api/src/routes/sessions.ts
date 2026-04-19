@@ -5,6 +5,7 @@ import type { Env } from '../types/env';
 import { sessions, sessionAttachments, sessionTemplates } from '@fisioflow/db';
 import { eq, and, desc, count, sql, or, ilike, isNull } from 'drizzle-orm';
 import { withTenant } from '../lib/db-utils';
+import { invalidatePatientCache } from '../lib/ai-context-cache';
 
 const app = new Hono<{ Bindings: Env; Variables: AuthVariables }>();
 
@@ -251,6 +252,9 @@ app.post('/:id/finalize', requireAuth, async (c) => {
     .returning();
 
   if (!row) return c.json({ error: 'Sessão não encontrada ou já finalizada' }, 404);
+  if (row.patientId) {
+    c.executionCtx.waitUntil(invalidatePatientCache(c.env, row.patientId).catch(() => {}));
+  }
   return c.json({ data: rowToRecord(row) });
 });
 
@@ -294,6 +298,8 @@ app.post('/', requireAuth, async (c) => {
       ).bind(newSession.id, patientId, body.appointment_id ?? null, user.uid, user.organizationId, preview).run()
     );
   }
+
+  c.executionCtx.waitUntil(invalidatePatientCache(c.env, patientId).catch(() => {}));
 
   return c.json({ data: rowToRecord(newSession) }, 201);
 });
@@ -341,6 +347,10 @@ app.put('/:id', requireAuth, async (c) => {
     );
   }
 
+  if (updated.patientId) {
+    c.executionCtx.waitUntil(invalidatePatientCache(c.env, updated.patientId).catch(() => {}));
+  }
+
   return c.json({ data: rowToRecord(updated) });
 });
 
@@ -352,7 +362,7 @@ app.delete('/:id', requireAuth, async (c) => {
   if (!id) return c.json({ error: 'ID é obrigatório' }, 400);
   if (!isValidUuid(id)) return c.json({ error: 'ID inválido' }, 400);
 
-  const [existing] = await db.select({ status: sessions.status })
+  const [existing] = await db.select({ status: sessions.status, patientId: sessions.patientId })
     .from(sessions)
     .where(and(eq(sessions.id, id), eq(sessions.organizationId, user.organizationId)))
     .limit(1);
@@ -366,6 +376,10 @@ app.delete('/:id', requireAuth, async (c) => {
     .where(
       withTenant(sessions, user.organizationId, eq(sessions.id, id))
     );
+
+  if (existing.patientId) {
+    c.executionCtx.waitUntil(invalidatePatientCache(c.env, existing.patientId).catch(() => {}));
+  }
 
   return c.json({ success: true });
 });
