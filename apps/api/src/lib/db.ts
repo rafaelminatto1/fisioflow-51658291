@@ -183,14 +183,26 @@ export function createDb(env: Env, mode: 'read' | 'write' = 'write'): FisioDb {
 		const orgId = getOrgContext();
 		let result;
 
-		if (orgId) {
-			const results = await (baseSql as any).transaction([
-				(baseSql as any).query(`SELECT set_config('app.org_id', $1, true)`, [orgId]),
-				(baseSql as any).query(queryText, queryParams),
-			]);
-			result = results[1];
-		} else {
-			result = await baseSql.query(queryText, queryParams);
+		console.log(`[DB/Neon] Executing query: ${queryText.substring(0, 100)}...`, { params: queryParams.length, orgId });
+
+		try {
+			if (orgId) {
+				const results = await (baseSql as any).transaction([
+					(baseSql as any).query(`SELECT set_config('app.org_id', $1, true)`, [orgId]),
+					(baseSql as any).query(queryText, queryParams),
+				]);
+				result = results[1];
+			} else {
+				result = await baseSql.query(queryText, queryParams);
+			}
+			console.log(`[DB/Neon] Query success. Rows: ${result.rows?.length}`);
+		} catch (dbErr: any) {
+			console.error(`[DB/Neon] Query Error: ${dbErr.message}`, { 
+				text: queryText,
+				params: queryParams,
+				stack: dbErr.stack 
+			});
+			throw dbErr;
 		}
 
 		// Normalizar rows: converter qualquer campo que pareça data para string ISO
