@@ -20,6 +20,8 @@ import { rateLimit } from "../middleware/rateLimit";
 import {
 	ClinicalReportSchema,
 	ExerciseSuggestionSchema,
+	FastProcessingSchema,
+	FormSuggestionSchema,
 	ReceiptOcrSchema,
 	SoapSchema,
 	TreatmentAdherenceSchema,
@@ -139,34 +141,47 @@ app.post("/service", async (c) => {
 
 			const prompt = `Você é um assistente especializado em fisioterapia. 
       Contexto do paciente: ${JSON.stringify(context)}
-      Pergunta do profissional: ${message}
-      Responda de forma técnica, concisa e baseada em evidências clínicas.`;
+      Pergunta do profissional: ${message}`;
+
+			const systemInstruction =
+				"Responda de forma técnica, concisa e baseada em evidências clínicas. Use o raciocínio clínico profundo para oferecer a melhor orientação.";
 
 			const start = performance.now();
-			const response = await callGemini(
-				c.env.GOOGLE_AI_API_KEY,
-				prompt,
-				"gemini-1.5-flash",
-				c.env.FISIOFLOW_AI_GATEWAY_URL,
-				c.env.FISIOFLOW_AI_GATEWAY_TOKEN,
-				"clinical",
-			);
-			const duration = performance.now() - start;
+			try {
+				const result = await callGeminiThinking(c.env, {
+					prompt,
+					model: "gemini-3-flash-preview",
+					thinkingLevel: "MEDIUM",
+					systemInstruction,
+					temperature: 0.4,
+				});
+				const duration = performance.now() - start;
 
-			c.executionCtx.waitUntil(
-				logToAxiom(c.env, c.executionCtx, {
-					level: "info",
-					type: "ai_inference_latency",
-					message: "Gemini inference completed",
-					metadata: {
-						action: "clinicalChat",
-						durationMs: duration,
-						promptLength: prompt.length,
-					},
-				}),
-			);
+				c.executionCtx.waitUntil(
+					logToAxiom(c.env, c.executionCtx, {
+						level: "info",
+						type: "ai_inference_latency",
+						message: "Gemini Thinking clinicalChat completed",
+						metadata: {
+							action: "clinicalChat",
+							durationMs: duration,
+							model: "gemini-3-flash-preview",
+						},
+					}),
+				);
 
-			return c.json({ data: { response } });
+				return c.json({ data: { response: result.text, thoughts: result.thoughts } });
+			} catch (error) {
+				// Fallback to basic callGemini if needed, or handle error
+				console.error("clinicalChat thinking failed:", error);
+				const response = await callGemini(
+					c.env.GOOGLE_AI_API_KEY,
+					prompt,
+					"gemini-1.5-flash",
+					c.env.FISIOFLOW_AI_GATEWAY_URL,
+				);
+				return c.json({ data: { response } });
+			}
 		}
 		case "exerciseSuggestion": {
 			const goals = Array.isArray(data.goals)
@@ -218,16 +233,17 @@ app.post("/service", async (c) => {
         Retorne em Markdown elegante, usando tabelas se necessário. Responda em Português Brasileiro.
       `;
 
-			const response = await callGemini(
-				c.env.GOOGLE_AI_API_KEY,
-				prompt,
-				"gemini-1.5-flash",
-				c.env.FISIOFLOW_AI_GATEWAY_URL,
-				c.env.FISIOFLOW_AI_GATEWAY_TOKEN,
-				"clinical",
-			);
+			const systemInstruction = "Você é um consultor sênior em logística de saúde e eventos esportivos.";
 
-			return c.json({ data: { response } });
+			const result = await callGeminiThinking(c.env, {
+				prompt,
+				model: "gemini-3-flash-preview",
+				thinkingLevel: "MEDIUM",
+				systemInstruction,
+				temperature: 0.6,
+			});
+
+			return c.json({ data: { response: result.text, thoughts: result.thoughts } });
 		}
 		// ... other cases can be migrated similarly
 		default:
@@ -332,17 +348,30 @@ app.post("/fast-processing", async (c) => {
 
 	const prompt =
 		mode === "fix_grammar"
-			? `Corrija a gramática e melhore a clareza técnica deste registro de fisioterapia, mantendo o tom profissional: "${text}". Retorne apenas o texto corrigido.`
-			: `Resuma este registro clínico de forma concisa: "${text}". Retorne apenas o resumo.`;
+			? `Corrija a gramática e melhore a clareza técnica deste registro de fisioterapia, mantendo o tom profissional: "${text}".`
+			: `Resuma este registro clínico de forma concisa: "${text}".`;
 
-	const result = await callGemini(
-		c.env.GOOGLE_AI_API_KEY,
-		prompt,
-		"gemini-1.5-flash-latest",
-		c.env.FISIOFLOW_AI_GATEWAY_URL,
-		c.env.FISIOFLOW_AI_GATEWAY_TOKEN,
-	);
-	return c.json({ data: { result } });
+	const systemInstruction = "Você é um assistente de redação clínica de alta precisão.";
+
+	try {
+		const parsed = await callGeminiStructured(c.env, {
+			schema: FastProcessingSchema,
+			prompt,
+			model: "gemini-3-flash-preview",
+			systemInstruction,
+			temperature: 0.2,
+		});
+		return c.json({ data: { result: parsed.result } });
+	} catch (error) {
+		// Basic fallback
+		const result = await callGemini(
+			c.env.GOOGLE_AI_API_KEY,
+			`${prompt} Retorne apenas o texto final.`,
+			"gemini-1.5-flash-latest",
+			c.env.FISIOFLOW_AI_GATEWAY_URL,
+		);
+		return c.json({ data: { result } });
+	}
 });
 
 app.post("/transcribe-audio", async (c) => {
@@ -631,9 +660,29 @@ app.post("/form-suggestions", async (c) => {
 		string,
 		unknown
 	>;
-	return c.json({
-		data: { suggestions: buildFormSuggestions(safeText(body.context)) },
-	});
+	const context = safeText(body.context);
+
+	const prompt = `Com base no contexto clínico fornecido, sugira campos, testes ou escalas relevantes para complementar a avaliação do paciente.
+  Contexto: ${context}`;
+
+	const systemInstruction =
+		"Você é um fisioterapeuta especialista em triagem e avaliação funcional. Retorne sugestões pertinentes ao quadro clínico apresentado.";
+
+	try {
+		const parsed = await callGeminiStructured(c.env, {
+			schema: FormSuggestionSchema,
+			prompt,
+			model: "gemini-3-flash-preview",
+			thinkingLevel: "LOW",
+			systemInstruction,
+			temperature: 0.5,
+		});
+		return c.json({ data: { suggestions: parsed.suggestions } });
+	} catch (error) {
+		return c.json({
+			data: { suggestions: buildFormSuggestions(context).map(s => ({ label: s, reason: "Sugestão padrão baseada em palavras-chave.", category: "outro" as const })) },
+		});
+	}
 });
 
 app.post("/document/analyze", async (c) => {
@@ -644,52 +693,49 @@ app.post("/document/analyze", async (c) => {
 	const fileUrl = safeText(body.fileUrl);
 	const fileName = safeText(body.fileName) || "documento";
 	const mediaType = safeText(body.mediaType);
+	const imageBase64 = safeText(body.imageBase64);
+
+	if (imageBase64 && mediaType.startsWith("image/")) {
+		const prompt = `Analise este documento clínico (${fileName}). Extraia os principais achados, faça um resumo clínico, classifique o tipo de documento e forneça recomendações de conduta fisioterapêutica.`;
+
+		try {
+			const report = await callGeminiStructured(c.env, {
+				schema: ClinicalReportSchema,
+				prompt: [
+					{ text: prompt },
+					{ inlineData: { mimeType: mediaType, data: imageBase64 } },
+				],
+				model: "gemini-3-flash-preview",
+				thinkingLevel: "MEDIUM",
+				systemInstruction: "Você é um especialista em análise de exames e laudos clínicos.",
+			});
+
+			return c.json({
+				data: {
+					extractedData: {
+						fileUrl,
+						text: report.summary,
+						confidence: 0.95,
+					},
+					classification: { type: report.trend === "negative" ? "clinical_report" : "other", confidence: 0.9 },
+					summary: {
+						keyFindings: report.keyFindings,
+						impression: report.clinicalReasoning,
+						recommendations: report.recommendations,
+					},
+					report,
+				},
+			});
+		} catch (error) {
+			console.error("Document analysis failed:", error);
+		}
+	}
+
 	const baseText = `Documento ${fileName} recebido para análise.`;
-	const classification = mediaType.includes("pdf")
-		? { type: "clinical_report", confidence: 0.61 }
-		: { type: "other", confidence: 0.48 };
 	return c.json({
 		data: {
-			extractedData: {
-				fileUrl,
-				storagePath: fileUrl,
-				text: baseText,
-				fullText: baseText,
-				confidence: 0.61,
-				language: "pt",
-			},
-			classification,
-			summary: {
-				keyFindings: [baseText],
-				impression: "Análise inicial concluída com heurística do Workers.",
-				recommendations: [
-					"Validar conteúdo com revisão clínica",
-					"Salvar no prontuário após conferência",
-				],
-			},
-			comparison: null,
-			translation:
-				body.options &&
-				typeof body.options === "object" &&
-				(body.options as Record<string, unknown>).includeTranslation
-					? {
-							originalText: baseText,
-							translatedText: baseText,
-							sourceLanguage: "auto",
-							targetLanguage: String(
-								(body.options as Record<string, unknown>).targetLanguage ??
-									"pt",
-							),
-						}
-					: null,
-			tags: [
-				{
-					id: "ai-doc-1",
-					name: classification.type.toUpperCase(),
-					category: "modality",
-					confidence: classification.confidence,
-				},
-			],
+			extractedData: { fileUrl, text: baseText, confidence: 0.5 },
+			summary: { keyFindings: [baseText], impression: "Análise manual necessária." },
 		},
 	});
 });
@@ -700,18 +746,22 @@ app.post("/document/classify", async (c) => {
 		unknown
 	>;
 	const text = safeText(body.text);
-	const lower = text.toLowerCase();
-	const type =
-		lower.includes("resson") || lower.includes("mri")
-			? "mri"
-			: lower.includes("raio") ||
-					lower.includes("x-ray") ||
-					lower.includes("rx")
-				? "xray"
-				: lower.includes("tomografia") || lower.includes("ct")
-					? "ct_scan"
-					: "clinical_report";
-	return c.json({ data: { type, confidence: 0.58 } });
+
+	const prompt = `Classifique o tipo de documento clínico com base no seguinte texto: "${text}".
+  Escolha entre: MRI, X-RAY, CT_SCAN, CLINICAL_REPORT, RECEIPT, OTHER.`;
+
+	try {
+		const result = await callGeminiThinking(c.env, {
+			prompt,
+			model: "gemini-3-flash-preview",
+			thinkingLevel: "MINIMAL",
+			temperature: 0.1,
+		});
+		const type = result.text.trim().toLowerCase();
+		return c.json({ data: { type, confidence: 0.9 } });
+	} catch {
+		return c.json({ data: { type: "clinical_report", confidence: 0.5 } });
+	}
 });
 
 app.post("/document/summarize", async (c) => {
@@ -941,25 +991,20 @@ app.post("/suggest-reply", async (c) => {
 
 	const prompt = `Você é um assistente administrativo e clínico de uma clínica de fisioterapia premium.
   Sua tarefa é redigir uma mensagem de WhatsApp para o paciente: ${patientName}.
-  Contexto atual: ${context}
-  
-  Diretrizes:
-  1. Tom profissional, acolhedor e empático.
-  2. Seja conciso (máximo 3 parágrafos curtos).
-  3. Use uma linguagem clara e evite jargões médicos complexos, a menos que necessário.
-  4. Inclua um "Call to Action" (ex: perguntar se ele quer agendar, ou como está se sentindo).
-  5. Use no máximo 2-3 emojis pertinentes.
-  
-  Retorne apenas o texto sugerido para a mensagem.`;
+  Contexto atual: ${context}`;
+
+	const systemInstruction =
+		"Tom profissional, acolhedor e empático. Seja conciso. Use no máximo 2 emojis. Inclua um Call to Action.";
 
 	try {
-		const result = await callGemini(
-			c.env.GOOGLE_AI_API_KEY,
+		const result = await callGeminiThinking(c.env, {
 			prompt,
-			"gemini-1.5-flash",
-			c.env.FISIOFLOW_AI_GATEWAY_URL,
-		);
-		return c.json({ data: { suggestion: result } });
+			model: "gemini-3-flash-preview",
+			thinkingLevel: "LOW",
+			systemInstruction,
+			temperature: 0.7,
+		});
+		return c.json({ data: { suggestion: result.text, thoughts: result.thoughts } });
 	} catch (error: any) {
 		console.error("[AI/SuggestReply] Error:", error);
 		return c.json({ error: "Erro ao gerar sugestão de IA" }, 500);

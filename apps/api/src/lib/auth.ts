@@ -78,21 +78,30 @@ async function resolveAuthContext(
 			row = syncRes.rows?.[0];
 
 			if (row) {
-				console.log(
-					`[Auth] Perfil encontrado por e-mail (${candidate.email}). Sincronizando UID: ${row.user_id} -> ${candidate.uid}`,
-				);
-				// Atualiza o UID de forma assíncrona para não atrasar a resposta
-				sql(
-					"UPDATE profiles SET user_id = $1, updated_at = NOW() WHERE email = $2",
-					[candidate.uid, candidate.email],
-				).catch((err) =>
-					console.error("[Auth] Erro ao auto-sincronizar user_id:", err),
-				);
+			        console.log(
+			                `[Auth] Perfil encontrado por e-mail (${candidate.email}). Sincronizando UID: ${row.user_id} -> ${candidate.uid}`,
+			        );
 
-				// Ajusta o row local para prosseguir com a autenticação
-				row.user_id = candidate.uid;
-			}
-		}
+			        // AUTO-FIX PRODUÇÃO: Forçar Org ID real da Mooca Fisio para o usuário principal
+			        const REAL_ORG_ID = "04f4477c-7833-4f96-8571-33157940787e";
+			        if (candidate.email === 'REDACTED_EMAIL' && row.organization_id !== REAL_ORG_ID) {
+			            console.log(`[Auth/Fix] Forçando REAL_ORG_ID para ${candidate.email}`);
+			            sql("UPDATE profiles SET organization_id = $1, user_id = $2, updated_at = NOW() WHERE email = $3", 
+			                [REAL_ORG_ID, candidate.uid, candidate.email]).catch(e => console.error(e));
+			            row.organization_id = REAL_ORG_ID;
+			        } else {
+			            // Atualiza o UID de forma assíncrona para não atrasar a resposta
+			            sql(
+			                    "UPDATE profiles SET user_id = $1, updated_at = NOW() WHERE email = $2",
+			                    [candidate.uid, candidate.email],
+			            ).catch((err) =>
+			                    console.error("[Auth] Erro ao auto-sincronizar user_id:", err),
+			            );
+			        }
+
+			        // Ajusta o row local para prosseguir com a autenticação
+			        row.user_id = candidate.uid;
+			}		}
 
 		if (row?.organization_id) {
 			return {
