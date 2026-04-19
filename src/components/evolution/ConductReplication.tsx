@@ -15,6 +15,7 @@ import { Copy, Search, Clock, Library, Loader2 } from "lucide-react";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { useSoapRecords } from "@/hooks/useSoapRecords";
+import { formatClinicalText } from "@/lib/evolution/formatters";
 import { useConductLibrary } from "@/hooks/useConductLibrary";
 import { useIntelligentConductSuggestions } from "@/hooks/useIntelligentConductSuggestions";
 import { Sparkles } from "lucide-react";
@@ -246,7 +247,7 @@ export const ConductReplication: React.FC<ConductReplicationProps> = ({
 												)}
 											</div>
 											<p className="text-sm text-muted-foreground line-clamp-3">
-												{record.plan}
+												{formatClinicalText(record.plan)}
 											</p>
 										</div>
 									))

@@ -13,6 +13,7 @@ import {
 	Clock,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { formatClinicalText } from "@/lib/evolution/formatters";
 
 interface PatientTimelineProps {
 	patientId: string | undefined;
@@ -168,7 +169,7 @@ export function PatientTimeline({ patientId }: PatientTimelineProps) {
 								{title}
 							</p>
 							<p className="mt-1 whitespace-pre-wrap text-xs leading-relaxed text-foreground/80">
-								{value}
+								{formatClinicalText(value)}
 							</p>
 						</button>
 					);

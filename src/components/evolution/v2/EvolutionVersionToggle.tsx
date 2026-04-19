@@ -5,7 +5,7 @@
  * smooth animations, and professional visual design.
  */
 import React from "react";
-import { FileText, ClipboardList, BookOpen } from "lucide-react";
+import { FileText, ClipboardList, BookOpen, Zap } from "lucide-react";
 import { cn } from "@/lib/utils";
 import {
 	Tooltip,
@@ -55,6 +55,13 @@ const versions: Array<{
 		badge: "V4",
 		icon: BookOpen,
 		tooltip: "Editor de Blocos com Offline-Sync",
+	},
+	{
+		key: "v5-pro",
+		label: "Pro",
+		badge: "NEW",
+		icon: Zap,
+		tooltip: "Editor Unificado com AI Scribe e Slash Commands",
 	},
 ];
 

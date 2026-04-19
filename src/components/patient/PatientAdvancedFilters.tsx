@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Slider } from "@/components/ui/slider";
 import { Switch } from "@/components/ui/switch";
@@ -14,6 +14,7 @@ import type { PatientFilters } from "./patientFiltersUtils";
 export type { PatientFilters };
 
 export interface PatientAdvancedFiltersProps {
+	currentFilters: PatientFilters;
 	onFilterChange: (filters: PatientFilters) => void;
 	activeFiltersCount: number;
 	onClearFilters: () => void;
@@ -24,11 +25,16 @@ const classificationOptions: PatientClassificationFilter[] = Object.values(
 );
 
 export function PatientAdvancedFilters({
+	currentFilters,
 	onFilterChange,
 	activeFiltersCount,
 	onClearFilters,
 }: PatientAdvancedFiltersProps) {
-	const [filters, setFilters] = useState<PatientFilters>({});
+	const [filters, setFilters] = useState<PatientFilters>(currentFilters);
+
+	useEffect(() => {
+		setFilters(currentFilters);
+	}, [currentFilters]);
 
 	const updateFilter = <K extends keyof PatientFilters>(
 		key: K,
@@ -136,6 +142,18 @@ export function PatientAdvancedFilters({
 						/>
 						<Label htmlFor="has-upcoming" className="text-xs cursor-pointer">
 							Agendamentos futuros
+						</Label>
+					</div>
+					<div className="flex items-center gap-2">
+						<Switch
+							id="has-surgery"
+							checked={!!filters.hasSurgery}
+							onCheckedChange={(checked) =>
+								updateFilter("hasSurgery", checked || undefined)
+							}
+						/>
+						<Label htmlFor="has-surgery" className="text-xs cursor-pointer">
+							Pós-cirúrgico
 						</Label>
 					</div>
 				</div>
