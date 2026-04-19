@@ -3,6 +3,7 @@ import { requireAuth, type AuthVariables } from "../lib/auth";
 import type { Env } from "../types/env";
 
 import { callGemini, transcribeAudioWithGemini, streamGeminiChat } from "../lib/ai-gemini";
+import { callGeminiStructured, callGeminiThinking } from "../lib/ai-gemini-v2";
 import {
 	runAi,
 	transcribeAudio as transcribeWithWhisper,
@@ -10,6 +11,13 @@ import {
 } from "../lib/ai-native";
 import { logToAxiom } from "../lib/axiom";
 import { rateLimit } from "../middleware/rateLimit";
+import {
+	ClinicalReportSchema,
+	ExerciseSuggestionSchema,
+	ReceiptOcrSchema,
+	SoapSchema,
+	TreatmentAdherenceSchema,
+} from "../schemas/ai-schemas";
 
 const app = new Hono<{ Bindings: Env; Variables: AuthVariables }>();
 
@@ -158,22 +166,33 @@ app.post("/service", async (c) => {
 			const goals = Array.isArray(data.goals)
 				? data.goals.map((goal) => String(goal))
 				: [];
-			const prompt = `Sugira 3 exercícios de fisioterapia para os seguintes objetivos: ${goals.join(", ")}. 
-      Para cada exercício, forneça o nome, a justificativa clínica e a área alvo. 
-      Retorne em formato JSON: { exercises: [{ name, rationale, targetArea }] }`;
+			const prompt = `Sugira 3 a 5 exercícios de fisioterapia apropriados para os objetivos: ${goals.join(", ")}. Inclua nome, justificativa clínica objetiva, área/articulação alvo e, quando pertinente, séries/repetições.`;
 
-			const aiResponse = await callGemini(
-				c.env.GOOGLE_AI_API_KEY,
-				prompt,
-				"gemini-1.5-flash",
-				c.env.FISIOFLOW_AI_GATEWAY_URL,
-				c.env.FISIOFLOW_AI_GATEWAY_TOKEN,
-				"exercise",
-			);
+			const systemInstruction =
+				"Você é um fisioterapeuta especialista em prescrição de exercícios. Retorne exercícios seguros, progressivos e com embasamento clínico em português brasileiro.";
+
 			try {
-				const parsed = JSON.parse(aiResponse.replace(/```json|```/g, ""));
+				const parsed = await callGeminiStructured(c.env, {
+					schema: ExerciseSuggestionSchema,
+					prompt,
+					model: "gemini-3-flash-preview",
+					thinkingLevel: "LOW",
+					systemInstruction,
+					temperature: 0.6,
+				});
 				return c.json({ data: { success: true, data: parsed } });
-			} catch {
+			} catch (error) {
+				c.executionCtx.waitUntil(
+					logToAxiom(c.env, c.executionCtx, {
+						level: "error",
+						type: "ai_inference_error",
+						message: "exerciseSuggestion failed",
+						metadata: {
+							action: "exerciseSuggestion",
+							error: error instanceof Error ? error.message : String(error),
+						},
+					}),
+				);
 				return c.json({ data: { success: true, data: { exercises: [] } } });
 			}
 		}
@@ -392,38 +411,53 @@ app.post("/transcribe-session", async (c) => {
 	>;
 	const text = safeText(body.hintText);
 
-	const prompt = `Com base no seguinte relato de uma sessão de fisioterapia, gere um prontuário no formato SOAP (Subjetivo, Objetivo, Avaliação, Plano).
-  Relato: "${text}"
-  Retorne em formato JSON: { subjective, objective, assessment, plan }`;
+	const prompt = `Relato de uma sessão de fisioterapia para estruturar em SOAP:
+"${text}"`;
+
+	const systemInstruction =
+		"Você é um fisioterapeuta experiente. Estruture o relato no formato SOAP em português brasileiro. Cada seção deve ter conteúdo clínico objetivo e conciso, sem repetir literalmente o relato.";
 
 	const start = performance.now();
-	const aiResponse = await callGemini(
-		c.env.GOOGLE_AI_API_KEY,
-		prompt,
-		"gemini-1.5-flash",
-		c.env.FISIOFLOW_AI_GATEWAY_URL,
-		c.env.FISIOFLOW_AI_GATEWAY_TOKEN,
-		"clinical",
-	);
-	const duration = performance.now() - start;
-
-	c.executionCtx.waitUntil(
-		logToAxiom(c.env, c.executionCtx, {
-			level: "info",
-			type: "ai_inference_latency",
-			message: "SOAP generation completed",
-			metadata: {
-				action: "transcribe-session",
-				durationMs: duration,
-				promptLength: prompt.length,
-			},
-		}),
-	);
-
 	try {
-		const soapData = JSON.parse(aiResponse.replace(/```json|```/g, ""));
+		const soapData = await callGeminiStructured(c.env, {
+			schema: SoapSchema,
+			prompt,
+			model: "gemini-3-flash-preview",
+			thinkingLevel: "MEDIUM",
+			systemInstruction,
+			temperature: 0.4,
+		});
+		const duration = performance.now() - start;
+
+		c.executionCtx.waitUntil(
+			logToAxiom(c.env, c.executionCtx, {
+				level: "info",
+				type: "ai_inference_latency",
+				message: "SOAP generation completed",
+				metadata: {
+					action: "transcribe-session",
+					durationMs: duration,
+					promptLength: prompt.length,
+					model: "gemini-3-flash-preview",
+				},
+			}),
+		);
+
 		return c.json({ data: { soapData } });
-	} catch {
+	} catch (error) {
+		const duration = performance.now() - start;
+		c.executionCtx.waitUntil(
+			logToAxiom(c.env, c.executionCtx, {
+				level: "error",
+				type: "ai_inference_error",
+				message: "SOAP generation failed, using heuristic fallback",
+				metadata: {
+					action: "transcribe-session",
+					durationMs: duration,
+					error: error instanceof Error ? error.message : String(error),
+				},
+			}),
+		);
 		return c.json({ data: { soapData: buildSoapFromText(text) } });
 	}
 });
@@ -434,16 +468,88 @@ app.post("/treatment-assistant", async (c) => {
 		unknown
 	>;
 	const action = safeText(body.action);
-	const risk = inferRiskLevel(
-		`${safeText(body.patientId)} ${safeText(body.context)}`,
-	);
-	const suggestion =
-		action === "predict_adherence"
-			? `Risco de aderência: ${risk}. Fatores principais: frequência irregular, dor percebida e necessidade de reforço do plano domiciliar.`
-			: action === "generate_report"
+	const context = safeText(body.context);
+	const patientId = safeText(body.patientId);
+
+	if (action !== "predict_adherence") {
+		const fallbackRisk = inferRiskLevel(`${patientId} ${context}`);
+		const suggestion =
+			action === "generate_report"
 				? "Relatório automático: evolução clínica monitorada, manter acompanhamento e registrar resposta funcional nas próximas sessões."
-				: "Conduta sugerida: revisar metas, ajustar progressão terapêutica e reforçar educação do paciente.";
-	return c.json({ data: { suggestion } });
+				: `Conduta sugerida (risco ${fallbackRisk}): revisar metas, ajustar progressão terapêutica e reforçar educação do paciente.`;
+		return c.json({ data: { suggestion } });
+	}
+
+	const prompt = `Paciente ID: ${patientId || "N/A"}
+Contexto clínico/histórico:
+${context || "Sem contexto adicional fornecido."}
+
+Analise o risco de não-aderência ao tratamento fisioterapêutico, identifique os fatores principais e recomende ações concretas.`;
+
+	const systemInstruction =
+		"Você é um fisioterapeuta experiente em gestão de aderência terapêutica. Baseie seu raciocínio em evidências clínicas e comportamentais.";
+
+	const start = performance.now();
+	try {
+		const adherence = await callGeminiStructured(c.env, {
+			schema: TreatmentAdherenceSchema,
+			prompt,
+			model: "gemini-3.1-pro-preview",
+			thinkingLevel: "HIGH",
+			systemInstruction,
+			temperature: 0.3,
+			maxOutputTokens: 2048,
+		});
+		const duration = performance.now() - start;
+
+		c.executionCtx.waitUntil(
+			logToAxiom(c.env, c.executionCtx, {
+				level: "info",
+				type: "ai_inference_latency",
+				message: "Treatment adherence prediction completed",
+				metadata: {
+					action: "predict_adherence",
+					durationMs: duration,
+					model: "gemini-3.1-pro-preview",
+					riskLevel: adherence.riskLevel,
+				},
+			}),
+		);
+
+		return c.json({
+			data: {
+				suggestion: adherence.suggestion,
+				riskLevel: adherence.riskLevel,
+				confidenceScore: adherence.confidenceScore,
+				primaryFactors: adherence.primaryFactors,
+				nextActions: adherence.nextActions,
+			},
+		});
+	} catch (error) {
+		c.executionCtx.waitUntil(
+			logToAxiom(c.env, c.executionCtx, {
+				level: "error",
+				type: "ai_inference_error",
+				message: "Treatment adherence prediction failed, using heuristic",
+				metadata: {
+					action: "predict_adherence",
+					error: error instanceof Error ? error.message : String(error),
+				},
+			}),
+		);
+		const fallbackRisk = inferRiskLevel(`${patientId} ${context}`);
+		return c.json({
+			data: {
+				suggestion: `Risco de aderência: ${fallbackRisk}. Fatores principais: frequência irregular, dor percebida e necessidade de reforço do plano domiciliar.`,
+				riskLevel:
+					fallbackRisk === "negative"
+						? "high"
+						: fallbackRisk === "positive"
+							? "low"
+							: "medium",
+			},
+		});
+	}
 });
 
 app.post("/analysis", async (c) => {
@@ -451,12 +557,67 @@ app.post("/analysis", async (c) => {
 		string,
 		unknown
 	>;
-	return c.json({
-		data: buildClinicalReport(
-			(body.metrics as Record<string, unknown>) ?? {},
-			(body.history as Record<string, unknown>) ?? undefined,
-		),
-	});
+	const metrics = (body.metrics as Record<string, unknown>) ?? {};
+	const history = (body.history as Record<string, unknown>) ?? undefined;
+
+	const prompt = `Métricas clínicas do paciente:
+${JSON.stringify(metrics, null, 2)}
+${history ? `\nHistórico anterior:\n${JSON.stringify(history, null, 2)}` : ""}
+
+Gere uma análise clínica estruturada em português brasileiro com resumo executivo, tendência evolutiva, achados-chave, raciocínio clínico, fatores de risco e recomendações objetivas.`;
+
+	const systemInstruction =
+		"Você é um fisioterapeuta sênior elaborando análise clínica para um prontuário. Seja objetivo, embasado em evidências e evite frases genéricas.";
+
+	const start = performance.now();
+	try {
+		const report = await callGeminiStructured(c.env, {
+			schema: ClinicalReportSchema,
+			prompt,
+			model: "gemini-3.1-pro-preview",
+			thinkingLevel: "HIGH",
+			systemInstruction,
+			temperature: 0.3,
+			maxOutputTokens: 3072,
+		});
+		const duration = performance.now() - start;
+
+		c.executionCtx.waitUntil(
+			logToAxiom(c.env, c.executionCtx, {
+				level: "info",
+				type: "ai_inference_latency",
+				message: "Clinical analysis completed",
+				metadata: {
+					action: "analysis",
+					durationMs: duration,
+					model: "gemini-3.1-pro-preview",
+					trend: report.trend,
+				},
+			}),
+		);
+
+		return c.json({
+			data: {
+				...report,
+				metrics,
+				history: history ?? null,
+				generatedAt: new Date().toISOString(),
+			},
+		});
+	} catch (error) {
+		c.executionCtx.waitUntil(
+			logToAxiom(c.env, c.executionCtx, {
+				level: "error",
+				type: "ai_inference_error",
+				message: "Clinical analysis failed, using heuristic",
+				metadata: {
+					action: "analysis",
+					error: error instanceof Error ? error.message : String(error),
+				},
+			}),
+		);
+		return c.json({ data: buildClinicalReport(metrics, history) });
+	}
 });
 
 app.post("/form-suggestions", async (c) => {
@@ -831,79 +992,30 @@ app.post("/receipt-ocr", async (c) => {
 		if (!imageBase64) return c.json({ error: "imageBase64 ausente" }, 400);
 	}
 
-	const prompt = `Você é um sistema de extração de dados financeiros para uma clínica de fisioterapia.
-Analise a imagem do comprovante de pagamento e extraia as seguintes informações:
-
-1. valor: valor numérico em reais (número, sem símbolo R$, use ponto como decimal, ex: 150.00)
-2. nome: nome do pagador/titular (string ou null)
-3. cardLastDigits: últimos 4 dígitos do cartão se visível (string de 4 chars ou null)
-4. isFirstPayment: true se o comprovante indica primeira parcela ou pagamento inicial (boolean)
-5. pixKey: chave pix se visível (string ou null)
-6. dataTransacao: data da transação no formato YYYY-MM-DD se visível (string ou null)
-
-Responda APENAS com um JSON válido, sem markdown, sem explicação:
-{"valor": 0, "nome": null, "cardLastDigits": null, "isFirstPayment": false, "pixKey": null, "dataTransacao": null}`;
+	const prompt = `Extraia os dados financeiros deste comprovante de pagamento. Se algum campo não estiver visível, retorne null para strings ou false para booleanos. Use ponto como separador decimal.`;
 
 	try {
-		const baseUrl = c.env.FISIOFLOW_AI_GATEWAY_URL
-			? `${c.env.FISIOFLOW_AI_GATEWAY_URL}/google-ai-studio`
-			: "https://generativelanguage.googleapis.com";
-
-		const headers: Record<string, string> = { "Content-Type": "application/json" };
-		if (c.env.FISIOFLOW_AI_GATEWAY_URL && c.env.FISIOFLOW_AI_GATEWAY_TOKEN) {
-			headers["Authorization"] = `Bearer ${c.env.FISIOFLOW_AI_GATEWAY_TOKEN}`;
-		}
-
-		const response = await fetch(
-			`${baseUrl}/v1beta/models/gemini-1.5-flash:generateContent?key=${c.env.GOOGLE_AI_API_KEY}`,
-			{
-				method: "POST",
-				headers,
-				body: JSON.stringify({
-					contents: [{
-						parts: [
-							{ text: prompt },
-							{ inline_data: { mime_type: mimeType, data: imageBase64 } },
-						],
-					}],
-					generationConfig: { temperature: 0.1, maxOutputTokens: 512 },
-				}),
-			},
-		);
-
-		if (!response.ok) {
-			const err = await response.json().catch(() => ({})) as any;
-			throw new Error(err?.error?.message ?? `Gemini HTTP ${response.status}`);
-		}
-
-		const geminiResult = await response.json() as any;
-		const rawText: string = geminiResult.candidates?.[0]?.content?.parts?.[0]?.text ?? "{}";
-
-		// Strip potential markdown fences
-		const jsonStr = rawText.replace(/```json?\n?/g, "").replace(/```/g, "").trim();
-
-		let extracted: Record<string, unknown>;
-		try {
-			extracted = JSON.parse(jsonStr);
-		} catch {
-			return c.json({ success: false, error: "IA não retornou JSON válido", raw: rawText }, 422);
-		}
-
-		const valor = Number(extracted.valor ?? 0);
-		return c.json({
-			success: true,
-			data: {
-				valor: isNaN(valor) ? 0 : valor,
-				nome: extracted.nome ?? null,
-				cardLastDigits: extracted.cardLastDigits ?? null,
-				isFirstPayment: Boolean(extracted.isFirstPayment),
-				pixKey: extracted.pixKey ?? null,
-				dataTransacao: extracted.dataTransacao ?? null,
-			},
+		const extracted = await callGeminiStructured(c.env, {
+			schema: ReceiptOcrSchema,
+			prompt: [
+				{ text: prompt },
+				{ inlineData: { mimeType, data: imageBase64 } },
+			],
+			model: "gemini-3-flash-preview",
+			thinkingLevel: "LOW",
+			systemInstruction:
+				"Você é um sistema de extração precisa de dados financeiros de comprovantes brasileiros (PIX, cartão, boleto).",
+			temperature: 0.1,
+			maxOutputTokens: 512,
 		});
+
+		return c.json({ success: true, data: extracted });
 	} catch (error: any) {
 		console.error("[AI/ReceiptOCR] Error:", error);
-		return c.json({ success: false, error: "Erro ao processar comprovante", details: error.message }, 500);
+		return c.json(
+			{ success: false, error: "Erro ao processar comprovante", details: error.message },
+			500,
+		);
 	}
 });
 
