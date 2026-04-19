@@ -33,6 +33,10 @@ const makeMapper =
 		aliases_pt: ex.aliasesPt || undefined,
 		aliases_en: ex.aliasesEn || undefined,
 		dictionary_id: ex.dictionaryId || undefined,
+		progression_suggestion: ex.progressionSuggestion || undefined,
+		suggested_sets: ex.suggestedSets || undefined,
+		suggested_reps: ex.suggestedReps || undefined,
+		suggested_rpe: ex.suggestedRpe || undefined,
 	});
 
 export const useExerciseCategories = () => {
