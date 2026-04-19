@@ -9,6 +9,7 @@ import {
 	invalidatePatientCache,
 	readPatientCacheEntry,
 } from "../lib/ai-context-cache";
+import { AssessmentRecordingService } from "../services/ai/AssessmentRecordingService";
 import { isUuid } from "../lib/validators";
 import {
 	runAi,
@@ -1324,6 +1325,188 @@ app.delete("/patient-360/:patientId", async (c) => {
 			500,
 		);
 	}
+});
+
+// ==========================================================================
+// Assessment — Voice/Transcript → Structured Form (Phase 2)
+// ==========================================================================
+
+app.post("/assessment/recording", async (c) => {
+	const user = c.get("user");
+	const body = (await c.req.json().catch(() => ({}))) as {
+		audioBase64?: string;
+		patientId?: string;
+		patientContextHint?: string;
+	};
+
+	if (!body.audioBase64 || body.audioBase64.length < 100) {
+		return c.json({ error: "audioBase64 ausente ou inválido" }, 400);
+	}
+	if (body.patientId && !isUuid(body.patientId)) {
+		return c.json({ error: "patientId inválido" }, 400);
+	}
+
+	try {
+		const service = new AssessmentRecordingService(c.env);
+		const result = await service.processRecording({
+			audioBase64: body.audioBase64,
+			patientId: body.patientId,
+			organizationId: user.organizationId,
+			patientContextHint: body.patientContextHint,
+		});
+
+		return c.json({
+			success: true,
+			data: result.form,
+			transcript: result.transcript,
+			patientContextUsed: result.patientContextUsed,
+		});
+	} catch (error: any) {
+		console.error("[AI/Assessment/recording] Error:", error);
+		await logToAxiom(c.env, c.executionCtx, {
+			level: "error",
+			message: "ai.assessment.recording.error",
+			patientId: body.patientId,
+			error: error?.message,
+		});
+		return c.json(
+			{
+				success: false,
+				error: "Erro ao processar gravação",
+				details: error?.message,
+			},
+			500,
+		);
+	}
+});
+
+app.post("/assessment/transcript", async (c) => {
+	const user = c.get("user");
+	const body = (await c.req.json().catch(() => ({}))) as {
+		transcript?: string;
+		patientId?: string;
+		patientContextHint?: string;
+	};
+
+	const transcript = (body.transcript ?? "").trim();
+	if (transcript.length < 10) {
+		return c.json(
+			{ error: "transcript ausente ou muito curto (mín. 10 caracteres)" },
+			400,
+		);
+	}
+	if (body.patientId && !isUuid(body.patientId)) {
+		return c.json({ error: "patientId inválido" }, 400);
+	}
+
+	try {
+		const service = new AssessmentRecordingService(c.env);
+		const result = await service.processTranscript({
+			transcript,
+			patientId: body.patientId,
+			organizationId: user.organizationId,
+			patientContextHint: body.patientContextHint,
+		});
+
+		return c.json({
+			success: true,
+			data: result.form,
+			transcript: result.transcript,
+			patientContextUsed: result.patientContextUsed,
+		});
+	} catch (error: any) {
+		console.error("[AI/Assessment/transcript] Error:", error);
+		await logToAxiom(c.env, c.executionCtx, {
+			level: "error",
+			message: "ai.assessment.transcript.error",
+			patientId: body.patientId,
+			error: error?.message,
+		});
+		return c.json(
+			{
+				success: false,
+				error: "Erro ao processar transcrição",
+				details: error?.message,
+			},
+			500,
+		);
+	}
+});
+
+// ==========================================================================
+// Assessment Live — Gemini Live API (Premium, opt-in) (Phase 3)
+// ==========================================================================
+
+app.get("/assessment/live-ws", async (c) => {
+	const user = c.get("user");
+
+	if (c.env.GOOGLE_AI_PREMIUM_ENABLED !== "true") {
+		return c.json(
+			{ error: "Modo Premium IA não está habilitado nesta organização" },
+			403,
+		);
+	}
+	if (!c.env.ASSESSMENT_LIVE_SESSION) {
+		return c.json({ error: "Assessment Live binding indisponível" }, 500);
+	}
+
+	const upgradeHeader = c.req.header("Upgrade");
+	if (upgradeHeader !== "websocket") {
+		return c.json({ error: "Expected WebSocket upgrade" }, 426);
+	}
+
+	const patientId = c.req.query("patientId");
+	if (!patientId || !isUuid(patientId)) {
+		return c.json({ error: "patientId inválido" }, 400);
+	}
+
+	// Rate limit Premium: 5 sessões/dia/org via D1 EDGE_CACHE
+	if (c.env.EDGE_CACHE) {
+		const today = new Date().toISOString().slice(0, 10);
+		const key = `assessment_live:${user.organizationId}:${today}`;
+		const row = await c.env.EDGE_CACHE.prepare(
+			"SELECT count FROM rate_limits WHERE key = ?",
+		)
+			.bind(key)
+			.first<{ count: number }>();
+		const current = row?.count ?? 0;
+		if (current >= 5) {
+			return c.json(
+				{
+					error:
+						"Limite diário de sessões Premium atingido (5/dia). Tente novamente amanhã.",
+				},
+				429,
+			);
+		}
+		await c.env.EDGE_CACHE.prepare(
+			`INSERT INTO rate_limits (key, count, window_start) VALUES (?, 1, strftime('%s','now'))
+			 ON CONFLICT(key) DO UPDATE SET count = count + 1`,
+		)
+			.bind(key)
+			.run();
+	}
+
+	const sessionId = crypto.randomUUID();
+	const id = c.env.ASSESSMENT_LIVE_SESSION.idFromName(sessionId);
+	const stub = c.env.ASSESSMENT_LIVE_SESSION.get(id);
+
+	const url = new URL(c.req.url);
+	const doUrl = new URL(url.origin);
+	doUrl.pathname = "/ws";
+	doUrl.searchParams.set("sessionId", sessionId);
+	doUrl.searchParams.set("patientId", patientId);
+	doUrl.searchParams.set("organizationId", user.organizationId);
+
+	return stub.fetch(doUrl.toString(), {
+		method: "GET",
+		headers: {
+			Upgrade: "websocket",
+			Connection: "Upgrade",
+			"Sec-WebSocket-Version": "13",
+			"Sec-WebSocket-Key": c.req.header("Sec-WebSocket-Key") ?? "",
+		},
+	});
 });
 
 export { app as aiRoutes };
