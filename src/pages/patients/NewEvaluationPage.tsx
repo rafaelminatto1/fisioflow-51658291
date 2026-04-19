@@ -20,6 +20,7 @@ import {
 	Sparkles,
 	Camera,
 	Printer,
+	Mic,
 } from "lucide-react";
 import { MainLayout } from "@/components/layout/MainLayout";
 import { PatientDashboard360 } from "@/components/patient/dashboard/PatientDashboard360";
@@ -34,6 +35,7 @@ import {
 } from "@/components/evaluation";
 import { useActionBridge } from "@/hooks/useActionBridge";
 import { NewPrescriptionModal } from "@/components/prescriptions/NewPrescriptionModal";
+import { AssessmentVoiceRecorder } from "@/components/ai/AssessmentVoiceRecorder";
 
 import type {
 	EvaluationTemplate,
@@ -407,10 +409,14 @@ export default function NewEvaluationPage() {
 							onValueChange={setActiveTab}
 							className="w-full"
 						>
-							<TabsList className="grid w-full grid-cols-2 md:grid-cols-4 lg:grid-cols-5 p-1 bg-muted/50 rounded-xl mb-6 print:hidden">
+							<TabsList className="grid w-full grid-cols-2 md:grid-cols-3 lg:grid-cols-6 p-1 bg-muted/50 rounded-xl mb-6 print:hidden">
 								<TabsTrigger value="dashboard" className="gap-2">
 									<LayoutDashboard className="h-4 w-4" />
 									<span className="hidden sm:inline">Visão Geral</span>
+								</TabsTrigger>
+								<TabsTrigger value="voice-ai" className="gap-2">
+									<Mic className="h-4 w-4" />
+									<span className="hidden sm:inline">Voz IA</span>
 								</TabsTrigger>
 								<TabsTrigger value="anamnesis" className="gap-2">
 									<FileText className="h-4 w-4" />
@@ -445,6 +451,16 @@ export default function NewEvaluationPage() {
 										surgeries={patient.surgeries || []}
 										onAction={(action) => setActiveTab(action === "goals" ? "dashboard" : action)}
 									/>
+								</TabsContent>
+
+								<TabsContent value="voice-ai" className="m-0 print:hidden">
+									<div className="max-w-4xl mx-auto">
+										<AssessmentVoiceRecorder
+											patientId={patientId}
+											patientContextHint={patient?.name ? `Paciente: ${patient.name}` : undefined}
+											onCompleted={() => setActiveTab("anamnesis")}
+										/>
+									</div>
 								</TabsContent>
 
 								<TabsContent value="anamnesis" className="m-0">
