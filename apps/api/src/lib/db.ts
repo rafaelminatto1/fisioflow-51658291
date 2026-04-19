@@ -201,10 +201,12 @@ export function createDb(env: Env, mode: 'read' | 'write' = 'write'): FisioDb {
 					const val = row[key];
 					if (val instanceof Date) {
 						row[key] = val.toISOString();
-					} else if (key.endsWith('_at') && val === undefined) {
+					} else if ((key.endsWith('_at') || key.endsWith('At') || key === 'date') && (val === undefined || val === null)) {
 						// Se o campo de data vier undefined, o Drizzle quebra. 
-						// Forçamos null para segurança.
+						// Para o Drizzle PgDate e PgTimestamp, retornar string ou null.
 						row[key] = null;
+					} else if (val && typeof val === 'object' && !Array.isArray(val) && (val.constructor?.name === 'Date' || typeof val.toISOString === 'function')) {
+						row[key] = val.toISOString();
 					}
 				}
 			}
