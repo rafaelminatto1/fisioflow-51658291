@@ -776,12 +776,14 @@ test.describe('Fluxos Críticos do FisioFlow', () => {
     await page.waitForLoadState('domcontentloaded');
 
     // Abrir busca global pela CTA do header
-    await page.locator('button[aria-label*="Abrir busca global"]').first().click();
+    await page.locator('[data-testid="open-global-search"]').first().click();
 
-    const searchInput = page.locator('[data-testid="global-search-input"]');
+    // O input real do cmdk geralmente não tem esse data-testid se não foi adicionado
+    // Vamos procurar pelo placeholder ou tipo
+    const searchInput = page.locator('input[placeholder*="Buscar paciente"]');
     await expect(searchInput).toBeVisible({ timeout: 10000 });
     await searchInput.fill('evento');
-    await expect(page.locator('text=Nenhum resultado encontrado.').first()).toBeVisible({ timeout: 10000 });
+    await expect(page.locator('text=Nenhum resultado para').first()).toBeVisible({ timeout: 10000 });
   });
 
   /**
@@ -807,13 +809,17 @@ test.describe('Fluxos Críticos do FisioFlow', () => {
     await page.waitForURL(url => url.pathname.includes('/profile'), { timeout: 10000 });
     await page.waitForLoadState('domcontentloaded');
 
-    // Clicar em Editar Perfil para habilitar os campos
-    await page.click('button:has-text("Editar Perfil")');
+    // Clicar em Editar para habilitar os campos
+    await page.click('[data-testid="edit-profile-button"]');
 
     // Atualizar nome
     const nameInput = page.locator('[data-testid="profile-name"]');
+    await expect(nameInput).toBeVisible({ timeout: 10000 });
     await nameInput.fill('Dr. Teste Atualizado');
-    await page.click('button:has-text("Salvar")');
+
+    await page.click('button:has-text("Salvar Alterações")');
+
+
 
     // Toast might contain extra text or different formatting
     await expect(page.locator('text=Perfil atualizado').first()).toBeVisible({ timeout: 15000 });

@@ -16,6 +16,7 @@ import {
 	check,
 } from "drizzle-orm/pg-core";
 import { sql, relations } from "drizzle-orm";
+import { withPublicOrOrganizationPolicy, withOrganizationPolicy } from "./rls_helper";
 import { evidenceLevelEnum } from "./protocols";
 
 // ===== EXERCISE TEMPLATE CATEGORIES (lookup) =====
@@ -28,6 +29,7 @@ export const exerciseTemplateCategories = pgTable(
 		orderIndex: integer("order_index").notNull().default(0),
 		organizationId: uuid("organization_id"),
 	},
+	(table) => [withPublicOrOrganizationPolicy("exercise_template_categories", table.organizationId)],
 );
 
 // ===== EXERCISE TEMPLATES =====
@@ -97,6 +99,7 @@ export const exerciseTemplates = pgTable(
 			"chk_treatment_phase",
 			sql`${table.treatmentPhase} IS NULL OR ${table.treatmentPhase} IN ('fase_aguda', 'fase_subaguda', 'remodelacao', 'retorno_ao_esporte')`,
 		),
+		withPublicOrOrganizationPolicy("exercise_templates", table.organizationId),
 	],
 );
 
@@ -126,7 +129,7 @@ export const exerciseTemplateItems = pgTable("exercise_template_items", {
 
 	createdAt: timestamp("created_at").defaultNow().notNull(),
 	updatedAt: timestamp("updated_at").defaultNow().notNull(),
-});
+}, (table) => [withOrganizationPolicy("exercise_template_items", table.organizationId)]);
 
 // ===== RELATIONS =====
 export const exerciseTemplatesRelations = relations(

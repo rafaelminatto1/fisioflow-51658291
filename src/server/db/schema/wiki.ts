@@ -18,6 +18,7 @@ import {
 	integer, customType
 } from "drizzle-orm/pg-core";
 import { relations } from "drizzle-orm";
+import { withPublicOrOrganizationPolicy } from "./rls_helper";
 
 // ===== WIKI PAGES =====
 export const wikiPages = pgTable("wiki_pages", {
@@ -67,7 +68,7 @@ export const wikiPages = pgTable("wiki_pages", {
 		},
 	})("embedding"),
 	embeddingSketch: text("embedding_sketch"),
-});
+}, (table) => [withPublicOrOrganizationPolicy("wiki_pages", table.organizationId)]);
 
 export const wikiPagesRelations = relations(wikiPages, ({ one, many }) => ({
 	parent: one(wikiPages, {
@@ -96,7 +97,7 @@ export const wikiPageVersions = pgTable("wiki_page_versions", {
 	createdBy: text("created_by"),
 
 	createdAt: timestamp("created_at").defaultNow().notNull(),
-});
+}, (table) => [withPublicOrOrganizationPolicy("wiki_page_versions", table.organizationId)]);
 
 export const wikiPageVersionsRelations = relations(
 	wikiPageVersions,
@@ -130,4 +131,4 @@ export const wikiDictionary = pgTable("wiki_dictionary", {
 	createdAt: timestamp("created_at").defaultNow().notNull(),
 	updatedAt: timestamp("updated_at").defaultNow().notNull(),
 	deletedAt: timestamp("deleted_at"), // soft delete
-});
+}, (table) => [withPublicOrOrganizationPolicy("wiki_dictionary", table.organizationId)]);
