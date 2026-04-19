@@ -28,6 +28,7 @@ import { getNeonAccessToken } from "@/lib/auth/neon-token";
 // Carrega apenas quando o usuário abre a edição de imagem.
 const LazyFilerobotImageEditor = React.lazy(() => import("react-filerobot-image-editor"));
 import { BilingualSuggestionsModal } from "./suggestion/BilingualSuggestionsModal";
+import { AIScribeModal } from "./clinical-scribe/AIScribeModal";
 
 interface NotionEvolutionEditorProps {
 	initialContent?: string;
@@ -42,6 +43,7 @@ interface NotionEvolutionEditorProps {
 		plan: string;
 	};
 	onAiAssist?: () => void;
+	isPro?: boolean;
 }
 
 export const NotionEvolutionEditor: React.FC<NotionEvolutionEditorProps> = ({
@@ -59,6 +61,7 @@ export const NotionEvolutionEditor: React.FC<NotionEvolutionEditorProps> = ({
 	const [isUploading, setIsUploading] = useState(false);
 	const [editingImage, setEditingImage] = useState<File | null>(null);
 	const [showSuggestions, setShowSuggestions] = useState(false);
+	const [showScribe, setShowScribe] = useState(false);
 
 	const DRAFT_KEY = `evolution_draft_${evolutionId}`;
 
@@ -224,10 +227,14 @@ export const NotionEvolutionEditor: React.FC<NotionEvolutionEditorProps> = ({
 		
 		const handleSuggestionsOpen = () => setShowSuggestions(true);
 		window.addEventListener("tiptap-sugestoes-open", handleSuggestionsOpen);
+
+		const handleScribeOpen = () => setShowScribe(true);
+		window.addEventListener("tiptap-scribe-open", handleScribeOpen);
 		
 		return () => {
 			window.removeEventListener("tiptap-upload", handleUploadEvent);
 			window.removeEventListener("tiptap-sugestoes-open", handleSuggestionsOpen);
+			window.removeEventListener("tiptap-scribe-open", handleScribeOpen);
 		};
 	}, [uploadToCloudflareR2]);
 
@@ -279,8 +286,16 @@ export const NotionEvolutionEditor: React.FC<NotionEvolutionEditorProps> = ({
 						<FileText className="w-5 h-5 text-white" />
 					</div>
 					<div>
-						<h2 className="text-lg font-black tracking-tight text-slate-800 dark:text-slate-100 uppercase italic">
-							Evolução Clínica Profissional
+						<h2 className={cn(
+							"text-lg font-black tracking-tight text-slate-800 dark:text-slate-100 uppercase italic flex items-center gap-2",
+							isPro && "text-blue-600 dark:text-blue-400"
+						)}>
+							Evolução Clínica {isPro ? "V5 Pro" : "Profissional"}
+							{isPro && (
+								<span className="px-1.5 py-0.5 bg-gradient-to-r from-blue-600 to-indigo-600 text-[8px] text-white rounded-md shadow-lg shadow-blue-500/20 not-italic">
+									BLOCK-BASED
+								</span>
+							)}
 						</h2>
 						<div className="flex items-center gap-2">
 							<span className="flex items-center gap-1 text-[10px] font-bold text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-900/30 px-2 py-0.5 rounded-full border border-blue-100 dark:border-blue-800">
@@ -302,6 +317,12 @@ export const NotionEvolutionEditor: React.FC<NotionEvolutionEditorProps> = ({
 				</div>
 
 				<div className="flex items-center gap-3">
+					<button
+						onClick={() => setShowScribe(true)}
+						className="hidden md:flex items-center gap-2 px-3 py-1.5 bg-blue-50 dark:bg-blue-900/30 hover:bg-blue-100 dark:hover:bg-blue-900/50 rounded-lg text-[10px] font-black text-blue-600 transition-colors border border-blue-100 dark:border-blue-800"
+					>
+						<Sparkles className="w-3 h-3" /> AI SCRIBE
+					</button>
 					<button
 						onClick={() =>
 							window.dispatchEvent(
@@ -456,6 +477,20 @@ export const NotionEvolutionEditor: React.FC<NotionEvolutionEditorProps> = ({
 				onOpenChange={setShowSuggestions}
 				onSelect={(term) => {
 					editor?.chain().focus().insertContent(term).run();
+				}}
+			/>
+
+			<AIScribeModal 
+				open={showScribe}
+				onOpenChange={setShowScribe}
+				onApply={(soap) => {
+					const content = `
+						<h2 class="text-blue-600 dark:text-blue-400 border-b pb-1">Subjetivo (AI Scribe)</h2><p>${soap.subjective}</p>
+						<h2 class="text-blue-600 dark:text-blue-400 border-b pb-1">Objetivo (AI Scribe)</h2><p>${soap.objective}</p>
+						<h2 class="text-blue-600 dark:text-blue-400 border-b pb-1">Avaliação (AI Scribe)</h2><p>${soap.assessment}</p>
+						<h2 class="text-blue-600 dark:text-blue-400 border-b pb-1">Plano (AI Scribe)</h2><p>${soap.plan}</p>
+					`;
+					editor?.chain().focus().insertContent(content).run();
 				}}
 			/>
 

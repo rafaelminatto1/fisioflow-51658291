@@ -16,7 +16,15 @@ export const patientsApi = {
 		createdFrom?: string;
 		createdTo?: string;
 		incompleteRegistration?: boolean;
-		sortBy?: "name_asc" | "created_at_desc" | "created_at_asc";
+		sortBy?:
+			| "name_asc"
+			| "name_desc"
+			| "created_at_desc"
+			| "created_at_asc"
+			| "main_condition_asc"
+			| "main_condition_desc";
+		condition?: string;
+		hasSurgery?: boolean;
 		limit?: number;
 		offset?: number;
 	}) => {

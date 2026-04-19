@@ -14,6 +14,7 @@ import {
 	Cloud,
 	Loader2,
 	Download,
+	Receipt,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -25,6 +26,7 @@ interface FloatingActionBarProps {
 	onComplete: () => void;
 	onShowKeyboardHelp?: () => void;
 	onExportPDF?: () => void;
+	onGenerateNFSe?: () => void;
 	isSaving?: boolean;
 	isCompleting?: boolean;
 	isExporting?: boolean;
@@ -39,6 +41,7 @@ export const FloatingActionBar: React.FC<FloatingActionBarProps> = ({
 	onComplete,
 	onShowKeyboardHelp,
 	onExportPDF,
+	onGenerateNFSe,
 	isSaving = false,
 	isCompleting = false,
 	isExporting = false,
@@ -149,6 +152,28 @@ export const FloatingActionBar: React.FC<FloatingActionBarProps> = ({
 								</TooltipTrigger>
 								<TooltipContent className="bg-slate-800 text-white border-none text-[10px] font-bold">
 									<p>EXPORTAR PDF</p>
+								</TooltipContent>
+							</Tooltip>
+						)}
+
+						{/* NFS-e Button */}
+						{onGenerateNFSe && (
+							<Tooltip>
+								<TooltipTrigger asChild>
+									<Button
+										variant="ghost"
+										size="sm"
+										onClick={onGenerateNFSe}
+										className="h-9 px-3 text-emerald-600 hover:text-emerald-700 hover:bg-emerald-50 transition-all border border-transparent hover:border-emerald-100"
+									>
+										<Receipt className="h-4 w-4" />
+										<span className="hidden lg:inline ml-2 text-xs font-bold uppercase tracking-wider">
+											NF-e
+										</span>
+									</Button>
+								</TooltipTrigger>
+								<TooltipContent className="bg-emerald-600 text-white border-none text-[10px] font-bold">
+									<p>GERAR NOTA FISCAL</p>
 								</TooltipContent>
 							</Tooltip>
 						)}
