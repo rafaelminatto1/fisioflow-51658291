@@ -13,6 +13,7 @@ import {
 	index,
 } from "drizzle-orm/pg-core";
 import { relations } from "drizzle-orm";
+import { withOrganizationPolicy } from "./rls_helper";
 import { organizations } from "./organizations";
 import { patients } from "./patients";
 
@@ -34,7 +35,7 @@ export const transacoes = pgTable("transacoes", {
 	deletedAt: timestamp("deleted_at"),
 	createdAt: timestamp("created_at").defaultNow().notNull(),
 	updatedAt: timestamp("updated_at").defaultNow().notNull(),
-});
+}, (table) => [withOrganizationPolicy("transacoes", table.organizationId)]);
 
 export const contasFinanceiras = pgTable("contas_financeiras", {
 	id: uuid("id").primaryKey().defaultRandom(),
@@ -55,7 +56,7 @@ export const contasFinanceiras = pgTable("contas_financeiras", {
 	deletedAt: timestamp("deleted_at"),
 	createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
 	updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow().notNull(),
-});
+}, (table) => [withOrganizationPolicy("contas_financeiras", table.organizationId)]);
 
 export const centrosCusto = pgTable("centros_custo", {
 	id: uuid("id").primaryKey().defaultRandom(),
@@ -69,7 +70,7 @@ export const centrosCusto = pgTable("centros_custo", {
 	deletedAt: timestamp("deleted_at"),
 	createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
 	updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow().notNull(),
-});
+}, (table) => [withOrganizationPolicy("centros_custo", table.organizationId)]);
 
 export const convenios = pgTable("convenios", {
 	id: uuid("id").primaryKey().defaultRandom(),
@@ -90,7 +91,7 @@ export const convenios = pgTable("convenios", {
 	deletedAt: timestamp("deleted_at"),
 	createdAt: timestamp("created_at").defaultNow().notNull(),
 	updatedAt: timestamp("updated_at").defaultNow().notNull(),
-});
+}, (table) => [withOrganizationPolicy("convenios", table.organizationId)]);
 
 export const pagamentos = pgTable("pagamentos", {
 	id: uuid("id").primaryKey().defaultRandom(),
@@ -109,7 +110,7 @@ export const pagamentos = pgTable("pagamentos", {
 	deletedAt: timestamp("deleted_at"),
 	createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
 	updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow().notNull(),
-});
+}, (table) => [withOrganizationPolicy("pagamentos", table.organizationId)]);
 
 export const empresasParceiras = pgTable("empresas_parceiras", {
 	id: uuid("id").primaryKey().defaultRandom(),
@@ -126,7 +127,7 @@ export const empresasParceiras = pgTable("empresas_parceiras", {
 	deletedAt: timestamp("deleted_at"),
 	createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
 	updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow().notNull(),
-});
+}, (table) => [withOrganizationPolicy("empresas_parceiras", table.organizationId)]);
 
 export const fornecedores = pgTable("fornecedores", {
 	id: uuid("id").primaryKey().defaultRandom(),
@@ -151,7 +152,7 @@ export const fornecedores = pgTable("fornecedores", {
 	deletedAt: timestamp("deleted_at"),
 	createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
 	updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow().notNull(),
-});
+}, (table) => [withOrganizationPolicy("fornecedores", table.organizationId)]);
 
 export const formasPagamento = pgTable("formas_pagamento", {
 	id: uuid("id").primaryKey().defaultRandom(),
@@ -166,7 +167,7 @@ export const formasPagamento = pgTable("formas_pagamento", {
 	deletedAt: timestamp("deleted_at"),
 	createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
 	updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow().notNull(),
-});
+}, (table) => [withOrganizationPolicy("formas_pagamento", table.organizationId)]);
 
 export const sessionPackageTemplates = pgTable("session_package_templates", {
 	id: uuid("id").primaryKey().defaultRandom(),
@@ -183,7 +184,7 @@ export const sessionPackageTemplates = pgTable("session_package_templates", {
 	deletedAt: timestamp("deleted_at"),
 	createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
 	updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow().notNull(),
-});
+}, (table) => [withOrganizationPolicy("session_package_templates", table.organizationId)]);
 
 export const packageStatusEnum = pgEnum("package_status", [
 	"active",
@@ -222,6 +223,7 @@ export const patientPackages = pgTable(
 		patientIdIdx: index("idx_patient_packages_patient_id").on(table.patientId),
 		statusIdx: index("idx_patient_packages_status").on(table.status),
 	}),
+	(table) => [withOrganizationPolicy("patient_packages", table.organizationId)],
 );
 
 export const patientPackagesRelations = relations(
@@ -244,7 +246,7 @@ export const packageUsage = pgTable("package_usage", {
 	appointmentId: uuid("appointment_id"),
 	usedAt: timestamp("used_at", { withTimezone: true }).defaultNow().notNull(),
 	createdBy: text("created_by"),
-});
+}, (table) => [withOrganizationPolicy("package_usage", table.organizationId)]);
 
 export const vouchers = pgTable("vouchers", {
 	id: uuid("id").primaryKey().defaultRandom(),
@@ -262,7 +264,7 @@ export const vouchers = pgTable("vouchers", {
 	deletedAt: timestamp("deleted_at"),
 	createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
 	updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow().notNull(),
-});
+}, (table) => [withOrganizationPolicy("vouchers", table.organizationId)]);
 
 export const userVouchers = pgTable("user_vouchers", {
 	id: uuid("id").primaryKey().defaultRandom(),
@@ -282,7 +284,7 @@ export const userVouchers = pgTable("user_vouchers", {
 	deletedAt: timestamp("deleted_at"),
 	createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
 	updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow().notNull(),
-});
+}, (table) => [withOrganizationPolicy("user_vouchers", table.organizationId)]);
 
 export const voucherCheckoutSessions = pgTable("voucher_checkout_sessions", {
 	id: uuid("id").primaryKey().defaultRandom(),
@@ -299,7 +301,7 @@ export const voucherCheckoutSessions = pgTable("voucher_checkout_sessions", {
 	deletedAt: timestamp("deleted_at"),
 	createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
 	updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow().notNull(),
-});
+}, (table) => [withOrganizationPolicy("voucher_checkout_sessions", table.organizationId)]);
 
 export const nfse = pgTable("nfse", {
 	id: uuid("id").primaryKey().defaultRandom(),
@@ -322,7 +324,7 @@ export const nfse = pgTable("nfse", {
 	deletedAt: timestamp("deleted_at"),
 	createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
 	updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow().notNull(),
-});
+}, (table) => [withOrganizationPolicy("nfse", table.organizationId)]);
 export const nfseConfig = pgTable("nfse_config", {
 	organizationId: uuid("organization_id")
 		.references(() => organizations.id)
@@ -335,7 +337,7 @@ export const nfseConfig = pgTable("nfse_config", {
 	aliquotaIss: numeric("aliquota_iss", { precision: 5, scale: 2 }),
 	autoEmissao: boolean("auto_emissao").default(false),
 	updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow().notNull(),
-});
+}, (table) => [withOrganizationPolicy("nfse_config", table.organizationId)]);
 
 export const vouchersRelations = relations(vouchers, ({ many }) => ({
 	userVouchers: many(userVouchers),

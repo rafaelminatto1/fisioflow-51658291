@@ -245,6 +245,7 @@ function ProfileContent() {
 							onClick={() => setIsEditing(!isEditing)}
 							variant={isEditing ? "outline" : "default"}
 							size="sm"
+							data-testid="edit-profile-button"
 						>
 							<Edit className="w-4 h-4 mr-2" />
 							{isEditing ? "Cancelar" : "Editar"}
