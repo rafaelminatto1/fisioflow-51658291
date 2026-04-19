@@ -9,6 +9,7 @@ import {
 	index,
 } from "drizzle-orm/pg-core";
 import { relations } from "drizzle-orm";
+import { withOrganizationPolicy } from "./rls_helper";
 import { patients } from "./patients";
 
 export const biomechanicsAssessmentTypeEnum = pgEnum("biomechanics_assessment_type", [
@@ -61,6 +62,7 @@ export const biomechanicsAssessments = pgTable(
 		organizationIdIdx: index("idx_biomechanics_organization_id").on(table.organizationId),
 		typeIdx: index("idx_biomechanics_type").on(table.type),
 	}),
+	(table) => [withOrganizationPolicy("biomechanics_assessments", table.organizationId)],
 );
 
 export const biomechanicsAssessmentsRelations = relations(biomechanicsAssessments, ({ one }) => ({

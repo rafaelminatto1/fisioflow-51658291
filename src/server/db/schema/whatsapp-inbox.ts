@@ -11,6 +11,7 @@ import {
 	uniqueIndex,
 } from "drizzle-orm/pg-core";
 import { relations } from "drizzle-orm";
+import { withOrganizationPolicy } from "./rls_helper";
 import { patients } from "./patients";
 
 export const whatsappContacts = pgTable(
@@ -43,6 +44,7 @@ export const whatsappContacts = pgTable(
 		waIdIdx: index("idx_wa_contacts_wa_id").on(table.waId),
 		bsuidIdx: index("idx_wa_contacts_bsuid").on(table.bsuid),
 	}),
+	(table) => [withOrganizationPolicy("whatsapp_contacts", table.organizationId)],
 );
 
 export const waConversations = pgTable(
@@ -92,6 +94,7 @@ export const waConversations = pgTable(
 			table.createdAt,
 		),
 	}),
+	(table) => [withOrganizationPolicy("wa_conversations", table.organizationId)],
 );
 
 export const waMessages = pgTable(
@@ -136,6 +139,7 @@ export const waMessages = pgTable(
 			table.createdAt,
 		),
 	}),
+	(table) => [withOrganizationPolicy("wa_messages", table.organizationId)],
 );
 
 export const waRawEvents = pgTable(
@@ -162,6 +166,7 @@ export const waRawEvents = pgTable(
 			table.idempotencyKey,
 		),
 	}),
+	(table) => [withOrganizationPolicy("wa_raw_events", table.organizationId)],
 );
 
 export const waAssignments = pgTable(
@@ -184,6 +189,7 @@ export const waAssignments = pgTable(
 		),
 		assignedToIdx: index("idx_wa_assign_assigned_to").on(table.assignedTo),
 	}),
+	(table) => [withOrganizationPolicy("wa_assignments", table.organizationId)],
 );
 
 export const waInternalNotes = pgTable(
@@ -203,6 +209,7 @@ export const waInternalNotes = pgTable(
 			table.conversationId,
 		),
 	}),
+	(table) => [withOrganizationPolicy("wa_internal_notes", table.organizationId)],
 );
 
 export const waTags = pgTable(
@@ -219,6 +226,7 @@ export const waTags = pgTable(
 			table.organizationId,
 		),
 	}),
+	(table) => [withOrganizationPolicy("wa_tags", table.organizationId)],
 );
 
 export const waConversationTags = pgTable(
@@ -238,6 +246,7 @@ export const waConversationTags = pgTable(
 			table.tagId,
 		),
 	}),
+	(table) => [withOrganizationPolicy("wa_conversation_tags", table.organizationId)],
 );
 
 export const waQuickReplies = pgTable(
@@ -259,6 +268,7 @@ export const waQuickReplies = pgTable(
 			table.organizationId,
 		),
 	}),
+	(table) => [withOrganizationPolicy("wa_quick_replies", table.organizationId)],
 );
 
 export const waAutomationRules = pgTable(
@@ -283,6 +293,7 @@ export const waAutomationRules = pgTable(
 			table.organizationId,
 		),
 	}),
+	(table) => [withOrganizationPolicy("wa_automation_rules", table.organizationId)],
 );
 
 export const waSlaConfig = pgTable(
@@ -305,6 +316,7 @@ export const waSlaConfig = pgTable(
 			table.organizationId,
 		),
 	}),
+	(table) => [withOrganizationPolicy("wa_sla_config", table.organizationId)],
 );
 
 export const waSlaTracking = pgTable(
@@ -336,6 +348,7 @@ export const waSlaTracking = pgTable(
 	(table) => ({
 		conversationIdIdx: index("idx_wa_sla_conv_id").on(table.conversationId),
 	}),
+	(table) => [withOrganizationPolicy("wa_sla_tracking", table.organizationId)],
 );
 
 export const waOptInOut = pgTable(
@@ -354,6 +367,7 @@ export const waOptInOut = pgTable(
 			table.organizationId,
 		),
 	}),
+	(table) => [withOrganizationPolicy("wa_opt_in_out", table.organizationId)],
 );
 
 export const whatsappContactsRelations = relations(
