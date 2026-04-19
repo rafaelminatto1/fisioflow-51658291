@@ -1,46 +1,44 @@
 import type { Env } from "../../types/env";
+import { callGeminiStructured } from "../../lib/ai-gemini-v2";
+import { SoapSchema, type Soap } from "../../schemas/ai-schemas";
 
 /**
- * EvolutionSummarizer - Resume e estrutura a evolução clínica do paciente via Workers AI.
+ * EvolutionSummarizer - Resume e estrutura a evolução clínica do paciente via Gemini V2.
  * Transforma notas rápidas ou transcrições no padrão clínico S.O.A.P.
  */
 export class EvolutionSummarizer {
   constructor(private env: Env) {}
 
-  async summarize(content: string): Promise<{ subjective: string, objective: string, assessment: string, plan: string }> {
+  async summarize(content: string): Promise<Soap> {
     const prompt = `
-      Você é um Fisioterapeuta experiente da FisioFlow.
       Converta a nota bruta abaixo em uma Evolução Clínica estruturada seguindo o padrão S.O.A.P. (Subjetivo, Objetiva, Avaliação, Plano).
-      Escreva em Português do Brasil de forma clara e profissional.
-      Se algum campo não for identificável, retorne vazio para aquele campo.
-
+      
       Nota Bruta:
       "${content}"
-
-      Retorne APENAS um JSON com os campos { subjective: string, objective: string, assessment: string, plan: string }.
     `;
 
-    try {
-      const response = await this.env.AI.run("@cf/meta/llama-3.1-8b-instruct", {
-        messages: [
-          { role: "system", content: "Você é um assistente especializado em redação clínica de fisioterapia. Retorne apenas JSON." },
-          { role: "user", content: prompt }
-        ],
-        max_tokens: 512,
-        temperature: 0.2,
-      });
+    const systemInstruction = 
+      "Você é um fisioterapeuta experiente da FisioFlow. Escreva em Português do Brasil de forma clara e profissional. " +
+      "Cada seção do SOAP deve ser preenchida com base no conteúdo clínico disponível.";
 
-      // Se a resposta for uma string que contém JSON (padrão de modelos Instruct)
-      const rawResponse = response.response || "";
-      const jsonMatch = rawResponse.match(/\{[\s\S]*\}/);
-      if (jsonMatch) {
-        return JSON.parse(jsonMatch[0]);
-      }
-      
-      return { subjective: content, objective: "", assessment: "", plan: "" };
+    try {
+      return await callGeminiStructured(this.env, {
+        schema: SoapSchema,
+        prompt,
+        model: "gemini-3-flash-preview",
+        thinkingLevel: "MEDIUM",
+        systemInstruction,
+        temperature: 0.3,
+      });
     } catch (error) {
       console.error("Erro EvolutionSummarizer:", error);
-      throw new Error("Falha ao resumir evolução via IA.");
+      // Fallback básico em caso de erro crítico da IA
+      return {
+        subjective: content,
+        objective: "Avaliação objetiva pendente.",
+        assessment: "Seguimento clínico.",
+        plan: "Manter conduta."
+      };
     }
   }
 }

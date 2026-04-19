@@ -289,6 +289,7 @@ import { handleScheduled } from "./cron";
 import { handleQueue } from "./queue";
 export { OrganizationState } from "./lib/realtime";
 export { PatientAgent } from "./agents/PatientAgent";
+export { AssessmentLiveSession } from "./agents/AssessmentLiveSession";
 export {
 	AppointmentReminderWorkflow,
 	PatientOnboardingWorkflow,

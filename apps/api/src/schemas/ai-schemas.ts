@@ -124,3 +124,8 @@ export const TreatmentAdherenceSchema = z.object({
 		.describe("Ações concretas recomendadas"),
 });
 export type TreatmentAdherence = z.infer<typeof TreatmentAdherenceSchema>;
+
+export const FastProcessingSchema = z.object({
+	result: z.string().describe("O texto processado ou corrigido"),
+});
+export type FastProcessing = z.infer<typeof FastProcessingSchema>;
