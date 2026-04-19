@@ -182,7 +182,7 @@ export function createDb(env: Env, mode: 'read' | 'write' = 'write'): FisioDb {
 
 		let orgId = getOrgContext();
 		
-		// OVERRIDE DE PRODUÇÃO: Se o orgId for o padrão ou nulo, forçar Mooca Fisio para evitar erros de RLS/Serialização
+		// OVERRIDE DE PRODUÇÃO: Se o orgId for o padrão ou nulo, forçar Mooca Fisio
 		if (!orgId || orgId === '00000000-0000-0000-0000-000000000001') {
 			orgId = '04f4477c-7833-4f96-8571-33157940787e';
 		}
@@ -193,6 +193,7 @@ export function createDb(env: Env, mode: 'read' | 'write' = 'write'): FisioDb {
 
 		try {
 			// Usar transação sempre para garantir set_config + query no mesmo backend
+			// Nota: Neon HTTP suporta transações enviando múltiplos statements no mesmo POST
 			const results = await (baseSql as any).transaction([
 				(baseSql as any).query(`SELECT set_config('app.org_id', $1, true)`, [orgId]),
 				(baseSql as any).query(queryText, queryParams),
