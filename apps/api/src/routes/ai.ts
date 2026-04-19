@@ -1025,4 +1025,208 @@ app.post("/receipt-ocr", async (c) => {
 	}
 });
 
+// ==========================================================================
+// Patient 360° — Long Context + Context Caching (Gemini Pro 1M+ tokens)
+// ==========================================================================
+
+const PATIENT_360_SYSTEM_INSTRUCTION = `Você é um fisioterapeuta sênior brasileiro analisando o contexto clínico completo de um paciente. Responda sempre em português, citando datas, sessões e escores específicos quando disponíveis no contexto. Seja direto, clínico e evite especulações além do contexto fornecido.`;
+
+app.post("/patient-360/prime", async (c) => {
+	const user = c.get("user");
+	const body = (await c.req.json().catch(() => ({}))) as {
+		patientId?: string;
+		forceRefresh?: boolean;
+	};
+
+	if (!isUuid(body.patientId))
+		return c.json({ error: "patientId inválido" }, 400);
+
+	try {
+		const handle = await getOrCreatePatientCache(
+			c.env,
+			body.patientId!,
+			user.organizationId,
+			{
+				model: "gemini-3-flash-preview",
+				systemInstruction: PATIENT_360_SYSTEM_INSTRUCTION,
+				forceRefresh: body.forceRefresh === true,
+			},
+		);
+
+		return c.json({
+			success: true,
+			cacheName: handle.cacheName,
+			model: handle.model,
+			createdNew: handle.createdNew,
+			expireTime: handle.expireTime,
+			approxTokens: handle.context.approxTokens,
+			counts: handle.context.counts,
+			generatedAt: handle.context.generatedAt,
+		});
+	} catch (error: any) {
+		console.error("[AI/Patient360/prime] Error:", error);
+		await logToAxiom(c.env, "ai.patient_360.prime.error", {
+			patientId: body.patientId,
+			message: error?.message,
+		});
+		return c.json(
+			{ success: false, error: "Erro ao preparar contexto do paciente", details: error?.message },
+			500,
+		);
+	}
+});
+
+app.post("/patient-360/ask", async (c) => {
+	const user = c.get("user");
+	const body = (await c.req.json().catch(() => ({}))) as {
+		patientId?: string;
+		question?: string;
+		thinkingLevel?: "MINIMAL" | "LOW" | "MEDIUM" | "HIGH";
+		includeThoughts?: boolean;
+	};
+
+	if (!isUuid(body.patientId))
+		return c.json({ error: "patientId inválido" }, 400);
+	const question = (body.question ?? "").trim();
+	if (!question) return c.json({ error: "question ausente" }, 400);
+
+	try {
+		const handle = await getOrCreatePatientCache(
+			c.env,
+			body.patientId!,
+			user.organizationId,
+			{
+				model: "gemini-3-flash-preview",
+				systemInstruction: PATIENT_360_SYSTEM_INSTRUCTION,
+			},
+		);
+
+		const result = await callGeminiThinking(c.env, {
+			prompt: question,
+			model: handle.model,
+			thinkingLevel: body.thinkingLevel ?? "MEDIUM",
+			cachedContent: handle.cacheName,
+			includeThoughts: body.includeThoughts === true,
+			temperature: 0.3,
+			maxOutputTokens: 1500,
+		});
+
+		return c.json({
+			success: true,
+			answer: result.text,
+			thoughts: result.thoughts,
+			usage: result.usageMetadata,
+			cache: {
+				name: handle.cacheName,
+				createdNew: handle.createdNew,
+				approxTokens: handle.context.approxTokens,
+			},
+		});
+	} catch (error: any) {
+		console.error("[AI/Patient360/ask] Error:", error);
+		await logToAxiom(c.env, "ai.patient_360.ask.error", {
+			patientId: body.patientId,
+			message: error?.message,
+		});
+		return c.json(
+			{ success: false, error: "Erro ao consultar contexto do paciente", details: error?.message },
+			500,
+		);
+	}
+});
+
+app.post("/patient-360/clinical-report", async (c) => {
+	const user = c.get("user");
+	const body = (await c.req.json().catch(() => ({}))) as {
+		patientId?: string;
+		focus?: string;
+	};
+
+	if (!isUuid(body.patientId))
+		return c.json({ error: "patientId inválido" }, 400);
+
+	try {
+		const handle = await getOrCreatePatientCache(
+			c.env,
+			body.patientId!,
+			user.organizationId,
+			{
+				model: "gemini-3-flash-preview",
+				systemInstruction: PATIENT_360_SYSTEM_INSTRUCTION,
+			},
+		);
+
+		const focus = body.focus?.trim();
+		const prompt = `Gere um relatório clínico estruturado (JSON) consolidando a evolução do paciente com base em todo o contexto carregado.${focus ? ` Foco específico: ${focus}.` : ""} Baseie cada achado em datas/sessões/escores reais quando disponíveis.`;
+
+		const report = await callGeminiStructured(c.env, {
+			schema: ClinicalReportSchema,
+			prompt,
+			model: handle.model,
+			thinkingLevel: "HIGH",
+			cachedContent: handle.cacheName,
+			systemInstruction: PATIENT_360_SYSTEM_INSTRUCTION,
+			temperature: 0.3,
+			maxOutputTokens: 2048,
+		});
+
+		return c.json({
+			success: true,
+			data: report,
+			cache: {
+				name: handle.cacheName,
+				createdNew: handle.createdNew,
+				approxTokens: handle.context.approxTokens,
+			},
+		});
+	} catch (error: any) {
+		console.error("[AI/Patient360/clinical-report] Error:", error);
+		await logToAxiom(c.env, "ai.patient_360.report.error", {
+			patientId: body.patientId,
+			message: error?.message,
+		});
+		return c.json(
+			{ success: false, error: "Erro ao gerar relatório clínico", details: error?.message },
+			500,
+		);
+	}
+});
+
+app.get("/patient-360/status/:patientId", async (c) => {
+	const patientId = c.req.param("patientId");
+	if (!isUuid(patientId))
+		return c.json({ error: "patientId inválido" }, 400);
+
+	const entry = await readPatientCacheEntry(c.env, patientId);
+	return c.json({
+		cached: !!entry,
+		entry: entry
+			? {
+					cacheName: entry.cacheName,
+					model: entry.model,
+					expireTime: entry.expireTime,
+					generatedAt: entry.generatedAt,
+					approxTokens: entry.approxTokens,
+				}
+			: null,
+	});
+});
+
+app.delete("/patient-360/:patientId", async (c) => {
+	const patientId = c.req.param("patientId");
+	if (!isUuid(patientId))
+		return c.json({ error: "patientId inválido" }, 400);
+
+	try {
+		await invalidatePatientCache(c.env, patientId);
+		return c.json({ success: true });
+	} catch (error: any) {
+		console.error("[AI/Patient360/delete] Error:", error);
+		return c.json(
+			{ success: false, error: "Erro ao invalidar cache", details: error?.message },
+			500,
+		);
+	}
+});
+
 export { app as aiRoutes };
