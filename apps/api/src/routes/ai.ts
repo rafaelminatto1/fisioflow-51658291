@@ -770,21 +770,35 @@ app.post("/document/summarize", async (c) => {
 		unknown
 	>;
 	const text = safeText(body.text);
-	return c.json({
-		data: {
-			keyFindings: text
-				.split("\n")
-				.map((line) => line.trim())
-				.filter(Boolean)
-				.slice(0, 3),
-			impression: firstSentence(text, "Resumo clínico indisponível."),
-			recommendations: [
-				"Correlacionar com sintomas atuais",
-				"Registrar no prontuário",
-			],
-			criticalAlerts: [],
-		},
-	});
+
+	const prompt = `Resuma o seguinte conteúdo clínico de forma objetiva, destacando os principais achados e recomendações:
+  "${text}"`;
+
+	try {
+		const report = await callGeminiStructured(c.env, {
+			schema: ClinicalReportSchema,
+			prompt,
+			model: "gemini-3-flash-preview",
+			thinkingLevel: "MEDIUM",
+			systemInstruction: "Você é um assistente especializado em síntese de prontuários e laudos fisioterapêuticos.",
+		});
+
+		return c.json({
+			data: {
+				keyFindings: report.keyFindings,
+				impression: report.summary,
+				recommendations: report.recommendations,
+				criticalAlerts: report.riskFactors,
+			},
+		});
+	} catch {
+		return c.json({
+			data: {
+				keyFindings: text.split("\n").filter(l => l.length > 10).slice(0, 3),
+				impression: "Resumo indisponível via IA, exibindo trechos do texto.",
+			},
+		});
+	}
 });
 
 app.post("/document/translate", async (c) => {
@@ -793,15 +807,29 @@ app.post("/document/translate", async (c) => {
 		unknown
 	>;
 	const text = safeText(body.text);
-	const targetLanguage = safeText(body.targetLanguage) || "pt";
-	return c.json({
-		data: {
-			originalText: text,
-			translatedText: text,
-			sourceLanguage: "auto",
-			targetLanguage,
-		},
-	});
+	const targetLanguage = safeText(body.targetLanguage) || "Portuguese";
+
+	const prompt = `Traduza o seguinte texto clínico para ${targetLanguage}, mantendo a precisão terminológica da área de fisioterapia e saúde:
+  "${text}"`;
+
+	try {
+		const result = await callGeminiThinking(c.env, {
+			prompt,
+			model: "gemini-3-flash-preview",
+			thinkingLevel: "MINIMAL",
+			temperature: 0.3,
+		});
+		return c.json({
+			data: {
+				originalText: text,
+				translatedText: result.text,
+				sourceLanguage: "auto",
+				targetLanguage,
+			},
+		});
+	} catch {
+		return c.json({ data: { originalText: text, translatedText: text, error: "Falha na tradução via IA" } });
+	}
 });
 
 app.post("/document/compare", async (c) => {
@@ -810,15 +838,33 @@ app.post("/document/compare", async (c) => {
 		unknown
 	>;
 	const currentText = safeText(body.currentText);
-	return c.json({
-		data: {
-			hasChanges: false,
-			changes: [
-				firstSentence(currentText, "Nenhuma mudança relevante identificada."),
-			],
-			progressScore: 50,
-		},
-	});
+	const previousText = safeText(body.previousText);
+
+	const prompt = `Compare os dois registros clínicos abaixo e identifique mudanças relevantes, progressos ou regressos no quadro do paciente.
+  
+  Registro Anterior:
+  "${previousText}"
+  
+  Registro Atual:
+  "${currentText}"`;
+
+	try {
+		const result = await callGeminiThinking(c.env, {
+			prompt,
+			model: "gemini-3-flash-preview",
+			thinkingLevel: "MEDIUM",
+			temperature: 0.3,
+		});
+		return c.json({
+			data: {
+				hasChanges: true,
+				changes: [result.text],
+				progressScore: 70, // Heurística baseada no texto poderia ser implementada
+			},
+		});
+	} catch {
+		return c.json({ data: { hasChanges: false, changes: ["Não foi possível comparar os documentos via IA."] } });
+	}
 });
 
 app.post("/document/pdf", async (c) => {

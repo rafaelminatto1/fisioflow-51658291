@@ -138,6 +138,10 @@ tag = "v5" # Placeholder to match remote state
 tag = "v6" # New migration to add PatientAgent
 new_classes = ["PatientAgent"]
 
+[[migrations]]
+tag = "v7" # New migration to add AssessmentLiveSession
+new_classes = ["AssessmentLiveSession"]
+
 # ===== AI & BROWSER RENDERING (Paid Plan) =====
 [ai]
 binding = "AI"
