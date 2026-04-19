@@ -446,9 +446,9 @@ function buildPatientWritePayload(
 		payload.sessionValue = nullableNumber(body.session_value)?.toString();
 	}
 
-	payload.updatedAt = new Date();
+	payload.updatedAt = sql`now()`;
 	if (isCreate) {
-		payload.createdAt = new Date();
+		payload.createdAt = sql`now()`;
 	}
 
 	return payload;
