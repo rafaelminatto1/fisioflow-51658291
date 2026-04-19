@@ -570,11 +570,6 @@ app.get("/", async (c) => {
 				isActive: patients.isActive,
 				createdAt: patients.createdAt,
 				updatedAt: patients.updatedAt,
-				hasSurgery: sql<boolean>`EXISTS (
-					SELECT 1 FROM surgeries s 
-					JOIN medical_records mr ON s.medical_record_id = mr.id 
-					WHERE mr.patient_id = ${patients.id}
-				)`.as("has_surgery"),
 			})
 			.from(patients)
 			.where(conditions)

@@ -66,6 +66,9 @@ app.get('/', requireAuth, async (c) => {
         }
       } catch (profileErr) {
         console.error('[Appointments/List] Error fetching profile for org fallback:', profileErr);
+        if (profileErr instanceof Error) {
+          console.error('[Appointments/List] Stack:', profileErr.stack);
+        }
       }
     }
 
