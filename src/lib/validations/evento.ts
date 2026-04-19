@@ -24,9 +24,11 @@ const eventoBaseSchema = z.object({
 	),
 	local: z
 		.string()
-		.min(2, "Local é obrigatório")
+		.trim()
+		.min(2, "O local deve ter pelo menos 2 caracteres")
 		.max(200, "Local não pode ter mais de 200 caracteres")
 		.transform(sanitizeString),
+
 	data_inicio: z.date({
 		error: "Data de início inválida",
 	}),
