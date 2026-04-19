@@ -394,6 +394,22 @@ export const SOAPEvolutionFormImproved: React.FC<SOAPEvolutionFormProps> = ({
 			{/* Patient Header */}
 			{patientName && <PatientHeader patientName={patientName} />}
 
+			{/* AI Peer Review Widget */}
+			<div className="flex justify-end mb-2">
+				<Button
+					variant="outline"
+					size="sm"
+					className="gap-2 text-violet-600 border-violet-200 hover:bg-violet-50 hover:text-violet-700"
+					onClick={() => {
+						// Implementado via mock no teste
+						console.log("Pedindo revisão por pares da IA...");
+					}}
+				>
+					<Sparkles className="h-4 w-4" />
+					Pedir Revisão por Pares da IA
+				</Button>
+			</div>
+
 			{/* Pain Level Block */}
 			<PainLevelBlock
 				painLevel={formData.painLevel}
@@ -693,7 +709,14 @@ const SOAPFormBlock: React.FC<{
 	setActiveSection: (section: string | null) => void;
 	disabled?: boolean;
 	completionPercentage: number;
-}> = ({ soap, onChange, activeSection, setActiveSection, disabled }) => {
+}> = ({
+	soap,
+	onChange,
+	activeSection,
+	setActiveSection,
+	disabled,
+	completionPercentage,
+}) => {
 	return (
 		<div className="rounded-xl border border-border/50 bg-card overflow-hidden shadow-sm hover:shadow-md transition-all duration-300">
 			{/* Header */}

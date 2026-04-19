@@ -62,6 +62,7 @@ export function NewEventoModal({ open, onOpenChange }: NewEventoModalProps) {
 			gratuito: false,
 			link_whatsapp: "",
 			valor_padrao_prestador: 0,
+			participantes_previstos: 0,
 		},
 	});
 
@@ -247,6 +248,23 @@ export function NewEventoModal({ open, onOpenChange }: NewEventoModalProps) {
 											</p>
 										)}
 									</div>
+
+									<div className="space-y-2">
+										<Label htmlFor="participantes_previstos">Quantidade de Participantes</Label>
+										<Input
+											id="participantes_previstos"
+											type="number"
+											{...register("participantes_previstos", {
+												valueAsNumber: true,
+											})}
+											placeholder="Ex: 100"
+										/>
+										{errors.participantes_previstos && (
+											<p className="text-sm text-destructive">
+												{errors.participantes_previstos.message}
+											</p>
+										)}
+									</div>
 								</div>
 							</div>
 
@@ -374,38 +392,44 @@ export function NewEventoModal({ open, onOpenChange }: NewEventoModalProps) {
 								<h3 className="text-lg font-medium">Configurações</h3>
 
 								<div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-									<div className="flex items-center space-x-2">
-										<Switch
-											id="gratuito"
-											checked={watchedGratuito}
-											onCheckedChange={(checked) =>
-												setValue("gratuito", checked)
-											}
-										/>
-										<Label htmlFor="gratuito">Evento Gratuito</Label>
+									<div className="flex flex-col gap-1">
+										<div className="flex items-center space-x-2">
+											<Switch
+												id="gratuito"
+												checked={watchedGratuito}
+												onCheckedChange={(checked) =>
+													setValue("gratuito", checked)
+												}
+											/>
+											<Label htmlFor="gratuito">Evento Gratuito para Participantes</Label>
+										</div>
+										<p className="text-[10px] text-muted-foreground ml-10">
+											Significa que não haverá cobrança de inscrição dos participantes.
+										</p>
 									</div>
 
-									{!watchedGratuito && (
-										<div className="space-y-2">
-											<Label htmlFor="valor_padrao_prestador">
-												Valor Padrão Prestador (R$)
-											</Label>
-											<Input
-												id="valor_padrao_prestador"
-												type="number"
-												step="0.01"
-												{...register("valor_padrao_prestador", {
-													valueAsNumber: true,
-												})}
-												placeholder="0.00"
-											/>
-											{errors.valor_padrao_prestador && (
-												<p className="text-sm text-destructive">
-													{errors.valor_padrao_prestador.message}
-												</p>
-											)}
-										</div>
-									)}
+									<div className="space-y-2">
+										<Label htmlFor="valor_padrao_prestador">
+											Valor Padrão Prestador (R$)
+										</Label>
+										<Input
+											id="valor_padrao_prestador"
+											type="number"
+											step="0.01"
+											{...register("valor_padrao_prestador", {
+												valueAsNumber: true,
+											})}
+											placeholder="0.00"
+										/>
+										<p className="text-[10px] text-muted-foreground">
+											Valor que será pago aos colaboradores por este evento.
+										</p>
+										{errors.valor_padrao_prestador && (
+											<p className="text-sm text-destructive">
+												{errors.valor_padrao_prestador.message}
+											</p>
+										)}
+									</div>
 
 									<div className="space-y-2 md:col-span-2">
 										<Label htmlFor="link_whatsapp">Link do WhatsApp</Label>
