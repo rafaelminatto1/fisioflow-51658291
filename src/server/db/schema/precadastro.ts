@@ -9,6 +9,7 @@ import {
 	date,
 	index,
 } from "drizzle-orm/pg-core";
+import { withOrganizationPolicy, withPublicWriteOrganizationPolicy } from "./rls_helper";
 
 export const precadastroTokens = pgTable(
 	"precadastro_tokens",
@@ -45,6 +46,7 @@ export const precadastroTokens = pgTable(
 		),
 		tokenIdx: index("idx_precadastro_tokens_token").on(table.token),
 	}),
+	(table) => [withOrganizationPolicy("precadastro_tokens", table.organizationId)],
 );
 
 export const precadastros = pgTable(
@@ -79,4 +81,5 @@ export const precadastros = pgTable(
 		),
 		tokenIdx: index("idx_precadastros_token").on(table.tokenId, table.createdAt),
 	}),
+	(table) => [...withPublicWriteOrganizationPolicy("precadastros", table.organizationId)],
 );

@@ -26,6 +26,7 @@ import {
 	doublePrecision,
 } from "drizzle-orm/pg-core";
 import { relations } from "drizzle-orm";
+import { withOrganizationPolicy } from "./rls_helper";
 import { patients } from "./patients";
 import { appointments } from "./appointments";
 
@@ -198,6 +199,7 @@ export const sessions = pgTable(
 		),
 		dateIdx: index("idx_sessions_date").on(table.date),
 	}),
+	(table) => [withOrganizationPolicy("sessions", table.organizationId)],
 );
 
 export const sessionsRelations = relations(sessions, ({ one, many }) => ({
@@ -266,6 +268,7 @@ export const sessionAttachments = pgTable(
 			table.patientId,
 		),
 	}),
+	(table) => [withOrganizationPolicy("session_attachments", table.organizationId)],
 );
 
 export const sessionAttachmentsRelations = relations(
@@ -315,4 +318,5 @@ export const sessionTemplates = pgTable(
 			table.therapistId,
 		),
 	}),
+	(table) => [withOrganizationPolicy("session_templates", table.organizationId)],
 );
