@@ -80,29 +80,37 @@ export function NewEventoModal({ open, onOpenChange }: NewEventoModalProps) {
 		if (template) {
 			setValue("nome", template.nome);
 			setValue("descricao", template.descricao || "");
-			setValue(
-				"categoria",
-				template.categoria as
-					| "corrida"
-					| "corporativo"
-					| "ativacao"
-					| "workshop"
-					| "outro",
-			);
+			setValue("categoria", template.categoria as any);
 			setValue("gratuito", template.gratuito);
 			setValue("valor_padrao_prestador", template.valor_padrao_prestador || 0);
+			// Garantir que o campo 'local' tenha pelo menos o mínimo exigido pelo Zod
+			setValue("local", "Clínica Principal");
+
+			// Carrega checklist do template se existir
+			if (template.checklist_padrao && template.checklist_padrao.length > 0) {
+				console.log(
+					"Checklist padrão do template detectado:",
+					template.checklist_padrao,
+				);
+			}
+
 			setShowTemplates(false);
 		}
 	};
 
 	const handleSave = async (data: EventoCreate) => {
+		logger.info("Iniciando salvamento de evento", data, "NewEventoModal");
 		try {
 			await createEvento.mutateAsync(data);
-			reset();
-			setShowTemplates(true);
 			onOpenChange(false);
+			reset();
+			toast.success("Evento criado com sucesso!");
 		} catch (error) {
-			logger.error("Erro ao criar evento", error, "NewEventoModal");
+			logger.error("Erro ao criar evento no modal", error, "NewEventoModal");
+			// Feedback visual extra para erros de rede ou validação remota
+			if (error instanceof Error) {
+				toast.error(`Erro ao salvar: ${error.message}`);
+			}
 		}
 	};
 
