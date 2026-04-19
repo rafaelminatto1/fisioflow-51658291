@@ -165,8 +165,40 @@ export function createDb(env: Env, mode: 'read' | 'write' = 'write'): FisioDb {
 	// cold because CF Workers timer starvation prevents connectionTimeoutMillis from firing.
 	// neon-http is stateless, handles cold-starts gracefully, and supports all DML.
 	const url = getUrl(env, 'read');
-	const sql = neon(url, { fullResults: true });
-	return drizzleHttp(sql, { schema }) as any;
+	const baseSql = neon(url, { fullResults: true });
+	
+	// Interceptador para injetar RLS automaticamente do ALS
+	const proxySql = (async (textOrStrings: any, ...values: any[]) => {
+		const orgId = getOrgContext();
+		
+		// Extrair query e params se for string ou template literal
+		let queryText = "";
+		let queryParams: any[] = [];
+		
+		if (typeof textOrStrings === 'string') {
+			queryText = textOrStrings;
+			queryParams = values[0] ?? [];
+		} else {
+			queryText = textOrStrings[0];
+			for (let i = 0; i < values.length; i++) {
+				queryText += `$${i + 1}${textOrStrings[i + 1]}`;
+				queryParams.push(values[i]);
+			}
+		}
+
+		if (orgId) {
+			// Usar transação para garantir que o set_config e a query rodem no mesmo "cano"
+			const results = await (baseSql as any).transaction([
+				(baseSql as any).query(`SELECT set_config('app.org_id', $1, true)`, [orgId]),
+				(baseSql as any).query(queryText, queryParams),
+			]);
+			return results[1];
+		}
+		
+		return await baseSql.query(queryText, queryParams);
+	}) as NeonQueryFunction<any, any>;
+
+	return drizzleHttp(proxySql, { schema }) as any;
 }
 
 function wrapSqlWithRls(
