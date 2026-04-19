@@ -92,6 +92,7 @@ const Patients = () => {
 			filtersState.classification !== "all"
 				? (filtersState.classification as any)
 				: undefined,
+		hasSurgery: filtersState.hasSurgery,
 	});
 
 	const headerStats = {
@@ -114,6 +115,7 @@ const Patients = () => {
 		filtersState.status !== "all" ||
 		filtersState.condition !== "all" ||
 		filtersState.classification !== "all" ||
+		filtersState.hasSurgery ||
 		!!filtersState.search;
 
 	return (
@@ -139,6 +141,8 @@ const Patients = () => {
 					conditionFilter={filtersState.condition}
 					onConditionFilterChange={(c) => updateSearchParams({ condition: c })}
 					uniqueConditions={uniqueConditions}
+					sortBy={filtersState.sortBy}
+					onSortByChange={(s) => updateSearchParams({ sortBy: s })}
 					activeAdvancedFiltersCount={activeAdvancedFiltersCount}
 					totalFilteredLabel={
 						hasActiveFilters ? `${totalCount} encontrado(s)` : undefined
@@ -174,10 +178,18 @@ const Patients = () => {
 						</PopoverTrigger>
 						<PopoverContent className="w-[320px] p-4" align="end">
 							<PatientAdvancedFilters
+								currentFilters={{
+									classification: filtersState.classification as any,
+									hasSurgery: filtersState.hasSurgery,
+								}}
 								onFilterChange={(f) => updateSearchParams(f as any)}
 								activeFiltersCount={activeAdvancedFiltersCount}
 								onClearFilters={() =>
-									updateSearchParams({ classification: undefined })
+									updateSearchParams({
+										classification: "all",
+										hasSurgery: undefined,
+										condition: "all",
+									})
 								}
 							/>
 						</PopoverContent>

@@ -94,7 +94,7 @@ import {
 } from "@/hooks/useSoapRecords";
 import { getAffectedSideAbbreviation } from "@/lib/constants/surgery";
 import { cn } from "@/lib/utils";
-import { formatClinicalSummary } from "@/lib/evolution/formatters";
+import { formatClinicalSummary, formatClinicalText } from "@/lib/evolution/formatters";
 import type {
 	AttachmentData,
 	MeasurementData,
@@ -498,7 +498,7 @@ ${
 															</span>
 														</div>
 														<p className="text-xs line-clamp-3">
-															{session.subjective}
+															{formatClinicalText(session.subjective)}
 														</p>
 													</div>
 												)}
@@ -515,7 +515,7 @@ ${
 															</span>
 														</div>
 														<p className="text-xs line-clamp-3">
-															{session.objective}
+															{formatClinicalText(session.objective)}
 														</p>
 													</div>
 												)}
@@ -532,7 +532,7 @@ ${
 															</span>
 														</div>
 														<p className="text-xs line-clamp-3">
-															{session.assessment}
+															{formatClinicalText(session.assessment)}
 														</p>
 													</div>
 												)}
@@ -549,7 +549,7 @@ ${
 															</span>
 														</div>
 														<p className="text-xs line-clamp-3">
-															{session.plan}
+															{formatClinicalText(session.plan)}
 														</p>
 													</div>
 												)}
@@ -616,7 +616,7 @@ ${
 													</span>
 												</div>
 												<p className="text-sm whitespace-pre-wrap leading-relaxed">
-													{session.subjective}
+													{formatClinicalText(session.subjective)}
 												</p>
 											</div>
 										)}
@@ -633,7 +633,7 @@ ${
 													</span>
 												</div>
 												<p className="text-sm whitespace-pre-wrap leading-relaxed">
-													{session.objective}
+													{formatClinicalText(session.objective)}
 												</p>
 											</div>
 										)}
@@ -650,7 +650,7 @@ ${
 													</span>
 												</div>
 												<p className="text-sm whitespace-pre-wrap leading-relaxed">
-													{session.assessment}
+													{formatClinicalText(session.assessment)}
 												</p>
 											</div>
 										)}
@@ -667,7 +667,7 @@ ${
 													</span>
 												</div>
 												<p className="text-sm whitespace-pre-wrap leading-relaxed">
-													{session.plan}
+													{formatClinicalText(session.plan)}
 												</p>
 											</div>
 										)}

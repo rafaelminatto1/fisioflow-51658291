@@ -33,6 +33,7 @@ import {
   CheckCircle2,
 } from "lucide-react";
 import type { ExerciseTemplate } from "@/types/workers";
+import { cn } from "@/lib/utils";
 
 // ─── Props ────────────────────────────────────────────────────────────────────
 
@@ -64,7 +65,7 @@ function NoExercisesState() {
   return (
     <div className="flex flex-col items-center justify-center py-12 text-center border-2 border-dashed rounded-xl bg-muted/30">
       <Dumbbell className="h-10 w-10 mb-4 text-muted-foreground/40" />
-      <p className="text-sm font-bold text-foreground uppercase tracking-tight">Sem exercícios cadastrados</p>
+      <p className="text-sm font-bold text-foreground uppercase tracking-tight">Nenhum exercício cadastrado</p>
       <p className="text-xs mt-1 text-muted-foreground">Este protocolo base ainda não possui movimentos vinculados.</p>
     </div>
   );
@@ -92,7 +93,7 @@ const POS_OP_PHASES = [
 
 function ExerciseTimeline() {
   return (
-    <div className="space-y-4 bg-primary/5 p-4 rounded-xl border border-primary/10">
+    <div data-testid="exercise-timeline" className="space-y-4 bg-primary/5 p-4 rounded-xl border border-primary/10">
       <div className="flex items-center gap-2 text-xs font-black uppercase tracking-widest text-primary">
         <CalendarDays className="h-4 w-4" />
         Sugerido: Progressão Semanal
@@ -163,22 +164,22 @@ export function TemplateDetailPanel({
               {template.name}
             </h2>
             <div className="flex flex-wrap items-center gap-2">
-              <Badge variant={isSystem ? "secondary" : "outline"} className={`text-[10px] font-black uppercase tracking-tight ${!isSystem ? "text-green-700 border-green-200 bg-green-50" : "bg-blue-50 text-blue-700 border-blue-100"}`}>
+              <Badge variant={isSystem ? "secondary" : "outline"} className={cn("text-[10px] font-black uppercase tracking-tight", !isSystem ? "text-green-700 border-green-200 bg-green-50" : "bg-blue-50 text-blue-700 border-blue-100")}>
                 {isSystem ? "Sistema FisioFlow" : "Personalizado Clínica"}
               </Badge>
-              {template.condition_name && (
+              {template.conditionName && (
                 <span className="text-xs font-bold text-muted-foreground/80 flex items-center gap-1">
                   <Stethoscope className="h-3 w-3" />
-                  {template.condition_name}
+                  {template.conditionName}
                 </span>
               )}
             </div>
           </div>
           
-          {template.evidence_level && (
+          {template.evidenceLevel && (
             <div className="flex flex-col items-center justify-center p-2 rounded-xl bg-amber-50 border border-amber-100 shadow-sm shrink-0">
               <span className="text-[9px] font-black uppercase text-amber-600/70 tracking-widest">Evidência</span>
-              <span className="text-xl font-black text-amber-700 leading-none">{template.evidence_level}</span>
+              <span className="text-xl font-black text-amber-700 leading-none">{template.evidenceLevel}</span>
             </div>
           )}
         </div>
@@ -199,7 +200,7 @@ export function TemplateDetailPanel({
           {isSystem ? (
             <Button variant="outline" onClick={onCustomize} className="h-10 px-5 gap-2 font-bold rounded-full border-muted-foreground/20 hover:bg-muted">
               <Edit className="h-4 w-4 text-muted-foreground" />
-              Customizar Cópia
+              Editar
             </Button>
           ) : (
             <>
@@ -210,9 +211,10 @@ export function TemplateDetailPanel({
               <Button
                 variant="ghost"
                 onClick={() => setDeleteDialogOpen(true)}
-                className="h-10 w-10 p-0 rounded-full text-destructive hover:bg-destructive/10 transition-colors"
+                className="h-10 px-3 gap-2 rounded-full text-destructive hover:bg-destructive/10 transition-colors font-bold"
               >
                 <Trash2 className="h-4 w-4" />
+                Excluir
               </Button>
             </>
           )}
@@ -256,10 +258,10 @@ export function TemplateDetailPanel({
                       {template.exerciseCount} Prescrições Base
                     </span>
                   </div>
-                  {template.estimated_duration && (
+                  {template.estimatedDuration && (
                     <div className="flex items-center gap-1.5 text-[11px] font-bold text-muted-foreground">
                       <Clock className="h-3.5 w-3.5" />
-                      {template.estimated_duration} MIN
+                      {template.estimatedDuration} MIN
                     </div>
                   )}
                 </div>
@@ -290,7 +292,7 @@ export function TemplateDetailPanel({
                         </div>
                         <div className="flex-1 min-w-0">
                           <h5 className="text-sm font-black uppercase leading-tight tracking-tight text-foreground line-clamp-2">
-                            {item.exercise?.name || item.exercise_id || "Exercício"}
+                            {item.exercise?.name || item.exerciseId || "Exercício"}
                           </h5>
                           <div className="flex flex-wrap items-center gap-x-4 gap-y-2 mt-3">
                             {item.sets && (
@@ -315,10 +317,10 @@ export function TemplateDetailPanel({
                         </div>
                       </div>
                       
-                      {(item.notes || item.clinical_notes) && (
+                      {(item.notes || item.clinicalNotes) && (
                         <div className="mt-4 pt-3 border-t border-dashed border-muted-foreground/10">
                           <p className="text-[11px] text-muted-foreground leading-relaxed italic">
-                            "{item.notes || item.clinical_notes}"
+                            "{item.notes || item.clinicalNotes}"
                           </p>
                         </div>
                       )}
@@ -337,9 +339,9 @@ export function TemplateDetailPanel({
                   <FileText className="h-3.5 w-3.5" />
                   Raciocínio Clínico e Orientações
                 </h4>
-                {template.clinical_notes ? (
+                {template.clinicalNotes ? (
                   <p className="text-sm text-foreground leading-relaxed font-medium whitespace-pre-wrap">
-                    {template.clinical_notes}
+                    {template.clinicalNotes}
                   </p>
                 ) : (
                   <EmptyContent label="Nenhuma nota clínica cadastrada para este protocolo." />
@@ -386,9 +388,9 @@ export function TemplateDetailPanel({
                 <TrendingUp className="h-3.5 w-3.5" />
                 Critérios de Progressão
               </h4>
-              {template.progression_notes ? (
+              {template.progressionNotes ? (
                 <p className="text-sm text-green-900 leading-relaxed font-bold">
-                  {template.progression_notes}
+                  {template.progressionNotes}
                 </p>
               ) : (
                 <EmptyContent label="Critérios de alta ou progressão de fase não definidos." />
@@ -400,9 +402,9 @@ export function TemplateDetailPanel({
           <TabsContent value="referencias" className="mt-0 focus-visible:ring-0">
             <div className="space-y-4">
               <h4 className="text-[10px] font-black uppercase text-muted-foreground tracking-widest px-1">Base Científica</h4>
-              {template.bibliographic_references && template.bibliographic_references.length > 0 ? (
+              {template.bibliographicReferences && template.bibliographicReferences.length > 0 ? (
                 <div className="space-y-3">
-                  {template.bibliographic_references.map((ref, i) => (
+                  {template.bibliographicReferences.map((ref, i) => (
                     <div key={i} className="flex gap-3 p-3 rounded-xl bg-muted/20 border border-muted-foreground/10">
                       <div className="h-5 w-5 shrink-0 flex items-center justify-center rounded bg-muted-foreground/10 text-[10px] font-black">{i+1}</div>
                       <p className="text-xs font-medium text-muted-foreground leading-snug">
@@ -421,4 +423,3 @@ export function TemplateDetailPanel({
     </div>
   );
 }
-

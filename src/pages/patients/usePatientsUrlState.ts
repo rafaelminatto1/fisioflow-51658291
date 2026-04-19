@@ -10,6 +10,8 @@ export function usePatientsUrlState() {
 	const statusParam = searchParams.get("status") || "all";
 	const conditionParam = searchParams.get("condition") || "all";
 	const classificationParam = searchParams.get("classification") || "all";
+	const sortByParam = searchParams.get("sortBy") || "created_at_desc";
+	const hasSurgeryParam = searchParams.get("hasSurgery") === "true";
 	const pageParam = parseInt(searchParams.get("page") || "1", 10);
 	
 	const isNewPatientModalOpen = searchParams.get("modal") === "create";
@@ -25,6 +27,8 @@ export function usePatientsUrlState() {
 			status: statusParam,
 			condition: conditionParam,
 			classification: classificationParam,
+			sortBy: sortByParam,
+			hasSurgery: hasSurgeryParam,
 			page: pageParam,
 			pageSize: 20,
 		}),
@@ -33,6 +37,8 @@ export function usePatientsUrlState() {
 			statusParam,
 			conditionParam,
 			classificationParam,
+			sortByParam,
+			hasSurgeryParam,
 			pageParam,
 		],
 	);
@@ -43,8 +49,10 @@ export function usePatientsUrlState() {
 			status: statusParam,
 			condition: conditionParam,
 			classification: classificationParam,
+			sortBy: sortByParam,
+			hasSurgery: hasSurgeryParam,
 		}),
-		[searchParam, statusParam, conditionParam, classificationParam],
+		[searchParam, statusParam, conditionParam, classificationParam, sortByParam, hasSurgeryParam],
 	);
 
 	// Sync debounced search to URL

@@ -17,6 +17,7 @@ export const useEvolutionShortcuts = (
 	onOpenHelp?: () => void,
 	onOpenTemplates?: () => void,
 	onSaveAndAnalyze?: () => void,
+	onOpenScribe?: () => void,
 ) => {
 	useEffect(() => {
 		const handleKeyPress = (e: KeyboardEvent) => {
@@ -32,6 +33,13 @@ export const useEvolutionShortcuts = (
 			if ((e.ctrlKey || e.metaKey) && e.key === "s" && !e.shiftKey) {
 				e.preventDefault();
 				onSave?.();
+				return;
+			}
+
+			// Alt + S para Scribe (On-Demand)
+			if (e.altKey && e.key === "s") {
+				e.preventDefault();
+				onOpenScribe?.();
 				return;
 			}
 
@@ -99,6 +107,7 @@ export const useEvolutionShortcuts = (
 		onOpenHelp,
 		onOpenTemplates,
 		onSaveAndAnalyze,
+		onOpenScribe,
 	]);
 
 	return null;
