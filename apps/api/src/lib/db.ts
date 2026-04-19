@@ -161,12 +161,59 @@ export type FisioDb = PgDatabase<any, typeof schema>;
  * Hyperdrive/TCP path is kept in createPool for raw SQL; all Drizzle ORM usage goes HTTP.
  */
 export function createDb(env: Env, mode: 'read' | 'write' = 'write'): FisioDb {
-	// Always use neon-http regardless of mode — TCP via Hyperdrive hangs when Neon is
-	// cold because CF Workers timer starvation prevents connectionTimeoutMillis from firing.
-	// neon-http is stateless, handles cold-starts gracefully, and supports all DML.
 	const url = getUrl(env, 'read');
-	const sql = neon(url, { fullResults: true });
-	return drizzleHttp(sql, { schema }) as any;
+	const baseSql = neon(url, { fullResults: true });
+
+	// Interceptador para normalizar datas que o Neon HTTP retorna como undefined ou objetos estranhos
+	const proxySql = (async (textOrStrings: any, ...values: any[]) => {
+		let queryText = "";
+		let queryParams: any[] = [];
+		
+		if (typeof textOrStrings === 'string') {
+			queryText = textOrStrings;
+			queryParams = values[0] ?? [];
+		} else {
+			queryText = textOrStrings[0];
+			for (let i = 0; i < values.length; i++) {
+				queryText += `$${i + 1}${textOrStrings[i + 1]}`;
+				queryParams.push(values[i]);
+			}
+		}
+
+		const orgId = getOrgContext();
+		let result;
+
+		if (orgId) {
+			const results = await (baseSql as any).transaction([
+				(baseSql as any).query(`SELECT set_config('app.org_id', $1, true)`, [orgId]),
+				(baseSql as any).query(queryText, queryParams),
+			]);
+			result = results[1];
+		} else {
+			result = await baseSql.query(queryText, queryParams);
+		}
+
+		// Normalizar rows: converter qualquer campo que pareça data para string ISO
+		// Isso evita o erro "reading toISOString of undefined" no Drizzle
+		if (result.rows && Array.isArray(result.rows)) {
+			for (const row of result.rows) {
+				for (const key in row) {
+					const val = row[key];
+					if (val instanceof Date) {
+						row[key] = val.toISOString();
+					} else if (key.endsWith('_at') && val === undefined) {
+						// Se o campo de data vier undefined, o Drizzle quebra. 
+						// Forçamos null para segurança.
+						row[key] = null;
+					}
+				}
+			}
+		}
+
+		return result;
+	}) as NeonQueryFunction<any, any>;
+
+	return drizzleHttp(proxySql, { schema }) as any;
 }
 
 function wrapSqlWithRls(
