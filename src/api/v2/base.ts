@@ -11,6 +11,26 @@ async function getAuthHeader(): Promise<Record<string, string>> {
 	return { Authorization: `Bearer ${token}` };
 }
 
+function getErrorMessage(body: unknown, fallback: string): string {
+	if (!body || typeof body !== "object") return fallback;
+
+	const payload = body as {
+		error?: unknown;
+		message?: unknown;
+		details?: unknown;
+	};
+	const base =
+		typeof payload.error === "string"
+			? payload.error
+			: typeof payload.message === "string"
+				? payload.message
+				: fallback;
+
+	return typeof payload.details === "string" && payload.details.trim()
+		? `${base}: ${payload.details}`
+		: base;
+}
+
 export async function request<T>(
 	path: string,
 	options: RequestInit = {},
@@ -45,7 +65,7 @@ export async function request<T>(
 				.json()
 				.catch(() => ({ error: retry.statusText }));
 			const error = new Error(
-				retryBody?.error ?? `HTTP ${retry.status}`,
+				getErrorMessage(retryBody, `HTTP ${retry.status}`),
 			) as RequestError;
 			error.status = retry.status;
 			error.payload = retryBody;
@@ -58,7 +78,7 @@ export async function request<T>(
 	if (!res.ok) {
 		const body = await res.json().catch(() => ({ error: res.statusText }));
 		const error = new Error(
-			body?.error ?? `HTTP ${res.status}`,
+			getErrorMessage(body, `HTTP ${res.status}`),
 		) as RequestError;
 		error.status = res.status;
 		error.payload = body;
@@ -89,7 +109,7 @@ export async function requestPublic<T>(
 
 	if (!res.ok) {
 		const body = await res.json().catch(() => ({ error: res.statusText }));
-		throw new Error(body?.error ?? `HTTP ${res.status}`);
+		throw new Error(getErrorMessage(body, `HTTP ${res.status}`));
 	}
 
 	return res.json() as Promise<T>;

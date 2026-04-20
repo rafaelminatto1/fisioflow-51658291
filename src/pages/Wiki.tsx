@@ -479,13 +479,37 @@ export default function WikiPage() {
 										</p>
 									</div>
 								</div>
-								<Button
-									onClick={handleCreatePage}
-									size="sm"
-									className="gap-1.5 flex-shrink-0"
-								>
-									<Plus className="h-4 w-4" /> Nova Página
-								</Button>
+								<div className="flex items-center gap-2">
+									<div className="hidden sm:flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-muted/30 border border-border/50 text-[10px] font-medium text-muted-foreground">
+										<div className={`h-1.5 w-1.5 rounded-full ${syncing ? 'bg-amber-500 animate-pulse' : 'bg-emerald-500'}`} />
+										{syncing ? 'Sincronizando...' : 'Wiki Offline Sync Ativo'}
+									</div>
+									<Button
+										variant="outline"
+										size="sm"
+										className="gap-1.5 flex-shrink-0"
+										disabled={syncing}
+										onClick={async () => {
+											if (!currentOrganizationId || !currentUserId) return;
+											const promise = wikiService.syncClinicalTestsToWiki(currentOrganizationId, currentUserId);
+											toast.promise(promise, {
+												loading: 'Sincronizando inteligência clínica...',
+												success: (data) => `Inteligência atualizada: ${data.created} criados, ${data.updated} atualizados.`,
+												error: 'Erro ao sincronizar inteligência clínica.'
+											});
+										}}
+									>
+										<History className={`h-4 w-4 ${syncing ? 'animate-spin' : ''}`} /> 
+										Sincronizar Inteligência
+									</Button>
+									<Button
+										onClick={handleCreatePage}
+										size="sm"
+										className="gap-1.5 flex-shrink-0"
+									>
+										<Plus className="h-4 w-4" /> Nova Página
+									</Button>
+								</div>
 							</div>
 
 							{evidenceTree.root && (

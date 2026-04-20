@@ -18,9 +18,9 @@ O FisioFlow utiliza **Neon** (Banco de Dados e Autenticação) e **Cloudflare** 
 
 ## Pré-requisitos de Desenvolvimento
 
-1. **Node.js v20.12.0+** instalado (obrigatório para Vite 8/Vitest).
-2. **pnpm v9+** como package manager.
-3. **Wrangler CLI** configurado:
+1. **Node.js v22.12.0+** instalado (obrigatório para Vite 8/Vitest 4).
+2. **pnpm v10.0.0+** como package manager do monorepo.
+3. **Wrangler CLI v4.83.0+** configurado:
    ```bash
    pnpm install -g wrangler
    wrangler login
@@ -41,13 +41,13 @@ pnpm install
 Renomeie `.env.example` para `.env` no root e em `apps/api` e `apps/web`.
 
 **Principais variáveis (Apps/API):**
-- `DATABASE_URL`: Connection string do Neon.
-- `NEON_AUTH_URL`: Endpoint do seu projeto de autenticação.
-- `HYPERDRIVE_ID`: ID obtido após criar a configuração de pooling na Cloudflare.
+- `DATABASE_URL`: Connection string do Neon PostgreSQL.
+- `NEON_AUTH_URL`: Endpoint do seu projeto de autenticação Neon.
+- `HYPERDRIVE_ID`: ID da configuração de pooling na Cloudflare.
 
 ---
 
-## 2. Banco de Dados (Drizzle ORM)
+## 2. Banco de Dados (Drizzle ORM v0.45.2)
 
 O sistema utiliza Drizzle para gerenciamento de schema e migrações.
 
@@ -67,7 +67,7 @@ pnpm db:migrate
 ## 3. Desenvolvimento e Deploy
 
 ### 3.1 Desenvolvimento Local
-Rodar o monorepo com Turbo:
+Rodar o monorepo com Turbo v2.8+:
 ```bash
 pnpm dev
 ```
@@ -90,9 +90,10 @@ wrangler pages deploy dist
 ## 4. Troubleshooting e Ferramentas
 
 - **Drizzle Studio:** `pnpm db:studio` para visualizar o banco em uma interface web.
-- **Node Version:** Se observar erro de `styleText`, você está usando uma versão do Node inferior a 20.12. Rodar `node -v` para conferir.
+- **Node Version:** Se observar erro de execução, verifique se está usando Node 22.12+. Rodar `node -v` para conferir.
 
 ---
 
 **Última atualização**: Abril 2026  
-**Status**: ✅ Baseline v4.0.0
+**Status**: ✅ Baseline v4.0.0 (Production Ready)
+

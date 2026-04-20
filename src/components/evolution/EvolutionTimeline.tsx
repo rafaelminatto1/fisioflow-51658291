@@ -36,7 +36,7 @@ import {
 	Target,
 	Trophy,
 } from "lucide-react";
-import React, { useCallback, useMemo, useState } from "react";
+import React, { useState } from "react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -243,7 +243,7 @@ const SessionDetailsModal: React.FC<{
 	].filter(Boolean).length;
 
 	// Função para exportar sessão como texto
-	const handleExportSession = useCallback(() => {
+	const handleExportSession = () => {
 		const exportText = `
 SESSÃO ${session.session_number || "?"} - ${safeFormat(session.created_at, "dd/MM/yyyy")}
 ${"=".repeat(50)}
@@ -298,7 +298,7 @@ ${
 		a.click();
 		document.body.removeChild(a);
 		URL.revokeObjectURL(url);
-	}, [session, sessionExercises, sessionMeasurements]);
+	};
 
 	return (
 		<Dialog open={isOpen} onOpenChange={onClose}>
@@ -919,7 +919,7 @@ export const EvolutionTimeline: React.FC<EvolutionTimelineProps> = ({
 	);
 
 	// Construir timeline de eventos
-	const timelineEvents = useMemo(() => {
+	const getTimelineEvents = () => {
 		const events: TimelineEvent[] = [];
 
 		// Adicionar sessões SOAP
@@ -1031,10 +1031,11 @@ export const EvolutionTimeline: React.FC<EvolutionTimelineProps> = ({
 			if (isNaN(timeB)) return -1;
 			return timeB - timeA;
 		});
-	}, [soapRecords, surgeries, goals, pathologies, measurements, attachments]);
+	};
+	const timelineEvents = getTimelineEvents();
 
 	// Filtrar eventos
-	const filteredEvents = useMemo(() => {
+	const getFilteredEvents = () => {
 		let filtered = timelineEvents;
 
 		// Filtro por tipo
@@ -1054,17 +1055,18 @@ export const EvolutionTimeline: React.FC<EvolutionTimelineProps> = ({
 
 		// Limitar resultados
 		return filtered.slice(0, limit);
-	}, [timelineEvents, filterType, searchQuery, limit]);
+	};
+	const filteredEvents = getFilteredEvents();
 
 	// Verificar se evento é recente (últimas 24 horas)
-	const isRecentEvent = useCallback((eventDate: Date) => {
+	const isRecentEvent = (eventDate: Date) => {
 		const now = new Date();
 		const diffHours = (now.getTime() - eventDate.getTime()) / (1000 * 60 * 60);
 		return diffHours <= 24;
-	}, []);
+	};
 
 	// Agrupar eventos por período
-	const groupedEvents = useMemo(() => {
+	const getGroupedEvents = () => {
 		const groups: Record<string, TimelineEvent[]> = {};
 
 		filteredEvents.forEach((event) => {
@@ -1098,21 +1100,20 @@ export const EvolutionTimeline: React.FC<EvolutionTimelineProps> = ({
 		});
 
 		return groups;
-	}, [filteredEvents]);
+	};
+	const groupedEvents = getGroupedEvents();
 
 	// Estatísticas
-	const stats = useMemo(() => {
-		return {
-			sessions: soapRecords.length,
-			surgeries: surgeries.length,
-			goals: goals.filter((g) => g.status === "concluido").length,
-			totalGoals: goals.length,
-			measurements: measurements.length,
-			attachments: attachments.length,
-		};
-	}, [soapRecords, surgeries, goals, measurements, attachments]);
+	const stats = {
+		sessions: soapRecords.length,
+		surgeries: surgeries.length,
+		goals: goals.filter((g) => g.status === "concluido").length,
+		totalGoals: goals.length,
+		measurements: measurements.length,
+		attachments: attachments.length,
+	};
 
-	const toggleExpand = useCallback((eventId: string) => {
+	const toggleExpand = (eventId: string) => {
 		setExpandedEvents((prev) => {
 			const newExpanded = new Set(prev);
 			if (newExpanded.has(eventId)) {
@@ -1122,21 +1123,18 @@ export const EvolutionTimeline: React.FC<EvolutionTimelineProps> = ({
 			}
 			return newExpanded;
 		});
-	}, []);
+	};
 
-	const handleViewSessionDetails = useCallback((session: SoapRecord) => {
+	const handleViewSessionDetails = (session: SoapRecord) => {
 		setSelectedSession(session);
 		setShowSessionModal(true);
-	}, []);
+	};
 
-	const handleCopySession = useCallback(
-		(session: SoapRecord) => {
-			if (onCopyEvolution) {
-				onCopyEvolution(session);
-			}
-		},
-		[onCopyEvolution],
-	);
+	const handleCopySession = (session: SoapRecord) => {
+		if (onCopyEvolution) {
+			onCopyEvolution(session);
+		}
+	};
 
 	// Teclado shortcuts
 	React.useEffect(() => {

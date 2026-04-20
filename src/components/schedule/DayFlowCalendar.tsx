@@ -35,8 +35,8 @@ const VIEW_MAP: Record<ViewType, string> = {
 	week: "timeGridWeek",
 	month: "dayGridMonth",
 };
-const WEEK_SLOT_COUNT = 56; // 14 hours * 4 slots per hour.
-const WEEK_HEADER_HEIGHT = 28;
+const WEEK_HEADER_HEIGHT = 48; // Updated for better accuracy of the clinical header
+const WEEK_SLOT_COUNT = 56; // 14 hours (07-21) * 4 slots per hour.
 
 export interface DayFlowCalendarWrapperProps {
 	appointments: any[];
@@ -559,26 +559,25 @@ export function DayFlowCalendarWrapper(props: DayFlowCalendarWrapperProps) {
 				}
 				.dayflow-week-view .ec-body {
 					overflow-y: hidden !important;
+					overflow-x: hidden !important;
+				}
+				.ec-header {
+					overflow: hidden !important;
+				}
+				.ec-sidebar {
+					width: 48px !important;
+					flex-shrink: 0 !important;
+					flex-grow: 0 !important;
+					border-right: 1px solid #cbd5e1 !important;
+				}
+				.ec-header .ec-sidebar {
+					width: 48px !important;
+					visibility: visible !important;
+					display: flex !important;
 				}
 				.dayflow-week-view .ec-body .ec-time,
 				.dayflow-week-view .ec-body .ec-line {
 					height: var(--agenda-slot-height, 20px) !important;
-				}
-				.dayflow-week-view .ec-header .ec-time,
-				.dayflow-week-view .ec-header .ec-sidebar-title,
-				.dayflow-week-view .ec-all-day .ec-time,
-				.dayflow-week-view .ec-all-day .ec-sidebar-title {
-					height: 0 !important;
-					min-height: 0 !important;
-					line-height: 0 !important;
-					padding: 0 !important;
-					overflow: hidden !important;
-					visibility: hidden !important;
-				}
-				.ec-sidebar {
-					width: 40px !important;
-					flex-shrink: 0 !important;
-					flex-grow: 0 !important;
 				}
 				.dayflow-week-view .ec-body .ec-time {
 					font-size: 10px !important;
@@ -593,8 +592,8 @@ export function DayFlowCalendarWrapper(props: DayFlowCalendarWrapperProps) {
 					justify-content: center !important;
 				}
 				.dayflow-event-shell {
-					width: 100%;
-					height: 100%;
+					width: calc(100% - 2px);
+					height: calc(100% - 2px);
 					padding: 1px;
 					overflow: hidden;
 					cursor: pointer;
