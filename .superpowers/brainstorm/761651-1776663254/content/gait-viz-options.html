@@ -1,0 +1,42 @@
+<h2>Como você prefere visualizar a Análise Espacial de Marcha?</h2>
+<p class="subtitle">Escolha o layout do relatório para desvios de tronco e centro de massa</p>
+
+<div class="cards" data-multiselect="false">
+  <div class="card" data-choice="grid" onclick="toggleSelect(this)">
+    <div class="card-image" style="background: #1e293b; display: flex; flex-direction: column; padding: 10px; gap: 5px;">
+      <div style="height: 40px; background: #8b5cf6; width: 80%; border-radius: 4px; opacity: 0.8"></div>
+      <div style="height: 40px; background: #06b6d4; width: 60%; border-radius: 4px; opacity: 0.8"></div>
+      <div style="height: 40px; background: #fbbf24; width: 90%; border-radius: 4px; opacity: 0.8"></div>
+    </div>
+    <div class="card-body">
+      <h3>Grid de Métricas Temporais</h3>
+      <p>Gráficos sincronizados mostrando a oscilação lateral (mm) e inclinação do tronco (graus) ao longo de cada passo.</p>
+    </div>
+  </div>
+
+  <div class="card" data-choice="overlay" onclick="toggleSelect(this)">
+    <div class="card-image" style="background: #000; position: relative; overflow: hidden;">
+      <div style="position: absolute; top: 20%; left: 50%; width: 2px; height: 60%; background: #06b6d4; opacity: 0.5;"></div>
+      <div style="position: absolute; top: 40%; left: 45%; width: 10px; height: 10px; background: #fbbf24; border-radius: 50%; box-shadow: 0 0 10px #fbbf24;"></div>
+      <div style="position: absolute; bottom: 10px; left: 10px; color: #fff; font-size: 10px;">COM Displacement: 4.2cm</div>
+    </div>
+    <div class="card-body">
+      <h3>Overlay de Vetores (Biomecânica)</h3>
+      <p>Vídeo com vetores dinâmicos desenhados sobre o corpo do paciente, destacando o deslocamento do centro de massa.</p>
+    </div>
+  </div>
+
+  <div class="card" data-choice="scores" onclick="toggleSelect(this)">
+    <div class="card-body" style="text-align: center;">
+      <div style="font-size: 24px; font-weight: 900; color: #10b981;">88%</div>
+      <div style="font-size: 10px; color: #64748b; text-transform: uppercase;">Simetria Espacial</div>
+      <div style="margin-top: 15px; height: 4px; background: #e2e8f0; border-radius: 2px;">
+        <div style="width: 88%; height: 100%; background: #10b981; border-radius: 2px;"></div>
+      </div>
+    </div>
+    <div class="card-body">
+      <h3>Scores de Estabilidade</h3>
+      <p>Resumo executivo com notas (0-100%) para Simetria, Estabilidade de Tronco e Eficiência do Centro de Massa.</p>
+    </div>
+  </div>
+</div>
