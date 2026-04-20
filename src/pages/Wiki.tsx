@@ -166,7 +166,7 @@ export default function WikiPage() {
 		if (searchQuery.startsWith("#")) {
 			const tagName = searchQuery.slice(1).toLowerCase();
 			return pages.filter((page) =>
-				page.tags.some((t) => t.toLowerCase().includes(tagName)),
+				(page.tags || []).some((t) => t && t.toLowerCase().includes(tagName)),
 			);
 		}
 
