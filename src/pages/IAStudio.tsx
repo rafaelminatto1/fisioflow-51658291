@@ -1,8 +1,7 @@
 import React, { useState } from "react";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import { MainLayout } from "@/components/layout/MainLayout";
 import { 
-	BrainCircuit, 
 	Mic, 
 	Activity, 
 	MessageSquare, 
@@ -13,17 +12,21 @@ import {
 	Lock
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { ScribeDrawer } from "@/features/ia-studio/components/ScribeDrawer";
 import { FisioADM } from "@/features/ia-studio/components/FisioADM";
+import { FisioRetention } from "@/features/ia-studio/components/FisioRetention";
+import { cn } from "@/lib/utils";
 
 const IAStudio = () => {
 	const [isScribeOpen, setIsScribeOpen] = useState(false);
 	const [isADMOpen, setIsADMOpen] = useState(false);
+	const [activeFeatureTab, setActiveFeatureTab] = useState<"retention" | "predict" | null>(null);
 
 	const features = [
 		{
+			id: "scribe",
 			title: "FisioAmbient",
 			subtitle: "AI Ambient Scribe",
 			desc: "Transcrição clínica inteligente e geração automática de SOAP.",
@@ -33,6 +36,7 @@ const IAStudio = () => {
 			status: "Ativo",
 		},
 		{
+			id: "adm",
 			title: "FisioADM",
 			subtitle: "Bio-Vision ROM",
 			desc: "Medição de amplitude de movimento via câmera em tempo real.",
@@ -42,14 +46,17 @@ const IAStudio = () => {
 			status: "Ativo",
 		},
 		{
+			id: "retention",
 			title: "FisioRetention",
 			subtitle: "Agente Proativo",
 			desc: "Automação de WhatsApp para reduzir no-show e churn.",
 			icon: <MessageSquare className="w-6 h-6" />,
 			color: "bg-emerald-500",
-			status: "Em breve",
+			action: () => setActiveFeatureTab(activeFeatureTab === "retention" ? null : "retention"),
+			status: "Ativo",
 		},
 		{
+			id: "predict",
 			title: "FisioPredict",
 			subtitle: "Predição de Alta",
 			desc: "Análise preditiva de tempo de tratamento e alta clínica.",
@@ -61,7 +68,7 @@ const IAStudio = () => {
 
 	return (
 		<MainLayout>
-			<div className="p-8 max-w-7xl mx-auto space-y-12">
+			<div className="p-8 max-w-7xl mx-auto space-y-12 pb-32">
 				{/* Hero Section */}
 				<header className="flex flex-col md:flex-row md:items-end justify-between gap-6 relative overflow-hidden">
 					<div className="space-y-4 relative z-10">
@@ -86,7 +93,6 @@ const IAStudio = () => {
 						</Button>
 					</div>
 
-					{/* Decorative background element */}
 					<div className="absolute -top-20 -right-20 w-96 h-96 bg-violet-500/10 blur-[100px] rounded-full" />
 				</header>
 
@@ -99,14 +105,20 @@ const IAStudio = () => {
 							animate={{ opacity: 1, y: 0 }}
 							transition={{ delay: idx * 0.1 }}
 						>
-							<Card className="group h-full border-none shadow-xl shadow-slate-200/50 dark:shadow-none dark:bg-slate-900/50 dark:border dark:border-slate-800 hover:ring-2 hover:ring-violet-500/30 transition-all duration-500 rounded-[32px] overflow-hidden flex flex-col cursor-pointer" onClick={feature.action}>
+							<Card 
+								className={cn(
+									"group h-full border-none shadow-xl shadow-slate-200/50 dark:shadow-none dark:bg-slate-900/50 dark:border dark:border-slate-800 hover:ring-2 hover:ring-violet-500/30 transition-all duration-500 rounded-[32px] overflow-hidden flex flex-col cursor-pointer",
+									activeFeatureTab === feature.id && "ring-2 ring-violet-500/50 shadow-violet-500/10"
+								)} 
+								onClick={feature.action}
+							>
 								<CardHeader className="p-8 pb-4">
-									<div className={`w-14 h-14 \${feature.color} rounded-2xl flex items-center justify-center text-white mb-6 shadow-lg shadow-\${feature.color.split('-')[1]}-500/30 group-hover:scale-110 transition-transform duration-500`}>
+									<div className={`w-14 h-14 ${feature.color} rounded-2xl flex items-center justify-center text-white mb-6 shadow-lg shadow-${feature.color.split('-')[1]}-500/30 group-hover:scale-110 transition-transform duration-500`}>
 										{feature.icon}
 									</div>
 									<div className="space-y-1">
 										<div className="flex items-center justify-between">
-											<span className="text-[10px] uppercase font-black tracking-widest text-slate-400">\${feature.subtitle}</span>
+											<span className="text-[10px] uppercase font-black tracking-widest text-slate-400">{feature.subtitle}</span>
 											<Badge variant="secondary" className="text-[9px] h-5 rounded-full px-2">
 												{feature.status === 'Ativo' ? <Zap className="w-2.5 h-2.5 mr-1 fill-violet-500 text-violet-500" /> : <Lock className="w-2.5 h-2.5 mr-1" />}
 												{feature.status}
@@ -120,7 +132,7 @@ const IAStudio = () => {
 										{feature.desc}
 									</p>
 									<Button variant="ghost" className="w-full justify-between group/btn hover:bg-violet-50 text-violet-600 dark:hover:bg-violet-900/20 rounded-xl px-4 font-bold transition-all">
-										Configurar
+										{feature.status === 'Ativo' ? 'Acessar' : 'Configurar'}
 										<ChevronRight className="w-4 h-4 group-hover/btn:translate-x-1 transition-transform" />
 									</Button>
 								</CardContent>
@@ -128,6 +140,22 @@ const IAStudio = () => {
 						</motion.div>
 					))}
 				</section>
+
+				{/* Detailed Feature View */}
+				<AnimatePresence mode="wait">
+					{activeFeatureTab === "retention" && (
+						<motion.div
+							initial={{ opacity: 0, y: 20 }}
+							animate={{ opacity: 1, y: 0 }}
+							exit={{ opacity: 0, y: -20 }}
+							className="bg-slate-50 dark:bg-slate-900/30 p-8 rounded-[40px] border border-white/5 shadow-inner overflow-hidden"
+						>
+							<div className="max-w-4xl mx-auto">
+								<FisioRetention />
+							</div>
+						</motion.div>
+					)}
+				</AnimatePresence>
 
 				{/* Security & Compliance Info */}
 				<footer className="p-8 rounded-[40px] bg-gradient-to-br from-slate-900 to-slate-950 text-white relative overflow-hidden">
@@ -148,7 +176,6 @@ const IAStudio = () => {
 						</Button>
 					</div>
 					
-					{/* Background circles */}
 					<div className="absolute top-1/2 left-1/4 w-32 h-32 bg-violet-600/20 blur-[60px] rounded-full" />
 					<div className="absolute bottom-0 right-10 w-48 h-48 bg-emerald-600/10 blur-[80px] rounded-full" />
 				</footer>
@@ -157,6 +184,7 @@ const IAStudio = () => {
 			<ScribeDrawer 
 				isOpen={isScribeOpen} 
 				onClose={() => setIsScribeOpen(false)} 
+				patientId="test-patient-id"
 			/>
 
 			<FisioADM
