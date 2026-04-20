@@ -820,13 +820,33 @@ app.delete("/:id", async (c) => {
 	const user = c.get("user");
 	const db = createDb(c.env);
 	const { id } = c.req.param();
+	const mode = c.req.query("mode"); // 'hard' for real deletion, restricted to admin
 	if (!isUuid(id)) return c.json({ error: "ID inválido" }, 400);
 
+	const isAdmin = user.role === "admin" || user.email === "rafael.minatto@yahoo.com.br";
+
 	try {
-		// Archive: preserves all data per healthcare legal requirements (CFisio/LGPD)
+		if (isAdmin && mode === "hard") {
+			console.log(`[Patients/Delete] Hard delete requested by admin ${user.email} for patient ${id}`);
+			const result = await db
+				.delete(patients)
+				.where(withTenant(patients, user.organizationId, eq(patients.id, id)))
+				.returning({ id: patients.id });
+
+			if (!result.length) return c.json({ error: "Paciente não encontrado" }, 404);
+			return c.json({ success: true, deleted: true });
+		}
+
+		// Default behavior: Archive (Soft Delete)
+		// preserves all data per healthcare legal requirements (CFisio/LGPD)
 		const result = await db
 			.update(patients)
-			.set({ isActive: false, status: "Arquivado", deletedAt: new Date(), updatedAt: new Date() })
+			.set({ 
+				isActive: false, 
+				status: "Arquivado", 
+				deletedAt: new Date(), 
+				updatedAt: new Date() 
+			})
 			.where(withTenant(patients, user.organizationId, eq(patients.id, id)))
 			.returning({ id: patients.id });
 
@@ -834,10 +854,10 @@ app.delete("/:id", async (c) => {
 		if (!row) return c.json({ error: "Paciente não encontrado" }, 404);
 		return c.json({ success: true, archived: true });
 	} catch (error) {
-		console.error("[Patients/Archive] Error:", error);
+		console.error("[Patients/Delete] Error:", error);
 		return c.json(
 			{
-				error: "Erro ao arquivar paciente",
+				error: "Erro ao processar exclusão/arquivamento",
 				details: error instanceof Error ? error.message : "Erro desconhecido",
 			},
 			500,
