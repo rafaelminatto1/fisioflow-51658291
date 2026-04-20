@@ -74,7 +74,7 @@ export function WikiPageCard({
 				</div>
 
 				<p className="text-sm text-muted-foreground line-clamp-2 mb-3">
-					{page.content.slice(0, 100).replace(/[#*`]/g, "") || "Sem resumo"}...
+					{(page.content || "").slice(0, 100).replace(/[#*`]/g, "") || "Sem resumo"}...
 				</p>
 
 				<div className="flex items-center justify-between">
@@ -85,15 +85,15 @@ export function WikiPageCard({
 								{page.category}
 							</Badge>
 						)}
-						{page.tags.slice(0, 2).map((tag) => (
+						{(page.tags || []).slice(0, 2).map((tag) => (
 							<Badge key={tag} variant="secondary" className="text-xs">
 								<Tag className="w-3 h-3 mr-1" />
 								{tag}
 							</Badge>
 						))}
-						{page.tags.length > 2 && (
+						{(page.tags || []).length > 2 && (
 							<Badge variant="secondary" className="text-xs">
-								+{page.tags.length - 2}
+								+{(page.tags || []).length - 2}
 							</Badge>
 						)}
 					</div>
