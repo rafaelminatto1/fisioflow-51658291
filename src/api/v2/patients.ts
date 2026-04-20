@@ -54,8 +54,11 @@ export const patientsApi = {
 			method: "PUT",
 			body: JSON.stringify(data),
 		}),
-	delete: (id: string) =>
-		request<{ success: boolean }>(`/api/patients/${id}`, { method: "DELETE" }),
+	delete: (id: string, mode?: "hard") =>
+		request<{ success: boolean }>(
+			`/api/patients/${id}${mode ? `?mode=${mode}` : ""}`,
+			{ method: "DELETE" },
+		),
 	stats: (id: string) =>
 		request<{ data: PatientStats }>(`/api/patients/${id}/stats`),
 	lastUpdated: () =>
