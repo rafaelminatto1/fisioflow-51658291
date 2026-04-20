@@ -72,6 +72,7 @@ import { marketingRoutes } from "./routes/marketing";
 import { biomechanicsRoutes } from "./routes/biomechanics";
 import { aiRoutes } from "./routes/ai";
 import { aiAgentsRoutes } from "./routes/ai-agents";
+import { aiStudioRoutes } from "./routes/ai-studio";
 import { fcmTokensRoutes } from "./routes/fcmTokens";
 import { webhooksRoutes } from "./routes/webhooks";
 import { patientPortalRoutes } from "./routes/patientPortal";
@@ -243,6 +244,7 @@ const apiRoutes = [
 	["/api/marketing", marketingRoutes],
 	["/api/biomechanics", biomechanicsRoutes],
 	["/api/ai", aiRoutes],
+	["/api/ia-studio", aiStudioRoutes],
 	["/api/agents", aiAgentsRoutes],
 	["/api/fcm-tokens", fcmTokensRoutes],
 	["/api/webhooks", webhooksRoutes],

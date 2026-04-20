@@ -8,7 +8,6 @@ import {
 	MessageSquare, 
 	TrendingUp, 
 	Zap, 
-	Sparkles,
 	ChevronRight,
 	ShieldCheck,
 	Lock
@@ -65,7 +64,7 @@ const IAStudio = () => {
 					<div className="space-y-4 relative z-10">
 						<div className="flex items-center gap-2">
 							<Badge className="bg-violet-600/10 text-violet-400 border-violet-500/20 hover:bg-violet-600/20 transition-colors">
-								<Sparkles className="w-3 h-3 mr-1" /> Inteligência de Borda
+								<Zap className="w-3 h-3 mr-1" /> Inteligência de Borda
 							</Badge>
 							<Badge variant="outline" className="text-slate-400 border-slate-800">v4.5 Early Access</Badge>
 						</div>
