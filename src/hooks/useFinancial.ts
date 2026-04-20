@@ -135,6 +135,14 @@ export const useFinancial = () => {
 		},
 	});
 
+	// Faturamento On-Demand: Sessions waiting for billing
+	const unbilledSessions = useMemo(() => {
+		// This logic would ideally come from a specific backend endpoint
+		// but we can compute it if we have the appointments data here.
+		// For now, we provide the structure for the FinancialWorkbench to consume.
+		return []; 
+	}, []);
+
 	return {
 		transactions,
 		allTransactions: rawTransactions,
@@ -147,6 +155,7 @@ export const useFinancial = () => {
 		updateTransaction: updateMutation.mutate,
 		deleteTransaction: deleteMutation.mutate,
 		markAsPaid: markAsPaidMutation.mutate,
+		unbilledSessions,
 		isCreating: createMutation.isPending,
 		isUpdating: updateMutation.isPending,
 		isDeleting: deleteMutation.isPending,

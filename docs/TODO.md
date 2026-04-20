@@ -30,5 +30,12 @@
 - `[x]` Update landing page with 2026 feature highlights (FisioFlow 2026 Premium Design)
 - `[x]` Ensure standard meta tags are present across all public routes (per SEO guidelines)
 
+## 🤖 AI & Agentic Intelligence (Roadmap 2026)
+- `[ ]` Implement Gemini 3.0 Thinking Mode in `EvolutionSummarizer`
+- `[ ]` Finalize Beta of FisioAmbient Scribe (Ambient Clinical Recording)
+- `[ ]` Develop Orchestrator Agent for automated scheduling and billing
+- `[ ]` Integrate Structured Outputs (Zod) in all clinical analysis endpoints
+- `[ ]` Launch Exercise Correction via Computer Vision (Mobile Edge AI)
+
 ---
-*Last Updated: April 9, 2026*
+*Last Updated: April 20, 2026*

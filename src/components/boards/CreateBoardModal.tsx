@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -52,6 +52,15 @@ export function CreateBoardModal({
 	);
 	const [selectedIcon, setSelectedIcon] = useState(BOARD_ICONS[0]);
 
+	useEffect(() => {
+		if (open) return;
+
+		setName("");
+		setDescription("");
+		setSelectedColor(BOARD_PRESET_COLORS[0].value);
+		setSelectedIcon(BOARD_ICONS[0]);
+	}, [open]);
+
 	const handleSubmit = (e: React.FormEvent) => {
 		e.preventDefault();
 		if (!name.trim()) return;
@@ -61,10 +70,6 @@ export function CreateBoardModal({
 			background_color: selectedColor,
 			icon: selectedIcon,
 		});
-		setName("");
-		setDescription("");
-		setSelectedColor(BOARD_PRESET_COLORS[0].value);
-		setSelectedIcon(BOARD_ICONS[0]);
 	};
 
 	return (
