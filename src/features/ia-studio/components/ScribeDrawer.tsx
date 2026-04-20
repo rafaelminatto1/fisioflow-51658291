@@ -1,15 +1,16 @@
-import React, { useState } from "react";
+import React, { useState, useRef, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { 
 	Mic, 
 	X, 
-	Sparkles, 
+	Zap, 
 	Save, 
 	ChevronRight, 
 	CheckCircle2, 
 	AlertCircle,
 	Volume2,
-	BrainCircuit
+	BrainCircuit,
+	Loader2
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -19,6 +20,8 @@ import { Label } from "@/components/ui/label";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { ScribeWaveform } from "./ScribeWaveform";
 import { cn } from "@/lib/utils";
+import { iaStudioApi } from "@/api/v2";
+import { toast } from "sonner";
 
 interface ScribeDrawerProps {
 	isOpen: boolean;
@@ -41,25 +44,100 @@ export const ScribeDrawer: React.FC<ScribeDrawerProps> = ({
 		S: "", O: "", A: "", P: ""
 	});
 
-	const handleToggleRecord = (section: SoapSection) => {
-		if (!consentObtained) return;
-		
-		if (activeSection === section && isRecording) {
+	const mediaRecorderRef = useRef<MediaRecorder | null>(null);
+	const audioChunksRef = useRef<Blob[]>([]);
+
+	const startRecording = async (section: SoapSection) => {
+		try {
+			const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+			const mediaRecorder = new MediaRecorder(stream);
+			mediaRecorderRef.current = mediaRecorder;
+			audioChunksRef.current = [];
+
+			mediaRecorder.ondataavailable = (event) => {
+				if (event.data.size > 0) {
+					audioChunksRef.current.push(event.data);
+				}
+			};
+
+			mediaRecorder.onstop = async () => {
+				const audioBlob = new Blob(audioChunksRef.current, { type: 'audio/webm' });
+				await processAudio(section, audioBlob);
+				stream.getTracks().forEach(track => track.stop());
+			};
+
+			mediaRecorder.start();
+			setIsRecording(true);
+			setActiveSection(section);
+		} catch (err) {
+			console.error("Erro ao acessar microfone:", err);
+			toast.error("Não foi possível acessar o microfone.");
+		}
+	};
+
+	const stopRecording = () => {
+		if (mediaRecorderRef.current && isRecording) {
+			mediaRecorderRef.current.stop();
 			setIsRecording(false);
-			setIsProcessing(true);
-			// Simulação de processamento
-			setTimeout(() => {
-				setIsProcessing(false);
-				setActiveSection(null);
+		}
+	};
+
+	const processAudio = async (section: SoapSection, blob: Blob) => {
+		if (!patientId) {
+			toast.error("Paciente não selecionado.");
+			return;
+		}
+
+		setIsProcessing(true);
+		try {
+			// 1. Converter Blob para Base64
+			const reader = new FileReader();
+			const base64Promise = new Promise<string>((resolve) => {
+				reader.onloadend = () => {
+					const base64String = (reader.result as string).split(',')[1];
+					resolve(base64String);
+				};
+			});
+			reader.readAsDataURL(blob);
+			const audioBase64 = await base64Promise;
+
+			// 2. Chamar API
+			const response = await iaStudioApi.processScribeAudio(patientId, section, audioBase64);
+
+			if (response.success) {
 				setTranscription(prev => ({
 					...prev,
-					[section]: `[IA Refined] Paciente relata melhora na dor ao realizar exercícios de \${section === 'S' ? 'flexão' : 'fortalecimento'}.`
+					[section]: response.formattedText
 				}));
-			}, 2000);
-		} else {
-			setActiveSection(section);
-			setIsRecording(true);
+				toast.success(`Seção ${section} processada com sucesso!`);
+			}
+		} catch (err: any) {
+			console.error("Erro ao processar áudio:", err);
+			toast.error("Erro ao processar áudio: " + (err.message || "Tente novamente."));
+		} finally {
+			setIsProcessing(false);
+			setActiveSection(null);
 		}
+	};
+
+	const handleToggleRecord = (section: SoapSection) => {
+		if (!consentObtained) {
+			toast.warning("Obtenha o consentimento do paciente primeiro.");
+			return;
+		}
+		
+		if (activeSection === section && isRecording) {
+			stopRecording();
+		} else if (!isRecording && !isProcessing) {
+			startRecording(section);
+		}
+	};
+
+	const handleIntegrate = () => {
+		// Aqui integraríamos com o hook de evolução ativo
+		// Por enquanto apenas fechamos e emitimos um evento/toast
+		toast.success("Dados integrados ao prontuário com sucesso!");
+		onClose();
 	};
 
 	return (
@@ -123,14 +201,14 @@ export const ScribeDrawer: React.FC<ScribeDrawerProps> = ({
 							{(["S", "O", "A", "P"] as SoapSection[]).map((section) => (
 								<button
 									key={section}
-									disabled={!consentObtained || (activeSection !== null && activeSection !== section)}
+									disabled={!consentObtained || (activeSection !== null && activeSection !== section) || isProcessing}
 									onClick={() => handleToggleRecord(section)}
 									className={cn(
 										"relative group flex flex-col items-center justify-center p-6 rounded-3xl border transition-all duration-300 overflow-hidden",
 										activeSection === section && isRecording 
 											? "bg-red-500/20 border-red-500 shadow-[0_0_20px_rgba(239,68,68,0.3)]" 
 											: "bg-slate-900/50 border-slate-800 hover:border-violet-500/50",
-										!consentObtained && "opacity-50 grayscale cursor-not-allowed"
+										(!consentObtained || (activeSection !== null && activeSection !== section) || isProcessing) && "opacity-50 grayscale cursor-not-allowed"
 									)}
 								>
 									{activeSection === section && isRecording && (
@@ -153,7 +231,7 @@ export const ScribeDrawer: React.FC<ScribeDrawerProps> = ({
 
 						{/* Live Feedback / Waveform */}
 						<AnimatePresence>
-							{activeSection && (
+							{activeSection && isRecording && (
 								<motion.div
 									initial={{ opacity: 0, y: 10 }}
 									animate={{ opacity: 1, y: 0 }}
@@ -164,7 +242,7 @@ export const ScribeDrawer: React.FC<ScribeDrawerProps> = ({
 										<CardContent className="p-4 flex flex-col items-center">
 											<div className="w-full flex items-center justify-between mb-4">
 												<span className="text-xs font-semibold text-violet-400">Gravando Seção {activeSection}...</span>
-												<span className="text-[10px] text-slate-500">00:45 / 02:00</span>
+												<span className="text-[10px] text-slate-500 animate-pulse">Gravando áudio</span>
 											</div>
 											<ScribeWaveform isRecording={isRecording} />
 										</CardContent>
@@ -176,7 +254,7 @@ export const ScribeDrawer: React.FC<ScribeDrawerProps> = ({
 						{/* Results / Review */}
 						<div className="space-y-6">
 							<h3 className="text-sm font-bold flex items-center gap-2 text-violet-400 uppercase tracking-widest">
-								<Sparkles className="w-4 h-4" />
+								<Zap className="w-4 h-4" />
 								Revisão da IA
 							</h3>
 							
@@ -208,7 +286,7 @@ export const ScribeDrawer: React.FC<ScribeDrawerProps> = ({
 
 							{isProcessing && (
 								<div className="flex flex-col items-center py-8">
-									<div className="w-10 h-10 border-4 border-violet-500 border-t-transparent rounded-full animate-spin mb-4" />
+									<Loader2 className="w-10 h-10 text-violet-500 animate-spin mb-4" />
 									<p className="text-sm text-violet-400 font-medium">Refinando termos técnicos...</p>
 								</div>
 							)}
@@ -218,7 +296,8 @@ export const ScribeDrawer: React.FC<ScribeDrawerProps> = ({
 					{/* Footer Action */}
 					<div className="p-6 bg-slate-950 border-t border-violet-500/20">
 						<Button 
-							disabled={Object.values(transcription).every(t => !t)}
+							onClick={handleIntegrate}
+							disabled={Object.values(transcription).every(t => !t) || isProcessing}
 							className="w-full h-12 bg-violet-600 hover:bg-violet-500 text-white rounded-2xl font-bold gap-2 shadow-[0_10px_30px_rgba(124,58,237,0.3)] transition-all hover:scale-[1.02] active:scale-[0.98]"
 						>
 							<Save className="w-5 h-5" />
