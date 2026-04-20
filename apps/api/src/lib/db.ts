@@ -51,8 +51,6 @@ export function getOrgContext(): string | undefined {
 }
 
 function getUrl(env: Env, mode: 'read' | 'write' = 'write'): string {
-	// Mode 'read' favors direct NEON_URL for HTTP driver compatibility (neon-http)
-	// Mode 'write' favors HYPERDRIVE for TCP pooling and performance
 	const url = (mode === 'read' ? env.NEON_URL : env.HYPERDRIVE?.connectionString) ||
 		env.NEON_URL ||
 		process.env.DATABASE_URL;
@@ -61,13 +59,8 @@ function getUrl(env: Env, mode: 'read' | 'write' = 'write'): string {
 	return url;
 }
 
-/**
- * Determina se devemos usar o driver TCP (pg) ou HTTP (neon).
- * Priorizamos TCP se estivermos usando Hyperdrive.
- */
 function isTcpConnection(env: Env, mode: 'read' | 'write' = 'write'): boolean {
 	const url = getUrl(env, mode);
-	// Se a URL vem do Hyperdrive ou é postgres://, usamos TCP via pg
 	if (env.HYPERDRIVE?.connectionString && url === env.HYPERDRIVE.connectionString) return true;
 	if (url.startsWith('postgres://') || url.startsWith('postgresql://')) return true;
 	return false;
@@ -84,7 +77,6 @@ function getGlobalPool(env: Env): Pool {
         connectionTimeoutMillis: 15000,
     });
 
-    // Wrap connect to automatically inject RLS context from ALS
     const originalConnect = pool.connect.bind(pool);
     pool.connect = (async () => {
         const client = await originalConnect();
@@ -95,7 +87,6 @@ function getGlobalPool(env: Env): Pool {
         return client;
     }) as any;
 
-    // Wrap query to automatically inject RLS context from ALS
     const originalQuery = pool.query.bind(pool);
     pool.query = (async (text: any, params: any) => {
         const orgId = getOrgContext();
@@ -150,113 +141,52 @@ export async function queryWithCache<T>(
 	}
 }
 
-/**
- * Tipo unificado para o banco de dados FisioFlow, suportando drivers HTTP e TCP.
- */
 export type FisioDb = PgDatabase<any, typeof schema>;
 
 /**
  * Cria uma instância do Drizzle configurada para o ambiente atual.
- * Always uses neon-http (NEON_URL) to avoid TCP cold-start hangs in Cloudflare Workers.
- * Hyperdrive/TCP path is kept in createPool for raw SQL; all Drizzle ORM usage goes HTTP.
  */
 export function createDb(env: Env, mode: 'read' | 'write' = 'write'): FisioDb {
 	const url = getUrl(env, 'read');
-	const baseSql = neon(url, { fullResults: true });
+	const baseSql = neon(url);
 
-	// Interceptador para normalizar datas que o Neon HTTP retorna como undefined ou objetos estranhos
-	const proxySql = (async (textOrStrings: any, ...values: any[]) => {
-		let queryText = "";
-		let queryParams: any[] = [];
-		
-		if (typeof textOrStrings === 'string') {
-			queryText = textOrStrings;
-			queryParams = values[0] ?? [];
-		} else {
-			queryText = textOrStrings[0];
-			for (let i = 0; i < values.length; i++) {
-				queryText += `$${i + 1}${textOrStrings[i + 1]}`;
-				queryParams.push(values[i]);
-			}
-		}
-
+	const proxySql = (async (sql: string, params: any[]) => {
 		let orgId = getOrgContext();
 		
-		// OVERRIDE DE PRODUÇÃO: Se o orgId for o padrão ou nulo, forçar Mooca Fisio
+		// OVERRIDE DE PRODUÇÃO
 		if (!orgId || orgId === '00000000-0000-0000-0000-000000000001') {
 			orgId = '04f4477c-7833-4f96-8571-33157940787e';
 		}
 
-		let result;
-
-		console.log(`[DB/Neon] Executing query: ${queryText.substring(0, 100)}...`, { params: queryParams.length, orgId });
-
 		try {
-			// Usar transação sempre para garantir set_config + query no mesmo backend
-			// Nota: Neon HTTP suporta transações enviando múltiplos statements no mesmo POST
-			const results = await (baseSql as any).transaction([
-				(baseSql as any).query(`SELECT set_config('app.org_id', $1, true)`, [orgId]),
-				(baseSql as any).query(queryText, queryParams),
+			const results = await baseSql.transaction([
+				baseSql.query(`SELECT set_config('app.org_id', $1, true)`, [orgId]),
+				baseSql.query(sql, params),
 			]);
-			result = results[1];
-			console.log(`[DB/Neon] Query success. Rows: ${result.rows?.length}`);
-		} catch (dbErr: any) {
-			console.error(`[DB/Neon] Query Error: ${dbErr.message}`, { 
-				text: queryText,
-				params: queryParams,
-				stack: dbErr.stack 
-			});
-			throw dbErr;
-		}
+			
+			const rows = results[1];
 
-		// Normalizar rows: converter qualquer campo que pareça data para string ISO
-		// Isso evita o erro "reading toISOString of undefined" no Drizzle
-		if (result.rows && Array.isArray(result.rows)) {
-			for (const row of result.rows) {
-				for (const key in row) {
-					const val = row[key];
-					if (val instanceof Date) {
-						row[key] = val.toISOString();
-					} else if ((key.endsWith('_at') || key.endsWith('At') || key === 'date') && (val === undefined || val === null)) {
-						// Se o campo de data vier undefined, o Drizzle quebra. 
-						// Para o Drizzle PgDate e PgTimestamp, retornar string ou null.
-						row[key] = null;
-					} else if (val && typeof val === 'object' && !Array.isArray(val) && (val.constructor?.name === 'Date' || typeof val.toISOString === 'function')) {
-						row[key] = val.toISOString();
+			// Normalização mínima para Drizzle
+			if (Array.isArray(rows)) {
+				for (const row of rows) {
+					for (const key in row) {
+						if (row[key] instanceof Date) {
+							row[key] = row[key].toISOString();
+						}
 					}
 				}
 			}
+
+			return rows;
+		} catch (dbErr: any) {
+			console.error(`[DB/Neon] Query Error: ${dbErr.message}`, { sql, params });
+			throw dbErr;
 		}
-
-		return result;
-	}) as NeonQueryFunction<any, any>;
-
-	return drizzleHttp(proxySql, { schema, fullResults: true }) as any;
-}
-
-function wrapSqlWithRls(
-	sql: NeonQueryFunction<any, any>,
-	organizationId: string,
-): NeonQueryFunction<any, any> {
-	return (async (textOrStrings: any, ...values: any[]) => {
-		// Drizzle calls this as (queryText, params) — plain string, not tagged template.
-		const queryText = typeof textOrStrings === 'string' ? textOrStrings : textOrStrings[0];
-		const queryParams = typeof textOrStrings === 'string' ? (values[0] ?? []) : values;
-
-		// sql.query() creates a deferred NeonQueryPromise suitable for transaction batching.
-		// fullResults is inherited from neon(url, { fullResults: true }) set in createDb.
-		const results = await (sql as any).transaction([
-			(sql as any).query(`SELECT set_config('app.org_id', $1, true)`, [organizationId]),
-			(sql as any).query(queryText, queryParams),
-		]);
-
-		return results[1];
 	}) as any;
+
+	return drizzleHttp(proxySql, { schema });
 }
 
-/**
- * Executa uma query garantindo o contexto de RLS.
- */
 export async function withRls<T>(
 	env: Env,
 	organizationId: string,
@@ -269,8 +199,6 @@ export async function withRls<T>(
 		const pool = getGlobalPool(env);
 		const client = await pool.connect();
 		try {
-            // Note: client.query already has orgId from ALS if it was called through getGlobalPool
-            // but here we are explicitly passing organizationId
 			await client.query(`SELECT set_config('app.org_id', $1, true)`, [organizationId]);
 			return await fn(client);
 		} finally {
@@ -285,9 +213,6 @@ export async function withRls<T>(
 	return await fn(sql);
 }
 
-/**
- * Cria um pool de conexões (ou emulação via HTTP) para queries manuais.
- */
 export function createPool(
 	env: Env,
 	defaultTimeout: number = DEFAULT_TIMEOUTS.query,
@@ -341,7 +266,6 @@ export function createPool(
 					const client = await pool.connect();
 					try {
 						await client.query('BEGIN');
-						// Note: pool.connect already injected orgId from ALS
 						const results = [];
 						for (const q of queries) {
 							const res = await client.query(q.text, q.values);
@@ -365,7 +289,6 @@ export function createPool(
 		};
 	}
 
-	// Fallback HTTP (Neon)
 	const sql = neon(url, { fullResults: true });
 	const queryProxy = async <Row extends DbRow = DbRow>(
 		text: string,
@@ -425,7 +348,6 @@ export function getRawSql(env: Env, mode: 'read' | 'write' = 'read'): DbQuery {
 			text = textOrStrings;
 			params = paramsOrValues[0] ?? [];
 		} else {
-			// Handle template literal
 			text = textOrStrings[0];
 			for (let i = 0; i < paramsOrValues.length; i++) {
 				text += `$${i + 1}${textOrStrings[i + 1]}`;
@@ -433,7 +355,6 @@ export function getRawSql(env: Env, mode: 'read' | 'write' = 'read'): DbQuery {
 			}
 		}
 
-		// HTTP Driver (Neon) - Used for 'read' mode or fallback
 		const sql = neon(url, { fullResults: true });
 		const neonProcess = async (queryText: string, queryParams: any[]) => {
 			if (orgId) {
