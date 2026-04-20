@@ -118,6 +118,35 @@ export function WikiPageViewerContent({
 				</div>
 			</div>
 
+			{page.clinical_metadata && Object.keys(page.clinical_metadata).length > 0 && (
+				<div className="mb-8 grid grid-cols-1 md:grid-cols-3 gap-4">
+					<div className="bg-primary/5 border border-primary/10 rounded-xl p-4 flex flex-col justify-center shadow-sm">
+						<p className="text-[10px] font-bold uppercase tracking-wider text-primary/60 mb-1">Alvo RPE (Borg)</p>
+						<p className="text-2xl font-black text-primary">{page.clinical_metadata.rpe_target || "—"}</p>
+					</div>
+					<div className="bg-primary/5 border border-primary/10 rounded-xl p-4 flex flex-col justify-center shadow-sm">
+						<p className="text-[10px] font-bold uppercase tracking-wider text-primary/60 mb-1">Regra de Progressão</p>
+						<p className="text-sm font-semibold text-slate-800 dark:text-slate-200">
+							{page.clinical_metadata.progression_rule || "Manual"}
+						</p>
+					</div>
+					<div className="bg-primary/5 border border-primary/10 rounded-xl p-4 flex flex-col justify-center shadow-sm">
+						<p className="text-[10px] font-bold uppercase tracking-wider text-primary/60 mb-1">Evidência Científica</p>
+						<div className="flex items-center gap-2">
+							<Badge className="bg-primary text-white font-black px-1.5 py-0">
+								{page.clinical_metadata.evidence_level || "?"}
+							</Badge>
+							<p className="text-xs font-medium text-muted-foreground">
+								{page.clinical_metadata.evidence_level === 'A' ? 'Evidência Forte' :
+								 page.clinical_metadata.evidence_level === 'B' ? 'Evidência Moderada' :
+								 page.clinical_metadata.evidence_level === 'C' ? 'Evidência Fraca' :
+								 page.clinical_metadata.evidence_level === 'D' ? 'Consenso Teórico' : 'Não especificado'}
+							</p>
+						</div>
+					</div>
+				</div>
+			)}
+
 			<div className="space-y-3">
 				{blocks.map((block) => {
 					const blockComments = commentsByBlock[block.id] || [];

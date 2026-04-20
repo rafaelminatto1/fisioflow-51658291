@@ -16,6 +16,7 @@ interface UseGlobalShortcutsOptions {
 	onNewSection?: () => void;
 	onShowShortcuts?: () => void;
 	onJumpToSection?: (sectionNumber: number) => void;
+	onAiScribe?: () => void;
 	enabled?: boolean;
 }
 
@@ -24,6 +25,7 @@ export const useGlobalShortcuts = ({
 	onNewSection,
 	onShowShortcuts,
 	onJumpToSection,
+	onAiScribe,
 	enabled = true,
 }: UseGlobalShortcutsOptions) => {
 	const handleKeyDown = useCallback(
@@ -57,9 +59,15 @@ export const useGlobalShortcuts = ({
 
 			switch (event.key.toLowerCase()) {
 				case "s":
-					// Ctrl/Cmd + S: Save
-					event.preventDefault();
-					onSave?.();
+					// Alt + S: AI Scribe
+					if (event.altKey) {
+						event.preventDefault();
+						onAiScribe?.();
+					} else if (isCtrlOrCmd) {
+						// Ctrl/Cmd + S: Save
+						event.preventDefault();
+						onSave?.();
+					}
 					break;
 
 				case "n":
@@ -95,7 +103,7 @@ export const useGlobalShortcuts = ({
 				}
 			}
 		},
-		[enabled, onSave, onNewSection, onShowShortcuts, onJumpToSection],
+		[enabled, onSave, onNewSection, onShowShortcuts, onJumpToSection, onAiScribe],
 	);
 
 	useEffect(() => {
@@ -131,6 +139,7 @@ export const SHORTCUTS_HELP = [
 	{ key: "Ctrl+S", action: "Salvar evolução" },
 	{ key: "Ctrl+N", action: "Nova seção" },
 	{ key: "Ctrl+/", action: "Mostrar atalhos" },
+	{ key: "Alt+S", action: "AI Scribe (Voz)" },
 	{ key: "Escape", action: "Fechar modal" },
 	{ key: "Ctrl+1 a 7", action: "Pular para seção" },
 ];

@@ -24,13 +24,14 @@ import { Backlinks } from "./suggestion/backlinks";
 import { uploadToR2 } from "@/lib/storage/r2-storage";
 import { getWorkersApiUrl } from "@/lib/api/config";
 import { getNeonAccessToken } from "@/lib/auth/neon-token";
+import { useGlobalShortcuts } from "@/hooks/useGlobalShortcuts";
 // Lazy load — react-filerobot-image-editor puxa styled-components + @scaleflex/ui (~350 KB).
 // Carrega apenas quando o usuário abre a edição de imagem.
 const LazyFilerobotImageEditor = React.lazy(() => import("react-filerobot-image-editor"));
 import { BilingualSuggestionsModal } from "./suggestion/BilingualSuggestionsModal";
 import { AIScribeModal } from "./clinical-scribe/AIScribeModal";
 
-interface NotionEvolutionEditorProps {
+interface V5ProBlockEditorProps {
 	initialContent?: string;
 	evolutionId?: string;
 	patientId?: string;
@@ -46,7 +47,7 @@ interface NotionEvolutionEditorProps {
 	isPro?: boolean;
 }
 
-export const NotionEvolutionEditor: React.FC<NotionEvolutionEditorProps> = ({
+export const V5ProBlockEditor: React.FC<V5ProBlockEditorProps> = ({
 	initialContent = "",
 	evolutionId = "new-evolution",
 	patientId,
@@ -116,6 +117,13 @@ export const NotionEvolutionEditor: React.FC<NotionEvolutionEditorProps> = ({
 			const timer = setTimeout(() => setSyncStatus("saved"), 1000);
 			return () => clearTimeout(timer);
 		},
+	});
+
+	// Atalhos Globais (Alt+S para AI Scribe)
+	useGlobalShortcuts({
+		onSave: () => handleSave(),
+		onAiScribe: () => setShowScribe(true),
+		enabled: true,
 	});
 
 	// Listener para Assistente de IA via Slash Command
@@ -464,11 +472,20 @@ export const NotionEvolutionEditor: React.FC<NotionEvolutionEditorProps> = ({
 							Busca Global
 						</span>
 					</div>
+					<div className="flex items-center gap-1.5 group">
+						<kbd className="px-2 py-1 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-md text-[10px] font-black text-slate-500 shadow-sm group-hover:border-blue-400 transition-colors">
+							{" "}
+							ALT+S{" "}
+						</kbd>
+						<span className="text-[9px] font-black text-slate-400 uppercase tracking-wider">
+							AI Scribe
+						</span>
+					</div>
 				</div>
 
 				<p className="text-[10px] font-bold text-slate-400 flex items-center gap-1 opacity-60">
 					<span className="w-1.5 h-1.5 bg-emerald-500 rounded-full animate-pulse" />
-					SISTEMA OPERACIONAL • MOOCA FISIO V4.0
+					SISTEMA OPERACIONAL • FISIOFLOW V5 PRO
 				</p>
 			</div>
 

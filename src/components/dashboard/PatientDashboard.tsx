@@ -1,4 +1,4 @@
-import { useMemo } from "react";
+import { useEffect } from "react";
 import {
 	differenceInCalendarDays,
 	format,
@@ -102,76 +102,54 @@ export function PatientDashboard({ profile }: PatientDashboardProps) {
 		}
 	});
 
-	const dashboardData = useMemo(() => {
-		const today = startOfDay(new Date());
-		const patientName = normalizeName(profile.full_name);
-		const patientAppointments = appointments
-			.filter(
-				(appointment) =>
-					normalizeName(appointment.patient_name) === patientName,
-			)
-			.sort(
-				(a, b) =>
-					new Date(a.start_time).getTime() - new Date(b.start_time).getTime(),
-			);
-
-		const upcomingAppointments = patientAppointments.filter(
+	const today = startOfDay(new Date());
+	const patientName = normalizeName(profile.full_name);
+	const patientAppointments = appointments
+		.filter(
 			(appointment) =>
-				appointment.status !== "cancelled" &&
-				isAfter(new Date(appointment.start_time), today),
-		);
-		const pastAppointments = patientAppointments.filter(
-			(appointment) =>
-				appointment.status !== "cancelled" &&
-				!isAfter(new Date(appointment.start_time), today),
+				normalizeName(appointment.patient_name) === patientName,
+		)
+		.sort(
+			(a, b) =>
+				new Date(a.start_time).getTime() - new Date(b.start_time).getTime(),
 		);
 
-		const confirmationRate =
-			patientAppointments.length > 0
-				? Math.round(
-						(patientAppointments.filter(
-							(appointment) => appointment.status === "confirmed",
-						).length /
-							patientAppointments.length) *
-							100,
-					)
-				: 0;
+	const upcomingAppointments = patientAppointments.filter(
+		(appointment) =>
+			appointment.status !== "cancelled" &&
+			isAfter(new Date(appointment.start_time), today),
+	);
+	const pastAppointments = patientAppointments.filter(
+		(appointment) =>
+			appointment.status !== "cancelled" &&
+			!isAfter(new Date(appointment.start_time), today),
+	);
 
-		const nextAppointment = upcomingAppointments[0] || null;
-		const daysUntilNext = nextAppointment
-			? Math.max(
-					differenceInCalendarDays(new Date(nextAppointment.start_time), today),
-					0,
+	const confirmationRate =
+		patientAppointments.length > 0
+			? Math.round(
+					(patientAppointments.filter(
+						(appointment) => appointment.status === "confirmed",
+					).length /
+						patientAppointments.length) *
+						100,
 				)
-			: null;
+			: 0;
 
-		const cadenceData = patientAppointments
-			.slice(-6)
-			.map((appointment, index) => ({
-				name: format(new Date(appointment.start_time), "dd/MM"),
-				value: index + 1,
-			}));
+	const nextAppointment = upcomingAppointments[0] || null;
+	const daysUntilNext = nextAppointment
+		? Math.max(
+				differenceInCalendarDays(new Date(nextAppointment.start_time), today),
+				0,
+			)
+		: null;
 
-		return {
-			patientAppointments,
-			upcomingAppointments,
-			pastAppointments,
-			confirmationRate,
-			nextAppointment,
-			daysUntilNext,
-			cadenceData,
-		};
-	}, [appointments, profile.full_name]);
-
-	const {
-		patientAppointments,
-		upcomingAppointments,
-		pastAppointments,
-		confirmationRate,
-		nextAppointment,
-		daysUntilNext,
-		cadenceData,
-	} = dashboardData;
+	const cadenceData = patientAppointments
+		.slice(-6)
+		.map((appointment, index) => ({
+			name: format(new Date(appointment.start_time), "dd/MM"),
+			value: index + 1,
+		}));
 
 	const careStatus =
 		upcomingAppointments.length > 0

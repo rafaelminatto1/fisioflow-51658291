@@ -8,12 +8,12 @@ Este documento contém as instruções atualizadas para o deploy do FisioFlow us
 
 - **Frontend Principal**: Cloudflare Pages (`fisioflow.pages.dev`)
 - **App do Paciente**: Cloudflare Pages (`fisioflow-patient.pages.dev`)
-- **Backend (API)**: Cloudflare Workers (`fisioflow-api`)
+- **Backend (API)**: Cloudflare Workers v4 (`fisioflow-api`)
 - **Processamento R2**: Cloudflare Workers (`r2-presigned-url-worker`)
 - **Database**: Neon DB (PostgreSQL Serverless)
 - **Auth**: Neon Auth (OIDC / JWT)
 - **Storage**: Cloudflare R2 (`fisioflow-exams`, `fisioflow-media`)
-- **Runtime**: Cloudflare Workers (V8) + Vite 8 + Rolldown
+- **Runtime**: Cloudflare Workers (V8) + Vite 8.0.7 + Rolldown
 
 ## 🚀 Fluxo de Deploy
 

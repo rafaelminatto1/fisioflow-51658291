@@ -4,6 +4,11 @@ import react from "@vitejs/plugin-react";
 import path from "path";
 import { visualizer } from "rollup-plugin-visualizer";
 import { defineConfig } from "vite";
+import { VitePWA } from "vite-plugin-pwa";
+import Icons from "unplugin-icons/vite";
+import { ViteImageOptimizer } from "vite-plugin-image-optimizer";
+import Inspect from "vite-plugin-inspect";
+import checker from "vite-plugin-checker";
 
 const repoRoot = path.resolve(__dirname, "../..");
 
@@ -16,19 +21,6 @@ function htmlPlugin(appVersion: string, buildTime: string): any {
 				.replace(/%APP_VERSION%/g, appVersion)
 				.replace(/%BUILD_TIME%/g, buildTime)
 				.replace(/%CACHE_BUSTER%/g, buildTime);
-		},
-		generateBundle() {
-			const swPath = path.resolve(__dirname, "public/sw.js");
-			const swContent = require("fs").readFileSync(swPath, "utf-8");
-			const updatedSw = swContent
-				.replace(/%APP_VERSION%/g, appVersion)
-				.replace(/%BUILD_TIME%/g, buildTime)
-				.replace(/'fisioflow-v1'/g, `'fisioflow-${appVersion}'`);
-			this.emitFile({
-				type: "asset",
-				fileName: "sw.js",
-				source: updatedSw,
-			});
 		},
 	};
 }
@@ -69,7 +61,7 @@ export default defineConfig(({ mode }) => {
 	const isProduction = mode === "production";
 	const isAnalyze = process.env.ANALYZE === "true";
 	const buildTime = Date.now().toString();
-	const VERSION_SUFFIX = "-v2.5.0-vite8";
+	const VERSION_SUFFIX = "-v2.5.1-vite8.0.9";
 	const appVersion =
 		(process.env.GIT_COMMIT_SHA || process.env.VITE_APP_VERSION || buildTime) +
 		VERSION_SUFFIX;
@@ -80,11 +72,90 @@ export default defineConfig(({ mode }) => {
 			__BUILD_TIME__: JSON.stringify(buildTime),
 			__CACHE_BUSTER__: JSON.stringify(buildTime),
 		},
+		experimental: {
+			// Vite 8 Full Bundle Mode — reduz requests de rede em dev e acelera startup
+			// Desativado temporariamente para debugar página em branco
+			bundledDev: false,
+		},
 		plugins: [
 			tailwindcss(),
-			react(),
+			react({
+				babel: {
+					plugins: [["babel-plugin-react-compiler", { target: "19" }]],
+				},
+			}),
 			mockMobileModules(),
 			htmlPlugin(appVersion, buildTime),
+			VitePWA({
+				strategies: "injectManifest",
+				srcDir: "src",
+				filename: "service-worker.ts",
+				registerType: "autoUpdate",
+				injectRegister: "auto",
+				manifest: {
+					name: "FisioFlow - Plataforma de Fisioterapia Digital",
+					short_name: "FisioFlow",
+					description: "Sistema completo de gestão para fisioterapeutas",
+					theme_color: "#0ea5e9",
+					background_color: "#ffffff",
+					display: "standalone",
+					orientation: "portrait-primary",
+					scope: "/",
+					start_url: "/",
+					icons: [
+						{
+							src: "/icons/badge-72x72.svg",
+							sizes: "72x72",
+							type: "image/svg+xml",
+							purpose: "any",
+						},
+						{
+							src: "/icons/icon-192x192.svg",
+							sizes: "192x192",
+							type: "image/svg+xml",
+							purpose: "any",
+						},
+						{
+							src: "/icons/icon-512x512.svg",
+							sizes: "512x512",
+							type: "image/svg+xml",
+							purpose: "any",
+						},
+					],
+				},
+				injectManifest: {
+					globPatterns: ["**/*.{js,css,html,ico,png,svg,avif,woff2}"],
+					maximumFileSizeToCacheInBytes: 5 * 1024 * 1024,
+				},
+				devOptions: {
+					enabled: false,
+					type: "module",
+				},
+			}),
+			Icons({
+				compiler: "jsx",
+				autoInstall: true,
+			}),
+			ViteImageOptimizer({
+				png: { quality: 80 },
+				jpeg: { quality: 75 },
+				webp: { lossy: true, quality: 80 },
+				avif: { lossy: true, quality: 70 },
+				svg: {
+					plugins: [
+						{ name: "removeViewBox", active: false },
+						{ name: "sortAttrs" },
+					],
+				},
+			}),
+			!isProduction && Inspect(),
+			!isProduction &&
+				checker({
+					typescript: {
+						tsconfigPath: "./tsconfig.json",
+					},
+					overlay: false,
+				}),
 			isAnalyze &&
 				visualizer({
 					filename: "stats.html",

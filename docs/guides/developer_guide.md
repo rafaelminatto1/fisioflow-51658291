@@ -6,14 +6,14 @@ Este guia documenta o ecossistema técnico do FisioFlow, focado na arquitetura d
 
 A aplicação foi migrada para uma arquitetura "Edge-First" para garantir latência mínima e escalabilidade global.
 
-- **Frontend:** React 19 + Vite 8 (Rolldown)
-- **Backend:** Hono.js (Cloudflare Workers)
+- **Frontend:** React 19.2.0 + Vite 8.0.7 (Rolldown)
+- **Backend:** Hono.js (Cloudflare Workers v4)
 - **Database:** Neon PostgreSQL (Serverless) + Hyperdrive (Pooling)
-- **ORM:** Drizzle ORM
-- **Auth:** Neon Auth (Better Auth) via JWKS
-- **Cache:** Cloudflare D1 (Edge SQL Cache) + KV
-- **Mensageria:** Cloudflare Queues + Inngest
-- **AI/ML:** Cloudflare AI (Workers AI) + MediaPipe (Biomecânica)
+- **ORM:** Drizzle ORM v0.45.2
+- **Auth:** Neon Auth (Better Auth v1.5.6) via JWKS
+- **Styling:** Tailwind CSS v4.2.2 + Radix UI
+- **Tools:** Turbo v2.8.21, Biome v2.4.9, Vitest v4.1.2
+- **AI/ML:** Gemini 3.0 (Structured Outputs) + Cloudflare AI
 
 ## 2. Estrutura do Monorepo
 
