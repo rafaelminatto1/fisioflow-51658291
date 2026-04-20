@@ -3,6 +3,7 @@ import { eq, and } from 'drizzle-orm';
 import { createDb } from '../lib/db';
 import { requireAuth } from '../lib/auth';
 import { clinicalScribeLogs } from '@fisioflow/db';
+import { sql } from 'drizzle-orm';
 import type { Env } from '../types/env';
 
 const app = new Hono<{ Bindings: Env }>();
@@ -23,10 +24,8 @@ app.post('/scribe/process', requireAuth, async (c) => {
   const db = await createDb(c.env);
 
   try {
-    // 1. Converter Base64 para Buffer/Uint8Array para o AI Whisper
     const audioBuffer = Uint8Array.from(atob(audioBase64), c => c.charCodeAt(0));
 
-    // 2. Transcrever com Whisper
     console.log('[AI-Studio] Transcrevendo áudio com Whisper...');
     const transcription: any = await c.env.AI.run('@cf/openai/whisper-large-v3-turbo', {
       audio: [...audioBuffer],
@@ -35,8 +34,6 @@ app.post('/scribe/process', requireAuth, async (c) => {
     const rawText = transcription.text;
     if (!rawText) throw new Error('Falha na transcrição');
 
-    // 3. Refinar com Llama 3.1 70B
-    console.log('[AI-Studio] Refinando texto com Llama 3.1...');
     const sectionName = {
       S: 'Subjetivo (Queixas e Histórico)',
       O: 'Objetivo (Medições e Exames)',
@@ -68,7 +65,6 @@ app.post('/scribe/process', requireAuth, async (c) => {
 
     const formattedText = refinement.response;
 
-    // 4. Salvar Log
     await db.insert(clinicalScribeLogs).values({
       organizationId: user.organizationId,
       patientId,
@@ -76,7 +72,7 @@ app.post('/scribe/process', requireAuth, async (c) => {
       section,
       rawText,
       formattedText,
-      tokensUsed: 0, // Poderia ser calculado se necessário
+      tokensUsed: 0,
     });
 
     return c.json({
@@ -96,14 +92,12 @@ app.post('/scribe/process', requireAuth, async (c) => {
 
 /**
  * GET /api/ia-studio/retention/at-risk
- * Lista pacientes com alto risco de abandono (churn)
  */
 app.get('/retention/at-risk', requireAuth, async (c) => {
   const user = c.get('user');
   const db = await createDb(c.env);
 
   try {
-    // Busca pacientes ativos sem consultas futuras
     const query = sql`
       SELECT p.id, p.full_name as "fullName", p.phone, p.status,
              MAX(a.date) as "lastSession"
@@ -123,7 +117,6 @@ app.get('/retention/at-risk', requireAuth, async (c) => {
 
     const result = await db.execute(query);
     
-    // Adiciona "IA Score" simulado baseado no tempo de ausência
     const data = result.rows.map((row: any) => {
       const lastDate = new Date(row.lastSession);
       const daysAbsent = Math.floor((Date.now() - lastDate.getTime()) / (1000 * 60 * 60 * 24));
@@ -143,7 +136,6 @@ app.get('/retention/at-risk', requireAuth, async (c) => {
 
 /**
  * GET /api/ia-studio/predict/discharge/:patientId
- * Prediz quantas sessões faltam para a alta
  */
 app.get('/predict/discharge/:patientId', requireAuth, async (c) => {
   const user = c.get('user');
@@ -151,7 +143,6 @@ app.get('/predict/discharge/:patientId', requireAuth, async (c) => {
   const db = await createDb(c.env);
 
   try {
-    // 1. Coletar dados do paciente para o modelo
     const patientData = await db.execute(sql`
       SELECT p.main_condition, 
              (SELECT COUNT(*) FROM appointments WHERE patient_id = ${patientId} AND status = 'concluido') as "sessionsCount"
@@ -165,8 +156,6 @@ app.get('/predict/discharge/:patientId', requireAuth, async (c) => {
     const condition = row.main_condition?.toLowerCase() || 'geral';
     const currentSessions = Number(row.sessionsCount);
 
-    // 2. Simular modelo de IA (Poderia usar Cloudflare AI aqui)
-    // Lógica: Base 20 sessões, ajustada por condição
     let baseSessions = 15;
     if (condition.includes('pos-op') || condition.includes('cirurgia')) baseSessions = 30;
     if (condition.includes('coluna') || condition.includes('hernia')) baseSessions = 24;
@@ -194,6 +183,62 @@ app.get('/predict/discharge/:patientId', requireAuth, async (c) => {
   } catch (error: any) {
     console.error('[AI-Studio] Erro na predição de alta:', error);
     return c.json({ error: 'Erro ao calcular predição' }, 500);
+  }
+});
+
+/**
+ * POST /api/ia-studio/reports/synthesize
+ * Gera síntese clínica dual (médico/paciente) baseada em destaques
+ */
+app.post('/reports/synthesize', requireAuth, async (c) => {
+  const user = c.get('user');
+  const body = await c.req.json();
+  const { patientId, highlights } = body;
+
+  if (!patientId || !highlights) {
+    return c.json({ error: 'Paciente e destaques são obrigatórios' }, 400);
+  }
+
+  try {
+    console.log('[AI-Studio] Gerando síntese de relatório com Llama 3.1...');
+    
+    const prompt = `
+      Você é um assistente de fisioterapia de alto nível.
+      Gere um relatório de evolução dual para o paciente baseado nos seguintes destaques clínicos:
+      "${highlights}"
+
+      O resultado deve ser um objeto JSON com dois campos:
+      1. "medico": Uma síntese técnica, formal, usando terminologia acadêmica da fisioterapia para o médico solicitante.
+      2. "paciente": Uma mensagem motivadora, clara, em linguagem humanizada, focando nas conquistas do paciente.
+
+      Regras:
+      - Tom profissional para o médico.
+      - Tom encorajador para o paciente.
+      - Retorne APENAS o JSON puro.
+    `;
+
+    const result: any = await c.env.AI.run('@cf/meta/llama-3.1-70b-instruct', {
+      messages: [
+        { role: 'system', content: 'Você é um especialista em comunicação clínica.' },
+        { role: 'user', content: prompt }
+      ]
+    });
+
+    // Extrair JSON da resposta da IA (caso venha com markdown)
+    let content = result.response;
+    const jsonMatch = content.match(/\{[\s\S]*\}/);
+    if (jsonMatch) content = jsonMatch[0];
+
+    const data = JSON.parse(content);
+
+    return c.json({
+      success: true,
+      data
+    });
+
+  } catch (error: any) {
+    console.error('[AI-Studio] Erro na síntese de relatório:', error);
+    return c.json({ error: 'Erro ao gerar síntese' }, 500);
   }
 });
 

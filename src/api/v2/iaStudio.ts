@@ -38,4 +38,10 @@ export const iaStudioApi = {
 
   getDischargePrediction: (patientId: string) =>
     request<{ data: DischargePrediction }>(`/api/ia-studio/predict/discharge/${patientId}`),
+
+  synthesizeReport: (patientId: string, highlights: string) =>
+    request<{ success: boolean; data: { medico: string; paciente: string } }>("/api/ia-studio/reports/synthesize", {
+      method: "POST",
+      body: JSON.stringify({ patientId, highlights }),
+    }),
 };
