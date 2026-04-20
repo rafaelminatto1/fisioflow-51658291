@@ -586,7 +586,7 @@ export function useSmartDashboardData(viewMode: ViewMode = "today") {
 		const tendenciaSemanal = weekDays.map((dia, i) => {
 			const dayStr = formatDateToLocalISO(subDays(weekEndDate, 6 - i));
 			const dayApts = appointmentsWeek.filter((a) =>
-				(a.date as string).startsWith(dayStr),
+				a.date && String(a.date).startsWith(dayStr),
 			);
 			return {
 				dia,
@@ -651,7 +651,7 @@ export function useSmartDashboardData(viewMode: ViewMode = "today") {
 				);
 				if (uniquePatientsLast30d.size === 0) return 0;
 				const futureApts = appointmentsWeek.filter(
-					(a) => new Date(a.date as string) > now,
+					(a) => a.date && new Date(a.date as string) > now,
 				);
 				const returnedPatients = new Set(
 					futureApts
