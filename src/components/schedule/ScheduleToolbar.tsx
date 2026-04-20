@@ -170,24 +170,19 @@ export const ScheduleToolbar: React.FC<ScheduleToolbarProps> = ({
 
 				<div className="h-6 w-[1px] bg-slate-200 dark:bg-slate-800" />
 
-				{/* View Switcher Block */}
+				{/* View Switcher Block - Restricted to Week View only as requested */}
 				<div className="flex items-center gap-1 bg-slate-100/50 dark:bg-slate-900/50 p-1 rounded-xl border border-slate-200/50 dark:border-slate-800/50">
-					{(["day", "week", "month"] as const).map((view) => (
-						<Button
-							key={view}
-							variant={viewType === view ? "default" : "ghost"}
-							size="sm"
-							onClick={() => onViewChange(view)}
-							className={cn(
-								"h-7 px-4 rounded-lg font-bold text-[10px] uppercase tracking-widest transition-all",
-								viewType === view
-									? "bg-white dark:bg-slate-800 text-slate-900 dark:text-white shadow-sm ring-1 ring-slate-200 dark:ring-slate-700"
-									: "text-slate-500 hover:text-slate-900 dark:hover:text-slate-200",
-							)}
-						>
-							{VIEW_LABELS[view]}
-						</Button>
-					))}
+					<Button
+						variant="default"
+						size="sm"
+						onClick={() => onViewChange("week")}
+						className={cn(
+							"h-7 px-4 rounded-lg font-bold text-[10px] uppercase tracking-widest transition-all",
+							"bg-white dark:bg-slate-800 text-slate-900 dark:text-white shadow-sm ring-1 ring-slate-200 dark:ring-slate-700"
+						)}
+					>
+						Semana
+					</Button>
 				</div>
 			</div>
 
@@ -311,22 +306,14 @@ export const ScheduleToolbar: React.FC<ScheduleToolbarProps> = ({
 			</div>
 
 			<div className="flex items-center gap-1.5 overflow-x-auto pb-1 scrollbar-hide">
-				{(["day", "week", "month"] as const).map((view) => (
-					<Button
-						key={view}
-						variant={viewType === view ? "default" : "outline"}
-						size="sm"
-						onClick={() => onViewChange(view)}
-						className={cn(
-							"h-8 px-4 rounded-lg font-bold text-[10px] uppercase tracking-widest",
-							viewType === view
-								? "bg-slate-900 text-white dark:bg-white dark:text-slate-900 shadow-sm"
-								: "border-slate-200 text-slate-500",
-						)}
-					>
-						{VIEW_LABELS[view]}
-					</Button>
-				))}
+				<Button
+					variant="default"
+					size="sm"
+					onClick={() => onViewChange("week")}
+					className="h-8 px-4 rounded-lg font-bold text-[10px] uppercase tracking-widest bg-slate-900 text-white dark:bg-white dark:text-slate-900 shadow-sm"
+				>
+					Semana
+				</Button>
 				<div className="ml-auto">
 					<AdvancedFilters
 						filters={filters}

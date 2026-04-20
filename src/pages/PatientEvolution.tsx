@@ -90,8 +90,8 @@ const LazyNotionEvolutionPanelV3 = lazy(() =>
 	})),
 );
 const LazyNotionEvolutionEditor = lazy(() =>
-	import("@/components/evolution/NotionEvolutionEditor").then((m) => ({
-		default: m.NotionEvolutionEditor,
+	import("@/components/evolution/V5ProBlockEditor").then((m) => ({
+		default: m.V5ProBlockEditor,
 	})),
 );
 const LazyEvolutionDraggableGrid = lazy(() =>

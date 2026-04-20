@@ -64,14 +64,35 @@
 /* Grid visibility for all hours */
 .ec-time-grid .ec-line {
 	display: block !important;
-	border-bottom: 1px solid #f1f5f9 !important;
+	border-bottom: 1px solid #e2e8f0 !important; /* Base line visibility increased */
 	opacity: 1 !important;
 	visibility: visible !important;
 }
 
-/* Make full-hour lines slightly more visible */
+/* Hide 15m and 45m marks for a cleaner look */
+.ec-time-grid .ec-line:nth-child(4n+1),
+.ec-time-grid .ec-line:nth-child(4n+3) {
+	border-bottom: none !important;
+	opacity: 0 !important;
+}
+
+/* 30m marks - visible dashed line */
+.ec-time-grid .ec-line:nth-child(4n+2) {
+	border-bottom: 1px dashed #cbd5e1 !important; /* Increased visibility */
+}
+
+/* 00m marks (Full hours) - strong solid line */
 .ec-time-grid .ec-line:nth-child(4n) {
-	border-bottom: 1px solid #e2e8f0 !important;
+	border-bottom: 2px solid #94a3b8 !important; /* Much more prominent */
+}
+
+/* Vertical column lines (Days) */
+.ec-day, .ec-header .ec-day {
+	border-right: 1px solid #cbd5e1 !important; /* Prominent vertical lines */
+}
+
+.ec-days {
+	border-left: 1px solid #cbd5e1 !important;
 }
 
 .sx__time-grid-hour-text {

@@ -49,15 +49,9 @@ import { useQueryClient } from "@tanstack/react-query";
 import { soapKeys } from "@/hooks/useSoapRecords";
 import { AgendaAutomationService } from "@/lib/services/AgendaAutomationService";
 import { EvolutionVersionToggle } from "./v2-improved/EvolutionVersionToggle";
-// Lazy load — cada versão do editor só é carregada quando o usuário a seleciona.
-const NotionEvolutionEditor = React.lazy(() =>
-  import("./NotionEvolutionEditor").then((m) => ({ default: m.NotionEvolutionEditor }))
-);
-const NotionV3Panel = React.lazy(() =>
-  import("./v3-notion/NotionEvolutionPanel").then((m) => ({ default: m.NotionEvolutionPanel }))
-);
-const NotionEvolutionPanel = React.lazy(() =>
-  import("./v2-improved/NotionEvolutionPanel").then((m) => ({ default: m.NotionEvolutionPanel }))
+// V5 Pro Block Editor — O novo padrão unificado de alta performance.
+const V5ProBlockEditor = React.lazy(() =>
+  import("./V5ProBlockEditor").then((m) => ({ default: m.V5ProBlockEditor }))
 );
 import { EvolutionSettingsModal, getEvolutionSettings } from "./EvolutionSettingsModal";
 import {
@@ -107,10 +101,8 @@ export const SessionEvolutionContainer: React.FC<SessionEvolutionContainerProps>
   const [, setAppointment] = useState<Record<string, unknown> | null>(null);
   const [, setAppointmentLoadedFromApi] = useState(false);
   const [activeTab, setActiveTab] = useState("evolution");
-  const [viewVersion, setViewVersion] = useState<
-    "classic" | "improved" | "v3-notion" | "v4-tiptap"
-  >(() => {
-    return (getEvolutionSettings().defaultViewVersion as any) || "v4-tiptap";
+  const [viewVersion, setViewVersion] = useState<"classic" | "v5-pro">(() => {
+    return (getEvolutionSettings().defaultViewVersion === "classic" ? "classic" : "v5-pro");
   });
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
 
@@ -149,7 +141,7 @@ export const SessionEvolutionContainer: React.FC<SessionEvolutionContainerProps>
   
   // Action Bridge - Conecta os dados do SOAP às sugestões
   // Mapeamos os campos do SOAP para o formato que o bridge entende
-  const soapFieldsAsTemplate = useMemo(() => [
+  const soapFieldsAsTemplate = [
     { id: "subjective", label: "Subjetivo", type: "text" },
     { id: "objective", label: "Objetivo", type: "text" },
     { id: "assessment", label: "Avaliação", type: "text" },
@@ -157,7 +149,7 @@ export const SessionEvolutionContainer: React.FC<SessionEvolutionContainerProps>
     // Adicionamos labels comuns que as regras buscam
     { id: "subjective", label: "Sinais de Alerta", type: "text" },
     { id: "objective", label: "Testes Clínicos", type: "text" },
-  ], []);
+  ];
 
   const { suggestions, hasRedFlag: hasRedFlags } = useActionBridge(
     soapFieldsAsTemplate as any,
@@ -230,202 +222,203 @@ export const SessionEvolutionContainer: React.FC<SessionEvolutionContainerProps>
     });
   };
 
-  const loadData = React.useCallback(async () => {
-    if (!user) {
-      setIsLoading(false);
-      setLoadError("Faça login para acessar esta página.");
-      return;
-    }
-    setIsLoading(true);
-    setLoadError(null);
-    try {
-      let currentPatientId = propPatientId || "";
-
-      // Load appointment data via API
-      if (appointmentId) {
-        let appointmentData: Record<string, unknown> & {
-          patient_id?: string;
-          patientId?: string;
-          notes?: string;
-        } = {};
-        let loadedFromApi = false;
-
-        try {
-          const apiAppointmentResponse = await appointmentsApi.get(appointmentId);
-          const apiAppointment = apiAppointmentResponse.data;
-          loadedFromApi = true;
-          setAppointmentLoadedFromApi(true);
-          const pid =
-            (apiAppointment as { patientId?: string; patient_id?: string }).patientId ??
-            (apiAppointment as { patient_id?: string }).patient_id;
-          appointmentData = {
-            id: apiAppointment.id,
-            patient_id: pid,
-            patientId: pid,
-            therapist_id: (apiAppointment as { therapist_id?: string }).therapist_id,
-            date: (apiAppointment as { date?: string }).date,
-            start_time:
-              (apiAppointment as { start_time?: string; startTime?: string }).start_time ??
-              (apiAppointment as { startTime?: string }).startTime,
-            notes: (apiAppointment as { notes?: string }).notes,
-          };
-          setAppointment({ id: apiAppointment.id, ...appointmentData });
-          currentPatientId = pid || currentPatientId;
-          if (pid) setPatientId(pid);
-
-          if (apiAppointment.patient) {
-            const { id: _ignored, ...patientData } = apiAppointment.patient;
-            setPatient({
-              id: apiAppointment.patient.id,
-              ...patientData,
-              full_name: apiAppointment.patient.full_name ?? apiAppointment.patient.name,
-              patientName: apiAppointment.patient.full_name ?? apiAppointment.patient.name,
-            });
-          }
-        } catch (apiErr) {
-          logger.warn(
-            "Appointment not found in API",
-            { appointmentId, err: apiErr },
-            "SessionEvolutionContainer",
-          );
-          throw new Error("Appointment not found");
-        }
-
-        const patientIdFromApp = appointmentData.patient_id ?? appointmentData.patientId;
-        if (patientIdFromApp) {
-          currentPatientId = String(patientIdFromApp);
-          setPatientId(currentPatientId);
-          if (!appointmentData.patient && loadedFromApi) {
-            try {
-              const apiPatient = await PatientService.getPatientById(currentPatientId);
-              if (apiPatient) {
-                const { id: _ignored, ...patientData } = apiPatient;
-                setPatient({
-                  id: apiPatient.id,
-                  ...patientData,
-                  full_name: apiPatient.name ?? (apiPatient as any).full_name,
-                  patientName: apiPatient.name ?? (apiPatient as any).patientName,
-                });
-              }
-            } catch {
-              // segue sem bloquear a tela
-            }
-          }
-        }
-
-        if (appointmentData.notes) {
-          try {
-            const notes = JSON.parse(String(appointmentData.notes));
-            if (notes.soap) setSoapData(notes.soap);
-            if (notes.exercises) setSessionExercises(notes.exercises);
-          } catch {
-            // Notes is plain text
-          }
-        }
-        const aptTherapistId = (appointmentData as { therapist_id?: string }).therapist_id;
-        setSelectedTherapistId(aptTherapistId || user?.uid || "");
-      } else if (propPatientId) {
-        const apiPatient = await PatientService.getPatientById(propPatientId);
-        if (!apiPatient) throw new Error("Patient not found");
-        const { id: _ignored, ...patientData } = apiPatient;
-        setPatient({
-          id: apiPatient.id,
-          ...patientData,
-          full_name: apiPatient.name,
-          patientName: apiPatient.name,
-        });
-        currentPatientId = propPatientId;
-        setSelectedTherapistId(user?.uid || "");
-      }
-
-      // Load patient related data
-      if (currentPatientId) {
-        const [patientAppointmentsRes, surgeriesRes, pathologiesRes, goalsRes] = await Promise.all([
-          appointmentsApi.list({ patientId: currentPatientId, limit: 500 }),
-          patientsApi.surgeries(currentPatientId),
-          patientsApi.pathologies(currentPatientId),
-          goalsApi.list(currentPatientId),
-        ]);
-
-        const completedStatuses = new Set(["completed", "concluido", "realizado", "atendido"]);
-        const calculatedSessionNumber =
-          (patientAppointmentsRes.data ?? []).filter((appointment) =>
-            completedStatuses.has(String(appointment.status ?? "").toLowerCase()),
-          ).length + 1;
-        setSessionNumber(calculatedSessionNumber);
-        setSurgeries(
-          (surgeriesRes.data ?? []).map((row) => ({
-            id: row.id,
-            patient_id: currentPatientId,
-            surgery_name: row.name,
-            surgery_date: row.surgery_date ?? row.created_at,
-            surgeon: row.surgeon ?? undefined,
-            hospital: row.hospital ?? undefined,
-            surgery_type: row.post_op_protocol ?? undefined,
-            notes: row.notes ?? undefined,
-            created_at: row.created_at,
-          })),
-        );
-        setPathologies(
-          (pathologiesRes.data ?? []).map((row) => ({
-            id: row.id,
-            patient_id: currentPatientId,
-            pathology_name: row.name,
-            cid_code: row.icd_code ?? undefined,
-            diagnosis_date: row.diagnosed_at ?? undefined,
-            status: row.status ?? undefined,
-            notes: row.notes ?? undefined,
-            created_at: row.created_at,
-          })),
-        );
-        setGoals(normalizeGoalRows(goalsRes.data));
-        // Check mandatory tests
-        const result = await MandatoryTestAlertService.checkMandatoryTests(
-          currentPatientId,
-          calculatedSessionNumber,
-          testsCompleted,
-        );
-        setMandatoryTestsResult(result);
-        setShowMandatoryAlert(!result.canSave);
-      }
-    } catch (error) {
-      logger.error("Erro ao carregar dados da sessão", error, "SessionEvolutionContainer");
-      const err = error as { code?: string; message?: string };
-      const msg = String(err?.message ?? "");
-      const isPermissionDenied =
-        err?.code === "permission-denied" ||
-        msg.includes("permission") ||
-        msg.includes("insufficient permissions");
-      const isNotFound =
-        err?.code === "not-found" ||
-        msg.includes("not found") ||
-        msg.includes("Appointment not found") ||
-        msg.includes("Patient not found");
-      const description = isPermissionDenied
-        ? "Sem permissão para acessar esta sessão. Verifique se seu perfil tem acesso a este atendimento ou entre em contato com o administrador."
-        : isNotFound
-          ? "Agendamento ou paciente não encontrado. Verifique se o link está correto."
-          : "Não foi possível carregar os dados da sessão. Tente novamente.";
-      setLoadError(description);
-      toast({
-        title: "Erro ao carregar dados",
-        description: isPermissionDenied
-          ? "Sem permissão para acessar esta sessão."
-          : isNotFound
-            ? "Agendamento não encontrado."
-            : "Não foi possível carregar os dados da sessão.",
-        variant: "destructive",
-      });
-    } finally {
-      setIsLoading(false);
-    }
-  }, [appointmentId, propPatientId, testsCompleted, toast, user]);
-
   useEffect(() => {
     let timeoutId: ReturnType<typeof setTimeout> | null = null;
     let cancelled = false;
     let retryCount = 0;
     const maxRetries = 3;
+
+    const loadData = async () => {
+      if (!user) {
+        setIsLoading(false);
+        setLoadError("Faça login para acessar esta página.");
+        return;
+      }
+      setIsLoading(true);
+      setLoadError(null);
+      try {
+        let currentPatientId = propPatientId || "";
+
+        // Load appointment data via API
+        if (appointmentId) {
+          let appointmentData: Record<string, unknown> & {
+            patient_id?: string;
+            patientId?: string;
+            notes?: string;
+          } = {};
+          let loadedFromApi = false;
+
+          try {
+            const apiAppointmentResponse = await appointmentsApi.get(appointmentId);
+            const apiAppointment = apiAppointmentResponse.data;
+            loadedFromApi = true;
+            setAppointmentLoadedFromApi(true);
+            const pid =
+              (apiAppointment as { patientId?: string; patient_id?: string }).patientId ??
+              (apiAppointment as { patient_id?: string }).patient_id;
+            appointmentData = {
+              id: apiAppointment.id,
+              patient_id: pid,
+              patientId: pid,
+              therapist_id: (apiAppointment as { therapist_id?: string }).therapist_id,
+              date: (apiAppointment as { date?: string }).date,
+              start_time:
+                (apiAppointment as { start_time?: string; startTime?: string }).start_time ??
+                (apiAppointment as { startTime?: string }).startTime,
+              notes: (apiAppointment as { notes?: string }).notes,
+            };
+            setAppointment({ id: apiAppointment.id, ...appointmentData });
+            currentPatientId = pid || currentPatientId;
+            if (pid) setPatientId(pid);
+
+            if (apiAppointment.patient) {
+              const { id: _ignored, ...patientData } = apiAppointment.patient;
+              setPatient({
+                id: apiAppointment.patient.id,
+                ...patientData,
+                full_name: apiAppointment.patient.full_name ?? apiAppointment.patient.name,
+                patientName: apiAppointment.patient.full_name ?? apiAppointment.patient.name,
+              });
+            }
+          } catch (apiErr) {
+            logger.warn(
+              "Appointment not found in API",
+              { appointmentId, err: apiErr },
+              "SessionEvolutionContainer",
+            );
+            throw new Error("Appointment not found");
+          }
+
+          const patientIdFromApp = appointmentData.patient_id ?? appointmentData.patientId;
+          if (patientIdFromApp) {
+            currentPatientId = String(patientIdFromApp);
+            setPatientId(currentPatientId);
+            if (!appointmentData.patient && loadedFromApi) {
+              try {
+                const apiPatient = await PatientService.getPatientById(currentPatientId);
+                if (apiPatient) {
+                  const { id: _ignored, ...patientData } = apiPatient;
+                  setPatient({
+                    id: apiPatient.id,
+                    ...patientData,
+                    full_name: apiPatient.name ?? (apiPatient as any).full_name,
+                    patientName: apiPatient.name ?? (apiPatient as any).patientName,
+                  });
+                }
+              } catch {
+                // segue sem bloquear a tela
+              }
+            }
+          }
+
+          if (appointmentData.notes) {
+            try {
+              const notes = JSON.parse(String(appointmentData.notes));
+              if (notes.soap) setSoapData(notes.soap);
+              if (notes.exercises) setSessionExercises(notes.exercises);
+            } catch {
+              // Notes is plain text
+            }
+          }
+          const aptTherapistId = (appointmentData as { therapist_id?: string }).therapist_id;
+          setSelectedTherapistId(aptTherapistId || user?.uid || "");
+        } else if (propPatientId) {
+          const apiPatient = await PatientService.getPatientById(propPatientId);
+          if (!apiPatient) throw new Error("Patient not found");
+          const { id: _ignored, ...patientData } = apiPatient;
+          setPatient({
+            id: apiPatient.id,
+            ...patientData,
+            full_name: apiPatient.name,
+            patientName: apiPatient.name,
+          });
+          currentPatientId = propPatientId;
+          setSelectedTherapistId(user?.uid || "");
+        }
+
+        // Load patient related data
+        if (currentPatientId) {
+          const [patientAppointmentsRes, surgeriesRes, pathologiesRes, goalsRes] = await Promise.all([
+            appointmentsApi.list({ patientId: currentPatientId, limit: 500 }),
+            patientsApi.surgeries(currentPatientId),
+            patientsApi.pathologies(currentPatientId),
+            goalsApi.list(currentPatientId),
+          ]);
+
+          const completedStatuses = new Set(["completed", "concluido", "realizado", "atendido"]);
+          const calculatedSessionNumber =
+            (patientAppointmentsRes.data ?? []).filter((appointment) =>
+              completedStatuses.has(String(appointment.status ?? "").toLowerCase()),
+            ).length + 1;
+          setSessionNumber(calculatedSessionNumber);
+          setSurgeries(
+            (surgeriesRes.data ?? []).map((row) => ({
+              id: row.id,
+              patient_id: currentPatientId,
+              surgery_name: row.name,
+              surgery_date: row.surgery_date ?? row.created_at,
+              surgeon: row.surgeon ?? undefined,
+              hospital: row.hospital ?? undefined,
+              surgery_type: row.post_op_protocol ?? undefined,
+              notes: row.notes ?? undefined,
+              created_at: row.created_at,
+            })),
+          );
+          setPathologies(
+            (pathologiesRes.data ?? []).map((row) => ({
+              id: row.id,
+              patient_id: currentPatientId,
+              pathology_name: row.name,
+              cid_code: row.icd_code ?? undefined,
+              diagnosis_date: row.diagnosed_at ?? undefined,
+              status: row.status ?? undefined,
+              notes: row.notes ?? undefined,
+              created_at: row.created_at,
+            })),
+          );
+          setGoals(normalizeGoalRows(goalsRes.data));
+          // Check mandatory tests
+          const result = await MandatoryTestAlertService.checkMandatoryTests(
+            currentPatientId,
+            calculatedSessionNumber,
+            testsCompleted,
+          );
+          setMandatoryTestsResult(result);
+          setShowMandatoryAlert(!result.canSave);
+        }
+      } catch (error) {
+        if (cancelled) return;
+        logger.error("Erro ao carregar dados da sessão", error, "SessionEvolutionContainer");
+        const err = error as { code?: string; message?: string };
+        const msg = String(err?.message ?? "");
+        const isPermissionDenied =
+          err?.code === "permission-denied" ||
+          msg.includes("permission") ||
+          msg.includes("insufficient permissions");
+        const isNotFound =
+          err?.code === "not-found" ||
+          msg.includes("not found") ||
+          msg.includes("Appointment not found") ||
+          msg.includes("Patient not found");
+        const description = isPermissionDenied
+          ? "Sem permissão para acessar esta sessão. Verifique se seu perfil tem acesso a este atendimento ou entre em contato com o administrador."
+          : isNotFound
+            ? "Agendamento ou paciente não encontrado. Verifique se o link está correto."
+            : "Não foi possível carregar os dados da sessão. Tente novamente.";
+        setLoadError(description);
+        toast({
+          title: "Erro ao carregar dados",
+          description: isPermissionDenied
+            ? "Sem permissão para acessar esta sessão."
+            : isNotFound
+              ? "Agendamento não encontrado."
+              : "Não foi possível carregar os dados da sessão.",
+          variant: "destructive",
+        });
+      } finally {
+        if (!cancelled) setIsLoading(false);
+      }
+    };
 
     const attemptLoad = async () => {
       try {
@@ -463,7 +456,7 @@ export const SessionEvolutionContainer: React.FC<SessionEvolutionContainerProps>
       cancelled = true;
       if (timeoutId) clearTimeout(timeoutId);
     };
-  }, [loadData, user]);
+  }, [appointmentId, propPatientId, testsCompleted, toast, user]);
 
   const handleSoapChange = (data: typeof soapData) => {
     setSoapData(data);
@@ -876,26 +869,8 @@ export const SessionEvolutionContainer: React.FC<SessionEvolutionContainerProps>
               <div className="flex items-center gap-3">
                 <h1 className="text-xl font-semibold">Evolução de Sessão</h1>
                 <EvolutionVersionToggle
-                  version={
-                    viewVersion === "classic"
-                      ? "v1-soap"
-                      : viewVersion === "v3-notion"
-                        ? "v3-notion"
-                        : viewVersion === "v4-tiptap"
-                          ? "v4-tiptap"
-                          : "v2-texto"
-                  }
-                  onToggle={(v) =>
-                    setViewVersion(
-                      v === "v1-soap"
-                        ? "classic"
-                        : v === "v3-notion"
-                          ? "v3-notion"
-                          : v === "v4-tiptap"
-                            ? "v4-tiptap"
-                            : "improved",
-                    )
-                  }
+                  version={viewVersion === "classic" ? "v1-soap" : "v4-tiptap"}
+                  onToggle={(v) => setViewVersion(v === "v1-soap" ? "classic" : "v5-pro")}
                 />
                 <Button
                   variant="ghost"
@@ -988,154 +963,21 @@ export const SessionEvolutionContainer: React.FC<SessionEvolutionContainerProps>
             <Loader2 className="w-8 h-8 animate-spin text-blue-600" />
           </div>
         }>
-        {viewVersion === "v4-tiptap" ? (
+        {viewVersion === "v5-pro" ? (
           <div className="h-full overflow-y-auto">
-            <NotionEvolutionEditor
+            <V5ProBlockEditor
               initialContent={soapData.assessment}
               soapData={soapData}
               evolutionId={appointmentId}
+              patientId={patientId}
               isSaving={isSaving}
+              isPro={true}
               onSave={(content) => {
                 handleSoapChange({ ...soapData, assessment: content });
-                // We simulate saving process, but handleSave is separate and triggerable here
-                // if we want to save immediately. For now we will call handleSave to match logic.
                 setTimeout(() => handleSave(), 100);
               }}
             />
           </div>
-        ) : viewVersion === "v3-notion" ? (
-          <NotionV3Panel
-            data={{
-              patientReport: soapData.subjective,
-              evolutionText: soapData.assessment,
-              procedures: [],
-              exercises: sessionExercises.map((ex) => ({
-                id: ex.id || Math.random().toString(),
-                exerciseId: ex.exerciseId,
-                name: ex.name,
-                prescription: `${ex.sets || 3}x${ex.repetitions || 10}${ex.weight ? ` c/ ${ex.weight}` : ""}`,
-                completed: ex.completed || false,
-                observations: ex.observations || "",
-                image_url: ex.image_url,
-                thumbnail_url: ex.thumbnail_url,
-                video_url: ex.video_url,
-                feedback: ((ex as any).feedback as any) || {
-                  pain: false,
-                  fatigue: false,
-                  difficultyPerforming: false,
-                },
-              })),
-              painLevel: 0,
-              painLocation: "",
-              homeCareExercises: soapData.plan,
-              observations: "",
-              sessionNumber,
-              totalSessions: sessionNumber,
-              sessionDate: new Date().toISOString(),
-              therapistName: user?.displayName || "Fisioterapeuta",
-              therapistCrefito: selectedTherapistCrefito || "",
-            }}
-            patientId={patientId}
-            evolutionId={appointmentId}
-            onAutoSave={(draft) =>
-              handleAutoSaveDraft({
-                patientReport: draft.patientReport,
-                evolutionText: draft.evolutionText,
-                homeCareExercises: draft.homeCareExercises,
-              })
-            }
-            onChange={(newData) => {
-              setSoapData({
-                subjective: newData.patientReport,
-                objective: soapData.objective,
-                assessment: newData.evolutionText,
-                plan: newData.homeCareExercises || soapData.plan,
-              });
-              setSessionExercises(
-                newData.exercises.map((ex) => ({
-                  id: ex.id,
-                  exerciseId: (ex as any).exerciseId || "",
-                  name: ex.name,
-                  sets: parseInt(ex.prescription?.split("x")[0]) || 3,
-                  repetitions: parseInt(ex.prescription?.split("x")[1]?.split(" ")[0]) || 10,
-                  weight: ex.prescription?.includes("c/")
-                    ? ex.prescription.split("c/")[1].trim()
-                    : "",
-                  completed: ex.completed || false,
-                  observations: ex.observations || "",
-                  image_url: ex.image_url,
-                  thumbnail_url: (ex as any).thumbnail_url,
-                  video_url: (ex as any).video_url,
-                  feedback: (ex as any).patientFeedback as any,
-                })),
-              );
-            }}
-            onSave={handleSave}
-            isSaving={isSaving}
-          />
-        ) : viewVersion === "improved" ? (
-          <NotionEvolutionPanel
-            data={{
-              patientReport: soapData.subjective,
-              evolutionText: soapData.assessment,
-              procedures: [], // Mapear se disponível
-              exercises: sessionExercises.map((ex) => ({
-                id: ex.id || Math.random().toString(),
-                exerciseId: ex.exerciseId,
-                name: ex.name,
-                prescription: `${ex.sets || 3}x${ex.repetitions || 10}${ex.weight ? ` c/ ${ex.weight}` : ""}`,
-                completed: ex.completed || false,
-                observations: ex.observations || "",
-                image_url: ex.image_url,
-                thumbnail_url: ex.thumbnail_url,
-                video_url: ex.video_url,
-                feedback: ((ex as any).feedback as any) || {
-                  pain: false,
-                  fatigue: false,
-                  difficultyPerforming: false,
-                },
-              })),
-              painLevel: 0,
-              painLocation: "",
-              homeCareExercises: soapData.plan,
-              observations: "",
-              sessionNumber,
-              totalSessions: sessionNumber,
-              sessionDate: new Date().toISOString(),
-              therapistName: user?.displayName || "Fisioterapeuta",
-              therapistCrefito: selectedTherapistCrefito || "",
-            }}
-            onChange={(newData) => {
-              setSoapData({
-                subjective: newData.patientReport,
-                objective: soapData.objective, // Manter o que já tinha
-                assessment: newData.evolutionText,
-                plan: newData.homeCareExercises || soapData.plan,
-              });
-              setSessionExercises(
-                newData.exercises.map((ex) => ({
-                  id: ex.id,
-                  exerciseId: (ex as any).exerciseId || "",
-                  name: ex.name,
-                  sets: parseInt(ex.prescription?.split("x")[0]) || 3,
-                  repetitions: parseInt(ex.prescription?.split("x")[1]?.split(" ")[0]) || 10,
-                  weight: ex.prescription?.includes("c/")
-                    ? ex.prescription.split("c/")[1].trim()
-                    : "",
-                  completed: ex.completed || false,
-                  observations: ex.observations || "",
-                  image_url: ex.image_url,
-                  thumbnail_url: (ex as any).thumbnail_url,
-                  video_url: (ex as any).video_url,
-                  feedback: (ex as any).patientFeedback as any,
-                })),
-              );
-            }}
-            onSave={handleSave}
-            isSaving={isSaving}
-            patientId={patientId}
-            evolutionId={appointmentId}
-          />
         ) : (
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 h-full">
             {/* Column 1: SOAP Form (30%) */}
