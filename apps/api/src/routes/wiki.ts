@@ -327,13 +327,16 @@ app.get("/org/list", requireAuth, async (c) => {
 	if (q) conditions.push(ilike(wikiPages.title, `%${q}%`));
 	if (category) conditions.push(eq(wikiPages.category, category));
 
-	const rows = await db
-		.select(wikiPageFullColumns)
-		.from(wikiPages)
-		.where(and(...conditions))
-		.orderBy(sql`${wikiPages.updatedAt} DESC`);
+	const where = and(...conditions);
+  const query = sql`
+    SELECT id, slug, title, icon, category, tags, view_count as "viewCount", version, updated_at as "updatedAt"
+    FROM wiki_pages
+    WHERE ${where}
+    ORDER BY updated_at DESC
+  `;
 
-	return c.json({ data: rows });
+	const result = await db.execute(query);
+	return c.json({ data: result.rows });
 });
 
 // ===== BUSCAR PÁGINA POR ID =====
