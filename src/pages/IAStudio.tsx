@@ -21,13 +21,14 @@ import { FisioADM } from "@/features/ia-studio/components/FisioADM";
 import { FisioRetention } from "@/features/ia-studio/components/FisioRetention";
 import { FisioPredictIndicator } from "@/features/ia-studio/components/FisioPredictIndicator";
 import { GaitAnalysisStudio } from "@/features/ia-studio/components/GaitAnalysisStudio";
+import { PremiumReportGenerator } from "@/features/ia-studio/components/PremiumReportGenerator";
 import { cn } from "@/lib/utils";
 
 const IAStudio = () => {
 	const [isScribeOpen, setIsScribeOpen] = useState(false);
 	const [isADMOpen, setIsADMOpen] = useState(false);
 	const [isGaitOpen, setIsGaitOpen] = useState(false);
-	const [activeFeatureTab, setActiveFeatureTab] = useState<"retention" | "predict" | null>(null);
+	const [activeFeatureTab, setActiveFeatureTab] = useState<"retention" | "predict" | "report" | null>(null);
 
 	const features = [
 		{
@@ -58,6 +59,16 @@ const IAStudio = () => {
 			icon: <MonitorPlay className="w-6 h-6" />,
 			color: "bg-cyan-500",
 			action: () => setIsGaitOpen(true),
+			status: "Ativo",
+		},
+		{
+			id: "report",
+			title: "Premium Reports",
+			subtitle: "Relatórios IA",
+			desc: "Geração de documentos PDF premium dual (Médico e Paciente) via IA.",
+			icon: <FileText className="w-6 h-6" />,
+			color: "bg-indigo-500",
+			action: () => setActiveFeatureTab(activeFeatureTab === "report" ? null : "report"),
 			status: "Ativo",
 		},
 		{
@@ -113,7 +124,7 @@ const IAStudio = () => {
 				</header>
 
 				{/* Features Grid */}
-				<section className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-6">
+				<section className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-6">
 					{features.map((feature, idx) => (
 						<motion.div
 							key={feature.title}
@@ -159,6 +170,19 @@ const IAStudio = () => {
 
 				{/* Detailed Feature View */}
 				<AnimatePresence mode="wait">
+					{activeFeatureTab === "report" && (
+						<motion.div
+							key="report"
+							initial={{ opacity: 0, y: 20 }}
+							animate={{ opacity: 1, y: 0 }}
+							exit={{ opacity: 0, y: -20 }}
+							className="bg-slate-50 dark:bg-slate-900/30 p-8 rounded-[40px] border border-white/5 shadow-inner overflow-hidden"
+						>
+							<div className="max-w-4xl mx-auto">
+								<PremiumReportGenerator patientId="test-patient-id" patientName="Paciente Teste" />
+							</div>
+						</motion.div>
+					)}
 					{activeFeatureTab === "retention" && (
 						<motion.div
 							key="retention"
