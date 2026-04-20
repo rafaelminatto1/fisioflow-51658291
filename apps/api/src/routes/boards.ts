@@ -8,6 +8,20 @@ const app = new Hono<{ Bindings: Env; Variables: AuthVariables }>();
 
 // ===== BOARDS =====
 
+const DEFAULT_BOARD_COLOR = '#0079BF';
+const DEFAULT_BOARD_ICON = '📋';
+
+function cleanString(value: unknown): string | null {
+  if (typeof value !== 'string') return null;
+  const trimmed = value.trim();
+  return trimmed.length > 0 ? trimmed : null;
+}
+
+function cleanHexColor(value: unknown): string {
+  const color = cleanString(value);
+  return color && /^#[0-9A-Fa-f]{6}$/.test(color) ? color : DEFAULT_BOARD_COLOR;
+}
+
 app.get('/', requireAuth, async (c) => {
   try {
     const user = c.get('user');
@@ -37,44 +51,57 @@ app.post('/', requireAuth, async (c) => {
     const user = c.get('user');
     const body = await c.req.json();
     const db = await createPool(c.env);
+    const name = cleanString(body.name) ?? cleanString(body.title) ?? cleanString(body.nome);
+
+    if (!name) {
+      return c.json({ error: 'Nome do board é obrigatório' }, 400);
+    }
+
+    const description = cleanString(body.description) ?? cleanString(body.descricao);
+    const backgroundColor = cleanHexColor(
+      body.background_color ?? body.backgroundColor ?? body.color,
+    );
+    const backgroundImage =
+      cleanString(body.background_image) ?? cleanString(body.backgroundImage);
+    const icon = cleanString(body.icon) ?? DEFAULT_BOARD_ICON;
 
     const result = await db.query(
-      `INSERT INTO boards (organization_id, created_by, name, description, background_color, background_image, icon)
-       VALUES ($1, $2, $3, $4, $5, $6, $7)
-       RETURNING *`,
+      `WITH new_board AS (
+         INSERT INTO boards (organization_id, created_by, name, description, background_color, background_image, icon)
+         VALUES ($1, $2, $3, $4, $5, $6, $7)
+         RETURNING *
+       ),
+       inserted_columns AS (
+         INSERT INTO board_columns (board_id, name, color, order_index)
+         SELECT new_board.id, col.name, col.color, col.order_index
+         FROM new_board
+         CROSS JOIN (
+           VALUES
+             ('A Fazer', '#E2E8F0', 0),
+             ('Em Progresso', '#BEE3F8', 1),
+             ('Concluído', '#C6F6D5', 2)
+         ) AS col(name, color, order_index)
+         RETURNING *
+       )
+       SELECT new_board.*,
+              COALESCE(
+                (SELECT json_agg(inserted_columns ORDER BY inserted_columns.order_index) FROM inserted_columns),
+                '[]'::json
+              ) AS columns
+       FROM new_board`,
       [
         user.organizationId,
         user.uid,
-        body.name,
-        body.description ?? null,
-        body.background_color ?? '#0079BF',
-        body.background_image ?? null,
-        body.icon ?? '📋',
+        name,
+        description,
+        backgroundColor,
+        backgroundImage,
+        icon,
       ]
     );
 
     const board = result.rows[0];
-
-    // Create default columns
-    const defaultColumns = [
-      { name: 'A Fazer', color: '#E2E8F0', order_index: 0 },
-      { name: 'Em Progresso', color: '#BEE3F8', order_index: 1 },
-      { name: 'Concluído', color: '#C6F6D5', order_index: 2 },
-    ];
-
-    await db.transaction(
-      defaultColumns.map(col => ({
-        text: `INSERT INTO board_columns (board_id, name, color, order_index) VALUES ($1, $2, $3, $4)`,
-        values: [board.id, col.name, col.color, col.order_index]
-      }))
-    );
-
-    const colsResult = await db.query(
-      `SELECT * FROM board_columns WHERE board_id = $1 ORDER BY order_index`,
-      [board.id]
-    );
-
-    return c.json({ data: { ...board, columns: colsResult.rows, task_count: 0 } }, 201);
+    return c.json({ data: { ...board, columns: board.columns ?? [], task_count: 0 } }, 201);
   } catch (error) {
     console.error('[Boards] POST / error:', error);
     return c.json({ error: 'Erro ao criar board', details: error instanceof Error ? error.message : String(error) }, 500);
@@ -709,7 +736,7 @@ app.post('/templates/financial', requireAuth, async (c) => {
   const db = await createPool(c.env);
 
   const boardRes = await db.query(
-    `INSERT INTO boards (organization_id, created_by, name, description, color, icon)
+    `INSERT INTO boards (organization_id, created_by, name, description, background_color, icon)
      VALUES ($1, $2, 'Gestão Financeira', 'Board para controle de cobranças, inadimplência e fluxo de caixa', '#22C55E', 'banknotes')
      RETURNING *`,
     [user.organizationId, user.uid],
@@ -735,9 +762,9 @@ app.post('/templates/financial', requireAuth, async (c) => {
 
   const childrenQueries = [
     ...columns.map((col) => ({
-      text: `INSERT INTO board_columns (board_id, organization_id, name, color, order_index, wip_limit)
-             VALUES ($1, $2, $3, $4, $5, $6)`,
-      values: [board.id, user.organizationId, col.name, col.color, col.order_index, col.wip_limit ?? null],
+      text: `INSERT INTO board_columns (board_id, name, color, order_index, wip_limit)
+             VALUES ($1, $2, $3, $4, $5)`,
+      values: [board.id, col.name, col.color, col.order_index, col.wip_limit ?? null],
     })),
     ...labels.map((l, i) => ({
       text: `INSERT INTO board_labels (board_id, organization_id, name, color, order_index)
@@ -757,7 +784,7 @@ app.post('/templates/goals', requireAuth, async (c) => {
   const db = await createPool(c.env);
 
   const boardRes = await db.query(
-    `INSERT INTO boards (organization_id, created_by, name, description, color, icon)
+    `INSERT INTO boards (organization_id, created_by, name, description, background_color, icon)
      VALUES ($1, $2, 'Objetivos dos Pacientes', 'Acompanhamento de metas funcionais e reabilitação', '#8B5CF6', 'target')
      RETURNING *`,
     [user.organizationId, user.uid],
@@ -784,9 +811,9 @@ app.post('/templates/goals', requireAuth, async (c) => {
 
   const childrenQueries = [
     ...columns.map((col) => ({
-      text: `INSERT INTO board_columns (board_id, organization_id, name, color, order_index, wip_limit)
-             VALUES ($1, $2, $3, $4, $5, $6)`,
-      values: [board.id, user.organizationId, col.name, col.color, col.order_index, null],
+      text: `INSERT INTO board_columns (board_id, name, color, order_index, wip_limit)
+             VALUES ($1, $2, $3, $4, $5)`,
+      values: [board.id, col.name, col.color, col.order_index, null],
     })),
     ...labels.map((l, i) => ({
       text: `INSERT INTO board_labels (board_id, organization_id, name, color, order_index)

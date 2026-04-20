@@ -1,6 +1,6 @@
 import { Hono } from 'hono';
 import { eq, and, inArray, sql } from 'drizzle-orm';
-import { createDb } from '../lib/db';
+import { createDb, createPool } from '../lib/db';
 import { requireAuth, type AuthVariables } from '../lib/auth';
 import type { Env } from '../types/env';
 import {
@@ -50,25 +50,25 @@ async function invalidateListCache(env: Env): Promise<void> {
 }
 
 // ===== CATEGORIAS =====
-app.get('/categories', async (c) => {
+app.get('/categories', requireAuth, async (c) => {
   try {
     const cached = await kvGet(c.env, KV_CATEGORIES);
     if (cached) return c.json({ data: cached });
 
-    const db = createDb(c.env, 'read');
-    const rows = await db
-      .select({
-        id: exerciseCategories.id,
-        slug: exerciseCategories.slug,
-        name: exerciseCategories.name,
-        description: exerciseCategories.description,
-        icon: exerciseCategories.icon,
-        color: exerciseCategories.color,
-        orderIndex: exerciseCategories.orderIndex,
-        parentId: exerciseCategories.parentId,
-      })
-      .from(exerciseCategories)
-      .orderBy(exerciseCategories.orderIndex);
+    const db = createPool(c.env);
+    const result = await db.query(
+      `SELECT id,
+              slug,
+              name,
+              description,
+              icon,
+              color,
+              order_index AS "orderIndex",
+              parent_id AS "parentId"
+       FROM exercise_categories
+       ORDER BY order_index NULLS LAST, name`,
+    );
+    const rows = result.rows;
 
     c.executionCtx.waitUntil(kvSet(c.env, KV_CATEGORIES, rows));
     return c.json({ data: rows });
@@ -79,7 +79,7 @@ app.get('/categories', async (c) => {
 });
 
 // ===== LISTA DE EXERCÍCIOS =====
-app.get('/', async (c) => {
+app.get('/', requireAuth, async (c) => {
   try {
   const {
     q,
@@ -101,23 +101,32 @@ app.get('/', async (c) => {
     if (cached) return c.json(cached);
   }
 
-  const db = createDb(c.env, 'read');
+  const db = createPool(c.env);
 
-  const pageNum = Math.max(1, parseInt(page));
-  const limitNum = Math.min(500, Math.max(1, parseInt(limit)));
+  const parsedPage = Number.parseInt(page, 10);
+  const parsedLimit = Number.parseInt(limit, 10);
+  const pageNum = Number.isFinite(parsedPage) ? Math.max(1, parsedPage) : 1;
+  const limitNum = Number.isFinite(parsedLimit)
+    ? Math.min(500, Math.max(1, parsedLimit))
+    : 20;
   const offset = (pageNum - 1) * limitNum;
 
-  const conditions = [eq(exercises.isActive, true), eq(exercises.isPublic, true)];
+  const params: unknown[] = [];
+  const whereParts = ['e.is_active = true', 'e.is_public = true'];
+  const addParam = (value: unknown) => {
+    params.push(value);
+    return `$${params.length}`;
+  };
 
   if (q && q.trim().length > 0) {
-    // Usando Full-Text Search unificado com websearch_to_tsquery para busca mais natural
-    conditions.push(
-      sql`to_tsvector('portuguese', 
-        ${exercises.name} || ' ' || 
-        coalesce(${exercises.description}, '') || ' ' || 
-        array_to_string(${exercises.tags}, ' ') || ' ' || 
-        array_to_string(${exercises.bodyParts}, ' ')
-      ) @@ websearch_to_tsquery('portuguese', ${q})`,
+    const qParam = addParam(q);
+    whereParts.push(
+      `to_tsvector('portuguese',
+         e.name || ' ' ||
+         COALESCE(e.description, '') || ' ' ||
+         array_to_string(COALESCE(e.tags, '{}'::text[]), ' ') || ' ' ||
+         array_to_string(COALESCE(e.body_parts, '{}'::text[]), ' ')
+       ) @@ websearch_to_tsquery('portuguese', ${qParam})`,
     );
   }
 
@@ -133,80 +142,78 @@ app.get('/', async (c) => {
     };
     const mapped = difficultyMap[difficulty.toLowerCase()];
     if (mapped) {
-      conditions.push(eq(exercises.difficulty, mapped));
+      whereParts.push(`e.difficulty = ${addParam(mapped)}`);
     }
   }
 
   if (bodyPart) {
-    conditions.push(sql`${bodyPart} = ANY(${exercises.bodyParts})`);
+    whereParts.push(`${addParam(bodyPart)} = ANY(COALESCE(e.body_parts, '{}'::text[]))`);
   }
 
   if (equipment) {
-    conditions.push(sql`${equipment} = ANY(${exercises.equipment})`);
+    whereParts.push(`${addParam(equipment)} = ANY(COALESCE(e.equipment, '{}'::text[]))`);
   }
 
   if (category && category !== "Todos") {
-    conditions.push(eq(exerciseCategories.slug, category));
+    whereParts.push(`ec.slug = ${addParam(category)}`);
   }
 
   if (favorites === 'true') {
     const authUser = c.get('user');
     if (authUser) {
-      conditions.push(
-        sql`EXISTS (
-          SELECT 1 FROM ${exerciseFavorites}
-          WHERE ${exerciseFavorites.exerciseId} = ${exercises.id}
-          AND ${exerciseFavorites.userId} = ${authUser.uid}
+      whereParts.push(
+        `EXISTS (
+          SELECT 1 FROM exercise_favorites ef
+          WHERE ef.exercise_id = e.id
+          AND ef.user_id = ${addParam(authUser.uid)}
         )`,
       );
     }
   }
 
-  const where = and(...conditions);
+  const whereSql = whereParts.join(' AND ');
+  const limitParam = `$${params.length + 1}`;
+  const offsetParam = `$${params.length + 2}`;
 
   const [rows, countResult] = await Promise.all([
-    db
-      .select({
-        id: exercises.id,
-        slug: exercises.slug,
-        name: exercises.name,
-        categoryId: exercises.categoryId,
-        categoryName: exerciseCategories.name,
-        difficulty: exercises.difficulty,
-        imageUrl: exercises.imageUrl,
-        thumbnailUrl: exercises.thumbnailUrl,
-        videoUrl: exercises.videoUrl,
-        musclesPrimary: sql<string[]>`COALESCE(${exercises.musclesPrimary}, '{}'::text[])`,
-        bodyParts: sql<string[]>`COALESCE(${exercises.bodyParts}, '{}'::text[])`,
-        equipment: sql<string[]>`COALESCE(${exercises.equipment}, '{}'::text[])`,
-        durationSeconds: exercises.durationSeconds,
-        description: exercises.description,
-        tags: sql<string[]>`COALESCE(${exercises.tags}, '{}'::text[])`,
-        embeddingSketch: exercises.embeddingSketch,
-        referencePose: exercises.referencePose,
-      })
-      .from(exercises)
-      .leftJoin(
-        exerciseCategories,
-        eq(exercises.categoryId, exerciseCategories.id),
-      )
-      .where(where)
-      .orderBy(exercises.name)
-      .limit(limitNum)
-      .offset(offset),
-    db
-      .select({ count: sql<number>`count(*)` })
-      .from(exercises)
-      .leftJoin(
-        exerciseCategories,
-        eq(exercises.categoryId, exerciseCategories.id),
-      )
-      .where(where),
+    db.query(
+      `SELECT e.id,
+              e.slug,
+              e.name,
+              e.category_id AS "categoryId",
+              ec.name AS "categoryName",
+              e.difficulty,
+              e.image_url AS "imageUrl",
+              e.thumbnail_url AS "thumbnailUrl",
+              e.video_url AS "videoUrl",
+              COALESCE(e.muscles_primary, '{}'::text[]) AS "musclesPrimary",
+              COALESCE(e.body_parts, '{}'::text[]) AS "bodyParts",
+              COALESCE(e.equipment, '{}'::text[]) AS equipment,
+              e.duration_seconds AS "durationSeconds",
+              e.description,
+              COALESCE(e.tags, '{}'::text[]) AS tags,
+              NULL AS "embeddingSketch",
+              NULL AS "referencePose"
+       FROM exercises e
+       LEFT JOIN exercise_categories ec ON e.category_id = ec.id
+       WHERE ${whereSql}
+       ORDER BY e.name
+       LIMIT ${limitParam}
+       OFFSET ${offsetParam}`,
+      [...params, limitNum, offset],
+    ),
+    db.query(
+      `SELECT count(*)::int AS count
+       FROM exercises e
+       LEFT JOIN exercise_categories ec ON e.category_id = ec.id
+       WHERE ${whereSql}`,
+      params,
+    ),
   ]);
 
-  const total = Number(countResult[0]?.count ?? 0);
+  const total = Number(countResult.rows[0]?.count ?? 0);
   const response = {
-    data: rows,
+    data: rows.rows,
     meta: {
       page: pageNum,
       limit: limitNum,

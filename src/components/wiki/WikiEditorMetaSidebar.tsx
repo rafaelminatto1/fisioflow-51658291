@@ -31,9 +31,11 @@ export function WikiEditorMetaSidebar({
 	category: string;
 	tags: string;
 	page: WikiPage | null;
+	clinicalMetadata: WikiPage["clinical_metadata"];
 	onPublishedChange: (value: boolean) => void;
 	onCategoryChange: (value: string) => void;
 	onTagsChange: (value: string) => void;
+	onClinicalMetadataChange: (value: WikiPage["clinical_metadata"]) => void;
 }) {
 	return (
 		<div className="w-80 space-y-6 overflow-auto border-l bg-muted/30 p-4">
@@ -63,6 +65,48 @@ export function WikiEditorMetaSidebar({
 					onChange={(event) => onTagsChange(event.target.value)}
 				/>
 				<p className="text-xs text-muted-foreground">Separadas por vírgula</p>
+			</div>
+
+			<div className="space-y-3 pt-4 border-t border-border/60">
+				<p className="text-[10px] font-bold uppercase tracking-widest text-primary/70">Inteligência Clínica</p>
+				
+				<div className="space-y-1.5">
+					<Label className="text-[11px] font-medium">Alvo RPE (Borg)</Label>
+					<Input
+						type="number"
+						min="0"
+						max="10"
+						placeholder="Ex: 7"
+						className="h-8 text-xs"
+						value={clinicalMetadata?.rpe_target || ""}
+						onChange={(e) => onClinicalMetadataChange({ ...clinicalMetadata, rpe_target: Number(e.target.value) })}
+					/>
+				</div>
+
+				<div className="space-y-1.5">
+					<Label className="text-[11px] font-medium">Regra de Progressão</Label>
+					<Input
+						placeholder="Ex: +2kg se RPE < 5"
+						className="h-8 text-xs"
+						value={clinicalMetadata?.progression_rule || ""}
+						onChange={(e) => onClinicalMetadataChange({ ...clinicalMetadata, progression_rule: e.target.value })}
+					/>
+				</div>
+
+				<div className="space-y-1.5">
+					<Label className="text-[11px] font-medium">Nível de Evidência</Label>
+					<select
+						className="h-8 w-full rounded-md border border-input bg-background px-2 py-1 text-xs shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+						value={clinicalMetadata?.evidence_level || ""}
+						onChange={(e) => onClinicalMetadataChange({ ...clinicalMetadata, evidence_level: e.target.value as any })}
+					>
+						<option value="">Selecione...</option>
+						<option value="A">Nível A (Forte)</option>
+						<option value="B">Nível B (Moderado)</option>
+						<option value="C">Nível C (Fraco)</option>
+						<option value="D">Nível D (Teórico)</option>
+					</select>
+				</div>
 			</div>
 
 			{page && (

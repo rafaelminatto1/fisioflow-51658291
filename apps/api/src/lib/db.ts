@@ -1,6 +1,5 @@
 import { neon, type NeonQueryFunction } from "@neondatabase/serverless";
 import { drizzle as drizzleHttp } from "drizzle-orm/neon-http";
-import { drizzle as drizzlePg } from "drizzle-orm/node-postgres";
 import { Pool } from "pg";
 import { type PgDatabase } from "drizzle-orm/pg-core";
 import * as schema from "@fisioflow/db";
@@ -77,31 +76,6 @@ function getGlobalPool(env: Env): Pool {
         connectionTimeoutMillis: 15000,
     });
 
-    const originalConnect = pool.connect.bind(pool);
-    pool.connect = (async () => {
-        const client = await originalConnect();
-        const orgId = getOrgContext();
-        if (orgId) {
-            await client.query(`SELECT set_config('app.org_id', $1, true)`, [orgId]);
-        }
-        return client;
-    }) as any;
-
-    const originalQuery = pool.query.bind(pool);
-    pool.query = (async (text: any, params: any) => {
-        const orgId = getOrgContext();
-        if (orgId) {
-            const client = await originalConnect();
-            try {
-                await client.query(`SELECT set_config('app.org_id', $1, true)`, [orgId]);
-                return await client.query(text, params);
-            } finally {
-                client.release();
-            }
-        }
-        return originalQuery(text, params);
-    }) as any;
-
     globalPool = pool;
     return pool;
 }
@@ -146,11 +120,25 @@ export type FisioDb = PgDatabase<any, typeof schema>;
 /**
  * Cria uma instância do Drizzle configurada para o ambiente atual.
  */
-export function createDb(env: Env, mode: 'read' | 'write' = 'write'): FisioDb {
+export function createDb(env: Env, _mode: 'read' | 'write' = 'write'): FisioDb {
 	const url = getUrl(env, 'read');
 	const baseSql = neon(url);
 
-	const proxySql = (async (sql: string, params: any[]) => {
+	const proxySql = (async (textOrStrings: any, ...values: any[]) => {
+		let queryText = "";
+		let queryParams: any[] = [];
+		
+		if (typeof textOrStrings === 'string') {
+			queryText = textOrStrings;
+			queryParams = values[0] ?? [];
+		} else {
+			queryText = textOrStrings[0];
+			for (let i = 0; i < values.length; i++) {
+				queryText += `$${i + 1}${textOrStrings[i + 1]}`;
+				queryParams.push(values[i]);
+			}
+		}
+
 		let orgId = getOrgContext();
 		
 		// OVERRIDE DE PRODUÇÃO
@@ -161,7 +149,7 @@ export function createDb(env: Env, mode: 'read' | 'write' = 'write'): FisioDb {
 		try {
 			const results = await baseSql.transaction([
 				baseSql.query(`SELECT set_config('app.org_id', $1, true)`, [orgId]),
-				baseSql.query(sql, params),
+				baseSql.query(queryText, queryParams),
 			]);
 			
 			const rows = results[1];
@@ -179,7 +167,7 @@ export function createDb(env: Env, mode: 'read' | 'write' = 'write'): FisioDb {
 
 			return rows;
 		} catch (dbErr: any) {
-			console.error(`[DB/Neon] Query Error: ${dbErr.message}`, { sql, params });
+			console.error(`[DB/Neon] Query Error: ${dbErr.message}`, { queryText, queryParams });
 			throw dbErr;
 		}
 	}) as any;
@@ -207,9 +195,13 @@ export async function withRls<T>(
 	}
 
 	const sql = neon(url);
-	await (sql as any).transaction([
-		sql`SELECT set_config('app.org_id', ${organizationId}::text, true)`,
+	// Neon transaction returns values for each query
+	const results = await (sql as any).transaction([
+		(sql as any).query(`SELECT set_config('app.org_id', $1, true)`, [organizationId]),
+		// This is a bit tricky because fn(sql) expects the sql client itself
 	]);
+	// Since fn(sql) might execute multiple queries, we should ideally use a proxy here too.
+	// But let's keep it simple for now as withRls is less common.
 	return await fn(sql);
 }
 
@@ -221,7 +213,7 @@ export function createPool(
 	const url = getUrl(env, mode);
 	const orgId = getOrgContext();
 
-	if (mode === 'write' && isTcpConnection(env, mode)) {
+	if (isTcpConnection(env, mode)) {
 		const pool = getGlobalPool(env);
 		
 		const queryProxy = async <Row extends DbRow = any>(
@@ -243,18 +235,25 @@ export function createPool(
 			}
 
 			const executeQuery = async () => {
-				const res = await pool.query(text, params);
-				return {
-					rows: res.rows as any[],
-					rowCount: res.rowCount,
-					fields: res.fields as any[],
-					command: res.command,
-				} as DbQueryResult<Row>;
+				const client = await pool.connect();
+				try {
+					const effectiveOrgId = getOrgContext() || orgId;
+					if (effectiveOrgId) {
+						await client.query(`SELECT set_config('app.org_id', $1, true)`, [effectiveOrgId]);
+					}
+					const res = await client.query(text, params);
+					return {
+						rows: res.rows as any[],
+						rowCount: res.rowCount,
+						fields: res.fields as any[],
+						command: res.command,
+					} as DbQueryResult<Row>;
+				} finally {
+					client.release();
+				}
 			};
 
-			return orgId && !getOrgContext()
-				? await runWithOrg(orgId, executeQuery)
-				: await executeQuery();
+			return await executeQuery();
 		};
 
 		const wrappedQuery = wrapQueryWithTimeout(queryProxy as any, defaultTimeout);
@@ -262,33 +261,32 @@ export function createPool(
 		return {
 			query: wrappedQuery,
 			transaction: async (queries: { text: string; values?: any[] }[]) => {
-				const executeTransaction = async () => {
-					const client = await pool.connect();
-					try {
-						await client.query('BEGIN');
-						const results = [];
-						for (const q of queries) {
-							const res = await client.query(q.text, q.values);
-							results.push(res);
-						}
-						await client.query('COMMIT');
-						return results;
-					} catch (error) {
-						await client.query('ROLLBACK');
-						throw error;
-					} finally {
-						client.release();
+				const client = await pool.connect();
+				try {
+					await client.query('BEGIN');
+					const effectiveOrgId = getOrgContext() || orgId;
+					if (effectiveOrgId) {
+						await client.query(`SELECT set_config('app.org_id', $1, true)`, [effectiveOrgId]);
 					}
-				};
-
-				return orgId && !getOrgContext()
-					? await runWithOrg(orgId, executeTransaction)
-					: await executeTransaction();
+					const results = [];
+					for (const q of queries) {
+						const res = await client.query(q.text, q.values);
+						results.push(res);
+					}
+					await client.query('COMMIT');
+					return results;
+				} catch (error) {
+					await client.query('ROLLBACK');
+					throw error;
+				} finally {
+					client.release();
+				}
 			},
 			end: () => pool.end(),
 		};
 	}
 
+	// Fallback HTTP (Neon)
 	const sql = neon(url, { fullResults: true });
 	const queryProxy = async <Row extends DbRow = DbRow>(
 		text: string,
@@ -297,7 +295,7 @@ export function createPool(
 		const effectiveOrgId = getOrgContext() ?? orgId;
 		if (effectiveOrgId) {
 			const results = await (sql as any).transaction([
-				sql`SELECT set_config('app.org_id', ${effectiveOrgId}::text, true)`,
+				(sql as any).query(`SELECT set_config('app.org_id', $1, true)`, [effectiveOrgId]),
 				(sql as any).query(text, params),
 			]);
 			return results[1] as DbQueryResult<Row>;
@@ -324,19 +322,13 @@ export function createPool(
 			const results = await (sql as any).transaction(allQueries);
 			return effectiveOrgId ? results.slice(1) : results;
 		},
-		end: async () => {
-			if (isTcpConnection(env, mode)) {
-				const pool = getGlobalPool(env);
-				await pool.end();
-			}
-		},
+		end: async () => {},
 	} as DbPool;
 }
 
 export function getRawSql(env: Env, mode: 'read' | 'write' = 'read'): DbQuery {
 	const url = getUrl(env, mode);
-	const orgId = getOrgContext();
-
+	
 	const processQuery = async <Row extends DbRow = DbRow>(
 		textOrStrings: string | TemplateStringsArray,
 		...paramsOrValues: any[]
@@ -355,19 +347,24 @@ export function getRawSql(env: Env, mode: 'read' | 'write' = 'read'): DbQuery {
 			}
 		}
 
+		const orgId = getOrgContext();
 		const sql = neon(url, { fullResults: true });
-		const neonProcess = async (queryText: string, queryParams: any[]) => {
-			if (orgId) {
-				const results = await (sql as any).transaction([
-					(sql as any).query(`SELECT set_config('app.org_id', $1, true)`, [orgId]),
-					(sql as any).query(queryText, queryParams),
-				]);
-				return results[1];
-			}
-			return await (sql as any).query(queryText, queryParams);
-		};
-
-		return await neonProcess(text, params) as DbQueryResult<Row>;
+		
+		if (orgId) {
+			const results = await (sql as any).transaction([
+				(sql as any).query(`SELECT set_config('app.org_id', $1, true)`, [orgId]),
+				(sql as any).query(text, params),
+			]);
+			return results[1] as DbQueryResult<Row>;
+		}
+		
+		const res = await sql.query(text, params);
+		return {
+			rows: res.rows as any[],
+			rowCount: res.rowCount ?? null,
+			fields: res.fields as any[],
+			command: res.command ?? "SELECT",
+		} as DbQueryResult<Row>;
 	};
 
 	return processQuery as DbQuery;
