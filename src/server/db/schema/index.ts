@@ -58,3 +58,6 @@ export * from "./whatsapp-inbox";
 
 // Pre-cadastro (Digital Admission)
 export * from "./precadastro";
+
+// AI Studio Features
+export * from "./ai_studio";

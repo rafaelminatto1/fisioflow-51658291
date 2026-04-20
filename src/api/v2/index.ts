@@ -12,6 +12,7 @@ export * from "./exercises";
 export * from "./feedback";
 export * from "./financial";
 export * from "./gamification";
+export * from "./iaStudio";
 export * from "./imaging";
 export * from "./insights";
 export * from "./knowledge";
