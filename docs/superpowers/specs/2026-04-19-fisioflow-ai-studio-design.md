@@ -62,3 +62,17 @@ O **FisioFlow AI Studio** é uma suíte de inteligência clínica projetada para
 - **Input**: CID-10 + Medições de ADM (Eixo 2) + Idade + Histórico de Sessões.
 - **Output**: Probabilidade de alta em X semanas.
 - **Backend**: Implementado via `Cloudflare Workers AI` usando regressão linear ou modelo de classificação leve.
+
+## 7. Upgrade v4.6: Profundidade Clínica & Refino Visual
+### 7.1 Análise de Marcha (FisioADM 2.0)
+- **Modo:** Vídeo Offline (Upload).
+- **Visualização:** Overlay de vetores biomecânicos e rastreamento de Centro de Massa (COM).
+- **Métricas:** Oscilação de tronco, simetria de passo e deslocamento vertical.
+
+### 7.2 OCR de Laudos (FisioAmbient 2.0)
+- **Tecnologia:** Cloudflare Workers AI (Llama 3.2 Vision ou OCR clássico + Llama refino).
+- **Fluxo:** Upload de foto/PDF -> Extração de achados críticos -> Inserção automática no SOAP (Objetivo).
+
+### 7.3 Estética Aura Intelligence
+- **Feedback:** "Glassmorphism" intensificado nos drawers.
+- **Animações:** Transições de página com stagger e micro-interações de estado (hover/active).

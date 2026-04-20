@@ -10,7 +10,8 @@ import {
 	ChevronRight,
 	ShieldCheck,
 	Lock,
-	User
+	User,
+	MonitorPlay
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -19,13 +20,14 @@ import { ScribeDrawer } from "@/features/ia-studio/components/ScribeDrawer";
 import { FisioADM } from "@/features/ia-studio/components/FisioADM";
 import { FisioRetention } from "@/features/ia-studio/components/FisioRetention";
 import { FisioPredictIndicator } from "@/features/ia-studio/components/FisioPredictIndicator";
+import { GaitAnalysisStudio } from "@/features/ia-studio/components/GaitAnalysisStudio";
 import { cn } from "@/lib/utils";
 
 const IAStudio = () => {
 	const [isScribeOpen, setIsScribeOpen] = useState(false);
 	const [isADMOpen, setIsADMOpen] = useState(false);
+	const [isGaitOpen, setIsGaitOpen] = useState(false);
 	const [activeFeatureTab, setActiveFeatureTab] = useState<"retention" | "predict" | null>(null);
-	const [selectedPatientId, setSelectedPatientId] = useState<string | null>(null);
 
 	const features = [
 		{
@@ -46,6 +48,16 @@ const IAStudio = () => {
 			icon: <Activity className="w-6 h-6" />,
 			color: "bg-blue-500",
 			action: () => setIsADMOpen(true),
+			status: "Ativo",
+		},
+		{
+			id: "gait",
+			title: "GaitStudio",
+			subtitle: "Análise de Marcha",
+			desc: "Análise biomecânica de vídeo com overlay de vetores e centro de massa.",
+			icon: <MonitorPlay className="w-6 h-6" />,
+			color: "bg-cyan-500",
+			action: () => setIsGaitOpen(true),
 			status: "Ativo",
 		},
 		{
@@ -80,12 +92,12 @@ const IAStudio = () => {
 							<Badge className="bg-violet-600/10 text-violet-400 border-violet-500/20 hover:bg-violet-600/20 transition-colors">
 								<Zap className="w-3 h-3 mr-1" /> Inteligência de Borda
 							</Badge>
-							<Badge variant="outline" className="text-slate-400 border-slate-800">v4.5 Early Access</Badge>
+							<Badge variant="outline" className="text-slate-400 border-slate-800">v4.6 Premium Access</Badge>
 						</div>
 						<h1 className="text-5xl font-black tracking-tighter text-slate-900 dark:text-white">
 							IA Studio <span className="text-transparent bg-clip-text bg-gradient-to-r from-violet-600 to-blue-500">Central</span>
 						</h1>
-						<p className="text-slate-500 dark:text-slate-400 max-w-2xl text-lg leading-relaxed">
+						<p className="text-slate-500 dark:text-slate-400 max-w-2xl text-lg leading-relaxed font-medium">
 							Potencialize sua prática clínica com as ferramentas de inteligência artificial mais avançadas da fisioterapia. Automação, precisão e retenção em um só lugar.
 						</p>
 					</div>
@@ -101,7 +113,7 @@ const IAStudio = () => {
 				</header>
 
 				{/* Features Grid */}
-				<section className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+				<section className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-6">
 					{features.map((feature, idx) => (
 						<motion.div
 							key={feature.title}
@@ -128,14 +140,14 @@ const IAStudio = () => {
 												{feature.status}
 											</Badge>
 										</div>
-										<CardTitle className="text-2xl font-bold group-hover:text-violet-600 transition-colors">{feature.title}</CardTitle>
+										<CardTitle className="text-xl font-bold group-hover:text-violet-600 transition-colors leading-tight">{feature.title}</CardTitle>
 									</div>
 								</CardHeader>
 								<CardContent className="p-8 pt-0 flex-1 flex flex-col justify-between">
-									<p className="text-sm text-slate-500 dark:text-slate-400 mb-8 leading-relaxed">
+									<p className="text-xs text-slate-500 dark:text-slate-400 mb-8 leading-relaxed font-medium">
 										{feature.desc}
 									</p>
-									<Button variant="ghost" className="w-full justify-between group/btn hover:bg-violet-50 text-violet-600 dark:hover:bg-violet-900/20 rounded-xl px-4 font-bold transition-all">
+									<Button variant="ghost" className="w-full justify-between group/btn hover:bg-violet-50 text-violet-600 dark:hover:bg-violet-900/20 rounded-xl px-4 font-bold transition-all h-9 text-xs uppercase tracking-widest">
 										{feature.status === 'Ativo' ? 'Acessar' : 'Configurar'}
 										<ChevronRight className="w-4 h-4 group-hover/btn:translate-x-1 transition-transform" />
 									</Button>
@@ -181,25 +193,25 @@ const IAStudio = () => {
 									</Button>
 								</div>
 								
-								<p className="text-slate-500 text-sm max-w-2xl">
+								<p className="text-slate-500 text-sm max-w-2xl font-medium">
 									Selecione um paciente para ver a projeção de tratamento baseada na evolução clínica e benchmarks da clínica.
 								</p>
 
-								<div className="grid grid-cols-1 md:grid-cols-2 gap-6 items-start">
-									<div className="p-8 rounded-3xl bg-white dark:bg-slate-900 shadow-sm border border-slate-100 dark:border-slate-800 space-y-6">
-										<h4 className="font-bold text-sm uppercase tracking-widest text-slate-400">Configuração do Modelo</h4>
-										<div className="space-y-4">
+								<div className="grid grid-cols-1 md:grid-cols-2 gap-8 items-start">
+									<div className="p-8 rounded-[32px] bg-white dark:bg-slate-900 shadow-sm border border-slate-100 dark:border-slate-800 space-y-8">
+										<h4 className="font-black text-xs uppercase tracking-[0.2em] text-slate-400">Configuração do Modelo</h4>
+										<div className="space-y-6">
 											<div className="flex justify-between items-center text-sm">
-												<span className="text-slate-500">Benchmark por CID</span>
-												<Badge variant="secondary">Hérnia de Disco (L5-S1)</Badge>
+												<span className="text-slate-500 font-bold">Benchmark por CID</span>
+												<Badge variant="secondary" className="rounded-lg">Hérnia de Disco (L5-S1)</Badge>
 											</div>
 											<div className="flex justify-between items-center text-sm">
-												<span className="text-slate-500">Frequência Semanal</span>
-												<Badge variant="secondary">2x por semana</Badge>
+												<span className="text-slate-500 font-bold">Frequência Semanal</span>
+												<Badge variant="secondary" className="rounded-lg">2x por semana</Badge>
 											</div>
 											<div className="flex justify-between items-center text-sm">
-												<span className="text-slate-500">Velocidade de Ganho ADM</span>
-												<Badge className="bg-emerald-500/10 text-emerald-500 border-none">+12% (Alta)</Badge>
+												<span className="text-slate-500 font-bold">Velocidade de Ganho ADM</span>
+												<Badge className="bg-emerald-500/10 text-emerald-500 border-none rounded-lg">+12% (Alta)</Badge>
 											</div>
 										</div>
 									</div>
@@ -218,13 +230,13 @@ const IAStudio = () => {
 								<div className="p-2 bg-emerald-500/20 rounded-lg border border-emerald-500/30">
 									<ShieldCheck className="w-5 h-5 text-emerald-400" />
 								</div>
-								<h3 className="text-xl font-bold">Segurança & Privacidade (LGPD)</h3>
+								<h3 className="text-xl font-bold uppercase tracking-tight">Segurança & Privacidade (LGPD)</h3>
 							</div>
-							<p className="text-slate-400 text-sm leading-relaxed">
+							<p className="text-slate-400 text-sm leading-relaxed font-medium">
 								O FisioFlow IA Studio foi projetado com privacidade por padrão. Os dados de voz e vídeo são processados de forma efêmera e criptografada. Nenhum dado biométrico é armazenado permanentemente sem o consentimento explícito e auditável do paciente.
 							</p>
 						</div>
-						<Button variant="outline" className="border-slate-800 text-white hover:bg-slate-800 rounded-2xl px-6 h-12">
+						<Button variant="outline" className="border-slate-800 text-white hover:bg-slate-800 rounded-2xl px-6 h-12 uppercase font-black text-[10px] tracking-widest">
 							Auditoria de IA
 						</Button>
 					</div>
@@ -243,6 +255,11 @@ const IAStudio = () => {
 			<FisioADM
 				isOpen={isADMOpen}
 				onClose={() => setIsADMOpen(false)}
+			/>
+
+			<GaitAnalysisStudio
+				isOpen={isGaitOpen}
+				onClose={() => setIsGaitOpen(false)}
 			/>
 		</MainLayout>
 	);
