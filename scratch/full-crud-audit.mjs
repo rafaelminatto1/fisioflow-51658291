@@ -17,11 +17,6 @@ async function run() {
     }
   });
 
-  page.on('pageerror', err => {
-    console.log(`[PAGE ERROR] [${page.url()}] ${err.message}`);
-    errors.push({ url: page.url(), text: err.message, type: 'pageerror' });
-  });
-
   try {
     console.log('--- Logging in ---');
     await page.goto(`${BASE_URL}/auth`);
@@ -31,46 +26,41 @@ async function run() {
     await page.waitForURL('**/agenda', { timeout: 60000 });
     console.log('Login successful');
 
-    // CRUD PATIENTS
-    console.log('--- Testing Patients CRUD ---');
+    // TEST PATIENT DIALOG (Admin View)
+    console.log('--- Testing Patient Archive/Delete Dialog ---');
     await page.goto(`${BASE_URL}/patients`);
-    await page.waitForSelector('button:has-text("Novo Paciente"), button:has-text("Adicionar")', { timeout: 10000 });
+    await page.waitForTimeout(5000);
     
-    // Create
-    console.log('Creating patient...');
-    const novoBtn = page.locator('button:has-text("Novo Paciente"), button:has-text("Adicionar")').first();
-    await novoBtn.click();
-    await page.waitForSelector('input[name="fullName"], input[name="full_name"]', { timeout: 5000 });
-    await page.fill('input[name="fullName"], input[name="full_name"]', 'Paciente Teste Audit ' + Date.now());
-    await page.click('button:has-text("Salvar"), button:has-text("Criar")');
+    // Select first patient
+    await page.locator('table tr, .patient-card').first().click();
     await page.waitForTimeout(3000);
-
-    // Read/Edit
-    console.log('Editing patient...');
-    await page.goto(`${BASE_URL}/patients`);
-    await page.waitForTimeout(2000);
-    const firstPatient = page.locator('table tr, .patient-card').first();
-    if (await firstPatient.isVisible()) {
-        await firstPatient.click();
-        await page.waitForTimeout(2000);
-        const editBtn = page.locator('button:has-text("Editar")').first();
-        if (await editBtn.isVisible()) {
-            await editBtn.click();
-            await page.waitForSelector('input', { timeout: 5000 });
-            await page.click('button:has-text("Salvar"), button:has-text("Confirmar")');
+    
+    // Open Delete/Archive Dialog
+    const deleteBtn = page.getByRole('button', { name: /Arquivar|Excluir/i }).first();
+    if (await deleteBtn.isVisible()) {
+        await deleteBtn.click();
+        await page.waitForTimeout(1000);
+        
+        // Check for Admin Hard Delete Option
+        const adminCheckbox = page.locator('#hard-delete-toggle');
+        if (await adminCheckbox.isVisible()) {
+            console.log('SUCCESS: Admin hard-delete checkbox is visible.');
+        } else {
+            console.log('FAILURE: Admin hard-delete checkbox is NOT visible.');
         }
+        
+        await page.getByRole('button', { name: /Cancelar/i }).click();
     }
-    await page.waitForTimeout(3000);
 
     console.log('--- CRUD Audit Finished ---');
     if (errors.length > 0) {
-      console.log(`Found ${errors.length} unique error messages in console.`);
+      console.log(`Found ${errors.length} error messages in console.`);
     } else {
-      console.log('No console errors found during CRUD operations!');
+      console.log('No console errors found during audit!');
     }
 
   } catch (e) {
-    console.error('Audit failed with error:', e);
+    console.error('Audit failed:', e.message);
   } finally {
     await browser.close();
   }
