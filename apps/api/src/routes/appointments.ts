@@ -59,7 +59,7 @@ app.get('/', requireAuth, async (c) => {
       console.log('[Appointments/List] Invalid/Default Org ID detected, looking up profile for uid:', user.uid);
       try {
         const { profiles } = await import('@fisioflow/db');
-        const profileResult = await db.select().from(profiles).where(eq(profiles.userId, user.uid)).limit(1);
+        const profileResult = await db.select({ organizationId: profiles.organizationId }).from(profiles).where(eq(profiles.userId, user.uid)).limit(1);
         if (profileResult[0]?.organizationId) {
           organizationId = profileResult[0].organizationId;
           console.log('[Appointments/List] Found correct Org ID from profile:', organizationId);
@@ -87,7 +87,7 @@ app.get('/', requireAuth, async (c) => {
         id: appointments.id,
         patientId: appointments.patientId,
         therapistId: appointments.therapistId,
-        date: appointments.date,
+        date: sql<string>`${appointments.date}::text`,
         startTime: appointments.startTime,
         endTime: appointments.endTime,
         status: appointments.status,
@@ -275,7 +275,7 @@ app.post('/', requireAuth, rateLimit({ limit: 20, windowSeconds: 3600, endpoint:
       console.log('[Appointments/Create] Invalid/Default Org ID detected, looking up profile for uid:', therapistId);
       try {
         const { profiles } = await import('@fisioflow/db');
-        const profileResult = await db.select().from(profiles).where(eq(profiles.userId, therapistId)).limit(1);
+        const profileResult = await db.select({ organizationId: profiles.organizationId }).from(profiles).where(eq(profiles.userId, therapistId)).limit(1);
         if (profileResult[0]?.organizationId) {
           organizationId = profileResult[0].organizationId;
           console.log('[Appointments/Create] Found correct Org ID from profile:', organizationId);
@@ -368,6 +368,26 @@ app.post('/', requireAuth, rateLimit({ limit: 20, windowSeconds: 3600, endpoint:
   }
 });
 
+app.get("/last-updated", requireAuth, async (c) => {
+	const user = c.get("user");
+	const db = createDb(c.env, 'read');
+
+	try {
+		const result = await db
+			.select({ last_updated_at: sql<string>`MAX(${appointments.updatedAt})` })
+			.from(appointments)
+			.where(withTenant(appointments, user.organizationId));
+
+		const lastUpdated = result[0]?.last_updated_at;
+		return c.json({
+			data: { last_updated_at: lastUpdated ? String(lastUpdated) : null },
+		});
+	} catch (error) {
+		console.error("[Appointments/LastUpdated] Error:", error);
+		return c.json({ data: { last_updated_at: null } });
+	}
+});
+
 app.get('/:id', requireAuth, async (c) => {
   const user = c.get('user');
   const db = createDb(c.env, 'read');
@@ -380,7 +400,7 @@ app.get('/:id', requireAuth, async (c) => {
     if (!organizationId || organizationId === '00000000-0000-0000-0000-000000000001') {
       try {
         const { profiles } = await import('@fisioflow/db');
-        const profileResult = await db.select().from(profiles).where(eq(profiles.userId, user.uid)).limit(1);
+        const profileResult = await db.select({ organizationId: profiles.organizationId }).from(profiles).where(eq(profiles.userId, user.uid)).limit(1);
         if (profileResult[0]?.organizationId) {
           organizationId = profileResult[0].organizationId;
         }
@@ -392,7 +412,7 @@ app.get('/:id', requireAuth, async (c) => {
         id: appointments.id,
         patientId: appointments.patientId,
         therapistId: appointments.therapistId,
-        date: appointments.date,
+        date: sql<string>`${appointments.date}::text`,
         startTime: appointments.startTime,
         endTime: appointments.endTime,
         status: appointments.status,
@@ -437,7 +457,7 @@ const updateAppointmentHandler: MiddlewareHandler<{ Bindings: Env; Variables: Au
     if (!organizationId || organizationId === '00000000-0000-0000-0000-000000000001') {
       try {
         const { profiles } = await import('@fisioflow/db');
-        const profileResult = await db.select().from(profiles).where(eq(profiles.userId, user.uid)).limit(1);
+        const profileResult = await db.select({ organizationId: profiles.organizationId }).from(profiles).where(eq(profiles.userId, user.uid)).limit(1);
         if (profileResult[0]?.organizationId) {
           organizationId = profileResult[0].organizationId;
         }
@@ -622,7 +642,7 @@ app.post('/:id/cancel', requireAuth, async (c) => {
     if (!organizationId || organizationId === '00000000-0000-0000-0000-000000000001') {
       try {
         const { profiles } = await import('@fisioflow/db');
-        const profileResult = await db.select().from(profiles).where(eq(profiles.userId, user.uid)).limit(1);
+        const profileResult = await db.select({ organizationId: profiles.organizationId }).from(profiles).where(eq(profiles.userId, user.uid)).limit(1);
         if (profileResult[0]?.organizationId) {
           organizationId = profileResult[0].organizationId;
         }
@@ -678,7 +698,7 @@ app.delete('/:id', requireAuth, async (c) => {
     if (!organizationId || organizationId === '00000000-0000-0000-0000-000000000001') {
       try {
         const { profiles } = await import('@fisioflow/db');
-        const profileResult = await db.select().from(profiles).where(eq(profiles.userId, user.uid)).limit(1);
+        const profileResult = await db.select({ organizationId: profiles.organizationId }).from(profiles).where(eq(profiles.userId, user.uid)).limit(1);
         if (profileResult[0]?.organizationId) {
           organizationId = profileResult[0].organizationId;
         }

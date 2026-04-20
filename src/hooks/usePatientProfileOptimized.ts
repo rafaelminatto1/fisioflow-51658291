@@ -364,6 +364,7 @@ export function usePatientProfilePrefetch() {
 	const queryClient = useQueryClient();
 	const prefetchQueueRef = useRef<Set<string>>(new Set());
 
+	const prefetchPatientData = useCallback(
 		(patientId: string) => {
 			if (!isValidUuid(patientId) || prefetchQueueRef.current.has(patientId)) return;
 			prefetchQueueRef.current.add(patientId);

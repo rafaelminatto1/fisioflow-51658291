@@ -219,88 +219,90 @@ function buildInsurancePayload(
 
 function normalizePatientRow(row: DbRow) {
 	// Drizzle ORM returns camelCase keys; raw SQL returns snake_case — support both
-	const fullName = row.full_name ?? row.fullName;
-	const orgId = row.organization_id ?? row.organizationId;
-	const phoneSecondary = row.phone_secondary ?? row.phoneSecondary;
-	const photoUrl = row.photo_url ?? row.photoUrl;
-	const profileId = row.profile_id ?? row.profileId;
-	const userId = row.user_id ?? row.userId;
-	const referredBy = row.referred_by ?? row.referredBy;
-	const professionalId = row.professional_id ?? row.professionalId;
-	const professionalName = row.professional_name ?? row.professionalName;
-	const isActive = row.is_active ?? row.isActive;
-	const mainCondition = row.main_condition ?? row.mainCondition;
-	const bloodType = row.blood_type ?? row.bloodType;
-	const weightKg = row.weight_kg ?? row.weightKg;
-	const heightCm = row.height_cm ?? row.heightCm;
-	const maritalStatus = row.marital_status ?? row.maritalStatus;
-	const educationLevel = row.education_level ?? row.educationLevel;
-	const sessionValue = row.session_value ?? row.sessionValue;
-	const consentData = row.consent_data ?? row.consentData;
-	const consentImage = row.consent_image ?? row.consentImage;
+	const id = row.id ?? row.ID;
+	const fullName = row.fullName ?? row.full_name ?? row.name;
+	const orgId = row.organizationId ?? row.organization_id;
+	const phone = row.phone;
+	const phoneSecondary = row.phoneSecondary ?? row.phone_secondary;
+	const photoUrl = row.photoUrl ?? row.photo_url;
+	const profileId = row.profileId ?? row.profile_id;
+	const userId = row.userId ?? row.user_id;
+	const referredBy = row.referredBy ?? row.referred_by;
+	const professionalId = row.professionalId ?? row.professional_id;
+	const professionalName = row.professionalName ?? row.professional_name;
+	const isActive = row.isActive ?? row.is_active;
+	const mainCondition = row.mainCondition ?? row.main_condition;
+	const bloodType = row.bloodType ?? row.blood_type;
+	const weightKg = row.weightKg ?? row.weight_kg;
+	const heightCm = row.heightCm ?? row.height_cm;
+	const maritalStatus = row.maritalStatus ?? row.marital_status;
+	const educationLevel = row.educationLevel ?? row.education_level;
+	const sessionValue = row.sessionValue ?? row.session_value;
+	const consentData = row.consentData ?? row.consent_data;
+	const consentImage = row.consentImage ?? row.consent_image;
 	const incompleteReg =
-		row.incomplete_registration ?? row.incompleteRegistration;
+		row.incompleteRegistration ?? row.incomplete_registration;
 	const birthDate =
-		row.birth_date ?? row.legacyDateOfBirth ?? row.date_of_birth;
-	const createdAt = row.created_at ?? row.createdAt;
-	const updatedAt = row.updated_at ?? row.updatedAt;
-	const rawEmergencyContact = row.emergency_contact ?? row.emergencyContact;
+		row.birthDate ?? row.birth_date ?? row.legacyDateOfBirth ?? row.date_of_birth;
+	const createdAt = row.createdAt ?? row.created_at;
+	const updatedAt = row.updatedAt ?? row.updated_at;
+	const rawEmergencyContact = row.emergencyContact ?? row.emergency_contact;
 	const rawInsurance = row.insurance;
 
 	const address = parseJsonObject(row.address);
 	const emergencyContact = parseJsonObject(rawEmergencyContact);
 	const insurance = parseJsonObject(rawInsurance);
 
-	const name = trimmedString(fullName) ?? trimmedString(row.name) ?? "Sem nome";
+	const name = trimmedString(fullName as string) ?? "Sem nome";
 
 	return {
 		...row,
-		id: String(row.id),
+		id: id ? String(id) : undefined,
 		name,
 		full_name: name,
-		organization_id: trimmedString(orgId) ?? "",
-		organizationId: trimmedString(orgId) ?? "",
-		phone: trimmedString(row.phone) ?? null,
-		phone_secondary: trimmedString(phoneSecondary) ?? null,
-		email: trimmedString(row.email) ?? null,
-		cpf: trimmedString(row.cpf) ?? null,
-		rg: trimmedString(row.rg) ?? null,
-		photo_url: trimmedString(photoUrl) ?? null,
-		profile_id: trimmedString(profileId) ?? null,
-		user_id: trimmedString(userId) ?? null,
-		referred_by: trimmedString(referredBy) ?? null,
-		professional_id: trimmedString(professionalId) ?? null,
-		professional_name: trimmedString(professionalName) ?? null,
+		organization_id: trimmedString(orgId as string) ?? "",
+		organizationId: trimmedString(orgId as string) ?? "",
+		phone: trimmedString(phone as string) ?? null,
+		phone_secondary: trimmedString(phoneSecondary as string) ?? null,
+		email: trimmedString(row.email as string) ?? null,
+		cpf: trimmedString(row.cpf as string) ?? null,
+		rg: trimmedString(row.rg as string) ?? null,
+		photo_url: trimmedString(photoUrl as string) ?? null,
+		profile_id: trimmedString(profileId as string) ?? null,
+		user_id: trimmedString(userId as string) ?? null,
+		referred_by: trimmedString(referredBy as string) ?? null,
+		professional_id: trimmedString(professionalId as string) ?? null,
+		professional_name: trimmedString(professionalName as string) ?? null,
 		birth_date: birthDate ? String(birthDate) : null,
 		gender: normalizeGenderFromDb(row.gender),
-		nickname: trimmedString(row.nickname) ?? null,
-		social_name: trimmedString(row.social_name ?? row.socialName) ?? null,
-		address: trimmedString(address?.street ?? row.address) ?? null,
-		city: trimmedString(address?.city ?? row.city) ?? null,
-		state: trimmedString(address?.state ?? row.state) ?? null,
-		zip_code: trimmedString(address?.cep ?? row.zip_code) ?? null,
+		nickname: trimmedString(row.nickname as string) ?? null,
+		social_name: trimmedString((row.social_name ?? row.socialName) as string) ?? null,
+		address: trimmedString((address?.street ?? row.address) as string) ?? null,
+		city: trimmedString((address?.city ?? row.city) as string) ?? null,
+		state: trimmedString((address?.state ?? row.state) as string) ?? null,
+		zip_code: trimmedString((address?.cep ?? row.zip_code) as string) ?? null,
 		emergency_contact:
-			trimmedString(emergencyContact?.name ?? rawEmergencyContact) ?? null,
+			trimmedString((emergencyContact?.name ?? rawEmergencyContact) as string) ?? null,
 		emergency_contact_relationship:
 			trimmedString(
-				emergencyContact?.relationship ?? row.emergency_contact_relationship,
+				(emergencyContact?.relationship ?? row.emergency_contact_relationship) as string,
 			) ?? null,
 		emergency_phone:
-			trimmedString(emergencyContact?.phone ?? row.emergency_phone) ?? null,
+			trimmedString((emergencyContact?.phone ?? row.emergency_phone) as string) ?? null,
 		health_insurance:
-			trimmedString(insurance?.provider ?? row.health_insurance) ?? null,
+			trimmedString((insurance?.provider ?? row.health_insurance) as string) ?? null,
 		insurance_number:
-			trimmedString(insurance?.cardNumber ?? row.insurance_number) ?? null,
-		main_condition: trimmedString(mainCondition) ?? null,
-		profession: trimmedString(row.profession) ?? null,
-		observations: trimmedString(row.observations ?? row.notes) ?? null,
-		status: trimmedString(row.status) ?? "Inicial",
+			trimmedString((insurance?.cardNumber ?? row.insurance_number) as string) ?? null,
+		main_condition: trimmedString(mainCondition as string) ?? null,
+		profession: trimmedString(row.profession as string) ?? null,
+		observations: trimmedString((row.observations ?? row.notes) as string) ?? null,
+		status: trimmedString(row.status as string) ?? "Inicial",
 		progress: nullableNumber(row.progress) ?? 0,
-		blood_type: trimmedString(bloodType) ?? null,
+		blood_type: trimmedString(bloodType as string) ?? null,
 		weight_kg: nullableNumber(weightKg),
 		height_cm: nullableNumber(heightCm),
-		marital_status: trimmedString(maritalStatus) ?? null,
-		education_level: trimmedString(educationLevel) ?? null,
+		marital_status: trimmedString(maritalStatus as string) ?? null,
+		education_level: trimmedString(educationLevel as string) ?? null,
 		session_value: nullableNumber(sessionValue),
 		consent_data: consentData !== false,
 		consent_image: Boolean(consentImage),
@@ -558,27 +560,21 @@ app.get("/", async (c) => {
 		}
 
 		// Data query
-		const data = await db
-			.select({
-				id: patients.id,
-				fullName: patients.fullName,
-				nickname: patients.nickname,
-				socialName: patients.socialName,
-				photoUrl: patients.photoUrl,
-				mainCondition: patients.mainCondition,
-				status: patients.status,
-				isActive: patients.isActive,
-				createdAt: patients.createdAt,
-				updatedAt: patients.updatedAt,
-			})
-			.from(patients)
-			.where(conditions)
-			.orderBy(orderBy)
-			.limit(limit)
-			.offset(offset);
+		const query = sql`
+			SELECT id, full_name as "fullName", nickname, social_name as "socialName", 
+			       photo_url as "photoUrl", main_condition as "mainCondition", 
+			       status, is_active as "isActive", created_at as "createdAt", updated_at as "updatedAt"
+			FROM patients
+			WHERE ${conditions}
+			ORDER BY ${orderBy}
+			LIMIT ${limit} OFFSET ${offset}
+		`;
+    
+    const dataResult = await db.execute(query);
+    const data = dataResult.rows;
 
 		return c.json({
-			data: data.map((row) => normalizePatientRow(row as DbRow)),
+			data: data.map((row: any) => normalizePatientRow(row as DbRow)),
 			total,
 			page: Math.floor(offset / limit) + 1,
 			perPage: limit,
@@ -763,18 +759,16 @@ app.get("/:id", async (c) => {
 	if (!isUuid(id)) return c.json({ error: "ID inválido" }, 400);
 
 	try {
-		const result = await db
-			.select()
-			.from(patients)
-			.where(withTenant(patients, user.organizationId, eq(patients.id, id)))
-			.limit(1);
+		const conditions = withTenant(patients, user.organizationId, eq(patients.id, id));
+	const query = sql`SELECT * FROM patients WHERE ${conditions} LIMIT 1`;
+		const result = await db.execute(query);
 
-		const row = result[0];
+		const row = result.rows[0];
 		if (!row) return c.json({ error: "Paciente não encontrado" }, 404);
 
 		return c.json({ data: normalizePatientRow(row as DbRow) });
-	} catch (error) {
-		console.error("[Patients/Get] Error:", error);
+	} catch (error: any) {
+		console.error("[Patients/Get] Error:", error.message);
 		return c.json({ error: "Erro ao buscar paciente" }, 500);
 	}
 });

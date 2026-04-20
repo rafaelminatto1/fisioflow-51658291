@@ -189,13 +189,16 @@ export function registerClinicalResourceRoutes(app: ClinicalRouteApp) {
       }
     }
 
-    const result = await db
-      .select()
-      .from(clinicalTestTemplates)
-      .where(and(...conditions))
-      .orderBy(asc(clinicalTestTemplates.name));
+    const query = sql`
+      SELECT * FROM clinical_test_templates
+      WHERE ${and(...conditions)}
+      ORDER BY name ASC
+    `;
+    
+    const dataResult = await db.execute(query);
+    const resultRows = dataResult.rows;
 
-    const data = result.map((row) =>
+    const data = resultRows.map((row) =>
       normalizeClinicalTestTemplateRow(row as any),
     );
 
@@ -207,23 +210,20 @@ export function registerClinicalResourceRoutes(app: ClinicalRouteApp) {
     const db = createDb(c.env);
     const { id } = c.req.param();
 
-    const [result] = await db
-      .select()
-      .from(clinicalTestTemplates)
-      .where(
-        and(
+    const conditions = and(
           eq(clinicalTestTemplates.id, id),
           or(
             eq(clinicalTestTemplates.organizationId, user.organizationId),
             sql`${clinicalTestTemplates.organizationId} IS NULL`
           )
-        )
-      )
-      .limit(1);
+        );
+    const query = sql`SELECT * FROM clinical_test_templates WHERE ${conditions} LIMIT 1`;
+    const result = await db.execute(query);
+    const row = result.rows[0];
 
-    if (!result) return c.json({ error: 'Teste clínico não encontrado' }, 404);
+    if (!row) return c.json({ error: 'Teste clínico não encontrado' }, 404);
 
-    return c.json({ data: normalizeClinicalTestTemplateRow(result as any) });
+    return c.json({ data: normalizeClinicalTestTemplateRow(row as any) });
   });
 
   app.post('/test-templates', requireAuth, async (c) => {
