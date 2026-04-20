@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, Suspense } from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Badge } from "@/components/ui/badge";
@@ -197,7 +197,9 @@ function AdvancedAnalyticsContentInternal() {
 export function AdvancedAnalyticsContent() {
 	return (
 		<AnalyticsFiltersProvider>
-			<AdvancedAnalyticsContentInternal />
+      <Suspense fallback={<div className="p-8 space-y-4"><Skeleton className="h-12 w-full" /><Skeleton className="h-64 w-full" /></div>}>
+			  <AdvancedAnalyticsContentInternal />
+      </Suspense>
 		</AnalyticsFiltersProvider>
 	);
 }
