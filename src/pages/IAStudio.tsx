@@ -16,9 +16,11 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { ScribeDrawer } from "@/features/ia-studio/components/ScribeDrawer";
+import { FisioADM } from "@/features/ia-studio/components/FisioADM";
 
 const IAStudio = () => {
 	const [isScribeOpen, setIsScribeOpen] = useState(false);
+	const [isADMOpen, setIsADMOpen] = useState(false);
 
 	const features = [
 		{
@@ -36,7 +38,8 @@ const IAStudio = () => {
 			desc: "Medição de amplitude de movimento via câmera em tempo real.",
 			icon: <Activity className="w-6 h-6" />,
 			color: "bg-blue-500",
-			status: "Em breve",
+			action: () => setIsADMOpen(true),
+			status: "Ativo",
 		},
 		{
 			title: "FisioRetention",
@@ -154,6 +157,11 @@ const IAStudio = () => {
 			<ScribeDrawer 
 				isOpen={isScribeOpen} 
 				onClose={() => setIsScribeOpen(false)} 
+			/>
+
+			<FisioADM
+				isOpen={isADMOpen}
+				onClose={() => setIsADMOpen(false)}
 			/>
 		</MainLayout>
 	);
