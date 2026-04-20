@@ -9,7 +9,8 @@ import {
 	Zap, 
 	ChevronRight,
 	ShieldCheck,
-	Lock
+	Lock,
+	User
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -17,12 +18,14 @@ import { Badge } from "@/components/ui/badge";
 import { ScribeDrawer } from "@/features/ia-studio/components/ScribeDrawer";
 import { FisioADM } from "@/features/ia-studio/components/FisioADM";
 import { FisioRetention } from "@/features/ia-studio/components/FisioRetention";
+import { FisioPredictIndicator } from "@/features/ia-studio/components/FisioPredictIndicator";
 import { cn } from "@/lib/utils";
 
 const IAStudio = () => {
 	const [isScribeOpen, setIsScribeOpen] = useState(false);
 	const [isADMOpen, setIsADMOpen] = useState(false);
 	const [activeFeatureTab, setActiveFeatureTab] = useState<"retention" | "predict" | null>(null);
+	const [selectedPatientId, setSelectedPatientId] = useState<string | null>(null);
 
 	const features = [
 		{
@@ -62,7 +65,8 @@ const IAStudio = () => {
 			desc: "Análise preditiva de tempo de tratamento e alta clínica.",
 			icon: <TrendingUp className="w-6 h-6" />,
 			color: "bg-amber-500",
-			status: "Em breve",
+			action: () => setActiveFeatureTab(activeFeatureTab === "predict" ? null : "predict"),
+			status: "Ativo",
 		}
 	];
 
@@ -145,6 +149,7 @@ const IAStudio = () => {
 				<AnimatePresence mode="wait">
 					{activeFeatureTab === "retention" && (
 						<motion.div
+							key="retention"
 							initial={{ opacity: 0, y: 20 }}
 							animate={{ opacity: 1, y: 0 }}
 							exit={{ opacity: 0, y: -20 }}
@@ -152,6 +157,54 @@ const IAStudio = () => {
 						>
 							<div className="max-w-4xl mx-auto">
 								<FisioRetention />
+							</div>
+						</motion.div>
+					)}
+
+					{activeFeatureTab === "predict" && (
+						<motion.div
+							key="predict"
+							initial={{ opacity: 0, y: 20 }}
+							animate={{ opacity: 1, y: 0 }}
+							exit={{ opacity: 0, y: -20 }}
+							className="bg-slate-50 dark:bg-slate-900/30 p-8 rounded-[40px] border border-white/5 shadow-inner overflow-hidden"
+						>
+							<div className="max-w-4xl mx-auto space-y-8">
+								<div className="flex items-center justify-between">
+									<h3 className="text-xl font-bold flex items-center gap-2">
+										<TrendingUp className="w-6 h-6 text-amber-500" />
+										Simulador de Alta Preditiva
+									</h3>
+									<Button variant="outline" className="rounded-xl border-white/10 h-10 gap-2">
+										<User className="w-4 h-4" />
+										Selecionar Paciente
+									</Button>
+								</div>
+								
+								<p className="text-slate-500 text-sm max-w-2xl">
+									Selecione um paciente para ver a projeção de tratamento baseada na evolução clínica e benchmarks da clínica.
+								</p>
+
+								<div className="grid grid-cols-1 md:grid-cols-2 gap-6 items-start">
+									<div className="p-8 rounded-3xl bg-white dark:bg-slate-900 shadow-sm border border-slate-100 dark:border-slate-800 space-y-6">
+										<h4 className="font-bold text-sm uppercase tracking-widest text-slate-400">Configuração do Modelo</h4>
+										<div className="space-y-4">
+											<div className="flex justify-between items-center text-sm">
+												<span className="text-slate-500">Benchmark por CID</span>
+												<Badge variant="secondary">Hérnia de Disco (L5-S1)</Badge>
+											</div>
+											<div className="flex justify-between items-center text-sm">
+												<span className="text-slate-500">Frequência Semanal</span>
+												<Badge variant="secondary">2x por semana</Badge>
+											</div>
+											<div className="flex justify-between items-center text-sm">
+												<span className="text-slate-500">Velocidade de Ganho ADM</span>
+												<Badge className="bg-emerald-500/10 text-emerald-500 border-none">+12% (Alta)</Badge>
+											</div>
+										</div>
+									</div>
+									<FisioPredictIndicator patientId="test-patient-id" />
+								</div>
 							</div>
 						</motion.div>
 					)}
