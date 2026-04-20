@@ -19,9 +19,9 @@ import {
 	YAxis,
 	CartesianGrid,
 	Tooltip,
-	ResponsiveContainer,
 	Legend,
 } from "recharts";
+import { SafeResponsiveContainer } from "@/components/charts/SafeResponsiveContainer";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { BiomechanicsEvolutionTab } from "@/components/evolution/BiomechanicsEvolutionTab";
@@ -267,7 +267,7 @@ export const PatientEvolutionDashboard = ({
 							<CardTitle className="text-lg">Nível de Dor por Sessão</CardTitle>
 						</CardHeader>
 						<CardContent>
-							<ResponsiveContainer width="100%" height={300}>
+							<SafeResponsiveContainer width="100%" height={300}>
 								<AreaChart data={chartData}>
 									<defs>
 										<linearGradient id="colorDor" x1="0" y1="0" x2="0" y2="1">
@@ -309,7 +309,7 @@ export const PatientEvolutionDashboard = ({
 										name="Nível de Dor"
 									/>
 								</AreaChart>
-							</ResponsiveContainer>
+							</SafeResponsiveContainer>
 						</CardContent>
 					</Card>
 				</TabsContent>
@@ -320,7 +320,7 @@ export const PatientEvolutionDashboard = ({
 							<CardTitle className="text-lg">Score de Mobilidade</CardTitle>
 						</CardHeader>
 						<CardContent>
-							<ResponsiveContainer width="100%" height={300}>
+							<SafeResponsiveContainer width="100%" height={300}>
 								<LineChart data={chartData}>
 									<CartesianGrid
 										strokeDasharray="3 3"
@@ -357,7 +357,7 @@ export const PatientEvolutionDashboard = ({
 										name="Mobilidade (%)"
 									/>
 								</LineChart>
-							</ResponsiveContainer>
+							</SafeResponsiveContainer>
 						</CardContent>
 					</Card>
 				</TabsContent>

@@ -87,6 +87,11 @@ export const patientProfileKeys = {
 		[...patientProfileKeys.all, id, "appointments"] as const,
 } as const;
 
+// Validation
+const UUID_REGEX = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+const isValidUuid = (id: string | undefined | null): boolean => 
+	!!id && id !== "undefined" && UUID_REGEX.test(id);
+
 /**
  * Dados do paciente (sempe carregado)
  */
@@ -94,13 +99,16 @@ function usePatientInfo(patientId: string) {
 	return useQuery({
 		queryKey: patientProfileKeys.patient(patientId),
 		queryFn: async () => {
+			if (!isValidUuid(patientId)) {
+				throw new Error("ID de paciente inválido");
+			}
 			const { data, error } = await PatientService.getPatientById(patientId);
 			if (error || !data) {
 				throw new Error("Paciente não encontrado");
 			}
 			return data;
 		},
-		enabled: !!patientId,
+		enabled: isValidUuid(patientId),
 		staleTime: PATIENT_PROFILE_CACHE_CONFIG.PATIENT.staleTime,
 		gcTime: PATIENT_PROFILE_CACHE_CONFIG.PATIENT.gcTime,
 	});
@@ -134,7 +142,7 @@ function useUpcomingAppointments(patientId: string, enabled: boolean) {
 				})
 				.slice(0, 5);
 		},
-		enabled: enabled && !!patientId,
+		enabled: enabled && isValidUuid(patientId),
 		staleTime: PATIENT_PROFILE_CACHE_CONFIG.EVOLUTION.staleTime,
 		gcTime: PATIENT_PROFILE_CACHE_CONFIG.EVOLUTION.gcTime,
 	});
@@ -150,7 +158,7 @@ function usePatientDocuments(patientId: string, enabled: boolean) {
 			const res = await documentsApi.list(patientId);
 			return res?.data ?? [];
 		},
-		enabled: enabled && !!patientId,
+		enabled: enabled && isValidUuid(patientId),
 		staleTime: PATIENT_PROFILE_CACHE_CONFIG.DOCUMENTS.staleTime,
 		gcTime: PATIENT_PROFILE_CACHE_CONFIG.DOCUMENTS.gcTime,
 	});
@@ -170,7 +178,7 @@ function usePatientGamification(patientId: string, enabled: boolean) {
 				achievements: [],
 			};
 		},
-		enabled: enabled && !!patientId,
+		enabled: enabled && isValidUuid(patientId),
 		staleTime: PATIENT_PROFILE_CACHE_CONFIG.GAMIFICATION.staleTime,
 		gcTime: PATIENT_PROFILE_CACHE_CONFIG.GAMIFICATION.gcTime,
 	});
@@ -206,7 +214,7 @@ export function usePatientProfileOptimized(options: PatientProfileOptions) {
 
 	// Prefetch de abas adjacentes
 	useEffect(() => {
-		if (!patientId || !prefetchAdjacent) return;
+		if (!isValidUuid(patientId) || !prefetchAdjacent) return;
 
 		const tabs: ProfileTab[] = [
 			"overview",
@@ -294,7 +302,7 @@ export function usePatientProfileOptimized(options: PatientProfileOptions) {
 	// Callbacks
 	const invalidateTab = useCallback(
 		(tab: ProfileTab) => {
-			if (!patientId) return;
+		if (!isValidUuid(patientId)) return;
 
 			switch (tab) {
 				case "overview":
@@ -356,9 +364,8 @@ export function usePatientProfilePrefetch() {
 	const queryClient = useQueryClient();
 	const prefetchQueueRef = useRef<Set<string>>(new Set());
 
-	const prefetchPatientData = useCallback(
 		(patientId: string) => {
-			if (prefetchQueueRef.current.has(patientId)) return;
+			if (!isValidUuid(patientId) || prefetchQueueRef.current.has(patientId)) return;
 			prefetchQueueRef.current.add(patientId);
 
 			// Prefetch em paralelo
