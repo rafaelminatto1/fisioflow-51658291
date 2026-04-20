@@ -204,19 +204,21 @@ app.get("/", async (c) => {
 
 	const where = and(...conditions);
 
-	const [rows, countResult] = await Promise.all([
-		db
-			.select(wikiPageListColumns)
-			.from(wikiPages)
-			.where(where)
-			.orderBy(wikiPages.title)
-			.limit(limitNum)
-			.offset(offset),
+  const query = sql`
+    SELECT id, slug, title, icon, category, tags, view_count as "viewCount", version, updated_at as "updatedAt"
+    FROM wiki_pages
+    WHERE ${where}
+    ORDER BY title ASC
+    LIMIT ${limitNum} OFFSET ${offset}
+  `;
+
+	const [dataResult, countResult] = await Promise.all([
+    db.execute(query),
 		db.select({ count: sql<number>`count(*)` }).from(wikiPages).where(where),
 	]);
 
 	return c.json({
-		data: rows,
+		data: dataResult.rows,
 		meta: {
 			page: pageNum,
 			limit: limitNum,
@@ -232,20 +234,17 @@ app.get("/:slug", async (c) => {
 	const db = await createDb(c.env);
 	const { slug } = c.req.param();
 
-	const row = await db
-		.select(wikiPageFullColumns)
-		.from(wikiPages)
-		.where(
-			and(
-				eq(wikiPages.slug, slug),
-				eq(wikiPages.isPublished, true),
-				eq(wikiPages.isPublic, true),
-				isNull(wikiPages.deletedAt),
-			),
-		)
-		.limit(1);
+  const conditions = and(
+    eq(wikiPages.slug, slug),
+    eq(wikiPages.isPublished, true),
+    eq(wikiPages.isPublic, true),
+    isNull(wikiPages.deletedAt),
+  );
+  const query = sql`SELECT * FROM wiki_pages WHERE ${conditions} LIMIT 1`;
+	const result = await db.execute(query);
+  const row = result.rows[0];
 
-	if (!row.length) return c.json({ error: "Página não encontrada" }, 404);
+	if (!row) return c.json({ error: "Página não encontrada" }, 404);
 
 	// Incrementa viewCount (fire-and-forget, não bloqueia response)
 	c.executionCtx.waitUntil(
