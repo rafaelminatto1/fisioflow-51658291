@@ -5,30 +5,33 @@ O **FisioAmbient** é um assistente de documentação clínica por voz que autom
 
 ## 2. Experiência do Usuário (UI/UX)
 - **Scribe Drawer:** Painel lateral persistente acessível em todas as telas de prontuário do paciente.
-- **Push-to-Talk (PTT):** Botões dedicados para as quatro seções do SOAP (Subjetivo, Objetivo, Avaliação, Plano).
+- **Workflow de Consentimento:** Antes do primeiro acionamento de voz na sessão, o terapeuta deve confirmar o "Consentimento Verbal do Paciente" via toggle obrigatório no Drawer.
+- **Push-to-Talk (PTT):** Botões dedicados para as quatro seções do SOAP (Subjetivo, Objetivo, Avaliação, Plano). Acionar uma nova gravação bloqueia outras seções até a conclusão do upload.
 - **Feedback Visual:** Waveform animada (Framer Motion) indicando captura ativa e indicadores de estado (Gravando, Processando, Finalizado).
-- **Editor de Revisão:** Campo de texto Rich Text para edição rápida antes da confirmação final no prontuário.
+- **Editor de Revisão:** Campo de texto Rich Text para edição rápida. O botão "Confirmar e Integrar" apensa o texto à respectiva seção da evolução ativa (`usePatientEvolution`).
 
 ## 3. Arquitetura Técnica
 ### 3.1 Frontend (React 19)
 - **Captura:** `MediaRecorder API` capturando áudio em formato WebM/Opus.
-- **Gerenciamento de Estado:** Zustand para controlar o fluxo de gravação e transcrição.
-- **Processamento Local:** Fragmentação do áudio para upload otimizado.
+- **Gerenciamento de Estado:** Zustand para controlar o fluxo de gravação. 
+- **Estratégia de Upload:** O áudio é enviado como um `Blob` único (formato base64) via `POST` para o Worker. Para garantir estabilidade, gravações individuais são limitadas a 120 segundos.
 
 ### 3.2 Backend (Cloudflare Workers AI)
-- **Transcrição:** `whisper-large-v3-turbo` para conversão de fala em texto com alta fidelidade terminológica.
-- **Refino Clínico:** `llama-3.1-70b` com System Prompt especializado em fisioterapia para estruturar e normalizar a nota.
-- **Orquestração:** Hono.js gerenciando as rotas de streaming e segurança.
+- **Transcrição:** `@cf/openai/whisper-large-v3-turbo` para conversão de fala em texto.
+- **Refino Clínico:** `llama-3.1-70b` com System Prompt especializado em fisioterapia.
+- **Orquestração:** Hono.js. O Worker deve processar o áudio de forma síncrona ou retornar um `Job ID` se o tempo de execução exceder os limites (dependendo da configuração do Worker).
 
 ### 3.3 Banco de Dados (Neon DB)
 - **Tabela `clinical_scribe_logs`:**
   - `id` (UUID)
+  - `organization_id` (FK - Obrigatório para RLS)
   - `patient_id` (FK)
   - `therapist_id` (FK)
   - `section` (ENUM: S, O, A, P)
   - `raw_text` (TEXT)
   - `formatted_text` (TEXT)
   - `consent_timestamp` (TIMESTAMP)
+  - `consent_source` (DEFAULT 'verbal_confirmed_by_therapist')
 
 ## 4. Segurança e Privacidade (LGPD)
 - **Processamento Efêmero:** O áudio é processado na memória V8 e deletado imediatamente após a transcrição. Nenhum arquivo de voz é persistido em disco.

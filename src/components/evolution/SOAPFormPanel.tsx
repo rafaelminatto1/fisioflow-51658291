@@ -26,6 +26,7 @@ import {
 } from "@/components/ui/dialog";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
+import { ScribeDrawer } from "@/features/ia-studio/components/ScribeDrawer";
 
 interface SOAPData {
 	subjective: string;
@@ -261,6 +262,7 @@ export const SOAPFormPanel: React.FC<SOAPFormPanelProps> = ({
 }) => {
 	const [activeSection, setActiveSection] = useState<string | null>(null);
 	const [showSOAPAssistant, setShowSOAPAssistant] = useState(false);
+	const [showFisioAmbient, setShowFisioAmbient] = useState(false);
 
 	const handleFieldChange = useCallback(
 		(key: keyof SOAPData, value: string) => {
@@ -379,6 +381,17 @@ export const SOAPFormPanel: React.FC<SOAPFormPanelProps> = ({
 
 				{/* Actions */}
 				<div className="flex items-center gap-2 pt-2">
+					{/* FisioAmbient Button */}
+					<Button
+						variant="outline"
+						size="sm"
+						onClick={() => setShowFisioAmbient(true)}
+						className="gap-1.5 border-violet-500/30 text-violet-600 hover:bg-violet-500/10 shadow-sm"
+					>
+						<Mic className="h-4 w-4" />
+						<span className="hidden sm:inline">FisioAmbient</span>
+					</Button>
+
 					{/* SOAP Assistant Button */}
 					<Button
 						variant="outline"
@@ -416,6 +429,13 @@ export const SOAPFormPanel: React.FC<SOAPFormPanelProps> = ({
 					)}
 				</div>
 			</CardContent>
+
+			{/* FisioAmbient Scribe Drawer */}
+			<ScribeDrawer
+				isOpen={showFisioAmbient}
+				onClose={() => setShowFisioAmbient(false)}
+				patientId={patientId}
+			/>
 
 			{/* SOAP Assistant Dialog */}
 			<Dialog open={showSOAPAssistant} onOpenChange={setShowSOAPAssistant}>
