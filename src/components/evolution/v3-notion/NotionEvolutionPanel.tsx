@@ -17,9 +17,7 @@
  */
 
 import React, {
-	useCallback,
 	useEffect,
-	useMemo,
 	useRef,
 	useState,
 } from "react";
@@ -100,7 +98,7 @@ const NotionEvolutionPanel: React.FC<NotionEvolutionPanelProps> = ({
 	// Voice Scribe
 	const voiceScribe = useVoiceScribe();
 
-	const handleVoiceToggle = useCallback(async () => {
+	const handleVoiceToggle = async () => {
 		if (voiceScribe.voiceState === "idle") {
 			await voiceScribe.startRecording();
 		} else if (voiceScribe.voiceState === "recording") {
@@ -137,7 +135,7 @@ const NotionEvolutionPanel: React.FC<NotionEvolutionPanelProps> = ({
 		} else if (voiceScribe.voiceState === "error") {
 			voiceScribe.reset();
 		}
-	}, [voiceScribe, onChange, data]);
+	};
 	const [aiSummary, setAiSummary] = useState<any>(null);
 	const navigate = useNavigate();
 	const [localSaveStatus, setLocalSaveStatus] = useState<
@@ -165,22 +163,15 @@ const NotionEvolutionPanel: React.FC<NotionEvolutionPanelProps> = ({
 	const checklistKey = `evolution_session_checklist_${patientId || "local"}_${data.sessionDate || "current"}`;
 	const [checklist, setChecklist] = useState(defaultChecklist);
 
-	const patientReportCount = useMemo(
-		() => (data.patientReport || "").replace(/<[^>]+>/g, "").length,
-		[data.patientReport],
-	);
-	const evolutionTextCount = useMemo(
-		() => (data.evolutionText || "").replace(/<[^>]+>/g, "").length,
-		[data.evolutionText],
-	);
-	const safeEvolutionId = useMemo(() => {
-		const rawEvolutionId =
-			evolutionId ||
-			`sessao-${data.sessionNumber || "draft"}-${data.sessionDate || "agora"}`;
-		return rawEvolutionId.replace(/[^a-zA-Z0-9_-]/g, "_");
-	}, [evolutionId, data.sessionNumber, data.sessionDate]);
+	const patientReportCount = (data.patientReport || "").replace(/<[^>]+>/g, "").length;
+	const evolutionTextCount = (data.evolutionText || "").replace(/<[^>]+>/g, "").length;
+	
+	const rawEvolutionId =
+		evolutionId ||
+		`sessao-${data.sessionNumber || "draft"}-${data.sessionDate || "agora"}`;
+	const safeEvolutionId = rawEvolutionId.replace(/[^a-zA-Z0-9_-]/g, "_");
 
-	const localSaveLabel = useMemo(() => {
+	const getLocalSaveLabel = () => {
 		if (!resolvedAutoSaveEnabled) return "Auto-salvar desativado";
 		if (localSaveStatus === "saving") return "Salvando...";
 		if (localSaveStatus === "error") return "Falha ao salvar";
@@ -188,7 +179,8 @@ const NotionEvolutionPanel: React.FC<NotionEvolutionPanelProps> = ({
 			return `Auto-salvo às ${localLastSaved.toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" })}`;
 		}
 		return "Auto-salvar ativo";
-	}, [resolvedAutoSaveEnabled, localSaveStatus, localLastSaved]);
+	};
+	const localSaveLabel = getLocalSaveLabel();
 
 	useEffect(() => {
 		if (!resolvedAutoSaveEnabled || disabled) return;
@@ -262,12 +254,12 @@ const NotionEvolutionPanel: React.FC<NotionEvolutionPanelProps> = ({
 		onShowShortcuts: () => setShowShortcutsModal(true),
 	});
 
-	const handleFieldChange = useCallback(
-		<K extends keyof EvolutionV2Data>(field: K, value: EvolutionV2Data[K]) => {
-			onChange({ ...data, [field]: value });
-		},
-		[data, onChange],
-	);
+	const handleFieldChange = <K extends keyof EvolutionV2Data>(
+		field: K,
+		value: EvolutionV2Data[K],
+	) => {
+		onChange({ ...data, [field]: value });
+	};
 
 	useEffect(() => {
 		const raw = localStorage.getItem(checklistKey);
@@ -286,13 +278,11 @@ const NotionEvolutionPanel: React.FC<NotionEvolutionPanelProps> = ({
 		localStorage.setItem(checklistKey, JSON.stringify(checklist));
 	}, [checklist, checklistKey]);
 
-	const checklistProgress = useMemo(() => {
-		const total = checklist.length;
-		const done = checklist.filter((item) => item.done).length;
-		return total ? Math.round((done / total) * 100) : 0;
-	}, [checklist]);
+	const totalItems = checklist.length;
+	const doneItems = checklist.filter((item) => item.done).length;
+	const checklistProgress = totalItems ? Math.round((doneItems / totalItems) * 100) : 0;
 
-	const summaryStats = useMemo(() => {
+	const getSummaryStats = () => {
 		const html = `${data.patientReport || ""} ${data.evolutionText || ""}`;
 		const text = html.replace(/<[^>]+>/g, " ").toLowerCase();
 		const stopwords = new Set([
@@ -334,6 +324,7 @@ const NotionEvolutionPanel: React.FC<NotionEvolutionPanelProps> = ({
 			"estão",
 			"sua",
 			"seu",
+			"um",
 		]);
 		const words = text
 			.split(/[^a-zà-ú0-9]+/i)
@@ -361,7 +352,8 @@ const NotionEvolutionPanel: React.FC<NotionEvolutionPanelProps> = ({
 			keywords,
 			timeSince,
 		};
-	}, [data.patientReport, data.evolutionText, data.sessionDate]);
+	};
+	const summaryStats = getSummaryStats();
 	const painLevel = data.painLevel ?? 0;
 
 	useEffect(() => {

@@ -26,6 +26,7 @@
     "noFallthroughCasesInSwitch": true,
     "noImplicitReturns": false,
     "noUncheckedIndexedAccess": false,
+    "types": ["vite-plugin-pwa/client"],
     "paths": {
       "@/*": [
         "../../src/*"

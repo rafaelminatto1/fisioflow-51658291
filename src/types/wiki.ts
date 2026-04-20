@@ -31,6 +31,13 @@ export interface WikiPage {
 	updated_at: TimestampLike;
 	version: number;
 	deleted_at?: TimestampLike;
+	clinical_metadata?: {
+		rpe_target?: number;
+		progression_rule?: string;
+		evidence_level?: "A" | "B" | "C" | "D";
+		recovery_time_hours?: number;
+		suggested_frequency_week?: number;
+	};
 }
 
 /**

@@ -9,7 +9,7 @@
 
 import { format } from "date-fns";
 import { AlertTriangle, Cake, MessageCircle, Sparkles } from "lucide-react";
-import { Suspense, useCallback, useEffect, useMemo } from "react";
+import { Suspense, useEffect } from "react";
 import { Link, useSearchParams } from "react-router-dom";
 import { MainLayout } from "@/components/layout/MainLayout";
 import { BulkActionsBar } from "@/components/schedule/BulkActionsBar";
@@ -39,7 +39,7 @@ export default function Schedule() {
 			? dateParamRaw
 			: format(new Date(), "yyyy-MM-dd");
 
-	const viewParam = (searchParams.get("view") || "week") as ViewType;
+	const viewParam = "week" as ViewType; // Force strictly week view as requested
 	const statusParam =
 		searchParams.get("status")?.split(",").filter(Boolean) || [];
 	const typesParam =
@@ -67,10 +67,8 @@ export default function Schedule() {
 		staffBirthdaysToday,
 	} = data;
 
-	const currentDate = useMemo(() => {
-		const [year, month, day] = dateParam.split("-").map(Number);
-		return new Date(year, month - 1, day);
-	}, [dateParam]);
+	const [year, month, day] = dateParam.split("-").map(Number);
+	const currentDate = new Date(year, month - 1, day);
 
 	const viewType = viewParam;
 	const patientFilter = patientParam || "";
@@ -108,23 +106,17 @@ export default function Schedule() {
 		}
 	}, [appointments, actions, isLoading]);
 
-	const handleDateChange = useCallback(
-		(date: Date) => {
-			const newParams = new URLSearchParams(searchParams);
-			newParams.set("date", format(date, "yyyy-MM-dd"));
-			setSearchParams(newParams, { replace: true });
-		},
-		[searchParams, setSearchParams],
-	);
+	const handleDateChange = (date: Date) => {
+		const newParams = new URLSearchParams(searchParams);
+		newParams.set("date", format(date, "yyyy-MM-dd"));
+		setSearchParams(newParams, { replace: true });
+	};
 
-	const handleViewTypeChange = useCallback(
-		(view: string) => {
-			const newParams = new URLSearchParams(searchParams);
-			newParams.set("view", view);
-			setSearchParams(newParams, { replace: true });
-		},
-		[searchParams, setSearchParams],
-	);
+	const handleViewTypeChange = (view: string) => {
+		const newParams = new URLSearchParams(searchParams);
+		newParams.set("view", view);
+		setSearchParams(newParams, { replace: true });
+	};
 
 	const handleFiltersChange = (newFilters: any) => {
 		const newParams = new URLSearchParams(searchParams);
@@ -146,50 +138,44 @@ export default function Schedule() {
 		setSearchParams(newParams, { replace: true });
 	};
 
-	const handlePatientFilterChange = useCallback(
-		(val: string) => {
-			const newParams = new URLSearchParams(searchParams);
-			if (val) {
-				newParams.set("patient", val);
-			} else {
-				newParams.delete("patient");
-			}
-			setSearchParams(newParams, { replace: true });
-		},
-		[searchParams, setSearchParams],
-	);
+	const handlePatientFilterChange = (val: string) => {
+		const newParams = new URLSearchParams(searchParams);
+		if (val) {
+			newParams.set("patient", val);
+		} else {
+			newParams.delete("patient");
+		}
+		setSearchParams(newParams, { replace: true });
+	};
 
-	const clearFilters = useCallback(() => {
+	const clearFilters = () => {
 		const newParams = new URLSearchParams(searchParams);
 		newParams.delete("status");
 		newParams.delete("types");
 		newParams.delete("therapists");
 		newParams.delete("patient");
 		setSearchParams(newParams, { replace: true });
-	}, [searchParams, setSearchParams]);
+	};
 
-	const handleTimeSlotClick = useCallback(
-		(dateTime: any) => {
-			// Ensure we have a string (Schedule-X v3+ passes Temporal objects)
-			const dtString =
-				typeof dateTime === "string" ? dateTime : dateTime?.toString() || "";
-			if (!dtString) return;
+	const handleTimeSlotClick = (dateTime: any) => {
+		// Ensure we have a string (Schedule-X v3+ passes Temporal objects)
+		const dtString =
+			typeof dateTime === "string" ? dateTime : dateTime?.toString() || "";
+		if (!dtString) return;
 
-			// Extract YYYY-MM-DD and optionally HH:mm regardless of "T" or space or timezone suffix
-			const match = dtString.match(
-				/^(\d{4}-\d{2}-\d{2})(?:[T\s](\d{2}:\d{2}))?/,
-			);
-			if (match) {
-				const datePart = match[1];
-				const timePart = match[2] || "";
+		// Extract YYYY-MM-DD and optionally HH:mm regardless of "T" or space or timezone suffix
+		const match = dtString.match(
+			/^(\d{4}-\d{2}-\d{2})(?:[T\s](\d{2}:\d{2}))?/,
+		);
+		if (match) {
+			const datePart = match[1];
+			const timePart = match[2] || "";
 
-				const [year, month, day] = datePart.split("-").map(Number);
-				const date = new Date(year, month - 1, day);
-				actions.handleTimeSlotClick(date, timePart);
-			}
-		},
-		[actions],
-	);
+			const [year, month, day] = datePart.split("-").map(Number);
+			const date = new Date(year, month - 1, day);
+			actions.handleTimeSlotClick(date, timePart);
+		}
+	};
 
 	// Keyboard Shortcuts
 	useEffect(() => {
@@ -347,7 +333,7 @@ export default function Schedule() {
 										appointments={appointments}
 										currentDate={currentDate}
 										onDateChange={handleDateChange}
-										viewType={viewType as "day" | "week" | "month"}
+										viewType="week"
 										onViewTypeChange={handleViewTypeChange}
 										onEventClick={(event: any) => {
 											const appointment = appointments.find(

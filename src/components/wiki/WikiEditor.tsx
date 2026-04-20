@@ -935,6 +935,7 @@ export function WikiEditor({ page, draft, onCancel, onSave }: WikiEditorProps) {
 	const [category, setCategory] = useState(source?.category || "");
 	const [tags, setTags] = useState(source?.tags?.join(", ") || "");
 	const [isPublished, setIsPublished] = useState(source?.is_published ?? true);
+	const [clinicalMetadata, setClinicalMetadata] = useState<WikiPage["clinical_metadata"]>(source?.clinical_metadata || {});
 	const [showPreview, setShowPreview] = useState(false);
 	const [blocks, setBlocks] = useState<WikiBlock[]>(() =>
 		buildBlocksFromSource(source),
@@ -961,6 +962,7 @@ export function WikiEditor({ page, draft, onCancel, onSave }: WikiEditorProps) {
 		setCategory(nextSource?.category || "");
 		setTags(nextSource?.tags?.join(", ") || "");
 		setIsPublished(nextSource?.is_published ?? true);
+		setClinicalMetadata(nextSource?.clinical_metadata || {});
 		setBlocks(buildBlocksFromSource(nextSource));
 		setSlashInput("");
 		setInsertAfterBlockId(null);
@@ -1172,6 +1174,7 @@ export function WikiEditor({ page, draft, onCancel, onSave }: WikiEditorProps) {
 						.filter(Boolean)
 				: [],
 			is_published: isPublished,
+			clinical_metadata: clinicalMetadata,
 			organization_id: organizationId || "org-1",
 			created_by: user?.uid || "user-1",
 			updated_by: user?.uid || "user-1",
@@ -1283,9 +1286,11 @@ export function WikiEditor({ page, draft, onCancel, onSave }: WikiEditorProps) {
 					category={category}
 					tags={tags}
 					page={page}
+					clinicalMetadata={clinicalMetadata}
 					onPublishedChange={setIsPublished}
 					onCategoryChange={setCategory}
 					onTagsChange={setTags}
+					onClinicalMetadataChange={setClinicalMetadata}
 				/>
 			</div>
 		</div>

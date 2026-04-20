@@ -5,6 +5,7 @@ import App from "./App.tsx";
 import "./index.css";
 import { fisioLogger as logger } from "@/lib/errors/logger";
 import { initializeOnClient } from "@/lib/services/initialization";
+import { registerSW } from "virtual:pwa-register";
 
 // 3. MONITORAMENTO DE ERROS DE BUNDLE (VITE 8)
 const isChunkLoadError = (error: unknown) => {
@@ -46,6 +47,36 @@ const container = document.getElementById("root");
 if (!container) throw new Error("Elemento root não encontrado");
 
 createRoot(container).render(<App />);
+
+// 5. REGISTRO DE SERVICE WORKER (PWA)
+if ("serviceWorker" in navigator && import.meta.env.PROD) {
+	let updateSW: ((reloadPage?: boolean) => Promise<void>) | undefined;
+
+	updateSW = registerSW({
+		immediate: true,
+		onNeedRefresh() {
+			console.log("[PWA] Nova versão disponível. Atualizando agora para evitar bundles antigos.");
+			void updateSW?.(true);
+		},
+		onOfflineReady() {
+			console.log("[PWA] Aplicativo pronto para uso offline.");
+		},
+	});
+
+	// Registro de Periodic Sync (V5 Pro)
+	navigator.serviceWorker.ready.then(async (registration) => {
+		if ("periodicSync" in registration) {
+			try {
+				await (registration as any).periodicSync.register("wiki-sync", {
+					minInterval: 24 * 60 * 60 * 1000, // 24 horas
+				});
+				console.log("[PWA] Periodic Sync registrado: wiki-sync");
+			} catch (err) {
+				console.warn("[PWA] Periodic Sync não pôde ser registrado:", err);
+			}
+		}
+	});
+}
 
 // Inicialização de serviços secundários após o render inicial para TBT zero
 setTimeout(() => {

@@ -287,4 +287,9 @@ export const wikiApi = {
 		request<{ ok: boolean }>(`/api/wiki/dictionary/${encodeURIComponent(id)}`, {
 			method: "DELETE",
 		}),
+	
+	syncClinicalTests: () =>
+		request<{ data: { created: number; updated: number } }>("/api/wiki/clinical-sync", {
+			method: "POST",
+		}),
 };

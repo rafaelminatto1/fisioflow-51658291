@@ -160,4 +160,17 @@ export const wikiService = {
 			return "";
 		}
 	},
+
+	async syncClinicalTestsToWiki(organizationId: string, userId: string): Promise<{ created: number, updated: number }> {
+		try {
+			// This would ideally be a call to a backend endpoint
+			// For now, we simulate the ingestion logic if we had access to the templates here
+			// In a real scenario, the backend would handle the mapping
+			const result = await wikiApi.syncClinicalTests();
+			return result.data as { created: number, updated: number };
+		} catch (error) {
+			console.error("Sync clinical tests failed:", error);
+			throw error;
+		}
+	},
 };
