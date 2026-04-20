@@ -158,8 +158,8 @@ function TriageColumn({
 
 											<div className="mt-2 flex items-center justify-between">
 												<div className="flex flex-wrap gap-1">
-													{page.tags
-														.filter((tag) => !tag.startsWith("triage-"))
+													{(page.tags || [])
+														.filter((tag) => tag && !tag.startsWith("triage-"))
 														.slice(0, 2)
 														.map((tag) => (
 															<Badge
