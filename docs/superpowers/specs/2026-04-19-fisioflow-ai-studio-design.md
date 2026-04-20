@@ -47,3 +47,18 @@ O **FisioFlow AI Studio** é uma suíte de inteligência clínica projetada para
 *   Redução de 60% no tempo de preenchimento de evolução.
 *   Aumento de 15% na taxa de retenção (LTV).
 *   Acurácia de predição de alta superior a 80% após 5 sessões.
+
+## 5. Detalhes Eixo 3: FisioRetention
+### 5.1 Gatilhos de IA
+- **Algoritmo de Risco de Churn**: Analisa a frequência histórica vs. ausência de agendamentos futuros.
+- **Inatividade de Exercícios**: Monitora se o paciente abriu o App do Paciente nos últimos X dias.
+
+### 5.2 Integração WhatsApp
+- Utiliza `WhatsAppService` existente.
+- Novos templates: `reengajamento_clinico`, `incentivo_exercicio`, `alerta_no_show`.
+
+## 6. Detalhes Eixo 4: FisioPredict
+### 6.1 Modelo de Predição
+- **Input**: CID-10 + Medições de ADM (Eixo 2) + Idade + Histórico de Sessões.
+- **Output**: Probabilidade de alta em X semanas.
+- **Backend**: Implementado via `Cloudflare Workers AI` usando regressão linear ou modelo de classificação leve.
