@@ -10,9 +10,9 @@ import {
 	YAxis,
 	CartesianGrid,
 	Tooltip,
-	ResponsiveContainer,
 	Legend,
 } from "recharts";
+import { SafeResponsiveContainer } from "@/components/charts/SafeResponsiveContainer";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { patientsApi, type PatientRow } from "@/api/v2";
@@ -450,7 +450,7 @@ export default function PainMapHistoryPage() {
 									</CardHeader>
 									<CardContent>
 										{historyData.evolutionData.length > 0 ? (
-											<ResponsiveContainer width="100%" height={250}>
+											<SafeResponsiveContainer width="100%" height={250}>
 												<LineChart data={historyData.evolutionData}>
 													<CartesianGrid
 														strokeDasharray="3 3"
@@ -487,7 +487,7 @@ export default function PainMapHistoryPage() {
 														dot={{ fill: "hsl(var(--primary))" }}
 													/>
 												</LineChart>
-											</ResponsiveContainer>
+											</SafeResponsiveContainer>
 										) : (
 											<div className="h-[250px] flex items-center justify-center text-muted-foreground">
 												Sem dados suficientes
@@ -503,7 +503,7 @@ export default function PainMapHistoryPage() {
 									</CardHeader>
 									<CardContent>
 										{historyData.regionRanking.length > 0 ? (
-											<ResponsiveContainer width="100%" height={250}>
+											<SafeResponsiveContainer width="100%" height={250}>
 												<BarChart
 													data={historyData.regionRanking}
 													layout="vertical"
@@ -543,7 +543,7 @@ export default function PainMapHistoryPage() {
 														radius={[0, 4, 4, 0]}
 													/>
 												</BarChart>
-											</ResponsiveContainer>
+											</SafeResponsiveContainer>
 										) : (
 											<div className="h-[250px] flex items-center justify-center text-muted-foreground">
 												Sem dados suficientes

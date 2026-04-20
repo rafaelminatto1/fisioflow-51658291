@@ -16,6 +16,7 @@ import {
 	CartesianGrid,
 	Tooltip,
 } from "recharts";
+import { SafeResponsiveContainer } from "@/components/charts/SafeResponsiveContainer";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { fisioLogger as logger } from "@/lib/errors/logger";
@@ -112,23 +113,22 @@ export function RevenueChart() {
 				<CardDescription>Atualizações em tempo real</CardDescription>
 			</CardHeader>
 			<CardContent>
-				<div
-					className="w-full bg-white dark:bg-gray-800 rounded-lg"
-					style={{ height: "300px" }}
-				>
-					<LineChart data={data}>
-						<CartesianGrid strokeDasharray="3 3" />
-						<XAxis dataKey="date" />
-						<YAxis />
-						<Tooltip formatter={tooltipFormatter} />
-						<Line
-							type="monotone"
-							dataKey="revenue"
-							stroke="hsl(var(--primary))"
-							strokeWidth={2}
-							dot={{ r: 4 }}
-						/>
-					</LineChart>
+				<div className="w-full bg-white dark:bg-gray-800 rounded-lg">
+					<SafeResponsiveContainer width="100%" height={300}>
+						<LineChart data={data}>
+							<CartesianGrid strokeDasharray="3 3" className="opacity-30" />
+							<XAxis dataKey="date" />
+							<YAxis />
+							<Tooltip formatter={tooltipFormatter} />
+							<Line
+								type="monotone"
+								dataKey="revenue"
+								stroke="hsl(var(--primary))"
+								strokeWidth={2}
+								dot={{ r: 4 }}
+							/>
+						</LineChart>
+					</SafeResponsiveContainer>
 				</div>
 			</CardContent>
 		</Card>

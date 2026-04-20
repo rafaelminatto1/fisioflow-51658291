@@ -162,7 +162,7 @@ export type FisioDb = PgDatabase<any, typeof schema>;
  */
 export function createDb(env: Env, mode: 'read' | 'write' = 'write'): FisioDb {
 	const url = getUrl(env, 'read');
-	const baseSql = neon(url, { fullResults: true, arrayMode: true });
+	const baseSql = neon(url, { fullResults: true });
 
 	// Interceptador para normalizar datas que o Neon HTTP retorna como undefined ou objetos estranhos
 	const proxySql = (async (textOrStrings: any, ...values: any[]) => {
