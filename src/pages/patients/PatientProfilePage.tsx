@@ -5,6 +5,7 @@
 
 import React, { useState, useEffect, lazy, Suspense } from "react";
 import { useParams, useNavigate, useSearchParams } from "react-router-dom";
+import { ErrorBoundary } from "@/components/common/ErrorBoundary";
 import { MainLayout } from "@/components/layout/MainLayout";
 import { PatientHelpers, Patient } from "@/types";
 import { APP_ROUTES, patientRoutes } from "@/lib/routing/appRoutes";
@@ -179,7 +180,44 @@ const OverviewTab = ({
 	);
 };
 
+const UUID_REGEX = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
 export const PatientProfilePage = () => {
+	const { id } = useParams<{ id: string }>();
+	const navigate = useNavigate();
+	const [searchParams] = useSearchParams();
+
+	// Validação de UUID
+	const isIdValid = id && id !== "undefined" && UUID_REGEX.test(id);
+
+	useEffect(() => {
+		if (!isIdValid && id) {
+			console.error("[PatientProfilePage] ID de paciente inválido:", id);
+			navigate(APP_ROUTES.PATIENTS, { replace: true });
+		}
+	}, [id, isIdValid, navigate]);
+
+	if (!isIdValid) {
+		return (
+			<MainLayout>
+				<div className="flex flex-col items-center justify-center h-[50vh] gap-4">
+					<h2 className="text-2xl font-bold">ID de Paciente Inválido</h2>
+					<Button onClick={() => navigate(APP_ROUTES.PATIENTS)}>
+						Voltar para lista
+					</Button>
+				</div>
+			</MainLayout>
+		);
+	}
+
+	return (
+		<ErrorBoundary onReset={() => window.location.reload()}>
+			<PatientProfileContent />
+		</ErrorBoundary>
+	);
+};
+
+const PatientProfileContent = () => {
 	const { id } = useParams<{ id: string }>();
 	const navigate = useNavigate();
 	const [searchParams] = useSearchParams();
