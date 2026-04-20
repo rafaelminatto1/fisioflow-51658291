@@ -29,11 +29,11 @@ import {
 	CollapsibleContent,
 	CollapsibleTrigger,
 } from "@/components/ui/collapsible";
+import { SafeResponsiveContainer } from "@/components/charts/SafeResponsiveContainer";
 import {
 	PieChart,
 	Pie,
 	Cell,
-	ResponsiveContainer,
 	BarChart,
 	Bar,
 	XAxis,
@@ -446,7 +446,7 @@ export default function AttendanceReport() {
 									Nenhum dado disponível
 								</div>
 							) : (
-								<ResponsiveContainer width="100%" height={250}>
+								<SafeResponsiveContainer width="100%" height={250}>
 									<PieChart>
 										<Pie
 											data={data?.pieChartData}
@@ -466,7 +466,7 @@ export default function AttendanceReport() {
 										</Pie>
 										<Tooltip />
 									</PieChart>
-								</ResponsiveContainer>
+								</SafeResponsiveContainer>
 							)}
 						</CardContent>
 					</Card>
@@ -485,7 +485,7 @@ export default function AttendanceReport() {
 									Nenhum dado disponível
 								</div>
 							) : (
-								<ResponsiveContainer width="100%" height={250}>
+								<SafeResponsiveContainer width="100%" height={250}>
 									<BarChart data={data?.dayOfWeekData}>
 										<CartesianGrid strokeDasharray="3 3" />
 										<XAxis dataKey="day" tick={{ fontSize: 12 }} />
@@ -505,7 +505,7 @@ export default function AttendanceReport() {
 											radius={[4, 4, 0, 0]}
 										/>
 									</BarChart>
-								</ResponsiveContainer>
+								</SafeResponsiveContainer>
 							)}
 						</CardContent>
 					</Card>
@@ -525,7 +525,7 @@ export default function AttendanceReport() {
 							{isLoading ? (
 								<Skeleton className="h-[250px] w-full" />
 							) : (
-								<ResponsiveContainer width="100%" height={250}>
+								<SafeResponsiveContainer width="100%" height={250}>
 									<LineChart data={data?.monthlyEvolution}>
 										<CartesianGrid strokeDasharray="3 3" />
 										<XAxis dataKey="month" />
@@ -542,7 +542,7 @@ export default function AttendanceReport() {
 											activeDot={{ r: 6 }}
 										/>
 									</LineChart>
-								</ResponsiveContainer>
+								</SafeResponsiveContainer>
 							)}
 						</CardContent>
 					</Card>

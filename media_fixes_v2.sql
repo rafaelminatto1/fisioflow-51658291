@@ -1,0 +1,58 @@
+-- FIXES
+UPDATE exercises SET image_url = '/exercises/illustrations/alongamento-trapezio-superior.avif' WHERE name = 'Alongamento de TFL e Banda IT' AND image_url = '/exercises/illustrations/alongamento-tfl.png';
+UPDATE exercises SET image_url = '/exercises/illustrations/respiracao-labial-franzida.avif' WHERE name = 'Respiração 360' AND image_url = '/exercises/illustrations/respiracao-360.avif';
+UPDATE exercises SET image_url = '/exercises/illustrations/marcha_tandem.avif' WHERE name = 'Caminhada Tandem' AND image_url = '/exercises/illustrations/marcha_tandem.png';
+UPDATE exercises SET image_url = '/exercises/illustrations/elevacao-pernas-barra.avif' WHERE name = 'Elevação de Pernas' AND image_url = '/exercises/illustrations/elevacao-pernas.avif';
+
+-- STILL MISSING
+-- Pallof Press: /exercises/illustrations/pallof-press.avif
+-- Afundo Caminhando: /exercises/illustrations/afundo-caminhando.avif
+-- Cadeira Flexora: /exercises/illustrations/flexao-joelho-cadeira.avif
+-- Equilíbrio no BOSU: /exercises/illustrations/equilibrio-bosu.avif
+-- Inversão Resistida: /exercises/illustrations/inversao-tornozelo-elastico.avif
+-- Eversão Resistida: /exercises/illustrations/eversao-tornozelo-elastico.avif
+-- Disco Proprioceptivo: /exercises/illustrations/disco-proprioceptivo.avif
+-- Full Can: /exercises/illustrations/full-can.avif
+-- Crucifixo Reverso: /exercises/illustrations/crucifixo-reverso.avif
+-- Extensão de Punho: /exercises/illustrations/extensao-punho.avif
+-- Liberação Miofascial com Rolo: /exercises/illustrations/liberacao-foam-roller.png
+-- Flexão de Punho: /exercises/illustrations/flexao-punho.avif
+-- Supinação e Pronação: /exercises/illustrations/supinacao-pronacao.avif
+-- Tyler Twist: /exercises/illustrations/tyler-twist.avif
+-- World's Greatest Stretch: /exercises/illustrations/worlds-greatest-stretch.avif
+-- Flexão de Punho: /exercises/illustrations/flexao-punho.avif
+-- Stir the Pot: /exercises/illustrations/stir-the-pot.avif
+-- Abdominal Reverso: /exercises/illustrations/abdominal-reverso.avif
+-- Abdominal Bicicleta: /exercises/illustrations/abdominal-bicicleta.avif
+-- Giro Russo: /exercises/illustrations/rotacao-tronco-sentado.avif
+-- Extensão Lombar: /exercises/illustrations/extensao-lombar-bola.avif
+-- Postura da Criança: /exercises/illustrations/postura-crianca.avif
+-- Retração Cervical: /exercises/illustrations/retracao-cervical.avif
+-- Isométrico Cervical: /exercises/illustrations/isometrico-cervical.avif
+-- Flexão de Williams: /exercises/illustrations/flexao-williams.avif
+-- Turkish Get-Up: /exercises/illustrations/turkish-getup.avif
+-- Carregamento Unilateral: /exercises/illustrations/suitcase-carry.avif
+-- Alongamento de Grande Dorsal: /exercises/illustrations/alongamento-dorsal.avif
+-- Alongamento de Rotadores de Ombro: /exercises/illustrations/alongamento-rotadores-ombro.avif
+-- World's Greatest Stretch: /exercises/illustrations/worlds-greatest-stretch.avif
+-- Liberação com Bola de Lacrosse: /exercises/illustrations/liberacao-bola-lacrosse.avif
+-- CARs de Quadril: /exercises/illustrations/hip-cars.avif
+-- Expansão Costal: /exercises/illustrations/expansao-costal.avif
+-- Ativação de VMO: /exercises/illustrations/ativacao-vmo-quad-set.png
+-- Ponte Unilateral Isométrica: /exercises/illustrations/ponte-unilateral.avif
+-- Estabilização do Olhar (VOR): /exercises/illustrations/estabilizacao-olhar-vor.png
+-- Manobra de Epley: /exercises/illustrations/manobra-epley.avif
+-- Deslizamento de Nervo Ciático: /exercises/illustrations/deslizamento-nervo-ciatico.png
+-- Deslizamento de Nervo Radial: /exercises/illustrations/deslizamento-nervo-radial.avif
+-- Deslizamento de Nervo Ulnar: /exercises/illustrations/deslizamento-nervo-ulnar.avif
+-- Alcance Funcional: /exercises/illustrations/alcance-funcional.avif
+-- Leg Press: /exercises/illustrations/leg-press.avif
+-- Drop Jump: /exercises/illustrations/drop-jump.avif
+-- Extensão de Dedos: /exercises/illustrations/extensao-dedos-elastico.avif
+-- Flexão de Braços no Joelho: /exercises/illustrations/flexao-braco-joelho.png
+-- Extensão de Dedos: /exercises/illustrations/extensao-dedos-elastico.avif
+-- Skipping: /exercises/illustrations/skipping-high-knees.png
+-- Extensão de Punho: /exercises/illustrations/extensao-punho.avif
+-- CARs de Ombro: /exercises/illustrations/shoulder-cars.avif
+-- Postura da Criança: /exercises/illustrations/postura-crianca.avif
+-- Subida de Degrau Assistida: /exercises/illustrations/subida-degrau-assistida.avif

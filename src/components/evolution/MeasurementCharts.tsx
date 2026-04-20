@@ -23,10 +23,10 @@ import {
 	CartesianGrid,
 	Tooltip,
 	Legend,
-	ResponsiveContainer,
 	Area,
 	AreaChart,
 } from "recharts";
+import { SafeResponsiveContainer } from "@/components/charts/SafeResponsiveContainer";
 
 interface MeasurementChartsProps {
 	measurementsByType: Record<
@@ -137,7 +137,7 @@ export const MeasurementCharts: React.FC<MeasurementChartsProps> = ({
 					</TabsList>
 
 					<TabsContent value="line" className="mt-0">
-						<ResponsiveContainer width="100%" height={300}>
+						<SafeResponsiveContainer width="100%" height={300}>
 							<LineChart data={currentData}>
 								<CartesianGrid strokeDasharray="3 3" opacity={0.3} />
 								<XAxis
@@ -161,11 +161,11 @@ export const MeasurementCharts: React.FC<MeasurementChartsProps> = ({
 									activeDot={{ r: 7 }}
 								/>
 							</LineChart>
-						</ResponsiveContainer>
+						</SafeResponsiveContainer>
 					</TabsContent>
 
 					<TabsContent value="bar" className="mt-0">
-						<ResponsiveContainer width="100%" height={300}>
+						<SafeResponsiveContainer width="100%" height={300}>
 							<BarChart data={currentData}>
 								<CartesianGrid strokeDasharray="3 3" opacity={0.3} />
 								<XAxis
@@ -186,11 +186,11 @@ export const MeasurementCharts: React.FC<MeasurementChartsProps> = ({
 									radius={[8, 8, 0, 0]}
 								/>
 							</BarChart>
-						</ResponsiveContainer>
+						</SafeResponsiveContainer>
 					</TabsContent>
 
 					<TabsContent value="area" className="mt-0">
-						<ResponsiveContainer width="100%" height={300}>
+						<SafeResponsiveContainer width="100%" height={300}>
 							<AreaChart data={currentData}>
 								<CartesianGrid strokeDasharray="3 3" opacity={0.3} />
 								<XAxis
@@ -213,7 +213,7 @@ export const MeasurementCharts: React.FC<MeasurementChartsProps> = ({
 									strokeWidth={2}
 								/>
 							</AreaChart>
-						</ResponsiveContainer>
+						</SafeResponsiveContainer>
 					</TabsContent>
 				</Tabs>
 

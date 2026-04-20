@@ -291,9 +291,14 @@ const Patients = () => {
 												<PatientListItem
 													patient={patient}
 													stats={patientStats}
-													onClick={() =>
-														navigate(patientRoutes.profile(patient.id))
-													}
+													onClick={() => {
+														const UUID_REGEX = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+														if (patient.id && patient.id !== "undefined" && UUID_REGEX.test(patient.id)) {
+															navigate(patientRoutes.profile(patient.id));
+														} else {
+															console.warn("[Patients] Tentativa de navegar para ID inválido:", patient.id);
+														}
+													}}
 												/>
 											</LazyComponent>
 										);
