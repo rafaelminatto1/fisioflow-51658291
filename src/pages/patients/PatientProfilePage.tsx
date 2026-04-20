@@ -47,6 +47,7 @@ import {
 } from "@/hooks/usePatientProfileOptimized";
 import { usePatientEvolutionReport } from "@/hooks/usePatientEvolutionReport";
 import { useEvaluationForms } from "@/hooks/useEvaluationForms";
+import { FisioPredictIndicator } from "@/features/ia-studio/components/FisioPredictIndicator";
 
 import {
 	Dialog,
@@ -133,6 +134,9 @@ const OverviewTab = ({
 					onAction={() => {}}
 				/>
 			</Suspense>
+
+			{/* AI Predictive Analytics */}
+			<FisioPredictIndicator patientId={patient.id} />
 
 			{/* Evolution Management Cards */}
 			<div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
