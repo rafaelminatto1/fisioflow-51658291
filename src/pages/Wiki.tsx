@@ -553,7 +553,7 @@ export default function WikiPage() {
 																{trail.title}
 															</h3>
 															<p className="text-sm text-muted-foreground line-clamp-3">
-																{trail.content
+																{(trail.content || "")
 																	.replace(/[#*`>-]/g, "")
 																	.slice(0, 180)}
 																...
