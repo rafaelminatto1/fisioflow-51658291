@@ -90,6 +90,12 @@ app.get('/profile/:patientId', requireAuth, async (c) => {
   const pool = await createPool(c.env);
   const { patientId } = c.req.param();
 
+  // Verify patient exists
+  const patientExists = await pool.query('SELECT 1 FROM patients WHERE id = $1', [patientId]);
+  if (!patientExists.rows.length) {
+    return c.json({ data: null, message: 'Paciente não encontrado' });
+  }
+
   // Get or create profile
   let result = await pool.query(
     'SELECT * FROM patient_gamification WHERE patient_id = $1',
@@ -261,6 +267,13 @@ app.get('/quests', requireAuth, async (c) => {
 app.get('/quests/:patientId', requireAuth, async (c) => {
   const pool = await createPool(c.env);
   const { patientId } = c.req.param();
+  
+  // Verify patient exists to avoid FK violations on later inserts
+  const patientExists = await pool.query('SELECT 1 FROM patients WHERE id = $1', [patientId]);
+  if (!patientExists.rows.length) {
+    return c.json({ data: { quests: [], completed_count: 0 }, message: 'Paciente não encontrado' });
+  }
+
   const today = new Date().toISOString().split('T')[0];
 
   const result = await pool.query(

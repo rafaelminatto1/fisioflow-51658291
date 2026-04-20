@@ -112,12 +112,12 @@ app.get("/", async (c) => {
 				evidenceLevel: exerciseProtocols.evidenceLevel,
 				description: exerciseProtocols.description,
 				weeksTotal: exerciseProtocols.weeksTotal,
-				tags: exerciseProtocols.tags,
-				icd10Codes: exerciseProtocols.icd10Codes,
+				tags: sql<string[]>`COALESCE(${exerciseProtocols.tags}, '{}'::text[])`,
+				icd10Codes: sql<string[]>`COALESCE(${exerciseProtocols.icd10Codes}, '{}'::text[])`,
 				milestones: exerciseProtocols.milestones,
 				restrictions: exerciseProtocols.restrictions,
 				phases: exerciseProtocols.phases,
-				createdAt: exerciseProtocols.createdAt,
+				createdAt: sql<string>`${exerciseProtocols.createdAt}::text`,
 				createdBy: exerciseProtocols.createdBy,
 			})
 			.from(exerciseProtocols)
