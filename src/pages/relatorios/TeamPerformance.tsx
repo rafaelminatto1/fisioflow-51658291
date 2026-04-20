@@ -25,6 +25,7 @@ import {
 	PopoverTrigger,
 } from "@/components/ui/popover";
 import { Calendar } from "@/components/ui/calendar";
+import { SafeResponsiveContainer } from "@/components/charts/SafeResponsiveContainer";
 import {
 	BarChart,
 	Bar,
@@ -32,7 +33,6 @@ import {
 	YAxis,
 	CartesianGrid,
 	Tooltip,
-	ResponsiveContainer,
 	LineChart,
 	Line,
 	Legend,
@@ -462,7 +462,7 @@ export default function TeamPerformance() {
 							{isLoading ? (
 								<Skeleton className="h-[300px] w-full" />
 							) : (
-								<ResponsiveContainer width="100%" height={300}>
+								<SafeResponsiveContainer width="100%" height={300}>
 									<BarChart
 										data={data?.therapists.slice(0, 6)}
 										layout="vertical"
@@ -491,7 +491,7 @@ export default function TeamPerformance() {
 											radius={[0, 4, 4, 0]}
 										/>
 									</BarChart>
-								</ResponsiveContainer>
+								</SafeResponsiveContainer>
 							)}
 						</CardContent>
 					</Card>
@@ -511,7 +511,7 @@ export default function TeamPerformance() {
 							{isLoading ? (
 								<Skeleton className="h-[300px] w-full" />
 							) : (
-								<ResponsiveContainer width="100%" height={300}>
+								<SafeResponsiveContainer width="100%" height={300}>
 									<LineChart data={data?.monthlyRevenue}>
 										<CartesianGrid strokeDasharray="3 3" />
 										<XAxis dataKey="month" />
@@ -536,7 +536,7 @@ export default function TeamPerformance() {
 											/>
 										))}
 									</LineChart>
-								</ResponsiveContainer>
+								</SafeResponsiveContainer>
 							)}
 						</CardContent>
 					</Card>
@@ -558,7 +558,7 @@ export default function TeamPerformance() {
 							{isLoading ? (
 								<Skeleton className="h-[300px] w-full" />
 							) : (
-								<ResponsiveContainer width="100%" height={300}>
+								<SafeResponsiveContainer width="100%" height={300}>
 									<RadarChart data={data?.radarData}>
 										<PolarGrid />
 										<PolarAngleAxis dataKey="metric" />
@@ -575,7 +575,7 @@ export default function TeamPerformance() {
 										))}
 										<Legend />
 									</RadarChart>
-								</ResponsiveContainer>
+								</SafeResponsiveContainer>
 							)}
 						</CardContent>
 					</Card>
