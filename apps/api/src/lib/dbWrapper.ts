@@ -28,8 +28,8 @@ export interface TimeoutConfig {
 }
 
 export const DEFAULT_TIMEOUTS: TimeoutConfig = {
-  query: 10000,
-  mutation: 30000,
+  query: 30000,
+  mutation: 60000,
   report: 120000,
   bulk: 45000,
 };
@@ -86,11 +86,32 @@ export function wrapQueryWithTimeout<T extends (...args: any[]) => Promise<any>>
     const queryDescription = typeof args[0] === 'string' 
       ? args[0].substring(0, 100) 
       : 'query';
+    const rawQuery = typeof args[0] === 'string' ? args[0] : '';
+    const isSafeSelect = /^\s*select\b/i.test(rawQuery);
 
-    return withTimeout(
-      queryFn(...args),
-      timeout,
-      queryDescription
-    );
+    try {
+      return await withTimeout(
+        queryFn(...args),
+        timeout,
+        queryDescription
+      );
+    } catch (error) {
+      if (!(error instanceof QueryTimeoutError) || !isSafeSelect) {
+        throw error;
+      }
+
+      const retryTimeout = Math.max(timeout, DEFAULT_TIMEOUTS.mutation);
+      console.warn('[DB] Retrying timed out SELECT query once', {
+        timeout,
+        retryTimeout,
+        query: queryDescription,
+      });
+
+      return await withTimeout(
+        queryFn(...args),
+        retryTimeout,
+        queryDescription
+      );
+    }
   }) as T;
 }

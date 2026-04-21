@@ -44,7 +44,26 @@ export const FisioADM: React.FC<FisioADMProps> = ({ isOpen, onClose, onResult })
 	const requestRef = useRef<number>(0);
 
 	const initPose = useCallback(async () => {
-		if (typeof window === "undefined" || !window.Pose) return;
+		if (typeof window === "undefined") return;
+
+		// Injetar scripts se não existirem
+		if (!window.Pose) {
+			const script = document.createElement('script');
+			script.src = 'https://cdn.jsdelivr.net/npm/@mediapipe/pose/pose.js';
+			script.async = true;
+			document.head.appendChild(script);
+			
+			const canvasUtils = document.createElement('script');
+			canvasUtils.src = 'https://cdn.jsdelivr.net/npm/@mediapipe/drawing_utils/drawing_utils.js';
+			canvasUtils.async = true;
+			document.head.appendChild(canvasUtils);
+
+			await new Promise((resolve) => {
+				script.onload = resolve;
+			});
+		}
+		
+		if (!window.Pose) return;
 		
 		const pose = new window.Pose({
 			locateFile: (file: string) => `https://cdn.jsdelivr.net/npm/@mediapipe/pose/${file}`,
