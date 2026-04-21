@@ -58,11 +58,11 @@ function cleanupMetadata(metadata: Record<string, unknown>): Record<string, unkn
 
 app.get('/', requireAuth, async (c) => {
   const user = c.get('user');
-  const pool = await createPool(c.env);
   const { patientId } = c.req.query();
   if (!patientId) return c.json({ error: 'patientId é obrigatório' }, 400);
+  const db = createPool(c.env);
 
-  const result = await pool.query(
+  const result = await db.query(
     `SELECT * FROM patient_goals
      WHERE patient_id = $1 AND organization_id = $2
      ORDER BY created_at DESC`,
@@ -73,8 +73,8 @@ app.get('/', requireAuth, async (c) => {
 
 app.post('/', requireAuth, async (c) => {
   const user = c.get('user');
-  const pool = await createPool(c.env);
   const body = (await c.req.json()) as Record<string, unknown>;
+  const db = createPool(c.env, 60_000, 'read');
 
   const patientId = String(body.patient_id ?? '').trim();
   if (!patientId) return c.json({ error: 'patient_id é obrigatório' }, 400);
@@ -102,7 +102,7 @@ app.post('/', requireAuth, async (c) => {
         : rawMetadata.current_progress ?? 0,
   });
 
-  const result = await pool.query(
+  const result = await db.query(
     `INSERT INTO patient_goals
        (patient_id, organization_id, description, target_date, status, priority, metadata, created_at, updated_at)
      VALUES ($1, $2, $3, $4, $5, $6, $7, NOW(), NOW())
@@ -122,11 +122,11 @@ app.post('/', requireAuth, async (c) => {
 
 app.put('/:id', requireAuth, async (c) => {
   const user = c.get('user');
-  const pool = await createPool(c.env);
   const { id } = c.req.param();
   const body = (await c.req.json()) as Record<string, unknown>;
+  const db = createPool(c.env, 60_000, 'read');
 
-  const current = await pool.query(
+  const current = await db.query(
     `SELECT * FROM patient_goals
      WHERE id = $1 AND organization_id = $2
      LIMIT 1`,
@@ -217,7 +217,7 @@ app.put('/:id', requireAuth, async (c) => {
   }
 
   params.push(id, user.organizationId);
-  const result = await pool.query(
+  const result = await db.query(
     `UPDATE patient_goals SET ${sets.join(', ')}
      WHERE id = $${params.length - 1} AND organization_id = $${params.length}
      RETURNING *`,
@@ -228,16 +228,16 @@ app.put('/:id', requireAuth, async (c) => {
 
 app.delete('/:id', requireAuth, async (c) => {
   const user = c.get('user');
-  const pool = await createPool(c.env);
   const { id } = c.req.param();
+  const db = createPool(c.env, 60_000, 'read');
 
-  const check = await pool.query(
+  const check = await db.query(
     'SELECT id FROM patient_goals WHERE id = $1 AND organization_id = $2',
     [id, user.organizationId],
   );
   if (!check.rows.length) return c.json({ error: 'Meta não encontrada' }, 404);
 
-  await pool.query('DELETE FROM patient_goals WHERE id = $1', [id]);
+  await db.query('DELETE FROM patient_goals WHERE id = $1', [id]);
   return c.json({ ok: true });
 });
 

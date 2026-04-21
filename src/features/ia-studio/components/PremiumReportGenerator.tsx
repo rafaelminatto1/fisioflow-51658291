@@ -7,8 +7,10 @@ import {
 	X,
 	Loader2,
 	Eye,
-	CheckCircle2
+	CheckCircle2,
+	RotateCcw
 } from "lucide-react";
+import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -166,7 +168,3 @@ export const PremiumReportGenerator: React.FC<PremiumReportGeneratorProps> = ({
 		</div>
 	);
 };
-
-// Import inline to fix types for now
-import { Label } from "@/components/ui/label";
-import { RotateCcw } from "lucide-react";

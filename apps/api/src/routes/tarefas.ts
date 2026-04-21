@@ -1,6 +1,7 @@
 import { Hono } from 'hono';
 import { createPool } from '../lib/db';
 import { requireAuth, type AuthVariables } from '../lib/auth';
+import { DEFAULT_TIMEOUTS } from '../lib/dbWrapper';
 import type { Env } from '../types/env';
 import { jsonSerialize } from '../lib/utils';
 import { isUuid } from '../lib/validators';
@@ -138,7 +139,7 @@ app.get('/by-entity/:type/:entityId', requireAuth, async (c) => {
   if (!isUuid(entityId)) return c.json({ error: 'ID inválido' }, 400);
   try {
     const user = c.get('user');
-    const db = await createPool(c.env);
+    const db = createPool(c.env, DEFAULT_TIMEOUTS.query, 'read');
     const result = await db.query(
       `SELECT *, task_references as references FROM tarefas
        WHERE organization_id = $1 AND linked_entity_type = $2 AND linked_entity_id = $3
@@ -156,11 +157,9 @@ app.get('/', requireAuth, async (c) => {
   try {
     const user = c.get('user');
     const { projectId } = c.req.query();
-    const db = await createPool(c.env);
+    const db = createPool(c.env, DEFAULT_TIMEOUTS.query, 'read');
 
-    // Get user role from profiles
-    const profileRes = await db.query(`SELECT role FROM profiles WHERE user_id = $1 LIMIT 1`, [user.uid]);
-    const userRole = profileRes.rows[0]?.role?.toLowerCase() || 'ESTAGIARIO';
+    const userRole = String(user.role ?? '').toLowerCase();
 
     let sql = `SELECT *, task_references as references FROM tarefas WHERE organization_id = $1`;
     const params: unknown[] = [user.organizationId];
@@ -193,7 +192,7 @@ app.post('/', requireAuth, async (c) => {
   try {
     const user = c.get('user');
     const body = await c.req.json();
-    const db = await createPool(c.env);
+    const db = createPool(c.env, DEFAULT_TIMEOUTS.mutation, 'read');
 
     const result = await db.query(
       `INSERT INTO tarefas (organization_id, created_by, responsavel_id, project_id, parent_id,
@@ -243,7 +242,7 @@ app.patch('/:id', requireAuth, async (c) => {
   try {
     const user = c.get('user');
     const body = await c.req.json();
-    const db = await createPool(c.env);
+    const db = createPool(c.env, DEFAULT_TIMEOUTS.mutation, 'read');
 
     // Map frontend field 'references' to DB column 'task_references'
     if ('references' in body && !('task_references' in body)) body.task_references = body.references;
@@ -320,7 +319,7 @@ app.delete('/:id', requireAuth, async (c) => {
   const user = c.get('user');
   const id = c.req.param('id');
   if (!isUuid(id)) return c.json({ error: 'ID inválido' }, 400);
-  const db = await createPool(c.env);
+  const db = createPool(c.env, DEFAULT_TIMEOUTS.mutation, 'read');
   await db.query(`DELETE FROM tarefas WHERE id = $1 AND organization_id = $2`, [id, user.organizationId]);
   return c.json({ ok: true });
 });
@@ -329,7 +328,7 @@ app.delete('/:id', requireAuth, async (c) => {
 app.post('/bulk', requireAuth, async (c) => {
   const user = c.get('user');
   const { updates } = await c.req.json() as { updates: Array<{ id: string; status?: string; order_index?: number }> };
-  const db = await createPool(c.env);
+  const db = createPool(c.env, DEFAULT_TIMEOUTS.mutation, 'read');
 
   await Promise.all(updates.map(({ id, ...fields }) => {
     const sets: string[] = ['updated_at = NOW()'];

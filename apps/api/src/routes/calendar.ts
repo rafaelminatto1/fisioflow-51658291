@@ -1,6 +1,7 @@
 import { Hono } from 'hono';
 import type { Env } from '../types/env';
-import { createPool } from '../lib/db';
+import { sql } from 'drizzle-orm';
+import { createDb } from '../lib/db';
 
 const app = new Hono<{ Bindings: Env }>();
 
@@ -10,19 +11,24 @@ const app = new Hono<{ Bindings: Env }>();
  */
 app.get('/feed/:patientId.ics', async (c) => {
   const patientId = (c.req.param() as Record<string, string>)['patientId.ics']?.replace('.ics', '') ?? '';
-  const db = await createPool(c.env);
+  const db = createDb(c.env, 'read');
 
   // Busca todos os agendamentos futuros deste paciente
-  const result = await db.query(`
+  const result = await db.execute(sql`
     SELECT a.*, p.full_name as patient_name, o.name as clinic_name
     FROM appointments a
     JOIN patients p ON p.id = a.patient_id
     JOIN organizations o ON o.id = a.organization_id
-    WHERE a.patient_id = $1 
+    WHERE a.patient_id = ${patientId}
       AND a.date >= (CURRENT_DATE - INTERVAL '1 day')
-      AND a.status NOT IN ('cancelled', 'no_show')
+      AND a.status::text NOT IN (
+        'cancelado', 'cancelled',
+        'faltou', 'faltou_com_aviso', 'faltou_sem_aviso',
+        'nao_atendido', 'nao_atendido_sem_cobranca', 'no_show',
+        'remarcar', 'remarcado', 'rescheduled'
+      )
     ORDER BY a.date ASC, a.start_time ASC
-  `, [patientId]);
+  `);
 
   const appointments = result.rows;
   if (!appointments.length) {
