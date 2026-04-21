@@ -5,6 +5,7 @@ import { turnstileVerify } from '../middleware/turnstile';
 import type { Env } from '../types/env';
 
 const app = new Hono<{ Bindings: Env }>();
+const DEFAULT_AUTH_ORIGIN = 'https://www.moocafisio.com.br';
 
 // 10 tentativas de login por IP por 15 minutos
 const loginRateLimit = rateLimit({
@@ -71,6 +72,70 @@ function extractSubFromJwt(token: string): string | null {
   }
 }
 
+function looksLikeJwt(token: string | null | undefined): token is string {
+  return typeof token === 'string' && token.split('.').length === 3;
+}
+
+function extractSessionCookieHeader(response: Response): string | null {
+  const setCookie = response.headers.get('set-cookie');
+  if (!setCookie) return null;
+
+  const secureSessionCookie = setCookie.match(/__Secure-neon-auth\.session_token=[^;]+/);
+  return secureSessionCookie?.[0] ?? null;
+}
+
+function getPreferredAuthOrigin(env: Env): string {
+  const origins = String(env.ALLOWED_ORIGINS || '')
+    .split(',')
+    .map((origin) => origin.trim())
+    .filter(Boolean);
+
+  return (
+    origins.find((origin) => origin === 'https://www.moocafisio.com.br') ||
+    origins.find((origin) => origin === 'https://moocafisio.com.br') ||
+    origins.find((origin) => origin.startsWith('https://') && !origin.includes('localhost')) ||
+    origins[0] ||
+    DEFAULT_AUTH_ORIGIN
+  );
+}
+
+async function materializeJwtToken(
+  env: Env,
+  neonAuthUrl: string,
+  rawToken: string | null | undefined,
+  sessionCookieHeader?: string | null,
+): Promise<string | null> {
+  if (looksLikeJwt(rawToken)) return rawToken;
+  if (!rawToken) return null;
+
+  try {
+    const headers: Record<string, string> = {
+      Accept: 'application/json',
+      Origin: getPreferredAuthOrigin(env),
+    };
+
+    if (sessionCookieHeader) {
+      headers.Cookie = sessionCookieHeader;
+    } else {
+      headers.Authorization = `Bearer ${rawToken}`;
+      headers.Cookie = `better-auth.session-token=${rawToken}`;
+    }
+
+    const sessionRes = await fetch(`${neonAuthUrl}/get-session`, {
+      headers,
+    });
+
+    const materializedJwt = sessionRes.headers.get('set-auth-jwt');
+    if (looksLikeJwt(materializedJwt)) {
+      return materializedJwt;
+    }
+  } catch (error: any) {
+    console.error('[Auth] Failed to materialize JWT via get-session:', error?.message || error);
+  }
+
+  return null;
+}
+
 // POST /api/auth/login
 app.post('/login', loginRateLimit, async (c) => {
   const { email, password } = await c.req.json();
@@ -95,14 +160,20 @@ app.post('/login', loginRateLimit, async (c) => {
       );
     }
 
-    const token: string | null =
+    const rawToken: string | null =
       neonRes.headers.get('set-auth-jwt') ||
       neonData.token ||
       neonData.access_token ||
       null;
 
+    const token = await materializeJwtToken(
+      c.env,
+      neonAuthUrl,
+      rawToken,
+      extractSessionCookieHeader(neonRes),
+    );
     if (!token) {
-      return c.json({ error: 'Token não recebido do servidor de autenticação' }, 500);
+      return c.json({ error: 'JWT não recebido do servidor de autenticação' }, 500);
     }
 
     const userId = extractSubFromJwt(token);
@@ -240,7 +311,12 @@ app.get('/session', async (c) => {
 
   try {
     const neonRes = await fetch(`${neonAuthUrl}/get-session`, {
-      headers: { Authorization: authHeader },
+      headers: {
+        Accept: 'application/json',
+        Authorization: authHeader,
+        Cookie: `better-auth.session-token=${authHeader.replace(/^Bearer\s+/i, '')}`,
+        Origin: getPreferredAuthOrigin(c.env),
+      },
     });
     if (!neonRes.ok) return c.json({ session: null }, 200);
     const data = await neonRes.json() as Record<string, unknown>;
