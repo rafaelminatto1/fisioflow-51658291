@@ -1,5 +1,6 @@
 import { Hono } from "hono";
-import { createPool } from "../lib/db";
+import { sql } from "drizzle-orm";
+import { createDb, createPool } from "../lib/db";
 import { requireAuth, type AuthUser } from "../lib/auth";
 import { broadcastToOrg } from "../lib/realtime";
 import { logToAxiom } from "../lib/axiom";
@@ -1676,26 +1677,28 @@ app.post("/quick-replies", requireAuth, async (c) => {
 
 app.get("/pending-confirmations", requireAuth, async (c) => {
 	const user = c.get("user");
-	const pool = await createPool(c.env);
+	const db = createDb(c.env, "read");
 	const { limit = "100" } = c.req.query();
 
 	const today = new Date().toISOString().split("T")[0];
 
 	try {
-		const result = await pool.query(
-			`SELECT a.id, a.patient_id, a.therapist_id, a.date, a.start_time, a.status,
-              p.full_name, p.phone
-       FROM appointments a
-       LEFT JOIN patients p ON p.id = a.patient_id
-       WHERE a.organization_id = $1
-         AND a.date >= $2
-         AND a.status IN ('scheduled', 'confirmed')
-       ORDER BY a.date ASC, a.start_time ASC
-       LIMIT $3`,
-			[user.organizationId, today, Number(limit)],
-		);
+		const result = await db.execute(sql`
+      SELECT a.id, a.patient_id, a.therapist_id, a.date, a.start_time, a.status,
+             p.full_name, p.phone
+      FROM (
+        SELECT id, patient_id, therapist_id, date, start_time, status
+        FROM appointments
+        WHERE organization_id = ${user.organizationId}
+          AND date >= ${today}
+          AND status::text IN ('agendado', 'presenca_confirmada', 'scheduled', 'confirmed')
+        ORDER BY date ASC, start_time ASC
+        LIMIT ${Number(limit)}
+      ) a
+      LEFT JOIN patients p ON p.id = a.patient_id
+    `);
 
-		const rows = result.rows.map((row) => ({
+		const rows = result.rows.map((row: any) => ({
 			appointment_id: row.id,
 			appointment_date:
 				row.date instanceof Date

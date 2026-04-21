@@ -53,6 +53,61 @@ const buildFallbackOrganization = (id: string) => ({
   updated_at: new Date().toISOString(),
 });
 
+app.get('/current', async (c) => {
+  const user = c.get('user');
+  const organizationId =
+    user.organizationId || '00000000-0000-0000-0000-000000000001';
+
+  if (organizationId === '00000000-0000-0000-0000-000000000001') {
+    return c.json({ data: buildFallbackOrganization(organizationId) });
+  }
+
+  const pool = await createPool(c.env);
+
+  if (!(await hasTable(pool, 'organizations'))) {
+    return c.json({ data: buildFallbackOrganization(organizationId) });
+  }
+
+  const [hasSlug, hasSettings, hasActive, hasCreatedAt, hasUpdatedAt] = await Promise.all([
+    hasColumn(pool, 'organizations', 'slug'),
+    hasColumn(pool, 'organizations', 'settings'),
+    hasColumn(pool, 'organizations', 'active'),
+    hasColumn(pool, 'organizations', 'created_at'),
+    hasColumn(pool, 'organizations', 'updated_at'),
+  ]);
+
+  const selectColumns = [
+    'id',
+    'name',
+    hasSlug ? 'slug' : "NULL::text AS slug",
+    hasSettings ? 'settings' : "'{}'::jsonb AS settings",
+    hasActive ? 'active' : 'true AS active',
+    hasCreatedAt ? 'created_at' : 'NULL::timestamptz AS created_at',
+    hasUpdatedAt ? 'updated_at' : 'NULL::timestamptz AS updated_at',
+  ];
+
+  try {
+    const result = await pool.query(
+      `
+        SELECT ${selectColumns.join(', ')}
+        FROM organizations
+        WHERE id = $1
+        LIMIT 1
+      `,
+      [organizationId],
+    );
+
+    if (!result.rows.length) {
+      return c.json({ data: buildFallbackOrganization(organizationId) });
+    }
+
+    return c.json({ data: result.rows[0] });
+  } catch (error) {
+    console.error('[organizations/current] fallback due to query error:', error);
+    return c.json({ data: buildFallbackOrganization(organizationId) });
+  }
+});
+
 app.get('/:id', async (c) => {
   const { id } = c.req.param();
   const user = c.get('user');

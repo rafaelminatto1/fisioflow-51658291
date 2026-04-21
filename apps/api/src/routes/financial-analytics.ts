@@ -21,7 +21,11 @@ export const registerFinancialAnalyticsRoutes = (app: FinancialApp) => {
       eq(appointments.organizationId, user.organizationId),
       gte(appointments.date, sql`CURRENT_DATE`),
       lte(appointments.date, sql`CURRENT_DATE + INTERVAL '30 days'`),
-      sql`${appointments.status} NOT IN ('cancelled', 'no_show')`
+      sql`${appointments.status}::text NOT IN (
+        'cancelado', 'cancelled',
+        'faltou', 'faltou_com_aviso', 'faltou_sem_aviso',
+        'nao_atendido', 'nao_atendido_sem_cobranca', 'no_show'
+      )`
     ));
 
     const [packagesBaseline] = await db.select({
@@ -34,7 +38,16 @@ export const registerFinancialAnalyticsRoutes = (app: FinancialApp) => {
     ));
 
     const [noShowRate] = await db.select({
-      rate: sql<number>`(COUNT(CASE WHEN ${appointments.status} = 'no_show' THEN 1 END)::float / NULLIF(COUNT(*), 0))`
+      rate: sql<number>`(
+        COUNT(
+          CASE
+            WHEN ${appointments.status}::text IN (
+              'faltou', 'faltou_com_aviso', 'faltou_sem_aviso',
+              'nao_atendido', 'nao_atendido_sem_cobranca', 'no_show'
+            ) THEN 1
+          END
+        )::float / NULLIF(COUNT(*), 0)
+      )`
     })
     .from(appointments)
     .where(and(

@@ -604,7 +604,13 @@ app.get('/appointments', async (c) => {
 
   if (upcoming) {
     filters.push(`a.date >= CURRENT_DATE`);
-    filters.push(`COALESCE(a.status, 'scheduled') NOT IN ('cancelled', 'completed')`);
+    filters.push(`COALESCE(a.status::text, 'agendado') NOT IN (
+      'cancelado', 'cancelled',
+      'atendido', 'avaliacao', 'completed', 'realizado', 'concluido',
+      'faltou', 'faltou_com_aviso', 'faltou_sem_aviso',
+      'nao_atendido', 'nao_atendido_sem_cobranca', 'no_show',
+      'remarcar', 'remarcado', 'rescheduled'
+    )`);
   }
 
   const result = await pool.query(
@@ -653,7 +659,7 @@ app.post('/appointments/:id/confirm', async (c) => {
     `
       UPDATE appointments
       SET
-        status = 'confirmed',
+        status = 'presenca_confirmada',
         confirmed_at = NOW(),
         confirmed_via = 'app',
         updated_at = NOW()
@@ -680,7 +686,7 @@ app.post('/appointments/:id/cancel', async (c) => {
     `
       UPDATE appointments
       SET
-        status = 'cancelled',
+        status = 'cancelado',
         cancellation_reason = $1,
         cancelled_at = NOW(),
         updated_at = NOW()

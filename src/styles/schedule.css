@@ -92,7 +92,7 @@
 }
 
 .ec-days {
-	border-left: 1px solid #cbd5e1 !important;
+	border-left: none !important;
 }
 
 .sx__time-grid-hour-text {

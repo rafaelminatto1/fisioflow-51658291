@@ -90,8 +90,8 @@ export const registerMlAnalyticsRoutes = (app: AnalyticsRouteApp) => {
     );
 
     const totalSessions = sessions.length;
-    const completedAppointments = (appointmentsRes.rows ?? []).filter(
-      (row) => row.status === 'completed',
+    const completedAppointments = (appointmentsRes.rows ?? []).filter((row) =>
+      ['atendido', 'avaliacao', 'completed', 'realizado', 'concluido'].includes(String(row.status ?? '').toLowerCase()),
     );
     const totalAppointments = appointmentsRes.rows.length;
     const attendanceRate =

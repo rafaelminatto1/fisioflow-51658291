@@ -12,7 +12,15 @@ import {
 	Lock,
 	User,
 	MonitorPlay,
-	FileText
+	FileText,
+	BrainCircuit,
+	AlertCircle,
+	ArrowRight,
+	Bot,
+	Target,
+	Sparkles,
+	AlertTriangle,
+	ArrowUpRight
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -23,269 +31,234 @@ import { FisioRetention } from "@/features/ia-studio/components/FisioRetention";
 import { FisioPredictIndicator } from "@/features/ia-studio/components/FisioPredictIndicator";
 import { GaitAnalysisStudio } from "@/features/ia-studio/components/GaitAnalysisStudio";
 import { PremiumReportGenerator } from "@/features/ia-studio/components/PremiumReportGenerator";
+import { IAInsightsBar } from "@/features/ia-studio/components/IAInsightsBar";
+import { AgentHub } from "@/features/ia-studio/components/AgentHub";
 import { cn } from "@/lib/utils";
+import { toast } from "sonner";
 
-const IAStudio = () => {
+export const IAStudio: React.FC = () => {
+	const [activeTab, setActiveTab] = useState("dashboard");
 	const [isScribeOpen, setIsScribeOpen] = useState(false);
 	const [isADMOpen, setIsADMOpen] = useState(false);
 	const [isGaitOpen, setIsGaitOpen] = useState(false);
+	const [isAgentHubOpen, setIsAgentHubOpen] = useState(false);
 	const [activeFeatureTab, setActiveFeatureTab] = useState<"retention" | "predict" | "report" | null>(null);
 
-	const features = [
-		{
-			id: "scribe",
-			title: "FisioAmbient",
-			subtitle: "AI Ambient Scribe",
-			desc: "Transcrição clínica inteligente e geração automática de SOAP.",
-			icon: <Mic className="w-6 h-6" />,
-			color: "bg-violet-500",
-			action: () => setIsScribeOpen(true),
-			status: "Ativo",
+	const tools = [
+		{ 
+			id: "adm", 
+			name: "FisioADM Pro", 
+			description: "Goniometria digital via MediaPipe", 
+			icon: Target, 
+			color: "text-blue-500", 
+			bg: "bg-blue-500/10",
+			action: () => setIsADMOpen(true)
 		},
-		{
-			id: "adm",
-			title: "FisioADM",
-			subtitle: "Bio-Vision ROM",
-			desc: "Medição de amplitude de movimento via câmera em tempo real.",
-			icon: <Activity className="w-6 h-6" />,
-			color: "bg-blue-500",
-			action: () => setIsADMOpen(true),
-			status: "Ativo",
+		{ 
+			id: "gait", 
+			name: "GaitStudio 2.0", 
+			description: "Análise de marcha e postura", 
+			icon: Activity, 
+			color: "text-emerald-500", 
+			bg: "bg-emerald-500/10",
+			action: () => setIsGaitOpen(true)
 		},
-		{
-			id: "gait",
-			title: "GaitStudio",
-			subtitle: "Análise de Marcha",
-			desc: "Análise biomecânica de vídeo com overlay de vetores e centro de massa.",
-			icon: <MonitorPlay className="w-6 h-6" />,
-			color: "bg-cyan-500",
-			action: () => setIsGaitOpen(true),
-			status: "Ativo",
+		{ 
+			id: "soap", 
+			name: "Agent Hub", 
+			description: "Revisores de SOAP e Simuladores", 
+			icon: Bot, 
+			color: "text-violet-500", 
+			bg: "bg-violet-500/10",
+			action: () => setIsAgentHubOpen(true)
 		},
-		{
-			id: "report",
-			title: "Premium Reports",
-			subtitle: "Relatórios IA",
-			desc: "Geração de documentos PDF premium dual (Médico e Paciente) via IA.",
-			icon: <FileText className="w-6 h-6" />,
-			color: "bg-indigo-500",
-			action: () => setActiveFeatureTab(activeFeatureTab === "report" ? null : "report"),
-			status: "Ativo",
+		{ 
+			id: "predict", 
+			name: "Predictive Alta", 
+			description: "Previsão de alta e evolução", 
+			icon: Zap, 
+			color: "text-amber-500", 
+			bg: "bg-amber-500/10",
+			action: () => setActiveFeatureTab(activeFeatureTab === "predict" ? null : "predict")
 		},
-		{
-			id: "retention",
-			title: "FisioRetention",
-			subtitle: "Agente Proativo",
-			desc: "Automação de WhatsApp para reduzir no-show e churn.",
-			icon: <MessageSquare className="w-6 h-6" />,
-			color: "bg-emerald-500",
-			action: () => setActiveFeatureTab(activeFeatureTab === "retention" ? null : "retention"),
-			status: "Ativo",
-		},
-		{
-			id: "predict",
-			title: "FisioPredict",
-			subtitle: "Predição de Alta",
-			desc: "Análise preditiva de tempo de tratamento e alta clínica.",
-			icon: <TrendingUp className="w-6 h-6" />,
-			color: "bg-amber-500",
-			action: () => setActiveFeatureTab(activeFeatureTab === "predict" ? null : "predict"),
-			status: "Ativo",
-		}
 	];
 
 	return (
 		<MainLayout>
-			<div className="p-8 max-w-7xl mx-auto space-y-12 pb-32">
-				{/* Hero Section */}
-				<header className="flex flex-col md:flex-row md:items-end justify-between gap-6 relative overflow-hidden">
-					<div className="space-y-4 relative z-10">
-						<div className="flex items-center gap-2">
-							<Badge className="bg-violet-600/10 text-violet-400 border-violet-500/20 hover:bg-violet-600/20 transition-colors">
-								<Zap className="w-3 h-3 mr-1" /> Inteligência de Borda
-							</Badge>
-							<Badge variant="outline" className="text-slate-400 border-slate-800">v4.6 Premium Access</Badge>
+			<div className="p-4 md:p-8 max-w-[1600px] mx-auto space-y-8 min-h-screen bg-slate-50 dark:bg-slate-950 pb-32">
+				{/* Modals/Overlays */}
+				<FisioADM isOpen={isADMOpen} onClose={() => setIsADMOpen(false)} />
+				<GaitAnalysisStudio isOpen={isGaitOpen} onClose={() => setIsGaitOpen(false)} />
+				<AgentHub isOpen={isAgentHubOpen} onClose={() => setIsAgentHubOpen(false)} />
+				<ScribeDrawer isOpen={isScribeOpen} onClose={() => setIsScribeOpen(false)} patientId="test" />
+
+				{/* Top Bar - Brand & Title */}
+				<div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
+					<div className="space-y-1">
+						<div className="flex items-center gap-2 mb-2">
+							<div className="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center">
+								<Bot className="text-white w-5 h-5" />
+							</div>
+							<span className="text-xs font-black uppercase tracking-[0.3em] text-blue-600">FisioFlow Intelligence</span>
 						</div>
-						<h1 className="text-5xl font-black tracking-tighter text-slate-900 dark:text-white">
-							IA Studio <span className="text-transparent bg-clip-text bg-gradient-to-r from-violet-600 to-blue-500">Central</span>
+						<h1 className="text-4xl md:text-5xl font-black text-slate-900 dark:text-white tracking-tighter leading-none italic uppercase">
+							IA Studio <span className="text-blue-600">Central</span>
 						</h1>
-						<p className="text-slate-500 dark:text-slate-400 max-w-2xl text-lg leading-relaxed font-medium">
-							Potencialize sua prática clínica com as ferramentas de inteligência artificial mais avançadas da fisioterapia. Automação, precisão e retenção em um só lugar.
+						<p className="text-slate-500 font-medium max-w-xl">
+							Sua central de inteligência clínica operacional. Automatize diagnósticos, revise prontuários e monitore a retenção de pacientes.
 						</p>
 					</div>
-					
-					<div className="flex gap-3 relative z-10">
-						<Button size="lg" className="bg-slate-900 text-white hover:bg-slate-800 rounded-2xl px-8 h-14 font-bold shadow-xl shadow-slate-200 dark:shadow-none transition-all hover:scale-105 active:scale-95">
-							<Zap className="w-5 h-5 mr-2 text-amber-400 fill-amber-400" />
-							Upgrade Pro
-						</Button>
-					</div>
 
-					<div className="absolute -top-20 -right-20 w-96 h-96 bg-violet-500/10 blur-[100px] rounded-full" />
-				</header>
-
-				{/* Features Grid */}
-				<section className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-6">
-					{features.map((feature, idx) => (
-						<motion.div
-							key={feature.title}
-							initial={{ opacity: 0, y: 20 }}
-							animate={{ opacity: 1, y: 0 }}
-							transition={{ delay: idx * 0.1 }}
-						>
-							<Card 
+					<div className="flex items-center gap-2 bg-white dark:bg-slate-900 p-1.5 rounded-2xl shadow-sm border border-slate-100 dark:border-slate-800">
+						{["dashboard", "settings"].map((tab) => (
+							<Button
+								key={tab}
+								variant={activeTab === tab ? "default" : "ghost"}
+								onClick={() => setActiveTab(tab)}
 								className={cn(
-									"group h-full border-none shadow-xl shadow-slate-200/50 dark:shadow-none dark:bg-slate-900/50 dark:border dark:border-slate-800 hover:ring-2 hover:ring-violet-500/30 transition-all duration-500 rounded-[32px] overflow-hidden flex flex-col cursor-pointer",
-									activeFeatureTab === feature.id && "ring-2 ring-violet-500/50 shadow-violet-500/10"
-								)} 
-								onClick={feature.action}
+									"rounded-xl h-10 px-6 font-bold capitalize transition-all",
+									activeTab === tab ? "bg-blue-600 text-white shadow-lg shadow-blue-500/20" : "text-slate-500"
+								)}
 							>
-								<CardHeader className="p-8 pb-4">
-									<div className={`w-14 h-14 ${feature.color} rounded-2xl flex items-center justify-center text-white mb-6 shadow-lg shadow-${feature.color.split('-')[1]}-500/30 group-hover:scale-110 transition-transform duration-500`}>
-										{feature.icon}
-									</div>
-									<div className="space-y-1">
-										<div className="flex items-center justify-between">
-											<span className="text-[10px] uppercase font-black tracking-widest text-slate-400">{feature.subtitle}</span>
-											<Badge variant="secondary" className="text-[9px] h-5 rounded-full px-2">
-												{feature.status === 'Ativo' ? <Zap className="w-2.5 h-2.5 mr-1 fill-violet-500 text-violet-500" /> : <Lock className="w-2.5 h-2.5 mr-1" />}
-												{feature.status}
-											</Badge>
-										</div>
-										<CardTitle className="text-xl font-bold group-hover:text-violet-600 transition-colors leading-tight">{feature.title}</CardTitle>
-									</div>
-								</CardHeader>
-								<CardContent className="p-8 pt-0 flex-1 flex flex-col justify-between">
-									<p className="text-xs text-slate-500 dark:text-slate-400 mb-8 leading-relaxed font-medium">
-										{feature.desc}
-									</p>
-									<Button variant="ghost" className="w-full justify-between group/btn hover:bg-violet-50 text-violet-600 dark:hover:bg-violet-900/20 rounded-xl px-4 font-bold transition-all h-9 text-xs uppercase tracking-widest">
-										{feature.status === 'Ativo' ? 'Acessar' : 'Configurar'}
-										<ChevronRight className="w-4 h-4 group-hover/btn:translate-x-1 transition-transform" />
-									</Button>
-								</CardContent>
-							</Card>
-						</motion.div>
-					))}
-				</section>
-
-				{/* Detailed Feature View */}
-				<AnimatePresence mode="wait">
-					{activeFeatureTab === "report" && (
-						<motion.div
-							key="report"
-							initial={{ opacity: 0, y: 20 }}
-							animate={{ opacity: 1, y: 0 }}
-							exit={{ opacity: 0, y: -20 }}
-							className="bg-slate-50 dark:bg-slate-900/30 p-8 rounded-[40px] border border-white/5 shadow-inner overflow-hidden"
-						>
-							<div className="max-w-4xl mx-auto">
-								<PremiumReportGenerator patientId="test-patient-id" patientName="Paciente Teste" />
-							</div>
-						</motion.div>
-					)}
-					{activeFeatureTab === "retention" && (
-						<motion.div
-							key="retention"
-							initial={{ opacity: 0, y: 20 }}
-							animate={{ opacity: 1, y: 0 }}
-							exit={{ opacity: 0, y: -20 }}
-							className="bg-slate-50 dark:bg-slate-900/30 p-8 rounded-[40px] border border-white/5 shadow-inner overflow-hidden"
-						>
-							<div className="max-w-4xl mx-auto">
-								<FisioRetention />
-							</div>
-						</motion.div>
-					)}
-
-					{activeFeatureTab === "predict" && (
-						<motion.div
-							key="predict"
-							initial={{ opacity: 0, y: 20 }}
-							animate={{ opacity: 1, y: 0 }}
-							exit={{ opacity: 0, y: -20 }}
-							className="bg-slate-50 dark:bg-slate-900/30 p-8 rounded-[40px] border border-white/5 shadow-inner overflow-hidden"
-						>
-							<div className="max-w-4xl mx-auto space-y-8">
-								<div className="flex items-center justify-between">
-									<h3 className="text-xl font-bold flex items-center gap-2">
-										<TrendingUp className="w-6 h-6 text-amber-500" />
-										Simulador de Alta Preditiva
-									</h3>
-									<Button variant="outline" className="rounded-xl border-white/10 h-10 gap-2">
-										<User className="w-4 h-4" />
-										Selecionar Paciente
-									</Button>
-								</div>
-								
-								<p className="text-slate-500 text-sm max-w-2xl font-medium">
-									Selecione um paciente para ver a projeção de tratamento baseada na evolução clínica e benchmarks da clínica.
-								</p>
-
-								<div className="grid grid-cols-1 md:grid-cols-2 gap-8 items-start">
-									<div className="p-8 rounded-[32px] bg-white dark:bg-slate-900 shadow-sm border border-slate-100 dark:border-slate-800 space-y-8">
-										<h4 className="font-black text-xs uppercase tracking-[0.2em] text-slate-400">Configuração do Modelo</h4>
-										<div className="space-y-6">
-											<div className="flex justify-between items-center text-sm">
-												<span className="text-slate-500 font-bold">Benchmark por CID</span>
-												<Badge variant="secondary" className="rounded-lg">Hérnia de Disco (L5-S1)</Badge>
-											</div>
-											<div className="flex justify-between items-center text-sm">
-												<span className="text-slate-500 font-bold">Frequência Semanal</span>
-												<Badge variant="secondary" className="rounded-lg">2x por semana</Badge>
-											</div>
-											<div className="flex justify-between items-center text-sm">
-												<span className="text-slate-500 font-bold">Velocidade de Ganho ADM</span>
-												<Badge className="bg-emerald-500/10 text-emerald-500 border-none rounded-lg">+12% (Alta)</Badge>
-											</div>
-										</div>
-									</div>
-									<FisioPredictIndicator patientId="test-patient-id" />
-								</div>
-							</div>
-						</motion.div>
-					)}
-				</AnimatePresence>
-
-				{/* Security & Compliance Info */}
-				<footer className="p-8 rounded-[40px] bg-gradient-to-br from-slate-900 to-slate-950 text-white relative overflow-hidden">
-					<div className="relative z-10 flex flex-col md:flex-row items-center gap-8 justify-between">
-						<div className="space-y-4 max-w-2xl">
-							<div className="flex items-center gap-3">
-								<div className="p-2 bg-emerald-500/20 rounded-lg border border-emerald-500/30">
-									<ShieldCheck className="w-5 h-5 text-emerald-400" />
-								</div>
-								<h3 className="text-xl font-bold uppercase tracking-tight">Segurança & Privacidade (LGPD)</h3>
-							</div>
-							<p className="text-slate-400 text-sm leading-relaxed font-medium">
-								O FisioFlow IA Studio foi projetado com privacidade por padrão. Os dados de voz e vídeo são processados de forma efêmera e criptografada. Nenhum dado biométrico é armazenado permanentemente sem o consentimento explícito e auditável do paciente.
-							</p>
-						</div>
-						<Button variant="outline" className="border-slate-800 text-white hover:bg-slate-800 rounded-2xl px-6 h-12 uppercase font-black text-[10px] tracking-widest">
-							Auditoria de IA
-						</Button>
+								{tab}
+							</Button>
+						))}
 					</div>
-					
-					<div className="absolute top-1/2 left-1/4 w-32 h-32 bg-violet-600/20 blur-[60px] rounded-full" />
-					<div className="absolute bottom-0 right-10 w-48 h-48 bg-emerald-600/10 blur-[80px] rounded-full" />
-				</footer>
+				</div>
+
+				<IAInsightsBar />
+
+				<div className="grid grid-cols-1 xl:grid-cols-4 gap-8">
+					{/* Main Content Area */}
+					<div className="xl:col-span-3 space-y-10">
+						<AnimatePresence mode="wait">
+							{activeFeatureTab ? (
+								<motion.div
+									key={activeFeatureTab}
+									initial={{ opacity: 0, y: 20 }}
+									animate={{ opacity: 1, y: 0 }}
+									exit={{ opacity: 0, y: 20 }}
+									className="p-8 rounded-[40px] bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800 shadow-xl relative"
+								>
+									<Button 
+										variant="ghost" 
+										size="icon" 
+										className="absolute top-6 right-6" 
+										onClick={() => setActiveFeatureTab(null)}
+									>
+										<X className="w-5 h-5" />
+									</Button>
+									{activeFeatureTab === "predict" && <FisioPredictIndicator patientId="test" />}
+									{activeFeatureTab === "retention" && <FisioRetention />}
+									{activeFeatureTab === "report" && <PremiumReportGenerator patientId="test" patientName="Paciente Teste" />}
+								</motion.div>
+							) : (
+								<div className="space-y-10">
+									{/* Action Grid */}
+									<div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+										{tools.map((tool) => (
+											<motion.div
+												key={tool.id}
+												whileHover={{ y: -5, scale: 1.01 }}
+												whileTap={{ scale: 0.99 }}
+											>
+												<Card 
+													className="group cursor-pointer border-none shadow-sm hover:shadow-2xl transition-all duration-500 bg-white dark:bg-slate-900 rounded-[32px] overflow-hidden"
+													onClick={tool.action}
+												>
+													<CardContent className="p-8 flex items-center gap-8 relative">
+														<div className={cn("absolute -right-8 -bottom-8 w-32 h-32 rounded-full opacity-10 group-hover:scale-150 transition-transform duration-700", tool.bg)} />
+														
+														<div className={cn("w-20 h-20 rounded-[24px] flex items-center justify-center shrink-0 shadow-inner group-hover:scale-110 transition-transform duration-500", tool.bg)}>
+															<tool.icon className={cn("w-10 h-10", tool.color)} />
+														</div>
+														<div className="flex-1 space-y-2 relative z-10">
+															<div className="flex items-center justify-between">
+																<h3 className="text-xl font-black text-slate-900 dark:text-white uppercase tracking-tight italic">{tool.name}</h3>
+																<div className={cn("w-10 h-10 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all", tool.bg)}>
+																	<ChevronRight className={cn("w-5 h-5", tool.color)} />
+																</div>
+															</div>
+															<p className="text-slate-500 font-medium text-sm leading-relaxed">{tool.description}</p>
+														</div>
+													</CardContent>
+												</Card>
+											</motion.div>
+										))}
+									</div>
+
+									{/* Promo Section */}
+									<section className="p-10 rounded-[40px] bg-gradient-to-br from-slate-900 to-slate-950 text-white relative overflow-hidden group">
+										<div className="absolute top-0 right-0 p-8 opacity-10 group-hover:opacity-20 transition-opacity">
+											<TrendingUp className="w-48 h-48" />
+										</div>
+										<div className="relative z-10 space-y-6">
+											<div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-emerald-400">
+												<TrendingUp className="w-3 h-3" />
+												<span className="text-[9px] font-black uppercase tracking-widest">Efficiency Boost: +40%</span>
+											</div>
+											<h2 className="text-4xl font-black tracking-tighter leading-none italic uppercase">
+												Reduza seu tempo de <br/><span className="text-blue-500">documentação pela metade.</span>
+											</h2>
+											<p className="text-slate-400 max-w-md text-sm font-medium leading-relaxed">
+												Use o AI Scribe durante seus atendimentos e deixe que a nossa inteligência clínica gere o SOAP, o faturamento e a evolução para você.
+											</p>
+											<div className="flex gap-4">
+												<Button 
+													className="bg-blue-600 hover:bg-blue-500 text-white rounded-2xl px-8 h-14 font-black text-sm uppercase tracking-widest shadow-xl shadow-blue-500/20"
+													onClick={() => setIsScribeOpen(true)}
+												>
+													Ativar FisioAmbient
+												</Button>
+											</div>
+										</div>
+									</section>
+								</div>
+							)}
+						</AnimatePresence>
+					</div>
+
+					{/* Sidebar / Insights Panel */}
+					<aside className="xl:col-span-1 space-y-8">
+						{/* Retention Panel */}
+						<Card className="border-none shadow-2xl bg-white dark:bg-slate-900 rounded-[32px] overflow-hidden">
+							<div className="p-6 pb-0 flex items-center justify-between">
+								<h3 className="text-xs font-black uppercase text-slate-400 tracking-widest flex items-center gap-2">
+									<AlertTriangle className="w-4 h-4 text-amber-500" /> Risco de Churn
+								</h3>
+								<Button variant="ghost" size="icon" className="rounded-full h-8 w-8" onClick={() => setActiveFeatureTab("retention")}>
+									<ArrowUpRight className="w-4 h-4" />
+								</Button>
+							</div>
+							<FisioRetention compact />
+							<div className="p-6 bg-slate-50 dark:bg-slate-900/50 border-t border-slate-100 dark:border-slate-800">
+								<Button 
+									className="w-full bg-blue-600 hover:bg-blue-500 text-white rounded-2xl h-12 font-bold gap-2"
+									onClick={() => toast.success("Automação de reengajamento ativada!")}
+								>
+									Automação Ativa
+								</Button>
+							</div>
+						</Card>
+
+						{/* Small Quick Insights */}
+						<div className="grid grid-cols-1 gap-4">
+							{[
+								{ label: "Precisão do Scribe", value: "98.2%", color: "text-emerald-500", icon: ShieldCheck },
+								{ label: "Tempo Economizado", value: "14h/mês", color: "text-blue-500", icon: Zap }
+							].map((stat, i) => (
+								<Card key={i} className="border-none shadow-sm bg-white dark:bg-slate-900 rounded-2xl p-6 flex items-center justify-between">
+									<div className="space-y-1">
+										<span className="text-[10px] font-black uppercase text-slate-400 tracking-widest block">{stat.label}</span>
+										<span className={cn("text-2xl font-black tracking-tighter", stat.color)}>{stat.value}</span>
+									</div>
+									<stat.icon className={cn("w-8 h-8 opacity-10", stat.color)} />
+								</Card>
+							))}
+						</div>
+					</aside>
+				</div>
 			</div>
-
-			<ScribeDrawer 
-				isOpen={isScribeOpen} 
-				onClose={() => setIsScribeOpen(false)} 
-				patientId="test-patient-id"
-			/>
-
-			<FisioADM
-				isOpen={isADMOpen}
-				onClose={() => setIsADMOpen(false)}
-			/>
-
-			<GaitAnalysisStudio
-				isOpen={isGaitOpen}
-				onClose={() => setIsGaitOpen(false)}
-			/>
 		</MainLayout>
 	);
 };
