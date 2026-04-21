@@ -74,7 +74,7 @@ export function DayFlowCalendarWrapper(props: DayFlowCalendarWrapperProps) {
 	} = props;
 	const { cssVariables, heightMultiplier } = useCardSize();
 	const isWeekView = viewType === "week";
-	const [weekSlotHeight, setWeekSlotHeight] = useState(20);
+	const [weekSlotHeight, setWeekSlotHeight] = useState(15);
 	const slotHeight = isWeekView ? weekSlotHeight : Math.round(24 * heightMultiplier);
 	const slotDuration = "00:15:00";
 	const slotLabelFormat = useMemo(
@@ -282,7 +282,7 @@ export function DayFlowCalendarWrapper(props: DayFlowCalendarWrapperProps) {
 						date: isValid(currentDate) ? currentDate : new Date(),
 						height: "100%",
 						slotMinTime: "07:00:00",
-						slotMaxTime: "21:00:00",
+						slotMaxTime: "21:15:00",
 						slotDuration,
 						slotHeight,
 						slotLabelInterval: "00:00:00",
@@ -580,6 +580,11 @@ export function DayFlowCalendarWrapper(props: DayFlowCalendarWrapperProps) {
 					display: flex !important;
 					border-right: 1px solid #cbd5e1 !important;
 					box-sizing: border-box !important;
+				}
+				.ec-lines {
+					position: absolute !important;
+					width: 100% !important;
+					pointer-events: none !important;
 				}
 				/* Force header to match body width by removing scrollbar compensation */
 				.ec-header {
