@@ -6,9 +6,8 @@
  * DELETE /api/documents/:id
  */
 import { Hono } from 'hono';
-import { createPool, createPoolForOrg } from '../lib/db';
+import { createPool } from '../lib/db';
 import { requireAuth, type AuthVariables } from '../lib/auth';
-import { DEFAULT_TIMEOUTS } from '../lib/dbWrapper';
 import type { Env } from '../types/env';
 import { generatePdfFromHtml } from '../lib/pdf';
 
@@ -36,7 +35,7 @@ function normalizeTemplateRow(row: Record<string, unknown>) {
 
 app.get('/', requireAuth, async (c) => {
   const user = c.get('user');
-  const pool = await createPoolForOrg(c.env, user.organizationId, DEFAULT_TIMEOUTS.query);
+  const pool = await createPool(c.env);
   const { patientId } = c.req.query();
   if (!patientId) return c.json({ error: 'patientId é obrigatório' }, 400);
 
@@ -51,7 +50,7 @@ app.get('/', requireAuth, async (c) => {
 
 app.post('/', requireAuth, async (c) => {
   const user = c.get('user');
-  const pool = await createPoolForOrg(c.env, user.organizationId, DEFAULT_TIMEOUTS.mutation);
+  const pool = await createPool(c.env);
   const body = (await c.req.json()) as Record<string, unknown>;
 
   const patientId = String(body.patient_id ?? '').trim();
@@ -80,7 +79,7 @@ app.post('/', requireAuth, async (c) => {
 
 app.delete('/:id', requireAuth, async (c) => {
   const user = c.get('user');
-  const pool = await createPoolForOrg(c.env, user.organizationId, DEFAULT_TIMEOUTS.mutation);
+  const pool = await createPool(c.env);
   const { id } = c.req.param();
 
   const check = await pool.query(
