@@ -122,57 +122,54 @@ export type FisioDb = PgDatabase<any, typeof schema>;
  */
 export function createDb(env: Env, _mode: 'read' | 'write' = 'write'): FisioDb {
 	const url = getUrl(env, 'read');
-	const baseSql = neon(url);
+	const baseSql = neon(url, { fullResults: true });
 
-	const proxySql = (async (textOrStrings: any, ...values: any[]) => {
-		let queryText = "";
-		let queryParams: any[] = [];
-		
-		if (typeof textOrStrings === 'string') {
-			queryText = textOrStrings;
-			queryParams = values[0] ?? [];
-		} else {
-			queryText = textOrStrings[0];
-			for (let i = 0; i < values.length; i++) {
-				queryText += `$${i + 1}${textOrStrings[i + 1]}`;
-				queryParams.push(values[i]);
+	const client = {
+		query: async (
+			queryText: string,
+			queryParams: any[] = [],
+			queryOpts?: Record<string, unknown>,
+		) => {
+			let orgId = getOrgContext();
+
+			// OVERRIDE DE PRODUÇÃO
+			if (!orgId || orgId === '00000000-0000-0000-0000-000000000001') {
+				orgId = '04f4477c-7833-4f96-8571-33157940787e';
 			}
-		}
 
-		let orgId = getOrgContext();
-		
-		// OVERRIDE DE PRODUÇÃO
-		if (!orgId || orgId === '00000000-0000-0000-0000-000000000001') {
-			orgId = '04f4477c-7833-4f96-8571-33157940787e';
-		}
+			try {
+				const results = await baseSql.transaction([
+					baseSql.query(`SELECT set_config('app.org_id', $1, true)`, [orgId]),
+					baseSql.query(queryText, queryParams, queryOpts as any),
+				]);
 
-		try {
-			const results = await baseSql.transaction([
-				baseSql.query(`SELECT set_config('app.org_id', $1, true)`, [orgId]),
-				baseSql.query(queryText, queryParams),
-			]);
-			
-			const rows = results[1];
+				const result = results[1] as any;
 
-			// Normalização mínima para Drizzle
-			if (Array.isArray(rows)) {
-				for (const row of rows) {
-					for (const key in row) {
-						if (row[key] instanceof Date) {
-							row[key] = row[key].toISOString();
+				// Drizzle neon-http espera o formato fullResults, não apenas o array de rows.
+				if (result?.rows && Array.isArray(result.rows)) {
+					for (const row of result.rows) {
+						if (!row || Array.isArray(row) || typeof row !== 'object') continue;
+						for (const key in row) {
+							if (row[key] instanceof Date) {
+								row[key] = row[key].toISOString();
+							}
 						}
 					}
 				}
+
+				return result;
+			} catch (dbErr: any) {
+				console.error(`[DB/Neon] Query Error: ${dbErr.message}`, {
+					queryText,
+					queryParams,
+					queryOpts,
+				});
+				throw dbErr;
 			}
+		},
+	} as const;
 
-			return rows;
-		} catch (dbErr: any) {
-			console.error(`[DB/Neon] Query Error: ${dbErr.message}`, { queryText, queryParams });
-			throw dbErr;
-		}
-	}) as any;
-
-	return drizzleHttp(proxySql, { schema });
+	return drizzleHttp(client as any, { schema });
 }
 
 export async function withRls<T>(
@@ -183,7 +180,7 @@ export async function withRls<T>(
 ): Promise<T> {
 	const url = getUrl(env, mode);
 	
-	if (isTcpConnection(env, mode)) {
+	if (mode === 'write' && isTcpConnection(env, mode)) {
 		const pool = getGlobalPool(env);
 		const client = await pool.connect();
 		try {
@@ -213,7 +210,7 @@ export function createPool(
 	const url = getUrl(env, mode);
 	const orgId = getOrgContext();
 
-	if (isTcpConnection(env, mode)) {
+	if (mode === 'write' && isTcpConnection(env, mode)) {
 		const pool = getGlobalPool(env);
 		
 		const queryProxy = async <Row extends DbRow = any>(
@@ -328,7 +325,51 @@ export function createPool(
 
 export function getRawSql(env: Env, mode: 'read' | 'write' = 'read'): DbQuery {
 	const url = getUrl(env, mode);
-	
+	const orgId = getOrgContext();
+
+	if (isTcpConnection(env, mode)) {
+		const pool = getGlobalPool(env);
+
+		const processQuery = async <Row extends DbRow = DbRow>(
+			textOrStrings: string | TemplateStringsArray,
+			...paramsOrValues: any[]
+		): Promise<DbQueryResult<Row>> => {
+			let text = "";
+			let params: any[] = [];
+
+			if (typeof textOrStrings === "string") {
+				text = textOrStrings;
+				params = paramsOrValues[0] ?? [];
+			} else {
+				text = textOrStrings[0];
+				for (let i = 0; i < paramsOrValues.length; i++) {
+					text += `$${i + 1}${textOrStrings[i + 1]}`;
+					params.push(paramsOrValues[i]);
+				}
+			}
+
+			const client = await pool.connect();
+			try {
+				const effectiveOrgId = getOrgContext() ?? orgId;
+				if (effectiveOrgId) {
+					await client.query(`SELECT set_config('app.org_id', $1, true)`, [effectiveOrgId]);
+				}
+
+				const res = await client.query(text, params);
+				return {
+					rows: res.rows as any[],
+					rowCount: res.rowCount,
+					fields: res.fields as any[],
+					command: res.command,
+				} as DbQueryResult<Row>;
+			} finally {
+				client.release();
+			}
+		};
+
+		return processQuery as DbQuery;
+	}
+
 	const processQuery = async <Row extends DbRow = DbRow>(
 		textOrStrings: string | TemplateStringsArray,
 		...paramsOrValues: any[]
@@ -347,7 +388,6 @@ export function getRawSql(env: Env, mode: 'read' | 'write' = 'read'): DbQuery {
 			}
 		}
 
-		const orgId = getOrgContext();
 		const sql = neon(url, { fullResults: true });
 		
 		if (orgId) {

@@ -4,7 +4,7 @@ import { requireAuth, type AuthVariables } from '../lib/auth';
 import { createPool, type DbRow } from '../lib/db';
 import { registerPatientAnalyticsRoutes } from './analytics/patient';
 import { registerMlAnalyticsRoutes } from './analytics/ml';
-import { parseDate } from './analytics/shared';
+import { hasTable, parseDate } from './analytics/shared';
 
 const app = new Hono<{ Bindings: Env; Variables: AuthVariables }>();
 
@@ -98,11 +98,16 @@ app.get('/dashboard', requireAuth, async (c) => {
       pool,
       'dashboard.appointmentsRange',
       `SELECT
-         COUNT(*) FILTER (WHERE status::text IN ('completed'))::int AS total_completed,
-         COUNT(*) FILTER (WHERE status::text IN ('scheduled', 'confirmed'))::int AS upcoming,
+         COUNT(*) FILTER (WHERE status::text IN ('atendido', 'avaliacao', 'completed', 'realizado', 'concluido'))::int AS total_completed,
+         COUNT(*) FILTER (WHERE status::text IN ('agendado', 'presenca_confirmada', 'scheduled', 'confirmed'))::int AS upcoming,
          COUNT(*)::int AS total,
-         COUNT(*) FILTER (WHERE status::text IN ('no_show'))::int AS no_show,
-         COUNT(*) FILTER (WHERE status::text IN ('confirmed'))::int AS confirmed
+         COUNT(*) FILTER (
+           WHERE status::text IN (
+             'faltou', 'faltou_com_aviso', 'faltou_sem_aviso',
+             'nao_atendido', 'nao_atendido_sem_cobranca', 'no_show'
+           )
+         )::int AS no_show,
+         COUNT(*) FILTER (WHERE status::text IN ('presenca_confirmada', 'confirmed'))::int AS confirmed
        FROM appointments
        WHERE organization_id = $1
          AND date BETWEEN $2::date AND $3::date`,
@@ -362,6 +367,10 @@ app.get('/retention/risk', requireAuth, async (c) => {
   const pool = await createPool(c.env);
 
   try {
+    const recentExercisesSql = (await hasTable(pool, 'exercise_sessions'))
+      ? `(SELECT COUNT(*) FROM exercise_sessions es WHERE es.patient_id = p.id AND es.created_at > NOW() - INTERVAL '7 days' AND es.completed = true)`
+      : `0`;
+
     // Identify patients at risk: 
     // 1. No appointments in the last 15 days
     // 2. More than 2 missed sessions in the last month
@@ -374,8 +383,14 @@ app.get('/retention/risk', requireAuth, async (c) => {
           p.full_name,
           p.phone,
           MAX(a.date) as last_appointment,
-          COUNT(*) FILTER (WHERE a.status = 'no_show' AND a.date > NOW() - INTERVAL '30 days') as missed_count,
-          (SELECT COUNT(*) FROM patient_exercise_logs pel WHERE pel.patient_id = p.id AND pel.created_at > NOW() - INTERVAL '7 days') as recent_exercises
+          COUNT(*) FILTER (
+            WHERE a.status::text IN (
+              'faltou', 'faltou_com_aviso', 'faltou_sem_aviso',
+              'nao_atendido', 'nao_atendido_sem_cobranca', 'no_show'
+            )
+            AND a.date > NOW() - INTERVAL '30 days'
+          ) as missed_count,
+          ${recentExercisesSql} as recent_exercises
         FROM patients p
         LEFT JOIN appointments a ON a.patient_id = p.id
         WHERE p.organization_id = $1 AND p.is_active = true

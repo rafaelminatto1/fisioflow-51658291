@@ -16,23 +16,72 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { motion } from "framer-motion";
 import { toast } from "sonner";
 
-export const FisioRetention: React.FC = () => {
+interface FisioRetentionProps {
+	compact?: boolean;
+}
+
+export const FisioRetention: React.FC<FisioRetentionProps> = ({ compact }) => {
 	const { data, isLoading } = useQuery({
 		queryKey: ["ia-studio", "retention"],
 		queryFn: () => iaStudioApi.getAtRiskPatients(),
 	});
 
 	const handleSendWhatsApp = (patient: AtRiskPatient) => {
-		toast.success(`Mensagem de reengajamento enviada para ${patient.fullName}`);
+		const message = `Olá ${patient.fullName.split(' ')[0]}, sentimos sua falta na clínica FisioFlow! Tudo bem com sua recuperação? Gostaríamos de agendar sua próxima sessão.`;
+		const url = `https://wa.me/${patient.phone?.replace(/\D/g, '') || ''}?text=${encodeURIComponent(message)}`;
+		window.open(url, '_blank');
+		toast.success(`Iniciando contato com ${patient.fullName}`);
 	};
 
 	if (isLoading) {
 		return <div className="space-y-4">
-			{[1, 2, 3].map(i => <Skeleton key={i} className="h-24 w-full rounded-2xl" />)}
+			{[1, 2, 3].map(i => <Skeleton key={i} className={cn("w-full rounded-2xl", compact ? "h-16" : "h-24")} />)}
 		</div>;
 	}
 
 	const patients = data?.data || [];
+
+	if (compact) {
+		return (
+			<div className="divide-y divide-slate-100 dark:divide-slate-800">
+				{patients.slice(0, 5).map((p, idx) => (
+					<div 
+						key={p.id}
+						className="p-4 hover:bg-slate-50 dark:hover:bg-slate-900/50 transition-colors flex items-center justify-between group"
+					>
+						<div className="flex items-center gap-3 min-w-0">
+							<div className="w-8 h-8 rounded-lg bg-slate-100 dark:bg-slate-800 flex items-center justify-center font-bold text-xs text-slate-500 flex-shrink-0">
+								{p.fullName.charAt(0)}
+							</div>
+							<div className="min-w-0">
+								<h4 className="text-xs font-bold truncate">{p.fullName}</h4>
+								<p className="text-[10px] text-slate-500 truncate">{p.reason}</p>
+							</div>
+						</div>
+						<div className="flex items-center gap-2">
+							<Badge className="bg-amber-500/10 text-amber-500 border-none text-[8px] h-4 px-1">
+								{p.riskScore}%
+							</Badge>
+							<Button 
+								size="icon" 
+								variant="ghost" 
+								className="h-7 w-7 opacity-0 group-hover:opacity-100 transition-opacity"
+								onClick={() => handleSendWhatsApp(p)}
+							>
+								<MessageSquare className="w-3.5 h-3.5 text-emerald-500" />
+							</Button>
+						</div>
+					</div>
+				))}
+				{patients.length === 0 && (
+					<div className="p-8 text-center">
+						<CheckCircle2 className="w-8 h-8 text-emerald-500 mx-auto mb-2 opacity-20" />
+						<p className="text-[10px] text-slate-500 font-medium">Sem riscos pendentes.</p>
+					</div>
+				)}
+			</div>
+		);
+	}
 
 	return (
 		<div className="space-y-6">
@@ -109,3 +158,4 @@ export const FisioRetention: React.FC = () => {
 		</div>
 	);
 };
+

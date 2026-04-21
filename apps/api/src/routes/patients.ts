@@ -1,10 +1,10 @@
 import { Hono } from "hono";
-import { eq, and, or, count, sql, desc, asc, isNull } from "drizzle-orm";
+import { eq, and, sql, desc, isNull } from "drizzle-orm";
 import { patients, sessions } from "@fisioflow/db";
 import type { Env } from "../types/env";
 import { requireAuth, type AuthVariables } from "../lib/auth";
-import { createDb } from "../lib/db";
-import { searchFilter, withTenant } from "../lib/db-utils";
+import { createDb, createPool } from "../lib/db";
+import { withTenant } from "../lib/db-utils";
 import { triggerInngestEvent } from "../lib/inngest-client";
 import { registerPatientClinicalDetailRoutes } from "./patients/clinical-details";
 import { isUuid } from "../lib/validators";
@@ -462,7 +462,7 @@ app.use("*", requireAuth);
 
 app.get("/", async (c) => {
 	const user = c.get("user");
-	const db = createDb(c.env, 'read');
+	const pool = createPool(c.env);
 
 	const search = trimmedString(c.req.query("search"));
 	const requestedStatus = trimmedString(c.req.query("status"));
@@ -479,99 +479,108 @@ app.get("/", async (c) => {
 	);
 
 	try {
-		let conditions: any = withTenant(patients, user.organizationId);
-
 		const normalizedStatus = requestedStatus?.toLowerCase();
+		const whereClauses: string[] = ["organization_id = $1"];
+		const params: Array<string | number | boolean> = [user.organizationId];
+		let paramIndex = 2;
+
 		if (normalizedStatus && normalizedStatus !== "all") {
 			if (["active", "ativo"].includes(normalizedStatus)) {
-				conditions = and(conditions, eq(patients.isActive, true))!;
+				whereClauses.push(`is_active = $${paramIndex++}`);
+				params.push(true);
 			} else if (["inactive", "inativo"].includes(normalizedStatus)) {
-				conditions = and(conditions, eq(patients.isActive, false))!;
+				whereClauses.push(`is_active = $${paramIndex++}`);
+				params.push(false);
 			} else {
-				conditions = and(conditions, eq(patients.status, requestedStatus!))!;
+				whereClauses.push(`status = $${paramIndex++}`);
+				params.push(requestedStatus!);
 			}
-		} else {
-			// Default to active if no status filter, or include all if status is "all"
-			if (!normalizedStatus) {
-				conditions = and(conditions, eq(patients.isActive, true))!;
-			}
+		} else if (!normalizedStatus) {
+			whereClauses.push(`is_active = $${paramIndex++}`);
+			params.push(true);
 		}
 
 		if (search) {
-			conditions = and(
-				conditions,
-				or(
-					searchFilter(patients.fullName, search),
-					searchFilter(patients.nickname, search),
-					searchFilter(patients.socialName, search),
-					searchFilter(patients.email, search),
-					searchFilter(patients.cpf, search),
-					searchFilter(patients.phone, search),
-				),
-			)!;
+			const searchValue = `%${search}%`;
+			whereClauses.push(
+				`(
+					full_name ILIKE $${paramIndex}
+					OR nickname ILIKE $${paramIndex}
+					OR social_name ILIKE $${paramIndex}
+					OR email ILIKE $${paramIndex}
+					OR cpf ILIKE $${paramIndex}
+					OR phone ILIKE $${paramIndex}
+				)`,
+			);
+			params.push(searchValue);
+			paramIndex += 1;
 		}
 
 		if (mainCondition && mainCondition !== "all") {
-			conditions = and(conditions, eq(patients.mainCondition, mainCondition))!;
+			whereClauses.push(`main_condition = $${paramIndex++}`);
+			params.push(mainCondition);
 		}
 
 		if (hasSurgery) {
-			// Use a subquery or raw SQL to filter patients with surgeries
-			// medical_records has patientId, surgeries has medicalRecordId
-			conditions = and(
-				conditions,
-				sql`EXISTS (
-					SELECT 1 FROM surgeries s 
-					JOIN medical_records mr ON s.medical_record_id = mr.id 
-					WHERE mr.patient_id = ${patients.id}
-				)`,
-			)!;
+			whereClauses.push(`
+				EXISTS (
+					SELECT 1
+					FROM surgeries s
+					JOIN medical_records mr ON s.medical_record_id = mr.id
+					WHERE mr.patient_id = patients.id
+				)
+			`);
 		}
 
-		// Count total using sql<number> for consistency
-		const totalResult = await db
-			.select({ count: sql<number>`count(*)` })
-			.from(patients)
-			.where(conditions);
-		const total = Number(totalResult[0]?.count ?? 0);
-
-		// Order by
-		let orderBy: any = desc(patients.createdAt);
+		let orderBy = 'created_at DESC';
 		switch (sortBy) {
 			case "created_at_asc":
-				orderBy = asc(patients.createdAt);
+				orderBy = 'created_at ASC';
 				break;
 			case "name_asc":
-				orderBy = asc(patients.fullName);
+				orderBy = 'full_name ASC';
 				break;
 			case "name_desc":
-				orderBy = desc(patients.fullName);
+				orderBy = 'full_name DESC';
 				break;
 			case "main_condition_asc":
-				orderBy = asc(patients.mainCondition);
+				orderBy = 'main_condition ASC NULLS LAST, full_name ASC';
 				break;
 			case "main_condition_desc":
-				orderBy = desc(patients.mainCondition);
+				orderBy = 'main_condition DESC NULLS LAST, full_name ASC';
 				break;
 			case "created_at_desc":
 			default:
-				orderBy = desc(patients.createdAt);
+				orderBy = 'created_at DESC';
 				break;
 		}
 
-		// Data query
-		const query = sql`
-			SELECT id, full_name as "fullName", nickname, social_name as "socialName", 
-			       photo_url as "photoUrl", main_condition as "mainCondition", 
-			       status, is_active as "isActive", created_at as "createdAt", updated_at as "updatedAt"
-			FROM patients
-			WHERE ${conditions}
-			ORDER BY ${orderBy}
-			LIMIT ${limit} OFFSET ${offset}
-		`;
-    
-    const dataResult = await db.execute(query);
-    const data = dataResult.rows;
+		const dataResult = await pool.query(
+			`
+				SELECT
+					id,
+					full_name AS "fullName",
+					nickname,
+					social_name AS "socialName",
+					photo_url AS "photoUrl",
+					main_condition AS "mainCondition",
+					status,
+					is_active AS "isActive",
+					created_at AS "createdAt",
+					updated_at AS "updatedAt",
+					COUNT(*) OVER()::int AS "__total"
+				FROM patients
+				WHERE ${whereClauses.join(" AND ")}
+				ORDER BY ${orderBy}
+				LIMIT $${paramIndex} OFFSET $${paramIndex + 1}
+			`,
+			[...params, limit, offset],
+		);
+		const total = Number((dataResult.rows[0] as any)?.__total ?? 0);
+		const data = dataResult.rows.map((row: any) => {
+			const { __total, ...patientRow } = row;
+			return patientRow;
+		});
 
 		return c.json({
 			data: data.map((row: any) => normalizePatientRow(row as DbRow)),
@@ -669,11 +678,10 @@ app.post("/", async (c) => {
 		console.log("[Patients/Create] Insert values:", insertValues);
 		console.log("[Patients/Create] Executing DB insert...");
 
-		await db
+		const [patient] = await db
 			.insert(patients)
-			.values(insertValues as any);
-		
-		return c.json({ message: "Paciente criado com sucesso" }, 201);
+			.values(insertValues as any)
+			.returning();
 
 		// Inngest Event: Patient Created (Sequência de Boas-vindas)
 		triggerInngestEvent(
@@ -682,14 +690,14 @@ app.post("/", async (c) => {
 			"patient.created",
 			{
 				patientId: patient.id,
-				name: patient.name,
+				name: patient.fullName,
 				email: patient.email,
 				phone: patient.phone,
 			},
 			{ id: user.uid },
 		);
 
-		return c.json({ data: patient }, 201);
+		return c.json({ data: normalizePatientRow(patient as DbRow) }, 201);
 	} catch (error) {
 		console.error("[Patients/Create] Error:", error);
 		console.error(
@@ -718,8 +726,22 @@ app.get("/:id/stats", async (c) => {
 		// or multiple queries if needed. Here we stick to a custom select.
 		const result = await db
 			.select({
-				total_sessions: sql<number>`count(*) filter (where status = 'completed')`,
-				upcoming_appointments: sql<number>`count(*) filter (where date >= current_date and (status not in ('cancelled', 'completed') or status is null))`,
+				total_sessions: sql<number>`count(*) filter (
+					where status::text in ('atendido', 'avaliacao', 'completed', 'realizado', 'concluido')
+				)`,
+				upcoming_appointments: sql<number>`count(*) filter (
+					where date >= current_date
+					and (
+						status::text not in (
+							'cancelado', 'cancelled',
+							'atendido', 'avaliacao', 'completed', 'realizado', 'concluido',
+							'faltou', 'faltou_com_aviso', 'faltou_sem_aviso',
+							'nao_atendido', 'nao_atendido_sem_cobranca', 'no_show',
+							'remarcar', 'remarcado', 'rescheduled'
+						)
+						or status is null
+					)
+				)`,
 				last_visit: sql<string>`max(date) filter (where date <= current_date)`,
 			})
 			.from(sql`appointments`) // Fallback to raw table name if not in schema yet

@@ -49,7 +49,7 @@ const mapTreatmentSession = (row: Record<string, unknown>) => ({
 
 app.get('/treatment-sessions', requireAuth, async (c) => {
   const user = c.get('user');
-  const pool = await createPool(c.env);
+  const pool = createPool(c.env);
   const patientId = c.req.query('patientId');
   if (!patientId) return c.json({ error: 'patientId é obrigatório' }, 400);
 

@@ -293,6 +293,7 @@ export function DayFlowCalendarWrapper(props: DayFlowCalendarWrapperProps) {
 						editable: true,
 						droppable: true,
 						selectable: true,
+						scrollBarWidth: 0,
 						headerToolbar: { start: "", center: "", end: "" },
 						locale: "pt-br",
 						firstDay: 1,
@@ -569,11 +570,25 @@ export function DayFlowCalendarWrapper(props: DayFlowCalendarWrapperProps) {
 					flex-shrink: 0 !important;
 					flex-grow: 0 !important;
 					border-right: 1px solid #cbd5e1 !important;
+					box-sizing: border-box !important;
 				}
 				.ec-header .ec-sidebar {
 					width: 48px !important;
+					flex-shrink: 0 !important;
+					flex-grow: 0 !important;
 					visibility: visible !important;
 					display: flex !important;
+					border-right: 1px solid #cbd5e1 !important;
+					box-sizing: border-box !important;
+				}
+				/* Force header to match body width by removing scrollbar compensation */
+				.ec-header {
+					padding-right: 0 !important;
+				}
+				.ec-scrollbar-spacer,
+				.ec-hidden-scroll {
+					display: none !important;
+					width: 0 !important;
 				}
 				.dayflow-week-view .ec-body .ec-time,
 				.dayflow-week-view .ec-body .ec-line {
