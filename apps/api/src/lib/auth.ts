@@ -7,9 +7,15 @@ import { createRemoteJWKSet, jwtVerify } from "jose";
 import type { MiddlewareHandler, Context } from "hono";
 import { getCookie } from "hono/cookie";
 import type { Env } from "../types/env";
-import { createPool, runWithOrg, getRawSql } from "./db";
+import { runWithOrg, getRawSql } from "./db";
+import { withTimeout } from "./dbWrapper";
 
 const jwksCache = new Map<string, ReturnType<typeof createRemoteJWKSet>>();
+const verifiedTokenCache = new Map<string, { user: AuthUser; expiresAt: number }>();
+const VERIFIED_TOKEN_CACHE_TTL_MS = 60_000;
+const AUTH_PROFILE_LOOKUP_TIMEOUT_MS = 12_000;
+const AUTH_SESSION_LOOKUP_TIMEOUT_MS = 20_000;
+const AUTH_GET_SESSION_TIMEOUT_MS = 5_000;
 
 /** ID da Organização Padrão (Clínica Única) */
 export const DEFAULT_ORG_ID = "00000000-0000-0000-0000-000000000001";
@@ -20,6 +26,25 @@ function getJwks(url: string): ReturnType<typeof createRemoteJWKSet> {
 	const jwks = createRemoteJWKSet(new URL(url));
 	jwksCache.set(url, jwks);
 	return jwks;
+}
+
+function getCachedVerifiedToken(token: string): AuthUser | null {
+	const cached = verifiedTokenCache.get(token);
+	if (!cached) return null;
+	if (cached.expiresAt <= Date.now()) {
+		verifiedTokenCache.delete(token);
+		return null;
+	}
+	return cached.user;
+}
+
+function cacheVerifiedToken(token: string, user: AuthUser | null): AuthUser | null {
+	if (!user) return null;
+	verifiedTokenCache.set(token, {
+		user,
+		expiresAt: Date.now() + VERIFIED_TOKEN_CACHE_TTL_MS,
+	});
+	return user;
 }
 
 export interface AuthUser {
@@ -45,9 +70,10 @@ async function resolveAuthContext(
 	if (!candidate.uid) return null;
 
 	try {
-		const sql = getRawSql(env, 'read');
-		let res = await sql(
-			`
+		const sql = getRawSql(env, 'write');
+		let res = await withTimeout(
+			sql(
+				`
         SELECT user_id, email, role, organization_id
         FROM profiles
         WHERE user_id = $1
@@ -55,7 +81,10 @@ async function resolveAuthContext(
         ORDER BY updated_at DESC NULLS LAST, created_at DESC NULLS LAST
         LIMIT 1
       `,
-			[candidate.uid],
+				[candidate.uid],
+			),
+			AUTH_PROFILE_LOOKUP_TIMEOUT_MS,
+			"auth resolve profile by user_id",
 		);
 
 		let row = res.rows?.[0];
@@ -63,8 +92,9 @@ async function resolveAuthContext(
 		// Auto-sincronização por e-mail: Se não encontrou pelo UID mas temos e-mail,
 		// tenta recuperar o perfil pelo e-mail e atualizar o UID automaticamente.
 		if (!row && candidate.email) {
-			const syncRes = await sql(
-				`
+			const syncRes = await withTimeout(
+				sql(
+					`
         SELECT user_id, email, role, organization_id
         FROM profiles
         WHERE email = $1
@@ -72,7 +102,10 @@ async function resolveAuthContext(
         ORDER BY updated_at DESC NULLS LAST, created_at DESC NULLS LAST
         LIMIT 1
       `,
-				[candidate.email],
+					[candidate.email],
+				),
+				AUTH_PROFILE_LOOKUP_TIMEOUT_MS,
+				"auth resolve profile by email",
 			);
 
 			row = syncRes.rows?.[0];
@@ -155,6 +188,42 @@ function getSessionCandidate(sessionData: any): CandidateAuthContext | null {
 	};
 }
 
+function looksLikeJwt(token: string): boolean {
+	return token.split(".").length === 3;
+}
+
+async function resolveJwtCandidate(
+	env: Env,
+	token: string,
+): Promise<AuthUser | null> {
+	const jwksUrl = env.NEON_AUTH_JWKS_URL;
+	if (!jwksUrl || !looksLikeJwt(token)) return null;
+
+	const jwks = getJwks(jwksUrl);
+	const verifyOptions: Parameters<typeof jwtVerify>[2] = {
+		clockTolerance: "10m",
+	};
+	if (env.NEON_AUTH_ISSUER) {
+		verifyOptions.issuer = env.NEON_AUTH_ISSUER;
+	}
+	if (env.NEON_AUTH_AUDIENCE) {
+		verifyOptions.audience = env.NEON_AUTH_AUDIENCE;
+	}
+
+	const { payload } = await jwtVerify(token, jwks, verifyOptions);
+	const userId =
+		(payload.sub as string) || (payload as any).userId || (payload as any).id;
+	if (!userId) return null;
+
+	return resolveAuthContext(env, {
+		uid: userId,
+		email: payload.email as string,
+		organizationId:
+			(payload as any).orgId || (payload as any).organizationId || null,
+		role: (payload as any).role || null,
+	});
+}
+
 /**
  * Extrai e verifica o token Neon Auth.
  * Aceita Header Authorization ou Cookies do Better Auth.
@@ -179,6 +248,11 @@ export async function verifyToken<E extends { Bindings: Env }>(
 		return null;
 	}
 
+	const cachedUser = getCachedVerifiedToken(token);
+	if (cachedUser) {
+		return cachedUser;
+	}
+
 	// 2. Valida como JWT do Neon Auth
 	const jwksUrl = env.NEON_AUTH_JWKS_URL;
 	if (!jwksUrl) {
@@ -193,34 +267,56 @@ export async function verifyToken<E extends { Bindings: Env }>(
 				"[Auth] Token simples detectado, usando fallback de validacao",
 			);
 
-			// Fallback A: Chamada ao /get-session do Neon Auth (Better Auth)
-			// Nota: Better Auth precisa do cookie para o /get-session funcionar corretamente
+			// Fallback A: Better Auth /get-session pode materializar um JWT em `set-auth-jwt`
+			// ou devolver a sessão diretamente, sem depender do lookup pesado em neon_auth.session.
 			if (env.NEON_AUTH_URL) {
+				const controller = new AbortController();
+				const timeoutId = setTimeout(
+					() => controller.abort("auth-get-session-timeout"),
+					AUTH_GET_SESSION_TIMEOUT_MS,
+				);
 				try {
 					const sessionRes = await fetch(`${env.NEON_AUTH_URL}/get-session`, {
+						method: "GET",
 						headers: {
+							Accept: "application/json",
 							Authorization: `Bearer ${token}`,
 							Cookie: `better-auth.session-token=${token}`,
 						},
+						signal: controller.signal,
 					});
 					if (sessionRes.ok) {
+						const authJwt = sessionRes.headers.get("set-auth-jwt");
+						if (authJwt && looksLikeJwt(authJwt)) {
+							console.log("[Auth] JWT materializado via /get-session");
+							const resolved = await resolveJwtCandidate(env, authJwt);
+							if (resolved) {
+								return cacheVerifiedToken(token, resolved);
+							}
+						}
+
 						const sessionData = (await sessionRes.json()) as any;
 						const candidate = getSessionCandidate(sessionData);
 						if (candidate) {
 							console.log("[Auth] Sessao validada via /get-session");
-							return await resolveAuthContext(env, candidate);
+							return cacheVerifiedToken(token, await resolveAuthContext(env, candidate));
 						}
+					} else {
+						console.warn("[Auth] /get-session respondeu com status inesperado:", sessionRes.status);
 					}
 				} catch (e) {
 					console.error("[Auth] Erro na validacao via fetch:", e);
+				} finally {
+					clearTimeout(timeoutId);
 				}
 			}
 
-			// Fallback B: Consulta direta ao banco de dados (mais robusto)
+			// Fallback B: Consulta direta ao banco de dados
 			try {
-				const sql = getRawSql(env, 'read');
-				const res = await sql(
-					`
+				const sql = getRawSql(env, 'write');
+				const res = await withTimeout(
+					sql(
+						`
           SELECT s."userId", u.email, u.role, p.organization_id
           FROM neon_auth.session s
           JOIN neon_auth."user" u ON s."userId" = u.id
@@ -228,18 +324,29 @@ export async function verifyToken<E extends { Bindings: Env }>(
           WHERE s.token = $1 AND s."expiresAt" > now()
           LIMIT 1
         `,
-					[token],
+						[token],
+					),
+					AUTH_SESSION_LOOKUP_TIMEOUT_MS,
+					"auth validate short token via db",
 				);
 
 				if (res.rows && res.rows.length > 0) {
 					const row = res.rows[0];
 					console.log("[Auth] Sessao validada via DB para userId:", row.userId);
-					return await resolveAuthContext(env, {
+					if (row.organization_id) {
+						return cacheVerifiedToken(token, {
+							uid: row.userId,
+							email: row.email,
+							organizationId: row.organization_id,
+							role: row.role ?? "viewer",
+						});
+					}
+					return cacheVerifiedToken(token, await resolveAuthContext(env, {
 						uid: row.userId,
 						email: row.email,
 						organizationId: row.organization_id,
 						role: row.role,
-					});
+					}));
 				}
 			} catch (dbErr) {
 				console.error("[Auth] Erro na validacao via DB:", dbErr);
@@ -249,35 +356,7 @@ export async function verifyToken<E extends { Bindings: Env }>(
 			return null;
 		}
 
-		const jwks = getJwks(jwksUrl);
-
-		// Validacao Robusta:
-
-		const verifyOptions: Parameters<typeof jwtVerify>[2] = {
-			clockTolerance: "10m",
-		};
-		if (env.NEON_AUTH_ISSUER) {
-			verifyOptions.issuer = env.NEON_AUTH_ISSUER;
-		}
-		if (env.NEON_AUTH_AUDIENCE) {
-			verifyOptions.audience = env.NEON_AUTH_AUDIENCE;
-		}
-		const { payload } = await jwtVerify(token, jwks, verifyOptions);
-
-		const userId =
-			(payload.sub as string) || (payload as any).userId || (payload as any).id;
-		if (!userId) {
-			console.error("[Auth] Token verified but userId missing", payload);
-			return null;
-		}
-
-		return await resolveAuthContext(env, {
-			uid: userId,
-			email: payload.email as string,
-			organizationId:
-				(payload as any).orgId || (payload as any).organizationId || null,
-			role: (payload as any).role || null,
-		});
+		return cacheVerifiedToken(token, await resolveJwtCandidate(env, token));
 	} catch (e) {
 		console.error(
 			"[Auth Error] JWT verification failed:",
@@ -296,7 +375,7 @@ export async function verifyToken<E extends { Bindings: Env }>(
 					const sessionData = (await sessionRes.json()) as any;
 					const candidate = getSessionCandidate(sessionData);
 					if (candidate) {
-						return await resolveAuthContext(env, candidate);
+						return cacheVerifiedToken(token, await resolveAuthContext(env, candidate));
 					}
 				}
 			} catch (sessionErr) {

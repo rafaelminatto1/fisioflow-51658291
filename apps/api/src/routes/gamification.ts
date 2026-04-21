@@ -12,8 +12,9 @@
  * POST   /api/gamification/buy                         — compra item
  */
 import { Hono } from 'hono';
-import { createPool } from '../lib/db';
+import { createPool, createPoolForOrg } from '../lib/db';
 import { requireAuth, type AuthVariables } from '../lib/auth';
+import { DEFAULT_TIMEOUTS } from '../lib/dbWrapper';
 import type { Env } from '../types/env';
 
 const app = new Hono<{ Bindings: Env; Variables: AuthVariables }>();
@@ -87,16 +88,14 @@ app.get('/profile', requireAuth, async (c) => {
 // ─── GET /profile/:patientId ─────────────────────────────────────────────────
 
 app.get('/profile/:patientId', requireAuth, async (c) => {
-  const pool = await createPool(c.env);
   const { patientId } = c.req.param();
+  const pool = createPool(c.env);
 
-  // Verify patient exists
   const patientExists = await pool.query('SELECT 1 FROM patients WHERE id = $1', [patientId]);
   if (!patientExists.rows.length) {
     return c.json({ data: null, message: 'Paciente não encontrado' });
   }
 
-  // Get or create profile
   let result = await pool.query(
     'SELECT * FROM patient_gamification WHERE patient_id = $1',
     [patientId],
@@ -116,7 +115,6 @@ app.get('/profile/:patientId', requireAuth, async (c) => {
 
   const profile = result.rows[0];
 
-  // Streak check: if last_activity_date is more than 1 day ago, maybe reset
   if (profile.last_activity_date) {
     const lastDate = new Date(profile.last_activity_date);
     const today = new Date();
@@ -125,7 +123,6 @@ app.get('/profile/:patientId', requireAuth, async (c) => {
     const diffDays = Math.floor((today.getTime() - lastDate.getTime()) / 86400000);
 
     if (diffDays > 1) {
-      // Check for streak_freeze in inventory
       const freezeResult = await pool.query(
         `SELECT * FROM user_inventory
          WHERE user_id = $1 AND item_code = 'streak_freeze' AND quantity > 0
@@ -144,7 +141,6 @@ app.get('/profile/:patientId', requireAuth, async (c) => {
             [newQty, freeze.id],
           );
         }
-        // Keep streak alive by backdating activity
         const yesterday = new Date();
         yesterday.setDate(yesterday.getDate() - 1);
         await pool.query(
@@ -152,14 +148,12 @@ app.get('/profile/:patientId', requireAuth, async (c) => {
           [yesterday.toISOString(), patientId],
         );
       } else {
-        // No freeze — reset streak
         await pool.query(
           'UPDATE patient_gamification SET current_streak = 0, updated_at = NOW() WHERE patient_id = $1',
           [patientId],
         );
       }
 
-      // Re-fetch after mutation
       result = await pool.query(
         'SELECT * FROM patient_gamification WHERE patient_id = $1',
         [patientId],
@@ -413,7 +407,7 @@ app.get('/transactions', requireAuth, async (c) => {
 
 app.get('/leaderboard', requireAuth, async (c) => {
   const user = c.get('user');
-  const pool = await createPool(c.env);
+  const pool = await createPoolForOrg(c.env, user.organizationId, DEFAULT_TIMEOUTS.query);
   const { period = 'all', limit = '50' } = c.req.query();
   const limitNum = Math.min(100, Math.max(1, Number.parseInt(limit, 10) || 50));
 
