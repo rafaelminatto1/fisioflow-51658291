@@ -214,14 +214,14 @@ export async function moderateContent(env: Env, text: string): Promise<boolean> 
 
 /**
  * Geração de embeddings para busca semântica (Vectorize).
- * Usa BGE-M3 — multilíngue, suporta pt-BR.
+ * Usa Workers AI `bge-base-en-v1.5` para manter compatibilidade com o índice 768d.
  */
 export async function generateEmbedding(env: Env, text: string): Promise<number[]> {
   const response = await runAi(
     env,
-    '@cf/baai/bge-m3',
+    '@cf/baai/bge-base-en-v1.5',
     { text: [text] },
-    { cache: true, cacheTtl: 86400 }, // embeddings de conteúdo estático podem ser cacheados
+    { cache: true, cacheTtl: 86400 },
   );
   return ((response as any).data?.[0] ?? []) as number[];
 }
@@ -255,4 +255,3 @@ export function parseTurboSketch(hex: string): Uint8Array {
   }
   return sketch;
 }
-

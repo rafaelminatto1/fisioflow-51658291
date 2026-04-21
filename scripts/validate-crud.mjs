@@ -5,7 +5,6 @@
  */
 
 const API = 'https://fisioflow-api.rafalegollas.workers.dev';
-const AUTH_URL = 'https://ep-wandering-bonus-acj4zwvo.neonauth.sa-east-1.aws.neon.tech/neondb/auth';
 const EMAIL = 'rafael.minatto@yahoo.com.br';
 const PASSWORD = 'Yukari30@';
 
@@ -14,16 +13,18 @@ const fail = (msg) => { console.error(`  ❌ ${msg}`); process.exitCode = 1; };
 const info = (msg) => console.log(`\n🔷 ${msg}`);
 
 async function getToken() {
-  const res = await fetch(`${AUTH_URL}/sign-in/email`, {
+  const res = await fetch(`${API}/api/auth/login`, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
-      'Origin': 'https://moocafisio.com.br',
+      'Origin': 'https://www.moocafisio.com.br',
     },
     body: JSON.stringify({ email: EMAIL, password: PASSWORD }),
   });
   const data = await res.json();
-  if (!res.ok || !data?.token) throw new Error(`Login falhou: ${JSON.stringify(data)}`);
+  if (!res.ok || typeof data?.token !== 'string' || data.token.split('.').length !== 3) {
+    throw new Error(`Login falhou: ${JSON.stringify(data)}`);
+  }
   return data.token;
 }
 

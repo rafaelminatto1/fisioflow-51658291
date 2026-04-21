@@ -16,6 +16,7 @@ const VERIFIED_TOKEN_CACHE_TTL_MS = 60_000;
 const AUTH_PROFILE_LOOKUP_TIMEOUT_MS = 12_000;
 const AUTH_SESSION_LOOKUP_TIMEOUT_MS = 20_000;
 const AUTH_GET_SESSION_TIMEOUT_MS = 5_000;
+const DEFAULT_AUTH_ORIGIN = "https://www.moocafisio.com.br";
 
 /** ID da Organização Padrão (Clínica Única) */
 export const DEFAULT_ORG_ID = "00000000-0000-0000-0000-000000000001";
@@ -55,6 +56,7 @@ export interface AuthUser {
 }
 
 export type AuthVariables = { user: AuthUser };
+type TokenSource = "authorization" | "query" | "cookie";
 
 type CandidateAuthContext = {
 	uid: string;
@@ -70,7 +72,7 @@ async function resolveAuthContext(
 	if (!candidate.uid) return null;
 
 	try {
-		const sql = getRawSql(env, 'write');
+		const sql = getRawSql(env, 'read');
 		let res = await withTimeout(
 			sql(
 				`
@@ -192,6 +194,25 @@ function looksLikeJwt(token: string): boolean {
 	return token.split(".").length === 3;
 }
 
+function normalizeSessionLookupToken(token: string): string {
+	return looksLikeJwt(token) ? token : token.split(".")[0] || token;
+}
+
+function getPreferredAuthOrigin(env: Env): string {
+	const rawOrigins = String(env.ALLOWED_ORIGINS || "")
+		.split(",")
+		.map((origin) => origin.trim())
+		.filter(Boolean);
+
+	const preferred =
+		rawOrigins.find((origin) => origin === "https://www.moocafisio.com.br") ||
+		rawOrigins.find((origin) => origin === "https://moocafisio.com.br") ||
+		rawOrigins.find((origin) => origin.startsWith("https://") && !origin.includes("localhost")) ||
+		rawOrigins[0];
+
+	return preferred || DEFAULT_AUTH_ORIGIN;
+}
+
 async function resolveJwtCandidate(
 	env: Env,
 	token: string,
@@ -234,13 +255,22 @@ export async function verifyToken<E extends { Bindings: Env }>(
 ): Promise<AuthUser | null> {
 	// 1. Tenta obter o token (header, query param para WebSocket, ou cookie)
 	let token = c.req.header("Authorization")?.replace("Bearer ", "");
+	let tokenSource: TokenSource | null = token ? "authorization" : null;
+	let sessionCookieValue: string | undefined;
 
 	if (!token) {
-		token =
-			c.req.query?.("token") ||
+		token = c.req.query?.("token");
+		tokenSource = token ? "query" : null;
+	}
+
+	if (!token) {
+		sessionCookieValue =
+			getCookie(c, "__Secure-neon-auth.session_token") ||
 			getCookie(c, "better-auth.session-token") ||
 			getCookie(c, "auth_session") ||
 			getCookie(c, "__session");
+		token = sessionCookieValue;
+		tokenSource = token ? "cookie" : null;
 	}
 
 	if (!token) {
@@ -261,15 +291,20 @@ export async function verifyToken<E extends { Bindings: Env }>(
 	}
 
 	try {
-		// Verificacao temporaria para tokens simples (32 caracteres)
-		if (token.length < 50) {
+		// Tokens opacos/sessão do Better Auth não são JWTs e precisam de um fluxo separado.
+		if (!looksLikeJwt(token)) {
 			console.log(
-				"[Auth] Token simples detectado, usando fallback de validacao",
+				"[Auth] Token de sessão opaco detectado, usando fallback de validacao",
 			);
+			const lookupToken = normalizeSessionLookupToken(token);
 
 			// Fallback A: Better Auth /get-session pode materializar um JWT em `set-auth-jwt`
 			// ou devolver a sessão diretamente, sem depender do lookup pesado em neon_auth.session.
 			if (env.NEON_AUTH_URL) {
+				const origin = getPreferredAuthOrigin(env);
+				const sessionCookieHeader = sessionCookieValue
+					? `__Secure-neon-auth.session_token=${sessionCookieValue}`
+					: undefined;
 				const controller = new AbortController();
 				const timeoutId = setTimeout(
 					() => controller.abort("auth-get-session-timeout"),
@@ -280,8 +315,13 @@ export async function verifyToken<E extends { Bindings: Env }>(
 						method: "GET",
 						headers: {
 							Accept: "application/json",
-							Authorization: `Bearer ${token}`,
-							Cookie: `better-auth.session-token=${token}`,
+							...(tokenSource === "authorization" || tokenSource === "query"
+								? { Authorization: `Bearer ${lookupToken}` }
+								: {}),
+							...(sessionCookieHeader
+								? { Cookie: sessionCookieHeader }
+								: {}),
+							Origin: origin,
 						},
 						signal: controller.signal,
 					});
@@ -324,7 +364,7 @@ export async function verifyToken<E extends { Bindings: Env }>(
           WHERE s.token = $1 AND s."expiresAt" > now()
           LIMIT 1
         `,
-						[token],
+						[lookupToken],
 					),
 					AUTH_SESSION_LOOKUP_TIMEOUT_MS,
 					"auth validate short token via db",
@@ -365,10 +405,15 @@ export async function verifyToken<E extends { Bindings: Env }>(
 
 		if (env.NEON_AUTH_URL) {
 			try {
+				const origin = getPreferredAuthOrigin(env);
 				const sessionRes = await fetch(`${env.NEON_AUTH_URL}/get-session`, {
 					headers: {
+						Accept: "application/json",
 						Authorization: `Bearer ${token}`,
-						Cookie: `better-auth.session-token=${token}`,
+						...(sessionCookieValue
+							? { Cookie: `__Secure-neon-auth.session_token=${sessionCookieValue}` }
+							: {}),
+						Origin: origin,
 					},
 				});
 				if (sessionRes.ok) {

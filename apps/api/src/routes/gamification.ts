@@ -12,9 +12,8 @@
  * POST   /api/gamification/buy                         — compra item
  */
 import { Hono } from 'hono';
-import { createPool, createPoolForOrg } from '../lib/db';
+import { createPool } from '../lib/db';
 import { requireAuth, type AuthVariables } from '../lib/auth';
-import { DEFAULT_TIMEOUTS } from '../lib/dbWrapper';
 import type { Env } from '../types/env';
 
 const app = new Hono<{ Bindings: Env; Variables: AuthVariables }>();
@@ -407,7 +406,7 @@ app.get('/transactions', requireAuth, async (c) => {
 
 app.get('/leaderboard', requireAuth, async (c) => {
   const user = c.get('user');
-  const pool = await createPoolForOrg(c.env, user.organizationId, DEFAULT_TIMEOUTS.query);
+  const pool = await createPool(c.env);
   const { period = 'all', limit = '50' } = c.req.query();
   const limitNum = Math.min(100, Math.max(1, Number.parseInt(limit, 10) || 50));
 
