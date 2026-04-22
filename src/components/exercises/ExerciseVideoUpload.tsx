@@ -2,12 +2,12 @@ import React, { useState, useRef, useCallback, useEffect } from "react";
 import { useDropzone } from "react-dropzone";
 import {
 	X,
-	Video,
 	Check,
 	AlertCircle,
 	Info,
 	ImageIcon,
 	Film,
+	Image as ImageIconLucide,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -42,11 +42,12 @@ import {
 	exerciseVideosService,
 	MAX_VIDEO_SIZE,
 	ALLOWED_VIDEO_EXTENSIONS,
+	ALLOWED_IMAGE_EXTENSIONS,
 	VideoCategory,
 	VideoDifficulty,
 } from "@/services/exerciseVideos";
 
-export interface ExerciseVideoUploadProps {
+export interface ExerciseMediaUploadProps {
 	open?: boolean;
 	onOpenChange?: (open: boolean) => void;
 	onSuccess?: () => void;
@@ -61,7 +62,7 @@ export interface ExerciseVideoUploadProps {
 	};
 }
 
-export const ExerciseVideoUpload: React.FC<ExerciseVideoUploadProps> = ({
+export const ExerciseVideoUpload: React.FC<ExerciseMediaUploadProps> = ({
 	open = false,
 	onOpenChange,
 	onSuccess,
@@ -85,10 +86,11 @@ export const ExerciseVideoUpload: React.FC<ExerciseVideoUploadProps> = ({
 	);
 
 	// File state
-	const [videoFile, setVideoFile] = useState<File | null>(null);
+	const [mediaFile, setMediaFile] = useState<File | null>(null);
+	const [mediaType, setMediaType] = useState<"video" | "image">("video");
 	const [thumbnailFile, setThumbnailFile] = useState<File | null>(null);
 	const [thumbnailPreview, setThumbnailPreview] = useState<string>("");
-	const [videoPreview, setVideoPreview] = useState<string>("");
+	const [mediaPreview, setMediaPreview] = useState<string>("");
 
 	// Upload state
 	const [isUploading, setIsUploading] = useState(false);
@@ -117,10 +119,10 @@ export const ExerciseVideoUpload: React.FC<ExerciseVideoUploadProps> = ({
 		setDifficulty("");
 		setSelectedBodyParts([]);
 		setSelectedEquipment([]);
-		setVideoFile(null);
+		setMediaFile(null);
 		setThumbnailFile(null);
 		setThumbnailPreview("");
-		setVideoPreview("");
+		setMediaPreview("");
 		setIsUploading(false);
 		setUploadProgress(0);
 		setUploadError(null);
@@ -133,7 +135,7 @@ export const ExerciseVideoUpload: React.FC<ExerciseVideoUploadProps> = ({
 		}
 	};
 
-	const handleVideoDrop = useCallback(
+	const handleMediaDrop = useCallback(
 		(
 			acceptedFiles: File[],
 			rejectedFiles: Array<{
@@ -149,11 +151,11 @@ export const ExerciseVideoUpload: React.FC<ExerciseVideoUploadProps> = ({
 				const error = rejection.errors[0];
 				if (error?.code === "file-too-large") {
 					setUploadError(
-						`O vídeo deve ter no máximo ${exerciseVideosService.formatFileSize(MAX_VIDEO_SIZE)}`,
+						`O arquivo é muito grande. Máximo permitido: ${exerciseVideosService.formatFileSize(MAX_VIDEO_SIZE)}`,
 					);
 				} else if (error?.code === "file-invalid-type") {
 					setUploadError(
-						`Formato não suportado. Use: ${ALLOWED_VIDEO_EXTENSIONS.join(", ")}`,
+						"Formato não suportado. Use vídeos (MP4, WebM, MOV) ou imagens (JPG, PNG, WebP, AVIF).",
 					);
 				} else {
 					setUploadError("Erro ao validar arquivo. Tente novamente.");
@@ -163,15 +165,18 @@ export const ExerciseVideoUpload: React.FC<ExerciseVideoUploadProps> = ({
 
 			const file = acceptedFiles[0];
 			if (file) {
+				const type = file.type.startsWith("video/") ? "video" : "image";
+				
 				// Validate using service
-				const validation = exerciseVideosService.validateVideoFile(file);
+				const validation = exerciseVideosService.validateMediaFile(file, type);
 				if (!validation.valid) {
 					setUploadError(validation.error || "Erro ao validar arquivo");
 					return;
 				}
 
-				setVideoFile(file);
-				setVideoPreview(URL.createObjectURL(file));
+				setMediaType(type);
+				setMediaFile(file);
+				setMediaPreview(URL.createObjectURL(file));
 				setUploadError(null);
 
 				// Auto-fill title from filename if empty
@@ -188,13 +193,13 @@ export const ExerciseVideoUpload: React.FC<ExerciseVideoUploadProps> = ({
 
 	const { getRootProps, getInputProps, isDragActive, isDragReject } =
 		useDropzone({
-			onDrop: handleVideoDrop,
+			onDrop: handleMediaDrop,
 			accept: {
 				"video/*": ALLOWED_VIDEO_EXTENSIONS.map((ext) => ext),
+				"image/*": ALLOWED_IMAGE_EXTENSIONS.map((ext) => ext),
 			},
 			multiple: false,
 			disabled: isUploading,
-			maxSize: MAX_VIDEO_SIZE,
 		});
 
 	const handleThumbnailChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -233,7 +238,7 @@ export const ExerciseVideoUpload: React.FC<ExerciseVideoUploadProps> = ({
 			title.trim().length >= 3 &&
 			category !== "" &&
 			difficulty !== "" &&
-			videoFile !== null
+			mediaFile !== null
 		);
 	};
 
@@ -247,7 +252,7 @@ export const ExerciseVideoUpload: React.FC<ExerciseVideoUploadProps> = ({
 			return;
 		}
 
-		if (!videoFile) return;
+		if (!mediaFile) return;
 
 		setUploadError(null);
 		setIsUploading(true);
@@ -264,20 +269,21 @@ export const ExerciseVideoUpload: React.FC<ExerciseVideoUploadProps> = ({
 					exercise_id: exerciseId,
 					title: title.trim(),
 					description: description.trim() || undefined,
-					file: videoFile,
+					file: mediaFile,
 					thumbnail: thumbnailFile || undefined,
 					category: category as VideoCategory,
 					difficulty: difficulty as VideoDifficulty,
 					body_parts: selectedBodyParts,
 					equipment: selectedEquipment,
+					type: mediaType,
 				},
 				{
 					onSuccess: () => {
 						clearInterval(progressInterval);
 						setUploadProgress(100);
 						toast({
-							title: "Vídeo enviado com sucesso!",
-							description: "O vídeo de exercício foi adicionado à biblioteca.",
+							title: `${mediaType === "video" ? "Vídeo" : "Imagem"} enviada com sucesso!`,
+							description: `A mídia de exercício foi adicionada à biblioteca.`,
 						});
 						resetForm();
 						onSuccess?.();
@@ -286,7 +292,7 @@ export const ExerciseVideoUpload: React.FC<ExerciseVideoUploadProps> = ({
 					onError: (error: { message?: string }) => {
 						clearInterval(progressInterval);
 						const errorMsg = error?.message || "Tente novamente mais tarde";
-						setUploadError(`Erro ao enviar vídeo: ${errorMsg}`);
+						setUploadError(`Erro ao enviar mídia: ${errorMsg}`);
 						setIsUploading(false);
 						setUploadProgress(0);
 					},
@@ -295,7 +301,7 @@ export const ExerciseVideoUpload: React.FC<ExerciseVideoUploadProps> = ({
 		} catch (error: unknown) {
 			const errorMsg =
 				error instanceof Error ? error.message : "Tente novamente";
-			setUploadError(`Erro ao enviar vídeo: ${errorMsg}`);
+			setUploadError(`Erro ao enviar mídia: ${errorMsg}`);
 			setIsUploading(false);
 			setUploadProgress(0);
 		}
@@ -305,20 +311,20 @@ export const ExerciseVideoUpload: React.FC<ExerciseVideoUploadProps> = ({
 		<Dialog open={open} onOpenChange={handleClose}>
 			<DialogContent className="max-w-2xl max-h-[85vh] flex flex-col p-0">
 				<DialogHeader className="p-6 pb-2">
-					<DialogTitle>Adicionar Vídeo de Exercício</DialogTitle>
+					<DialogTitle>Adicionar Mídia de Exercício</DialogTitle>
 					<DialogDescription>
-						Faça upload de um vídeo demonstrativo de exercício para a biblioteca
+						Faça upload de um vídeo ou imagem demonstrativa para a biblioteca
 					</DialogDescription>
 				</DialogHeader>
 
 				<div className="flex-1 overflow-y-auto px-6 py-2">
 					<div className="space-y-5">
-						{/* Video Upload Area */}
+						{/* Media Upload Area */}
 						<div className="space-y-2">
 							<Label>
-								Vídeo <span className="text-destructive">*</span>
+								Mídia (Vídeo ou Imagem) <span className="text-destructive">*</span>
 							</Label>
-							{!videoFile ? (
+							{!mediaFile ? (
 								<div
 									{...getRootProps()}
 									className={cn(
@@ -341,7 +347,7 @@ export const ExerciseVideoUpload: React.FC<ExerciseVideoUploadProps> = ({
 											isDragReject && "bg-destructive/20",
 										)}
 									>
-										<Video
+										<Film
 											className={cn(
 												"h-8 w-8 transition-colors",
 												isDragActive && !isDragReject
@@ -355,12 +361,11 @@ export const ExerciseVideoUpload: React.FC<ExerciseVideoUploadProps> = ({
 										{isDragActive
 											? isDragReject
 												? "Formato não suportado"
-												: "Solte o vídeo aqui"
-											: "Arraste um vídeo ou clique para selecionar"}
+												: "Solte o arquivo aqui"
+											: "Arraste um vídeo/imagem ou clique para selecionar"}
 									</p>
 									<p className="text-xs text-muted-foreground mt-2">
-										MP4, WebM, MOV (máx.{" "}
-										{exerciseVideosService.formatFileSize(MAX_VIDEO_SIZE)})
+										Vídeos (MP4, WebM) ou Imagens (JPG, PNG, WebP)
 									</p>
 								</div>
 							) : (
@@ -369,26 +374,38 @@ export const ExerciseVideoUpload: React.FC<ExerciseVideoUploadProps> = ({
 										<div className="flex items-start gap-4">
 											<div className="flex-1 min-w-0">
 												<div className="flex items-center gap-2 mb-2">
-													<Film className="h-5 w-5 text-primary flex-shrink-0" />
+													{mediaType === "video" ? (
+														<Film className="h-5 w-5 text-primary flex-shrink-0" />
+													) : (
+														<ImageIconLucide className="h-5 w-5 text-primary flex-shrink-0" />
+													)}
 													<p className="font-medium text-sm truncate">
-														{videoFile.name}
+														{mediaFile.name}
 													</p>
 												</div>
 												<p className="text-xs text-muted-foreground mb-3">
-													{exerciseVideosService.formatFileSize(videoFile.size)}
+													{exerciseVideosService.formatFileSize(mediaFile.size)}
 												</p>
-												<video
-													src={videoPreview}
-													className="rounded-md w-full max-h-48 object-cover bg-black"
-													controls
-												/>
+												{mediaType === "video" ? (
+													<video
+														src={mediaPreview}
+														className="rounded-md w-full max-h-48 object-cover bg-black"
+														controls
+													/>
+												) : (
+													<img
+														src={mediaPreview}
+														className="rounded-md w-full max-h-48 object-contain bg-muted"
+														alt="Preview"
+													/>
+												)}
 											</div>
 											<Button
 												variant="ghost"
 												size="icon"
 												onClick={() => {
-													setVideoFile(null);
-													setVideoPreview("");
+													setMediaFile(null);
+													setMediaPreview("");
 													setUploadError(null);
 												}}
 												disabled={isUploading}
@@ -401,73 +418,75 @@ export const ExerciseVideoUpload: React.FC<ExerciseVideoUploadProps> = ({
 							)}
 						</div>
 
-						{/* Thumbnail Upload (Optional) */}
-						<div className="space-y-2">
-							<div className="flex items-center gap-2">
-								<Label>Thumbnail (opcional)</Label>
-								<Badge variant="outline" className="text-xs">
-									Será gerada automaticamente
-								</Badge>
-							</div>
-							{!thumbnailPreview ? (
-								<div
-									className={cn(
-										"border-2 border-dashed rounded-lg p-4 text-center cursor-pointer transition-colors hover:border-primary/50",
-										isUploading && "opacity-50 cursor-not-allowed",
-									)}
-									onClick={() =>
-										!isUploading && thumbnailInputRef.current?.click()
-									}
-								>
-									<input
-										ref={thumbnailInputRef}
-										type="file"
-										accept="image/*"
-										onChange={handleThumbnailChange}
-										className="hidden"
-										disabled={isUploading}
-									/>
-									<ImageIcon className="h-8 w-8 mx-auto mb-2 text-muted-foreground" />
-									<p className="text-sm text-muted-foreground">
-										Clique para adicionar uma imagem personalizada
-									</p>
+						{/* Thumbnail Upload (Optional - Only for Videos) */}
+						{mediaType === "video" && (
+							<div className="space-y-2 animate-in fade-in slide-in-from-top-2">
+								<div className="flex items-center gap-2">
+									<Label>Thumbnail (opcional)</Label>
+									<Badge variant="outline" className="text-xs">
+										Será gerada automaticamente
+									</Badge>
 								</div>
-							) : (
-								<Card>
-									<CardContent className="p-4">
-										<div className="flex items-center gap-4">
-											<img
-												src={thumbnailPreview}
-												alt="Thumbnail"
-												className="w-24 h-16 object-cover rounded"
-											/>
-											<div className="flex-1 min-w-0">
-												<p className="text-sm font-medium truncate">
-													Thumbnail personalizada
-												</p>
-												<p className="text-xs text-muted-foreground truncate">
-													{thumbnailFile?.name}
-												</p>
+								{!thumbnailPreview ? (
+									<div
+										className={cn(
+											"border-2 border-dashed rounded-lg p-4 text-center cursor-pointer transition-colors hover:border-primary/50",
+											isUploading && "opacity-50 cursor-not-allowed",
+										)}
+										onClick={() =>
+											!isUploading && thumbnailInputRef.current?.click()
+										}
+									>
+										<input
+											ref={thumbnailInputRef}
+											type="file"
+											accept="image/*"
+											onChange={handleThumbnailChange}
+											className="hidden"
+											disabled={isUploading}
+										/>
+										<ImageIcon className="h-8 w-8 mx-auto mb-2 text-muted-foreground" />
+										<p className="text-sm text-muted-foreground">
+											Clique para adicionar uma imagem personalizada
+										</p>
+									</div>
+								) : (
+									<Card>
+										<CardContent className="p-4">
+											<div className="flex items-center gap-4">
+												<img
+													src={thumbnailPreview}
+													alt="Thumbnail"
+													className="w-24 h-16 object-cover rounded"
+												/>
+												<div className="flex-1 min-w-0">
+													<p className="text-sm font-medium truncate">
+														Thumbnail personalizada
+													</p>
+													<p className="text-xs text-muted-foreground truncate">
+														{thumbnailFile?.name}
+													</p>
+												</div>
+												<Button
+													variant="ghost"
+													size="icon"
+													onClick={() => {
+														setThumbnailFile(null);
+														setThumbnailPreview("");
+														if (thumbnailInputRef.current) {
+															thumbnailInputRef.current.value = "";
+														}
+													}}
+													disabled={isUploading}
+												>
+													<X className="h-4 w-4" />
+												</Button>
 											</div>
-											<Button
-												variant="ghost"
-												size="icon"
-												onClick={() => {
-													setThumbnailFile(null);
-													setThumbnailPreview("");
-													if (thumbnailInputRef.current) {
-														thumbnailInputRef.current.value = "";
-													}
-												}}
-												disabled={isUploading}
-											>
-												<X className="h-4 w-4" />
-											</Button>
-										</div>
-									</CardContent>
-								</Card>
-							)}
-						</div>
+										</CardContent>
+									</Card>
+								)}
+							</div>
+						)}
 
 						{/* Title */}
 						<div className="space-y-2">
@@ -609,7 +628,7 @@ export const ExerciseVideoUpload: React.FC<ExerciseVideoUploadProps> = ({
 								<div className="flex items-center justify-between">
 									<div className="flex items-center gap-2 text-sm">
 										<div className="animate-spin h-4 w-4 border-2 border-primary border-t-transparent rounded-full" />
-										<span className="font-medium">Enviando vídeo...</span>
+										<span className="font-medium">Enviando mídia...</span>
 									</div>
 									<span className="text-sm text-muted-foreground">
 										{uploadProgress}%
@@ -628,16 +647,16 @@ export const ExerciseVideoUpload: React.FC<ExerciseVideoUploadProps> = ({
 						)}
 
 						{/* Info Message */}
-						{!videoFile && (
+						{!mediaFile && (
 							<div className="flex items-start gap-3 p-3 bg-blue-50 dark:bg-blue-950/20 border border-blue-200 dark:border-blue-900 rounded-lg">
 								<Info className="h-5 w-5 text-blue-600 dark:text-blue-400 flex-shrink-0 mt-0.5" />
 								<div className="text-sm text-blue-800 dark:text-blue-200">
-									<p className="font-medium mb-1">Dicas para um bom vídeo:</p>
+									<p className="font-medium mb-1">Dicas para uma boa mídia:</p>
 									<ul className="list-disc list-inside space-y-0.5 text-blue-700 dark:text-blue-300">
 										<li>Use iluminação adequada</li>
-										<li>Mantenha a câmera estável</li>
-										<li>Demonstre o movimento completamente</li>
 										<li>Vídeos curtos (30s - 2min) funcionam melhor</li>
+										<li>Imagens devem estar focadas no movimento</li>
+										<li>Demonstre o movimento completamente</li>
 									</ul>
 								</div>
 							</div>
@@ -664,7 +683,7 @@ export const ExerciseVideoUpload: React.FC<ExerciseVideoUploadProps> = ({
 								Enviando...
 							</span>
 						) : (
-							"Adicionar Vídeo"
+							"Adicionar Mídia"
 						)}
 					</Button>
 				</DialogFooter>
@@ -672,5 +691,6 @@ export const ExerciseVideoUpload: React.FC<ExerciseVideoUploadProps> = ({
 		</Dialog>
 	);
 };
+
 
 export default ExerciseVideoUpload;
