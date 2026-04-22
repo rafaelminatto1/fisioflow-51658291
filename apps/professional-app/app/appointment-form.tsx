@@ -431,6 +431,8 @@ export default function AppointmentFormScreen() {
         />
         {errors.patientId && <Text style={styles.errorText}>{errors.patientId.message}</Text>}
 
+        <View style={[styles.sectionDivider, { backgroundColor: colors.border }]} />
+
         <View style={styles.row}>
           <View style={styles.col}>
             <Text style={[styles.label, { color: colors.textSecondary }]}>Data *</Text>
@@ -545,6 +547,8 @@ export default function AppointmentFormScreen() {
           )}
         />
 
+        <View style={[styles.sectionDivider, { backgroundColor: colors.border }]} />
+
         <View style={styles.row}>
           <View style={styles.col}>
             <Controller
@@ -575,6 +579,8 @@ export default function AppointmentFormScreen() {
             />
           </View>
         </View>
+
+        <View style={[styles.sectionDivider, { backgroundColor: colors.border }]} />
 
         {/* Payment Section - Only for editing */}
         {isEditing && (
@@ -622,6 +628,8 @@ export default function AppointmentFormScreen() {
             )}
           </View>
         )}
+
+        <View style={[styles.sectionDivider, { backgroundColor: colors.border }]} />
 
         <Text style={[styles.label, { color: colors.textSecondary }]}>Observações</Text>
         <Controller
