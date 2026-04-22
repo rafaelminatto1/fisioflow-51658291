@@ -13,8 +13,8 @@ import { generateEmbedding, generateTurboSketch } from '../lib/ai-native';
 const app = new Hono<{ Bindings: Env; Variables: AuthVariables }>();
 
 const KV_TTL = 3600; // 1 hora
-const KV_CATEGORIES = 'exercises:v1:categories';
-const KV_LIST_PREFIX = 'exercises:v1:list:';
+const KV_CATEGORIES = 'exercises:v2:categories';
+const KV_LIST_PREFIX = 'exercises:v3:list:';
 
 async function kvGet(env: Env, key: string): Promise<unknown | null> {
   if (!env.FISIOFLOW_CONFIG) return null;
@@ -189,7 +189,12 @@ app.get('/', requireAuth, async (c) => {
               COALESCE(e.muscles_primary, '{}'::text[]) AS "musclesPrimary",
               COALESCE(e.body_parts, '{}'::text[]) AS "bodyParts",
               COALESCE(e.equipment, '{}'::text[]) AS equipment,
-              e.duration_seconds AS "durationSeconds",
+              e.duration_seconds AS duration,
+              e.sets_recommended AS sets,
+              e.reps_recommended AS repetitions,
+              e.pathologies_indicated AS "indicated_pathologies",
+              e.pathologies_contraindicated AS "contraindicated_pathologies",
+              e."references" AS "scientific_references",
               e.description,
               COALESCE(e.tags, '{}'::text[]) AS tags,
               NULL AS "embeddingSketch",

@@ -16,7 +16,13 @@ export interface Exercise {
 	bodyParts: string[];
 	equipment: string[];
 	durationSeconds: number | null;
+	duration?: number | null;
 	description: string | null;
+	sets?: number | null;
+	repetitions?: number | null;
+	indicated_pathologies?: string[] | null;
+	contraindicated_pathologies?: string[] | null;
+	scientific_references?: string | null;
 	aliasesPt?: string[] | null;
 	aliasesEn?: string[] | null;
 	dictionaryId?: string | null;
