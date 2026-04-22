@@ -33,6 +33,7 @@ import {
 	ClipboardList,
 	Target,
 	Dumbbell,
+	Eye,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
@@ -94,6 +95,7 @@ import {
 import { toast } from "sonner";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { useBoardLabels } from "@/contexts/BoardLabelsContext";
+import { useAuth } from "@/contexts/AuthContext";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { boardChecklistTemplatesApi } from "@/api/v2";
 import type { BoardChecklistTemplate } from "@/types/boards";
@@ -181,6 +183,7 @@ export function TaskDetailModal({
 	teamMembers,
 }: TaskDetailModalProps) {
 	const isMobile = useIsMobile();
+	const { user } = useAuth();
 	const updateTarefa = useUpdateTarefa();
 	const createTarefa = useCreateTarefa();
 
@@ -220,14 +223,6 @@ export function TaskDetailModal({
 	const [saveTemplateName, setSaveTemplateName] = useState("");
 	const [depSearch, setDepSearch] = useState("");
 
-	// Stable ref to always have the latest onSubmit without stale closures
-	const onSubmitRef = useRef<(data: TarefaDetailFormData) => Promise<void>>(
-		async () => {},
-	);
-	const triggerSave = useCallback(() => {
-		form.handleSubmit((data) => onSubmitRef.current(data))();
-	}, [form]);
-
 	const form = useForm<TarefaDetailFormData>({
 		resolver: zodResolver(tarefaDetailSchema),
 		defaultValues: {
@@ -249,6 +244,14 @@ export function TaskDetailModal({
 			requires_acknowledgment: false,
 		},
 	});
+
+	// Stable ref to always have the latest onSubmit without stale closures
+	const onSubmitRef = useRef<(data: TarefaDetailFormData) => Promise<void>>(
+		async () => {},
+	);
+	const triggerSave = useCallback(() => {
+		form.handleSubmit((data) => onSubmitRef.current(data))();
+	}, [form]);
 
 	const {
 		fields: checklistFields,
@@ -1740,7 +1743,7 @@ export function TaskDetailModal({
 
 											updateTarefa.mutate({
 												id: tarefa.id,
-												updates: { acknowledgments: updatedAcks },
+												acknowledgments: updatedAcks,
 											});
 
 											toast.success(

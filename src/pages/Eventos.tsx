@@ -69,6 +69,9 @@ interface Evento {
 	hora_fim?: string | null;
 	local: string;
 	gratuito: boolean;
+	participantes_previstos?: number;
+	minimo_colaboradores?: number;
+	colaboradores_confirmados?: number;
 }
 
 export default function Eventos() {
@@ -473,6 +476,33 @@ export default function Eventos() {
 											</div>
 										</div>
 										<div className="space-y-1">
+											<p className="text-[10px] font-black uppercase tracking-widest text-slate-400">
+												Escala (Equipe)
+											</p>
+											<div className="flex items-center gap-2">
+												<Badge
+													className={cn(
+														"rounded-xl border-none font-black px-2 py-0.5",
+														!evento.minimo_colaboradores ||
+															evento.minimo_colaboradores === 0
+															? "bg-slate-100 text-slate-500"
+															: (evento.colaboradores_confirmados || 0) /
+																	evento.minimo_colaboradores >=
+																1
+																? "bg-emerald-100 text-emerald-700 dark:bg-emerald-500/20 dark:text-emerald-400"
+																: (evento.colaboradores_confirmados || 0) /
+																		evento.minimo_colaboradores >=
+																	0.5
+																	? "bg-amber-100 text-amber-700 dark:bg-amber-500/20 dark:text-amber-400"
+																	: "bg-rose-100 text-rose-700 dark:bg-rose-500/20 dark:text-rose-400",
+													)}
+												>
+													{evento.colaboradores_confirmados || 0}/
+													{evento.minimo_colaboradores || 0}
+												</Badge>
+											</div>
+										</div>
+										<div className="space-y-1 col-span-2">
 											<p className="text-[10px] font-black uppercase tracking-widest text-slate-400">
 												Onde
 											</p>
