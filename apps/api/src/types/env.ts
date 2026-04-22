@@ -156,6 +156,9 @@ export interface Env {
 	TWILIO_AUTH_TOKEN?: string;
 	TWILIO_PHONE_NUMBER?: string;
 
+	// Z.AI (GLM models) — OpenAI-compatible API
+	ZAI_API_KEY?: string;
+
 	// Focus NFe / NFSe
 	FOCUS_NFE_TOKEN?: string;
 	FOCUS_NFE_ENVIRONMENT?: string;
