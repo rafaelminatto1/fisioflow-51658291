@@ -11,10 +11,10 @@ import {
 	Menu,
 	Palette,
 	Shield,
+	ChevronRight,
 } from "lucide-react";
 import { Link, useSearchParams } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
 import { useScheduleSettings } from "@/hooks/useScheduleSettings";
 import { useScheduleCapacity } from "@/hooks/useScheduleCapacity";
 import { SettingsLoadingState } from "@/components/schedule/settings/shared/SettingsLoadingState";
@@ -27,6 +27,8 @@ import {
 } from "@/components/ui/sheet";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { useIsMobile } from "@/hooks/use-mobile";
+import { cn } from "@/lib/utils";
+
 const ScheduleOverviewTab = lazy(() =>
 	import("@/components/schedule/settings/tabs/ScheduleOverviewTab").then(
 		(m) => ({ default: m.ScheduleOverviewTab }),
@@ -64,36 +66,60 @@ const scheduleSettingsTabs = [
 		label: "Visão Geral",
 		description: "Resumo das configurações",
 		icon: LayoutDashboard,
+		color: "text-blue-600 dark:text-blue-400",
+		activeBg: "bg-blue-50 dark:bg-blue-950/40",
+		activeBorder: "border-blue-500/70",
+		iconBg: "bg-blue-100 dark:bg-blue-900/40",
 	},
 	{
 		value: "schedule",
 		label: "Horários",
 		description: "Capacidade e funcionamento",
 		icon: Clock,
+		color: "text-teal-600 dark:text-teal-400",
+		activeBg: "bg-teal-50 dark:bg-teal-950/40",
+		activeBorder: "border-teal-500/70",
+		iconBg: "bg-teal-100 dark:bg-teal-900/40",
 	},
 	{
 		value: "policies",
 		label: "Políticas",
 		description: "Cancelamentos e lembretes",
 		icon: Shield,
+		color: "text-amber-600 dark:text-amber-400",
+		activeBg: "bg-amber-50 dark:bg-amber-950/40",
+		activeBorder: "border-amber-500/70",
+		iconBg: "bg-amber-100 dark:bg-amber-900/40",
 	},
 	{
 		value: "blocked",
 		label: "Bloqueios",
 		description: "Ausências e indisponibilidades",
 		icon: CalendarOff,
+		color: "text-red-600 dark:text-red-400",
+		activeBg: "bg-red-50 dark:bg-red-950/40",
+		activeBorder: "border-red-500/70",
+		iconBg: "bg-red-100 dark:bg-red-900/40",
 	},
 	{
 		value: "visual",
 		label: "Aparência",
 		description: "Cards e cores da agenda",
 		icon: Palette,
+		color: "text-pink-600 dark:text-pink-400",
+		activeBg: "bg-pink-50 dark:bg-pink-950/40",
+		activeBorder: "border-pink-500/70",
+		iconBg: "bg-pink-100 dark:bg-pink-900/40",
 	},
 	{
 		value: "accessibility",
 		label: "Acessibilidade",
 		description: "Contraste, texto e animações",
 		icon: Eye,
+		color: "text-cyan-600 dark:text-cyan-400",
+		activeBg: "bg-cyan-50 dark:bg-cyan-950/40",
+		activeBorder: "border-cyan-500/70",
+		iconBg: "bg-cyan-100 dark:bg-cyan-900/40",
 	},
 ] as const;
 
@@ -110,24 +136,55 @@ function SidebarNav({
 		<>
 			{scheduleSettingsTabs.map((tab) => {
 				const Icon = tab.icon;
+				const isActive = activeTab === tab.value;
 				return (
 					<TabsTrigger
 						key={tab.value}
 						value={tab.value}
-						className="group h-auto min-h-12 w-full justify-start rounded-xl border border-transparent px-3 py-2.5 text-left transition-colors data-[state=active]:border-primary/20 data-[state=active]:bg-primary/10 data-[state=active]:text-primary data-[state=active]:shadow-none"
+						className={cn(
+							"group relative h-auto w-full justify-start rounded-xl border px-3 py-2.5 text-left transition-all duration-200 overflow-hidden",
+							"data-[state=inactive]:border-transparent data-[state=inactive]:hover:bg-muted/50 data-[state=inactive]:hover:border-border/50",
+							isActive && `${tab.activeBg} ${tab.activeBorder} shadow-sm`,
+						)}
 					>
-						<div className="flex min-w-0 items-center gap-2.5">
-							<span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-muted text-muted-foreground transition-colors group-data-[state=active]:bg-primary/15 group-data-[state=active]:text-primary">
+						{/* Active indicator bar */}
+						{isActive && (
+							<div
+								className={cn(
+									"absolute left-0 top-2 bottom-2 w-0.5 rounded-full",
+									tab.color.replace("text-", "bg-"),
+								)}
+							/>
+						)}
+						<div className="flex min-w-0 items-center gap-2.5 pl-1">
+							<span
+								className={cn(
+									"flex h-8 w-8 shrink-0 items-center justify-center rounded-lg transition-all duration-200",
+									isActive
+										? `${tab.iconBg} ${tab.color}`
+										: "bg-muted text-muted-foreground group-hover:bg-muted/80",
+								)}
+							>
 								<Icon className="h-3.5 w-3.5" />
 							</span>
-							<span className="min-w-0 space-y-0.5">
-								<span className="block text-sm font-medium leading-none">
+							<span className="min-w-0 flex-1 space-y-0.5">
+								<span
+									className={cn(
+										"block text-sm font-medium leading-none transition-colors",
+										isActive ? tab.color : "",
+									)}
+								>
 									{tab.label}
 								</span>
 								<span className="mt-1 hidden text-[11px] font-normal leading-snug text-muted-foreground lg:block">
 									{tab.description}
 								</span>
 							</span>
+							{isActive && (
+								<ChevronRight
+									className={cn("h-3.5 w-3.5 shrink-0 opacity-60", tab.color)}
+								/>
+							)}
 						</div>
 					</TabsTrigger>
 				);
@@ -160,36 +217,43 @@ export default function ScheduleSettings() {
 
 	const isValidTab = scheduleSettingsTabs.some((t) => t.value === activeTab);
 	const currentTab = isValidTab ? activeTab : "overview";
+	const currentTabMeta = scheduleSettingsTabs.find((t) => t.value === currentTab);
 
 	return (
 		<MainLayout compactPadding>
-			<div className="space-y-4">
+			<div className="space-y-5">
+				{/* Header */}
 				<div className="flex items-center justify-between gap-3">
-					<div className="flex items-center gap-2.5">
+					<div className="flex items-center gap-3">
 						<Link to="/agenda">
 							<Button
 								variant="ghost"
 								size="icon"
-								className="rounded-xl h-9 w-9 shrink-0"
+								className="rounded-xl h-9 w-9 shrink-0 hover:bg-muted/80"
 							>
 								<ArrowLeft className="h-4 w-4" />
 							</Button>
 						</Link>
-						<div className="flex items-center gap-2.5">
-							<div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary">
-								<CalendarClock className="h-4 w-4" />
+						<div className="flex items-center gap-3">
+							<div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-blue-500 to-teal-500 text-white shadow-sm">
+								<CalendarClock className="h-5 w-5" />
 							</div>
 							<div>
-								<h1 className="text-base font-bold leading-none">
+								<h1 className="text-base font-bold leading-none tracking-tight">
 									Configurações da Agenda
 								</h1>
-								<p className="mt-0.5 text-xs text-muted-foreground">
+								<p className="mt-1 text-xs text-muted-foreground">
 									Horários, aparência e políticas
 								</p>
 							</div>
 						</div>
 					</div>
-					<Button asChild variant="outline" size="sm" className="rounded-xl shrink-0">
+					<Button
+						asChild
+						variant="outline"
+						size="sm"
+						className="rounded-xl shrink-0 border-border/60 hover:border-border"
+					>
 						<Link to="/agenda">Ver agenda</Link>
 					</Button>
 				</div>
@@ -197,16 +261,17 @@ export default function ScheduleSettings() {
 				<Tabs
 					value={currentTab}
 					onValueChange={handleTabChange}
-					className="grid gap-4 lg:grid-cols-[14rem_minmax(0,1fr)] lg:items-start"
+					className="grid gap-5 lg:grid-cols-[15rem_minmax(0,1fr)] lg:items-start"
 				>
+					{/* Sidebar navigation */}
 					{isMobile ? (
 						<Sheet open={sheetOpen} onOpenChange={setSheetOpen}>
 							<SheetTrigger asChild>
 								<Button
 									variant="outline"
-									className="w-full justify-between rounded-xl"
+									className="w-full justify-between rounded-xl border-border/60 h-11"
 								>
-									<span className="flex items-center gap-2">
+									<span className="flex items-center gap-2.5">
 										{(() => {
 											const t = scheduleSettingsTabs.find(
 												(tab) => tab.value === currentTab,
@@ -215,7 +280,7 @@ export default function ScheduleSettings() {
 											const Icon = t.icon;
 											return (
 												<>
-													<Icon className="h-4 w-4 text-muted-foreground" />
+													<Icon className={cn("h-4 w-4", t.color)} />
 													<span className="font-medium">{t.label}</span>
 												</>
 											);
@@ -239,7 +304,7 @@ export default function ScheduleSettings() {
 							</SheetContent>
 						</Sheet>
 					) : (
-						<TabsList className="hidden lg:grid h-auto w-full grid-cols-2 gap-1.5 rounded-2xl border bg-background p-1.5 shadow-sm lg:sticky lg:top-4 lg:block lg:space-y-1">
+						<TabsList className="hidden lg:flex lg:flex-col h-auto w-full gap-1 rounded-2xl border bg-card p-2 shadow-sm lg:sticky lg:top-4">
 							<SidebarNav
 								activeTab={currentTab}
 								onTabChange={handleTabChange}
@@ -247,50 +312,87 @@ export default function ScheduleSettings() {
 						</TabsList>
 					)}
 
-					<div className="rounded-2xl border bg-background p-4 shadow-sm min-h-[60vh]">
-						<Suspense fallback={<SettingsLoadingState />}>
-							<TabsContent
-								value="overview"
-								className="mt-0 focus-visible:outline-none"
+					{/* Tab content area */}
+					<div
+						className={cn(
+							"rounded-2xl border bg-card shadow-sm min-h-[60vh] overflow-hidden",
+							currentTabMeta &&
+								`border-t-2 ${currentTabMeta.activeBorder.replace("border-", "border-t-")}`,
+						)}
+					>
+						{/* Content tab indicator bar */}
+						{currentTabMeta && (
+							<div
+								className={cn(
+									"flex items-center gap-2.5 px-6 py-4 border-b bg-card/80",
+								)}
 							>
-								<ScheduleOverviewTab />
-							</TabsContent>
+								<div
+									className={cn(
+										"flex h-8 w-8 items-center justify-center rounded-lg",
+										currentTabMeta.iconBg,
+									)}
+								>
+									<currentTabMeta.icon
+										className={cn("h-4 w-4", currentTabMeta.color)}
+									/>
+								</div>
+								<div>
+									<p className={cn("text-sm font-semibold", currentTabMeta.color)}>
+										{currentTabMeta.label}
+									</p>
+									<p className="text-xs text-muted-foreground">
+										{currentTabMeta.description}
+									</p>
+								</div>
+							</div>
+						)}
 
-							<TabsContent
-								value="schedule"
-								className="mt-0 focus-visible:outline-none"
-							>
-								<ScheduleCapacityHoursTab />
-							</TabsContent>
+						<div className="p-6">
+							<Suspense fallback={<SettingsLoadingState />}>
+								<TabsContent
+									value="overview"
+									className="mt-0 focus-visible:outline-none"
+								>
+									<ScheduleOverviewTab />
+								</TabsContent>
 
-							<TabsContent
-								value="policies"
-								className="mt-0 focus-visible:outline-none"
-							>
-								<SchedulePoliciesTab />
-							</TabsContent>
+								<TabsContent
+									value="schedule"
+									className="mt-0 focus-visible:outline-none"
+								>
+									<ScheduleCapacityHoursTab />
+								</TabsContent>
 
-							<TabsContent
-								value="blocked"
-								className="mt-0 focus-visible:outline-none"
-							>
-								<ScheduleBlockedTab />
-							</TabsContent>
+								<TabsContent
+									value="policies"
+									className="mt-0 focus-visible:outline-none"
+								>
+									<SchedulePoliciesTab />
+								</TabsContent>
 
-							<TabsContent
-								value="visual"
-								className="mt-0 focus-visible:outline-none"
-							>
-								<ScheduleVisualTab />
-							</TabsContent>
+								<TabsContent
+									value="blocked"
+									className="mt-0 focus-visible:outline-none"
+								>
+									<ScheduleBlockedTab />
+								</TabsContent>
 
-							<TabsContent
-								value="accessibility"
-								className="mt-0 focus-visible:outline-none"
-							>
-								<ScheduleAccessibilityTab />
-							</TabsContent>
-						</Suspense>
+								<TabsContent
+									value="visual"
+									className="mt-0 focus-visible:outline-none"
+								>
+									<ScheduleVisualTab />
+								</TabsContent>
+
+								<TabsContent
+									value="accessibility"
+									className="mt-0 focus-visible:outline-none"
+								>
+									<ScheduleAccessibilityTab />
+								</TabsContent>
+							</Suspense>
+						</div>
 					</div>
 				</Tabs>
 			</div>
