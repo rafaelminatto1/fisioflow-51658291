@@ -4,10 +4,9 @@ import { useEvento } from "@/hooks/useEventos";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { ArrowLeft, Calendar, MapPin, DollarSign, Edit } from "lucide-react";
+import { ArrowLeft, Calendar, MapPin, DollarSign, Edit, Users } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { EmptyState, LoadingSkeleton } from "@/components/ui";
-import { PrestadoresTab } from "@/components/eventos/PrestadoresTab";
 import { ChecklistTab } from "@/components/eventos/ChecklistTab";
 import { ParticipantesTab } from "@/components/eventos/ParticipantesTab";
 import { FinanceiroTab } from "@/components/eventos/FinanceiroTab";
@@ -16,6 +15,7 @@ import { EventoFinancialReportButton } from "@/components/eventos/EventoFinancia
 import { SaveAsTemplateButton } from "@/components/eventos/SaveAsTemplateButton";
 import { EditEventoModal } from "@/components/eventos/EditEventoModal";
 import { useState } from "react";
+import { cn } from "@/lib/utils";
 
 const statusColors = {
 	AGENDADO: "bg-blue-500",
@@ -184,6 +184,46 @@ export default function EventoDetalhes() {
 							</p>
 						</CardContent>
 					</Card>
+
+					<Card>
+						<CardHeader className="pb-3">
+							<CardTitle className="text-sm font-medium flex items-center gap-2">
+								<Users className="h-4 w-4" />
+								Equipe (Quórum)
+							</CardTitle>
+						</CardHeader>
+						<CardContent>
+							<div className="flex items-center gap-2">
+								<p className="text-sm font-bold">
+									{evento.colaboradores_confirmados || 0} /{" "}
+									{evento.minimo_colaboradores || 0}
+								</p>
+								{evento.minimo_colaboradores > 0 && (
+									<Badge
+										className={cn(
+											"text-[10px] font-bold",
+											(evento.colaboradores_confirmados || 0) /
+												evento.minimo_colaboradores >=
+												1
+												? "bg-green-500"
+												: (evento.colaboradores_confirmados || 0) /
+														evento.minimo_colaboradores >=
+													0.5
+													? "bg-yellow-500"
+													: "bg-red-500",
+										)}
+									>
+										{Math.round(
+											((evento.colaboradores_confirmados || 0) /
+												evento.minimo_colaboradores) *
+												100,
+										)}
+										%
+									</Badge>
+								)}
+							</div>
+						</CardContent>
+					</Card>
 				</div>
 
 				{/* Descrição */}
@@ -201,13 +241,10 @@ export default function EventoDetalhes() {
 				)}
 
 				{/* Tabs responsivos */}
-				<Tabs defaultValue="prestadores" className="w-full">
-					<TabsList className="grid w-full grid-cols-2 sm:grid-cols-5 h-auto gap-1">
-						<TabsTrigger value="prestadores" className="text-sm">
-							Prestadores
-						</TabsTrigger>
-						<TabsTrigger value="contratados" className="text-sm">
-							Contratados
+				<Tabs defaultValue="colaboradores" className="w-full">
+					<TabsList className="grid w-full grid-cols-2 sm:grid-cols-4 h-auto gap-1">
+						<TabsTrigger value="colaboradores" className="text-sm">
+							Colaboradores
 						</TabsTrigger>
 						<TabsTrigger value="checklist" className="text-sm">
 							Checklist
@@ -220,11 +257,7 @@ export default function EventoDetalhes() {
 						</TabsTrigger>
 					</TabsList>
 
-					<TabsContent value="prestadores">
-						<PrestadoresTab eventoId={id!} />
-					</TabsContent>
-
-					<TabsContent value="contratados">
+					<TabsContent value="colaboradores">
 						<ContratadosTab
 							eventoId={id!}
 							evento={{
