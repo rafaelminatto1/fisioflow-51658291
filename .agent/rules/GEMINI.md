@@ -109,6 +109,7 @@ When auto-applying an agent, inform the user:
 - **Testing**: Mandatory. Pyramid (Unit > Int > E2E) + AAA Pattern.
 - **Performance**: Measure first. Adhere to 2025 standards (Core Web Vitals).
 - **Infra/Safety**: 5-Phase Deployment. Verify secrets security.
+- **Tech Stack Restriction**: NO Firebase, NO Firestore, NO GCloud. This project uses Cloudflare, Neon DB, and Neon Auth EXCLUSIVELY. Do NOT suggest or use Firebase services.
 
 ### 📁 File Dependency Awareness
 
