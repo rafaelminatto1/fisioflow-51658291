@@ -1,37 +1,16 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { SettingsSectionCard } from "@/components/schedule/settings/shared/SettingsSectionCard";
 import { CalendarRange, Globe } from "lucide-react";
+import { useBookingWindow } from "@/hooks/useBookingWindow";
 
-interface BookingWindowState {
+interface BookingWindowLocalState {
 	minAdvanceHours: number;
 	maxAdvanceDays: number;
 	allowSameDay: boolean;
 	sameDayCutoff: string;
 	allowOnlineBooking: boolean;
-}
-
-const STORAGE_KEY = "fisioflow-booking-window";
-
-function loadState(): BookingWindowState {
-	try {
-		const raw = localStorage.getItem(STORAGE_KEY);
-		if (raw) return JSON.parse(raw);
-	} catch {
-		// ignore parse errors, use defaults
-	}
-	return {
-		minAdvanceHours: 24,
-		maxAdvanceDays: 60,
-		allowSameDay: true,
-		sameDayCutoff: "14:00",
-		allowOnlineBooking: true,
-	};
-}
-
-function persist(state: BookingWindowState) {
-	localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
 }
 
 function formatHours(h: number): string {
@@ -42,18 +21,50 @@ function formatHours(h: number): string {
 }
 
 export function BookingWindowSettings() {
-	const [state, setState] = useState<BookingWindowState>(loadState);
+	const { data: remote, save, isSaving } = useBookingWindow();
+
+	const [state, setState] = useState<BookingWindowLocalState>({
+		minAdvanceHours: remote.minAdvanceDays * 24,
+		maxAdvanceDays: remote.maxAdvanceDays,
+		allowSameDay: remote.allowSameDay,
+		sameDayCutoff: "14:00",
+		allowOnlineBooking: remote.allowOnlineBooking,
+	});
+
+	const [dirty, setDirty] = useState(false);
 
 	useEffect(() => {
-		persist(state);
-	}, [state]);
+		if (!dirty) {
+			setState({
+				minAdvanceHours: remote.minAdvanceDays * 24,
+				maxAdvanceDays: remote.maxAdvanceDays,
+				allowSameDay: remote.allowSameDay,
+				sameDayCutoff: "14:00",
+				allowOnlineBooking: remote.allowOnlineBooking,
+			});
+		}
+	}, [remote, dirty]);
 
-	const update = <K extends keyof BookingWindowState>(
-		key: K,
-		value: BookingWindowState[K],
-	) => {
-		setState((prev) => ({ ...prev, [key]: value }));
-	};
+	const update = useCallback(
+		<K extends keyof BookingWindowLocalState>(
+			key: K,
+			value: BookingWindowLocalState[K],
+		) => {
+			setState((prev) => ({ ...prev, [key]: value }));
+			setDirty(true);
+		},
+		[],
+	);
+
+	const handleSave = useCallback(() => {
+		save({
+			minAdvanceDays: Math.round(state.minAdvanceHours / 24),
+			maxAdvanceDays: state.maxAdvanceDays,
+			allowSameDay: state.allowSameDay,
+			allowOnlineBooking: state.allowOnlineBooking,
+		});
+		setDirty(false);
+	}, [state, save]);
 
 	return (
 		<SettingsSectionCard
@@ -158,6 +169,19 @@ export function BookingWindowSettings() {
 						/>
 					</div>
 				</div>
+
+				{dirty && (
+					<div className="flex justify-end pt-2">
+						<button
+							type="button"
+							onClick={handleSave}
+							disabled={isSaving}
+							className="px-4 py-2 text-sm font-medium rounded-lg bg-indigo-600 text-white hover:bg-indigo-700 disabled:opacity-50 transition-colors"
+						>
+							{isSaving ? "Salvando..." : "Salvar alterações"}
+						</button>
+					</div>
+				)}
 			</div>
 		</SettingsSectionCard>
 	);

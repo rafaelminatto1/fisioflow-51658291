@@ -81,6 +81,42 @@ export interface ScheduleCapacityConfig {
 	updated_at?: string;
 }
 
+export interface ScheduleAppointmentType {
+	id: string;
+	organization_id?: string;
+	name: string;
+	duration_minutes: number;
+	buffer_before_minutes: number;
+	buffer_after_minutes: number;
+	color: string;
+	max_per_day: number | null;
+	is_active: boolean;
+	is_default: boolean;
+	sort_order: number;
+	created_at?: string;
+	updated_at?: string;
+}
+
+export interface ScheduleBookingWindow {
+	id: string;
+	organization_id?: string;
+	min_advance_days: number;
+	max_advance_days: number;
+	same_day_booking: boolean;
+	online_booking: boolean;
+	created_at?: string;
+	updated_at?: string;
+}
+
+export interface ScheduleSlotConfig {
+	id: string;
+	organization_id?: string;
+	slot_interval_minutes: number;
+	alignment_type: string;
+	created_at?: string;
+	updated_at?: string;
+}
+
 export interface WaitlistEntry {
 	id: string;
 	patient_id: string;
@@ -310,6 +346,63 @@ export const schedulingApi = {
 		occurrences: (id: string) =>
 			request<{ data: Array<Record<string, unknown>> }>(
 				`/api/scheduling/recurring-series/${encodeURIComponent(id)}/occurrences`,
+			),
+	},
+	appointmentTypes: {
+		list: () =>
+			request<{ data: ScheduleAppointmentType[] }>(
+				"/api/scheduling/appointment-types",
+			),
+		create: (data: Record<string, unknown>) =>
+			request<{ data: ScheduleAppointmentType }>(
+				"/api/scheduling/appointment-types",
+				{
+					method: "POST",
+					body: JSON.stringify(data),
+				},
+			),
+		update: (id: string, data: Record<string, unknown>) =>
+			request<{ data: ScheduleAppointmentType }>(
+				`/api/scheduling/appointment-types/${encodeURIComponent(id)}`,
+				{
+					method: "PUT",
+					body: JSON.stringify(data),
+				},
+			),
+		delete: (id: string) =>
+			request<{ ok?: boolean; success?: boolean }>(
+				`/api/scheduling/appointment-types/${encodeURIComponent(id)}`,
+				{
+					method: "DELETE",
+				},
+			),
+	},
+	bookingWindow: {
+		get: () =>
+			request<{ data: ScheduleBookingWindow | null }>(
+				"/api/scheduling/settings/booking-window",
+			),
+		upsert: (data: Record<string, unknown>) =>
+			request<{ data: ScheduleBookingWindow }>(
+				"/api/scheduling/settings/booking-window",
+				{
+					method: "PUT",
+					body: JSON.stringify(data),
+				},
+			),
+	},
+	slotConfig: {
+		get: () =>
+			request<{ data: ScheduleSlotConfig | null }>(
+				"/api/scheduling/settings/slot-config",
+			),
+		upsert: (data: Record<string, unknown>) =>
+			request<{ data: ScheduleSlotConfig }>(
+				"/api/scheduling/settings/slot-config",
+				{
+					method: "PUT",
+					body: JSON.stringify(data),
+				},
 			),
 	},
 };
