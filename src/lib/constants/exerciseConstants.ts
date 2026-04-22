@@ -352,3 +352,80 @@ export const FILTER_PRESETS = [
 		},
 	},
 ] as const;
+
+// ============================================
+// PATHOLOGIES (Patologias para indicação/contraindicação)
+// ============================================
+export const COMMON_PATHOLOGIES = [
+	// Musculoesqueléticas
+	{ value: "Artrose", label: "Artrose (OA)", category: "Musculoesquelética" },
+	{ value: "Lombalgia", label: "Lombalgia", category: "Musculoesquelética" },
+	{ value: "Cervicalgia", label: "Cervicalgia", category: "Musculoesquelética" },
+	{ value: "Hérnia de Disco", label: "Hérnia de Disco", category: "Musculoesquelética" },
+	{ value: "Espondilolistese", label: "Espondilolistese", category: "Musculoesquelética" },
+	{ value: "Estenose Lombar", label: "Estenose Lombar", category: "Musculoesquelética" },
+	{ value: "Escoliose", label: "Escoliose", category: "Musculoesquelética" },
+	{ value: "Osteoporose", label: "Osteoporose", category: "Musculoesquelética" },
+	{ value: "Fibromialgia", label: "Fibromialgia", category: "Musculoesquelética" },
+	// Tendões e Ligamentos
+	{ value: "Tendinopatia", label: "Tendinopatia", category: "Tendão/Ligamento" },
+	{ value: "Tendinopatia Patelar", label: "Tendinopatia Patelar", category: "Tendão/Ligamento" },
+	{ value: "Tendinopatia do Aquiles", label: "Tendinopatia do Aquiles", category: "Tendão/Ligamento" },
+	{ value: "Epicondilite Lateral", label: "Epicondilite Lateral", category: "Tendão/Ligamento" },
+	{ value: "Epicondilite Medial", label: "Epicondilite Medial", category: "Tendão/Ligamento" },
+	{ value: "Lesão de LCA", label: "Lesão de LCA", category: "Tendão/Ligamento" },
+	{ value: "Lesão de Menisco", label: "Lesão de Menisco", category: "Tendão/Ligamento" },
+	{ value: "Instabilidade de Ombro", label: "Instabilidade de Ombro", category: "Tendão/Ligamento" },
+	{ value: "Lesão de Manguito Rotador", label: "Lesão de Manguito Rotador", category: "Tendão/Ligamento" },
+	// Articulares
+	{ value: "Síndrome do Impacto", label: "Síndrome do Impacto", category: "Articular" },
+	{ value: "Síndrome Femoropatelar", label: "Síndrome Femoropatelar", category: "Articular" },
+	{ value: "Capsulite Adesiva", label: "Capsulite Adesiva (Ombro Congelado)", category: "Articular" },
+	{ value: "Bursite", label: "Bursite", category: "Articular" },
+	{ value: "Entorse de Tornozelo", label: "Entorse de Tornozelo", category: "Articular" },
+	{ value: "Fascite Plantar", label: "Fascite Plantar", category: "Articular" },
+	// Neurológicas
+	{ value: "Ciática", label: "Ciática / Lombociatalgia", category: "Neurológica" },
+	{ value: "Síndrome do Túnel do Carpo", label: "Síndrome do Túnel do Carpo", category: "Neurológica" },
+	{ value: "Cervicobracialgia", label: "Cervicobracialgia", category: "Neurológica" },
+	// Pós-cirúrgicas
+	{ value: "Pós-Operatório LCA", label: "Pós-Op LCA", category: "Pós-Operatória" },
+	{ value: "Pós-Artroplastia Joelho", label: "Pós-Artroplastia Joelho (PTJ)", category: "Pós-Operatória" },
+	{ value: "Pós-Artroplastia Quadril", label: "Pós-Artroplastia Quadril (PTQ)", category: "Pós-Operatória" },
+	{ value: "Pós-Artroscopia", label: "Pós-Artroscopia", category: "Pós-Operatória" },
+	{ value: "Pós-Cirurgia de Ombro", label: "Pós-Cirurgia de Ombro", category: "Pós-Operatória" },
+	// Gerais
+	{ value: "Fratura Recente", label: "Fratura Recente", category: "Geral" },
+	{ value: "Hipertensão", label: "Hipertensão Arterial", category: "Geral" },
+	{ value: "Cardiopatia", label: "Cardiopatia", category: "Geral" },
+	{ value: "Gestante", label: "Gestante", category: "Geral" },
+	{ value: "Idoso Frágil", label: "Idoso Frágil", category: "Geral" },
+] as const;
+
+// ============================================
+// PRECAUTION LEVELS (Níveis de Precaução)
+// ============================================
+export const PRECAUTION_LEVELS = [
+	{ value: "safe", label: "Seguro", color: "emerald", description: "Baixo risco, pode ser executado sem supervisão direta" },
+	{ value: "supervised", label: "Requer Supervisão", color: "amber", description: "Risco moderado, recomenda-se supervisão profissional" },
+	{ value: "restricted", label: "Restrito", color: "rose", description: "Alto risco, apenas sob supervisão profissional direta" },
+] as const;
+
+// ============================================
+// EVIDENCE LEVELS (Níveis de Evidência)
+// ============================================
+export const EVIDENCE_LEVELS = [
+	{ value: "CPG", label: "Diretriz Clínica (CPG)", color: "emerald" },
+	{ value: "SystematicReview", label: "Revisão Sistemática", color: "blue" },
+	{ value: "RCT", label: "Ensaio Clínico (RCT)", color: "cyan" },
+	{ value: "Consensus", label: "Consenso", color: "amber" },
+	{ value: "ExpertOpinion", label: "Opinião de Especialista", color: "slate" },
+] as const;
+
+// Helper functions for new constants
+export const getPathologyOptions = () =>
+	COMMON_PATHOLOGIES.map((p) => ({ value: p.value, label: p.label, category: p.category }));
+export const getPrecautionOptions = () =>
+	PRECAUTION_LEVELS.map((p) => ({ value: p.value, label: p.label }));
+export const getEvidenceLevelOptions = () =>
+	EVIDENCE_LEVELS.map((e) => ({ value: e.value, label: e.label }));

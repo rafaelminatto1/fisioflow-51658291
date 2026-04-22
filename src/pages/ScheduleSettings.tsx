@@ -127,7 +127,7 @@ type TabValue = (typeof scheduleSettingsTabs)[number]["value"];
 
 function SidebarNav({
 	activeTab,
-	onTabChange,
+	onTabChange: _onTabChange,
 }: {
 	activeTab: TabValue;
 	onTabChange: (v: TabValue) => void;

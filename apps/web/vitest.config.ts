@@ -86,6 +86,7 @@ export default defineConfig({
       'test-start-attendance.spec.ts',
       'src/lib/a11y/__tests__/index.test.ts',
       'apps/professional-app/__tests__/Neon-security-rules.test.ts',
+      'validate-agenda.spec.ts',
     ],
 
     // Test timeouts
@@ -141,8 +142,8 @@ export default defineConfig({
   },
 
   resolve: {
+    tsconfigPaths: true,
     alias: {
-      '@': path.resolve(repoRoot, 'src'),
       '@fisioflow/ui': path.resolve(repoRoot, 'packages/ui/src'),
       '@fisioflow/core': path.resolve(repoRoot, 'packages/core/src'),
       '@fisioflow/config': path.resolve(repoRoot, 'packages/config/src'),

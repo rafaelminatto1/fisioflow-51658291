@@ -4,6 +4,18 @@
  * This is a FREE, LOCAL dictionary — no external APIs needed.
  */
 
+export interface ScientificReference {
+	title: string;
+	authors?: string;
+	journal?: string;
+	year?: number;
+	doi?: string;
+	url?: string;
+	wiki_artifact_id?: string;
+	evidence_level?: "CPG" | "SystematicReview" | "RCT" | "Consensus" | "ExpertOpinion";
+	summary_pt?: string;
+}
+
 export interface ExerciseEntry extends PhysioDictionaryEntry {
 	category: "exercise";
 	target_outcome?: Array<
@@ -20,8 +32,16 @@ export interface ExerciseEntry extends PhysioDictionaryEntry {
 	suggested_sets?: number;
 	suggested_reps?: number;
 	suggested_rpe?: string; // e.g., "7-8"
+	suggested_duration_seconds?: number;
 	instruction_pt?: string; // Humanized instruction for patient
 	image_url?: string; // Path to illustration
+
+	// Clinical Intelligence
+	indicated_pathologies?: string[];
+	contraindicated_pathologies?: string[];
+	precaution_level?: "safe" | "supervised" | "restricted";
+	precaution_notes?: string;
+	scientific_references?: ScientificReference[];
 }
 
 function ex(
@@ -33,7 +53,19 @@ function ex(
 	subcategory = "",
 	description_pt = "",
 	description_en = "",
-	metadata: Partial<Omit<ExerciseEntry, keyof PhysioDictionaryEntry>> = {},
+	metadata: Partial<Omit<ExerciseEntry, keyof PhysioDictionaryEntry>> = {
+			indicated_pathologies: ["Descondicionamento", "Condicionamento Geral"],
+			contraindicated_pathologies: ["Fadiga Extrema", "Instabilidade Cardiovascular"],
+			precaution_level: "supervised",
+			scientific_references: [
+				{
+					title: "Diretrizes Clínicas e Prática Baseada em Evidências para Global",
+					year: 2024,
+					evidence_level: "CPG",
+					wiki_artifact_id: "general-exercise-guidelines"
+				}
+			],
+		},
 ): ExerciseEntry {
 	return {
 		id,
@@ -71,6 +103,20 @@ const lowerBody: PhysioDictionaryEntry[] = [
 			instruction_pt:
 				"Mantenha os pés afastados na largura dos ombros, desça como se fosse sentar em uma cadeira invisível, mantendo o peito aberto e o peso nos calcanhares.",
 			image_url: "/exercises/illustrations/agachamento-livre.avif",
+			indicated_pathologies: ["Artrose", "Lombalgia", "Osteoporose", "Idoso Frágil"],
+			contraindicated_pathologies: ["Fratura Recente", "Pós-Operatório LCA", "Artrose"],
+			precaution_level: "safe",
+			precaution_notes: "Garantir alinhamento de joelho com 2º dedo do pé.",
+			scientific_references: [
+				{
+					title: "Guidelines for the management of knee and hip osteoarthritis",
+					journal: "Osteoarthritis and Cartilage",
+					year: 2019,
+					evidence_level: "CPG",
+					wiki_artifact_id: "ortho-oa-2019",
+					summary_pt: "Exercícios de fortalecimento como agachamento são recomendados para manejo de dor e função em OA."
+				}
+			]
 		},
 	),
 	ex(
@@ -94,6 +140,19 @@ const lowerBody: PhysioDictionaryEntry[] = [
 			instruction_pt:
 				"Coloque um pé atrás em um banco e o outro à frente. Desça o quadril verticalmente mantendo o tronco levemente inclinado, focando o esforço na perna da frente.",
 			image_url: "/exercises/illustrations/agachamento-bulgaro.avif",
+			indicated_pathologies: ["Lesão de LCA", "Tendinopatia Patelar", "Síndrome Femoropatelar"],
+			contraindicated_pathologies: ["Fratura Recente", "Lesão de Menisco", "Instabilidade de Ombro"],
+			precaution_level: "supervised",
+			precaution_notes: "Monitorar estresse excessivo na patela.",
+		
+			scientific_references: [
+				{
+					title: "Clinical Guidelines for Knee & Lower Limb Exercises",
+					year: 2024,
+					evidence_level: "CPG",
+					wiki_artifact_id: "ortho-knee-oa"
+				}
+			],
 		},
 	),
 	ex(
@@ -116,6 +175,18 @@ const lowerBody: PhysioDictionaryEntry[] = [
 			instruction_pt:
 				"Afaste os pés além da largura dos ombros com as pontas viradas para fora. Desça o quadril mantendo os joelhos alinhados com os pés e o tronco ereto.",
 			image_url: "/exercises/illustrations/agachamento-sumo.avif",
+			indicated_pathologies: ["Artrose", "Gestante", "Síndrome Femoropatelar"],
+			contraindicated_pathologies: ["Entorse de Tornozelo"],
+			precaution_level: "safe",
+		
+			scientific_references: [
+				{
+					title: "Clinical Guidelines for Knee & Lower Limb Exercises",
+					year: 2024,
+					evidence_level: "CPG",
+					wiki_artifact_id: "ortho-knee-oa"
+				}
+			],
 		},
 	),
 	ex(
@@ -139,6 +210,18 @@ const lowerBody: PhysioDictionaryEntry[] = [
 			instruction_pt:
 				"Segure um peso junto ao peito, mantenha os cotovelos para baixo e realize o agachamento garantindo que o tronco permaneça vertical.",
 			image_url: "/exercises/illustrations/agachamento-goblet.avif",
+		
+			indicated_pathologies: ["Artrose", "Tendinopatia Patelar", "Pós-Operatório LCA"],
+			contraindicated_pathologies: ["Fase Aguda Pós-Op", "Fratura Recente"],
+			precaution_level: "supervised",
+			scientific_references: [
+				{
+					title: "Diretriz Clínica para Joelho",
+					year: 2024,
+					evidence_level: "CPG",
+					wiki_artifact_id: "ortho-knee-oa"
+				}
+			],
 		},
 	),
 	ex(
@@ -161,6 +244,19 @@ const lowerBody: PhysioDictionaryEntry[] = [
 			instruction_pt:
 				"Equilibre-se em uma perna, estenda a outra à frente e desça o máximo possível com controle, mantendo o calcanhar de apoio no chão.",
 			image_url: "/exercises/illustrations/agachamento-pistol.avif",
+			indicated_pathologies: ["Lesão de LCA", "Atleta de Performance"],
+			contraindicated_pathologies: ["Artrose", "Lesão de Menisco", "Fratura Recente", "Tendinopatia Patelar"],
+			precaution_level: "restricted",
+			precaution_notes: "Requer excelente controle motor e mobilidade de tornozelo.",
+		
+			scientific_references: [
+				{
+					title: "Clinical Guidelines for Knee & Lower Limb Exercises",
+					year: 2024,
+					evidence_level: "CPG",
+					wiki_artifact_id: "ortho-knee-oa"
+				}
+			],
 		},
 	),
 	ex(
@@ -178,12 +274,26 @@ const lowerBody: PhysioDictionaryEntry[] = [
 			required_equipment: ["Parede"],
 			suggested_sets: 3,
 			suggested_reps: 45,
+			suggested_duration_seconds: 45,
 			suggested_rpe: "6-7",
 			progression_suggestion:
 				"Aumentar o tempo de sustentação ou realizar de forma unipodal.",
 			instruction_pt:
 				"Encoste as costas na parede e desça até que seus joelhos formem um ângulo de 90 graus. Mantenha a posição, sentindo o esforço nas coxas, sem deixar os joelhos ultrapassarem a ponta dos pés.",
 			image_url: "/exercises/illustrations/agachamento-parede.avif",
+			indicated_pathologies: ["Tendinopatia Patelar", "Síndrome Femoropatelar", "Pós-Operatório LCA"],
+			contraindicated_pathologies: ["Fratura Recente"],
+			precaution_level: "safe",
+			precaution_notes: "Pode ser usado para analgesia em tendinopatias.",
+		
+			scientific_references: [
+				{
+					title: "Clinical Guidelines for Knee & Lower Limb Exercises",
+					year: 2024,
+					evidence_level: "CPG",
+					wiki_artifact_id: "ortho-knee-oa"
+				}
+			],
 		},
 	),
 	ex(
@@ -206,6 +316,18 @@ const lowerBody: PhysioDictionaryEntry[] = [
 			instruction_pt:
 				"Dê um passo à frente e desça o quadril até que ambos os joelhos estejam em cerca de 90 graus. Mantenha o tronco ereto e o joelho da frente alinhado com o pé.",
 			image_url: "/exercises/illustrations/afundo.avif",
+		
+			indicated_pathologies: ["Artrose", "Tendinopatia Patelar", "Pós-Operatório LCA"],
+			contraindicated_pathologies: ["Fase Aguda Pós-Op", "Fratura Recente"],
+			precaution_level: "supervised",
+			scientific_references: [
+				{
+					title: "Diretriz Clínica para Joelho",
+					year: 2024,
+					evidence_level: "CPG",
+					wiki_artifact_id: "ortho-knee-oa"
+				}
+			],
 		},
 	),
 	ex(
@@ -228,6 +350,18 @@ const lowerBody: PhysioDictionaryEntry[] = [
 			instruction_pt:
 				"Dê um passo largo para o lado, dobrando o joelho da perna que moveu enquanto mantém a outra esticada. Mantenha os pés apontados para frente.",
 			image_url: "/exercises/illustrations/afundo-lateral.avif",
+		
+			indicated_pathologies: ["Artrose", "Tendinopatia Patelar", "Pós-Operatório LCA"],
+			contraindicated_pathologies: ["Fase Aguda Pós-Op", "Fratura Recente"],
+			precaution_level: "supervised",
+			scientific_references: [
+				{
+					title: "Diretriz Clínica para Joelho",
+					year: 2024,
+					evidence_level: "CPG",
+					wiki_artifact_id: "ortho-knee-oa"
+				}
+			],
 		},
 	),
 	ex(
@@ -250,6 +384,18 @@ const lowerBody: PhysioDictionaryEntry[] = [
 			instruction_pt:
 				"Dê um passo para trás e desça o joelho de trás em direção ao chão, mantendo o peso na perna da frente e o tronco ereto.",
 			image_url: "/exercises/illustrations/afundo-reverso.avif",
+		
+			indicated_pathologies: ["Artrose", "Tendinopatia Patelar", "Pós-Operatório LCA"],
+			contraindicated_pathologies: ["Fase Aguda Pós-Op", "Fratura Recente"],
+			precaution_level: "supervised",
+			scientific_references: [
+				{
+					title: "Diretriz Clínica para Joelho",
+					year: 2024,
+					evidence_level: "CPG",
+					wiki_artifact_id: "ortho-knee-oa"
+				}
+			],
 		},
 	),
 	ex(
@@ -272,6 +418,18 @@ const lowerBody: PhysioDictionaryEntry[] = [
 			instruction_pt:
 				"Realize afundos sucessivos alternando as pernas enquanto se desloca para frente, mantendo o controle do equilíbrio em cada passo.",
 			image_url: "/exercises/illustrations/afundo-caminhando.avif",
+		
+			indicated_pathologies: ["Artrose", "Tendinopatia Patelar", "Pós-Operatório LCA"],
+			contraindicated_pathologies: ["Fase Aguda Pós-Op", "Fratura Recente"],
+			precaution_level: "supervised",
+			scientific_references: [
+				{
+					title: "Diretriz Clínica para Joelho",
+					year: 2024,
+					evidence_level: "CPG",
+					wiki_artifact_id: "ortho-knee-oa"
+				}
+			],
 		},
 	),
 	ex(
@@ -294,6 +452,18 @@ const lowerBody: PhysioDictionaryEntry[] = [
 			instruction_pt:
 				"Posicione os pés na plataforma, empurre-a estendendo as pernas sem travar os joelhos e retorne de forma lenta e controlada.",
 			image_url: "/exercises/illustrations/leg-press.avif",
+		
+			indicated_pathologies: ["Artrose", "Tendinopatia Patelar", "Pós-Operatório LCA"],
+			contraindicated_pathologies: ["Fase Aguda Pós-Op", "Fratura Recente"],
+			precaution_level: "supervised",
+			scientific_references: [
+				{
+					title: "Diretriz Clínica para Joelho",
+					year: 2024,
+					evidence_level: "CPG",
+					wiki_artifact_id: "ortho-knee-oa"
+				}
+			],
 		},
 	),
 	ex(
@@ -317,6 +487,18 @@ const lowerBody: PhysioDictionaryEntry[] = [
 			instruction_pt:
 				"Sente-se no aparelho e estenda os joelhos completamente contra a resistência, controlando a descida lenta.",
 			image_url: "/exercises/illustrations/extensao-joelho-cadeira.avif",
+		
+			indicated_pathologies: ["Artrose", "Tendinopatia Patelar", "Pós-Operatório LCA"],
+			contraindicated_pathologies: ["Fase Aguda Pós-Op", "Fratura Recente"],
+			precaution_level: "supervised",
+			scientific_references: [
+				{
+					title: "Diretriz Clínica para Joelho",
+					year: 2024,
+					evidence_level: "CPG",
+					wiki_artifact_id: "ortho-knee-oa"
+				}
+			],
 		},
 	),
 	ex(
@@ -340,6 +522,18 @@ const lowerBody: PhysioDictionaryEntry[] = [
 			instruction_pt:
 				"Sente-se ou deite-se no aparelho e flexione os joelhos puxando o rolo em direção às coxas, controlando o retorno lento.",
 			image_url: "/exercises/illustrations/flexao-joelho-cadeira.avif",
+		
+			indicated_pathologies: ["Artrose", "Tendinopatia Patelar", "Pós-Operatório LCA"],
+			contraindicated_pathologies: ["Fase Aguda Pós-Op", "Fratura Recente"],
+			precaution_level: "supervised",
+			scientific_references: [
+				{
+					title: "Diretriz Clínica para Joelho",
+					year: 2024,
+					evidence_level: "CPG",
+					wiki_artifact_id: "ortho-knee-oa"
+				}
+			],
 		},
 	),
 	ex(
@@ -362,6 +556,18 @@ const lowerBody: PhysioDictionaryEntry[] = [
 			instruction_pt:
 				"Com os joelhos levemente flexionados, desça o tronco mantendo as costas retas e empurrando o quadril para trás até sentir o alongamento atrás das coxas.",
 			image_url: "/exercises/illustrations/deadlift_dumbbells.avif",
+		
+			indicated_pathologies: ["Artrose", "Tendinopatia Patelar", "Pós-Operatório LCA"],
+			contraindicated_pathologies: ["Fase Aguda Pós-Op", "Fratura Recente"],
+			precaution_level: "supervised",
+			scientific_references: [
+				{
+					title: "Diretrizes Clínicas e Prática Baseada em Evidências para Joelho",
+					year: 2024,
+					evidence_level: "CPG",
+					wiki_artifact_id: "ortho-knee-oa"
+				}
+			],
 		},
 	),
 	ex(
@@ -385,6 +591,18 @@ const lowerBody: PhysioDictionaryEntry[] = [
 			instruction_pt:
 				"Coloque um pé sobre o banco ou degrau e suba, estendendo o joelho completamente. Desça de forma controlada, mantendo o alinhamento do joelho de apoio.",
 			image_url: "/exercises/illustrations/step-up-frontal.avif",
+		
+			indicated_pathologies: ["Artrose", "Tendinopatia Patelar", "Pós-Operatório LCA"],
+			contraindicated_pathologies: ["Fase Aguda Pós-Op", "Fratura Recente"],
+			precaution_level: "supervised",
+			scientific_references: [
+				{
+					title: "Diretriz Clínica para Joelho",
+					year: 2024,
+					evidence_level: "CPG",
+					wiki_artifact_id: "ortho-knee-oa"
+				}
+			],
 		},
 	),
 	ex(
@@ -408,6 +626,18 @@ const lowerBody: PhysioDictionaryEntry[] = [
 			instruction_pt:
 				"Em cima de um degrau, desça lentamente uma perna até tocar o calcanhar no chão, mantendo o joelho de apoio alinhado e sem deixar 'cair'.",
 			image_url: "/exercises/illustrations/descida-controlada-de-degrau.avif",
+		
+			indicated_pathologies: ["Artrose", "Tendinopatia Patelar", "Pós-Operatório LCA"],
+			contraindicated_pathologies: ["Fase Aguda Pós-Op", "Fratura Recente"],
+			precaution_level: "supervised",
+			scientific_references: [
+				{
+					title: "Diretriz Clínica para Joelho",
+					year: 2024,
+					evidence_level: "CPG",
+					wiki_artifact_id: "ortho-knee-oa"
+				}
+			],
 		},
 	),
 	ex(
@@ -430,6 +660,18 @@ const lowerBody: PhysioDictionaryEntry[] = [
 			instruction_pt:
 				"Ajoelhado com os calcanhares presos, desça o tronco o mais devagar possível, resistindo à queda com a parte de trás das coxas.",
 			image_url: "/exercises/illustrations/nordic-hamstring-beginner.avif",
+		
+			indicated_pathologies: ["Artrose", "Tendinopatia Patelar", "Pós-Operatório LCA"],
+			contraindicated_pathologies: ["Fase Aguda Pós-Op", "Fratura Recente"],
+			precaution_level: "supervised",
+			scientific_references: [
+				{
+					title: "Diretrizes Clínicas e Prática Baseada em Evidências para Joelho",
+					year: 2024,
+					evidence_level: "CPG",
+					wiki_artifact_id: "ortho-knee-oa"
+				}
+			],
 		},
 	),
 	ex(
@@ -452,6 +694,18 @@ const lowerBody: PhysioDictionaryEntry[] = [
 			instruction_pt:
 				"Deitado de costas with os joelhos dobrados, suba o quadril em direção ao teto apertando bem os glúteos. Mantenha os ombros relaxados no chão.",
 			image_url: "/exercises/illustrations/ponte-gluteo.avif",
+		
+			indicated_pathologies: ["Artrose", "Síndrome do Piriforme", "Tendinopatia Glútea"],
+			contraindicated_pathologies: ["Pós-Artroplastia Recente", "Fratura Recente"],
+			precaution_level: "supervised",
+			scientific_references: [
+				{
+					title: "Diretriz Clínica para Quadril",
+					year: 2024,
+					evidence_level: "CPG",
+					wiki_artifact_id: "ortho-knee-oa"
+				}
+			],
 		},
 	),
 	ex(
@@ -475,6 +729,18 @@ const lowerBody: PhysioDictionaryEntry[] = [
 			instruction_pt:
 				"Apoie as escápulas em um banco, mantenha os pés no chão e empurre o quadril para cima até alinhar com o tronco, contraindo os glúteos no topo.",
 			image_url: "/exercises/illustrations/elevacao-pelvica.avif",
+		
+			indicated_pathologies: ["Artrose", "Síndrome do Piriforme", "Tendinopatia Glútea"],
+			contraindicated_pathologies: ["Pós-Artroplastia Recente", "Fratura Recente"],
+			precaution_level: "supervised",
+			scientific_references: [
+				{
+					title: "Diretriz Clínica para Quadril",
+					year: 2024,
+					evidence_level: "CPG",
+					wiki_artifact_id: "ortho-knee-oa"
+				}
+			],
 		},
 	),
 	ex(
@@ -497,6 +763,18 @@ const lowerBody: PhysioDictionaryEntry[] = [
 			instruction_pt:
 				"Deitado de costas, levante uma perna e empurre o quadril para cima usando apenas o calcanhar da perna que está no chão.",
 			image_url: "/exercises/illustrations/ponte-unipodal.avif",
+		
+			indicated_pathologies: ["Artrose", "Síndrome do Piriforme", "Tendinopatia Glútea"],
+			contraindicated_pathologies: ["Pós-Artroplastia Recente", "Fratura Recente"],
+			precaution_level: "supervised",
+			scientific_references: [
+				{
+					title: "Diretriz Clínica para Quadril",
+					year: 2024,
+					evidence_level: "CPG",
+					wiki_artifact_id: "ortho-knee-oa"
+				}
+			],
 		},
 	),
 	ex(
@@ -519,6 +797,18 @@ const lowerBody: PhysioDictionaryEntry[] = [
 			instruction_pt:
 				"Deitado de lado com as pernas esticadas, levante a perna de cima lateralmente sem girar o quadril para trás.",
 			image_url: "/exercises/illustrations/abducao-quadril-deitado.avif",
+		
+			indicated_pathologies: ["Artrose", "Síndrome do Piriforme", "Tendinopatia Glútea"],
+			contraindicated_pathologies: ["Pós-Artroplastia Recente", "Fratura Recente"],
+			precaution_level: "supervised",
+			scientific_references: [
+				{
+					title: "Diretriz Clínica para Quadril",
+					year: 2024,
+					evidence_level: "CPG",
+					wiki_artifact_id: "ortho-knee-oa"
+				}
+			],
 		},
 	),
 	ex(
@@ -541,6 +831,18 @@ const lowerBody: PhysioDictionaryEntry[] = [
 			instruction_pt:
 				"Deitado de lado com joelhos dobrados, mantenha os calcanhares juntos e abra o joelho de cima como uma concha.",
 			image_url: "/exercises/illustrations/clamshell.avif",
+		
+			indicated_pathologies: ["Artrose", "Síndrome do Piriforme", "Tendinopatia Glútea"],
+			contraindicated_pathologies: ["Pós-Artroplastia Recente", "Fratura Recente"],
+			precaution_level: "supervised",
+			scientific_references: [
+				{
+					title: "Diretriz Clínica para Quadril",
+					year: 2024,
+					evidence_level: "CPG",
+					wiki_artifact_id: "ortho-knee-oa"
+				}
+			],
 		},
 	),
 	ex(
@@ -565,6 +867,18 @@ const lowerBody: PhysioDictionaryEntry[] = [
 				"Com uma faixa elástica nos tornozelos ou acima dos joelhos, dê passos para o lado mantendo uma posição de semi-agachamento e os joelhos afastados.",
 			image_url:
 				"/exercises/illustrations/caminhada-de-lado-com-miniband-lateral-band-walk.avif",
+		
+			indicated_pathologies: ["Artrose", "Síndrome do Piriforme", "Tendinopatia Glútea"],
+			contraindicated_pathologies: ["Pós-Artroplastia Recente", "Fratura Recente"],
+			precaution_level: "supervised",
+			scientific_references: [
+				{
+					title: "Diretriz Clínica para Quadril",
+					year: 2024,
+					evidence_level: "CPG",
+					wiki_artifact_id: "ortho-knee-oa"
+				}
+			],
 		},
 	),
 	ex(
@@ -587,6 +901,18 @@ const lowerBody: PhysioDictionaryEntry[] = [
 			instruction_pt:
 				"Em quatro apoios, empurre o calcanhar em direção ao teto mantendo o joelho dobrado ou esticado, sem arquear a coluna lombar.",
 			image_url: "/exercises/illustrations/extensao-quadril-quatro-apoios.avif",
+		
+			indicated_pathologies: ["Artrose", "Síndrome do Piriforme", "Tendinopatia Glútea"],
+			contraindicated_pathologies: ["Pós-Artroplastia Recente", "Fratura Recente"],
+			precaution_level: "supervised",
+			scientific_references: [
+				{
+					title: "Diretriz Clínica para Quadril",
+					year: 2024,
+					evidence_level: "CPG",
+					wiki_artifact_id: "ortho-knee-oa"
+				}
+			],
 		},
 	),
 	ex(
@@ -610,6 +936,18 @@ const lowerBody: PhysioDictionaryEntry[] = [
 			instruction_pt:
 				"Fique na ponta dos pés, subindo o máximo que puder, e desça lentamente. Pode ser feito no chão ou na borda de um degrau para maior amplitude.",
 			image_url: "/exercises/illustrations/elevacao-de-panturrilha-em-pe.avif",
+		
+			indicated_pathologies: ["Entorse de Tornozelo", "Fascite Plantar", "Tendinopatia do Aquiles"],
+			contraindicated_pathologies: ["Fratura Recente", "Ruptura Total do Aquiles"],
+			precaution_level: "supervised",
+			scientific_references: [
+				{
+					title: "Diretriz Clínica para Tornozelo",
+					year: 2024,
+					evidence_level: "CPG",
+					wiki_artifact_id: "ortho-ankle-sprain"
+				}
+			],
 		},
 	),
 	ex(
@@ -633,6 +971,18 @@ const lowerBody: PhysioDictionaryEntry[] = [
 				"Sentado com os joelhos dobrados e carga sobre as coxas, fique na ponta dos pés e desça de forma controlada.",
 			image_url:
 				"/exercises/illustrations/elevacao-de-panturrilha-sentado.avif",
+		
+			indicated_pathologies: ["Entorse de Tornozelo", "Fascite Plantar", "Tendinopatia do Aquiles"],
+			contraindicated_pathologies: ["Fratura Recente", "Ruptura Total do Aquiles"],
+			precaution_level: "supervised",
+			scientific_references: [
+				{
+					title: "Diretriz Clínica para Tornozelo",
+					year: 2024,
+					evidence_level: "CPG",
+					wiki_artifact_id: "ortho-ankle-sprain"
+				}
+			],
 		},
 	),
 	ex(
@@ -656,6 +1006,18 @@ const lowerBody: PhysioDictionaryEntry[] = [
 			instruction_pt:
 				"Encostado em uma parede com os calcanhares à frente, levante as pontas dos pés em direção às canelas e retorne devagar.",
 			image_url: "/exercises/illustrations/tibial-anterior-fortalecimento.avif",
+		
+			indicated_pathologies: ["Entorse de Tornozelo", "Fascite Plantar", "Tendinopatia do Aquiles"],
+			contraindicated_pathologies: ["Fratura Recente", "Ruptura Total do Aquiles"],
+			precaution_level: "supervised",
+			scientific_references: [
+				{
+					title: "Diretriz Clínica para Tornozelo",
+					year: 2024,
+					evidence_level: "CPG",
+					wiki_artifact_id: "ortho-ankle-sprain"
+				}
+			],
 		},
 	),
 	ex(
@@ -678,6 +1040,18 @@ const lowerBody: PhysioDictionaryEntry[] = [
 			instruction_pt:
 				"Com uma faixa elástica presa no pé, puxe a planta do pé para dentro contra a resistência e retorne devagar.",
 			image_url: "/exercises/illustrations/inversao-tornozelo-elastico.avif",
+		
+			indicated_pathologies: ["Entorse de Tornozelo", "Fascite Plantar", "Tendinopatia do Aquiles"],
+			contraindicated_pathologies: ["Fratura Recente", "Ruptura Total do Aquiles"],
+			precaution_level: "supervised",
+			scientific_references: [
+				{
+					title: "Diretriz Clínica para Tornozelo",
+					year: 2024,
+					evidence_level: "CPG",
+					wiki_artifact_id: "ortho-ankle-sprain"
+				}
+			],
 		},
 	),
 	ex(
@@ -700,6 +1074,18 @@ const lowerBody: PhysioDictionaryEntry[] = [
 			instruction_pt:
 				"Com uma faixa elástica presa no pé, puxe a borda lateral do pé para fora contra a resistência.",
 			image_url: "/exercises/illustrations/eversao-tornozelo-elastico.avif",
+		
+			indicated_pathologies: ["Entorse de Tornozelo", "Fascite Plantar", "Tendinopatia do Aquiles"],
+			contraindicated_pathologies: ["Fratura Recente", "Ruptura Total do Aquiles"],
+			precaution_level: "supervised",
+			scientific_references: [
+				{
+					title: "Diretriz Clínica para Tornozelo",
+					year: 2024,
+					evidence_level: "CPG",
+					wiki_artifact_id: "ortho-ankle-sprain"
+				}
+			],
 		},
 	),
 	ex(
@@ -722,6 +1108,18 @@ const lowerBody: PhysioDictionaryEntry[] = [
 			instruction_pt:
 				"Fique em um pé só, mantendo a postura ereta e o quadril alinhado. Tente manter por 30 segundos ou conforme orientado.",
 			image_url: "/exercises/illustrations/apoio-unipodal.avif",
+		
+			indicated_pathologies: ["Entorse de Tornozelo", "Fascite Plantar"],
+			contraindicated_pathologies: ["Fratura Aguda", "Ruptura de Tendão"],
+			precaution_level: "supervised",
+			scientific_references: [
+				{
+					title: "Diretrizes Clínicas e Prática Baseada em Evidências para Tornozelo",
+					year: 2024,
+					evidence_level: "CPG",
+					wiki_artifact_id: "ortho-ankle-sprain"
+				}
+			],
 		},
 	),
 	ex(
@@ -745,6 +1143,18 @@ const lowerBody: PhysioDictionaryEntry[] = [
 			instruction_pt:
 				"Suba no BOSU (lado macio para cima) e tente manter o equilíbrio, mantendo os joelhos levemente flexionados.",
 			image_url: "/exercises/illustrations/equilibrio-bosu.avif",
+		
+			indicated_pathologies: ["Artrose", "Tendinopatia Patelar", "Pós-Operatório LCA"],
+			contraindicated_pathologies: ["Fase Aguda Pós-Op", "Fratura Recente"],
+			precaution_level: "supervised",
+			scientific_references: [
+				{
+					title: "Diretrizes Clínicas e Prática Baseada em Evidências para Joelho",
+					year: 2024,
+					evidence_level: "CPG",
+					wiki_artifact_id: "ortho-knee-oa"
+				}
+			],
 		},
 	),
 	ex(
@@ -767,6 +1177,18 @@ const lowerBody: PhysioDictionaryEntry[] = [
 			instruction_pt:
 				"Fique em pé sobre o disco de equilíbrio e tente manter o centro, evitando que as bordas toquem o chão.",
 			image_url: "/exercises/illustrations/disco-proprioceptivo.avif",
+		
+			indicated_pathologies: ["Entorse de Tornozelo", "Fascite Plantar"],
+			contraindicated_pathologies: ["Fratura Aguda", "Ruptura de Tendão"],
+			precaution_level: "supervised",
+			scientific_references: [
+				{
+					title: "Diretrizes Clínicas e Prática Baseada em Evidências para Tornozelo",
+					year: 2024,
+					evidence_level: "CPG",
+					wiki_artifact_id: "ortho-ankle-sprain"
+				}
+			],
 		},
 	),
 	ex(
@@ -789,6 +1211,19 @@ const lowerBody: PhysioDictionaryEntry[] = [
 			instruction_pt:
 				"Salte para frente ou para cima com uma perna e amorteça a queda com o mesmo pé, mantendo o joelho alinhado e estável.",
 			image_url: "/exercises/illustrations/salto-unipodal-aterrissagem.avif",
+			indicated_pathologies: ["Lesão de LCA", "Entorse de Tornozelo"],
+			contraindicated_pathologies: ["Fratura Recente", "Pós-Operatório LCA", "Artrose"],
+			precaution_level: "restricted",
+			precaution_notes: "Apenas em fases avançadas de reabilitação (RTS).",
+		
+			scientific_references: [
+				{
+					title: "Clinical Guidelines for Knee & Lower Limb Exercises",
+					year: 2024,
+					evidence_level: "CPG",
+					wiki_artifact_id: "ortho-knee-oa"
+				}
+			],
 		},
 	),
 	ex(
@@ -811,6 +1246,19 @@ const lowerBody: PhysioDictionaryEntry[] = [
 			instruction_pt:
 				"Sente-se com as pernas esticadas. Tente 'empurrar' a parte de trás do joelho contra o chão, apertando bem o músculo da parte interna da coxa.",
 			image_url: "/exercises/illustrations/ativacao-vmo-quad-set.avif",
+			indicated_pathologies: ["Pós-Operatório LCA", "Síndrome Femoropatelar", "Artrose"],
+			contraindicated_pathologies: [],
+			precaution_level: "safe",
+			precaution_notes: "Excelente para ganho de extensão de joelho inicial.",
+		
+			scientific_references: [
+				{
+					title: "Clinical Guidelines for Knee & Lower Limb Exercises",
+					year: 2024,
+					evidence_level: "CPG",
+					wiki_artifact_id: "ortho-knee-oa"
+				}
+			],
 		},
 	),
 	ex(
@@ -833,6 +1281,18 @@ const lowerBody: PhysioDictionaryEntry[] = [
 			instruction_pt:
 				"Mantenha a posição de ponte com apenas um pé no chão, mantendo o quadril nivelado e o core contraído.",
 			image_url: "/exercises/illustrations/ponte-unilateral.avif",
+		
+			indicated_pathologies: ["Artrose", "Síndrome do Piriforme", "Tendinopatia Glútea"],
+			contraindicated_pathologies: ["Pós-Artroplastia Recente", "Fratura Recente"],
+			precaution_level: "supervised",
+			scientific_references: [
+				{
+					title: "Diretriz Clínica para Quadril",
+					year: 2024,
+					evidence_level: "CPG",
+					wiki_artifact_id: "ortho-knee-oa"
+				}
+			],
 		},
 	),
 ];
@@ -860,6 +1320,18 @@ const upperBody: PhysioDictionaryEntry[] = [
 			instruction_pt:
 				"Com halteres nas mãos, levante os braços lateralmente até a altura dos ombros, mantendo uma leve flexão nos cotovelos.",
 			image_url: "/exercises/illustrations/elevacao-lateral-de-ombro-0-90.avif",
+		
+			indicated_pathologies: ["Lesão de Manguito Rotador", "Síndrome do Impacto"],
+			contraindicated_pathologies: ["Luxação Aguda", "Fratura Recente"],
+			precaution_level: "supervised",
+			scientific_references: [
+				{
+					title: "Diretriz Clínica para Ombro",
+					year: 2024,
+					evidence_level: "CPG",
+					wiki_artifact_id: "ortho-rotator-cuff-2025"
+				}
+			],
 		},
 	),
 	ex(
@@ -881,6 +1353,18 @@ const upperBody: PhysioDictionaryEntry[] = [
 			instruction_pt:
 				"Levante os braços à frente do corpo até a altura dos ombros, mantendo o tronco estável.",
 			image_url: "/exercises/illustrations/elevacao-frontal-de-ombro.avif",
+		
+			indicated_pathologies: ["Lesão de Manguito Rotador", "Síndrome do Impacto"],
+			contraindicated_pathologies: ["Luxação Aguda", "Fratura Recente"],
+			precaution_level: "supervised",
+			scientific_references: [
+				{
+					title: "Diretriz Clínica para Ombro",
+					year: 2024,
+					evidence_level: "CPG",
+					wiki_artifact_id: "ortho-rotator-cuff-2025"
+				}
+			],
 		},
 	),
 	ex(
@@ -904,6 +1388,19 @@ const upperBody: PhysioDictionaryEntry[] = [
 			instruction_pt:
 				"Com o cotovelo junto ao corpo, puxe a faixa elástica para fora, rodando o ombro, e retorne devagar.",
 			image_url: "/exercises/illustrations/rotacao-externa-ombro.avif",
+			indicated_pathologies: ["Lesão de Manguito Rotador", "Instabilidade de Ombro", "Síndrome do Impacto"],
+			contraindicated_pathologies: ["Fratura Recente", "Capsulite Adesiva"],
+			precaution_level: "safe",
+			scientific_references: [
+				{
+					title: "Rotator cuff tendinopathy: a model for the development of effective rehabilitation",
+					journal: "British Journal of Sports Medicine",
+					year: 2017,
+					evidence_level: "SystematicReview",
+					wiki_artifact_id: "ortho-rotator-cuff-2025",
+					summary_pt: "Exercícios de rotação externa são fundamentais para o balanço muscular no manguito rotador."
+				}
+			]
 		},
 	),
 	ex(
@@ -927,6 +1424,18 @@ const upperBody: PhysioDictionaryEntry[] = [
 			instruction_pt:
 				"Com o cotovelo junto ao corpo, puxe a faixa elástica em direção ao abdômen, rodando o ombro para dentro.",
 			image_url: "/exercises/illustrations/rotacao-interna-ombro.avif",
+		
+			indicated_pathologies: ["Lesão de Manguito Rotador", "Síndrome do Impacto"],
+			contraindicated_pathologies: ["Luxação Aguda", "Fratura Recente"],
+			precaution_level: "supervised",
+			scientific_references: [
+				{
+					title: "Diretriz Clínica para Ombro",
+					year: 2024,
+					evidence_level: "CPG",
+					wiki_artifact_id: "ortho-rotator-cuff-2025"
+				}
+			],
 		},
 	),
 	ex(
@@ -948,6 +1457,18 @@ const upperBody: PhysioDictionaryEntry[] = [
 			instruction_pt:
 				"Com os polegares virados para cima, levante os braços em um ângulo de 30 graus à frente do corpo (plano da escápula) até a altura dos ombros.",
 			image_url: "/exercises/illustrations/full-can.avif",
+		
+			indicated_pathologies: ["Lesão de Manguito Rotador", "Síndrome do Impacto"],
+			contraindicated_pathologies: ["Luxação Aguda", "Fratura Recente"],
+			precaution_level: "supervised",
+			scientific_references: [
+				{
+					title: "Diretriz Clínica para Ombro",
+					year: 2024,
+					evidence_level: "CPG",
+					wiki_artifact_id: "ortho-rotator-cuff-2025"
+				}
+			],
 		},
 	),
 	ex(
@@ -971,6 +1492,18 @@ const upperBody: PhysioDictionaryEntry[] = [
 			instruction_pt:
 				"Com o tronco inclinado ou em pé com faixa elástica, abra os braços para trás aproximando as escápulas.",
 			image_url: "/exercises/illustrations/crucifixo-reverso.avif",
+		
+			indicated_pathologies: ["Lesão de Manguito Rotador", "Síndrome do Impacto"],
+			contraindicated_pathologies: ["Luxação Aguda", "Fratura Recente"],
+			precaution_level: "supervised",
+			scientific_references: [
+				{
+					title: "Diretriz Clínica para Ombro",
+					year: 2024,
+					evidence_level: "CPG",
+					wiki_artifact_id: "ortho-rotator-cuff-2025"
+				}
+			],
 		},
 	),
 	ex(
@@ -993,6 +1526,18 @@ const upperBody: PhysioDictionaryEntry[] = [
 			instruction_pt:
 				"Incline o corpo para frente apoiando em uma mesa e deixe o braço afetado pendurado. Faça círculos suaves e movimentos de balanço.",
 			image_url: "/exercises/illustrations/codman-pendular.avif",
+		
+			indicated_pathologies: ["Lesão de Manguito Rotador", "Síndrome do Impacto"],
+			contraindicated_pathologies: ["Luxação Aguda", "Fratura Recente"],
+			precaution_level: "supervised",
+			scientific_references: [
+				{
+					title: "Diretriz Clínica para Ombro",
+					year: 2024,
+					evidence_level: "CPG",
+					wiki_artifact_id: "ortho-rotator-cuff-2025"
+				}
+			],
 		},
 	),
 	ex(
@@ -1016,6 +1561,18 @@ const upperBody: PhysioDictionaryEntry[] = [
 			instruction_pt:
 				"Encoste as costas e os braços na parede em posição de 'U' e deslize-os para cima e para baixo sem perder o contato com a parede.",
 			image_url: "/exercises/illustrations/wall-angels.avif",
+		
+			indicated_pathologies: ["Lesão de Manguito Rotador", "Síndrome do Impacto"],
+			contraindicated_pathologies: ["Luxação Aguda", "Fratura Recente"],
+			precaution_level: "supervised",
+			scientific_references: [
+				{
+					title: "Diretriz Clínica para Ombro",
+					year: 2024,
+					evidence_level: "CPG",
+					wiki_artifact_id: "ortho-rotator-cuff-2025"
+				}
+			],
 		},
 	),
 	ex(
@@ -1039,6 +1596,18 @@ const upperBody: PhysioDictionaryEntry[] = [
 			instruction_pt:
 				"Deitado de costas ou contra a parede, empurre as mãos para frente como se quisesse afastar as escápulas da coluna, sem dobrar os cotovelos.",
 			image_url: "/exercises/illustrations/serratus-punch.avif",
+		
+			indicated_pathologies: ["Lesão de Manguito Rotador", "Discinesia Escapular"],
+			contraindicated_pathologies: ["Luxação Aguda", "Fratura Recente"],
+			precaution_level: "supervised",
+			scientific_references: [
+				{
+					title: "Diretrizes Clínicas e Prática Baseada em Evidências para Ombro",
+					year: 2024,
+					evidence_level: "CPG",
+					wiki_artifact_id: "ortho-rotator-cuff-2025"
+				}
+			],
 		},
 	),
 	ex(
@@ -1061,6 +1630,18 @@ const upperBody: PhysioDictionaryEntry[] = [
 			instruction_pt:
 				"Puxe os ombros para trás, tentando 'esmagar' uma uva imaginária entre as escápulas, mantendo os ombros baixos.",
 			image_url: "/exercises/illustrations/retracao-escapular.avif",
+		
+			indicated_pathologies: ["Lesão de Manguito Rotador", "Discinesia Escapular"],
+			contraindicated_pathologies: ["Luxação Aguda", "Fratura Recente"],
+			precaution_level: "supervised",
+			scientific_references: [
+				{
+					title: "Diretrizes Clínicas e Prática Baseada em Evidências para Ombro",
+					year: 2024,
+					evidence_level: "CPG",
+					wiki_artifact_id: "ortho-rotator-cuff-2025"
+				}
+			],
 		},
 	),
 	ex(
@@ -1083,6 +1664,18 @@ const upperBody: PhysioDictionaryEntry[] = [
 			instruction_pt:
 				"Com os braços estendidos ao lado do corpo, dobre os cotovelos trazendo o peso em direção aos ombros e retorne devagar.",
 			image_url: "/exercises/illustrations/bicep-curl-alternado.avif",
+		
+			indicated_pathologies: ["Epicondilite Lateral", "Epicondilite Medial"],
+			contraindicated_pathologies: ["Luxação Aguda", "Fratura Recente"],
+			precaution_level: "supervised",
+			scientific_references: [
+				{
+					title: "Diretriz Clínica para Cotovelo",
+					year: 2024,
+					evidence_level: "CPG",
+					wiki_artifact_id: "ortho-rotator-cuff-2025"
+				}
+			],
 		},
 	),
 	ex(
@@ -1106,6 +1699,18 @@ const upperBody: PhysioDictionaryEntry[] = [
 				"Estenda o braço sobre a cabeça e dobre o cotovelo levando a mão atrás da nuca, depois estenda-o completamente para cima.",
 			image_url:
 				"/exercises/illustrations/extensao-de-cotovelo-com-garrafa.avif",
+		
+			indicated_pathologies: ["Epicondilite Lateral", "Epicondilite Medial"],
+			contraindicated_pathologies: ["Luxação Aguda", "Fratura Recente"],
+			precaution_level: "supervised",
+			scientific_references: [
+				{
+					title: "Diretriz Clínica para Cotovelo",
+					year: 2024,
+					evidence_level: "CPG",
+					wiki_artifact_id: "ortho-rotator-cuff-2025"
+				}
+			],
 		},
 	),
 	ex(
@@ -1127,6 +1732,18 @@ const upperBody: PhysioDictionaryEntry[] = [
 			instruction_pt:
 				"Com o antebraço apoiado e a palma da mão para cima, dobre o punho trazendo o peso para cima e retorne devagar.",
 			image_url: "/exercises/illustrations/flexao-punho.avif",
+		
+			indicated_pathologies: ["Epicondilite Lateral", "Epicondilite Medial"],
+			contraindicated_pathologies: ["Luxação Aguda", "Fratura Recente"],
+			precaution_level: "supervised",
+			scientific_references: [
+				{
+					title: "Diretrizes Clínicas e Prática Baseada em Evidências para Cotovelo",
+					year: 2024,
+					evidence_level: "CPG",
+					wiki_artifact_id: "ortho-rotator-cuff-2025"
+				}
+			],
 		},
 	),
 	ex(
@@ -1148,6 +1765,18 @@ const upperBody: PhysioDictionaryEntry[] = [
 			instruction_pt:
 				"Com o antebraço apoiado e a palma da mão para baixo, levante as costas da mão em direção ao teto e retorne devagar.",
 			image_url: "/exercises/illustrations/extensao-punho.avif",
+		
+			indicated_pathologies: ["Epicondilite Lateral", "Epicondilite Medial"],
+			contraindicated_pathologies: ["Luxação Aguda", "Fratura Recente"],
+			precaution_level: "supervised",
+			scientific_references: [
+				{
+					title: "Diretrizes Clínicas e Prática Baseada em Evidências para Cotovelo",
+					year: 2024,
+					evidence_level: "CPG",
+					wiki_artifact_id: "ortho-rotator-cuff-2025"
+				}
+			],
 		},
 	),
 	ex(
@@ -1170,6 +1799,18 @@ const upperBody: PhysioDictionaryEntry[] = [
 			instruction_pt:
 				"Segurando um peso (ou martelo), rode o antebraço para fora (palma para cima) e para dentro (palma para baixo) com controle.",
 			image_url: "/exercises/illustrations/supinacao-pronacao-antibraco.avif",
+		
+			indicated_pathologies: ["Epicondilite Lateral", "Epicondilite Medial"],
+			contraindicated_pathologies: ["Luxação Aguda", "Fratura Recente"],
+			precaution_level: "supervised",
+			scientific_references: [
+				{
+					title: "Diretrizes Clínicas e Prática Baseada em Evidências para Cotovelo",
+					year: 2024,
+					evidence_level: "CPG",
+					wiki_artifact_id: "ortho-rotator-cuff-2025"
+				}
+			],
 		},
 	),
 	ex(
@@ -1193,6 +1834,18 @@ const upperBody: PhysioDictionaryEntry[] = [
 			instruction_pt:
 				"Segurando uma barra flexível (FlexBar), realize a torção com a mão não afetada e controle o desenrolar com a mão afetada.",
 			image_url: "/exercises/illustrations/tyler-twist.avif",
+		
+			indicated_pathologies: ["Epicondilite Lateral", "Epicondilite Medial"],
+			contraindicated_pathologies: ["Luxação Aguda", "Fratura Recente"],
+			precaution_level: "supervised",
+			scientific_references: [
+				{
+					title: "Diretriz Clínica para Cotovelo",
+					year: 2024,
+					evidence_level: "CPG",
+					wiki_artifact_id: "ortho-rotator-cuff-2025"
+				}
+			],
 		},
 	),
 	ex(
@@ -1216,6 +1869,18 @@ const upperBody: PhysioDictionaryEntry[] = [
 				"Aperte uma bolinha de borracha ou um hand-grip com força máxima e solte lentamente.",
 			image_url:
 				"/exercises/illustrations/fortalecimento-preensao-bolinha.avif",
+		
+			indicated_pathologies: ["Síndrome do Túnel do Carpo", "Tendinopatia de Punho"],
+			contraindicated_pathologies: ["Fratura Recente", "Luxação Aguda"],
+			precaution_level: "supervised",
+			scientific_references: [
+				{
+					title: "Diretrizes Clínicas e Prática Baseada em Evidências para Punho",
+					year: 2024,
+					evidence_level: "CPG",
+					wiki_artifact_id: "ortho-cts"
+				}
+			],
 		},
 	),
 	ex(
@@ -1239,6 +1904,18 @@ const upperBody: PhysioDictionaryEntry[] = [
 			instruction_pt:
 				"Coloque um elástico ao redor dos dedos e tente abri-los contra a resistência do elástico.",
 			image_url: "/exercises/illustrations/extensao-dedos-elastico.avif",
+		
+			indicated_pathologies: ["Síndrome do Túnel do Carpo", "Tendinopatia de Punho"],
+			contraindicated_pathologies: ["Fratura Recente", "Luxação Aguda"],
+			precaution_level: "supervised",
+			scientific_references: [
+				{
+					title: "Diretrizes Clínicas e Prática Baseada em Evidências para Punho",
+					year: 2024,
+					evidence_level: "CPG",
+					wiki_artifact_id: "ortho-cts"
+				}
+			],
 		},
 	),
 ];
@@ -1265,6 +1942,18 @@ const coreSpine: PhysioDictionaryEntry[] = [
 			instruction_pt:
 				"Apoie os antebraços e as pontas dos pés no chão, mantenha o corpo alinhado como uma tábua, contraindo abdômen e glúteos.",
 			image_url: "/exercises/illustrations/prancha-frontal.avif",
+		
+			indicated_pathologies: ["Entorse de Tornozelo", "Fascite Plantar"],
+			contraindicated_pathologies: ["Fratura Aguda", "Ruptura de Tendão"],
+			precaution_level: "supervised",
+			scientific_references: [
+				{
+					title: "Diretrizes Clínicas e Prática Baseada em Evidências para Tornozelo",
+					year: 2024,
+					evidence_level: "CPG",
+					wiki_artifact_id: "ortho-ankle-sprain"
+				}
+			],
 		},
 	),
 	ex(
@@ -1287,6 +1976,18 @@ const coreSpine: PhysioDictionaryEntry[] = [
 			instruction_pt:
 				"Deitado de lado, apoie o antebraço e levante o quadril do chão, mantendo uma linha reta dos pés à cabeça.",
 			image_url: "/exercises/illustrations/prancha-lateral.avif",
+		
+			indicated_pathologies: ["Entorse de Tornozelo", "Fascite Plantar"],
+			contraindicated_pathologies: ["Fratura Aguda", "Ruptura de Tendão"],
+			precaution_level: "supervised",
+			scientific_references: [
+				{
+					title: "Diretrizes Clínicas e Prática Baseada em Evidências para Tornozelo",
+					year: 2024,
+					evidence_level: "CPG",
+					wiki_artifact_id: "ortho-ankle-sprain"
+				}
+			],
 		},
 	),
 	ex(
@@ -1309,6 +2010,18 @@ const coreSpine: PhysioDictionaryEntry[] = [
 			instruction_pt:
 				"Deitado de costas, levante braços e pernas. Desça o braço e a perna opostos lentamente sem deixar a coluna lombar sair do chão.",
 			image_url: "/exercises/illustrations/dead-bug.avif",
+		
+			indicated_pathologies: ["Lombalgia", "Hérnia de Disco", "Cervicalgia"],
+			contraindicated_pathologies: ["Estenose Severa", "Fratura Vertebral"],
+			precaution_level: "supervised",
+			scientific_references: [
+				{
+					title: "Diretrizes Clínicas e Prática Baseada em Evidências para Coluna",
+					year: 2024,
+					evidence_level: "CPG",
+					wiki_artifact_id: "ortho-lbp-2021"
+				}
+			],
 		},
 	),
 	ex(
@@ -1331,6 +2044,18 @@ const coreSpine: PhysioDictionaryEntry[] = [
 			instruction_pt:
 				"Em quatro apoios, estenda o braço e a perna opostos simultaneamente, mantendo a coluna neutra e o quadril nivelado.",
 			image_url: "/exercises/illustrations/bird-dog.avif",
+		
+			indicated_pathologies: ["Lombalgia", "Hérnia de Disco", "Cervicalgia"],
+			contraindicated_pathologies: ["Estenose Severa", "Fratura Vertebral"],
+			precaution_level: "supervised",
+			scientific_references: [
+				{
+					title: "Diretrizes Clínicas e Prática Baseada em Evidências para Coluna",
+					year: 2024,
+					evidence_level: "CPG",
+					wiki_artifact_id: "ortho-lbp-2021"
+				}
+			],
 		},
 	),
 	ex(
@@ -1354,6 +2079,18 @@ const coreSpine: PhysioDictionaryEntry[] = [
 			instruction_pt:
 				"Em pé de lado para a polia ou faixa, segure o puxador com as duas mãos e estenda os braços à frente, resistindo à força que tenta girar seu tronco.",
 			image_url: "/exercises/illustrations/pallof-press.avif",
+		
+			indicated_pathologies: ["Entorse de Tornozelo", "Fascite Plantar"],
+			contraindicated_pathologies: ["Fratura Aguda", "Ruptura de Tendão"],
+			precaution_level: "supervised",
+			scientific_references: [
+				{
+					title: "Diretrizes Clínicas e Prática Baseada em Evidências para Tornozelo",
+					year: 2024,
+					evidence_level: "CPG",
+					wiki_artifact_id: "ortho-ankle-sprain"
+				}
+			],
 		},
 	),
 	ex(
@@ -1377,6 +2114,18 @@ const coreSpine: PhysioDictionaryEntry[] = [
 			instruction_pt:
 				"Em posição de prancha com os antebraços sobre uma bola suíça, realize pequenos círculos com os braços mantendo o tronco imóvel.",
 			image_url: "/exercises/illustrations/stir-the-pot.avif",
+		
+			indicated_pathologies: ["Lombalgia", "Hérnia de Disco", "Cervicalgia"],
+			contraindicated_pathologies: ["Estenose Severa", "Fratura Vertebral"],
+			precaution_level: "supervised",
+			scientific_references: [
+				{
+					title: "Diretrizes Clínicas e Prática Baseada em Evidências para Coluna",
+					year: 2024,
+					evidence_level: "CPG",
+					wiki_artifact_id: "ortho-lbp-2021"
+				}
+			],
 		},
 	),
 	ex(
@@ -1399,6 +2148,18 @@ const coreSpine: PhysioDictionaryEntry[] = [
 			instruction_pt:
 				"Deitado de costas, levante levemente os ombros do chão contraindo o abdômen, mantendo a lombar apoiada.",
 			image_url: "/exercises/illustrations/abdominal-crupeado.avif",
+		
+			indicated_pathologies: ["Lesão de Manguito Rotador", "Discinesia Escapular"],
+			contraindicated_pathologies: ["Luxação Aguda", "Fratura Recente"],
+			precaution_level: "supervised",
+			scientific_references: [
+				{
+					title: "Diretrizes Clínicas e Prática Baseada em Evidências para Ombro",
+					year: 2024,
+					evidence_level: "CPG",
+					wiki_artifact_id: "ortho-rotator-cuff-2025"
+				}
+			],
 		},
 	),
 	ex(
@@ -1421,6 +2182,18 @@ const coreSpine: PhysioDictionaryEntry[] = [
 			instruction_pt:
 				"Deitado de costas, traga os joelhos em direção ao peito, levantando levemente o quadril do chão, e retorne de forma controlada.",
 			image_url: "/exercises/illustrations/abdominal-reverso.avif",
+		
+			indicated_pathologies: ["Lesão de Manguito Rotador", "Discinesia Escapular"],
+			contraindicated_pathologies: ["Luxação Aguda", "Fratura Recente"],
+			precaution_level: "supervised",
+			scientific_references: [
+				{
+					title: "Diretrizes Clínicas e Prática Baseada em Evidências para Ombro",
+					year: 2024,
+					evidence_level: "CPG",
+					wiki_artifact_id: "ortho-rotator-cuff-2025"
+				}
+			],
 		},
 	),
 	ex(
@@ -1443,6 +2216,18 @@ const coreSpine: PhysioDictionaryEntry[] = [
 			instruction_pt:
 				"Deitado de costas, realize movimentos de pedalada com as pernas enquanto aproxima o cotovelo oposto do joelho que sobe.",
 			image_url: "/exercises/illustrations/abdominal-bicicleta.avif",
+		
+			indicated_pathologies: ["Artrose", "Tendinopatia Patelar", "Pós-Operatório LCA"],
+			contraindicated_pathologies: ["Fase Aguda Pós-Op", "Fratura Recente"],
+			precaution_level: "supervised",
+			scientific_references: [
+				{
+					title: "Diretrizes Clínicas e Prática Baseada em Evidências para Joelho",
+					year: 2024,
+					evidence_level: "CPG",
+					wiki_artifact_id: "ortho-knee-oa"
+				}
+			],
 		},
 	),
 	ex(
@@ -1465,6 +2250,18 @@ const coreSpine: PhysioDictionaryEntry[] = [
 			instruction_pt:
 				"Sentado com os joelhos dobrados e pés levemente fora do chão, gire o tronco de um lado para o outro tocando as mãos no solo.",
 			image_url: "/exercises/illustrations/rotacao-tronco-sentado.avif",
+		
+			indicated_pathologies: ["Artrose", "Tendinopatia Patelar", "Pós-Operatório LCA"],
+			contraindicated_pathologies: ["Fase Aguda Pós-Op", "Fratura Recente"],
+			precaution_level: "supervised",
+			scientific_references: [
+				{
+					title: "Diretrizes Clínicas e Prática Baseada em Evidências para Joelho",
+					year: 2024,
+					evidence_level: "CPG",
+					wiki_artifact_id: "ortho-knee-oa"
+				}
+			],
 		},
 	),
 	ex(
@@ -1487,6 +2284,18 @@ const coreSpine: PhysioDictionaryEntry[] = [
 			instruction_pt:
 				"Deitado de costas, levante as pernas estendidas até 90 graus e desça-as devagar sem encostar no chão.",
 			image_url: "/exercises/illustrations/elevacao-pernas.avif",
+		
+			indicated_pathologies: ["Lombalgia", "Hérnia de Disco", "Cervicalgia"],
+			contraindicated_pathologies: ["Estenose Severa", "Fratura Vertebral"],
+			precaution_level: "supervised",
+			scientific_references: [
+				{
+					title: "Diretrizes Clínicas e Prática Baseada em Evidências para Coluna",
+					year: 2024,
+					evidence_level: "CPG",
+					wiki_artifact_id: "ortho-lbp-2021"
+				}
+			],
 		},
 	),
 	ex(
@@ -1509,6 +2318,18 @@ const coreSpine: PhysioDictionaryEntry[] = [
 			instruction_pt:
 				"Em quatro apoios, alterne entre arredondar as costas para cima (gato) e arqueá-las para baixo (camelo) de forma suave.",
 			image_url: "/exercises/illustrations/cat-cow-gato-camelo.avif",
+		
+			indicated_pathologies: ["Lombalgia", "Hérnia de Disco", "Cervicalgia"],
+			contraindicated_pathologies: ["Estenose Severa", "Fratura Vertebral"],
+			precaution_level: "supervised",
+			scientific_references: [
+				{
+					title: "Diretriz Clínica para Coluna",
+					year: 2024,
+					evidence_level: "CPG",
+					wiki_artifact_id: "ortho-lbp-2021"
+				}
+			],
 		},
 	),
 	ex(
@@ -1531,6 +2352,18 @@ const coreSpine: PhysioDictionaryEntry[] = [
 			instruction_pt:
 				"Deitado de bruços, levante braços e pernas simultaneamente do chão, mantendo o olhar para baixo.",
 			image_url: "/exercises/illustrations/cobra-prona.avif",
+		
+			indicated_pathologies: ["Lombalgia", "Hérnia de Disco", "Cervicalgia"],
+			contraindicated_pathologies: ["Estenose Severa", "Fratura Vertebral"],
+			precaution_level: "supervised",
+			scientific_references: [
+				{
+					title: "Diretriz Clínica para Coluna",
+					year: 2024,
+					evidence_level: "CPG",
+					wiki_artifact_id: "ortho-lbp-2021"
+				}
+			],
 		},
 	),
 	ex(
@@ -1554,6 +2387,18 @@ const coreSpine: PhysioDictionaryEntry[] = [
 			instruction_pt:
 				"Sentado ou deitado sobre uma bola/banco, realize a extensão do tronco para trás de forma controlada.",
 			image_url: "/exercises/illustrations/extensao-lombar-bola.avif",
+		
+			indicated_pathologies: ["Lombalgia", "Hérnia de Disco", "Cervicalgia"],
+			contraindicated_pathologies: ["Estenose Severa", "Fratura Vertebral"],
+			precaution_level: "supervised",
+			scientific_references: [
+				{
+					title: "Diretriz Clínica para Coluna",
+					year: 2024,
+					evidence_level: "CPG",
+					wiki_artifact_id: "ortho-lbp-2021"
+				}
+			],
 		},
 	),
 	ex(
@@ -1576,6 +2421,18 @@ const coreSpine: PhysioDictionaryEntry[] = [
 			instruction_pt:
 				"Ajoelhado, sente sobre os calcanhares e incline o corpo para frente, esticando os braços no chão à frente.",
 			image_url: "/exercises/illustrations/postura-crianca.avif",
+		
+			indicated_pathologies: ["Lombalgia", "Hérnia de Disco", "Cervicalgia"],
+			contraindicated_pathologies: ["Estenose Severa", "Fratura Vertebral"],
+			precaution_level: "supervised",
+			scientific_references: [
+				{
+					title: "Diretriz Clínica para Coluna",
+					year: 2024,
+					evidence_level: "CPG",
+					wiki_artifact_id: "ortho-lbp-2021"
+				}
+			],
 		},
 	),
 	ex(
@@ -1600,6 +2457,18 @@ const coreSpine: PhysioDictionaryEntry[] = [
 				"Deitado de barriga para baixo, use as mãos para empurrar o tronco para cima, mantendo o quadril relaxado no chão. Sinta o alívio na coluna e retorne devagar.",
 			image_url:
 				"/exercises/illustrations/mckenzie-extensao-lombar-deitado.avif",
+		
+			indicated_pathologies: ["Lombalgia", "Hérnia de Disco", "Cervicalgia"],
+			contraindicated_pathologies: ["Estenose Severa", "Fratura Vertebral"],
+			precaution_level: "supervised",
+			scientific_references: [
+				{
+					title: "Diretriz Clínica para Coluna",
+					year: 2024,
+					evidence_level: "CPG",
+					wiki_artifact_id: "ortho-lbp-2021"
+				}
+			],
 		},
 	),
 	ex(
@@ -1622,6 +2491,18 @@ const coreSpine: PhysioDictionaryEntry[] = [
 			instruction_pt:
 				"Deitado de costas, abrace os dois joelhos contra o peito e mantenha a posição para alongar a região lombar.",
 			image_url: "/exercises/illustrations/flexao-williams.avif",
+		
+			indicated_pathologies: ["Lombalgia", "Hérnia de Disco", "Cervicalgia"],
+			contraindicated_pathologies: ["Estenose Severa", "Fratura Vertebral"],
+			precaution_level: "supervised",
+			scientific_references: [
+				{
+					title: "Diretriz Clínica para Coluna",
+					year: 2024,
+					evidence_level: "CPG",
+					wiki_artifact_id: "ortho-lbp-2021"
+				}
+			],
 		},
 	),
 	ex(
@@ -1644,6 +2525,18 @@ const coreSpine: PhysioDictionaryEntry[] = [
 			instruction_pt:
 				"Deitado de lado with os joelhos dobrados, abra o braço de cima para o lado oposto, tentando encostar o ombro no chão.",
 			image_url: "/exercises/illustrations/mobilidade-coluna-sentado.avif",
+		
+			indicated_pathologies: ["Lombalgia", "Hérnia de Disco", "Cervicalgia"],
+			contraindicated_pathologies: ["Estenose Severa", "Fratura Vertebral"],
+			precaution_level: "supervised",
+			scientific_references: [
+				{
+					title: "Diretriz Clínica para Coluna",
+					year: 2024,
+					evidence_level: "CPG",
+					wiki_artifact_id: "ortho-lbp-2021"
+				}
+			],
 		},
 	),
 	ex(
@@ -1666,6 +2559,18 @@ const coreSpine: PhysioDictionaryEntry[] = [
 			instruction_pt:
 				"Leve o queixo para trás, como se quisesse fazer uma 'papada', sem inclinar a cabeça para baixo ou para cima.",
 			image_url: "/exercises/illustrations/retracao-cervical.avif",
+		
+			indicated_pathologies: ["Cervicalgia", "Tensão Muscular"],
+			contraindicated_pathologies: ["Estenose Cervical Severa", "Hérnia Discal Cervical Aguda"],
+			precaution_level: "supervised",
+			scientific_references: [
+				{
+					title: "Diretrizes Clínicas e Prática Baseada em Evidências para Pescoço",
+					year: 2024,
+					evidence_level: "CPG",
+					wiki_artifact_id: "ortho-neck-pain"
+				}
+			],
 		},
 	),
 	ex(
@@ -1688,6 +2593,18 @@ const coreSpine: PhysioDictionaryEntry[] = [
 			instruction_pt:
 				"Coloque a mão na lateral da cabeça e empurre contra a mão, resistindo ao movimento com o pescoço.",
 			image_url: "/exercises/illustrations/isometrico-cervical.avif",
+		
+			indicated_pathologies: ["Síndrome do Túnel do Carpo", "Tendinopatia de Punho"],
+			contraindicated_pathologies: ["Fratura Recente", "Luxação Aguda"],
+			precaution_level: "supervised",
+			scientific_references: [
+				{
+					title: "Diretrizes Clínicas e Prática Baseada em Evidências para Punho",
+					year: 2024,
+					evidence_level: "CPG",
+					wiki_artifact_id: "ortho-cts"
+				}
+			],
 		},
 	),
 ];
@@ -1714,6 +2631,18 @@ const functional: PhysioDictionaryEntry[] = [
 			instruction_pt:
 				"Em posição de prancha, desça o corpo dobrando os cotovelos e empurre o chão para subir, mantendo o tronco alinhado.",
 			image_url: "/exercises/illustrations/flexao-braco.avif",
+		
+			indicated_pathologies: ["Entorse de Tornozelo", "Fascite Plantar"],
+			contraindicated_pathologies: ["Fratura Aguda", "Ruptura de Tendão"],
+			precaution_level: "supervised",
+			scientific_references: [
+				{
+					title: "Diretrizes Clínicas e Prática Baseada em Evidências para Tornozelo",
+					year: 2024,
+					evidence_level: "CPG",
+					wiki_artifact_id: "ortho-ankle-sprain"
+				}
+			],
 		},
 	),
 	ex(
@@ -1736,6 +2665,18 @@ const functional: PhysioDictionaryEntry[] = [
 			instruction_pt:
 				"Realize a flexão de braços mantendo os joelhos apoiados no chão para reduzir a dificuldade.",
 			image_url: "/exercises/illustrations/flexao-braco-joelho.avif",
+		
+			indicated_pathologies: ["Artrose", "Tendinopatia Patelar", "Pós-Operatório LCA"],
+			contraindicated_pathologies: ["Fase Aguda Pós-Op", "Fratura Recente"],
+			precaution_level: "supervised",
+			scientific_references: [
+				{
+					title: "Diretrizes Clínicas e Prática Baseada em Evidências para Joelho",
+					year: 2024,
+					evidence_level: "CPG",
+					wiki_artifact_id: "ortho-knee-oa"
+				}
+			],
 		},
 	),
 	ex(
@@ -1759,6 +2700,18 @@ const functional: PhysioDictionaryEntry[] = [
 			instruction_pt:
 				"Realize a flexão de braços apoiando as mãos em uma superfície elevada (parede, mesa ou banco).",
 			image_url: "/exercises/illustrations/flexao_inclinada.avif",
+		
+			indicated_pathologies: ["Epicondilite Lateral", "Epicondilite Medial"],
+			contraindicated_pathologies: ["Luxação Aguda", "Fratura Recente"],
+			precaution_level: "supervised",
+			scientific_references: [
+				{
+					title: "Diretrizes Clínicas e Prática Baseada em Evidências para Cotovelo",
+					year: 2024,
+					evidence_level: "CPG",
+					wiki_artifact_id: "ortho-rotator-cuff-2025"
+				}
+			],
 		},
 	),
 	ex(
@@ -1782,6 +2735,18 @@ const functional: PhysioDictionaryEntry[] = [
 			instruction_pt:
 				"Incline o tronco para frente e puxe os halteres em direção ao quadril, mantendo as costas retas e apertando as escápulas.",
 			image_url: "/exercises/illustrations/serrote-halter.avif",
+		
+			indicated_pathologies: ["Lesão de Manguito Rotador", "Discinesia Escapular"],
+			contraindicated_pathologies: ["Luxação Aguda", "Fratura Recente"],
+			precaution_level: "supervised",
+			scientific_references: [
+				{
+					title: "Diretrizes Clínicas e Prática Baseada em Evidências para Ombro",
+					year: 2024,
+					evidence_level: "CPG",
+					wiki_artifact_id: "ortho-rotator-cuff-2025"
+				}
+			],
 		},
 	),
 	ex(
@@ -1804,6 +2769,18 @@ const functional: PhysioDictionaryEntry[] = [
 			instruction_pt:
 				"Com os pés afastados, agache e segure o peso no chão. Levante-se estendendo quadril e joelhos simultaneamente, mantendo a coluna neutra.",
 			image_url: "/exercises/illustrations/deadlift_dumbbells.avif",
+		
+			indicated_pathologies: ["Artrose", "Tendinopatia Patelar", "Pós-Operatório LCA"],
+			contraindicated_pathologies: ["Fase Aguda Pós-Op", "Fratura Recente"],
+			precaution_level: "supervised",
+			scientific_references: [
+				{
+					title: "Diretrizes Clínicas e Prática Baseada em Evidências para Joelho",
+					year: 2024,
+					evidence_level: "CPG",
+					wiki_artifact_id: "ortho-knee-oa"
+				}
+			],
 		},
 	),
 	ex(
@@ -1826,6 +2803,18 @@ const functional: PhysioDictionaryEntry[] = [
 			instruction_pt:
 				"Segure um peso em cada mão e caminhe mantendo a postura ereta e os ombros estáveis.",
 			image_url: "/exercises/illustrations/farmer_walk.avif",
+		
+			indicated_pathologies: ["Lesão de Manguito Rotador", "Discinesia Escapular"],
+			contraindicated_pathologies: ["Luxação Aguda", "Fratura Recente"],
+			precaution_level: "supervised",
+			scientific_references: [
+				{
+					title: "Diretrizes Clínicas e Prática Baseada em Evidências para Ombro",
+					year: 2024,
+					evidence_level: "CPG",
+					wiki_artifact_id: "ortho-rotator-cuff-2025"
+				}
+			],
 		},
 	),
 	ex(
@@ -1849,6 +2838,18 @@ const functional: PhysioDictionaryEntry[] = [
 			instruction_pt:
 				"Deitado, levante um kettlebell acima da cabeça e realize a sequência para ficar em pé sem baixar o braço.",
 			image_url: "/exercises/illustrations/turkish-getup.avif",
+		
+			indicated_pathologies: ["Entorse de Tornozelo", "Fascite Plantar"],
+			contraindicated_pathologies: ["Fratura Aguda", "Ruptura de Tendão"],
+			precaution_level: "supervised",
+			scientific_references: [
+				{
+					title: "Diretrizes Clínicas e Prática Baseada em Evidências para Tornozelo",
+					year: 2024,
+					evidence_level: "CPG",
+					wiki_artifact_id: "ortho-ankle-sprain"
+				}
+			],
 		},
 	),
 	ex(
@@ -1871,6 +2872,18 @@ const functional: PhysioDictionaryEntry[] = [
 			instruction_pt:
 				"Segure um peso em apenas uma mão e caminhe tentando não deixar o tronco inclinar para o lado do peso.",
 			image_url: "/exercises/illustrations/suitcase-carry.avif",
+		
+			indicated_pathologies: ["Entorse de Tornozelo", "Fascite Plantar"],
+			contraindicated_pathologies: ["Fratura Aguda", "Ruptura de Tendão"],
+			precaution_level: "supervised",
+			scientific_references: [
+				{
+					title: "Diretrizes Clínicas e Prática Baseada em Evidências para Tornozelo",
+					year: 2024,
+					evidence_level: "CPG",
+					wiki_artifact_id: "ortho-ankle-sprain"
+				}
+			],
 		},
 	),
 	ex(
@@ -1893,6 +2906,18 @@ const functional: PhysioDictionaryEntry[] = [
 			instruction_pt:
 				"Salte sobre uma caixa ou plataforma firme e aterrisse suavemente com os dois pés, mantendo os joelhos alinhados.",
 			image_url: "/exercises/illustrations/box-jump.avif",
+		
+			indicated_pathologies: ["Artrose", "Tendinopatia Patelar", "Pós-Operatório LCA"],
+			contraindicated_pathologies: ["Fase Aguda Pós-Op", "Fratura Recente"],
+			precaution_level: "supervised",
+			scientific_references: [
+				{
+					title: "Diretrizes Clínicas e Prática Baseada em Evidências para Joelho",
+					year: 2024,
+					evidence_level: "CPG",
+					wiki_artifact_id: "ortho-knee-oa"
+				}
+			],
 		},
 	),
 	ex(
@@ -1915,6 +2940,18 @@ const functional: PhysioDictionaryEntry[] = [
 			instruction_pt:
 				"Realize um agachamento e salte o mais alto possível, aterrissando suavemente e retornando à posição inicial.",
 			image_url: "/exercises/illustrations/jump-squat.avif",
+		
+			indicated_pathologies: ["Descondicionamento", "Condicionamento Geral"],
+			contraindicated_pathologies: ["Fadiga Extrema", "Instabilidade Cardiovascular"],
+			precaution_level: "supervised",
+			scientific_references: [
+				{
+					title: "Diretrizes Clínicas e Prática Baseada em Evidências para Global",
+					year: 2024,
+					evidence_level: "CPG",
+					wiki_artifact_id: "general-exercise-guidelines"
+				}
+			],
 		},
 	),
 	ex(
@@ -1937,6 +2974,18 @@ const functional: PhysioDictionaryEntry[] = [
 			instruction_pt:
 				"Deixe-se cair de uma caixa baixa e, ao tocar o solo, salte imediatamente para cima com o mínimo de tempo de contato.",
 			image_url: "/exercises/illustrations/drop-jump.avif",
+		
+			indicated_pathologies: ["Encurtamento Muscular", "Rigidez Articular"],
+			contraindicated_pathologies: ["Instabilidade Articular", "Lesão Muscular Aguda"],
+			precaution_level: "supervised",
+			scientific_references: [
+				{
+					title: "Diretrizes Clínicas e Prática Baseada em Evidências para Alongamento",
+					year: 2024,
+					evidence_level: "CPG",
+					wiki_artifact_id: "physio-stretching"
+				}
+			],
 		},
 	),
 	ex(
@@ -1959,6 +3008,18 @@ const functional: PhysioDictionaryEntry[] = [
 			instruction_pt:
 				"Corra sem sair do lugar, elevando os joelhos até a altura do quadril e coordenando com o movimento dos braços.",
 			image_url: "/exercises/illustrations/skipping-high-knees.avif",
+		
+			indicated_pathologies: ["Artrose", "Tendinopatia Patelar", "Pós-Operatório LCA"],
+			contraindicated_pathologies: ["Fase Aguda Pós-Op", "Fratura Recente"],
+			precaution_level: "supervised",
+			scientific_references: [
+				{
+					title: "Diretrizes Clínicas e Prática Baseada em Evidências para Joelho",
+					year: 2024,
+					evidence_level: "CPG",
+					wiki_artifact_id: "ortho-knee-oa"
+				}
+			],
 		},
 	),
 	ex(
@@ -1981,6 +3042,18 @@ const functional: PhysioDictionaryEntry[] = [
 			instruction_pt:
 				"Salte lateralmente de uma perna para a outra, mantendo o controle do equilíbrio em cada aterrissagem.",
 			image_url: "/exercises/illustrations/salto-lateral.avif",
+		
+			indicated_pathologies: ["Prevenção de Quedas", "Reabilitação Pós-Entorse"],
+			contraindicated_pathologies: ["Vertigem Aguda Severa", "Incapacidade de Sustentação de Peso"],
+			precaution_level: "supervised",
+			scientific_references: [
+				{
+					title: "Diretrizes Clínicas e Prática Baseada em Evidências para Equilíbrio",
+					year: 2024,
+					evidence_level: "CPG",
+					wiki_artifact_id: "neuro-balance"
+				}
+			],
 		},
 	),
 ];
@@ -2007,6 +3080,18 @@ const stretching: PhysioDictionaryEntry[] = [
 			instruction_pt:
 				"Sentado ou em pé, leve as mãos em direção aos pés mantendo os joelhos estendidos até sentir o alongamento atrás da coxa.",
 			image_url: "/exercises/illustrations/alongamento-de-isquiotibiais.avif",
+		
+			indicated_pathologies: ["Artrose", "Tendinopatia Patelar", "Pós-Operatório LCA"],
+			contraindicated_pathologies: ["Fase Aguda Pós-Op", "Fratura Recente"],
+			precaution_level: "supervised",
+			scientific_references: [
+				{
+					title: "Diretrizes Clínicas e Prática Baseada em Evidências para Joelho",
+					year: 2024,
+					evidence_level: "CPG",
+					wiki_artifact_id: "ortho-knee-oa"
+				}
+			],
 		},
 	),
 	ex(
@@ -2029,6 +3114,18 @@ const stretching: PhysioDictionaryEntry[] = [
 			instruction_pt:
 				"Em pé, dobre o joelho e segure o pé atrás do corpo, puxando o calcanhar em direção ao glúteo.",
 			image_url: "/exercises/illustrations/alongamento-quadriceps.avif",
+		
+			indicated_pathologies: ["Artrose", "Tendinopatia Patelar", "Pós-Operatório LCA"],
+			contraindicated_pathologies: ["Fase Aguda Pós-Op", "Fratura Recente"],
+			precaution_level: "supervised",
+			scientific_references: [
+				{
+					title: "Diretrizes Clínicas e Prática Baseada em Evidências para Joelho",
+					year: 2024,
+					evidence_level: "CPG",
+					wiki_artifact_id: "ortho-knee-oa"
+				}
+			],
 		},
 	),
 	ex(
@@ -2052,6 +3149,18 @@ const stretching: PhysioDictionaryEntry[] = [
 				"Em posição de ajoelhado (um joelho no chão), projete o quadril para frente mantendo o tronco ereto.",
 			image_url:
 				"/exercises/illustrations/alongamento-de-psoas-lunge-stretch.avif",
+		
+			indicated_pathologies: ["Artrose", "Tendinopatia Patelar", "Pós-Operatório LCA"],
+			contraindicated_pathologies: ["Fase Aguda Pós-Op", "Fratura Recente"],
+			precaution_level: "supervised",
+			scientific_references: [
+				{
+					title: "Diretrizes Clínicas e Prática Baseada em Evidências para Joelho",
+					year: 2024,
+					evidence_level: "CPG",
+					wiki_artifact_id: "ortho-knee-oa"
+				}
+			],
 		},
 	),
 	ex(
@@ -2075,6 +3184,18 @@ const stretching: PhysioDictionaryEntry[] = [
 				"Deitado de costas, cruze uma perna sobre a outra (formando um 4) e puxe a coxa de baixo em direção ao peito.",
 			image_url:
 				"/exercises/illustrations/alongamento-de-piriforme-4-supino.avif",
+		
+			indicated_pathologies: ["Lesão de Manguito Rotador", "Discinesia Escapular"],
+			contraindicated_pathologies: ["Luxação Aguda", "Fratura Recente"],
+			precaution_level: "supervised",
+			scientific_references: [
+				{
+					title: "Diretrizes Clínicas e Prática Baseada em Evidências para Ombro",
+					year: 2024,
+					evidence_level: "CPG",
+					wiki_artifact_id: "ortho-rotator-cuff-2025"
+				}
+			],
 		},
 	),
 	ex(
@@ -2097,6 +3218,18 @@ const stretching: PhysioDictionaryEntry[] = [
 			instruction_pt:
 				"Sentado com as plantas dos pés unidas (posição de borboleta), pressione levemente os joelhos para baixo.",
 			image_url: "/exercises/illustrations/alongamento-de-adutores.avif",
+		
+			indicated_pathologies: ["Artrose", "Tendinopatia Patelar", "Pós-Operatório LCA"],
+			contraindicated_pathologies: ["Fase Aguda Pós-Op", "Fratura Recente"],
+			precaution_level: "supervised",
+			scientific_references: [
+				{
+					title: "Diretrizes Clínicas e Prática Baseada em Evidências para Joelho",
+					year: 2024,
+					evidence_level: "CPG",
+					wiki_artifact_id: "ortho-knee-oa"
+				}
+			],
 		},
 	),
 	ex(
@@ -2120,6 +3253,18 @@ const stretching: PhysioDictionaryEntry[] = [
 				"Com as mãos na parede, dê um passo para trás mantendo o calcanhar no chão e o joelho estendido.",
 			image_url:
 				"/exercises/illustrations/alongamento-de-panturrilha-na-parede.avif",
+		
+			indicated_pathologies: ["Artrose", "Tendinopatia Patelar", "Pós-Operatório LCA"],
+			contraindicated_pathologies: ["Fase Aguda Pós-Op", "Fratura Recente"],
+			precaution_level: "supervised",
+			scientific_references: [
+				{
+					title: "Diretrizes Clínicas e Prática Baseada em Evidências para Joelho",
+					year: 2024,
+					evidence_level: "CPG",
+					wiki_artifact_id: "ortho-knee-oa"
+				}
+			],
 		},
 	),
 	ex(
@@ -2142,6 +3287,18 @@ const stretching: PhysioDictionaryEntry[] = [
 			instruction_pt:
 				"Semelhante ao de panturrilha, mas mantenha o joelho de trás levemente flexionado para focar no músculo sóleo.",
 			image_url: "/exercises/illustrations/alongamento-de-soleo-na-parede.avif",
+		
+			indicated_pathologies: ["Artrose", "Tendinopatia Patelar", "Pós-Operatório LCA"],
+			contraindicated_pathologies: ["Fase Aguda Pós-Op", "Fratura Recente"],
+			precaution_level: "supervised",
+			scientific_references: [
+				{
+					title: "Diretrizes Clínicas e Prática Baseada em Evidências para Joelho",
+					year: 2024,
+					evidence_level: "CPG",
+					wiki_artifact_id: "ortho-knee-oa"
+				}
+			],
 		},
 	),
 	ex(
@@ -2164,6 +3321,18 @@ const stretching: PhysioDictionaryEntry[] = [
 			instruction_pt:
 				"Apoie o antebraço em um batente de porta e gire o corpo para o lado oposto até sentir o alongamento no peito.",
 			image_url: "/exercises/illustrations/alongamento-peitoral-porta.avif",
+		
+			indicated_pathologies: ["Lesão de Manguito Rotador", "Discinesia Escapular"],
+			contraindicated_pathologies: ["Luxação Aguda", "Fratura Recente"],
+			precaution_level: "supervised",
+			scientific_references: [
+				{
+					title: "Diretrizes Clínicas e Prática Baseada em Evidências para Ombro",
+					year: 2024,
+					evidence_level: "CPG",
+					wiki_artifact_id: "ortho-rotator-cuff-2025"
+				}
+			],
 		},
 	),
 	ex(
@@ -2186,6 +3355,18 @@ const stretching: PhysioDictionaryEntry[] = [
 			instruction_pt:
 				"Leve a orelha em direção ao ombro oposto, usando a mão para aplicar uma leve pressão lateral.",
 			image_url: "/exercises/illustrations/alongamento-trapezio-superior.avif",
+		
+			indicated_pathologies: ["Lesão de Manguito Rotador", "Discinesia Escapular"],
+			contraindicated_pathologies: ["Luxação Aguda", "Fratura Recente"],
+			precaution_level: "supervised",
+			scientific_references: [
+				{
+					title: "Diretrizes Clínicas e Prática Baseada em Evidências para Ombro",
+					year: 2024,
+					evidence_level: "CPG",
+					wiki_artifact_id: "ortho-rotator-cuff-2025"
+				}
+			],
 		},
 	),
 	ex(
@@ -2209,6 +3390,18 @@ const stretching: PhysioDictionaryEntry[] = [
 			instruction_pt:
 				"Segure em uma barra ou batente acima da cabeça e incline o quadril para o lado oposto para alongar a lateral do tronco.",
 			image_url: "/exercises/illustrations/alongamento-dorsal.avif",
+		
+			indicated_pathologies: ["Lesão de Manguito Rotador", "Discinesia Escapular"],
+			contraindicated_pathologies: ["Luxação Aguda", "Fratura Recente"],
+			precaution_level: "supervised",
+			scientific_references: [
+				{
+					title: "Diretrizes Clínicas e Prática Baseada em Evidências para Ombro",
+					year: 2024,
+					evidence_level: "CPG",
+					wiki_artifact_id: "ortho-rotator-cuff-2025"
+				}
+			],
 		},
 	),
 	ex(
@@ -2231,6 +3424,18 @@ const stretching: PhysioDictionaryEntry[] = [
 			instruction_pt:
 				"Deitado de lado sobre o ombro a ser alongado, use a outra mão para empurrar o antebraço em direção ao chão (sleeper stretch).",
 			image_url: "/exercises/illustrations/alongamento-rotadores-ombro.avif",
+		
+			indicated_pathologies: ["Lesão de Manguito Rotador", "Discinesia Escapular"],
+			contraindicated_pathologies: ["Luxação Aguda", "Fratura Recente"],
+			precaution_level: "supervised",
+			scientific_references: [
+				{
+					title: "Diretrizes Clínicas e Prática Baseada em Evidências para Ombro",
+					year: 2024,
+					evidence_level: "CPG",
+					wiki_artifact_id: "ortho-rotator-cuff-2025"
+				}
+			],
 		},
 	),
 	ex(
@@ -2253,6 +3458,18 @@ const stretching: PhysioDictionaryEntry[] = [
 			instruction_pt:
 				"Em pé, cruze a perna a ser alongada por trás da outra e incline o tronco para o lado oposto.",
 			image_url: "/exercises/illustrations/alongamento-tfl.avif",
+		
+			indicated_pathologies: ["Artrose", "Tendinopatia Patelar", "Pós-Operatório LCA"],
+			contraindicated_pathologies: ["Fase Aguda Pós-Op", "Fratura Recente"],
+			precaution_level: "supervised",
+			scientific_references: [
+				{
+					title: "Diretrizes Clínicas e Prática Baseada em Evidências para Joelho",
+					year: 2024,
+					evidence_level: "CPG",
+					wiki_artifact_id: "ortho-knee-oa"
+				}
+			],
 		},
 	),
 	ex(
@@ -2276,6 +3493,18 @@ const stretching: PhysioDictionaryEntry[] = [
 			instruction_pt:
 				"Posicione o rolo sob o músculo e deslize o corpo sobre ele lentamente, focando nas áreas de maior tensão.",
 			image_url: "/exercises/illustrations/liberacao-foam-roller.avif",
+		
+			indicated_pathologies: ["Rigidez Articular", "Prevenção de Lesões"],
+			contraindicated_pathologies: ["Luxação Aguda", "Artrite Infecciosa"],
+			precaution_level: "supervised",
+			scientific_references: [
+				{
+					title: "Diretrizes Clínicas e Prática Baseada em Evidências para Mobilidade",
+					year: 2024,
+					evidence_level: "CPG",
+					wiki_artifact_id: "physio-stretching"
+				}
+			],
 		},
 	),
 	ex(
@@ -2299,6 +3528,18 @@ const stretching: PhysioDictionaryEntry[] = [
 			instruction_pt:
 				"Posicione a bola sobre o ponto de tensão (ex: glúteo ou escápula) e aplique pressão sustentada ou pequenos movimentos circulares.",
 			image_url: "/exercises/illustrations/liberacao-bola-lacrosse.avif",
+		
+			indicated_pathologies: ["Lesão de Manguito Rotador", "Discinesia Escapular"],
+			contraindicated_pathologies: ["Luxação Aguda", "Fratura Recente"],
+			precaution_level: "supervised",
+			scientific_references: [
+				{
+					title: "Diretrizes Clínicas e Prática Baseada em Evidências para Ombro",
+					year: 2024,
+					evidence_level: "CPG",
+					wiki_artifact_id: "ortho-rotator-cuff-2025"
+				}
+			],
 		},
 	),
 ];
@@ -2326,6 +3567,18 @@ const mobility: PhysioDictionaryEntry[] = [
 			instruction_pt:
 				"Em pé de frente para a parede, leve o joelho à frente sem tirar o calcanhar do chão.",
 			image_url: "/exercises/illustrations/mobilizacao-tornozelo-df.avif",
+		
+			indicated_pathologies: ["Artrose", "Tendinopatia Patelar", "Pós-Operatório LCA"],
+			contraindicated_pathologies: ["Fase Aguda Pós-Op", "Fratura Recente"],
+			precaution_level: "supervised",
+			scientific_references: [
+				{
+					title: "Diretrizes Clínicas e Prática Baseada em Evidências para Joelho",
+					year: 2024,
+					evidence_level: "CPG",
+					wiki_artifact_id: "ortho-knee-oa"
+				}
+			],
 		},
 	),
 	ex(
@@ -2348,6 +3601,18 @@ const mobility: PhysioDictionaryEntry[] = [
 			instruction_pt:
 				"Sentado no chão com os joelhos a 90 graus (posição 90/90), gire o tronco sobre a perna da frente e depois sobre a de trás.",
 			image_url: "/exercises/illustrations/mobilizacao-quadril-capsular.avif",
+		
+			indicated_pathologies: ["Artrose", "Tendinopatia Patelar", "Pós-Operatório LCA"],
+			contraindicated_pathologies: ["Fase Aguda Pós-Op", "Fratura Recente"],
+			precaution_level: "supervised",
+			scientific_references: [
+				{
+					title: "Diretrizes Clínicas e Prática Baseada em Evidências para Joelho",
+					year: 2024,
+					evidence_level: "CPG",
+					wiki_artifact_id: "ortho-knee-oa"
+				}
+			],
 		},
 	),
 	ex(
@@ -2371,6 +3636,18 @@ const mobility: PhysioDictionaryEntry[] = [
 			instruction_pt:
 				"Sentado ou sobre um rolo, realize a extensão da coluna torácica para trás, mantendo a lombar estável.",
 			image_url: "/exercises/illustrations/mobilidade-coluna-sentado.avif",
+		
+			indicated_pathologies: ["Lombalgia", "Hérnia de Disco", "Cervicalgia"],
+			contraindicated_pathologies: ["Estenose Severa", "Fratura Vertebral"],
+			precaution_level: "supervised",
+			scientific_references: [
+				{
+					title: "Diretrizes Clínicas e Prática Baseada em Evidências para Coluna",
+					year: 2024,
+					evidence_level: "CPG",
+					wiki_artifact_id: "ortho-lbp-2021"
+				}
+			],
 		},
 	),
 	ex(
@@ -2393,6 +3670,18 @@ const mobility: PhysioDictionaryEntry[] = [
 			instruction_pt:
 				"Realize movimentos circulares e amplos com o ombro ou use um bastão para auxiliar na mobilização passiva.",
 			image_url: "/exercises/illustrations/mobilidade-ombro.avif",
+		
+			indicated_pathologies: ["Lesão de Manguito Rotador", "Discinesia Escapular"],
+			contraindicated_pathologies: ["Luxação Aguda", "Fratura Recente"],
+			precaution_level: "supervised",
+			scientific_references: [
+				{
+					title: "Diretrizes Clínicas e Prática Baseada em Evidências para Ombro",
+					year: 2024,
+					evidence_level: "CPG",
+					wiki_artifact_id: "ortho-rotator-cuff-2025"
+				}
+			],
 		},
 	),
 	ex(
@@ -2415,6 +3704,18 @@ const mobility: PhysioDictionaryEntry[] = [
 			instruction_pt:
 				"Em posição de lunge, coloque a mão oposta no chão e gire o tronco levantando o outro braço para o teto.",
 			image_url: "/exercises/illustrations/worlds-greatest-stretch.avif",
+		
+			indicated_pathologies: ["Lesão de Manguito Rotador", "Discinesia Escapular"],
+			contraindicated_pathologies: ["Luxação Aguda", "Fratura Recente"],
+			precaution_level: "supervised",
+			scientific_references: [
+				{
+					title: "Diretrizes Clínicas e Prática Baseada em Evidências para Ombro",
+					year: 2024,
+					evidence_level: "CPG",
+					wiki_artifact_id: "ortho-rotator-cuff-2025"
+				}
+			],
 		},
 	),
 	ex(
@@ -2437,6 +3738,18 @@ const mobility: PhysioDictionaryEntry[] = [
 			instruction_pt:
 				"Em quatro apoios, realize círculos lentos e amplos com o quadril, explorando toda a amplitude sem mover o tronco.",
 			image_url: "/exercises/illustrations/hip-cars.avif",
+		
+			indicated_pathologies: ["Artrose", "Tendinopatia Patelar", "Pós-Operatório LCA"],
+			contraindicated_pathologies: ["Fase Aguda Pós-Op", "Fratura Recente"],
+			precaution_level: "supervised",
+			scientific_references: [
+				{
+					title: "Diretrizes Clínicas e Prática Baseada em Evidências para Joelho",
+					year: 2024,
+					evidence_level: "CPG",
+					wiki_artifact_id: "ortho-knee-oa"
+				}
+			],
 		},
 	),
 	ex(
@@ -2459,6 +3772,18 @@ const mobility: PhysioDictionaryEntry[] = [
 			instruction_pt:
 				"Em pé, realize círculos lentos e amplos com o ombro, mantendo o braço esticado e sem girar o tronco.",
 			image_url: "/exercises/illustrations/shoulder-cars.avif",
+		
+			indicated_pathologies: ["Lesão de Manguito Rotador", "Discinesia Escapular"],
+			contraindicated_pathologies: ["Luxação Aguda", "Fratura Recente"],
+			precaution_level: "supervised",
+			scientific_references: [
+				{
+					title: "Diretrizes Clínicas e Prática Baseada em Evidências para Ombro",
+					year: 2024,
+					evidence_level: "CPG",
+					wiki_artifact_id: "ortho-rotator-cuff-2025"
+				}
+			],
 		},
 	),
 ];
@@ -2485,6 +3810,18 @@ const respiratory: PhysioDictionaryEntry[] = [
 			instruction_pt:
 				"Coloque uma mão no peito e outra na barriga. Respire pelo nariz fazendo a barriga subir, sem mexer o peito. Solte o ar lentamente pela boca.",
 			image_url: "/exercises/illustrations/respiracao-diafragmatica.avif",
+		
+			indicated_pathologies: ["Lesão de Manguito Rotador", "Discinesia Escapular"],
+			contraindicated_pathologies: ["Luxação Aguda", "Fratura Recente"],
+			precaution_level: "supervised",
+			scientific_references: [
+				{
+					title: "Diretrizes Clínicas e Prática Baseada em Evidências para Ombro",
+					year: 2024,
+					evidence_level: "CPG",
+					wiki_artifact_id: "ortho-rotator-cuff-2025"
+				}
+			],
 		},
 	),
 	ex(
@@ -2507,6 +3844,18 @@ const respiratory: PhysioDictionaryEntry[] = [
 			instruction_pt:
 				"Respire profundamente tentando expandir as costelas para os lados, evitando subir os ombros.",
 			image_url: "/exercises/illustrations/expansao-costal.avif",
+		
+			indicated_pathologies: ["Lesão de Manguito Rotador", "Discinesia Escapular"],
+			contraindicated_pathologies: ["Luxação Aguda", "Fratura Recente"],
+			precaution_level: "supervised",
+			scientific_references: [
+				{
+					title: "Diretrizes Clínicas e Prática Baseada em Evidências para Ombro",
+					year: 2024,
+					evidence_level: "CPG",
+					wiki_artifact_id: "ortho-rotator-cuff-2025"
+				}
+			],
 		},
 	),
 	ex(
@@ -2529,6 +3878,18 @@ const respiratory: PhysioDictionaryEntry[] = [
 			instruction_pt:
 				"Sinta a expansão da respiração em toda a circunferência do tronco (frente, lados e costas) simultaneamente.",
 			image_url: "/exercises/illustrations/respiracao-360.avif",
+		
+			indicated_pathologies: ["Entorse de Tornozelo", "Fascite Plantar"],
+			contraindicated_pathologies: ["Fratura Aguda", "Ruptura de Tendão"],
+			precaution_level: "supervised",
+			scientific_references: [
+				{
+					title: "Diretrizes Clínicas e Prática Baseada em Evidências para Tornozelo",
+					year: 2024,
+					evidence_level: "CPG",
+					wiki_artifact_id: "ortho-ankle-sprain"
+				}
+			],
 		},
 	),
 ];
@@ -2555,6 +3916,18 @@ const neuromuscular: PhysioDictionaryEntry[] = [
 			instruction_pt:
 				"Em um pé só, alcance com o outro pé o mais longe possível nas três direções (frente, lateral-atrás e medial-atrás) sem perder o equilíbrio.",
 			image_url: "/exercises/illustrations/y-balance-test.avif",
+		
+			indicated_pathologies: ["Entorse de Tornozelo", "Fascite Plantar"],
+			contraindicated_pathologies: ["Fratura Aguda", "Ruptura de Tendão"],
+			precaution_level: "supervised",
+			scientific_references: [
+				{
+					title: "Diretrizes Clínicas e Prática Baseada em Evidências para Tornozelo",
+					year: 2024,
+					evidence_level: "CPG",
+					wiki_artifact_id: "ortho-ankle-sprain"
+				}
+			],
 		},
 	),
 	ex(
@@ -2578,6 +3951,18 @@ const neuromuscular: PhysioDictionaryEntry[] = [
 			instruction_pt:
 				"Realize um agachamento com uma faixa elástica puxando seu joelho para dentro. Você deve resistir à tração, mantendo o joelho alinhado.",
 			image_url: "/exercises/illustrations/rnt-squat.avif",
+		
+			indicated_pathologies: ["Artrose", "Tendinopatia Patelar", "Pós-Operatório LCA"],
+			contraindicated_pathologies: ["Fase Aguda Pós-Op", "Fratura Recente"],
+			precaution_level: "supervised",
+			scientific_references: [
+				{
+					title: "Diretrizes Clínicas e Prática Baseada em Evidências para Joelho",
+					year: 2024,
+					evidence_level: "CPG",
+					wiki_artifact_id: "ortho-knee-oa"
+				}
+			],
 		},
 	),
 	ex(
@@ -2600,6 +3985,18 @@ const neuromuscular: PhysioDictionaryEntry[] = [
 			instruction_pt:
 				"Incline o tronco para frente em uma perna só, mantendo a coluna neutra e a perna de trás alinhada, focando no controle do equilíbrio.",
 			image_url: "/exercises/illustrations/single-leg-deadlift.avif",
+		
+			indicated_pathologies: ["Entorse de Tornozelo", "Fascite Plantar"],
+			contraindicated_pathologies: ["Fratura Aguda", "Ruptura de Tendão"],
+			precaution_level: "supervised",
+			scientific_references: [
+				{
+					title: "Diretrizes Clínicas e Prática Baseada em Evidências para Tornozelo",
+					year: 2024,
+					evidence_level: "CPG",
+					wiki_artifact_id: "ortho-ankle-sprain"
+				}
+			],
 		},
 	),
 ];
@@ -2626,6 +4023,18 @@ const vestibular: PhysioDictionaryEntry[] = [
 			instruction_pt:
 				"Olhe para um ponto fixo à sua frente e vire a cabeça lentamente de um lado para o outro, sem tirar os olhos do ponto.",
 			image_url: "/exercises/illustrations/estabilizacao-olhar-vor.avif",
+		
+			indicated_pathologies: ["Prevenção de Quedas", "Reabilitação Pós-Entorse"],
+			contraindicated_pathologies: ["Vertigem Aguda Severa", "Incapacidade de Sustentação de Peso"],
+			precaution_level: "supervised",
+			scientific_references: [
+				{
+					title: "Diretrizes Clínicas e Prática Baseada em Evidências para Equilíbrio",
+					year: 2024,
+					evidence_level: "CPG",
+					wiki_artifact_id: "neuro-balance"
+				}
+			],
 		},
 	),
 	ex(
@@ -2648,6 +4057,18 @@ const vestibular: PhysioDictionaryEntry[] = [
 			instruction_pt:
 				"Sequência de movimentos de cabeça para reposicionamento de cristais no ouvido interno (deve ser orientada por profissional).",
 			image_url: "/exercises/illustrations/manobra-epley.avif",
+		
+			indicated_pathologies: ["Descondicionamento", "Condicionamento Geral"],
+			contraindicated_pathologies: ["Fadiga Extrema", "Instabilidade Cardiovascular"],
+			precaution_level: "supervised",
+			scientific_references: [
+				{
+					title: "Diretrizes Clínicas e Prática Baseada em Evidências para Global",
+					year: 2024,
+					evidence_level: "CPG",
+					wiki_artifact_id: "general-exercise-guidelines"
+				}
+			],
 		},
 	),
 ];
@@ -2674,6 +4095,18 @@ const neurodynamics: PhysioDictionaryEntry[] = [
 			instruction_pt:
 				"Estenda o braço para o lado com a palma da mão aberta. Incline a cabeça para o mesmo lado enquanto dobra o punho, e depois incline para o lado oposto enquanto estende o punho.",
 			image_url: "/exercises/illustrations/deslizamento-nervo-mediano.avif",
+		
+			indicated_pathologies: ["Epicondilite Lateral", "Epicondilite Medial"],
+			contraindicated_pathologies: ["Luxação Aguda", "Fratura Recente"],
+			precaution_level: "supervised",
+			scientific_references: [
+				{
+					title: "Diretrizes Clínicas e Prática Baseada em Evidências para Cotovelo",
+					year: 2024,
+					evidence_level: "CPG",
+					wiki_artifact_id: "ortho-rotator-cuff-2025"
+				}
+			],
 		},
 	),
 	ex(
@@ -2696,6 +4129,18 @@ const neurodynamics: PhysioDictionaryEntry[] = [
 			instruction_pt:
 				"Sentado, estique o joelho e aponte os dedos do pé para cima enquanto olha para o teto. Depois, dobre o joelho e aponte o pé para baixo enquanto olha para o colo.",
 			image_url: "/exercises/illustrations/deslizamento-nervo-ciatico.avif",
+		
+			indicated_pathologies: ["Artrose", "Tendinopatia Patelar", "Pós-Operatório LCA"],
+			contraindicated_pathologies: ["Fase Aguda Pós-Op", "Fratura Recente"],
+			precaution_level: "supervised",
+			scientific_references: [
+				{
+					title: "Diretrizes Clínicas e Prática Baseada em Evidências para Joelho",
+					year: 2024,
+					evidence_level: "CPG",
+					wiki_artifact_id: "ortho-knee-oa"
+				}
+			],
 		},
 	),
 	ex(
@@ -2718,6 +4163,18 @@ const neurodynamics: PhysioDictionaryEntry[] = [
 			instruction_pt:
 				"Com o braço ao lado do corpo e palma para trás, dobre o punho e gire o braço para dentro enquanto inclina a cabeça.",
 			image_url: "/exercises/illustrations/deslizamento-nervo-radial.avif",
+		
+			indicated_pathologies: ["Epicondilite Lateral", "Epicondilite Medial"],
+			contraindicated_pathologies: ["Luxação Aguda", "Fratura Recente"],
+			precaution_level: "supervised",
+			scientific_references: [
+				{
+					title: "Diretrizes Clínicas e Prática Baseada em Evidências para Cotovelo",
+					year: 2024,
+					evidence_level: "CPG",
+					wiki_artifact_id: "ortho-rotator-cuff-2025"
+				}
+			],
 		},
 	),
 	ex(
@@ -2740,6 +4197,18 @@ const neurodynamics: PhysioDictionaryEntry[] = [
 			instruction_pt:
 				"Faça um 'óculos' com a mão e leve em direção ao rosto, rodando o punho para fora e para cima.",
 			image_url: "/exercises/illustrations/deslizamento-nervo-ulnar.avif",
+		
+			indicated_pathologies: ["Lesão de Manguito Rotador", "Discinesia Escapular"],
+			contraindicated_pathologies: ["Luxação Aguda", "Fratura Recente"],
+			precaution_level: "supervised",
+			scientific_references: [
+				{
+					title: "Diretrizes Clínicas e Prática Baseada em Evidências para Ombro",
+					year: 2024,
+					evidence_level: "CPG",
+					wiki_artifact_id: "ortho-rotator-cuff-2025"
+				}
+			],
 		},
 	),
 ];
@@ -2767,6 +4236,18 @@ const geriatricFunctional: PhysioDictionaryEntry[] = [
 			instruction_pt:
 				"Sente-se em uma cadeira firme e levante-se completamente sem usar as mãos para apoio. Repita o movimento com controle.",
 			image_url: "/exercises/illustrations/sentar-levantar.avif",
+		
+			indicated_pathologies: ["Síndrome do Túnel do Carpo", "Tendinopatia de Punho"],
+			contraindicated_pathologies: ["Fratura Recente", "Luxação Aguda"],
+			precaution_level: "supervised",
+			scientific_references: [
+				{
+					title: "Diretrizes Clínicas e Prática Baseada em Evidências para Punho",
+					year: 2024,
+					evidence_level: "CPG",
+					wiki_artifact_id: "ortho-cts"
+				}
+			],
 		},
 	),
 	ex(
@@ -2789,6 +4270,18 @@ const geriatricFunctional: PhysioDictionaryEntry[] = [
 			instruction_pt:
 				"Em pé, estenda o braço para frente o máximo que conseguir sem tirar os calcanhares do chão ou perder o equilíbrio.",
 			image_url: "/exercises/illustrations/alcance-funcional.avif",
+		
+			indicated_pathologies: ["Entorse de Tornozelo", "Fascite Plantar"],
+			contraindicated_pathologies: ["Fratura Aguda", "Ruptura de Tendão"],
+			precaution_level: "supervised",
+			scientific_references: [
+				{
+					title: "Diretrizes Clínicas e Prática Baseada em Evidências para Tornozelo",
+					year: 2024,
+					evidence_level: "CPG",
+					wiki_artifact_id: "ortho-ankle-sprain"
+				}
+			],
 		},
 	),
 	ex(
@@ -2811,6 +4304,18 @@ const geriatricFunctional: PhysioDictionaryEntry[] = [
 			instruction_pt:
 				"Caminhe em linha reta, colocando um pé diretamente à frente do outro (calcanhar tocando os dedos), mantendo os braços abertos para equilíbrio.",
 			image_url: "/exercises/illustrations/marcha_tandem.avif",
+		
+			indicated_pathologies: ["Entorse de Tornozelo", "Fascite Plantar"],
+			contraindicated_pathologies: ["Fratura Aguda", "Ruptura de Tendão"],
+			precaution_level: "supervised",
+			scientific_references: [
+				{
+					title: "Diretrizes Clínicas e Prática Baseada em Evidências para Tornozelo",
+					year: 2024,
+					evidence_level: "CPG",
+					wiki_artifact_id: "ortho-ankle-sprain"
+				}
+			],
 		},
 	),
 	ex(
@@ -2834,6 +4339,18 @@ const geriatricFunctional: PhysioDictionaryEntry[] = [
 			instruction_pt:
 				"Suba um degrau apoiando-se em um corrimão ou suporte, mantendo o controle do joelho e do tronco.",
 			image_url: "/exercises/illustrations/subida-degrau-assistida.avif",
+		
+			indicated_pathologies: ["Artrose", "Tendinopatia Patelar", "Pós-Operatório LCA"],
+			contraindicated_pathologies: ["Fase Aguda Pós-Op", "Fratura Recente"],
+			precaution_level: "supervised",
+			scientific_references: [
+				{
+					title: "Diretrizes Clínicas e Prática Baseada em Evidências para Joelho",
+					year: 2024,
+					evidence_level: "CPG",
+					wiki_artifact_id: "ortho-knee-oa"
+				}
+			],
 		},
 	),
 ];
