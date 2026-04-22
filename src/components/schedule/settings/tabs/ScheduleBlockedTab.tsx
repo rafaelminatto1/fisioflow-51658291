@@ -21,9 +21,8 @@ export function ScheduleBlockedTab() {
 
 	return (
 		<div className="space-y-5">
-			{/* Filter tabs */}
 			<div
-				className="flex items-center gap-1.5 flex-wrap p-1 bg-muted/40 rounded-xl"
+				className="flex items-center gap-0 border-b"
 				role="tablist"
 				aria-label="Filtro de bloqueios"
 			>
@@ -38,12 +37,15 @@ export function ScheduleBlockedTab() {
 							aria-selected={isActive}
 							onClick={() => setFilter(f.value)}
 							className={cn(
-								"flex items-center gap-1.5 px-3 py-2 rounded-lg text-xs font-medium transition-all duration-150",
+								"flex items-center gap-1.5 px-4 py-2.5 text-xs font-medium transition-colors relative",
 								isActive
-									? "bg-card text-foreground shadow-sm border border-border/60"
-									: "text-muted-foreground hover:text-foreground hover:bg-muted/60",
+									? "text-foreground"
+									: "text-muted-foreground hover:text-foreground",
 							)}
 						>
+							{isActive && (
+								<span className="absolute bottom-0 left-0 right-0 h-0.5 bg-red-500 rounded-full" />
+							)}
 							<Icon className={cn("h-3.5 w-3.5", isActive && "text-red-500")} />
 							{f.label}
 						</button>
@@ -51,7 +53,6 @@ export function ScheduleBlockedTab() {
 				})}
 			</div>
 
-			{/* Content */}
 			<BlockedTimesManager filter={filter} />
 		</div>
 	);
