@@ -357,7 +357,7 @@ export default function Exercises() {
 									className="gap-1.5 sm:gap-2 h-full rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent data-[state=active]:shadow-none px-3 sm:px-4 md:px-6 text-xs sm:text-sm"
 								>
 									<Video className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
-									<span className="hidden xs:inline">Vídeos</span>
+									<span className="hidden xs:inline">Mídias</span>
 								</TabsTrigger>
 								<TabsTrigger
 									value="templates"
@@ -427,7 +427,7 @@ export default function Exercises() {
 										<span className="font-medium">
 											{exercisesWithoutVideo.length} exercícios
 										</span>{" "}
-										sem vídeo demonstrativo
+										sem mídia demonstrativa
 									</p>
 									<Button
 										variant="outline"
