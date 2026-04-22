@@ -1,28 +1,14 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { SettingsSectionCard } from "@/components/schedule/settings/shared/SettingsSectionCard";
 import { AlignHorizontalSpaceAround } from "lucide-react";
+import { useSlotConfig } from "@/hooks/useSlotConfig";
+import { cn } from "@/lib/utils";
 
-interface SlotAlignmentState {
+interface SlotAlignmentLocalState {
 	slotInterval: 15 | 30 | 60;
 	roundToNextSlot: boolean;
-}
-
-const STORAGE_KEY = "fisioflow-slot-alignment";
-
-function loadState(): SlotAlignmentState {
-	try {
-		const raw = localStorage.getItem(STORAGE_KEY);
-		if (raw) return JSON.parse(raw);
-	} catch {
-		// ignore parse errors, use defaults
-	}
-	return { slotInterval: 15, roundToNextSlot: false };
-}
-
-function persist(state: SlotAlignmentState) {
-	localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
 }
 
 const SLOT_OPTIONS: { value: 15 | 30 | 60; label: string }[] = [
@@ -62,11 +48,39 @@ function MiniTimeline({ interval }: { interval: number }) {
 }
 
 export function SlotAlignmentSettings() {
-	const [state, setState] = useState<SlotAlignmentState>(loadState);
+	const { data: remote, save, isSaving } = useSlotConfig();
+
+	const [state, setState] = useState<SlotAlignmentLocalState>({
+		slotInterval: remote.slotInterval,
+		roundToNextSlot: false,
+	});
+
+	const [dirty, setDirty] = useState(false);
 
 	useEffect(() => {
-		persist(state);
-	}, [state]);
+		if (!dirty) {
+			setState({ slotInterval: remote.slotInterval, roundToNextSlot: false });
+		}
+	}, [remote, dirty]);
+
+	const update = useCallback(
+		<K extends keyof SlotAlignmentLocalState>(
+			key: K,
+			value: SlotAlignmentLocalState[K],
+		) => {
+			setState((prev) => ({ ...prev, [key]: value }));
+			setDirty(true);
+		},
+		[],
+	);
+
+	const handleSave = useCallback(() => {
+		save({
+			slotInterval: state.slotInterval,
+			alignmentType: state.roundToNextSlot ? "round" : "fixed",
+		});
+		setDirty(false);
+	}, [state, save]);
 
 	return (
 		<SettingsSectionCard
@@ -91,9 +105,7 @@ export function SlotAlignmentSettings() {
 								type="radio"
 								name="slot-interval"
 								checked={state.slotInterval === opt.value}
-								onChange={() =>
-									setState((prev) => ({ ...prev, slotInterval: opt.value }))
-								}
+								onChange={() => update("slotInterval", opt.value)}
 								className="w-4 h-4 text-teal-600 focus:ring-teal-500"
 							/>
 							<span className="text-sm font-medium">{opt.label}</span>
@@ -107,9 +119,7 @@ export function SlotAlignmentSettings() {
 					<Switch
 						id="round-next-slot"
 						checked={state.roundToNextSlot}
-						onCheckedChange={(v) =>
-							setState((prev) => ({ ...prev, roundToNextSlot: v }))
-						}
+						onCheckedChange={(v) => update("roundToNextSlot", v)}
 					/>
 					<Label
 						htmlFor="round-next-slot"
@@ -118,6 +128,19 @@ export function SlotAlignmentSettings() {
 						Arredondar para o próximo slot disponível
 					</Label>
 				</div>
+
+				{dirty && (
+					<div className="flex justify-end pt-2">
+						<button
+							type="button"
+							onClick={handleSave}
+							disabled={isSaving}
+							className="px-4 py-2 text-sm font-medium rounded-lg bg-teal-600 text-white hover:bg-teal-700 disabled:opacity-50 transition-colors"
+						>
+							{isSaving ? "Salvando..." : "Salvar alterações"}
+						</button>
+					</div>
+				)}
 			</div>
 		</SettingsSectionCard>
 	);
