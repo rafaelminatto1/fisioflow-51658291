@@ -17,6 +17,7 @@ import {
 	Loader2,
 	FileText,
 	Search,
+	Sparkles,
 } from "lucide-react";
 import { toast } from "sonner";
 import { Commands } from "./suggestion/commands";
@@ -25,6 +26,7 @@ import { uploadToR2 } from "@/lib/storage/r2-storage";
 import { getWorkersApiUrl } from "@/lib/api/config";
 import { getNeonAccessToken } from "@/lib/auth/neon-token";
 import { useGlobalShortcuts } from "@/hooks/useGlobalShortcuts";
+import { cn } from "@/lib/utils";
 // Lazy load — react-filerobot-image-editor puxa styled-components + @scaleflex/ui (~350 KB).
 // Carrega apenas quando o usuário abre a edição de imagem.
 const LazyFilerobotImageEditor = React.lazy(() => import("react-filerobot-image-editor"));

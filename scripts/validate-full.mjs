@@ -13,6 +13,24 @@ const fail = (msg) => { failed++; console.error(`  ❌ ${msg}`); };
 const info = (msg) => console.log(`\n🔷 ${msg}`);
 const skip = (msg) => console.log(`  ⏭  ${msg}`);
 
+function buildUniqueAppointmentSlot() {
+  const now = new Date();
+  const dayOffset = 14 + (now.getUTCDate() % 7);
+  const future = new Date(now.getTime() + dayOffset * 24 * 60 * 60 * 1000);
+  const slotSeed = Number(String(Date.now()).slice(-4));
+  const startHour = 8 + (slotSeed % 9);
+  const startMinute = (Math.floor(slotSeed / 10) % 4) * 15;
+  const endMinuteTotal = startHour * 60 + startMinute + 50;
+  const endHour = Math.floor(endMinuteTotal / 60);
+  const endMinute = endMinuteTotal % 60;
+
+  return {
+    date: future.toISOString().slice(0, 10),
+    startTime: `${String(startHour).padStart(2, '0')}:${String(startMinute).padStart(2, '0')}`,
+    endTime: `${String(endHour).padStart(2, '0')}:${String(endMinute).padStart(2, '0')}`,
+  };
+}
+
 async function getToken() {
   const res = await fetch(`${API}/api/auth/login`, {
     method: 'POST',
@@ -90,12 +108,13 @@ async function main() {
     const plist = await req('GET', '/api/patients?limit=1', token);
     const patient = plist.json?.data?.[0];
     if (!patient) { skip('Sem paciente disponível'); return; }
+    const slot = buildUniqueAppointmentSlot();
 
     const list = await req('GET', '/api/appointments', token);
     if (list.ok) { ok(`LIST → ${list.status} — ${list.json?.data?.length ?? 0} registros`); } else { fail(`LIST → ${list.status}`); }
 
     const create = await req('POST', '/api/appointments', token, {
-      patientId: patient.id, date: '2026-05-10', startTime: '10:00', endTime: '10:50',
+      patientId: patient.id, date: slot.date, startTime: slot.startTime, endTime: slot.endTime,
     });
     const aid = create.json?.data?.id;
     if (create.status === 201 && aid) { ok(`CREATE → 201 id=${aid}`); } else { fail(`CREATE → ${create.status}: ${JSON.stringify(create.json)}`); }
