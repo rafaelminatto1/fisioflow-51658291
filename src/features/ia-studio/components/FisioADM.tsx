@@ -18,6 +18,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { BioVisionOverlay } from "./BioVisionOverlay";
 import { toast } from "sonner";
+import { cn } from "@/lib/utils";
 
 interface FisioADMProps {
 	isOpen: boolean;
