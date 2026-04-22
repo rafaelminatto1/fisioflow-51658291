@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo, useRef, useCallback } from 'react';
 import {
   View,
   Text,
@@ -10,7 +10,8 @@ import {
   Platform,
   Modal,
   TextInput,
-  Switch,
+  Animated,
+  Dimensions,
 } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -28,6 +29,8 @@ import * as z from 'zod';
 import { PatientAutocomplete } from '@/components/appointment/PatientAutocomplete';
 import { OptionSelector } from '@/components/appointment/OptionSelector';
 import DateTimePicker from '@react-native-community/datetimepicker';
+
+const SCREEN_WIDTH = Dimensions.get('window').width;
 
 const APPOINTMENT_TYPES = [
   'Avaliação Inicial', 'Fisioterapia', 'Osteopatia', 'Pilates', 
@@ -75,6 +78,26 @@ export default function AppointmentFormScreen() {
   const [isPaid, setIsPaid] = useState(false);
   const [,setFinancialRecordId] = useState<string | null>(null);
 
+  const drawerAnim = useRef(new Animated.Value(0)).current;
+
+  useEffect(() => {
+    Animated.spring(drawerAnim, {
+      toValue: showPaymentModal ? 1 : 0,
+      useNativeDriver: true,
+      tension: 80,
+      friction: 14,
+    }).start();
+  }, [showPaymentModal, drawerAnim]);
+
+  const closePaymentDrawer = useCallback(() => {
+    Animated.spring(drawerAnim, {
+      toValue: 0,
+      useNativeDriver: true,
+      tension: 80,
+      friction: 14,
+    }).start(() => setShowPaymentModal(false));
+  }, [drawerAnim]);
+
   const { 
     createAsync, 
     updateAsync, 
@@ -113,36 +136,34 @@ export default function AppointmentFormScreen() {
   };
 
   useEffect(() => {
-    if (appointmentId) {
-      loadAppointmentData();
-    }
-  }, [appointmentId]);
-
-  const loadAppointmentData = async () => {
-    try {
-      const data = await getAppointmentByIdHook(appointmentId!);
-      if (data) {
-        const appointmentDate = new Date(data.date);
-        reset({
-          patientId: data.patientId,
-          patientName: data.patientName,
-          date: format(appointmentDate, 'dd/MM/yyyy'),
-          time: data.time || format(appointmentDate, 'HH:mm'),
-          type: data.type,
-          duration: data.duration,
-          status: data.status as any,
-          notes: data.notes || '',
-          isGroup: data.isGroup || false,
-          additionalNames: data.additionalNames || '',
-          isUnlimited: data.isUnlimited || false,
-        });
+    if (!appointmentId) return;
+    const load = async () => {
+      try {
+        const data = await getAppointmentByIdHook(appointmentId);
+        if (data) {
+          const appointmentDate = new Date(data.date);
+          reset({
+            patientId: data.patientId,
+            patientName: data.patientName,
+            date: format(appointmentDate, 'dd/MM/yyyy'),
+            time: data.time || format(appointmentDate, 'HH:mm'),
+            type: data.type,
+            duration: data.duration,
+            status: data.status as any,
+            notes: data.notes || '',
+            isGroup: data.isGroup || false,
+            additionalNames: data.additionalNames || '',
+            isUnlimited: data.isUnlimited || false,
+          });
+        }
+      } catch {
+        Alert.alert('Erro', 'Não foi possível carregar os dados do agendamento.');
+      } finally {
+        setIsLoadingData(false);
       }
-    } catch  {
-      Alert.alert('Erro', 'Não foi possível carregar os dados do agendamento.');
-    } finally {
-      setIsLoadingData(false);
-    }
-  };
+    };
+    load();
+  }, [appointmentId, reset]);
 
   const onSave = async (formData: AppointmentFormData) => {
     medium();
@@ -555,22 +576,6 @@ export default function AppointmentFormScreen() {
           </View>
         </View>
 
-        <Text style={[styles.label, { color: colors.textSecondary }]}>Observações</Text>
-        <Controller
-          control={control}
-          name="notes"
-          render={({ field: { value, onChange } }) => (
-            <Input
-              placeholder="Observações sobre o atendimento..."
-              value={value}
-              onChangeText={onChange}
-              multiline
-              numberOfLines={3}
-              style={{ minHeight: 80 }}
-            />
-          )}
-        />
-
         {/* Payment Section - Only for editing */}
         {isEditing && (
           <View style={[styles.paymentSection, { borderColor: colors.border, backgroundColor: colors.surface }]}>
@@ -618,6 +623,22 @@ export default function AppointmentFormScreen() {
           </View>
         )}
 
+        <Text style={[styles.label, { color: colors.textSecondary }]}>Observações</Text>
+        <Controller
+          control={control}
+          name="notes"
+          render={({ field: { value, onChange } }) => (
+            <Input
+              placeholder="Observações sobre o atendimento..."
+              value={value}
+              onChangeText={onChange}
+              multiline
+              numberOfLines={3}
+              style={{ minHeight: 80 }}
+            />
+          )}
+        />
+
         {/* Botão de criar — apenas para novo agendamento. Edição salva via prompt ao voltar. */}
         {!isEditing && (
           <Button
@@ -652,94 +673,114 @@ export default function AppointmentFormScreen() {
         <View style={{ height: 32 }} />
       </ScrollView>
 
-      {/* Payment Modal */}
+      {/* Payment Modal - Left Drawer */}
       <Modal
         visible={showPaymentModal}
-        animationType="slide"
+        animationType="fade"
         transparent
-        onRequestClose={() => setShowPaymentModal(false)}
+        onRequestClose={closePaymentDrawer}
       >
-        <SafeAreaView style={styles.modalOverlay}>
-          <View style={[styles.modalContent, { backgroundColor: colors.background }]}>
-            <View style={[styles.modalHeader, { borderBottomColor: colors.border }]}>
-              <Text style={[styles.modalTitle, { color: colors.text }]}>Registrar Pagamento</Text>
-              <TouchableOpacity onPress={() => setShowPaymentModal(false)}>
-                <Ionicons name="close" size={24} color={colors.text} />
-              </TouchableOpacity>
-            </View>
-
-            <ScrollView style={styles.modalBody} keyboardShouldPersistTaps="handled">
-              {/* Valor */}
-              <Text style={[styles.label, { color: colors.textSecondary }]}>Valor da Sessão *</Text>
-              <View style={[styles.valueInputContainer, { borderColor: colors.border, backgroundColor: colors.surface }]}>
-                <Text style={[styles.currencyPrefix, { color: colors.textSecondary }]}>R$</Text>
-                <TextInput
-                  key="payment-value-input"
-                  style={[styles.valueInput, { color: colors.text }]}
-                  value={displayAmount.replace('R$', '').trim()}
-                  onChangeText={handleAmountChange}
-                  placeholder="0,00"
-                  placeholderTextColor={colors.textMuted}
-                  keyboardType="numeric"
-                />
-              </View>
-              <Text style={styles.inputHint}>Toque para digitar o valor em centavos</Text>
-
-              {/* Payment Method */}
-              <Text style={[styles.label, { color: colors.textSecondary, marginTop: 16 }]}>Forma de Pagamento</Text>
-              <View style={styles.paymentMethodsGrid}>
-                {PAYMENT_METHODS.map((method) => (
-                  <TouchableOpacity
-                    key={method.value}
-                    style={[
-                      styles.paymentMethodButton,
-                      { borderColor: colors.border },
-                      selectedPaymentMethod === method.value && { 
-                        backgroundColor: colors.primary + '20', 
-                        borderColor: colors.primary 
-                      }
-                    ]}
-                    onPress={() => setSelectedPaymentMethod(method.value)}
-                  >
-                    <Ionicons
-                      name={
-                        method.value === 'pix' ? 'qr-code-outline' :
-                        method.value === 'cash' ? 'cash-outline' :
-                        method.value === 'credit_card' ? 'card-outline' :
-                        method.value === 'debit_card' ? 'card-outline' :
-                        'swap-horizontal-outline'
-                      }
-                      size={24}
-                      color={selectedPaymentMethod === method.value ? colors.primary : colors.textSecondary}
-                    />
-                    <Text style={[
-                      styles.paymentMethodText,
-                      { color: selectedPaymentMethod === method.value ? colors.primary : colors.textSecondary }
-                    ]}>
-                      {method.label}
-                    </Text>
-                  </TouchableOpacity>
-                ))}
+        <View style={styles.drawerOverlay}>
+          <TouchableOpacity
+            style={styles.drawerBackdrop}
+            activeOpacity={1}
+            onPress={closePaymentDrawer}
+          />
+          <Animated.View
+            style={[
+              styles.drawerPanel,
+              { backgroundColor: colors.background },
+              {
+                transform: [{
+                  translateX: drawerAnim.interpolate({
+                    inputRange: [0, 1],
+                    outputRange: [-SCREEN_WIDTH * 0.85, 0],
+                  })
+                }]
+              }
+            ]}
+          >
+            <SafeAreaView style={{ flex: 1 }} edges={['top', 'left', 'bottom']}>
+              <View style={[styles.modalHeader, { borderBottomColor: colors.border }]}>
+                <Text style={[styles.modalTitle, { color: colors.text }]}>Registrar Pagamento</Text>
+                <TouchableOpacity onPress={closePaymentDrawer}>
+                  <Ionicons name="close" size={24} color={colors.text} />
+                </TouchableOpacity>
               </View>
 
-              {/* Confirm Button */}
-              <TouchableOpacity
-                style={[styles.confirmPaymentButton, { backgroundColor: colors.success }]}
-                onPress={handlePayment}
-                disabled={createFinancialMutation.isPending || markAsPaidMutation.isPending}
-              >
-                {(createFinancialMutation.isPending || markAsPaidMutation.isPending) ? (
-                  <ActivityIndicator color="#fff" />
-                ) : (
-                  <>
-                    <Ionicons name="checkmark-circle" size={24} color="#fff" />
-                    <Text style={styles.confirmPaymentText}>Confirmar Pagamento</Text>
-                  </>
-                )}
-              </TouchableOpacity>
-            </ScrollView>
-          </View>
-        </SafeAreaView>
+              <ScrollView style={styles.modalBody} keyboardShouldPersistTaps="handled">
+                {/* Valor */}
+                <Text style={[styles.label, { color: colors.textSecondary }]}>Valor da Sessão *</Text>
+                <View style={[styles.valueInputContainer, { borderColor: colors.border, backgroundColor: colors.surface }]}>
+                  <Text style={[styles.currencyPrefix, { color: colors.textSecondary }]}>R$</Text>
+                  <TextInput
+                    key="payment-value-input"
+                    style={[styles.valueInput, { color: colors.text }]}
+                    value={displayAmount.replace('R$', '').trim()}
+                    onChangeText={handleAmountChange}
+                    placeholder="0,00"
+                    placeholderTextColor={colors.textMuted}
+                    keyboardType="numeric"
+                  />
+                </View>
+                <Text style={styles.inputHint}>Toque para digitar o valor em centavos</Text>
+
+                {/* Payment Method */}
+                <Text style={[styles.label, { color: colors.textSecondary, marginTop: 16 }]}>Forma de Pagamento</Text>
+                <View style={styles.paymentMethodsGrid}>
+                  {PAYMENT_METHODS.map((method) => (
+                    <TouchableOpacity
+                      key={method.value}
+                      style={[
+                        styles.paymentMethodButton,
+                        { borderColor: colors.border },
+                        selectedPaymentMethod === method.value && { 
+                          backgroundColor: colors.primary + '20', 
+                          borderColor: colors.primary 
+                        }
+                      ]}
+                      onPress={() => setSelectedPaymentMethod(method.value)}
+                    >
+                      <Ionicons
+                        name={
+                          method.value === 'pix' ? 'qr-code-outline' :
+                          method.value === 'cash' ? 'cash-outline' :
+                          method.value === 'credit_card' ? 'card-outline' :
+                          method.value === 'debit_card' ? 'card-outline' :
+                          'swap-horizontal-outline'
+                        }
+                        size={24}
+                        color={selectedPaymentMethod === method.value ? colors.primary : colors.textSecondary}
+                      />
+                      <Text style={[
+                        styles.paymentMethodText,
+                        { color: selectedPaymentMethod === method.value ? colors.primary : colors.textSecondary }
+                      ]}>
+                        {method.label}
+                      </Text>
+                    </TouchableOpacity>
+                  ))}
+                </View>
+
+                {/* Confirm Button */}
+                <TouchableOpacity
+                  style={[styles.confirmPaymentButton, { backgroundColor: colors.success }]}
+                  onPress={handlePayment}
+                  disabled={createFinancialMutation.isPending || markAsPaidMutation.isPending}
+                >
+                  {(createFinancialMutation.isPending || markAsPaidMutation.isPending) ? (
+                    <ActivityIndicator color="#fff" />
+                  ) : (
+                    <>
+                      <Ionicons name="checkmark-circle" size={24} color="#fff" />
+                      <Text style={styles.confirmPaymentText}>Confirmar Pagamento</Text>
+                    </>
+                  )}
+                </TouchableOpacity>
+              </ScrollView>
+            </SafeAreaView>
+          </Animated.View>
+        </View>
       </Modal>
     </SafeAreaView>
   );
@@ -751,35 +792,36 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    paddingHorizontal: 16,
-    paddingVertical: 16,
+    paddingHorizontal: 20,
+    paddingVertical: 18,
     borderBottomWidth: 1,
   },
   backButton: {
-    padding: 8,
-    marginLeft: -8,
+    padding: 10,
+    marginLeft: -10,
   },
-  title: { fontSize: 18, fontWeight: '600' },
-  content: { flex: 1, padding: 16 },
-  label: { fontSize: 14, fontWeight: '500', marginBottom: 6 },
-  row: { flexDirection: 'row', gap: 12 },
+  title: { fontSize: 20, fontWeight: '700' },
+  content: { flex: 1, padding: 20, gap: 4 },
+  label: { fontSize: 14, fontWeight: '600', marginBottom: 8 },
+  row: { flexDirection: 'row', gap: 16 },
   col: { flex: 1 },
   pickerButton: {
     flexDirection: 'row',
     alignItems: 'center',
-    height: 52,
+    height: 56,
     borderWidth: 1,
-    borderRadius: 12,
-    paddingHorizontal: 14,
+    borderRadius: 14,
+    paddingHorizontal: 16,
     marginBottom: 16,
   },
   pickerText: {
     marginLeft: 8,
     fontSize: 15,
   },
-  confirmPickerButton: {
-    marginTop: -8,
-    marginBottom: 16,
+  sectionDivider: {
+    height: 1,
+    marginVertical: 8,
+    opacity: 0.08,
   },
   saveButton: { marginTop: 8 },
   startButton: { marginTop: 12 },
@@ -787,30 +829,30 @@ const styles = StyleSheet.create({
   errorText: { color: '#ef4444', fontSize: 12, marginTop: -12, marginBottom: 12 },
   // Payment Section Styles
   paymentSection: {
-    marginTop: 16,
-    marginBottom: 16,
-    borderRadius: 16,
+    marginTop: 20,
+    marginBottom: 20,
+    borderRadius: 18,
     borderWidth: 1,
-    padding: 16,
+    padding: 20,
   },
   paymentHeader: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 10,
-    marginBottom: 16,
+    gap: 12,
+    marginBottom: 18,
   },
   paymentTitle: {
-    fontSize: 16,
-    fontWeight: '600',
+    fontSize: 18,
+    fontWeight: '700',
   },
   paymentStatusRow: {
-    marginBottom: 16,
+    marginBottom: 18,
   },
   paymentInfo: {
-    gap: 6,
+    gap: 8,
   },
   paymentLabel: {
-    fontSize: 12,
+    fontSize: 13,
     fontWeight: '500',
   },
   statusBadge: {
@@ -823,74 +865,84 @@ const styles = StyleSheet.create({
     alignSelf: 'flex-start',
   },
   statusText: {
-    fontSize: 13,
+    fontSize: 14,
     fontWeight: '600',
   },
   payButton: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    gap: 8,
+    gap: 10,
+    paddingVertical: 16,
+    borderRadius: 14,
   },
   payButtonText: {
     color: '#fff',
-    fontSize: 15,
-    fontWeight: '600',
+    fontSize: 16,
+    fontWeight: '700',
   },
   paidInfo: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 8,
-    paddingVertical: 12,
-    paddingHorizontal: 16,
-    borderRadius: 12,
+    gap: 10,
+    paddingVertical: 14,
+    paddingHorizontal: 18,
+    borderRadius: 14,
   },
   paidText: {
     fontSize: 14,
     fontWeight: '500',
   },
-  // Modal Styles
-  modalOverlay: {
+  // Drawer Styles
+  drawerOverlay: {
+    flex: 1,
+    flexDirection: 'row',
+  },
+  drawerBackdrop: {
     flex: 1,
     backgroundColor: 'rgba(0,0,0,0.5)',
-    justifyContent: 'flex-end',
   },
-  modalContent: {
-    borderTopLeftRadius: 24,
-    borderTopRightRadius: 24,
-    maxHeight: '80%',
+  drawerPanel: {
+    position: 'absolute',
+    left: 0,
+    top: 0,
+    bottom: 0,
+    width: SCREEN_WIDTH * 0.85,
+    maxWidth: 420,
+    borderRightWidth: 1,
+    borderRightColor: 'rgba(0,0,0,0.1)',
   },
   modalHeader: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    paddingHorizontal: 20,
-    paddingVertical: 16,
+    paddingHorizontal: 24,
+    paddingVertical: 18,
     borderBottomWidth: 1,
   },
   modalTitle: {
-    fontSize: 18,
-    fontWeight: '600',
+    fontSize: 20,
+    fontWeight: '700',
   },
   modalBody: {
-    padding: 20,
+    padding: 24,
   },
   valueInputContainer: {
     flexDirection: 'row',
     alignItems: 'center',
     borderWidth: 1,
-    borderRadius: 12,
-    paddingHorizontal: 16,
-    height: 56,
+    borderRadius: 14,
+    paddingHorizontal: 18,
+    height: 60,
   },
   currencyPrefix: {
-    fontSize: 18,
+    fontSize: 20,
     fontWeight: '700',
-    marginRight: 8,
+    marginRight: 10,
   },
   valueInput: {
     flex: 1,
-    fontSize: 20,
+    fontSize: 22,
     fontWeight: '600',
   },
   inputHint: {
@@ -900,37 +952,36 @@ const styles = StyleSheet.create({
     marginTop: 4,
   },
   paymentMethodsGrid: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
+    flexDirection: 'column',
     gap: 10,
     marginTop: 8,
   },
   paymentMethodButton: {
-    width: '31%',
+    flexDirection: 'row',
     alignItems: 'center',
-    paddingVertical: 14,
-    paddingHorizontal: 8,
-    borderRadius: 12,
+    gap: 12,
+    width: '100%',
+    paddingVertical: 16,
+    paddingHorizontal: 16,
+    borderRadius: 14,
     borderWidth: 1,
   },
   paymentMethodText: {
-    fontSize: 12,
+    fontSize: 15,
     fontWeight: '500',
-    marginTop: 6,
-    textAlign: 'center',
   },
   confirmPaymentButton: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
     gap: 10,
-    marginTop: 24,
-    paddingVertical: 16,
-    borderRadius: 12,
+    marginTop: 28,
+    paddingVertical: 18,
+    borderRadius: 14,
   },
   confirmPaymentText: {
     color: '#fff',
-    fontSize: 16,
-    fontWeight: '600',
+    fontSize: 17,
+    fontWeight: '700',
   },
 });

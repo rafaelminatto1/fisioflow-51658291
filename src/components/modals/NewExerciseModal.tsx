@@ -73,7 +73,7 @@ const exerciseSchema = z.object({
 	alternativeEquipment: z.array(z.string()).optional(),
 	precaution_level: z.enum(["safe", "supervised", "restricted"]).optional(),
 	precaution_notes: z.string().optional(),
-	scientific_references: z.array(z.any()).optional(),
+	scientific_references: z.union([z.array(z.any()), z.string()]).optional(),
 });
 
 type ExerciseFormData = z.infer<typeof exerciseSchema>;
@@ -151,11 +151,11 @@ export function NewExerciseModal({
 				sets: exercise.sets || undefined,
 				repetitions: exercise.repetitions || undefined,
 				duration: exercise.duration || undefined,
-				indicated_pathologies: exercise.indicated_pathologies || [],
-				contraindicated_pathologies: exercise.contraindicated_pathologies || [],
-				body_parts: exercise.body_parts || [],
-				equipment: exercise.equipment || [],
-				alternativeEquipment: exercise.alternativeEquipment || [],
+				indicated_pathologies: Array.isArray(exercise.indicated_pathologies) ? exercise.indicated_pathologies : [],
+				contraindicated_pathologies: Array.isArray(exercise.contraindicated_pathologies) ? exercise.contraindicated_pathologies : [],
+				body_parts: Array.isArray(exercise.body_parts) ? exercise.body_parts : [],
+				equipment: Array.isArray(exercise.equipment) ? exercise.equipment : [],
+				alternativeEquipment: Array.isArray((exercise as any).alternativeEquipment) ? (exercise as any).alternativeEquipment : [],
 				precaution_level: (exercise as any).precaution_level || "safe",
 				precaution_notes: (exercise as any).precaution_notes || "",
 				scientific_references: (exercise as any).scientific_references || [],
@@ -835,110 +835,131 @@ export function NewExerciseModal({
 									</div>
 									
 									<div className="space-y-2">
-										{(form.watch("scientific_references") || []).map((ref: any, index: number) => (
-											<div key={index} className="flex gap-2 items-start border p-2 rounded-lg bg-muted/30">
-												<div className="flex-1 grid grid-cols-1 sm:grid-cols-2 gap-2">
-													<Input 
-														placeholder="Título do artigo" 
-														className="h-8 text-xs" 
-														value={ref.title}
-														onChange={(e) => {
-															const refs = [...form.getValues("scientific_references")];
-															refs[index].title = e.target.value;
+										{Array.isArray(form.watch("scientific_references")) ? (
+											(form.watch("scientific_references") || []).map((ref: any, index: number) => (
+												<div key={index} className="flex gap-2 items-start border p-2 rounded-lg bg-muted/30">
+													<div className="flex-1 grid grid-cols-1 sm:grid-cols-2 gap-2">
+														<Input 
+															placeholder="Título do artigo" 
+															className="h-8 text-xs" 
+															value={ref.title}
+															onChange={(e) => {
+																const refs = [...form.getValues("scientific_references") as any[]];
+																refs[index].title = e.target.value;
+																form.setValue("scientific_references", refs);
+															}}
+														/>
+														<div className="flex gap-2 relative">
+															<Input 
+																placeholder="ID do Artigo Wiki (Opcional)" 
+																className="h-8 text-xs font-mono pr-8" 
+																value={ref.wiki_artifact_id || ""}
+																onChange={(e) => {
+																	const refs = [...form.getValues("scientific_references") as any[]];
+																	refs[index].wiki_artifact_id = e.target.value;
+																	form.setValue("scientific_references", refs);
+																}}
+															/>
+															{ref.wiki_artifact_id && knowledgeBase.find(a => a.id === ref.wiki_artifact_id) && (
+																<Popover>
+																	<PopoverTrigger asChild>
+																		<Button variant="ghost" size="icon" className="h-6 w-6 absolute right-1 top-1 text-sky-600 hover:bg-sky-50">
+																			<BookOpen className="h-3.5 w-3.5" />
+																		</Button>
+																	</PopoverTrigger>
+																	<PopoverContent className="w-80 p-3 shadow-xl border-sky-100" side="top">
+																		{(() => {
+																			const article = knowledgeBase.find(a => a.id === ref.wiki_artifact_id);
+																			if (!article) return null;
+																			return (
+																				<div className="space-y-2">
+																					<h4 className="font-bold text-sm text-slate-800 leading-tight">{article.title}</h4>
+																					<div className="flex items-center gap-2">
+																						<span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">{article.group}</span>
+																						<span className="text-[10px] bg-slate-100 px-1.5 rounded text-slate-500">{article.year}</span>
+																					</div>
+																					{article.highlights && article.highlights.length > 0 && (
+																						<div className="mt-2 space-y-1">
+																							<p className="text-[10px] font-bold text-slate-400 uppercase">Key Findings:</p>
+																							<ul className="text-xs text-slate-600 space-y-1">
+																								{article.highlights.map((h, i) => (
+																									<li key={i} className="flex gap-1.5"><span className="text-sky-500 mt-0.5">•</span> <span>{h}</span></li>
+																								))}
+																							</ul>
+																						</div>
+																					)}
+																				</div>
+																			);
+																		})()}
+																	</PopoverContent>
+																</Popover>
+															)}
+														</div>
+														<div className="flex gap-2">
+															<Input 
+																type="number" 
+																className="h-8 text-xs w-20" 
+																value={ref.year}
+																onChange={(e) => {
+																	const refs = [...form.getValues("scientific_references") as any[]];
+																	refs[index].year = parseInt(e.target.value);
+																	form.setValue("scientific_references", refs);
+																}}
+															/>
+															<Select 
+																value={ref.evidence_level}
+																onValueChange={(val) => {
+																	const refs = [...form.getValues("scientific_references") as any[]];
+																	refs[index].evidence_level = val;
+																	form.setValue("scientific_references", refs);
+																}}
+															>
+																<SelectTrigger className="h-8 text-[10px]">
+																	<SelectValue />
+																</SelectTrigger>
+																<SelectContent>
+																	{getEvidenceLevelOptions().map(opt => (
+																		<SelectItem key={opt.value} value={opt.value}>{opt.label}</SelectItem>
+																	))}
+																</SelectContent>
+															</Select>
+														</div>
+													</div>
+													<Button 
+														type="button" 
+														variant="ghost" 
+														size="icon" 
+														className="h-8 w-8 text-destructive"
+														onClick={() => {
+															const refs = [...form.getValues("scientific_references") as any[]];
+															refs.splice(index, 1);
 															form.setValue("scientific_references", refs);
 														}}
-													/>
-													<div className="flex gap-2 relative">
-														<Input 
-															placeholder="ID do Artigo Wiki (Opcional)" 
-															className="h-8 text-xs font-mono pr-8" 
-															value={ref.wiki_artifact_id || ""}
-															onChange={(e) => {
-																const refs = [...form.getValues("scientific_references")];
-																refs[index].wiki_artifact_id = e.target.value;
-																form.setValue("scientific_references", refs);
-															}}
-														/>
-														{ref.wiki_artifact_id && knowledgeBase.find(a => a.id === ref.wiki_artifact_id) && (
-															<Popover>
-																<PopoverTrigger asChild>
-																	<Button variant="ghost" size="icon" className="h-6 w-6 absolute right-1 top-1 text-sky-600 hover:bg-sky-50">
-																		<BookOpen className="h-3.5 w-3.5" />
-																	</Button>
-																</PopoverTrigger>
-																<PopoverContent className="w-80 p-3 shadow-xl border-sky-100" side="top">
-																	{(() => {
-																		const article = knowledgeBase.find(a => a.id === ref.wiki_artifact_id);
-																		if (!article) return null;
-																		return (
-																			<div className="space-y-2">
-																				<h4 className="font-bold text-sm text-slate-800 leading-tight">{article.title}</h4>
-																				<div className="flex items-center gap-2">
-																					<span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">{article.group}</span>
-																					<span className="text-[10px] bg-slate-100 px-1.5 rounded text-slate-500">{article.year}</span>
-																				</div>
-																				{article.highlights && article.highlights.length > 0 && (
-																					<div className="mt-2 space-y-1">
-																						<p className="text-[10px] font-bold text-slate-400 uppercase">Key Findings:</p>
-																						<ul className="text-xs text-slate-600 space-y-1">
-																							{article.highlights.map((h, i) => (
-																								<li key={i} className="flex gap-1.5"><span className="text-sky-500 mt-0.5">•</span> <span>{h}</span></li>
-																							))}
-																						</ul>
-																					</div>
-																				)}
-																			</div>
-																		);
-																	})()}
-																</PopoverContent>
-															</Popover>
-														)}
-													</div>
-													<div className="flex gap-2">
-														<Input 
-															type="number" 
-															className="h-8 text-xs w-20" 
-															value={ref.year}
-															onChange={(e) => {
-																const refs = [...form.getValues("scientific_references")];
-																refs[index].year = parseInt(e.target.value);
-																form.setValue("scientific_references", refs);
-															}}
-														/>
-														<Select 
-															value={ref.evidence_level}
-															onValueChange={(val) => {
-																const refs = [...form.getValues("scientific_references")];
-																refs[index].evidence_level = val;
-																form.setValue("scientific_references", refs);
-															}}
-														>
-															<SelectTrigger className="h-8 text-[10px]">
-																<SelectValue />
-															</SelectTrigger>
-															<SelectContent>
-																{getEvidenceLevelOptions().map(opt => (
-																	<SelectItem key={opt.value} value={opt.value}>{opt.label}</SelectItem>
-																))}
-															</SelectContent>
-														</Select>
-													</div>
+													>
+														<X className="h-4 w-4" />
+													</Button>
 												</div>
-												<Button 
-													type="button" 
-													variant="ghost" 
-													size="icon" 
-													className="h-8 w-8 text-destructive"
-													onClick={() => {
-														const refs = [...form.getValues("scientific_references")];
-														refs.splice(index, 1);
-														form.setValue("scientific_references", refs);
-													}}
-												>
-													<X className="h-4 w-4" />
-												</Button>
-											</div>
-										))}
+											))
+										) : (
+											<FormField
+												control={form.control}
+												name="scientific_references"
+												render={({ field }) => (
+													<FormItem>
+														<FormControl>
+															<Textarea 
+																{...field} 
+																value={typeof field.value === 'string' ? field.value : ''}
+																onChange={(e) => field.onChange(e.target.value)}
+																placeholder="Referências em formato texto/markdown..."
+																className="text-xs min-h-[100px] font-mono bg-muted/10"
+															/>
+														</FormControl>
+														<FormMessage />
+													</FormItem>
+												)}
+											/>
+										)}
 									</div>
 								</div>
 							</div>
