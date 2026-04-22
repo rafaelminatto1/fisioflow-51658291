@@ -38,6 +38,11 @@ import { exercisesApi } from "@/api/v2";
 import { uploadToR2 } from "@/lib/storage/r2-storage";
 import { toast } from "@/hooks/use-toast";
 import { Progress } from "@/components/ui/progress";
+import { MultiSelect } from "@/components/ui/multi-select";
+import { 
+	getBodyPartsOptions, 
+	getEquipmentOptions 
+} from "@/lib/constants/exerciseConstants";
 import type { Exercise } from "@/hooks/useExercises";
 
 const exerciseSchema = z.object({
@@ -55,6 +60,7 @@ const exerciseSchema = z.object({
 	contraindicated_pathologies: z.array(z.string()).optional(),
 	body_parts: z.array(z.string()).optional(),
 	equipment: z.array(z.string()).optional(),
+	alternativeEquipment: z.array(z.string()).optional(),
 });
 
 type ExerciseFormData = z.infer<typeof exerciseSchema>;
@@ -102,6 +108,7 @@ export function NewExerciseModal({
 			contraindicated_pathologies: [],
 			body_parts: [],
 			equipment: [],
+			alternativeEquipment: [],
 		},
 	});
 
@@ -132,6 +139,7 @@ export function NewExerciseModal({
 				contraindicated_pathologies: exercise.contraindicated_pathologies || [],
 				body_parts: exercise.body_parts || [],
 				equipment: exercise.equipment || [],
+				alternativeEquipment: [],
 			});
 		} else {
 			form.reset({
@@ -149,6 +157,7 @@ export function NewExerciseModal({
 				contraindicated_pathologies: [],
 				body_parts: [],
 				equipment: [],
+				alternativeEquipment: [],
 			});
 		}
 	}, [exercise, form]);
@@ -636,31 +645,15 @@ export function NewExerciseModal({
 									render={({ field }) => (
 										<FormItem>
 											<FormLabel>
-												Patologias Indicadas (separar por vírgula)
+												Patologias Indicadas
 											</FormLabel>
 											<FormControl>
-												{/* Handle string[] <-> string conversion here or in schema */}
-												{/* Since Zod schema handles simple strings, we might need to update schema too. 
-                             For quick implementation, let's treat it as string in form and split on submit, 
-                             but matching Zod type is better. 
-                             Let's stick to simple Textarea and I will update schema next.
-                         */}
-												<Textarea
-													placeholder="Ex: Joelho Valgo, Artrose"
-													{...field}
-													value={
-														Array.isArray(field.value)
-															? field.value.join(", ")
-															: field.value || ""
-													}
-													onChange={(e) =>
-														field.onChange(
-															e.target.value
-																.split(",")
-																.map((s) => s.trim())
-																.filter(Boolean),
-														)
-													}
+												<MultiSelect
+													options={[]}
+													selected={Array.isArray(field.value) ? field.value : []}
+													onChange={field.onChange}
+													allowCustom={true}
+													placeholder="Digite e pressione Enter..."
 												/>
 											</FormControl>
 											<FormMessage />
@@ -673,25 +666,15 @@ export function NewExerciseModal({
 									render={({ field }) => (
 										<FormItem>
 											<FormLabel>
-												Contraindicações (separar por vírgula)
+												Contraindicações
 											</FormLabel>
 											<FormControl>
-												<Textarea
-													placeholder="Ex: Fratura Recente"
-													{...field}
-													value={
-														Array.isArray(field.value)
-															? field.value.join(", ")
-															: field.value || ""
-													}
-													onChange={(e) =>
-														field.onChange(
-															e.target.value
-																.split(",")
-																.map((s) => s.trim())
-																.filter(Boolean),
-														)
-													}
+												<MultiSelect
+													options={[]}
+													selected={Array.isArray(field.value) ? field.value : []}
+													onChange={field.onChange}
+													allowCustom={true}
+													placeholder="Digite e pressione Enter..."
 												/>
 											</FormControl>
 											<FormMessage />
@@ -707,25 +690,15 @@ export function NewExerciseModal({
 									render={({ field }) => (
 										<FormItem>
 											<FormLabel>
-												Partes do Corpo (separar por vírgula)
+												Partes do Corpo
 											</FormLabel>
 											<FormControl>
-												<Input
-													placeholder="Ex: Ombro, Cotovelo"
-													{...field}
-													value={
-														Array.isArray(field.value)
-															? field.value.join(", ")
-															: field.value || ""
-													}
-													onChange={(e) =>
-														field.onChange(
-															e.target.value
-																.split(",")
-																.map((s) => s.trim())
-																.filter(Boolean),
-														)
-													}
+												<MultiSelect
+													options={getBodyPartsOptions()}
+													selected={Array.isArray(field.value) ? field.value : []}
+													onChange={field.onChange}
+													allowCustom={true}
+													placeholder="Selecionar ou digitar..."
 												/>
 											</FormControl>
 											<FormMessage />
@@ -737,24 +710,14 @@ export function NewExerciseModal({
 									name="equipment"
 									render={({ field }) => (
 										<FormItem>
-											<FormLabel>Equipamentos (separar por vírgula)</FormLabel>
+											<FormLabel>Equipamentos</FormLabel>
 											<FormControl>
-												<Input
-													placeholder="Ex: Halter, Elástico"
-													{...field}
-													value={
-														Array.isArray(field.value)
-															? field.value.join(", ")
-															: field.value || ""
-													}
-													onChange={(e) =>
-														field.onChange(
-															e.target.value
-																.split(",")
-																.map((s) => s.trim())
-																.filter(Boolean),
-														)
-													}
+												<MultiSelect
+													options={getEquipmentOptions()}
+													selected={Array.isArray(field.value) ? field.value : []}
+													onChange={field.onChange}
+													allowCustom={true}
+													placeholder="Selecionar ou digitar..."
 												/>
 											</FormControl>
 											<FormMessage />
@@ -767,25 +730,15 @@ export function NewExerciseModal({
 									render={({ field }) => (
 										<FormItem>
 											<FormLabel>
-												Equipamentos Alternativos (separar por vírgula)
+												Equipamentos Alternativos
 											</FormLabel>
 											<FormControl>
-												<Input
-													placeholder="Ex: Vassoura, Toalha, Garrafa PET"
-													{...field}
-													value={
-														Array.isArray(field.value)
-															? field.value.join(", ")
-															: field.value || ""
-													}
-													onChange={(e) =>
-														field.onChange(
-															e.target.value
-																.split(",")
-																.map((s) => s.trim())
-																.filter(Boolean),
-														)
-													}
+												<MultiSelect
+													options={getEquipmentOptions()}
+													selected={Array.isArray(field.value) ? field.value : []}
+													onChange={field.onChange}
+													allowCustom={true}
+													placeholder="Selecionar ou digitar..."
 												/>
 											</FormControl>
 											<FormMessage />

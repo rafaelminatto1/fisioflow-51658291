@@ -121,310 +121,262 @@ const Patients = () => {
 	return (
 		<MainLayout>
 			<div
-				className="space-y-6 animate-fade-in pb-20 md:pb-8"
+				className="max-w-7xl mx-auto space-y-8 animate-fade-in pb-20 md:pb-8"
 				data-testid="patients-page"
 			>
-				{/* Modern Sticky Glass Header Container */}
-				<div className="sticky top-0 z-30 -mx-4 px-4 py-4 bg-background/60 backdrop-blur-xl border-b border-border/40 shadow-sm transition-all duration-300">
-					<PatientsPageHeader
-						stats={headerStats}
-						onNewPatient={() => updateSearchParams({ modal: "create" })}
-						onExport={() => exportPatients(patients, statsMap)}
-						onToggleAnalytics={() =>
-							updateSearchParams({
-								analytics: showAnalytics ? undefined : "true",
-							})
-						}
-						showAnalytics={showAnalytics}
-						searchTerm={searchTerm}
-						onSearchChange={setSearchTerm}
-						statusFilter={filtersState.status}
-						onStatusFilterChange={(s) => updateSearchParams({ status: s })}
-						conditionFilter={filtersState.condition}
-						onConditionFilterChange={(c) => updateSearchParams({ condition: c })}
-						uniqueConditions={uniqueConditions}
-						sortBy={filtersState.sortBy}
-						onSortByChange={(s) => updateSearchParams({ sortBy: s })}
-						activeAdvancedFiltersCount={activeAdvancedFiltersCount}
-						totalFilteredLabel={
-							hasActiveFilters ? `${totalCount} encontrado(s)` : undefined
-						}
-						onClearAllFilters={handleClearAllFilters}
-						hasActiveFilters={hasActiveFilters}
-						classificationFilter={filtersState.classification as any}
-						onClassificationFilterChange={(c) =>
-							updateSearchParams({ classification: c })
-						}
-					>
-						<Popover>
-							<PopoverTrigger asChild>
-								<Button
-									variant="outline"
-									size="icon"
-									className={cn(
-										"h-8 w-8 rounded-lg shrink-0",
-										activeAdvancedFiltersCount > 0 &&
-											"border-primary bg-primary/5 text-primary",
+				{/* Refactored Header - Now contains all dashboard stats and search */}
+				<PatientsPageHeader
+					stats={headerStats}
+					onNewPatient={() => updateSearchParams({ modal: "create" })}
+					onExport={() => exportPatients(patients, statsMap)}
+					onToggleAnalytics={() =>
+						updateSearchParams({
+							analytics: showAnalytics ? undefined : "true",
+						})
+					}
+					showAnalytics={showAnalytics}
+					searchTerm={searchTerm}
+					onSearchChange={setSearchTerm}
+					statusFilter={filtersState.status}
+					onStatusFilterChange={(s) => updateSearchParams({ status: s })}
+					conditionFilter={filtersState.condition}
+					onConditionFilterChange={(c) => updateSearchParams({ condition: c })}
+					uniqueConditions={uniqueConditions}
+					sortBy={filtersState.sortBy}
+					onSortByChange={(s) => updateSearchParams({ sortBy: s })}
+					activeAdvancedFiltersCount={activeAdvancedFiltersCount}
+					totalFilteredLabel={
+						hasActiveFilters ? `${totalCount} encontrado(s)` : undefined
+					}
+					onClearAllFilters={handleClearAllFilters}
+					hasActiveFilters={hasActiveFilters}
+					classificationFilter={filtersState.classification as any}
+					onClassificationFilterChange={(c) =>
+						updateSearchParams({ classification: c })
+					}
+				>
+					<Popover>
+						<PopoverTrigger asChild>
+							<Button
+								variant="outline"
+								size="icon"
+								className={cn(
+									"h-14 w-14 rounded-[1.25rem] border-slate-200 dark:border-slate-800 bg-white/40 dark:bg-slate-900/40 shrink-0",
+									activeAdvancedFiltersCount > 0 &&
+										"border-primary bg-primary/5 text-primary",
+								)}
+								title="Filtros avançados"
+							>
+								<div className="relative">
+									<Filter className="h-5 w-5" />
+									{activeAdvancedFiltersCount > 0 && (
+										<span className="absolute -right-2 -top-2 flex h-5 w-5 items-center justify-center rounded-full bg-primary text-[10px] text-primary-foreground font-bold shadow-lg shadow-primary/30">
+											{activeAdvancedFiltersCount}
+										</span>
 									)}
-									title="Filtros avançados"
-								>
-									<div className="relative">
-										<Filter className="h-4 w-4" />
-										{activeAdvancedFiltersCount > 0 && (
-											<span className="absolute -right-1 -top-1 flex h-3 w-3 items-center justify-center rounded-full bg-primary text-[8px] text-primary-foreground font-bold">
-												{activeAdvancedFiltersCount}
-											</span>
-										)}
-									</div>
-								</Button>
-							</PopoverTrigger>
-							<PopoverContent className="w-[320px] p-4 rounded-2xl shadow-premium border-border/40" align="end">
-								<PatientAdvancedFilters
-									currentFilters={{
-										classification: filtersState.classification as any,
-										hasSurgery: filtersState.hasSurgery,
-									}}
-									onFilterChange={(f) => updateSearchParams(f as any)}
-									activeFiltersCount={activeAdvancedFiltersCount}
-									onClearFilters={handleClearAllFilters}
-								/>
-							</PopoverContent>
-						</Popover>
-					</PatientsPageHeader>
-				</div>
-
-				<div className="grid grid-cols-1 lg:grid-cols-4 gap-6 px-1">
-					{/* Sidebar / Stats Side - Premium Polished Cards */}
-					<div className="lg:col-span-1 space-y-6 lg:sticky lg:top-24 h-fit">
-						<div className="grid grid-cols-2 lg:grid-cols-1 gap-3">
-							<div className="p-4 rounded-2xl bg-gradient-to-br from-emerald-500/10 to-emerald-500/[0.02] border border-emerald-500/20 space-y-1 group hover:border-emerald-500/40 transition-all cursor-default">
-								<div className="flex items-center justify-between">
-									<p className="text-[10px] font-bold text-emerald-600 uppercase tracking-widest">Ativos</p>
-									<div className="h-5 w-5 rounded-full bg-emerald-500/20 flex items-center justify-center">
-										<CheckCircle2 className="h-3 w-3 text-emerald-600" />
-									</div>
 								</div>
-								<p className="text-2xl font-black text-emerald-700 dark:text-emerald-400">{headerStats.activeCount}</p>
-								<div className="h-1 w-12 bg-emerald-500/20 rounded-full" />
-							</div>
+							</Button>
+						</PopoverTrigger>
+						<PopoverContent className="w-[320px] p-4 rounded-3xl shadow-premium border-border/40 backdrop-blur-xl" align="end">
+							<PatientAdvancedFilters
+								currentFilters={{
+									classification: filtersState.classification as any,
+									hasSurgery: filtersState.hasSurgery,
+								}}
+								onFilterChange={(f) => updateSearchParams(f as any)}
+								activeFiltersCount={activeAdvancedFiltersCount}
+								onClearFilters={handleClearAllFilters}
+							/>
+						</PopoverContent>
+					</Popover>
+				</PatientsPageHeader>
 
-							<div className="p-4 rounded-2xl bg-gradient-to-br from-blue-500/10 to-blue-500/[0.02] border border-blue-500/20 space-y-1 group hover:border-blue-500/40 transition-all cursor-default">
-								<div className="flex items-center justify-between">
-									<p className="text-[10px] font-bold text-blue-600 uppercase tracking-widest">Novos</p>
-									<div className="h-5 w-5 rounded-full bg-blue-500/20 flex items-center justify-center">
-										<Sparkles className="h-3 w-3 text-blue-600" />
-									</div>
-								</div>
-								<p className="text-2xl font-black text-blue-700 dark:text-blue-400">{headerStats.newCount}</p>
-								<div className="h-1 w-12 bg-blue-500/20 rounded-full" />
-							</div>
-
-							<div className="p-4 rounded-2xl bg-gradient-to-br from-orange-500/10 to-orange-500/[0.02] border border-orange-500/20 space-y-1 group hover:border-orange-500/40 transition-all cursor-default">
-								<div className="flex items-center justify-between">
-									<p className="text-[10px] font-bold text-orange-600 uppercase tracking-widest">Em Risco</p>
-									<div className="h-5 w-5 rounded-full bg-orange-500/20 flex items-center justify-center">
-										<AlertTriangle className="h-3 w-3 text-orange-600" />
-									</div>
-								</div>
-								<p className="text-2xl font-black text-orange-700 dark:text-orange-400">{headerStats.noShowRisk}</p>
-								<div className="h-1 w-12 bg-orange-500/20 rounded-full" />
-							</div>
-
-							<div className="p-4 rounded-2xl bg-gradient-to-br from-purple-500/10 to-purple-500/[0.02] border border-purple-500/20 space-y-1 group hover:border-purple-500/40 transition-all cursor-default">
-								<div className="flex items-center justify-between">
-									<p className="text-[10px] font-bold text-purple-600 uppercase tracking-widest">Finalizados</p>
-									<div className="h-5 w-5 rounded-full bg-purple-500/20 flex items-center justify-center">
-										<CheckCircle2 className="h-3 w-3 text-purple-600" />
-									</div>
-								</div>
-								<p className="text-2xl font-black text-purple-700 dark:text-purple-400">{headerStats.completedCount}</p>
-								<div className="h-1 w-12 bg-purple-500/20 rounded-full" />
-							</div>
-						</div>
-
-						<PatientPageInsights
-							totalPatients={patients.length}
-							classificationStats={filteredStats}
-						/>
-					</div>
-
-					{/* Main Content Area */}
-					<div className="lg:col-span-3 space-y-6">
-						<Tabs
-							value={activeTab}
-							onValueChange={(v) => updateSearchParams({ tab: v })}
-							className="w-full"
-						>
-							<div className="flex items-center justify-between mb-6">
-								<TabsList className="bg-secondary/40 p-1 rounded-2xl h-11 border border-border/30">
+				{/* Main Content Area - Full Width / Centered */}
+				<div className="space-y-8">
+					<Tabs
+						value={activeTab}
+						onValueChange={(v) => updateSearchParams({ tab: v })}
+						className="w-full"
+					>
+						<div className="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-6 mb-10">
+							<div className="relative p-1.5 rounded-[2rem] bg-slate-100/50 dark:bg-slate-800/50 border border-white/50 dark:border-white/10 backdrop-blur-xl shadow-inner flex items-center gap-1">
+								<TabsList className="bg-transparent h-14 p-0 gap-1">
 									<TabsTrigger
 										value="list"
-										className="rounded-xl px-6 h-9 font-bold text-[10px] uppercase tracking-wider data-[state=active]:bg-background data-[state=active]:shadow-premium data-[state=active]:text-primary transition-all"
+										className="rounded-[1.5rem] px-10 h-11 font-black text-[11px] uppercase tracking-[0.2em] data-[state=active]:bg-white data-[state=active]:text-primary data-[state=active]:shadow-xl transition-all duration-500 hover:text-primary/70"
 									>
 										Gestão Clínica
 									</TabsTrigger>
 									<TabsTrigger
 										value="birthdays"
-										className="rounded-xl px-6 h-9 font-bold text-[10px] uppercase tracking-wider gap-2 data-[state=active]:bg-background data-[state=active]:shadow-premium data-[state=active]:text-primary transition-all"
+										className="rounded-[1.5rem] px-10 h-11 font-black text-[11px] uppercase tracking-[0.2em] gap-3 data-[state=active]:bg-white data-[state=active]:text-primary data-[state=active]:shadow-xl transition-all duration-500 hover:text-primary/70"
 									>
-										<Cake className="h-3 w-3 text-pink-500" />
+										<Cake className="h-4 w-4 text-pink-500" />
 										Aniversariantes
 									</TabsTrigger>
 								</TabsList>
-
-								<div className="hidden sm:flex items-center gap-3">
-									<p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground/60">
-										{totalCount} Registros
-									</p>
-								</div>
+								
+								{/* Decorative indicator line - hidden in mobile */}
+								<div className="hidden lg:block absolute -bottom-4 left-1/2 -translate-x-1/2 w-12 h-1 bg-primary/20 rounded-full blur-[1px]" />
 							</div>
 
-							<TabsContent
-								value="list"
-								className="space-y-6 mt-0 focus-visible:outline-none"
-							>
-								{/* Analytics Dashboard with enhanced glass effect */}
-								{showAnalytics && (
-									<div className="animate-in fade-in slide-in-from-top-4 duration-500">
-										<LazyComponent
-											placeholder={
-												<div className="h-[200px] w-full bg-muted/20 rounded-3xl animate-pulse border border-border/30" />
-											}
-										>
-											<div className="p-4 rounded-3xl border border-border/30 bg-gradient-to-br from-background/40 to-secondary/10 backdrop-blur-sm shadow-sm">
-												<PatientAnalytics
-													totalPatients={totalCount}
-													classificationStats={filteredStats}
-												/>
-											</div>
-										</LazyComponent>
-									</div>
-								)}
-
-								<IncompleteRegistrationAlert />
-
-								{isLoading && patients.length === 0 ? (
-									<div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-										{Array.from({ length: 4 }).map((_, i) => (
-											<div key={i} className="h-40 w-full bg-muted/20 rounded-2xl animate-pulse border border-border/20" />
-										))}
-									</div>
-								) : patients.length === 0 ? (
-									<div className="py-12">
-										<EmptyState
-											icon={Users}
-											title={
-												hasActiveFilters
-													? "Busca sem resultados"
-													: "Nenhum paciente cadastrado"
-											}
-											description={
-												hasActiveFilters
-													? "Tente remover alguns filtros para encontrar o que procura."
-													: "Sua base de pacientes está vazia. Comece adicionando o primeiro!"
-											}
-											action={
-												hasActiveFilters
-													? {
-															label: "Ver Todos os Pacientes",
-															onClick: handleClearAllFilters,
-														}
-													: {
-															label: "Cadastrar Primeiro Paciente",
-															onClick: () => updateSearchParams({ modal: "create" }),
-														}
-											}
-										/>
-									</div>
-								) : (
-									<div className="space-y-8">
-										<div
-											className="grid grid-cols-1 md:grid-cols-2 gap-5"
-											data-testid="patient-list"
-										>
-											{patients.map((patient, index) => {
-												const patientStats = statsMap[patient.id];
-												return (
-													<div 
-														key={patient.id} 
-														className="animate-in fade-in slide-in-from-bottom-4 duration-500 fill-mode-both"
-														style={{ animationDelay: `${index * 50}ms` }}
-													>
-														<LazyComponent
-															placeholder={
-																<div className="h-[140px] w-full bg-muted/20 rounded-2xl animate-pulse border border-border/20" />
-															}
-															rootMargin="100px"
-														>
-															<PatientListItem
-																patient={patient}
-																stats={patientStats}
-																onClick={() => {
-																	const UUID_REGEX = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
-																	if (patient.id && UUID_REGEX.test(patient.id)) {
-																		navigate(patientRoutes.profile(patient.id));
-																	}
-																}}
-															/>
-														</LazyComponent>
-													</div>
-												);
-											})}
-										</div>
-
-										{totalPages > 1 && (
-											<div className="flex flex-col sm:flex-row items-center justify-between gap-4 py-6 border-t border-border/30">
-												<p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground/60 bg-secondary/40 px-3 py-1.5 rounded-full">
-													Exibindo {Math.min(currentPage * pageSize, totalCount)} de {totalCount} pacientes
-												</p>
-												<Pagination className="w-auto ml-auto mr-0">
-													<PaginationContent className="gap-2">
-														<PaginationItem>
-															<PaginationPrevious
-																onClick={() => updateSearchParams({ page: String(currentPage - 1) })}
-																className={cn(
-																	"h-9 rounded-xl border-border/40 hover:bg-background transition-all",
-																	currentPage <= 1 && "pointer-events-none opacity-40"
-																)}
-															/>
-														</PaginationItem>
-														
-														<div className="flex items-center gap-1 bg-secondary/20 p-1 rounded-xl">
-															<span className="text-xs font-bold px-3 py-1 bg-background rounded-lg shadow-sm text-primary">
-																{currentPage}
-															</span>
-															<span className="text-[10px] font-bold text-muted-foreground px-1 uppercase tracking-tighter">
-																de {totalPages}
-															</span>
-														</div>
-
-														<PaginationItem>
-															<PaginationNext
-																onClick={() => updateSearchParams({ page: String(currentPage + 1) })}
-																className={cn(
-																	"h-9 rounded-xl border-border/40 hover:bg-background transition-all",
-																	currentPage >= totalPages && "pointer-events-none opacity-40"
-																)}
-															/>
-														</PaginationItem>
-													</PaginationContent>
-												</Pagination>
-											</div>
-										)}
-									</div>
-								)}
-							</TabsContent>
-
-							<TabsContent
-								value="birthdays"
-								className="mt-0 focus-visible:outline-none animate-in fade-in slide-in-from-right-4 duration-500"
-							>
-								<div className="p-1 rounded-3xl border border-border/30 bg-gradient-to-br from-secondary/30 to-background/20 backdrop-blur-sm overflow-hidden">
-									<AniversariantesContent />
+							<div className="flex items-center gap-4 bg-white/40 dark:bg-slate-900/40 px-6 py-3 rounded-[1.5rem] border border-white/20 dark:border-slate-800/30 backdrop-blur-md shadow-premium-sm">
+								<div className="flex -space-x-2">
+									{[1, 2, 3].map((i) => (
+										<div key={i} className="h-6 w-6 rounded-full border-2 border-white dark:border-slate-900 bg-slate-200 dark:bg-slate-800" />
+									))}
 								</div>
-							</TabsContent>
-						</Tabs>
-					</div>
+								<p className="text-[10px] font-black uppercase tracking-[0.25em] text-slate-500 dark:text-slate-400">
+									<span className="text-primary">{totalCount}</span> Pacientes Ativos
+								</p>
+							</div>
+						</div>
+
+						<TabsContent
+							value="list"
+							className="space-y-8 mt-0 focus-visible:outline-none"
+						>
+							{/* Analytics Dashboard with enhanced glass effect */}
+							{showAnalytics && (
+								<div className="animate-in fade-in slide-in-from-top-6 duration-700">
+									<LazyComponent
+										placeholder={
+											<div className="h-[240px] w-full bg-muted/20 rounded-[2.5rem] animate-pulse border border-border/20" />
+										}
+									>
+										<div className="p-1 rounded-[2.5rem] border border-border/20 bg-gradient-to-br from-background/40 to-secondary/10 backdrop-blur-md shadow-inner shadow-white/10">
+											<PatientAnalytics
+												totalPatients={totalCount}
+												classificationStats={filteredStats}
+											/>
+										</div>
+									</LazyComponent>
+								</div>
+							)}
+
+							<IncompleteRegistrationAlert />
+
+							{isLoading && patients.length === 0 ? (
+								<div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+									{Array.from({ length: 6 }).map((_, i) => (
+										<div key={i} className="h-48 w-full bg-muted/20 rounded-3xl animate-pulse border border-border/20" />
+									))}
+								</div>
+							) : patients.length === 0 ? (
+								<div className="py-20">
+									<EmptyState
+										icon={Users}
+										title={
+											hasActiveFilters
+												? "Busca sem resultados"
+												: "Nenhum paciente cadastrado"
+										}
+										description={
+											hasActiveFilters
+												? "Tente remover alguns filtros para encontrar o que procura."
+												: "Sua base de pacientes está vazia. Comece adicionando o primeiro!"
+										}
+										action={
+											hasActiveFilters
+												? {
+														label: "Ver Todos os Pacientes",
+														onClick: handleClearAllFilters,
+													}
+												: {
+														label: "Cadastrar Primeiro Paciente",
+														onClick: () => updateSearchParams({ modal: "create" }),
+													}
+										}
+									/>
+								</div>
+							) : (
+								<div className="space-y-10">
+									<div
+										className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"
+										data-testid="patient-list"
+									>
+										{patients.map((patient, index) => {
+											const patientStats = statsMap[patient.id];
+											return (
+												<div 
+													key={patient.id} 
+													className="animate-in fade-in slide-in-from-bottom-6 duration-700 fill-mode-both"
+													style={{ animationDelay: `${index * 80}ms` }}
+												>
+													<LazyComponent
+														placeholder={
+															<div className="h-[160px] w-full bg-muted/20 rounded-3xl animate-pulse border border-border/20" />
+														}
+														rootMargin="150px"
+													>
+														<PatientListItem
+															patient={patient}
+															stats={patientStats}
+															onClick={() => {
+																const UUID_REGEX = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+																if (patient.id && UUID_REGEX.test(patient.id)) {
+																	navigate(patientRoutes.profile(patient.id));
+																}
+															}}
+														/>
+													</LazyComponent>
+												</div>
+											);
+										})}
+									</div>
+
+									{totalPages > 1 && (
+										<div className="flex flex-col sm:flex-row items-center justify-between gap-6 py-10 border-t border-border/20">
+											<p className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground/60 bg-secondary/20 px-6 py-2.5 rounded-full backdrop-blur-sm border border-border/10">
+												Exibindo {Math.min(currentPage * pageSize, totalCount)} de {totalCount} pacientes
+											</p>
+											<Pagination className="w-auto ml-auto mr-0">
+												<PaginationContent className="gap-3">
+													<PaginationItem>
+														<PaginationPrevious
+															onClick={() => updateSearchParams({ page: String(currentPage - 1) })}
+															className={cn(
+																"h-12 w-12 rounded-2xl border-border/20 hover:bg-background shadow-sm transition-all",
+																currentPage <= 1 && "pointer-events-none opacity-30"
+															)}
+														/>
+													</PaginationItem>
+													
+													<div className="flex items-center gap-2 bg-secondary/10 p-1.5 rounded-2xl border border-border/10">
+														<span className="text-sm font-black px-4 py-1.5 bg-background rounded-xl shadow-premium text-primary">
+															{currentPage}
+														</span>
+														<span className="text-[10px] font-black text-muted-foreground px-2 uppercase tracking-tighter opacity-50">
+															/ {totalPages}
+														</span>
+													</div>
+
+													<PaginationItem>
+														<PaginationNext
+															onClick={() => updateSearchParams({ page: String(currentPage + 1) })}
+															className={cn(
+																"h-12 w-12 rounded-2xl border-border/20 hover:bg-background shadow-sm transition-all",
+																currentPage >= totalPages && "pointer-events-none opacity-30"
+															)}
+														/>
+													</PaginationItem>
+												</PaginationContent>
+											</Pagination>
+										</div>
+									)}
+								</div>
+							)}
+						</TabsContent>
+
+						<TabsContent
+							value="birthdays"
+							className="mt-0 focus-visible:outline-none animate-in fade-in slide-in-from-right-8 duration-700"
+						>
+							<div className="p-1 rounded-[2.5rem] border border-border/20 bg-gradient-to-br from-secondary/10 to-background/5 backdrop-blur-md overflow-hidden shadow-inner shadow-white/5">
+								<AniversariantesContent />
+							</div>
+						</TabsContent>
+					</Tabs>
 				</div>
 			</div>
 			<PatientCreateModal

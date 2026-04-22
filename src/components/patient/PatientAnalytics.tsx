@@ -75,310 +75,220 @@ export function PatientAnalytics({
 }: PatientAnalyticsProps) {
 	// Dados para o gráfico de barras - Distribuição de Classificações
 	const classificationData = [
-		{
-			name: "Ativos",
-			value: classificationStats.active,
-			fill: chartConfig.active.color,
-		},
-		{
-			name: "Inativos 7d",
-			value: classificationStats.inactive7,
-			fill: chartConfig.inactive7.color,
-		},
-		{
-			name: "Inativos 30d",
-			value: classificationStats.inactive30,
-			fill: chartConfig.inactive30.color,
-		},
-		{
-			name: "Inativos 60d+",
-			value: classificationStats.inactive60,
-			fill: chartConfig.inactive60.color,
-		},
-		{
-			name: "Risco No-Show",
-			value: classificationStats.noShowRisk,
-			fill: chartConfig.noShowRisk.color,
-		},
-		{
-			name: "Com Pendências",
-			value: classificationStats.hasUnpaid,
-			fill: chartConfig.hasUnpaid.color,
-		},
-		{
-			name: "Novos",
-			value: classificationStats.newPatients,
-			fill: chartConfig.newPatients.color,
-		},
+		{ name: "Ativos", value: classificationStats.active, fill: chartConfig.active.color },
+		{ name: "Novos", value: classificationStats.newPatients, fill: chartConfig.newPatients.color },
+		{ name: "Risco", value: classificationStats.noShowRisk, fill: chartConfig.noShowRisk.color },
+		{ name: "Pendentes", value: classificationStats.hasUnpaid, fill: chartConfig.hasUnpaid.color },
+		{ name: "Inativos", value: classificationStats.inactive7 + classificationStats.inactive30 + classificationStats.inactive60, fill: chartConfig.inactive30.color },
 	];
 
 	// Dados para o gráfico de pizza - Visão Geral
 	const overviewData = [
-		{
-			name: "Ativos",
-			value: classificationStats.active,
-			color: chartConfig.active.color,
-		},
-		{
-			name: "Inativos",
-			value:
-				classificationStats.inactive7 +
-				classificationStats.inactive30 +
-				classificationStats.inactive60,
-			color: chartConfig.inactive30.color,
-		},
-		{
-			name: "Concluídos",
-			value: classificationStats.completed,
-			color: chartConfig.completed.color,
-		},
-		{
-			name: "Novos",
-			value: classificationStats.newPatients,
-			color: chartConfig.newPatients.color,
-		},
-	];
-
-	// Dados para o gráfico de linha - Tendência de Inatividade
-	const inactivityData = [
-		{ periodo: "7 dias", quantidade: classificationStats.inactive7 },
-		{ periodo: "30 dias", quantidade: classificationStats.inactive30 },
-		{ periodo: "60 dias+", quantidade: classificationStats.inactive60 },
+		{ name: "Ativos", value: classificationStats.active, color: chartConfig.active.color },
+		{ name: "Inativos", value: classificationStats.inactive7 + classificationStats.inactive30 + classificationStats.inactive60, color: chartConfig.inactive30.color },
+		{ name: "Concluídos", value: classificationStats.completed, color: chartConfig.completed.color },
+		{ name: "Novos", value: classificationStats.newPatients, color: chartConfig.newPatients.color },
 	];
 
 	// Calcular porcentagens
-	const activePercentage =
-		totalPatients > 0
-			? ((classificationStats.active / totalPatients) * 100).toFixed(1)
-			: "0";
-	const riskPercentage =
-		totalPatients > 0
-			? (
-					((classificationStats.noShowRisk + classificationStats.hasUnpaid) /
-						totalPatients) *
-					100
-				).toFixed(1)
-			: "0";
-	const newPatientsPercentage =
-		totalPatients > 0
-			? ((classificationStats.newPatients / totalPatients) * 100).toFixed(1)
-			: "0";
+	const activePercentage = totalPatients > 0 ? ((classificationStats.active / totalPatients) * 100).toFixed(1) : "0";
+	const riskPercentage = totalPatients > 0 ? ((((classificationStats.noShowRisk + classificationStats.hasUnpaid) / totalPatients) * 100)).toFixed(1) : "0";
+	const newPatientsPercentage = totalPatients > 0 ? ((classificationStats.newPatients / totalPatients) * 100).toFixed(1) : "0";
 
 	return (
-		<div className="space-y-4">
-			{/* Métricas Principais */}
-			<div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-				<Card>
-					<CardContent className="p-4">
-						<div className="flex items-center gap-3">
-							<div className="w-10 h-10 rounded-lg bg-emerald-500/10 flex items-center justify-center">
-								<Activity className="w-5 h-5 text-emerald-500" />
-							</div>
-							<div>
-								<p className="text-sm text-muted-foreground">
-									Taxa de Atividade
-								</p>
-								<p className="text-2xl font-bold">{activePercentage}%</p>
-							</div>
-						</div>
-					</CardContent>
-				</Card>
-
-				<Card>
-					<CardContent className="p-4">
-						<div className="flex items-center gap-3">
-							<div className="w-10 h-10 rounded-lg bg-orange-500/10 flex items-center justify-center">
-								<TrendingUp className="w-5 h-5 text-orange-500" />
-							</div>
-							<div>
-								<p className="text-sm text-muted-foreground">Risco de Perda</p>
-								<p className="text-2xl font-bold">{riskPercentage}%</p>
-							</div>
-						</div>
-					</CardContent>
-				</Card>
-
-				<Card>
-					<CardContent className="p-4">
-						<div className="flex items-center gap-3">
-							<div className="w-10 h-10 rounded-lg bg-blue-500/10 flex items-center justify-center">
-								<Users className="w-5 h-5 text-blue-500" />
-							</div>
-							<div>
-								<p className="text-sm text-muted-foreground">Novos Pacientes</p>
-								<p className="text-2xl font-bold">{newPatientsPercentage}%</p>
-							</div>
-						</div>
-					</CardContent>
-				</Card>
+		<div className="space-y-8 p-1">
+			{/* Métricas Principais - Premium Glass Cards */}
+			<div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+				<AnalyticsMiniCard
+					label="Taxa de Atividade"
+					value={`${activePercentage}%`}
+					icon={Activity}
+					color="emerald"
+					description="Pacientes com tratamento em dia"
+				/>
+				<AnalyticsMiniCard
+					label="Risco de Evasão"
+					value={`${riskPercentage}%`}
+					icon={TrendingUp}
+					color="orange"
+					description="Risco de no-show ou pendências"
+				/>
+				<AnalyticsMiniCard
+					label="Crescimento"
+					value={`${newPatientsPercentage}%`}
+					icon={Users}
+					color="blue"
+					description="Novos pacientes este mês"
+				/>
 			</div>
 
-			{/* Gráficos */}
-			<div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-				{/* Gráfico de Barras - Distribuição por Classificação */}
-				<Card>
-					<CardHeader>
-						<CardTitle className="text-base font-semibold">
-							Distribuição por Classificação
+			{/* Gráficos em Containers de Vidro */}
+			<div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+				<Card className="rounded-[2rem] border-white/40 dark:border-white/10 bg-white/40 dark:bg-slate-900/40 backdrop-blur-xl shadow-premium overflow-hidden border">
+					<CardHeader className="pb-2">
+						<CardTitle className="text-sm font-black uppercase tracking-[0.2em] text-slate-400">
+							Fluxo de Classificação
 						</CardTitle>
 					</CardHeader>
 					<CardContent>
-						<ChartContainer config={chartConfig} className="h-[200px]">
-							<BarChart data={classificationData}>
-								<XAxis
-									dataKey="name"
-									tick={{ fontSize: 12 }}
-									tickLine={false}
-									axisLine={false}
-								/>
-								<YAxis
-									tick={{ fontSize: 12 }}
-									tickLine={false}
-									axisLine={false}
-								/>
-								<ChartTooltip content={<ChartTooltipContent />} />
-								<Bar dataKey="value" radius={[4, 4, 0, 0]} />
-							</BarChart>
+						<ChartContainer config={chartConfig} className="h-[240px] w-full">
+							<ResponsiveContainer width="100%" height="100%">
+								<BarChart data={classificationData} margin={{ top: 20, right: 0, left: -20, bottom: 0 }}>
+									<XAxis
+										dataKey="name"
+										tick={{ fontSize: 10, fontWeight: 800 }}
+										tickLine={false}
+										axisLine={false}
+									/>
+									<YAxis
+										tick={{ fontSize: 10, fontWeight: 800 }}
+										tickLine={false}
+										axisLine={false}
+									/>
+									<ChartTooltip content={<ChartTooltipContent className="rounded-2xl shadow-2xl border-none backdrop-blur-xl" />} />
+									<Bar 
+										dataKey="value" 
+										radius={[12, 12, 12, 12]} 
+										barSize={40}
+										animationDuration={1500}
+									/>
+								</BarChart>
+							</ResponsiveContainer>
 						</ChartContainer>
 					</CardContent>
 				</Card>
 
-				{/* Gráfico de Pizza - Visão Geral */}
-				<Card>
-					<CardHeader>
-						<CardTitle className="text-base font-semibold">
-							Visão Geral
+				<Card className="rounded-[2rem] border-white/40 dark:border-white/10 bg-white/40 dark:bg-slate-900/40 backdrop-blur-xl shadow-premium overflow-hidden border">
+					<CardHeader className="pb-2">
+						<CardTitle className="text-sm font-black uppercase tracking-[0.2em] text-slate-400">
+							Composição da Base
 						</CardTitle>
 					</CardHeader>
 					<CardContent>
-						<ChartContainer config={chartConfig} className="h-[200px]">
+						<ChartContainer config={chartConfig} className="h-[240px] w-full">
 							<ResponsiveContainer width="100%" height="100%">
 								<PieChart>
 									<Pie
 										data={overviewData}
 										cx="50%"
 										cy="50%"
-										labelLine={false}
-										label={({ name, percent }) =>
-											`${name}: ${(percent * 100).toFixed(0)}%`
-										}
-										outerRadius={60}
-										fill="#8884d8"
+										innerRadius={60}
+										outerRadius={80}
+										paddingAngle={8}
 										dataKey="value"
+										animationDuration={1500}
 									>
 										{overviewData.map((entry, index) => (
-											<Cell key={`cell-${index}`} fill={entry.color} />
+											<Cell key={`cell-${index}`} fill={entry.color} stroke="none" />
 										))}
 									</Pie>
-									<ChartTooltip content={<ChartTooltipContent />} />
-									<ChartLegend content={<ChartLegendContent />} />
+									<ChartTooltip content={<ChartTooltipContent className="rounded-2xl shadow-2xl border-none backdrop-blur-xl" />} />
 								</PieChart>
 							</ResponsiveContainer>
 						</ChartContainer>
-					</CardContent>
-				</Card>
-
-				{/* Gráfico de Linha - Tendência de Inatividade */}
-				<Card className="lg:col-span-2">
-					<CardHeader>
-						<CardTitle className="text-base font-semibold">
-							Tendência de Inatividade
-						</CardTitle>
-					</CardHeader>
-					<CardContent>
-						<ChartContainer config={chartConfig} className="h-[200px]">
-							<LineChart data={inactivityData}>
-								<XAxis
-									dataKey="periodo"
-									tick={{ fontSize: 12 }}
-									tickLine={false}
-									axisLine={false}
-								/>
-								<YAxis
-									tick={{ fontSize: 12 }}
-									tickLine={false}
-									axisLine={false}
-								/>
-								<ChartTooltip content={<ChartTooltipContent />} />
-								<Line
-									type="monotone"
-									dataKey="quantidade"
-									stroke={chartConfig.inactive30.color}
-									strokeWidth={2}
-									dot={{ fill: chartConfig.inactive30.color, r: 4 }}
-									activeDot={{ r: 6 }}
-								/>
-							</LineChart>
-						</ChartContainer>
+						<div className="flex flex-wrap justify-center gap-4 mt-2">
+							{overviewData.map((item) => (
+								<div key={item.name} className="flex items-center gap-2">
+									<div className="w-2 h-2 rounded-full" style={{ backgroundColor: item.color }} />
+									<span className="text-[10px] font-black uppercase tracking-widest text-slate-500">{item.name}</span>
+								</div>
+							))}
+						</div>
 					</CardContent>
 				</Card>
 			</div>
 
-			{/* Insights e Recomendações */}
-			<Card className="bg-gradient-to-br from-blue-50 to-indigo-50 dark:from-blue-950/20 dark:to-indigo-950/20 border-blue-200 dark:border-blue-800">
-				<CardHeader>
-					<CardTitle className="text-base font-semibold flex items-center gap-2">
-						<Calendar className="w-4 h-4" />
-						Insights e Recomendações
-					</CardTitle>
-				</CardHeader>
-				<CardContent className="space-y-2 text-sm">
-					{classificationStats.noShowRisk > 0 && (
-						<div className="flex items-start gap-2 p-2 bg-orange-100 dark:bg-orange-900/20 rounded-md">
-							<span className="text-orange-600 dark:text-orange-400">⚠️</span>
-							<p>
-								<strong>Ação Recomendada:</strong> Entre em contato com os{" "}
-								{classificationStats.noShowRisk} pacientes com risco de no-show
-								para reagendar sessões.
-							</p>
+			{/* Insights e Recomendações - Premium Flow */}
+			<div className="relative overflow-hidden rounded-[2.5rem] bg-gradient-to-br from-primary/10 to-indigo-500/10 border border-primary/20 p-8">
+				<div className="relative z-10 flex flex-col md:flex-row items-center gap-8">
+					<div className="h-16 w-16 rounded-2xl bg-primary text-white flex items-center justify-center shadow-lg shadow-primary/30 shrink-0">
+						<Calendar className="h-8 w-8" />
+					</div>
+					<div className="space-y-4 flex-1">
+						<h3 className="text-xl font-black text-slate-800 dark:text-white tracking-tight">IA Clinical Insights & Ações</h3>
+						<div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+							{classificationStats.noShowRisk > 0 && (
+								<InsightPill 
+									icon="⚠️" 
+									color="orange"
+									text={`Contacte os ${classificationStats.noShowRisk} pacientes em risco de no-show.`}
+								/>
+							)}
+							{classificationStats.inactive30 > 0 && (
+								<InsightPill 
+									icon="🔴" 
+									color="red"
+									text={`${classificationStats.inactive30} pacientes inativos há mais de 30 dias.`}
+								/>
+							)}
+							{parseFloat(activePercentage) > 70 && (
+								<InsightPill 
+									icon="✅" 
+									color="emerald"
+									text="Excelente taxa de atividade! Engajamento acima da média."
+								/>
+							)}
+							{classificationStats.newPatients > 0 && (
+								<InsightPill 
+									icon="📈" 
+									color="blue"
+									text={`${classificationStats.newPatients} novos pacientes. Foco no onboarding.`}
+								/>
+							)}
 						</div>
-					)}
+					</div>
+				</div>
+				<div className="absolute top-0 right-0 -mr-12 -mt-12 w-48 h-48 bg-primary/5 rounded-full blur-3xl" />
+			</div>
+		</div>
+	);
+}
 
-					{classificationStats.hasUnpaid > 0 && (
-						<div className="flex items-start gap-2 p-2 bg-yellow-100 dark:bg-yellow-900/20 rounded-md">
-							<span className="text-yellow-600 dark:text-yellow-400">💰</span>
-							<p>
-								<strong>Atenção:</strong> {classificationStats.hasUnpaid}{" "}
-								pacientes possuem sessões pagas e não compareceram. Considere
-								entrar em contato.
-							</p>
-						</div>
-					)}
+function AnalyticsMiniCard({ label, value, icon: Icon, color, description }: { 
+	label: string, 
+	value: string, 
+	icon: any, 
+	color: 'emerald' | 'orange' | 'blue',
+	description: string
+}) {
+	const colors = {
+		emerald: "from-emerald-500/20 text-emerald-600 bg-emerald-500/10 border-emerald-500/20 shadow-emerald-500/5",
+		orange: "from-orange-500/20 text-orange-600 bg-orange-500/10 border-orange-500/20 shadow-orange-500/5",
+		blue: "from-blue-500/20 text-blue-600 bg-blue-500/10 border-blue-500/20 shadow-blue-500/5",
+	};
 
-					{classificationStats.inactive30 > 0 && (
-						<div className="flex items-start gap-2 p-2 bg-red-100 dark:bg-red-900/20 rounded-md">
-							<span className="text-red-600 dark:text-red-400">🔴</span>
-							<p>
-								<strong>Alerta:</strong> {classificationStats.inactive30}{" "}
-								pacientes estão inativos há 30 dias ou mais. Considere fazer
-								follow-up.
-							</p>
-						</div>
-					)}
+	return (
+		<div className={cn(
+			"group relative overflow-hidden p-6 rounded-[2rem] bg-white/40 dark:bg-slate-900/40 backdrop-blur-xl border transition-all duration-500 hover:-translate-y-1 hover:shadow-2xl",
+			colors[color]
+		)}>
+			<div className="relative z-10 flex items-start justify-between">
+				<div className="space-y-2">
+					<p className="text-[10px] font-black uppercase tracking-[0.2em] opacity-60">{label}</p>
+					<h4 className="text-4xl font-black tracking-tighter">{value}</h4>
+					<p className="text-[10px] font-bold text-slate-400 group-hover:text-slate-500 transition-colors">{description}</p>
+				</div>
+				<div className={cn("h-12 w-12 rounded-2xl flex items-center justify-center shadow-lg transition-transform duration-500 group-hover:scale-110", colors[color])}>
+					<Icon className="h-6 w-6" />
+				</div>
+			</div>
+			<div className="absolute bottom-0 right-0 -mr-4 -mb-4 w-24 h-24 bg-gradient-to-br opacity-10 rounded-full blur-2xl transition-all duration-500 group-hover:scale-150" />
+		</div>
+	);
+}
 
-					{classificationStats.newPatients > 0 &&
-						classificationStats.newPatients <= 3 && (
-							<div className="flex items-start gap-2 p-2 bg-blue-100 dark:bg-blue-900/20 rounded-md">
-								<span className="text-blue-600 dark:text-blue-400">📊</span>
-								<p>
-									<strong>Oportunidade:</strong> Há{" "}
-									{classificationStats.newPatients} novos pacientes. Garanta um
-									bom onboarding para melhorar a retenção.
-								</p>
-							</div>
-						)}
+function InsightPill({ icon, text, color }: { icon: string, text: string, color: 'orange' | 'red' | 'emerald' | 'blue' }) {
+	const colors = {
+		orange: "bg-orange-500/10 text-orange-700 dark:text-orange-300 border-orange-200/50",
+		red: "bg-red-500/10 text-red-700 dark:text-red-300 border-red-200/50",
+		emerald: "bg-emerald-500/10 text-emerald-700 dark:text-emerald-300 border-emerald-200/50",
+		blue: "bg-blue-500/10 text-blue-700 dark:text-blue-300 border-blue-200/50",
+	};
 
-					{parseFloat(activePercentage) > 70 && (
-						<div className="flex items-start gap-2 p-2 bg-green-100 dark:bg-green-900/20 rounded-md">
-							<span className="text-green-600 dark:text-green-400">✅</span>
-							<p>
-								<strong>Excelente!</strong> {activePercentage}% dos pacientes
-								estão ativos. Continue mantendo o engajamento!
-							</p>
-						</div>
-					)}
-				</CardContent>
-			</Card>
+	return (
+		<div className={cn("flex items-center gap-3 p-3 rounded-2xl border backdrop-blur-sm transition-all hover:translate-x-1", colors[color])}>
+			<span className="text-lg">{icon}</span>
+			<p className="text-xs font-bold leading-tight">{text}</p>
 		</div>
 	);
 }

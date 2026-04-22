@@ -9,6 +9,7 @@ interface SettingsSectionCardProps {
 	children: ReactNode;
 	action?: ReactNode;
 	className?: string;
+	variant?: "default" | "highlight" | "warning";
 }
 
 export function SettingsSectionCard({
@@ -19,22 +20,48 @@ export function SettingsSectionCard({
 	children,
 	action,
 	className,
+	variant = "default",
 }: SettingsSectionCardProps) {
 	return (
 		<div
-			className={cn("rounded-xl border bg-muted/10 p-4 space-y-4", className)}
+			className={cn(
+				"rounded-2xl border bg-card shadow-sm overflow-hidden transition-shadow hover:shadow-md",
+				variant === "highlight" &&
+					"border-primary/30 bg-primary/[0.02] dark:bg-primary/[0.04]",
+				variant === "warning" &&
+					"border-amber-200 bg-amber-50/30 dark:border-amber-800/50 dark:bg-amber-950/10",
+				className,
+			)}
 		>
-			<div className="flex items-center justify-between gap-2 pb-3 border-b">
-				<div className="flex items-center gap-2 min-w-0">
-					<div className={cn("p-1.5 rounded-md shrink-0", iconBg)}>{icon}</div>
+			{/* Card Header */}
+			<div
+				className={cn(
+					"flex items-center justify-between gap-3 px-5 py-4 border-b",
+					variant === "highlight" && "border-primary/20",
+					variant === "warning" && "border-amber-200/60 dark:border-amber-800/40",
+				)}
+			>
+				<div className="flex items-center gap-3 min-w-0">
+					<div
+						className={cn(
+							"flex h-9 w-9 shrink-0 items-center justify-center rounded-xl shadow-sm",
+							iconBg,
+						)}
+					>
+						{icon}
+					</div>
 					<div className="min-w-0">
-						<p className="text-sm font-semibold">{title}</p>
-						<p className="text-xs text-muted-foreground">{description}</p>
+						<p className="text-sm font-semibold leading-tight">{title}</p>
+						<p className="text-xs text-muted-foreground mt-0.5 leading-tight">
+							{description}
+						</p>
 					</div>
 				</div>
 				{action}
 			</div>
-			{children}
+
+			{/* Card Body */}
+			<div className="p-5">{children}</div>
 		</div>
 	);
 }
