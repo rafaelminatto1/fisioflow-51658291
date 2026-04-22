@@ -119,7 +119,7 @@ function KnowledgeCard({
 								variant="ghost"
 								size="icon"
 								onClick={() => navigate(`/wiki/article/${item.id}`)}
-								className="h-7 w-7 text-primary hover:bg-primary/10"
+								className="h-7 w-7 text-emerald-600 hover:bg-emerald-50"
 								title="Ver Detalhes"
 							>
 								<Eye className="h-3.5 w-3.5" />
@@ -128,7 +128,7 @@ function KnowledgeCard({
 								variant="ghost"
 								size="icon"
 								onClick={handleCopySummary}
-								className="h-7 w-7"
+								className="h-7 w-7 text-slate-400 hover:text-slate-600"
 								title="Copiar Resumo"
 							>
 								<Copy className="h-3.5 w-3.5" />
@@ -137,7 +137,7 @@ function KnowledgeCard({
 								variant="ghost"
 								size="icon"
 								onClick={() => onEdit(item)}
-								className="h-7 w-7"
+								className="h-7 w-7 text-slate-400 hover:text-slate-600"
 								title="Editar"
 							>
 								<Pencil className="h-3.5 w-3.5" />
@@ -147,7 +147,7 @@ function KnowledgeCard({
 									variant="ghost"
 									size="icon"
 									onClick={() => onDelete(item)}
-									className="h-7 w-7 text-destructive hover:bg-destructive/10"
+									className="h-7 w-7 text-destructive/40 hover:text-destructive hover:bg-destructive/5"
 									title="Excluir"
 								>
 									<Trash2 className="h-3.5 w-3.5" />
@@ -157,9 +157,14 @@ function KnowledgeCard({
 					</div>
 
 					<div className="flex flex-wrap items-center gap-2">
+						<div className={`p-1.5 rounded-lg ${evidenceColorMap[item.evidence]?.split(' ')[0] || "bg-slate-100"}`}>
+							{item.group === "Ortopedia" && <Stethoscope className="h-3.5 w-3.5 text-emerald-600" />}
+							{item.group === "Esportiva" && <TrendingUp className="h-3.5 w-3.5 text-amber-600" />}
+							{item.group === "Pos-operatorio esportivo" && <ShieldCheck className="h-3.5 w-3.5 text-sky-600" />}
+						</div>
 						<Badge
 							variant="outline"
-							className={`${evidenceColorMap[item.evidence] || ""} border-0 font-bold text-[10px]`}
+							className={`${evidenceColorMap[item.evidence] || ""} border-0 font-bold text-[10px] px-2 py-0.5`}
 						>
 							{knowledgeEvidenceLabels[item.evidence] || item.evidence}
 						</Badge>
@@ -298,33 +303,53 @@ function KnowledgeMapView({ items }: { items: KnowledgeArticle[] }) {
 	);
 
 	return (
-		<div className="relative rounded-2xl border bg-background p-6 min-h-[600px] overflow-hidden">
-			<div className="absolute inset-0 pointer-events-none opacity-40 bg-[radial-gradient(circle_at_top,#0f172a_0%,transparent_55%)]" />
+		<div className="relative rounded-3xl border bg-slate-50/50 p-8 min-h-[650px] overflow-hidden shadow-inner animate-in fade-in duration-1000">
+			<div className="absolute inset-0 pointer-events-none opacity-20 bg-[radial-gradient(circle_at_center,#64748b_0%,transparent_70%)]" />
+			
 			<svg
 				className="absolute inset-0 w-full h-full"
 				viewBox="0 0 100 100"
 				preserveAspectRatio="none"
 			>
-				{nodes.map((node) => (
-					<line
-						key={`${node.group.id}-${node.subgroup}`}
-						x1={node.x * 100}
-						y1={10}
-						x2={node.x * 100}
-						y2={node.y * 100}
-						stroke="rgba(148,163,184,0.25)"
-						strokeWidth="0.3"
-					/>
-				))}
+				{nodes.map((node) => {
+					const startX = node.x * 100;
+					const startY = 8;
+					const endX = node.x * 100;
+					const endY = node.y * 100;
+					const cp1y = startY + (endY - startY) * 0.4;
+					const cp2y = startY + (endY - startY) * 0.6;
+					
+					// Slight horizontal offset for the curve control points to make it more organic
+					const groupOffset = (node.group.id === "Ortopedia" ? -2 : node.group.id === "Esportiva" ? 0 : 2);
+					const cp1x = startX + groupOffset;
+					const cp2x = endX + groupOffset;
+
+					return (
+						<path
+							key={`${node.group.id}-${node.subgroup}`}
+							d={`M ${startX} ${startY} C ${cp1x} ${cp1y}, ${cp2x} ${cp2y}, ${endX} ${endY}`}
+							fill="none"
+							stroke={node.group.id === "Ortopedia" ? "#10b981" : node.group.id === "Esportiva" ? "#f59e0b" : "#0ea5e9"}
+							strokeWidth="0.25"
+							strokeOpacity="0.2"
+							strokeDasharray="1,1"
+							className="transition-all duration-700"
+						/>
+					);
+				})}
 			</svg>
 
-			<div className="relative z-10 flex justify-between text-xs text-muted-foreground">
+			<div className="relative z-10 flex justify-between text-xs mb-20">
 				{groups.map((group) => (
-					<div key={group.group.id} className="text-center w-full">
+					<div key={group.group.id} className="text-center w-full px-4">
 						<div
-							className={`mx-auto inline-flex items-center gap-2 rounded-full px-3 py-1 ${group.soft}`}
+							className={`mx-auto inline-flex items-center gap-2 rounded-xl px-5 py-2.5 shadow-lg border border-white/20 ${
+								group.group.id === "Ortopedia" ? "bg-emerald-500 text-white" : 
+								group.group.id === "Esportiva" ? "bg-amber-500 text-white" : 
+								"bg-sky-500 text-white"
+							}`}
 						>
-							<span className={`font-semibold ${group.accent}`}>
+							<span className="font-black uppercase tracking-widest text-[10px]">
 								{group.group.label}
 							</span>
 						</div>
@@ -332,15 +357,39 @@ function KnowledgeMapView({ items }: { items: KnowledgeArticle[] }) {
 				))}
 			</div>
 
-			<div className="relative z-10 mt-6">
+			<div className="relative z-10">
 				{nodes.map((node) => (
 					<div
 						key={`${node.group.id}-${node.subgroup}-node`}
-						className="absolute -translate-x-1/2 -translate-y-1/2 rounded-2xl border bg-background/90 shadow-sm px-3 py-2 text-xs"
-						style={{ left: `${node.x * 100}%`, top: `${node.y * 100}%` }}
+						className={`absolute -translate-x-1/2 -translate-y-1/2 rounded-2xl border-2 bg-white shadow-md px-5 py-4 min-w-[140px] transition-all hover:scale-110 hover:shadow-2xl cursor-pointer group/node ${
+							node.group.id === "Ortopedia" ? "border-emerald-100 hover:border-emerald-500" : 
+							node.group.id === "Esportiva" ? "border-amber-100 hover:border-amber-500" : 
+							"border-sky-100 hover:border-sky-500"
+						}`}
+						style={{ 
+							left: `${node.x * 100}%`, 
+							top: `${node.y * 100}%`,
+						}}
 					>
-						<div className="font-semibold">{node.subgroup}</div>
-						<div className="text-muted-foreground">{node.count} itens</div>
+						<div className="flex flex-col items-center text-center gap-1.5">
+							<div className="font-black text-[12px] uppercase tracking-tight text-slate-800 group-hover/node:text-slate-950 transition-colors">
+								{node.subgroup}
+							</div>
+							<div className={`text-[10px] font-black px-3 py-1 rounded-full ${
+								node.group.id === "Ortopedia" ? "bg-emerald-50 text-emerald-600" : 
+								node.group.id === "Esportiva" ? "bg-amber-50 text-amber-600" : 
+								"bg-sky-50 text-sky-600"
+							}`}>
+								{node.count} {node.count === 1 ? 'item' : 'itens'}
+							</div>
+						</div>
+						
+						{/* Subtle indicator of depth/organic feel */}
+						<div className={`absolute -bottom-1 left-1/2 -translate-x-1/2 w-8 h-1 rounded-full opacity-20 ${
+							node.group.id === "Ortopedia" ? "bg-emerald-500" : 
+							node.group.id === "Esportiva" ? "bg-amber-500" : 
+							"bg-sky-500"
+						}`} />
 					</div>
 				))}
 			</div>
@@ -498,24 +547,24 @@ export function KnowledgeHubView({
 				</div>
 
 				{/* Estatísticas Rápidas */}
-				<div className="rounded-2xl bg-slate-950 text-white p-6 space-y-5 shadow-xl border border-white/5 relative overflow-hidden group">
+				<div className="rounded-2xl bg-slate-900 text-white p-5 space-y-5 shadow-xl border border-white/5 relative overflow-hidden group">
 					<div className="absolute top-0 right-0 p-4 opacity-5 group-hover:opacity-10 transition-opacity">
-						<Stethoscope className="h-20 w-20" />
+						<Stethoscope className="h-16 w-16" />
 					</div>
 					<div className="flex items-center gap-2 relative z-10">
-						<div className="h-8 w-8 rounded-lg bg-emerald-500/20 flex items-center justify-center">
-							<ShieldCheck className="h-5 w-5 text-emerald-400 animate-pulse" />
+						<div className="h-7 w-7 rounded-lg bg-emerald-500/20 flex items-center justify-center">
+							<ShieldCheck className="h-4 w-4 text-emerald-400 animate-pulse" />
 						</div>
-						<h4 className="text-sm font-black font-display uppercase tracking-wider">Base Certificada</h4>
+						<h4 className="text-xs font-black uppercase tracking-wider">Base Certificada</h4>
 					</div>
-					<div className="space-y-3">
+					<div className="space-y-2.5">
 						<div className="flex justify-between items-end">
-							<span className="text-xs text-slate-400">Total de Itens</span>
-							<span className="text-lg font-bold leading-none">
+							<span className="text-[10px] text-slate-400 uppercase font-bold tracking-tight">Status da Base</span>
+							<span className="text-base font-bold leading-none">
 								{knowledgeStats.total}
 							</span>
 						</div>
-						<div className="w-full bg-white/10 h-1.5 rounded-full overflow-hidden">
+						<div className="w-full bg-white/10 h-1 rounded-full overflow-hidden">
 							<div
 								className="bg-emerald-500 h-full transition-all duration-1000"
 								style={{
@@ -523,9 +572,110 @@ export function KnowledgeHubView({
 								}}
 							/>
 						</div>
-						<p className="text-[10px] text-slate-400 leading-relaxed italic">
-							A meta da clínica é manter 90% da base em status "Verificado".
+						<p className="text-[9px] text-slate-400 leading-relaxed italic opacity-70">
+							A meta é manter 90% da base "Verificada".
 						</p>
+					</div>
+				</div>
+
+				<Separator className="opacity-50" />
+
+				{/* Trending Widget (Moved from right) */}
+				<div className="space-y-4">
+					<div className="flex items-center gap-2 px-1">
+						<TrendingUp className="h-4 w-4 text-amber-500" />
+						<h3 className="text-[10px] font-black uppercase tracking-widest text-slate-400">
+							Em Destaque
+						</h3>
+					</div>
+					<div className="space-y-3">
+						{trendingArticles.map((article, idx) => (
+							<div
+								key={article.id}
+								className="flex gap-3 group cursor-pointer p-2 rounded-lg hover:bg-slate-50 transition-colors"
+								onClick={() => onEditArticle(article)}
+							>
+								<div className="h-7 w-7 rounded-md bg-slate-100 flex items-center justify-center shrink-0 font-bold text-[10px] text-slate-400 group-hover:bg-amber-50 group-hover:text-amber-600 transition-colors">
+									{idx + 1}
+								</div>
+								<div className="min-w-0">
+									<h4 className="text-[11px] font-bold truncate leading-none mb-1 group-hover:text-amber-700 transition-colors">
+										{article.title}
+									</h4>
+									<span className="text-[9px] font-medium text-muted-foreground uppercase tracking-tight">
+										{article.subgroup}
+									</span>
+								</div>
+							</div>
+						))}
+					</div>
+				</div>
+
+				<Separator className="opacity-50" />
+
+				{/* Timeline de Auditoria (Moved from right - Minimalist) */}
+				<div className="space-y-4">
+					<div className="flex items-center justify-between px-1">
+						<div className="flex items-center gap-2">
+							<History className="h-4 w-4 text-blue-500" />
+							<h3 className="text-[10px] font-black uppercase tracking-widest text-slate-400">
+								Atividade
+							</h3>
+						</div>
+						<Button
+							variant="ghost"
+							size="sm"
+							className="h-6 px-2 text-[9px] font-bold uppercase text-slate-400 hover:text-primary"
+							onClick={() => onAuditArticle(null)}
+						>
+							Ver tudo
+						</Button>
+					</div>
+
+					<div className="space-y-4 px-1">
+						{auditItems && auditItems.length === 0 && (
+							<p className="text-[10px] text-muted-foreground italic">
+								Nenhuma atividade registrada.
+							</p>
+						)}
+						{auditItems &&
+							auditItems.slice(0, 5).map((entry) => {
+								const title =
+									articleTitleMap.get(entry.article_id) || entry.article_id;
+								const date =
+									(entry.created_at as any).toDate?.() ||
+									new Date(entry.created_at);
+								const actorName =
+									(auditProfiles &&
+										auditProfiles[entry.actor_id]?.full_name) ||
+									"Sistema";
+								return (
+									<div key={entry.id} className="flex gap-3 group items-start">
+										<div className="h-2 w-2 rounded-full bg-slate-200 mt-1.5 shrink-0 group-hover:bg-blue-500 transition-colors" />
+										<div className="min-w-0 space-y-0.5">
+											<p className="text-[10px] leading-tight text-slate-600">
+												<span className="font-bold text-slate-900">
+													{actorName.split(" ")[0]}
+												</span>
+												<span className="mx-1 opacity-70">
+													{entry.action}
+												</span>
+											</p>
+											<p className="text-[10px] font-medium text-slate-400 truncate italic">
+												{title}
+											</p>
+											<div className="flex items-center gap-1 text-[9px] text-slate-300 font-bold uppercase tracking-tighter">
+												{date.toLocaleDateString("pt-BR", {
+													day: "2-digit",
+													month: "short",
+													hour: "2-digit",
+													minute: "2-digit",
+												})}
+											</div>
+										</div>
+									</div>
+								);
+							})}
 					</div>
 				</div>
 			</aside>
@@ -629,111 +779,6 @@ export function KnowledgeHubView({
 				)}
 			</main>
 
-			{/* Activity & Trends (Right Sidebar) */}
-			<aside className="lg:w-80 shrink-0 space-y-6">
-				{/* Trending Widget */}
-				<div className="rounded-xl border bg-card p-5 space-y-4">
-					<div className="flex items-center gap-2">
-						<TrendingUp className="h-4 w-4 text-emerald-500" />
-						<h3 className="text-sm font-bold uppercase tracking-wider text-muted-foreground">
-							Em Destaque
-						</h3>
-					</div>
-					<div className="space-y-4">
-						{trendingArticles.map((article, idx) => (
-							<div
-								key={article.id}
-								className="flex gap-3 group cursor-pointer"
-								onClick={() => onEditArticle(article)}
-							>
-								<div className="h-8 w-8 rounded-lg bg-slate-100 dark:bg-slate-800 flex items-center justify-center shrink-0 font-bold text-slate-400 group-hover:bg-primary/10 group-hover:text-primary transition-colors">
-									0{idx + 1}
-								</div>
-								<div className="min-w-0">
-									<h4 className="text-xs font-bold truncate leading-none mb-1 group-hover:text-primary transition-colors">
-										{article.title}
-									</h4>
-									<span className="text-[10px] text-muted-foreground">
-										{article.subgroup}
-									</span>
-								</div>
-							</div>
-						))}
-					</div>
-				</div>
-
-				{/* Timeline de Auditoria */}
-				<div className="space-y-4">
-					<div className="flex items-center justify-between px-1">
-						<div className="flex items-center gap-2">
-							<History className="h-4 w-4 text-primary" />
-							<h3 className="text-sm font-bold uppercase tracking-wider text-muted-foreground">
-								Atividade Recente
-							</h3>
-						</div>
-						<Button
-							variant="ghost"
-							size="sm"
-							className="h-7 text-[10px] font-bold uppercase"
-							onClick={() => onAuditArticle(null)}
-						>
-							Ver tudo
-						</Button>
-					</div>
-
-					<ScrollArea className="h-[450px] pr-4">
-						<div className="space-y-6 relative ml-2 border-l border-slate-100 dark:border-slate-800 pl-4">
-							{auditItems && auditItems.length === 0 && (
-								<p className="text-[10px] text-muted-foreground italic">
-									Nenhuma atividade registrada.
-								</p>
-							)}
-							{auditItems &&
-								auditItems.slice(0, 10).map((entry) => {
-									const title =
-										articleTitleMap.get(entry.article_id) || entry.article_id;
-									const date =
-										(entry.created_at as any).toDate?.() ||
-										new Date(entry.created_at);
-									const actorName =
-										(auditProfiles &&
-											auditProfiles[entry.actor_id]?.full_name) ||
-										"Sistema";
-									return (
-										<div key={entry.id} className="relative group">
-											<div className="absolute -left-[21px] top-0.5 h-2.5 w-2.5 rounded-full bg-slate-200 border-2 border-white group-hover:bg-primary transition-colors" />
-											<div className="space-y-1">
-												<p className="text-[11px] leading-tight font-medium">
-													<span className="font-bold text-slate-900 dark:text-slate-100">
-														{actorName}
-													</span>
-													<span className="text-muted-foreground mx-1">
-														realizou
-													</span>
-													<span className="text-primary font-bold">
-														{entry.action}
-													</span>
-												</p>
-												<p className="text-[10px] font-medium text-slate-500 line-clamp-1 italic">
-													"{title}"
-												</p>
-												<div className="flex items-center gap-1.5 text-[9px] text-muted-foreground font-bold uppercase tracking-tighter">
-													<Calendar className="h-2.5 w-2.5" />
-													{date.toLocaleDateString("pt-BR", {
-														day: "2-digit",
-														month: "short",
-														hour: "2-digit",
-														minute: "2-digit",
-													})}
-												</div>
-											</div>
-										</div>
-									);
-								})}
-						</div>
-					</ScrollArea>
-				</div>
-			</aside>
 		</div>
 	);
 }
