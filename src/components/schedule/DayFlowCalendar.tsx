@@ -77,9 +77,15 @@ export function DayFlowCalendarWrapper(props: DayFlowCalendarWrapperProps) {
 	const [weekSlotHeight, setWeekSlotHeight] = useState(15);
 	const slotHeight = isWeekView ? weekSlotHeight : Math.round(24 * heightMultiplier);
 	const slotDuration = "00:15:00";
+	// @event-calendar/core passes slot-label Date objects in UTC.
+	// Using getUTCHours/getUTCMinutes ensures the sidebar times match the
+	// actual appointment times stored as local time strings (e.g. "16:00").
 	const slotLabelFormat = useMemo(
-		() => (time: Date) =>
-			time.getMinutes() === 0 ? format(time, "HH:mm") : "",
+		() => (time: Date) => {
+			const h = time.getUTCHours();
+			const m = time.getUTCMinutes();
+			return m === 0 ? `${String(h).padStart(2, "0")}:00` : "";
+		},
 		[],
 	);
 
@@ -285,7 +291,7 @@ export function DayFlowCalendarWrapper(props: DayFlowCalendarWrapperProps) {
 						slotMaxTime: "21:15:00",
 						slotDuration,
 						slotHeight,
-						slotLabelInterval: "00:00:00",
+						slotLabelInterval: "01:00:00",
 						slotLabelFormat,
 						scrollTime: "07:00:00",
 						hiddenDays: [0],
@@ -447,7 +453,7 @@ export function DayFlowCalendarWrapper(props: DayFlowCalendarWrapperProps) {
 			);
 			calendar.setOption("slotHeight", slotHeight);
 			calendar.setOption("slotDuration", slotDuration);
-			calendar.setOption("slotLabelInterval", "00:00:00");
+			calendar.setOption("slotLabelInterval", "01:00:00");
 			calendar.setOption("slotLabelFormat", slotLabelFormat);
 			calendar.setOption("scrollTime", "07:00:00");
 			calendar.setOption("events", dfEvents);

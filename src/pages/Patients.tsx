@@ -7,7 +7,7 @@
  * @version 2.0.0 - Library Mode
  */
 
-import { Cake, Filter, Users } from "lucide-react";
+import { Cake, Filter, Users, CheckCircle2, Sparkles, AlertTriangle } from "lucide-react";
 import { useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import { LazyComponent } from "@/components/common/LazyComponent";

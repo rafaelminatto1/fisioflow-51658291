@@ -109,38 +109,84 @@ export class ComponentErrorBoundary extends Component<
 
 		// Fallback padrão
 		return (
-			<Card className="border-destructive">
-				<CardHeader>
-					<CardTitle className="flex items-center gap-2 text-destructive">
-						<AlertCircle className="h-5 w-5" />
-						Erro no Componente{componentName ? ` ${componentName}` : ""}
-					</CardTitle>
-				</CardHeader>
-				<CardContent>
-					<p className="text-sm text-muted-foreground mb-4">
-						Ocorreu um erro ao renderizar este componente. Tente recarregar.
-					</p>
-					{error && (
-						<details className="mb-4">
-							<summary className="text-xs cursor-pointer text-muted-foreground">
-								Detalhes do erro
-							</summary>
-							<pre className="mt-2 text-xs bg-muted p-2 rounded overflow-auto max-h-32">
-								{error.message}
-							</pre>
-						</details>
-					)}
-					<Button
-						variant="outline"
-						size="sm"
-						onClick={this.handleReset}
-						className="gap-2"
-					>
-						<RefreshCw className="h-4 w-4" />
-						Tentar Novamente
-					</Button>
-				</CardContent>
-			</Card>
+			<div className="p-1 rounded-[2.5rem] bg-gradient-to-br from-destructive/20 via-destructive/5 to-transparent border border-destructive/20 shadow-2xl overflow-hidden animate-in fade-in zoom-in duration-500">
+				<div className="relative overflow-hidden bg-background/60 backdrop-blur-2xl rounded-[2.25rem] p-8 md:p-10 border border-white/10">
+					{/* Decorative background elements */}
+					<div className="absolute top-0 right-0 -mr-20 -mt-20 w-64 h-64 bg-destructive/10 rounded-full blur-3xl pointer-events-none" />
+					<div className="absolute bottom-0 left-0 -ml-20 -mb-20 w-64 h-64 bg-primary/5 rounded-full blur-3xl pointer-events-none" />
+					
+					<div className="relative z-10 flex flex-col items-center text-center">
+						<div className="mb-6 relative">
+							<div className="absolute inset-0 bg-destructive/20 rounded-full blur-xl animate-pulse" />
+							<div className="relative h-20 w-20 rounded-3xl bg-gradient-to-br from-destructive/20 to-destructive/40 flex items-center justify-center border border-destructive/30 shadow-inner">
+								<AlertCircle className="h-10 w-10 text-destructive" />
+							</div>
+						</div>
+						
+						<h3 className="text-2xl md:text-3xl font-black text-slate-900 dark:text-white mb-3 tracking-tight">
+							Ops! Algo deu errado no componente
+							{componentName && (
+								<span className="block text-destructive mt-1 text-xl opacity-90 uppercase tracking-widest font-bold">
+									{componentName}
+								</span>
+							)}
+						</h3>
+						
+						<p className="text-slate-500 dark:text-slate-400 max-w-md mx-auto mb-8 leading-relaxed font-medium">
+							Identificamos uma pequena instabilidade ao carregar este recurso.
+							Nossa equipe técnica já foi notificada para resolver isso.
+						</p>
+
+						<div className="flex flex-col sm:flex-row items-center justify-center gap-4 w-full">
+							<Button
+								onClick={this.handleReset}
+								className="h-14 px-8 rounded-2xl bg-destructive hover:bg-destructive/90 text-white font-bold shadow-lg shadow-destructive/20 gap-3 transition-all active:scale-95 w-full sm:w-auto"
+							>
+								<RefreshCw className="h-5 w-5" />
+								Tentar Novamente
+							</Button>
+							
+							<Button
+								variant="outline"
+								onClick={() => window.location.reload()}
+								className="h-14 px-8 rounded-2xl border-destructive/20 hover:bg-destructive/5 font-bold gap-3 transition-all active:scale-95 w-full sm:w-auto"
+							>
+								Recarregar Página
+							</Button>
+						</div>
+
+						{error && (
+							<div className="mt-10 w-full max-w-2xl text-left">
+								<details className="group border border-destructive/10 rounded-2xl bg-destructive/5 overflow-hidden transition-all duration-300">
+									<summary className="flex items-center justify-between p-4 cursor-pointer hover:bg-destructive/10 transition-colors list-none">
+										<div className="flex items-center gap-3">
+											<div className="h-2 w-2 rounded-full bg-destructive animate-pulse" />
+											<span className="text-[10px] font-bold uppercase tracking-widest text-destructive/70">
+												Detalhes Técnicos para Suporte
+											</span>
+										</div>
+										<span className="text-xs font-black text-destructive/40 group-open:rotate-180 transition-transform">
+											↓
+										</span>
+									</summary>
+									<div className="p-4 pt-0">
+										<div className="bg-slate-950/90 rounded-xl p-4 overflow-x-auto shadow-inner border border-white/5">
+											<code className="text-xs text-rose-400 font-mono block whitespace-pre-wrap break-all leading-relaxed">
+												{error.name}: {error.message}
+												{"\n\n"}
+												{error.stack?.split('\n').slice(0, 3).join('\n')}
+											</code>
+										</div>
+										<p className="text-[10px] mt-4 text-destructive/40 font-bold uppercase text-center tracking-widest">
+											Protocolo: {Math.random().toString(36).substring(7).toUpperCase()}
+										</p>
+									</div>
+								</details>
+							</div>
+						)}
+					</div>
+				</div>
+			</div>
 		);
 	}
 }
