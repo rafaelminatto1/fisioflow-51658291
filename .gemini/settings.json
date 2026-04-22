@@ -1,26 +1,60 @@
 {
   "mcpServers": {
+    "neon": {
+      "type": "http",
+      "url": "https://mcp.neon.tech/mcp"
+    },
+    "exa": {
+      "httpUrl": "https://mcp.exa.ai/mcp"
+    },
+    "shadcn": {
+      "command": "npx",
+      "args": [
+        "shadcn@latest",
+        "mcp"
+      ]
+    },
+    "stripe": {
+      "httpUrl": "https://mcp.stripe.com/mcp"
+    },
+    "github": {
+      "httpUrl": "https://server.smithery.ai/smithery-ai/github/mcp"
+    },
+    "cloudflare-api": {
+      "httpUrl": "https://mcp.cloudflare.com/mcp",
+      "timeout": 600000
+    },
+    "context7": {
+      "httpUrl": "https://mcp.context7.com/mcp",
+      "headers": {
+        "CONTEXT7_API_KEY": "ctx7sk-ad94ba7f-5d88-47b6-9c00-a478dd2b5343"
+      }
+    },
     "playwright": {
       "command": "npx",
       "args": [
         "-y",
         "@playwright/mcp@latest"
       ],
-      "description": "Local Playwright MCP server for browser automation"
-    },
-    "cloudflare-api": {
-      "httpUrl": "https://mcp.cloudflare.com",
-      "description": "Cloudflare managed MCP server for the Cloudflare API",
-      "timeout": 600000
+      "description": "Playwright MCP for browser automation and E2E testing"
     },
     "expo-mcp": {
       "httpUrl": "https://mcp.expo.dev/mcp",
-      "description": "Expo hosted MCP server for Expo and EAS workflows",
+      "description": "Expo MCP for React Native development",
       "timeout": 600000
     },
-    "neon": {
-      "type": "http",
-      "url": "https://mcp.neon.tech"
+    "react-native-mcp": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "@ohah/react-native-mcp-server"
+      ]
+    },
+    "chrome-devtools": {
+      "command": "npx",
+      "args": [
+        "chrome-devtools-mcp@latest"
+      ]
     },
     "pubmed": {
       "url": "https://server.smithery.ai/pubmed/mcp",
