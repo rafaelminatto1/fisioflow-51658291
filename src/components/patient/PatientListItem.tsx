@@ -54,7 +54,7 @@ export const PatientListItem = ({
 						: undefined,
 				}}
 				onClick={onClick}
-				actions={<PatientActions patient={patient} />}
+				actions={<PatientActions patient={patient} variant="speed-dial" />}
 				className="h-full"
 			/>
 		</button>

@@ -1,5 +1,6 @@
 import { Hono, type Context } from 'hono';
 import { createPool } from '../lib/db';
+import { primeAuthUserCache } from '../lib/auth';
 import { rateLimit } from '../middleware/rateLimit';
 import { turnstileVerify } from '../middleware/turnstile';
 import type { Env } from '../types/env';
@@ -53,11 +54,21 @@ async function forwardToNeonAuth(
   });
 }
 
-async function fetchUserProfile(pool: ReturnType<typeof createPool>, userId: string) {
+async function fetchUserProfile(
+  pool: ReturnType<typeof createPool>,
+  userId: string,
+  email?: string,
+) {
   const result = await pool.query(
     `SELECT id, user_id, email, full_name as name, role, organization_id
-     FROM profiles WHERE user_id = $1 LIMIT 1`,
-    [userId]
+     FROM profiles
+     WHERE organization_id IS NOT NULL
+       AND (user_id = $1 OR ($2::text IS NOT NULL AND email = $2))
+     ORDER BY CASE WHEN user_id = $1 THEN 0 ELSE 1 END,
+              updated_at DESC NULLS LAST,
+              created_at DESC NULLS LAST
+     LIMIT 1`,
+    [userId, email ?? null]
   );
   return result.rows[0] || null;
 }
@@ -181,7 +192,15 @@ app.post('/login', loginRateLimit, async (c) => {
     if (userId) {
       try {
         const pool = createPool(c.env);
-        userProfile = await fetchUserProfile(pool, userId);
+        userProfile = await fetchUserProfile(pool, userId, email);
+        if (userProfile?.organization_id) {
+          primeAuthUserCache({
+            uid: userId,
+            email: userProfile.email || email,
+            organizationId: userProfile.organization_id,
+            role: userProfile.role || neonData.user?.role || 'fisioterapeuta',
+          });
+        }
       } catch {
         // Profile fetch is optional — don't block login
       }
