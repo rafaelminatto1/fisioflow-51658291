@@ -435,22 +435,6 @@ const Patients = () => {
 			/>
 		</MainLayout>
 	);
-			<PatientCreateModal
-				open={isNewPatientModalOpen}
-				onOpenChange={(open) =>
-					updateSearchParams({ modal: open ? "create" : undefined })
-				}
-			/>
-		</MainLayout>
-	);
-			<PatientCreateModal
-				open={isNewPatientModalOpen}
-				onOpenChange={(open) =>
-					updateSearchParams({ modal: open ? "create" : undefined })
-				}
-			/>
-		</MainLayout>
-	);
 };
 
 export default Patients;
