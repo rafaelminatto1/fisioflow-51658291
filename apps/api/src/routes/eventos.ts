@@ -43,7 +43,9 @@ app.get('/activities', requireAuth, async (c) => {
   params.push(Number(limit), Number(offset));
 
   const result = await pool.query(
-    `SELECT * FROM eventos WHERE ${conditions.join(' AND ')} ORDER BY data_inicio DESC LIMIT $${params.length - 1} OFFSET $${params.length}`,
+    `SELECT *, 
+      (SELECT COUNT(*)::int FROM evento_contratados ec WHERE ec.evento_id = eventos.id) as colaboradores_confirmados 
+     FROM eventos WHERE ${conditions.join(' AND ')} ORDER BY data_inicio DESC LIMIT $${params.length - 1} OFFSET $${params.length}`,
     params,
   );
   try { return c.json({ data: result.rows || result }); } catch { return c.json({ data: [] }); }
@@ -55,7 +57,9 @@ app.get('/activities/:id', requireAuth, async (c) => {
   const { id } = c.req.param();
 
   const result = await pool.query(
-    'SELECT * FROM eventos WHERE id = $1 AND organization_id = $2 LIMIT 1',
+    `SELECT *, 
+      (SELECT COUNT(*)::int FROM evento_contratados ec WHERE ec.evento_id = eventos.id) as colaboradores_confirmados 
+     FROM eventos WHERE id = $1 AND organization_id = $2 LIMIT 1`,
     [id, user.organizationId],
   );
   if (!result.rows.length) return c.json({ error: 'Não encontrado' }, 404);
@@ -67,11 +71,12 @@ app.post('/activities', requireAuth, async (c) => {
   const pool = await createPool(c.env);
   const b = (await c.req.json()) as Record<string, unknown>;
   const result = await pool.query(
-    `INSERT INTO eventos (organization_id, nome, descricao, categoria, local, data_inicio, data_fim, hora_inicio, hora_fim, gratuito, link_whatsapp, valor_padrao_prestador, status)
-     VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13) RETURNING *`,
+    `INSERT INTO eventos (organization_id, nome, descricao, categoria, local, data_inicio, data_fim, hora_inicio, hora_fim, gratuito, link_whatsapp, valor_padrao_prestador, status, participantes_previstos, minimo_colaboradores)
+     VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15) RETURNING *`,
     [user.organizationId, b.nome, b.descricao??null, b.categoria??null, b.local??null,
      b.data_inicio??null, b.data_fim??null, b.hora_inicio??null, b.hora_fim??null,
-     b.gratuito??false, b.link_whatsapp??null, b.valor_padrao_prestador??null, b.status??'ativo'],
+     b.gratuito??false, b.link_whatsapp??null, b.valor_padrao_prestador??null, b.status??'ativo',
+     b.participantes_previstos??0, b.minimo_colaboradores??0],
   );
   return c.json({ data: result.rows[0] }, 201);
 });
@@ -84,11 +89,13 @@ app.put('/activities/:id', requireAuth, async (c) => {
   const result = await pool.query(
     `UPDATE eventos SET nome=COALESCE($3,nome), descricao=$4, categoria=$5, local=$6, data_inicio=$7, data_fim=$8,
      hora_inicio=$9, hora_fim=$10, gratuito=COALESCE($11,gratuito), link_whatsapp=$12, valor_padrao_prestador=$13,
-     status=COALESCE($14,status), updated_at=NOW()
+     status=COALESCE($14,status), participantes_previstos=COALESCE($15,participantes_previstos), 
+     minimo_colaboradores=COALESCE($16,minimo_colaboradores), updated_at=NOW()
      WHERE id=$1 AND organization_id=$2 RETURNING *`,
     [id, user.organizationId, b.nome??null, b.descricao??null, b.categoria??null, b.local??null,
      b.data_inicio??null, b.data_fim??null, b.hora_inicio??null, b.hora_fim??null,
-     b.gratuito??null, b.link_whatsapp??null, b.valor_padrao_prestador??null, b.status??null],
+     b.gratuito??null, b.link_whatsapp??null, b.valor_padrao_prestador??null, b.status??null,
+     b.participantes_previstos??null, b.minimo_colaboradores??null],
   );
   if (!result.rows.length) return c.json({ error: 'Não encontrado' }, 404);
   return c.json({ data: result.rows[0] });

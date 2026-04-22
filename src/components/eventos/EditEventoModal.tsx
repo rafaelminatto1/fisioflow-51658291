@@ -42,6 +42,7 @@ const updateSchema = z.object({
 	link_whatsapp: z.string().optional(),
 	valor_padrao_prestador: z.number().nonnegative().default(0),
 	participantes_previstos: z.number().int().nonnegative().default(0),
+	minimo_colaboradores: z.number().int().nonnegative().default(0),
 });
 
 type UpdateFormData = z.infer<typeof updateSchema>;
@@ -64,6 +65,7 @@ interface EditEventoModalProps {
 		link_whatsapp: string | null;
 		valor_padrao_prestador: number;
 		participantes_previstos?: number;
+		minimo_colaboradores?: number;
 	};
 }
 
@@ -111,6 +113,7 @@ export function EditEventoModal({
 				link_whatsapp: evento.link_whatsapp || "",
 				valor_padrao_prestador: Number(evento.valor_padrao_prestador),
 				participantes_previstos: Number(evento.participantes_previstos || 0),
+				minimo_colaboradores: Number(evento.minimo_colaboradores || 0),
 			});
 		}
 	}, [evento, reset]);
@@ -292,6 +295,15 @@ export function EditEventoModal({
 							id="participantes_previstos"
 							type="number"
 							{...register("participantes_previstos", { valueAsNumber: true })}
+						/>
+					</div>
+
+					<div>
+						<Label htmlFor="minimo_colaboradores">Mínimo de Colaboradores</Label>
+						<Input
+							id="minimo_colaboradores"
+							type="number"
+							{...register("minimo_colaboradores", { valueAsNumber: true })}
 						/>
 					</div>
 
