@@ -332,7 +332,7 @@ export const builtinClinicalTestsCatalog: ClinicalTestCatalogRecord[] = [
 		source_label: "Curadoria FisioFlow",
 		sort_order: 5,
 		illustration: "nerve-tension",
-		imageUrl: "/clinical-tests/illustrations/slump-test.png",
+		imageUrl: "/clinical-tests/illustrations/slump-test.avif",
 		fieldsDefinition: [
 			{ id: "pain_nprs", label: "Intensidade da Dor (0-10)", type: "nprs" },
 			{
@@ -361,7 +361,7 @@ export const builtinClinicalTestsCatalog: ClinicalTestCatalogRecord[] = [
 		evidence_summary: "Melhor teste isolado para triagem clínica de LCA.",
 		source_label: "Curadoria FisioFlow",
 		sort_order: 10,
-		imageUrl: "/clinical-tests/illustrations/lachman-test.png",
+		imageUrl: "/clinical-tests/illustrations/lachman-test.avif",
 		evidence_resources: [
 			{
 				title: "Validity of the Lachman Test",
@@ -405,7 +405,7 @@ export const builtinClinicalTestsCatalog: ClinicalTestCatalogRecord[] = [
 		evidence_summary: "Altamente específico para ruptura total do LCA.",
 		source_label: "Curadoria FisioFlow",
 		sort_order: 12,
-		imageUrl: "/clinical-tests/illustrations/pivot-shift-knee.png",
+		imageUrl: "/clinical-tests/illustrations/pivot-shift-knee.avif",
 		illustration: "knee-stability",
 		fieldsDefinition: [
 			{
@@ -441,7 +441,7 @@ export const builtinClinicalTestsCatalog: ClinicalTestCatalogRecord[] = [
 		evidence_summary: "Provocação de sintomas meniscais em carga e rotação.",
 		source_label: "Curadoria FisioFlow",
 		sort_order: 30,
-		imageUrl: "/clinical-tests/illustrations/thessaly-test.png",
+		imageUrl: "/clinical-tests/illustrations/thessaly-test.avif",
 		illustration: "knee-stability",
 		fieldsDefinition: [
 			{ id: "pain_nprs", label: "Dor na Rotação (0-10)", type: "nprs" },
@@ -551,7 +551,7 @@ export const builtinClinicalTestsCatalog: ClinicalTestCatalogRecord[] = [
 			"Altamente clínico para detectar instabilidade anterior crônica.",
 		source_label: "Curadoria FisioFlow",
 		sort_order: 103,
-		imageUrl: "/clinical-tests/illustrations/shoulder-apprehension.png",
+		imageUrl: "/clinical-tests/illustrations/shoulder-apprehension.avif",
 		illustration: "shoulder-rotation",
 		fieldsDefinition: [
 			{
@@ -821,7 +821,7 @@ export const builtinClinicalTestsCatalog: ClinicalTestCatalogRecord[] = [
 			"Teste de alta confiabilidade clínica para diagnóstico imediato de ruptura do tendão de Aquiles.",
 		source_label: "Curadoria FisioFlow",
 		sort_order: 42,
-		imageUrl: "/clinical-tests/illustrations/thompson-test.png",
+		imageUrl: "/clinical-tests/illustrations/thompson-test.avif",
 		illustration: "ankle-stability",
 		fieldsDefinition: [
 			{
@@ -855,7 +855,7 @@ export const builtinClinicalTestsCatalog: ClinicalTestCatalogRecord[] = [
 		source_label: "Curadoria FisioFlow",
 		sort_order: 52,
 		illustration: "hip-rotation",
-		imageUrl: "/clinical-tests/illustrations/ober-test.png",
+		imageUrl: "/clinical-tests/illustrations/ober-test.avif",
 		fieldsDefinition: [
 			{
 				id: "adduction_limitation",
@@ -889,7 +889,7 @@ export const builtinClinicalTestsCatalog: ClinicalTestCatalogRecord[] = [
 		source_label: "Curadoria FisioFlow",
 		sort_order: 35,
 		illustration: "balance-dynamic",
-		imageUrl: "/clinical-tests/illustrations/trendelenburg-sign.png",
+		imageUrl: "/clinical-tests/illustrations/trendelenburg-sign.avif",
 		fieldsDefinition: [
 			{
 				id: "pelvic_drop",
@@ -924,7 +924,7 @@ export const builtinClinicalTestsCatalog: ClinicalTestCatalogRecord[] = [
 		source_label: "Curadoria FisioFlow",
 		sort_order: 115,
 		illustration: "balance-reach",
-		imageUrl: "/clinical-tests/illustrations/step-down-test.png",
+		imageUrl: "/clinical-tests/illustrations/step-down-test.avif",
 		fieldsDefinition: [
 			{ id: "quality_score", label: "Score Qualidade (0-5)", type: "number" },
 			{ id: "pain_nprs", label: "Dor (0-10)", type: "nprs" },
@@ -949,7 +949,7 @@ export const builtinClinicalTestsCatalog: ClinicalTestCatalogRecord[] = [
 		source_label: "Curadoria FisioFlow",
 		sort_order: 65,
 		illustration: "hip-rotation",
-		imageUrl: "/clinical-tests/illustrations/adductor-squeeze.png",
+		imageUrl: "/clinical-tests/illustrations/adductor-squeeze.avif",
 		fieldsDefinition: [
 			{ id: "pain_0_degrees", label: "Dor a 0° (0-10)", type: "nprs" },
 			{ id: "pain_45_degrees", label: "Dor a 45° (0-10)", type: "nprs" },
@@ -973,7 +973,7 @@ export const builtinClinicalTestsCatalog: ClinicalTestCatalogRecord[] = [
 		source_label: "Curadoria FisioFlow",
 		sort_order: 42,
 		illustration: "shoulder-impingement",
-		imageUrl: "/clinical-tests/illustrations/kibler-dyskinesis.png",
+		imageUrl: "/clinical-tests/illustrations/kibler-dyskinesis.avif",
 		fieldsDefinition: [
 			{
 				id: "dyskinesis_type",
@@ -1006,7 +1006,7 @@ export const builtinClinicalTestsCatalog: ClinicalTestCatalogRecord[] = [
 		source_label: "Curadoria FisioFlow",
 		sort_order: 15,
 		illustration: "knee-stability",
-		imageUrl: "/clinical-tests/illustrations/mcmurray-test.png",
+		imageUrl: "/clinical-tests/illustrations/mcmurray-test.avif",
 		fieldsDefinition: [
 			{
 				id: "pain_medial",
@@ -1049,7 +1049,7 @@ export const builtinClinicalTestsCatalog: ClinicalTestCatalogRecord[] = [
 		source_label: "Curadoria FisioFlow",
 		sort_order: 60,
 		illustration: "hip-rotation",
-		imageUrl: "/clinical-tests/illustrations/thomas-test.png",
+		imageUrl: "/clinical-tests/illustrations/thomas-test.avif",
 		fieldsDefinition: [
 			{
 				id: "iliopsoas_tightness",
@@ -1134,7 +1134,7 @@ export const builtinClinicalTestsCatalog: ClinicalTestCatalogRecord[] = [
 			"Sensibilidade moderada mas alta especificidade para neuropatias compressivas.",
 		source_label: "Curadoria FisioFlow",
 		sort_order: 80,
-		imageUrl: "/clinical-tests/illustrations/tinel-sign-wrist.png",
+		imageUrl: "/clinical-tests/illustrations/tinel-sign-wrist.avif",
 		illustration: "wrist-stability",
 		fieldsDefinition: [
 			{
@@ -1175,7 +1175,7 @@ export const builtinClinicalTestsCatalog: ClinicalTestCatalogRecord[] = [
 		source_label: "Curadoria FisioFlow",
 		sort_order: 70,
 		illustration: "wrist-flexion",
-		imageUrl: "/clinical-tests/illustrations/finkelstein-test.png",
+		imageUrl: "/clinical-tests/illustrations/finkelstein-test.avif",
 		fieldsDefinition: [
 			{ id: "nprs_pain", label: "Intensidade da Dor (0-10)", type: "nprs" },
 			{
@@ -1278,7 +1278,7 @@ export const builtinClinicalTestsCatalog: ClinicalTestCatalogRecord[] = [
 		source_label: "Curadoria FisioFlow",
 		sort_order: 126,
 		illustration: "sit-to-stand",
-		imageUrl: "/clinical-tests/illustrations/nordic-hamstring.png",
+		imageUrl: "/clinical-tests/illustrations/nordic-hamstring.avif",
 		fieldsDefinition: [
 			{ id: "angle_break", label: "Ângulo Queda (°)", type: "number" },
 			{ id: "reps", label: "Repetições", type: "number" },
@@ -1325,7 +1325,7 @@ export const builtinClinicalTestsCatalog: ClinicalTestCatalogRecord[] = [
 		source_label: "Curadoria FisioFlow",
 		sort_order: 116,
 		illustration: "balance-reach",
-		imageUrl: "/clinical-tests/illustrations/single-leg-squat.png",
+		imageUrl: "/clinical-tests/illustrations/single-leg-squat.avif",
 		fieldsDefinition: [
 			{
 				id: "quality",
@@ -1356,7 +1356,7 @@ export const builtinClinicalTestsCatalog: ClinicalTestCatalogRecord[] = [
 		source_label: "Curadoria FisioFlow",
 		sort_order: 110,
 		illustration: "elbow-test",
-		imageUrl: "/clinical-tests/illustrations/cozen-test.png",
+		imageUrl: "/clinical-tests/illustrations/cozen-test.avif",
 		fieldsDefinition: [
 			{ id: "nprs_pain", label: "Intensidade da Dor (0-10)", type: "nprs" },
 			{ id: "weakness_present", label: "Fraqueza Associada", type: "boolean" },
@@ -1380,7 +1380,7 @@ export const builtinClinicalTestsCatalog: ClinicalTestCatalogRecord[] = [
 		evidence_summary: "Complementar ao teste de Cozen via alongamento passivo.",
 		source_label: "Curadoria FisioFlow",
 		sort_order: 111,
-		imageUrl: "/clinical-tests/illustrations/mills-test.png",
+		imageUrl: "/clinical-tests/illustrations/mills-test.avif",
 		illustration: "elbow-test",
 		fieldsDefinition: [
 			{ id: "nprs_pain", label: "Intensidade da Dor (0-10)", type: "nprs" },
@@ -1486,7 +1486,7 @@ export const builtinClinicalTestsCatalog: ClinicalTestCatalogRecord[] = [
 			"Teste de estiramento passivo clássico para flexores de quadril biarticulares.",
 		source_label: "Curadoria FisioFlow",
 		sort_order: 60,
-		imageUrl: "/clinical-tests/illustrations/ely-test.png",
+		imageUrl: "/clinical-tests/illustrations/ely-test.avif",
 		illustration: "knee-stability",
 		fieldsDefinition: [
 			{
@@ -1518,7 +1518,7 @@ export const builtinClinicalTestsCatalog: ClinicalTestCatalogRecord[] = [
 		evidence_summary: "Teste de provocação simples para patologias AC.",
 		source_label: "Curadoria FisioFlow",
 		sort_order: 115,
-		imageUrl: "/clinical-tests/illustrations/crossover-test.png",
+		imageUrl: "/clinical-tests/illustrations/crossover-test.avif",
 		illustration: "shoulder-impingement",
 		fieldsDefinition: [
 			{ id: "nprs_pain", label: "Intensidade da Dor (0-10)", type: "nprs" },
@@ -1545,7 +1545,7 @@ export const builtinClinicalTestsCatalog: ClinicalTestCatalogRecord[] = [
 			"Sistema mais robusto para prognóstico de lesões musculares.",
 		source_label: "Curadoria FisioFlow",
 		sort_order: 125,
-		imageUrl: "/clinical-tests/illustrations/hamstring-bamic.png",
+		imageUrl: "/clinical-tests/illustrations/hamstring-bamic.avif",
 		illustration: "knee-stability",
 		fieldsDefinition: [
 			{
@@ -1579,7 +1579,7 @@ export const builtinClinicalTestsCatalog: ClinicalTestCatalogRecord[] = [
 		evidence_summary: "Útil para identificar irritação no tendão do bíceps.",
 		source_label: "Curadoria FisioFlow",
 		sort_order: 45,
-		imageUrl: "/clinical-tests/illustrations/speed-test.png",
+		imageUrl: "/clinical-tests/illustrations/speed-test.avif",
 		illustration: "shoulder-impingement",
 		fieldsDefinition: [
 			{ id: "nprs_pain", label: "Dor no Sulco (0-10)", type: "nprs" },
@@ -1627,7 +1627,7 @@ export const builtinClinicalTestsCatalog: ClinicalTestCatalogRecord[] = [
 		evidence_summary: "Alta acurácia para rupturas do supraespinhal.",
 		source_label: "Curadoria FisioFlow",
 		sort_order: 42,
-		imageUrl: "/clinical-tests/illustrations/empty-can-jobe.png",
+		imageUrl: "/clinical-tests/illustrations/empty-can-jobe.avif",
 		illustration: "shoulder-impingement",
 		fieldsDefinition: [
 			{
@@ -1684,7 +1684,7 @@ export const builtinClinicalTestsCatalog: ClinicalTestCatalogRecord[] = [
 			"Utilizado para confirmar achados de outros testes meniscais.",
 		source_label: "Curadoria FisioFlow",
 		sort_order: 22,
-		imageUrl: "/clinical-tests/illustrations/apley-compression.png",
+		imageUrl: "/clinical-tests/illustrations/apley-compression.avif",
 		illustration: "knee-stability",
 		fieldsDefinition: [
 			{
@@ -1712,7 +1712,7 @@ export const builtinClinicalTestsCatalog: ClinicalTestCatalogRecord[] = [
 		evidence_summary: "Teste mais confiável para insuficiência do LCP.",
 		source_label: "Curadoria FisioFlow",
 		sort_order: 14,
-		imageUrl: "/clinical-tests/illustrations/posterior-drawer-knee.png",
+		imageUrl: "/clinical-tests/illustrations/posterior-drawer-knee.avif",
 		illustration: "knee-stability",
 		fieldsDefinition: [
 			{ id: "translation_mm", label: "Translação (mm)", type: "number" },
@@ -1736,7 +1736,7 @@ export const builtinClinicalTestsCatalog: ClinicalTestCatalogRecord[] = [
 		evidence_summary: "Principal teste para entorses laterais de tornozelo.",
 		source_label: "Curadoria FisioFlow",
 		sort_order: 40,
-		imageUrl: "/clinical-tests/illustrations/anterior-drawer-ankle.png",
+		imageUrl: "/clinical-tests/illustrations/anterior-drawer-ankle.avif",
 		illustration: "ankle-stability",
 		fieldsDefinition: [
 			{
@@ -1765,7 +1765,7 @@ export const builtinClinicalTestsCatalog: ClinicalTestCatalogRecord[] = [
 		evidence_summary: "Diferencia entorses simples de lesões de sindesmose.",
 		source_label: "Curadoria FisioFlow",
 		sort_order: 45,
-		imageUrl: "/clinical-tests/illustrations/kleiger-test.png",
+		imageUrl: "/clinical-tests/illustrations/kleiger-test.avif",
 		illustration: "ankle-stability",
 		fieldsDefinition: [
 			{
@@ -1794,7 +1794,7 @@ export const builtinClinicalTestsCatalog: ClinicalTestCatalogRecord[] = [
 			"Teste de baixa especificidade, mas útil para detecção de irritação articular.",
 		source_label: "Curadoria FisioFlow",
 		sort_order: 50,
-		imageUrl: "/clinical-tests/illustrations/log-roll-hip.png",
+		imageUrl: "/clinical-tests/illustrations/log-roll-hip.avif",
 		illustration: "hip-rotation",
 		fieldsDefinition: [
 			{ id: "clicking", label: "Presença de Click", type: "boolean" },
@@ -1844,7 +1844,7 @@ export const builtinClinicalTestsCatalog: ClinicalTestCatalogRecord[] = [
 			"Preditor de risco de quedas em idosos e estabilidade em atletas.",
 		source_label: "Curadoria FisioFlow",
 		sort_order: 15,
-		imageUrl: "/clinical-tests/illustrations/single-leg-stance.png",
+		imageUrl: "/clinical-tests/illustrations/single-leg-stance.avif",
 		fieldsDefinition: [
 			{ id: "time_seconds", label: "Tempo de Permanência (s)", type: "number" },
 			{
@@ -1903,7 +1903,7 @@ export const builtinClinicalTestsCatalog: ClinicalTestCatalogRecord[] = [
 			"Sensibilidade de 91% e Especificidade de 93% no estudo original.",
 		source_label: "Curadoria FisioFlow",
 		sort_order: 55,
-		imageUrl: "/clinical-tests/illustrations/crank-test-shoulder.png",
+		imageUrl: "/clinical-tests/illustrations/crank-test-shoulder.avif",
 		fieldsDefinition: [
 			{ id: "clicking", label: "Presença de Click", type: "boolean" },
 			{ id: "pain_levels", label: "Nível de Dor", type: "nprs" },
@@ -2005,7 +2005,7 @@ export const builtinClinicalTestsCatalog: ClinicalTestCatalogRecord[] = [
 			"Teste de escolha para diagnóstico de rupturas do subescapular.",
 		source_label: "Curadoria FisioFlow",
 		sort_order: 75,
-		imageUrl: "/clinical-tests/illustrations/gerber-liftoff.png",
+		imageUrl: "/clinical-tests/illustrations/gerber-liftoff.avif",
 		fieldsDefinition: [
 			{
 				id: "distance_cm",
