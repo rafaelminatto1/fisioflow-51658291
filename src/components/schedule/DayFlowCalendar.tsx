@@ -22,10 +22,7 @@ import { useStatusConfig } from "@/hooks/useStatusConfig";
 import { useCardSize } from "@/hooks/useCardSize";
 import { AppointmentQuickView } from "./AppointmentQuickView";
 import { ScheduleToolbar } from "./ScheduleToolbar";
-import {
-	getCalendarCardColors,
-	normalizeStatus,
-} from "./shared/appointment-status";
+import { getCalendarCardColors, normalizeStatus } from "./shared/appointment-status";
 
 type ViewType = "day" | "week" | "month";
 
@@ -34,8 +31,16 @@ const VIEW_MAP: Record<ViewType, string> = {
 	week: "timeGridWeek",
 	month: "dayGridMonth",
 };
-const WEEK_HEADER_HEIGHT = 48; // Updated for better accuracy of the clinical header
-const WEEK_SLOT_COUNT = 56; // 14 hours (07-21) * 4 slots per hour.
+const CLINIC_OPEN_HOUR = 7;
+const CLINIC_CLOSE_HOUR = 21;
+const SATURDAY_CLOSE_HOUR = 13;
+const SLOT_INTERVAL_MINUTES = 15;
+const CLINIC_SLOT_MIN_TIME = `${String(CLINIC_OPEN_HOUR).padStart(2, "0")}:00:00`;
+const CLINIC_SLOT_MAX_TIME = `${String(CLINIC_CLOSE_HOUR).padStart(2, "0")}:15:00`;
+const CLINIC_SCROLL_TIME = CLINIC_SLOT_MIN_TIME;
+const SLOT_LABEL_INTERVAL = 0;
+const WEEK_HEADER_FALLBACK_HEIGHT = 48;
+const WEEK_SLOT_COUNT = ((CLINIC_CLOSE_HOUR - CLINIC_OPEN_HOUR) * 60) / SLOT_INTERVAL_MINUTES;
 
 export interface DayFlowCalendarWrapperProps {
 	appointments: any[];
@@ -64,13 +69,7 @@ export interface DayFlowCalendarWrapperProps {
 }
 
 export function DayFlowCalendarWrapper(props: DayFlowCalendarWrapperProps) {
-	const {
-		appointments,
-		currentDate,
-		viewType,
-		onDateChange,
-		onViewTypeChange,
-	} = props;
+	const { appointments, currentDate, viewType, onDateChange, onViewTypeChange } = props;
 	const { cssVariables, heightMultiplier } = useCardSize();
 	const isWeekView = viewType === "week";
 	const [weekSlotHeight, setWeekSlotHeight] = useState(15);
@@ -94,13 +93,36 @@ export function DayFlowCalendarWrapper(props: DayFlowCalendarWrapperProps) {
 	const propsRef = useRef(props);
 	const isDraggingRef = useRef(false);
 
+	const syncCalendarViewport = (resetScroll = false) => {
+		const calendar = calendarInstance.current;
+		if (!calendar || viewType === "month") return;
+
+		calendar.setOption("slotMinTime", CLINIC_SLOT_MIN_TIME);
+		calendar.setOption("slotMaxTime", CLINIC_SLOT_MAX_TIME);
+		calendar.setOption("scrollTime", CLINIC_SCROLL_TIME);
+		calendar.setOption("slotLabelInterval", SLOT_LABEL_INTERVAL);
+		calendar.setOption("flexibleSlotTimeLimits", false);
+
+		if (!resetScroll || typeof window === "undefined") return;
+
+		const alignToOpeningHour = () => {
+			const body = containerRef.current?.querySelector<HTMLElement>(".ec-body");
+			if (body) {
+				body.scrollTop = 0;
+			}
+		};
+
+		window.requestAnimationFrame(() => {
+			window.requestAnimationFrame(alignToOpeningHour);
+		});
+	};
+
 	// State for the globally floating Popover, totally detached from calendar DOM nodes
 	const [activePopover, setActivePopover] = useState<{
 		event: any;
 		rect: DOMRect;
 	} | null>(null);
-	const { getStatusConfig: getSharedStatusConfig } =
-		useStatusConfig();
+	const { getStatusConfig: getSharedStatusConfig } = useStatusConfig();
 
 	const cardColorsMapRef = useRef<
 		Record<string, { accent: string; background: string; text: string }>
@@ -108,10 +130,7 @@ export function DayFlowCalendarWrapper(props: DayFlowCalendarWrapperProps) {
 	const [colorVersion, setColorVersion] = useState(0);
 
 	useEffect(() => {
-		const map: Record<
-			string,
-			{ accent: string; background: string; text: string }
-		> = {};
+		const map: Record<string, { accent: string; background: string; text: string }> = {};
 		const allStatuses = [
 			"agendado",
 			"atendido",
@@ -143,25 +162,22 @@ export function DayFlowCalendarWrapper(props: DayFlowCalendarWrapperProps) {
 	}, [props]);
 
 	useEffect(() => {
-		if (
-			!isWeekView ||
-			!containerRef.current ||
-			typeof ResizeObserver === "undefined"
-		) {
+		if (!isWeekView || !containerRef.current || typeof ResizeObserver === "undefined") {
 			return;
 		}
 
 		const updateWeekSlotHeight = () => {
-			const availableHeight =
-				containerRef.current?.getBoundingClientRect().height ?? 0;
+			const mount = containerRef.current;
+			const availableHeight = mount?.getBoundingClientRect().height ?? 0;
 			if (!availableHeight) return;
+			const headerHeight =
+				mount?.querySelector(".ec-header")?.getBoundingClientRect().height ??
+				WEEK_HEADER_FALLBACK_HEIGHT;
 			const nextSlotHeight = Math.max(
 				10,
-				Math.floor((availableHeight - WEEK_HEADER_HEIGHT) / WEEK_SLOT_COUNT),
+				Math.floor((availableHeight - headerHeight) / WEEK_SLOT_COUNT),
 			);
-			setWeekSlotHeight((current) =>
-				current === nextSlotHeight ? current : nextSlotHeight,
-			);
+			setWeekSlotHeight((current) => (current === nextSlotHeight ? current : nextSlotHeight));
 		};
 
 		updateWeekSlotHeight();
@@ -257,8 +273,8 @@ export function DayFlowCalendarWrapper(props: DayFlowCalendarWrapperProps) {
 		const saturdayDate = format(saturday, "yyyy-MM-dd");
 		const closedRangeEvent = {
 			id: `closed-saturday-${saturdayDate}`,
-			start: new Date(`${saturdayDate}T13:00:00Z`),
-			end: new Date(`${saturdayDate}T21:00:00Z`),
+			start: new Date(`${saturdayDate}T${String(SATURDAY_CLOSE_HOUR).padStart(2, "0")}:00:00Z`),
+			end: new Date(`${saturdayDate}T${String(CLINIC_CLOSE_HOUR).padStart(2, "0")}:00:00Z`),
 			display: "background" as const,
 			backgroundColor: "rgba(148, 163, 184, 0.16)",
 			classNames: ["dayflow-closed-slot"],
@@ -286,13 +302,14 @@ export function DayFlowCalendarWrapper(props: DayFlowCalendarWrapperProps) {
 						events: dfEvents,
 						date: isValid(currentDate) ? currentDate : new Date(),
 						height: "100%",
-						slotMinTime: "07:00:00",
-						slotMaxTime: "21:15:00",
+						slotMinTime: CLINIC_SLOT_MIN_TIME,
+						slotMaxTime: CLINIC_SLOT_MAX_TIME,
 						slotDuration,
 						slotHeight,
-						slotLabelInterval: "01:00:00",
+						slotLabelInterval: SLOT_LABEL_INTERVAL,
 						slotLabelFormat,
-						scrollTime: "07:00:00",
+						scrollTime: CLINIC_SCROLL_TIME,
+						flexibleSlotTimeLimits: false,
 						hiddenDays: [0],
 						snapDuration: "00:15:00",
 						editable: true,
@@ -304,20 +321,14 @@ export function DayFlowCalendarWrapper(props: DayFlowCalendarWrapperProps) {
 						firstDay: 1,
 						allDaySlot: false,
 						eventContent: (info: any) => {
-							if (
-								info.event.display === "background" ||
-								info.event.id?.startsWith("closed-")
-							) {
+							if (info.event.display === "background" || info.event.id?.startsWith("closed-")) {
 								return { html: "" };
 							}
 							const appointment = info.event.extendedProps;
 							const formattedTime = info.event.start.toISOString().slice(11, 16);
-							const normalizedStatusName = normalizeStatus(
-								appointment.status || "agendado",
-							);
+							const normalizedStatusName = normalizeStatus(appointment.status || "agendado");
 							const isCancelled =
-								appointment.status === "cancelled" ||
-								normalizedStatusName === "cancelado";
+								appointment.status === "cancelled" || normalizedStatusName === "cancelado";
 							const cardDensityClass = isWeekView
 								? "dayflow-event-card--compact"
 								: "dayflow-event-card--default";
@@ -356,9 +367,7 @@ export function DayFlowCalendarWrapper(props: DayFlowCalendarWrapperProps) {
 							const ms = info.date.getTime();
 							const roundedMs = Math.round(ms / (15 * 60000)) * (15 * 60000);
 							const roundedDate = new Date(roundedMs);
-							propsRef.current.onTimeSlotClick?.(
-								roundedDate.toISOString().slice(0, 16),
-							);
+							propsRef.current.onTimeSlotClick?.(roundedDate.toISOString().slice(0, 16));
 						},
 						eventDragStart: () => {
 							setActivePopover(null);
@@ -376,9 +385,7 @@ export function DayFlowCalendarWrapper(props: DayFlowCalendarWrapperProps) {
 								const startUTC = info.event.start;
 								const durationInMinutes = Math.max(
 									15,
-									Math.round(
-										(info.event.end.getTime() - startUTC.getTime()) / 60000 / 15,
-									) * 15,
+									Math.round((info.event.end.getTime() - startUTC.getTime()) / 60000 / 15) * 15,
 								);
 								const ms = startUTC.getTime();
 								const roundedMs = Math.round(ms / (15 * 60000)) * (15 * 60000);
@@ -396,11 +403,7 @@ export function DayFlowCalendarWrapper(props: DayFlowCalendarWrapperProps) {
 									});
 								});
 
-								propsRef.current.onAppointmentReschedule(
-									String(info.event.id),
-									startStr,
-									endStr,
-								);
+								propsRef.current.onAppointmentReschedule(String(info.event.id), startStr, endStr);
 
 								if (typeof navigator !== "undefined" && navigator.vibrate) {
 									navigator.vibrate([15, 50, 15]);
@@ -412,6 +415,7 @@ export function DayFlowCalendarWrapper(props: DayFlowCalendarWrapperProps) {
 			});
 
 			calendarInstance.current = calendar;
+			syncCalendarViewport(true);
 		} catch (err) {
 			console.error("[DayFlow] Render Error:", err);
 		}
@@ -446,27 +450,16 @@ export function DayFlowCalendarWrapper(props: DayFlowCalendarWrapperProps) {
 
 		try {
 			calendar.setOption("view", VIEW_MAP[viewType]);
-			calendar.setOption(
-				"date",
-				isValid(currentDate) ? currentDate : new Date(),
-			);
+			calendar.setOption("date", isValid(currentDate) ? currentDate : new Date());
 			calendar.setOption("slotHeight", slotHeight);
 			calendar.setOption("slotDuration", slotDuration);
-			calendar.setOption("slotLabelInterval", "01:00:00");
 			calendar.setOption("slotLabelFormat", slotLabelFormat);
-			calendar.setOption("scrollTime", "07:00:00");
 			calendar.setOption("events", dfEvents);
+			syncCalendarViewport(viewType === "week");
 		} catch (e) {
 			console.warn("[DayFlow] Sync error:", e);
 		}
-	}, [
-		dfEvents,
-		currentDate,
-		viewType,
-		slotHeight,
-		slotDuration,
-		slotLabelFormat,
-	]);
+	}, [dfEvents, currentDate, viewType, slotHeight, slotDuration, slotLabelFormat]);
 
 	return (
 		<div
@@ -491,11 +484,7 @@ export function DayFlowCalendarWrapper(props: DayFlowCalendarWrapperProps) {
 				onClick={(e) => {
 					// Close popover if user clicks outside of an event
 					const target = e.target as HTMLElement;
-					if (
-						activePopover &&
-						!target.closest(".ec-event") &&
-						!target.closest('[role="dialog"]')
-					) {
+					if (activePopover && !target.closest(".ec-event") && !target.closest('[role="dialog"]')) {
 						setActivePopover(null);
 					}
 				}}
@@ -503,10 +492,7 @@ export function DayFlowCalendarWrapper(props: DayFlowCalendarWrapperProps) {
 				<div
 					className={`flex-1 h-full min-h-0 bg-white border border-slate-200 shadow-sm rounded-xl overflow-hidden relative ${isWeekView ? "dayflow-week-view" : "dayflow-regular-view"}`}
 				>
-					<div
-						ref={containerRef}
-						className="h-full w-full dayflow-vanilla-mount"
-					/>
+					<div ref={containerRef} className="h-full w-full dayflow-vanilla-mount" />
 				</div>
 			</div>
 
@@ -519,9 +505,7 @@ export function DayFlowCalendarWrapper(props: DayFlowCalendarWrapperProps) {
 						...activePopover.event.extendedProps,
 						date: activePopover.event.start,
 						time: activePopover.event.start.toISOString().slice(11, 16),
-						duration: Math.round(
-							(activePopover.event.end - activePopover.event.start) / 60000,
-						),
+						duration: Math.round((activePopover.event.end - activePopover.event.start) / 60000),
 					}}
 					onEdit={() => {
 						setActivePopover(null);

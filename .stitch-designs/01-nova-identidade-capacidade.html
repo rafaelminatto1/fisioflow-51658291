@@ -1,0 +1,381 @@
+<!DOCTYPE html>
+
+<html lang="pt-BR"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Configurações da Agenda - FisioFlow</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Roboto+Mono:wght@500&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "tertiary-container": "#f2a560",
+                        "surface-container-low": "#f1f4f7",
+                        "tertiary": "#8b5011",
+                        "secondary-fixed": "#e4e2e2",
+                        "on-primary-fixed-variant": "#004d64",
+                        "on-error-container": "#93000a",
+                        "tertiary-fixed": "#ffdcc1",
+                        "surface-bright": "#f7fafc",
+                        "error-container": "#ffdad6",
+                        "background": "#f7fafc",
+                        "primary-fixed-dim": "#7fd1f5",
+                        "tertiary-fixed-dim": "#ffb779",
+                        "surface-container-lowest": "#ffffff",
+                        "secondary-container": "#e1dfdf",
+                        "on-secondary-fixed-variant": "#464747",
+                        "on-surface": "#181c1e",
+                        "on-tertiary-fixed-variant": "#6c3a00",
+                        "on-primary-fixed": "#001f2a",
+                        "on-secondary-fixed": "#1b1c1c",
+                        "outline": "#6f787e",
+                        "on-secondary-container": "#636262",
+                        "on-background": "#181c1e",
+                        "primary-fixed": "#bde9ff",
+                        "inverse-primary": "#7fd1f5",
+                        "outline-variant": "#bec8ce",
+                        "on-primary": "#ffffff",
+                        "surface-variant": "#e0e3e5",
+                        "surface-dim": "#d7dadd",
+                        "on-tertiary": "#ffffff",
+                        "primary-container": "#6dc0e3",
+                        "surface-container": "#ebeef1",
+                        "error": "#ba1a1a",
+                        "secondary": "#5e5e5e",
+                        "surface-tint": "#006783",
+                        "secondary-fixed-dim": "#c7c6c6",
+                        "on-tertiary-fixed": "#2e1500",
+                        "inverse-surface": "#2d3133",
+                        "on-error": "#ffffff",
+                        "surface-container-highest": "#e0e3e5",
+                        "on-tertiary-container": "#6d3a00",
+                        "on-primary-container": "#004d64",
+                        "primary": "#006783",
+                        "inverse-on-surface": "#eef1f4",
+                        "on-secondary": "#ffffff",
+                        "surface-container-high": "#e6e8eb",
+                        "on-surface-variant": "#3f484d",
+                        "surface": "#f7fafc"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.25rem",
+                        "lg": "0.5rem",
+                        "xl": "0.75rem",
+                        "full": "9999px"
+                    },
+                    "spacing": {
+                        "xl": "40px",
+                        "xxl": "64px",
+                        "container-max": "1440px",
+                        "lg": "24px",
+                        "md": "16px",
+                        "base": "8px",
+                        "xs": "4px",
+                        "sm": "8px",
+                        "gutter": "24px"
+                    },
+                    "fontFamily": {
+                        "body-md": ["Inter"],
+                        "label-sm": ["Inter"],
+                        "h2": ["Inter"],
+                        "body-lg": ["Inter"],
+                        "h1": ["Inter"],
+                        "body-sm": ["Inter"],
+                        "h3": ["Inter"],
+                        "label-md": ["Inter"]
+                    },
+                    "fontSize": {
+                        "body-md": ["16px", { "lineHeight": "1.5", "fontWeight": "400" }],
+                        "label-sm": ["12px", { "lineHeight": "1", "fontWeight": "600" }],
+                        "h2": ["32px", { "lineHeight": "1.25", "letterSpacing": "-0.01em", "fontWeight": "600" }],
+                        "body-lg": ["18px", { "lineHeight": "1.55", "fontWeight": "400" }],
+                        "h1": ["40px", { "lineHeight": "1.2", "letterSpacing": "-0.02em", "fontWeight": "600" }],
+                        "body-sm": ["14px", { "lineHeight": "1.45", "fontWeight": "400" }],
+                        "h3": ["24px", { "lineHeight": "1.3", "fontWeight": "600" }],
+                        "label-md": ["14px", { "lineHeight": "1", "letterSpacing": "0.01em", "fontWeight": "500" }]
+                    }
+                }
+            }
+        }
+    </script>
+<style>
+        .font-mono { font-family: 'Roboto Mono', monospace; }
+        .glass-card {
+            background: rgba(255, 255, 255, 0.9);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            box-shadow: 0 4px 12px rgba(94, 94, 94, 0.05);
+        }
+    </style>
+</head>
+<body class="bg-background text-on-background font-body-md text-body-md antialiased min-h-screen">
+<!-- SideNavBar -->
+<nav class="fixed left-0 top-0 h-full z-50 flex flex-col pt-8 bg-surface-container-lowest w-[240px] border-r border-surface-container-high shadow-sm font-['Inter'] antialiased tracking-tight">
+<div class="px-6 mb-8">
+<h1 class="text-xl font-bold tracking-tight text-on-surface">FisioFlow</h1>
+<p class="text-on-surface-variant font-label-sm text-label-sm mt-1">Clinical Management</p>
+</div>
+<div class="flex-1 flex flex-col gap-2">
+<a class="flex items-center gap-3 px-6 py-3 text-on-surface-variant hover:text-on-surface hover:bg-surface-container-low transition-all duration-200 ease-in-out" href="#">
+<span class="material-symbols-outlined" data-icon="dashboard">dashboard</span>
+<span class="font-label-md text-label-md">Início</span>
+</a>
+<a class="flex items-center gap-3 px-6 py-3 text-on-surface-variant hover:text-on-surface hover:bg-surface-container-low transition-all duration-200 ease-in-out" href="#">
+<span class="material-symbols-outlined" data-icon="person">person</span>
+<span class="font-label-md text-label-md">Pacientes</span>
+</a>
+<a class="flex items-center gap-3 px-6 py-3 text-on-surface-variant hover:text-on-surface hover:bg-surface-container-low transition-all duration-200 ease-in-out" href="#">
+<span class="material-symbols-outlined" data-icon="calendar_month">calendar_month</span>
+<span class="font-label-md text-label-md">Agenda</span>
+</a>
+<a class="flex items-center gap-3 px-6 py-3 text-on-surface-variant hover:text-on-surface hover:bg-surface-container-low transition-all duration-200 ease-in-out" href="#">
+<span class="material-symbols-outlined" data-icon="fitness_center">fitness_center</span>
+<span class="font-label-md text-label-md">Exercícios</span>
+</a>
+<a class="flex items-center gap-3 px-6 py-3 text-on-surface-variant hover:text-on-surface hover:bg-surface-container-low transition-all duration-200 ease-in-out" href="#">
+<span class="material-symbols-outlined" data-icon="assessment">assessment</span>
+<span class="font-label-md text-label-md">Relatórios</span>
+</a>
+<a class="flex items-center gap-3 px-6 py-3 text-primary-container bg-surface-container-low font-semibold border-r-4 border-primary-container transition-all duration-200 ease-in-out" href="#">
+<span class="material-symbols-outlined" data-icon="settings">settings</span>
+<span class="font-label-md text-label-md">Configurações</span>
+</a>
+</div>
+</nav>
+<!-- TopAppBar -->
+<header class="sticky top-0 z-40 w-full flex items-center justify-between px-8 ml-[240px] w-[calc(100%-240px)] h-16 border-b border-surface-container-high bg-surface-container-lowest/80 backdrop-blur-md flat font-['Inter'] text-sm font-medium text-primary-container">
+<div class="flex items-center gap-4">
+<button class="text-on-surface-variant hover:opacity-80 transition-opacity active:scale-95 transition-transform flex items-center justify-center">
+<span class="material-symbols-outlined">arrow_back</span>
+</button>
+<h2 class="text-lg font-semibold text-on-surface">Configurações da Agenda</h2>
+</div>
+<div class="flex items-center gap-6">
+<button class="bg-primary-container text-on-primary font-label-md text-label-md px-4 py-2 rounded border border-transparent hover:opacity-80 transition-opacity active:scale-95 transition-transform">
+                Ver Agenda
+            </button>
+<div class="flex items-center gap-4 text-on-surface-variant">
+<button class="hover:opacity-80 transition-opacity active:scale-95 transition-transform flex items-center justify-center">
+<span class="material-symbols-outlined" data-icon="notifications">notifications</span>
+</button>
+<button class="hover:opacity-80 transition-opacity active:scale-95 transition-transform flex items-center justify-center">
+<span class="material-symbols-outlined" data-icon="help_outline">help_outline</span>
+</button>
+</div>
+</div>
+</header>
+<!-- Main Content -->
+<main class="ml-[240px] p-xl max-w-container-max mx-auto flex flex-col gap-lg">
+<!-- Hero Section -->
+<section class="glass-card rounded-xl p-lg border-l-4 border-l-primary-container relative overflow-hidden">
+<div class="relative z-10 flex flex-col md:flex-row justify-between items-start md:items-center gap-md">
+<div>
+<h2 class="font-h3 text-h3 text-on-surface mb-xs">Capacidade de Atendimento por Horário</h2>
+<p class="font-body-sm text-body-sm text-on-surface-variant">Gerencie quantos pacientes podem ser agendados simultaneamente em cada bloco de horário.</p>
+</div>
+<button class="bg-surface-container text-on-surface font-label-md text-label-md px-4 py-2 rounded-lg hover:bg-surface-container-high transition-colors flex items-center gap-2">
+<span class="material-symbols-outlined text-[18px]">add</span>
+                    Nova Regra
+                </button>
+</div>
+</section>
+<div class="grid grid-cols-1 lg:grid-cols-3 gap-lg">
+<!-- Left Column: Timeline & Configs -->
+<div class="lg:col-span-2 flex flex-col gap-lg">
+<!-- Stats Row -->
+<div class="grid grid-cols-1 md:grid-cols-3 gap-md">
+<div class="bg-surface-container-lowest rounded-xl p-md shadow-sm border border-surface-container flex items-center gap-md">
+<div class="w-10 h-10 rounded-full bg-[#10b981]/10 flex items-center justify-center text-[#10b981]">
+<span class="material-symbols-outlined" data-icon="check_circle" data-weight="fill" style="font-variation-settings: 'FILL' 1;">check_circle</span>
+</div>
+<div>
+<p class="font-label-sm text-label-sm text-on-surface-variant uppercase tracking-wider">Média Diária</p>
+<p class="font-h3 text-h3 text-on-surface">14 <span class="font-body-sm text-body-sm text-on-surface-variant font-normal">pacientes</span></p>
+</div>
+</div>
+<div class="bg-surface-container-lowest rounded-xl p-md shadow-sm border border-surface-container flex items-center gap-md">
+<div class="w-10 h-10 rounded-full bg-primary-container/10 flex items-center justify-center text-primary-container">
+<span class="material-symbols-outlined" data-icon="group" data-weight="fill" style="font-variation-settings: 'FILL' 1;">group</span>
+</div>
+<div>
+<p class="font-label-sm text-label-sm text-on-surface-variant uppercase tracking-wider">Capacidade Max</p>
+<p class="font-h3 text-h3 text-on-surface">3 <span class="font-body-sm text-body-sm text-on-surface-variant font-normal">por horário</span></p>
+</div>
+</div>
+<div class="bg-surface-container-lowest rounded-xl p-md shadow-sm border border-surface-container flex items-center gap-md">
+<div class="w-10 h-10 rounded-full bg-[#f59e0b]/10 flex items-center justify-center text-[#f59e0b]">
+<span class="material-symbols-outlined" data-icon="schedule" data-weight="fill" style="font-variation-settings: 'FILL' 1;">schedule</span>
+</div>
+<div>
+<p class="font-label-sm text-label-sm text-on-surface-variant uppercase tracking-wider">Tempo Médio</p>
+<p class="font-h3 text-h3 text-on-surface">45 <span class="font-body-sm text-body-sm text-on-surface-variant font-normal">minutos</span></p>
+</div>
+</div>
+</div>
+<!-- Visual Timeline -->
+<div class="bg-surface-container-lowest rounded-xl p-lg shadow-sm border border-surface-container">
+<h3 class="font-label-md text-label-md text-on-surface mb-md">Visão Geral do Dia (Seg-Sex)</h3>
+<div class="relative pt-6 pb-2">
+<!-- Timeline Bar -->
+<div class="h-8 bg-surface-container-low rounded-lg flex overflow-hidden">
+<div class="h-full bg-primary-container/20 w-[16.6%] border-r border-white flex items-center justify-center">
+<span class="text-xs font-semibold text-primary-container">2x</span>
+</div>
+<div class="h-full bg-primary-container/40 w-[25%] border-r border-white flex items-center justify-center">
+<span class="text-xs font-semibold text-primary">3x</span>
+</div>
+<div class="h-full bg-surface-container-high w-[16.6%] border-r border-white flex items-center justify-center">
+<span class="text-xs font-medium text-on-surface-variant">Almoço</span>
+</div>
+<div class="h-full bg-primary-container/40 w-[25%] border-r border-white flex items-center justify-center">
+<span class="text-xs font-semibold text-primary">3x</span>
+</div>
+<div class="h-full bg-primary-container/20 w-[16.8%] flex items-center justify-center">
+<span class="text-xs font-semibold text-primary-container">1x</span>
+</div>
+</div>
+<!-- Time Markers -->
+<div class="flex justify-between mt-2 font-mono text-[10px] text-on-surface-variant">
+<span>07:00</span>
+<span>09:00</span>
+<span>12:00</span>
+<span>14:00</span>
+<span>17:00</span>
+<span>19:00</span>
+</div>
+</div>
+</div>
+<!-- Configured List -->
+<div class="bg-surface-container-lowest rounded-xl shadow-sm border border-surface-container overflow-hidden">
+<div class="px-lg py-md border-b border-surface-container bg-surface-bright flex justify-between items-center">
+<h3 class="font-label-md text-label-md text-on-surface">Regras Ativas</h3>
+</div>
+<div class="divide-y divide-surface-container">
+<!-- Slot 1 -->
+<div class="p-lg flex items-center justify-between hover:bg-surface-container-lowest/50 transition-colors">
+<div class="flex items-center gap-md">
+<div class="w-12 h-12 rounded-lg bg-surface-container flex flex-col items-center justify-center">
+<span class="font-mono text-xs font-bold text-on-surface">SEG-SEX</span>
+</div>
+<div>
+<h4 class="font-label-md text-label-md text-on-surface">Manhã Alta Demanda</h4>
+<div class="flex items-center gap-2 mt-1">
+<span class="font-mono text-[12px] bg-surface-container-low px-2 py-0.5 rounded text-on-surface-variant">07:00 - 12:00</span>
+<span class="w-1 h-1 rounded-full bg-surface-container-high"></span>
+<span class="font-body-sm text-[12px] text-on-surface-variant">Até 3 pacientes</span>
+</div>
+</div>
+</div>
+<div class="flex items-center gap-2">
+<span class="px-2 py-1 bg-primary-container/10 text-primary-container font-label-sm text-[10px] rounded-full uppercase tracking-wide">Ativo</span>
+<button class="p-2 text-on-surface-variant hover:text-primary transition-colors rounded-full hover:bg-surface-container">
+<span class="material-symbols-outlined text-[20px]" data-icon="edit">edit</span>
+</button>
+</div>
+</div>
+<!-- Slot 2 -->
+<div class="p-lg flex items-center justify-between hover:bg-surface-container-lowest/50 transition-colors">
+<div class="flex items-center gap-md">
+<div class="w-12 h-12 rounded-lg bg-surface-container flex flex-col items-center justify-center">
+<span class="font-mono text-xs font-bold text-on-surface">SEG-SEX</span>
+</div>
+<div>
+<h4 class="font-label-md text-label-md text-on-surface">Tarde Padrão</h4>
+<div class="flex items-center gap-2 mt-1">
+<span class="font-mono text-[12px] bg-surface-container-low px-2 py-0.5 rounded text-on-surface-variant">14:00 - 19:00</span>
+<span class="w-1 h-1 rounded-full bg-surface-container-high"></span>
+<span class="font-body-sm text-[12px] text-on-surface-variant">Até 2 pacientes</span>
+</div>
+</div>
+</div>
+<div class="flex items-center gap-2">
+<span class="px-2 py-1 bg-primary-container/10 text-primary-container font-label-sm text-[10px] rounded-full uppercase tracking-wide">Ativo</span>
+<button class="p-2 text-on-surface-variant hover:text-primary transition-colors rounded-full hover:bg-surface-container">
+<span class="material-symbols-outlined text-[20px]" data-icon="edit">edit</span>
+</button>
+</div>
+</div>
+<!-- Slot 3 -->
+<div class="p-lg flex items-center justify-between hover:bg-surface-container-lowest/50 transition-colors">
+<div class="flex items-center gap-md">
+<div class="w-12 h-12 rounded-lg bg-surface-container flex flex-col items-center justify-center">
+<span class="font-mono text-xs font-bold text-on-surface">SÁB</span>
+</div>
+<div>
+<h4 class="font-label-md text-label-md text-on-surface">Plantão Sábado</h4>
+<div class="flex items-center gap-2 mt-1">
+<span class="font-mono text-[12px] bg-surface-container-low px-2 py-0.5 rounded text-on-surface-variant">08:00 - 12:00</span>
+<span class="w-1 h-1 rounded-full bg-surface-container-high"></span>
+<span class="font-body-sm text-[12px] text-on-surface-variant">Apenas 1 paciente</span>
+</div>
+</div>
+</div>
+<div class="flex items-center gap-2">
+<span class="px-2 py-1 bg-surface-container-high text-on-surface-variant font-label-sm text-[10px] rounded-full uppercase tracking-wide">Pausado</span>
+<button class="p-2 text-on-surface-variant hover:text-primary transition-colors rounded-full hover:bg-surface-container">
+<span class="material-symbols-outlined text-[20px]" data-icon="edit">edit</span>
+</button>
+</div>
+</div>
+</div>
+</div>
+</div>
+<!-- Right Column: Summary & Tips -->
+<div class="flex flex-col gap-lg">
+<!-- Weekly Summary Grid -->
+<div class="bg-surface-container-lowest rounded-xl p-lg shadow-sm border border-surface-container">
+<h3 class="font-label-md text-label-md text-on-surface mb-md">Disponibilidade Semanal</h3>
+<div class="grid grid-cols-7 gap-xs">
+<div class="text-center font-label-sm text-[10px] text-on-surface-variant mb-1">D</div>
+<div class="text-center font-label-sm text-[10px] text-on-surface-variant mb-1">S</div>
+<div class="text-center font-label-sm text-[10px] text-on-surface-variant mb-1">T</div>
+<div class="text-center font-label-sm text-[10px] text-on-surface-variant mb-1">Q</div>
+<div class="text-center font-label-sm text-[10px] text-on-surface-variant mb-1">Q</div>
+<div class="text-center font-label-sm text-[10px] text-on-surface-variant mb-1">S</div>
+<div class="text-center font-label-sm text-[10px] text-on-surface-variant mb-1">S</div>
+<!-- Row 1 -->
+<div class="aspect-square rounded bg-surface-container-low"></div>
+<div class="aspect-square rounded bg-primary-container/40"></div>
+<div class="aspect-square rounded bg-primary-container/60"></div>
+<div class="aspect-square rounded bg-primary-container/40"></div>
+<div class="aspect-square rounded bg-primary-container/80"></div>
+<div class="aspect-square rounded bg-primary-container/40"></div>
+<div class="aspect-square rounded bg-primary-container/20"></div>
+<!-- Row 2 -->
+<div class="aspect-square rounded bg-surface-container-low"></div>
+<div class="aspect-square rounded bg-primary-container/60"></div>
+<div class="aspect-square rounded bg-primary-container/80"></div>
+<div class="aspect-square rounded bg-primary-container/60"></div>
+<div class="aspect-square rounded bg-primary-container/40"></div>
+<div class="aspect-square rounded bg-primary-container/60"></div>
+<div class="aspect-square rounded bg-surface-container-low"></div>
+</div>
+<div class="flex items-center justify-between mt-4">
+<span class="font-label-sm text-[10px] text-on-surface-variant">Livre</span>
+<div class="flex-1 h-1.5 mx-2 bg-gradient-to-r from-surface-container-low via-primary-container/50 to-primary-container rounded-full"></div>
+<span class="font-label-sm text-[10px] text-on-surface-variant">Lotado</span>
+</div>
+</div>
+<!-- Tips Card -->
+<div class="bg-primary-fixed/30 rounded-xl p-lg border border-primary-fixed-dim">
+<div class="flex items-start gap-3">
+<span class="material-symbols-outlined text-primary mt-0.5" data-icon="lightbulb">lightbulb</span>
+<div>
+<h4 class="font-label-md text-label-md text-on-primary-fixed mb-1">Dica de Eficiência</h4>
+<p class="font-body-sm text-[13px] text-on-primary-fixed-variant leading-relaxed">
+                                Notamos que terças e quintas à tarde possuem alta ociosidade. Considere abrir turmas focadas em pilates ou reabilitação preventiva nesses horários para otimizar sua capacidade.
+                            </p>
+<a class="inline-block mt-3 font-label-sm text-sm text-primary hover:underline" href="#">Ver relatório de ocupação →</a>
+</div>
+</div>
+</div>
+</div>
+</div>
+</main>
+</body></html>
