@@ -61,7 +61,7 @@ export default defineConfig(({ mode }) => {
 	const isProduction = mode === "production";
 	const isAnalyze = process.env.ANALYZE === "true";
 	const buildTime = Date.now().toString();
-	const VERSION_SUFFIX = "-v2.5.1-vite8.0.9";
+	const VERSION_SUFFIX = "-v2.6.0-vite8.0.9-tsconfigPaths";
 	const appVersion =
 		(process.env.GIT_COMMIT_SHA || process.env.VITE_APP_VERSION || buildTime) +
 		VERSION_SUFFIX;
@@ -72,10 +72,9 @@ export default defineConfig(({ mode }) => {
 			__BUILD_TIME__: JSON.stringify(buildTime),
 			__CACHE_BUSTER__: JSON.stringify(buildTime),
 		},
+		devtools: !isProduction,
 		experimental: {
-			// Vite 8 Full Bundle Mode — reduz requests de rede em dev e acelera startup
-			// Desativado temporariamente para debugar página em branco
-			bundledDev: false,
+			bundledDev: true,
 		},
 		plugins: [
 			tailwindcss(),
@@ -176,7 +175,7 @@ export default defineConfig(({ mode }) => {
 			format: "es",
 		},
 		resolve: {
-			// Manual aliases are used below for precise control over package versions and stubs.
+			tsconfigPaths: true,
 			dedupe: [
 				"react",
 				"react-dom",
@@ -187,11 +186,10 @@ export default defineConfig(({ mode }) => {
 				"@tanstack/react-query",
 			],
 			alias: {
-				"@": path.resolve(repoRoot, "src"),
-				lodash: "lodash-es",
 				"@fisioflow/ui": path.resolve(repoRoot, "packages/ui/src"),
 				"@fisioflow/core": path.resolve(repoRoot, "packages/core/src"),
 				"@fisioflow/skills": path.resolve(repoRoot, "src/lib/skills"),
+				lodash: "lodash-es",
 				exceljs: path.resolve(
 					repoRoot,
 					"node_modules/exceljs/lib/exceljs.browser.js",

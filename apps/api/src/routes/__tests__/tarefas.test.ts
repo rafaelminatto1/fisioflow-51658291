@@ -1,13 +1,10 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 
-// ── Mock the DB and auth ───────────────────────────────────────────────────
-
 const mockQuery = vi.fn();
 vi.mock('../../lib/db', () => ({
   createPool: vi.fn(() => ({ query: mockQuery })),
 }));
 
-// Auth mock: returns user with configurable role
 let mockUserRole = 'fisioterapeuta';
 let mockUserId = 'user-fisio-001';
 
@@ -22,8 +19,6 @@ vi.mock('../../lib/auth', () => ({
     await next();
   }),
 }));
-
-// ── Helpers ────────────────────────────────────────────────────────────────
 
 async function buildApp() {
   const { Hono } = await import('hono');
@@ -43,8 +38,6 @@ function makeRequest(method: string, path: string, body?: unknown) {
 
 const BASE_ENV = { HYPERDRIVE: {}, ALLOWED_ORIGINS: '*', ENVIRONMENT: 'development' };
 
-// ── Tests ──────────────────────────────────────────────────────────────────
-
 describe('GET /api/tarefas — visibilidade por role', () => {
   beforeEach(() => {
     vi.clearAllMocks();
@@ -57,9 +50,6 @@ describe('GET /api/tarefas — visibilidade por role', () => {
       { id: 't1', titulo: 'Tarefa Geral', responsavel_id: 'user-outro-001' },
       { id: 't2', titulo: 'Minha Tarefa', responsavel_id: 'user-fisio-001' },
     ];
-    // Profile query
-    mockQuery.mockResolvedValueOnce({ rows: [{ role: 'fisioterapeuta' }] });
-    // Tasks query
     mockQuery.mockResolvedValueOnce({ rows: tasks });
 
     const app = await buildApp();
@@ -69,8 +59,7 @@ describe('GET /api/tarefas — visibilidade por role', () => {
     const json = await res.json() as any;
     expect(json.data).toHaveLength(2);
 
-    // Should NOT filter by responsavel_id for fisioterapeuta
-    const tarefasQuery = mockQuery.mock.calls[1][0] as string;
+    const tarefasQuery = mockQuery.mock.calls[0][0] as string;
     expect(tarefasQuery).not.toContain('responsavel_id');
   });
 
@@ -79,7 +68,6 @@ describe('GET /api/tarefas — visibilidade por role', () => {
     mockUserId = 'user-intern-001';
 
     const myTask = { id: 't3', titulo: 'Minha Tarefa', responsavel_id: 'user-intern-001' };
-    mockQuery.mockResolvedValueOnce({ rows: [{ role: 'estagiario' }] });
     mockQuery.mockResolvedValueOnce({ rows: [myTask] });
 
     const app = await buildApp();
@@ -89,11 +77,10 @@ describe('GET /api/tarefas — visibilidade por role', () => {
     const json = await res.json() as any;
     expect(json.data).toHaveLength(1);
 
-    // Query must include responsavel_id filter for estagiário
-    const tarefasQuery = mockQuery.mock.calls[1][0] as string;
+    const tarefasQuery = mockQuery.mock.calls[0][0] as string;
     expect(tarefasQuery).toContain('responsavel_id');
-    // Param should include the intern's userId
-    const tarefasParams = mockQuery.mock.calls[1][1] as any[];
+
+    const tarefasParams = mockQuery.mock.calls[0][1] as any[];
     expect(tarefasParams).toContain('user-intern-001');
   });
 });
@@ -112,7 +99,6 @@ describe('PATCH /api/tarefas/bulk — atualização de order_index', () => {
       { id: 't3', order_index: 2 },
     ];
 
-    // Each update triggers one query
     mockQuery.mockResolvedValue({ rows: [{ id: 't1' }] });
 
     const app = await buildApp();
@@ -121,8 +107,6 @@ describe('PATCH /api/tarefas/bulk — atualização de order_index', () => {
       BASE_ENV as any
     );
 
-    // The route may return 200 or handle differently
-    // At minimum it should not return 500
     expect(res.status).toBeLessThan(500);
   });
 });

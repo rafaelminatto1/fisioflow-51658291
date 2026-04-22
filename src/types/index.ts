@@ -293,6 +293,18 @@ export interface Appointment {
 	updatedAt: string;
 }
 
+export interface ScientificReference {
+	title: string;
+	authors?: string;
+	journal?: string;
+	year?: number;
+	doi?: string;
+	url?: string;
+	wiki_artifact_id?: string;
+	evidence_level?: "CPG" | "SystematicReview" | "RCT" | "Consensus" | "ExpertOpinion";
+	summary_pt?: string;
+}
+
 export interface Exercise {
 	id: string;
 	name: string;
@@ -320,6 +332,13 @@ export interface Exercise {
 	suggested_rpe?: string;
 	created_at?: string;
 	updated_at?: string;
+
+	// Clinical Intelligence
+	alternativeEquipment?: string[];
+	suggested_duration_seconds?: number;
+	precaution_level?: "safe" | "supervised" | "restricted";
+	precaution_notes?: string;
+	scientific_references?: ScientificReference[];
 }
 
 export interface ExercisePlan {

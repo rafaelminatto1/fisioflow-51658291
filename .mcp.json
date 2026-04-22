@@ -2,7 +2,7 @@
   "mcpServers": {
     "neon": {
       "type": "http",
-      "url": "https://mcp.neon.tech"
+      "url": "https://mcp.neon.tech/mcp"
     },
     "shadcn": {
       "command": "npx",
@@ -14,6 +14,50 @@
     "exa": {
       "type": "http",
       "url": "https://mcp.exa.ai/mcp?exaApiKey=REDACTED"
+    },
+    "stripe": {
+      "type": "http",
+      "url": "https://mcp.stripe.com/mcp"
+    },
+    "github": {
+      "type": "http",
+      "url": "https://server.smithery.ai/smithery-ai/github/mcp"
+    },
+    "cloudflare-api": {
+      "type": "http",
+      "url": "https://mcp.cloudflare.com/mcp"
+    },
+    "context7": {
+      "type": "http",
+      "url": "https://mcp.context7.com/mcp",
+      "headers": {
+        "CONTEXT7_API_KEY": "REDACTED"
+      }
+    },
+    "playwright": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "@playwright/mcp@latest"
+      ]
+    },
+    "expo-mcp": {
+      "type": "http",
+      "url": "https://mcp.expo.dev/mcp"
+    },
+    "react-native-mcp": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "@ohah/react-native-mcp-server"
+      ]
+    },
+    "chrome-devtools": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "chrome-devtools-mcp@latest"
+      ]
     }
   }
 }
