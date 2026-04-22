@@ -59,6 +59,12 @@ const VIEW_LABELS = {
 	month: "Mês",
 } as const;
 
+const VIEW_OPTIONS = (
+	Object.entries(VIEW_LABELS) as Array<
+		[ScheduleToolbarProps["viewType"], (typeof VIEW_LABELS)[keyof typeof VIEW_LABELS]]
+	>
+).map(([value, label]) => ({ value, label }));
+
 export const ScheduleToolbar: React.FC<ScheduleToolbarProps> = ({
 	currentDate,
 	viewType,
@@ -107,6 +113,36 @@ export const ScheduleToolbar: React.FC<ScheduleToolbarProps> = ({
 				return "";
 		}
 	}, [currentDate, viewType]);
+
+	const renderViewSwitcher = ({
+		activeClassName,
+		idleClassName,
+		containerClassName,
+		buttonClassName,
+	}: {
+		activeClassName: string;
+		idleClassName: string;
+		containerClassName: string;
+		buttonClassName: string;
+	}) => (
+		<div className={containerClassName}>
+			{VIEW_OPTIONS.map((view) => {
+				const isActive = viewType === view.value;
+
+				return (
+					<Button
+						key={view.value}
+						variant={isActive ? "default" : "ghost"}
+						size="sm"
+						onClick={() => onViewChange(view.value)}
+						className={cn(buttonClassName, isActive ? activeClassName : idleClassName)}
+					>
+						{view.label}
+					</Button>
+				);
+			})}
+		</div>
+	);
 
 	// For desktop - show all controls
 	const DesktopToolbar = () => (
@@ -170,20 +206,16 @@ export const ScheduleToolbar: React.FC<ScheduleToolbarProps> = ({
 
 				<div className="h-6 w-[1px] bg-slate-200 dark:bg-slate-800" />
 
-				{/* View Switcher Block - Restricted to Week View only as requested */}
-				<div className="flex items-center gap-1 bg-slate-100/50 dark:bg-slate-900/50 p-1 rounded-xl border border-slate-200/50 dark:border-slate-800/50">
-					<Button
-						variant="default"
-						size="sm"
-						onClick={() => onViewChange("week")}
-						className={cn(
-							"h-7 px-4 rounded-lg font-bold text-[10px] uppercase tracking-widest transition-all",
-							"bg-white dark:bg-slate-800 text-slate-900 dark:text-white shadow-sm ring-1 ring-slate-200 dark:ring-slate-700"
-						)}
-					>
-						Semana
-					</Button>
-				</div>
+				{renderViewSwitcher({
+					activeClassName:
+						"bg-white dark:bg-slate-800 text-slate-900 dark:text-white shadow-sm ring-1 ring-slate-200 dark:ring-slate-700",
+					idleClassName:
+						"text-slate-600 dark:text-slate-400 hover:bg-white dark:hover:bg-slate-800",
+					containerClassName:
+						"flex items-center gap-1 bg-slate-100/50 dark:bg-slate-900/50 p-1 rounded-xl border border-slate-200/50 dark:border-slate-800/50",
+					buttonClassName:
+						"h-7 px-4 rounded-lg font-bold text-[10px] uppercase tracking-widest transition-all",
+				})}
 			</div>
 
 			{/* Right Group: Capacity indicator + Gear Button + Actions */}
@@ -306,14 +338,15 @@ export const ScheduleToolbar: React.FC<ScheduleToolbarProps> = ({
 			</div>
 
 			<div className="flex items-center gap-1.5 overflow-x-auto pb-1 scrollbar-hide">
-				<Button
-					variant="default"
-					size="sm"
-					onClick={() => onViewChange("week")}
-					className="h-8 px-4 rounded-lg font-bold text-[10px] uppercase tracking-widest bg-slate-900 text-white dark:bg-white dark:text-slate-900 shadow-sm"
-				>
-					Semana
-				</Button>
+				{renderViewSwitcher({
+					activeClassName:
+						"bg-slate-900 text-white dark:bg-white dark:text-slate-900 shadow-sm",
+					idleClassName:
+						"bg-white text-slate-600 border border-slate-200 dark:border-slate-800 dark:bg-slate-950 dark:text-slate-400",
+					containerClassName: "flex items-center gap-1.5 whitespace-nowrap",
+					buttonClassName:
+						"h-8 px-3 rounded-lg font-bold text-[10px] uppercase tracking-widest",
+				})}
 				<div className="ml-auto">
 					<AdvancedFilters
 						filters={filters}
