@@ -1,0 +1,104 @@
+<h2>Agenda: troca de visualização</h2>
+<p class="subtitle">Objetivo: liberar <strong>Dia</strong>, <strong>Semana</strong> e <strong>Mês</strong>, com <strong>Semana</strong> como padrão.</p>
+
+<div class="cards">
+  <div class="card" data-choice="a" onclick="toggleSelect(this)">
+    <div class="card-body">
+      <div class="label">Recomendado</div>
+      <h3>Opção A</h3>
+      <p>Toolbar com seletor visível: <strong>Dia | Semana | Mês</strong> no desktop e no mobile.</p>
+      <div class="mockup">
+        <div class="mockup-header">Preview</div>
+        <div class="mockup-body">
+          <div class="mock-nav">Hoje | ‹ › | 22 de abril de 2026</div>
+          <div style="display:flex;gap:8px;align-items:center;margin-top:12px;">
+            <button class="mock-button">Dia</button>
+            <button class="mock-button" style="background:#111827;color:#fff;">Semana</button>
+            <button class="mock-button">Mês</button>
+          </div>
+          <div class="placeholder" style="margin-top:14px;">Semana abre por padrão, mas os 3 modos ficam acessíveis o tempo todo.</div>
+        </div>
+      </div>
+      <div class="pros-cons">
+        <div class="pros">
+          <h4>Prós</h4>
+          <ul>
+            <li>Mais direto e previsível</li>
+            <li>Menor mudança estrutural</li>
+            <li>Funciona igual em toda a agenda</li>
+          </ul>
+        </div>
+        <div class="cons">
+          <h4>Contras</h4>
+          <ul>
+            <li>Ocupa um pouco mais de espaço na toolbar mobile</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="card" data-choice="b" onclick="toggleSelect(this)">
+    <div class="card-body">
+      <div class="label">Compacta</div>
+      <h3>Opção B</h3>
+      <p>Desktop com <strong>Dia | Semana | Mês</strong>; no mobile, troca por menu ou dropdown.</p>
+      <div class="mockup">
+        <div class="mockup-header">Preview</div>
+        <div class="mockup-body">
+          <div class="mock-nav">Hoje | ‹ › | 22 de abril de 2026</div>
+          <div style="display:flex;gap:8px;align-items:center;margin-top:12px;">
+            <button class="mock-button">Visualização: Semana ▾</button>
+          </div>
+          <div class="placeholder" style="margin-top:14px;">Ganha espaço no mobile, mas esconde a troca de modo.</div>
+        </div>
+      </div>
+      <div class="pros-cons">
+        <div class="pros">
+          <h4>Prós</h4>
+          <ul>
+            <li>Toolbar mobile mais limpa</li>
+            <li>Boa para telas estreitas</li>
+          </ul>
+        </div>
+        <div class="cons">
+          <h4>Contras</h4>
+          <ul>
+            <li>Interação menos óbvia</li>
+            <li>Desktop e mobile ficam diferentes</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="card" data-choice="c" onclick="toggleSelect(this)">
+    <div class="card-body">
+      <div class="label">Conservadora</div>
+      <h3>Opção C</h3>
+      <p>Libera os 3 modos só no desktop e mantém a regra atual do mobile mais restrita.</p>
+      <div class="mockup">
+        <div class="mockup-header">Preview</div>
+        <div class="mockup-body">
+          <div class="mock-nav">Desktop: Dia | Semana | Mês</div>
+          <div class="placeholder" style="margin-top:14px;">Mobile continua simplificado e pode não mostrar todas as visões.</div>
+        </div>
+      </div>
+      <div class="pros-cons">
+        <div class="pros">
+          <h4>Prós</h4>
+          <ul>
+            <li>Menor risco em telas pequenas</li>
+          </ul>
+        </div>
+        <div class="cons">
+          <h4>Contras</h4>
+          <ul>
+            <li>Experiência inconsistente</li>
+            <li>Não entrega totalmente o pedido</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

@@ -26,6 +26,11 @@ import { useScheduleHandlers } from "@/hooks/useScheduleHandlers";
 import { useSchedulePageData, type ViewType } from "@/hooks/useSchedulePage";
 import type { ViewType as CalendarViewType } from "@/hooks/useScheduleState";
 import { KEYBOARD_SHORTCUTS } from "@/lib/calendar/constants";
+import {
+	parseScheduleViewParam,
+	updateScheduleViewSearchParams,
+	type ScheduleViewType,
+} from "@/lib/schedule/viewParams";
 
 import "@/styles/schedule.css";
 
@@ -39,7 +44,7 @@ export default function Schedule() {
 			? dateParamRaw
 			: format(new Date(), "yyyy-MM-dd");
 
-	const viewParam = "week" as ViewType; // Force strictly week view as requested
+	const viewParam = parseScheduleViewParam(searchParams.get("view")) as ViewType;
 	const statusParam =
 		searchParams.get("status")?.split(",").filter(Boolean) || [];
 	const typesParam =
@@ -112,9 +117,8 @@ export default function Schedule() {
 		setSearchParams(newParams, { replace: true });
 	};
 
-	const handleViewTypeChange = (view: string) => {
-		const newParams = new URLSearchParams(searchParams);
-		newParams.set("view", view);
+	const handleViewTypeChange = (view: ScheduleViewType) => {
+		const newParams = updateScheduleViewSearchParams(searchParams, view);
 		setSearchParams(newParams, { replace: true });
 	};
 
@@ -333,7 +337,7 @@ export default function Schedule() {
 										appointments={appointments}
 										currentDate={currentDate}
 										onDateChange={handleDateChange}
-										viewType="week"
+										viewType={viewType}
 										onViewTypeChange={handleViewTypeChange}
 										onEventClick={(event: any) => {
 											const appointment = appointments.find(
