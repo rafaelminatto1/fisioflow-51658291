@@ -50,11 +50,12 @@ const CANCELLATION_PRESETS = [
 	},
 ];
 
-const FEE_PRESETS = [
+	const FEE_PRESETS = [
+	{ label: "R$ 25", value: 25 },
 	{ label: "R$ 50", value: 50 },
+	{ label: "R$ 75", value: 75 },
 	{ label: "R$ 100", value: 100 },
-	{ label: "R$ 150", value: 150 },
-];
+	];
 
 export function CancellationRulesManager() {
 	const {
@@ -118,7 +119,7 @@ export function CancellationRulesManager() {
 				<Label className="text-xs font-medium text-muted-foreground">
 					Presets de política
 				</Label>
-				<div className="grid grid-cols-3 gap-2">
+				<div className="flex gap-2">
 					{CANCELLATION_PRESETS.map((preset) => {
 						const isActive =
 							rules.min_hours_before === preset.min_hours_before &&
@@ -129,17 +130,15 @@ export function CancellationRulesManager() {
 								key={preset.label}
 								onClick={() => applyPreset(preset)}
 								className={cn(
-									"flex flex-col items-center gap-1.5 p-3 rounded-xl border-2 transition-all hover:shadow-sm text-center",
+									"inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium border transition-all",
 									isActive
-										? "border-primary bg-primary/5 shadow-sm"
-										: "border-border bg-muted/30 hover:bg-muted/50",
+										? "bg-primary text-primary-foreground border-primary shadow-sm"
+										: "bg-muted/50 text-muted-foreground border-border hover:bg-muted hover:text-foreground",
 								)}
 							>
-								<span className="text-2xl">{preset.icon}</span>
-								<p className="font-semibold text-xs">{preset.label}</p>
-								<p className="text-[10px] text-muted-foreground">
-									{preset.description}
-								</p>
+								<span>{preset.icon}</span>
+								{preset.label}
+								<span className="text-[10px] opacity-70">({preset.description})</span>
 							</button>
 						);
 					})}
@@ -238,15 +237,15 @@ export function CancellationRulesManager() {
 				</div>
 
 				{rules.charge_late_cancellation && (
-					<div className="p-3 rounded-lg border bg-muted/30 ml-2 animate-in slide-in-from-top-2 duration-200">
+					<div className="p-3 rounded-xl border border-amber-200 dark:border-amber-800 bg-amber-50/50 dark:bg-amber-950/20 ml-2 animate-in slide-in-from-top-2 duration-200">
 						<div className="flex items-center gap-2 mb-2">
-							<DollarSign className="h-4 w-4 text-muted-foreground" />
+							<DollarSign className="h-4 w-4 text-amber-600 dark:text-amber-400" />
 							<Label className="text-sm font-medium">
 								Taxa de cancelamento tardio
 							</Label>
 						</div>
-						<div className="flex items-center gap-3 mb-2">
-							<span className="text-lg font-bold">R$</span>
+						<div className="flex items-center gap-3 mb-3">
+							<span className="text-lg font-bold text-amber-700 dark:text-amber-300">R$</span>
 							<Slider
 								value={[lateFee]}
 								onValueChange={([value]) =>
@@ -257,23 +256,27 @@ export function CancellationRulesManager() {
 								step={5}
 								className="flex-1 cursor-pointer"
 							/>
-							<span className="text-lg font-bold min-w-[4rem] text-right">
+							<span className="text-lg font-bold min-w-[4rem] text-right text-amber-700 dark:text-amber-300">
 								{lateFee.toFixed(0)}
 							</span>
 						</div>
-						<div className="flex gap-2">
+						<div className="flex gap-2 flex-wrap">
 							{FEE_PRESETS.map((preset) => (
-								<Button
+								<button
 									key={preset.label}
-									size="sm"
-									variant={lateFee === preset.value ? "default" : "outline"}
+									type="button"
 									onClick={() =>
 										updateRule("late_cancellation_fee", preset.value)
 									}
-									className="h-7 text-xs"
+									className={cn(
+										"px-3 py-1.5 rounded-full text-xs font-medium border transition-all",
+										lateFee === preset.value
+											? "bg-amber-600 text-white border-amber-600"
+											: "bg-background border-amber-200 dark:border-amber-800 text-amber-700 dark:text-amber-300 hover:bg-amber-100 dark:hover:bg-amber-900/30",
+									)}
 								>
 									{preset.label}
-								</Button>
+								</button>
 							))}
 						</div>
 					</div>
