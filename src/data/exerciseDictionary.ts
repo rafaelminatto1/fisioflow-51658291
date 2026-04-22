@@ -160,7 +160,7 @@ const lowerBody: PhysioDictionaryEntry[] = [
 				"Adicionar carga leve ou aumentar a velocidade da subida (explosão).",
 			instruction_pt:
 				"Equilibre-se em uma perna, estenda a outra à frente e desça o máximo possível com controle, mantendo o calcanhar de apoio no chão.",
-			image_url: "/exercises/illustrations/agachamento-pistol.png",
+			image_url: "/exercises/illustrations/agachamento-pistol.avif",
 		},
 	),
 	ex(
@@ -810,7 +810,7 @@ const lowerBody: PhysioDictionaryEntry[] = [
 				"Utilizar uma mini-band para resistir à adução e rotação interna durante a ativação.",
 			instruction_pt:
 				"Sente-se com as pernas esticadas. Tente 'empurrar' a parte de trás do joelho contra o chão, apertando bem o músculo da parte interna da coxa.",
-			image_url: "/exercises/illustrations/ativacao-vmo-quad-set.png",
+			image_url: "/exercises/illustrations/ativacao-vmo-quad-set.avif",
 		},
 	),
 	ex(
@@ -1038,7 +1038,7 @@ const upperBody: PhysioDictionaryEntry[] = [
 				"Realizar no chão (posição de flexão) progredindo para o 'Push-up Plus'.",
 			instruction_pt:
 				"Deitado de costas ou contra a parede, empurre as mãos para frente como se quisesse afastar as escápulas da coluna, sem dobrar os cotovelos.",
-			image_url: "/exercises/illustrations/serratus-punch.png",
+			image_url: "/exercises/illustrations/serratus-punch.avif",
 		},
 	),
 	ex(
@@ -1105,7 +1105,7 @@ const upperBody: PhysioDictionaryEntry[] = [
 			instruction_pt:
 				"Estenda o braço sobre a cabeça e dobre o cotovelo levando a mão atrás da nuca, depois estenda-o completamente para cima.",
 			image_url:
-				"/exercises/illustrations/extensao-de-cotovelo-com-garrafa.png",
+				"/exercises/illustrations/extensao-de-cotovelo-com-garrafa.avif",
 		},
 	),
 	ex(
@@ -1735,7 +1735,7 @@ const functional: PhysioDictionaryEntry[] = [
 				"Retirar os joelhos do chão para progredir para a flexão padrão.",
 			instruction_pt:
 				"Realize a flexão de braços mantendo os joelhos apoiados no chão para reduzir a dificuldade.",
-			image_url: "/exercises/illustrations/flexao-braco-joelho.png",
+			image_url: "/exercises/illustrations/flexao-braco-joelho.avif",
 		},
 	),
 	ex(
@@ -1958,7 +1958,7 @@ const functional: PhysioDictionaryEntry[] = [
 				"Aumentar a velocidade ou realizar com deslocamento frontal.",
 			instruction_pt:
 				"Corra sem sair do lugar, elevando os joelhos até a altura do quadril e coordenando com o movimento dos braços.",
-			image_url: "/exercises/illustrations/skipping-high-knees.png",
+			image_url: "/exercises/illustrations/skipping-high-knees.avif",
 		},
 	),
 	ex(
@@ -2275,7 +2275,7 @@ const stretching: PhysioDictionaryEntry[] = [
 				"Cruzar a perna oposta sobre a que está sendo liberada para aumentar a pressão.",
 			instruction_pt:
 				"Posicione o rolo sob o músculo e deslize o corpo sobre ele lentamente, focando nas áreas de maior tensão.",
-			image_url: "/exercises/illustrations/liberacao-foam-roller.png",
+			image_url: "/exercises/illustrations/liberacao-foam-roller.avif",
 		},
 	),
 	ex(
@@ -2625,7 +2625,7 @@ const vestibular: PhysioDictionaryEntry[] = [
 				"Aumentar a velocidade do movimento ou realizar a estabilização enquanto caminha.",
 			instruction_pt:
 				"Olhe para um ponto fixo à sua frente e vire a cabeça lentamente de um lado para o outro, sem tirar os olhos do ponto.",
-			image_url: "/exercises/illustrations/estabilizacao-olhar-vor.png",
+			image_url: "/exercises/illustrations/estabilizacao-olhar-vor.avif",
 		},
 	),
 	ex(
@@ -2695,7 +2695,7 @@ const neurodynamics: PhysioDictionaryEntry[] = [
 				"Realizar na posição de decúbito dorsal (deitado) com elevação da perna estendida.",
 			instruction_pt:
 				"Sentado, estique o joelho e aponte os dedos do pé para cima enquanto olha para o teto. Depois, dobre o joelho e aponte o pé para baixo enquanto olha para o colo.",
-			image_url: "/exercises/illustrations/deslizamento-nervo-ciatico.png",
+			image_url: "/exercises/illustrations/deslizamento-nervo-ciatico.avif",
 		},
 	),
 	ex(
