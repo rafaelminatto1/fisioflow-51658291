@@ -379,10 +379,10 @@ app.post('/', requireAuth, async (c) => {
 	            values: vector,
 	            metadata: { name: row.name, category: categoryLabel, sketch }
 	          }]);
-          // Update DB embedding and sketch for hybrid search potential
-          await db.update(exercises).set({ 
-            embedding: vector,
-            embeddingSketch: sketch 
+          // Mantemos apenas o sketch no Postgres para busca híbrida local.
+          // O vetor bruto continua no Vectorize, evitando mismatch de dimensão da coluna legada.
+          await db.update(exercises).set({
+            embeddingSketch: sketch
           }).where(eq(exercises.id, row.id));
         }
       } catch (e) {
@@ -433,10 +433,8 @@ app.put('/:id', requireAuth, async (c) => {
             values: vector,
             metadata: { name: row.name, category: categoryLabel, sketch }
           }]);
-          // Update DB embedding and sketch
-          await db.update(exercises).set({ 
-            embedding: vector,
-            embeddingSketch: sketch 
+          await db.update(exercises).set({
+            embeddingSketch: sketch
           }).where(eq(exercises.id, row.id));
         }
       } catch (e) {

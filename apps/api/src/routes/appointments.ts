@@ -53,24 +53,7 @@ app.get('/', requireAuth, async (c) => {
   try {
     const { dateFrom, dateTo, therapistId, patientId, status, limit = '100' } = c.req.query();
 
-    // Fallback para organizationId se vier o default ou nulo
-    let organizationId = user.organizationId;
-    if (!organizationId || organizationId === '00000000-0000-0000-0000-000000000001') {
-      console.log('[Appointments/List] Invalid/Default Org ID detected, looking up profile for uid:', user.uid);
-      try {
-        const { profiles } = await import('@fisioflow/db');
-        const profileResult = await db.select({ organizationId: profiles.organizationId }).from(profiles).where(eq(profiles.userId, user.uid)).limit(1);
-        if (profileResult[0]?.organizationId) {
-          organizationId = profileResult[0].organizationId;
-          console.log('[Appointments/List] Found correct Org ID from profile:', organizationId);
-        }
-      } catch (profileErr) {
-        console.error('[Appointments/List] Error fetching profile for org fallback:', profileErr);
-        if (profileErr instanceof Error) {
-          console.error('[Appointments/List] Stack:', profileErr.stack);
-        }
-      }
-    }
+    const organizationId = user.organizationId;
 
     let conditions: any = withTenant(appointments, organizationId);
 
@@ -274,21 +257,7 @@ app.post('/', requireAuth, rateLimit({ limit: 20, windowSeconds: 3600, endpoint:
     const isUnlimited = body.isUnlimited ?? body.is_unlimited ?? false;
     const additionalNames = body.additionalNames ?? body.additional_names ?? null;
 
-    // Fallback para organizationId se vier o default ou nulo
-    let organizationId = user.organizationId;
-    if (!organizationId || organizationId === '00000000-0000-0000-0000-000000000001') {
-      console.log('[Appointments/Create] Invalid/Default Org ID detected, looking up profile for uid:', therapistId);
-      try {
-        const { profiles } = await import('@fisioflow/db');
-        const profileResult = await db.select({ organizationId: profiles.organizationId }).from(profiles).where(eq(profiles.userId, therapistId)).limit(1);
-        if (profileResult[0]?.organizationId) {
-          organizationId = profileResult[0].organizationId;
-          console.log('[Appointments/Create] Found correct Org ID from profile:', organizationId);
-        }
-      } catch (profileErr) {
-        console.error('[Appointments/Create] Error fetching profile for org fallback:', profileErr);
-      }
-    }
+    const organizationId = user.organizationId;
 
     console.log('[Appointments/Create] Input Body:', JSON.stringify(body));
     console.log('[Appointments/Create] Processed Fields:', {
@@ -400,17 +369,7 @@ app.get('/:id', requireAuth, async (c) => {
   if (!id) return c.json({ error: 'ID é obrigatório' }, 400);
   if (!isUuid(id)) return c.json({ error: 'ID inválido' }, 400);
   try {
-    // Fallback para organizationId
-    let organizationId = user.organizationId;
-    if (!organizationId || organizationId === '00000000-0000-0000-0000-000000000001') {
-      try {
-        const { profiles } = await import('@fisioflow/db');
-        const profileResult = await db.select({ organizationId: profiles.organizationId }).from(profiles).where(eq(profiles.userId, user.uid)).limit(1);
-        if (profileResult[0]?.organizationId) {
-          organizationId = profileResult[0].organizationId;
-        }
-      } catch (e) {}
-    }
+    const organizationId = user.organizationId;
 
     const result = await db
       .select({
@@ -457,17 +416,7 @@ const updateAppointmentHandler: MiddlewareHandler<{ Bindings: Env; Variables: Au
   try {
     const body = await c.req.json() as Record<string, any>;
 
-    // Fallback para organizationId
-    let organizationId = user.organizationId;
-    if (!organizationId || organizationId === '00000000-0000-0000-0000-000000000001') {
-      try {
-        const { profiles } = await import('@fisioflow/db');
-        const profileResult = await db.select({ organizationId: profiles.organizationId }).from(profiles).where(eq(profiles.userId, user.uid)).limit(1);
-        if (profileResult[0]?.organizationId) {
-          organizationId = profileResult[0].organizationId;
-        }
-      } catch (e) {}
-    }
+    const organizationId = user.organizationId;
 
     const response = await (async (tx: typeof db) => {
       const currentResult = await tx
@@ -642,17 +591,7 @@ app.post('/:id/cancel', requireAuth, async (c) => {
   try {
     const body = await c.req.json().catch(() => ({}));
 
-    // Fallback para organizationId
-    let organizationId = user.organizationId;
-    if (!organizationId || organizationId === '00000000-0000-0000-0000-000000000001') {
-      try {
-        const { profiles } = await import('@fisioflow/db');
-        const profileResult = await db.select({ organizationId: profiles.organizationId }).from(profiles).where(eq(profiles.userId, user.uid)).limit(1);
-        if (profileResult[0]?.organizationId) {
-          organizationId = profileResult[0].organizationId;
-        }
-      } catch (e) {}
-    }
+    const organizationId = user.organizationId;
 
     const result = await db
       .update(appointments)
@@ -698,17 +637,7 @@ app.delete('/:id', requireAuth, async (c) => {
   if (!isUuid(id)) return c.json({ error: 'ID inválido' }, 400);
 
   try {
-    // Fallback para organizationId
-    let organizationId = user.organizationId;
-    if (!organizationId || organizationId === '00000000-0000-0000-0000-000000000001') {
-      try {
-        const { profiles } = await import('@fisioflow/db');
-        const profileResult = await db.select({ organizationId: profiles.organizationId }).from(profiles).where(eq(profiles.userId, user.uid)).limit(1);
-        if (profileResult[0]?.organizationId) {
-          organizationId = profileResult[0].organizationId;
-        }
-      } catch (e) {}
-    }
+    const organizationId = user.organizationId;
 
     const result = await db
       .update(appointments)
