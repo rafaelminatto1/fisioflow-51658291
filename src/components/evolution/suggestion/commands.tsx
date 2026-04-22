@@ -4,6 +4,8 @@ import { ReactRenderer } from "@tiptap/react";
 import { PluginKey } from "@tiptap/pm/state";
 import tippy from "tippy.js";
 import { Sparkles, ClipboardList, CheckSquare, ImageIcon, BookOpen } from "lucide-react";
+import { Activity, Star } from "lucide-react";
+import { cn } from "@/lib/utils";
 
 export function getEvolutionSettings() {
   const STORAGE_KEY = 'fisioflow_evolution_settings';
@@ -323,5 +325,5 @@ const CommandList = forwardRef((props: any, ref) => {
 	);
 });
 
-import { cn } from "@/lib/utils";
+
 CommandList.displayName = "CommandList";

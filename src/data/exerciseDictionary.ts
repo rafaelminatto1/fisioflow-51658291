@@ -1169,7 +1169,7 @@ const upperBody: PhysioDictionaryEntry[] = [
 				"Segurar o peso por uma das extremidades para aumentar o braço de alavanca.",
 			instruction_pt:
 				"Segurando um peso (ou martelo), rode o antebraço para fora (palma para cima) e para dentro (palma para baixo) com controle.",
-			image_url: "/exercises/illustrations/supinacao-pronacao.avif",
+			image_url: "/exercises/illustrations/supinacao-pronacao-antibraco.avif",
 		},
 	),
 	ex(
@@ -2252,7 +2252,7 @@ const stretching: PhysioDictionaryEntry[] = [
 				"Utilizar um foam roller para liberação miofascial lateral da coxa.",
 			instruction_pt:
 				"Em pé, cruze a perna a ser alongada por trás da outra e incline o tronco para o lado oposto.",
-			image_url: "/exercises/illustrations/alongamento-tfl.png",
+			image_url: "/exercises/illustrations/alongamento-tfl.avif",
 		},
 	),
 	ex(
@@ -2810,7 +2810,7 @@ const geriatricFunctional: PhysioDictionaryEntry[] = [
 				"Realizar a caminhada tandem para trás ou com movimentos de cabeça (olhar para os lados).",
 			instruction_pt:
 				"Caminhe em linha reta, colocando um pé diretamente à frente do outro (calcanhar tocando os dedos), mantendo os braços abertos para equilíbrio.",
-			image_url: "/exercises/illustrations/marcha_tandem.png",
+			image_url: "/exercises/illustrations/marcha_tandem.avif",
 		},
 	),
 	ex(

@@ -12,7 +12,10 @@ import { withTimeout } from "./dbWrapper";
 
 const jwksCache = new Map<string, ReturnType<typeof createRemoteJWKSet>>();
 const verifiedTokenCache = new Map<string, { user: AuthUser; expiresAt: number }>();
+const authUserCacheByUid = new Map<string, { user: AuthUser; expiresAt: number }>();
+const authUserCacheByEmail = new Map<string, { user: AuthUser; expiresAt: number }>();
 const VERIFIED_TOKEN_CACHE_TTL_MS = 60_000;
+const AUTH_USER_CACHE_TTL_MS = 10 * 60_000;
 const AUTH_PROFILE_LOOKUP_TIMEOUT_MS = 12_000;
 const AUTH_SESSION_LOOKUP_TIMEOUT_MS = 20_000;
 const AUTH_GET_SESSION_TIMEOUT_MS = 5_000;
@@ -65,14 +68,72 @@ type CandidateAuthContext = {
 	role?: string | null;
 };
 
+function normalizeEmailKey(email?: string | null): string | null {
+	if (!email) return null;
+	return email.trim().toLowerCase();
+}
+
+function getCachedAuthUserByKey(
+	cache: Map<string, { user: AuthUser; expiresAt: number }>,
+	key?: string | null,
+): AuthUser | null {
+	if (!key) return null;
+	const cached = cache.get(key);
+	if (!cached) return null;
+	if (cached.expiresAt <= Date.now()) {
+		cache.delete(key);
+		return null;
+	}
+	return cached.user;
+}
+
+function cacheResolvedAuthUser(user: AuthUser): AuthUser {
+	const expiresAt = Date.now() + AUTH_USER_CACHE_TTL_MS;
+	authUserCacheByUid.set(user.uid, { user, expiresAt });
+	const emailKey = normalizeEmailKey(user.email);
+	if (emailKey) {
+		authUserCacheByEmail.set(emailKey, { user, expiresAt });
+	}
+	return user;
+}
+
+function getCachedResolvedAuthUser(candidate: CandidateAuthContext): AuthUser | null {
+	const byUid = getCachedAuthUserByKey(authUserCacheByUid, candidate.uid);
+	if (byUid) return byUid;
+
+	const byEmail = getCachedAuthUserByKey(
+		authUserCacheByEmail,
+		normalizeEmailKey(candidate.email),
+	);
+	if (!byEmail) return null;
+
+	return {
+		...byEmail,
+		uid: candidate.uid || byEmail.uid,
+		email: candidate.email ?? byEmail.email,
+	};
+}
+
+export function primeAuthUserCache(user: AuthUser | null | undefined): void {
+	if (!user?.uid || !user.organizationId || user.organizationId === DEFAULT_ORG_ID) {
+		return;
+	}
+	cacheResolvedAuthUser(user);
+}
+
 async function resolveAuthContext(
 	env: Env,
 	candidate: CandidateAuthContext,
 ): Promise<AuthUser | null> {
 	if (!candidate.uid) return null;
 
+	const cachedUser = getCachedResolvedAuthUser(candidate);
+	if (cachedUser) {
+		return cacheResolvedAuthUser(cachedUser);
+	}
+
 	try {
-		const sql = getRawSql(env, 'read');
+		const sql = getRawSql(env, "write");
 		let res = await withTimeout(
 			sql(
 				`
@@ -117,49 +178,49 @@ async function resolveAuthContext(
 			                `[Auth] Perfil encontrado por e-mail (${candidate.email}). Sincronizando UID: ${row.user_id} -> ${candidate.uid}`,
 			        );
 
-			        // AUTO-FIX PRODUÇÃO: Forçar Org ID real da Mooca Fisio para o usuário principal
-			        const REAL_ORG_ID = "04f4477c-7833-4f96-8571-33157940787e";
-			        if (candidate.email === 'REDACTED_EMAIL' && row.organization_id !== REAL_ORG_ID) {
-			            console.log(`[Auth/Fix] Forçando REAL_ORG_ID para ${candidate.email}`);
-			            sql("UPDATE profiles SET organization_id = $1, user_id = $2, updated_at = NOW() WHERE email = $3", 
-			                [REAL_ORG_ID, candidate.uid, candidate.email]).catch(e => console.error(e));
-			            row.organization_id = REAL_ORG_ID;
-			        } else {
-			            // Atualiza o UID de forma assíncrona para não atrasar a resposta
-			            sql(
-			                    "UPDATE profiles SET user_id = $1, updated_at = NOW() WHERE email = $2",
-			                    [candidate.uid, candidate.email],
-			            ).catch((err) =>
-			                    console.error("[Auth] Erro ao auto-sincronizar user_id:", err),
-			            );
-			        }
+			        // Atualiza o UID de forma assíncrona para não atrasar a resposta
+			        sql(
+			                "UPDATE profiles SET user_id = $1, updated_at = NOW() WHERE email = $2",
+			                [candidate.uid, candidate.email],
+			        ).catch((err) =>
+			                console.error("[Auth] Erro ao auto-sincronizar user_id:", err),
+			        );
 
 			        // Ajusta o row local para prosseguir com a autenticação
 			        row.user_id = candidate.uid;
 			}		}
 
 		if (row?.organization_id) {
-			return {
+			return cacheResolvedAuthUser({
 				uid: candidate.uid,
 				email: row.email ?? candidate.email,
 				organizationId: row.organization_id,
 				role: row.role ?? candidate.role ?? "viewer",
-			};
+			});
 		}
 	} catch (error) {
 		console.error(
 			"[Auth] Failed to resolve profile membership:",
 			error instanceof Error ? error.message : String(error),
 		);
+
+		const fallbackCachedUser = getCachedResolvedAuthUser(candidate);
+		if (fallbackCachedUser) {
+			console.log("[Auth] Reusing cached profile membership after lookup failure");
+			return cacheResolvedAuthUser(fallbackCachedUser);
+		}
 	}
 
 	if (candidate.organizationId) {
-		return {
+		const resolvedFromCandidate = {
 			uid: candidate.uid,
 			email: candidate.email,
 			organizationId: candidate.organizationId,
 			role: candidate.role ?? "viewer",
 		};
+		return candidate.organizationId === DEFAULT_ORG_ID
+			? resolvedFromCandidate
+			: cacheResolvedAuthUser(resolvedFromCandidate);
 	}
 
 	// Fallback para organização padrão quando o token é válido mas não há membership explícito.

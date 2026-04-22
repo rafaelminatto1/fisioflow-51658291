@@ -85,30 +85,21 @@ function createClinicalIllustration(
 	<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 480 320" role="img" aria-label="${escapeXml(title)}">
 		<defs>
 			<linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
-				<stop offset="0%" stop-color="#f0fdfa" />
-				<stop offset="55%" stop-color="#ecfeff" />
+				<stop offset="0%" stop-color="#ffffff" />
 				<stop offset="100%" stop-color="#f8fafc" />
 			</linearGradient>
-			<linearGradient id="panel" x1="0%" y1="0%" x2="100%" y2="100%">
-				<stop offset="0%" stop-color="#ffffff" stop-opacity="0.94" />
-				<stop offset="100%" stop-color="#dff7f3" stop-opacity="0.84" />
-			</linearGradient>
 			<filter id="shadow" x="-20%" y="-20%" width="140%" height="140%">
-				<feDropShadow dx="0" dy="16" stdDeviation="18" flood-color="#0f766e" flood-opacity="0.10" />
+				<feDropShadow dx="0" dy="8" stdDeviation="12" flood-color="#0f172a" flood-opacity="0.05" />
 			</filter>
 		</defs>
-		<rect width="480" height="320" rx="32" fill="url(#bg)" />
-		<circle cx="88" cy="84" r="48" fill="#ccfbf1" />
-		<circle cx="392" cy="64" r="34" fill="#dbeafe" />
-		<circle cx="420" cy="248" r="44" fill="#dcfce7" />
-		<rect x="32" y="32" width="416" height="256" rx="28" fill="url(#panel)" stroke="#cbd5e1" stroke-opacity="0.55" filter="url(#shadow)" />
-		<g transform="translate(58 44)">
-			<rect x="0" y="0" width="132" height="34" rx="17" fill="#ffffff" stroke="#99f6e4" />
-			<text x="16" y="21" font-size="12" font-family="Arial, sans-serif" fill="#0f766e" font-weight="700" letter-spacing="0.08em">FISIOFLOW TESTES</text>
-			<text x="0" y="74" font-size="28" font-family="Arial, sans-serif" fill="#0f172a" font-weight="700">${escapeXml(title)}</text>
-			<text x="0" y="102" font-size="15" font-family="Arial, sans-serif" fill="#475569">${escapeXml(subtitle)}</text>
+		<rect width="480" height="320" fill="url(#bg)" />
+		<rect x="24" y="24" width="432" height="272" rx="24" fill="#ffffff" filter="url(#shadow)" stroke="#f1f5f9" />
+		<g transform="translate(48 56)">
+			<text x="0" y="0" font-size="10" font-family="Inter, system-ui, sans-serif" fill="#64748b" font-weight="600" letter-spacing="0.1em">CLINICAL TEST</text>
+			<text x="0" y="32" font-size="24" font-family="Inter, system-ui, sans-serif" fill="#0f172a" font-weight="700">${escapeXml(title)}</text>
+			<text x="0" y="56" font-size="14" font-family="Inter, system-ui, sans-serif" fill="#94a3b8">${escapeXml(subtitle)}</text>
 		</g>
-		<g transform="translate(264 40)">
+		<g transform="translate(260 40) scale(1.1)">
 			${artwork}
 		</g>
 	</svg>
@@ -342,10 +333,6 @@ export const builtinClinicalTestsCatalog: ClinicalTestCatalogRecord[] = [
 		sort_order: 5,
 		illustration: "nerve-tension",
 		imageUrl: "/clinical-tests/illustrations/slump-test.png",
-		initialPositionImageUrl:
-			"/clinical-tests/illustrations/slump-test-initial.avif",
-		finalPositionImageUrl:
-			"/clinical-tests/illustrations/slump-test-final.avif",
 		fieldsDefinition: [
 			{ id: "pain_nprs", label: "Intensidade da Dor (0-10)", type: "nprs" },
 			{
@@ -539,6 +526,7 @@ export const builtinClinicalTestsCatalog: ClinicalTestCatalogRecord[] = [
 		source_label: "Curadoria FisioFlow",
 		sort_order: 105,
 		illustration: "shoulder-impingement",
+		imageUrl: "/clinical-tests/illustrations/painful-arc-test.avif",
 		lr_positive: 3.7,
 		lr_negative: 0.5,
 		cluster_id: "cluster-subacromial-impingement",
@@ -1095,6 +1083,7 @@ export const builtinClinicalTestsCatalog: ClinicalTestCatalogRecord[] = [
 		source_label: "Curadoria FisioFlow",
 		sort_order: 200,
 		illustration: "sit-to-stand",
+		imageUrl: "/clinical-tests/illustrations/oxford-scale.avif",
 		fieldsDefinition: [
 			{
 				id: "grade",
@@ -1270,6 +1259,7 @@ export const builtinClinicalTestsCatalog: ClinicalTestCatalogRecord[] = [
 		source_label: "Curadoria FisioFlow",
 		sort_order: 150,
 		illustration: "gait-speed",
+		imageUrl: "/clinical-tests/illustrations/mulder-click.avif",
 	}),
 	createBuiltinTest({
 		id: "builtin-nordic-curl",
@@ -1312,6 +1302,7 @@ export const builtinClinicalTestsCatalog: ClinicalTestCatalogRecord[] = [
 		source_label: "Curadoria FisioFlow",
 		sort_order: 84,
 		illustration: "nerve-tension",
+		imageUrl: "/clinical-tests/illustrations/ultt1-median.avif",
 		fieldsDefinition: [
 			{ id: "pain_nprs", label: "Dor (0-10)", type: "nprs" },
 			{ id: "angle_elbow", label: "Ângulo Extensão (°)", type: "number" },
@@ -1415,6 +1406,7 @@ export const builtinClinicalTestsCatalog: ClinicalTestCatalogRecord[] = [
 		sort_order: 35,
 		sort_order: 35,
 		illustration: "elbow-test",
+		imageUrl: "/clinical-tests/illustrations/golfers-elbow.avif",
 		fieldsDefinition: [
 			{ id: "nprs_pain", label: "Intensidade da Dor (0-10)", type: "nprs" },
 		],
@@ -1440,6 +1432,7 @@ export const builtinClinicalTestsCatalog: ClinicalTestCatalogRecord[] = [
 		source_label: "Curadoria FisioFlow",
 		sort_order: 155,
 		illustration: "thoracic-outlet",
+		imageUrl: "/clinical-tests/illustrations/adson-test.avif",
 		fieldsDefinition: [
 			{
 				id: "pulse_quality",
@@ -1467,6 +1460,7 @@ export const builtinClinicalTestsCatalog: ClinicalTestCatalogRecord[] = [
 			"Teste clínico clássico para Síndrome do Desfiladeiro Torácico.",
 		tags: ["tos", "neurovascular", "cervical"],
 		illustration: "shoulder-impingement",
+		imageUrl: "/clinical-tests/illustrations/roos-test.avif",
 		fieldsDefinition: [
 			{ id: "time_sustained", label: "Tempo (s)", type: "number" },
 		],
@@ -1881,6 +1875,7 @@ export const builtinClinicalTestsCatalog: ClinicalTestCatalogRecord[] = [
 			"Essencial na reabilitação de cirurgias de joelho e dor patelofemoral.",
 		source_label: "Curadoria FisioFlow",
 		sort_order: 20,
+		imageUrl: "/clinical-tests/illustrations/vmo-activation.avif",
 		fieldsDefinition: [
 			{
 				id: "activation_quality",
@@ -1932,6 +1927,7 @@ export const builtinClinicalTestsCatalog: ClinicalTestCatalogRecord[] = [
 		sensitivity_specificity: "Evidência Limitada (Clássico Clínico).",
 		source_label: "Curadoria FisioFlow",
 		sort_order: 60,
+		imageUrl: "/clinical-tests/illustrations/ludington-sign.avif",
 		fieldsDefinition: [
 			{ id: "palpation", label: "Tendão Palpável", type: "boolean" },
 		],
@@ -1955,6 +1951,7 @@ export const builtinClinicalTestsCatalog: ClinicalTestCatalogRecord[] = [
 			"Sensibilidade de 42% e Especificidade de 80% para rizartrose.",
 		source_label: "Curadoria FisioFlow",
 		sort_order: 65,
+		imageUrl: "/clinical-tests/illustrations/thumb-grind.avif",
 		fieldsDefinition: [
 			{ id: "crepitus", label: "Presença de Creptação", type: "boolean" },
 			{ id: "pain_nprs", label: "Dor (0-10)", type: "nprs" },
@@ -1979,6 +1976,7 @@ export const builtinClinicalTestsCatalog: ClinicalTestCatalogRecord[] = [
 			"Alta especificidade para rupturas do manguito posterior.",
 		source_label: "Curadoria FisioFlow",
 		sort_order: 70,
+		imageUrl: "/clinical-tests/illustrations/patte-test.avif",
 		fieldsDefinition: [
 			{
 				id: "weakness",
@@ -2034,6 +2032,7 @@ export const builtinClinicalTestsCatalog: ClinicalTestCatalogRecord[] = [
 			"Baixa sensibilidade e especificidade; deve ser usado apenas como rastreio inicial.",
 		source_label: "Curadoria FisioFlow",
 		sort_order: 80,
+		imageUrl: "/clinical-tests/illustrations/homan-sign.avif",
 		fieldsDefinition: [
 			{ id: "pain_intensity", label: "Intensidade da Dor", type: "nprs" },
 		],
@@ -2054,6 +2053,7 @@ export const builtinClinicalTestsCatalog: ClinicalTestCatalogRecord[] = [
 		evidence_summary: "Altamente confiável para predição de risco de quedas.",
 		source_label: "Curadoria FisioFlow",
 		sort_order: 85,
+		imageUrl: "/clinical-tests/illustrations/berg-balance.avif",
 		evidence_resources: [
 			{
 				title: "Measuring balance in the elderly",
@@ -2083,6 +2083,7 @@ export const builtinClinicalTestsCatalog: ClinicalTestCatalogRecord[] = [
 			"Amplamente utilizado em ambientes hospitalares e de cuidados prolongados.",
 		source_label: "Curadoria FisioFlow",
 		sort_order: 90,
+		imageUrl: "/clinical-tests/illustrations/tinetti-index.avif",
 		fieldsDefinition: [
 			{ id: "balance_score", label: "Equilíbrio (0-16)", type: "number" },
 			{ id: "gait_score", label: "Marcha (0-12)", type: "number" },
@@ -2106,6 +2107,7 @@ export const builtinClinicalTestsCatalog: ClinicalTestCatalogRecord[] = [
 			"Forte preditor de incapacidade, hospitalização e mortalidade.",
 		source_label: "Curadoria FisioFlow",
 		sort_order: 95,
+		imageUrl: "/clinical-tests/illustrations/sppb-test.avif",
 		evidence_resources: [
 			{
 				title: "A short physical performance battery",
