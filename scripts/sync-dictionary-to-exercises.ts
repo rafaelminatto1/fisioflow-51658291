@@ -26,9 +26,24 @@ async function sync() {
         const slug = exercise.id.replace('exd-', '');
         const res = await sql`
             INSERT INTO exercises (
-                slug, name, image_url, thumbnail_url, description, instructions, difficulty, updated_at
+                slug, name, image_url, thumbnail_url, description, instructions, difficulty, 
+                pathologies_indicated, pathologies_contraindicated, "references",
+                sets_recommended, reps_recommended, duration_seconds, updated_at
             ) VALUES (
-                ${slug}, ${exercise.pt}, ${imageUrl}, ${imageUrl}, ${description}, ${instructions}, ${difficulty}::exercise_difficulty, NOW()
+                ${slug}, 
+                ${exercise.pt}, 
+                ${imageUrl}, 
+                ${imageUrl}, 
+                ${description}, 
+                ${instructions}, 
+                ${difficulty}::exercise_difficulty,
+                ${exercise.indicated_pathologies || []},
+                ${exercise.contraindicated_pathologies || []},
+                ${JSON.stringify(exercise.scientific_references || [])},
+                ${exercise.suggested_sets || 3},
+                ${exercise.suggested_reps || 12},
+                ${exercise.suggested_duration_seconds || null},
+                NOW()
             )
             ON CONFLICT (slug) DO UPDATE SET
                 name = EXCLUDED.name,
@@ -37,6 +52,12 @@ async function sync() {
                 description = EXCLUDED.description,
                 instructions = EXCLUDED.instructions,
                 difficulty = EXCLUDED.difficulty,
+                pathologies_indicated = EXCLUDED.pathologies_indicated,
+                pathologies_contraindicated = EXCLUDED.pathologies_contraindicated,
+                "references" = EXCLUDED."references",
+                sets_recommended = EXCLUDED.sets_recommended,
+                reps_recommended = EXCLUDED.reps_recommended,
+                duration_seconds = EXCLUDED.duration_seconds,
                 updated_at = NOW()
             RETURNING name, slug
         `;
