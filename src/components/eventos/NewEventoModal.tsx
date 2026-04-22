@@ -439,6 +439,28 @@ export function NewEventoModal({ open, onOpenChange }: NewEventoModalProps) {
 										)}
 									</div>
 
+									<div className="space-y-2">
+										<Label htmlFor="minimo_colaboradores">
+											Mínimo de Colaboradores
+										</Label>
+										<Input
+											id="minimo_colaboradores"
+											type="number"
+											{...register("minimo_colaboradores", {
+												valueAsNumber: true,
+											})}
+											placeholder="Ex: 5"
+										/>
+										<p className="text-[10px] text-muted-foreground">
+											Quantidade mínima de equipe necessária para o evento.
+										</p>
+										{errors.minimo_colaboradores && (
+											<p className="text-sm text-destructive">
+												{errors.minimo_colaboradores.message}
+											</p>
+										)}
+									</div>
+
 									<div className="space-y-2 md:col-span-2">
 										<Label htmlFor="link_whatsapp">Link do WhatsApp</Label>
 										<Input

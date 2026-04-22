@@ -161,9 +161,9 @@ export function PhysioDictionaryView() {
 										<CardTitle className="text-base font-bold text-primary pr-12">
 											{term.pt}
 										</CardTitle>
-										<div className="flex items-center gap-1">
-											<Badge variant="secondary" className="text-[10px] uppercase tracking-wider">
-												{term.category}
+										<div className="flex items-center gap-1 transition-opacity duration-200 group-hover:opacity-0">
+											<Badge variant="secondary" className="text-[10px] uppercase tracking-wider whitespace-nowrap bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400 border-none">
+												{CATEGORIES.find(c => c.id === term.category)?.label || term.category}
 											</Badge>
 										</div>
 									</div>
@@ -172,7 +172,7 @@ export function PhysioDictionaryView() {
 										{term.en}
 									</CardDescription>
 
-									<div className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity flex gap-1">
+									<div className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-all duration-300 flex gap-1 bg-white/90 dark:bg-slate-900/90 backdrop-blur-md p-1 rounded-xl border border-slate-200/50 dark:border-slate-800/50 shadow-lg z-10 translate-y-1 group-hover:translate-y-0">
 										<Button
 											variant="ghost"
 											size="icon"
