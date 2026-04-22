@@ -18,6 +18,8 @@ export type ClinicalTestCatalogRecord = ClinicalTestTemplateRecord & {
 	lr_positive?: number | null;
 	lr_negative?: number | null;
 	cluster_id?: string | null;
+	aliases_pt?: string[];
+	aliases_en?: string[];
 };
 
 export interface ClinicalEvidenceResource {
@@ -69,6 +71,8 @@ interface BaseCatalogInput {
 	lr_positive?: number;
 	lr_negative?: number;
 	cluster_id?: string;
+	aliases_pt?: string[];
+	aliases_en?: string[];
 }
 
 function createSvgDataUrl(svg: string) {
@@ -306,6 +310,8 @@ function createBuiltinTest(input: BaseCatalogInput): ClinicalTestCatalogRecord {
 		source_label: input.source_label,
 		sort_order: input.sort_order,
 		evidence_resources: input.evidence_resources ?? [],
+		aliases_pt: input.aliases_pt ?? [],
+		aliases_en: input.aliases_en ?? [],
 	};
 }
 
@@ -406,6 +412,7 @@ export const builtinClinicalTestsCatalog: ClinicalTestCatalogRecord[] = [
 		source_label: "Curadoria FisioFlow",
 		sort_order: 12,
 		imageUrl: "/clinical-tests/illustrations/pivot-shift-knee.avif",
+		aliases_pt: ["Pivot Shift"],
 		illustration: "knee-stability",
 		fieldsDefinition: [
 			{
@@ -611,6 +618,7 @@ export const builtinClinicalTestsCatalog: ClinicalTestCatalogRecord[] = [
 		sort_order: 55,
 		illustration: "hip-rotation",
 		imageUrl: "/clinical-tests/illustrations/faber-test.avif",
+		aliases_pt: ["FABER", "Teste de Patrick (FABER)"],
 		fieldsDefinition: [
 			{
 				id: "pain_location",
@@ -890,6 +898,7 @@ export const builtinClinicalTestsCatalog: ClinicalTestCatalogRecord[] = [
 		sort_order: 35,
 		illustration: "balance-dynamic",
 		imageUrl: "/clinical-tests/illustrations/trendelenburg-sign.avif",
+		aliases_pt: ["Teste de Trendelenburg"],
 		fieldsDefinition: [
 			{
 				id: "pelvic_drop",
@@ -950,6 +959,7 @@ export const builtinClinicalTestsCatalog: ClinicalTestCatalogRecord[] = [
 		sort_order: 65,
 		illustration: "hip-rotation",
 		imageUrl: "/clinical-tests/illustrations/adductor-squeeze.avif",
+		aliases_pt: ["Adductor Squeeze Test (Doha)"],
 		fieldsDefinition: [
 			{ id: "pain_0_degrees", label: "Dor a 0° (0-10)", type: "nprs" },
 			{ id: "pain_45_degrees", label: "Dor a 45° (0-10)", type: "nprs" },
@@ -974,6 +984,7 @@ export const builtinClinicalTestsCatalog: ClinicalTestCatalogRecord[] = [
 		sort_order: 42,
 		illustration: "shoulder-impingement",
 		imageUrl: "/clinical-tests/illustrations/kibler-dyskinesis.avif",
+		aliases_pt: ["Teste de Kibler (Discinesia Escapular)"],
 		fieldsDefinition: [
 			{
 				id: "dyskinesis_type",
@@ -1232,6 +1243,7 @@ export const builtinClinicalTestsCatalog: ClinicalTestCatalogRecord[] = [
 		sort_order: 10,
 		illustration: "knee-stability",
 		imageUrl: "/clinical-tests/illustrations/anterior-drawer-knee.avif",
+		aliases_pt: ["Teste de Gaveta Anterior (Joelho)"],
 		fieldsDefinition: [
 			{ id: "translation_mm", label: "Translação (mm)", type: "number" },
 			{
@@ -1546,6 +1558,7 @@ export const builtinClinicalTestsCatalog: ClinicalTestCatalogRecord[] = [
 		source_label: "Curadoria FisioFlow",
 		sort_order: 125,
 		imageUrl: "/clinical-tests/illustrations/hamstring-bamic.avif",
+		aliases_pt: ["Teste de Isquiotibiais (BAMIC)"],
 		illustration: "knee-stability",
 		fieldsDefinition: [
 			{
@@ -1604,6 +1617,7 @@ export const builtinClinicalTestsCatalog: ClinicalTestCatalogRecord[] = [
 		source_label: "Curadoria FisioFlow",
 		sort_order: 46,
 		illustration: "shoulder-impingement",
+		imageUrl: "/clinical-tests/illustrations/yergason-test.avif",
 		fieldsDefinition: [
 			{ id: "nprs_pain", label: "Dor (0-10)", type: "nprs" },
 			{ id: "tendon_pop", label: "Tensão/Salto do Tendão", type: "boolean" },
@@ -1628,6 +1642,7 @@ export const builtinClinicalTestsCatalog: ClinicalTestCatalogRecord[] = [
 		source_label: "Curadoria FisioFlow",
 		sort_order: 42,
 		imageUrl: "/clinical-tests/illustrations/empty-can-jobe.avif",
+		aliases_pt: ["Teste de Jobe"],
 		illustration: "shoulder-impingement",
 		fieldsDefinition: [
 			{
@@ -1737,6 +1752,7 @@ export const builtinClinicalTestsCatalog: ClinicalTestCatalogRecord[] = [
 		source_label: "Curadoria FisioFlow",
 		sort_order: 40,
 		imageUrl: "/clinical-tests/illustrations/anterior-drawer-ankle.avif",
+		aliases_pt: ["Teste de Gaveta Anterior (Tornozelo)"],
 		illustration: "ankle-stability",
 		fieldsDefinition: [
 			{
@@ -2155,7 +2171,14 @@ export function mergeClinicalTestsCatalog(
 	const merged = new Map<string, ClinicalTestCatalogRecord>();
 
 	for (const builtin of builtinClinicalTestsCatalog) {
-		merged.set(normalizeClinicalTestName(builtin.name), builtin);
+		const namesToIndex = [
+			builtin.name,
+			...(builtin.aliases_pt ?? []),
+			...(builtin.aliases_en ?? []),
+		];
+		for (const name of namesToIndex) {
+			if (name) merged.set(normalizeClinicalTestName(name), builtin);
+		}
 	}
 
 	for (const remoteTest of remoteTests) {
@@ -2188,7 +2211,7 @@ export function mergeClinicalTestsCatalog(
 				(remoteTest as ClinicalTestCatalogRecord).sensitivity_specificity ??
 				builtin?.sensitivity_specificity ??
 				null,
-			image_url: remoteTest.image_url ?? builtin?.image_url ?? null,
+			image_url: builtin?.image_url ?? remoteTest.image_url ?? null,
 			initial_position_image_url:
 				remoteTest.initial_position_image_url ??
 				builtin?.initial_position_image_url ??
