@@ -58,6 +58,9 @@ export interface KnowledgeArtifact {
 	viewCount: number;
 	citationCount?: number; // Internal or external citations
 
+	// Bidirectional Linking
+	linkedExerciseIds?: string[]; // IDs from exerciseDictionary
+
 	createdAt: any; // Database Timestamp
 	updatedAt: any; // Database Timestamp
 	createdBy: string;
