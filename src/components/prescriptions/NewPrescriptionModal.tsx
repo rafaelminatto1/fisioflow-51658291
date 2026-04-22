@@ -28,6 +28,7 @@ import {
 	SelectTrigger,
 	SelectValue,
 } from "@/components/ui/select";
+import { useIsMobile } from "@/hooks/use-mobile";
 import { useExercises } from "@/hooks/useExercises";
 import {
 	usePrescriptions,
@@ -35,7 +36,9 @@ import {
 } from "@/hooks/usePrescriptions";
 import { useDebounce } from "@/hooks/performance/useDebounce";
 import { fisioLogger as logger } from "@/lib/errors/logger";
-import { useIsMobile } from "@/hooks/use-mobile";
+import { usePatientById } from "@/hooks/patients/usePatients";
+import { findContraindications } from "@/lib/clinical-utils";
+import { ContraindicationAlert } from "@/components/prescriptions/ContraindicationAlert";
 
 // Helper function to generate UUID - using crypto.randomUUID() to avoid "ne is not a function" error in production
 const uuidv4 = (): string => crypto.randomUUID();
@@ -85,10 +88,14 @@ export function NewPrescriptionModal({
 	const [title, setTitle] = useState("Prescrição de Reabilitação");
 	const [notes, setNotes] = useState("");
 	const [validityDays, setValidityDays] = useState("30");
-	const [selectedExercises, setSelectedExercises] = useState<
-		PrescriptionExercise[]
-	>([]);
+	const [selectedExercises, setSelectedExercises] = useState<PrescriptionExercise[]>([]);
 	const [selectedExerciseId, setSelectedExerciseId] = useState("");
+
+	// Clinical Intelligence State
+	const { data: patient } = usePatientById(patientId);
+	const [contraindicationAlertOpen, setContraindicationAlertOpen] = useState(false);
+	const [conflicts, setConflicts] = useState<string[]>([]);
+	const [pendingExercise, setPendingExercise] = useState<any>(null);
 
 	// Auto-load from protocol or exercise if provided
 	useEffect(() => {
@@ -139,25 +146,47 @@ export function NewPrescriptionModal({
 	const handleAddExercise = () => {
 		if (!selectedExerciseId) return;
 
-		const exercise = availableExercises.find(
-			(e) => e.id === selectedExerciseId,
-		);
+		const exercise = availableExercises.find((e) => e.id === selectedExerciseId);
 		if (!exercise) return;
 
+		// Check for contraindications
+		if (patient) {
+			const foundConflicts = findContraindications(exercise, patient);
+			if (foundConflicts.length > 0) {
+				setConflicts(foundConflicts);
+				setPendingExercise(exercise);
+				setContraindicationAlertOpen(true);
+				return;
+			}
+		}
+
+		executeAddExercise(exercise);
+	};
+
+	const executeAddExercise = (exercise: any) => {
 		const newExercise: PrescriptionExercise = {
 			id: uuidv4(),
+			exerciseId: exercise.id,
 			name: exercise.name,
-			description: exercise.instruction_pt || exercise.description,
 			sets: exercise.sets || 3,
-			repetitions: exercise.repetitions || 10,
+			repetitions: exercise.repetitions || 12,
 			intensity_rpe: exercise.suggested_rpe || "",
 			frequency: "Diariamente",
+			description: exercise.instruction_pt || exercise.description,
 			video_url: exercise.video_url,
 			image_url: exercise.image_url,
 		};
 
 		setSelectedExercises([...selectedExercises, newExercise]);
 		setSelectedExerciseId("");
+	};
+
+	const handleConfirmContraindication = () => {
+		if (pendingExercise) {
+			executeAddExercise(pendingExercise);
+			setPendingExercise(null);
+			setContraindicationAlertOpen(false);
+		}
 	};
 
 	const handleRemoveExercise = (id: string) => {
@@ -205,6 +234,7 @@ export function NewPrescriptionModal({
 	};
 
 	return (
+		<>
 		<CustomModal
 			open={open}
 			onOpenChange={onOpenChange}
@@ -536,5 +566,16 @@ export function NewPrescriptionModal({
 				</Button>
 			</CustomModalFooter>
 		</CustomModal>
+
+		{pendingExercise && (
+			<ContraindicationAlert
+				open={contraindicationAlertOpen}
+				onOpenChange={setContraindicationAlertOpen}
+				exercise={pendingExercise}
+				conflicts={conflicts}
+				onConfirm={handleConfirmContraindication}
+			/>
+		)}
+		</>
 	);
 }

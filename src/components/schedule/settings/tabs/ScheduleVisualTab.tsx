@@ -1,4 +1,3 @@
-import type React from "react";
 import { AgendaVisualConfiguration } from "@/components/schedule/settings/AgendaVisualConfiguration";
 import { StatusColorManager } from "@/components/schedule/settings/StatusColorManager";
 import { useCardSize } from "@/hooks/useCardSize";

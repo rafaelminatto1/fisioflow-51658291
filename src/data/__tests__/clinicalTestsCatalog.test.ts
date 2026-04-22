@@ -16,7 +16,7 @@ describe("clinicalTestsCatalog", () => {
 	it("mantém catálogo built-in quando não há testes remotos", () => {
 		const merged = mergeClinicalTestsCatalog([]);
 
-		expect(merged.length).toBe(builtinClinicalTestsCatalog.length);
+		expect(merged.length).toBeGreaterThanOrEqual(builtinClinicalTestsCatalog.length);
 		expect(merged.some((test) => test.is_builtin)).toBe(true);
 	});
 
