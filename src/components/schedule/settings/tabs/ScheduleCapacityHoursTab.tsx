@@ -1,32 +1,28 @@
-import { ScheduleCapacityManager } from "@/components/schedule/ScheduleCapacityManager";
 import { BusinessHoursManager } from "@/components/schedule/settings/BusinessHoursManager";
-import { Users, Clock } from "lucide-react";
+import { BookingWindowSettings } from "@/components/schedule/settings/BookingWindowSettings";
+import { SlotAlignmentSettings } from "@/components/schedule/settings/SlotAlignmentSettings";
+import { Clock } from "lucide-react";
 import { SettingsSectionCard } from "@/components/schedule/settings/shared/SettingsSectionCard";
 
 export function ScheduleCapacityHoursTab() {
 	return (
-		<div className="space-y-5">
-			{/* Capacidade */}
-			<SettingsSectionCard
-				icon={<Users className="h-4 w-4" />}
-				iconBg="bg-teal-100 dark:bg-teal-900/40 text-teal-600 dark:text-teal-400"
-				title="Capacidade de Atendimento"
-				description="Número máximo de vagas por dia e faixa de horário"
-				variant="highlight"
-			>
-				<ScheduleCapacityManager />
-			</SettingsSectionCard>
+		<div className="grid grid-cols-1 lg:grid-cols-12 gap-5">
+			<div className="lg:col-span-7">
+				<SettingsSectionCard
+					icon={<Clock className="h-4 w-4" />}
+					iconBg="bg-teal-100 dark:bg-teal-900/40 text-teal-600 dark:text-teal-400"
+					title="Horário de Funcionamento"
+					description="Defina os horários de abertura e fechamento de cada dia"
+					variant="highlight"
+				>
+					<BusinessHoursManager />
+				</SettingsSectionCard>
+			</div>
 
-			{/* Horários de Funcionamento */}
-			<SettingsSectionCard
-				icon={<Clock className="h-4 w-4" />}
-				iconBg="bg-blue-100 dark:bg-blue-900/40 text-blue-600 dark:text-blue-400"
-				title="Horários de Funcionamento"
-				description="Dias da semana, horários de abertura/fechamento e intervalos"
-				variant="highlight"
-			>
-				<BusinessHoursManager />
-			</SettingsSectionCard>
+			<div className="lg:col-span-5 flex flex-col gap-5">
+				<BookingWindowSettings />
+				<SlotAlignmentSettings />
+			</div>
 		</div>
 	);
 }
