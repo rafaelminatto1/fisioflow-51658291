@@ -23,6 +23,7 @@ import { cn } from "@/lib/utils";
 import { accentIncludes } from "@/lib/utils/bilingualSearch";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
+import { motion } from "framer-motion";
 
 interface Aniversariante {
 	id: string;
@@ -157,20 +158,25 @@ export function AniversariantesContent() {
 				</div>
 				<div className="flex flex-wrap gap-2">
 					{meses.map((mes, idx) => (
-						<Button
+						<motion.div
 							key={mes}
-							variant={mesSelecionado === idx + 1 ? "default" : "outline"}
-							size="lg"
-							onClick={() => setMesSelecionado(idx + 1)}
-							className={cn(
-								"rounded-2xl h-14 px-8 text-xs font-black uppercase tracking-widest transition-all duration-300",
-								mesSelecionado === idx + 1
-									? "bg-primary text-white shadow-xl shadow-primary/30 border-primary scale-105"
-									: "bg-white/50 dark:bg-slate-900/50 hover:bg-white dark:hover:bg-slate-800 border-slate-200 dark:border-slate-800 text-slate-500",
-							)}
+							whileHover={{ scale: 1.05 }}
+							whileTap={{ scale: 0.95 }}
 						>
-							{mes}
-						</Button>
+							<Button
+								variant={mesSelecionado === idx + 1 ? "default" : "outline"}
+								size="lg"
+								onClick={() => setMesSelecionado(idx + 1)}
+								className={cn(
+									"rounded-2xl h-14 px-8 text-xs font-black uppercase tracking-widest transition-all duration-300",
+									mesSelecionado === idx + 1
+										? "bg-primary text-white shadow-xl shadow-primary/30 border-primary scale-105"
+										: "bg-white/50 dark:bg-slate-900/50 hover:bg-white dark:hover:bg-slate-800 border-slate-200 dark:border-slate-800 text-slate-500",
+								)}
+							>
+								{mes}
+							</Button>
+						</motion.div>
 					))}
 				</div>
 			</div>
@@ -216,71 +222,74 @@ export function AniversariantesContent() {
 								</p>
 							</div>
 						) : (
-							<div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 p-4">
-								{filteredAniversariantes.map((a) => (
-									<div
-										key={a.id}
-										className={cn(
-											"group relative overflow-hidden p-6 rounded-3xl border transition-all duration-500",
-											a.dia === hoje && mesSelecionado === mesAtual
-												? "bg-primary/5 border-primary/30 shadow-lg shadow-primary/10"
-												: "bg-white/50 dark:bg-slate-800/50 border-slate-100 dark:border-slate-800 hover:border-primary/20 hover:bg-white dark:hover:bg-slate-800 hover:shadow-xl hover:shadow-primary/5 hover:-translate-y-1"
-										)}
-									>
-										<div className="flex items-start justify-between relative z-10">
-											<div className="flex items-center gap-4">
-												<div className={cn(
-													"w-12 h-12 rounded-2xl flex items-center justify-center font-black text-lg transition-all duration-500",
-													a.dia === hoje && mesSelecionado === mesAtual
-														? "bg-primary text-white shadow-lg shadow-primary/30"
-														: "bg-slate-100 dark:bg-slate-700 text-slate-500 group-hover:bg-primary/10 group-hover:text-primary"
-												)}>
-													{a.dia}
+								<div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 p-4">
+									{filteredAniversariantes.map((a, index) => (
+										<motion.div
+											key={a.id}
+											initial={{ opacity: 0, y: 20 }}
+											animate={{ opacity: 1, y: 0 }}
+											transition={{ delay: index * 0.05, duration: 0.5, ease: "easeOut" }}
+											className={cn(
+												"group relative overflow-hidden p-6 rounded-3xl border transition-all duration-500",
+												a.dia === hoje && mesSelecionado === mesAtual
+													? "bg-primary/5 border-primary/30 shadow-lg shadow-primary/10"
+													: "bg-white/50 dark:bg-slate-800/50 border-slate-100 dark:border-slate-800 hover:border-primary/20 hover:bg-white dark:hover:bg-slate-800 hover:shadow-xl hover:shadow-primary/5 hover:-translate-y-1"
+											)}
+										>
+											<div className="flex items-start justify-between relative z-10">
+												<div className="flex items-center gap-4">
+													<div className={cn(
+														"w-12 h-12 rounded-2xl flex items-center justify-center font-black text-lg transition-all duration-500",
+														a.dia === hoje && mesSelecionado === mesAtual
+															? "bg-primary text-white shadow-lg shadow-primary/30"
+															: "bg-slate-100 dark:bg-slate-700 text-slate-500 group-hover:bg-primary/10 group-hover:text-primary"
+													)}>
+														{a.dia}
+													</div>
+													<div>
+														<p className="font-black text-slate-800 dark:text-white tracking-tight group-hover:text-primary transition-colors">
+															{a.name}
+														</p>
+														<p className="text-[10px] font-black uppercase tracking-widest text-slate-400 mt-1">
+															{format(new Date(a.birth_date), "dd 'de' MMMM", { locale: ptBR })}
+														</p>
+													</div>
 												</div>
-												<div>
-													<p className="font-black text-slate-800 dark:text-white tracking-tight group-hover:text-primary transition-colors">
-														{a.name}
-													</p>
-													<p className="text-[10px] font-black uppercase tracking-widest text-slate-400 mt-1">
-														{format(new Date(a.birth_date), "dd 'de' MMMM", { locale: ptBR })}
-													</p>
+												
+												<div className="flex flex-col items-end gap-2">
+													<Badge variant="outline" className="rounded-lg font-black text-[10px] border-slate-200 py-1">
+														{a.idade} ANOS
+													</Badge>
 												</div>
 											</div>
-											
-											<div className="flex flex-col items-end gap-2">
-												<Badge variant="outline" className="rounded-lg font-black text-[10px] border-slate-200 py-1">
-													{a.idade} ANOS
-												</Badge>
-											</div>
-										</div>
 
-										<div className="mt-6 flex items-center justify-between border-t border-slate-100 dark:border-slate-700/50 pt-4 opacity-0 group-hover:opacity-100 transition-all duration-500 translate-y-2 group-hover:translate-y-0">
-											<p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Contatar Paciente</p>
-											<div className="flex items-center gap-2">
-												{a.phone && (
-													<Button variant="ghost" size="icon" className="h-10 w-10 rounded-xl text-emerald-500 hover:bg-emerald-500 hover:text-white transition-all shadow-emerald-500/20" asChild>
-														<a href={`https://wa.me/55${a.phone.replace(/\D/g, "")}`} target="_blank" rel="noreferrer">
-															<Phone className="h-4 w-4" />
-														</a>
-													</Button>
-												)}
-												{a.email && (
-													<Button variant="ghost" size="icon" className="h-10 w-10 rounded-xl text-blue-500 hover:bg-blue-500 hover:text-white transition-all shadow-blue-500/20" asChild>
-														<a href={`mailto:${a.email}`}>
-															<Mail className="h-4 w-4" />
-														</a>
-													</Button>
-												)}
+											<div className="mt-6 flex items-center justify-between border-t border-slate-100 dark:border-slate-700/50 pt-4 opacity-0 group-hover:opacity-100 transition-all duration-500 translate-y-2 group-hover:translate-y-0">
+												<p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Contatar Paciente</p>
+												<div className="flex items-center gap-2">
+													{a.phone && (
+														<Button variant="ghost" size="icon" className="h-10 w-10 rounded-xl text-emerald-500 hover:bg-emerald-500 hover:text-white transition-all shadow-emerald-500/20" asChild>
+															<a href={`https://wa.me/55${a.phone.replace(/\D/g, "")}`} target="_blank" rel="noreferrer">
+																<Phone className="h-4 w-4" />
+															</a>
+														</Button>
+													)}
+													{a.email && (
+														<Button variant="ghost" size="icon" className="h-10 w-10 rounded-xl text-blue-500 hover:bg-blue-500 hover:text-white transition-all shadow-blue-500/20" asChild>
+															<a href={`mailto:${a.email}`}>
+																<Mail className="h-4 w-4" />
+															</a>
+														</Button>
+													)}
+												</div>
 											</div>
-										</div>
 
-										{/* Background Decoration for "Today" card */}
-										{a.dia === hoje && mesSelecionado === mesAtual && (
-											<div className="absolute top-0 right-0 -mr-8 -mt-8 w-24 h-24 bg-primary/10 rounded-full blur-2xl" />
-										)}
-									</div>
-								))}
-							</div>
+											{/* Background Decoration for "Today" card */}
+											{a.dia === hoje && mesSelecionado === mesAtual && (
+												<div className="absolute top-0 right-0 -mr-8 -mt-8 w-24 h-24 bg-primary/10 rounded-full blur-2xl" />
+											)}
+										</motion.div>
+									))}
+								</div>
 						)}
 					</div>
 				</div>

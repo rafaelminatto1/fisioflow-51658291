@@ -1,36 +1,32 @@
 import { CancellationRulesManager } from "@/components/schedule/settings/CancellationRulesManager";
 import { NotificationSettingsManager } from "@/components/schedule/settings/NotificationSettingsManager";
-import { AlertTriangle, Bell } from "lucide-react";
+import { ShieldAlert, Bell } from "lucide-react";
 import { SettingsSectionCard } from "@/components/schedule/settings/shared/SettingsSectionCard";
 
 export function SchedulePoliciesTab() {
 	return (
-		<div className="space-y-4">
-		<div>
-			<h2 className="text-base font-bold">Políticas</h2>
-			<p className="text-sm text-muted-foreground">Regras de cancelamento e notificações automáticas</p>
-		</div>
-		<div className="grid gap-4 lg:grid-cols-2 lg:items-start">
+		<div className="space-y-5">
+			{/* Cancelamento */}
 			<SettingsSectionCard
-				icon={
-					<AlertTriangle className="h-4 w-4 text-amber-600 dark:text-amber-400" />
-				}
-				iconBg="bg-amber-100 dark:bg-amber-900/30"
-				title="Cancelamento"
-				description="Antecedência mínima, limites e taxas"
+				icon={<ShieldAlert className="h-4 w-4" />}
+				iconBg="bg-amber-100 dark:bg-amber-900/40 text-amber-600 dark:text-amber-400"
+				title="Política de Cancelamento"
+				description="Antecedência mínima, limites mensais e taxas por cancelamento tardio"
+				variant="warning"
 			>
 				<CancellationRulesManager />
 			</SettingsSectionCard>
 
+			{/* Notificações */}
 			<SettingsSectionCard
-				icon={<Bell className="h-4 w-4 text-violet-600 dark:text-violet-400" />}
-				iconBg="bg-violet-100 dark:bg-violet-900/30"
-				title="Notificações"
-				description="Confirmações, lembretes e mensagens"
+				icon={<Bell className="h-4 w-4" />}
+				iconBg="bg-sky-100 dark:bg-sky-900/40 text-sky-600 dark:text-sky-400"
+				title="Notificações Automáticas"
+				description="Confirmações, lembretes e mensagens personalizadas por canal"
+				variant="highlight"
 			>
 				<NotificationSettingsManager />
 			</SettingsSectionCard>
-		</div>
 		</div>
 	);
 }

@@ -19,6 +19,8 @@ import {
 	ResponsiveContainer,
 } from "recharts";
 import { TrendingUp, Activity, Calendar, Users } from "lucide-react";
+import { motion } from "framer-motion";
+import { cn } from "@/lib/utils";
 
 interface PatientAnalyticsProps {
 	totalPatients: number;
@@ -258,10 +260,16 @@ function AnalyticsMiniCard({ label, value, icon: Icon, color, description }: {
 	};
 
 	return (
-		<div className={cn(
-			"group relative overflow-hidden p-6 rounded-[2rem] bg-white/40 dark:bg-slate-900/40 backdrop-blur-xl border transition-all duration-500 hover:-translate-y-1 hover:shadow-2xl",
-			colors[color]
-		)}>
+		<motion.div
+			initial={{ opacity: 0, scale: 0.95 }}
+			animate={{ opacity: 1, scale: 1 }}
+			whileHover={{ y: -5 }}
+			transition={{ duration: 0.4 }}
+			className={cn(
+				"group relative overflow-hidden p-6 rounded-[2rem] bg-white/40 dark:bg-slate-900/40 backdrop-blur-xl border transition-all duration-500 hover:shadow-2xl",
+				colors[color]
+			)}
+		>
 			<div className="relative z-10 flex items-start justify-between">
 				<div className="space-y-2">
 					<p className="text-[10px] font-black uppercase tracking-[0.2em] opacity-60">{label}</p>
@@ -273,7 +281,7 @@ function AnalyticsMiniCard({ label, value, icon: Icon, color, description }: {
 				</div>
 			</div>
 			<div className="absolute bottom-0 right-0 -mr-4 -mb-4 w-24 h-24 bg-gradient-to-br opacity-10 rounded-full blur-2xl transition-all duration-500 group-hover:scale-150" />
-		</div>
+		</motion.div>
 	);
 }
 
