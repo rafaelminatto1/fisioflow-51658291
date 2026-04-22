@@ -31,8 +31,10 @@ import {
 	Loader2,
 	Upload,
 	X,
+	Plus,
 	Film,
 	Image as ImageIcon,
+	BookOpen,
 } from "lucide-react";
 import { exercisesApi } from "@/api/v2";
 import { uploadToR2 } from "@/lib/storage/r2-storage";
@@ -40,10 +42,19 @@ import { toast } from "@/hooks/use-toast";
 import { Progress } from "@/components/ui/progress";
 import { MultiSelect } from "@/components/ui/multi-select";
 import { 
-	getBodyPartsOptions, 
-	getEquipmentOptions 
+	getBodyPartsOptions,
+	getEquipmentOptions,
+	getPathologyOptions,
+	getPrecautionOptions,
+	getEvidenceLevelOptions,
 } from "@/lib/constants/exerciseConstants";
 import type { Exercise } from "@/hooks/useExercises";
+import {
+	Popover,
+	PopoverContent,
+	PopoverTrigger,
+} from "@/components/ui/popover";
+import { knowledgeBase } from "@/data/knowledgeBase";
 
 const exerciseSchema = z.object({
 	name: z.string().min(3, "Nome deve ter pelo menos 3 caracteres"),
@@ -58,9 +69,11 @@ const exerciseSchema = z.object({
 	duration: z.number().int().positive().optional().nullable(),
 	indicated_pathologies: z.array(z.string()).optional(),
 	contraindicated_pathologies: z.array(z.string()).optional(),
-	body_parts: z.array(z.string()).optional(),
 	equipment: z.array(z.string()).optional(),
 	alternativeEquipment: z.array(z.string()).optional(),
+	precaution_level: z.enum(["safe", "supervised", "restricted"]).optional(),
+	precaution_notes: z.string().optional(),
+	scientific_references: z.array(z.any()).optional(),
 });
 
 type ExerciseFormData = z.infer<typeof exerciseSchema>;
@@ -109,6 +122,9 @@ export function NewExerciseModal({
 			body_parts: [],
 			equipment: [],
 			alternativeEquipment: [],
+			precaution_level: "safe",
+			precaution_notes: "",
+			scientific_references: [],
 		},
 	});
 
@@ -139,7 +155,10 @@ export function NewExerciseModal({
 				contraindicated_pathologies: exercise.contraindicated_pathologies || [],
 				body_parts: exercise.body_parts || [],
 				equipment: exercise.equipment || [],
-				alternativeEquipment: [],
+				alternativeEquipment: exercise.alternativeEquipment || [],
+				precaution_level: (exercise as any).precaution_level || "safe",
+				precaution_notes: (exercise as any).precaution_notes || "",
+				scientific_references: (exercise as any).scientific_references || [],
 			});
 		} else {
 			form.reset({
@@ -158,6 +177,9 @@ export function NewExerciseModal({
 				body_parts: [],
 				equipment: [],
 				alternativeEquipment: [],
+				precaution_level: "safe",
+				precaution_notes: "",
+				scientific_references: [],
 			});
 		}
 	}, [exercise, form]);
@@ -389,13 +411,14 @@ export function NewExerciseModal({
 								)}
 							/>
 
+							<p className="text-[11px] text-muted-foreground italic mb-1">📊 Valores médios recomendados — o profissional ajusta na prescrição individual</p>
 							<div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
 								<FormField
 									control={form.control}
 									name="sets"
 									render={({ field }) => (
 										<FormItem>
-											<FormLabel>Séries</FormLabel>
+											<FormLabel>Séries (Recomendado)</FormLabel>
 											<FormControl>
 												<Input
 													type="number"
@@ -420,7 +443,7 @@ export function NewExerciseModal({
 									name="repetitions"
 									render={({ field }) => (
 										<FormItem>
-											<FormLabel>Repetições</FormLabel>
+											<FormLabel>Repetições (Recomendado)</FormLabel>
 											<FormControl>
 												<Input
 													type="number"
@@ -445,7 +468,7 @@ export function NewExerciseModal({
 									name="duration"
 									render={({ field }) => (
 										<FormItem>
-											<FormLabel>Duração (seg)</FormLabel>
+											<FormLabel>Duração Recomendada (seg)</FormLabel>
 											<FormControl>
 												<Input
 													type="number"
@@ -645,15 +668,15 @@ export function NewExerciseModal({
 									render={({ field }) => (
 										<FormItem>
 											<FormLabel>
-												Patologias Indicadas
+												✅ Indicações Clínicas
 											</FormLabel>
 											<FormControl>
 												<MultiSelect
-													options={[]}
+													options={getPathologyOptions()}
 													selected={Array.isArray(field.value) ? field.value : []}
 													onChange={field.onChange}
 													allowCustom={true}
-													placeholder="Digite e pressione Enter..."
+													placeholder="Selecionar patologias indicadas..."
 												/>
 											</FormControl>
 											<FormMessage />
@@ -666,15 +689,15 @@ export function NewExerciseModal({
 									render={({ field }) => (
 										<FormItem>
 											<FormLabel>
-												Contraindicações
+												⚠️ Contraindicações
 											</FormLabel>
 											<FormControl>
 												<MultiSelect
-													options={[]}
+													options={getPathologyOptions()}
 													selected={Array.isArray(field.value) ? field.value : []}
 													onChange={field.onChange}
 													allowCustom={true}
-													placeholder="Digite e pressione Enter..."
+													placeholder="Selecionar contraindicações..."
 												/>
 											</FormControl>
 											<FormMessage />
@@ -745,6 +768,179 @@ export function NewExerciseModal({
 										</FormItem>
 									)}
 								/>
+							</div>
+							
+							<div className="space-y-4 pt-4 border-t mt-4">
+								<h3 className="text-sm font-semibold flex items-center gap-2">
+									<Sparkles className="h-4 w-4 text-primary" />
+									Inteligência Clínica & Segurança
+								</h3>
+								
+								<div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+									<FormField
+										control={form.control}
+										name="precaution_level"
+										render={({ field }) => (
+											<FormItem>
+												<FormLabel>Nível de Precaução</FormLabel>
+												<Select onValueChange={field.onChange} defaultValue={field.value}>
+													<FormControl>
+														<SelectTrigger>
+															<SelectValue placeholder="Selecione o nível" />
+														</SelectTrigger>
+													</FormControl>
+													<SelectContent>
+														{getPrecautionOptions().map(opt => (
+															<SelectItem key={opt.value} value={opt.value}>{opt.label}</SelectItem>
+														))}
+													</SelectContent>
+												</Select>
+												<FormMessage />
+											</FormItem>
+										)}
+									/>
+									<FormField
+										control={form.control}
+										name="precaution_notes"
+										render={({ field }) => (
+											<FormItem>
+												<FormLabel>Notas de Segurança</FormLabel>
+												<FormControl>
+													<Input {...field} placeholder="Ex: Evitar valgo dinâmico" />
+												</FormControl>
+												<FormMessage />
+											</FormItem>
+										)}
+									/>
+								</div>
+
+								<div className="space-y-3">
+									<div className="flex items-center justify-between">
+										<FormLabel className="text-sm font-semibold">Referências Científicas (Wiki)</FormLabel>
+										<Button 
+											type="button" 
+											variant="outline" 
+											size="sm" 
+											className="h-7 text-[10px] gap-1"
+											onClick={() => {
+												const refs = form.getValues("scientific_references") || [];
+												form.setValue("scientific_references", [
+													...refs, 
+													{ title: "", year: new Date().getFullYear(), evidence_level: "ExpertOpinion" }
+												]);
+											}}
+										>
+											<Plus className="h-3 w-3" /> Adicionar Ref.
+										</Button>
+									</div>
+									
+									<div className="space-y-2">
+										{(form.watch("scientific_references") || []).map((ref: any, index: number) => (
+											<div key={index} className="flex gap-2 items-start border p-2 rounded-lg bg-muted/30">
+												<div className="flex-1 grid grid-cols-1 sm:grid-cols-2 gap-2">
+													<Input 
+														placeholder="Título do artigo" 
+														className="h-8 text-xs" 
+														value={ref.title}
+														onChange={(e) => {
+															const refs = [...form.getValues("scientific_references")];
+															refs[index].title = e.target.value;
+															form.setValue("scientific_references", refs);
+														}}
+													/>
+													<div className="flex gap-2 relative">
+														<Input 
+															placeholder="ID do Artigo Wiki (Opcional)" 
+															className="h-8 text-xs font-mono pr-8" 
+															value={ref.wiki_artifact_id || ""}
+															onChange={(e) => {
+																const refs = [...form.getValues("scientific_references")];
+																refs[index].wiki_artifact_id = e.target.value;
+																form.setValue("scientific_references", refs);
+															}}
+														/>
+														{ref.wiki_artifact_id && knowledgeBase.find(a => a.id === ref.wiki_artifact_id) && (
+															<Popover>
+																<PopoverTrigger asChild>
+																	<Button variant="ghost" size="icon" className="h-6 w-6 absolute right-1 top-1 text-sky-600 hover:bg-sky-50">
+																		<BookOpen className="h-3.5 w-3.5" />
+																	</Button>
+																</PopoverTrigger>
+																<PopoverContent className="w-80 p-3 shadow-xl border-sky-100" side="top">
+																	{(() => {
+																		const article = knowledgeBase.find(a => a.id === ref.wiki_artifact_id);
+																		if (!article) return null;
+																		return (
+																			<div className="space-y-2">
+																				<h4 className="font-bold text-sm text-slate-800 leading-tight">{article.title}</h4>
+																				<div className="flex items-center gap-2">
+																					<span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">{article.group}</span>
+																					<span className="text-[10px] bg-slate-100 px-1.5 rounded text-slate-500">{article.year}</span>
+																				</div>
+																				{article.highlights && article.highlights.length > 0 && (
+																					<div className="mt-2 space-y-1">
+																						<p className="text-[10px] font-bold text-slate-400 uppercase">Key Findings:</p>
+																						<ul className="text-xs text-slate-600 space-y-1">
+																							{article.highlights.map((h, i) => (
+																								<li key={i} className="flex gap-1.5"><span className="text-sky-500 mt-0.5">•</span> <span>{h}</span></li>
+																							))}
+																						</ul>
+																					</div>
+																				)}
+																			</div>
+																		);
+																	})()}
+																</PopoverContent>
+															</Popover>
+														)}
+													</div>
+													<div className="flex gap-2">
+														<Input 
+															type="number" 
+															className="h-8 text-xs w-20" 
+															value={ref.year}
+															onChange={(e) => {
+																const refs = [...form.getValues("scientific_references")];
+																refs[index].year = parseInt(e.target.value);
+																form.setValue("scientific_references", refs);
+															}}
+														/>
+														<Select 
+															value={ref.evidence_level}
+															onValueChange={(val) => {
+																const refs = [...form.getValues("scientific_references")];
+																refs[index].evidence_level = val;
+																form.setValue("scientific_references", refs);
+															}}
+														>
+															<SelectTrigger className="h-8 text-[10px]">
+																<SelectValue />
+															</SelectTrigger>
+															<SelectContent>
+																{getEvidenceLevelOptions().map(opt => (
+																	<SelectItem key={opt.value} value={opt.value}>{opt.label}</SelectItem>
+																))}
+															</SelectContent>
+														</Select>
+													</div>
+												</div>
+												<Button 
+													type="button" 
+													variant="ghost" 
+													size="icon" 
+													className="h-8 w-8 text-destructive"
+													onClick={() => {
+														const refs = [...form.getValues("scientific_references")];
+														refs.splice(index, 1);
+														form.setValue("scientific_references", refs);
+													}}
+												>
+													<X className="h-4 w-4" />
+												</Button>
+											</div>
+										))}
+									</div>
+								</div>
 							</div>
 						</form>
 					</Form>
