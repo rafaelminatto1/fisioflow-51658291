@@ -1096,4 +1096,234 @@ app.get('/recurring-series/:id/occurrences', requireAuth, async (c) => {
   }
 });
 
+// ============================================================
+// Appointment Types
+// ============================================================
+
+const mapAppointmentTypeRow = (row: Record<string, any>) => ({
+  ...row,
+  duration_minutes: Number(row.duration_minutes ?? 30),
+  buffer_before_minutes: Number(row.buffer_before_minutes ?? 0),
+  buffer_after_minutes: Number(row.buffer_after_minutes ?? 0),
+  max_per_day: row.max_per_day != null ? Number(row.max_per_day) : null,
+  is_active: row.is_active ?? true,
+  is_default: row.is_default ?? false,
+  sort_order: Number(row.sort_order ?? 0),
+});
+
+const normalizeAppointmentTypePayload = (body: Record<string, any>) => {
+  const name = String(body.name ?? '').trim();
+  if (!name) throw new Error('name é obrigatório');
+
+  const duration = Number(body.duration_minutes ?? 30);
+  if (Number.isNaN(duration) || duration < 5) throw new Error('duration_minutes inválido');
+
+  return {
+    name,
+    durationMinutes: duration,
+    bufferBefore: Number(body.buffer_before_minutes ?? 0),
+    bufferAfter: Number(body.buffer_after_minutes ?? 0),
+    color: String(body.color ?? '#195de6'),
+    maxPerDay: body.max_per_day != null ? Number(body.max_per_day) : null,
+    isActive: body.is_active !== false,
+    isDefault: body.is_default === true,
+    sortOrder: Number(body.sort_order ?? 0),
+  };
+};
+
+app.get('/appointment-types', requireAuth, async (c) => {
+  const user = c.get('user');
+  const pool = await createPool(c.env);
+  try {
+    const result = await pool.query(
+      'SELECT * FROM appointment_types WHERE organization_id = $1 ORDER BY sort_order ASC, name ASC',
+      [user.organizationId],
+    );
+    return c.json({ data: result.rows.map(mapAppointmentTypeRow) });
+  } catch {
+    return c.json(emptyData());
+  }
+});
+
+app.post('/appointment-types', requireAuth, async (c) => {
+  const user = c.get('user');
+  const pool = await createPool(c.env);
+  try {
+    const body = await c.req.json();
+    const n = normalizeAppointmentTypePayload(body);
+    const result = await pool.query(
+      `INSERT INTO appointment_types (organization_id, name, duration_minutes, buffer_before_minutes, buffer_after_minutes, color, max_per_day, is_active, is_default, sort_order)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
+       RETURNING *`,
+      [user.organizationId, n.name, n.durationMinutes, n.bufferBefore, n.bufferAfter, n.color, n.maxPerDay, n.isActive, n.isDefault, n.sortOrder],
+    );
+    return c.json({ data: mapAppointmentTypeRow(result.rows[0]) });
+  } catch (error: any) {
+    return c.json({ error: error.message }, 500);
+  }
+});
+
+app.put('/appointment-types/:id', requireAuth, async (c) => {
+  const user = c.get('user');
+  const pool = await createPool(c.env);
+  const { id } = c.req.param();
+  try {
+    const body = await c.req.json();
+    const current = await pool.query(
+      'SELECT * FROM appointment_types WHERE id = $1 AND organization_id = $2 LIMIT 1',
+      [id, user.organizationId],
+    );
+    if (!current.rows[0]) {
+      return c.json({ error: 'Tipo de atendimento não encontrado' }, 404);
+    }
+
+    const merged = {
+      name: body.name ?? current.rows[0].name,
+      duration_minutes: body.duration_minutes ?? current.rows[0].duration_minutes,
+      buffer_before_minutes: body.buffer_before_minutes ?? current.rows[0].buffer_before_minutes,
+      buffer_after_minutes: body.buffer_after_minutes ?? current.rows[0].buffer_after_minutes,
+      color: body.color ?? current.rows[0].color,
+      max_per_day: body.max_per_day !== undefined ? body.max_per_day : current.rows[0].max_per_day,
+      is_active: body.is_active !== undefined ? body.is_active : current.rows[0].is_active,
+      is_default: body.is_default !== undefined ? body.is_default : current.rows[0].is_default,
+      sort_order: body.sort_order ?? current.rows[0].sort_order,
+    };
+
+    const result = await pool.query(
+      `UPDATE appointment_types
+       SET name = $1, duration_minutes = $2, buffer_before_minutes = $3, buffer_after_minutes = $4,
+           color = $5, max_per_day = $6, is_active = $7, is_default = $8, sort_order = $9, updated_at = NOW()
+       WHERE id = $10 AND organization_id = $11
+       RETURNING *`,
+      [merged.name, merged.duration_minutes, merged.buffer_before_minutes, merged.buffer_after_minutes,
+       merged.color, merged.max_per_day, merged.is_active, merged.is_default, merged.sort_order,
+       id, user.organizationId],
+    );
+    return c.json({ data: mapAppointmentTypeRow(result.rows[0]) });
+  } catch (error: any) {
+    return c.json({ error: error.message }, 500);
+  }
+});
+
+app.delete('/appointment-types/:id', requireAuth, async (c) => {
+  const user = c.get('user');
+  const pool = await createPool(c.env);
+  const { id } = c.req.param();
+  try {
+    await pool.query(
+      'DELETE FROM appointment_types WHERE id = $1 AND organization_id = $2',
+      [id, user.organizationId],
+    );
+    return c.json({ success: true });
+  } catch (error: any) {
+    return c.json({ error: error.message }, 500);
+  }
+});
+
+// ============================================================
+// Booking Window Settings (single row per org)
+// ============================================================
+
+const mapBookingWindowRow = (row: Record<string, any>) => ({
+  ...row,
+  min_advance_days: Number(row.min_advance_days ?? 0),
+  max_advance_days: Number(row.max_advance_days ?? 60),
+  same_day_booking: row.same_day_booking ?? true,
+  online_booking: row.online_booking ?? true,
+});
+
+app.get('/settings/booking-window', requireAuth, async (c) => {
+  const user = c.get('user');
+  const pool = await createPool(c.env);
+  try {
+    const result = await pool.query(
+      'SELECT * FROM schedule_booking_window WHERE organization_id = $1 LIMIT 1',
+      [user.organizationId],
+    );
+    return c.json({ data: result.rows[0] ? mapBookingWindowRow(result.rows[0]) : null });
+  } catch {
+    return c.json(emptyObject());
+  }
+});
+
+const handleUpsertBookingWindow = async (c: any) => {
+  const user = c.get('user');
+  const pool = await createPool(c.env);
+  try {
+    const body = await c.req.json();
+    const minAdvance = Number(body.min_advance_days ?? 0);
+    const maxAdvance = Number(body.max_advance_days ?? 60);
+    const sameDay = body.same_day_booking !== false;
+    const online = body.online_booking !== false;
+
+    const result = await pool.query(
+      `INSERT INTO schedule_booking_window (organization_id, min_advance_days, max_advance_days, same_day_booking, online_booking)
+       VALUES ($1, $2, $3, $4, $5)
+       ON CONFLICT (organization_id) DO UPDATE
+       SET min_advance_days = $2, max_advance_days = $3, same_day_booking = $4, online_booking = $5, updated_at = NOW()
+       RETURNING *`,
+      [user.organizationId, minAdvance, maxAdvance, sameDay, online],
+    );
+    return c.json({ data: mapBookingWindowRow(result.rows[0]) });
+  } catch (error: any) {
+    return c.json({ error: error.message }, 500);
+  }
+};
+
+app.post('/settings/booking-window', requireAuth, handleUpsertBookingWindow);
+app.put('/settings/booking-window', requireAuth, handleUpsertBookingWindow);
+
+// ============================================================
+// Slot Config (single row per org)
+// ============================================================
+
+const mapSlotConfigRow = (row: Record<string, any>) => ({
+  ...row,
+  slot_interval_minutes: Number(row.slot_interval_minutes ?? 30),
+  alignment_type: row.alignment_type ?? 'fixed',
+});
+
+app.get('/settings/slot-config', requireAuth, async (c) => {
+  const user = c.get('user');
+  const pool = await createPool(c.env);
+  try {
+    const result = await pool.query(
+      'SELECT * FROM schedule_slot_config WHERE organization_id = $1 LIMIT 1',
+      [user.organizationId],
+    );
+    return c.json({ data: result.rows[0] ? mapSlotConfigRow(result.rows[0]) : null });
+  } catch {
+    return c.json(emptyObject());
+  }
+});
+
+const handleUpsertSlotConfig = async (c: any) => {
+  const user = c.get('user');
+  const pool = await createPool(c.env);
+  try {
+    const body = await c.req.json();
+    const interval = Number(body.slot_interval_minutes ?? 30);
+    const alignment = String(body.alignment_type ?? 'fixed');
+
+    if (![15, 30, 60].includes(interval)) {
+      return c.json({ error: 'slot_interval_minutes deve ser 15, 30 ou 60' }, 400);
+    }
+
+    const result = await pool.query(
+      `INSERT INTO schedule_slot_config (organization_id, slot_interval_minutes, alignment_type)
+       VALUES ($1, $2, $3)
+       ON CONFLICT (organization_id) DO UPDATE
+       SET slot_interval_minutes = $2, alignment_type = $3, updated_at = NOW()
+       RETURNING *`,
+      [user.organizationId, interval, alignment],
+    );
+    return c.json({ data: mapSlotConfigRow(result.rows[0]) });
+  } catch (error: any) {
+    return c.json({ error: error.message }, 500);
+  }
+};
+
+app.post('/settings/slot-config', requireAuth, handleUpsertSlotConfig);
+app.put('/settings/slot-config', requireAuth, handleUpsertSlotConfig);
+
 export { app as schedulingRoutes };
