@@ -36,9 +36,9 @@ const CLINIC_CLOSE_HOUR = 21;
 const SATURDAY_CLOSE_HOUR = 13;
 const SLOT_INTERVAL_MINUTES = 15;
 const CLINIC_SLOT_MIN_TIME = `${String(CLINIC_OPEN_HOUR).padStart(2, "0")}:00:00`;
-const CLINIC_SLOT_MAX_TIME = `${String(CLINIC_CLOSE_HOUR).padStart(2, "0")}:15:00`;
+const CLINIC_SLOT_MAX_TIME = `${String(CLINIC_CLOSE_HOUR).padStart(2, "0")}:00:00`;
 const CLINIC_SCROLL_TIME = CLINIC_SLOT_MIN_TIME;
-const SLOT_LABEL_INTERVAL = 0;
+const SLOT_LABEL_INTERVAL = "01:00:00";
 const WEEK_HEADER_FALLBACK_HEIGHT = 48;
 const WEEK_SLOT_COUNT = ((CLINIC_CLOSE_HOUR - CLINIC_OPEN_HOUR) * 60) / SLOT_INTERVAL_MINUTES;
 
@@ -102,6 +102,7 @@ export function DayFlowCalendarWrapper(props: DayFlowCalendarWrapperProps) {
 		calendar.setOption("scrollTime", CLINIC_SCROLL_TIME);
 		calendar.setOption("slotLabelInterval", SLOT_LABEL_INTERVAL);
 		calendar.setOption("flexibleSlotTimeLimits", false);
+		calendar.setOption("expandRows", true);
 
 		if (!resetScroll || typeof window === "undefined") return;
 
