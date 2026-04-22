@@ -88,6 +88,7 @@ import { searchRoutes } from "./routes/search";
 import { reportsPdfRoutes } from "./routes/reportsPdf";
 import { eventsRoutes as businessEventsRoutes } from "./routes/events";
 import aiSearchApp from "./routes/aiSearch";
+import { aiConfigRoutes } from "./routes/ai-config";
 import { verifyToken } from "./lib/auth";
 import { getRawSql } from "./lib/db";
 import { routeAgentRequest } from "agents";
@@ -260,6 +261,7 @@ const apiRoutes = [
 	["/api/reports/pdf", reportsPdfRoutes],
 	["/api/events", businessEventsRoutes],
 	["/api/ai-search", aiSearchApp],
+	["/api/ai-config", aiConfigRoutes],
 ] as const;
 
 apiRoutes.forEach(([path, router]) => {
