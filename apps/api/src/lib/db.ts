@@ -50,8 +50,9 @@ export function getOrgContext(): string | undefined {
 }
 
 function getUrl(env: Env, mode: 'read' | 'write' = 'write'): string {
-	const url = (mode === 'read' ? env.NEON_URL : env.HYPERDRIVE?.connectionString) ||
-		env.NEON_URL ||
+	// Bypass Hyperdrive for now to ensure we get fresh data after mass updates
+	const url = env.NEON_URL ||
+		(mode === 'read' ? env.NEON_URL : env.HYPERDRIVE?.connectionString) ||
 		process.env.DATABASE_URL;
 	
 	if (!url) throw new Error("Database configuration error: URL missing");

@@ -413,6 +413,82 @@ export function ExerciseViewModal({
 										</div>
 									</div>
 
+									{/* Clinical Intelligence: Pathologies */}
+									{(exercise.indicated_pathologies?.length || exercise.contraindicated_pathologies?.length) && (
+										<div className="space-y-4 exercise-print-section">
+											<div className="flex items-center gap-2 text-primary font-medium exercise-print-section-title no-print">
+												<div className="p-1.5 rounded-md bg-primary/10">
+													<Heart className="h-4 w-4" />
+												</div>
+												Inteligência Clínica
+											</div>
+											
+											<div className="space-y-4">
+												{exercise.indicated_pathologies && exercise.indicated_pathologies.length > 0 && (
+													<div className="space-y-2">
+														<span className="text-[10px] font-semibold uppercase text-emerald-600 tracking-wider flex items-center gap-1.5 px-1">
+															<div className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
+															Indicações Principais
+														</span>
+														<div className="flex flex-wrap gap-1.5">
+															{exercise.indicated_pathologies.map((path) => (
+																<Badge key={path} variant="secondary" className="bg-emerald-500/5 text-emerald-700 border-emerald-500/10 text-[11px] py-0.5">
+																	{path}
+																</Badge>
+															))}
+														</div>
+													</div>
+												)}
+
+												{exercise.contraindicated_pathologies && exercise.contraindicated_pathologies.length > 0 && (
+													<div className="space-y-2">
+														<span className="text-[10px] font-semibold uppercase text-rose-600 tracking-wider flex items-center gap-1.5 px-1">
+															<div className="w-1.5 h-1.5 rounded-full bg-rose-500" />
+															Contraindicações / Cuidados
+														</span>
+														<div className="flex flex-wrap gap-1.5">
+															{exercise.contraindicated_pathologies.map((path) => (
+																<Badge key={path} variant="secondary" className="bg-rose-500/5 text-rose-700 border-rose-500/10 text-[11px] py-0.5">
+																	{path}
+																</Badge>
+															))}
+														</div>
+													</div>
+												)}
+											</div>
+										</div>
+									)}
+
+									{/* Scientific References */}
+									{exercise.scientific_references && (
+										<div className="space-y-3 exercise-print-section">
+											<div className="flex items-center gap-2 text-primary font-medium exercise-print-section-title no-print">
+												<div className="p-1.5 rounded-md bg-primary/10">
+													<FileText className="h-4 w-4" />
+												</div>
+												Evidência Científica
+											</div>
+											<div className="bg-muted/20 p-4 rounded-lg border border-border/30 text-xs text-muted-foreground italic leading-relaxed exercise-print-references">
+												{typeof exercise.scientific_references === 'string' ? (
+													<div className="prose prose-sm prose-invert max-w-none">
+														{exercise.scientific_references}
+													</div>
+												) : (
+													<ul className="space-y-1 list-disc pl-4 not-italic">
+														{(exercise.scientific_references as any[]).map((ref, idx) => (
+															<li key={idx}>
+																{ref.authors && `${ref.authors}. `}
+																<strong>{ref.title}</strong>
+																{ref.journal && `. ${ref.journal}`}
+																{ref.year && ` (${ref.year})`}
+															</li>
+														))}
+													</ul>
+												)}
+											</div>
+										</div>
+									)}
+
 									{/* Related (Optional - keeping simplified for now) */}
 									{exercise.category && (
 										<div className="pt-4 mt-auto no-print">
