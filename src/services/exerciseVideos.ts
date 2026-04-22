@@ -12,13 +12,13 @@ import { exerciseVideosApi } from "@/api/v2";
 // TYPES
 // ============================================================================
 
-export interface ExerciseVideo {
+export interface ExerciseMedia {
 	id: string;
 	exercise_id: string | null;
 	organization_id?: string | null;
 	title: string;
 	description: string | null;
-	video_url: string;
+	video_url: string; // URL da mídia (vídeo ou imagem)
 	thumbnail_url: string | null;
 	duration: number | null;
 	file_size: number;
@@ -26,12 +26,16 @@ export interface ExerciseVideo {
 	difficulty: VideoDifficulty;
 	body_parts: string[];
 	equipment: string[];
+	type: "video" | "image";
 	uploaded_by: string;
 	created_at: string;
 	updated_at: string;
 }
 
-export interface UploadVideoData {
+// Mantendo o nome para compatibilidade com o hook, mas é um ExerciseMedia
+export type ExerciseVideo = ExerciseMedia;
+
+export interface UploadMediaData {
 	exercise_id?: string;
 	title: string;
 	description?: string;
@@ -41,7 +45,11 @@ export interface UploadVideoData {
 	difficulty: VideoDifficulty;
 	body_parts: string[];
 	equipment: string[];
+	type: "video" | "image";
 }
+
+// Mantendo para compatibilidade
+export type UploadVideoData = UploadMediaData;
 
 export interface VideoMetadata {
 	duration?: number;
@@ -61,13 +69,17 @@ export type VideoCategory =
 
 export type VideoDifficulty = "iniciante" | "intermediário" | "avançado";
 
-export type VideoFilterOptions = {
+export type MediaFilterOptions = {
 	category?: VideoCategory | "all";
 	difficulty?: VideoDifficulty | "all";
 	bodyPart?: string;
 	equipment?: string;
 	searchTerm?: string;
+	type?: "all" | "video" | "image";
 };
+
+// Mantendo para compatibilidade
+export type VideoFilterOptions = MediaFilterOptions;
 
 // ============================================================================
 // CONSTANTS
@@ -117,6 +129,7 @@ export const EQUIPMENT_OPTIONS = [
 ] as const;
 
 export const MAX_VIDEO_SIZE = 100 * 1024 * 1024; // 100MB
+export const MAX_IMAGE_SIZE = 10 * 1024 * 1024; // 10MB
 export const ALLOWED_VIDEO_FORMATS = [
 	"video/mp4",
 	"video/webm",
@@ -130,6 +143,14 @@ export const ALLOWED_VIDEO_EXTENSIONS = [
 	".avi",
 ] as const;
 
+export const ALLOWED_IMAGE_EXTENSIONS = [
+	".jpg",
+	".jpeg",
+	".png",
+	".webp",
+	".avif",
+] as const;
+
 // ============================================================================
 // SERVICE
 // ============================================================================
@@ -137,7 +158,7 @@ export const ALLOWED_VIDEO_EXTENSIONS = [
 export const exerciseVideosService = {
 	// ── READ ──────────────────────────────────────────────────────────────────
 
-	async getVideos(filters?: VideoFilterOptions): Promise<ExerciseVideo[]> {
+	async getVideos(filters?: MediaFilterOptions): Promise<ExerciseMedia[]> {
 		try {
 			const res = await exerciseVideosApi.list({
 				category: filters?.category !== "all" ? filters?.category : undefined,
@@ -148,7 +169,15 @@ export const exerciseVideosService = {
 					filters?.equipment !== "all" ? filters?.equipment : undefined,
 				search: filters?.searchTerm,
 			});
-			return res.data ?? [];
+
+			let data = (res.data as ExerciseMedia[]) ?? [];
+
+			// Client-side filter for type since backend might not support it yet
+			if (filters?.type && filters.type !== "all") {
+				data = data.filter((m) => m.type === filters.type);
+			}
+
+			return data;
 		} catch (error) {
 			logger.error(
 				"[exerciseVideosService] getVideos error",
@@ -159,11 +188,11 @@ export const exerciseVideosService = {
 		}
 	},
 
-	async getVideoById(id: string): Promise<ExerciseVideo> {
+	async getVideoById(id: string): Promise<ExerciseMedia> {
 		try {
 			const res = await exerciseVideosApi.get(id);
-			if (!res.data) throw new Error("Vídeo não encontrado");
-			return res.data;
+			if (!res.data) throw new Error("Mídia não encontrada");
+			return res.data as ExerciseMedia;
 		} catch (error) {
 			logger.error(
 				"[exerciseVideosService] getVideoById error",
@@ -174,10 +203,10 @@ export const exerciseVideosService = {
 		}
 	},
 
-	async getVideosByExerciseId(exerciseId: string): Promise<ExerciseVideo[]> {
+	async getVideosByExerciseId(exerciseId: string): Promise<ExerciseMedia[]> {
 		try {
 			const res = await exerciseVideosApi.byExercise(exerciseId);
-			return res.data ?? [];
+			return (res.data as ExerciseMedia[]) ?? [];
 		} catch (error) {
 			logger.error(
 				"[exerciseVideosService] getVideosByExerciseId error",
@@ -190,26 +219,38 @@ export const exerciseVideosService = {
 
 	// ── PROCESSING HELPERS (browser-side, sem serviço externo) ───────────────────────
 
-	validateVideoFile(file: File): { valid: boolean; error?: string } {
-		if (file.size > MAX_VIDEO_SIZE) {
-			return {
-				valid: false,
-				error: `O vídeo deve ter no máximo ${this.formatFileSize(MAX_VIDEO_SIZE)}`,
-			};
-		}
-		if (!file.type.startsWith("video/")) {
-			return { valid: false, error: "O arquivo deve ser um vídeo" };
-		}
-		const ext = file.name.toLowerCase().substring(file.name.lastIndexOf("."));
-		if (
-			!ALLOWED_VIDEO_EXTENSIONS.includes(
-				ext as (typeof ALLOWED_VIDEO_EXTENSIONS)[number],
-			)
-		) {
-			return {
-				valid: false,
-				error: `Formato não suportado. Use: ${ALLOWED_VIDEO_EXTENSIONS.join(", ")}`,
-			};
+	validateMediaFile(file: File, type: "video" | "image"): { valid: boolean; error?: string } {
+		if (type === "video") {
+			if (file.size > MAX_VIDEO_SIZE) {
+				return {
+					valid: false,
+					error: `O vídeo deve ter no máximo ${this.formatFileSize(MAX_VIDEO_SIZE)}`,
+				};
+			}
+			if (!file.type.startsWith("video/")) {
+				return { valid: false, error: "O arquivo deve ser um vídeo" };
+			}
+			const ext = file.name.toLowerCase().substring(file.name.lastIndexOf("."));
+			if (
+				!ALLOWED_VIDEO_EXTENSIONS.includes(
+					ext as (typeof ALLOWED_VIDEO_EXTENSIONS)[number],
+				)
+			) {
+				return {
+					valid: false,
+					error: `Formato não suportado. Use: ${ALLOWED_VIDEO_EXTENSIONS.join(", ")}`,
+				};
+			}
+		} else {
+			if (file.size > MAX_IMAGE_SIZE) {
+				return {
+					valid: false,
+					error: `A imagem deve ter no máximo ${this.formatFileSize(MAX_IMAGE_SIZE)}`,
+				};
+			}
+			if (!file.type.startsWith("image/")) {
+				return { valid: false, error: "O arquivo deve ser uma imagem" };
+			}
 		}
 		return { valid: true };
 	},
@@ -271,7 +312,7 @@ export const exerciseVideosService = {
 						},
 						"image/jpeg",
 						0.8,
-					);
+						);
 				} catch (e) {
 					cleanup();
 					reject(e);
@@ -293,35 +334,51 @@ export const exerciseVideosService = {
 
 	// ── UPLOAD ────────────────────────────────────────────────────────────────
 
-	async uploadVideo(data: UploadVideoData): Promise<ExerciseVideo> {
+	async uploadVideo(data: UploadMediaData): Promise<ExerciseMedia> {
 		try {
-			const validation = this.validateVideoFile(data.file);
+			const type = data.type || (data.file.type.startsWith("video/") ? "video" : "image");
+			const validation = this.validateMediaFile(data.file, type);
 			if (!validation.valid) throw new Error(validation.error);
 
-			const metadata = await this.extractVideoMetadata(data.file);
-
-			// Generate thumbnail if not provided
+			let videoUrl = "";
 			let thumbnailUrl: string | null = null;
-			const thumbnailFile =
-				data.thumbnail ??
-				(await this.generateThumbnail(data.file).then(
-					(blob) => new File([blob], "thumbnail.jpg", { type: "image/jpeg" }),
-					() => null,
-				));
+			let duration: number | null = null;
 
-			// Upload video to R2
-			const { publicUrl: videoUrl } = await uploadToR2(
-				data.file,
-				"exercise-videos/videos",
-			);
+			if (type === "video") {
+				const metadata = await this.extractVideoMetadata(data.file);
+				duration = Math.round(metadata.duration ?? 0);
 
-			// Upload thumbnail to R2
-			if (thumbnailFile) {
-				const { publicUrl: thumbUrl } = await uploadToR2(
-					thumbnailFile,
-					"exercise-videos/thumbnails",
-				).catch(() => ({ publicUrl: null }));
-				thumbnailUrl = thumbUrl;
+				// Generate thumbnail if not provided
+				const thumbnailFile =
+					data.thumbnail ??
+					(await this.generateThumbnail(data.file).then(
+						(blob) => new File([blob], "thumbnail.jpg", { type: "image/jpeg" }),
+						() => null,
+					));
+
+				// Upload video to R2
+				const { publicUrl } = await uploadToR2(
+					data.file,
+					"exercise-videos/videos",
+				);
+				videoUrl = publicUrl;
+
+				// Upload thumbnail to R2
+				if (thumbnailFile) {
+					const { publicUrl: thumbUrl } = await uploadToR2(
+						thumbnailFile,
+						"exercise-videos/thumbnails",
+					).catch(() => ({ publicUrl: null }));
+					thumbnailUrl = thumbUrl;
+				}
+			} else {
+				// Upload image to R2
+				const { publicUrl } = await uploadToR2(
+					data.file,
+					"exercise-videos/images",
+				);
+				videoUrl = publicUrl;
+				thumbnailUrl = publicUrl; // For images, the "video_url" and "thumbnail_url" are the same
 			}
 
 			// Save metadata in Neon via Workers
@@ -331,18 +388,19 @@ export const exerciseVideosService = {
 				description: data.description?.trim() ?? null,
 				video_url: videoUrl,
 				thumbnail_url: thumbnailUrl,
-				duration: Math.round(metadata.duration ?? 0),
+				duration,
 				file_size: data.file.size,
 				category: data.category,
 				difficulty: data.difficulty,
 				body_parts: data.body_parts,
 				equipment: data.equipment,
+				type,
 			});
 
-			return res.data;
+			return res.data as ExerciseMedia;
 		} catch (error) {
 			logger.error(
-				"[exerciseVideosService] uploadVideo error",
+				"[exerciseVideosService] uploadMedia error",
 				error,
 				"exerciseVideos",
 			);
@@ -356,17 +414,17 @@ export const exerciseVideosService = {
 		id: string,
 		updates: Partial<
 			Omit<
-				ExerciseVideo,
+				ExerciseMedia,
 				"id" | "created_at" | "uploaded_by" | "video_url" | "file_size"
 			>
 		>,
-	): Promise<ExerciseVideo> {
+	): Promise<ExerciseMedia> {
 		try {
 			const res = await exerciseVideosApi.update(
 				id,
 				updates as Record<string, unknown>,
 			);
-			return res.data;
+			return res.data as ExerciseMedia;
 		} catch (error) {
 			logger.error(
 				"[exerciseVideosService] updateVideo error",
@@ -379,16 +437,16 @@ export const exerciseVideosService = {
 
 	// ── DELETE ────────────────────────────────────────────────────────────────
 
-	async deleteVideo(id: string): Promise<ExerciseVideo> {
+	async deleteVideo(id: string): Promise<ExerciseMedia> {
 		try {
 			const res = await exerciseVideosApi.delete(id);
-			const video = res.data;
+			const video = res.data as ExerciseMedia;
 
 			// Delete R2 files (best-effort)
 			const filesToDelete: string[] = [];
 			const videoKey = this.extractR2KeyFromUrl(video.video_url);
 			if (videoKey) filesToDelete.push(videoKey);
-			if (video.thumbnail_url) {
+			if (video.thumbnail_url && video.thumbnail_url !== video.video_url) {
 				const thumbKey = this.extractR2KeyFromUrl(video.thumbnail_url);
 				if (thumbKey) filesToDelete.push(thumbKey);
 			}
@@ -426,9 +484,10 @@ export const exerciseVideosService = {
 	},
 
 	formatDuration(seconds: number): string {
-		if (!seconds || !isFinite(seconds)) return "--:--";
+		if (seconds === null || !isFinite(seconds)) return "--:--";
 		const mins = Math.floor(seconds / 60);
 		const secs = Math.floor(seconds % 60);
 		return `${mins}:${secs.toString().padStart(2, "0")}`;
 	},
 };
+
