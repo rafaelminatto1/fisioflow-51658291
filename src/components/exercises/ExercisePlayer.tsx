@@ -61,6 +61,11 @@ function getEmbedUrl(url: string): string | null {
 		return url;
 	}
 
+	// Direct image URL
+	if (url.match(/\.(jpeg|jpg|png|gif|webp|avif)$/i)) {
+		return url;
+	}
+
 	return null;
 }
 
@@ -77,6 +82,7 @@ export const ExercisePlayer: React.FC<ExercisePlayerProps> = ({
 
 	const embedUrl = exercise.video_url ? getEmbedUrl(exercise.video_url) : null;
 	const isDirectVideo = embedUrl?.match(/\.(mp4|webm|ogg)$/i);
+	const isImageInVideoUrl = exercise.video_url?.match(/\.(jpeg|jpg|png|gif|webp|avif)$/i);
 
 	const handleShare = async () => {
 		if (navigator.share) {
@@ -190,8 +196,12 @@ export const ExercisePlayer: React.FC<ExercisePlayerProps> = ({
 					<TabsList className="w-full">
 						{exercise.video_url && (
 							<TabsTrigger value="video" className="flex-1">
-								<Video className="h-4 w-4 mr-2" />
-								Vídeo
+								{isImageInVideoUrl ? (
+									<ImageIcon className="h-4 w-4 mr-2" />
+								) : (
+									<Video className="h-4 w-4 mr-2" />
+								)}
+								{isImageInVideoUrl ? "Imagem" : "Vídeo"}
 							</TabsTrigger>
 						)}
 						{exercise.image_url && (
@@ -208,12 +218,18 @@ export const ExercisePlayer: React.FC<ExercisePlayerProps> = ({
 
 					{exercise.video_url && (
 						<TabsContent value="video" className="mt-4">
-							<div className="aspect-video bg-muted rounded-lg overflow-hidden">
+							<div className="aspect-video bg-muted rounded-lg overflow-hidden flex items-center justify-center">
 								{embedUrl ? (
 									isDirectVideo ? (
 										<video controls className="w-full h-full" src={embedUrl}>
 											Seu navegador não suporta vídeos.
 										</video>
+									) : isImageInVideoUrl ? (
+										<img
+											src={embedUrl}
+											alt={exercise.name}
+											className="max-w-full max-h-full object-contain"
+										/>
 									) : (
 										<iframe
 											src={embedUrl}

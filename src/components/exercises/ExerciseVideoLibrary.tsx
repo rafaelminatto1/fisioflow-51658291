@@ -22,6 +22,8 @@ import {
 	ChevronLeft,
 	Square,
 	MoreVertical,
+	Image as ImageIcon,
+	Film,
 } from "lucide-react";
 import {
 	DropdownMenu,
@@ -91,6 +93,7 @@ export function ExerciseVideoLibrary({
 	const debouncedSearchTerm = useDebounce(searchTerm, 300);
 	const [categoryFilter, setCategoryFilter] = useState<string>("all");
 	const [difficultyFilter, setDifficultyFilter] = useState<string>("all");
+	const [typeFilter, setTypeFilter] = useState<string>("all");
 	const [bodyPartFilter, setBodyPartFilter] = useState<string>("all");
 	const [equipmentFilter, setEquipmentFilter] = useState<string>("all");
 	const [selectedVideo, setSelectedVideo] = useState<ExerciseVideo | null>(
@@ -135,6 +138,8 @@ export function ExerciseVideoLibrary({
 				return false;
 			if (difficultyFilter !== "all" && video.difficulty !== difficultyFilter)
 				return false;
+			if (typeFilter !== "all" && video.type !== typeFilter)
+				return false;
 			if (
 				bodyPartFilter !== "all" &&
 				!video.body_parts?.includes(bodyPartFilter)
@@ -153,6 +158,7 @@ export function ExerciseVideoLibrary({
 		debouncedSearchTerm,
 		categoryFilter,
 		difficultyFilter,
+		typeFilter,
 		bodyPartFilter,
 		equipmentFilter,
 	]);
@@ -160,6 +166,7 @@ export function ExerciseVideoLibrary({
 	const hasActiveFilters =
 		categoryFilter !== "all" ||
 		difficultyFilter !== "all" ||
+		typeFilter !== "all" ||
 		bodyPartFilter !== "all" ||
 		equipmentFilter !== "all" ||
 		searchTerm.length > 0;
@@ -167,6 +174,7 @@ export function ExerciseVideoLibrary({
 	const clearFilters = () => {
 		setCategoryFilter("all");
 		setDifficultyFilter("all");
+		setTypeFilter("all");
 		setBodyPartFilter("all");
 		setEquipmentFilter("all");
 		setSearchTerm("");
@@ -458,9 +466,9 @@ export function ExerciseVideoLibrary({
 			{/* Header */}
 			<div className="flex items-center justify-between">
 				<div>
-					<h2 className="text-xl font-semibold">Biblioteca de Vídeos</h2>
+					<h2 className="text-xl font-semibold">Biblioteca de Mídias</h2>
 					<p className="text-sm text-muted-foreground">
-						{filteredVideos.length} vídeo
+						{filteredVideos.length} mídia
 						{filteredVideos.length !== 1 ? "s" : ""}
 						{hasActiveFilters && ` de ${videos?.length || 0}`}
 					</p>
@@ -512,7 +520,7 @@ export function ExerciseVideoLibrary({
 							</Button>
 							<Button onClick={() => setShowUpload(true)} className="gap-2">
 								<Upload className="h-4 w-4" />
-								Upload Vídeo
+								Upload Mídia
 							</Button>
 						</>
 					)}
@@ -524,7 +532,7 @@ export function ExerciseVideoLibrary({
 				<div className="relative">
 					<Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
 					<Input
-						placeholder="Buscar vídeos..."
+						placeholder="Buscar mídias..."
 						value={searchTerm}
 						onChange={(e) => setSearchTerm(e.target.value)}
 						className="pl-9"
@@ -557,6 +565,17 @@ export function ExerciseVideoLibrary({
 									{diff.charAt(0).toUpperCase() + diff.slice(1)}
 								</SelectItem>
 							))}
+						</SelectContent>
+					</Select>
+
+					<Select value={typeFilter} onValueChange={setTypeFilter}>
+						<SelectTrigger className="w-[140px]">
+							<SelectValue placeholder="Tipo" />
+						</SelectTrigger>
+						<SelectContent>
+							<SelectItem value="all">Todos Tipos</SelectItem>
+							<SelectItem value="video">Vídeos</SelectItem>
+							<SelectItem value="image">Imagens</SelectItem>
 						</SelectContent>
 					</Select>
 
@@ -602,23 +621,23 @@ export function ExerciseVideoLibrary({
 				</div>
 			</div>
 
-			{/* Video Grid/List */}
+			{/* Media Grid/List */}
 			{filteredVideos.length === 0 ? (
 				<EmptyState
-					icon={Video}
+					icon={Film}
 					title={
-						hasActiveFilters ? "Nenhum vídeo encontrado" : "Nenhum vídeo ainda"
+						hasActiveFilters ? "Nenhuma mídia encontrada" : "Nenhuma mídia ainda"
 					}
 					description={
 						hasActiveFilters
 							? "Tente ajustar seus filtros de busca"
-							: "Comece adicionando vídeos demonstrativos de exercícios"
+							: "Comece adicionando vídeos ou imagens demonstrativas de exercícios"
 					}
 				>
 					{!hasActiveFilters && (
 						<Button onClick={() => setShowUpload(true)} className="gap-2">
 							<Upload className="h-4 w-4" />
-							Upload Primeiro Vídeo
+							Upload Primeira Mídia
 						</Button>
 					)}
 				</EmptyState>
@@ -703,12 +722,22 @@ export function ExerciseVideoLibrary({
 					</DialogHeader>
 					{selectedVideo && (
 						<div className="space-y-4">
-							<ExerciseVideoPlayer
-								src={selectedVideo.video_url}
-								thumbnail={selectedVideo.thumbnail_url}
-								title={selectedVideo.title}
-								onEnded={showPlaylist ? playNext : undefined}
-							/>
+							{selectedVideo.type === "video" ? (
+								<ExerciseVideoPlayer
+									src={selectedVideo.video_url}
+									thumbnail={selectedVideo.thumbnail_url}
+									title={selectedVideo.title}
+									onEnded={showPlaylist ? playNext : undefined}
+								/>
+							) : (
+								<div className="aspect-video w-full flex items-center justify-center bg-muted rounded-lg overflow-hidden">
+									<img
+										src={selectedVideo.video_url}
+										alt={selectedVideo.title}
+										className="max-w-full max-h-full object-contain"
+									/>
+								</div>
+							)}
 							<div className="space-y-3">
 								<div className="flex items-center justify-between">
 									<div className="space-y-2 flex-1">
@@ -780,7 +809,7 @@ export function ExerciseVideoLibrary({
 												onClick={() => downloadVideo(selectedVideo)}
 											>
 												<Download className="h-4 w-4 mr-2" />
-												Baixar Vídeo
+												Baixar {selectedVideo.type === "video" ? "Vídeo" : "Imagem"}
 											</DropdownMenuItem>
 											<DropdownMenuItem
 												onClick={() => {
@@ -828,13 +857,13 @@ export function ExerciseVideoLibrary({
 				</AlertDialogContent>
 			</AlertDialog>
 
-			{/* Edit Video Modal */}
+			{/* Edit Media Modal */}
 			<Dialog open={showEdit} onOpenChange={handleCloseEdit}>
 				<DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
 					<DialogHeader>
-						<DialogTitle>Editar Vídeo</DialogTitle>
+						<DialogTitle>Editar Mídia</DialogTitle>
 						<DialogDescription>
-							Atualize as informações do vídeo de exercício
+							Atualize as informações da mídia de exercício
 						</DialogDescription>
 					</DialogHeader>
 
@@ -1055,7 +1084,11 @@ function VideoCard({
 					/>
 				) : (
 					<div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-primary/10 to-primary/5">
-						<Video className="h-12 w-12 text-primary/30" />
+						{video.type === "video" ? (
+							<Video className="h-12 w-12 text-primary/30" />
+						) : (
+							<ImageIcon className="h-12 w-12 text-primary/30" />
+						)}
 					</div>
 				)}
 
@@ -1082,7 +1115,7 @@ function VideoCard({
 				)}
 
 				{/* Duration badge */}
-				{video.duration && (
+				{video.type === "video" && video.duration && (
 					<div className="absolute bottom-2 right-2 px-2 py-1 rounded bg-black/70 text-white text-xs font-medium">
 						{exerciseVideosService.formatDuration(video.duration)}
 					</div>
@@ -1100,7 +1133,11 @@ function VideoCard({
 							className="w-14 h-14 rounded-full bg-white/90 hover:bg-white"
 							aria-label={`Reproduzir ${video.title}`}
 						>
-							<Play className="h-6 w-6 fill-black text-black ml-1" />
+							{video.type === "video" ? (
+								<Play className="h-6 w-6 fill-black text-black ml-1" />
+							) : (
+								<Eye className="h-6 w-6 text-black" />
+							)}
 						</Button>
 					</div>
 				)}
@@ -1109,7 +1146,12 @@ function VideoCard({
 				<div
 					className={cn("absolute top-2", isBulkMode ? "left-10" : "left-2")}
 				>
-					<Badge className="bg-primary/90 text-white text-xs capitalize">
+					<Badge className="bg-primary/90 text-white text-xs capitalize gap-1">
+						{video.type === "video" ? (
+							<Video className="h-3 w-3" />
+						) : (
+							<ImageIcon className="h-3 w-3" />
+						)}
 						{video.category}
 					</Badge>
 				</div>
@@ -1238,7 +1280,11 @@ function VideoListItem({
 					/>
 				) : (
 					<div className="w-full h-full flex items-center justify-center">
-						<Video className="h-8 w-8 text-primary/30" />
+						{video.type === "video" ? (
+							<Video className="h-8 w-8 text-primary/30" />
+						) : (
+							<ImageIcon className="h-8 w-8 text-primary/30" />
+						)}
 					</div>
 				)}
 				{!isBulkMode && (
@@ -1249,11 +1295,15 @@ function VideoListItem({
 							className="w-8 h-8 rounded-full bg-white/90"
 							aria-label={`Reproduzir ${video.title}`}
 						>
-							<Play className="h-4 w-4 fill-black text-black ml-0.5" />
+							{video.type === "video" ? (
+								<Play className="h-4 w-4 fill-black text-black ml-0.5" />
+							) : (
+								<Eye className="h-4 w-4 text-black" />
+							)}
 						</Button>
 					</div>
 				)}
-				{video.duration && (
+				{video.type === "video" && video.duration && (
 					<div className="absolute bottom-1 right-1 px-1.5 py-0.5 rounded bg-black/70 text-white text-[10px]">
 						{exerciseVideosService.formatDuration(video.duration)}
 					</div>
@@ -1285,8 +1335,17 @@ function VideoListItem({
 			{!isBulkMode && (
 				<div className="flex items-center gap-2">
 					<Button variant="ghost" size="sm" onClick={onPlay}>
-						<Play className="h-4 w-4 mr-1" />
-						Assistir
+						{video.type === "video" ? (
+							<>
+								<Play className="h-4 w-4 mr-1" />
+								Assistir
+							</>
+						) : (
+							<>
+								<Eye className="h-4 w-4 mr-1" />
+								Ver
+							</>
+						)}
 					</Button>
 					<Button
 						variant="ghost"

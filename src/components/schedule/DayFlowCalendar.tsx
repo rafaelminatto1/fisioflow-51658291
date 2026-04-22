@@ -603,11 +603,11 @@ export function DayFlowCalendarWrapper(props: DayFlowCalendarWrapperProps) {
 				}
 				.dayflow-week-view .ec-body .ec-time,
 				.dayflow-week-view .ec-body .ec-line {
-					height: var(--agenda-slot-height, 20px) !important;
+					height: ${slotHeight}px !important;
 				}
 				.dayflow-week-view .ec-body .ec-time {
 					font-size: 10px !important;
-					line-height: var(--agenda-slot-height, 20px) !important;
+					line-height: ${slotHeight}px !important;
 					top: 0 !important;
 					text-align: center !important;
 					width: 100% !important;

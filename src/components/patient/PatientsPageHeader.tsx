@@ -17,9 +17,13 @@ import {
 	Sparkles,
 	CheckCircle2,
 	ArrowUpDown,
+	FileText,
+	PieChart,
+	Zap,
 } from "lucide-react";
 import type { PatientClassification } from "@/hooks/usePatientStats";
 import { cn } from "@/lib/utils";
+import { PatientPageInsights } from "./PatientPageInsights";
 
 export interface PatientsPageHeaderStats {
 	totalCount: number;
@@ -78,7 +82,7 @@ export function PatientsPageHeader({
 	uniqueConditions,
 	sortBy,
 	onSortByChange,
-	activeAdvancedFiltersCount: _activeAdvancedFiltersCount,
+	activeAdvancedFiltersCount,
 	totalFilteredLabel,
 	onClearAllFilters,
 	hasActiveFilters,
@@ -87,290 +91,336 @@ export function PatientsPageHeader({
 	children,
 }: PatientsPageHeaderProps) {
 	return (
-		<header className="space-y-3" data-testid="patients-page-header">
-			{/* Compact title row */}
-			<div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-				<div className="flex items-center gap-3 min-w-0">
-					<div className="h-9 w-9 rounded-xl bg-primary/10 flex items-center justify-center flex-shrink-0">
-						<Users className="h-4 w-4 text-primary" />
+		<div className="space-y-6" data-testid="patients-page-header">
+			{/* Main Header Container - Ultra Premium Glassmorphism */}
+			<div className="relative overflow-hidden rounded-[2.5rem] bg-gradient-to-br from-white/80 to-white/40 dark:from-slate-900/80 dark:to-slate-900/40 backdrop-blur-2xl border border-white/20 dark:border-slate-800/30 shadow-2xl shadow-primary/5 p-6 md:p-8">
+				{/* Top Row: Title + Quick Actions */}
+				<div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6 mb-8">
+					<div className="flex items-center gap-4">
+						<div className="h-14 w-14 rounded-2xl bg-primary/10 flex items-center justify-center shadow-inner shadow-primary/20">
+							<Users className="h-7 w-7 text-primary" />
+						</div>
+						<div>
+							<h1 className="text-2xl md:text-3xl font-black tracking-tight text-slate-900 dark:text-white">
+								Pacientes
+							</h1>
+							<p className="text-sm font-medium text-muted-foreground/80 flex items-center gap-2">
+								<span className="flex h-2 w-2 rounded-full bg-emerald-500 animate-pulse" />
+								{stats.totalCount} registros na base clínica
+							</p>
+						</div>
 					</div>
-					<div className="min-w-0">
-						<h1
-							className="text-base sm:text-lg font-semibold leading-tight text-slate-900 dark:text-white"
-							id="page-title"
+
+					{/* Quick Actions - "Itens Rápidos" */}
+					<div className="flex flex-wrap items-center gap-3">
+						<Button
+							onClick={onNewPatient}
+							className="h-14 px-8 rounded-3xl bg-primary text-white shadow-xl shadow-primary/20 hover:shadow-primary/40 transition-all hover:scale-[1.02] active:scale-95 gap-3 font-black text-xs uppercase tracking-widest border-b-4 border-primary-foreground/20"
 						>
-							Pacientes
-						</h1>
-						<div className="flex items-center gap-2 text-xs text-muted-foreground flex-wrap mt-0.5">
-							<span>
-								<span className="font-medium text-foreground">
-									{stats.totalCount}
-								</span>{" "}
-								total
-							</span>
-							<span className="text-border">·</span>
-							<span>
-								<span className="font-medium text-emerald-600">
-									{stats.activeByClassification}
-								</span>{" "}
-								ativos
-							</span>
-							{stats.newPatients > 0 && (
-								<>
-									<span className="text-border">·</span>
-									<span>
-										<span className="font-medium text-blue-600">
-											{stats.newPatients}
-										</span>{" "}
-										novos
-									</span>
-								</>
-							)}
-							{stats.noShowRisk > 0 && (
-								<>
-									<span className="text-border hidden sm:inline">·</span>
-									<span className="hidden sm:inline">
-										<span className="font-medium text-red-600">
-											{stats.noShowRisk}
-										</span>{" "}
-										risco
-									</span>
-								</>
-							)}
+							<div className="h-6 w-6 rounded-full bg-white/20 flex items-center justify-center">
+								<Plus className="h-4 w-4" />
+							</div>
+							<span>Novo Paciente</span>
+						</Button>
+
+						<div className="flex items-center gap-2 bg-slate-100/80 dark:bg-slate-800/80 p-1.5 rounded-[1.75rem] border border-white/50 dark:border-white/10 backdrop-blur-xl shadow-inner">
+							<QuickActionButton
+								icon={Download}
+								label="Exportar"
+								onClick={onExport}
+								title="Exportar base de pacientes"
+							/>
+							<div className="w-px h-6 bg-slate-200 dark:bg-slate-700 mx-1" />
+							<QuickActionButton
+								icon={PieChart}
+								label="Análises"
+								onClick={onToggleAnalytics}
+								active={showAnalytics}
+								title={showAnalytics ? "Ocultar análises" : "Ver análises clínicas"}
+							/>
+							<QuickActionButton
+								icon={Zap}
+								label="Insights"
+								onClick={() => {}} 
+								variant="premium"
+								title="IA Clinical Insights"
+							/>
 						</div>
 					</div>
 				</div>
 
-				<div className="flex items-center gap-2 flex-shrink-0">
-					<Button
-						variant="outline"
-						size="icon"
-						onClick={onToggleAnalytics}
-						className={cn(
-							"h-8 w-8 rounded-lg border-slate-200 dark:border-slate-800 transition-all",
-							showAnalytics &&
-								"bg-primary text-white border-primary shadow-sm shadow-primary/20",
-						)}
-						aria-pressed={showAnalytics}
-						title={showAnalytics ? "Ocultar análises" : "Ver análises"}
-					>
-						<Activity className="h-4 w-4" />
-					</Button>
-					<Button
-						variant="outline"
-						size="icon"
-						onClick={onExport}
-						className="h-8 w-8 rounded-lg border-slate-200 dark:border-slate-800"
-						title="Exportar pacientes"
-					>
-						<Download className="h-4 w-4" />
-					</Button>
-					{children}
-					<Button
-						size="sm"
-						onClick={onNewPatient}
-						data-testid="add-patient"
-						className="h-8 px-3 gap-1.5"
-					>
-						<Plus className="h-4 w-4" />
-						<span>Novo Paciente</span>
-					</Button>
-				</div>
-			</div>
-
-			{/* Search + Inline Filters */}
-			<div className="flex flex-col gap-2 sm:flex-row sm:items-center">
-				<div className="relative flex-1 group">
-					<Search
-						className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400 group-focus-within:text-primary transition-colors"
-						aria-hidden
-					/>
-					<input
-						type="search"
-						placeholder="Buscar por nome, condição ou telefone..."
-						value={searchTerm}
-						onChange={(e) => onSearchChange(e.target.value)}
-						className="h-9 w-full rounded-lg border border-slate-200 dark:border-slate-800 bg-white/50 dark:bg-slate-900/50 pl-9 pr-4 text-sm ring-offset-background transition-all placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary/50"
-						aria-label="Buscar pacientes"
-					/>
-				</div>
-
-				<div className="flex items-center gap-2">
-					<Select value={statusFilter} onValueChange={onStatusFilterChange}>
-						<SelectTrigger className="h-9 w-[140px] text-xs rounded-lg border-slate-200 dark:border-slate-800 bg-white/50 dark:bg-slate-900/50">
-							<SelectValue placeholder="Status" />
-						</SelectTrigger>
-						<SelectContent className="rounded-xl border-slate-200 dark:border-slate-800 shadow-xl">
-							<SelectItem value="all">Todos os status</SelectItem>
-							<SelectItem value="Inicial">Inicial</SelectItem>
-							<SelectItem value="Em Tratamento">Em Tratamento</SelectItem>
-							<SelectItem value="Recuperação">Recuperação</SelectItem>
-							<SelectItem value="Concluído">Concluído</SelectItem>
-						</SelectContent>
-					</Select>
-
-					<Select
-						value={conditionFilter}
-						onValueChange={onConditionFilterChange}
-					>
-						<SelectTrigger className="h-9 w-[160px] text-xs rounded-lg border-slate-200 dark:border-slate-800 bg-white/50 dark:bg-slate-900/50">
-							<SelectValue placeholder="Condição" />
-						</SelectTrigger>
-						<SelectContent className="rounded-xl border-slate-200 dark:border-slate-800 shadow-xl">
-							<SelectItem value="all">Todas condições</SelectItem>
-							{uniqueConditions.map((c) => (
-								<SelectItem key={String(c)} value={String(c)}>
-									{String(c)}
-								</SelectItem>
-							))}
-						</SelectContent>
-					</Select>
-
-					<Select value={sortBy} onValueChange={onSortByChange}>
-						<SelectTrigger className="h-9 w-[160px] text-xs rounded-lg border-slate-200 dark:border-slate-800 bg-white/50 dark:bg-slate-900/50">
-							<div className="flex items-center gap-2">
-								<ArrowUpDown className="h-3 w-3 text-slate-400" />
-								<SelectValue placeholder="Ordenar por" />
-							</div>
-						</SelectTrigger>
-						<SelectContent className="rounded-xl border-slate-200 dark:border-slate-800 shadow-xl">
-							<SelectItem value="created_at_desc">Mais recentes</SelectItem>
-							<SelectItem value="created_at_asc">Mais antigos</SelectItem>
-							<SelectItem value="name_asc">Nome (A-Z)</SelectItem>
-							<SelectItem value="name_desc">Nome (Z-A)</SelectItem>
-							<SelectItem value="main_condition_asc">Patologia (A-Z)</SelectItem>
-							<SelectItem value="main_condition_desc">Patologia (Z-A)</SelectItem>
-						</SelectContent>
-					</Select>
-				</div>
-			</div>
-
-			{/* Classification chips */}
-			<div className="flex flex-wrap items-center gap-2">
-				<div className="flex flex-wrap items-center gap-2">
-					<StatChip
+				{/* Dashboard Cards Row - Moved from sidebar to top section */}
+				<div className="grid grid-cols-2 md:grid-cols-4 gap-5 mb-8">
+					<HeaderStatCard
 						label="Ativos"
 						value={stats.activeByClassification}
-						icon={<CheckCircle2 className="h-3 w-3" />}
-						variant="success"
-						classification="active"
+						icon={CheckCircle2}
+						color="emerald"
 						isSelected={classificationFilter === "active"}
-						onClick={onClassificationFilterChange}
+						onClick={() => onClassificationFilterChange?.("active")}
 					/>
-					<StatChip
+					<HeaderStatCard
 						label="Novos"
 						value={stats.newPatients}
-						icon={<Sparkles className="h-3 w-3" />}
-						variant="info"
-						classification="new_patient"
+						icon={Sparkles}
+						color="blue"
 						isSelected={classificationFilter === "new_patient"}
-						onClick={onClassificationFilterChange}
+						onClick={() => onClassificationFilterChange?.("new_patient")}
 					/>
-					<StatChip
-						label="Risco"
+					<HeaderStatCard
+						label="Em Risco"
 						value={stats.noShowRisk}
-						icon={<AlertTriangle className="h-3 w-3" />}
-						variant="danger"
-						classification="no_show_risk"
+						icon={AlertTriangle}
+						color="orange"
 						isSelected={classificationFilter === "no_show_risk"}
-						onClick={onClassificationFilterChange}
+						onClick={() => onClassificationFilterChange?.("no_show_risk")}
 					/>
-					<StatChip
-						label="Inativos"
-						value={stats.inactive30}
-						icon={<Clock className="h-3 w-3" />}
-						variant="warning"
-						classification="inactive_30"
-						isSelected={classificationFilter === "inactive_30"}
-						onClick={onClassificationFilterChange}
+					<HeaderStatCard
+						label="Finalizados"
+						value={stats.completedCount}
+						icon={CheckCircle2}
+						color="purple"
+						isSelected={classificationFilter === "completed" as any}
+						onClick={() => {}}
 					/>
 				</div>
 
+				{/* Search & Filter Row - Refactored for better flow */}
+				<div className="flex flex-col xl:flex-row items-center gap-5">
+					<div className="relative flex-1 w-full group">
+						<div className="absolute inset-y-0 left-5 flex items-center pointer-events-none">
+							<Search className="h-5 w-5 text-slate-400 group-focus-within:text-primary transition-all duration-300" />
+						</div>
+						<input
+							type="search"
+							placeholder="Buscar por nome, patologia ou contato..."
+							value={searchTerm}
+							onChange={(e) => onSearchChange(e.target.value)}
+							className="h-16 w-full rounded-[2rem] border border-slate-200/60 dark:border-slate-800/60 bg-white/60 dark:bg-slate-900/60 pl-14 pr-6 text-sm font-bold ring-offset-background transition-all placeholder:text-slate-400 focus:outline-none focus:ring-8 focus:ring-primary/5 focus:border-primary/40 shadow-inner"
+						/>
+					</div>
+
+					<div className="flex flex-wrap items-center gap-4 w-full xl:w-auto">
+						<Select value={statusFilter} onValueChange={onStatusFilterChange}>
+							<SelectTrigger className="h-16 w-full sm:w-[180px] text-xs font-black uppercase tracking-widest rounded-[1.5rem] border-slate-200/60 dark:border-slate-800/60 bg-white/60 dark:bg-slate-900/60 focus:ring-primary/10">
+								<SelectValue placeholder="Status" />
+							</SelectTrigger>
+							<SelectContent className="rounded-[1.5rem] border-slate-200/60 dark:border-slate-800/60 shadow-2xl backdrop-blur-2xl p-2">
+								<SelectItem value="all" className="rounded-xl font-bold">Todos status</SelectItem>
+								<SelectItem value="Inicial" className="rounded-xl font-bold">Inicial</SelectItem>
+								<SelectItem value="Em Tratamento" className="rounded-xl font-bold">Em Tratamento</SelectItem>
+								<SelectItem value="Recuperação" className="rounded-xl font-bold">Recuperação</SelectItem>
+								<SelectItem value="Concluído" className="rounded-xl font-bold">Concluído</SelectItem>
+							</SelectContent>
+						</Select>
+
+						<Select value={conditionFilter} onValueChange={onConditionFilterChange}>
+							<SelectTrigger className="h-16 w-full sm:w-[200px] text-xs font-black uppercase tracking-widest rounded-[1.5rem] border-slate-200/60 dark:border-slate-800/60 bg-white/60 dark:bg-slate-900/60 focus:ring-primary/10">
+								<SelectValue placeholder="Condição" />
+							</SelectTrigger>
+							<SelectContent className="rounded-[1.5rem] border-slate-200/60 dark:border-slate-800/60 shadow-2xl backdrop-blur-2xl p-2">
+								<SelectItem value="all" className="rounded-xl font-bold">Todas condições</SelectItem>
+								{uniqueConditions.map((c) => (
+									<SelectItem key={String(c)} value={String(c)} className="rounded-xl font-bold">
+										{String(c)}
+									</SelectItem>
+								))}
+							</SelectContent>
+						</Select>
+
+						<Select value={sortBy} onValueChange={onSortByChange}>
+							<SelectTrigger className="h-16 w-full sm:w-[200px] text-xs font-black uppercase tracking-widest rounded-[1.5rem] border-slate-200/60 dark:border-slate-800/60 bg-white/60 dark:bg-slate-900/60 focus:ring-primary/10">
+								<div className="flex items-center gap-3">
+									<ArrowUpDown className="h-4 w-4 text-primary" />
+									<SelectValue placeholder="Ordenar" />
+								</div>
+							</SelectTrigger>
+							<SelectContent className="rounded-[1.5rem] border-slate-200/60 dark:border-slate-800/60 shadow-2xl backdrop-blur-2xl p-2">
+								<SelectItem value="created_at_desc" className="rounded-xl font-bold">Mais recentes</SelectItem>
+								<SelectItem value="created_at_asc" className="rounded-xl font-bold">Mais antigos</SelectItem>
+								<SelectItem value="name_asc" className="rounded-xl font-bold">Nome (A-Z)</SelectItem>
+								<SelectItem value="name_desc" className="rounded-xl font-bold">Nome (Z-A)</SelectItem>
+								<SelectItem value="main_condition_asc" className="rounded-xl font-bold">Patologia (A-Z)</SelectItem>
+								<SelectItem value="main_condition_desc" className="rounded-xl font-bold">Patologia (Z-A)</SelectItem>
+							</SelectContent>
+						</Select>
+
+						{children}
+					</div>
+				</div>
+
+				{/* Integrated Insights Pill */}
+				<div className="mt-8">
+					<PatientPageInsights
+						totalPatients={stats.totalCount}
+						classificationStats={stats as any}
+					/>
+				</div>
+
+				{/* Active Filter Clearances */}
 				{hasActiveFilters && (
-					<div className="ml-auto flex items-center gap-3 animate-in fade-in slide-in-from-right-2 bg-primary/5 px-3 py-1.5 rounded-xl border border-primary/10">
-						<span className="text-[10px] font-bold text-primary uppercase tracking-wider">
-							{totalFilteredLabel ?? "Filtrado"}
-						</span>
+					<div className="mt-6 flex items-center justify-between border-t border-slate-100 dark:border-slate-800/50 pt-6 animate-in fade-in slide-in-from-top-2 duration-500">
+						<div className="flex items-center gap-4">
+							<div className="flex -space-x-2">
+								<div className="h-8 w-8 rounded-full bg-primary/20 border-2 border-white dark:border-slate-900 flex items-center justify-center">
+									<Activity className="h-4 w-4 text-primary" />
+								</div>
+							</div>
+							<p className="text-[10px] font-black text-primary uppercase tracking-[0.2em]">
+								{totalFilteredLabel ?? "Base Filtrada"}
+							</p>
+						</div>
 						<button
 							type="button"
 							onClick={onClearAllFilters}
-							className="text-[10px] font-black uppercase tracking-[0.15em] text-primary hover:text-primary/80 transition-colors"
+							className="group text-[10px] font-black uppercase tracking-[0.2em] text-red-500 hover:text-white transition-all bg-red-50 hover:bg-red-500 dark:bg-red-950/20 px-6 py-2.5 rounded-full border border-red-100 dark:border-red-900/30 flex items-center gap-2"
 						>
-							Limpar
+							<Plus className="h-3 w-3 rotate-45 transition-transform group-hover:scale-125" />
+							Limpar Filtros
 						</button>
 					</div>
 				)}
 			</div>
-		</header>
+		</div>
 	);
 }
 
-interface StatChipProps {
-	label: string;
-	value: number;
-	icon: React.ReactNode;
-	variant: "success" | "warning" | "danger" | "info";
-	classification?: PatientClassification;
-	isSelected?: boolean;
-	onClick?: (classification: PatientClassification | "all") => void;
-}
-
-function StatChip({
+function QuickActionButton({
+	icon: Icon,
 	label,
-	value,
-	icon,
-	variant,
-	classification,
-	isSelected,
 	onClick,
-}: StatChipProps) {
-	const variantClasses = {
-		success:
-			"border-emerald-100 bg-emerald-50/40 text-emerald-700 dark:border-emerald-800/30 dark:bg-emerald-950/20 dark:text-emerald-300",
-		warning:
-			"border-amber-100 bg-amber-50/40 text-amber-700 dark:border-amber-800/30 dark:bg-amber-950/20 dark:text-amber-300",
-		danger:
-			"border-red-100 bg-red-50/40 text-red-700 dark:border-red-800/30 dark:bg-red-950/20 dark:text-red-300",
-		info: "border-blue-100 bg-blue-50/40 text-blue-700 dark:border-blue-800/30 dark:bg-blue-950/20 dark:text-blue-300",
-	};
-
-	const handleClick = () => {
-		if (onClick && classification) {
-			onClick(isSelected ? "all" : classification);
-		}
-	};
-
-	const baseClasses = cn(
-		"flex items-center gap-1.5 rounded-full border px-2.5 py-1 transition-all",
-		variantClasses[variant],
-		onClick && "cursor-pointer hover:opacity-80 active:scale-[0.98]",
-		isSelected &&
-			"ring-1 ring-primary ring-offset-1 ring-offset-background font-medium",
-	);
-
-	const content = (
-		<>
-			<span className="shrink-0 opacity-70" aria-hidden>
-				{icon}
-			</span>
-			<span className="text-[11px] tabular-nums font-semibold">{value}</span>
-			<span className="text-[10px] opacity-70 leading-none">{label}</span>
-			{isSelected && <span className="ml-0.5 text-[8px] opacity-60">✕</span>}
-		</>
-	);
-
-	if (onClick && classification) {
+	active,
+	variant = "default",
+	title,
+}: {
+	icon: any;
+	label: string;
+	onClick: () => void;
+	active?: boolean;
+	variant?: "default" | "premium";
+	title: string;
+}) {
+	if (variant === "premium") {
 		return (
-			<button
-				type="button"
-				onClick={handleClick}
-				className={baseClasses}
-				aria-pressed={isSelected}
+			<Button
+				variant="ghost"
+				size="sm"
+				onClick={onClick}
+				className={cn(
+					"h-11 px-4 rounded-2xl gap-2 text-[10px] font-black uppercase tracking-wider transition-all relative overflow-hidden",
+					"bg-gradient-to-br from-primary to-indigo-600 text-white shadow-lg shadow-primary/25 hover:shadow-primary/40 hover:-translate-y-0.5"
+				)}
+				title={title}
 			>
-				{content}
-			</button>
+				<Icon className="h-4 w-4 animate-pulse" />
+				<span className="hidden sm:inline">{label}</span>
+				<div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent -translate-x-full animate-[shimmer_2s_infinite]" />
+			</Button>
 		);
 	}
 
-	return <div className={baseClasses}>{content}</div>;
+	return (
+		<Button
+			variant="ghost"
+			size="sm"
+			onClick={onClick}
+			className={cn(
+				"h-11 px-4 rounded-2xl gap-2 text-[10px] font-black uppercase tracking-wider transition-all",
+				active
+					? "bg-white dark:bg-slate-900 text-primary shadow-xl shadow-primary/10 border border-primary/20 scale-105"
+					: "text-slate-500 hover:bg-white dark:hover:bg-slate-700 hover:text-primary",
+			)}
+			title={title}
+		>
+			<Icon className={cn("h-4 w-4", active && "animate-bounce")} />
+			<span className="hidden sm:inline">{label}</span>
+		</Button>
+	);
+}
+
+function HeaderStatCard({
+	label,
+	value,
+	icon: Icon,
+	color,
+	isSelected,
+	onClick,
+}: {
+	label: string;
+	value: number;
+	icon: any;
+	color: "emerald" | "blue" | "orange" | "purple";
+	isSelected?: boolean;
+	onClick?: () => void;
+}) {
+	const colorMap = {
+		emerald: {
+			bg: "from-emerald-500/10 to-emerald-500/[0.02]",
+			border: "border-emerald-500/20",
+			hoverBorder: "hover:border-emerald-500/40",
+			text: "text-emerald-600",
+			val: "text-emerald-700 dark:text-emerald-400",
+			iconBg: "bg-emerald-500/20",
+			indicator: "bg-emerald-500/20",
+		},
+		blue: {
+			bg: "from-blue-500/10 to-blue-500/[0.02]",
+			border: "border-blue-500/20",
+			hoverBorder: "hover:border-blue-500/40",
+			text: "text-blue-600",
+			val: "text-blue-700 dark:text-blue-400",
+			iconBg: "bg-blue-500/20",
+			indicator: "bg-blue-500/20",
+		},
+		orange: {
+			bg: "from-orange-500/10 to-orange-500/[0.02]",
+			border: "border-orange-500/20",
+			hoverBorder: "hover:border-orange-500/40",
+			text: "text-orange-600",
+			val: "text-orange-700 dark:text-orange-400",
+			iconBg: "bg-orange-500/20",
+			indicator: "bg-orange-500/20",
+		},
+		purple: {
+			bg: "from-purple-500/10 to-purple-500/[0.02]",
+			border: "border-purple-500/20",
+			hoverBorder: "hover:border-purple-500/40",
+			text: "text-purple-600",
+			val: "text-purple-700 dark:text-purple-400",
+			iconBg: "bg-purple-500/20",
+			indicator: "bg-purple-500/20",
+		},
+	};
+
+	const c = colorMap[color];
+
+	return (
+		<div
+			onClick={onClick}
+			className={cn(
+				"p-4 rounded-3xl bg-gradient-to-br border space-y-1 group transition-all duration-300 cursor-pointer relative overflow-hidden",
+				c.bg,
+				c.border,
+				c.hoverBorder,
+				isSelected && "ring-2 ring-primary ring-offset-2 ring-offset-background",
+				!isSelected && "hover:scale-[1.02] active:scale-95",
+			)}
+		>
+			<div className="flex items-center justify-between">
+				<p className={cn("text-[9px] font-black uppercase tracking-[0.15em]", c.text)}>
+					{label}
+				</p>
+				<div className={cn("h-6 w-6 rounded-full flex items-center justify-center transition-transform group-hover:rotate-12", c.iconBg)}>
+					<Icon className={cn("h-3.5 w-3.5", c.text)} />
+				</div>
+			</div>
+			<p className={cn("text-3xl font-black tabular-nums", c.val)}>
+				{value}
+			</p>
+			<div className={cn("h-1 w-12 rounded-full transition-all group-hover:w-full", c.indicator)} />
+			
+			{/* Subtle decorative background icon */}
+			<Icon className={cn("absolute -right-2 -bottom-2 h-16 w-16 opacity-[0.03] transition-all group-hover:scale-110", c.text)} />
+		</div>
+	);
 }
