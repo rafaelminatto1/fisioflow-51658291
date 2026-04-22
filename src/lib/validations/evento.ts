@@ -72,6 +72,13 @@ const eventoBaseSchema = z.object({
 		.int("Deve ser um número inteiro")
 		.nonnegative("Não pode ser negativo")
 		.default(0),
+	minimo_colaboradores: z
+		.number({
+			error: "Quantidade mínima deve ser um número",
+		})
+		.int("Deve ser um número inteiro")
+		.nonnegative("Não pode ser negativo")
+		.default(0),
 });
 
 // Schema para criar evento com validação de datas
@@ -102,6 +109,7 @@ export const eventoUpdateSchema = eventoBaseSchema.partial().extend({
 export const eventoSchema = eventoBaseSchema.extend({
 	id: z.string().uuid(),
 	status: z.enum(["AGENDADO", "EM_ANDAMENTO", "CONCLUIDO", "CANCELADO"]),
+	colaboradores_confirmados: z.number().int().optional(),
 	created_at: z.string(),
 	updated_at: z.string(),
 });
