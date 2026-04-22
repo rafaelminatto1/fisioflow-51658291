@@ -109,7 +109,7 @@ export const useAppointmentQuickViewLogic = ({
 
 	const handleStatusChange = useCallback(
 		(newStatus: string) => {
-			if (newStatus === appointment.status) return;
+			if (normalizeStatus(newStatus) === normalizeStatus(appointment.status)) return;
 			if (newStatus === "falta") {
 				setPendingStatus(newStatus);
 				setShowNoShowConfirmDialog(true);

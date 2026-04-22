@@ -9,6 +9,7 @@ import { ErrorHandler } from "@/lib/errors/ErrorHandler";
 import { fisioLogger as logger } from "@/lib/errors/logger";
 import { AppointmentNotificationService } from "@/lib/services/AppointmentNotificationService";
 import { AppointmentService } from "@/services/appointmentService";
+import { normalizeStatus as normalizeFrontendStatus } from "@/components/schedule/shared/appointment-status";
 import type {
 	AppointmentBase,
 	AppointmentFormData,
@@ -16,10 +17,8 @@ import type {
 } from "@/types/appointment";
 import { isAppointmentConflictError } from "@/utils/appointmentErrors";
 import {
-	invalidateAffectedPeriods,
 	invalidateAppointmentsComprehensive,
 } from "@/utils/cacheInvalidation";
-import { formatDateToLocalISO } from "@/utils/dateUtils";
 import { requireUserOrganizationId } from "@/utils/userHelpers";
 import { parseUpdatesToAppointment } from "../appointmentOptimistic";
 import { appointmentPeriodKeys } from "../useAppointmentsByPeriod";
@@ -297,17 +296,22 @@ export function useUpdateAppointmentStatus() {
 		},
 		onMutate: async ({ appointmentId, status }) => {
 			const organizationId = profile?.organization_id;
+			const normalizedStatus = normalizeFrontendStatus(status);
 
 			await queryClient.cancelQueries({
 				queryKey: appointmentKeys.list(organizationId),
 			});
 			await queryClient.cancelQueries({ queryKey: appointmentPeriodKeys.all });
+			await queryClient.cancelQueries({ queryKey: ["schedule-appointments"] });
 
 			const previousData = queryClient.getQueryData<AppointmentsQueryResult>(
 				appointmentKeys.list(organizationId),
 			);
 			const previousPeriodQueries = queryClient.getQueriesData({
 				queryKey: appointmentPeriodKeys.all,
+			});
+			const previousScheduleQueries = queryClient.getQueriesData({
+				queryKey: ["schedule-appointments"],
 			});
 
 			// Atualiza o cache principal imediatamente
@@ -316,7 +320,7 @@ export function useUpdateAppointmentStatus() {
 				(old: AppointmentsQueryResult | undefined) => ({
 					...old,
 					data: (old?.data || []).map((apt) =>
-						apt.id === appointmentId ? { ...apt, status } : apt,
+						apt.id === appointmentId ? { ...apt, status: normalizedStatus } : apt,
 					),
 				}),
 			);
@@ -326,11 +330,19 @@ export function useUpdateAppointmentStatus() {
 				{ queryKey: appointmentPeriodKeys.all },
 				(old: AppointmentBase[] | undefined) =>
 					old?.map((apt) =>
-						apt.id === appointmentId ? { ...apt, status } : apt,
+						apt.id === appointmentId ? { ...apt, status: normalizedStatus } : apt,
 					),
 			);
 
-			return { previousData, previousPeriodQueries };
+			queryClient.setQueriesData(
+				{ queryKey: ["schedule-appointments"] },
+				(old: AppointmentBase[] | undefined) =>
+					old?.map((apt) =>
+						apt.id === appointmentId ? { ...apt, status: normalizedStatus } : apt,
+					),
+			);
+
+			return { previousData, previousPeriodQueries, previousScheduleQueries };
 		},
 		onSuccess: (updatedData, variables) => {
 			const organizationId = profile?.organization_id;
@@ -377,6 +389,9 @@ export function useUpdateAppointmentStatus() {
 				);
 			}
 			context?.previousPeriodQueries?.forEach(([queryKey, data]) => {
+				queryClient.setQueryData(queryKey, data);
+			});
+			context?.previousScheduleQueries?.forEach(([queryKey, data]) => {
 				queryClient.setQueryData(queryKey, data);
 			});
 			logger.error(
