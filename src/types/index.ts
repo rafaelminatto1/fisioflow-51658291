@@ -338,7 +338,7 @@ export interface Exercise {
 	suggested_duration_seconds?: number;
 	precaution_level?: "safe" | "supervised" | "restricted";
 	precaution_notes?: string;
-	scientific_references?: ScientificReference[];
+	scientific_references?: string | ScientificReference[];
 }
 
 export interface ExercisePlan {

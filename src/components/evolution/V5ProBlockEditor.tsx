@@ -57,6 +57,7 @@ export const V5ProBlockEditor: React.FC<V5ProBlockEditorProps> = ({
 	isSaving = false,
 	soapData,
 	onAiAssist,
+	isPro,
 }) => {
 	const [syncStatus, setSyncStatus] = useState<"idle" | "saving" | "saved">(
 		"idle",

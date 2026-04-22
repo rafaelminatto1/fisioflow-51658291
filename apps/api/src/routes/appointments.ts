@@ -3,7 +3,7 @@ import type { MiddlewareHandler } from 'hono';
 import type { Env } from '../types/env';
 import { requireAuth, type AuthVariables } from '../lib/auth';
 import { rateLimit } from '../middleware/rateLimit';
-import { eq, and, sql, desc, lte, gte, isNull } from 'drizzle-orm';
+import { eq, and, sql, desc, lte, gte } from 'drizzle-orm';
 import { appointments, patients } from '@fisioflow/db';
 import {
   normalizeStatus,
@@ -452,7 +452,7 @@ const updateAppointmentHandler: MiddlewareHandler<{ Bindings: Env; Variables: Au
       const ignoreCapacity = body.ignoreCapacity === true;
 
       const parsedDuration = rawDuration !== undefined ? parseInt(String(rawDuration), 10) : undefined;
-      const normalizedStatus = status !== undefined ? normalizeStatus(status) : String(current.status ?? 'scheduled');
+      const normalizedStatus = status !== undefined ? normalizeStatus(status) : String(current.status ?? 'agendado');
 
       const effectiveDate = date ?? current.date;
       const effectiveStartTime = startTime ?? current.startTime;
