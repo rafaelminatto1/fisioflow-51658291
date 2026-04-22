@@ -2,6 +2,10 @@
 	"$schema": "https://opencode.ai/config.json",
 	"lsp": {
 		"typescript": {
+			"command": [
+				"/home/rafael/.config/opencode/node_modules/.bin/typescript-language-server",
+				"--stdio"
+			],
 			"initialization": {
 				"preferences": {
 					"importModuleSpecifierPreference": "relative",
