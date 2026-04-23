@@ -29,9 +29,9 @@ app.get('/config', requireAuth, async (c) => {
 	const user = c.get('user');
 	const pool = createPool(c.env);
 	const result = await pool.query(
-		`SELECT id, organization_id, razao_social, cnpj, inscricao_municipal,
-		        codigo_municipio, regime_tributario, optante_simples, tp_opcao_simples,
-		        incentivo_fiscal, aliquota_padrao, codigo_servico_padrao, cnae,
+		`SELECT id, organization_id, razao_social, cnpj_prestador AS cnpj, inscricao_municipal,
+		        municipio_codigo AS codigo_municipio, regime_tributario, optante_simples, tp_opcao_simples,
+		        incentivo_fiscal, aliquota_iss AS aliquota_padrao, codigo_servico_padrao, cnae,
 		        discriminacao_padrao, ambiente, created_at, updated_at
 		 FROM nfse_config WHERE organization_id = $1 LIMIT 1`,
 		[user.organizationId],
@@ -45,24 +45,41 @@ app.put('/config', requireAuth, async (c) => {
 	const pool = createPool(c.env);
 
 	const fields = [
-		'razao_social', 'cnpj', 'inscricao_municipal', 'codigo_municipio',
-		'regime_tributario', 'optante_simples', 'tp_opcao_simples', 'incentivo_fiscal',
-		'aliquota_padrao', 'codigo_servico_padrao', 'cnae', 'discriminacao_padrao', 'ambiente',
+		{ apiKey: 'razao_social', column: 'razao_social' },
+		{ apiKey: 'cnpj', column: 'cnpj_prestador' },
+		{ apiKey: 'inscricao_municipal', column: 'inscricao_municipal' },
+		{ apiKey: 'codigo_municipio', column: 'municipio_codigo' },
+		{ apiKey: 'regime_tributario', column: 'regime_tributario' },
+		{ apiKey: 'optante_simples', column: 'optante_simples' },
+		{ apiKey: 'tp_opcao_simples', column: 'tp_opcao_simples' },
+		{ apiKey: 'incentivo_fiscal', column: 'incentivo_fiscal' },
+		{ apiKey: 'aliquota_padrao', column: 'aliquota_iss' },
+		{ apiKey: 'codigo_servico_padrao', column: 'codigo_servico_padrao' },
+		{ apiKey: 'cnae', column: 'cnae' },
+		{ apiKey: 'discriminacao_padrao', column: 'discriminacao_padrao' },
+		{ apiKey: 'ambiente', column: 'ambiente' },
 	];
 
 	const sets: string[] = ['updated_at = NOW()'];
 	const params: unknown[] = [user.organizationId];
+	const providedFields: string[] = [];
 
 	for (const field of fields) {
-		if (body[field] !== undefined) {
-			params.push(body[field]);
-			sets.push(`${field} = $${params.length}`);
+		const value = body[field.apiKey] ?? body[field.column];
+		if (value !== undefined) {
+			params.push(value);
+			providedFields.push(field.column);
+			sets.push(`${field.column} = $${params.length}`);
 		}
 	}
 
+	if (!providedFields.length) {
+		return c.json({ error: 'Nenhum campo informado para atualização' }, 400);
+	}
+
 	const result = await pool.query(
-		`INSERT INTO nfse_config (organization_id, ${fields.filter(f => body[f] !== undefined).join(', ')})
-		 VALUES ($1, ${fields.filter(f => body[f] !== undefined).map((_, i) => `$${i + 2}`).join(', ')})
+		`INSERT INTO nfse_config (organization_id, ${providedFields.join(', ')})
+		 VALUES ($1, ${providedFields.map((_, i) => `$${i + 2}`).join(', ')})
 		 ON CONFLICT (organization_id) DO UPDATE SET ${sets.join(', ')}
 		 RETURNING *`,
 		params,
@@ -166,7 +183,7 @@ app.post('/generate', requireAuth, async (c) => {
 	);
 	const numeroRps = String(seqResult.rows[0]?.next_rps ?? 1);
 
-	const aliquota = body.aliquota_iss ?? (Number(cfg.aliquota_padrao) || 0.02);
+	const aliquota = body.aliquota_iss ?? Number(cfg.aliquota_iss ?? cfg.aliquota_padrao ?? 0.02);
 	const valorIss = Number((body.valor_servico * aliquota).toFixed(2));
 	const dataEmissao = new Date().toISOString();
 	const tpOpcaoSimples = cfg.tp_opcao_simples ?? 4;
@@ -207,9 +224,9 @@ app.post('/send/:id', requireAuth, async (c) => {
 
 	const pool = createPool(c.env);
 	const nfseResult = await pool.query(
-		`SELECT n.*, cfg.cnpj, cfg.inscricao_municipal, cfg.codigo_municipio,
+		`SELECT n.*, cfg.cnpj_prestador AS cnpj, cfg.inscricao_municipal, cfg.municipio_codigo AS codigo_municipio,
 		        cfg.optante_simples, cfg.tp_opcao_simples, cfg.incentivo_fiscal,
-		        cfg.aliquota_padrao, cfg.codigo_servico_padrao, cfg.cnae,
+		        cfg.aliquota_iss AS aliquota_padrao, cfg.codigo_servico_padrao, cfg.cnae,
 		        cfg.razao_social, cfg.ambiente
 		 FROM nfse_records n
 		 JOIN nfse_config cfg ON cfg.organization_id = n.organization_id
@@ -343,7 +360,12 @@ app.post('/test/:id', requireAuth, async (c) => {
 
 	const pool = createPool(c.env);
 	const nfseResult = await pool.query(
-		`SELECT n.*, cfg.* FROM nfse_records n
+		`SELECT n.*, cfg.razao_social, cfg.cnpj_prestador AS cnpj, cfg.inscricao_municipal,
+		        cfg.municipio_codigo AS codigo_municipio, cfg.regime_tributario,
+		        cfg.optante_simples, cfg.tp_opcao_simples, cfg.incentivo_fiscal,
+		        cfg.aliquota_iss AS aliquota_padrao, cfg.codigo_servico_padrao,
+		        cfg.cnae, cfg.discriminacao_padrao, cfg.ambiente
+		 FROM nfse_records n
 		 JOIN nfse_config cfg ON cfg.organization_id = n.organization_id
 		 WHERE n.id = $1 AND n.organization_id = $2 LIMIT 1`,
 		[id, user.organizationId],
@@ -358,22 +380,22 @@ app.post('/test/:id', requireAuth, async (c) => {
 			serie: 'RPS',
 			tipo: '1',
 			dataEmissao: nfse.data_emissao,
-			cnpjPrestador: nfse.cnpj?.replace(/\D/g, '') || '',
+			cnpjPrestador: nfse.cnpj_prestador?.replace(/\D/g, '') || '',
 			inscricaoMunicipal: nfse.inscricao_municipal?.replace(/\D/g, '') || '',
-			codigoServico: nfse.codigo_servico_padrao ?? '14.01',
+			codigoServico: nfse.codigo_servico ?? '14.01',
 			codigoCnae: nfse.cnae ?? '86500-4/04',
 			discriminacao: nfse.discriminacao,
 			valorServicos: Number(nfse.valor_servico).toFixed(2),
 			valorDeducoes: '0.00',
 			valorIss: Number(nfse.valor_iss).toFixed(2),
-			aliquota: Number(nfse.aliquota_iss ?? nfse.aliquota_padrao ?? 0.02).toFixed(4),
+			aliquota: Number(nfse.aliquota_iss ?? 0.02).toFixed(4),
 			issRetido: '2',
 			tomadorCpfCnpj: nfse.tomador_cpf_cnpj?.replace(/\D/g, '') || '',
 			tomadorInscricaoMunicipal: '',
 			tomadorRazaoSocial: nfse.tomador_nome || '',
 			tomadorEmail: nfse.tomador_email || '',
 			tpOpcaoSimples: nfse.tp_opcao_simples ?? 4,
-			codigoMunicipio: nfse.codigo_municipio ?? '3550308',
+			codigoMunicipio: nfse.municipio_prestacao ?? '3550308',
 		});
 
 		return c.json({ data: result });
@@ -392,7 +414,7 @@ app.get('/consulta-nfse/:id', requireAuth, async (c) => {
 
 	const pool = createPool(c.env);
 	const nfseResult = await pool.query(
-		`SELECT n.numero_nfse, n.codigo_verificacao, cfg.cnpj, cfg.inscricao_municipal
+		`SELECT n.numero_nfse, n.codigo_verificacao, cfg.cnpj_prestador AS cnpj, cfg.inscricao_municipal
 		 FROM nfse_records n
 		 JOIN nfse_config cfg ON cfg.organization_id = n.organization_id
 		 WHERE n.id = $1 AND n.organization_id = $2 LIMIT 1`,
@@ -406,7 +428,7 @@ app.get('/consulta-nfse/:id', requireAuth, async (c) => {
 
 	try {
 		const result = await consultaNFe(c.env, {
-			cnpjRemetente: nfse.cnpj?.replace(/\D/g, ''),
+			cnpjRemetente: nfse.cnpj_prestador?.replace(/\D/g, ''),
 			inscricaoMunicipal: nfse.inscricao_municipal?.replace(/\D/g, ''),
 			numeroNfse: nfse.numero_nfse,
 		});
@@ -426,7 +448,7 @@ app.get('/consulta-lote/:numeroLote', requireAuth, async (c) => {
 	const user = c.get('user');
 	const pool = createPool(c.env);
 	const cfgResult = await pool.query(
-		`SELECT cnpj, inscricao_municipal FROM nfse_config WHERE organization_id = $1 LIMIT 1`,
+		`SELECT cnpj_prestador AS cnpj, inscricao_municipal, municipio_codigo AS codigo_municipio FROM nfse_config WHERE organization_id = $1 LIMIT 1`,
 		[user.organizationId],
 	);
 
@@ -455,7 +477,7 @@ app.post('/cancel/:id', requireAuth, async (c) => {
 
 	const pool = createPool(c.env);
 	const nfseResult = await pool.query(
-		`SELECT n.*, cfg.cnpj, cfg.inscricao_municipal FROM nfse_records n
+		`SELECT n.*, cfg.cnpj_prestador AS cnpj, cfg.inscricao_municipal FROM nfse_records n
 		 JOIN nfse_config cfg ON cfg.organization_id = n.organization_id
 		 WHERE n.id = $1 AND n.organization_id = $2 LIMIT 1`,
 		[id, user.organizationId],

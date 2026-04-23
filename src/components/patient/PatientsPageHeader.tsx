@@ -192,7 +192,7 @@ export function PatientsPageHeader({
 				</div>
 
 				<div className="mt-8 space-y-5 rounded-[2rem] border border-white/50 bg-white/70 p-5 backdrop-blur-xl dark:border-slate-800/70 dark:bg-slate-950/40">
-					<div className="grid grid-cols-1 gap-4 xl:grid-cols-[minmax(0,1.6fr)_repeat(5,minmax(0,0.72fr))]">
+					<div className="grid grid-cols-1 gap-4 xl:grid-cols-[minmax(0,1.6fr)_repeat(3,minmax(170px,0.8fr))] 2xl:grid-cols-[minmax(0,1.6fr)_repeat(5,minmax(150px,0.72fr))]">
 						<div className="relative">
 							<Search className="pointer-events-none absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
 							<Input
@@ -223,7 +223,7 @@ export function PatientsPageHeader({
 							onValueChange={onPathologyFilterChange}
 							placeholder="Patologia principal"
 							items={[
-								{ value: "all", label: "Todas patologias" },
+								{ value: "all", label: "Patologias" },
 								...pathologyOptions.map((option) => ({
 									value: option,
 									label: option,
@@ -236,7 +236,7 @@ export function PatientsPageHeader({
 							onValueChange={onPathologyStatusFilterChange}
 							placeholder="Status da patologia"
 							items={[
-								{ value: "all", label: "Todos status clínicos" },
+								{ value: "all", label: "Status clínico" },
 								...PATIENT_DIRECTORY_PATHOLOGY_STATUSES,
 							]}
 						/>
@@ -246,7 +246,7 @@ export function PatientsPageHeader({
 							onValueChange={onPaymentModelFilterChange}
 							placeholder="Pagamento"
 							items={[
-								{ value: "all", label: "Todos os modelos" },
+								{ value: "all", label: "Pagamento" },
 								...PATIENT_PAYER_MODEL_OPTIONS,
 							]}
 						/>
@@ -256,7 +256,7 @@ export function PatientsPageHeader({
 							onValueChange={onFinancialStatusFilterChange}
 							placeholder="Financeiro"
 							items={[
-								{ value: "all", label: "Todas as situações" },
+								{ value: "all", label: "Financeiro" },
 								...PATIENT_FINANCIAL_STATUS_OPTIONS,
 							]}
 						/>
