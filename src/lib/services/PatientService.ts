@@ -43,7 +43,7 @@ export class PatientService {
 	 * Uses optimized column selection from constants
 	 */
 	static async getPatients(_organizationId?: string): Promise<Patient[]> {
-		const response = await patientsApi.list({ limit: 1000 });
+		const response = await patientsApi.list({ limit: 200 });
 		const data = response.data || [];
 
 		return data.map((p: PatientApiData) => ({

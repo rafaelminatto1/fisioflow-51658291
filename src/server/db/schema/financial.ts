@@ -56,7 +56,10 @@ export const contasFinanceiras = pgTable("contas_financeiras", {
 	deletedAt: timestamp("deleted_at"),
 	createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
 	updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow().notNull(),
-}, (table) => [withOrganizationPolicy("contas_financeiras", table.organizationId)]);
+}, (table) => [
+	index("idx_contas_financeiras_org_patient").on(table.organizationId, table.patientId),
+	withOrganizationPolicy("contas_financeiras", table.organizationId)
+]);
 
 export const centrosCusto = pgTable("centros_custo", {
 	id: uuid("id").primaryKey().defaultRandom(),

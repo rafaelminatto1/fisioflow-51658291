@@ -9,18 +9,6 @@ type FinancialApp = Hono<{ Bindings: Env; Variables: AuthVariables }>;
 type CommandCenterPeriod = 'daily' | 'weekly' | 'monthly' | 'all';
 type QueryRow = Record<string, unknown>;
 
-const NO_SHOW_STATUSES = [
-  'faltou',
-  'faltou_com_aviso',
-  'faltou_sem_aviso',
-  'nao_atendido',
-  'nao_atendido_sem_cobranca',
-  'no_show',
-];
-
-const RECEIVABLE_ACCOUNT_TYPES = ['receber', 'receita'];
-const PAYABLE_ACCOUNT_TYPES = ['pagar', 'despesa'];
-
 function addDays(date: Date, amount: number) {
   const next = new Date(date);
   next.setDate(next.getDate() + amount);
@@ -147,7 +135,7 @@ function buildAlerts(input: {
       title: 'Erros em emissão fiscal',
       description: `${input.failedNfse} NFS-e com erro podem bloquear faturamento e fechamento.`,
       tone: 'critical',
-      href: '/financeiro/nfse',
+      href: '/financial?tab=documents&documents=nfse',
     });
   }
 
@@ -157,7 +145,7 @@ function buildAlerts(input: {
       title: 'Fila fiscal pendente',
       description: `${input.pendingNfse} documentos aguardam emissão ou autorização.`,
       tone: 'warning',
-      href: '/financeiro/nfse',
+      href: '/financial?tab=documents&documents=nfse',
     });
   }
 
@@ -241,7 +229,7 @@ function buildSuggestions(input: {
       id: 'fiscal-queue',
       title: 'Limpe a fila fiscal antes do fechamento',
       description: 'Emitir NFS-e pendentes reduz atrito no fechamento e melhora rastreabilidade documental.',
-      href: '/financeiro/nfse',
+      href: '/financial?tab=documents&documents=nfse',
     });
   }
 
@@ -475,6 +463,27 @@ export const registerFinancialAnalyticsRoutes = (app: FinancialApp) => {
       },
     );
 
+    const packageInventory = await queryFirst(
+      pool,
+      'package-inventory',
+      `SELECT
+          COALESCE(
+            SUM(
+              COALESCE(remaining_sessions, 0) * (
+                COALESCE(price, 0) / NULLIF(COALESCE(total_sessions, 0), 0)
+              )
+            ),
+            0
+          ) AS inventory_value
+        FROM patient_packages
+        WHERE organization_id = $1
+          AND status = 'active'`,
+      [user.organizationId],
+      {
+        inventory_value: 0,
+      },
+    );
+
     const scheduleMetrics = await queryFirst(
       pool,
       'schedule-metrics',
@@ -581,54 +590,55 @@ export const registerFinancialAnalyticsRoutes = (app: FinancialApp) => {
     }>(
       pool,
       'risk-patients',
-      `SELECT
+      `WITH patient_receivables AS (
+          SELECT
+            patient_id,
+            COALESCE(SUM(valor), 0) AS open_amount
+          FROM contas_financeiras
+          WHERE organization_id = $1
+            AND deleted_at IS NULL
+            AND patient_id IS NOT NULL
+            AND status IN ('pendente', 'atrasado')
+            AND tipo IN ('receber', 'receita')
+          GROUP BY patient_id
+        ),
+        patient_appointments AS (
+          SELECT
+            patient_id,
+            MAX(date)::text AS last_appointment,
+            COUNT(*) FILTER (
+              WHERE status::text IN (
+                'faltou', 'faltou_com_aviso', 'faltou_sem_aviso',
+                'nao_atendido', 'nao_atendido_sem_cobranca', 'no_show'
+              )
+            )::int AS missed_count
+          FROM appointments
+          WHERE organization_id = $1
+            AND deleted_at IS NULL
+            AND patient_id IS NOT NULL
+          GROUP BY patient_id
+        )
+        SELECT
           p.id::text AS id,
           p.full_name AS full_name,
           COALESCE(p.phone, '') AS phone,
-          COALESCE(MAX(a.date)::text, null) AS last_appointment,
-          COALESCE(SUM(
-            CASE
-              WHEN cf.status IN ('pendente', 'atrasado') AND cf.tipo IN ('receber', 'receita') THEN cf.valor
-              ELSE 0
-            END
-          ), 0) AS open_amount,
-          COUNT(
-            CASE
-              WHEN a.status::text IN (
-                'faltou', 'faltou_com_aviso', 'faltou_sem_aviso',
-                'nao_atendido', 'nao_atendido_sem_cobranca', 'no_show'
-              ) THEN 1
-            END
-          )::int AS missed_count
+          pa.last_appointment,
+          COALESCE(pr.open_amount, 0) AS open_amount,
+          COALESCE(pa.missed_count, 0) AS missed_count
         FROM patients p
-        LEFT JOIN contas_financeiras cf
-          ON cf.patient_id = p.id
-          AND cf.organization_id = p.organization_id
-          AND cf.deleted_at IS NULL
-        LEFT JOIN appointments a
-          ON a.patient_id = p.id
-          AND a.organization_id = p.organization_id
-          AND a.deleted_at IS NULL
+        LEFT JOIN patient_receivables pr ON pr.patient_id = p.id
+        LEFT JOIN patient_appointments pa ON pa.patient_id = p.id
         WHERE p.organization_id = $1
           AND p.deleted_at IS NULL
           AND COALESCE(p.is_active, true) = true
-        GROUP BY p.id, p.full_name, p.phone
-        HAVING
-          COALESCE(SUM(
-            CASE
-              WHEN cf.status IN ('pendente', 'atrasado') AND cf.tipo IN ('receber', 'receita') THEN cf.valor
-              ELSE 0
-            END
-          ), 0) > 0
-          OR COUNT(
-            CASE
-              WHEN a.status::text IN (
-                'faltou', 'faltou_com_aviso', 'faltou_sem_aviso',
-                'nao_atendido', 'nao_atendido_sem_cobranca', 'no_show'
-              ) THEN 1
-            END
-          ) > 0
-        ORDER BY open_amount DESC, missed_count DESC, MAX(a.date) ASC NULLS FIRST
+          AND (
+            COALESCE(pr.open_amount, 0) > 0
+            OR COALESCE(pa.missed_count, 0) > 0
+          )
+        ORDER BY
+          COALESCE(pr.open_amount, 0) DESC,
+          COALESCE(pa.missed_count, 0) DESC,
+          pa.last_appointment ASC NULLS FIRST
         LIMIT 5`,
       [user.organizationId],
       [],
@@ -737,13 +747,14 @@ export const registerFinancialAnalyticsRoutes = (app: FinancialApp) => {
       pool,
       'documents-summary',
       `SELECT
-          COUNT(*) FILTER (WHERE status IN ('rascunho', 'enviado'))::int AS pending_nfse,
+          COUNT(*) FILTER (
+            WHERE status IN ('rascunho', 'enviado', 'emitida', 'pendente_revisao')
+          )::int AS pending_nfse,
           COUNT(*) FILTER (WHERE status = 'autorizado')::int AS authorized_nfse,
           COUNT(*) FILTER (WHERE status = 'erro')::int AS failed_nfse
-        FROM nfse
+        FROM nfse_records
         WHERE organization_id = $1
-          AND deleted_at IS NULL
-          AND data_emissao::date BETWEEN $2::date AND $3::date`,
+          AND COALESCE(data_emissao, created_at)::date BETWEEN $2::date AND $3::date`,
       [user.organizationId, range.startDate, range.endDate],
       {
         pending_nfse: 0,
@@ -767,9 +778,63 @@ export const registerFinancialAnalyticsRoutes = (app: FinancialApp) => {
       },
     );
 
+    const recentReceipts = await queryRows<{
+      id: string;
+      title: string;
+      counterpart: string;
+      amount: string | number;
+      status: string;
+      issued_at: string;
+    }>(
+      pool,
+      'recent-receipts',
+      `SELECT
+          id::text AS id,
+          'Recibo #' || LPAD(numero_recibo::text, 6, '0') AS title,
+          COALESCE(referente, 'Recibo emitido') AS counterpart,
+          COALESCE(valor, 0) AS amount,
+          CASE
+            WHEN assinado = true THEN 'assinado'
+            ELSE 'emitido'
+          END AS status,
+          COALESCE(data_emissao, created_at)::text AS issued_at
+        FROM recibos
+        WHERE organization_id = $1
+        ORDER BY COALESCE(data_emissao, created_at) DESC
+        LIMIT 4`,
+      [user.organizationId],
+      [],
+    );
+
+    const recentNfse = await queryRows<{
+      id: string;
+      title: string;
+      counterpart: string;
+      amount: string | number;
+      status: string;
+      issued_at: string;
+    }>(
+      pool,
+      'recent-nfse',
+      `SELECT
+          id::text AS id,
+          COALESCE(numero_nfse::text, numero_rps, 'Sem número') AS title,
+          COALESCE(tomador_nome, 'Tomador não informado') AS counterpart,
+          COALESCE(valor_servico, 0) AS amount,
+          COALESCE(status, 'rascunho') AS status,
+          COALESCE(data_emissao, created_at)::text AS issued_at
+        FROM nfse_records
+        WHERE organization_id = $1
+        ORDER BY COALESCE(data_emissao, created_at) DESC
+        LIMIT 4`,
+      [user.organizationId],
+      [],
+    );
+
     const realizedRevenue = toNumber(transactionSummary.realized_revenue);
     const realizedExpenses = toNumber(transactionSummary.realized_expenses);
     const previousRealizedRevenue = toNumber(previousRevenue.realized_revenue);
+    const netBalance = realizedRevenue - realizedExpenses;
     const averageTicket =
       toNumber(appointmentMetrics.average_ticket) ||
       (toInt(transactionSummary.realized_revenue_count) > 0
@@ -778,6 +843,31 @@ export const registerFinancialAnalyticsRoutes = (app: FinancialApp) => {
     const noShowRate = toNumber(noShowRateMetrics.rate);
     const projectedNext30Days =
       toNumber(scheduleMetrics.expected_revenue_next_30d) * (1 - noShowRate);
+    const estimatedMargin = realizedRevenue > 0 ? (netBalance / realizedRevenue) * 100 : 0;
+    const recentDocuments = [
+      ...recentReceipts.map((row) => ({
+        id: `receipt-${String(row.id ?? '')}`,
+        kind: 'receipt' as const,
+        title: String(row.title ?? 'Recibo'),
+        counterpart: String(row.counterpart ?? 'Recibo emitido'),
+        amount: toNumber(row.amount),
+        status: String(row.status ?? 'emitido'),
+        issuedAt: String(row.issued_at ?? ''),
+        href: '/financial?tab=documents&documents=receipts',
+      })),
+      ...recentNfse.map((row) => ({
+        id: `nfse-${String(row.id ?? '')}`,
+        kind: 'nfse' as const,
+        title: `NFS-e ${String(row.title ?? 'Sem número')}`,
+        counterpart: String(row.counterpart ?? 'Tomador não informado'),
+        amount: toNumber(row.amount),
+        status: String(row.status ?? 'rascunho'),
+        issuedAt: String(row.issued_at ?? ''),
+        href: '/financial?tab=documents&documents=nfse',
+      })),
+    ]
+      .sort((a, b) => new Date(b.issuedAt).getTime() - new Date(a.issuedAt).getTime())
+      .slice(0, 6);
 
     let runningBalance = 0;
     const cashflowPoints = cashflowRows.map((row) => {
@@ -817,13 +907,15 @@ export const registerFinancialAnalyticsRoutes = (app: FinancialApp) => {
       data: {
         period: range,
         summary: {
+          cashPosition: netBalance,
           realizedRevenue,
           realizedExpenses,
-          netBalance: realizedRevenue - realizedExpenses,
+          netBalance,
           pendingReceivables: toNumber(accountSummary.pending_receivables),
           pendingPayables: toNumber(accountSummary.pending_payables),
           overdueAmount: toNumber(accountSummary.overdue_amount),
           averageTicket,
+          estimatedMargin,
           collectionRate: toInt(transactionSummary.total_count)
             ? (toInt(transactionSummary.settled_count) / toInt(transactionSummary.total_count)) * 100
             : 0,
@@ -839,10 +931,27 @@ export const registerFinancialAnalyticsRoutes = (app: FinancialApp) => {
             balance: cashflowPoints.length ? cashflowPoints[cashflowPoints.length - 1].balance : 0,
           },
         },
+        projection: {
+          rawExpectedRevenue: toNumber(scheduleMetrics.expected_revenue_next_30d),
+          adjustedExpectedRevenue: projectedNext30Days,
+          scheduledSessions: toInt(scheduleMetrics.scheduled_next_30d),
+          noShowRate,
+          packageInventoryValue: toNumber(packageInventory.inventory_value),
+        },
         collections: {
           overdueCount: toInt(accountSummary.overdue_receivables_count),
           dueTodayCount: toInt(accountSummary.due_today_count),
           topAccounts: topAccounts.map((row) => ({
+            id: String(row.id ?? ''),
+            tipo: String(row.tipo ?? 'receita'),
+            description: String(row.description ?? 'Sem descrição'),
+            status: String(row.status ?? 'pendente'),
+            amount: toNumber(row.amount),
+            dueDate: String(row.due_date ?? ''),
+            patientId: row.patient_id ? String(row.patient_id) : null,
+            patientName: String(row.patient_name ?? 'Sem vínculo de paciente'),
+          })),
+          todayCollections: todayCollections.map((row) => ({
             id: String(row.id ?? ''),
             tipo: String(row.tipo ?? 'receita'),
             description: String(row.description ?? 'Sem descrição'),
@@ -908,6 +1017,7 @@ export const registerFinancialAnalyticsRoutes = (app: FinancialApp) => {
           amount: toNumber(row.amount),
           createdAt: String(row.created_at ?? ''),
         })),
+        recentDocuments,
         alerts,
         suggestions,
       },

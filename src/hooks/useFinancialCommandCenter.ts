@@ -17,6 +17,7 @@ const emptyState: FinancialCommandCenterData = {
 		previousEndDate: "",
 	},
 	summary: {
+		cashPosition: 0,
 		realizedRevenue: 0,
 		realizedExpenses: 0,
 		netBalance: 0,
@@ -24,10 +25,18 @@ const emptyState: FinancialCommandCenterData = {
 		pendingPayables: 0,
 		overdueAmount: 0,
 		averageTicket: 0,
+		estimatedMargin: 0,
 		collectionRate: 0,
 		monthlyGrowth: 0,
 		activePatients: 0,
 		projectedNext30Days: 0,
+	},
+	projection: {
+		rawExpectedRevenue: 0,
+		adjustedExpectedRevenue: 0,
+		scheduledSessions: 0,
+		noShowRate: 0,
+		packageInventoryValue: 0,
 	},
 	cashflow: {
 		points: [],
@@ -41,6 +50,7 @@ const emptyState: FinancialCommandCenterData = {
 		overdueCount: 0,
 		dueTodayCount: 0,
 		topAccounts: [],
+		todayCollections: [],
 	},
 	documents: {
 		receiptsInPeriod: 0,
@@ -83,6 +93,7 @@ const emptyState: FinancialCommandCenterData = {
 		},
 	},
 	recentTransactions: [],
+	recentDocuments: [],
 	alerts: [],
 	suggestions: [],
 };
@@ -93,7 +104,7 @@ export function useFinancialCommandCenter(
 	const { organizationId } = useAuth();
 
 	return useQuery({
-		queryKey: ["financial-command-center", period],
+		queryKey: ["financial-command-center", organizationId, period],
 		enabled: !!organizationId,
 		staleTime: 1000 * 60 * 3,
 		gcTime: 1000 * 60 * 10,
