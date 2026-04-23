@@ -50,6 +50,20 @@
       "when": 1776434173858,
       "tag": "0006_ambiguous_vin_gonzales",
       "breakpoints": true
+    },
+    {
+      "idx": 7,
+      "version": "7",
+      "when": 1776916117063,
+      "tag": "0007_nasty_ted_forrester",
+      "breakpoints": true
+    },
+    {
+      "idx": 8,
+      "version": "7",
+      "when": 1776916811146,
+      "tag": "0008_blue_firebrand",
+      "breakpoints": true
     }
   ]
 }

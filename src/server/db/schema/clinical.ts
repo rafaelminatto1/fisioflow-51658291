@@ -286,6 +286,7 @@ export const patientObjectiveAssignments = pgTable("patient_objective_assignment
 		.notNull(),
 	prioridade: integer("prioridade").default(2),
 	notas: text("notas"),
+	isSensitive: boolean("is_sensitive").default(false).notNull(), // Para filtragem de IA
 	createdBy: text("created_by"),
 	deletedAt: timestamp("deleted_at"),
 	createdAt: timestamp("created_at").defaultNow().notNull(),

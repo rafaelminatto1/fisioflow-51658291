@@ -15,3 +15,4 @@ export type { PatientDischargeParams } from './dischargeWorkflow';
 
 export { PatientReengagementWorkflow } from './reengagementWorkflow';
 export type { PatientReengagementParams } from './reengagementWorkflow';
+export { PatientDigitalTwinWorkflow } from "./patient-digital-twin";
