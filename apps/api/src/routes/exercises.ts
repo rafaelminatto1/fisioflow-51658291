@@ -7,6 +7,7 @@ import {
   exercises,
   exerciseCategories,
   exerciseFavorites,
+  exerciseMediaAttachments,
 } from '@fisioflow/db';
 import { generateEmbedding, generateTurboSketch } from '../lib/ai-native';
 
@@ -359,13 +360,30 @@ app.post('/', requireAuth, async (c) => {
   const user = c.get('user');
   const body = await c.req.json();
 
+  const { media, ...exerciseData } = body;
+
   const [row] = await db
     .insert(exercises)
     .values({
-      ...body,
+      ...exerciseData,
       createdBy: user.uid,
     })
     .returning();
+
+  // Processar mídias
+  if (media && Array.isArray(media) && media.length > 0) {
+    await db.insert(exerciseMediaAttachments).values(
+      media.map((m: any, idx: number) => ({
+        exerciseId: row.id,
+        mediaId: m.id, // Se vier da galeria
+        type: m.type,
+        url: m.url,
+        caption: m.caption,
+        orderIndex: m.orderIndex ?? idx,
+        organizationId: user.organizationId,
+      }))
+    );
+  }
 
   // Background tasks: Invalidate cache and update embedding/vectorize
   c.executionCtx.waitUntil((async () => {
@@ -404,22 +422,42 @@ app.put('/:id', requireAuth, async (c) => {
   const db = await createDb(c.env);
   const { id } = c.req.param();
   const body = await c.req.json();
+  const { media, ...exerciseData } = body;
 
   // Remove campos imutáveis
-  delete body.id;
-  delete body.createdBy;
-  delete body.createdAt;
+  delete exerciseData.id;
+  delete exerciseData.createdBy;
+  delete exerciseData.createdAt;
 
   const [row] = await db
     .update(exercises)
     .set({
-      ...body,
+      ...exerciseData,
       updatedAt: new Date(),
     })
     .where(eq(exercises.id, id))
     .returning();
 
   if (!row) return c.json({ error: 'Exercício não encontrado' }, 404);
+
+  // Sincronizar mídias (estratégia: deletar e inserir para simplificar ordenação)
+  if (media && Array.isArray(media)) {
+    await db.delete(exerciseMediaAttachments).where(eq(exerciseMediaAttachments.exerciseId, id));
+    
+    if (media.length > 0) {
+      await db.insert(exerciseMediaAttachments).values(
+        media.map((m: any, idx: number) => ({
+          exerciseId: id,
+          mediaId: m.id,
+          type: m.type,
+          url: m.url,
+          caption: m.caption,
+          orderIndex: m.orderIndex ?? idx,
+          organizationId: user.organizationId,
+        }))
+      );
+    }
+  }
 
   // Background tasks: Invalidate cache and update embedding/vectorize
   c.executionCtx.waitUntil((async () => {

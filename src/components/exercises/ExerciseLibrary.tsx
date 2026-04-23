@@ -802,7 +802,7 @@ export function ExerciseLibrary({
 	return (
 		<div className="flex flex-col w-full relative px-4 sm:px-6 pb-6">
 			{/* Search and Filters - Sticky Header */}
-			<div className="sticky top-[112px] md:top-[96px] z-20 bg-background/95 backdrop-blur-md pt-2 pb-4 -mx-4 px-4 sm:-mx-6 sm:px-6 border-b mb-4 transition-all duration-300">
+			<div className="sticky top-0 z-20 bg-background/95 backdrop-blur-md pt-4 pb-4 -mx-4 px-4 sm:-mx-6 sm:px-6 border-b mb-4 transition-all duration-300">
 				<div className="flex flex-col gap-4">
 				<div className="flex items-center gap-4">
 					<div className="relative flex-1">
