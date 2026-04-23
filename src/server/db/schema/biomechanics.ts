@@ -7,6 +7,8 @@ import {
 	jsonb,
 	pgEnum,
 	index,
+	numeric,
+	integer,
 } from "drizzle-orm/pg-core";
 import { relations } from "drizzle-orm";
 import { withOrganizationPolicy } from "./rls_helper";
@@ -65,9 +67,46 @@ export const biomechanicsAssessments = pgTable(
 	],
 );
 
-export const biomechanicsAssessmentsRelations = relations(biomechanicsAssessments, ({ one }) => ({
+/**
+ * Biomechanics Metrics
+ * Armazena métricas normalizadas para busca rápida e agregação.
+ */
+export const biomechanicsMetrics = pgTable(
+	"biomechanics_metrics",
+	{
+		id: uuid("id").primaryKey().defaultRandom(),
+		assessmentId: uuid("assessment_id")
+			.notNull()
+			.references(() => biomechanicsAssessments.id),
+		organizationId: uuid("organization_id").notNull(),
+		patientId: uuid("patient_id")
+			.notNull()
+			.references(() => patients.id),
+		
+		metricKey: varchar("metric_key", { length: 100 }).notNull(), // ex: 'gait_speed', 'knee_flexion_l'
+		metricValue: numeric("metric_value", { precision: 10, scale: 2 }).notNull(),
+		unit: varchar("unit", { length: 20 }), // ex: 'm/s', 'deg'
+		
+		createdAt: timestamp("created_at").defaultNow().notNull(),
+	},
+	(table) => [
+		index("idx_bio_metric_key").on(table.metricKey),
+		index("idx_bio_metric_patient").on(table.patientId),
+		withOrganizationPolicy("biomechanics_metrics", table.organizationId),
+	],
+);
+
+export const biomechanicsAssessmentsRelations = relations(biomechanicsAssessments, ({ one, many }) => ({
 	patient: one(patients, {
 		fields: [biomechanicsAssessments.patientId],
 		references: [patients.id],
+	}),
+	metrics: many(biomechanicsMetrics),
+}));
+
+export const biomechanicsMetricsRelations = relations(biomechanicsMetrics, ({ one }) => ({
+	assessment: one(biomechanicsAssessments, {
+		fields: [biomechanicsMetrics.assessmentId],
+		references: [biomechanicsAssessments.id],
 	}),
 }));

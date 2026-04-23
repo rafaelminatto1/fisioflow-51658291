@@ -105,6 +105,11 @@ name = "patient-reengagement"
 binding = "WORKFLOW_REENGAGEMENT"
 class_name = "PatientReengagementWorkflow"
 
+[[workflows]]
+name = "patient-digital-twin"
+binding = "WORKFLOW_DIGITAL_TWIN"
+class_name = "PatientDigitalTwinWorkflow"
+
 # ===== DURABLE OBJECTS (Realtime State & Agents) =====
 [[durable_objects.bindings]]
 name = "ORGANIZATION_STATE"
@@ -281,6 +286,11 @@ class_name = "PatientDischargeWorkflow"
 name = "patient-reengagement"
 binding = "WORKFLOW_REENGAGEMENT"
 class_name = "PatientReengagementWorkflow"
+
+[[env.production.workflows]]
+name = "patient-digital-twin"
+binding = "WORKFLOW_DIGITAL_TWIN"
+class_name = "PatientDigitalTwinWorkflow"
 
 [[env.production.hyperdrive]]
 binding = "HYPERDRIVE"

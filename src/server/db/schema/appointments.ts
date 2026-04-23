@@ -106,6 +106,10 @@ export const appointments = pgTable(
 		paidAt: timestamp("paid_at"),
 		packageId: uuid("package_id"), // If using session package
 
+		// Billing & Fiscal - RF02.3
+		billingStatus: varchar("billing_status", { length: 50 }).default("pending"), // 'pending', 'ready_for_invoice', 'invoiced'
+		invoiceId: uuid("invoice_id"), // Reference to NFS-e table when integrated
+
 		// Notes & Cancellation
 		notes: text("notes"),
 		cancellationReason: text("cancellation_reason"),

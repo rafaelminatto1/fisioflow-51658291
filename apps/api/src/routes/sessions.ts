@@ -6,10 +6,28 @@ import { sessions, sessionAttachments, sessionTemplates } from '@fisioflow/db';
 import { eq, and, desc, count, sql, or, ilike, isNull } from 'drizzle-orm';
 import { withTenant } from '../lib/db-utils';
 import { invalidatePatientCache } from '../lib/ai-context-cache';
+import { processClinicalEmbedding } from '../lib/ai/embeddings';
 
 const app = new Hono<{ Bindings: Env; Variables: AuthVariables }>();
 
 // ===== HELPERS =====
+
+/** Local: Converte SOAP para texto único para embedding */
+function extractSoapText(row: any): string {
+	const parts = [];
+	
+	const subjective = jsonbToText(row.subjective);
+	const objective = jsonbToText(row.objective);
+	const assessment = jsonbToText(row.assessment);
+	const plan = jsonbToText(row.plan);
+
+	if (subjective) parts.push(`[Subjetivo]: ${subjective}`);
+	if (objective) parts.push(`[Objetivo]: ${objective}`);
+	if (assessment) parts.push(`[Avaliação]: ${assessment}`);
+	if (plan) parts.push(`[Plano]: ${plan}`);
+
+	return parts.join("\n\n");
+}
 
 /** Verifica se uma string é um UUID válido */
 function isValidUuid(val: string): boolean {
@@ -252,8 +270,20 @@ app.post('/:id/finalize', requireAuth, async (c) => {
     .returning();
 
   if (!row) return c.json({ error: 'Sessão não encontrada ou já finalizada' }, 404);
+  
   if (row.patientId) {
-    c.executionCtx.waitUntil(invalidatePatientCache(c.env, row.patientId).catch(() => {}));
+    c.executionCtx.waitUntil(
+		Promise.all([
+			invalidatePatientCache(c.env, row.patientId),
+			processClinicalEmbedding(
+				c.env, 
+				user.organizationId, 
+				row.patientId, 
+				row.id, 
+				extractSoapText(row)
+			)
+		]).catch(() => {})
+	);
   }
   return c.json({ data: rowToRecord(row) });
 });
