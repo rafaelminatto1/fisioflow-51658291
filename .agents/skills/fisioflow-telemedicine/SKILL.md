@@ -1,3 +1,8 @@
+---
+name: fisioflow-telemedicine
+description: Reference for FisioFlow telemedicine flows using Jitsi Meet. Use when working on telemedicine routes, room lifecycle, session scheduling, meeting links, recordings, or remote session state.
+---
+
 # FisioFlow Telemedicine
 
 Telemedicine integration using Jitsi Meet for remote physiotherapy sessions.
