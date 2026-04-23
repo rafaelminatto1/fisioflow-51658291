@@ -167,29 +167,29 @@ export const useDashboardMetrics = (period: DashboardPeriod = "hoje") => {
 				contasRes,
 				pagamentosRes,
 			] = await Promise.all([
-				patientsApi.list({ limit: 3000, offset: 0 }),
+				patientsApi.list({ limit: 1000, offset: 0 }),
 				appointmentsApi.list({
 					dateFrom: primaryDateFrom,
 					dateTo: primaryDateTo,
-					limit: 3000,
+					limit: 1000,
 					offset: 0,
 				}),
 				appointmentsApi.list({
 					dateFrom: thirtyDaysAgo,
 					dateTo: today,
-					limit: 3000,
+					limit: 1000,
 					offset: 0,
 				}),
 				appointmentsApi.list({
 					dateFrom: weekStart,
 					dateTo: weekEnd,
-					limit: 3000,
+					limit: 1000,
 					offset: 0,
 				}),
 				appointmentsApi.list({
 					dateFrom: startCurrentMonth,
 					dateTo: today,
-					limit: 3000,
+					limit: 1000,
 					offset: 0,
 				}),
 				profileApi.listTherapists().catch((error) => {

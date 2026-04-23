@@ -1,9 +1,18 @@
-import { useState, Suspense } from "react";
+import { useState } from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { BarChart3, Sparkles, RefreshCw, TrendingUp, TrendingDown, DollarSign, Calendar, Users } from "lucide-react";
+import {
+	BarChart3,
+	Sparkles,
+	RefreshCw,
+	TrendingUp,
+	TrendingDown,
+	DollarSign,
+	Calendar,
+	Users,
+} from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import { request } from "@/api/v2/base";
 import { AppointmentAnalytics } from "@/components/analytics/AppointmentAnalytics";
@@ -15,8 +24,15 @@ import { AnalyticsFiltersProvider } from "@/contexts/AnalyticsFiltersContext";
 import { AnalyticsFilters } from "@/components/analytics/AnalyticsFilters";
 import { formatCurrency } from "@/lib/utils";
 import { ErrorBoundary } from "react-error-boundary";
+import { MainLayout } from "@/components/layout/MainLayout";
 
-function ErrorFallback({ error, resetErrorBoundary }: { error: Error; resetErrorBoundary: () => void }) {
+function ErrorFallback({
+	error,
+	resetErrorBoundary,
+}: {
+	error: Error;
+	resetErrorBoundary: () => void;
+}) {
 	return (
 		<div className="p-6 rounded-2xl bg-red-50 border border-red-100 text-center space-y-4">
 			<div className="flex justify-center">
@@ -25,12 +41,19 @@ function ErrorFallback({ error, resetErrorBoundary }: { error: Error; resetError
 				</div>
 			</div>
 			<div className="space-y-1">
-				<h3 className="text-lg font-bold text-red-900">Ops! Algo deu errado na análise</h3>
+				<h3 className="text-lg font-bold text-red-900">
+					Ops! Algo deu errado na análise
+				</h3>
 				<p className="text-sm text-red-600 max-w-md mx-auto">
-					Não conseguimos carregar os dados desta seção. Isso pode ser um problema temporário de conexão.
+					Não conseguimos carregar os dados desta seção. Isso pode ser um
+					problema temporário de conexão.
 				</p>
 			</div>
-			<Button onClick={resetErrorBoundary} variant="outline" className="border-red-200 text-red-600 hover:bg-red-100">
+			<Button
+				onClick={resetErrorBoundary}
+				variant="outline"
+				className="border-red-200 text-red-600 hover:bg-red-100"
+			>
 				Tentar novamente
 			</Button>
 		</div>
@@ -42,14 +65,25 @@ const MONTHS_OPTIONS = [3, 6, 12] as const;
 interface BIData {
 	revenue: { total_period: number; current_month: number; trend_pct: number };
 	occupancy: { rate: number };
-	retention: { rate: number; retained_patients: number; total_active_patients: number };
+	retention: {
+		rate: number;
+		retained_patients: number;
+		total_active_patients: number;
+	};
 	top_therapists: Array<{ name: string; sessions_completed: number }>;
 }
 
-function KpiStrip({ months, onMonthsChange }: { months: number; onMonthsChange: (m: number) => void }) {
+function KpiStrip({
+	months,
+	onMonthsChange,
+}: {
+	months: number;
+	onMonthsChange: (m: number) => void;
+}) {
 	const { data, isLoading, refetch, isFetching } = useQuery({
 		queryKey: ["analytics", "bi", months],
-		queryFn: () => request<{ data: BIData }>(`/api/analytics/bi?months=${months}`),
+		queryFn: () =>
+			request<{ data: BIData }>(`/api/analytics/bi?months=${months}`),
 		staleTime: 5 * 60 * 1000,
 		select: (res) => res.data,
 	});
@@ -58,7 +92,9 @@ function KpiStrip({ months, onMonthsChange }: { months: number; onMonthsChange: 
 		{
 			label: "Receita no Período",
 			value: isLoading ? "—" : formatCurrency(data?.revenue?.total_period ?? 0),
-			sub: isLoading ? "" : `Mês atual: ${formatCurrency(data?.revenue?.current_month ?? 0)}`,
+			sub: isLoading
+				? ""
+				: `Mês atual: ${formatCurrency(data?.revenue?.current_month ?? 0)}`,
 			trend: data?.revenue?.trend_pct,
 			icon: DollarSign,
 			color: "text-emerald-600",
@@ -75,7 +111,9 @@ function KpiStrip({ months, onMonthsChange }: { months: number; onMonthsChange: 
 		{
 			label: "Retenção de Pacientes",
 			value: isLoading ? "—" : `${data?.retention?.rate ?? 0}%`,
-			sub: isLoading ? "" : `${data?.retention?.retained_patients ?? 0} / ${data?.retention?.total_active_patients ?? 0}`,
+			sub: isLoading
+				? ""
+				: `${data?.retention?.retained_patients ?? 0} / ${data?.retention?.total_active_patients ?? 0}`,
 			icon: Users,
 			color: "text-violet-600",
 			bg: "bg-violet-50 dark:bg-violet-950/30",
@@ -87,39 +125,72 @@ function KpiStrip({ months, onMonthsChange }: { months: number; onMonthsChange: 
 			<div className="flex items-center justify-between gap-4">
 				<div className="flex items-center gap-2">
 					{MONTHS_OPTIONS.map((m) => (
-						<Button key={m} variant={months === m ? "default" : "ghost"} size="sm" className="h-7 px-3 text-xs rounded-xl" onClick={() => onMonthsChange(m)}>
+						<Button
+							key={m}
+							variant={months === m ? "default" : "ghost"}
+							size="sm"
+							className="h-7 px-3 text-xs rounded-xl"
+							onClick={() => onMonthsChange(m)}
+						>
 							{m}M
 						</Button>
 					))}
-					<span className="text-[10px] text-muted-foreground font-medium hidden sm:block">período de referência dos KPIs</span>
+					<span className="text-[10px] text-muted-foreground font-medium hidden sm:block">
+						período de referência dos KPIs
+					</span>
 				</div>
-				<Button variant="ghost" size="sm" className="h-7 w-7 p-0 rounded-xl" onClick={() => refetch()} disabled={isFetching}>
-					<RefreshCw className={`h-3.5 w-3.5 ${isFetching ? "animate-spin" : ""}`} />
+				<Button
+					variant="ghost"
+					size="sm"
+					className="h-7 w-7 p-0 rounded-xl"
+					onClick={() => refetch()}
+					disabled={isFetching}
+				>
+					<RefreshCw
+						className={`h-3.5 w-3.5 ${isFetching ? "animate-spin" : ""}`}
+					/>
 				</Button>
 			</div>
 
 			<div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
 				{kpis.map((kpi) => (
-					<div key={kpi.label} className="flex items-center gap-3 p-3.5 rounded-2xl bg-background border border-border/50 shadow-sm">
+					<div
+						key={kpi.label}
+						className="flex items-center gap-3 p-3.5 rounded-2xl bg-background border border-border/50 shadow-sm"
+					>
 						<div className={`p-2.5 rounded-xl ${kpi.bg} shrink-0`}>
 							<kpi.icon className={`h-4 w-4 ${kpi.color}`} />
 						</div>
 						<div className="min-w-0">
-							<p className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider truncate">{kpi.label}</p>
+							<p className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider truncate">
+								{kpi.label}
+							</p>
 							<div className="flex items-center gap-1.5">
 								{isLoading ? (
 									<Skeleton className="h-5 w-20" />
 								) : (
-									<span className={`text-lg font-black ${kpi.color}`}>{kpi.value}</span>
+									<span className={`text-lg font-black ${kpi.color}`}>
+										{kpi.value}
+									</span>
 								)}
 								{kpi.trend !== undefined && !isLoading && (
-									<span className={`flex items-center text-[10px] font-bold ${kpi.trend >= 0 ? "text-emerald-600" : "text-red-500"}`}>
-										{kpi.trend >= 0 ? <TrendingUp className="h-3 w-3 mr-0.5" /> : <TrendingDown className="h-3 w-3 mr-0.5" />}
+									<span
+										className={`flex items-center text-[10px] font-bold ${kpi.trend >= 0 ? "text-emerald-600" : "text-red-500"}`}
+									>
+										{kpi.trend >= 0 ? (
+											<TrendingUp className="h-3 w-3 mr-0.5" />
+										) : (
+											<TrendingDown className="h-3 w-3 mr-0.5" />
+										)}
 										{Math.abs(kpi.trend)}%
 									</span>
 								)}
 							</div>
-							{kpi.sub && <p className="text-[10px] text-muted-foreground truncate">{kpi.sub}</p>}
+							{kpi.sub && (
+								<p className="text-[10px] text-muted-foreground truncate">
+									{kpi.sub}
+								</p>
+							)}
 						</div>
 					</div>
 				))}
@@ -150,7 +221,8 @@ function AdvancedAnalyticsContentInternal() {
 							</Badge>
 						</div>
 						<p className="text-sm text-muted-foreground font-medium mt-0.5 max-w-2xl">
-							Insights e previsões baseadas em IA para otimizar o desempenho da clínica.
+							Insights e previsões baseadas em IA para otimizar o desempenho da
+							clínica.
 						</p>
 					</div>
 				</div>
@@ -169,23 +241,38 @@ function AdvancedAnalyticsContentInternal() {
 				<AnalyticsFilters />
 			</div>
 
-			{/* Tabs — sem sub-tab Dashboard */}
+			{/* Tabs */}
 			<Tabs defaultValue="patients" className="space-y-6">
 				<div className="flex items-center overflow-x-auto pb-2 -mx-1 px-1 no-scrollbar">
 					<TabsList className="h-12 inline-flex items-center justify-start p-1.5 bg-muted/50 rounded-2xl border border-border/50 backdrop-blur-sm">
-						<TabsTrigger value="patients" className="h-9 px-4 rounded-xl data-[state=active]:bg-background data-[state=active]:shadow-md data-[state=active]:text-primary transition-all text-xs font-bold gap-2">
+						<TabsTrigger
+							value="patients"
+							className="h-9 px-4 rounded-xl data-[state=active]:bg-background data-[state=active]:shadow-md data-[state=active]:text-primary transition-all text-xs font-bold gap-2"
+						>
 							Pacientes
 						</TabsTrigger>
-						<TabsTrigger value="appointments" className="h-9 px-4 rounded-xl data-[state=active]:bg-background data-[state=active]:shadow-md data-[state=active]:text-primary transition-all text-xs font-bold gap-2">
+						<TabsTrigger
+							value="appointments"
+							className="h-9 px-4 rounded-xl data-[state=active]:bg-background data-[state=active]:shadow-md data-[state=active]:text-primary transition-all text-xs font-bold gap-2"
+						>
 							Agendamentos
 						</TabsTrigger>
-						<TabsTrigger value="financial" className="h-9 px-4 rounded-xl data-[state=active]:bg-background data-[state=active]:shadow-md data-[state=active]:text-primary transition-all text-xs font-bold gap-2">
+						<TabsTrigger
+							value="financial"
+							className="h-9 px-4 rounded-xl data-[state=active]:bg-background data-[state=active]:shadow-md data-[state=active]:text-primary transition-all text-xs font-bold gap-2"
+						>
 							Financeiro
 						</TabsTrigger>
-						<TabsTrigger value="team" className="h-9 px-4 rounded-xl data-[state=active]:bg-background data-[state=active]:shadow-md data-[state=active]:text-primary transition-all text-xs font-bold gap-2">
+						<TabsTrigger
+							value="team"
+							className="h-9 px-4 rounded-xl data-[state=active]:bg-background data-[state=active]:shadow-md data-[state=active]:text-primary transition-all text-xs font-bold gap-2"
+						>
 							Equipe
 						</TabsTrigger>
-						<TabsTrigger value="predictive" className="h-9 px-4 rounded-xl data-[state=active]:bg-background data-[state=active]:shadow-md data-[state=active]:text-primary transition-all text-xs font-bold gap-2">
+						<TabsTrigger
+							value="predictive"
+							className="h-9 px-4 rounded-xl data-[state=active]:bg-background data-[state=active]:shadow-md data-[state=active]:text-primary transition-all text-xs font-bold gap-2"
+						>
 							<Sparkles className="h-3.5 w-3.5" />
 							Preditivo
 						</TabsTrigger>
@@ -193,23 +280,38 @@ function AdvancedAnalyticsContentInternal() {
 				</div>
 
 				<ErrorBoundary FallbackComponent={ErrorFallback}>
-					<TabsContent value="patients" className="space-y-4 animate-in fade-in slide-in-from-bottom-4 duration-500">
+					<TabsContent
+						value="patients"
+						className="space-y-4 animate-in fade-in slide-in-from-bottom-4 duration-500"
+					>
 						<PatientAnalytics />
 					</TabsContent>
 
-					<TabsContent value="appointments" className="space-y-4 animate-in fade-in slide-in-from-bottom-4 duration-500">
+					<TabsContent
+						value="appointments"
+						className="space-y-4 animate-in fade-in slide-in-from-bottom-4 duration-500"
+					>
 						<AppointmentAnalytics />
 					</TabsContent>
 
-					<TabsContent value="financial" className="space-y-4 animate-in fade-in slide-in-from-bottom-4 duration-500">
+					<TabsContent
+						value="financial"
+						className="space-y-4 animate-in fade-in slide-in-from-bottom-4 duration-500"
+					>
 						<FinancialAnalytics />
 					</TabsContent>
 
-					<TabsContent value="team" className="space-y-4 animate-in fade-in slide-in-from-bottom-4 duration-500">
+					<TabsContent
+						value="team"
+						className="space-y-4 animate-in fade-in slide-in-from-bottom-4 duration-500"
+					>
 						<TeamPerformance />
 					</TabsContent>
 
-					<TabsContent value="predictive" className="space-y-4 animate-in fade-in slide-in-from-bottom-4 duration-500">
+					<TabsContent
+						value="predictive"
+						className="space-y-4 animate-in fade-in slide-in-from-bottom-4 duration-500"
+					>
 						<PredictiveAnalytics />
 					</TabsContent>
 				</ErrorBoundary>
@@ -221,9 +323,17 @@ function AdvancedAnalyticsContentInternal() {
 export function AdvancedAnalyticsContent() {
 	return (
 		<AnalyticsFiltersProvider>
-      <Suspense fallback={<div className="p-8 space-y-4"><Skeleton className="h-12 w-full" /><Skeleton className="h-64 w-full" /></div>}>
-			  <AdvancedAnalyticsContentInternal />
-      </Suspense>
+			<AdvancedAnalyticsContentInternal />
 		</AnalyticsFiltersProvider>
 	);
 }
+
+export function AdvancedAnalytics() {
+	return (
+		<MainLayout>
+			<AdvancedAnalyticsContent />
+		</MainLayout>
+	);
+}
+
+export default AdvancedAnalytics;
