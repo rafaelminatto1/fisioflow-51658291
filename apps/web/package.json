@@ -314,7 +314,7 @@
     "vite-plugin-inspect": "^11.3.3",
     "vite-plugin-pwa": "^1.2.0",
     "vitest": "^4.0.18",
-    "wrangler": "4.83.0"
+    "wrangler": "4.84.1"
   },
   "peerDependencies": {
     "@capgo/capacitor-native-biometric": "^8.4.2"
