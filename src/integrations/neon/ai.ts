@@ -11,7 +11,7 @@ import { initAppCheck } from "@/lib/app-check";
 import { fisioLogger as logger } from "@/lib/errors/logger";
 import { getServerOnlyEnv } from "@/lib/config/server-only";
 import { getWorkersApiUrl } from "@/lib/api/config";
-import { getAuth } from "firebase/auth";
+import { getNeonAccessToken } from "@/lib/auth/neon-token";
 
 export enum AIModelType {
 	GEMINI_2_5_FLASH = "gemini-2.5-flash",
@@ -247,8 +247,7 @@ export class NeonAIService {
 		if (typeof window !== "undefined") {
 			try {
 				const apiUrl = getWorkersApiUrl();
-				const auth = getAuth();
-				const token = await auth.currentUser?.getIdToken();
+				const token = await getNeonAccessToken();
 
 				const response = await fetch(`${apiUrl}/ai/service`, {
 					method: "POST",
