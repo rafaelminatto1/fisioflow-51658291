@@ -157,10 +157,10 @@ export function FinancialAnalytics() {
 		select: (res) => res.data,
 	});
 
-	const revenueMonths = (biData?.revenue.trend ?? []).map((r) => ({
-		month: r.month.slice(5),
-		receita: Number(r.revenue),
-		sessoes: r.sessions,
+	const revenueMonths = (biData?.revenue?.trend ?? []).map((r) => ({
+		month: r.month?.slice(5) || "",
+		receita: Number(r.revenue || 0),
+		sessoes: r.sessions || 0,
 	}));
 
 	const pieData = (biData?.status_breakdown ?? []).map((s) => ({

@@ -32,6 +32,18 @@ app.get('/:key{.*}', async (c) => {
       const headers = new Headers();
       object.writeHttpMetadata(headers);
       headers.set('Cache-Control', 'public, max-age=31536000, immutable');
+      headers.set('Access-Control-Allow-Origin', '*');
+      headers.set('Cross-Origin-Resource-Policy', 'cross-origin');
+      
+      // Garantir Content-Type se estiver ausente
+      if (!headers.has('Content-Type')) {
+        const ext = key.split('.').pop()?.toLowerCase();
+        if (ext === 'avif') headers.set('Content-Type', 'image/avif');
+        else if (ext === 'webp') headers.set('Content-Type', 'image/webp');
+        else if (ext === 'png') headers.set('Content-Type', 'image/png');
+        else if (ext === 'jpg' || ext === 'jpeg') headers.set('Content-Type', 'image/jpeg');
+      }
+
       return new Response(object.body, { headers });
     }
 
