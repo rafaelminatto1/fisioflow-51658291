@@ -130,7 +130,7 @@ export function FinancialAnalytics() {
 		queryFn: async () => {
 			if (!dateRange?.from || !dateRange?.to) return [];
 
-			const response = await financialApi.pagamentos.list({ limit: 3000 });
+			const response = await financialApi.pagamentos.list({ limit: 1000 });
 			const payments = ((response?.data ?? []) as Pagamento[]).filter((p) => {
 				if (!p.created_at) return false;
 				const d = new Date(p.created_at);
