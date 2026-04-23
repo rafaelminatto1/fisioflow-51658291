@@ -14,6 +14,28 @@ import { PredictiveAnalytics } from "@/components/analytics/PredictiveAnalytics"
 import { AnalyticsFiltersProvider } from "@/contexts/AnalyticsFiltersContext";
 import { AnalyticsFilters } from "@/components/analytics/AnalyticsFilters";
 import { formatCurrency } from "@/lib/utils";
+import { ErrorBoundary } from "react-error-boundary";
+
+function ErrorFallback({ error, resetErrorBoundary }: { error: Error; resetErrorBoundary: () => void }) {
+	return (
+		<div className="p-6 rounded-2xl bg-red-50 border border-red-100 text-center space-y-4">
+			<div className="flex justify-center">
+				<div className="p-3 bg-red-100 rounded-xl">
+					<Sparkles className="h-6 w-6 text-red-600" />
+				</div>
+			</div>
+			<div className="space-y-1">
+				<h3 className="text-lg font-bold text-red-900">Ops! Algo deu errado na análise</h3>
+				<p className="text-sm text-red-600 max-w-md mx-auto">
+					Não conseguimos carregar os dados desta seção. Isso pode ser um problema temporário de conexão.
+				</p>
+			</div>
+			<Button onClick={resetErrorBoundary} variant="outline" className="border-red-200 text-red-600 hover:bg-red-100">
+				Tentar novamente
+			</Button>
+		</div>
+	);
+}
 
 const MONTHS_OPTIONS = [3, 6, 12] as const;
 
@@ -35,16 +57,16 @@ function KpiStrip({ months, onMonthsChange }: { months: number; onMonthsChange: 
 	const kpis = [
 		{
 			label: "Receita no Período",
-			value: isLoading ? "—" : formatCurrency(data?.revenue.total_period ?? 0),
-			sub: isLoading ? "" : `Mês atual: ${formatCurrency(data?.revenue.current_month ?? 0)}`,
-			trend: data?.revenue.trend_pct,
+			value: isLoading ? "—" : formatCurrency(data?.revenue?.total_period ?? 0),
+			sub: isLoading ? "" : `Mês atual: ${formatCurrency(data?.revenue?.current_month ?? 0)}`,
+			trend: data?.revenue?.trend_pct,
 			icon: DollarSign,
 			color: "text-emerald-600",
 			bg: "bg-emerald-50 dark:bg-emerald-950/30",
 		},
 		{
 			label: "Taxa de Ocupação",
-			value: isLoading ? "—" : `${data?.occupancy.rate ?? 0}%`,
+			value: isLoading ? "—" : `${data?.occupancy?.rate ?? 0}%`,
 			sub: "",
 			icon: Calendar,
 			color: "text-blue-600",
@@ -52,8 +74,8 @@ function KpiStrip({ months, onMonthsChange }: { months: number; onMonthsChange: 
 		},
 		{
 			label: "Retenção de Pacientes",
-			value: isLoading ? "—" : `${data?.retention.rate ?? 0}%`,
-			sub: isLoading ? "" : `${data?.retention.retained_patients ?? 0} / ${data?.retention.total_active_patients ?? 0}`,
+			value: isLoading ? "—" : `${data?.retention?.rate ?? 0}%`,
+			sub: isLoading ? "" : `${data?.retention?.retained_patients ?? 0} / ${data?.retention?.total_active_patients ?? 0}`,
 			icon: Users,
 			color: "text-violet-600",
 			bg: "bg-violet-50 dark:bg-violet-950/30",
@@ -170,25 +192,27 @@ function AdvancedAnalyticsContentInternal() {
 					</TabsList>
 				</div>
 
-				<TabsContent value="patients" className="space-y-4 animate-in fade-in slide-in-from-bottom-4 duration-500">
-					<PatientAnalytics />
-				</TabsContent>
+				<ErrorBoundary FallbackComponent={ErrorFallback}>
+					<TabsContent value="patients" className="space-y-4 animate-in fade-in slide-in-from-bottom-4 duration-500">
+						<PatientAnalytics />
+					</TabsContent>
 
-				<TabsContent value="appointments" className="space-y-4 animate-in fade-in slide-in-from-bottom-4 duration-500">
-					<AppointmentAnalytics />
-				</TabsContent>
+					<TabsContent value="appointments" className="space-y-4 animate-in fade-in slide-in-from-bottom-4 duration-500">
+						<AppointmentAnalytics />
+					</TabsContent>
 
-				<TabsContent value="financial" className="space-y-4 animate-in fade-in slide-in-from-bottom-4 duration-500">
-					<FinancialAnalytics />
-				</TabsContent>
+					<TabsContent value="financial" className="space-y-4 animate-in fade-in slide-in-from-bottom-4 duration-500">
+						<FinancialAnalytics />
+					</TabsContent>
 
-				<TabsContent value="team" className="space-y-4 animate-in fade-in slide-in-from-bottom-4 duration-500">
-					<TeamPerformance />
-				</TabsContent>
+					<TabsContent value="team" className="space-y-4 animate-in fade-in slide-in-from-bottom-4 duration-500">
+						<TeamPerformance />
+					</TabsContent>
 
-				<TabsContent value="predictive" className="space-y-4 animate-in fade-in slide-in-from-bottom-4 duration-500">
-					<PredictiveAnalytics />
-				</TabsContent>
+					<TabsContent value="predictive" className="space-y-4 animate-in fade-in slide-in-from-bottom-4 duration-500">
+						<PredictiveAnalytics />
+					</TabsContent>
+				</ErrorBoundary>
 			</Tabs>
 		</div>
 	);
