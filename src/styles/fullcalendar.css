@@ -1,0 +1,62 @@
+/*
+  Overrides for FullCalendar to match FisioFlow's theme
+  Add this to your main CSS or import it.
+*/
+
+.calendar-container-override .fc {
+  font-family: inherit;
+  --fc-border-color: hsl(var(--border));
+  --fc-button-text-color: hsl(var(--foreground));
+  --fc-button-bg-color: hsl(var(--background));
+  --fc-button-border-color: hsl(var(--border));
+  --fc-button-hover-bg-color: hsl(var(--accent));
+  --fc-button-hover-border-color: hsl(var(--border));
+  --fc-button-active-bg-color: hsl(var(--accent));
+  --fc-button-active-border-color: hsl(var(--border));
+  --fc-event-bg-color: hsl(var(--primary));
+  --fc-event-border-color: hsl(var(--primary));
+  --fc-event-text-color: hsl(var(--primary-foreground));
+  --fc-event-selected-overlay-color: rgba(0, 0, 0, 0.25);
+  --fc-page-bg-color: hsl(var(--background));
+  --fc-neutral-bg-color: hsl(var(--muted));
+  --fc-neutral-text-color: hsl(var(--muted-foreground));
+  --fc-today-bg-color: hsl(var(--accent) / 0.3);
+}
+
+.calendar-container-override .fc-theme-standard th,
+.calendar-container-override .fc-theme-standard td,
+.calendar-container-override .fc-theme-standard .fc-scrollgrid {
+  border-color: hsl(var(--border) / 0.5);
+}
+
+.calendar-container-override .fc-col-header-cell-cushion {
+  padding: 8px 4px;
+  text-transform: capitalize;
+  font-weight: 500;
+  color: hsl(var(--foreground));
+}
+
+.calendar-container-override .fc-timegrid-slot-label-cushion {
+  font-size: 0.75rem;
+  color: hsl(var(--muted-foreground));
+}
+
+.calendar-container-override .fc-v-event {
+  border-radius: var(--radius);
+  border: none;
+  background-color: transparent;
+  overflow: hidden;
+  box-shadow: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+  transition: transform 0.1s ease, box-shadow 0.1s ease;
+}
+
+.calendar-container-override .fc-v-event:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+  z-index: 5 !important;
+}
+
+.calendar-container-override .fc-event-main {
+  padding: 0;
+  height: 100%;
+}
