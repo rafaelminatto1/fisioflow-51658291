@@ -44,6 +44,12 @@ import { MagicTextarea } from "@/components/ai/MagicTextarea";
 import { BrasilService } from "@/services/brasilApi";
 import { toast } from "sonner";
 import { MultiSelect } from "@/components/ui/multi-select";
+import {
+	PATIENT_CARE_PROFILE_OPTIONS,
+	PATIENT_ORIGIN_OPTIONS,
+	PATIENT_PAYER_MODEL_OPTIONS,
+	PATIENT_THERAPY_FOCUS_OPTIONS,
+} from "@/lib/constants/patient-directory";
 import { PATHOLOGY_OPTIONS } from "@/lib/constants/pathologies";
 import { SmartDatePicker } from "@/components/ui/smart-date-picker";
 
@@ -111,6 +117,13 @@ export const PatientForm = forwardRef<HTMLFormElement, PatientFormProps>(
 				education_level: patient?.education_level || "",
 				health_insurance: patient?.health_insurance || "",
 				insurance_number: patient?.insurance_number || "",
+				origin: patient?.origin || "",
+				referred_by: patient?.referred_by || "",
+				care_profiles: patient?.care_profiles || [],
+				sports_practiced: patient?.sports_practiced || [],
+				therapy_focuses: patient?.therapy_focuses || [],
+				payer_model: patient?.payer_model || "",
+				partner_company_name: patient?.partner_company_name || "",
 				observations: patient?.observations || "",
 				status: (patient?.status as any) || "Inicial",
 			},
@@ -127,7 +140,7 @@ export const PatientForm = forwardRef<HTMLFormElement, PatientFormProps>(
 		const watchedBirthDate = watch("birth_date");
 		const watchedCpf = watch("cpf");
 		const watchedPhone = watch("phone");
-
+		const watchedPayerModel = watch("payer_model");
 		const watchedZipCode = watch("zip_code");
 
 		// handlers
@@ -703,6 +716,38 @@ export const PatientForm = forwardRef<HTMLFormElement, PatientFormProps>(
 							<CardContent className="space-y-4">
 								<div className="grid grid-cols-1 md:grid-cols-2 gap-4">
 									<div className="space-y-2">
+										<Label htmlFor="origin">Origem do Paciente</Label>
+										<Controller
+											name="origin"
+											control={form.control}
+											render={({ field }) => (
+												<Select
+													onValueChange={field.onChange}
+													value={field.value || ""}
+												>
+													<SelectTrigger id="origin">
+														<SelectValue placeholder="Selecione a origem" />
+													</SelectTrigger>
+													<SelectContent>
+														{PATIENT_ORIGIN_OPTIONS.map((option) => (
+															<SelectItem key={option.value} value={option.value}>
+																{option.label}
+															</SelectItem>
+														))}
+													</SelectContent>
+												</Select>
+											)}
+										/>
+									</div>
+									<div className="space-y-2">
+										<Label htmlFor="referred_by">Indicação / Referência</Label>
+										<Input
+											id="referred_by"
+											placeholder="Nome do parceiro, médico ou indicação"
+											{...register("referred_by")}
+										/>
+									</div>
+									<div className="space-y-2">
 										<Label htmlFor="health_insurance">
 											Convênio / Seguro Saúde
 										</Label>
@@ -738,6 +783,103 @@ export const PatientForm = forwardRef<HTMLFormElement, PatientFormProps>(
 											{...register("education_level")}
 										/>
 									</div>
+								</div>
+
+								<div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+									<div className="space-y-2">
+										<Label htmlFor="payer_model">Modelo de Pagamento</Label>
+										<Controller
+											name="payer_model"
+											control={form.control}
+											render={({ field }) => (
+												<Select
+													onValueChange={field.onChange}
+													value={field.value || ""}
+												>
+													<SelectTrigger id="payer_model">
+														<SelectValue placeholder="Selecione o modelo" />
+													</SelectTrigger>
+													<SelectContent>
+														{PATIENT_PAYER_MODEL_OPTIONS.map((option) => (
+															<SelectItem key={option.value} value={option.value}>
+																{option.label}
+															</SelectItem>
+														))}
+													</SelectContent>
+												</Select>
+											)}
+										/>
+									</div>
+									<div className="space-y-2">
+										<Label htmlFor="partner_company_name">Parceria</Label>
+										<Input
+											id="partner_company_name"
+											placeholder="Empresa parceira, assessoria ou origem corporativa"
+											disabled={watchedPayerModel !== "parceria"}
+											{...register("partner_company_name")}
+										/>
+									</div>
+								</div>
+
+								<div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+									<div className="space-y-2">
+										<Label htmlFor="care_profiles">Perfil assistencial</Label>
+										<Controller
+											name="care_profiles"
+											control={form.control}
+											render={({ field }) => (
+												<MultiSelect
+													options={PATIENT_CARE_PROFILE_OPTIONS.map((option) => ({
+														value: option.value,
+														label: option.label,
+													}))}
+													selected={field.value || []}
+													onChange={field.onChange}
+													placeholder="Selecione os perfis assistenciais"
+													allowCustom={false}
+												/>
+											)}
+										/>
+									</div>
+									<div className="space-y-2">
+										<Label htmlFor="therapy_focuses">Foco terapêutico</Label>
+										<Controller
+											name="therapy_focuses"
+											control={form.control}
+											render={({ field }) => (
+												<MultiSelect
+													options={PATIENT_THERAPY_FOCUS_OPTIONS.map((option) => ({
+														value: option.value,
+														label: option.label,
+													}))}
+													selected={field.value || []}
+													onChange={field.onChange}
+													placeholder="Selecione as abordagens principais"
+													allowCustom={false}
+												/>
+											)}
+										/>
+									</div>
+								</div>
+
+								<div className="space-y-2">
+									<Label htmlFor="sports_practiced">Esportes praticados</Label>
+									<Controller
+										name="sports_practiced"
+										control={form.control}
+										render={({ field }) => (
+											<MultiSelect
+												options={(field.value || []).map((value) => ({
+													value,
+													label: value,
+												}))}
+												selected={field.value || []}
+												onChange={field.onChange}
+												placeholder="Ex: corrida, futebol, crossfit..."
+												allowCustom={true}
+											/>
+										)}
+									/>
 								</div>
 
 								<div className="space-y-2">

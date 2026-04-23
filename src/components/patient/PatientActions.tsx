@@ -98,6 +98,7 @@ export const PatientActions: React.FC<PatientActionsProps> = ({ patient, variant
 		try {
 			await patientsApi.update(patient.id, { status });
 			queryClient.invalidateQueries({ queryKey: ["patients"] });
+			queryClient.invalidateQueries({ queryKey: ["patients-list"] });
 			toast({ description: `Status atualizado para "${status}".` });
 		} catch (err: unknown) {
 			const msg = err instanceof Error ? err.message : "Erro ao atualizar status";

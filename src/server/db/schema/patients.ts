@@ -103,6 +103,11 @@ export const patients = pgTable(
 		referredBy: varchar("referred_by", { length: 150 }), // Referral source
 		professionalId: uuid("professional_id"),
 		professionalName: varchar("professional_name", { length: 150 }),
+		careProfiles: text("care_profiles").array().default([]),
+		sportsPracticed: text("sports_practiced").array().default([]),
+		therapyFocuses: text("therapy_focuses").array().default([]),
+		payerModel: varchar("payer_model", { length: 50 }),
+		partnerCompanyName: varchar("partner_company_name", { length: 150 }),
 
 		// Status & Notes
 		isActive: boolean("is_active").default(true).notNull(),
@@ -136,17 +141,15 @@ export const patients = pgTable(
 		createdAt: timestamp("created_at").defaultNow().notNull(),
 		updatedAt: timestamp("updated_at").defaultNow().notNull(),
 	},
-	(table) => ({
-		organizationIdIdx: index("idx_patients_organization_id").on(
-			table.organizationId,
-		),
-		profileIdIdx: index("idx_patients_profile_id").on(table.profileId),
-		userIdIdx: index("idx_patients_user_id").on(table.userId),
-		cpfIdx: index("idx_patients_cpf").on(table.cpf),
-		isActiveIdx: index("idx_patients_is_active").on(table.isActive),
-		fullNameIdx: index("idx_patients_full_name").on(table.fullName),
-	}),
-	(table) => [withOrganizationPolicy("patients", table.organizationId)],
+	(table) => [
+		index("idx_patients_organization_id").on(table.organizationId),
+		index("idx_patients_profile_id").on(table.profileId),
+		index("idx_patients_user_id").on(table.userId),
+		index("idx_patients_cpf").on(table.cpf),
+		index("idx_patients_is_active").on(table.isActive),
+		index("idx_patients_full_name").on(table.fullName),
+		withOrganizationPolicy("patients", table.organizationId),
+	],
 );
 
 export const patientsRelations = relations(patients, ({ many }) => ({
@@ -244,10 +247,10 @@ export const medicalRecords = pgTable(
 		createdAt: timestamp("created_at").defaultNow().notNull(),
 		updatedAt: timestamp("updated_at").defaultNow().notNull(),
 	},
-	(table) => ({
-		patientIdIdx: index("idx_medical_records_patient_id").on(table.patientId),
-	}),
-	(table) => [withOrganizationPolicy("medical_records", table.organizationId)],
+	(table) => [
+		index("idx_medical_records_patient_id").on(table.patientId),
+		withOrganizationPolicy("medical_records", table.organizationId),
+	],
 );
 
 export const medicalRecordsRelations = relations(
@@ -374,4 +377,3 @@ export const goalsRelations = relations(goals, ({ one }) => ({
 }));
 
 // Moved to financial.ts to centralize financial entities
-

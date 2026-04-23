@@ -37,14 +37,12 @@ export const whatsappContacts = pgTable(
 		createdAt: timestamp("created_at").defaultNow().notNull(),
 		updatedAt: timestamp("updated_at").defaultNow().notNull(),
 	},
-	(table) => ({
-		organizationIdIdx: index("idx_wa_contacts_organization_id").on(
-			table.organizationId,
-		),
-		waIdIdx: index("idx_wa_contacts_wa_id").on(table.waId),
-		bsuidIdx: index("idx_wa_contacts_bsuid").on(table.bsuid),
-	}),
-	(table) => [withOrganizationPolicy("whatsapp_contacts", table.organizationId)],
+	(table) => [
+		index("idx_wa_contacts_organization_id").on(table.organizationId),
+		index("idx_wa_contacts_wa_id").on(table.waId),
+		index("idx_wa_contacts_bsuid").on(table.bsuid),
+		withOrganizationPolicy("whatsapp_contacts", table.organizationId),
+	],
 );
 
 export const waConversations = pgTable(
@@ -74,27 +72,19 @@ export const waConversations = pgTable(
 		createdAt: timestamp("created_at").defaultNow().notNull(),
 		updatedAt: timestamp("updated_at").defaultNow().notNull(),
 	},
-	(table) => ({
-		organizationIdIdx: index("idx_wa_conv_organization_id").on(
-			table.organizationId,
-		),
-		contactIdIdx: index("idx_wa_conv_contact_id").on(table.contactId),
-		patientIdIdx: index("idx_wa_conv_patient_id").on(table.patientId),
-		assignedToIdx: index("idx_wa_conv_assigned_to").on(table.assignedTo),
-		orgStatusIdx: index("idx_wa_conv_org_status").on(
-			table.organizationId,
-			table.status,
-		),
-		orgAssignedIdx: index("idx_wa_conv_org_assigned").on(
+	(table) => [
+		index("idx_wa_conv_organization_id").on(table.organizationId),
+		index("idx_wa_conv_contact_id").on(table.contactId),
+		index("idx_wa_conv_patient_id").on(table.patientId),
+		index("idx_wa_conv_assigned_to").on(table.assignedTo),
+		index("idx_wa_conv_org_status").on(table.organizationId, table.status),
+		index("idx_wa_conv_org_assigned").on(
 			table.organizationId,
 			table.assignedTo,
 		),
-		orgCreatedIdx: index("idx_wa_conv_org_created").on(
-			table.organizationId,
-			table.createdAt,
-		),
-	}),
-	(table) => [withOrganizationPolicy("wa_conversations", table.organizationId)],
+		index("idx_wa_conv_org_created").on(table.organizationId, table.createdAt),
+		withOrganizationPolicy("wa_conversations", table.organizationId),
+	],
 );
 
 export const waMessages = pgTable(
@@ -123,23 +113,17 @@ export const waMessages = pgTable(
 		metadata: jsonb("metadata"),
 		createdAt: timestamp("created_at").defaultNow().notNull(),
 	},
-	(table) => ({
-		conversationIdIdx: index("idx_wa_msgs_conversation_id").on(
-			table.conversationId,
-		),
-		organizationIdIdx: index("idx_wa_msgs_organization_id").on(
-			table.organizationId,
-		),
-		contactIdIdx: index("idx_wa_msgs_contact_id").on(table.contactId),
-		metaMessageIdIdx: index("idx_wa_msgs_meta_message_id").on(
-			table.metaMessageId,
-		),
-		convCreatedIdx: index("idx_wa_msgs_conv_created").on(
+	(table) => [
+		index("idx_wa_msgs_conversation_id").on(table.conversationId),
+		index("idx_wa_msgs_organization_id").on(table.organizationId),
+		index("idx_wa_msgs_contact_id").on(table.contactId),
+		index("idx_wa_msgs_meta_message_id").on(table.metaMessageId),
+		index("idx_wa_msgs_conv_created").on(
 			table.conversationId,
 			table.createdAt,
 		),
-	}),
-	(table) => [withOrganizationPolicy("wa_messages", table.organizationId)],
+		withOrganizationPolicy("wa_messages", table.organizationId),
+	],
 );
 
 export const waRawEvents = pgTable(
@@ -155,18 +139,12 @@ export const waRawEvents = pgTable(
 		idempotencyKey: text("idempotency_key"),
 		createdAt: timestamp("created_at").defaultNow().notNull(),
 	},
-	(table) => ({
-		organizationIdIdx: index("idx_wa_events_organization_id").on(
-			table.organizationId,
-		),
-		metaMessageIdIdx: index("idx_wa_events_meta_message_id").on(
-			table.metaMessageId,
-		),
-		idempotencyKeyIdx: uniqueIndex("idx_wa_events_idempotency_key").on(
-			table.idempotencyKey,
-		),
-	}),
-	(table) => [withOrganizationPolicy("wa_raw_events", table.organizationId)],
+	(table) => [
+		index("idx_wa_events_organization_id").on(table.organizationId),
+		index("idx_wa_events_meta_message_id").on(table.metaMessageId),
+		uniqueIndex("idx_wa_events_idempotency_key").on(table.idempotencyKey),
+		withOrganizationPolicy("wa_raw_events", table.organizationId),
+	],
 );
 
 export const waAssignments = pgTable(
@@ -183,13 +161,11 @@ export const waAssignments = pgTable(
 		reason: text("reason"),
 		createdAt: timestamp("created_at").defaultNow().notNull(),
 	},
-	(table) => ({
-		conversationIdIdx: index("idx_wa_assign_conversation_id").on(
-			table.conversationId,
-		),
-		assignedToIdx: index("idx_wa_assign_assigned_to").on(table.assignedTo),
-	}),
-	(table) => [withOrganizationPolicy("wa_assignments", table.organizationId)],
+	(table) => [
+		index("idx_wa_assign_conversation_id").on(table.conversationId),
+		index("idx_wa_assign_assigned_to").on(table.assignedTo),
+		withOrganizationPolicy("wa_assignments", table.organizationId),
+	],
 );
 
 export const waInternalNotes = pgTable(
@@ -204,12 +180,10 @@ export const waInternalNotes = pgTable(
 		content: text("content").notNull(),
 		createdAt: timestamp("created_at").defaultNow().notNull(),
 	},
-	(table) => ({
-		conversationIdIdx: index("idx_wa_notes_conversation_id").on(
-			table.conversationId,
-		),
-	}),
-	(table) => [withOrganizationPolicy("wa_internal_notes", table.organizationId)],
+	(table) => [
+		index("idx_wa_notes_conversation_id").on(table.conversationId),
+		withOrganizationPolicy("wa_internal_notes", table.organizationId),
+	],
 );
 
 export const waTags = pgTable(
@@ -221,12 +195,10 @@ export const waTags = pgTable(
 		color: varchar("color", { length: 7 }),
 		createdAt: timestamp("created_at").defaultNow().notNull(),
 	},
-	(table) => ({
-		organizationIdIdx: index("idx_wa_tags_organization_id").on(
-			table.organizationId,
-		),
-	}),
-	(table) => [withOrganizationPolicy("wa_tags", table.organizationId)],
+	(table) => [
+		index("idx_wa_tags_organization_id").on(table.organizationId),
+		withOrganizationPolicy("wa_tags", table.organizationId),
+	],
 );
 
 export const waConversationTags = pgTable(
@@ -240,13 +212,13 @@ export const waConversationTags = pgTable(
 		organizationId: uuid("organization_id"),
 		createdAt: timestamp("created_at").defaultNow().notNull(),
 	},
-	(table) => ({
-		convTagUniqueIdx: uniqueIndex("idx_wa_conv_tags_unique").on(
+	(table) => [
+		uniqueIndex("idx_wa_conv_tags_unique").on(
 			table.conversationId,
 			table.tagId,
 		),
-	}),
-	(table) => [withOrganizationPolicy("wa_conversation_tags", table.organizationId)],
+		withOrganizationPolicy("wa_conversation_tags", table.organizationId),
+	],
 );
 
 export const waQuickReplies = pgTable(
@@ -263,12 +235,10 @@ export const waQuickReplies = pgTable(
 		createdBy: uuid("created_by"),
 		createdAt: timestamp("created_at").defaultNow().notNull(),
 	},
-	(table) => ({
-		organizationIdIdx: index("idx_wa_replies_organization_id").on(
-			table.organizationId,
-		),
-	}),
-	(table) => [withOrganizationPolicy("wa_quick_replies", table.organizationId)],
+	(table) => [
+		index("idx_wa_replies_organization_id").on(table.organizationId),
+		withOrganizationPolicy("wa_quick_replies", table.organizationId),
+	],
 );
 
 export const waAutomationRules = pgTable(
@@ -288,12 +258,10 @@ export const waAutomationRules = pgTable(
 		createdAt: timestamp("created_at").defaultNow().notNull(),
 		updatedAt: timestamp("updated_at").defaultNow().notNull(),
 	},
-	(table) => ({
-		organizationIdIdx: index("idx_wa_rules_organization_id").on(
-			table.organizationId,
-		),
-	}),
-	(table) => [withOrganizationPolicy("wa_automation_rules", table.organizationId)],
+	(table) => [
+		index("idx_wa_rules_organization_id").on(table.organizationId),
+		withOrganizationPolicy("wa_automation_rules", table.organizationId),
+	],
 );
 
 export const waSlaConfig = pgTable(
@@ -311,12 +279,10 @@ export const waSlaConfig = pgTable(
 		isActive: boolean("is_active").default(true),
 		createdAt: timestamp("created_at").defaultNow().notNull(),
 	},
-	(table) => ({
-		organizationIdIdx: index("idx_wa_sla_cfg_organization_id").on(
-			table.organizationId,
-		),
-	}),
-	(table) => [withOrganizationPolicy("wa_sla_config", table.organizationId)],
+	(table) => [
+		index("idx_wa_sla_cfg_organization_id").on(table.organizationId),
+		withOrganizationPolicy("wa_sla_config", table.organizationId),
+	],
 );
 
 export const waSlaTracking = pgTable(
@@ -345,10 +311,10 @@ export const waSlaTracking = pgTable(
 		resolutionBreached: boolean("resolution_breached").default(false),
 		createdAt: timestamp("created_at").defaultNow().notNull(),
 	},
-	(table) => ({
-		conversationIdIdx: index("idx_wa_sla_conv_id").on(table.conversationId),
-	}),
-	(table) => [withOrganizationPolicy("wa_sla_tracking", table.organizationId)],
+	(table) => [
+		index("idx_wa_sla_conv_id").on(table.conversationId),
+		withOrganizationPolicy("wa_sla_tracking", table.organizationId),
+	],
 );
 
 export const waOptInOut = pgTable(
@@ -362,12 +328,10 @@ export const waOptInOut = pgTable(
 		reason: text("reason"),
 		createdAt: timestamp("created_at").defaultNow().notNull(),
 	},
-	(table) => ({
-		organizationIdIdx: index("idx_wa_opt_organization_id").on(
-			table.organizationId,
-		),
-	}),
-	(table) => [withOrganizationPolicy("wa_opt_in_out", table.organizationId)],
+	(table) => [
+		index("idx_wa_opt_organization_id").on(table.organizationId),
+		withOrganizationPolicy("wa_opt_in_out", table.organizationId),
+	],
 );
 
 export const whatsappContactsRelations = relations(

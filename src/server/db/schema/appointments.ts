@@ -127,19 +127,17 @@ export const appointments = pgTable(
 		updatedAt: timestamp("updated_at").defaultNow().notNull(),
 		createdBy: uuid("created_by"),
 	},
-	(table) => ({
-		organizationIdIdx: index("idx_appointments_organization_id").on(
-			table.organizationId,
-		),
-		patientIdIdx: index("idx_appointments_patient_id").on(table.patientId),
-		therapistDateIdx: index("idx_appointments_therapist_date").on(
+	(table) => [
+		index("idx_appointments_organization_id").on(table.organizationId),
+		index("idx_appointments_patient_id").on(table.patientId),
+		index("idx_appointments_therapist_date").on(
 			table.therapistId,
 			table.date,
 		),
-		statusIdx: index("idx_appointments_status").on(table.status),
-		roomIdIdx: index("idx_appointments_room_id").on(table.roomId),
-	}),
-	(table) => [withOrganizationPolicy("appointments", table.organizationId)],
+		index("idx_appointments_status").on(table.status),
+		index("idx_appointments_room_id").on(table.roomId),
+		withOrganizationPolicy("appointments", table.organizationId),
+	],
 );
 
 export const appointmentsRelations = relations(appointments, ({ one }) => ({
@@ -179,13 +177,11 @@ export const rooms = pgTable(
 
 		createdAt: timestamp("created_at").defaultNow().notNull(),
 	},
-	(table) => ({
-		organizationIdIdx: index("idx_rooms_organization_id").on(
-			table.organizationId,
-		),
-		isActiveIdx: index("idx_rooms_is_active").on(table.isActive),
-	}),
-	(table) => [withOrganizationPolicy("rooms", table.organizationId)],
+	(table) => [
+		index("idx_rooms_organization_id").on(table.organizationId),
+		index("idx_rooms_is_active").on(table.isActive),
+		withOrganizationPolicy("rooms", table.organizationId),
+	],
 );
 
 // ===== BLOCKED TIME SLOTS =====
@@ -209,18 +205,13 @@ export const blockedSlots = pgTable(
 
 		createdAt: timestamp("created_at").defaultNow().notNull(),
 	},
-	(table) => ({
-		organizationIdIdx: index("idx_blocked_slots_organization_id").on(
-			table.organizationId,
-		),
-		therapistDateIdx: index("idx_blocked_slots_therapist_date").on(
+	(table) => [
+		index("idx_blocked_slots_organization_id").on(table.organizationId),
+		index("idx_blocked_slots_therapist_date").on(
 			table.therapistId,
 			table.date,
 		),
-		roomDateIdx: index("idx_blocked_slots_room_date").on(
-			table.roomId,
-			table.date,
-		),
-	}),
-	(table) => [withOrganizationPolicy("blocked_slots", table.organizationId)],
+		index("idx_blocked_slots_room_date").on(table.roomId, table.date),
+		withOrganizationPolicy("blocked_slots", table.organizationId),
+	],
 );

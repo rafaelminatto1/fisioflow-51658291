@@ -1559,3 +1559,6 @@ export async function checkPatientNameDuplicate(
 
 	return { duplicateExists: response.data?.duplicateExists || false };
 }
+
+export { reportsApi } from "./api/reports";
+export type { PdfReportRequest, PdfReportResponse } from "./api/reports";
