@@ -50,7 +50,7 @@ import {
 export interface ExerciseMediaUploadProps {
 	open?: boolean;
 	onOpenChange?: (open: boolean) => void;
-	onSuccess?: () => void;
+	onSuccess?: (media: ExerciseMedia) => void;
 	exerciseId?: string;
 	defaultValues?: {
 		title?: string;
@@ -278,7 +278,7 @@ export const ExerciseVideoUpload: React.FC<ExerciseMediaUploadProps> = ({
 					type: mediaType,
 				},
 				{
-					onSuccess: () => {
+					onSuccess: (data) => {
 						clearInterval(progressInterval);
 						setUploadProgress(100);
 						toast({
@@ -286,7 +286,7 @@ export const ExerciseVideoUpload: React.FC<ExerciseMediaUploadProps> = ({
 							description: `A mídia de exercício foi adicionada à biblioteca.`,
 						});
 						resetForm();
-						onSuccess?.();
+						onSuccess?.(data as ExerciseMedia);
 						setTimeout(() => onOpenChange?.(false), 500);
 					},
 					onError: (error: { message?: string }) => {

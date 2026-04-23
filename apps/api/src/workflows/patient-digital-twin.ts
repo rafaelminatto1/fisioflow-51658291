@@ -9,14 +9,14 @@ import { eq, and, desc, sql } from "drizzle-orm";
  * Analisa o comportamento longitudinal do paciente e gera predições.
  */
 export class PatientDigitalTwinWorkflow extends WorkflowEntrypoint<Env, { patientId: string }> {
-	async run(event: WorkflowEvent<{ patientId: string }>) {
+	async run(event: WorkflowEvent<{ patientId: string }>, step: WorkflowStep) {
 		const { patientId } = event.payload;
 		const organizationId = await this.getOrganizationId(patientId);
 
 		if (!organizationId) return;
 
 		// Passo 1: Analisar Aderência (Frequência vs Agendado)
-		const adherence = await this.step.do("calculate-adherence", async () => {
+		const adherence = await step.do("calculate-adherence", async () => {
 			const db = getRawSql(this.env, 'read');
 			const stats = await db`
 				SELECT 
@@ -36,7 +36,7 @@ export class PatientDigitalTwinWorkflow extends WorkflowEntrypoint<Env, { patien
 		});
 
 		// Passo 2: Analisar Tendência de Dor (Longitudinal)
-		const painTrend = await this.step.do("analyze-pain-trend", async () => {
+		const painTrend = await step.do("analyze-pain-trend", async () => {
 			const db = getRawSql(this.env, 'read');
 			const history = await db`
 				SELECT pain_level_before as pain
@@ -57,7 +57,7 @@ export class PatientDigitalTwinWorkflow extends WorkflowEntrypoint<Env, { patien
 		});
 
 		// Passo 3: Gerar Predição de Risco via Gemini
-		const riskAssessment = await this.step.do("ai-risk-prediction", async () => {
+		const riskAssessment = await step.do("ai-risk-prediction", async () => {
 			const prompt = `Analise os dados deste paciente de fisioterapia:
 			- Aderência às sessões: ${adherence}%
 			- Tendência de dor: ${painTrend}
@@ -74,7 +74,7 @@ export class PatientDigitalTwinWorkflow extends WorkflowEntrypoint<Env, { patien
 		});
 
 		// Passo 4: Persistir no Digital Twin (Neon)
-		await this.step.do("save-to-digital-twin", async () => {
+		await step.do("save-to-digital-twin", async () => {
 			const sql = getRawSql(this.env, 'write');
 			await sql`
 				INSERT INTO patient_longitudinal_summary (

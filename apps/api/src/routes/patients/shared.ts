@@ -1,9 +1,10 @@
 import type { Hono } from 'hono';
 import type { Env } from '../../types/env';
 import type { AuthVariables } from '../../lib/auth';
+import type { CustomVariables } from '../../middleware/requestId';
 import { createPool } from '../../lib/db';
 
-export type PatientRouteApp = Hono<{ Bindings: Env; Variables: AuthVariables }>;
+export type PatientRouteApp = Hono<{ Bindings: Env; Variables: AuthVariables & CustomVariables }>;
 export type DbPool = ReturnType<typeof createPool>;
 export type DbRow = Record<string, unknown>;
 export type PatientPayload = Record<string, unknown>;

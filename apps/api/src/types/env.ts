@@ -5,6 +5,7 @@ import type {
 	HEPComplianceWorkflow,
 	PatientDischargeWorkflow,
 	PatientReengagementWorkflow,
+	PatientDigitalTwinWorkflow,
 } from "../workflows";
 
 /**
@@ -94,6 +95,7 @@ export interface Env {
 	WORKFLOW_HEP_COMPLIANCE?: Workflow<HEPComplianceWorkflow>;
 	WORKFLOW_DISCHARGE?: Workflow<PatientDischargeWorkflow>;
 	WORKFLOW_REENGAGEMENT?: Workflow<PatientReengagementWorkflow>;
+	WORKFLOW_DIGITAL_TWIN?: Workflow<PatientDigitalTwinWorkflow>;
 
 	// AI & Browser Rendering
 	AI: {

@@ -3,6 +3,7 @@ import { eq, and, sql, desc, isNull } from "drizzle-orm";
 import { patients, sessions } from "@fisioflow/db";
 import type { Env } from "../types/env";
 import { requireAuth, type AuthVariables } from "../lib/auth";
+import type { CustomVariables } from "../middleware/requestId";
 import { createDb, createPool } from "../lib/db";
 import { withTenant } from "../lib/db-utils";
 import { triggerInngestEvent } from "../lib/inngest-client";
@@ -18,7 +19,7 @@ import {
 	parseJsonObject,
 } from "./patients/shared";
 
-const app = new Hono<{ Bindings: Env; Variables: AuthVariables }>();
+const app = new Hono<{ Bindings: Env; Variables: AuthVariables & CustomVariables }>();
 
 // Removed tableColumnsCache and helpers as we shift to Drizzle ORM
 
@@ -691,6 +692,7 @@ app.get("/", async (c) => {
 	const financialStatus = trimmedString(c.req.query("financialStatus"));
 	const origin = trimmedString(c.req.query("origin"));
 	const partnerCompany = trimmedString(c.req.query("partnerCompany"));
+	const incompleteRegistration = c.req.query("incompleteRegistration") === "true";
 	const limit = Math.min(
 		200,
 		Math.max(1, Number.parseInt(c.req.query("limit") ?? "100", 10) || 100),
@@ -732,12 +734,12 @@ app.get("/", async (c) => {
 			pathology_agg AS (
 				SELECT
 					pp.patient_id,
-					ARRAY_REMOVE(ARRAY_AGG(DISTINCT pp.pathology_name), NULL) AS pathology_names,
+					ARRAY_REMOVE(ARRAY_AGG(DISTINCT pp.name), NULL) AS pathology_names,
 					ARRAY_REMOVE(
 						ARRAY_AGG(
 							DISTINCT CASE
 								WHEN LOWER(COALESCE(pp.status, '')) IN ('ativo', 'active', 'em_tratamento', 'em tratamento')
-									THEN pp.pathology_name
+									THEN pp.name
 								ELSE NULL
 							END
 						),
@@ -747,10 +749,10 @@ app.get("/", async (c) => {
 					BOOL_OR(LOWER(COALESCE(pp.status, '')) IN ('ativo', 'active', 'em_tratamento', 'em tratamento')) AS has_active_pathology,
 					BOOL_OR(LOWER(COALESCE(pp.status, '')) IN ('monitoramento', 'monitoring', 'cronico', 'crônico')) AS has_monitor_pathology,
 					BOOL_OR(LOWER(COALESCE(pp.status, '')) IN ('resolvido', 'treated', 'tratada', 'tratado', 'alta')) AS has_treated_pathology,
-					MIN(pp.pathology_name) FILTER (
+					MIN(pp.name) FILTER (
 						WHERE LOWER(COALESCE(pp.status, '')) IN ('ativo', 'active', 'em_tratamento', 'em tratamento')
 					) AS primary_pathology
-				FROM patient_pathologies pp
+				FROM pathologies pp
 				WHERE pp.organization_id = $1::uuid
 				GROUP BY pp.patient_id
 			),
@@ -759,7 +761,7 @@ app.get("/", async (c) => {
 					ps.patient_id,
 					TRUE AS has_surgery,
 					BOOL_OR(ps.surgery_date >= CURRENT_DATE - INTERVAL '90 days') AS recent_surgery
-				FROM patient_surgeries ps
+				FROM surgeries ps
 				WHERE ps.organization_id = $1::uuid
 				GROUP BY ps.patient_id
 			),
@@ -1055,6 +1057,10 @@ app.get("/", async (c) => {
 			);
 		}
 
+		if (incompleteRegistration) {
+			baseConditions.push(`directory."incompleteRegistration" = TRUE`);
+		}
+
 		if (hasSurgery) {
 			baseConditions.push(`directory."hasSurgery" = TRUE`);
 		}
@@ -1136,12 +1142,19 @@ app.get("/", async (c) => {
 			);
 			console.log(`[Patients/List] Data query took ${Date.now() - startData}ms`);
 		} catch (e: any) {
-			console.error("[Patients/List] Data Query Error:", e.message, e.stack);
+			console.error("[Patients/List] Data Query Error:", {
+				message: e.message,
+				stack: e.stack,
+				params: [...params, limit, offset],
+				querySnippet: finalWhereSql
+			});
 			throw new Error(`Data query failed: ${e.message}`);
 		}
 
+		let summaryParams: any[] = [];
 		try {
 			const startSummary = Date.now();
+			summaryParams = params.slice(0, params.length - (classification && classification !== "all" ? 1 : 0));
 			summaryResult = await pool.query(
 				`
 					${cteSql}
@@ -1170,11 +1183,15 @@ app.get("/", async (c) => {
 					FROM directory_rows directory
 					${baseWhereSql}
 				`,
-				params.slice(0, params.length - (classification && classification !== "all" ? 1 : 0)),
+				summaryParams,
 			);
 			console.log(`[Patients/List] Summary query took ${Date.now() - startSummary}ms`);
 		} catch (e: any) {
-			console.error("[Patients/List] Summary Query Error:", e.message, e.stack);
+			console.error("[Patients/List] Summary Query Error:", {
+				message: e.message,
+				params: summaryParams,
+				baseWhere: baseWhereSql
+			});
 			// Do not throw, return partial data
 			summaryResult = { rows: [] };
 		}
@@ -1285,7 +1302,8 @@ app.get("/", async (c) => {
 			},
 		});
 	} catch (error) {
-		console.error("[Patients/List] Error:", error);
+		const requestId = c.get("requestId") || "unknown";
+		console.error(`[Patients/List] Critical Error [Req: ${requestId}]:`, error);
 		const errorMessage = error instanceof Error ? error.message : String(error);
 		const errorStack = error instanceof Error ? error.stack : undefined;
 		
@@ -1295,6 +1313,7 @@ app.get("/", async (c) => {
 				total: 0,
 				error: "Erro ao listar pacientes",
 				details: errorMessage,
+				requestId,
 				stack: c.env.ENVIRONMENT !== "production" ? errorStack : undefined,
 			},
 			500,
