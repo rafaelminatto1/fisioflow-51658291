@@ -66,6 +66,7 @@ const listPatients = async () => {
 			sortBy: "name_asc",
 			limit,
 			offset,
+			minimal: true,
 		});
 		const chunk = response?.data ?? [];
 		items.push(...chunk);

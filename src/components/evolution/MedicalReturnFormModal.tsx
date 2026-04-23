@@ -1,14 +1,22 @@
-import React, { useEffect, useState } from "react";
-import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { Calendar, FileText, Loader2, Phone, Stethoscope } from "lucide-react";
+import type React from "react";
+import { useEffect, useState } from "react";
+import { useForm } from "react-hook-form";
+import { toast } from "sonner";
 import { z } from "zod";
+import { DoctorAutocomplete } from "@/components/doctors/DoctorAutocomplete";
+import { DoctorFormModal } from "@/components/doctors/DoctorFormModal";
+import { Button } from "@/components/ui/button";
+import { Checkbox } from "@/components/ui/checkbox";
 import {
 	Dialog,
 	DialogContent,
 	DialogDescription,
+	DialogFooter,
 	DialogHeader,
 	DialogTitle,
-	DialogFooter,
 } from "@/components/ui/dialog";
 import {
 	Form,
@@ -18,6 +26,7 @@ import {
 	FormLabel,
 	FormMessage,
 } from "@/components/ui/form";
+import { Input } from "@/components/ui/input";
 import {
 	Select,
 	SelectContent,
@@ -25,17 +34,9 @@ import {
 	SelectTrigger,
 	SelectValue,
 } from "@/components/ui/select";
-import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { Button } from "@/components/ui/button";
-import { Checkbox } from "@/components/ui/checkbox";
-import { Loader2, Stethoscope, Calendar, Phone, FileText } from "lucide-react";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { MedicalReturnService } from "@/lib/services/medicalReturnService";
 import type { MedicalReturn, MedicalReturnFormData } from "@/types/evolution";
-import { DoctorAutocomplete } from "@/components/doctors/DoctorAutocomplete";
-import { DoctorFormModal } from "@/components/doctors/DoctorFormModal";
-import { toast } from "sonner";
 
 const formSchema = z.object({
 	doctor_name: z.string().min(2, "Nome do médico é obrigatório"),
@@ -70,27 +71,7 @@ export const MedicalReturnFormModal: React.FC<MedicalReturnFormModalProps> = ({
 	const [suggestedDoctorName, setSuggestedDoctorName] = useState("");
 
 	const form = useForm<FormValues>({
-		resolver: async (data, context, options) => {
-			try {
-				return await zodResolver(formSchema)(data, context, options);
-			} catch (error) {
-				console.error("Zod Resolver Error:", error);
-				if (error instanceof z.ZodError) {
-					return {
-						values: {},
-						errors: error.issues.reduce((acc, curr) => {
-							const path = curr.path.join(".");
-							acc[path] = {
-								message: curr.message,
-								type: curr.code,
-							};
-							return acc;
-						}, {} as any),
-					};
-				}
-				return { values: {}, errors: {} };
-			}
-		},
+		resolver: zodResolver(formSchema),
 		defaultValues: {
 			doctor_name: "",
 			doctor_phone: "",
@@ -124,7 +105,7 @@ export const MedicalReturnFormModal: React.FC<MedicalReturnFormModalProps> = ({
 				report_sent: false,
 			});
 		}
-	}, [medicalReturn, form, open]);
+	}, [medicalReturn, form]);
 
 	useEffect(() => {
 		if (!open) {
@@ -246,7 +227,9 @@ export const MedicalReturnFormModal: React.FC<MedicalReturnFormModalProps> = ({
 									name="doctor_name"
 									render={({ field, fieldState }) => (
 										<FormItem className="col-span-2">
-											<FormLabel className={cn(fieldState.error && "text-destructive")}>
+											<FormLabel
+												className={cn(fieldState.error && "text-destructive")}
+											>
 												Nome do Médico *
 											</FormLabel>
 											<FormControl>
@@ -256,7 +239,14 @@ export const MedicalReturnFormModal: React.FC<MedicalReturnFormModalProps> = ({
 														if (doctor) {
 															field.onChange(doctor.name);
 															// Auto-populate phone if available
-															form.setValue("doctor_phone", doctor.phone || "");
+															form.setValue(
+																"doctor_phone",
+																doctor.phone || "",
+																{
+																	shouldDirty: true,
+																},
+															);
+															form.trigger("doctor_name");
 														} else {
 															field.onChange("");
 														}
@@ -296,18 +286,23 @@ export const MedicalReturnFormModal: React.FC<MedicalReturnFormModalProps> = ({
 									name="return_date"
 									render={({ field, fieldState }) => (
 										<FormItem>
-											<FormLabel className={cn(
-												"flex items-center gap-1",
-												fieldState.error && "text-destructive"
-											)}>
+											<FormLabel
+												className={cn(
+													"flex items-center gap-1",
+													fieldState.error && "text-destructive",
+												)}
+											>
 												<Calendar className="h-3 w-3" />
 												Data do Retorno *
 											</FormLabel>
 											<FormControl>
-												<Input 
-													type="date" 
-													{...field} 
-													className={cn(fieldState.error && "border-destructive focus-visible:ring-destructive")}
+												<Input
+													type="date"
+													{...field}
+													className={cn(
+														fieldState.error &&
+															"border-destructive focus-visible:ring-destructive",
+													)}
 												/>
 											</FormControl>
 											<FormMessage />
@@ -455,12 +450,11 @@ export const MedicalReturnFormModal: React.FC<MedicalReturnFormModalProps> = ({
 				onSuccess={(doctor) => {
 					form.setValue("doctor_name", doctor.name, {
 						shouldDirty: true,
-						shouldValidate: true,
 					});
 					form.setValue("doctor_phone", doctor.phone || "", {
 						shouldDirty: true,
-						shouldValidate: true,
 					});
+					form.trigger(["doctor_name", "doctor_phone"]);
 					setDoctorModalOpen(false);
 					setSuggestedDoctorName("");
 				}}

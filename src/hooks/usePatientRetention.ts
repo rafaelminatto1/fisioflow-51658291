@@ -121,7 +121,7 @@ function calculateRiskScore(
 
 async function loadRetentionBase(months: number = 12) {
 	const [patientsRes, appointmentsRes, contasRes] = await Promise.all([
-		patientsApi.list({ limit: 5000 }),
+		patientsApi.list({ limit: 5000, minimal: true }),
 		appointmentsApi.list({
 			dateFrom: subMonths(new Date(), Math.max(months + 3, 15)).toISOString(),
 			limit: 5000,

@@ -510,7 +510,7 @@ export default function RelatorioConvenioPage() {
 		queryKey: ["pacientes-select", organizationId],
 		queryFn: async () => {
 			if (!organizationId) return [];
-			const res = await patientsApi.list({ limit: 200, sortBy: "name_asc" });
+			const res = await patientsApi.list({ limit: 200, sortBy: "name_asc", minimal: true });
 			return (res.data ?? []) as Array<{
 				id: string;
 				full_name: string;
