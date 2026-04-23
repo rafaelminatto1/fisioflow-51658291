@@ -174,7 +174,7 @@ function KnowledgeCard({
 								className="bg-amber-100 text-amber-800 border-0 text-[10px] flex items-center gap-1"
 							>
 								<UserCheck className="h-3 w-3" />
-								Validando: {reviewerName.split(" ")[0]}
+								Validando: {reviewerName?.split(" ")[0]}
 							</Badge>
 						)}
 						{item.status === "pending" && (
@@ -655,7 +655,7 @@ export function KnowledgeHubView({
 										<div className="min-w-0 space-y-0.5">
 											<p className="text-[10px] leading-tight text-slate-600">
 												<span className="font-bold text-slate-900">
-													{actorName.split(" ")[0]}
+													{actorName?.split(" ")[0]}
 												</span>
 												<span className="mx-1 opacity-70">
 													{entry.action}
