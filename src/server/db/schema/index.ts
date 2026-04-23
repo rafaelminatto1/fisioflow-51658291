@@ -40,6 +40,7 @@ export * from "./financial";
 
 // Clinical Resources & Patient Details
 export * from "./clinical";
+export * from "./clinical_intelligence";
 
 // Exercise Templates & Item Packages
 export * from "./templates";

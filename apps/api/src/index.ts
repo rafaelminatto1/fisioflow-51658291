@@ -84,11 +84,13 @@ import { nfseRoutes } from "./routes/nfse";
 import { packagesRoutes } from "./routes/packages";
 import { announcementsRoutes } from "./routes/announcements";
 import { adminSeedTemplatesRoutes } from "./routes/admin/seed-templates";
+import { triggerDigitalTwinRoutes } from "./routes/admin/trigger-digital-twin";
 import { searchRoutes } from "./routes/search";
 import { reportsPdfRoutes } from "./routes/reportsPdf";
 import { eventsRoutes as businessEventsRoutes } from "./routes/events";
 import aiSearchApp from "./routes/aiSearch";
 import { aiConfigRoutes } from "./routes/ai-config";
+import { aiClinicalSearchRoutes } from "./routes/ai-clinical-search";
 import { verifyToken } from "./lib/auth";
 import { getRawSql } from "./lib/db";
 import { routeAgentRequest } from "agents";
@@ -257,11 +259,13 @@ const apiRoutes = [
 	["/api/packages", packagesRoutes],
 	["/api/announcements", announcementsRoutes],
 	["/api/admin/seed-templates", adminSeedTemplatesRoutes],
+	["/api/admin/trigger-digital-twin", triggerDigitalTwinRoutes],
 	["/api/search", searchRoutes],
 	["/api/reports/pdf", reportsPdfRoutes],
 	["/api/events", businessEventsRoutes],
 	["/api/ai-search", aiSearchApp],
 	["/api/ai-config", aiConfigRoutes],
+	["/api/ai-clinical-search", aiClinicalSearchRoutes],
 ] as const;
 
 apiRoutes.forEach(([path, router]) => {
@@ -301,6 +305,7 @@ export {
 	HEPComplianceWorkflow,
 	PatientDischargeWorkflow,
 	PatientReengagementWorkflow,
+	PatientDigitalTwinWorkflow,
 } from "./workflows";
 
 // Hono RPC — exporta o tipo da app para type-safe client no frontend
