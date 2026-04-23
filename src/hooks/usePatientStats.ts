@@ -1,16 +1,21 @@
-/**
- * usePatientStats - Migrated to Neon/Workers
- */
-
-// ============================================================================================
-// TYPES & INTERFACES
-// ============================================================================================
-
 import { useQuery } from "@tanstack/react-query";
 import { differenceInDays } from "date-fns";
-import { appointmentsApi } from "@/api/v2/appointments";
-import { sessionsApi } from "@/api/v2/clinical";
-import type { AppointmentRow, SessionRecord } from "@/types/workers";
+import type { Appointment, SessionRecord } from "@/types";
+import { request } from "@/utils/request";
+
+// ============================================================================================
+// TYPES & CONSTANTS
+// ============================================================================================
+
+export type PatientClassification =
+	| "active"
+	| "inactive_7"
+	| "inactive_30"
+	| "inactive_custom"
+	| "no_show_risk"
+	| "has_unpaid"
+	| "new_patient"
+	| "completed_treatment";
 
 export interface PatientStats {
 	sessionsCompleted: number;
@@ -25,82 +30,17 @@ export interface PatientStats {
 	classification: PatientClassification;
 }
 
-export type PatientClassification =
-	| "active"
-	| "inactive_7"
-	| "inactive_30"
-	| "inactive_custom"
-	| "no_show_risk"
-	| "has_unpaid"
-	| "new_patient"
-	| "completed_treatment";
-
 export interface PatientClassificationFilter {
-	value: PatientClassification | "all";
+	value: PatientClassification;
 	label: string;
 	description: string;
 	icon: string;
 	color: string;
 }
 
-export type Appointment = AppointmentRow;
-
-export interface SOAPRecord {
-	id: string;
-	patient_id: string;
-	created_at: string;
-	status: string;
-	record_date: string;
-}
-
-interface PatientStatsInput {
-	appointments: Appointment[];
-	soapRecords: SOAPRecord[];
-}
-
-interface ClassificationStats {
-	sessionsCompleted: number;
-	daysSinceLastAppointment: number;
-	unpaidSessionsCount: number;
-	noShowCount: number;
-	upcomingAppointmentsCount: number;
-	totalAppointments: number;
-}
-
-// ============================================================================================
-// CONSTANTS
-// ============================================================================================
-
-// Status mappings for better type safety
-const COMPLETED_STATUSES = ["completed", "Realizado", "concluido"] as const;
-const SCHEDULED_STATUSES = [
-	"scheduled",
-	"confirmed",
-	"agendado",
-	"confirmado",
-] as const;
-const MISSED_STATUSES = [
-	"cancelled",
-	"no_show",
-	"missed",
-	"Cancelado",
-	"cancelado",
-	"falta",
-] as const;
-const NO_SHOW_STATUSES = ["no_show", "missed", "falta"] as const;
-
-// Classification thresholds (in days)
-const THRESHOLDS = {
-	INACTIVE_CUSTOM: 60,
-	INACTIVE_30: 30,
-	INACTIVE_7: 7,
-	NO_SHOW_RISK_COUNT: 2,
-} as const;
-
-// Query configuration
 const QUERY_CONFIG = {
-	STALE_TIME: 5 * 60 * 1000, // 5 minutes
-} as const;
+	STALE_TIME: 1000 * 60 * 15, // 15 minutos
+};
 
 export const PATIENT_CLASSIFICATIONS: Record<
 	PatientClassification,
@@ -109,20 +49,20 @@ export const PATIENT_CLASSIFICATIONS: Record<
 	active: {
 		value: "active",
 		label: "Ativos",
-		description: "Pacientes com atividade nos últimos 7 dias",
-		icon: "💚",
-		color: "emerald",
+		description: "Pacientes em tratamento regular",
+		icon: "🟢",
+		color: "green",
 	},
 	inactive_7: {
 		value: "inactive_7",
-		label: "Inativos (7 dias)",
+		label: "Inativos (7+ dias)",
 		description: "Sem comparecimento há mais de 7 dias",
-		icon: "⚠️",
-		color: "amber",
+		icon: "🟡",
+		color: "yellow",
 	},
 	inactive_30: {
 		value: "inactive_30",
-		label: "Inativos (30 dias)",
+		label: "Inativos (30+ dias)",
 		description: "Sem comparecimento há mais de 30 dias",
 		icon: "🔴",
 		color: "red",
@@ -165,234 +105,7 @@ export const PATIENT_CLASSIFICATIONS: Record<
 } as const;
 
 // ============================================================================================
-// UTILITY FUNCTIONS
-// ============================================================================================
-
-function calculateDaysSince(dateString: string): number {
-	const date = new Date(dateString);
-	const today = new Date();
-	return differenceInDays(today, date);
-}
-
-function isAppointmentCompleted(appointment: Appointment): boolean {
-	return COMPLETED_STATUSES.includes(
-		appointment.status as (typeof COMPLETED_STATUSES)[number],
-	);
-}
-
-function isAppointmentScheduled(appointment: Appointment): boolean {
-	return SCHEDULED_STATUSES.includes(
-		appointment.status as (typeof SCHEDULED_STATUSES)[number],
-	);
-}
-
-function isAppointmentMissed(appointment: Appointment): boolean {
-	return MISSED_STATUSES.includes(
-		appointment.status as (typeof MISSED_STATUSES)[number],
-	);
-}
-
-function isAppointmentNoShow(appointment: Appointment): boolean {
-	return NO_SHOW_STATUSES.includes(
-		appointment.status as (typeof NO_SHOW_STATUSES)[number],
-	);
-}
-
-function isAppointmentUnpaid(appointment: Appointment): boolean {
-	return (
-		appointment.payment_status === "pending" &&
-		isAppointmentCompleted(appointment)
-	);
-}
-
-function isAppointmentUpcoming(appointment: Appointment): boolean {
-	const appointmentDate = new Date(appointment.date);
-	const today = new Date();
-	today.setHours(0, 0, 0, 0);
-	return appointmentDate >= today && isAppointmentScheduled(appointment);
-}
-
-function countAppointments(
-	appointments: Appointment[],
-	predicate: (a: Appointment) => boolean,
-): number {
-	return appointments.filter(predicate).length;
-}
-
-function findFirstCompletedAppointment(
-	appointments: Appointment[],
-): Appointment | undefined {
-	return appointments.find(isAppointmentCompleted);
-}
-
-function findFirstSOAPRecord(
-	soapRecords: SOAPRecord[],
-): SOAPRecord | undefined {
-	return soapRecords[soapRecords.length - 1];
-}
-
-function determineFirstEvaluationDate(
-	soapRecords: SOAPRecord[],
-	appointments: Appointment[],
-): string | undefined {
-	const firstSoap = findFirstSOAPRecord(soapRecords);
-	const firstAppointment = findFirstCompletedAppointment(appointments);
-	const lastAppointment = appointments[appointments.length - 1];
-
-	return (
-		firstSoap?.created_at ||
-		firstAppointment?.date ||
-		lastAppointment?.date
-	);
-}
-
-export function calculatePatientStats(
-	input: PatientStatsInput,
-): Omit<PatientStats, "classification"> {
-	const { appointments, soapRecords } = input;
-
-	const sessionsCompleted = soapRecords.length;
-	const totalAppointments = appointments.length;
-
-	const firstEvaluationDate = determineFirstEvaluationDate(
-		soapRecords,
-		appointments,
-	);
-	const lastAppointment = appointments[0];
-	const lastAppointmentDate = lastAppointment?.date;
-
-	const daysSinceLastAppointment = lastAppointmentDate
-		? calculateDaysSince(lastAppointmentDate)
-		: 0;
-
-	const unpaidSessionsCount = countAppointments(
-		appointments,
-		isAppointmentUnpaid,
-	);
-	const noShowCount = countAppointments(appointments, isAppointmentNoShow);
-	const missedAppointmentsCount = countAppointments(
-		appointments,
-		isAppointmentMissed,
-	);
-	const upcomingAppointmentsCount = countAppointments(
-		appointments,
-		isAppointmentUpcoming,
-	);
-
-	return {
-		sessionsCompleted,
-		firstEvaluationDate,
-		lastAppointmentDate,
-		daysSinceLastAppointment,
-		unpaidSessionsCount,
-		noShowCount,
-		missedAppointmentsCount,
-		upcomingAppointmentsCount,
-		totalAppointments,
-	};
-}
-
-export function classifyPatient(stats: ClassificationStats): PatientClassification {
-	// If has unpaid sessions and no-shows
-	if (stats.unpaidSessionsCount > 0 && stats.noShowCount > 0) {
-		return "has_unpaid";
-	}
-
-	// If has many no-shows
-	if (stats.noShowCount >= THRESHOLDS.NO_SHOW_RISK_COUNT) {
-		return "no_show_risk";
-	}
-
-	// If never had sessions
-	if (stats.sessionsCompleted === 0 && stats.totalAppointments === 0) {
-		return "new_patient";
-	}
-
-	// If has upcoming appointment
-	if (stats.upcomingAppointmentsCount > 0) {
-		return "active";
-	}
-
-	// Classify by inactivity level
-	if (stats.daysSinceLastAppointment >= THRESHOLDS.INACTIVE_CUSTOM) {
-		return "inactive_custom";
-	} else if (stats.daysSinceLastAppointment >= THRESHOLDS.INACTIVE_30) {
-		return "inactive_30";
-	} else if (stats.daysSinceLastAppointment >= THRESHOLDS.INACTIVE_7) {
-		return "inactive_7";
-	}
-
-	return "active";
-}
-
-const sessionToSOAPRecord = (session: SessionRecord): SOAPRecord => ({
-	id: session.id,
-	patient_id: session.patient_id,
-	created_at: session.created_at,
-	status: session.status,
-	record_date: session.record_date,
-});
-
-const sortAppointmentsDesc = (appointments: Appointment[]) =>
-	[...appointments].sort((a, b) => {
-		const dateA = new Date(a.date).getTime();
-		const dateB = new Date(b.date).getTime();
-		return dateB - dateA;
-	});
-
-const sortSoapRecordsDesc = (records: SOAPRecord[]) =>
-	[...records].sort(
-		(a, b) =>
-			new Date(b.record_date).getTime() - new Date(a.record_date).getTime(),
-	);
-
-export const fetchAllAppointments = async (
-	patientId: string,
-): Promise<Appointment[]> => {
-	const pageSize = 1000;
-	const appointments: Appointment[] = [];
-	let offset = 0;
-
-	while (true) {
-		const res = await appointmentsApi.list({
-			patientId,
-			limit: pageSize,
-			offset,
-		});
-		const chunk = (res?.data ?? []) as Appointment[];
-		appointments.push(...chunk);
-		if (chunk.length < pageSize) break;
-		offset += pageSize;
-	}
-
-	return sortAppointmentsDesc(appointments);
-};
-
-export const fetchFinalizedSessions = async (
-	patientId: string,
-): Promise<SOAPRecord[]> => {
-	const pageSize = 200;
-	const records: SOAPRecord[] = [];
-	let offset = 0;
-
-	while (true) {
-		const res = await sessionsApi.list({
-			patientId,
-			status: "finalized",
-			limit: pageSize,
-			offset,
-		});
-		const chunk = (res?.data ?? []) as SessionRecord[];
-		records.push(...chunk.map(sessionToSOAPRecord));
-		if (chunk.length < pageSize) break;
-		offset += pageSize;
-	}
-
-	return sortSoapRecordsDesc(records);
-};
-
-// ============================================================================================
-// HOOKS
+// HOOKS (Otimizados para usar as rotas do backend)
 // ============================================================================================
 
 export const usePatientStats = (patientId: string | undefined) => {
@@ -403,24 +116,17 @@ export const usePatientStats = (patientId: string | undefined) => {
 				throw new Error("ID do paciente não fornecido");
 			}
 
-			const [appointments, soapRecords] = await Promise.all([
-				fetchAllAppointments(patientId),
-				fetchFinalizedSessions(patientId),
-			]);
+			// Chama o endpoint de estatísticas agregadas, que é infinitamente mais
+			// rápido do que baixar todas as sessões e consultas para a RAM.
+			const res = await request<{ data: PatientStats }>(
+				`/api/patients/stats/${encodeURIComponent(patientId)}/detailed-stats`
+			);
 
-			// Calculate statistics
-			const stats = calculatePatientStats({
-				appointments,
-				soapRecords,
-			});
+			if (!res || !res.data) {
+			    throw new Error("Falha ao obter estatísticas");
+			}
 
-			// Determine classification
-			const classification = classifyPatient(stats);
-
-			return {
-				...stats,
-				classification,
-			} as PatientStats;
+			return res.data;
 		},
 		enabled: !!patientId,
 		staleTime: QUERY_CONFIG.STALE_TIME,
@@ -435,26 +141,16 @@ export const useMultiplePatientStats = (patientIds: string[]) => {
 				return {};
 			}
 
-			const statsMap: Record<string, PatientStats> = {};
-
-			await Promise.all(
-				patientIds.map(async (id) => {
-					const [appointments, soapRecords] = await Promise.all([
-						fetchAllAppointments(id),
-						fetchFinalizedSessions(id),
-					]);
-
-					const stats = calculatePatientStats({
-						appointments,
-						soapRecords,
-					});
-
-					const classification = classifyPatient(stats);
-					statsMap[id] = { ...stats, classification };
-				}),
+			// Chamada em batch para o servidor Neon
+			const res = await request<{ data: Record<string, PatientStats> }>(
+				"/api/patients/stats/bulk",
+				{
+					method: "POST",
+					body: JSON.stringify({ patientIds }),
+				}
 			);
 
-			return statsMap;
+			return res?.data || {};
 		},
 		enabled: patientIds.length > 0,
 		staleTime: QUERY_CONFIG.STALE_TIME,

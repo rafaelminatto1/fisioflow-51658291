@@ -1,3 +1,4 @@
+import { patientStatsRoutes } from "./patients/stats";
 import { Hono } from "hono";
 import { eq, and, sql, desc, isNull } from "drizzle-orm";
 import { patients, sessions } from "@fisioflow/db";
@@ -1818,5 +1819,7 @@ app.get("/:id/export", async (c) => {
 });
 
 registerPatientClinicalDetailRoutes(app);
+
+app.route("/stats", patientStatsRoutes);
 
 export { app as patientsRoutes };
