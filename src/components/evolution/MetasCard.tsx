@@ -25,7 +25,18 @@ interface MetasCardProps {
 	defaultCollapsed?: boolean;
 }
 
-// ... (countdown logic remains same)
+// Calcula o countdown formatado de forma compacta
+function formatCountdown(targetDate: string | undefined): {
+	text: string;
+	isUrgent: boolean;
+} {
+	if (!targetDate) return { text: "-", isUrgent: false };
+	const date = parseISO(targetDate);
+	return {
+		text: formatDetailedDuration(targetDate),
+		isUrgent: isPast(date) || isToday(date),
+	};
+}
 
 export const MetasCard = memo(function MetasCard({
 	patientId,
