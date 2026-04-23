@@ -58,7 +58,7 @@ export interface AuthUser {
 	role?: string;
 }
 
-export type AuthVariables = { user: AuthUser };
+export type AuthVariables = { user: AuthUser; requestId?: string };
 type TokenSource = "authorization" | "query" | "cookie";
 
 type CandidateAuthContext = {
