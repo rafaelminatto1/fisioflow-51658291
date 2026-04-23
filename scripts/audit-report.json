@@ -1,0 +1,173 @@
+{
+  "timestamp": "2026-04-23T13:42:50.714Z",
+  "results": [
+    {
+      "name": "Dashboard",
+      "path": "/dashboard",
+      "durationMs": 18368,
+      "errors": [
+        "Failed to load resource: the server responded with a status of 500 ()",
+        "Failed to load resource: the server responded with a status of 500 ()",
+        "Failed to load resource: the server responded with a status of 500 ()"
+      ],
+      "warnings": [
+        "⚠️ Poor LCP: 16396"
+      ],
+      "networkFailures": [
+        "https://www.moocafisio.com.br/cdn-cgi/rum? - net::ERR_ABORTED",
+        "https://www.moocafisio.com.br/assets/push-notifications-Dr5SSh16.js - net::ERR_ABORTED",
+        "https://ep-wandering-bonus-acj4zwvo.neonauth.sa-east-1.aws.neon.tech/neondb/auth/token - net::ERR_ABORTED",
+        "https://www.moocafisio.com.br/cdn-cgi/rum? - net::ERR_ABORTED",
+        "https://cdn.jsdelivr.net/npm/temporal-polyfill@0.2.5/dist/global.iife.min.js - net::ERR_BLOCKED_BY_ORB"
+      ],
+      "metrics": {
+        "ttfb": 79.5,
+        "domInteractive": 608.0999999940395,
+        "loadTime": 995.7999999970198
+      }
+    },
+    {
+      "name": "Pacientes",
+      "path": "/pacientes",
+      "durationMs": 4355,
+      "errors": [
+        "Failed to load resource: the server responded with a status of 500 ()",
+        "Failed to load resource: the server responded with a status of 500 ()",
+        "Failed to load resource: the server responded with a status of 500 ()"
+      ],
+      "warnings": [],
+      "networkFailures": [
+        "https://www.moocafisio.com.br/cdn-cgi/rum? - net::ERR_ABORTED",
+        "https://cdn.jsdelivr.net/npm/temporal-polyfill@0.2.5/dist/global.iife.min.js - net::ERR_BLOCKED_BY_ORB"
+      ],
+      "metrics": {
+        "ttfb": 306,
+        "domInteractive": 699.2999999970198,
+        "loadTime": 839.3999999985099
+      }
+    },
+    {
+      "name": "Agenda",
+      "path": "/agenda",
+      "durationMs": 5180,
+      "errors": [
+        "Failed to load resource: the server responded with a status of 500 ()",
+        "Failed to load resource: the server responded with a status of 500 ()",
+        "Failed to load resource: the server responded with a status of 500 ()",
+        "Failed to load resource: the server responded with a status of 500 ()",
+        "Failed to load resource: the server responded with a status of 500 ()",
+        "Failed to load resource: the server responded with a status of 500 ()",
+        "Failed to load resource: the server responded with a status of 500 ()"
+      ],
+      "warnings": [],
+      "networkFailures": [
+        "https://www.moocafisio.com.br/cdn-cgi/rum? - net::ERR_ABORTED",
+        "https://cdn.jsdelivr.net/npm/temporal-polyfill@0.2.5/dist/global.iife.min.js - net::ERR_BLOCKED_BY_ORB"
+      ],
+      "metrics": {
+        "ttfb": 35,
+        "domInteractive": 299.29999999701977,
+        "loadTime": 438.5
+      }
+    },
+    {
+      "name": "Exercícios",
+      "path": "/exercises",
+      "durationMs": 5708,
+      "errors": [],
+      "warnings": [],
+      "networkFailures": [
+        "https://www.moocafisio.com.br/cdn-cgi/rum? - net::ERR_ABORTED",
+        "https://cdn.jsdelivr.net/npm/temporal-polyfill@0.2.5/dist/global.iife.min.js - net::ERR_BLOCKED_BY_ORB",
+        "https://r2-worker.rafalegollas.workers.dev/cdn-cgi/image/width=800,quality=85,format=auto/https%3A%2F%2Fwww.moocafisio.com.br%2Fexercises%2Fillustrations%2Fabdominal-bicicleta.avif - net::ERR_BLOCKED_BY_ORB",
+        "https://r2-worker.rafalegollas.workers.dev/cdn-cgi/image/width=800,quality=85,format=auto/https%3A%2F%2Fwww.moocafisio.com.br%2Fexercises%2Fillustrations%2Fab-wheel-rollout.avif - net::ERR_BLOCKED_BY_ORB",
+        "https://r2-worker.rafalegollas.workers.dev/cdn-cgi/image/width=800,quality=85,format=auto/https%3A%2F%2Fwww.moocafisio.com.br%2Fexercises%2Fillustrations%2F4-apoios-four-point-kneeling.avif - net::ERR_BLOCKED_BY_ORB",
+        "https://r2-worker.rafalegollas.workers.dev/cdn-cgi/image/width=800,quality=85,format=auto/https%3A%2F%2Fwww.moocafisio.com.br%2Fexercises%2Fillustrations%2Fabdominal-obliquo.avif - net::ERR_BLOCKED_BY_ORB",
+        "https://r2-worker.rafalegollas.workers.dev/cdn-cgi/image/width=800,quality=85,format=auto/https%3A%2F%2Fwww.moocafisio.com.br%2Fexercises%2Fillustrations%2Fabdominal-crupeado.avif - net::ERR_BLOCKED_BY_ORB",
+        "https://r2-worker.rafalegollas.workers.dev/cdn-cgi/image/width=800,quality=85,format=auto/https%3A%2F%2Fwww.moocafisio.com.br%2Fexercises%2Fillustrations%2Fabducao-quadril-deitado.avif - net::ERR_BLOCKED_BY_ORB",
+        "https://r2-worker.rafalegollas.workers.dev/cdn-cgi/image/width=800,quality=85,format=auto/https%3A%2F%2Fwww.moocafisio.com.br%2Fexercises%2Fillustrations%2Fabdominal-reverso.avif - net::ERR_BLOCKED_BY_ORB",
+        "https://r2-worker.rafalegollas.workers.dev/cdn-cgi/image/width=800,quality=85,format=auto/https%3A%2F%2Fwww.moocafisio.com.br%2Fexercises%2Fillustrations%2Fabducao-de-quadril-em-pe.avif - net::ERR_BLOCKED_BY_ORB",
+        "https://r2-worker.rafalegollas.workers.dev/cdn-cgi/image/width=800,quality=85,format=auto/https%3A%2F%2Fwww.moocafisio.com.br%2Fexercises%2Fillustrations%2Fabducao-quadril-pe.avif - net::ERR_BLOCKED_BY_ORB",
+        "https://r2-worker.rafalegollas.workers.dev/cdn-cgi/image/width=800,quality=85,format=auto/https%3A%2F%2Fwww.moocafisio.com.br%2Fexercises%2Fillustrations%2Fafundo.avif - net::ERR_BLOCKED_BY_ORB",
+        "https://r2-worker.rafalegollas.workers.dev/cdn-cgi/image/width=800,quality=85,format=auto/https%3A%2F%2Fwww.moocafisio.com.br%2Fexercises%2Fillustrations%2Fafundo-caminhando.avif - net::ERR_BLOCKED_BY_ORB",
+        "https://r2-worker.rafalegollas.workers.dev/cdn-cgi/image/width=800,quality=85,format=auto/https%3A%2F%2Fwww.moocafisio.com.br%2Fexercises%2Fillustrations%2Fafundo-frontal-lunge.avif - net::ERR_BLOCKED_BY_ORB",
+        "https://r2-worker.rafalegollas.workers.dev/cdn-cgi/image/width=800,quality=85,format=auto/https%3A%2F%2Fwww.moocafisio.com.br%2Fexercises%2Fillustrations%2Fafundo-lateral.avif - net::ERR_BLOCKED_BY_ORB",
+        "https://r2-worker.rafalegollas.workers.dev/cdn-cgi/image/width=800,quality=85,format=auto/https%3A%2F%2Fwww.moocafisio.com.br%2Fexercises%2Fillustrations%2Fafundo-passada.avif - net::ERR_BLOCKED_BY_ORB",
+        "https://r2-worker.rafalegollas.workers.dev/cdn-cgi/image/width=800,quality=85,format=auto/https%3A%2F%2Fwww.moocafisio.com.br%2Fexercises%2Fillustrations%2Fagachamento-goblet.avif - net::ERR_BLOCKED_BY_ORB",
+        "https://r2-worker.rafalegollas.workers.dev/cdn-cgi/image/width=800,quality=85,format=auto/https%3A%2F%2Fwww.moocafisio.com.br%2Fexercises%2Fillustrations%2Fafundo-reverso.avif - net::ERR_BLOCKED_BY_ORB",
+        "https://r2-worker.rafalegollas.workers.dev/cdn-cgi/image/width=800,quality=85,format=auto/https%3A%2F%2Fwww.moocafisio.com.br%2Fexercises%2Fillustrations%2Fagachamento-bulgaro.avif - net::ERR_BLOCKED_BY_ORB",
+        "https://r2-worker.rafalegollas.workers.dev/cdn-cgi/image/width=800,quality=85,format=auto/https%3A%2F%2Fwww.moocafisio.com.br%2Fexercises%2Fillustrations%2Fagachamento-livre.avif - net::ERR_BLOCKED_BY_ORB",
+        "https://r2-worker.rafalegollas.workers.dev/cdn-cgi/image/width=800,quality=85,format=auto/https%3A%2F%2Fwww.moocafisio.com.br%2Fexercises%2Fillustrations%2Fagachamento-parelde-wall-sit.avif - net::ERR_BLOCKED_BY_ORB",
+        "https://r2-worker.rafalegollas.workers.dev/cdn-cgi/image/width=800,quality=85,format=auto/https%3A%2F%2Fwww.moocafisio.com.br%2Fexercises%2Fillustrations%2Fagachamento-sumo.avif - net::ERR_BLOCKED_BY_ORB",
+        "https://r2-worker.rafalegollas.workers.dev/cdn-cgi/image/width=800,quality=85,format=auto/https%3A%2F%2Fwww.moocafisio.com.br%2Fexercises%2Fillustrations%2Fagachamento-pistol.avif - net::ERR_BLOCKED_BY_ORB",
+        "https://r2-worker.rafalegollas.workers.dev/cdn-cgi/image/width=800,quality=85,format=auto/https%3A%2F%2Fwww.moocafisio.com.br%2Fexercises%2Fillustrations%2Frnt-squat.avif - net::ERR_BLOCKED_BY_ORB",
+        "https://r2-worker.rafalegollas.workers.dev/cdn-cgi/image/width=800,quality=85,format=auto/https%3A%2F%2Fwww.moocafisio.com.br%2Fexercises%2Fillustrations%2Fjump-squat.avif - net::ERR_BLOCKED_BY_ORB",
+        "https://r2-worker.rafalegollas.workers.dev/cdn-cgi/image/width=800,quality=85,format=auto/https%3A%2F%2Fwww.moocafisio.com.br%2Fexercises%2Fillustrations%2Fagachamento-com-soco.avif - net::ERR_BLOCKED_BY_ORB",
+        "https://r2-worker.rafalegollas.workers.dev/cdn-cgi/image/width=800,quality=85,format=auto/https%3A%2F%2Fwww.moocafisio.com.br%2Fexercises%2Fillustrations%2Fagachamento-suporte.avif - net::ERR_BLOCKED_BY_ORB"
+      ],
+      "metrics": {
+        "ttfb": 177.20000000298023,
+        "domInteractive": 548.5,
+        "loadTime": 830.2000000029802
+      }
+    },
+    {
+      "name": "Financeiro",
+      "path": "/financial",
+      "durationMs": 3721,
+      "errors": [],
+      "warnings": [],
+      "networkFailures": [
+        "https://www.moocafisio.com.br/cdn-cgi/rum? - net::ERR_ABORTED",
+        "https://cdn.jsdelivr.net/npm/temporal-polyfill@0.2.5/dist/global.iife.min.js - net::ERR_BLOCKED_BY_ORB"
+      ],
+      "metrics": {
+        "ttfb": 30.100000001490116,
+        "domInteractive": 223.70000000298023,
+        "loadTime": 379.3999999985099
+      }
+    },
+    {
+      "name": "Analytics",
+      "path": "/analytics",
+      "durationMs": 4110,
+      "errors": [
+        "Error: Minified React error #306; visit https://react.dev/errors/306?args[]=undefined&args[]= for the full message or use the non-minified dev environment for full errors and additional helpful warnings.\n    at Hc (https://www.moocafisio.com.br/assets/vendor-react-ChVaQsFh.js:8:80342)\n    at Au (https://www.moocafisio.com.br/assets/vendor-react-ChVaQsFh.js:8:115761)\n    at Du (https://www.moocafisio.com.br/assets/vendor-react-ChVaQsFh.js:8:114844)\n    at Eu (https://www.moocafisio.com.br/assets/vendor-react-ChVaQsFh.js:8:114683)\n    at yu (https://www.moocafisio.com.br/assets/vendor-react-ChVaQsFh.js:8:111564)\n    at ad (https://www.moocafisio.com.br/assets/vendor-react-ChVaQsFh.js:8:123039)\n    at MessagePort.ie (https://www.moocafisio.com.br/assets/vendor-react-ChVaQsFh.js:1:58144)",
+        "React Router caught the following error during render Error: Minified React error #306; visit https://react.dev/errors/306?args[]=undefined&args[]= for the full message or use the non-minified dev environment for full errors and additional helpful warnings.\n    at Hc (https://www.moocafisio.com.br/assets/vendor-react-ChVaQsFh.js:8:80342)\n    at Au (https://www.moocafisio.com.br/assets/vendor-react-ChVaQsFh.js:8:115761)\n    at Du (https://www.moocafisio.com.br/assets/vendor-react-ChVaQsFh.js:8:114844)\n    at Eu (https://www.moocafisio.com.br/assets/vendor-react-ChVaQsFh.js:8:114683)\n    at yu (https://www.moocafisio.com.br/assets/vendor-react-ChVaQsFh.js:8:111564)\n    at ad (https://www.moocafisio.com.br/assets/vendor-react-ChVaQsFh.js:8:123039)\n    at MessagePort.ie (https://www.moocafisio.com.br/assets/vendor-react-ChVaQsFh.js:1:58144)"
+      ],
+      "warnings": [
+        "WebSocket connection to 'wss://api-pro.moocafisio.com.br/api/realtime?token=eyJhbGciOiJFZERTQSIsImtpZCI6IjM1NDViNjdiLWJiMzItNDMzYi1hNDNkLTBhY2E5ODZkMDQ4YyJ9.eyJpYXQiOjE3NzY5NTE3NjIsIm5hbWUiOiJEci4gVGVzdGUgQXR1YWxpemFkbyIsImVtYWlsIjoicmFmYWVsLm1pbmF0dG9AeWFob28uY29tLmJyIiwiZW1haWxWZXJpZmllZCI6ZmFsc2UsImNyZWF0ZWRBdCI6IjIwMjYtMDQtMTRUMjA6NDc6MTQuMzMxWiIsInVwZGF0ZWRBdCI6IjIwMjYtMDQtMTlUMDE6MDI6MzYuODY5WiIsInJvbGUiOiJhdXRoZW50aWNhdGVkIiwiYmFubmVkIjpmYWxzZSwiYmFuUmVhc29uIjpudWxsLCJiYW5FeHBpcmVzIjpudWxsLCJpZCI6IjRhMzgzNzY5LWQ4NWItNDYxMy1iYWNlLWIxZDQ1MzBiYWMwMyIsInN1YiI6IjRhMzgzNzY5LWQ4NWItNDYxMy1iYWNlLWIxZDQ1MzBiYWMwMyIsImV4cCI6MTc3Njk1MjY2MiwiaXNzIjoiaHR0cHM6Ly9lcC13YW5kZXJpbmctYm9udXMtYWNqNHp3dm8ubmVvbmF1dGguc2EtZWFzdC0xLmF3cy5uZW9uLnRlY2giLCJhdWQiOiJodHRwczovL2VwLXdhbmRlcmluZy1ib251cy1hY2o0end2by5uZW9uYXV0aC5zYS1lYXN0LTEuYXdzLm5lb24udGVjaCJ9.R8ycFdID5524VoO-1rtIlZP3gGvS0aFul8nKI2hVXbyVgYNWQJ2FSehY3vYFq7iVw3gDd3mbeObEeS4SWmHuCA' failed: WebSocket is closed before the connection is established."
+      ],
+      "networkFailures": [
+        "https://www.moocafisio.com.br/cdn-cgi/rum? - net::ERR_ABORTED",
+        "https://cdn.jsdelivr.net/npm/temporal-polyfill@0.2.5/dist/global.iife.min.js - net::ERR_BLOCKED_BY_ORB"
+      ],
+      "metrics": {
+        "ttfb": 30.80000000447035,
+        "domInteractive": 346.70000000298023,
+        "loadTime": 441.80000000447035
+      }
+    },
+    {
+      "name": "Configurações",
+      "path": "/settings",
+      "durationMs": 4331,
+      "errors": [],
+      "warnings": [],
+      "networkFailures": [
+        "https://www.moocafisio.com.br/cdn-cgi/rum? - net::ERR_ABORTED",
+        "https://cdn.jsdelivr.net/npm/temporal-polyfill@0.2.5/dist/global.iife.min.js - net::ERR_BLOCKED_BY_ORB"
+      ],
+      "metrics": {
+        "ttfb": 26.30000000447035,
+        "domInteractive": 533.7000000029802,
+        "loadTime": 677.1000000014901
+      }
+    }
+  ],
+  "summary": {
+    "totalPages": 7,
+    "totalErrors": 15,
+    "totalWarnings": 2
+  }
+}
