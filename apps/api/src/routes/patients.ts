@@ -693,6 +693,7 @@ app.get("/", async (c) => {
 	const origin = trimmedString(c.req.query("origin"));
 	const partnerCompany = trimmedString(c.req.query("partnerCompany"));
 	const incompleteRegistration = c.req.query("incompleteRegistration") === "true";
+	const isMinimal = c.req.query("minimal") === "true";
 	const limit = Math.min(
 		200,
 		Math.max(1, Number.parseInt(c.req.query("limit") ?? "100", 10) || 100),
@@ -703,7 +704,39 @@ app.get("/", async (c) => {
 	);
 
 	try {
-		const cteSql = `
+		let cteSql = "";
+		let finalSelectSql = "";
+
+		if (isMinimal) {
+			cteSql = `
+				WITH directory_rows AS (
+					SELECT
+						p.id,
+						p.organization_id AS "organizationId",
+						p.full_name AS "fullName",
+						p.nickname,
+						p.social_name AS "socialName",
+						p.photo_url AS "photoUrl",
+						p.email,
+						p.phone,
+						p.status,
+						p.is_active AS "isActive",
+						p.created_at AS "createdAt",
+						p.date_of_birth AS "birthDate",
+						(SELECT MAX(date) FROM appointments WHERE patient_id = p.id AND organization_id = p.organization_id) as "lastAppointmentDate",
+						NULL as classification,
+						'current' as "financialStatus",
+						0 as "sessionsCompleted",
+						0 as "totalAppointments",
+						NULL as "nextAppointmentDate",
+						0 as "openBalance"
+					FROM patients p
+					WHERE p.organization_id = $1::uuid
+						AND COALESCE(p.archived, FALSE) = FALSE
+				)
+			`;
+		} else {
+			cteSql = `
 			WITH appointment_agg AS (
 				SELECT
 					a.patient_id,
@@ -931,7 +964,8 @@ app.get("/", async (c) => {
 				WHERE p.organization_id = $1::uuid
 					AND COALESCE(p.archived, FALSE) = FALSE
 			)
-		`;
+			`;
+		}
 
 		const baseConditions: string[] = [];
 		const params: Array<string | number | boolean | string[]> = [
