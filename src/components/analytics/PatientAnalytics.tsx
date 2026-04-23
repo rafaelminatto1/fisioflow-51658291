@@ -79,7 +79,7 @@ const listAllPatients = async () => {
 	let offset = 0;
 	const limit = 1000;
 	while (offset < 10000) {
-		const response = await patientsApi.list({ limit, offset, sortBy: "name_asc" });
+		const response = await patientsApi.list({ limit, offset, sortBy: "name_asc", minimal: true });
 		const chunk = response?.data ?? [];
 		all.push(...chunk);
 		if (chunk.length < limit) break;

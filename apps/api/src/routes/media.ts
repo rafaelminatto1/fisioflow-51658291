@@ -2,9 +2,15 @@ import { Hono } from 'hono';
 import { v4 as uuidv4 } from 'uuid';
 import { S3Client, PutObjectCommand, DeleteObjectCommand } from '@aws-sdk/client-s3';
 import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
+import { eq, and, desc, sql } from 'drizzle-orm';
 import { requireAuth, type AuthVariables } from '../lib/auth';
-import { createPool } from '../lib/db';
+import { createDb, createPool } from '../lib/db';
 import type { Env } from '../types/env';
+import { 
+    mediaGallery, 
+    exerciseMediaAttachments,
+    mediaTypeEnum 
+} from '@fisioflow/db';
 
 const app = new Hono<{ Bindings: Env; Variables: AuthVariables }>();
 
@@ -18,63 +24,183 @@ const ALLOWED_TYPES: Record<string, string> = {
     'video/webm': '.webm',
     'video/quicktime': '.mov',
     'application/pdf': '.pdf',
-    'application/msword': '.doc',
-    'application/vnd.openxmlformats-officedocument.wordprocessingml.document': '.docx',
 };
 
-app.get('/annotations', requireAuth, async (c) => {
-    const user = c.get('user');
-    const pool = await createPool(c.env);
-    const assetId = c.req.query('assetId');
+// ===== GALLERY MANAGEMENT =====
 
-    if (!assetId) {
-        return c.json({ error: 'assetId é obrigatório' }, 400);
+// Listar mídia da galeria
+app.get('/gallery', requireAuth, async (c) => {
+    try {
+        const db = await createDb(c.env);
+        const user = c.get('user');
+        const folder = c.req.query('folder');
+        const type = c.req.query('type');
+
+        let query = db.select().from(mediaGallery).where(eq(mediaGallery.organizationId, user.organizationId));
+
+        const filters = [eq(mediaGallery.organizationId, user.organizationId)];
+        if (folder) filters.push(eq(mediaGallery.folder, folder));
+        if (type) filters.push(eq(mediaGallery.type, type as any));
+
+        const rows = await db
+            .select()
+            .from(mediaGallery)
+            .where(and(...filters))
+            .orderBy(desc(mediaGallery.createdAt));
+
+        return c.json({ data: rows });
+    } catch (error: any) {
+        console.error('[Media/Gallery] Error:', error.message);
+        return c.json({ error: 'Falha ao listar galeria' }, 500);
     }
-
-    const result = await pool.query(
-        `
-          SELECT id, asset_id, version, data, created_at, author_id
-          FROM asset_annotations
-          WHERE organization_id = $1 AND asset_id = $2
-          ORDER BY version DESC
-        `,
-        [user.organizationId, assetId],
-    );
-
-    try { return c.json({ data: result.rows || result }); } catch { return c.json({ data: [] }); }
 });
 
-app.post('/annotations', requireAuth, async (c) => {
-    const user = c.get('user');
-    const pool = await createPool(c.env);
-    const body = await c.req.json() as Record<string, unknown>;
+// Listar pastas únicas
+app.get('/gallery/folders', requireAuth, async (c) => {
+    try {
+        const db = await createDb(c.env);
+        const user = c.get('user');
 
-    if (!body.asset_id) {
-        return c.json({ error: 'asset_id é obrigatório' }, 400);
+        const rows = await db
+            .select({ folder: mediaGallery.folder })
+            .from(mediaGallery)
+            .where(eq(mediaGallery.organizationId, user.organizationId))
+            .groupBy(mediaGallery.folder);
+
+        return c.json({ data: rows.map(r => r.folder) });
+    } catch (error: any) {
+        console.error('[Media/Folders] Error:', error.message);
+        return c.json({ error: 'Falha ao listar pastas' }, 500);
     }
-
-    const result = await pool.query(
-        `
-          INSERT INTO asset_annotations (
-            organization_id, asset_id, version, data, author_id, created_at
-          ) VALUES (
-            $1, $2, $3, $4::jsonb, $5, NOW()
-          )
-          RETURNING id, asset_id, version, data, created_at, author_id
-        `,
-        [
-            user.organizationId,
-            String(body.asset_id),
-            Number(body.version ?? 1),
-            JSON.stringify(body.data ?? []),
-            user.uid,
-        ],
-    );
-
-    return c.json({ data: result.rows[0] }, 201);
 });
 
-// ===== ROTA DE UPLOAD (Pre-Signed URL) =====
+// Registrar nova mídia na galeria
+app.post('/gallery', requireAuth, async (c) => {
+    try {
+        const db = await createDb(c.env);
+        const user = c.get('user');
+        const body = await c.req.json();
+
+        const [row] = await db
+            .insert(mediaGallery)
+            .values({
+                ...body,
+                organizationId: user.organizationId,
+            })
+            .returning();
+
+        return c.json({ data: row }, 201);
+    } catch (error: any) {
+        console.error('[Media/GallerySave] Error:', error.message);
+        return c.json({ error: 'Falha ao salvar mídia na galeria' }, 500);
+    }
+});
+
+// Remover da galeria
+app.delete('/gallery/:id', requireAuth, async (c) => {
+    try {
+        const db = await createDb(c.env);
+        const user = c.get('user');
+        const { id } = c.req.param();
+
+        const [row] = await db
+            .delete(mediaGallery)
+            .where(and(eq(mediaGallery.id, id), eq(mediaGallery.organizationId, user.organizationId)))
+            .returning();
+
+        if (!row) return c.json({ error: 'Mídia não encontrada' }, 404);
+
+        return c.json({ ok: true });
+    } catch (error: any) {
+        console.error('[Media/GalleryDelete] Error:', error.message);
+        return c.json({ error: 'Falha ao excluir mídia da galeria' }, 500);
+    }
+});
+
+// ===== EXERCISE ATTACHMENTS =====
+
+// Listar mídia de um exercício
+app.get('/exercise/:exerciseId', requireAuth, async (c) => {
+    try {
+        const db = await createDb(c.env);
+        const { exerciseId } = c.req.param();
+
+        const rows = await db
+            .select()
+            .from(exerciseMediaAttachments)
+            .where(eq(exerciseMediaAttachments.exerciseId, exerciseId))
+            .orderBy(exerciseMediaAttachments.orderIndex);
+
+        return c.json({ data: rows });
+    } catch (error: any) {
+        console.error('[Media/ExerciseList] Error:', error.message);
+        return c.json({ error: 'Falha ao listar mídias do exercício' }, 500);
+    }
+});
+
+// Anexar mídia ao exercício
+app.post('/exercise/:exerciseId', requireAuth, async (c) => {
+    try {
+        const db = await createDb(c.env);
+        const { exerciseId } = c.req.param();
+        const body = await c.req.json();
+
+        const [row] = await db
+            .insert(exerciseMediaAttachments)
+            .values({
+                ...body,
+                exerciseId,
+            })
+            .returning();
+
+        return c.json({ data: row }, 201);
+    } catch (error: any) {
+        console.error('[Media/ExerciseAttach] Error:', error.message);
+        return c.json({ error: 'Falha ao anexar mídia' }, 500);
+    }
+});
+
+// Atualizar anexo (reordenação ou legenda)
+app.put('/exercise/attachment/:id', requireAuth, async (c) => {
+    try {
+        const db = await createDb(c.env);
+        const { id } = c.req.param();
+        const body = await c.req.json();
+
+        const [row] = await db
+            .update(exerciseMediaAttachments)
+            .set({
+                ...body,
+                updatedAt: new Date(),
+            })
+            .where(eq(exerciseMediaAttachments.id, id))
+            .returning();
+
+        return c.json({ data: row });
+    } catch (error: any) {
+        console.error('[Media/ExerciseUpdate] Error:', error.message);
+        return c.json({ error: 'Falha ao atualizar anexo' }, 500);
+    }
+});
+
+// Desanexar
+app.delete('/exercise/attachment/:id', requireAuth, async (c) => {
+    try {
+        const db = await createDb(c.env);
+        const { id } = c.req.param();
+
+        await db
+            .delete(exerciseMediaAttachments)
+            .where(eq(exerciseMediaAttachments.id, id));
+
+        return c.json({ ok: true });
+    } catch (error: any) {
+        console.error('[Media/ExerciseDetach] Error:', error.message);
+        return c.json({ error: 'Falha ao desanexar mídia' }, 500);
+    }
+});
+
+// ===== ROTA DE UPLOAD LEGADA (Pre-Signed URL) =====
 app.post('/upload-url', requireAuth, async (c) => {
     try {
         const body = await c.req.json();
@@ -115,7 +241,6 @@ app.post('/upload-url', requireAuth, async (c) => {
             CacheControl: 'public, max-age=31536000, immutable',
         });
 
-        // Gera o link para o client subir o arquivo diretamente com validade de 90 minutos (sessão de fisioterapia)
         const signedUrl = await getSignedUrl(s3Client, command, { expiresIn: 5400 });
         const publicUrl = `${c.env.R2_PUBLIC_URL}/${key}`;
 
@@ -133,7 +258,7 @@ app.post('/upload-url', requireAuth, async (c) => {
     }
 });
 
-// ===== ROTA DE EXCLUSÃO DE ARQUIVO (Apenas Donos ou Admin) =====
+// ===== ROTA DE EXCLUSÃO DE ARQUIVO LEGADA =====
 app.delete('/:key{.*}', requireAuth, async (c) => {
     try {
         const key = c.req.param('key');
@@ -143,13 +268,10 @@ app.delete('/:key{.*}', requireAuth, async (c) => {
             return c.json({ error: 'Chave não informada' }, 400);
         }
 
-        // Regra simples: A key contem o UID do criador no path, como folder/date/userId/...
-        // Se o usuário não for dono do arquivo (e a gente não tiver um role de admin explicito), proibir.
         if (!key.includes(`/${user.uid}/`)) {
             return c.json({ error: 'Acesso negado para remover este arquivo' }, 403);
         }
 
-        // Deleta o arquivo via S3 API usando o R2_BUCKET compatível
         const s3Client = new S3Client({
             region: 'auto',
             endpoint: `https://${c.env.R2_ACCOUNT_ID}.r2.cloudflarestorage.com`,

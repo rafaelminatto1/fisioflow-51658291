@@ -49,6 +49,7 @@ export const IncompleteRegistrationAlert: React.FC = () => {
 					const fallback = await patientsApi.list({
 						limit: 200,
 						sortBy: "created_at_desc",
+						minimal: true,
 					});
 					const fallbackPatients = (fallback?.data ?? [])
 						.filter((item) => Boolean(item.incomplete_registration))

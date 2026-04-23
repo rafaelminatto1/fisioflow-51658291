@@ -498,6 +498,7 @@ export function CohortComparison({
 					limit: 500,
 					offset: patientsOffset,
 					sortBy: "name_asc",
+					minimal: true,
 				});
 				const chunk = response?.data ?? [];
 				allPatients.push(...chunk);
