@@ -28,12 +28,15 @@ import {
 	BODY_PARTS,
 	CATEGORIES,
 	EQUIPMENT,
+	COMMON_PATHOLOGIES,
+	PRECAUTION_LEVELS,
 } from "@/lib/constants/exerciseConstants";
 import {
 	findExactNormalizedMatch,
 	findSimilarItems,
 } from "@/lib/utils/similarity";
 import type { Exercise } from "@/types";
+import type { ApiExercise } from "@/types/api";
 import { SafeAreaView } from "react-native-safe-area-context";
 
 const DIFFICULTIES = [
@@ -47,6 +50,46 @@ function normalizeText(text: string): string {
 		.toLowerCase()
 		.normalize("NFD")
 		.replace(/[\u0300-\u036f]/g, "");
+}
+
+type ScientificReferenceItem = {
+	title: string;
+	url: string;
+};
+
+type ExerciseFormData = Partial<Exercise> & {
+	pathologiesIndicated: string[];
+	pathologiesContraindicated: string[];
+	precaution_level: "safe" | "supervised" | "restricted";
+	precaution_notes: string;
+	scientific_references: ScientificReferenceItem[];
+};
+
+function parseScientificReferences(
+	value: ApiExercise["scientific_references"],
+): ScientificReferenceItem[] {
+	if (Array.isArray(value)) {
+		return value.map((item) => ({
+			title: item?.title || "",
+			url: item?.url || "",
+		}));
+	}
+
+	if (typeof value === "string" && value.trim().length > 0) {
+		try {
+			const parsed = JSON.parse(value);
+			if (Array.isArray(parsed)) {
+				return parsed.map((item) => ({
+					title: item?.title || "",
+					url: item?.url || "",
+				}));
+			}
+		} catch {
+			return [];
+		}
+	}
+
+	return [];
 }
 
 function SegmentedPicker({
@@ -520,8 +563,10 @@ export default function ExerciseFormScreen() {
 	const [showBodyPartsModal, setShowBodyPartsModal] = useState(false);
 	const [showEquipmentModal, setShowEquipmentModal] = useState(false);
 	const [showTagsModal, setShowTagsModal] = useState(false);
+	const [showIndicatedModal, setShowIndicatedModal] = useState(false);
+	const [showContraindicatedModal, setShowContraindicatedModal] = useState(false);
 
-	const [formData, setFormData] = useState<Partial<Exercise>>({
+	const [formData, setFormData] = useState<ExerciseFormData>({
 		name: "",
 		description: "",
 		category: "",
@@ -530,6 +575,11 @@ export default function ExerciseFormScreen() {
 		videoUrl: "",
 		imageUrl: "",
 		embeddingSketch: "",
+		pathologiesIndicated: [],
+		pathologiesContraindicated: [],
+		precaution_level: "safe",
+		precaution_notes: "",
+		scientific_references: [],
 	});
 
 	const { data: exercise, isLoading: isLoadingExercise } = useQuery({
@@ -549,12 +599,22 @@ export default function ExerciseFormScreen() {
 				description: exercise.description || "",
 				category: exercise.category || "",
 				difficulty: (exercise.difficulty as any) || "medium",
-				instructions: exercise.instructions || [],
+				instructions: Array.isArray(exercise.instructions) ? exercise.instructions : [],
 				videoUrl: exercise.videoUrl || "",
 				imageUrl: exercise.imageUrl || "",
 				embeddingSketch: exercise.embeddingSketch || "",
+				pathologiesIndicated: exercise.indicated_pathologies || [],
+				pathologiesContraindicated: exercise.contraindicated_pathologies || [],
+				precaution_level: exercise.precaution_level || "safe",
+				precaution_notes: exercise.precaution_notes || "",
+				scientific_references: parseScientificReferences(
+					exercise.scientific_references,
+				),
 			});
 			setCategories(exercise.category ? [exercise.category] : []);
+			setBodyParts(exercise.body_parts || exercise.bodyParts || []);
+			setEquipment(exercise.equipment || []);
+			setTags(exercise.tags || []);
 		}
 	}, [exercise]);
 
@@ -570,9 +630,20 @@ export default function ExerciseFormScreen() {
 			const dataToSave = {
 				...formData,
 				category: categories[0] || "",
+				body_parts: bodyParts,
+				equipment: equipment,
+				tags: tags,
+				indicated_pathologies: formData.pathologiesIndicated,
+				contraindicated_pathologies: formData.pathologiesContraindicated,
+				scientific_references: JSON.stringify(
+					formData.scientific_references ?? [],
+				),
 			};
 			if (isEditing && exerciseId) {
-				await updateExerciseAsync({ id: exerciseId, data: dataToSave });
+				await updateExerciseAsync({
+					id: exerciseId,
+					data: dataToSave as Partial<Exercise>,
+				});
 				success();
 				Alert.alert("Sucesso", "Exercício atualizado com sucesso!");
 			} else {
@@ -622,7 +693,10 @@ export default function ExerciseFormScreen() {
 		);
 	};
 
-	const updateField = (field: keyof typeof formData, value: any) => {
+	const updateField = <K extends keyof ExerciseFormData>(
+		field: K,
+		value: ExerciseFormData[K],
+	) => {
 		setFormData((prev) => ({ ...prev, [field]: value }));
 	};
 
@@ -655,6 +729,14 @@ export default function ExerciseFormScreen() {
 	const tagOptions = tags.map((t) => ({
 		label: t,
 		value: t,
+	}));
+	const pathologyOptions = COMMON_PATHOLOGIES.map((p) => ({
+		label: p.label,
+		value: p.value,
+	}));
+	const precautionOptions = PRECAUTION_LEVELS.map((p) => ({
+		label: p.label,
+		value: p.value,
 	}));
 
 	return (
@@ -722,13 +804,62 @@ export default function ExerciseFormScreen() {
 						textAlignVertical="top"
 					/>
 
+					<View style={styles.sectionHeader}>
+						<Text style={[styles.label, { color: colors.text }]}>Instruções (Passo a Passo)</Text>
+						<TouchableOpacity
+							onPress={() => {
+								const current = formData.instructions || [];
+								updateField("instructions", [...current, ""]);
+							}}
+						>
+							<Ionicons name="add-circle" size={24} color={colors.primary} />
+						</TouchableOpacity>
+					</View>
+
+					{(formData.instructions || []).map((inst, index) => (
+						<View key={`inst-${index}`} style={styles.instructionItem}>
+							<Text style={[styles.stepNumber, { color: colors.textMuted }]}>{index + 1}</Text>
+							<TextInput
+								style={[
+									styles.input,
+									{
+										flex: 1,
+										borderColor: colors.border,
+										backgroundColor: colors.surface,
+										color: colors.text,
+										minHeight: 50,
+									},
+								]}
+								value={inst}
+								onChangeText={(v) => {
+									const newInst = [...(formData.instructions || [])];
+									newInst[index] = v;
+									updateField("instructions", newInst);
+								}}
+								placeholder="Descreva este passo..."
+								placeholderTextColor={colors.textMuted}
+								multiline
+							/>
+							<TouchableOpacity
+								onPress={() => {
+									const newInst = (formData.instructions || []).filter((_, i) => i !== index);
+									updateField("instructions", newInst);
+								}}
+							>
+								<Ionicons name="trash-outline" size={20} color={colors.error} />
+							</TouchableOpacity>
+						</View>
+					))}
+
 					<Text style={[styles.label, { color: colors.text }]}>
 						Dificuldade
 					</Text>
 					<SegmentedPicker
 						options={DIFFICULTIES}
 						value={formData.difficulty || "medium"}
-						onChange={(v) => updateField("difficulty", v)}
+						onChange={(v) =>
+							updateField("difficulty", v as ExerciseFormData["difficulty"])
+						}
 						primaryColor={colors.primary}
 						textMuted={colors.textMuted}
 					/>
@@ -904,11 +1035,7 @@ export default function ExerciseFormScreen() {
 						>
 							{tags.length > 0 ? tags.join(", ") : "Selecione ou crie tags..."}
 						</Text>
-						<Ionicons
-							name="chevron-down"
-							size={20}
-							color={colors.textSecondary}
-						/>
+						<Ionicons name="chevron-down" size={20} color={colors.textSecondary} />
 					</TouchableOpacity>
 					{tags.length > 0 && (
 						<View style={styles.chipsContainer}>
@@ -932,6 +1059,157 @@ export default function ExerciseFormScreen() {
 							))}
 						</View>
 					)}
+
+					<Text style={[styles.label, { color: colors.text }]}>Patologias Indicadas</Text>
+					<TouchableOpacity
+						style={[
+							styles.multiSelectBtn,
+							{ borderColor: colors.border, backgroundColor: colors.surface },
+						]}
+						onPress={() => setShowIndicatedModal(true)}
+					>
+						<Text
+							style={{
+								color: (formData.pathologiesIndicated || []).length ? colors.text : colors.textMuted,
+								flex: 1,
+							}}
+							numberOfLines={1}
+						>
+							{(formData.pathologiesIndicated || []).length > 0
+								? (formData.pathologiesIndicated || []).join(", ")
+								: "Selecione patologias..."}
+						</Text>
+						<Ionicons name="chevron-down" size={20} color={colors.textSecondary} />
+					</TouchableOpacity>
+
+					<Text style={[styles.label, { color: colors.text }]}>Patologias Contraindicadas</Text>
+					<TouchableOpacity
+						style={[
+							styles.multiSelectBtn,
+							{ borderColor: colors.border, backgroundColor: colors.surface },
+						]}
+						onPress={() => setShowContraindicatedModal(true)}
+					>
+						<Text
+							style={{
+								color: (formData.pathologiesContraindicated || []).length ? colors.text : colors.textMuted,
+								flex: 1,
+							}}
+							numberOfLines={1}
+						>
+							{(formData.pathologiesContraindicated || []).length > 0
+								? (formData.pathologiesContraindicated || []).join(", ")
+								: "Selecione patologias..."}
+						</Text>
+						<Ionicons name="chevron-down" size={20} color={colors.textSecondary} />
+					</TouchableOpacity>
+
+					<Text style={[styles.label, { color: colors.text }]}>Nível de Precaução</Text>
+					<SegmentedPicker
+						options={precautionOptions}
+						value={formData.precaution_level || "safe"}
+						onChange={(v) =>
+							updateField(
+								"precaution_level",
+								v as ExerciseFormData["precaution_level"],
+							)
+						}
+						primaryColor={colors.primary}
+						textMuted={colors.textMuted}
+					/>
+
+					<Text style={[styles.label, { color: colors.text }]}>Notas de Precaução</Text>
+					<TextInput
+						style={[
+							styles.input,
+							{
+								borderColor: colors.border,
+								backgroundColor: colors.surface,
+								color: colors.text,
+							},
+						]}
+						value={formData.precaution_notes}
+						onChangeText={(v) => updateField("precaution_notes", v)}
+						placeholder="Ex: Evitar em fase aguda de dor"
+						placeholderTextColor={colors.textMuted}
+					/>
+
+					<View style={styles.sectionHeader}>
+						<Text style={[styles.label, { color: colors.text }]}>Referências Científicas</Text>
+						<TouchableOpacity
+							onPress={() => {
+								const current = formData.scientific_references || [];
+								updateField("scientific_references", [...current, { title: "", url: "" }]);
+							}}
+						>
+							<Ionicons name="add-circle" size={24} color={colors.primary} />
+						</TouchableOpacity>
+					</View>
+
+					{(formData.scientific_references || []).map((ref, index) => (
+						<View key={`ref-${index}`} style={styles.referenceItem}>
+							<View style={{ flex: 1, gap: 8 }}>
+								<TextInput
+									style={[
+										styles.input,
+										{
+											borderColor: colors.border,
+											backgroundColor: colors.surface,
+											color: colors.text,
+											paddingVertical: 8,
+										},
+									]}
+									value={ref.title}
+									onChangeText={(v) => {
+										const newRefs: ScientificReferenceItem[] = [
+											...(formData.scientific_references || []),
+										];
+										newRefs[index] = {
+											title: v,
+											url: newRefs[index]?.url || "",
+										};
+										updateField("scientific_references", newRefs);
+									}}
+									placeholder="Título do Artigo / Livro"
+									placeholderTextColor={colors.textMuted}
+								/>
+								<TextInput
+									style={[
+										styles.input,
+										{
+											borderColor: colors.border,
+											backgroundColor: colors.surface,
+											color: colors.text,
+											paddingVertical: 8,
+										},
+									]}
+									value={ref.url}
+									onChangeText={(v) => {
+										const newRefs: ScientificReferenceItem[] = [
+											...(formData.scientific_references || []),
+										];
+										newRefs[index] = {
+											title: newRefs[index]?.title || "",
+											url: v,
+										};
+										updateField("scientific_references", newRefs);
+									}}
+									placeholder="URL ou DOI"
+									placeholderTextColor={colors.textMuted}
+								/>
+							</View>
+							<TouchableOpacity
+								onPress={() => {
+									const newRefs = (formData.scientific_references || []).filter(
+										(_, i) => i !== index,
+									);
+									updateField("scientific_references", newRefs);
+								}}
+							>
+								<Ionicons name="trash-outline" size={20} color={colors.error} />
+							</TouchableOpacity>
+						</View>
+					))}
 
 					<Text style={[styles.label, { color: colors.text }]}>
 						URL da Imagem
@@ -1042,6 +1320,26 @@ export default function ExerciseFormScreen() {
 				selectedValues={tags}
 				onSelect={handleTagSelect}
 			/>
+
+			<AutocompleteMultiSelectModal
+				visible={showIndicatedModal}
+				onClose={() => setShowIndicatedModal(false)}
+				title="Patologias Indicadas"
+				fieldLabel="a patologia"
+				options={pathologyOptions}
+				selectedValues={formData.pathologiesIndicated || []}
+				onSelect={(v) => updateField("pathologiesIndicated", v)}
+			/>
+
+			<AutocompleteMultiSelectModal
+				visible={showContraindicatedModal}
+				onClose={() => setShowContraindicatedModal(false)}
+				title="Patologias Contraindicadas"
+				fieldLabel="a patologia"
+				options={pathologyOptions}
+				selectedValues={formData.pathologiesContraindicated || []}
+				onSelect={(v) => updateField("pathologiesContraindicated", v)}
+			/>
 		</SafeAreaView>
 	);
 }
@@ -1110,5 +1408,32 @@ const styles = StyleSheet.create({
 	},
 	chipText: {
 		fontSize: 12,
+	},
+	sectionHeader: {
+		flexDirection: "row",
+		alignItems: "center",
+		justifyContent: "space-between",
+		marginTop: 20,
+		marginBottom: 8,
+	},
+	instructionItem: {
+		flexDirection: "row",
+		alignItems: "center",
+		gap: 10,
+		marginBottom: 8,
+	},
+	stepNumber: {
+		fontSize: 14,
+		fontWeight: "600",
+		width: 20,
+	},
+	referenceItem: {
+		flexDirection: "row",
+		alignItems: "center",
+		gap: 10,
+		backgroundColor: "#f8fafc",
+		padding: 12,
+		borderRadius: 12,
+		marginBottom: 8,
 	},
 });

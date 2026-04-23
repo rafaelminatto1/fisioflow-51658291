@@ -8,16 +8,23 @@ import {
 	TouchableOpacity,
 	Alert,
 	Linking,
+	Modal,
 } from "react-native";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { useQuery } from "@tanstack/react-query";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
+import { useState } from "react";
 import { getExerciseById } from "@/lib/api";
 import { useColors } from "@/hooks/useColorScheme";
 import { useExerciseFavorites } from "@/hooks/useExerciseFavorites";
 import { Button } from "@/components";
 import { useHaptics } from "@/hooks/useHaptics";
+
+type ScientificReference = {
+	title?: string;
+	url?: string;
+};
 
 export default function ExerciseDetailScreen() {
 	const { id } = useLocalSearchParams();
@@ -25,6 +32,7 @@ export default function ExerciseDetailScreen() {
 	const colors = useColors();
 	const { medium } = useHaptics();
 	const { isFavorite, toggleFavorite, isToggling } = useExerciseFavorites();
+	const [zoomVisible, setZoomVisible] = useState(false);
 
 	const {
 		data: exercise,
@@ -52,6 +60,21 @@ export default function ExerciseDetailScreen() {
 			</View>
 		);
 	}
+
+	const scientificReferences: ScientificReference[] = Array.isArray(
+		exercise.scientific_references,
+	)
+		? exercise.scientific_references
+		: typeof exercise.scientific_references === "string"
+			? (() => {
+					try {
+						const parsed = JSON.parse(exercise.scientific_references);
+						return Array.isArray(parsed) ? parsed : [];
+					} catch {
+						return [];
+					}
+				})()
+			: [];
 
 	return (
 		<SafeAreaView
@@ -95,15 +118,48 @@ export default function ExerciseDetailScreen() {
 			</View>
 			<ScrollView>
 				{exercise.imageUrl && (
-					<Image source={{ uri: exercise.imageUrl }} style={styles.image} />
+					<TouchableOpacity activeOpacity={0.9} onPress={() => setZoomVisible(true)}>
+						<Image source={{ uri: exercise.imageUrl }} style={styles.image} resizeMode="contain" />
+						<View style={styles.zoomBadge}>
+							<Ionicons name="expand-outline" size={20} color="#fff" />
+						</View>
+					</TouchableOpacity>
 				)}
 				<View style={styles.content}>
-					<Text style={[styles.title, { color: colors.text }]}>
-						{exercise.name}
-					</Text>
-					<Text style={[styles.description, { color: colors.textSecondary }]}>
-						{exercise.description}
-					</Text>
+					<View style={styles.titleRow}>
+						<Text style={[styles.title, { color: colors.text }]}>
+							{exercise.name}
+						</Text>
+						{exercise.precaution_level && (
+							<View
+								style={[
+									styles.precautionBadge,
+									{
+										backgroundColor:
+											exercise.precaution_level === "restricted"
+												? colors.error
+												: exercise.precaution_level === "supervised"
+													? colors.warning
+													: colors.success,
+									},
+								]}
+							>
+								<Text style={styles.precautionText}>
+									{exercise.precaution_level === "restricted"
+										? "Restrito"
+										: exercise.precaution_level === "supervised"
+											? "Supervisionado"
+											: "Seguro"}
+								</Text>
+							</View>
+						)}
+					</View>
+
+					{exercise.description && (
+						<Text style={[styles.description, { color: colors.textSecondary }]}>
+							{exercise.description}
+						</Text>
+					)}
 
 					<View style={styles.metaContainer}>
 						<View style={[styles.metaTag, { backgroundColor: colors.surface }]}>
@@ -118,18 +174,65 @@ export default function ExerciseDetailScreen() {
 						</View>
 					</View>
 
-					{exercise.instructions && exercise.instructions.length > 0 && (
+					{exercise.precaution_notes && (
+						<View style={[styles.precautionNotes, { borderColor: colors.warning }]}>
+							<Ionicons name="warning-outline" size={18} color={colors.warning} />
+							<Text style={[styles.precautionNotesText, { color: colors.text }]}>
+								{exercise.precaution_notes}
+							</Text>
+						</View>
+					)}
+
+					{exercise.instructions && Array.isArray(exercise.instructions) && exercise.instructions.length > 0 && (
 						<View style={styles.section}>
 							<Text style={[styles.sectionTitle, { color: colors.text }]}>
-								Instruções
+								Passo a Passo
 							</Text>
 							{exercise.instructions.map((inst: string, index: number) => (
-								<Text
-									key={index}
-									style={[styles.instruction, { color: colors.textSecondary }]}
+								<View key={index} style={styles.instructionItem}>
+									<Text style={[styles.stepNumber, { color: colors.primary }]}>{index + 1}</Text>
+									<Text style={[styles.instructionText, { color: colors.textSecondary }]}>
+										{inst}
+									</Text>
+								</View>
+							))}
+						</View>
+					)}
+
+					{exercise.indicated_pathologies && exercise.indicated_pathologies.length > 0 && (
+						<View style={styles.section}>
+							<Text style={[styles.sectionTitle, { color: colors.text }]}>
+								Indicações
+							</Text>
+							<View style={styles.pathologyContainer}>
+								{exercise.indicated_pathologies.map((path, idx) => (
+									<View key={idx} style={[styles.pathologyTag, { backgroundColor: colors.surface }]}>
+										<Text style={[styles.pathologyText, { color: colors.text }]}>{path}</Text>
+									</View>
+								))}
+							</View>
+						</View>
+					)}
+
+					{scientificReferences.length > 0 && (
+						<View style={styles.section}>
+							<Text style={[styles.sectionTitle, { color: colors.text }]}>
+								Base Científica
+							</Text>
+							{scientificReferences.map((ref, idx) => (
+								<TouchableOpacity
+									key={idx}
+									style={[styles.referenceCard, { backgroundColor: colors.surface }]}
+									onPress={() => ref.url && Linking.openURL(ref.url)}
 								>
-									{`\u2022 ${inst}`}
-								</Text>
+									<Ionicons name="book-outline" size={20} color={colors.primary} />
+									<View style={{ flex: 1 }}>
+										<Text style={[styles.referenceTitle, { color: colors.text }]} numberOfLines={2}>
+											{ref.title || 'Referência sem título'}
+										</Text>
+										{ref.url && <Text style={{ color: colors.primary, fontSize: 12 }}>Ver Evidência</Text>}
+									</View>
+								</TouchableOpacity>
 							))}
 						</View>
 					)}
@@ -137,7 +240,7 @@ export default function ExerciseDetailScreen() {
 					{exercise.videoUrl && (
 						<View style={styles.section}>
 							<Button
-								title="Assistir Vídeo"
+								title="Assistir Demonstração"
 								onPress={() =>
 									Linking.openURL(exercise.videoUrl!).catch(() =>
 										Alert.alert("Erro", "Não foi possível abrir o vídeo."),
@@ -149,6 +252,19 @@ export default function ExerciseDetailScreen() {
 					)}
 				</View>
 			</ScrollView>
+
+					<Modal visible={zoomVisible} transparent animationType="fade">
+						<SafeAreaView style={styles.zoomContainer}>
+							<TouchableOpacity style={styles.closeZoom} onPress={() => setZoomVisible(false)}>
+								<Ionicons name="close" size={30} color="#fff" />
+							</TouchableOpacity>
+							<Image
+								source={{ uri: exercise.imageUrl }}
+								style={styles.fullImage}
+								resizeMode="contain"
+							/>
+						</SafeAreaView>
+					</Modal>
 		</SafeAreaView>
 	);
 }
@@ -227,5 +343,101 @@ const styles = StyleSheet.create({
 		fontSize: 16,
 		lineHeight: 24,
 		marginBottom: 4,
+	},
+	zoomBadge: {
+		position: "absolute",
+		bottom: 16,
+		right: 16,
+		backgroundColor: "rgba(0,0,0,0.5)",
+		padding: 8,
+		borderRadius: 20,
+	},
+	titleRow: {
+		flexDirection: "row",
+		alignItems: "center",
+		justifyContent: "space-between",
+		marginBottom: 8,
+		flexWrap: "wrap",
+		gap: 8,
+	},
+	precautionBadge: {
+		paddingHorizontal: 10,
+		paddingVertical: 4,
+		borderRadius: 12,
+	},
+	precautionText: {
+		color: "#fff",
+		fontSize: 12,
+		fontWeight: "bold",
+	},
+	precautionNotes: {
+		flexDirection: "row",
+		alignItems: "center",
+		gap: 8,
+		backgroundColor: "rgba(255, 193, 7, 0.1)",
+		padding: 12,
+		borderRadius: 12,
+		borderWidth: 1,
+		marginBottom: 20,
+	},
+	precautionNotesText: {
+		fontSize: 14,
+		flex: 1,
+	},
+	instructionItem: {
+		flexDirection: "row",
+		gap: 12,
+		marginBottom: 12,
+	},
+	stepNumber: {
+		fontSize: 16,
+		fontWeight: "bold",
+		width: 24,
+	},
+	instructionText: {
+		fontSize: 16,
+		lineHeight: 24,
+		flex: 1,
+	},
+	pathologyContainer: {
+		flexDirection: "row",
+		flexWrap: "wrap",
+		gap: 8,
+	},
+	pathologyTag: {
+		paddingHorizontal: 12,
+		paddingVertical: 6,
+		borderRadius: 20,
+	},
+	pathologyText: {
+		fontSize: 14,
+	},
+	referenceCard: {
+		flexDirection: "row",
+		alignItems: "center",
+		gap: 12,
+		padding: 12,
+		borderRadius: 12,
+		marginBottom: 8,
+	},
+	referenceTitle: {
+		fontSize: 14,
+		fontWeight: "500",
+	},
+	zoomContainer: {
+		flex: 1,
+		backgroundColor: "#000",
+		justifyContent: "center",
+		alignItems: "center",
+	},
+	closeZoom: {
+		position: "absolute",
+		top: 50,
+		right: 20,
+		zIndex: 10,
+	},
+	fullImage: {
+		width: "100%",
+		height: "80%",
 	},
 });
