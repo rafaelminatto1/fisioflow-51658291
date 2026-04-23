@@ -50,7 +50,7 @@ export function getOrgContext(): string | undefined {
 }
 
 function getUrl(env: Env, mode: 'read' | 'write' = 'write'): string {
-	// Bypass Hyperdrive for now to ensure we get fresh data after mass updates
+	// Priority: NEON_URL (Direct) > HYPERDRIVE (Pooled) > DATABASE_URL (Legacy/Dev)
 	let url = env.NEON_URL ||
 		(mode === 'read' ? env.NEON_URL : env.HYPERDRIVE?.connectionString) ||
 		process.env.DATABASE_URL;
@@ -58,9 +58,10 @@ function getUrl(env: Env, mode: 'read' | 'write' = 'write'): string {
 	if (!url) throw new Error("Database configuration error: URL missing");
 
 	// Otimização para Neon + Cloudflare (Pooling & Cold Starts)
+	// Aumentamos o timeout para 15s para evitar erros em Cold Starts do Neon
 	if (url.includes('neon.tech') && !url.includes('connect_timeout')) {
 		const separator = url.includes('?') ? '&' : '?';
-		url += `${separator}connect_timeout=10&sslmode=require`;
+		url += `${separator}connect_timeout=15&sslmode=require&pool_timeout=10`;
 	}
 
 	return url;
@@ -79,7 +80,7 @@ function getGlobalPool(env: Env): Pool {
 
     const pool = new Pool({
         connectionString: url,
-        max: 10,
+        max: 20,
         idleTimeoutMillis: 10000,
         connectionTimeoutMillis: 15000,
         // Otimização de latência TCP
