@@ -752,7 +752,7 @@ app.get("/", async (c) => {
 					MIN(pp.name) FILTER (
 						WHERE LOWER(COALESCE(pp.status, '')) IN ('ativo', 'active', 'em_tratamento', 'em tratamento')
 					) AS primary_pathology
-				FROM pathologies pp
+				FROM patient_pathologies pp
 				WHERE pp.organization_id = $1::uuid
 				GROUP BY pp.patient_id
 			),
@@ -761,7 +761,7 @@ app.get("/", async (c) => {
 					ps.patient_id,
 					TRUE AS has_surgery,
 					BOOL_OR(ps.surgery_date >= CURRENT_DATE - INTERVAL '90 days') AS recent_surgery
-				FROM surgeries ps
+				FROM patient_surgeries ps
 				WHERE ps.organization_id = $1::uuid
 				GROUP BY ps.patient_id
 			),
@@ -1205,10 +1205,10 @@ app.get("/", async (c) => {
 				`
 					SELECT
 						ARRAY(
-							SELECT DISTINCT pp.pathology_name
+							SELECT DISTINCT pp.name
 							FROM patient_pathologies pp
 							WHERE pp.organization_id = $1::uuid
-								AND pp.pathology_name IS NOT NULL
+								AND pp.name IS NOT NULL
 							ORDER BY 1
 						) AS pathologies,
 						ARRAY(
