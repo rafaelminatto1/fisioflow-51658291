@@ -179,6 +179,8 @@ app.get("/api/health/schema", async (c) => {
 
 // ===== ROTAS =====
 const apiRoutes = [
+	["/api/ai-trigger-dt", triggerDigitalTwinRoutes],
+	["/api/ai-clinical-search", aiClinicalSearchRoutes],
 	["/api/exercises", exercisesRoutes],
 	["/api/protocols", protocolsRoutes],
 	["/api/wiki", wikiRoutes],
@@ -259,7 +261,6 @@ const apiRoutes = [
 	["/api/packages", packagesRoutes],
 	["/api/announcements", announcementsRoutes],
 	["/api/admin/seed-templates", adminSeedTemplatesRoutes],
-	["/api/admin/trigger-digital-twin", triggerDigitalTwinRoutes],
 	["/api/search", searchRoutes],
 	["/api/reports/pdf", reportsPdfRoutes],
 	["/api/events", businessEventsRoutes],

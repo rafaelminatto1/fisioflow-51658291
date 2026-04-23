@@ -80,10 +80,14 @@ import { withImageParams } from "@/lib/storageProxy";
 
 interface ExerciseVideoLibraryProps {
 	onUploadClick?: () => void;
+	onSelectMedia?: (media: ExerciseVideo) => void;
+	selectionMode?: boolean;
 }
 
 export function ExerciseVideoLibrary({
 	onUploadClick: _onUploadClick,
+	onSelectMedia,
+	selectionMode = false,
 }: ExerciseVideoLibraryProps) {
 	const { data: videos, isLoading, error } = useExerciseVideos();
 	const deleteVideoMutation = useDeleteExerciseVideo();
@@ -655,6 +659,8 @@ export function ExerciseVideoLibrary({
 							isBulkMode={isBulkMode}
 							isSelected={selectedIds.has(video.id)}
 							onToggleSelect={() => toggleSelectVideo(video.id)}
+							selectionMode={selectionMode}
+							onSelectMedia={onSelectMedia}
 						/>
 					))}
 				</div>
@@ -672,6 +678,8 @@ export function ExerciseVideoLibrary({
 							isBulkMode={isBulkMode}
 							isSelected={selectedIds.has(video.id)}
 							onToggleSelect={() => toggleSelectVideo(video.id)}
+							selectionMode={selectionMode}
+							onSelectMedia={onSelectMedia}
 						/>
 					))}
 				</div>
@@ -1037,6 +1045,8 @@ function VideoCard({
 	isBulkMode,
 	isSelected,
 	onToggleSelect,
+	selectionMode,
+	onSelectMedia,
 }: {
 	video: ExerciseVideo;
 	onPlay: () => void;
@@ -1047,8 +1057,14 @@ function VideoCard({
 	isBulkMode: boolean;
 	isSelected: boolean;
 	onToggleSelect: () => void;
+	selectionMode?: boolean;
+	onSelectMedia?: (media: ExerciseVideo) => void;
 }) {
 	const handleCardClick = (e: React.MouseEvent) => {
+		if (selectionMode && onSelectMedia) {
+			onSelectMedia(video);
+			return;
+		}
 		if (isBulkMode) {
 			onToggleSelect();
 		} else if ((e.target as HTMLElement).closest("button")) {
@@ -1269,7 +1285,7 @@ function VideoListItem({
 			{/* Thumbnail */}
 			<div
 				className="relative w-32 h-20 flex-shrink-0 rounded overflow-hidden bg-muted cursor-pointer"
-				onClick={isBulkMode ? onToggleSelect : onPlay}
+				onClick={selectionMode && onSelectMedia ? () => onSelectMedia(video) : (isBulkMode ? onToggleSelect : onPlay)}
 			>
 				{video.thumbnail_url ? (
 					<OptimizedImage
@@ -1313,7 +1329,7 @@ function VideoListItem({
 			{/* Info */}
 			<div
 				className="flex-1 min-w-0 cursor-pointer"
-				onClick={isBulkMode ? onToggleSelect : undefined}
+				onClick={selectionMode && onSelectMedia ? () => onSelectMedia(video) : (isBulkMode ? onToggleSelect : undefined)}
 			>
 				<h4 className="font-medium text-sm truncate">{video.title}</h4>
 				{video.description && (
@@ -1384,7 +1400,10 @@ function VideoListItem({
 export const ExerciseVideoLibraryMemo = memo(
 	ExerciseVideoLibrary,
 	(prevProps, nextProps) => {
-		// Custom comparison para determinar quando re-renderizar
-		return prevProps.onUploadClick === nextProps.onUploadClick;
+		return (
+			prevProps.onUploadClick === nextProps.onUploadClick &&
+			prevProps.selectionMode === nextProps.selectionMode &&
+			prevProps.onSelectMedia === nextProps.onSelectMedia
+		);
 	},
 );
