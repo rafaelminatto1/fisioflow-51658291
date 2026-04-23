@@ -826,21 +826,43 @@ app.get("/", async (c) => {
 			directory_rows AS (
 				SELECT
 					p.id,
+					p.organization_id AS "organizationId",
 					p.full_name AS "fullName",
 					p.nickname,
 					p.social_name AS "socialName",
 					p.photo_url AS "photoUrl",
 					p.email,
 					p.phone,
+					p.phone_secondary AS "phoneSecondary",
 					p.cpf,
+					p.rg,
+					p.gender,
 					p.status,
 					p.is_active AS "isActive",
 					p.created_at AS "createdAt",
 					p.updated_at AS "updatedAt",
 					p.origin,
 					p.referred_by AS "referredBy",
+					p.profile_id AS "profileId",
+					p.user_id AS "userId",
 					p.professional_id AS "professionalId",
 					p.professional_name AS "professionalName",
+					p.progress,
+					p.blood_type AS "bloodType",
+					p.weight_kg AS "weightKg",
+					p.height_cm AS "heightCm",
+					p.marital_status AS "maritalStatus",
+					p.education_level AS "educationLevel",
+					p.session_value AS "sessionValue",
+					p.consent_data AS "consentData",
+					p.consent_image AS "consentImage",
+					p.incomplete_registration AS "incompleteRegistration",
+					p.address,
+					p.emergency_contact AS "emergencyContact",
+					p.insurance,
+					p.date_of_birth AS "birthDate",
+					p.observations,
+					p.notes,
 					COALESCE((p.insurance ->> 'provider'), NULL) AS "healthInsurance",
 					COALESCE(p.main_condition, pathology_agg.primary_pathology) AS "mainCondition",
 					COALESCE(pathology_agg.primary_pathology, p.main_condition) AS "primaryPathology",
@@ -1094,109 +1116,108 @@ app.get("/", async (c) => {
 				break;
 		}
 
-		const totalResult = await pool.query(
-			`
-				${cteSql}
-				SELECT COUNT(*)::int AS total
-				FROM directory_rows directory
-				${finalWhereSql}
-			`,
-			params,
-		);
+		const [dataResult, summaryResult, facetsResult, totalResult] = await Promise.all([
+			pool.query(
+				`
+					${cteSql}
+					SELECT *, COUNT(*) OVER()::int AS "__total"
+					FROM directory_rows directory
+					${finalWhereSql}
+					ORDER BY ${orderBy}
+					LIMIT $${paramIndex} OFFSET $${paramIndex + 1}
+				`,
+				[...params, limit, offset],
+			),
+			pool.query(
+				`
+					${cteSql}
+					SELECT
+						COUNT(*)::int AS total,
+						COUNT(*) FILTER (WHERE directory.classification = 'active')::int AS active,
+						COUNT(*) FILTER (WHERE directory.classification = 'new_patient')::int AS new_patients,
+						COUNT(*) FILTER (WHERE directory.classification = 'at_risk')::int AS at_risk,
+						COUNT(*) FILTER (WHERE directory.classification = 'completed')::int AS completed,
+						COUNT(*) FILTER (
+							WHERE directory."lastAppointmentDate" < CURRENT_DATE - INTERVAL '7 days'
+								AND directory.classification <> 'completed'
+						)::int AS inactive_7,
+						COUNT(*) FILTER (
+							WHERE directory."lastAppointmentDate" < CURRENT_DATE - INTERVAL '30 days'
+								AND directory.classification <> 'completed'
+						)::int AS inactive_30,
+						COUNT(*) FILTER (
+							WHERE directory."lastAppointmentDate" < CURRENT_DATE - INTERVAL '60 days'
+								AND directory.classification <> 'completed'
+						)::int AS inactive_60,
+						COUNT(*) FILTER (WHERE directory."noShowCount" > 0)::int AS no_show_risk,
+						COUNT(*) FILTER (
+							WHERE directory."financialStatus" IN ('pending_balance', 'in_collection')
+						)::int AS has_unpaid
+					FROM directory_rows directory
+					${baseWhereSql}
+				`,
+				params.slice(0, params.length - (classification && classification !== "all" ? 1 : 0)),
+			),
+			pool.query(
+				`
+					SELECT
+						ARRAY(
+							SELECT DISTINCT pp.pathology_name
+							FROM patient_pathologies pp
+							WHERE pp.organization_id = $1::uuid
+								AND pp.pathology_name IS NOT NULL
+							ORDER BY 1
+						) AS pathologies,
+						ARRAY(
+							SELECT DISTINCT value
+							FROM patients p2, LATERAL UNNEST(COALESCE(p2.care_profiles, ARRAY[]::text[])) AS value
+							WHERE p2.organization_id = $1::uuid
+								AND COALESCE(value, '') <> ''
+							ORDER BY 1
+						) AS care_profiles,
+						ARRAY(
+							SELECT DISTINCT value
+							FROM patients p3, LATERAL UNNEST(COALESCE(p3.sports_practiced, ARRAY[]::text[])) AS value
+							WHERE p3.organization_id = $1::uuid
+								AND COALESCE(value, '') <> ''
+							ORDER BY 1
+						) AS sports,
+						ARRAY(
+							SELECT DISTINCT value
+							FROM patients p4, LATERAL UNNEST(COALESCE(p4.therapy_focuses, ARRAY[]::text[])) AS value
+							WHERE p4.organization_id = $1::uuid
+								AND COALESCE(value, '') <> ''
+							ORDER BY 1
+						) AS therapy_focuses,
+						ARRAY(
+							SELECT DISTINCT p5.origin
+							FROM patients p5
+							WHERE p5.organization_id = $1::uuid
+								AND COALESCE(p5.origin, '') <> ''
+							ORDER BY 1
+						) AS origins,
+						ARRAY(
+							SELECT DISTINCT p6.partner_company_name
+							FROM patients p6
+							WHERE p6.organization_id = $1::uuid
+								AND COALESCE(p6.partner_company_name, '') <> ''
+							ORDER BY 1
+						) AS partners
+				`,
+				[user.organizationId],
+			),
+			pool.query(
+				`
+					${cteSql}
+					SELECT COUNT(*)::int AS total
+					FROM directory_rows directory
+					${finalWhereSql}
+				`,
+				params,
+			),
+		]);
 
-		const summaryResult = await pool.query(
-			`
-				${cteSql}
-				SELECT
-					COUNT(*)::int AS total,
-					COUNT(*) FILTER (WHERE directory.classification = 'active')::int AS active,
-					COUNT(*) FILTER (WHERE directory.classification = 'new_patient')::int AS new_patients,
-					COUNT(*) FILTER (WHERE directory.classification = 'at_risk')::int AS at_risk,
-					COUNT(*) FILTER (WHERE directory.classification = 'completed')::int AS completed,
-					COUNT(*) FILTER (
-						WHERE directory."lastAppointmentDate" < CURRENT_DATE - INTERVAL '7 days'
-							AND directory.classification <> 'completed'
-					)::int AS inactive_7,
-					COUNT(*) FILTER (
-						WHERE directory."lastAppointmentDate" < CURRENT_DATE - INTERVAL '30 days'
-							AND directory.classification <> 'completed'
-					)::int AS inactive_30,
-					COUNT(*) FILTER (
-						WHERE directory."lastAppointmentDate" < CURRENT_DATE - INTERVAL '60 days'
-							AND directory.classification <> 'completed'
-					)::int AS inactive_60,
-					COUNT(*) FILTER (WHERE directory."noShowCount" > 0)::int AS no_show_risk,
-					COUNT(*) FILTER (
-						WHERE directory."financialStatus" IN ('pending_balance', 'in_collection')
-					)::int AS has_unpaid
-				FROM directory_rows directory
-				${baseWhereSql}
-			`,
-			params.slice(0, params.length - (classification && classification !== "all" ? 1 : 0)),
-		);
-
-		const facetsResult = await pool.query(
-			`
-				SELECT
-					ARRAY(
-						SELECT DISTINCT pp.pathology_name
-						FROM patient_pathologies pp
-						WHERE pp.organization_id = $1::uuid
-							AND pp.pathology_name IS NOT NULL
-						ORDER BY 1
-					) AS pathologies,
-					ARRAY(
-						SELECT DISTINCT value
-						FROM patients p2, LATERAL UNNEST(COALESCE(p2.care_profiles, ARRAY[]::text[])) AS value
-						WHERE p2.organization_id = $1::uuid
-							AND COALESCE(value, '') <> ''
-						ORDER BY 1
-					) AS care_profiles,
-					ARRAY(
-						SELECT DISTINCT value
-						FROM patients p3, LATERAL UNNEST(COALESCE(p3.sports_practiced, ARRAY[]::text[])) AS value
-						WHERE p3.organization_id = $1::uuid
-							AND COALESCE(value, '') <> ''
-						ORDER BY 1
-					) AS sports,
-					ARRAY(
-						SELECT DISTINCT value
-						FROM patients p4, LATERAL UNNEST(COALESCE(p4.therapy_focuses, ARRAY[]::text[])) AS value
-						WHERE p4.organization_id = $1::uuid
-							AND COALESCE(value, '') <> ''
-						ORDER BY 1
-					) AS therapy_focuses,
-					ARRAY(
-						SELECT DISTINCT p5.origin
-						FROM patients p5
-						WHERE p5.organization_id = $1::uuid
-							AND COALESCE(p5.origin, '') <> ''
-						ORDER BY 1
-					) AS origins,
-					ARRAY(
-						SELECT DISTINCT p6.partner_company_name
-						FROM patients p6
-						WHERE p6.organization_id = $1::uuid
-							AND COALESCE(p6.partner_company_name, '') <> ''
-						ORDER BY 1
-					) AS partners
-			`,
-			[user.organizationId],
-		);
-
-		const dataResult = await pool.query(
-			`
-				${cteSql}
-				SELECT *
-				FROM directory_rows directory
-				${finalWhereSql}
-				ORDER BY ${orderBy}
-				LIMIT $${paramIndex} OFFSET $${paramIndex + 1}
-			`,
-			[...params, limit, offset],
-		);
-
-		const total = Number(totalResult.rows[0]?.total ?? 0);
+		const total = Number(totalResult.rows[0]?.total ?? (dataResult.rows[0] as any)?.__total ?? 0);
 		const summaryRow = (summaryResult.rows[0] ?? {}) as Record<string, unknown>;
 		const facetsRow = (facetsResult.rows[0] ?? {}) as Record<string, unknown>;
 
@@ -1230,12 +1251,16 @@ app.get("/", async (c) => {
 		});
 	} catch (error) {
 		console.error("[Patients/List] Error:", error);
+		const errorMessage = error instanceof Error ? error.message : String(error);
+		const errorStack = error instanceof Error ? error.stack : undefined;
+		
 		return c.json(
 			{
 				data: [],
 				total: 0,
 				error: "Erro ao listar pacientes",
-				details: error instanceof Error ? error.message : String(error),
+				details: errorMessage,
+				stack: c.env.ENVIRONMENT !== "production" ? errorStack : undefined,
 			},
 			500,
 		);
