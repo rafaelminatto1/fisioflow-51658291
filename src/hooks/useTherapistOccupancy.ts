@@ -275,7 +275,7 @@ export const useTherapistOccupancy = (
 			const dateFrom = format(start, "yyyy-MM-dd");
 			const dateTo = format(end, "yyyy-MM-dd");
 
-			const res = await appointmentsApi.list({ dateFrom, dateTo, limit: 3000 });
+			const res = await appointmentsApi.list({ dateFrom, dateTo, limit: 1000 });
 			const rawAppointments = (res?.data ?? []) as AppointmentRow[];
 
 			const appointments = rawAppointments.flatMap((appointment) => {

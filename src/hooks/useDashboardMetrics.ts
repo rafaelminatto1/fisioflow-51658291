@@ -201,7 +201,7 @@ export const useDashboardMetrics = (period: DashboardPeriod = "hoje") => {
 					return { data: [] as TherapistSummary[] };
 				}),
 				financialApi.contas
-					.list({ tipo: "receita", status: "pago", limit: 3000, offset: 0 })
+					.list({ tipo: "receita", status: "pago", limit: 1000, offset: 0 })
 					.catch((error) => {
 						logger.warn(
 							"Falha ao carregar contas para dashboard",
@@ -211,7 +211,7 @@ export const useDashboardMetrics = (period: DashboardPeriod = "hoje") => {
 						return { data: [] as ContaFinanceira[] };
 					}),
 				financialApi.pagamentos
-					.list({ limit: 3000, offset: 0 })
+					.list({ limit: 1000, offset: 0 })
 					.catch((error) => {
 						logger.warn(
 							"Falha ao carregar pagamentos para dashboard",

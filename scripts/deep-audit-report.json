@@ -1,17 +1,66 @@
 {
-  "timestamp": "2026-04-23T14:38:20.758Z",
+  "timestamp": "2026-04-23T14:50:06.504Z",
   "results": [
     {
       "name": "Dashboard",
       "path": "/dashboard",
       "tabs": [],
-      "errors": [],
-      "warnings": [],
-      "networkFailures": [
-        "https://www.moocafisio.com.br/cdn-cgi/rum? - net::ERR_ABORTED",
-        "https://www.moocafisio.com.br/assets/push-notifications-BTybVHUG.js - net::ERR_ABORTED",
-        "https://www.moocafisio.com.br/cdn-cgi/rum? - net::ERR_ABORTED",
-        "https://ep-wandering-bonus-acj4zwvo.neonauth.sa-east-1.aws.neon.tech/neondb/auth/token - net::ERR_ABORTED"
+      "errors": [
+        "Failed to load resource: the server responded with a status of 500 ()",
+        "Failed to load resource: the server responded with a status of 500 ()",
+        "Failed to load resource: the server responded with a status of 500 ()",
+        "Failed to load resource: the server responded with a status of 500 ()",
+        "Failed to load resource: the server responded with a status of 500 ()"
+      ],
+      "warnings": [
+        "⚠️ Poor LCP: 4548"
+      ],
+      "networkErrors": [
+        {
+          "type": "failed",
+          "url": "https://www.moocafisio.com.br/cdn-cgi/rum?",
+          "error": "net::ERR_ABORTED"
+        },
+        {
+          "type": "failed",
+          "url": "https://fisioflow-api.rafalegollas.workers.dev/api/appointments?dateFrom=2026-04-16&limit=100",
+          "error": "net::ERR_ABORTED"
+        },
+        {
+          "type": "failed",
+          "url": "https://fisioflow-api.rafalegollas.workers.dev/api/profile/me",
+          "error": "net::ERR_ABORTED"
+        },
+        {
+          "type": "failed",
+          "url": "https://www.moocafisio.com.br/cdn-cgi/rum?",
+          "error": "net::ERR_ABORTED"
+        },
+        {
+          "type": "http_error",
+          "url": "https://fisioflow-api.rafalegollas.workers.dev/api/patients?limit=3000&offset=0",
+          "status": 500
+        },
+        {
+          "type": "http_error",
+          "url": "https://fisioflow-api.rafalegollas.workers.dev/api/patients?incompleteRegistration=true&sortBy=created_at_desc&limit=10&offset=0",
+          "status": 500
+        },
+        {
+          "type": "http_error",
+          "url": "https://fisioflow-api.rafalegollas.workers.dev/api/patients?limit=3000&offset=0",
+          "status": 500
+        },
+        {
+          "type": "http_error",
+          "url": "https://fisioflow-api.rafalegollas.workers.dev/api/patients?limit=3000&offset=0",
+          "status": 500
+        },
+        {
+          "type": "http_error",
+          "url": "https://fisioflow-api.rafalegollas.workers.dev/api/patients?limit=3000&offset=0",
+          "status": 500
+        }
       ]
     },
     {
@@ -33,45 +82,63 @@
         "Failed to load resource: the server responded with a status of 500 ()",
         "Failed to load resource: the server responded with a status of 500 ()",
         "Failed to load resource: the server responded with a status of 500 ()",
-        "Failed to load resource: the server responded with a status of 500 ()",
         "Failed to load resource: the server responded with a status of 500 ()"
       ],
-      "warnings": [],
-      "networkFailures": [
-        "https://fisioflow-api.rafalegollas.workers.dev/api/appointments?dateFrom=2026-04-20&dateTo=2026-04-26&limit=3000&offset=0 - net::ERR_ABORTED",
-        "https://fisioflow-api.rafalegollas.workers.dev/api/appointments?dateFrom=2026-04-23&dateTo=2026-04-24&limit=500 - net::ERR_ABORTED",
-        "https://fisioflow-api.rafalegollas.workers.dev/api/financial/pagamentos?limit=3000&offset=0 - net::ERR_ABORTED",
-        "https://fisioflow-api.rafalegollas.workers.dev/api/patients?limit=3000&offset=0 - net::ERR_ABORTED",
-        "https://fisioflow-api.rafalegollas.workers.dev/api/appointments?dateFrom=2026-04-23&dateTo=2026-04-23&limit=20&offset=0 - net::ERR_ABORTED",
-        "https://fisioflow-api.rafalegollas.workers.dev/api/announcements?type=policy - net::ERR_ABORTED",
-        "https://fisioflow-api.rafalegollas.workers.dev/api/appointments?dateFrom=2026-03-23&dateTo=2026-04-23&limit=3000&offset=0 - net::ERR_ABORTED",
-        "https://www.moocafisio.com.br/cdn-cgi/rum? - net::ERR_ABORTED",
-        "https://fisioflow-api.rafalegollas.workers.dev/api/notifications?limit=10 - net::ERR_ABORTED",
-        "https://fisioflow-api.rafalegollas.workers.dev/api/appointments?limit=20&offset=0 - net::ERR_ABORTED",
-        "https://fisioflow-api.rafalegollas.workers.dev/api/appointments?dateFrom=2026-04-23&dateTo=2026-04-23&limit=3000&offset=0 - net::ERR_ABORTED",
-        "https://fisioflow-api.rafalegollas.workers.dev/api/financial/contas?tipo=receita&status=pago&limit=3000&offset=0 - net::ERR_ABORTED",
-        "https://fisioflow-api.rafalegollas.workers.dev/api/appointments?dateFrom=2026-04-01&dateTo=2026-04-23&limit=3000&offset=0 - net::ERR_ABORTED",
-        "https://fisioflow-api.rafalegollas.workers.dev/api/patients?incompleteRegistration=true&sortBy=created_at_desc&limit=10&offset=0 - net::ERR_ABORTED",
-        "https://fisioflow-api.rafalegollas.workers.dev/api/insights/dashboard - net::ERR_ABORTED",
-        "https://fisioflow-api.rafalegollas.workers.dev/api/profile/therapists - net::ERR_ABORTED"
+      "warnings": [
+        "⚠️ Poor LCP: 4120"
+      ],
+      "networkErrors": [
+        {
+          "type": "failed",
+          "url": "https://www.moocafisio.com.br/cdn-cgi/rum?",
+          "error": "net::ERR_ABORTED"
+        },
+        {
+          "type": "http_error",
+          "url": "https://fisioflow-api.rafalegollas.workers.dev/api/patients?incompleteRegistration=true&sortBy=created_at_desc&limit=10&offset=0",
+          "status": 500
+        },
+        {
+          "type": "http_error",
+          "url": "https://fisioflow-api.rafalegollas.workers.dev/api/patients?sortBy=created_at_desc&limit=20&offset=0",
+          "status": 500
+        },
+        {
+          "type": "http_error",
+          "url": "https://fisioflow-api.rafalegollas.workers.dev/api/patients?sortBy=created_at_desc&limit=20&offset=0",
+          "status": 500
+        },
+        {
+          "type": "http_error",
+          "url": "https://fisioflow-api.rafalegollas.workers.dev/api/patients?sortBy=created_at_desc&limit=20&offset=0",
+          "status": 500
+        },
+        {
+          "type": "http_error",
+          "url": "https://fisioflow-api.rafalegollas.workers.dev/api/patients?status=ativo&limit=1000",
+          "status": 500
+        },
+        {
+          "type": "http_error",
+          "url": "https://fisioflow-api.rafalegollas.workers.dev/api/patients?status=ativo&limit=1000",
+          "status": 500
+        }
       ]
     },
     {
       "name": "Agenda",
       "path": "/agenda",
       "tabs": [],
-      "errors": [
-        "Failed to load resource: the server responded with a status of 500 ()",
-        "Failed to load resource: the server responded with a status of 500 ()",
-        "Failed to load resource: the server responded with a status of 500 ()",
-        "Failed to load resource: the server responded with a status of 500 ()",
-        "Failed to load resource: the server responded with a status of 500 ()",
-        "Failed to load resource: the server responded with a status of 500 ()",
-        "Failed to load resource: the server responded with a status of 500 ()"
+      "errors": [],
+      "warnings": [
+        "⚠️ Slow page load: initial_load took 4560.69999999553ms"
       ],
-      "warnings": [],
-      "networkFailures": [
-        "https://www.moocafisio.com.br/cdn-cgi/rum? - net::ERR_ABORTED"
+      "networkErrors": [
+        {
+          "type": "failed",
+          "url": "https://www.moocafisio.com.br/cdn-cgi/rum?",
+          "error": "net::ERR_ABORTED"
+        }
       ]
     },
     {
@@ -109,11 +176,35 @@
         "Failed to load resource: the server responded with a status of 500 ()"
       ],
       "warnings": [
-        "⚠️ Slow page load: initial_load took 3289.3000000044703ms",
-        "⚠️ Poor LCP: 8924"
+        "⚠️ Poor LCP: 5004",
+        "⚠️ Poor LCP: 8460"
       ],
-      "networkFailures": [
-        "https://www.moocafisio.com.br/cdn-cgi/rum? - net::ERR_ABORTED"
+      "networkErrors": [
+        {
+          "type": "failed",
+          "url": "https://fisioflow-api.rafalegollas.workers.dev/api/profile/me",
+          "error": "net::ERR_ABORTED"
+        },
+        {
+          "type": "failed",
+          "url": "https://www.moocafisio.com.br/cdn-cgi/rum?",
+          "error": "net::ERR_ABORTED"
+        },
+        {
+          "type": "http_error",
+          "url": "https://fisioflow-api.rafalegollas.workers.dev/api/patients?limit=1000",
+          "status": 500
+        },
+        {
+          "type": "http_error",
+          "url": "https://fisioflow-api.rafalegollas.workers.dev/api/patients?limit=1000",
+          "status": 500
+        },
+        {
+          "type": "http_error",
+          "url": "https://fisioflow-api.rafalegollas.workers.dev/api/patients?limit=1000",
+          "status": 500
+        }
       ]
     },
     {
@@ -155,13 +246,37 @@
       ],
       "errors": [
         "Failed to load resource: the server responded with a status of 500 ()",
+        "Failed to load resource: the server responded with a status of 500 ()",
+        "Failed to load resource: the server responded with a status of 500 ()",
         "Failed to load resource: the server responded with a status of 500 ()"
       ],
-      "warnings": [
-        "⚠️ Poor LCP: 8828"
-      ],
-      "networkFailures": [
-        "https://www.moocafisio.com.br/cdn-cgi/rum? - net::ERR_ABORTED"
+      "warnings": [],
+      "networkErrors": [
+        {
+          "type": "failed",
+          "url": "https://www.moocafisio.com.br/cdn-cgi/rum?",
+          "error": "net::ERR_ABORTED"
+        },
+        {
+          "type": "http_error",
+          "url": "https://fisioflow-api.rafalegollas.workers.dev/api/patients?limit=500&sortBy=name_asc",
+          "status": 500
+        },
+        {
+          "type": "http_error",
+          "url": "https://fisioflow-api.rafalegollas.workers.dev/api/patients?limit=500&sortBy=name_asc",
+          "status": 500
+        },
+        {
+          "type": "http_error",
+          "url": "https://fisioflow-api.rafalegollas.workers.dev/api/commissions/summary?month=2026-04",
+          "status": 500
+        },
+        {
+          "type": "http_error",
+          "url": "https://fisioflow-api.rafalegollas.workers.dev/api/commissions/summary?month=2026-04",
+          "status": 500
+        }
       ]
     },
     {
@@ -211,12 +326,127 @@
         "Failed to load resource: the server responded with a status of 500 ()",
         "Failed to load resource: the server responded with a status of 500 ()",
         "Failed to load resource: the server responded with a status of 500 ()",
-        "Failed to load resource: the server responded with a status of 500 ()",
         "Failed to load resource: the server responded with a status of 500 ()"
       ],
-      "warnings": [],
-      "networkFailures": [
-        "https://www.moocafisio.com.br/cdn-cgi/rum? - net::ERR_ABORTED"
+      "warnings": [
+        "[PWA] Periodic Sync não pôde ser registrado: UnknownError: Unknown error."
+      ],
+      "networkErrors": [
+        {
+          "type": "failed",
+          "url": "https://www.moocafisio.com.br/cdn-cgi/rum?",
+          "error": "net::ERR_ABORTED"
+        },
+        {
+          "type": "http_error",
+          "url": "https://fisioflow-api.rafalegollas.workers.dev/api/patients?limit=1000&offset=0&sortBy=name_asc",
+          "status": 500
+        },
+        {
+          "type": "http_error",
+          "url": "https://fisioflow-api.rafalegollas.workers.dev/api/patients?limit=1000&offset=0&sortBy=name_asc",
+          "status": 500
+        },
+        {
+          "type": "http_error",
+          "url": "https://fisioflow-api.rafalegollas.workers.dev/api/patients?limit=1000&offset=0&sortBy=name_asc",
+          "status": 500
+        },
+        {
+          "type": "http_error",
+          "url": "https://fisioflow-api.rafalegollas.workers.dev/api/patients?limit=1000&offset=0&sortBy=name_asc",
+          "status": 500
+        },
+        {
+          "type": "http_error",
+          "url": "https://fisioflow-api.rafalegollas.workers.dev/api/patients?limit=1000&offset=0&sortBy=name_asc",
+          "status": 500
+        },
+        {
+          "type": "http_error",
+          "url": "https://fisioflow-api.rafalegollas.workers.dev/api/patients?limit=1000&offset=0&sortBy=name_asc",
+          "status": 500
+        },
+        {
+          "type": "http_error",
+          "url": "https://fisioflow-api.rafalegollas.workers.dev/api/patients?limit=1000&offset=0&sortBy=name_asc",
+          "status": 500
+        },
+        {
+          "type": "http_error",
+          "url": "https://fisioflow-api.rafalegollas.workers.dev/api/patients?limit=1000&offset=0&sortBy=name_asc",
+          "status": 500
+        },
+        {
+          "type": "http_error",
+          "url": "https://fisioflow-api.rafalegollas.workers.dev/api/patients?limit=1000&offset=0&sortBy=name_asc",
+          "status": 500
+        },
+        {
+          "type": "http_error",
+          "url": "https://fisioflow-api.rafalegollas.workers.dev/api/patients?limit=1000&offset=0&sortBy=name_asc",
+          "status": 500
+        },
+        {
+          "type": "http_error",
+          "url": "https://fisioflow-api.rafalegollas.workers.dev/api/patients?limit=1000&offset=0&sortBy=name_asc",
+          "status": 500
+        },
+        {
+          "type": "http_error",
+          "url": "https://fisioflow-api.rafalegollas.workers.dev/api/patients?limit=1000&offset=0&sortBy=name_asc",
+          "status": 500
+        },
+        {
+          "type": "http_error",
+          "url": "https://fisioflow-api.rafalegollas.workers.dev/api/patients?limit=1000&offset=0&sortBy=name_asc",
+          "status": 500
+        },
+        {
+          "type": "http_error",
+          "url": "https://fisioflow-api.rafalegollas.workers.dev/api/patients?limit=1000&offset=0&sortBy=name_asc",
+          "status": 500
+        },
+        {
+          "type": "http_error",
+          "url": "https://fisioflow-api.rafalegollas.workers.dev/api/patients?limit=1000&offset=0&sortBy=name_asc",
+          "status": 500
+        },
+        {
+          "type": "http_error",
+          "url": "https://fisioflow-api.rafalegollas.workers.dev/api/patients?limit=1000&offset=0&sortBy=name_asc",
+          "status": 500
+        },
+        {
+          "type": "http_error",
+          "url": "https://fisioflow-api.rafalegollas.workers.dev/api/patients?limit=1000&offset=0&sortBy=name_asc",
+          "status": 500
+        },
+        {
+          "type": "http_error",
+          "url": "https://fisioflow-api.rafalegollas.workers.dev/api/patients?limit=1000&offset=0&sortBy=name_asc",
+          "status": 500
+        },
+        {
+          "type": "http_error",
+          "url": "https://fisioflow-api.rafalegollas.workers.dev/api/patients?limit=1000&offset=0&sortBy=name_asc",
+          "status": 500
+        },
+        {
+          "type": "http_error",
+          "url": "https://fisioflow-api.rafalegollas.workers.dev/api/patients?limit=1000&offset=0&sortBy=name_asc",
+          "status": 500
+        },
+        {
+          "type": "http_error",
+          "url": "https://fisioflow-api.rafalegollas.workers.dev/api/insights/financial?startDate=2026-04-01&endDate=2026-04-30",
+          "status": 500
+        },
+        {
+          "type": "http_error",
+          "url": "https://fisioflow-api.rafalegollas.workers.dev/api/insights/financial?startDate=2026-04-01&endDate=2026-04-30",
+          "status": 500
+        }
       ]
     },
     {
@@ -249,16 +479,23 @@
         }
       ],
       "errors": [],
-      "warnings": [],
-      "networkFailures": [
-        "https://www.moocafisio.com.br/cdn-cgi/rum? - net::ERR_ABORTED"
+      "warnings": [
+        "[PWA] Periodic Sync não pôde ser registrado: UnknownError: Unknown error."
+      ],
+      "networkErrors": [
+        {
+          "type": "failed",
+          "url": "https://www.moocafisio.com.br/cdn-cgi/rum?",
+          "error": "net::ERR_ABORTED"
+        }
       ]
     }
   ],
   "summary": {
     "totalPages": 7,
-    "totalErrors": 42,
-    "totalWarnings": 3,
+    "totalErrors": 40,
+    "totalWarnings": 7,
+    "totalNetworkErrors": 51,
     "totalTabsTested": 27
   }
 }
