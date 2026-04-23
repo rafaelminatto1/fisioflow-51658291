@@ -423,6 +423,7 @@ app.put('/:id', requireAuth, async (c) => {
   const { id } = c.req.param();
   const body = await c.req.json();
   const { media, ...exerciseData } = body;
+  const user = c.get('user');
 
   // Remove campos imutáveis
   delete exerciseData.id;
