@@ -907,8 +907,9 @@ export function ExerciseLibrary({
 					</div>
 				</div>
 			</div>
+		</div>
 
-			{/* Library Grid */}
+		{/* Library Grid */}
 			<div className="rounded-xl border bg-background/50 backdrop-blur-sm relative min-h-[400px]">
 				{filteredExercises.length === 0 ? (
 					<EmptyState icon={Dumbbell} title="Nenhum exercício" />
