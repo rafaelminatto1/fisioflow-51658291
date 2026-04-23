@@ -41,6 +41,11 @@ import {
 } from "./ClinicalTestMetricsBuilder";
 import { fisioLogger as logger } from "@/lib/errors/logger";
 import { useIsMobile } from "@/hooks/use-mobile";
+import { MediaLibrarySelectorModal } from "./MediaLibrarySelectorModal";
+import { ExerciseVideoUpload } from "@/components/exercises/ExerciseVideoUpload";
+import { ExerciseMedia } from "@/services/exerciseVideos";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import { UploadCloud, FolderOpen } from "lucide-react";
 
 interface ClinicalTest
 	extends Omit<ClinicalTestTemplateRecord, "fields_definition"> {
@@ -119,6 +124,68 @@ export function ClinicalTestFormModal({
 	});
 
 	const [tagsInput, setTagsInput] = useState("");
+
+	// Media selection states
+	const [activeMediaField, setActiveMediaField] = useState<
+		| "image_url"
+		| "initial_position_image_url"
+		| "final_position_image_url"
+		| "media_urls"
+		| null
+	>(null);
+	const [isGalleryOpen, setIsGalleryOpen] = useState(false);
+	const [isUploadOpen, setIsUploadOpen] = useState(false);
+
+	const handleOpenGallery = (
+		field:
+			| "image_url"
+			| "initial_position_image_url"
+			| "final_position_image_url"
+			| "media_urls",
+	) => {
+		setActiveMediaField(field);
+		setIsGalleryOpen(true);
+	};
+
+	const handleOpenUpload = (
+		field:
+			| "image_url"
+			| "initial_position_image_url"
+			| "final_position_image_url"
+			| "media_urls",
+	) => {
+		setActiveMediaField(field);
+		setIsUploadOpen(true);
+	};
+
+	const handleMediaSelected = (url: string) => {
+		if (!activeMediaField) return;
+
+		if (activeMediaField === "media_urls") {
+			const currentUrls = formData.media_urls || [];
+			if (!currentUrls.includes(url)) {
+				setFormData({ ...formData, media_urls: [...currentUrls, url] });
+			}
+		} else {
+			setFormData({ ...formData, [activeMediaField]: url });
+		}
+		setIsGalleryOpen(false);
+	};
+
+	const handleUploadSuccess = (media: ExerciseMedia) => {
+		const url = media.video_url;
+		if (!activeMediaField) return;
+
+		if (activeMediaField === "media_urls") {
+			const currentUrls = formData.media_urls || [];
+			if (!currentUrls.includes(url)) {
+				setFormData({ ...formData, media_urls: [...currentUrls, url] });
+			}
+		} else {
+			setFormData({ ...formData, [activeMediaField]: url });
+		}
+		setIsUploadOpen(false);
+	};
 
 	useEffect(() => {
 		if (test) {
@@ -555,91 +622,204 @@ export function ClinicalTestFormModal({
 							{/* YouTube/Video URL */}
 							<div className="space-y-2">
 								<Label htmlFor="media_urls" className="flex items-center gap-2 text-xs font-black uppercase tracking-wider text-slate-500 ml-1">
-									<Video className="h-4 w-4" /> Vídeos (URLs, separadas por vírgula)
+									<Video className="h-4 w-4" /> Vídeos (URLs)
 								</Label>
-								<MagicTextarea
-									id="media_urls"
-									showMic={false}
-									value={formData.media_urls?.join(", ") || ""}
-									onValueChange={(val) => {
-										const urls = val
-											.split(",")
-											.map((u) => u.trim())
-											.filter(Boolean);
-										setFormData({ ...formData, media_urls: urls });
-									}}
-									placeholder="https://www.youtube.com/watch?v=..., https://vimeo.com/..."
-									rows={3}
-									className="bg-white/50 border-white/40 focus:bg-white focus:border-teal-500/50 rounded-2xl shadow-sm"
-								/>
+								<div className="flex gap-2">
+									<MagicTextarea
+										id="media_urls"
+										showMic={false}
+										value={formData.media_urls?.join(", ") || ""}
+										onValueChange={(val) => {
+											const urls = val
+												.split(",")
+												.map((u) => u.trim())
+												.filter(Boolean);
+											setFormData({ ...formData, media_urls: urls });
+										}}
+										placeholder="https://www.youtube.com/watch?v=..., https://vimeo.com/..."
+										rows={2}
+										className="bg-white/50 border-white/40 focus:bg-white focus:border-teal-500/50 rounded-2xl shadow-sm min-h-[80px]"
+									/>
+									<div className="flex flex-col gap-2 shrink-0">
+										<TooltipProvider>
+											<Tooltip>
+												<TooltipTrigger asChild>
+													<Button
+														type="button"
+														variant="outline"
+														size="icon"
+														className="h-10 w-10 rounded-xl bg-white/50 border-white/40 hover:bg-white hover:border-teal-500/50 transition-all"
+														onClick={() => handleOpenGallery("media_urls")}
+													>
+														<FolderOpen className="h-4 w-4 text-teal-600" />
+													</Button>
+												</TooltipTrigger>
+												<TooltipContent>Galeria de Vídeos</TooltipContent>
+											</Tooltip>
+										</TooltipProvider>
+										<TooltipProvider>
+											<Tooltip>
+												<TooltipTrigger asChild>
+													<Button
+														type="button"
+														variant="outline"
+														size="icon"
+														className="h-10 w-10 rounded-xl bg-white/50 border-white/40 hover:bg-white hover:border-teal-500/50 transition-all"
+														onClick={() => handleOpenUpload("media_urls")}
+													>
+														<UploadCloud className="h-4 w-4 text-teal-600" />
+													</Button>
+												</TooltipTrigger>
+												<TooltipContent>Upload de Vídeo</TooltipContent>
+											</Tooltip>
+										</TooltipProvider>
+									</div>
+								</div>
 								<p className="text-xs text-slate-400 mt-1 italic pl-1">
-									Adicione links de vídeos demonstrativos da execução do teste.
+									Adicione links do YouTube/Vimeo ou mídias da galeria.
 								</p>
 							</div>
 
 							{/* Main Image URL */}
-							<div>
+							<div className="space-y-2">
 								<Label
 									htmlFor="image_url_media"
-									className="flex items-center gap-2"
+									className="flex items-center gap-2 text-xs font-black uppercase tracking-wider text-slate-500 ml-1"
 								>
-									<ImageIcon className="h-4 w-4" /> URL da Imagem de Capa
+									<ImageIcon className="h-4 w-4" /> Imagem de Capa
 								</Label>
-								<Input
-									id="image_url_media"
-									type="url"
-									value={formData.image_url || ""}
-									onChange={(e) =>
-										setFormData({ ...formData, image_url: e.target.value })
-									}
-									placeholder="https://... (imagem de execução)"
-								/>
-								<p className="text-xs text-slate-500 mt-1">
-									Imagem exibida como referência visual principal.
+								<div className="flex gap-2">
+									<Input
+										id="image_url_media"
+										type="url"
+										value={formData.image_url || ""}
+										onChange={(e) =>
+											setFormData({ ...formData, image_url: e.target.value })
+										}
+										placeholder="https://... (imagem de execução)"
+										className="h-12 bg-white/50 border-white/40 focus:bg-white focus:border-teal-500/50 rounded-xl shadow-sm"
+									/>
+									<TooltipProvider>
+										<Tooltip>
+											<TooltipTrigger asChild>
+												<Button
+													type="button"
+													variant="outline"
+													size="icon"
+													className="h-12 w-12 rounded-xl bg-white/50 border-white/40 hover:bg-white hover:border-teal-500/50 transition-all shrink-0"
+													onClick={() => handleOpenGallery("image_url")}
+												>
+													<FolderOpen className="h-5 w-5 text-teal-600" />
+												</Button>
+											</TooltipTrigger>
+											<TooltipContent>Escolher da Galeria</TooltipContent>
+										</Tooltip>
+									</TooltipProvider>
+									<TooltipProvider>
+										<Tooltip>
+											<TooltipTrigger asChild>
+												<Button
+													type="button"
+													variant="outline"
+													size="icon"
+													className="h-12 w-12 rounded-xl bg-white/50 border-white/40 hover:bg-white hover:border-teal-500/50 transition-all shrink-0"
+													onClick={() => handleOpenUpload("image_url")}
+												>
+													<UploadCloud className="h-5 w-5 text-teal-600" />
+												</Button>
+											</TooltipTrigger>
+											<TooltipContent>Fazer Upload</TooltipContent>
+										</Tooltip>
+									</TooltipProvider>
+								</div>
+								<p className="text-xs text-slate-500 mt-1 italic pl-1">
+									Imagem exibida como referência visual principal do teste.
 								</p>
 							</div>
 
-							{/* Initial Position Image URL */}
-							<div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-								<div>
+							{/* Initial and Final Positions */}
+							<div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+								<div className="space-y-2">
 									<Label
 										htmlFor="initial_position_image"
-										className="flex items-center gap-2"
+										className="flex items-center gap-2 text-xs font-black uppercase tracking-wider text-slate-500 ml-1"
 									>
 										<ImageIcon className="h-4 w-4" /> Posição Inicial
 									</Label>
-									<Input
-										id="initial_position_image"
-										type="url"
-										value={formData.initial_position_image_url || ""}
-										onChange={(e) =>
-											setFormData({
-												...formData,
-												initial_position_image_url: e.target.value,
-											})
-										}
-										placeholder="https://... (posição inicial)"
-									/>
+									<div className="flex gap-2">
+										<Input
+											id="initial_position_image"
+											type="url"
+											value={formData.initial_position_image_url || ""}
+											onChange={(e) =>
+												setFormData({
+													...formData,
+													initial_position_image_url: e.target.value,
+												})
+											}
+											placeholder="https://..."
+											className="h-12 bg-white/50 border-white/40 focus:bg-white focus:border-teal-500/50 rounded-xl shadow-sm"
+										/>
+										<Button
+											type="button"
+											variant="outline"
+											size="icon"
+											className="h-12 w-12 rounded-xl bg-white/50 border-white/40 shrink-0"
+											onClick={() => handleOpenGallery("initial_position_image_url")}
+										>
+											<FolderOpen className="h-4 w-4 text-teal-600" />
+										</Button>
+										<Button
+											type="button"
+											variant="outline"
+											size="icon"
+											className="h-12 w-12 rounded-xl bg-white/50 border-white/40 shrink-0"
+											onClick={() => handleOpenUpload("initial_position_image_url")}
+										>
+											<UploadCloud className="h-4 w-4 text-teal-600" />
+										</Button>
+									</div>
 								</div>
-								<div>
+								<div className="space-y-2">
 									<Label
 										htmlFor="final_position_image"
-										className="flex items-center gap-2"
+										className="flex items-center gap-2 text-xs font-black uppercase tracking-wider text-slate-500 ml-1"
 									>
 										<ImageIcon className="h-4 w-4" /> Posição Final
 									</Label>
-									<Input
-										id="final_position_image"
-										type="url"
-										value={formData.final_position_image_url || ""}
-										onChange={(e) =>
-											setFormData({
-												...formData,
-												final_position_image_url: e.target.value,
-											})
-										}
-										placeholder="https://... (posição final)"
-									/>
+									<div className="flex gap-2">
+										<Input
+											id="final_position_image"
+											type="url"
+											value={formData.final_position_image_url || ""}
+											onChange={(e) =>
+												setFormData({
+													...formData,
+													final_position_image_url: e.target.value,
+												})
+											}
+											placeholder="https://..."
+											className="h-12 bg-white/50 border-white/40 focus:bg-white focus:border-teal-500/50 rounded-xl shadow-sm"
+										/>
+										<Button
+											type="button"
+											variant="outline"
+											size="icon"
+											className="h-12 w-12 rounded-xl bg-white/50 border-white/40 shrink-0"
+											onClick={() => handleOpenGallery("final_position_image_url")}
+										>
+											<FolderOpen className="h-4 w-4 text-teal-600" />
+										</Button>
+										<Button
+											type="button"
+											variant="outline"
+											size="icon"
+											className="h-12 w-12 rounded-xl bg-white/50 border-white/40 shrink-0"
+											onClick={() => handleOpenUpload("final_position_image_url")}
+										>
+											<UploadCloud className="h-4 w-4 text-teal-600" />
+										</Button>
+									</div>
 								</div>
 							</div>
 						</TabsContent>
@@ -671,6 +851,28 @@ export function ClinicalTestFormModal({
 					{submitLabel}
 				</Button>
 			</CustomModalFooter>
+
+			{/* Media Picker Modals */}
+			<MediaLibrarySelectorModal
+				open={isGalleryOpen}
+				onOpenChange={setIsGalleryOpen}
+				onSelect={handleMediaSelected}
+				title={
+					activeMediaField === "media_urls"
+						? "Selecionar Vídeo da Galeria"
+						: "Selecionar Imagem da Galeria"
+				}
+			/>
+
+			<ExerciseVideoUpload
+				open={isUploadOpen}
+				onOpenChange={setIsUploadOpen}
+				onSuccess={handleUploadSuccess}
+				defaultValues={{
+					title: `Mídia para ${formData.name}`,
+					category: formData.category || "mobilidade",
+				}}
+			/>
 		</CustomModal>
 	);
 }

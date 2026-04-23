@@ -1,8 +1,8 @@
 import { Hono } from "hono";
-import type { Env } from "../types/env";
-import type { AuthVariables } from "../lib/auth";
-import { requireAuth } from "../lib/auth";
-import { createDb } from "../lib/db";
+import type { Env } from "../../types/env";
+import type { AuthVariables } from "../../lib/auth";
+import { requireAuth } from "../../lib/auth";
+import { createDb } from "../../lib/db";
 import { patients } from "@fisioflow/db";
 import { eq } from "drizzle-orm";
 
@@ -24,11 +24,17 @@ app.post("/", requireAuth, async (c) => {
 
 		console.log(`[Admin/DigitalTwin] Triggering analysis for ${activePatients.length} patients`);
 
+		if (!c.env.WORKFLOW_DIGITAL_TWIN) {
+			return c.json({ error: "Workflow binding missing" }, 500);
+		}
+
+		const workflow = c.env.WORKFLOW_DIGITAL_TWIN;
+
 		// 2. Disparar workflow para cada um (em background)
 		c.executionCtx.waitUntil((async () => {
 			for (const p of activePatients) {
 				try {
-					await c.env.WORKFLOW_DIGITAL_TWIN.create({
+					await workflow.create({
 						id: `dt-${p.id}-${Date.now()}`,
 						params: { patientId: p.id }
 					});

@@ -3,6 +3,7 @@ import type { MiddlewareHandler } from 'hono';
 import type { Env } from '../types/env';
 import { requireAuth, type AuthVariables } from '../lib/auth';
 import { rateLimit } from '../middleware/rateLimit';
+import type { CustomVariables } from '../middleware/requestId';
 import { eq, and, sql, desc, lte, gte } from 'drizzle-orm';
 import { appointments, patients } from '@fisioflow/db';
 import {
@@ -21,7 +22,7 @@ import { broadcastToOrg } from '../lib/realtime';
 
 
 
-const app = new Hono<{ Bindings: Env; Variables: AuthVariables }>();
+const app = new Hono<{ Bindings: Env; Variables: AuthVariables & CustomVariables }>();
 
 function normalizeAppointmentRow(row: any) {
   return {
@@ -403,11 +404,18 @@ app.get('/:id', requireAuth, async (c) => {
     return c.json({ data: normalizeAppointmentRow(row) });
 
   } catch (error: any) {
-    return c.json({ error: 'Erro ao buscar agendamento', details: error.message }, 500);
+    const requestId = c.get('requestId') || 'unknown';
+    console.error(`[Appointments/GetById] Error [Req: ${requestId}]:`, error.message, error.stack);
+    return c.json({ 
+      error: 'Erro ao buscar agendamento', 
+      details: error.message,
+      requestId,
+      stack: c.env.ENVIRONMENT !== 'production' ? error.stack : undefined
+    }, 500);
   }
 });
 
-const updateAppointmentHandler: MiddlewareHandler<{ Bindings: Env; Variables: AuthVariables }> = async (c) => {
+const updateAppointmentHandler: MiddlewareHandler<{ Bindings: Env; Variables: AuthVariables & CustomVariables }> = async (c) => {
   const user = c.get('user');
   const db = createDb(c.env, 'write');
   const id = c.req.param('id');
@@ -570,11 +578,20 @@ const updateAppointmentHandler: MiddlewareHandler<{ Bindings: Env; Variables: Au
 
     return c.json({ data: normalizeAppointmentRow(row) });
   } catch (error: any) {
-    console.error('[Appointments/Update] Critical Error:', error.message, error.stack);
+    const requestId = c.get('requestId') || 'unknown';
+    console.error(`[Appointments/Update] Critical Error [Req: ${requestId}]:`, error.message, error.stack);
     if (isConflictError(error)) {
-      return c.json({ error: 'Conflito de horário: o terapeuta já possui um agendamento neste período.' }, 409);
+      return c.json({ 
+        error: 'Conflito de horário: o terapeuta já possui um agendamento neste período.',
+        requestId 
+      }, 409);
     }
-    return c.json({ error: 'Erro ao atualizar agendamento', details: error.message }, 500);
+    return c.json({ 
+      error: 'Erro ao atualizar agendamento', 
+      details: error.message,
+      requestId,
+      stack: c.env.ENVIRONMENT !== 'production' ? error.stack : undefined
+    }, 500);
   }
 };
 
