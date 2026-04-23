@@ -44,11 +44,14 @@ app.get('/transacoes', requireAuth, async (c) => {
     if (dateFrom) filters.push(gte(transacoes.createdAt, new Date(dateFrom)));
     if (dateTo) filters.push(lte(transacoes.createdAt, new Date(dateTo)));
 
+    const limitNum = Math.min(1000, Math.max(1, Number(limit) || 50));
+    const offsetNum = Math.max(0, Number(offset) || 0);
+
     const result = await db.select().from(transacoes)
       .where(and(...filters))
       .orderBy(desc(transacoes.createdAt))
-      .limit(Number(limit))
-      .offset(Number(offset));
+      .limit(limitNum)
+      .offset(offsetNum);
 
     return c.json({ data: result });
   } catch (e) {
@@ -150,6 +153,9 @@ app.get('/contas', requireAuth, async (c) => {
     if (dateTo) filters.push(sql`COALESCE(${contasFinanceiras.dataVencimento}, ${contasFinanceiras.createdAt}::date) <= ${dateTo}`);
     if (patientId) filters.push(eq(contasFinanceiras.patientId, patientId));
 
+    const limitNum = Math.min(1000, Math.max(1, Number(limit) || 50));
+    const offsetNum = Math.max(0, Number(offset) || 0);
+
     const result = await db.select({
       id: contasFinanceiras.id,
       organizationId: contasFinanceiras.organizationId,
@@ -172,8 +178,8 @@ app.get('/contas', requireAuth, async (c) => {
     .leftJoin(sql`patients p`, sql`p.id = ${contasFinanceiras.patientId}`)
     .where(and(...filters))
     .orderBy(sql`${contasFinanceiras.dataVencimento} ASC NULLS LAST`, desc(contasFinanceiras.createdAt))
-    .limit(Number(limit))
-    .offset(Number(offset));
+    .limit(limitNum)
+    .offset(offsetNum);
 
     return c.json({ data: result });
   } catch (e) {
@@ -375,12 +381,15 @@ app.get('/pagamentos', requireAuth, async (c) => {
   }
 
   try {
+    const limitNum = Math.min(1000, Math.max(1, Number(limit) || 50));
+    const offsetNum = Math.max(0, Number(offset) || 0);
+
     const result = await db.select()
       .from(pagamentos)
       .where(and(...where))
       .orderBy(desc(pagamentos.pagoEm), desc(pagamentos.createdAt))
-      .limit(Number(limit))
-      .offset(Number(offset));
+      .limit(limitNum)
+      .offset(offsetNum);
 
     return c.json({ data: result });
   } catch (e) {

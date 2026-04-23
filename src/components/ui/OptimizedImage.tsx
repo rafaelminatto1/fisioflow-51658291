@@ -44,7 +44,8 @@ function getOptimizedUrl(src: string, options: { width?: number; quality?: numbe
     src.startsWith("data:") ||
     src.startsWith("blob:") ||
     src.includes("localhost") ||
-    src.includes("/assets/")
+    src.includes("/assets/") ||
+    src.includes("/exercises/illustrations/")
   ) {
     return src;
   }
