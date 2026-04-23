@@ -187,8 +187,23 @@ const ExerciseCard = React.memo(function ExerciseCard({
 				{/* Overlay Gradient - pointer-events-none to prevent blocking touch */}
 				<div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none" />
 
-				{/* Top Badges */}
-				<div className="absolute top-3 left-3 right-3 flex items-start justify-between">
+				{/* Quick View on Hover - pointer-events-none on mobile to prevent blocking */}
+				<div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all pointer-events-none md:pointer-events-auto z-10">
+					<Button
+						onClick={(e) => {
+							e.stopPropagation();
+							onView();
+						}}
+						size="lg"
+						className="shadow-2xl gap-2 bg-white/95 text-foreground hover:bg-white touch-manipulation pointer-events-auto"
+					>
+						<Play className="h-5 w-5" />
+						Visualizar
+					</Button>
+				</div>
+
+				{/* Top Badges - Rendered after overlay to ensure clickability */}
+				<div className="absolute top-3 left-3 right-3 flex items-start justify-between z-20">
 					<Button
 						variant="ghost"
 						size="icon"
@@ -225,21 +240,6 @@ const ExerciseCard = React.memo(function ExerciseCard({
 							</Badge>
 						)}
 					</div>
-				</div>
-
-				{/* Quick View on Hover - pointer-events-none on mobile to prevent blocking */}
-				<div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all pointer-events-none md:pointer-events-auto">
-					<Button
-						onClick={(e) => {
-							e.stopPropagation();
-							onView();
-						}}
-						size="lg"
-						className="shadow-2xl gap-2 bg-white/95 text-foreground hover:bg-white touch-manipulation"
-					>
-						<Play className="h-5 w-5" />
-						Visualizar
-					</Button>
 				</div>
 			</div>
 
