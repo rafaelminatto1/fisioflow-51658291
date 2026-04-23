@@ -1,0 +1,264 @@
+{
+  "timestamp": "2026-04-23T14:38:20.758Z",
+  "results": [
+    {
+      "name": "Dashboard",
+      "path": "/dashboard",
+      "tabs": [],
+      "errors": [],
+      "warnings": [],
+      "networkFailures": [
+        "https://www.moocafisio.com.br/cdn-cgi/rum? - net::ERR_ABORTED",
+        "https://www.moocafisio.com.br/assets/push-notifications-BTybVHUG.js - net::ERR_ABORTED",
+        "https://www.moocafisio.com.br/cdn-cgi/rum? - net::ERR_ABORTED",
+        "https://ep-wandering-bonus-acj4zwvo.neonauth.sa-east-1.aws.neon.tech/neondb/auth/token - net::ERR_ABORTED"
+      ]
+    },
+    {
+      "name": "Pacientes",
+      "path": "/pacientes",
+      "tabs": [
+        {
+          "name": "COCKPIT CLÍNICO",
+          "status": "ok"
+        },
+        {
+          "name": "ANIVERSARIANTES",
+          "status": "ok"
+        }
+      ],
+      "errors": [
+        "Failed to load resource: the server responded with a status of 500 ()",
+        "Failed to load resource: the server responded with a status of 500 ()",
+        "Failed to load resource: the server responded with a status of 500 ()",
+        "Failed to load resource: the server responded with a status of 500 ()",
+        "Failed to load resource: the server responded with a status of 500 ()",
+        "Failed to load resource: the server responded with a status of 500 ()",
+        "Failed to load resource: the server responded with a status of 500 ()"
+      ],
+      "warnings": [],
+      "networkFailures": [
+        "https://fisioflow-api.rafalegollas.workers.dev/api/appointments?dateFrom=2026-04-20&dateTo=2026-04-26&limit=3000&offset=0 - net::ERR_ABORTED",
+        "https://fisioflow-api.rafalegollas.workers.dev/api/appointments?dateFrom=2026-04-23&dateTo=2026-04-24&limit=500 - net::ERR_ABORTED",
+        "https://fisioflow-api.rafalegollas.workers.dev/api/financial/pagamentos?limit=3000&offset=0 - net::ERR_ABORTED",
+        "https://fisioflow-api.rafalegollas.workers.dev/api/patients?limit=3000&offset=0 - net::ERR_ABORTED",
+        "https://fisioflow-api.rafalegollas.workers.dev/api/appointments?dateFrom=2026-04-23&dateTo=2026-04-23&limit=20&offset=0 - net::ERR_ABORTED",
+        "https://fisioflow-api.rafalegollas.workers.dev/api/announcements?type=policy - net::ERR_ABORTED",
+        "https://fisioflow-api.rafalegollas.workers.dev/api/appointments?dateFrom=2026-03-23&dateTo=2026-04-23&limit=3000&offset=0 - net::ERR_ABORTED",
+        "https://www.moocafisio.com.br/cdn-cgi/rum? - net::ERR_ABORTED",
+        "https://fisioflow-api.rafalegollas.workers.dev/api/notifications?limit=10 - net::ERR_ABORTED",
+        "https://fisioflow-api.rafalegollas.workers.dev/api/appointments?limit=20&offset=0 - net::ERR_ABORTED",
+        "https://fisioflow-api.rafalegollas.workers.dev/api/appointments?dateFrom=2026-04-23&dateTo=2026-04-23&limit=3000&offset=0 - net::ERR_ABORTED",
+        "https://fisioflow-api.rafalegollas.workers.dev/api/financial/contas?tipo=receita&status=pago&limit=3000&offset=0 - net::ERR_ABORTED",
+        "https://fisioflow-api.rafalegollas.workers.dev/api/appointments?dateFrom=2026-04-01&dateTo=2026-04-23&limit=3000&offset=0 - net::ERR_ABORTED",
+        "https://fisioflow-api.rafalegollas.workers.dev/api/patients?incompleteRegistration=true&sortBy=created_at_desc&limit=10&offset=0 - net::ERR_ABORTED",
+        "https://fisioflow-api.rafalegollas.workers.dev/api/insights/dashboard - net::ERR_ABORTED",
+        "https://fisioflow-api.rafalegollas.workers.dev/api/profile/therapists - net::ERR_ABORTED"
+      ]
+    },
+    {
+      "name": "Agenda",
+      "path": "/agenda",
+      "tabs": [],
+      "errors": [
+        "Failed to load resource: the server responded with a status of 500 ()",
+        "Failed to load resource: the server responded with a status of 500 ()",
+        "Failed to load resource: the server responded with a status of 500 ()",
+        "Failed to load resource: the server responded with a status of 500 ()",
+        "Failed to load resource: the server responded with a status of 500 ()",
+        "Failed to load resource: the server responded with a status of 500 ()",
+        "Failed to load resource: the server responded with a status of 500 ()"
+      ],
+      "warnings": [],
+      "networkFailures": [
+        "https://www.moocafisio.com.br/cdn-cgi/rum? - net::ERR_ABORTED"
+      ]
+    },
+    {
+      "name": "Exercícios",
+      "path": "/exercises",
+      "tabs": [
+        {
+          "name": "Biblioteca\n351",
+          "status": "ok"
+        },
+        {
+          "name": "Mídias",
+          "status": "ok"
+        },
+        {
+          "name": "Templates\n49",
+          "status": "ok"
+        },
+        {
+          "name": "Protocolos\n55",
+          "status": "ok"
+        },
+        {
+          "name": "IA Assistente\nNOVO",
+          "status": "ok"
+        },
+        {
+          "name": "Analytics",
+          "status": "ok"
+        }
+      ],
+      "errors": [
+        "Failed to load resource: the server responded with a status of 500 ()",
+        "Failed to load resource: the server responded with a status of 500 ()",
+        "Failed to load resource: the server responded with a status of 500 ()"
+      ],
+      "warnings": [
+        "⚠️ Slow page load: initial_load took 3289.3000000044703ms",
+        "⚠️ Poor LCP: 8924"
+      ],
+      "networkFailures": [
+        "https://www.moocafisio.com.br/cdn-cgi/rum? - net::ERR_ABORTED"
+      ]
+    },
+    {
+      "name": "Financeiro",
+      "path": "/financial",
+      "tabs": [
+        {
+          "name": "Visão Geral",
+          "status": "ok"
+        },
+        {
+          "name": "Fluxo de Caixa",
+          "status": "ok"
+        },
+        {
+          "name": "Contas",
+          "status": "ok"
+        },
+        {
+          "name": "Recibos",
+          "status": "ok"
+        },
+        {
+          "name": "NFS-e",
+          "status": "ok"
+        },
+        {
+          "name": "Pacotes",
+          "status": "ok"
+        },
+        {
+          "name": "DRE",
+          "status": "ok"
+        },
+        {
+          "name": "Comissões",
+          "status": "ok"
+        }
+      ],
+      "errors": [
+        "Failed to load resource: the server responded with a status of 500 ()",
+        "Failed to load resource: the server responded with a status of 500 ()"
+      ],
+      "warnings": [
+        "⚠️ Poor LCP: 8828"
+      ],
+      "networkFailures": [
+        "https://www.moocafisio.com.br/cdn-cgi/rum? - net::ERR_ABORTED"
+      ]
+    },
+    {
+      "name": "Analytics",
+      "path": "/analytics",
+      "tabs": [
+        {
+          "name": "Pacientes",
+          "status": "ok"
+        },
+        {
+          "name": "Agendamentos",
+          "status": "ok"
+        },
+        {
+          "name": "Financeiro",
+          "status": "ok"
+        },
+        {
+          "name": "Equipe",
+          "status": "ok"
+        },
+        {
+          "name": "Preditivo",
+          "status": "ok"
+        }
+      ],
+      "errors": [
+        "Failed to load resource: the server responded with a status of 500 ()",
+        "Failed to load resource: the server responded with a status of 500 ()",
+        "Failed to load resource: the server responded with a status of 500 ()",
+        "Failed to load resource: the server responded with a status of 500 ()",
+        "Failed to load resource: the server responded with a status of 500 ()",
+        "Failed to load resource: the server responded with a status of 500 ()",
+        "Failed to load resource: the server responded with a status of 500 ()",
+        "Failed to load resource: the server responded with a status of 500 ()",
+        "Failed to load resource: the server responded with a status of 500 ()",
+        "Failed to load resource: the server responded with a status of 500 ()",
+        "Failed to load resource: the server responded with a status of 500 ()",
+        "Failed to load resource: the server responded with a status of 500 ()",
+        "Failed to load resource: the server responded with a status of 500 ()",
+        "Failed to load resource: the server responded with a status of 500 ()",
+        "Failed to load resource: the server responded with a status of 500 ()",
+        "Failed to load resource: the server responded with a status of 500 ()",
+        "Failed to load resource: the server responded with a status of 500 ()",
+        "Failed to load resource: the server responded with a status of 500 ()",
+        "Failed to load resource: the server responded with a status of 500 ()",
+        "Failed to load resource: the server responded with a status of 500 ()",
+        "Failed to load resource: the server responded with a status of 500 ()",
+        "Failed to load resource: the server responded with a status of 500 ()",
+        "Failed to load resource: the server responded with a status of 500 ()"
+      ],
+      "warnings": [],
+      "networkFailures": [
+        "https://www.moocafisio.com.br/cdn-cgi/rum? - net::ERR_ABORTED"
+      ]
+    },
+    {
+      "name": "Configurações",
+      "path": "/settings",
+      "tabs": [
+        {
+          "name": "Perfil",
+          "status": "ok"
+        },
+        {
+          "name": "Notificações",
+          "status": "ok"
+        },
+        {
+          "name": "Segurança",
+          "status": "ok"
+        },
+        {
+          "name": "Clínica",
+          "status": "ok"
+        },
+        {
+          "name": "Agenda",
+          "status": "ok"
+        },
+        {
+          "name": "Aparência",
+          "status": "ok"
+        }
+      ],
+      "errors": [],
+      "warnings": [],
+      "networkFailures": [
+        "https://www.moocafisio.com.br/cdn-cgi/rum? - net::ERR_ABORTED"
+      ]
+    }
+  ],
+  "summary": {
+    "totalPages": 7,
+    "totalErrors": 42,
+    "totalWarnings": 3,
+    "totalTabsTested": 27
+  }
+}
