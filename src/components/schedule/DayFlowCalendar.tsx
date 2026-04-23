@@ -163,29 +163,33 @@ export function DayFlowCalendarWrapper(props: DayFlowCalendarWrapperProps) {
 	}, [props]);
 
 	useEffect(() => {
-		if (!isWeekView || !containerRef.current || typeof ResizeObserver === "undefined") {
+		console.log("[FisioFlow] DayFlowCalendar v2.2 - Range: 07:00-21:00");
+	}, []);
+
+	useEffect(() => {
+		if (!isWeekView || !containerRef.current) {
 			return;
 		}
 
 		const updateWeekSlotHeight = () => {
 			const mount = containerRef.current;
-			const availableHeight = mount?.getBoundingClientRect().height ?? 0;
-			if (!availableHeight) return;
-			const headerHeight =
-				mount?.querySelector(".ec-header")?.getBoundingClientRect().height ??
-				WEEK_HEADER_FALLBACK_HEIGHT;
+			if (!mount) return;
+			
+			// Use viewport height as a more stable base than getBoundingClientRect on a potentially resizing container
+			const availableHeight = window.innerHeight - 200; // Safe margin for headers/tabs
+			const headerHeight = WEEK_HEADER_FALLBACK_HEIGHT;
+			
 			const nextSlotHeight = Math.max(
 				10,
 				Math.floor((availableHeight - headerHeight) / WEEK_SLOT_COUNT),
 			);
-			setWeekSlotHeight((current) => (current === nextSlotHeight ? current : nextSlotHeight));
+			
+			setWeekSlotHeight((current) => (Math.abs(current - nextSlotHeight) > 2 ? nextSlotHeight : current));
 		};
 
 		updateWeekSlotHeight();
-		const observer = new ResizeObserver(updateWeekSlotHeight);
-		observer.observe(containerRef.current);
-
-		return () => observer.disconnect();
+		window.addEventListener('resize', updateWeekSlotHeight);
+		return () => window.removeEventListener('resize', updateWeekSlotHeight);
 	}, [isWeekView]);
 
 	const [optimisticAppointments, addOptimisticAppointment] = useOptimistic(
