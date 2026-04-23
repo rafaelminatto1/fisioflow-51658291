@@ -197,7 +197,7 @@ async function generateScheduleOptimization(
 
 async function generateRetentionWarnings(): Promise<ProactiveSuggestion[]> {
 	const recentCutoff = subDays(new Date(), 45);
-	const patients = (await patientsApi.list({ limit: 300 })).data ?? [];
+	const patients = (await patientsApi.list({ limit: 300, minimal: true })).data ?? [];
 	const recentAppointments =
 		(
 			await appointmentsApi.list({

@@ -11,6 +11,7 @@ export async function getPatients(
 			status: options?.status,
 			search: options?.search,
 			limit: options?.limit || 100,
+			minimal: true,
 		},
 	});
 	return response.data || [];

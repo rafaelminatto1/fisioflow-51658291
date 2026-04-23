@@ -162,6 +162,7 @@ function useAdminAnalytics() {
 					sortBy: "name_asc",
 					limit: batchLimit,
 					offset: patientsOffset,
+					minimal: true,
 				});
 				const chunk = response?.data ?? [];
 				allPatients.push(...chunk);

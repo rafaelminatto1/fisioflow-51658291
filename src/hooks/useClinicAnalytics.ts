@@ -174,6 +174,7 @@ export function useDashboardMetrics(options: DashboardMetricsOptions = {}) {
 						limit: 5000,
 						offset: 0,
 						sortBy: "created_at_desc",
+						minimal: true,
 					}),
 					profileApi.listTherapists().catch(() => ({ data: [] })),
 					financialApi.pagamentos.list({ limit: 5000 }),

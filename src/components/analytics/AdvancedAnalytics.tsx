@@ -95,7 +95,7 @@ export default function AdvancedAnalytics() {
 				eventsResponse,
 				financialResponse,
 			] = await Promise.all([
-				patientsApi.list({ limit: 5000 }),
+				patientsApi.list({ limit: 5000, minimal: true }),
 				appointmentsApi.list({ limit: 5000 }),
 				eventosApi.list(),
 				analyticsApi.financial({
