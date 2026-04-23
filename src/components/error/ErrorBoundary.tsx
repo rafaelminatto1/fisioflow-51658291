@@ -25,41 +25,13 @@ import {
 } from "../ui/card";
 import { fisioLogger as logger } from "@/lib/errors/logger";
 
+import { handleChunkError } from "@/utils/chunkError";
+
 function useVitePreloadErrorHandler() {
 	useEffect(() => {
 		const handleVitePreloadError = (event: Event) => {
 			logger.error("[Vite] Erro de preload detectado", event, "ErrorBoundary");
-
-			const storageKey = "vite_preload_error_reload";
-			const reloadCountKey = "vite_reload_count";
-			const reloadCount = parseInt(
-				sessionStorage.getItem(reloadCountKey) || "0",
-				10,
-			);
-
-			// Limitar a 3 recargas automáticas para evitar loop infinito
-			if (reloadCount < 3) {
-				sessionStorage.setItem(storageKey, Date.now().toString());
-				sessionStorage.setItem(reloadCountKey, (reloadCount + 1).toString());
-
-				logger.info(
-					`[Vite] Recarregando página automaticamente (tentativa ${reloadCount + 1}/3)...`,
-					undefined,
-					"ErrorBoundary",
-				);
-
-				setTimeout(() => {
-					window.location.reload();
-				}, 1000);
-			} else {
-				logger.error(
-					"[Vite] Limite de recargas automáticas atingido.",
-					undefined,
-					"ErrorBoundary",
-				);
-				// Limpar contador para permitir futuras tentativas manuais
-				sessionStorage.removeItem(reloadCountKey);
-			}
+			handleChunkError(event, "vite:preloadError");
 		};
 
 		// Adicionar listener para erros de preload do Vite
@@ -110,23 +82,12 @@ class ErrorBoundary extends Component<Props, State> {
 			this.props.onError(error, errorInfo);
 		}
 
-		this.setState({});
-
 		// Check for chunk load error
-		if (
-			error.message.includes("Failed to fetch dynamically imported module") ||
-			error.message.includes("Importing a module script failed")
-		) {
-			// Check if we already tried reloading
-			const storageKey = "chunk_load_error_reload";
-			const lastReload = sessionStorage.getItem(storageKey);
-
-			if (!lastReload) {
-				sessionStorage.setItem(storageKey, "true");
-				window.location.reload();
-				return;
-			}
+		if (handleChunkError(error, "ErrorBoundary")) {
+			return;
 		}
+
+		this.setState({});
 	}
 
 	handleReload = () => {
