@@ -1,3 +1,8 @@
+---
+name: fisioflow-lgpd
+description: Practical guidance for LGPD-related technical implementation in FisioFlow. Use when working on personal or sensitive data handling, consent, audit, retention, export, or deletion flows.
+---
+
 # FisioFlow LGPD Compliance Skill
 
 Practical implementation patterns for Lei Geral de Protecao de Dados (LGPD) compliance in the FisioFlow physiotherapy clinic system. This is NOT legal advice — it documents how the codebase enforces data protection technically.

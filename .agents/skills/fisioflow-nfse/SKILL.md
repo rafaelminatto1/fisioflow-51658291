@@ -1,3 +1,8 @@
+---
+name: fisioflow-nfse
+description: Reference for Brazilian NFS-e issuance through Focus NFe in FisioFlow. Use when implementing or reviewing invoice configuration, emission lifecycle, tax fields, or municipality integration.
+---
+
 # FisioFlow NFS-e Integration Skill
 
 Brazilian electronic service invoice (Nota Fiscal de Serviços Eletrônica) integration patterns for the FisioFlow physiotherapy clinic management system.
