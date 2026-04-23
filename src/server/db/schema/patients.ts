@@ -152,6 +152,8 @@ export const patients = pgTable(
 	},
 	(table) => [
 		index("idx_patients_organization_id").on(table.organizationId),
+		index("idx_patients_org_status").on(table.organizationId, table.status),
+		index("idx_patients_org_active").on(table.organizationId, table.isActive),
 		index("idx_patients_profile_id").on(table.profileId),
 		index("idx_patients_user_id").on(table.userId),
 		index("idx_patients_cpf").on(table.cpf),

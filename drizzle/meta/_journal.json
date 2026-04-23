@@ -71,6 +71,13 @@
       "when": 1776950751828,
       "tag": "0009_brown_wallflower",
       "breakpoints": true
+    },
+    {
+      "idx": 10,
+      "version": "7",
+      "when": 1776957722765,
+      "tag": "0010_cheerful_captain_america",
+      "breakpoints": true
     }
   ]
 }

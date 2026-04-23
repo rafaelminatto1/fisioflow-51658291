@@ -2,7 +2,7 @@
  * NFSeContent — Gestão de Notas Fiscais de Serviços Eletrônicas
  * Padrão ABRASF — usado pela Prefeitura de São Paulo e maioria dos municípios
  */
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -361,11 +361,15 @@ function ConfigModal({
 interface NFSeContentProps {
 	patientId?: string;
 	appointmentId?: string;
+	autoOpenCreate?: boolean;
+	onAutoOpenHandled?: () => void;
 }
 
 export function NFSeContent({
 	patientId,
 	appointmentId,
+	autoOpenCreate = false,
+	onAutoOpenHandled,
 }: NFSeContentProps = {}) {
 	const [emitOpen, setEmitOpen] = useState(false);
 	const [configOpen, setConfigOpen] = useState(false);
@@ -383,6 +387,13 @@ export function NFSeContent({
 	const cancel = useCancelNFSe();
 
 	const records = recordsData?.data ?? [];
+
+	useEffect(() => {
+		if (!autoOpenCreate) return;
+
+		setEmitOpen(true);
+		onAutoOpenHandled?.();
+	}, [autoOpenCreate, onAutoOpenHandled]);
 
 	return (
 		<div className="space-y-4">

@@ -34,6 +34,7 @@ export function useCreateContaFinanceira() {
 		onSuccess: () => {
 			queryClient.invalidateQueries({ queryKey: ["contas-financeiras"] });
 			queryClient.invalidateQueries({ queryKey: ["resumo-financeiro"] });
+			queryClient.invalidateQueries({ queryKey: ["financial-command-center"] });
 			toast.success("Conta criada com sucesso.");
 		},
 		onError: () => {
@@ -56,6 +57,7 @@ export function useUpdateContaFinanceira() {
 		onSuccess: () => {
 			queryClient.invalidateQueries({ queryKey: ["contas-financeiras"] });
 			queryClient.invalidateQueries({ queryKey: ["resumo-financeiro"] });
+			queryClient.invalidateQueries({ queryKey: ["financial-command-center"] });
 			toast.success("Conta atualizada.");
 		},
 		onError: () => {
@@ -74,6 +76,7 @@ export function useDeleteContaFinanceira() {
 		onSuccess: () => {
 			queryClient.invalidateQueries({ queryKey: ["contas-financeiras"] });
 			queryClient.invalidateQueries({ queryKey: ["resumo-financeiro"] });
+			queryClient.invalidateQueries({ queryKey: ["financial-command-center"] });
 			toast.success("Conta excluída.");
 		},
 		onError: () => {

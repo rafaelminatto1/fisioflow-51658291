@@ -26,6 +26,7 @@ export type FinancialCommandCenterPeriod =
 	| "all";
 
 export interface FinancialCommandCenterSummary {
+	cashPosition: number;
 	realizedRevenue: number;
 	realizedExpenses: number;
 	netBalance: number;
@@ -33,6 +34,7 @@ export interface FinancialCommandCenterSummary {
 	pendingPayables: number;
 	overdueAmount: number;
 	averageTicket: number;
+	estimatedMargin: number;
 	collectionRate: number;
 	monthlyGrowth: number;
 	activePatients: number;
@@ -56,6 +58,14 @@ export interface FinancialCommandCenterAccountSpotlight {
 	dueDate: string;
 	patientId: string | null;
 	patientName: string;
+}
+
+export interface FinancialCommandCenterProjection {
+	rawExpectedRevenue: number;
+	adjustedExpectedRevenue: number;
+	scheduledSessions: number;
+	noShowRate: number;
+	packageInventoryValue: number;
 }
 
 export interface FinancialCommandCenterRiskPatient {
@@ -82,6 +92,17 @@ export interface FinancialCommandCenterSuggestion {
 	href: string;
 }
 
+export interface FinancialCommandCenterRecentDocument {
+	id: string;
+	kind: "receipt" | "nfse";
+	title: string;
+	counterpart: string;
+	amount: number;
+	status: string;
+	issuedAt: string;
+	href: string;
+}
+
 export interface FinancialCommandCenterData {
 	period: {
 		key: FinancialCommandCenterPeriod;
@@ -92,6 +113,7 @@ export interface FinancialCommandCenterData {
 		previousEndDate: string;
 	};
 	summary: FinancialCommandCenterSummary;
+	projection: FinancialCommandCenterProjection;
 	cashflow: {
 		points: FinancialCommandCenterCashflowPoint[];
 		totals: {
@@ -104,6 +126,7 @@ export interface FinancialCommandCenterData {
 		overdueCount: number;
 		dueTodayCount: number;
 		topAccounts: FinancialCommandCenterAccountSpotlight[];
+		todayCollections: FinancialCommandCenterAccountSpotlight[];
 	};
 	documents: {
 		receiptsInPeriod: number;
@@ -153,6 +176,7 @@ export interface FinancialCommandCenterData {
 		amount: number;
 		createdAt: string;
 	}>;
+	recentDocuments: FinancialCommandCenterRecentDocument[];
 	alerts: FinancialCommandCenterAlert[];
 	suggestions: FinancialCommandCenterSuggestion[];
 }

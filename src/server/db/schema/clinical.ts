@@ -8,8 +8,10 @@ import {
 	integer,
 	numeric,
 	date,
+	index,
 } from "drizzle-orm/pg-core";
 import { patients } from "./patients";
+import { withOrganizationPolicy } from "./rls_helper";
 
 export const patientGoals = pgTable("patient_goals", {
 	id: uuid("id").primaryKey().defaultRandom(),
@@ -49,7 +51,10 @@ export const patientPathologies = pgTable("patient_pathologies", {
 	deletedAt: timestamp("deleted_at"),
 	createdAt: timestamp("created_at").defaultNow().notNull(),
 	updatedAt: timestamp("updated_at").defaultNow().notNull(),
-});
+}, (table) => [
+	index("idx_patient_pathologies_org_patient").on(table.organizationId, table.patientId),
+	withOrganizationPolicy("patient_pathologies", table.organizationId)
+]);
 
 export const patientSessionMetrics = pgTable("patient_session_metrics", {
 	id: uuid("id").primaryKey().defaultRandom(),

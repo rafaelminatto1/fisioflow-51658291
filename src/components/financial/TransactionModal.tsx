@@ -1,3 +1,4 @@
+import { useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
@@ -43,7 +44,7 @@ const transactionSchema = z.object({
 	tipo: z.enum(["receita", "despesa", "pagamento", "recebimento"]),
 	descricao: z.string().min(3, "Descrição deve ter pelo menos 3 caracteres"),
 	valor: z.number().positive("Valor deve ser positivo"),
-	status: z.enum(["pendente", "concluido", "cancelado"]).default("pendente"),
+	status: z.enum(["pendente", "concluido", "pago", "cancelado"]).default("pendente"),
 	metadata: z.record(z.string(), z.unknown()).optional(),
 });
 
@@ -57,6 +58,7 @@ interface TransactionModalProps {
 	) => void;
 	transaction?: Transaction;
 	isLoading?: boolean;
+	defaultTipo?: TransactionFormData["tipo"];
 }
 
 export function TransactionModal({
@@ -65,12 +67,16 @@ export function TransactionModal({
 	onSubmit,
 	transaction,
 	isLoading,
+	defaultTipo,
 }: TransactionModalProps) {
 	const isMobile = useIsMobile();
+	const resolvedTipo = (transaction?.tipo ??
+		defaultTipo ??
+		"receita") as TransactionFormData["tipo"];
 	const form = useForm<TransactionFormData>({
 		resolver: zodResolver(transactionSchema),
 		defaultValues: {
-			tipo: (transaction?.tipo ?? "receita") as TransactionFormData["tipo"],
+			tipo: resolvedTipo,
 			descricao: transaction?.descricao || "",
 			valor: transaction?.valor ? Number(transaction.valor) : undefined,
 			status: (transaction?.status ??
@@ -78,6 +84,17 @@ export function TransactionModal({
 			metadata: transaction?.metadata || undefined,
 		},
 	});
+
+	useEffect(() => {
+		form.reset({
+			tipo: resolvedTipo,
+			descricao: transaction?.descricao || "",
+			valor: transaction?.valor ? Number(transaction.valor) : undefined,
+			status: (transaction?.status ??
+				"pendente") as TransactionFormData["status"],
+			metadata: transaction?.metadata || undefined,
+		});
+	}, [defaultTipo, form, resolvedTipo, transaction, open]);
 
 	const handleSubmit = (data: TransactionFormData) => {
 		onSubmit(data as Omit<Transaction, "id" | "created_at" | "updated_at">);
@@ -193,6 +210,12 @@ export function TransactionModal({
 														<div className="flex items-center gap-2">
 															<CheckCircle2 className="h-4 w-4 text-emerald-500" />
 															Concluído
+														</div>
+													</SelectItem>
+													<SelectItem value="pago">
+														<div className="flex items-center gap-2">
+															<CheckCircle2 className="h-4 w-4 text-emerald-500" />
+															Pago
 														</div>
 													</SelectItem>
 													<SelectItem value="cancelado">
