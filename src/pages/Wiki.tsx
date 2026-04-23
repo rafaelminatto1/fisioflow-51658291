@@ -224,10 +224,10 @@ export default function WikiPage() {
 				? annotationMap.user.get(activeArticle.id)
 				: annotationMap.org.get(activeArticle.id);
 		setAnnotationHighlights(
-			(currentAnnotation?.highlights || activeArticle.highlights).join("\n"),
+			(Array.isArray(currentAnnotation?.highlights) ? currentAnnotation.highlights : activeArticle.highlights || []).join("\n"),
 		);
 		setAnnotationObservations(
-			(currentAnnotation?.observations || activeArticle.observations).join(
+			(Array.isArray(currentAnnotation?.observations) ? currentAnnotation.observations : activeArticle.observations || []).join(
 				"\n",
 			),
 		);
@@ -326,8 +326,8 @@ export default function WikiPage() {
 			await handleSaveAnnotation({
 				articleId: activeArticle.id,
 				scope: annotationScope,
-				highlights: annotationHighlights.split("\n").filter(Boolean),
-				observations: annotationObservations.split("\n").filter(Boolean),
+				highlights: (typeof annotationHighlights === "string" ? annotationHighlights : "").split("\n").filter(Boolean),
+				observations: (typeof annotationObservations === "string" ? annotationObservations : "").split("\n").filter(Boolean),
 				status: annotationStatus,
 				notes: annotationNotes,
 			});

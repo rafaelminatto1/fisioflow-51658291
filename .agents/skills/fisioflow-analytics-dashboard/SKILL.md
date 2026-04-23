@@ -1,3 +1,8 @@
+---
+name: fisioflow-analytics-dashboard
+description: Reference for building and reviewing analytics dashboards with FisioFlow's existing BI infrastructure. Use when working on dashboard metrics, financial aggregations, ML analytics endpoints, or reporting data flows.
+---
+
 # FisioFlow Analytics Dashboard
 
 Reference for building analytics dashboards with the existing BI infrastructure.
