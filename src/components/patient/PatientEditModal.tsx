@@ -37,6 +37,7 @@ export const PatientEditModal: React.FC<PatientEditModalProps> = ({
 			await patientsApi.update(patientId, data);
 			toast.success("Paciente atualizado com sucesso!");
 			queryClient.invalidateQueries({ queryKey: ["patients"] });
+			queryClient.invalidateQueries({ queryKey: ["patients-list"] });
 			queryClient.invalidateQueries({ queryKey: ["patient", patientId] });
 			onOpenChange(false);
 		} catch (err: unknown) {

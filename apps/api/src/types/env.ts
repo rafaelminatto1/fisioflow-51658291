@@ -115,6 +115,7 @@ export interface Env {
 				filters?: Record<string, any>;
 			}): Promise<any>;
 		};
+		toMarkdown(input: ReadableStream | ArrayBuffer | Blob | string, options?: { maxDepth?: number }): Promise<string>;
 	};
 	BROWSER: any;
 
@@ -159,9 +160,14 @@ export interface Env {
 	// Z.AI (GLM models) — OpenAI-compatible API
 	ZAI_API_KEY?: string;
 
-	// Focus NFe / NFSe
+	// Focus NFe / NFSe (legacy — sendo substituído por emissão direta SP)
 	FOCUS_NFE_TOKEN?: string;
 	FOCUS_NFE_ENVIRONMENT?: string;
+
+	// NFSe São Paulo — emissão direta via webservice SOAP + mTLS
+	NFSE_SP_CERT?: Fetcher; // mTLS binding (apresenta certificado na conexão TLS)
+	NFSE_SP_CERT_PEM?: string; // Certificado PEM para assinatura XML
+	NFSE_SP_KEY_PEM?: string; // Chave privada PEM para assinatura XML
 
 	// Cloudflare Turnstile (anti-bot para rotas públicas)
 	TURNSTILE_SECRET_KEY?: string;

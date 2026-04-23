@@ -409,6 +409,7 @@ const styles = StyleSheet.create({
   scoreBadge: { paddingHorizontal: 8, paddingVertical: 3, borderRadius: 8, marginLeft: 'auto' as any },
   scoreText: { fontSize: 13, fontWeight: '600' },
   testName: { fontSize: 15, fontWeight: '600' },
+  testMeta: { flexDirection: 'row', flexWrap: 'wrap', gap: 10, marginTop: 4 },
   metaItemShort: { flexDirection: 'row', alignItems: 'center', gap: 4 },
   interpretationBox: { marginTop: 4, padding: 8, borderRadius: 8, borderLeftWidth: 3, borderLeftColor: '#6366F1' },
   interpretation: { fontSize: 13, fontStyle: 'italic', lineHeight: 18 },

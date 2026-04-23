@@ -119,6 +119,46 @@ function jsonbTextToString(value: unknown): string | undefined {
 	return undefined;
 }
 
+function normalizeTextArray(value: unknown): string[] {
+	if (Array.isArray(value)) {
+		return value
+			.map((item) => trimmedString(item))
+			.filter((item): item is string => Boolean(item));
+	}
+
+	if (typeof value === "string") {
+		const normalized = value.trim();
+		if (!normalized) return [];
+
+		if (normalized.startsWith("[") || normalized.startsWith("{")) {
+			try {
+				const parsed = JSON.parse(
+					normalized.replace(/^\{/, "[").replace(/\}$/, "]"),
+				) as unknown;
+				if (Array.isArray(parsed)) {
+					return parsed
+						.map((item) => trimmedString(item))
+						.filter((item): item is string => Boolean(item));
+				}
+			} catch {
+				// Fall through to CSV parsing.
+			}
+		}
+
+		return normalized
+			.split(",")
+			.map((item) => item.trim())
+			.filter(Boolean);
+	}
+
+	return [];
+}
+
+function parseStringArrayInput(value: unknown): string[] | null {
+	if (value === undefined) return null;
+	return normalizeTextArray(value);
+}
+
 function deriveIsActive(body: PatientPayload): boolean {
 	const explicit = nullableBoolean(body.is_active ?? body.isActive);
 	if (explicit !== null) return explicit;
@@ -242,6 +282,15 @@ function normalizePatientRow(row: DbRow) {
 	const consentImage = row.consentImage ?? row.consent_image;
 	const incompleteReg =
 		row.incompleteRegistration ?? row.incomplete_registration;
+	const careProfiles = normalizeTextArray(
+		row.careProfiles ?? row.care_profiles,
+	);
+	const sportsPracticed = normalizeTextArray(
+		row.sportsPracticed ?? row.sports_practiced,
+	);
+	const therapyFocuses = normalizeTextArray(
+		row.therapyFocuses ?? row.therapy_focuses,
+	);
 	const birthDate =
 		row.birthDate ?? row.birth_date ?? row.legacyDateOfBirth ?? row.date_of_birth;
 	const createdAt = row.createdAt ?? row.created_at;
@@ -293,7 +342,30 @@ function normalizePatientRow(row: DbRow) {
 			trimmedString((insurance?.provider ?? row.health_insurance) as string) ?? null,
 		insurance_number:
 			trimmedString((insurance?.cardNumber ?? row.insurance_number) as string) ?? null,
+		origin: trimmedString(row.origin as string) ?? null,
+		referredBy: trimmedString(referredBy as string) ?? null,
+		professionalId: trimmedString(professionalId as string) ?? null,
+		professionalName: trimmedString(professionalName as string) ?? null,
+		care_profiles: careProfiles,
+		careProfiles,
+		sports_practiced: sportsPracticed,
+		sportsPracticed,
+		therapy_focuses: therapyFocuses,
+		therapyFocuses,
+		payer_model:
+			trimmedString((row.payer_model ?? row.payerModel) as string) ?? null,
+		payerModel:
+			trimmedString((row.payer_model ?? row.payerModel) as string) ?? null,
+		partner_company_name:
+			trimmedString(
+				(row.partner_company_name ?? row.partnerCompanyName) as string,
+			) ?? null,
+		partnerCompanyName:
+			trimmedString(
+				(row.partner_company_name ?? row.partnerCompanyName) as string,
+			) ?? null,
 		main_condition: trimmedString(mainCondition as string) ?? null,
+		mainCondition: trimmedString(mainCondition as string) ?? null,
 		profession: trimmedString(row.profession as string) ?? null,
 		observations: trimmedString((row.observations ?? row.notes) as string) ?? null,
 		status: trimmedString(row.status as string) ?? "Inicial",
@@ -441,6 +513,38 @@ function buildPatientWritePayload(
 	if (body.referred_by !== undefined) {
 		payload.referredBy = nullableString(body.referred_by);
 	}
+	if (body.care_profiles !== undefined || body.careProfiles !== undefined) {
+		payload.careProfiles = parseStringArrayInput(
+			body.care_profiles ?? body.careProfiles,
+		);
+	}
+	if (
+		body.sports_practiced !== undefined ||
+		body.sportsPracticed !== undefined
+	) {
+		payload.sportsPracticed = parseStringArrayInput(
+			body.sports_practiced ?? body.sportsPracticed,
+		);
+	}
+	if (
+		body.therapy_focuses !== undefined ||
+		body.therapyFocuses !== undefined
+	) {
+		payload.therapyFocuses = parseStringArrayInput(
+			body.therapy_focuses ?? body.therapyFocuses,
+		);
+	}
+	if (body.payer_model !== undefined || body.payerModel !== undefined) {
+		payload.payerModel = nullableString(body.payer_model ?? body.payerModel);
+	}
+	if (
+		body.partner_company_name !== undefined ||
+		body.partnerCompanyName !== undefined
+	) {
+		payload.partnerCompanyName = nullableString(
+			body.partner_company_name ?? body.partnerCompanyName,
+		);
+	}
 	if (body.photo_url !== undefined) {
 		payload.photoUrl = nullableString(body.photo_url);
 	}
@@ -456,6 +560,114 @@ function buildPatientWritePayload(
 	return payload;
 }
 
+function normalizePatientDirectoryRow(row: DbRow) {
+	const mainCondition = trimmedString(
+		(row.mainCondition ?? row.main_condition ?? row.primaryPathology) as string,
+	);
+	const primaryPathology = trimmedString(
+		(row.primaryPathology ?? row.primary_pathology ?? row.mainCondition) as string,
+	);
+	const pathologyNames = normalizeTextArray(
+		row.pathologyNames ?? row.pathology_names,
+	);
+	const activePathologyNames = normalizeTextArray(
+		row.activePathologyNames ?? row.active_pathology_names,
+	);
+	const pathologyStatuses = normalizeTextArray(
+		row.pathologyStatuses ?? row.pathology_statuses,
+	);
+	const careProfiles = normalizeTextArray(
+		row.careProfiles ?? row.care_profiles,
+	);
+	const sportsPracticed = normalizeTextArray(
+		row.sportsPracticed ?? row.sports_practiced,
+	);
+	const therapyFocuses = normalizeTextArray(
+		row.therapyFocuses ?? row.therapy_focuses,
+	);
+	const classification = trimmedString(row.classification as string) ?? null;
+	const financialStatus =
+		trimmedString(
+			(row.financialStatus ?? row.financial_status) as string,
+		) ?? null;
+	const lastAppointmentDate =
+		row.lastAppointmentDate ?? row.last_appointment_date;
+	const nextAppointmentDate =
+		row.nextAppointmentDate ?? row.next_appointment_date;
+	const sessionsCompleted = nullableNumber(
+		row.sessionsCompleted ?? row.sessions_completed,
+	);
+	const totalAppointments = nullableNumber(
+		row.totalAppointments ?? row.total_appointments,
+	);
+	const noShowCount = nullableNumber(row.noShowCount ?? row.no_show_count);
+	const upcomingAppointmentsCount = nullableNumber(
+		row.upcomingAppointmentsCount ?? row.upcoming_appointments_count,
+	);
+	const openBalance = nullableNumber(row.openBalance ?? row.open_balance);
+	const payerModel =
+		trimmedString((row.payerModel ?? row.payer_model) as string) ?? null;
+	const partnerCompanyName =
+		trimmedString(
+			(row.partnerCompanyName ?? row.partner_company_name) as string,
+		) ?? null;
+	const hasSurgery = Boolean(row.hasSurgery ?? row.has_surgery);
+	const recentSurgery = Boolean(row.recentSurgery ?? row.recent_surgery);
+	const base = normalizePatientRow({
+		...row,
+		mainCondition: mainCondition ?? primaryPathology,
+	});
+
+	return {
+		...base,
+		main_condition: mainCondition ?? primaryPathology,
+		mainCondition: mainCondition ?? primaryPathology,
+		primary_pathology: primaryPathology,
+		primaryPathology,
+		pathology_names: pathologyNames,
+		pathologyNames,
+		active_pathology_names: activePathologyNames,
+		activePathologyNames,
+		pathology_statuses: pathologyStatuses,
+		pathologyStatuses,
+		care_profiles: careProfiles,
+		careProfiles,
+		sports_practiced: sportsPracticed,
+		sportsPracticed,
+		therapy_focuses: therapyFocuses,
+		therapyFocuses,
+		payer_model: payerModel,
+		payerModel,
+		partner_company_name: partnerCompanyName,
+		partnerCompanyName,
+		has_surgery: hasSurgery,
+		hasSurgery,
+		recent_surgery: recentSurgery,
+		recentSurgery,
+		classification,
+		financial_status: financialStatus,
+		financialStatus,
+		sessions_completed: sessionsCompleted ?? 0,
+		sessionsCompleted: sessionsCompleted ?? 0,
+		total_appointments: totalAppointments ?? 0,
+		totalAppointments: totalAppointments ?? 0,
+		no_show_count: noShowCount ?? 0,
+		noShowCount: noShowCount ?? 0,
+		upcoming_appointments_count: upcomingAppointmentsCount ?? 0,
+		upcomingAppointmentsCount: upcomingAppointmentsCount ?? 0,
+		last_appointment_date: lastAppointmentDate
+			? String(lastAppointmentDate)
+			: null,
+		lastAppointmentDate: lastAppointmentDate ? String(lastAppointmentDate) : null,
+		next_appointment_date: nextAppointmentDate
+			? String(nextAppointmentDate)
+			: null,
+		nextAppointmentDate: nextAppointmentDate ? String(nextAppointmentDate) : null,
+		open_balance: openBalance ?? 0,
+		openBalance: openBalance ?? 0,
+	};
+}
+
 // Removed buildInsertStatement and buildUpdateStatement as we shift to Drizzle ORM
 
 app.use("*", requireAuth);
@@ -466,9 +678,19 @@ app.get("/", async (c) => {
 
 	const search = trimmedString(c.req.query("search"));
 	const requestedStatus = trimmedString(c.req.query("status"));
+	const classification = trimmedString(c.req.query("classification"));
 	const sortBy = trimmedString(c.req.query("sortBy"));
 	const hasSurgery = c.req.query("hasSurgery") === "true";
 	const mainCondition = trimmedString(c.req.query("condition"));
+	const pathologies = normalizeTextArray(c.req.queries("pathologies"));
+	const pathologyStatus = trimmedString(c.req.query("pathologyStatus"));
+	const careProfiles = normalizeTextArray(c.req.queries("careProfiles"));
+	const sports = normalizeTextArray(c.req.queries("sports"));
+	const therapyFocuses = normalizeTextArray(c.req.queries("therapyFocuses"));
+	const paymentModel = trimmedString(c.req.query("paymentModel"));
+	const financialStatus = trimmedString(c.req.query("financialStatus"));
+	const origin = trimmedString(c.req.query("origin"));
+	const partnerCompany = trimmedString(c.req.query("partnerCompany"));
 	const limit = Math.min(
 		200,
 		Math.max(1, Number.parseInt(c.req.query("limit") ?? "100", 10) || 100),
@@ -479,114 +701,532 @@ app.get("/", async (c) => {
 	);
 
 	try {
-		const normalizedStatus = requestedStatus?.toLowerCase();
-		const whereClauses: string[] = ["organization_id = $1"];
-		const params: Array<string | number | boolean> = [user.organizationId];
-		let paramIndex = 2;
+		const cteSql = `
+			WITH appointment_agg AS (
+				SELECT
+					a.patient_id,
+					COUNT(*)::int AS total_appointments,
+					COUNT(*) FILTER (
+						WHERE LOWER(COALESCE(a.status, '')) IN ('atendido', 'realizado', 'completed', 'concluido', 'concluído')
+					)::int AS completed_appointments,
+					COUNT(*) FILTER (
+						WHERE LOWER(COALESCE(a.status, '')) IN ('faltou', 'faltou_sem_aviso', 'faltou_com_aviso', 'no_show', 'missed')
+					)::int AS no_show_count,
+					COUNT(*) FILTER (
+						WHERE a.date >= CURRENT_DATE
+							AND LOWER(COALESCE(a.status, '')) IN ('agendado', 'avaliacao', 'presenca_confirmada', 'scheduled', 'confirmed')
+					)::int AS upcoming_appointments,
+					MAX(a.date) AS last_appointment_date,
+					MIN(a.date) FILTER (
+						WHERE a.date >= CURRENT_DATE
+							AND LOWER(COALESCE(a.status, '')) IN ('agendado', 'avaliacao', 'presenca_confirmada', 'scheduled', 'confirmed')
+					) AS next_appointment_date,
+					COUNT(*) FILTER (
+						WHERE LOWER(COALESCE(a.payment_status, '')) = 'pending'
+							AND LOWER(COALESCE(a.status, '')) IN ('atendido', 'realizado', 'completed', 'concluido', 'concluído')
+					)::int AS unpaid_appointments
+				FROM appointments a
+				WHERE a.organization_id = $1::uuid
+				GROUP BY a.patient_id
+			),
+			pathology_agg AS (
+				SELECT
+					pp.patient_id,
+					ARRAY_REMOVE(ARRAY_AGG(DISTINCT pp.pathology_name), NULL) AS pathology_names,
+					ARRAY_REMOVE(
+						ARRAY_AGG(
+							DISTINCT CASE
+								WHEN LOWER(COALESCE(pp.status, '')) IN ('ativo', 'active', 'em_tratamento', 'em tratamento')
+									THEN pp.pathology_name
+								ELSE NULL
+							END
+						),
+						NULL
+					) AS active_pathology_names,
+					ARRAY_REMOVE(ARRAY_AGG(DISTINCT LOWER(COALESCE(pp.status, ''))), NULL) AS pathology_statuses,
+					BOOL_OR(LOWER(COALESCE(pp.status, '')) IN ('ativo', 'active', 'em_tratamento', 'em tratamento')) AS has_active_pathology,
+					BOOL_OR(LOWER(COALESCE(pp.status, '')) IN ('monitoramento', 'monitoring', 'cronico', 'crônico')) AS has_monitor_pathology,
+					BOOL_OR(LOWER(COALESCE(pp.status, '')) IN ('resolvido', 'treated', 'tratada', 'tratado', 'alta')) AS has_treated_pathology,
+					MIN(pp.pathology_name) FILTER (
+						WHERE LOWER(COALESCE(pp.status, '')) IN ('ativo', 'active', 'em_tratamento', 'em tratamento')
+					) AS primary_pathology
+				FROM patient_pathologies pp
+				WHERE pp.organization_id = $1::uuid
+				GROUP BY pp.patient_id
+			),
+			surgery_agg AS (
+				SELECT
+					ps.patient_id,
+					TRUE AS has_surgery,
+					BOOL_OR(ps.surgery_date >= CURRENT_DATE - INTERVAL '90 days') AS recent_surgery
+				FROM patient_surgeries ps
+				WHERE ps.organization_id = $1::uuid
+				GROUP BY ps.patient_id
+			),
+			finance_agg AS (
+				SELECT
+					cf.patient_id,
+					COUNT(*) FILTER (
+						WHERE LOWER(COALESCE(cf.status, '')) IN ('pendente', 'pending', 'aberto', 'open')
+					)::int AS open_count,
+					COUNT(*) FILTER (
+						WHERE LOWER(COALESCE(cf.status, '')) IN ('pendente', 'pending', 'aberto', 'open')
+							AND cf.data_vencimento < CURRENT_DATE
+					)::int AS overdue_count,
+					COALESCE(SUM(
+						CASE
+							WHEN LOWER(COALESCE(cf.tipo, '')) = 'receita'
+								THEN cf.valor::numeric
+							ELSE 0::numeric
+						END
+					), 0::numeric) AS receivable_total,
+					COALESCE(SUM(
+						CASE
+							WHEN LOWER(COALESCE(cf.status, '')) IN ('pendente', 'pending', 'aberto', 'open')
+								THEN cf.valor::numeric
+							ELSE 0::numeric
+						END
+					), 0::numeric) AS open_amount
+				FROM contas_financeiras cf
+				WHERE cf.organization_id = $1::uuid
+					AND COALESCE(cf.deleted_at IS NULL, TRUE)
+					AND cf.patient_id IS NOT NULL
+				GROUP BY cf.patient_id
+			),
+			payments_agg AS (
+				SELECT
+					pg.patient_id,
+					COALESCE(SUM(pg.valor::numeric), 0::numeric) AS paid_total
+				FROM pagamentos pg
+				WHERE pg.organization_id = $1::uuid
+					AND COALESCE(pg.deleted_at IS NULL, TRUE)
+					AND pg.patient_id IS NOT NULL
+				GROUP BY pg.patient_id
+			),
+			unbilled_agg AS (
+				SELECT
+					a.patient_id,
+					COUNT(*)::int AS unbilled_count
+				FROM appointments a
+				LEFT JOIN contas_financeiras cf
+					ON cf.appointment_id = a.id
+					AND cf.organization_id = a.organization_id
+					AND COALESCE(cf.deleted_at IS NULL, TRUE)
+				LEFT JOIN pagamentos pg
+					ON pg.appointment_id = a.id
+					AND pg.organization_id = a.organization_id
+					AND COALESCE(pg.deleted_at IS NULL, TRUE)
+				WHERE a.organization_id = $1::uuid
+					AND LOWER(COALESCE(a.status, '')) IN ('atendido', 'realizado', 'completed', 'concluido', 'concluído')
+					AND a.package_id IS NULL
+					AND cf.id IS NULL
+					AND pg.id IS NULL
+				GROUP BY a.patient_id
+			),
+			directory_rows AS (
+				SELECT
+					p.id,
+					p.full_name AS "fullName",
+					p.nickname,
+					p.social_name AS "socialName",
+					p.photo_url AS "photoUrl",
+					p.email,
+					p.phone,
+					p.cpf,
+					p.status,
+					p.is_active AS "isActive",
+					p.created_at AS "createdAt",
+					p.updated_at AS "updatedAt",
+					p.origin,
+					p.referred_by AS "referredBy",
+					p.professional_id AS "professionalId",
+					p.professional_name AS "professionalName",
+					COALESCE((p.insurance ->> 'provider'), NULL) AS "healthInsurance",
+					COALESCE(p.main_condition, pathology_agg.primary_pathology) AS "mainCondition",
+					COALESCE(pathology_agg.primary_pathology, p.main_condition) AS "primaryPathology",
+					COALESCE(pathology_agg.pathology_names, ARRAY[]::text[]) AS "pathologyNames",
+					COALESCE(pathology_agg.active_pathology_names, ARRAY[]::text[]) AS "activePathologyNames",
+					COALESCE(pathology_agg.pathology_statuses, ARRAY[]::text[]) AS "pathologyStatuses",
+					COALESCE(pathology_agg.has_active_pathology, FALSE) AS "hasActivePathology",
+					COALESCE(pathology_agg.has_monitor_pathology, FALSE) AS "hasMonitorPathology",
+					COALESCE(pathology_agg.has_treated_pathology, FALSE) AS "hasTreatedPathology",
+					COALESCE(p.care_profiles, ARRAY[]::text[]) AS "careProfiles",
+					COALESCE(p.sports_practiced, ARRAY[]::text[]) AS "sportsPracticed",
+					COALESCE(p.therapy_focuses, ARRAY[]::text[]) AS "therapyFocuses",
+					COALESCE(
+						p.payer_model,
+						CASE
+							WHEN COALESCE(p.partner_company_name, '') <> '' THEN 'parceria'
+							WHEN COALESCE((p.insurance ->> 'provider'), '') <> '' THEN 'convenio'
+							ELSE 'particular'
+						END
+					) AS "payerModel",
+					p.partner_company_name AS "partnerCompanyName",
+					COALESCE(surgery_agg.has_surgery, FALSE) AS "hasSurgery",
+					COALESCE(surgery_agg.recent_surgery, FALSE) AS "recentSurgery",
+					COALESCE(appointment_agg.completed_appointments, 0) AS "sessionsCompleted",
+					COALESCE(appointment_agg.total_appointments, 0) AS "totalAppointments",
+					COALESCE(appointment_agg.no_show_count, 0) AS "noShowCount",
+					COALESCE(appointment_agg.upcoming_appointments, 0) AS "upcomingAppointmentsCount",
+					appointment_agg.last_appointment_date AS "lastAppointmentDate",
+					appointment_agg.next_appointment_date AS "nextAppointmentDate",
+					COALESCE(finance_agg.open_amount, 0::numeric) AS "openBalance",
+					CASE
+						WHEN COALESCE(payments_agg.paid_total, 0::numeric) > COALESCE(finance_agg.receivable_total, 0::numeric)
+							AND COALESCE(finance_agg.receivable_total, 0::numeric) > 0::numeric
+							THEN 'credit'
+						WHEN COALESCE(finance_agg.overdue_count, 0) > 0 THEN 'in_collection'
+						WHEN COALESCE(unbilled_agg.unbilled_count, 0) > 0 THEN 'uninvoiced'
+						WHEN COALESCE(finance_agg.open_count, 0) > 0 THEN 'pending_balance'
+						ELSE 'current'
+					END AS "financialStatus",
+					CASE
+						WHEN LOWER(COALESCE(p.status, '')) IN ('concluído', 'concluido', 'alta', 'arquivado')
+							THEN 'completed'
+						WHEN COALESCE(appointment_agg.total_appointments, 0) = 0
+							AND p.created_at >= NOW() - INTERVAL '30 days'
+							THEN 'new_patient'
+						WHEN (
+							COALESCE(appointment_agg.no_show_count, 0) > 0
+							AND COALESCE(appointment_agg.upcoming_appointments, 0) = 0
+						) OR (
+							appointment_agg.last_appointment_date IS NOT NULL
+							AND appointment_agg.last_appointment_date < CURRENT_DATE - INTERVAL '30 days'
+							AND COALESCE(appointment_agg.upcoming_appointments, 0) = 0
+						)
+							THEN 'at_risk'
+						ELSE 'active'
+					END AS classification
+				FROM patients p
+				LEFT JOIN appointment_agg ON appointment_agg.patient_id = p.id
+				LEFT JOIN pathology_agg ON pathology_agg.patient_id = p.id
+				LEFT JOIN surgery_agg ON surgery_agg.patient_id = p.id
+				LEFT JOIN finance_agg ON finance_agg.patient_id = p.id
+				LEFT JOIN payments_agg ON payments_agg.patient_id = p.id
+				LEFT JOIN unbilled_agg ON unbilled_agg.patient_id = p.id
+				WHERE p.organization_id = $1::uuid
+					AND COALESCE(p.archived, FALSE) = FALSE
+			)
+		`;
 
+		const baseConditions: string[] = [];
+		const params: Array<string | number | boolean | string[]> = [
+			user.organizationId,
+		];
+		let paramIndex = 2;
+		const pushCondition = (
+			clause: string,
+			value?: string | number | boolean | string[],
+		) => {
+			baseConditions.push(clause);
+			if (value !== undefined) params.push(value);
+		};
+
+		const normalizedStatus = requestedStatus?.toLowerCase();
 		if (normalizedStatus && normalizedStatus !== "all") {
 			if (["active", "ativo"].includes(normalizedStatus)) {
-				whereClauses.push(`is_active = $${paramIndex++}`);
-				params.push(true);
+				pushCondition(`directory."isActive" = $${paramIndex++}`, true);
 			} else if (["inactive", "inativo"].includes(normalizedStatus)) {
-				whereClauses.push(`is_active = $${paramIndex++}`);
-				params.push(false);
+				pushCondition(`directory."isActive" = $${paramIndex++}`, false);
 			} else {
-				whereClauses.push(`status = $${paramIndex++}`);
-				params.push(requestedStatus!);
+				pushCondition(`directory.status = $${paramIndex++}`, requestedStatus!);
 			}
-		} else if (!normalizedStatus) {
-			whereClauses.push(`is_active = $${paramIndex++}`);
-			params.push(true);
 		}
 
 		if (search) {
 			const searchValue = `%${search}%`;
-			whereClauses.push(
+			pushCondition(
 				`(
-					full_name ILIKE $${paramIndex}
-					OR nickname ILIKE $${paramIndex}
-					OR social_name ILIKE $${paramIndex}
-					OR email ILIKE $${paramIndex}
-					OR cpf ILIKE $${paramIndex}
-					OR phone ILIKE $${paramIndex}
+					directory."fullName" ILIKE $${paramIndex}
+					OR COALESCE(directory.nickname, '') ILIKE $${paramIndex}
+					OR COALESCE(directory."socialName", '') ILIKE $${paramIndex}
+					OR COALESCE(directory.email, '') ILIKE $${paramIndex}
+					OR COALESCE(directory.cpf, '') ILIKE $${paramIndex}
+					OR COALESCE(directory.phone, '') ILIKE $${paramIndex}
+					OR COALESCE(directory."mainCondition", '') ILIKE $${paramIndex}
+					OR ARRAY_TO_STRING(directory."pathologyNames", ', ') ILIKE $${paramIndex}
+					OR COALESCE(directory.origin, '') ILIKE $${paramIndex}
+					OR COALESCE(directory."partnerCompanyName", '') ILIKE $${paramIndex}
+					OR COALESCE(directory."professionalName", '') ILIKE $${paramIndex}
 				)`,
+				searchValue,
 			);
-			params.push(searchValue);
 			paramIndex += 1;
 		}
 
 		if (mainCondition && mainCondition !== "all") {
-			whereClauses.push(`main_condition = $${paramIndex++}`);
-			params.push(mainCondition);
+			pushCondition(
+				`(
+					directory."mainCondition" = $${paramIndex}
+					OR directory."primaryPathology" = $${paramIndex}
+				)`,
+				mainCondition,
+			);
+			paramIndex += 1;
+		}
+
+		if (pathologies.length > 0) {
+			pushCondition(
+				`directory."pathologyNames" && $${paramIndex}::text[]`,
+				pathologies,
+			);
+			paramIndex += 1;
+		}
+
+		if (pathologyStatus && pathologyStatus !== "all") {
+			if (pathologyStatus === "active") {
+				baseConditions.push(`directory."hasActivePathology" = TRUE`);
+			} else if (pathologyStatus === "monitoring") {
+				baseConditions.push(`directory."hasMonitorPathology" = TRUE`);
+			} else if (pathologyStatus === "treated") {
+				baseConditions.push(`directory."hasTreatedPathology" = TRUE`);
+			} else if (pathologyStatus === "historical") {
+				baseConditions.push(
+					`CARDINALITY(directory."pathologyNames") > 0`,
+				);
+			}
+		}
+
+		if (careProfiles.length > 0) {
+			pushCondition(
+				`directory."careProfiles" && $${paramIndex}::text[]`,
+				careProfiles,
+			);
+			paramIndex += 1;
+		}
+
+		if (sports.length > 0) {
+			pushCondition(
+				`directory."sportsPracticed" && $${paramIndex}::text[]`,
+				sports,
+			);
+			paramIndex += 1;
+		}
+
+		if (therapyFocuses.length > 0) {
+			pushCondition(
+				`directory."therapyFocuses" && $${paramIndex}::text[]`,
+				therapyFocuses,
+			);
+			paramIndex += 1;
+		}
+
+		if (paymentModel && paymentModel !== "all") {
+			pushCondition(`directory."payerModel" = $${paramIndex++}`, paymentModel);
+		}
+
+		if (financialStatus && financialStatus !== "all") {
+			pushCondition(
+				`directory."financialStatus" = $${paramIndex++}`,
+				financialStatus,
+			);
+		}
+
+		if (origin && origin !== "all") {
+			pushCondition(`directory.origin = $${paramIndex++}`, origin);
+		}
+
+		if (partnerCompany && partnerCompany !== "all") {
+			pushCondition(
+				`directory."partnerCompanyName" = $${paramIndex++}`,
+				partnerCompany,
+			);
 		}
 
 		if (hasSurgery) {
-			whereClauses.push(`
-				EXISTS (
-					SELECT 1
-					FROM surgeries s
-					JOIN medical_records mr ON s.medical_record_id = mr.id
-					WHERE mr.patient_id = patients.id
-				)
-			`);
+			baseConditions.push(`directory."hasSurgery" = TRUE`);
 		}
 
-		let orderBy = 'created_at DESC';
+		const finalConditions = [...baseConditions];
+		if (classification && classification !== "all") {
+			finalConditions.push(`directory.classification = $${paramIndex++}`);
+			params.push(classification);
+		}
+
+		const baseWhereSql =
+			baseConditions.length > 0 ? `WHERE ${baseConditions.join(" AND ")}` : "";
+		const finalWhereSql =
+			finalConditions.length > 0
+				? `WHERE ${finalConditions.join(" AND ")}`
+				: "";
+
+		let orderBy = `directory."createdAt" DESC`;
 		switch (sortBy) {
 			case "created_at_asc":
-				orderBy = 'created_at ASC';
+				orderBy = `directory."createdAt" ASC`;
 				break;
 			case "name_asc":
-				orderBy = 'full_name ASC';
+				orderBy = `directory."fullName" ASC`;
 				break;
 			case "name_desc":
-				orderBy = 'full_name DESC';
+				orderBy = `directory."fullName" DESC`;
 				break;
 			case "main_condition_asc":
-				orderBy = 'main_condition ASC NULLS LAST, full_name ASC';
+				orderBy = `COALESCE(directory."primaryPathology", directory."mainCondition") ASC NULLS LAST, directory."fullName" ASC`;
 				break;
 			case "main_condition_desc":
-				orderBy = 'main_condition DESC NULLS LAST, full_name ASC';
+				orderBy = `COALESCE(directory."primaryPathology", directory."mainCondition") DESC NULLS LAST, directory."fullName" ASC`;
+				break;
+			case "next_appointment_asc":
+				orderBy = `directory."nextAppointmentDate" ASC NULLS LAST, directory."fullName" ASC`;
+				break;
+			case "last_activity_desc":
+				orderBy = `directory."lastAppointmentDate" DESC NULLS LAST, directory."fullName" ASC`;
+				break;
+			case "open_balance_desc":
+				orderBy = `directory."openBalance" DESC NULLS LAST, directory."fullName" ASC`;
+				break;
+			case "risk_desc":
+				orderBy = `
+					CASE directory.classification
+						WHEN 'at_risk' THEN 0
+						WHEN 'new_patient' THEN 1
+						WHEN 'active' THEN 2
+						ELSE 3
+					END,
+					directory."noShowCount" DESC,
+					directory."lastAppointmentDate" ASC NULLS LAST
+				`;
 				break;
 			case "created_at_desc":
 			default:
-				orderBy = 'created_at DESC';
+				orderBy = `directory."createdAt" DESC`;
 				break;
 		}
 
-		const dataResult = await pool.query(
+		const totalResult = await pool.query(
+			`
+				${cteSql}
+				SELECT COUNT(*)::int AS total
+				FROM directory_rows directory
+				${finalWhereSql}
+			`,
+			params,
+		);
+
+		const summaryResult = await pool.query(
+			`
+				${cteSql}
+				SELECT
+					COUNT(*)::int AS total,
+					COUNT(*) FILTER (WHERE directory.classification = 'active')::int AS active,
+					COUNT(*) FILTER (WHERE directory.classification = 'new_patient')::int AS new_patients,
+					COUNT(*) FILTER (WHERE directory.classification = 'at_risk')::int AS at_risk,
+					COUNT(*) FILTER (WHERE directory.classification = 'completed')::int AS completed,
+					COUNT(*) FILTER (
+						WHERE directory."lastAppointmentDate" < CURRENT_DATE - INTERVAL '7 days'
+							AND directory.classification <> 'completed'
+					)::int AS inactive_7,
+					COUNT(*) FILTER (
+						WHERE directory."lastAppointmentDate" < CURRENT_DATE - INTERVAL '30 days'
+							AND directory.classification <> 'completed'
+					)::int AS inactive_30,
+					COUNT(*) FILTER (
+						WHERE directory."lastAppointmentDate" < CURRENT_DATE - INTERVAL '60 days'
+							AND directory.classification <> 'completed'
+					)::int AS inactive_60,
+					COUNT(*) FILTER (WHERE directory."noShowCount" > 0)::int AS no_show_risk,
+					COUNT(*) FILTER (
+						WHERE directory."financialStatus" IN ('pending_balance', 'in_collection')
+					)::int AS has_unpaid
+				FROM directory_rows directory
+				${baseWhereSql}
+			`,
+			params.slice(0, params.length - (classification && classification !== "all" ? 1 : 0)),
+		);
+
+		const facetsResult = await pool.query(
 			`
 				SELECT
-					id,
-					full_name AS "fullName",
-					nickname,
-					social_name AS "socialName",
-					photo_url AS "photoUrl",
-					main_condition AS "mainCondition",
-					status,
-					is_active AS "isActive",
-					created_at AS "createdAt",
-					updated_at AS "updatedAt",
-					COUNT(*) OVER()::int AS "__total"
-				FROM patients
-				WHERE ${whereClauses.join(" AND ")}
+					ARRAY(
+						SELECT DISTINCT pp.pathology_name
+						FROM patient_pathologies pp
+						WHERE pp.organization_id = $1::uuid
+							AND pp.pathology_name IS NOT NULL
+						ORDER BY 1
+					) AS pathologies,
+					ARRAY(
+						SELECT DISTINCT value
+						FROM patients p2, LATERAL UNNEST(COALESCE(p2.care_profiles, ARRAY[]::text[])) AS value
+						WHERE p2.organization_id = $1::uuid
+							AND COALESCE(value, '') <> ''
+						ORDER BY 1
+					) AS care_profiles,
+					ARRAY(
+						SELECT DISTINCT value
+						FROM patients p3, LATERAL UNNEST(COALESCE(p3.sports_practiced, ARRAY[]::text[])) AS value
+						WHERE p3.organization_id = $1::uuid
+							AND COALESCE(value, '') <> ''
+						ORDER BY 1
+					) AS sports,
+					ARRAY(
+						SELECT DISTINCT value
+						FROM patients p4, LATERAL UNNEST(COALESCE(p4.therapy_focuses, ARRAY[]::text[])) AS value
+						WHERE p4.organization_id = $1::uuid
+							AND COALESCE(value, '') <> ''
+						ORDER BY 1
+					) AS therapy_focuses,
+					ARRAY(
+						SELECT DISTINCT p5.origin
+						FROM patients p5
+						WHERE p5.organization_id = $1::uuid
+							AND COALESCE(p5.origin, '') <> ''
+						ORDER BY 1
+					) AS origins,
+					ARRAY(
+						SELECT DISTINCT p6.partner_company_name
+						FROM patients p6
+						WHERE p6.organization_id = $1::uuid
+							AND COALESCE(p6.partner_company_name, '') <> ''
+						ORDER BY 1
+					) AS partners
+			`,
+			[user.organizationId],
+		);
+
+		const dataResult = await pool.query(
+			`
+				${cteSql}
+				SELECT *
+				FROM directory_rows directory
+				${finalWhereSql}
 				ORDER BY ${orderBy}
 				LIMIT $${paramIndex} OFFSET $${paramIndex + 1}
 			`,
 			[...params, limit, offset],
 		);
-		const total = Number((dataResult.rows[0] as any)?.__total ?? 0);
-		const data = dataResult.rows.map((row: any) => {
-			const { __total, ...patientRow } = row;
-			return patientRow;
-		});
+
+		const total = Number(totalResult.rows[0]?.total ?? 0);
+		const summaryRow = (summaryResult.rows[0] ?? {}) as Record<string, unknown>;
+		const facetsRow = (facetsResult.rows[0] ?? {}) as Record<string, unknown>;
 
 		return c.json({
-			data: data.map((row: any) => normalizePatientRow(row as DbRow)),
+			data: dataResult.rows.map((row) =>
+				normalizePatientDirectoryRow(row as DbRow),
+			),
 			total,
 			page: Math.floor(offset / limit) + 1,
 			perPage: limit,
+			summary: {
+				total: Number(summaryRow.total ?? total),
+				active: Number(summaryRow.active ?? 0),
+				newPatients: Number(summaryRow.new_patients ?? 0),
+				atRisk: Number(summaryRow.at_risk ?? 0),
+				completed: Number(summaryRow.completed ?? 0),
+				inactive7: Number(summaryRow.inactive_7 ?? 0),
+				inactive30: Number(summaryRow.inactive_30 ?? 0),
+				inactive60: Number(summaryRow.inactive_60 ?? 0),
+				noShowRisk: Number(summaryRow.no_show_risk ?? 0),
+				hasUnpaid: Number(summaryRow.has_unpaid ?? 0),
+			},
+			facets: {
+				pathologies: normalizeTextArray(facetsRow.pathologies),
+				careProfiles: normalizeTextArray(facetsRow.care_profiles),
+				sports: normalizeTextArray(facetsRow.sports),
+				therapyFocuses: normalizeTextArray(facetsRow.therapy_focuses),
+				origins: normalizeTextArray(facetsRow.origins),
+				partners: normalizeTextArray(facetsRow.partners),
+			},
 		});
 	} catch (error) {
 		console.error("[Patients/List] Error:", error);

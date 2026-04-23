@@ -111,7 +111,7 @@ export function SearchablePatientPicker({
               keyExtractor={item => item.id}
               renderItem={renderItem}
               contentContainerStyle={styles.list}
-              ListEmptyState={() => (
+              ListEmptyComponent={() => (
                 <View style={styles.empty}>
                   <Text style={{ color: colors.textSecondary }}>Nenhum paciente encontrado.</Text>
                 </View>

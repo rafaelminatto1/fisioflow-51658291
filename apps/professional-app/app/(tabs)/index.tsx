@@ -772,12 +772,14 @@ export default function DashboardScreen() {
 								showsHorizontalScrollIndicator={false}
 								contentContainerStyle={styles.hScroll}
 							>
-								{protocols.slice(0, 5).map((p) => (
-									<TouchableOpacity
-										key={p.id}
-										onPress={() => router.push(`/protocols/${p.id}`)}
-										activeOpacity={0.7}
-									>
+									{protocols.slice(0, 5).map((p) => (
+										<TouchableOpacity
+											key={p.id}
+											onPress={() =>
+												router.push(`/protocol-detail?protocolId=${p.id}` as any)
+											}
+											activeOpacity={0.7}
+										>
 										<Card
 											style={[
 												styles.protocolMiniCard,

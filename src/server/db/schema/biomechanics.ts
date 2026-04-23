@@ -57,12 +57,12 @@ export const biomechanicsAssessments = pgTable(
 		createdAt: timestamp("created_at").defaultNow().notNull(),
 		updatedAt: timestamp("updated_at").defaultNow().notNull(),
 	},
-	(table) => ({
-		patientIdIdx: index("idx_biomechanics_patient_id").on(table.patientId),
-		organizationIdIdx: index("idx_biomechanics_organization_id").on(table.organizationId),
-		typeIdx: index("idx_biomechanics_type").on(table.type),
-	}),
-	(table) => [withOrganizationPolicy("biomechanics_assessments", table.organizationId)],
+	(table) => [
+		index("idx_biomechanics_patient_id").on(table.patientId),
+		index("idx_biomechanics_organization_id").on(table.organizationId),
+		index("idx_biomechanics_type").on(table.type),
+		withOrganizationPolicy("biomechanics_assessments", table.organizationId),
+	],
 );
 
 export const biomechanicsAssessmentsRelations = relations(biomechanicsAssessments, ({ one }) => ({

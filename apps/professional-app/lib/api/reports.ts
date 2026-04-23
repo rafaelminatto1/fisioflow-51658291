@@ -1,4 +1,4 @@
-import { request } from './client';
+import { fetchApi } from './client';
 
 export interface PdfReportRequest {
   type: string;
@@ -18,14 +18,14 @@ export interface PdfReportResponse {
 
 export const reportsApi = {
   generatePdf: (data: PdfReportRequest) =>
-    request<PdfReportResponse>('/api/reports/pdf', {
+    fetchApi<PdfReportResponse>('/api/reports/pdf', {
       method: 'POST',
-      body: JSON.stringify(data),
+      data,
     }),
 
   shareLink: (data: { key: string; expiresIn?: number }) =>
-    request<{ url: string }>('/api/reports/pdf/share', {
+    fetchApi<{ url: string }>('/api/reports/pdf/share', {
       method: 'POST',
-      body: JSON.stringify(data),
+      data,
     }),
 };

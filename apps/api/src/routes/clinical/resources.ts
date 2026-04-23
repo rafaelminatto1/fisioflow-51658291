@@ -198,7 +198,7 @@ export function registerClinicalResourceRoutes(app: ClinicalRouteApp) {
     const dataResult = await db.execute(query);
     const resultRows = dataResult.rows;
 
-    const data = resultRows.map((row) =>
+    const data = resultRows.map((row: Record<string, any>) =>
       normalizeClinicalTestTemplateRow(row as any),
     );
 
