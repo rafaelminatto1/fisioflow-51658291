@@ -742,23 +742,23 @@ app.get("/", async (c) => {
 					a.patient_id,
 					COUNT(*)::int AS total_appointments,
 					COUNT(*) FILTER (
-						WHERE LOWER(COALESCE(a.status, '')) IN ('atendido', 'realizado', 'completed', 'concluido', 'concluído')
+						WHERE LOWER(COALESCE(a.status::text, '')) IN ('atendido', 'realizado', 'completed', 'concluido', 'concluído')
 					)::int AS completed_appointments,
 					COUNT(*) FILTER (
-						WHERE LOWER(COALESCE(a.status, '')) IN ('faltou', 'faltou_sem_aviso', 'faltou_com_aviso', 'no_show', 'missed')
+						WHERE LOWER(COALESCE(a.status::text, '')) IN ('faltou', 'faltou_sem_aviso', 'faltou_com_aviso', 'no_show', 'missed')
 					)::int AS no_show_count,
 					COUNT(*) FILTER (
 						WHERE a.date >= CURRENT_DATE
-							AND LOWER(COALESCE(a.status, '')) IN ('agendado', 'avaliacao', 'presenca_confirmada', 'scheduled', 'confirmed')
+							AND LOWER(COALESCE(a.status::text, '')) IN ('agendado', 'avaliacao', 'presenca_confirmada', 'scheduled', 'confirmed')
 					)::int AS upcoming_appointments,
 					MAX(a.date) AS last_appointment_date,
 					MIN(a.date) FILTER (
 						WHERE a.date >= CURRENT_DATE
-							AND LOWER(COALESCE(a.status, '')) IN ('agendado', 'avaliacao', 'presenca_confirmada', 'scheduled', 'confirmed')
+							AND LOWER(COALESCE(a.status::text, '')) IN ('agendado', 'avaliacao', 'presenca_confirmada', 'scheduled', 'confirmed')
 					) AS next_appointment_date,
 					COUNT(*) FILTER (
-						WHERE LOWER(COALESCE(a.payment_status, '')) = 'pending'
-							AND LOWER(COALESCE(a.status, '')) IN ('atendido', 'realizado', 'completed', 'concluido', 'concluído')
+						WHERE LOWER(COALESCE(a.payment_status::text, '')) = 'pending'
+							AND LOWER(COALESCE(a.status::text, '')) IN ('atendido', 'realizado', 'completed', 'concluido', 'concluído')
 					)::int AS unpaid_appointments
 				FROM appointments a
 				WHERE a.organization_id = $1::uuid
@@ -771,19 +771,19 @@ app.get("/", async (c) => {
 					ARRAY_REMOVE(
 						ARRAY_AGG(
 							DISTINCT CASE
-								WHEN LOWER(COALESCE(pp.status, '')) IN ('ativo', 'active', 'em_tratamento', 'em tratamento')
+								WHEN LOWER(COALESCE(pp.status::text, '')) IN ('ativo', 'active', 'em_tratamento', 'em tratamento')
 									THEN pp.name
 								ELSE NULL
 							END
 						),
 						NULL
 					) AS active_pathology_names,
-					ARRAY_REMOVE(ARRAY_AGG(DISTINCT LOWER(COALESCE(pp.status, ''))), NULL) AS pathology_statuses,
-					BOOL_OR(LOWER(COALESCE(pp.status, '')) IN ('ativo', 'active', 'em_tratamento', 'em tratamento')) AS has_active_pathology,
-					BOOL_OR(LOWER(COALESCE(pp.status, '')) IN ('monitoramento', 'monitoring', 'cronico', 'crônico')) AS has_monitor_pathology,
-					BOOL_OR(LOWER(COALESCE(pp.status, '')) IN ('resolvido', 'treated', 'tratada', 'tratado', 'alta')) AS has_treated_pathology,
+					ARRAY_REMOVE(ARRAY_AGG(DISTINCT LOWER(COALESCE(pp.status::text, ''))), NULL) AS pathology_statuses,
+					BOOL_OR(LOWER(COALESCE(pp.status::text, '')) IN ('ativo', 'active', 'em_tratamento', 'em tratamento')) AS has_active_pathology,
+					BOOL_OR(LOWER(COALESCE(pp.status::text, '')) IN ('monitoramento', 'monitoring', 'cronico', 'crônico')) AS has_monitor_pathology,
+					BOOL_OR(LOWER(COALESCE(pp.status::text, '')) IN ('resolvido', 'treated', 'tratada', 'tratado', 'alta')) AS has_treated_pathology,
 					MIN(pp.name) FILTER (
-						WHERE LOWER(COALESCE(pp.status, '')) IN ('ativo', 'active', 'em_tratamento', 'em tratamento')
+						WHERE LOWER(COALESCE(pp.status::text, '')) IN ('ativo', 'active', 'em_tratamento', 'em tratamento')
 					) AS primary_pathology
 				FROM patient_pathologies pp
 				WHERE pp.organization_id = $1::uuid
@@ -802,22 +802,22 @@ app.get("/", async (c) => {
 				SELECT
 					cf.patient_id,
 					COUNT(*) FILTER (
-						WHERE LOWER(COALESCE(cf.status, '')) IN ('pendente', 'pending', 'aberto', 'open')
+						WHERE LOWER(COALESCE(cf.status::text, '')) IN ('pendente', 'pending', 'aberto', 'open')
 					)::int AS open_count,
 					COUNT(*) FILTER (
-						WHERE LOWER(COALESCE(cf.status, '')) IN ('pendente', 'pending', 'aberto', 'open')
+						WHERE LOWER(COALESCE(cf.status::text, '')) IN ('pendente', 'pending', 'aberto', 'open')
 							AND cf.data_vencimento < CURRENT_DATE
 					)::int AS overdue_count,
 					COALESCE(SUM(
 						CASE
-							WHEN LOWER(COALESCE(cf.tipo, '')) = 'receita'
+							WHEN LOWER(COALESCE(cf.tipo::text, '')) = 'receita'
 								THEN cf.valor::numeric
 							ELSE 0::numeric
 						END
 					), 0::numeric) AS receivable_total,
 					COALESCE(SUM(
 						CASE
-							WHEN LOWER(COALESCE(cf.status, '')) IN ('pendente', 'pending', 'aberto', 'open')
+							WHEN LOWER(COALESCE(cf.status::text, '')) IN ('pendente', 'pending', 'aberto', 'open')
 								THEN cf.valor::numeric
 							ELSE 0::numeric
 						END
@@ -852,7 +852,7 @@ app.get("/", async (c) => {
 					AND pg.organization_id = a.organization_id
 					AND COALESCE(pg.deleted_at IS NULL, TRUE)
 				WHERE a.organization_id = $1::uuid
-					AND LOWER(COALESCE(a.status, '')) IN ('atendido', 'realizado', 'completed', 'concluido', 'concluído')
+					AND LOWER(COALESCE(a.status::text, '')) IN ('atendido', 'realizado', 'completed', 'concluido', 'concluído')
 					AND a.package_id IS NULL
 					AND cf.id IS NULL
 					AND pg.id IS NULL
@@ -938,7 +938,7 @@ app.get("/", async (c) => {
 						ELSE 'current'
 					END AS "financialStatus",
 					CASE
-						WHEN LOWER(COALESCE(p.status, '')) IN ('concluído', 'concluido', 'alta', 'arquivado')
+						WHEN LOWER(COALESCE(p.status::text, '')) IN ('concluído', 'concluido', 'alta', 'arquivado')
 							THEN 'completed'
 						WHEN COALESCE(appointment_agg.total_appointments, 0) = 0
 							AND p.created_at >= NOW() - INTERVAL '30 days'
