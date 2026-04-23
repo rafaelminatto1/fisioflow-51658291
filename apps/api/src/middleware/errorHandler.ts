@@ -126,7 +126,7 @@ export async function errorHandler(err: Error, c: CustomContext) {
   }
 
   if (appError.statusCode >= 500) {
-    console.error(`[ERROR] Request ${requestId}:`, {
+    console.error(`[ERROR] Request ${requestId} | ${c.req.method} ${c.req.path}:`, {
       type: appError.type,
       message: appError.message,
       statusCode: appError.statusCode,
