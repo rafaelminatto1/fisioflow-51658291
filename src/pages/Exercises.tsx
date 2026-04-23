@@ -334,9 +334,9 @@ export default function Exercises() {
 				</div>
 
 				{/* Main Content Tabs - Mobile Optimized */}
-				<Card className="overflow-hidden">
+				<Card className="overflow-visible border-none bg-transparent shadow-none">
 					<Tabs value={activeTab} onValueChange={handleTabChange}>
-						<div className="border-b bg-muted/30">
+						<div className="sticky top-[64px] md:top-[40px] z-30 border-b bg-background/95 backdrop-blur-sm rounded-t-xl overflow-hidden">
 							<TabsList className="w-full justify-start rounded-none border-0 bg-transparent h-12 sm:h-14 p-0">
 								<TabsTrigger
 									value="library"
@@ -410,7 +410,7 @@ export default function Exercises() {
 							</TabsList>
 						</div>
 
-						<TabsContent value="library" className="m-0 p-3 sm:p-4 md:p-6">
+						<TabsContent value="library" className="m-0 p-0">
 							<ComponentErrorBoundary componentName="ExerciseLibrary">
 								<ExerciseLibrary onEditExercise={handleEditExercise} />
 							</ComponentErrorBoundary>
