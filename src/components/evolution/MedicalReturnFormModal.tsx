@@ -70,7 +70,27 @@ export const MedicalReturnFormModal: React.FC<MedicalReturnFormModalProps> = ({
 	const [suggestedDoctorName, setSuggestedDoctorName] = useState("");
 
 	const form = useForm<FormValues>({
-		resolver: zodResolver(formSchema),
+		resolver: async (data, context, options) => {
+			try {
+				return await zodResolver(formSchema)(data, context, options);
+			} catch (error) {
+				console.error("Zod Resolver Error:", error);
+				if (error instanceof z.ZodError) {
+					return {
+						values: {},
+						errors: error.issues.reduce((acc, curr) => {
+							const path = curr.path.join(".");
+							acc[path] = {
+								message: curr.message,
+								type: curr.code,
+							};
+							return acc;
+						}, {} as any),
+					};
+				}
+				return { values: {}, errors: {} };
+			}
+		},
 		defaultValues: {
 			doctor_name: "",
 			doctor_phone: "",
@@ -224,9 +244,11 @@ export const MedicalReturnFormModal: React.FC<MedicalReturnFormModalProps> = ({
 								<FormField
 									control={form.control}
 									name="doctor_name"
-									render={({ field }) => (
+									render={({ field, fieldState }) => (
 										<FormItem className="col-span-2">
-											<FormLabel>Nome do Médico *</FormLabel>
+											<FormLabel className={cn(fieldState.error && "text-destructive")}>
+												Nome do Médico *
+											</FormLabel>
 											<FormControl>
 												<DoctorAutocomplete
 													value={field.value}
@@ -244,6 +266,7 @@ export const MedicalReturnFormModal: React.FC<MedicalReturnFormModalProps> = ({
 														setDoctorModalOpen(true);
 													}}
 													placeholder="Selecione ou digite o nome do médico..."
+													error={!!fieldState.error}
 												/>
 											</FormControl>
 											<FormMessage />
@@ -271,14 +294,21 @@ export const MedicalReturnFormModal: React.FC<MedicalReturnFormModalProps> = ({
 								<FormField
 									control={form.control}
 									name="return_date"
-									render={({ field }) => (
+									render={({ field, fieldState }) => (
 										<FormItem>
-											<FormLabel className="flex items-center gap-1">
+											<FormLabel className={cn(
+												"flex items-center gap-1",
+												fieldState.error && "text-destructive"
+											)}>
 												<Calendar className="h-3 w-3" />
 												Data do Retorno *
 											</FormLabel>
 											<FormControl>
-												<Input type="date" {...field} />
+												<Input 
+													type="date" 
+													{...field} 
+													className={cn(fieldState.error && "border-destructive focus-visible:ring-destructive")}
+												/>
 											</FormControl>
 											<FormMessage />
 										</FormItem>

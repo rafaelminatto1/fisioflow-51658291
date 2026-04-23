@@ -39,6 +39,7 @@ export function useCreateRecibo() {
 		},
 		onSuccess: () => {
 			queryClient.invalidateQueries({ queryKey: ["recibos"] });
+			queryClient.invalidateQueries({ queryKey: ["financial-command-center"] });
 			toast.success("Recibo emitido com sucesso.");
 		},
 		onError: () => toast.error("Erro ao emitir recibo."),

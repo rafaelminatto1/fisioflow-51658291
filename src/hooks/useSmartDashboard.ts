@@ -183,7 +183,7 @@ export function useSmartDashboardData(viewMode: ViewMode = "today") {
 		queryKey: ["dashboard-patients"],
 		queryFn: async () => {
 			try {
-				const res = await patientsApi.list({ limit: 1000 });
+				const res = await patientsApi.list({ limit: 200 });
 				return (res?.data ?? []) as PatientRow[];
 			} catch (error) {
 				logger.error("Error loading patients", { error }, "useSmartDashboard");

@@ -155,7 +155,7 @@ export function DoctorFormModal({
 
 	return (
 		<Dialog open={open} onOpenChange={onOpenChange}>
-			<DialogContent className="sm:max-w-2xl max-h-[90vh] overflow-y-auto p-0 gap-0 overflow-hidden border-none shadow-2xl">
+			<DialogContent className="w-[96vw] sm:!max-w-5xl max-h-[92vh] overflow-hidden p-0 gap-0 border-none shadow-2xl">
 				<DialogHeader className="p-6 pb-4 bg-gradient-to-br from-blue-600 to-blue-700 text-white dark:from-blue-900 dark:to-slate-900">
 					<div className="flex items-center gap-3">
 						<div className="p-2.5 bg-white/20 rounded-xl backdrop-blur-sm ring-1 ring-white/30">
@@ -177,7 +177,7 @@ export function DoctorFormModal({
 				<Form {...form}>
 					<form
 						onSubmit={form.handleSubmit(onSubmit)}
-						className="p-6 space-y-8 bg-background"
+						className="p-6 space-y-8 bg-background max-h-[calc(92vh-112px)] overflow-y-auto"
 					>
 						{/* Basic Information Section */}
 						<div className="space-y-4 animate-in fade-in slide-in-from-bottom-2 duration-300">
@@ -190,12 +190,12 @@ export function DoctorFormModal({
 								</h3>
 							</div>
 
-							<div className="grid grid-cols-1 md:grid-cols-6 gap-5">
+							<div className="grid grid-cols-1 md:grid-cols-8 gap-5">
 								<FormField
 									control={form.control}
 									name="name"
 									render={({ field }) => (
-										<FormItem className="md:col-span-6">
+										<FormItem className="md:col-span-8">
 											<FormLabel className="text-xs font-bold uppercase text-muted-foreground/80 flex items-center gap-1.5">
 												Nome Completo{" "}
 												<span className="text-destructive">*</span>
@@ -219,7 +219,7 @@ export function DoctorFormModal({
 									control={form.control}
 									name="specialty"
 									render={({ field }) => (
-										<FormItem className="md:col-span-3">
+										<FormItem className="md:col-span-4">
 											<FormLabel className="text-xs font-bold uppercase text-muted-foreground/80">
 												Especialidade
 											</FormLabel>
@@ -265,7 +265,7 @@ export function DoctorFormModal({
 									control={form.control}
 									name="crm_state"
 									render={({ field }) => (
-										<FormItem className="md:col-span-1">
+										<FormItem className="md:col-span-2">
 											<FormLabel className="text-xs font-bold uppercase text-muted-foreground/80">
 												UF
 											</FormLabel>
@@ -295,12 +295,12 @@ export function DoctorFormModal({
 								</h3>
 							</div>
 
-							<div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+							<div className="grid grid-cols-1 md:grid-cols-8 gap-5">
 								<FormField
 									control={form.control}
 									name="phone"
 									render={({ field }) => (
-										<FormItem>
+										<FormItem className="md:col-span-4">
 											<FormLabel className="text-xs font-bold uppercase text-muted-foreground/80">
 												WhatsApp / Telefone
 											</FormLabel>
@@ -323,7 +323,7 @@ export function DoctorFormModal({
 									control={form.control}
 									name="email"
 									render={({ field }) => (
-										<FormItem>
+										<FormItem className="md:col-span-4">
 											<FormLabel className="text-xs font-bold uppercase text-muted-foreground/80">
 												E-mail
 											</FormLabel>
@@ -356,12 +356,12 @@ export function DoctorFormModal({
 								</h3>
 							</div>
 
-							<div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+							<div className="grid grid-cols-1 md:grid-cols-8 gap-5">
 								<FormField
 									control={form.control}
 									name="clinic_name"
 									render={({ field }) => (
-										<FormItem className="md:col-span-1">
+										<FormItem className="md:col-span-4">
 											<FormLabel className="text-xs font-bold uppercase text-muted-foreground/80">
 												Nome da Clínica
 											</FormLabel>
@@ -384,7 +384,7 @@ export function DoctorFormModal({
 									control={form.control}
 									name="clinic_phone"
 									render={({ field }) => (
-										<FormItem className="md:col-span-1">
+										<FormItem className="md:col-span-4">
 											<FormLabel className="text-xs font-bold uppercase text-muted-foreground/80">
 												Telefone Clínica
 											</FormLabel>
@@ -407,7 +407,7 @@ export function DoctorFormModal({
 									control={form.control}
 									name="clinic_address"
 									render={({ field }) => (
-										<FormItem className="md:col-span-2">
+										<FormItem className="md:col-span-8">
 											<FormLabel className="text-xs font-bold uppercase text-muted-foreground/80">
 												Endereço Profissional
 											</FormLabel>
@@ -461,7 +461,7 @@ export function DoctorFormModal({
 							/>
 						</div>
 
-						<DialogFooter className="pt-4 border-t border-border/50 flex items-center gap-3">
+						<DialogFooter className="sticky bottom-0 z-10 pt-4 border-t border-border/50 flex items-center gap-3 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/85">
 							<Button
 								type="button"
 								variant="ghost"

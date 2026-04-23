@@ -74,7 +74,15 @@ interface OrganizationData {
 	logo_url?: string;
 }
 
-export function RecibosContent() {
+interface RecibosContentProps {
+	autoOpenCreate?: boolean;
+	onAutoOpenHandled?: () => void;
+}
+
+export function RecibosContent({
+	autoOpenCreate = false,
+	onAutoOpenHandled,
+}: RecibosContentProps = {}) {
 	const { user } = useAuth();
 	const isMobile = useIsMobile();
 	const { currentOrganization: orgData } = useOrganizations();
@@ -110,6 +118,13 @@ export function RecibosContent() {
 		show_disclaimer: true,
 		assinado_padrao: true,
 	});
+
+	useEffect(() => {
+		if (!autoOpenCreate) return;
+
+		setIsDialogOpen(true);
+		onAutoOpenHandled?.();
+	}, [autoOpenCreate, onAutoOpenHandled]);
 
 	const handleOCRExtracted = (data: {
 		valor: number;

@@ -9,7 +9,7 @@ export function usePatientReengagement() {
 	const { data: inactivePatients = [], isLoading } = useQuery({
 		queryKey: ["inactive-patients-reengagement"],
 		queryFn: async () => {
-			const res = await patientsApi.list({ status: "ativo", limit: 1000 });
+			const res = await patientsApi.list({ status: "ativo", limit: 200 });
 			const patients = (res?.data ?? []) as PatientRow[];
 			const today = new Date();
 
