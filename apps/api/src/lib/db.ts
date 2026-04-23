@@ -51,11 +51,18 @@ export function getOrgContext(): string | undefined {
 
 function getUrl(env: Env, mode: 'read' | 'write' = 'write'): string {
 	// Bypass Hyperdrive for now to ensure we get fresh data after mass updates
-	const url = env.NEON_URL ||
+	let url = env.NEON_URL ||
 		(mode === 'read' ? env.NEON_URL : env.HYPERDRIVE?.connectionString) ||
 		process.env.DATABASE_URL;
 	
 	if (!url) throw new Error("Database configuration error: URL missing");
+
+	// Otimização para Neon + Cloudflare (Pooling & Cold Starts)
+	if (url.includes('neon.tech') && !url.includes('connect_timeout')) {
+		const separator = url.includes('?') ? '&' : '?';
+		url += `${separator}connect_timeout=10&sslmode=require`;
+	}
+
 	return url;
 }
 
@@ -75,6 +82,8 @@ function getGlobalPool(env: Env): Pool {
         max: 10,
         idleTimeoutMillis: 10000,
         connectionTimeoutMillis: 15000,
+        // Otimização de latência TCP
+        keepAlive: true,
     });
 
     globalPool = pool;
