@@ -1,3 +1,8 @@
+---
+name: fisioflow-clinical-schema
+description: Reference for the FisioFlow database schema and multi-tenant RLS conventions. Use when working with Drizzle schema files, table relationships, organization scoping, migrations, or SQL queries.
+---
+
 # FisioFlow Database Schema Reference
 
 Neon PostgreSQL + Drizzle ORM. Schema files at `src/server/db/schema/`. All tables re-exported from `src/server/db/schema/index.ts`.

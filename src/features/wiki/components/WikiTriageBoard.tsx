@@ -172,7 +172,7 @@ function TriageColumn({
 														))}
 												</div>
 												<span className="text-[9px] text-muted-foreground opacity-60">
-													{page.template_id?.split("-")[0] || "manual"}
+													{(typeof page.template_id === "string") ? page.template_id.split("-")[0] : "manual"}
 												</span>
 											</div>
 										</div>

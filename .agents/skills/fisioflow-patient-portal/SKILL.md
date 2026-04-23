@@ -1,3 +1,8 @@
+---
+name: fisioflow-patient-portal
+description: Specification reference for the planned FisioFlow patient portal. Use when designing or implementing patient self-service features such as authentication, appointments, HEP, progress, or payments.
+---
+
 # FisioFlow Patient Portal
 
 **STATUS: NOT YET IMPLEMENTED** — This skill defines the specification for the patient-facing portal, identified as a critical competitive gap.
