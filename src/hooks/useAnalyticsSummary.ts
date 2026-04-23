@@ -139,7 +139,7 @@ const fetchAppointmentsForRange = async (
 		dateFrom: formatDateToLocalISO(start),
 		dateTo: formatDateToLocalISO(end),
 		therapistId: therapistId === "all" ? undefined : therapistId,
-		limit: 3000,
+		limit: 1000,
 	});
 	return (res?.data ?? []) as AppointmentRow[];
 };

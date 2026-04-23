@@ -108,7 +108,7 @@ export const MainLayout: React.FC<MainLayoutProps> = ({
 				{/* Sidebar - Hidden on mobile */}
 				<Sidebar />
 
-				<div className="flex-1 flex flex-col min-h-screen min-w-0 overflow-hidden relative">
+				<div className="flex-1 flex flex-col min-h-screen min-w-0 overflow-visible relative">
 					{/* Decorative background for the whole content area */}
 					<div className="absolute inset-0 bg-gradient-to-br from-background via-accent/5 to-background pointer-events-none" />
 
