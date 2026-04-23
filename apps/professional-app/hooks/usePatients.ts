@@ -153,3 +153,8 @@ export function usePatient(id?: string) {
     staleTime: 1000 * 60 * 5,
   });
 }
+
+export async function getPatientByIdHook(id: string) {
+  const apiPatient = await getPatientById(id);
+  return apiPatient ? mapApiPatient(apiPatient) : null;
+}

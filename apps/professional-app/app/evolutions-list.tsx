@@ -365,12 +365,16 @@ export default function EvolutionsListScreen() {
 				: "?"}) com a data de hoje?`,
 			[
 				{ text: "Cancelar", style: "cancel" },
-				{
-					text: "Duplicar",
-					onPress: async () => {
-						setDuplicatingId(evolution.id);
-						try {
-							await duplicateAsync(evolution.id);
+					{
+						text: "Duplicar",
+						onPress: async () => {
+							if (!evolution.id) {
+								Alert.alert("Erro", "Sessão inválida para duplicação.");
+								return;
+							}
+							setDuplicatingId(evolution.id);
+							try {
+								await duplicateAsync(evolution.id);
 							Alert.alert("Sucesso", "Sessão duplicada com sucesso!");
 						} catch (err: any) {
 							Alert.alert("Erro", err.message || "Não foi possível duplicar a sessão.");

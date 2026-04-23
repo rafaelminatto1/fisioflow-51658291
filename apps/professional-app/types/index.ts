@@ -68,7 +68,13 @@ export interface Exercise {
 	name: string;
 	description: string;
 	category: string;
-	difficulty: "easy" | "medium" | "hard";
+	difficulty:
+		| "easy"
+		| "medium"
+		| "hard"
+		| "iniciante"
+		| "intermediario"
+		| "avancado";
 	videoUrl?: string;
 	imageUrl?: string;
 	instructions: string[];

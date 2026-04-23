@@ -8,7 +8,6 @@
     "skipLibCheck": true,
     "lib": ["ESNext", "WebWorker"],
     "types": ["@cloudflare/workers-types"],
-    "baseUrl": ".",
     "paths": {
       "@fisioflow/jules": ["../../packages/jules/src/index.ts"],
       "@fisioflow/db": ["../../packages/db/src/index.ts"]

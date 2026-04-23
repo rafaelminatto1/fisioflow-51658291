@@ -39,14 +39,14 @@ export const precadastroTokens = pgTable(
 			.defaultNow()
 			.notNull(),
 	},
-	(table) => ({
-		orgCreatedIdx: index("idx_precadastro_tokens_org_created").on(
+	(table) => [
+		index("idx_precadastro_tokens_org_created").on(
 			table.organizationId,
 			table.createdAt,
 		),
-		tokenIdx: index("idx_precadastro_tokens_token").on(table.token),
-	}),
-	(table) => [withOrganizationPolicy("precadastro_tokens", table.organizationId)],
+		index("idx_precadastro_tokens_token").on(table.token),
+		withOrganizationPolicy("precadastro_tokens", table.organizationId),
+	],
 );
 
 export const precadastros = pgTable(
@@ -74,12 +74,12 @@ export const precadastros = pgTable(
 			.defaultNow()
 			.notNull(),
 	},
-	(table) => ({
-		orgCreatedIdx: index("idx_precadastros_org_created").on(
+	(table) => [
+		index("idx_precadastros_org_created").on(
 			table.organizationId,
 			table.createdAt,
 		),
-		tokenIdx: index("idx_precadastros_token").on(table.tokenId, table.createdAt),
-	}),
-	(table) => [...withPublicWriteOrganizationPolicy("precadastros", table.organizationId)],
+		index("idx_precadastros_token").on(table.tokenId, table.createdAt),
+		...withPublicWriteOrganizationPolicy("precadastros", table.organizationId),
+	],
 );
