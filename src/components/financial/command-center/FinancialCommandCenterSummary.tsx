@@ -16,6 +16,7 @@ import {
 	Users,
 	Wallet,
 } from "lucide-react";
+import type { ComponentType } from "react";
 import { Link } from "react-router-dom";
 import {
 	Area,
@@ -70,7 +71,7 @@ function StatCard({
 	label: string;
 	value: string;
 	description: string;
-	icon: React.ComponentType<{ className?: string }>;
+	icon: ComponentType<{ className?: string }>;
 	tone?: "default" | "success" | "warning" | "danger";
 }) {
 	return (
@@ -114,7 +115,7 @@ function QuickAction({
 	to: string;
 	label: string;
 	description: string;
-	icon: React.ComponentType<{ className?: string }>;
+	icon: ComponentType<{ className?: string }>;
 }) {
 	return (
 		<Link
