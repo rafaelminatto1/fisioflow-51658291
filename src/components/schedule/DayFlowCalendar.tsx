@@ -35,9 +35,9 @@ const CLINIC_OPEN_HOUR = 7;
 const CLINIC_CLOSE_HOUR = 21;
 const SATURDAY_CLOSE_HOUR = 13;
 const SLOT_INTERVAL_MINUTES = 15;
-const CLINIC_SLOT_MIN_TIME = "07:00:00";
-const CLINIC_SLOT_MAX_TIME = "21:00:00";
-const CLINIC_SCROLL_TIME = "07:00:00";
+const CLINIC_SLOT_MIN_TIME = "07:00";
+const CLINIC_SLOT_MAX_TIME = "21:00";
+const CLINIC_SCROLL_TIME = "07:00";
 const SLOT_LABEL_INTERVAL = "01:00:00";
 const WEEK_HEADER_FALLBACK_HEIGHT = 48;
 const WEEK_SLOT_COUNT = ((CLINIC_CLOSE_HOUR - CLINIC_OPEN_HOUR) * 60) / SLOT_INTERVAL_MINUTES;
@@ -74,7 +74,7 @@ export function DayFlowCalendarWrapper(props: DayFlowCalendarWrapperProps) {
 	const { appointments, currentDate, viewType, onDateChange, onViewTypeChange } = props;
 	const { cssVariables, heightMultiplier } = useCardSize();
 	const isWeekView = viewType === "week";
-	const [weekSlotHeight, setWeekSlotHeight] = useState(15);
+	const [weekSlotHeight, setWeekSlotHeight] = useState(24);
 	const slotHeight = isWeekView ? weekSlotHeight : Math.round(24 * heightMultiplier);
 	const slotDuration = "00:15:00";
 	// @event-calendar/core passes slot-label Date objects in UTC.
@@ -102,22 +102,25 @@ export function DayFlowCalendarWrapper(props: DayFlowCalendarWrapperProps) {
 		calendar.setOption("slotMinTime", CLINIC_SLOT_MIN_TIME);
 		calendar.setOption("slotMaxTime", CLINIC_SLOT_MAX_TIME);
 		calendar.setOption("scrollTime", CLINIC_SCROLL_TIME);
-		calendar.setOption("slotLabelInterval", SLOT_LABEL_INTERVAL);
 		calendar.setOption("flexibleSlotTimeLimits", false);
 		calendar.setOption("expandRows", true);
+		calendar.setOption("nowIndicator", true);
+		calendar.setOption("allDaySlot", false);
+
+		// Debug log to verify what the calendar instance actually has
+		console.log("[FisioFlow] Applied Options - Min:", calendar.getOption("slotMinTime"), "Max:", calendar.getOption("slotMaxTime"));
 
 		if (!resetScroll || typeof window === "undefined") return;
 
-		const alignToOpeningHour = () => {
-			const body = containerRef.current?.querySelector<HTMLElement>(".ec-body");
-			if (body) {
-				body.scrollTop = 0;
+		// Force a re-apply after a small delay to catch any post-render overrides
+		setTimeout(() => {
+			if (calendarInstance.current) {
+				calendarInstance.current.setOption("slotMinTime", CLINIC_SLOT_MIN_TIME);
+				calendarInstance.current.setOption("slotMaxTime", CLINIC_SLOT_MAX_TIME);
+				calendarInstance.current.setOption("scrollTime", CLINIC_SCROLL_TIME);
+				calendarInstance.current.setOption("allDaySlot", false);
 			}
-		};
-
-		window.requestAnimationFrame(() => {
-			window.requestAnimationFrame(alignToOpeningHour);
-		});
+		}, 100);
 	};
 
 	// State for the globally floating Popover, totally detached from calendar DOM nodes
@@ -165,7 +168,7 @@ export function DayFlowCalendarWrapper(props: DayFlowCalendarWrapperProps) {
 	}, [props]);
 
 	useEffect(() => {
-		console.log("[FisioFlow] DayFlowCalendar v2.3 - Strict Range: 07:00-21:00");
+		console.log("[FisioFlow] DayFlowCalendar v3.7 - Forced Labels Visibility");
 	}, []);
 
 	useEffect(() => {
@@ -304,119 +307,116 @@ export function DayFlowCalendarWrapper(props: DayFlowCalendarWrapperProps) {
 				target: containerRef.current!,
 				props: {
 					plugins: [TimeGrid, DayGrid, Interaction],
-					options: {
-						view: VIEW_MAP[viewType] || "timeGridWeek",
-						events: dfEvents,
-						date: isValid(currentDate) ? currentDate : new Date(),
-						height: "100%",
-						slotMinTime: CLINIC_SLOT_MIN_TIME,
-						slotMaxTime: CLINIC_SLOT_MAX_TIME,
-						slotDuration,
-						slotHeight,
-						slotLabelInterval: SLOT_LABEL_INTERVAL,
-						slotLabelFormat,
-						scrollTime: CLINIC_SCROLL_TIME,
-						flexibleSlotTimeLimits: false,
-						hiddenDays: [0],
-						snapDuration: "00:15:00",
-						editable: true,
-						droppable: true,
-						selectable: true,
-						scrollBarWidth: 0,
-						headerToolbar: { start: "", center: "", end: "" },
-						locale: "pt-br",
-						firstDay: 1,
-						allDaySlot: false,
-						eventContent: (info: any) => {
-							if (info.event.display === "background" || info.event.id?.startsWith("closed-")) {
-								return { html: "" };
-							}
-							const appointment = info.event.extendedProps;
-							const formattedTime = info.event.start.toISOString().slice(11, 16);
-							const normalizedStatusName = normalizeStatus(appointment.status || "agendado");
-							const isCancelled =
-								appointment.status === "cancelled" || normalizedStatusName === "cancelado";
-							const cardDensityClass = isWeekView
-								? "dayflow-event-card--compact"
-								: "dayflow-event-card--default";
-							const colors =
-								cardColorsMapRef.current[normalizedStatusName] ||
-								getCalendarCardColors(normalizedStatusName);
+					view: VIEW_MAP[viewType] || "timeGridWeek",
+					events: dfEvents,
+					date: isValid(currentDate) ? currentDate : new Date(),
+					height: "100%",
+					slotMinTime: CLINIC_SLOT_MIN_TIME,
+					slotMaxTime: CLINIC_SLOT_MAX_TIME,
+					slotDuration,
+					slotHeight,
+					scrollTime: CLINIC_SCROLL_TIME,
+					flexibleSlotTimeLimits: false,
+					nowIndicator: true,
+					hiddenDays: [0],
+					snapDuration: "00:15:00",
+					editable: true,
+					droppable: true,
+					selectable: true,
+					scrollBarWidth: 0,
+					headerToolbar: { start: "", center: "", end: "" },
+					locale: "pt-br",
+					firstDay: 1,
+					allDaySlot: false,
+					eventContent: (info: any) => {
+						if (info.event.display === "background" || info.event.id?.startsWith("closed-")) {
+							return { html: "" };
+						}
+						const appointment = info.event.extendedProps;
+						const formattedTime = info.event.start.toISOString().slice(11, 16);
+						const normalizedStatusName = normalizeStatus(appointment.status || "agendado");
+						const isCancelled =
+							appointment.status === "cancelled" || normalizedStatusName === "cancelado";
+						const cardDensityClass = isWeekView
+							? "dayflow-event-card--compact"
+							: "dayflow-event-card--default";
+						const colors =
+							cardColorsMapRef.current[normalizedStatusName] ||
+							getCalendarCardColors(normalizedStatusName);
 
-							const html = `
-								<div class="dayflow-event-shell ${cardDensityClass} ${isCancelled ? "dayflow-event-shell--cancelled" : ""}" style="background-color:${colors.background};border-left:3px solid ${colors.accent};border-radius:6px; font-size: var(--agenda-card-font-scale, 11px); opacity: var(--agenda-card-opacity, 1);">
-									<div class="dayflow-event-card" style="border-left:none;">
-										<div class="dayflow-event-card__meta" style="font-size: 0.8em;">
-											<span class="dayflow-event-card__time" style="color:${colors.text}; font-size: 1em;">
-												${formattedTime}
-											</span>
-											<div class="dayflow-event-card__dot" style="background-color:${colors.accent};"></div>
-										</div>
-										<div class="dayflow-event-card__title" style="color:${colors.text}; display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden; white-space:normal; word-break:break-word; line-height:1.2; font-size: 1em;">
-											${appointment.title}
-										</div>
+						const html = `
+							<div class="dayflow-event-shell ${cardDensityClass} ${isCancelled ? "dayflow-event-shell--cancelled" : ""}" style="background-color:${colors.background};border-left:3px solid ${colors.accent};border-radius:6px; font-size: var(--agenda-card-font-scale, 11px); opacity: var(--agenda-card-opacity, 1);">
+								<div class="dayflow-event-card" style="border-left:none;">
+									<div class="dayflow-event-card__meta" style="font-size: 0.8em;">
+										<span class="dayflow-event-card__time" style="color:${colors.text}; font-size: 1em;">
+											${formattedTime}
+										</span>
+										<div class="dayflow-event-card__dot" style="background-color:${colors.accent};"></div>
+									</div>
+									<div class="dayflow-event-card__title" style="color:${colors.text}; display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden; white-space:normal; word-break:break-word; line-height:1.2; font-size: 1em;">
+										${appointment.title}
 									</div>
 								</div>
-							`;
-							return { html };
-						},
-						eventClick: (info: any) => {
-							if (info.jsEvent) {
-								info.jsEvent.preventDefault();
-								info.jsEvent.stopPropagation();
-							}
-							// Use coordinate-based anchor to detach popover from calendar DOM node
-							const rect = info.el.getBoundingClientRect();
-							setActivePopover({ event: info.event, rect });
-						},
-						dateClick: (info: any) => {
-							setActivePopover(null);
-							const ms = info.date.getTime();
-							const roundedMs = Math.round(ms / (15 * 60000)) * (15 * 60000);
-							const roundedDate = new Date(roundedMs);
-							propsRef.current.onTimeSlotClick?.(roundedDate.toISOString().slice(0, 16));
-						},
-						eventDragStart: () => {
-							setActivePopover(null);
-							isDraggingRef.current = true;
-						},
-						eventDragStop: () => {
-							// Delay resetting dragging flag to allow internal logic to complete without interference
-							setTimeout(() => {
-								isDraggingRef.current = false;
-							}, 200);
-						},
-						eventDrop: (info: any) => {
+							</div>
+						`;
+						return { html };
+					},
+					eventClick: (info: any) => {
+						if (info.jsEvent) {
+							info.jsEvent.preventDefault();
+							info.jsEvent.stopPropagation();
+						}
+						// Use coordinate-based anchor to detach popover from calendar DOM node
+						const rect = info.el.getBoundingClientRect();
+						setActivePopover({ event: info.event, rect });
+					},
+					dateClick: (info: any) => {
+						setActivePopover(null);
+						const ms = info.date.getTime();
+						const roundedMs = Math.round(ms / (15 * 60000)) * (15 * 60000);
+						const roundedDate = new Date(roundedMs);
+						propsRef.current.onTimeSlotClick?.(roundedDate.toISOString().slice(0, 16));
+					},
+					eventDragStart: () => {
+						setActivePopover(null);
+						isDraggingRef.current = true;
+					},
+					eventDragStop: () => {
+						// Delay resetting dragging flag to allow internal logic to complete without interference
+						setTimeout(() => {
 							isDraggingRef.current = false;
-							if (propsRef.current.onAppointmentReschedule) {
-								const startUTC = info.event.start;
-								const durationInMinutes = Math.max(
-									15,
-									Math.round((info.event.end.getTime() - startUTC.getTime()) / 60000 / 15) * 15,
-								);
-								const ms = startUTC.getTime();
-								const roundedMs = Math.round(ms / (15 * 60000)) * (15 * 60000);
-								const roundedStart = new Date(roundedMs);
-								const roundedEnd = new Date(roundedMs + durationInMinutes * 60000);
-								const startStr = roundedStart.toISOString().slice(0, 16);
-								const endStr = roundedEnd.toISOString().slice(0, 16);
+						}, 200);
+					},
+					eventDrop: (info: any) => {
+						isDraggingRef.current = false;
+						if (propsRef.current.onAppointmentReschedule) {
+							const startUTC = info.event.start;
+							const durationInMinutes = Math.max(
+								15,
+								Math.round((info.event.end.getTime() - startUTC.getTime()) / 60000 / 15) * 15,
+							);
+							const ms = startUTC.getTime();
+							const roundedMs = Math.round(ms / (15 * 60000)) * (15 * 60000);
+							const roundedStart = new Date(roundedMs);
+							const roundedEnd = new Date(roundedMs + durationInMinutes * 60000);
+							const startStr = roundedStart.toISOString().slice(0, 16);
+							const endStr = roundedEnd.toISOString().slice(0, 16);
 
-								// Use optimistic update to keep UI in sync immediately
-								startTransition(() => {
-									addOptimisticAppointment({
-										id: String(info.event.id),
-										start: startStr,
-										end: endStr,
-									});
+							// Use optimistic update to keep UI in sync immediately
+							startTransition(() => {
+								addOptimisticAppointment({
+									id: String(info.event.id),
+									start: startStr,
+									end: endStr,
 								});
+							});
 
-								propsRef.current.onAppointmentReschedule(String(info.event.id), startStr, endStr);
+							propsRef.current.onAppointmentReschedule(String(info.event.id), startStr, endStr);
 
-								if (typeof navigator !== "undefined" && navigator.vibrate) {
-									navigator.vibrate([15, 50, 15]);
-								}
+							if (typeof navigator !== "undefined" && navigator.vibrate) {
+								navigator.vibrate([15, 50, 15]);
 							}
-						},
+						}
 					},
 				},
 			});
@@ -559,20 +559,36 @@ export function DayFlowCalendarWrapper(props: DayFlowCalendarWrapperProps) {
 					overflow: hidden !important;
 				}
 				.ec-sidebar {
-					width: 48px !important;
+					width: 60px !important;
 					flex-shrink: 0 !important;
 					flex-grow: 0 !important;
 					border-right: 1px solid #cbd5e1 !important;
 					box-sizing: border-box !important;
 				}
 				.ec-header .ec-sidebar {
-					width: 48px !important;
+					width: 60px !important;
 					flex-shrink: 0 !important;
 					flex-grow: 0 !important;
 					visibility: visible !important;
-					display: flex !important;
 					border-right: 1px solid #cbd5e1 !important;
-					box-sizing: border-box !important;
+				}
+				.ec-all-day {
+					display: none !important;
+				}
+				.ec-sidebar-title {
+					display: none !important;
+				}
+				.ec-time {
+					width: 100% !important;
+					display: flex !important;
+					justify-content: center !important;
+					align-items: center !important;
+					text-align: center !important;
+					font-weight: 700 !important;
+					color: #1e293b !important; /* Darker slate for maximum visibility */
+					font-size: 13px !important; /* Slightly larger */
+					visibility: visible !important;
+					opacity: 1 !important;
 				}
 				.ec-lines {
 					position: absolute !important;

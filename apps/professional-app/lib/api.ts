@@ -81,6 +81,16 @@ function normalizeAppointmentPayload(
 }
 
 function normalizeExercise(apiExercise: any): ApiExercise {
+	const bodyParts = apiExercise.bodyParts ?? apiExercise.body_parts ?? [];
+	const indicatedPathologies =
+		apiExercise.indicated_pathologies ?? apiExercise.pathologiesIndicated ?? [];
+	const contraindicatedPathologies =
+		apiExercise.contraindicated_pathologies ??
+		apiExercise.pathologiesContraindicated ??
+		[];
+	const scientificReferences =
+		apiExercise.scientific_references ?? apiExercise.references ?? [];
+
 	return {
 		...apiExercise,
 		category:
@@ -100,6 +110,14 @@ function normalizeExercise(apiExercise: any): ApiExercise {
 		instructions: Array.isArray(apiExercise.instructions)
 			? apiExercise.instructions
 			: [],
+		body_parts: bodyParts,
+		bodyParts,
+		tags: Array.isArray(apiExercise.tags) ? apiExercise.tags : [],
+		indicated_pathologies: indicatedPathologies,
+		contraindicated_pathologies: contraindicatedPathologies,
+		precaution_level: apiExercise.precaution_level,
+		precaution_notes: apiExercise.precaution_notes ?? apiExercise.precautions,
+		scientific_references: scientificReferences,
 		embeddingSketch: apiExercise.embeddingSketch ?? apiExercise.embedding_sketch,
 		referencePose: apiExercise.referencePose ?? apiExercise.reference_pose,
 	};

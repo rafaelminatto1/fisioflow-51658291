@@ -82,6 +82,7 @@ export interface Exercise {
 	reps?: number;
 	duration?: number;
 	bodyParts?: string[];
+	tags?: string[];
 	aiConfig?: {
 		enabled: boolean;
 		type: "squat" | "pushup" | "lateral_raise" | "plank" | "lunge";
