@@ -18,15 +18,6 @@ const NO_SHOW_STATUSES = [
   'no_show',
 ];
 
-const NON_PRODUCTIVE_STATUSES = [
-  'cancelado',
-  'cancelled',
-  ...NO_SHOW_STATUSES,
-  'remarcar',
-  'remarcado',
-  'rescheduled',
-];
-
 function addDays(date: Date, amount: number) {
   const next = new Date(date);
   next.setDate(next.getDate() + amount);
@@ -298,7 +289,12 @@ export const registerFinancialAnalyticsRoutes = (app: FinancialApp) => {
       },
     );
 
-    const cashflowRows = await queryRows(
+    const cashflowRows = await queryRows<{
+      bucket: string;
+      label: string;
+      income: string | number;
+      expense: string | number;
+    }>(
       pool,
       'cashflow',
       `SELECT
@@ -346,7 +342,16 @@ export const registerFinancialAnalyticsRoutes = (app: FinancialApp) => {
       },
     );
 
-    const topAccounts = await queryRows(
+    const topAccounts = await queryRows<{
+      id: string;
+      tipo: string;
+      description: string;
+      status: string;
+      amount: string | number;
+      due_date: string;
+      patient_id: string | null;
+      patient_name: string;
+    }>(
       pool,
       'top-accounts',
       `SELECT
@@ -377,7 +382,14 @@ export const registerFinancialAnalyticsRoutes = (app: FinancialApp) => {
       [],
     );
 
-    const recentTransactions = await queryRows(
+    const recentTransactions = await queryRows<{
+      id: string;
+      tipo: string;
+      description: string;
+      status: string;
+      amount: string | number;
+      created_at: string;
+    }>(
       pool,
       'recent-transactions',
       `SELECT
@@ -520,7 +532,14 @@ export const registerFinancialAnalyticsRoutes = (app: FinancialApp) => {
       },
     );
 
-    const riskPatients = await queryRows(
+    const riskPatients = await queryRows<{
+      id: string;
+      full_name: string;
+      phone: string;
+      last_appointment: string | null;
+      open_amount: string | number;
+      missed_count: string | number;
+    }>(
       pool,
       'risk-patients',
       `SELECT
