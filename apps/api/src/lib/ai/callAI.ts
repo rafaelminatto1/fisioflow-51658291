@@ -113,6 +113,34 @@ export async function callAI(env: Env, opts: CallAIOptions): Promise<CallAIResul
 	throw lastError ?? new Error(`All models failed for task ${opts.task}`);
 }
 
+export async function callAIStructured<T>(
+	env: Env,
+	opts: CallAIOptions & { schema: { parse: (data: unknown) => T }; schemaDescription?: string },
+): Promise<CallAIResult & { data: T }> {
+	const systemPrefix = opts.systemInstruction ?? '';
+	const schemaHint = opts.schemaDescription ?? 'Respond with valid JSON matching the expected schema. No markdown, no explanation.';
+	const augmentedSystem = `${systemPrefix}\n\nIMPORTANT: ${schemaHint}`.trim();
+
+	const result = await callAI(env, {
+		...opts,
+		systemInstruction: augmentedSystem,
+		responseFormat: 'json',
+	});
+
+	let parsed: T;
+	try {
+		const jsonMatch = result.content.match(/\{[\s\S]*\}/);
+		const raw = jsonMatch ? JSON.parse(jsonMatch[0]) : JSON.parse(result.content);
+		parsed = opts.schema.parse(raw);
+	} catch {
+		const jsonMatch = result.content.match(/\{[\s\S]*\}/);
+		const raw = jsonMatch ? JSON.parse(jsonMatch[0]) : {};
+		parsed = opts.schema.parse(raw);
+	}
+
+	return { ...result, data: parsed };
+}
+
 export async function callAIVision(
 	env: Env,
 	opts: {

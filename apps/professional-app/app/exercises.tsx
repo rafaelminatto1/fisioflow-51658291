@@ -11,6 +11,7 @@ import {
 	ActivityIndicator,
 	Animated,
 	Dimensions,
+	Modal as RNModal,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
@@ -724,7 +725,7 @@ export default function ExercisesScreen() {
 			</Modal>
 
 			{/* Image Preview Modal */}
-			<Modal
+			<RNModal
 				visible={!!previewExercise}
 				transparent
 				animationType="fade"
@@ -749,7 +750,7 @@ export default function ExercisesScreen() {
 						</Text>
 					</View>
 				</TouchableOpacity>
-			</Modal>
+			</RNModal>
 
 			{!patientId && (
 				<TouchableOpacity
@@ -777,11 +778,26 @@ function FiltersModal({
 	selectedBodyPart,
 	setSelectedBodyPart,
 	onReset,
+}: {
+	visible: boolean;
+	onClose: () => void;
+	selectedDifficulty: string | null;
+	setSelectedDifficulty: (value: string | null) => void;
+	selectedEquipment: string | null;
+	setSelectedEquipment: (value: string | null) => void;
+	selectedBodyPart: string | null;
+	setSelectedBodyPart: (value: string | null) => void;
+	onReset: () => void;
 }) {
 	const colors = useColors();
 	const { light, medium } = useHaptics();
 
-	const renderOption = (label, value, current, setter) => (
+	const renderOption = (
+		label: string,
+		value: string,
+		current: string | null,
+		setter: (value: string | null) => void,
+	) => (
 		<TouchableOpacity
 			key={String(value)}
 			style={[
@@ -818,24 +834,6 @@ function FiltersModal({
 			visible={visible}
 			onClose={onClose}
 			title="Filtros Avançados"
-			footer={
-				<View style={styles.modalFooter}>
-					<Button
-						title="Limpar"
-						variant="outline"
-						onPress={() => {
-							medium();
-							onReset();
-						}}
-						style={{ flex: 1, marginRight: 8 }}
-					/>
-					<Button
-						title="Ver Exercícios"
-						onPress={onClose}
-						style={{ flex: 2 }}
-					/>
-				</View>
-			}
 		>
 			<View style={styles.modalContent}>
 				<Text style={[styles.modalLabel, { color: colors.text }]}>
@@ -876,6 +874,18 @@ function FiltersModal({
 					)}
 				</View>
 			</View>
+			<View style={styles.modalFooter}>
+				<Button
+					title="Limpar"
+					variant="outline"
+					onPress={() => {
+						medium();
+						onReset();
+					}}
+					style={{ flex: 1, marginRight: 8 }}
+				/>
+				<Button title="Ver Exercícios" onPress={onClose} style={{ flex: 2 }} />
+			</View>
 		</Modal>
 	);
 }
@@ -910,6 +920,11 @@ const styles = StyleSheet.create({
 	},
 	headerAction: {
 		padding: 8,
+	},
+	searchContainer: {
+		paddingHorizontal: 20,
+		paddingTop: 16,
+		paddingBottom: 8,
 	},
 	exerciseCard: {
 		marginHorizontal: 20,
@@ -1085,6 +1100,16 @@ const styles = StyleSheet.create({
 		paddingHorizontal: 20,
 		paddingBottom: 15,
 	},
+	sectionTitle: {
+		fontSize: 16,
+		fontWeight: "700",
+		paddingHorizontal: 20,
+		marginTop: 8,
+		marginBottom: 12,
+	},
+	listHeaderDivider: {
+		height: 12,
+	},
 	filterChip: {
 		flexDirection: "row",
 		alignItems: "center",
@@ -1112,6 +1137,13 @@ const styles = StyleSheet.create({
 	modalFooter: {
 		flexDirection: "row",
 		paddingTop: 16,
+	},
+	loadingList: {
+		paddingTop: 24,
+		gap: 16,
+	},
+	listContent: {
+		paddingBottom: 32,
 	},
 	emptyContainer: {
 		alignItems: "center",

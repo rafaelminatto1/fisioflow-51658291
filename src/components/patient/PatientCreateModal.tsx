@@ -53,6 +53,7 @@ export const PatientCreateModal: React.FC<PatientCreateModalProps> = ({
 			console.log("[PatientCreateModal] Paciente criado com sucesso:", result);
 			toast.success(`${data.full_name} foi cadastrado com sucesso!`);
 			queryClient.invalidateQueries({ queryKey: ["patients"] });
+			queryClient.invalidateQueries({ queryKey: ["patients-list"] });
 			onOpenChange(false);
 		} catch (err: unknown) {
 			console.error("[PatientCreateModal] Erro completo:", err);

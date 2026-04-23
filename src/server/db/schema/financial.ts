@@ -219,11 +219,11 @@ export const patientPackages = pgTable(
 		createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
 		updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow().notNull(),
 	},
-	(table) => ({
-		patientIdIdx: index("idx_patient_packages_patient_id").on(table.patientId),
-		statusIdx: index("idx_patient_packages_status").on(table.status),
-	}),
-	(table) => [withOrganizationPolicy("patient_packages", table.organizationId)],
+	(table) => [
+		index("idx_patient_packages_patient_id").on(table.patientId),
+		index("idx_patient_packages_status").on(table.status),
+		withOrganizationPolicy("patient_packages", table.organizationId),
+	],
 );
 
 export const patientPackagesRelations = relations(
@@ -383,4 +383,3 @@ export const nfseConfigRelations = relations(nfseConfig, ({ one }) => ({
 		references: [organizations.id],
 	}),
 }));
-

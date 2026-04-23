@@ -218,6 +218,21 @@ export const PatientFormSchema = z.object({
 		.max(100, "Número muito longo")
 		.optional()
 		.nullable(),
+	origin: z.string().max(100, "Origem muito longa").optional().nullable(),
+	referred_by: z
+		.string()
+		.max(150, "Origem da indicação muito longa")
+		.optional()
+		.nullable(),
+	care_profiles: z.array(z.string()).optional().default([]),
+	sports_practiced: z.array(z.string()).optional().default([]),
+	therapy_focuses: z.array(z.string()).optional().default([]),
+	payer_model: z.string().max(50, "Modelo de pagamento inválido").optional().nullable(),
+	partner_company_name: z
+		.string()
+		.max(150, "Nome da parceria muito longo")
+		.optional()
+		.nullable(),
 	observations: z
 		.string()
 		.max(5000, "Observações muito longas")

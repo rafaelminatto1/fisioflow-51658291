@@ -1,555 +1,559 @@
 /**
- * NFS-e Routes — Nota Fiscal de Serviços Eletrônica (padrão ABRASF)
+ * NFS-e Routes — Nota Fiscal de Serviços Eletrônica (Prefeitura de São Paulo)
  *
- * Implementa geração de XML RPS, envio ao webservice do município e
- * armazenamento dos registros fiscais.
+ * Emissão direta via webservice SOAP com mTLS (certificado digital ICP-Brasil).
+ * Sem dependência de Focus NFe. PDF DANFSe salvo no Cloudflare R2.
  */
 import { Hono } from 'hono';
 import { createPool } from '../lib/db';
 import { requireAuth, type AuthVariables } from '../lib/auth';
 import { isUuid } from '../lib/validators';
 import type { Env } from '../types/env';
+import { envioRPS, testeEnvioLoteRPS, consultaNFe, consultaLote, cancelamentoNFe, hasSPCertConfig } from '../lib/nfseSPClient';
+import { generateAndSaveDanfse, getDanfsePresignedUrl, getDanfseR2Key } from '../lib/nfseDanfse';
 
 const app = new Hono<{ Bindings: Env; Variables: AuthVariables }>();
 
+function escapeXml(s: string): string {
+	return String(s)
+		.replace(/&/g, '&amp;')
+		.replace(/</g, '&lt;')
+		.replace(/>/g, '&gt;')
+		.replace(/"/g, '&quot;')
+		.replace(/'/g, '&apos;');
+}
+
 // ===== CONFIGURAÇÃO DO PRESTADOR =====
 
-// GET /api/nfse/config
 app.get('/config', requireAuth, async (c) => {
-  const user = c.get('user');
-  const pool = createPool(c.env);
-
-  const result = await pool.query(
-    `SELECT id, organization_id, razao_social, cnpj, inscricao_municipal,
-            codigo_municipio, regime_tributario, optante_simples, incentivo_fiscal,
-            aliquota_padrao, codigo_servico_padrao, discriminacao_padrao, ambiente,
-            created_at, updated_at
-     FROM nfse_config WHERE organization_id = $1 LIMIT 1`,
-    [user.organizationId],
-  );
-
-  return c.json({ data: result.rows[0] ?? null });
+	const user = c.get('user');
+	const pool = createPool(c.env);
+	const result = await pool.query(
+		`SELECT id, organization_id, razao_social, cnpj, inscricao_municipal,
+		        codigo_municipio, regime_tributario, optante_simples, tp_opcao_simples,
+		        incentivo_fiscal, aliquota_padrao, codigo_servico_padrao, cnae,
+		        discriminacao_padrao, ambiente, created_at, updated_at
+		 FROM nfse_config WHERE organization_id = $1 LIMIT 1`,
+		[user.organizationId],
+	);
+	return c.json({ data: result.rows[0] ?? null });
 });
 
-// PUT /api/nfse/config
 app.put('/config', requireAuth, async (c) => {
-  const user = c.get('user');
-  const body = (await c.req.json()) as Record<string, unknown>;
-  const pool = createPool(c.env);
+	const user = c.get('user');
+	const body = (await c.req.json()) as Record<string, unknown>;
+	const pool = createPool(c.env);
 
-  const fields = [
-    'razao_social', 'cnpj', 'inscricao_municipal', 'codigo_municipio',
-    'regime_tributario', 'optante_simples', 'incentivo_fiscal',
-    'aliquota_padrao', 'codigo_servico_padrao', 'discriminacao_padrao', 'ambiente',
-  ];
+	const fields = [
+		'razao_social', 'cnpj', 'inscricao_municipal', 'codigo_municipio',
+		'regime_tributario', 'optante_simples', 'tp_opcao_simples', 'incentivo_fiscal',
+		'aliquota_padrao', 'codigo_servico_padrao', 'cnae', 'discriminacao_padrao', 'ambiente',
+	];
 
-  const sets: string[] = ['updated_at = NOW()'];
-  const params: unknown[] = [user.organizationId];
+	const sets: string[] = ['updated_at = NOW()'];
+	const params: unknown[] = [user.organizationId];
 
-  for (const field of fields) {
-    if (body[field] !== undefined) {
-      params.push(body[field]);
-      sets.push(`${field} = $${params.length}`);
-    }
-  }
+	for (const field of fields) {
+		if (body[field] !== undefined) {
+			params.push(body[field]);
+			sets.push(`${field} = $${params.length}`);
+		}
+	}
 
-  const result = await pool.query(
-    `INSERT INTO nfse_config (organization_id, ${fields.filter(f => body[f] !== undefined).join(', ')})
-     VALUES ($1, ${fields.filter(f => body[f] !== undefined).map((_, i) => `$${i + 2}`).join(', ')})
-     ON CONFLICT (organization_id) DO UPDATE SET ${sets.join(', ')}
-     RETURNING id, organization_id, razao_social, cnpj, inscricao_municipal, ambiente`,
-    params,
-  );
+	const result = await pool.query(
+		`INSERT INTO nfse_config (organization_id, ${fields.filter(f => body[f] !== undefined).join(', ')})
+		 VALUES ($1, ${fields.filter(f => body[f] !== undefined).map((_, i) => `$${i + 2}`).join(', ')})
+		 ON CONFLICT (organization_id) DO UPDATE SET ${sets.join(', ')}
+		 RETURNING *`,
+		params,
+	);
 
-  return c.json({ data: result.rows[0] });
+	return c.json({ data: result.rows[0] });
 });
 
 // ===== LISTAGEM E DETALHE =====
 
-// GET /api/nfse?patientId=xxx&month=2026-03&status=autorizado&limit=50
 app.get('/', requireAuth, async (c) => {
-  const user = c.get('user');
-  const pool = createPool(c.env);
-  const { patientId, month, status, limit: lim } = c.req.query();
+	const user = c.get('user');
+	const pool = createPool(c.env);
+	const { patientId, month, status, limit: lim } = c.req.query();
 
-  const conditions = ['organization_id = $1'];
-  const params: unknown[] = [user.organizationId];
+	const conditions = ['organization_id = $1'];
+	const params: unknown[] = [user.organizationId];
 
-  if (patientId && isUuid(patientId)) {
-    params.push(patientId);
-    conditions.push(`patient_id = $${params.length}`);
-  }
-  if (month && /^\d{4}-\d{2}$/.test(month)) {
-    params.push(`${month}-01`);
-    conditions.push(`data_emissao >= $${params.length}::date`);
-    const [y, m] = month.split('-');
-    const end = new Date(Number(y), Number(m), 0).toISOString().split('T')[0];
-    params.push(end);
-    conditions.push(`data_emissao <= $${params.length}::date`);
-  }
-  if (status) {
-    params.push(status);
-    conditions.push(`status = $${params.length}`);
-  }
+	if (patientId && isUuid(patientId)) {
+		params.push(patientId);
+		conditions.push(`patient_id = $${params.length}`);
+	}
+	if (month && /^\d{4}-\d{2}$/.test(month)) {
+		params.push(`${month}-01`);
+		conditions.push(`data_emissao >= $${params.length}::date`);
+		const [y, m] = month.split('-');
+		const end = new Date(Number(y), Number(m), 0).toISOString().split('T')[0];
+		params.push(end);
+		conditions.push(`data_emissao <= $${params.length}::date`);
+	}
+	if (status) {
+		params.push(status);
+		conditions.push(`status = $${params.length}`);
+	}
 
-  params.push(Math.min(Number(lim) || 50, 200));
+	params.push(Math.min(Number(lim) || 50, 200));
 
-  const result = await pool.query(
-    `SELECT id, patient_id, appointment_id, numero_nfse, numero_rps, serie_rps,
-            data_emissao, valor_servico, aliquota_iss, valor_iss, status,
-            codigo_verificacao, link_nfse, tomador_nome, created_at
-     FROM nfse_records
-     WHERE ${conditions.join(' AND ')}
-     ORDER BY data_emissao DESC
-     LIMIT $${params.length}`,
-    params,
-  );
+	const result = await pool.query(
+		`SELECT id, patient_id, appointment_id, numero_nfse, numero_rps, serie_rps,
+		        data_emissao, valor_servico, aliquota_iss, valor_iss, status,
+		        codigo_verificacao, link_nfse, link_danfse, tomador_nome, created_at
+		 FROM nfse_records
+		 WHERE ${conditions.join(' AND ')}
+		 ORDER BY data_emissao DESC
+		 LIMIT $${params.length}`,
+		params,
+	);
 
-  return c.json({ data: result.rows || [] });
+	return c.json({ data: result.rows || [] });
 });
 
-// GET /api/nfse/:id
 app.get('/:id', requireAuth, async (c) => {
-  const user = c.get('user');
-  const { id } = c.req.param();
-  if (!isUuid(id)) return c.json({ error: 'ID inválido' }, 400);
+	const user = c.get('user');
+	const { id } = c.req.param();
+	if (!isUuid(id)) return c.json({ error: 'ID inválido' }, 400);
 
-  const pool = createPool(c.env);
-  const result = await pool.query(
-    `SELECT * FROM nfse_records WHERE id = $1 AND organization_id = $2 LIMIT 1`,
-    [id, user.organizationId],
-  );
+	const pool = createPool(c.env);
+	const result = await pool.query(
+		`SELECT * FROM nfse_records WHERE id = $1 AND organization_id = $2 LIMIT 1`,
+		[id, user.organizationId],
+	);
 
-  if (!result.rows.length) return c.json({ error: 'NFS-e não encontrada' }, 404);
-  return c.json({ data: result.rows[0] });
+	if (!result.rows.length) return c.json({ error: 'NFS-e não encontrada' }, 404);
+	return c.json({ data: result.rows[0] });
 });
 
-// ===== GERAÇÃO DE RPS =====
+// ===== GERAÇÃO DE RASCUNHO =====
 
-function buildRpsXml(rps: {
-  numero: string;
-  serie: string;
-  tipo: string;
-  dataEmissao: string;
-  prestador: { cnpj: string; inscricaoMunicipal: string };
-  tomador: { nome: string; cpfCnpj?: string; email?: string };
-  servico: { discriminacao: string; codigoServico: string; valorServico: number; aliquota: number; valorIss: number; issRetido: boolean };
-  optanteSimplesNacional: boolean;
-  incentivadorCultural: boolean;
-}): string {
-  const issRetido = rps.servico.issRetido ? '1' : '2';
-  const optante = rps.optanteSimplesNacional ? '1' : '2';
-  const incentivador = rps.incentivadorCultural ? '1' : '2';
-
-  return `<?xml version="1.0" encoding="UTF-8"?>
-<EnviarLoteRpsEnvio xmlns="http://www.abrasf.org.br/nfse.xsd">
-  <LoteRps versao="2.01">
-    <NumeroLote>1</NumeroLote>
-    <CpfCnpj><Cnpj>${escapeXml(rps.prestador.cnpj)}</Cnpj></CpfCnpj>
-    <InscricaoMunicipal>${escapeXml(rps.prestador.inscricaoMunicipal)}</InscricaoMunicipal>
-    <QuantidadeRps>1</QuantidadeRps>
-    <ListaRps>
-      <Rps>
-        <InfDeclaracaoPrestacaoServico Id="RPS${escapeXml(rps.numero)}">
-          <Rps>
-            <IdentificacaoRps>
-              <Numero>${escapeXml(rps.numero)}</Numero>
-              <Serie>${escapeXml(rps.serie)}</Serie>
-              <Tipo>${escapeXml(rps.tipo)}</Tipo>
-            </IdentificacaoRps>
-            <DataEmissao>${escapeXml(rps.dataEmissao)}</DataEmissao>
-            <Status>1</Status>
-          </Rps>
-          <Competencia>${escapeXml(rps.dataEmissao.slice(0, 10))}</Competencia>
-          <Servico>
-            <Valores>
-              <ValorServicos>${rps.servico.valorServico.toFixed(2)}</ValorServicos>
-              <ValorDeducoes>0.00</ValorDeducoes>
-              <ValorPis>0.00</ValorPis>
-              <ValorCofins>0.00</ValorCofins>
-              <ValorInss>0.00</ValorInss>
-              <ValorIr>0.00</ValorIr>
-              <ValorCsll>0.00</ValorCsll>
-              <IssRetido>${issRetido}</IssRetido>
-              <ValorIss>${rps.servico.valorIss.toFixed(2)}</ValorIss>
-              <ValorIssRetido>0.00</ValorIssRetido>
-              <OutrasRetencoes>0.00</OutrasRetencoes>
-              <BaseCalculo>${rps.servico.valorServico.toFixed(2)}</BaseCalculo>
-              <Aliquota>${rps.servico.aliquota.toFixed(4)}</Aliquota>
-              <ValorLiquidoNfse>${rps.servico.valorServico.toFixed(2)}</ValorLiquidoNfse>
-            </Valores>
-            <ItemListaServico>${escapeXml(rps.servico.codigoServico)}</ItemListaServico>
-            <CodigoCnae>8650-0/04</CodigoCnae>
-            <CodigoTributacaoMunicipio>${escapeXml(rps.servico.codigoServico)}</CodigoTributacaoMunicipio>
-            <Discriminacao>${escapeXml(rps.servico.discriminacao)}</Discriminacao>
-            <CodigoMunicipio>3550308</CodigoMunicipio>
-            <ExigibilidadeISS>1</ExigibilidadeISS>
-          </Servico>
-          <Prestador>
-            <CpfCnpj><Cnpj>${escapeXml(rps.prestador.cnpj)}</Cnpj></CpfCnpj>
-            <InscricaoMunicipal>${escapeXml(rps.prestador.inscricaoMunicipal)}</InscricaoMunicipal>
-          </Prestador>
-          <Tomador>
-            <IdentificacaoTomador>
-              ${rps.tomador.cpfCnpj
-                ? `<CpfCnpj>${rps.tomador.cpfCnpj.length <= 11 ? `<Cpf>${escapeXml(rps.tomador.cpfCnpj)}</Cpf>` : `<Cnpj>${escapeXml(rps.tomador.cpfCnpj)}</Cnpj>`}</CpfCnpj>`
-                : ''}
-            </IdentificacaoTomador>
-            <RazaoSocial>${escapeXml(rps.tomador.nome)}</RazaoSocial>
-            ${rps.tomador.email ? `<Contato><Email>${escapeXml(rps.tomador.email)}</Email></Contato>` : ''}
-          </Tomador>
-          <OptanteSimplesNacional>${optante}</OptanteSimplesNacional>
-          <IncentivoFiscal>${incentivador}</IncentivoFiscal>
-        </InfDeclaracaoPrestacaoServico>
-      </Rps>
-    </ListaRps>
-  </LoteRps>
-</EnviarLoteRpsEnvio>`;
-}
-
-function escapeXml(s: string): string {
-  return String(s)
-    .replace(/&/g, '&amp;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;')
-    .replace(/"/g, '&quot;')
-    .replace(/'/g, '&apos;');
-}
-
-// POST /api/nfse/generate — criar rascunho com XML RPS
 app.post('/generate', requireAuth, async (c) => {
-  const user = c.get('user');
-  const body = (await c.req.json()) as {
-    patient_id?: string;
-    appointment_id?: string;
-    valor_servico: number;
-    discriminacao: string;
-    tomador_nome: string;
-    tomador_cpf_cnpj?: string;
-    tomador_email?: string;
-    aliquota_iss?: number;
-  };
+	const user = c.get('user');
+	const body = (await c.req.json()) as {
+		patient_id?: string;
+		appointment_id?: string;
+		valor_servico: number;
+		discriminacao: string;
+		tomador_nome: string;
+		tomador_cpf_cnpj?: string;
+		tomador_email?: string;
+		aliquota_iss?: number;
+	};
 
-  if (!body.valor_servico || !body.discriminacao || !body.tomador_nome) {
-    return c.json({ error: 'valor_servico, discriminacao e tomador_nome são obrigatórios' }, 400);
-  }
+	if (!body.valor_servico || !body.discriminacao || !body.tomador_nome) {
+		return c.json({ error: 'valor_servico, discriminacao e tomador_nome são obrigatórios' }, 400);
+	}
 
-  const pool = createPool(c.env);
+	const pool = createPool(c.env);
+	const cfgResult = await pool.query(
+		`SELECT * FROM nfse_config WHERE organization_id = $1 LIMIT 1`,
+		[user.organizationId],
+	);
 
-  // Buscar configuração do prestador
-  const cfgResult = await pool.query(
-    `SELECT * FROM nfse_config WHERE organization_id = $1 LIMIT 1`,
-    [user.organizationId],
-  );
+	if (!cfgResult.rows.length) {
+		return c.json({ error: 'Configure os dados do prestador em Configurações > NFS-e antes de gerar' }, 422);
+	}
 
-  if (!cfgResult.rows.length) {
-    return c.json({ error: 'Configure os dados do prestador em Configurações > NFS-e antes de gerar' }, 422);
-  }
+	const cfg = cfgResult.rows[0];
+	const seqResult = await pool.query(
+		`SELECT COALESCE(MAX(CAST(numero_rps AS INTEGER)), 0) + 1 AS next_rps
+		 FROM nfse_records WHERE organization_id = $1`,
+		[user.organizationId],
+	);
+	const numeroRps = String(seqResult.rows[0]?.next_rps ?? 1);
 
-  const cfg = cfgResult.rows[0];
+	const aliquota = body.aliquota_iss ?? (Number(cfg.aliquota_padrao) || 0.02);
+	const valorIss = Number((body.valor_servico * aliquota).toFixed(2));
+	const dataEmissao = new Date().toISOString();
+	const tpOpcaoSimples = cfg.tp_opcao_simples ?? 4;
 
-  // Gerar número do RPS sequencial
-  const seqResult = await pool.query(
-    `SELECT COALESCE(MAX(CAST(numero_rps AS INTEGER)), 0) + 1 AS next_rps
-     FROM nfse_records WHERE organization_id = $1`,
-    [user.organizationId],
-  );
-  const numeroRps = String(seqResult.rows[0]?.next_rps ?? 1);
+	const result = await pool.query(
+		`INSERT INTO nfse_records
+		  (organization_id, patient_id, appointment_id, numero_rps, serie_rps, data_emissao,
+		   valor_servico, aliquota_iss, valor_iss, codigo_servico, discriminacao,
+		   tomador_nome, tomador_cpf_cnpj, tomador_email, status, created_at, updated_at)
+		 VALUES ($1,$2,$3,$4,'RPS',$5,$6,$7,$8,$9,$10,$11,$12,$13,'rascunho',NOW(),NOW())
+		 RETURNING *`,
+		[
+			user.organizationId,
+			(body.patient_id && isUuid(body.patient_id)) ? body.patient_id : null,
+			(body.appointment_id && isUuid(body.appointment_id)) ? body.appointment_id : null,
+			numeroRps,
+			dataEmissao,
+			body.valor_servico,
+			aliquota,
+			valorIss,
+			cfg.codigo_servico_padrao ?? '14.01',
+			body.discriminacao,
+			body.tomador_nome,
+			body.tomador_cpf_cnpj ?? null,
+			body.tomador_email ?? null,
+		],
+	);
 
-  const aliquota = body.aliquota_iss ?? (Number(cfg.aliquota_padrao) || 0.02);
-  const valorIss = Number((body.valor_servico * aliquota).toFixed(2));
-  const dataEmissao = new Date().toISOString();
-
-  const xmlRps = buildRpsXml({
-    numero: numeroRps,
-    serie: 'RPS',
-    tipo: '1',
-    dataEmissao,
-    prestador: { cnpj: cfg.cnpj, inscricaoMunicipal: cfg.inscricao_municipal },
-    tomador: {
-      nome: body.tomador_nome,
-      cpfCnpj: body.tomador_cpf_cnpj,
-      email: body.tomador_email,
-    },
-    servico: {
-      discriminacao: body.discriminacao,
-      codigoServico: cfg.codigo_servico_padrao ?? '14.01',
-      valorServico: body.valor_servico,
-      aliquota,
-      valorIss,
-      issRetido: false,
-    },
-    optanteSimplesNacional: cfg.optante_simples ?? true,
-    incentivadorCultural: cfg.incentivo_fiscal ?? false,
-  });
-
-  const result = await pool.query(
-    `INSERT INTO nfse_records
-      (organization_id, patient_id, appointment_id, numero_rps, serie_rps, data_emissao,
-       valor_servico, aliquota_iss, valor_iss, codigo_servico, discriminacao,
-       tomador_nome, tomador_cpf_cnpj, tomador_email, status, xml_rps, created_at, updated_at)
-     VALUES ($1,$2,$3,$4,'RPS',$5,$6,$7,$8,$9,$10,$11,$12,$13,'rascunho',$14,NOW(),NOW())
-     RETURNING *`,
-    [
-      user.organizationId,
-      (body.patient_id && isUuid(body.patient_id)) ? body.patient_id : null,
-      (body.appointment_id && isUuid(body.appointment_id)) ? body.appointment_id : null,
-      numeroRps,
-      dataEmissao,
-      body.valor_servico,
-      aliquota,
-      valorIss,
-      cfg.codigo_servico_padrao ?? '14.01',
-      body.discriminacao,
-      body.tomador_nome,
-      body.tomador_cpf_cnpj ?? null,
-      body.tomador_email ?? null,
-      xmlRps,
-    ],
-  );
-
-  return c.json({ data: result.rows[0] }, 201);
+	return c.json({ data: result.rows[0] }, 201);
 });
 
-// ===== INTEGRAÇÃO FOCUS NFE =====
+// ===== ENVIO DIRETO — PREFEITURA DE SÃO PAULO =====
 
-/**
- * Envia NFS-e via API Focus NFe (foco.io)
- * Eles gerenciam o certificado digital A1 e o SOAP com a prefeitura.
- * Docs: https://focusnfe.com.br/doc/#nfse-envio
- */
-async function sendViaFocusNfe(
-  env: Env,
-  nfse: Record<string, any>,
-  cfg: Record<string, any>,
-  ambiente: 'homologacao' | 'producao',
-): Promise<{
-  ref: string;
-  status: string;
-  numero_nfse?: string;
-  codigo_verificacao?: string;
-  link_nfse?: string;
-  erros?: string;
-}> {
-  const token = env.FOCUS_NFE_TOKEN;
-  if (!token) throw new Error('FOCUS_NFE_TOKEN não configurado');
-
-  const baseUrl = ambiente === 'producao'
-    ? 'https://api.focusnfe.com.br'
-    : 'https://homologacao.focusnfe.com.br';
-
-  const ref = `fisioflow-${nfse.id}`;
-
-  const payload = {
-    data_emissao: nfse.data_emissao ?? new Date().toISOString(),
-    natureza_operacao: 1,
-    optante_simples_nacional: cfg.optante_simples ? 1 : 2,
-    incentivador_cultural: cfg.incentivo_fiscal ? 1 : 2,
-    status: 1, // Normal
-    prestador: {
-      cnpj: cfg.cnpj?.replace(/\D/g, ''),
-      inscricao_municipal: cfg.inscricao_municipal,
-      codigo_municipio: cfg.codigo_municipio ?? '3550308', // SP default
-    },
-    tomador: {
-      ...(nfse.tomador_cpf_cnpj
-        ? (nfse.tomador_cpf_cnpj.replace(/\D/g, '').length <= 11
-            ? { cpf: nfse.tomador_cpf_cnpj.replace(/\D/g, '') }
-            : { cnpj: nfse.tomador_cpf_cnpj.replace(/\D/g, '') })
-        : {}),
-      razao_social: nfse.tomador_nome,
-      ...(nfse.tomador_email ? { email: nfse.tomador_email } : {}),
-    },
-    itens: [
-      {
-        discriminacao: nfse.discriminacao,
-        valor_unitario: Number(nfse.valor_servico),
-        quantidade: 1,
-        item_lista_servico: cfg.codigo_servico_padrao ?? '14.01',
-        aliquota_iss: Number(nfse.aliquota_iss ?? cfg.aliquota_padrao ?? 0.02) * 100,
-        iss_retido: false,
-      },
-    ],
-  };
-
-  // Enviar NFS-e
-  const sendResp = await fetch(`${baseUrl}/v2/nfse?ref=${ref}`, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      Authorization: `Basic ${btoa(`${token}:`)}`,
-    },
-    body: JSON.stringify(payload),
-  });
-
-  if (!sendResp.ok && sendResp.status !== 422) {
-    const err = await sendResp.text();
-    throw new Error(`Focus NFe erro ${sendResp.status}: ${err}`);
-  }
-
-  const sendData = await sendResp.json() as Record<string, any>;
-
-  // Se já foi autorizado diretamente
-  if (sendData.status === 'autorizado') {
-    return {
-      ref,
-      status: 'autorizado',
-      numero_nfse: sendData.numero,
-      codigo_verificacao: sendData.codigo_verificacao,
-      link_nfse: sendData.caminho_danfe_nfse ?? sendData.url,
-    };
-  }
-
-  // Aguardar processamento (polling até 30s)
-  for (let i = 0; i < 6; i++) {
-    await new Promise((r) => setTimeout(r, 5000));
-    const statusResp = await fetch(`${baseUrl}/v2/nfse/${ref}`, {
-      headers: { Authorization: `Basic ${btoa(`${token}:`)}` },
-    });
-    if (!statusResp.ok) continue;
-    const statusData = await statusResp.json() as Record<string, any>;
-    if (statusData.status === 'autorizado') {
-      return {
-        ref,
-        status: 'autorizado',
-        numero_nfse: statusData.numero,
-        codigo_verificacao: statusData.codigo_verificacao,
-        link_nfse: statusData.caminho_danfe_nfse ?? statusData.url,
-      };
-    }
-    if (statusData.status === 'erro' || statusData.status === 'cancelado') {
-      const erros = statusData.erros?.map((e: any) => e.mensagem).join('; ') ?? 'Erro desconhecido';
-      return { ref, status: 'erro', erros };
-    }
-  }
-
-  // Ainda processando — retornar como "enviado" e checar depois
-  return { ref, status: 'enviado' };
-}
-
-// POST /api/nfse/send/:id — enviar ao webservice da prefeitura SP
 app.post('/send/:id', requireAuth, async (c) => {
-  const user = c.get('user');
-  const { id } = c.req.param();
-  if (!isUuid(id)) return c.json({ error: 'ID inválido' }, 400);
+	const user = c.get('user');
+	const { id } = c.req.param();
+	if (!isUuid(id)) return c.json({ error: 'ID inválido' }, 400);
 
-  const pool = createPool(c.env);
+	const pool = createPool(c.env);
+	const nfseResult = await pool.query(
+		`SELECT n.*, cfg.cnpj, cfg.inscricao_municipal, cfg.codigo_municipio,
+		        cfg.optante_simples, cfg.tp_opcao_simples, cfg.incentivo_fiscal,
+		        cfg.aliquota_padrao, cfg.codigo_servico_padrao, cfg.cnae,
+		        cfg.razao_social, cfg.ambiente
+		 FROM nfse_records n
+		 JOIN nfse_config cfg ON cfg.organization_id = n.organization_id
+		 WHERE n.id = $1 AND n.organization_id = $2 LIMIT 1`,
+		[id, user.organizationId],
+	);
 
-  const nfseResult = await pool.query(
-    `SELECT n.*, cfg.cnpj, cfg.inscricao_municipal, cfg.codigo_municipio,
-            cfg.optante_simples, cfg.incentivo_fiscal, cfg.aliquota_padrao,
-            cfg.codigo_servico_padrao, cfg.ambiente
-     FROM nfse_records n
-     JOIN nfse_config cfg ON cfg.organization_id = n.organization_id
-     WHERE n.id = $1 AND n.organization_id = $2 LIMIT 1`,
-    [id, user.organizationId],
-  );
+	if (!nfseResult.rows.length) return c.json({ error: 'NFS-e não encontrada ou configuração pendente' }, 404);
 
-  if (!nfseResult.rows.length) return c.json({ error: 'NFS-e não encontrada ou configuração pendente' }, 404);
+	const nfse = nfseResult.rows[0];
+	if (nfse.status !== 'rascunho') {
+		return c.json({ error: `NFS-e não pode ser enviada no status "${nfse.status}"` }, 422);
+	}
 
-  const nfse = nfseResult.rows[0];
-  if (nfse.status !== 'rascunho') {
-    return c.json({ error: `NFS-e não pode ser enviada no status "${nfse.status}"` }, 422);
-  }
+	const ambiente = (nfse.ambiente ?? 'homologacao') as 'homologacao' | 'producao';
 
-  const ambiente = (nfse.ambiente ?? 'homologacao') as 'homologacao' | 'producao';
-  const temFocusToken = !!c.env.FOCUS_NFE_TOKEN;
+	if (hasSPCertConfig(c.env)) {
+		try {
+			const result = await envioRPS(c.env, {
+				numero: nfse.numero_rps,
+				serie: 'RPS',
+				tipo: '1',
+				dataEmissao: nfse.data_emissao,
+				cnpjPrestador: nfse.cnpj?.replace(/\D/g, '') || '',
+				inscricaoMunicipal: nfse.inscricao_municipal?.replace(/\D/g, '') || '',
+				codigoServico: nfse.codigo_servico_padrao ?? '14.01',
+				codigoCnae: nfse.cnae ?? '86500-4/04',
+				discriminacao: nfse.discriminacao,
+				valorServicos: Number(nfse.valor_servico).toFixed(2),
+				valorDeducoes: '0.00',
+				valorIss: Number(nfse.valor_iss).toFixed(2),
+				aliquota: Number(nfse.aliquota_iss ?? nfse.aliquota_padrao ?? 0.02).toFixed(4),
+				issRetido: '2',
+				tomadorCpfCnpj: nfse.tomador_cpf_cnpj?.replace(/\D/g, '') || '',
+				tomadorInscricaoMunicipal: '',
+				tomadorRazaoSocial: nfse.tomador_nome || '',
+				tomadorEmail: nfse.tomador_email || '',
+				tpOpcaoSimples: nfse.tp_opcao_simples ?? 4,
+				codigoMunicipio: nfse.codigo_municipio ?? '3550308',
+			});
 
-  if (temFocusToken) {
-    // Envio real via Focus NFe (gerencia certificado A1 + SOAP)
-    try {
-      const result = await sendViaFocusNfe(c.env, nfse, nfse, ambiente);
+			if (result.success && result.numeroNfse) {
+				await pool.query(
+					`UPDATE nfse_records
+					 SET status = 'autorizado', numero_nfse = $1, codigo_verificacao = $2,
+					     link_nfse = $3, updated_at = NOW()
+					 WHERE id = $4`,
+					[result.numeroNfse, result.codigoVerificacao, result.linkNfse, id],
+				);
 
-      if (result.status === 'autorizado') {
-        await pool.query(
-          `UPDATE nfse_records
-           SET status = 'autorizado', numero_nfse = $1, codigo_verificacao = $2,
-               link_nfse = $3, focus_nfe_ref = $4, updated_at = NOW()
-           WHERE id = $5`,
-          [result.numero_nfse, result.codigo_verificacao, result.link_nfse, result.ref, id],
-        );
-        return c.json({ data: { id, ...result, status: 'autorizado' } });
-      }
+				const updated = await pool.query(`SELECT * FROM nfse_records WHERE id = $1`, [id]);
+				const updatedNfse = updated.rows[0];
 
-      if (result.status === 'erro') {
-        await pool.query(
-          `UPDATE nfse_records SET status = 'erro', focus_nfe_ref = $1, updated_at = NOW() WHERE id = $2`,
-          [result.ref, id],
-        );
-        return c.json({ error: `Prefeitura recusou: ${result.erros}` }, 422);
-      }
+				try {
+					const danfseUrl = await generateAndSaveDanfse(c.env, updatedNfse, nfse);
+					if (danfseUrl) {
+						await pool.query(
+							`UPDATE nfse_records SET link_danfse = $1 WHERE id = $2`,
+							[danfseUrl, id],
+						);
+						updatedNfse.link_danfse = danfseUrl;
+					}
+				} catch (danfseErr) {
+					console.error('[NFSe] Erro ao gerar DANFSe:', danfseErr);
+				}
 
-      // enviado — processando de forma assíncrona
-      await pool.query(
-        `UPDATE nfse_records SET status = 'enviado', focus_nfe_ref = $1, updated_at = NOW() WHERE id = $2`,
-        [result.ref, id],
-      );
-      return c.json({ data: { id, status: 'enviado', ref: result.ref, message: 'NFS-e enviada — aguardando autorização da prefeitura' } });
-    } catch (err: any) {
-      console.error('[NFSe] Erro Focus NFe:', err);
-      return c.json({ error: `Falha no envio: ${err.message}` }, 500);
-    }
-  }
+				return c.json({ data: { id, ...result, link_danfse: updatedNfse.link_danfse } });
+			}
 
-  if (ambiente === 'homologacao') {
-    // Simulação de autorização para homologação sem token Focus
-    const numeroNfse = String(Date.now()).slice(-8);
-    const codigoVerificacao = crypto.randomUUID().replace(/-/g, '').slice(0, 8).toUpperCase();
-    await pool.query(
-      `UPDATE nfse_records
-       SET status = 'autorizado', numero_nfse = $1, codigo_verificacao = $2,
-           link_nfse = $3, updated_at = NOW()
-       WHERE id = $4`,
-      [
-        numeroNfse,
-        codigoVerificacao,
-        `https://nfe.prefeitura.sp.gov.br/contribuinte/notaprint.aspx?nf=${numeroNfse}&c=${codigoVerificacao}`,
-        id,
-      ],
-    );
-    return c.json({ data: { id, status: 'autorizado', numero_nfse: numeroNfse, codigo_verificacao: codigoVerificacao, ambiente: 'homologacao (simulado)' } });
-  }
+			if (result.erros && result.erros.length > 0) {
+				await pool.query(
+					`UPDATE nfse_records SET status = 'erro', updated_at = NOW() WHERE id = $1`,
+					[id],
+				);
+				const msgs = result.erros.map(e => `${e.codigo}: ${e.descricao}`).join('; ');
+				return c.json({ error: `Prefeitura recusou: ${msgs}` }, 422);
+			}
 
-  return c.json({ error: 'Configure FOCUS_NFE_TOKEN para envio em produção' }, 422);
+			await pool.query(
+				`UPDATE nfse_records SET status = 'enviado', updated_at = NOW() WHERE id = $1`,
+				[id],
+			);
+			return c.json({ data: { id, status: 'enviado', message: 'NFS-e enviada — aguardando processamento' } });
+		} catch (err: any) {
+			console.error('[NFSe] Erro envio SP:', err);
+			return c.json({ error: `Falha no envio: ${err.message}` }, 500);
+		}
+	}
+
+	// Sem certificado → simulação homologação
+	if (ambiente === 'homologacao') {
+		const numeroNfse = String(Date.now()).slice(-8);
+		const codigoVerificacao = crypto.randomUUID().replace(/-/g, '').slice(0, 8).toUpperCase();
+		await pool.query(
+			`UPDATE nfse_records
+			 SET status = 'autorizado', numero_nfse = $1, codigo_verificacao = $2,
+			     link_nfse = $3, updated_at = NOW()
+			 WHERE id = $4`,
+			[
+				numeroNfse,
+				codigoVerificacao,
+				`https://nfe.prefeitura.sp.gov.br/contribuinte/notaprint.aspx?nf=${numeroNfse}&c=${codigoVerificacao}`,
+				id,
+			],
+		);
+
+		const updated = await pool.query(`SELECT * FROM nfse_records WHERE id = $1`, [id]);
+		const updatedNfse = updated.rows[0];
+
+		try {
+			const danfseUrl = await generateAndSaveDanfse(c.env, updatedNfse, nfse);
+			if (danfseUrl) {
+				await pool.query(`UPDATE nfse_records SET link_danfse = $1 WHERE id = $2`, [danfseUrl, id]);
+				updatedNfse.link_danfse = danfseUrl;
+			}
+		} catch (_) {}
+
+		return c.json({ data: { id, status: 'autorizado', numero_nfse: numeroNfse, codigo_verificacao: codigoVerificacao, ambiente: 'homologacao (simulado)', link_danfse: updatedNfse.link_danfse } });
+	}
+
+	return c.json({ error: 'Certificado digital não configurado. Configure NFSE_SP_CERT para envio em produção.' }, 422);
 });
 
-// GET /api/nfse/status/:ref — consultar status na Focus NFe
-app.get('/status/:ref', requireAuth, async (c) => {
-  const { ref } = c.req.param();
-  const token = c.env.FOCUS_NFE_TOKEN;
-  if (!token) return c.json({ error: 'FOCUS_NFE_TOKEN não configurado' }, 422);
+// ===== TESTE DE ENVIO (valida sem gerar nota) =====
 
-  const cfgResult = await createPool(c.env).query(
-    `SELECT ambiente FROM nfse_config WHERE organization_id = $1 LIMIT 1`,
-    [c.get('user').organizationId],
-  );
-  const ambiente = cfgResult.rows[0]?.ambiente ?? 'homologacao';
-  const baseUrl = ambiente === 'producao' ? 'https://api.focusnfe.com.br' : 'https://homologacao.focusnfe.com.br';
+app.post('/test/:id', requireAuth, async (c) => {
+	const user = c.get('user');
+	const { id } = c.req.param();
+	if (!isUuid(id)) return c.json({ error: 'ID inválido' }, 400);
+	if (!hasSPCertConfig(c.env)) return c.json({ error: 'Certificado digital não configurado' }, 422);
 
-  const resp = await fetch(`${baseUrl}/v2/nfse/${encodeURIComponent(ref)}`, {
-    headers: { Authorization: `Basic ${btoa(`${token}:`)}` },
-  });
+	const pool = createPool(c.env);
+	const nfseResult = await pool.query(
+		`SELECT n.*, cfg.* FROM nfse_records n
+		 JOIN nfse_config cfg ON cfg.organization_id = n.organization_id
+		 WHERE n.id = $1 AND n.organization_id = $2 LIMIT 1`,
+		[id, user.organizationId],
+	);
 
-  if (!resp.ok) return c.json({ error: 'Referência não encontrada na Focus NFe' }, 404);
-  return c.json({ data: await resp.json() });
+	if (!nfseResult.rows.length) return c.json({ error: 'NFS-e não encontrada' }, 404);
+	const nfse = nfseResult.rows[0];
+
+	try {
+		const result = await testeEnvioLoteRPS(c.env, {
+			numero: nfse.numero_rps,
+			serie: 'RPS',
+			tipo: '1',
+			dataEmissao: nfse.data_emissao,
+			cnpjPrestador: nfse.cnpj?.replace(/\D/g, '') || '',
+			inscricaoMunicipal: nfse.inscricao_municipal?.replace(/\D/g, '') || '',
+			codigoServico: nfse.codigo_servico_padrao ?? '14.01',
+			codigoCnae: nfse.cnae ?? '86500-4/04',
+			discriminacao: nfse.discriminacao,
+			valorServicos: Number(nfse.valor_servico).toFixed(2),
+			valorDeducoes: '0.00',
+			valorIss: Number(nfse.valor_iss).toFixed(2),
+			aliquota: Number(nfse.aliquota_iss ?? nfse.aliquota_padrao ?? 0.02).toFixed(4),
+			issRetido: '2',
+			tomadorCpfCnpj: nfse.tomador_cpf_cnpj?.replace(/\D/g, '') || '',
+			tomadorInscricaoMunicipal: '',
+			tomadorRazaoSocial: nfse.tomador_nome || '',
+			tomadorEmail: nfse.tomador_email || '',
+			tpOpcaoSimples: nfse.tp_opcao_simples ?? 4,
+			codigoMunicipio: nfse.codigo_municipio ?? '3550308',
+		});
+
+		return c.json({ data: result });
+	} catch (err: any) {
+		return c.json({ error: `Teste falhou: ${err.message}` }, 500);
+	}
 });
 
-// DELETE /api/nfse/:id — cancelar NFS-e
+// ===== CONSULTA NFSE NA PREFEITURA =====
+
+app.get('/consulta-nfse/:id', requireAuth, async (c) => {
+	const user = c.get('user');
+	const { id } = c.req.param();
+	if (!isUuid(id)) return c.json({ error: 'ID inválido' }, 400);
+	if (!hasSPCertConfig(c.env)) return c.json({ error: 'Certificado digital não configurado' }, 422);
+
+	const pool = createPool(c.env);
+	const nfseResult = await pool.query(
+		`SELECT n.numero_nfse, n.codigo_verificacao, cfg.cnpj, cfg.inscricao_municipal
+		 FROM nfse_records n
+		 JOIN nfse_config cfg ON cfg.organization_id = n.organization_id
+		 WHERE n.id = $1 AND n.organization_id = $2 LIMIT 1`,
+		[id, user.organizationId],
+	);
+
+	if (!nfseResult.rows.length) return c.json({ error: 'NFS-e não encontrada' }, 404);
+	const nfse = nfseResult.rows[0];
+
+	if (!nfse.numero_nfse) return c.json({ error: 'NFS-e ainda não foi autorizada' }, 422);
+
+	try {
+		const result = await consultaNFe(c.env, {
+			cnpjRemetente: nfse.cnpj?.replace(/\D/g, ''),
+			inscricaoMunicipal: nfse.inscricao_municipal?.replace(/\D/g, ''),
+			numeroNfse: nfse.numero_nfse,
+		});
+
+		return c.json({ data: result });
+	} catch (err: any) {
+		return c.json({ error: `Consulta falhou: ${err.message}` }, 500);
+	}
+});
+
+// ===== CONSULTA LOTE =====
+
+app.get('/consulta-lote/:numeroLote', requireAuth, async (c) => {
+	const { numeroLote } = c.req.param();
+	if (!hasSPCertConfig(c.env)) return c.json({ error: 'Certificado digital não configurado' }, 422);
+
+	const user = c.get('user');
+	const pool = createPool(c.env);
+	const cfgResult = await pool.query(
+		`SELECT cnpj, inscricao_municipal FROM nfse_config WHERE organization_id = $1 LIMIT 1`,
+		[user.organizationId],
+	);
+
+	if (!cfgResult.rows.length) return c.json({ error: 'Configuração não encontrada' }, 404);
+	const cfg = cfgResult.rows[0];
+
+	try {
+		const result = await consultaLote(c.env, {
+			cnpjRemetente: cfg.cnpj?.replace(/\D/g, ''),
+			inscricaoMunicipal: cfg.inscricao_municipal?.replace(/\D/g, ''),
+			numeroLote,
+		});
+
+		return c.json({ data: result });
+	} catch (err: any) {
+		return c.json({ error: `Consulta lote falhou: ${err.message}` }, 500);
+	}
+});
+
+// ===== CANCELAMENTO NA PREFEITURA =====
+
+app.post('/cancel/:id', requireAuth, async (c) => {
+	const user = c.get('user');
+	const { id } = c.req.param();
+	if (!isUuid(id)) return c.json({ error: 'ID inválido' }, 400);
+
+	const pool = createPool(c.env);
+	const nfseResult = await pool.query(
+		`SELECT n.*, cfg.cnpj, cfg.inscricao_municipal FROM nfse_records n
+		 JOIN nfse_config cfg ON cfg.organization_id = n.organization_id
+		 WHERE n.id = $1 AND n.organization_id = $2 LIMIT 1`,
+		[id, user.organizationId],
+	);
+
+	if (!nfseResult.rows.length) return c.json({ error: 'NFS-e não encontrada' }, 404);
+	const nfse = nfseResult.rows[0];
+
+	if (nfse.status === 'cancelado') return c.json({ error: 'NFS-e já está cancelada' }, 422);
+	if (!nfse.numero_nfse) return c.json({ error: 'NFS-e não possui número — não pode ser cancelada' }, 422);
+
+	if (hasSPCertConfig(c.env)) {
+		try {
+			const result = await cancelamentoNFe(c.env, {
+				cnpjRemetente: nfse.cnpj?.replace(/\D/g, ''),
+				inscricaoMunicipal: nfse.inscricao_municipal?.replace(/\D/g, ''),
+				numeroNfse: nfse.numero_nfse,
+			});
+
+			if (!result.success) {
+				const msgs = result.erros?.map(e => `${e.codigo}: ${e.descricao}`).join('; ') ?? 'Erro desconhecido';
+				return c.json({ error: `Prefeitura recusou cancelamento: ${msgs}` }, 422);
+			}
+		} catch (err: any) {
+			return c.json({ error: `Cancelamento falhou: ${err.message}` }, 500);
+		}
+	}
+
+	await pool.query(
+		`UPDATE nfse_records SET status = 'cancelado', updated_at = NOW() WHERE id = $1`,
+		[id],
+	);
+
+	return c.json({ data: { id, status: 'cancelado' } });
+});
+
+// ===== DANFSe PDF (download) =====
+
+app.get('/danfse/:id', requireAuth, async (c) => {
+	const user = c.get('user');
+	const { id } = c.req.param();
+	if (!isUuid(id)) return c.json({ error: 'ID inválido' }, 400);
+
+	const pool = createPool(c.env);
+	const result = await pool.query(
+		`SELECT id, organization_id, numero_nfse, link_danfse, status FROM nfse_records WHERE id = $1 AND organization_id = $2 LIMIT 1`,
+		[id, user.organizationId],
+	);
+
+	if (!result.rows.length) return c.json({ error: 'NFS-e não encontrada' }, 404);
+	const nfse = result.rows[0];
+
+	if (!nfse.link_danfse) {
+		const cfgResult = await pool.query(
+			`SELECT * FROM nfse_config WHERE organization_id = $1 LIMIT 1`,
+			[user.organizationId],
+		);
+		if (!cfgResult.rows.length) return c.json({ error: 'Configuração não encontrada' }, 404);
+
+		const fullResult = await pool.query(`SELECT * FROM nfse_records WHERE id = $1`, [id]);
+		const danfseUrl = await generateAndSaveDanfse(c.env, fullResult.rows[0], cfgResult.rows[0]);
+
+		if (danfseUrl) {
+			await pool.query(`UPDATE nfse_records SET link_danfse = $1 WHERE id = $2`, [danfseUrl, id]);
+		} else {
+			return c.json({ error: 'Não foi possível gerar o DANFSe' }, 500);
+		}
+
+		nfse.link_danfse = danfseUrl;
+	}
+
+	const key = getDanfseR2Key(nfse.organization_id, nfse.id, '');
+	const presignedUrl = await getDanfsePresignedUrl(c.env, key);
+
+	if (presignedUrl) {
+		return c.redirect(presignedUrl);
+	}
+
+	return c.json({ data: { url: nfse.link_danfse } });
+});
+
+// ===== DELETE LOCAL (sem cancelar na prefeitura) =====
+
 app.delete('/:id', requireAuth, async (c) => {
-  const user = c.get('user');
-  const { id } = c.req.param();
-  if (!isUuid(id)) return c.json({ error: 'ID inválido' }, 400);
+	const user = c.get('user');
+	const { id } = c.req.param();
+	if (!isUuid(id)) return c.json({ error: 'ID inválido' }, 400);
 
-  const pool = createPool(c.env);
-  const result = await pool.query(
-    `UPDATE nfse_records SET status = 'cancelado', updated_at = NOW()
-     WHERE id = $1 AND organization_id = $2 AND status != 'cancelado'
-     RETURNING id, status`,
-    [id, user.organizationId],
-  );
+	const pool = createPool(c.env);
+	const result = await pool.query(
+		`UPDATE nfse_records SET status = 'cancelado', updated_at = NOW()
+		 WHERE id = $1 AND organization_id = $2 AND status != 'cancelado'
+		 RETURNING id, status`,
+		[id, user.organizationId],
+	);
 
-  if (!result.rows.length) return c.json({ error: 'NFS-e não encontrada ou já cancelada' }, 404);
-  return c.json({ data: result.rows[0] });
+	if (!result.rows.length) return c.json({ error: 'NFS-e não encontrada ou já cancelada' }, 404);
+	return c.json({ data: result.rows[0] });
 });
 
 export { app as nfseRoutes };

@@ -30,6 +30,13 @@ export interface Patient {
 	marital_status?: string | null;
 	profession?: string | null;
 	education_level?: string | null;
+	origin?: string | null;
+	referred_by?: string | null;
+	care_profiles?: string[] | null;
+	sports_practiced?: string[] | null;
+	therapy_focuses?: string[] | null;
+	payer_model?: string | null;
+	partner_company_name?: string | null;
 	consent_data?: boolean | null;
 	consent_image?: boolean | null;
 	incomplete_registration?: boolean | null;
@@ -64,6 +71,13 @@ export interface PatientCreateInput {
 	marital_status?: string;
 	profession?: string;
 	education_level?: string;
+	origin?: string;
+	referred_by?: string;
+	care_profiles?: string[];
+	sports_practiced?: string[];
+	therapy_focuses?: string[];
+	payer_model?: string;
+	partner_company_name?: string;
 	observations?: string;
 	organization_id: string;
 	referring_doctor_name?: string;

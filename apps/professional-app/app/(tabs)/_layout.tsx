@@ -5,6 +5,7 @@ import { Platform } from "react-native";
 import { useQuery } from "@tanstack/react-query";
 import { useAuthStore } from "@/store/auth";
 import { getConversations } from "@/lib/api";
+import { fetchConversations } from "@/services/whatsapp-api";
 
 function useUnreadBadge() {
 	const { user } = useAuthStore();

@@ -11,7 +11,7 @@ export async function detectPoseAsync(imageUrl: string): Promise<any[]> {
 /**
  * Real-time vision-camera frame processor plugin
  */
-const plugin = VisionCameraProxy.initFrameProcessorPlugin('detectPose');
+const plugin = VisionCameraProxy.initFrameProcessorPlugin('detectPose', {});
 
 export function detectPose(frame: Frame): any[] {
   'worklet';
