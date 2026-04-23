@@ -60,6 +60,7 @@ function mockMobileModules() {
 export default defineConfig(({ mode }) => {
 	const isProduction = mode === "production";
 	const isAnalyze = process.env.ANALYZE === "true";
+	const enableImageOptimizer = process.env.ENABLE_IMAGE_OPTIMIZER === "1";
 	const buildTime = Date.now().toString();
 	const VERSION_SUFFIX = "-v2.6.0-vite8.0.9-tsconfigPaths";
 	const appVersion =
@@ -135,18 +136,19 @@ export default defineConfig(({ mode }) => {
 				compiler: "jsx",
 				autoInstall: true,
 			}),
-			ViteImageOptimizer({
-				png: { quality: 80 },
-				jpeg: { quality: 75 },
-				webp: { lossy: true, quality: 80 },
-				avif: { lossy: true, quality: 70 },
-				svg: {
-					plugins: [
-						{ name: "removeViewBox", active: false },
-						{ name: "sortAttrs" },
-					],
-				},
-			}),
+			enableImageOptimizer &&
+				ViteImageOptimizer({
+					png: { quality: 80 },
+					jpeg: { quality: 75 },
+					webp: { lossy: true, quality: 80 },
+					avif: { lossy: true, quality: 70 },
+					svg: {
+						plugins: [
+							{ name: "removeViewBox", active: false },
+							{ name: "sortAttrs" },
+						],
+					},
+				}),
 			!isProduction && Inspect(),
 			!isProduction &&
 				checker({
