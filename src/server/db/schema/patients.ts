@@ -103,6 +103,15 @@ export const patients = pgTable(
 		referredBy: varchar("referred_by", { length: 150 }), // Referral source
 		professionalId: uuid("professional_id"),
 		professionalName: varchar("professional_name", { length: 150 }),
+		primaryProfessionalId: uuid("primary_professional_id"), // Responsável direto pelo paciente
+
+		// Inteligência Artificial & Preferências
+		aiPreferences: jsonb("ai_preferences").$type<{
+			communicationTone?: 'formal' | 'friendly' | 'empathetic';
+			preferredContactMethod?: 'whatsapp' | 'email' | 'push';
+			aiSummaryEnabled?: boolean;
+		}>().default({}),
+		
 		careProfiles: text("care_profiles").array().default([]),
 		sportsPracticed: text("sports_practiced").array().default([]),
 		therapyFocuses: text("therapy_focuses").array().default([]),
