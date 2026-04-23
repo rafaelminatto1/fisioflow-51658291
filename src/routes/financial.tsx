@@ -4,9 +4,9 @@
  */
 
 import { lazy } from "react";
-import { Route } from "react-router-dom";
+import { Navigate, Route } from "react-router-dom";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
-import { FinancialWorkbench } from "@/components/financial/FinancialWorkbench";
+import { APP_ROUTES } from "@/lib/routing/appRoutes";
 
 // Lazy loads - Financeiro
 const ContasFinanceirasPage = lazy(
@@ -113,15 +113,7 @@ export const financialRoutes = (
 			path="/financeiro"
 			element={
 				<ProtectedRoute>
-					<FinancialWorkbench />
-				</ProtectedRoute>
-			}
-		/>
-		<Route
-			path="/financial"
-			element={
-				<ProtectedRoute>
-					<FinancialWorkbench />
+					<Navigate to={APP_ROUTES.FINANCIAL} replace />
 				</ProtectedRoute>
 			}
 		/>

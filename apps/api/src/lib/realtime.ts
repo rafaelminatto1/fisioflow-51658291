@@ -105,7 +105,9 @@ export class OrganizationState implements DurableObject {
   }
 
   async webSocketClose(ws: WebSocket, code: number, reason: string) {
-    ws.close(code, reason);
+    // 1006 é um código reservado para fechamento anormal e não pode ser passado para ws.close()
+    const safeCode = code === 1006 ? 1000 : code;
+    ws.close(safeCode, reason);
   }
 
   async webSocketError(ws: WebSocket, error: unknown) {
