@@ -48,7 +48,8 @@ export function StudyMode({ artifact, onClose }: StudyModeProps) {
 	const browserPdfUrl = useMemo(() => {
 		if (!artifact?.url) return "";
 		const hash = `page=${pageNumber}&zoom=${Math.round(scale * 100)}`;
-		const baseUrl = artifact.url.split("#")[0];
+		const baseUrl = typeof artifact.url === "string" ? artifact.url.split("#")[0] : "";
+		if (!baseUrl) return "";
 		return `${baseUrl}#${hash}`;
 	}, [artifact, pageNumber, scale]);
 

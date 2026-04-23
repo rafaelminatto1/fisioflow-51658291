@@ -1,3 +1,8 @@
+---
+name: fisioflow-whatsapp-automation
+description: Reference for WhatsApp Business communication, reminders, automations, and inbox workflows in FisioFlow. Use when working on messaging routes, templates, conversation state, SLAs, opt-in or opt-out, or automation rules.
+---
+
 # FisioFlow WhatsApp Automation
 
 WhatsApp Business integration for patient communication, appointment reminders, and shared inbox management.

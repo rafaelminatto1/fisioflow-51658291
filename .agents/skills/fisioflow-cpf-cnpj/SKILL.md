@@ -1,3 +1,8 @@
+---
+name: fisioflow-cpf-cnpj
+description: Reference for Brazilian document validation and formatting utilities used in FisioFlow. Use when implementing or reviewing CPF, CNPJ, CEP, phone, RG, or CRM validation behavior.
+---
+
 # FisioFlow Brazilian Document Validation
 
 Validation and formatting utilities for Brazilian documents used throughout the FisioFlow physiotherapy clinic system. Covers CPF, CNPJ, CEP, phone numbers, RG identity cards, and CRM medical licenses.

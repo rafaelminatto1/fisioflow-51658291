@@ -1,3 +1,8 @@
+---
+name: fisioflow-soap-evolution
+description: Clinical evolution and SOAP note patterns for FisioFlow. Use when creating, modifying, or reviewing evolution-related components, routes, types, editors, AI generation, or persistence.
+---
+
 # FisioFlow SOAP Evolution Skill
 
 Clinical evolution (SOAP notes) patterns for the FisioFlow physiotherapy clinic system. Use this skill when creating, modifying, or reviewing evolution-related components, routes, types, AI generation, or data persistence.

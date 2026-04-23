@@ -1,3 +1,8 @@
+---
+name: fisioflow-cloudflare-infra
+description: Reference for the Cloudflare Workers infrastructure that powers FisioFlow. Use when changing Wrangler config, bindings, queues, workflows, Durable Objects, storage, AI, or deployment setup.
+---
+
 # FisioFlow Cloudflare Infrastructure
 
 Complete reference for the FisioFlow API Worker deployed on Cloudflare. All configuration lives in `apps/api/wrangler.toml`. The Worker is a Hono app (`apps/api/src/index.ts`) with 3 environments: top-level (default), `production`, and `staging`.
