@@ -460,7 +460,7 @@ const updateAppointmentHandler: MiddlewareHandler<{ Bindings: Env; Variables: Au
       const ignoreCapacity = body.ignoreCapacity === true;
 
       const parsedDuration = rawDuration !== undefined ? parseInt(String(rawDuration), 10) : undefined;
-      const normalizedStatus = status !== undefined ? normalizeStatus(status) : String(current.status ?? 'agendado');
+      const normalizedStatus = status !== undefined ? normalizeStatus(status) : String(current.status ?? 'scheduled');
 
       const effectiveDate = date ?? current.date;
       const effectiveStartTime = startTime ?? current.startTime;
