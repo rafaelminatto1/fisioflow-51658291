@@ -18,6 +18,9 @@ const NO_SHOW_STATUSES = [
   'no_show',
 ];
 
+const RECEIVABLE_ACCOUNT_TYPES = ['receber', 'receita'];
+const PAYABLE_ACCOUNT_TYPES = ['pagar', 'despesa'];
+
 function addDays(date: Date, amount: number) {
   const next = new Date(date);
   next.setDate(next.getDate() + amount);
@@ -316,16 +319,16 @@ export const registerFinancialAnalyticsRoutes = (app: FinancialApp) => {
       pool,
       'account-summary',
       `SELECT
-          COALESCE(SUM(CASE WHEN tipo = 'receita' AND status IN ('pendente', 'atrasado') THEN valor ELSE 0 END), 0) AS pending_receivables,
-          COALESCE(SUM(CASE WHEN tipo = 'despesa' AND status IN ('pendente', 'atrasado') THEN valor ELSE 0 END), 0) AS pending_payables,
-          COALESCE(SUM(CASE WHEN tipo = 'receita' AND status IN ('pendente', 'atrasado') AND COALESCE(data_vencimento, created_at::date) < CURRENT_DATE THEN valor ELSE 0 END), 0) AS overdue_amount,
+          COALESCE(SUM(CASE WHEN tipo IN ('receber', 'receita') AND status IN ('pendente', 'atrasado') THEN valor ELSE 0 END), 0) AS pending_receivables,
+          COALESCE(SUM(CASE WHEN tipo IN ('pagar', 'despesa') AND status IN ('pendente', 'atrasado') THEN valor ELSE 0 END), 0) AS pending_payables,
+          COALESCE(SUM(CASE WHEN tipo IN ('receber', 'receita') AND status IN ('pendente', 'atrasado') AND COALESCE(data_vencimento, created_at::date) < CURRENT_DATE THEN valor ELSE 0 END), 0) AS overdue_amount,
           COUNT(*) FILTER (
-            WHERE tipo = 'receita'
+            WHERE tipo IN ('receber', 'receita')
               AND status IN ('pendente', 'atrasado')
               AND COALESCE(data_vencimento, created_at::date) < CURRENT_DATE
           )::int AS overdue_receivables_count,
           COUNT(*) FILTER (
-            WHERE tipo = 'receita'
+            WHERE tipo IN ('receber', 'receita')
               AND status IN ('pendente', 'atrasado')
               AND COALESCE(data_vencimento, created_at::date) = CURRENT_DATE
           )::int AS due_today_count
@@ -367,7 +370,7 @@ export const registerFinancialAnalyticsRoutes = (app: FinancialApp) => {
         LEFT JOIN patients p ON p.id = cf.patient_id
         WHERE cf.organization_id = $1
           AND cf.deleted_at IS NULL
-          AND cf.tipo = 'receita'
+          AND cf.tipo IN ('receber', 'receita')
           AND cf.status IN ('pendente', 'atrasado')
         ORDER BY
           CASE
@@ -378,6 +381,42 @@ export const registerFinancialAnalyticsRoutes = (app: FinancialApp) => {
           COALESCE(cf.data_vencimento, cf.created_at::date) ASC,
           cf.valor DESC
         LIMIT 6`,
+      [user.organizationId],
+      [],
+    );
+
+    const todayCollections = await queryRows<{
+      id: string;
+      tipo: string;
+      description: string;
+      status: string;
+      amount: string | number;
+      due_date: string;
+      patient_id: string | null;
+      patient_name: string;
+    }>(
+      pool,
+      'today-collections',
+      `SELECT
+          cf.id::text AS id,
+          cf.tipo AS tipo,
+          COALESCE(cf.descricao, 'Sem descrição') AS description,
+          cf.status AS status,
+          COALESCE(cf.valor, 0) AS amount,
+          COALESCE(cf.data_vencimento, cf.created_at::date)::text AS due_date,
+          cf.patient_id::text AS patient_id,
+          COALESCE(p.full_name, 'Sem vínculo de paciente') AS patient_name
+        FROM contas_financeiras cf
+        LEFT JOIN patients p ON p.id = cf.patient_id
+        WHERE cf.organization_id = $1
+          AND cf.deleted_at IS NULL
+          AND cf.tipo IN ('receber', 'receita')
+          AND cf.status IN ('pendente', 'atrasado')
+          AND COALESCE(cf.data_vencimento, cf.created_at::date) <= CURRENT_DATE
+        ORDER BY
+          COALESCE(cf.data_vencimento, cf.created_at::date) ASC,
+          cf.valor DESC
+        LIMIT 5`,
       [user.organizationId],
       [],
     );
@@ -549,7 +588,7 @@ export const registerFinancialAnalyticsRoutes = (app: FinancialApp) => {
           COALESCE(MAX(a.date)::text, null) AS last_appointment,
           COALESCE(SUM(
             CASE
-              WHEN cf.status IN ('pendente', 'atrasado') THEN cf.valor
+              WHEN cf.status IN ('pendente', 'atrasado') AND cf.tipo IN ('receber', 'receita') THEN cf.valor
               ELSE 0
             END
           ), 0) AS open_amount,
@@ -577,7 +616,7 @@ export const registerFinancialAnalyticsRoutes = (app: FinancialApp) => {
         HAVING
           COALESCE(SUM(
             CASE
-              WHEN cf.status IN ('pendente', 'atrasado') THEN cf.valor
+              WHEN cf.status IN ('pendente', 'atrasado') AND cf.tipo IN ('receber', 'receita') THEN cf.valor
               ELSE 0
             END
           ), 0) > 0
