@@ -89,11 +89,21 @@ export function classifyError(error: Error): AppError {
     );
   }
 
+  // Erros do Neon/Hyperdrive que não foram capturados pelas classes específicas
+  if (error.message.includes('pool') || error.message.includes('connection')) {
+    return new AppErrorImpl(
+      ErrorType.TIMEOUT,
+      'Database connection pool exhausted. Please try again.',
+      503,
+      { originalError: error.message }
+    );
+  }
+
   return new AppErrorImpl(
     ErrorType.INTERNAL,
     'An unexpected error occurred. Please try again.',
     500,
-    { originalError: error.message }
+    { originalError: error.message, stack: error.stack }
   );
 }
 

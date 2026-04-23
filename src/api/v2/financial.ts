@@ -19,6 +19,144 @@ import type {
 const fin = (path: string, opts?: RequestInit) =>
 	request<any>(`/api/financial${path}`, opts);
 
+export type FinancialCommandCenterPeriod =
+	| "daily"
+	| "weekly"
+	| "monthly"
+	| "all";
+
+export interface FinancialCommandCenterSummary {
+	realizedRevenue: number;
+	realizedExpenses: number;
+	netBalance: number;
+	pendingReceivables: number;
+	pendingPayables: number;
+	overdueAmount: number;
+	averageTicket: number;
+	collectionRate: number;
+	monthlyGrowth: number;
+	activePatients: number;
+	projectedNext30Days: number;
+}
+
+export interface FinancialCommandCenterCashflowPoint {
+	date: string;
+	label: string;
+	income: number;
+	expense: number;
+	balance: number;
+}
+
+export interface FinancialCommandCenterAccountSpotlight {
+	id: string;
+	tipo: string;
+	description: string;
+	status: string;
+	amount: number;
+	dueDate: string;
+	patientId: string | null;
+	patientName: string;
+}
+
+export interface FinancialCommandCenterRiskPatient {
+	id: string;
+	fullName: string;
+	phone: string;
+	lastAppointment: string | null;
+	openAmount: number;
+	missedCount: number;
+}
+
+export interface FinancialCommandCenterAlert {
+	id: string;
+	title: string;
+	description: string;
+	tone: "critical" | "warning" | "info";
+	href: string;
+}
+
+export interface FinancialCommandCenterSuggestion {
+	id: string;
+	title: string;
+	description: string;
+	href: string;
+}
+
+export interface FinancialCommandCenterData {
+	period: {
+		key: FinancialCommandCenterPeriod;
+		label: string;
+		startDate: string;
+		endDate: string;
+		previousStartDate: string;
+		previousEndDate: string;
+	};
+	summary: FinancialCommandCenterSummary;
+	cashflow: {
+		points: FinancialCommandCenterCashflowPoint[];
+		totals: {
+			income: number;
+			expense: number;
+			balance: number;
+		};
+	};
+	collections: {
+		overdueCount: number;
+		dueTodayCount: number;
+		topAccounts: FinancialCommandCenterAccountSpotlight[];
+	};
+	documents: {
+		receiptsInPeriod: number;
+		lastReceiptNumber: number;
+		pendingNfse: number;
+		authorizedNfse: number;
+		failedNfse: number;
+	};
+	integrations: {
+		patients: {
+			activeCount: number;
+			newPatients: number;
+			convertedPatients: number;
+			riskPatients: FinancialCommandCenterRiskPatient[];
+		};
+		crm: {
+			totalLeads: number;
+			pipelineLeads: number;
+			hotLeads: number;
+			openTasks: number;
+			overdueTasks: number;
+			topStage: {
+				name: string;
+				total: number;
+			};
+			campaignsInPeriod: number;
+		};
+		marketing: {
+			recallActive: number;
+			referralRedemptions: number;
+			convertedLeads: number;
+			newPatientsInPeriod: number;
+		};
+		schedule: {
+			completedSessions: number;
+			scheduledNext7Days: number;
+			scheduledNext30Days: number;
+			expectedRevenueNext30Days: number;
+			noShowRate90d: number;
+		};
+	};
+	recentTransactions: Array<{
+		id: string;
+		tipo: string;
+		description: string;
+		status: string;
+		amount: number;
+		createdAt: string;
+	}>;
+	alerts: FinancialCommandCenterAlert[];
+	suggestions: FinancialCommandCenterSuggestion[];
+}
+
 export interface PatientPackageRow {
 	id: string;
 	patient_id: string;
@@ -39,6 +177,12 @@ export interface PatientPackageRow {
 }
 
 export const financialApi = {
+	commandCenter: {
+		get: (period: FinancialCommandCenterPeriod = "monthly") =>
+			fin(`/command-center?period=${encodeURIComponent(period)}`) as Promise<{
+				data: FinancialCommandCenterData;
+			}>,
+	},
 	transacoes: {
 		list: (p?: {
 			tipo?: string;

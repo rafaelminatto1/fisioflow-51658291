@@ -61,7 +61,7 @@ function getUrl(env: Env, mode: 'read' | 'write' = 'write'): string {
 	// Aumentamos o timeout para 15s para evitar erros em Cold Starts do Neon
 	if (url.includes('neon.tech') && !url.includes('connect_timeout')) {
 		const separator = url.includes('?') ? '&' : '?';
-		url += `${separator}connect_timeout=15&sslmode=require&pool_timeout=10`;
+		url += `${separator}connect_timeout=20&sslmode=require&pool_timeout=15`;
 	}
 
 	return url;
