@@ -61,6 +61,44 @@ export const CATEGORIES = [
 export type Category = (typeof CATEGORIES)[number]["value"];
 
 // ============================================
+// PRECAUTION LEVELS
+// ============================================
+export const PRECAUTION_LEVELS = [
+	{ value: "safe", label: "Seguro" },
+	{ value: "supervised", label: "Supervisionado" },
+	{ value: "restricted", label: "Restrito" },
+] as const;
+
+export type PrecautionLevel = (typeof PRECAUTION_LEVELS)[number]["value"];
+
+// ============================================
+// COMMON PATHOLOGIES
+// ============================================
+export const COMMON_PATHOLOGIES = [
+	{ value: "Dor Lombar Crônica", label: "Dor Lombar Crônica" },
+	{ value: "Hérnia de Disco", label: "Hérnia de Disco" },
+	{ value: "Cervicalgia", label: "Cervicalgia" },
+	{ value: "Escoliose", label: "Escoliose" },
+	{ value: "Artrose de Joelho (Gonartrose)", label: "Artrose de Joelho (Gonartrose)" },
+	{ value: "Artrose de Quadril (Coxartrose)", label: "Artrose de Quadril (Coxartrose)" },
+	{ value: "Tendinite de Ombro / Manguito Rotador", label: "Tendinite de Ombro / Manguito Rotador" },
+	{ value: "Bursite", label: "Bursite" },
+	{ value: "Fascite Plantar", label: "Fascite Plantar" },
+	{ value: "Síndrome do Túnel do Carpo", label: "Síndrome do Túnel do Carpo" },
+	{ value: "Epicondilite Lateral (Cotovelo de Tenista)", label: "Epicondilite Lateral (Cotovelo de Tenista)" },
+	{ value: "Epicondilite Medial (Cotovelo de Golfista)", label: "Epicondilite Medial (Cotovelo de Golfista)" },
+	{ value: "Fibromialgia", label: "Fibromialgia" },
+	{ value: "Osteoporose", label: "Osteoporose" },
+	{ value: "Lesão de LCA (Ligamento Cruzado Anterior)", label: "Lesão de LCA (Ligamento Cruzado Anterior)" },
+	{ value: "Lesão Meniscal", label: "Lesão Meniscal" },
+	{ value: "Entorse de Tornozelo", label: "Entorse de Tornozelo" },
+	{ value: "Tendinopatia de Aquiles", label: "Tendinopatia de Aquiles" },
+	{ value: "Síndrome de Dor Patelofemoral", label: "Síndrome de Dor Patelofemoral" },
+	{ value: "Pós-Op Reconstrução de LCA", label: "Pós-Op Reconstrução de LCA" },
+	{ value: "Pós-Op Prótese Total de Joelho (ATJ)", label: "Pós-Op Prótese Total de Joelho (ATJ)" },
+] as const;
+
+// ============================================
 // EQUIPMENT (Equipamentos)
 // Including home-friendly options for patients
 // ============================================
