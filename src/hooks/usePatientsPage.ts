@@ -1,24 +1,13 @@
-/**
- * usePatientsPage - Hook para dados da página de Pacientes (Library Mode)
- *
- * Substitui o loader/action do Framework Mode por React Query.
- *
- * @version 1.0.0 - Library Mode Migration
- */
-
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { useMemo } from "react";
 import { toast } from "sonner";
-import { patientsApi } from "@/api/v2/patients";
-import { useAuth } from "@/hooks/useAuth";
-import { invalidatePatientsComprehensive } from "@/utils/cacheInvalidation";
 import {
-	calculatePatientStats,
-	classifyPatient,
-	fetchAllAppointments,
-	fetchFinalizedSessions,
-} from "@/hooks/usePatientStats";
+	patientsApi,
+	type PatientsListFacets,
+	type PatientsListSummary,
+} from "@/api/v2/patients";
+import { useAuth } from "@/hooks/useAuth";
 import { fisioLogger as logger } from "@/lib/errors/logger";
+import { invalidatePatientsComprehensive } from "@/utils/cacheInvalidation";
 import type { PatientRow } from "@/types/workers";
 
 export interface PatientsFilters {
@@ -26,6 +15,15 @@ export interface PatientsFilters {
 	status?: string;
 	condition?: string;
 	classification?: string;
+	pathologies?: string[];
+	pathologyStatus?: string;
+	careProfiles?: string[];
+	sports?: string[];
+	therapyFocuses?: string[];
+	paymentModel?: string;
+	financialStatus?: string;
+	origin?: string;
+	partnerCompany?: string;
 	sortBy?: string;
 	hasSurgery?: boolean;
 	page?: number;
@@ -35,9 +33,33 @@ export interface PatientsFilters {
 export interface PatientsPageData {
 	patients: PatientRow[];
 	totalCount: number;
-	statsMap: Record<string, any>;
+	statsMap: Record<string, never>;
 	uniqueConditions: string[];
+	summary: PatientsListSummary;
+	facets: PatientsListFacets;
 }
+
+const EMPTY_SUMMARY: PatientsListSummary = {
+	total: 0,
+	active: 0,
+	newPatients: 0,
+	atRisk: 0,
+	completed: 0,
+	inactive7: 0,
+	inactive30: 0,
+	inactive60: 0,
+	noShowRisk: 0,
+	hasUnpaid: 0,
+};
+
+const EMPTY_FACETS: PatientsListFacets = {
+	pathologies: [],
+	careProfiles: [],
+	sports: [],
+	therapyFocuses: [],
+	origins: [],
+	partners: [],
+};
 
 export function usePatientsPageData(filters: PatientsFilters = {}) {
 	const queryClient = useQueryClient();
@@ -48,6 +70,15 @@ export function usePatientsPageData(filters: PatientsFilters = {}) {
 		status = "all",
 		condition = "all",
 		classification = "all",
+		pathologies = [],
+		pathologyStatus = "all",
+		careProfiles = [],
+		sports = [],
+		therapyFocuses = [],
+		paymentModel = "all",
+		financialStatus = "all",
+		origin = "all",
+		partnerCompany = "all",
 		sortBy = "created_at_desc",
 		hasSurgery = false,
 		page = 1,
@@ -56,8 +87,8 @@ export function usePatientsPageData(filters: PatientsFilters = {}) {
 
 	const {
 		data: patientsResponse,
-		isLoading: isLoadingPatients,
-		error: patientsError,
+		isLoading,
+		error,
 	} = useQuery({
 		queryKey: [
 			"patients-list",
@@ -65,6 +96,15 @@ export function usePatientsPageData(filters: PatientsFilters = {}) {
 			status,
 			condition,
 			classification,
+			pathologies,
+			pathologyStatus,
+			careProfiles,
+			sports,
+			therapyFocuses,
+			paymentModel,
+			financialStatus,
+			origin,
+			partnerCompany,
 			sortBy,
 			hasSurgery,
 			page,
@@ -72,67 +112,48 @@ export function usePatientsPageData(filters: PatientsFilters = {}) {
 		],
 		queryFn: async () => {
 			try {
-				const res = await patientsApi.list({
+				return await patientsApi.list({
 					status: status === "all" ? undefined : status,
 					search: search || undefined,
-					sortBy: sortBy as any,
+					sortBy: sortBy as PatientsFilters["sortBy"],
 					condition: condition === "all" ? undefined : condition,
+					classification: classification === "all" ? undefined : classification,
+					pathologies: pathologies.length > 0 ? pathologies : undefined,
+					pathologyStatus:
+						pathologyStatus === "all" ? undefined : pathologyStatus,
+					careProfiles: careProfiles.length > 0 ? careProfiles : undefined,
+					sports: sports.length > 0 ? sports : undefined,
+					therapyFocuses:
+						therapyFocuses.length > 0 ? therapyFocuses : undefined,
+					paymentModel:
+						paymentModel === "all" ? undefined : paymentModel,
+					financialStatus:
+						financialStatus === "all" ? undefined : financialStatus,
+					origin: origin === "all" ? undefined : origin,
+					partnerCompany:
+						partnerCompany === "all" ? undefined : partnerCompany,
 					hasSurgery: hasSurgery || undefined,
 					limit: pageSize,
 					offset: (page - 1) * pageSize,
 				});
-				return res;
-			} catch (error) {
-				logger.error("Error loading patients", { error }, "usePatientsPage");
-				throw error;
+			} catch (queryError) {
+				logger.error(
+					"Error loading patients",
+					{ error: queryError, filters },
+					"usePatientsPage",
+				);
+				throw queryError;
 			}
 		},
-		enabled: !!organizationId,
+		enabled: Boolean(organizationId),
 		staleTime: 1000 * 60 * 2,
 		gcTime: 1000 * 60 * 5,
 	});
 
 	const patients = patientsResponse?.data ?? [];
 	const totalCount = patientsResponse?.total ?? 0;
-
-	const { data: statsMap = {}, isLoading: isLoadingStats } = useQuery({
-		queryKey: ["patients-stats", patients.map((p) => p.id).join(",")],
-		queryFn: async () => {
-			const statsMap: Record<string, any> = {};
-
-			await Promise.all(
-				patients.map(async (patient) => {
-					const [appointments, soapRecords] = await Promise.all([
-						fetchAllAppointments(patient.id),
-						fetchFinalizedSessions(patient.id),
-					]);
-
-					const stats = calculatePatientStats({
-						appointments,
-						soapRecords,
-					});
-
-					const patientClassification = classifyPatient(stats);
-					statsMap[patient.id] = {
-						...stats,
-						classification: patientClassification,
-					};
-				}),
-			);
-
-			return statsMap;
-		},
-		enabled: patients.length > 0,
-		staleTime: 1000 * 60 * 5,
-		gcTime: 1000 * 60 * 15,
-	});
-
-	const uniqueConditions = useMemo(() => {
-		const conditions = patients
-			.map((p) => p.mainCondition)
-			.filter((c): c is string => Boolean(c));
-		return Array.from(new Set(conditions));
-	}, [patients]);
+	const summary = patientsResponse?.summary ?? EMPTY_SUMMARY;
+	const facets = patientsResponse?.facets ?? EMPTY_FACETS;
 
 	const createMutation = useMutation({
 		mutationFn: async (data: Partial<PatientRow>) => {
@@ -143,8 +164,12 @@ export function usePatientsPageData(filters: PatientsFilters = {}) {
 			await invalidatePatientsComprehensive(queryClient);
 			toast.success("Paciente criado com sucesso");
 		},
-		onError: (error) => {
-			logger.error("Error creating patient", { error }, "usePatientsPage");
+		onError: (mutationError) => {
+			logger.error(
+				"Error creating patient",
+				{ error: mutationError },
+				"usePatientsPage",
+			);
 			toast.error("Erro ao criar paciente");
 		},
 	});
@@ -158,8 +183,12 @@ export function usePatientsPageData(filters: PatientsFilters = {}) {
 			await invalidatePatientsComprehensive(queryClient, variables.id);
 			toast.success("Paciente atualizado com sucesso");
 		},
-		onError: (error) => {
-			logger.error("Error updating patient", { error }, "usePatientsPage");
+		onError: (mutationError) => {
+			logger.error(
+				"Error updating patient",
+				{ error: mutationError },
+				"usePatientsPage",
+			);
 			toast.error("Erro ao atualizar paciente");
 		},
 	});
@@ -172,20 +201,24 @@ export function usePatientsPageData(filters: PatientsFilters = {}) {
 			await invalidatePatientsComprehensive(queryClient, variables);
 			toast.success("Paciente arquivado com sucesso");
 		},
-		onError: (error) => {
-			logger.error("Error archiving patient", { error }, "usePatientsPage");
+		onError: (mutationError) => {
+			logger.error(
+				"Error archiving patient",
+				{ error: mutationError },
+				"usePatientsPage",
+			);
 			toast.error("Erro ao arquivar paciente");
 		},
 	});
-
-	const isLoading = isLoadingPatients || isLoadingStats;
 
 	return {
 		data: {
 			patients,
 			totalCount,
-			statsMap,
-			uniqueConditions,
+			statsMap: {},
+			uniqueConditions: facets.pathologies,
+			summary,
+			facets,
 		} as PatientsPageData,
 		mutations: {
 			create: createMutation.mutateAsync,
@@ -193,7 +226,7 @@ export function usePatientsPageData(filters: PatientsFilters = {}) {
 			delete: deleteMutation.mutateAsync,
 		},
 		isLoading,
-		error: patientsError,
+		error,
 		refetch: () => {
 			invalidatePatientsComprehensive(queryClient);
 		},

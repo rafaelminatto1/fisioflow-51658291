@@ -1,13 +1,4 @@
-/**
- * Patients Page - React Router v7 Library Mode
- *
- * Migrated from Framework Mode to Library Mode.
- * Uses React Query for data fetching via usePatientsPageData hook.
- *
- * @version 2.0.0 - Library Mode
- */
-
-import { Cake, Filter, Users, CheckCircle2, Sparkles, AlertTriangle } from "lucide-react";
+import { Cake, Filter, Users } from "lucide-react";
 import { useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import { LazyComponent } from "@/components/common/LazyComponent";
@@ -18,18 +9,16 @@ import {
 	PatientAdvancedFilters,
 	PatientAnalytics,
 	PatientCreateModal,
-	PatientPageInsights,
 	PatientsPageHeader,
+	type HeaderFilterChip,
 } from "@/components/patient";
 import { PatientListItem } from "@/components/patient/PatientListItem";
 import { EmptyState } from "@/components/ui";
 import { Button } from "@/components/ui/button";
-import { LoadingSkeleton } from "@/components/ui/loading-skeleton";
 import {
 	Pagination,
 	PaginationContent,
 	PaginationItem,
-	PaginationLink,
 	PaginationNext,
 	PaginationPrevious,
 } from "@/components/ui/pagination";
@@ -40,19 +29,23 @@ import {
 } from "@/components/ui/popover";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { usePatientsPageData } from "@/hooks/usePatientsPage";
+import {
+	PATIENT_CARE_PROFILE_LABELS,
+	PATIENT_CLASSIFICATION_LABELS,
+	PATIENT_FINANCIAL_STATUS_LABELS,
+	PATIENT_ORIGIN_LABELS,
+	PATIENT_PATHOLOGY_STATUS_LABELS,
+	PATIENT_PAYER_MODEL_LABELS,
+	PATIENT_THERAPY_FOCUS_LABELS,
+} from "@/lib/constants/patient-directory";
 import { patientRoutes } from "@/lib/routing/appRoutes";
 import { cn } from "@/lib/utils";
 import { AniversariantesContent } from "./relatorios/AniversariantesPage";
-
-// Refactored hooks
 import { usePatientsExport } from "./patients/usePatientsExport";
-import { usePatientsStats } from "./patients/usePatientsStats";
 import { usePatientsUrlState } from "./patients/usePatientsUrlState";
 
 const Patients = () => {
 	const navigate = useNavigate();
-
-	// Custom hook for URL state and filters
 	const {
 		filters,
 		filtersState,
@@ -66,69 +59,188 @@ const Patients = () => {
 		pageParam,
 	} = usePatientsUrlState();
 
-	// Data fetching
 	const { data, isLoading } = usePatientsPageData(filters);
-	const { patients, totalCount, statsMap, uniqueConditions } = data;
-
-	// Export logic
+	const { patients, totalCount, summary, facets } = data;
 	const { exportPatients } = usePatientsExport();
-
-	// Calculate stats
-	const filteredStats = usePatientsStats(patients, statsMap, totalCount);
 
 	const pagination = useMemo(
 		() => ({
 			currentPage: pageParam,
-			totalPages: Math.ceil(totalCount / 20),
+			totalPages: Math.max(1, Math.ceil(totalCount / 20)),
 			pageSize: 20,
 		}),
 		[pageParam, totalCount],
 	);
 
-	const { currentPage, totalPages, pageSize } = pagination;
-
 	const activeAdvancedFiltersCount = countActiveFilters({
-		classification:
-			filtersState.classification !== "all"
-				? (filtersState.classification as any)
-				: undefined,
 		hasSurgery: filtersState.hasSurgery,
+		pathologyStatus: filtersState.pathologyStatus,
+		pathologies: filtersState.pathologies,
+		careProfiles: filtersState.careProfiles,
+		sports: filtersState.sports,
+		therapyFocuses: filtersState.therapyFocuses,
+		paymentModel: filtersState.paymentModel,
+		financialStatus: filtersState.financialStatus,
+		origin: filtersState.origin,
+		partnerCompany: filtersState.partnerCompany,
 	});
 
 	const headerStats = {
 		totalCount,
-		currentPage,
-		totalPages,
-		activeCount: filteredStats.active,
-		newCount: filteredStats.newPatients,
-		completedCount: filteredStats.completed,
-		activeByClassification: filteredStats.active,
-		inactive7: filteredStats.inactive7,
-		inactive30: filteredStats.inactive30,
-		inactive60: filteredStats.inactive60,
-		noShowRisk: filteredStats.noShowRisk,
-		hasUnpaid: filteredStats.hasUnpaid,
-		newPatients: filteredStats.newPatients,
+		currentPage: pagination.currentPage,
+		totalPages: pagination.totalPages,
+		activeCount: summary.active,
+		newCount: summary.newPatients,
+		atRiskCount: summary.atRisk,
+		completedCount: summary.completed,
+		inactive7: summary.inactive7,
+		inactive30: summary.inactive30,
+		inactive60: summary.inactive60,
+		noShowRisk: summary.noShowRisk,
+		hasUnpaid: summary.hasUnpaid,
 	};
 
 	const hasActiveFilters =
 		filtersState.status !== "all" ||
 		filtersState.condition !== "all" ||
 		filtersState.classification !== "all" ||
-		filtersState.hasSurgery ||
-		!!filtersState.search;
+		filtersState.pathologyStatus !== "all" ||
+		filtersState.paymentModel !== "all" ||
+		filtersState.financialStatus !== "all" ||
+		filtersState.origin !== "all" ||
+		filtersState.partnerCompany !== "all" ||
+		Boolean(filtersState.search) ||
+		Boolean(filtersState.hasSurgery) ||
+		filtersState.pathologies.length > 0 ||
+		filtersState.careProfiles.length > 0 ||
+		filtersState.sports.length > 0 ||
+		filtersState.therapyFocuses.length > 0;
+
+	const handleClassificationToggle = (value: string) => {
+		updateSearchParams({
+			classification: filtersState.classification === value ? "all" : value,
+		});
+	};
+
+	const activeFilterChips = useMemo<HeaderFilterChip[]>(() => {
+		const chips: HeaderFilterChip[] = [];
+		const addChip = (key: string, label: string, update: Record<string, any>) => {
+			chips.push({
+				key,
+				label,
+				onRemove: () => updateSearchParams(update),
+			});
+		};
+
+		if (filtersState.classification !== "all") {
+			addChip(
+				"classification",
+				PATIENT_CLASSIFICATION_LABELS[
+					filtersState.classification as keyof typeof PATIENT_CLASSIFICATION_LABELS
+				] ?? filtersState.classification,
+				{ classification: "all" },
+			);
+		}
+
+		if (filtersState.search) addChip("search", `Busca: ${filtersState.search}`, { q: undefined });
+		if (filtersState.status !== "all")
+			addChip("status", `Status: ${filtersState.status}`, { status: "all" });
+		if (filtersState.condition !== "all")
+			addChip("condition", `Patologia: ${filtersState.condition}`, {
+				condition: "all",
+			});
+		if (filtersState.pathologyStatus !== "all")
+			addChip(
+				"pathologyStatus",
+				`Status clínico: ${
+					PATIENT_PATHOLOGY_STATUS_LABELS[
+						filtersState.pathologyStatus as keyof typeof PATIENT_PATHOLOGY_STATUS_LABELS
+					] ?? filtersState.pathologyStatus
+				}`,
+				{ pathologyStatus: "all" },
+			);
+		if (filtersState.paymentModel !== "all")
+			addChip(
+				"paymentModel",
+				`Pagamento: ${
+					PATIENT_PAYER_MODEL_LABELS[filtersState.paymentModel] ??
+					filtersState.paymentModel
+				}`,
+				{ paymentModel: "all" },
+			);
+		if (filtersState.financialStatus !== "all")
+			addChip(
+				"financialStatus",
+				`Financeiro: ${
+					PATIENT_FINANCIAL_STATUS_LABELS[filtersState.financialStatus] ??
+					filtersState.financialStatus
+				}`,
+				{ financialStatus: "all" },
+			);
+		if (filtersState.origin !== "all")
+			addChip(
+				"origin",
+				`Origem: ${
+					PATIENT_ORIGIN_LABELS[filtersState.origin] ?? filtersState.origin
+				}`,
+				{ origin: "all" },
+			);
+		if (filtersState.partnerCompany !== "all")
+			addChip(
+				"partnerCompany",
+				`Parceria: ${filtersState.partnerCompany}`,
+				{ partnerCompany: "all" },
+			);
+		if (filtersState.hasSurgery)
+			addChip("hasSurgery", "Com cirurgia", { hasSurgery: undefined });
+
+		for (const pathology of filtersState.pathologies) {
+			addChip(`pathology-${pathology}`, `Patologia: ${pathology}`, {
+				pathologies: filtersState.pathologies.filter((value) => value !== pathology),
+			});
+		}
+
+		for (const profile of filtersState.careProfiles) {
+			addChip(
+				`careProfile-${profile}`,
+				`Perfil: ${PATIENT_CARE_PROFILE_LABELS[profile] ?? profile}`,
+				{
+					careProfiles: filtersState.careProfiles.filter((value) => value !== profile),
+				},
+			);
+		}
+
+		for (const sport of filtersState.sports) {
+			addChip(`sport-${sport}`, `Esporte: ${sport}`, {
+				sports: filtersState.sports.filter((value) => value !== sport),
+			});
+		}
+
+		for (const focus of filtersState.therapyFocuses) {
+			addChip(
+				`focus-${focus}`,
+				`Foco: ${PATIENT_THERAPY_FOCUS_LABELS[focus] ?? focus}`,
+				{
+					therapyFocuses: filtersState.therapyFocuses.filter(
+						(value) => value !== focus,
+					),
+				},
+			);
+		}
+
+		return chips;
+	}, [filtersState, updateSearchParams]);
 
 	return (
 		<MainLayout>
 			<div
-				className="max-w-7xl mx-auto space-y-8 animate-fade-in pb-20 md:pb-8"
+				className="mx-auto max-w-7xl space-y-8 pb-20 md:pb-8"
 				data-testid="patients-page"
 			>
-				{/* Refactored Header - Now contains all dashboard stats and search */}
 				<PatientsPageHeader
 					stats={headerStats}
 					onNewPatient={() => updateSearchParams({ modal: "create" })}
-					onExport={() => exportPatients(patients, statsMap)}
+					onExport={() => exportPatients(patients, {})}
 					onToggleAnalytics={() =>
 						updateSearchParams({
 							analytics: showAnalytics ? undefined : "true",
@@ -138,22 +250,35 @@ const Patients = () => {
 					searchTerm={searchTerm}
 					onSearchChange={setSearchTerm}
 					statusFilter={filtersState.status}
-					onStatusFilterChange={(s) => updateSearchParams({ status: s })}
-					conditionFilter={filtersState.condition}
-					onConditionFilterChange={(c) => updateSearchParams({ condition: c })}
-					uniqueConditions={uniqueConditions}
+					onStatusFilterChange={(value) => updateSearchParams({ status: value })}
+					pathologyFilter={filtersState.condition}
+					onPathologyFilterChange={(value) =>
+						updateSearchParams({ condition: value })
+					}
+					pathologyOptions={facets.pathologies}
+					pathologyStatusFilter={filtersState.pathologyStatus}
+					onPathologyStatusFilterChange={(value) =>
+						updateSearchParams({ pathologyStatus: value })
+					}
+					paymentModelFilter={filtersState.paymentModel}
+					onPaymentModelFilterChange={(value) =>
+						updateSearchParams({ paymentModel: value })
+					}
+					financialStatusFilter={filtersState.financialStatus}
+					onFinancialStatusFilterChange={(value) =>
+						updateSearchParams({ financialStatus: value })
+					}
 					sortBy={filtersState.sortBy}
-					onSortByChange={(s) => updateSearchParams({ sortBy: s })}
+					onSortByChange={(value) => updateSearchParams({ sortBy: value })}
 					activeAdvancedFiltersCount={activeAdvancedFiltersCount}
 					totalFilteredLabel={
-						hasActiveFilters ? `${totalCount} encontrado(s)` : undefined
+						hasActiveFilters ? `${totalCount} paciente(s) encontrados` : undefined
 					}
 					onClearAllFilters={handleClearAllFilters}
 					hasActiveFilters={hasActiveFilters}
-					classificationFilter={filtersState.classification as any}
-					onClassificationFilterChange={(c) =>
-						updateSearchParams({ classification: c })
-					}
+					classificationFilter={filtersState.classification}
+					onClassificationFilterChange={handleClassificationToggle}
+					activeFilterChips={activeFilterChips}
 				>
 					<Popover>
 						<PopoverTrigger asChild>
@@ -161,95 +286,112 @@ const Patients = () => {
 								variant="outline"
 								size="icon"
 								className={cn(
-									"h-14 w-14 rounded-[1.25rem] border-slate-200 dark:border-slate-800 bg-white/40 dark:bg-slate-900/40 shrink-0",
+									"h-14 w-14 rounded-[1.2rem] border-slate-200/80 bg-white/90 backdrop-blur-md dark:border-slate-800 dark:bg-slate-950/60",
 									activeAdvancedFiltersCount > 0 &&
-										"border-primary bg-primary/5 text-primary",
+										"border-primary/30 bg-primary/5 text-primary",
 								)}
 								title="Filtros avançados"
 							>
 								<div className="relative">
 									<Filter className="h-5 w-5" />
 									{activeAdvancedFiltersCount > 0 && (
-										<span className="absolute -right-2 -top-2 flex h-5 w-5 items-center justify-center rounded-full bg-primary text-[10px] text-primary-foreground font-bold shadow-lg shadow-primary/30">
+										<span className="absolute -right-2 -top-2 flex h-5 w-5 items-center justify-center rounded-full bg-primary text-[10px] font-bold text-white">
 											{activeAdvancedFiltersCount}
 										</span>
 									)}
 								</div>
 							</Button>
 						</PopoverTrigger>
-						<PopoverContent className="w-[320px] p-4 rounded-3xl shadow-premium border-border/40 backdrop-blur-xl" align="end">
+						<PopoverContent
+							className="w-[380px] rounded-[1.75rem] p-4"
+							align="end"
+						>
 							<PatientAdvancedFilters
 								currentFilters={{
-									classification: filtersState.classification as any,
 									hasSurgery: filtersState.hasSurgery,
+									pathologyStatus: filtersState.pathologyStatus,
+									pathologies: filtersState.pathologies,
+									careProfiles: filtersState.careProfiles,
+									sports: filtersState.sports,
+									therapyFocuses: filtersState.therapyFocuses,
+									paymentModel: filtersState.paymentModel,
+									financialStatus: filtersState.financialStatus,
+									origin: filtersState.origin,
+									partnerCompany: filtersState.partnerCompany,
 								}}
-								onFilterChange={(f) => updateSearchParams(f as any)}
+								onFilterChange={(nextFilters) => updateSearchParams(nextFilters)}
 								activeFiltersCount={activeAdvancedFiltersCount}
-								onClearFilters={handleClearAllFilters}
+								onClearFilters={() =>
+									updateSearchParams({
+										hasSurgery: undefined,
+										pathologyStatus: "all",
+										pathologies: [],
+										careProfiles: [],
+										sports: [],
+										therapyFocuses: [],
+										paymentModel: "all",
+										financialStatus: "all",
+										origin: "all",
+										partnerCompany: "all",
+									})
+								}
+								facets={facets}
 							/>
 						</PopoverContent>
 					</Popover>
 				</PatientsPageHeader>
 
-				{/* Main Content Area - Full Width / Centered */}
 				<div className="space-y-8">
 					<Tabs
 						value={activeTab}
-						onValueChange={(v) => updateSearchParams({ tab: v })}
+						onValueChange={(value) => updateSearchParams({ tab: value })}
 						className="w-full"
 					>
-						<div className="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-6 mb-10">
-							<div className="relative p-1.5 rounded-[2rem] bg-slate-100/50 dark:bg-slate-800/50 border border-white/50 dark:border-white/10 backdrop-blur-xl shadow-inner flex items-center gap-1">
-								<TabsList className="bg-transparent h-14 p-0 gap-1">
+						<div className="flex flex-col items-start justify-between gap-6 lg:flex-row lg:items-center">
+							<div className="rounded-[1.75rem] border border-white/50 bg-white/70 p-1.5 shadow-sm backdrop-blur-xl dark:border-slate-800/70 dark:bg-slate-950/40">
+								<TabsList className="h-14 gap-1 bg-transparent p-0">
 									<TabsTrigger
 										value="list"
-										className="rounded-[1.5rem] px-10 h-11 font-black text-[11px] uppercase tracking-[0.2em] data-[state=active]:bg-white data-[state=active]:text-primary data-[state=active]:shadow-xl transition-all duration-500 hover:text-primary/70"
+										className="rounded-[1.25rem] px-8 text-[11px] font-black uppercase tracking-[0.18em] data-[state=active]:bg-white data-[state=active]:text-primary data-[state=active]:shadow-sm dark:data-[state=active]:bg-slate-900"
 									>
-										Gestão Clínica
+										Cockpit Clínico
 									</TabsTrigger>
 									<TabsTrigger
 										value="birthdays"
-										className="rounded-[1.5rem] px-10 h-11 font-black text-[11px] uppercase tracking-[0.2em] gap-3 data-[state=active]:bg-white data-[state=active]:text-primary data-[state=active]:shadow-xl transition-all duration-500 hover:text-primary/70"
+										className="rounded-[1.25rem] px-8 text-[11px] font-black uppercase tracking-[0.18em] data-[state=active]:bg-white data-[state=active]:text-primary data-[state=active]:shadow-sm dark:data-[state=active]:bg-slate-900"
 									>
-										<Cake className="h-4 w-4 text-pink-500" />
+										<Cake className="mr-2 h-4 w-4 text-pink-500" />
 										Aniversariantes
 									</TabsTrigger>
 								</TabsList>
-								
-								{/* Decorative indicator line - hidden in mobile */}
-								<div className="hidden lg:block absolute -bottom-4 left-1/2 -translate-x-1/2 w-12 h-1 bg-primary/20 rounded-full blur-[1px]" />
 							</div>
 
-							<div className="flex items-center gap-4 bg-white/40 dark:bg-slate-900/40 px-6 py-3 rounded-[1.5rem] border border-white/20 dark:border-slate-800/30 backdrop-blur-md shadow-premium-sm">
-								<div className="flex -space-x-2">
-									{[1, 2, 3].map((i) => (
-										<div key={i} className="h-6 w-6 rounded-full border-2 border-white dark:border-slate-900 bg-slate-200 dark:bg-slate-800" />
-									))}
-								</div>
-								<p className="text-[10px] font-black uppercase tracking-[0.25em] text-slate-500 dark:text-slate-400">
-									<span className="text-primary">{totalCount}</span> Pacientes Ativos
-								</p>
+							<div className="rounded-[1.35rem] border border-white/50 bg-white/70 px-5 py-3 text-[11px] font-black uppercase tracking-[0.2em] text-slate-500 shadow-sm backdrop-blur-xl dark:border-slate-800/70 dark:bg-slate-950/40 dark:text-slate-300">
+								<span className="text-primary">{totalCount}</span> pacientes nesta visão
 							</div>
 						</div>
 
-						<TabsContent
-							value="list"
-							className="space-y-8 mt-0 focus-visible:outline-none"
-						>
-							{/* Analytics Dashboard with enhanced glass effect */}
+						<TabsContent value="list" className="mt-0 space-y-8">
 							{showAnalytics && (
-								<div className="animate-in fade-in slide-in-from-top-6 duration-700">
+								<div className="rounded-[2rem] border border-white/40 bg-white/60 p-3 backdrop-blur-xl dark:border-slate-800/70 dark:bg-slate-950/35">
 									<LazyComponent
 										placeholder={
-											<div className="h-[240px] w-full bg-muted/20 rounded-[2.5rem] animate-pulse border border-border/20" />
+											<div className="h-[240px] w-full animate-pulse rounded-[1.5rem] bg-muted/20" />
 										}
 									>
-										<div className="p-1 rounded-[2.5rem] border border-border/20 bg-gradient-to-br from-background/40 to-secondary/10 backdrop-blur-md shadow-inner shadow-white/10">
-											<PatientAnalytics
-												totalPatients={totalCount}
-												classificationStats={filteredStats}
-											/>
-										</div>
+										<PatientAnalytics
+											totalPatients={totalCount}
+											classificationStats={{
+												active: summary.active,
+												inactive7: summary.inactive7,
+												inactive30: summary.inactive30,
+												inactive60: summary.inactive60,
+												noShowRisk: summary.noShowRisk,
+												hasUnpaid: summary.hasUnpaid,
+												newPatients: summary.newPatients,
+												completed: summary.completed,
+											}}
+										/>
 									</LazyComponent>
 								</div>
 							)}
@@ -257,9 +399,12 @@ const Patients = () => {
 							<IncompleteRegistrationAlert />
 
 							{isLoading && patients.length === 0 ? (
-								<div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-									{Array.from({ length: 6 }).map((_, i) => (
-										<div key={i} className="h-48 w-full bg-muted/20 rounded-3xl animate-pulse border border-border/20" />
+								<div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
+									{Array.from({ length: 6 }).map((_, index) => (
+										<div
+											key={index}
+											className="h-[260px] animate-pulse rounded-[2rem] border border-border/20 bg-muted/20"
+										/>
 									))}
 								</div>
 							) : patients.length === 0 ? (
@@ -268,95 +413,85 @@ const Patients = () => {
 										icon={Users}
 										title={
 											hasActiveFilters
-												? "Busca sem resultados"
+												? "Nenhum paciente encontrado"
 												: "Nenhum paciente cadastrado"
 										}
 										description={
 											hasActiveFilters
-												? "Tente remover alguns filtros para encontrar o que procura."
-												: "Sua base de pacientes está vazia. Comece adicionando o primeiro!"
+												? "Ajuste os filtros clínicos, operacionais ou financeiros para ampliar a busca."
+												: "Sua base ainda está vazia. Cadastre o primeiro paciente para começar."
 										}
 										action={
 											hasActiveFilters
 												? {
-														label: "Ver Todos os Pacientes",
+														label: "Limpar filtros",
 														onClick: handleClearAllFilters,
 													}
 												: {
-														label: "Cadastrar Primeiro Paciente",
+														label: "Cadastrar paciente",
 														onClick: () => updateSearchParams({ modal: "create" }),
 													}
 										}
 									/>
 								</div>
 							) : (
-								<div className="space-y-10">
+								<div className="space-y-8">
 									<div
-										className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"
+										className="grid grid-cols-1 gap-6 xl:grid-cols-2"
 										data-testid="patient-list"
 									>
-										{patients.map((patient, index) => {
-											const patientStats = statsMap[patient.id];
-											return (
-												<div 
-													key={patient.id} 
-													className="animate-in fade-in slide-in-from-bottom-6 duration-700 fill-mode-both"
-													style={{ animationDelay: `${index * 80}ms` }}
-												>
-													<LazyComponent
-														placeholder={
-															<div className="h-[160px] w-full bg-muted/20 rounded-3xl animate-pulse border border-border/20" />
-														}
-														rootMargin="150px"
-													>
-														<PatientListItem
-															patient={patient}
-															stats={patientStats}
-															onClick={() => {
-																const UUID_REGEX = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
-																if (patient.id && UUID_REGEX.test(patient.id)) {
-																	navigate(patientRoutes.profile(patient.id));
-																}
-															}}
-														/>
-													</LazyComponent>
-												</div>
-											);
-										})}
+										{patients.map((patient) => (
+											<PatientListItem
+												key={patient.id}
+												patient={patient}
+												onClick={() => {
+													const UUID_REGEX =
+														/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+													if (patient.id && UUID_REGEX.test(patient.id)) {
+														navigate(patientRoutes.profile(patient.id));
+													}
+												}}
+											/>
+										))}
 									</div>
 
-									{totalPages > 1 && (
-										<div className="flex flex-col sm:flex-row items-center justify-between gap-6 py-10 border-t border-border/20">
-											<p className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground/60 bg-secondary/20 px-6 py-2.5 rounded-full backdrop-blur-sm border border-border/10">
-												Exibindo {Math.min(currentPage * pageSize, totalCount)} de {totalCount} pacientes
+									{pagination.totalPages > 1 && (
+										<div className="flex flex-col items-center justify-between gap-4 border-t border-border/20 pt-6 sm:flex-row">
+											<p className="text-[11px] font-semibold text-muted-foreground">
+												Exibindo {Math.min(pagination.currentPage * pagination.pageSize, totalCount)} de {totalCount} pacientes
 											</p>
-											<Pagination className="w-auto ml-auto mr-0">
-												<PaginationContent className="gap-3">
+											<Pagination className="mx-0 w-auto">
+												<PaginationContent className="gap-2">
 													<PaginationItem>
 														<PaginationPrevious
-															onClick={() => updateSearchParams({ page: String(currentPage - 1) })}
+															onClick={() =>
+																updateSearchParams({
+																	page: String(pagination.currentPage - 1),
+																})
+															}
 															className={cn(
-																"h-12 w-12 rounded-2xl border-border/20 hover:bg-background shadow-sm transition-all",
-																currentPage <= 1 && "pointer-events-none opacity-30"
+																"rounded-xl",
+																pagination.currentPage <= 1 &&
+																	"pointer-events-none opacity-40",
 															)}
 														/>
 													</PaginationItem>
-													
-													<div className="flex items-center gap-2 bg-secondary/10 p-1.5 rounded-2xl border border-border/10">
-														<span className="text-sm font-black px-4 py-1.5 bg-background rounded-xl shadow-premium text-primary">
-															{currentPage}
-														</span>
-														<span className="text-[10px] font-black text-muted-foreground px-2 uppercase tracking-tighter opacity-50">
-															/ {totalPages}
-														</span>
-													</div>
-
+													<PaginationItem>
+														<div className="rounded-xl border border-border/30 px-4 py-2 text-sm font-bold">
+															{pagination.currentPage} / {pagination.totalPages}
+														</div>
+													</PaginationItem>
 													<PaginationItem>
 														<PaginationNext
-															onClick={() => updateSearchParams({ page: String(currentPage + 1) })}
+															onClick={() =>
+																updateSearchParams({
+																	page: String(pagination.currentPage + 1),
+																})
+															}
 															className={cn(
-																"h-12 w-12 rounded-2xl border-border/20 hover:bg-background shadow-sm transition-all",
-																currentPage >= totalPages && "pointer-events-none opacity-30"
+																"rounded-xl",
+																pagination.currentPage >= pagination.totalPages &&
+																	"pointer-events-none opacity-40",
 															)}
 														/>
 													</PaginationItem>
@@ -368,17 +503,15 @@ const Patients = () => {
 							)}
 						</TabsContent>
 
-						<TabsContent
-							value="birthdays"
-							className="mt-0 focus-visible:outline-none animate-in fade-in slide-in-from-right-8 duration-700"
-						>
-							<div className="p-1 rounded-[2.5rem] border border-border/20 bg-gradient-to-br from-secondary/10 to-background/5 backdrop-blur-md overflow-hidden shadow-inner shadow-white/5">
+						<TabsContent value="birthdays" className="mt-0">
+							<div className="overflow-hidden rounded-[2rem] border border-white/40 bg-white/60 p-3 backdrop-blur-xl dark:border-slate-800/70 dark:bg-slate-950/35">
 								<AniversariantesContent />
 							</div>
 						</TabsContent>
 					</Tabs>
 				</div>
 			</div>
+
 			<PatientCreateModal
 				open={isNewPatientModalOpen}
 				onOpenChange={(open) =>

@@ -15,7 +15,7 @@ import { usePatients } from "@/hooks/usePatients";
 import { fetchApi } from "@/lib/api";
 import { PoseFeedbackOverlay } from "@/components/ai/PoseFeedbackOverlay";
 import { detectPose } from "expo-vision-pose-detector";
-import { useExercisesLibrary, useExerciseUpdate, useExercise } from "@/hooks/useExercises";
+import { useExercisesLibrary, useExerciseUpdate } from "@/hooks/useExercises";
 import { Exercise } from "@/types";
 import { PoseLandmark } from "@/types/pose";
 
@@ -158,9 +158,11 @@ export default function BiomechanicsScreen() {
 
     setIsSavingReference(true);
     try {
-      await updateExercise.mutateAsync({
+      await updateExercise.updateExerciseAsync({
         id: selectedExerciseId,
-        referencePose: landmarks,
+        data: {
+          referencePose: JSON.stringify(landmarks),
+        },
       });
       setReferenceLandmarks(landmarks);
       Alert.alert("Sucesso", "Pose de referência salva para este exercício!");

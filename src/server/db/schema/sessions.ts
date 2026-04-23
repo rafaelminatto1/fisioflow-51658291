@@ -188,18 +188,14 @@ export const sessions = pgTable(
 		createdAt: timestamp("created_at").defaultNow().notNull(),
 		updatedAt: timestamp("updated_at").defaultNow().notNull(),
 	},
-	(table) => ({
-		patientIdIdx: index("idx_sessions_patient_id").on(table.patientId),
-		appointmentIdIdx: index("idx_sessions_appointment_id").on(
-			table.appointmentId,
-		),
-		therapistIdIdx: index("idx_sessions_therapist_id").on(table.therapistId),
-		organizationIdIdx: index("idx_sessions_organization_id").on(
-			table.organizationId,
-		),
-		dateIdx: index("idx_sessions_date").on(table.date),
-	}),
-	(table) => [withOrganizationPolicy("sessions", table.organizationId)],
+	(table) => [
+		index("idx_sessions_patient_id").on(table.patientId),
+		index("idx_sessions_appointment_id").on(table.appointmentId),
+		index("idx_sessions_therapist_id").on(table.therapistId),
+		index("idx_sessions_organization_id").on(table.organizationId),
+		index("idx_sessions_date").on(table.date),
+		withOrganizationPolicy("sessions", table.organizationId),
+	],
 );
 
 export const sessionsRelations = relations(sessions, ({ one, many }) => ({
@@ -259,16 +255,12 @@ export const sessionAttachments = pgTable(
 		uploadedBy: uuid("uploaded_by"),
 		uploadedAt: timestamp("uploaded_at").defaultNow().notNull(),
 	},
-	(table) => ({
-		orgIdx: index("idx_session_attachments_org_id").on(table.organizationId),
-		sessionIdIdx: index("idx_session_attachments_session_id").on(
-			table.sessionId,
-		),
-		patientIdIdx: index("idx_session_attachments_patient_id").on(
-			table.patientId,
-		),
-	}),
-	(table) => [withOrganizationPolicy("session_attachments", table.organizationId)],
+	(table) => [
+		index("idx_session_attachments_org_id").on(table.organizationId),
+		index("idx_session_attachments_session_id").on(table.sessionId),
+		index("idx_session_attachments_patient_id").on(table.patientId),
+		withOrganizationPolicy("session_attachments", table.organizationId),
+	],
 );
 
 export const sessionAttachmentsRelations = relations(
@@ -310,13 +302,9 @@ export const sessionTemplates = pgTable(
 		createdAt: timestamp("created_at").defaultNow().notNull(),
 		updatedAt: timestamp("updated_at").defaultNow().notNull(),
 	},
-	(table) => ({
-		organizationIdIdx: index("idx_session_templates_organization_id").on(
-			table.organizationId,
-		),
-		therapistIdIdx: index("idx_session_templates_therapist_id").on(
-			table.therapistId,
-		),
-	}),
-	(table) => [withOrganizationPolicy("session_templates", table.organizationId)],
+	(table) => [
+		index("idx_session_templates_organization_id").on(table.organizationId),
+		index("idx_session_templates_therapist_id").on(table.therapistId),
+		withOrganizationPolicy("session_templates", table.organizationId),
+	],
 );

@@ -31,10 +31,10 @@ export const patientGamification = pgTable(
 		createdAt: timestamp("created_at", { withTimezone: true }).defaultNow(),
 		updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow(),
 	},
-	(t) => ({
-		uniquePatient: unique().on(t.patientId),
-	}),
-	(table) => [withOrganizationPolicy("patient_gamification", table.organizationId)],
+	(table) => [
+		unique().on(table.patientId),
+		withOrganizationPolicy("patient_gamification", table.organizationId),
+	],
 );
 
 // XP Transactions Table
@@ -105,8 +105,8 @@ export const dailyQuests = pgTable(
 		createdAt: timestamp("created_at", { withTimezone: true }).defaultNow(),
 		updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow(),
 	},
-	(t) => ({
-		uniquePatientDate: unique().on(t.patientId, t.date),
-	}),
-	(table) => [withOrganizationPolicy("daily_quests", table.organizationId)],
+	(table) => [
+		unique().on(table.patientId, table.date),
+		withOrganizationPolicy("daily_quests", table.organizationId),
+	],
 );
