@@ -114,7 +114,7 @@ export default function AgendaScreen() {
 	} = useAppointments({
 		startDate: fetchRange.startDate,
 		endDate: fetchRange.endDate,
-		limit: 1000,
+		limit: 200,
 		refetchInterval: 30_000,
 	});
 

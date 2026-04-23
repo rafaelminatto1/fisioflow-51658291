@@ -145,7 +145,7 @@ export const PatientService = {
 			throw AppError.badRequest("Organization ID is required");
 
 		try {
-			const response = await patientsApi.list({ limit: 1000 });
+			const response = await patientsApi.list({ limit: 200 });
 			const patients = (response.data || []).map((p) => this.mapToApp(p));
 			return { data: patients, error: null };
 		} catch (error) {

@@ -76,7 +76,27 @@ export const SurgeryFormModal: React.FC<SurgeryFormModalProps> = ({
 	const [newSurgeryType, setNewSurgeryType] = React.useState("");
 
 	const form = useForm<FormValues>({
-		resolver: zodResolver(formSchema),
+		resolver: async (data, context, options) => {
+			try {
+				return await zodResolver(formSchema)(data, context, options);
+			} catch (error) {
+				console.error("Zod Resolver Error:", error);
+				if (error instanceof z.ZodError) {
+					return {
+						values: {},
+						errors: error.issues.reduce((acc, curr) => {
+							const path = curr.path.join(".");
+							acc[path] = {
+								message: curr.message,
+								type: curr.code,
+							};
+							return acc;
+						}, {} as any),
+					};
+				}
+				return { values: {}, errors: {} };
+			}
+		},
 		defaultValues: {
 			surgery_name: "",
 			surgery_date: "",
@@ -249,15 +269,17 @@ export const SurgeryFormModal: React.FC<SurgeryFormModalProps> = ({
 								<FormField
 									control={form.control}
 									name="surgery_type"
-									render={({ field }) => (
+									render={({ field, fieldState }) => (
 										<FormItem className="col-span-2">
-											<FormLabel>Tipo de Cirurgia</FormLabel>
+											<FormLabel className={cn(fieldState.error && "text-destructive")}>
+												Tipo de Cirurgia
+											</FormLabel>
 											<Select
 												onValueChange={handleTypeChange}
 												value={field.value}
 											>
 												<FormControl>
-													<SelectTrigger>
+													<SelectTrigger className={cn(fieldState.error && "border-destructive focus:ring-destructive")}>
 														<SelectValue placeholder="Selecione o tipo..." />
 													</SelectTrigger>
 												</FormControl>
@@ -277,13 +299,16 @@ export const SurgeryFormModal: React.FC<SurgeryFormModalProps> = ({
 								<FormField
 									control={form.control}
 									name="surgery_name"
-									render={({ field }) => (
+									render={({ field, fieldState }) => (
 										<FormItem className="col-span-2">
-											<FormLabel>Nome Personalizado (Opcional)</FormLabel>
+											<FormLabel className={cn(fieldState.error && "text-destructive")}>
+												Nome Personalizado (Opcional)
+											</FormLabel>
 											<FormControl>
 												<Input
 													placeholder="Ex: Artroscopia de Ombro"
 													{...field}
+													className={cn(fieldState.error && "border-destructive focus-visible:ring-destructive")}
 												/>
 											</FormControl>
 											<FormMessage />
@@ -294,14 +319,25 @@ export const SurgeryFormModal: React.FC<SurgeryFormModalProps> = ({
 								<FormField
 									control={form.control}
 									name="surgery_date"
-									render={({ field }) => (
+									render={({ field, fieldState }) => (
 										<FormItem>
-											<FormLabel className="flex items-center gap-1">
+											<FormLabel 
+												className={cn(
+													"flex items-center gap-1",
+													fieldState.error && "text-destructive"
+												)}
+											>
 												<Calendar className="h-3 w-3" />
 												Data *
 											</FormLabel>
 											<FormControl>
-												<Input type="date" {...field} />
+												<Input 
+													type="date" 
+													{...field} 
+													className={cn(
+														fieldState.error && "border-destructive focus-visible:ring-destructive"
+													)}
+												/>
 											</FormControl>
 											<FormMessage />
 										</FormItem>
@@ -311,15 +347,17 @@ export const SurgeryFormModal: React.FC<SurgeryFormModalProps> = ({
 								<FormField
 									control={form.control}
 									name="affected_side"
-									render={({ field }) => (
+									render={({ field, fieldState }) => (
 										<FormItem>
-											<FormLabel>Lado Afetado</FormLabel>
+											<FormLabel className={cn(fieldState.error && "text-destructive")}>
+												Lado Afetado
+											</FormLabel>
 											<Select
 												onValueChange={field.onChange}
 												value={field.value}
 											>
 												<FormControl>
-													<SelectTrigger>
+													<SelectTrigger className={cn(fieldState.error && "border-destructive focus:ring-destructive")}>
 														<SelectValue />
 													</SelectTrigger>
 												</FormControl>

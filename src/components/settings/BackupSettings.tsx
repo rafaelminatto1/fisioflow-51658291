@@ -42,7 +42,7 @@ export function BackupSettings() {
 					switch (colName) {
 						case "patients":
 							backupData[colName] =
-								(await patientsApi.list({ limit: 1000 })).data ?? [];
+								(await patientsApi.list({ limit: 200 })).data ?? [];
 							break;
 						case "appointments":
 							backupData[colName] =

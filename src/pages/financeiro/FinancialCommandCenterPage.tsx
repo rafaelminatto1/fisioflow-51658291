@@ -12,7 +12,7 @@ import {
 	Trash2,
 	Wallet,
 } from "lucide-react";
-import { lazy, Suspense, useMemo, useState } from "react";
+import { lazy, Suspense, useState } from "react";
 import { useSearchParams } from "react-router-dom";
 import { TransactionModal } from "@/components/financial";
 import { FinancialCommandCenterSummary } from "@/components/financial/command-center/FinancialCommandCenterSummary";
@@ -39,7 +39,7 @@ import {
 	SelectValue,
 } from "@/components/ui/select";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import type { Transaction, FinancialStats as LegacyFinancialStats } from "@/hooks/useFinancial";
+import type { Transaction } from "@/hooks/useFinancial";
 import { useToast } from "@/hooks/use-toast";
 import {
 	type PeriodType,
@@ -69,13 +69,8 @@ const RecibosContent = lazy(() =>
 	})),
 );
 const NFSeContent = lazy(() =>
-	import("./NFSePage").then((module) => ({
+	import("@/components/financial/NFSeContent").then((module) => ({
 		default: module.NFSeContent,
-	})),
-);
-const FinancialAIAdvisor = lazy(() =>
-	import("@/components/financial/FinancialAIAdvisor").then((m) => ({
-		default: m.FinancialAIAdvisor,
 	})),
 );
 const FinancialDRE = lazy(() =>
@@ -103,8 +98,16 @@ const MAIN_TABS = [
 	"performance",
 	"commissions",
 ] as const;
+const COLLECTIONS_SUBVIEWS = ["receivables", "packages"] as const;
+const BILLING_SUBVIEWS = ["operations", "payables"] as const;
+const DOCUMENTS_SUBVIEWS = ["receipts", "nfse"] as const;
+const PERFORMANCE_SUBVIEWS = ["analytics", "dre"] as const;
 
 type MainTab = (typeof MAIN_TABS)[number];
+type CollectionsSubview = (typeof COLLECTIONS_SUBVIEWS)[number];
+type BillingSubview = (typeof BILLING_SUBVIEWS)[number];
+type DocumentsSubview = (typeof DOCUMENTS_SUBVIEWS)[number];
+type PerformanceSubview = (typeof PERFORMANCE_SUBVIEWS)[number];
 
 function parsePeriod(value: string | null): PeriodType {
 	if (value === "daily" || value === "weekly" || value === "monthly" || value === "all") {
@@ -120,6 +123,38 @@ function parseMainTab(value: string | null): MainTab {
 	}
 
 	return "summary";
+}
+
+function parseCollectionsSubview(value: string | null): CollectionsSubview {
+	if (value && COLLECTIONS_SUBVIEWS.includes(value as CollectionsSubview)) {
+		return value as CollectionsSubview;
+	}
+
+	return "receivables";
+}
+
+function parseBillingSubview(value: string | null): BillingSubview {
+	if (value && BILLING_SUBVIEWS.includes(value as BillingSubview)) {
+		return value as BillingSubview;
+	}
+
+	return "operations";
+}
+
+function parseDocumentsSubview(value: string | null): DocumentsSubview {
+	if (value && DOCUMENTS_SUBVIEWS.includes(value as DocumentsSubview)) {
+		return value as DocumentsSubview;
+	}
+
+	return "receipts";
+}
+
+function parsePerformanceSubview(value: string | null): PerformanceSubview {
+	if (value && PERFORMANCE_SUBVIEWS.includes(value as PerformanceSubview)) {
+		return value as PerformanceSubview;
+	}
+
+	return "analytics";
 }
 
 function renderStatusBadge(status: string) {
@@ -178,6 +213,12 @@ const FinancialCommandCenterPage = () => {
 	const [searchParams, setSearchParams] = useSearchParams();
 	const period = parsePeriod(searchParams.get("period"));
 	const activeTab = parseMainTab(searchParams.get("tab"));
+	const collectionsSubview = parseCollectionsSubview(searchParams.get("collections"));
+	const billingSubview = parseBillingSubview(searchParams.get("billing"));
+	const documentsSubview = parseDocumentsSubview(searchParams.get("documents"));
+	const performanceSubview = parsePerformanceSubview(searchParams.get("performance"));
+	const shouldAutoOpenReceipt = searchParams.get("receiptAction") === "new";
+	const shouldAutoOpenNfse = searchParams.get("nfseAction") === "new";
 
 	const {
 		data: pageData,
@@ -189,55 +230,82 @@ const FinancialCommandCenterPage = () => {
 
 	const { transactions, stats } = pageData;
 
-	const [billingSubview, setBillingSubview] = useState("operations");
-	const [documentsSubview, setDocumentsSubview] = useState("receipts");
-	const [performanceSubview, setPerformanceSubview] = useState("analytics");
 	const [isModalOpen, setIsModalOpen] = useState(false);
 	const [editingTransaction, setEditingTransaction] =
 		useState<Transaction | null>(null);
+	const [modalDefaultTipo, setModalDefaultTipo] = useState<
+		"receita" | "despesa" | "pagamento" | "recebimento"
+	>("receita");
 	const [deleteId, setDeleteId] = useState<string | null>(null);
 	const [isExporting, setIsExporting] = useState(false);
 
 	const { toast } = useToast();
 
-	const commandCenterSummary = commandCenter?.summary;
-	const advisorStats = useMemo<LegacyFinancialStats>(
-		() => ({
-			totalRevenue: commandCenterSummary?.realizedRevenue ?? stats.totalRevenue,
-			totalExpenses:
-				commandCenterSummary?.realizedExpenses ?? stats.totalExpenses,
-			netProfit:
-				commandCenterSummary?.netBalance ??
-				stats.totalRevenue - stats.totalExpenses,
-			pendingAmount:
-				commandCenterSummary?.pendingReceivables ?? stats.pendingPayments,
-			monthlyGrowth: commandCenterSummary?.monthlyGrowth ?? stats.monthlyGrowth,
-		}),
-		[commandCenterSummary, stats],
-	);
-
-	const updateQueryParam = (key: string, value: string) => {
+	const updateQueryParams = (updates: Record<string, string | null>) => {
 		const next = new URLSearchParams(searchParams);
-		next.set(key, value);
+		for (const [key, value] of Object.entries(updates)) {
+			if (!value) {
+				next.delete(key);
+				continue;
+			}
+
+			next.set(key, value);
+		}
 		setSearchParams(next);
 	};
 
 	const handleMainTabChange = (value: string) => {
-		updateQueryParam("tab", value);
+		updateQueryParams({ tab: value });
 	};
 
 	const handlePeriodChange = (value: string) => {
-		updateQueryParam("period", value);
+		updateQueryParams({ period: value });
 	};
 
-	const handleNewTransaction = () => {
+	const handleOpenTransactionModal = (
+		defaultTipo: "receita" | "despesa" | "pagamento" | "recebimento" = "receita",
+	) => {
+		setModalDefaultTipo(defaultTipo);
 		setEditingTransaction(null);
 		setIsModalOpen(true);
 	};
 
+	const handleNewTransaction = () => {
+		handleOpenTransactionModal("receita");
+	};
+
 	const handleEditTransaction = (transaction: Transaction) => {
+		setModalDefaultTipo(
+			(transaction.tipo as "receita" | "despesa" | "pagamento" | "recebimento") ??
+				"receita",
+		);
 		setEditingTransaction(transaction);
 		setIsModalOpen(true);
+	};
+
+	const handleRegisterExpense = () => {
+		handleOpenTransactionModal("despesa");
+	};
+
+	const handleReceiptQuickAction = () => {
+		updateQueryParams({
+			tab: "documents",
+			documents: "receipts",
+			receiptAction: "new",
+		});
+	};
+
+	const handleNfseQuickAction = () => {
+		updateQueryParams({
+			tab: "documents",
+			documents: "nfse",
+			nfseAction: "new",
+		});
+	};
+
+	const clearActionParams = (...keys: string[]) => {
+		const updates = Object.fromEntries(keys.map((key) => [key, null]));
+		updateQueryParams(updates);
 	};
 
 	const handleSubmit = async (
@@ -299,7 +367,7 @@ const FinancialCommandCenterPage = () => {
 					status: transaction.status,
 					data_vencimento: transaction.created_at,
 					data_pagamento:
-						transaction.status === "concluido"
+						transaction.status === "concluido" || transaction.status === "pago"
 							? transaction.updated_at
 							: undefined,
 				})),
@@ -322,20 +390,19 @@ const FinancialCommandCenterPage = () => {
 	return (
 		<MainLayout>
 			<div className="container mx-auto max-w-7xl space-y-6 px-4 py-6 md:px-6 md:py-8">
-				<Card className="overflow-hidden rounded-[32px] border-primary/15 bg-[linear-gradient(135deg,rgba(255,255,255,0.98),rgba(244,248,255,0.96),rgba(239,250,245,0.9))] shadow-[0_30px_90px_-60px_rgba(37,99,235,0.45)] dark:border-primary/20 dark:bg-[linear-gradient(135deg,rgba(15,23,42,0.94),rgba(17,24,39,0.92),rgba(6,78,59,0.18))]">
+				<Card className="rounded-[30px] border-primary/10 bg-[linear-gradient(135deg,rgba(255,255,255,0.98),rgba(246,249,255,0.95),rgba(241,251,246,0.9))] shadow-[0_28px_80px_-60px_rgba(37,99,235,0.42)] dark:border-primary/20 dark:bg-[linear-gradient(135deg,rgba(15,23,42,0.92),rgba(17,24,39,0.9),rgba(6,78,59,0.18))]">
 					<CardContent className="space-y-4 p-5 md:p-6">
-						<div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
-							<div className="space-y-3">
+						<div className="flex flex-col gap-4 xl:flex-row xl:items-end xl:justify-between">
+							<div className="space-y-2">
 								<Badge className="w-fit rounded-full bg-white/85 px-3 py-1 text-[10px] font-black uppercase tracking-[0.2em] text-slate-700 shadow-sm dark:bg-slate-900/70 dark:text-slate-200">
-									Hub Financeiro 2026
+									Command Center Financeiro
 								</Badge>
-								<div className="space-y-2">
-									<h1 className="text-3xl font-black tracking-tight text-slate-950 dark:text-white md:text-4xl">
-										Financeiro conectado ao resto da operação
+								<div className="space-y-1">
+									<h1 className="text-2xl font-black tracking-tight text-slate-950 dark:text-white md:text-3xl">
+										Gestão Financeira
 									</h1>
-									<p className="max-w-3xl text-sm text-slate-600 dark:text-slate-300 md:text-base">
-										Command center de caixa, cobrança, documentos, desempenho e
-										integrações com agenda, pacientes, CRM e marketing.
+									<p className="max-w-3xl text-sm text-slate-600 dark:text-slate-300">
+										Visão unificada de caixa, cobrança, documentos e performance conectada a pacientes, CRM, marketing e agenda.
 									</p>
 								</div>
 							</div>
@@ -372,54 +439,44 @@ const FinancialCommandCenterPage = () => {
 							</div>
 						</div>
 
-						<div className="grid gap-3 md:grid-cols-2 xl:grid-cols-4">
-							<div className="rounded-3xl border border-white/80 bg-white/70 p-4 dark:border-slate-800/70 dark:bg-slate-950/45">
-								<p className="text-[10px] font-black uppercase tracking-[0.22em] text-slate-400">
-									Cobrança vencida
-								</p>
-								<p className="mt-2 text-2xl font-black text-slate-950 dark:text-white">
-									{formatCurrency(commandCenterSummary?.overdueAmount ?? 0)}
-								</p>
-								<p className="mt-1 text-xs text-slate-500 dark:text-slate-400">
-									Age primeiro no que já venceu.
-								</p>
-							</div>
-
-							<div className="rounded-3xl border border-white/80 bg-white/70 p-4 dark:border-slate-800/70 dark:bg-slate-950/45">
-								<p className="text-[10px] font-black uppercase tracking-[0.22em] text-slate-400">
-									Receita projetada 30d
-								</p>
-								<p className="mt-2 text-2xl font-black text-slate-950 dark:text-white">
-									{formatCurrency(commandCenterSummary?.projectedNext30Days ?? 0)}
-								</p>
-								<p className="mt-1 text-xs text-slate-500 dark:text-slate-400">
-									Baseada na agenda futura e ajuste de faltas.
-								</p>
-							</div>
-
-							<div className="rounded-3xl border border-white/80 bg-white/70 p-4 dark:border-slate-800/70 dark:bg-slate-950/45">
-								<p className="text-[10px] font-black uppercase tracking-[0.22em] text-slate-400">
-									Leads em pipeline
-								</p>
-								<p className="mt-2 text-2xl font-black text-slate-950 dark:text-white">
-									{commandCenter?.integrations.crm.pipelineLeads ?? 0}
-								</p>
-								<p className="mt-1 text-xs text-slate-500 dark:text-slate-400">
-									CRM já conectado à leitura de receita.
-								</p>
-							</div>
-
-							<div className="rounded-3xl border border-white/80 bg-white/70 p-4 dark:border-slate-800/70 dark:bg-slate-950/45">
-								<p className="text-[10px] font-black uppercase tracking-[0.22em] text-slate-400">
-									Sessões nos próximos 7 dias
-								</p>
-								<p className="mt-2 text-2xl font-black text-slate-950 dark:text-white">
-									{commandCenter?.integrations.schedule.scheduledNext7Days ?? 0}
-								</p>
-								<p className="mt-1 text-xs text-slate-500 dark:text-slate-400">
-									Agenda usada como previsão operacional.
-								</p>
-							</div>
+						<div className="flex flex-wrap gap-2">
+							<Button
+								variant="outline"
+								className="h-10 rounded-2xl border-white/80 bg-white/70 font-bold dark:border-slate-800/80 dark:bg-slate-950/50"
+								onClick={() =>
+									updateQueryParams({
+										tab: "collections",
+										collections: "receivables",
+									})
+								}
+							>
+								<HandCoins className="mr-2 h-4 w-4" />
+								Cobrar paciente
+							</Button>
+							<Button
+								variant="outline"
+								className="h-10 rounded-2xl border-white/80 bg-white/70 font-bold dark:border-slate-800/80 dark:bg-slate-950/50"
+								onClick={handleReceiptQuickAction}
+							>
+								<Receipt className="mr-2 h-4 w-4" />
+								Emitir recibo
+							</Button>
+							<Button
+								variant="outline"
+								className="h-10 rounded-2xl border-white/80 bg-white/70 font-bold dark:border-slate-800/80 dark:bg-slate-950/50"
+								onClick={handleNfseQuickAction}
+							>
+								<FileText className="mr-2 h-4 w-4" />
+								Emitir NFS-e
+							</Button>
+							<Button
+								variant="outline"
+								className="h-10 rounded-2xl border-white/80 bg-white/70 font-bold dark:border-slate-800/80 dark:bg-slate-950/50"
+								onClick={handleRegisterExpense}
+							>
+								<Wallet className="mr-2 h-4 w-4" />
+								Registrar despesa
+							</Button>
 						</div>
 					</CardContent>
 				</Card>
@@ -466,15 +523,10 @@ const FinancialCommandCenterPage = () => {
 						{!commandCenter && isLoadingCommandCenter ? (
 							<SectionSkeleton />
 						) : commandCenter ? (
-							<>
-								<FinancialCommandCenterSummary
-									data={commandCenter}
-									onNewTransaction={handleNewTransaction}
-								/>
-								<Suspense fallback={<PageShellFallback />}>
-									<FinancialAIAdvisor stats={advisorStats} />
-								</Suspense>
-							</>
+							<FinancialCommandCenterSummary
+								data={commandCenter}
+								onNewTransaction={handleNewTransaction}
+							/>
 						) : (
 							<EmptyState
 								icon={LayoutDashboard}
@@ -489,42 +541,72 @@ const FinancialCommandCenterPage = () => {
 					</TabsContent>
 
 					<TabsContent value="collections" className="space-y-6">
-						<div className="grid gap-4 md:grid-cols-3">
-							<Card className="rounded-[28px] border-white/70 bg-white/90 dark:border-slate-800/80 dark:bg-slate-950/70">
-								<CardContent className="p-5">
-									<p className="text-[10px] font-black uppercase tracking-[0.22em] text-slate-400">
-										Vencidas
-									</p>
-									<p className="mt-2 text-3xl font-black text-slate-950 dark:text-white">
-										{commandCenter?.collections.overdueCount ?? 0}
-									</p>
-								</CardContent>
-							</Card>
-							<Card className="rounded-[28px] border-white/70 bg-white/90 dark:border-slate-800/80 dark:bg-slate-950/70">
-								<CardContent className="p-5">
-									<p className="text-[10px] font-black uppercase tracking-[0.22em] text-slate-400">
-										Vencem hoje
-									</p>
-									<p className="mt-2 text-3xl font-black text-slate-950 dark:text-white">
-										{commandCenter?.collections.dueTodayCount ?? 0}
-									</p>
-								</CardContent>
-							</Card>
-							<Card className="rounded-[28px] border-white/70 bg-white/90 dark:border-slate-800/80 dark:bg-slate-950/70">
-								<CardContent className="p-5">
-									<p className="text-[10px] font-black uppercase tracking-[0.22em] text-slate-400">
-										Saldo em aberto
-									</p>
-									<p className="mt-2 text-3xl font-black text-slate-950 dark:text-white">
-										{formatCurrency(commandCenter?.summary.pendingReceivables ?? 0)}
-									</p>
-								</CardContent>
-							</Card>
-						</div>
+						<Tabs
+							value={collectionsSubview}
+							onValueChange={(value) =>
+								updateQueryParams({ tab: "collections", collections: value })
+							}
+							className="space-y-5"
+						>
+							<TabsList className="flex h-auto flex-wrap justify-start gap-2 rounded-[24px] bg-white/80 p-2 dark:bg-slate-950/70">
+								<TabsTrigger value="receivables" className="rounded-2xl px-4 py-2 font-bold">
+									Recebíveis
+								</TabsTrigger>
+								<TabsTrigger value="packages" className="rounded-2xl px-4 py-2 font-bold">
+									Pacotes
+								</TabsTrigger>
+							</TabsList>
 
-						<Suspense fallback={<PageShellFallback />}>
-							<ContasFinanceirasContent />
-						</Suspense>
+							<TabsContent value="receivables" className="space-y-6">
+								<div className="grid gap-4 md:grid-cols-3">
+									<Card className="rounded-[28px] border-white/70 bg-white/90 dark:border-slate-800/80 dark:bg-slate-950/70">
+										<CardContent className="p-5">
+											<p className="text-[10px] font-black uppercase tracking-[0.22em] text-slate-400">
+												Vencidas
+											</p>
+											<p className="mt-2 text-3xl font-black text-slate-950 dark:text-white">
+												{commandCenter?.collections.overdueCount ?? 0}
+											</p>
+										</CardContent>
+									</Card>
+									<Card className="rounded-[28px] border-white/70 bg-white/90 dark:border-slate-800/80 dark:bg-slate-950/70">
+										<CardContent className="p-5">
+											<p className="text-[10px] font-black uppercase tracking-[0.22em] text-slate-400">
+												Vencem hoje
+											</p>
+											<p className="mt-2 text-3xl font-black text-slate-950 dark:text-white">
+												{commandCenter?.collections.dueTodayCount ?? 0}
+											</p>
+										</CardContent>
+									</Card>
+									<Card className="rounded-[28px] border-white/70 bg-white/90 dark:border-slate-800/80 dark:bg-slate-950/70">
+										<CardContent className="p-5">
+											<p className="text-[10px] font-black uppercase tracking-[0.22em] text-slate-400">
+												Saldo em aberto
+											</p>
+											<p className="mt-2 text-3xl font-black text-slate-950 dark:text-white">
+												{formatCurrency(commandCenter?.summary.pendingReceivables ?? 0)}
+											</p>
+										</CardContent>
+									</Card>
+								</div>
+
+								<Suspense fallback={<PageShellFallback />}>
+									<ContasFinanceirasContent
+										initialTab="receber"
+										title="Central de cobrança"
+										description="Recebíveis, inadimplência e vencimentos priorizados no mesmo fluxo."
+										actionLabel="Nova cobrança"
+									/>
+								</Suspense>
+							</TabsContent>
+
+							<TabsContent value="packages">
+								<Suspense fallback={<PageShellFallback />}>
+									<PackagesManager />
+								</Suspense>
+							</TabsContent>
+						</Tabs>
 					</TabsContent>
 
 					<TabsContent value="cashflow" className="space-y-6">
@@ -536,15 +618,17 @@ const FinancialCommandCenterPage = () => {
 					<TabsContent value="billing" className="space-y-6">
 						<Tabs
 							value={billingSubview}
-							onValueChange={setBillingSubview}
+							onValueChange={(value) =>
+								updateQueryParams({ tab: "billing", billing: value })
+							}
 							className="space-y-5"
 						>
 							<TabsList className="flex h-auto flex-wrap justify-start gap-2 rounded-[24px] bg-white/80 p-2 dark:bg-slate-950/70">
 								<TabsTrigger value="operations" className="rounded-2xl px-4 py-2 font-bold">
 									Operação
 								</TabsTrigger>
-								<TabsTrigger value="packages" className="rounded-2xl px-4 py-2 font-bold">
-									Pacotes
+								<TabsTrigger value="payables" className="rounded-2xl px-4 py-2 font-bold">
+									Contas a pagar
 								</TabsTrigger>
 							</TabsList>
 
@@ -700,9 +784,15 @@ const FinancialCommandCenterPage = () => {
 								</Card>
 							</TabsContent>
 
-							<TabsContent value="packages">
+							<TabsContent value="payables">
 								<Suspense fallback={<PageShellFallback />}>
-									<PackagesManager />
+									<ContasFinanceirasContent
+										initialTab="pagar"
+										lockType
+										title="Contas a pagar"
+										description="Saídas futuras, vencimentos críticos e compromissos financeiros concentrados no faturamento."
+										actionLabel="Nova conta a pagar"
+									/>
 								</Suspense>
 							</TabsContent>
 						</Tabs>
@@ -744,7 +834,9 @@ const FinancialCommandCenterPage = () => {
 
 						<Tabs
 							value={documentsSubview}
-							onValueChange={setDocumentsSubview}
+							onValueChange={(value) =>
+								updateQueryParams({ tab: "documents", documents: value })
+							}
 							className="space-y-5"
 						>
 							<TabsList className="flex h-auto flex-wrap justify-start gap-2 rounded-[24px] bg-white/80 p-2 dark:bg-slate-950/70">
@@ -758,13 +850,19 @@ const FinancialCommandCenterPage = () => {
 
 							<TabsContent value="receipts">
 								<Suspense fallback={<PageShellFallback />}>
-									<RecibosContent />
+									<RecibosContent
+										autoOpenCreate={shouldAutoOpenReceipt}
+										onAutoOpenHandled={() => clearActionParams("receiptAction")}
+									/>
 								</Suspense>
 							</TabsContent>
 
 							<TabsContent value="nfse">
 								<Suspense fallback={<PageShellFallback />}>
-									<NFSeContent />
+									<NFSeContent
+										autoOpenCreate={shouldAutoOpenNfse}
+										onAutoOpenHandled={() => clearActionParams("nfseAction")}
+									/>
 								</Suspense>
 							</TabsContent>
 						</Tabs>
@@ -773,7 +871,9 @@ const FinancialCommandCenterPage = () => {
 					<TabsContent value="performance" className="space-y-6">
 						<Tabs
 							value={performanceSubview}
-							onValueChange={setPerformanceSubview}
+							onValueChange={(value) =>
+								updateQueryParams({ tab: "performance", performance: value })
+							}
 							className="space-y-5"
 						>
 							<TabsList className="flex h-auto flex-wrap justify-start gap-2 rounded-[24px] bg-white/80 p-2 dark:bg-slate-950/70">
@@ -813,6 +913,7 @@ const FinancialCommandCenterPage = () => {
 				onSubmit={handleSubmit}
 				transaction={editingTransaction ?? undefined}
 				isLoading={isSubmitting}
+				defaultTipo={modalDefaultTipo}
 			/>
 
 			<AlertDialog open={!!deleteId} onOpenChange={(open) => !open && setDeleteId(null)}>

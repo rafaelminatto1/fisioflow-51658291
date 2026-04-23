@@ -617,7 +617,7 @@ export const getTodayBirthdays = async (
 	Array<{ id: string; name: string; phone: string; email: string }>
 > => {
 	try {
-		const patients = (await patientsApi.list({ limit: 1000 })).data ?? [];
+		const patients = (await patientsApi.list({ limit: 200 })).data ?? [];
 		const today = new Date();
 		const month = today.getMonth() + 1;
 		const day = today.getDate();
