@@ -7,37 +7,15 @@ import { fisioLogger as logger } from "@/lib/errors/logger";
 import { initializeOnClient } from "@/lib/services/initialization";
 import { registerSW } from "virtual:pwa-register";
 
+import { handleChunkError } from "@/utils/chunkError";
+
 // 3. MONITORAMENTO DE ERROS DE BUNDLE (VITE 8)
-const isChunkLoadError = (error: unknown) => {
-	const message =
-		typeof error === "string"
-			? error
-			: typeof error === "object" &&
-				  error !== null &&
-				  "message" in error &&
-				  typeof error.message === "string"
-				? error.message
-				: "";
-	return (
-		/Loading chunk/i.test(message) ||
-		/Loading CSS chunk/i.test(message) ||
-		/Failed to fetch dynamically imported module/i.test(message)
-	);
-};
-
-const reloadOnChunkError = (source: string) => {
-	console.warn(`[Vite] Erro de carregamento de chunk detectado via ${source}. Recarregando...`);
-	window.location.reload();
-};
-
 window.addEventListener("error", (event) => {
-	if (!isChunkLoadError(event.error ?? event.message)) return;
-	reloadOnChunkError("window.error");
+	handleChunkError(event.error ?? event.message, "window.error");
 });
 
 window.addEventListener("unhandledrejection", (event) => {
-	if (!isChunkLoadError(event.reason)) return;
-	reloadOnChunkError("unhandledrejection");
+	handleChunkError(event.reason, "unhandledrejection");
 });
 
 // ============================================================================
