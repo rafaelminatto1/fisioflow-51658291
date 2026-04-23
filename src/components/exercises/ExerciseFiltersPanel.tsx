@@ -31,7 +31,7 @@ import {
 import {
 	EQUIPMENT,
 	getHomeEquipment,
-	FILTER_PRESETS,
+
 	HOME_EQUIPMENT_GROUP,
 	NO_EQUIPMENT_GROUP_ID,
 	BODY_PARTS,
@@ -194,15 +194,7 @@ export function ExerciseFiltersPanel({
 		});
 	};
 
-	const applyPreset = (preset: (typeof FILTER_PRESETS)[number]) => {
-		onFiltersChange({
-			bodyParts: preset.filters.bodyParts || [],
-			difficulty: preset.filters.difficulty || [],
-			categories: [],
-			equipment: preset.filters.equipment || [],
-			homeOnly: preset.id === "home_exercises",
-		});
-	};
+
 
 	const activeFiltersCount =
 		filters.bodyParts.length +
@@ -350,23 +342,7 @@ export function ExerciseFiltersPanel({
 				)}
 			</div>
 
-			{/* Quick Preset Buttons */}
-			<div className="flex items-center gap-2 flex-wrap">
-				<span className="text-xs text-muted-foreground mr-1">
-					Filtros rápidos:
-				</span>
-				{FILTER_PRESETS.map((preset) => (
-					<Button
-						key={preset.id}
-						variant="ghost"
-						size="sm"
-						onClick={() => applyPreset(preset)}
-						className="h-7 px-2 text-xs text-muted-foreground hover:text-foreground"
-					>
-						{preset.label}
-					</Button>
-				))}
-			</div>
+
 
 			{/* Active Filters Summary */}
 			{hasActiveFilters && (
