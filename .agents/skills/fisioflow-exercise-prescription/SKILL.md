@@ -1,3 +1,8 @@
+---
+name: fisioflow-exercise-prescription
+description: Reference for the exercise library, AI search, protocols, and home exercise prescription flow in FisioFlow. Use when working on exercises, categories, embeddings, HEP, or prescription APIs and UI.
+---
+
 # FisioFlow Exercise Prescription & HEP
 
 Reference for the exercise library, AI-powered search, protocol management, and home exercise prescription system.

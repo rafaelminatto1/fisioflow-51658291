@@ -1,3 +1,8 @@
+---
+name: fisioflow-api-patterns
+description: Reference guide for creating API routes that match FisioFlow conventions. Use when adding or reviewing Hono, Drizzle, Neon Auth, tenant scoping, request handling, or response patterns.
+---
+
 # FisioFlow API Patterns & Conventions
 
 Reference guide for creating new routes that match the existing codebase. The API is a Cloudflare Worker built with Hono.js, Drizzle ORM, and Neon Auth.

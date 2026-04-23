@@ -1,0 +1,2 @@
+ALTER TABLE "patient_objective_assignments" ADD COLUMN "is_sensitive" boolean DEFAULT false NOT NULL;--> statement-breakpoint
+ALTER TABLE "clinical_embeddings" ADD CONSTRAINT "clinical_embeddings_evolution_id_unique" UNIQUE("evolution_id");

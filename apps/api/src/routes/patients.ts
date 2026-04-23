@@ -1129,6 +1129,9 @@ app.get("/", async (c) => {
 
 		try {
 			const startData = Date.now();
+			const safeLimit = isNaN(limit) ? 20 : limit;
+			const safeOffset = isNaN(offset) ? 0 : offset;
+			
 			dataResult = await pool.query(
 				`
 					${cteSql}
@@ -1138,7 +1141,7 @@ app.get("/", async (c) => {
 					ORDER BY ${orderBy}
 					LIMIT $${paramIndex} OFFSET $${paramIndex + 1}
 				`,
-				[...params, limit, offset],
+				[...params, safeLimit, safeOffset],
 			);
 			console.log(`[Patients/List] Data query took ${Date.now() - startData}ms`);
 		} catch (e: any) {
