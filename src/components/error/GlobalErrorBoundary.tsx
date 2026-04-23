@@ -6,6 +6,7 @@
  */
 
 import React, { Component, ErrorInfo, ReactNode } from "react";
+import { handleChunkError } from "@/utils/chunkError";
 import { Button } from "@/components/ui/button";
 import {
 	Card,
@@ -56,6 +57,11 @@ export class GlobalErrorBoundary extends Component<Props, State> {
 		if (import.meta.env.DEV) {
 			console.error("Error caught by boundary:", error);
 			console.error("Error info:", errorInfo);
+		}
+
+		// Check for chunk load error
+		if (handleChunkError(error, "GlobalErrorBoundary")) {
+			return;
 		}
 
 		// Send to Sentry
