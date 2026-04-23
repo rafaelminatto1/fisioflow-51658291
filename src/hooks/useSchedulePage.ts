@@ -241,7 +241,7 @@ export function useSchedulePageData(
 		queryKey: ["schedule-patients"],
 		queryFn: async () => {
 			try {
-				const res = await patientsApi.list({ limit: 50 });
+				const res = await patientsApi.list({ limit: 50, minimal: true });
 				return res?.data ?? [];
 			} catch (error) {
 				logger.error("Error loading patients", { error }, "useSchedulePage");
