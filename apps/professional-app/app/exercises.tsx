@@ -251,29 +251,26 @@ export default function ExercisesScreen() {
 						/>
 					</TouchableOpacity>
 
-					{/* IA Badge */}
-					{["squat", "pushup", "plank", "lunge"].includes(
-						exercise.id?.toLowerCase() || "",
-					) && (
-						<View
-							style={[
-								styles.iaBadgeOverlay,
-								{
-									backgroundColor: "#0D9488D0",
-									borderColor: "#2DD4BF60",
-									borderWidth: 1,
-									shadowColor: "#2DD4BF",
-									shadowOffset: { width: 0, height: 0 },
-									shadowOpacity: 0.5,
-									shadowRadius: 8,
-									elevation: 4,
-								},
-							]}
-						>
-							<Ionicons name="sparkles" size={12} color="#fff" />
-							<Text style={styles.iaBadgeText}>IA ASSISTIDA</Text>
-						</View>
-					)}
+					{/* IA & 3D Badges */}
+					<View style={styles.badgeContainer}>
+						{(exercise.tags?.some(
+							(t: string) => t.toLowerCase() === "ia_assisted" || t.toLowerCase() === "ia",
+						) ||
+							["squat", "pushup", "plank", "lunge"].includes(
+								exercise.id?.toLowerCase() || "",
+							)) && (
+							<View style={[styles.badge, { backgroundColor: "#0D9488D0" }]}>
+								<Ionicons name="sparkles" size={10} color="#fff" />
+								<Text style={styles.badgeText}>IA</Text>
+							</View>
+						)}
+						{exercise.imageUrl?.includes('fisioflow-media') && (
+							<View style={[styles.badge, { backgroundColor: colors.primary + 'D0' }]}>
+								<Ionicons name="cube-outline" size={10} color="#fff" />
+								<Text style={styles.badgeText}>3D ANATOMIA</Text>
+							</View>
+						)}
+					</View>
 				</View>
 
 				<View style={styles.exerciseContent}>
@@ -965,32 +962,48 @@ const styles = StyleSheet.create({
 	},
 	favoriteButtonOverlay: {
 		position: "absolute",
-		top: 12,
-		left: 12,
-		width: 36,
-		height: 36,
-		borderRadius: 18,
+		top: 8,
+		right: 8,
+		width: 32,
+		height: 32,
+		borderRadius: 16,
 		justifyContent: "center",
 		alignItems: "center",
-		zIndex: 2,
+		zIndex: 10,
+	},
+	badgeContainer: {
+		position: "absolute",
+		bottom: 8,
+		left: 8,
+		flexDirection: "row",
+		gap: 4,
+	},
+	badge: {
+		flexDirection: "row",
+		alignItems: "center",
+		paddingHorizontal: 6,
+		paddingVertical: 3,
+		borderRadius: 6,
+		gap: 3,
+	},
+	badgeText: {
+		color: "#fff",
+		fontSize: 9,
+		fontWeight: "bold",
+	},
+	iaBadgeOverlay: {
+		flexDirection: "row",
+		alignItems: "center",
+		paddingHorizontal: 8,
+		paddingVertical: 4,
+		borderRadius: 6,
+		gap: 4,
 	},
 	difficultyTextOverlay: {
 		color: "#FFF",
 		fontSize: 11,
 		fontWeight: "800",
 		textTransform: "uppercase",
-	},
-	iaBadgeOverlay: {
-		position: "absolute",
-		bottom: 12,
-		left: 12,
-		flexDirection: "row",
-		alignItems: "center",
-		paddingHorizontal: 10,
-		paddingVertical: 6,
-		borderRadius: 10,
-		gap: 6,
-		zIndex: 2,
 	},
 	exerciseContent: {
 		padding: 16,
