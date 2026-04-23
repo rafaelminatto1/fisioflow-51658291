@@ -35,12 +35,14 @@ const CLINIC_OPEN_HOUR = 7;
 const CLINIC_CLOSE_HOUR = 21;
 const SATURDAY_CLOSE_HOUR = 13;
 const SLOT_INTERVAL_MINUTES = 15;
-const CLINIC_SLOT_MIN_TIME = `${String(CLINIC_OPEN_HOUR).padStart(2, "0")}:00:00`;
-const CLINIC_SLOT_MAX_TIME = `${String(CLINIC_CLOSE_HOUR).padStart(2, "0")}:00:00`;
-const CLINIC_SCROLL_TIME = CLINIC_SLOT_MIN_TIME;
+const CLINIC_SLOT_MIN_TIME = "07:00:00";
+const CLINIC_SLOT_MAX_TIME = "21:00:00";
+const CLINIC_SCROLL_TIME = "07:00:00";
 const SLOT_LABEL_INTERVAL = "01:00:00";
 const WEEK_HEADER_FALLBACK_HEIGHT = 48;
 const WEEK_SLOT_COUNT = ((CLINIC_CLOSE_HOUR - CLINIC_OPEN_HOUR) * 60) / SLOT_INTERVAL_MINUTES;
+
+console.log("[FisioFlow] Global Config - Close Hour:", CLINIC_CLOSE_HOUR, "Max Time:", CLINIC_SLOT_MAX_TIME);
 
 export interface DayFlowCalendarWrapperProps {
 	appointments: any[];
@@ -163,7 +165,7 @@ export function DayFlowCalendarWrapper(props: DayFlowCalendarWrapperProps) {
 	}, [props]);
 
 	useEffect(() => {
-		console.log("[FisioFlow] DayFlowCalendar v2.2 - Range: 07:00-21:00");
+		console.log("[FisioFlow] DayFlowCalendar v2.3 - Strict Range: 07:00-21:00");
 	}, []);
 
 	useEffect(() => {
