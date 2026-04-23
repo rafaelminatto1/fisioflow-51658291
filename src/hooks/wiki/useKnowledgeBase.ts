@@ -88,8 +88,7 @@ export function useKnowledgeBase(
 		queryKey: ["knowledge-audit-profiles", auditItems.map((i) => i.actor_id)],
 		queryFn: () =>
 			currentOrganizationId
-				? knowledgeBaseService.getProfilesSummary(
-						currentOrganizationId,
+				? knowledgeBaseService.getProfilesByIds(
 						auditItems.map((i) => i.actor_id),
 					)
 				: Promise.resolve({}),
@@ -178,9 +177,9 @@ export function useKnowledgeBase(
 			if (!kbQuery || kbUseSemantic) return true;
 
 			// Busca inteligente usando termos expandidos do dicionário (PT/EN/Sinônimos)
-			const normalizedTitle = normalizeForSearch(item.title);
-			const normalizedSubgroup = normalizeForSearch(item.subgroup);
-			const normalizedTags = item.tags.map(normalizeForSearch);
+			const normalizedTitle = normalizeForSearch(item.title || "");
+			const normalizedSubgroup = normalizeForSearch(item.subgroup || "");
+			const normalizedTags = (item.tags || []).map(normalizeForSearch);
 
 			return expandedQueries.some((q) =>
 				normalizedTitle.includes(q) ||

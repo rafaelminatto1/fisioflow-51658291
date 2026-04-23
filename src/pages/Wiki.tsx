@@ -269,7 +269,7 @@ export default function WikiPage() {
 				return;
 			}
 
-			const lines = instantiated.content.split("\n");
+			const lines = (instantiated.content || "").split("\n");
 			const derivedTitle =
 				lines[0]?.replace(/^#\s*/, "").trim() || template.name;
 			const isTriageTemplate = [
