@@ -14,7 +14,7 @@ export const usePatientsPostgres = (organizationId: string | undefined) => {
 		queryKey: ["patients-postgres", organizationId],
 		queryFn: async () => {
 			if (!isUUID(organizationId)) return [];
-			const result = await patientsApi.list({ limit: 500 });
+			const result = await patientsApi.list({ limit: 500, minimal: true });
 			return result.data ?? [];
 		},
 		enabled: isUUID(organizationId),

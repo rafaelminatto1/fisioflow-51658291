@@ -67,7 +67,7 @@ const Telemedicine = () => {
 	const { data: patients } = useQuery({
 		queryKey: ["patients-for-telemedicine"],
 		queryFn: async () => {
-			const res = await patientsApi.list({ status: "ativo", limit: 200 });
+			const res = await patientsApi.list({ status: "ativo", limit: 200, minimal: true });
 			return (res?.data ?? []) as PatientListItem[];
 		},
 	});

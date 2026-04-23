@@ -8,9 +8,8 @@
       "httpUrl": "https://mcp.exa.ai/mcp"
     },
     "shadcn": {
-      "command": "npx",
+      "command": "node_modules/.bin/shadcn",
       "args": [
-        "shadcn@latest",
         "mcp"
       ]
     },
@@ -44,11 +43,8 @@
       "timeout": 600000
     },
     "react-native-mcp": {
-      "command": "npx",
-      "args": [
-        "-y",
-        "@ohah/react-native-mcp-server"
-      ]
+      "command": "node_modules/.bin/react-native-mcp-server",
+      "args": []
     },
     "chrome-devtools": {
       "command": "npx",
@@ -60,5 +56,18 @@
       "url": "https://server.smithery.ai/pubmed/mcp",
       "type": "http"
     }
+  },
+  "ui": {
+    "hideBanner": true,
+    "hideTips": true,
+    "showHomeDirectoryWarning": false,
+    "showCompatibilityWarnings": false
+  },
+  "general": {
+    "enableAutoUpdate": false,
+    "enableAutoUpdateNotification": false
+  },
+  "context": {
+    "discoveryMaxDirs": 50
   }
 }

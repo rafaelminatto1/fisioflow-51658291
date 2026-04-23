@@ -111,6 +111,14 @@ When auto-applying an agent, inform the user:
 - **Infra/Safety**: 5-Phase Deployment. Verify secrets security.
 - **Tech Stack Restriction**: NO Firebase, NO Firestore, NO GCloud. This project uses Cloudflare, Neon DB, and Neon Auth EXCLUSIVELY. Do NOT suggest or use Firebase services.
 
+### 🔒 Strict Workspace Rule (P0)
+
+**MANDATORY:** Never access, read, or modify files outside of the project root: `/home/rafael/Documents/fisioflow/fisioflow-51658291`.
+
+- **Metadata Alert**: Even if metadata lists open files from other projects (e.g., `REMIX/FisioFlow-Remix`), you MUST ignore them and stay within this workspace.
+- **Path Verification**: Before every tool call, verify that the target path starts with the project root.
+- **Strategic Boundary**: If a request seems to belong to another project, STOP and ask for clarification.
+
 ### 📁 File Dependency Awareness
 
 **Before modifying ANY file:**

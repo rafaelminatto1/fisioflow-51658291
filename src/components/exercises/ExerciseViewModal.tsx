@@ -123,7 +123,7 @@ export function ExerciseViewModal({
 		<>
 			<Dialog open={open} onOpenChange={onOpenChange}>
 				<DialogContent
-					className="fixed left-[50%] top-[50%] z-50 !-translate-x-1/2 !-translate-y-1/2 w-[90vw] md:w-[80vw] lg:w-[85vw] max-w-6xl max-h-[85vh] p-0 gap-0 overflow-hidden flex flex-col bg-background/95 backdrop-blur-xl border-border/50 shadow-2xl rounded-lg exercise-print-layout"
+					className="fixed left-[50%] top-[50%] z-50 !-translate-x-1/2 !-translate-y-1/2 w-[95vw] md:w-[90vw] lg:w-[85vw] max-w-[1400px] max-h-[90vh] p-0 gap-0 overflow-hidden flex flex-col bg-background/95 backdrop-blur-xl border-border/50 shadow-2xl rounded-lg exercise-print-layout"
 					onInteractOutside={(e) => e.preventDefault()}
 					onEscapeKeyDown={(e) => {
 						e.preventDefault();
@@ -242,8 +242,8 @@ export function ExerciseViewModal({
 
 					{/* Content - Scrollable */}
 					<div className="flex-1 min-h-0 overflow-hidden grid grid-cols-1 lg:grid-cols-12">
-						{/* Left Column - Media (8 cols) */}
-						<div className="lg:col-span-8 bg-muted/10 h-full flex flex-col border-r border-border/50 overflow-hidden relative exercise-print-media">
+						{/* Left Column - Media (7 cols) */}
+						<div className="lg:col-span-7 bg-muted/10 h-full flex flex-col border-r border-border/50 overflow-hidden relative exercise-print-media">
 							<div className="absolute inset-0 bg-gradient-to-br from-background via-muted/20 to-muted/40 pointer-events-none" />
 
 							<Tabs
@@ -343,12 +343,12 @@ export function ExerciseViewModal({
 							</Tabs>
 						</div>
 
-						{/* Right Column - Information (4 cols) */}
-						<div className="lg:col-span-4 h-full min-h-0 bg-background flex flex-col">
+						{/* Right Column - Information (5 cols) */}
+						<div className="lg:col-span-5 h-full min-h-0 bg-background flex flex-col">
 							<ScrollArea className="flex-1 h-full min-h-0">
 								<div className="p-4 sm:p-6 space-y-6 sm:space-y-8">
 									{/* Metrics / Parameters */}
-									<div className="grid grid-cols-3 gap-4 exercise-print-metrics">
+									<div className="grid grid-cols-3 gap-2 sm:gap-4 exercise-print-metrics">
 										<MetricCard
 											icon={Repeat}
 											label="Séries"
@@ -547,7 +547,7 @@ function MetricCard({
 			<div className="p-2 rounded-full bg-background shadow-sm mb-1 group-hover:scale-110 transition-transform duration-300 no-print">
 				<Icon className="h-4 w-4 text-primary" />
 			</div>
-			<span className="text-[10px] items-center font-medium text-muted-foreground uppercase tracking-wider exercise-print-metric-label">
+			<span className="text-[10px] items-center font-medium text-muted-foreground uppercase tracking-wider exercise-print-metric-label whitespace-nowrap">
 				{label}
 			</span>
 			<div className="flex items-baseline gap-1">

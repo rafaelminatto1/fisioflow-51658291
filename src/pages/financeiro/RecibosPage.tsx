@@ -201,7 +201,7 @@ export function RecibosContent({
 	const { data: pacientes = [] } = useQuery({
 		queryKey: ["pacientes-select"],
 		queryFn: async () => {
-			const res = await patientsApi.list({ limit: 500, sortBy: "name_asc" });
+			const res = await patientsApi.list({ limit: 500, sortBy: "name_asc", minimal: true });
 			return (res?.data ?? []).map((p) => ({
 				id: p.id,
 				full_name: p.name || p.full_name || "Paciente",
