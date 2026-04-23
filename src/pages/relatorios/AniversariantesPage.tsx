@@ -44,7 +44,7 @@ export function AniversariantesContent() {
 	const { data: aniversariantes = [], isLoading } = useQuery({
 		queryKey: ["aniversariantes", mesSelecionado],
 		queryFn: async () => {
-			const res = await patientsApi.list({ status: "ativo", limit: 200 });
+			const res = await patientsApi.list({ status: "ativo", limit: 200, minimal: true });
 			const patients = (res?.data ?? []) as PatientRow[];
 
 			return patients

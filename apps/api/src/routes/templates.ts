@@ -350,31 +350,71 @@ app.post('/', requireAuth, async (c) => {
   const db = createDb(c.env);
   const user = c.get('user');
   const body = await c.req.json();
-  const { items, ...templateData } = body;
+  const { items, ...rawData } = body;
 
-  const [template] = await db
-    .insert(exerciseTemplates)
-    .values({
-      ...templateData,
-      createdBy: user.uid,
-    })
-    .returning();
+  console.log(`[Templates/Create] Creating template for org ${user.organizationId} with ${items?.length ?? 0} items`);
 
-  let insertedItems: Array<Record<string, unknown>> = [];
-  if (items && Array.isArray(items) && items.length > 0) {
-    insertedItems = await db
-      .insert(exerciseTemplateItems)
-      .values(
-        items.map((item: any, index: number) => ({
-          ...item,
-          templateId: template.id,
-          orderIndex: item.orderIndex ?? index,
-        }))
-      )
-      .returning();
+  try {
+    const result = await db.transaction(async (tx) => {
+      // 1. Inserir o template base
+      const [template] = await tx
+        .insert(exerciseTemplates)
+        .values({
+          name: rawData.name,
+          description: rawData.description,
+          category: rawData.category,
+          conditionName: rawData.condition_name ?? rawData.conditionName,
+          templateVariant: rawData.template_variant ?? rawData.templateVariant ?? 'Personalizado',
+          templateType: rawData.templateType ?? 'custom',
+          patientProfile: rawData.patientProfile ?? rawData.patient_profile,
+          organizationId: user.organizationId ?? null,
+          createdBy: user.uid,
+          isDraft: rawData.isDraft ?? false,
+          isActive: true,
+          exerciseCount: items?.length ?? 0,
+          clinicalNotes: rawData.clinicalNotes ?? rawData.clinical_notes,
+          contraindications: rawData.contraindications ?? rawData.contraindications,
+          precautions: rawData.precautions ?? rawData.precautions,
+          progressionNotes: rawData.progressionNotes ?? rawData.progression_notes,
+          evidenceLevel: rawData.evidenceLevel ?? rawData.evidence_level,
+        })
+        .returning();
+
+      let insertedItems: any[] = [];
+      
+      // 2. Inserir os itens do template se existirem
+      if (items && Array.isArray(items) && items.length > 0) {
+        insertedItems = await tx
+          .insert(exerciseTemplateItems)
+          .values(
+            items.map((item: any, index: number) => ({
+              templateId: template.id,
+              exerciseId: item.exercise_id ?? item.exerciseId,
+              orderIndex: item.order_index ?? item.orderIndex ?? index,
+              sets: item.sets,
+              repetitions: item.repetitions,
+              duration: item.duration,
+              notes: item.notes,
+              clinicalNotes: item.clinical_notes ?? item.clinicalNotes,
+              focusMuscles: item.focus_muscles ?? item.focusMuscles,
+              purpose: item.purpose,
+            }))
+          )
+          .returning();
+      }
+
+      return { ...template, items: insertedItems };
+    });
+
+    return c.json({ data: result });
+  } catch (error: any) {
+    console.error("[Templates/Create] Error:", error.message);
+    return c.json({ 
+      error: 'Erro ao criar template', 
+      details: error.message,
+      requestId: c.get('requestId') 
+    }, 500);
   }
-
-  return c.json({ data: { ...template, items: insertedItems } });
 });
 
 // ===== ATUALIZAR TEMPLATE =====
