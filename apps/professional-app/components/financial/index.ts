@@ -6,7 +6,7 @@ export {
 } from "./FinancialFilters";
 export { DeleteConfirmationModal } from "./DeleteConfirmationModal";
 export { FinancialChart, PaymentNotifications } from "./FinancialChart";
-export { TransactionCard, TransactionCardCompact } from "./TransactionCard";
+export { TransactionCard } from "./TransactionCard";
 export {
 	FinancialSummaryCard,
 	FinancialSummaryGrid,

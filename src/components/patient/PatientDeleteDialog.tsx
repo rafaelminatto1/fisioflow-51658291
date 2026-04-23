@@ -50,6 +50,7 @@ export const PatientDeleteDialog: React.FC<PatientDeleteDialogProps> = ({
 				toast.success(`Paciente "${patientName}" arquivado com sucesso.`);
 			}
 			queryClient.invalidateQueries({ queryKey: ["patients"] });
+			queryClient.invalidateQueries({ queryKey: ["patients-list"] });
 			onOpenChange(false);
 		} catch (err: unknown) {
 			const msg = err instanceof Error ? err.message : "Erro ao processar solicitação";

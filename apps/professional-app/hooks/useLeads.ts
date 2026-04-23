@@ -60,12 +60,15 @@ export function useLeads() {
 	return {
 		leads,
 		isLoading,
+		loading: isLoading,
 		isFetching,
 		refreshing: isFetching,
 		error,
 		refresh: refetch,
 		createLead: createMutation.mutateAsync,
 		updateLead: updateMutation.mutateAsync,
+		updateLeadStatus: (id: string, estagio: ApiLead["estagio"]) =>
+			updateMutation.mutateAsync({ id, data: { estagio } }),
 		deleteLead: deleteMutation.mutateAsync,
 		isCreating: createMutation.isPending,
 		isUpdating: updateMutation.isPending,

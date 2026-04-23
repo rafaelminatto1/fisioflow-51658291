@@ -421,6 +421,7 @@ export interface PatientRow {
 	id: string;
 	organization_id: string;
 	full_name: string;
+	name?: string | null;
 	email: string | null;
 	phone: string | null;
 	cpf: string | null;
@@ -439,6 +440,66 @@ export interface PatientRow {
 	medical_return_date?: string | null;
 	created_at: string;
 	updated_at: string;
+	mainCondition?: string | null;
+	origin?: string | null;
+	referred_by?: string | null;
+	referredBy?: string | null;
+	professional_id?: string | null;
+	professionalId?: string | null;
+	professional_name?: string | null;
+	professionalName?: string | null;
+	health_insurance?: string | null;
+	care_profiles?: string[] | null;
+	careProfiles?: string[] | null;
+	sports_practiced?: string[] | null;
+	sportsPracticed?: string[] | null;
+	therapy_focuses?: string[] | null;
+	therapyFocuses?: string[] | null;
+	payer_model?: string | null;
+	payerModel?: string | null;
+	partner_company_name?: string | null;
+	partnerCompanyName?: string | null;
+	pathology_names?: string[] | null;
+	pathologyNames?: string[] | null;
+	active_pathology_names?: string[] | null;
+	activePathologyNames?: string[] | null;
+	primary_pathology?: string | null;
+	primaryPathology?: string | null;
+	pathology_statuses?: string[] | null;
+	pathologyStatuses?: string[] | null;
+	has_surgery?: boolean;
+	hasSurgery?: boolean;
+	recent_surgery?: boolean;
+	recentSurgery?: boolean;
+	classification?: "active" | "new_patient" | "at_risk" | "completed" | null;
+	financial_status?:
+		| "current"
+		| "pending_balance"
+		| "in_collection"
+		| "credit"
+		| "uninvoiced"
+		| null;
+	financialStatus?:
+		| "current"
+		| "pending_balance"
+		| "in_collection"
+		| "credit"
+		| "uninvoiced"
+		| null;
+	sessions_completed?: number | null;
+	sessionsCompleted?: number | null;
+	total_appointments?: number | null;
+	totalAppointments?: number | null;
+	no_show_count?: number | null;
+	noShowCount?: number | null;
+	upcoming_appointments_count?: number | null;
+	upcomingAppointmentsCount?: number | null;
+	last_appointment_date?: string | null;
+	lastAppointmentDate?: string | null;
+	next_appointment_date?: string | null;
+	nextAppointmentDate?: string | null;
+	open_balance?: number | null;
+	openBalance?: number | null;
 }
 
 export interface PatientStats {

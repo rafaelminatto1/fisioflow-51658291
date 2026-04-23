@@ -3,6 +3,28 @@ import { requireAuth, type AuthVariables } from '../lib/auth';
 import type { Env } from '../types/env';
 import { R2Service } from '../lib/storage/R2Service';
 
+const QUICK_ACTIONS_BASE = 'https://browser.ai.cloudflare.com/api/v1';
+
+async function generatePdfQuickAction(html: string): Promise<Uint8Array> {
+	const response = await fetch(`${QUICK_ACTIONS_BASE}/pdf`, {
+		method: 'POST',
+		headers: { 'Content-Type': 'application/json' },
+		body: JSON.stringify({
+			html,
+			options: {
+				format: 'A4',
+				printBackground: true,
+				margin: { top: '20mm', right: '15mm', bottom: '20mm', left: '15mm' },
+			},
+		}),
+	});
+	if (!response.ok) {
+		throw new Error(`Quick Actions PDF failed: ${response.status}`);
+	}
+	const buf = await response.arrayBuffer();
+	return new Uint8Array(buf);
+}
+
 const app = new Hono<{ Bindings: Env; Variables: AuthVariables }>();
 
 type PdfReportType = 'soap' | 'progress' | 'prescription' | 'discharge' | 'exam';
@@ -24,10 +46,6 @@ type PdfRequest = {
  * Recebe dados clínicos, renderiza HTML estilizado, converte para PDF.
  */
 app.post('/', requireAuth, async (c) => {
-  if (!c.env.BROWSER) {
-    return c.json({ error: 'Browser Rendering não configurado' }, 503);
-  }
-
   const user = c.get('user');
   const body = (await c.req.json()) as PdfRequest;
 
@@ -39,23 +57,8 @@ app.post('/', requireAuth, async (c) => {
   const r2 = new R2Service(c.env);
 
   try {
-    // Cloudflare Browser Rendering — Puppeteer API
-    const { default: puppeteer } = await import('@cloudflare/puppeteer');
-    const browser = await puppeteer.launch(c.env.BROWSER);
-    const page = await browser.newPage();
+    const pdfBuffer = await generatePdfQuickAction(html);
 
-    await page.setContent(html, { waitUntil: 'networkidle0' });
-    await page.emulateMediaType('screen');
-
-    const pdfBuffer = await page.pdf({
-      format: 'A4',
-      printBackground: true,
-      margin: { top: '20mm', right: '15mm', bottom: '20mm', left: '15mm' },
-    });
-
-    await browser.close();
-
-    // Salvar em R2 e retornar URLs
     if (body.saveToR2 !== false) {
       const timestamp = Date.now();
       const baseKey = `reports/${user.organizationId}/${body.patientId}/${body.type}-${timestamp}`;

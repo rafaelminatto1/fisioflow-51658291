@@ -1,4 +1,6 @@
 import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { Input } from "@/components/ui/input";
 import {
 	Select,
 	SelectContent,
@@ -7,21 +9,21 @@ import {
 	SelectValue,
 } from "@/components/ui/select";
 import {
+	AlertTriangle,
+	ArrowUpDown,
+	CheckCircle2,
+	Download,
 	Plus,
 	Search,
-	Users,
-	Download,
-	Activity,
-	AlertTriangle,
-	Clock,
 	Sparkles,
-	CheckCircle2,
-	ArrowUpDown,
-	FileText,
-	PieChart,
-	Zap,
+	Users,
+	X,
 } from "lucide-react";
-import type { PatientClassification } from "@/hooks/usePatientStats";
+import {
+	PATIENT_DIRECTORY_PATHOLOGY_STATUSES,
+	PATIENT_FINANCIAL_STATUS_OPTIONS,
+	PATIENT_PAYER_MODEL_OPTIONS,
+} from "@/lib/constants/patient-directory";
 import { cn } from "@/lib/utils";
 import { PatientPageInsights } from "./PatientPageInsights";
 
@@ -31,14 +33,19 @@ export interface PatientsPageHeaderStats {
 	totalPages: number;
 	activeCount: number;
 	newCount: number;
+	atRiskCount: number;
 	completedCount: number;
-	activeByClassification: number;
 	inactive7: number;
 	inactive30: number;
 	inactive60: number;
 	noShowRisk: number;
 	hasUnpaid: number;
-	newPatients: number;
+}
+
+export interface HeaderFilterChip {
+	key: string;
+	label: string;
+	onRemove: () => void;
 }
 
 export interface PatientsPageHeaderProps {
@@ -51,19 +58,24 @@ export interface PatientsPageHeaderProps {
 	onSearchChange: (value: string) => void;
 	statusFilter: string;
 	onStatusFilterChange: (value: string) => void;
-	conditionFilter: string;
-	onConditionFilterChange: (value: string) => void;
-	uniqueConditions: string[];
+	pathologyFilter: string;
+	onPathologyFilterChange: (value: string) => void;
+	pathologyOptions: string[];
+	pathologyStatusFilter: string;
+	onPathologyStatusFilterChange: (value: string) => void;
+	paymentModelFilter: string;
+	onPaymentModelFilterChange: (value: string) => void;
+	financialStatusFilter: string;
+	onFinancialStatusFilterChange: (value: string) => void;
 	sortBy: string;
 	onSortByChange: (value: string) => void;
 	activeAdvancedFiltersCount: number;
 	totalFilteredLabel?: string;
 	onClearAllFilters: () => void;
 	hasActiveFilters: boolean;
-	classificationFilter?: PatientClassification | "all";
-	onClassificationFilterChange?: (
-		classification: PatientClassification | "all",
-	) => void;
+	classificationFilter?: string;
+	onClassificationFilterChange?: (classification: string) => void;
+	activeFilterChips?: HeaderFilterChip[];
 	children?: React.ReactNode;
 }
 
@@ -77,9 +89,15 @@ export function PatientsPageHeader({
 	onSearchChange,
 	statusFilter,
 	onStatusFilterChange,
-	conditionFilter,
-	onConditionFilterChange,
-	uniqueConditions,
+	pathologyFilter,
+	onPathologyFilterChange,
+	pathologyOptions,
+	pathologyStatusFilter,
+	onPathologyStatusFilterChange,
+	paymentModelFilter,
+	onPaymentModelFilterChange,
+	financialStatusFilter,
+	onFinancialStatusFilterChange,
 	sortBy,
 	onSortByChange,
 	activeAdvancedFiltersCount,
@@ -88,253 +106,295 @@ export function PatientsPageHeader({
 	hasActiveFilters,
 	classificationFilter = "all",
 	onClassificationFilterChange,
+	activeFilterChips = [],
 	children,
 }: PatientsPageHeaderProps) {
 	return (
 		<div className="space-y-6" data-testid="patients-page-header">
-			{/* Main Header Container - Ultra Premium Glassmorphism */}
-			<div className="relative overflow-hidden rounded-[2.5rem] bg-gradient-to-br from-white/80 to-white/40 dark:from-slate-900/80 dark:to-slate-900/40 backdrop-blur-2xl border border-white/20 dark:border-slate-800/30 shadow-2xl shadow-primary/5 p-6 md:p-8">
-				{/* Top Row: Title + Quick Actions */}
-				<div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6 mb-8">
-					<div className="flex items-center gap-4">
-						<div className="h-14 w-14 rounded-2xl bg-primary/10 flex items-center justify-center shadow-inner shadow-primary/20">
-							<Users className="h-7 w-7 text-primary" />
+			<div className="relative overflow-hidden rounded-[2.25rem] border border-white/40 bg-[radial-gradient(circle_at_top_left,_rgba(79,70,229,0.08),_transparent_28%),radial-gradient(circle_at_bottom_right,_rgba(16,185,129,0.10),_transparent_32%),linear-gradient(135deg,_rgba(255,255,255,0.92),_rgba(248,250,252,0.84))] p-6 shadow-[0_32px_80px_-48px_rgba(15,23,42,0.45)] backdrop-blur-xl dark:border-slate-800/60 dark:bg-[radial-gradient(circle_at_top_left,_rgba(99,102,241,0.16),_transparent_28%),radial-gradient(circle_at_bottom_right,_rgba(16,185,129,0.12),_transparent_32%),linear-gradient(135deg,_rgba(15,23,42,0.94),_rgba(15,23,42,0.82))] md:p-8">
+				<div className="flex flex-col gap-6 xl:flex-row xl:items-start xl:justify-between">
+					<div className="space-y-3">
+						<div className="flex items-center gap-4">
+							<div className="flex h-16 w-16 items-center justify-center rounded-[1.75rem] bg-primary/10 shadow-inner shadow-primary/20">
+								<Users className="h-8 w-8 text-primary" />
+							</div>
+							<div>
+								<h1 className="text-3xl font-black tracking-tight text-slate-950 dark:text-white">
+									Gestão de Pacientes
+								</h1>
+								<p className="mt-1 flex items-center gap-2 text-sm font-medium text-slate-600 dark:text-slate-300">
+									<span className="h-2 w-2 rounded-full bg-emerald-500" />
+									{stats.totalCount} pacientes no diretório clínico-operacional
+								</p>
+							</div>
 						</div>
-						<div>
-							<h1 className="text-2xl md:text-3xl font-black tracking-tight text-slate-900 dark:text-white">
-								Pacientes
-							</h1>
-							<p className="text-sm font-medium text-muted-foreground/80 flex items-center gap-2">
-								<span className="flex h-2 w-2 rounded-full bg-emerald-500 animate-pulse" />
-								{stats.totalCount} registros na base clínica
-							</p>
+
+						<div className="grid grid-cols-2 gap-4 md:grid-cols-4">
+							<HeaderStatCard
+								label="Ativos"
+								value={stats.activeCount}
+								tone="emerald"
+								isSelected={classificationFilter === "active"}
+								onClick={() => onClassificationFilterChange?.("active")}
+								icon={CheckCircle2}
+							/>
+							<HeaderStatCard
+								label="Novos"
+								value={stats.newCount}
+								tone="blue"
+								isSelected={classificationFilter === "new_patient"}
+								onClick={() => onClassificationFilterChange?.("new_patient")}
+								icon={Sparkles}
+							/>
+							<HeaderStatCard
+								label="Em risco"
+								value={stats.atRiskCount}
+								tone="amber"
+								isSelected={classificationFilter === "at_risk"}
+								onClick={() => onClassificationFilterChange?.("at_risk")}
+								icon={AlertTriangle}
+							/>
+							<HeaderStatCard
+								label="Alta / Finalizados"
+								value={stats.completedCount}
+								tone="violet"
+								isSelected={classificationFilter === "completed"}
+								onClick={() => onClassificationFilterChange?.("completed")}
+								icon={CheckCircle2}
+							/>
 						</div>
 					</div>
 
-					{/* Quick Actions - "Itens Rápidos" */}
-					<div className="flex flex-wrap items-center gap-3">
+					<div className="flex flex-wrap items-center gap-3 xl:max-w-[360px] xl:justify-end">
 						<Button
 							onClick={onNewPatient}
-							className="h-14 px-8 rounded-3xl bg-primary text-white shadow-xl shadow-primary/20 hover:shadow-primary/40 transition-all hover:scale-[1.02] active:scale-95 gap-3 font-black text-xs uppercase tracking-widest border-b-4 border-primary-foreground/20"
+							className="h-14 rounded-[1.35rem] px-7 text-xs font-black uppercase tracking-[0.22em] shadow-xl shadow-primary/20"
 						>
-							<div className="h-6 w-6 rounded-full bg-white/20 flex items-center justify-center">
-								<Plus className="h-4 w-4" />
-							</div>
-							<span>Novo Paciente</span>
+							<Plus className="mr-2 h-4 w-4" />
+							Novo Paciente
 						</Button>
-
-						<div className="flex items-center gap-2 bg-slate-100/80 dark:bg-slate-800/80 p-1.5 rounded-[1.75rem] border border-white/50 dark:border-white/10 backdrop-blur-xl shadow-inner">
-							<QuickActionButton
-								icon={Download}
-								label="Exportar"
-								onClick={onExport}
-								title="Exportar base de pacientes"
-							/>
-							<div className="w-px h-6 bg-slate-200 dark:bg-slate-700 mx-1" />
-							<QuickActionButton
-								icon={PieChart}
-								label="Análises"
-								onClick={onToggleAnalytics}
-								active={showAnalytics}
-								title={showAnalytics ? "Ocultar análises" : "Ver análises clínicas"}
-							/>
-							<QuickActionButton
-								icon={Zap}
-								label="Insights"
-								onClick={() => {}} 
-								variant="premium"
-								title="IA Clinical Insights"
-							/>
-						</div>
+						<Button
+							variant="outline"
+							onClick={onExport}
+							className="h-14 rounded-[1.35rem] border-white/50 bg-white/70 px-5 text-xs font-black uppercase tracking-[0.18em] backdrop-blur-md dark:border-slate-700 dark:bg-slate-900/50"
+						>
+							<Download className="mr-2 h-4 w-4" />
+							Exportar
+						</Button>
+						<Button
+							variant={showAnalytics ? "default" : "outline"}
+							onClick={onToggleAnalytics}
+							className="h-14 rounded-[1.35rem] px-5 text-xs font-black uppercase tracking-[0.18em]"
+						>
+							{showAnalytics ? "Ocultar análises" : "Análises"}
+						</Button>
 					</div>
 				</div>
 
-				{/* Dashboard Cards Row - Moved from sidebar to top section */}
-				<div className="grid grid-cols-2 md:grid-cols-4 gap-5 mb-8">
-					<HeaderStatCard
-						label="Ativos"
-						value={stats.activeByClassification}
-						icon={CheckCircle2}
-						color="emerald"
-						isSelected={classificationFilter === "active"}
-						onClick={() => onClassificationFilterChange?.("active")}
-					/>
-					<HeaderStatCard
-						label="Novos"
-						value={stats.newPatients}
-						icon={Sparkles}
-						color="blue"
-						isSelected={classificationFilter === "new_patient"}
-						onClick={() => onClassificationFilterChange?.("new_patient")}
-					/>
-					<HeaderStatCard
-						label="Em Risco"
-						value={stats.noShowRisk}
-						icon={AlertTriangle}
-						color="orange"
-						isSelected={classificationFilter === "no_show_risk"}
-						onClick={() => onClassificationFilterChange?.("no_show_risk")}
-					/>
-					<HeaderStatCard
-						label="Finalizados"
-						value={stats.completedCount}
-						icon={CheckCircle2}
-						color="purple"
-						isSelected={classificationFilter === "completed" as any}
-						onClick={() => {}}
-					/>
-				</div>
-
-				{/* Search & Filter Row - Refactored for better flow */}
-				<div className="flex flex-col xl:flex-row items-center gap-5">
-					<div className="relative flex-1 w-full group">
-						<div className="absolute inset-y-0 left-5 flex items-center pointer-events-none">
-							<Search className="h-5 w-5 text-slate-400 group-focus-within:text-primary transition-all duration-300" />
+				<div className="mt-8 space-y-5 rounded-[2rem] border border-white/50 bg-white/70 p-5 backdrop-blur-xl dark:border-slate-800/70 dark:bg-slate-950/40">
+					<div className="grid grid-cols-1 gap-4 xl:grid-cols-[minmax(0,1.6fr)_repeat(5,minmax(0,0.72fr))]">
+						<div className="relative">
+							<Search className="pointer-events-none absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
+							<Input
+								type="search"
+								value={searchTerm}
+								onChange={(event) => onSearchChange(event.target.value)}
+								placeholder="Buscar por nome, contato, patologia, parceiro ou profissional"
+								className="h-14 rounded-[1.2rem] border-slate-200/80 bg-white pl-11 text-sm font-medium dark:border-slate-800 dark:bg-slate-950/60"
+							/>
 						</div>
-						<input
-							type="search"
-							placeholder="Buscar por nome, patologia ou contato..."
-							value={searchTerm}
-							onChange={(e) => onSearchChange(e.target.value)}
-							className="h-16 w-full rounded-[2rem] border border-slate-200/60 dark:border-slate-800/60 bg-white/60 dark:bg-slate-900/60 pl-14 pr-6 text-sm font-bold ring-offset-background transition-all placeholder:text-slate-400 focus:outline-none focus:ring-8 focus:ring-primary/5 focus:border-primary/40 shadow-inner"
+
+						<HeaderSelect
+							value={statusFilter}
+							onValueChange={onStatusFilterChange}
+							placeholder="Status do paciente"
+							items={[
+								{ value: "all", label: "Todos status" },
+								{ value: "Inicial", label: "Inicial" },
+								{ value: "Em Tratamento", label: "Em Tratamento" },
+								{ value: "Recuperação", label: "Recuperação" },
+								{ value: "Concluído", label: "Concluído" },
+								{ value: "Alta", label: "Alta" },
+							]}
+						/>
+
+						<HeaderSelect
+							value={pathologyFilter}
+							onValueChange={onPathologyFilterChange}
+							placeholder="Patologia principal"
+							items={[
+								{ value: "all", label: "Todas patologias" },
+								...pathologyOptions.map((option) => ({
+									value: option,
+									label: option,
+								})),
+							]}
+						/>
+
+						<HeaderSelect
+							value={pathologyStatusFilter}
+							onValueChange={onPathologyStatusFilterChange}
+							placeholder="Status da patologia"
+							items={[
+								{ value: "all", label: "Todos status clínicos" },
+								...PATIENT_DIRECTORY_PATHOLOGY_STATUSES,
+							]}
+						/>
+
+						<HeaderSelect
+							value={paymentModelFilter}
+							onValueChange={onPaymentModelFilterChange}
+							placeholder="Pagamento"
+							items={[
+								{ value: "all", label: "Todos os modelos" },
+								...PATIENT_PAYER_MODEL_OPTIONS,
+							]}
+						/>
+
+						<HeaderSelect
+							value={financialStatusFilter}
+							onValueChange={onFinancialStatusFilterChange}
+							placeholder="Financeiro"
+							items={[
+								{ value: "all", label: "Todas as situações" },
+								...PATIENT_FINANCIAL_STATUS_OPTIONS,
+							]}
 						/>
 					</div>
 
-					<div className="flex flex-wrap items-center gap-4 w-full xl:w-auto">
-						<Select value={statusFilter} onValueChange={onStatusFilterChange}>
-							<SelectTrigger className="h-16 w-full sm:w-[180px] text-xs font-black uppercase tracking-widest rounded-[1.5rem] border-slate-200/60 dark:border-slate-800/60 bg-white/60 dark:bg-slate-900/60 focus:ring-primary/10">
-								<SelectValue placeholder="Status" />
-							</SelectTrigger>
-							<SelectContent className="rounded-[1.5rem] border-slate-200/60 dark:border-slate-800/60 shadow-2xl backdrop-blur-2xl p-2">
-								<SelectItem value="all" className="rounded-xl font-bold">Todos status</SelectItem>
-								<SelectItem value="Inicial" className="rounded-xl font-bold">Inicial</SelectItem>
-								<SelectItem value="Em Tratamento" className="rounded-xl font-bold">Em Tratamento</SelectItem>
-								<SelectItem value="Recuperação" className="rounded-xl font-bold">Recuperação</SelectItem>
-								<SelectItem value="Concluído" className="rounded-xl font-bold">Concluído</SelectItem>
-							</SelectContent>
-						</Select>
+					<div className="flex flex-col gap-4 xl:flex-row xl:items-center xl:justify-between">
+						<div className="flex flex-wrap items-center gap-3">
+							<HeaderSelect
+								value={sortBy}
+								onValueChange={onSortByChange}
+								placeholder="Ordenar"
+								className="w-full xl:w-[250px]"
+								items={[
+									{ value: "created_at_desc", label: "Mais recentes" },
+									{ value: "created_at_asc", label: "Mais antigos" },
+									{ value: "name_asc", label: "Nome (A-Z)" },
+									{ value: "name_desc", label: "Nome (Z-A)" },
+									{ value: "main_condition_asc", label: "Patologia (A-Z)" },
+									{ value: "main_condition_desc", label: "Patologia (Z-A)" },
+									{ value: "next_appointment_asc", label: "Próxima sessão" },
+									{ value: "last_activity_desc", label: "Última atividade" },
+									{ value: "open_balance_desc", label: "Maior saldo pendente" },
+									{ value: "risk_desc", label: "Maior risco" },
+								]}
+								triggerPrefix={<ArrowUpDown className="h-4 w-4 text-primary" />}
+							/>
+							{children}
+							{activeAdvancedFiltersCount > 0 && (
+								<Badge className="rounded-full border border-primary/20 bg-primary/5 px-3 py-1 text-[11px] font-semibold text-primary">
+									{activeAdvancedFiltersCount} filtro(s) avançado(s)
+								</Badge>
+							)}
+						</div>
 
-						<Select value={conditionFilter} onValueChange={onConditionFilterChange}>
-							<SelectTrigger className="h-16 w-full sm:w-[200px] text-xs font-black uppercase tracking-widest rounded-[1.5rem] border-slate-200/60 dark:border-slate-800/60 bg-white/60 dark:bg-slate-900/60 focus:ring-primary/10">
-								<SelectValue placeholder="Condição" />
-							</SelectTrigger>
-							<SelectContent className="rounded-[1.5rem] border-slate-200/60 dark:border-slate-800/60 shadow-2xl backdrop-blur-2xl p-2">
-								<SelectItem value="all" className="rounded-xl font-bold">Todas condições</SelectItem>
-								{uniqueConditions.map((c) => (
-									<SelectItem key={String(c)} value={String(c)} className="rounded-xl font-bold">
-										{String(c)}
-									</SelectItem>
-								))}
-							</SelectContent>
-						</Select>
-
-						<Select value={sortBy} onValueChange={onSortByChange}>
-							<SelectTrigger className="h-16 w-full sm:w-[200px] text-xs font-black uppercase tracking-widest rounded-[1.5rem] border-slate-200/60 dark:border-slate-800/60 bg-white/60 dark:bg-slate-900/60 focus:ring-primary/10">
-								<div className="flex items-center gap-3">
-									<ArrowUpDown className="h-4 w-4 text-primary" />
-									<SelectValue placeholder="Ordenar" />
-								</div>
-							</SelectTrigger>
-							<SelectContent className="rounded-[1.5rem] border-slate-200/60 dark:border-slate-800/60 shadow-2xl backdrop-blur-2xl p-2">
-								<SelectItem value="created_at_desc" className="rounded-xl font-bold">Mais recentes</SelectItem>
-								<SelectItem value="created_at_asc" className="rounded-xl font-bold">Mais antigos</SelectItem>
-								<SelectItem value="name_asc" className="rounded-xl font-bold">Nome (A-Z)</SelectItem>
-								<SelectItem value="name_desc" className="rounded-xl font-bold">Nome (Z-A)</SelectItem>
-								<SelectItem value="main_condition_asc" className="rounded-xl font-bold">Patologia (A-Z)</SelectItem>
-								<SelectItem value="main_condition_desc" className="rounded-xl font-bold">Patologia (Z-A)</SelectItem>
-							</SelectContent>
-						</Select>
-
-						{children}
+						<div className="flex flex-wrap items-center gap-2">
+							<Badge className="rounded-full border border-emerald-200/80 bg-emerald-50 px-3 py-1 text-[11px] font-semibold text-emerald-700 dark:border-emerald-900/60 dark:bg-emerald-950/30 dark:text-emerald-300">
+								{stats.noShowRisk} com risco de falta
+							</Badge>
+							<Badge className="rounded-full border border-amber-200/80 bg-amber-50 px-3 py-1 text-[11px] font-semibold text-amber-700 dark:border-amber-900/60 dark:bg-amber-950/30 dark:text-amber-300">
+								{stats.hasUnpaid} com pendência financeira
+							</Badge>
+							<Badge className="rounded-full border border-slate-200/80 bg-slate-50 px-3 py-1 text-[11px] font-semibold text-slate-700 dark:border-slate-800 dark:bg-slate-900/60 dark:text-slate-200">
+								Pág. {stats.currentPage} de {stats.totalPages || 1}
+							</Badge>
+						</div>
 					</div>
+
+					{activeFilterChips.length > 0 && (
+						<div className="flex flex-wrap items-center gap-2">
+							{activeFilterChips.map((chip) => (
+								<button
+									key={chip.key}
+									type="button"
+									onClick={chip.onRemove}
+									className="inline-flex items-center gap-2 rounded-full border border-primary/20 bg-primary/5 px-3 py-1.5 text-[11px] font-semibold text-primary transition hover:bg-primary/10"
+								>
+									{chip.label}
+									<X className="h-3.5 w-3.5" />
+								</button>
+							))}
+						</div>
+					)}
+
+					{hasActiveFilters && (
+						<div className="flex flex-col gap-3 border-t border-slate-200/60 pt-4 dark:border-slate-800">
+							<div className="flex items-center justify-between gap-4">
+								<p className="text-[11px] font-black uppercase tracking-[0.18em] text-primary">
+									{totalFilteredLabel ?? "Base filtrada"}
+								</p>
+								<Button
+									variant="ghost"
+									onClick={onClearAllFilters}
+									className="h-9 rounded-full px-4 text-[11px] font-black uppercase tracking-[0.18em] text-red-500 hover:bg-red-50 hover:text-red-600 dark:hover:bg-red-950/30"
+								>
+									<X className="mr-2 h-4 w-4" />
+									Limpar filtros
+								</Button>
+							</div>
+						</div>
+					)}
 				</div>
 
-				{/* Integrated Insights Pill */}
-				<div className="mt-8">
+				<div className="mt-6">
 					<PatientPageInsights
 						totalPatients={stats.totalCount}
-						classificationStats={stats as any}
+						classificationStats={{
+							active: stats.activeCount,
+							inactive7: stats.inactive7,
+							inactive30: stats.inactive30,
+							inactive60: stats.inactive60,
+							noShowRisk: stats.noShowRisk,
+							hasUnpaid: stats.hasUnpaid,
+							newPatients: stats.newCount,
+							completed: stats.completedCount,
+						}}
 					/>
 				</div>
-
-				{/* Active Filter Clearances */}
-				{hasActiveFilters && (
-					<div className="mt-6 flex items-center justify-between border-t border-slate-100 dark:border-slate-800/50 pt-6 animate-in fade-in slide-in-from-top-2 duration-500">
-						<div className="flex items-center gap-4">
-							<div className="flex -space-x-2">
-								<div className="h-8 w-8 rounded-full bg-primary/20 border-2 border-white dark:border-slate-900 flex items-center justify-center">
-									<Activity className="h-4 w-4 text-primary" />
-								</div>
-							</div>
-							<p className="text-[10px] font-black text-primary uppercase tracking-[0.2em]">
-								{totalFilteredLabel ?? "Base Filtrada"}
-							</p>
-						</div>
-						<button
-							type="button"
-							onClick={onClearAllFilters}
-							className="group text-[10px] font-black uppercase tracking-[0.2em] text-red-500 hover:text-white transition-all bg-red-50 hover:bg-red-500 dark:bg-red-950/20 px-6 py-2.5 rounded-full border border-red-100 dark:border-red-900/30 flex items-center gap-2"
-						>
-							<Plus className="h-3 w-3 rotate-45 transition-transform group-hover:scale-125" />
-							Limpar Filtros
-						</button>
-					</div>
-				)}
 			</div>
 		</div>
 	);
 }
 
-function QuickActionButton({
-	icon: Icon,
-	label,
-	onClick,
-	active,
-	variant = "default",
-	title,
+function HeaderSelect({
+	value,
+	onValueChange,
+	placeholder,
+	items,
+	className,
+	triggerPrefix,
 }: {
-	icon: any;
-	label: string;
-	onClick: () => void;
-	active?: boolean;
-	variant?: "default" | "premium";
-	title: string;
+	value: string;
+	onValueChange: (value: string) => void;
+	placeholder: string;
+	items: Array<{ value: string; label: string }>;
+	className?: string;
+	triggerPrefix?: React.ReactNode;
 }) {
-	if (variant === "premium") {
-		return (
-			<Button
-				variant="ghost"
-				size="sm"
-				onClick={onClick}
-				className={cn(
-					"h-11 px-4 rounded-2xl gap-2 text-[10px] font-black uppercase tracking-wider transition-all relative overflow-hidden",
-					"bg-gradient-to-br from-primary to-indigo-600 text-white shadow-lg shadow-primary/25 hover:shadow-primary/40 hover:-translate-y-0.5"
-				)}
-				title={title}
-			>
-				<Icon className="h-4 w-4 animate-pulse" />
-				<span className="hidden sm:inline">{label}</span>
-				<div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent -translate-x-full animate-[shimmer_2s_infinite]" />
-			</Button>
-		);
-	}
-
 	return (
-		<Button
-			variant="ghost"
-			size="sm"
-			onClick={onClick}
-			className={cn(
-				"h-11 px-4 rounded-2xl gap-2 text-[10px] font-black uppercase tracking-wider transition-all",
-				active
-					? "bg-white dark:bg-slate-900 text-primary shadow-xl shadow-primary/10 border border-primary/20 scale-105"
-					: "text-slate-500 hover:bg-white dark:hover:bg-slate-700 hover:text-primary",
-			)}
-			title={title}
-		>
-			<Icon className={cn("h-4 w-4", active && "animate-bounce")} />
-			<span className="hidden sm:inline">{label}</span>
-		</Button>
+		<Select value={value} onValueChange={onValueChange}>
+			<SelectTrigger
+				className={cn(
+					"h-14 rounded-[1.2rem] border-slate-200/80 bg-white text-left text-xs font-black uppercase tracking-[0.16em] dark:border-slate-800 dark:bg-slate-950/60",
+					className,
+				)}
+			>
+				<div className="flex min-w-0 items-center gap-2">
+					{triggerPrefix}
+					<SelectValue placeholder={placeholder} />
+				</div>
+			</SelectTrigger>
+			<SelectContent className="rounded-2xl">
+				{items.map((item) => (
+					<SelectItem key={item.value} value={item.value}>
+						{item.label}
+					</SelectItem>
+				))}
+			</SelectContent>
+		</Select>
 	);
 }
 
@@ -342,85 +402,47 @@ function HeaderStatCard({
 	label,
 	value,
 	icon: Icon,
-	color,
+	tone,
 	isSelected,
 	onClick,
 }: {
 	label: string;
 	value: number;
-	icon: any;
-	color: "emerald" | "blue" | "orange" | "purple";
+	icon: React.ElementType;
+	tone: "emerald" | "blue" | "amber" | "violet";
 	isSelected?: boolean;
 	onClick?: () => void;
 }) {
-	const colorMap = {
-		emerald: {
-			bg: "from-emerald-500/10 to-emerald-500/[0.02]",
-			border: "border-emerald-500/20",
-			hoverBorder: "hover:border-emerald-500/40",
-			text: "text-emerald-600",
-			val: "text-emerald-700 dark:text-emerald-400",
-			iconBg: "bg-emerald-500/20",
-			indicator: "bg-emerald-500/20",
-		},
-		blue: {
-			bg: "from-blue-500/10 to-blue-500/[0.02]",
-			border: "border-blue-500/20",
-			hoverBorder: "hover:border-blue-500/40",
-			text: "text-blue-600",
-			val: "text-blue-700 dark:text-blue-400",
-			iconBg: "bg-blue-500/20",
-			indicator: "bg-blue-500/20",
-		},
-		orange: {
-			bg: "from-orange-500/10 to-orange-500/[0.02]",
-			border: "border-orange-500/20",
-			hoverBorder: "hover:border-orange-500/40",
-			text: "text-orange-600",
-			val: "text-orange-700 dark:text-orange-400",
-			iconBg: "bg-orange-500/20",
-			indicator: "bg-orange-500/20",
-		},
-		purple: {
-			bg: "from-purple-500/10 to-purple-500/[0.02]",
-			border: "border-purple-500/20",
-			hoverBorder: "hover:border-purple-500/40",
-			text: "text-purple-600",
-			val: "text-purple-700 dark:text-purple-400",
-			iconBg: "bg-purple-500/20",
-			indicator: "bg-purple-500/20",
-		},
-	};
-
-	const c = colorMap[color];
+	const toneMap = {
+		emerald:
+			"border-emerald-200/70 bg-emerald-50/80 text-emerald-700 dark:border-emerald-900/60 dark:bg-emerald-950/20 dark:text-emerald-300",
+		blue: "border-blue-200/70 bg-blue-50/80 text-blue-700 dark:border-blue-900/60 dark:bg-blue-950/20 dark:text-blue-300",
+		amber:
+			"border-amber-200/70 bg-amber-50/80 text-amber-700 dark:border-amber-900/60 dark:bg-amber-950/20 dark:text-amber-300",
+		violet:
+			"border-violet-200/70 bg-violet-50/80 text-violet-700 dark:border-violet-900/60 dark:bg-violet-950/20 dark:text-violet-300",
+	} satisfies Record<string, string>;
 
 	return (
-		<div
+		<button
+			type="button"
 			onClick={onClick}
 			className={cn(
-				"p-4 rounded-3xl bg-gradient-to-br border space-y-1 group transition-all duration-300 cursor-pointer relative overflow-hidden",
-				c.bg,
-				c.border,
-				c.hoverBorder,
-				isSelected && "ring-2 ring-primary ring-offset-2 ring-offset-background",
-				!isSelected && "hover:scale-[1.02] active:scale-95",
+				"relative overflow-hidden rounded-[1.75rem] border px-4 py-4 text-left transition duration-200",
+				toneMap[tone],
+				isSelected
+					? "ring-2 ring-primary/40 ring-offset-2 ring-offset-background"
+					: "hover:-translate-y-0.5 hover:shadow-lg",
 			)}
 		>
 			<div className="flex items-center justify-between">
-				<p className={cn("text-[9px] font-black uppercase tracking-[0.15em]", c.text)}>
-					{label}
-				</p>
-				<div className={cn("h-6 w-6 rounded-full flex items-center justify-center transition-transform group-hover:rotate-12", c.iconBg)}>
-					<Icon className={cn("h-3.5 w-3.5", c.text)} />
+				<p className="text-[10px] font-black uppercase tracking-[0.2em]">{label}</p>
+				<div className="rounded-full bg-white/70 p-2 dark:bg-slate-900/50">
+					<Icon className="h-4 w-4" />
 				</div>
 			</div>
-			<p className={cn("text-3xl font-black tabular-nums", c.val)}>
-				{value}
-			</p>
-			<div className={cn("h-1 w-12 rounded-full transition-all group-hover:w-full", c.indicator)} />
-			
-			{/* Subtle decorative background icon */}
-			<Icon className={cn("absolute -right-2 -bottom-2 h-16 w-16 opacity-[0.03] transition-all group-hover:scale-110", c.text)} />
-		</div>
+			<p className="mt-4 text-3xl font-black tracking-tight">{value}</p>
+			<div className="mt-3 h-1 w-14 rounded-full bg-current/25" />
+		</button>
 	);
 }
