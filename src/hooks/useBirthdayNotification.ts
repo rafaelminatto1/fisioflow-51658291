@@ -17,7 +17,7 @@ export function useBirthdayNotification() {
 	const { data: patients = [] } = useQuery({
 		queryKey: ["patients-birthdays-today"],
 		queryFn: async () => {
-			const res = await patientsApi.list({ status: "ativo", limit: 200 });
+			const res = await patientsApi.list({ status: "ativo", limit: 200, minimal: true });
 			const today = new Date();
 			const month = today.getUTCMonth() + 1;
 			const day = today.getUTCDate();
