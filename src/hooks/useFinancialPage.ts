@@ -42,7 +42,7 @@ export function useFinancialPageData(period: PeriodType = "monthly") {
 		isLoading: isLoadingTransactions,
 		error: transactionsError,
 	} = useQuery({
-		queryKey: ["financial-transactions", period],
+		queryKey: ["financial-transactions", organizationId, period],
 		queryFn: async () => {
 			try {
 				const res = await financialApi.transacoes.list({ limit: 300 });
@@ -92,7 +92,7 @@ export function useFinancialPageData(period: PeriodType = "monthly") {
 			.reduce((sum, t) => sum + (t.valor || 0), 0);
 
 		const paidCount = transactions.filter(
-			(t: Transaction) => t.status === "pago",
+			(t: Transaction) => t.status === "pago" || t.status === "concluido",
 		).length;
 
 		const revenueCount = transactions.filter(
@@ -122,6 +122,9 @@ export function useFinancialPageData(period: PeriodType = "monthly") {
 			queryClient.invalidateQueries({
 				queryKey: ["financial-transactions"],
 			});
+			queryClient.invalidateQueries({
+				queryKey: ["financial-command-center"],
+			});
 			toast.success("Transação criada com sucesso");
 		},
 		onError: (error) => {
@@ -145,6 +148,9 @@ export function useFinancialPageData(period: PeriodType = "monthly") {
 			queryClient.invalidateQueries({
 				queryKey: ["financial-transactions"],
 			});
+			queryClient.invalidateQueries({
+				queryKey: ["financial-command-center"],
+			});
 			toast.success("Transação atualizada com sucesso");
 		},
 		onError: (error) => {
@@ -161,6 +167,9 @@ export function useFinancialPageData(period: PeriodType = "monthly") {
 			queryClient.invalidateQueries({
 				queryKey: ["financial-transactions"],
 			});
+			queryClient.invalidateQueries({
+				queryKey: ["financial-command-center"],
+			});
 			toast.success("Transação excluída com sucesso");
 		},
 		onError: (error) => {
@@ -176,6 +185,9 @@ export function useFinancialPageData(period: PeriodType = "monthly") {
 		onSuccess: () => {
 			queryClient.invalidateQueries({
 				queryKey: ["financial-transactions"],
+			});
+			queryClient.invalidateQueries({
+				queryKey: ["financial-command-center"],
 			});
 			toast.success("Pagamento registrado com sucesso");
 		},
