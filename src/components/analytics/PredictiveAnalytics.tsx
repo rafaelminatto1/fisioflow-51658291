@@ -43,7 +43,7 @@ export function PredictiveAnalytics() {
 			const response = await appointmentsApi.list({
 				dateFrom: format(last30Days[0], "yyyy-MM-dd"),
 				dateTo: format(last30Days[last30Days.length - 1], "yyyy-MM-dd"),
-				limit: 3000,
+				limit: 1000,
 			});
 			const historicalCounts = buildDailyCounts(
 				response?.data ?? [],
@@ -84,7 +84,7 @@ export function PredictiveAnalytics() {
 			const response = await appointmentsApi.list({
 				dateFrom: format(thirtyDaysAgo, "yyyy-MM-dd"),
 				dateTo: format(new Date(), "yyyy-MM-dd"),
-				limit: 3000,
+				limit: 1000,
 			});
 			const appointments = response?.data ?? [];
 			const totalAppointments = appointments.length;

@@ -33,7 +33,6 @@ async function runDeepAudit() {
   const page = await context.newPage();
 
   const auditResults: any[] = [];
-  const globalErrors: string[] = [];
 
   // --- LOGIN ---
   console.log("🔐 Logging in...");
@@ -60,7 +59,7 @@ async function runDeepAudit() {
       tabs: [],
       errors: [],
       warnings: [],
-      networkFailures: []
+      networkErrors: []
     };
 
     const consoleListener = (msg: ConsoleMessage) => {
@@ -71,16 +70,25 @@ async function runDeepAudit() {
       }
       if (msg.type() === "warning") routeResults.warnings.push(text);
     };
-    page.on("console", consoleListener);
 
-    const requestListener = (request: any) => {
+    const requestFailedListener = (request: any) => {
       const failure = request.failure();
-      if (failure) {
-        const errorText = `${request.url()} - ${failure.errorText}`;
-        routeResults.networkFailures.push(errorText);
+      const errorText = `${request.url()} - ${failure?.errorText || 'Unknown'}`;
+      routeResults.networkErrors.push({ type: 'failed', url: request.url(), error: failure?.errorText });
+      console.log(`   [NET FAIL] ${errorText}`);
+    };
+
+    const responseListener = (response: any) => {
+      const status = response.status();
+      if (status >= 400) {
+        routeResults.networkErrors.push({ type: 'http_error', url: response.url(), status });
+        console.log(`   [HTTP ERROR] ${status} - ${response.url()}`);
       }
     };
-    page.on("requestfailed", requestListener);
+
+    page.on("console", consoleListener);
+    page.on("requestfailed", requestFailedListener);
+    page.on("response", responseListener);
 
     try {
       await page.goto(`${BASE_URL}${route.path}`, { waitUntil: "networkidle", timeout: 30000 });
@@ -122,7 +130,8 @@ async function runDeepAudit() {
 
     // Cleanup listeners
     page.off("console", consoleListener);
-    page.off("requestfailed", requestListener);
+    page.off("requestfailed", requestFailedListener);
+    page.off("response", responseListener);
   }
 
   // --- SAVE REPORT ---
@@ -133,6 +142,7 @@ async function runDeepAudit() {
       totalPages: auditResults.length,
       totalErrors: auditResults.reduce((acc, r) => acc + r.errors.length, 0),
       totalWarnings: auditResults.reduce((acc, r) => acc + r.warnings.length, 0),
+      totalNetworkErrors: auditResults.reduce((acc, r) => acc + r.networkErrors.length, 0),
       totalTabsTested: auditResults.reduce((acc, r) => acc + r.tabs.length, 0)
     }
   };
