@@ -62,3 +62,6 @@ export * from "./precadastro";
 
 // AI Studio Features
 export * from "./ai_studio";
+
+// Media & Gallery
+export * from "./media";

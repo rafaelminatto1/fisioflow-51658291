@@ -12,6 +12,7 @@ interface DoctorAutocompleteProps {
 	placeholder?: string;
 	disabled?: boolean;
 	className?: string;
+	error?: boolean;
 }
 
 export function DoctorAutocomplete({
@@ -21,6 +22,7 @@ export function DoctorAutocomplete({
 	placeholder = "Selecione ou digite o nome do médico...",
 	disabled = false,
 	className,
+	error = false,
 }: DoctorAutocompleteProps) {
 	const [open, setOpen] = useState(false);
 	const [searchTerm, setSearchTerm] = useState(value);
@@ -109,7 +111,10 @@ export function DoctorAutocomplete({
 						setIsFocused(true);
 						setOpen(true);
 					}}
-					className="pl-10 h-10 w-full bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700 focus-visible:ring-2 focus-visible:ring-blue-500/40"
+					className={cn(
+						"pl-10 h-10 w-full bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700 focus-visible:ring-2 focus-visible:ring-blue-500/40",
+						error && "border-destructive focus-visible:ring-destructive"
+					)}
 					disabled={disabled}
 				/>
 				{isLoading && (

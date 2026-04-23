@@ -30,6 +30,7 @@ const vector = customType<{ data: number[] }>({
 });
 import { relations } from "drizzle-orm";
 import { protocolExercises } from "./protocols";
+import { exerciseMediaAttachments } from "./media";
 
 // ===== ENUMS =====
 export const difficultyEnum = pgEnum("exercise_difficulty", [
@@ -164,6 +165,7 @@ export const exercisesRelations = relations(exercises, ({ one, many }) => ({
 		references: [exerciseCategories.id],
 	}),
 	protocolExercises: many(protocolExercises),
+	media: many(exerciseMediaAttachments),
 }));
 
 // ===== EXERCISE FAVORITES =====

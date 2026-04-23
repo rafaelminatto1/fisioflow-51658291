@@ -1132,6 +1132,10 @@ app.get("/", async (c) => {
 			const safeLimit = isNaN(limit) ? 20 : limit;
 			const safeOffset = isNaN(offset) ? 0 : offset;
 			
+			// Otimização: Se não houver filtros complexos, poderíamos filtrar pacientes primeiro.
+			// Mas como classification e financialStatus são calculados, precisamos da CTE completa.
+			// Adicionamos logging para monitorar.
+
 			dataResult = await pool.query(
 				`
 					${cteSql}
@@ -1143,7 +1147,12 @@ app.get("/", async (c) => {
 				`,
 				[...params, safeLimit, safeOffset],
 			);
-			console.log(`[Patients/List] Data query took ${Date.now() - startData}ms`);
+			const duration = Date.now() - startData;
+			console.log(`[Patients/List] Data query took ${duration}ms (Limit: ${safeLimit}, Offset: ${safeOffset})`);
+			
+			if (duration > 5000) {
+				console.warn(`[Patients/List] SLOW QUERY DETECTED: ${duration}ms for org ${user.organizationId}`);
+			}
 		} catch (e: any) {
 			console.error("[Patients/List] Data Query Error:", {
 				message: e.message,

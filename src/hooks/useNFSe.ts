@@ -67,6 +67,7 @@ export function useSaveNFSeConfig() {
 			request("/api/nfse/config", { method: "PUT", body: JSON.stringify(cfg) }),
 		onSuccess: () => {
 			queryClient.invalidateQueries({ queryKey: ["nfse-config"] });
+			queryClient.invalidateQueries({ queryKey: ["financial-command-center"] });
 			toast.success("Configuração NFS-e salva!");
 		},
 		onError: (e: Error) => toast.error("Erro: " + e.message),
@@ -92,6 +93,7 @@ export function useGenerateNFSe() {
 			}),
 		onSuccess: () => {
 			queryClient.invalidateQueries({ queryKey: ["nfse-records"] });
+			queryClient.invalidateQueries({ queryKey: ["financial-command-center"] });
 			toast.success("RPS gerado com sucesso!");
 		},
 		onError: (e: Error) => toast.error("Erro ao gerar NFS-e: " + e.message),
@@ -108,6 +110,7 @@ export function useSendNFSe() {
 			}),
 		onSuccess: (res: any) => {
 			queryClient.invalidateQueries({ queryKey: ["nfse-records"] });
+			queryClient.invalidateQueries({ queryKey: ["financial-command-center"] });
 			const status = res?.data?.status;
 			if (status === "autorizado") {
 				toast.success(`NFS-e autorizada! Nº ${res.data.numero_nfse}`);
@@ -126,6 +129,7 @@ export function useCancelNFSe() {
 			request(`/api/nfse/${id}`, { method: "DELETE" }),
 		onSuccess: () => {
 			queryClient.invalidateQueries({ queryKey: ["nfse-records"] });
+			queryClient.invalidateQueries({ queryKey: ["financial-command-center"] });
 			toast.success("NFS-e cancelada");
 		},
 		onError: (e: Error) => toast.error("Erro ao cancelar: " + e.message),

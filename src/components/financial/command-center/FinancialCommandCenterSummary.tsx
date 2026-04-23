@@ -35,7 +35,7 @@ import { SafeResponsiveContainer } from "@/components/charts/SafeResponsiveConta
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { APP_ROUTES } from "@/lib/routing/appRoutes";
+import { APP_ROUTES, patientRoutes } from "@/lib/routing/appRoutes";
 import { cn, formatCurrency } from "@/lib/utils";
 
 interface FinancialCommandCenterSummaryProps {
@@ -179,7 +179,7 @@ export function FinancialCommandCenterSummary({
 									variant="outline"
 									className="h-10 rounded-2xl border-primary/20 bg-white/70 px-5 font-bold dark:bg-slate-950/40"
 								>
-									<Link to={`${APP_ROUTES.FINANCIAL}?tab=collections`}>
+									<Link to={`${APP_ROUTES.FINANCIAL}?tab=collections&collections=receivables`}>
 										Ir para cobrança
 									</Link>
 								</Button>
@@ -192,7 +192,7 @@ export function FinancialCommandCenterSummary({
 									Saldo do período
 								</p>
 								<p className="mt-2 text-3xl font-black tracking-tight text-slate-950 dark:text-white">
-									{formatCurrency(data.summary.netBalance)}
+									{formatCurrency(data.summary.cashPosition)}
 								</p>
 								<div className="mt-3 flex items-center gap-2">
 									<Badge
@@ -218,25 +218,25 @@ export function FinancialCommandCenterSummary({
 
 							<div className="rounded-3xl border border-white/70 bg-white/70 p-4 dark:border-slate-800/70 dark:bg-slate-950/40">
 								<p className="text-[10px] font-black uppercase tracking-[0.22em] text-slate-400">
-									Receita projetada 30d
+									Receita ajustada 30d
 								</p>
 								<p className="mt-2 text-3xl font-black tracking-tight text-slate-950 dark:text-white">
-									{formatCurrency(data.summary.projectedNext30Days)}
+									{formatCurrency(data.projection.adjustedExpectedRevenue)}
 								</p>
 								<p className="mt-3 text-xs text-slate-500 dark:text-slate-400">
-									Com ajuste de no-show e agenda futura.
+									Bruto de {formatCurrency(data.projection.rawExpectedRevenue)} com ajuste de no-show.
 								</p>
 							</div>
 
 							<div className="rounded-3xl border border-white/70 bg-white/70 p-4 dark:border-slate-800/70 dark:bg-slate-950/40">
 								<p className="text-[10px] font-black uppercase tracking-[0.22em] text-slate-400">
-									Pacientes ativos
+									Sessões previstas 30d
 								</p>
 								<p className="mt-2 text-3xl font-black tracking-tight text-slate-950 dark:text-white">
-									{data.summary.activePatients}
+									{data.projection.scheduledSessions}
 								</p>
 								<p className="mt-3 text-xs text-slate-500 dark:text-slate-400">
-									Base em acompanhamento com impacto direto em receita e retenção.
+									No-show recente em {(data.projection.noShowRate * 100).toFixed(1)}% no horizonte projetado.
 								</p>
 							</div>
 						</div>
@@ -291,24 +291,17 @@ export function FinancialCommandCenterSummary({
 
 			<div className="grid gap-4 md:grid-cols-2 xl:grid-cols-6">
 				<StatCard
-					label="Receita realizada"
-					value={formatCurrency(data.summary.realizedRevenue)}
-					description="Entradas conciliadas no período."
-					icon={TrendingUp}
+					label="Caixa disponível"
+					value={formatCurrency(data.summary.cashPosition)}
+					description="Leitura líquida do período selecionado."
+					icon={Wallet}
 					tone="success"
-				/>
-				<StatCard
-					label="Saídas realizadas"
-					value={formatCurrency(data.summary.realizedExpenses)}
-					description="Despesas já executadas."
-					icon={TrendingDown}
-					tone="danger"
 				/>
 				<StatCard
 					label="A receber"
 					value={formatCurrency(data.summary.pendingReceivables)}
 					description={`${data.collections.overdueCount} vencidas + ${data.collections.dueTodayCount} hoje`}
-					icon={Wallet}
+					icon={TrendingUp}
 					tone="warning"
 				/>
 				<StatCard
@@ -319,6 +312,13 @@ export function FinancialCommandCenterSummary({
 					tone="default"
 				/>
 				<StatCard
+					label="Inadimplência"
+					value={formatCurrency(data.summary.overdueAmount)}
+					description="Valor já vencido e em risco de caixa."
+					icon={TrendingDown}
+					tone="danger"
+				/>
+				<StatCard
 					label="Ticket médio"
 					value={formatCurrency(data.summary.averageTicket)}
 					description="Baseado em sessões atendidas."
@@ -326,124 +326,216 @@ export function FinancialCommandCenterSummary({
 					tone="default"
 				/>
 				<StatCard
-					label="Efetivação"
-					value={`${data.summary.collectionRate.toFixed(0)}%`}
-					description="Lançamentos liquidados no período."
+					label="Margem estimada"
+					value={`${data.summary.estimatedMargin.toFixed(1)}%`}
+					description={`Efetivação em ${data.summary.collectionRate.toFixed(0)}% no período.`}
 					icon={LineChart}
-					tone="default"
+					tone={data.summary.estimatedMargin >= 0 ? "success" : "danger"}
 				/>
 			</div>
 
 			<div className="grid gap-4 xl:grid-cols-[1.6fr_0.95fr]">
-				<Card className="rounded-[28px] border-white/70 bg-white/90 shadow-[0_24px_70px_-52px_rgba(15,23,42,0.45)] dark:border-slate-800/80 dark:bg-slate-950/70">
-					<CardHeader className="flex flex-row items-start justify-between gap-3 pb-2">
-						<div>
-							<CardTitle className="text-lg font-black tracking-tight text-slate-950 dark:text-white">
-								Fluxo de caixa do período
-							</CardTitle>
-							<p className="text-sm text-slate-500 dark:text-slate-400">
-								Entradas, saídas e saldo acumulado numa mesma leitura.
-							</p>
-						</div>
-						<Button
-							asChild
-							variant="ghost"
-							className="rounded-2xl text-xs font-bold"
-						>
-							<Link to={`${APP_ROUTES.FINANCIAL}?tab=cashflow`}>
-								Abrir fluxo
-								<ArrowRight className="ml-2 h-3.5 w-3.5" />
-							</Link>
-						</Button>
-					</CardHeader>
-					<CardContent className="space-y-4 pt-2">
-						<div className="grid gap-3 sm:grid-cols-3">
-							<div className="rounded-2xl bg-emerald-500/8 p-3">
-								<p className="text-[10px] font-black uppercase tracking-[0.2em] text-emerald-700/70 dark:text-emerald-300/70">
-									Entradas
-								</p>
-								<p className="mt-2 text-xl font-black text-emerald-700 dark:text-emerald-300">
-									{formatCurrency(data.cashflow.totals.income)}
+				<div className="grid gap-4">
+					<Card className="rounded-[28px] border-white/70 bg-white/90 shadow-[0_24px_70px_-52px_rgba(15,23,42,0.45)] dark:border-slate-800/80 dark:bg-slate-950/70">
+						<CardHeader className="flex flex-row items-start justify-between gap-3 pb-2">
+							<div>
+								<CardTitle className="text-lg font-black tracking-tight text-slate-950 dark:text-white">
+									Fluxo de caixa e projeção 30 dias
+								</CardTitle>
+								<p className="text-sm text-slate-500 dark:text-slate-400">
+									Entradas, saídas, saldo acumulado e forecast operacional na mesma leitura.
 								</p>
 							</div>
-							<div className="rounded-2xl bg-rose-500/8 p-3">
-								<p className="text-[10px] font-black uppercase tracking-[0.2em] text-rose-700/70 dark:text-rose-300/70">
-									Saídas
-								</p>
-								<p className="mt-2 text-xl font-black text-rose-700 dark:text-rose-300">
-									{formatCurrency(data.cashflow.totals.expense)}
-								</p>
+							<Button
+								asChild
+								variant="ghost"
+								className="rounded-2xl text-xs font-bold"
+							>
+								<Link to={`${APP_ROUTES.FINANCIAL}?tab=cashflow`}>
+									Abrir fluxo
+									<ArrowRight className="ml-2 h-3.5 w-3.5" />
+								</Link>
+							</Button>
+						</CardHeader>
+						<CardContent className="space-y-4 pt-2">
+							<div className="grid gap-3 sm:grid-cols-3">
+								<div className="rounded-2xl bg-emerald-500/8 p-3">
+									<p className="text-[10px] font-black uppercase tracking-[0.2em] text-emerald-700/70 dark:text-emerald-300/70">
+										Entradas
+									</p>
+									<p className="mt-2 text-xl font-black text-emerald-700 dark:text-emerald-300">
+										{formatCurrency(data.cashflow.totals.income)}
+									</p>
+								</div>
+								<div className="rounded-2xl bg-rose-500/8 p-3">
+									<p className="text-[10px] font-black uppercase tracking-[0.2em] text-rose-700/70 dark:text-rose-300/70">
+										Saídas
+									</p>
+									<p className="mt-2 text-xl font-black text-rose-700 dark:text-rose-300">
+										{formatCurrency(data.cashflow.totals.expense)}
+									</p>
+								</div>
+								<div className="rounded-2xl bg-primary/8 p-3">
+									<p className="text-[10px] font-black uppercase tracking-[0.2em] text-primary/70">
+										Saldo acumulado
+									</p>
+									<p className="mt-2 text-xl font-black text-slate-950 dark:text-white">
+										{formatCurrency(data.cashflow.totals.balance)}
+									</p>
+								</div>
 							</div>
-							<div className="rounded-2xl bg-primary/8 p-3">
-								<p className="text-[10px] font-black uppercase tracking-[0.2em] text-primary/70">
-									Saldo acumulado
-								</p>
-								<p className="mt-2 text-xl font-black text-slate-950 dark:text-white">
-									{formatCurrency(data.cashflow.totals.balance)}
-								</p>
-							</div>
-						</div>
 
-						<div className="h-[280px] w-full">
-							<SafeResponsiveContainer className="h-full" minHeight={280}>
-								<AreaChart data={data.cashflow.points}>
-									<defs>
-										<linearGradient id="command-center-income" x1="0" y1="0" x2="0" y2="1">
-											<stop offset="0%" stopColor="#10b981" stopOpacity={0.3} />
-											<stop offset="100%" stopColor="#10b981" stopOpacity={0} />
-										</linearGradient>
-										<linearGradient id="command-center-expense" x1="0" y1="0" x2="0" y2="1">
-											<stop offset="0%" stopColor="#ef4444" stopOpacity={0.24} />
-											<stop offset="100%" stopColor="#ef4444" stopOpacity={0} />
-										</linearGradient>
-									</defs>
-									<CartesianGrid vertical={false} strokeDasharray="4 6" stroke="#E2E8F0" />
-									<XAxis
-										dataKey="label"
-										axisLine={false}
-										tickLine={false}
-										tick={{ fill: "#64748b", fontSize: 12 }}
-									/>
-									<YAxis
-										axisLine={false}
-										tickLine={false}
-										tick={{ fill: "#64748b", fontSize: 12 }}
-										tickFormatter={(value) => `R$${Math.round(value / 1000)}k`}
-									/>
-									<Tooltip
-										formatter={(value: number) => formatCurrency(Number(value))}
-										contentStyle={{
-											borderRadius: "18px",
-											border: "1px solid rgba(226,232,240,0.8)",
-											boxShadow: "0 24px 60px -40px rgba(15,23,42,0.45)",
-										}}
-									/>
-									<Area
-										type="monotone"
-										dataKey="income"
-										stroke="#10b981"
-										fill="url(#command-center-income)"
-										strokeWidth={2.5}
-									/>
-									<Area
-										type="monotone"
-										dataKey="expense"
-										stroke="#ef4444"
-										fill="url(#command-center-expense)"
-										strokeWidth={2.5}
-									/>
-									<Line
-										type="monotone"
-										dataKey="balance"
-										stroke="hsl(var(--primary))"
-										strokeWidth={2.5}
-										dot={false}
-									/>
-								</AreaChart>
-							</SafeResponsiveContainer>
-						</div>
-					</CardContent>
-				</Card>
+							<div className="grid gap-3 md:grid-cols-3">
+								<div className="rounded-2xl border border-emerald-100 bg-emerald-50/80 p-4 dark:border-emerald-900/40 dark:bg-emerald-950/20">
+									<p className="text-[10px] font-black uppercase tracking-[0.2em] text-emerald-700/70 dark:text-emerald-300/70">
+										Agenda bruta 30d
+									</p>
+									<p className="mt-2 text-xl font-black text-emerald-700 dark:text-emerald-300">
+										{formatCurrency(data.projection.rawExpectedRevenue)}
+									</p>
+									<p className="mt-1 text-xs text-emerald-800/70 dark:text-emerald-200/70">
+										{data.projection.scheduledSessions} sessões mapeadas na projeção.
+									</p>
+								</div>
+								<div className="rounded-2xl border border-primary/10 bg-primary/5 p-4">
+									<p className="text-[10px] font-black uppercase tracking-[0.2em] text-primary/70">
+										Receita ajustada
+									</p>
+									<p className="mt-2 text-xl font-black text-slate-950 dark:text-white">
+										{formatCurrency(data.projection.adjustedExpectedRevenue)}
+									</p>
+									<p className="mt-1 text-xs text-slate-500 dark:text-slate-400">
+										No-show recente em {(data.projection.noShowRate * 100).toFixed(1)}%.
+									</p>
+								</div>
+								<div className="rounded-2xl border border-amber-100 bg-amber-50/80 p-4 dark:border-amber-900/40 dark:bg-amber-950/20">
+									<p className="text-[10px] font-black uppercase tracking-[0.2em] text-amber-700/70 dark:text-amber-300/70">
+										Carteira de pacotes
+									</p>
+									<p className="mt-2 text-xl font-black text-amber-700 dark:text-amber-300">
+										{formatCurrency(data.projection.packageInventoryValue)}
+									</p>
+									<p className="mt-1 text-xs text-amber-800/70 dark:text-amber-200/70">
+										Valor ainda não realizado nos pacotes ativos.
+									</p>
+								</div>
+							</div>
+
+							<div className="h-[280px] w-full">
+								<SafeResponsiveContainer className="h-full" minHeight={280}>
+									<AreaChart data={data.cashflow.points}>
+										<defs>
+											<linearGradient id="command-center-income" x1="0" y1="0" x2="0" y2="1">
+												<stop offset="0%" stopColor="#10b981" stopOpacity={0.3} />
+												<stop offset="100%" stopColor="#10b981" stopOpacity={0} />
+											</linearGradient>
+											<linearGradient id="command-center-expense" x1="0" y1="0" x2="0" y2="1">
+												<stop offset="0%" stopColor="#ef4444" stopOpacity={0.24} />
+												<stop offset="100%" stopColor="#ef4444" stopOpacity={0} />
+											</linearGradient>
+										</defs>
+										<CartesianGrid vertical={false} strokeDasharray="4 6" stroke="#E2E8F0" />
+										<XAxis
+											dataKey="label"
+											axisLine={false}
+											tickLine={false}
+											tick={{ fill: "#64748b", fontSize: 12 }}
+										/>
+										<YAxis
+											axisLine={false}
+											tickLine={false}
+											tick={{ fill: "#64748b", fontSize: 12 }}
+											tickFormatter={(value) => `R$${Math.round(value / 1000)}k`}
+										/>
+										<Tooltip
+											formatter={(value: number) => formatCurrency(Number(value))}
+											contentStyle={{
+												borderRadius: "18px",
+												border: "1px solid rgba(226,232,240,0.8)",
+												boxShadow: "0 24px 60px -40px rgba(15,23,42,0.45)",
+											}}
+										/>
+										<Area
+											type="monotone"
+											dataKey="income"
+											stroke="#10b981"
+											fill="url(#command-center-income)"
+											strokeWidth={2.5}
+										/>
+										<Area
+											type="monotone"
+											dataKey="expense"
+											stroke="#ef4444"
+											fill="url(#command-center-expense)"
+											strokeWidth={2.5}
+										/>
+										<Line
+											type="monotone"
+											dataKey="balance"
+											stroke="hsl(var(--primary))"
+											strokeWidth={2.5}
+											dot={false}
+										/>
+									</AreaChart>
+								</SafeResponsiveContainer>
+							</div>
+						</CardContent>
+					</Card>
+
+					<Card className="rounded-[28px] border-white/70 bg-white/90 shadow-[0_24px_70px_-52px_rgba(15,23,42,0.45)] dark:border-slate-800/80 dark:bg-slate-950/70">
+						<CardHeader className="flex flex-row items-center justify-between gap-3 pb-2">
+							<div>
+								<CardTitle className="text-base font-black text-slate-950 dark:text-white">
+									Movimentações recentes
+								</CardTitle>
+								<p className="text-sm text-slate-500 dark:text-slate-400">
+									Lançamentos que ajudam a validar o que entrou e saiu do caixa.
+								</p>
+							</div>
+							<Button
+								asChild
+								variant="ghost"
+								className="rounded-2xl text-xs font-bold"
+							>
+								<Link to={`${APP_ROUTES.FINANCIAL}?tab=billing&billing=operations`}>
+									Abrir faturamento
+									<ArrowRight className="ml-2 h-3.5 w-3.5" />
+								</Link>
+							</Button>
+						</CardHeader>
+						<CardContent className="space-y-3">
+							{data.recentTransactions.length === 0 ? (
+								<p className="rounded-2xl border border-dashed border-slate-200 p-4 text-sm text-slate-500 dark:border-slate-800 dark:text-slate-400">
+									Sem movimentações recentes registradas no financeiro.
+								</p>
+							) : (
+								data.recentTransactions.slice(0, 5).map((transaction) => (
+									<div
+										key={transaction.id}
+										className="flex items-center justify-between gap-3 rounded-2xl border border-slate-100 bg-slate-50/80 p-4 dark:border-slate-800 dark:bg-slate-900/60"
+									>
+										<div>
+											<p className="text-sm font-bold text-slate-950 dark:text-white">
+												{transaction.description}
+											</p>
+											<p className="mt-1 text-xs text-slate-500 dark:text-slate-400">
+												{transaction.tipo} • {new Date(transaction.createdAt).toLocaleDateString("pt-BR")}
+											</p>
+										</div>
+										<div className="text-right">
+											<p className="text-sm font-black text-slate-950 dark:text-white">
+												{formatCurrency(transaction.amount)}
+											</p>
+											<Badge className="mt-1 rounded-full border-0 bg-slate-900/5 text-[10px] font-black uppercase tracking-[0.16em] text-slate-600 dark:bg-white/10 dark:text-slate-300">
+												{transaction.status}
+											</Badge>
+										</div>
+									</div>
+								))
+							)}
+						</CardContent>
+					</Card>
+				</div>
 
 				<div className="grid gap-4">
 					<Card className="rounded-[28px] border-white/70 bg-white/90 shadow-[0_24px_70px_-52px_rgba(15,23,42,0.45)] dark:border-slate-800/80 dark:bg-slate-950/70">
@@ -497,20 +589,17 @@ export function FinancialCommandCenterSummary({
 						<CardHeader className="pb-2">
 							<CardTitle className="flex items-center gap-2 text-base font-black text-slate-950 dark:text-white">
 								<Wallet className="h-4 w-4 text-primary" />
-								Cobrança prioritária
+								Cobranças a fazer hoje
 							</CardTitle>
 						</CardHeader>
 						<CardContent className="space-y-3">
-							{data.collections.topAccounts.length === 0 ? (
+							{data.collections.todayCollections.length === 0 ? (
 								<p className="rounded-2xl border border-dashed border-slate-200 p-4 text-sm text-slate-500 dark:border-slate-800 dark:text-slate-400">
-									Não há contas em aberto relevantes no momento.
+									Nenhuma cobrança urgente para hoje ou vencida no momento.
 								</p>
 							) : (
-								data.collections.topAccounts.map((account) => (
-									<div
-										key={account.id}
-										className="rounded-2xl border border-slate-100 bg-slate-50/80 p-4 dark:border-slate-800 dark:bg-slate-900/60"
-									>
+								data.collections.todayCollections.map((account) => {
+									const accountContent = (
 										<div className="flex items-start justify-between gap-3">
 											<div>
 												<p className="text-sm font-bold text-slate-950 dark:text-white">
@@ -529,15 +618,36 @@ export function FinancialCommandCenterSummary({
 												</p>
 											</div>
 										</div>
-									</div>
-								))
+									);
+
+									if (account.patientId) {
+										return (
+											<Link
+												key={account.id}
+												to={patientRoutes.profile(account.patientId)}
+												className="block rounded-2xl border border-slate-100 bg-slate-50/80 p-4 transition-all hover:-translate-y-0.5 dark:border-slate-800 dark:bg-slate-900/60"
+											>
+												{accountContent}
+											</Link>
+										);
+									}
+
+									return (
+										<div
+											key={account.id}
+											className="rounded-2xl border border-slate-100 bg-slate-50/80 p-4 dark:border-slate-800 dark:bg-slate-900/60"
+										>
+											{accountContent}
+										</div>
+									);
+								})
 							)}
 							<Button
 								asChild
 								variant="outline"
 								className="w-full rounded-2xl font-bold"
 							>
-								<Link to={`${APP_ROUTES.FINANCIAL}?tab=collections`}>
+								<Link to={`${APP_ROUTES.FINANCIAL}?tab=collections&collections=receivables`}>
 									Abrir central de cobrança
 								</Link>
 							</Button>
@@ -561,9 +671,10 @@ export function FinancialCommandCenterSummary({
 							</p>
 						) : (
 							data.integrations.patients.riskPatients.map((patient) => (
-								<div
+								<Link
 									key={patient.id}
-									className="rounded-2xl border border-slate-100 bg-slate-50/80 p-4 dark:border-slate-800 dark:bg-slate-900/60"
+									to={patientRoutes.profile(patient.id)}
+									className="block rounded-2xl border border-slate-100 bg-slate-50/80 p-4 transition-all hover:-translate-y-0.5 dark:border-slate-800 dark:bg-slate-900/60"
 								>
 									<div className="flex items-start justify-between gap-3">
 										<div>
@@ -578,7 +689,7 @@ export function FinancialCommandCenterSummary({
 											{formatCurrency(patient.openAmount)}
 										</p>
 									</div>
-								</div>
+								</Link>
 							))
 						)}
 						<Button
@@ -675,38 +786,72 @@ export function FinancialCommandCenterSummary({
 						<CardHeader className="pb-2">
 							<CardTitle className="flex items-center gap-2 text-base font-black text-slate-950 dark:text-white">
 								<Receipt className="h-4 w-4 text-primary" />
-								Documentos
+								Documentos recentes
 							</CardTitle>
 						</CardHeader>
 						<CardContent className="space-y-3">
-							<div className="rounded-2xl bg-slate-50/80 p-4 dark:bg-slate-900/60">
-								<p className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400">
-									Recibos emitidos
-								</p>
-								<p className="mt-2 text-2xl font-black text-slate-950 dark:text-white">
-									{data.documents.receiptsInPeriod}
-								</p>
-								<p className="mt-1 text-xs text-slate-500 dark:text-slate-400">
-									Último número #{data.documents.lastReceiptNumber}
-								</p>
+							<div className="grid gap-3 sm:grid-cols-2">
+								<div className="rounded-2xl bg-slate-50/80 p-4 dark:bg-slate-900/60">
+									<p className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400">
+										Recibos emitidos
+									</p>
+									<p className="mt-2 text-2xl font-black text-slate-950 dark:text-white">
+										{data.documents.receiptsInPeriod}
+									</p>
+									<p className="mt-1 text-xs text-slate-500 dark:text-slate-400">
+										Último número #{data.documents.lastReceiptNumber}
+									</p>
+								</div>
+								<div className="rounded-2xl bg-slate-50/80 p-4 dark:bg-slate-900/60">
+									<p className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400">
+										NFS-e
+									</p>
+									<p className="mt-2 text-2xl font-black text-slate-950 dark:text-white">
+										{data.documents.pendingNfse}
+									</p>
+									<p className="mt-1 text-xs text-slate-500 dark:text-slate-400">
+										pendentes • {data.documents.authorizedNfse} autorizadas • {data.documents.failedNfse} com erro
+									</p>
+								</div>
 							</div>
-							<div className="rounded-2xl bg-slate-50/80 p-4 dark:bg-slate-900/60">
-								<p className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400">
-									NFS-e
+							{data.recentDocuments.length === 0 ? (
+								<p className="rounded-2xl border border-dashed border-slate-200 p-4 text-sm text-slate-500 dark:border-slate-800 dark:text-slate-400">
+									Sem documentos recentes emitidos no período.
 								</p>
-								<p className="mt-2 text-2xl font-black text-slate-950 dark:text-white">
-									{data.documents.pendingNfse}
-								</p>
-								<p className="mt-1 text-xs text-slate-500 dark:text-slate-400">
-									pendentes • {data.documents.authorizedNfse} autorizadas • {data.documents.failedNfse} com erro
-								</p>
-							</div>
+							) : (
+								data.recentDocuments.slice(0, 4).map((document) => (
+									<Link
+										key={document.id}
+										to={document.href}
+										className="block rounded-2xl border border-slate-100 bg-slate-50/80 p-4 transition-all hover:-translate-y-0.5 dark:border-slate-800 dark:bg-slate-900/60"
+									>
+										<div className="flex items-start justify-between gap-3">
+											<div>
+												<p className="text-sm font-bold text-slate-950 dark:text-white">
+													{document.title}
+												</p>
+												<p className="mt-1 text-xs text-slate-500 dark:text-slate-400">
+													{document.counterpart}
+												</p>
+											</div>
+											<div className="text-right">
+												<p className="text-sm font-black text-slate-950 dark:text-white">
+													{formatCurrency(document.amount)}
+												</p>
+												<p className="mt-1 text-[11px] text-slate-500 dark:text-slate-400">
+													{document.status}
+												</p>
+											</div>
+										</div>
+									</Link>
+								))
+							)}
 							<Button
 								asChild
 								variant="outline"
 								className="w-full rounded-2xl font-bold"
 							>
-								<Link to={`${APP_ROUTES.FINANCIAL}?tab=documents`}>
+								<Link to={`${APP_ROUTES.FINANCIAL}?tab=documents&documents=receipts`}>
 									Abrir documentos
 								</Link>
 							</Button>
@@ -716,13 +861,13 @@ export function FinancialCommandCenterSummary({
 					<Card className="rounded-[28px] border-white/70 bg-white/90 shadow-[0_24px_70px_-52px_rgba(15,23,42,0.45)] dark:border-slate-800/80 dark:bg-slate-950/70">
 						<CardHeader className="pb-2">
 							<CardTitle className="text-base font-black text-slate-950 dark:text-white">
-								Próximos movimentos
+								IA financeira acionável
 							</CardTitle>
 						</CardHeader>
 						<CardContent className="space-y-3">
 							{data.suggestions.length === 0 ? (
 								<p className="rounded-2xl border border-dashed border-slate-200 p-4 text-sm text-slate-500 dark:border-slate-800 dark:text-slate-400">
-									Sem sugestões adicionais para o período atual.
+									A IA não apontou novas ações prioritárias para o período atual.
 								</p>
 							) : (
 								data.suggestions.map((suggestion) => (

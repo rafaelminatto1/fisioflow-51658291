@@ -13,7 +13,7 @@ export const usePatients = (organizationId?: string | null) => {
 		queryKey: ["patients", organizationId],
 		queryFn: async (): Promise<Patient[]> => {
 			if (!organizationId) return [];
-			const response = await patientsApi.list({ limit: 1000 });
+			const response = await patientsApi.list({ limit: 200 });
 			return (response.data || []).map((p) =>
 				PatientService.mapToApp(p),
 			) as unknown as Patient[];

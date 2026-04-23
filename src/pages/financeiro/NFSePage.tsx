@@ -2,7 +2,7 @@
  * NFSe Page Content - Refactored for Hub Integration
  */
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -173,7 +173,15 @@ export function NFSePreview({
 	);
 }
 
-export function NFSeContent() {
+interface NFSeContentProps {
+	autoOpenCreate?: boolean;
+	onAutoOpenHandled?: () => void;
+}
+
+export function NFSeContent({
+	autoOpenCreate = false,
+	onAutoOpenHandled,
+}: NFSeContentProps = {}) {
 	const { user } = useAuth();
 	const { currentOrganization: orgData } = useOrganizations();
 	
@@ -195,6 +203,13 @@ export function NFSeContent() {
 		codigo_cnae: "8711500",
 		codigo_tributario: "010700",
 	});
+
+	useEffect(() => {
+		if (!autoOpenCreate) return;
+
+		setIsDialogOpen(true);
+		onAutoOpenHandled?.();
+	}, [autoOpenCreate, onAutoOpenHandled]);
 
 	const { data: nfses = [], isLoading } = useQuery({
 		queryKey: ["nfse-list", organizationId],
