@@ -47,10 +47,13 @@
   <!-- PWA Configuration for Mobile -->
   <meta name="mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-capable" content="yes" />
-  <script src="https://cdn.jsdelivr.net/npm/temporal-polyfill@0.2.5/dist/global.iife.min.js"></script>
   <meta name="apple-mobile-web-app-status-bar-style" content="default" />
   <meta name="apple-mobile-web-app-title" content="FisioFlow" />
   <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.avif" />
+
+  <!-- Critical Preconnects -->
+  <link rel="preconnect" href="https://db.moocafisio.com.br" crossorigin>
+  <link rel="preconnect" href="https://auth.neon.tech" crossorigin>
 
   <!-- Favicon (SVG for modern browsers, AVIF fallback for newer browsers) -->
   <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
