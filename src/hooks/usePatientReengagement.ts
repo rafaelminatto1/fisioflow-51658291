@@ -9,26 +9,30 @@ export function usePatientReengagement() {
 	const { data: inactivePatients = [], isLoading } = useQuery({
 		queryKey: ["inactive-patients-reengagement"],
 		queryFn: async () => {
-			const res = await patientsApi.list({ status: "ativo", limit: 200 });
+			const res = await patientsApi.list({ status: "ativo", limit: 200, minimal: true });
 			const patients = (res?.data ?? []) as PatientRow[];
 			const today = new Date();
 
 			return patients
 				.filter((p) => {
-					if (!p.last_visit_date) return false;
-					const lastVisit = parseISO(p.last_visit_date);
+					const lastVisitDate = p.last_appointment_date || p.lastAppointmentDate;
+					if (!lastVisitDate) return false;
+					const lastVisit = parseISO(lastVisitDate);
 					const daysSinceLastVisit = differenceInDays(today, lastVisit);
 
 					// Critério: mais de 60 dias sem visita
 					return daysSinceLastVisit >= 60;
 				})
-				.map((p) => ({
-					id: p.id,
-					name: p.name || p.full_name,
-					phone: p.phone,
-					daysInactive: differenceInDays(today, parseISO(p.last_visit_date!)),
-					lastVisit: p.last_visit_date,
-				}))
+				.map((p) => {
+					const lastVisitDate = p.last_appointment_date || p.lastAppointmentDate;
+					return {
+						id: p.id,
+						name: p.name || p.full_name,
+						phone: p.phone,
+						daysInactive: differenceInDays(today, parseISO(lastVisitDate!)),
+						lastVisit: lastVisitDate,
+					};
+				})
 				.sort((a, b) => b.daysInactive - a.daysInactive);
 		},
 	});

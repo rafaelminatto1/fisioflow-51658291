@@ -38,6 +38,7 @@ export interface PatientsListParams {
 	origin?: string;
 	partnerCompany?: string;
 	hasSurgery?: boolean;
+	minimal?: boolean;
 	limit?: number;
 	offset?: number;
 }
