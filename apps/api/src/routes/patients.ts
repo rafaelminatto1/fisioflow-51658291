@@ -1116,8 +1116,14 @@ app.get("/", async (c) => {
 				break;
 		}
 
-		const [dataResult, summaryResult, facetsResult, totalResult] = await Promise.all([
-			pool.query(
+		let dataResult;
+		let summaryResult;
+		let facetsResult;
+		let totalResult;
+
+		try {
+			const startData = Date.now();
+			dataResult = await pool.query(
 				`
 					${cteSql}
 					SELECT *, COUNT(*) OVER()::int AS "__total"
@@ -1127,8 +1133,16 @@ app.get("/", async (c) => {
 					LIMIT $${paramIndex} OFFSET $${paramIndex + 1}
 				`,
 				[...params, limit, offset],
-			),
-			pool.query(
+			);
+			console.log(`[Patients/List] Data query took ${Date.now() - startData}ms`);
+		} catch (e: any) {
+			console.error("[Patients/List] Data Query Error:", e.message, e.stack);
+			throw new Error(`Data query failed: ${e.message}`);
+		}
+
+		try {
+			const startSummary = Date.now();
+			summaryResult = await pool.query(
 				`
 					${cteSql}
 					SELECT
@@ -1157,8 +1171,17 @@ app.get("/", async (c) => {
 					${baseWhereSql}
 				`,
 				params.slice(0, params.length - (classification && classification !== "all" ? 1 : 0)),
-			),
-			pool.query(
+			);
+			console.log(`[Patients/List] Summary query took ${Date.now() - startSummary}ms`);
+		} catch (e: any) {
+			console.error("[Patients/List] Summary Query Error:", e.message, e.stack);
+			// Do not throw, return partial data
+			summaryResult = { rows: [] };
+		}
+
+		try {
+			const startFacets = Date.now();
+			facetsResult = await pool.query(
 				`
 					SELECT
 						ARRAY(
@@ -1205,8 +1228,16 @@ app.get("/", async (c) => {
 						) AS partners
 				`,
 				[user.organizationId],
-			),
-			pool.query(
+			);
+			console.log(`[Patients/List] Facets query took ${Date.now() - startFacets}ms`);
+		} catch (e: any) {
+			console.error("[Patients/List] Facets Query Error:", e.message, e.stack);
+			facetsResult = { rows: [] };
+		}
+
+		try {
+			const startTotal = Date.now();
+			totalResult = await pool.query(
 				`
 					${cteSql}
 					SELECT COUNT(*)::int AS total
@@ -1214,8 +1245,12 @@ app.get("/", async (c) => {
 					${finalWhereSql}
 				`,
 				params,
-			),
-		]);
+			);
+			console.log(`[Patients/List] Total query took ${Date.now() - startTotal}ms`);
+		} catch (e: any) {
+			console.error("[Patients/List] Total Query Error:", e.message, e.stack);
+			totalResult = { rows: [] };
+		}
 
 		const total = Number(totalResult.rows[0]?.total ?? (dataResult.rows[0] as any)?.__total ?? 0);
 		const summaryRow = (summaryResult.rows[0] ?? {}) as Record<string, unknown>;
