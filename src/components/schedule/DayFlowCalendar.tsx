@@ -35,8 +35,8 @@ const CLINIC_OPEN_HOUR = 7;
 const CLINIC_CLOSE_HOUR = 21;
 const SATURDAY_CLOSE_HOUR = 13;
 const SLOT_INTERVAL_MINUTES = 15;
-const CLINIC_SLOT_MIN_TIME = "07:00";
-const CLINIC_SLOT_MAX_TIME = "21:00";
+const CLINIC_SLOT_MIN_TIME = "06:30";
+const CLINIC_SLOT_MAX_TIME = "21:30";
 const CLINIC_SCROLL_TIME = "07:00";
 const SLOT_LABEL_INTERVAL = "01:00:00";
 const WEEK_HEADER_FALLBACK_HEIGHT = 48;
@@ -82,8 +82,8 @@ export function DayFlowCalendarWrapper(props: DayFlowCalendarWrapperProps) {
 	// actual appointment times stored as local time strings (e.g. "16:00").
 	const slotLabelFormat = useMemo(
 		() => (time: Date) => {
-			const h = time.getUTCHours();
-			const m = time.getUTCMinutes();
+			const h = time.getHours();
+			const m = time.getMinutes();
 			return m === 0 ? `${String(h).padStart(2, "0")}:00` : "";
 		},
 		[],
@@ -168,7 +168,7 @@ export function DayFlowCalendarWrapper(props: DayFlowCalendarWrapperProps) {
 	}, [props]);
 
 	useEffect(() => {
-		console.log("[FisioFlow] DayFlowCalendar v3.7 - Forced Labels Visibility");
+		console.log("[FisioFlow] DayFlowCalendar v3.9 - Final Local 07:00 Alignment");
 	}, []);
 
 	useEffect(() => {
@@ -315,6 +315,7 @@ export function DayFlowCalendarWrapper(props: DayFlowCalendarWrapperProps) {
 					slotMaxTime: CLINIC_SLOT_MAX_TIME,
 					slotDuration,
 					slotHeight,
+					slotLabelFormat,
 					scrollTime: CLINIC_SCROLL_TIME,
 					flexibleSlotTimeLimits: false,
 					nowIndicator: true,
