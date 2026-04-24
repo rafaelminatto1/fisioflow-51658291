@@ -216,7 +216,8 @@ export function ScheduleCalendar(props: ScheduleCalendarProps) {
 	// Build calendar events: appointments + tasks + blocked-times background
 	const events = useMemo<EventInput[]>(() => {
 		const apptEvents: EventInput[] = [];
-		for (const a of appointments) {
+		const safeAppointments = Array.isArray(appointments) ? appointments : [];
+		for (const a of safeAppointments) {
 			if (!a || (!a.id && !a.tempId)) continue;
 
 			const rawDate =
