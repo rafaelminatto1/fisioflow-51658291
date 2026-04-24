@@ -709,7 +709,7 @@ export default function AttendanceReport() {
 							</div>
 						) : (
 							<div className="space-y-2">
-								{data?.appointments.slice(0, 20).map((apt) => (
+								{(data?.appointments || []).slice(0, 20).map((apt) => (
 									<Collapsible
 										key={apt.id}
 										open={expandedRows.has(apt.id)}
