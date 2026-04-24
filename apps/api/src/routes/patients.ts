@@ -1817,6 +1817,93 @@ app.get("/:id/export", async (c) => {
 	}
 });
 
+// LGPD Direito ao Esquecimento — anonimização irreversível
+app.post("/:id/forget", async (c) => {
+	const user = c.get("user");
+	const db = createDb(c.env, 'write');
+	const { id } = c.req.param();
+	if (!isUuid(id)) return c.json({ error: "ID inválido" }, 400);
+
+	const role = (user as any).role;
+	if (role !== "admin" && role !== "owner") {
+		return c.json({ error: "Apenas administradores podem executar anonimização LGPD" }, 403);
+	}
+
+	try {
+		const patientResult = await db
+			.select()
+			.from(patients)
+			.where(withTenant(patients, user.organizationId, eq(patients.id, id)))
+			.limit(1);
+
+		const patient = patientResult[0];
+		if (!patient) return c.json({ error: "Paciente não encontrado" }, 404);
+
+		// Hash determinístico do ID para permitir referências estatísticas sem reidentificação
+		const hashSeed = await crypto.subtle.digest(
+			"SHA-256",
+			new TextEncoder().encode(`${user.organizationId}:${id}:forget`),
+		);
+		const anonSuffix = Array.from(new Uint8Array(hashSeed))
+			.slice(0, 4)
+			.map((b) => b.toString(16).padStart(2, "0"))
+			.join("");
+
+		const anonEmail = `anonimizado-${anonSuffix}@lgpd.invalid`;
+		const anonName = `Paciente Anonimizado ${anonSuffix}`;
+
+		await db
+			.update(patients)
+			.set({
+				fullName: anonName,
+				email: anonEmail,
+				phone: null,
+				cpf: null,
+				rg: null,
+				birthDate: null,
+				address: null,
+				emergencyContact: null,
+				emergencyPhone: null,
+				healthInsurance: null,
+				insuranceNumber: null,
+				notes: null,
+				medicalHistory: null,
+				medications: null,
+				allergies: null,
+				profession: null,
+				isActive: false,
+				status: "Anonimizado",
+				deletedAt: new Date(),
+				updatedAt: new Date(),
+			} as any)
+			.where(withTenant(patients, user.organizationId, eq(patients.id, id)));
+
+		// Audit log — imutável para prova de conformidade LGPD
+		await db.execute(sql`
+			INSERT INTO audit_log (organization_id, user_id, action, resource_type, resource_id, metadata, created_at)
+			VALUES (
+				${user.organizationId}::uuid,
+				${user.uid},
+				'lgpd_forget',
+				'patient',
+				${id}::uuid,
+				${JSON.stringify({ anonSuffix, requestedBy: user.email ?? user.uid })}::jsonb,
+				NOW()
+			)
+		`);
+
+		return c.json({
+			success: true,
+			anonymized: true,
+			anonSuffix,
+			message: "Dados pessoais anonimizados. Histórico clínico mantido sob pseudônimo para fins estatísticos.",
+		});
+	} catch (error) {
+		console.error("[Patients/Forget] Error:", error);
+		return c.json({ error: "Erro ao anonimizar dados do paciente" }, 500);
+	}
+});
+
 registerPatientClinicalDetailRoutes(app);
 
 export { app as patientsRoutes };
