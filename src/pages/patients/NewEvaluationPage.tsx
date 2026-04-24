@@ -123,7 +123,7 @@ export default function NewEvaluationPage() {
 	const { toast } = useToast();
 	const incrementTemplateUsage = useIncrementTemplateUsage();
 	const updateEvaluationResponse = useUpdatePatientEvaluationResponse();
-	const { data: evaluationResponse, isLoading: isEvaluationLoading } =
+	const { data: evaluationResponse, isLoading: isEvaluationLoading, isError: isEvaluationError } =
 		usePatientEvaluationResponse(evaluationId || undefined);
 	const hasHydratedEvaluation = useRef(false);
 	const hasMarkedStarted = useRef(false);
@@ -158,7 +158,7 @@ export default function NewEvaluationPage() {
 	const suggestions = useActionBridge(allFields, fieldValues);
 
 	// Fetch Patient Data
-	const { data: patient, isLoading } = useQuery({
+	const { data: patient, isLoading, isError } = useQuery({
 		queryKey: ["patient-full", patientId],
 		queryFn: async () => {
 			if (!patientId) return null;
@@ -188,6 +188,7 @@ export default function NewEvaluationPage() {
 			};
 		},
 		enabled: !!patientId,
+		retry: 1,
 	});
 
 	// Handle template selection
@@ -354,6 +355,36 @@ export default function NewEvaluationPage() {
 		);
 	}
 
+	if (isError || !patient || (evaluationId && isEvaluationError)) {
+		return (
+			<MainLayout>
+				<div className="p-8 text-center space-y-6 max-w-2xl mx-auto min-h-[60vh] flex flex-col items-center justify-center">
+					<div className="w-20 h-20 bg-rose-50 rounded-3xl flex items-center justify-center mb-4">
+						<Activity className="h-10 w-10 text-rose-500" />
+					</div>
+					<div className="space-y-2">
+						<h2 className="text-3xl font-bold tracking-tight">
+							{isEvaluationError ? "Avaliação não encontrada" : "Paciente não encontrado"}
+						</h2>
+						<p className="text-muted-foreground text-lg">
+							{isEvaluationError 
+								? "Não foi possível carregar os dados desta avaliação. Ela pode ter sido removida ou o ID está incorreto."
+								: "Não foi possível carregar as informações deste paciente. O registro pode ter sido removido ou o link está incorreto."}
+						</p>
+					</div>
+					<div className="flex flex-col sm:flex-row gap-3 w-full sm:w-auto pt-4">
+						<Button variant="outline" size="lg" onClick={() => navigate(-1)} className="rounded-xl px-8">
+							<ArrowLeft className="mr-2 h-4 w-4" /> Voltar
+						</Button>
+						<Button size="lg" onClick={() => window.location.reload()} className="rounded-xl px-8">
+							Tentar novamente
+						</Button>
+					</div>
+				</div>
+			</MainLayout>
+		);
+	}
+
 	return (
 		<RichTextProvider>
 			<MainLayout
@@ -440,15 +471,15 @@ export default function NewEvaluationPage() {
 								<TabsContent value="dashboard" className="m-0 print:hidden">
 									<PatientDashboard360
 										patient={patient}
-										appointments={patient.appointments}
+										appointments={patient?.appointments || []}
 										currentAppointmentId={appointmentId || undefined}
 										activeGoals={
-											patient.goals?.filter((g: any) => g.status === "em_andamento") || []
+											patient?.goals?.filter((g: any) => g.status === "em_andamento") || []
 										}
 										activePathologies={
-											patient.pathologies?.filter((p: any) => p.status !== "resolvido") || []
+											patient?.pathologies?.filter((p: any) => p.status !== "resolvido") || []
 										}
-										surgeries={patient.surgeries || []}
+										surgeries={patient?.surgeries || []}
 										onAction={(action) => setActiveTab(action === "goals" ? "dashboard" : action)}
 									/>
 								</TabsContent>
