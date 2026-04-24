@@ -1,7 +1,8 @@
 import { neon } from '@neondatabase/serverless';
 import { exerciseDictionary } from '../src/data/exerciseDictionary';
 
-const DATABASE_URL = "postgresql://neondb_owner:REDACTED-NEON-PASSWORD@ep-wandering-bonus-acj4zwvo-pooler.sa-east-1.aws.neon.tech/neondb?sslmode=require&channel_binding=require";
+const DATABASE_URL = process.env.DATABASE_URL;
+if (!DATABASE_URL) throw new Error("DATABASE_URL is not set");
 
 async function sync() {
     const sql = neon(DATABASE_URL);
