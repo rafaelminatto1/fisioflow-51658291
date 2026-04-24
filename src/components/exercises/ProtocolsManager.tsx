@@ -149,6 +149,8 @@ export const ProtocolsManager = memo(function ProtocolsManager() {
 				<div className="relative w-full md:w-80">
 					<Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground/50" />
 					<Input
+						id="search-protocols-input"
+						name="search-protocols-input"
 						placeholder="Buscar protocolo..."
 						value={search}
 						onChange={(e) => setSearch(e.target.value)}
