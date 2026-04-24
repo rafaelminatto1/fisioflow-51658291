@@ -138,6 +138,10 @@ export const appointments = pgTable(
 			table.organizationId,
 			table.patientId,
 		),
+		index("idx_appointments_org_date").on(
+			table.organizationId,
+			table.date,
+		),
 		index("idx_appointments_therapist_date").on(
 			table.therapistId,
 			table.date,
