@@ -143,11 +143,6 @@ export function createDb(env: Env, _mode: 'read' | 'write' = 'write'): FisioDb {
 		) => {
 			let orgId = getOrgContext();
 
-			// OVERRIDE DE PRODUÇÃO
-			if (!orgId || orgId === '00000000-0000-0000-0000-000000000001') {
-				orgId = '04f4477c-7833-4f96-8571-33157940787e';
-			}
-
 			try {
 				const results = await baseSql.transaction([
 					baseSql.query(`SELECT set_config('app.org_id', $1, true)`, [orgId]),
