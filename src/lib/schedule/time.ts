@@ -2,8 +2,7 @@
  * Time helpers for the schedule calendar.
  *
  * Always keep calendar events in the clinic's LOCAL time zone. Never use
- * toISOString() or getUTCHours()/getUTCMinutes() in calendar code — that's
- * the class of bug we fixed in DayFlowCalendar v3.7→v3.9.
+ * toISOString() or getUTCHours()/getUTCMinutes() in calendar code.
  */
 
 /**
