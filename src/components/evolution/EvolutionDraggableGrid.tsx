@@ -20,7 +20,7 @@ import {
 	TrendingUp,
 	ChevronUp,
 	ChevronDown,
-	ImageIcon,
+	Image as ImageIcon,
 	Dumbbell,
 	House,
 	History,

@@ -9,6 +9,7 @@ import { z } from "zod";
 import { DoctorAutocomplete } from "@/components/doctors/DoctorAutocomplete";
 import { DoctorFormModal } from "@/components/doctors/DoctorFormModal";
 import { Button } from "@/components/ui/button";
+import { cn } from "@/lib/utils";
 import { Checkbox } from "@/components/ui/checkbox";
 import {
 	Dialog,
