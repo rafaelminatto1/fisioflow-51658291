@@ -249,7 +249,7 @@ export class NeonAIService {
 				const apiUrl = getWorkersApiUrl();
 				const token = await getNeonAccessToken();
 
-				const response = await fetch(`${apiUrl}/ai/service`, {
+				const response = await fetch(`${apiUrl}/api/ai/service`, {
 					method: "POST",
 					headers: {
 						"Content-Type": "application/json",
