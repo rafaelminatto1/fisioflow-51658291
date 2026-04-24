@@ -15,6 +15,7 @@ import { MainLayout } from "@/components/layout/MainLayout";
 import { BulkActionsBar } from "@/components/schedule/BulkActionsBar";
 // import CalendarView from "@/components/schedule/CalendarView";
 import { DayFlowCalendarWrapper } from "@/components/schedule/DayFlowCalendar";
+import { ScheduleCalendar } from "@/components/schedule/ScheduleCalendar";
 import { ScheduleModals } from "@/components/schedule/ScheduleModals";
 import { CalendarSkeletonEnhanced } from "@/components/schedule/skeletons/CalendarSkeletonEnhanced";
 import { Button } from "@/components/ui/button";
@@ -70,7 +71,12 @@ export default function Schedule() {
 		patients,
 		birthdaysToday,
 		staffBirthdaysToday,
+		tarefas,
 	} = data;
+
+	const calendarImpl =
+		(import.meta.env.VITE_SCHEDULE_CALENDAR as "fullcalendar" | "dayflow") ||
+		"dayflow";
 
 	const [year, month, day] = dateParam.split("-").map(Number);
 	const currentDate = new Date(year, month - 1, day);
@@ -331,6 +337,62 @@ export default function Schedule() {
 								{isNavigating && appointments.length === 0 ? (
 									<CalendarSkeletonEnhanced
 										viewType={viewType as CalendarViewType}
+									/>
+								) : calendarImpl === "fullcalendar" ? (
+									<ScheduleCalendar
+										appointments={appointments as never}
+										tarefas={tarefas ?? []}
+										currentDate={currentDate}
+										onDateChange={handleDateChange}
+										viewType={viewType}
+										onViewTypeChange={handleViewTypeChange}
+										onEventClick={(event) => {
+											const appointment = appointments.find(
+												(a) => a.id === event.id,
+											);
+											if (appointment)
+												actions.handleAppointmentClick(appointment);
+										}}
+										onTimeSlotClick={handleTimeSlotClick}
+										onAppointmentReschedule={(id, start) => {
+											const appointment = appointments.find((a) => a.id === id);
+											if (!appointment) return;
+											const match = start.match(
+												/^(\d{4}-\d{2}-\d{2})(?:[T\s](\d{2}:\d{2}))?/,
+											);
+											if (!match) return;
+											const [y, m, d] = match[1].split("-").map(Number);
+											const date = new Date(y, m - 1, d);
+											const timePart = match[2] || "";
+											actions.handleAppointmentReschedule(
+												appointment,
+												date,
+												timePart,
+											);
+										}}
+										onEditAppointment={(id) => {
+											const appointment = appointments.find((a) => a.id === id);
+											if (appointment)
+												actions.handleEditAppointment(appointment);
+										}}
+										onDeleteAppointment={(id) => {
+											const appointment = appointments.find((a) => a.id === id);
+											if (appointment)
+												actions.handleDeleteAppointment(appointment);
+										}}
+										onStatusChange={actions.handleUpdateStatus}
+										isSelectionMode={isSelectionMode}
+										selectedIds={selectedIds}
+										onToggleSelection={toggleSelection}
+										onCreateAppointment={actions.handleCreateAppointment}
+										onToggleSelectionMode={toggleSelectionMode}
+										filters={filters}
+										onFiltersChange={handleFiltersChange}
+										onClearFilters={clearFilters}
+										totalAppointmentsCount={appointments.length}
+										patientFilter={patientFilter}
+										onPatientFilterChange={handlePatientFilterChange}
+										therapists={therapists}
 									/>
 								) : (
 									<DayFlowCalendarWrapper

@@ -15,6 +15,8 @@ import { appointmentsApi } from "@/api/v2/appointments";
 import { patientsApi } from "@/api/v2/patients";
 import { profileApi } from "@/api/v2/system";
 import { useAuth } from "@/hooks/useAuth";
+import { useTarefas } from "@/hooks/useTarefas";
+import type { Tarefa } from "@/types/tarefas";
 import { fisioLogger as logger } from "@/lib/errors/logger";
 import { AppointmentService } from "@/services/appointmentService";
 import { normalizeStatus } from "@/components/schedule/shared/appointment-status";
@@ -41,6 +43,7 @@ export interface SchedulePageData {
 	patients: PatientRow[];
 	birthdaysToday: PatientRow[];
 	staffBirthdaysToday: TherapistProfileRow[];
+	tarefas: Tarefa[];
 	organizationId: string;
 }
 
@@ -237,6 +240,8 @@ export function useSchedulePageData(
 		gcTime: 1000 * 60 * 15,
 	});
 
+	const { data: tarefas = [], isLoading: isLoadingTarefas } = useTarefas();
+
 	const { data: patients = [], isLoading: isLoadingPatients } = useQuery({
 		queryKey: ["schedule-patients"],
 		queryFn: async () => {
@@ -340,7 +345,10 @@ export function useSchedulePageData(
 	});
 
 	const isLoading =
-		isLoadingAppointments || isLoadingTherapists || isLoadingPatients;
+		isLoadingAppointments ||
+		isLoadingTherapists ||
+		isLoadingPatients ||
+		isLoadingTarefas;
 
 	return {
 		data: {
@@ -349,6 +357,7 @@ export function useSchedulePageData(
 			patients,
 			birthdaysToday,
 			staffBirthdaysToday,
+			tarefas,
 			organizationId: authOrgId || "",
 		} as SchedulePageData,
 		mutations: {
