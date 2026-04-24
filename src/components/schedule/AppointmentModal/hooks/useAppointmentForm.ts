@@ -231,7 +231,7 @@ export const useAppointmentForm = ({
 			dbPaymentStatus = appointmentData.payment_status;
 		}
 
-		const formattedData = {
+		const formattedData: any = {
 			patient_id: appointmentData.patient_id,
 			therapist_id: appointmentData.therapist_id || effectiveTherapistId,
 			date: appointmentData.appointment_date,
@@ -239,7 +239,7 @@ export const useAppointmentForm = ({
 			end_time: endTimeString,
 			status: appointmentData.status as any,
 			payment_status: dbPaymentStatus,
-			notes: appointmentData.notes || "",
+			notes: String(appointmentData.notes || ""),
 			session_type: (appointmentData.type === "Fisioterapia"
 				? "individual"
 				: "group") as "individual" | "group",
@@ -247,8 +247,15 @@ export const useAppointmentForm = ({
 			payment_method:
 				appointmentData.payment_status === "paid_package"
 					? "package"
-					: appointmentData.payment_method,
+					: appointmentData.payment_method || null,
 		};
+
+		// Clean up keys with empty string values to avoid DB constraint issues
+		Object.keys(formattedData).forEach(key => {
+			if (formattedData[key] === "") {
+				formattedData[key] = null;
+			}
+		});
 
 		const appointmentId = appointment?.id;
 
