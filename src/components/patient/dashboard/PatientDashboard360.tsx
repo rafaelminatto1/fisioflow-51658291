@@ -125,10 +125,10 @@ export const PatientDashboard360 = ({
 	const { nextAppointment, calculatedAge, patientName } =
 		useMemo(() => {
 			const name = PatientHelpers.getName(patient);
-			const birthDate = patient.birth_date || patient.birthDate;
+			const birthDate = patient?.birth_date || patient?.birthDate;
 
 			const age =
-				patient.age ||
+				patient?.age ||
 				(birthDate
 					? Math.floor(
 							(new Date().getTime() - new Date(birthDate).getTime()) /
@@ -141,8 +141,9 @@ export const PatientDashboard360 = ({
 			const next = appointments
 				? [...appointments]
 						.filter((a) => {
-							const date = a.date || a.appointment_date;
-							const status = a.status;
+							const date = a?.date || a?.appointment_date;
+							if (!date) return false;
+							const status = a?.status;
 							return (
 								new Date(date) > new Date() &&
 								a.id !== currentAppointmentId &&
@@ -152,10 +153,10 @@ export const PatientDashboard360 = ({
 						})
 						.sort((a, b) => {
 							const dateA = new Date(
-								a.date || (a.appointment_date as string),
+								(a.date || a.appointment_date) as string,
 							).getTime();
 							const dateB = new Date(
-								b.date || (b.appointment_date as string),
+								(b.date || b.appointment_date) as string,
 							).getTime();
 							return dateA - dateB;
 						})[0]
