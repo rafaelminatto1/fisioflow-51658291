@@ -1,0 +1,21 @@
+# Template for local development — copy to apps/api/.dev.vars and fill values.
+# .dev.vars is gitignored. NEVER commit real secrets here.
+
+# Hyperdrive — direct Neon connection for `wrangler dev`
+# Password: read from root .env (DATABASE_URL) — do not duplicate here in plaintext.
+WRANGLER_HYPERDRIVE_LOCAL_CONNECTION_STRING_HYPERDRIVE="postgresql://neondb_owner:<PASSWORD>@ep-wandering-bonus-acj4zwvo-pooler.sa-east-1.aws.neon.tech/neondb?sslmode=require"
+
+# Neon Auth — JWT verification (public endpoints, safe to commit as placeholders)
+NEON_AUTH_JWKS_URL="https://ep-wandering-bonus-acj4zwvo.neonauth.sa-east-1.aws.neon.tech/neondb/auth/.well-known/jwks.json"
+NEON_AUTH_ISSUER="https://ep-wandering-bonus-acj4zwvo.neonauth.sa-east-1.aws.neon.tech"
+
+# CORS allow-list for local dev
+ALLOWED_ORIGINS="http://localhost:4173,http://localhost:5173,https://moocafisio.com.br,http://localhost:3000"
+
+# LiveKit (telemedicina) — get from https://cloud.livekit.io
+LIVEKIT_URL="wss://<your-project>.livekit.cloud"
+LIVEKIT_API_KEY="<rotate-me>"
+LIVEKIT_API_SECRET="<rotate-me>"
+
+# Google AI / Gemini — get from https://aistudio.google.com/app/apikey
+GOOGLE_AI_API_KEY="<rotate-me>"

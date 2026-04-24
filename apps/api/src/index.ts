@@ -143,7 +143,27 @@ app.use(
 );
 
 app.use("*", logger());
-app.use("*", secureHeaders());
+app.use(
+	"*",
+	secureHeaders({
+		strictTransportSecurity: "max-age=63072000; includeSubDomains; preload",
+		xFrameOptions: "DENY",
+		xContentTypeOptions: "nosniff",
+		referrerPolicy: "strict-origin-when-cross-origin",
+		permissionsPolicy: {
+			camera: ["self"],
+			microphone: ["self"],
+			geolocation: ["self"],
+			payment: [],
+			usb: [],
+			accelerometer: [],
+			gyroscope: ["self"],
+			magnetometer: [],
+		},
+		crossOriginOpenerPolicy: "same-origin",
+		crossOriginResourcePolicy: "cross-origin",
+	}),
+);
 app.use("*", requestIdMiddleware);
 // Analytics Engine — instrumentação automática de todas as rotas (fire-and-forget)
 app.use("*", (c, next) => analyticsMiddleware(c.env)(c, next));
