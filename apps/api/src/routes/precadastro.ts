@@ -26,15 +26,15 @@ function normalizeFields(value: unknown, fallback: string[]): string[] {
 type NormalizedToken = {
   id: string;
   organization_id: string;
-  nome: string;
-  descricao: string | null;
+  name: string;
+  description: string | null;
   token?: string;
-  ativo: boolean;
-  max_usos: number | null;
-  usos_atuais: number;
+  is_active: boolean;
+  max_uses: number | null;
+  current_uses: number;
   expires_at: string | null;
-  campos_obrigatorios: string[];
-  campos_opcionais: string[];
+  required_fields: string[];
+  optional_fields: string[];
   ui_style: Record<string, unknown>;
   created_at?: string;
   updated_at?: string;
@@ -44,15 +44,15 @@ function normalizeToken(row: Record<string, unknown>): NormalizedToken {
   return {
     id: String(row.id ?? ''),
     organization_id: String(row.organization_id ?? ''),
-    nome: String(row.nome ?? ''),
-    descricao: row.descricao == null ? null : String(row.descricao),
+    name: String(row.name ?? row.nome ?? ''),
+    description: (row.description ?? row.descricao) == null ? null : String(row.description ?? row.descricao),
     token: row.token == null ? undefined : String(row.token),
-    ativo: row.ativo !== false,
-    max_usos: row.max_usos == null ? null : Number(row.max_usos),
-    usos_atuais: Number(row.usos_atuais ?? 0),
+    is_active: (row.is_active ?? row.ativo) !== false,
+    max_uses: (row.max_uses ?? row.max_usos) == null ? null : Number(row.max_uses ?? row.max_usos),
+    current_uses: Number(row.current_uses ?? row.usos_atuais ?? 0),
     expires_at: row.expires_at == null ? null : String(row.expires_at),
-    campos_obrigatorios: normalizeFields(row.campos_obrigatorios, ['nome', 'email']),
-    campos_opcionais: normalizeFields(row.campos_opcionais, ['telefone']),
+    required_fields: normalizeFields(row.required_fields ?? row.campos_obrigatorios, ['name', 'email']),
+    optional_fields: normalizeFields(row.optional_fields ?? row.campos_opcionais, ['phone']),
     ui_style: (typeof row.ui_style === 'string' ? JSON.parse(row.ui_style) : row.ui_style) || {},
     created_at: row.created_at == null ? undefined : String(row.created_at),
     updated_at: row.updated_at == null ? undefined : String(row.updated_at),
@@ -60,20 +60,20 @@ function normalizeToken(row: Record<string, unknown>): NormalizedToken {
 }
 
 function normalizePrecadastro(row: Record<string, unknown>) {
-  const adicionais =
-    row.dados_adicionais && typeof row.dados_adicionais === 'string'
-      ? JSON.parse(String(row.dados_adicionais))
-      : row.dados_adicionais;
+  const additionalData =
+    (row.additional_data ?? row.dados_adicionais) && typeof (row.additional_data ?? row.dados_adicionais) === 'string'
+      ? JSON.parse(String(row.additional_data ?? row.dados_adicionais))
+      : (row.additional_data ?? row.dados_adicionais);
 
-  const typed = (adicionais && typeof adicionais === 'object' ? adicionais : {}) as Record<string, unknown>;
+  const typed = (additionalData && typeof additionalData === 'object' ? additionalData : {}) as Record<string, unknown>;
 
   return {
     ...row,
-    dados_adicionais: typed,
+    additional_data: typed,
     cpf: typeof typed.cpf === 'string' ? typed.cpf : undefined,
-    convenio: typeof typed.convenio === 'string' ? typed.convenio : undefined,
-    queixa_principal:
-      typeof typed.queixa_principal === 'string' ? typed.queixa_principal : undefined,
+    health_insurance: typeof (typed.health_insurance ?? typed.convenio) === 'string' ? (typed.health_insurance ?? typed.convenio) : undefined,
+    main_complaint:
+      typeof (typed.main_complaint ?? typed.queixa_principal) === 'string' ? (typed.main_complaint ?? typed.queixa_principal) : undefined,
   };
 }
 
@@ -81,16 +81,16 @@ app.get('/public/:token', async (c) => {
   const pool = await createPool(c.env);
   const { token } = c.req.param();
 
-  if (!(await hasTable(pool, 'precadastro_tokens'))) {
+  if (!(await hasTable(pool, 'pre_registration_tokens'))) {
     return c.json({ error: 'Pré-cadastro não disponível' }, 501);
   }
 
   const result = await pool.query(
     `
-      SELECT id, organization_id, nome, descricao, ativo, max_usos, usos_atuais, expires_at,
-             campos_obrigatorios, campos_opcionais, ui_style, created_at, updated_at
-      FROM precadastro_tokens
-      WHERE token = $1 AND ativo = true
+      SELECT id, organization_id, name, description, is_active, max_uses, current_uses, expires_at,
+             required_fields, optional_fields, ui_style, created_at, updated_at
+      FROM pre_registration_tokens
+      WHERE token = $1 AND is_active = true
       LIMIT 1
     `,
     [token],
@@ -101,8 +101,8 @@ app.get('/public/:token', async (c) => {
 
   const normalized = normalizeToken(row);
   if (
-    normalized.max_usos != null &&
-    normalized.usos_atuais >= normalized.max_usos
+    normalized.max_uses != null &&
+    normalized.current_uses >= normalized.max_uses
   ) {
     return c.json({ error: 'Este link atingiu o limite máximo de usos' }, 400);
   }
@@ -119,16 +119,16 @@ app.post('/public/:token/submissions', async (c) => {
   const { token } = c.req.param();
   const body = (await c.req.json()) as Record<string, unknown>;
 
-  if (!(await hasTable(pool, 'precadastro_tokens')) || !(await hasTable(pool, 'precadastros'))) {
+  if (!(await hasTable(pool, 'pre_registration_tokens')) || !(await hasTable(pool, 'pre_registrations'))) {
     return c.json({ error: 'Pré-cadastro não disponível' }, 501);
   }
 
   const tokenResult = await pool.query(
     `
-      SELECT id, organization_id, nome, descricao, ativo, max_usos, usos_atuais, expires_at,
-             campos_obrigatorios, campos_opcionais, ui_style, created_at, updated_at
-      FROM precadastro_tokens
-      WHERE token = $1 AND ativo = true
+      SELECT id, organization_id, name, description, is_active, max_uses, current_uses, expires_at,
+             required_fields, optional_fields, ui_style, created_at, updated_at
+      FROM pre_registration_tokens
+      WHERE token = $1 AND is_active = true
       LIMIT 1
     `,
     [token],
@@ -139,8 +139,8 @@ app.post('/public/:token/submissions', async (c) => {
 
   const normalizedToken = normalizeToken(tokenRow);
   if (
-    normalizedToken.max_usos != null &&
-    normalizedToken.usos_atuais >= normalizedToken.max_usos
+    normalizedToken.max_uses != null &&
+    normalizedToken.current_uses >= normalizedToken.max_uses
   ) {
     return c.json({ error: 'Este link atingiu o limite máximo de usos' }, 400);
   }
@@ -149,46 +149,46 @@ app.post('/public/:token/submissions', async (c) => {
     return c.json({ error: 'Este link expirou' }, 400);
   }
 
-  const requiredFields = normalizedToken.campos_obrigatorios ?? ['nome', 'email'];
+  const requiredFields = normalizedToken.required_fields ?? ['name', 'email'];
   for (const field of requiredFields) {
-    const value = body[field];
+    const value = body[field] ?? body[field === 'name' ? 'nome' : field];
     if (value == null || String(value).trim() === '') {
       return c.json({ error: `O campo ${field} é obrigatório` }, 400);
     }
   }
 
-  const dadosAdicionais: Record<string, unknown> = {};
-  if (body.cpf) dadosAdicionais.cpf = body.cpf;
-  if (body.convenio) dadosAdicionais.convenio = body.convenio;
-  if (body.queixa_principal) dadosAdicionais.queixa_principal = body.queixa_principal;
+  const additionalData: Record<string, unknown> = {};
+  if (body.cpf) additionalData.cpf = body.cpf;
+  if (body.health_insurance ?? body.convenio) additionalData.health_insurance = body.health_insurance ?? body.convenio;
+  if (body.main_complaint ?? body.queixa_principal) additionalData.main_complaint = body.main_complaint ?? body.queixa_principal;
 
   await pool.query('BEGIN');
   try {
     const insertResult = await pool.query(
       `
-        INSERT INTO precadastros (
-          token_id, organization_id, nome, email, telefone, data_nascimento, endereco,
-          observacoes, status, dados_adicionais, created_at, updated_at
+        INSERT INTO pre_registrations (
+          token_id, organization_id, name, email, phone, birth_date, address,
+          notes, status, additional_data, created_at, updated_at
         ) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,'pendente',$9,NOW(),NOW())
         RETURNING *
       `,
       [
         normalizedToken.id,
         normalizedToken.organization_id,
-        String(body.nome ?? ''),
+        String(body.name ?? body.nome ?? ''),
         body.email ? String(body.email) : null,
-        body.telefone ? String(body.telefone) : null,
-        body.data_nascimento ? String(body.data_nascimento) : null,
-        body.endereco ? String(body.endereco) : null,
-        body.observacoes ? String(body.observacoes) : null,
-        Object.keys(dadosAdicionais).length > 0 ? JSON.stringify(dadosAdicionais) : null,
+        body.phone ?? body.telefone ? String(body.phone ?? body.telefone) : null,
+        body.birth_date ?? body.data_nascimento ? String(body.birth_date ?? body.data_nascimento) : null,
+        body.address ?? body.endereco ? String(body.address ?? body.endereco) : null,
+        body.notes ?? body.observacoes ? String(body.notes ?? body.observacoes) : null,
+        Object.keys(additionalData).length > 0 ? JSON.stringify(additionalData) : null,
       ],
     );
 
     await pool.query(
       `
-        UPDATE precadastro_tokens
-        SET usos_atuais = usos_atuais + 1, updated_at = NOW()
+        UPDATE pre_registration_tokens
+        SET current_uses = current_uses + 1, updated_at = NOW()
         WHERE id = $1
       `,
       [normalizedToken.id],
@@ -206,14 +206,14 @@ app.get('/tokens', requireAuth, async (c) => {
   const user = c.get('user');
   const pool = await createPool(c.env);
 
-  if (!(await hasTable(pool, 'precadastro_tokens'))) {
+  if (!(await hasTable(pool, 'pre_registration_tokens'))) {
     return c.json({ data: [] });
   }
 
   const result = await pool.query(
     `
       SELECT *
-      FROM precadastro_tokens
+      FROM pre_registration_tokens
       WHERE organization_id = $1
       ORDER BY created_at DESC
     `,
@@ -228,34 +228,34 @@ app.post('/tokens', requireAuth, async (c) => {
   const pool = await createPool(c.env);
   const body = (await c.req.json()) as Record<string, unknown>;
 
-  if (!(await hasTable(pool, 'precadastro_tokens'))) {
+  if (!(await hasTable(pool, 'pre_registration_tokens'))) {
     return c.json({ error: 'Pré-cadastro não disponível' }, 501);
   }
 
-  const nome = String(body.nome ?? '').trim() || 'Link de Pré-cadastro';
+  const name = String(body.name ?? body.nome ?? '').trim() || 'Link de Pré-cadastro';
   const token = String(body.token ?? crypto.randomUUID().replace(/-/g, '').slice(0, 12));
-  const camposObrigatorios = normalizeFields(body.campos_obrigatorios, ['nome', 'email', 'telefone']);
-  const camposOpcionais = normalizeFields(body.campos_opcionais, []);
-  const maxUsos = body.max_usos == null || body.max_usos === '' ? null : Number(body.max_usos);
+  const requiredFields = normalizeFields(body.required_fields ?? body.campos_obrigatorios, ['name', 'email', 'phone']);
+  const optionalFields = normalizeFields(body.optional_fields ?? body.campos_opcionais, []);
+  const maxUses = (body.max_uses ?? body.max_usos) == null || (body.max_uses ?? body.max_usos) === '' ? null : Number(body.max_uses ?? body.max_usos);
 
   const result = await pool.query(
     `
-      INSERT INTO precadastro_tokens (
-        organization_id, nome, descricao, token, ativo, max_usos, usos_atuais,
-        expires_at, campos_obrigatorios, campos_opcionais, ui_style, created_at, updated_at
+      INSERT INTO pre_registration_tokens (
+        organization_id, name, description, token, is_active, max_uses, current_uses,
+        expires_at, required_fields, optional_fields, ui_style, created_at, updated_at
       ) VALUES ($1,$2,$3,$4,$5,$6,0,$7,$8::text[],$9::text[],$10,NOW(),NOW())
       RETURNING *
     `,
     [
       user.organizationId,
-      nome,
-      body.descricao ? String(body.descricao) : null,
+      name,
+      body.description ?? body.descricao ? String(body.description ?? body.descricao) : null,
       token,
-      body.ativo !== false,
-      Number.isFinite(maxUsos) ? maxUsos : null,
+      (body.is_active ?? body.ativo) !== false,
+      Number.isFinite(maxUses) ? maxUses : null,
       body.expires_at ? String(body.expires_at) : null,
-      camposObrigatorios,
-      camposOpcionais,
+      requiredFields,
+      optionalFields,
       body.ui_style ? (typeof body.ui_style === 'object' ? JSON.stringify(body.ui_style) : String(body.ui_style)) : '{}',
     ],
   );
@@ -269,40 +269,40 @@ app.put('/tokens/:id', requireAuth, async (c) => {
   const { id } = c.req.param();
   const body = (await c.req.json()) as Record<string, unknown>;
 
-  if (!(await hasTable(pool, 'precadastro_tokens'))) {
+  if (!(await hasTable(pool, 'pre_registration_tokens'))) {
     return c.json({ error: 'Pré-cadastro não disponível' }, 501);
   }
 
   const sets: string[] = ['updated_at = NOW()'];
   const params: unknown[] = [];
 
-  if (body.nome !== undefined) {
-    params.push(String(body.nome));
-    sets.push(`nome = $${params.length}`);
+  if (body.name !== undefined || body.nome !== undefined) {
+    params.push(String(body.name ?? body.nome));
+    sets.push(`name = $${params.length}`);
   }
-  if (body.descricao !== undefined) {
-    params.push(body.descricao ? String(body.descricao) : null);
-    sets.push(`descricao = $${params.length}`);
+  if (body.description !== undefined || body.descricao !== undefined) {
+    params.push(body.description ?? body.descricao ? String(body.description ?? body.descricao) : null);
+    sets.push(`description = $${params.length}`);
   }
-  if (body.ativo !== undefined) {
-    params.push(Boolean(body.ativo));
-    sets.push(`ativo = $${params.length}`);
+  if (body.is_active !== undefined || body.ativo !== undefined) {
+    params.push(Boolean(body.is_active ?? body.ativo));
+    sets.push(`is_active = $${params.length}`);
   }
-  if (body.max_usos !== undefined) {
-    params.push(body.max_usos == null || body.max_usos === '' ? null : Number(body.max_usos));
-    sets.push(`max_usos = $${params.length}`);
+  if (body.max_uses !== undefined || body.max_usos !== undefined) {
+    params.push((body.max_uses ?? body.max_usos) == null || (body.max_uses ?? body.max_usos) === '' ? null : Number(body.max_uses ?? body.max_usos));
+    sets.push(`max_uses = $${params.length}`);
   }
   if (body.expires_at !== undefined) {
     params.push(body.expires_at ? String(body.expires_at) : null);
     sets.push(`expires_at = $${params.length}`);
   }
-  if (body.campos_obrigatorios !== undefined) {
-    params.push(normalizeFields(body.campos_obrigatorios, ['nome', 'email']));
-    sets.push(`campos_obrigatorios = $${params.length}::text[]`);
+  if (body.required_fields !== undefined || body.campos_obrigatorios !== undefined) {
+    params.push(normalizeFields(body.required_fields ?? body.campos_obrigatorios, ['name', 'email']));
+    sets.push(`required_fields = $${params.length}::text[]`);
   }
-  if (body.campos_opcionais !== undefined) {
-    params.push(normalizeFields(body.campos_opcionais, []));
-    sets.push(`campos_opcionais = $${params.length}::text[]`);
+  if (body.optional_fields !== undefined || body.campos_opcionais !== undefined) {
+    params.push(normalizeFields(body.optional_fields ?? body.campos_opcionais, []));
+    sets.push(`optional_fields = $${params.length}::text[]`);
   }
   if (body.ui_style !== undefined) {
     params.push(body.ui_style ? (typeof body.ui_style === 'object' ? JSON.stringify(body.ui_style) : String(body.ui_style)) : '{}');
@@ -312,7 +312,7 @@ app.put('/tokens/:id', requireAuth, async (c) => {
   params.push(id, user.organizationId);
   const result = await pool.query(
     `
-      UPDATE precadastro_tokens
+      UPDATE pre_registration_tokens
       SET ${sets.join(', ')}
       WHERE id = $${params.length - 1} AND organization_id = $${params.length}
       RETURNING *
@@ -328,7 +328,7 @@ app.get('/submissions', requireAuth, async (c) => {
   const user = c.get('user');
   const pool = await createPool(c.env);
 
-  if (!(await hasTable(pool, 'precadastros'))) {
+  if (!(await hasTable(pool, 'pre_registrations'))) {
     return c.json({ data: [] });
   }
 
@@ -336,9 +336,9 @@ app.get('/submissions', requireAuth, async (c) => {
     `
       SELECT
         p.*,
-        t.nome AS token_nome
-      FROM precadastros p
-      LEFT JOIN precadastro_tokens t ON t.id = p.token_id
+        t.name AS token_name
+      FROM pre_registrations p
+      LEFT JOIN pre_registration_tokens t ON t.id = p.token_id
       WHERE p.organization_id = $1
       ORDER BY p.created_at DESC
     `,
@@ -356,7 +356,7 @@ app.put('/submissions/:id', requireAuth, async (c) => {
   const { id } = c.req.param();
   const body = (await c.req.json()) as Record<string, unknown>;
 
-  if (!(await hasTable(pool, 'precadastros'))) {
+  if (!(await hasTable(pool, 'pre_registrations'))) {
     return c.json({ error: 'Pré-cadastro não disponível' }, 501);
   }
 
@@ -379,7 +379,7 @@ app.put('/submissions/:id', requireAuth, async (c) => {
   params.push(id, user.organizationId);
   const result = await pool.query(
     `
-      UPDATE precadastros
+      UPDATE pre_registrations
       SET ${sets.join(', ')}
       WHERE id = $${params.length - 1} AND organization_id = $${params.length}
       RETURNING *
