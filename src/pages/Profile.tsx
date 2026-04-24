@@ -508,8 +508,3 @@ export const Profile = () => {
 		</MainLayout>
 	);
 };
-;
-};
->
-	);
-};
