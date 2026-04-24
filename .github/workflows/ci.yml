@@ -153,3 +153,24 @@ jobs:
           apiToken: ${{ secrets.CF_API_TOKEN }}
           accountId: ${{ secrets.CF_ACCOUNT_ID }}
           command: deploy --env production
+
+  smoke-test:
+    name: Production Smoke Test
+    needs: [deploy-api, deploy-web]
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: ./.github/actions/setup
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          pnpm-version: ${{ env.PNPM_VERSION }}
+      - name: Install Playwright Browsers
+        run: pnpm exec playwright install --with-deps chromium
+      - name: Run Smoke Test
+        run: |
+          pnpm exec playwright test e2e/production-health.spec.ts
+        env:
+          TEST_BASE_URL: https://www.moocafisio.com.br
+          TEST_USER_EMAIL: ${{ secrets.PROD_TEST_USER_EMAIL }}
+          TEST_USER_PASSWORD: ${{ secrets.PROD_TEST_USER_PASSWORD }}

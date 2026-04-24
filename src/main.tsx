@@ -33,12 +33,26 @@ if ("serviceWorker" in navigator && import.meta.env.PROD) {
 	updateSW = registerSW({
 		immediate: true,
 		onNeedRefresh() {
-			console.log("[PWA] Nova versão disponível. Atualizando agora para evitar bundles antigos.");
+			console.log("[PWA] Nova versão detectada. Forçando atualização de cache...");
+			// Força o reload para garantir que o navegador pegue os novos assets e evite 404
 			void updateSW?.(true);
 		},
 		onOfflineReady() {
-			console.log("[PWA] Aplicativo pronto para uso offline.");
+			console.log("[PWA] Conteúdo em cache para uso offline.");
 		},
+		onRegisteredSW(swUrl, r) {
+			console.log("[PWA] Service Worker registrado:", swUrl);
+			// Força verificação de update a cada hora
+			if (r) {
+				setInterval(() => {
+					console.log("[PWA] Verificando atualizações em segundo plano...");
+					r.update();
+				}, 60 * 60 * 1000);
+			}
+		},
+		onRegisterError(error) {
+			console.error("[PWA] Erro no registro do Service Worker:", error);
+		}
 	});
 
 	// Registro de Periodic Sync (V5 Pro)
