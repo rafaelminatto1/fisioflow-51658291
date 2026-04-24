@@ -198,18 +198,22 @@ export const PatientActions: React.FC<PatientActionsProps> = ({ patient, variant
 					</DropdownMenuContent>
 				</DropdownMenu>
 
-				<PatientEditModal
-					open={editModalOpen}
-					onOpenChange={setEditModalOpen}
-					patientId={patient.id}
-				/>
+				{editModalOpen && (
+					<PatientEditModal
+						open={editModalOpen}
+						onOpenChange={setEditModalOpen}
+						patientId={patient.id}
+					/>
+				)}
 
-				<PatientDeleteDialog
-					open={deleteDialogOpen}
-					onOpenChange={setDeleteDialogOpen}
-					patientId={patient.id}
-					patientName={patient.full_name}
-				/>
+				{deleteDialogOpen && (
+					<PatientDeleteDialog
+						open={deleteDialogOpen}
+						onOpenChange={setDeleteDialogOpen}
+						patientId={patient.id}
+						patientName={patient.full_name}
+					/>
+				)}
 			</div>
 		);
 	}
@@ -312,18 +316,22 @@ export const PatientActions: React.FC<PatientActionsProps> = ({ patient, variant
 			</DropdownMenu>
 
 			{/* Modals */}
-			<PatientEditModal
-				open={editModalOpen}
-				onOpenChange={setEditModalOpen}
-				patientId={patient.id}
-			/>
+			{editModalOpen && (
+				<PatientEditModal
+					open={editModalOpen}
+					onOpenChange={setEditModalOpen}
+					patientId={patient.id}
+				/>
+			)}
 
-			<PatientDeleteDialog
-				open={deleteDialogOpen}
-				onOpenChange={setDeleteDialogOpen}
-				patientId={patient.id}
-				patientName={patient.full_name}
-			/>
+			{deleteDialogOpen && (
+				<PatientDeleteDialog
+					open={deleteDialogOpen}
+					onOpenChange={setDeleteDialogOpen}
+					patientId={patient.id}
+					patientName={patient.full_name}
+				/>
+			)}
 		</>
 	);
 };

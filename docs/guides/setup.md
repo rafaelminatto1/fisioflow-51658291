@@ -20,7 +20,7 @@ O FisioFlow utiliza **Neon** (Banco de Dados e Autenticação) e **Cloudflare** 
 
 1. **Node.js v22.12.0+** instalado (obrigatório para Vite 8/Vitest 4).
 2. **pnpm v10.0.0+** como package manager do monorepo.
-3. **Wrangler CLI v4.83.0+** configurado:
+3. **Wrangler CLI v4.84.1+** configurado:
    ```bash
    pnpm install -g wrangler
    wrangler login
