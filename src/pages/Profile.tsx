@@ -382,6 +382,8 @@ function ProfileContent() {
 							</span>
 							<Input
 								id="slug"
+								name="slug"
+								autoComplete="off"
 								value={form.slug}
 								onChange={handleSlugChange}
 								disabled={!isEditing}
@@ -504,5 +506,10 @@ export const Profile = () => {
 				</Tabs>
 			</div>
 		</MainLayout>
+	);
+};
+;
+};
+>
 	);
 };
