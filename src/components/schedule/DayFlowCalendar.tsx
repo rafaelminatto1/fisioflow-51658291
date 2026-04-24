@@ -343,7 +343,8 @@ export function DayFlowCalendarWrapper(props: DayFlowCalendarWrapperProps) {
 							: "dayflow-event-card--default";
 						const colors =
 							cardColorsMapRef.current[normalizedStatusName] ||
-							getCalendarCardColors(normalizedStatusName);
+							getCalendarCardColors(normalizedStatusName) ||
+							getCalendarCardColors("agendado");
 
 						const html = `
 							<div class="dayflow-event-shell ${cardDensityClass} ${isCancelled ? "dayflow-event-shell--cancelled" : ""}" style="background-color:${colors.background};border-left:3px solid ${colors.accent};border-radius:6px; font-size: var(--agenda-card-font-scale, 11px); opacity: var(--agenda-card-opacity, 1);">

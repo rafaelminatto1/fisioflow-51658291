@@ -206,9 +206,9 @@ const CalendarAppointmentCardBase = forwardRef<
 						pointerEvents:
 							isDragging && hideGhostWhenSiblings ? "none" : undefined,
 						borderRadius: "12px",
-						backgroundColor: cardColors.background,
-						borderLeft: `3px solid ${cardColors.accent}`,
-						color: cardColors.text,
+						backgroundColor: (cardColors || {}).background || "transparent",
+						borderLeft: `3px solid ${(cardColors || {}).accent || "currentColor"}`,
+						color: (cardColors || {}).text || "inherit",
 					}}
 					tabIndex={0}
 					role="button"
