@@ -34,13 +34,15 @@ export function ScheduleEventContent({
 	colors,
 	isSelected,
 }: ScheduleEventContentProps) {
+	const safeColors = colors || { background: "transparent", accent: "currentColor", text: "inherit" };
+
 	return (
 		<div
 			className="flex h-full w-full flex-col overflow-hidden rounded-md"
 			style={{
-				background: colors.background,
-				borderLeft: `3px solid ${colors.accent}`,
-				color: colors.text,
+				background: safeColors.background,
+				borderLeft: `3px solid ${safeColors.accent}`,
+				color: safeColors.text,
 				opacity: isSelected ? 0.85 : 1,
 				padding: "2px 4px",
 				fontSize: "var(--agenda-card-font-scale, 0.75rem)",
