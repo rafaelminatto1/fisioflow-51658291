@@ -28,7 +28,7 @@ function normalizeClinicalTestTemplateRow(row: Record<string, any>) {
     ...row,
     organization_id: organizationId,
     created_by: row.created_by ?? row.createdBy ?? null,
-    name_en: row.name_en ?? row.nameEn ?? null,
+    name: row.name ?? null,
     target_joint: row.target_joint ?? row.targetJoint ?? null,
     instructions: row.instructions ?? row.execution ?? null,
     execution: row.execution ?? row.instructions ?? null,
@@ -241,7 +241,6 @@ export function registerClinicalResourceRoutes(app: ClinicalRouteApp) {
         organizationId: body.organization_id ?? user.organizationId,
         createdBy: body.created_by ?? user.uid,
         name: String(body.name),
-        nameEn: body.name_en ?? null,
         category: body.category,
         targetJoint: body.target_joint,
         purpose: body.purpose ?? null,
@@ -275,7 +274,6 @@ export function registerClinicalResourceRoutes(app: ClinicalRouteApp) {
       .update(clinicalTestTemplates)
       .set({
         name: body.name !== undefined ? body.name : undefined,
-        nameEn: body.name_en !== undefined ? (body.name_en || null) : undefined,
         category: body.category !== undefined ? body.category : undefined,
         targetJoint: body.target_joint !== undefined ? body.target_joint : undefined,
         purpose: body.purpose !== undefined ? (body.purpose || null) : undefined,
@@ -544,13 +542,13 @@ export function registerClinicalResourceRoutes(app: ClinicalRouteApp) {
     const { ativo } = c.req.query();
 
     const conditions = [eq(evolutionTemplates.organizationId, user.organizationId)];
-    if (ativo !== undefined) conditions.push(eq(evolutionTemplates.ativo, ativo === 'true'));
+    if (ativo !== undefined) conditions.push(eq(evolutionTemplates.isActive, ativo === 'true'));
 
     const result = await db
       .select()
       .from(evolutionTemplates)
       .where(and(...conditions))
-      .orderBy(asc(sql`COALESCE(NULLIF(${evolutionTemplates.nome}, ''), NULLIF(${evolutionTemplates.name}, ''), 'Template')`));
+      .orderBy(asc(sql`COALESCE(NULLIF(${evolutionTemplates.name}, ''), 'Template')`));
 
     return c.json({ data: result.map((row) => normalizeEvolutionTemplateRow(row as any)) });
   });
@@ -580,12 +578,12 @@ export function registerClinicalResourceRoutes(app: ClinicalRouteApp) {
     const db = createDb(c.env);
     const body = (await c.req.json()) as Record<string, any>;
 
-    const nome = String(body.nome ?? body.name ?? '').trim();
-    if (!nome) return c.json({ error: 'nome é obrigatório' }, 400);
+    const name = String(body.nome ?? body.name ?? '').trim();
+    if (!name) return c.json({ error: 'name é obrigatório' }, 400);
 
-    const tipo = String(body.tipo ?? 'fisioterapia');
-    const descricao = body.descricao ?? body.description ?? null;
-    const conteudo = String(body.conteudo ?? body.content ?? '');
+    const type = String(body.tipo ?? body.type ?? 'fisioterapia');
+    const description = body.descricao ?? body.description ?? null;
+    const content = String(body.conteudo ?? body.content ?? '');
     const camposPadrao = normalizeJsonArray(body.campos_padrao ?? body.blocks);
     const tags = normalizeTextArray(body.tags);
 
@@ -593,17 +591,14 @@ export function registerClinicalResourceRoutes(app: ClinicalRouteApp) {
       .insert(evolutionTemplates)
       .values({
         organizationId: user.organizationId,
-        nome: nome,
-        name: String(body.name ?? nome),
-        tipo: tipo,
-        descricao: descricao,
-        description: body.description ?? descricao,
-        conteudo: conteudo,
-        content: String(body.content ?? conteudo),
+        name: name,
+        type: type,
+        description: description,
+        content: content,
         camposPadrao: camposPadrao,
         blocks: normalizeJsonArray(body.blocks ?? camposPadrao),
         tags: tags,
-        ativo: body.ativo !== false,
+        isActive: body.ativo !== false && body.is_active !== false,
         createdBy: user.uid,
       })
       .returning();
@@ -622,20 +617,16 @@ export function registerClinicalResourceRoutes(app: ClinicalRouteApp) {
     };
 
     if (body.nome !== undefined || body.name !== undefined) {
-      const nomeVal = String(body.nome ?? body.name ?? '');
-      updateData.nome = nomeVal;
-      updateData.name = String(body.name ?? nomeVal);
+      updateData.name = String(body.nome ?? body.name ?? '');
     }
-    if (body.tipo !== undefined) updateData.tipo = String(body.tipo);
+    if (body.tipo !== undefined || body.type !== undefined) {
+      updateData.type = String(body.tipo ?? body.type);
+    }
     if (body.descricao !== undefined || body.description !== undefined) {
-      const descVal = body.descricao ?? body.description ?? null;
-      updateData.descricao = descVal;
-      updateData.description = body.description ?? descVal;
+      updateData.description = body.descricao ?? body.description ?? null;
     }
     if (body.conteudo !== undefined || body.content !== undefined) {
-      const contentVal = String(body.conteudo ?? body.content ?? '');
-      updateData.conteudo = contentVal;
-      updateData.content = String(body.content ?? contentVal);
+      updateData.content = String(body.conteudo ?? body.content ?? '');
     }
     if (body.campos_padrao !== undefined || body.blocks !== undefined) {
       const fieldsVal = normalizeJsonArray(body.campos_padrao ?? body.blocks);
@@ -643,7 +634,9 @@ export function registerClinicalResourceRoutes(app: ClinicalRouteApp) {
       updateData.blocks = normalizeJsonArray(body.blocks ?? fieldsVal);
     }
     if (body.tags !== undefined) updateData.tags = normalizeTextArray(body.tags);
-    if (body.ativo !== undefined) updateData.ativo = body.ativo;
+    if (body.ativo !== undefined || body.is_active !== undefined) {
+      updateData.isActive = body.ativo ?? body.is_active;
+    }
 
     const [result] = await db
       .update(evolutionTemplates)
@@ -971,14 +964,14 @@ export function registerClinicalResourceRoutes(app: ClinicalRouteApp) {
       .from(patientObjectives)
       .where(
         and(
-          eq(patientObjectives.ativo, true),
+          eq(patientObjectives.isActive, true),
           or(
             eq(patientObjectives.organizationId, user.organizationId),
             sql`${patientObjectives.organizationId} IS NULL`
           )
         )
       )
-      .orderBy(asc(patientObjectives.categoria), asc(patientObjectives.nome));
+      .orderBy(asc(patientObjectives.category), asc(patientObjectives.name));
 
     return c.json({ data: result });
   });
@@ -988,16 +981,16 @@ export function registerClinicalResourceRoutes(app: ClinicalRouteApp) {
     const db = createDb(c.env);
     const body = (await c.req.json()) as Record<string, any>;
 
-    if (!body.nome) return c.json({ error: 'nome é obrigatório' }, 400);
+    if (!body.nome && !body.name) return c.json({ error: 'name é obrigatório' }, 400);
 
     const [result] = await db
       .insert(patientObjectives)
       .values({
         organizationId: user.organizationId,
-        nome: String(body.nome),
-        descricao: body.descricao ? String(body.descricao) : null,
-        categoria: body.categoria ? String(body.categoria) : null,
-        ativo: body.ativo !== undefined ? Boolean(body.ativo) : true,
+        name: String(body.nome ?? body.name),
+        description: (body.descricao ?? body.description) ? String(body.descricao ?? body.description) : null,
+        category: (body.categoria ?? body.category) ? String(body.categoria ?? body.category) : null,
+        isActive: (body.ativo ?? body.is_active) !== undefined ? Boolean(body.ativo ?? body.is_active) : true,
         createdBy: user.uid,
       })
       .returning();
@@ -1015,10 +1008,18 @@ export function registerClinicalResourceRoutes(app: ClinicalRouteApp) {
       updatedAt: new Date(),
     };
 
-    if (body.nome !== undefined) updateData.nome = String(body.nome);
-    if (body.descricao !== undefined) updateData.descricao = body.descricao ? String(body.descricao) : null;
-    if (body.categoria !== undefined) updateData.categoria = body.categoria ? String(body.categoria) : null;
-    if (body.ativo !== undefined) updateData.ativo = Boolean(body.ativo);
+    if (body.nome !== undefined || body.name !== undefined) {
+      updateData.name = String(body.nome ?? body.name);
+    }
+    if (body.descricao !== undefined || body.description !== undefined) {
+      updateData.description = (body.descricao ?? body.description) ? String(body.descricao ?? body.description) : null;
+    }
+    if (body.categoria !== undefined || body.category !== undefined) {
+      updateData.category = (body.categoria ?? body.category) ? String(body.categoria ?? body.category) : null;
+    }
+    if (body.ativo !== undefined || body.is_active !== undefined) {
+      updateData.isActive = Boolean(body.ativo ?? body.is_active);
+    }
 
     const [result] = await db
       .update(patientObjectives)
@@ -1042,7 +1043,7 @@ export function registerClinicalResourceRoutes(app: ClinicalRouteApp) {
 
     await db
       .update(patientObjectives)
-      .set({ ativo: false, updatedAt: new Date() })
+      .set({ isActive: false, updatedAt: new Date() })
       .where(
         and(
           eq(patientObjectives.id, id),
@@ -1066,16 +1067,16 @@ export function registerClinicalResourceRoutes(app: ClinicalRouteApp) {
         organizationId: patientObjectiveAssignments.organizationId,
         patientId: patientObjectiveAssignments.patientId,
         objectiveId: patientObjectiveAssignments.objectiveId,
-        prioridade: patientObjectiveAssignments.prioridade,
-        notas: patientObjectiveAssignments.notas,
+        prioridade: patientObjectiveAssignments.priority,
+        notas: patientObjectiveAssignments.notes,
         createdBy: patientObjectiveAssignments.createdBy,
         createdAt: patientObjectiveAssignments.createdAt,
         objective: {
           id: patientObjectives.id,
-          nome: patientObjectives.nome,
-          descricao: patientObjectives.descricao,
-          categoria: patientObjectives.categoria,
-          ativo: patientObjectives.ativo,
+          name: patientObjectives.name,
+          description: patientObjectives.description,
+          category: patientObjectives.category,
+          isActive: patientObjectives.isActive,
           organizationId: patientObjectives.organizationId,
           createdAt: patientObjectives.createdAt,
         },
@@ -1108,8 +1109,8 @@ export function registerClinicalResourceRoutes(app: ClinicalRouteApp) {
         organizationId: user.organizationId,
         patientId: String(body.patient_id),
         objectiveId: String(body.objective_id),
-        prioridade: Number(body.prioridade ?? 2),
-        notas: body.notas ? String(body.notas) : null,
+        priority: Number(body.prioridade ?? body.priority ?? 2),
+        notes: (body.notas ?? body.notes) ? String(body.notas ?? body.notes) : null,
         createdBy: user.uid,
       })
       .returning();
