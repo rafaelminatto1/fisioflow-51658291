@@ -418,11 +418,18 @@ export function ScheduleCalendar(props: ScheduleCalendarProps) {
 	};
 
 	const renderEventContent = (arg: EventContentArg) => {
-		const kind = (arg.event.extendedProps as { _kind?: string })._kind;
+		const props = arg.event.extendedProps as {
+			_kind?: string;
+			colors?: { background: string; accent: string; text: string };
+			isGroup?: boolean;
+			groupCount?: number;
+		};
+
+		const kind = props._kind;
 		if (kind === "blocked") return undefined;
 
 		if (kind === "task") {
-			const colors = { background: "transparent", accent: "", text: "" };
+			const taskColors = { background: "transparent", accent: "currentColor", text: "inherit" };
 			return (
 				<ScheduleEventContent
 					title={arg.event.title}
@@ -430,17 +437,19 @@ export function ScheduleCalendar(props: ScheduleCalendarProps) {
 					isAllDay
 					isGroup={false}
 					isTask
-					colors={colors}
+					colors={taskColors}
 					isSelected={false}
 				/>
 			);
 		}
 
-		const { colors, isGroup, groupCount } = arg.event.extendedProps as {
-			colors: { background: string; accent: string; text: string };
-			isGroup: boolean;
-			groupCount: number;
+		const colors = props.colors || {
+			background: "transparent",
+			accent: "currentColor",
+			text: "inherit",
 		};
+		const isGroup = !!props.isGroup;
+		const groupCount = props.groupCount || 0;
 
 		return (
 			<ScheduleEventContent
