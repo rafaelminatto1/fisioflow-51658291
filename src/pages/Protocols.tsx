@@ -237,6 +237,8 @@ export default function Protocols() {
 						<div className="relative w-full sm:w-96">
 							<Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
 							<Input
+								id="search-protocols-main"
+								name="search-protocols-main"
 								placeholder="Buscar por nome, patologia ou região..."
 								value={search}
 								onChange={(e) => setSearch(e.target.value)}
