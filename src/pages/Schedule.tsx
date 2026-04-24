@@ -76,7 +76,7 @@ export default function Schedule() {
 
 	const calendarImpl =
 		(import.meta.env.VITE_SCHEDULE_CALENDAR as "fullcalendar" | "dayflow") ||
-		"dayflow";
+		"fullcalendar";
 
 	const [year, month, day] = dateParam.split("-").map(Number);
 	const currentDate = new Date(year, month - 1, day);
