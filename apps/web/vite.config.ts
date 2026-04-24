@@ -72,7 +72,6 @@ export default defineConfig(({ mode }) => {
 			__APP_VERSION__: JSON.stringify(appVersion),
 			__BUILD_TIME__: JSON.stringify(buildTime),
 			__CACHE_BUSTER__: JSON.stringify(buildTime),
-			"import.meta.env.VITE_SCHEDULE_CALENDAR": JSON.stringify("fullcalendar"),
 		},
 		devtools: !isProduction,
 		experimental: {

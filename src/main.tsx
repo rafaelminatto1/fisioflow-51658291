@@ -49,8 +49,11 @@ if ("serviceWorker" in navigator && import.meta.env.PROD) {
 					minInterval: 24 * 60 * 60 * 1000, // 24 horas
 				});
 				console.log("[PWA] Periodic Sync registrado: wiki-sync");
-			} catch (err) {
-				console.warn("[PWA] Periodic Sync não pôde ser registrado:", err);
+			} catch (err: any) {
+				// Silencia erro de permissão negada (comum se não estiver instalado como PWA)
+				if (err?.name !== "NotAllowedError") {
+					console.warn("[PWA] Periodic Sync não pôde ser registrado:", err);
+				}
 			}
 		}
 	});

@@ -1,17 +1,15 @@
 /**
  * ScheduleCalendar — React-native wrapper around @fullcalendar/react.
  *
- * Replaces DayFlowCalendar (VanillaJS @event-calendar/core). Drop-in API
- * compatible with DayFlowCalendarWrapperProps; additionally accepts
- * `tarefas` to render tasks as all-day events.
+ * Primary calendar engine for FisioFlow. Supports appointments,
+ * tasks (as all-day events), and blocked times.
  *
  * Reads business hours and blocked times from useScheduleSettings so the
  * calendar automatically honors the clinic's configured open window
  * (e.g. Saturday 07:00–13:00). No hardcoded slot min/max times.
  *
  * Timezone: every event is emitted in LOCAL wall-clock time via
- * src/lib/schedule/time.ts helpers. Never calls toISOString() or
- * getUTCHours() — that's the regression we fixed in DayFlow v3.9.
+ * src/lib/schedule/time.ts helpers.
  */
 
 import interactionPlugin from "@fullcalendar/interaction";

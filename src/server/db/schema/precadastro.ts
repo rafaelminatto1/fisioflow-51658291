@@ -11,26 +11,26 @@ import {
 } from "drizzle-orm/pg-core";
 import { withOrganizationPolicy, withPublicWriteOrganizationPolicy } from "./rls_helper";
 
-export const precadastroTokens = pgTable(
-	"precadastro_tokens",
+export const preRegistrationTokens = pgTable(
+	"pre_registration_tokens",
 	{
 		id: uuid("id").primaryKey().defaultRandom(),
 		organizationId: uuid("organization_id").notNull(),
-		nome: text("nome").notNull(),
-		descricao: text("descricao"),
+		name: text("name").notNull(),
+		description: text("description"),
 		token: text("token").notNull().unique(),
-		ativo: boolean("ativo").default(true).notNull(),
-		maxUsos: integer("max_usos"),
-		usosAtuais: integer("usos_atuais").default(0).notNull(),
+		isActive: boolean("is_active").default(true).notNull(),
+		maxUses: integer("max_uses"),
+		currentUses: integer("current_uses").default(0).notNull(),
 		expiresAt: timestamp("expires_at", { withTimezone: true }),
-		camposObrigatorios: text("campos_obrigatorios")
+		requiredFields: text("required_fields")
 			.array()
 			.notNull()
-			.default(["nome", "email"]),
-		camposOpcionais: text("campos_opcionais")
+			.default(["name", "email"]),
+		optionalFields: text("optional_fields")
 			.array()
 			.notNull()
-			.default(["telefone"]),
+			.default(["phone"]),
 		uiStyle: jsonb("ui_style").default({}).notNull(),
 		createdAt: timestamp("created_at", { withTimezone: true })
 			.defaultNow()
@@ -40,33 +40,33 @@ export const precadastroTokens = pgTable(
 			.notNull(),
 	},
 	(table) => [
-		index("idx_precadastro_tokens_org_created").on(
+		index("idx_pre_registration_tokens_org_created").on(
 			table.organizationId,
 			table.createdAt,
 		),
-		index("idx_precadastro_tokens_token").on(table.token),
-		withOrganizationPolicy("precadastro_tokens", table.organizationId),
+		index("idx_pre_registration_tokens_token").on(table.token),
+		withOrganizationPolicy("pre_registration_tokens", table.organizationId),
 	],
 );
 
-export const precadastros = pgTable(
-	"precadastros",
+export const preRegistrations = pgTable(
+	"pre_registrations",
 	{
 		id: uuid("id").primaryKey().defaultRandom(),
 		tokenId: uuid("token_id")
 			.notNull()
-			.references(() => precadastroTokens.id, { onDelete: "cascade" }),
+			.references(() => preRegistrationTokens.id, { onDelete: "cascade" }),
 		organizationId: uuid("organization_id").notNull(),
-		nome: text("nome").notNull(),
+		name: text("name").notNull(),
 		email: text("email"),
-		telefone: text("telefone"),
-		dataNascimento: date("data_nascimento"),
-		endereco: text("endereco"),
-		observacoes: text("observacoes"),
-		status: text("status").default("pendente").notNull(),
+		phone: text("phone"),
+		birthDate: date("birth_date"),
+		address: text("address"),
+		notes: text("notes"),
+		status: text("status").default("pending").notNull(),
 		convertedAt: timestamp("converted_at", { withTimezone: true }),
 		patientId: uuid("patient_id"),
-		dadosAdicionais: jsonb("dados_adicionais"),
+		additionalData: jsonb("additional_data"),
 		createdAt: timestamp("created_at", { withTimezone: true })
 			.defaultNow()
 			.notNull(),
@@ -75,11 +75,11 @@ export const precadastros = pgTable(
 			.notNull(),
 	},
 	(table) => [
-		index("idx_precadastros_org_created").on(
+		index("idx_pre_registrations_org_created").on(
 			table.organizationId,
 			table.createdAt,
 		),
-		index("idx_precadastros_token").on(table.tokenId, table.createdAt),
-		...withPublicWriteOrganizationPolicy("precadastros", table.organizationId),
+		index("idx_pre_registrations_token").on(table.tokenId, table.createdAt),
+		...withPublicWriteOrganizationPolicy("pre_registrations", table.organizationId),
 	],
 );
