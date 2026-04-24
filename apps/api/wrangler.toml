@@ -111,6 +111,8 @@ binding = "WORKFLOW_DIGITAL_TWIN"
 class_name = "PatientDigitalTwinWorkflow"
 
 # ===== DURABLE OBJECTS (Realtime State & Agents) =====
+# DO migration tags são imutáveis após deploy — nunca renomeie tags já aplicadas.
+# Para adicionar nova classe: append novo bloco com tag = "v{N+1}".
 [[durable_objects.bindings]]
 name = "ORGANIZATION_STATE"
 class_name = "OrganizationState"
@@ -124,27 +126,28 @@ name = "ASSESSMENT_LIVE_SESSION"
 class_name = "AssessmentLiveSession"
 
 
+# v1 adicionou OrganizationState (ver env.staging.migrations.v1 com new_classes)
 [[migrations]]
-tag = "v1" # Placeholder
+tag = "v1"
 
 [[migrations]]
-tag = "v2" # Placeholder
+tag = "v2"
 
 [[migrations]]
-tag = "v3" # Placeholder
+tag = "v3"
 
 [[migrations]]
-tag = "v4" # Placeholder
+tag = "v4"
 
 [[migrations]]
-tag = "v5" # Placeholder to match remote state
+tag = "v5"
 
 [[migrations]]
-tag = "v6" # New migration to add PatientAgent
+tag = "v6"
 new_classes = ["PatientAgent"]
 
 [[migrations]]
-tag = "v7" # New migration to add AssessmentLiveSession
+tag = "v7"
 new_classes = ["AssessmentLiveSession"]
 
 # ===== AI & BROWSER RENDERING (Paid Plan) =====
@@ -184,10 +187,6 @@ NEON_AUTH_JWKS_URL = "https://ep-wandering-bonus-acj4zwvo.neonauth.sa-east-1.aws
 NEON_AUTH_ISSUER = "https://ep-wandering-bonus-acj4zwvo.neonauth.sa-east-1.aws.neon.tech"
 NEON_AUTH_AUDIENCE = "https://ep-wandering-bonus-acj4zwvo.neonauth.sa-east-1.aws.neon.tech"
 
-# Hasura (Produção)
-VITE_HASURA_PROJECT_URL = "https://capital-duckling-42.hasura.app/v1/graphql"
-# VITE_HASURA_ADMIN_SECRET deve ser setado via: wrangler secret put VITE_HASURA_ADMIN_SECRET
-
 # Axiom Logging (Produção)
 AXIOM_ORG_ID = "activity-dbyc"
 AXIOM_DATASET = "fisioflow-logs"
@@ -220,7 +219,6 @@ NEON_AUTH_ISSUER = "https://ep-wandering-bonus-acj4zwvo.neonauth.sa-east-1.aws.n
 NEON_AUTH_AUDIENCE = "https://ep-wandering-bonus-acj4zwvo.neonauth.sa-east-1.aws.neon.tech"
 # NEON_URL must be configured as a Cloudflare secret.
 NEON_DATA_API_URL = "https://ep-wandering-bonus-acj4zwvo.apirest.sa-east-1.aws.neon.tech/neondb/rest/v1"
-VITE_HASURA_PROJECT_URL = "https://capital-duckling-42.hasura.app/v1/graphql"
 AXIOM_ORG_ID = "activity-dbyc"
 AXIOM_DATASET = "fisioflow-logs"
 FISIOFLOW_AI_GATEWAY_URL = "https://gateway.ai.cloudflare.com/v1/32156f9a72a32d1ece28ab74bcd398fb/fisioflow-gateway"
@@ -341,11 +339,8 @@ NEON_AUTH_URL = "https://ep-withered-glade-acrv7il7.neonauth.sa-east-1.aws.neon.
 NEON_AUTH_JWKS_URL = "https://ep-withered-glade-acrv7il7.neonauth.sa-east-1.aws.neon.tech/neondb/auth/.well-known/jwks.json"
 NEON_AUTH_ISSUER = "https://ep-withered-glade-acrv7il7.neonauth.sa-east-1.aws.neon.tech"
 NEON_AUTH_AUDIENCE = "https://ep-withered-glade-acrv7il7.neonauth.sa-east-1.aws.neon.tech"
-  FISIOFLOW_AI_GATEWAY_URL = "https://gateway.ai.cloudflare.com/v1/32156f9a72a32d1ece28ab74bcd398fb/fisioflow-gateway-staging"
-  TURNSTILE_SITE_KEY = "0x4AAAAAAC813j31sbl6IHX3"
-
-# Hasura (Staging)
-VITE_HASURA_PROJECT_URL = ""
+FISIOFLOW_AI_GATEWAY_URL = "https://gateway.ai.cloudflare.com/v1/32156f9a72a32d1ece28ab74bcd398fb/fisioflow-gateway-staging"
+TURNSTILE_SITE_KEY = "0x4AAAAAAC813j31sbl6IHX3"
 
 # Axiom (Staging)
 AXIOM_ORG_ID = "activity-dbyc"
