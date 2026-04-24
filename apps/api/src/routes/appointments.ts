@@ -225,13 +225,31 @@ async function enforceCapacity(
 }
 
 
+function sanitizeInput(data: any): any {
+  if (data === null || data === undefined) return null;
+  if (typeof data === 'string') {
+    const trimmed = data.trim();
+    if (trimmed === '' || trimmed === 'null' || trimmed === 'undefined') return null;
+    return trimmed;
+  }
+  if (Array.isArray(data)) return data.map(sanitizeInput);
+  if (typeof data === 'object') {
+    return Object.fromEntries(
+      Object.entries(data).map(([k, v]) => [k, sanitizeInput(v)])
+    );
+  }
+  return data;
+}
+
 // 20 agendamentos criados por organização por hora
 app.post('/', requireAuth, rateLimit({ limit: 20, windowSeconds: 3600, endpoint: 'appointments-create' }), async (c) => {
   const user = c.get('user');
   const db = createDb(c.env, 'write');
 
   try {
-    const body = await c.req.json();
+    const rawBody = await c.req.json();
+    const body = sanitizeInput(rawBody);
+
     // Accept both camelCase and snake_case
     const patientId   = body.patientId   || body.patient_id;
     const date        = body.date        || body.appointment_date;
@@ -422,7 +440,8 @@ const updateAppointmentHandler: MiddlewareHandler<{ Bindings: Env; Variables: Au
   if (!id) return c.json({ error: 'ID é obrigatório' }, 400);
   if (!isUuid(id)) return c.json({ error: 'ID inválido' }, 400);
   try {
-    const body = await c.req.json() as Record<string, any>;
+    const rawBody = await c.req.json();
+    const body = sanitizeInput(rawBody);
 
     const organizationId = user.organizationId;
 
