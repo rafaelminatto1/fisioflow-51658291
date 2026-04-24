@@ -2735,6 +2735,8 @@ export default function WhatsAppInboxPage() {
 					</DialogHeader>
 					<div className="space-y-4 py-4">
 						<Input
+							id="contact-search-existing"
+							name="contact-search-existing"
 							placeholder="Buscar por nome ou telefone..."
 							value={contactSearch}
 							onChange={(e) => setContactSearch(e.target.value)}
