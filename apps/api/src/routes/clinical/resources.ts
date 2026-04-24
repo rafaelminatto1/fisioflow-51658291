@@ -1089,7 +1089,7 @@ export function registerClinicalResourceRoutes(app: ClinicalRouteApp) {
           eq(patientObjectiveAssignments.patientId, patientId)
         )
       )
-      .orderBy(asc(patientObjectiveAssignments.prioridade), desc(patientObjectiveAssignments.createdAt));
+      .orderBy(asc(patientObjectiveAssignments.priority), desc(patientObjectiveAssignments.createdAt));
 
     return c.json({ data: result });
   });

@@ -124,10 +124,6 @@ export interface Env {
 	// Queues
 	BACKGROUND_QUEUE: Queue;
 
-	// Hasura GraphQL Configuration
-	VITE_HASURA_PROJECT_URL?: string;
-	VITE_HASURA_ADMIN_SECRET?: string;
-
 	// Axiom Logging Configuration
 	AXIOM_TOKEN?: string;
 	AXIOM_ORG_ID?: string;

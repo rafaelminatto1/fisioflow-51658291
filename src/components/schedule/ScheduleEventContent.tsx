@@ -18,11 +18,8 @@ export interface ScheduleEventContentProps {
 }
 
 /**
- * React-native render for a single calendar event. Replaces the HTML-string
- * approach used by DayFlowCalendar (which was hard to maintain and test).
- *
- * Kept deliberately small and style-token-driven so FullCalendar's virtualized
- * render stays fast even with hundreds of events in month view.
+ * React render for a single calendar event. Kept small and style-token-driven
+ * so FullCalendar's virtualized render stays fast even with hundreds of events.
  */
 export function ScheduleEventContent({
 	title,

@@ -6,42 +6,25 @@ interface PushPayload {
 	data?: Record<string, string>;
 }
 
-/**
- * Envia notificação push para múltiplos tokens via Neon Cloud Messaging (FCM) v1 API
- * Nota: Requer SERVICE_ACCOUNT_KEY nas variáveis de ambiente do Cloudflare
- */
+// Push real ainda não está ativado. Fase 2.5 do roadmap implementa:
+// - iOS: APNs HTTP/2 direto do Worker
+// - Android: FCM HTTP v1 API (FCM como transporte, sem SDK Firebase)
+// Até lá, estes helpers apenas registram a intenção de envio.
+
 export async function sendPushBatch(
-	env: Env,
+	_env: Env,
 	tokens: string[],
 	payload: PushPayload,
 ) {
 	if (!tokens || tokens.length === 0) return;
 
-	// Em um ambiente Cloudflare Worker, o envio de push geralmente é feito via fetch para a API do Google/Neon
-	// ou através de um webhook/serviço externo para evitar limites de execução.
-	// Como estamos refinando, vamos estruturar o loop de disparos.
-
 	console.log(
-		`[PushBatch] Enviando push para ${tokens.length} dispositivos: "${payload.title}"`,
+		`[PushBatch] stub — registraria ${tokens.length} dispositivos: "${payload.title}"`,
 	);
 
-	// Se houver uma chave de service account configurada, faríamos a autenticação OAuth2 aqui.
-	// Por enquanto, registramos o log do envio para fins de auditoria do sistema.
-
-	const results = await Promise.allSettled(
-		tokens.map(async (token) => {
-			// Exemplo de chamada FCM v1 (necessita token de acesso OAuth2)
-			// return fetch(`https://fcm.googleapis.com/v1/projects/${env.Neon_PROJECT_ID}/messages:send`, { ... });
-			return { success: true, token };
-		}),
-	);
-
-	return results;
+	return tokens.map((token) => ({ success: true, token }));
 }
 
-/**
- * Busca todos os tokens ativos de uma organização e envia o push
- */
 export async function notifyOrganization(
 	env: Env,
 	pool: any,
@@ -63,9 +46,6 @@ export async function notifyOrganization(
 	}
 }
 
-/**
- * Busca todos os tokens ativos de um usuário específico e envia o push
- */
 export async function notifyUser(
 	env: Env,
 	pool: any,
