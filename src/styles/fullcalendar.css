@@ -1,0 +1,103 @@
+/**
+ * FullCalendar theme bridge — maps FullCalendar CSS variables to the
+ * FisioFlow design system (Tailwind v4 + HSL tokens).
+ *
+ * Scoped via `.fc` to avoid clashing with Tailwind reset. Do not add
+ * rules that bleed outside the calendar — use @layer components so
+ * this loads after Tailwind base but before utility overrides.
+ */
+
+@layer components {
+  .fc {
+    --fc-border-color: hsl(var(--border));
+    --fc-page-bg-color: hsl(var(--background));
+    --fc-neutral-bg-color: hsl(var(--muted));
+    --fc-neutral-text-color: hsl(var(--muted-foreground));
+
+    --fc-today-bg-color: hsl(var(--accent) / 0.35);
+    --fc-now-indicator-color: hsl(var(--destructive));
+
+    --fc-event-bg-color: hsl(var(--primary));
+    --fc-event-border-color: hsl(var(--primary));
+    --fc-event-text-color: hsl(var(--primary-foreground));
+
+    --fc-event-selected-overlay-color: hsl(var(--primary) / 0.15);
+
+    --fc-button-bg-color: hsl(var(--secondary));
+    --fc-button-border-color: hsl(var(--border));
+    --fc-button-text-color: hsl(var(--secondary-foreground));
+    --fc-button-hover-bg-color: hsl(var(--secondary) / 0.85);
+    --fc-button-hover-border-color: hsl(var(--border));
+    --fc-button-active-bg-color: hsl(var(--primary));
+    --fc-button-active-border-color: hsl(var(--primary));
+
+    --fc-highlight-color: hsl(var(--primary) / 0.12);
+    --fc-non-business-color: hsl(var(--muted) / 0.5);
+    --fc-bg-event-color: hsl(var(--destructive));
+    --fc-bg-event-opacity: 0.15;
+
+    --fc-event-min-height: var(--schedule-card-min-height, 28px);
+
+    font-family: inherit;
+    color: hsl(var(--foreground));
+    background: hsl(var(--background));
+  }
+
+  .fc .fc-col-header-cell-cushion,
+  .fc .fc-daygrid-day-number,
+  .fc .fc-timegrid-slot-label-cushion {
+    color: hsl(var(--foreground));
+    text-decoration: none;
+  }
+
+  .fc .fc-timegrid-slot {
+    height: var(--fc-event-min-height);
+  }
+
+  .fc .fc-event {
+    border-radius: 6px;
+    font-size: 0.75rem;
+    cursor: pointer;
+    padding: 0;
+  }
+
+  .fc .fc-event-main {
+    padding: 2px 4px;
+  }
+
+  .fc .fc-event.fc-event-selected::after {
+    background: var(--fc-event-selected-overlay-color);
+  }
+
+  /* Background events (blocked times) — slightly stronger tint */
+  .fc .fc-bg-event {
+    background: hsl(var(--destructive) / 0.12);
+    border-left: 3px solid hsl(var(--destructive));
+  }
+  .fc .fc-bg-event .fc-event-title {
+    color: hsl(var(--destructive));
+    font-weight: 500;
+    padding: 2px 6px;
+  }
+
+  /* Task events (allDay row) */
+  .fc .fc-event.fc-event-task {
+    background: hsl(var(--primary) / 0.12);
+    border: 1px dashed hsl(var(--primary));
+    color: hsl(var(--primary));
+  }
+
+  /* Group appointments — subtle ring */
+  .fc .fc-event.fc-event-group {
+    box-shadow: inset 0 0 0 1px hsl(var(--ring));
+  }
+
+  /* Selection mode — dimmed unselected, bright selected */
+  .fc[data-selection-mode="true"] .fc-event:not(.fc-event-selected-inline) {
+    opacity: 0.55;
+  }
+
+  .fc-license-message {
+    display: none !important;
+  }
+}
