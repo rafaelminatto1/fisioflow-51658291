@@ -69,7 +69,7 @@ export const centrosCusto = pgTable("centros_custo", {
 	nome: varchar("nome", { length: 255 }).notNull(),
 	descricao: text("descricao"),
 	codigo: varchar("codigo", { length: 50 }),
-	ativo: varchar("ativo", { length: 10 }).default("true"), // Keeping as varchar matching the convenios pattern if needed, but db said boolean for others. Let's check centros_custo specifically.
+	ativo: boolean("ativo").default(true),
 	deletedAt: timestamp("deleted_at"),
 	createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
 	updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow().notNull(),
@@ -126,7 +126,7 @@ export const empresasParceiras = pgTable("empresas_parceiras", {
 	telefone: text("telefone"),
 	contrapartidas: text("contrapartidas"),
 	observacoes: text("observacoes"),
-	ativo: varchar("ativo", { length: 10 }).default("true"),
+	ativo: boolean("ativo").default(true),
 	deletedAt: timestamp("deleted_at"),
 	createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
 	updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow().notNull(),

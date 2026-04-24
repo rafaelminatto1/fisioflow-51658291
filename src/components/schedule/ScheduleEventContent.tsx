@@ -51,7 +51,7 @@ export function ScheduleEventContent({
 			{!isAllDay && timeText && (
 				<div
 					className="flex items-center gap-1 text-[0.85em] leading-tight"
-					style={{ color: colors.text }}
+					style={{ color: safeColors.text }}
 				>
 					<Clock className="h-3 w-3 shrink-0 opacity-80" aria-hidden />
 					<span className="truncate font-medium">{timeText}</span>
@@ -65,7 +65,7 @@ export function ScheduleEventContent({
 			)}
 			<div
 				className="line-clamp-2 break-words text-[0.95em] font-semibold leading-tight"
-				style={{ color: colors.text }}
+				style={{ color: safeColors.text }}
 			>
 				{isTask ? `🗒 ${title}` : title}
 			</div>
