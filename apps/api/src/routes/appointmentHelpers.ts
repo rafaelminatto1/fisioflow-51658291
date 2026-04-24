@@ -5,37 +5,37 @@
 
 export const STATUS_MAP: Record<string, string> = {
   // Canonical PT-BR enum values stored in the database (pass-through)
-  agendado: 'scheduled',
-  atendido: 'completed',
-  avaliacao: 'evaluation',
-  cancelado: 'cancelled',
-  faltou: 'no_show',
+  agendado: 'agendado',
+  atendido: 'atendido',
+  avaliacao: 'avaliacao',
+  cancelado: 'cancelado',
+  faltou: 'faltou',
   faltou_com_aviso: 'faltou_com_aviso',
   faltou_sem_aviso: 'faltou_sem_aviso',
   nao_atendido: 'nao_atendido',
   nao_atendido_sem_cobranca: 'nao_atendido_sem_cobranca',
-  presenca_confirmada: 'confirmed',
-  remarcar: 'rescheduled',
+  presenca_confirmada: 'presenca_confirmada',
+  remarcar: 'remarcar',
 
   // Legacy English aliases -> canonical PT-BR enum values
-  scheduled: 'scheduled',
-  confirmed: 'confirmed',
-  in_progress: 'completed',
-  completed: 'completed',
-  evaluation: 'evaluation',
-  cancelled: 'cancelled',
-  no_show: 'no_show',
-  rescheduled: 'rescheduled',
+  scheduled: 'agendado',
+  confirmed: 'presenca_confirmada',
+  in_progress: 'atendido',
+  completed: 'atendido',
+  evaluation: 'avaliacao',
+  cancelled: 'cancelado',
+  no_show: 'faltou',
+  rescheduled: 'remarcar',
 
   // Other accepted aliases -> canonical PT-BR enum values
-  aguardando: 'scheduled',
-  aguardando_confirmacao: 'scheduled',
-  confirmado: 'confirmed',
-  em_andamento: 'completed',
-  concluido: 'completed',
-  falta: 'no_show',
-  remarcado: 'rescheduled',
-  reagendado: 'rescheduled',
+  aguardando: 'agendado',
+  aguardando_confirmacao: 'agendado',
+  confirmado: 'presenca_confirmada',
+  em_andamento: 'atendido',
+  concluido: 'atendido',
+  falta: 'faltou',
+  remarcado: 'remarcar',
+  reagendado: 'remarcar',
 };
 
 export const APPOINTMENT_TYPE_MAP: Record<string, string> = {
@@ -66,24 +66,24 @@ export const APPOINTMENT_TYPE_MAP: Record<string, string> = {
 };
 
 const VALID_STATUSES = new Set([
-  'scheduled',
-  'completed',
-  'evaluation',
-  'cancelled',
-  'no_show',
+  'agendado',
+  'atendido',
+  'avaliacao',
+  'cancelado',
+  'faltou',
   'faltou_com_aviso',
   'faltou_sem_aviso',
   'nao_atendido',
   'nao_atendido_sem_cobranca',
-  'confirmed',
-  'rescheduled',
+  'presenca_confirmada',
+  'remarcar',
 ]);
 
 export function normalizeStatus(raw: string | undefined): string {
-  if (!raw) return 'scheduled';
+  if (!raw) return 'agendado';
   const normalized = raw.toLowerCase().trim().replace(/\s+/g, '_');
   if (VALID_STATUSES.has(normalized)) return normalized;
-  return STATUS_MAP[normalized] ?? 'scheduled';
+  return STATUS_MAP[normalized] ?? 'agendado';
 }
 
 export function normalizeAppointmentType(raw: string | undefined): string {
@@ -144,13 +144,15 @@ export function isConflictError(err: { code?: string; message?: string }): boole
 }
 
 export function countsTowardCapacity(status: string): boolean {
+  const normalized = normalizeStatus(status);
   return ![
-    'cancelled',
-    'no_show',
+    'cancelado',
+    'faltou',
     'faltou_com_aviso',
     'faltou_sem_aviso',
     'nao_atendido',
     'nao_atendido_sem_cobranca',
-    'rescheduled',
-  ].includes(normalizeStatus(status));
+    'remarcar',
+  ].includes(normalized);
 }
+
