@@ -3,7 +3,8 @@ import * as fs from "fs";
 import * as path from "path";
 
 async function main() {
-  const connectionString = "postgresql://neondb_owner:REDACTED-NEON-PASSWORD@ep-wandering-bonus-acj4zwvo-pooler.sa-east-1.aws.neon.tech/neondb?sslmode=require";
+  const connectionString = process.env.DATABASE_URL;
+  if (!connectionString) throw new Error("DATABASE_URL is not set");
   const pool = new Pool({ connectionString });
 
   const file = fs.readFileSync(path.join(process.cwd(), "drizzle/0004_demonic_yellow_claw.sql"), "utf-8");
