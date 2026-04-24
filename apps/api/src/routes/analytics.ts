@@ -98,16 +98,16 @@ app.get('/dashboard', requireAuth, async (c) => {
       pool,
       'dashboard.appointmentsRange',
       `SELECT
-         COUNT(*) FILTER (WHERE status::text IN ('atendido', 'avaliacao', 'completed', 'realizado', 'concluido'))::int AS total_completed,
-         COUNT(*) FILTER (WHERE status::text IN ('agendado', 'presenca_confirmada', 'scheduled', 'confirmed'))::int AS upcoming,
+         COUNT(*) FILTER (WHERE status::text IN ('atendido', 'avaliacao'))::int AS total_completed,
+         COUNT(*) FILTER (WHERE status::text IN ('agendado', 'presenca_confirmada'))::int AS upcoming,
          COUNT(*)::int AS total,
          COUNT(*) FILTER (
            WHERE status::text IN (
              'faltou', 'faltou_com_aviso', 'faltou_sem_aviso',
-             'nao_atendido', 'nao_atendido_sem_cobranca', 'no_show'
+             'nao_atendido', 'nao_atendido_sem_cobranca'
            )
          )::int AS no_show,
-         COUNT(*) FILTER (WHERE status::text IN ('presenca_confirmada', 'confirmed'))::int AS confirmed
+         COUNT(*) FILTER (WHERE status::text IN ('presenca_confirmada'))::int AS confirmed
        FROM appointments
        WHERE organization_id = $1
          AND date BETWEEN $2::date AND $3::date`,

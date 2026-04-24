@@ -192,8 +192,7 @@ export const sessions = pgTable(
 		index("idx_sessions_patient_id").on(table.patientId),
 		index("idx_sessions_appointment_id").on(table.appointmentId),
 		index("idx_sessions_therapist_id").on(table.therapistId),
-		index("idx_sessions_organization_id").on(table.organizationId),
-		index("idx_sessions_date").on(table.date),
+		index("idx_sessions_org_date").on(table.organizationId, table.date),
 		withOrganizationPolicy("sessions", table.organizationId),
 	],
 );

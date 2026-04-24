@@ -1,10 +1,10 @@
 import { Hono } from 'hono';
 import { and, eq } from 'drizzle-orm';
 import {
-  convenios,
-  empresasParceiras,
-  fornecedores,
-  formasPagamento,
+  healthInsurances,
+  partnerCompanies,
+  suppliers,
+  paymentMethods,
 } from '@fisioflow/db';
 import { createDb } from '../lib/db';
 import { requireAuth, type AuthVariables } from '../lib/auth';
@@ -18,13 +18,13 @@ export const registerFinancialCatalogRoutes = (app: FinancialApp) => {
     const db = createDb(c.env);
 
     try {
-      const result = await db.select().from(empresasParceiras)
-        .where(eq(empresasParceiras.organizationId, user.organizationId))
-        .orderBy(empresasParceiras.nome);
+      const result = await db.select().from(partnerCompanies)
+        .where(eq(partnerCompanies.organizationId, user.organizationId))
+        .orderBy(partnerCompanies.name);
 
       return c.json({ data: result });
     } catch (e) {
-      console.error('[Financial/EmpresasParceiras] Drizzle error:', e);
+      console.error('[Financial/PartnerCompanies] Drizzle error:', e);
       return c.json({ data: [] });
     }
   });
@@ -34,25 +34,25 @@ export const registerFinancialCatalogRoutes = (app: FinancialApp) => {
     const db = createDb(c.env);
     const body = (await c.req.json()) as any;
 
-    if (!body.nome) return c.json({ error: 'nome é obrigatório' }, 400);
+    if (!body.nome && !body.name) return c.json({ error: 'name é obrigatório' }, 400);
 
     try {
-      const [result] = await db.insert(empresasParceiras)
+      const [result] = await db.insert(partnerCompanies)
         .values({
           organizationId: user.organizationId,
-          nome: String(body.nome),
-          contato: body.contato ?? null,
+          name: String(body.nome ?? body.name),
+          contact: body.contato ?? body.contact ?? null,
           email: body.email ?? null,
-          telefone: body.telefone ?? null,
-          contrapartidas: body.contrapartidas ?? null,
-          observacoes: body.observacoes ?? null,
-          ativo: body.ativo !== undefined ? String(body.ativo) : 'true',
+          phone: body.telefone ?? body.phone ?? null,
+          benefits: body.contrapartidas ?? body.benefits ?? null,
+          notes: body.observacoes ?? body.notes ?? null,
+          isActive: (body.ativo ?? body.is_active) !== undefined ? Boolean(body.ativo ?? body.is_active) : true,
         })
         .returning();
 
       return c.json({ data: result }, 201);
     } catch (e) {
-      console.error('[Financial/EmpresasParceiras] Insert error:', e);
+      console.error('[Financial/PartnerCompanies] Insert error:', e);
       return c.json({ error: 'Erro ao criar empresa parceira' }, 500);
     }
   });
@@ -64,27 +64,27 @@ export const registerFinancialCatalogRoutes = (app: FinancialApp) => {
     const body = (await c.req.json()) as any;
 
     try {
-      const [result] = await db.update(empresasParceiras)
+      const [result] = await db.update(partnerCompanies)
         .set({
-          nome: body.nome !== undefined ? String(body.nome) : undefined,
-          contato: body.contato !== undefined ? body.contato : undefined,
+          name: (body.nome ?? body.name) !== undefined ? String(body.nome ?? body.name) : undefined,
+          contact: (body.contato ?? body.contact) !== undefined ? (body.contato ?? body.contact) : undefined,
           email: body.email !== undefined ? body.email : undefined,
-          telefone: body.telefone !== undefined ? body.telefone : undefined,
-          contrapartidas: body.contrapartidas !== undefined ? body.contrapartidas : undefined,
-          observacoes: body.observacoes !== undefined ? body.observacoes : undefined,
-          ativo: body.ativo !== undefined ? String(body.ativo) : undefined,
+          phone: (body.telefone ?? body.phone) !== undefined ? (body.telefone ?? body.phone) : undefined,
+          benefits: (body.contrapartidas ?? body.benefits) !== undefined ? (body.contrapartidas ?? body.benefits) : undefined,
+          notes: (body.observacoes ?? body.notes) !== undefined ? (body.observacoes ?? body.notes) : undefined,
+          isActive: (body.ativo ?? body.is_active) !== undefined ? Boolean(body.ativo ?? body.is_active) : undefined,
           updatedAt: new Date(),
         })
         .where(and(
-          eq(empresasParceiras.id, id),
-          eq(empresasParceiras.organizationId, user.organizationId)
+          eq(partnerCompanies.id, id),
+          eq(partnerCompanies.organizationId, user.organizationId)
         ))
         .returning();
 
       if (!result) return c.json({ error: 'Empresa parceira não encontrada' }, 404);
       return c.json({ data: result });
     } catch (e) {
-      console.error('[Financial/EmpresasParceiras] Update error:', e);
+      console.error('[Financial/PartnerCompanies] Update error:', e);
       return c.json({ error: 'Erro ao atualizar empresa parceira' }, 500);
     }
   });
@@ -95,17 +95,17 @@ export const registerFinancialCatalogRoutes = (app: FinancialApp) => {
     const { id } = c.req.param();
 
     try {
-      const [result] = await db.update(empresasParceiras).set({ deletedAt: new Date() })
+      const [result] = await db.update(partnerCompanies).set({ deletedAt: new Date() })
         .where(and(
-          eq(empresasParceiras.id, id),
-          eq(empresasParceiras.organizationId, user.organizationId)
+          eq(partnerCompanies.id, id),
+          eq(partnerCompanies.organizationId, user.organizationId)
         ))
         .returning();
 
       if (!result) return c.json({ error: 'Empresa parceira não encontrada' }, 404);
       return c.json({ ok: true });
     } catch (e) {
-      console.error('[Financial/EmpresasParceiras] Delete error:', e);
+      console.error('[Financial/PartnerCompanies] Delete error:', e);
       return c.json({ error: 'Erro ao deletar empresa parceira' }, 500);
     }
   });
@@ -115,13 +115,13 @@ export const registerFinancialCatalogRoutes = (app: FinancialApp) => {
     const db = createDb(c.env);
 
     try {
-      const result = await db.select().from(fornecedores)
-        .where(eq(fornecedores.organizationId, user.organizationId))
-        .orderBy(fornecedores.razaoSocial);
+      const result = await db.select().from(suppliers)
+        .where(eq(suppliers.organizationId, user.organizationId))
+        .orderBy(suppliers.legalName);
 
       return c.json({ data: result });
     } catch (e) {
-      console.error('[Financial/Fornecedores] Drizzle error:', e);
+      console.error('[Financial/Suppliers] Drizzle error:', e);
       return c.json({ data: [] });
     }
   });
@@ -131,33 +131,33 @@ export const registerFinancialCatalogRoutes = (app: FinancialApp) => {
     const db = createDb(c.env);
     const body = (await c.req.json()) as any;
 
-    if (!body.razao_social) return c.json({ error: 'razao_social é obrigatório' }, 400);
+    if (!body.razao_social && !body.legal_name) return c.json({ error: 'legal_name é obrigatório' }, 400);
 
     try {
-      const [result] = await db.insert(fornecedores)
+      const [result] = await db.insert(suppliers)
         .values({
           organizationId: user.organizationId,
-          tipoPessoa: body.tipo_pessoa ?? 'pj',
-          razaoSocial: body.razao_social,
-          nomeFantasia: body.nome_fantasia ?? null,
-          cpfCnpj: body.cpf_cnpj ?? null,
-          inscricaoEstadual: body.inscricao_estadual ?? null,
+          personType: body.tipo_pessoa ?? body.person_type ?? 'pj',
+          legalName: body.razao_social ?? body.legal_name,
+          tradeName: body.nome_fantasia ?? body.trade_name ?? null,
+          taxId: body.cpf_cnpj ?? body.tax_id ?? null,
+          stateRegistration: body.inscricao_estadual ?? body.state_registration ?? null,
           email: body.email ?? null,
-          telefone: body.telefone ?? null,
-          celular: body.celular ?? null,
-          endereco: body.endereco ?? null,
-          cidade: body.cidade ?? null,
-          estado: body.estado ?? null,
-          cep: body.cep ?? null,
-          observacoes: body.observacoes ?? null,
-          categoria: body.categoria ?? null,
-          ativo: body.ativo !== undefined ? String(body.ativo) : 'true',
+          phone: body.telefone ?? body.phone ?? null,
+          mobilePhone: body.celular ?? body.mobile_phone ?? null,
+          address: body.endereco ?? body.address ?? null,
+          city: body.cidade ?? body.city ?? null,
+          state: body.estado ?? body.state ?? null,
+          zipCode: body.cep ?? body.zip_code ?? null,
+          notes: body.observacoes ?? body.notes ?? null,
+          category: body.categoria ?? body.category ?? null,
+          isActive: (body.ativo ?? body.is_active) !== undefined ? Boolean(body.ativo ?? body.is_active) : true,
         })
         .returning();
 
       return c.json({ data: result }, 201);
     } catch (e) {
-      console.error('[Financial/Fornecedores] Insert error:', e);
+      console.error('[Financial/Suppliers] Insert error:', e);
       return c.json({ error: 'Erro ao criar fornecedor' }, 500);
     }
   });
@@ -169,35 +169,35 @@ export const registerFinancialCatalogRoutes = (app: FinancialApp) => {
     const body = (await c.req.json()) as any;
 
     try {
-      const [result] = await db.update(fornecedores)
+      const [result] = await db.update(suppliers)
         .set({
-          tipoPessoa: body.tipo_pessoa !== undefined ? body.tipo_pessoa : undefined,
-          razaoSocial: body.razao_social !== undefined ? body.razao_social : undefined,
-          nomeFantasia: body.nome_fantasia !== undefined ? body.nome_fantasia : undefined,
-          cpfCnpj: body.cpf_cnpj !== undefined ? body.cpf_cnpj : undefined,
-          inscricaoEstadual: body.inscricao_estadual !== undefined ? body.inscricao_estadual : undefined,
+          personType: (body.tipo_pessoa ?? body.person_type) !== undefined ? (body.tipo_pessoa ?? body.person_type) : undefined,
+          legalName: (body.razao_social ?? body.legal_name) !== undefined ? (body.razao_social ?? body.legal_name) : undefined,
+          tradeName: (body.nome_fantasia ?? body.trade_name) !== undefined ? (body.nome_fantasia ?? body.trade_name) : undefined,
+          taxId: (body.cpf_cnpj ?? body.tax_id) !== undefined ? (body.cpf_cnpj ?? body.tax_id) : undefined,
+          stateRegistration: (body.inscricao_estadual ?? body.state_registration) !== undefined ? (body.inscricao_estadual ?? body.state_registration) : undefined,
           email: body.email !== undefined ? body.email : undefined,
-          telefone: body.telefone !== undefined ? body.telefone : undefined,
-          celular: body.celular !== undefined ? body.celular : undefined,
-          endereco: body.endereco !== undefined ? body.endereco : undefined,
-          cidade: body.cidade !== undefined ? body.cidade : undefined,
-          estado: body.estado !== undefined ? body.estado : undefined,
-          cep: body.cep !== undefined ? body.cep : undefined,
-          observacoes: body.observacoes !== undefined ? body.observacoes : undefined,
-          categoria: body.categoria !== undefined ? body.categoria : undefined,
-          ativo: body.ativo !== undefined ? String(body.ativo) : undefined,
+          phone: (body.telefone ?? body.phone) !== undefined ? (body.telefone ?? body.phone) : undefined,
+          mobilePhone: (body.celular ?? body.mobile_phone) !== undefined ? (body.celular ?? body.mobile_phone) : undefined,
+          address: (body.endereco ?? body.address) !== undefined ? (body.endereco ?? body.address) : undefined,
+          city: (body.cidade ?? body.city) !== undefined ? (body.cidade ?? body.city) : undefined,
+          state: (body.estado ?? body.state) !== undefined ? (body.estado ?? body.state) : undefined,
+          zipCode: (body.cep ?? body.zip_code) !== undefined ? (body.cep ?? body.zip_code) : undefined,
+          notes: (body.observacoes ?? body.notes) !== undefined ? (body.observacoes ?? body.notes) : undefined,
+          category: (body.categoria ?? body.category) !== undefined ? (body.categoria ?? body.category) : undefined,
+          isActive: (body.ativo ?? body.is_active) !== undefined ? Boolean(body.ativo ?? body.is_active) : undefined,
           updatedAt: new Date(),
         })
         .where(and(
-          eq(fornecedores.id, id),
-          eq(fornecedores.organizationId, user.organizationId)
+          eq(suppliers.id, id),
+          eq(suppliers.organizationId, user.organizationId)
         ))
         .returning();
 
       if (!result) return c.json({ error: 'Fornecedor não encontrado' }, 404);
       return c.json({ data: result });
     } catch (e) {
-      console.error('[Financial/Fornecedores] Update error:', e);
+      console.error('[Financial/Suppliers] Update error:', e);
       return c.json({ error: 'Erro ao atualizar fornecedor' }, 500);
     }
   });
@@ -208,17 +208,17 @@ export const registerFinancialCatalogRoutes = (app: FinancialApp) => {
     const { id } = c.req.param();
 
     try {
-      const [result] = await db.update(fornecedores).set({ deletedAt: new Date() })
+      const [result] = await db.update(suppliers).set({ deletedAt: new Date() })
         .where(and(
-          eq(fornecedores.id, id),
-          eq(fornecedores.organizationId, user.organizationId)
+          eq(suppliers.id, id),
+          eq(suppliers.organizationId, user.organizationId)
         ))
         .returning();
 
       if (!result) return c.json({ error: 'Fornecedor não encontrado' }, 404);
       return c.json({ ok: true });
     } catch (e) {
-      console.error('[Financial/Fornecedores] Delete error:', e);
+      console.error('[Financial/Suppliers] Delete error:', e);
       return c.json({ error: 'Erro ao deletar fornecedor' }, 500);
     }
   });
@@ -228,13 +228,13 @@ export const registerFinancialCatalogRoutes = (app: FinancialApp) => {
     const db = createDb(c.env);
 
     try {
-      const result = await db.select().from(formasPagamento)
-        .where(eq(formasPagamento.organizationId, user.organizationId))
-        .orderBy(formasPagamento.nome);
+      const result = await db.select().from(paymentMethods)
+        .where(eq(paymentMethods.organizationId, user.organizationId))
+        .orderBy(paymentMethods.name);
 
       return c.json({ data: result });
     } catch (e) {
-      console.error('[Financial/FormasPagamento] Drizzle error:', e);
+      console.error('[Financial/PaymentMethods] Drizzle error:', e);
       return c.json({ data: [] });
     }
   });
@@ -244,23 +244,23 @@ export const registerFinancialCatalogRoutes = (app: FinancialApp) => {
     const db = createDb(c.env);
     const body = (await c.req.json()) as any;
 
-    if (!body.nome) return c.json({ error: 'nome é obrigatório' }, 400);
+    if (!body.nome && !body.name) return c.json({ error: 'name é obrigatório' }, 400);
 
     try {
-      const [result] = await db.insert(formasPagamento)
+      const [result] = await db.insert(paymentMethods)
         .values({
           organizationId: user.organizationId,
-          nome: String(body.nome),
-          tipo: body.tipo ?? 'geral',
-          taxaPercentual: body.taxa_percentual != null ? String(body.taxa_percentual) : '0',
-          diasRecebimento: body.dias_recebimento != null ? Number(body.dias_recebimento) : 0,
-          ativo: body.ativo !== false,
+          name: String(body.nome ?? body.name),
+          type: body.tipo ?? body.type ?? 'geral',
+          feePercentage: (body.taxa_percentual ?? body.fee_percentage) != null ? String(body.taxa_percentual ?? body.fee_percentage) : '0',
+          payoutDays: (body.dias_recebimento ?? body.payout_days) != null ? Number(body.dias_recebimento ?? body.payout_days) : 0,
+          isActive: (body.ativo ?? body.is_active) !== false,
         })
         .returning();
 
       return c.json({ data: result }, 201);
     } catch (e) {
-      console.error('[Financial/FormasPagamento] Insert error:', e);
+      console.error('[Financial/PaymentMethods] Insert error:', e);
       return c.json({ error: 'Erro ao criar forma de pagamento' }, 500);
     }
   });
@@ -272,25 +272,25 @@ export const registerFinancialCatalogRoutes = (app: FinancialApp) => {
     const body = (await c.req.json()) as any;
 
     try {
-      const [result] = await db.update(formasPagamento)
+      const [result] = await db.update(paymentMethods)
         .set({
-          nome: body.nome !== undefined ? String(body.nome) : undefined,
-          tipo: body.tipo !== undefined ? body.tipo : undefined,
-          taxaPercentual: body.taxa_percentual !== undefined ? String(body.taxa_percentual) : undefined,
-          diasRecebimento: body.dias_recebimento !== undefined ? Number(body.dias_recebimento) : undefined,
-          ativo: body.ativo !== undefined ? Boolean(body.ativo) : undefined,
+          name: (body.nome ?? body.name) !== undefined ? String(body.nome ?? body.name) : undefined,
+          type: (body.tipo ?? body.type) !== undefined ? (body.tipo ?? body.type) : undefined,
+          feePercentage: (body.taxa_percentual ?? body.fee_percentage) !== undefined ? String(body.taxa_percentual ?? body.fee_percentage) : undefined,
+          payoutDays: (body.dias_recebimento ?? body.payout_days) !== undefined ? Number(body.dias_recebimento ?? body.payout_days) : undefined,
+          isActive: (body.ativo ?? body.is_active) !== undefined ? Boolean(body.ativo ?? body.is_active) : undefined,
           updatedAt: new Date(),
         })
         .where(and(
-          eq(formasPagamento.id, id),
-          eq(formasPagamento.organizationId, user.organizationId)
+          eq(paymentMethods.id, id),
+          eq(paymentMethods.organizationId, user.organizationId)
         ))
         .returning();
 
       if (!result) return c.json({ error: 'Forma de pagamento não encontrada' }, 404);
       return c.json({ data: result });
     } catch (e) {
-      console.error('[Financial/FormasPagamento] Update error:', e);
+      console.error('[Financial/PaymentMethods] Update error:', e);
       return c.json({ error: 'Erro ao atualizar forma de pagamento' }, 500);
     }
   });
@@ -301,17 +301,17 @@ export const registerFinancialCatalogRoutes = (app: FinancialApp) => {
     const { id } = c.req.param();
 
     try {
-      const [result] = await db.update(formasPagamento).set({ deletedAt: new Date() })
+      const [result] = await db.update(paymentMethods).set({ deletedAt: new Date() })
         .where(and(
-          eq(formasPagamento.id, id),
-          eq(formasPagamento.organizationId, user.organizationId)
+          eq(paymentMethods.id, id),
+          eq(paymentMethods.organizationId, user.organizationId)
         ))
         .returning();
 
       if (!result) return c.json({ error: 'Forma de pagamento não encontrada' }, 404);
       return c.json({ ok: true });
     } catch (e) {
-      console.error('[Financial/FormasPagamento] Delete error:', e);
+      console.error('[Financial/PaymentMethods] Delete error:', e);
       return c.json({ error: 'Erro ao deletar forma de pagamento' }, 500);
     }
   });
@@ -321,20 +321,20 @@ export const registerFinancialCatalogRoutes = (app: FinancialApp) => {
     const db = createDb(c.env);
     const { ativo } = c.req.query();
 
-    const where = [eq(convenios.organizationId, user.organizationId)];
+    const where = [eq(healthInsurances.organizationId, user.organizationId)];
     if (ativo !== undefined) {
-      where.push(eq(convenios.ativo, ativo === 'true'));
+      where.push(eq(healthInsurances.isActive, ativo === 'true'));
     }
 
     try {
       const result = await db.select()
-        .from(convenios)
+        .from(healthInsurances)
         .where(and(...where))
-        .orderBy(convenios.nome);
+        .orderBy(healthInsurances.name);
 
       return c.json({ data: result });
     } catch (e) {
-      console.error('[Financial/Convenios] Get error:', e);
+      console.error('[Financial/HealthInsurances] Get error:', e);
       return c.json({ data: [] });
     }
   });
@@ -344,27 +344,27 @@ export const registerFinancialCatalogRoutes = (app: FinancialApp) => {
     const db = createDb(c.env);
     const body = (await c.req.json()) as Record<string, any>;
 
-    if (!body.nome) return c.json({ error: 'nome é obrigatório' }, 400);
+    if (!body.nome && !body.name) return c.json({ error: 'name é obrigatório' }, 400);
 
     try {
-      const [result] = await db.insert(convenios)
+      const [result] = await db.insert(healthInsurances)
         .values({
           organizationId: user.organizationId,
-          nome: String(body.nome),
-          cnpj: body.cnpj ?? null,
-          telefone: body.telefone ?? null,
+          name: String(body.nome ?? body.name),
+          taxId: body.cnpj ?? body.tax_id ?? null,
+          phone: body.telefone ?? body.phone ?? null,
           email: body.email ?? null,
-          contatoResponsavel: body.contato_responsavel ?? null,
-          valorRepasse: body.valor_repasse != null ? String(body.valor_repasse) : null,
-          prazoPagamentoDias: body.prazo_pagamento_dias != null ? Number(body.prazo_pagamento_dias) : null,
-          observacoes: body.observacoes ?? null,
-          ativo: body.ativo !== false,
+          responsibleContact: body.contato_responsavel ?? body.responsible_contact ?? null,
+          reimbursementAmount: (body.valor_repasse ?? body.reimbursement_amount) != null ? String(body.valor_repasse ?? body.reimbursement_amount) : null,
+          paymentTermsDays: (body.prazo_pagamento_dias ?? body.payment_terms_days) != null ? Number(body.prazo_pagamento_dias ?? body.payment_terms_days) : null,
+          notes: (body.observacoes ?? body.notes) ?? null,
+          isActive: (body.ativo ?? body.is_active) !== false,
         })
         .returning();
 
       return c.json({ data: result }, 201);
     } catch (e) {
-      console.error('[Financial/Convenios] Create error:', e);
+      console.error('[Financial/HealthInsurances] Create error:', e);
       return c.json({ error: 'Erro ao criar convênio' }, 500);
     }
   });
@@ -376,29 +376,29 @@ export const registerFinancialCatalogRoutes = (app: FinancialApp) => {
     const body = (await c.req.json()) as Record<string, any>;
 
     try {
-      const [result] = await db.update(convenios)
+      const [result] = await db.update(healthInsurances)
         .set({
-          nome: body.nome !== undefined ? String(body.nome) : undefined,
-          cnpj: body.cnpj !== undefined ? body.cnpj : undefined,
-          telefone: body.telefone !== undefined ? body.telefone : undefined,
+          name: (body.nome ?? body.name) !== undefined ? String(body.nome ?? body.name) : undefined,
+          taxId: (body.cnpj ?? body.tax_id) !== undefined ? (body.cnpj ?? body.tax_id) : undefined,
+          phone: (body.telefone ?? body.phone) !== undefined ? (body.telefone ?? body.phone) : undefined,
           email: body.email !== undefined ? body.email : undefined,
-          contatoResponsavel: body.contato_responsavel !== undefined ? body.contato_responsavel : undefined,
-          valorRepasse: body.valor_repasse !== undefined ? String(body.valor_repasse) : undefined,
-          prazoPagamentoDias: body.prazo_pagamento_dias !== undefined ? Number(body.prazo_pagamento_dias) : undefined,
-          observacoes: body.observacoes !== undefined ? body.observacoes : undefined,
-          ativo: body.ativo !== undefined ? body.ativo : undefined,
+          responsibleContact: (body.contato_responsavel ?? body.responsible_contact) !== undefined ? (body.contato_responsavel ?? body.responsible_contact) : undefined,
+          reimbursementAmount: (body.valor_repasse ?? body.reimbursement_amount) !== undefined ? String(body.valor_repasse ?? body.reimbursement_amount) : undefined,
+          paymentTermsDays: (body.prazo_pagamento_dias ?? body.payment_terms_days) !== undefined ? Number(body.prazo_pagamento_dias ?? body.payment_terms_days) : undefined,
+          notes: (body.observacoes ?? body.notes) !== undefined ? (body.observacoes ?? body.notes) : undefined,
+          isActive: (body.ativo ?? body.is_active) !== undefined ? (body.ativo ?? body.is_active) : undefined,
           updatedAt: new Date(),
         })
         .where(and(
-          eq(convenios.id, id),
-          eq(convenios.organizationId, user.organizationId)
+          eq(healthInsurances.id, id),
+          eq(healthInsurances.organizationId, user.organizationId)
         ))
         .returning();
 
       if (!result) return c.json({ error: 'Convênio não encontrado' }, 404);
       return c.json({ data: result });
     } catch (e) {
-      console.error('[Financial/Convenios] Update error:', e);
+      console.error('[Financial/HealthInsurances] Update error:', e);
       return c.json({ error: 'Erro ao atualizar convênio' }, 500);
     }
   });
@@ -409,17 +409,17 @@ export const registerFinancialCatalogRoutes = (app: FinancialApp) => {
     const { id } = c.req.param();
 
     try {
-      const [result] = await db.update(convenios).set({ deletedAt: new Date() })
+      const [result] = await db.update(healthInsurances).set({ deletedAt: new Date() })
         .where(and(
-          eq(convenios.id, id),
-          eq(convenios.organizationId, user.organizationId)
+          eq(healthInsurances.id, id),
+          eq(healthInsurances.organizationId, user.organizationId)
         ))
         .returning();
 
       if (!result) return c.json({ error: 'Convênio não encontrado' }, 404);
       return c.json({ ok: true });
     } catch (e) {
-      console.error('[Financial/Convenios] Delete error:', e);
+      console.error('[Financial/HealthInsurances] Delete error:', e);
       return c.json({ error: 'Erro ao deletar convênio' }, 500);
     }
   });

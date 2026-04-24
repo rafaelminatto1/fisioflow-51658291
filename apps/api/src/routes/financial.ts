@@ -10,10 +10,10 @@
 import { Hono } from 'hono';
 import { eq, and, gte, lte, desc, sql } from 'drizzle-orm';
 import { 
-  transacoes, 
-  contasFinanceiras, 
-  centrosCusto,
-  pagamentos,
+  transactions, 
+  financialAccounts, 
+  costCenters,
+  payments,
   sessionPackageTemplates,
   patientPackages,
   packageUsage,
@@ -37,19 +37,19 @@ app.get('/transacoes', requireAuth, async (c) => {
   const { tipo, status, dateFrom, dateTo, limit = '50', offset = '0' } = c.req.query();
 
   try {
-    const filters = [withTenant(transacoes, user.organizationId)];
+    const filters = [withTenant(transactions, user.organizationId)];
 
-    if (tipo) filters.push(eq(transacoes.tipo, tipo));
-    if (status) filters.push(eq(transacoes.status, status));
-    if (dateFrom) filters.push(gte(transacoes.createdAt, new Date(dateFrom)));
-    if (dateTo) filters.push(lte(transacoes.createdAt, new Date(dateTo)));
+    if (tipo) filters.push(eq(transactions.type, tipo));
+    if (status) filters.push(eq(transactions.status, status));
+    if (dateFrom) filters.push(gte(transactions.createdAt, new Date(dateFrom)));
+    if (dateTo) filters.push(lte(transactions.createdAt, new Date(dateTo)));
 
     const limitNum = Math.min(1000, Math.max(1, Number(limit) || 50));
     const offsetNum = Math.max(0, Number(offset) || 0);
 
-    const result = await db.select().from(transacoes)
+    const result = await db.select().from(transactions)
       .where(and(...filters))
-      .orderBy(desc(transacoes.createdAt))
+      .orderBy(desc(transactions.createdAt))
       .limit(limitNum)
       .offset(offsetNum);
 
@@ -65,19 +65,19 @@ app.post('/transacoes', requireAuth, async (c) => {
   const db = createDb(c.env);
   const body = (await c.req.json()) as any;
 
-  if (!body.tipo) return c.json({ error: 'tipo é obrigatório' }, 400);
-  if (body.valor == null) return c.json({ error: 'valor é obrigatório' }, 400);
+  if (!body.tipo && !body.type) return c.json({ error: 'type é obrigatório' }, 400);
+  if (body.valor == null && body.amount == null) return c.json({ error: 'amount é obrigatório' }, 400);
 
   try {
-    const [result] = await db.insert(transacoes)
+    const [result] = await db.insert(transactions)
       .values({
         organizationId: user.organizationId,
         userId: body.user_id ?? user.uid,
-        tipo: String(body.tipo),
-        valor: String(body.valor), // numeric is string in drizzle
-        descricao: body.descricao ?? null,
-        status: body.status ?? 'pendente',
-        categoria: body.categoria ?? null,
+        type: String(body.tipo ?? body.type),
+        amount: String(body.valor ?? body.amount), // numeric is string in drizzle
+        description: body.descricao ?? body.description ?? null,
+        status: body.status ?? 'pending',
+        category: body.categoria ?? body.category ?? null,
         stripePaymentIntentId: body.stripe_payment_intent_id ?? null,
         stripeRefundId: body.stripe_refund_id ?? null,
         metadata: body.metadata ?? {},
@@ -98,17 +98,17 @@ app.put('/transacoes/:id', requireAuth, async (c) => {
   const body = (await c.req.json()) as any;
 
   try {
-    const [result] = await db.update(transacoes)
+    const [result] = await db.update(transactions)
       .set({
-        tipo: body.tipo !== undefined ? String(body.tipo) : undefined,
-        valor: body.valor !== undefined ? String(body.valor) : undefined,
-        descricao: body.descricao !== undefined ? body.descricao : undefined,
+        type: (body.tipo ?? body.type) !== undefined ? String(body.tipo ?? body.type) : undefined,
+        amount: (body.valor ?? body.amount) !== undefined ? String(body.valor ?? body.amount) : undefined,
+        description: (body.descricao ?? body.description) !== undefined ? (body.descricao ?? body.description) : undefined,
         status: body.status !== undefined ? body.status : undefined,
-        categoria: body.categoria !== undefined ? body.categoria : undefined,
+        category: (body.categoria ?? body.category) !== undefined ? (body.categoria ?? body.category) : undefined,
         metadata: body.metadata !== undefined ? body.metadata : undefined,
         updatedAt: new Date(),
       })
-      .where(withTenant(transacoes, user.organizationId, eq(transacoes.id, id)))
+      .where(withTenant(transactions, user.organizationId, eq(transactions.id, id)))
       .returning();
 
     if (!result) return c.json({ error: 'Transação não encontrada' }, 404);
@@ -125,8 +125,8 @@ app.delete('/transacoes/:id', requireAuth, async (c) => {
   const { id } = c.req.param();
 
   try {
-    const [result] = await db.update(transacoes).set({ deletedAt: new Date() })
-      .where(withTenant(transacoes, user.organizationId, eq(transacoes.id, id)))
+    const [result] = await db.update(transactions).set({ deletedAt: new Date() })
+      .where(withTenant(transactions, user.organizationId, eq(transactions.id, id)))
       .returning();
 
     if (!result) return c.json({ error: 'Transação não encontrada' }, 404);
@@ -145,39 +145,39 @@ app.get('/contas', requireAuth, async (c) => {
   const { tipo, status, dateFrom, dateTo, limit = '50', offset = '0', patientId } = c.req.query();
  
   try {
-    const filters = [withTenant(contasFinanceiras, user.organizationId)];
+    const filters = [withTenant(financialAccounts, user.organizationId)];
    
-    if (tipo) filters.push(eq(contasFinanceiras.tipo, tipo));
-    if (status) filters.push(eq(contasFinanceiras.status, status));
-    if (dateFrom) filters.push(sql`COALESCE(${contasFinanceiras.dataVencimento}, ${contasFinanceiras.createdAt}::date) >= ${dateFrom}`);
-    if (dateTo) filters.push(sql`COALESCE(${contasFinanceiras.dataVencimento}, ${contasFinanceiras.createdAt}::date) <= ${dateTo}`);
-    if (patientId) filters.push(eq(contasFinanceiras.patientId, patientId));
+    if (tipo) filters.push(eq(financialAccounts.type, tipo));
+    if (status) filters.push(eq(financialAccounts.status, status));
+    if (dateFrom) filters.push(sql`COALESCE(${financialAccounts.dueDate}, ${financialAccounts.createdAt}::date) >= ${dateFrom}`);
+    if (dateTo) filters.push(sql`COALESCE(${financialAccounts.dueDate}, ${financialAccounts.createdAt}::date) <= ${dateTo}`);
+    if (patientId) filters.push(eq(financialAccounts.patientId, patientId));
 
     const limitNum = Math.min(1000, Math.max(1, Number(limit) || 50));
     const offsetNum = Math.max(0, Number(offset) || 0);
 
     const result = await db.select({
-      id: contasFinanceiras.id,
-      organizationId: contasFinanceiras.organizationId,
-      tipo: contasFinanceiras.tipo,
-      valor: contasFinanceiras.valor,
-      status: contasFinanceiras.status,
-      descricao: contasFinanceiras.descricao,
-      data_vencimento: contasFinanceiras.dataVencimento,
-      pago_em: contasFinanceiras.pagoEm,
-      patient_id: contasFinanceiras.patientId,
-      appointment_id: contasFinanceiras.appointmentId,
-      categoria: contasFinanceiras.categoria,
-      forma_pagamento: contasFinanceiras.formaPagamento,
-      observacoes: contasFinanceiras.observacoes,
-      created_at: contasFinanceiras.createdAt,
-      updated_at: contasFinanceiras.updatedAt,
+      id: financialAccounts.id,
+      organizationId: financialAccounts.organizationId,
+      type: financialAccounts.type,
+      amount: financialAccounts.amount,
+      status: financialAccounts.status,
+      description: financialAccounts.description,
+      due_date: financialAccounts.dueDate,
+      paid_at: financialAccounts.paidAt,
+      patient_id: financialAccounts.patientId,
+      appointment_id: financialAccounts.appointmentId,
+      category: financialAccounts.category,
+      payment_method: financialAccounts.paymentMethod,
+      notes: financialAccounts.notes,
+      created_at: financialAccounts.createdAt,
+      updated_at: financialAccounts.updatedAt,
       patient_name: sql<string | null>`p.full_name`
     })
-    .from(contasFinanceiras)
-    .leftJoin(sql`patients p`, sql`p.id = ${contasFinanceiras.patientId}`)
+    .from(financialAccounts)
+    .leftJoin(sql`patients p`, sql`p.id = ${financialAccounts.patientId}`)
     .where(and(...filters))
-    .orderBy(sql`${contasFinanceiras.dataVencimento} ASC NULLS LAST`, desc(contasFinanceiras.createdAt))
+    .orderBy(sql`${financialAccounts.dueDate} ASC NULLS LAST`, desc(financialAccounts.createdAt))
     .limit(limitNum)
     .offset(offsetNum);
 
@@ -193,24 +193,24 @@ app.post('/contas', requireAuth, async (c) => {
   const db = createDb(c.env);
   const body = (await c.req.json()) as any;
  
-  if (!body.tipo) return c.json({ error: 'tipo é obrigatório' }, 400);
-  if (body.valor == null) return c.json({ error: 'valor é obrigatório' }, 400);
+  if (!body.tipo && !body.type) return c.json({ error: 'type é obrigatório' }, 400);
+  if (body.valor == null && body.amount == null) return c.json({ error: 'amount é obrigatório' }, 400);
  
   try {
-    const [result] = await db.insert(contasFinanceiras)
+    const [result] = await db.insert(financialAccounts)
       .values({
         organizationId: user.organizationId,
-        tipo: String(body.tipo),
-        valor: String(body.valor),
-        status: body.status ?? 'pendente',
-        descricao: body.descricao ?? null,
-        dataVencimento: body.data_vencimento ?? null,
-        pagoEm: body.pago_em ?? null,
+        type: String(body.tipo ?? body.type),
+        amount: String(body.valor ?? body.amount),
+        status: body.status ?? 'pending',
+        description: body.descricao ?? body.description ?? null,
+        dueDate: body.due_date ?? body.data_vencimento ?? null,
+        paidAt: body.paid_at ?? body.pago_em ?? null,
         patientId: body.patient_id ?? null,
         appointmentId: body.appointment_id ?? null,
-        categoria: body.categoria ?? null,
-        formaPagamento: body.forma_pagamento ?? null,
-        observacoes: body.observacoes ?? null,
+        category: body.categoria ?? body.category ?? null,
+        paymentMethod: body.payment_method ?? body.forma_pagamento ?? null,
+        notes: body.observacoes ?? body.notes ?? null,
       })
       .returning();
 
@@ -228,19 +228,19 @@ app.put('/contas/:id', requireAuth, async (c) => {
   const body = (await c.req.json()) as any;
  
   try {
-    const [result] = await db.update(contasFinanceiras)
+    const [result] = await db.update(financialAccounts)
       .set({
         status: body.status !== undefined ? body.status : undefined,
-        valor: body.valor !== undefined ? String(body.valor) : undefined,
-        descricao: body.descricao !== undefined ? body.descricao : undefined,
-        dataVencimento: body.data_vencimento !== undefined ? body.data_vencimento : undefined,
-        pagoEm: body.pago_em !== undefined ? body.pago_em : undefined,
-        observacoes: body.observacoes !== undefined ? body.observacoes : undefined,
-        formaPagamento: body.forma_pagamento !== undefined ? body.forma_pagamento : undefined,
-        categoria: body.categoria !== undefined ? body.categoria : undefined,
+        amount: (body.valor ?? body.amount) !== undefined ? String(body.valor ?? body.amount) : undefined,
+        description: (body.descricao ?? body.description) !== undefined ? (body.descricao ?? body.description) : undefined,
+        dueDate: (body.due_date ?? body.data_vencimento) !== undefined ? (body.due_date ?? body.data_vencimento) : undefined,
+        paidAt: (body.paid_at ?? body.pago_em) !== undefined ? (body.paid_at ?? body.pago_em) : undefined,
+        notes: (body.observacoes ?? body.notes) !== undefined ? (body.observacoes ?? body.notes) : undefined,
+        paymentMethod: (body.payment_method ?? body.forma_pagamento) !== undefined ? (body.payment_method ?? body.forma_pagamento) : undefined,
+        category: (body.categoria ?? body.category) !== undefined ? (body.categoria ?? body.category) : undefined,
         updatedAt: new Date(),
       })
-      .where(withTenant(contasFinanceiras, user.organizationId, eq(contasFinanceiras.id, id)))
+      .where(withTenant(financialAccounts, user.organizationId, eq(financialAccounts.id, id)))
       .returning();
 
     if (!result) return c.json({ error: 'Conta não encontrada' }, 404);
@@ -257,8 +257,8 @@ app.delete('/contas/:id', requireAuth, async (c) => {
   const { id } = c.req.param();
 
   try {
-    const [result] = await db.update(contasFinanceiras).set({ deletedAt: new Date() })
-      .where(withTenant(contasFinanceiras, user.organizationId, eq(contasFinanceiras.id, id)))
+    const [result] = await db.update(financialAccounts).set({ deletedAt: new Date() })
+      .where(withTenant(financialAccounts, user.organizationId, eq(financialAccounts.id, id)))
       .returning();
 
     if (!result) return c.json({ error: 'Conta não encontrada' }, 404);
@@ -277,12 +277,12 @@ app.get('/centros-custo', requireAuth, async (c) => {
   const { ativo } = c.req.query();
 
   try {
-    const filters = [withTenant(centrosCusto, user.organizationId)];
-    if (ativo !== undefined) filters.push(eq(centrosCusto.ativo, ativo));
+    const filters = [withTenant(costCenters, user.organizationId)];
+    if (ativo !== undefined) filters.push(eq(costCenters.isActive, ativo === 'true'));
 
-    const result = await db.select().from(centrosCusto)
+    const result = await db.select().from(costCenters)
       .where(and(...filters))
-      .orderBy(centrosCusto.nome);
+      .orderBy(costCenters.name);
 
     return c.json({ data: result });
   } catch (e) {
@@ -296,16 +296,16 @@ app.post('/centros-custo', requireAuth, async (c) => {
   const db = createDb(c.env);
   const body = (await c.req.json()) as any;
 
-  if (!body.nome) return c.json({ error: 'nome é obrigatório' }, 400);
+  if (!body.nome && !body.name) return c.json({ error: 'name é obrigatório' }, 400);
 
   try {
-    const [result] = await db.insert(centrosCusto)
+    const [result] = await db.insert(costCenters)
       .values({
         organizationId: user.organizationId,
-        nome: String(body.nome),
-        descricao: body.descricao ?? null,
-        codigo: body.codigo ?? null,
-        ativo: body.ativo !== undefined ? String(body.ativo) : 'true',
+        name: String(body.nome ?? body.name),
+        description: body.descricao ?? body.description ?? null,
+        code: body.codigo ?? body.code ?? null,
+        isActive: (body.ativo ?? body.is_active) !== undefined ? Boolean(body.ativo ?? body.is_active) : true,
       })
       .returning();
 
@@ -323,15 +323,15 @@ app.put('/centros-custo/:id', requireAuth, async (c) => {
   const body = (await c.req.json()) as any;
 
   try {
-    const [result] = await db.update(centrosCusto)
+    const [result] = await db.update(costCenters)
       .set({
-        nome: body.nome !== undefined ? String(body.nome) : undefined,
-        descricao: body.descricao !== undefined ? body.descricao : undefined,
-        codigo: body.codigo !== undefined ? body.codigo : undefined,
-        ativo: body.ativo !== undefined ? String(body.ativo) : undefined,
+        name: (body.nome ?? body.name) !== undefined ? String(body.nome ?? body.name) : undefined,
+        description: (body.descricao ?? body.description) !== undefined ? (body.descricao ?? body.description) : undefined,
+        code: (body.codigo ?? body.code) !== undefined ? (body.codigo ?? body.code) : undefined,
+        isActive: (body.ativo ?? body.is_active) !== undefined ? Boolean(body.ativo ?? body.is_active) : undefined,
         updatedAt: new Date(),
       })
-      .where(withTenant(centrosCusto, user.organizationId, eq(centrosCusto.id, id)))
+      .where(withTenant(costCenters, user.organizationId, eq(costCenters.id, id)))
       .returning();
 
     if (!result) return c.json({ error: 'Centro de custo não encontrado' }, 404);
@@ -348,8 +348,8 @@ app.delete('/centros-custo/:id', requireAuth, async (c) => {
   const { id } = c.req.param();
 
   try {
-    const [result] = await db.update(centrosCusto).set({ deletedAt: new Date() })
-      .where(withTenant(centrosCusto, user.organizationId, eq(centrosCusto.id, id)))
+    const [result] = await db.update(costCenters).set({ deletedAt: new Date() })
+      .where(withTenant(costCenters, user.organizationId, eq(costCenters.id, id)))
       .returning();
 
     if (!result) return c.json({ error: 'Centro de custo não encontrado' }, 404);
@@ -367,17 +367,17 @@ app.get('/pagamentos', requireAuth, async (c) => {
   const db = createDb(c.env);
   const { eventoId, patientId, appointmentId, dateFrom, dateTo, limit = '50', offset = '0' } = c.req.query();
 
-  const where = [withTenant(pagamentos, user.organizationId)];
-  if (eventoId) where.push(eq(pagamentos.eventoId, eventoId));
-  if (patientId) where.push(eq(pagamentos.patientId, patientId));
-  if (appointmentId) where.push(eq(pagamentos.appointmentId, appointmentId));
+  const where = [withTenant(payments, user.organizationId)];
+  if (eventoId) where.push(eq(payments.eventId, eventoId));
+  if (patientId) where.push(eq(payments.patientId, patientId));
+  if (appointmentId) where.push(eq(payments.appointmentId, appointmentId));
   
-  // Date filtering logic matching original COALESCE(pago_em, created_at::date)
+  // Date filtering logic matching original COALESCE(paid_at, created_at::date)
   if (dateFrom) {
-    where.push(sql`COALESCE(${pagamentos.pagoEm}, ${pagamentos.createdAt}::date) >= ${dateFrom}`);
+    where.push(sql`COALESCE(${payments.paidAt}, ${payments.createdAt}::date) >= ${dateFrom}`);
   }
   if (dateTo) {
-    where.push(sql`COALESCE(${pagamentos.pagoEm}, ${pagamentos.createdAt}::date) <= ${dateTo}`);
+    where.push(sql`COALESCE(${payments.paidAt}, ${payments.createdAt}::date) <= ${dateTo}`);
   }
 
   try {
@@ -385,9 +385,9 @@ app.get('/pagamentos', requireAuth, async (c) => {
     const offsetNum = Math.max(0, Number(offset) || 0);
 
     const result = await db.select()
-      .from(pagamentos)
+      .from(payments)
       .where(and(...where))
-      .orderBy(desc(pagamentos.pagoEm), desc(pagamentos.createdAt))
+      .orderBy(desc(payments.paidAt), desc(payments.createdAt))
       .limit(limitNum)
       .offset(offsetNum);
 
@@ -403,18 +403,18 @@ app.post('/pagamentos', requireAuth, async (c) => {
   const db = createDb(c.env);
   const body = (await c.req.json()) as Record<string, any>;
 
-  if (body.valor == null) return c.json({ error: 'valor é obrigatório' }, 400);
+  if (body.valor == null && body.amount == null) return c.json({ error: 'amount é obrigatório' }, 400);
 
   try {
-    const [result] = await db.insert(pagamentos)
+    const [result] = await db.insert(payments)
       .values({
         organizationId: user.organizationId,
-        eventoId: body.evento_id ?? null,
+        eventId: body.evento_id ?? body.event_id ?? null,
         appointmentId: body.appointment_id ?? null,
-        valor: String(body.valor),
-        formaPagamento: body.forma_pagamento ?? null,
-        pagoEm: body.pago_em ?? null,
-        observacoes: body.observacoes ?? null,
+        amount: String(body.valor ?? body.amount),
+        paymentMethod: body.payment_method ?? body.forma_pagamento ?? null,
+        paidAt: body.paid_at ?? body.pago_em ?? null,
+        notes: body.observacoes ?? body.notes ?? null,
         patientId: body.patient_id ?? null,
       })
       .returning();
@@ -433,15 +433,15 @@ app.put('/pagamentos/:id', requireAuth, async (c) => {
   const body = (await c.req.json()) as Record<string, any>;
 
   try {
-    const [result] = await db.update(pagamentos)
+    const [result] = await db.update(payments)
       .set({
-        valor: body.valor !== undefined ? String(body.valor) : undefined,
-        formaPagamento: body.forma_pagamento !== undefined ? body.forma_pagamento : undefined,
-        pagoEm: body.pago_em !== undefined ? body.pago_em : undefined,
-        observacoes: body.observacoes !== undefined ? body.observacoes : undefined,
+        amount: (body.valor ?? body.amount) !== undefined ? String(body.valor ?? body.amount) : undefined,
+        paymentMethod: (body.payment_method ?? body.forma_pagamento) !== undefined ? (body.payment_method ?? body.forma_pagamento) : undefined,
+        paidAt: (body.paid_at ?? body.pago_em) !== undefined ? (body.paid_at ?? body.pago_em) : undefined,
+        notes: (body.observacoes ?? body.notes) !== undefined ? (body.observacoes ?? body.notes) : undefined,
         updatedAt: new Date(),
       })
-      .where(withTenant(pagamentos, user.organizationId, eq(pagamentos.id, id)))
+      .where(withTenant(payments, user.organizationId, eq(payments.id, id)))
       .returning();
 
     if (!result) return c.json({ error: 'Pagamento não encontrado' }, 404);
@@ -458,8 +458,8 @@ app.delete('/pagamentos/:id', requireAuth, async (c) => {
   const { id } = c.req.param();
 
   try {
-    const [result] = await db.update(pagamentos).set({ deletedAt: new Date() })
-      .where(withTenant(pagamentos, user.organizationId, eq(pagamentos.id, id)))
+    const [result] = await db.update(payments).set({ deletedAt: new Date() })
+      .where(withTenant(payments, user.organizationId, eq(payments.id, id)))
       .returning();
 
     if (!result) return c.json({ error: 'Pagamento não encontrado' }, 404);
