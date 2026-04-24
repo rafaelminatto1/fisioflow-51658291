@@ -494,8 +494,8 @@ app.get('/bi', requireAuth, async (c) => {
       'bi.revenueTrend',
       `SELECT
          TO_CHAR(date_trunc('month', a.date), 'YYYY-MM') AS month,
-         COUNT(*) FILTER (WHERE a.status::text IN ('completed','realizado','atendido'))::int AS sessions,
-         COALESCE(SUM(a.payment_amount) FILTER (WHERE a.status::text IN ('completed','realizado','atendido')), 0)::numeric(12,2) AS revenue
+         COUNT(*) FILTER (WHERE a.status::text IN ('atendido', 'avaliacao'))::int AS sessions,
+         COALESCE(SUM(a.payment_amount) FILTER (WHERE a.status::text IN ('atendido', 'avaliacao')), 0)::numeric(12,2) AS revenue
        FROM appointments a
        WHERE a.organization_id = $1
          AND a.date >= date_trunc('month', NOW()) - ($2 - 1) * INTERVAL '1 month'
@@ -511,8 +511,7 @@ app.get('/bi', requireAuth, async (c) => {
       `SELECT
          COUNT(*) FILTER (
            WHERE status::text IN (
-             'completed','realizado','atendido',
-             'scheduled','confirmed','agendado','presenca_confirmada','avaliacao'
+             'atendido', 'avaliacao', 'agendado', 'presenca_confirmada'
            )
          )::numeric AS booked,
          COUNT(*)::numeric AS total
@@ -535,7 +534,7 @@ app.get('/bi', requireAuth, async (c) => {
          SELECT patient_id, COUNT(*) AS visit_count
          FROM appointments
          WHERE organization_id = $1
-           AND status::text IN ('completed','realizado','atendido')
+           AND status::text IN ('atendido', 'avaliacao')
            AND date >= NOW() - INTERVAL '90 days'
          GROUP BY patient_id
        ) t`,
@@ -550,14 +549,14 @@ app.get('/bi', requireAuth, async (c) => {
       `SELECT
          a.therapist_id::text AS therapist_id,
          COALESCE(NULLIF(p.full_name, ''), NULLIF(p.name, ''), a.therapist_id::text) AS name,
-         COUNT(*) FILTER (WHERE a.status::text IN ('completed','realizado','atendido'))::int AS sessions_completed,
+         COUNT(*) FILTER (WHERE a.status::text IN ('atendido', 'avaliacao'))::int AS sessions_completed,
          COUNT(*) FILTER (
            WHERE a.status::text IN (
-             'no_show','faltou','faltou_com_aviso','faltou_sem_aviso',
+             'faltou','faltou_com_aviso','faltou_sem_aviso',
              'nao_atendido','nao_atendido_sem_cobranca'
            )
          )::int AS no_shows,
-         COALESCE(SUM(a.payment_amount) FILTER (WHERE a.status::text IN ('completed','realizado','atendido')), 0)::numeric(12,2) AS revenue
+         COALESCE(SUM(a.payment_amount) FILTER (WHERE a.status::text IN ('atendido', 'avaliacao')), 0)::numeric(12,2) AS revenue
        FROM appointments a
        LEFT JOIN profiles p
          ON (p.id = a.therapist_id OR p.user_id = a.therapist_id::text)
