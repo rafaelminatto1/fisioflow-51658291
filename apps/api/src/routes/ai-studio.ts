@@ -108,7 +108,7 @@ app.get('/retention/at-risk', requireAuth, async (c) => {
         AND p.id NOT IN (
           SELECT patient_id FROM appointments 
           WHERE date >= CURRENT_DATE
-            AND status::text IN ('agendado', 'presenca_confirmada', 'avaliacao', 'scheduled', 'confirmed')
+            AND status::text IN ('agendado', 'presenca_confirmada', 'avaliacao')
         )
       GROUP BY p.id
       HAVING MAX(a.date) < CURRENT_DATE - INTERVAL '10 days'
@@ -150,7 +150,7 @@ app.get('/predict/discharge/:patientId', requireAuth, async (c) => {
                SELECT COUNT(*)
                FROM appointments
                WHERE patient_id = ${patientId}
-                 AND status::text IN ('atendido', 'avaliacao', 'completed', 'realizado', 'concluido')
+                 AND status::text IN ('atendido', 'avaliacao')
              ) as "sessionsCount"
       FROM patients p
       WHERE p.id = ${patientId} AND p.organization_id = ${user.organizationId}
