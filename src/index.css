@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Figtree:wght@300;400;500;600;700&family=Noto+Sans:wght@300;400;500;700&display=swap');
+@import url("https://fonts.googleapis.com/css2?family=Figtree:wght@300;400;500;600;700&family=Noto+Sans:wght@300;400;500;700&display=swap");
 @import "tailwindcss";
 @import "./styles/fullcalendar.css";
 @source "./**/*.{ts,tsx,js,jsx}";
@@ -7,9 +7,9 @@
 @custom-variant dark (&:is(.dark *));
 
 @theme {
-  --font-sans: 'Noto Sans', 'Inter', ui-sans-serif, system-ui, sans-serif;
-  --font-display: 'Figtree', 'Outfit', ui-sans-serif, system-ui, sans-serif;
-  
+  --font-sans: "Noto Sans", "Inter", ui-sans-serif, system-ui, sans-serif;
+  --font-display: "Figtree", "Outfit", ui-sans-serif, system-ui, sans-serif;
+
   /* Breakpoints */
   --breakpoint-xs: 480px;
   --breakpoint-sm: 640px;
@@ -49,7 +49,7 @@
   --color-popover-foreground: hsl(var(--popover-foreground));
   --color-card: hsl(var(--card));
   --color-card-foreground: hsl(var(--card-foreground));
-  
+
   --color-sidebar-background: hsl(var(--sidebar-background));
   --color-sidebar-foreground: hsl(var(--sidebar-foreground));
   --color-sidebar-primary: hsl(var(--sidebar-primary));
@@ -71,7 +71,7 @@
   --color-pain-8: #ef4444;
   --color-pain-9: #b91c1c;
   --color-pain-10: #7f1d1d;
-  
+
   --color-pain-gauge-low: #22c55e;
   --color-pain-gauge-med: #eab308;
   --color-pain-gauge-high: #ef4444;
@@ -96,39 +96,86 @@
 
   /* Animations & Keyframes */
   @keyframes accordion-down {
-    from { height: 0; }
-    to { height: var(--radix-accordion-content-height); }
+    from {
+      height: 0;
+    }
+    to {
+      height: var(--radix-accordion-content-height);
+    }
   }
   @keyframes accordion-up {
-    from { height: var(--radix-accordion-content-height); }
-    to { height: 0; }
+    from {
+      height: var(--radix-accordion-content-height);
+    }
+    to {
+      height: 0;
+    }
   }
   @keyframes wiggle {
-    0%, 100% { transform: rotate(0deg); }
-    15% { transform: rotate(15deg); }
-    30% { transform: rotate(-10deg); }
-    45% { transform: rotate(5deg); }
-    60% { transform: rotate(-5deg); }
+    0%,
+    100% {
+      transform: rotate(0deg);
+    }
+    15% {
+      transform: rotate(15deg);
+    }
+    30% {
+      transform: rotate(-10deg);
+    }
+    45% {
+      transform: rotate(5deg);
+    }
+    60% {
+      transform: rotate(-5deg);
+    }
   }
   @keyframes pulse-ring {
-    0% { transform: scale(0.8); opacity: 0.5; }
-    100% { transform: scale(2.0); opacity: 0; }
+    0% {
+      transform: scale(0.8);
+      opacity: 0.5;
+    }
+    100% {
+      transform: scale(2);
+      opacity: 0;
+    }
   }
   @keyframes pulse-subtle {
-    0%, 100% { opacity: 1; transform: scale(1); }
-    50% { opacity: 0.85; transform: scale(0.98); }
+    0%,
+    100% {
+      opacity: 1;
+      transform: scale(1);
+    }
+    50% {
+      opacity: 0.85;
+      transform: scale(0.98);
+    }
   }
   @keyframes gauge-rotate {
-    0% { transform: rotate(-90deg); }
-    100% { transform: rotate(90deg); }
+    0% {
+      transform: rotate(-90deg);
+    }
+    100% {
+      transform: rotate(90deg);
+    }
   }
   @keyframes stagger-in {
-    0% { opacity: 0; transform: translateY(20px); }
-    100% { opacity: 1; transform: translateY(0); }
+    0% {
+      opacity: 0;
+      transform: translateY(20px);
+    }
+    100% {
+      opacity: 1;
+      transform: translateY(0);
+    }
   }
   @keyframes bounce-subtle {
-    0%, 100% { transform: translateY(0); }
-    50% { transform: translateY(-4px); }
+    0%,
+    100% {
+      transform: translateY(0);
+    }
+    50% {
+      transform: translateY(-4px);
+    }
   }
 
   --animate-accordion-down: accordion-down 0.2s ease-out;
@@ -162,7 +209,7 @@
     --input: 220 13% 91%;
     --ring: 211 100% 50%;
     --radius: 1rem;
-    
+
     --sidebar-background: 0 0% 100%;
     --sidebar-foreground: 222.2 47.4% 11.2%;
     --sidebar-primary: 210 90% 51%;
@@ -205,7 +252,12 @@
     color: hsl(var(--foreground));
     font-family: var(--font-sans);
   }
-  h1, h2, h3, h4, h5, h6 {
+  h1,
+  h2,
+  h3,
+  h4,
+  h5,
+  h6 {
     font-family: var(--font-display);
   }
 }

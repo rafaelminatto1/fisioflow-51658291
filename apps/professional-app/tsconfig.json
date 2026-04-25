@@ -3,12 +3,8 @@
   "compilerOptions": {
     "strict": true,
     "paths": {
-      "@fisioflow/core": [
-        "../../packages/core/src/index.ts"
-      ],
-      "@/*": [
-        "./*"
-      ]
+      "@fisioflow/core": ["../../packages/core/src/index.ts"],
+      "@/*": ["./*"]
     },
     "skipLibCheck": true,
     "esModuleInterop": true,
@@ -16,13 +12,7 @@
     "resolveJsonModule": true,
     "jsx": "react-native"
   },
-  "include": [
-    "**/*.ts",
-    "**/*.tsx",
-    "index.ts",
-    ".expo/types/**/*.ts",
-    "expo-env.d.ts"
-  ],
+  "include": ["**/*.ts", "**/*.tsx", "index.ts", ".expo/types/**/*.ts", "expo-env.d.ts"],
   "exclude": [
     "node_modules",
     "babel.config.js",

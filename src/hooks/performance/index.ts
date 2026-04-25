@@ -5,24 +5,17 @@
  */
 
 // Lazy loading de bibliotecas pesadas
-export {
-	useLazyLibrary,
-	useMediaPipeVision,
-} from "./useLazyLibrary";
+export { useLazyLibrary, useMediaPipeVision } from "./useLazyLibrary";
 
 // Debounce - adia execução até parar de receber eventos
-export {
-	useDebounce,
-	useDebouncedCallback,
-	useDebounceWithPending,
-} from "./useDebounce";
+export { useDebounce, useDebouncedCallback, useDebounceWithPending } from "./useDebounce";
 
 // Throttle - limita frequência de execução
 export {
-	useThrottle,
-	useThrottledCallback,
-	useScrollThrottle,
-	useResizeThrottle,
+  useThrottle,
+  useThrottledCallback,
+  useScrollThrottle,
+  useResizeThrottle,
 } from "./useThrottle";
 
 // Virtualização de listas
@@ -33,76 +26,72 @@ export { useOptimizedList, usePagination } from "./useOptimizedList";
 
 // Intersection Observer para lazy loading
 export {
-	useIntersectionObserver,
-	useLazyRender,
-	useInfiniteScroll,
-	useAnimateOnScroll,
+  useIntersectionObserver,
+  useLazyRender,
+  useInfiniteScroll,
+  useAnimateOnScroll,
 } from "./useIntersectionObserver";
 
 // Memoização avançada
 export {
-	usePrevious,
-	useTrackedMemo,
-	useMemoWithTTL,
-	useInvalidableCallback,
-	useMultiMemo,
-	usePersistentMemo,
-	useThrottledValue,
-	usePromiseMemo,
-	useDeepMemo,
-	useConditionalMemo,
+  usePrevious,
+  useTrackedMemo,
+  useMemoWithTTL,
+  useInvalidableCallback,
+  useMultiMemo,
+  usePersistentMemo,
+  useThrottledValue,
+  usePromiseMemo,
+  useDeepMemo,
+  useConditionalMemo,
 } from "./useMemoAdvanced";
 
 // React Query otimizado
 export {
-	QueryConfig,
-	useStableQuery,
-	useStaticQuery,
-	useOptimizedQuery,
-	useFrequentQuery,
-	useBatchRefetch,
-	useOptimizedMutation,
-	usePrefetch,
-	useOptimisticCache,
-	useInfiniteScrollOptimized,
-	createQueryKeys,
-	QueryKeys,
+  QueryConfig,
+  useStableQuery,
+  useStaticQuery,
+  useOptimizedQuery,
+  useFrequentQuery,
+  useBatchRefetch,
+  useOptimizedMutation,
+  usePrefetch,
+  useOptimisticCache,
+  useInfiniteScrollOptimized,
+  createQueryKeys,
+  QueryKeys,
 } from "./useReactQueryOptimized";
 
 // Prefetching - carrega dados antecipadamente
 export {
-	usePrefetchOnHover,
-	usePrefetchRelated,
-	usePrefetchMultiple,
-	usePrefetchOnProximity,
-	usePrefetchPatientOnHover,
-	usePrefetchUpcomingAppointments,
-	usePrefetchEvolutionTemplates,
-	PrefetchOnHover,
+  usePrefetchOnHover,
+  usePrefetchRelated,
+  usePrefetchMultiple,
+  usePrefetchOnProximity,
+  usePrefetchPatientOnHover,
+  usePrefetchUpcomingAppointments,
+  usePrefetchEvolutionTemplates,
+  PrefetchOnHover,
 } from "./usePrefetch";
 
 // Queries com cancelamento automático
-export {
-	useCancellableQuery,
-	useDebouncedQuery,
-	useLazyQuery,
-} from "./useCancellableQuery";
+export { useCancellableQuery, useDebouncedQuery, useLazyQuery } from "./useCancellableQuery";
 
 // Deduplicação de queries
 export {
-	useDeduplicatedQuery,
-	useDeduplicatedPrefetch,
-	useBatchDeduplicatedQuery,
-	useInvalidateDeduplicatedCache,
-	useDeduplicationStats,
+  useDeduplicatedQuery,
+  useDeduplicatedPrefetch,
+  useBatchDeduplicatedQuery,
+  useInvalidateDeduplicatedCache,
+  useDeduplicationStats,
 } from "./useQueryDeduplication";
 
 // Optimistic mutations
 export {
-	useOptimisticMutation,
-	useCreateMutation,
-	useUpdateMutation,
-	useDeleteMutation,
-	type OptimisticMutationContext,
-	type OptimisticMutationOptions,
+  useOptimisticMutation,
+  useCreateMutation,
+  useUpdateMutation,
+  useDeleteMutation,
+  type OptimisticMutationContext,
+  type OptimisticMutationOptions,
 } from "../useOptimisticMutation";

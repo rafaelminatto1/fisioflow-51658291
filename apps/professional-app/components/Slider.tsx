@@ -1,8 +1,6 @@
-import React, { useState } from 'react';
-import { View, Text, StyleSheet, PanResponder } from 'react-native';
-import { useColors } from '@/hooks/useColorScheme';
-
-
+import React, { useState } from "react";
+import { View, Text, StyleSheet, PanResponder } from "react-native";
+import { useColors } from "@/hooks/useColorScheme";
 
 interface Props {
   minValue?: number;
@@ -50,9 +48,7 @@ export function Slider({
 
   return (
     <View style={styles.container}>
-      {label && (
-        <Text style={[styles.label, { color: colors.textSecondary }]}>{label}</Text>
-      )}
+      {label && <Text style={[styles.label, { color: colors.textSecondary }]}>{label}</Text>}
 
       <View
         style={styles.sliderContainer}
@@ -90,40 +86,37 @@ export function Slider({
         </View>
 
         {/* Marks */}
-        {marks && marks.map((mark) => {
-          const markPercentage = ((mark.value - minValue) / (maxValue - minValue)) * 100;
-          return (
-            <View
-              key={mark.value}
-              style={[
-                styles.mark,
-                {
-                  left: `${markPercentage}%`,
-                },
-              ]}
-            >
-              <View style={[styles.markLine, { backgroundColor: colors.border }]} />
-              <Text style={[styles.markLabel, { color: colors.textSecondary }]}>
-                {mark.label}
-              </Text>
-            </View>
-          );
-        })}
+        {marks &&
+          marks.map((mark) => {
+            const markPercentage = ((mark.value - minValue) / (maxValue - minValue)) * 100;
+            return (
+              <View
+                key={mark.value}
+                style={[
+                  styles.mark,
+                  {
+                    left: `${markPercentage}%`,
+                  },
+                ]}
+              >
+                <View style={[styles.markLine, { backgroundColor: colors.border }]} />
+                <Text style={[styles.markLabel, { color: colors.textSecondary }]}>
+                  {mark.label}
+                </Text>
+              </View>
+            );
+          })}
       </View>
 
       {/* Value Display */}
       <View style={styles.valueContainer}>
         {showLabels && (
           <>
-            <Text style={[styles.minLabel, { color: colors.textSecondary }]}>
-              {minValue}
-            </Text>
+            <Text style={[styles.minLabel, { color: colors.textSecondary }]}>{minValue}</Text>
             <View style={[styles.valueBubble, { backgroundColor: colors.primary }]}>
-              <Text style={[styles.valueText, { color: '#FFFFFF' }]}>{value}</Text>
+              <Text style={[styles.valueText, { color: "#FFFFFF" }]}>{value}</Text>
             </View>
-            <Text style={[styles.maxLabel, { color: colors.textSecondary }]}>
-              {maxValue}
-            </Text>
+            <Text style={[styles.maxLabel, { color: colors.textSecondary }]}>{maxValue}</Text>
           </>
         )}
       </View>
@@ -137,16 +130,16 @@ const styles = StyleSheet.create({
   },
   label: {
     fontSize: 14,
-    fontWeight: '500',
+    fontWeight: "500",
     marginBottom: 12,
   },
   sliderContainer: {
     height: 32,
-    position: 'relative',
+    position: "relative",
     marginBottom: 8,
   },
   track: {
-    position: 'absolute',
+    position: "absolute",
     top: 14,
     left: 0,
     right: 0,
@@ -154,21 +147,21 @@ const styles = StyleSheet.create({
     borderRadius: 2,
   },
   progress: {
-    position: 'absolute',
+    position: "absolute",
     top: 14,
     left: 0,
     height: 4,
     borderRadius: 2,
   },
   thumb: {
-    position: 'absolute',
+    position: "absolute",
     top: 8,
     width: 24,
     height: 24,
     borderRadius: 12,
     borderWidth: 2,
-    alignItems: 'center',
-    justifyContent: 'center',
+    alignItems: "center",
+    justifyContent: "center",
   },
   thumbInner: {
     width: 12,
@@ -176,9 +169,9 @@ const styles = StyleSheet.create({
     borderRadius: 6,
   },
   mark: {
-    position: 'absolute',
+    position: "absolute",
     top: 32,
-    alignItems: 'center',
+    alignItems: "center",
     transform: [{ translateX: -8 }],
   },
   markLine: {
@@ -190,9 +183,9 @@ const styles = StyleSheet.create({
     marginTop: 2,
   },
   valueContainer: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
   },
   minLabel: {
     fontSize: 12,
@@ -207,8 +200,8 @@ const styles = StyleSheet.create({
   },
   valueText: {
     fontSize: 16,
-    fontWeight: '600',
+    fontWeight: "600",
     minWidth: 24,
-    textAlign: 'center',
+    textAlign: "center",
   },
 });

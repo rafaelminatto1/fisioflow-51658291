@@ -1,7 +1,7 @@
-import { Hono } from 'hono';
-import type { Env } from '../types/env';
-import { requireAuth, type AuthVariables } from '../lib/auth';
-import { createPool } from '../lib/db';
+import { Hono } from "hono";
+import type { Env } from "../types/env";
+import { requireAuth, type AuthVariables } from "../lib/auth";
+import { createPool } from "../lib/db";
 
 const app = new Hono<{ Bindings: Env; Variables: AuthVariables }>();
 
@@ -10,7 +10,7 @@ type DbRow = Record<string, unknown>;
 type PortalPayload = Record<string, unknown>;
 
 const tableColumnsCache = new Map<string, Promise<Set<string>>>();
-const PROFESSIONAL_ROLES = ['admin', 'fisioterapeuta', 'professional'];
+const PROFESSIONAL_ROLES = ["admin", "fisioterapeuta", "professional"];
 
 function cacheKey(table: string) {
   return `public.${table}`;
@@ -42,7 +42,7 @@ async function hasTable(pool: DbPool, table: string): Promise<boolean> {
 }
 
 function trimmedString(value: unknown): string | undefined {
-  if (typeof value !== 'string') return undefined;
+  if (typeof value !== "string") return undefined;
   const normalized = value.trim();
   return normalized.length > 0 ? normalized : undefined;
 }
@@ -52,9 +52,9 @@ function nullableString(value: unknown): string | null {
 }
 
 function nullableNumber(value: unknown): number | null {
-  if (typeof value === 'number' && Number.isFinite(value)) return value;
-  if (typeof value === 'string') {
-    const normalized = value.replace(',', '.').trim();
+  if (typeof value === "number" && Number.isFinite(value)) return value;
+  if (typeof value === "string") {
+    const normalized = value.replace(",", ".").trim();
     if (!normalized) return null;
     const parsed = Number.parseFloat(normalized);
     return Number.isFinite(parsed) ? parsed : null;
@@ -64,13 +64,13 @@ function nullableNumber(value: unknown): number | null {
 
 function parseJsonObject(value: unknown): Record<string, unknown> | null {
   if (!value) return null;
-  if (typeof value === 'object' && !Array.isArray(value)) {
+  if (typeof value === "object" && !Array.isArray(value)) {
     return value as Record<string, unknown>;
   }
-  if (typeof value === 'string') {
+  if (typeof value === "string") {
     try {
       const parsed = JSON.parse(value) as unknown;
-      if (parsed && typeof parsed === 'object' && !Array.isArray(parsed)) {
+      if (parsed && typeof parsed === "object" && !Array.isArray(parsed)) {
         return parsed as Record<string, unknown>;
       }
     } catch {
@@ -83,18 +83,18 @@ function parseJsonObject(value: unknown): Record<string, unknown> | null {
 function normalizeGenderToDb(value: unknown): string | null {
   const normalized = trimmedString(value)?.toLowerCase();
   if (!normalized) return null;
-  if (['m', 'masculino', 'male', 'homem'].includes(normalized)) return 'M';
-  if (['f', 'feminino', 'female', 'mulher'].includes(normalized)) return 'F';
-  if (['o', 'outro', 'other'].includes(normalized)) return 'O';
+  if (["m", "masculino", "male", "homem"].includes(normalized)) return "M";
+  if (["f", "feminino", "female", "mulher"].includes(normalized)) return "F";
+  if (["o", "outro", "other"].includes(normalized)) return "O";
   return normalized.toUpperCase();
 }
 
-function normalizeGenderFromDb(value: unknown): 'masculino' | 'feminino' | 'outro' | null {
+function normalizeGenderFromDb(value: unknown): "masculino" | "feminino" | "outro" | null {
   const normalized = trimmedString(value)?.toLowerCase();
   if (!normalized) return null;
-  if (['m', 'masculino', 'male', 'homem'].includes(normalized)) return 'masculino';
-  if (['f', 'feminino', 'female', 'mulher'].includes(normalized)) return 'feminino';
-  return 'outro';
+  if (["m", "masculino", "male", "homem"].includes(normalized)) return "masculino";
+  if (["f", "feminino", "female", "mulher"].includes(normalized)) return "feminino";
+  return "outro";
 }
 
 function normalizeAddressPayload(value: unknown): Record<string, unknown> | null {
@@ -113,7 +113,7 @@ function normalizeAddressPayload(value: unknown): Record<string, unknown> | null
 }
 
 function buildAddressPayload(body: PortalPayload): Record<string, unknown> | null {
-  if (body.address && typeof body.address === 'object') {
+  if (body.address && typeof body.address === "object") {
     return normalizeAddressPayload(body.address);
   }
 
@@ -141,8 +141,8 @@ function buildAddressPayload(body: PortalPayload): Record<string, unknown> | nul
 }
 
 function getInviteCode(id: string): string {
-  const normalized = id.replace(/[^a-zA-Z0-9]/g, '').toUpperCase();
-  return normalized.slice(0, 6).padEnd(6, 'X');
+  const normalized = id.replace(/[^a-zA-Z0-9]/g, "").toUpperCase();
+  return normalized.slice(0, 6).padEnd(6, "X");
 }
 
 function normalizeProfileRow(
@@ -153,31 +153,31 @@ function normalizeProfileRow(
     trimmedString(row?.full_name) ??
     trimmedString(row?.name) ??
     fallback.fullName ??
-    fallback.email?.split('@')[0] ??
-    'Paciente';
+    fallback.email?.split("@")[0] ??
+    "Paciente";
 
   return {
-    id: trimmedString(row?.id) ?? '',
+    id: trimmedString(row?.id) ?? "",
     user_id: trimmedString(row?.user_id) ?? fallback.userId,
     email: trimmedString(row?.email) ?? fallback.email ?? null,
     full_name: fullName,
-    role: trimmedString(row?.role) ?? 'patient',
+    role: trimmedString(row?.role) ?? "patient",
     organization_id: trimmedString(row?.organization_id) ?? fallback.organizationId,
     created_at: row?.created_at ? String(row.created_at) : new Date().toISOString(),
     updated_at: row?.updated_at ? String(row.updated_at) : new Date().toISOString(),
   };
 }
 
-function normalizePatientRow(row: DbRow | null | undefined, profile: ReturnType<typeof normalizeProfileRow>) {
+function normalizePatientRow(
+  row: DbRow | null | undefined,
+  profile: ReturnType<typeof normalizeProfileRow>,
+) {
   const address = normalizeAddressPayload(row?.address);
-  const fullName =
-    trimmedString(row?.full_name) ??
-    trimmedString(row?.name) ??
-    profile.full_name;
+  const fullName = trimmedString(row?.full_name) ?? trimmedString(row?.name) ?? profile.full_name;
 
   return {
-    id: trimmedString(row?.id) ?? '',
-    patient_id: trimmedString(row?.id) ?? '',
+    id: trimmedString(row?.id) ?? "",
+    patient_id: trimmedString(row?.id) ?? "",
     profile_id: trimmedString(row?.profile_id) ?? (profile.id || null),
     user_id: trimmedString(row?.user_id) ?? profile.user_id,
     name: fullName,
@@ -193,9 +193,7 @@ function normalizePatientRow(row: DbRow | null | undefined, profile: ReturnType<
     address,
     professional_id: trimmedString(row?.professional_id) ?? null,
     professional_name:
-      trimmedString(row?.professional_name) ??
-      trimmedString(row?.referred_by) ??
-      null,
+      trimmedString(row?.professional_name) ?? trimmedString(row?.referred_by) ?? null,
     referred_by: trimmedString(row?.referred_by) ?? null,
     incomplete_registration: row?.incomplete_registration === true,
     created_at: row?.created_at ? String(row.created_at) : profile.created_at,
@@ -243,8 +241,8 @@ async function upsertProfile(
     trimmedString(body.full_name ?? body.name) ??
     trimmedString(existing.rows[0]?.full_name) ??
     trimmedString(existing.rows[0]?.name) ??
-    user.email?.split('@')[0] ??
-    'Paciente';
+    user.email?.split("@")[0] ??
+    "Paciente";
 
   if (!existing.rows.length) {
     const inserted = await pool.query(
@@ -276,7 +274,7 @@ async function upsertProfile(
         user.uid,
         user.email ?? null,
         fullName,
-        options.forcePatientRole ? 'patient' : 'patient',
+        options.forcePatientRole ? "patient" : "patient",
         user.organizationId,
       ],
     );
@@ -306,7 +304,7 @@ async function upsertProfile(
     `,
     [
       user.uid,
-      body.email ? String(body.email) : user.email ?? null,
+      body.email ? String(body.email) : (user.email ?? null),
       fullName,
       options.forcePatientRole,
     ],
@@ -320,10 +318,10 @@ async function findPatientForUser(
   user: { uid: string; email?: string; organizationId: string },
   profileId?: string,
 ) {
-  const patientColumns = await getTableColumns(pool, 'patients');
+  const patientColumns = await getTableColumns(pool, "patients");
   if (patientColumns.size === 0) return null;
 
-  if (profileId && patientColumns.has('profile_id')) {
+  if (profileId && patientColumns.has("profile_id")) {
     const result = await pool.query(
       `
         SELECT *
@@ -337,7 +335,7 @@ async function findPatientForUser(
     if (result.rows.length) return result.rows[0] as DbRow;
   }
 
-  if (patientColumns.has('user_id')) {
+  if (patientColumns.has("user_id")) {
     const result = await pool.query(
       `
         SELECT *
@@ -351,7 +349,7 @@ async function findPatientForUser(
     if (result.rows.length) return result.rows[0] as DbRow;
   }
 
-  if (user.email && patientColumns.has('email')) {
+  if (user.email && patientColumns.has("email")) {
     const result = await pool.query(
       `
         SELECT *
@@ -375,7 +373,7 @@ async function upsertPatient(
   profileRow: DbRow,
   body: PortalPayload,
 ) {
-  const patientColumns = await getTableColumns(pool, 'patients');
+  const patientColumns = await getTableColumns(pool, "patients");
   if (patientColumns.size === 0) return null;
 
   const existing = await findPatientForUser(pool, user, trimmedString(profileRow.id));
@@ -383,24 +381,31 @@ async function upsertPatient(
     trimmedString(body.full_name ?? body.name) ??
     trimmedString(existing?.full_name) ??
     trimmedString(profileRow.full_name) ??
-    user.email?.split('@')[0] ??
-    'Paciente';
+    user.email?.split("@")[0] ??
+    "Paciente";
 
   const addressPayload = buildAddressPayload(body);
   const payload: Record<string, unknown> = {};
 
-  if (patientColumns.has('organization_id')) payload.organization_id = user.organizationId;
-  if (patientColumns.has('full_name')) payload.full_name = fullName;
-  if (patientColumns.has('email')) payload.email = nullableString(body.email) ?? user.email ?? null;
-  if (patientColumns.has('phone') && body.phone !== undefined) payload.phone = nullableString(body.phone);
-  if (patientColumns.has('cpf') && body.cpf !== undefined) payload.cpf = nullableString(body.cpf);
-  if (patientColumns.has('birth_date') && body.birth_date !== undefined) payload.birth_date = nullableString(body.birth_date);
-  if (patientColumns.has('gender') && body.gender !== undefined) payload.gender = normalizeGenderToDb(body.gender);
-  if (patientColumns.has('profession') && body.profession !== undefined) payload.profession = nullableString(body.profession);
-  if (patientColumns.has('photo_url') && (body.photo_url !== undefined || body.avatarUrl !== undefined)) {
+  if (patientColumns.has("organization_id")) payload.organization_id = user.organizationId;
+  if (patientColumns.has("full_name")) payload.full_name = fullName;
+  if (patientColumns.has("email")) payload.email = nullableString(body.email) ?? user.email ?? null;
+  if (patientColumns.has("phone") && body.phone !== undefined)
+    payload.phone = nullableString(body.phone);
+  if (patientColumns.has("cpf") && body.cpf !== undefined) payload.cpf = nullableString(body.cpf);
+  if (patientColumns.has("birth_date") && body.birth_date !== undefined)
+    payload.birth_date = nullableString(body.birth_date);
+  if (patientColumns.has("gender") && body.gender !== undefined)
+    payload.gender = normalizeGenderToDb(body.gender);
+  if (patientColumns.has("profession") && body.profession !== undefined)
+    payload.profession = nullableString(body.profession);
+  if (
+    patientColumns.has("photo_url") &&
+    (body.photo_url !== undefined || body.avatarUrl !== undefined)
+  ) {
     payload.photo_url = nullableString(body.photo_url ?? body.avatarUrl);
   }
-  if (patientColumns.has('address') && addressPayload) {
+  if (patientColumns.has("address") && addressPayload) {
     payload.address = JSON.stringify({
       street: addressPayload.street ?? null,
       number: addressPayload.number ?? null,
@@ -411,38 +416,38 @@ async function upsertPatient(
       cep: addressPayload.zipCode ?? null,
     });
   }
-  if (patientColumns.has('incomplete_registration')) {
+  if (patientColumns.has("incomplete_registration")) {
     payload.incomplete_registration = body.incomplete_registration === true;
   }
-  if (patientColumns.has('profile_id')) payload.profile_id = trimmedString(profileRow.id);
-  if (patientColumns.has('user_id')) payload.user_id = user.uid;
-  if (patientColumns.has('professional_id') && body.professional_id !== undefined) {
+  if (patientColumns.has("profile_id")) payload.profile_id = trimmedString(profileRow.id);
+  if (patientColumns.has("user_id")) payload.user_id = user.uid;
+  if (patientColumns.has("professional_id") && body.professional_id !== undefined) {
     payload.professional_id = nullableString(body.professional_id);
   }
-  if (patientColumns.has('professional_name') && body.professional_name !== undefined) {
+  if (patientColumns.has("professional_name") && body.professional_name !== undefined) {
     payload.professional_name = nullableString(body.professional_name);
   }
-  if (patientColumns.has('referred_by') && body.professional_name !== undefined) {
+  if (patientColumns.has("referred_by") && body.professional_name !== undefined) {
     payload.referred_by = nullableString(body.professional_name);
   }
-  if (patientColumns.has('updated_at')) payload.updated_at = new Date().toISOString();
+  if (patientColumns.has("updated_at")) payload.updated_at = new Date().toISOString();
 
   if (!existing) {
-    if (patientColumns.has('created_at')) payload.created_at = new Date().toISOString();
+    if (patientColumns.has("created_at")) payload.created_at = new Date().toISOString();
 
     const columns = Object.keys(payload);
     const params = columns.map((column) => payload[column]);
     const placeholders = columns.map((_, index) => `$${index + 1}`);
 
     const inserted = await pool.query(
-      `INSERT INTO patients (${columns.join(', ')}) VALUES (${placeholders.join(', ')}) RETURNING *`,
+      `INSERT INTO patients (${columns.join(", ")}) VALUES (${placeholders.join(", ")}) RETURNING *`,
       params,
     );
 
     return inserted.rows[0] as DbRow;
   }
 
-  const updateEntries = Object.entries(payload).filter(([column]) => column !== 'organization_id');
+  const updateEntries = Object.entries(payload).filter(([column]) => column !== "organization_id");
   if (!updateEntries.length) return existing;
 
   const sets = updateEntries.map(([column], index) => `${column} = $${index + 1}`);
@@ -452,7 +457,7 @@ async function upsertPatient(
   const updated = await pool.query(
     `
       UPDATE patients
-      SET ${sets.join(', ')}
+      SET ${sets.join(", ")}
       WHERE id = $${params.length}
       RETURNING *
     `,
@@ -477,10 +482,10 @@ async function ensurePortalContext(
   };
 }
 
-app.use('*', requireAuth);
+app.use("*", requireAuth);
 
-app.post('/bootstrap', async (c) => {
-  const user = c.get('user');
+app.post("/bootstrap", async (c) => {
+  const user = c.get("user");
   const pool = await createPool(c.env);
   const body = (await c.req.json().catch(() => ({}))) as PortalPayload;
 
@@ -488,27 +493,27 @@ app.post('/bootstrap', async (c) => {
   return c.json({ data: context.data }, 201);
 });
 
-app.get('/profile', async (c) => {
-  const user = c.get('user');
+app.get("/profile", async (c) => {
+  const user = c.get("user");
   const pool = await createPool(c.env);
   const context = await ensurePortalContext(pool, user);
   // Cache de Perfil: 5 min na borda, revalidação em background (stale-while-revalidate)
-  c.header('Cache-Control', 'public, max-age=300, stale-while-revalidate=60');
+  c.header("Cache-Control", "public, max-age=300, stale-while-revalidate=60");
   return c.json({ data: context.data });
 });
 
-app.patch('/profile', async (c) => {
-  const user = c.get('user');
+app.patch("/profile", async (c) => {
+  const user = c.get("user");
   const pool = await createPool(c.env);
   const body = (await c.req.json()) as PortalPayload;
   const context = await ensurePortalContext(pool, user, body, { forcePatientRole: false });
   return c.json({ data: context.data });
 });
 
-app.get('/therapists', async (c) => {
-  const user = c.get('user');
+app.get("/therapists", async (c) => {
+  const user = c.get("user");
   const pool = await createPool(c.env);
-  const search = trimmedString(c.req.query('search'))?.toLowerCase();
+  const search = trimmedString(c.req.query("search"))?.toLowerCase();
 
   const result = await pool.query(
     `
@@ -523,35 +528,39 @@ app.get('/therapists', async (c) => {
 
   const therapists = result.rows
     .map((row) => {
-      const id = trimmedString((row as DbRow).id) ?? '';
-      const name = trimmedString((row as DbRow).full_name) ?? trimmedString((row as DbRow).name) ?? 'Profissional';
+      const id = trimmedString((row as DbRow).id) ?? "";
+      const name =
+        trimmedString((row as DbRow).full_name) ??
+        trimmedString((row as DbRow).name) ??
+        "Profissional";
       const email = trimmedString((row as DbRow).email) ?? null;
-      const inviteCode = getInviteCode(id || trimmedString((row as DbRow).user_id) || '');
+      const inviteCode = getInviteCode(id || trimmedString((row as DbRow).user_id) || "");
       return {
         id,
         name,
         email,
-        role: trimmedString((row as DbRow).role) ?? 'professional',
+        role: trimmedString((row as DbRow).role) ?? "professional",
         invite_code: inviteCode,
       };
     })
     .filter((row) => {
       if (!search) return true;
-      return [row.name, row.email ?? '', row.invite_code]
-        .some((value) => value.toLowerCase().includes(search));
+      return [row.name, row.email ?? "", row.invite_code].some((value) =>
+        value.toLowerCase().includes(search),
+      );
     });
 
   return c.json({ data: therapists });
 });
 
-app.post('/link-professional', async (c) => {
-  const user = c.get('user');
+app.post("/link-professional", async (c) => {
+  const user = c.get("user");
   const pool = await createPool(c.env);
   const body = (await c.req.json()) as PortalPayload;
   const professionalId = trimmedString(body.professional_id ?? body.professionalId);
 
   if (!professionalId) {
-    return c.json({ error: 'professional_id é obrigatório' }, 400);
+    return c.json({ error: "professional_id é obrigatório" }, 400);
   }
 
   const professionalResult = await pool.query(
@@ -567,14 +576,12 @@ app.post('/link-professional', async (c) => {
   );
 
   if (!professionalResult.rows.length) {
-    return c.json({ error: 'Profissional não encontrado' }, 404);
+    return c.json({ error: "Profissional não encontrado" }, 404);
   }
 
   const professional = professionalResult.rows[0] as DbRow;
   const professionalName =
-    trimmedString(professional.full_name) ??
-    trimmedString(professional.name) ??
-    'Profissional';
+    trimmedString(professional.full_name) ?? trimmedString(professional.name) ?? "Profissional";
 
   const context = await ensurePortalContext(
     pool,
@@ -589,18 +596,18 @@ app.post('/link-professional', async (c) => {
   return c.json({ data: context.data });
 });
 
-app.get('/appointments', async (c) => {
-  const user = c.get('user');
+app.get("/appointments", async (c) => {
+  const user = c.get("user");
   const pool = await createPool(c.env);
   const { data } = await ensurePortalContext(pool, user);
 
-  if (!data.patient_id || !(await hasTable(pool, 'appointments'))) {
+  if (!data.patient_id || !(await hasTable(pool, "appointments"))) {
     return c.json({ data: [] });
   }
 
-  const upcoming = c.req.query('upcoming') === 'true';
+  const upcoming = c.req.query("upcoming") === "true";
   const params: unknown[] = [data.patient_id, user.organizationId];
-  const filters = ['a.patient_id = $1', 'a.organization_id = $2'];
+  const filters = ["a.patient_id = $1", "a.organization_id = $2"];
 
   if (upcoming) {
     filters.push(`a.date >= CURRENT_DATE`);
@@ -620,40 +627,44 @@ app.get('/appointments', async (c) => {
         COALESCE(tp.full_name, tp.name, 'Fisioterapeuta') AS professional_name
       FROM appointments a
       LEFT JOIN profiles tp ON tp.id = a.therapist_id
-      WHERE ${filters.join(' AND ')}
+      WHERE ${filters.join(" AND ")}
       ORDER BY a.date ASC, a.start_time ASC
     `,
     params,
   );
 
   // Cache de Consultas: 1 min na borda, revalidação em background (stale-while-revalidate)
-  c.header('Cache-Control', 'public, max-age=60, stale-while-revalidate=30');
+  c.header("Cache-Control", "public, max-age=60, stale-while-revalidate=30");
 
   const appointments = result.rows.map((row) => ({
-    id: String((row as DbRow).id ?? ''),
+    id: String((row as DbRow).id ?? ""),
     patient_id: trimmedString((row as DbRow).patient_id) ?? data.patient_id,
     professional_id: trimmedString((row as DbRow).therapist_id) ?? null,
-    professional_name: trimmedString((row as DbRow).professional_name) ?? 'Fisioterapeuta',
-    type: trimmedString((row as DbRow).type) ?? 'session',
+    professional_name: trimmedString((row as DbRow).professional_name) ?? "Fisioterapeuta",
+    type: trimmedString((row as DbRow).type) ?? "session",
     date: (row as DbRow).date ? String((row as DbRow).date) : new Date().toISOString().slice(0, 10),
-    time: trimmedString((row as DbRow).start_time) ?? '09:00',
+    time: trimmedString((row as DbRow).start_time) ?? "09:00",
     duration: nullableNumber((row as DbRow).duration_minutes) ?? 60,
-    status: (row as DbRow).status ? String((row as DbRow).status) : 'scheduled',
+    status: (row as DbRow).status ? String((row as DbRow).status) : "scheduled",
     notes: trimmedString((row as DbRow).notes) ?? null,
-    createdAt: (row as DbRow).created_at ? String((row as DbRow).created_at) : new Date().toISOString(),
-    updatedAt: (row as DbRow).updated_at ? String((row as DbRow).updated_at) : new Date().toISOString(),
+    createdAt: (row as DbRow).created_at
+      ? String((row as DbRow).created_at)
+      : new Date().toISOString(),
+    updatedAt: (row as DbRow).updated_at
+      ? String((row as DbRow).updated_at)
+      : new Date().toISOString(),
   }));
 
   return c.json({ data: appointments });
 });
 
-app.post('/appointments/:id/confirm', async (c) => {
-  const user = c.get('user');
+app.post("/appointments/:id/confirm", async (c) => {
+  const user = c.get("user");
   const pool = await createPool(c.env);
   const { data } = await ensurePortalContext(pool, user);
-  const id = c.req.param('id');
+  const id = c.req.param("id");
 
-  if (!data.patient_id) return c.json({ error: 'Paciente não encontrado' }, 404);
+  if (!data.patient_id) return c.json({ error: "Paciente não encontrado" }, 404);
 
   await pool.query(
     `
@@ -673,14 +684,14 @@ app.post('/appointments/:id/confirm', async (c) => {
   return c.json({ success: true });
 });
 
-app.post('/appointments/:id/cancel', async (c) => {
-  const user = c.get('user');
+app.post("/appointments/:id/cancel", async (c) => {
+  const user = c.get("user");
   const pool = await createPool(c.env);
   const { data } = await ensurePortalContext(pool, user);
-  const id = c.req.param('id');
+  const id = c.req.param("id");
   const body = await c.req.json().catch(() => ({}));
 
-  if (!data.patient_id) return c.json({ error: 'Paciente não encontrado' }, 404);
+  if (!data.patient_id) return c.json({ error: "Paciente não encontrado" }, 404);
 
   await pool.query(
     `
@@ -700,17 +711,21 @@ app.post('/appointments/:id/cancel', async (c) => {
   return c.json({ success: true });
 });
 
-app.get('/exercises', async (c) => {
-  const user = c.get('user');
+app.get("/exercises", async (c) => {
+  const user = c.get("user");
   const pool = await createPool(c.env);
   const { data } = await ensurePortalContext(pool, user);
 
-  if (!data.patient_id || !(await hasTable(pool, 'exercise_plans')) || !(await hasTable(pool, 'exercise_plan_items'))) {
+  if (
+    !data.patient_id ||
+    !(await hasTable(pool, "exercise_plans")) ||
+    !(await hasTable(pool, "exercise_plan_items"))
+  ) {
     return c.json({ data: [] });
   }
 
-  const hasExercises = await hasTable(pool, 'exercises');
-  const hasSessions = await hasTable(pool, 'exercise_sessions');
+  const hasExercises = await hasTable(pool, "exercises");
+  const hasSessions = await hasTable(pool, "exercise_sessions");
   const sessionJoin = hasSessions
     ? `
       LEFT JOIN LATERAL (
@@ -726,7 +741,7 @@ app.get('/exercises', async (c) => {
         LIMIT 1
       ) latest_session ON true
     `
-    : '';
+    : "";
 
   const result = await pool.query(
     `
@@ -741,12 +756,12 @@ app.get('/exercises', async (c) => {
         i.repetitions,
         i.duration,
         i.notes,
-        ${hasExercises ? 'e.name AS exercise_name, e.description AS exercise_description, e.video_url, e.image_url,' : ''}
-        ${hasSessions ? 'latest_session.completed AS latest_completed, latest_session.created_at AS latest_completed_at, latest_session.metrics AS latest_metrics' : 'NULL AS latest_completed, NULL AS latest_completed_at, NULL AS latest_metrics'}
+        ${hasExercises ? "e.name AS exercise_name, e.description AS exercise_description, e.video_url, e.image_url," : ""}
+        ${hasSessions ? "latest_session.completed AS latest_completed, latest_session.created_at AS latest_completed_at, latest_session.metrics AS latest_metrics" : "NULL AS latest_completed, NULL AS latest_completed_at, NULL AS latest_metrics"}
       FROM patients p
       JOIN exercise_plans ep ON ep.patient_id = p.id
       JOIN exercise_plan_items i ON i.plan_id = ep.id
-      ${hasExercises ? 'LEFT JOIN exercises e ON e.id = i.exercise_id' : ''}
+      ${hasExercises ? "LEFT JOIN exercises e ON e.id = i.exercise_id" : ""}
       ${sessionJoin}
       WHERE p.id = $1
       ORDER BY ep.created_at DESC, i.order_index ASC
@@ -757,24 +772,27 @@ app.get('/exercises', async (c) => {
   const exercises = result.rows.map((row) => {
     const metrics = parseJsonObject((row as DbRow).latest_metrics);
     return {
-      id: String((row as DbRow).assignment_id ?? ''),
+      id: String((row as DbRow).assignment_id ?? ""),
       patientId: data.patient_id,
-      exerciseId: trimmedString((row as DbRow).exercise_id) ?? '',
+      exerciseId: trimmedString((row as DbRow).exercise_id) ?? "",
       sets: nullableNumber((row as DbRow).sets) ?? 0,
       reps: nullableNumber((row as DbRow).repetitions) ?? 0,
       duration: nullableNumber((row as DbRow).duration),
       notes: trimmedString((row as DbRow).notes) ?? null,
       completed: (row as DbRow).latest_completed === true,
-      completedAt: (row as DbRow).latest_completed_at ? String((row as DbRow).latest_completed_at) : null,
-      progress: nullableNumber(metrics?.progress) ?? ((row as DbRow).latest_completed === true ? 100 : 0),
+      completedAt: (row as DbRow).latest_completed_at
+        ? String((row as DbRow).latest_completed_at)
+        : null,
+      progress:
+        nullableNumber(metrics?.progress) ?? ((row as DbRow).latest_completed === true ? 100 : 0),
       plan: {
-        id: trimmedString((row as DbRow).plan_id) ?? '',
-        name: trimmedString((row as DbRow).plan_name) ?? 'Plano atual',
+        id: trimmedString((row as DbRow).plan_id) ?? "",
+        name: trimmedString((row as DbRow).plan_name) ?? "Plano atual",
         description: trimmedString((row as DbRow).plan_description) ?? null,
       },
       exercise: {
-        id: trimmedString((row as DbRow).exercise_id) ?? '',
-        name: trimmedString((row as DbRow).exercise_name) ?? 'Exercício',
+        id: trimmedString((row as DbRow).exercise_id) ?? "",
+        name: trimmedString((row as DbRow).exercise_name) ?? "Exercício",
         description: trimmedString((row as DbRow).exercise_description) ?? null,
         videoUrl: trimmedString((row as DbRow).video_url) ?? null,
         imageUrl: trimmedString((row as DbRow).image_url) ?? null,
@@ -785,14 +803,18 @@ app.get('/exercises', async (c) => {
   return c.json({ data: exercises });
 });
 
-app.post('/exercises/:assignmentId/complete', async (c) => {
-  const user = c.get('user');
+app.post("/exercises/:assignmentId/complete", async (c) => {
+  const user = c.get("user");
   const pool = await createPool(c.env);
   const { data } = await ensurePortalContext(pool, user);
-  const assignmentId = c.req.param('assignmentId');
+  const assignmentId = c.req.param("assignmentId");
   const body = (await c.req.json().catch(() => ({}))) as PortalPayload;
 
-  if (!data.patient_id || !(await hasTable(pool, 'exercise_plan_items')) || !(await hasTable(pool, 'exercise_sessions'))) {
+  if (
+    !data.patient_id ||
+    !(await hasTable(pool, "exercise_plan_items")) ||
+    !(await hasTable(pool, "exercise_sessions"))
+  ) {
     return c.json({ success: true });
   }
 
@@ -809,7 +831,7 @@ app.post('/exercises/:assignmentId/complete', async (c) => {
   );
 
   if (!itemResult.rows.length) {
-    return c.json({ error: 'Exercício não encontrado' }, 404);
+    return c.json({ error: "Exercício não encontrado" }, 404);
   }
 
   const item = itemResult.rows[0] as DbRow;
@@ -886,11 +908,11 @@ app.post('/exercises/:assignmentId/complete', async (c) => {
   return c.json({ success: true });
 });
 
-app.get('/notifications', async (c) => {
-  const user = c.get('user');
+app.get("/notifications", async (c) => {
+  const user = c.get("user");
   const pool = await createPool(c.env);
 
-  if (!(await hasTable(pool, 'notifications'))) {
+  if (!(await hasTable(pool, "notifications"))) {
     return c.json({ data: [] });
   }
 
@@ -906,24 +928,26 @@ app.get('/notifications', async (c) => {
   );
 
   const notifications = result.rows.map((row) => ({
-    id: String((row as DbRow).id ?? ''),
+    id: String((row as DbRow).id ?? ""),
     user_id: trimmedString((row as DbRow).user_id) ?? user.uid,
-    title: trimmedString((row as DbRow).title) ?? 'Notificação',
-    body: trimmedString((row as DbRow).message) ?? trimmedString((row as DbRow).body) ?? '',
-    type: trimmedString((row as DbRow).type) ?? 'system',
+    title: trimmedString((row as DbRow).title) ?? "Notificação",
+    body: trimmedString((row as DbRow).message) ?? trimmedString((row as DbRow).body) ?? "",
+    type: trimmedString((row as DbRow).type) ?? "system",
     read: (row as DbRow).is_read === true,
     data: parseJsonObject((row as DbRow).metadata) ?? {},
-    createdAt: (row as DbRow).created_at ? String((row as DbRow).created_at) : new Date().toISOString(),
+    createdAt: (row as DbRow).created_at
+      ? String((row as DbRow).created_at)
+      : new Date().toISOString(),
   }));
 
   return c.json({ data: notifications });
 });
 
-app.post('/notifications/:id/read', async (c) => {
-  const user = c.get('user');
+app.post("/notifications/:id/read", async (c) => {
+  const user = c.get("user");
   const pool = await createPool(c.env);
 
-  if (!(await hasTable(pool, 'notifications'))) {
+  if (!(await hasTable(pool, "notifications"))) {
     return c.json({ success: true });
   }
 
@@ -934,26 +958,26 @@ app.post('/notifications/:id/read', async (c) => {
       WHERE id = $1
         AND user_id = $2
     `,
-    [c.req.param('id'), user.uid],
+    [c.req.param("id"), user.uid],
   );
 
   return c.json({ success: true });
 });
 
-app.post('/notifications/read-all', async (c) => {
-  const user = c.get('user');
+app.post("/notifications/read-all", async (c) => {
+  const user = c.get("user");
   const pool = await createPool(c.env);
 
-  if (!(await hasTable(pool, 'notifications'))) {
+  if (!(await hasTable(pool, "notifications"))) {
     return c.json({ success: true });
   }
 
-  await pool.query('UPDATE notifications SET is_read = true WHERE user_id = $1', [user.uid]);
+  await pool.query("UPDATE notifications SET is_read = true WHERE user_id = $1", [user.uid]);
   return c.json({ success: true });
 });
 
-app.get('/progress', async (c) => {
-  const user = c.get('user');
+app.get("/progress", async (c) => {
+  const user = c.get("user");
   const pool = await createPool(c.env);
   const { data } = await ensurePortalContext(pool, user);
 
@@ -961,7 +985,7 @@ app.get('/progress', async (c) => {
     return c.json({ data: { evolutions: [], reports: [] } });
   }
 
-  const evolutions = (await hasTable(pool, 'treatment_sessions'))
+  const evolutions = (await hasTable(pool, "treatment_sessions"))
     ? await pool.query(
         `
           SELECT *
@@ -975,7 +999,7 @@ app.get('/progress', async (c) => {
       )
     : { rows: [] as DbRow[] };
 
-  const reports = (await hasTable(pool, 'medical_reports'))
+  const reports = (await hasTable(pool, "medical_reports"))
     ? await pool.query(
         `
           SELECT *
@@ -992,30 +1016,35 @@ app.get('/progress', async (c) => {
   return c.json({
     data: {
       evolutions: evolutions.rows.map((row: DbRow) => ({
-        id: String((row as DbRow).id ?? ''),
-        record_date:
-          (row as DbRow).session_date ? String((row as DbRow).session_date) : new Date().toISOString(),
+        id: String((row as DbRow).id ?? ""),
+        record_date: (row as DbRow).session_date
+          ? String((row as DbRow).session_date)
+          : new Date().toISOString(),
         subjective: trimmedString((row as DbRow).subjective) ?? null,
         objective: trimmedString((row as DbRow).objective) ?? null,
         assessment: trimmedString((row as DbRow).assessment) ?? null,
         plan: trimmedString((row as DbRow).plan) ?? null,
-        pain_level: nullableNumber((row as DbRow).pain_level_after) ?? nullableNumber((row as DbRow).pain_level_before) ?? 0,
+        pain_level:
+          nullableNumber((row as DbRow).pain_level_after) ??
+          nullableNumber((row as DbRow).pain_level_before) ??
+          0,
         therapist_name: null,
-        status: 'finalized',
+        status: "finalized",
         session_number: null,
       })),
       reports: reports.rows.map((row: DbRow) => ({
-        id: String((row as DbRow).id ?? ''),
-        data_emissao:
-          (row as DbRow).data_emissao ? String((row as DbRow).data_emissao) : new Date().toISOString(),
+        id: String((row as DbRow).id ?? ""),
+        data_emissao: (row as DbRow).data_emissao
+          ? String((row as DbRow).data_emissao)
+          : new Date().toISOString(),
         payload: parseJsonObject((row as DbRow).payload) ?? {},
       })),
     },
   });
 });
 
-app.get('/stats', async (c) => {
-  const user = c.get('user');
+app.get("/stats", async (c) => {
+  const user = c.get("user");
   const pool = await createPool(c.env);
   const context = await ensurePortalContext(pool, user);
   const patientId = context.data.patient_id;
@@ -1024,16 +1053,16 @@ app.get('/stats', async (c) => {
     return c.json({ data: { totalAppointments: 0, totalExercises: 0, totalMonths: 0 } });
   }
 
-  const appointmentsCount = (await hasTable(pool, 'appointments'))
+  const appointmentsCount = (await hasTable(pool, "appointments"))
     ? await pool.query(
-        'SELECT COUNT(*)::int AS total FROM appointments WHERE patient_id = $1 AND organization_id = $2',
+        "SELECT COUNT(*)::int AS total FROM appointments WHERE patient_id = $1 AND organization_id = $2",
         [patientId, user.organizationId],
       )
     : { rows: [{ total: 0 }] as DbRow[] };
 
-  const exercisesCount = (await hasTable(pool, 'exercise_sessions'))
+  const exercisesCount = (await hasTable(pool, "exercise_sessions"))
     ? await pool.query(
-        'SELECT COUNT(*)::int AS total FROM exercise_sessions WHERE patient_id = $1 AND completed = true',
+        "SELECT COUNT(*)::int AS total FROM exercise_sessions WHERE patient_id = $1 AND completed = true",
         [patientId],
       )
     : { rows: [{ total: 0 }] as DbRow[] };

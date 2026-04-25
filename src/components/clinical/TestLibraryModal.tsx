@@ -1,18 +1,12 @@
-import React, {
-	useState,
-	useMemo,
-	useCallback,
-	useEffect,
-	useRef,
-} from "react";
+import React, { useState, useMemo, useCallback, useEffect, useRef } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { clinicalTestsApi, type ClinicalTestTemplateRecord } from "@/api/v2";
 import {
-	CustomModal,
-	CustomModalHeader,
-	CustomModalTitle,
-	CustomModalBody,
-	CustomModalFooter,
+  CustomModal,
+  CustomModalHeader,
+  CustomModalTitle,
+  CustomModalBody,
+  CustomModalFooter,
 } from "@/components/ui/custom-modal";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -20,24 +14,24 @@ import { Badge } from "@/components/ui/badge";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Separator } from "@/components/ui/separator";
 import {
-	Search,
-	BookOpen,
-	Plus,
-	HeartPulse,
-	Info,
-	Eye,
-	X,
-	ChevronDown,
-	ChevronRight,
-	Check,
-	Sparkles,
-	Bone,
-	TrendingUp,
-	Activity,
-	Brain,
-	Wind,
-	Keyboard,
-	ThumbsUp,
+  Search,
+  BookOpen,
+  Plus,
+  HeartPulse,
+  Info,
+  Eye,
+  X,
+  ChevronDown,
+  ChevronRight,
+  Check,
+  Sparkles,
+  Bone,
+  TrendingUp,
+  Activity,
+  Brain,
+  Wind,
+  Keyboard,
+  ThumbsUp,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
@@ -47,960 +41,931 @@ import { diagnosticClusters } from "@/data/clinicalClusters";
 export type ClinicalTest = ClinicalTestTemplateRecord;
 
 interface TestLibraryModalProps {
-	open: boolean;
-	onOpenChange: (open: boolean) => void;
-	onAddTest: (test: ClinicalTest) => void;
-	patientId?: string;
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  onAddTest: (test: ClinicalTest) => void;
+  patientId?: string;
 }
 
 const CATEGORIES = [
-	{
-		id: "Todos",
-		label: "Todos",
-		icon: BookOpen,
-		color: "bg-slate-50 text-slate-700 border-slate-200",
-	},
-	{
-		id: "Esportiva",
-		label: "Esportiva",
-		icon: TrendingUp,
-		color: "bg-orange-50 text-orange-700 border-orange-200",
-	},
-	{
-		id: "Ortopedia",
-		label: "Ortopedia",
-		icon: Bone,
-		color: "bg-blue-50 text-blue-700 border-blue-200",
-	},
-	{
-		id: "Pós-Operatório",
-		label: "Pós-Operatório",
-		icon: Activity,
-		color: "bg-emerald-50 text-emerald-700 border-emerald-200",
-	},
-	{
-		id: "Neurológico",
-		label: "Neurológico",
-		icon: Brain,
-		color: "bg-purple-50 text-purple-700 border-purple-200",
-	},
-	{
-		id: "Respiratório",
-		label: "Respiratório",
-		icon: Wind,
-		color: "bg-cyan-50 text-cyan-700 border-cyan-200",
-	},
+  {
+    id: "Todos",
+    label: "Todos",
+    icon: BookOpen,
+    color: "bg-slate-50 text-slate-700 border-slate-200",
+  },
+  {
+    id: "Esportiva",
+    label: "Esportiva",
+    icon: TrendingUp,
+    color: "bg-orange-50 text-orange-700 border-orange-200",
+  },
+  {
+    id: "Ortopedia",
+    label: "Ortopedia",
+    icon: Bone,
+    color: "bg-blue-50 text-blue-700 border-blue-200",
+  },
+  {
+    id: "Pós-Operatório",
+    label: "Pós-Operatório",
+    icon: Activity,
+    color: "bg-emerald-50 text-emerald-700 border-emerald-200",
+  },
+  {
+    id: "Neurológico",
+    label: "Neurológico",
+    icon: Brain,
+    color: "bg-purple-50 text-purple-700 border-purple-200",
+  },
+  {
+    id: "Respiratório",
+    label: "Respiratório",
+    icon: Wind,
+    color: "bg-cyan-50 text-cyan-700 border-cyan-200",
+  },
 ];
 
 const JOINTS = [
-	"Todos",
-	"Ombro",
-	"Joelho",
-	"Quadril",
-	"Tornozelo",
-	"Coluna",
-	"Cervical",
-	"Punho",
-	"Cotovelo",
-	"Mão",
-	"Pelve",
+  "Todos",
+  "Ombro",
+  "Joelho",
+  "Quadril",
+  "Tornozelo",
+  "Coluna",
+  "Cervical",
+  "Punho",
+  "Cotovelo",
+  "Mão",
+  "Pelve",
 ];
 
 const TEST_TYPES = [
-	{ id: "all", label: "Todos" },
-	{ id: "special_test", label: "Testes Especiais" },
-	{ id: "functional_test", label: "Testes Funcionais" },
+  { id: "all", label: "Todos" },
+  { id: "special_test", label: "Testes Especiais" },
+  { id: "functional_test", label: "Testes Funcionais" },
 ];
 
 export function TestLibraryModal({
-	open,
-	onOpenChange,
-	onAddTest,
-	patientId,
+  open,
+  onOpenChange,
+  onAddTest,
+  patientId,
 }: TestLibraryModalProps) {
-	const isMobile = useIsMobile();
-	const [searchTerm, setSearchTerm] = useState("");
-	const [selectedCategory, setSelectedCategory] = useState("Todos");
-	const [selectedJoint, setSelectedJoint] = useState("Todos");
-	const [selectedType, setSelectedType] = useState("all");
-	const [selectedTest, setSelectedTest] = useState<ClinicalTest | null>(null);
-	const [collapsedCategories, setCollapsedCategories] = useState<Set<string>>(
-		new Set(),
-	);
-	const [recentlyAdded, setRecentlyAdded] = useState<Set<string>>(new Set());
-	const [focusedIndex, setFocusedIndex] = useState(-1);
+  const isMobile = useIsMobile();
+  const [searchTerm, setSearchTerm] = useState("");
+  const [selectedCategory, setSelectedCategory] = useState("Todos");
+  const [selectedJoint, setSelectedJoint] = useState("Todos");
+  const [selectedType, setSelectedType] = useState("all");
+  const [selectedTest, setSelectedTest] = useState<ClinicalTest | null>(null);
+  const [collapsedCategories, setCollapsedCategories] = useState<Set<string>>(new Set());
+  const [recentlyAdded, setRecentlyAdded] = useState<Set<string>>(new Set());
+  const [focusedIndex, setFocusedIndex] = useState(-1);
 
-	const searchInputRef = useRef<HTMLInputElement>(null);
+  const searchInputRef = useRef<HTMLInputElement>(null);
 
-	// Load recent tests from localStorage
-	useEffect(() => {
-		if (open && patientId) {
-			const saved = localStorage.getItem(`recent-tests-${patientId}`);
-			if (saved) {
-				setRecentlyAdded(new Set(JSON.parse(saved)));
-			}
-		}
-	}, [open, patientId]);
+  // Load recent tests from localStorage
+  useEffect(() => {
+    if (open && patientId) {
+      const saved = localStorage.getItem(`recent-tests-${patientId}`);
+      if (saved) {
+        setRecentlyAdded(new Set(JSON.parse(saved)));
+      }
+    }
+  }, [open, patientId]);
 
-	// Focus search on open
-	useEffect(() => {
-		if (open) {
-			setTimeout(() => searchInputRef.current?.focus(), 100);
-		} else {
-			// Reset state on close
-			setSearchTerm("");
-			setSelectedCategory("Todos");
-			setSelectedJoint("Todos");
-			setSelectedType("all");
-			setSelectedTest(null);
-			setFocusedIndex(-1);
-		}
-	}, [open]);
+  // Focus search on open
+  useEffect(() => {
+    if (open) {
+      setTimeout(() => searchInputRef.current?.focus(), 100);
+    } else {
+      // Reset state on close
+      setSearchTerm("");
+      setSelectedCategory("Todos");
+      setSelectedJoint("Todos");
+      setSelectedType("all");
+      setSelectedTest(null);
+      setFocusedIndex(-1);
+    }
+  }, [open]);
 
-	const { data: tests = [], isLoading } = useQuery({
-		queryKey: ["clinical-tests-library"],
-		queryFn: async () => {
-			const res = await clinicalTestsApi.list();
-			return (res?.data ?? []) as ClinicalTest[];
-		},
-		enabled: open,
-	});
+  const { data: tests = [], isLoading } = useQuery({
+    queryKey: ["clinical-tests-library"],
+    queryFn: async () => {
+      const res = await clinicalTestsApi.list();
+      return (res?.data ?? []) as ClinicalTest[];
+    },
+    enabled: open,
+  });
 
-	const getFilteredTests = useCallback(() => {
-		return tests.filter((test) => {
-			const searchLower = searchTerm.toLowerCase();
-			const matchesSearch =
-				test.name.toLowerCase().includes(searchLower) ||
-				(test.name_en && test.name_en.toLowerCase().includes(searchLower)) ||
-				(test.tags &&
-					test.tags.some((t) => t.toLowerCase().includes(searchLower))) ||
-				(test.target_joint &&
-					test.target_joint.toLowerCase().includes(searchLower)) ||
-				(test.purpose && test.purpose.toLowerCase().includes(searchLower));
+  const getFilteredTests = useCallback(() => {
+    return tests.filter((test) => {
+      const searchLower = searchTerm.toLowerCase();
+      const matchesSearch =
+        test.name.toLowerCase().includes(searchLower) ||
+        (test.name_en && test.name_en.toLowerCase().includes(searchLower)) ||
+        (test.tags && test.tags.some((t) => t.toLowerCase().includes(searchLower))) ||
+        (test.target_joint && test.target_joint.toLowerCase().includes(searchLower)) ||
+        (test.purpose && test.purpose.toLowerCase().includes(searchLower));
 
-			const matchesCategory =
-				selectedCategory === "Todos" || test.category === selectedCategory;
-			const matchesJoint =
-				selectedJoint === "Todos" || test.target_joint === selectedJoint;
-			const matchesType = selectedType === "all" || test.type === selectedType;
+      const matchesCategory = selectedCategory === "Todos" || test.category === selectedCategory;
+      const matchesJoint = selectedJoint === "Todos" || test.target_joint === selectedJoint;
+      const matchesType = selectedType === "all" || test.type === selectedType;
 
-			return matchesSearch && matchesCategory && matchesJoint && matchesType;
-		});
-	}, [tests, searchTerm, selectedCategory, selectedJoint, selectedType]);
+      return matchesSearch && matchesCategory && matchesJoint && matchesType;
+    });
+  }, [tests, searchTerm, selectedCategory, selectedJoint, selectedType]);
 
-	const filteredTests = useMemo(() => getFilteredTests(), [getFilteredTests]);
+  const filteredTests = useMemo(() => getFilteredTests(), [getFilteredTests]);
 
-	// Keyboard navigation
-	useEffect(() => {
-		const handleKeyDown = (e: KeyboardEvent) => {
-			if (!open) return;
+  // Keyboard navigation
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (!open) return;
 
-			switch (e.key) {
-				case "ArrowDown":
-					e.preventDefault();
-					setFocusedIndex((prev) =>
-						Math.min(prev + 1, filteredTests.length - 1),
-					);
-					break;
-				case "ArrowUp":
-					e.preventDefault();
-					setFocusedIndex((prev) => Math.max(prev - 1, 0));
-					break;
-				case "Enter":
-					e.preventDefault();
-					if (focusedIndex >= 0 && filteredTests[focusedIndex]) {
-						handleAddTest(filteredTests[focusedIndex]);
-					}
-					break;
-			}
-		};
+      switch (e.key) {
+        case "ArrowDown":
+          e.preventDefault();
+          setFocusedIndex((prev) => Math.min(prev + 1, filteredTests.length - 1));
+          break;
+        case "ArrowUp":
+          e.preventDefault();
+          setFocusedIndex((prev) => Math.max(prev - 1, 0));
+          break;
+        case "Enter":
+          e.preventDefault();
+          if (focusedIndex >= 0 && filteredTests[focusedIndex]) {
+            handleAddTest(filteredTests[focusedIndex]);
+          }
+          break;
+      }
+    };
 
-		window.addEventListener("keydown", handleKeyDown);
-		return () => window.removeEventListener("keydown", handleKeyDown);
-	}, [open, focusedIndex, filteredTests]);
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [open, focusedIndex, filteredTests]);
 
-	const groupedTests = useMemo(() => {
-		const groups: Record<string, ClinicalTest[]> = {};
-		filteredTests.forEach((test) => {
-			const category = test.category || "Outros";
-			if (!groups[category]) {
-				groups[category] = [];
-			}
-			groups[category].push(test);
-		});
-		return groups;
-	}, [filteredTests]);
+  const groupedTests = useMemo(() => {
+    const groups: Record<string, ClinicalTest[]> = {};
+    filteredTests.forEach((test) => {
+      const category = test.category || "Outros";
+      if (!groups[category]) {
+        groups[category] = [];
+      }
+      groups[category].push(test);
+    });
+    return groups;
+  }, [filteredTests]);
 
-	const recentTests = useMemo(() => {
-		return tests.filter((test) => recentlyAdded.has(test.id));
-	}, [tests, recentlyAdded]);
+  const recentTests = useMemo(() => {
+    return tests.filter((test) => recentlyAdded.has(test.id));
+  }, [tests, recentlyAdded]);
 
-	const handleAddTest = useCallback(
-		(test: ClinicalTest, closeAfter = true) => {
-			onAddTest(test);
-			toast.success(`"${test.name}" adicionado à medição`, {
-				icon: <Check className="h-4 w-4 text-teal-500" />,
-			});
+  const handleAddTest = useCallback(
+    (test: ClinicalTest, closeAfter = true) => {
+      onAddTest(test);
+      toast.success(`"${test.name}" adicionado à medição`, {
+        icon: <Check className="h-4 w-4 text-teal-500" />,
+      });
 
-			// Add to recent
-			const newRecent = new Set(recentlyAdded);
-			newRecent.add(test.id);
-			// Keep only last 10
-			if (newRecent.size > 10) {
-				const first = Array.from(newRecent)[0];
-				newRecent.delete(first);
-			}
-			setRecentlyAdded(newRecent);
-			if (patientId) {
-				localStorage.setItem(
-					`recent-tests-${patientId}`,
-					JSON.stringify(Array.from(newRecent)),
-				);
-			}
+      // Add to recent
+      const newRecent = new Set(recentlyAdded);
+      newRecent.add(test.id);
+      // Keep only last 10
+      if (newRecent.size > 10) {
+        const first = Array.from(newRecent)[0];
+        newRecent.delete(first);
+      }
+      setRecentlyAdded(newRecent);
+      if (patientId) {
+        localStorage.setItem(`recent-tests-${patientId}`, JSON.stringify(Array.from(newRecent)));
+      }
 
-			if (closeAfter) {
-				onOpenChange(false);
-			} else {
-				setSelectedTest(null);
-			}
-		},
-		[onAddTest, recentlyAdded, patientId, onOpenChange],
-	);
+      if (closeAfter) {
+        onOpenChange(false);
+      } else {
+        setSelectedTest(null);
+      }
+    },
+    [onAddTest, recentlyAdded, patientId, onOpenChange],
+  );
 
-	const toggleCategory = (category: string) => {
-		setCollapsedCategories((prev) => {
-			const newSet = new Set(prev);
-			if (newSet.has(category)) {
-				newSet.delete(category);
-			} else {
-				newSet.add(category);
-			}
-			return newSet;
-		});
-	};
+  const toggleCategory = (category: string) => {
+    setCollapsedCategories((prev) => {
+      const newSet = new Set(prev);
+      if (newSet.has(category)) {
+        newSet.delete(category);
+      } else {
+        newSet.add(category);
+      }
+      return newSet;
+    });
+  };
 
-	const getCategoryIcon = (category: string) => {
-		return CATEGORIES.find((c) => c.id === category)?.icon || BookOpen;
-	};
+  const getCategoryIcon = (category: string) => {
+    return CATEGORIES.find((c) => c.id === category)?.icon || BookOpen;
+  };
 
-	const getCategoryColor = (category: string) => {
-		return (
-			CATEGORIES.find((c) => c.id === category)?.color || CATEGORIES[0].color
-		);
-	};
+  const getCategoryColor = (category: string) => {
+    return CATEGORIES.find((c) => c.id === category)?.color || CATEGORIES[0].color;
+  };
 
-	const getTestTypeIcon = (type?: string) => {
-		return type === "functional_test" ? TrendingUp : Sparkles;
-	};
+  const getTestTypeIcon = (type?: string) => {
+    return type === "functional_test" ? TrendingUp : Sparkles;
+  };
 
-	// Render test card
-	const renderTestCard = (test: ClinicalTest, index: number) => {
-		const CategoryIcon = getCategoryIcon(test.category);
-		const TypeIcon = getTestTypeIcon(test.type);
-		const isFocused = focusedIndex === index;
-		const hasImage = test.image_url || test.media_urls?.[0];
+  // Render test card
+  const renderTestCard = (test: ClinicalTest, index: number) => {
+    const CategoryIcon = getCategoryIcon(test.category);
+    const TypeIcon = getTestTypeIcon(test.type);
+    const isFocused = focusedIndex === index;
+    const hasImage = test.image_url || test.media_urls?.[0];
 
-		return (
-			<div
-				key={test.id}
-				className={cn(
-					"group flex items-start gap-3 p-3 rounded-xl border transition-all duration-200 cursor-pointer",
-					"bg-white hover:border-teal-300 hover:shadow-md",
-					selectedTest?.id === test.id
-						? "border-teal-500 bg-teal-50/50 ring-2 ring-teal-200"
-						: "border-slate-200",
-					isFocused && "ring-2 ring-teal-300 ring-offset-1",
-				)}
-				onClick={() => setSelectedTest(test)}
-				onMouseEnter={() => setFocusedIndex(index)}
-			>
-				{/* Image or Icon */}
-				<div
-					className={cn(
-						"relative flex items-center justify-center w-14 h-14 rounded-lg shrink-0 overflow-hidden border border-slate-100 shadow-sm",
-						getCategoryColor(test.category),
-					)}
-				>
-					{hasImage ? (
-						<div className="absolute inset-0 w-full h-full">
-							<img
-								src={test.image_url || test.media_urls?.[0]}
-								alt={test.name}
-								className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-110"
-								loading="lazy"
-							/>
-							<div className="absolute inset-0 bg-black/5 opacity-0 group-hover:opacity-100 transition-opacity" />
-						</div>
-					) : (
-						<CategoryIcon className="h-6 w-6" />
-					)}
-				</div>
+    return (
+      <div
+        key={test.id}
+        className={cn(
+          "group flex items-start gap-3 p-3 rounded-xl border transition-all duration-200 cursor-pointer",
+          "bg-white hover:border-teal-300 hover:shadow-md",
+          selectedTest?.id === test.id
+            ? "border-teal-500 bg-teal-50/50 ring-2 ring-teal-200"
+            : "border-slate-200",
+          isFocused && "ring-2 ring-teal-300 ring-offset-1",
+        )}
+        onClick={() => setSelectedTest(test)}
+        onMouseEnter={() => setFocusedIndex(index)}
+      >
+        {/* Image or Icon */}
+        <div
+          className={cn(
+            "relative flex items-center justify-center w-14 h-14 rounded-lg shrink-0 overflow-hidden border border-slate-100 shadow-sm",
+            getCategoryColor(test.category),
+          )}
+        >
+          {hasImage ? (
+            <div className="absolute inset-0 w-full h-full">
+              <img
+                src={test.image_url || test.media_urls?.[0]}
+                alt={test.name}
+                className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-110"
+                loading="lazy"
+              />
+              <div className="absolute inset-0 bg-black/5 opacity-0 group-hover:opacity-100 transition-opacity" />
+            </div>
+          ) : (
+            <CategoryIcon className="h-6 w-6" />
+          )}
+        </div>
 
-				{/* Content */}
-				<div className="flex-1 min-w-0">
-					<div className="flex items-center gap-2 mb-1">
-						<span className="font-semibold text-sm text-slate-800 truncate">
-							{test.name}
-						</span>
-						<TypeIcon className="h-3 w-3 text-slate-400 shrink-0" />
-						{test.target_joint && (
-							<Badge
-								variant="secondary"
-								className="text-[9px] h-4 px-1.5 font-medium shrink-0 bg-slate-100 text-slate-600 border-slate-200"
-							>
-								{test.target_joint}
-							</Badge>
-						)}
-					</div>
+        {/* Content */}
+        <div className="flex-1 min-w-0">
+          <div className="flex items-center gap-2 mb-1">
+            <span className="font-semibold text-sm text-slate-800 truncate">{test.name}</span>
+            <TypeIcon className="h-3 w-3 text-slate-400 shrink-0" />
+            {test.target_joint && (
+              <Badge
+                variant="secondary"
+                className="text-[9px] h-4 px-1.5 font-medium shrink-0 bg-slate-100 text-slate-600 border-slate-200"
+              >
+                {test.target_joint}
+              </Badge>
+            )}
+          </div>
 
-					{test.purpose && (
-						<p className="text-xs text-slate-500 line-clamp-2 mb-1.5">
-							{test.purpose}
-						</p>
-					)}
+          {test.purpose && (
+            <p className="text-xs text-slate-500 line-clamp-2 mb-1.5">{test.purpose}</p>
+          )}
 
-					{test.tags && test.tags.length > 0 && (
-						<div className="flex gap-1 flex-wrap">
-							{test.tags.slice(0, 3).map((tag) => (
-								<span
-									key={tag}
-									className="text-[9px] bg-slate-50 text-slate-500 px-1.5 py-0.5 rounded border border-slate-100"
-								>
-									#{tag}
-								</span>
-							))}
-							{test.tags.length > 3 && (
-								<span className="text-[9px] text-slate-400">
-									+{test.tags.length - 3}
-								</span>
-							)}
-						</div>
-					)}
-				</div>
+          {test.tags && test.tags.length > 0 && (
+            <div className="flex gap-1 flex-wrap">
+              {test.tags.slice(0, 3).map((tag) => (
+                <span
+                  key={tag}
+                  className="text-[9px] bg-slate-50 text-slate-500 px-1.5 py-0.5 rounded border border-slate-100"
+                >
+                  #{tag}
+                </span>
+              ))}
+              {test.tags.length > 3 && (
+                <span className="text-[9px] text-slate-400">+{test.tags.length - 3}</span>
+              )}
+            </div>
+          )}
+        </div>
 
-				{/* Actions */}
-				<div className="flex flex-col gap-1 shrink-0">
-					<Button
-						size="sm"
-						variant="ghost"
-						className="h-7 w-7 p-0 rounded-lg bg-teal-50 text-teal-600 hover:bg-teal-600 hover:text-white transition-all"
-						onClick={(e) => {
-							e.stopPropagation();
-							handleAddTest(test, false);
-						}}
-					>
-						<Plus className="h-3.5 w-3.5" />
-					</Button>
-					{hasImage && (
-						<div className="flex items-center justify-center w-7 h-7 rounded bg-slate-100 text-slate-400">
-							<Eye className="h-3.5 w-3.5" />
-						</div>
-					)}
-				</div>
-			</div>
-		);
-	};
+        {/* Actions */}
+        <div className="flex flex-col gap-1 shrink-0">
+          <Button
+            size="sm"
+            variant="ghost"
+            className="h-7 w-7 p-0 rounded-lg bg-teal-50 text-teal-600 hover:bg-teal-600 hover:text-white transition-all"
+            onClick={(e) => {
+              e.stopPropagation();
+              handleAddTest(test, false);
+            }}
+          >
+            <Plus className="h-3.5 w-3.5" />
+          </Button>
+          {hasImage && (
+            <div className="flex items-center justify-center w-7 h-7 rounded bg-slate-100 text-slate-400">
+              <Eye className="h-3.5 w-3.5" />
+            </div>
+          )}
+        </div>
+      </div>
+    );
+  };
 
-	return (
-		<CustomModal
-			open={open}
-			onOpenChange={onOpenChange}
-			isMobile={isMobile}
-			contentClassName="max-w-5xl h-[90vh]"
-		>
-			<CustomModalHeader
-				className="bg-gradient-to-r from-teal-600 to-teal-700"
-				onClose={() => onOpenChange(false)}
-			>
-				<div className="flex items-center gap-3">
-					<div className="p-2 bg-white/20 rounded-lg">
-						<HeartPulse className="h-5 w-5 text-white" />
-					</div>
-					<div>
-						<CustomModalTitle className="text-xl font-bold text-white flex items-center gap-2">
-							Biblioteca de Testes
-							<Badge className="bg-white/20 text-white hover:bg-white/30 border-0 text-xs">
-								{tests.length}
-							</Badge>
-						</CustomModalTitle>
-						<p className="text-teal-100 text-sm">
-							Pesquise e adicione testes à evolução do paciente
-						</p>
-					</div>
-				</div>
-				{!isMobile && (
-					<div className="flex items-center gap-2 ml-auto mr-4">
-						<div className="flex items-center gap-1.5 bg-white/10 px-3 py-1.5 rounded-lg">
-							<Keyboard className="h-3.5 w-3.5 text-white/70" />
-							<span className="text-xs text-white/80">
-								↑↓ navegar • Enter adicionar • Esc fechar
-							</span>
-						</div>
-					</div>
-				)}
-			</CustomModalHeader>
+  return (
+    <CustomModal
+      open={open}
+      onOpenChange={onOpenChange}
+      isMobile={isMobile}
+      contentClassName="max-w-5xl h-[90vh]"
+    >
+      <CustomModalHeader
+        className="bg-gradient-to-r from-teal-600 to-teal-700"
+        onClose={() => onOpenChange(false)}
+      >
+        <div className="flex items-center gap-3">
+          <div className="p-2 bg-white/20 rounded-lg">
+            <HeartPulse className="h-5 w-5 text-white" />
+          </div>
+          <div>
+            <CustomModalTitle className="text-xl font-bold text-white flex items-center gap-2">
+              Biblioteca de Testes
+              <Badge className="bg-white/20 text-white hover:bg-white/30 border-0 text-xs">
+                {tests.length}
+              </Badge>
+            </CustomModalTitle>
+            <p className="text-teal-100 text-sm">
+              Pesquise e adicione testes à evolução do paciente
+            </p>
+          </div>
+        </div>
+        {!isMobile && (
+          <div className="flex items-center gap-2 ml-auto mr-4">
+            <div className="flex items-center gap-1.5 bg-white/10 px-3 py-1.5 rounded-lg">
+              <Keyboard className="h-3.5 w-3.5 text-white/70" />
+              <span className="text-xs text-white/80">
+                ↑↓ navegar • Enter adicionar • Esc fechar
+              </span>
+            </div>
+          </div>
+        )}
+      </CustomModalHeader>
 
-			<CustomModalBody className="p-0 sm:p-0">
-				<div className="flex h-full overflow-hidden">
-					{/* Left Panel - List */}
-					<div className="flex-1 flex flex-col min-w-0 border-r h-full overflow-hidden">
-						{/* Search and Filters */}
-						<div className="p-4 border-b bg-slate-50 space-y-3 shrink-0">
-							<div className="relative">
-								<Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
-								<Input
-									ref={searchInputRef}
-									placeholder="Buscar por nome, categoria, articulação ou tags..."
-									value={searchTerm}
-									onChange={(e) => setSearchTerm(e.target.value)}
-									className="pl-10 h-11 border-slate-200 focus-visible:ring-teal-400"
-								/>
-								{searchTerm && (
-									<Button
-										variant="ghost"
-										size="sm"
-										className="absolute right-1 top-1/2 -translate-y-1/2 h-7 w-7 p-0"
-										onClick={() => setSearchTerm("")}
-									>
-										<X className="h-3.5 w-3.5" />
-									</Button>
-								)}
-							</div>
+      <CustomModalBody className="p-0 sm:p-0">
+        <div className="flex h-full overflow-hidden">
+          {/* Left Panel - List */}
+          <div className="flex-1 flex flex-col min-w-0 border-r h-full overflow-hidden">
+            {/* Search and Filters */}
+            <div className="p-4 border-b bg-slate-50 space-y-3 shrink-0">
+              <div className="relative">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
+                <Input
+                  ref={searchInputRef}
+                  placeholder="Buscar por nome, categoria, articulação ou tags..."
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  className="pl-10 h-11 border-slate-200 focus-visible:ring-teal-400"
+                />
+                {searchTerm && (
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="absolute right-1 top-1/2 -translate-y-1/2 h-7 w-7 p-0"
+                    onClick={() => setSearchTerm("")}
+                  >
+                    <X className="h-3.5 w-3.5" />
+                  </Button>
+                )}
+              </div>
 
-							{/* Type Filter */}
-							<div className="flex gap-2 overflow-x-auto pb-1 scrollbar-hide">
-								<span className="text-xs font-semibold text-slate-500 uppercase flex items-center">
-									Tipo:
-								</span>
-								{TEST_TYPES.map((type) => (
-									<Button
-										key={type.id}
-										variant={selectedType === type.id ? "default" : "outline"}
-										size="sm"
-										onClick={() => setSelectedType(type.id)}
-										className={cn(
-											"h-7 px-3 text-xs font-medium whitespace-nowrap shrink-0",
-											selectedType === type.id
-												? "bg-violet-600 hover:bg-violet-700 text-white"
-												: "border-slate-200 hover:border-violet-300 hover:bg-violet-50",
-										)}
-									>
-										{type.label}
-									</Button>
-								))}
-							</div>
+              {/* Type Filter */}
+              <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-hide">
+                <span className="text-xs font-semibold text-slate-500 uppercase flex items-center">
+                  Tipo:
+                </span>
+                {TEST_TYPES.map((type) => (
+                  <Button
+                    key={type.id}
+                    variant={selectedType === type.id ? "default" : "outline"}
+                    size="sm"
+                    onClick={() => setSelectedType(type.id)}
+                    className={cn(
+                      "h-7 px-3 text-xs font-medium whitespace-nowrap shrink-0",
+                      selectedType === type.id
+                        ? "bg-violet-600 hover:bg-violet-700 text-white"
+                        : "border-slate-200 hover:border-violet-300 hover:bg-violet-50",
+                    )}
+                  >
+                    {type.label}
+                  </Button>
+                ))}
+              </div>
 
-							{/* Category Filter */}
-							<div className="flex gap-2 overflow-x-auto pb-1 scrollbar-hide">
-								<span className="text-xs font-semibold text-slate-500 uppercase flex items-center">
-									Categoria:
-								</span>
-								{CATEGORIES.map((cat) => {
-									const Icon = cat.icon;
-									return (
-										<Button
-											key={cat.id}
-											variant={
-												selectedCategory === cat.id ? "default" : "outline"
-											}
-											size="sm"
-											onClick={() => setSelectedCategory(cat.id)}
-											className={cn(
-												"h-7 px-2.5 text-xs font-medium whitespace-nowrap shrink-0 gap-1",
-												selectedCategory === cat.id
-													? cat.color
-															.split(" ")
-															.slice(0, 2)
-															.join(" ")
-															.replace("50", "600")
-													: "border-slate-200 hover:bg-slate-100",
-											)}
-										>
-											<Icon className="h-3 w-3" />
-											{cat.label}
-										</Button>
-									);
-								})}
-							</div>
+              {/* Category Filter */}
+              <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-hide">
+                <span className="text-xs font-semibold text-slate-500 uppercase flex items-center">
+                  Categoria:
+                </span>
+                {CATEGORIES.map((cat) => {
+                  const Icon = cat.icon;
+                  return (
+                    <Button
+                      key={cat.id}
+                      variant={selectedCategory === cat.id ? "default" : "outline"}
+                      size="sm"
+                      onClick={() => setSelectedCategory(cat.id)}
+                      className={cn(
+                        "h-7 px-2.5 text-xs font-medium whitespace-nowrap shrink-0 gap-1",
+                        selectedCategory === cat.id
+                          ? cat.color.split(" ").slice(0, 2).join(" ").replace("50", "600")
+                          : "border-slate-200 hover:bg-slate-100",
+                      )}
+                    >
+                      <Icon className="h-3 w-3" />
+                      {cat.label}
+                    </Button>
+                  );
+                })}
+              </div>
 
-							{/* Joint Filter */}
-							<div className="flex gap-2 overflow-x-auto pb-1 scrollbar-hide">
-								<span className="text-xs font-semibold text-slate-500 uppercase flex items-center">
-									Articulação:
-								</span>
-								{JOINTS.map((joint) => (
-									<Button
-										key={joint}
-										variant={selectedJoint === joint ? "default" : "outline"}
-										size="sm"
-										onClick={() => setSelectedJoint(joint)}
-										className={cn(
-											"h-7 px-2.5 text-xs font-medium whitespace-nowrap shrink-0",
-											selectedJoint === joint
-												? "bg-blue-600 hover:bg-blue-700 text-white"
-												: "border-slate-200 hover:border-blue-300 hover:bg-blue-50",
-										)}
-									>
-										{joint}
-									</Button>
-								))}
-							</div>
+              {/* Joint Filter */}
+              <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-hide">
+                <span className="text-xs font-semibold text-slate-500 uppercase flex items-center">
+                  Articulação:
+                </span>
+                {JOINTS.map((joint) => (
+                  <Button
+                    key={joint}
+                    variant={selectedJoint === joint ? "default" : "outline"}
+                    size="sm"
+                    onClick={() => setSelectedJoint(joint)}
+                    className={cn(
+                      "h-7 px-2.5 text-xs font-medium whitespace-nowrap shrink-0",
+                      selectedJoint === joint
+                        ? "bg-blue-600 hover:bg-blue-700 text-white"
+                        : "border-slate-200 hover:border-blue-300 hover:bg-blue-50",
+                    )}
+                  >
+                    {joint}
+                  </Button>
+                ))}
+              </div>
 
-							{/* Clear filters */}
-							{(searchTerm ||
-								selectedCategory !== "Todos" ||
-								selectedJoint !== "Todos" ||
-								selectedType !== "all") && (
-								<Button
-									variant="ghost"
-									size="sm"
-									onClick={() => {
-										setSearchTerm("");
-										setSelectedCategory("Todos");
-										setSelectedJoint("Todos");
-										setSelectedType("all");
-									}}
-									className="h-7 text-xs text-slate-500 hover:text-slate-700"
-								>
-									Limpar filtros
-								</Button>
-							)}
-						</div>
+              {/* Clear filters */}
+              {(searchTerm ||
+                selectedCategory !== "Todos" ||
+                selectedJoint !== "Todos" ||
+                selectedType !== "all") && (
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => {
+                    setSearchTerm("");
+                    setSelectedCategory("Todos");
+                    setSelectedJoint("Todos");
+                    setSelectedType("all");
+                  }}
+                  className="h-7 text-xs text-slate-500 hover:text-slate-700"
+                >
+                  Limpar filtros
+                </Button>
+              )}
+            </div>
 
-						{/* Results */}
-						<ScrollArea className="flex-1">
-							<div className="px-4 py-3 space-y-4">
-								{isLoading ? (
-									<div className="flex items-center justify-center py-12">
-										<div className="text-center">
-											<div className="flex justify-center gap-1 mb-3">
-												<div
-													className="h-2 w-2 bg-teal-600 rounded-full animate-bounce"
-													style={{ animationDelay: "0ms" }}
-												/>
-												<div
-													className="h-2 w-2 bg-teal-600 rounded-full animate-bounce"
-													style={{ animationDelay: "150ms" }}
-												/>
-												<div
-													className="h-2 w-2 bg-teal-600 rounded-full animate-bounce"
-													style={{ animationDelay: "300ms" }}
-												/>
-											</div>
-											<p className="text-sm text-slate-500 font-medium">
-												Carregando testes...
-											</p>
-										</div>
-									</div>
-								) : filteredTests.length === 0 ? (
-									<div className="flex items-center justify-center py-12">
-										<div className="text-center">
-											<div className="w-16 h-16 bg-slate-100 rounded-full flex items-center justify-center mx-auto mb-4">
-												<BookOpen className="h-8 w-8 text-slate-300" />
-											</div>
-											<p className="text-sm text-slate-600 font-semibold mb-1">
-												Nenhum teste encontrado
-											</p>
-											<p className="text-xs text-slate-500 mb-3">
-												Tente ajustar os filtros ou a busca
-											</p>
-											<Button
-												variant="outline"
-												size="sm"
-												onClick={() => {
-													setSearchTerm("");
-													setSelectedCategory("Todos");
-													setSelectedJoint("Todos");
-													setSelectedType("all");
-												}}
-											>
-												Limpar filtros
-											</Button>
-										</div>
-									</div>
-								) : (
-									<>
-										{/* Recent Tests */}
-										{recentTests.length > 0 &&
-											!searchTerm &&
-											selectedCategory === "Todos" &&
-											selectedJoint === "Todos" &&
-											selectedType === "all" && (
-												<div className="space-y-3">
-													<div className="flex items-center gap-2 text-xs font-semibold text-slate-500 uppercase">
-														<Sparkles className="h-3.5 w-3.5 text-teal-600" />
-														Recentes
-													</div>
-													<div className="grid gap-2">
-														{recentTests
-															.slice(0, 5)
-															.map((test) => renderTestCard(test, 0))}
-													</div>
-													<Separator />
-												</div>
-											)}
+            {/* Results */}
+            <ScrollArea className="flex-1">
+              <div className="px-4 py-3 space-y-4">
+                {isLoading ? (
+                  <div className="flex items-center justify-center py-12">
+                    <div className="text-center">
+                      <div className="flex justify-center gap-1 mb-3">
+                        <div
+                          className="h-2 w-2 bg-teal-600 rounded-full animate-bounce"
+                          style={{ animationDelay: "0ms" }}
+                        />
+                        <div
+                          className="h-2 w-2 bg-teal-600 rounded-full animate-bounce"
+                          style={{ animationDelay: "150ms" }}
+                        />
+                        <div
+                          className="h-2 w-2 bg-teal-600 rounded-full animate-bounce"
+                          style={{ animationDelay: "300ms" }}
+                        />
+                      </div>
+                      <p className="text-sm text-slate-500 font-medium">Carregando testes...</p>
+                    </div>
+                  </div>
+                ) : filteredTests.length === 0 ? (
+                  <div className="flex items-center justify-center py-12">
+                    <div className="text-center">
+                      <div className="w-16 h-16 bg-slate-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                        <BookOpen className="h-8 w-8 text-slate-300" />
+                      </div>
+                      <p className="text-sm text-slate-600 font-semibold mb-1">
+                        Nenhum teste encontrado
+                      </p>
+                      <p className="text-xs text-slate-500 mb-3">
+                        Tente ajustar os filtros ou a busca
+                      </p>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => {
+                          setSearchTerm("");
+                          setSelectedCategory("Todos");
+                          setSelectedJoint("Todos");
+                          setSelectedType("all");
+                        }}
+                      >
+                        Limpar filtros
+                      </Button>
+                    </div>
+                  </div>
+                ) : (
+                  <>
+                    {/* Recent Tests */}
+                    {recentTests.length > 0 &&
+                      !searchTerm &&
+                      selectedCategory === "Todos" &&
+                      selectedJoint === "Todos" &&
+                      selectedType === "all" && (
+                        <div className="space-y-3">
+                          <div className="flex items-center gap-2 text-xs font-semibold text-slate-500 uppercase">
+                            <Sparkles className="h-3.5 w-3.5 text-teal-600" />
+                            Recentes
+                          </div>
+                          <div className="grid gap-2">
+                            {recentTests.slice(0, 5).map((test) => renderTestCard(test, 0))}
+                          </div>
+                          <Separator />
+                        </div>
+                      )}
 
-										{/* Grouped Tests */}
-										<div className="space-y-4">
-											{Object.entries(groupedTests).map(
-												([category, categoryTests]) => {
-													const isCollapsed = collapsedCategories.has(category);
-													const CategoryIcon = getCategoryIcon(category);
-													let globalIndex =
-														recentTests.length > 0 &&
-														!searchTerm &&
-														selectedCategory === "Todos" &&
-														selectedJoint === "Todos" &&
-														selectedType === "all"
-															? 5
-															: 0;
+                    {/* Grouped Tests */}
+                    <div className="space-y-4">
+                      {Object.entries(groupedTests).map(([category, categoryTests]) => {
+                        const isCollapsed = collapsedCategories.has(category);
+                        const CategoryIcon = getCategoryIcon(category);
+                        let globalIndex =
+                          recentTests.length > 0 &&
+                          !searchTerm &&
+                          selectedCategory === "Todos" &&
+                          selectedJoint === "Todos" &&
+                          selectedType === "all"
+                            ? 5
+                            : 0;
 
-													return (
-														<div key={category} className="space-y-3">
-															<Button
-																variant="ghost"
-																className="w-full justify-start h-auto px-0 hover:bg-transparent"
-																onClick={() => toggleCategory(category)}
-															>
-																<div className="flex items-center gap-2">
-																	{isCollapsed ? (
-																		<ChevronRight className="h-4 w-4 text-slate-400" />
-																	) : (
-																		<ChevronDown className="h-4 w-4 text-slate-400" />
-																	)}
-																	<Badge
-																		className={cn(
-																			"text-xs font-bold px-2 py-0.5",
-																			getCategoryColor(category),
-																		)}
-																	>
-																		<CategoryIcon className="h-3 w-3 mr-1" />
-																		{category}
-																	</Badge>
-																	<span className="text-xs text-slate-500 font-medium">
-																		{categoryTests.length}
-																	</span>
-																</div>
-															</Button>
+                        return (
+                          <div key={category} className="space-y-3">
+                            <Button
+                              variant="ghost"
+                              className="w-full justify-start h-auto px-0 hover:bg-transparent"
+                              onClick={() => toggleCategory(category)}
+                            >
+                              <div className="flex items-center gap-2">
+                                {isCollapsed ? (
+                                  <ChevronRight className="h-4 w-4 text-slate-400" />
+                                ) : (
+                                  <ChevronDown className="h-4 w-4 text-slate-400" />
+                                )}
+                                <Badge
+                                  className={cn(
+                                    "text-xs font-bold px-2 py-0.5",
+                                    getCategoryColor(category),
+                                  )}
+                                >
+                                  <CategoryIcon className="h-3 w-3 mr-1" />
+                                  {category}
+                                </Badge>
+                                <span className="text-xs text-slate-500 font-medium">
+                                  {categoryTests.length}
+                                </span>
+                              </div>
+                            </Button>
 
-															{!isCollapsed && (
-																<div className="grid gap-2">
-																	{categoryTests.map((test) =>
-																		renderTestCard(test, globalIndex++),
-																	)}
-																</div>
-															)}
-														</div>
-													);
-												},
-											)}
-										</div>
-									</>
-								)}
-							</div>
-						</ScrollArea>
-					</div>
+                            {!isCollapsed && (
+                              <div className="grid gap-2">
+                                {categoryTests.map((test) => renderTestCard(test, globalIndex++))}
+                              </div>
+                            )}
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </>
+                )}
+              </div>
+            </ScrollArea>
+          </div>
 
-					{/* Right Panel - Test Details */}
-					{selectedTest && (
-						<div
-							className={cn(
-								"w-96 bg-slate-50 flex flex-col shrink-0 border-l",
-								isMobile && "fixed inset-0 z-[60] w-full",
-							)}
-						>
-							<div className="p-4 border-b bg-white flex items-center justify-between">
-								<div>
-									<h3 className="font-semibold text-slate-800">
-										{selectedTest.name}
-									</h3>
-									{selectedTest.name_en && (
-										<p className="text-xs text-slate-500 italic">
-											{selectedTest.name_en}
-										</p>
-									)}
-								</div>
-								<Button
-									variant="ghost"
-									size="sm"
-									className="h-8 w-8 p-0"
-									onClick={() => setSelectedTest(null)}
-								>
-									<X className="h-4 w-4" />
-								</Button>
-							</div>
+          {/* Right Panel - Test Details */}
+          {selectedTest && (
+            <div
+              className={cn(
+                "w-96 bg-slate-50 flex flex-col shrink-0 border-l",
+                isMobile && "fixed inset-0 z-[60] w-full",
+              )}
+            >
+              <div className="p-4 border-b bg-white flex items-center justify-between">
+                <div>
+                  <h3 className="font-semibold text-slate-800">{selectedTest.name}</h3>
+                  {selectedTest.name_en && (
+                    <p className="text-xs text-slate-500 italic">{selectedTest.name_en}</p>
+                  )}
+                </div>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="h-8 w-8 p-0"
+                  onClick={() => setSelectedTest(null)}
+                >
+                  <X className="h-4 w-4" />
+                </Button>
+              </div>
 
-							<ScrollArea className="flex-1">
-								{/* Cluster Info (Sticky-like at top of scroll if exists) */}
-								{selectedTest.cluster_id && (
-									(() => {
-										const cluster = diagnosticClusters.find(c => c.id === selectedTest.cluster_id);
-										if (!cluster) return null;
-										const otherTests = cluster.tests.filter(id => id !== selectedTest.id);
-										
-										return (
-											<div className="mx-4 mt-4 rounded-2xl border border-amber-100 bg-amber-50/50 p-4">
-												<div className="flex items-center gap-2 mb-2">
-													<Sparkles className="h-4 w-4 text-amber-600" />
-													<h4 className="text-[11px] font-black uppercase tracking-wider text-amber-600">
-														Refinar Diagnóstico
-													</h4>
-												</div>
-												<p className="text-xs font-semibold text-amber-900 mb-3">
-													{cluster.name}
-												</p>
-												<p className="text-[11px] text-amber-800 leading-relaxed mb-4 opacity-80">
-													{cluster.interpretation}
-												</p>
-												
-												{otherTests.length > 0 && (
-													<div className="space-y-2">
-														<p className="text-[10px] font-bold text-amber-600/70 uppercase tracking-widest">
-															Testes Sugeridos:
-														</p>
-														<div className="flex flex-wrap gap-1.5">
-															{otherTests.map(testId => {
-																const label = testId.replace('builtin-', '').replace(/-/g, ' ');
-																return (
-																	<button
-																		key={testId}
-																		type="button"
-																		onClick={() => {
-																			const found = tests.find(t => t.id === testId);
-																			if (found) setSelectedTest(found);
-																		}}
-																		className="rounded-full bg-white px-2.5 py-1 text-[10px] font-bold text-amber-700 border border-amber-200/50 shadow-sm transition-all hover:bg-amber-100 hover:border-amber-300 active:scale-95"
-																	>
-																		{label}
-																	</button>
-																);
-															})}
-														</div>
-													</div>
-												)}
-											</div>
-										);
-									})()
-								)}
+              <ScrollArea className="flex-1">
+                {/* Cluster Info (Sticky-like at top of scroll if exists) */}
+                {selectedTest.cluster_id &&
+                  (() => {
+                    const cluster = diagnosticClusters.find(
+                      (c) => c.id === selectedTest.cluster_id,
+                    );
+                    if (!cluster) return null;
+                    const otherTests = cluster.tests.filter((id) => id !== selectedTest.id);
 
-								<div className="p-4 space-y-4">
-									{/* Image */}
-									{(selectedTest.image_url || selectedTest.media_urls?.[0]) && (
-										<div className="rounded-xl overflow-hidden border border-slate-200 bg-white shadow-sm">
-											<img
-												src={
-													selectedTest.image_url || selectedTest.media_urls?.[0]
-												}
-												alt={selectedTest.name}
-												className="w-full h-56 object-cover bg-slate-50"
-											/>
-										</div>
-									)}
+                    return (
+                      <div className="mx-4 mt-4 rounded-2xl border border-amber-100 bg-amber-50/50 p-4">
+                        <div className="flex items-center gap-2 mb-2">
+                          <Sparkles className="h-4 w-4 text-amber-600" />
+                          <h4 className="text-[11px] font-black uppercase tracking-wider text-amber-600">
+                            Refinar Diagnóstico
+                          </h4>
+                        </div>
+                        <p className="text-xs font-semibold text-amber-900 mb-3">{cluster.name}</p>
+                        <p className="text-[11px] text-amber-800 leading-relaxed mb-4 opacity-80">
+                          {cluster.interpretation}
+                        </p>
 
-									{/* Badges */}
-									<div className="flex flex-wrap gap-2">
-										<Badge className={getCategoryColor(selectedTest.category)}>
-											{selectedTest.category}
-										</Badge>
-										{selectedTest.target_joint && (
-											<Badge
-												variant="secondary"
-												className="bg-slate-100 text-slate-700 border-slate-200"
-											>
-												{selectedTest.target_joint}
-											</Badge>
-										)}
-										{selectedTest.type && (
-											<Badge
-												variant="secondary"
-												className="bg-violet-50 text-violet-700 border-violet-200"
-											>
-												{selectedTest.type === "functional_test"
-													? "Funcional"
-													: "Especial"}
-											</Badge>
-										)}
-									</div>
+                        {otherTests.length > 0 && (
+                          <div className="space-y-2">
+                            <p className="text-[10px] font-bold text-amber-600/70 uppercase tracking-widest">
+                              Testes Sugeridos:
+                            </p>
+                            <div className="flex flex-wrap gap-1.5">
+                              {otherTests.map((testId) => {
+                                const label = testId.replace("builtin-", "").replace(/-/g, " ");
+                                return (
+                                  <button
+                                    key={testId}
+                                    type="button"
+                                    onClick={() => {
+                                      const found = tests.find((t) => t.id === testId);
+                                      if (found) setSelectedTest(found);
+                                    }}
+                                    className="rounded-full bg-white px-2.5 py-1 text-[10px] font-bold text-amber-700 border border-amber-200/50 shadow-sm transition-all hover:bg-amber-100 hover:border-amber-300 active:scale-95"
+                                  >
+                                    {label}
+                                  </button>
+                                );
+                              })}
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    );
+                  })()}
 
-									{/* Purpose */}
-									{selectedTest.purpose && (
-										<div>
-											<h4 className="text-xs font-semibold text-slate-700 uppercase mb-1.5">
-												Objetivo
-											</h4>
-											<p className="text-sm text-slate-600 leading-relaxed">
-												{selectedTest.purpose}
-											</p>
-										</div>
-									)}
+                <div className="p-4 space-y-4">
+                  {/* Image */}
+                  {(selectedTest.image_url || selectedTest.media_urls?.[0]) && (
+                    <div className="rounded-xl overflow-hidden border border-slate-200 bg-white shadow-sm">
+                      <img
+                        src={selectedTest.image_url || selectedTest.media_urls?.[0]}
+                        alt={selectedTest.name}
+                        className="w-full h-56 object-cover bg-slate-50"
+                      />
+                    </div>
+                  )}
 
-									{/* Execution */}
-									{selectedTest.execution && (
-										<div>
-											<h4 className="text-xs font-semibold text-slate-700 uppercase mb-1.5">
-												Execução
-											</h4>
-											<p className="text-sm text-slate-600 leading-relaxed whitespace-pre-line">
-												{selectedTest.execution}
-											</p>
-										</div>
-									)}
+                  {/* Badges */}
+                  <div className="flex flex-wrap gap-2">
+                    <Badge className={getCategoryColor(selectedTest.category)}>
+                      {selectedTest.category}
+                    </Badge>
+                    {selectedTest.target_joint && (
+                      <Badge
+                        variant="secondary"
+                        className="bg-slate-100 text-slate-700 border-slate-200"
+                      >
+                        {selectedTest.target_joint}
+                      </Badge>
+                    )}
+                    {selectedTest.type && (
+                      <Badge
+                        variant="secondary"
+                        className="bg-violet-50 text-violet-700 border-violet-200"
+                      >
+                        {selectedTest.type === "functional_test" ? "Funcional" : "Especial"}
+                      </Badge>
+                    )}
+                  </div>
 
-									{/* Positive Sign */}
-									{selectedTest.positive_sign && (
-										<div>
-											<h4 className="text-xs font-semibold text-slate-700 uppercase mb-1.5">
-												Sinal Positivo
-											</h4>
-											<p className="text-sm text-slate-600 leading-relaxed">
-												{selectedTest.positive_sign}
-											</p>
-										</div>
-									)}
+                  {/* Purpose */}
+                  {selectedTest.purpose && (
+                    <div>
+                      <h4 className="text-xs font-semibold text-slate-700 uppercase mb-1.5">
+                        Objetivo
+                      </h4>
+                      <p className="text-sm text-slate-600 leading-relaxed">
+                        {selectedTest.purpose}
+                      </p>
+                    </div>
+                  )}
 
-									{/* Tags */}
-									{selectedTest.tags && selectedTest.tags.length > 0 && (
-										<div>
-											<h4 className="text-xs font-semibold text-slate-700 uppercase mb-1.5">
-												Tags
-											</h4>
-											<div className="flex flex-wrap gap-1.5">
-												{selectedTest.tags.map((tag) => (
-													<span
-														key={tag}
-														className="text-xs bg-slate-100 text-slate-600 px-2 py-1 rounded"
-													>
-														#{tag}
-													</span>
-												))}
-											</div>
-										</div>
-									)}
+                  {/* Execution */}
+                  {selectedTest.execution && (
+                    <div>
+                      <h4 className="text-xs font-semibold text-slate-700 uppercase mb-1.5">
+                        Execução
+                      </h4>
+                      <p className="text-sm text-slate-600 leading-relaxed whitespace-pre-line">
+                        {selectedTest.execution}
+                      </p>
+                    </div>
+                  )}
 
-									{/* Evidence Accuracy */}
-									{(selectedTest.lr_positive || selectedTest.lr_negative) && (
-										<div className="rounded-2xl border border-slate-100 bg-white p-4 shadow-sm">
-											<h4 className="text-[11px] font-bold text-slate-500 uppercase tracking-widest mb-3 flex items-center gap-2">
-												<Activity className="h-3.5 w-3.5" />
-												Acurácia (EBP)
-											</h4>
-											<div className="grid grid-cols-2 gap-3">
-												{selectedTest.lr_positive && (
-													<div className={cn(
-														"rounded-xl p-2.5 border transition-colors",
-														selectedTest.lr_positive >= 10 ? "bg-emerald-50 border-emerald-100" :
-														selectedTest.lr_positive >= 5 ? "bg-teal-50 border-teal-100" :
-														selectedTest.lr_positive > 2 ? "bg-blue-50 border-blue-100" :
-														"bg-slate-50 border-slate-100"
-													)}>
-														<p className={cn(
-															"text-[9px] font-black uppercase tracking-tighter",
-															selectedTest.lr_positive >= 5 ? "text-teal-600" : "text-slate-500"
-														)}>LR+</p>
-														<p className={cn(
-															"text-base font-black",
-															selectedTest.lr_positive >= 5 ? "text-teal-700" : "text-slate-700"
-														)}>{selectedTest.lr_positive}</p>
-													</div>
-												)}
-												{selectedTest.lr_negative && (
-													<div className={cn(
-														"rounded-xl p-2.5 border transition-colors",
-														selectedTest.lr_negative <= 0.1 ? "bg-emerald-50 border-emerald-100" :
-														selectedTest.lr_negative <= 0.2 ? "bg-teal-50 border-teal-100" :
-														selectedTest.lr_negative < 0.5 ? "bg-blue-50 border-blue-100" :
-														"bg-slate-50 border-slate-100"
-													)}>
-														<p className={cn(
-															"text-[9px] font-black uppercase tracking-tighter",
-															selectedTest.lr_negative <= 0.2 ? "text-teal-600" : "text-slate-500"
-														)}>LR-</p>
-														<p className={cn(
-															"text-base font-black",
-															selectedTest.lr_negative <= 0.2 ? "text-teal-700" : "text-slate-700"
-														)}>{selectedTest.lr_negative}</p>
-													</div>
-												)}
-											</div>
-											
-											{selectedTest.lr_positive && selectedTest.lr_positive > 5 && (
-												<div className="mt-3 flex items-center gap-2 rounded-lg bg-teal-500/10 p-2 text-[10px] font-bold text-teal-700">
-													<ThumbsUp className="h-3 w-3" />
-													Forte poder confirmatório
-												</div>
-											)}
-										</div>
-									)}
+                  {/* Positive Sign */}
+                  {selectedTest.positive_sign && (
+                    <div>
+                      <h4 className="text-xs font-semibold text-slate-700 uppercase mb-1.5">
+                        Sinal Positivo
+                      </h4>
+                      <p className="text-sm text-slate-600 leading-relaxed">
+                        {selectedTest.positive_sign}
+                      </p>
+                    </div>
+                  )}
 
-									{/* Fields */}
-									{selectedTest.fields_definition &&
-										selectedTest.fields_definition.length > 0 && (
-											<div>
-												<h4 className="text-xs font-semibold text-slate-700 uppercase mb-1.5">
-													Campos do Formulário
-												</h4>
-												<div className="space-y-1.5">
-													{selectedTest.fields_definition.map((field) => (
-														<div
-															key={field.id}
-															className="flex items-center justify-between text-xs bg-white px-2 py-1.5 rounded border border-slate-200"
-														>
-															<span className="font-medium text-slate-700">
-																{field.label}
-															</span>
-															<div className="flex items-center gap-2">
-																{field.unit && (
-																	<span className="text-slate-400">
-																		({field.unit})
-																	</span>
-																)}
-																{field.required && (
-																	<span className="text-red-500">*</span>
-																)}
-															</div>
-														</div>
-													))}
-												</div>
-											</div>
-										)}
-								</div>
-							</ScrollArea>
+                  {/* Tags */}
+                  {selectedTest.tags && selectedTest.tags.length > 0 && (
+                    <div>
+                      <h4 className="text-xs font-semibold text-slate-700 uppercase mb-1.5">
+                        Tags
+                      </h4>
+                      <div className="flex flex-wrap gap-1.5">
+                        {selectedTest.tags.map((tag) => (
+                          <span
+                            key={tag}
+                            className="text-xs bg-slate-100 text-slate-600 px-2 py-1 rounded"
+                          >
+                            #{tag}
+                          </span>
+                        ))}
+                      </div>
+                    </div>
+                  )}
 
-							{/* Add Button */}
-							<div className="p-4 border-t bg-white">
-								<Button
-									className="w-full bg-teal-600 hover:bg-teal-700 text-white"
-									onClick={() => handleAddTest(selectedTest)}
-								>
-									<Plus className="h-4 w-4 mr-2" />
-									Adicionar à medição
-								</Button>
-							</div>
-						</div>
-					)}
-				</div>
-			</CustomModalBody>
+                  {/* Evidence Accuracy */}
+                  {(selectedTest.lr_positive || selectedTest.lr_negative) && (
+                    <div className="rounded-2xl border border-slate-100 bg-white p-4 shadow-sm">
+                      <h4 className="text-[11px] font-bold text-slate-500 uppercase tracking-widest mb-3 flex items-center gap-2">
+                        <Activity className="h-3.5 w-3.5" />
+                        Acurácia (EBP)
+                      </h4>
+                      <div className="grid grid-cols-2 gap-3">
+                        {selectedTest.lr_positive && (
+                          <div
+                            className={cn(
+                              "rounded-xl p-2.5 border transition-colors",
+                              selectedTest.lr_positive >= 10
+                                ? "bg-emerald-50 border-emerald-100"
+                                : selectedTest.lr_positive >= 5
+                                  ? "bg-teal-50 border-teal-100"
+                                  : selectedTest.lr_positive > 2
+                                    ? "bg-blue-50 border-blue-100"
+                                    : "bg-slate-50 border-slate-100",
+                            )}
+                          >
+                            <p
+                              className={cn(
+                                "text-[9px] font-black uppercase tracking-tighter",
+                                selectedTest.lr_positive >= 5 ? "text-teal-600" : "text-slate-500",
+                              )}
+                            >
+                              LR+
+                            </p>
+                            <p
+                              className={cn(
+                                "text-base font-black",
+                                selectedTest.lr_positive >= 5 ? "text-teal-700" : "text-slate-700",
+                              )}
+                            >
+                              {selectedTest.lr_positive}
+                            </p>
+                          </div>
+                        )}
+                        {selectedTest.lr_negative && (
+                          <div
+                            className={cn(
+                              "rounded-xl p-2.5 border transition-colors",
+                              selectedTest.lr_negative <= 0.1
+                                ? "bg-emerald-50 border-emerald-100"
+                                : selectedTest.lr_negative <= 0.2
+                                  ? "bg-teal-50 border-teal-100"
+                                  : selectedTest.lr_negative < 0.5
+                                    ? "bg-blue-50 border-blue-100"
+                                    : "bg-slate-50 border-slate-100",
+                            )}
+                          >
+                            <p
+                              className={cn(
+                                "text-[9px] font-black uppercase tracking-tighter",
+                                selectedTest.lr_negative <= 0.2
+                                  ? "text-teal-600"
+                                  : "text-slate-500",
+                              )}
+                            >
+                              LR-
+                            </p>
+                            <p
+                              className={cn(
+                                "text-base font-black",
+                                selectedTest.lr_negative <= 0.2
+                                  ? "text-teal-700"
+                                  : "text-slate-700",
+                              )}
+                            >
+                              {selectedTest.lr_negative}
+                            </p>
+                          </div>
+                        )}
+                      </div>
 
-			<CustomModalFooter
-				isMobile={isMobile}
-				className="bg-slate-50 justify-between py-2"
-			>
-				<div className="flex items-center gap-2 text-xs text-slate-500">
-					<Info className="h-3.5 w-3.5" />
-					<span>
-						{filteredTests.length} teste{filteredTests.length !== 1 ? "s" : ""}{" "}
-						disponível{filteredTests.length !== 1 ? "is" : ""}
-					</span>
-				</div>
-				<Button
-					variant="outline"
-					size="sm"
-					onClick={() => onOpenChange(false)}
-					className="h-8"
-				>
-					Fechar
-				</Button>
-			</CustomModalFooter>
-		</CustomModal>
-	);
+                      {selectedTest.lr_positive && selectedTest.lr_positive > 5 && (
+                        <div className="mt-3 flex items-center gap-2 rounded-lg bg-teal-500/10 p-2 text-[10px] font-bold text-teal-700">
+                          <ThumbsUp className="h-3 w-3" />
+                          Forte poder confirmatório
+                        </div>
+                      )}
+                    </div>
+                  )}
+
+                  {/* Fields */}
+                  {selectedTest.fields_definition && selectedTest.fields_definition.length > 0 && (
+                    <div>
+                      <h4 className="text-xs font-semibold text-slate-700 uppercase mb-1.5">
+                        Campos do Formulário
+                      </h4>
+                      <div className="space-y-1.5">
+                        {selectedTest.fields_definition.map((field) => (
+                          <div
+                            key={field.id}
+                            className="flex items-center justify-between text-xs bg-white px-2 py-1.5 rounded border border-slate-200"
+                          >
+                            <span className="font-medium text-slate-700">{field.label}</span>
+                            <div className="flex items-center gap-2">
+                              {field.unit && <span className="text-slate-400">({field.unit})</span>}
+                              {field.required && <span className="text-red-500">*</span>}
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                </div>
+              </ScrollArea>
+
+              {/* Add Button */}
+              <div className="p-4 border-t bg-white">
+                <Button
+                  className="w-full bg-teal-600 hover:bg-teal-700 text-white"
+                  onClick={() => handleAddTest(selectedTest)}
+                >
+                  <Plus className="h-4 w-4 mr-2" />
+                  Adicionar à medição
+                </Button>
+              </div>
+            </div>
+          )}
+        </div>
+      </CustomModalBody>
+
+      <CustomModalFooter isMobile={isMobile} className="bg-slate-50 justify-between py-2">
+        <div className="flex items-center gap-2 text-xs text-slate-500">
+          <Info className="h-3.5 w-3.5" />
+          <span>
+            {filteredTests.length} teste{filteredTests.length !== 1 ? "s" : ""} disponível
+            {filteredTests.length !== 1 ? "is" : ""}
+          </span>
+        </div>
+        <Button variant="outline" size="sm" onClick={() => onOpenChange(false)} className="h-8">
+          Fechar
+        </Button>
+      </CustomModalFooter>
+    </CustomModal>
+  );
 }

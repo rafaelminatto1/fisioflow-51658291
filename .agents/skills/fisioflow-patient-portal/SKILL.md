@@ -14,6 +14,7 @@ All Brazilian competitors (Cliniconect, Ikora, Ninsaúde, EffiClin) offer patien
 ## Requirements (from competitive analysis)
 
 ### Authentication
+
 - Phone-based OTP login (WhatsApp SMS fallback)
 - Magic link via email
 - Link to existing patient record via CPF or phone match
@@ -23,6 +24,7 @@ All Brazilian competitors (Cliniconect, Ikora, Ninsaúde, EffiClin) offer patien
 ### Core Features
 
 #### 1. Appointment Management
+
 - View upcoming appointments (date, time, therapist, type)
 - Confirm/cancel appointments (with reason)
 - Request reschedule
@@ -30,6 +32,7 @@ All Brazilian competitors (Cliniconect, Ikora, Ninsaúde, EffiClin) offer patien
 - Receive real-time status updates (WebSocket)
 
 #### 2. Exercise Programs (HEP - Home Exercise Program)
+
 - View prescribed exercises with video/image instructions
 - Mark exercises as completed
 - Track adherence streak
@@ -37,12 +40,14 @@ All Brazilian competitors (Cliniconect, Ikora, Ninsaúde, EffiClin) offer patien
 - View exercise history and progress charts
 
 #### 3. Evolution/Progress Viewing (Read-Only)
+
 - View SOAP evolution summaries (patient-friendly language)
 - Pain progression charts (from `patient_session_metrics`)
 - Goal status tracking (from `patient_goals`)
 - Biomechanics assessment results
 
 #### 4. Financial
+
 - View outstanding bills (from `contas_financeiras`)
 - Payment history
 - Package status (remaining sessions from `patient_packages`)
@@ -50,11 +55,13 @@ All Brazilian competitors (Cliniconect, Ikora, Ninsaúde, EffiClin) offer patien
 - Online payment (Stripe integration)
 
 #### 5. Documents
+
 - View/download uploaded documents (from `session_attachments`)
 - Upload documents (exams, referrals)
 - Before/after photo gallery (file_category: before_after)
 
 #### 6. Gamification (from existing `gamification.ts` schema)
+
 - XP and level display (from `patient_gamification`)
 - Achievement badges (from `achievements_log`)
 - Daily quests (from `daily_quests`)
@@ -65,6 +72,7 @@ All Brazilian competitors (Cliniconect, Ikora, Ninsaúde, EffiClin) offer patien
 ## Database Schema Extensions Needed
 
 ### `patient_portal_users` (new table)
+
 ```
 patient_portal_users
 ├── id: uuid PK
@@ -84,6 +92,7 @@ patient_portal_users
 ```
 
 ### `patient_exercise_logs` (new table for HEP adherence)
+
 ```
 patient_exercise_logs
 ├── id: uuid PK
@@ -107,6 +116,7 @@ patient_exercise_logs
 **File:** `apps/api/src/routes/patient-portal.ts`
 
 ### Unauthenticated Routes
+
 ```
 POST /api/portal/auth/otp/send     — Send OTP to patient phone
 POST /api/portal/auth/otp/verify   — Verify OTP, return JWT
@@ -115,6 +125,7 @@ GET  /api/portal/auth/magic-link/verify?token=xxx — Verify magic link
 ```
 
 ### Authenticated Routes (patient JWT, not staff JWT)
+
 ```
 GET  /api/portal/me                — Patient profile
 GET  /api/portal/appointments      — Upcoming appointments
@@ -130,6 +141,7 @@ GET  /api/portal/gamification      — XP, achievements, quests
 ```
 
 ### Auth Middleware (different from staff auth)
+
 ```ts
 const requirePatientAuth = async (c, next) => {
   const token = extractBearerToken(c.req);
@@ -149,12 +161,14 @@ const requirePatientAuth = async (c, next) => {
 ## Frontend Specification
 
 ### Web App (shared component library)
+
 - Route: `/portal/*` in fisioflow-web
 - Minimal, mobile-first design
 - Dark/light theme
 - Portuguese (pt-BR) only
 
 ### Mobile App (Expo, patient app)
+
 - Already scaffolded as `apps/patient/`
 - Uses same API endpoints
 - Push notifications for appointments, exercises

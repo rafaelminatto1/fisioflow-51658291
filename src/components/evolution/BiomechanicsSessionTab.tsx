@@ -4,7 +4,16 @@
  */
 import React, { Suspense, lazy, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Activity, Zap, AlignJustify, Layout, Save, CheckCircle2, Loader2, ChevronDown } from "lucide-react";
+import {
+  Activity,
+  Zap,
+  AlignJustify,
+  Layout,
+  Save,
+  CheckCircle2,
+  Loader2,
+  ChevronDown,
+} from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
@@ -14,24 +23,24 @@ import { biomechanicsApi, sessionsApi, type BiomechanicsData } from "@/api/v2";
 type StudioType = "gait" | "jump" | "posture" | "functional";
 
 const GaitAnalysisStudio = lazy(() =>
-	import("@/components/analysis/studios/GaitAnalysisStudio").then((m) => ({
-		default: m.GaitAnalysisStudio,
-	})),
+  import("@/components/analysis/studios/GaitAnalysisStudio").then((m) => ({
+    default: m.GaitAnalysisStudio,
+  })),
 );
 const JumpAnalysisStudio = lazy(() =>
-	import("@/components/analysis/studios/JumpAnalysisStudio").then((m) => ({
-		default: m.JumpAnalysisStudio,
-	})),
+  import("@/components/analysis/studios/JumpAnalysisStudio").then((m) => ({
+    default: m.JumpAnalysisStudio,
+  })),
 );
 const PostureAnalysisStudio = lazy(() =>
-	import("@/components/analysis/studios/PostureAnalysisStudio").then((m) => ({
-		default: m.PostureAnalysisStudio,
-	})),
+  import("@/components/analysis/studios/PostureAnalysisStudio").then((m) => ({
+    default: m.PostureAnalysisStudio,
+  })),
 );
 const FunctionalAnalysisStudio = lazy(() =>
-	import("@/components/analysis/studios/FunctionalAnalysisStudio").then((m) => ({
-		default: m.FunctionalAnalysisStudio,
-	})),
+  import("@/components/analysis/studios/FunctionalAnalysisStudio").then((m) => ({
+    default: m.FunctionalAnalysisStudio,
+  })),
 );
 
 const STUDIO_CONFIG: Record<
@@ -144,7 +153,7 @@ export const BiomechanicsSessionTab: React.FC<BiomechanicsSessionTabProps> = ({
         title: "✅ Análise salva na sessão",
         description: `${STUDIO_CONFIG[selectedStudio].label} vinculada ao atendimento de ${patientName}.`,
       });
-    } catch  {
+    } catch {
       toast({
         title: "Erro ao salvar",
         description: "Não foi possível vincular a análise à sessão. Tente novamente.",
@@ -156,7 +165,7 @@ export const BiomechanicsSessionTab: React.FC<BiomechanicsSessionTabProps> = ({
   };
 
   const handleStudioData = (data: any) => {
-    setPendingData(prev => ({ ...prev, ...data }));
+    setPendingData((prev) => ({ ...prev, ...data }));
   };
 
   const renderStudio = () => {
@@ -187,7 +196,8 @@ export const BiomechanicsSessionTab: React.FC<BiomechanicsSessionTabProps> = ({
             <FunctionalAnalysisStudio onDataUpdate={handleStudioData} />
           </Suspense>
         );
-      default: return null;
+      default:
+        return null;
     }
   };
 
@@ -237,7 +247,9 @@ export const BiomechanicsSessionTab: React.FC<BiomechanicsSessionTabProps> = ({
                     </motion.div>
                   )}
                   <div className={`p-2 rounded-xl ${isSelected ? config.bgColor : "bg-muted/50"}`}>
-                    <Icon className={`h-5 w-5 ${isSelected ? config.color : "text-muted-foreground"}`} />
+                    <Icon
+                      className={`h-5 w-5 ${isSelected ? config.color : "text-muted-foreground"}`}
+                    />
                   </div>
                   <div>
                     <p className={`text-sm font-black ${isSelected ? config.color : ""}`}>
@@ -309,7 +321,8 @@ export const BiomechanicsSessionTab: React.FC<BiomechanicsSessionTabProps> = ({
             <div>
               <p className="font-bold text-muted-foreground">Selecione o tipo de análise</p>
               <p className="text-sm text-muted-foreground/70 mt-1 max-w-sm">
-                Escolha entre Marcha, Salto, Postura ou Funcional para iniciar a captura e análise biomecânica.
+                Escolha entre Marcha, Salto, Postura ou Funcional para iniciar a captura e análise
+                biomecânica.
               </p>
             </div>
           </CardContent>

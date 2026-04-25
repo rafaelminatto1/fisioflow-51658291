@@ -3,19 +3,13 @@
  * Modal player for exercise videos with controls
  */
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect } from "react";
 
-import {
-  View,
-  Text,
-  StyleSheet,
-  Modal,
-  TouchableOpacity,
-} from 'react-native';
-import { VideoView, useVideoPlayer } from 'expo-video';
-import { Ionicons } from '@expo/vector-icons';
-import { SafeAreaView } from 'react-native-safe-area-context';
-import { useColors } from '@/hooks/useColorScheme';
+import { View, Text, StyleSheet, Modal, TouchableOpacity } from "react-native";
+import { VideoView, useVideoPlayer } from "expo-video";
+import { Ionicons } from "@expo/vector-icons";
+import { SafeAreaView } from "react-native-safe-area-context";
+import { useColors } from "@/hooks/useColorScheme";
 
 interface VideoModalProps {
   visible: boolean;
@@ -88,19 +82,14 @@ export function VideoModal({
   };
 
   return (
-    <Modal
-      visible={visible}
-      animationType="slide"
-      onRequestClose={onClose}
-      statusBarTranslucent
-    >
-      <SafeAreaView style={[styles.container, { backgroundColor: '#000' }]} edges={['top']}>
+    <Modal visible={visible} animationType="slide" onRequestClose={onClose} statusBarTranslucent>
+      <SafeAreaView style={[styles.container, { backgroundColor: "#000" }]} edges={["top"]}>
         {/* Header */}
         <View style={styles.header}>
           <TouchableOpacity onPress={onClose} style={styles.closeButton}>
             <Ionicons name="close" size={28} color="#FFFFFF" />
           </TouchableOpacity>
-          <Text style={styles.headerTitle}>{title || 'Exercício'}</Text>
+          <Text style={styles.headerTitle}>{title || "Exercício"}</Text>
           <View style={styles.headerSpacer} />
         </View>
 
@@ -117,9 +106,7 @@ export function VideoModal({
         {/* Video Info */}
         {description && (
           <View style={styles.infoContainer}>
-            <Text style={[styles.infoText, { color: '#FFFFFF' }]}>
-              {description}
-            </Text>
+            <Text style={[styles.infoText, { color: "#FFFFFF" }]}>{description}</Text>
           </View>
         )}
 
@@ -147,7 +134,7 @@ export function VideoModal({
                   <Text
                     style={[
                       styles.speedMenuItemText,
-                      { color: playbackSpeed === speed ? colors.primary : '#FFFFFF' },
+                      { color: playbackSpeed === speed ? colors.primary : "#FFFFFF" },
                     ]}
                   >
                     {speed}x
@@ -159,26 +146,19 @@ export function VideoModal({
 
           {/* Play/Pause Button */}
           <TouchableOpacity style={styles.playButton} onPress={togglePlayPause}>
-            <Ionicons
-              name={isPlaying ? 'pause' : 'play'}
-              size={32}
-              color="#000000"
-            />
+            <Ionicons name={isPlaying ? "pause" : "play"} size={32} color="#000000" />
           </TouchableOpacity>
 
           <TouchableOpacity style={styles.speedButton} onPress={replayVideo}>
             <Ionicons name="refresh" size={24} color="#FFFFFF" />
           </TouchableOpacity>
-
         </View>
 
         {/* Tips */}
         <View style={styles.tipsContainer}>
           <View style={styles.tip}>
             <Ionicons name="information-circle" size={16} color="#FFFFFF" />
-            <Text style={styles.tipText}>
-              Mantenha a postura correta durante o exercício
-            </Text>
+            <Text style={styles.tipText}>Mantenha a postura correta durante o exercício</Text>
           </View>
         </View>
       </SafeAreaView>
@@ -189,12 +169,12 @@ export function VideoModal({
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#000',
+    backgroundColor: "#000",
   },
   header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
     paddingHorizontal: 16,
     paddingVertical: 12,
   },
@@ -202,24 +182,24 @@ const styles = StyleSheet.create({
     padding: 8,
   },
   headerTitle: {
-    color: '#FFFFFF',
+    color: "#FFFFFF",
     fontSize: 17,
-    fontWeight: '600',
+    fontWeight: "600",
     flex: 1,
-    textAlign: 'center',
+    textAlign: "center",
   },
   headerSpacer: {
     width: 44,
   },
   videoContainer: {
     aspectRatio: 16 / 9,
-    backgroundColor: '#000',
-    justifyContent: 'center',
-    alignItems: 'center',
+    backgroundColor: "#000",
+    justifyContent: "center",
+    alignItems: "center",
   },
   video: {
-    width: '100%',
-    height: '100%',
+    width: "100%",
+    height: "100%",
   },
   infoContainer: {
     padding: 16,
@@ -229,9 +209,9 @@ const styles = StyleSheet.create({
     lineHeight: 22,
   },
   controls: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
     paddingVertical: 16,
     paddingHorizontal: 24,
     gap: 24,
@@ -240,14 +220,14 @@ const styles = StyleSheet.create({
     padding: 8,
   },
   speedButtonText: {
-    color: '#FFFFFF',
+    color: "#FFFFFF",
     fontSize: 14,
-    fontWeight: '600',
+    fontWeight: "600",
   },
   speedMenu: {
-    position: 'absolute',
+    position: "absolute",
     left: 16,
-    backgroundColor: 'rgba(40, 40, 40, 0.95)',
+    backgroundColor: "rgba(40, 40, 40, 0.95)",
     borderRadius: 8,
     padding: 4,
   },
@@ -256,34 +236,34 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
   },
   speedMenuItemActive: {
-    backgroundColor: 'rgba(34, 197, 94, 0.3)',
+    backgroundColor: "rgba(34, 197, 94, 0.3)",
   },
   speedMenuItemText: {
-    color: '#FFFFFF',
+    color: "#FFFFFF",
     fontSize: 14,
   },
   playButton: {
     width: 64,
     height: 64,
     borderRadius: 32,
-    backgroundColor: '#FFFFFF',
-    justifyContent: 'center',
-    alignItems: 'center',
+    backgroundColor: "#FFFFFF",
+    justifyContent: "center",
+    alignItems: "center",
   },
   tipsContainer: {
     paddingHorizontal: 16,
     paddingBottom: 24,
   },
   tip: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     gap: 8,
     padding: 12,
-    backgroundColor: 'rgba(255, 255, 255, 0.1)',
+    backgroundColor: "rgba(255, 255, 255, 0.1)",
     borderRadius: 8,
   },
   tipText: {
-    color: '#FFFFFF',
+    color: "#FFFFFF",
     fontSize: 13,
     flex: 1,
   },

@@ -76,22 +76,17 @@ export const useTemplateUIStore = create<TemplateUIStore>()(
 // SELECTORS
 // =====================================================================
 
-export const selectSelectedTemplateId = (state: TemplateUIStore) =>
-  state.selectedTemplateId;
+export const selectSelectedTemplateId = (state: TemplateUIStore) => state.selectedTemplateId;
 
-export const selectActiveProfile = (state: TemplateUIStore) =>
-  state.activeProfile;
+export const selectActiveProfile = (state: TemplateUIStore) => state.activeProfile;
 
 export const selectSearchQuery = (state: TemplateUIStore) => state.searchQuery;
 
-export const selectApplyFlowOpen = (state: TemplateUIStore) =>
-  state.applyFlowOpen;
+export const selectApplyFlowOpen = (state: TemplateUIStore) => state.applyFlowOpen;
 
-export const selectCreateFlowOpen = (state: TemplateUIStore) =>
-  state.createFlowOpen;
+export const selectCreateFlowOpen = (state: TemplateUIStore) => state.createFlowOpen;
 
-export const selectCreateFlowSourceId = (state: TemplateUIStore) =>
-  state.createFlowSourceId;
+export const selectCreateFlowSourceId = (state: TemplateUIStore) => state.createFlowSourceId;
 
 // =====================================================================
 // EXPORTS

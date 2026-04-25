@@ -12,11 +12,13 @@ Reference for the exercise library, AI-powered search, protocol management, and 
 ## Architecture
 
 ### Route File
+
 `apps/api/src/routes/exercises.ts` (~531 lines)
 
 ### Database Schema
 
 #### `exercise_categories` — Hierarchical taxonomy
+
 ```
 exercise_categories
 ├── id: uuid PK
@@ -29,6 +31,7 @@ exercise_categories
 Self-referential relations with `relationName: "subcategories"`.
 
 #### `exercises` — Full exercise library
+
 ```
 exercises
 ├── id: uuid PK
@@ -50,6 +53,7 @@ exercises
 ```
 
 #### `exercise_protocols` — Evidence-based protocols
+
 ```
 exercise_protocols
 ├── id: uuid PK
@@ -69,6 +73,7 @@ exercise_protocols
 ```
 
 #### `protocol_exercises` — Protocol ↔ Exercise pivot
+
 ```
 protocol_exercises
 ├── id: uuid PK
@@ -81,6 +86,7 @@ protocol_exercises
 ```
 
 #### `exercise_favorites` — Therapist favorites
+
 ```
 exercise_favorites
 ├── id: uuid PK
@@ -90,7 +96,9 @@ exercise_favorites
 ```
 
 #### `exercise_prescriptions` — Home Exercise Programs (HEP)
+
 From `clinical.ts`:
+
 ```
 exercise_prescriptions
 ├── id: uuid PK
@@ -107,7 +115,9 @@ exercise_prescriptions
 ```
 
 #### `prescribed_exercises` — Individual exercise assignments
+
 From `clinical.ts`:
+
 ```
 prescribed_exercises
 ├── id: uuid PK
@@ -126,34 +136,38 @@ prescribed_exercises
 ## AI Search Capabilities
 
 ### Semantic Search (Vector Embeddings)
-```ts
-import { generateEmbedding } from "../lib/ai-native"
 
-const queryEmbedding = await generateEmbedding(searchText)
+```ts
+import { generateEmbedding } from "../lib/ai-native";
+
+const queryEmbedding = await generateEmbedding(searchText);
 const results = await db.execute(sql`
   SELECT *, embedding <=> ${queryEmbedding}::vector AS distance
   FROM exercises
   WHERE organization_id = ${orgId} AND is_active = true
   ORDER BY embedding <=> ${queryEmbedding}::vector
   LIMIT 20
-`)
+`);
 ```
 
 ### Sketch-Based Search
-```ts
-import { generateTurboSketch } from "../lib/ai-native"
 
-const sketchEmbedding = await generateTurboSketch(imageBuffer)
+```ts
+import { generateTurboSketch } from "../lib/ai-native";
+
+const sketchEmbedding = await generateTurboSketch(imageBuffer);
 // Same vector similarity search using embeddingSketch column
 ```
 
 ### Full-Text Search (Portuguese)
+
 ```ts
 // Uses GIN index on to_tsvector('portuguese', name)
 WHERE to_tsvector('portuguese', name) @@ plainto_tsquery('portuguese', ${search})
 ```
 
 ### Pose Detection
+
 `referencePose: jsonb` stores MediaPipe landmarks. The mobile apps compare real-time camera feed against these landmarks for form feedback.
 
 ---
@@ -161,15 +175,16 @@ WHERE to_tsvector('portuguese', name) @@ plainto_tsquery('portuguese', ${search}
 ## KV Caching Layer
 
 ```ts
-const CACHE_PREFIX = "exercises:v1:"
-const CACHE_TTL = 3600 // 1 hour
+const CACHE_PREFIX = "exercises:v1:";
+const CACHE_TTL = 3600; // 1 hour
 
 // Cache invalidation targets first 5 pages for common page sizes
-const INVALIDATE_PAGES = [1, 2, 3, 4, 5]
-const COMMON_PAGE_SIZES = [20, 50, 500]
+const INVALIDATE_PAGES = [1, 2, 3, 4, 5];
+const COMMON_PAGE_SIZES = [20, 50, 500];
 ```
 
 Cache keys:
+
 - `exercises:v1:categories` — Category tree
 - `exercises:v1:list:{orgId}:{page}:{size}` — Paginated exercise lists
 - `exercises:v1:detail:{exerciseId}` — Individual exercise detail
@@ -195,14 +210,14 @@ When applying a protocol to a patient:
 const protocol = await db.query.exerciseProtocols.findFirst({
   where: eq(exerciseProtocols.id, protocolId),
   with: { exercises: true },
-})
+});
 
-const currentWeek = getWeeksSinceInjury(patient.injuryDate)
+const currentWeek = getWeeksSinceInjury(patient.injuryDate);
 const currentPhase = protocol.phases.find(
-  p => currentWeek >= p.weekStart && currentWeek <= p.weekEnd
-)
+  (p) => currentWeek >= p.weekStart && currentWeek <= p.weekEnd,
+);
 
 const exercisesForPhase = protocol.exercises.filter(
-  e => currentWeek >= e.phaseWeekStart && currentWeek <= e.phaseWeekEnd
-)
+  (e) => currentWeek >= e.phaseWeekStart && currentWeek <= e.phaseWeekEnd,
+);
 ```

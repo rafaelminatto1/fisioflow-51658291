@@ -1,5 +1,5 @@
-import { patientApi } from './api';
-import { authClient } from './neonAuth';
+import { patientApi } from "./api";
+import { authClient } from "./neonAuth";
 
 type SessionFetchContext = {
   response?: {
@@ -9,26 +9,26 @@ type SessionFetchContext = {
   };
 };
 
-jest.mock('./neonAuth', () => ({
+jest.mock("./neonAuth", () => ({
   authClient: {
     getSession: jest.fn(),
   },
 }));
 
-jest.mock('./logger', () => ({
+jest.mock("./logger", () => ({
   log: {
     error: jest.fn(),
   },
 }));
 
-jest.mock('./mappers', () => ({
+jest.mock("./mappers", () => ({
   Mappers: {
     patientProfile: jest.fn((value) => value),
     appointment: jest.fn((value) => value),
   },
 }));
 
-describe('patientApi route contracts', () => {
+describe("patientApi route contracts", () => {
   const mockJsonResponse = (body: unknown, status = 200) => ({
     ok: status >= 200 && status < 300,
     status,
@@ -43,7 +43,7 @@ describe('patientApi route contracts', () => {
         options?.fetchOptions?.onSuccess?.({
           response: {
             headers: {
-              get: () => 'jwt-test-token',
+              get: () => "jwt-test-token",
             },
           },
         });
@@ -51,7 +51,7 @@ describe('patientApi route contracts', () => {
         return Promise.resolve({
           data: {
             session: {
-              token: 'jwt-test-token',
+              token: "jwt-test-token",
             },
           },
         });
@@ -59,49 +59,45 @@ describe('patientApi route contracts', () => {
     );
   });
 
-  it('busca perfil no prefixo canônico do patient portal', async () => {
+  it("busca perfil no prefixo canônico do patient portal", async () => {
     (global.fetch as jest.Mock).mockResolvedValueOnce(
-      mockJsonResponse({ id: 'patient-1', name: 'Paciente Teste' }),
+      mockJsonResponse({ id: "patient-1", name: "Paciente Teste" }),
     );
 
     await patientApi.getProfile();
 
     expect(global.fetch).toHaveBeenCalledWith(
-      'https://api-paciente.moocafisio.com.br/api/patient-portal/profile',
+      "https://api-paciente.moocafisio.com.br/api/patient-portal/profile",
       expect.objectContaining({
-        method: 'GET',
+        method: "GET",
         headers: expect.any(Headers),
       }),
     );
   });
 
-  it('envia confirmacao de consulta no endpoint correto do patient portal', async () => {
-    (global.fetch as jest.Mock).mockResolvedValueOnce(
-      mockJsonResponse({ success: true }),
-    );
+  it("envia confirmacao de consulta no endpoint correto do patient portal", async () => {
+    (global.fetch as jest.Mock).mockResolvedValueOnce(mockJsonResponse({ success: true }));
 
-    await patientApi.confirmAppointment('appt-123');
+    await patientApi.confirmAppointment("appt-123");
 
     expect(global.fetch).toHaveBeenCalledWith(
-      'https://api-paciente.moocafisio.com.br/api/patient-portal/appointments/appt-123/confirm',
+      "https://api-paciente.moocafisio.com.br/api/patient-portal/appointments/appt-123/confirm",
       expect.objectContaining({
-        method: 'POST',
+        method: "POST",
         body: JSON.stringify({}),
       }),
     );
   });
 
-  it('preserva query params no endpoint de appointments', async () => {
-    (global.fetch as jest.Mock).mockResolvedValueOnce(
-      mockJsonResponse([]),
-    );
+  it("preserva query params no endpoint de appointments", async () => {
+    (global.fetch as jest.Mock).mockResolvedValueOnce(mockJsonResponse([]));
 
     await patientApi.getAppointments(true);
 
     expect(global.fetch).toHaveBeenCalledWith(
-      'https://api-paciente.moocafisio.com.br/api/patient-portal/appointments?upcoming=true',
+      "https://api-paciente.moocafisio.com.br/api/patient-portal/appointments?upcoming=true",
       expect.objectContaining({
-        method: 'GET',
+        method: "GET",
       }),
     );
   });

@@ -28,48 +28,48 @@
 
 /* Tokens de Fonte Display */
 :root {
-	--font-display: "Outfit", system-ui, sans-serif;
-	--font-body: "Inter", system-ui, sans-serif;
+  --font-display: "Outfit", system-ui, sans-serif;
+  --font-body: "Inter", system-ui, sans-serif;
 }
 
 /* Tokens de Espaçamento para Outfit */
 :root {
-	--tracking-display-tighter: -0.05em;
-	--tracking-display-tight: -0.025em;
-	--tracking-display-normal: 0;
-	--tracking-display-wide: 0.025em;
-	--tracking-display-wider: 0.05em;
+  --tracking-display-tighter: -0.05em;
+  --tracking-display-tight: -0.025em;
+  --tracking-display-normal: 0;
+  --tracking-display-wide: 0.025em;
+  --tracking-display-wider: 0.05em;
 }
 
 /* Utilitários de Fonte Display */
 .font-display {
-	font-family: var(--font-display);
-	letter-spacing: var(--tracking-display-normal);
-	font-weight: 600;
+  font-family: var(--font-display);
+  letter-spacing: var(--tracking-display-normal);
+  font-weight: 600;
 }
 
 .font-display-tighter {
-	font-family: var(--font-display);
-	letter-spacing: var(--tracking-display-tighter);
-	font-weight: 700;
+  font-family: var(--font-display);
+  letter-spacing: var(--tracking-display-tighter);
+  font-weight: 700;
 }
 
 .font-display-tight {
-	font-family: var(--font-display);
-	letter-spacing: var(--tracking-display-tight);
-	font-weight: 600;
+  font-family: var(--font-display);
+  letter-spacing: var(--tracking-display-tight);
+  font-weight: 600;
 }
 
 .font-display-normal {
-	font-family: var(--font-display);
-	letter-spacing: var(--tracking-display-normal);
-	font-weight: 500;
+  font-family: var(--font-display);
+  letter-spacing: var(--tracking-display-normal);
+  font-weight: 500;
 }
 
 .font-display-wide {
-	font-family: var(--font-display);
-	letter-spacing: var(--tracking-display-wide);
-	font-weight: 500;
+  font-family: var(--font-display);
+  letter-spacing: var(--tracking-display-wide);
+  font-weight: 500;
 }
 
 /* Aplicação em Headings */
@@ -79,10 +79,10 @@ h3,
 h4,
 h5,
 h6 {
-	font-family: var(--font-display);
-	letter-spacing: var(--tracking-display-tight);
-	font-weight: 700;
-	line-height: 1.2;
+  font-family: var(--font-display);
+  letter-spacing: var(--tracking-display-tight);
+  font-weight: 700;
+  line-height: 1.2;
 }
 
 /* Fonte Body */
@@ -93,9 +93,9 @@ div,
 input,
 textarea,
 button {
-	font-family: var(--font-body);
-	font-weight: 400;
-	line-height: 1.6;
+  font-family: var(--font-body);
+  font-weight: 400;
+  line-height: 1.6;
 }
 
 /* Optimização de Carregamento - Managed by Google Fonts */

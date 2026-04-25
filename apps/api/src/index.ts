@@ -101,214 +101,208 @@ import { cors } from "hono/cors";
 const app = new Hono<{ Bindings: Env; Variables: CustomVariables }>();
 
 function parseAllowedOrigins(value?: string): string[] {
-	return (value ?? "")
-		.split(",")
-		.map((origin) => origin.trim())
-		.filter(Boolean);
+  return (value ?? "")
+    .split(",")
+    .map((origin) => origin.trim())
+    .filter(Boolean);
 }
 
-function resolveCorsOrigin(
-	origin: string | undefined,
-	env: Env,
-): string | undefined {
-	const allowedOrigins = parseAllowedOrigins(env.ALLOWED_ORIGINS);
-	if (allowedOrigins.length === 0) return undefined;
+function resolveCorsOrigin(origin: string | undefined, env: Env): string | undefined {
+  const allowedOrigins = parseAllowedOrigins(env.ALLOWED_ORIGINS);
+  if (allowedOrigins.length === 0) return undefined;
 
-	if (allowedOrigins.includes("*")) {
-		return env.ENVIRONMENT === "production" ? undefined : origin;
-	}
+  if (allowedOrigins.includes("*")) {
+    return env.ENVIRONMENT === "production" ? undefined : origin;
+  }
 
-	if (!origin) return undefined;
-	return allowedOrigins.includes(origin) ? origin : undefined;
+  if (!origin) return undefined;
+  return allowedOrigins.includes(origin) ? origin : undefined;
 }
 
 // CORS: usa allowlist de ambiente; wildcard só é aceito fora de produção.
 app.use(
-	"*",
-	cors({
-		origin: (origin, c) => resolveCorsOrigin(origin, c.env),
-		allowMethods: ["GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"],
-		allowHeaders: [
-			"Content-Type",
-			"Authorization",
-			"X-Requested-With",
-			"Accept",
-			"Cookie",
-			"X-Neon-Auth-Token",
-			"X-Request-ID",
-		],
-		credentials: true,
-		maxAge: 86400,
-	}),
+  "*",
+  cors({
+    origin: (origin, c) => resolveCorsOrigin(origin, c.env),
+    allowMethods: ["GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"],
+    allowHeaders: [
+      "Content-Type",
+      "Authorization",
+      "X-Requested-With",
+      "Accept",
+      "Cookie",
+      "X-Neon-Auth-Token",
+      "X-Request-ID",
+    ],
+    credentials: true,
+    maxAge: 86400,
+  }),
 );
 
 app.use("*", logger());
 app.use(
-	"*",
-	secureHeaders({
-		strictTransportSecurity: "max-age=63072000; includeSubDomains; preload",
-		xFrameOptions: "DENY",
-		xContentTypeOptions: "nosniff",
-		referrerPolicy: "strict-origin-when-cross-origin",
-		permissionsPolicy: {
-			camera: ["self"],
-			microphone: ["self"],
-			geolocation: ["self"],
-			payment: [],
-			usb: [],
-			accelerometer: [],
-			gyroscope: ["self"],
-			magnetometer: [],
-		},
-		crossOriginOpenerPolicy: "same-origin",
-		crossOriginResourcePolicy: "cross-origin",
-	}),
+  "*",
+  secureHeaders({
+    strictTransportSecurity: "max-age=63072000; includeSubDomains; preload",
+    xFrameOptions: "DENY",
+    xContentTypeOptions: "nosniff",
+    referrerPolicy: "strict-origin-when-cross-origin",
+    permissionsPolicy: {
+      camera: ["self"],
+      microphone: ["self"],
+      geolocation: ["self"],
+      payment: [],
+      usb: [],
+      accelerometer: [],
+      gyroscope: ["self"],
+      magnetometer: [],
+    },
+    crossOriginOpenerPolicy: "same-origin",
+    crossOriginResourcePolicy: "cross-origin",
+  }),
 );
 app.use("*", requestIdMiddleware);
 // Analytics Engine — instrumentação automática de todas as rotas (fire-and-forget)
 app.use("*", (c, next) => analyticsMiddleware(c.env)(c, next));
 
 // ===== HEALTH & DB DIAGNOSTIC =====
-app.get("/api/health", (c) =>
-	c.json({ status: "ok", time: new Date().toISOString() }),
-);
+app.get("/api/health", (c) => c.json({ status: "ok", time: new Date().toISOString() }));
 
 app.get("/api/health/db", async (c) => {
-	try {
-		const sql = getRawSql(c.env);
-		const result = await sql("SELECT 1 as connection_test");
-		return c.json({ status: "connected", rows: result.rows });
-	} catch (error: any) {
-		return c.json({ status: "error", message: error.message }, 500);
-	}
+  try {
+    const sql = getRawSql(c.env);
+    const result = await sql("SELECT 1 as connection_test");
+    return c.json({ status: "connected", rows: result.rows });
+  } catch (error: any) {
+    return c.json({ status: "error", message: error.message }, 500);
+  }
 });
 
 app.get("/api/health/schema", async (c) => {
-	try {
-		const sql = getRawSql(c.env);
-		const result = await sql(`
+  try {
+    const sql = getRawSql(c.env);
+    const result = await sql(`
 			SELECT column_name, data_type
 			FROM information_schema.columns
 			WHERE table_name = 'patients'
 		`);
-		return c.json({ table: "patients", columns: result.rows });
-	} catch (error: any) {
-		return c.json({ status: "error", message: error.message }, 500);
-	}
+    return c.json({ table: "patients", columns: result.rows });
+  } catch (error: any) {
+    return c.json({ status: "error", message: error.message }, 500);
+  }
 });
 
 // ===== ROTAS =====
 const apiRoutes = [
-	["/api/ai-trigger-dt", triggerDigitalTwinRoutes],
-	["/api/ai-clinical-search", aiClinicalSearchRoutes],
-	["/api/exercises", exercisesRoutes],
-	["/api/protocols", protocolsRoutes],
-	["/api/wiki", wikiRoutes],
-	["/api/knowledge", knowledgeRoutes],
-	["/api/templates", templatesRoutes],
-	["/api/sessions", sessionsRoutes],
-	["/api/auth", authRoutes],
-	["/api/media", mediaRoutes],
-	["/api/patients", patientsRoutes],
-	["/api/appointments", appointmentsRoutes],
-	["/api/documents", documentsRoutes],
-	["/api/exams", examsRoutes],
-	["/api/medical-requests", medicalRequestsRoutes],
-	["/api/goals", goalsRoutes],
-	["/api/profile", profileRoutes],
-	["/api/doctors", doctorsRoutes],
-	["/api/goal-profiles", goalProfilesRoutes],
-	["/api/financial", financialRoutes],
-	["/api/scheduling", schedulingRoutes],
-	["/api/crm", crmRoutes],
-	["/api/clinical", clinicalRoutes],
-	["/api/notifications", notificationsRoutes],
-	["/api/communications", communicationsRoutes],
-	["/api/organizations", organizationsRoutes],
-	["/api/organization-members", organizationMembersRoutes],
-	["/api/evolution", evolutionRoutes],
-	["/api/evaluation-forms", evaluationFormsRoutes],
-	["/api/notification-preferences", notificationPreferencesRoutes],
-	["/api/prestadores", prestadoresRoutes],
-	["/api/recibos", recibosRoutes],
-	["/api/feriados", feriadosRoutes],
-	["/api/push-subscriptions", pushSubscriptionsRoutes],
-	["/api/automation", automationRoutes],
-	["/api/gamification-notifications", gamificationNotificationsRoutes],
-	["/api/gamification", gamificationRoutes],
-	["/api/exercise-videos", exerciseVideosRoutes],
-	["/api/exercise-sessions", exerciseSessionsRoutes],
-	["/api/time-entries", timeEntriesRoutes],
-	["/api/whatsapp", whatsappRoutes],
-	["/api/whatsapp/webhook", whatsappWebhookRoutes],
-	["/api/whatsapp/inbox", whatsappInboxRoutes],
-	["/api/precadastro", precadastroRoutes],
-	["/api/telemedicine", telemedicineRoutes],
-	["/api/image-processor", imageProcessorRoutes],
-	["/api/calendar", calendarRoutes],
-	["/api/projects", projectsRoutes],
-	["/api/reports", reportsRoutes],
-	["/api/public-booking", publicBookingRoutes],
-	["/api/integrations", integrationsRoutes],
-	["/api/security", securityRoutes],
-	["/api/treatment-cycles", treatmentCyclesRoutes],
-	["/api/evolution-versions", evolutionVersionsRoutes],
-	["/api/exercise-plans", exercisePlansRoutes],
-	["/api/activity-lab", activityLabRoutes],
-	["/api/patient-portal", patientPortalRoutes],
-	["/api/audit-logs", auditRoutes],
-	["/api/analytics", analyticsRoutes],
-	["/api/insights", analyticsRoutes],
-	["/api", eventosRoutes],
-	["/api/innovations", innovationsRoutes],
-	["/api/tarefas", tarefasRoutes],
-	["/api/invitations", invitationsRoutes],
-	["/api/satisfaction-surveys", satisfactionSurveysRoutes],
-	["/api/wearables", wearablesRoutes],
-	["/api/document-signatures", documentSignaturesRoutes],
-	["/api/marketing", marketingRoutes],
-	["/api/biomechanics", biomechanicsRoutes],
-	["/api/ai", aiRoutes],
-	["/api/ia-studio", aiStudioRoutes],
-	["/api/agents", aiAgentsRoutes],
-	["/api/fcm-tokens", fcmTokensRoutes],
-	["/api/webhooks", webhooksRoutes],
-	["/api/messaging", messagingRoutes],
-	["/api/boards", boardsRoutes],
-	["/api/standardized-tests", standardizedTestsRoutes],
-	["/api/commissions", commissionsRoutes],
-	["/api/nfse", nfseRoutes],
-	["/api/packages", packagesRoutes],
-	["/api/announcements", announcementsRoutes],
-	["/api/admin/seed-templates", adminSeedTemplatesRoutes],
-	["/api/search", searchRoutes],
-	["/api/reports/pdf", reportsPdfRoutes],
-	["/api/events", businessEventsRoutes],
-	["/api/ai-search", aiSearchApp],
-	["/api/ai-config", aiConfigRoutes],
-	["/api/ai-clinical-search", aiClinicalSearchRoutes],
+  ["/api/ai-trigger-dt", triggerDigitalTwinRoutes],
+  ["/api/ai-clinical-search", aiClinicalSearchRoutes],
+  ["/api/exercises", exercisesRoutes],
+  ["/api/protocols", protocolsRoutes],
+  ["/api/wiki", wikiRoutes],
+  ["/api/knowledge", knowledgeRoutes],
+  ["/api/templates", templatesRoutes],
+  ["/api/sessions", sessionsRoutes],
+  ["/api/auth", authRoutes],
+  ["/api/media", mediaRoutes],
+  ["/api/patients", patientsRoutes],
+  ["/api/appointments", appointmentsRoutes],
+  ["/api/documents", documentsRoutes],
+  ["/api/exams", examsRoutes],
+  ["/api/medical-requests", medicalRequestsRoutes],
+  ["/api/goals", goalsRoutes],
+  ["/api/profile", profileRoutes],
+  ["/api/doctors", doctorsRoutes],
+  ["/api/goal-profiles", goalProfilesRoutes],
+  ["/api/financial", financialRoutes],
+  ["/api/scheduling", schedulingRoutes],
+  ["/api/crm", crmRoutes],
+  ["/api/clinical", clinicalRoutes],
+  ["/api/notifications", notificationsRoutes],
+  ["/api/communications", communicationsRoutes],
+  ["/api/organizations", organizationsRoutes],
+  ["/api/organization-members", organizationMembersRoutes],
+  ["/api/evolution", evolutionRoutes],
+  ["/api/evaluation-forms", evaluationFormsRoutes],
+  ["/api/notification-preferences", notificationPreferencesRoutes],
+  ["/api/prestadores", prestadoresRoutes],
+  ["/api/recibos", recibosRoutes],
+  ["/api/feriados", feriadosRoutes],
+  ["/api/push-subscriptions", pushSubscriptionsRoutes],
+  ["/api/automation", automationRoutes],
+  ["/api/gamification-notifications", gamificationNotificationsRoutes],
+  ["/api/gamification", gamificationRoutes],
+  ["/api/exercise-videos", exerciseVideosRoutes],
+  ["/api/exercise-sessions", exerciseSessionsRoutes],
+  ["/api/time-entries", timeEntriesRoutes],
+  ["/api/whatsapp", whatsappRoutes],
+  ["/api/whatsapp/webhook", whatsappWebhookRoutes],
+  ["/api/whatsapp/inbox", whatsappInboxRoutes],
+  ["/api/precadastro", precadastroRoutes],
+  ["/api/telemedicine", telemedicineRoutes],
+  ["/api/image-processor", imageProcessorRoutes],
+  ["/api/calendar", calendarRoutes],
+  ["/api/projects", projectsRoutes],
+  ["/api/reports", reportsRoutes],
+  ["/api/public-booking", publicBookingRoutes],
+  ["/api/integrations", integrationsRoutes],
+  ["/api/security", securityRoutes],
+  ["/api/treatment-cycles", treatmentCyclesRoutes],
+  ["/api/evolution-versions", evolutionVersionsRoutes],
+  ["/api/exercise-plans", exercisePlansRoutes],
+  ["/api/activity-lab", activityLabRoutes],
+  ["/api/patient-portal", patientPortalRoutes],
+  ["/api/audit-logs", auditRoutes],
+  ["/api/analytics", analyticsRoutes],
+  ["/api/insights", analyticsRoutes],
+  ["/api", eventosRoutes],
+  ["/api/innovations", innovationsRoutes],
+  ["/api/tarefas", tarefasRoutes],
+  ["/api/invitations", invitationsRoutes],
+  ["/api/satisfaction-surveys", satisfactionSurveysRoutes],
+  ["/api/wearables", wearablesRoutes],
+  ["/api/document-signatures", documentSignaturesRoutes],
+  ["/api/marketing", marketingRoutes],
+  ["/api/biomechanics", biomechanicsRoutes],
+  ["/api/ai", aiRoutes],
+  ["/api/ia-studio", aiStudioRoutes],
+  ["/api/agents", aiAgentsRoutes],
+  ["/api/fcm-tokens", fcmTokensRoutes],
+  ["/api/webhooks", webhooksRoutes],
+  ["/api/messaging", messagingRoutes],
+  ["/api/boards", boardsRoutes],
+  ["/api/standardized-tests", standardizedTestsRoutes],
+  ["/api/commissions", commissionsRoutes],
+  ["/api/nfse", nfseRoutes],
+  ["/api/packages", packagesRoutes],
+  ["/api/announcements", announcementsRoutes],
+  ["/api/admin/seed-templates", adminSeedTemplatesRoutes],
+  ["/api/search", searchRoutes],
+  ["/api/reports/pdf", reportsPdfRoutes],
+  ["/api/events", businessEventsRoutes],
+  ["/api/ai-search", aiSearchApp],
+  ["/api/ai-config", aiConfigRoutes],
+  ["/api/ai-clinical-search", aiClinicalSearchRoutes],
 ] as const;
 
 apiRoutes.forEach(([path, router]) => {
-	app.route(path, router as any);
+  app.route(path, router as any);
 });
 
 // REALTIME
 app.get("/api/realtime", async (c) => {
-	if (c.req.header("Upgrade") !== "websocket")
-		return c.json({ error: "Upgrade required" }, 400);
-	const token = c.req.query("token");
-	if (!token) return c.json({ error: "Token required" }, 401);
-	const authUser = await verifyToken(c, c.env);
-	if (!authUser) return c.json({ error: "Invalid token" }, 401);
-	const id = c.env.ORGANIZATION_STATE.idFromName(authUser.organizationId);
-	const obj = c.env.ORGANIZATION_STATE.get(id);
-	// Durable Object espera path /ws com userId e orgId
-	const wsUrl = new URL(c.req.url);
-	wsUrl.pathname = "/ws";
-	wsUrl.searchParams.set("userId", authUser.uid);
-	wsUrl.searchParams.set("orgId", authUser.organizationId);
-	return obj.fetch(new Request(wsUrl.toString(), c.req.raw));
+  if (c.req.header("Upgrade") !== "websocket") return c.json({ error: "Upgrade required" }, 400);
+  const token = c.req.query("token");
+  if (!token) return c.json({ error: "Token required" }, 401);
+  const authUser = await verifyToken(c, c.env);
+  if (!authUser) return c.json({ error: "Invalid token" }, 401);
+  const id = c.env.ORGANIZATION_STATE.idFromName(authUser.organizationId);
+  const obj = c.env.ORGANIZATION_STATE.get(id);
+  // Durable Object espera path /ws com userId e orgId
+  const wsUrl = new URL(c.req.url);
+  wsUrl.pathname = "/ws";
+  wsUrl.searchParams.set("userId", authUser.uid);
+  wsUrl.searchParams.set("orgId", authUser.organizationId);
+  return obj.fetch(new Request(wsUrl.toString(), c.req.raw));
 });
 
 // ERROR HANDLER (BLINDADO COM CORS)
@@ -320,13 +314,13 @@ export { OrganizationState } from "./lib/realtime";
 export { PatientAgent } from "./agents/PatientAgent";
 export { AssessmentLiveSession } from "./agents/AssessmentLiveSession";
 export {
-	AppointmentReminderWorkflow,
-	PatientOnboardingWorkflow,
-	NFSeWorkflow,
-	HEPComplianceWorkflow,
-	PatientDischargeWorkflow,
-	PatientReengagementWorkflow,
-	PatientDigitalTwinWorkflow,
+  AppointmentReminderWorkflow,
+  PatientOnboardingWorkflow,
+  NFSeWorkflow,
+  HEPComplianceWorkflow,
+  PatientDischargeWorkflow,
+  PatientReengagementWorkflow,
+  PatientDigitalTwinWorkflow,
 } from "./workflows";
 
 // Hono RPC — exporta o tipo da app para type-safe client no frontend
@@ -337,56 +331,52 @@ export type AppType = typeof app;
  * headers do middleware (CORS, secureHeaders) não corrompam a resposta 101.
  */
 async function handleRealtimeWS(request: Request, env: Env): Promise<Response> {
-	const url = new URL(request.url);
-	const token = url.searchParams.get("token");
-	if (!token)
-		return new Response(JSON.stringify({ error: "Token required" }), {
-			status: 401,
-		});
+  const url = new URL(request.url);
+  const token = url.searchParams.get("token");
+  if (!token)
+    return new Response(JSON.stringify({ error: "Token required" }), {
+      status: 401,
+    });
 
-	// eslint-disable-next-line @typescript-eslint/no-explicit-any
-	const authUser = await verifyToken(
-		{
-			req: {
-				header: () => undefined,
-				query: (k: string) => (k === "token" ? token : undefined),
-			},
-		} as any,
-		env,
-	);
-	if (!authUser)
-		return new Response(JSON.stringify({ error: "Invalid token" }), {
-			status: 401,
-		});
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const authUser = await verifyToken(
+    {
+      req: {
+        header: () => undefined,
+        query: (k: string) => (k === "token" ? token : undefined),
+      },
+    } as any,
+    env,
+  );
+  if (!authUser)
+    return new Response(JSON.stringify({ error: "Invalid token" }), {
+      status: 401,
+    });
 
-	const id = env.ORGANIZATION_STATE.idFromName(authUser.organizationId);
-	const obj = env.ORGANIZATION_STATE.get(id);
-	const wsUrl = new URL(request.url);
-	wsUrl.pathname = "/ws";
-	wsUrl.searchParams.set("userId", authUser.uid);
-	wsUrl.searchParams.set("orgId", authUser.organizationId);
-	return obj.fetch(new Request(wsUrl.toString(), request));
+  const id = env.ORGANIZATION_STATE.idFromName(authUser.organizationId);
+  const obj = env.ORGANIZATION_STATE.get(id);
+  const wsUrl = new URL(request.url);
+  wsUrl.pathname = "/ws";
+  wsUrl.searchParams.set("userId", authUser.uid);
+  wsUrl.searchParams.set("orgId", authUser.organizationId);
+  return obj.fetch(new Request(wsUrl.toString(), request));
 }
 
 export default {
-	async fetch(
-		request: Request,
-		env: Env,
-		ctx: ExecutionContext,
-	): Promise<Response> {
-		// 1. Roteamento de Agentes (Cloudflare Agents SDK) - Intercepta /agents/*
-		const agentResponse = await routeAgentRequest(request, env);
-		if (agentResponse) return agentResponse;
+  async fetch(request: Request, env: Env, ctx: ExecutionContext): Promise<Response> {
+    // 1. Roteamento de Agentes (Cloudflare Agents SDK) - Intercepta /agents/*
+    const agentResponse = await routeAgentRequest(request, env);
+    if (agentResponse) return agentResponse;
 
-		// WebSocket upgrades: bypass Hono middleware (evita corrupção da resposta 101)
-		if (
-			request.headers.get("Upgrade") === "websocket" &&
-			new URL(request.url).pathname === "/api/realtime"
-		) {
-			return handleRealtimeWS(request, env);
-		}
-		return app.fetch(request, env, ctx);
-	},
-	scheduled: handleScheduled,
-	queue: handleQueue,
+    // WebSocket upgrades: bypass Hono middleware (evita corrupção da resposta 101)
+    if (
+      request.headers.get("Upgrade") === "websocket" &&
+      new URL(request.url).pathname === "/api/realtime"
+    ) {
+      return handleRealtimeWS(request, env);
+    }
+    return app.fetch(request, env, ctx);
+  },
+  scheduled: handleScheduled,
+  queue: handleQueue,
 };

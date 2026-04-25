@@ -13,17 +13,17 @@
  * GET    /api/evaluation-forms/:id/responses?patientId=
  * POST   /api/evaluation-forms/:id/responses
  */
-import { Hono } from 'hono';
-import { createPool } from '../lib/db';
-import { requireAuth, type AuthVariables } from '../lib/auth';
-import type { Env } from '../types/env';
-import { isUuid } from '../lib/validators';
+import { Hono } from "hono";
+import { createPool } from "../lib/db";
+import { requireAuth, type AuthVariables } from "../lib/auth";
+import type { Env } from "../types/env";
+import { isUuid } from "../lib/validators";
 
 const app = new Hono<{ Bindings: Env; Variables: AuthVariables }>();
 
 function normalizeOptions(value: unknown): unknown[] | null {
   if (Array.isArray(value)) return value;
-  if (typeof value === 'string') {
+  if (typeof value === "string") {
     try {
       const parsed = JSON.parse(value);
       return Array.isArray(parsed) ? parsed : null;
@@ -34,13 +34,13 @@ function normalizeOptions(value: unknown): unknown[] | null {
   return null;
 }
 
-const evaluationResponseStatuses = new Set(['scheduled', 'in_progress', 'completed', 'cancelled']);
+const evaluationResponseStatuses = new Set(["scheduled", "in_progress", "completed", "cancelled"]);
 
 // Global flag to avoid redundant table verification across requests within the same worker instance
 let tablesInitialized = false;
 
 function normalizeDateInput(value: unknown): string | null {
-  if (typeof value !== 'string' || !value.trim()) return null;
+  if (typeof value !== "string" || !value.trim()) return null;
   const parsed = new Date(value);
   if (Number.isNaN(parsed.getTime())) return null;
   return parsed.toISOString();
@@ -154,24 +154,27 @@ async function ensureTables(env: Env): Promise<void> {
       try {
         await pool.query(statement);
       } catch (e) {
-        console.error(`[ensureTables] Error executing statement: ${statement.substring(0, 50)}...`, e);
+        console.error(
+          `[ensureTables] Error executing statement: ${statement.substring(0, 50)}...`,
+          e,
+        );
       }
     }
     tablesInitialized = true;
   } catch (error) {
-    console.error('[ensureTables] Critical error during table verification', error);
+    console.error("[ensureTables] Critical error during table verification", error);
   } finally {
     await pool.end();
   }
 }
 
-app.get('/', requireAuth, async (c) => {
-  const user = c.get('user');
+app.get("/", requireAuth, async (c) => {
+  const user = c.get("user");
   await ensureTables(c.env);
   const pool = await createPool(c.env);
   const { tipo, ativo, favorite } = c.req.query();
 
-  const conditions: string[] = ['organization_id = $1'];
+  const conditions: string[] = ["organization_id = $1"];
   const params: unknown[] = [user.organizationId];
 
   if (tipo) {
@@ -179,36 +182,40 @@ app.get('/', requireAuth, async (c) => {
     conditions.push(`tipo = $${params.length}`);
   }
   if (ativo !== undefined) {
-    params.push(ativo === 'true');
+    params.push(ativo === "true");
     conditions.push(`ativo = $${params.length}`);
   }
   if (favorite !== undefined) {
-    params.push(favorite === 'true');
+    params.push(favorite === "true");
     conditions.push(`is_favorite = $${params.length}`);
   }
 
   const result = await pool.query(
     `SELECT * FROM evaluation_forms
-     WHERE ${conditions.join(' AND ')}
+     WHERE ${conditions.join(" AND ")}
      ORDER BY nome ASC`,
     params,
   );
-  try { return c.json({ data: result.rows || result }); } catch { return c.json({ data: [] }); }
+  try {
+    return c.json({ data: result.rows || result });
+  } catch {
+    return c.json({ data: [] });
+  }
 });
 
-app.get('/responses', requireAuth, async (c) => {
-  const user = c.get('user');
+app.get("/responses", requireAuth, async (c) => {
+  const user = c.get("user");
   await ensureTables(c.env);
   const pool = await createPool(c.env);
-  const patientId = c.req.query('patientId');
+  const patientId = c.req.query("patientId");
 
-  if (!patientId) return c.json({ error: 'patientId é obrigatório' }, 400);
+  if (!patientId) return c.json({ error: "patientId é obrigatório" }, 400);
 
   const patientResult = await pool.query(
     `SELECT id FROM patients WHERE id = $1 AND organization_id = $2 LIMIT 1`,
     [patientId, user.organizationId],
   );
-  if (!patientResult.rows.length) return c.json({ error: 'Paciente não encontrado' }, 404);
+  if (!patientResult.rows.length) return c.json({ error: "Paciente não encontrado" }, 404);
 
   const result = await pool.query(
     `
@@ -236,13 +243,13 @@ app.get('/responses', requireAuth, async (c) => {
   return c.json({ data: result.rows || [] });
 });
 
-app.get('/responses/:responseId', requireAuth, async (c) => {
-  const user = c.get('user');
+app.get("/responses/:responseId", requireAuth, async (c) => {
+  const user = c.get("user");
   await ensureTables(c.env);
   const pool = await createPool(c.env);
   const { responseId } = c.req.param();
 
-  if (!isUuid(responseId)) return c.json({ error: 'Avaliação não encontrada' }, 404);
+  if (!isUuid(responseId)) return c.json({ error: "Avaliação não encontrada" }, 404);
 
   const responseResult = await pool.query(
     `
@@ -262,7 +269,7 @@ app.get('/responses/:responseId', requireAuth, async (c) => {
     `,
     [responseId, user.organizationId],
   );
-  if (!responseResult.rows.length) return c.json({ error: 'Avaliação não encontrada' }, 404);
+  if (!responseResult.rows.length) return c.json({ error: "Avaliação não encontrada" }, 404);
 
   const response = responseResult.rows[0] as Record<string, unknown>;
   const fieldsResult = await pool.query(
@@ -288,17 +295,17 @@ app.get('/responses/:responseId', requireAuth, async (c) => {
   });
 });
 
-app.put('/responses/:responseId', requireAuth, async (c) => {
-  const user = c.get('user');
+app.put("/responses/:responseId", requireAuth, async (c) => {
+  const user = c.get("user");
   await ensureTables(c.env);
   const pool = await createPool(c.env);
   const { responseId } = c.req.param();
 
-  if (!isUuid(responseId)) return c.json({ error: 'Avaliação não encontrada' }, 404);
+  if (!isUuid(responseId)) return c.json({ error: "Avaliação não encontrada" }, 404);
 
   const body = (await c.req.json()) as Record<string, unknown>;
 
-  const sets: string[] = ['updated_at = NOW()'];
+  const sets: string[] = ["updated_at = NOW()"];
   const params: unknown[] = [];
 
   if (body.responses !== undefined) {
@@ -309,16 +316,16 @@ app.put('/responses/:responseId', requireAuth, async (c) => {
   if (body.status !== undefined) {
     const status = String(body.status);
     if (!evaluationResponseStatuses.has(status)) {
-      return c.json({ error: 'Status de avaliação inválido' }, 400);
+      return c.json({ error: "Status de avaliação inválido" }, 400);
     }
     params.push(status);
     sets.push(`status = $${params.length}`);
 
-    if (status === 'in_progress' && body.started_at === undefined) {
-      sets.push('started_at = COALESCE(started_at, NOW())');
+    if (status === "in_progress" && body.started_at === undefined) {
+      sets.push("started_at = COALESCE(started_at, NOW())");
     }
-    if (status === 'completed' && body.completed_at === undefined) {
-      sets.push('completed_at = COALESCE(completed_at, NOW())');
+    if (status === "completed" && body.completed_at === undefined) {
+      sets.push("completed_at = COALESCE(completed_at, NOW())");
     }
   }
 
@@ -335,31 +342,31 @@ app.put('/responses/:responseId', requireAuth, async (c) => {
     sets.push(`completed_at = $${params.length}`);
   }
   if (body.appointment_id !== undefined) {
-    params.push(typeof body.appointment_id === 'string' ? body.appointment_id : null);
+    params.push(typeof body.appointment_id === "string" ? body.appointment_id : null);
     sets.push(`appointment_id = $${params.length}`);
   }
 
   params.push(responseId, user.organizationId);
   const result = await pool.query(
     `UPDATE patient_evaluation_responses
-     SET ${sets.join(', ')}
+     SET ${sets.join(", ")}
      WHERE id = $${params.length - 1}
        AND organization_id = $${params.length}
      RETURNING *`,
     params,
   );
 
-  if (!result.rows.length) return c.json({ error: 'Avaliação não encontrada' }, 404);
+  if (!result.rows.length) return c.json({ error: "Avaliação não encontrada" }, 404);
   return c.json({ data: result.rows[0] });
 });
 
-app.get('/:id', requireAuth, async (c) => {
-  const user = c.get('user');
+app.get("/:id", requireAuth, async (c) => {
+  const user = c.get("user");
   await ensureTables(c.env);
   const pool = await createPool(c.env);
   const { id } = c.req.param();
 
-  if (!isUuid(id)) return c.json({ error: 'Ficha não encontrada' }, 404);
+  if (!isUuid(id)) return c.json({ error: "Ficha não encontrada" }, 404);
 
   const formResult = await pool.query(
     `SELECT * FROM evaluation_forms
@@ -368,7 +375,7 @@ app.get('/:id', requireAuth, async (c) => {
     [id, user.organizationId],
   );
   if (!formResult.rows.length) {
-    return c.json({ error: 'Ficha não encontrada' }, 404);
+    return c.json({ error: "Ficha não encontrada" }, 404);
   }
 
   let fields: unknown[] = [];
@@ -383,13 +390,13 @@ app.get('/:id', requireAuth, async (c) => {
   return c.json({ data: { ...formResult.rows[0], fields } });
 });
 
-app.post('/', requireAuth, async (c) => {
-  const user = c.get('user');
+app.post("/", requireAuth, async (c) => {
+  const user = c.get("user");
   await ensureTables(c.env);
   const pool = await createPool(c.env);
   const body = (await c.req.json()) as Record<string, unknown>;
 
-  if (!body.nome) return c.json({ error: 'nome é obrigatório' }, 400);
+  if (!body.nome) return c.json({ error: "nome é obrigatório" }, 400);
 
   const result = await pool.query(
     `INSERT INTO evaluation_forms
@@ -403,7 +410,7 @@ app.post('/', requireAuth, async (c) => {
       String(body.nome),
       body.descricao ?? null,
       body.referencias ?? null,
-      body.tipo ?? 'anamnese',
+      body.tipo ?? "anamnese",
       body.ativo !== false,
       body.is_favorite === true,
       body.usage_count != null ? Number(body.usage_count) : 0,
@@ -415,17 +422,17 @@ app.post('/', requireAuth, async (c) => {
   return c.json({ data: result.rows[0] }, 201);
 });
 
-app.put('/:id', requireAuth, async (c) => {
-  const user = c.get('user');
+app.put("/:id", requireAuth, async (c) => {
+  const user = c.get("user");
   await ensureTables(c.env);
   const pool = await createPool(c.env);
   const { id } = c.req.param();
 
-  if (!isUuid(id)) return c.json({ error: 'Ficha não encontrada' }, 404);
+  if (!isUuid(id)) return c.json({ error: "Ficha não encontrada" }, 404);
 
   const body = (await c.req.json()) as Record<string, unknown>;
 
-  const sets: string[] = ['updated_at = NOW()'];
+  const sets: string[] = ["updated_at = NOW()"];
   const params: unknown[] = [];
 
   if (body.nome !== undefined) {
@@ -471,22 +478,22 @@ app.put('/:id', requireAuth, async (c) => {
 
   params.push(id, user.organizationId);
   const result = await pool.query(
-    `UPDATE evaluation_forms SET ${sets.join(', ')}
+    `UPDATE evaluation_forms SET ${sets.join(", ")}
      WHERE id = $${params.length - 1} AND organization_id = $${params.length}
      RETURNING *`,
     params,
   );
-  if (!result.rows.length) return c.json({ error: 'Ficha não encontrada' }, 404);
+  if (!result.rows.length) return c.json({ error: "Ficha não encontrada" }, 404);
   return c.json({ data: result.rows[0] });
 });
 
-app.delete('/:id', requireAuth, async (c) => {
-  const user = c.get('user');
+app.delete("/:id", requireAuth, async (c) => {
+  const user = c.get("user");
   await ensureTables(c.env);
   const pool = await createPool(c.env);
   const { id } = c.req.param();
 
-  if (!isUuid(id)) return c.json({ error: 'Ficha não encontrada' }, 404);
+  if (!isUuid(id)) return c.json({ error: "Ficha não encontrada" }, 404);
 
   const result = await pool.query(
     `UPDATE evaluation_forms
@@ -496,17 +503,17 @@ app.delete('/:id', requireAuth, async (c) => {
     [id, user.organizationId],
   );
 
-  if (!result.rows.length) return c.json({ error: 'Ficha não encontrada' }, 404);
+  if (!result.rows.length) return c.json({ error: "Ficha não encontrada" }, 404);
   return c.json({ ok: true });
 });
 
-app.post('/:id/duplicate', requireAuth, async (c) => {
-  const user = c.get('user');
+app.post("/:id/duplicate", requireAuth, async (c) => {
+  const user = c.get("user");
   await ensureTables(c.env);
   const pool = await createPool(c.env);
   const { id } = c.req.param();
 
-  if (!isUuid(id)) return c.json({ error: 'Ficha não encontrada' }, 404);
+  if (!isUuid(id)) return c.json({ error: "Ficha não encontrada" }, 404);
 
   const originalFormResult = await pool.query(
     `SELECT * FROM evaluation_forms
@@ -514,7 +521,7 @@ app.post('/:id/duplicate', requireAuth, async (c) => {
      LIMIT 1`,
     [id, user.organizationId],
   );
-  if (!originalFormResult.rows.length) return c.json({ error: 'Ficha não encontrada' }, 404);
+  if (!originalFormResult.rows.length) return c.json({ error: "Ficha não encontrada" }, 404);
 
   const original = originalFormResult.rows[0] as Record<string, unknown>;
 
@@ -527,10 +534,10 @@ app.post('/:id/duplicate', requireAuth, async (c) => {
     [
       user.organizationId,
       user.uid,
-      `${String(original.nome ?? 'Ficha')} (Cópia)`,
+      `${String(original.nome ?? "Ficha")} (Cópia)`,
       original.descricao ?? null,
       original.referencias ?? null,
-      original.tipo ?? 'anamnese',
+      original.tipo ?? "anamnese",
       false,
       0,
       null,
@@ -553,8 +560,8 @@ app.post('/:id/duplicate', requireAuth, async (c) => {
        VALUES ($1,$2,$3,$4,$5::jsonb,$6,$7,$8,$9,$10,$11,NOW(),NOW())`,
       [
         duplicated.id,
-        field.tipo_campo ?? 'texto_curto',
-        field.label ?? '',
+        field.tipo_campo ?? "texto_curto",
+        field.label ?? "",
         field.placeholder ?? null,
         JSON.stringify(normalizeOptions(field.opcoes) ?? []),
         field.ordem ?? 0,
@@ -570,13 +577,13 @@ app.post('/:id/duplicate', requireAuth, async (c) => {
   return c.json({ data: duplicated }, 201);
 });
 
-app.post('/:id/fields', requireAuth, async (c) => {
-  const user = c.get('user');
+app.post("/:id/fields", requireAuth, async (c) => {
+  const user = c.get("user");
   await ensureTables(c.env);
   const pool = await createPool(c.env);
   const { id } = c.req.param();
 
-  if (!isUuid(id)) return c.json({ error: 'Ficha não encontrada' }, 404);
+  if (!isUuid(id)) return c.json({ error: "Ficha não encontrada" }, 404);
 
   const body = (await c.req.json()) as Record<string, unknown>;
 
@@ -584,7 +591,7 @@ app.post('/:id/fields', requireAuth, async (c) => {
     `SELECT id FROM evaluation_forms WHERE id = $1 AND organization_id = $2 LIMIT 1`,
     [id, user.organizationId],
   );
-  if (!formCheck.rows.length) return c.json({ error: 'Ficha não encontrada' }, 404);
+  if (!formCheck.rows.length) return c.json({ error: "Ficha não encontrada" }, 404);
 
   const result = await pool.query(
     `INSERT INTO evaluation_form_fields
@@ -594,8 +601,8 @@ app.post('/:id/fields', requireAuth, async (c) => {
      RETURNING *`,
     [
       id,
-      body.tipo_campo ?? 'texto_curto',
-      body.label ?? '',
+      body.tipo_campo ?? "texto_curto",
+      body.label ?? "",
       body.placeholder ?? null,
       JSON.stringify(normalizeOptions(body.opcoes) ?? []),
       body.ordem ?? 0,
@@ -610,13 +617,13 @@ app.post('/:id/fields', requireAuth, async (c) => {
   return c.json({ data: result.rows[0] }, 201);
 });
 
-app.put('/fields/:fieldId', requireAuth, async (c) => {
-  const user = c.get('user');
+app.put("/fields/:fieldId", requireAuth, async (c) => {
+  const user = c.get("user");
   await ensureTables(c.env);
   const pool = await createPool(c.env);
   const { fieldId } = c.req.param();
 
-  if (!isUuid(fieldId)) return c.json({ error: 'Campo não encontrado' }, 404);
+  if (!isUuid(fieldId)) return c.json({ error: "Campo não encontrado" }, 404);
 
   const body = (await c.req.json()) as Record<string, unknown>;
 
@@ -630,9 +637,9 @@ app.put('/fields/:fieldId', requireAuth, async (c) => {
     `,
     [fieldId, user.organizationId],
   );
-  if (!ownership.rows.length) return c.json({ error: 'Campo não encontrado' }, 404);
+  if (!ownership.rows.length) return c.json({ error: "Campo não encontrado" }, 404);
 
-  const sets: string[] = ['updated_at = NOW()'];
+  const sets: string[] = ["updated_at = NOW()"];
   const params: unknown[] = [];
 
   if (body.tipo_campo !== undefined) {
@@ -679,22 +686,22 @@ app.put('/fields/:fieldId', requireAuth, async (c) => {
   params.push(fieldId);
   const result = await pool.query(
     `UPDATE evaluation_form_fields
-     SET ${sets.join(', ')}
+     SET ${sets.join(", ")}
      WHERE id = $${params.length}
      RETURNING *`,
     params,
   );
-  if (!result.rows.length) return c.json({ error: 'Campo não encontrado' }, 404);
+  if (!result.rows.length) return c.json({ error: "Campo não encontrado" }, 404);
   return c.json({ data: result.rows[0] });
 });
 
-app.delete('/fields/:fieldId', requireAuth, async (c) => {
-  const user = c.get('user');
+app.delete("/fields/:fieldId", requireAuth, async (c) => {
+  const user = c.get("user");
   await ensureTables(c.env);
   const pool = await createPool(c.env);
   const { fieldId } = c.req.param();
 
-  if (!isUuid(fieldId)) return c.json({ error: 'Campo não encontrado' }, 404);
+  if (!isUuid(fieldId)) return c.json({ error: "Campo não encontrado" }, 404);
 
   const result = await pool.query(
     `
@@ -707,22 +714,22 @@ app.delete('/fields/:fieldId', requireAuth, async (c) => {
     `,
     [fieldId, user.organizationId],
   );
-  if (!result.rows.length) return c.json({ error: 'Campo não encontrado' }, 404);
+  if (!result.rows.length) return c.json({ error: "Campo não encontrado" }, 404);
   return c.json({ ok: true });
 });
 
-app.get('/:id/responses', requireAuth, async (c) => {
-  const user = c.get('user');
+app.get("/:id/responses", requireAuth, async (c) => {
+  const user = c.get("user");
   await ensureTables(c.env);
   const pool = await createPool(c.env);
   const { id } = c.req.param();
 
-  if (!isUuid(id)) return c.json({ error: 'Ficha não encontrada' }, 404);
+  if (!isUuid(id)) return c.json({ error: "Ficha não encontrada" }, 404);
 
-  const patientId = c.req.query('patientId');
+  const patientId = c.req.query("patientId");
 
   const params: unknown[] = [id, user.organizationId];
-  const conditions = ['form_id = $1', 'organization_id = $2'];
+  const conditions = ["form_id = $1", "organization_id = $2"];
   if (patientId) {
     params.push(patientId);
     conditions.push(`patient_id = $${params.length}`);
@@ -731,60 +738,64 @@ app.get('/:id/responses', requireAuth, async (c) => {
   const result = await pool.query(
     `SELECT *
      FROM patient_evaluation_responses
-     WHERE ${conditions.join(' AND ')}
+     WHERE ${conditions.join(" AND ")}
      ORDER BY created_at DESC`,
     params,
   );
 
-  try { return c.json({ data: result.rows || result }); } catch { return c.json({ data: [] }); }
+  try {
+    return c.json({ data: result.rows || result });
+  } catch {
+    return c.json({ data: [] });
+  }
 });
 
-app.post('/:id/responses', requireAuth, async (c) => {
-  const user = c.get('user');
+app.post("/:id/responses", requireAuth, async (c) => {
+  const user = c.get("user");
   await ensureTables(c.env);
   const pool = await createPool(c.env);
   const { id } = c.req.param();
 
-  if (!isUuid(id)) return c.json({ error: 'Ficha não encontrada' }, 404);
+  if (!isUuid(id)) return c.json({ error: "Ficha não encontrada" }, 404);
 
   const body = (await c.req.json()) as Record<string, unknown>;
 
-  const patientId = typeof body.patient_id === 'string' ? body.patient_id : null;
-  if (!patientId) return c.json({ error: 'patient_id é obrigatório' }, 400);
+  const patientId = typeof body.patient_id === "string" ? body.patient_id : null;
+  if (!patientId) return c.json({ error: "patient_id é obrigatório" }, 400);
 
-  const status = typeof body.status === 'string' ? body.status : 'completed';
+  const status = typeof body.status === "string" ? body.status : "completed";
   if (!evaluationResponseStatuses.has(status)) {
-    return c.json({ error: 'Status de avaliação inválido' }, 400);
+    return c.json({ error: "Status de avaliação inválido" }, 400);
   }
 
   const scheduledFor = normalizeDateInput(body.scheduled_for);
-  if (status === 'scheduled') {
-    if (!scheduledFor) return c.json({ error: 'scheduled_for é obrigatório' }, 400);
+  if (status === "scheduled") {
+    if (!scheduledFor) return c.json({ error: "scheduled_for é obrigatório" }, 400);
     if (new Date(scheduledFor).getTime() < Date.now() - 60_000) {
-      return c.json({ error: 'Data da avaliação não pode estar no passado' }, 400);
+      return c.json({ error: "Data da avaliação não pode estar no passado" }, 400);
     }
   }
 
   const startedAt =
     normalizeDateInput(body.started_at) ??
-    (status === 'in_progress' ? new Date().toISOString() : null);
+    (status === "in_progress" ? new Date().toISOString() : null);
   const completedAt =
     normalizeDateInput(body.completed_at) ??
-    (status === 'completed' ? new Date().toISOString() : null);
+    (status === "completed" ? new Date().toISOString() : null);
 
   const [formResult, patientResult] = await Promise.all([
-    pool.query(
-      `SELECT id FROM evaluation_forms WHERE id = $1 AND organization_id = $2 LIMIT 1`,
-      [id, user.organizationId],
-    ),
-    pool.query(
-      `SELECT id FROM patients WHERE id = $1 AND organization_id = $2 LIMIT 1`,
-      [patientId, user.organizationId],
-    ),
+    pool.query(`SELECT id FROM evaluation_forms WHERE id = $1 AND organization_id = $2 LIMIT 1`, [
+      id,
+      user.organizationId,
+    ]),
+    pool.query(`SELECT id FROM patients WHERE id = $1 AND organization_id = $2 LIMIT 1`, [
+      patientId,
+      user.organizationId,
+    ]),
   ]);
 
-  if (!formResult.rows.length) return c.json({ error: 'Ficha não encontrada' }, 404);
-  if (!patientResult.rows.length) return c.json({ error: 'Paciente não encontrado' }, 404);
+  if (!formResult.rows.length) return c.json({ error: "Ficha não encontrada" }, 404);
+  if (!patientResult.rows.length) return c.json({ error: "Paciente não encontrado" }, 404);
 
   const result = await pool.query(
     `INSERT INTO patient_evaluation_responses
@@ -796,7 +807,7 @@ app.post('/:id/responses', requireAuth, async (c) => {
       user.organizationId,
       patientId,
       id,
-      typeof body.appointment_id === 'string' ? body.appointment_id : null,
+      typeof body.appointment_id === "string" ? body.appointment_id : null,
       JSON.stringify(body.responses ?? {}),
       status,
       scheduledFor,

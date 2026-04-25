@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState } from "react";
 
 import {
   View,
@@ -8,11 +8,11 @@ import {
   TouchableOpacity,
   TextInputProps,
   ViewStyle,
-} from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
-import { useColors } from '@/hooks/useColorScheme';
+} from "react-native";
+import { Ionicons } from "@expo/vector-icons";
+import { useColors } from "@/hooks/useColorScheme";
 
-type MaskType = 'phone' | 'cpf' | 'cep' | 'date';
+type MaskType = "phone" | "cpf" | "cep" | "date";
 
 interface InputProps extends TextInputProps {
   label?: string;
@@ -28,10 +28,10 @@ interface InputProps extends TextInputProps {
  * Apply mask to input value
  */
 function applyMask(value: string, mask: MaskType): string {
-  const cleanValue = value.replace(/\D/g, '');
+  const cleanValue = value.replace(/\D/g, "");
 
   switch (mask) {
-    case 'phone':
+    case "phone":
       if (cleanValue.length <= 2) {
         return cleanValue;
       } else if (cleanValue.length <= 7) {
@@ -40,7 +40,7 @@ function applyMask(value: string, mask: MaskType): string {
         return `(${cleanValue.slice(0, 2)}) ${cleanValue.slice(2, 7)}-${cleanValue.slice(7, 11)}`;
       }
 
-    case 'cpf':
+    case "cpf":
       if (cleanValue.length <= 3) {
         return cleanValue;
       } else if (cleanValue.length <= 6) {
@@ -51,14 +51,14 @@ function applyMask(value: string, mask: MaskType): string {
         return `${cleanValue.slice(0, 3)}.${cleanValue.slice(3, 6)}.${cleanValue.slice(6, 9)}-${cleanValue.slice(9, 11)}`;
       }
 
-    case 'cep':
+    case "cep":
       if (cleanValue.length <= 5) {
         return cleanValue;
       } else {
         return `${cleanValue.slice(0, 5)}-${cleanValue.slice(5, 8)}`;
       }
 
-    case 'date':
+    case "date":
       if (cleanValue.length <= 2) {
         return cleanValue;
       } else if (cleanValue.length <= 4) {
@@ -87,7 +87,7 @@ export function Input({
   const colors = useColors();
   const [isFocused, setIsFocused] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
-  const [maskedValue, setMaskedValue] = useState('');
+  const [maskedValue, setMaskedValue] = useState("");
 
   const isPassword = secureTextEntry;
   const actualSecureTextEntry = isPassword && !showPassword;
@@ -102,26 +102,20 @@ export function Input({
 
     if (onChangeText) {
       // Pass both masked and unmasked values
-      const cleanValue = mask ? text.replace(/\D/g, '') : text;
+      const cleanValue = mask ? text.replace(/\D/g, "") : text;
       (onChangeText as any)(newValue, cleanValue);
     }
   };
 
   return (
     <View style={[styles.container, containerStyle]}>
-      {label && (
-        <Text style={[styles.label, { color: colors.text }]}>{label}</Text>
-      )}
+      {label && <Text style={[styles.label, { color: colors.text }]}>{label}</Text>}
       <View
         style={[
           styles.inputContainer,
           {
             backgroundColor: colors.surface,
-            borderColor: error
-              ? colors.error
-              : isFocused
-              ? colors.primary
-              : colors.border,
+            borderColor: error ? colors.error : isFocused ? colors.primary : colors.border,
           },
         ]}
       >
@@ -151,12 +145,9 @@ export function Input({
           {...props}
         />
         {isPassword && (
-          <TouchableOpacity
-            onPress={() => setShowPassword(!showPassword)}
-            style={styles.rightIcon}
-          >
+          <TouchableOpacity onPress={() => setShowPassword(!showPassword)} style={styles.rightIcon}>
             <Ionicons
-              name={showPassword ? 'eye-off' : 'eye'}
+              name={showPassword ? "eye-off" : "eye"}
               size={20}
               color={colors.textSecondary}
             />
@@ -172,9 +163,7 @@ export function Input({
           </TouchableOpacity>
         )}
       </View>
-      {error && (
-        <Text style={[styles.error, { color: colors.error }]}>{error}</Text>
-      )}
+      {error && <Text style={[styles.error, { color: colors.error }]}>{error}</Text>}
     </View>
   );
 }
@@ -185,12 +174,12 @@ const styles = StyleSheet.create({
   },
   label: {
     fontSize: 14,
-    fontWeight: '500',
+    fontWeight: "500",
     marginBottom: 6,
   },
   inputContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     borderRadius: 12,
     borderWidth: 1.5,
     minHeight: 52,

@@ -3,18 +3,18 @@
  */
 
 export enum AnalysisType {
-  POSTURE = 'posture',
-  REPETITION = 'repetition',
-  RANGE = 'range',
-  FORM = 'form'
+  POSTURE = "posture",
+  REPETITION = "repetition",
+  RANGE = "range",
+  FORM = "form",
 }
 
 export enum ExerciseType {
-  SQUAT = 'squat',
-  PUSHUP = 'pushup',
-  LATERAL_RAISE = 'lateral_raise',
-  PLANK = 'plank',
-  LUNGE = 'lunge',
+  SQUAT = "squat",
+  PUSHUP = "pushup",
+  LATERAL_RAISE = "lateral_raise",
+  PLANK = "plank",
+  LUNGE = "lunge",
 }
 
 export interface PoseLandmark {

@@ -1,12 +1,16 @@
-import { config } from 'dotenv';
-import { neon } from '@neondatabase/serverless';
-import { drizzle } from 'drizzle-orm/neon-http';
-import * as schema from '../packages/db/src/schema/index.ts';
-import { eq, and, sql } from 'drizzle-orm';
-import { exercises, exerciseCategories, exerciseFavorites } from '../packages/db/src/schema/exercises.ts';
+import { config } from "dotenv";
+import { neon } from "@neondatabase/serverless";
+import { drizzle } from "drizzle-orm/neon-http";
+import * as schema from "../packages/db/src/schema/index.ts";
+import { eq, and, sql } from "drizzle-orm";
+import {
+  exercises,
+  exerciseCategories,
+  exerciseFavorites,
+} from "../packages/db/src/schema/exercises.ts";
 
-config({ path: './apps/api/.env.production' });
-config({ path: './apps/api/.env' });
+config({ path: "./apps/api/.env.production" });
+config({ path: "./apps/api/.env" });
 
 const sql_neon = neon(process.env.NEON_URL || process.env.DATABASE_URL);
 const db = drizzle(sql_neon, { schema });
@@ -17,7 +21,7 @@ async function run() {
     const offset = 0;
     const conditions = [eq(exercises.isActive, true), eq(exercises.isPublic, true)];
     const where = and(...conditions);
-    
+
     console.log("Running query...");
     const [rows, countResult] = await Promise.all([
       db
@@ -41,10 +45,7 @@ async function run() {
           referencePose: exercises.referencePose,
         })
         .from(exercises)
-        .leftJoin(
-          exerciseCategories,
-          eq(exercises.categoryId, exerciseCategories.id),
-        )
+        .leftJoin(exerciseCategories, eq(exercises.categoryId, exerciseCategories.id))
         .where(where)
         .orderBy(exercises.name)
         .limit(limitNum)
@@ -52,14 +53,11 @@ async function run() {
       db
         .select({ count: sql`count(*)` })
         .from(exercises)
-        .leftJoin(
-          exerciseCategories,
-          eq(exercises.categoryId, exerciseCategories.id),
-        )
+        .leftJoin(exerciseCategories, eq(exercises.categoryId, exerciseCategories.id))
         .where(where),
     ]);
     console.log("Success! Rows:", rows.length, "Total:", countResult[0]?.count);
-  } catch(e) {
+  } catch (e) {
     console.error("Error:", e);
   }
 }

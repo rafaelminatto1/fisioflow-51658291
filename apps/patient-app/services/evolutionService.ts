@@ -1,6 +1,6 @@
-import { patientApi } from '@/lib/api';
-import { asyncResult, Result } from '@/lib/async';
-import { perf } from '@/lib/performance';
+import { patientApi } from "@/lib/api";
+import { asyncResult, Result } from "@/lib/async";
+import { perf } from "@/lib/performance";
 
 export function subscribeToEvolutions(
   userId: string,
@@ -8,7 +8,7 @@ export function subscribeToEvolutions(
 ): () => void {
   const load = async () => {
     const result = await getEvolutions(userId);
-    callback(result.success ? result.data ?? [] : []);
+    callback(result.success ? (result.data ?? []) : []);
   };
 
   load();
@@ -22,9 +22,9 @@ export async function getEvolutions(
   endDate?: Date,
 ): Promise<Result<any[]>> {
   return asyncResult(async () => {
-    perf.start('api_get_evolutions');
+    perf.start("api_get_evolutions");
     const progress = await patientApi.getProgress();
-    perf.end('api_get_evolutions', true);
+    perf.end("api_get_evolutions", true);
 
     let evolutions = progress.evolutions || [];
     if (startDate || endDate) {
@@ -37,14 +37,14 @@ export async function getEvolutions(
     }
 
     return evolutions;
-  }, 'getEvolutions');
+  }, "getEvolutions");
 }
 
 export async function getEvolutionStats(userId: string): Promise<Result<any>> {
   return asyncResult(async () => {
-    perf.start('api_get_evolution_stats');
+    perf.start("api_get_evolution_stats");
     const evolutionsResult = await getEvolutions(userId);
-    const evolutions = evolutionsResult.success ? evolutionsResult.data ?? [] : [];
+    const evolutions = evolutionsResult.success ? (evolutionsResult.data ?? []) : [];
 
     if (evolutions.length === 0) {
       return {
@@ -57,7 +57,8 @@ export async function getEvolutionStats(userId: string): Promise<Result<any>> {
 
     const totalSessions = evolutions.length;
     const painLevels = evolutions.map((evolution: any) => evolution.pain_level || 0);
-    const averagePain = painLevels.reduce((sum: number, value: number) => sum + value, 0) / painLevels.length;
+    const averagePain =
+      painLevels.reduce((sum: number, value: number) => sum + value, 0) / painLevels.length;
 
     const dates = evolutions
       .map((evolution: any) => new Date(evolution.record_date || evolution.date || Date.now()))
@@ -74,7 +75,7 @@ export async function getEvolutionStats(userId: string): Promise<Result<any>> {
     const lastPain = evolutions[0]?.pain_level || 0;
     const painImprovement = firstPain - lastPain;
 
-    perf.end('api_get_evolution_stats', true);
+    perf.end("api_get_evolution_stats", true);
 
     return {
       totalSessions,
@@ -82,5 +83,5 @@ export async function getEvolutionStats(userId: string): Promise<Result<any>> {
       painImprovement: Math.round(painImprovement * 10) / 10,
       totalDays,
     };
-  }, 'getEvolutionStats');
+  }, "getEvolutionStats");
 }

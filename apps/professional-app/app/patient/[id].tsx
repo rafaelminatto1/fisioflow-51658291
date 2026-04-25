@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect } from "react";
 
 import {
   View,
@@ -12,22 +12,22 @@ import {
   TextInput,
   Alert,
   Linking,
-} from 'react-native';
-import { useLocalSearchParams, router } from 'expo-router';
-import { SafeAreaView } from 'react-native-safe-area-context';
-import { Ionicons } from '@expo/vector-icons';
-import { useColors } from '@/hooks/useColorScheme';
-import { Card } from '@/components';
-import { useHaptics } from '@/hooks/useHaptics';
-import { useQuery } from '@tanstack/react-query';
-import { getPatientByIdHook } from '@/hooks/usePatients';
-import { format, isValid, parse } from 'date-fns';
-import { useEvolutions } from '@/hooks';
-import { useAIExerciseHistory } from '@/hooks/useAIExerciseHistory';
-import { AIExerciseHistoryCard } from '@/components/ai/AIExerciseHistoryCard';
-import { PainProgressChart } from '@/components/patient/PainProgressChart';
-import { CloudReportActions } from '@/components/patient/CloudReportActions';
-import { generateEvolutionPDF } from '@/lib/services/pdfGenerator';
+} from "react-native";
+import { useLocalSearchParams, router } from "expo-router";
+import { SafeAreaView } from "react-native-safe-area-context";
+import { Ionicons } from "@expo/vector-icons";
+import { useColors } from "@/hooks/useColorScheme";
+import { Card } from "@/components";
+import { useHaptics } from "@/hooks/useHaptics";
+import { useQuery } from "@tanstack/react-query";
+import { getPatientByIdHook } from "@/hooks/usePatients";
+import { format, isValid, parse } from "date-fns";
+import { useEvolutions } from "@/hooks";
+import { useAIExerciseHistory } from "@/hooks/useAIExerciseHistory";
+import { AIExerciseHistoryCard } from "@/components/ai/AIExerciseHistoryCard";
+import { PainProgressChart } from "@/components/patient/PainProgressChart";
+import { CloudReportActions } from "@/components/patient/CloudReportActions";
+import { generateEvolutionPDF } from "@/lib/services/pdfGenerator";
 import {
   usePatientFinancialRecords,
   usePatientFinancialSummary,
@@ -35,8 +35,8 @@ import {
   useUpdateFinancialRecord,
   useDeleteFinancialRecord,
   useMarkAsPaid,
-} from '@/hooks/usePatientFinancial';
-import type { ApiFinancialRecord } from '@/lib/api';
+} from "@/hooks/usePatientFinancial";
+import type { ApiFinancialRecord } from "@/lib/api";
 
 export default function PatientDetailScreen() {
   const params = useLocalSearchParams();
@@ -44,19 +44,31 @@ export default function PatientDetailScreen() {
   const colors = useColors();
   const { light, medium, success, error } = useHaptics();
   const [refreshing, setRefreshing] = useState(false);
-  const [selectedTab, setSelectedTab] = useState<'info' | 'financial' | 'evolutions' | 'biofeedback' | 'proms' | 'hep'>((tab as any) || 'info');
+  const [selectedTab, setSelectedTab] = useState<
+    "info" | "financial" | "evolutions" | "biofeedback" | "proms" | "hep"
+  >((tab as any) || "info");
 
   const { data: patient, refetch } = useQuery({
-    queryKey: ['patient', id],
-    queryFn: () => id ? getPatientByIdHook(id as string) : null,
+    queryKey: ["patient", id],
+    queryFn: () => (id ? getPatientByIdHook(id as string) : null),
     enabled: !!id,
   });
 
   const { data: aiHistory, isLoading: isLoadingAI } = useAIExerciseHistory(id as string);
-  const { evolutions, isLoading: isLoadingEvolutions, refetch: refetchEvolutions } = useEvolutions(id as string);
+  const {
+    evolutions,
+    isLoading: isLoadingEvolutions,
+    refetch: refetchEvolutions,
+  } = useEvolutions(id as string);
 
-  const { data: financialRecords, isLoading: isLoadingFinancial, refetch: refetchFinancial } = usePatientFinancialRecords(id as string);
-  const { data: financialSummary, refetch: refetchSummary } = usePatientFinancialSummary(id as string);
+  const {
+    data: financialRecords,
+    isLoading: isLoadingFinancial,
+    refetch: refetchFinancial,
+  } = usePatientFinancialRecords(id as string);
+  const { data: financialSummary, refetch: refetchSummary } = usePatientFinancialSummary(
+    id as string,
+  );
 
   const createFinancialMutation = useCreateFinancialRecord();
   const updateFinancialMutation = useUpdateFinancialRecord();
@@ -67,10 +79,10 @@ export default function PatientDetailScreen() {
   const [showFinancialModal, setShowFinancialModal] = useState(false);
   const [editingRecord, setEditingRecord] = useState<ApiFinancialRecord | null>(null);
   const [formData, setFormData] = useState({
-    session_date: (initialDateParam as string) || format(new Date(), 'yyyy-MM-dd'),
-    session_value: '',
-    payment_method: '',
-    notes: '',
+    session_date: (initialDateParam as string) || format(new Date(), "yyyy-MM-dd"),
+    session_value: "",
+    payment_method: "",
+    notes: "",
   });
 
   const formatBirthDate = (birthDate?: unknown) => {
@@ -82,14 +94,14 @@ export default function PatientDetailScreen() {
 
     if (birthDate instanceof Date) {
       parsed = birthDate;
-    } else if (typeof birthDate === 'string') {
+    } else if (typeof birthDate === "string") {
       const trimmed = birthDate.trim();
       if (!trimmed) {
         return null;
       }
 
-      if (trimmed.includes('/')) {
-        const parsedByMask = parse(trimmed, 'dd/MM/yyyy', new Date());
+      if (trimmed.includes("/")) {
+        const parsedByMask = parse(trimmed, "dd/MM/yyyy", new Date());
         if (isValid(parsedByMask)) {
           parsed = parsedByMask;
         }
@@ -101,12 +113,12 @@ export default function PatientDetailScreen() {
           parsed = parsedByDate;
         }
       }
-    } else if (typeof (birthDate as { toDate?: () => Date }).toDate === 'function') {
+    } else if (typeof (birthDate as { toDate?: () => Date }).toDate === "function") {
       const parsedByTimestamp = (birthDate as { toDate: () => Date }).toDate();
       if (isValid(parsedByTimestamp)) {
         parsed = parsedByTimestamp;
       }
-    } else if (typeof (birthDate as { seconds?: number }).seconds === 'number') {
+    } else if (typeof (birthDate as { seconds?: number }).seconds === "number") {
       const parsedBySeconds = new Date((birthDate as { seconds: number }).seconds * 1000);
       if (isValid(parsedBySeconds)) {
         parsed = parsedBySeconds;
@@ -117,13 +129,13 @@ export default function PatientDetailScreen() {
       return null;
     }
 
-    return format(parsed, 'dd/MM/yyyy');
+    return format(parsed, "dd/MM/yyyy");
   };
 
   const birthDateLabel = formatBirthDate(patient?.birthDate);
 
   useEffect(() => {
-    if (autoCreate === 'true' && selectedTab === 'financial') {
+    if (autoCreate === "true" && selectedTab === "financial") {
       setShowFinancialModal(true);
     }
   }, [autoCreate, selectedTab]);
@@ -138,17 +150,17 @@ export default function PatientDetailScreen() {
     setRefreshing(false);
   };
 
-  const name = patient?.name || (patientName as string) || 'Paciente';
+  const name = patient?.name || (patientName as string) || "Paciente";
 
   const handleWhatsApp = () => {
     if (!patient?.phone) {
-      Alert.alert('Erro', 'Paciente sem telefone cadastrado.');
+      Alert.alert("Erro", "Paciente sem telefone cadastrado.");
       return;
     }
     light();
-    const phone = patient.phone.replace(/\D/g, '');
+    const phone = patient.phone.replace(/\D/g, "");
     const url = `whatsapp://send?phone=55${phone}`;
-    Linking.canOpenURL(url).then(supported => {
+    Linking.canOpenURL(url).then((supported) => {
       if (supported) {
         Linking.openURL(url);
       } else {
@@ -158,16 +170,26 @@ export default function PatientDetailScreen() {
   };
 
   return (
-    <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]} edges={['top', 'left', 'right', 'bottom']}>
+    <SafeAreaView
+      style={[styles.container, { backgroundColor: colors.background }]}
+      edges={["top", "left", "right", "bottom"]}
+    >
       <ScrollView
         contentContainerStyle={styles.scrollContent}
-        refreshControl={
-          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
-        }
+        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}
       >
         {/* Patient Header */}
         <View style={styles.header}>
-          <View style={[styles.avatar, { backgroundColor: colors.primary + '20', borderColor: colors.primary + '40', borderWidth: 2 }]}>
+          <View
+            style={[
+              styles.avatar,
+              {
+                backgroundColor: colors.primary + "20",
+                borderColor: colors.primary + "40",
+                borderWidth: 2,
+              },
+            ]}
+          >
             <Text style={[styles.avatarText, { color: colors.primary }]}>
               {name.charAt(0).toUpperCase()}
             </Text>
@@ -177,13 +199,15 @@ export default function PatientDetailScreen() {
             <View
               style={[
                 styles.statusBadge,
-                { backgroundColor: colors.success + '15', borderColor: colors.success + '30', borderWidth: 1 },
+                {
+                  backgroundColor: colors.success + "15",
+                  borderColor: colors.success + "30",
+                  borderWidth: 1,
+                },
               ]}
             >
               <View style={[styles.statusDot, { backgroundColor: colors.success }]} />
-              <Text style={[styles.statusText, { color: colors.success }]}>
-                Ativo
-              </Text>
+              <Text style={[styles.statusText, { color: colors.success }]}>Ativo</Text>
             </View>
           </View>
         </View>
@@ -191,7 +215,7 @@ export default function PatientDetailScreen() {
         {/* Quick Actions */}
         <View style={styles.actionsRow}>
           <TouchableOpacity
-            style={[styles.actionBtn, { backgroundColor: '#25D366' + 'E0' }]}
+            style={[styles.actionBtn, { backgroundColor: "#25D366" + "E0" }]}
             onPress={handleWhatsApp}
           >
             <Ionicons name="logo-whatsapp" size={18} color="#FFFFFF" />
@@ -199,7 +223,7 @@ export default function PatientDetailScreen() {
           </TouchableOpacity>
 
           <TouchableOpacity
-            style={[styles.actionBtn, { backgroundColor: colors.primary + 'E0' }]}
+            style={[styles.actionBtn, { backgroundColor: colors.primary + "E0" }]}
             onPress={() => {
               medium();
               router.push(`/appointment-form?patientId=${id}&patientName=${name}`);
@@ -209,7 +233,7 @@ export default function PatientDetailScreen() {
             <Text style={styles.actionBtnText}>Agendar</Text>
           </TouchableOpacity>
           <TouchableOpacity
-            style={[styles.actionBtn, { backgroundColor: colors.success + 'E0' }]}
+            style={[styles.actionBtn, { backgroundColor: colors.success + "E0" }]}
             onPress={() => {
               medium();
               router.push(`/exercises?patientId=${id}&patientName=${name}`);
@@ -219,7 +243,7 @@ export default function PatientDetailScreen() {
             <Text style={styles.actionBtnText}>Planos</Text>
           </TouchableOpacity>
           <TouchableOpacity
-            style={[styles.actionBtn, { backgroundColor: colors.info + 'E0' }]}
+            style={[styles.actionBtn, { backgroundColor: colors.info + "E0" }]}
             onPress={() => {
               medium();
               router.push(`/evolution-form?patientId=${id}&patientName=${name}` as any);
@@ -231,13 +255,21 @@ export default function PatientDetailScreen() {
         </View>
 
         {/* Tab Selector */}
-        <View style={[styles.tabContainer, { backgroundColor: colors.surface + '80', borderColor: colors.border + '30' }]}>
-          {(['info', 'financial', 'evolutions', 'biofeedback'] as const).map((tabKey) => (
+        <View
+          style={[
+            styles.tabContainer,
+            { backgroundColor: colors.surface + "80", borderColor: colors.border + "30" },
+          ]}
+        >
+          {(["info", "financial", "evolutions", "biofeedback"] as const).map((tabKey) => (
             <TouchableOpacity
               key={tabKey}
               style={[
                 styles.tab,
-                selectedTab === tabKey && { backgroundColor: colors.primary + 'E0', ...styles.activeTabShadow },
+                selectedTab === tabKey && {
+                  backgroundColor: colors.primary + "E0",
+                  ...styles.activeTabShadow,
+                },
               ]}
               onPress={() => {
                 medium();
@@ -247,17 +279,23 @@ export default function PatientDetailScreen() {
               <Text
                 style={[
                   styles.tabText,
-                  { color: selectedTab === tabKey ? '#FFFFFF' : colors.textSecondary },
+                  { color: selectedTab === tabKey ? "#FFFFFF" : colors.textSecondary },
                 ]}
               >
-                {tabKey === 'info' ? 'Info' : tabKey === 'financial' ? 'Financeiro' : tabKey === 'evolutions' ? 'Evolução' : 'IA'}
+                {tabKey === "info"
+                  ? "Info"
+                  : tabKey === "financial"
+                    ? "Financeiro"
+                    : tabKey === "evolutions"
+                      ? "Evolução"
+                      : "IA"}
               </Text>
             </TouchableOpacity>
           ))}
         </View>
 
         {/* Tab Content */}
-        {selectedTab === 'biofeedback' && (
+        {selectedTab === "biofeedback" && (
           <View style={styles.aiHistoryContainer}>
             <TouchableOpacity
               style={[styles.addEvolutionBtn, { backgroundColor: colors.primary }]}
@@ -274,11 +312,7 @@ export default function PatientDetailScreen() {
               <ActivityIndicator size="large" color={colors.primary} style={{ marginTop: 20 }} />
             ) : aiHistory && aiHistory.length > 0 ? (
               aiHistory.map((session) => (
-                <AIExerciseHistoryCard 
-                  key={session.id} 
-                  session={session} 
-                  colors={colors} 
-                />
+                <AIExerciseHistoryCard key={session.id} session={session} colors={colors} />
               ))
             ) : (
               <View style={styles.emptyEvolution}>
@@ -293,79 +327,131 @@ export default function PatientDetailScreen() {
             )}
           </View>
         )}
-        {selectedTab === 'info' && (
+        {selectedTab === "info" && (
           <>
             <View style={styles.infoSection}>
-                <PainProgressChart evolutions={evolutions} />
-                {/* Personal Information */}
-                <Card style={[styles.infoCard, { backgroundColor: colors.surface + 'B0', borderColor: colors.border + '40', borderWidth: 1.2 }]}>
-                    <View style={styles.infoCardHeader}>
-                        <Ionicons name="person-circle-outline" size={20} color={colors.primary} />
-                        <Text style={[styles.infoSectionTitle, { color: colors.text }]}>Informações Pessoais</Text>
-                    </View>
-                    <View style={styles.infoRow}>
-                        <Text style={[styles.infoLabel, { color: colors.textSecondary }]}>Nome:</Text>
-                        <Text style={[styles.infoValue, { color: colors.text }]}>{patient?.name || 'N/A'}</Text>
-                    </View>
-                    {birthDateLabel && (
-                    <View style={styles.infoRow}>
-                        <Text style={[styles.infoLabel, { color: colors.textSecondary }]}>Nascimento:</Text>
-                        <Text style={[styles.infoValue, { color: colors.text }]}>
-                        {birthDateLabel}
-                        </Text>
-                    </View>
-                    )}
-                </Card>
-
-                <Card style={[styles.infoCard, { backgroundColor: colors.surface + 'B0', borderColor: colors.border + '40', borderWidth: 1.2 }]}>
-                    <View style={styles.infoCardHeader}>
-                        <Ionicons name="call-outline" size={20} color={colors.primary} />
-                        <Text style={[styles.infoSectionTitle, { color: colors.text }]}>Contato</Text>
-                    </View>
-                    {patient?.email && (
-                    <View style={styles.infoRow}>
-                        <Text style={[styles.infoLabel, { color: colors.textSecondary }]}>Email:</Text>
-                        <Text style={[styles.infoValue, { color: colors.text }]}>{patient.email}</Text>
-                    </View>
-                    )}
-                    {patient?.phone && (
-                    <View style={styles.infoRow}>
-                        <Text style={[styles.infoLabel, { color: colors.textSecondary }]}>Telefone:</Text>
-                        <Text style={[styles.infoValue, { color: colors.text }]}>{patient.phone}</Text>
-                    </View>
-                    )}
-                </Card>
-
-                <Card style={[styles.infoCard, { backgroundColor: colors.surface + 'B0', borderColor: colors.border + '40', borderWidth: 1.2 }]}>
-                    <View style={styles.infoCardHeader}>
-                        <Ionicons name="pulse-outline" size={20} color={colors.primary} />
-                        <Text style={[styles.infoSectionTitle, { color: colors.text }]}>Dados Clínicos</Text>
-                    </View>
-                    {patient?.condition && (
-                    <View style={styles.infoRow}>
-                        <Text style={[styles.infoLabel, { color: colors.textSecondary }]}>Condição:</Text>
-                        <Text style={[styles.infoValue, { color: colors.text }]}>{patient.condition}</Text>
-                    </View>
-                    )}
-                    {patient?.diagnosis && (
-                    <View style={styles.infoRow}>
-                        <Text style={[styles.infoLabel, { color: colors.textSecondary }]}>Diagnóstico:</Text>
-                        <Text style={[styles.infoValue, { color: colors.text }]}>{patient.diagnosis}</Text>
-                    </View>
-                    )}
-                </Card>
-
-                {patient?.notes && (
-                    <Card style={[styles.infoCard, { backgroundColor: colors.surface + 'B0', borderColor: colors.border + '40', borderWidth: 1.2 }]}>
-                        <View style={styles.infoCardHeader}>
-                            <Ionicons name="document-text-outline" size={20} color={colors.primary} />
-                            <Text style={[styles.infoSectionTitle, { color: colors.text }]}>Observações</Text>
-                        </View>
-                        <Text style={[styles.notesText, { color: colors.text }]}>
-                            {patient.notes}
-                        </Text>
-                    </Card>
+              <PainProgressChart evolutions={evolutions} />
+              {/* Personal Information */}
+              <Card
+                style={[
+                  styles.infoCard,
+                  {
+                    backgroundColor: colors.surface + "B0",
+                    borderColor: colors.border + "40",
+                    borderWidth: 1.2,
+                  },
+                ]}
+              >
+                <View style={styles.infoCardHeader}>
+                  <Ionicons name="person-circle-outline" size={20} color={colors.primary} />
+                  <Text style={[styles.infoSectionTitle, { color: colors.text }]}>
+                    Informações Pessoais
+                  </Text>
+                </View>
+                <View style={styles.infoRow}>
+                  <Text style={[styles.infoLabel, { color: colors.textSecondary }]}>Nome:</Text>
+                  <Text style={[styles.infoValue, { color: colors.text }]}>
+                    {patient?.name || "N/A"}
+                  </Text>
+                </View>
+                {birthDateLabel && (
+                  <View style={styles.infoRow}>
+                    <Text style={[styles.infoLabel, { color: colors.textSecondary }]}>
+                      Nascimento:
+                    </Text>
+                    <Text style={[styles.infoValue, { color: colors.text }]}>{birthDateLabel}</Text>
+                  </View>
                 )}
+              </Card>
+
+              <Card
+                style={[
+                  styles.infoCard,
+                  {
+                    backgroundColor: colors.surface + "B0",
+                    borderColor: colors.border + "40",
+                    borderWidth: 1.2,
+                  },
+                ]}
+              >
+                <View style={styles.infoCardHeader}>
+                  <Ionicons name="call-outline" size={20} color={colors.primary} />
+                  <Text style={[styles.infoSectionTitle, { color: colors.text }]}>Contato</Text>
+                </View>
+                {patient?.email && (
+                  <View style={styles.infoRow}>
+                    <Text style={[styles.infoLabel, { color: colors.textSecondary }]}>Email:</Text>
+                    <Text style={[styles.infoValue, { color: colors.text }]}>{patient.email}</Text>
+                  </View>
+                )}
+                {patient?.phone && (
+                  <View style={styles.infoRow}>
+                    <Text style={[styles.infoLabel, { color: colors.textSecondary }]}>
+                      Telefone:
+                    </Text>
+                    <Text style={[styles.infoValue, { color: colors.text }]}>{patient.phone}</Text>
+                  </View>
+                )}
+              </Card>
+
+              <Card
+                style={[
+                  styles.infoCard,
+                  {
+                    backgroundColor: colors.surface + "B0",
+                    borderColor: colors.border + "40",
+                    borderWidth: 1.2,
+                  },
+                ]}
+              >
+                <View style={styles.infoCardHeader}>
+                  <Ionicons name="pulse-outline" size={20} color={colors.primary} />
+                  <Text style={[styles.infoSectionTitle, { color: colors.text }]}>
+                    Dados Clínicos
+                  </Text>
+                </View>
+                {patient?.condition && (
+                  <View style={styles.infoRow}>
+                    <Text style={[styles.infoLabel, { color: colors.textSecondary }]}>
+                      Condição:
+                    </Text>
+                    <Text style={[styles.infoValue, { color: colors.text }]}>
+                      {patient.condition}
+                    </Text>
+                  </View>
+                )}
+                {patient?.diagnosis && (
+                  <View style={styles.infoRow}>
+                    <Text style={[styles.infoLabel, { color: colors.textSecondary }]}>
+                      Diagnóstico:
+                    </Text>
+                    <Text style={[styles.infoValue, { color: colors.text }]}>
+                      {patient.diagnosis}
+                    </Text>
+                  </View>
+                )}
+              </Card>
+
+              {patient?.notes && (
+                <Card
+                  style={[
+                    styles.infoCard,
+                    {
+                      backgroundColor: colors.surface + "B0",
+                      borderColor: colors.border + "40",
+                      borderWidth: 1.2,
+                    },
+                  ]}
+                >
+                  <View style={styles.infoCardHeader}>
+                    <Ionicons name="document-text-outline" size={20} color={colors.primary} />
+                    <Text style={[styles.infoSectionTitle, { color: colors.text }]}>
+                      Observações
+                    </Text>
+                  </View>
+                  <Text style={[styles.notesText, { color: colors.text }]}>{patient.notes}</Text>
+                </Card>
+              )}
             </View>
 
             <TouchableOpacity
@@ -381,7 +467,7 @@ export default function PatientDetailScreen() {
           </>
         )}
 
-        {selectedTab === 'evolutions' && (
+        {selectedTab === "evolutions" && (
           <View style={styles.evolutionsContainer}>
             <View style={styles.evolutionsHeaderActions}>
               <TouchableOpacity
@@ -394,15 +480,18 @@ export default function PatientDetailScreen() {
                 <Ionicons name="add" size={24} color="#FFFFFF" />
                 <Text style={styles.addEvolutionBtnText}>Nova Evolução</Text>
               </TouchableOpacity>
-              
+
               <TouchableOpacity
-                style={[styles.exportPdfBtn, { borderColor: colors.primary, backgroundColor: colors.surface }]}
+                style={[
+                  styles.exportPdfBtn,
+                  { borderColor: colors.primary, backgroundColor: colors.surface },
+                ]}
                 onPress={async () => {
                   if (!patient || evolutions.length === 0) {
-                    Alert.alert('Erro', 'Não há dados suficientes para gerar o relatório.');
+                    Alert.alert("Erro", "Não há dados suficientes para gerar o relatório.");
                     return;
                   }
-                  
+
                   medium();
                   setIsGeneratingPDF(true);
                   try {
@@ -410,7 +499,7 @@ export default function PatientDetailScreen() {
                     success();
                   } catch (err: any) {
                     error();
-                    Alert.alert('Erro', err.message || 'Falha ao gerar PDF');
+                    Alert.alert("Erro", err.message || "Falha ao gerar PDF");
                   } finally {
                     setIsGeneratingPDF(false);
                   }
@@ -436,13 +525,13 @@ export default function PatientDetailScreen() {
                 reportType="progress"
                 reportData={{
                   summary: `Relatório de evolução clínica com ${evolutions.length} sessões registradas.`,
-                  evolutions: evolutions.slice(0, 10).map(e => ({
+                  evolutions: evolutions.slice(0, 10).map((e) => ({
                     date: e.date,
                     subjective: e.subjective,
                     objective: e.objective,
                     assessment: e.assessment,
-                    plan: e.plan
-                  }))
+                    plan: e.plan,
+                  })),
                 }}
               />
             )}
@@ -450,7 +539,10 @@ export default function PatientDetailScreen() {
             {/* View All Evolutions Button */}
             {evolutions.length > 0 && (
               <TouchableOpacity
-                style={[styles.viewAllBtn, { backgroundColor: colors.surface, borderColor: colors.border }]}
+                style={[
+                  styles.viewAllBtn,
+                  { backgroundColor: colors.surface, borderColor: colors.border },
+                ]}
                 onPress={() => {
                   medium();
                   router.push(`/evolutions-list?patientId=${id}&patientName=${name}` as any);
@@ -471,17 +563,45 @@ export default function PatientDetailScreen() {
                   key={evolution.id}
                   onPress={() => {
                     medium();
-                    router.push(`/evolution-detail?evolutionId=${evolution.id}&patientId=${id}&patientName=${name}` as any);
+                    router.push(
+                      `/evolution-detail?evolutionId=${evolution.id}&patientId=${id}&patientName=${name}` as any,
+                    );
                   }}
                 >
-                  <Card style={[styles.evolutionCard, { backgroundColor: colors.surface + 'B0', borderColor: colors.border + '40', borderWidth: 1.2 }]}>
+                  <Card
+                    style={[
+                      styles.evolutionCard,
+                      {
+                        backgroundColor: colors.surface + "B0",
+                        borderColor: colors.border + "40",
+                        borderWidth: 1.2,
+                      },
+                    ]}
+                  >
                     <View style={styles.evolutionHeader}>
                       <Text style={[styles.evolutionDate, { color: colors.text }]}>
-                        {evolution.date ? format(new Date(evolution.date), 'dd/MM/yyyy HH:mm') : 'Data não disponível'}
+                        {evolution.date
+                          ? format(new Date(evolution.date), "dd/MM/yyyy HH:mm")
+                          : "Data não disponível"}
                       </Text>
                       {evolution.painLevel !== undefined && (
-                        <View style={[styles.painBadge, { backgroundColor: evolution.painLevel > 5 ? colors.error + '15' : colors.success + '15' }]}>
-                          <Text style={[styles.painText, { color: evolution.painLevel > 5 ? colors.error : colors.success }]}>
+                        <View
+                          style={[
+                            styles.painBadge,
+                            {
+                              backgroundColor:
+                                evolution.painLevel > 5
+                                  ? colors.error + "15"
+                                  : colors.success + "15",
+                            },
+                          ]}
+                        >
+                          <Text
+                            style={[
+                              styles.painText,
+                              { color: evolution.painLevel > 5 ? colors.error : colors.success },
+                            ]}
+                          >
                             Dor: {evolution.painLevel}
                           </Text>
                         </View>
@@ -489,17 +609,30 @@ export default function PatientDetailScreen() {
                     </View>
                     <View style={styles.soapPreview}>
                       {evolution.subjective && (
-                        <Text style={[styles.soapItem, { color: colors.textSecondary }]} numberOfLines={1}>
-                          <Text style={{ fontWeight: '700', color: colors.primary }}>S: </Text>{evolution.subjective}
+                        <Text
+                          style={[styles.soapItem, { color: colors.textSecondary }]}
+                          numberOfLines={1}
+                        >
+                          <Text style={{ fontWeight: "700", color: colors.primary }}>S: </Text>
+                          {evolution.subjective}
                         </Text>
                       )}
                       {evolution.objective && (
-                        <Text style={[styles.soapItem, { color: colors.textSecondary }]} numberOfLines={1}>
-                          <Text style={{ fontWeight: '700', color: colors.primary }}>O: </Text>{evolution.objective}
+                        <Text
+                          style={[styles.soapItem, { color: colors.textSecondary }]}
+                          numberOfLines={1}
+                        >
+                          <Text style={{ fontWeight: "700", color: colors.primary }}>O: </Text>
+                          {evolution.objective}
                         </Text>
                       )}
                     </View>
-                    <Ionicons name="chevron-forward" size={18} color={colors.textMuted} style={styles.evolutionArrow} />
+                    <Ionicons
+                      name="chevron-forward"
+                      size={18}
+                      color={colors.textMuted}
+                      style={styles.evolutionArrow}
+                    />
                   </Card>
                 </TouchableOpacity>
               ))
@@ -517,20 +650,24 @@ export default function PatientDetailScreen() {
           </View>
         )}
 
-        {selectedTab === 'financial' && (
+        {selectedTab === "financial" && (
           <View style={styles.financialContainer}>
             {/* Summary Card */}
             {financialSummary && (
               <Card style={styles.summaryCard}>
                 <View style={styles.summaryRow}>
                   <View style={styles.summaryItem}>
-                    <Text style={[styles.summaryLabel, { color: colors.textSecondary }]}>Total Pago</Text>
+                    <Text style={[styles.summaryLabel, { color: colors.textSecondary }]}>
+                      Total Pago
+                    </Text>
                     <Text style={[styles.summaryValue, { color: colors.success }]}>
                       R$ {financialSummary.total_paid.toFixed(2)}
                     </Text>
                   </View>
                   <View style={styles.summaryItem}>
-                    <Text style={[styles.summaryLabel, { color: colors.textSecondary }]}>Pendente</Text>
+                    <Text style={[styles.summaryLabel, { color: colors.textSecondary }]}>
+                      Pendente
+                    </Text>
                     <Text style={[styles.summaryValue, { color: colors.warning }]}>
                       R$ {financialSummary.total_pending.toFixed(2)}
                     </Text>
@@ -539,13 +676,17 @@ export default function PatientDetailScreen() {
                 <View style={[styles.divider, { backgroundColor: colors.border }]} />
                 <View style={styles.summaryRow}>
                   <View style={styles.summaryItem}>
-                    <Text style={[styles.summaryLabel, { color: colors.textSecondary }]}>Sessões</Text>
+                    <Text style={[styles.summaryLabel, { color: colors.textSecondary }]}>
+                      Sessões
+                    </Text>
                     <Text style={[styles.summaryValue, { color: colors.text }]}>
                       {financialSummary.paid_sessions}/{financialSummary.total_sessions}
                     </Text>
                   </View>
                   <View style={styles.summaryItem}>
-                    <Text style={[styles.summaryLabel, { color: colors.textSecondary }]}>Média/Sessão</Text>
+                    <Text style={[styles.summaryLabel, { color: colors.textSecondary }]}>
+                      Média/Sessão
+                    </Text>
                     <Text style={[styles.summaryValue, { color: colors.text }]}>
                       R$ {financialSummary.average_session_value.toFixed(2)}
                     </Text>
@@ -561,10 +702,10 @@ export default function PatientDetailScreen() {
                 medium();
                 setEditingRecord(null);
                 setFormData({
-                  session_date: format(new Date(), 'yyyy-MM-DD'),
-                  session_value: '',
-                  payment_method: '',
-                  notes: '',
+                  session_date: format(new Date(), "yyyy-MM-DD"),
+                  session_value: "",
+                  payment_method: "",
+                  notes: "",
                 });
                 setShowFinancialModal(true);
               }}
@@ -588,10 +729,12 @@ export default function PatientDetailScreen() {
                     <View style={styles.recordHeader}>
                       <View style={styles.recordDateContainer}>
                         <Text style={[styles.recordDate, { color: colors.text }]}>
-                          {format(new Date(record.session_date), 'dd/MM/yyyy')}
+                          {format(new Date(record.session_date), "dd/MM/yyyy")}
                         </Text>
                         {(record as any).partnership && (
-                          <View style={[styles.partnershipBadge, { backgroundColor: colors.infoLight }]}>
+                          <View
+                            style={[styles.partnershipBadge, { backgroundColor: colors.infoLight }]}
+                          >
                             <Ionicons name="pricetag" size={12} color={colors.info} />
                             <Text style={[styles.partnershipBadgeText, { color: colors.info }]}>
                               {(record as any).partnership.name}
@@ -604,11 +747,11 @@ export default function PatientDetailScreen() {
                           styles.statusBadge,
                           {
                             backgroundColor:
-                              record.payment_status === 'paid'
+                              record.payment_status === "paid"
                                 ? colors.successLight
-                                : record.payment_status === 'partial'
-                                ? colors.warningLight
-                                : colors.errorLight,
+                                : record.payment_status === "partial"
+                                  ? colors.warningLight
+                                  : colors.errorLight,
                           },
                         ]}
                       >
@@ -617,15 +760,19 @@ export default function PatientDetailScreen() {
                             styles.statusText,
                             {
                               color:
-                                record.payment_status === 'paid'
+                                record.payment_status === "paid"
                                   ? colors.success
-                                  : record.payment_status === 'partial'
-                                  ? colors.warning
-                                  : colors.error,
+                                  : record.payment_status === "partial"
+                                    ? colors.warning
+                                    : colors.error,
                             },
                           ]}
                         >
-                          {record.payment_status === 'paid' ? 'Pago' : record.payment_status === 'partial' ? 'Parcial' : 'Pendente'}
+                          {record.payment_status === "paid"
+                            ? "Pago"
+                            : record.payment_status === "partial"
+                              ? "Parcial"
+                              : "Pendente"}
                         </Text>
                       </View>
                     </View>
@@ -633,7 +780,9 @@ export default function PatientDetailScreen() {
                     <View style={styles.recordValues}>
                       {record.discount_value > 0 && (
                         <View style={styles.valueRow}>
-                          <Text style={[styles.valueLabel, { color: colors.textSecondary }]}>Valor da sessão:</Text>
+                          <Text style={[styles.valueLabel, { color: colors.textSecondary }]}>
+                            Valor da sessão:
+                          </Text>
                           <Text style={[styles.valueOriginal, { color: colors.textMuted }]}>
                             R$ {record.session_value.toFixed(2)}
                           </Text>
@@ -641,23 +790,31 @@ export default function PatientDetailScreen() {
                       )}
                       {record.discount_value > 0 && (
                         <View style={styles.valueRow}>
-                          <Text style={[styles.valueLabel, { color: colors.textSecondary }]}>Desconto:</Text>
+                          <Text style={[styles.valueLabel, { color: colors.textSecondary }]}>
+                            Desconto:
+                          </Text>
                           <Text style={[styles.valueDiscount, { color: colors.success }]}>
                             - R$ {record.discount_value.toFixed(2)}
                           </Text>
                         </View>
                       )}
                       <View style={styles.valueRow}>
-                        <Text style={[styles.valueLabel, { color: colors.textSecondary }]}>Valor final:</Text>
-                        <Text style={[styles.valueFinal, { color: colors.text, fontWeight: 'bold' }]}>
+                        <Text style={[styles.valueLabel, { color: colors.textSecondary }]}>
+                          Valor final:
+                        </Text>
+                        <Text
+                          style={[styles.valueFinal, { color: colors.text, fontWeight: "bold" }]}
+                        >
                           R$ {record.final_value.toFixed(2)}
                         </Text>
                       </View>
-                      {record.payment_status === 'paid' && record.paid_date && (
+                      {record.payment_status === "paid" && record.paid_date && (
                         <View style={styles.valueRow}>
-                          <Text style={[styles.valueLabel, { color: colors.textSecondary }]}>Pago em:</Text>
+                          <Text style={[styles.valueLabel, { color: colors.textSecondary }]}>
+                            Pago em:
+                          </Text>
                           <Text style={[styles.valuePaid, { color: colors.success }]}>
-                            {format(new Date(record.paid_date), 'dd/MM/yyyy')}
+                            {format(new Date(record.paid_date), "dd/MM/yyyy")}
                           </Text>
                         </View>
                       )}
@@ -667,48 +824,60 @@ export default function PatientDetailScreen() {
                       <View style={styles.paymentMethodContainer}>
                         <Ionicons name="card" size={14} color={colors.textSecondary} />
                         <Text style={[styles.paymentMethodText, { color: colors.textSecondary }]}>
-                          {record.payment_method === 'cash' ? 'Dinheiro' :
-                           record.payment_method === 'credit_card' ? 'Cartão de Crédito' :
-                           record.payment_method === 'debit_card' ? 'Cartão de Débito' :
-                           record.payment_method === 'pix' ? 'PIX' :
-                           record.payment_method === 'transfer' ? 'Transferência' :
-                           record.payment_method === 'barter' ? 'Permuta' : record.payment_method}
+                          {record.payment_method === "cash"
+                            ? "Dinheiro"
+                            : record.payment_method === "credit_card"
+                              ? "Cartão de Crédito"
+                              : record.payment_method === "debit_card"
+                                ? "Cartão de Débito"
+                                : record.payment_method === "pix"
+                                  ? "PIX"
+                                  : record.payment_method === "transfer"
+                                    ? "Transferência"
+                                    : record.payment_method === "barter"
+                                      ? "Permuta"
+                                      : record.payment_method}
                         </Text>
                       </View>
                     )}
 
                     {record.notes && (
-                      <Text style={[styles.recordNotes, { color: colors.textSecondary }]}>{record.notes}</Text>
+                      <Text style={[styles.recordNotes, { color: colors.textSecondary }]}>
+                        {record.notes}
+                      </Text>
                     )}
 
                     <View style={styles.recordActions}>
-                      {record.payment_status !== 'paid' && (
+                      {record.payment_status !== "paid" && (
                         <TouchableOpacity
                           style={[styles.markPaidBtn, { backgroundColor: colors.success }]}
                           onPress={() => {
                             medium();
                             Alert.alert(
-                              'Marcar como Pago',
-                              'Deseja marcar este registro como pago?',
+                              "Marcar como Pago",
+                              "Deseja marcar este registro como pago?",
                               [
-                                { text: 'Cancelar', style: 'cancel' },
+                                { text: "Cancelar", style: "cancel" },
                                 {
-                                  text: 'Confirmar',
+                                  text: "Confirmar",
                                   onPress: () => {
                                     markAsPaidMutation.mutate(
-                                      { recordId: record.id, paymentMethod: 'cash' },
+                                      { recordId: record.id, paymentMethod: "cash" },
                                       {
                                         onSuccess: () => {
-                                          Alert.alert('Sucesso', 'Registro marcado como pago!');
+                                          Alert.alert("Sucesso", "Registro marcado como pago!");
                                         },
                                         onError: (error: any) => {
-                                          Alert.alert('Erro', error.message || 'Não foi possível marcar como pago.');
+                                          Alert.alert(
+                                            "Erro",
+                                            error.message || "Não foi possível marcar como pago.",
+                                          );
                                         },
-                                      }
+                                      },
                                     );
                                   },
                                 },
-                              ]
+                              ],
                             );
                           }}
                         >
@@ -722,10 +891,10 @@ export default function PatientDetailScreen() {
                           medium();
                           setEditingRecord(record);
                           setFormData({
-                            session_date: record.session_date.split('T')[0],
+                            session_date: record.session_date.split("T")[0],
                             session_value: record.session_value.toString(),
-                            payment_method: record.payment_method || '',
-                            notes: record.notes || '',
+                            payment_method: record.payment_method || "",
+                            notes: record.notes || "",
                           });
                           setShowFinancialModal(true);
                         }}
@@ -737,25 +906,28 @@ export default function PatientDetailScreen() {
                         onPress={() => {
                           medium();
                           Alert.alert(
-                            'Excluir Registro',
-                            'Deseja excluir este registro financeiro?',
+                            "Excluir Registro",
+                            "Deseja excluir este registro financeiro?",
                             [
-                              { text: 'Cancelar', style: 'cancel' },
+                              { text: "Cancelar", style: "cancel" },
                               {
-                                text: 'Excluir',
-                                style: 'destructive',
+                                text: "Excluir",
+                                style: "destructive",
                                 onPress: () => {
                                   deleteFinancialMutation.mutate(record.id, {
                                     onSuccess: () => {
-                                      Alert.alert('Sucesso', 'Registro excluído!');
+                                      Alert.alert("Sucesso", "Registro excluído!");
                                     },
                                     onError: (error: any) => {
-                                      Alert.alert('Erro', error.message || 'Não foi possível excluir o registro.');
+                                      Alert.alert(
+                                        "Erro",
+                                        error.message || "Não foi possível excluir o registro.",
+                                      );
                                     },
                                   });
                                 },
                               },
-                            ]
+                            ],
                           );
                         }}
                       >
@@ -786,11 +958,11 @@ export default function PatientDetailScreen() {
           animationType="slide"
           onRequestClose={() => setShowFinancialModal(false)}
         >
-          <SafeAreaView style={[styles.modalContainer, { backgroundColor: 'rgba(0,0,0,0.5)' }]}>
+          <SafeAreaView style={[styles.modalContainer, { backgroundColor: "rgba(0,0,0,0.5)" }]}>
             <View style={[styles.modalContent, { backgroundColor: colors.surface }]}>
               <View style={styles.modalHeader}>
                 <Text style={[styles.modalTitle, { color: colors.text }]}>
-                  {editingRecord ? 'Editar Registro' : 'Novo Registro'}
+                  {editingRecord ? "Editar Registro" : "Novo Registro"}
                 </Text>
                 <TouchableOpacity onPress={() => setShowFinancialModal(false)}>
                   <Ionicons name="close" size={24} color={colors.text} />
@@ -801,7 +973,14 @@ export default function PatientDetailScreen() {
                 <View style={styles.formGroup}>
                   <Text style={[styles.formLabel, { color: colors.text }]}>Data da Sessão *</Text>
                   <TextInput
-                    style={[styles.formInput, { backgroundColor: colors.background, borderColor: colors.border, color: colors.text }]}
+                    style={[
+                      styles.formInput,
+                      {
+                        backgroundColor: colors.background,
+                        borderColor: colors.border,
+                        color: colors.text,
+                      },
+                    ]}
                     value={formData.session_date}
                     onChangeText={(text) => setFormData({ ...formData, session_date: text })}
                     placeholder="AAAA-MM-DD"
@@ -809,9 +988,18 @@ export default function PatientDetailScreen() {
                 </View>
 
                 <View style={styles.formGroup}>
-                  <Text style={[styles.formLabel, { color: colors.text }]}>Valor da Sessão (R$) *</Text>
+                  <Text style={[styles.formLabel, { color: colors.text }]}>
+                    Valor da Sessão (R$) *
+                  </Text>
                   <TextInput
-                    style={[styles.formInput, { backgroundColor: colors.background, borderColor: colors.border, color: colors.text }]}
+                    style={[
+                      styles.formInput,
+                      {
+                        backgroundColor: colors.background,
+                        borderColor: colors.border,
+                        color: colors.text,
+                      },
+                    ]}
                     value={formData.session_value}
                     onChangeText={(text) => setFormData({ ...formData, session_value: text })}
                     placeholder="0.00"
@@ -820,16 +1008,22 @@ export default function PatientDetailScreen() {
                 </View>
 
                 <View style={styles.formGroup}>
-                  <Text style={[styles.formLabel, { color: colors.text }]}>Método de Pagamento</Text>
+                  <Text style={[styles.formLabel, { color: colors.text }]}>
+                    Método de Pagamento
+                  </Text>
                   <View style={styles.paymentMethodsContainer}>
-                    {['cash', 'pix', 'credit_card', 'debit_card', 'transfer'].map((method) => (
+                    {["cash", "pix", "credit_card", "debit_card", "transfer"].map((method) => (
                       <TouchableOpacity
                         key={method}
                         style={[
                           styles.paymentMethodOption,
                           {
-                            backgroundColor: formData.payment_method === method ? colors.primary : colors.background,
-                            borderColor: formData.payment_method === method ? colors.primary : colors.border,
+                            backgroundColor:
+                              formData.payment_method === method
+                                ? colors.primary
+                                : colors.background,
+                            borderColor:
+                              formData.payment_method === method ? colors.primary : colors.border,
                           },
                         ]}
                         onPress={() => setFormData({ ...formData, payment_method: method })}
@@ -837,13 +1031,18 @@ export default function PatientDetailScreen() {
                         <Text
                           style={[
                             styles.paymentMethodOptionText,
-                            { color: formData.payment_method === method ? '#FFFFFF' : colors.text },
+                            { color: formData.payment_method === method ? "#FFFFFF" : colors.text },
                           ]}
                         >
-                          {method === 'cash' ? 'Dinheiro' :
-                           method === 'pix' ? 'PIX' :
-                           method === 'credit_card' ? 'Crédito' :
-                           method === 'debit_card' ? 'Débito' : 'Transferência'}
+                          {method === "cash"
+                            ? "Dinheiro"
+                            : method === "pix"
+                              ? "PIX"
+                              : method === "credit_card"
+                                ? "Crédito"
+                                : method === "debit_card"
+                                  ? "Débito"
+                                  : "Transferência"}
                         </Text>
                       </TouchableOpacity>
                     ))}
@@ -853,7 +1052,15 @@ export default function PatientDetailScreen() {
                 <View style={styles.formGroup}>
                   <Text style={[styles.formLabel, { color: colors.text }]}>Observações</Text>
                   <TextInput
-                    style={[styles.formInput, styles.formTextarea, { backgroundColor: colors.background, borderColor: colors.border, color: colors.text }]}
+                    style={[
+                      styles.formInput,
+                      styles.formTextarea,
+                      {
+                        backgroundColor: colors.background,
+                        borderColor: colors.border,
+                        color: colors.text,
+                      },
+                    ]}
                     value={formData.notes}
                     onChangeText={(text) => setFormData({ ...formData, notes: text })}
                     placeholder="Observações sobre o pagamento..."
@@ -875,7 +1082,7 @@ export default function PatientDetailScreen() {
                   onPress={() => {
                     const sessionValue = parseFloat(formData.session_value);
                     if (!sessionValue || sessionValue <= 0) {
-                      Alert.alert('Erro', 'Valor da sessão deve ser maior que zero.');
+                      Alert.alert("Erro", "Valor da sessão deve ser maior que zero.");
                       return;
                     }
 
@@ -883,7 +1090,16 @@ export default function PatientDetailScreen() {
                       patient_id: id as string,
                       session_date: formData.session_date,
                       session_value: sessionValue,
-                      payment_method: (formData.payment_method as 'cash' | 'credit_card' | 'debit_card' | 'pix' | 'transfer' | 'barter' | 'other' | undefined) || undefined,
+                      payment_method:
+                        (formData.payment_method as
+                          | "cash"
+                          | "credit_card"
+                          | "debit_card"
+                          | "pix"
+                          | "transfer"
+                          | "barter"
+                          | "other"
+                          | undefined) || undefined,
                       notes: formData.notes || undefined,
                     };
 
@@ -893,21 +1109,27 @@ export default function PatientDetailScreen() {
                         {
                           onSuccess: () => {
                             setShowFinancialModal(false);
-                            Alert.alert('Sucesso', 'Registro atualizado!');
+                            Alert.alert("Sucesso", "Registro atualizado!");
                           },
                           onError: (error: any) => {
-                            Alert.alert('Erro', error.message || 'Não foi possível atualizar o registro.');
+                            Alert.alert(
+                              "Erro",
+                              error.message || "Não foi possível atualizar o registro.",
+                            );
                           },
-                        }
+                        },
                       );
                     } else {
                       createFinancialMutation.mutate(data as any, {
                         onSuccess: () => {
                           setShowFinancialModal(false);
-                          Alert.alert('Sucesso', 'Registro criado!');
+                          Alert.alert("Sucesso", "Registro criado!");
                         },
                         onError: (error: any) => {
-                          Alert.alert('Erro', error.message || 'Não foi possível criar o registro.');
+                          Alert.alert(
+                            "Erro",
+                            error.message || "Não foi possível criar o registro.",
+                          );
                         },
                       });
                     }
@@ -932,21 +1154,21 @@ const styles = StyleSheet.create({
     padding: 16,
   },
   header: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     marginBottom: 20,
   },
   avatar: {
     width: 72,
     height: 72,
     borderRadius: 36,
-    alignItems: 'center',
-    justifyContent: 'center',
+    alignItems: "center",
+    justifyContent: "center",
   },
   avatarText: {
     fontSize: 28,
-    fontWeight: 'bold',
-    color: '#FFFFFF',
+    fontWeight: "bold",
+    color: "#FFFFFF",
   },
   headerInfo: {
     flex: 1,
@@ -954,39 +1176,39 @@ const styles = StyleSheet.create({
   },
   name: {
     fontSize: 22,
-    fontWeight: 'bold',
+    fontWeight: "bold",
   },
   statusBadge: {
-    alignSelf: 'flex-start',
+    alignSelf: "flex-start",
     paddingHorizontal: 10,
     paddingVertical: 4,
     borderRadius: 12,
   },
   statusText: {
     fontSize: 12,
-    fontWeight: '600',
+    fontWeight: "600",
   },
   actionsRow: {
-    flexDirection: 'row',
+    flexDirection: "row",
     gap: 12,
     marginBottom: 20,
   },
   actionBtn: {
     flex: 1,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
     paddingVertical: 12,
     borderRadius: 12,
     gap: 6,
   },
   actionBtnText: {
-    color: '#FFFFFF',
+    color: "#FFFFFF",
     fontSize: 14,
-    fontWeight: '600',
+    fontWeight: "600",
   },
   tabContainer: {
-    flexDirection: 'row',
+    flexDirection: "row",
     borderRadius: 12,
     borderWidth: 1,
     padding: 4,
@@ -995,12 +1217,12 @@ const styles = StyleSheet.create({
   tab: {
     flex: 1,
     paddingVertical: 10,
-    alignItems: 'center',
+    alignItems: "center",
     borderRadius: 8,
   },
   tabText: {
     fontSize: 14,
-    fontWeight: '600',
+    fontWeight: "600",
   },
   infoSection: {
     gap: 16,
@@ -1010,8 +1232,8 @@ const styles = StyleSheet.create({
     padding: 16,
   },
   infoCardHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     gap: 8,
     marginBottom: 12,
   },
@@ -1019,8 +1241,8 @@ const styles = StyleSheet.create({
     marginBottom: 16,
   },
   infoRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     gap: 12,
   },
   infoLabel: {
@@ -1030,7 +1252,7 @@ const styles = StyleSheet.create({
   infoValue: {
     flex: 1,
     fontSize: 15,
-    fontWeight: '500',
+    fontWeight: "500",
   },
   divider: {
     height: 1,
@@ -1051,23 +1273,23 @@ const styles = StyleSheet.create({
     gap: 16,
   },
   addEvolutionBtn: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
     paddingVertical: 16,
     borderRadius: 12,
     gap: 12,
     marginBottom: 8,
   },
   addEvolutionBtnText: {
-    color: '#FFFFFF',
+    color: "#FFFFFF",
     fontSize: 16,
-    fontWeight: '600',
+    fontWeight: "600",
   },
   viewAllBtn: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
     paddingVertical: 12,
     borderRadius: 12,
     gap: 8,
@@ -1076,21 +1298,21 @@ const styles = StyleSheet.create({
   },
   viewAllBtnText: {
     fontSize: 14,
-    fontWeight: '600',
+    fontWeight: "600",
   },
   evolutionCard: {
     padding: 16,
-    position: 'relative',
+    position: "relative",
   },
   evolutionHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
     marginBottom: 8,
   },
   evolutionDate: {
     fontSize: 14,
-    fontWeight: '600',
+    fontWeight: "600",
   },
   painBadge: {
     paddingHorizontal: 8,
@@ -1099,11 +1321,11 @@ const styles = StyleSheet.create({
   },
   painText: {
     fontSize: 12,
-    fontWeight: 'bold',
+    fontWeight: "bold",
   },
   attachmentsBadge: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     paddingHorizontal: 8,
     paddingVertical: 2,
     borderRadius: 8,
@@ -1112,7 +1334,7 @@ const styles = StyleSheet.create({
   },
   attachmentsText: {
     fontSize: 12,
-    fontWeight: 'bold',
+    fontWeight: "bold",
   },
   soapPreview: {
     gap: 4,
@@ -1122,39 +1344,39 @@ const styles = StyleSheet.create({
     fontSize: 14,
   },
   evolutionArrow: {
-    position: 'absolute',
+    position: "absolute",
     right: 12,
-    top: '50%',
+    top: "50%",
     marginTop: -10,
   },
   emptyEvolution: {
-    alignItems: 'center',
+    alignItems: "center",
     paddingVertical: 40,
   },
   emptyEvolutionTitle: {
     fontSize: 18,
-    fontWeight: '700',
+    fontWeight: "700",
     letterSpacing: -0.4,
     marginTop: 16,
   },
   emptyEvolutionText: {
     fontSize: 14,
     marginTop: 4,
-    textAlign: 'center',
+    textAlign: "center",
     paddingHorizontal: 32,
   },
   editButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
     paddingVertical: 12,
     borderRadius: 12,
     gap: 8,
   },
   editButtonText: {
-    color: '#FFFFFF',
+    color: "#FFFFFF",
     fontSize: 16,
-    fontWeight: '600',
+    fontWeight: "600",
   },
   financialContainer: {
     gap: 16,
@@ -1163,11 +1385,11 @@ const styles = StyleSheet.create({
     padding: 16,
   },
   summaryRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
+    flexDirection: "row",
+    justifyContent: "space-between",
   },
   summaryItem: {
-    alignItems: 'center',
+    alignItems: "center",
     flex: 1,
   },
   summaryLabel: {
@@ -1176,20 +1398,20 @@ const styles = StyleSheet.create({
   },
   summaryValue: {
     fontSize: 16,
-    fontWeight: 'bold',
+    fontWeight: "bold",
   },
   addFinancialBtn: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
     paddingVertical: 12,
     borderRadius: 12,
     gap: 8,
   },
   addFinancialBtnText: {
-    color: '#FFFFFF',
+    color: "#FFFFFF",
     fontSize: 16,
-    fontWeight: '600',
+    fontWeight: "600",
   },
   recordsList: {
     gap: 12,
@@ -1198,23 +1420,23 @@ const styles = StyleSheet.create({
     padding: 16,
   },
   recordHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
     marginBottom: 12,
   },
   recordDateContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     gap: 8,
   },
   recordDate: {
     fontSize: 16,
-    fontWeight: '600',
+    fontWeight: "600",
   },
   partnershipBadge: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     paddingHorizontal: 6,
     paddingVertical: 2,
     borderRadius: 4,
@@ -1222,39 +1444,39 @@ const styles = StyleSheet.create({
   },
   partnershipBadgeText: {
     fontSize: 10,
-    fontWeight: 'bold',
+    fontWeight: "bold",
   },
   recordValues: {
     gap: 4,
     marginBottom: 12,
   },
   valueRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
   },
   valueLabel: {
     fontSize: 13,
   },
   valueOriginal: {
     fontSize: 13,
-    textDecorationLine: 'line-through',
+    textDecorationLine: "line-through",
   },
   valueDiscount: {
     fontSize: 13,
-    fontWeight: '500',
+    fontWeight: "500",
   },
   valueFinal: {
     fontSize: 15,
-    fontWeight: 'bold',
+    fontWeight: "bold",
   },
   valuePaid: {
     fontSize: 13,
-    fontWeight: '500',
+    fontWeight: "500",
   },
   paymentMethodContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     gap: 6,
     marginBottom: 8,
   },
@@ -1263,26 +1485,26 @@ const styles = StyleSheet.create({
   },
   recordNotes: {
     fontSize: 13,
-    fontStyle: 'italic',
+    fontStyle: "italic",
     marginBottom: 12,
   },
   recordActions: {
-    flexDirection: 'row',
-    justifyContent: 'flex-end',
+    flexDirection: "row",
+    justifyContent: "flex-end",
     gap: 12,
   },
   markPaidBtn: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     paddingHorizontal: 12,
     paddingVertical: 6,
     borderRadius: 6,
     gap: 6,
   },
   markPaidBtnText: {
-    color: '#FFFFFF',
+    color: "#FFFFFF",
     fontSize: 12,
-    fontWeight: '600',
+    fontWeight: "600",
   },
   editRecordBtn: {
     padding: 6,
@@ -1296,23 +1518,23 @@ const styles = StyleSheet.create({
   },
   modalContainer: {
     flex: 1,
-    justifyContent: 'flex-end',
+    justifyContent: "flex-end",
   },
   modalContent: {
     borderTopLeftRadius: 20,
     borderTopRightRadius: 20,
     padding: 20,
-    maxHeight: '80%',
+    maxHeight: "80%",
   },
   modalHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
     marginBottom: 20,
   },
   modalTitle: {
     fontSize: 18,
-    fontWeight: 'bold',
+    fontWeight: "bold",
   },
   modalScroll: {
     marginBottom: 20,
@@ -1322,7 +1544,7 @@ const styles = StyleSheet.create({
   },
   formLabel: {
     fontSize: 14,
-    fontWeight: '600',
+    fontWeight: "600",
     marginBottom: 8,
   },
   formInput: {
@@ -1333,11 +1555,11 @@ const styles = StyleSheet.create({
   },
   formTextarea: {
     minHeight: 80,
-    textAlignVertical: 'top',
+    textAlignVertical: "top",
   },
   paymentMethodsContainer: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
+    flexDirection: "row",
+    flexWrap: "wrap",
     gap: 8,
   },
   paymentMethodOption: {
@@ -1348,33 +1570,33 @@ const styles = StyleSheet.create({
   },
   paymentMethodOptionText: {
     fontSize: 12,
-    fontWeight: '600',
+    fontWeight: "600",
   },
   modalActions: {
-    flexDirection: 'row',
+    flexDirection: "row",
     gap: 12,
   },
   modalBtn: {
     flex: 1,
     paddingVertical: 12,
     borderRadius: 8,
-    alignItems: 'center',
+    alignItems: "center",
   },
   modalBtnCancel: {
     borderWidth: 1,
   },
   modalBtnText: {
     fontSize: 16,
-    fontWeight: '600',
+    fontWeight: "600",
   },
   modalBtnConfirmText: {
-    color: '#FFFFFF',
+    color: "#FFFFFF",
     fontSize: 16,
-    fontWeight: '600',
+    fontWeight: "600",
   },
   loadingContainer: {
     padding: 20,
-    alignItems: 'center',
+    alignItems: "center",
   },
   loadingText: {
     marginTop: 8,
@@ -1386,35 +1608,35 @@ const styles = StyleSheet.create({
   },
   infoSectionTitle: {
     fontSize: 17,
-    fontWeight: '700',
+    fontWeight: "700",
     letterSpacing: -0.4,
     marginBottom: 8,
   },
   emptyFinancial: {
-    alignItems: 'center',
+    alignItems: "center",
     paddingVertical: 40,
   },
   emptyFinancialTitle: {
     fontSize: 16,
-    fontWeight: '600',
+    fontWeight: "600",
     marginTop: 16,
   },
   emptyFinancialText: {
     fontSize: 14,
     marginTop: 4,
-    textAlign: 'center',
+    textAlign: "center",
     paddingHorizontal: 32,
   },
   evolutionsHeaderActions: {
-    flexDirection: 'row',
+    flexDirection: "row",
     gap: 12,
     marginBottom: 8,
-    alignItems: 'center',
+    alignItems: "center",
   },
   exportPdfBtn: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
     paddingHorizontal: 16,
     borderRadius: 12,
     borderWidth: 1,
@@ -1423,7 +1645,7 @@ const styles = StyleSheet.create({
   },
   exportPdfBtnText: {
     fontSize: 14,
-    fontWeight: '600',
+    fontWeight: "600",
   },
   statusDot: {
     width: 6,
@@ -1432,7 +1654,7 @@ const styles = StyleSheet.create({
     marginRight: 4,
   },
   activeTabShadow: {
-    shadowColor: '#000',
+    shadowColor: "#000",
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
     shadowRadius: 4,

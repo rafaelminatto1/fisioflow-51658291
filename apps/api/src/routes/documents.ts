@@ -5,17 +5,17 @@
  * POST   /api/documents
  * DELETE /api/documents/:id
  */
-import { Hono } from 'hono';
-import { createPool } from '../lib/db';
-import { requireAuth, type AuthVariables } from '../lib/auth';
-import type { Env } from '../types/env';
-import { generatePdfFromHtml } from '../lib/pdf';
+import { Hono } from "hono";
+import { createPool } from "../lib/db";
+import { requireAuth, type AuthVariables } from "../lib/auth";
+import type { Env } from "../types/env";
+import { generatePdfFromHtml } from "../lib/pdf";
 
 const app = new Hono<{ Bindings: Env; Variables: AuthVariables }>();
 
 function asArray(value: unknown): unknown[] {
   if (Array.isArray(value)) return value;
-  if (typeof value === 'string') {
+  if (typeof value === "string") {
     try {
       const parsed = JSON.parse(value);
       return Array.isArray(parsed) ? parsed : [];
@@ -33,11 +33,11 @@ function normalizeTemplateRow(row: Record<string, unknown>) {
   };
 }
 
-app.get('/', requireAuth, async (c) => {
-  const user = c.get('user');
+app.get("/", requireAuth, async (c) => {
+  const user = c.get("user");
   const pool = await createPool(c.env);
   const { patientId } = c.req.query();
-  if (!patientId) return c.json({ error: 'patientId é obrigatório' }, 400);
+  if (!patientId) return c.json({ error: "patientId é obrigatório" }, 400);
 
   const result = await pool.query(
     `SELECT * FROM patient_documents
@@ -45,16 +45,20 @@ app.get('/', requireAuth, async (c) => {
      ORDER BY created_at DESC`,
     [patientId, user.organizationId],
   );
-  try { return c.json({ data: result.rows || result }); } catch { return c.json({ data: [] }); }
+  try {
+    return c.json({ data: result.rows || result });
+  } catch {
+    return c.json({ data: [] });
+  }
 });
 
-app.post('/', requireAuth, async (c) => {
-  const user = c.get('user');
+app.post("/", requireAuth, async (c) => {
+  const user = c.get("user");
   const pool = await createPool(c.env);
   const body = (await c.req.json()) as Record<string, unknown>;
 
-  const patientId = String(body.patient_id ?? '').trim();
-  if (!patientId) return c.json({ error: 'patient_id é obrigatório' }, 400);
+  const patientId = String(body.patient_id ?? "").trim();
+  if (!patientId) return c.json({ error: "patient_id é obrigatório" }, 400);
 
   const result = await pool.query(
     `INSERT INTO patient_documents
@@ -63,12 +67,13 @@ app.post('/', requireAuth, async (c) => {
      VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, NOW(), NOW())
      RETURNING *`,
     [
-      patientId, user.organizationId,
-      String(body.file_name ?? ''),
-      String(body.file_path ?? ''),
+      patientId,
+      user.organizationId,
+      String(body.file_name ?? ""),
+      String(body.file_path ?? ""),
       body.file_type ?? null,
       body.file_size != null ? Number(body.file_size) : null,
-      body.category ?? 'outro',
+      body.category ?? "outro",
       body.description ?? null,
       body.storage_url ?? null,
       user.uid,
@@ -77,23 +82,23 @@ app.post('/', requireAuth, async (c) => {
   return c.json({ data: result.rows[0] }, 201);
 });
 
-app.delete('/:id', requireAuth, async (c) => {
-  const user = c.get('user');
+app.delete("/:id", requireAuth, async (c) => {
+  const user = c.get("user");
   const pool = await createPool(c.env);
   const { id } = c.req.param();
 
   const check = await pool.query(
-    'SELECT file_path FROM patient_documents WHERE id = $1 AND organization_id = $2',
+    "SELECT file_path FROM patient_documents WHERE id = $1 AND organization_id = $2",
     [id, user.organizationId],
   );
-  if (!check.rows.length) return c.json({ error: 'Documento não encontrado' }, 404);
+  if (!check.rows.length) return c.json({ error: "Documento não encontrado" }, 404);
 
-  await pool.query('DELETE FROM patient_documents WHERE id = $1', [id]);
+  await pool.query("DELETE FROM patient_documents WHERE id = $1", [id]);
   return c.json({ ok: true, file_path: check.rows[0].file_path });
 });
 
-app.get('/atestado-templates', requireAuth, async (c) => {
-  const user = c.get('user');
+app.get("/atestado-templates", requireAuth, async (c) => {
+  const user = c.get("user");
   const pool = await createPool(c.env);
   const result = await pool.query(
     `
@@ -105,16 +110,18 @@ app.get('/atestado-templates', requireAuth, async (c) => {
     [user.organizationId],
   );
 
-  return c.json({ data: result.rows.map((row: Record<string, unknown>) => normalizeTemplateRow(row)) });
+  return c.json({
+    data: result.rows.map((row: Record<string, unknown>) => normalizeTemplateRow(row)),
+  });
 });
 
-app.post('/atestado-templates', requireAuth, async (c) => {
-  const user = c.get('user');
+app.post("/atestado-templates", requireAuth, async (c) => {
+  const user = c.get("user");
   const pool = await createPool(c.env);
   const body = (await c.req.json()) as Record<string, unknown>;
 
   if (!body.nome || !body.conteudo) {
-    return c.json({ error: 'nome e conteudo são obrigatórios' }, 400);
+    return c.json({ error: "nome e conteudo são obrigatórios" }, 400);
   }
 
   const result = await pool.query(
@@ -138,8 +145,8 @@ app.post('/atestado-templates', requireAuth, async (c) => {
   return c.json({ data: normalizeTemplateRow(result.rows[0] as Record<string, unknown>) }, 201);
 });
 
-app.put('/atestado-templates/:id', requireAuth, async (c) => {
-  const user = c.get('user');
+app.put("/atestado-templates/:id", requireAuth, async (c) => {
+  const user = c.get("user");
   const pool = await createPool(c.env);
   const { id } = c.req.param();
   const body = (await c.req.json()) as Record<string, unknown>;
@@ -170,24 +177,24 @@ app.put('/atestado-templates/:id', requireAuth, async (c) => {
     ],
   );
 
-  if (!result.rows.length) return c.json({ error: 'Template não encontrado' }, 404);
+  if (!result.rows.length) return c.json({ error: "Template não encontrado" }, 404);
   return c.json({ data: normalizeTemplateRow(result.rows[0] as Record<string, unknown>) });
 });
 
-app.delete('/atestado-templates/:id', requireAuth, async (c) => {
-  const user = c.get('user');
+app.delete("/atestado-templates/:id", requireAuth, async (c) => {
+  const user = c.get("user");
   const pool = await createPool(c.env);
   const { id } = c.req.param();
 
-  await pool.query('DELETE FROM atestado_templates WHERE id = $1 AND organization_id = $2', [
+  await pool.query("DELETE FROM atestado_templates WHERE id = $1 AND organization_id = $2", [
     id,
     user.organizationId,
   ]);
   return c.json({ ok: true });
 });
 
-app.get('/contrato-templates', requireAuth, async (c) => {
-  const user = c.get('user');
+app.get("/contrato-templates", requireAuth, async (c) => {
+  const user = c.get("user");
   const pool = await createPool(c.env);
   const result = await pool.query(
     `
@@ -199,16 +206,18 @@ app.get('/contrato-templates', requireAuth, async (c) => {
     [user.organizationId],
   );
 
-  return c.json({ data: result.rows.map((row: Record<string, unknown>) => normalizeTemplateRow(row)) });
+  return c.json({
+    data: result.rows.map((row: Record<string, unknown>) => normalizeTemplateRow(row)),
+  });
 });
 
-app.post('/contrato-templates', requireAuth, async (c) => {
-  const user = c.get('user');
+app.post("/contrato-templates", requireAuth, async (c) => {
+  const user = c.get("user");
   const pool = await createPool(c.env);
   const body = (await c.req.json()) as Record<string, unknown>;
 
   if (!body.nome || !body.conteudo) {
-    return c.json({ error: 'nome e conteudo são obrigatórios' }, 400);
+    return c.json({ error: "nome e conteudo são obrigatórios" }, 400);
   }
 
   const result = await pool.query(
@@ -222,7 +231,7 @@ app.post('/contrato-templates', requireAuth, async (c) => {
       user.organizationId,
       String(body.nome),
       body.descricao ? String(body.descricao) : null,
-      String(body.tipo ?? 'outro'),
+      String(body.tipo ?? "outro"),
       String(body.conteudo),
       JSON.stringify(asArray(body.variaveis_disponiveis).map(String)),
       body.ativo !== undefined ? Boolean(body.ativo) : true,
@@ -233,8 +242,8 @@ app.post('/contrato-templates', requireAuth, async (c) => {
   return c.json({ data: normalizeTemplateRow(result.rows[0] as Record<string, unknown>) }, 201);
 });
 
-app.put('/contrato-templates/:id', requireAuth, async (c) => {
-  const user = c.get('user');
+app.put("/contrato-templates/:id", requireAuth, async (c) => {
+  const user = c.get("user");
   const pool = await createPool(c.env);
   const { id } = c.req.param();
   const body = (await c.req.json()) as Record<string, unknown>;
@@ -267,16 +276,16 @@ app.put('/contrato-templates/:id', requireAuth, async (c) => {
     ],
   );
 
-  if (!result.rows.length) return c.json({ error: 'Template não encontrado' }, 404);
+  if (!result.rows.length) return c.json({ error: "Template não encontrado" }, 404);
   return c.json({ data: normalizeTemplateRow(result.rows[0] as Record<string, unknown>) });
 });
 
-app.delete('/contrato-templates/:id', requireAuth, async (c) => {
-  const user = c.get('user');
+app.delete("/contrato-templates/:id", requireAuth, async (c) => {
+  const user = c.get("user");
   const pool = await createPool(c.env);
   const { id } = c.req.param();
 
-  await pool.query('DELETE FROM contrato_templates WHERE id = $1 AND organization_id = $2', [
+  await pool.query("DELETE FROM contrato_templates WHERE id = $1 AND organization_id = $2", [
     id,
     user.organizationId,
   ]);
@@ -287,22 +296,22 @@ app.delete('/contrato-templates/:id', requireAuth, async (c) => {
  * Endpoint de Impressão (Geração de PDF)
  * Gera um PDF a partir de HTML enviado ou do ID de um documento/template.
  */
-app.post('/print', requireAuth, async (c) => {
-  const user = c.get('user');
+app.post("/print", requireAuth, async (c) => {
+  const user = c.get("user");
   try {
     const body = (await c.req.json()) as { html: string; filename?: string; title?: string };
     const html = body.html;
     const filename = body.filename;
     const title = body.title;
 
-    if (!html) return c.json({ error: 'HTML é obrigatório' }, 400);
+    if (!html) return c.json({ error: "HTML é obrigatório" }, 400);
 
     const fullHtml = `
       <!DOCTYPE html>
       <html>
         <head>
           <meta charset="UTF-8">
-          <title>${title || 'FisioFlow Document'}</title>
+          <title>${title || "FisioFlow Document"}</title>
           <style>
             body { font-family: 'Helvetica', 'Arial', sans-serif; color: #1a1a1a; line-height: 1.5; padding: 20px; }
             .header { border-bottom: 2px solid #3b82f6; margin-bottom: 30px; padding-bottom: 10px; }
@@ -315,7 +324,7 @@ app.post('/print', requireAuth, async (c) => {
         <body>
           <div class="header">
             <h2>FisioFlow - Clínica de Fisioterapia</h2>
-            <div class="meta">Data: ${new Date().toLocaleDateString('pt-BR')} | Profissional ID: ${user.uid}</div>
+            <div class="meta">Data: ${new Date().toLocaleDateString("pt-BR")} | Profissional ID: ${user.uid}</div>
           </div>
           <div class="content">${html}</div>
           <div class="footer">Gerado via FisioFlow Cloud System</div>
@@ -327,13 +336,13 @@ app.post('/print', requireAuth, async (c) => {
 
     return new Response(pdf as BodyInit, {
       headers: {
-        'Content-Type': 'application/pdf',
-        'Content-Disposition': `attachment; filename="${filename || 'documento'}.pdf"`,
+        "Content-Type": "application/pdf",
+        "Content-Disposition": `attachment; filename="${filename || "documento"}.pdf"`,
       },
     });
   } catch (error: any) {
-    console.error('[Documents/Print] Error:', error);
-    return c.json({ error: 'Erro ao gerar PDF', details: error.message }, 500);
+    console.error("[Documents/Print] Error:", error);
+    return c.json({ error: "Erro ao gerar PDF", details: error.message }, 500);
   }
 });
 

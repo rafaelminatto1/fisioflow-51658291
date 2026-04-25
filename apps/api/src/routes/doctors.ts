@@ -1,21 +1,21 @@
-import { Hono } from 'hono';
-import type { Env } from '../types/env';
-import { requireAuth, type AuthVariables } from '../lib/auth';
-import { createPool } from '../lib/db';
+import { Hono } from "hono";
+import type { Env } from "../types/env";
+import { requireAuth, type AuthVariables } from "../lib/auth";
+import { createPool } from "../lib/db";
 
 const app = new Hono<{ Bindings: Env; Variables: AuthVariables }>();
 
-app.get('/', requireAuth, async (c) => {
-  const user = c.get('user');
-  const { search, q, limit = '50', offset = '0' } = c.req.query();
-  const searchTerm = (search ?? q ?? '').trim();
+app.get("/", requireAuth, async (c) => {
+  const user = c.get("user");
+  const { search, q, limit = "50", offset = "0" } = c.req.query();
+  const searchTerm = (search ?? q ?? "").trim();
   const limitNum = Math.min(1000, Math.max(1, Number.parseInt(limit, 10) || 50));
   const offsetNum = Math.max(0, Number.parseInt(offset, 10) || 0);
 
   const pool = await createPool(c.env);
   try {
     const params: Array<string | number> = [user.organizationId];
-    let where = 'WHERE organization_id = $1 AND is_active = true';
+    let where = "WHERE organization_id = $1 AND is_active = true";
 
     if (searchTerm) {
       params.push(`%${searchTerm}%`);
@@ -63,8 +63,8 @@ app.get('/', requireAuth, async (c) => {
   }
 });
 
-app.get('/:id', requireAuth, async (c) => {
-  const user = c.get('user');
+app.get("/:id", requireAuth, async (c) => {
+  const user = c.get("user");
   const { id } = c.req.param();
 
   const pool = await createPool(c.env);
@@ -92,19 +92,19 @@ app.get('/:id', requireAuth, async (c) => {
       `,
       [id, user.organizationId],
     );
-    if (!result.rows.length) return c.json({ error: 'Médico não encontrado' }, 404);
+    if (!result.rows.length) return c.json({ error: "Médico não encontrado" }, 404);
     return c.json({ data: result.rows[0] });
   } finally {
     await pool.end();
   }
 });
 
-app.post('/', requireAuth, async (c) => {
-  const user = c.get('user');
+app.post("/", requireAuth, async (c) => {
+  const user = c.get("user");
   const body = (await c.req.json()) as Record<string, unknown>;
-  const name = String(body.name ?? '').trim();
+  const name = String(body.name ?? "").trim();
 
-  if (!name) return c.json({ error: 'Nome é obrigatório' }, 400);
+  if (!name) return c.json({ error: "Nome é obrigatório" }, 400);
 
   const pool = await createPool(c.env);
   try {
@@ -167,18 +167,18 @@ app.post('/', requireAuth, async (c) => {
   }
 });
 
-app.put('/:id', requireAuth, async (c) => {
-  const user = c.get('user');
+app.put("/:id", requireAuth, async (c) => {
+  const user = c.get("user");
   const { id } = c.req.param();
   const body = (await c.req.json()) as Record<string, unknown>;
 
   const pool = await createPool(c.env);
   try {
     const current = await pool.query(
-      'SELECT * FROM doctors WHERE id = $1 AND organization_id = $2 LIMIT 1',
+      "SELECT * FROM doctors WHERE id = $1 AND organization_id = $2 LIMIT 1",
       [id, user.organizationId],
     );
-    if (!current.rows.length) return c.json({ error: 'Médico não encontrado' }, 404);
+    if (!current.rows.length) return c.json({ error: "Médico não encontrado" }, 404);
     const d = current.rows[0];
 
     const result = await pool.query(
@@ -216,14 +216,34 @@ app.put('/:id', requireAuth, async (c) => {
       `,
       [
         body.name !== undefined ? String(body.name) : d.name,
-        body.specialty !== undefined ? (body.specialty ? String(body.specialty) : null) : d.specialty,
+        body.specialty !== undefined
+          ? body.specialty
+            ? String(body.specialty)
+            : null
+          : d.specialty,
         body.crm !== undefined ? (body.crm ? String(body.crm) : null) : d.crm,
-        body.crm_state !== undefined ? (body.crm_state ? String(body.crm_state) : null) : d.crm_state,
+        body.crm_state !== undefined
+          ? body.crm_state
+            ? String(body.crm_state)
+            : null
+          : d.crm_state,
         body.phone !== undefined ? (body.phone ? String(body.phone) : null) : d.phone,
         body.email !== undefined ? (body.email ? String(body.email) : null) : d.email,
-        body.clinic_name !== undefined ? (body.clinic_name ? String(body.clinic_name) : null) : d.clinic_name,
-        body.clinic_address !== undefined ? (body.clinic_address ? String(body.clinic_address) : null) : d.clinic_address,
-        body.clinic_phone !== undefined ? (body.clinic_phone ? String(body.clinic_phone) : null) : d.clinic_phone,
+        body.clinic_name !== undefined
+          ? body.clinic_name
+            ? String(body.clinic_name)
+            : null
+          : d.clinic_name,
+        body.clinic_address !== undefined
+          ? body.clinic_address
+            ? String(body.clinic_address)
+            : null
+          : d.clinic_address,
+        body.clinic_phone !== undefined
+          ? body.clinic_phone
+            ? String(body.clinic_phone)
+            : null
+          : d.clinic_phone,
         body.notes !== undefined ? (body.notes ? String(body.notes) : null) : d.notes,
         body.is_active !== undefined ? Boolean(body.is_active) : d.is_active,
         id,
@@ -237,8 +257,8 @@ app.put('/:id', requireAuth, async (c) => {
   }
 });
 
-app.delete('/:id', requireAuth, async (c) => {
-  const user = c.get('user');
+app.delete("/:id", requireAuth, async (c) => {
+  const user = c.get("user");
   const { id } = c.req.param();
 
   const pool = await createPool(c.env);
@@ -252,7 +272,7 @@ app.delete('/:id', requireAuth, async (c) => {
       `,
       [id, user.organizationId],
     );
-    if (!result.rows.length) return c.json({ error: 'Médico não encontrado' }, 404);
+    if (!result.rows.length) return c.json({ error: "Médico não encontrado" }, 404);
     return c.json({ success: true });
   } finally {
     await pool.end();

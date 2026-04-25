@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback } from "react";
 
 export interface InclinometerData {
   angle: number;
@@ -13,7 +13,7 @@ export const useDeviceInclinometer = (): InclinometerData => {
   const [permissionGranted, setPermissionGranted] = useState(false);
 
   useEffect(() => {
-    if (typeof window !== 'undefined' && window.DeviceOrientationEvent) {
+    if (typeof window !== "undefined" && window.DeviceOrientationEvent) {
       setIsSupported(true);
     }
   }, []);
@@ -23,7 +23,7 @@ export const useDeviceInclinometer = (): InclinometerData => {
     // beta: front-to-back tilt in degrees, where front is positive (-180 to 180)
     // gamma: left-to-right tilt in degrees, where right is positive (-90 to 90)
     let degrees = 0;
-    
+
     if (event.beta != null && event.gamma != null) {
       // Simplistic approach for portrait mode tilting:
       // If we hold the phone in portrait and tilt forward/backward, beta changes.
@@ -31,48 +31,46 @@ export const useDeviceInclinometer = (): InclinometerData => {
       // For a physical inclinometer, usually you place the side of the phone on the limb.
       // E.g., placing the long edge of the phone on a leg means tilt is primarily the phone's pitch/roll.
       // Let's use the absolute pitch/roll combination or just beta if upright.
-      
+
       // Let's assume the user places the back of the phone or the side of the phone.
       // The most common physical inclinometer phone usage: edge on the patient.
-      const y = event.beta; 
-      const x = event.gamma; 
+      const y = event.beta;
+      const x = event.gamma;
       // We can take the dominant tilt as the angle, or a vector magnitude.
       // For a true inclinometer of the screen plane against gravity:
-      degrees = Math.abs(x) > Math.abs(y) ? x : y; 
+      degrees = Math.abs(x) > Math.abs(y) ? x : y;
     }
-    
+
     setAngle(Math.round(degrees));
   }, []);
 
   const requestPermission = useCallback(async () => {
     try {
       // iOS 13+ requires permission for DeviceOrientation
-      if (
-        typeof (DeviceOrientationEvent as any).requestPermission === 'function'
-      ) {
+      if (typeof (DeviceOrientationEvent as any).requestPermission === "function") {
         const permissionState = await (DeviceOrientationEvent as any).requestPermission();
-        if (permissionState === 'granted') {
+        if (permissionState === "granted") {
           setPermissionGranted(true);
-          window.addEventListener('deviceorientation', handleOrientation);
+          window.addEventListener("deviceorientation", handleOrientation);
         } else {
-          console.warn('Permission to access device orientation was denied.');
+          console.warn("Permission to access device orientation was denied.");
         }
       } else {
         // Non-iOS 13+ devices
         setPermissionGranted(true);
-        window.addEventListener('deviceorientation', handleOrientation);
+        window.addEventListener("deviceorientation", handleOrientation);
       }
     } catch (error) {
-      console.error('Error requesting orientation permission:', error);
+      console.error("Error requesting orientation permission:", error);
       // Fallback: try listening anyway
       setPermissionGranted(true);
-      window.addEventListener('deviceorientation', handleOrientation);
+      window.addEventListener("deviceorientation", handleOrientation);
     }
   }, [handleOrientation]);
 
   useEffect(() => {
     return () => {
-      window.removeEventListener('deviceorientation', handleOrientation);
+      window.removeEventListener("deviceorientation", handleOrientation);
     };
   }, [handleOrientation]);
 
@@ -80,6 +78,6 @@ export const useDeviceInclinometer = (): InclinometerData => {
     angle,
     isSupported,
     permissionGranted,
-    requestPermission
+    requestPermission,
   };
 };

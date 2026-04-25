@@ -1,29 +1,35 @@
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { useAuthStore } from '@/store/auth';
-import type { Patient } from '@/types';
-import { getPatients, getPatientById, createPatient, updatePatient, deletePatient, type ApiPatient } from '@/lib/api';
-import { auditLogger } from '@/lib/services/auditLogger';
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useAuthStore } from "@/store/auth";
+import type { Patient } from "@/types";
+import {
+  getPatients,
+  getPatientById,
+  createPatient,
+  updatePatient,
+  deletePatient,
+  type ApiPatient,
+} from "@/lib/api";
+import { auditLogger } from "@/lib/services/auditLogger";
 
 export interface UsePatientsOptions {
-  status?: 'active' | 'inactive' | 'Em_Tratamento';
+  status?: "active" | "inactive" | "Em_Tratamento";
   limit?: number;
   search?: string;
 }
-
 
 // Map API patient type to app Patient type
 function mapApiPatient(apiPatient: ApiPatient): Patient {
   return {
     id: apiPatient.id,
     userId: undefined,
-    name: apiPatient.name || apiPatient.full_name || 'Sem nome',
+    name: apiPatient.name || apiPatient.full_name || "Sem nome",
     email: apiPatient.email || undefined,
     phone: apiPatient.phone || undefined,
     birthDate: apiPatient.birth_date,
     condition: apiPatient.main_condition || apiPatient.observations,
     diagnosis: undefined,
     notes: apiPatient.observations,
-    status: (apiPatient.is_active !== false) ? 'active' : 'inactive',
+    status: apiPatient.is_active !== false ? "active" : "inactive",
     progress: apiPatient.progress,
     lastVisit: undefined,
     organizationId: undefined,
@@ -33,8 +39,8 @@ function mapApiPatient(apiPatient: ApiPatient): Patient {
 }
 
 // Reverse map app status to API status
-function mapToApiStatus(status: Patient['status']): string {
-  return status === 'active' ? 'Em_Tratamento' : status;
+function mapToApiStatus(status: Patient["status"]): string {
+  return status === "active" ? "Em_Tratamento" : status;
 }
 
 export function usePatients(options?: UsePatientsOptions) {
@@ -42,12 +48,12 @@ export function usePatients(options?: UsePatientsOptions) {
   const queryClient = useQueryClient();
 
   const patients = useQuery({
-    queryKey: ['patients', user?.id, options],
+    queryKey: ["patients", user?.id, options],
     queryFn: async () => {
       if (!user?.id) return [];
 
       const data = await getPatients(user.organizationId, {
-        status: options?.status === 'active' ? undefined : options?.status,
+        status: options?.status === "active" ? undefined : options?.status,
         search: options?.search,
         limit: options?.limit || 100,
       });
@@ -58,28 +64,33 @@ export function usePatients(options?: UsePatientsOptions) {
   });
 
   const createMutation = useMutation({
-    mutationFn: async (data: Omit<Patient, 'id' | 'createdAt' | 'updatedAt' | 'userId' | 'clinicId'>) => {
-      if (!user?.id) throw new Error('User not authenticated');
+    mutationFn: async (
+      data: Omit<Patient, "id" | "createdAt" | "updatedAt" | "userId" | "clinicId">,
+    ) => {
+      if (!user?.id) throw new Error("User not authenticated");
 
       const apiPatient = await createPatient({
         name: data.name,
         email: data.email,
         phone: data.phone,
-        birth_date: typeof data.birthDate === 'string' ? data.birthDate : data.birthDate?.toISOString().split('T')[0],
+        birth_date:
+          typeof data.birthDate === "string"
+            ? data.birthDate
+            : data.birthDate?.toISOString().split("T")[0],
         main_condition: data.condition,
         status: mapToApiStatus(data.status),
         observations: data.notes,
       });
 
       const mappedPatient = mapApiPatient(apiPatient);
-      
+
       // Log audit event
-      await auditLogger.logPHIModification(user.id, 'create', 'patient', mappedPatient.id);
+      await auditLogger.logPHIModification(user.id, "create", "patient", mappedPatient.id);
 
       return mappedPatient;
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['patients'] });
+      queryClient.invalidateQueries({ queryKey: ["patients"] });
     },
   });
 
@@ -89,38 +100,42 @@ export function usePatients(options?: UsePatientsOptions) {
       if (data.name) updateData.name = data.name;
       if (data.email !== undefined) updateData.email = data.email;
       if (data.phone !== undefined) updateData.phone = data.phone;
-      if (data.birthDate) updateData.birth_date = typeof data.birthDate === 'string' ? data.birthDate : data.birthDate.toISOString().split('T')[0];
+      if (data.birthDate)
+        updateData.birth_date =
+          typeof data.birthDate === "string"
+            ? data.birthDate
+            : data.birthDate.toISOString().split("T")[0];
       if (data.condition !== undefined) updateData.main_condition = data.condition;
       if (data.status) updateData.status = mapToApiStatus(data.status);
       if (data.notes !== undefined) updateData.observations = data.notes;
 
       const apiPatient = await updatePatient(id, updateData);
-      
+
       // Log audit event
       if (user?.id) {
-        await auditLogger.logPHIModification(user.id, 'update', 'patient', id);
+        await auditLogger.logPHIModification(user.id, "update", "patient", id);
       }
 
       return mapApiPatient(apiPatient);
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['patients'] });
+      queryClient.invalidateQueries({ queryKey: ["patients"] });
     },
   });
 
   const deleteMutation = useMutation({
     mutationFn: async (id: string) => {
       const result = await deletePatient(id);
-      
+
       // Log audit event
       if (user?.id) {
-        await auditLogger.logPHIModification(user.id, 'delete', 'patient', id);
+        await auditLogger.logPHIModification(user.id, "delete", "patient", id);
       }
-      
+
       return result;
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['patients'] });
+      queryClient.invalidateQueries({ queryKey: ["patients"] });
     },
   });
 
@@ -143,7 +158,7 @@ export function usePatients(options?: UsePatientsOptions) {
 
 export function usePatient(id?: string) {
   return useQuery({
-    queryKey: ['patient', id],
+    queryKey: ["patient", id],
     queryFn: async () => {
       if (!id) return null;
       const apiPatient = await getPatientById(id);

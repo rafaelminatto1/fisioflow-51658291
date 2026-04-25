@@ -21,6 +21,7 @@ npm install
 ### 2. Configurar Neon Auth
 
 1. Copie o arquivo de exemplo:
+
 ```bash
 cp .env.example .env
 ```
@@ -30,6 +31,7 @@ cp .env.example .env
 ### 3. Adicionar Icones
 
 Substitua os arquivos placeholder em `assets/` pelos seus icones reais:
+
 - `icon.png` (1024x1024)
 - `splash-icon.png` (512x512)
 - `adaptive-icon.png` (1024x1024)
@@ -53,16 +55,19 @@ npm start
 ### Configurar EAS Build
 
 1. Instale o EAS CLI:
+
 ```bash
 npm install -g eas-cli
 ```
 
 2. Faca login na sua conta Expo:
+
 ```bash
 eas login
 ```
 
 3. Configure o projeto:
+
 ```bash
 eas build:configure
 ```

@@ -1,11 +1,13 @@
 # Medical Return Feature Implementation Summary
 
 ## Overview
+
 Successfully implemented a comprehensive Medical Return management system with modal-based editing, similar to the existing Surgeries feature. The implementation includes full CRUD operations, optional time-of-day field, and report status tracking.
 
 ## Components Created/Modified
 
 ### 1. **MedicalReturnFormModal.tsx** (NEW)
+
 - Location: `src/components/evolution/MedicalReturnFormModal.tsx`
 - Full-featured modal for adding/editing medical return records
 - Fields:
@@ -20,6 +22,7 @@ Successfully implemented a comprehensive Medical Return management system with m
 - Mutation hooks for create, update, and delete operations
 
 ### 2. **MedicalReturnCard.tsx** (REFACTORED)
+
 - Location: `src/components/evolution/MedicalReturnCard.tsx`
 - Changed from inline editing to list-based display with modal
 - Features:
@@ -32,6 +35,7 @@ Successfully implemented a comprehensive Medical Return management system with m
   - Empty state with fallback to patient's referring doctor info
 
 ### 3. **MedicalReturnService.ts** (NEW)
+
 - Location: `src/lib/services/medicalReturnService.ts`
 - Service layer for medical return CRUD operations
 - Methods:
@@ -44,6 +48,7 @@ Successfully implemented a comprehensive Medical Return management system with m
 ## Type Definitions
 
 ### 4. **evolution.ts** (UPDATED)
+
 - Location: `src/types/evolution.ts`
 - Added `MedicalReturn` interface:
   ```typescript
@@ -53,7 +58,7 @@ Successfully implemented a comprehensive Medical Return management system with m
     doctor_name: string;
     doctor_phone?: string;
     return_date: string;
-    return_period?: 'manha' | 'tarde' | 'noite';
+    return_period?: "manha" | "tarde" | "noite";
     notes?: string;
     report_done?: boolean;
     report_sent?: boolean;
@@ -64,12 +69,14 @@ Successfully implemented a comprehensive Medical Return management system with m
 - Added `MedicalReturnFormData` type for form handling
 
 ### 5. **index.ts** (UPDATED)
+
 - Location: `src/types/index.ts`
 - Added `medical_return_period` field to Patient interface
 
 ## Hooks
 
 ### 6. **usePatientEvolution.firebase.ts** (UPDATED)
+
 - Location: `src/hooks/usePatientEvolution.firebase.ts`
 - Added `PatientMedicalReturn` interface
 - Added `usePatientMedicalReturns(patientId)` hook
@@ -77,6 +84,7 @@ Successfully implemented a comprehensive Medical Return management system with m
 - Updated `usePatientEvolutionData()` to fetch and return medical returns
 
 ### 7. **usePatientEvolution.ts** (UPDATED)
+
 - Location: `src/hooks/usePatientEvolution.ts`
 - Added same interfaces and hooks as firebase version for consistency
 - Both hook files now support medical returns
@@ -84,6 +92,7 @@ Successfully implemented a comprehensive Medical Return management system with m
 ## Database
 
 ### 8. **firestore.rules** (UPDATED)
+
 - Location: `firestore.rules`
 - Added security rules for `patient_medical_returns` collection:
   ```
@@ -95,6 +104,7 @@ Successfully implemented a comprehensive Medical Return management system with m
 ## Features Implemented
 
 ### ✅ Core Functionality
+
 - [x] Modal-based add/edit interface
 - [x] List view of all medical returns
 - [x] Optional time-of-day field (morning/afternoon/night)
@@ -103,6 +113,7 @@ Successfully implemented a comprehensive Medical Return management system with m
 - [x] Real-time updates via React Query
 
 ### ✅ UI/UX Enhancements
+
 - [x] Compact card design matching Surgeries card
 - [x] Visual indicators for upcoming returns
 - [x] Status badges with color coding
@@ -112,6 +123,7 @@ Successfully implemented a comprehensive Medical Return management system with m
 - [x] Responsive layout
 
 ### ✅ Data Management
+
 - [x] Firestore integration
 - [x] Query invalidation on mutations
 - [x] Optimistic updates
@@ -121,6 +133,7 @@ Successfully implemented a comprehensive Medical Return management system with m
 ## Testing Checklist
 
 ### Manual Testing Required
+
 - [ ] Add new medical return via modal
 - [ ] Edit existing medical return
 - [ ] Delete medical return (with confirmation)
@@ -135,7 +148,9 @@ Successfully implemented a comprehensive Medical Return management system with m
 ## Known Issues/Limitations
 
 ### Existing Lint Errors (Not Related to This Feature)
+
 The following lint errors exist in the codebase but are not caused by this implementation:
+
 - Missing exports in `src/types/common.ts` (SessionId, TreatmentId, ServiceResult, ErrorMap)
 - Spread type errors in `usePatientEvolution` hooks (pre-existing)
 - SoapRecord type incompatibility between hooks (pre-existing)
@@ -153,12 +168,15 @@ These errors should be addressed separately as they affect other parts of the ap
 ## Migration Notes
 
 ### Breaking Changes
+
 - The `MedicalReturnCard` no longer uses inline editing
 - Old patient fields (`referring_doctor_name`, `medical_return_date`) are still supported for backward compatibility
 - New medical returns are stored in the `patient_medical_returns` collection
 
 ### Data Migration
+
 If there are existing patients with `medical_return_date` set, consider creating a migration script to:
+
 1. Read all patients with `medical_return_date`
 2. Create corresponding entries in `patient_medical_returns` collection
 3. Preserve the doctor name and phone from patient record
@@ -166,11 +184,13 @@ If there are existing patients with `medical_return_date` set, consider creating
 ## File Summary
 
 **New Files:**
+
 - `src/components/evolution/MedicalReturnFormModal.tsx` (355 lines)
 - `src/lib/services/medicalReturnService.ts` (59 lines)
 - `.gemini/medical-return-implementation.md` (this file)
 
 **Modified Files:**
+
 - `src/components/evolution/MedicalReturnCard.tsx` (refactored from inline to list view)
 - `src/types/evolution.ts` (added MedicalReturn types)
 - `src/types/index.ts` (added medical_return_period field)

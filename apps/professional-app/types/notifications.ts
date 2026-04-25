@@ -1,5 +1,4 @@
-
-export type NotificationCategory = 'appointments' | 'patients' | 'system' | 'marketing';
+export type NotificationCategory = "appointments" | "patients" | "system" | "marketing";
 
 export interface NotificationPreference {
   userId: string;

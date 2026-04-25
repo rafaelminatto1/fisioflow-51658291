@@ -1,13 +1,13 @@
 /**
  * PoseFeedbackOverlay - Overlay Visual de Detecção de Pose (Mobile)
- * 
+ *
  * Versão React Native usando SVG para desenhar o esqueleto sobre a câmera.
  */
 
-import React from 'react';
-import { View, StyleSheet } from 'react-native';
-import Svg, { Circle, Line, Text as SvgText } from 'react-native-svg';
-import { PoseLandmark, JointAngle, MainJoint } from '../../types/pose';
+import React from "react";
+import { View, StyleSheet } from "react-native";
+import Svg, { Circle, Line, Text as SvgText } from "react-native-svg";
+import { PoseLandmark, JointAngle, MainJoint } from "../../types/pose";
 
 interface PoseFeedbackOverlayProps {
   landmarks: PoseLandmark[];
@@ -19,11 +19,18 @@ interface PoseFeedbackOverlayProps {
 }
 
 const POSE_CONNECTIONS = [
-  [11, 12], [11, 23], [12, 24], [23, 24], // Torso
-  [11, 13], [13, 15], // Braço esquerdo
-  [12, 14], [14, 16], // Braço direito
-  [23, 25], [25, 27], // Perna esquerda
-  [24, 26], [26, 28], // Perna direita
+  [11, 12],
+  [11, 23],
+  [12, 24],
+  [23, 24], // Torso
+  [11, 13],
+  [13, 15], // Braço esquerdo
+  [12, 14],
+  [14, 16], // Braço direito
+  [23, 25],
+  [25, 27], // Perna esquerda
+  [24, 26],
+  [26, 28], // Perna direita
 ];
 
 export const PoseFeedbackOverlay: React.FC<PoseFeedbackOverlayProps> = ({
@@ -32,7 +39,7 @@ export const PoseFeedbackOverlay: React.FC<PoseFeedbackOverlayProps> = ({
   jointAngles,
   width,
   height,
-  showSkeleton = true
+  showSkeleton = true,
 }) => {
   if (!landmarks || landmarks.length === 0) return null;
 
@@ -40,13 +47,13 @@ export const PoseFeedbackOverlay: React.FC<PoseFeedbackOverlayProps> = ({
 
   const calculateAccuracy = () => {
     if (!landmarks || !referenceLandmarks || referenceLandmarks.length === 0) return null;
-    
+
     // Main body joints: 11-16 (arms), 23-28 (legs/torso)
     const trackedIndices = [11, 12, 13, 14, 15, 16, 23, 24, 25, 26, 27, 28];
     let totalDist = 0;
     let count = 0;
 
-    trackedIndices.forEach(idx => {
+    trackedIndices.forEach((idx) => {
       const lm = landmarks[idx];
       const ref = referenceLandmarks[idx];
       if (lm && ref && lm.visibility > 0.5 && ref.visibility > 0.5) {
@@ -78,12 +85,12 @@ export const PoseFeedbackOverlay: React.FC<PoseFeedbackOverlayProps> = ({
           {POSE_CONNECTIONS.map(([start, end], index) => {
             const p1 = points[start];
             const p2 = points[end];
-            
+
             if (!p1 || !p2 || p1.visibility < 0.5 || p2.visibility < 0.5) return null;
 
             return (
               <Line
-                key={`conn-${isGhost ? 'ghost-' : ''}${index}`}
+                key={`conn-${isGhost ? "ghost-" : ""}${index}`}
                 x1={p1.x * width}
                 y1={p1.y * height}
                 x2={p2.x * width}
@@ -98,15 +105,16 @@ export const PoseFeedbackOverlay: React.FC<PoseFeedbackOverlayProps> = ({
           {points.map((lm, index) => {
             if (!lm || lm.visibility < 0.5) return null;
             // Mostrar apenas articulações principais no fantasma
-            if (isGhost && ![11, 12, 13, 14, 15, 16, 23, 24, 25, 26, 27, 28].includes(index)) return null;
-            
+            if (isGhost && ![11, 12, 13, 14, 15, 16, 23, 24, 25, 26, 27, 28].includes(index))
+              return null;
+
             return (
               <Circle
-                key={`lm-${isGhost ? 'ghost-' : ''}${index}`}
+                key={`lm-${isGhost ? "ghost-" : ""}${index}`}
                 cx={lm.x * width}
                 cy={lm.y * height}
                 r={circleRadius}
-                fill={isGhost ? "#94A3B8" : (index < 11 ? "#FF0000" : "#00FF00")} // Vermelho pra face, verde pra corpo
+                fill={isGhost ? "#94A3B8" : index < 11 ? "#FF0000" : "#00FF00"} // Vermelho pra face, verde pra corpo
                 stroke="#FFFFFF"
                 strokeWidth="1"
               />
@@ -120,7 +128,9 @@ export const PoseFeedbackOverlay: React.FC<PoseFeedbackOverlayProps> = ({
   return (
     <View style={[styles.container, { width, height }]} pointerEvents="none">
       {/* Primeiro o fantasma (referência) */}
-      {referenceLandmarks && referenceLandmarks.length > 0 && renderSkeleton(referenceLandmarks, "#94A3B8", true)}
+      {referenceLandmarks &&
+        referenceLandmarks.length > 0 &&
+        renderSkeleton(referenceLandmarks, "#94A3B8", true)}
 
       {/* Depois o esqueleto real */}
       {showSkeleton && renderSkeleton(landmarks, "#00FF00")}
@@ -169,9 +179,9 @@ export const PoseFeedbackOverlay: React.FC<PoseFeedbackOverlayProps> = ({
 
 const styles = StyleSheet.create({
   container: {
-    position: 'absolute',
+    position: "absolute",
     top: 0,
     left: 0,
     zIndex: 10,
-  }
+  },
 });

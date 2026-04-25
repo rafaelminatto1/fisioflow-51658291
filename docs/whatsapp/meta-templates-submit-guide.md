@@ -8,6 +8,7 @@
 Hoje você está enviando "(sem template)" em 27 de 31 mensagens — essas caem no limite de **24h conversation window** do WhatsApp Business Platform. Fora dessa janela, enviar sem template **falha sempre**. Por isso 51.6% de falha.
 
 Templates aprovados permitem:
+
 - Enviar mensagens proativas (lembretes D-3, D-1, D-0) fora da janela de 24h
 - Usar variáveis `{{1}}`, `{{2}}`, etc. para personalizar
 - Mensagens de utilidade (lembretes) têm custo reduzido
@@ -15,15 +16,16 @@ Templates aprovados permitem:
 ## Como submeter
 
 ### 1. Acesso
+
 1. Entrar em **https://business.facebook.com** (sua Meta Business conta)
 2. Menu lateral → **WhatsApp Manager** → **Templates de mensagem**
 3. Botão azul "Criar template"
 
 ### 2. Configurações padrão para todos os templates
 
-| Campo | Valor |
-|---|---|
-| Idioma | **Português (BR)** |
+| Campo     | Valor                                                                                      |
+| --------- | ------------------------------------------------------------------------------------------ |
+| Idioma    | **Português (BR)**                                                                         |
 | Categoria | **Utility** (lembretes, confirmações, cancelamentos) ou **Marketing** (pacotes, campanhas) |
 
 ## Templates a submeter (copiar exato)
@@ -34,11 +36,13 @@ Templates aprovados permitem:
 - **Nome**: `appointment_reminder_d3`
 - **Idioma**: Português (BR)
 - **Body**:
+
 ```
 Olá, {{1}}! Passando para lembrar da sua sessão de fisioterapia na {{2}} em *{{3}}* às *{{4}}*.
 
 Está tudo certo para comparecer? Responda *Sim* para confirmar ou *Reagendar* se precisar mudar o horário.
 ```
+
 - **Exemplos (para aprovação)**:
   - `{{1}}` = Maria
   - `{{2}}` = Clínica Moocafisio
@@ -52,11 +56,13 @@ Está tudo certo para comparecer? Responda *Sim* para confirmar ou *Reagendar* s
 - **Categoria**: Utility
 - **Nome**: `appointment_reminder_d1`
 - **Body**:
+
 ```
 Oi, {{1}}! Sua sessão de fisioterapia é *amanhã* ({{2}}) às *{{3}}*.
 
 Responda *Confirmar* ou *Cancelar* — sem resposta assumimos presença.
 ```
+
 - **Exemplos**:
   - `{{1}}` = João
   - `{{2}}` = quinta-feira
@@ -69,11 +75,13 @@ Responda *Confirmar* ou *Cancelar* — sem resposta assumimos presença.
 - **Categoria**: Utility
 - **Nome**: `appointment_reminder_d0`
 - **Body**:
+
 ```
 {{1}}, lembrete rápido: sua sessão de fisioterapia é *hoje às {{2}}*.
 
 Te esperamos em {{3}}. Qualquer imprevisto, nos avise por aqui.
 ```
+
 - **Exemplos**:
   - `{{1}}` = Ana
   - `{{2}}` = 16:00
@@ -86,11 +94,13 @@ Te esperamos em {{3}}. Qualquer imprevisto, nos avise por aqui.
 - **Categoria**: Utility
 - **Nome**: `confirmation_request`
 - **Body**:
+
 ```
 Olá, {{1}}. Sua sessão está marcada para *{{2}}* às *{{3}}*.
 
 Por favor, responda *Confirmar* ou *Reagendar* para ajustarmos a agenda.
 ```
+
 - **Exemplos**:
   - `{{1}}` = Carlos
   - `{{2}}` = 29/04 (segunda)
@@ -103,6 +113,7 @@ Por favor, responda *Confirmar* ou *Reagendar* para ajustarmos a agenda.
 - **Categoria**: Utility
 - **Nome**: `reschedule_followup`
 - **Body**:
+
 ```
 Olá, {{1}}. Recebemos seu pedido de reagendamento.
 
@@ -113,6 +124,7 @@ Tenho estas opções disponíveis:
 
 Responda com o número da opção preferida.
 ```
+
 - **Exemplos**:
   - `{{1}}` = Beatriz
   - `{{2}}` = seg 28/04 às 10:00
@@ -126,11 +138,13 @@ Responda com o número da opção preferida.
 - **Categoria**: Utility
 - **Nome**: `cancellation_confirmation`
 - **Body**:
+
 ```
 {{1}}, seu cancelamento da sessão de *{{2}}* às *{{3}}* foi registrado.
 
 Quando quiser remarcar, é só nos enviar uma mensagem aqui. Cuide-se!
 ```
+
 - **Exemplos**:
   - `{{1}}` = Pedro
   - `{{2}}` = 28/04
@@ -138,7 +152,7 @@ Quando quiser remarcar, é só nos enviar uma mensagem aqui. Cuide-se!
 
 ---
 
-### 7. `boas_vindas_paciente` — Onboarding pós-primeiro agendamento *(já aprovado — manter)*
+### 7. `boas_vindas_paciente` — Onboarding pós-primeiro agendamento _(já aprovado — manter)_
 
 Já está aprovado (3 enviadas, 3 lidas 100%). Não precisa submeter de novo.
 
@@ -147,6 +161,7 @@ Já está aprovado (3 enviadas, 3 lidas 100%). Não precisa submeter de novo.
 Quando Meta aprovar (email notificação), os templates aparecem em `GET /api/whatsapp/templates`. O `AppointmentReminderWorkflow` no Worker vai começar a usar automaticamente.
 
 **Verificar aprovação programaticamente**:
+
 ```bash
 curl "https://api-pro.moocafisio.com.br/api/whatsapp/templates" -H "Authorization: Bearer $JWT" | jq
 ```
@@ -163,6 +178,7 @@ curl "https://api-pro.moocafisio.com.br/api/whatsapp/templates" -H "Authorizatio
 ## Se Meta rejeitar
 
 Razões comuns:
+
 - Template parece spam → tire emojis, tom mais formal
 - Categoria errada → mude Marketing ↔ Utility
 - Variáveis mal formatadas → use exemplos reais de clínica

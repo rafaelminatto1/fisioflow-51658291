@@ -2,7 +2,7 @@
  * Onboarding Flow Screen
  */
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect } from "react";
 import {
   View,
   Text,
@@ -10,18 +10,18 @@ import {
   TouchableOpacity,
   ActivityIndicator,
   ScrollView,
-} from 'react-native';
-import { useRouter } from 'expo-router';
-import { Ionicons } from '@expo/vector-icons';
-import { SafeAreaView } from 'react-native-safe-area-context';
-import * as Device from 'expo-device';
-import Constants from 'expo-constants';
-import { LEGAL_VERSIONS } from '@/constants/legalVersions';
-import MedicalDisclaimerModal from '@/components/legal/MedicalDisclaimerModal';
-import { authApi } from '@/lib/auth-api';
-import { fetchApi } from '@/lib/api';
+} from "react-native";
+import { useRouter } from "expo-router";
+import { Ionicons } from "@expo/vector-icons";
+import { SafeAreaView } from "react-native-safe-area-context";
+import * as Device from "expo-device";
+import Constants from "expo-constants";
+import { LEGAL_VERSIONS } from "@/constants/legalVersions";
+import MedicalDisclaimerModal from "@/components/legal/MedicalDisclaimerModal";
+import { authApi } from "@/lib/auth-api";
+import { fetchApi } from "@/lib/api";
 
-type OnboardingStep = 'welcome' | 'privacy' | 'terms' | 'disclaimer' | 'biometric' | 'complete';
+type OnboardingStep = "welcome" | "privacy" | "terms" | "disclaimer" | "biometric" | "complete";
 
 interface OnboardingState {
   currentStep: OnboardingStep;
@@ -34,7 +34,7 @@ interface OnboardingState {
 export default function OnboardingScreen() {
   const router = useRouter();
   const [state, setState] = useState<OnboardingState>({
-    currentStep: 'welcome',
+    currentStep: "welcome",
     privacyAccepted: false,
     termsAccepted: false,
     disclaimerAccepted: false,
@@ -52,43 +52,43 @@ export default function OnboardingScreen() {
     try {
       const currentUser = await authApi.getMe();
       setUser(currentUser);
-      
+
       const res = await fetchApi<any>(`/api/users/${currentUser.id}`);
       if (res.data?.onboardingComplete) {
-        router.replace('/(tabs)');
+        router.replace("/(tabs)");
       }
     } catch (error) {
-      console.error('Error checking onboarding status:', error);
+      console.error("Error checking onboarding status:", error);
     }
   };
 
   const getDeviceInfo = () => {
     return {
-      model: Device.modelName || 'Unknown',
-      osVersion: Device.osVersion || 'Unknown',
-      appVersion: Constants.expoConfig?.version || '1.0.0',
-      platform: 'ios' as const,
+      model: Device.modelName || "Unknown",
+      osVersion: Device.osVersion || "Unknown",
+      appVersion: Constants.expoConfig?.version || "1.0.0",
+      platform: "ios" as const,
     };
   };
 
   const storeAcceptance = async (type: string, version: string) => {
-    if (!user) throw new Error('No authenticated user');
-    await fetchApi('/api/consents/accept', {
-      method: 'POST',
+    if (!user) throw new Error("No authenticated user");
+    await fetchApi("/api/consents/accept", {
+      method: "POST",
       data: {
         userId: user.id,
         type,
         version,
-        deviceInfo: getDeviceInfo()
-      }
+        deviceInfo: getDeviceInfo(),
+      },
     });
   };
 
   const completeOnboarding = async () => {
-    if (!user) throw new Error('No authenticated user');
+    if (!user) throw new Error("No authenticated user");
 
     await fetchApi(`/api/users/${user.id}`, {
-      method: 'PUT',
+      method: "PUT",
       data: {
         onboardingComplete: true,
         onboardingCompletedAt: new Date().toISOString(),
@@ -96,7 +96,7 @@ export default function OnboardingScreen() {
         termsOfServiceVersion: LEGAL_VERSIONS.TERMS_OF_SERVICE,
         medicalDisclaimerVersion: LEGAL_VERSIONS.MEDICAL_DISCLAIMER,
         deviceInfo: getDeviceInfo(),
-      }
+      },
     });
   };
 
@@ -104,36 +104,36 @@ export default function OnboardingScreen() {
     setIsLoading(true);
     try {
       switch (state.currentStep) {
-        case 'welcome':
-          setState({ ...state, currentStep: 'privacy' });
+        case "welcome":
+          setState({ ...state, currentStep: "privacy" });
           break;
 
-        case 'privacy':
-          await storeAcceptance('privacy_policy', LEGAL_VERSIONS.PRIVACY_POLICY);
-          setState({ ...state, currentStep: 'terms', privacyAccepted: true });
+        case "privacy":
+          await storeAcceptance("privacy_policy", LEGAL_VERSIONS.PRIVACY_POLICY);
+          setState({ ...state, currentStep: "terms", privacyAccepted: true });
           break;
 
-        case 'terms':
-          await storeAcceptance('terms_of_service', LEGAL_VERSIONS.TERMS_OF_SERVICE);
-          setState({ ...state, currentStep: 'disclaimer', termsAccepted: true });
+        case "terms":
+          await storeAcceptance("terms_of_service", LEGAL_VERSIONS.TERMS_OF_SERVICE);
+          setState({ ...state, currentStep: "disclaimer", termsAccepted: true });
           break;
 
-        case 'disclaimer':
+        case "disclaimer":
           setShowDisclaimerModal(true);
           break;
 
-        case 'biometric':
-          setState({ ...state, currentStep: 'complete' });
+        case "biometric":
+          setState({ ...state, currentStep: "complete" });
           await completeOnboarding();
-          router.replace('/(tabs)');
+          router.replace("/(tabs)");
           break;
 
         default:
           break;
       }
     } catch (error) {
-      console.error('Error in onboarding flow:', error);
-      alert('Erro ao processar. Por favor, tente novamente.');
+      console.error("Error in onboarding flow:", error);
+      alert("Erro ao processar. Por favor, tente novamente.");
     } finally {
       setIsLoading(false);
     }
@@ -141,24 +141,24 @@ export default function OnboardingScreen() {
 
   const handleDisclaimerAcknowledged = async () => {
     setShowDisclaimerModal(false);
-    setState({ ...state, currentStep: 'biometric', disclaimerAccepted: true });
+    setState({ ...state, currentStep: "biometric", disclaimerAccepted: true });
   };
 
   const skipBiometric = async () => {
     setIsLoading(true);
     try {
       await completeOnboarding();
-      router.replace('/(tabs)');
+      router.replace("/(tabs)");
     } catch (error) {
-      console.error('Error completing onboarding:', error);
-      alert('Erro ao finalizar. Por favor, tente novamente.');
+      console.error("Error completing onboarding:", error);
+      alert("Erro ao finalizar. Por favor, tente novamente.");
     } finally {
       setIsLoading(false);
     }
   };
 
   const setupBiometric = () => {
-    router.push('/(auth)/biometric-setup?mode=onboarding' as any);
+    router.push("/(auth)/biometric-setup?mode=onboarding" as any);
   };
 
   const renderWelcome = () => (
@@ -172,14 +172,10 @@ export default function OnboardingScreen() {
         privacidade, termos de uso e responsabilidades médicas.
       </Text>
       <Text style={styles.description}>
-        Este processo leva apenas alguns minutos e garante que você está ciente de como seus dados
-        e os dados dos seus pacientes são protegidos.
+        Este processo leva apenas alguns minutos e garante que você está ciente de como seus dados e
+        os dados dos seus pacientes são protegidos.
       </Text>
-      <TouchableOpacity
-        style={styles.primaryButton}
-        onPress={goToNextStep}
-        disabled={isLoading}
-      >
+      <TouchableOpacity style={styles.primaryButton} onPress={goToNextStep} disabled={isLoading}>
         {isLoading ? (
           <ActivityIndicator color="#fff" />
         ) : (
@@ -211,15 +207,11 @@ export default function OnboardingScreen() {
       </ScrollView>
       <TouchableOpacity
         style={styles.primaryButton}
-        onPress={() => router.push('/(legal)/privacy-policy?mode=onboarding' as any)}
+        onPress={() => router.push("/(legal)/privacy-policy?mode=onboarding" as any)}
       >
         <Text style={styles.primaryButtonText}>Ler Política de Privacidade</Text>
       </TouchableOpacity>
-      <TouchableOpacity
-        style={styles.secondaryButton}
-        onPress={goToNextStep}
-        disabled={isLoading}
-      >
+      <TouchableOpacity style={styles.secondaryButton} onPress={goToNextStep} disabled={isLoading}>
         {isLoading ? (
           <ActivityIndicator color="#007AFF" />
         ) : (
@@ -236,20 +228,16 @@ export default function OnboardingScreen() {
       </View>
       <Text style={styles.title}>Termos de Uso</Text>
       <Text style={styles.description}>
-        Os Termos de Uso estabelecem as regras para utilização do FisioFlow e suas
-        responsabilidades como profissional de saúde.
+        Os Termos de Uso estabelecem as regras para utilização do FisioFlow e suas responsabilidades
+        como profissional de saúde.
       </Text>
       <TouchableOpacity
         style={styles.primaryButton}
-        onPress={() => router.push('/(legal)/terms-of-service?mode=onboarding' as any)}
+        onPress={() => router.push("/(legal)/terms-of-service?mode=onboarding" as any)}
       >
         <Text style={styles.primaryButtonText}>Ler Termos de Uso</Text>
       </TouchableOpacity>
-      <TouchableOpacity
-        style={styles.secondaryButton}
-        onPress={goToNextStep}
-        disabled={isLoading}
-      >
+      <TouchableOpacity style={styles.secondaryButton} onPress={goToNextStep} disabled={isLoading}>
         {isLoading ? (
           <ActivityIndicator color="#007AFF" />
         ) : (
@@ -268,22 +256,14 @@ export default function OnboardingScreen() {
       <Text style={styles.description}>
         Proteja o acesso aos dados sensíveis de saúde dos seus pacientes.
       </Text>
-      <TouchableOpacity
-        style={styles.primaryButton}
-        onPress={setupBiometric}
-        disabled={isLoading}
-      >
+      <TouchableOpacity style={styles.primaryButton} onPress={setupBiometric} disabled={isLoading}>
         {isLoading ? (
           <ActivityIndicator color="#fff" />
         ) : (
           <Text style={styles.primaryButtonText}>Configurar Agora</Text>
         )}
       </TouchableOpacity>
-      <TouchableOpacity
-        style={styles.secondaryButton}
-        onPress={skipBiometric}
-        disabled={isLoading}
-      >
+      <TouchableOpacity style={styles.secondaryButton} onPress={skipBiometric} disabled={isLoading}>
         <Text style={styles.secondaryButtonText}>Pular por Enquanto</Text>
       </TouchableOpacity>
     </View>
@@ -291,29 +271,32 @@ export default function OnboardingScreen() {
 
   const renderStep = () => {
     switch (state.currentStep) {
-      case 'welcome': return renderWelcome();
-      case 'privacy': return renderPrivacy();
-      case 'terms': return renderTerms();
-      case 'biometric': return renderBiometric();
-      default: return null;
+      case "welcome":
+        return renderWelcome();
+      case "privacy":
+        return renderPrivacy();
+      case "terms":
+        return renderTerms();
+      case "biometric":
+        return renderBiometric();
+      default:
+        return null;
     }
   };
 
   const getProgress = () => {
-    const steps = ['welcome', 'privacy', 'terms', 'disclaimer', 'biometric'];
+    const steps = ["welcome", "privacy", "terms", "disclaimer", "biometric"];
     const currentIndex = steps.indexOf(state.currentStep);
     return ((currentIndex + 1) / steps.length) * 100;
   };
 
   return (
-    <SafeAreaView style={styles.container} edges={['top', 'bottom']}>
+    <SafeAreaView style={styles.container} edges={["top", "bottom"]}>
       <View style={styles.progressContainer}>
         <View style={styles.progressBar}>
           <View style={[styles.progressFill, { width: `${getProgress()}%` }]} />
         </View>
-        <Text style={styles.progressText}>
-          {Math.round(getProgress())}% completo
-        </Text>
+        <Text style={styles.progressText}>{Math.round(getProgress())}% completo</Text>
       </View>
       <ScrollView
         style={styles.content}
@@ -332,23 +315,69 @@ export default function OnboardingScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#fff' },
-  progressContainer: { paddingHorizontal: 20, paddingVertical: 16, borderBottomWidth: 1, borderBottomColor: '#E5E7EB' },
-  progressBar: { height: 4, backgroundColor: '#E5E7EB', borderRadius: 2, overflow: 'hidden', marginBottom: 8 },
-  progressFill: { height: '100%', backgroundColor: '#007AFF', borderRadius: 2 },
-  progressText: { fontSize: 12, color: '#6B7280', textAlign: 'center' },
+  container: { flex: 1, backgroundColor: "#fff" },
+  progressContainer: {
+    paddingHorizontal: 20,
+    paddingVertical: 16,
+    borderBottomWidth: 1,
+    borderBottomColor: "#E5E7EB",
+  },
+  progressBar: {
+    height: 4,
+    backgroundColor: "#E5E7EB",
+    borderRadius: 2,
+    overflow: "hidden",
+    marginBottom: 8,
+  },
+  progressFill: { height: "100%", backgroundColor: "#007AFF", borderRadius: 2 },
+  progressText: { fontSize: 12, color: "#6B7280", textAlign: "center" },
   content: { flex: 1 },
-  contentContainer: { flexGrow: 1, justifyContent: 'center', padding: 20 },
-  stepContainer: { alignItems: 'center' },
+  contentContainer: { flexGrow: 1, justifyContent: "center", padding: 20 },
+  stepContainer: { alignItems: "center" },
   iconContainer: { marginBottom: 24 },
-  title: { fontSize: 28, fontWeight: '700', color: '#1F2937', textAlign: 'center', marginBottom: 16 },
-  description: { fontSize: 16, lineHeight: 24, color: '#6B7280', textAlign: 'center', marginBottom: 16 },
-  bulletList: { width: '100%', maxHeight: 200, marginVertical: 16 },
-  bulletItem: { flexDirection: 'row', alignItems: 'center', marginBottom: 12, paddingHorizontal: 8 },
-  bulletText: { flex: 1, fontSize: 15, color: '#374151', marginLeft: 12 },
-  note: { fontSize: 14, color: '#9CA3AF', textAlign: 'center', marginTop: 8, marginBottom: 16 },
-  primaryButton: { width: '100%', backgroundColor: '#007AFF', paddingVertical: 16, borderRadius: 12, alignItems: 'center', marginTop: 24, minHeight: 52, justifyContent: 'center' },
-  primaryButtonText: { fontSize: 16, fontWeight: '600', color: '#fff' },
-  secondaryButton: { width: '100%', backgroundColor: 'transparent', paddingVertical: 16, borderRadius: 12, alignItems: 'center', marginTop: 12, minHeight: 52, justifyContent: 'center' },
-  secondaryButtonText: { fontSize: 16, fontWeight: '600', color: '#007AFF' },
+  title: {
+    fontSize: 28,
+    fontWeight: "700",
+    color: "#1F2937",
+    textAlign: "center",
+    marginBottom: 16,
+  },
+  description: {
+    fontSize: 16,
+    lineHeight: 24,
+    color: "#6B7280",
+    textAlign: "center",
+    marginBottom: 16,
+  },
+  bulletList: { width: "100%", maxHeight: 200, marginVertical: 16 },
+  bulletItem: {
+    flexDirection: "row",
+    alignItems: "center",
+    marginBottom: 12,
+    paddingHorizontal: 8,
+  },
+  bulletText: { flex: 1, fontSize: 15, color: "#374151", marginLeft: 12 },
+  note: { fontSize: 14, color: "#9CA3AF", textAlign: "center", marginTop: 8, marginBottom: 16 },
+  primaryButton: {
+    width: "100%",
+    backgroundColor: "#007AFF",
+    paddingVertical: 16,
+    borderRadius: 12,
+    alignItems: "center",
+    marginTop: 24,
+    minHeight: 52,
+    justifyContent: "center",
+  },
+  primaryButtonText: { fontSize: 16, fontWeight: "600", color: "#fff" },
+  secondaryButton: {
+    width: "100%",
+    backgroundColor: "transparent",
+    paddingVertical: 16,
+    borderRadius: 12,
+    alignItems: "center",
+    marginTop: 12,
+    minHeight: 52,
+    justifyContent: "center",
+  },
+  secondaryButtonText: { fontSize: 16, fontWeight: "600", color: "#007AFF" },
 });

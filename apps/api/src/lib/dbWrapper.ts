@@ -2,10 +2,10 @@ export class QueryTimeoutError extends Error {
   constructor(
     message: string,
     public readonly timeout: number,
-    public readonly query: string
+    public readonly query: string,
   ) {
     super(message);
-    this.name = 'QueryTimeoutError';
+    this.name = "QueryTimeoutError";
   }
 }
 
@@ -13,10 +13,10 @@ export class DatabaseError extends Error {
   constructor(
     message: string,
     public readonly originalError: Error,
-    public readonly query?: string
+    public readonly query?: string,
   ) {
     super(message);
-    this.name = 'DatabaseError';
+    this.name = "DatabaseError";
   }
 }
 
@@ -37,7 +37,7 @@ export const DEFAULT_TIMEOUTS: TimeoutConfig = {
 export function withTimeout<T>(
   promise: Promise<T>,
   timeoutMs: number,
-  queryDescription: string
+  queryDescription: string,
 ): Promise<T> {
   return new Promise((resolve, reject) => {
     const timeoutId = setTimeout(() => {
@@ -45,8 +45,8 @@ export function withTimeout<T>(
         new QueryTimeoutError(
           `Database query timed out after ${timeoutMs}ms: ${queryDescription}`,
           timeoutMs,
-          queryDescription
-        )
+          queryDescription,
+        ),
       );
     }, timeoutMs);
 
@@ -61,11 +61,7 @@ export function withTimeout<T>(
           reject(error);
         } else {
           reject(
-            new DatabaseError(
-              `Database query failed: ${error.message}`,
-              error,
-              queryDescription
-            )
+            new DatabaseError(`Database query failed: ${error.message}`, error, queryDescription),
           );
         }
       });
@@ -74,44 +70,32 @@ export function withTimeout<T>(
 
 export function wrapQueryWithTimeout<T extends (...args: any[]) => Promise<any>>(
   queryFn: T,
-  defaultTimeout: number = DEFAULT_TIMEOUTS.query
+  defaultTimeout: number = DEFAULT_TIMEOUTS.query,
 ): T {
   return (async (...args: any[]) => {
     const lastArg = args[args.length - 1];
-    const timeout = 
-      typeof lastArg === 'object' && lastArg?.timeout 
-        ? lastArg.timeout 
-        : defaultTimeout;
-    
-    const queryDescription = typeof args[0] === 'string' 
-      ? args[0].substring(0, 100) 
-      : 'query';
-    const rawQuery = typeof args[0] === 'string' ? args[0] : '';
+    const timeout =
+      typeof lastArg === "object" && lastArg?.timeout ? lastArg.timeout : defaultTimeout;
+
+    const queryDescription = typeof args[0] === "string" ? args[0].substring(0, 100) : "query";
+    const rawQuery = typeof args[0] === "string" ? args[0] : "";
     const isSafeSelect = /^\s*select\b/i.test(rawQuery);
 
     try {
-      return await withTimeout(
-        queryFn(...args),
-        timeout,
-        queryDescription
-      );
+      return await withTimeout(queryFn(...args), timeout, queryDescription);
     } catch (error) {
       if (!(error instanceof QueryTimeoutError) || !isSafeSelect) {
         throw error;
       }
 
       const retryTimeout = Math.max(timeout, DEFAULT_TIMEOUTS.mutation);
-      console.warn('[DB] Retrying timed out SELECT query once', {
+      console.warn("[DB] Retrying timed out SELECT query once", {
         timeout,
         retryTimeout,
         query: queryDescription,
       });
 
-      return await withTimeout(
-        queryFn(...args),
-        retryTimeout,
-        queryDescription
-      );
+      return await withTimeout(queryFn(...args), retryTimeout, queryDescription);
     }
   }) as T;
 }

@@ -2,34 +2,44 @@
 
 import type { GetInfo, GetAnnotations } from "react-router/internal";
 
-type Module = typeof import("../Auth.js")
+type Module = typeof import("../Auth.js");
 
 type Info = GetInfo<{
-  file: "pages/Auth.tsx",
-  module: Module
-}>
+  file: "pages/Auth.tsx";
+  module: Module;
+}>;
 
-type Matches = [{
-  id: "root";
-  module: typeof import("../../root.js");
-}, {
-  id: "components/layout/InfrastructureLayout";
-  module: typeof import("../../components/layout/InfrastructureLayout.js");
-}, {
-  id: "auth-root";
-  module: typeof import("../Auth.js");
-}] | [{
-  id: "root";
-  module: typeof import("../../root.js");
-}, {
-  id: "components/layout/InfrastructureLayout";
-  module: typeof import("../../components/layout/InfrastructureLayout.js");
-}, {
-  id: "auth-login";
-  module: typeof import("../Auth.js");
-}];
+type Matches =
+  | [
+      {
+        id: "root";
+        module: typeof import("../../root.js");
+      },
+      {
+        id: "components/layout/InfrastructureLayout";
+        module: typeof import("../../components/layout/InfrastructureLayout.js");
+      },
+      {
+        id: "auth-root";
+        module: typeof import("../Auth.js");
+      },
+    ]
+  | [
+      {
+        id: "root";
+        module: typeof import("../../root.js");
+      },
+      {
+        id: "components/layout/InfrastructureLayout";
+        module: typeof import("../../components/layout/InfrastructureLayout.js");
+      },
+      {
+        id: "auth-login";
+        module: typeof import("../Auth.js");
+      },
+    ];
 
-type Annotations = GetAnnotations<Info & { module: Module, matches: Matches }, false>;
+type Annotations = GetAnnotations<Info & { module: Module; matches: Matches }, false>;
 
 export namespace Route {
   // links

@@ -18,8 +18,8 @@ import { Appointment } from "@/types/appointment";
 import { formatDateToLocalISO, parseResponseDate } from "@/utils/dateUtils";
 
 export interface AppointmentPreviewTarget {
-	date: Date;
-	time: string;
+  date: Date;
+  time: string;
 }
 
 export const CARD_GAP_PERCENT = 2;
@@ -44,61 +44,61 @@ export const DEFAULT_PREVIEW_HEIGHT = 64;
  * Cores de status para appointments - consistente com CalendarAppointmentCard
  */
 export const APPOINTMENT_STATUS_COLORS = {
-	confirmado: {
-		bg: "bg-emerald-500/20",
-		border: "border-emerald-500",
-		accent: "bg-emerald-600",
-		hex: "#10b981",
-	},
-	agendado: {
-		bg: "bg-cyan-500/20",
-		border: "border-cyan-500",
-		accent: "bg-cyan-600",
-		hex: "#06b6d4",
-	},
-	em_andamento: {
-		bg: "bg-amber-500/20",
-		border: "border-amber-500",
-		accent: "bg-amber-600",
-		hex: "#f59e0b",
-	},
-	cancelado: {
-		bg: "bg-red-500/20",
-		border: "border-red-500",
-		accent: "bg-red-600",
-		hex: "#ef4444",
-	},
-	falta: {
-		bg: "bg-red-500/20",
-		border: "border-red-500",
-		accent: "bg-red-600",
-		hex: "#ef4444",
-	},
-	concluido: {
-		bg: "bg-teal-500/20",
-		border: "border-teal-500",
-		accent: "bg-teal-600",
-		hex: "#14b8a6",
-	},
-	avaliacao: {
-		bg: "bg-violet-500/20",
-		border: "border-violet-500",
-		accent: "bg-violet-600",
-		hex: "#8b5cf6",
-	},
-	default: {
-		bg: "bg-slate-500/20",
-		border: "border-slate-500",
-		accent: "bg-slate-600",
-		hex: "#64748b",
-	},
+  confirmado: {
+    bg: "bg-emerald-500/20",
+    border: "border-emerald-500",
+    accent: "bg-emerald-600",
+    hex: "#10b981",
+  },
+  agendado: {
+    bg: "bg-cyan-500/20",
+    border: "border-cyan-500",
+    accent: "bg-cyan-600",
+    hex: "#06b6d4",
+  },
+  em_andamento: {
+    bg: "bg-amber-500/20",
+    border: "border-amber-500",
+    accent: "bg-amber-600",
+    hex: "#f59e0b",
+  },
+  cancelado: {
+    bg: "bg-red-500/20",
+    border: "border-red-500",
+    accent: "bg-red-600",
+    hex: "#ef4444",
+  },
+  falta: {
+    bg: "bg-red-500/20",
+    border: "border-red-500",
+    accent: "bg-red-600",
+    hex: "#ef4444",
+  },
+  concluido: {
+    bg: "bg-teal-500/20",
+    border: "border-teal-500",
+    accent: "bg-teal-600",
+    hex: "#14b8a6",
+  },
+  avaliacao: {
+    bg: "bg-violet-500/20",
+    border: "border-violet-500",
+    accent: "bg-violet-600",
+    hex: "#8b5cf6",
+  },
+  default: {
+    bg: "bg-slate-500/20",
+    border: "border-slate-500",
+    accent: "bg-slate-600",
+    hex: "#64748b",
+  },
 } as const;
 
 /**
  * Tipo para cores de status
  */
 export type StatusColors =
-	(typeof APPOINTMENT_STATUS_COLORS)[keyof typeof APPOINTMENT_STATUS_COLORS];
+  (typeof APPOINTMENT_STATUS_COLORS)[keyof typeof APPOINTMENT_STATUS_COLORS];
 
 // ============================================================================
 // PUBLIC FUNCTIONS
@@ -111,69 +111,63 @@ export type StatusColors =
  * @returns Objeto com classes bg e border
  */
 export const getStatusCardClasses = (
-	status: string,
+  status: string,
 ): { bg: string; border: string; accent?: string } => {
-	return (
-		APPOINTMENT_STATUS_COLORS[
-			status as keyof typeof APPOINTMENT_STATUS_COLORS
-		] || APPOINTMENT_STATUS_COLORS.default
-	);
+  return (
+    APPOINTMENT_STATUS_COLORS[status as keyof typeof APPOINTMENT_STATUS_COLORS] ||
+    APPOINTMENT_STATUS_COLORS.default
+  );
 };
 
 const normalizePreviewDate = (date: Appointment["date"]): Date | null => {
-	if (!date) return null;
-	if (date instanceof Date) return Number.isNaN(date.getTime()) ? null : date;
-	if (typeof date === "string") {
-		const parsed = parseResponseDate(date);
-		return Number.isNaN(parsed.getTime()) ? null : parsed;
-	}
-	return null;
+  if (!date) return null;
+  if (date instanceof Date) return Number.isNaN(date.getTime()) ? null : date;
+  if (typeof date === "string") {
+    const parsed = parseResponseDate(date);
+    return Number.isNaN(parsed.getTime()) ? null : parsed;
+  }
+  return null;
 };
 
 const normalizePreviewTime = (time: string | null | undefined): string => {
-	if (!time || !time.trim()) return "00:00";
-	return time.substring(0, 5);
+  if (!time || !time.trim()) return "00:00";
+  return time.substring(0, 5);
 };
 
 export const isSameAppointmentSlot = (
-	appointment: Appointment,
-	target: AppointmentPreviewTarget,
+  appointment: Appointment,
+  target: AppointmentPreviewTarget,
 ): boolean => {
-	const appointmentDate = normalizePreviewDate(appointment.date);
-	if (!appointmentDate) return false;
+  const appointmentDate = normalizePreviewDate(appointment.date);
+  if (!appointmentDate) return false;
 
-	return (
-		formatDateToLocalISO(appointmentDate) ===
-			formatDateToLocalISO(target.date) &&
-		normalizePreviewTime(appointment.time) === normalizePreviewTime(target.time)
-	);
+  return (
+    formatDateToLocalISO(appointmentDate) === formatDateToLocalISO(target.date) &&
+    normalizePreviewTime(appointment.time) === normalizePreviewTime(target.time)
+  );
 };
 
 export const buildDragPreviewAppointments = (
-	appointments: Appointment[],
-	draggedAppointment: Appointment | null,
-	target: AppointmentPreviewTarget | null,
+  appointments: Appointment[],
+  draggedAppointment: Appointment | null,
+  target: AppointmentPreviewTarget | null,
 ): Appointment[] => {
-	if (
-		!draggedAppointment ||
-		!target ||
-		isSameAppointmentSlot(draggedAppointment, target)
-	) {
-		return appointments;
-	}
+  if (!draggedAppointment || !target || isSameAppointmentSlot(draggedAppointment, target)) {
+    return appointments;
+  }
 
-	const targetDate = formatDateToLocalISO(target.date) as Appointment["date"];
-	const targetTime = normalizePreviewTime(target.time);
+  const targetDate = formatDateToLocalISO(target.date) as Appointment["date"];
+  const targetTime = normalizePreviewTime(target.time);
 
-	return appointments.map((appointment) =>
-		appointment.id === draggedAppointment.id
-			? {
-					...appointment,
-					date: targetDate,
-					time: targetTime,
-				}
-			: appointment,
-	);
+  return appointments.map((appointment) =>
+    appointment.id === draggedAppointment.id
+      ? {
+          ...appointment,
+          date: targetDate,
+          time: targetTime,
+        }
+      : appointment,
+  );
 };
 
 /**
@@ -183,10 +177,10 @@ export const buildDragPreviewAppointments = (
  * @returns Cor hexadecimal
  */
 const getStatusHexColor = (status: string): string => {
-	return (
-		APPOINTMENT_STATUS_COLORS[status as keyof typeof APPOINTMENT_STATUS_COLORS]
-			?.hex || APPOINTMENT_STATUS_COLORS.default.hex
-	);
+  return (
+    APPOINTMENT_STATUS_COLORS[status as keyof typeof APPOINTMENT_STATUS_COLORS]?.hex ||
+    APPOINTMENT_STATUS_COLORS.default.hex
+  );
 };
 
 /**
@@ -202,9 +196,9 @@ const getStatusHexColor = (status: string): string => {
  * calculateCardWidthPercent(3) // 31.33
  */
 export const calculateCardWidthPercent = (stackCount: number): number => {
-	if (stackCount <= 1) return 100;
-	const totalGap = CARD_GAP_PERCENT * (stackCount + 1);
-	return (100 - totalGap) / stackCount;
+  if (stackCount <= 1) return 100;
+  const totalGap = CARD_GAP_PERCENT * (stackCount + 1);
+  return (100 - totalGap) / stackCount;
 };
 
 /**
@@ -220,15 +214,9 @@ export const calculateCardWidthPercent = (stackCount: number): number => {
  * calculateCardOffsetPercent(0, 3) // 2
  * calculateCardOffsetPercent(1, 3) // 35.33
  */
-export const calculateCardOffsetPercent = (
-	stackIndex: number,
-	stackCount: number,
-): number => {
-	if (stackCount <= 1) return 0;
-	return (
-		CARD_GAP_PERCENT +
-		stackIndex * (calculateCardWidthPercent(stackCount) + CARD_GAP_PERCENT)
-	);
+export const calculateCardOffsetPercent = (stackIndex: number, stackCount: number): number => {
+  if (stackCount <= 1) return 0;
+  return CARD_GAP_PERCENT + stackIndex * (calculateCardWidthPercent(stackCount) + CARD_GAP_PERCENT);
 };
 
 /**
@@ -238,15 +226,8 @@ export const calculateCardOffsetPercent = (
  * @param totalCards - Número total de cards
  * @returns true se deve mostrar texto
  */
-export const shouldShowText = (
-	cardWidthPercent: number,
-	totalCards: number,
-): boolean => {
-	return (
-		cardWidthPercent > 25 ||
-		totalCards <= 3 ||
-		totalCards <= MAX_CARDS_WITHOUT_BADGE
-	);
+export const shouldShowText = (cardWidthPercent: number, totalCards: number): boolean => {
+  return cardWidthPercent > 25 || totalCards <= 3 || totalCards <= MAX_CARDS_WITHOUT_BADGE;
 };
 
 /**
@@ -259,71 +240,69 @@ export const shouldShowText = (
  * @returns Canvas element ou null se falhar
  */
 export const createSimpleDragPreview = (
-	appointment: Appointment,
-	width: number = DEFAULT_PREVIEW_WIDTH,
-	height: number = DEFAULT_PREVIEW_HEIGHT,
+  appointment: Appointment,
+  width: number = DEFAULT_PREVIEW_WIDTH,
+  height: number = DEFAULT_PREVIEW_HEIGHT,
 ): HTMLCanvasElement | null => {
-	if (!appointment?.patientName) return null;
+  if (!appointment?.patientName) return null;
 
-	const canvas = document.createElement("canvas");
-	canvas.width = width;
-	canvas.height = height;
-	const ctx = canvas.getContext("2d");
+  const canvas = document.createElement("canvas");
+  canvas.width = width;
+  canvas.height = height;
+  const ctx = canvas.getContext("2d");
 
-	if (!ctx) return null;
+  if (!ctx) return null;
 
-	const statusColor = getStatusHexColor(appointment.status || "agendado");
+  const statusColor = getStatusHexColor(appointment.status || "agendado");
 
-	// Sombra para destaque durante arraste
-	ctx.shadowColor = "rgba(0, 0, 0, 0.25)";
-	ctx.shadowBlur = 12;
-	ctx.shadowOffsetX = 0;
-	ctx.shadowOffsetY = 4;
+  // Sombra para destaque durante arraste
+  ctx.shadowColor = "rgba(0, 0, 0, 0.25)";
+  ctx.shadowBlur = 12;
+  ctx.shadowOffsetX = 0;
+  ctx.shadowOffsetY = 4;
 
-	// Fundo com borda arredondada
-	ctx.fillStyle = "rgba(255, 255, 255, 0.95)";
-	ctx.strokeStyle = statusColor;
-	ctx.lineWidth = 2.5;
+  // Fundo com borda arredondada
+  ctx.fillStyle = "rgba(255, 255, 255, 0.95)";
+  ctx.strokeStyle = statusColor;
+  ctx.lineWidth = 2.5;
 
-	roundRect(ctx, 0, 0, width, height, 8);
-	ctx.fill();
-	ctx.stroke();
+  roundRect(ctx, 0, 0, width, height, 8);
+  ctx.fill();
+  ctx.stroke();
 
-	// Reset shadow para não afetar elementos internos
-	ctx.shadowColor = "transparent";
-	ctx.shadowBlur = 0;
-	ctx.shadowOffsetX = 0;
-	ctx.shadowOffsetY = 0;
+  // Reset shadow para não afetar elementos internos
+  ctx.shadowColor = "transparent";
+  ctx.shadowBlur = 0;
+  ctx.shadowOffsetX = 0;
+  ctx.shadowOffsetY = 0;
 
-	// Barra lateral colorida
-	ctx.fillStyle = statusColor;
-	roundRect(ctx, 4, 8, 4, height - 16, 2);
-	ctx.fill();
+  // Barra lateral colorida
+  ctx.fillStyle = statusColor;
+  roundRect(ctx, 4, 8, 4, height - 16, 2);
+  ctx.fill();
 
-	// Nome do paciente
-	ctx.fillStyle = "#0f172a";
-	ctx.font =
-		'bold 13px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
-	ctx.textAlign = "left" as CanvasTextAlign;
-	ctx.textBaseline = "top" as CanvasTextBaseline;
+  // Nome do paciente
+  ctx.fillStyle = "#0f172a";
+  ctx.font = 'bold 13px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
+  ctx.textAlign = "left" as CanvasTextAlign;
+  ctx.textBaseline = "top" as CanvasTextBaseline;
 
-	const maxTextWidth = width - 40;
-	const displayName = truncateText(ctx, appointment.patientName, maxTextWidth);
-	ctx.fillText(displayName, 16, 14);
+  const maxTextWidth = width - 40;
+  const displayName = truncateText(ctx, appointment.patientName, maxTextWidth);
+  ctx.fillText(displayName, 16, 14);
 
-	// Horário
-	ctx.fillStyle = "#64748b";
-	ctx.font =
-		'12px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
-	ctx.fillText(appointment.time || "--:--", 16, 34);
+  // Horário
+  ctx.fillStyle = "#64748b";
+  ctx.font = '12px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
+  ctx.fillText(appointment.time || "--:--", 16, 34);
 
-	// Status badge (círculo)
-	ctx.fillStyle = statusColor;
-	ctx.beginPath();
-	ctx.arc(width - 16, 20, 5, 0, Math.PI * 2);
-	ctx.fill();
+  // Status badge (círculo)
+  ctx.fillStyle = statusColor;
+  ctx.beginPath();
+  ctx.arc(width - 16, 20, 5, 0, Math.PI * 2);
+  ctx.fill();
 
-	return canvas;
+  return canvas;
 };
 
 // ============================================================================
@@ -335,54 +314,50 @@ export const createSimpleDragPreview = (
  * para navegadores que não suportam roundRect nativo
  */
 function roundRect(
-	ctx: CanvasRenderingContext2D,
-	x: number,
-	y: number,
-	width: number,
-	height: number,
-	radius: number,
+  ctx: CanvasRenderingContext2D,
+  x: number,
+  y: number,
+  width: number,
+  height: number,
+  radius: number,
 ): void {
-	if (ctx.roundRect) {
-		ctx.beginPath();
-		ctx.roundRect(x, y, width, height, radius);
-	} else {
-		ctx.beginPath();
-		ctx.moveTo(x + radius, y);
-		ctx.lineTo(x + width - radius, y);
-		ctx.quadraticCurveTo(x + width, y, x + width, y + radius);
-		ctx.lineTo(x + width, y + height - radius);
-		ctx.quadraticCurveTo(x + width, y + height, x + width - radius, y + height);
-		ctx.lineTo(x + radius, y + height);
-		ctx.quadraticCurveTo(x, y + height, x, y + height - radius);
-		ctx.lineTo(x, y + radius);
-		ctx.quadraticCurveTo(x, y, x + radius, y);
-		ctx.closePath();
-	}
+  if (ctx.roundRect) {
+    ctx.beginPath();
+    ctx.roundRect(x, y, width, height, radius);
+  } else {
+    ctx.beginPath();
+    ctx.moveTo(x + radius, y);
+    ctx.lineTo(x + width - radius, y);
+    ctx.quadraticCurveTo(x + width, y, x + width, y + radius);
+    ctx.lineTo(x + width, y + height - radius);
+    ctx.quadraticCurveTo(x + width, y + height, x + width - radius, y + height);
+    ctx.lineTo(x + radius, y + height);
+    ctx.quadraticCurveTo(x, y + height, x, y + height - radius);
+    ctx.lineTo(x, y + radius);
+    ctx.quadraticCurveTo(x, y, x + radius, y);
+    ctx.closePath();
+  }
 }
 
 /**
  * Trunca texto para caber em uma largura máxima
  */
-function truncateText(
-	ctx: CanvasRenderingContext2D,
-	text: string,
-	maxWidth: number,
-): string {
-	if (!text) return "";
+function truncateText(ctx: CanvasRenderingContext2D, text: string, maxWidth: number): string {
+  if (!text) return "";
 
-	const width = ctx.measureText(text).width;
-	if (width <= maxWidth) return text;
+  const width = ctx.measureText(text).width;
+  if (width <= maxWidth) return text;
 
-	const ellipsis = "...";
-	const ellipsisWidth = ctx.measureText(ellipsis).width;
+  const ellipsis = "...";
+  const ellipsisWidth = ctx.measureText(ellipsis).width;
 
-	let truncated = text;
-	while (truncated.length > 0) {
-		truncated = truncated.slice(0, -1);
-		if (ctx.measureText(truncated).width + ellipsisWidth <= maxWidth) {
-			return truncated + ellipsis;
-		}
-	}
+  let truncated = text;
+  while (truncated.length > 0) {
+    truncated = truncated.slice(0, -1);
+    if (ctx.measureText(truncated).width + ellipsisWidth <= maxWidth) {
+      return truncated + ellipsis;
+    }
+  }
 
-	return ellipsis;
+  return ellipsis;
 }

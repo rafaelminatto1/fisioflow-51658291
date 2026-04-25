@@ -9,9 +9,9 @@
  *   await seedExerciseTemplates(db);
  */
 
-import { eq, inArray } from 'drizzle-orm';
-import { exerciseTemplates } from '@fisioflow/db';
-import type { NeonHttpDatabase } from 'drizzle-orm/neon-http';
+import { eq, inArray } from "drizzle-orm";
+import { exerciseTemplates } from "@fisioflow/db";
+import type { NeonHttpDatabase } from "drizzle-orm/neon-http";
 
 export type DrizzleDB = NeonHttpDatabase<Record<string, unknown>>;
 
@@ -19,145 +19,145 @@ interface SystemTemplate {
   name: string;
   conditionName: string;
   templateVariant: string;
-  evidenceLevel: 'A' | 'B' | 'C' | 'D';
-  patientProfile: 'ortopedico' | 'esportivo' | 'pos_operatorio' | 'prevencao' | 'idosos';
+  evidenceLevel: "A" | "B" | "C" | "D";
+  patientProfile: "ortopedico" | "esportivo" | "pos_operatorio" | "prevencao" | "idosos";
 }
 
 const SYSTEM_TEMPLATES: SystemTemplate[] = [
   // ── Ortopédico (5) ──────────────────────────────────────
   {
-    name: 'Protocolo Lombalgia Crônica',
-    conditionName: 'Lombalgia',
-    templateVariant: 'Conservador',
-    evidenceLevel: 'A',
-    patientProfile: 'ortopedico',
+    name: "Protocolo Lombalgia Crônica",
+    conditionName: "Lombalgia",
+    templateVariant: "Conservador",
+    evidenceLevel: "A",
+    patientProfile: "ortopedico",
   },
   {
-    name: 'Protocolo Cervicalgia Postural',
-    conditionName: 'Cervicalgia',
-    templateVariant: 'Inicial',
-    evidenceLevel: 'B',
-    patientProfile: 'ortopedico',
+    name: "Protocolo Cervicalgia Postural",
+    conditionName: "Cervicalgia",
+    templateVariant: "Inicial",
+    evidenceLevel: "B",
+    patientProfile: "ortopedico",
   },
   {
-    name: 'Reabilitação Tendinite Patelar',
-    conditionName: 'Tendinite Patelar',
-    templateVariant: 'Progressivo',
-    evidenceLevel: 'B',
-    patientProfile: 'ortopedico',
+    name: "Reabilitação Tendinite Patelar",
+    conditionName: "Tendinite Patelar",
+    templateVariant: "Progressivo",
+    evidenceLevel: "B",
+    patientProfile: "ortopedico",
   },
   {
-    name: 'Tratamento Fascite Plantar',
-    conditionName: 'Fascite Plantar',
-    templateVariant: 'Conservador',
-    evidenceLevel: 'A',
-    patientProfile: 'ortopedico',
+    name: "Tratamento Fascite Plantar",
+    conditionName: "Fascite Plantar",
+    templateVariant: "Conservador",
+    evidenceLevel: "A",
+    patientProfile: "ortopedico",
   },
   {
-    name: 'Reabilitação Manguito Rotador',
-    conditionName: 'Síndrome do Manguito Rotador',
-    templateVariant: 'Conservador',
-    evidenceLevel: 'B',
-    patientProfile: 'ortopedico',
+    name: "Reabilitação Manguito Rotador",
+    conditionName: "Síndrome do Manguito Rotador",
+    templateVariant: "Conservador",
+    evidenceLevel: "B",
+    patientProfile: "ortopedico",
   },
 
   // ── Esportivo (3) ───────────────────────────────────────
   {
-    name: 'Retorno ao Esporte - Entorse de Tornozelo',
-    conditionName: 'Entorse de Tornozelo',
-    templateVariant: 'Progressivo',
-    evidenceLevel: 'A',
-    patientProfile: 'esportivo',
+    name: "Retorno ao Esporte - Entorse de Tornozelo",
+    conditionName: "Entorse de Tornozelo",
+    templateVariant: "Progressivo",
+    evidenceLevel: "A",
+    patientProfile: "esportivo",
   },
   {
-    name: 'Fortalecimento para Corredores',
-    conditionName: 'Síndrome do Trato Iliotibial',
-    templateVariant: 'Preventivo',
-    evidenceLevel: 'B',
-    patientProfile: 'esportivo',
+    name: "Fortalecimento para Corredores",
+    conditionName: "Síndrome do Trato Iliotibial",
+    templateVariant: "Preventivo",
+    evidenceLevel: "B",
+    patientProfile: "esportivo",
   },
   {
-    name: 'Prevenção de Lesões em Atletas',
-    conditionName: 'Prevenção Geral',
-    templateVariant: 'Funcional',
-    evidenceLevel: 'B',
-    patientProfile: 'esportivo',
+    name: "Prevenção de Lesões em Atletas",
+    conditionName: "Prevenção Geral",
+    templateVariant: "Funcional",
+    evidenceLevel: "B",
+    patientProfile: "esportivo",
   },
 
   // ── Pós-operatório (4) ──────────────────────────────────
   {
-    name: 'Reconstrução LCA - Protocolo Acelerado',
-    conditionName: 'Reconstrução de LCA',
-    templateVariant: 'Acelerado',
-    evidenceLevel: 'A',
-    patientProfile: 'pos_operatorio',
+    name: "Reconstrução LCA - Protocolo Acelerado",
+    conditionName: "Reconstrução de LCA",
+    templateVariant: "Acelerado",
+    evidenceLevel: "A",
+    patientProfile: "pos_operatorio",
   },
   {
-    name: 'Prótese Total de Joelho',
-    conditionName: 'Artroplastia de Joelho',
-    templateVariant: 'Padrão',
-    evidenceLevel: 'A',
-    patientProfile: 'pos_operatorio',
+    name: "Prótese Total de Joelho",
+    conditionName: "Artroplastia de Joelho",
+    templateVariant: "Padrão",
+    evidenceLevel: "A",
+    patientProfile: "pos_operatorio",
   },
   {
-    name: 'Prótese Total de Quadril',
-    conditionName: 'Artroplastia de Quadril',
-    templateVariant: 'Padrão',
-    evidenceLevel: 'A',
-    patientProfile: 'pos_operatorio',
+    name: "Prótese Total de Quadril",
+    conditionName: "Artroplastia de Quadril",
+    templateVariant: "Padrão",
+    evidenceLevel: "A",
+    patientProfile: "pos_operatorio",
   },
   {
-    name: 'Reparo do Manguito Rotador',
-    conditionName: 'Reparo Cirúrgico do Manguito',
-    templateVariant: 'Conservador',
-    evidenceLevel: 'B',
-    patientProfile: 'pos_operatorio',
+    name: "Reparo do Manguito Rotador",
+    conditionName: "Reparo Cirúrgico do Manguito",
+    templateVariant: "Conservador",
+    evidenceLevel: "B",
+    patientProfile: "pos_operatorio",
   },
 
   // ── Prevenção (3) ───────────────────────────────────────
   {
-    name: 'Prevenção de Quedas',
-    conditionName: 'Prevenção de Quedas',
-    templateVariant: 'Funcional',
-    evidenceLevel: 'A',
-    patientProfile: 'prevencao',
+    name: "Prevenção de Quedas",
+    conditionName: "Prevenção de Quedas",
+    templateVariant: "Funcional",
+    evidenceLevel: "A",
+    patientProfile: "prevencao",
   },
   {
-    name: 'Fortalecimento Postural',
-    conditionName: 'Desvios Posturais',
-    templateVariant: 'Progressivo',
-    evidenceLevel: 'B',
-    patientProfile: 'prevencao',
+    name: "Fortalecimento Postural",
+    conditionName: "Desvios Posturais",
+    templateVariant: "Progressivo",
+    evidenceLevel: "B",
+    patientProfile: "prevencao",
   },
   {
-    name: 'Ergonomia para Escritório',
-    conditionName: 'Síndrome do Trabalhador Sedentário',
-    templateVariant: 'Educativo',
-    evidenceLevel: 'C',
-    patientProfile: 'prevencao',
+    name: "Ergonomia para Escritório",
+    conditionName: "Síndrome do Trabalhador Sedentário",
+    templateVariant: "Educativo",
+    evidenceLevel: "C",
+    patientProfile: "prevencao",
   },
 
   // ── Idosos (3) ──────────────────────────────────────────
   {
-    name: 'Equilíbrio e Marcha para Idosos',
-    conditionName: 'Instabilidade Postural',
-    templateVariant: 'Funcional',
-    evidenceLevel: 'A',
-    patientProfile: 'idosos',
+    name: "Equilíbrio e Marcha para Idosos",
+    conditionName: "Instabilidade Postural",
+    templateVariant: "Funcional",
+    evidenceLevel: "A",
+    patientProfile: "idosos",
   },
   {
-    name: 'Fortalecimento Funcional para Idosos',
-    conditionName: 'Sarcopenia',
-    templateVariant: 'Progressivo',
-    evidenceLevel: 'B',
-    patientProfile: 'idosos',
+    name: "Fortalecimento Funcional para Idosos",
+    conditionName: "Sarcopenia",
+    templateVariant: "Progressivo",
+    evidenceLevel: "B",
+    patientProfile: "idosos",
   },
   {
-    name: 'Mobilidade Articular Geral',
-    conditionName: 'Rigidez Articular',
-    templateVariant: 'Conservador',
-    evidenceLevel: 'B',
-    patientProfile: 'idosos',
+    name: "Mobilidade Articular Geral",
+    conditionName: "Rigidez Articular",
+    templateVariant: "Conservador",
+    evidenceLevel: "B",
+    patientProfile: "idosos",
   },
 ];
 
@@ -178,8 +178,7 @@ export async function seedExerciseTemplates(db: DrizzleDB): Promise<number> {
     .select({ name: exerciseTemplates.name })
     .from(exerciseTemplates)
     .where(
-      inArray(exerciseTemplates.name, allNames) &&
-        eq(exerciseTemplates.templateType, 'system'),
+      inArray(exerciseTemplates.name, allNames) && eq(exerciseTemplates.templateType, "system"),
     );
 
   const existingNames = new Set(existing.map((r) => r.name));
@@ -199,7 +198,7 @@ export async function seedExerciseTemplates(db: DrizzleDB): Promise<number> {
     templateVariant: t.templateVariant,
     evidenceLevel: t.evidenceLevel,
     patientProfile: t.patientProfile,
-    templateType: 'system' as const,
+    templateType: "system" as const,
     organizationId: null,
     isActive: true,
     isDraft: false,
@@ -211,7 +210,7 @@ export async function seedExerciseTemplates(db: DrizzleDB): Promise<number> {
 
   console.log(
     `[seed:exercise-templates] Inserted ${toInsert.length}/${SYSTEM_TEMPLATES.length} system templates` +
-      (existingNames.size > 0 ? ` (${existingNames.size} already existed)` : ''),
+      (existingNames.size > 0 ? ` (${existingNames.size} already existed)` : ""),
   );
 
   return toInsert.length;

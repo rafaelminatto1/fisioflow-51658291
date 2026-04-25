@@ -1,9 +1,9 @@
-import { Env } from './types/env';
-import { createPool } from './lib/db';
-import { triggerInngestEvent } from './lib/inngest-client';
-import { sendAppointmentReminderEmail } from './lib/email';
-import type { WhatsAppQueuePayload } from './queue';
-import { cleanupRateLimits } from './middleware/rateLimit';
+import { Env } from "./types/env";
+import { createPool } from "./lib/db";
+import { triggerInngestEvent } from "./lib/inngest-client";
+import { sendAppointmentReminderEmail } from "./lib/email";
+import type { WhatsAppQueuePayload } from "./queue";
+import { cleanupRateLimits } from "./middleware/rateLimit";
 
 /**
  * Cloudflare Worker Cron Trigger Handler
@@ -51,26 +51,26 @@ export async function handleScheduled(event: ScheduledEvent, env: Env, ctx: Exec
 }
 
 async function processBirthdays(db: any, env: Env, ctx: ExecutionContext) {
-  console.log('[Cron] Checking for birthdays...');
+  console.log("[Cron] Checking for birthdays...");
   const result = await db.query(`
-    SELECT id, full_name, phone 
-    FROM patients 
-    WHERE is_active = true 
+    SELECT id, full_name, phone
+    FROM patients
+    WHERE is_active = true
       AND EXTRACT(MONTH FROM birth_date) = EXTRACT(MONTH FROM CURRENT_DATE)
       AND EXTRACT(DAY FROM birth_date) = EXTRACT(DAY FROM CURRENT_DATE)
   `);
 
   for (const row of result.rows) {
-    await triggerInngestEvent(env, ctx, 'patient.birthday', {
+    await triggerInngestEvent(env, ctx, "patient.birthday", {
       patientId: row.id,
       name: row.full_name,
-      phone: row.phone
+      phone: row.phone,
     });
   }
 }
 
 async function processInactivePatients(db: any, env: Env, ctx: ExecutionContext) {
-  console.log('[Cron] Checking for inactive patients...');
+  console.log("[Cron] Checking for inactive patients...");
   const result = await db.query(`
     SELECT p.id, p.full_name, p.phone, p.organization_id
     FROM patients p
@@ -85,16 +85,16 @@ async function processInactivePatients(db: any, env: Env, ctx: ExecutionContext)
   `);
 
   for (const row of result.rows) {
-    await triggerInngestEvent(env, ctx, 'patient.inactive', {
+    await triggerInngestEvent(env, ctx, "patient.inactive", {
       patientId: row.id,
       name: row.full_name,
-      phone: row.phone
+      phone: row.phone,
     });
   }
 }
 
 async function sendAppointmentReminders(pool: any, env: Env, _ctx: ExecutionContext) {
-  console.log('[Cron] Sending appointment reminders (Email & WhatsApp)...');
+  console.log("[Cron] Sending appointment reminders (Email & WhatsApp)...");
   const result = await pool.query(`
     SELECT
       a.id,
@@ -123,7 +123,7 @@ async function sendAppointmentReminders(pool: any, env: Env, _ctx: ExecutionCont
         await sendAppointmentReminderEmail(env, row.patient_email, {
           patientName: row.patient_name,
           date: row.formatted_date,
-          time: row.time?.substring(0, 5) ?? '',
+          time: row.time?.substring(0, 5) ?? "",
           therapistName: row.therapist_name,
         });
         emailSent++;
@@ -135,22 +135,22 @@ async function sendAppointmentReminders(pool: any, env: Env, _ctx: ExecutionCont
     // 2. WhatsApp Reminder — enqueue for async processing with automatic retry
     if (row.patient_phone && env.BACKGROUND_QUEUE) {
       try {
-        const timeStr = row.time?.substring(0, 5) ?? '';
-        const therapistStr = row.therapist_name || 'Fisioterapeuta';
+        const timeStr = row.time?.substring(0, 5) ?? "";
+        const therapistStr = row.therapist_name || "Fisioterapeuta";
         const queuePayload: WhatsAppQueuePayload = {
           to: row.patient_phone,
-          templateName: 'lembrete_sessao',
-          languageCode: 'pt_BR',
+          templateName: "lembrete_sessao",
+          languageCode: "pt_BR",
           bodyParameters: [
-            { type: 'text', text: timeStr },
-            { type: 'text', text: therapistStr },
+            { type: "text", text: timeStr },
+            { type: "text", text: therapistStr },
           ],
           organizationId: row.organization_id,
           patientId: row.patient_id,
           messageText: `Lembrete automático: sua sessão será às ${timeStr} com ${therapistStr}.`,
           appointmentId: row.id,
         };
-        await env.BACKGROUND_QUEUE.send({ type: 'SEND_WHATSAPP', payload: queuePayload });
+        await env.BACKGROUND_QUEUE.send({ type: "SEND_WHATSAPP", payload: queuePayload });
         whatsappSent++;
       } catch (err) {
         console.error(`[Cron] Failed to enqueue WhatsApp for ${row.patient_phone}:`, err);
@@ -161,33 +161,32 @@ async function sendAppointmentReminders(pool: any, env: Env, _ctx: ExecutionCont
 }
 
 async function performDatabaseCleanup(pool: any, _env: Env) {
-  console.log('[Cron] Performing database maintenance...');
-  
+  console.log("[Cron] Performing database maintenance...");
+
   try {
     // 1. Limpeza de Logs de Segurança (Manter apenas 90 dias)
     // Ações: LOGIN_SUCCESS, LOGIN_FAILURE
     const securityCleanup = await pool.query(`
-      DELETE FROM audit_logs 
+      DELETE FROM audit_logs
       WHERE action IN ('LOGIN_SUCCESS', 'LOGIN_FAILURE')
         AND created_at < (CURRENT_DATE - INTERVAL '90 days')
     `);
     console.log(`[Cleanup] Deleted ${securityCleanup.rowCount} old security logs.`);
 
     // 2. Limpeza de Logs de Sistema (Opcional, manter 1 ano se não for clínico)
-    // Aqui poderíamos limpar INSERT/UPDATE de tabelas menos críticas, 
-    // mas por segurança e legislação (20 anos para prontuários), 
+    // Aqui poderíamos limpar INSERT/UPDATE de tabelas menos críticas,
+    // mas por segurança e legislação (20 anos para prontuários),
     // manteremos os logs de 'patients', 'evolutions' e 'appointments' intactos.
-    
+
     // 3. Limpeza de tokens expirados (se houver tabela de sessions ou tokens)
     // await pool.query('DELETE FROM auth_tokens WHERE expires_at < NOW()');
-
   } catch (error) {
-    console.error('[Cleanup] Error during database maintenance:', error);
+    console.error("[Cleanup] Error during database maintenance:", error);
   }
 }
 
 async function processDueDateAutomations(pool: any) {
-  console.log('[Cron] Processing due_date_approaching automations...');
+  console.log("[Cron] Processing due_date_approaching automations...");
   try {
     // Find tasks vencendo em 1 ou 2 dias (janela: amanhã e depois de amanhã)
     const tasksRes = await pool.query(`
@@ -233,7 +232,7 @@ async function processDueDateAutomations(pool: any) {
 
           for (const action of automation.actions) {
             try {
-              if (action.type === 'send_notification') {
+              if (action.type === "send_notification") {
                 const targetUserId = task.responsavel_id ?? task.created_by;
                 if (!targetUserId) continue;
                 await pool.query(
@@ -243,45 +242,50 @@ async function processDueDateAutomations(pool: any) {
                   [
                     orgId,
                     targetUserId,
-                    action.message ?? 'Tarefa vencendo em breve',
+                    action.message ?? "Tarefa vencendo em breve",
                     `"${task.titulo}" vence em ${daysUntilDue} dia(s).`,
                     `/boards/${boardId}`,
                     JSON.stringify({ task_id: task.id, automation_id: automation.id }),
                   ],
                 );
-              } else if (action.type === 'assign_label' && action.label_id) {
+              } else if (action.type === "assign_label" && action.label_id) {
                 await pool.query(
                   `UPDATE tarefas SET label_ids = array_append(label_ids, $1::uuid), updated_at = NOW()
                    WHERE id = $2 AND NOT ($1::uuid = ANY(label_ids))`,
                   [action.label_id, task.id],
                 );
-              } else if (action.type === 'change_status' && action.status) {
+              } else if (action.type === "change_status" && action.status) {
                 await pool.query(
                   `UPDATE tarefas SET status = $1, updated_at = NOW() WHERE id = $2`,
                   [action.status, task.id],
                 );
               }
             } catch (err) {
-              console.error(`[Cron][Automation] action ${action.type} failed for task ${task.id}:`, err);
+              console.error(
+                `[Cron][Automation] action ${action.type} failed for task ${task.id}:`,
+                err,
+              );
             }
           }
 
-          await pool.query(
-            `UPDATE board_automations SET execution_count = execution_count + 1, last_executed_at = NOW() WHERE id = $1`,
-            [automation.id],
-          ).catch(() => null);
+          await pool
+            .query(
+              `UPDATE board_automations SET execution_count = execution_count + 1, last_executed_at = NOW() WHERE id = $1`,
+              [automation.id],
+            )
+            .catch(() => null);
         }
       }
     }
 
     console.log(`[Cron] due_date_approaching: checked ${tasksRes.rows.length} tasks.`);
   } catch (error) {
-    console.error('[Cron] processDueDateAutomations error:', error);
+    console.error("[Cron] processDueDateAutomations error:", error);
   }
 }
 
 async function prewarmDatabase(pool: any) {
-  console.log('[Cron] Prewarming database cache after scale-to-zero...');
+  console.log("[Cron] Prewarming database cache after scale-to-zero...");
   try {
     // pg_prewarm carrega as tabelas mais acessadas no buffer cache do Postgres
     // Reduz latência das primeiras queries do dia após o banco acordar
@@ -293,8 +297,8 @@ async function prewarmDatabase(pool: any) {
         pg_prewarm('sessions')     AS sessions_blocks,
         pg_prewarm('exercise_protocols') AS protocols_blocks
     `);
-    console.log('[Cron] Database cache prewarmed successfully.');
+    console.log("[Cron] Database cache prewarmed successfully.");
   } catch (error) {
-    console.warn('[Cron] Prewarm failed (non-critical):', error);
+    console.warn("[Cron] Prewarm failed (non-critical):", error);
   }
 }

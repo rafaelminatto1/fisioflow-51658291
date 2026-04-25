@@ -10,15 +10,9 @@ import { fisioLogger as logger } from "@/lib/errors/logger";
 import { AppointmentNotificationService } from "@/lib/services/AppointmentNotificationService";
 import { AppointmentService } from "@/services/appointmentService";
 import { normalizeStatus as normalizeFrontendStatus } from "@/components/schedule/shared/appointment-status";
-import type {
-	AppointmentBase,
-	AppointmentFormData,
-	AppointmentStatus,
-} from "@/types/appointment";
+import type { AppointmentBase, AppointmentFormData, AppointmentStatus } from "@/types/appointment";
 import { isAppointmentConflictError } from "@/utils/appointmentErrors";
-import {
-	invalidateAppointmentsComprehensive,
-} from "@/utils/cacheInvalidation";
+import { invalidateAppointmentsComprehensive } from "@/utils/cacheInvalidation";
 import { requireUserOrganizationId } from "@/utils/userHelpers";
 import { parseUpdatesToAppointment } from "../appointmentOptimistic";
 import { appointmentPeriodKeys } from "../useAppointmentsByPeriod";
@@ -26,384 +20,334 @@ import type { AppointmentsQueryResult } from "./useAppointmentsCache";
 import { appointmentKeys } from "./useAppointmentsData";
 
 export function useCreateAppointment() {
-	const queryClient = useQueryClient();
-	const { toast } = useToast();
-	const { profile } = useAuth();
+  const queryClient = useQueryClient();
+  const { toast } = useToast();
+  const { profile } = useAuth();
 
-	return useMutation({
-		mutationFn: async (
-			data: AppointmentFormData & { ignoreCapacity?: boolean },
-		) => {
-			const organizationId =
-				profile?.organization_id || (await requireUserOrganizationId());
-			const currentResult = queryClient.getQueryData<AppointmentsQueryResult>(
-				appointmentKeys.list(profile?.organization_id),
-			);
-			return AppointmentService.createAppointment(
-				data,
-				organizationId,
-				currentResult?.data || [],
-			);
-		},
-		onMutate: async (variables) => {
-			const organizationId = profile?.organization_id;
-			const queryKey = appointmentKeys.list(organizationId);
-			const previousData =
-				queryClient.getQueryData<AppointmentsQueryResult>(queryKey);
+  return useMutation({
+    mutationFn: async (data: AppointmentFormData & { ignoreCapacity?: boolean }) => {
+      const organizationId = profile?.organization_id || (await requireUserOrganizationId());
+      const currentResult = queryClient.getQueryData<AppointmentsQueryResult>(
+        appointmentKeys.list(profile?.organization_id),
+      );
+      return AppointmentService.createAppointment(data, organizationId, currentResult?.data || []);
+    },
+    onMutate: async (variables) => {
+      const organizationId = profile?.organization_id;
+      const queryKey = appointmentKeys.list(organizationId);
+      const previousData = queryClient.getQueryData<AppointmentsQueryResult>(queryKey);
 
-			const tempId = `temp-${Date.now()}`;
-			const optimisticAppointment: AppointmentBase = {
-				id: tempId,
-				patientId: variables.patient_id,
-				patientName: variables.patient_name || variables.patient_id || "",
-				phone: "",
-				date: new Date(variables.appointment_date || Date.now()),
-				time: variables.appointment_time || variables.start_time || "",
-				duration: variables.duration || 60,
-				type: variables.type || "Fisioterapia",
-				status: variables.status || "agendado",
-				notes: variables.notes || "",
-				createdAt: new Date(),
-				updatedAt: new Date(),
-				therapistId: variables.therapist_id || undefined,
-				room: variables.room || undefined,
-				payment_status: variables.payment_status || "pending",
-			};
+      const tempId = `temp-${Date.now()}`;
+      const optimisticAppointment: AppointmentBase = {
+        id: tempId,
+        patientId: variables.patient_id,
+        patientName: variables.patient_name || variables.patient_id || "",
+        phone: "",
+        date: new Date(variables.appointment_date || Date.now()),
+        time: variables.appointment_time || variables.start_time || "",
+        duration: variables.duration || 60,
+        type: variables.type || "Fisioterapia",
+        status: variables.status || "agendado",
+        notes: variables.notes || "",
+        createdAt: new Date(),
+        updatedAt: new Date(),
+        therapistId: variables.therapist_id || undefined,
+        room: variables.room || undefined,
+        payment_status: variables.payment_status || "pending",
+      };
 
-			queryClient.setQueryData(
-				queryKey,
-				(old: AppointmentsQueryResult | undefined) => ({
-					...old,
-					data: [...(old?.data || []), optimisticAppointment],
-				}),
-			);
+      queryClient.setQueryData(queryKey, (old: AppointmentsQueryResult | undefined) => ({
+        ...old,
+        data: [...(old?.data || []), optimisticAppointment],
+      }));
 
-			await queryClient.cancelQueries({ queryKey });
+      await queryClient.cancelQueries({ queryKey });
 
-			return { previousData, tempId };
-		},
-		onSuccess: async (data, _variables, context) => {
-			queryClient.setQueryData(
-				appointmentKeys.list(profile?.organization_id),
-				(old: AppointmentsQueryResult | undefined) => ({
-					...old,
-					data: [
-						...(old?.data.filter((apt) => apt.id !== context?.tempId) || []),
-						data,
-					],
-				}),
-			);
+      return { previousData, tempId };
+    },
+    onSuccess: async (data, _variables, context) => {
+      queryClient.setQueryData(
+        appointmentKeys.list(profile?.organization_id),
+        (old: AppointmentsQueryResult | undefined) => ({
+          ...old,
+          data: [...(old?.data.filter((apt) => apt.id !== context?.tempId) || []), data],
+        }),
+      );
 
-			await invalidateAppointmentsComprehensive(
-				queryClient,
-				data.date,
-				profile?.organization_id,
-			);
+      await invalidateAppointmentsComprehensive(queryClient, data.date, profile?.organization_id);
 
-			toast({
-				title: "Sucesso",
-				description: "Agendamento criado com sucesso",
-			});
+      toast({
+        title: "Sucesso",
+        description: "Agendamento criado com sucesso",
+      });
 
-			AppointmentNotificationService.scheduleNotification(
-				data.id,
-				data.patientId,
-				data.date,
-				data.time,
-				data.patientName,
-			);
-		},
-		onError: (error: Error, _variables, context) => {
-			if (context?.previousData) {
-				queryClient.setQueryData(
-					appointmentKeys.list(profile?.organization_id),
-					context.previousData,
-				);
-			}
-			if (isAppointmentConflictError(error)) {
-				ErrorHandler.handle(error, "useCreateAppointment", {
-					showNotification: false,
-				});
-			} else {
-				ErrorHandler.handle(error, "useCreateAppointment");
-			}
-		},
-	});
+      AppointmentNotificationService.scheduleNotification(
+        data.id,
+        data.patientId,
+        data.date,
+        data.time,
+        data.patientName,
+      );
+    },
+    onError: (error: Error, _variables, context) => {
+      if (context?.previousData) {
+        queryClient.setQueryData(
+          appointmentKeys.list(profile?.organization_id),
+          context.previousData,
+        );
+      }
+      if (isAppointmentConflictError(error)) {
+        ErrorHandler.handle(error, "useCreateAppointment", {
+          showNotification: false,
+        });
+      } else {
+        ErrorHandler.handle(error, "useCreateAppointment");
+      }
+    },
+  });
 }
 
 export function useUpdateAppointment() {
-	const queryClient = useQueryClient();
-	const { toast } = useToast();
-	const { profile } = useAuth();
+  const queryClient = useQueryClient();
+  const { toast } = useToast();
+  const { profile } = useAuth();
 
-	return useMutation({
-		mutationFn: async ({
-			appointmentId,
-			updates,
-			ignoreCapacity,
-		}: {
-			appointmentId: string;
-			updates: Partial<AppointmentFormData>;
-			ignoreCapacity?: boolean;
-			suppressSuccessToast?: boolean;
-		}) => {
-			const organizationId =
-				profile?.organization_id || (await requireUserOrganizationId());
-			return AppointmentService.updateAppointment(
-				appointmentId,
-				{ ...updates, ignoreCapacity },
-				organizationId,
-			);
-		},
-		networkMode: "offlineFirst",
-		onMutate: async (variables) => {
-			const organizationId = profile?.organization_id;
-			await queryClient.cancelQueries({
-				queryKey: appointmentKeys.list(organizationId),
-			});
-			await queryClient.cancelQueries({ queryKey: appointmentPeriodKeys.all });
+  return useMutation({
+    mutationFn: async ({
+      appointmentId,
+      updates,
+      ignoreCapacity,
+    }: {
+      appointmentId: string;
+      updates: Partial<AppointmentFormData>;
+      ignoreCapacity?: boolean;
+      suppressSuccessToast?: boolean;
+    }) => {
+      const organizationId = profile?.organization_id || (await requireUserOrganizationId());
+      return AppointmentService.updateAppointment(
+        appointmentId,
+        { ...updates, ignoreCapacity },
+        organizationId,
+      );
+    },
+    networkMode: "offlineFirst",
+    onMutate: async (variables) => {
+      const organizationId = profile?.organization_id;
+      await queryClient.cancelQueries({
+        queryKey: appointmentKeys.list(organizationId),
+      });
+      await queryClient.cancelQueries({ queryKey: appointmentPeriodKeys.all });
 
-			const previousData = queryClient.getQueryData<AppointmentsQueryResult>(
-				appointmentKeys.list(organizationId),
-			);
-			const previousPeriodQueries = queryClient.getQueriesData({
-				queryKey: appointmentPeriodKeys.all,
-			});
-			const parsedUpdates = parseUpdatesToAppointment(variables.updates);
+      const previousData = queryClient.getQueryData<AppointmentsQueryResult>(
+        appointmentKeys.list(organizationId),
+      );
+      const previousPeriodQueries = queryClient.getQueriesData({
+        queryKey: appointmentPeriodKeys.all,
+      });
+      const parsedUpdates = parseUpdatesToAppointment(variables.updates);
 
-			queryClient.setQueryData(
-				appointmentKeys.list(organizationId),
-				(old: AppointmentsQueryResult | undefined) => ({
-					...old,
-					data:
-						old?.data.map((apt) =>
-							apt.id === variables.appointmentId
-								? { ...apt, ...parsedUpdates }
-								: apt,
-						) || [],
-				}),
-			);
+      queryClient.setQueryData(
+        appointmentKeys.list(organizationId),
+        (old: AppointmentsQueryResult | undefined) => ({
+          ...old,
+          data:
+            old?.data.map((apt) =>
+              apt.id === variables.appointmentId ? { ...apt, ...parsedUpdates } : apt,
+            ) || [],
+        }),
+      );
 
-			queryClient.setQueriesData(
-				{ queryKey: appointmentPeriodKeys.all },
-				(old: AppointmentBase[] | undefined) =>
-					old?.map((apt) =>
-						apt.id === variables.appointmentId
-							? { ...apt, ...parsedUpdates }
-							: apt,
-					),
-			);
+      queryClient.setQueriesData(
+        { queryKey: appointmentPeriodKeys.all },
+        (old: AppointmentBase[] | undefined) =>
+          old?.map((apt) =>
+            apt.id === variables.appointmentId ? { ...apt, ...parsedUpdates } : apt,
+          ),
+      );
 
-			return { previousData, previousPeriodQueries };
-		},
-		onSuccess: async (data, variables) => {
-			const organizationId = profile?.organization_id || "";
-			
-			await invalidateAppointmentsComprehensive(
-				queryClient,
-				data.date,
-				organizationId,
-			);
+      return { previousData, previousPeriodQueries };
+    },
+    onSuccess: async (data, variables) => {
+      const organizationId = profile?.organization_id || "";
 
-			if (!variables.suppressSuccessToast) {
-				toast({
-					title: "Sucesso",
-					description: "Agendamento atualizado com sucesso",
-				});
-			}
-		},
-		onError: (error: Error, _variables, context) => {
-			const organizationId = profile?.organization_id;
-			if (context?.previousData) {
-				queryClient.setQueryData(
-					appointmentKeys.list(organizationId),
-					context.previousData,
-				);
-			}
-			context?.previousPeriodQueries?.forEach(([queryKey, data]) => {
-				queryClient.setQueryData(queryKey, data);
-			});
-			if (isAppointmentConflictError(error)) {
-				ErrorHandler.handle(error, "useUpdateAppointment", {
-					showNotification: false,
-				});
-			} else {
-				ErrorHandler.handle(error, "useUpdateAppointment");
-			}
-		},
-	});
+      await invalidateAppointmentsComprehensive(queryClient, data.date, organizationId);
+
+      if (!variables.suppressSuccessToast) {
+        toast({
+          title: "Sucesso",
+          description: "Agendamento atualizado com sucesso",
+        });
+      }
+    },
+    onError: (error: Error, _variables, context) => {
+      const organizationId = profile?.organization_id;
+      if (context?.previousData) {
+        queryClient.setQueryData(appointmentKeys.list(organizationId), context.previousData);
+      }
+      context?.previousPeriodQueries?.forEach(([queryKey, data]) => {
+        queryClient.setQueryData(queryKey, data);
+      });
+      if (isAppointmentConflictError(error)) {
+        ErrorHandler.handle(error, "useUpdateAppointment", {
+          showNotification: false,
+        });
+      } else {
+        ErrorHandler.handle(error, "useUpdateAppointment");
+      }
+    },
+  });
 }
 
 export function useDeleteAppointment() {
-	const queryClient = useQueryClient();
-	const { toast } = useToast();
-	const { profile } = useAuth();
+  const queryClient = useQueryClient();
+  const { toast } = useToast();
+  const { profile } = useAuth();
 
-	return useMutation({
-		mutationFn: async (appointmentId: string) => {
-			const organizationId =
-				profile?.organization_id || (await requireUserOrganizationId());
-			const currentResult = queryClient.getQueryData<AppointmentsQueryResult>(
-				appointmentKeys.list(profile?.organization_id),
-			);
-			const appointment = currentResult?.data.find(
-				(apt) => apt.id === appointmentId,
-			);
-			await AppointmentService.deleteAppointment(appointmentId, organizationId);
-			return { appointmentId, appointment };
-		},
-		onSuccess: async ({ appointmentId, appointment }) => {
-			const organizationId = profile?.organization_id || "";
-			
-			await invalidateAppointmentsComprehensive(
-				queryClient,
-				appointment?.date,
-				organizationId,
-			);
+  return useMutation({
+    mutationFn: async (appointmentId: string) => {
+      const organizationId = profile?.organization_id || (await requireUserOrganizationId());
+      const currentResult = queryClient.getQueryData<AppointmentsQueryResult>(
+        appointmentKeys.list(profile?.organization_id),
+      );
+      const appointment = currentResult?.data.find((apt) => apt.id === appointmentId);
+      await AppointmentService.deleteAppointment(appointmentId, organizationId);
+      return { appointmentId, appointment };
+    },
+    onSuccess: async ({ appointmentId, appointment }) => {
+      const organizationId = profile?.organization_id || "";
 
-			queryClient.removeQueries({
-				queryKey: appointmentKeys.detail(appointmentId),
-			});
+      await invalidateAppointmentsComprehensive(queryClient, appointment?.date, organizationId);
 
-			toast({
-				title: "Sucesso",
-				description: "Agendamento excluído com sucesso",
-			});
-		},
-		onError: (error: Error) => {
-			ErrorHandler.handle(error, "useDeleteAppointment");
-		},
-	});
+      queryClient.removeQueries({
+        queryKey: appointmentKeys.detail(appointmentId),
+      });
+
+      toast({
+        title: "Sucesso",
+        description: "Agendamento excluído com sucesso",
+      });
+    },
+    onError: (error: Error) => {
+      ErrorHandler.handle(error, "useDeleteAppointment");
+    },
+  });
 }
 
 export function useUpdateAppointmentStatus() {
-	const queryClient = useQueryClient();
-	const { toast } = useToast();
-	const { profile } = useAuth();
+  const queryClient = useQueryClient();
+  const { toast } = useToast();
+  const { profile } = useAuth();
 
-	return useMutation({
-		mutationFn: async ({
-			appointmentId,
-			status,
-		}: {
-			appointmentId: string;
-			status: AppointmentStatus;
-		}) => {
-			if (!appointmentId) throw new Error("ID do agendamento é obrigatório");
-			if (!status) throw new Error("Status é obrigatório");
-			await requireUserOrganizationId();
-			return await AppointmentService.updateStatus(appointmentId, status);
-		},
-		onMutate: async ({ appointmentId, status }) => {
-			const organizationId = profile?.organization_id;
-			const normalizedStatus = normalizeFrontendStatus(status);
+  return useMutation({
+    mutationFn: async ({
+      appointmentId,
+      status,
+    }: {
+      appointmentId: string;
+      status: AppointmentStatus;
+    }) => {
+      if (!appointmentId) throw new Error("ID do agendamento é obrigatório");
+      if (!status) throw new Error("Status é obrigatório");
+      await requireUserOrganizationId();
+      return await AppointmentService.updateStatus(appointmentId, status);
+    },
+    onMutate: async ({ appointmentId, status }) => {
+      const organizationId = profile?.organization_id;
+      const normalizedStatus = normalizeFrontendStatus(status);
 
-			await queryClient.cancelQueries({
-				queryKey: appointmentKeys.list(organizationId),
-			});
-			await queryClient.cancelQueries({ queryKey: appointmentPeriodKeys.all });
-			await queryClient.cancelQueries({ queryKey: ["schedule-appointments"] });
+      await queryClient.cancelQueries({
+        queryKey: appointmentKeys.list(organizationId),
+      });
+      await queryClient.cancelQueries({ queryKey: appointmentPeriodKeys.all });
+      await queryClient.cancelQueries({ queryKey: ["schedule-appointments"] });
 
-			const previousData = queryClient.getQueryData<AppointmentsQueryResult>(
-				appointmentKeys.list(organizationId),
-			);
-			const previousPeriodQueries = queryClient.getQueriesData({
-				queryKey: appointmentPeriodKeys.all,
-			});
-			const previousScheduleQueries = queryClient.getQueriesData({
-				queryKey: ["schedule-appointments"],
-			});
+      const previousData = queryClient.getQueryData<AppointmentsQueryResult>(
+        appointmentKeys.list(organizationId),
+      );
+      const previousPeriodQueries = queryClient.getQueriesData({
+        queryKey: appointmentPeriodKeys.all,
+      });
+      const previousScheduleQueries = queryClient.getQueriesData({
+        queryKey: ["schedule-appointments"],
+      });
 
-			// Atualiza o cache principal imediatamente
-			queryClient.setQueryData(
-				appointmentKeys.list(organizationId),
-				(old: AppointmentsQueryResult | undefined) => ({
-					...old,
-					data: (old?.data || []).map((apt) =>
-						apt.id === appointmentId ? { ...apt, status: normalizedStatus } : apt,
-					),
-				}),
-			);
+      // Atualiza o cache principal imediatamente
+      queryClient.setQueryData(
+        appointmentKeys.list(organizationId),
+        (old: AppointmentsQueryResult | undefined) => ({
+          ...old,
+          data: (old?.data || []).map((apt) =>
+            apt.id === appointmentId ? { ...apt, status: normalizedStatus } : apt,
+          ),
+        }),
+      );
 
-			// Atualiza todas as queries de período (visão semanal/diária do calendário)
-			queryClient.setQueriesData(
-				{ queryKey: appointmentPeriodKeys.all },
-				(old: AppointmentBase[] | undefined) =>
-					old?.map((apt) =>
-						apt.id === appointmentId ? { ...apt, status: normalizedStatus } : apt,
-					),
-			);
+      // Atualiza todas as queries de período (visão semanal/diária do calendário)
+      queryClient.setQueriesData(
+        { queryKey: appointmentPeriodKeys.all },
+        (old: AppointmentBase[] | undefined) =>
+          old?.map((apt) =>
+            apt.id === appointmentId ? { ...apt, status: normalizedStatus } : apt,
+          ),
+      );
 
-			queryClient.setQueriesData(
-				{ queryKey: ["schedule-appointments"] },
-				(old: AppointmentBase[] | undefined) =>
-					old?.map((apt) =>
-						apt.id === appointmentId ? { ...apt, status: normalizedStatus } : apt,
-					),
-			);
+      queryClient.setQueriesData(
+        { queryKey: ["schedule-appointments"] },
+        (old: AppointmentBase[] | undefined) =>
+          old?.map((apt) =>
+            apt.id === appointmentId ? { ...apt, status: normalizedStatus } : apt,
+          ),
+      );
 
-			return { previousData, previousPeriodQueries, previousScheduleQueries };
-		},
-		onSuccess: (updatedData, variables) => {
-			const organizationId = profile?.organization_id;
-			const { appointmentId } = variables;
+      return { previousData, previousPeriodQueries, previousScheduleQueries };
+    },
+    onSuccess: (updatedData, variables) => {
+      const organizationId = profile?.organization_id;
+      const { appointmentId } = variables;
 
-			// Se tivermos os dados atualizados, injetamos no cache para evitar o "flicker" de refetch
-			if (updatedData) {
-				queryClient.setQueryData(
-					appointmentKeys.list(organizationId),
-					(old: AppointmentsQueryResult | undefined) => ({
-						...old,
-						data: (old?.data || []).map((apt) =>
-							apt.id === appointmentId ? { ...apt, ...updatedData } : apt,
-						),
-					}),
-				);
+      // Se tivermos os dados atualizados, injetamos no cache para evitar o "flicker" de refetch
+      if (updatedData) {
+        queryClient.setQueryData(
+          appointmentKeys.list(organizationId),
+          (old: AppointmentsQueryResult | undefined) => ({
+            ...old,
+            data: (old?.data || []).map((apt) =>
+              apt.id === appointmentId ? { ...apt, ...updatedData } : apt,
+            ),
+          }),
+        );
 
-				queryClient.setQueriesData(
-					{ queryKey: appointmentPeriodKeys.all },
-					(old: AppointmentBase[] | undefined) =>
-						old?.map((apt) =>
-							apt.id === appointmentId ? { ...apt, ...updatedData } : apt,
-						),
-				);
-			}
+        queryClient.setQueriesData(
+          { queryKey: appointmentPeriodKeys.all },
+          (old: AppointmentBase[] | undefined) =>
+            old?.map((apt) => (apt.id === appointmentId ? { ...apt, ...updatedData } : apt)),
+        );
+      }
 
-			invalidateAppointmentsComprehensive(
-				queryClient,
-				updatedData?.date,
-				organizationId,
-			);
+      invalidateAppointmentsComprehensive(queryClient, updatedData?.date, organizationId);
 
-			toast({
-				title: "Status atualizado",
-				description: `Status alterado para ${variables.status}`,
-			});
-		},
-		onError: (error, _variables, context) => {
-			const organizationId = profile?.organization_id;
-			if (context?.previousData) {
-				queryClient.setQueryData(
-					appointmentKeys.list(organizationId),
-					context.previousData,
-				);
-			}
-			context?.previousPeriodQueries?.forEach(([queryKey, data]) => {
-				queryClient.setQueryData(queryKey, data);
-			});
-			context?.previousScheduleQueries?.forEach(([queryKey, data]) => {
-				queryClient.setQueryData(queryKey, data);
-			});
-			logger.error(
-				"Erro ao atualizar status",
-				error,
-				"useAppointmentsMutations",
-			);
-			toast({
-				title: "Erro",
-				description: "Não foi possível atualizar o status",
-				variant: "destructive",
-			});
-		},
-	});
+      toast({
+        title: "Status atualizado",
+        description: `Status alterado para ${variables.status}`,
+      });
+    },
+    onError: (error, _variables, context) => {
+      const organizationId = profile?.organization_id;
+      if (context?.previousData) {
+        queryClient.setQueryData(appointmentKeys.list(organizationId), context.previousData);
+      }
+      context?.previousPeriodQueries?.forEach(([queryKey, data]) => {
+        queryClient.setQueryData(queryKey, data);
+      });
+      context?.previousScheduleQueries?.forEach(([queryKey, data]) => {
+        queryClient.setQueryData(queryKey, data);
+      });
+      logger.error("Erro ao atualizar status", error, "useAppointmentsMutations");
+      toast({
+        title: "Erro",
+        description: "Não foi possível atualizar o status",
+        variant: "destructive",
+      });
+    },
+  });
 }

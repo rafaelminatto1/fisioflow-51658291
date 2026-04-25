@@ -18,7 +18,7 @@ graph TB
     F --> G[Push Service Provider]
     G --> H[Browser Push API]
     H --> I[User Device]
-    
+
     J[Scheduler Service] --> F
     K[Event Triggers] --> F
     L[Admin Dashboard] --> B
@@ -35,59 +35,66 @@ graph TB
 ### 1. NotificationManager (Frontend)
 
 **Responsibilities:**
+
 - Manage push subscription lifecycle
 - Handle permission requests
 - Coordinate with Service Worker
 - Provide notification preferences UI
 
 **Key Methods:**
+
 ```typescript
 interface NotificationManager {
-  requestPermission(): Promise<boolean>
-  subscribe(): Promise<PushSubscription>
-  unsubscribe(): Promise<void>
-  updatePreferences(preferences: NotificationPreferences): Promise<void>
-  getNotificationHistory(): Promise<Notification[]>
+  requestPermission(): Promise<boolean>;
+  subscribe(): Promise<PushSubscription>;
+  unsubscribe(): Promise<void>;
+  updatePreferences(preferences: NotificationPreferences): Promise<void>;
+  getNotificationHistory(): Promise<Notification[]>;
 }
 ```
 
 ### 2. Service Worker Enhancement
 
 **Responsibilities:**
+
 - Handle push events
 - Display notifications
 - Manage offline notification queue
 - Handle notification clicks and actions
 
 **Key Events:**
+
 ```typescript
 // Push event handler
-self.addEventListener('push', handlePushEvent)
-// Notification click handler  
-self.addEventListener('notificationclick', handleNotificationClick)
+self.addEventListener("push", handlePushEvent);
+// Notification click handler
+self.addEventListener("notificationclick", handleNotificationClick);
 // Background sync for offline notifications
-self.addEventListener('sync', handleBackgroundSync)
+self.addEventListener("sync", handleBackgroundSync);
 ```
 
 ### 3. Supabase Functions (Edge Functions)
 
 **Functions:**
+
 - `send-notification`: Send individual notifications
 - `schedule-notifications`: Handle scheduled notifications
 - `process-notification-events`: Process system events for notifications
 
 **Example Function Structure:**
+
 ```typescript
 export async function sendNotification(
   userId: string,
   type: NotificationType,
-  payload: NotificationPayload
-): Promise<void>
+  payload: NotificationPayload,
+): Promise<void>;
 ```
 
 ### 4. Database Schema Extensions
 
 **New Tables:**
+
 ```sql
 -- Push subscriptions
 CREATE TABLE push_subscriptions (
@@ -133,29 +140,31 @@ CREATE TABLE notification_history (
 ### 5. Notification Types and Templates
 
 **Notification Categories:**
+
 ```typescript
 enum NotificationType {
-  APPOINTMENT_REMINDER = 'appointment_reminder',
-  APPOINTMENT_CHANGE = 'appointment_change',
-  EXERCISE_REMINDER = 'exercise_reminder',
-  EXERCISE_MILESTONE = 'exercise_milestone',
-  PROGRESS_UPDATE = 'progress_update',
-  SYSTEM_ALERT = 'system_alert',
-  PAYMENT_REMINDER = 'payment_reminder',
-  THERAPIST_MESSAGE = 'therapist_message'
+  APPOINTMENT_REMINDER = "appointment_reminder",
+  APPOINTMENT_CHANGE = "appointment_change",
+  EXERCISE_REMINDER = "exercise_reminder",
+  EXERCISE_MILESTONE = "exercise_milestone",
+  PROGRESS_UPDATE = "progress_update",
+  SYSTEM_ALERT = "system_alert",
+  PAYMENT_REMINDER = "payment_reminder",
+  THERAPIST_MESSAGE = "therapist_message",
 }
 ```
 
 **Template System:**
+
 ```typescript
 interface NotificationTemplate {
-  type: NotificationType
-  title: string
-  body: string
-  icon?: string
-  badge?: string
-  actions?: NotificationAction[]
-  data?: Record<string, any>
+  type: NotificationType;
+  title: string;
+  body: string;
+  icon?: string;
+  badge?: string;
+  actions?: NotificationAction[];
+  data?: Record<string, any>;
 }
 ```
 
@@ -165,49 +174,49 @@ interface NotificationTemplate {
 
 ```typescript
 interface PushSubscription {
-  id: string
-  userId: string
-  endpoint: string
+  id: string;
+  userId: string;
+  endpoint: string;
   keys: {
-    p256dh: string
-    auth: string
-  }
-  createdAt: Date
-  updatedAt: Date
+    p256dh: string;
+    auth: string;
+  };
+  createdAt: Date;
+  updatedAt: Date;
 }
 
 interface NotificationPreferences {
-  userId: string
-  appointmentReminders: boolean
-  exerciseReminders: boolean
-  progressUpdates: boolean
-  systemAlerts: boolean
+  userId: string;
+  appointmentReminders: boolean;
+  exerciseReminders: boolean;
+  progressUpdates: boolean;
+  systemAlerts: boolean;
   quietHours: {
-    start: string // HH:MM format
-    end: string   // HH:MM format
-  }
-  weekendNotifications: boolean
+    start: string; // HH:MM format
+    end: string; // HH:MM format
+  };
+  weekendNotifications: boolean;
 }
 
 interface NotificationPayload {
-  type: NotificationType
-  title: string
-  body: string
-  icon?: string
-  badge?: string
-  image?: string
-  data?: Record<string, any>
-  actions?: NotificationAction[]
-  requireInteraction?: boolean
-  silent?: boolean
-  tag?: string
-  timestamp?: Date
+  type: NotificationType;
+  title: string;
+  body: string;
+  icon?: string;
+  badge?: string;
+  image?: string;
+  data?: Record<string, any>;
+  actions?: NotificationAction[];
+  requireInteraction?: boolean;
+  silent?: boolean;
+  tag?: string;
+  timestamp?: Date;
 }
 
 interface NotificationAction {
-  action: string
-  title: string
-  icon?: string
+  action: string;
+  title: string;
+  icon?: string;
 }
 ```
 
@@ -215,17 +224,17 @@ interface NotificationAction {
 
 ```typescript
 interface NotificationTrigger {
-  id: string
-  name: string
-  event: string
-  conditions: Record<string, any>
-  template: NotificationTemplate
+  id: string;
+  name: string;
+  event: string;
+  conditions: Record<string, any>;
+  template: NotificationTemplate;
   schedule?: {
-    delay?: number // minutes
-    recurring?: boolean
-    cron?: string
-  }
-  active: boolean
+    delay?: number; // minutes
+    recurring?: boolean;
+    cron?: string;
+  };
+  active: boolean;
 }
 ```
 
@@ -262,13 +271,13 @@ class NotificationErrorHandler {
     // Display permission request banner
     // Track analytics
   }
-  
+
   async handleSubscriptionError(error: Error): Promise<void> {
     // Implement retry logic
     // Fallback to alternative notification method
     // Log error for monitoring
   }
-  
+
   async handleNetworkError(): Promise<void> {
     // Queue for background sync
     // Show offline indicator
@@ -280,6 +289,7 @@ class NotificationErrorHandler {
 ## Testing Strategy
 
 ### Unit Tests
+
 - NotificationManager methods
 - Service Worker event handlers
 - Template rendering
@@ -287,24 +297,28 @@ class NotificationErrorHandler {
 - Preference management
 
 ### Integration Tests
+
 - End-to-end notification flow
 - Supabase function integration
 - Database operations
 - Real-time subscription handling
 
 ### Browser Compatibility Tests
+
 - Chrome, Firefox, Safari, Edge
 - Mobile browsers (iOS Safari, Chrome Mobile)
 - PWA installation scenarios
 - Offline functionality
 
 ### Performance Tests
+
 - Notification delivery latency
 - Service Worker performance impact
 - Database query optimization
 - Memory usage monitoring
 
 ### User Experience Tests
+
 - Permission request flow
 - Notification interaction
 - Preference management
@@ -313,48 +327,51 @@ class NotificationErrorHandler {
 ### Test Scenarios
 
 ```typescript
-describe('Push Notification System', () => {
-  describe('Permission Management', () => {
-    it('should request permission gracefully')
-    it('should handle permission denial')
-    it('should retry permission request')
-  })
-  
-  describe('Subscription Lifecycle', () => {
-    it('should create subscription')
-    it('should update subscription')
-    it('should handle subscription expiry')
-  })
-  
-  describe('Notification Delivery', () => {
-    it('should send appointment reminders')
-    it('should respect user preferences')
-    it('should handle offline scenarios')
-  })
-  
-  describe('User Interactions', () => {
-    it('should handle notification clicks')
-    it('should process notification actions')
-    it('should track analytics')
-  })
-})
+describe("Push Notification System", () => {
+  describe("Permission Management", () => {
+    it("should request permission gracefully");
+    it("should handle permission denial");
+    it("should retry permission request");
+  });
+
+  describe("Subscription Lifecycle", () => {
+    it("should create subscription");
+    it("should update subscription");
+    it("should handle subscription expiry");
+  });
+
+  describe("Notification Delivery", () => {
+    it("should send appointment reminders");
+    it("should respect user preferences");
+    it("should handle offline scenarios");
+  });
+
+  describe("User Interactions", () => {
+    it("should handle notification clicks");
+    it("should process notification actions");
+    it("should track analytics");
+  });
+});
 ```
 
 ## Security Considerations
 
 ### Data Protection
+
 - Encrypt sensitive notification data
 - Implement proper CORS policies
 - Validate all notification payloads
 - Use HTTPS for all communications
 
 ### Privacy Compliance
+
 - LGPD compliance for Brazilian users
 - Clear consent mechanisms
 - Data retention policies
 - User data deletion capabilities
 
 ### Authentication & Authorization
+
 - Verify user permissions before sending notifications
 - Implement rate limiting
 - Secure API endpoints
@@ -363,18 +380,21 @@ describe('Push Notification System', () => {
 ## Performance Optimization
 
 ### Delivery Optimization
+
 - Batch notifications when possible
 - Implement smart scheduling
 - Use notification deduplication
 - Optimize payload size
 
 ### Client-Side Performance
+
 - Lazy load notification components
 - Efficient Service Worker caching
 - Minimize main thread blocking
 - Optimize notification rendering
 
 ### Database Performance
+
 - Index notification queries
 - Implement pagination for history
 - Use database triggers for real-time events
@@ -383,6 +403,7 @@ describe('Push Notification System', () => {
 ## Monitoring and Analytics
 
 ### Key Metrics
+
 - Notification delivery rate
 - Click-through rate
 - Permission grant rate
@@ -390,12 +411,14 @@ describe('Push Notification System', () => {
 - Error rates and types
 
 ### Monitoring Tools
+
 - Real-time delivery tracking
 - Performance monitoring
 - Error logging and alerting
 - User behavior analytics
 
 ### Dashboard Features
+
 - Notification performance overview
 - User engagement trends
 - Error rate monitoring

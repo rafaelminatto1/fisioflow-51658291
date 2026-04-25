@@ -1,6 +1,6 @@
 import { neon } from "@neondatabase/serverless";
 import { drizzle } from "drizzle-orm/neon-http";
-import * as schema from "../src/server/db/schema/clinical"; 
+import * as schema from "../src/server/db/schema/clinical";
 import { builtinClinicalTestsCatalog } from "../src/data/clinicalTestsCatalog";
 import { eq, sql } from "drizzle-orm";
 import dotenv from "dotenv";
@@ -42,12 +42,13 @@ async function main() {
 
     // Try to find existing by name (normalized)
     const existing = await db.query.clinicalTestTemplates.findFirst({
-      where: (table, { eq }) => eq(table.name, test.name)
+      where: (table, { eq }) => eq(table.name, test.name),
     });
 
     if (existing) {
       console.log(`Updating: ${test.name}`);
-      await db.update(schema.clinicalTestTemplates)
+      await db
+        .update(schema.clinicalTestTemplates)
         .set(data)
         .where(eq(schema.clinicalTestTemplates.id, existing.id));
     } else {
@@ -62,7 +63,7 @@ async function main() {
   console.log("Sync completed successfully!");
 }
 
-main().catch(err => {
+main().catch((err) => {
   console.error("Sync failed:", err);
   process.exit(1);
 });

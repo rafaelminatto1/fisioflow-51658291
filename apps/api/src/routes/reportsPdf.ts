@@ -1,33 +1,33 @@
-import { Hono } from 'hono';
-import { requireAuth, type AuthVariables } from '../lib/auth';
-import type { Env } from '../types/env';
-import { R2Service } from '../lib/storage/R2Service';
+import { Hono } from "hono";
+import { requireAuth, type AuthVariables } from "../lib/auth";
+import type { Env } from "../types/env";
+import { R2Service } from "../lib/storage/R2Service";
 
-const QUICK_ACTIONS_BASE = 'https://browser.ai.cloudflare.com/api/v1';
+const QUICK_ACTIONS_BASE = "https://browser.ai.cloudflare.com/api/v1";
 
 async function generatePdfQuickAction(html: string): Promise<Uint8Array> {
-	const response = await fetch(`${QUICK_ACTIONS_BASE}/pdf`, {
-		method: 'POST',
-		headers: { 'Content-Type': 'application/json' },
-		body: JSON.stringify({
-			html,
-			options: {
-				format: 'A4',
-				printBackground: true,
-				margin: { top: '20mm', right: '15mm', bottom: '20mm', left: '15mm' },
-			},
-		}),
-	});
-	if (!response.ok) {
-		throw new Error(`Quick Actions PDF failed: ${response.status}`);
-	}
-	const buf = await response.arrayBuffer();
-	return new Uint8Array(buf);
+  const response = await fetch(`${QUICK_ACTIONS_BASE}/pdf`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      html,
+      options: {
+        format: "A4",
+        printBackground: true,
+        margin: { top: "20mm", right: "15mm", bottom: "20mm", left: "15mm" },
+      },
+    }),
+  });
+  if (!response.ok) {
+    throw new Error(`Quick Actions PDF failed: ${response.status}`);
+  }
+  const buf = await response.arrayBuffer();
+  return new Uint8Array(buf);
 }
 
 const app = new Hono<{ Bindings: Env; Variables: AuthVariables }>();
 
-type PdfReportType = 'soap' | 'progress' | 'prescription' | 'discharge' | 'exam';
+type PdfReportType = "soap" | "progress" | "prescription" | "discharge" | "exam";
 
 type PdfRequest = {
   type: PdfReportType;
@@ -45,12 +45,12 @@ type PdfRequest = {
  * Gera PDF server-side via Cloudflare Browser Rendering (Puppeteer).
  * Recebe dados clínicos, renderiza HTML estilizado, converte para PDF.
  */
-app.post('/', requireAuth, async (c) => {
-  const user = c.get('user');
+app.post("/", requireAuth, async (c) => {
+  const user = c.get("user");
   const body = (await c.req.json()) as PdfRequest;
 
   if (!body.type || !body.patientName || !body.data) {
-    return c.json({ error: 'type, patientName e data são obrigatórios' }, 400);
+    return c.json({ error: "type, patientName e data são obrigatórios" }, 400);
   }
 
   const html = buildHtml(body);
@@ -63,36 +63,46 @@ app.post('/', requireAuth, async (c) => {
       const timestamp = Date.now();
       const baseKey = `reports/${user.organizationId}/${body.patientId}/${body.type}-${timestamp}`;
       const pdfKey = `${baseKey}.pdf`;
-      const fileName = `${body.type}-${body.patientName.replace(/\s+/g, '_')}`;
+      const fileName = `${body.type}-${body.patientName.replace(/\s+/g, "_")}`;
 
       // Upload PDF
-      await r2.uploadFile(pdfKey, new Uint8Array(pdfBuffer as any), 'application/pdf', `${fileName}.pdf`);
+      await r2.uploadFile(
+        pdfKey,
+        new Uint8Array(pdfBuffer as any),
+        "application/pdf",
+        `${fileName}.pdf`,
+      );
 
       let htmlKey: string | undefined;
       if (body.includeHtml) {
         htmlKey = `${baseKey}.html`;
-        await r2.uploadFile(htmlKey, new TextEncoder().encode(html), 'text/html', `${fileName}.html`);
+        await r2.uploadFile(
+          htmlKey,
+          new TextEncoder().encode(html),
+          "text/html",
+          `${fileName}.html`,
+        );
       }
 
-      return c.json({ 
-        pdfUrl: `${c.env.R2_PUBLIC_URL}/${pdfKey}`, 
+      return c.json({
+        pdfUrl: `${c.env.R2_PUBLIC_URL}/${pdfKey}`,
         pdfKey,
         htmlUrl: htmlKey ? `${c.env.R2_PUBLIC_URL}/${htmlKey}` : undefined,
-        htmlKey
+        htmlKey,
       });
     }
 
     // Retornar binário direto
     return new Response(new Uint8Array(pdfBuffer as any), {
       headers: {
-        'Content-Type': 'application/pdf',
-        'Content-Disposition': `attachment; filename="${body.type}-${body.patientName.replace(/\s+/g, '_')}.pdf"`,
-        'Cache-Control': 'no-store',
+        "Content-Type": "application/pdf",
+        "Content-Disposition": `attachment; filename="${body.type}-${body.patientName.replace(/\s+/g, "_")}.pdf"`,
+        "Cache-Control": "no-store",
       },
     });
   } catch (error: any) {
-    console.error('[PDF] Error generating PDF:', error);
-    return c.json({ error: 'Erro ao gerar PDF', details: error.message }, 500);
+    console.error("[PDF] Error generating PDF:", error);
+    return c.json({ error: "Erro ao gerar PDF", details: error.message }, 500);
   }
 });
 
@@ -100,18 +110,18 @@ app.post('/', requireAuth, async (c) => {
  * POST /api/reports/pdf/share
  * Gera um link temporário (URL assinada) para um relatório existente.
  */
-app.post('/share', requireAuth, async (c) => {
+app.post("/share", requireAuth, async (c) => {
   const r2 = new R2Service(c.env);
   const { key, expiresIn } = (await c.req.json()) as { key: string; expiresIn?: number };
 
-  if (!key) return c.json({ error: 'key é obrigatória' }, 400);
+  if (!key) return c.json({ error: "key é obrigatória" }, 400);
 
   try {
     // Gera link temporário (default 24h se não especificado)
     const signedUrl = await r2.getDownloadUrl(key, expiresIn || 86400);
     return c.json({ url: signedUrl });
   } catch (error: any) {
-    return c.json({ error: 'Erro ao gerar link temporário', details: error.message }, 500);
+    return c.json({ error: "Erro ao gerar link temporário", details: error.message }, 500);
   }
 });
 
@@ -119,14 +129,26 @@ app.post('/share', requireAuth, async (c) => {
  * GET /api/reports/pdf/templates
  * Lista tipos de relatório disponíveis.
  */
-app.get('/templates', requireAuth, (c) => {
+app.get("/templates", requireAuth, (c) => {
   return c.json({
     templates: [
-      { type: 'soap', name: 'Nota SOAP', description: 'Registro de sessão fisioterapêutica' },
-      { type: 'progress', name: 'Relatório de Progresso', description: 'Evolução do paciente ao longo do tratamento' },
-      { type: 'prescription', name: 'Prescrição / Pedido Médico', description: 'Solicitação de exames ou encaminhamentos' },
-      { type: 'discharge', name: 'Relatório de Alta', description: 'Sumário da alta fisioterapêutica' },
-      { type: 'exam', name: 'Laudo de Exame', description: 'Laudo de avaliação ou exame físico' },
+      { type: "soap", name: "Nota SOAP", description: "Registro de sessão fisioterapêutica" },
+      {
+        type: "progress",
+        name: "Relatório de Progresso",
+        description: "Evolução do paciente ao longo do tratamento",
+      },
+      {
+        type: "prescription",
+        name: "Prescrição / Pedido Médico",
+        description: "Solicitação de exames ou encaminhamentos",
+      },
+      {
+        type: "discharge",
+        name: "Relatório de Alta",
+        description: "Sumário da alta fisioterapêutica",
+      },
+      { type: "exam", name: "Laudo de Exame", description: "Laudo de avaliação ou exame físico" },
     ],
   });
 });
@@ -135,7 +157,11 @@ app.get('/templates', requireAuth, (c) => {
 
 function buildHtml(req: PdfRequest): string {
   const content = buildContent(req);
-  const date = new Date().toLocaleDateString('pt-BR', { day: '2-digit', month: 'long', year: 'numeric' });
+  const date = new Date().toLocaleDateString("pt-BR", {
+    day: "2-digit",
+    month: "long",
+    year: "numeric",
+  });
 
   return `<!DOCTYPE html>
 <html lang="pt-BR">
@@ -276,31 +302,31 @@ function buildContent(req: PdfRequest): string {
   const d = req.data as Record<string, string>;
 
   switch (req.type) {
-    case 'soap':
+    case "soap":
       return `
-        <div class="section"><div class="section-title">S — Subjetivo</div><div class="section-body">${d.subjective ?? '—'}</div></div>
-        <div class="section"><div class="section-title">O — Objetivo</div><div class="section-body">${d.objective ?? '—'}</div></div>
-        <div class="section"><div class="section-title">A — Avaliação</div><div class="section-body">${d.assessment ?? '—'}</div></div>
-        <div class="section"><div class="section-title">P — Plano</div><div class="section-body">${d.plan ?? '—'}</div></div>
-        ${d.pain_level ? `<div class="section"><div class="section-title">Escala de Dor (EVA)</div><div class="section-body">${d.pain_level}/10 — ${d.pain_location ?? ''}</div></div>` : ''}`;
+        <div class="section"><div class="section-title">S — Subjetivo</div><div class="section-body">${d.subjective ?? "—"}</div></div>
+        <div class="section"><div class="section-title">O — Objetivo</div><div class="section-body">${d.objective ?? "—"}</div></div>
+        <div class="section"><div class="section-title">A — Avaliação</div><div class="section-body">${d.assessment ?? "—"}</div></div>
+        <div class="section"><div class="section-title">P — Plano</div><div class="section-body">${d.plan ?? "—"}</div></div>
+        ${d.pain_level ? `<div class="section"><div class="section-title">Escala de Dor (EVA)</div><div class="section-body">${d.pain_level}/10 — ${d.pain_location ?? ""}</div></div>` : ""}`;
 
-    case 'progress':
+    case "progress":
       return `
-        <div class="section"><div class="section-title">Evolução Clínica</div><div class="section-body">${d.summary ?? '—'}</div></div>
-        <div class="section"><div class="section-title">Objetivos Atingidos</div><div class="section-body">${d.goals_achieved ?? '—'}</div></div>
-        <div class="section"><div class="section-title">Próximos Passos</div><div class="section-body">${d.next_steps ?? '—'}</div></div>`;
+        <div class="section"><div class="section-title">Evolução Clínica</div><div class="section-body">${d.summary ?? "—"}</div></div>
+        <div class="section"><div class="section-title">Objetivos Atingidos</div><div class="section-body">${d.goals_achieved ?? "—"}</div></div>
+        <div class="section"><div class="section-title">Próximos Passos</div><div class="section-body">${d.next_steps ?? "—"}</div></div>`;
 
-    case 'prescription':
+    case "prescription":
       return `
-        <div class="section"><div class="section-title">Prescrição / Solicitação</div><div class="section-body">${d.content ?? '—'}</div></div>
-        <div class="section"><div class="section-title">Indicação Clínica</div><div class="section-body">${d.indication ?? '—'}</div></div>
+        <div class="section"><div class="section-title">Prescrição / Solicitação</div><div class="section-body">${d.content ?? "—"}</div></div>
+        <div class="section"><div class="section-title">Indicação Clínica</div><div class="section-body">${d.indication ?? "—"}</div></div>
         <div style="margin-top:40px"><div class="signature-line">Assinatura e carimbo do profissional</div></div>`;
 
-    case 'discharge':
+    case "discharge":
       return `
-        <div class="section"><div class="section-title">Sumário da Alta</div><div class="section-body">${d.summary ?? '—'}</div></div>
-        <div class="section"><div class="section-title">Orientações Pós-Alta</div><div class="section-body">${d.instructions ?? '—'}</div></div>
-        <div class="section"><div class="section-title">Resultado do Tratamento</div><div class="section-body">${d.outcome ?? '—'}</div></div>`;
+        <div class="section"><div class="section-title">Sumário da Alta</div><div class="section-body">${d.summary ?? "—"}</div></div>
+        <div class="section"><div class="section-title">Orientações Pós-Alta</div><div class="section-body">${d.instructions ?? "—"}</div></div>
+        <div class="section"><div class="section-title">Resultado do Tratamento</div><div class="section-body">${d.outcome ?? "—"}</div></div>`;
 
     default:
       return `<div class="section"><div class="section-body">${JSON.stringify(req.data, null, 2)}</div></div>`;
@@ -309,13 +335,13 @@ function buildContent(req: PdfRequest): string {
 
 function typeLabel(type: PdfReportType): string {
   const labels: Record<PdfReportType, string> = {
-    soap: 'Nota SOAP',
-    progress: 'Relatório de Progresso',
-    prescription: 'Prescrição',
-    discharge: 'Relatório de Alta',
-    exam: 'Laudo de Exame',
+    soap: "Nota SOAP",
+    progress: "Relatório de Progresso",
+    prescription: "Prescrição",
+    discharge: "Relatório de Alta",
+    exam: "Laudo de Exame",
   };
-  return labels[type] ?? 'Relatório';
+  return labels[type] ?? "Relatório";
 }
 
 export const reportsPdfRoutes = app;

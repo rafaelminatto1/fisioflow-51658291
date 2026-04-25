@@ -1,6 +1,6 @@
-import { fetchApi } from '@/lib/api';
-import { authApi } from '@/lib/auth-api';
-import { config } from '@/lib/config';
+import { fetchApi } from "@/lib/api";
+import { authApi } from "@/lib/auth-api";
+import { config } from "@/lib/config";
 
 /**
  * Upload de um arquivo para o Cloudflare R2 (via API)
@@ -11,37 +11,37 @@ import { config } from '@/lib/config';
 export async function uploadFile(uri: string, path: string): Promise<string> {
   try {
     const token = await authApi.getToken();
-    if (!token) throw new Error('Not authenticated');
+    if (!token) throw new Error("Not authenticated");
 
     const response = await fetch(uri);
     const blob = await response.blob();
 
     const formData = new FormData();
     // @ts-expect-error - React Native FormData accepts blob
-    formData.append('file', {
-        uri,
-        name: path.split('/').pop() || 'file',
-        type: blob.type || 'application/octet-stream',
+    formData.append("file", {
+      uri,
+      name: path.split("/").pop() || "file",
+      type: blob.type || "application/octet-stream",
     });
-    formData.append('path', path);
+    formData.append("path", path);
 
     const uploadRes = await fetch(`${config.apiUrl}/api/storage/upload`, {
-      method: 'POST',
+      method: "POST",
       headers: {
-        'Authorization': `Bearer ${token}`
+        Authorization: `Bearer ${token}`,
       },
-      body: formData
+      body: formData,
     });
 
     if (!uploadRes.ok) {
-        throw new Error(`Upload falhou: ${uploadRes.status}`);
+      throw new Error(`Upload falhou: ${uploadRes.status}`);
     }
 
     const data = await uploadRes.json();
     return data.url;
   } catch (error) {
-    console.error('Error uploading file:', error);
-    throw new Error('Não foi possível fazer upload do arquivo');
+    console.error("Error uploading file:", error);
+    throw new Error("Não foi possível fazer upload do arquivo");
   }
 }
 
@@ -52,10 +52,10 @@ export async function uploadEvolutionPhoto(
   patientId: string,
   evolutionId: string,
   uri: string,
-  fileName: string
+  fileName: string,
 ): Promise<string> {
   const timestamp = Date.now();
-  const sanitizedFileName = fileName.replace(/[^a-zA-Z0-9.]/g, '_');
+  const sanitizedFileName = fileName.replace(/[^a-zA-Z0-9.]/g, "_");
   const path = `evolutions/${patientId}/${evolutionId}/${timestamp}_${sanitizedFileName}`;
   return uploadFile(uri, path);
 }
@@ -84,10 +84,10 @@ export async function uploadAvatar(userId: string, uri: string): Promise<string>
 export async function uploadPatientAttachment(
   patientId: string,
   uri: string,
-  fileName: string
+  fileName: string,
 ): Promise<string> {
   const timestamp = Date.now();
-  const sanitizedFileName = fileName.replace(/[^a-zA-Z0-9.]/g, '_');
+  const sanitizedFileName = fileName.replace(/[^a-zA-Z0-9.]/g, "_");
   const path = `patients/${patientId}/attachments/${timestamp}_${sanitizedFileName}`;
   return uploadFile(uri, path);
 }
@@ -97,13 +97,13 @@ export async function uploadPatientAttachment(
  */
 export async function deleteFile(path: string): Promise<void> {
   try {
-    await fetchApi('/api/storage/delete', {
-        method: 'POST',
-        data: { path }
+    await fetchApi("/api/storage/delete", {
+      method: "POST",
+      data: { path },
     });
   } catch (error) {
-    console.error('Error deleting file:', error);
-    throw new Error('Não foi possível deletar o arquivo');
+    console.error("Error deleting file:", error);
+    throw new Error("Não foi possível deletar o arquivo");
   }
 }
 
@@ -113,7 +113,7 @@ export async function deleteFile(path: string): Promise<void> {
 export async function deleteEvolutionPhoto(
   patientId: string,
   evolutionId: string,
-  fileName: string
+  fileName: string,
 ): Promise<void> {
   const path = `evolutions/${patientId}/${evolutionId}/${fileName}`;
   return deleteFile(path);
@@ -126,12 +126,12 @@ export async function deleteEvolutionPhoto(
  */
 export async function getFileUrl(path: string): Promise<string> {
   try {
-    const data = await fetchApi<any>('/api/storage/url', {
-        params: { path }
+    const data = await fetchApi<any>("/api/storage/url", {
+      params: { path },
     });
     return data.url;
   } catch (error) {
-    console.error('Error getting file URL:', error);
-    throw new Error('Não foi possível obter a URL do arquivo');
+    console.error("Error getting file URL:", error);
+    throw new Error("Não foi possível obter a URL do arquivo");
   }
 }

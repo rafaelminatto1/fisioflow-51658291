@@ -1,11 +1,11 @@
-import React, { useState } from 'react';
-import { View, TextInput, StyleSheet, TouchableOpacity, ScrollView } from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
-import { SlashMenu, SlashCommand } from './SlashMenu';
-import { ExerciseSelectorModal } from './ExerciseSelectorModal';
-import { ClinicalSelectorModal } from './ClinicalSelectorModal';
-import { PROCEDURES, CLINICAL_TESTS, ClinicalResource } from '@/constants/clinicalData';
-import type { Exercise } from '@/types';
+import React, { useState } from "react";
+import { View, TextInput, StyleSheet, TouchableOpacity, ScrollView } from "react-native";
+import { Ionicons } from "@expo/vector-icons";
+import { SlashMenu, SlashCommand } from "./SlashMenu";
+import { ExerciseSelectorModal } from "./ExerciseSelectorModal";
+import { ClinicalSelectorModal } from "./ClinicalSelectorModal";
+import { PROCEDURES, CLINICAL_TESTS, ClinicalResource } from "@/constants/clinicalData";
+import type { Exercise } from "@/types";
 
 interface TiptapFormProps {
   content: string;
@@ -20,56 +20,56 @@ export function TiptapForm({ content, onChangeContent, colors }: TiptapFormProps
   const [showTests, setShowTests] = useState(false);
 
   const tools = [
-    { icon: 'text', action: 'heading' },
-    { icon: 'list', action: 'bullet' },
-    { icon: 'list-circle', action: 'number' },
-    { icon: 'code', action: 'code' },
-    { icon: 'link', action: 'link' },
-    { icon: 'image', action: 'image' },
+    { icon: "text", action: "heading" },
+    { icon: "list", action: "bullet" },
+    { icon: "list-circle", action: "number" },
+    { icon: "code", action: "code" },
+    { icon: "link", action: "link" },
+    { icon: "image", action: "image" },
   ];
 
   const handleTextChange = (text: string) => {
-    if (text[text.length - 1] === '/') {
+    if (text[text.length - 1] === "/") {
       setShowMenu(true);
     }
     onChangeContent(text);
   };
 
   const handleCommandSelect = (command: SlashCommand) => {
-    if (command.id === 'exercicios') {
+    if (command.id === "exercicios") {
       setShowExercises(true);
       setShowMenu(false);
       return;
     }
-    if (command.id === 'procedimentos') {
+    if (command.id === "procedimentos") {
       setShowProcedures(true);
       setShowMenu(false);
       return;
     }
-    if (command.id === 'testes') {
+    if (command.id === "testes") {
       setShowTests(true);
       setShowMenu(false);
       return;
     }
 
-    const before = content.slice(0, content.lastIndexOf('/'));
-    const after = content.slice(content.lastIndexOf('/') + 1);
+    const before = content.slice(0, content.lastIndexOf("/"));
+    const after = content.slice(content.lastIndexOf("/") + 1);
     onChangeContent(before + command.content + after);
     setShowMenu(false);
   };
 
   const handleExerciseSelect = (exercise: Exercise) => {
-    const before = content.slice(0, content.lastIndexOf('/'));
-    const after = content.slice(content.lastIndexOf('/') + 1);
-    const exerciseText = `\n• Exercício: ${exercise.name}${exercise.sets ? ` (${exercise.sets}x${exercise.reps})` : ''}\n  - Obs: `;
+    const before = content.slice(0, content.lastIndexOf("/"));
+    const after = content.slice(content.lastIndexOf("/") + 1);
+    const exerciseText = `\n• Exercício: ${exercise.name}${exercise.sets ? ` (${exercise.sets}x${exercise.reps})` : ""}\n  - Obs: `;
     onChangeContent(before + exerciseText + after);
     setShowExercises(false);
   };
 
-  const handleClinicalSelect = (item: ClinicalResource, type: 'procedimento' | 'teste') => {
-    const before = content.slice(0, content.lastIndexOf('/'));
-    const after = content.slice(content.lastIndexOf('/') + 1);
-    const text = `\n• ${type === 'procedimento' ? 'Procedimento' : 'Teste'}: ${item.name}\n  - Resultado/Obs: `;
+  const handleClinicalSelect = (item: ClinicalResource, type: "procedimento" | "teste") => {
+    const before = content.slice(0, content.lastIndexOf("/"));
+    const after = content.slice(content.lastIndexOf("/") + 1);
+    const text = `\n• ${type === "procedimento" ? "Procedimento" : "Teste"}: ${item.name}\n  - Resultado/Obs: `;
     onChangeContent(before + text + after);
     setShowProcedures(false);
     setShowTests(false);
@@ -78,7 +78,12 @@ export function TiptapForm({ content, onChangeContent, colors }: TiptapFormProps
   return (
     <View style={styles.container}>
       {/* Fake Tiptap Toolbar */}
-      <View style={[styles.toolbar, { backgroundColor: colors.surface, borderBottomColor: colors.border }]}>
+      <View
+        style={[
+          styles.toolbar,
+          { backgroundColor: colors.surface, borderBottomColor: colors.border },
+        ]}
+      >
         <ScrollView horizontal showsHorizontalScrollIndicator={false}>
           {tools.map((tool, index) => (
             <TouchableOpacity key={index} style={styles.toolButton}>
@@ -87,7 +92,7 @@ export function TiptapForm({ content, onChangeContent, colors }: TiptapFormProps
           ))}
         </ScrollView>
       </View>
-      
+
       <TextInput
         style={[styles.input, { color: colors.text }]}
         placeholder="Use a barra acima ou '/' para comandos..."
@@ -115,7 +120,7 @@ export function TiptapForm({ content, onChangeContent, colors }: TiptapFormProps
       <ClinicalSelectorModal
         isVisible={showProcedures}
         onClose={() => setShowProcedures(false)}
-        onSelect={(item) => handleClinicalSelect(item, 'procedimento')}
+        onSelect={(item) => handleClinicalSelect(item, "procedimento")}
         title="Procedimentos"
         data={PROCEDURES}
         colors={colors}
@@ -124,7 +129,7 @@ export function TiptapForm({ content, onChangeContent, colors }: TiptapFormProps
       <ClinicalSelectorModal
         isVisible={showTests}
         onClose={() => setShowTests(false)}
-        onSelect={(item) => handleClinicalSelect(item, 'teste')}
+        onSelect={(item) => handleClinicalSelect(item, "teste")}
         title="Testes Clínicos"
         data={CLINICAL_TESTS}
         colors={colors}
@@ -137,12 +142,12 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     borderRadius: 12,
-    overflow: 'hidden',
+    overflow: "hidden",
     borderWidth: 1,
-    borderColor: 'transparent',
+    borderColor: "transparent",
   },
   toolbar: {
-    flexDirection: 'row',
+    flexDirection: "row",
     padding: 8,
     borderBottomWidth: 1,
   },

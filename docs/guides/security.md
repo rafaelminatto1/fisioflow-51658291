@@ -9,6 +9,7 @@ O FisioFlow segue um modelo de segurança "Edge-First", onde a autenticação e 
 ### 1. Isolamento de Multi-tenancy (Drizzle/Neon)
 
 Diferente do modelo RLS (Row Level Security) tradicional, o FisioFlow utiliza **Isolamento via Contexto de Aplicação**:
+
 - ✅ **organizationId Obrigatório:** Todas as queries SQL injetam automaticamente o `organizationId` do usuário autenticado.
 - ✅ **Middleware de Tenant:** O Hono.js valida se o usuário tem permissão para acessar aquela organização antes de chegar ao banco.
 - ✅ **Validadores Zod:** Garantem que nenhum dado de uma organização seja enviado para outra através de payloads.
@@ -55,14 +56,10 @@ Sempre inclua o `organizationId` em suas queries para garantir o isolamento.
 
 ```typescript
 // ✅ CORRETO - Filtro explícito garantido pelo middleware
-const results = await db.select()
+const results = await db
+  .select()
   .from(patients)
-  .where(
-    and(
-      eq(patients.organizationId, ctx.get('organizationId')),
-      eq(patients.id, targetId)
-    )
-  );
+  .where(and(eq(patients.organizationId, ctx.get("organizationId")), eq(patients.id, targetId)));
 ```
 
 ### 2. Sanitização e XSS

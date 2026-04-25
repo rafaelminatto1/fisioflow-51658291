@@ -5,7 +5,7 @@
  * validação e upload de foto de avatar.
  */
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect } from "react";
 
 import {
   View,
@@ -18,17 +18,17 @@ import {
   ActivityIndicator,
   KeyboardAvoidingView,
   Platform,
-} from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
-import { useRouter } from 'expo-router';
-import { Ionicons } from '@expo/vector-icons';
-import * as ImagePicker from 'expo-image-picker';
-import { useColors } from '@/hooks/useColorScheme';
-import { useAuthStore } from '@/store/auth';
-import { Card, Button, Input } from '@/components';
-import { mediaApi, patientApi } from '@/lib/api';
-import { validators } from '@/lib/validation';
-import { log } from '@/lib/logger';
+} from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
+import { useRouter } from "expo-router";
+import { Ionicons } from "@expo/vector-icons";
+import * as ImagePicker from "expo-image-picker";
+import { useColors } from "@/hooks/useColorScheme";
+import { useAuthStore } from "@/store/auth";
+import { Card, Button, Input } from "@/components";
+import { mediaApi, patientApi } from "@/lib/api";
+import { validators } from "@/lib/validation";
+import { log } from "@/lib/logger";
 
 interface ProfileFormData {
   name: string;
@@ -55,27 +55,25 @@ interface FormErrors {
   birthDate?: string;
 }
 
-
-
 export default function ProfileEditScreen() {
   const colors = useColors();
   const router = useRouter();
   const { user } = useAuthStore();
 
   const [formData, setFormData] = useState<ProfileFormData>({
-    name: '',
-    email: '',
-    phone: '',
-    cpf: '',
-    birthDate: '',
+    name: "",
+    email: "",
+    phone: "",
+    cpf: "",
+    birthDate: "",
     address: {
-      street: '',
-      number: '',
-      complement: '',
-      neighborhood: '',
-      city: '',
-      state: '',
-      zipCode: '',
+      street: "",
+      number: "",
+      complement: "",
+      neighborhood: "",
+      city: "",
+      state: "",
+      zipCode: "",
     },
   });
 
@@ -97,37 +95,37 @@ export default function ProfileEditScreen() {
       const profile = await patientApi.getProfile();
       const address = profile?.address || {};
       setFormData({
-        name: profile?.name || user.name || '',
-        email: profile?.email || user.email || '',
-        phone: profile?.phone || '',
-        cpf: profile?.cpf || '',
-        birthDate: profile?.birthDate || '',
+        name: profile?.name || user.name || "",
+        email: profile?.email || user.email || "",
+        phone: profile?.phone || "",
+        cpf: profile?.cpf || "",
+        birthDate: profile?.birthDate || "",
         address: {
-          street: address.street || '',
-          number: address.number || '',
-          complement: address.complement || '',
-          neighborhood: address.neighborhood || '',
-          city: address.city || '',
-          state: address.state || '',
-          zipCode: address.zipCode || '',
+          street: address.street || "",
+          number: address.number || "",
+          complement: address.complement || "",
+          neighborhood: address.neighborhood || "",
+          city: address.city || "",
+          state: address.state || "",
+          zipCode: address.zipCode || "",
         },
       });
       setAvatarUrl(profile?.photoUrl || profile?.avatarUrl || user.avatarUrl || null);
     } catch (error) {
-      log.error('Error loading user data:', error);
+      log.error("Error loading user data:", error);
     }
   };
 
   const updateFormField = (field: keyof ProfileFormData, value: string) => {
-    setFormData(prev => ({ ...prev, [field]: value }));
+    setFormData((prev) => ({ ...prev, [field]: value }));
     // Clear error for this field
     if (field in errors) {
-      setErrors(prev => ({ ...prev, [field]: undefined }));
+      setErrors((prev) => ({ ...prev, [field]: undefined }));
     }
   };
 
-  const updateAddressField = (field: keyof ProfileFormData['address'], value: string) => {
-    setFormData(prev => ({
+  const updateAddressField = (field: keyof ProfileFormData["address"], value: string) => {
+    setFormData((prev) => ({
       ...prev,
       address: { ...prev.address, [field]: value },
     }));
@@ -138,9 +136,9 @@ export default function ProfileEditScreen() {
 
     // Validate name
     if (!formData.name.trim()) {
-      newErrors.name = 'Nome é obrigatório';
+      newErrors.name = "Nome é obrigatório";
     } else if (formData.name.trim().length < 3) {
-      newErrors.name = 'Nome deve ter pelo menos 3 caracteres';
+      newErrors.name = "Nome deve ter pelo menos 3 caracteres";
     }
 
     // Validate email
@@ -151,12 +149,12 @@ export default function ProfileEditScreen() {
 
     // Validate phone (optional but if provided, must be valid)
     if (formData.phone && !validators.phone(formData.phone)) {
-      newErrors.phone = 'Telefone inválido';
+      newErrors.phone = "Telefone inválido";
     }
 
     // Validate CPF (optional but if provided, must be valid)
     if (formData.cpf && !validators.cpf(formData.cpf)) {
-      newErrors.cpf = 'CPF inválido';
+      newErrors.cpf = "CPF inválido";
     }
 
     setErrors(newErrors);
@@ -167,7 +165,7 @@ export default function ProfileEditScreen() {
     if (!user?.id) return;
 
     if (!validateForm()) {
-      Alert.alert('Erro', 'Por favor, corrija os erros no formulário');
+      Alert.alert("Erro", "Por favor, corrija os erros no formulário");
       return;
     }
 
@@ -183,12 +181,12 @@ export default function ProfileEditScreen() {
         address: formData.address,
       });
 
-      Alert.alert('Sucesso', 'Perfil atualizado com sucesso!', [
-        { text: 'OK', onPress: () => router.back() }
+      Alert.alert("Sucesso", "Perfil atualizado com sucesso!", [
+        { text: "OK", onPress: () => router.back() },
       ]);
     } catch (error) {
-      log.error('Error saving profile:', error);
-      Alert.alert('Erro', 'Não foi possível salvar o perfil. Tente novamente.');
+      log.error("Error saving profile:", error);
+      Alert.alert("Erro", "Não foi possível salvar o perfil. Tente novamente.");
     } finally {
       setSaving(false);
     }
@@ -201,8 +199,8 @@ export default function ProfileEditScreen() {
 
       if (!permissionResult.granted) {
         Alert.alert(
-          'Permissão Necessária',
-          'Precisamos de acesso à galeria para alterar sua foto de perfil.'
+          "Permissão Necessária",
+          "Precisamos de acesso à galeria para alterar sua foto de perfil.",
         );
         return;
       }
@@ -217,11 +215,11 @@ export default function ProfileEditScreen() {
 
       if (!result.canceled && result.assets[0]) {
         setUploadingAvatar(true);
-        await uploadAvatar(result.assets[0].uri, result.assets[0].mimeType || 'image/jpeg');
+        await uploadAvatar(result.assets[0].uri, result.assets[0].mimeType || "image/jpeg");
       }
     } catch (error) {
-      log.error('Error picking avatar:', error);
-      Alert.alert('Erro', 'Não foi possível selecionar a imagem.');
+      log.error("Error picking avatar:", error);
+      Alert.alert("Erro", "Não foi possível selecionar a imagem.");
     } finally {
       setUploadingAvatar(false);
     }
@@ -233,17 +231,17 @@ export default function ProfileEditScreen() {
     try {
       const response = await fetch(uri);
       const blob = await response.blob();
-      const extension = contentType.includes('png') ? 'png' : 'jpg';
+      const extension = contentType.includes("png") ? "png" : "jpg";
       const upload = await mediaApi.getUploadUrl({
         filename: `avatar-${user.id}.${extension}`,
         contentType,
-        folder: 'avatars',
+        folder: "avatars",
       });
 
       await fetch(upload.uploadUrl, {
-        method: 'PUT',
+        method: "PUT",
         headers: {
-          'Content-Type': contentType,
+          "Content-Type": contentType,
         },
         body: blob,
       });
@@ -253,43 +251,42 @@ export default function ProfileEditScreen() {
       });
 
       setAvatarUrl(upload.publicUrl);
-      Alert.alert('Sucesso', 'Foto de perfil atualizada!');
+      Alert.alert("Sucesso", "Foto de perfil atualizada!");
     } catch (error) {
-      log.error('Error uploading avatar:', error);
-      Alert.alert('Erro', 'Não foi possível atualizar a foto de perfil.');
+      log.error("Error uploading avatar:", error);
+      Alert.alert("Erro", "Não foi possível atualizar a foto de perfil.");
     }
   };
 
   const handleRemoveAvatar = async () => {
     if (!user?.id) return;
 
-    Alert.alert(
-      'Remover Foto',
-      'Deseja remover sua foto de perfil?',
-      [
-        { text: 'Cancelar', style: 'cancel' },
-        {
-          text: 'Remover',
-          style: 'destructive',
-          onPress: async () => {
-            try {
-              await patientApi.updateProfile({
-                photo_url: null,
-              });
-              setAvatarUrl(null);
-            } catch  {
-              Alert.alert('Erro', 'Não foi possível remover a foto.');
-            }
-          },
+    Alert.alert("Remover Foto", "Deseja remover sua foto de perfil?", [
+      { text: "Cancelar", style: "cancel" },
+      {
+        text: "Remover",
+        style: "destructive",
+        onPress: async () => {
+          try {
+            await patientApi.updateProfile({
+              photo_url: null,
+            });
+            setAvatarUrl(null);
+          } catch {
+            Alert.alert("Erro", "Não foi possível remover a foto.");
+          }
         },
-      ]
-    );
+      },
+    ]);
   };
 
   return (
-    <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]} edges={['top']}>
+    <SafeAreaView
+      style={[styles.container, { backgroundColor: colors.background }]}
+      edges={["top"]}
+    >
       <KeyboardAvoidingView
-        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+        behavior={Platform.OS === "ios" ? "padding" : "height"}
         style={styles.keyboardView}
       >
         {/* Header */}
@@ -308,16 +305,14 @@ export default function ProfileEditScreen() {
           {/* Avatar Section */}
           <View style={styles.avatarSection}>
             <TouchableOpacity onPress={handlePickAvatar} activeOpacity={0.7}>
-              <View style={[styles.avatarContainer, { backgroundColor: colors.primary + '20' }]}>
+              <View style={[styles.avatarContainer, { backgroundColor: colors.primary + "20" }]}>
                 {uploadingAvatar ? (
                   <ActivityIndicator size="large" color={colors.primary} />
                 ) : avatarUrl ? (
                   <Image source={{ uri: avatarUrl }} style={styles.avatarImage} />
                 ) : (
                   <View style={[styles.avatarPlaceholder, { backgroundColor: colors.primary }]}>
-                    <Text style={styles.avatarText}>
-                      {formData.name.charAt(0).toUpperCase()}
-                    </Text>
+                    <Text style={styles.avatarText}>{formData.name.charAt(0).toUpperCase()}</Text>
                   </View>
                 )}
                 <View style={[styles.editAvatarBadge, { backgroundColor: colors.primary }]}>
@@ -327,9 +322,7 @@ export default function ProfileEditScreen() {
             </TouchableOpacity>
             {avatarUrl && (
               <TouchableOpacity onPress={handleRemoveAvatar} style={styles.removeAvatarButton}>
-                <Text style={[styles.removeAvatarText, { color: colors.error }]}>
-                  Remover foto
-                </Text>
+                <Text style={[styles.removeAvatarText, { color: colors.error }]}>Remover foto</Text>
               </TouchableOpacity>
             )}
           </View>
@@ -342,7 +335,7 @@ export default function ProfileEditScreen() {
               label="Nome Completo"
               placeholder="Seu nome completo"
               value={formData.name}
-              onChangeText={(value) => updateFormField('name', value)}
+              onChangeText={(value) => updateFormField("name", value)}
               error={errors.name}
               leftIcon="person-outline"
               autoCapitalize="words"
@@ -352,7 +345,7 @@ export default function ProfileEditScreen() {
               label="Email"
               placeholder="seu@email.com"
               value={formData.email}
-              onChangeText={(value) => updateFormField('email', value)}
+              onChangeText={(value) => updateFormField("email", value)}
               error={errors.email}
               leftIcon="mail-outline"
               autoCapitalize="none"
@@ -363,7 +356,7 @@ export default function ProfileEditScreen() {
               label="Telefone"
               placeholder="(11) 98765-4321"
               value={formData.phone}
-              onChangeText={(value) => updateFormField('phone', value)}
+              onChangeText={(value) => updateFormField("phone", value)}
               error={errors.phone}
               leftIcon="call-outline"
               keyboardType="phone-pad"
@@ -374,7 +367,7 @@ export default function ProfileEditScreen() {
               label="CPF"
               placeholder="000.000.000-00"
               value={formData.cpf}
-              onChangeText={(value) => updateFormField('cpf', value)}
+              onChangeText={(value) => updateFormField("cpf", value)}
               error={errors.cpf}
               leftIcon="card-outline"
               keyboardType="number-pad"
@@ -385,7 +378,7 @@ export default function ProfileEditScreen() {
               label="Data de Nascimento"
               placeholder="DD/MM/AAAA"
               value={formData.birthDate}
-              onChangeText={(value) => updateFormField('birthDate', value)}
+              onChangeText={(value) => updateFormField("birthDate", value)}
               error={errors.birthDate}
               leftIcon="calendar-outline"
               mask="date"
@@ -400,7 +393,7 @@ export default function ProfileEditScreen() {
               label="Rua"
               placeholder="Nome da rua"
               value={formData.address.street}
-              onChangeText={(value) => updateAddressField('street', value)}
+              onChangeText={(value) => updateAddressField("street", value)}
               leftIcon="location-outline"
             />
 
@@ -410,7 +403,7 @@ export default function ProfileEditScreen() {
                   label="Número"
                   placeholder="123"
                   value={formData.address.number}
-                  onChangeText={(value) => updateAddressField('number', value)}
+                  onChangeText={(value) => updateAddressField("number", value)}
                   keyboardType="number-pad"
                 />
               </View>
@@ -419,7 +412,7 @@ export default function ProfileEditScreen() {
                   label="Complemento"
                   placeholder="Apto, Bloco"
                   value={formData.address.complement}
-                  onChangeText={(value) => updateAddressField('complement', value)}
+                  onChangeText={(value) => updateAddressField("complement", value)}
                 />
               </View>
             </View>
@@ -428,7 +421,7 @@ export default function ProfileEditScreen() {
               label="Bairro"
               placeholder="Nome do bairro"
               value={formData.address.neighborhood}
-              onChangeText={(value) => updateAddressField('neighborhood', value)}
+              onChangeText={(value) => updateAddressField("neighborhood", value)}
               leftIcon="home-outline"
             />
 
@@ -438,7 +431,7 @@ export default function ProfileEditScreen() {
                   label="Cidade"
                   placeholder="Nome da cidade"
                   value={formData.address.city}
-                  onChangeText={(value) => updateAddressField('city', value)}
+                  onChangeText={(value) => updateAddressField("city", value)}
                   leftIcon="business-outline"
                 />
               </View>
@@ -447,7 +440,7 @@ export default function ProfileEditScreen() {
                   label="UF"
                   placeholder="SP"
                   value={formData.address.state}
-                  onChangeText={(value) => updateAddressField('state', value)}
+                  onChangeText={(value) => updateAddressField("state", value)}
                   maxLength={2}
                   autoCapitalize="characters"
                 />
@@ -458,7 +451,7 @@ export default function ProfileEditScreen() {
               label="CEP"
               placeholder="00000-000"
               value={formData.address.zipCode}
-              onChangeText={(value) => updateAddressField('zipCode', value)}
+              onChangeText={(value) => updateAddressField("zipCode", value)}
               leftIcon="bookmark-outline"
               keyboardType="number-pad"
               mask="cep"
@@ -488,13 +481,13 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
     paddingHorizontal: 16,
     paddingVertical: 12,
     borderBottomWidth: 1,
-    borderBottomColor: 'rgba(0,0,0,0.05)',
+    borderBottomColor: "rgba(0,0,0,0.05)",
   },
   backButton: {
     padding: 8,
@@ -502,7 +495,7 @@ const styles = StyleSheet.create({
   },
   title: {
     fontSize: 18,
-    fontWeight: '600',
+    fontWeight: "600",
   },
   placeholder: {
     width: 40,
@@ -512,49 +505,49 @@ const styles = StyleSheet.create({
     paddingBottom: 32,
   },
   avatarSection: {
-    alignItems: 'center',
+    alignItems: "center",
     marginBottom: 24,
   },
   avatarContainer: {
     width: 120,
     height: 120,
     borderRadius: 60,
-    overflow: 'hidden',
+    overflow: "hidden",
     marginBottom: 12,
   },
   avatarImage: {
-    width: '100%',
-    height: '100%',
+    width: "100%",
+    height: "100%",
   },
   avatarPlaceholder: {
-    width: '100%',
-    height: '100%',
-    alignItems: 'center',
-    justifyContent: 'center',
+    width: "100%",
+    height: "100%",
+    alignItems: "center",
+    justifyContent: "center",
   },
   avatarText: {
     fontSize: 48,
-    fontWeight: '700',
-    color: '#FFFFFF',
+    fontWeight: "700",
+    color: "#FFFFFF",
   },
   editAvatarBadge: {
-    position: 'absolute',
+    position: "absolute",
     bottom: 4,
     right: 4,
     width: 32,
     height: 32,
     borderRadius: 16,
-    alignItems: 'center',
-    justifyContent: 'center',
+    alignItems: "center",
+    justifyContent: "center",
     borderWidth: 3,
-    borderColor: '#FFFFFF',
+    borderColor: "#FFFFFF",
   },
   removeAvatarButton: {
     marginTop: 8,
   },
   removeAvatarText: {
     fontSize: 14,
-    fontWeight: '500',
+    fontWeight: "500",
   },
   card: {
     marginBottom: 16,
@@ -562,11 +555,11 @@ const styles = StyleSheet.create({
   },
   sectionTitle: {
     fontSize: 16,
-    fontWeight: '600',
+    fontWeight: "600",
     marginBottom: 16,
   },
   row: {
-    flexDirection: 'row',
+    flexDirection: "row",
     gap: 12,
   },
   half: {

@@ -3,71 +3,70 @@
  * Event tracking and analytics helpers
  */
 
-
 /**
  * Event names for analytics
  */
 
-import { log } from './logger';
-import { getDeviceInfo } from './device';
+import { log } from "./logger";
+import { getDeviceInfo } from "./device";
 
 export const AnalyticsEvents = {
   // Auth events
-  SIGN_UP_STARTED: 'sign_up_started',
-  SIGN_UP_COMPLETED: 'sign_up_completed',
-  SIGN_UP_FAILED: 'sign_up_failed',
-  LOGIN_STARTED: 'login_started',
-  LOGIN_COMPLETED: 'login_completed',
-  LOGIN_FAILED: 'login_failed',
-  LOGOUT: 'logout',
-  PASSWORD_RESET: 'password_reset',
+  SIGN_UP_STARTED: "sign_up_started",
+  SIGN_UP_COMPLETED: "sign_up_completed",
+  SIGN_UP_FAILED: "sign_up_failed",
+  LOGIN_STARTED: "login_started",
+  LOGIN_COMPLETED: "login_completed",
+  LOGIN_FAILED: "login_failed",
+  LOGOUT: "logout",
+  PASSWORD_RESET: "password_reset",
 
   // Onboarding
-  ONBOARDING_STARTED: 'onboarding_started',
-  ONBOARDING_STEP_VIEWED: 'onboarding_step_viewed',
-  ONBOARDING_COMPLETED: 'onboarding_completed',
-  ONBOARDING_SKIPPED: 'onboarding_skipped',
+  ONBOARDING_STARTED: "onboarding_started",
+  ONBOARDING_STEP_VIEWED: "onboarding_step_viewed",
+  ONBOARDING_COMPLETED: "onboarding_completed",
+  ONBOARDING_SKIPPED: "onboarding_skipped",
 
   // Professional link
-  LINK_PROFESSIONAL_STARTED: 'link_professional_started',
-  LINK_PROFESSIONAL_COMPLETED: 'link_professional_completed',
-  LINK_PROFESSIONAL_FAILED: 'link_professional_failed',
+  LINK_PROFESSIONAL_STARTED: "link_professional_started",
+  LINK_PROFESSIONAL_COMPLETED: "link_professional_completed",
+  LINK_PROFESSIONAL_FAILED: "link_professional_failed",
 
   // Exercises
-  EXERCISES_VIEWED: 'exercises_viewed',
-  EXERCISE_COMPLETED: 'exercise_completed',
-  EXERCISE_UNCOMPLETED: 'exercise_uncompleted',
-  EXERCISE_VIDEO_PLAYED: 'exercise_video_played',
-  EXERCISE_FEEDBACK_SUBMITTED: 'exercise_feedback_submitted',
-  ALL_EXERCISES_COMPLETED: 'all_exercises_completed',
+  EXERCISES_VIEWED: "exercises_viewed",
+  EXERCISE_COMPLETED: "exercise_completed",
+  EXERCISE_UNCOMPLETED: "exercise_uncompleted",
+  EXERCISE_VIDEO_PLAYED: "exercise_video_played",
+  EXERCISE_FEEDBACK_SUBMITTED: "exercise_feedback_submitted",
+  ALL_EXERCISES_COMPLETED: "all_exercises_completed",
 
   // Appointments
-  APPOINTMENTS_VIEWED: 'appointments_viewed',
-  APPOINTMENT_CONFIRMED: 'appointment_confirmed',
-  APPOINTMENT_CANCELLED: 'appointment_cancelled',
+  APPOINTMENTS_VIEWED: "appointments_viewed",
+  APPOINTMENT_CONFIRMED: "appointment_confirmed",
+  APPOINTMENT_CANCELLED: "appointment_cancelled",
 
   // Progress
-  PROGRESS_VIEWED: 'progress_viewed',
-  EVOLUTION_VIEWED: 'evolution_viewed',
-  PROGRESS_PERIOD_CHANGED: 'progress_period_changed',
+  PROGRESS_VIEWED: "progress_viewed",
+  EVOLUTION_VIEWED: "evolution_viewed",
+  PROGRESS_PERIOD_CHANGED: "progress_period_changed",
 
   // Profile & Settings
-  PROFILE_VIEWED: 'profile_viewed',
-  SETTINGS_VIEWED: 'settings_viewed',
-  SETTINGS_CHANGED: 'settings_changed',
-  NOTIFICATIONS_TOGGLED: 'notifications_toggled',
+  PROFILE_VIEWED: "profile_viewed",
+  SETTINGS_VIEWED: "settings_viewed",
+  SETTINGS_CHANGED: "settings_changed",
+  NOTIFICATIONS_TOGGLED: "notifications_toggled",
 
   // Settings specific
-  AUTO_PLAY_TOGGLED: 'auto_play_toggled',
-  HAPTIC_FEEDBACK_TOGGLED: 'haptic_feedback_toggled',
-  CACHE_CLEARED: 'cache_cleared',
-  DATA_EXPORTED: 'data_exported',
+  AUTO_PLAY_TOGGLED: "auto_play_toggled",
+  HAPTIC_FEEDBACK_TOGGLED: "haptic_feedback_toggled",
+  CACHE_CLEARED: "cache_cleared",
+  DATA_EXPORTED: "data_exported",
 
   // Support
-  HELP_VIEWED: 'help_viewed',
-  PRIVACY_VIEWED: 'privacy_viewed',
-  TERMS_VIEWED: 'terms_viewed',
-  SUPPORT_CONTACTED: 'support_contacted',
+  HELP_VIEWED: "help_viewed",
+  PRIVACY_VIEWED: "privacy_viewed",
+  TERMS_VIEWED: "terms_viewed",
+  SUPPORT_CONTACTED: "support_contacted",
 } as const;
 
 /**
@@ -121,19 +120,19 @@ interface AnalyticsClient {
  */
 class MockAnalyticsClient implements AnalyticsClient {
   track(eventName: string, properties?: EventProperties) {
-    log.info('ANALYTICS', `Track: ${eventName}`, properties);
+    log.info("ANALYTICS", `Track: ${eventName}`, properties);
   }
 
   identify(userId: string, traits?: Record<string, any>) {
-    log.info('ANALYTICS', `Identify: ${userId}`, traits);
+    log.info("ANALYTICS", `Identify: ${userId}`, traits);
   }
 
   reset() {
-    log.info('ANALYTICS', 'Reset');
+    log.info("ANALYTICS", "Reset");
   }
 
   screen(screenName: string, properties?: EventProperties) {
-    log.info('ANALYTICS', `Screen: ${screenName}`, properties);
+    log.info("ANALYTICS", `Screen: ${screenName}`, properties);
   }
 }
 
@@ -156,9 +155,9 @@ class AnalyticsManager {
   async initialize() {
     try {
       this.deviceInfo = await getDeviceInfo();
-      log.info('ANALYTICS', 'Analytics initialized');
+      log.info("ANALYTICS", "Analytics initialized");
     } catch (error) {
-      log.error('ANALYTICS', 'Failed to initialize', error);
+      log.error("ANALYTICS", "Failed to initialize", error);
     }
   }
 
@@ -262,8 +261,7 @@ export const track = {
   onboardingSkipped: () => analytics.track(AnalyticsEvents.ONBOARDING_SKIPPED),
 
   // Professional link
-  linkProfessionalCompleted: () =>
-    analytics.track(AnalyticsEvents.LINK_PROFESSIONAL_COMPLETED),
+  linkProfessionalCompleted: () => analytics.track(AnalyticsEvents.LINK_PROFESSIONAL_COMPLETED),
 
   // Exercises
   exercisesViewed: () => analytics.track(AnalyticsEvents.EXERCISES_VIEWED),

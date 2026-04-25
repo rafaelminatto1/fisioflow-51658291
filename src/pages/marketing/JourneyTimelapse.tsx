@@ -10,20 +10,18 @@ import { JourneyTimelapse } from "@/components/marketing/JourneyTimelapse";
 import { useAuth } from "@/contexts/AuthContext";
 
 export default function JourneyTimelapsePage() {
-	const { user } = useAuth();
+  const { user } = useAuth();
 
-	return (
-		<MainLayout>
-			<div className="mb-6">
-				<h1 className="text-3xl font-bold tracking-tight">
-					Timelapse de Evolução
-				</h1>
-				<p className="text-muted-foreground mt-1">
-					Crie vídeos timelapse automáticos com fotos do paciente
-				</p>
-			</div>
+  return (
+    <MainLayout>
+      <div className="mb-6">
+        <h1 className="text-3xl font-bold tracking-tight">Timelapse de Evolução</h1>
+        <p className="text-muted-foreground mt-1">
+          Crie vídeos timelapse automáticos com fotos do paciente
+        </p>
+      </div>
 
-			<JourneyTimelapse clinicName={user?.clinicName || "FisioFlow"} />
-		</MainLayout>
-	);
+      <JourneyTimelapse clinicName={user?.clinicName || "FisioFlow"} />
+    </MainLayout>
+  );
 }

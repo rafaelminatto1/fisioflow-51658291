@@ -1,1 +1,11 @@
-{"files":{"patient-app/.turbo/turbo-lint.log":{"size":24782,"mtime_nanos":1773857024778399996,"mode":436,"is_dir":false}},"order":["patient-app/.turbo/turbo-lint.log"]}
+{
+  "files": {
+    "patient-app/.turbo/turbo-lint.log": {
+      "size": 24782,
+      "mtime_nanos": 1773857024778399996,
+      "mode": 436,
+      "is_dir": false
+    }
+  },
+  "order": ["patient-app/.turbo/turbo-lint.log"]
+}

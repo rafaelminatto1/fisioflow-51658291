@@ -1,8 +1,8 @@
-import React from 'react';
-import { View, Text, StyleSheet } from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
-import { useColors } from '@/hooks/useColorScheme';
-import type { SyncStatus } from '@/hooks/useSyncStatus';
+import React from "react";
+import { View, Text, StyleSheet } from "react-native";
+import { Ionicons } from "@expo/vector-icons";
+import { useColors } from "@/hooks/useColorScheme";
+import type { SyncStatus } from "@/hooks/useSyncStatus";
 
 interface Props {
   status: SyncStatus;
@@ -11,38 +11,43 @@ interface Props {
   compact?: boolean;
 }
 
-export function SyncStatus({ status, isOnline: _isOnline, pendingChanges = 0, compact = false }: Props) {
+export function SyncStatus({
+  status,
+  isOnline: _isOnline,
+  pendingChanges = 0,
+  compact = false,
+}: Props) {
   const colors = useColors();
 
-  if (compact && status === 'synced' && pendingChanges === 0) {
+  if (compact && status === "synced" && pendingChanges === 0) {
     return null;
   }
 
   const getStatusInfo = () => {
     switch (status) {
-      case 'syncing':
+      case "syncing":
         return {
-          icon: 'sync' as const,
+          icon: "sync" as const,
           color: colors.warning,
-          text: 'Sincronizando...',
+          text: "Sincronizando...",
         };
-      case 'synced':
+      case "synced":
         return {
-          icon: 'checkmark-circle' as const,
+          icon: "checkmark-circle" as const,
           color: pendingChanges > 0 ? colors.warning : colors.success,
-          text: pendingChanges > 0 ? `${pendingChanges} alterações pendentes` : 'Sincronizado',
+          text: pendingChanges > 0 ? `${pendingChanges} alterações pendentes` : "Sincronizado",
         };
-      case 'error':
+      case "error":
         return {
-          icon: 'alert-circle' as const,
+          icon: "alert-circle" as const,
           color: colors.error,
-          text: 'Erro de sincronização',
+          text: "Erro de sincronização",
         };
-      case 'offline':
+      case "offline":
         return {
-          icon: 'cloud-offline' as const,
+          icon: "cloud-offline" as const,
           color: colors.textMuted,
-          text: 'Modo offline',
+          text: "Modo offline",
         };
     }
   };
@@ -51,8 +56,8 @@ export function SyncStatus({ status, isOnline: _isOnline, pendingChanges = 0, co
 
   return (
     <View style={[styles.container, compact && styles.compact]}>
-      <View style={[styles.iconContainer, { backgroundColor: statusInfo.color + '20' }]}>
-        {status === 'syncing' ? (
+      <View style={[styles.iconContainer, { backgroundColor: statusInfo.color + "20" }]}>
+        {status === "syncing" ? (
           <Ionicons name="sync" size={16} color={statusInfo.color} />
         ) : (
           <Ionicons name={statusInfo.icon} size={16} color={statusInfo.color} />
@@ -61,7 +66,7 @@ export function SyncStatus({ status, isOnline: _isOnline, pendingChanges = 0, co
       {!compact && (
         <Text style={[styles.text, { color: statusInfo.color }]}>{statusInfo.text}</Text>
       )}
-      {compact && status === 'syncing' && (
+      {compact && status === "syncing" && (
         <Ionicons name="sync" size={16} color={statusInfo.color} />
       )}
     </View>
@@ -70,22 +75,22 @@ export function SyncStatus({ status, isOnline: _isOnline, pendingChanges = 0, co
 
 const styles = StyleSheet.create({
   container: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     gap: 8,
   },
   compact: {
-    marginLeft: 'auto',
+    marginLeft: "auto",
   },
   iconContainer: {
     width: 28,
     height: 28,
     borderRadius: 14,
-    alignItems: 'center',
-    justifyContent: 'center',
+    alignItems: "center",
+    justifyContent: "center",
   },
   text: {
     fontSize: 12,
-    fontWeight: '500',
+    fontWeight: "500",
   },
 });

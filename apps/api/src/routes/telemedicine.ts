@@ -1,7 +1,7 @@
-import { Hono } from 'hono';
-import { createPool } from '../lib/db';
-import { requireAuth, type AuthVariables } from '../lib/auth';
-import type { Env } from '../types/env';
+import { Hono } from "hono";
+import { createPool } from "../lib/db";
+import { requireAuth, type AuthVariables } from "../lib/auth";
+import type { Env } from "../types/env";
 
 const app = new Hono<{ Bindings: Env; Variables: AuthVariables }>();
 type Pool = ReturnType<typeof createPool>;
@@ -67,8 +67,8 @@ async function ensureTelemedicineSchema(pool: Pool) {
   await telemedicineSchemaReady;
 }
 
-app.get('/rooms', requireAuth, async (c) => {
-  const user = c.get('user');
+app.get("/rooms", requireAuth, async (c) => {
+  const user = c.get("user");
   const pool = await createPool(c.env);
   try {
     await ensureTelemedicineSchema(pool);
@@ -88,15 +88,19 @@ app.get('/rooms', requireAuth, async (c) => {
       [user.organizationId],
     );
 
-    try { return c.json({ data: result.rows || result }); } catch  { return c.json({ data: [] }); }
+    try {
+      return c.json({ data: result.rows || result });
+    } catch {
+      return c.json({ data: [] });
+    }
   } catch (error) {
-    console.error('[Telemedicine/List] Error:', error);
+    console.error("[Telemedicine/List] Error:", error);
     return c.json({ data: [] });
   }
 });
 
-app.get('/rooms/:id', requireAuth, async (c) => {
-  const user = c.get('user');
+app.get("/rooms/:id", requireAuth, async (c) => {
+  const user = c.get("user");
   const pool = await createPool(c.env);
   const { id } = c.req.param();
   try {
@@ -117,25 +121,27 @@ app.get('/rooms/:id', requireAuth, async (c) => {
       [id, user.organizationId],
     );
 
-    if (!result.rows.length) return c.json({ error: 'Sala não encontrada' }, 404);
+    if (!result.rows.length) return c.json({ error: "Sala não encontrada" }, 404);
     return c.json({ data: result.rows[0] });
   } catch (error) {
-    console.error('[Telemedicine/Get] Error:', error);
-    return c.json({ error: 'Erro ao carregar sala' }, 500);
+    console.error("[Telemedicine/Get] Error:", error);
+    return c.json({ error: "Erro ao carregar sala" }, 500);
   }
 });
 
-app.post('/rooms', requireAuth, async (c) => {
-  const user = c.get('user');
+app.post("/rooms", requireAuth, async (c) => {
+  const user = c.get("user");
   const pool = await createPool(c.env);
   try {
     await ensureTelemedicineSchema(pool);
     const body = (await c.req.json()) as Record<string, unknown>;
 
-    if (!body.patient_id) return c.json({ error: 'patient_id é obrigatório' }, 400);
+    if (!body.patient_id) return c.json({ error: "patient_id é obrigatório" }, 400);
 
-    const roomCode = String(body.room_code ?? crypto.randomUUID().replace(/-/g, '').slice(0, 8).toUpperCase());
-    const meetingProvider = String(body.meeting_provider ?? 'jitsi');
+    const roomCode = String(
+      body.room_code ?? crypto.randomUUID().replace(/-/g, "").slice(0, 8).toUpperCase(),
+    );
+    const meetingProvider = String(body.meeting_provider ?? "jitsi");
     const meetingUrl = String(body.meeting_url ?? buildMeetingUrl(roomCode));
 
     const result = await pool.query(
@@ -153,7 +159,7 @@ app.post('/rooms', requireAuth, async (c) => {
         body.therapist_id ?? user.uid,
         body.appointment_id ?? null,
         roomCode,
-        body.status ?? 'aguardando',
+        body.status ?? "aguardando",
         body.scheduled_at ?? null,
         body.started_at ?? null,
         body.ended_at ?? null,
@@ -167,13 +173,13 @@ app.post('/rooms', requireAuth, async (c) => {
 
     return c.json({ data: result.rows[0] }, 201);
   } catch (error) {
-    console.error('[Telemedicine/Create] Error:', error);
-    return c.json({ error: 'Erro ao criar sala de telemedicina' }, 500);
+    console.error("[Telemedicine/Create] Error:", error);
+    return c.json({ error: "Erro ao criar sala de telemedicina" }, 500);
   }
 });
 
-app.post('/rooms/:id/start', requireAuth, async (c) => {
-  const user = c.get('user');
+app.post("/rooms/:id/start", requireAuth, async (c) => {
+  const user = c.get("user");
   const pool = await createPool(c.env);
   const { id } = c.req.param();
   try {
@@ -190,9 +196,9 @@ app.post('/rooms/:id/start', requireAuth, async (c) => {
     );
 
     const current = currentResult.rows[0];
-    if (!current) return c.json({ error: 'Sala não encontrada' }, 404);
+    if (!current) return c.json({ error: "Sala não encontrada" }, 404);
 
-    const meetingProvider = current.meeting_provider ?? 'jitsi';
+    const meetingProvider = current.meeting_provider ?? "jitsi";
     const meetingUrl = current.meeting_url ?? buildMeetingUrl(current.room_code);
 
     const result = await pool.query(
@@ -212,49 +218,79 @@ app.post('/rooms/:id/start', requireAuth, async (c) => {
 
     return c.json({ data: result.rows[0] });
   } catch (error) {
-    console.error('[Telemedicine/Start] Error:', error);
-    return c.json({ error: 'Erro ao iniciar sala de telemedicina' }, 500);
+    console.error("[Telemedicine/Start] Error:", error);
+    return c.json({ error: "Erro ao iniciar sala de telemedicina" }, 500);
   }
 });
 
-app.put('/rooms/:id', requireAuth, async (c) => {
-  const user = c.get('user');
+app.put("/rooms/:id", requireAuth, async (c) => {
+  const user = c.get("user");
   const pool = await createPool(c.env);
   const { id } = c.req.param();
   try {
     await ensureTelemedicineSchema(pool);
     const body = (await c.req.json()) as Record<string, unknown>;
 
-    const sets: string[] = ['updated_at = NOW()'];
+    const sets: string[] = ["updated_at = NOW()"];
     const params: unknown[] = [];
 
-    if (body.status !== undefined) { params.push(body.status); sets.push(`status = $${params.length}`); }
-    if (body.scheduled_at !== undefined) { params.push(body.scheduled_at); sets.push(`scheduled_at = $${params.length}`); }
-    if (body.started_at !== undefined) { params.push(body.started_at); sets.push(`started_at = $${params.length}`); }
-    if (body.ended_at !== undefined) { params.push(body.ended_at); sets.push(`ended_at = $${params.length}`); }
-    if (body.duration_minutes !== undefined) { params.push(body.duration_minutes != null ? Number(body.duration_minutes) : null); sets.push(`duration_minutes = $${params.length}`); }
-    if (body.recording_url !== undefined) { params.push(body.recording_url); sets.push(`recording_url = $${params.length}`); }
-    if (body.meeting_provider !== undefined) { params.push(body.meeting_provider); sets.push(`meeting_provider = $${params.length}`); }
-    if (body.meeting_url !== undefined) { params.push(body.meeting_url); sets.push(`meeting_url = $${params.length}`); }
-    if (body.notas !== undefined) { params.push(body.notas); sets.push(`notas = $${params.length}`); }
-    if (body.appointment_id !== undefined) { params.push(body.appointment_id); sets.push(`appointment_id = $${params.length}`); }
+    if (body.status !== undefined) {
+      params.push(body.status);
+      sets.push(`status = $${params.length}`);
+    }
+    if (body.scheduled_at !== undefined) {
+      params.push(body.scheduled_at);
+      sets.push(`scheduled_at = $${params.length}`);
+    }
+    if (body.started_at !== undefined) {
+      params.push(body.started_at);
+      sets.push(`started_at = $${params.length}`);
+    }
+    if (body.ended_at !== undefined) {
+      params.push(body.ended_at);
+      sets.push(`ended_at = $${params.length}`);
+    }
+    if (body.duration_minutes !== undefined) {
+      params.push(body.duration_minutes != null ? Number(body.duration_minutes) : null);
+      sets.push(`duration_minutes = $${params.length}`);
+    }
+    if (body.recording_url !== undefined) {
+      params.push(body.recording_url);
+      sets.push(`recording_url = $${params.length}`);
+    }
+    if (body.meeting_provider !== undefined) {
+      params.push(body.meeting_provider);
+      sets.push(`meeting_provider = $${params.length}`);
+    }
+    if (body.meeting_url !== undefined) {
+      params.push(body.meeting_url);
+      sets.push(`meeting_url = $${params.length}`);
+    }
+    if (body.notas !== undefined) {
+      params.push(body.notas);
+      sets.push(`notas = $${params.length}`);
+    }
+    if (body.appointment_id !== undefined) {
+      params.push(body.appointment_id);
+      sets.push(`appointment_id = $${params.length}`);
+    }
 
     params.push(id, user.organizationId);
     const result = await pool.query(
       `
         UPDATE telemedicine_rooms
-        SET ${sets.join(', ')}
+        SET ${sets.join(", ")}
         WHERE id = $${params.length - 1} AND organization_id = $${params.length}
         RETURNING *
       `,
       params,
     );
 
-    if (!result.rows.length) return c.json({ error: 'Sala não encontrada' }, 404);
+    if (!result.rows.length) return c.json({ error: "Sala não encontrada" }, 404);
     return c.json({ data: result.rows[0] });
   } catch (error) {
-    console.error('[Telemedicine/Update] Error:', error);
-    return c.json({ error: 'Erro ao atualizar sala de telemedicina' }, 500);
+    console.error("[Telemedicine/Update] Error:", error);
+    return c.json({ error: "Erro ao atualizar sala de telemedicina" }, 500);
   }
 });
 
@@ -303,49 +339,55 @@ async function generateLiveKitToken(
     video: videoGrant,
   };
 
-  const header = { alg: 'HS256', typ: 'JWT' };
+  const header = { alg: "HS256", typ: "JWT" };
   const encode = (obj: object) =>
-    btoa(JSON.stringify(obj)).replace(/\+/g, '-').replace(/\//g, '_').replace(/=/g, '');
+    btoa(JSON.stringify(obj)).replace(/\+/g, "-").replace(/\//g, "_").replace(/=/g, "");
 
   const signingInput = `${encode(header)}.${encode(payload)}`;
 
   const key = await crypto.subtle.importKey(
-    'raw',
+    "raw",
     new TextEncoder().encode(apiSecret),
-    { name: 'HMAC', hash: 'SHA-256' },
+    { name: "HMAC", hash: "SHA-256" },
     false,
-    ['sign'],
+    ["sign"],
   );
 
-  const signature = await crypto.subtle.sign('HMAC', key, new TextEncoder().encode(signingInput));
+  const signature = await crypto.subtle.sign("HMAC", key, new TextEncoder().encode(signingInput));
   const sig = btoa(String.fromCharCode(...new Uint8Array(signature)))
-    .replace(/\+/g, '-')
-    .replace(/\//g, '_')
-    .replace(/=/g, '');
+    .replace(/\+/g, "-")
+    .replace(/\//g, "_")
+    .replace(/=/g, "");
 
   return `${signingInput}.${sig}`;
 }
 
-app.post('/livekit-token', requireAuth, async (c) => {
-  const user = c.get('user');
+app.post("/livekit-token", requireAuth, async (c) => {
+  const user = c.get("user");
   const body = (await c.req.json().catch(() => ({}))) as {
     room_id?: string;
     identity?: string;
-    role?: 'therapist' | 'patient';
+    role?: "therapist" | "patient";
     display_name?: string;
   };
 
   const apiKey = (c.env as any).LIVEKIT_API_KEY;
   const apiSecret = (c.env as any).LIVEKIT_API_SECRET;
-  const livekitUrl = (c.env as any).LIVEKIT_URL ?? 'wss://your-livekit-url.livekit.cloud';
+  const livekitUrl = (c.env as any).LIVEKIT_URL ?? "wss://your-livekit-url.livekit.cloud";
 
   if (!apiKey || !apiSecret) {
-    return c.json({ error: 'LiveKit não configurado. Defina LIVEKIT_API_KEY e LIVEKIT_API_SECRET via wrangler secret put.' }, 503);
+    return c.json(
+      {
+        error:
+          "LiveKit não configurado. Defina LIVEKIT_API_KEY e LIVEKIT_API_SECRET via wrangler secret put.",
+      },
+      503,
+    );
   }
 
   const roomName = body.room_id ?? `fisioflow-${user.organizationId}-${Date.now()}`;
   const identity = body.identity ?? user.uid;
-  const role = body.role ?? 'therapist';
+  const role = body.role ?? "therapist";
   const displayName = body.display_name ?? identity;
 
   const token = await generateLiveKitToken(apiKey, apiSecret, {
@@ -354,7 +396,7 @@ app.post('/livekit-token', requireAuth, async (c) => {
     name: displayName,
     canPublish: true,
     canSubscribe: true,
-    isAdmin: role === 'therapist',
+    isAdmin: role === "therapist",
     ttl: 7200, // 2 horas
   });
 

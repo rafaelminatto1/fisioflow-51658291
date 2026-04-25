@@ -15,10 +15,9 @@ import type { ExerciseTemplate, PatientProfileCategory } from "@/types/workers";
 
 const createTemplateSchema = z.object({
   name: z.string().trim().min(1, "Nome é obrigatório"),
-  patientProfile: z.enum(
-    ["ortopedico", "esportivo", "pos_operatorio", "prevencao", "idosos"],
-    { error: "Perfil de paciente é obrigatório" },
-  ),
+  patientProfile: z.enum(["ortopedico", "esportivo", "pos_operatorio", "prevencao", "idosos"], {
+    error: "Perfil de paciente é obrigatório",
+  }),
   conditionName: z.string().trim().min(1, "Condição clínica é obrigatória"),
   templateVariant: z.string().optional(),
   items: z.array(z.any()).default([]),
@@ -82,132 +81,121 @@ function arbitraryValidInput(): fc.Arbitrary<CreateTemplateInput> {
 
 // Feature: exercise-templates-refactor, Property 12: Validação de campos obrigatórios no formulário de criação
 describe("Property 12: Validação de campos obrigatórios no formulário de criação", () => {
-  it(
-    "Property 12a: qualquer combinação válida de name, patientProfile e conditionName passa na validação",
-    () => {
-      // Validates: Requirements 4.3
-      fc.assert(
-        fc.property(arbitraryValidInput(), (input) => {
-          const result = validateCreateTemplate(input);
-          return result.success === true;
-        }),
-        { numRuns: 100 },
-      );
-    },
-  );
+  it("Property 12a: qualquer combinação válida de name, patientProfile e conditionName passa na validação", () => {
+    // Validates: Requirements 4.3
+    fc.assert(
+      fc.property(arbitraryValidInput(), (input) => {
+        const result = validateCreateTemplate(input);
+        return result.success === true;
+      }),
+      { numRuns: 100 },
+    );
+  });
 
-  it(
-    "Property 12b: name ausente ou em branco deve rejeitar a submissão",
-    () => {
-      // Validates: Requirements 4.3
-      fc.assert(
-        fc.property(
-          arbitraryBlankString,
-          arbitraryPatientProfile,
-          arbitraryNonBlankString,
-          (blankName, patientProfile, conditionName) => {
-            const result = validateCreateTemplate({ name: blankName, patientProfile, conditionName });
-            return result.success === false;
-          },
-        ),
-        { numRuns: 100 },
-      );
-    },
-  );
+  it("Property 12b: name ausente ou em branco deve rejeitar a submissão", () => {
+    // Validates: Requirements 4.3
+    fc.assert(
+      fc.property(
+        arbitraryBlankString,
+        arbitraryPatientProfile,
+        arbitraryNonBlankString,
+        (blankName, patientProfile, conditionName) => {
+          const result = validateCreateTemplate({ name: blankName, patientProfile, conditionName });
+          return result.success === false;
+        },
+      ),
+      { numRuns: 100 },
+    );
+  });
 
-  it(
-    "Property 12c: conditionName ausente ou em branco deve rejeitar a submissão",
-    () => {
-      // Validates: Requirements 4.3
-      fc.assert(
-        fc.property(
-          arbitraryNonBlankString,
-          arbitraryPatientProfile,
-          arbitraryBlankString,
-          (name, patientProfile, blankCondition) => {
-            const result = validateCreateTemplate({ name, patientProfile, conditionName: blankCondition });
-            return result.success === false;
-          },
-        ),
-        { numRuns: 100 },
-      );
-    },
-  );
+  it("Property 12c: conditionName ausente ou em branco deve rejeitar a submissão", () => {
+    // Validates: Requirements 4.3
+    fc.assert(
+      fc.property(
+        arbitraryNonBlankString,
+        arbitraryPatientProfile,
+        arbitraryBlankString,
+        (name, patientProfile, blankCondition) => {
+          const result = validateCreateTemplate({
+            name,
+            patientProfile,
+            conditionName: blankCondition,
+          });
+          return result.success === false;
+        },
+      ),
+      { numRuns: 100 },
+    );
+  });
 
-  it(
-    "Property 12d: patientProfile ausente deve rejeitar a submissão",
-    () => {
-      // Validates: Requirements 4.3
-      fc.assert(
-        fc.property(
-          arbitraryNonBlankString,
-          arbitraryNonBlankString,
-          (name, conditionName) => {
-            const result = validateCreateTemplate({ name, conditionName });
-            return result.success === false;
-          },
-        ),
-        { numRuns: 100 },
-      );
-    },
-  );
+  it("Property 12d: patientProfile ausente deve rejeitar a submissão", () => {
+    // Validates: Requirements 4.3
+    fc.assert(
+      fc.property(arbitraryNonBlankString, arbitraryNonBlankString, (name, conditionName) => {
+        const result = validateCreateTemplate({ name, conditionName });
+        return result.success === false;
+      }),
+      { numRuns: 100 },
+    );
+  });
 
-  it(
-    "Property 12e: patientProfile com valor fora do enum deve rejeitar a submissão",
-    () => {
-      // Validates: Requirements 4.3
-      const validProfiles = new Set(["ortopedico", "esportivo", "pos_operatorio", "prevencao", "idosos"]);
-      fc.assert(
-        fc.property(
-          arbitraryNonBlankString,
-          fc.string({ minLength: 1, maxLength: 30 }).filter((s) => !validProfiles.has(s)),
-          arbitraryNonBlankString,
-          (name, invalidProfile, conditionName) => {
-            const result = validateCreateTemplate({ name, patientProfile: invalidProfile, conditionName });
-            return result.success === false;
-          },
-        ),
-        { numRuns: 100 },
-      );
-    },
-  );
+  it("Property 12e: patientProfile com valor fora do enum deve rejeitar a submissão", () => {
+    // Validates: Requirements 4.3
+    const validProfiles = new Set([
+      "ortopedico",
+      "esportivo",
+      "pos_operatorio",
+      "prevencao",
+      "idosos",
+    ]);
+    fc.assert(
+      fc.property(
+        arbitraryNonBlankString,
+        fc.string({ minLength: 1, maxLength: 30 }).filter((s) => !validProfiles.has(s)),
+        arbitraryNonBlankString,
+        (name, invalidProfile, conditionName) => {
+          const result = validateCreateTemplate({
+            name,
+            patientProfile: invalidProfile,
+            conditionName,
+          });
+          return result.success === false;
+        },
+      ),
+      { numRuns: 100 },
+    );
+  });
 
-  it(
-    "Property 12f: name e conditionName ambos em branco deve rejeitar a submissão",
-    () => {
-      // Validates: Requirements 4.3
-      fc.assert(
-        fc.property(
-          arbitraryBlankString,
-          arbitraryPatientProfile,
-          arbitraryBlankString,
-          (blankName, patientProfile, blankCondition) => {
-            const result = validateCreateTemplate({ name: blankName, patientProfile, conditionName: blankCondition });
-            return result.success === false;
-          },
-        ),
-        { numRuns: 100 },
-      );
-    },
-  );
+  it("Property 12f: name e conditionName ambos em branco deve rejeitar a submissão", () => {
+    // Validates: Requirements 4.3
+    fc.assert(
+      fc.property(
+        arbitraryBlankString,
+        arbitraryPatientProfile,
+        arbitraryBlankString,
+        (blankName, patientProfile, blankCondition) => {
+          const result = validateCreateTemplate({
+            name: blankName,
+            patientProfile,
+            conditionName: blankCondition,
+          });
+          return result.success === false;
+        },
+      ),
+      { numRuns: 100 },
+    );
+  });
 
-  it(
-    "Property 12g: todos os campos obrigatórios ausentes deve rejeitar a submissão",
-    () => {
-      // Validates: Requirements 4.3
-      fc.assert(
-        fc.property(
-          arbitraryBlankString,
-          arbitraryBlankString,
-          (blankName, blankCondition) => {
-            const result = validateCreateTemplate({ name: blankName, conditionName: blankCondition });
-            return result.success === false;
-          },
-        ),
-        { numRuns: 100 },
-      );
-    },
-  );
+  it("Property 12g: todos os campos obrigatórios ausentes deve rejeitar a submissão", () => {
+    // Validates: Requirements 4.3
+    fc.assert(
+      fc.property(arbitraryBlankString, arbitraryBlankString, (blankName, blankCondition) => {
+        const result = validateCreateTemplate({ name: blankName, conditionName: blankCondition });
+        return result.success === false;
+      }),
+      { numRuns: 100 },
+    );
+  });
 });
 
 // ─── Testes unitários complementares (schema) ─────────────────────────────────
@@ -223,7 +211,11 @@ describe("createTemplateSchema — testes unitários", () => {
   });
 
   it("rejeita name vazio", () => {
-    const result = validateCreateTemplate({ name: "", patientProfile: "ortopedico", conditionName: "Lombalgia crônica" });
+    const result = validateCreateTemplate({
+      name: "",
+      patientProfile: "ortopedico",
+      conditionName: "Lombalgia crônica",
+    });
     expect(result.success).toBe(false);
     if (!result.success) {
       expect(result.error.issues.find((i) => i.path[0] === "name")).toBeDefined();
@@ -231,12 +223,20 @@ describe("createTemplateSchema — testes unitários", () => {
   });
 
   it("rejeita name composto apenas de espaços", () => {
-    const result = validateCreateTemplate({ name: "   ", patientProfile: "ortopedico", conditionName: "Lombalgia crônica" });
+    const result = validateCreateTemplate({
+      name: "   ",
+      patientProfile: "ortopedico",
+      conditionName: "Lombalgia crônica",
+    });
     expect(result.success).toBe(false);
   });
 
   it("rejeita conditionName vazio", () => {
-    const result = validateCreateTemplate({ name: "Protocolo Lombalgia", patientProfile: "ortopedico", conditionName: "" });
+    const result = validateCreateTemplate({
+      name: "Protocolo Lombalgia",
+      patientProfile: "ortopedico",
+      conditionName: "",
+    });
     expect(result.success).toBe(false);
     if (!result.success) {
       expect(result.error.issues.find((i) => i.path[0] === "conditionName")).toBeDefined();
@@ -244,23 +244,38 @@ describe("createTemplateSchema — testes unitários", () => {
   });
 
   it("rejeita conditionName composto apenas de espaços", () => {
-    const result = validateCreateTemplate({ name: "Protocolo Lombalgia", patientProfile: "ortopedico", conditionName: "  \t  " });
+    const result = validateCreateTemplate({
+      name: "Protocolo Lombalgia",
+      patientProfile: "ortopedico",
+      conditionName: "  \t  ",
+    });
     expect(result.success).toBe(false);
   });
 
   it("rejeita patientProfile ausente", () => {
-    const result = validateCreateTemplate({ name: "Protocolo Lombalgia", conditionName: "Lombalgia crônica" });
+    const result = validateCreateTemplate({
+      name: "Protocolo Lombalgia",
+      conditionName: "Lombalgia crônica",
+    });
     expect(result.success).toBe(false);
   });
 
   it("rejeita patientProfile com valor inválido", () => {
-    const result = validateCreateTemplate({ name: "Protocolo Lombalgia", patientProfile: "invalido", conditionName: "Lombalgia crônica" });
+    const result = validateCreateTemplate({
+      name: "Protocolo Lombalgia",
+      patientProfile: "invalido",
+      conditionName: "Lombalgia crônica",
+    });
     expect(result.success).toBe(false);
   });
 
   it("aceita todos os valores válidos de patientProfile", () => {
     for (const profile of ["ortopedico", "esportivo", "pos_operatorio", "prevencao", "idosos"]) {
-      const result = validateCreateTemplate({ name: "Template Teste", patientProfile: profile, conditionName: "Condição Teste" });
+      const result = validateCreateTemplate({
+        name: "Template Teste",
+        patientProfile: profile,
+        conditionName: "Condição Teste",
+      });
       expect(result.success, `perfil '${profile}' deve ser aceito`).toBe(true);
     }
   });
@@ -460,7 +475,9 @@ describe("buildPreFillValues — modo personalizar pré-preenche campos corretam
   });
 
   it("copia progressionNotes do template fonte", () => {
-    const values = buildPreFillValues(makeTemplate({ progressionNotes: "Aumentar carga na semana 3" }));
+    const values = buildPreFillValues(
+      makeTemplate({ progressionNotes: "Aumentar carga na semana 3" }),
+    );
     expect(values.progressionNotes).toBe("Aumentar carga na semana 3");
   });
 
@@ -494,7 +511,9 @@ describe("buildPreFillValues — modo personalizar pré-preenche campos corretam
 
   it("retorna a referência sem '\\n' quando há apenas uma", () => {
     const tpl = makeTemplate({ bibliographicReferences: ["Autor A et al. (2023). Artigo único."] });
-    expect(buildPreFillValues(tpl).bibliographicReferences).toBe("Autor A et al. (2023). Artigo único.");
+    expect(buildPreFillValues(tpl).bibliographicReferences).toBe(
+      "Autor A et al. (2023). Artigo único.",
+    );
   });
 
   it("items sempre começa vazio (exercícios não são copiados)", () => {

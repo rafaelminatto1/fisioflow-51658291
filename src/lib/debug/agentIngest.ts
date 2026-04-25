@@ -6,12 +6,12 @@
  */
 
 export interface AgentIngestPayload {
-	location: string;
-	message: string;
-	data?: Record<string, unknown>;
-	timestamp?: number;
-	sessionId?: string;
-	hypothesisId?: string;
+  location: string;
+  message: string;
+  data?: Record<string, unknown>;
+  timestamp?: number;
+  sessionId?: string;
+  hypothesisId?: string;
 }
 
 /**
@@ -19,5 +19,5 @@ export interface AgentIngestPayload {
  * Antes enviava logs para servidor de debug local.
  */
 export function agentIngest(_payload: AgentIngestPayload): void {
-	// No-op: desabilitado para produção
+  // No-op: desabilitado para produção
 }

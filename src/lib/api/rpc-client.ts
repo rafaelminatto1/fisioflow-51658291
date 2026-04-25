@@ -24,19 +24,19 @@ import { getWorkersApiUrl } from "./config";
 import type { AppType } from "../../../apps/api/src/index";
 
 function getBaseUrl(): string {
-	return getWorkersApiUrl();
+  return getWorkersApiUrl();
 }
 
 async function getHeaders(): Promise<Record<string, string>> {
-	try {
-		const token = await getNeonAccessToken();
-		if (token) {
-			return { Authorization: `Bearer ${token}` };
-		}
-	} catch {
-		// sem token — rotas públicas funcionam sem auth
-	}
-	return {};
+  try {
+    const token = await getNeonAccessToken();
+    if (token) {
+      return { Authorization: `Bearer ${token}` };
+    }
+  } catch {
+    // sem token — rotas públicas funcionam sem auth
+  }
+  return {};
 }
 
 /**
@@ -44,17 +44,17 @@ async function getHeaders(): Promise<Record<string, string>> {
  * Os headers de auth são injetados via fetch override.
  */
 export const rpc = hc<AppType>(getBaseUrl(), {
-	fetch: async (input: RequestInfo | URL, init?: RequestInit) => {
-		const authHeaders = await getHeaders();
-		return fetch(input, {
-			...init,
-			headers: {
-				"Content-Type": "application/json",
-				...authHeaders,
-				...init?.headers,
-			},
-		});
-	},
+  fetch: async (input: RequestInfo | URL, init?: RequestInit) => {
+    const authHeaders = await getHeaders();
+    return fetch(input, {
+      ...init,
+      headers: {
+        "Content-Type": "application/json",
+        ...authHeaders,
+        ...init?.headers,
+      },
+    });
+  },
 });
 
 export type { AppType };

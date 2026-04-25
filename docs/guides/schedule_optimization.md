@@ -25,16 +25,18 @@ This document provides comprehensive documentation for the performance optimizat
 **Purpose**: Fetch appointments only for the visible period (day/week/month) instead of loading all appointments.
 
 **Usage**:
+
 ```typescript
 const { data, isLoading, error } = useAppointmentsByPeriod({
-  viewType: 'week',
+  viewType: "week",
   date: new Date(),
-  organizationId: 'org-123',
-  therapistId: 'therapist-456' // optional
+  organizationId: "org-123",
+  therapistId: "therapist-456", // optional
 });
 ```
 
 **Benefits**:
+
 - 70% reduction in data transferred
 - 60-70% faster initial load
 - Efficient caching per period
@@ -48,15 +50,17 @@ const { data, isLoading, error } = useAppointmentsByPeriod({
 **Purpose**: Automatically prefetch next and previous periods for instant navigation.
 
 **Usage**:
+
 ```typescript
 usePrefetchAdjacentPeriods(periodQuery, {
-  direction: 'both', // 'forward' | 'backward' | 'both'
+  direction: "both", // 'forward' | 'backward' | 'both'
   delay: 500, // ms
-  networkAware: true // disable on slow connections
+  networkAware: true, // disable on slow connections
 });
 ```
 
 **Benefits**:
+
 - Instant navigation between periods
 - Network-aware (respects slow connections)
 - Silent prefetch (no loading indicators)
@@ -70,6 +74,7 @@ usePrefetchAdjacentPeriods(periodQuery, {
 **Purpose**: Apply filters efficiently with separate cache and debounced search.
 
 **Usage**:
+
 ```typescript
 const {
   data: appointments,
@@ -77,19 +82,17 @@ const {
   error,
   isFiltered,
   filterCount,
-  totalCount
-} = useFilteredAppointments(
-  periodQuery,
-  {
-    status: ['confirmado'],
-    types: ['avaliacao'],
-    therapists: ['therapist-123'],
-    patientName: 'João' // debounced 300ms
-  }
-);
+  totalCount,
+} = useFilteredAppointments(periodQuery, {
+  status: ["confirmado"],
+  types: ["avaliacao"],
+  therapists: ["therapist-123"],
+  patientName: "João", // debounced 300ms
+});
 ```
 
 **Benefits**:
+
 - Filters applied in < 200ms
 - Debounced patient search (300ms)
 - Separate cache for filtered results
@@ -104,23 +107,19 @@ const {
 **Purpose**: Virtualize time slots to render only visible items (for large calendars).
 
 **Usage**:
+
 ```typescript
-const {
-  visibleSlots,
-  totalHeight,
-  onScroll,
-  isVirtualized,
-  offsetY
-} = useVirtualizedTimeSlots({
+const { visibleSlots, totalHeight, onScroll, isVirtualized, offsetY } = useVirtualizedTimeSlots({
   totalSlots: 100,
   slotHeight: 60,
   overscan: 3,
   containerHeight: 600,
-  threshold: 50 // only virtualize if > 50 slots
+  threshold: 50, // only virtualize if > 50 slots
 });
 ```
 
 **Benefits**:
+
 - Render only 10-15 visible slots instead of 100+
 - Smooth scrolling at 60fps
 - Automatic activation when needed (> 50 slots)
@@ -136,22 +135,16 @@ const {
 **Purpose**: Cache formatted date strings to avoid repeated formatting operations.
 
 **Usage**:
+
 ```typescript
-const formattedDate = useMemoizedDateFormat(
-  new Date(),
-  "dd 'de' MMMM 'de' yyyy",
-  ptBR
-);
+const formattedDate = useMemoizedDateFormat(new Date(), "dd 'de' MMMM 'de' yyyy", ptBR);
 
 // For multiple dates
-const formattedDates = useMemoizedDateFormats(
-  [date1, date2, date3],
-  'dd/MM/yyyy',
-  ptBR
-);
+const formattedDates = useMemoizedDateFormats([date1, date2, date3], "dd/MM/yyyy", ptBR);
 ```
 
 **Benefits**:
+
 - Cached formatting (no recalculation on re-renders)
 - Supports multiple dates
 - Locale-aware
@@ -165,23 +158,21 @@ const formattedDates = useMemoizedDateFormats(
 **Purpose**: Cache conflict detection results to avoid repeated calculations.
 
 **Usage**:
+
 ```typescript
 const { hasConflict, conflictingAppointments } = useMemoizedConflicts(
-  { date: new Date(), time: '10:00' },
+  { date: new Date(), time: "10:00" },
   60, // duration in minutes
   appointments,
-  'exclude-id-123' // optional
+  "exclude-id-123", // optional
 );
 
 // For multiple slots
-const conflictsMap = useMemoizedMultipleConflicts(
-  slots,
-  60,
-  appointments
-);
+const conflictsMap = useMemoizedMultipleConflicts(slots, 60, appointments);
 ```
 
 **Benefits**:
+
 - Cached conflict detection
 - Supports multiple slots
 - Excludes cancelled appointments
@@ -195,11 +186,13 @@ const conflictsMap = useMemoizedMultipleConflicts(
 **Purpose**: Debounce values to reduce unnecessary operations.
 
 **Usage**:
+
 ```typescript
 const debouncedSearchTerm = useDebounce(searchTerm, 300);
 ```
 
 **Benefits**:
+
 - Reduces API calls
 - Configurable delay
 - Simple and reusable
@@ -215,11 +208,13 @@ const debouncedSearchTerm = useDebounce(searchTerm, 300);
 **Purpose**: Loading skeleton for calendar views.
 
 **Usage**:
+
 ```typescript
 <CalendarSkeleton viewType="week" />
 ```
 
 **Features**:
+
 - Adapts to view type (day/week/month)
 - Shimmer animation
 - Matches final calendar structure
@@ -233,11 +228,13 @@ const debouncedSearchTerm = useDebounce(searchTerm, 300);
 **Purpose**: Loading skeleton for appointment cards.
 
 **Usage**:
+
 ```typescript
 <AppointmentCardSkeleton variant="expanded" />
 ```
 
 **Features**:
+
 - Supports compact and expanded variants
 - Matches AppointmentCard dimensions
 - Shimmer animation
@@ -251,11 +248,13 @@ const debouncedSearchTerm = useDebounce(searchTerm, 300);
 **Purpose**: Loading skeleton for appointment lists.
 
 **Usage**:
+
 ```typescript
 <AppointmentListSkeleton count={5} variant="expanded" />
 ```
 
 **Features**:
+
 - Configurable count
 - Supports variants
 - Renders multiple AppointmentCardSkeleton
@@ -296,6 +295,7 @@ invalidateAllAppointmentCaches(
 ```
 
 **Benefits**:
+
 - 80-90% fewer refetches
 - Preserves unaffected cache
 - Less server load
@@ -313,14 +313,14 @@ invalidateAllAppointmentCaches(
 ```typescript
 // Calculate period bounds
 const bounds = calculatePeriodBounds({
-  viewType: 'week',
+  viewType: "week",
   date: new Date(),
-  organizationId: 'org-123'
+  organizationId: "org-123",
 });
 // Returns: { startDate: '2026-02-17', endDate: '2026-02-23' }
 
 // Calculate adjacent period
-const nextPeriod = calculateAdjacentPeriod(currentQuery, 'forward');
+const nextPeriod = calculateAdjacentPeriod(currentQuery, "forward");
 
 // Format bounds for display
 const formatted = formatPeriodBounds(bounds);
@@ -331,6 +331,7 @@ const isInPeriod = isDateInPeriod(date, bounds);
 ```
 
 **Features**:
+
 - Supports day/week/month views
 - ISO week (Monday to Sunday)
 - Locale-aware formatting
@@ -343,13 +344,16 @@ All modals and heavy components are lazy loaded to reduce initial bundle size:
 
 ```typescript
 // Lazy loaded components
-const CalendarView = lazy(() => import('@/components/schedule/CalendarView'));
-const AppointmentModal = lazy(() => import('@/components/schedule/AppointmentModalRefactored'));
-const AppointmentQuickEditModal = lazy(() => import('@/components/schedule/AppointmentQuickEditModal'));
-const WaitlistQuickAdd = lazy(() => import('@/components/schedule/WaitlistQuickAdd'));
+const CalendarView = lazy(() => import("@/components/schedule/CalendarView"));
+const AppointmentModal = lazy(() => import("@/components/schedule/AppointmentModalRefactored"));
+const AppointmentQuickEditModal = lazy(
+  () => import("@/components/schedule/AppointmentQuickEditModal"),
+);
+const WaitlistQuickAdd = lazy(() => import("@/components/schedule/WaitlistQuickAdd"));
 ```
 
 **Benefits**:
+
 - ~30% smaller initial bundle
 - Modals load only when opened
 - Better Time to Interactive (TTI)
@@ -400,7 +404,7 @@ direction: 'both' // 'forward' | 'backward' | 'both'
 
 ```typescript
 // In useFilteredAppointments
-patientSearchDebounce: 300 // ms
+patientSearchDebounce: 300; // ms
 ```
 
 ### Virtualization Configuration
@@ -439,7 +443,8 @@ See `COMO_TESTAR_OTIMIZACOES.md` for comprehensive testing guide.
 
 **Symptom**: No prefetch queries in Network tab
 
-**Solution**: 
+**Solution**:
+
 - Check network connection (prefetch disabled on 3G/2G)
 - Check save-data mode (prefetch disabled)
 - Verify 500ms delay has passed
@@ -449,6 +454,7 @@ See `COMO_TESTAR_OTIMIZACOES.md` for comprehensive testing guide.
 **Symptom**: Filters take > 200ms to apply
 
 **Solution**:
+
 - Check server response time
 - Verify debounce is working (300ms for patient search)
 - Check if separate cache is being used
@@ -458,6 +464,7 @@ See `COMO_TESTAR_OTIMIZACOES.md` for comprehensive testing guide.
 **Symptom**: All chunks load immediately
 
 **Solution**:
+
 - Verify React.lazy() is used
 - Check Suspense wrapper is present
 - Verify Vite code splitting configuration

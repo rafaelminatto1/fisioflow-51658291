@@ -1,4 +1,4 @@
-const { neon } = require('@neondatabase/serverless');
+const { neon } = require("@neondatabase/serverless");
 
 const DATABASE_URL = process.env.DATABASE_URL;
 if (!DATABASE_URL) {
@@ -98,15 +98,15 @@ const mappings = [
   { name: "Stretching Global Ativo", category: "Core / Estabilização" },
   { name: "Bird-Dog (Cachorro-Passarinho)", category: "Core / Estabilização" },
   { name: "Flexão de Braço (Push-up)", category: "Core / Estabilização" },
-  { name: "Flexão de Braço na Parede", category: "Core / Estabilização" }
+  { name: "Flexão de Braço na Parede", category: "Core / Estabilização" },
 ];
 
 async function finalizeCategorization() {
   console.log(`Starting Phase 3 Categorization of ${mappings.length} exercises...`);
-  
+
   const categories = await sql`SELECT id, name FROM exercise_categories`;
   const categoryMap = {};
-  categories.forEach(c => {
+  categories.forEach((c) => {
     categoryMap[c.name] = c.id;
   });
 
@@ -115,12 +115,13 @@ async function finalizeCategorization() {
     const categoryId = categoryMap[m.category];
     if (categoryId) {
       const result = await sql`
-        UPDATE exercises 
+        UPDATE exercises
         SET category_id = ${categoryId}, updated_at = NOW()
         WHERE name = ${m.name}
       `;
-      if (result.length === 0) { // serverless neon result is different than pg client
-         // In serverless, it might just return empty array if no rows affected or the updated rows.
+      if (result.length === 0) {
+        // serverless neon result is different than pg client
+        // In serverless, it might just return empty array if no rows affected or the updated rows.
       }
       updatedCount++;
       console.log(`- Updated: ${m.name} -> ${m.category}`);
@@ -128,7 +129,7 @@ async function finalizeCategorization() {
       console.warn(`- Category NOT found: ${m.category} for ${m.name}`);
     }
   }
-  
+
   console.log(`Phase 3 completed. ${updatedCount} exercises re-categorized.`);
 }
 

@@ -6,15 +6,15 @@ import {
   TouchableOpacity,
   Alert,
   ActivityIndicator,
-} from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
-import { Stack, useRouter, useLocalSearchParams } from 'expo-router';
-import { Ionicons } from '@expo/vector-icons';
-import { useColors } from '@/hooks/useColorScheme';
-import { useHaptics } from '@/hooks/useHaptics';
-import { useProtocol } from '@/hooks/useProtocol';
-import { useProtocols } from '@/hooks/useProtocols';
-import { Card } from '@/components';
+} from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
+import { Stack, useRouter, useLocalSearchParams } from "expo-router";
+import { Ionicons } from "@expo/vector-icons";
+import { useColors } from "@/hooks/useColorScheme";
+import { useHaptics } from "@/hooks/useHaptics";
+import { useProtocol } from "@/hooks/useProtocol";
+import { useProtocols } from "@/hooks/useProtocols";
+import { Card } from "@/components";
 
 export default function ProtocolDetailScreen() {
   const colors = useColors();
@@ -24,7 +24,7 @@ export default function ProtocolDetailScreen() {
 
   const protocolId = params.protocolId as string;
   const { protocol, isLoading } = useProtocol(protocolId);
-  const { delete: deleteProtocol, duplicate: duplicateProtocol, isDeleting, } = useProtocols();
+  const { delete: deleteProtocol, duplicate: duplicateProtocol, isDeleting } = useProtocols();
 
   const handleEdit = () => {
     medium();
@@ -33,55 +33,51 @@ export default function ProtocolDetailScreen() {
 
   const handleDuplicate = async () => {
     medium();
-    Alert.alert(
-      'Duplicar Protocolo',
-      'Deseja criar uma cópia deste protocolo?',
-      [
-        { text: 'Cancelar', style: 'cancel' },
-        {
-          text: 'Duplicar',
-          onPress: async () => {
-            try {
-              await duplicateProtocol(protocolId);
-              success();
-              Alert.alert('Sucesso', 'Protocolo duplicado com sucesso!');
-            } catch (err: any) {
-              hapticError();
-              Alert.alert('Erro', err.message || 'Não foi possível duplicar o protocolo.');
-            }
-          },
+    Alert.alert("Duplicar Protocolo", "Deseja criar uma cópia deste protocolo?", [
+      { text: "Cancelar", style: "cancel" },
+      {
+        text: "Duplicar",
+        onPress: async () => {
+          try {
+            await duplicateProtocol(protocolId);
+            success();
+            Alert.alert("Sucesso", "Protocolo duplicado com sucesso!");
+          } catch (err: any) {
+            hapticError();
+            Alert.alert("Erro", err.message || "Não foi possível duplicar o protocolo.");
+          }
         },
-      ]
-    );
+      },
+    ]);
   };
 
   const handleDelete = () => {
     medium();
     Alert.alert(
-      'Excluir Protocolo',
-      'Tem certeza que deseja excluir este protocolo? Esta ação não pode ser desfeita.',
+      "Excluir Protocolo",
+      "Tem certeza que deseja excluir este protocolo? Esta ação não pode ser desfeita.",
       [
-        { text: 'Cancelar', style: 'cancel' },
+        { text: "Cancelar", style: "cancel" },
         {
-          text: 'Excluir',
-          style: 'destructive',
+          text: "Excluir",
+          style: "destructive",
           onPress: async () => {
             try {
               await deleteProtocol(protocolId);
               success();
-              Alert.alert('Sucesso', 'Protocolo excluído com sucesso!', [
+              Alert.alert("Sucesso", "Protocolo excluído com sucesso!", [
                 {
-                  text: 'OK',
+                  text: "OK",
                   onPress: () => router.back(),
                 },
               ]);
             } catch (err: any) {
               hapticError();
-              Alert.alert('Erro', err.message || 'Não foi possível excluir o protocolo.');
+              Alert.alert("Erro", err.message || "Não foi possível excluir o protocolo.");
             }
           },
         },
-      ]
+      ],
     );
   };
 
@@ -121,10 +117,18 @@ export default function ProtocolDetailScreen() {
   }
 
   return (
-    <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]} edges={['top']}>
+    <SafeAreaView
+      style={[styles.container, { backgroundColor: colors.background }]}
+      edges={["top"]}
+    >
       <Stack.Screen options={{ headerShown: false }} />
       {/* Header */}
-      <View style={[styles.header, { backgroundColor: colors.surface, borderBottomColor: colors.border }]}>
+      <View
+        style={[
+          styles.header,
+          { backgroundColor: colors.surface, borderBottomColor: colors.border },
+        ]}
+      >
         <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
           <Ionicons name="arrow-back" size={24} color={colors.text} />
         </TouchableOpacity>
@@ -180,7 +184,10 @@ export default function ProtocolDetailScreen() {
             {protocol.exercises.map((exercise, index) => (
               <View
                 key={`${exercise.exerciseId}-${index}`}
-                style={[styles.exerciseItem, { backgroundColor: colors.background, borderColor: colors.border }]}
+                style={[
+                  styles.exerciseItem,
+                  { backgroundColor: colors.background, borderColor: colors.border },
+                ]}
               >
                 <View style={[styles.exerciseOrder, { backgroundColor: colors.primaryLight }]}>
                   <Text style={[styles.exerciseOrderText, { color: colors.primary }]}>
@@ -189,7 +196,7 @@ export default function ProtocolDetailScreen() {
                 </View>
                 <View style={styles.exerciseContent}>
                   <Text style={[styles.exerciseName, { color: colors.text }]}>
-                    {exercise.exercise?.name || 'Exercício'}
+                    {exercise.exercise?.name || "Exercício"}
                   </Text>
                   <View style={styles.exerciseDetails}>
                     <View style={styles.exerciseDetailItem}>
@@ -261,9 +268,9 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
     paddingHorizontal: 16,
     paddingVertical: 12,
     borderBottomWidth: 1,
@@ -273,9 +280,9 @@ const styles = StyleSheet.create({
   },
   headerTitle: {
     fontSize: 18,
-    fontWeight: '600',
+    fontWeight: "600",
     flex: 1,
-    textAlign: 'center',
+    textAlign: "center",
   },
   editButton: {
     padding: 8,
@@ -292,19 +299,19 @@ const styles = StyleSheet.create({
     gap: 12,
   },
   titleRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'flex-start',
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "flex-start",
     gap: 12,
   },
   protocolName: {
     fontSize: 20,
-    fontWeight: '600',
+    fontWeight: "600",
     flex: 1,
   },
   templateBadge: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     paddingHorizontal: 10,
     paddingVertical: 4,
     borderRadius: 12,
@@ -312,45 +319,45 @@ const styles = StyleSheet.create({
   },
   templateBadgeText: {
     fontSize: 12,
-    fontWeight: '600',
+    fontWeight: "600",
   },
   description: {
     fontSize: 15,
     lineHeight: 22,
   },
   metaRow: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
+    flexDirection: "row",
+    flexWrap: "wrap",
     gap: 16,
     marginTop: 4,
   },
   metaItem: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     gap: 8,
   },
   metaText: {
     fontSize: 14,
-    fontWeight: '500',
+    fontWeight: "500",
   },
   exercisesCard: {
     padding: 16,
     gap: 16,
   },
   sectionHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     gap: 8,
   },
   sectionTitle: {
     fontSize: 16,
-    fontWeight: '600',
+    fontWeight: "600",
   },
   exercisesList: {
     gap: 12,
   },
   exerciseItem: {
-    flexDirection: 'row',
+    flexDirection: "row",
     padding: 12,
     borderRadius: 12,
     borderWidth: 1,
@@ -360,12 +367,12 @@ const styles = StyleSheet.create({
     width: 32,
     height: 32,
     borderRadius: 16,
-    alignItems: 'center',
-    justifyContent: 'center',
+    alignItems: "center",
+    justifyContent: "center",
   },
   exerciseOrderText: {
     fontSize: 16,
-    fontWeight: '600',
+    fontWeight: "600",
   },
   exerciseContent: {
     flex: 1,
@@ -373,16 +380,16 @@ const styles = StyleSheet.create({
   },
   exerciseName: {
     fontSize: 16,
-    fontWeight: '600',
+    fontWeight: "600",
   },
   exerciseDetails: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
+    flexDirection: "row",
+    flexWrap: "wrap",
     gap: 12,
   },
   exerciseDetailItem: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     gap: 4,
   },
   exerciseDetailText: {
@@ -390,33 +397,33 @@ const styles = StyleSheet.create({
   },
   exerciseNotes: {
     fontSize: 13,
-    fontStyle: 'italic',
+    fontStyle: "italic",
   },
   actions: {
     gap: 12,
   },
   primaryButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
     padding: 16,
     borderRadius: 12,
     gap: 8,
   },
   primaryButtonText: {
-    color: '#fff',
+    color: "#fff",
     fontSize: 16,
-    fontWeight: '600',
+    fontWeight: "600",
   },
   secondaryActions: {
-    flexDirection: 'row',
+    flexDirection: "row",
     gap: 12,
   },
   secondaryButton: {
     flex: 1,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
     padding: 12,
     borderRadius: 12,
     borderWidth: 1,
@@ -424,18 +431,18 @@ const styles = StyleSheet.create({
   },
   secondaryButtonText: {
     fontSize: 14,
-    fontWeight: '600',
+    fontWeight: "600",
   },
   errorContainer: {
     flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
+    justifyContent: "center",
+    alignItems: "center",
     padding: 40,
     gap: 16,
   },
   errorText: {
     fontSize: 18,
-    fontWeight: '600',
+    fontWeight: "600",
   },
   errorButton: {
     paddingHorizontal: 24,
@@ -444,14 +451,14 @@ const styles = StyleSheet.create({
     marginTop: 8,
   },
   errorButtonText: {
-    color: '#fff',
+    color: "#fff",
     fontSize: 16,
-    fontWeight: '600',
+    fontWeight: "600",
   },
   loadingContainer: {
     flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
+    justifyContent: "center",
+    alignItems: "center",
   },
   loadingText: {
     marginTop: 12,

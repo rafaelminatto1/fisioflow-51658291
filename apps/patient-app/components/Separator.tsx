@@ -3,11 +3,11 @@
  * Visual separator/divider
  */
 
-import React from 'react';
-import { View, StyleSheet } from 'react-native';
-import { useColors } from '@/hooks/useColorScheme';
+import React from "react";
+import { View, StyleSheet } from "react-native";
+import { useColors } from "@/hooks/useColorScheme";
 
-export type SeparatorOrientation = 'horizontal' | 'vertical';
+export type SeparatorOrientation = "horizontal" | "vertical";
 
 interface SeparatorProps {
   orientation?: SeparatorOrientation;
@@ -17,7 +17,7 @@ interface SeparatorProps {
 }
 
 export function Separator({
-  orientation = 'horizontal',
+  orientation = "horizontal",
   thickness = 1,
   color,
   style,
@@ -28,11 +28,11 @@ export function Separator({
   return (
     <View
       style={[
-        orientation === 'horizontal' ? styles.horizontal : styles.vertical,
+        orientation === "horizontal" ? styles.horizontal : styles.vertical,
         {
           backgroundColor: separatorColor,
-          height: orientation === 'horizontal' ? thickness : '100%',
-          width: orientation === 'vertical' ? thickness : '100%',
+          height: orientation === "horizontal" ? thickness : "100%",
+          width: orientation === "vertical" ? thickness : "100%",
         },
         style,
       ]}
@@ -41,20 +41,20 @@ export function Separator({
 }
 
 interface SpacingProps {
-  size?: number | 'small' | 'medium' | 'large';
+  size?: number | "small" | "medium" | "large";
   orientation?: SeparatorOrientation;
   style?: any;
 }
 
-export function Spacing({ size = 'medium', orientation = 'horizontal', style }: SpacingProps) {
+export function Spacing({ size = "medium", orientation = "horizontal", style }: SpacingProps) {
   const getSize = (): number => {
-    if (typeof size === 'number') return size;
+    if (typeof size === "number") return size;
     switch (size) {
-      case 'small':
+      case "small":
         return 8;
-      case 'medium':
+      case "medium":
         return 16;
-      case 'large':
+      case "large":
         return 24;
       default:
         return 16;
@@ -66,10 +66,10 @@ export function Spacing({ size = 'medium', orientation = 'horizontal', style }: 
   return (
     <View
       style={[
-        orientation === 'horizontal' ? styles.horizontal : styles.vertical,
+        orientation === "horizontal" ? styles.horizontal : styles.vertical,
         {
-          height: orientation === 'horizontal' ? dimension : '100%',
-          width: orientation === 'vertical' ? dimension : '100%',
+          height: orientation === "horizontal" ? dimension : "100%",
+          width: orientation === "vertical" ? dimension : "100%",
         },
         style,
       ]}
@@ -79,9 +79,9 @@ export function Spacing({ size = 'medium', orientation = 'horizontal', style }: 
 
 const styles = StyleSheet.create({
   horizontal: {
-    width: '100%',
+    width: "100%",
   },
   vertical: {
-    height: '100%',
+    height: "100%",
   },
 });

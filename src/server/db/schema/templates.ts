@@ -6,14 +6,14 @@
  */
 
 import {
-	pgTable,
-	uuid,
-	varchar,
-	text,
-	boolean,
-	timestamp,
-	integer,
-	check,
+  pgTable,
+  uuid,
+  varchar,
+  text,
+  boolean,
+  timestamp,
+  integer,
+  check,
 } from "drizzle-orm/pg-core";
 import { sql, relations } from "drizzle-orm";
 import { withPublicOrOrganizationPolicy, withOrganizationPolicy } from "./rls_helper";
@@ -21,139 +21,134 @@ import { evidenceLevelEnum } from "./protocols";
 
 // ===== EXERCISE TEMPLATE CATEGORIES (lookup) =====
 export const exerciseTemplateCategories = pgTable(
-	"exercise_template_categories",
-	{
-		id: text("id").primaryKey(), // 'ortopedico', 'esportivo', etc.
-		label: text("label").notNull(), // 'Ortopédico', 'Esportivo', etc.
-		icon: text("icon"), // Lucide icon name
-		orderIndex: integer("order_index").notNull().default(0),
-		organizationId: uuid("organization_id"),
-	},
-	(table) => [withPublicOrOrganizationPolicy("exercise_template_categories", table.organizationId)],
+  "exercise_template_categories",
+  {
+    id: text("id").primaryKey(), // 'ortopedico', 'esportivo', etc.
+    label: text("label").notNull(), // 'Ortopédico', 'Esportivo', etc.
+    icon: text("icon"), // Lucide icon name
+    orderIndex: integer("order_index").notNull().default(0),
+    organizationId: uuid("organization_id"),
+  },
+  (table) => [withPublicOrOrganizationPolicy("exercise_template_categories", table.organizationId)],
 );
 
 // ===== EXERCISE TEMPLATES =====
 export const exerciseTemplates = pgTable(
-	"exercise_templates",
-	{
-		id: uuid("id").primaryKey().defaultRandom(),
+  "exercise_templates",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
 
-		name: varchar("name", { length: 500 }).notNull(),
-		description: text("description"),
-		category: varchar("category", { length: 200 }),
-		conditionName: varchar("condition_name", { length: 500 }),
-		templateVariant: varchar("template_variant", { length: 200 }),
+    name: varchar("name", { length: 500 }).notNull(),
+    description: text("description"),
+    category: varchar("category", { length: 200 }),
+    conditionName: varchar("condition_name", { length: 500 }),
+    templateVariant: varchar("template_variant", { length: 200 }),
 
-		// Clinical metadata
-		clinicalNotes: text("clinical_notes"),
-		contraindications: text("contraindications"),
-		precautions: text("precautions"),
-		progressionNotes: text("progression_notes"),
-		evidenceLevel: evidenceLevelEnum("evidence_level"),
-		bibliographicReferences: text("bibliographic_references").array().default([]),
+    // Clinical metadata
+    clinicalNotes: text("clinical_notes"),
+    contraindications: text("contraindications"),
+    precautions: text("precautions"),
+    progressionNotes: text("progression_notes"),
+    evidenceLevel: evidenceLevelEnum("evidence_level"),
+    bibliographicReferences: text("bibliographic_references").array().default([]),
 
-		// NEW: Template type — 'system' (platform-wide) or 'custom' (org-specific)
-		templateType: text("template_type").notNull().default("custom"),
+    // NEW: Template type — 'system' (platform-wide) or 'custom' (org-specific)
+    templateType: text("template_type").notNull().default("custom"),
 
-		// NEW: Patient profile category
-		patientProfile: text("patient_profile"),
+    // NEW: Patient profile category
+    patientProfile: text("patient_profile"),
 
-		// NEW: Attributes for better filtering
-		difficultyLevel: text("difficulty_level"), // 'iniciante', 'intermediario', 'avancado'
-		treatmentPhase: text("treatment_phase"), // 'fase_aguda', 'fase_subaguda', 'remodelacao', 'retorno_ao_esporte'
-		bodyPart: text("body_part"), // 'ombro', 'joelho', 'quadril', 'coluna_cervical', 'coluna_lombar', 'tornozelo'
-		estimatedDuration: integer("estimated_duration"), // minutes
+    // NEW: Attributes for better filtering
+    difficultyLevel: text("difficulty_level"), // 'iniciante', 'intermediario', 'avancado'
+    treatmentPhase: text("treatment_phase"), // 'fase_aguda', 'fase_subaguda', 'remodelacao', 'retorno_ao_esporte'
+    bodyPart: text("body_part"), // 'ombro', 'joelho', 'quadril', 'coluna_cervical', 'coluna_lombar', 'tornozelo'
+    estimatedDuration: integer("estimated_duration"), // minutes
 
-		// NEW: Reference to the System_Template this was customized from
-		sourceTemplateId: uuid("source_template_id"),
+    // NEW: Reference to the System_Template this was customized from
+    sourceTemplateId: uuid("source_template_id"),
 
-		// NEW: Draft support
-		isDraft: boolean("is_draft").notNull().default(false),
+    // NEW: Draft support
+    isDraft: boolean("is_draft").notNull().default(false),
 
-		// NEW: Denormalized exercise count for listing performance
-		exerciseCount: integer("exercise_count").notNull().default(0),
+    // NEW: Denormalized exercise count for listing performance
+    exerciseCount: integer("exercise_count").notNull().default(0),
 
-		// Control
-		isActive: boolean("is_active").default(true).notNull(),
-		isPublic: boolean("is_public").default(true).notNull(),
-		organizationId: uuid("organization_id"),
-		createdBy: text("created_by"),
+    // Control
+    isActive: boolean("is_active").default(true).notNull(),
+    isPublic: boolean("is_public").default(true).notNull(),
+    organizationId: uuid("organization_id"),
+    createdBy: text("created_by"),
 
-		createdAt: timestamp("created_at").defaultNow().notNull(),
-		updatedAt: timestamp("updated_at").defaultNow().notNull(),
-	},
-	(table) => [
-		check(
-			"chk_template_type",
-			sql`${table.templateType} IN ('system', 'custom')`,
-		),
-		check(
-			"chk_patient_profile",
-			sql`${table.patientProfile} IS NULL OR ${table.patientProfile} IN ('ortopedico', 'esportivo', 'pos_operatorio', 'prevencao', 'idosos')`,
-		),
-		check(
-			"chk_difficulty_level",
-			sql`${table.difficultyLevel} IS NULL OR ${table.difficultyLevel} IN ('iniciante', 'intermediario', 'avancado')`,
-		),
-		check(
-			"chk_treatment_phase",
-			sql`${table.treatmentPhase} IS NULL OR ${table.treatmentPhase} IN ('fase_aguda', 'fase_subaguda', 'remodelacao', 'retorno_ao_esporte')`,
-		),
-		withPublicOrOrganizationPolicy("exercise_templates", table.organizationId),
-	],
+    createdAt: timestamp("created_at").defaultNow().notNull(),
+    updatedAt: timestamp("updated_at").defaultNow().notNull(),
+  },
+  (table) => [
+    check("chk_template_type", sql`${table.templateType} IN ('system', 'custom')`),
+    check(
+      "chk_patient_profile",
+      sql`${table.patientProfile} IS NULL OR ${table.patientProfile} IN ('ortopedico', 'esportivo', 'pos_operatorio', 'prevencao', 'idosos')`,
+    ),
+    check(
+      "chk_difficulty_level",
+      sql`${table.difficultyLevel} IS NULL OR ${table.difficultyLevel} IN ('iniciante', 'intermediario', 'avancado')`,
+    ),
+    check(
+      "chk_treatment_phase",
+      sql`${table.treatmentPhase} IS NULL OR ${table.treatmentPhase} IN ('fase_aguda', 'fase_subaguda', 'remodelacao', 'retorno_ao_esporte')`,
+    ),
+    withPublicOrOrganizationPolicy("exercise_templates", table.organizationId),
+  ],
 );
 
 // ===== EXERCISE TEMPLATE ITEMS =====
-export const exerciseTemplateItems = pgTable("exercise_template_items", {
-	id: uuid("id").primaryKey().defaultRandom(),
-	templateId: uuid("template_id")
-		.notNull()
-		.references(() => exerciseTemplates.id),
+export const exerciseTemplateItems = pgTable(
+  "exercise_template_items",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    templateId: uuid("template_id")
+      .notNull()
+      .references(() => exerciseTemplates.id),
 
-	// Reference to exercise
-	exerciseId: text("exercise_id").notNull(),
+    // Reference to exercise
+    exerciseId: text("exercise_id").notNull(),
 
-	orderIndex: integer("order_index").default(0).notNull(),
+    orderIndex: integer("order_index").default(0).notNull(),
 
-	// Exercise parameters for this template
-	sets: integer("sets"),
-	repetitions: integer("repetitions"),
-	duration: integer("duration"), // seconds
-	notes: text("notes"),
-	weekStart: integer("week_start"),
-	weekEnd: integer("week_end"),
-	clinicalNotes: text("clinical_notes"),
-	focusMuscles: text("focus_muscles").array().default([]),
-	purpose: text("purpose"),
-	organizationId: uuid("organization_id"),
+    // Exercise parameters for this template
+    sets: integer("sets"),
+    repetitions: integer("repetitions"),
+    duration: integer("duration"), // seconds
+    notes: text("notes"),
+    weekStart: integer("week_start"),
+    weekEnd: integer("week_end"),
+    clinicalNotes: text("clinical_notes"),
+    focusMuscles: text("focus_muscles").array().default([]),
+    purpose: text("purpose"),
+    organizationId: uuid("organization_id"),
 
-	createdAt: timestamp("created_at").defaultNow().notNull(),
-	updatedAt: timestamp("updated_at").defaultNow().notNull(),
-}, (table) => [withOrganizationPolicy("exercise_template_items", table.organizationId)]);
+    createdAt: timestamp("created_at").defaultNow().notNull(),
+    updatedAt: timestamp("updated_at").defaultNow().notNull(),
+  },
+  (table) => [withOrganizationPolicy("exercise_template_items", table.organizationId)],
+);
 
 // ===== RELATIONS =====
-export const exerciseTemplatesRelations = relations(
-	exerciseTemplates,
-	({ one, many }) => ({
-		items: many(exerciseTemplateItems),
-		sourceTemplate: one(exerciseTemplates, {
-			fields: [exerciseTemplates.sourceTemplateId],
-			references: [exerciseTemplates.id],
-			relationName: "customizations",
-		}),
-		customizations: many(exerciseTemplates, { relationName: "customizations" }),
-	}),
-);
+export const exerciseTemplatesRelations = relations(exerciseTemplates, ({ one, many }) => ({
+  items: many(exerciseTemplateItems),
+  sourceTemplate: one(exerciseTemplates, {
+    fields: [exerciseTemplates.sourceTemplateId],
+    references: [exerciseTemplates.id],
+    relationName: "customizations",
+  }),
+  customizations: many(exerciseTemplates, { relationName: "customizations" }),
+}));
 
-export const exerciseTemplateItemsRelations = relations(
-	exerciseTemplateItems,
-	({ one }) => ({
-		template: one(exerciseTemplates, {
-			fields: [exerciseTemplateItems.templateId],
-			references: [exerciseTemplates.id],
-		}),
-	}),
-);
+export const exerciseTemplateItemsRelations = relations(exerciseTemplateItems, ({ one }) => ({
+  template: one(exerciseTemplates, {
+    fields: [exerciseTemplateItems.templateId],
+    references: [exerciseTemplates.id],
+  }),
+}));
 
 // ===== INFERRED TYPES =====
 export type ExerciseTemplate = typeof exerciseTemplates.$inferSelect;
@@ -166,8 +161,8 @@ export type ExerciseTemplateCategory = typeof exerciseTemplateCategories.$inferS
 export type NewExerciseTemplateCategory = typeof exerciseTemplateCategories.$inferInsert;
 
 export type PatientProfileCategory =
-	| "ortopedico"
-	| "esportivo"
-	| "pos_operatorio"
-	| "prevencao"
-	| "idosos";
+  | "ortopedico"
+  | "esportivo"
+  | "pos_operatorio"
+  | "prevencao"
+  | "idosos";

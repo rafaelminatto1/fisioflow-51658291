@@ -1,260 +1,281 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="pt-BR">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
 
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport"
-    content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+    <!-- Versão da aplicação para controle de cache -->
+    <meta name="app-version" content="%APP_VERSION%" />
+    <meta name="build-time" content="%BUILD_TIME%" />
 
-  <!-- Versão da aplicação para controle de cache -->
-  <meta name="app-version" content="%APP_VERSION%" />
-  <meta name="build-time" content="%BUILD_TIME%" />
+    <!-- Cache Control - Previne cache agressivo do navegador -->
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
+    <meta http-equiv="Pragma" content="no-cache" />
+    <meta http-equiv="Expires" content="0" />
 
-  <!-- Cache Control - Previne cache agressivo do navegador -->
-  <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
-  <meta http-equiv="Pragma" content="no-cache" />
-  <meta http-equiv="Expires" content="0" />
+    <title>FisioFlow - Sistema de Gestão para Clínicas de Fisioterapia</title>
+    <meta
+      name="description"
+      content="Sistema completo de gestão para clínicas de fisioterapia com dashboard, agendamentos, pacientes e relatórios"
+    />
+    <meta name="author" content="FisioFlow" />
+    <meta
+      name="keywords"
+      content="fisioterapia, clínica, gestão, agendamento, pacientes, sistema médico"
+    />
 
-  <title>FisioFlow - Sistema de Gestão para Clínicas de Fisioterapia</title>
-  <meta name="description"
-    content="Sistema completo de gestão para clínicas de fisioterapia com dashboard, agendamentos, pacientes e relatórios" />
-  <meta name="author" content="FisioFlow" />
-  <meta name="keywords" content="fisioterapia, clínica, gestão, agendamento, pacientes, sistema médico" />
+    <!-- Google Fonts Preconnect (Optional for other fallback fonts if needed) -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
 
-  <!-- Google Fonts Preconnect (Optional for other fallback fonts if needed) -->
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <!-- Typography (Noto Sans & Figtree from Google Fonts) -->
+    <link
+      rel="preload"
+      as="style"
+      href="https://fonts.googleapis.com/css2?family=Figtree:wght@300;400;500;600;700&family=Noto+Sans:wght@300;400;500;700&display=swap"
+    />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Figtree:wght@300;400;500;600;700&family=Noto+Sans:wght@300;400;500;700&display=swap"
+      rel="stylesheet"
+    />
 
-  <!-- Typography (Noto Sans & Figtree from Google Fonts) -->
-  <link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=Figtree:wght@300;400;500;600;700&family=Noto+Sans:wght@300;400;500;700&display=swap">
-  <link href="https://fonts.googleapis.com/css2?family=Figtree:wght@300;400;500;600;700&family=Noto+Sans:wght@300;400;500;700&display=swap" rel="stylesheet">
-  
-   <!-- Design System v2.0 - Premium Identity -->
-   <link rel="stylesheet" href="/styles/premium-design-system.css?v=__CACHE_BUSTER__" />
+    <!-- Design System v2.0 - Premium Identity -->
+    <link rel="stylesheet" href="/styles/premium-design-system.css?v=__CACHE_BUSTER__" />
 
-  <!-- Otimização de Carregamento (Hints para o Cloudflare Early Hints) -->
+    <!-- Otimização de Carregamento (Hints para o Cloudflare Early Hints) -->
 
-  <link rel="prefetch" href="/favicon.svg" as="image">
-  <link rel="prefetch" href="/manifest.json" as="fetch">
+    <link rel="prefetch" href="/favicon.svg" as="image" />
+    <link rel="prefetch" href="/manifest.json" as="fetch" />
 
-  <!-- PWA Configuration -->
-  <link rel="manifest" href="/manifest.json" />
-  <meta name="theme-color" content="#0ea5e9" />
-  <meta name="background-color" content="#ffffff" />
-  <meta name="display" content="standalone" />
-  <meta name="orientation" content="portrait" />
+    <!-- PWA Configuration -->
+    <link rel="manifest" href="/manifest.json" />
+    <meta name="theme-color" content="#0ea5e9" />
+    <meta name="background-color" content="#ffffff" />
+    <meta name="display" content="standalone" />
+    <meta name="orientation" content="portrait" />
 
-  <!-- PWA Configuration for Mobile -->
-  <meta name="mobile-web-app-capable" content="yes" />
-  <meta name="apple-mobile-web-app-capable" content="yes" />
-  <meta name="apple-mobile-web-app-status-bar-style" content="default" />
-  <meta name="apple-mobile-web-app-title" content="FisioFlow" />
-  <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.avif" />
+    <!-- PWA Configuration for Mobile -->
+    <meta name="mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+    <meta name="apple-mobile-web-app-title" content="FisioFlow" />
+    <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.avif" />
 
-  <!-- Critical Preconnects -->
-  <link rel="preconnect" href="https://db.moocafisio.com.br" crossorigin>
-  <link rel="preconnect" href="https://auth.neon.tech" crossorigin>
+    <!-- Critical Preconnects -->
+    <link rel="preconnect" href="https://db.moocafisio.com.br" crossorigin />
+    <link rel="preconnect" href="https://auth.neon.tech" crossorigin />
 
-  <!-- Favicon (SVG for modern browsers, AVIF fallback for newer browsers) -->
-  <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
-  <link rel="icon" type="image/avif" sizes="32x32" href="/favicon-32x32.avif" />
-  <link rel="icon" type="image/avif" sizes="16x16" href="/favicon-16x16.avif" />
-  <link rel="shortcut icon" href="/favicon.ico" />
-  <link rel="manifest" href="/site.webmanifest" />
+    <!-- Favicon (SVG for modern browsers, AVIF fallback for newer browsers) -->
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <link rel="icon" type="image/avif" sizes="32x32" href="/favicon-32x32.avif" />
+    <link rel="icon" type="image/avif" sizes="16x16" href="/favicon-16x16.avif" />
+    <link rel="shortcut icon" href="/favicon.ico" />
+    <link rel="manifest" href="/site.webmanifest" />
 
-  <meta property="og:title" content="FisioFlow - Gestão Inteligente para Fisioterapia" />
-  <meta property="og:description"
-    content="Plataforma líder em gestão de clínicas: agendamento inteligente, prontuário digital e IA para reabilitação." />
-  <meta property="og:type" content="website" />
-  <meta property="og:url" content="https://fisioflow.com.br" />
-  <meta property="og:site_name" content="FisioFlow" />
-  <meta property="og:locale" content="pt_BR" />
-  <meta property="og:image" content="https://lovable.dev/opengraph-image-p98pqg.avif" />
+    <meta property="og:title" content="FisioFlow - Gestão Inteligente para Fisioterapia" />
+    <meta
+      property="og:description"
+      content="Plataforma líder em gestão de clínicas: agendamento inteligente, prontuário digital e IA para reabilitação."
+    />
+    <meta property="og:type" content="website" />
+    <meta property="og:url" content="https://fisioflow.com.br" />
+    <meta property="og:site_name" content="FisioFlow" />
+    <meta property="og:locale" content="pt_BR" />
+    <meta property="og:image" content="https://lovable.dev/opengraph-image-p98pqg.avif" />
 
-  <meta name="twitter:card" content="summary_large_image" />
-  <meta name="twitter:site" content="@lovable_dev" />
-  <meta name="twitter:image" content="https://lovable.dev/opengraph-image-p98pqg.avif" />
-  <style>
-    #root {
-      display: flex;
-      min-height: 100vh;
-      flex-direction: column;
-    }
-  </style>
-</head>
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:site" content="@lovable_dev" />
+    <meta name="twitter:image" content="https://lovable.dev/opengraph-image-p98pqg.avif" />
+    <style>
+      #root {
+        display: flex;
+        min-height: 100vh;
+        flex-direction: column;
+      }
+    </style>
+  </head>
 
-<body>
-  <div id="root"></div>
-   <!-- Expor versão globalmente para cache busting -->
+  <body>
+    <div id="root"></div>
+    <!-- Expor versão globalmente para cache busting -->
     <script>
-       /**
-        * Polyfill Completo para Constantes Globais (Vite/HMR/Babel/SystemJS)
-        *
-        * Este script inicializa todas as constantes globais que bibliotecas de terceiros
-        * no vendor bundle esperam que existam no window.
-        */
-       (() => {
-         'use strict';
+      /**
+       * Polyfill Completo para Constantes Globais (Vite/HMR/Babel/SystemJS)
+       *
+       * Este script inicializa todas as constantes globais que bibliotecas de terceiros
+       * no vendor bundle esperam que existam no window.
+       */
+      (() => {
+        "use strict";
 
-         // ============ HMR CONSTANTS (Vite) ============
-         if (typeof window.__HMR_BASE__ === 'undefined') {
-           window.__HMR_BASE__ = '';
-         }
-         if (typeof window.__HMR_CONFIG_NAME__ === 'undefined') {
-           window.__HMR_CONFIG_NAME__ = '';
-         }
-         if (typeof window.__HMR_DIRECT_TARGET__ === 'undefined') {
-           window.__HMR_DIRECT_TARGET__ = '';
-         }
-         if (typeof window.__HMR_ENABLE_OVERLAY__ === 'undefined') {
-           window.__HMR_ENABLE_OVERLAY__ = false;
-         }
-         if (typeof window.__HMR_HOSTNAME__ === 'undefined') {
-           window.__HMR_HOSTNAME__ = 'localhost';
-         }
-         if (typeof window.__HMR_PORT__ === 'undefined') {
-           window.__HMR_PORT__ = '5173';
-         }
-         if (typeof window.__HMR_PROTOCOL__ === 'undefined') {
-           window.__HMR_PROTOCOL__ = 'ws:';
-         }
-         if (typeof window.__HMR_TIMEOUT__ === 'undefined') {
-           window.__HMR_TIMEOUT__ = '60000';
-         }
-         if (typeof window.__WS_TOKEN__ === 'undefined') {
-           window.__WS_TOKEN__ = '';
-         }
+        // ============ HMR CONSTANTS (Vite) ============
+        if (typeof window.__HMR_BASE__ === "undefined") {
+          window.__HMR_BASE__ = "";
+        }
+        if (typeof window.__HMR_CONFIG_NAME__ === "undefined") {
+          window.__HMR_CONFIG_NAME__ = "";
+        }
+        if (typeof window.__HMR_DIRECT_TARGET__ === "undefined") {
+          window.__HMR_DIRECT_TARGET__ = "";
+        }
+        if (typeof window.__HMR_ENABLE_OVERLAY__ === "undefined") {
+          window.__HMR_ENABLE_OVERLAY__ = false;
+        }
+        if (typeof window.__HMR_HOSTNAME__ === "undefined") {
+          window.__HMR_HOSTNAME__ = "localhost";
+        }
+        if (typeof window.__HMR_PORT__ === "undefined") {
+          window.__HMR_PORT__ = "5173";
+        }
+        if (typeof window.__HMR_PROTOCOL__ === "undefined") {
+          window.__HMR_PROTOCOL__ = "ws:";
+        }
+        if (typeof window.__HMR_TIMEOUT__ === "undefined") {
+          window.__HMR_TIMEOUT__ = "60000";
+        }
+        if (typeof window.__WS_TOKEN__ === "undefined") {
+          window.__WS_TOKEN__ = "";
+        }
 
-         // ============ BUILD CONSTANTS ============
-         if (typeof window.__DEFINES__ === 'undefined') {
-           window.__DEFINES__ = {};
-         }
-         if (typeof window.__BASE__ === 'undefined') {
-           window.__BASE__ = '/';
-         }
-         if (typeof window.__BUNDLED_DEV__ === 'undefined') {
-           window.__BUNDLED_DEV__ = false;
-         }
-         if (typeof window.__CLASS__ === 'undefined') {
-           window.__CLASS__ = '';
-         }
-         if (typeof window.__COMPILER_HALT_OFFSET__ === 'undefined') {
-           window.__COMPILER_HALT_OFFSET__ = '';
-         }
-         if (typeof window.__DATA__ === 'undefined') {
-           window.__DATA__ = '';
-         }
-         if (typeof window.__DIR__ === 'undefined') {
-           window.__DIR__ = '';
-         }
-         if (typeof window.__ENCODING__ === 'undefined') {
-           window.__ENCODING__ = 'utf8';
-         }
-         if (typeof window.__END__ === 'undefined') {
-           window.__END__ = '';
-         }
-         if (typeof window.__FILE__ === 'undefined') {
-           window.__FILE__ = '';
-         }
-         if (typeof window.__FUNCTION__ === 'undefined') {
-           window.__FUNCTION__ = '';
-         }
-         if (typeof window.__LINE__ === 'undefined') {
-           window.__LINE__ = '';
-         }
-         if (typeof window.__METHOD__ === 'undefined') {
-           window.__METHOD__ = '';
-         }
-         if (typeof window.__NAMESPACE__ === 'undefined') {
-           window.__NAMESPACE__ = '';
-         }
-         if (typeof window.__NEXT_DATA__ === 'undefined') {
-           window.__NEXT_DATA__ = {};
-         }
+        // ============ BUILD CONSTANTS ============
+        if (typeof window.__DEFINES__ === "undefined") {
+          window.__DEFINES__ = {};
+        }
+        if (typeof window.__BASE__ === "undefined") {
+          window.__BASE__ = "/";
+        }
+        if (typeof window.__BUNDLED_DEV__ === "undefined") {
+          window.__BUNDLED_DEV__ = false;
+        }
+        if (typeof window.__CLASS__ === "undefined") {
+          window.__CLASS__ = "";
+        }
+        if (typeof window.__COMPILER_HALT_OFFSET__ === "undefined") {
+          window.__COMPILER_HALT_OFFSET__ = "";
+        }
+        if (typeof window.__DATA__ === "undefined") {
+          window.__DATA__ = "";
+        }
+        if (typeof window.__DIR__ === "undefined") {
+          window.__DIR__ = "";
+        }
+        if (typeof window.__ENCODING__ === "undefined") {
+          window.__ENCODING__ = "utf8";
+        }
+        if (typeof window.__END__ === "undefined") {
+          window.__END__ = "";
+        }
+        if (typeof window.__FILE__ === "undefined") {
+          window.__FILE__ = "";
+        }
+        if (typeof window.__FUNCTION__ === "undefined") {
+          window.__FUNCTION__ = "";
+        }
+        if (typeof window.__LINE__ === "undefined") {
+          window.__LINE__ = "";
+        }
+        if (typeof window.__METHOD__ === "undefined") {
+          window.__METHOD__ = "";
+        }
+        if (typeof window.__NAMESPACE__ === "undefined") {
+          window.__NAMESPACE__ = "";
+        }
+        if (typeof window.__NEXT_DATA__ === "undefined") {
+          window.__NEXT_DATA__ = {};
+        }
 
-         // ============ SERVER CONSTANTS ============
-         if (typeof window.__SERVER_HOST__ === 'undefined') {
-           window.__SERVER_HOST__ = 'localhost:5173';
-         }
-         if (typeof window.__SERVER_FORWARD_CONSOLE__ === 'undefined') {
-           window.__SERVER_FORWARD_CONSOLE__ = 'true';
-         }
+        // ============ SERVER CONSTANTS ============
+        if (typeof window.__SERVER_HOST__ === "undefined") {
+          window.__SERVER_HOST__ = "localhost:5173";
+        }
+        if (typeof window.__SERVER_FORWARD_CONSOLE__ === "undefined") {
+          window.__SERVER_FORWARD_CONSOLE__ = "true";
+        }
 
-         // ============ SENTRY CONSTANTS ============
-         if (typeof window.__SENTRY__ === 'undefined') {
-           window.__SENTRY__ = {};
-         }
-         if (typeof window.__SENTRY_BROWSER_BUNDLE__ === 'undefined') {
-           window.__SENTRY_BROWSER_BUNDLE__ = true;
-         }
-         if (typeof window.__SENTRY_DEBUG__ === 'undefined') {
-           window.__SENTRY_DEBUG__ = false;
-         }
-         if (typeof window.__SENTRY_EXCLUDE_REPLAY_WORKER__ === 'undefined') {
-           window.__SENTRY_EXCLUDE_REPLAY_WORKER__ = false;
-         }
-         if (typeof window.__SENTRY_INSTRUMENTED__ === 'undefined') {
-           window.__SENTRY_INSTRUMENTED__ = false;
-         }
-         if (typeof window.__SENTRY_RELEASE__ === 'undefined') {
-           window.__SENTRY_RELEASE__ = '';
-         }
-         if (typeof window.__SENTRY_SAFE_RANDOM_ID_WRAPPER__ === 'undefined') {
-           window.__SENTRY_SAFE_RANDOM_ID_WRAPPER__ = false;
-         }
-         if (typeof window.__SENTRY_SUPPRESS_TRACING__ === 'undefined') {
-           window.__SENTRY_SUPPRESS_TRACING__ = false;
-         }
-         if (typeof window.__SENTRY_TRACING__ === 'undefined') {
-           window.__SENTRY_TRACING__ = false;
-         }
+        // ============ SENTRY CONSTANTS ============
+        if (typeof window.__SENTRY__ === "undefined") {
+          window.__SENTRY__ = {};
+        }
+        if (typeof window.__SENTRY_BROWSER_BUNDLE__ === "undefined") {
+          window.__SENTRY_BROWSER_BUNDLE__ = true;
+        }
+        if (typeof window.__SENTRY_DEBUG__ === "undefined") {
+          window.__SENTRY_DEBUG__ = false;
+        }
+        if (typeof window.__SENTRY_EXCLUDE_REPLAY_WORKER__ === "undefined") {
+          window.__SENTRY_EXCLUDE_REPLAY_WORKER__ = false;
+        }
+        if (typeof window.__SENTRY_INSTRUMENTED__ === "undefined") {
+          window.__SENTRY_INSTRUMENTED__ = false;
+        }
+        if (typeof window.__SENTRY_RELEASE__ === "undefined") {
+          window.__SENTRY_RELEASE__ = "";
+        }
+        if (typeof window.__SENTRY_SAFE_RANDOM_ID_WRAPPER__ === "undefined") {
+          window.__SENTRY_SAFE_RANDOM_ID_WRAPPER__ = false;
+        }
+        if (typeof window.__SENTRY_SUPPRESS_TRACING__ === "undefined") {
+          window.__SENTRY_SUPPRESS_TRACING__ = false;
+        }
+        if (typeof window.__SENTRY_TRACING__ === "undefined") {
+          window.__SENTRY_TRACING__ = false;
+        }
 
-         // ============ THIRD-PARTY CONSTANTS ============
-         if (typeof window.__POSTHOG_TOOLBAR__ === 'undefined') {
-           window.__POSTHOG_TOOLBAR__ = false;
-         }
-         if (typeof window.__RRWEB_EXCLUDE_IFRAME__ === 'undefined') {
-           window.__RRWEB_EXCLUDE_IFRAME__ = false;
-         }
-         if (typeof window.__RRWEB_EXCLUDE_SHADOW_DOM__ === 'undefined') {
-           window.__RRWEB_EXCLUDE_SHADOW_DOM__ = false;
-         }
+        // ============ THIRD-PARTY CONSTANTS ============
+        if (typeof window.__POSTHOG_TOOLBAR__ === "undefined") {
+          window.__POSTHOG_TOOLBAR__ = false;
+        }
+        if (typeof window.__RRWEB_EXCLUDE_IFRAME__ === "undefined") {
+          window.__RRWEB_EXCLUDE_IFRAME__ = false;
+        }
+        if (typeof window.__RRWEB_EXCLUDE_SHADOW_DOM__ === "undefined") {
+          window.__RRWEB_EXCLUDE_SHADOW_DOM__ = false;
+        }
 
-         // ============ SPECIAL CONSTANTS ============
-         if (typeof window.__CANCEL__ === 'undefined') {
-           window.__CANCEL__ = null;
-         }
-         if (typeof window.__PRETTY_FUNCTION__ === 'undefined') {
-           window.__PRETTY_FUNCTION__ = false;
-         }
+        // ============ SPECIAL CONSTANTS ============
+        if (typeof window.__CANCEL__ === "undefined") {
+          window.__CANCEL__ = null;
+        }
+        if (typeof window.__PRETTY_FUNCTION__ === "undefined") {
+          window.__PRETTY_FUNCTION__ = false;
+        }
 
-         console.log('[GlobalConstants] Todos os polyfills de constantes globais foram inicializados');
-       })();
+        console.log(
+          "[GlobalConstants] Todos os polyfills de constantes globais foram inicializados",
+        );
+      })();
 
-       window.__APP_VERSION__ = "%APP_VERSION%";
-       window.__BUILD_TIME__ = "%BUILD_TIME%";
-       window.__CACHE_BUSTER__ = window.__BUILD_TIME__ || Date.now().toString();
+      window.__APP_VERSION__ = "%APP_VERSION%";
+      window.__BUILD_TIME__ = "%BUILD_TIME%";
+      window.__CACHE_BUSTER__ = window.__BUILD_TIME__ || Date.now().toString();
 
-    // Limpar storage se a versão mudar drasticamente (ex: após 24h)
-    const lastVersion = localStorage.getItem('app_version');
-    const currentVersion = window.__APP_VERSION__;
+      // Limpar storage se a versão mudar drasticamente (ex: após 24h)
+      const lastVersion = localStorage.getItem("app_version");
+      const currentVersion = window.__APP_VERSION__;
 
-    if (lastVersion && lastVersion !== currentVersion) {
-      console.log('[Cache] Versão alterada, limpando caches...');
-      // Limpar caches que podem causar problemas
-      sessionStorage.clear();
-      // Não limpar localStorage completamente para preservar preferências
-    }
+      if (lastVersion && lastVersion !== currentVersion) {
+        console.log("[Cache] Versão alterada, limpando caches...");
+        // Limpar caches que podem causar problemas
+        sessionStorage.clear();
+        // Não limpar localStorage completamente para preservar preferências
+      }
 
-    localStorage.setItem('app_version', currentVersion);
-    localStorage.setItem('last_build_time', window.__BUILD_TIME__);
-  </script>
+      localStorage.setItem("app_version", currentVersion);
+      localStorage.setItem("last_build_time", window.__BUILD_TIME__);
+    </script>
 
-  <!-- MediaPipe CDN (Defered to avoid blocking initial render) -->
-  <script src="https://cdn.jsdelivr.net/npm/@mediapipe/pose/pose.js" crossorigin="anonymous" defer></script>
-  <script src="https://cdn.jsdelivr.net/npm/@mediapipe/drawing_utils/drawing_utils.js" crossorigin="anonymous" defer></script>
+    <!-- MediaPipe CDN (Defered to avoid blocking initial render) -->
+    <script
+      src="https://cdn.jsdelivr.net/npm/@mediapipe/pose/pose.js"
+      crossorigin="anonymous"
+      defer
+    ></script>
+    <script
+      src="https://cdn.jsdelivr.net/npm/@mediapipe/drawing_utils/drawing_utils.js"
+      crossorigin="anonymous"
+      defer
+    ></script>
 
-	<script type="module" src="./src/main.tsx"></script>
-</body>
-
+    <script type="module" src="./src/main.tsx"></script>
+  </body>
 </html>

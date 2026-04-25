@@ -1,40 +1,40 @@
 /**
  * Permission Manager
- * 
+ *
  * OTIMIZAÇÃO: Usa lazy loading para não incluir módulos pesados no bundle inicial.
  * Camera, MediaLibrary, Location são carregados apenas quando necessário.
  */
 
-import * as Notifications from 'expo-notifications';
-import { Alert, Linking, Platform } from 'react-native';
-import { consentManager } from './consentManager';
-import { CONSENT_TYPES } from '@/constants/consentTypes';
+import * as Notifications from "expo-notifications";
+import { Alert, Linking, Platform } from "react-native";
+import { consentManager } from "./consentManager";
+import { CONSENT_TYPES } from "@/constants/consentTypes";
 
-export type PermissionType = 'camera' | 'photos' | 'location' | 'notifications';
-export type PermissionStatus = 'granted' | 'denied' | 'undetermined' | 'limited';
+export type PermissionType = "camera" | "photos" | "location" | "notifications";
+export type PermissionStatus = "granted" | "denied" | "undetermined" | "limited";
 
 // Cache para módulos carregados sob demanda
-let cameraModule: typeof import('expo-camera') | null = null;
-let mediaLibraryModule: typeof import('expo-media-library') | null = null;
-let locationModule: typeof import('expo-location') | null = null;
+let cameraModule: typeof import("expo-camera") | null = null;
+let mediaLibraryModule: typeof import("expo-media-library") | null = null;
+let locationModule: typeof import("expo-location") | null = null;
 
 async function getCameraModule() {
   if (!cameraModule) {
-    cameraModule = await import('expo-camera');
+    cameraModule = await import("expo-camera");
   }
   return cameraModule;
 }
 
 async function getMediaLibraryModule() {
   if (!mediaLibraryModule) {
-    mediaLibraryModule = await import('expo-media-library');
+    mediaLibraryModule = await import("expo-media-library");
   }
   return mediaLibraryModule;
 }
 
 async function getLocationModule() {
   if (!locationModule) {
-    locationModule = await import('expo-location');
+    locationModule = await import("expo-location");
   }
   return locationModule;
 }
@@ -56,78 +56,75 @@ export class PermissionManager {
    */
   async checkPermission(permission: PermissionType): Promise<PermissionStatus> {
     switch (permission) {
-      case 'camera': {
+      case "camera": {
         const Camera = await getCameraModule();
         const result = await Camera.Camera.getCameraPermissionsAsync();
         return result.status as PermissionStatus;
       }
-      case 'photos': {
+      case "photos": {
         const MediaLibrary = await getMediaLibraryModule();
         const { status } = await MediaLibrary.getPermissionsAsync();
         return status as PermissionStatus;
       }
-      case 'location': {
+      case "location": {
         const Location = await getLocationModule();
         const { status } = await Location.getForegroundPermissionsAsync();
         return status as PermissionStatus;
       }
-      case 'notifications': {
+      case "notifications": {
         const { status } = await Notifications.getPermissionsAsync();
         return status as any as PermissionStatus;
       }
       default:
-        return 'undetermined';
+        return "undetermined";
     }
   }
 
   /**
    * Request permission with optional explainer logic
    */
-  async requestPermission(
-    permission: PermissionType,
-    userId?: string
-  ): Promise<PermissionStatus> {
-    let status: PermissionStatus = 'undetermined';
+  async requestPermission(permission: PermissionType, userId?: string): Promise<PermissionStatus> {
+    let status: PermissionStatus = "undetermined";
 
     switch (permission) {
-      case 'camera': {
+      case "camera": {
         const Camera = await getCameraModule();
         const result = await Camera.Camera.requestCameraPermissionsAsync();
         status = result.status as PermissionStatus;
-        if (userId && status === 'granted') {
-          await consentManager.grantConsent(userId, CONSENT_TYPES.CAMERA_PERMISSION, '1.0');
+        if (userId && status === "granted") {
+          await consentManager.grantConsent(userId, CONSENT_TYPES.CAMERA_PERMISSION, "1.0");
         }
         break;
       }
-      case 'photos': {
+      case "photos": {
         const MediaLibrary = await getMediaLibraryModule();
         const result = await MediaLibrary.requestPermissionsAsync();
         status = result.status as PermissionStatus;
-        if (userId && status === 'granted') {
-          await consentManager.grantConsent(userId, CONSENT_TYPES.PHOTOS_PERMISSION, '1.0');
+        if (userId && status === "granted") {
+          await consentManager.grantConsent(userId, CONSENT_TYPES.PHOTOS_PERMISSION, "1.0");
         }
         break;
       }
-      case 'location': {
+      case "location": {
         const Location = await getLocationModule();
         const result = await Location.requestForegroundPermissionsAsync();
         status = result.status as PermissionStatus;
-        if (userId && status === 'granted') {
-          await consentManager.grantConsent(userId, CONSENT_TYPES.LOCATION_PERMISSION, '1.0');
+        if (userId && status === "granted") {
+          await consentManager.grantConsent(userId, CONSENT_TYPES.LOCATION_PERMISSION, "1.0");
         }
         break;
       }
-      case 'notifications': {
+      case "notifications": {
         const result = await Notifications.requestPermissionsAsync();
         status = result.status as any as PermissionStatus;
-        if (userId && status === 'granted') {
-          await consentManager.grantConsent(userId, CONSENT_TYPES.NOTIFICATIONS_PERMISSION, '1.0');
+        if (userId && status === "granted") {
+          await consentManager.grantConsent(userId, CONSENT_TYPES.NOTIFICATIONS_PERMISSION, "1.0");
         }
         break;
       }
     }
 
-    if (status === 'denied') {
+    if (status === "denied") {
       this.showDeniedAlert(permission);
     }
 
@@ -138,8 +135,8 @@ export class PermissionManager {
    * Open app settings in system
    */
   openSettings(): void {
-    if (Platform.OS === 'ios') {
-      Linking.openURL('app-settings:');
+    if (Platform.OS === "ios") {
+      Linking.openURL("app-settings:");
     } else {
       Linking.openSettings();
     }
@@ -150,34 +147,34 @@ export class PermissionManager {
    */
   getAlternativeWorkflow(permission: PermissionType): string {
     switch (permission) {
-      case 'camera':
-        return 'Você pode selecionar fotos existentes da sua galeria em vez de tirar uma nova foto.';
-      case 'photos':
-        return 'Você pode usar a câmera para tirar fotos no momento, se o acesso à galeria estiver restrito.';
-      case 'location':
-        return 'Você pode selecionar o endereço da clínica manualmente na lista para realizar o check-in.';
-      case 'notifications':
-        return 'Você pode verificar novos agendamentos e mensagens diretamente no painel principal do aplicativo.';
+      case "camera":
+        return "Você pode selecionar fotos existentes da sua galeria em vez de tirar uma nova foto.";
+      case "photos":
+        return "Você pode usar a câmera para tirar fotos no momento, se o acesso à galeria estiver restrito.";
+      case "location":
+        return "Você pode selecionar o endereço da clínica manualmente na lista para realizar o check-in.";
+      case "notifications":
+        return "Você pode verificar novos agendamentos e mensagens diretamente no painel principal do aplicativo.";
       default:
-        return '';
+        return "";
     }
   }
 
   private showDeniedAlert(permission: PermissionType): void {
     const labels: Record<PermissionType, string> = {
-      camera: 'Câmera',
-      photos: 'Fotos',
-      location: 'Localização',
-      notifications: 'Notificações',
+      camera: "Câmera",
+      photos: "Fotos",
+      location: "Localização",
+      notifications: "Notificações",
     };
 
     Alert.alert(
-      'Permissão Negada',
+      "Permissão Negada",
       `O acesso à ${labels[permission]} é necessário para esta funcionalidade. ${this.getAlternativeWorkflow(permission)}`,
       [
-        { text: 'Agora não', style: 'cancel' },
-        { text: 'Configurações', onPress: () => this.openSettings() },
-      ]
+        { text: "Agora não", style: "cancel" },
+        { text: "Configurações", onPress: () => this.openSettings() },
+      ],
     );
   }
 }

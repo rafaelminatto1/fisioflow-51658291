@@ -1,7 +1,7 @@
-import { fetchApi } from '@/lib/api';
-import { fisioLogger } from '../errors/logger';
+import { fetchApi } from "@/lib/api";
+import { fisioLogger } from "../errors/logger";
 
-export type ExportFormat = 'json' | 'pdf' | 'csv';
+export type ExportFormat = "json" | "pdf" | "csv";
 
 export interface ExportRequest {
   format: ExportFormat;
@@ -9,7 +9,7 @@ export interface ExportRequest {
     start: Date;
     end: Date;
   };
-  types: ('appointments' | 'evolutions' | 'exercises' | 'profile')[];
+  types: ("appointments" | "evolutions" | "exercises" | "profile")[];
 }
 
 class DataExportService {
@@ -26,25 +26,27 @@ class DataExportService {
 
   async requestExport(request: ExportRequest): Promise<{ status: string; url?: string }> {
     try {
-      const data = await fetchApi<any>('/api/export', {
-        method: 'POST',
+      const data = await fetchApi<any>("/api/export", {
+        method: "POST",
         data: {
-           format: request.format,
-           types: request.types,
-           dateRange: request.dateRange ? {
-               start: request.dateRange.start.toISOString(),
-               end: request.dateRange.end.toISOString()
-           } : undefined
-        }
+          format: request.format,
+          types: request.types,
+          dateRange: request.dateRange
+            ? {
+                start: request.dateRange.start.toISOString(),
+                end: request.dateRange.end.toISOString(),
+              }
+            : undefined,
+        },
       });
 
       // Log export event
       // Note: we can get user ID from fetchApi result if needed, but for now assuming successful call
       // await auditLogger.logExport(userId, 'patient', request.format);
-      
+
       return data;
     } catch (error) {
-      fisioLogger.error('Export request failed', error, 'DataExportService');
+      fisioLogger.error("Export request failed", error, "DataExportService");
       throw error;
     }
   }

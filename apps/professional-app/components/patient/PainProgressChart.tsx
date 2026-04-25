@@ -1,8 +1,8 @@
-import React from 'react';
-import { View, Text, StyleSheet, Dimensions } from 'react-native';
-import { useColors } from '@/hooks/useColorScheme';
-import type { Evolution } from '@/types';
-import { format } from 'date-fns';
+import React from "react";
+import { View, Text, StyleSheet, Dimensions } from "react-native";
+import { useColors } from "@/hooks/useColorScheme";
+import type { Evolution } from "@/types";
+import { format } from "date-fns";
 
 interface PainProgressChartProps {
   evolutions: Evolution[];
@@ -12,22 +12,27 @@ const CHART_HEIGHT = 160;
 
 export const PainProgressChart = ({ evolutions }: PainProgressChartProps) => {
   const colors = useColors();
-  const screenWidth = Dimensions.get('window').width - 48;
+  const screenWidth = Dimensions.get("window").width - 48;
 
   const chartData = evolutions
     .filter((evolution) => evolution.painLevel !== undefined)
-    .sort((left, right) => new Date(left.date || '').getTime() - new Date(right.date || '').getTime())
+    .sort(
+      (left, right) => new Date(left.date || "").getTime() - new Date(right.date || "").getTime(),
+    )
     .slice(-7)
     .map((evolution, index) => ({
       id: `${evolution.id}-${index}`,
       value: Math.max(0, Math.min(10, evolution.painLevel || 0)),
-      label: evolution.date ? format(new Date(evolution.date), 'dd/MM') : '',
+      label: evolution.date ? format(new Date(evolution.date), "dd/MM") : "",
     }));
 
   if (chartData.length < 2) {
     return (
       <View
-        style={[styles.emptyContainer, { backgroundColor: colors.surface, borderColor: colors.border }]}
+        style={[
+          styles.emptyContainer,
+          { backgroundColor: colors.surface, borderColor: colors.border },
+        ]}
         accessible
         accessibilityLabel="Gráfico de evolução da dor disponível após 2 sessões."
       >
@@ -47,7 +52,12 @@ export const PainProgressChart = ({ evolutions }: PainProgressChartProps) => {
     >
       <Text style={[styles.title, { color: colors.text }]}>Evolução do Nível de Dor</Text>
 
-      <View style={[styles.chartCard, { backgroundColor: colors.surface, borderColor: colors.border, width: screenWidth }]}>
+      <View
+        style={[
+          styles.chartCard,
+          { backgroundColor: colors.surface, borderColor: colors.border, width: screenWidth },
+        ]}
+      >
         <View style={styles.yAxis}>
           {[10, 8, 6, 4, 2, 0].map((tick) => (
             <Text key={tick} style={[styles.axisLabel, { color: colors.textMuted }]}>
@@ -75,9 +85,7 @@ export const PainProgressChart = ({ evolutions }: PainProgressChartProps) => {
               const height = Math.max(8, (point.value / 10) * CHART_HEIGHT);
               return (
                 <View key={point.id} style={styles.columnWrapper}>
-                  <Text style={[styles.valueLabel, { color: colors.text }]}>
-                    {point.value}
-                  </Text>
+                  <Text style={[styles.valueLabel, { color: colors.text }]}>{point.value}</Text>
                   <View style={[styles.barTrack, { backgroundColor: colors.border }]}>
                     <View
                       style={[
@@ -107,21 +115,21 @@ export const PainProgressChart = ({ evolutions }: PainProgressChartProps) => {
 const styles = StyleSheet.create({
   container: {
     marginVertical: 16,
-    width: '100%',
+    width: "100%",
   },
   title: {
     fontSize: 16,
-    fontWeight: '700',
+    fontWeight: "700",
     marginBottom: 12,
   },
   chartCard: {
     borderWidth: 1,
     borderRadius: 16,
     padding: 16,
-    flexDirection: 'row',
+    flexDirection: "row",
   },
   yAxis: {
-    justifyContent: 'space-between',
+    justifyContent: "space-between",
     height: CHART_HEIGHT,
     marginRight: 12,
   },
@@ -131,38 +139,38 @@ const styles = StyleSheet.create({
   plotArea: {
     flex: 1,
     height: CHART_HEIGHT + 34,
-    justifyContent: 'flex-end',
+    justifyContent: "flex-end",
   },
   gridLine: {
-    position: 'absolute',
+    position: "absolute",
     left: 0,
     right: 0,
     borderTopWidth: 1,
   },
   columns: {
-    flexDirection: 'row',
-    alignItems: 'flex-end',
-    justifyContent: 'space-between',
+    flexDirection: "row",
+    alignItems: "flex-end",
+    justifyContent: "space-between",
     height: CHART_HEIGHT + 24,
   },
   columnWrapper: {
     flex: 1,
-    alignItems: 'center',
+    alignItems: "center",
     gap: 6,
   },
   valueLabel: {
     fontSize: 12,
-    fontWeight: '600',
+    fontWeight: "600",
   },
   barTrack: {
     width: 24,
     height: CHART_HEIGHT,
     borderRadius: 12,
-    justifyContent: 'flex-end',
-    overflow: 'hidden',
+    justifyContent: "flex-end",
+    overflow: "hidden",
   },
   barFill: {
-    width: '100%',
+    width: "100%",
     borderRadius: 12,
   },
   xLabel: {
@@ -171,19 +179,19 @@ const styles = StyleSheet.create({
   footerText: {
     fontSize: 11,
     marginTop: 8,
-    textAlign: 'right',
+    textAlign: "right",
   },
   emptyContainer: {
     padding: 24,
     borderRadius: 16,
     borderWidth: 1,
     marginVertical: 16,
-    width: '100%',
-    alignItems: 'center',
-    justifyContent: 'center',
+    width: "100%",
+    alignItems: "center",
+    justifyContent: "center",
   },
   emptyText: {
-    textAlign: 'center',
+    textAlign: "center",
     fontSize: 14,
     lineHeight: 20,
   },

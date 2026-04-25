@@ -6,332 +6,320 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { templatesApi } from "@/api/v2";
 import type {
-	ExerciseTemplate as WorkersTemplate,
-	ExerciseTemplateItem as WorkersTemplateItem,
-	PatientProfileCategory,
+  ExerciseTemplate as WorkersTemplate,
+  ExerciseTemplateItem as WorkersTemplateItem,
+  PatientProfileCategory,
 } from "@/types/workers";
 import { toast } from "sonner";
 
 export interface ExerciseTemplate {
-	id: string;
-	name: string;
-	description?: string;
-	category: string;
-	condition_name: string;
-	difficulty_level?: string;
-	treatment_phase?: string;
-	body_part?: string;
-	estimated_duration?: number;
-	template_variant?: string;
-	organization_id?: string;
-	created_by?: string;
-	created_at?: string;
-	updated_at?: string;
-	// Campos clínicos baseados em evidências
-	clinical_notes?: string;
-	contraindications?: string;
-	precautions?: string;
-	progression_notes?: string;
-	evidence_level?: "A" | "B" | "C" | "D";
-	bibliographic_references?: string[];
-	items?: ExerciseTemplateItem[];
-	exerciseCount?: number;
+  id: string;
+  name: string;
+  description?: string;
+  category: string;
+  condition_name: string;
+  difficulty_level?: string;
+  treatment_phase?: string;
+  body_part?: string;
+  estimated_duration?: number;
+  template_variant?: string;
+  organization_id?: string;
+  created_by?: string;
+  created_at?: string;
+  updated_at?: string;
+  // Campos clínicos baseados em evidências
+  clinical_notes?: string;
+  contraindications?: string;
+  precautions?: string;
+  progression_notes?: string;
+  evidence_level?: "A" | "B" | "C" | "D";
+  bibliographic_references?: string[];
+  items?: ExerciseTemplateItem[];
+  exerciseCount?: number;
 }
 
 export interface ExerciseTemplateItem {
-	id: string;
-	template_id: string;
-	exercise_id: string;
-	order_index: number;
-	sets?: number;
-	repetitions?: number;
-	duration?: number;
-	notes?: string;
-	week_start?: number;
-	week_end?: number;
-	// Campos clínicos específicos por exercício
-	clinical_notes?: string;
-	focus_muscles?: string[];
-	purpose?: string;
-	exercise?: {
-		id: string;
-		name: string;
-		description?: string;
-		category?: string;
-		difficulty?: string;
-	};
+  id: string;
+  template_id: string;
+  exercise_id: string;
+  order_index: number;
+  sets?: number;
+  repetitions?: number;
+  duration?: number;
+  notes?: string;
+  week_start?: number;
+  week_end?: number;
+  // Campos clínicos específicos por exercício
+  clinical_notes?: string;
+  focus_muscles?: string[];
+  purpose?: string;
+  exercise?: {
+    id: string;
+    name: string;
+    description?: string;
+    category?: string;
+    difficulty?: string;
+  };
 }
 
 /**
  * Mapeia formato do Worker para App legada
  */
 const mapWorkerToAppTemplate = (t: WorkersTemplate): ExerciseTemplate => ({
-	id: t.id,
-	name: t.name,
-	description: t.description || undefined,
-	category: t.category || "",
-	condition_name: t.conditionName || "",
-	difficulty_level: t.difficultyLevel || undefined,
-	treatment_phase: t.treatmentPhase || undefined,
-	body_part: t.bodyPart || undefined,
-	estimated_duration: t.estimatedDuration || undefined,
-	template_variant: t.templateVariant || undefined,
-	organization_id: t.organizationId || undefined,
-	created_by: t.createdBy || undefined,
-	created_at: t.createdAt,
-	updated_at: t.updatedAt,
-	clinical_notes: t.clinicalNotes || undefined,
-	contraindications: t.contraindications || undefined,
-	precautions: t.precautions || undefined,
-	progression_notes: t.progressionNotes || undefined,
-	evidence_level: t.evidenceLevel || undefined,
-	bibliographic_references: t.bibliographicReferences,
-	exerciseCount: t.exerciseCount || 0,
-	items: t.items?.map(mapWorkerToAppTemplateItem),
+  id: t.id,
+  name: t.name,
+  description: t.description || undefined,
+  category: t.category || "",
+  condition_name: t.conditionName || "",
+  difficulty_level: t.difficultyLevel || undefined,
+  treatment_phase: t.treatmentPhase || undefined,
+  body_part: t.bodyPart || undefined,
+  estimated_duration: t.estimatedDuration || undefined,
+  template_variant: t.templateVariant || undefined,
+  organization_id: t.organizationId || undefined,
+  created_by: t.createdBy || undefined,
+  created_at: t.createdAt,
+  updated_at: t.updatedAt,
+  clinical_notes: t.clinicalNotes || undefined,
+  contraindications: t.contraindications || undefined,
+  precautions: t.precautions || undefined,
+  progression_notes: t.progressionNotes || undefined,
+  evidence_level: t.evidenceLevel || undefined,
+  bibliographic_references: t.bibliographicReferences,
+  exerciseCount: t.exerciseCount || 0,
+  items: t.items?.map(mapWorkerToAppTemplateItem),
 });
 
-const mapWorkerToAppTemplateItem = (
-	i: WorkersTemplateItem,
-): ExerciseTemplateItem => ({
-	id: i.id,
-	template_id: i.templateId,
-	exercise_id: i.exerciseId,
-	order_index: i.orderIndex,
-	sets: i.sets || undefined,
-	repetitions: i.repetitions || undefined,
-	duration: i.duration || undefined,
-	notes: i.notes || undefined,
-	week_start: i.weekStart || undefined,
-	week_end: i.weekEnd || undefined,
-	clinical_notes: i.clinicalNotes || undefined,
-	focus_muscles: i.focusMuscles,
-	purpose: i.purpose || undefined,
-	exercise: i.exercise
-		? {
-				id: i.exercise.id,
-				name: i.exercise.name,
-				description: i.exercise.description || undefined,
-				category: i.exercise.category || undefined,
-				difficulty: i.exercise.difficulty || undefined,
-				imageUrl: i.exercise.imageUrl || undefined,
-				thumbnailUrl: i.exercise.thumbnailUrl || undefined,
-			}
-		: undefined,
+const mapWorkerToAppTemplateItem = (i: WorkersTemplateItem): ExerciseTemplateItem => ({
+  id: i.id,
+  template_id: i.templateId,
+  exercise_id: i.exerciseId,
+  order_index: i.orderIndex,
+  sets: i.sets || undefined,
+  repetitions: i.repetitions || undefined,
+  duration: i.duration || undefined,
+  notes: i.notes || undefined,
+  week_start: i.weekStart || undefined,
+  week_end: i.weekEnd || undefined,
+  clinical_notes: i.clinicalNotes || undefined,
+  focus_muscles: i.focusMuscles,
+  purpose: i.purpose || undefined,
+  exercise: i.exercise
+    ? {
+        id: i.exercise.id,
+        name: i.exercise.name,
+        description: i.exercise.description || undefined,
+        category: i.exercise.category || undefined,
+        difficulty: i.exercise.difficulty || undefined,
+        imageUrl: i.exercise.imageUrl || undefined,
+        thumbnailUrl: i.exercise.thumbnailUrl || undefined,
+      }
+    : undefined,
 });
 
 export const useWorkersTemplates = (filters?: {
-	q?: string;
-	category?: string;
-	patientProfile?: PatientProfileCategory | 'all';
-	templateType?: 'system' | 'custom';
-	isDraft?: boolean;
-	page?: number;
-	limit?: number;
+  q?: string;
+  category?: string;
+  patientProfile?: PatientProfileCategory | "all";
+  templateType?: "system" | "custom";
+  isDraft?: boolean;
+  page?: number;
+  limit?: number;
 }) => {
-	const { patientProfile, templateType, q, ...rest } = filters ?? {};
+  const { patientProfile, templateType, q, ...rest } = filters ?? {};
 
-	// Normalize 'all' to undefined so it's not sent as a query param
-	const apiParams = {
-		...rest,
-		q,
-		patientProfile: patientProfile === 'all' ? undefined : patientProfile,
-		templateType,
-		limit: filters?.limit ?? 100, // Increase default limit to show all templates
-	};
+  // Normalize 'all' to undefined so it's not sent as a query param
+  const apiParams = {
+    ...rest,
+    q,
+    patientProfile: patientProfile === "all" ? undefined : patientProfile,
+    templateType,
+    limit: filters?.limit ?? 100, // Increase default limit to show all templates
+  };
 
-	const { data, isLoading, error, refetch } = useQuery({
-		queryKey: ["templates", { patientProfile, templateType, q }],
-		queryFn: () => templatesApi.list(apiParams),
-		staleTime: 1000 * 60 * 5,
-	});
+  const { data, isLoading, error, refetch } = useQuery({
+    queryKey: ["templates", { patientProfile, templateType, q }],
+    queryFn: () => templatesApi.list(apiParams),
+    staleTime: 1000 * 60 * 5,
+  });
 
-	const templates = (data?.data ?? []).map(mapWorkerToAppTemplate);
+  const templates = (data?.data ?? []).map(mapWorkerToAppTemplate);
 
-	return {
-		templates,
-		meta: data?.meta,
-		loading: isLoading,
-		error,
-		refetch,
-	};
+  return {
+    templates,
+    meta: data?.meta,
+    loading: isLoading,
+    error,
+    refetch,
+  };
 };
 
 export const useExerciseTemplates = (filters?: {
-	category?: string;
-	patientProfile?: PatientProfileCategory | 'all';
-	templateType?: 'system' | 'custom';
-	isDraft?: boolean;
-	q?: string;
+  category?: string;
+  patientProfile?: PatientProfileCategory | "all";
+  templateType?: "system" | "custom";
+  isDraft?: boolean;
+  q?: string;
 }) => {
-	const queryClient = useQueryClient();
+  const queryClient = useQueryClient();
 
-	const { templates, loading, error } = useWorkersTemplates(filters);
+  const { templates, loading, error } = useWorkersTemplates(filters);
 
-	const createMutation = useMutation({
-		mutationFn: (template: any) => templatesApi.create(template),
-		onSuccess: () => {
-			queryClient.invalidateQueries({ queryKey: ["templates"] });
-			toast.success("Template criado com sucesso");
-		},
-		onError: (error: Error) => {
-			toast.error("Erro ao criar template: " + error.message);
-		},
-	});
+  const createMutation = useMutation({
+    mutationFn: (template: any) => templatesApi.create(template),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["templates"] });
+      toast.success("Template criado com sucesso");
+    },
+    onError: (error: Error) => {
+      toast.error("Erro ao criar template: " + error.message);
+    },
+  });
 
-	const updateMutation = useMutation({
-		mutationFn: ({ id, ...template }: any) => templatesApi.update(id, template),
-		onSuccess: () => {
-			queryClient.invalidateQueries({ queryKey: ["templates"] });
-			toast.success("Template atualizado com sucesso");
-		},
-		onError: (error: Error) => {
-			toast.error("Erro ao atualizar template: " + error.message);
-		},
-	});
+  const updateMutation = useMutation({
+    mutationFn: ({ id, ...template }: any) => templatesApi.update(id, template),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["templates"] });
+      toast.success("Template atualizado com sucesso");
+    },
+    onError: (error: Error) => {
+      toast.error("Erro ao atualizar template: " + error.message);
+    },
+  });
 
-	const deleteMutation = useMutation({
-		mutationFn: templatesApi.delete,
-		onSuccess: () => {
-			queryClient.invalidateQueries({ queryKey: ["templates"] });
-			toast.success("Template excluído com sucesso");
-		},
-		onError: (error: Error) => {
-			toast.error("Erro ao excluir template: " + error.message);
-		},
-	});
+  const deleteMutation = useMutation({
+    mutationFn: templatesApi.delete,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["templates"] });
+      toast.success("Template excluído com sucesso");
+    },
+    onError: (error: Error) => {
+      toast.error("Erro ao excluir template: " + error.message);
+    },
+  });
 
-	return {
-		templates,
-		loading,
-		error,
-		createTemplate: createMutation.mutate,
-		createTemplateAsync: createMutation.mutateAsync,
-		updateTemplate: updateMutation.mutate,
-		deleteTemplate: deleteMutation.mutate,
-		isCreating: createMutation.isPending,
-		isUpdating: updateMutation.isPending,
-		isDeleting: deleteMutation.isPending,
-	};
+  return {
+    templates,
+    loading,
+    error,
+    createTemplate: createMutation.mutate,
+    createTemplateAsync: createMutation.mutateAsync,
+    updateTemplate: updateMutation.mutate,
+    deleteTemplate: deleteMutation.mutate,
+    isCreating: createMutation.isPending,
+    isUpdating: updateMutation.isPending,
+    isDeleting: deleteMutation.isPending,
+  };
 };
 
 export const useWorkersTemplateDetail = (id: string) => {
-	return useQuery({
-		queryKey: ["workers-template", id],
-		queryFn: () => templatesApi.get(id),
-		enabled: !!id,
-	});
+  return useQuery({
+    queryKey: ["workers-template", id],
+    queryFn: () => templatesApi.get(id),
+    enabled: !!id,
+  });
 };
 
 export const useTemplateItems = (templateId?: string) => {
-	const queryClient = useQueryClient();
+  const queryClient = useQueryClient();
 
-	const { data, isLoading } = useQuery({
-		queryKey: ["exercise-template-items", templateId],
-		queryFn: async () => {
-			if (!templateId) return [];
-			const res = await templatesApi.get(templateId);
-			return res.data.items.map(mapWorkerToAppTemplateItem);
-		},
-		enabled: !!templateId,
-	});
+  const { data, isLoading } = useQuery({
+    queryKey: ["exercise-template-items", templateId],
+    queryFn: async () => {
+      if (!templateId) return [];
+      const res = await templatesApi.get(templateId);
+      return res.data.items.map(mapWorkerToAppTemplateItem);
+    },
+    enabled: !!templateId,
+  });
 
-	const items = data ?? [];
+  const items = data ?? [];
 
-	const addItemMutation = useMutation({
-		mutationFn: async (
-			item: Omit<ExerciseTemplateItem, "id" | "created_at">,
-		) => {
-			if (!templateId) throw new Error("templateId é obrigatório");
-			const current = await templatesApi.get(templateId);
-			const currentItems = current.data.items;
-			const newItems = [
-				...currentItems,
-				{ ...item, order_index: currentItems.length },
-			];
-			const res = await templatesApi.update(templateId, { items: newItems });
-			return res.data.items.map(mapWorkerToAppTemplateItem);
-		},
-		onSuccess: () => {
-			queryClient.invalidateQueries({
-				queryKey: ["exercise-template-items", templateId],
-			});
-			queryClient.invalidateQueries({ queryKey: ["templates"] });
-			toast.success("Exercício adicionado ao template");
-		},
-		onError: (error: Error) => {
-			toast.error("Erro ao adicionar exercício: " + error.message);
-		},
-	});
+  const addItemMutation = useMutation({
+    mutationFn: async (item: Omit<ExerciseTemplateItem, "id" | "created_at">) => {
+      if (!templateId) throw new Error("templateId é obrigatório");
+      const current = await templatesApi.get(templateId);
+      const currentItems = current.data.items;
+      const newItems = [...currentItems, { ...item, order_index: currentItems.length }];
+      const res = await templatesApi.update(templateId, { items: newItems });
+      return res.data.items.map(mapWorkerToAppTemplateItem);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({
+        queryKey: ["exercise-template-items", templateId],
+      });
+      queryClient.invalidateQueries({ queryKey: ["templates"] });
+      toast.success("Exercício adicionado ao template");
+    },
+    onError: (error: Error) => {
+      toast.error("Erro ao adicionar exercício: " + error.message);
+    },
+  });
 
-	const removeItemMutation = useMutation({
-		mutationFn: async (id: string) => {
-			if (!templateId) throw new Error("templateId é obrigatório");
-			const current = await templatesApi.get(templateId);
-			const newItems = current.data.items.filter(
-				(i: WorkersTemplateItem) => i.id !== id,
-			);
-			await templatesApi.update(templateId, { items: newItems });
-		},
-		onSuccess: () => {
-			queryClient.invalidateQueries({
-				queryKey: ["exercise-template-items", templateId],
-			});
-			queryClient.invalidateQueries({ queryKey: ["templates"] });
-			toast.success("Exercício removido do template");
-		},
-		onError: (error: Error) => {
-			toast.error("Erro ao remover exercício: " + error.message);
-		},
-	});
+  const removeItemMutation = useMutation({
+    mutationFn: async (id: string) => {
+      if (!templateId) throw new Error("templateId é obrigatório");
+      const current = await templatesApi.get(templateId);
+      const newItems = current.data.items.filter((i: WorkersTemplateItem) => i.id !== id);
+      await templatesApi.update(templateId, { items: newItems });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({
+        queryKey: ["exercise-template-items", templateId],
+      });
+      queryClient.invalidateQueries({ queryKey: ["templates"] });
+      toast.success("Exercício removido do template");
+    },
+    onError: (error: Error) => {
+      toast.error("Erro ao remover exercício: " + error.message);
+    },
+  });
 
-	const updateItemMutation = useMutation({
-		mutationFn: async ({
-			id,
-			...changes
-		}: Partial<ExerciseTemplateItem> & { id: string }) => {
-			if (!templateId) throw new Error("templateId é obrigatório");
-			const current = await templatesApi.get(templateId);
-			const newItems = current.data.items.map((i: WorkersTemplateItem) =>
-				i.id === id ? { ...i, ...changes } : i,
-			);
-			const res = await templatesApi.update(templateId, { items: newItems });
-			return res.data.items.map(mapWorkerToAppTemplateItem);
-		},
-		onSuccess: () => {
-			queryClient.invalidateQueries({
-				queryKey: ["exercise-template-items", templateId],
-			});
-			toast.success("Exercício atualizado");
-		},
-		onError: (error: Error) => {
-			toast.error("Erro ao atualizar exercício: " + error.message);
-		},
-	});
+  const updateItemMutation = useMutation({
+    mutationFn: async ({ id, ...changes }: Partial<ExerciseTemplateItem> & { id: string }) => {
+      if (!templateId) throw new Error("templateId é obrigatório");
+      const current = await templatesApi.get(templateId);
+      const newItems = current.data.items.map((i: WorkersTemplateItem) =>
+        i.id === id ? { ...i, ...changes } : i,
+      );
+      const res = await templatesApi.update(templateId, { items: newItems });
+      return res.data.items.map(mapWorkerToAppTemplateItem);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({
+        queryKey: ["exercise-template-items", templateId],
+      });
+      toast.success("Exercício atualizado");
+    },
+    onError: (error: Error) => {
+      toast.error("Erro ao atualizar exercício: " + error.message);
+    },
+  });
 
-	return {
-		items,
-		loading: isLoading,
-		addItem: addItemMutation.mutate,
-		removeItem: removeItemMutation.mutate,
-		updateItem: updateItemMutation.mutate,
-	};
+  return {
+    items,
+    loading: isLoading,
+    addItem: addItemMutation.mutate,
+    removeItem: removeItemMutation.mutate,
+    updateItem: updateItemMutation.mutate,
+  };
 };
 
 export interface TemplateCategory {
-	id: PatientProfileCategory;
-	label: string;
-	icon: string | null;
-	orderIndex: number;
+  id: PatientProfileCategory;
+  label: string;
+  icon: string | null;
+  orderIndex: number;
 }
 
 export const useTemplateCategories = () => {
-	const { data, isLoading, error } = useQuery({
-		queryKey: ["template-categories"],
-		queryFn: () => templatesApi.categories(),
-		staleTime: 1000 * 60 * 30, // 30 minutes — static lookup data
-	});
+  const { data, isLoading, error } = useQuery({
+    queryKey: ["template-categories"],
+    queryFn: () => templatesApi.categories(),
+    staleTime: 1000 * 60 * 30, // 30 minutes — static lookup data
+  });
 
-	const categories = (data?.data ?? []) as TemplateCategory[];
+  const categories = (data?.data ?? []) as TemplateCategory[];
 
-	return { categories, loading: isLoading, error };
+  return { categories, loading: isLoading, error };
 };

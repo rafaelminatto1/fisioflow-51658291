@@ -1,11 +1,15 @@
-import { create } from 'zustand';
-import { authClient, isNeonAuthEnabled } from './neonAuth';
-import { registerPushToken, clearPushToken, removeNotificationListeners } from '@/lib/notificationsSystem';
-import { getOfflineManager, initializeOfflineManager } from '@/lib/offlineManager';
-import Constants from 'expo-constants';
-import { log } from '@/lib/logger';
-import { User } from '@/types/auth';
-import { Mappers } from './mappers';
+import { create } from "zustand";
+import { authClient, isNeonAuthEnabled } from "./neonAuth";
+import {
+  registerPushToken,
+  clearPushToken,
+  removeNotificationListeners,
+} from "@/lib/notificationsSystem";
+import { getOfflineManager, initializeOfflineManager } from "@/lib/offlineManager";
+import Constants from "expo-constants";
+import { log } from "@/lib/logger";
+import { User } from "@/types/auth";
+import { Mappers } from "./mappers";
 
 interface AuthState {
   user: User | null;
@@ -34,12 +38,12 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     set({ isLoading: true, error: null });
     try {
       if (!isNeonAuthEnabled()) {
-        throw new Error('Neon Auth não configurado.');
+        throw new Error("Neon Auth não configurado.");
       }
 
-      const { data, error } = await authClient.signIn.email({ 
-        email: email.trim().toLowerCase(), 
-        password 
+      const { data, error } = await authClient.signIn.email({
+        email: email.trim().toLowerCase(),
+        password,
       });
 
       if (error) {
@@ -47,16 +51,16 @@ export const useAuthStore = create<AuthState>((set, get) => ({
       }
 
       const neonUser = data.user;
-      
+
       // Centralizar mapeamento e garantir role correta
       const user = Mappers.user({
         ...neonUser,
-        role: (neonUser as any).role || 'patient'
+        role: (neonUser as any).role || "patient",
       });
 
-      if (user.role !== 'patient' && user.role !== 'admin') {
+      if (user.role !== "patient" && user.role !== "admin") {
         await authClient.signOut();
-        throw new Error('Acesso restrito a pacientes.');
+        throw new Error("Acesso restrito a pacientes.");
       }
 
       set({
@@ -65,12 +69,11 @@ export const useAuthStore = create<AuthState>((set, get) => ({
         isLoading: false,
       });
 
-      initializeOfflineManager(user.id).catch(err => {
-        log.warn('Failed to initialize offline manager:', err);
+      initializeOfflineManager(user.id).catch((err) => {
+        log.warn("Failed to initialize offline manager:", err);
       });
-
     } catch (error: any) {
-      set({ error: error.message || 'Erro ao fazer login', isLoading: false });
+      set({ error: error.message || "Erro ao fazer login", isLoading: false });
       throw error;
     }
   },
@@ -79,26 +82,27 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     set({ isLoading: true });
     try {
       const { user } = get();
-      
+
       if (user) {
         const cleanupTasks = [
-          clearPushToken(user.id).catch(e => log.error('Logout - clearPushToken:', e)),
-          getOfflineManager().clearQueue().catch(e => log.error('Logout - clearQueue:', e)),
-          getOfflineManager().clearCache().catch(e => log.error('Logout - clearCache:', e)),
+          clearPushToken(user.id).catch((e) => log.error("Logout - clearPushToken:", e)),
+          getOfflineManager()
+            .clearQueue()
+            .catch((e) => log.error("Logout - clearQueue:", e)),
+          getOfflineManager()
+            .clearCache()
+            .catch((e) => log.error("Logout - clearCache:", e)),
         ];
 
-        const timeout = new Promise(resolve => setTimeout(resolve, 3000));
-        await Promise.race([
-          Promise.all(cleanupTasks),
-          timeout
-        ]);
+        const timeout = new Promise((resolve) => setTimeout(resolve, 3000));
+        await Promise.race([Promise.all(cleanupTasks), timeout]);
 
         removeNotificationListeners();
         getOfflineManager().destroy();
       }
 
       await authClient.signOut();
-      
+
       set({
         user: null,
         isAuthenticated: false,
@@ -106,12 +110,12 @@ export const useAuthStore = create<AuthState>((set, get) => ({
         error: null,
       });
     } catch (error: any) {
-      log.error('Logout error:', error);
-      set({ 
-        user: null, 
-        isAuthenticated: false, 
+      log.error("Logout error:", error);
+      set({
+        user: null,
+        isAuthenticated: false,
         isLoading: false,
-        error: error.message || 'Erro ao sair'
+        error: error.message || "Erro ao sair",
       });
     }
   },
@@ -127,11 +131,11 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     // Usar o hook de subscrição de sessão do Better Auth
     const unsubscribe = authClient.useSession.subscribe(async (session: any) => {
       const neonUser = session?.data?.user;
-      
+
       if (neonUser) {
         const user = Mappers.user({
           ...neonUser,
-          role: (neonUser as any).role || 'patient'
+          role: (neonUser as any).role || "patient",
         });
 
         set({
@@ -140,13 +144,13 @@ export const useAuthStore = create<AuthState>((set, get) => ({
           isLoading: false,
         });
 
-        const appVersion = Constants.expoConfig?.version || '1.0.0';
-        registerPushToken(neonUser.id, appVersion).catch(err => {
-          log.warn('Failed to register push token:', err);
+        const appVersion = Constants.expoConfig?.version || "1.0.0";
+        registerPushToken(neonUser.id, appVersion).catch((err) => {
+          log.warn("Failed to register push token:", err);
         });
 
-        initializeOfflineManager(user.id).catch(err => {
-          log.warn('Failed to initialize offline manager:', err);
+        initializeOfflineManager(user.id).catch((err) => {
+          log.warn("Failed to initialize offline manager:", err);
         });
       } else {
         set({

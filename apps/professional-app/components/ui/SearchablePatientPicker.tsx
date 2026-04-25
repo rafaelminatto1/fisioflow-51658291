@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo } from "react";
 import {
   View,
   Text,
@@ -8,10 +8,10 @@ import {
   TextInput,
   FlatList,
   ActivityIndicator,
-} from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
-import { useColors } from '@/hooks/useColorScheme';
-import { SafeAreaView } from 'react-native-safe-area-context';
+} from "react-native";
+import { Ionicons } from "@expo/vector-icons";
+import { useColors } from "@/hooks/useColorScheme";
+import { SafeAreaView } from "react-native-safe-area-context";
 
 interface Patient {
   id: string;
@@ -37,15 +37,12 @@ export function SearchablePatientPicker({
   selectedId,
 }: SearchablePatientPickerProps) {
   const colors = useColors();
-  const [search, setSearch] = useState('');
+  const [search, setSearch] = useState("");
 
   const filteredPatients = useMemo(() => {
     if (!search) return patients;
     const term = search.toLowerCase();
-    return patients.filter(p => 
-      p.name.toLowerCase().includes(term) || 
-      p.phone?.includes(term)
-    );
+    return patients.filter((p) => p.name.toLowerCase().includes(term) || p.phone?.includes(term));
   }, [patients, search]);
 
   const renderItem = ({ item }: { item: Patient }) => (
@@ -53,11 +50,11 @@ export function SearchablePatientPicker({
       style={[
         styles.item,
         { borderBottomColor: colors.border },
-        selectedId === item.id && { backgroundColor: colors.primary + '10' }
+        selectedId === item.id && { backgroundColor: colors.primary + "10" },
       ]}
       onPress={() => {
         onSelect(item.id);
-        setSearch('');
+        setSearch("");
         onClose();
       }}
     >
@@ -67,9 +64,7 @@ export function SearchablePatientPicker({
           <Text style={[styles.itemPhone, { color: colors.textSecondary }]}>{item.phone}</Text>
         )}
       </View>
-      {selectedId === item.id && (
-        <Ionicons name="checkmark" size={20} color={colors.primary} />
-      )}
+      {selectedId === item.id && <Ionicons name="checkmark" size={20} color={colors.primary} />}
     </TouchableOpacity>
   );
 
@@ -85,7 +80,12 @@ export function SearchablePatientPicker({
           </View>
 
           <View style={styles.searchContainer}>
-            <View style={[styles.searchBar, { backgroundColor: colors.surface, borderColor: colors.border }]}>
+            <View
+              style={[
+                styles.searchBar,
+                { backgroundColor: colors.surface, borderColor: colors.border },
+              ]}
+            >
               <Ionicons name="search" size={20} color={colors.textSecondary} />
               <TextInput
                 style={[styles.searchInput, { color: colors.text }]}
@@ -96,7 +96,7 @@ export function SearchablePatientPicker({
                 autoFocus
               />
               {search.length > 0 && (
-                <TouchableOpacity onPress={() => setSearch('')}>
+                <TouchableOpacity onPress={() => setSearch("")}>
                   <Ionicons name="close-circle" size={18} color={colors.textSecondary} />
                 </TouchableOpacity>
               )}
@@ -108,7 +108,7 @@ export function SearchablePatientPicker({
           ) : (
             <FlatList
               data={filteredPatients}
-              keyExtractor={item => item.id}
+              keyExtractor={(item) => item.id}
               renderItem={renderItem}
               contentContainerStyle={styles.list}
               ListEmptyComponent={() => (
@@ -127,25 +127,25 @@ export function SearchablePatientPicker({
 const styles = StyleSheet.create({
   overlay: {
     flex: 1,
-    backgroundColor: 'rgba(0,0,0,0.5)',
+    backgroundColor: "rgba(0,0,0,0.5)",
   },
   container: {
     flex: 1,
     marginTop: 60,
     borderTopLeftRadius: 24,
     borderTopRightRadius: 24,
-    overflow: 'hidden',
+    overflow: "hidden",
   },
   header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
     padding: 16,
     borderBottomWidth: 1,
   },
   title: {
     fontSize: 18,
-    fontWeight: '700',
+    fontWeight: "700",
   },
   closeBtn: {
     padding: 4,
@@ -154,8 +154,8 @@ const styles = StyleSheet.create({
     padding: 16,
   },
   searchBar: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     paddingHorizontal: 12,
     height: 48,
     borderRadius: 12,
@@ -170,18 +170,18 @@ const styles = StyleSheet.create({
     paddingBottom: 40,
   },
   item: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     padding: 16,
     borderBottomWidth: 1,
-    justifyContent: 'space-between',
+    justifyContent: "space-between",
   },
   itemContent: {
     flex: 1,
   },
   itemName: {
     fontSize: 16,
-    fontWeight: '500',
+    fontWeight: "500",
   },
   itemPhone: {
     fontSize: 13,
@@ -192,6 +192,6 @@ const styles = StyleSheet.create({
   },
   empty: {
     padding: 40,
-    alignItems: 'center',
+    alignItems: "center",
   },
 });

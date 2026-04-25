@@ -3,10 +3,10 @@
  * Visual indicator for password strength
  */
 
-import { useMemo } from 'react';
-import { View, Text, StyleSheet } from 'react-native';
-import { useColors } from '@/hooks/useColorScheme';
-import { getPasswordStrength, checkPasswordRequirements } from '@/lib/validation';
+import { useMemo } from "react";
+import { View, Text, StyleSheet } from "react-native";
+import { useColors } from "@/hooks/useColorScheme";
+import { getPasswordStrength, checkPasswordRequirements } from "@/lib/validation";
 
 interface PasswordStrengthProps {
   password: string;
@@ -33,9 +33,7 @@ export function PasswordStrength({ password, show = true }: PasswordStrengthProp
               styles.strengthSegment,
               {
                 backgroundColor:
-                  index <= strength.score
-                    ? strength.color || colors.border
-                    : colors.border,
+                  index <= strength.score ? strength.color || colors.border : colors.border,
               },
             ]}
           />
@@ -43,9 +41,7 @@ export function PasswordStrength({ password, show = true }: PasswordStrengthProp
       </View>
 
       {strength.label && (
-        <Text style={[styles.label, { color: strength.color }]}>
-          {strength.label}
-        </Text>
+        <Text style={[styles.label, { color: strength.color }]}>{strength.label}</Text>
       )}
 
       {password.length > 0 && password.length < 8 && (
@@ -75,7 +71,7 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   strengthBar: {
-    flexDirection: 'row',
+    flexDirection: "row",
     gap: 4,
   },
   strengthSegment: {
@@ -85,15 +81,15 @@ const styles = StyleSheet.create({
   },
   label: {
     fontSize: 12,
-    fontWeight: '600',
-    textAlign: 'center',
+    fontWeight: "600",
+    textAlign: "center",
   },
   requirements: {
     gap: 4,
   },
   requirementItem: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     gap: 6,
   },
   requirementDot: {

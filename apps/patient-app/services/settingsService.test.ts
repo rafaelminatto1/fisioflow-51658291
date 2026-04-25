@@ -2,17 +2,17 @@
  * Settings Service Tests
  */
 
-describe('SettingsService', () => {
-  it('should export settings functions', () => {
+describe("SettingsService", () => {
+  it("should export settings functions", () => {
     const exports = [
-      'getSettings',
-      'getSetting',
-      'updateSetting',
-      'toggleSetting',
-      'resetSettings',
+      "getSettings",
+      "getSetting",
+      "updateSetting",
+      "toggleSetting",
+      "resetSettings",
     ];
-    exports.forEach(exp => {
-      expect(typeof exp).toBe('string');
+    exports.forEach((exp) => {
+      expect(typeof exp).toBe("string");
     });
   });
 });

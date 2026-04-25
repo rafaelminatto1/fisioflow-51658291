@@ -7,10 +7,10 @@ import { fisioLogger as logger } from "@/lib/errors/logger";
 import { isNativePlatform, shareWithNativeSheet } from "@/lib/platform/native";
 
 export interface ShareOptions {
-	title?: string;
-	text?: string;
-	url?: string;
-	dialogTitle?: string;
+  title?: string;
+  text?: string;
+  url?: string;
+  dialogTitle?: string;
 }
 
 /**
@@ -18,35 +18,35 @@ export interface ShareOptions {
  * @param options Opções de compartilhamento
  */
 export async function shareContent(options: ShareOptions): Promise<void> {
-	if (!isNativePlatform()) {
-		// Fallback para web
-		if (navigator.share) {
-			await navigator.share({
-				title: options.title,
-				text: options.text,
-				url: options.url,
-			});
-			return;
-		}
+  if (!isNativePlatform()) {
+    // Fallback para web
+    if (navigator.share) {
+      await navigator.share({
+        title: options.title,
+        text: options.text,
+        url: options.url,
+      });
+      return;
+    }
 
-		logger.warn("Share não disponível neste dispositivo", undefined, "share");
-		return;
-	}
+    logger.warn("Share não disponível neste dispositivo", undefined, "share");
+    return;
+  }
 
-	try {
-		await shareWithNativeSheet({
-			title: options.title ?? "FisioFlow",
-			text: options.text,
-			url: options.url,
-			dialogTitle: options.dialogTitle ?? "Compartilhar",
-		});
-	} catch (error: unknown) {
-		if (error instanceof Error && error.message?.includes("User canceled")) {
-			// Usuário cancelou, não é um erro
-			return;
-		}
-		logger.error("Erro ao compartilhar", error, "share");
-	}
+  try {
+    await shareWithNativeSheet({
+      title: options.title ?? "FisioFlow",
+      text: options.text,
+      url: options.url,
+      dialogTitle: options.dialogTitle ?? "Compartilhar",
+    });
+  } catch (error: unknown) {
+    if (error instanceof Error && error.message?.includes("User canceled")) {
+      // Usuário cancelou, não é um erro
+      return;
+    }
+    logger.error("Erro ao compartilhar", error, "share");
+  }
 }
 
 /**
@@ -54,18 +54,15 @@ export async function shareContent(options: ShareOptions): Promise<void> {
  * @param exerciseId ID do exercício
  * @param exerciseName Nome do exercício
  */
-export async function shareExercise(
-	exerciseId: string,
-	exerciseName: string,
-): Promise<void> {
-	const url = `https://fisioflow.com/exercises/${exerciseId}`;
+export async function shareExercise(exerciseId: string, exerciseName: string): Promise<void> {
+  const url = `https://fisioflow.com/exercises/${exerciseId}`;
 
-	await shareContent({
-		title: exerciseName,
-		text: `Confira este exercício do FisioFlow: ${exerciseName}`,
-		url: url,
-		dialogTitle: "Compartilhar Exercício",
-	});
+  await shareContent({
+    title: exerciseName,
+    text: `Confira este exercício do FisioFlow: ${exerciseName}`,
+    url: url,
+    dialogTitle: "Compartilhar Exercício",
+  });
 }
 
 /**
@@ -73,59 +70,49 @@ export async function shareExercise(
  * @param pdfUrl URL do PDF
  * @param title Título do relatório
  */
-export async function shareReport(
-	pdfUrl: string,
-	title: string,
-): Promise<void> {
-	await shareContent({
-		title: title,
-		text: `Relatório: ${title}`,
-		url: pdfUrl,
-		dialogTitle: "Compartilhar Relatório",
-	});
+export async function shareReport(pdfUrl: string, title: string): Promise<void> {
+  await shareContent({
+    title: title,
+    text: `Relatório: ${title}`,
+    url: pdfUrl,
+    dialogTitle: "Compartilhar Relatório",
+  });
 }
 
 /**
  * Compartilha o app FisioFlow
  */
 export async function shareApp(): Promise<void> {
-	await shareContent({
-		title: "FisioFlow - Gestão para Fisioterapia",
-		text: "Conheça o FisioFlow, o sistema completo para gestão de clínicas de fisioterapia!",
-		url: "https://fisioflow.com",
-		dialogTitle: "Convide um colega",
-	});
+  await shareContent({
+    title: "FisioFlow - Gestão para Fisioterapia",
+    text: "Conheça o FisioFlow, o sistema completo para gestão de clínicas de fisioterapia!",
+    url: "https://fisioflow.com",
+    dialogTitle: "Convide um colega",
+  });
 }
 
 /**
  * Compartilha mensagem do WhatsApp
  */
-export async function shareWhatsApp(
-	phone: string,
-	message: string,
-): Promise<void> {
-	const url = `https://wa.me/${phone}?text=${encodeURIComponent(message)}`;
+export async function shareWhatsApp(phone: string, message: string): Promise<void> {
+  const url = `https://wa.me/${phone}?text=${encodeURIComponent(message)}`;
 
-	await shareContent({
-		title: "WhatsApp",
-		url: url,
-		dialogTitle: "Enviar pelo WhatsApp",
-	});
+  await shareContent({
+    title: "WhatsApp",
+    url: url,
+    dialogTitle: "Enviar pelo WhatsApp",
+  });
 }
 
 /**
  * Compartilha por email
  */
-export async function shareEmail(
-	to: string,
-	subject: string,
-	body: string,
-): Promise<void> {
-	const url = `mailto:${to}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
+export async function shareEmail(to: string, subject: string, body: string): Promise<void> {
+  const url = `mailto:${to}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
 
-	await shareContent({
-		title: "Email",
-		url: url,
-		dialogTitle: "Enviar por Email",
-	});
+  await shareContent({
+    title: "Email",
+    url: url,
+    dialogTitle: "Enviar por Email",
+  });
 }

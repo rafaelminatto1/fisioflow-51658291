@@ -8,77 +8,78 @@ let _detector: PoseDetector | null = null;
 let _initPromise: Promise<void> | null = null;
 
 export const useMoveNet = (videoRef: React.RefObject<HTMLVideoElement | null>) => {
-	const [aiEnabled, setAiEnabled] = useState(false);
-	const [aiLoading, setAiLoading] = useState(false);
-	const [poseKeypoints, setPoseKeypoints] = useState<Keypoint[] | null>(null);
-	const isRunningRef = useRef(false);
-	const rafRef = useRef<number | null>(null);
+  const [aiEnabled, setAiEnabled] = useState(false);
+  const [aiLoading, setAiLoading] = useState(false);
+  const [poseKeypoints, setPoseKeypoints] = useState<Keypoint[] | null>(null);
+  const isRunningRef = useRef(false);
+  const rafRef = useRef<number | null>(null);
 
-	const detect = useCallback(async () => {
-		if (!isRunningRef.current) return;
-		
-		// Handle both react-webcam ref and standard HTMLVideoElement ref
-		const video = (videoRef.current as any)?.video || videoRef.current;
-		
-		if (video && _detector && video.readyState >= 2) { // 2 = HAVE_CURRENT_DATA
-			try {
-				const poses = await _detector.estimatePoses(video);
-				if (poses[0]?.keypoints) setPoseKeypoints(poses[0].keypoints);
-			} catch (err) {
-				console.error("TF.js estimatePoses error:", err);
-			}
-		}
-		if (isRunningRef.current) {
-			rafRef.current = requestAnimationFrame(detect);
-		}
-	}, [videoRef]);
+  const detect = useCallback(async () => {
+    if (!isRunningRef.current) return;
 
-	const startMoveNet = useCallback(async () => {
-		if (isRunningRef.current) return;
-		setAiEnabled(true);
-		isRunningRef.current = true;
-		
-		if (!_detector) {
-			setAiLoading(true);
-			try {
-				if (!_initPromise) {
-					_initPromise = (async () => {
-						_detector = await createMoveNetDetector();
-					})();
-				}
-				await _initPromise;
-			} catch (err) {
-				console.error("MoveNet init failed:", err);
-				setAiEnabled(false);
-				isRunningRef.current = false;
-				setAiLoading(false);
-				return;
-			}
-			setAiLoading(false);
-		}
+    // Handle both react-webcam ref and standard HTMLVideoElement ref
+    const video = (videoRef.current as any)?.video || videoRef.current;
 
-		detect();
-	}, [detect]);
+    if (video && _detector && video.readyState >= 2) {
+      // 2 = HAVE_CURRENT_DATA
+      try {
+        const poses = await _detector.estimatePoses(video);
+        if (poses[0]?.keypoints) setPoseKeypoints(poses[0].keypoints);
+      } catch (err) {
+        console.error("TF.js estimatePoses error:", err);
+      }
+    }
+    if (isRunningRef.current) {
+      rafRef.current = requestAnimationFrame(detect);
+    }
+  }, [videoRef]);
 
-	const stopMoveNet = useCallback(() => {
-		isRunningRef.current = false;
-		if (rafRef.current) {
-			cancelAnimationFrame(rafRef.current);
-			rafRef.current = null;
-		}
-		setPoseKeypoints(null);
-		setAiEnabled(false);
-	}, []);
+  const startMoveNet = useCallback(async () => {
+    if (isRunningRef.current) return;
+    setAiEnabled(true);
+    isRunningRef.current = true;
 
-	useEffect(() => {
-		return () => {
-			isRunningRef.current = false;
-			if (rafRef.current) {
-				cancelAnimationFrame(rafRef.current);
-				rafRef.current = null;
-			}
-		};
-	}, []);
+    if (!_detector) {
+      setAiLoading(true);
+      try {
+        if (!_initPromise) {
+          _initPromise = (async () => {
+            _detector = await createMoveNetDetector();
+          })();
+        }
+        await _initPromise;
+      } catch (err) {
+        console.error("MoveNet init failed:", err);
+        setAiEnabled(false);
+        isRunningRef.current = false;
+        setAiLoading(false);
+        return;
+      }
+      setAiLoading(false);
+    }
 
-	return { aiEnabled, aiLoading, poseKeypoints, startMoveNet, stopMoveNet };
+    detect();
+  }, [detect]);
+
+  const stopMoveNet = useCallback(() => {
+    isRunningRef.current = false;
+    if (rafRef.current) {
+      cancelAnimationFrame(rafRef.current);
+      rafRef.current = null;
+    }
+    setPoseKeypoints(null);
+    setAiEnabled(false);
+  }, []);
+
+  useEffect(() => {
+    return () => {
+      isRunningRef.current = false;
+      if (rafRef.current) {
+        cancelAnimationFrame(rafRef.current);
+        rafRef.current = null;
+      }
+    };
+  }, []);
+
+  return { aiEnabled, aiLoading, poseKeypoints, startMoveNet, stopMoveNet };
 };

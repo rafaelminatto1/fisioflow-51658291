@@ -14,7 +14,7 @@ test.describe('Produção - Validação de Acesso FisioFlow 2026', () => {
     // 3. Clicar no botão de entrar
     console.log('Procurando botão de login...');
     const loginButton = page.locator('button:has-text("Entrar"), button[type="submit"], .btn-primary').first();
-    
+
     // Diagnóstico se falhar
     try {
       await loginButton.waitFor({ state: 'visible', timeout: 10000 });
@@ -33,13 +33,13 @@ test.describe('Produção - Validação de Acesso FisioFlow 2026', () => {
     // 5. Validar elementos logados
     const isDashboard = page.url().includes('dashboard');
     const isAgenda = page.url().includes('agenda');
-    
+
     if (isDashboard) {
       await expect(page.locator('text=Dashboard')).toBeVisible();
     } else if (isAgenda) {
       await expect(page.locator('text=Agenda')).toBeVisible();
     }
-    
+
     // Validar se o nome do usuário aparece (ajustar se necessário)
     // await expect(page.locator('text=Rafael')).toBeVisible();
 

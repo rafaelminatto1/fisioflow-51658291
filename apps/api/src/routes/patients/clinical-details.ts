@@ -1,4 +1,4 @@
-import { createPool } from '../../lib/db';
+import { createPool } from "../../lib/db";
 import {
   type PatientPayload,
   type PatientRouteApp,
@@ -15,11 +15,11 @@ import {
   normalizePathologyRow,
   normalizeSurgeryRow,
   normalizeMedicalReturnRow,
-} from './shared';
+} from "./shared";
 
 export function registerPatientClinicalDetailRoutes(app: PatientRouteApp) {
-  app.get('/:id/medical-records', async (c) => {
-    const user = c.get('user');
+  app.get("/:id/medical-records", async (c) => {
+    const user = c.get("user");
     const db = await createPool(c.env);
     const { id } = c.req.param();
 
@@ -37,8 +37,8 @@ export function registerPatientClinicalDetailRoutes(app: PatientRouteApp) {
     return c.json({ data: result.rows.map((row) => normalizeMedicalRecordRow(row as DbRow)) });
   });
 
-  app.post('/:id/medical-records', async (c) => {
-    const user = c.get('user');
+  app.post("/:id/medical-records", async (c) => {
+    const user = c.get("user");
     const db = await createPool(c.env);
     const { id } = c.req.param();
     const body = (await c.req.json()) as PatientPayload;
@@ -95,8 +95,8 @@ export function registerPatientClinicalDetailRoutes(app: PatientRouteApp) {
     return c.json({ data: normalizeMedicalRecordRow(result.rows[0] as DbRow) }, 201);
   });
 
-  app.put('/:id/medical-records/:recordId', async (c) => {
-    const user = c.get('user');
+  app.put("/:id/medical-records/:recordId", async (c) => {
+    const user = c.get("user");
     const db = await createPool(c.env);
     const { id, recordId } = c.req.param();
     const body = (await c.req.json()) as PatientPayload;
@@ -137,12 +137,12 @@ export function registerPatientClinicalDetailRoutes(app: PatientRouteApp) {
     );
 
     const row = result.rows[0] as DbRow | undefined;
-    if (!row) return c.json({ error: 'Prontuário não encontrado' }, 404);
+    if (!row) return c.json({ error: "Prontuário não encontrado" }, 404);
     return c.json({ data: normalizeMedicalRecordRow(row) });
   });
 
-  app.delete('/:id/medical-records/:recordId', async (c) => {
-    const user = c.get('user');
+  app.delete("/:id/medical-records/:recordId", async (c) => {
+    const user = c.get("user");
     const db = await createPool(c.env);
     const { id, recordId } = c.req.param();
 
@@ -159,8 +159,8 @@ export function registerPatientClinicalDetailRoutes(app: PatientRouteApp) {
     return c.json({ ok: true });
   });
 
-  app.get('/:id/physical-examinations', async (c) => {
-    const user = c.get('user');
+  app.get("/:id/physical-examinations", async (c) => {
+    const user = c.get("user");
     const db = await createPool(c.env);
     const { id } = c.req.param();
 
@@ -175,11 +175,13 @@ export function registerPatientClinicalDetailRoutes(app: PatientRouteApp) {
       [id, user.organizationId],
     );
 
-    return c.json({ data: result.rows.map((row) => normalizePhysicalExaminationRow(row as DbRow)) });
+    return c.json({
+      data: result.rows.map((row) => normalizePhysicalExaminationRow(row as DbRow)),
+    });
   });
 
-  app.post('/:id/physical-examinations', async (c) => {
-    const user = c.get('user');
+  app.post("/:id/physical-examinations", async (c) => {
+    const user = c.get("user");
     const db = await createPool(c.env);
     const { id } = c.req.param();
     const body = (await c.req.json()) as PatientPayload;
@@ -245,8 +247,8 @@ export function registerPatientClinicalDetailRoutes(app: PatientRouteApp) {
     return c.json({ data: normalizePhysicalExaminationRow(result.rows[0] as DbRow) }, 201);
   });
 
-  app.put('/:id/physical-examinations/:examId', async (c) => {
-    const user = c.get('user');
+  app.put("/:id/physical-examinations/:examId", async (c) => {
+    const user = c.get("user");
     const db = await createPool(c.env);
     const { id, examId } = c.req.param();
     const body = (await c.req.json()) as PatientPayload;
@@ -276,7 +278,9 @@ export function registerPatientClinicalDetailRoutes(app: PatientRouteApp) {
       [
         nullableString(body.record_date),
         nullableString(body.created_by),
-        body.vital_signs !== undefined ? JSON.stringify(parseJsonObject(body.vital_signs) ?? {}) : null,
+        body.vital_signs !== undefined
+          ? JSON.stringify(parseJsonObject(body.vital_signs) ?? {})
+          : null,
         nullableString(body.general_appearance),
         nullableString(body.heent),
         nullableString(body.cardiovascular),
@@ -293,12 +297,12 @@ export function registerPatientClinicalDetailRoutes(app: PatientRouteApp) {
     );
 
     const row = result.rows[0] as DbRow | undefined;
-    if (!row) return c.json({ error: 'Exame físico não encontrado' }, 404);
+    if (!row) return c.json({ error: "Exame físico não encontrado" }, 404);
     return c.json({ data: normalizePhysicalExaminationRow(row) });
   });
 
-  app.delete('/:id/physical-examinations/:examId', async (c) => {
-    const user = c.get('user');
+  app.delete("/:id/physical-examinations/:examId", async (c) => {
+    const user = c.get("user");
     const db = await createPool(c.env);
     const { id, examId } = c.req.param();
 
@@ -315,8 +319,8 @@ export function registerPatientClinicalDetailRoutes(app: PatientRouteApp) {
     return c.json({ ok: true });
   });
 
-  app.get('/:id/treatment-plans', async (c) => {
-    const user = c.get('user');
+  app.get("/:id/treatment-plans", async (c) => {
+    const user = c.get("user");
     const db = await createPool(c.env);
     const { id } = c.req.param();
 
@@ -334,8 +338,8 @@ export function registerPatientClinicalDetailRoutes(app: PatientRouteApp) {
     return c.json({ data: result.rows.map((row) => normalizeTreatmentPlanRow(row as DbRow)) });
   });
 
-  app.post('/:id/treatment-plans', async (c) => {
-    const user = c.get('user');
+  app.post("/:id/treatment-plans", async (c) => {
+    const user = c.get("user");
     const db = await createPool(c.env);
     const { id } = c.req.param();
     const body = (await c.req.json()) as PatientPayload;
@@ -389,8 +393,8 @@ export function registerPatientClinicalDetailRoutes(app: PatientRouteApp) {
     return c.json({ data: normalizeTreatmentPlanRow(result.rows[0] as DbRow) }, 201);
   });
 
-  app.put('/:id/treatment-plans/:planId', async (c) => {
-    const user = c.get('user');
+  app.put("/:id/treatment-plans/:planId", async (c) => {
+    const user = c.get("user");
     const db = await createPool(c.env);
     const { id, planId } = c.req.param();
     const body = (await c.req.json()) as PatientPayload;
@@ -416,11 +420,21 @@ export function registerPatientClinicalDetailRoutes(app: PatientRouteApp) {
       [
         nullableString(body.record_date),
         nullableString(body.created_by),
-        body.diagnosis !== undefined ? JSON.stringify(Array.isArray(body.diagnosis) ? body.diagnosis : []) : null,
-        body.objectives !== undefined ? JSON.stringify(Array.isArray(body.objectives) ? body.objectives : []) : null,
-        body.procedures !== undefined ? JSON.stringify(Array.isArray(body.procedures) ? body.procedures : []) : null,
-        body.exercises !== undefined ? JSON.stringify(Array.isArray(body.exercises) ? body.exercises : []) : null,
-        body.recommendations !== undefined ? JSON.stringify(Array.isArray(body.recommendations) ? body.recommendations : []) : null,
+        body.diagnosis !== undefined
+          ? JSON.stringify(Array.isArray(body.diagnosis) ? body.diagnosis : [])
+          : null,
+        body.objectives !== undefined
+          ? JSON.stringify(Array.isArray(body.objectives) ? body.objectives : [])
+          : null,
+        body.procedures !== undefined
+          ? JSON.stringify(Array.isArray(body.procedures) ? body.procedures : [])
+          : null,
+        body.exercises !== undefined
+          ? JSON.stringify(Array.isArray(body.exercises) ? body.exercises : [])
+          : null,
+        body.recommendations !== undefined
+          ? JSON.stringify(Array.isArray(body.recommendations) ? body.recommendations : [])
+          : null,
         nullableString(body.follow_up_date),
         planId,
         id,
@@ -429,12 +443,12 @@ export function registerPatientClinicalDetailRoutes(app: PatientRouteApp) {
     );
 
     const row = result.rows[0] as DbRow | undefined;
-    if (!row) return c.json({ error: 'Plano de tratamento não encontrado' }, 404);
+    if (!row) return c.json({ error: "Plano de tratamento não encontrado" }, 404);
     return c.json({ data: normalizeTreatmentPlanRow(row) });
   });
 
-  app.delete('/:id/treatment-plans/:planId', async (c) => {
-    const user = c.get('user');
+  app.delete("/:id/treatment-plans/:planId", async (c) => {
+    const user = c.get("user");
     const db = await createPool(c.env);
     const { id, planId } = c.req.param();
 
@@ -451,14 +465,14 @@ export function registerPatientClinicalDetailRoutes(app: PatientRouteApp) {
     return c.json({ ok: true });
   });
 
-  app.get('/:id/attachments', async (c) => {
-    const user = c.get('user');
+  app.get("/:id/attachments", async (c) => {
+    const user = c.get("user");
     const db = await createPool(c.env);
     const { id } = c.req.param();
-    const recordId = trimmedString(c.req.query('recordId'));
+    const recordId = trimmedString(c.req.query("recordId"));
 
     const params: unknown[] = [id, user.organizationId];
-    const clauses = ['patient_id = $1::uuid', 'organization_id = $2::uuid'];
+    const clauses = ["patient_id = $1::uuid", "organization_id = $2::uuid"];
 
     if (recordId) {
       params.push(recordId);
@@ -469,7 +483,7 @@ export function registerPatientClinicalDetailRoutes(app: PatientRouteApp) {
       `
         SELECT *
         FROM medical_attachments
-        WHERE ${clauses.join(' AND ')}
+        WHERE ${clauses.join(" AND ")}
         ORDER BY uploaded_at DESC
       `,
       params,
@@ -478,8 +492,8 @@ export function registerPatientClinicalDetailRoutes(app: PatientRouteApp) {
     return c.json({ data: result.rows.map((row) => normalizeMedicalAttachmentRow(row as DbRow)) });
   });
 
-  app.post('/:id/attachments', async (c) => {
-    const user = c.get('user');
+  app.post("/:id/attachments", async (c) => {
+    const user = c.get("user");
     const db = await createPool(c.env);
     const { id } = c.req.param();
     const body = (await c.req.json()) as PatientPayload;
@@ -522,9 +536,9 @@ export function registerPatientClinicalDetailRoutes(app: PatientRouteApp) {
         id,
         user.organizationId,
         nullableString(body.record_id),
-        trimmedString(body.file_name) ?? trimmedString(body.name) ?? 'arquivo',
-        trimmedString(body.file_url) ?? '',
-        trimmedString(body.file_type) ?? 'application/octet-stream',
+        trimmedString(body.file_name) ?? trimmedString(body.name) ?? "arquivo",
+        trimmedString(body.file_url) ?? "",
+        trimmedString(body.file_type) ?? "application/octet-stream",
         nullableNumber(body.file_size),
         nullableString(body.uploaded_by),
         nullableString(body.category),
@@ -535,8 +549,8 @@ export function registerPatientClinicalDetailRoutes(app: PatientRouteApp) {
     return c.json({ data: normalizeMedicalAttachmentRow(result.rows[0] as DbRow) }, 201);
   });
 
-  app.delete('/:id/attachments/:attachmentId', async (c) => {
-    const user = c.get('user');
+  app.delete("/:id/attachments/:attachmentId", async (c) => {
+    const user = c.get("user");
     const db = await createPool(c.env);
     const { id, attachmentId } = c.req.param();
 
@@ -553,8 +567,8 @@ export function registerPatientClinicalDetailRoutes(app: PatientRouteApp) {
     return c.json({ ok: true });
   });
 
-  app.get('/:id/pathologies', async (c) => {
-    const user = c.get('user');
+  app.get("/:id/pathologies", async (c) => {
+    const user = c.get("user");
     const db = await createPool(c.env);
     const { id } = c.req.param();
 
@@ -572,8 +586,8 @@ export function registerPatientClinicalDetailRoutes(app: PatientRouteApp) {
     return c.json({ data: result.rows.map((row) => normalizePathologyRow(row as DbRow)) });
   });
 
-  app.post('/:id/pathologies', async (c) => {
-    const user = c.get('user');
+  app.post("/:id/pathologies", async (c) => {
+    const user = c.get("user");
     const db = await createPool(c.env);
     const { id } = c.req.param();
     const body = (await c.req.json()) as PatientPayload;
@@ -615,7 +629,7 @@ export function registerPatientClinicalDetailRoutes(app: PatientRouteApp) {
       [
         id,
         user.organizationId,
-        trimmedString(body.pathology_name) ?? trimmedString(body.name) ?? '',
+        trimmedString(body.pathology_name) ?? trimmedString(body.name) ?? "",
         nullableString(body.cid_code ?? body.icd_code),
         nullableString(body.diagnosis_date ?? body.diagnosed_at),
         nullableString(body.severity),
@@ -630,8 +644,8 @@ export function registerPatientClinicalDetailRoutes(app: PatientRouteApp) {
     return c.json({ data: normalizePathologyRow(result.rows[0] as DbRow) }, 201);
   });
 
-  app.put('/:id/pathologies/:pathologyId', async (c) => {
-    const user = c.get('user');
+  app.put("/:id/pathologies/:pathologyId", async (c) => {
+    const user = c.get("user");
     const db = await createPool(c.env);
     const { id, pathologyId } = c.req.param();
     const body = (await c.req.json()) as PatientPayload;
@@ -670,12 +684,12 @@ export function registerPatientClinicalDetailRoutes(app: PatientRouteApp) {
     );
 
     const row = result.rows[0] as DbRow | undefined;
-    if (!row) return c.json({ error: 'Patologia não encontrada' }, 404);
+    if (!row) return c.json({ error: "Patologia não encontrada" }, 404);
     return c.json({ data: normalizePathologyRow(row) });
   });
 
-  app.delete('/:id/pathologies/:pathologyId', async (c) => {
-    const user = c.get('user');
+  app.delete("/:id/pathologies/:pathologyId", async (c) => {
+    const user = c.get("user");
     const db = await createPool(c.env);
     const { id, pathologyId } = c.req.param();
 
@@ -692,8 +706,8 @@ export function registerPatientClinicalDetailRoutes(app: PatientRouteApp) {
     return c.json({ ok: true });
   });
 
-  app.get('/:id/surgeries', async (c) => {
-    const user = c.get('user');
+  app.get("/:id/surgeries", async (c) => {
+    const user = c.get("user");
     const db = await createPool(c.env);
     const { id } = c.req.param();
 
@@ -711,8 +725,8 @@ export function registerPatientClinicalDetailRoutes(app: PatientRouteApp) {
     return c.json({ data: result.rows.map((row) => normalizeSurgeryRow(row as DbRow)) });
   });
 
-  app.post('/:id/surgeries', async (c) => {
-    const user = c.get('user');
+  app.post("/:id/surgeries", async (c) => {
+    const user = c.get("user");
     const db = await createPool(c.env);
     const { id } = c.req.param();
     const body = (await c.req.json()) as PatientPayload;
@@ -756,7 +770,7 @@ export function registerPatientClinicalDetailRoutes(app: PatientRouteApp) {
       [
         id,
         user.organizationId,
-        trimmedString(body.surgery_name ?? body.name) ?? '',
+        trimmedString(body.surgery_name ?? body.name) ?? "",
         nullableString(body.surgery_date),
         nullableString(body.surgeon_name ?? body.surgeon),
         nullableString(body.hospital),
@@ -772,8 +786,8 @@ export function registerPatientClinicalDetailRoutes(app: PatientRouteApp) {
     return c.json({ data: normalizeSurgeryRow(result.rows[0] as DbRow) }, 201);
   });
 
-  app.put('/:id/surgeries/:surgeryId', async (c) => {
-    const user = c.get('user');
+  app.put("/:id/surgeries/:surgeryId", async (c) => {
+    const user = c.get("user");
     const db = await createPool(c.env);
     const { id, surgeryId } = c.req.param();
     const body = (await c.req.json()) as PatientPayload;
@@ -814,12 +828,12 @@ export function registerPatientClinicalDetailRoutes(app: PatientRouteApp) {
     );
 
     const row = result.rows[0] as DbRow | undefined;
-    if (!row) return c.json({ error: 'Cirurgia não encontrada' }, 404);
+    if (!row) return c.json({ error: "Cirurgia não encontrada" }, 404);
     return c.json({ data: normalizeSurgeryRow(row) });
   });
 
-  app.delete('/:id/surgeries/:surgeryId', async (c) => {
-    const user = c.get('user');
+  app.delete("/:id/surgeries/:surgeryId", async (c) => {
+    const user = c.get("user");
     const db = await createPool(c.env);
     const { id, surgeryId } = c.req.param();
 
@@ -836,8 +850,8 @@ export function registerPatientClinicalDetailRoutes(app: PatientRouteApp) {
     return c.json({ ok: true });
   });
 
-  app.get('/:id/medical-returns', async (c) => {
-    const user = c.get('user');
+  app.get("/:id/medical-returns", async (c) => {
+    const user = c.get("user");
     const db = await createPool(c.env);
     const { id } = c.req.param();
 
@@ -855,8 +869,8 @@ export function registerPatientClinicalDetailRoutes(app: PatientRouteApp) {
     return c.json({ data: result.rows.map((row) => normalizeMedicalReturnRow(row as DbRow)) });
   });
 
-  app.post('/:id/medical-returns', async (c) => {
-    const user = c.get('user');
+  app.post("/:id/medical-returns", async (c) => {
+    const user = c.get("user");
     const db = await createPool(c.env);
     const { id } = c.req.param();
     const body = (await c.req.json()) as PatientPayload;
@@ -896,7 +910,7 @@ export function registerPatientClinicalDetailRoutes(app: PatientRouteApp) {
       [
         id,
         user.organizationId,
-        trimmedString(body.doctor_name) ?? '',
+        trimmedString(body.doctor_name) ?? "",
         nullableString(body.doctor_phone),
         nullableString(body.return_date),
         nullableString(body.return_period),
@@ -910,8 +924,8 @@ export function registerPatientClinicalDetailRoutes(app: PatientRouteApp) {
     return c.json({ data: normalizeMedicalReturnRow(result.rows[0] as DbRow) }, 201);
   });
 
-  app.put('/:id/medical-returns/:medicalReturnId', async (c) => {
-    const user = c.get('user');
+  app.put("/:id/medical-returns/:medicalReturnId", async (c) => {
+    const user = c.get("user");
     const db = await createPool(c.env);
     const { id, medicalReturnId } = c.req.param();
     const body = (await c.req.json()) as PatientPayload;
@@ -948,12 +962,12 @@ export function registerPatientClinicalDetailRoutes(app: PatientRouteApp) {
     );
 
     const row = result.rows[0] as DbRow | undefined;
-    if (!row) return c.json({ error: 'Retorno médico não encontrado' }, 404);
+    if (!row) return c.json({ error: "Retorno médico não encontrado" }, 404);
     return c.json({ data: normalizeMedicalReturnRow(row) });
   });
 
-  app.delete('/:id/medical-returns/:medicalReturnId', async (c) => {
-    const user = c.get('user');
+  app.delete("/:id/medical-returns/:medicalReturnId", async (c) => {
+    const user = c.get("user");
     const db = await createPool(c.env);
     const { id, medicalReturnId } = c.req.param();
 

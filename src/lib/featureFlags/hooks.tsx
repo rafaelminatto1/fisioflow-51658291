@@ -20,12 +20,7 @@
  */
 
 import React, { useEffect, useState, useCallback, createContext } from "react";
-import {
-	StatsigService,
-	FeatureFlagName,
-	DynamicConfigName,
-	StatsigOptions,
-} from "./statsig";
+import { StatsigService, FeatureFlagName, DynamicConfigName, StatsigOptions } from "./statsig";
 import { fisioLogger as logger } from "@/lib/errors/logger";
 
 // ============================================================================
@@ -33,13 +28,13 @@ import { fisioLogger as logger } from "@/lib/errors/logger";
 // ============================================================================
 
 interface FeatureFlagContextValue {
-	isInitialized: boolean;
-	userId: string | null;
+  isInitialized: boolean;
+  userId: string | null;
 }
 
 const FeatureFlagContext = createContext<FeatureFlagContextValue>({
-	isInitialized: false,
-	userId: null,
+  isInitialized: false,
+  userId: null,
 });
 FeatureFlagContext.displayName = "FeatureFlagContext";
 
@@ -48,42 +43,42 @@ FeatureFlagContext.displayName = "FeatureFlagContext";
  * Wraps your app to enable Statsig functionality
  */
 export function FeatureFlagProvider({
-	children,
-	sdkKey,
-	user,
+  children,
+  sdkKey,
+  user,
 }: {
-	children: React.ReactNode;
-	sdkKey?: string;
-	user?: { userID?: string; email?: string; [key: string]: unknown };
+  children: React.ReactNode;
+  sdkKey?: string;
+  user?: { userID?: string; email?: string; [key: string]: unknown };
 }) {
-	const [userId] = useState(user?.userID || null);
+  const [userId] = useState(user?.userID || null);
 
-	// Get the SDK key from props or environment
-	const rawKey =
-		sdkKey ||
-		import.meta.env.VITE_STATSIG_CLIENT_KEY ||
-		import.meta.env.NEXT_PUBLIC_STATSIG_CLIENT_KEY;
-	const statsigKey = rawKey?.trim();
+  // Get the SDK key from props or environment
+  const rawKey =
+    sdkKey ||
+    import.meta.env.VITE_STATSIG_CLIENT_KEY ||
+    import.meta.env.NEXT_PUBLIC_STATSIG_CLIENT_KEY;
+  const statsigKey = rawKey?.trim();
 
-	// Debug log to verify key (masked)
-	useEffect(() => {
-		if (statsigKey) {
-			logger.debug(
-				"[Statsig] Key present (Statsig removed in this build)",
-				undefined,
-				"featureFlags",
-			);
-		} else {
-			logger.debug("[Statsig] No key found", undefined, "featureFlags");
-		}
-	}, [statsigKey]);
+  // Debug log to verify key (masked)
+  useEffect(() => {
+    if (statsigKey) {
+      logger.debug(
+        "[Statsig] Key present (Statsig removed in this build)",
+        undefined,
+        "featureFlags",
+      );
+    } else {
+      logger.debug("[Statsig] No key found", undefined, "featureFlags");
+    }
+  }, [statsigKey]);
 
-	// Always render without StatsigProvider
-	return (
-		<FeatureFlagContext.Provider value={{ isInitialized: false, userId }}>
-			{children}
-		</FeatureFlagContext.Provider>
-	);
+  // Always render without StatsigProvider
+  return (
+    <FeatureFlagContext.Provider value={{ isInitialized: false, userId }}>
+      {children}
+    </FeatureFlagContext.Provider>
+  );
 }
 
 // ============================================================================
@@ -94,68 +89,68 @@ export function FeatureFlagProvider({
  * Hook to check if a feature flag is enabled
  */
 export function useFeatureFlag(
-	flagName: FeatureFlagName,
-	_options?: StatsigOptions,
+  flagName: FeatureFlagName,
+  _options?: StatsigOptions,
 ): {
-	enabled: boolean;
-	isLoading: boolean;
-	metadata?: unknown;
-	error: Error | null;
+  enabled: boolean;
+  isLoading: boolean;
+  metadata?: unknown;
+  error: Error | null;
 } {
-	const [data, setData] = useState<{
-		enabled: boolean;
-		metadata?: unknown;
-	}>(() => ({
-		enabled: StatsigService.isFeatureEnabled(flagName),
-	}));
+  const [data, setData] = useState<{
+    enabled: boolean;
+    metadata?: unknown;
+  }>(() => ({
+    enabled: StatsigService.isFeatureEnabled(flagName),
+  }));
 
-	const [isLoading, setIsLoading] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
 
-	useEffect(() => {
-		// Initial check - just get the value
-		const checkGate = () => {
-			const metadata = StatsigService.getFeatureFlagMetadata(flagName);
-			setData({
-				enabled: metadata.enabled,
-				metadata: metadata.metadata,
-			});
-			setIsLoading(false);
-		};
+  useEffect(() => {
+    // Initial check - just get the value
+    const checkGate = () => {
+      const metadata = StatsigService.getFeatureFlagMetadata(flagName);
+      setData({
+        enabled: metadata.enabled,
+        metadata: metadata.metadata,
+      });
+      setIsLoading(false);
+    };
 
-		checkGate();
-	}, [flagName]);
+    checkGate();
+  }, [flagName]);
 
-	return {
-		...data,
-		isLoading,
-		error: null,
-	};
+  return {
+    ...data,
+    isLoading,
+    error: null,
+  };
 }
 
 /**
  * Hook to check multiple feature flags at once
  */
 export function useMultipleFeatureFlags(
-	flagNames: FeatureFlagName[],
+  flagNames: FeatureFlagName[],
 ): Record<FeatureFlagName, boolean> & { isLoading: boolean } {
-	const [flags, setFlags] = useState<Record<FeatureFlagName, boolean>>(() =>
-		StatsigService.getMultipleFeatureFlags(flagNames),
-	);
-	const [isLoading, setIsLoading] = useState(false);
+  const [flags, setFlags] = useState<Record<FeatureFlagName, boolean>>(() =>
+    StatsigService.getMultipleFeatureFlags(flagNames),
+  );
+  const [isLoading, setIsLoading] = useState(false);
 
-	useEffect(() => {
-		const checkFlags = () => {
-			setFlags(StatsigService.getMultipleFeatureFlags(flagNames));
-			setIsLoading(false);
-		};
+  useEffect(() => {
+    const checkFlags = () => {
+      setFlags(StatsigService.getMultipleFeatureFlags(flagNames));
+      setIsLoading(false);
+    };
 
-		checkFlags();
-	}, [flagNames]);
+    checkFlags();
+  }, [flagNames]);
 
-	return {
-		...flags,
-		isLoading,
-	};
+  return {
+    ...flags,
+    isLoading,
+  };
 }
 
 // ============================================================================
@@ -166,40 +161,40 @@ export function useMultipleFeatureFlags(
  * Hook to get dynamic configuration
  */
 export function useDynamicConfig<T = unknown>(
-	configName: DynamicConfigName,
+  configName: DynamicConfigName,
 ): {
-	config: T | null;
-	isLoading: boolean;
-	error: Error | null;
+  config: T | null;
+  isLoading: boolean;
+  error: Error | null;
 } {
-	const [config, setConfig] = useState<T | null>(() =>
-		StatsigService.getDynamicConfig<T>(configName),
-	);
-	const [isLoading, setIsLoading] = useState(false);
+  const [config, setConfig] = useState<T | null>(() =>
+    StatsigService.getDynamicConfig<T>(configName),
+  );
+  const [isLoading, setIsLoading] = useState(false);
 
-	useEffect(() => {
-		const checkConfig = () => {
-			setConfig(StatsigService.getDynamicConfig<T>(configName));
-			setIsLoading(false);
-		};
+  useEffect(() => {
+    const checkConfig = () => {
+      setConfig(StatsigService.getDynamicConfig<T>(configName));
+      setIsLoading(false);
+    };
 
-		checkConfig();
-	}, [configName]);
+    checkConfig();
+  }, [configName]);
 
-	return { config, isLoading, error: null };
+  return { config, isLoading, error: null };
 }
 
 /**
  * Hook to get a specific value from a dynamic config
  */
 export function useConfigValue<T = unknown>(
-	configName: DynamicConfigName,
-	key: string,
-	defaultValue?: T,
+  configName: DynamicConfigName,
+  key: string,
+  defaultValue?: T,
 ): T | undefined {
-	const { config } = useDynamicConfig<Record<string, T>>(configName);
+  const { config } = useDynamicConfig<Record<string, T>>(configName);
 
-	return config?.[key] ?? defaultValue;
+  return config?.[key] ?? defaultValue;
 }
 
 // ============================================================================
@@ -210,44 +205,44 @@ export function useConfigValue<T = unknown>(
  * Hook to get experiment variant
  */
 export function useExperiment<T = string>(
-	experimentName: string,
+  experimentName: string,
 ): {
-	variant: T | null;
-	name: string;
-	isLoading: boolean;
-	logExposure: () => void;
+  variant: T | null;
+  name: string;
+  isLoading: boolean;
+  logExposure: () => void;
 } {
-	const [data, setData] = useState<{ variant: T | null; name: string }>(() => {
-		const result = StatsigService.getExperiment<T>(experimentName);
-		return {
-			variant: result?.value ?? null,
-			name: result?.name ?? "",
-		};
-	});
-	const [isLoading, setIsLoading] = useState(false);
+  const [data, setData] = useState<{ variant: T | null; name: string }>(() => {
+    const result = StatsigService.getExperiment<T>(experimentName);
+    return {
+      variant: result?.value ?? null,
+      name: result?.name ?? "",
+    };
+  });
+  const [isLoading, setIsLoading] = useState(false);
 
-	useEffect(() => {
-		const checkExperiment = () => {
-			const result = StatsigService.getExperiment<T>(experimentName);
-			setData({
-				variant: result?.value ?? null,
-				name: result?.name ?? "",
-			});
-			setIsLoading(false);
-		};
+  useEffect(() => {
+    const checkExperiment = () => {
+      const result = StatsigService.getExperiment<T>(experimentName);
+      setData({
+        variant: result?.value ?? null,
+        name: result?.name ?? "",
+      });
+      setIsLoading(false);
+    };
 
-		checkExperiment();
-	}, [experimentName]);
+    checkExperiment();
+  }, [experimentName]);
 
-	const logExposure = useCallback(() => {
-		StatsigService.logExperimentExposure(experimentName);
-	}, [experimentName]);
+  const logExposure = useCallback(() => {
+    StatsigService.logExperimentExposure(experimentName);
+  }, [experimentName]);
 
-	return {
-		...data,
-		isLoading,
-		logExposure,
-	};
+  return {
+    ...data,
+    isLoading,
+    logExposure,
+  };
 }
 
 // ============================================================================
@@ -258,28 +253,28 @@ export function useExperiment<T = string>(
  * Hook for logging analytics events
  */
 export function useAnalytics(): {
-	logEvent: (
-		eventName: string,
-		value?: number,
-		metadata?: Record<string, string | number | boolean | null>,
-	) => void;
-	Analytics: typeof StatsigService.Analytics;
+  logEvent: (
+    eventName: string,
+    value?: number,
+    metadata?: Record<string, string | number | boolean | null>,
+  ) => void;
+  Analytics: typeof StatsigService.Analytics;
 } {
-	const logEvent = useCallback(
-		(
-			eventName: string,
-			value?: number,
-			metadata?: Record<string, string | number | boolean | null>,
-		) => {
-			StatsigService.logEvent(eventName, value, metadata);
-		},
-		[],
-	);
+  const logEvent = useCallback(
+    (
+      eventName: string,
+      value?: number,
+      metadata?: Record<string, string | number | boolean | null>,
+    ) => {
+      StatsigService.logEvent(eventName, value, metadata);
+    },
+    [],
+  );
 
-	return {
-		logEvent,
-		Analytics: StatsigService.Analytics,
-	};
+  return {
+    logEvent,
+    Analytics: StatsigService.Analytics,
+  };
 }
 
 // ============================================================================
@@ -290,42 +285,42 @@ export function useAnalytics(): {
  * Hook for AI-related feature flags
  */
 export function useAIFeatures() {
-	return useMultipleFeatureFlags([
-		"ai_transcription",
-		"ai_chatbot",
-		"ai_exercise_suggestions",
-		"ai_clinsight_insights",
-	]);
+  return useMultipleFeatureFlags([
+    "ai_transcription",
+    "ai_chatbot",
+    "ai_exercise_suggestions",
+    "ai_clinsight_insights",
+  ]);
 }
 
 /**
  * Hook for clinical feature flags
  */
 export function useClinicalFeatures() {
-	return useMultipleFeatureFlags([
-		"digital_prescription",
-		"pain_map_v2",
-		"soap_records_v2",
-		"exercise_library_v2",
-	]);
+  return useMultipleFeatureFlags([
+    "digital_prescription",
+    "pain_map_v2",
+    "soap_records_v2",
+    "exercise_library_v2",
+  ]);
 }
 
 /**
  * Hook for integration feature flags
  */
 export function useIntegrationFeatures() {
-	return useMultipleFeatureFlags([
-		"whatsapp_notifications",
-		"google_calendar_sync",
-		"email_reminders",
-	]);
+  return useMultipleFeatureFlags([
+    "whatsapp_notifications",
+    "google_calendar_sync",
+    "email_reminders",
+  ]);
 }
 
 /**
  * Hook for system status
  */
 export function useSystemStatus() {
-	return useMultipleFeatureFlags(["maintenance_mode", "beta_features"]);
+  return useMultipleFeatureFlags(["maintenance_mode", "beta_features"]);
 }
 
 // ============================================================================
@@ -336,45 +331,45 @@ export function useSystemStatus() {
  * Higher-order component to conditionally render based on feature flag
  */
 export function withFeatureFlag<P extends object>(
-	flagName: FeatureFlagName,
-	fallback?: React.ComponentType<P>,
+  flagName: FeatureFlagName,
+  fallback?: React.ComponentType<P>,
 ) {
-	return function (Component: React.ComponentType<P>) {
-		return function FeatureFlagWrapper(props: P) {
-			const { enabled, isLoading } = useFeatureFlag(flagName);
+  return function (Component: React.ComponentType<P>) {
+    return function FeatureFlagWrapper(props: P) {
+      const { enabled, isLoading } = useFeatureFlag(flagName);
 
-			if (isLoading) {
-				return null; // or loading spinner
-			}
+      if (isLoading) {
+        return null; // or loading spinner
+      }
 
-			if (!enabled) {
-				return fallback ? React.createElement(fallback, props) : null;
-			}
+      if (!enabled) {
+        return fallback ? React.createElement(fallback, props) : null;
+      }
 
-			return React.createElement(Component, props);
-		};
-	};
+      return React.createElement(Component, props);
+    };
+  };
 }
 
 /**
  * Component for conditional rendering based on feature flag
  */
 export function FeatureFlag({
-	flag,
-	children,
-	invert = false,
-	fallback = null,
+  flag,
+  children,
+  invert = false,
+  fallback = null,
 }: {
-	flag: FeatureFlagName;
-	children: React.ReactNode;
-	invert?: boolean;
-	fallback?: React.ReactNode;
+  flag: FeatureFlagName;
+  children: React.ReactNode;
+  invert?: boolean;
+  fallback?: React.ReactNode;
 }) {
-	const { enabled, isLoading } = useFeatureFlag(flag);
+  const { enabled, isLoading } = useFeatureFlag(flag);
 
-	if (isLoading) return fallback;
-	if (invert) return enabled ? fallback : children;
-	return enabled ? children : fallback;
+  if (isLoading) return fallback;
+  if (invert) return enabled ? fallback : children;
+  return enabled ? children : fallback;
 }
 
 // ============================================================================

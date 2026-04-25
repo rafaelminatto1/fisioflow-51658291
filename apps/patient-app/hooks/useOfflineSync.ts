@@ -3,13 +3,13 @@
  * Integrates offline manager and network status
  */
 
-import { useState, useEffect } from 'react';
-import { getOfflineManager, SyncStatus } from '@/lib/offlineManager';
-import { useNetworkStatus } from './useNetworkStatus';
-import { useAuthStore } from '@/store/auth';
+import { useState, useEffect } from "react";
+import { getOfflineManager, SyncStatus } from "@/lib/offlineManager";
+import { useNetworkStatus } from "./useNetworkStatus";
+import { useAuthStore } from "@/store/auth";
 
 export function useOfflineSync() {
-  const {user} = useAuthStore();
+  const { user } = useAuthStore();
   const networkStatus = useNetworkStatus();
 
   const [syncStatus, setSyncStatus] = useState<SyncStatus>({
@@ -37,14 +37,14 @@ export function useOfflineSync() {
 
         return unsubscribe;
       } catch (error) {
-        console.error('Error initializing offline manager:', error);
+        console.error("Error initializing offline manager:", error);
         return () => {};
       }
     };
 
     let unsubscribe: (() => void) | null = null;
 
-    init().then(unsub => {
+    init().then((unsub) => {
       unsubscribe = unsub;
     });
 
@@ -56,7 +56,7 @@ export function useOfflineSync() {
   // Update online status based on network
   useEffect(() => {
     const isOnline = networkStatus.isConnected && networkStatus.isInternetReachable;
-    setSyncStatus(prev => ({...prev, isOnline}));
+    setSyncStatus((prev) => ({ ...prev, isOnline }));
   }, [networkStatus]);
 
   /**
@@ -73,8 +73,8 @@ export function useOfflineSync() {
    * Queue an operation
    */
   const queueOperation = async (
-    type: 'complete_exercise' | 'update_profile' | 'submit_feedback',
-    data: any
+    type: "complete_exercise" | "update_profile" | "submit_feedback",
+    data: any,
   ) => {
     if (!user?.id) return;
 

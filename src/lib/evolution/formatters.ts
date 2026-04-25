@@ -36,14 +36,16 @@ export const tryParseJSON = (text: string | undefined): any | null => {
 /**
  * Formats a JSON string or plain text into a structured summary.
  */
-export const formatClinicalSummary = (text: string | undefined): { label: string; value: string }[] | string => {
+export const formatClinicalSummary = (
+  text: string | undefined,
+): { label: string; value: string }[] | string => {
   const data = tryParseJSON(text);
   if (data && typeof data === "object") {
     return Object.entries(data)
       .filter(([_, value]) => value !== undefined && value !== null && value !== "")
       .map(([key, value]) => {
         let displayValue = "";
-        
+
         if (Array.isArray(value)) {
           displayValue = value
             .map((item: any) => {
@@ -77,9 +79,7 @@ export const formatClinicalSummary = (text: string | undefined): { label: string
 export const formatClinicalText = (text: string | undefined): string => {
   const summary = formatClinicalSummary(text);
   if (Array.isArray(summary)) {
-    return summary
-      .map((item) => `${item.label}: ${item.value}`)
-      .join("\n");
+    return summary.map((item) => `${item.label}: ${item.value}`).join("\n");
   }
   return summary;
 };

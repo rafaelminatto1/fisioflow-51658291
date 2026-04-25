@@ -3,25 +3,25 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
-import { 
-  Plus, 
-  Search, 
-  Bone, 
-  Activity, 
-  Scissors, 
-  Shield, 
-  HeartHandshake, 
-  FilterX, 
+import {
+  Plus,
+  Search,
+  Bone,
+  Activity,
+  Scissors,
+  Shield,
+  HeartHandshake,
+  FilterX,
   ChevronDown,
-  LayoutGrid
+  LayoutGrid,
 } from "lucide-react";
-import { 
-  DropdownMenu, 
-  DropdownMenuContent, 
-  DropdownMenuItem, 
-  DropdownMenuLabel, 
-  DropdownMenuSeparator, 
-  DropdownMenuTrigger 
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { TemplateCard } from "./TemplateCard";
 import type { ExerciseTemplate, PatientProfileCategory } from "@/types/workers";
@@ -120,7 +120,9 @@ function ProfileFilterTabs({ templates, activeProfile, onProfileChange }: Profil
           >
             {profile.icon}
             {profile.label}
-            <span className={`ml-1 text-[9px] px-1 rounded-full ${isActive ? "bg-white/20" : "bg-muted-foreground/10"}`}>
+            <span
+              className={`ml-1 text-[9px] px-1 rounded-full ${isActive ? "bg-white/20" : "bg-muted-foreground/10"}`}
+            >
               {count}
             </span>
           </button>
@@ -160,9 +162,7 @@ function EmptyState({ onClear }: { onClear: () => void }) {
       <div className="bg-muted p-4 rounded-full mb-4">
         <FilterX className="h-8 w-8 text-muted-foreground opacity-40" />
       </div>
-      <p className="text-sm font-semibold text-foreground">
-        Nenhum template encontrado
-      </p>
+      <p className="text-sm font-semibold text-foreground">Nenhum template encontrado</p>
       <p className="text-xs mt-1 text-muted-foreground max-w-[200px] leading-relaxed">
         Não encontramos protocolos com esses filtros específicos.
       </p>
@@ -182,14 +182,14 @@ export interface AdvancedFilters {
 }
 
 export function filterTemplates(
-	templates: ExerciseTemplate[],
-	profile: PatientProfileCategory | "all",
-	query: string,
+  templates: ExerciseTemplate[],
+  profile: PatientProfileCategory | "all",
+  query: string,
   advanced?: AdvancedFilters,
 ): ExerciseTemplate[] {
-	if (!Array.isArray(templates)) return [];
-	let result = templates;
-  
+  if (!Array.isArray(templates)) return [];
+  let result = templates;
+
   if (profile !== "all") {
     result = result.filter((t) => t.patientProfile === profile);
   }
@@ -215,7 +215,7 @@ export function filterTemplates(
         t.condition_name?.toLowerCase().includes(q) ||
         t.templateVariant?.toLowerCase().includes(q) ||
         t.bodyPart?.toLowerCase().includes(q) ||
-        t.body_part?.toLowerCase().includes(q)
+        t.body_part?.toLowerCase().includes(q),
     );
   }
 
@@ -268,12 +268,17 @@ export function TemplateSidebar({
       {/* Header */}
       <div className="flex items-center justify-between">
         <div className="space-y-0.5">
-          <h3 className="font-black text-lg tracking-tighter uppercase text-foreground">Biblioteca</h3>
+          <h3 className="font-black text-lg tracking-tighter uppercase text-foreground">
+            Biblioteca
+          </h3>
           <p className="text-[10px] text-muted-foreground font-bold uppercase tracking-widest">
             {templates.length} Protocolos Disponíveis
           </p>
         </div>
-        <Button onClick={onCreateClick} className="h-9 px-4 gap-2 font-bold shadow-sm active:scale-95 transition-transform">
+        <Button
+          onClick={onCreateClick}
+          className="h-9 px-4 gap-2 font-bold shadow-sm active:scale-95 transition-transform"
+        >
           <Plus className="h-4 w-4" />
           Novo Template
         </Button>
@@ -293,7 +298,11 @@ export function TemplateSidebar({
 
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
-            <Button variant="outline" size="sm" className={`h-9 px-3 gap-2 text-xs font-bold ${hasActiveAdvancedFilters ? "border-primary text-primary bg-primary/5" : ""}`}>
+            <Button
+              variant="outline"
+              size="sm"
+              className={`h-9 px-3 gap-2 text-xs font-bold ${hasActiveAdvancedFilters ? "border-primary text-primary bg-primary/5" : ""}`}
+            >
               <ChevronDown className="h-3.5 w-3.5" />
               Filtros
               {hasActiveAdvancedFilters && (
@@ -302,35 +311,51 @@ export function TemplateSidebar({
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end" className="w-56">
-            <DropdownMenuLabel className="text-[10px] font-black uppercase text-muted-foreground tracking-widest">Filtros Avançados</DropdownMenuLabel>
+            <DropdownMenuLabel className="text-[10px] font-black uppercase text-muted-foreground tracking-widest">
+              Filtros Avançados
+            </DropdownMenuLabel>
             <DropdownMenuSeparator />
-            
+
             {/* Dificuldade */}
             <div className="p-2 space-y-1.5">
-              <span className="text-[10px] font-bold uppercase text-muted-foreground px-2">Dificuldade</span>
-              {DIFFICULTY_OPTIONS.map(opt => (
-                <DropdownMenuItem 
+              <span className="text-[10px] font-bold uppercase text-muted-foreground px-2">
+                Dificuldade
+              </span>
+              {DIFFICULTY_OPTIONS.map((opt) => (
+                <DropdownMenuItem
                   key={opt.id}
                   className={`text-xs cursor-pointer ${advFilters.difficulty === opt.id ? "bg-primary/10 text-primary font-bold" : ""}`}
-                  onClick={() => setAdvancedFilters(prev => ({ ...prev, difficulty: prev.difficulty === opt.id ? undefined : opt.id }))}
+                  onClick={() =>
+                    setAdvancedFilters((prev) => ({
+                      ...prev,
+                      difficulty: prev.difficulty === opt.id ? undefined : opt.id,
+                    }))
+                  }
                 >
                   {opt.label}
                 </DropdownMenuItem>
               ))}
             </div>
-            
+
             <DropdownMenuSeparator />
-            
+
             {/* Região */}
             <div className="p-2 space-y-1.5">
-              <span className="text-[10px] font-bold uppercase text-muted-foreground px-2">Região</span>
+              <span className="text-[10px] font-bold uppercase text-muted-foreground px-2">
+                Região
+              </span>
               <div className="grid grid-cols-2 gap-1 px-1">
-                {BODY_PART_OPTIONS.slice(0, 6).map(opt => (
-                  <Button 
+                {BODY_PART_OPTIONS.slice(0, 6).map((opt) => (
+                  <Button
                     key={opt.id}
-                    variant="ghost" 
+                    variant="ghost"
                     className={`h-7 px-2 text-[10px] justify-start font-medium ${advFilters.bodyPart === opt.id ? "bg-primary/10 text-primary font-bold" : ""}`}
-                    onClick={() => setAdvancedFilters(prev => ({ ...prev, bodyPart: prev.bodyPart === opt.id ? undefined : opt.id }))}
+                    onClick={() =>
+                      setAdvancedFilters((prev) => ({
+                        ...prev,
+                        bodyPart: prev.bodyPart === opt.id ? undefined : opt.id,
+                      }))
+                    }
                   >
                     {opt.label}
                   </Button>
@@ -341,7 +366,7 @@ export function TemplateSidebar({
             {hasActiveAdvancedFilters && (
               <>
                 <DropdownMenuSeparator />
-                <DropdownMenuItem 
+                <DropdownMenuItem
                   className="text-xs text-destructive font-bold justify-center cursor-pointer"
                   onClick={() => setAdvancedFilters({})}
                 >
@@ -384,4 +409,3 @@ export function TemplateSidebar({
     </div>
   );
 }
-

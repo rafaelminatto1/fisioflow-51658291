@@ -5,37 +5,34 @@ import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { Textarea } from "@/components/ui/textarea";
 import {
-	CalendarOff,
-	Plus,
-	Trash2,
-	Loader2,
-	Calendar,
-	Clock,
-	Info,
-	CheckCircle2,
-	Umbrella,
-	PartyPopper,
-	GraduationCap,
-	Wrench,
-	User,
-	Pencil,
+  CalendarOff,
+  Plus,
+  Trash2,
+  Loader2,
+  Calendar,
+  Clock,
+  Info,
+  CheckCircle2,
+  Umbrella,
+  PartyPopper,
+  GraduationCap,
+  Wrench,
+  User,
+  Pencil,
 } from "lucide-react";
-import {
-	useScheduleSettings,
-	type BlockedTime,
-} from "@/hooks/useScheduleSettings";
+import { useScheduleSettings, type BlockedTime } from "@/hooks/useScheduleSettings";
 import { format, parseISO, isToday, isThisWeek, isAfter, differenceInDays } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import {
-	AlertDialog,
-	AlertDialogAction,
-	AlertDialogCancel,
-	AlertDialogContent,
-	AlertDialogDescription,
-	AlertDialogFooter,
-	AlertDialogHeader,
-	AlertDialogTitle,
-	AlertDialogTrigger,
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
@@ -43,488 +40,514 @@ import { toast } from "@/hooks/use-toast";
 import { SettingsLoadingState } from "@/components/schedule/settings/shared/SettingsLoadingState";
 
 const QUICK_TEMPLATES = [
-	{
-		title: "Férias",
-		icon: Umbrella,
-		days: 7,
-		reason: "Período de férias",
-		type: "ferias",
-		color: "from-blue-50 to-cyan-50 dark:from-blue-950/30 dark:to-cyan-950/30 border-blue-200 dark:border-blue-800",
-		borderColor: "border-l-blue-500",
-		badgeColor: "bg-blue-100 text-blue-700 dark:bg-blue-900/40 dark:text-blue-300",
-	},
-	{
-		title: "Feriado",
-		icon: PartyPopper,
-		days: 1,
-		reason: "Feriado nacional",
-		type: "feriado",
-		color: "from-green-50 to-emerald-50 dark:from-green-950/30 dark:to-emerald-950/30 border-green-200 dark:border-green-800",
-		borderColor: "border-l-emerald-500",
-		badgeColor: "bg-emerald-100 text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-300",
-	},
-	{
-		title: "Curso",
-		icon: GraduationCap,
-		days: 3,
-		reason: "Participação em curso/evento",
-		type: "curso",
-		color: "from-purple-50 to-violet-50 dark:from-purple-950/30 dark:to-violet-950/30 border-purple-200 dark:border-purple-800",
-		borderColor: "border-l-purple-500",
-		badgeColor: "bg-purple-100 text-purple-700 dark:bg-purple-900/40 dark:text-purple-300",
-	},
-	{
-		title: "Manutenção",
-		icon: Wrench,
-		days: 1,
-		reason: "Manutenção da clínica",
-		type: "manutencao",
-		color: "from-amber-50 to-orange-50 dark:from-amber-950/30 dark:to-orange-950/30 border-amber-200 dark:border-amber-800",
-		borderColor: "border-l-amber-500",
-		badgeColor: "bg-amber-100 text-amber-700 dark:bg-amber-900/40 dark:text-amber-300",
-	},
-	{
-		title: "Pessoal",
-		icon: User,
-		days: 1,
-		reason: "Motivo pessoal",
-		type: "pessoal",
-		color: "from-rose-50 to-pink-50 dark:from-rose-950/30 dark:to-pink-950/30 border-rose-200 dark:border-rose-800",
-		borderColor: "border-l-rose-500",
-		badgeColor: "bg-rose-100 text-rose-700 dark:bg-rose-900/40 dark:text-rose-300",
-	},
+  {
+    title: "Férias",
+    icon: Umbrella,
+    days: 7,
+    reason: "Período de férias",
+    type: "ferias",
+    color:
+      "from-blue-50 to-cyan-50 dark:from-blue-950/30 dark:to-cyan-950/30 border-blue-200 dark:border-blue-800",
+    borderColor: "border-l-blue-500",
+    badgeColor: "bg-blue-100 text-blue-700 dark:bg-blue-900/40 dark:text-blue-300",
+  },
+  {
+    title: "Feriado",
+    icon: PartyPopper,
+    days: 1,
+    reason: "Feriado nacional",
+    type: "feriado",
+    color:
+      "from-green-50 to-emerald-50 dark:from-green-950/30 dark:to-emerald-950/30 border-green-200 dark:border-green-800",
+    borderColor: "border-l-emerald-500",
+    badgeColor: "bg-emerald-100 text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-300",
+  },
+  {
+    title: "Curso",
+    icon: GraduationCap,
+    days: 3,
+    reason: "Participação em curso/evento",
+    type: "curso",
+    color:
+      "from-purple-50 to-violet-50 dark:from-purple-950/30 dark:to-violet-950/30 border-purple-200 dark:border-purple-800",
+    borderColor: "border-l-purple-500",
+    badgeColor: "bg-purple-100 text-purple-700 dark:bg-purple-900/40 dark:text-purple-300",
+  },
+  {
+    title: "Manutenção",
+    icon: Wrench,
+    days: 1,
+    reason: "Manutenção da clínica",
+    type: "manutencao",
+    color:
+      "from-amber-50 to-orange-50 dark:from-amber-950/30 dark:to-orange-950/30 border-amber-200 dark:border-amber-800",
+    borderColor: "border-l-amber-500",
+    badgeColor: "bg-amber-100 text-amber-700 dark:bg-amber-900/40 dark:text-amber-300",
+  },
+  {
+    title: "Pessoal",
+    icon: User,
+    days: 1,
+    reason: "Motivo pessoal",
+    type: "pessoal",
+    color:
+      "from-rose-50 to-pink-50 dark:from-rose-950/30 dark:to-pink-950/30 border-rose-200 dark:border-rose-800",
+    borderColor: "border-l-rose-500",
+    badgeColor: "bg-rose-100 text-rose-700 dark:bg-rose-900/40 dark:text-rose-300",
+  },
 ];
 
 function getTypeInfo(title: string) {
-	const normalized = title.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
-	if (normalized.includes("feria")) return QUICK_TEMPLATES[0];
-	if (normalized.includes("feriado")) return QUICK_TEMPLATES[1];
-	if (normalized.includes("curso")) return QUICK_TEMPLATES[2];
-	if (normalized.includes("manuten")) return QUICK_TEMPLATES[3];
-	if (normalized.includes("pessoal")) return QUICK_TEMPLATES[4];
-	return { borderColor: "border-l-muted-foreground", badgeColor: "bg-muted text-muted-foreground", type: "outro" };
+  const normalized = title
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "");
+  if (normalized.includes("feria")) return QUICK_TEMPLATES[0];
+  if (normalized.includes("feriado")) return QUICK_TEMPLATES[1];
+  if (normalized.includes("curso")) return QUICK_TEMPLATES[2];
+  if (normalized.includes("manuten")) return QUICK_TEMPLATES[3];
+  if (normalized.includes("pessoal")) return QUICK_TEMPLATES[4];
+  return {
+    borderColor: "border-l-muted-foreground",
+    badgeColor: "bg-muted text-muted-foreground",
+    type: "outro",
+  };
 }
 
-function filterBlockedTimes(
-	times: BlockedTime[],
-	filter: string,
-): BlockedTime[] {
-	const now = new Date();
-	switch (filter) {
-		case "active":
-			return times.filter((b) => isAfter(parseISO(b.end_date), now));
-		case "past":
-			return times.filter((b) => !isAfter(parseISO(b.end_date), now));
-		case "this_week":
-			return times.filter(
-				(b) =>
-					isThisWeek(parseISO(b.start_date)) ||
-					isThisWeek(parseISO(b.end_date)),
-			);
-		default:
-			return times;
-	}
+function filterBlockedTimes(times: BlockedTime[], filter: string): BlockedTime[] {
+  const now = new Date();
+  switch (filter) {
+    case "active":
+      return times.filter((b) => isAfter(parseISO(b.end_date), now));
+    case "past":
+      return times.filter((b) => !isAfter(parseISO(b.end_date), now));
+    case "this_week":
+      return times.filter(
+        (b) => isThisWeek(parseISO(b.start_date)) || isThisWeek(parseISO(b.end_date)),
+      );
+    default:
+      return times;
+  }
 }
 
 interface BlockedTimesManagerProps {
-	filter?: string;
+  filter?: string;
 }
 
-export function BlockedTimesManager({
-	filter = "all",
-}: BlockedTimesManagerProps) {
-	const {
-		blockedTimes,
-		createBlockedTime,
-		deleteBlockedTime,
-		isLoadingBlocked,
-		isCreatingBlocked,
-		isDeletingBlocked,
-	} = useScheduleSettings();
-	const [saved, setSaved] = useState(false);
-	const [newBlocked, setNewBlocked] = useState({
-		title: "",
-		reason: "",
-		start_date: format(new Date(), "yyyy-MM-dd"),
-		end_date: format(new Date(), "yyyy-MM-dd"),
-		start_time: "",
-		end_time: "",
-		is_all_day: true,
-		is_recurring: false,
-		recurring_days: [] as number[],
-	});
+export function BlockedTimesManager({ filter = "all" }: BlockedTimesManagerProps) {
+  const {
+    blockedTimes,
+    createBlockedTime,
+    deleteBlockedTime,
+    isLoadingBlocked,
+    isCreatingBlocked,
+    isDeletingBlocked,
+  } = useScheduleSettings();
+  const [saved, setSaved] = useState(false);
+  const [newBlocked, setNewBlocked] = useState({
+    title: "",
+    reason: "",
+    start_date: format(new Date(), "yyyy-MM-dd"),
+    end_date: format(new Date(), "yyyy-MM-dd"),
+    start_time: "",
+    end_time: "",
+    is_all_day: true,
+    is_recurring: false,
+    recurring_days: [] as number[],
+  });
 
-	const toMinutes = (value: string) => {
-		const [hours, minutes] = value.split(":").map(Number);
-		return hours * 60 + minutes;
-	};
+  const toMinutes = (value: string) => {
+    const [hours, minutes] = value.split(":").map(Number);
+    return hours * 60 + minutes;
+  };
 
-	const handleCreate = async () => {
-		if (!newBlocked.title.trim()) {
-			toast({
-				title: "Título obrigatório",
-				description: "Informe um título para o bloqueio.",
-				variant: "destructive",
-			});
-			return;
-		}
-		if (newBlocked.start_date > newBlocked.end_date) {
-			toast({
-				title: "Período inválido",
-				description: "A data de início deve ser anterior ou igual à data de fim.",
-				variant: "destructive",
-			});
-			return;
-		}
-		if (!newBlocked.is_all_day) {
-			if (!newBlocked.start_time || !newBlocked.end_time) {
-				toast({
-					title: "Horário obrigatório",
-					description: "Preencha hora início e hora fim para bloqueio parcial.",
-					variant: "destructive",
-				});
-				return;
-			}
-			if (toMinutes(newBlocked.start_time) >= toMinutes(newBlocked.end_time)) {
-				toast({
-					title: "Faixa de horário inválida",
-					description: "Hora início deve ser anterior à hora fim.",
-					variant: "destructive",
-				});
-				return;
-			}
-		}
-		try {
-			await createBlockedTime.mutateAsync({
-				...newBlocked,
-				title: newBlocked.title.trim(),
-				reason: newBlocked.reason?.trim() || "",
-				start_time: newBlocked.is_all_day ? undefined : newBlocked.start_time,
-				end_time: newBlocked.is_all_day ? undefined : newBlocked.end_time,
-			});
-			setSaved(true);
-			setTimeout(() => setSaved(false), 2000);
-			resetForm();
-		} catch {}
-	};
+  const handleCreate = async () => {
+    if (!newBlocked.title.trim()) {
+      toast({
+        title: "Título obrigatório",
+        description: "Informe um título para o bloqueio.",
+        variant: "destructive",
+      });
+      return;
+    }
+    if (newBlocked.start_date > newBlocked.end_date) {
+      toast({
+        title: "Período inválido",
+        description: "A data de início deve ser anterior ou igual à data de fim.",
+        variant: "destructive",
+      });
+      return;
+    }
+    if (!newBlocked.is_all_day) {
+      if (!newBlocked.start_time || !newBlocked.end_time) {
+        toast({
+          title: "Horário obrigatório",
+          description: "Preencha hora início e hora fim para bloqueio parcial.",
+          variant: "destructive",
+        });
+        return;
+      }
+      if (toMinutes(newBlocked.start_time) >= toMinutes(newBlocked.end_time)) {
+        toast({
+          title: "Faixa de horário inválida",
+          description: "Hora início deve ser anterior à hora fim.",
+          variant: "destructive",
+        });
+        return;
+      }
+    }
+    try {
+      await createBlockedTime.mutateAsync({
+        ...newBlocked,
+        title: newBlocked.title.trim(),
+        reason: newBlocked.reason?.trim() || "",
+        start_time: newBlocked.is_all_day ? undefined : newBlocked.start_time,
+        end_time: newBlocked.is_all_day ? undefined : newBlocked.end_time,
+      });
+      setSaved(true);
+      setTimeout(() => setSaved(false), 2000);
+      resetForm();
+    } catch {}
+  };
 
-	const resetForm = () => {
-		setNewBlocked({
-			title: "",
-			reason: "",
-			start_date: format(new Date(), "yyyy-MM-dd"),
-			end_date: format(new Date(), "yyyy-MM-dd"),
-			start_time: "",
-			end_time: "",
-			is_all_day: true,
-			is_recurring: false,
-			recurring_days: [],
-		});
-	};
+  const resetForm = () => {
+    setNewBlocked({
+      title: "",
+      reason: "",
+      start_date: format(new Date(), "yyyy-MM-dd"),
+      end_date: format(new Date(), "yyyy-MM-dd"),
+      start_time: "",
+      end_time: "",
+      is_all_day: true,
+      is_recurring: false,
+      recurring_days: [],
+    });
+  };
 
-	const applyTemplate = (template: (typeof QUICK_TEMPLATES)[0]) => {
-		const endDate = new Date();
-		endDate.setDate(endDate.getDate() + template.days);
-		setNewBlocked({
-			...newBlocked,
-			title: template.title,
-			reason: template.reason,
-			start_date: format(new Date(), "yyyy-MM-dd"),
-			end_date: format(endDate, "yyyy-MM-dd"),
-		});
-	};
+  const applyTemplate = (template: (typeof QUICK_TEMPLATES)[0]) => {
+    const endDate = new Date();
+    endDate.setDate(endDate.getDate() + template.days);
+    setNewBlocked({
+      ...newBlocked,
+      title: template.title,
+      reason: template.reason,
+      start_date: format(new Date(), "yyyy-MM-dd"),
+      end_date: format(endDate, "yyyy-MM-dd"),
+    });
+  };
 
-	const formatDateRange = (blocked: BlockedTime) => {
-		const start = format(parseISO(blocked.start_date), "dd/MM", { locale: ptBR });
-		const end = format(parseISO(blocked.end_date), "dd/MM", { locale: ptBR });
-		if (start === end) {
-			const date = parseISO(blocked.start_date);
-			return (
-				<span className="flex items-center gap-2 flex-wrap">
-					{isToday(date) && (
-						<Badge variant="secondary" className="text-xs">Hoje</Badge>
-					)}
-					<span>{start}</span>
-					{blocked.is_all_day ? (
-						<Badge variant="secondary" className="text-xs">Dia inteiro</Badge>
-					) : (
-						<span className="text-muted-foreground">
-							{blocked.start_time?.slice(0, 5)} - {blocked.end_time?.slice(0, 5)}
-						</span>
-					)}
-				</span>
-			);
-		}
-		return <span>{start} até {end}</span>;
-	};
+  const formatDateRange = (blocked: BlockedTime) => {
+    const start = format(parseISO(blocked.start_date), "dd/MM", { locale: ptBR });
+    const end = format(parseISO(blocked.end_date), "dd/MM", { locale: ptBR });
+    if (start === end) {
+      const date = parseISO(blocked.start_date);
+      return (
+        <span className="flex items-center gap-2 flex-wrap">
+          {isToday(date) && (
+            <Badge variant="secondary" className="text-xs">
+              Hoje
+            </Badge>
+          )}
+          <span>{start}</span>
+          {blocked.is_all_day ? (
+            <Badge variant="secondary" className="text-xs">
+              Dia inteiro
+            </Badge>
+          ) : (
+            <span className="text-muted-foreground">
+              {blocked.start_time?.slice(0, 5)} - {blocked.end_time?.slice(0, 5)}
+            </span>
+          )}
+        </span>
+      );
+    }
+    return (
+      <span>
+        {start} até {end}
+      </span>
+    );
+  };
 
-	if (isLoadingBlocked) {
-		return <SettingsLoadingState message="Carregando bloqueios..." />;
-	}
+  if (isLoadingBlocked) {
+    return <SettingsLoadingState message="Carregando bloqueios..." />;
+  }
 
-	const filteredTimes = filterBlockedTimes(blockedTimes ?? [], filter);
-	const activeBlockCount = (blockedTimes ?? []).filter((b) =>
-		isAfter(parseISO(b.end_date), new Date()),
-	).length;
+  const filteredTimes = filterBlockedTimes(blockedTimes ?? [], filter);
+  const activeBlockCount = (blockedTimes ?? []).filter((b) =>
+    isAfter(parseISO(b.end_date), new Date()),
+  ).length;
 
-	return (
-		<div className="grid grid-cols-1 lg:grid-cols-12 gap-5">
-			<div className="lg:col-span-8 space-y-4">
-				<div className="flex items-center justify-between">
-					<div className="flex items-center gap-2">
-						<CalendarOff className="h-4 w-4 text-muted-foreground" />
-						<span className="text-sm font-medium">
-							{filteredTimes.length} bloqueio{filteredTimes.length !== 1 ? "s" : ""}
-						</span>
-					</div>
-					<Badge variant="secondary" className="text-xs">
-						{activeBlockCount} ativo{activeBlockCount !== 1 ? "s" : ""}
-					</Badge>
-				</div>
+  return (
+    <div className="grid grid-cols-1 lg:grid-cols-12 gap-5">
+      <div className="lg:col-span-8 space-y-4">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <CalendarOff className="h-4 w-4 text-muted-foreground" />
+            <span className="text-sm font-medium">
+              {filteredTimes.length} bloqueio{filteredTimes.length !== 1 ? "s" : ""}
+            </span>
+          </div>
+          <Badge variant="secondary" className="text-xs">
+            {activeBlockCount} ativo{activeBlockCount !== 1 ? "s" : ""}
+          </Badge>
+        </div>
 
-				<div className="space-y-1.5">
-					<Label className="text-xs font-medium text-muted-foreground">Modelos Rápidos</Label>
-					<div className="grid grid-cols-2 sm:grid-cols-5 gap-2">
-						{QUICK_TEMPLATES.map((template) => {
-							const Icon = template.icon;
-							return (
-								<button
-									key={template.title}
-									type="button"
-									onClick={() => applyTemplate(template)}
-									className={cn(
-										"flex flex-col items-center gap-1.5 p-2.5 rounded-xl border-2 transition-all hover:scale-[1.02] hover:shadow-md",
-										template.color,
-									)}
-								>
-									<div className="p-1.5 bg-white/80 dark:bg-slate-900/80 rounded-lg shadow-sm">
-										<Icon className="h-4 w-4" />
-									</div>
-									<div className="text-center">
-										<p className="font-semibold text-[11px]">{template.title}</p>
-										<p className="text-[10px] text-muted-foreground">
-											{template.days}d
-										</p>
-									</div>
-								</button>
-							);
-						})}
-					</div>
-				</div>
+        <div className="space-y-1.5">
+          <Label className="text-xs font-medium text-muted-foreground">Modelos Rápidos</Label>
+          <div className="grid grid-cols-2 sm:grid-cols-5 gap-2">
+            {QUICK_TEMPLATES.map((template) => {
+              const Icon = template.icon;
+              return (
+                <button
+                  key={template.title}
+                  type="button"
+                  onClick={() => applyTemplate(template)}
+                  className={cn(
+                    "flex flex-col items-center gap-1.5 p-2.5 rounded-xl border-2 transition-all hover:scale-[1.02] hover:shadow-md",
+                    template.color,
+                  )}
+                >
+                  <div className="p-1.5 bg-white/80 dark:bg-slate-900/80 rounded-lg shadow-sm">
+                    <Icon className="h-4 w-4" />
+                  </div>
+                  <div className="text-center">
+                    <p className="font-semibold text-[11px]">{template.title}</p>
+                    <p className="text-[10px] text-muted-foreground">{template.days}d</p>
+                  </div>
+                </button>
+              );
+            })}
+          </div>
+        </div>
 
-				<div className="space-y-2">
-					{filteredTimes.length > 0 ? (
-						filteredTimes.map((blocked) => {
-							const isActive = isAfter(parseISO(blocked.end_date), new Date());
-							const typeInfo = getTypeInfo(blocked.title);
-							const daysDuration = differenceInDays(parseISO(blocked.end_date), parseISO(blocked.start_date)) + 1;
-							return (
-								<div
-									key={blocked.id}
-									className={cn(
-										"flex items-start justify-between p-3 rounded-xl border-l-4 border transition-all",
-										isActive
-											? `${typeInfo.borderColor} bg-card shadow-sm`
-											: "border-l-muted-foreground/30 bg-muted/30 opacity-60",
-									)}
-								>
-									<div className="flex-1 min-w-0">
-										<div className="flex items-center gap-2 flex-wrap">
-											<p className="font-semibold text-sm truncate">
-												{blocked.title}
-											</p>
-											<span className={cn("text-[10px] font-bold px-1.5 py-0.5 rounded", typeInfo.badgeColor)}>
-												{(blocked.title || "").toUpperCase().slice(0, 10)}
-											</span>
-											{daysDuration > 1 && (
-												<Badge variant="outline" className="text-[10px] h-5">
-													{daysDuration} dias
-												</Badge>
-											)}
-											{isActive && (
-												<Badge variant="destructive" className="text-[10px] h-5 shrink-0">
-													Ativo
-												</Badge>
-											)}
-										</div>
-										<p className="text-sm mt-0.5">{formatDateRange(blocked)}</p>
-										{blocked.reason && (
-											<p className="text-xs text-muted-foreground mt-0.5 flex items-center gap-1">
-												<Info className="h-3 w-3 shrink-0" />
-												<span className="truncate">{blocked.reason}</span>
-											</p>
-										)}
-									</div>
-									<div className="flex items-center gap-1 shrink-0 ml-2">
-										<AlertDialog>
-											<AlertDialogTrigger asChild>
-												<Button
-													size="icon"
-													variant="ghost"
-													className="h-8 w-8 hover:bg-red-100 dark:hover:bg-red-900/30 hover:text-red-600"
-												>
-													<Trash2 className="h-4 w-4" />
-												</Button>
-											</AlertDialogTrigger>
-											<AlertDialogContent>
-												<AlertDialogHeader>
-													<AlertDialogTitle>Remover bloqueio?</AlertDialogTitle>
-													<AlertDialogDescription>
-														O período &quot;{blocked.title}&quot; será liberado para agendamentos.
-													</AlertDialogDescription>
-												</AlertDialogHeader>
-												<AlertDialogFooter>
-													<AlertDialogCancel>Cancelar</AlertDialogCancel>
-													<AlertDialogAction
-														disabled={isDeletingBlocked}
-														onClick={() => deleteBlockedTime.mutate(blocked.id)}
-														className="bg-red-600 hover:bg-red-700"
-													>
-														Remover
-													</AlertDialogAction>
-												</AlertDialogFooter>
-											</AlertDialogContent>
-										</AlertDialog>
-									</div>
-								</div>
-							);
-						})
-					) : (
-						<div className="text-center py-10 px-4 rounded-xl border-2 border-dashed border-muted-foreground/25 bg-gradient-to-br from-muted/20 to-muted/5">
-							<div className="inline-flex p-3 rounded-full bg-muted/30 mb-3">
-								<CalendarOff className="h-8 w-8 text-muted-foreground/50" />
-							</div>
-							<p className="text-sm font-medium text-muted-foreground mb-0.5">
-								Nenhum bloqueio {filter !== "all" ? "com esse filtro" : "configurado"}
-							</p>
-							<p className="text-xs text-muted-foreground/70 max-w-xs mx-auto">
-								Use os modelos rápidos ou preencha o formulário ao lado
-							</p>
-						</div>
-					)}
-				</div>
-			</div>
+        <div className="space-y-2">
+          {filteredTimes.length > 0 ? (
+            filteredTimes.map((blocked) => {
+              const isActive = isAfter(parseISO(blocked.end_date), new Date());
+              const typeInfo = getTypeInfo(blocked.title);
+              const daysDuration =
+                differenceInDays(parseISO(blocked.end_date), parseISO(blocked.start_date)) + 1;
+              return (
+                <div
+                  key={blocked.id}
+                  className={cn(
+                    "flex items-start justify-between p-3 rounded-xl border-l-4 border transition-all",
+                    isActive
+                      ? `${typeInfo.borderColor} bg-card shadow-sm`
+                      : "border-l-muted-foreground/30 bg-muted/30 opacity-60",
+                  )}
+                >
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <p className="font-semibold text-sm truncate">{blocked.title}</p>
+                      <span
+                        className={cn(
+                          "text-[10px] font-bold px-1.5 py-0.5 rounded",
+                          typeInfo.badgeColor,
+                        )}
+                      >
+                        {(blocked.title || "").toUpperCase().slice(0, 10)}
+                      </span>
+                      {daysDuration > 1 && (
+                        <Badge variant="outline" className="text-[10px] h-5">
+                          {daysDuration} dias
+                        </Badge>
+                      )}
+                      {isActive && (
+                        <Badge variant="destructive" className="text-[10px] h-5 shrink-0">
+                          Ativo
+                        </Badge>
+                      )}
+                    </div>
+                    <p className="text-sm mt-0.5">{formatDateRange(blocked)}</p>
+                    {blocked.reason && (
+                      <p className="text-xs text-muted-foreground mt-0.5 flex items-center gap-1">
+                        <Info className="h-3 w-3 shrink-0" />
+                        <span className="truncate">{blocked.reason}</span>
+                      </p>
+                    )}
+                  </div>
+                  <div className="flex items-center gap-1 shrink-0 ml-2">
+                    <AlertDialog>
+                      <AlertDialogTrigger asChild>
+                        <Button
+                          size="icon"
+                          variant="ghost"
+                          className="h-8 w-8 hover:bg-red-100 dark:hover:bg-red-900/30 hover:text-red-600"
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
+                      </AlertDialogTrigger>
+                      <AlertDialogContent>
+                        <AlertDialogHeader>
+                          <AlertDialogTitle>Remover bloqueio?</AlertDialogTitle>
+                          <AlertDialogDescription>
+                            O período &quot;{blocked.title}&quot; será liberado para agendamentos.
+                          </AlertDialogDescription>
+                        </AlertDialogHeader>
+                        <AlertDialogFooter>
+                          <AlertDialogCancel>Cancelar</AlertDialogCancel>
+                          <AlertDialogAction
+                            disabled={isDeletingBlocked}
+                            onClick={() => deleteBlockedTime.mutate(blocked.id)}
+                            className="bg-red-600 hover:bg-red-700"
+                          >
+                            Remover
+                          </AlertDialogAction>
+                        </AlertDialogFooter>
+                      </AlertDialogContent>
+                    </AlertDialog>
+                  </div>
+                </div>
+              );
+            })
+          ) : (
+            <div className="text-center py-10 px-4 rounded-xl border-2 border-dashed border-muted-foreground/25 bg-gradient-to-br from-muted/20 to-muted/5">
+              <div className="inline-flex p-3 rounded-full bg-muted/30 mb-3">
+                <CalendarOff className="h-8 w-8 text-muted-foreground/50" />
+              </div>
+              <p className="text-sm font-medium text-muted-foreground mb-0.5">
+                Nenhum bloqueio {filter !== "all" ? "com esse filtro" : "configurado"}
+              </p>
+              <p className="text-xs text-muted-foreground/70 max-w-xs mx-auto">
+                Use os modelos rápidos ou preencha o formulário ao lado
+              </p>
+            </div>
+          )}
+        </div>
+      </div>
 
-			<div className="lg:col-span-4">
-				<div className="lg:sticky lg:top-4 space-y-4 p-4 rounded-2xl border bg-card shadow-sm">
-					<div className="flex items-center gap-2">
-						<div className="p-2 bg-red-100 dark:bg-red-900/30 rounded-lg">
-							<CalendarOff className="h-4 w-4 text-red-600 dark:text-red-400" />
-						</div>
-						<div>
-							<h3 className="text-sm font-semibold">Novo Bloqueio</h3>
-							<p className="text-[11px] text-muted-foreground">Preencha para bloquear horários</p>
-						</div>
-					</div>
+      <div className="lg:col-span-4">
+        <div className="lg:sticky lg:top-4 space-y-4 p-4 rounded-2xl border bg-card shadow-sm">
+          <div className="flex items-center gap-2">
+            <div className="p-2 bg-red-100 dark:bg-red-900/30 rounded-lg">
+              <CalendarOff className="h-4 w-4 text-red-600 dark:text-red-400" />
+            </div>
+            <div>
+              <h3 className="text-sm font-semibold">Novo Bloqueio</h3>
+              <p className="text-[11px] text-muted-foreground">Preencha para bloquear horários</p>
+            </div>
+          </div>
 
-					<div className="space-y-3">
-						<div className="space-y-1.5">
-							<Label className="text-xs">Título</Label>
-							<Input
-								placeholder="Ex: Férias, Feriado..."
-								value={newBlocked.title}
-								onChange={(e) => setNewBlocked({ ...newBlocked, title: e.target.value })}
-								className="h-9 text-sm"
-							/>
-						</div>
+          <div className="space-y-3">
+            <div className="space-y-1.5">
+              <Label className="text-xs">Título</Label>
+              <Input
+                placeholder="Ex: Férias, Feriado..."
+                value={newBlocked.title}
+                onChange={(e) => setNewBlocked({ ...newBlocked, title: e.target.value })}
+                className="h-9 text-sm"
+              />
+            </div>
 
-						<div className="grid grid-cols-2 gap-2">
-							<div className="space-y-1.5">
-								<Label className="text-xs flex items-center gap-1">
-									<Calendar className="h-3 w-3 text-blue-500" />
-									Início
-								</Label>
-								<Input
-									type="date"
-									value={newBlocked.start_date}
-									onChange={(e) => setNewBlocked({ ...newBlocked, start_date: e.target.value })}
-									className="h-9 text-sm"
-								/>
-							</div>
-							<div className="space-y-1.5">
-								<Label className="text-xs flex items-center gap-1">
-									<Calendar className="h-3 w-3 text-blue-500" />
-									Fim
-								</Label>
-								<Input
-									type="date"
-									value={newBlocked.end_date}
-									onChange={(e) => setNewBlocked({ ...newBlocked, end_date: e.target.value })}
-									className="h-9 text-sm"
-								/>
-							</div>
-						</div>
+            <div className="grid grid-cols-2 gap-2">
+              <div className="space-y-1.5">
+                <Label className="text-xs flex items-center gap-1">
+                  <Calendar className="h-3 w-3 text-blue-500" />
+                  Início
+                </Label>
+                <Input
+                  type="date"
+                  value={newBlocked.start_date}
+                  onChange={(e) => setNewBlocked({ ...newBlocked, start_date: e.target.value })}
+                  className="h-9 text-sm"
+                />
+              </div>
+              <div className="space-y-1.5">
+                <Label className="text-xs flex items-center gap-1">
+                  <Calendar className="h-3 w-3 text-blue-500" />
+                  Fim
+                </Label>
+                <Input
+                  type="date"
+                  value={newBlocked.end_date}
+                  onChange={(e) => setNewBlocked({ ...newBlocked, end_date: e.target.value })}
+                  className="h-9 text-sm"
+                />
+              </div>
+            </div>
 
-						<div className="flex items-center justify-between p-2.5 rounded-lg border bg-muted/30">
-							<div>
-								<Label className="text-xs font-medium">Dia inteiro</Label>
-							</div>
-							<Switch
-								checked={newBlocked.is_all_day}
-								onCheckedChange={(checked) => setNewBlocked({ ...newBlocked, is_all_day: checked })}
-							/>
-						</div>
+            <div className="flex items-center justify-between p-2.5 rounded-lg border bg-muted/30">
+              <div>
+                <Label className="text-xs font-medium">Dia inteiro</Label>
+              </div>
+              <Switch
+                checked={newBlocked.is_all_day}
+                onCheckedChange={(checked) => setNewBlocked({ ...newBlocked, is_all_day: checked })}
+              />
+            </div>
 
-						{!newBlocked.is_all_day && (
-							<div className="grid grid-cols-2 gap-2 animate-in slide-in-from-top-2 duration-300">
-								<div className="space-y-1.5">
-									<Label className="text-xs flex items-center gap-1">
-										<Clock className="h-3 w-3 text-amber-500" />
-										Hora Início
-									</Label>
-									<Input
-										type="time"
-										value={newBlocked.start_time}
-										onChange={(e) => setNewBlocked({ ...newBlocked, start_time: e.target.value })}
-										className="h-9 text-sm"
-									/>
-								</div>
-								<div className="space-y-1.5">
-									<Label className="text-xs flex items-center gap-1">
-										<Clock className="h-3 w-3 text-amber-500" />
-										Hora Fim
-									</Label>
-									<Input
-										type="time"
-										value={newBlocked.end_time}
-										onChange={(e) => setNewBlocked({ ...newBlocked, end_time: e.target.value })}
-										className="h-9 text-sm"
-									/>
-								</div>
-							</div>
-						)}
+            {!newBlocked.is_all_day && (
+              <div className="grid grid-cols-2 gap-2 animate-in slide-in-from-top-2 duration-300">
+                <div className="space-y-1.5">
+                  <Label className="text-xs flex items-center gap-1">
+                    <Clock className="h-3 w-3 text-amber-500" />
+                    Hora Início
+                  </Label>
+                  <Input
+                    type="time"
+                    value={newBlocked.start_time}
+                    onChange={(e) => setNewBlocked({ ...newBlocked, start_time: e.target.value })}
+                    className="h-9 text-sm"
+                  />
+                </div>
+                <div className="space-y-1.5">
+                  <Label className="text-xs flex items-center gap-1">
+                    <Clock className="h-3 w-3 text-amber-500" />
+                    Hora Fim
+                  </Label>
+                  <Input
+                    type="time"
+                    value={newBlocked.end_time}
+                    onChange={(e) => setNewBlocked({ ...newBlocked, end_time: e.target.value })}
+                    className="h-9 text-sm"
+                  />
+                </div>
+              </div>
+            )}
 
-						<div className="space-y-1.5">
-							<Label className="text-xs">Motivo (opcional)</Label>
-							<Textarea
-								placeholder="Motivo do bloqueio..."
-								value={newBlocked.reason}
-								onChange={(e) => setNewBlocked({ ...newBlocked, reason: e.target.value })}
-								rows={2}
-								className="resize-none text-sm"
-							/>
-						</div>
+            <div className="space-y-1.5">
+              <Label className="text-xs">Motivo (opcional)</Label>
+              <Textarea
+                placeholder="Motivo do bloqueio..."
+                value={newBlocked.reason}
+                onChange={(e) => setNewBlocked({ ...newBlocked, reason: e.target.value })}
+                rows={2}
+                className="resize-none text-sm"
+              />
+            </div>
 
-						<Button
-							type="button"
-							onClick={handleCreate}
-							disabled={isCreatingBlocked || !newBlocked.title || !newBlocked.start_date}
-							className={cn(
-								"w-full h-10 text-sm font-semibold",
-								saved ? "bg-green-600 hover:bg-green-700" : "bg-red-600 hover:bg-red-700 text-white",
-							)}
-						>
-							{saved ? (
-								<><CheckCircle2 className="h-4 w-4 mr-2" />Criado!</>
-							) : isCreatingBlocked ? (
-								<><Loader2 className="h-4 w-4 mr-2 animate-spin" />Criando...</>
-							) : (
-								<><Plus className="h-4 w-4 mr-2" />Criar Bloqueio</>
-							)}
-						</Button>
-					</div>
-				</div>
-			</div>
-		</div>
-	);
+            <Button
+              type="button"
+              onClick={handleCreate}
+              disabled={isCreatingBlocked || !newBlocked.title || !newBlocked.start_date}
+              className={cn(
+                "w-full h-10 text-sm font-semibold",
+                saved
+                  ? "bg-green-600 hover:bg-green-700"
+                  : "bg-red-600 hover:bg-red-700 text-white",
+              )}
+            >
+              {saved ? (
+                <>
+                  <CheckCircle2 className="h-4 w-4 mr-2" />
+                  Criado!
+                </>
+              ) : isCreatingBlocked ? (
+                <>
+                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                  Criando...
+                </>
+              ) : (
+                <>
+                  <Plus className="h-4 w-4 mr-2" />
+                  Criar Bloqueio
+                </>
+              )}
+            </Button>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
 }

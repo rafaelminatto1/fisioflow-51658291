@@ -9,80 +9,77 @@ import { toast } from "sonner";
 export type { Convenio };
 
 export type ConvenioFormData = Pick<
-	Convenio,
-	| "nome"
-	| "cnpj"
-	| "telefone"
-	| "email"
-	| "contato_responsavel"
-	| "valor_repasse"
-	| "prazo_pagamento_dias"
-	| "observacoes"
-	| "ativo"
+  Convenio,
+  | "nome"
+  | "cnpj"
+  | "telefone"
+  | "email"
+  | "contato_responsavel"
+  | "valor_repasse"
+  | "prazo_pagamento_dias"
+  | "observacoes"
+  | "ativo"
 >;
 
 export function useConvenios() {
-	return useQuery({
-		queryKey: ["convenios"],
-		queryFn: async () => {
-			const res = await financialApi.convenios.list();
-			return (res?.data ?? res ?? []) as Convenio[];
-		},
-	});
+  return useQuery({
+    queryKey: ["convenios"],
+    queryFn: async () => {
+      const res = await financialApi.convenios.list();
+      return (res?.data ?? res ?? []) as Convenio[];
+    },
+  });
 }
 
 export function useCreateConvenio() {
-	const queryClient = useQueryClient();
+  const queryClient = useQueryClient();
 
-	return useMutation({
-		mutationFn: async (convenio: ConvenioFormData) => {
-			const res = await financialApi.convenios.create(convenio);
-			return (res?.data ?? res) as Convenio;
-		},
-		onSuccess: () => {
-			queryClient.invalidateQueries({ queryKey: ["convenios"] });
-			toast.success("Convênio criado com sucesso");
-		},
-		onError: (error: Error) => {
-			toast.error("Erro ao criar convênio: " + error.message);
-		},
-	});
+  return useMutation({
+    mutationFn: async (convenio: ConvenioFormData) => {
+      const res = await financialApi.convenios.create(convenio);
+      return (res?.data ?? res) as Convenio;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["convenios"] });
+      toast.success("Convênio criado com sucesso");
+    },
+    onError: (error: Error) => {
+      toast.error("Erro ao criar convênio: " + error.message);
+    },
+  });
 }
 
 export function useUpdateConvenio() {
-	const queryClient = useQueryClient();
+  const queryClient = useQueryClient();
 
-	return useMutation({
-		mutationFn: async ({
-			id,
-			...updates
-		}: Partial<Convenio> & { id: string }) => {
-			const res = await financialApi.convenios.update(id, updates);
-			return (res?.data ?? res) as Convenio;
-		},
-		onSuccess: () => {
-			queryClient.invalidateQueries({ queryKey: ["convenios"] });
-			toast.success("Convênio atualizado");
-		},
-		onError: (error: Error) => {
-			toast.error("Erro ao atualizar: " + error.message);
-		},
-	});
+  return useMutation({
+    mutationFn: async ({ id, ...updates }: Partial<Convenio> & { id: string }) => {
+      const res = await financialApi.convenios.update(id, updates);
+      return (res?.data ?? res) as Convenio;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["convenios"] });
+      toast.success("Convênio atualizado");
+    },
+    onError: (error: Error) => {
+      toast.error("Erro ao atualizar: " + error.message);
+    },
+  });
 }
 
 export function useDeleteConvenio() {
-	const queryClient = useQueryClient();
+  const queryClient = useQueryClient();
 
-	return useMutation({
-		mutationFn: async (id: string) => {
-			await financialApi.convenios.delete(id);
-		},
-		onSuccess: () => {
-			queryClient.invalidateQueries({ queryKey: ["convenios"] });
-			toast.success("Convênio removido");
-		},
-		onError: (error: Error) => {
-			toast.error("Erro ao remover: " + error.message);
-		},
-	});
+  return useMutation({
+    mutationFn: async (id: string) => {
+      await financialApi.convenios.delete(id);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["convenios"] });
+      toast.success("Convênio removido");
+    },
+    onError: (error: Error) => {
+      toast.error("Erro ao remover: " + error.message);
+    },
+  });
 }

@@ -9,9 +9,9 @@ import { MainLayout } from "@/components/layout/MainLayout";
 import { MythVsTruthGenerator } from "@/components/marketing/MythVsTruthGenerator";
 
 export default function MythVsTruthPage() {
-	return (
-		<MainLayout>
-			<MythVsTruthGenerator />
-		</MainLayout>
-	);
+  return (
+    <MainLayout>
+      <MythVsTruthGenerator />
+    </MainLayout>
+  );
 }

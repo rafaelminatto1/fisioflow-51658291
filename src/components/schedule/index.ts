@@ -22,9 +22,9 @@ export { MiniCalendar } from "./MiniCalendar";
 export { AppointmentSearch } from "./AppointmentSearch";
 export { AdvancedFilters } from "./AdvancedFilters";
 export {
-	GoogleCalendarButton,
-	GoogleCalendarStatus,
-	GoogleCalendarBadge,
+  GoogleCalendarButton,
+  GoogleCalendarStatus,
+  GoogleCalendarBadge,
 } from "./GoogleCalendarButton";
 
 // ============================================================================
@@ -42,25 +42,22 @@ export { PullToRefresh } from "./PullToRefresh";
 export { SwipeNavigation } from "./SwipeNavigation";
 
 export {
-	hapticFeedback,
-	hapticLight,
-	hapticMedium,
-	hapticHeavy,
-	hapticSuccess,
-	hapticError,
-	hapticWarning,
-	hapticCustom,
-	useHaptic,
+  hapticFeedback,
+  hapticLight,
+  hapticMedium,
+  hapticHeavy,
+  hapticSuccess,
+  hapticError,
+  hapticWarning,
+  hapticCustom,
+  useHaptic,
 } from "./HapticFeedback";
 
 // Skeleton Components
 export { CalendarSkeleton } from "./skeletons/CalendarSkeleton";
 export { AppointmentCardSkeleton } from "./skeletons/AppointmentCardSkeleton";
 export { AppointmentListSkeleton } from "./skeletons/AppointmentListSkeleton";
-export {
-	CalendarSkeletonEnhanced,
-	PulseLoader,
-} from "./skeletons/CalendarSkeletonEnhanced";
+export { CalendarSkeletonEnhanced, PulseLoader } from "./skeletons/CalendarSkeletonEnhanced";
 
 export { KeyboardShortcutsEnhanced } from "./KeyboardShortcutsEnhanced";
 
@@ -75,26 +72,19 @@ export { VirtualizedDayView } from "./VirtualizedDayView";
 
 export { VirtualizedWeekView } from "./VirtualizedWeekView";
 
-export {
-	LazyAppointmentModal,
-	useAppointmentModalPreload,
-} from "./LazyAppointmentModal";
+export { LazyAppointmentModal, useAppointmentModalPreload } from "./LazyAppointmentModal";
 
 export { OptimizedImageLoader, OptimizedAvatar } from "./OptimizedImageLoader";
 
 export {
-	useBackgroundSync,
-	BackgroundSyncProvider,
-	useOfflineQueue,
-	registerSyncServiceWorker,
-	type SyncOperation,
+  useBackgroundSync,
+  BackgroundSyncProvider,
+  useOfflineQueue,
+  registerSyncServiceWorker,
+  type SyncOperation,
 } from "./BackgroundSync";
 
-export {
-	DebouncedSearch,
-	DebouncedSearchAdvanced,
-	useDebouncedSearch,
-} from "./DebouncedSearch";
+export { DebouncedSearch, DebouncedSearchAdvanced, useDebouncedSearch } from "./DebouncedSearch";
 
 // ============================================================================
 // UI Components

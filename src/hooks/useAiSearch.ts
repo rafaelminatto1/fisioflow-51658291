@@ -1,5 +1,5 @@
-import { useState } from 'react';
-import { apiClient } from '../lib/api/v2/client';
+import { useState } from "react";
+import { apiClient } from "../lib/api/v2/client";
 
 export interface AiSource {
   file_id: string;
@@ -25,8 +25,9 @@ export function useAiSearch() {
   const [error, setError] = useState<string | null>(null);
 
   const search = async (query: string): Promise<AiSearchResult | null> => {
-    const API_BASE = import.meta.env.VITE_WORKERS_API_URL || 'https://fisioflow-api.rafalegollas.workers.dev';
-    
+    const API_BASE =
+      import.meta.env.VITE_WORKERS_API_URL || "https://fisioflow-api.rafalegollas.workers.dev";
+
     setLoading(true);
     setError(null);
 
@@ -34,8 +35,8 @@ export function useAiSearch() {
       const data = await apiClient.post<AiSearchResult>(`${API_BASE}/api/ai-search`, { query });
       return data;
     } catch (err: any) {
-      console.error('AI Search Hook Error:', err);
-      setError(err.message || 'Erro inesperado ao realizar busca com IA');
+      console.error("AI Search Hook Error:", err);
+      setError(err.message || "Erro inesperado ao realizar busca com IA");
       return null;
     } finally {
       setLoading(false);

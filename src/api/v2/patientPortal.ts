@@ -79,7 +79,10 @@ export const patientPortalApi = {
     return res.data;
   },
 
-  async getAppointments(params?: { status?: string; limit?: number }): Promise<PortalAppointment[]> {
+  async getAppointments(params?: {
+    status?: string;
+    limit?: number;
+  }): Promise<PortalAppointment[]> {
     const qs = new URLSearchParams();
     if (params?.status) qs.set("status", params.status);
     if (params?.limit) qs.set("limit", String(params.limit));
@@ -105,7 +108,10 @@ export const patientPortalApi = {
     return res.data ?? [];
   },
 
-  async completeExercise(assignmentId: string, data: { sets_done?: number; reps_done?: number; pain_level?: number; notes?: string }): Promise<void> {
+  async completeExercise(
+    assignmentId: string,
+    data: { sets_done?: number; reps_done?: number; pain_level?: number; notes?: string },
+  ): Promise<void> {
     await request(`/api/patient-portal/exercises/${assignmentId}/complete`, {
       method: "POST",
       body: JSON.stringify(data),

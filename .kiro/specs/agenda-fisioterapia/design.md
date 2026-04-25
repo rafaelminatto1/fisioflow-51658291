@@ -13,21 +13,21 @@ graph TB
     A[AgendaPage] --> B[WeeklyCalendar]
     A --> C[AgendaHeader]
     A --> D[AgendaFilters]
-    
+
     B --> E[TimeSlotGrid]
     B --> F[AppointmentBlock]
-    
+
     F --> G[AppointmentModal]
     G --> H[PatientInfo]
     G --> I[SessionControls]
     G --> J[PaymentControls]
-    
+
     A --> K[NewAppointmentModal]
-    
+
     L[AgendaService] --> M[AppointmentService]
     L --> N[PatientService]
     L --> O[PaymentService]
-    
+
     P[useAgenda] --> L
     Q[useAppointments] --> M
     R[usePatients] --> N
@@ -45,26 +45,30 @@ graph TB
 ### 1. AgendaPage (Componente Principal)
 
 **Responsabilidades:**
+
 - Orquestrar todos os componentes da agenda
 - Gerenciar estado global da visualização (semana atual, filtros)
 - Controlar modals e overlays
 
 **Props Interface:**
+
 ```typescript
 interface AgendaPageProps {
   initialDate?: Date;
-  userRole: 'admin' | 'therapist' | 'intern' | 'patient';
+  userRole: "admin" | "therapist" | "intern" | "patient";
 }
 ```
 
 ### 2. WeeklyCalendar
 
 **Responsabilidades:**
+
 - Renderizar grid semanal com slots de tempo
 - Exibir agendamentos como blocos coloridos
 - Gerenciar interações de clique e drag
 
 **Props Interface:**
+
 ```typescript
 interface WeeklyCalendarProps {
   currentWeek: Date;
@@ -78,11 +82,13 @@ interface WeeklyCalendarProps {
 ### 3. AppointmentModal
 
 **Responsabilidades:**
+
 - Exibir detalhes completos do agendamento
 - Controlar ações de sessão (iniciar evolução, marcar status)
 - Gerenciar pagamentos e observações
 
 **Props Interface:**
+
 ```typescript
 interface AppointmentModalProps {
   appointment: Appointment;
@@ -96,11 +102,13 @@ interface AppointmentModalProps {
 ### 4. SessionControls
 
 **Responsabilidades:**
+
 - Botões para ações da sessão (concluir, faltar, reagendar)
 - Controle de status visual
 - Validações de permissão por role
 
 **Props Interface:**
+
 ```typescript
 interface SessionControlsProps {
   appointment: Appointment;
@@ -113,11 +121,13 @@ interface SessionControlsProps {
 ### 5. PaymentControls
 
 **Responsabilidades:**
+
 - Interface para marcar pagamentos
 - Seleção de tipo de pagamento (avulso/pacote)
 - Histórico de pagamentos da sessão
 
 **Props Interface:**
+
 ```typescript
 interface PaymentControlsProps {
   appointment: Appointment;
@@ -129,6 +139,7 @@ interface PaymentControlsProps {
 ## Modelos de Dados
 
 ### Appointment
+
 ```typescript
 interface Appointment {
   id: string;
@@ -137,13 +148,13 @@ interface Appointment {
   date: string;
   start_time: string;
   end_time: string;
-  status: 'scheduled' | 'completed' | 'missed' | 'cancelled' | 'rescheduled';
-  payment_status: 'pending' | 'paid' | 'partial';
-  session_type: 'individual' | 'group';
+  status: "scheduled" | "completed" | "missed" | "cancelled" | "rescheduled";
+  payment_status: "pending" | "paid" | "partial";
+  session_type: "individual" | "group";
   notes: string;
   created_at: string;
   updated_at: string;
-  
+
   // Relacionamentos
   patient: Patient;
   therapist: User;
@@ -152,6 +163,7 @@ interface Appointment {
 ```
 
 ### Patient (Estendido para Agenda)
+
 ```typescript
 interface Patient {
   id: string;
@@ -162,28 +174,30 @@ interface Patient {
   package_sessions: number;
   remaining_sessions: number;
   important_notes: string;
-  status: 'active' | 'inactive';
+  status: "active" | "inactive";
   created_at: string;
 }
 ```
 
 ### Payment
+
 ```typescript
 interface Payment {
   id: string;
   appointment_id: string;
   amount: number;
-  payment_type: 'session' | 'package';
+  payment_type: "session" | "package";
   sessions_count?: number;
-  payment_method: 'cash' | 'card' | 'pix' | 'transfer';
+  payment_method: "cash" | "card" | "pix" | "transfer";
   paid_at: string;
   notes: string;
 }
 ```
 
 ### SessionStatus
+
 ```typescript
-type SessionStatus = 'scheduled' | 'completed' | 'missed' | 'cancelled' | 'rescheduled';
+type SessionStatus = "scheduled" | "completed" | "missed" | "cancelled" | "rescheduled";
 
 interface StatusConfig {
   label: string;
@@ -197,6 +211,7 @@ interface StatusConfig {
 ## Design Visual
 
 ### Esquema de Cores por Status
+
 - **Agendado**: Azul (#3B82F6) - Sessão marcada, aguardando
 - **Concluído**: Verde (#10B981) - Sessão realizada com sucesso
 - **Faltou**: Vermelho (#EF4444) - Paciente não compareceu
@@ -204,6 +219,7 @@ interface StatusConfig {
 - **Reagendado**: Laranja (#F59E0B) - Sessão movida para outra data
 
 ### Layout da Agenda
+
 ```
 ┌─────────────────────────────────────────────────────────────┐
 │ [< Semana Anterior] [15-21 Jan 2024] [Próxima Semana >]    │
@@ -220,6 +236,7 @@ interface StatusConfig {
 ```
 
 ### Modal de Agendamento
+
 ```
 ┌─────────────────────────────────────────┐
 │ Agendamento - João Silva                │
@@ -266,18 +283,21 @@ interface StatusConfig {
 ## Estratégia de Testes
 
 ### Testes Unitários
+
 - Componentes individuais (WeeklyCalendar, AppointmentModal)
 - Hooks customizados (useAgenda, useAppointments)
 - Utilitários de data e formatação
 - Validações de permissão por role
 
 ### Testes de Integração
+
 - Fluxo completo de criação de agendamento
 - Sincronização em tempo real entre usuários
 - Navegação entre semanas com carregamento de dados
 - Interações modal + agenda
 
 ### Testes E2E
+
 - Cenário completo: login → agenda → criar agendamento → marcar como pago
 - Teste de permissões por tipo de usuário
 - Responsividade em diferentes dispositivos
@@ -312,24 +332,28 @@ interface StatusConfig {
 ### Controle de Acesso por Role
 
 **Administrador:**
+
 - Acesso completo a todos os agendamentos
 - Pode criar/editar/excluir qualquer agendamento
 - Acesso a relatórios financeiros
 - Gestão de usuários e permissões
 
 **Fisioterapeuta:**
+
 - Visualiza todos os agendamentos
 - Pode criar/editar agendamentos
 - Controle completo de sessões e pagamentos
 - Acesso a evoluções de todos os pacientes
 
 **Estagiário:**
+
 - Visualiza todos os agendamentos (somente leitura)
 - Pode marcar status de sessão (com supervisão)
 - Não pode alterar valores ou criar agendamentos
 - Acesso limitado a dados financeiros
 
 **Paciente:**
+
 - Visualiza apenas seus próprios agendamentos
 - Interface simplificada (lista, não calendário)
 - Não pode alterar dados

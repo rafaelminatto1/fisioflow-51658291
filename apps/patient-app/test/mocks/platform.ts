@@ -3,11 +3,9 @@
  * Mock implementations for auth and data services.
  */
 
-
 /**
  * Mock Auth State
  */
-
 
 let mockAuthUser: any = null;
 let _mockAuthError: Error | null = null;
@@ -85,9 +83,9 @@ export function getMockEvolutions(userId: string): any[] {
  */
 export function createMockUser(overrides = {}) {
   return {
-    uid: 'test-user-123',
-    email: 'test@example.com',
-    displayName: 'Test User',
+    uid: "test-user-123",
+    email: "test@example.com",
+    displayName: "Test User",
     emailVerified: true,
     ...overrides,
   };
@@ -103,7 +101,7 @@ export async function mockNetworkDelay<T>(data: T, delay: number = 100): Promise
 /**
  * Helper to simulate network error
  */
-export async function mockNetworkError(message: string = 'Network error'): Promise<never> {
+export async function mockNetworkError(message: string = "Network error"): Promise<never> {
   return new Promise((_, reject) => {
     setTimeout(() => reject(new Error(message)), 100);
   });

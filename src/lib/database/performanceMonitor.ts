@@ -10,25 +10,25 @@
 import { fisioLogger as logger } from "@/lib/errors/logger";
 
 export interface SlowQuery {
-	queryId: string;
-	calls: number;
-	totalTime: number;
-	meanTime: number;
-	maxTime: number;
-	query: string;
+  queryId: string;
+  calls: number;
+  totalTime: number;
+  meanTime: number;
+  maxTime: number;
+  query: string;
 }
 
 export interface QueryMetrics {
-	queryName: string;
-	duration: number;
-	cached: boolean;
-	timestamp: number;
+  queryName: string;
+  duration: number;
+  cached: boolean;
+  timestamp: number;
 }
 
 export interface PerformanceReport {
-	slowQueries: SlowQuery[];
-	recommendations: string[];
-	metrics: QueryMetrics[];
+  slowQueries: SlowQuery[];
+  recommendations: string[];
+  metrics: QueryMetrics[];
 }
 
 // ============================================================================
@@ -40,55 +40,55 @@ const queryMetrics: QueryMetrics[] = [];
 const MAX_METRICS = 1000;
 
 export async function trackQuery<T>(
-	queryName: string,
-	queryFn: () => Promise<T>,
-	thresholdMs: number = 1000,
+  queryName: string,
+  queryFn: () => Promise<T>,
+  thresholdMs: number = 1000,
 ): Promise<T> {
-	const startTime = performance.now();
+  const startTime = performance.now();
 
-	try {
-		const result = await queryFn();
-		const duration = performance.now() - startTime;
+  try {
+    const result = await queryFn();
+    const duration = performance.now() - startTime;
 
-		// Store metric
-		const metric: QueryMetrics = {
-			queryName,
-			duration,
-			cached: false,
-			timestamp: Date.now(),
-		};
+    // Store metric
+    const metric: QueryMetrics = {
+      queryName,
+      duration,
+      cached: false,
+      timestamp: Date.now(),
+    };
 
-		queryMetrics.push(metric);
+    queryMetrics.push(metric);
 
-		// Keep only recent metrics
-		if (queryMetrics.length > MAX_METRICS) {
-			queryMetrics.shift();
-		}
+    // Keep only recent metrics
+    if (queryMetrics.length > MAX_METRICS) {
+      queryMetrics.shift();
+    }
 
-		if (duration > thresholdMs) {
-			logger.warn(
-				`Slow query detected: ${queryName}`,
-				{ duration: `${duration.toFixed(2)}ms` },
-				"PerformanceMonitor",
-			);
-		} else {
-			logger.debug(
-				`Query: ${queryName}`,
-				{ duration: `${duration.toFixed(2)}ms` },
-				"PerformanceMonitor",
-			);
-		}
+    if (duration > thresholdMs) {
+      logger.warn(
+        `Slow query detected: ${queryName}`,
+        { duration: `${duration.toFixed(2)}ms` },
+        "PerformanceMonitor",
+      );
+    } else {
+      logger.debug(
+        `Query: ${queryName}`,
+        { duration: `${duration.toFixed(2)}ms` },
+        "PerformanceMonitor",
+      );
+    }
 
-		return result;
-	} catch (error) {
-		const duration = performance.now() - startTime;
-		logger.error(
-			`Query failed: ${queryName}`,
-			{ error, duration: `${duration.toFixed(2)}ms` },
-			"PerformanceMonitor",
-		);
-		throw error;
-	}
+    return result;
+  } catch (error) {
+    const duration = performance.now() - startTime;
+    logger.error(
+      `Query failed: ${queryName}`,
+      { error, duration: `${duration.toFixed(2)}ms` },
+      "PerformanceMonitor",
+    );
+    throw error;
+  }
 }
 
 // ============================================================================
@@ -96,56 +96,50 @@ export async function trackQuery<T>(
 // ============================================================================
 
 export async function generatePerformanceReport(): Promise<PerformanceReport> {
-	const slowQueries: SlowQuery[] = [];
-	const recommendations: string[] = [];
+  const slowQueries: SlowQuery[] = [];
+  const recommendations: string[] = [];
 
-	// Analyze query metrics
-	const slowQueryMetrics = queryMetrics.filter((m) => m.duration > 500);
-	slowQueryMetrics.forEach((m) => {
-		slowQueries.push({
-			queryId: m.queryName.substring(0, 20),
-			calls: 1,
-			totalTime: m.duration,
-			meanTime: m.duration,
-			maxTime: m.duration,
-			query: m.queryName,
-		});
-	});
+  // Analyze query metrics
+  const slowQueryMetrics = queryMetrics.filter((m) => m.duration > 500);
+  slowQueryMetrics.forEach((m) => {
+    slowQueries.push({
+      queryId: m.queryName.substring(0, 20),
+      calls: 1,
+      totalTime: m.duration,
+      meanTime: m.duration,
+      maxTime: m.duration,
+      query: m.queryName,
+    });
+  });
 
-	// Generate recommendations
-	if (slowQueryMetrics.length > 5) {
-		recommendations.push(
-			"Multiple slow queries detected - consider implementing caching",
-		);
-	}
+  // Generate recommendations
+  if (slowQueryMetrics.length > 5) {
+    recommendations.push("Multiple slow queries detected - consider implementing caching");
+  }
 
-	if (slowQueryMetrics.length > 0) {
-		const avgDuration =
-			slowQueryMetrics.reduce((sum, m) => sum + m.duration, 0) /
-			slowQueryMetrics.length;
-		if (avgDuration > 2000) {
-			recommendations.push(
-				"Average query time is high - consider using database indexes or pagination",
-			);
-		}
-	}
+  if (slowQueryMetrics.length > 0) {
+    const avgDuration =
+      slowQueryMetrics.reduce((sum, m) => sum + m.duration, 0) / slowQueryMetrics.length;
+    if (avgDuration > 2000) {
+      recommendations.push(
+        "Average query time is high - consider using database indexes or pagination",
+      );
+    }
+  }
 
-	// Check cache hit rate
-	const cachedQueries = queryMetrics.filter((m) => m.cached);
-	const cacheHitRate =
-		queryMetrics.length > 0 ? cachedQueries.length / queryMetrics.length : 0;
+  // Check cache hit rate
+  const cachedQueries = queryMetrics.filter((m) => m.cached);
+  const cacheHitRate = queryMetrics.length > 0 ? cachedQueries.length / queryMetrics.length : 0;
 
-	if (cacheHitRate < 0.3) {
-		recommendations.push(
-			"Low cache hit rate - consider implementing query caching",
-		);
-	}
+  if (cacheHitRate < 0.3) {
+    recommendations.push("Low cache hit rate - consider implementing query caching");
+  }
 
-	return {
-		slowQueries,
-		recommendations,
-		metrics: queryMetrics.slice(-100), // Last 100 metrics
-	};
+  return {
+    slowQueries,
+    recommendations,
+    metrics: queryMetrics.slice(-100), // Last 100 metrics
+  };
 }
 
 // ============================================================================
@@ -153,63 +147,63 @@ export async function generatePerformanceReport(): Promise<PerformanceReport> {
 // ============================================================================
 
 interface CacheEntry<T> {
-	data: T;
-	timestamp: number;
-	ttl: number;
+  data: T;
+  timestamp: number;
+  ttl: number;
 }
 
 const queryCache = new Map<string, CacheEntry<unknown>>();
 
 export async function cachedQuery<T>(
-	cacheKey: string,
-	queryFn: () => Promise<T>,
-	ttlMs: number = 60000, // 1 minute default
+  cacheKey: string,
+  queryFn: () => Promise<T>,
+  ttlMs: number = 60000, // 1 minute default
 ): Promise<T> {
-	const cached = queryCache.get(cacheKey);
+  const cached = queryCache.get(cacheKey);
 
-	if (cached && Date.now() - cached.timestamp < cached.ttl) {
-		logger.debug(`Cache hit: ${cacheKey}`, {}, "PerformanceMonitor");
-		return cached.data as T;
-	}
+  if (cached && Date.now() - cached.timestamp < cached.ttl) {
+    logger.debug(`Cache hit: ${cacheKey}`, {}, "PerformanceMonitor");
+    return cached.data as T;
+  }
 
-	logger.debug(`Cache miss: ${cacheKey}`, {}, "PerformanceMonitor");
+  logger.debug(`Cache miss: ${cacheKey}`, {}, "PerformanceMonitor");
 
-	// Track the actual query
-	const result = await trackQuery(cacheKey, queryFn);
+  // Track the actual query
+  const result = await trackQuery(cacheKey, queryFn);
 
-	queryCache.set(cacheKey, {
-		data: result,
-		timestamp: Date.now(),
-		ttl: ttlMs,
-	});
+  queryCache.set(cacheKey, {
+    data: result,
+    timestamp: Date.now(),
+    ttl: ttlMs,
+  });
 
-	return result;
+  return result;
 }
 
 export function clearCache(cacheKey?: string): void {
-	if (cacheKey) {
-		queryCache.delete(cacheKey);
-		logger.debug(`Cleared cache: ${cacheKey}`, {}, "PerformanceMonitor");
-	} else {
-		queryCache.clear();
-		logger.debug("Cleared all query cache", {}, "PerformanceMonitor");
-	}
+  if (cacheKey) {
+    queryCache.delete(cacheKey);
+    logger.debug(`Cleared cache: ${cacheKey}`, {}, "PerformanceMonitor");
+  } else {
+    queryCache.clear();
+    logger.debug("Cleared all query cache", {}, "PerformanceMonitor");
+  }
 }
 
 export async function preloadCache(): Promise<void> {
-	logger.info("Preloading query cache...", {}, "PerformanceMonitor");
+  logger.info("Preloading query cache...", {}, "PerformanceMonitor");
 
-	try {
-		// In production, preload critical data here
-		// For now, this is a placeholder
-		logger.info(
-			"Cache preloading is configured but no data is preloaded",
-			{},
-			"PerformanceMonitor",
-		);
-	} catch (error) {
-		logger.warn("Failed to preload cache", error, "PerformanceMonitor");
-	}
+  try {
+    // In production, preload critical data here
+    // For now, this is a placeholder
+    logger.info(
+      "Cache preloading is configured but no data is preloaded",
+      {},
+      "PerformanceMonitor",
+    );
+  } catch (error) {
+    logger.warn("Failed to preload cache", error, "PerformanceMonitor");
+  }
 }
 
 // ============================================================================
@@ -217,24 +211,24 @@ export async function preloadCache(): Promise<void> {
 // ============================================================================
 
 export function optimizedQuery(
-	collectionPath: string,
-	options: {
-		filters?: Array<{
-			field: string;
-			op: "==" | "!=" | ">" | ">=" | "<" | "<=" | "array-contains";
-			value: unknown;
-		}>;
-		orderBy?: { field: string; direction: "asc" | "desc" };
-		limit?: number;
-	},
+  collectionPath: string,
+  options: {
+    filters?: Array<{
+      field: string;
+      op: "==" | "!=" | ">" | ">=" | "<" | "<=" | "array-contains";
+      value: unknown;
+    }>;
+    orderBy?: { field: string; direction: "asc" | "desc" };
+    limit?: number;
+  },
 ) {
-	// This is a placeholder - in a real implementation, you'd build the query here
-	// For now, it returns metadata about the query
-	return {
-		collectionPath,
-		options,
-		estimatedCost: options?.limit ? options.limit * 1 : "variable",
-	};
+  // This is a placeholder - in a real implementation, you'd build the query here
+  // For now, it returns metadata about the query
+  return {
+    collectionPath,
+    options,
+    estimatedCost: options?.limit ? options.limit * 1 : "variable",
+  };
 }
 
 // ============================================================================
@@ -242,22 +236,22 @@ export function optimizedQuery(
 // ============================================================================
 
 export const PerformanceMonitor = {
-	trackQuery,
-	generatePerformanceReport,
-	cachedQuery,
-	clearCache,
-	preloadCache,
-	optimizedQuery,
+  trackQuery,
+  generatePerformanceReport,
+  cachedQuery,
+  clearCache,
+  preloadCache,
+  optimizedQuery,
 };
 
 // Extend Window interface for type checking
 declare global {
-	interface Window {
-		PerformanceMonitor?: typeof PerformanceMonitor;
-	}
+  interface Window {
+    PerformanceMonitor?: typeof PerformanceMonitor;
+  }
 }
 
 // Export to window for debugging in production
 if (typeof window !== "undefined") {
-	window.PerformanceMonitor = PerformanceMonitor;
+  window.PerformanceMonitor = PerformanceMonitor;
 }

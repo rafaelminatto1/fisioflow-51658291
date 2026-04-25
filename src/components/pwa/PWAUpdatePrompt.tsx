@@ -6,5 +6,5 @@
  */
 
 export function PWAUpdatePrompt() {
-	return null;
+  return null;
 }

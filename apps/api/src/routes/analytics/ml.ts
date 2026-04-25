@@ -1,17 +1,21 @@
-import { requireAuth } from '../../lib/auth';
+import { requireAuth } from "../../lib/auth";
 import { createPool, getRawSql, type DbRow } from "../../lib/db";
-import { determineOutcomeCategory, getAgeGroup, hashPatientId, roundTo } from '../mlHelpers';
-import { parseDate, type AnalyticsRouteApp } from './shared';
+import { determineOutcomeCategory, getAgeGroup, hashPatientId, roundTo } from "../mlHelpers";
+import { parseDate, type AnalyticsRouteApp } from "./shared";
 
 const AGE_GROUP_RANGES: Record<string, [number, number]> = {
-  '0-17': [0, 17],
-  '18-30': [18, 30],
-  '31-50': [31, 50],
-  '51-65': [51, 65],
-  '65+': [65, 120],
+  "0-17": [0, 17],
+  "18-30": [18, 30],
+  "31-50": [31, 50],
+  "51-65": [51, 65],
+  "65+": [65, 120],
 };
 
-const matchesAgeGroup = (ageGroup: string | undefined, minAge?: number, maxAge?: number): boolean => {
+const matchesAgeGroup = (
+  ageGroup: string | undefined,
+  minAge?: number,
+  maxAge?: number,
+): boolean => {
   if (!ageGroup) return true;
   if (!minAge && !maxAge) return true;
   const range = AGE_GROUP_RANGES[ageGroup];
@@ -23,11 +27,11 @@ const matchesAgeGroup = (ageGroup: string | undefined, minAge?: number, maxAge?:
 };
 
 export const registerMlAnalyticsRoutes = (app: AnalyticsRouteApp) => {
-  app.get('/ml-training-data/patient/:patientId', requireAuth, async (c) => {
+  app.get("/ml-training-data/patient/:patientId", requireAuth, async (c) => {
     const { patientId } = c.req.param();
-    const user = c.get('user');
+    const user = c.get("user");
     const pool = await createPool(c.env);
-    const salt = c.env.ML_SALT ?? c.env.VITE_ML_SALT ?? 'fisioflow-ml-salt';
+    const salt = c.env.ML_SALT ?? c.env.VITE_ML_SALT ?? "fisioflow-ml-salt";
 
     interface PatientRow extends DbRow {
       birth_date: string | Date | null;
@@ -45,7 +49,7 @@ export const registerMlAnalyticsRoutes = (app: AnalyticsRouteApp) => {
     );
 
     if (patientRes.rows.length === 0) {
-      return c.json({ error: 'Paciente não encontrado' }, 404);
+      return c.json({ error: "Paciente não encontrado" }, 404);
     }
 
     const patient = patientRes.rows[0];
@@ -91,7 +95,9 @@ export const registerMlAnalyticsRoutes = (app: AnalyticsRouteApp) => {
 
     const totalSessions = sessions.length;
     const completedAppointments = (appointmentsRes.rows ?? []).filter((row) =>
-      ['atendido', 'avaliacao', 'completed', 'realizado', 'concluido'].includes(String(row.status ?? '').toLowerCase()),
+      ["atendido", "avaliacao", "completed", "realizado", "concluido"].includes(
+        String(row.status ?? "").toLowerCase(),
+      ),
     );
     const totalAppointments = appointmentsRes.rows.length;
     const attendanceRate =
@@ -128,10 +134,10 @@ export const registerMlAnalyticsRoutes = (app: AnalyticsRouteApp) => {
     const sessionFrequency = totalSessions / weeksActive;
 
     const primaryPathology =
-      pathologiesRes.rows.find((row) => row.status === 'ativo')?.name ||
+      pathologiesRes.rows.find((row) => row.status === "ativo")?.name ||
       pathologiesRes.rows[0]?.name ||
-      'unknown';
-    const chronicCondition = pathologiesRes.rows.some((row) => row.status === 'cronico');
+      "unknown";
+    const chronicCondition = pathologiesRes.rows.some((row) => row.status === "cronico");
 
     const startPeriod = patient.created_at ?? new Date().toISOString();
     const endPeriod = lastSession?.session_date
@@ -141,12 +147,12 @@ export const registerMlAnalyticsRoutes = (app: AnalyticsRouteApp) => {
     const trainingData = {
       patient_hash: await hashPatientId(patientId, salt),
       age_group: getAgeGroup(patient.birth_date),
-      gender: patient.gender ?? 'unknown',
+      gender: patient.gender ?? "unknown",
       primary_pathology: primaryPathology,
       chronic_condition: chronicCondition,
       baseline_pain_level: roundTo(initialPain, 1),
       baseline_functional_score: roundTo(initialFunction, 1),
-      treatment_type: 'physical_therapy',
+      treatment_type: "physical_therapy",
       session_frequency_weekly: roundTo(sessionFrequency, 1),
       total_sessions: totalSessions,
       attendance_rate: roundTo(attendanceRate, 2),
@@ -169,10 +175,10 @@ export const registerMlAnalyticsRoutes = (app: AnalyticsRouteApp) => {
     return c.json({ data: trainingData });
   });
 
-  app.get('/ml-training-data/patients', requireAuth, async (c) => {
+  app.get("/ml-training-data/patients", requireAuth, async (c) => {
     const pool = await createPool(c.env);
-    const user = c.get('user');
-    const limitValue = Math.min(Math.max(Number(c.req.query('limit') ?? 50), 1), 200);
+    const user = c.get("user");
+    const limitValue = Math.min(Math.max(Number(c.req.query("limit") ?? 50), 1), 200);
     const rows = await pool.query(
       `
         SELECT id, created_at
@@ -187,9 +193,9 @@ export const registerMlAnalyticsRoutes = (app: AnalyticsRouteApp) => {
     return c.json({ data: rows.rows });
   });
 
-  app.get('/ml-training-data/stats', requireAuth, async (c) => {
+  app.get("/ml-training-data/stats", requireAuth, async (c) => {
     const pool = await createPool(c.env);
-    const user = c.get('user');
+    const user = c.get("user");
     const rows = await pool.query(
       `
         SELECT outcome_category, age_group, pain_reduction_percentage, functional_improvement_percentage
@@ -202,13 +208,13 @@ export const registerMlAnalyticsRoutes = (app: AnalyticsRouteApp) => {
     const totalRecords = records.length;
 
     const outcomeCounts = records.reduce<Record<string, number>>((acc, row) => {
-      const key = row.outcome_category ?? 'unknown';
+      const key = row.outcome_category ?? "unknown";
       acc[key] = (acc[key] ?? 0) + 1;
       return acc;
     }, {});
 
     const ageDistribution = records.reduce<Record<string, number>>((acc, row) => {
-      const key = row.age_group ?? 'unknown';
+      const key = row.age_group ?? "unknown";
       acc[key] = (acc[key] ?? 0) + 1;
       return acc;
     }, {});
@@ -216,10 +222,8 @@ export const registerMlAnalyticsRoutes = (app: AnalyticsRouteApp) => {
     const avgPainReduction =
       totalRecords > 0
         ? roundTo(
-            records.reduce(
-              (sum, row) => sum + Number(row.pain_reduction_percentage ?? 0),
-              0,
-            ) / totalRecords,
+            records.reduce((sum, row) => sum + Number(row.pain_reduction_percentage ?? 0), 0) /
+              totalRecords,
             1,
           )
         : 0;
@@ -250,13 +254,13 @@ export const registerMlAnalyticsRoutes = (app: AnalyticsRouteApp) => {
     });
   });
 
-  app.get('/ml-training-data/similar', requireAuth, async (c) => {
+  app.get("/ml-training-data/similar", requireAuth, async (c) => {
     const pool = await createPool(c.env);
-    const user = c.get('user');
-    const condition = c.req.query('condition');
-    const minAge = Number(c.req.query('minAge') ?? 0);
-    const maxAge = Number(c.req.query('maxAge') ?? 0);
-    const limitValue = Math.min(Math.max(Number(c.req.query('limit') ?? 50), 1), 200);
+    const user = c.get("user");
+    const condition = c.req.query("condition");
+    const minAge = Number(c.req.query("minAge") ?? 0);
+    const maxAge = Number(c.req.query("maxAge") ?? 0);
+    const limitValue = Math.min(Math.max(Number(c.req.query("limit") ?? 50), 1), 200);
 
     if (!condition) {
       return c.json({ data: [] });
@@ -280,41 +284,41 @@ export const registerMlAnalyticsRoutes = (app: AnalyticsRouteApp) => {
     return c.json({ data: candidates });
   });
 
-  app.post('/ml-training-data', requireAuth, async (c) => {
+  app.post("/ml-training-data", requireAuth, async (c) => {
     const pool = await createPool(c.env);
-    const user = c.get('user');
+    const user = c.get("user");
     const payload = (await c.req.json()) as Record<string, unknown>;
     const columns = [
-      'patient_hash',
-      'age_group',
-      'gender',
-      'primary_pathology',
-      'chronic_condition',
-      'baseline_pain_level',
-      'baseline_functional_score',
-      'treatment_type',
-      'session_frequency_weekly',
-      'total_sessions',
-      'attendance_rate',
-      'home_exercise_compliance',
-      'portal_login_frequency',
-      'outcome_category',
-      'sessions_to_discharge',
-      'pain_reduction_percentage',
-      'functional_improvement_percentage',
-      'patient_satisfaction_score',
-      'data_collection_period_start',
-      'data_collection_period_end',
-      'created_at',
+      "patient_hash",
+      "age_group",
+      "gender",
+      "primary_pathology",
+      "chronic_condition",
+      "baseline_pain_level",
+      "baseline_functional_score",
+      "treatment_type",
+      "session_frequency_weekly",
+      "total_sessions",
+      "attendance_rate",
+      "home_exercise_compliance",
+      "portal_login_frequency",
+      "outcome_category",
+      "sessions_to_discharge",
+      "pain_reduction_percentage",
+      "functional_improvement_percentage",
+      "patient_satisfaction_score",
+      "data_collection_period_start",
+      "data_collection_period_end",
+      "created_at",
     ];
 
     const values = columns.map((column) => payload[column] ?? null);
-    const placeholders = columns.map((_, index) => `$${index + 1}`).join(', ');
-    const updateClause = columns.map((column) => `${column} = EXCLUDED.${column}`).join(', ');
+    const placeholders = columns.map((_, index) => `$${index + 1}`).join(", ");
+    const updateClause = columns.map((column) => `${column} = EXCLUDED.${column}`).join(", ");
 
     const insertRes = await pool.query(
       `
-        INSERT INTO ml_training_data (${columns.join(', ')}, organization_id, updated_at)
+        INSERT INTO ml_training_data (${columns.join(", ")}, organization_id, updated_at)
         VALUES (${placeholders}, $${columns.length + 1}, NOW())
         ON CONFLICT (organization_id, patient_hash)
         DO UPDATE SET ${updateClause}, updated_at = NOW()
@@ -326,21 +330,21 @@ export const registerMlAnalyticsRoutes = (app: AnalyticsRouteApp) => {
     return c.json({ data: insertRes.rows[0] });
   });
 
-  app.post('/patient-predictions/upsert', requireAuth, async (c) => {
+  app.post("/patient-predictions/upsert", requireAuth, async (c) => {
     const pool = await createPool(c.env);
-    const user = c.get('user');
+    const user = c.get("user");
     const body = (await c.req.json()) as {
       patient_id?: string;
       predictions?: Array<Record<string, unknown>>;
     };
 
     if (!body.patient_id || !Array.isArray(body.predictions)) {
-      return c.json({ error: 'patient_id e predictions são obrigatórios' }, 400);
+      return c.json({ error: "patient_id e predictions são obrigatórios" }, 400);
     }
 
     const client = pool as any;
     try {
-      await client.query('BEGIN');
+      await client.query("BEGIN");
       await client.query(
         `
           UPDATE patient_predictions
@@ -376,7 +380,7 @@ export const registerMlAnalyticsRoutes = (app: AnalyticsRouteApp) => {
             prediction.confidence_interval ?? null,
             prediction.target_date ?? null,
             prediction.timeframe_days ?? null,
-            prediction.model_version ?? 'custom',
+            prediction.model_version ?? "custom",
             prediction.model_name ?? null,
             true,
             prediction.milestones ?? [],
@@ -388,21 +392,21 @@ export const registerMlAnalyticsRoutes = (app: AnalyticsRouteApp) => {
         inserted.push(res.rows[0]);
       }
 
-      await client.query('COMMIT');
+      await client.query("COMMIT");
       return c.json({ data: inserted });
     } catch (error) {
-      await client.query('ROLLBACK');
+      await client.query("ROLLBACK");
       throw error;
     } finally {
       client.release();
     }
   });
 
-  app.get('/population-health', requireAuth, async (c) => {
+  app.get("/population-health", requireAuth, async (c) => {
     const pool = await createPool(c.env);
-    const user = c.get('user');
-    const startDate = parseDate(c.req.query('startDate')) ?? new Date().toISOString().split('T')[0];
-    const endDate = parseDate(c.req.query('endDate')) ?? new Date().toISOString().split('T')[0];
+    const user = c.get("user");
+    const startDate = parseDate(c.req.query("startDate")) ?? new Date().toISOString().split("T")[0];
+    const endDate = parseDate(c.req.query("endDate")) ?? new Date().toISOString().split("T")[0];
 
     const patientsRes = await pool.query(
       `

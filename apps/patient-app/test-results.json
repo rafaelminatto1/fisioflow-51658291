@@ -26,9 +26,7 @@
         "name": "patient-ios",
         "testDir": "/home/rafael/Documents/fisioflow/fisioflow-51658291/patient-app/e2e",
         "testIgnore": [],
-        "testMatch": [
-          "**/*.@(spec|test).?(c|m)[jt]s?(x)"
-        ],
+        "testMatch": ["**/*.@(spec|test).?(c|m)[jt]s?(x)"],
         "timeout": 60000
       },
       {
@@ -42,9 +40,7 @@
         "name": "chromium",
         "testDir": "/home/rafael/Documents/fisioflow/fisioflow-51658291/patient-app/e2e",
         "testIgnore": [],
-        "testMatch": [
-          "**/*.@(spec|test).?(c|m)[jt]s?(x)"
-        ],
+        "testMatch": ["**/*.@(spec|test).?(c|m)[jt]s?(x)"],
         "timeout": 60000
       },
       {
@@ -58,9 +54,7 @@
         "name": "mobile",
         "testDir": "/home/rafael/Documents/fisioflow/fisioflow-51658291/patient-app/e2e",
         "testIgnore": [],
-        "testMatch": [
-          "**/*.@(spec|test).?(c|m)[jt]s?(x)"
-        ],
+        "testMatch": ["**/*.@(spec|test).?(c|m)[jt]s?(x)"],
         "timeout": 60000
       }
     ],
@@ -84,10 +78,7 @@
           "outputFile": "test-results.xml"
         }
       ],
-      [
-        "list",
-        null
-      ]
+      ["list", null]
     ],
     "reportSlowTests": {
       "max": 5,

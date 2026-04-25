@@ -3,7 +3,7 @@
  * Collects user feedback about exercise difficulty and pain level
  */
 
-import { useState } from 'react';
+import { useState } from "react";
 
 import {
   View,
@@ -13,11 +13,11 @@ import {
   TouchableOpacity,
   ScrollView,
   TextInput,
-} from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
-import { Ionicons } from '@expo/vector-icons';
-import { useColors } from '@/hooks/useColorScheme';
-import { Button } from './Button';
+} from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
+import { Ionicons } from "@expo/vector-icons";
+import { useColors } from "@/hooks/useColorScheme";
+import { Button } from "./Button";
 
 interface ExerciseFeedbackModalProps {
   visible: boolean;
@@ -41,22 +41,21 @@ export function ExerciseFeedbackModal({
   const colors = useColors();
   const [difficulty, setDifficulty] = useState<1 | 2 | 3 | 4 | 5>(3);
   const [pain, setPain] = useState<0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10>(0);
-  const [notes, setNotes] = useState('');
+  const [notes, setNotes] = useState("");
   const [submitting, setSubmitting] = useState(false);
 
   const handleSubmit = async () => {
     setSubmitting(true);
     const feedback: ExerciseFeedback = { difficulty, pain, notes };
     await onSubmit(feedback);
-    setNotes('');
+    setNotes("");
     setDifficulty(3);
     setPain(0);
     setSubmitting(false);
     onClose();
   };
 
-  const difficultyLabels = ['Muito Fácil', 'Fácil', 'Médio', 'Difícil', 'Muito Difícil'];
-  
+  const difficultyLabels = ["Muito Fácil", "Fácil", "Médio", "Difícil", "Muito Difícil"];
 
   return (
     <Modal
@@ -65,7 +64,10 @@ export function ExerciseFeedbackModal({
       presentationStyle="pageSheet"
       onRequestClose={onClose}
     >
-      <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]} edges={['bottom']}>
+      <SafeAreaView
+        style={[styles.container, { backgroundColor: colors.background }]}
+        edges={["bottom"]}
+      >
         {/* Header */}
         <View style={[styles.header, { borderBottomColor: colors.border }]}>
           <TouchableOpacity onPress={onClose} style={styles.closeButton}>
@@ -102,7 +104,8 @@ export function ExerciseFeedbackModal({
                   style={[
                     styles.optionButton,
                     {
-                      backgroundColor: difficulty === level ? colors.primary + '20' : colors.surface,
+                      backgroundColor:
+                        difficulty === level ? colors.primary + "20" : colors.surface,
                       borderColor: difficulty === level ? colors.primary : colors.border,
                     },
                   ]}
@@ -115,8 +118,7 @@ export function ExerciseFeedbackModal({
                         style={[
                           styles.dot,
                           {
-                            backgroundColor:
-                              dot <= level ? colors.primary : colors.textMuted,
+                            backgroundColor: dot <= level ? colors.primary : colors.textMuted,
                             opacity: dot <= level ? 1 : 0.3,
                           },
                         ]}
@@ -151,7 +153,7 @@ export function ExerciseFeedbackModal({
 
             <View style={styles.painSlider}>
               <TouchableOpacity
-                style={[styles.painButton, { backgroundColor: colors.success + '30' }]}
+                style={[styles.painButton, { backgroundColor: colors.success + "30" }]}
                 onPress={() => setPain(0)}
               >
                 <Ionicons name="happy" size={20} color={colors.success} />
@@ -168,18 +170,18 @@ export function ExerciseFeedbackModal({
                         backgroundColor:
                           pain === level
                             ? level <= 3
-                              ? colors.warning + '30'
+                              ? colors.warning + "30"
                               : level <= 7
-                              ? colors.error + '30'
-                              : '#DC262630'
-                            : 'transparent',
+                                ? colors.error + "30"
+                                : "#DC262630"
+                            : "transparent",
                         borderColor:
                           pain === level
                             ? level <= 3
                               ? colors.warning
                               : level <= 7
-                              ? colors.error
-                              : '#DC2626'
+                                ? colors.error
+                                : "#DC2626"
                             : colors.border,
                       },
                     ]}
@@ -194,8 +196,8 @@ export function ExerciseFeedbackModal({
                               ? level <= 3
                                 ? colors.warning
                                 : level <= 7
-                                ? colors.error
-                                : '#DC2626'
+                                  ? colors.error
+                                  : "#DC2626"
                               : colors.textSecondary,
                         },
                       ]}
@@ -207,22 +209,22 @@ export function ExerciseFeedbackModal({
               </View>
 
               <TouchableOpacity
-                style={[styles.painButton, { backgroundColor: '#DC262620' }]}
+                style={[styles.painButton, { backgroundColor: "#DC262620" }]}
                 onPress={() => setPain(10)}
               >
                 <Ionicons name="sad" size={20} color="#DC2626" />
-                <Text style={[styles.painButtonLabel, { color: '#DC2626' }]}>Máxima</Text>
+                <Text style={[styles.painButtonLabel, { color: "#DC2626" }]}>Máxima</Text>
               </TouchableOpacity>
             </View>
 
             <Text style={[styles.painLabel, { color: colors.textSecondary }]}>
               {pain === 0
-                ? 'Sem dor sentida'
+                ? "Sem dor sentida"
                 : pain <= 3
-                ? 'Dor leve - Continue com o exercício'
-                : pain <= 7
-                ? 'Dor moderada - Reduza a intensidade'
-                : 'Dor severa - Pare o exercício e consulte seu fisioterapeuta'}
+                  ? "Dor leve - Continue com o exercício"
+                  : pain <= 7
+                    ? "Dor moderada - Reduza a intensidade"
+                    : "Dor severa - Pare o exercício e consulte seu fisioterapeuta"}
             </Text>
           </View>
 
@@ -253,9 +255,7 @@ export function ExerciseFeedbackModal({
               onChangeText={setNotes}
               maxLength={500}
             />
-            <Text style={[styles.charCount, { color: colors.textMuted }]}>
-              {notes.length}/500
-            </Text>
+            <Text style={[styles.charCount, { color: colors.textMuted }]}>{notes.length}/500</Text>
           </View>
         </ScrollView>
 
@@ -268,9 +268,7 @@ export function ExerciseFeedbackModal({
             style={styles.submitButton}
           />
           <TouchableOpacity onPress={onClose} style={styles.skipButton}>
-            <Text style={[styles.skipButtonText, { color: colors.textSecondary }]}>
-              Pular
-            </Text>
+            <Text style={[styles.skipButtonText, { color: colors.textSecondary }]}>Pular</Text>
           </TouchableOpacity>
         </View>
       </SafeAreaView>
@@ -283,9 +281,9 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
     paddingVertical: 16,
     paddingHorizontal: 20,
     borderBottomWidth: 1,
@@ -295,11 +293,11 @@ const styles = StyleSheet.create({
   },
   headerContent: {
     flex: 1,
-    alignItems: 'center',
+    alignItems: "center",
   },
   title: {
     fontSize: 18,
-    fontWeight: '700',
+    fontWeight: "700",
   },
   subtitle: {
     fontSize: 13,
@@ -315,14 +313,14 @@ const styles = StyleSheet.create({
     marginBottom: 32,
   },
   sectionHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     gap: 8,
     marginBottom: 12,
   },
   sectionTitle: {
     fontSize: 18,
-    fontWeight: '700',
+    fontWeight: "700",
   },
   sectionDescription: {
     fontSize: 15,
@@ -332,15 +330,15 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   optionButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     padding: 12,
     borderRadius: 12,
     borderWidth: 2,
     gap: 12,
   },
   dotsContainer: {
-    flexDirection: 'row',
+    flexDirection: "row",
     gap: 4,
   },
   dot: {
@@ -350,7 +348,7 @@ const styles = StyleSheet.create({
   },
   optionLabel: {
     fontSize: 20,
-    fontWeight: '700',
+    fontWeight: "700",
     minWidth: 24,
   },
   optionDescription: {
@@ -361,20 +359,20 @@ const styles = StyleSheet.create({
     gap: 12,
   },
   painButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
     gap: 8,
     padding: 12,
     borderRadius: 12,
   },
   painButtonLabel: {
     fontSize: 14,
-    fontWeight: '600',
+    fontWeight: "600",
   },
   painScale: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
+    flexDirection: "row",
+    justifyContent: "space-between",
     paddingHorizontal: 4,
   },
   painLevelButton: {
@@ -382,17 +380,17 @@ const styles = StyleSheet.create({
     height: 40,
     borderRadius: 8,
     borderWidth: 2,
-    alignItems: 'center',
-    justifyContent: 'center',
+    alignItems: "center",
+    justifyContent: "center",
   },
   painLevelText: {
     fontSize: 14,
-    fontWeight: '700',
+    fontWeight: "700",
   },
   painLabel: {
     fontSize: 13,
-    textAlign: 'center',
-    fontStyle: 'italic',
+    textAlign: "center",
+    fontStyle: "italic",
   },
   notesInput: {
     borderRadius: 12,
@@ -400,11 +398,11 @@ const styles = StyleSheet.create({
     padding: 12,
     fontSize: 15,
     minHeight: 100,
-    textAlignVertical: 'top',
+    textAlignVertical: "top",
   },
   charCount: {
     fontSize: 12,
-    textAlign: 'right',
+    textAlign: "right",
     marginTop: 4,
   },
   footer: {
@@ -415,11 +413,11 @@ const styles = StyleSheet.create({
     marginBottom: 12,
   },
   skipButton: {
-    alignItems: 'center',
+    alignItems: "center",
     paddingVertical: 8,
   },
   skipButtonText: {
     fontSize: 15,
-    fontWeight: '600',
+    fontWeight: "600",
   },
 });

@@ -17,7 +17,7 @@ test('verify exercises page displays content on first load without double click'
   console.log('--- Verifying Content is Visible on First Load ---');
   // The search input uniquely belongs to the ExerciseLibrary component
   const searchInput = page.getByPlaceholder('Buscar exercícios...');
-  
+
   // Await the content indicator
   await expect(searchInput).toBeVisible({ timeout: 30000 });
 });

@@ -33,15 +33,17 @@ export const iaStudioApi = {
       body: JSON.stringify({ patientId, section, audioBase64 }),
     }),
 
-  getAtRiskPatients: () =>
-    request<{ data: AtRiskPatient[] }>("/api/ia-studio/retention/at-risk"),
+  getAtRiskPatients: () => request<{ data: AtRiskPatient[] }>("/api/ia-studio/retention/at-risk"),
 
   getDischargePrediction: (patientId: string) =>
     request<{ data: DischargePrediction }>(`/api/ia-studio/predict/discharge/${patientId}`),
 
   synthesizeReport: (patientId: string, highlights: string) =>
-    request<{ success: boolean; data: { medico: string; paciente: string } }>("/api/ia-studio/reports/synthesize", {
-      method: "POST",
-      body: JSON.stringify({ patientId, highlights }),
-    }),
+    request<{ success: boolean; data: { medico: string; paciente: string } }>(
+      "/api/ia-studio/reports/synthesize",
+      {
+        method: "POST",
+        body: JSON.stringify({ patientId, highlights }),
+      },
+    ),
 };

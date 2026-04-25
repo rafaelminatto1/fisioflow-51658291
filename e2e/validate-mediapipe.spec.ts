@@ -33,7 +33,7 @@ test.describe('Validação de Produção - MediaPipe', () => {
     // Acessar a URL de produção (baseada no config do playwright ou env)
     const baseUrl = process.env.PLAYWRIGHT_TEST_BASE_URL || 'https://fisioflow-professional.web.app';
     console.log(`[Test] Acessando ${baseUrl}`);
-    
+
     await page.goto(baseUrl, { waitUntil: 'networkidle' });
 
     // Aguardar um pouco para garantir que o pré-carregamento disparou
@@ -42,9 +42,9 @@ test.describe('Validação de Produção - MediaPipe', () => {
 
     // Verificar se houve algum erro 404 para o MediaPipe
     const mediapipeErrors = failedRequests.filter(req => req.includes('mediapipe'));
-    
+
     expect(mediapipeErrors, `Encontrados erros de carregamento no MediaPipe: ${mediapipeErrors.join(', ')}`).toHaveLength(0);
-    
+
     // Verificar especificamente a versão problematica 0.10.22 no log de rede (não deve existir)
     const hasWrongVersion = failedRequests.some(req => req.includes('0.10.22'));
     expect(hasWrongVersion, 'A aplicação ainda está tentando carregar a versão antiga 0.10.22').toBe(false);

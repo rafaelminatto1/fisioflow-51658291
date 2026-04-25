@@ -1,23 +1,23 @@
 // Load polyfills first
-import '../lib/polyfills';
+import "../lib/polyfills";
 
-import { useEffect } from 'react';
-import { Stack } from 'expo-router';
-import { StatusBar } from 'expo-status-bar';
-import { View, ActivityIndicator, StyleSheet } from 'react-native';
-import { GestureHandlerRootView } from 'react-native-gesture-handler';
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { useAuthStore } from '@/store/auth';
-import { useColors, useColorScheme } from '@/hooks/useColorScheme';
-import * as SplashScreen from 'expo-splash-screen';
-import * as Haptics from 'expo-haptics';
-import { registerForPushNotificationsAsync } from '@/lib/notifications';
-import * as Sentry from '@sentry/react-native';
-import { ErrorBoundary } from '@/components/ErrorBoundary';
+import { useEffect } from "react";
+import { Stack } from "expo-router";
+import { StatusBar } from "expo-status-bar";
+import { View, ActivityIndicator, StyleSheet } from "react-native";
+import { GestureHandlerRootView } from "react-native-gesture-handler";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { useAuthStore } from "@/store/auth";
+import { useColors, useColorScheme } from "@/hooks/useColorScheme";
+import * as SplashScreen from "expo-splash-screen";
+import * as Haptics from "expo-haptics";
+import { registerForPushNotificationsAsync } from "@/lib/notifications";
+import * as Sentry from "@sentry/react-native";
+import { ErrorBoundary } from "@/components/ErrorBoundary";
 
 // Initialize Sentry — only in production builds (native SDK not available via Metro)
 const sentryDsn = process.env.EXPO_PUBLIC_SENTRY_DSN;
-if (!__DEV__ && sentryDsn && sentryDsn.startsWith('https://')) {
+if (!__DEV__ && sentryDsn && sentryDsn.startsWith("https://")) {
   Sentry.init({
     dsn: sentryDsn,
     enableNative: true,
@@ -50,7 +50,7 @@ const queryClient = new QueryClient({
 async function preloadCriticalModules(): Promise<void> {
   // Carregar date-fns em background (usado em várias telas)
   // Não bloqueia o fluxo de login
-  import('date-fns').catch(() => {});
+  import("date-fns").catch(() => {});
 }
 
 function RootLayoutContent() {
@@ -64,10 +64,10 @@ function RootLayoutContent() {
       try {
         // Iniciar preload de módulos em paralelo com a inicialização
         preloadCriticalModules();
-        
+
         await initialize();
       } catch (error) {
-        console.error('Failed to initialize auth:', error);
+        console.error("Failed to initialize auth:", error);
       }
     };
     initAuth();
@@ -87,7 +87,7 @@ function RootLayoutContent() {
             await registerForPushNotificationsAsync();
           }
         } catch (error) {
-          console.log('Setup finalization error:', error);
+          console.log("Setup finalization error:", error);
         }
       }
     };
@@ -104,7 +104,7 @@ function RootLayoutContent() {
 
   return (
     <>
-      <StatusBar style={colorScheme === 'dark' ? 'light' : 'dark'} />
+      <StatusBar style={colorScheme === "dark" ? "light" : "dark"} />
       <Stack
         screenOptions={{
           headerStyle: {
@@ -112,7 +112,7 @@ function RootLayoutContent() {
           },
           headerTintColor: colors.text,
           headerTitleStyle: {
-            fontWeight: '600',
+            fontWeight: "600",
           },
           contentStyle: {
             backgroundColor: colors.background,
@@ -124,7 +124,7 @@ function RootLayoutContent() {
         <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
         <Stack.Screen
           name="patient/[id]"
-          options={{ title: 'Paciente', headerBackTitle: 'Voltar' }}
+          options={{ title: "Paciente", headerBackTitle: "Voltar" }}
         />
 
         {/* ── Form sheets iOS nativos (bottom sheet arrastável) ─────────────── */}
@@ -132,8 +132,8 @@ function RootLayoutContent() {
         <Stack.Screen
           name="patient-form"
           options={{
-            title: 'Paciente',
-            presentation: 'formSheet',
+            title: "Paciente",
+            presentation: "formSheet",
             sheetAllowedDetents: [0.6, 1],
             sheetInitialDetentIndex: 0,
             sheetGrabberVisible: true,
@@ -143,9 +143,9 @@ function RootLayoutContent() {
         <Stack.Screen
           name="appointment-form"
           options={{
-            title: 'Agendamento',
+            title: "Agendamento",
             headerShown: false,
-            presentation: 'formSheet',
+            presentation: "formSheet",
             sheetAllowedDetents: [0.7, 1],
             sheetInitialDetentIndex: 0,
             sheetGrabberVisible: true,
@@ -155,8 +155,8 @@ function RootLayoutContent() {
         <Stack.Screen
           name="evolution-form"
           options={{
-            title: 'Evolução',
-            presentation: 'formSheet',
+            title: "Evolução",
+            presentation: "formSheet",
             sheetAllowedDetents: [0.85, 1],
             sheetInitialDetentIndex: 0,
             sheetGrabberVisible: true,
@@ -166,8 +166,8 @@ function RootLayoutContent() {
         <Stack.Screen
           name="tarefa-form"
           options={{
-            title: 'Tarefa',
-            presentation: 'formSheet',
+            title: "Tarefa",
+            presentation: "formSheet",
             sheetAllowedDetents: [0.5, 1],
             sheetInitialDetentIndex: 0,
             sheetGrabberVisible: true,
@@ -177,8 +177,8 @@ function RootLayoutContent() {
         <Stack.Screen
           name="financial-form"
           options={{
-            title: 'Financeiro',
-            presentation: 'formSheet',
+            title: "Financeiro",
+            presentation: "formSheet",
             sheetAllowedDetents: [0.6, 1],
             sheetInitialDetentIndex: 0,
             sheetGrabberVisible: true,
@@ -188,8 +188,8 @@ function RootLayoutContent() {
         <Stack.Screen
           name="nfse-form"
           options={{
-            title: 'NFS-e',
-            presentation: 'formSheet',
+            title: "NFS-e",
+            presentation: "formSheet",
             sheetAllowedDetents: [0.7, 1],
             sheetInitialDetentIndex: 0,
             sheetGrabberVisible: true,
@@ -199,8 +199,8 @@ function RootLayoutContent() {
         <Stack.Screen
           name="protocol-form"
           options={{
-            title: 'Protocolo',
-            presentation: 'formSheet',
+            title: "Protocolo",
+            presentation: "formSheet",
             sheetAllowedDetents: [0.6, 1],
             sheetInitialDetentIndex: 0,
             sheetGrabberVisible: true,
@@ -210,8 +210,8 @@ function RootLayoutContent() {
         <Stack.Screen
           name="prom-form"
           options={{
-            title: 'Escala Clínica',
-            presentation: 'formSheet',
+            title: "Escala Clínica",
+            presentation: "formSheet",
             sheetAllowedDetents: [0.75, 1],
             sheetInitialDetentIndex: 0,
             sheetGrabberVisible: true,
@@ -221,18 +221,15 @@ function RootLayoutContent() {
         <Stack.Screen
           name="exercise-form"
           options={{
-            title: 'Exercício',
-            presentation: 'formSheet',
+            title: "Exercício",
+            presentation: "formSheet",
             sheetAllowedDetents: [0.65, 1],
             sheetInitialDetentIndex: 0,
             sheetGrabberVisible: true,
             sheetCornerRadius: 20,
           }}
         />
-        <Stack.Screen
-          name="whatsapp-chat/[id]"
-          options={{ headerShown: false }}
-        />
+        <Stack.Screen name="whatsapp-chat/[id]" options={{ headerShown: false }} />
       </Stack>
     </>
   );
@@ -253,7 +250,7 @@ export default function RootLayout() {
 const styles = StyleSheet.create({
   loading: {
     flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
+    justifyContent: "center",
+    alignItems: "center",
   },
 });

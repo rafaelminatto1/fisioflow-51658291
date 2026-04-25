@@ -1,4 +1,3 @@
-
 openapi: 3.0.0
 info:
   title: FisioFlow API
@@ -21,14 +20,14 @@ paths:
             type: string
             enum: [active, inactive]
       responses:
-        '200':
+        "200":
           description: List of patients
           content:
             application/json:
               schema:
                 type: array
                 items:
-                  $ref: '#/components/schemas/Patient'
+                  $ref: "#/components/schemas/Patient"
     post:
       summary: Create patient
       tags: [Patients]
@@ -37,14 +36,14 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/PatientInput'
+              $ref: "#/components/schemas/PatientInput"
       responses:
-        '201':
+        "201":
           description: Patient created
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/Patient'
+                $ref: "#/components/schemas/Patient"
 
   /appointments:
     get:
@@ -62,14 +61,14 @@ paths:
             type: string
             format: date
       responses:
-        '200':
+        "200":
           description: List of appointments
           content:
             application/json:
               schema:
                 type: array
                 items:
-                  $ref: '#/components/schemas/Appointment'
+                  $ref: "#/components/schemas/Appointment"
 components:
   schemas:
     Patient:

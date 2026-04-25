@@ -30,7 +30,7 @@ import {
   useFocusRestoration,
   useSkipLink,
   useKeyboardListNavigation,
-} from '@/lib/a11y';
+} from "@/lib/a11y";
 ```
 
 ## ARIA Attributes
@@ -67,25 +67,25 @@ import { ariaAttributes } from '@/lib/a11y';
 
 ### Available ARIA Helpers
 
-| Helper | Description |
-|--------|-------------|
-| `expanded(isExpanded)` | Expandable sections |
-| `popup(isOpen, type)` | Dropdowns, popovers |
-| `selected(isSelected)` | Tabs, list items |
-| `checked(isChecked)` | Checkboxes, toggle buttons |
-| `pressed(isPressed)` | Toggle buttons |
-| `disabled(isDisabled)` | Disabled state |
-| `invalid(isInvalid, messageId)` | Form errors |
-| `liveRegion(politeness)` | Live announcements |
-| `current(isCurrent)` | Current page/item |
-| `modal(role?)` | Modals/dialogs |
-| `tab(isSelected, controlsId, panelId)` | Tabs |
-| `slider(value, min, max)` | Range sliders |
-| `progressBar(value, max)` | Progress bars |
-| `navigation(label?)` | Nav regions |
-| `main(label?)` | Main content |
-| `search(label?)` | Search regions |
-| `form(label)` | Forms |
+| Helper                                 | Description                |
+| -------------------------------------- | -------------------------- |
+| `expanded(isExpanded)`                 | Expandable sections        |
+| `popup(isOpen, type)`                  | Dropdowns, popovers        |
+| `selected(isSelected)`                 | Tabs, list items           |
+| `checked(isChecked)`                   | Checkboxes, toggle buttons |
+| `pressed(isPressed)`                   | Toggle buttons             |
+| `disabled(isDisabled)`                 | Disabled state             |
+| `invalid(isInvalid, messageId)`        | Form errors                |
+| `liveRegion(politeness)`               | Live announcements         |
+| `current(isCurrent)`                   | Current page/item          |
+| `modal(role?)`                         | Modals/dialogs             |
+| `tab(isSelected, controlsId, panelId)` | Tabs                       |
+| `slider(value, min, max)`              | Range sliders              |
+| `progressBar(value, max)`              | Progress bars              |
+| `navigation(label?)`                   | Nav regions                |
+| `main(label?)`                         | Main content               |
+| `search(label?)`                       | Search regions             |
+| `form(label)`                          | Forms                      |
 
 ## Hooks
 
@@ -113,6 +113,7 @@ function Modal({ isOpen, onClose, children }) {
 ```
 
 **Features:**
+
 - Saves and restores focus automatically
 - Cycles through focusable elements with Tab/Shift+Tab
 - Escape key closes (optional)
@@ -122,7 +123,7 @@ function Modal({ isOpen, onClose, children }) {
 Restores focus after modal closes.
 
 ```typescript
-import { useFocusRestoration } from '@/lib/a11y';
+import { useFocusRestoration } from "@/lib/a11y";
 
 function MyModal({ isOpen }) {
   useFocusRestoration(isOpen);
@@ -194,24 +195,24 @@ function Select({ options, onSelect }) {
 ### Key Constants
 
 ```typescript
-import { keys } from '@/lib/a11y';
+import { keys } from "@/lib/a11y";
 
-keys.ENTER;     // 'Enter'
-keys.SPACE;     // ' '
-keys.ESCAPE;    // 'Escape'
-keys.TAB;       // 'Tab'
-keys.ARROW_UP;   // 'ArrowUp'
+keys.ENTER; // 'Enter'
+keys.SPACE; // ' '
+keys.ESCAPE; // 'Escape'
+keys.TAB; // 'Tab'
+keys.ARROW_UP; // 'ArrowUp'
 keys.ARROW_DOWN; // 'ArrowDown'
 keys.ARROW_LEFT; // 'ArrowLeft'
-keys.ARROW_RIGHT;// 'ArrowRight'
-keys.HOME;      // 'Home'
-keys.END;       // 'End'
+keys.ARROW_RIGHT; // 'ArrowRight'
+keys.HOME; // 'Home'
+keys.END; // 'End'
 ```
 
 ### Type Guards
 
 ```typescript
-import { isActivationKey, isArrowKey } from '@/lib/a11y';
+import { isActivationKey, isArrowKey } from "@/lib/a11y";
 
 function handleKeyDown(e: KeyboardEvent) {
   if (isActivationKey(e.key)) {
@@ -225,15 +226,15 @@ function handleKeyDown(e: KeyboardEvent) {
 ### Keyboard Handler Creator
 
 ```typescript
-import { createKeyboardHandler } from '@/lib/a11y';
+import { createKeyboardHandler } from "@/lib/a11y";
 
 const handler = createKeyboardHandler({
-  Enter: () => console.log('Activated'),
-  Escape: () => console.log('Cancelled'),
-  ArrowUp: () => console.log('Up'),
+  Enter: () => console.log("Activated"),
+  Escape: () => console.log("Cancelled"),
+  ArrowUp: () => console.log("Up"),
 });
 
-element.addEventListener('keydown', handler);
+element.addEventListener("keydown", handler);
 ```
 
 ## Screen Reader Support
@@ -243,19 +244,20 @@ element.addEventListener('keydown', handler);
 Announces messages to screen readers using ARIA live regions.
 
 ```typescript
-import { announceToScreenReader } from '@/lib/a11y';
+import { announceToScreenReader } from "@/lib/a11y";
 
 // Success message
-announceToScreenReader('Paciente salvo com sucesso!');
+announceToScreenReader("Paciente salvo com sucesso!");
 
 // Error message
-announceToScreenReader('Erro ao salvar. Tente novamente.', 'assertive');
+announceToScreenReader("Erro ao salvar. Tente novamente.", "assertive");
 
 // Status update
-announceToScreenReader('Carregando dados...', 'polite');
+announceToScreenReader("Carregando dados...", "polite");
 ```
 
 **Features:**
+
 - Creates live region element automatically
 - Removes element after announcement
 - Supports both `polite` and `assertive` priorities
@@ -462,6 +464,7 @@ function AppLayout() {
 ## WCAG 2.1 Compliance
 
 ### Perceivable
+
 - ✅ Text alternatives for non-text content
 - ✅ Captions for video content
 - ✅ Audio descriptions
@@ -469,6 +472,7 @@ function AppLayout() {
 - ✅ High contrast mode support
 
 ### Operable
+
 - ✅ Keyboard accessible
 - ✅ No keyboard traps
 - ✅ Focus indicators
@@ -477,12 +481,14 @@ function AppLayout() {
 - ✅ No seizure triggers
 
 ### Understandable
+
 - ✅ Language of page
 - ✅ Consistent navigation
 - ✅ Error identification
 - ✅ Labels and instructions
 
 ### Robust
+
 - ✅ Compatible with assistive technologies
 - ✅ Accessible by name, role, value
 - ✅ ARIA attributes correct
@@ -530,11 +536,11 @@ const previousFocus = document.activeElement;
 ### 4. Announce Dynamic Changes
 
 ```typescript
-import { announceToScreenReader } from '@/lib/a11y';
+import { announceToScreenReader } from "@/lib/a11y";
 
 // When content changes
 setData(newData);
-announceToScreenReader('Dados atualizados');
+announceToScreenReader("Dados atualizados");
 ```
 
 ### 5. Test with Screen Reader

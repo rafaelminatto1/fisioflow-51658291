@@ -20,228 +20,226 @@ import { ptBR } from "date-fns/locale";
 
 // Tipos
 export interface EmailConfig {
-	provider: "resend" | "gmail" | "sendgrid";
-	apiKey?: string;
-	from?: string;
-	fromName?: string;
+  provider: "resend" | "gmail" | "sendgrid";
+  apiKey?: string;
+  from?: string;
+  fromName?: string;
 }
 
 export interface AppointmentData {
-	id: string;
-	patientName: string;
-	patientEmail: string;
-	professionalName: string;
-	start: Date;
-	end: Date;
-	type: string;
-	location?: string;
-	notes?: string;
-	googleMeetLink?: string;
+  id: string;
+  patientName: string;
+  patientEmail: string;
+  professionalName: string;
+  start: Date;
+  end: Date;
+  type: string;
+  location?: string;
+  notes?: string;
+  googleMeetLink?: string;
 }
 
 export interface PatientData {
-	name: string;
-	email: string;
-	phone?: string;
+  name: string;
+  email: string;
+  phone?: string;
 }
 
 /**
  * Classe para envio de emails
  */
 export class EmailNotificationService {
-	private resend: Resend | null = null;
-	private config: EmailConfig;
+  private resend: Resend | null = null;
+  private config: EmailConfig;
 
-	constructor(config: EmailConfig) {
-		this.config = config;
+  constructor(config: EmailConfig) {
+    this.config = config;
 
-		if (config.provider === "resend" && config.apiKey) {
-			this.resend = new Resend(config.apiKey);
-		}
-	}
+    if (config.provider === "resend" && config.apiKey) {
+      this.resend = new Resend(config.apiKey);
+    }
+  }
 
-	/**
-	 * Envia email de confirmação de agendamento
-	 */
-	async sendAppointmentConfirmation(
-		appointment: AppointmentData,
-	): Promise<void> {
-		const subject = `Confirmação de Agendamento - ${appointment.type}`;
-		const html = this.getAppointmentConfirmationTemplate(appointment);
+  /**
+   * Envia email de confirmação de agendamento
+   */
+  async sendAppointmentConfirmation(appointment: AppointmentData): Promise<void> {
+    const subject = `Confirmação de Agendamento - ${appointment.type}`;
+    const html = this.getAppointmentConfirmationTemplate(appointment);
 
-		await this.sendEmail({
-			to: appointment.patientEmail,
-			subject,
-			html,
-		});
-	}
+    await this.sendEmail({
+      to: appointment.patientEmail,
+      subject,
+      html,
+    });
+  }
 
-	/**
-	 * Envia lembrete de agendamento (24h antes)
-	 */
-	async sendAppointmentReminder(appointment: AppointmentData): Promise<void> {
-		const subject = `Lembrete: Sua consulta é amanhã - ${appointment.type}`;
-		const html = this.getAppointmentReminderTemplate(appointment);
+  /**
+   * Envia lembrete de agendamento (24h antes)
+   */
+  async sendAppointmentReminder(appointment: AppointmentData): Promise<void> {
+    const subject = `Lembrete: Sua consulta é amanhã - ${appointment.type}`;
+    const html = this.getAppointmentReminderTemplate(appointment);
 
-		await this.sendEmail({
-			to: appointment.patientEmail,
-			subject,
-			html,
-		});
-	}
+    await this.sendEmail({
+      to: appointment.patientEmail,
+      subject,
+      html,
+    });
+  }
 
-	/**
-	 * Envia lembrete de hoje (2h antes)
-	 */
-	async sendSameDayReminder(appointment: AppointmentData): Promise<void> {
-		const subject = `Lembrete: Sua consulta é hoje - ${appointment.type}`;
-		const html = this.getSameDayReminderTemplate(appointment);
+  /**
+   * Envia lembrete de hoje (2h antes)
+   */
+  async sendSameDayReminder(appointment: AppointmentData): Promise<void> {
+    const subject = `Lembrete: Sua consulta é hoje - ${appointment.type}`;
+    const html = this.getSameDayReminderTemplate(appointment);
 
-		await this.sendEmail({
-			to: appointment.patientEmail,
-			subject,
-			html,
-		});
-	}
+    await this.sendEmail({
+      to: appointment.patientEmail,
+      subject,
+      html,
+    });
+  }
 
-	/**
-	 * Envia aviso de falta/marcation
-	 */
-	async sendNoShowNotice(appointment: AppointmentData): Promise<void> {
-		const subject = `Ausência na consulta - ${format(appointment.start, "dd/MM/yyyy")}`;
-		const html = this.getNoShowTemplate(appointment);
+  /**
+   * Envia aviso de falta/marcation
+   */
+  async sendNoShowNotice(appointment: AppointmentData): Promise<void> {
+    const subject = `Ausência na consulta - ${format(appointment.start, "dd/MM/yyyy")}`;
+    const html = this.getNoShowTemplate(appointment);
 
-		await this.sendEmail({
-			to: appointment.patientEmail,
-			subject,
-			html,
-		});
-	}
+    await this.sendEmail({
+      to: appointment.patientEmail,
+      subject,
+      html,
+    });
+  }
 
-	/**
-	 * Envida convite para telemedicina
-	 */
-	async sendTelemedicineInvite(appointment: AppointmentData): Promise<void> {
-		const subject = `Link para consulta online - ${appointment.type}`;
-		const html = this.getTelemedicineInviteTemplate(appointment);
+  /**
+   * Envida convite para telemedicina
+   */
+  async sendTelemedicineInvite(appointment: AppointmentData): Promise<void> {
+    const subject = `Link para consulta online - ${appointment.type}`;
+    const html = this.getTelemedicineInviteTemplate(appointment);
 
-		await this.sendEmail({
-			to: appointment.patientEmail,
-			subject,
-			html,
-		});
-	}
+    await this.sendEmail({
+      to: appointment.patientEmail,
+      subject,
+      html,
+    });
+  }
 
-	/**
-	 * Envia relatório de evolução
-	 */
-	async sendEvolutionReport(
-		patient: PatientData,
-		reportData: {
-			period: { start: Date; end: Date };
-			summary: string;
-			nextAppointment?: Date;
-			attachmentUrl?: string;
-		},
-	): Promise<void> {
-		const subject = `Relatório de Evolução - ${patient.name}`;
-		const html = this.getEvolutionReportTemplate(patient, reportData);
+  /**
+   * Envia relatório de evolução
+   */
+  async sendEvolutionReport(
+    patient: PatientData,
+    reportData: {
+      period: { start: Date; end: Date };
+      summary: string;
+      nextAppointment?: Date;
+      attachmentUrl?: string;
+    },
+  ): Promise<void> {
+    const subject = `Relatório de Evolução - ${patient.name}`;
+    const html = this.getEvolutionReportTemplate(patient, reportData);
 
-		await this.sendEmail({
-			to: patient.email,
-			subject,
-			html,
-			attachments: reportData.attachmentUrl
-				? [{ filename: "evolucao.pdf", path: reportData.attachmentUrl }]
-				: undefined,
-		});
-	}
+    await this.sendEmail({
+      to: patient.email,
+      subject,
+      html,
+      attachments: reportData.attachmentUrl
+        ? [{ filename: "evolucao.pdf", path: reportData.attachmentUrl }]
+        : undefined,
+    });
+  }
 
-	/**
-	 * Envia email de boas-vindas
-	 */
-	async sendWelcomeEmail(patient: PatientData): Promise<void> {
-		const subject = "Bem-vindo(a) ao FisioFlow";
-		const html = this.getWelcomeTemplate(patient);
+  /**
+   * Envia email de boas-vindas
+   */
+  async sendWelcomeEmail(patient: PatientData): Promise<void> {
+    const subject = "Bem-vindo(a) ao FisioFlow";
+    const html = this.getWelcomeTemplate(patient);
 
-		await this.sendEmail({
-			to: patient.email,
-			subject,
-			html,
-		});
-	}
+    await this.sendEmail({
+      to: patient.email,
+      subject,
+      html,
+    });
+  }
 
-	/**
-	 * Envia email de aniversário
-	 */
-	async sendBirthdayEmail(patient: PatientData): Promise<void> {
-		const subject = "Feliz Aniversário! 🎉";
-		const html = this.getBirthdayTemplate(patient);
+  /**
+   * Envia email de aniversário
+   */
+  async sendBirthdayEmail(patient: PatientData): Promise<void> {
+    const subject = "Feliz Aniversário! 🎉";
+    const html = this.getBirthdayTemplate(patient);
 
-		await this.sendEmail({
-			to: patient.email,
-			subject,
-			html,
-		});
-	}
+    await this.sendEmail({
+      to: patient.email,
+      subject,
+      html,
+    });
+  }
 
-	/**
-	 * Envia relatório semanal para profissionais
-	 */
-	async sendWeeklyReport(
-		professionalEmail: string,
-		data: {
-			week: { start: Date; end: Date };
-			totalAppointments: number;
-			completedSessions: number;
-			noShows: number;
-			newPatients: number;
-			revenue?: number;
-		},
-	): Promise<void> {
-		const subject = `Relatório Semanal - ${format(data.week.start, "dd/MM")} a ${format(data.week.end, "dd/MM")}`;
-		const html = this.getWeeklyReportTemplate(professionalEmail, data);
+  /**
+   * Envia relatório semanal para profissionais
+   */
+  async sendWeeklyReport(
+    professionalEmail: string,
+    data: {
+      week: { start: Date; end: Date };
+      totalAppointments: number;
+      completedSessions: number;
+      noShows: number;
+      newPatients: number;
+      revenue?: number;
+    },
+  ): Promise<void> {
+    const subject = `Relatório Semanal - ${format(data.week.start, "dd/MM")} a ${format(data.week.end, "dd/MM")}`;
+    const html = this.getWeeklyReportTemplate(professionalEmail, data);
 
-		await this.sendEmail({
-			to: professionalEmail,
-			subject,
-			html,
-		});
-	}
+    await this.sendEmail({
+      to: professionalEmail,
+      subject,
+      html,
+    });
+  }
 
-	/**
-	 * Método genérico de envio
-	 */
-	private async sendEmail(params: {
-		to: string;
-		subject: string;
-		html: string;
-		attachments?: Array<{ filename: string; path: string }>;
-	}): Promise<void> {
-		if (this.config.provider === "resend" && this.resend) {
-			await this.resend.emails.send({
-				from: this.config.from || "FisioFlow <contato@moocafisio.com.br>",
-				to: params.to,
-				subject: params.subject,
-				html: params.html,
-				attachments: params.attachments,
-			});
-		} else {
-			console.warn("Provider não configurado para envio de email");
-			console.log("Email seria enviado:", params);
-		}
-	}
+  /**
+   * Método genérico de envio
+   */
+  private async sendEmail(params: {
+    to: string;
+    subject: string;
+    html: string;
+    attachments?: Array<{ filename: string; path: string }>;
+  }): Promise<void> {
+    if (this.config.provider === "resend" && this.resend) {
+      await this.resend.emails.send({
+        from: this.config.from || "FisioFlow <contato@moocafisio.com.br>",
+        to: params.to,
+        subject: params.subject,
+        html: params.html,
+        attachments: params.attachments,
+      });
+    } else {
+      console.warn("Provider não configurado para envio de email");
+      console.log("Email seria enviado:", params);
+    }
+  }
 
-	// ==================== TEMPLATES ====================
+  // ==================== TEMPLATES ====================
 
-	private getAppointmentConfirmationTemplate(data: AppointmentData): string {
-		const dateStr = format(data.start, "dd 'de' MMMM 'de' yyyy", {
-			locale: ptBR,
-		});
-		const timeStr = format(data.start, "HH:mm");
-		const endTimeStr = format(data.end, "HH:mm");
+  private getAppointmentConfirmationTemplate(data: AppointmentData): string {
+    const dateStr = format(data.start, "dd 'de' MMMM 'de' yyyy", {
+      locale: ptBR,
+    });
+    const timeStr = format(data.start, "HH:mm");
+    const endTimeStr = format(data.end, "HH:mm");
 
-		return `
+    return `
 <!DOCTYPE html>
 <html>
 <head>
@@ -287,42 +285,42 @@ export class EmailNotificationService {
           <div class="detail-value">${data.professionalName}</div>
         </div>
         ${
-					data.location
-						? `
+          data.location
+            ? `
         <div class="detail-row">
           <div class="detail-label">Local:</div>
           <div class="detail-value">${data.location}</div>
         </div>
         `
-						: ""
-				}
+            : ""
+        }
         ${
-					data.googleMeetLink
-						? `
+          data.googleMeetLink
+            ? `
         <div class="detail-row">
           <div class="detail-label">Link da Sessão:</div>
           <div class="detail-value"><a href="${data.googleMeetLink}">Acessar Google Meet</a></div>
         </div>
         `
-						: ""
-				}
+            : ""
+        }
       </div>
 
       ${
-				data.googleMeetLink
-					? `
+        data.googleMeetLink
+          ? `
       <a href="${data.googleMeetLink}" class="button">Entrar na Sessão</a>
       `
-					: ""
-			}
+          : ""
+      }
 
       ${
-				data.notes
-					? `
+        data.notes
+          ? `
       <p><strong>Observações:</strong> ${data.notes}</p>
       `
-					: ""
-			}
+          : ""
+      }
 
       <p>Por favor, chegue com 15 minutos de antecedência.</p>
       <p>Se precisar reagendar, responda a este email ou entre em contato pelo telefone.</p>
@@ -334,15 +332,15 @@ export class EmailNotificationService {
 </body>
 </html>
     `.trim();
-	}
+  }
 
-	private getAppointmentReminderTemplate(data: AppointmentData): string {
-		const dateStr = format(data.start, "dd 'de' MMMM 'de' yyyy", {
-			locale: ptBR,
-		});
-		const timeStr = format(data.start, "HH:mm");
+  private getAppointmentReminderTemplate(data: AppointmentData): string {
+    const dateStr = format(data.start, "dd 'de' MMMM 'de' yyyy", {
+      locale: ptBR,
+    });
+    const timeStr = format(data.start, "HH:mm");
 
-		return `
+    return `
 <!DOCTYPE html>
 <html>
 <head>
@@ -376,12 +374,12 @@ export class EmailNotificationService {
       </ul>
 
       ${
-				data.googleMeetLink
-					? `
+        data.googleMeetLink
+          ? `
       <p>Para sua sessão online, <a href="${data.googleMeetLink}">clique aqui</a> para acessar a sala de espera.</p>
       `
-					: ""
-			}
+          : ""
+      }
 
       <p>Se precisar reagendar, por favor nos avise com antecedência.</p>
     </div>
@@ -392,12 +390,12 @@ export class EmailNotificationService {
 </body>
 </html>
     `.trim();
-	}
+  }
 
-	private getSameDayReminderTemplate(data: AppointmentData): string {
-		const timeStr = format(data.start, "HH:mm");
+  private getSameDayReminderTemplate(data: AppointmentData): string {
+    const timeStr = format(data.start, "HH:mm");
 
-		return `
+    return `
 <!DOCTYPE html>
 <html>
 <head>
@@ -423,14 +421,14 @@ export class EmailNotificationService {
       <p style="text-align: center;">com ${data.professionalName}</p>
 
       ${
-				data.googleMeetLink
-					? `
+        data.googleMeetLink
+          ? `
       <p style="text-align: center; margin-top: 30px;">
         <a href="${data.googleMeetLink}" style="display: inline-block; background: #005293; color: white; padding: 15px 40px; text-decoration: none; border-radius: 8px; font-weight: bold;">Entrar na Chamada</a>
       </p>
       `
-					: ""
-			}
+          : ""
+      }
 
       <p style="text-align: center; margin-top: 30px; font-size: 14px; color: #666;">
         Te esperamos lá! 💪
@@ -443,15 +441,15 @@ export class EmailNotificationService {
 </body>
 </html>
     `.trim();
-	}
+  }
 
-	private getNoShowTemplate(data: AppointmentData): string {
-		const dateStr = format(data.start, "dd 'de' MMMM 'de' yyyy", {
-			locale: ptBR,
-		});
-		const timeStr = format(data.start, "HH:mm");
+  private getNoShowTemplate(data: AppointmentData): string {
+    const dateStr = format(data.start, "dd 'de' MMMM 'de' yyyy", {
+      locale: ptBR,
+    });
+    const timeStr = format(data.start, "HH:mm");
 
-		return `
+    return `
 <!DOCTYPE html>
 <html>
 <head>
@@ -491,15 +489,15 @@ export class EmailNotificationService {
 </body>
 </html>
     `.trim();
-	}
+  }
 
-	private getTelemedicineInviteTemplate(data: AppointmentData): string {
-		const dateStr = format(data.start, "dd 'de' MMMM 'de' yyyy", {
-			locale: ptBR,
-		});
-		const timeStr = format(data.start, "HH:mm");
+  private getTelemedicineInviteTemplate(data: AppointmentData): string {
+    const dateStr = format(data.start, "dd 'de' MMMM 'de' yyyy", {
+      locale: ptBR,
+    });
+    const timeStr = format(data.start, "HH:mm");
 
-		return `
+    return `
 <!DOCTYPE html>
 <html>
 <head>
@@ -552,10 +550,10 @@ export class EmailNotificationService {
 </body>
 </html>
     `.trim();
-	}
+  }
 
-	private getWelcomeTemplate(patient: PatientData): string {
-		return `
+  private getWelcomeTemplate(patient: PatientData): string {
+    return `
 <!DOCTYPE html>
 <html>
 <head>
@@ -610,12 +608,12 @@ export class EmailNotificationService {
 </body>
 </html>
     `.trim();
-	}
+  }
 
-	private getBirthdayTemplate(patient: PatientData): string {
-		const firstName = patient.name.split(" ")[0];
+  private getBirthdayTemplate(patient: PatientData): string {
+    const firstName = patient.name.split(" ")[0];
 
-		return `
+    return `
 <!DOCTYPE html>
 <html>
 <head>
@@ -651,19 +649,19 @@ export class EmailNotificationService {
 </body>
 </html>
     `.trim();
-	}
+  }
 
-	private getEvolutionReportTemplate(
-		patient: PatientData,
-		data: {
-			period: { start: Date; end: Date };
-			summary: string;
-			nextAppointment?: Date;
-		},
-	): string {
-		const periodStr = `${format(data.period.start, "dd/MM")} a ${format(data.period.end, "dd/MM/yyyy")}`;
+  private getEvolutionReportTemplate(
+    patient: PatientData,
+    data: {
+      period: { start: Date; end: Date };
+      summary: string;
+      nextAppointment?: Date;
+    },
+  ): string {
+    const periodStr = `${format(data.period.start, "dd/MM")} a ${format(data.period.end, "dd/MM/yyyy")}`;
 
-		return `
+    return `
 <!DOCTYPE html>
 <html>
 <head>
@@ -692,14 +690,14 @@ export class EmailNotificationService {
       </div>
 
       ${
-				data.nextAppointment
-					? `
+        data.nextAppointment
+          ? `
       <p style="text-align: center; color: #005293; font-weight: bold;">
         Próxima consulta: ${format(data.nextAppointment, "dd 'de' MMMM 'às' HH:mm", { locale: ptBR })}
       </p>
       `
-					: ""
-			}
+          : ""
+      }
 
       <p>Continue se dedicando ao tratamento. Cada dia é um passo a mais em direção aos seus objetivos!</p>
     </div>
@@ -710,26 +708,26 @@ export class EmailNotificationService {
 </body>
 </html>
     `.trim();
-	}
+  }
 
-	private getWeeklyReportTemplate(
-		email: string,
-		data: {
-			week: { start: Date; end: Date };
-			totalAppointments: number;
-			completedSessions: number;
-			noShows: number;
-			newPatients: number;
-			revenue?: number;
-		},
-	): string {
-		const weekStr = `${format(data.week.start, "dd/MM")} a ${format(data.week.end, "dd/MM")}`;
-		const completionRate =
-			data.totalAppointments > 0
-				? Math.round((data.completedSessions / data.totalAppointments) * 100)
-				: 0;
+  private getWeeklyReportTemplate(
+    email: string,
+    data: {
+      week: { start: Date; end: Date };
+      totalAppointments: number;
+      completedSessions: number;
+      noShows: number;
+      newPatients: number;
+      revenue?: number;
+    },
+  ): string {
+    const weekStr = `${format(data.week.start, "dd/MM")} a ${format(data.week.end, "dd/MM")}`;
+    const completionRate =
+      data.totalAppointments > 0
+        ? Math.round((data.completedSessions / data.totalAppointments) * 100)
+        : 0;
 
-		return `
+    return `
 <!DOCTYPE html>
 <html>
 <head>
@@ -775,15 +773,15 @@ export class EmailNotificationService {
           <div class="stat-label">Novos Pacientes</div>
         </div>
         ${
-					data.revenue !== undefined
-						? `
+          data.revenue !== undefined
+            ? `
         <div class="stat">
           <div class="stat-value">R$${data.revenue.toLocaleString("pt-BR")}</div>
           <div class="stat-label">Receita</div>
         </div>
         `
-						: ""
-				}
+            : ""
+        }
       </div>
 
       <p style="text-align: center; color: #666; font-size: 14px;">
@@ -797,31 +795,28 @@ export class EmailNotificationService {
 </body>
 </html>
     `.trim();
-	}
+  }
 }
 
 /**
  * Factory para criar serviço de email
  */
 export class EmailServiceFactory {
-	static create(config: EmailConfig): EmailNotificationService {
-		return new EmailNotificationService(config);
-	}
+  static create(config: EmailConfig): EmailNotificationService {
+    return new EmailNotificationService(config);
+  }
 
-	static async createFromEnv(): Promise<EmailNotificationService> {
-		const provider = (process.env.EMAIL_PROVIDER || "resend") as
-			| "resend"
-			| "gmail"
-			| "sendgrid";
-		const apiKey = process.env.RESEND_API_KEY || process.env.SENDGRID_API_KEY;
-		const from = process.env.EMAIL_FROM || "contato@moocafisio.com.br";
-		const fromName = process.env.EMAIL_FROM_NAME || "FisioFlow";
+  static async createFromEnv(): Promise<EmailNotificationService> {
+    const provider = (process.env.EMAIL_PROVIDER || "resend") as "resend" | "gmail" | "sendgrid";
+    const apiKey = process.env.RESEND_API_KEY || process.env.SENDGRID_API_KEY;
+    const from = process.env.EMAIL_FROM || "contato@moocafisio.com.br";
+    const fromName = process.env.EMAIL_FROM_NAME || "FisioFlow";
 
-		return new EmailNotificationService({
-			provider,
-			apiKey,
-			from,
-			fromName,
-		});
-	}
+    return new EmailNotificationService({
+      provider,
+      apiKey,
+      from,
+      fromName,
+    });
+  }
 }
