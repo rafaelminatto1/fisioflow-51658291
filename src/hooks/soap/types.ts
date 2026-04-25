@@ -28,6 +28,18 @@ export class SoapOperationError extends Error {
 	}
 }
 
+export interface SoapRecordV2 {
+	id: string;
+	patientId: string;
+	recordDate: string;
+	subjective: string;
+	objective: string;
+	assessment: string;
+	plan: string;
+	createdAt: string;
+	createdBy: string;
+}
+
 export interface SoapRecord {
 	id: string;
 	patient_id: string;

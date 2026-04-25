@@ -1416,7 +1416,6 @@ export const builtinClinicalTestsCatalog: ClinicalTestCatalogRecord[] = [
 		evidence_summary: "Provocação de dor na origem dos flexores/pronadores.",
 		source_label: "Curadoria FisioFlow",
 		sort_order: 35,
-		sort_order: 35,
 		illustration: "elbow-test",
 		imageUrl: "/clinical-tests/illustrations/golfers-elbow.avif",
 		fieldsDefinition: [

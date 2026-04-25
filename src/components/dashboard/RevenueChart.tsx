@@ -85,9 +85,8 @@ export function RevenueChart() {
 	}, [loadRevenueData]);
 
 	const tooltipFormatter = useMemo(
-		// @ts-expect-error -- recharts v3 formatter type
-		() => (value: number) => [
-			`R$ ${value.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}`,
+		() => (value: number | string) => [
+			`R$ ${Number(value).toLocaleString("pt-BR", { minimumFractionDigits: 2 })}`,
 			"Receita",
 		],
 		[],
