@@ -1,7 +1,7 @@
-import { patientApi } from '@/lib/api';
-import { asyncResult, Result } from '@/lib/async';
-import { log } from '@/lib/logger';
-import { perf } from '@/lib/performance';
+import { patientApi } from "@/lib/api";
+import { asyncResult, Result } from "@/lib/async";
+import { log } from "@/lib/logger";
+import { perf } from "@/lib/performance";
 
 export function subscribeToAppointments(
   userId: string,
@@ -12,7 +12,7 @@ export function subscribeToAppointments(
       const appointments = await patientApi.getAppointments();
       callback(appointments);
     } catch (error) {
-      log.error('APPOINTMENT', 'Error polling appointments (no cache available)', error);
+      log.error("APPOINTMENT", "Error polling appointments (no cache available)", error);
     }
   };
 
@@ -23,29 +23,29 @@ export function subscribeToAppointments(
 
 export async function getUpcomingAppointments(_userId: string): Promise<Result<any[]>> {
   return asyncResult(async () => {
-    perf.start('api_get_upcoming_appointments');
+    perf.start("api_get_upcoming_appointments");
     const appointments = await patientApi.getAppointments(true);
-    perf.end('api_get_upcoming_appointments', true);
+    perf.end("api_get_upcoming_appointments", true);
     return appointments;
-  }, 'getUpcomingAppointments');
+  }, "getUpcomingAppointments");
 }
 
 export async function getPastAppointments(_userId: string): Promise<Result<any[]>> {
   return asyncResult(async () => {
-    perf.start('api_get_past_appointments');
+    perf.start("api_get_past_appointments");
     const appointments = await patientApi.getAppointments();
     const now = Date.now();
     const pastAppointments = appointments.filter((appointment: any) => {
       const appointmentDate = new Date(appointment.date).getTime();
       return (
         appointmentDate < now ||
-        appointment.status === 'completed' ||
-        appointment.status === 'cancelled'
+        appointment.status === "completed" ||
+        appointment.status === "cancelled"
       );
     });
-    perf.end('api_get_past_appointments', true);
+    perf.end("api_get_past_appointments", true);
     return pastAppointments;
-  }, 'getPastAppointments');
+  }, "getPastAppointments");
 }
 
 export async function getNextAppointment(userId: string): Promise<Result<any | null>> {
@@ -55,7 +55,7 @@ export async function getNextAppointment(userId: string): Promise<Result<any | n
       return null;
     }
     return result.data[0];
-  }, 'getNextAppointment');
+  }, "getNextAppointment");
 }
 
 export async function getAppointmentById(
@@ -63,11 +63,11 @@ export async function getAppointmentById(
   appointmentId: string,
 ): Promise<Result<any | null>> {
   return asyncResult(async () => {
-    perf.start('api_get_appointment_by_id');
+    perf.start("api_get_appointment_by_id");
     const appointments = await patientApi.getAppointments();
-    perf.end('api_get_appointment_by_id', true);
+    perf.end("api_get_appointment_by_id", true);
     return appointments.find((appointment: any) => appointment.id === appointmentId) ?? null;
-  }, 'getAppointmentById');
+  }, "getAppointmentById");
 }
 
 export interface AppointmentUpdate {
@@ -82,7 +82,7 @@ export async function updateAppointment(
   updates: AppointmentUpdate,
 ): Promise<Result<void>> {
   return asyncResult(async () => {
-    perf.start('api_update_appointment');
+    perf.start("api_update_appointment");
 
     if (updates.confirmed === true || updates.responseToReminder === true) {
       await patientApi.confirmAppointment(appointmentId);
@@ -92,9 +92,9 @@ export async function updateAppointment(
       await patientApi.cancelAppointment(appointmentId, updates.patientNotes);
     }
 
-    perf.end('api_update_appointment', true);
-    log.info('APPOINTMENT', 'Appointment updated by patient', { appointmentId, updates });
-  }, 'updateAppointment');
+    perf.end("api_update_appointment", true);
+    log.info("APPOINTMENT", "Appointment updated by patient", { appointmentId, updates });
+  }, "updateAppointment");
 }
 
 export async function confirmAppointment(

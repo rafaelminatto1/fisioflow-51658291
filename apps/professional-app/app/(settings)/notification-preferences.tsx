@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect } from "react";
 import {
   View,
   Text,
@@ -8,15 +8,19 @@ import {
   TouchableOpacity,
   Alert,
   ActivityIndicator,
-} from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
-import { Ionicons } from '@expo/vector-icons';
-import { useColors } from '@/hooks/useColorScheme';
-import { useAuthStore } from '@/store/auth';
-import { Card, Button } from '@/components';
-import { NotificationCategory, NotificationPreference, NotificationPreferences } from '@/types/notifications';
-import DateTimePicker from '@react-native-community/datetimepicker';
-import { fetchApi } from '@/lib/api';
+} from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
+import { Ionicons } from "@expo/vector-icons";
+import { useColors } from "@/hooks/useColorScheme";
+import { useAuthStore } from "@/store/auth";
+import { Card, Button } from "@/components";
+import {
+  NotificationCategory,
+  NotificationPreference,
+  NotificationPreferences,
+} from "@/types/notifications";
+import DateTimePicker from "@react-native-community/datetimepicker";
+import { fetchApi } from "@/lib/api";
 
 export default function NotificationPreferencesScreen() {
   const colors = useColors();
@@ -24,11 +28,11 @@ export default function NotificationPreferencesScreen() {
   const [preferences, setPreferences] = useState<NotificationPreferences | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
-  
+
   // States for time picker
   const [showTimePicker, setShowTimePicker] = useState<{
     category: NotificationCategory;
-    type: 'start' | 'end';
+    type: "start" | "end";
   } | null>(null);
 
   useEffect(() => {
@@ -39,41 +43,41 @@ export default function NotificationPreferencesScreen() {
     if (!user?.id) return;
     setIsLoading(true);
     try {
-      const data = await fetchApi<any>(`/api/settings/notifications/${user.id}`).catch(err => {
+      const data = await fetchApi<any>(`/api/settings/notifications/${user.id}`).catch((err) => {
         if (err.status === 404) return null;
         throw err;
       });
-      
+
       if (data) {
         setPreferences(data);
       } else {
         // Default preferences
         const defaultPrefs: NotificationPreferences = {
           userId: user.id,
-          appointments: createDefaultPreference('appointments'),
-          patients: createDefaultPreference('patients'),
-          system: createDefaultPreference('system'),
-          marketing: createDefaultPreference('marketing'),
+          appointments: createDefaultPreference("appointments"),
+          patients: createDefaultPreference("patients"),
+          system: createDefaultPreference("system"),
+          marketing: createDefaultPreference("marketing"),
           updatedAt: new Date(),
         };
         setPreferences(defaultPrefs);
       }
     } catch (error) {
-      console.error('Error loading notification preferences:', error);
-      Alert.alert('Erro', 'Não foi possível carregar suas preferências de notificações.');
+      console.error("Error loading notification preferences:", error);
+      Alert.alert("Erro", "Não foi possível carregar suas preferências de notificações.");
     } finally {
       setIsLoading(false);
     }
   };
 
   const createDefaultPreference = (category: NotificationCategory): NotificationPreference => ({
-    userId: user?.id || '',
+    userId: user?.id || "",
     category,
     enabled: true,
     quietHoursEnabled: false,
-    quietHoursStart: '22:00',
-    quietHoursEnd: '08:00',
-    channels: { push: true, email: true, inApp: true }
+    quietHoursStart: "22:00",
+    quietHoursEnd: "08:00",
+    channels: { push: true, email: true, inApp: true },
   });
 
   const handleSave = async () => {
@@ -81,33 +85,40 @@ export default function NotificationPreferencesScreen() {
     setIsSaving(true);
     try {
       await fetchApi(`/api/settings/notifications/${user.id}`, {
-        method: 'PUT',
+        method: "PUT",
         data: {
           ...preferences,
           updatedAt: new Date().toISOString(),
-        }
+        },
       });
-      Alert.alert('Sucesso', 'Suas preferências foram salvas.');
+      Alert.alert("Sucesso", "Suas preferências foram salvas.");
     } catch (error) {
-      console.error('Error saving notification preferences:', error);
-      Alert.alert('Erro', 'Não foi possível salvar suas preferências.');
+      console.error("Error saving notification preferences:", error);
+      Alert.alert("Erro", "Não foi possível salvar suas preferências.");
     } finally {
       setIsSaving(false);
     }
   };
 
-  const updateCategory = (category: NotificationCategory, updates: Partial<NotificationPreference>) => {
+  const updateCategory = (
+    category: NotificationCategory,
+    updates: Partial<NotificationPreference>,
+  ) => {
     if (!preferences) return;
     setPreferences({
       ...preferences,
       [category]: {
         ...preferences[category],
-        ...updates
-      }
+        ...updates,
+      },
     });
   };
 
-  const renderCategory = (title: string, category: NotificationCategory, icon: keyof typeof Ionicons.prototype.props.name) => {
+  const renderCategory = (
+    title: string,
+    category: NotificationCategory,
+    icon: keyof typeof Ionicons.prototype.props.name,
+  ) => {
     if (!preferences) return null;
     const pref = preferences[category];
 
@@ -134,27 +145,33 @@ export default function NotificationPreferencesScreen() {
               </Text>
               <Switch
                 value={pref.quietHoursEnabled}
-                onValueChange={(quietHoursEnabled) => updateCategory(category, { quietHoursEnabled })}
+                onValueChange={(quietHoursEnabled) =>
+                  updateCategory(category, { quietHoursEnabled })
+                }
                 trackColor={{ false: colors.border, true: colors.primary }}
                 accessibilityLabel={`Habilitar horário de silêncio para ${title}`}
               />
             </View>
-            
+
             {pref.quietHoursEnabled && (
               <View style={styles.timeRows}>
-                <TouchableOpacity 
-                  style={[styles.timeButton, { backgroundColor: colors.primary + '10' }]}
-                  onPress={() => setShowTimePicker({ category, type: 'start' })}
+                <TouchableOpacity
+                  style={[styles.timeButton, { backgroundColor: colors.primary + "10" }]}
+                  onPress={() => setShowTimePicker({ category, type: "start" })}
                 >
                   <Text style={[styles.timeLabel, { color: colors.textSecondary }]}>Início:</Text>
-                  <Text style={[styles.timeValue, { color: colors.primary }]}>{pref.quietHoursStart}</Text>
+                  <Text style={[styles.timeValue, { color: colors.primary }]}>
+                    {pref.quietHoursStart}
+                  </Text>
                 </TouchableOpacity>
-                <TouchableOpacity 
-                  style={[styles.timeButton, { backgroundColor: colors.primary + '10' }]}
-                  onPress={() => setShowTimePicker({ category, type: 'end' })}
+                <TouchableOpacity
+                  style={[styles.timeButton, { backgroundColor: colors.primary + "10" }]}
+                  onPress={() => setShowTimePicker({ category, type: "end" })}
                 >
                   <Text style={[styles.timeLabel, { color: colors.textSecondary }]}>Fim:</Text>
-                  <Text style={[styles.timeValue, { color: colors.primary }]}>{pref.quietHoursEnd}</Text>
+                  <Text style={[styles.timeValue, { color: colors.primary }]}>
+                    {pref.quietHoursEnd}
+                  </Text>
                 </TouchableOpacity>
               </View>
             )}
@@ -166,12 +183,12 @@ export default function NotificationPreferencesScreen() {
 
   const onTimeChange = (event: any, selectedDate?: Date) => {
     if (selectedDate && showTimePicker) {
-      const hours = selectedDate.getHours().toString().padStart(2, '0');
-      const minutes = selectedDate.getMinutes().toString().padStart(2, '0');
+      const hours = selectedDate.getHours().toString().padStart(2, "0");
+      const minutes = selectedDate.getMinutes().toString().padStart(2, "0");
       const timeString = `${hours}:${minutes}`;
-      
+
       updateCategory(showTimePicker.category, {
-        [showTimePicker.type === 'start' ? 'quietHoursStart' : 'quietHoursEnd']: timeString
+        [showTimePicker.type === "start" ? "quietHoursStart" : "quietHoursEnd"]: timeString,
       });
     }
     setShowTimePicker(null);
@@ -186,7 +203,10 @@ export default function NotificationPreferencesScreen() {
   }
 
   return (
-    <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]} edges={['bottom', 'left', 'right']}>
+    <SafeAreaView
+      style={[styles.container, { backgroundColor: colors.background }]}
+      edges={["bottom", "left", "right"]}
+    >
       <ScrollView contentContainerStyle={styles.scrollContent}>
         <View style={styles.header}>
           <Text style={[styles.title, { color: colors.text }]}>Preferências de Notificações</Text>
@@ -195,10 +215,10 @@ export default function NotificationPreferencesScreen() {
           </Text>
         </View>
 
-        {renderCategory('Agendamentos', 'appointments', 'calendar-outline')}
-        {renderCategory('Pacientes', 'patients', 'people-outline')}
-        {renderCategory('Sistema', 'system', 'settings-outline')}
-        {renderCategory('Marketing', 'marketing', 'megaphone-outline')}
+        {renderCategory("Agendamentos", "appointments", "calendar-outline")}
+        {renderCategory("Pacientes", "patients", "people-outline")}
+        {renderCategory("Sistema", "system", "settings-outline")}
+        {renderCategory("Marketing", "marketing", "megaphone-outline")}
 
         <Button
           title="Salvar Alterações"
@@ -225,19 +245,36 @@ const styles = StyleSheet.create({
   container: { flex: 1 },
   scrollContent: { padding: 16 },
   header: { marginBottom: 24 },
-  title: { fontSize: 22, fontWeight: 'bold', marginBottom: 8 },
+  title: { fontSize: 22, fontWeight: "bold", marginBottom: 8 },
   subtitle: { fontSize: 16, lineHeight: 22 },
   categoryCard: { marginBottom: 16, padding: 16 },
-  categoryHeader: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 },
-  categoryTitleContainer: { flexDirection: 'row', alignItems: 'center', gap: 12 },
-  categoryTitle: { fontSize: 18, fontWeight: '600' },
-  quietHoursContainer: { borderTopWidth: 1, borderTopColor: 'rgba(0,0,0,0.05)', paddingTop: 12 },
-  quietHoursHeader: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 8 },
-  quietHoursLabel: { fontSize: 14, fontWeight: '600' },
-  timeRows: { flexDirection: 'row', gap: 12, marginTop: 8 },
-  timeButton: { flex: 1, padding: 10, borderRadius: 8, flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
+  categoryHeader: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    marginBottom: 12,
+  },
+  categoryTitleContainer: { flexDirection: "row", alignItems: "center", gap: 12 },
+  categoryTitle: { fontSize: 18, fontWeight: "600" },
+  quietHoursContainer: { borderTopWidth: 1, borderTopColor: "rgba(0,0,0,0.05)", paddingTop: 12 },
+  quietHoursHeader: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    marginBottom: 8,
+  },
+  quietHoursLabel: { fontSize: 14, fontWeight: "600" },
+  timeRows: { flexDirection: "row", gap: 12, marginTop: 8 },
+  timeButton: {
+    flex: 1,
+    padding: 10,
+    borderRadius: 8,
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+  },
   timeLabel: { fontSize: 13 },
-  timeValue: { fontSize: 15, fontWeight: 'bold' },
+  timeValue: { fontSize: 15, fontWeight: "bold" },
   saveButton: { marginTop: 24, marginBottom: 32 },
-  loadingContainer: { flex: 1, justifyContent: 'center', alignItems: 'center' },
+  loadingContainer: { flex: 1, justifyContent: "center", alignItems: "center" },
 });

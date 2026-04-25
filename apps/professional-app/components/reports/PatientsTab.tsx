@@ -1,9 +1,9 @@
-import React, { useMemo } from 'react';
-import { View, Text, StyleSheet } from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
-import { useColors } from '@/hooks/useColorScheme';
-import { Card } from '@/components';
-import { StatGrid } from './StatGrid';
+import React, { useMemo } from "react";
+import { View, Text, StyleSheet } from "react-native";
+import { Ionicons } from "@expo/vector-icons";
+import { useColors } from "@/hooks/useColorScheme";
+import { Card } from "@/components";
+import { StatGrid } from "./StatGrid";
 
 interface PatientsTabProps {
   patients: any[];
@@ -14,7 +14,7 @@ export function PatientsTab({ patients, topPatients }: PatientsTabProps) {
   const colors = useColors();
 
   const patientStats = useMemo(() => {
-    const newPatients = patients.filter(p => {
+    const newPatients = patients.filter((p) => {
       const createdAt = p.createdAt instanceof Date ? p.createdAt : new Date(p.createdAt);
       const thirtyDaysAgo = new Date();
       thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
@@ -22,9 +22,13 @@ export function PatientsTab({ patients, topPatients }: PatientsTabProps) {
     }).length;
 
     return [
-      { label: 'Novos (30d)', value: newPatients, color: colors.success },
-      { label: 'Total', value: patients.length, color: colors.primary },
-      { label: 'Inativos', value: patients.filter(p => p.status === 'inactive').length, color: colors.textMuted },
+      { label: "Novos (30d)", value: newPatients, color: colors.success },
+      { label: "Total", value: patients.length, color: colors.primary },
+      {
+        label: "Inativos",
+        value: patients.filter((p) => p.status === "inactive").length,
+        color: colors.textMuted,
+      },
     ];
   }, [patients, colors]);
 
@@ -37,7 +41,14 @@ export function PatientsTab({ patients, topPatients }: PatientsTabProps) {
         <Text style={[styles.chartTitle, { color: colors.text }]}>Mais Frequentes</Text>
         {topPatients.length > 0 ? (
           topPatients.map((patient, idx) => (
-            <View key={patient.id} style={[styles.topPatientItem, idx === topPatients.length - 1 && { borderBottomWidth: 0 }, { borderBottomColor: colors.border }]}>
+            <View
+              key={patient.id}
+              style={[
+                styles.topPatientItem,
+                idx === topPatients.length - 1 && { borderBottomWidth: 0 },
+                { borderBottomColor: colors.border },
+              ]}
+            >
               <View style={styles.rankBadge}>
                 <Text style={styles.rankText}>#{idx + 1}</Text>
               </View>
@@ -63,20 +74,20 @@ export function PatientsTab({ patients, topPatients }: PatientsTabProps) {
 const styles = StyleSheet.create({
   sectionTitle: {
     fontSize: 18,
-    fontWeight: '600',
+    fontWeight: "600",
     marginBottom: 16,
   },
   chartTitle: {
     fontSize: 16,
-    fontWeight: '600',
+    fontWeight: "600",
     marginBottom: 24,
   },
   topPatientsCard: {
     marginBottom: 16,
   },
   topPatientItem: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     paddingVertical: 12,
     borderBottomWidth: 1,
   },
@@ -84,14 +95,14 @@ const styles = StyleSheet.create({
     width: 28,
     height: 28,
     borderRadius: 14,
-    backgroundColor: '#F3F4F6',
-    alignItems: 'center',
-    justifyContent: 'center',
+    backgroundColor: "#F3F4F6",
+    alignItems: "center",
+    justifyContent: "center",
   },
   rankText: {
     fontSize: 12,
-    fontWeight: '600',
-    color: '#6B7280',
+    fontWeight: "600",
+    color: "#6B7280",
   },
   patientName: {
     flex: 1,
@@ -100,16 +111,16 @@ const styles = StyleSheet.create({
   },
   visitCount: {
     fontSize: 14,
-    fontWeight: '600',
+    fontWeight: "600",
   },
   chartPlaceholder: {
-    alignItems: 'center',
+    alignItems: "center",
     paddingVertical: 32,
     gap: 12,
   },
   chartPlaceholderText: {
     fontSize: 14,
-    textAlign: 'center',
+    textAlign: "center",
     paddingHorizontal: 32,
   },
 });

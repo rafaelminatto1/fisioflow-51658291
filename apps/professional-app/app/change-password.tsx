@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState } from "react";
 import {
   View,
   Text,
@@ -7,24 +7,24 @@ import {
   TouchableOpacity,
   TextInput,
   Alert,
-} from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
-import { Ionicons } from '@expo/vector-icons';
-import { useRouter } from 'expo-router';
-import { useColors } from '@/hooks/useColorScheme';
-import { Button, Card } from '@/components';
-import { useHaptics } from '@/hooks/useHaptics';
-import { fetchApi } from '@/lib/api';
+} from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
+import { Ionicons } from "@expo/vector-icons";
+import { useRouter } from "expo-router";
+import { useColors } from "@/hooks/useColorScheme";
+import { Button, Card } from "@/components";
+import { useHaptics } from "@/hooks/useHaptics";
+import { fetchApi } from "@/lib/api";
 
 export default function ChangePasswordScreen() {
   const colors = useColors();
   const router = useRouter();
-  
+
   const { medium, success, error } = useHaptics();
 
-  const [currentPassword, setCurrentPassword] = useState('');
-  const [newPassword, setNewPassword] = useState('');
-  const [confirmPassword, setConfirmPassword] = useState('');
+  const [currentPassword, setCurrentPassword] = useState("");
+  const [newPassword, setNewPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
   const [showCurrentPassword, setShowCurrentPassword] = useState(false);
   const [showNewPassword, setShowNewPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
@@ -40,21 +40,21 @@ export default function ChangePasswordScreen() {
     const newErrors: typeof errors = {};
 
     if (!currentPassword) {
-      newErrors.currentPassword = 'Digite sua senha atual';
+      newErrors.currentPassword = "Digite sua senha atual";
     }
 
     if (!newPassword) {
-      newErrors.newPassword = 'Digite a nova senha';
+      newErrors.newPassword = "Digite a nova senha";
     } else if (newPassword.length < 8) {
-      newErrors.newPassword = 'A senha deve ter pelo menos 8 caracteres';
+      newErrors.newPassword = "A senha deve ter pelo menos 8 caracteres";
     } else if (!/(?=.*[a-z])(?=.*[A-Z])(?=.*\d)/.test(newPassword)) {
-      newErrors.newPassword = 'A senha deve conter letras maiúsculas, minúsculas e números';
+      newErrors.newPassword = "A senha deve conter letras maiúsculas, minúsculas e números";
     }
 
     if (!confirmPassword) {
-      newErrors.confirmPassword = 'Confirme a nova senha';
+      newErrors.confirmPassword = "Confirme a nova senha";
     } else if (confirmPassword !== newPassword) {
-      newErrors.confirmPassword = 'As senhas não conferem';
+      newErrors.confirmPassword = "As senhas não conferem";
     }
 
     setErrors(newErrors);
@@ -71,31 +71,29 @@ export default function ChangePasswordScreen() {
 
     setIsLoading(true);
     try {
-      await fetchApi('/api/auth/change-password', {
-        method: 'POST',
+      await fetchApi("/api/auth/change-password", {
+        method: "POST",
         data: {
           currentPassword,
-          newPassword
-        }
+          newPassword,
+        },
       });
 
       success();
-      Alert.alert(
-        'Sucesso',
-        'Sua senha foi alterada com sucesso!',
-        [{ text: 'OK', onPress: () => router.back() }]
-      );
+      Alert.alert("Sucesso", "Sua senha foi alterada com sucesso!", [
+        { text: "OK", onPress: () => router.back() },
+      ]);
     } catch (err: any) {
       error();
-      Alert.alert('Erro', err.message || 'Não foi possível alterar a senha. Tente novamente.');
+      Alert.alert("Erro", err.message || "Não foi possível alterar a senha. Tente novamente.");
     } finally {
       setIsLoading(false);
     }
   };
 
   const getPasswordStrength = (): { label: string; color: string } => {
-    if (!newPassword) return { label: '', color: colors.textMuted };
-    
+    if (!newPassword) return { label: "", color: colors.textMuted };
+
     let strength = 0;
     if (newPassword.length >= 8) strength++;
     if (newPassword.length >= 12) strength++;
@@ -104,15 +102,18 @@ export default function ChangePasswordScreen() {
     if (/\d/.test(newPassword)) strength++;
     if (/[!@#$%^&*(),.?":{}|<>]/.test(newPassword)) strength++;
 
-    if (strength <= 2) return { label: 'Fraca', color: colors.error };
-    if (strength <= 4) return { label: 'Média', color: colors.warning };
-    return { label: 'Forte', color: colors.success };
+    if (strength <= 2) return { label: "Fraca", color: colors.error };
+    if (strength <= 4) return { label: "Média", color: colors.warning };
+    return { label: "Forte", color: colors.success };
   };
 
   const passwordStrength = getPasswordStrength();
 
   return (
-    <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]} edges={['left', 'right']}>
+    <SafeAreaView
+      style={[styles.container, { backgroundColor: colors.background }]}
+      edges={["left", "right"]}
+    >
       {/* Header */}
       <View style={[styles.header, { borderBottomColor: colors.border }]}>
         <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
@@ -130,7 +131,8 @@ export default function ChangePasswordScreen() {
             <View style={styles.infoTextContainer}>
               <Text style={[styles.infoTitle, { color: colors.text }]}>Segurança da Conta</Text>
               <Text style={[styles.infoText, { color: colors.textSecondary }]}>
-                Crie uma senha forte com pelo menos 8 caracteres, incluindo letras maiúsculas, minúsculas e números.
+                Crie uma senha forte com pelo menos 8 caracteres, incluindo letras maiúsculas,
+                minúsculas e números.
               </Text>
             </View>
           </View>
@@ -141,13 +143,19 @@ export default function ChangePasswordScreen() {
           {/* Current Password */}
           <View style={styles.inputGroup}>
             <Text style={[styles.label, { color: colors.text }]}>Senha Atual</Text>
-            <View style={[styles.inputContainer, { borderColor: errors.currentPassword ? colors.error : colors.border }]}>
+            <View
+              style={[
+                styles.inputContainer,
+                { borderColor: errors.currentPassword ? colors.error : colors.border },
+              ]}
+            >
               <TextInput
                 style={[styles.input, { backgroundColor: colors.surface, color: colors.text }]}
                 value={currentPassword}
                 onChangeText={(value) => {
                   setCurrentPassword(value);
-                  if (errors.currentPassword) setErrors(prev => ({ ...prev, currentPassword: undefined }));
+                  if (errors.currentPassword)
+                    setErrors((prev) => ({ ...prev, currentPassword: undefined }));
                 }}
                 placeholder="Digite sua senha atual"
                 placeholderTextColor={colors.textMuted}
@@ -155,28 +163,36 @@ export default function ChangePasswordScreen() {
                 autoCapitalize="none"
               />
               <TouchableOpacity onPress={() => setShowCurrentPassword(!showCurrentPassword)}>
-                <Ionicons 
-                  name={showCurrentPassword ? 'eye-off-outline' : 'eye-outline'} 
-                  size={22} 
-                  color={colors.textSecondary} 
+                <Ionicons
+                  name={showCurrentPassword ? "eye-off-outline" : "eye-outline"}
+                  size={22}
+                  color={colors.textSecondary}
                 />
               </TouchableOpacity>
             </View>
             {errors.currentPassword && (
-              <Text style={[styles.errorText, { color: colors.error }]}>{errors.currentPassword}</Text>
+              <Text style={[styles.errorText, { color: colors.error }]}>
+                {errors.currentPassword}
+              </Text>
             )}
           </View>
 
           {/* New Password */}
           <View style={styles.inputGroup}>
             <Text style={[styles.label, { color: colors.text }]}>Nova Senha</Text>
-            <View style={[styles.inputContainer, { borderColor: errors.newPassword ? colors.error : colors.border }]}>
+            <View
+              style={[
+                styles.inputContainer,
+                { borderColor: errors.newPassword ? colors.error : colors.border },
+              ]}
+            >
               <TextInput
                 style={[styles.input, { backgroundColor: colors.surface, color: colors.text }]}
                 value={newPassword}
                 onChangeText={(value) => {
                   setNewPassword(value);
-                  if (errors.newPassword) setErrors(prev => ({ ...prev, newPassword: undefined }));
+                  if (errors.newPassword)
+                    setErrors((prev) => ({ ...prev, newPassword: undefined }));
                 }}
                 placeholder="Digite a nova senha"
                 placeholderTextColor={colors.textMuted}
@@ -184,10 +200,10 @@ export default function ChangePasswordScreen() {
                 autoCapitalize="none"
               />
               <TouchableOpacity onPress={() => setShowNewPassword(!showNewPassword)}>
-                <Ionicons 
-                  name={showNewPassword ? 'eye-off-outline' : 'eye-outline'} 
-                  size={22} 
-                  color={colors.textSecondary} 
+                <Ionicons
+                  name={showNewPassword ? "eye-off-outline" : "eye-outline"}
+                  size={22}
+                  color={colors.textSecondary}
                 />
               </TouchableOpacity>
             </View>
@@ -205,11 +221,13 @@ export default function ChangePasswordScreen() {
                         styles.strengthBar,
                         {
                           backgroundColor: passwordStrength.color,
-                          opacity: (passwordStrength.label === 'Fraca' && level <= 1) ||
-                                   (passwordStrength.label === 'Média' && level <= 2) ||
-                                   passwordStrength.label === 'Forte'
-                            ? 1 : 0.2
-                        }
+                          opacity:
+                            (passwordStrength.label === "Fraca" && level <= 1) ||
+                            (passwordStrength.label === "Média" && level <= 2) ||
+                            passwordStrength.label === "Forte"
+                              ? 1
+                              : 0.2,
+                        },
                       ]}
                     />
                   ))}
@@ -224,13 +242,19 @@ export default function ChangePasswordScreen() {
           {/* Confirm Password */}
           <View style={styles.inputGroup}>
             <Text style={[styles.label, { color: colors.text }]}>Confirmar Senha</Text>
-            <View style={[styles.inputContainer, { borderColor: errors.confirmPassword ? colors.error : colors.border }]}>
+            <View
+              style={[
+                styles.inputContainer,
+                { borderColor: errors.confirmPassword ? colors.error : colors.border },
+              ]}
+            >
               <TextInput
                 style={[styles.input, { backgroundColor: colors.surface, color: colors.text }]}
                 value={confirmPassword}
                 onChangeText={(value) => {
                   setConfirmPassword(value);
-                  if (errors.confirmPassword) setErrors(prev => ({ ...prev, confirmPassword: undefined }));
+                  if (errors.confirmPassword)
+                    setErrors((prev) => ({ ...prev, confirmPassword: undefined }));
                 }}
                 placeholder="Confirme a nova senha"
                 placeholderTextColor={colors.textMuted}
@@ -238,36 +262,45 @@ export default function ChangePasswordScreen() {
                 autoCapitalize="none"
               />
               <TouchableOpacity onPress={() => setShowConfirmPassword(!showConfirmPassword)}>
-                <Ionicons 
-                  name={showConfirmPassword ? 'eye-off-outline' : 'eye-outline'} 
-                  size={22} 
-                  color={colors.textSecondary} 
+                <Ionicons
+                  name={showConfirmPassword ? "eye-off-outline" : "eye-outline"}
+                  size={22}
+                  color={colors.textSecondary}
                 />
               </TouchableOpacity>
             </View>
             {errors.confirmPassword && (
-              <Text style={[styles.errorText, { color: colors.error }]}>{errors.confirmPassword}</Text>
+              <Text style={[styles.errorText, { color: colors.error }]}>
+                {errors.confirmPassword}
+              </Text>
             )}
           </View>
 
           {/* Requirements */}
           <View style={styles.requirementsContainer}>
-            <Text style={[styles.requirementsTitle, { color: colors.textSecondary }]}>Requisitos:</Text>
+            <Text style={[styles.requirementsTitle, { color: colors.textSecondary }]}>
+              Requisitos:
+            </Text>
             {[
-              { text: 'Mínimo 8 caracteres', valid: newPassword.length >= 8 },
-              { text: 'Letras maiúsculas e minúsculas', valid: /(?=.*[a-z])(?=.*[A-Z])/.test(newPassword) },
-              { text: 'Pelo menos um número', valid: /\d/.test(newPassword) },
+              { text: "Mínimo 8 caracteres", valid: newPassword.length >= 8 },
+              {
+                text: "Letras maiúsculas e minúsculas",
+                valid: /(?=.*[a-z])(?=.*[A-Z])/.test(newPassword),
+              },
+              { text: "Pelo menos um número", valid: /\d/.test(newPassword) },
             ].map((req, idx) => (
               <View key={idx} style={styles.requirementItem}>
                 <Ionicons
-                  name={req.valid ? 'checkmark-circle' : 'ellipse-outline'}
+                  name={req.valid ? "checkmark-circle" : "ellipse-outline"}
                   size={16}
                   color={req.valid ? colors.success : colors.textMuted}
                 />
-                <Text style={[
-                  styles.requirementText,
-                  { color: req.valid ? colors.success : colors.textSecondary }
-                ]}>
+                <Text
+                  style={[
+                    styles.requirementText,
+                    { color: req.valid ? colors.success : colors.textSecondary },
+                  ]}
+                >
                   {req.text}
                 </Text>
               </View>
@@ -293,9 +326,9 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
     paddingHorizontal: 16,
     paddingVertical: 12,
     borderBottomWidth: 1,
@@ -305,7 +338,7 @@ const styles = StyleSheet.create({
   },
   headerTitle: {
     fontSize: 18,
-    fontWeight: '600',
+    fontWeight: "600",
   },
   scrollView: {
     flex: 1,
@@ -317,8 +350,8 @@ const styles = StyleSheet.create({
     marginBottom: 16,
   },
   infoContent: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     gap: 12,
   },
   infoTextContainer: {
@@ -326,7 +359,7 @@ const styles = StyleSheet.create({
   },
   infoTitle: {
     fontSize: 16,
-    fontWeight: '600',
+    fontWeight: "600",
     marginBottom: 4,
   },
   infoText: {
@@ -341,12 +374,12 @@ const styles = StyleSheet.create({
   },
   label: {
     fontSize: 14,
-    fontWeight: '500',
+    fontWeight: "500",
     marginBottom: 8,
   },
   inputContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     borderWidth: 1,
     borderRadius: 10,
     paddingHorizontal: 16,
@@ -361,13 +394,13 @@ const styles = StyleSheet.create({
     marginTop: 4,
   },
   strengthContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
     marginTop: 8,
   },
   strengthBars: {
-    flexDirection: 'row',
+    flexDirection: "row",
     gap: 4,
   },
   strengthBar: {
@@ -377,23 +410,23 @@ const styles = StyleSheet.create({
   },
   strengthLabel: {
     fontSize: 12,
-    fontWeight: '500',
+    fontWeight: "500",
     marginLeft: 8,
   },
   requirementsContainer: {
     marginTop: 16,
     paddingTop: 16,
     borderTopWidth: 1,
-    borderTopColor: '#E5E7EB',
+    borderTopColor: "#E5E7EB",
   },
   requirementsTitle: {
     fontSize: 13,
-    fontWeight: '500',
+    fontWeight: "500",
     marginBottom: 8,
   },
   requirementItem: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     gap: 8,
     marginBottom: 6,
   },

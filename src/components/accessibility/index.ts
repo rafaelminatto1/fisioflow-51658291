@@ -6,12 +6,9 @@
  */
 
 export { SkipLink } from "./SkipLink";
-export {
-	MainContentProps,
-	useMainContentProps,
-} from "@/hooks/accessibility/useMainContentProps";
+export { MainContentProps, useMainContentProps } from "@/hooks/accessibility/useMainContentProps";
 export { FocusVisibleHandler } from "./FocusVisibleHandler";
 export {
-	useFocusVisibleHandler,
-	useFocusClassName,
+  useFocusVisibleHandler,
+  useFocusClassName,
 } from "@/hooks/accessibility/useFocusVisibleHandler";

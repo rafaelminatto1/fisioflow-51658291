@@ -11,15 +11,12 @@ Diretrizes obrigatórias:
 
 Contexto do paciente (quando fornecido) serve para correlacionar achados anteriores e continuidade do cuidado.`;
 
-export function buildAssessmentPrompt(
-	transcript: string,
-	patientContext?: string,
-): string {
-	const contextBlock = patientContext
-		? `\n<contexto_paciente>\n${patientContext}\n</contexto_paciente>\n`
-		: "";
+export function buildAssessmentPrompt(transcript: string, patientContext?: string): string {
+  const contextBlock = patientContext
+    ? `\n<contexto_paciente>\n${patientContext}\n</contexto_paciente>\n`
+    : "";
 
-	return `Analise a transcrição abaixo e preencha o formulário estruturado de avaliação fisioterapêutica. Use thinking mode para raciocinar sobre diagnóstico diferencial antes de preencher os campos.${contextBlock}
+  return `Analise a transcrição abaixo e preencha o formulário estruturado de avaliação fisioterapêutica. Use thinking mode para raciocinar sobre diagnóstico diferencial antes de preencher os campos.${contextBlock}
 <transcricao_avaliacao>
 ${transcript}
 </transcricao_avaliacao>

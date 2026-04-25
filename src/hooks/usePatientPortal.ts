@@ -36,7 +36,10 @@ export function usePortalExercises() {
   });
 
   const complete = useMutation({
-    mutationFn: ({ assignmentId, data }: {
+    mutationFn: ({
+      assignmentId,
+      data,
+    }: {
       assignmentId: string;
       data: { sets_done?: number; reps_done?: number; pain_level?: number; notes?: string };
     }) => patientPortalApi.completeExercise(assignmentId, data),

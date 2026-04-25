@@ -7,20 +7,10 @@
           "https://www.moocafisio.com.br",
           "https://moocafisio.com.br"
         ],
-        "methods": [
-          "GET",
-          "PUT",
-          "POST",
-          "DELETE",
-          "HEAD"
-        ],
-        "headers": [
-          "*"
-        ]
+        "methods": ["GET", "PUT", "POST", "DELETE", "HEAD"],
+        "headers": ["*"]
       },
-      "exposeHeaders": [
-        "ETag"
-      ],
+      "exposeHeaders": ["ETag"],
       "maxAgeSeconds": 3000
     }
   ]

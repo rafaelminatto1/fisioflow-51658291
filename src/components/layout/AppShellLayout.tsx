@@ -9,18 +9,18 @@ import { AuthenticatedAppShell } from "@/components/app/AuthenticatedAppShell";
  * Wraps private routes with the Authenticated App Shell.
  */
 export default function AppShellLayout() {
-	const location = useLocation();
-	const isPublicRoute = isPublicBootPath(location.pathname);
+  const location = useLocation();
+  const isPublicRoute = isPublicBootPath(location.pathname);
 
-	if (isPublicRoute) {
-		return <Outlet />;
-	}
+  if (isPublicRoute) {
+    return <Outlet />;
+  }
 
-	return (
-		<ProtectedRoute>
-			<AuthenticatedAppShell>
-				<Outlet />
-			</AuthenticatedAppShell>
-		</ProtectedRoute>
-	);
+  return (
+    <ProtectedRoute>
+      <AuthenticatedAppShell>
+        <Outlet />
+      </AuthenticatedAppShell>
+    </ProtectedRoute>
+  );
 }

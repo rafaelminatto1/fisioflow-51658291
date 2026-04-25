@@ -1,9 +1,15 @@
-import React, { useMemo } from 'react';
-import { ScrollView, StyleSheet } from 'react-native';
-import { KanbanColumn } from './KanbanColumn';
-import type { ApiTarefa, TarefaStatus } from '@/lib/api';
+import React, { useMemo } from "react";
+import { ScrollView, StyleSheet } from "react-native";
+import { KanbanColumn } from "./KanbanColumn";
+import type { ApiTarefa, TarefaStatus } from "@/lib/api";
 
-const VISIBLE_COLUMNS: TarefaStatus[] = ['BACKLOG', 'A_FAZER', 'EM_PROGRESSO', 'REVISAO', 'CONCLUIDO'];
+const VISIBLE_COLUMNS: TarefaStatus[] = [
+  "BACKLOG",
+  "A_FAZER",
+  "EM_PROGRESSO",
+  "REVISAO",
+  "CONCLUIDO",
+];
 
 interface Props {
   tarefas: ApiTarefa[];
@@ -13,7 +19,12 @@ interface Props {
 export function KanbanBoard({ tarefas, onMoveCard }: Props) {
   const byStatus = useMemo(() => {
     const map: Record<TarefaStatus, ApiTarefa[]> = {
-      BACKLOG: [], A_FAZER: [], EM_PROGRESSO: [], REVISAO: [], CONCLUIDO: [], ARQUIVADO: [],
+      BACKLOG: [],
+      A_FAZER: [],
+      EM_PROGRESSO: [],
+      REVISAO: [],
+      CONCLUIDO: [],
+      ARQUIVADO: [],
     };
     for (const t of tarefas) {
       if (map[t.status]) map[t.status].push(t);
@@ -45,6 +56,6 @@ const styles = StyleSheet.create({
   container: {
     paddingHorizontal: 16,
     paddingVertical: 12,
-    alignItems: 'flex-start',
+    alignItems: "flex-start",
   },
 });

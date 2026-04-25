@@ -9,12 +9,12 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { 
-  Select, 
-  SelectContent, 
-  SelectItem, 
-  SelectTrigger, 
-  SelectValue 
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
 } from "@/components/ui/select";
 import { Receipt, CreditCard, Banknote, FileText, Loader2 } from "lucide-react";
 import { toast } from "sonner";
@@ -64,7 +64,7 @@ export function QuickBillingModal({ isOpen, onClose, appointment }: QuickBilling
 
       // 2. Emitir NFS-e (opcional, simulado aqui ou via endpoint real se disponível)
       // await financialApi.nfse.create({ ... });
-      
+
       toast.success("Faturamento concluído com sucesso!");
     },
     onSuccess: () => {
@@ -88,7 +88,7 @@ export function QuickBillingModal({ isOpen, onClose, appointment }: QuickBilling
             Faturamento On-Demand
           </DialogTitle>
         </DialogHeader>
-        
+
         <div className="grid gap-4 py-4">
           <div className="p-3 rounded-lg bg-slate-800/50 border border-slate-700/50">
             <p className="text-sm text-slate-400">Paciente</p>
@@ -148,8 +148,8 @@ export function QuickBillingModal({ isOpen, onClose, appointment }: QuickBilling
           <Button variant="ghost" onClick={onClose} className="text-slate-400">
             Cancelar
           </Button>
-          <Button 
-            onClick={() => billMutation.mutate()} 
+          <Button
+            onClick={() => billMutation.mutate()}
             disabled={billMutation.isPending}
             className="bg-emerald-600 hover:bg-emerald-500 text-white"
           >

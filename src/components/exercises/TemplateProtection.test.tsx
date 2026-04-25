@@ -138,14 +138,11 @@ describe("Property 7: System_Templates não podem ser excluídos", () => {
   it("guardDeleteTemplate retorna 403 para 'system' e 200 para 'custom'", () => {
     // Validates: Requirements 8.1
     fc.assert(
-      fc.property(
-        fc.constantFrom("system" as const, "custom" as const),
-        (templateType) => {
-          const status = guardDeleteTemplate(templateType);
-          if (templateType === "system") return status === 403;
-          return status === 200;
-        },
-      ),
+      fc.property(fc.constantFrom("system" as const, "custom" as const), (templateType) => {
+        const status = guardDeleteTemplate(templateType);
+        if (templateType === "system") return status === 403;
+        return status === 200;
+      }),
       { numRuns: 100 },
     );
   });

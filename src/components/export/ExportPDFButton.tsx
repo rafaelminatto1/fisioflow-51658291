@@ -26,7 +26,12 @@ interface ExportSoapButtonProps {
   label?: string;
 }
 
-export function ExportSoapPDFButton({ evolution, size = "sm", variant = "outline", label = "PDF" }: ExportSoapButtonProps) {
+export function ExportSoapPDFButton({
+  evolution,
+  size = "sm",
+  variant = "outline",
+  label = "PDF",
+}: ExportSoapButtonProps) {
   const [loading, setLoading] = useState(false);
 
   const handleExport = async () => {
@@ -43,7 +48,11 @@ export function ExportSoapPDFButton({ evolution, size = "sm", variant = "outline
 
   return (
     <Button variant={variant} size={size} onClick={handleExport} disabled={loading}>
-      {loading ? <Loader2 className="h-3.5 w-3.5 animate-spin mr-1" /> : <FileText className="h-3.5 w-3.5 mr-1" />}
+      {loading ? (
+        <Loader2 className="h-3.5 w-3.5 animate-spin mr-1" />
+      ) : (
+        <FileText className="h-3.5 w-3.5 mr-1" />
+      )}
       {label}
     </Button>
   );
@@ -58,7 +67,12 @@ interface ExportProtocolButtonProps {
   label?: string;
 }
 
-export function ExportProtocolPDFButton({ protocol, size = "sm", variant = "outline", label = "Exportar PDF" }: ExportProtocolButtonProps) {
+export function ExportProtocolPDFButton({
+  protocol,
+  size = "sm",
+  variant = "outline",
+  label = "Exportar PDF",
+}: ExportProtocolButtonProps) {
   const [loading, setLoading] = useState(false);
 
   const handleExport = async () => {
@@ -75,7 +89,11 @@ export function ExportProtocolPDFButton({ protocol, size = "sm", variant = "outl
 
   return (
     <Button variant={variant} size={size} onClick={handleExport} disabled={loading}>
-      {loading ? <Loader2 className="h-3.5 w-3.5 animate-spin mr-1" /> : <Dumbbell className="h-3.5 w-3.5 mr-1" />}
+      {loading ? (
+        <Loader2 className="h-3.5 w-3.5 animate-spin mr-1" />
+      ) : (
+        <Dumbbell className="h-3.5 w-3.5 mr-1" />
+      )}
       {label}
     </Button>
   );
@@ -90,7 +108,12 @@ interface ExportReceiptButtonProps {
   label?: string;
 }
 
-export function ExportReceiptPDFButton({ receipt, size = "sm", variant = "outline", label = "Recibo PDF" }: ExportReceiptButtonProps) {
+export function ExportReceiptPDFButton({
+  receipt,
+  size = "sm",
+  variant = "outline",
+  label = "Recibo PDF",
+}: ExportReceiptButtonProps) {
   const [loading, setLoading] = useState(false);
 
   const handleExport = async () => {
@@ -107,7 +130,11 @@ export function ExportReceiptPDFButton({ receipt, size = "sm", variant = "outlin
 
   return (
     <Button variant={variant} size={size} onClick={handleExport} disabled={loading}>
-      {loading ? <Loader2 className="h-3.5 w-3.5 animate-spin mr-1" /> : <Receipt className="h-3.5 w-3.5 mr-1" />}
+      {loading ? (
+        <Loader2 className="h-3.5 w-3.5 animate-spin mr-1" />
+      ) : (
+        <Receipt className="h-3.5 w-3.5 mr-1" />
+      )}
       {label}
     </Button>
   );
@@ -124,7 +151,14 @@ interface ExportPDFDropdownProps {
   receipt?: Omit<ReceiptData, "patient_name" | "therapist_name" | "clinic_name">;
 }
 
-export function ExportPDFDropdown({ patientName, therapistName, clinicName, soap, protocol, receipt }: ExportPDFDropdownProps) {
+export function ExportPDFDropdown({
+  patientName,
+  therapistName,
+  clinicName,
+  soap,
+  protocol,
+  receipt,
+}: ExportPDFDropdownProps) {
   const [loading, setLoading] = useState<string | null>(null);
 
   const run = async (type: string, fn: () => void) => {
@@ -146,23 +180,60 @@ export function ExportPDFDropdown({ patientName, therapistName, clinicName, soap
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
         <Button variant="outline" size="sm" disabled={!!loading}>
-          {loading ? <Loader2 className="h-3.5 w-3.5 animate-spin mr-1" /> : <FileDown className="h-3.5 w-3.5 mr-1" />}
+          {loading ? (
+            <Loader2 className="h-3.5 w-3.5 animate-spin mr-1" />
+          ) : (
+            <FileDown className="h-3.5 w-3.5 mr-1" />
+          )}
           Exportar PDF
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end" className="w-48">
         {soap && (
-          <DropdownMenuItem onClick={() => run("soap", () => generateSoapPDF({ ...soap, patient_name: patientName, therapist_name: therapistName, clinic_name: clinicName }))}>
+          <DropdownMenuItem
+            onClick={() =>
+              run("soap", () =>
+                generateSoapPDF({
+                  ...soap,
+                  patient_name: patientName,
+                  therapist_name: therapistName,
+                  clinic_name: clinicName,
+                }),
+              )
+            }
+          >
             <FileText className="h-4 w-4 mr-2" /> Evolução SOAP
           </DropdownMenuItem>
         )}
         {protocol && (
-          <DropdownMenuItem onClick={() => run("protocol", () => generateExerciseProtocolPDF({ ...protocol, patient_name: patientName, therapist_name: therapistName, clinic_name: clinicName }))}>
+          <DropdownMenuItem
+            onClick={() =>
+              run("protocol", () =>
+                generateExerciseProtocolPDF({
+                  ...protocol,
+                  patient_name: patientName,
+                  therapist_name: therapistName,
+                  clinic_name: clinicName,
+                }),
+              )
+            }
+          >
             <Dumbbell className="h-4 w-4 mr-2" /> Protocolo de Exercícios
           </DropdownMenuItem>
         )}
         {receipt && (
-          <DropdownMenuItem onClick={() => run("receipt", () => generateReceiptPDF({ ...receipt, patient_name: patientName, therapist_name: therapistName, clinic_name: clinicName }))}>
+          <DropdownMenuItem
+            onClick={() =>
+              run("receipt", () =>
+                generateReceiptPDF({
+                  ...receipt,
+                  patient_name: patientName,
+                  therapist_name: therapistName,
+                  clinic_name: clinicName,
+                }),
+              )
+            }
+          >
             <Receipt className="h-4 w-4 mr-2" /> Recibo de Atendimento
           </DropdownMenuItem>
         )}

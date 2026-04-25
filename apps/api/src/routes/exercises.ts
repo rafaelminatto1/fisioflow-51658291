@@ -1,35 +1,39 @@
-import { Hono } from 'hono';
-import { eq, and, inArray, sql } from 'drizzle-orm';
-import { createDb, createPool } from '../lib/db';
-import { requireAuth, type AuthVariables } from '../lib/auth';
-import type { Env } from '../types/env';
+import { Hono } from "hono";
+import { eq, and, inArray, sql } from "drizzle-orm";
+import { createDb, createPool } from "../lib/db";
+import { requireAuth, type AuthVariables } from "../lib/auth";
+import type { Env } from "../types/env";
 import {
   exercises,
   exerciseCategories,
   exerciseFavorites,
   exerciseMediaAttachments,
-} from '@fisioflow/db';
-import { generateEmbedding, generateTurboSketch } from '../lib/ai-native';
+} from "@fisioflow/db";
+import { generateEmbedding, generateTurboSketch } from "../lib/ai-native";
 
 const app = new Hono<{ Bindings: Env; Variables: AuthVariables }>();
 
 const KV_TTL = 3600; // 1 hora
-const KV_CATEGORIES = 'exercises:v2:categories';
-const KV_LIST_PREFIX = 'exercises:v3:list:';
+const KV_CATEGORIES = "exercises:v2:categories";
+const KV_LIST_PREFIX = "exercises:v3:list:";
 
 async function kvGet(env: Env, key: string): Promise<unknown | null> {
   if (!env.FISIOFLOW_CONFIG) return null;
   try {
-    const cached = await env.FISIOFLOW_CONFIG.get(key, 'json');
+    const cached = await env.FISIOFLOW_CONFIG.get(key, "json");
     return cached;
-  } catch { return null; }
+  } catch {
+    return null;
+  }
 }
 
 async function kvSet(env: Env, key: string, value: unknown): Promise<void> {
   if (!env.FISIOFLOW_CONFIG) return;
   try {
     await env.FISIOFLOW_CONFIG.put(key, JSON.stringify(value), { expirationTtl: KV_TTL });
-  } catch { /* non-critical */ }
+  } catch {
+    /* non-critical */
+  }
 }
 
 async function kvDelete(env: Env, ...keys: string[]): Promise<void> {
@@ -40,7 +44,7 @@ async function kvDelete(env: Env, ...keys: string[]): Promise<void> {
 
 async function invalidateListCache(env: Env): Promise<void> {
   // Invalida as primeiras 5 páginas dos limites padrão
-  const commonLimits = ['20', '50', '500'];
+  const commonLimits = ["20", "50", "500"];
   const keys: string[] = [];
   for (const limit of commonLimits) {
     for (let p = 1; p <= 5; p++) {
@@ -51,7 +55,7 @@ async function invalidateListCache(env: Env): Promise<void> {
 }
 
 // ===== CATEGORIAS =====
-app.get('/categories', requireAuth, async (c) => {
+app.get("/categories", requireAuth, async (c) => {
   try {
     const cached = await kvGet(c.env, KV_CATEGORIES);
     if (cached) return c.json({ data: cached });
@@ -74,111 +78,109 @@ app.get('/categories', requireAuth, async (c) => {
     c.executionCtx.waitUntil(kvSet(c.env, KV_CATEGORIES, rows));
     return c.json({ data: rows });
   } catch (error: any) {
-    console.error('[Exercises/Categories] Error:', error.message);
+    console.error("[Exercises/Categories] Error:", error.message);
     return c.json({ data: [] }, 500);
   }
 });
 
 // ===== LISTA DE EXERCÍCIOS =====
-app.get('/', requireAuth, async (c) => {
+app.get("/", requireAuth, async (c) => {
   try {
-  const {
-    q,
-    category,
-    difficulty,
-    bodyPart,
-    equipment,
-    page = '1',
-    limit = '20',
-    favorites,
-  } = c.req.query();
+    const {
+      q,
+      category,
+      difficulty,
+      bodyPart,
+      equipment,
+      page = "1",
+      limit = "20",
+      favorites,
+    } = c.req.query();
 
-  // Cache only unfiltered requests (most common: browsing the library)
-  const isDefaultQuery = !q && !category && !difficulty && !bodyPart && !equipment;
-  const cacheKey = isDefaultQuery ? `${KV_LIST_PREFIX}p${page}:l${limit}` : null;
+    // Cache only unfiltered requests (most common: browsing the library)
+    const isDefaultQuery = !q && !category && !difficulty && !bodyPart && !equipment;
+    const cacheKey = isDefaultQuery ? `${KV_LIST_PREFIX}p${page}:l${limit}` : null;
 
-  if (cacheKey) {
-    const cached = await kvGet(c.env, cacheKey);
-    if (cached) return c.json(cached);
-  }
+    if (cacheKey) {
+      const cached = await kvGet(c.env, cacheKey);
+      if (cached) return c.json(cached);
+    }
 
-  const db = createPool(c.env);
+    const db = createPool(c.env);
 
-  const parsedPage = Number.parseInt(page, 10);
-  const parsedLimit = Number.parseInt(limit, 10);
-  const pageNum = Number.isFinite(parsedPage) ? Math.max(1, parsedPage) : 1;
-  const limitNum = Number.isFinite(parsedLimit)
-    ? Math.min(500, Math.max(1, parsedLimit))
-    : 20;
-  const offset = (pageNum - 1) * limitNum;
+    const parsedPage = Number.parseInt(page, 10);
+    const parsedLimit = Number.parseInt(limit, 10);
+    const pageNum = Number.isFinite(parsedPage) ? Math.max(1, parsedPage) : 1;
+    const limitNum = Number.isFinite(parsedLimit) ? Math.min(500, Math.max(1, parsedLimit)) : 20;
+    const offset = (pageNum - 1) * limitNum;
 
-  const params: unknown[] = [];
-  const whereParts = ['e.is_active = true', 'e.is_public = true'];
-  const addParam = (value: unknown) => {
-    params.push(value);
-    return `$${params.length}`;
-  };
+    const params: unknown[] = [];
+    const whereParts = ["e.is_active = true", "e.is_public = true"];
+    const addParam = (value: unknown) => {
+      params.push(value);
+      return `$${params.length}`;
+    };
 
-  if (q && q.trim().length > 0) {
-    const qParam = addParam(q);
-    whereParts.push(
-      `to_tsvector('portuguese',
+    if (q && q.trim().length > 0) {
+      const qParam = addParam(q);
+      whereParts.push(
+        `to_tsvector('portuguese',
          e.name || ' ' ||
          COALESCE(e.description, '') || ' ' ||
          array_to_string(COALESCE(e.tags, '{}'::text[]), ' ') || ' ' ||
          array_to_string(COALESCE(e.body_parts, '{}'::text[]), ' ')
        ) @@ websearch_to_tsquery('portuguese', ${qParam})`,
-    );
-  }
-
-  if (difficulty) {
-    // Suporte a aliases EN/PT para dificuldade
-    const difficultyMap: Record<string, "iniciante" | "intermediario" | "avancado"> = {
-      easy: 'iniciante',
-      iniciante: 'iniciante',
-      medium: 'intermediario',
-      intermediario: 'intermediario',
-      hard: 'avancado',
-      avancado: 'avancado',
-    };
-    const mapped = difficultyMap[difficulty.toLowerCase()];
-    if (mapped) {
-      whereParts.push(`e.difficulty = ${addParam(mapped)}`);
+      );
     }
-  }
 
-  if (bodyPart) {
-    whereParts.push(`${addParam(bodyPart)} = ANY(COALESCE(e.body_parts, '{}'::text[]))`);
-  }
+    if (difficulty) {
+      // Suporte a aliases EN/PT para dificuldade
+      const difficultyMap: Record<string, "iniciante" | "intermediario" | "avancado"> = {
+        easy: "iniciante",
+        iniciante: "iniciante",
+        medium: "intermediario",
+        intermediario: "intermediario",
+        hard: "avancado",
+        avancado: "avancado",
+      };
+      const mapped = difficultyMap[difficulty.toLowerCase()];
+      if (mapped) {
+        whereParts.push(`e.difficulty = ${addParam(mapped)}`);
+      }
+    }
 
-  if (equipment) {
-    whereParts.push(`${addParam(equipment)} = ANY(COALESCE(e.equipment, '{}'::text[]))`);
-  }
+    if (bodyPart) {
+      whereParts.push(`${addParam(bodyPart)} = ANY(COALESCE(e.body_parts, '{}'::text[]))`);
+    }
 
-  if (category && category !== "Todos") {
-    whereParts.push(`ec.slug = ${addParam(category)}`);
-  }
+    if (equipment) {
+      whereParts.push(`${addParam(equipment)} = ANY(COALESCE(e.equipment, '{}'::text[]))`);
+    }
 
-  if (favorites === 'true') {
-    const authUser = c.get('user');
-    if (authUser) {
-      whereParts.push(
-        `EXISTS (
+    if (category && category !== "Todos") {
+      whereParts.push(`ec.slug = ${addParam(category)}`);
+    }
+
+    if (favorites === "true") {
+      const authUser = c.get("user");
+      if (authUser) {
+        whereParts.push(
+          `EXISTS (
           SELECT 1 FROM exercise_favorites ef
           WHERE ef.exercise_id = e.id
           AND ef.user_id = ${addParam(authUser.uid)}
         )`,
-      );
+        );
+      }
     }
-  }
 
-  const whereSql = whereParts.join(' AND ');
-  const limitParam = `$${params.length + 1}`;
-  const offsetParam = `$${params.length + 2}`;
+    const whereSql = whereParts.join(" AND ");
+    const limitParam = `$${params.length + 1}`;
+    const offsetParam = `$${params.length + 2}`;
 
-  const [rows, countResult] = await Promise.all([
-    db.query(
-      `SELECT e.id,
+    const [rows, countResult] = await Promise.all([
+      db.query(
+        `SELECT e.id,
               e.slug,
               e.name,
               e.category_id AS "categoryId",
@@ -206,51 +208,48 @@ app.get('/', requireAuth, async (c) => {
        ORDER BY e.name
        LIMIT ${limitParam}
        OFFSET ${offsetParam}`,
-      [...params, limitNum, offset],
-    ),
-    db.query(
-      `SELECT count(*)::int AS count
+        [...params, limitNum, offset],
+      ),
+      db.query(
+        `SELECT count(*)::int AS count
        FROM exercises e
        LEFT JOIN exercise_categories ec ON e.category_id = ec.id
        WHERE ${whereSql}`,
-      params,
-    ),
-  ]);
+        params,
+      ),
+    ]);
 
-  const total = Number(countResult.rows[0]?.count ?? 0);
-  const response = {
-    data: rows.rows,
-    meta: {
-      page: pageNum,
-      limit: limitNum,
-      total,
-      pages: Math.ceil(total / limitNum),
-    },
-  };
+    const total = Number(countResult.rows[0]?.count ?? 0);
+    const response = {
+      data: rows.rows,
+      meta: {
+        page: pageNum,
+        limit: limitNum,
+        total,
+        pages: Math.ceil(total / limitNum),
+      },
+    };
 
-  if (cacheKey) {
-    c.executionCtx.waitUntil(kvSet(c.env, cacheKey, response));
-  }
+    if (cacheKey) {
+      c.executionCtx.waitUntil(kvSet(c.env, cacheKey, response));
+    }
 
-  return c.json(response);
+    return c.json(response);
   } catch (error: any) {
-    console.error('[Exercises/List] Error:', error.message);
+    console.error("[Exercises/List] Error:", error.message);
     return c.json({ data: [], meta: { page: 1, limit: 20, total: 0, pages: 0 } }, 500);
   }
 });
 
-
 // ===== DETALHE DO EXERCÍCIO =====
-app.get('/:id', async (c) => {
+app.get("/:id", async (c) => {
   try {
-    const db = createDb(c.env, 'read');
+    const db = createDb(c.env, "read");
     const { id } = c.req.param();
 
     // Aceita UUID ou slug
     const isUuid = /^[0-9a-f-]{36}$/i.test(id);
-    const condition = isUuid
-      ? eq(exercises.id, id)
-      : eq(exercises.slug, id);
+    const condition = isUuid ? eq(exercises.id, id) : eq(exercises.slug, id);
 
     const row = await db
       .select()
@@ -258,66 +257,66 @@ app.get('/:id', async (c) => {
       .where(and(condition, eq(exercises.isActive, true)))
       .limit(1);
 
-    if (!row.length) return c.json({ error: 'Exercício não encontrado' }, 404);
+    if (!row.length) return c.json({ error: "Exercício não encontrado" }, 404);
 
     return c.json({ data: row[0] });
   } catch (error: any) {
-    console.error('[Exercises/Detail] Error:', error.message);
-    return c.json({ error: 'Erro ao buscar exercício' }, 500);
+    console.error("[Exercises/Detail] Error:", error.message);
+    return c.json({ error: "Erro ao buscar exercício" }, 500);
   }
 });
 
 // ===== FAVORITAR (auth obrigatório) =====
-app.post('/:id/favorite', requireAuth, async (c) => {
+app.post("/:id/favorite", requireAuth, async (c) => {
   try {
     const db = await createDb(c.env);
-    const user = c.get('user');
+    const user = c.get("user");
     const { id } = c.req.param();
 
     await db
       .insert(exerciseFavorites)
-      .values({ 
-        userId: user.uid, 
+      .values({
+        userId: user.uid,
         exerciseId: id,
-        organizationId: user.organizationId 
+        organizationId: user.organizationId,
       })
       .onConflictDoNothing();
 
     return c.json({ ok: true });
   } catch (err) {
-    console.error('[exercises/:id/favorite] error:', err);
-    return c.json({ error: 'Erro ao favoritar exercício' }, 500);
+    console.error("[exercises/:id/favorite] error:", err);
+    return c.json({ error: "Erro ao favoritar exercício" }, 500);
   }
 });
 
-app.delete('/:id/favorite', requireAuth, async (c) => {
+app.delete("/:id/favorite", requireAuth, async (c) => {
   try {
     const db = await createDb(c.env);
-    const user = c.get('user');
+    const user = c.get("user");
     const { id } = c.req.param();
 
     await db
       .delete(exerciseFavorites)
       .where(
         and(
-          eq(exerciseFavorites.userId, user.uid), 
+          eq(exerciseFavorites.userId, user.uid),
           eq(exerciseFavorites.exerciseId, id),
-          eq(exerciseFavorites.organizationId, user.organizationId)
+          eq(exerciseFavorites.organizationId, user.organizationId),
         ),
       );
 
     return c.json({ ok: true });
   } catch (err) {
-    console.error('[exercises/:id/unfavorite] error:', err);
-    return c.json({ error: 'Erro ao remover favorito' }, 500);
+    console.error("[exercises/:id/unfavorite] error:", err);
+    return c.json({ error: "Erro ao remover favorito" }, 500);
   }
 });
 
 // ===== EXERCÍCIOS FAVORITOS DO USUÁRIO =====
-app.get('/favorites/me', requireAuth, async (c) => {
+app.get("/favorites/me", requireAuth, async (c) => {
   try {
     const db = await createDb(c.env);
-    const user = c.get('user');
+    const user = c.get("user");
 
     const rows = await db
       .select({
@@ -338,26 +337,29 @@ app.get('/favorites/me', requireAuth, async (c) => {
       .leftJoin(exerciseCategories, eq(exercises.categoryId, exerciseCategories.id))
       .where(
         and(
-          eq(exerciseFavorites.userId, user.uid), 
+          eq(exerciseFavorites.userId, user.uid),
           eq(exercises.isActive, true),
-          eq(exerciseFavorites.organizationId, user.organizationId)
-        )
+          eq(exerciseFavorites.organizationId, user.organizationId),
+        ),
       );
 
     return c.json({ data: rows });
   } catch (err) {
-    console.error('[exercises/favorites/me] error:', err);
-    return c.json({ 
-      error: 'Erro ao buscar favoritos',
-      details: err instanceof Error ? err.message : String(err)
-    }, 500);
+    console.error("[exercises/favorites/me] error:", err);
+    return c.json(
+      {
+        error: "Erro ao buscar favoritos",
+        details: err instanceof Error ? err.message : String(err),
+      },
+      500,
+    );
   }
 });
 
 // ===== CRIAR EXERCÍCIO =====
-app.post('/', requireAuth, async (c) => {
+app.post("/", requireAuth, async (c) => {
   const db = await createDb(c.env);
-  const user = c.get('user');
+  const user = c.get("user");
   const body = await c.req.json();
 
   const { media, ...exerciseData } = body;
@@ -381,49 +383,57 @@ app.post('/', requireAuth, async (c) => {
         caption: m.caption,
         orderIndex: m.orderIndex ?? idx,
         organizationId: user.organizationId,
-      }))
+      })),
     );
   }
 
   // Background tasks: Invalidate cache and update embedding/vectorize
-  c.executionCtx.waitUntil((async () => {
-    await invalidateListCache(c.env);
-    
-    // Generate embedding and update Vectorize if binding exists
-    if (c.env.CLINICAL_KNOWLEDGE) {
-      try {
-	        const categoryLabel = row.subcategory || row.categoryId || '';
-	        const textToEmbed = `${row.name} ${row.description || ''} ${categoryLabel} ${row.bodyParts?.join(' ') || ''}`.trim();
-	        const vector = await generateEmbedding(c.env, textToEmbed);
-	        if (vector.length > 0) {
+  c.executionCtx.waitUntil(
+    (async () => {
+      await invalidateListCache(c.env);
+
+      // Generate embedding and update Vectorize if binding exists
+      if (c.env.CLINICAL_KNOWLEDGE) {
+        try {
+          const categoryLabel = row.subcategory || row.categoryId || "";
+          const textToEmbed =
+            `${row.name} ${row.description || ""} ${categoryLabel} ${row.bodyParts?.join(" ") || ""}`.trim();
+          const vector = await generateEmbedding(c.env, textToEmbed);
+          if (vector.length > 0) {
             const sketch = generateTurboSketch(vector);
-	          await c.env.CLINICAL_KNOWLEDGE.upsert([{
-	            id: row.id,
-	            values: vector,
-	            metadata: { name: row.name, category: categoryLabel, sketch }
-	          }]);
-          // Mantemos apenas o sketch no Postgres para busca híbrida local.
-          // O vetor bruto continua no Vectorize, evitando mismatch de dimensão da coluna legada.
-          await db.update(exercises).set({
-            embeddingSketch: sketch
-          }).where(eq(exercises.id, row.id));
+            await c.env.CLINICAL_KNOWLEDGE.upsert([
+              {
+                id: row.id,
+                values: vector,
+                metadata: { name: row.name, category: categoryLabel, sketch },
+              },
+            ]);
+            // Mantemos apenas o sketch no Postgres para busca híbrida local.
+            // O vetor bruto continua no Vectorize, evitando mismatch de dimensão da coluna legada.
+            await db
+              .update(exercises)
+              .set({
+                embeddingSketch: sketch,
+              })
+              .where(eq(exercises.id, row.id));
+          }
+        } catch (e) {
+          console.error("[Exercises] Failed to update semantic index:", e);
         }
-      } catch (e) {
-        console.error('[Exercises] Failed to update semantic index:', e);
       }
-    }
-  })());
+    })(),
+  );
 
   return c.json({ data: row });
 });
 
 // ===== ATUALIZAR EXERCÍCIO =====
-app.put('/:id', requireAuth, async (c) => {
+app.put("/:id", requireAuth, async (c) => {
   const db = await createDb(c.env);
   const { id } = c.req.param();
   const body = await c.req.json();
   const { media, ...exerciseData } = body;
-  const user = c.get('user');
+  const user = c.get("user");
 
   // Remove campos imutáveis
   delete exerciseData.id;
@@ -439,12 +449,12 @@ app.put('/:id', requireAuth, async (c) => {
     .where(eq(exercises.id, id))
     .returning();
 
-  if (!row) return c.json({ error: 'Exercício não encontrado' }, 404);
+  if (!row) return c.json({ error: "Exercício não encontrado" }, 404);
 
   // Sincronizar mídias (estratégia: deletar e inserir para simplificar ordenação)
   if (media && Array.isArray(media)) {
     await db.delete(exerciseMediaAttachments).where(eq(exerciseMediaAttachments.exerciseId, id));
-    
+
     if (media.length > 0) {
       await db.insert(exerciseMediaAttachments).values(
         media.map((m: any, idx: number) => ({
@@ -455,43 +465,51 @@ app.put('/:id', requireAuth, async (c) => {
           caption: m.caption,
           orderIndex: m.orderIndex ?? idx,
           organizationId: user.organizationId,
-        }))
+        })),
       );
     }
   }
 
   // Background tasks: Invalidate cache and update embedding/vectorize
-  c.executionCtx.waitUntil((async () => {
-    await invalidateListCache(c.env);
-    
-    // Only regenerate if relevant fields changed (simple check for now)
-    if (c.env.CLINICAL_KNOWLEDGE) {
-      try {
-        const categoryLabel = row.subcategory || row.categoryId || '';
-        const textToEmbed = `${row.name} ${row.description || ''} ${categoryLabel} ${row.bodyParts?.join(' ') || ''}`.trim();
-        const vector = await generateEmbedding(c.env, textToEmbed);
-        if (vector.length > 0) {
-          const sketch = generateTurboSketch(vector);
-          await c.env.CLINICAL_KNOWLEDGE.upsert([{
-            id: row.id,
-            values: vector,
-            metadata: { name: row.name, category: categoryLabel, sketch }
-          }]);
-          await db.update(exercises).set({
-            embeddingSketch: sketch
-          }).where(eq(exercises.id, row.id));
+  c.executionCtx.waitUntil(
+    (async () => {
+      await invalidateListCache(c.env);
+
+      // Only regenerate if relevant fields changed (simple check for now)
+      if (c.env.CLINICAL_KNOWLEDGE) {
+        try {
+          const categoryLabel = row.subcategory || row.categoryId || "";
+          const textToEmbed =
+            `${row.name} ${row.description || ""} ${categoryLabel} ${row.bodyParts?.join(" ") || ""}`.trim();
+          const vector = await generateEmbedding(c.env, textToEmbed);
+          if (vector.length > 0) {
+            const sketch = generateTurboSketch(vector);
+            await c.env.CLINICAL_KNOWLEDGE.upsert([
+              {
+                id: row.id,
+                values: vector,
+                metadata: { name: row.name, category: categoryLabel, sketch },
+              },
+            ]);
+            await db
+              .update(exercises)
+              .set({
+                embeddingSketch: sketch,
+              })
+              .where(eq(exercises.id, row.id));
+          }
+        } catch (e) {
+          console.error("[Exercises] Failed to update semantic index on update:", e);
         }
-      } catch (e) {
-        console.error('[Exercises] Failed to update semantic index on update:', e);
       }
-    }
-  })());
+    })(),
+  );
 
   return c.json({ data: row });
 });
 
 // ===== DELETAR EXERCÍCIO (soft delete) =====
-app.delete('/:id', requireAuth, async (c) => {
+app.delete("/:id", requireAuth, async (c) => {
   const db = await createDb(c.env);
   const { id } = c.req.param();
 
@@ -504,18 +522,18 @@ app.delete('/:id', requireAuth, async (c) => {
     .where(eq(exercises.id, id))
     .returning();
 
-  if (!row) return c.json({ error: 'Exercício não encontrado' }, 404);
+  if (!row) return c.json({ error: "Exercício não encontrado" }, 404);
 
   c.executionCtx.waitUntil(invalidateListCache(c.env));
   return c.json({ ok: true });
 });
 
 // ===== BUSCA SEMÂNTICA (AI Powered via Vectorize) =====
-app.get('/search/semantic', async (c) => {
-  const { q, limit = '10' } = c.req.query();
+app.get("/search/semantic", async (c) => {
+  const { q, limit = "10" } = c.req.query();
 
   if (!q || q.trim().length < 2) {
-    return c.json({ error: 'Parâmetro q obrigatório (mínimo 2 caracteres)' }, 400);
+    return c.json({ error: "Parâmetro q obrigatório (mínimo 2 caracteres)" }, 400);
   }
 
   const limitNum = Math.min(50, Math.max(1, parseInt(limit)));
@@ -524,28 +542,25 @@ app.get('/search/semantic', async (c) => {
   if (c.env.CLINICAL_KNOWLEDGE) {
     try {
       const vector = await generateEmbedding(c.env, q);
-      const matches = await c.env.CLINICAL_KNOWLEDGE.query(vector, { 
+      const matches = await c.env.CLINICAL_KNOWLEDGE.query(vector, {
         limit: limitNum,
-        topK: limitNum // Vectorize query options
+        topK: limitNum, // Vectorize query options
       } as any);
 
       if (matches.matches && matches.matches.length > 0) {
-        const matchedIds = matches.matches.map(m => m.id);
+        const matchedIds = matches.matches.map((m) => m.id);
         const db = await createDb(c.env);
         const rows = await db
           .select()
           .from(exercises)
-          .where(and(
-            inArray(exercises.id, matchedIds),
-            eq(exercises.isActive, true)
-          ));
-        
+          .where(and(inArray(exercises.id, matchedIds), eq(exercises.isActive, true)));
+
         // Sort rows by the original match order (relevance)
-        const sortedRows = matchedIds.map(id => rows.find(r => r.id === id)).filter(Boolean);
-        return c.json({ data: sortedRows, meta: { method: 'vector' } });
+        const sortedRows = matchedIds.map((id) => rows.find((r) => r.id === id)).filter(Boolean);
+        return c.json({ data: sortedRows, meta: { method: "vector" } });
       }
     } catch (e) {
-      console.error('[Exercises] Semantic search error:', e);
+      console.error("[Exercises] Semantic search error:", e);
       // Fallback below
     }
   }
@@ -559,17 +574,17 @@ app.get('/search/semantic', async (c) => {
       and(
         eq(exercises.isActive, true),
         eq(exercises.isPublic, true),
-        sql`to_tsvector('portuguese', 
-          ${exercises.name} || ' ' || 
-          coalesce(${exercises.description}, '') || ' ' || 
-          array_to_string(${exercises.tags}, ' ') || ' ' || 
+        sql`to_tsvector('portuguese',
+          ${exercises.name} || ' ' ||
+          coalesce(${exercises.description}, '') || ' ' ||
+          array_to_string(${exercises.tags}, ' ') || ' ' ||
           array_to_string(${exercises.bodyParts}, ' ')
         ) @@ websearch_to_tsquery('portuguese', ${q})`,
       ),
     )
     .limit(limitNum);
 
-  return c.json({ data: rows, meta: { method: 'text' } });
+  return c.json({ data: rows, meta: { method: "text" } });
 });
 
 export { app as exercisesRoutes };

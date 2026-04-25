@@ -1,74 +1,74 @@
 .mobile-optimized {
-	font-size: 14px;
-	line-height: 1.5;
+  font-size: 14px;
+  line-height: 1.5;
 }
 
 .touch-target {
-	min-height: 44px;
-	min-width: 44px;
+  min-height: 44px;
+  min-width: 44px;
 }
 
 .safe-area-inset-top {
-	padding-top: env(safe-area-inset-top);
+  padding-top: env(safe-area-inset-top);
 }
 
 .safe-area-inset-bottom {
-	padding-bottom: env(safe-area-inset-bottom);
+  padding-bottom: env(safe-area-inset-bottom);
 }
 
 .safe-area-inset-left {
-	padding-left: env(safe-area-inset-left);
+  padding-left: env(safe-area-inset-left);
 }
 
 .safe-area-inset-right {
-	padding-right: env(safe-area-inset-right);
+  padding-right: env(safe-area-inset-right);
 }
 
 .safe-area-inset-bottom-16 {
-	padding-bottom: calc(env(safe-area-inset-bottom) + 1rem);
+  padding-bottom: calc(env(safe-area-inset-bottom) + 1rem);
 }
 
 .pb-safe {
-	padding-bottom: calc(env(safe-area-inset-bottom) + 0.5rem);
+  padding-bottom: calc(env(safe-area-inset-bottom) + 0.5rem);
 }
 
 .modal-footer-safe {
-	padding-bottom: calc(env(safe-area-inset-bottom) + 1rem);
+  padding-bottom: calc(env(safe-area-inset-bottom) + 1rem);
 }
 
 .touch-manipulation {
-	touch-action: manipulation;
+  touch-action: manipulation;
 }
 
 @media (max-width: 768px) {
-	.modal-mobile-container {
-		max-height: calc(100dvh - 1rem);
-		height: calc(100dvh - 1rem);
-	}
+  .modal-mobile-container {
+    max-height: calc(100dvh - 1rem);
+    height: calc(100dvh - 1rem);
+  }
 }
 
 @media screen and (min-width: 390px) and (max-width: 430px) {
-	.touch-target {
-		min-height: 48px;
-		min-width: 48px;
-	}
+  .touch-target {
+    min-height: 48px;
+    min-width: 48px;
+  }
 }
 
 @media screen and (max-width: 768px) {
-	input[type="text"],
-	input[type="email"],
-	input[type="password"],
-	input[type="number"],
-	input[type="tel"],
-	input[type="url"],
-	input[type="search"],
-	input[type="date"],
-	input[type="time"],
-	input[type="datetime-local"],
-	textarea,
-	select {
-		font-size: 16px !important;
-	}
+  input[type="text"],
+  input[type="email"],
+  input[type="password"],
+  input[type="number"],
+  input[type="tel"],
+  input[type="url"],
+  input[type="search"],
+  input[type="date"],
+  input[type="time"],
+  input[type="datetime-local"],
+  textarea,
+  select {
+    font-size: 16px !important;
+  }
 }
 
 button,
@@ -80,5 +80,5 @@ textarea,
 select,
 .btn,
 .touch-target {
-	touch-action: manipulation;
+  touch-action: manipulation;
 }

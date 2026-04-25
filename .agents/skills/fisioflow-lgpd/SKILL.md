@@ -24,33 +24,33 @@ LGPD Article 5 distinguishes personal data from sensitive data. In a physiothera
 
 Stored primarily in the `patients` table (`src/server/db/schema/patients.ts`):
 
-| Field | Column | Classification |
-|---|---|---|
-| Name | `fullName`, `socialName`, `nickname` | Personal |
-| CPF | `cpf` | Personal (unique identifier) |
-| RG | `rg` | Personal (identity document) |
-| Phone | `phone`, `phoneSecondary` | Personal (contact) |
-| Email | `email` | Personal (contact) |
-| Address | `address` (JSONB) | Personal (location) |
-| Date of birth | `legacyDateOfBirth` | Personal |
-| Photo | `photoUrl` | Personal (biometric-adjacent) |
+| Field         | Column                               | Classification                |
+| ------------- | ------------------------------------ | ----------------------------- |
+| Name          | `fullName`, `socialName`, `nickname` | Personal                      |
+| CPF           | `cpf`                                | Personal (unique identifier)  |
+| RG            | `rg`                                 | Personal (identity document)  |
+| Phone         | `phone`, `phoneSecondary`            | Personal (contact)            |
+| Email         | `email`                              | Personal (contact)            |
+| Address       | `address` (JSONB)                    | Personal (location)           |
+| Date of birth | `legacyDateOfBirth`                  | Personal                      |
+| Photo         | `photoUrl`                           | Personal (biometric-adjacent) |
 
 ### Sensitive Health Data (Article 5, II)
 
 Requires heightened protection. Stored across multiple tables:
 
-| Data | Table | Fields |
-|---|---|---|
-| Anamnesis / medical history | `medical_records` | `medicalHistory`, `pastHistory`, `familyHistory`, `currentHistory` |
-| Current medications | `medical_records` | `medications` (JSONB), `currentMedications` |
-| Allergies | `medical_records` | `allergies` (JSONB) |
-| Physical exam findings | `medical_records` | `physicalExam` (JSONB: ROM, muscle strength, special tests) |
-| Diagnoses + CID-10 | `medical_records` | `diagnosis`, `icd10Codes` |
-| SOAP session notes | `sessions` | `subjective`, `objective`, `assessment`, `plan` |
-| Pathologies | `pathologies` | `name`, `icdCode`, `status`, `diagnosedAt` |
-| Surgeries | `surgeries` | `name`, `surgeryDate`, `surgeon`, `hospital` |
-| Biomechanics | `biomechanics` | gait analysis, joint angles |
-| Session recordings | R2 (`recordings/`) | video/audio media |
+| Data                        | Table              | Fields                                                             |
+| --------------------------- | ------------------ | ------------------------------------------------------------------ |
+| Anamnesis / medical history | `medical_records`  | `medicalHistory`, `pastHistory`, `familyHistory`, `currentHistory` |
+| Current medications         | `medical_records`  | `medications` (JSONB), `currentMedications`                        |
+| Allergies                   | `medical_records`  | `allergies` (JSONB)                                                |
+| Physical exam findings      | `medical_records`  | `physicalExam` (JSONB: ROM, muscle strength, special tests)        |
+| Diagnoses + CID-10          | `medical_records`  | `diagnosis`, `icd10Codes`                                          |
+| SOAP session notes          | `sessions`         | `subjective`, `objective`, `assessment`, `plan`                    |
+| Pathologies                 | `pathologies`      | `name`, `icdCode`, `status`, `diagnosedAt`                         |
+| Surgeries                   | `surgeries`        | `name`, `surgeryDate`, `surgeon`, `hospital`                       |
+| Biomechanics                | `biomechanics`     | gait analysis, joint angles                                        |
+| Session recordings          | R2 (`recordings/`) | video/audio media                                                  |
 
 ### Classification Pattern for New Fields
 
@@ -159,11 +159,11 @@ before the actual query inside a transaction, ensuring RLS policies apply.
 
 ### Which Policy to Use
 
-| Pattern | Use Case | Example Tables |
-|---|---|---|
-| `withOrganizationPolicy` | Standard tenant data | `patients`, `sessions`, `medical_records`, `appointments` |
-| `withPublicWriteOrganizationPolicy` | Public can INSERT, auth users see own org | `precadastro` (patient self-registration) |
-| `withPublicOrOrganizationPolicy` | Shared global content + org-specific | `wiki`, knowledge base entries |
+| Pattern                             | Use Case                                  | Example Tables                                            |
+| ----------------------------------- | ----------------------------------------- | --------------------------------------------------------- |
+| `withOrganizationPolicy`            | Standard tenant data                      | `patients`, `sessions`, `medical_records`, `appointments` |
+| `withPublicWriteOrganizationPolicy` | Public can INSERT, auth users see own org | `precadastro` (patient self-registration)                 |
+| `withPublicOrOrganizationPolicy`    | Shared global content + org-specific      | `wiki`, knowledge base entries                            |
 
 ---
 
@@ -180,25 +180,25 @@ The system writes audit entries to TWO destinations:
 
 ```typescript
 type AuditAction =
-  | 'patient.view'
-  | 'patient.create'
-  | 'patient.update'
-  | 'patient.delete'
-  | 'session.create'
-  | 'session.update'
-  | 'session.finalize'
-  | 'session.delete'
-  | 'exam.upload'
-  | 'exam.view'
-  | 'document.sign'
-  | 'document.view'
-  | 'auth.login'
-  | 'auth.logout'
-  | 'lgpd.data_export'
-  | 'lgpd.data_delete'
-  | 'lgpd.consent_update'
-  | 'financial.view'
-  | 'financial.create';
+  | "patient.view"
+  | "patient.create"
+  | "patient.update"
+  | "patient.delete"
+  | "session.create"
+  | "session.update"
+  | "session.finalize"
+  | "session.delete"
+  | "exam.upload"
+  | "exam.view"
+  | "document.sign"
+  | "document.view"
+  | "auth.login"
+  | "auth.logout"
+  | "lgpd.data_export"
+  | "lgpd.data_delete"
+  | "lgpd.consent_update"
+  | "financial.view"
+  | "financial.create";
 ```
 
 ### Logging Pattern in Route Handlers
@@ -215,15 +215,19 @@ app.get("/patients/:id", requireAuth, async (c) => {
     where: eq(patients.id, patientId),
   });
 
-  writeAuditLog(c.env, {
-    action: 'patient.view',
-    entityId: patientId,
-    entityType: 'patient',
-    userId: user.uid,
-    organizationId: user.organizationId,
-    ipAddress: ctx.ipAddress,
-    userAgent: ctx.userAgent,
-  }, c.executionCtx);
+  writeAuditLog(
+    c.env,
+    {
+      action: "patient.view",
+      entityId: patientId,
+      entityType: "patient",
+      userId: user.uid,
+      organizationId: user.organizationId,
+      ipAddress: ctx.ipAddress,
+      userAgent: ctx.userAgent,
+    },
+    c.executionCtx,
+  );
 
   return c.json(patient);
 });
@@ -265,15 +269,15 @@ ORDER BY created_at DESC;
 
 ### When to Log
 
-| Action | Required | Why |
-|---|---|---|
-| Patient data viewed | YES | LGPD Article 37 — data access accountability |
-| Patient data created/updated | YES | Traceability of clinical records |
-| Patient data deleted | YES | Right to be forgotten audit trail |
-| Consent changes | YES | LGPD Article 8 — proof of consent |
-| Data exports | YES | LGPD Article 18 — portability requests |
-| Session finalized | YES | Clinical record integrity |
-| Auth events (login/logout) | Recommended | Access control auditing |
+| Action                       | Required    | Why                                          |
+| ---------------------------- | ----------- | -------------------------------------------- |
+| Patient data viewed          | YES         | LGPD Article 37 — data access accountability |
+| Patient data created/updated | YES         | Traceability of clinical records             |
+| Patient data deleted         | YES         | Right to be forgotten audit trail            |
+| Consent changes              | YES         | LGPD Article 8 — proof of consent            |
+| Data exports                 | YES         | LGPD Article 18 — portability requests       |
+| Session finalized            | YES         | Clinical record integrity                    |
+| Auth events (login/logout)   | Recommended | Access control auditing                      |
 
 ### Important: Fire-and-Forget Pattern
 
@@ -355,7 +359,8 @@ app.patch("/patients/:id/consent", requireAuth, async (c) => {
   const body = await c.req.json();
   const ctx = extractRequestContext(c);
 
-  await db.update(patients)
+  await db
+    .update(patients)
     .set({
       consentData: body.consentData,
       consentImage: body.consentImage,
@@ -363,19 +368,23 @@ app.patch("/patients/:id/consent", requireAuth, async (c) => {
     })
     .where(eq(patients.id, patientId));
 
-  writeAuditLog(c.env, {
-    action: 'lgpd.consent_update',
-    entityId: patientId,
-    entityType: 'patient',
-    userId: user.uid,
-    organizationId: user.organizationId,
-    ipAddress: ctx.ipAddress,
-    userAgent: ctx.userAgent,
-    metadata: {
-      consentData: body.consentData,
-      consentImage: body.consentImage,
+  writeAuditLog(
+    c.env,
+    {
+      action: "lgpd.consent_update",
+      entityId: patientId,
+      entityType: "patient",
+      userId: user.uid,
+      organizationId: user.organizationId,
+      ipAddress: ctx.ipAddress,
+      userAgent: ctx.userAgent,
+      metadata: {
+        consentData: body.consentData,
+        consentImage: body.consentImage,
+      },
     },
-  }, c.executionCtx);
+    c.executionCtx,
+  );
 
   return c.json({ success: true });
 });
@@ -406,14 +415,14 @@ if (involvesImageCapture && !patient?.consentImage) {
 
 CFM Resolution 2.145/2016 requires physiotherapy records be retained for at least **20 years** from the last appointment.
 
-| Data Type | Retention | Legal Basis |
-|---|---|---|
-| Clinical records (SOAP, anamnesis) | 20 years minimum | CFM Resolution 2.145/2016 |
-| Patient registration data | Duration of relationship + 20 years | Contract + regulatory |
-| Session recordings (video/audio) | 5 years after last session | Clinical quality, not regulatory |
-| Financial records (invoices, payments) | 5 years + current year | Tax legislation |
-| Audit logs | 5 years | LGPD Article 37 |
-| WhatsApp messages | Duration of relationship | Consent-based, operational |
+| Data Type                              | Retention                           | Legal Basis                      |
+| -------------------------------------- | ----------------------------------- | -------------------------------- |
+| Clinical records (SOAP, anamnesis)     | 20 years minimum                    | CFM Resolution 2.145/2016        |
+| Patient registration data              | Duration of relationship + 20 years | Contract + regulatory            |
+| Session recordings (video/audio)       | 5 years after last session          | Clinical quality, not regulatory |
+| Financial records (invoices, payments) | 5 years + current year              | Tax legislation                  |
+| Audit logs                             | 5 years                             | LGPD Article 37                  |
+| WhatsApp messages                      | Duration of relationship            | Consent-based, operational       |
 
 ### Implementation Pattern: Soft Delete with Retention
 
@@ -433,14 +442,11 @@ app.get("/cron/retention-cleanup", async (c) => {
   const cutoff5y = new Date();
   cutoff5y.setFullYear(cutoff5y.getFullYear() - 5);
 
-  await db.delete(sessions)
-    .where(and(
-      isNotNull(sessions.deletedAt),
-      lt(sessions.deletedAt, cutoff20y),
-    ));
+  await db
+    .delete(sessions)
+    .where(and(isNotNull(sessions.deletedAt), lt(sessions.deletedAt, cutoff20y)));
 
-  await db.delete(auditLogs)
-    .where(lt(auditLogs.createdAt, cutoff5y));
+  await db.delete(auditLogs).where(lt(auditLogs.createdAt, cutoff5y));
 
   return c.json({ success: true });
 });
@@ -472,13 +478,23 @@ export async function deleteContactData(
 
   if (conversationIds.length > 0) {
     await pool.query(`DELETE FROM wa_messages WHERE conversation_id = ANY($1)`, [conversationIds]);
-    await pool.query(`DELETE FROM wa_assignments WHERE conversation_id = ANY($1)`, [conversationIds]);
-    await pool.query(`DELETE FROM wa_sla_tracking WHERE conversation_id = ANY($1)`, [conversationIds]);
+    await pool.query(`DELETE FROM wa_assignments WHERE conversation_id = ANY($1)`, [
+      conversationIds,
+    ]);
+    await pool.query(`DELETE FROM wa_sla_tracking WHERE conversation_id = ANY($1)`, [
+      conversationIds,
+    ]);
     await pool.query(`DELETE FROM wa_conversations WHERE id = ANY($1)`, [conversationIds]);
   }
 
-  await pool.query(`DELETE FROM wa_opt_in_out WHERE contact_id = $1 AND org_id = $2`, [contactId, orgId]);
-  await pool.query(`DELETE FROM wa_access_log WHERE contact_id = $1 AND org_id = $2`, [contactId, orgId]);
+  await pool.query(`DELETE FROM wa_opt_in_out WHERE contact_id = $1 AND org_id = $2`, [
+    contactId,
+    orgId,
+  ]);
+  await pool.query(`DELETE FROM wa_access_log WHERE contact_id = $1 AND org_id = $2`, [
+    contactId,
+    orgId,
+  ]);
 
   await pool.query(
     `UPDATE whatsapp_contacts SET
@@ -554,10 +570,10 @@ export async function anonymizePatient(
     [patientId, orgId],
   );
 
-  await pool.query(
-    `DELETE FROM exams WHERE patient_id = $1 AND organization_id = $2`,
-    [patientId, orgId],
-  );
+  await pool.query(`DELETE FROM exams WHERE patient_id = $1 AND organization_id = $2`, [
+    patientId,
+    orgId,
+  ]);
 
   await pool.query("COMMIT");
 }
@@ -620,15 +636,15 @@ All traffic to Cloudflare Workers uses **TLS 1.3** by default. No configuration 
 R2 objects are never publicly accessible. The `R2Service` (`apps/api/src/lib/storage/R2Service.ts`) generates time-limited presigned URLs:
 
 ```typescript
-import { S3Client, PutObjectCommand, GetObjectCommand } from '@aws-sdk/client-s3';
-import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
+import { S3Client, PutObjectCommand, GetObjectCommand } from "@aws-sdk/client-s3";
+import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
 
 export class R2Service {
   private client: S3Client;
 
   constructor(private env: Env) {
     this.client = new S3Client({
-      region: 'auto',
+      region: "auto",
       endpoint: `https://${env.R2_ACCOUNT_ID}.r2.cloudflarestorage.com`,
       credentials: {
         accessKeyId: env.R2_ACCESS_KEY_ID,
@@ -637,7 +653,7 @@ export class R2Service {
     });
   }
 
-  async getUploadUrl(key: string, contentType = 'video/webm') {
+  async getUploadUrl(key: string, contentType = "video/webm") {
     const command = new PutObjectCommand({
       Bucket: this.env.MEDIA_BUCKET.toString(),
       Key: key,
@@ -670,12 +686,12 @@ Secrets (R2 credentials, API keys, JWT signing keys) are stored as **Cloudflare 
 
 The system defines four primary roles stored in the `profiles` table:
 
-| Role | Permissions Scope | Data Access |
-|---|---|---|
-| `admin` | Full system access | All patients, all data in org |
-| `fisioterapeuta` | Clinical operations | Own patients + assigned conversations |
-| `recepcionista` | Scheduling, patient intake | All patients (view), scheduling, WhatsApp inbox |
-| `paciente` | Self-service portal | Own data only |
+| Role             | Permissions Scope          | Data Access                                     |
+| ---------------- | -------------------------- | ----------------------------------------------- |
+| `admin`          | Full system access         | All patients, all data in org                   |
+| `fisioterapeuta` | Clinical operations        | Own patients + assigned conversations           |
+| `recepcionista`  | Scheduling, patient intake | All patients (view), scheduling, WhatsApp inbox |
+| `paciente`       | Self-service portal        | Own data only                                   |
 
 Additional role: `estagiario` (intern) — limited to assigned patients.
 
@@ -707,10 +723,7 @@ const WHATSAPP_PERMISSIONS: Record<string, string[]> = {
     "whatsapp:assign",
     "whatsapp:view_financial",
   ],
-  estagiario: [
-    "whatsapp:view_assigned",
-    "whatsapp:send_message",
-  ],
+  estagiario: ["whatsapp:view_assigned", "whatsapp:send_message"],
 };
 
 export function requireWhatsAppPermission(permission: string) {
@@ -767,12 +780,13 @@ export async function getScopedConversationsFilter(pool, userId, orgId) {
 ```typescript
 import { requireAuth } from "../lib/auth";
 
-app.get("/patients/:id/medical-records",
+app.get(
+  "/patients/:id/medical-records",
   requireAuth,
   requirePermission("clinical:view_medical_records"),
   async (c) => {
     // Only fisioterapeuta and admin can access
-  }
+  },
 );
 ```
 
@@ -805,19 +819,20 @@ app.post("/security/revoke-sessions", requireAuth, requireRole("admin"), async (
   const { userId } = await c.req.json();
   const sql = getRawSql(c.env, "write");
 
-  await sql(
-    `DELETE FROM neon_auth.session WHERE "userId" = $1`,
-    [userId],
-  );
+  await sql(`DELETE FROM neon_auth.session WHERE "userId" = $1`, [userId]);
 
-  writeAuditLog(c.env, {
-    action: 'auth.logout',
-    entityId: userId,
-    entityType: 'user',
-    userId: c.get("user").uid,
-    organizationId: c.get("user").organizationId,
-    metadata: { reason: "security_incident" },
-  }, c.executionCtx);
+  writeAuditLog(
+    c.env,
+    {
+      action: "auth.logout",
+      entityId: userId,
+      entityType: "user",
+      userId: c.get("user").uid,
+      organizationId: c.get("user").organizationId,
+      metadata: { reason: "security_incident" },
+    },
+    c.executionCtx,
+  );
 
   return c.json({ success: true });
 });
@@ -868,13 +883,17 @@ app.post("/security/breach-report", requireAuth, requireRole("admin"), async (c)
     notificationRequired: patientIds.length > 0,
   };
 
-  writeAuditLog(c.env, {
-    action: 'lgpd.data_export',
-    entityType: 'breach_report',
-    userId: c.get("user").uid,
-    organizationId: c.get("user").organizationId,
-    metadata: report,
-  }, c.executionCtx);
+  writeAuditLog(
+    c.env,
+    {
+      action: "lgpd.data_export",
+      entityType: "breach_report",
+      userId: c.get("user").uid,
+      organizationId: c.get("user").organizationId,
+      metadata: report,
+    },
+    c.executionCtx,
+  );
 
   return c.json(report);
 });

@@ -1,32 +1,37 @@
-import { renderHook, act } from '@testing-library/react';
-import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { usePeerReview } from '../usePeerReview';
+import { renderHook, act } from "@testing-library/react";
+import { describe, it, expect, vi, beforeEach } from "vitest";
+import { usePeerReview } from "../usePeerReview";
 
 // Mock the global fetch
 global.fetch = vi.fn();
 
-describe('usePeerReview hook', () => {
+describe("usePeerReview hook", () => {
   beforeEach(() => {
     vi.clearAllMocks();
   });
 
-  it('should process SOAP review successfully', async () => {
+  it("should process SOAP review successfully", async () => {
     const mockData = {
       score: 90,
       insights: ["Bom raciocínio clínico"],
       missingTests: [],
-      suggestedExercises: ["Ponte"]
+      suggestedExercises: ["Ponte"],
     };
 
     (global.fetch as any).mockResolvedValue({
       ok: true,
-      json: async () => ({ success: true, data: mockData })
+      json: async () => ({ success: true, data: mockData }),
     });
 
     const { result } = renderHook(() => usePeerReview());
 
     await act(async () => {
-      await result.current.reviewSoap({ subjective: 'Dor', objective: '', assessment: '', plan: '' });
+      await result.current.reviewSoap({
+        subjective: "Dor",
+        objective: "",
+        assessment: "",
+        plan: "",
+      });
     });
 
     expect(result.current.loading).toBe(false);
@@ -34,7 +39,7 @@ describe('usePeerReview hook', () => {
     expect(result.current.error).toBeNull();
   });
 
-  it('should clear review result', async () => {
+  it("should clear review result", async () => {
     const { result } = renderHook(() => usePeerReview());
 
     // Simulate setting data manually first to test clear

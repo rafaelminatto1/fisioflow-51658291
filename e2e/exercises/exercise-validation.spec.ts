@@ -82,7 +82,7 @@ test.describe('Exercise Library Validation', () => {
         body: JSON.stringify({ data: [], total: 0 }),
       });
     });
-    
+
     // Mock MediaPipe to avoid heavy loading in tests
     await page.addInitScript(() => {
       // Mock navigator.mediaDevices.getUserMedia
@@ -97,7 +97,7 @@ test.describe('Exercise Library Validation', () => {
   test('should open exercise modal and show DialogTitle/Description (Accessibility)', async ({ page }) => {
     await navigateToExerciseLibrary(page);
     await expect(page.getByTestId('exercise-library-title')).toBeVisible({ timeout: 15000 });
-    
+
     const firstCard = page.locator('.group.overflow-hidden.h-full.flex.flex-col').first();
     if (!(await firstCard.isVisible({ timeout: 5000 }).catch(() => false))) {
       await expect(page.getByTestId('exercise-library-title')).toBeVisible();
@@ -108,14 +108,14 @@ test.describe('Exercise Library Validation', () => {
 
     const dialog = page.getByRole('dialog').first();
     await expect(dialog.getByRole('heading').first()).toBeVisible();
-    
+
     const srOnlyDesc = dialog.locator('.sr-only').filter({ hasText: 'Visualização detalhada' });
     await expect(srOnlyDesc).toBeAttached();
   });
 
   test('should open Biofeedback IA tab without ReferenceError', async ({ page }) => {
     await navigateToExerciseLibrary(page);
-    
+
     const firstCard = page.locator('.group.overflow-hidden.h-full.flex.flex-col').first();
     if (!(await firstCard.isVisible({ timeout: 5000 }).catch(() => false))) {
       await expect(page.getByTestId('exercise-library-title')).toBeVisible();
@@ -132,7 +132,7 @@ test.describe('Exercise Library Validation', () => {
     // If there was a ReferenceError, the ComponentErrorBoundary would show an error message
     // "Ocorreu um erro ao renderizar este componente"
     await expect(page.getByText('Ocorreu um erro ao renderizar este componente')).not.toBeVisible();
-    
+
     // Should show the camera activation UI
     await expect(page.getByText(/Ativar Câmera para Biofeedback/i)).toBeVisible({ timeout: 10000 });
   });
@@ -148,7 +148,7 @@ test.describe('Exercise Library Validation', () => {
     // Verify hidden file inputs exist
     const fileInputs = page.locator('input[type="file"]');
     await expect(fileInputs).toHaveCount(2);
-    
+
     await expect(page.locator('input[accept="video/*"]')).toBeAttached();
     await expect(page.locator('input[accept="image/*"]')).toBeAttached();
   });

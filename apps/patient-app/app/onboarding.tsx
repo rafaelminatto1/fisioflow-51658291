@@ -3,25 +3,18 @@
  * First-time user experience walkthrough
  */
 
-import { useState } from 'react';
+import { useState } from "react";
 
-import {
-  View,
-  Text,
-  StyleSheet,
-  ScrollView,
-  TouchableOpacity,
-  Dimensions,
-} from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
-import { router } from 'expo-router';
-import { Ionicons } from '@expo/vector-icons';
-import { useColors } from '@/hooks/useColorScheme';
-import AsyncStorage from '@react-native-async-storage/async-storage';
-import { Button } from '@/components';
-import { log } from '@/lib/logger';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Dimensions } from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
+import { router } from "expo-router";
+import { Ionicons } from "@expo/vector-icons";
+import { useColors } from "@/hooks/useColorScheme";
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import { Button } from "@/components";
+import { log } from "@/lib/logger";
 
-const ONBOARDING_KEY = '@fisioflow_onboarding_completed';
+const ONBOARDING_KEY = "@fisioflow_onboarding_completed";
 
 interface OnboardingStep {
   id: string;
@@ -33,39 +26,44 @@ interface OnboardingStep {
 
 const onboardingSteps: OnboardingStep[] = [
   {
-    id: '1',
-    title: 'Bem-vindo ao FisioFlow',
-    description: 'Seu aplicativo para acompanhamento fisioterapêutico personalizado. Realize seus exercícios em casa e acompanhe sua evolução.',
-    icon: 'fitness',
-    color: '#22c55e',
+    id: "1",
+    title: "Bem-vindo ao FisioFlow",
+    description:
+      "Seu aplicativo para acompanhamento fisioterapêutico personalizado. Realize seus exercícios em casa e acompanhe sua evolução.",
+    icon: "fitness",
+    color: "#22c55e",
   },
   {
-    id: '2',
-    title: 'Exercícios Personalizados',
-    description: 'Receba planos de exercícios personalizados do seu fisioterapeuta. Cada exercício vem com vídeos demonstrativos.',
-    icon: 'barbell',
-    color: '#3b82f6',
+    id: "2",
+    title: "Exercícios Personalizados",
+    description:
+      "Receba planos de exercícios personalizados do seu fisioterapeuta. Cada exercício vem com vídeos demonstrativos.",
+    icon: "barbell",
+    color: "#3b82f6",
   },
   {
-    id: '3',
-    title: 'Acompanhe seu Progresso',
-    description: 'Visualize sua evolução ao longo do tempo com gráficos e estatísticas detalhadas do seu tratamento.',
-    icon: 'trending-up',
-    color: '#6366f1',
+    id: "3",
+    title: "Acompanhe seu Progresso",
+    description:
+      "Visualize sua evolução ao longo do tempo com gráficos e estatísticas detalhadas do seu tratamento.",
+    icon: "trending-up",
+    color: "#6366f1",
   },
   {
-    id: '4',
-    title: 'Lembretes Automáticos',
-    description: 'Nunca mais esqueça de fazer seus exercícios ou de uma consulta. Receba notificações personalizadas.',
-    icon: 'notifications',
-    color: '#f59e0b',
+    id: "4",
+    title: "Lembretes Automáticos",
+    description:
+      "Nunca mais esqueça de fazer seus exercícios ou de uma consulta. Receba notificações personalizadas.",
+    icon: "notifications",
+    color: "#f59e0b",
   },
   {
-    id: '5',
-    title: 'Funciona Offline',
-    description: 'Sem internet? Sem problemas! O app funciona offline e sincroniza automaticamente quando você reconectar.',
-    icon: 'cloud-offline',
-    color: '#ec4899',
+    id: "5",
+    title: "Funciona Offline",
+    description:
+      "Sem internet? Sem problemas! O app funciona offline e sincroniza automaticamente quando você reconectar.",
+    icon: "cloud-offline",
+    color: "#ec4899",
   },
 ];
 
@@ -89,10 +87,10 @@ export default function OnboardingScreen() {
   const handleComplete = async () => {
     setLoading(true);
     try {
-      await AsyncStorage.setItem(ONBOARDING_KEY, 'true');
-      router.replace('/(auth)/login');
+      await AsyncStorage.setItem(ONBOARDING_KEY, "true");
+      router.replace("/(auth)/login");
     } catch (error) {
-      log.error('Error saving onboarding:', error);
+      log.error("Error saving onboarding:", error);
     } finally {
       setLoading(false);
     }
@@ -101,11 +99,14 @@ export default function OnboardingScreen() {
   const step = onboardingSteps[currentStep];
 
   return (
-    <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]} edges={['left', 'right']}>
+    <SafeAreaView
+      style={[styles.container, { backgroundColor: colors.background }]}
+      edges={["left", "right"]}
+    >
       {/* Skip Button */}
       {currentStep < onboardingSteps.length - 1 && (
-        <TouchableOpacity 
-          style={styles.skipButton} 
+        <TouchableOpacity
+          style={styles.skipButton}
           onPress={handleSkip}
           accessibilityLabel="Pular introdução"
           accessibilityRole="button"
@@ -114,10 +115,7 @@ export default function OnboardingScreen() {
         </TouchableOpacity>
       )}
 
-      <ScrollView
-        contentContainerStyle={styles.scrollContent}
-        showsVerticalScrollIndicator={false}
-      >
+      <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
         {/* Pagination Dots */}
         <View style={styles.paginationContainer}>
           {onboardingSteps.map((_, index) => (
@@ -135,7 +133,7 @@ export default function OnboardingScreen() {
         </View>
 
         {/* Icon */}
-        <View style={[styles.iconContainer, { backgroundColor: step.color + '20' }]}>
+        <View style={[styles.iconContainer, { backgroundColor: step.color + "20" }]}>
           <Ionicons name={step.icon} size={80} color={step.color} />
         </View>
 
@@ -150,29 +148,37 @@ export default function OnboardingScreen() {
         {/* Feature Preview (Illustration) */}
         <View style={styles.previewContainer}>
           <View style={[styles.previewCard, { backgroundColor: colors.surface }]}>
-            {step.id === '1' && (
+            {step.id === "1" && (
               <>
                 <View style={[styles.previewHeader, { borderBottomColor: colors.border }]}>
                   <Ionicons name="person" size={24} color={colors.primary} />
-                  <Text style={[styles.previewTitle, { color: colors.text }]}>Olá, Paciente! 👋</Text>
+                  <Text style={[styles.previewTitle, { color: colors.text }]}>
+                    Olá, Paciente! 👋
+                  </Text>
                 </View>
                 <View style={[styles.previewBody, { borderBottomColor: colors.border }]}>
-                  <View style={[styles.previewRow, { backgroundColor: colors.primary + '10' }]}>
+                  <View style={[styles.previewRow, { backgroundColor: colors.primary + "10" }]}>
                     <Ionicons name="checkmark-circle" size={20} color={colors.primary} />
-                    <Text style={[styles.previewText, { color: colors.text }]}>3 exercícios hoje</Text>
+                    <Text style={[styles.previewText, { color: colors.text }]}>
+                      3 exercícios hoje
+                    </Text>
                   </View>
-                  <View style={[styles.previewRow, { backgroundColor: colors.success + '10' }]}>
+                  <View style={[styles.previewRow, { backgroundColor: colors.success + "10" }]}>
                     <Ionicons name="flame" size={20} color={colors.success} />
-                    <Text style={[styles.previewText, { color: colors.text }]}>5 dias de sequência</Text>
+                    <Text style={[styles.previewText, { color: colors.text }]}>
+                      5 dias de sequência
+                    </Text>
                   </View>
                 </View>
               </>
             )}
-            {step.id === '2' && (
+            {step.id === "2" && (
               <>
                 <View style={[styles.previewHeader, { borderBottomColor: colors.border }]}>
                   <Ionicons name="barbell" size={24} color={colors.info} />
-                  <Text style={[styles.previewTitle, { color: colors.text }]}>Exercícios de Hoje</Text>
+                  <Text style={[styles.previewTitle, { color: colors.text }]}>
+                    Exercícios de Hoje
+                  </Text>
                 </View>
                 <View style={[styles.previewBody, { borderBottomColor: colors.border }]}>
                   <View style={[styles.previewRow, { backgroundColor: colors.surface }]}>
@@ -188,7 +194,7 @@ export default function OnboardingScreen() {
                 </View>
               </>
             )}
-            {step.id === '3' && (
+            {step.id === "3" && (
               <>
                 <View style={[styles.previewHeader, { borderBottomColor: colors.border }]}>
                   <Ionicons name="trending-up" size={24} color={colors.warning} />
@@ -196,11 +202,13 @@ export default function OnboardingScreen() {
                 </View>
                 <View style={[styles.previewBody, { borderBottomColor: colors.border }]}>
                   <View style={[styles.statsRow, { backgroundColor: colors.surface }]}>
-                    <View style={[styles.statBox, { backgroundColor: colors.primary + '10' }]}>
+                    <View style={[styles.statBox, { backgroundColor: colors.primary + "10" }]}>
                       <Text style={[styles.statValue, { color: colors.primary }]}>12</Text>
-                      <Text style={[styles.statLabel, { color: colors.textSecondary }]}>Sessões</Text>
+                      <Text style={[styles.statLabel, { color: colors.textSecondary }]}>
+                        Sessões
+                      </Text>
                     </View>
-                    <View style={[styles.statBox, { backgroundColor: colors.success + '10' }]}>
+                    <View style={[styles.statBox, { backgroundColor: colors.success + "10" }]}>
                       <Text style={[styles.statValue, { color: colors.success }]}>-30%</Text>
                       <Text style={[styles.statLabel, { color: colors.textSecondary }]}>Dor</Text>
                     </View>
@@ -208,25 +216,29 @@ export default function OnboardingScreen() {
                 </View>
               </>
             )}
-            {step.id === '4' && (
+            {step.id === "4" && (
               <>
                 <View style={[styles.previewHeader, { borderBottomColor: colors.border }]}>
                   <Ionicons name="notifications" size={24} color={colors.warning} />
                   <Text style={[styles.previewTitle, { color: colors.text }]}>Lembretes</Text>
                 </View>
                 <View style={[styles.previewBody, { borderBottomColor: colors.border }]}>
-                  <View style={[styles.previewRow, { backgroundColor: colors.warning + '10' }]}>
+                  <View style={[styles.previewRow, { backgroundColor: colors.warning + "10" }]}>
                     <Ionicons name="fitness" size={20} color={colors.warning} />
-                    <Text style={[styles.previewText, { color: colors.text }]}>Hora dos exercícios!</Text>
+                    <Text style={[styles.previewText, { color: colors.text }]}>
+                      Hora dos exercícios!
+                    </Text>
                   </View>
-                  <View style={[styles.previewRow, { backgroundColor: colors.info + '10' }]}>
+                  <View style={[styles.previewRow, { backgroundColor: colors.info + "10" }]}>
                     <Ionicons name="calendar" size={20} color={colors.info} />
-                    <Text style={[styles.previewText, { color: colors.text }]}>Consulta amanhã às 14h</Text>
+                    <Text style={[styles.previewText, { color: colors.text }]}>
+                      Consulta amanhã às 14h
+                    </Text>
                   </View>
                 </View>
               </>
             )}
-            {step.id === '5' && (
+            {step.id === "5" && (
               <>
                 <View style={[styles.previewHeader, { borderBottomColor: colors.border }]}>
                   <Ionicons name="cloud-offline" size={24} color={colors.error} />
@@ -236,11 +248,13 @@ export default function OnboardingScreen() {
                   <View style={[styles.previewRow, { backgroundColor: colors.surface }]}>
                     <Ionicons name="cloud-offline" size={20} color={colors.error} />
                     <Text style={[styles.previewText, { color: colors.text }]}>Sem conexão</Text>
-                    <View style={[styles.syncBadge, { backgroundColor: colors.warning + '20' }]}>
-                      <Text style={[styles.syncBadgeText, { color: colors.warning }]}>3 pendências</Text>
+                    <View style={[styles.syncBadge, { backgroundColor: colors.warning + "20" }]}>
+                      <Text style={[styles.syncBadgeText, { color: colors.warning }]}>
+                        3 pendências
+                      </Text>
                     </View>
                   </View>
-                  <View style={[styles.previewRow, { backgroundColor: colors.success + '10' }]}>
+                  <View style={[styles.previewRow, { backgroundColor: colors.success + "10" }]}>
                     <Ionicons name="cloud-done" size={20} color={colors.success} />
                     <Text style={[styles.previewText, { color: colors.text }]}>Sincronizado!</Text>
                   </View>
@@ -258,7 +272,10 @@ export default function OnboardingScreen() {
           <View
             style={[
               styles.progressFill,
-              { backgroundColor: step.color, width: `${((currentStep + 1) / onboardingSteps.length) * 100}%` },
+              {
+                backgroundColor: step.color,
+                width: `${((currentStep + 1) / onboardingSteps.length) * 100}%`,
+              },
             ]}
           />
         </View>
@@ -276,7 +293,7 @@ export default function OnboardingScreen() {
             </TouchableOpacity>
           )}
           <Button
-            title={currentStep === onboardingSteps.length - 1 ? 'Começar' : 'Continuar'}
+            title={currentStep === onboardingSteps.length - 1 ? "Começar" : "Continuar"}
             onPress={handleNext}
             loading={loading}
             style={styles.nextButton}
@@ -292,20 +309,20 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   skipButton: {
-    alignSelf: 'flex-end',
+    alignSelf: "flex-end",
     padding: 16,
   },
   skipButtonText: {
     fontSize: 15,
-    fontWeight: '600',
+    fontWeight: "600",
   },
   scrollContent: {
     flex: 1,
     padding: 24,
-    alignItems: 'center',
+    alignItems: "center",
   },
   paginationContainer: {
-    flexDirection: 'row',
+    flexDirection: "row",
     gap: 8,
     marginBottom: 32,
   },
@@ -317,49 +334,49 @@ const styles = StyleSheet.create({
     width: 160,
     height: 160,
     borderRadius: 80,
-    alignItems: 'center',
-    justifyContent: 'center',
+    alignItems: "center",
+    justifyContent: "center",
     marginBottom: 32,
   },
   title: {
     fontSize: 28,
-    fontWeight: '700',
-    textAlign: 'center',
+    fontWeight: "700",
+    textAlign: "center",
     marginBottom: 16,
   },
   description: {
     fontSize: 16,
-    textAlign: 'center',
+    textAlign: "center",
     lineHeight: 24,
     marginBottom: 32,
     paddingHorizontal: 16,
   },
   previewContainer: {
-    width: '100%',
-    maxWidth: Dimensions.get('window').width - 48,
+    width: "100%",
+    maxWidth: Dimensions.get("window").width - 48,
   },
   previewCard: {
     borderRadius: 16,
-    overflow: 'hidden',
+    overflow: "hidden",
   },
   previewHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     gap: 12,
     padding: 16,
     borderBottomWidth: 1,
   },
   previewTitle: {
     fontSize: 16,
-    fontWeight: '600',
+    fontWeight: "600",
   },
   previewBody: {
     padding: 12,
     gap: 8,
   },
   previewRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     gap: 12,
     padding: 12,
     borderRadius: 12,
@@ -367,21 +384,21 @@ const styles = StyleSheet.create({
   previewText: {
     flex: 1,
     fontSize: 14,
-    fontWeight: '500',
+    fontWeight: "500",
   },
   statsRow: {
-    flexDirection: 'row',
+    flexDirection: "row",
     gap: 12,
   },
   statBox: {
     flex: 1,
     padding: 16,
     borderRadius: 12,
-    alignItems: 'center',
+    alignItems: "center",
   },
   statValue: {
     fontSize: 24,
-    fontWeight: '700',
+    fontWeight: "700",
     marginBottom: 4,
   },
   statLabel: {
@@ -394,7 +411,7 @@ const styles = StyleSheet.create({
   },
   syncBadgeText: {
     fontSize: 11,
-    fontWeight: '600',
+    fontWeight: "600",
   },
   bottomContainer: {
     padding: 20,
@@ -404,16 +421,16 @@ const styles = StyleSheet.create({
     height: 4,
     borderRadius: 2,
     marginBottom: 20,
-    overflow: 'hidden',
+    overflow: "hidden",
   },
   progressFill: {
-    height: '100%',
+    height: "100%",
     borderRadius: 2,
   },
   buttonsContainer: {
-    flexDirection: 'row',
+    flexDirection: "row",
     gap: 12,
-    alignItems: 'center',
+    alignItems: "center",
   },
   backButton: {
     paddingHorizontal: 24,
@@ -423,7 +440,7 @@ const styles = StyleSheet.create({
   },
   backButtonText: {
     fontSize: 16,
-    fontWeight: '600',
+    fontWeight: "600",
   },
   nextButton: {
     flex: 1,

@@ -1,16 +1,9 @@
-import React, { useState } from 'react';
-import {
-  View,
-  Text,
-  StyleSheet,
-  TouchableOpacity,
-  Modal,
-  ScrollView,
-} from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
-import { Ionicons } from '@expo/vector-icons';
-import { useColors } from '@/hooks/useColorScheme';
-import { useHaptics } from '@/hooks/useHaptics';
+import React, { useState } from "react";
+import { View, Text, StyleSheet, TouchableOpacity, Modal, ScrollView } from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
+import { Ionicons } from "@expo/vector-icons";
+import { useColors } from "@/hooks/useColorScheme";
+import { useHaptics } from "@/hooks/useHaptics";
 
 interface Option {
   label: string;
@@ -31,7 +24,7 @@ export function OptionSelector({
   value,
   options,
   onSelect,
-  placeholder = 'Selecione uma opção',
+  placeholder = "Selecione uma opção",
   multiple = false,
 }: OptionSelectorProps) {
   const colors = useColors();
@@ -48,7 +41,8 @@ export function OptionSelector({
   const getLabel = () => {
     if (multiple && Array.isArray(value)) {
       if (value.length === 0) return placeholder;
-      if (value.length === 1) return options.find(o => o.value === value[0])?.label || placeholder;
+      if (value.length === 1)
+        return options.find((o) => o.value === value[0])?.label || placeholder;
       return `${value.length} selecionados`;
     }
     const selectedOption = options.find((opt) => opt.value === value);
@@ -82,7 +76,18 @@ export function OptionSelector({
           setShowModal(true);
         }}
       >
-        <Text style={[styles.selectorText, { color: value ? (Array.isArray(value) && value.length === 0 ? colors.textMuted : colors.text) : colors.textMuted }]}>
+        <Text
+          style={[
+            styles.selectorText,
+            {
+              color: value
+                ? Array.isArray(value) && value.length === 0
+                  ? colors.textMuted
+                  : colors.text
+                : colors.textMuted,
+            },
+          ]}
+        >
           {getLabel()}
         </Text>
         <Ionicons name="chevron-down" size={20} color={colors.textSecondary} />
@@ -98,10 +103,10 @@ export function OptionSelector({
           <View style={[styles.modalContent, { backgroundColor: colors.background }]}>
             <View style={[styles.modalHeader, { borderBottomColor: colors.border }]}>
               <Text style={[styles.modalTitle, { color: colors.text }]}>{label}</Text>
-              <View style={{ flexDirection: 'row', gap: 16 }}>
+              <View style={{ flexDirection: "row", gap: 16 }}>
                 {multiple && (
                   <TouchableOpacity onPress={() => setShowModal(false)}>
-                    <Text style={{ color: colors.primary, fontWeight: '600' }}>Concluído</Text>
+                    <Text style={{ color: colors.primary, fontWeight: "600" }}>Concluído</Text>
                   </TouchableOpacity>
                 )}
                 <TouchableOpacity onPress={() => setShowModal(false)}>
@@ -115,17 +120,21 @@ export function OptionSelector({
                   key={String(option.value)}
                   style={[
                     styles.modalItem,
-                    { 
+                    {
                       borderBottomColor: colors.border,
-                      backgroundColor: isSelected(option.value) ? colors.primary + '10' : 'transparent' 
-                    }
+                      backgroundColor: isSelected(option.value)
+                        ? colors.primary + "10"
+                        : "transparent",
+                    },
                   ]}
                   onPress={() => handleSelect(option.value)}
                 >
-                  <Text style={[
-                    styles.modalItemText, 
-                    { color: isSelected(option.value) ? colors.primary : colors.text }
-                  ]}>
+                  <Text
+                    style={[
+                      styles.modalItemText,
+                      { color: isSelected(option.value) ? colors.primary : colors.text },
+                    ]}
+                  >
                     {option.label}
                   </Text>
                   {isSelected(option.value) && (
@@ -147,13 +156,13 @@ const styles = StyleSheet.create({
   },
   label: {
     fontSize: 14,
-    fontWeight: '500',
+    fontWeight: "500",
     marginBottom: 6,
   },
   selector: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
     paddingHorizontal: 16,
     paddingVertical: 14,
     borderRadius: 12,
@@ -164,34 +173,34 @@ const styles = StyleSheet.create({
   },
   modalOverlay: {
     flex: 1,
-    backgroundColor: 'rgba(0,0,0,0.5)',
-    justifyContent: 'flex-end',
+    backgroundColor: "rgba(0,0,0,0.5)",
+    justifyContent: "flex-end",
   },
   modalContent: {
     borderTopLeftRadius: 20,
     borderTopRightRadius: 20,
     paddingBottom: 20,
-    maxHeight: '70%',
+    maxHeight: "70%",
   },
   modalHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
     paddingHorizontal: 16,
     paddingVertical: 16,
     borderBottomWidth: 1,
   },
   modalTitle: {
     fontSize: 18,
-    fontWeight: '600',
+    fontWeight: "600",
   },
   modalList: {
     paddingVertical: 8,
   },
   modalItem: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
     paddingHorizontal: 16,
     paddingVertical: 14,
     borderBottomWidth: 1,

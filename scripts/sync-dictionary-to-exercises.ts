@@ -1,42 +1,42 @@
-import { neon } from '@neondatabase/serverless';
-import { exerciseDictionary } from '../src/data/exerciseDictionary';
+import { neon } from "@neondatabase/serverless";
+import { exerciseDictionary } from "../src/data/exerciseDictionary";
 
 const DATABASE_URL = process.env.DATABASE_URL;
 if (!DATABASE_URL) throw new Error("DATABASE_URL is not set");
 
 async function sync() {
-    const sql = neon(DATABASE_URL);
-    console.log('🚀 Iniciando sincronização do Dicionário para a Tabela de Exercícios...');
+  const sql = neon(DATABASE_URL);
+  console.log("🚀 Iniciando sincronização do Dicionário para a Tabela de Exercícios...");
 
-    let updatedCount = 0;
-    let totalProcessed = 0;
+  let updatedCount = 0;
+  let totalProcessed = 0;
 
-    for (const exercise of exerciseDictionary) {
-        totalProcessed++;
-        
-        // Map intensity to difficulty enum
-        let difficulty = 'iniciante';
-        if (exercise.intensity_level >= 5) difficulty = 'avancado';
-        else if (exercise.intensity_level >= 3) difficulty = 'intermediario';
+  for (const exercise of exerciseDictionary) {
+    totalProcessed++;
 
-        const description = exercise.description_pt;
-        const instructions = exercise.instruction_pt;
-        const imageUrl = exercise.image_url;
+    // Map intensity to difficulty enum
+    let difficulty = "iniciante";
+    if (exercise.intensity_level >= 5) difficulty = "avancado";
+    else if (exercise.intensity_level >= 3) difficulty = "intermediario";
 
-        // UPSERT with full metadata
-        const slug = exercise.id.replace('exd-', '');
-        const res = await sql`
+    const description = exercise.description_pt;
+    const instructions = exercise.instruction_pt;
+    const imageUrl = exercise.image_url;
+
+    // UPSERT with full metadata
+    const slug = exercise.id.replace("exd-", "");
+    const res = await sql`
             INSERT INTO exercises (
-                slug, name, image_url, thumbnail_url, description, instructions, difficulty, 
+                slug, name, image_url, thumbnail_url, description, instructions, difficulty,
                 pathologies_indicated, pathologies_contraindicated, "references",
                 sets_recommended, reps_recommended, duration_seconds, updated_at
             ) VALUES (
-                ${slug}, 
-                ${exercise.pt}, 
-                ${imageUrl}, 
-                ${imageUrl}, 
-                ${description}, 
-                ${instructions}, 
+                ${slug},
+                ${exercise.pt},
+                ${imageUrl},
+                ${imageUrl},
+                ${description},
+                ${instructions},
                 ${difficulty}::exercise_difficulty,
                 ${exercise.indicated_pathologies || []},
                 ${exercise.contraindicated_pathologies || []},
@@ -63,16 +63,16 @@ async function sync() {
             RETURNING name, slug
         `;
 
-        if (res.length > 0) {
-            console.log(`✅ Sincronizado: "${exercise.pt}" (Slug: ${slug})`);
-            updatedCount++;
-        }
+    if (res.length > 0) {
+      console.log(`✅ Sincronizado: "${exercise.pt}" (Slug: ${slug})`);
+      updatedCount++;
     }
+  }
 
-    console.log('\n--- Resumo Final ---');
-    console.log(`📊 Processados: ${totalProcessed}`);
-    console.log(`✅ Atualizados no DB: ${updatedCount}`);
-    console.log(`✨ Sincronização concluída!`);
+  console.log("\n--- Resumo Final ---");
+  console.log(`📊 Processados: ${totalProcessed}`);
+  console.log(`✅ Atualizados no DB: ${updatedCount}`);
+  console.log(`✨ Sincronização concluída!`);
 }
 
 sync().catch(console.error);

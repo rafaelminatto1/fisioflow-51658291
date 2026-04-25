@@ -5,10 +5,7 @@
     },
     "shadcn": {
       "command": "npx",
-      "args": [
-        "shadcn@latest",
-        "mcp"
-      ]
+      "args": ["shadcn@latest", "mcp"]
     },
     "exa": {
       "url": "https://mcp.exa.ai/mcp?exaApiKey=d12af1da-4c1d-4665-a952-2bdfa6283d11"
@@ -30,27 +27,18 @@
     },
     "playwright": {
       "command": "npx",
-      "args": [
-        "-y",
-        "@playwright/mcp@latest"
-      ]
+      "args": ["-y", "@playwright/mcp@latest"]
     },
     "expo-mcp": {
       "url": "https://mcp.expo.dev/mcp"
     },
     "react-native-mcp": {
       "command": "npx",
-      "args": [
-        "-y",
-        "@ohah/react-native-mcp-server"
-      ]
+      "args": ["-y", "@ohah/react-native-mcp-server"]
     },
     "chrome-devtools": {
       "command": "npx",
-      "args": [
-        "-y",
-        "chrome-devtools-mcp@latest"
-      ]
+      "args": ["-y", "chrome-devtools-mcp@latest"]
     }
   }
 }

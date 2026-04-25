@@ -1,6 +1,6 @@
-import React from 'react';
-import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
+import React from "react";
+import { View, Text, TouchableOpacity, StyleSheet } from "react-native";
+import { Ionicons } from "@expo/vector-icons";
 
 interface PatientCardProps {
   name: string;
@@ -21,13 +21,15 @@ export function PatientCard({ name, condition, status, stats, onClick }: Patient
           <Text style={styles.name}>{name}</Text>
           <Text style={styles.condition}>{condition}</Text>
         </View>
-        <View style={[styles.badge, status === 'Alta' ? styles.badgeSuccess : styles.badgeInfo]}>
-          <Text style={[styles.badgeText, status === 'Alta' ? styles.textSuccess : styles.textInfo]}>
+        <View style={[styles.badge, status === "Alta" ? styles.badgeSuccess : styles.badgeInfo]}>
+          <Text
+            style={[styles.badgeText, status === "Alta" ? styles.textSuccess : styles.textInfo]}
+          >
             {status}
           </Text>
         </View>
       </View>
-      
+
       {stats && (
         <View style={styles.footer}>
           <View style={styles.stat}>
@@ -48,28 +50,28 @@ export function PatientCard({ name, condition, status, stats, onClick }: Patient
 
 const styles = StyleSheet.create({
   card: {
-    backgroundColor: '#fff',
+    backgroundColor: "#fff",
     borderRadius: 12,
     padding: 16,
     marginBottom: 12,
     borderWidth: 1,
-    borderColor: '#e5e7eb',
+    borderColor: "#e5e7eb",
   },
   header: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'flex-start',
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "flex-start",
     marginBottom: 12,
   },
   name: {
     fontSize: 16,
-    fontWeight: '600',
-    color: '#111827',
+    fontWeight: "600",
+    color: "#111827",
     marginBottom: 4,
   },
   condition: {
     fontSize: 14,
-    color: '#6b7280',
+    color: "#6b7280",
   },
   badge: {
     paddingHorizontal: 10,
@@ -77,35 +79,35 @@ const styles = StyleSheet.create({
     borderRadius: 999,
   },
   badgeInfo: {
-    backgroundColor: '#eff6ff',
+    backgroundColor: "#eff6ff",
   },
   badgeSuccess: {
-    backgroundColor: '#f0fdf4',
+    backgroundColor: "#f0fdf4",
   },
   badgeText: {
     fontSize: 12,
-    fontWeight: '500',
+    fontWeight: "500",
   },
   textInfo: {
-    color: '#3b82f6',
+    color: "#3b82f6",
   },
   textSuccess: {
-    color: '#22c55e',
+    color: "#22c55e",
   },
   footer: {
-    flexDirection: 'row',
+    flexDirection: "row",
     gap: 16,
     borderTopWidth: 1,
-    borderTopColor: '#f3f4f6',
+    borderTopColor: "#f3f4f6",
     paddingTop: 12,
   },
   stat: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     gap: 6,
   },
   statText: {
     fontSize: 13,
-    color: '#6b7280',
+    color: "#6b7280",
   },
 });

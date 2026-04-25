@@ -31,10 +31,10 @@ cp .env.example .env
 
 ## Acesso rápido:
 
-| Método | URL | Senha |
-|--------|-----|-------|
-| Navegador | http://localhost:8888 | fisioflow123 |
-| VNC Nativo | localhost:5900 | fisioflow123 |
+| Método     | URL                   | Senha        |
+| ---------- | --------------------- | ------------ |
+| Navegador  | http://localhost:8888 | fisioflow123 |
+| VNC Nativo | localhost:5900        | fisioflow123 |
 
 ## Troubleshooting rápido:
 

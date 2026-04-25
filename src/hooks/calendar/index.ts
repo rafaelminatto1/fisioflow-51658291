@@ -3,11 +3,8 @@
  */
 
 export {
-	useAppointmentGroups,
-	useDayAppointments,
-	useAppointmentOverlap,
+  useAppointmentGroups,
+  useDayAppointments,
+  useAppointmentOverlap,
 } from "./useAppointmentGroups";
-export {
-	useAppointmentPositioning,
-	useAppointmentPositions,
-} from "./useAppointmentPositioning";
+export { useAppointmentPositioning, useAppointmentPositions } from "./useAppointmentPositioning";

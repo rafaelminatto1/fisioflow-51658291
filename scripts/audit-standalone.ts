@@ -40,7 +40,7 @@ async function runAudit() {
   await page.fill('input[type="email"]', EMAIL);
   await page.fill('input[type="password"]', PASSWORD);
   await page.click('button[type="submit"]');
-  
+
   try {
     await page.waitForURL((url) => !url.pathname.includes("/auth"), { timeout: 15000 });
     console.log("✅ Login successful");
@@ -53,7 +53,7 @@ async function runAudit() {
   // --- AUDIT ROUTES ---
   for (const route of ROUTES) {
     console.log(`🔍 Auditing ${route.name} (${route.path})...`);
-    
+
     const errors: string[] = [];
     const warnings: string[] = [];
     const networkFailures: string[] = [];
@@ -103,7 +103,7 @@ async function runAudit() {
     // Cleanup listeners for next route
     page.off("console", consoleListener);
     page.off("requestfailed", requestListener);
-    
+
     console.log(`   Done in ${duration}ms. Errors: ${errors.length}, Warnings: ${warnings.length}`);
   }
 
@@ -115,7 +115,7 @@ async function runAudit() {
       totalPages: auditResults.length,
       totalErrors: auditResults.reduce((acc, r) => acc + r.errors.length, 0),
       totalWarnings: auditResults.reduce((acc, r) => acc + r.warnings.length, 0),
-    }
+    },
   };
 
   fs.writeFileSync(REPORT_PATH, JSON.stringify(finalReport, null, 2));

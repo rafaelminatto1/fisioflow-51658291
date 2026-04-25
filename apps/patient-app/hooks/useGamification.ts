@@ -1,9 +1,13 @@
-import { useQuery } from '@tanstack/react-query';
-import { gamificationApi } from '@/lib/api';
+import { useQuery } from "@tanstack/react-query";
+import { gamificationApi } from "@/lib/api";
 
 export function useGamification() {
-  const { data: profile, isLoading, refetch } = useQuery({
-    queryKey: ['gamification-profile'],
+  const {
+    data: profile,
+    isLoading,
+    refetch,
+  } = useQuery({
+    queryKey: ["gamification-profile"],
     queryFn: () => gamificationApi.getProfile(),
     staleTime: 1000 * 60 * 15, // 15 minutes
   });

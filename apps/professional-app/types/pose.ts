@@ -8,58 +8,58 @@
 // ============================================================================
 
 export enum AnalysisType {
-  POSTURE = 'posture',
-  REPETITION = 'repetition',
-  RANGE = 'range',
-  FORM = 'form'
+  POSTURE = "posture",
+  REPETITION = "repetition",
+  RANGE = "range",
+  FORM = "form",
 }
 
 export enum ExerciseType {
-  SQUAT = 'squat',
-  PUSHUP = 'pushup',
-  LATERAL_RAISE = 'lateral_raise',
-  PLANK = 'plank',
-  LUNGE = 'lunge',
-  SHOULDER_PRESS = 'shoulder_press',
-  HIP_ABDUCTION = 'hip_abduction',
-  KNEE_FLEXION = 'knee_flexion',
+  SQUAT = "squat",
+  PUSHUP = "pushup",
+  LATERAL_RAISE = "lateral_raise",
+  PLANK = "plank",
+  LUNGE = "lunge",
+  SHOULDER_PRESS = "shoulder_press",
+  HIP_ABDUCTION = "hip_abduction",
+  KNEE_FLEXION = "knee_flexion",
 }
 
 export enum MovementPhase {
-  UP = 'up',
-  DOWN = 'down',
-  LEFT = 'left',
-  RIGHT = 'right',
-  FLEXION = 'flexion',
-  EXTENSION = 'extension',
-  CONCENTRIC = 'concentric',
-  ECCENTRIC = 'eccentric',
-  HOLD = 'hold',
+  UP = "up",
+  DOWN = "down",
+  LEFT = "left",
+  RIGHT = "right",
+  FLEXION = "flexion",
+  EXTENSION = "extension",
+  CONCENTRIC = "concentric",
+  ECCENTRIC = "eccentric",
+  HOLD = "hold",
 }
 
 export enum ExecutionQuality {
-  PERFECT = 'perfect',
-  GOOD = 'good',
-  FAIR = 'fair',
-  POOR = 'poor',
-  VERY_POOR = 'very_poor'
+  PERFECT = "perfect",
+  GOOD = "good",
+  FAIR = "fair",
+  POOR = "poor",
+  VERY_POOR = "very_poor",
 }
 
 export enum SessionState {
-  IDLE = 'idle',
-  CALIBRATING = 'calibrating',
-  EXERCISING = 'exercising',
-  PAUSED = 'paused',
-  COMPLETED = 'completed',
-  ANALYZING = 'analyzing',
-  ERROR = 'error',
+  IDLE = "idle",
+  CALIBRATING = "calibrating",
+  EXERCISING = "exercising",
+  PAUSED = "paused",
+  COMPLETED = "completed",
+  ANALYZING = "analyzing",
+  ERROR = "error",
 }
 
 export enum SeverityLevel {
-  NONE = 'none',
-  MILD = 'mild',
-  MODERATE = 'moderate',
-  SEVERE = 'severe',
+  NONE = "none",
+  MILD = "mild",
+  MODERATE = "moderate",
+  SEVERE = "severe",
 }
 
 // ============================================================================
@@ -140,38 +140,38 @@ export interface AngleTriad {
 }
 
 export enum MainJoint {
-  LEFT_SHOULDER = 'left_shoulder',
-  RIGHT_SHOULDER = 'right_shoulder',
-  LEFT_ELBOW = 'left_elbow',
-  RIGHT_ELBOW = 'right_elbow',
-  LEFT_WRIST = 'left_wrist',
-  RIGHT_WRIST = 'right_wrist',
-  LEFT_HIP = 'left_hip',
-  RIGHT_HIP = 'right_hip',
-  LEFT_KNEE = 'left_knee',
-  RIGHT_KNEE = 'right_knee',
-  LEFT_ANKLE = 'left_ankle',
-  RIGHT_ANKLE = 'right_ankle',
+  LEFT_SHOULDER = "left_shoulder",
+  RIGHT_SHOULDER = "right_shoulder",
+  LEFT_ELBOW = "left_elbow",
+  RIGHT_ELBOW = "right_elbow",
+  LEFT_WRIST = "left_wrist",
+  RIGHT_WRIST = "right_wrist",
+  LEFT_HIP = "left_hip",
+  RIGHT_HIP = "right_hip",
+  LEFT_KNEE = "left_knee",
+  RIGHT_KNEE = "right_knee",
+  LEFT_ANKLE = "left_ankle",
+  RIGHT_ANKLE = "right_ankle",
 }
 
 export enum PostureIssueType {
-  HEAD_FORWARD = 'head_forward',
-  HEAD_BACKWARD = 'head_backward',
-  HEAD_TILTED = 'head_tilted',
-  SHOULDERS_ROUNDED = 'shoulders_rounded',
-  SHOULDERS_ELEVATED = 'shoulders_elevated',
-  SHOULDERS_ASYMMETRICAL = 'shoulders_asymmetric',
-  BACK_ROUNDED = 'back_rounded',
-  BACK_HYPEREXTENDED = 'back_hyperextended',
-  BACK_FLEXED = 'back_flexed',
-  HIPS_ASYMMETRIC = 'hips_asymmetric',
-  HIPS_SHIFTED = 'hips_shifted',
-  KNEES_VALGUS = 'knees_valgus',
-  KNEES_CAVED = 'knees_caved',
-  FLAT_FEET = 'flat_feet',
-  WEAK_CORE = 'weak_core',
-  EXCESSIVE_LEAN = 'excessive_lean',
-  UNEVEN_PELVIS = 'uneven_pelvis',
+  HEAD_FORWARD = "head_forward",
+  HEAD_BACKWARD = "head_backward",
+  HEAD_TILTED = "head_tilted",
+  SHOULDERS_ROUNDED = "shoulders_rounded",
+  SHOULDERS_ELEVATED = "shoulders_elevated",
+  SHOULDERS_ASYMMETRICAL = "shoulders_asymmetric",
+  BACK_ROUNDED = "back_rounded",
+  BACK_HYPEREXTENDED = "back_hyperextended",
+  BACK_FLEXED = "back_flexed",
+  HIPS_ASYMMETRIC = "hips_asymmetric",
+  HIPS_SHIFTED = "hips_shifted",
+  KNEES_VALGUS = "knees_valgus",
+  KNEES_CAVED = "knees_caved",
+  FLAT_FEET = "flat_feet",
+  WEAK_CORE = "weak_core",
+  EXCESSIVE_LEAN = "excessive_lean",
+  UNEVEN_PELVIS = "uneven_pelvis",
 }
 
 export interface PostureIssue {
@@ -257,15 +257,15 @@ export interface PoseProvider {
 export const EXERCISE_TEMPLATES: Record<ExerciseType, ExerciseTemplate> = {
   [ExerciseType.SQUAT]: {
     type: ExerciseType.SQUAT,
-    name: 'Agachamento',
+    name: "Agachamento",
     primaryKeypoints: [11, 12, 23, 24, 25, 26, 27, 28],
     angleTriads: [
       { pivot: 23, a: 11, b: 25 }, // Hip
-      { pivot: 25, a: 23, b: 27 }  // Knee
+      { pivot: 25, a: 23, b: 27 }, // Knee
     ],
     thresholds: {
-      '23': { min: 60, max: 100 },
-      '25': { min: 70, max: 110 }
+      "23": { min: 60, max: 100 },
+      "25": { min: 70, max: 110 },
     },
     expectedRomMin: 70,
     expectedRomMax: 130,

@@ -6,7 +6,7 @@ import {
   hapticWarning,
   hapticError,
   hapticSelection,
-} from '@/lib/haptics';
+} from "@/lib/haptics";
 
 /**
  * Hook simplificado para feedback tátil (haptics)

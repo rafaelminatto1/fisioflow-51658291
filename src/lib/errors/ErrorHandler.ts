@@ -7,19 +7,19 @@ import { logger } from "./logger";
 import { toast } from "sonner";
 
 export interface ErrorNotificationOptions {
-	/** Whether to show toast notification (default: true) */
-	showNotification?: boolean;
-	/** Custom title for notification */
-	title?: string;
-	/** Custom message for notification */
-	message?: string;
-	/** Notification duration in milliseconds */
-	duration?: number;
-	/** Action button for notification */
-	action?: {
-		label: string;
-		onClick: () => void;
-	};
+  /** Whether to show toast notification (default: true) */
+  showNotification?: boolean;
+  /** Custom title for notification */
+  title?: string;
+  /** Custom message for notification */
+  message?: string;
+  /** Notification duration in milliseconds */
+  duration?: number;
+  /** Action button for notification */
+  action?: {
+    label: string;
+    onClick: () => void;
+  };
 }
 
 /**
@@ -27,329 +27,314 @@ export interface ErrorNotificationOptions {
  * Centralizes error logging and user notification strategies.
  */
 export const ErrorHandler = {
-	/**
-	 * Handle any error thrown in the application
-	 */
-	handle(
-		error: unknown,
-		context?: string,
-		options?: ErrorNotificationOptions,
-	): AppError {
-		let appError: AppError;
+  /**
+   * Handle any error thrown in the application
+   */
+  handle(error: unknown, context?: string, options?: ErrorNotificationOptions): AppError {
+    let appError: AppError;
 
-		// Convert to AppError if needed
-		if (error instanceof AppError) {
-			appError = error;
-		} else if (error instanceof Error) {
-			// Check if it's a Database error
-			if (this.isDatabaseError(error)) {
-				appError = DatabaseError.fromNetworkError(error);
-			} else {
-				// Wrap generic errors
-				appError = new AppError(
-					error.message,
-					"UNKNOWN_ERROR",
-					500,
-					false,
-					{ context },
-					error,
-				);
-				appError.stack = error.stack;
-			}
-		} else {
-			// Handle non-error objects
-			appError = new AppError(
-				"Erro desconhecido",
-				"UNKNOWN_ERROR",
-				500,
-				false,
-				{ context, originalError: error },
-			);
-		}
+    // Convert to AppError if needed
+    if (error instanceof AppError) {
+      appError = error;
+    } else if (error instanceof Error) {
+      // Check if it's a Database error
+      if (this.isDatabaseError(error)) {
+        appError = DatabaseError.fromNetworkError(error);
+      } else {
+        // Wrap generic errors
+        appError = new AppError(error.message, "UNKNOWN_ERROR", 500, false, { context }, error);
+        appError.stack = error.stack;
+      }
+    } else {
+      // Handle non-error objects
+      appError = new AppError("Erro desconhecido", "UNKNOWN_ERROR", 500, false, {
+        context,
+        originalError: error,
+      });
+    }
 
-		// Log the error
-		this.logError(appError, context);
+    // Log the error
+    this.logError(appError, context);
 
-		// Notify user if appropriate
-		const shouldNotify =
-			options?.showNotification ?? this.shouldNotifyUser(appError);
-		if (shouldNotify) {
-			this.notifyUser(appError, options);
-		}
+    // Notify user if appropriate
+    const shouldNotify = options?.showNotification ?? this.shouldNotifyUser(appError);
+    if (shouldNotify) {
+      this.notifyUser(appError, options);
+    }
 
-		// Special handling for auth errors
-		if (this.isAuthError(appError)) {
-			this.handleAuthError(appError);
-		}
+    // Special handling for auth errors
+    if (this.isAuthError(appError)) {
+      this.handleAuthError(appError);
+    }
 
-		return appError;
-	},
+    return appError;
+  },
 
-	/**
-	 * Determine if error should be shown to user
-	 */
-	shouldNotifyUser(error: AppError): boolean {
-		// Don't notify for 404s in some cases
-		if (error.code === "NOT_FOUND" && error.context?.silent) {
-			return false;
-		}
+  /**
+   * Determine if error should be shown to user
+   */
+  shouldNotifyUser(error: AppError): boolean {
+    // Don't notify for 404s in some cases
+    if (error.code === "NOT_FOUND" && error.context?.silent) {
+      return false;
+    }
 
-		// Always notify for operational errors and server errors
-		return error.isOperational || error.statusCode >= 500;
-	},
+    // Always notify for operational errors and server errors
+    return error.isOperational || error.statusCode >= 500;
+  },
 
-	/**
-	 * Log error appropriately based on severity
-	 */
-	logError(error: AppError, context?: string) {
-		const logData = {
-			code: error.code,
-			statusCode: error.statusCode,
-			context,
-			...error.context,
-		};
+  /**
+   * Log error appropriately based on severity
+   */
+  logError(error: AppError, context?: string) {
+    const logData = {
+      code: error.code,
+      statusCode: error.statusCode,
+      context,
+      ...error.context,
+    };
 
-		if (error.isOperational) {
-			logger.warn(error.message, logData, context || error.code);
-		} else {
-			logger.error(error.message, error.toJSON(), context || "CRITICAL");
-		}
-	},
+    if (error.isOperational) {
+      logger.warn(error.message, logData, context || error.code);
+    } else {
+      logger.error(error.message, error.toJSON(), context || "CRITICAL");
+    }
+  },
 
-	/**
-	 * Show toast notification to user
-	 */
-	notifyUser(error: AppError, options?: ErrorNotificationOptions) {
-		const title = options?.title || this.getTitle(error);
-		const message = options?.message || error.getUserMessage();
-		const fullMessage = title ? `${title}: ${message}` : message;
+  /**
+   * Show toast notification to user
+   */
+  notifyUser(error: AppError, options?: ErrorNotificationOptions) {
+    const title = options?.title || this.getTitle(error);
+    const message = options?.message || error.getUserMessage();
+    const fullMessage = title ? `${title}: ${message}` : message;
 
-		// Determine toast type based on error severity
-		const toastType = this.getToastType(error);
+    // Determine toast type based on error severity
+    const toastType = this.getToastType(error);
 
-		// Show notification with action if provided
-		const toastFn = toast[toastType] || toast.error;
+    // Show notification with action if provided
+    const toastFn = toast[toastType] || toast.error;
 
-		if (options?.action) {
-			toastFn(fullMessage, {
-				duration: options?.duration,
-				action: {
-					label: options.action.label,
-					onClick: options.action.onClick,
-				},
-			});
-		} else {
-			toastFn(fullMessage, { duration: options?.duration });
-		}
-	},
+    if (options?.action) {
+      toastFn(fullMessage, {
+        duration: options?.duration,
+        action: {
+          label: options.action.label,
+          onClick: options.action.onClick,
+        },
+      });
+    } else {
+      toastFn(fullMessage, { duration: options?.duration });
+    }
+  },
 
-	/**
-	 * Get toast type based on error
-	 */
-	getToastType(error: AppError): "error" | "warning" | "info" {
-		if (error.statusCode >= 500 || !error.isOperational) {
-			return "error";
-		}
-		if (error.statusCode === 401 || error.statusCode === 403) {
-			return "warning";
-		}
-		if (error.statusCode >= 400 && error.statusCode < 500) {
-			return "warning";
-		}
-		return "error";
-	},
+  /**
+   * Get toast type based on error
+   */
+  getToastType(error: AppError): "error" | "warning" | "info" {
+    if (error.statusCode >= 500 || !error.isOperational) {
+      return "error";
+    }
+    if (error.statusCode === 401 || error.statusCode === 403) {
+      return "warning";
+    }
+    if (error.statusCode >= 400 && error.statusCode < 500) {
+      return "warning";
+    }
+    return "error";
+  },
 
-	/**
-	 * Get friendly title based on error code
-	 */
-	getTitle(error: AppError): string {
-		// Database-specific titles
-		if (error instanceof DatabaseError) {
-			switch (error.code) {
-				case "UNIQUE_VIOLATION":
-					return "Registro Duplicado";
-				case "FOREIGN_KEY":
-					return "Registro Relacionado";
-				case "REQUIRED_FIELD":
-					return "Campo Obrigatório";
-				case "RLS_DENIED":
-					return "Acesso Restrito";
-				case "INVALID_CREDENTIALS":
-					return "Credenciais Inválidas";
-				case "EMAIL_NOT_CONFIRMED":
-					return "E-mail Não Confirmado";
-				case "SESSION_EXPIRED":
-					return "Sessão Expirada";
-				case "NETWORK_ERROR":
-					return "Sem Conexão";
-				case "TIMEOUT":
-					return "Tempo Esgotado";
-				default:
-					return "Erro de Banco de Dados";
-			}
-		}
+  /**
+   * Get friendly title based on error code
+   */
+  getTitle(error: AppError): string {
+    // Database-specific titles
+    if (error instanceof DatabaseError) {
+      switch (error.code) {
+        case "UNIQUE_VIOLATION":
+          return "Registro Duplicado";
+        case "FOREIGN_KEY":
+          return "Registro Relacionado";
+        case "REQUIRED_FIELD":
+          return "Campo Obrigatório";
+        case "RLS_DENIED":
+          return "Acesso Restrito";
+        case "INVALID_CREDENTIALS":
+          return "Credenciais Inválidas";
+        case "EMAIL_NOT_CONFIRMED":
+          return "E-mail Não Confirmado";
+        case "SESSION_EXPIRED":
+          return "Sessão Expirada";
+        case "NETWORK_ERROR":
+          return "Sem Conexão";
+        case "TIMEOUT":
+          return "Tempo Esgotado";
+        default:
+          return "Erro de Banco de Dados";
+      }
+    }
 
-		// General error titles
-		switch (error.code) {
-			case "BAD_REQUEST":
-				return "Dados Inválidos";
-			case "UNAUTHORIZED":
-				return "Não Autorizado";
-			case "FORBIDDEN":
-				return "Permissão Negada";
-			case "NOT_FOUND":
-				return "Não Encontrado";
-			case "CONFLICT":
-				return "Conflito de Dados";
-			case "VALIDATION_ERROR":
-				return "Erro de Validação";
-			case "RATE_LIMIT":
-				return "Muitas Tentativas";
-			case "INTERNAL_ERROR":
-				return "Erro no Sistema";
-			case "NETWORK_ERROR":
-				return "Erro de Conexão";
-			case "TIMEOUT":
-				return "Operação Expirou";
-			case "SERVICE_UNAVAILABLE":
-				return "Serviço Indisponível";
-			default:
-				return "Ocorreu um Erro";
-		}
-	},
+    // General error titles
+    switch (error.code) {
+      case "BAD_REQUEST":
+        return "Dados Inválidos";
+      case "UNAUTHORIZED":
+        return "Não Autorizado";
+      case "FORBIDDEN":
+        return "Permissão Negada";
+      case "NOT_FOUND":
+        return "Não Encontrado";
+      case "CONFLICT":
+        return "Conflito de Dados";
+      case "VALIDATION_ERROR":
+        return "Erro de Validação";
+      case "RATE_LIMIT":
+        return "Muitas Tentativas";
+      case "INTERNAL_ERROR":
+        return "Erro no Sistema";
+      case "NETWORK_ERROR":
+        return "Erro de Conexão";
+      case "TIMEOUT":
+        return "Operação Expirou";
+      case "SERVICE_UNAVAILABLE":
+        return "Serviço Indisponível";
+      default:
+        return "Ocorreu um Erro";
+    }
+  },
 
-	/**
-	 * Check if error is a backend/data layer error
-	 */
-	isDataLayerError(error: Error): boolean {
-		const message = error.message.toLowerCase();
-		return (
-			message.includes("database") ||
-			message.includes("postgres") ||
-			message.includes("worker") ||
-			message.includes("permission-denied") ||
-			message.includes("not-found") ||
-			message.includes("already-exists") ||
-			message.includes("unauthenticated") ||
-			error.name === "PostgrestError"
-		);
-	},
+  /**
+   * Check if error is a backend/data layer error
+   */
+  isDataLayerError(error: Error): boolean {
+    const message = error.message.toLowerCase();
+    return (
+      message.includes("database") ||
+      message.includes("postgres") ||
+      message.includes("worker") ||
+      message.includes("permission-denied") ||
+      message.includes("not-found") ||
+      message.includes("already-exists") ||
+      message.includes("unauthenticated") ||
+      error.name === "PostgrestError"
+    );
+  },
 
-	/**
-	 * Check if error is a database error (legacy compatibility)
-	 */
-	isDatabaseError(error: Error): boolean {
-		return this.isDataLayerError(error);
-	},
+  /**
+   * Check if error is a database error (legacy compatibility)
+   */
+  isDatabaseError(error: Error): boolean {
+    return this.isDataLayerError(error);
+  },
 
-	/**
-	 * Check if error is an auth error
-	 */
-	isAuthError(error: AppError): boolean {
-		return (
-			error.code === "UNAUTHORIZED" ||
-			error.code === "INVALID_CREDENTIALS" ||
-			error.code === "SESSION_EXPIRED" ||
-			error.code === "EMAIL_NOT_CONFIRMED" ||
-			error.code === "INVALID_REFRESH_TOKEN" ||
-			error.statusCode === 401
-		);
-	},
+  /**
+   * Check if error is an auth error
+   */
+  isAuthError(error: AppError): boolean {
+    return (
+      error.code === "UNAUTHORIZED" ||
+      error.code === "INVALID_CREDENTIALS" ||
+      error.code === "SESSION_EXPIRED" ||
+      error.code === "EMAIL_NOT_CONFIRMED" ||
+      error.code === "INVALID_REFRESH_TOKEN" ||
+      error.statusCode === 401
+    );
+  },
 
-	/**
-	 * Handle auth-specific errors
-	 */
-	handleAuthError(error: AppError) {
-		// Clear session data
-		if (typeof window !== "undefined") {
-			// Could trigger logout flow here
-			logger.info("Auth error detected, session may need refresh", {
-				code: error.code,
-			});
-		}
-	},
+  /**
+   * Handle auth-specific errors
+   */
+  handleAuthError(error: AppError) {
+    // Clear session data
+    if (typeof window !== "undefined") {
+      // Could trigger logout flow here
+      logger.info("Auth error detected, session may need refresh", {
+        code: error.code,
+      });
+    }
+  },
 
-	/**
-	 * Handle async errors in promises
-	 */
-	async handleAsync<T>(
-		fn: () => Promise<T>,
-		context?: string,
-		options?: ErrorNotificationOptions & { fallbackValue?: T },
-	): Promise<T> {
-		try {
-			return await fn();
-		} catch (error) {
-			this.handle(error, context, options);
-			if (options?.fallbackValue !== undefined) {
-				return options.fallbackValue;
-			}
-			throw error;
-		}
-	},
+  /**
+   * Handle async errors in promises
+   */
+  async handleAsync<T>(
+    fn: () => Promise<T>,
+    context?: string,
+    options?: ErrorNotificationOptions & { fallbackValue?: T },
+  ): Promise<T> {
+    try {
+      return await fn();
+    } catch (error) {
+      this.handle(error, context, options);
+      if (options?.fallbackValue !== undefined) {
+        return options.fallbackValue;
+      }
+      throw error;
+    }
+  },
 
-	/**
-	 * Wrap a function with error handling
-	 */
-	wrap<T extends (...args: unknown[]) => unknown>(
-		fn: T,
-		context?: string,
-		options?: ErrorNotificationOptions,
-	): T {
-		return ((...args: unknown[]) => {
-			try {
-				const result = fn(...args);
-				// Handle async functions
-				if (result instanceof Promise) {
-					return result.catch((error) => {
-						throw this.handle(error, context, options);
-					});
-				}
-				return result;
-			} catch (error) {
-				throw this.handle(error, context, options);
-			}
-		}) as T;
-	},
+  /**
+   * Wrap a function with error handling
+   */
+  wrap<T extends (...args: unknown[]) => unknown>(
+    fn: T,
+    context?: string,
+    options?: ErrorNotificationOptions,
+  ): T {
+    return ((...args: unknown[]) => {
+      try {
+        const result = fn(...args);
+        // Handle async functions
+        if (result instanceof Promise) {
+          return result.catch((error) => {
+            throw this.handle(error, context, options);
+          });
+        }
+        return result;
+      } catch (error) {
+        throw this.handle(error, context, options);
+      }
+    }) as T;
+  },
 
-	/**
-	 * Batch handle multiple errors
-	 */
-	handleBatch(errors: unknown[], context?: string): AppError[] {
-		return errors.map((error, index) =>
-			this.handle(error, `${context}[${index}]`, { showNotification: false }),
-		);
-	},
+  /**
+   * Batch handle multiple errors
+   */
+  handleBatch(errors: unknown[], context?: string): AppError[] {
+    return errors.map((error, index) =>
+      this.handle(error, `${context}[${index}]`, { showNotification: false }),
+    );
+  },
 
-	/**
-	 * Get recovery suggestion for error
-	 */
-	getRecoverySuggestion(error: AppError): string | null {
-		const suggestions: Record<string, string> = {
-			NETWORK_ERROR: "Verifique sua conexão com a internet.",
-			TIMEOUT: "Tente novamente. Se o problema persistir, contate o suporte.",
-			SESSION_EXPIRED: "Faça login novamente.",
-			INVALID_CREDENTIALS: "Verifique seu e-mail e senha.",
-			UNIQUE_VIOLATION: "Este registro já existe. Verifique os dados.",
-			FOREIGN_KEY: "Verifique se os registros relacionados existem.",
-			REQUIRED_FIELD: "Preencha todos os campos obrigatórios.",
-			RATE_LIMIT: "Aguarde alguns minutos antes de tentar novamente.",
-			SERVICE_UNAVAILABLE:
-				"O serviço está temporariamente indisponível. Tente novamente mais tarde.",
-		};
+  /**
+   * Get recovery suggestion for error
+   */
+  getRecoverySuggestion(error: AppError): string | null {
+    const suggestions: Record<string, string> = {
+      NETWORK_ERROR: "Verifique sua conexão com a internet.",
+      TIMEOUT: "Tente novamente. Se o problema persistir, contate o suporte.",
+      SESSION_EXPIRED: "Faça login novamente.",
+      INVALID_CREDENTIALS: "Verifique seu e-mail e senha.",
+      UNIQUE_VIOLATION: "Este registro já existe. Verifique os dados.",
+      FOREIGN_KEY: "Verifique se os registros relacionados existem.",
+      REQUIRED_FIELD: "Preencha todos os campos obrigatórios.",
+      RATE_LIMIT: "Aguarde alguns minutos antes de tentar novamente.",
+      SERVICE_UNAVAILABLE:
+        "O serviço está temporariamente indisponível. Tente novamente mais tarde.",
+    };
 
-		return suggestions[error.code] || null;
-	},
+    return suggestions[error.code] || null;
+  },
 };
 
 /**
  * React Error Boundary fallback component helper
  */
 export function getErrorFallbackMessage(error: unknown): string {
-	const appError = ErrorHandler.handle(error, "ErrorBoundary", {
-		showNotification: false,
-	});
-	return appError.getUserMessage();
+  const appError = ErrorHandler.handle(error, "ErrorBoundary", {
+    showNotification: false,
+  });
+  return appError.getUserMessage();
 }
 
 /**

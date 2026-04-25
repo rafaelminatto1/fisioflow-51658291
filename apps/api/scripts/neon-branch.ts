@@ -2,7 +2,7 @@ import { type Env } from "../src/types/env";
 
 /**
  * Neon DB Branch Management Script
- * 
+ *
  * Usage:
  *   npx tsx scripts/neon-branch.ts create <branch-name> [parent-id]
  *   npx tsx scripts/neon-branch.ts list
@@ -22,8 +22,8 @@ async function neonFetch(path: string, options: RequestInit = {}) {
   const response = await fetch(`${NEON_API_URL}${path}`, {
     ...options,
     headers: {
-      "Authorization": `Bearer ${API_KEY}`,
-      "Accept": "application/json",
+      Authorization: `Bearer ${API_KEY}`,
+      Accept: "application/json",
       "Content-Type": "application/json",
       ...options.headers,
     },
@@ -40,13 +40,15 @@ async function neonFetch(path: string, options: RequestInit = {}) {
 async function listBranches() {
   if (!PROJECT_ID) throw new Error("NEON_PROJECT_ID is required");
   const branches = await neonFetch(`/projects/${PROJECT_ID}/branches`);
-  console.table(branches.branches.map((b: any) => ({
-    id: b.id,
-    name: b.name,
-    parent: b.parent_id,
-    created: b.created_at,
-    primary: b.primary ? "✅" : "❌"
-  })));
+  console.table(
+    branches.branches.map((b: any) => ({
+      id: b.id,
+      name: b.name,
+      parent: b.parent_id,
+      created: b.created_at,
+      primary: b.primary ? "✅" : "❌",
+    })),
+  );
 }
 
 async function createBranch(name: string, parentId?: string) {
@@ -58,7 +60,7 @@ async function createBranch(name: string, parentId?: string) {
       branch: {
         name,
         parent_id: parentId,
-      }
+      },
     }),
   });
   console.log(`Branch criado com sucesso! ID: ${result.branch.id}`);
@@ -74,7 +76,7 @@ async function deleteBranch(id: string) {
   console.log("Branch removido.");
 }
 
-const [,, command, arg1, arg2] = process.argv;
+const [, , command, arg1, arg2] = process.argv;
 
 (async () => {
   try {

@@ -9,9 +9,9 @@ import { MainLayout } from "@/components/layout/MainLayout";
 import { AdherenceGamification } from "@/components/marketing/AdherenceGamification";
 
 export default function AdherenceGamificationPage() {
-	return (
-		<MainLayout>
-			<AdherenceGamification />
-		</MainLayout>
-	);
+  return (
+    <MainLayout>
+      <AdherenceGamification />
+    </MainLayout>
+  );
 }

@@ -1,7 +1,7 @@
-import { Hono } from 'hono';
-import type { Env } from '../types/env';
-import { requireAuth, type AuthVariables } from '../lib/auth';
-import { createPool } from '../lib/db';
+import { Hono } from "hono";
+import type { Env } from "../types/env";
+import { requireAuth, type AuthVariables } from "../lib/auth";
+import { createPool } from "../lib/db";
 
 const app = new Hono<{ Bindings: Env; Variables: AuthVariables }>();
 
@@ -10,20 +10,20 @@ type FeriadoRow = {
   organization_id?: string;
   nome: string;
   data: string;
-  tipo: 'nacional' | 'estadual' | 'municipal' | 'ponto_facultativo';
+  tipo: "nacional" | "estadual" | "municipal" | "ponto_facultativo";
   recorrente: boolean;
   bloqueia_agenda: boolean;
   created_at: string;
   updated_at: string;
 };
 
-app.get('/', requireAuth, async (c) => {
-  const user = c.get('user');
+app.get("/", requireAuth, async (c) => {
+  const user = c.get("user");
   const { year } = c.req.query();
   const pool = await createPool(c.env);
 
   // 1. Feriados org-específicos (customizados / estaduais) — sempre do Neon
-  const conditions = ['organization_id = $1'];
+  const conditions = ["organization_id = $1"];
   const params: unknown[] = [user.organizationId];
 
   if (year) {
@@ -33,7 +33,7 @@ app.get('/', requireAuth, async (c) => {
 
   const [orgResult, nacionaisD1] = await Promise.all([
     pool.query(
-      `SELECT * FROM feriados WHERE ${conditions.join(' AND ')} ORDER BY data ASC`,
+      `SELECT * FROM feriados WHERE ${conditions.join(" AND ")} ORDER BY data ASC`,
       params,
     ),
     // 2. Feriados nacionais do D1 (zero latência, sem hit no Neon)
@@ -41,15 +41,17 @@ app.get('/', requireAuth, async (c) => {
       ? c.env.DB.prepare(
           year
             ? "SELECT data, nome, tipo FROM feriados_nacionais WHERE data LIKE ? ORDER BY data ASC"
-            : "SELECT data, nome, tipo FROM feriados_nacionais ORDER BY data ASC"
-        ).bind(year ? `${year}-%` : undefined).all<{ data: string; nome: string; tipo: string }>()
+            : "SELECT data, nome, tipo FROM feriados_nacionais ORDER BY data ASC",
+        )
+          .bind(year ? `${year}-%` : undefined)
+          .all<{ data: string; nome: string; tipo: string }>()
           .then((r) => r.results)
           .catch(() => [])
       : Promise.resolve([]),
   ]);
 
   // Mapeia nacionais do D1 para o formato esperado pelo frontend (mesclando sem duplicatas)
-  const orgDates = new Set((orgResult.rows as FeriadoRow[]).map((r) => r.data?.split('T')[0]));
+  const orgDates = new Set((orgResult.rows as FeriadoRow[]).map((r) => r.data?.split("T")[0]));
   const nacionaisMapped = nacionaisD1
     .filter((f) => !orgDates.has(f.data)) // org já definiu override para essa data
     .map((f) => ({
@@ -57,21 +59,22 @@ app.get('/', requireAuth, async (c) => {
       organization_id: null,
       nome: f.nome,
       data: f.data,
-      tipo: 'nacional' as const,
+      tipo: "nacional" as const,
       recorrente: true,
       bloqueia_agenda: true,
       created_at: new Date().toISOString(),
       updated_at: new Date().toISOString(),
     }));
 
-  const merged = [...(orgResult.rows as FeriadoRow[]), ...nacionaisMapped]
-    .sort((a, b) => a.data.localeCompare(b.data));
+  const merged = [...(orgResult.rows as FeriadoRow[]), ...nacionaisMapped].sort((a, b) =>
+    a.data.localeCompare(b.data),
+  );
 
   return c.json({ data: merged });
 });
 
-app.post('/', requireAuth, async (c) => {
-  const user = c.get('user');
+app.post("/", requireAuth, async (c) => {
+  const user = c.get("user");
   const pool = await createPool(c.env);
   const body = (await c.req.json()) as Partial<FeriadoRow>;
 
@@ -82,9 +85,9 @@ app.post('/', requireAuth, async (c) => {
      RETURNING *`,
     [
       user.organizationId,
-      body.nome ?? 'Feriado',
+      body.nome ?? "Feriado",
       body.data ?? new Date().toISOString(),
-      body.tipo ?? 'nacional',
+      body.tipo ?? "nacional",
       body.recorrente ?? true,
       body.bloqueia_agenda ?? true,
     ],
@@ -93,8 +96,8 @@ app.post('/', requireAuth, async (c) => {
   return c.json({ data: result.rows[0] }, 201);
 });
 
-app.put('/:id', requireAuth, async (c) => {
-  const user = c.get('user');
+app.put("/:id", requireAuth, async (c) => {
+  const user = c.get("user");
   const pool = await createPool(c.env);
   const { id } = c.req.param();
   const body = (await c.req.json()) as Partial<FeriadoRow>;
@@ -104,43 +107,43 @@ app.put('/:id', requireAuth, async (c) => {
   const pushIf = (value: unknown, clause: string) => {
     if (value !== undefined) {
       params.push(value);
-      sets.push(clause.replace('?', `$${params.length}`));
+      sets.push(clause.replace("?", `$${params.length}`));
     }
   };
 
-  pushIf(body.nome, 'nome = ?');
-  pushIf(body.data, 'data = ?');
-  pushIf(body.tipo, 'tipo = ?');
-  pushIf(body.recorrente, 'recorrente = ?');
-  pushIf(body.bloqueia_agenda, 'bloqueia_agenda = ?');
+  pushIf(body.nome, "nome = ?");
+  pushIf(body.data, "data = ?");
+  pushIf(body.tipo, "tipo = ?");
+  pushIf(body.recorrente, "recorrente = ?");
+  pushIf(body.bloqueia_agenda, "bloqueia_agenda = ?");
 
   if (!sets.length) {
-    return c.json({ error: 'Nada para atualizar' }, 400);
+    return c.json({ error: "Nada para atualizar" }, 400);
   }
 
   params.push(id, user.organizationId);
   const result = await pool.query(
-    `UPDATE feriados SET ${sets.join(', ')}, updated_at = NOW()
+    `UPDATE feriados SET ${sets.join(", ")}, updated_at = NOW()
      WHERE id = $${params.length - 1} AND organization_id = $${params.length}
      RETURNING *`,
     params,
   );
 
-  if (!result.rows.length) return c.json({ error: 'Feriado não encontrado' }, 404);
+  if (!result.rows.length) return c.json({ error: "Feriado não encontrado" }, 404);
   return c.json({ data: result.rows[0] });
 });
 
-app.delete('/:id', requireAuth, async (c) => {
-  const user = c.get('user');
+app.delete("/:id", requireAuth, async (c) => {
+  const user = c.get("user");
   const pool = await createPool(c.env);
   const { id } = c.req.param();
 
   const result = await pool.query(
-    'DELETE FROM feriados WHERE id = $1 AND organization_id = $2 RETURNING id',
+    "DELETE FROM feriados WHERE id = $1 AND organization_id = $2 RETURNING id",
     [id, user.organizationId],
   );
 
-  if (!result.rows.length) return c.json({ error: 'Feriado não encontrado' }, 404);
+  if (!result.rows.length) return c.json({ error: "Feriado não encontrado" }, 404);
   return c.json({ ok: true });
 });
 

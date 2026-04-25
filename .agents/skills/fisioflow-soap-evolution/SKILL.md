@@ -15,12 +15,12 @@ FisioFlow uses the standard SOAP clinical documentation method. Each treatment s
 
 ### Section Breakdown
 
-| Section | Portuguese | Purpose | Example Content |
-|---------|-----------|---------|-----------------|
-| **S** (Subjective) | Subjetivo | Patient-reported symptoms, pain level, complaints, functional limitations | "Paciente relata dor lombar há 2 semanas, EVA 7/10, piora ao sentar" |
-| **O** (Objective) | Objetivo | Therapist observations, measurements, ROM, special tests, palpation, gait | Stored as JSONB with structured fields: inspection, palpation, movement_tests, special_tests, posture_analysis, gait_analysis |
-| **A** (Assessment) | Avaliação | Clinical reasoning, diagnosis, progress evaluation, prognosis | "Lombalgia mecânica com diminuição de ADM em flexão. Progresso satisfatório desde sessão anterior." |
-| **P** (Plan) | Plano | Treatment plan, exercises, frequency, home program, precautions | "Continuar com alongamento de isquiotibiais 3x/semana. Adicionar fortalecimento de core." |
+| Section            | Portuguese | Purpose                                                                   | Example Content                                                                                                               |
+| ------------------ | ---------- | ------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------- |
+| **S** (Subjective) | Subjetivo  | Patient-reported symptoms, pain level, complaints, functional limitations | "Paciente relata dor lombar há 2 semanas, EVA 7/10, piora ao sentar"                                                          |
+| **O** (Objective)  | Objetivo   | Therapist observations, measurements, ROM, special tests, palpation, gait | Stored as JSONB with structured fields: inspection, palpation, movement_tests, special_tests, posture_analysis, gait_analysis |
+| **A** (Assessment) | Avaliação  | Clinical reasoning, diagnosis, progress evaluation, prognosis             | "Lombalgia mecânica com diminuição de ADM em flexão. Progresso satisfatório desde sessão anterior."                           |
+| **P** (Plan)       | Plano      | Treatment plan, exercises, frequency, home program, precautions           | "Continuar com alongamento de isquiotibiais 3x/semana. Adicionar fortalecimento de core."                                     |
 
 ### Three Filling Modes
 
@@ -75,6 +75,7 @@ CREATE TABLE treatment_sessions (
 ```
 
 Key points:
+
 - `appointment_id` is nullable — sessions can be standalone (no appointment)
 - `objective` is **JSONB** (structured), while `subjective`, `assessment`, `plan` are plain **TEXT**
 - `pain_level_before` and `pain_level_after` are integers 0-10
@@ -230,6 +231,7 @@ interface SessionEvolution {
 ```
 
 Key types to know:
+
 - `SessionExerciseData` — exercise performed within a session (sets, reps, weight, difficulty, side)
 - `MeasurementData` — single measurement with type/unit/value
 - `VitalSigns` — blood pressure, heart rate, respiratory rate, temperature, O2 saturation, pain
@@ -241,21 +243,21 @@ Key types to know:
 
 Worker API (`apps/api/src/routes/evolution.ts`):
 
-| Method | Path | Purpose |
-|--------|------|---------|
-| GET | `/evolution/treatment-sessions?patientId=...&limit=N` | List sessions for patient |
-| POST | `/evolution/treatment-sessions` | Create or upsert session |
-| PATCH | `/evolution/treatment-sessions/:id` | Update existing session |
-| GET | `/evolution/measurements?patientId=...` | List measurements |
-| POST | `/evolution/measurements` | Create measurement |
-| GET | `/evolution/required-measurements?pathologies=...` | Get required measurements for pathologies |
+| Method | Path                                                  | Purpose                                   |
+| ------ | ----------------------------------------------------- | ----------------------------------------- |
+| GET    | `/evolution/treatment-sessions?patientId=...&limit=N` | List sessions for patient                 |
+| POST   | `/evolution/treatment-sessions`                       | Create or upsert session                  |
+| PATCH  | `/evolution/treatment-sessions/:id`                   | Update existing session                   |
+| GET    | `/evolution/measurements?patientId=...`               | List measurements                         |
+| POST   | `/evolution/measurements`                             | Create measurement                        |
+| GET    | `/evolution/required-measurements?pathologies=...`    | Get required measurements for pathologies |
 
 Version API (`apps/api/src/routes/evolutionVersions.ts`):
 
-| Method | Path | Purpose |
-|--------|------|---------|
-| GET | `/evolution-versions?soapRecordId=...` | List versions (max 25) |
-| POST | `/evolution-versions` | Save a new version |
+| Method | Path                                   | Purpose                |
+| ------ | -------------------------------------- | ---------------------- |
+| GET    | `/evolution-versions?soapRecordId=...` | List versions (max 25) |
+| POST   | `/evolution-versions`                  | Save a new version     |
 
 Client API (`apps/professional-app/lib/api/evolutions.ts`):
 
@@ -290,7 +292,17 @@ const triggerAutoSave = useCallback(() => {
     const res = await fetchApi("/api/sessions/autosave", { method: "POST", data: body });
     savedEvolutionId.current = res.data?.id ?? savedEvolutionId.current;
   }, 2000);
-}, [mode, subjective, objective, assessment, plan, freeContent, patientId, appointmentId, painLevel]);
+}, [
+  mode,
+  subjective,
+  objective,
+  assessment,
+  plan,
+  freeContent,
+  patientId,
+  appointmentId,
+  painLevel,
+]);
 ```
 
 ---
@@ -326,6 +338,7 @@ const PAIN_DESCRIPTIONS: Record<number, { text: string; color: string }> = {
 Color bands: green (0-1) → lime (2-3) → yellow (4-5) → orange (6-7) → red (8-10).
 
 Pain characteristics available as datalist suggestions:
+
 - Aguda/Faca, Queimação, Pulsátil, Cólica, Pressão/Peso, Fadiga/Cansaço, Latejante, Amortecimento/Formigamento, Pontada, Cócegas/irritação
 
 Pain is captured twice per session: `pain_level_before` (pre-treatment) and `pain_level_after` (post-treatment).
@@ -338,22 +351,41 @@ Interactive anatomical diagram for marking pain regions. Types in `src/types/pai
 type PainIntensity = 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10;
 
 type PainType =
-  | "aguda" | "cronica" | "latejante" | "queimacao"
-  | "formigamento" | "dormencia" | "peso" | "pontada"
-  | "sharp" | "throbbing" | "burning" | "tingling"
-  | "numbness" | "stiffness";
+  | "aguda"
+  | "cronica"
+  | "latejante"
+  | "queimacao"
+  | "formigamento"
+  | "dormencia"
+  | "peso"
+  | "pontada"
+  | "sharp"
+  | "throbbing"
+  | "burning"
+  | "tingling"
+  | "numbness"
+  | "stiffness";
 
 type BodyRegion =
-  | "cabeca_frente_direita" | "cabeca_frente_esquerda"
-  | "cabeca_nuca_direita" | "cabeca_nuca_esquerda"
-  | "pescoco_frontal_direito" | "pescoco_frontal_esquerdo"
-  | "ombro_direito" | "ombro_esquerdo"
-  | "braco_direito" | "braco_esquerdo"
-  | "joelho_direito" | "joelho_esquerdo"
-  | "lombar_esquerda" | "lombar_direita"
-  | "quadril_direito" | "quadril_esquerdo"
-  | "pe_direito" | "pe_esquerdo"
-  /* ... 40+ regions total */;
+  | "cabeca_frente_direita"
+  | "cabeca_frente_esquerda"
+  | "cabeca_nuca_direita"
+  | "cabeca_nuca_esquerda"
+  | "pescoco_frontal_direito"
+  | "pescoco_frontal_esquerdo"
+  | "ombro_direito"
+  | "ombro_esquerdo"
+  | "braco_direito"
+  | "braco_esquerdo"
+  | "joelho_direito"
+  | "joelho_esquerdo"
+  | "lombar_esquerda"
+  | "lombar_direita"
+  | "quadril_direito"
+  | "quadril_esquerdo"
+  | "pe_direito"
+  | "pe_esquerdo";
+/* ... 40+ regions total */
 
 interface PainMapPoint {
   region: BodyRegion;
@@ -489,7 +521,8 @@ const editor = useEditor({
     StarterKit.configure({ history: true, link: false }),
     Image.configure({
       HTMLAttributes: {
-        class: "rounded-lg border border-gray-200 shadow-md max-w-full h-auto cursor-zoom-in hover:opacity-95 transition-opacity",
+        class:
+          "rounded-lg border border-gray-200 shadow-md max-w-full h-auto cursor-zoom-in hover:opacity-95 transition-opacity",
       },
     }),
     PdfEmbed,
@@ -498,11 +531,13 @@ const editor = useEditor({
     TaskItem.configure({ nested: true }),
     Mention.configure({
       HTMLAttributes: {
-        class: "bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-300 px-1.5 py-0.5 rounded-md font-bold text-xs",
+        class:
+          "bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-300 px-1.5 py-0.5 rounded-md font-bold text-xs",
       },
     }),
     Placeholder.configure({
-      placeholder: "Digite '/' para comandos clínicos, '[[ ' para vincular sessões ou arraste um exame para cá...",
+      placeholder:
+        "Digite '/' para comandos clínicos, '[[ ' para vincular sessões ou arraste um exame para cá...",
     }),
     Commands,
     Backlinks,
@@ -516,6 +551,7 @@ const editor = useEditor({
 ```
 
 Custom extensions:
+
 - **`Commands`** (`src/components/evolution/suggestion/commands.ts`) — Slash command menu for clinical shortcuts
 - **`Backlinks`** (`src/components/evolution/suggestion/backlinks.ts`) — `[[` trigger to link to other sessions/records
 - **`PdfEmbed`** (`src/components/evolution/extensions/PdfEmbed.ts`) — Inline PDF preview
@@ -527,7 +563,10 @@ When SOAP data exists but Tiptap content is empty, the editor auto-migrates:
 ```typescript
 useEffect(() => {
   if (editor && (!editor.getHTML() || editor?.getHTML() === "<p></p>")) {
-    if (soapData && (soapData.subjective || soapData.objective || soapData.assessment || soapData.plan)) {
+    if (
+      soapData &&
+      (soapData.subjective || soapData.objective || soapData.assessment || soapData.plan)
+    ) {
       const migratedContent = `
         <h2 class="text-blue-600 dark:text-blue-400 border-b pb-1">Subjetivo</h2>
         <p>${soapData.subjective || "<em>Sem registro</em>"}</p>
@@ -554,18 +593,21 @@ import { set, get, del } from "idb-keyval";
 const DRAFT_KEY = `evolution_draft_${evolutionId}`;
 
 set(DRAFT_KEY, html);
-get(DRAFT_KEY).then((draft) => { if (draft) editor.commands.setContent(draft); });
+get(DRAFT_KEY).then((draft) => {
+  if (draft) editor.commands.setContent(draft);
+});
 ```
 
 ### Mobile Tiptap Form (`apps/professional-app/components/evolution/TiptapForm.tsx`)
 
 On mobile (React Native), the Tiptap editor is replaced with a plain `TextInput` that supports slash commands via a custom `SlashMenu`. Triggers:
+
 - `/` — Opens slash command menu
 - Command options: exercises, procedures, clinical tests
 
 ```typescript
 const handleTextChange = (text: string) => {
-  if (text[text.length - 1] === '/') setShowMenu(true);
+  if (text[text.length - 1] === "/") setShowMenu(true);
   onChangeContent(text);
 };
 ```
@@ -592,8 +634,13 @@ const SOAP_AI_CONFIG = {
 
 ```typescript
 interface PatientSOAPContext {
-  patient: Pick<Patient, "id" | "name" | "birthDate" | "gender" | "mainCondition" | "medicalHistory"> & { age: number };
-  previousSOAP?: Array<Pick<SOAPRecord, "sessionNumber" | "subjective" | "objective" | "assessment" | "plan">>;
+  patient: Pick<
+    Patient,
+    "id" | "name" | "birthDate" | "gender" | "mainCondition" | "medicalHistory"
+  > & { age: number };
+  previousSOAP?: Array<
+    Pick<SOAPRecord, "sessionNumber" | "subjective" | "objective" | "assessment" | "plan">
+  >;
   sessionNumber: number;
   sessionType?: "initial" | "follow-up" | "reassessment" | "discharge";
   language?: "pt" | "en" | "es";
@@ -641,24 +688,28 @@ Zod-validated output schema:
 const SOAPGenerationSchema = z.object({
   soap: z.object({
     subjective: z.string().describe("Patient reported symptoms and complaints in Portuguese"),
-    objective: z.object({
-      inspection: z.string().optional(),
-      palpation: z.string().optional(),
-      movement_tests: z.record(z.string()).optional(),
-      special_tests: z.record(z.string()).optional(),
-      posture_analysis: z.string().optional(),
-      gait_analysis: z.string().optional(),
-    }).optional(),
+    objective: z
+      .object({
+        inspection: z.string().optional(),
+        palpation: z.string().optional(),
+        movement_tests: z.record(z.string()).optional(),
+        special_tests: z.record(z.string()).optional(),
+        posture_analysis: z.string().optional(),
+        gait_analysis: z.string().optional(),
+      })
+      .optional(),
     assessment: z.string().describe("Clinical assessment and diagnosis in Portuguese"),
-    plan: z.object({
-      short_term_goals: z.array(z.string()).optional(),
-      long_term_goals: z.array(z.string()).optional(),
-      interventions: z.array(z.string()).optional(),
-      frequency: z.string().optional(),
-      duration: z.string().optional(),
-      home_exercises: z.array(z.string()).optional(),
-      precautions: z.array(z.string()).optional(),
-    }).optional(),
+    plan: z
+      .object({
+        short_term_goals: z.array(z.string()).optional(),
+        long_term_goals: z.array(z.string()).optional(),
+        interventions: z.array(z.string()).optional(),
+        frequency: z.string().optional(),
+        duration: z.string().optional(),
+        home_exercises: z.array(z.string()).optional(),
+        precautions: z.array(z.string()).optional(),
+      })
+      .optional(),
   }),
   keyFindings: z.array(z.string()),
   recommendations: z.array(z.string()),
@@ -698,10 +749,7 @@ Return ONLY valid JSON matching the provided schema. Do not include markdown cod
 ```typescript
 const assistant = new SOAPAssistant(apiKey);
 
-const result = await assistant.generateSOAPFromText(
-  consultationText,
-  patientContext,
-);
+const result = await assistant.generateSOAPFromText(consultationText, patientContext);
 
 if (result.success && result.data) {
   const { soap, keyFindings, recommendations, redFlags, suggestedCodes } = result.data;
@@ -713,11 +761,7 @@ if (result.success && result.data) {
 Audio consultation → transcription → SOAP generation in a single flow:
 
 ```typescript
-const result = await assistant.generateSOAPFromAudio(
-  audioBuffer,
-  "audio/mp3",
-  patientContext,
-);
+const result = await assistant.generateSOAPFromAudio(audioBuffer, "audio/mp3", patientContext);
 ```
 
 Supported audio formats: `audio/mp3`, `audio/mp4`, `audio/wav`, `audio/webm`, `audio/mpeg`, `audio/x-wav`.
@@ -735,9 +779,7 @@ const handleGenerateWithAI = async () => {
       appointmentId,
       painLevel,
       mode,
-      context: mode === "SOAP"
-        ? { subjective, objective, assessment, plan }
-        : { freeContent },
+      context: mode === "SOAP" ? { subjective, objective, assessment, plan } : { freeContent },
     },
   });
   if (mode === "SOAP" && data.soap) {
@@ -779,28 +821,28 @@ const assistant = getSOAPAssistant();
 
 ## Key File Locations
 
-| File | Purpose |
-|------|---------|
-| `src/types/evolution.ts` | All evolution-related TypeScript types |
-| `src/types/painMap.ts` | Pain map types (BodyRegion, PainMapPoint, etc.) |
-| `src/lib/ai/soap-assistant.ts` | AI SOAP generation (Gemini) |
-| `src/lib/export/evolutionPdfExport.ts` | PDF export with SOAP table |
-| `apps/api/src/routes/evolution.ts` | Worker API for treatment sessions & measurements |
-| `apps/api/src/routes/evolutionVersions.ts` | Version history API |
-| `apps/professional-app/app/evolution-form.tsx` | Mobile evolution form |
-| `apps/professional-app/lib/api/evolutions.ts` | Mobile API client |
-| `apps/professional-app/components/evolution/SOAPForm.tsx` | SOAP mode form |
-| `apps/professional-app/components/evolution/TiptapForm.tsx` | Tiptap mode form (mobile) |
-| `apps/professional-app/components/evolution/PainLevelSlider.tsx` | Pain slider (mobile) |
-| `apps/professional-app/components/evolution/SlashMenu.tsx` | Slash commands (mobile) |
-| `src/components/evolution/V5ProBlockEditor.tsx` | Web Tiptap editor |
-| `src/components/evolution/PainScaleInput.tsx` | VAS pain scale (web) |
-| `src/components/evolution/PainMapCanvas.tsx` | Body pain map canvas |
-| `src/components/evolution/SessionExercisesPanel.tsx` | Exercise tracking per session |
-| `src/components/evolution/EvolutionVersionHistory.tsx` | Version history UI (Sheet) |
-| `src/components/evolution/EvolutionTimeline.tsx` | Timeline view of all events |
-| `src/components/evolution/SOAPFormPanel.tsx` | SOAP form panel (web) |
-| `src/components/evolution/MeasurementCharts.tsx` | Measurement visualization |
-| `src/components/evolution/TestEvolutionPanel.tsx` | Standardized test results over time |
-| `src/components/evolution/ConductReplication.tsx` | Copy conduct from previous session |
-| `src/components/evolution/EvolutionAlerts.tsx` | Smart alerts (pain increase, plateau, etc.) |
+| File                                                             | Purpose                                          |
+| ---------------------------------------------------------------- | ------------------------------------------------ |
+| `src/types/evolution.ts`                                         | All evolution-related TypeScript types           |
+| `src/types/painMap.ts`                                           | Pain map types (BodyRegion, PainMapPoint, etc.)  |
+| `src/lib/ai/soap-assistant.ts`                                   | AI SOAP generation (Gemini)                      |
+| `src/lib/export/evolutionPdfExport.ts`                           | PDF export with SOAP table                       |
+| `apps/api/src/routes/evolution.ts`                               | Worker API for treatment sessions & measurements |
+| `apps/api/src/routes/evolutionVersions.ts`                       | Version history API                              |
+| `apps/professional-app/app/evolution-form.tsx`                   | Mobile evolution form                            |
+| `apps/professional-app/lib/api/evolutions.ts`                    | Mobile API client                                |
+| `apps/professional-app/components/evolution/SOAPForm.tsx`        | SOAP mode form                                   |
+| `apps/professional-app/components/evolution/TiptapForm.tsx`      | Tiptap mode form (mobile)                        |
+| `apps/professional-app/components/evolution/PainLevelSlider.tsx` | Pain slider (mobile)                             |
+| `apps/professional-app/components/evolution/SlashMenu.tsx`       | Slash commands (mobile)                          |
+| `src/components/evolution/V5ProBlockEditor.tsx`                  | Web Tiptap editor                                |
+| `src/components/evolution/PainScaleInput.tsx`                    | VAS pain scale (web)                             |
+| `src/components/evolution/PainMapCanvas.tsx`                     | Body pain map canvas                             |
+| `src/components/evolution/SessionExercisesPanel.tsx`             | Exercise tracking per session                    |
+| `src/components/evolution/EvolutionVersionHistory.tsx`           | Version history UI (Sheet)                       |
+| `src/components/evolution/EvolutionTimeline.tsx`                 | Timeline view of all events                      |
+| `src/components/evolution/SOAPFormPanel.tsx`                     | SOAP form panel (web)                            |
+| `src/components/evolution/MeasurementCharts.tsx`                 | Measurement visualization                        |
+| `src/components/evolution/TestEvolutionPanel.tsx`                | Standardized test results over time              |
+| `src/components/evolution/ConductReplication.tsx`                | Copy conduct from previous session               |
+| `src/components/evolution/EvolutionAlerts.tsx`                   | Smart alerts (pain increase, plateau, etc.)      |

@@ -1,101 +1,85 @@
 {
-	"$schema": "https://opencode.ai/config.json",
-	"lsp": {
-		"typescript": {
-			"command": [
-				"/home/rafael/.config/opencode/node_modules/.bin/typescript-language-server",
-				"--stdio"
-			],
-			"initialization": {
-				"preferences": {
-					"importModuleSpecifierPreference": "relative",
-					"includePackageJsonAutoImports": "off"
-				}
-			}
-		}
-	},
-	"mcp": {
-		"neon": {
-			"type": "remote",
-			"url": "https://mcp.neon.tech/mcp",
-			"enabled": true
-		},
-		"shadcn": {
-			"type": "local",
-			"command": [
-				"npx",
-				"shadcn@latest",
-				"mcp"
-			],
-			"enabled": true
-		},
-		"exa": {
-			"type": "remote",
-			"url": "https://mcp.exa.ai/mcp",
-			"enabled": true,
-			"headers": {
-				"x-api-key": "d12af1da-4c1d-4665-a952-2bdfa6283d11"
-			}
-		},
-		"chrome-devtools": {
-			"type": "local",
-			"command": [
-				"npx",
-				"-y",
-				"chrome-devtools-mcp@latest"
-			],
-			"enabled": true
-		},
-		"stripe": {
-			"type": "remote",
-			"url": "https://mcp.stripe.com/mcp",
-			"enabled": true
-		},
-		"github": {
-			"type": "remote",
-			"url": "https://server.smithery.ai/smithery-ai/github/mcp",
-			"enabled": true
-		},
-		"cloudflare-api": {
-			"type": "remote",
-			"url": "https://mcp.cloudflare.com/mcp",
-			"enabled": true
-		},
-		"context7": {
-			"type": "remote",
-			"url": "https://mcp.context7.com/mcp",
-			"enabled": true,
-			"headers": {
-				"CONTEXT7_API_KEY": "ctx7sk-ad94ba7f-5d88-47b6-9c00-a478dd2b5343"
-			}
-		},
-		"playwright": {
-			"type": "local",
-			"command": [
-				"npx",
-				"-y",
-				"@playwright/mcp@latest"
-			],
-			"enabled": true
-		},
-		"expo-mcp": {
-			"type": "remote",
-			"url": "https://mcp.expo.dev/mcp",
-			"enabled": true
-		},
-		"react-native-mcp": {
-			"type": "local",
-			"command": [
-				"npx",
-				"-y",
-				"@ohah/react-native-mcp-server"
-			],
-			"enabled": true
-		},
-		"stitch": {
-			"type": "remote",
-			"url": "https://stitch.googleapis.com/mcp",
-			"enabled": true
-		}
-	}
+  "$schema": "https://opencode.ai/config.json",
+  "lsp": {
+    "typescript": {
+      "command": [
+        "/home/rafael/.config/opencode/node_modules/.bin/typescript-language-server",
+        "--stdio"
+      ],
+      "initialization": {
+        "preferences": {
+          "importModuleSpecifierPreference": "relative",
+          "includePackageJsonAutoImports": "off"
+        }
+      }
+    }
+  },
+  "mcp": {
+    "neon": {
+      "type": "remote",
+      "url": "https://mcp.neon.tech/mcp",
+      "enabled": true
+    },
+    "shadcn": {
+      "type": "local",
+      "command": ["npx", "shadcn@latest", "mcp"],
+      "enabled": true
+    },
+    "exa": {
+      "type": "remote",
+      "url": "https://mcp.exa.ai/mcp",
+      "enabled": true,
+      "headers": {
+        "x-api-key": "d12af1da-4c1d-4665-a952-2bdfa6283d11"
+      }
+    },
+    "chrome-devtools": {
+      "type": "local",
+      "command": ["npx", "-y", "chrome-devtools-mcp@latest"],
+      "enabled": true
+    },
+    "stripe": {
+      "type": "remote",
+      "url": "https://mcp.stripe.com/mcp",
+      "enabled": true
+    },
+    "github": {
+      "type": "remote",
+      "url": "https://server.smithery.ai/smithery-ai/github/mcp",
+      "enabled": true
+    },
+    "cloudflare-api": {
+      "type": "remote",
+      "url": "https://mcp.cloudflare.com/mcp",
+      "enabled": true
+    },
+    "context7": {
+      "type": "remote",
+      "url": "https://mcp.context7.com/mcp",
+      "enabled": true,
+      "headers": {
+        "CONTEXT7_API_KEY": "ctx7sk-ad94ba7f-5d88-47b6-9c00-a478dd2b5343"
+      }
+    },
+    "playwright": {
+      "type": "local",
+      "command": ["npx", "-y", "@playwright/mcp@latest"],
+      "enabled": true
+    },
+    "expo-mcp": {
+      "type": "remote",
+      "url": "https://mcp.expo.dev/mcp",
+      "enabled": true
+    },
+    "react-native-mcp": {
+      "type": "local",
+      "command": ["npx", "-y", "@ohah/react-native-mcp-server"],
+      "enabled": true
+    },
+    "stitch": {
+      "type": "remote",
+      "url": "https://stitch.googleapis.com/mcp",
+      "enabled": true
+    }
+  }
 }

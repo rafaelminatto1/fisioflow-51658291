@@ -7,18 +7,18 @@
  * @module lib/exerciseReminders
  */
 
-import { useEffect, useState } from 'react';
-import * as Notifications from 'expo-notifications';
-import AsyncStorage from '@react-native-async-storage/async-storage';
-import { patientApi } from './api';
-import { log } from '@/lib/logger';
+import { useEffect, useState } from "react";
+import * as Notifications from "expo-notifications";
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import { patientApi } from "./api";
+import { log } from "@/lib/logger";
 
 /**
  * Configuração de lembrete de exercícios
  */
 export interface ExerciseReminderConfig {
   enabled: boolean;
-  frequency: 'daily' | 'custom';
+  frequency: "daily" | "custom";
   times: string[]; // Horários no formato "HH:mm"
   daysOfWeek?: number[]; // 0-6 (Domingo-Sábado), null = todos os dias
   message?: string;
@@ -28,28 +28,28 @@ export interface ExerciseReminderConfig {
  * Tipos de notificações de exercícios
  */
 export type ExerciseReminderType =
-  | 'daily_reminder'
-  | 'missed_exercise'
-  | 'streak_reminder'
-  | 'completion_celebration';
+  | "daily_reminder"
+  | "missed_exercise"
+  | "streak_reminder"
+  | "completion_celebration";
 
 /**
  * Configurações padrão de lembretes
  */
 const DEFAULT_REMINDER_CONFIG: ExerciseReminderConfig = {
   enabled: false,
-  frequency: 'daily',
-  times: ['09:00', '18:00'],
+  frequency: "daily",
+  times: ["09:00", "18:00"],
   daysOfWeek: [0, 1, 2, 3, 4, 5, 6], // Todos os dias
-  message: 'Hora dos exercícios! Você tem exercícios pendentes para hoje.',
+  message: "Hora dos exercícios! Você tem exercícios pendentes para hoje.",
 };
 
 /**
  * Chaves para armazenamento local
  */
 const STORAGE_KEYS = {
-  REMINDER_CONFIG: '@fisioflow_exercise_reminders',
-  NOTIFICATION_IDS: '@fisioflow_reminder_notification_ids',
+  REMINDER_CONFIG: "@fisioflow_exercise_reminders",
+  NOTIFICATION_IDS: "@fisioflow_reminder_notification_ids",
 };
 
 /**
@@ -99,7 +99,7 @@ export class ExerciseReminders {
         this.config = JSON.parse(stored);
       }
     } catch (error) {
-      log.error('Error loading reminder config:', error);
+      log.error("Error loading reminder config:", error);
     }
   }
 
@@ -108,10 +108,7 @@ export class ExerciseReminders {
    */
   private async saveConfig(): Promise<void> {
     try {
-      await AsyncStorage.setItem(
-        STORAGE_KEYS.REMINDER_CONFIG,
-        JSON.stringify(this.config)
-      );
+      await AsyncStorage.setItem(STORAGE_KEYS.REMINDER_CONFIG, JSON.stringify(this.config));
 
       if (this.userId) {
         await patientApi.updateProfile({
@@ -119,7 +116,7 @@ export class ExerciseReminders {
         });
       }
     } catch (error) {
-      log.error('Error saving reminder config:', error);
+      log.error("Error saving reminder config:", error);
     }
   }
 
@@ -160,7 +157,7 @@ export class ExerciseReminders {
 
     // Para cada horário configurado
     for (const time of this.config.times) {
-      const [hours, minutes] = time.split(':').map(Number);
+      const [hours, minutes] = time.split(":").map(Number);
 
       // Para cada dia da semana (se configurado)
       const days = this.config.daysOfWeek || [0, 1, 2, 3, 4, 5, 6];
@@ -179,10 +176,7 @@ export class ExerciseReminders {
     }
 
     // Salvar IDs das notificações agendadas
-    await AsyncStorage.setItem(
-      STORAGE_KEYS.NOTIFICATION_IDS,
-      JSON.stringify(notificationIds)
-    );
+    await AsyncStorage.setItem(STORAGE_KEYS.NOTIFICATION_IDS, JSON.stringify(notificationIds));
   }
 
   /**
@@ -200,9 +194,9 @@ export class ExerciseReminders {
     try {
       const scheduledId = await Notifications.scheduleNotificationAsync({
         content: {
-          title: '⏰ Hora dos Exercícios',
-          body: this.config.message || 'Chegou a hora de realizar seus exercícios!',
-          data: { type: 'exercise_reminder' },
+          title: "⏰ Hora dos Exercícios",
+          body: this.config.message || "Chegou a hora de realizar seus exercícios!",
+          data: { type: "exercise_reminder" },
         },
         trigger: {
           type: Notifications.SchedulableTriggerInputTypes.CALENDAR,
@@ -215,7 +209,7 @@ export class ExerciseReminders {
 
       return scheduledId;
     } catch (error) {
-      log.error('Error scheduling reminder:', error);
+      log.error("Error scheduling reminder:", error);
       return null;
     }
   }
@@ -228,12 +222,14 @@ export class ExerciseReminders {
       const storedIds = await AsyncStorage.getItem(STORAGE_KEYS.NOTIFICATION_IDS);
       if (storedIds) {
         const ids = JSON.parse(storedIds);
-        await Promise.all(ids.map((id: string) => Notifications.cancelScheduledNotificationAsync(id)));
+        await Promise.all(
+          ids.map((id: string) => Notifications.cancelScheduledNotificationAsync(id)),
+        );
       }
 
       await AsyncStorage.removeItem(STORAGE_KEYS.NOTIFICATION_IDS);
     } catch (error) {
-      log.error('Error canceling reminders:', error);
+      log.error("Error canceling reminders:", error);
     }
   }
 
@@ -243,15 +239,15 @@ export class ExerciseReminders {
   async sendCompletionNotification(count: number, streak: number): Promise<void> {
     if (!this.config.enabled) return;
 
-    const title = '🎉 Parabéns!';
-    let body = '';
+    const title = "🎉 Parabéns!";
+    let body = "";
 
     if (streak >= 7) {
       body = `Incrível! ${streak} dias seguidos de exercícios!`;
     } else if (streak >= 3) {
       body = `Ótimo trabalho! ${streak} dias consecutivos!`;
     } else {
-      body = `Você completou ${count} exercício${count !== 1 ? 's' : ''} hoje!`;
+      body = `Você completou ${count} exercício${count !== 1 ? "s" : ""} hoje!`;
     }
 
     await Notifications.scheduleNotificationAsync({
@@ -270,7 +266,7 @@ export class ExerciseReminders {
       content: {
         title: "⚠️ Exercícios Pendentes",
         body: "Você ainda não completou seus exercícios de hoje. Vamos lá?",
-        data: { type: 'missed_exercise' },
+        data: { type: "missed_exercise" },
       },
       trigger: null,
     });
@@ -283,15 +279,15 @@ export class ExerciseReminders {
     try {
       const { status: existingStatus } = await Notifications.getPermissionsAsync();
 
-      if (existingStatus === 'granted') {
+      if (existingStatus === "granted") {
         return true;
       }
 
       const { status } = await Notifications.requestPermissionsAsync();
 
-      return status === 'granted';
+      return status === "granted";
     } catch (error) {
-      log.error('Error requesting notification permissions:', error);
+      log.error("Error requesting notification permissions:", error);
       return false;
     }
   }
@@ -299,12 +295,12 @@ export class ExerciseReminders {
   /**
    * Verifica o status das permissões
    */
-  async getPermissionsStatus(): Promise<'granted' | 'denied' | 'undetermined'> {
+  async getPermissionsStatus(): Promise<"granted" | "denied" | "undetermined"> {
     try {
       const { status } = await Notifications.getPermissionsAsync();
       return status;
-    } catch  {
-      return 'denied';
+    } catch {
+      return "denied";
     }
   }
 
@@ -323,7 +319,7 @@ export class ExerciseReminders {
       const ids = JSON.parse(storedIds);
       return allScheduled.filter((n) => ids.includes(n.identifier));
     } catch (error) {
-      log.error('Error getting scheduled notifications:', error);
+      log.error("Error getting scheduled notifications:", error);
       return [];
     }
   }
@@ -358,12 +354,12 @@ export function useExerciseReminders(userId?: string) {
 export async function createSimpleReminder(
   hour: number,
   minute: number,
-  message?: string
+  message?: string,
 ): Promise<void> {
   await Notifications.scheduleNotificationAsync({
     content: {
-      title: '⏰ Lembrete de Exercícios',
-      body: message || 'Hora de fazer seus exercícios!',
+      title: "⏰ Lembrete de Exercícios",
+      body: message || "Hora de fazer seus exercícios!",
     },
     trigger: {
       type: Notifications.SchedulableTriggerInputTypes.CALENDAR,

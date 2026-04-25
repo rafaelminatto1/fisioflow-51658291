@@ -1,6 +1,5 @@
-
-import { Pool } from '@neondatabase/serverless';
-import dotenv from 'dotenv';
+import { Pool } from "@neondatabase/serverless";
+import dotenv from "dotenv";
 
 dotenv.config();
 
@@ -9,7 +8,7 @@ async function sanitizeAppointments() {
   const pool = new Pool({ connectionString });
 
   try {
-    console.log('Sanitizando banco de dados...');
+    console.log("Sanitizando banco de dados...");
 
     // Passo 1: Limpar campos que são strings vazias ou literais 'null'
     await pool.query(`
@@ -48,9 +47,9 @@ async function sanitizeAppointments() {
     `);
     console.log(`- End time calculado: ${fixEnd.rowCount}`);
 
-    console.log('Sanitização completa!');
+    console.log("Sanitização completa!");
   } catch (e) {
-    console.error('Falha crítica:', e);
+    console.error("Falha crítica:", e);
   } finally {
     await pool.end();
   }

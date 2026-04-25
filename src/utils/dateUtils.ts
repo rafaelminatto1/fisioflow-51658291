@@ -15,10 +15,10 @@
  * formatDateToLocalISO(date) // "2026-01-08"
  */
 export function formatDateToLocalISO(date: Date): string {
-	const year = date.getFullYear();
-	const month = String(date.getMonth() + 1).padStart(2, "0");
-	const day = String(date.getDate()).padStart(2, "0");
-	return `${year}-${month}-${day}`;
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+  const day = String(date.getDate()).padStart(2, "0");
+  return `${year}-${month}-${day}`;
 }
 
 /**
@@ -30,10 +30,10 @@ export function formatDateToLocalISO(date: Date): string {
  * formatDateToBrazilian(date) // "08/01/2026"
  */
 export function formatDateToBrazilian(date: Date): string {
-	const year = date.getFullYear();
-	const month = String(date.getMonth() + 1).padStart(2, "0");
-	const day = String(date.getDate()).padStart(2, "0");
-	return `${day}/${month}/${year}`;
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+  const day = String(date.getDate()).padStart(2, "0");
+  return `${day}/${month}/${year}`;
 }
 
 /**
@@ -44,13 +44,13 @@ export function formatDateToBrazilian(date: Date): string {
  * formatDateTimeToBrazilian(date) // "08/01/2026 às 14:30"
  */
 export function formatDateTimeToBrazilian(date: Date, time?: string): string {
-	const dateStr = formatDateToBrazilian(date);
-	if (time) {
-		return `${dateStr} às ${time}`;
-	}
-	const hours = String(date.getHours()).padStart(2, "0");
-	const minutes = String(date.getMinutes()).padStart(2, "0");
-	return `${dateStr} às ${hours}:${minutes}`;
+  const dateStr = formatDateToBrazilian(date);
+  if (time) {
+    return `${dateStr} às ${time}`;
+  }
+  const hours = String(date.getHours()).padStart(2, "0");
+  const minutes = String(date.getMinutes()).padStart(2, "0");
+  return `${dateStr} às ${hours}:${minutes}`;
 }
 
 /**
@@ -61,15 +61,15 @@ export function formatDateTimeToBrazilian(date: Date, time?: string): string {
  * getLocalDateParts(date) // { year: 2026, month: 1, day: 8 }
  */
 export function getLocalDateParts(date: Date): {
-	year: number;
-	month: number;
-	day: number;
+  year: number;
+  month: number;
+  day: number;
 } {
-	return {
-		year: date.getFullYear(),
-		month: date.getMonth() + 1,
-		day: date.getDate(),
-	};
+  return {
+    year: date.getFullYear(),
+    month: date.getMonth() + 1,
+    day: date.getDate(),
+  };
 }
 
 /**
@@ -81,44 +81,44 @@ export function getLocalDateParts(date: Date): {
  * date.getDate() // 8 (não 7 por causa de timezone)
  */
 export function parseDateFromLocalISO(dateString: string): Date {
-	const [year, month, day] = dateString.split("-").map(Number);
-	return new Date(year, month - 1, day);
+  const [year, month, day] = dateString.split("-").map(Number);
+  return new Date(year, month - 1, day);
 }
 
 /**
  * Verifica se duas datas são o mesmo dia (ignorando hora)
  */
 export function isSameDay(date1: Date, date2: Date): boolean {
-	return (
-		date1.getFullYear() === date2.getFullYear() &&
-		date1.getMonth() === date2.getMonth() &&
-		date1.getDate() === date2.getDate()
-	);
+  return (
+    date1.getFullYear() === date2.getFullYear() &&
+    date1.getMonth() === date2.getMonth() &&
+    date1.getDate() === date2.getDate()
+  );
 }
 
 /**
  * Retorna o início do dia (00:00:00) para uma data
  */
 export function startOfDayLocal(date: Date): Date {
-	const result = new Date(date);
-	result.setHours(0, 0, 0, 0);
-	return result;
+  const result = new Date(date);
+  result.setHours(0, 0, 0, 0);
+  return result;
 }
 
 /**
  * Retorna o fim do dia (23:59:59) para uma data
  */
 export function endOfDayLocal(date: Date): Date {
-	const result = new Date(date);
-	result.setHours(23, 59, 59, 999);
-	return result;
+  const result = new Date(date);
+  result.setHours(23, 59, 59, 999);
+  return result;
 }
 
 /**
  * Formata hora no formato HH:MM
  */
 export function formatTime(hours: number, minutes: number): string {
-	return `${String(hours).padStart(2, "0")}:${String(minutes).padStart(2, "0")}`;
+  return `${String(hours).padStart(2, "0")}:${String(minutes).padStart(2, "0")}`;
 }
 
 /**
@@ -127,21 +127,18 @@ export function formatTime(hours: number, minutes: number): string {
  * Útil para horários sugeridos de criação, garantindo que o usuário
  * sempre abra o modal em um slot válido da agenda.
  */
-export function roundDateToNextInterval(
-	date: Date,
-	intervalMinutes = 15,
-): Date {
-	const result = new Date(date);
-	result.setSeconds(0, 0);
+export function roundDateToNextInterval(date: Date, intervalMinutes = 15): Date {
+  const result = new Date(date);
+  result.setSeconds(0, 0);
 
-	const minutes = result.getMinutes();
-	const remainder = minutes % intervalMinutes;
+  const minutes = result.getMinutes();
+  const remainder = minutes % intervalMinutes;
 
-	if (remainder !== 0) {
-		result.setMinutes(minutes + (intervalMinutes - remainder));
-	}
+  if (remainder !== 0) {
+    result.setMinutes(minutes + (intervalMinutes - remainder));
+  }
 
-	return result;
+  return result;
 }
 
 /**
@@ -149,30 +146,26 @@ export function roundDateToNextInterval(
  *
  * Útil para normalizar horários vindos de drag and drop.
  */
-export function roundDateToNearestInterval(
-	date: Date,
-	intervalMinutes = 15,
-): Date {
-	const result = new Date(date);
-	result.setSeconds(0, 0);
+export function roundDateToNearestInterval(date: Date, intervalMinutes = 15): Date {
+  const result = new Date(date);
+  result.setSeconds(0, 0);
 
-	const totalMinutes = result.getHours() * 60 + result.getMinutes();
-	const roundedMinutes =
-		Math.round(totalMinutes / intervalMinutes) * intervalMinutes;
+  const totalMinutes = result.getHours() * 60 + result.getMinutes();
+  const roundedMinutes = Math.round(totalMinutes / intervalMinutes) * intervalMinutes;
 
-	result.setHours(0, roundedMinutes, 0, 0);
-	return result;
+  result.setHours(0, roundedMinutes, 0, 0);
+  return result;
 }
 
 /**
  * Parse de string de hora HH:MM para objeto
  */
 export function parseTime(timeString: string): {
-	hours: number;
-	minutes: number;
+  hours: number;
+  minutes: number;
 } {
-	const [hours, minutes] = timeString.split(":").map(Number);
-	return { hours: hours || 0, minutes: minutes || 0 };
+  const [hours, minutes] = timeString.split(":").map(Number);
+  return { hours: hours || 0, minutes: minutes || 0 };
 }
 
 /**
@@ -194,43 +187,41 @@ export function parseTime(timeString: string): {
  * parseResponseDate(undefined)  // Date atual
  */
 export function parseResponseDate(dateStr: string | null | undefined): Date {
-	if (!dateStr) {
-		return new Date();
-	}
+  if (!dateStr) {
+    return new Date();
+  }
 
-	// Se é um timestamp ISO completo com timezone, usar new Date diretamente
-	if (
-		dateStr.includes("T") &&
-		(dateStr.includes("Z") ||
-			dateStr.includes("+") ||
-			dateStr.match(/-\d{2}:\d{2}$/))
-	) {
-		return new Date(dateStr);
-	}
+  // Se é um timestamp ISO completo com timezone, usar new Date diretamente
+  if (
+    dateStr.includes("T") &&
+    (dateStr.includes("Z") || dateStr.includes("+") || dateStr.match(/-\d{2}:\d{2}$/))
+  ) {
+    return new Date(dateStr);
+  }
 
-	// Se é apenas a data (YYYY-MM-DD), parsear como local
-	const parts = dateStr.split("-");
-	if (parts.length === 3) {
-		const [year, month, day] = parts.map(Number);
-		// Validação básica
-		if (
-			!isNaN(year) &&
-			!isNaN(month) &&
-			!isNaN(day) &&
-			year >= 2000 &&
-			year <= 2100 &&
-			month >= 1 &&
-			month <= 12 &&
-			day >= 1 &&
-			day <= 31
-		) {
-			// Usar meio-dia para evitar problemas de DST
-			return new Date(year, month - 1, day, 12, 0, 0);
-		}
-	}
+  // Se é apenas a data (YYYY-MM-DD), parsear como local
+  const parts = dateStr.split("-");
+  if (parts.length === 3) {
+    const [year, month, day] = parts.map(Number);
+    // Validação básica
+    if (
+      !isNaN(year) &&
+      !isNaN(month) &&
+      !isNaN(day) &&
+      year >= 2000 &&
+      year <= 2100 &&
+      month >= 1 &&
+      month <= 12 &&
+      day >= 1 &&
+      day <= 31
+    ) {
+      // Usar meio-dia para evitar problemas de DST
+      return new Date(year, month - 1, day, 12, 0, 0);
+    }
+  }
 
-	// Fallback para new Date (pode causar problemas de timezone, mas é melhor que nada)
-	return new Date(dateStr);
+  // Fallback para new Date (pode causar problemas de timezone, mas é melhor que nada)
+  return new Date(dateStr);
 }
 
 /**
@@ -242,48 +233,44 @@ export function parseResponseDate(dateStr: string | null | undefined): Date {
  * @param dateStr - String de data do backend ("YYYY-MM-DD", ISO string, ou null/undefined)
  * @returns Date object no horário local ou null
  */
-export function parseResponseDateOrNull(
-	dateStr: string | null | undefined,
-): Date | null {
-	if (!dateStr) {
-		return null;
-	}
+export function parseResponseDateOrNull(dateStr: string | null | undefined): Date | null {
+  if (!dateStr) {
+    return null;
+  }
 
-	// Se é um timestamp ISO completo com timezone, usar new Date diretamente
-	if (
-		dateStr.includes("T") &&
-		(dateStr.includes("Z") ||
-			dateStr.includes("+") ||
-			dateStr.match(/-\d{2}:\d{2}$/))
-	) {
-		const parsed = new Date(dateStr);
-		return isNaN(parsed.getTime()) ? null : parsed;
-	}
+  // Se é um timestamp ISO completo com timezone, usar new Date diretamente
+  if (
+    dateStr.includes("T") &&
+    (dateStr.includes("Z") || dateStr.includes("+") || dateStr.match(/-\d{2}:\d{2}$/))
+  ) {
+    const parsed = new Date(dateStr);
+    return isNaN(parsed.getTime()) ? null : parsed;
+  }
 
-	// Se é apenas a data (YYYY-MM-DD), parsear como local
-	const parts = dateStr.split("-");
-	if (parts.length === 3) {
-		const [year, month, day] = parts.map(Number);
-		// Validação básica
-		if (
-			!isNaN(year) &&
-			!isNaN(month) &&
-			!isNaN(day) &&
-			year >= 2000 &&
-			year <= 2100 &&
-			month >= 1 &&
-			month <= 12 &&
-			day >= 1 &&
-			day <= 31
-		) {
-			// Usar meio-dia para evitar problemas de DST
-			return new Date(year, month - 1, day, 12, 0, 0);
-		}
-	}
+  // Se é apenas a data (YYYY-MM-DD), parsear como local
+  const parts = dateStr.split("-");
+  if (parts.length === 3) {
+    const [year, month, day] = parts.map(Number);
+    // Validação básica
+    if (
+      !isNaN(year) &&
+      !isNaN(month) &&
+      !isNaN(day) &&
+      year >= 2000 &&
+      year <= 2100 &&
+      month >= 1 &&
+      month <= 12 &&
+      day >= 1 &&
+      day <= 31
+    ) {
+      // Usar meio-dia para evitar problemas de DST
+      return new Date(year, month - 1, day, 12, 0, 0);
+    }
+  }
 
-	// Fallback
-	const parsed = new Date(dateStr);
-	return isNaN(parsed.getTime()) ? null : parsed;
+  // Fallback
+  const parsed = new Date(dateStr);
+  return isNaN(parsed.getTime()) ? null : parsed;
 }
 
 /**
@@ -292,48 +279,48 @@ export function parseResponseDateOrNull(
  * @returns String formatada: "há Xd · Ysem · Zm · Wa" ou "em Xd · Ysem · Zm · Wa"
  */
 export function formatDetailedDuration(date: Date | string): string {
-	if (!date) return "-";
-	const targetDate = typeof date === "string" ? new Date(date) : date;
-	const now = new Date();
+  if (!date) return "-";
+  const targetDate = typeof date === "string" ? new Date(date) : date;
+  const now = new Date();
 
-	// Usar o início do dia para ambos para evitar problemas de horas
-	const d1 = new Date(targetDate);
-	d1.setHours(0, 0, 0, 0);
-	const d2 = new Date(now);
-	d2.setHours(0, 0, 0, 0);
+  // Usar o início do dia para ambos para evitar problemas de horas
+  const d1 = new Date(targetDate);
+  d1.setHours(0, 0, 0, 0);
+  const d2 = new Date(now);
+  d2.setHours(0, 0, 0, 0);
 
-	const diffMs = d2.getTime() - d1.getTime();
-	const totalDays = Math.abs(Math.floor(diffMs / (1000 * 60 * 60 * 24)));
-	const isPast = diffMs > 0;
-	const isFuture = diffMs < 0;
+  const diffMs = d2.getTime() - d1.getTime();
+  const totalDays = Math.abs(Math.floor(diffMs / (1000 * 60 * 60 * 24)));
+  const isPast = diffMs > 0;
+  const isFuture = diffMs < 0;
 
-	if (totalDays === 0) return "Hoje";
-	if (totalDays === 1) return isPast ? "há 1 dia" : "amanhã";
+  if (totalDays === 0) return "Hoje";
+  if (totalDays === 1) return isPast ? "há 1 dia" : "amanhã";
 
-	const years = Math.floor(totalDays / 365);
-	const months = Math.floor(totalDays / 30);
-	const weeks = Math.floor(totalDays / 7);
+  const years = Math.floor(totalDays / 365);
+  const months = Math.floor(totalDays / 30);
+  const weeks = Math.floor(totalDays / 7);
 
-	const parts: string[] = [];
+  const parts: string[] = [];
 
-	// Adicionar total de dias
-	parts.push(`${totalDays}d`);
+  // Adicionar total de dias
+  parts.push(`${totalDays}d`);
 
-	// Adicionar total de semanas se >= 1
-	if (weeks >= 1) {
-		parts.push(`${weeks}sem`);
-	}
+  // Adicionar total de semanas se >= 1
+  if (weeks >= 1) {
+    parts.push(`${weeks}sem`);
+  }
 
-	// Adicionar total de meses se >= 1
-	if (months >= 1) {
-		parts.push(`${months}m`);
-	}
+  // Adicionar total de meses se >= 1
+  if (months >= 1) {
+    parts.push(`${months}m`);
+  }
 
-	// Adicionar total de anos se >= 1
-	if (years >= 1) {
-		parts.push(`${years}a`);
-	}
+  // Adicionar total de anos se >= 1
+  if (years >= 1) {
+    parts.push(`${years}a`);
+  }
 
-	const prefix = isPast ? "há" : isFuture ? "em" : "";
-	return `${prefix} ${parts.join(" · ")}`.trim();
+  const prefix = isPast ? "há" : isFuture ? "em" : "";
+  return `${prefix} ${parts.join(" · ")}`.trim();
 }

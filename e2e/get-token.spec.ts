@@ -6,11 +6,11 @@ test('extrair token jwt', async ({ page }) => {
   await page.fill('input[type="password"]', 'Yukari30@');
   await page.click('button:has-text("Entrar"), button[type="submit"]');
   await page.waitForURL('**/agenda');
-  
+
   // Extrair do localStorage
   const storage = await page.evaluate(() => {
     return JSON.stringify(localStorage);
   });
-  
+
   console.log('LOCAL_STORAGE:', storage);
 });

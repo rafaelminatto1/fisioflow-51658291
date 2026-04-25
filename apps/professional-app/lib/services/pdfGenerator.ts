@@ -1,27 +1,29 @@
-import * as Print from 'expo-print';
-import * as Sharing from 'expo-sharing';
-import { format } from 'date-fns';
-import { ptBR } from 'date-fns/locale';
-import type { Patient, Evolution } from '@/types';
+import * as Print from "expo-print";
+import * as Sharing from "expo-sharing";
+import { format } from "date-fns";
+import { ptBR } from "date-fns/locale";
+import type { Patient, Evolution } from "@/types";
 
 /**
  * Generates a professional text summary for WhatsApp sharing.
  */
 export function generateEvolutionTextSummary(patient: Patient, evolution: Evolution): string {
-  const dateStr = evolution.date ? format(new Date(evolution.date), "dd/MM/yyyy", { locale: ptBR }) : 'N/A';
-  
+  const dateStr = evolution.date
+    ? format(new Date(evolution.date), "dd/MM/yyyy", { locale: ptBR })
+    : "N/A";
+
   let summary = `*Fisioterapia - Relatório de Evolução*\n\n`;
   summary += `*Paciente:* ${patient.name}\n`;
   summary += `*Data:* ${dateStr}\n`;
   summary += `*Nível de Dor:* ${evolution.painLevel}/10\n\n`;
-  
+
   if (evolution.subjective) summary += `*Subjetivo:* ${evolution.subjective}\n`;
   if (evolution.objective) summary += `*Objetivo:* ${evolution.objective}\n`;
   if (evolution.assessment) summary += `*Avaliação:* ${evolution.assessment}\n`;
   if (evolution.plan) summary += `*Conduta/Plano:* ${evolution.plan}\n\n`;
-  
+
   summary += `_Relatório gerado via FisioFlow_`;
-  
+
   return summary;
 }
 
@@ -31,13 +33,13 @@ export function generateEvolutionTextSummary(patient: Patient, evolution: Evolut
  */
 export async function generateEvolutionPDF(patient: Patient, evolutions: Evolution[]) {
   const sortedEvolutions = [...evolutions].sort(
-    (a, b) => new Date(b.date || '').getTime() - new Date(a.date || '').getTime()
+    (a, b) => new Date(b.date || "").getTime() - new Date(a.date || "").getTime(),
   );
 
-  const primaryColor = '#0EA5E9'; // Modern Sky Blue
-  const secondaryColor = '#64748B';
-  const borderColor = '#E2E8F0';
-  const backgroundColor = '#F8FAFC';
+  const primaryColor = "#0EA5E9"; // Modern Sky Blue
+  const secondaryColor = "#64748B";
+  const borderColor = "#E2E8F0";
+  const backgroundColor = "#F8FAFC";
 
   const html = `
     <!DOCTYPE html>
@@ -47,14 +49,14 @@ export async function generateEvolutionPDF(patient: Patient, evolutions: Evoluti
         <meta name="viewport" content="width=device-width, initial-scale=1.0" />
         <style>
           @page { margin: 20mm; }
-          body { 
-            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; 
-            color: #1E293B; 
+          body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            color: #1E293B;
             line-height: 1.6;
             margin: 0;
             padding: 0;
           }
-          
+
           /* Header Styles */
           .document-header {
             display: flex;
@@ -65,17 +67,17 @@ export async function generateEvolutionPDF(patient: Patient, evolutions: Evoluti
             margin-bottom: 32px;
           }
           .brand-container { flex: 1; }
-          .brand-name { 
-            font-size: 28px; 
-            font-weight: 800; 
-            color: ${primaryColor}; 
+          .brand-name {
+            font-size: 28px;
+            font-weight: 800;
+            color: ${primaryColor};
             letter-spacing: -0.5px;
             margin: 0;
           }
-          .document-type { 
-            font-size: 14px; 
-            font-weight: 600; 
-            color: ${secondaryColor}; 
+          .document-type {
+            font-size: 14px;
+            font-weight: 600;
+            color: ${secondaryColor};
             text-transform: uppercase;
             letter-spacing: 1px;
             margin-top: 4px;
@@ -94,10 +96,10 @@ export async function generateEvolutionPDF(patient: Patient, evolutions: Evoluti
             border: 1px solid ${borderColor};
           }
           .profile-item { margin-bottom: 8px; }
-          .profile-label { 
-            font-size: 11px; 
-            font-weight: 700; 
-            color: ${secondaryColor}; 
+          .profile-label {
+            font-size: 11px;
+            font-weight: 700;
+            color: ${secondaryColor};
             text-transform: uppercase;
             display: block;
             margin-bottom: 2px;
@@ -113,7 +115,7 @@ export async function generateEvolutionPDF(patient: Patient, evolutions: Evoluti
             page-break-inside: avoid;
           }
           .evolution-entry:hover { border-left-color: ${primaryColor}; }
-          
+
           .entry-header {
             display: flex;
             justify-content: space-between;
@@ -185,13 +187,13 @@ export async function generateEvolutionPDF(patient: Patient, evolutions: Evoluti
             </div>
             <div class="profile-item">
               <span class="profile-label">Data de Nascimento</span>
-              <span class="profile-value">${patient.birthDate ? format(new Date(patient.birthDate), 'dd/MM/yyyy') : 'Não informada'}</span>
+              <span class="profile-value">${patient.birthDate ? format(new Date(patient.birthDate), "dd/MM/yyyy") : "Não informada"}</span>
             </div>
           </div>
           <div class="profile-column">
             <div class="profile-item">
               <span class="profile-label">Condição Principal</span>
-              <span class="profile-value">${patient.condition || 'Geral'}</span>
+              <span class="profile-value">${patient.condition || "Geral"}</span>
             </div>
             <div class="profile-item">
               <span class="profile-label">Total de Atendimentos</span>
@@ -201,51 +203,74 @@ export async function generateEvolutionPDF(patient: Patient, evolutions: Evoluti
         </div>
 
         <div class="evolution-container">
-          ${sortedEvolutions.map(ev => {
-            const painValue = ev.painLevel || 0;
-            const painClass = painValue <= 3 ? 'pain-low' : painValue <= 6 ? 'pain-med' : 'pain-high';
-            
-            return `
+          ${sortedEvolutions
+            .map((ev) => {
+              const painValue = ev.painLevel || 0;
+              const painClass =
+                painValue <= 3 ? "pain-low" : painValue <= 6 ? "pain-med" : "pain-high";
+
+              return `
               <div class="evolution-entry">
                 <div class="entry-header">
-                  <span class="entry-date">${ev.date ? format(new Date(ev.date), "dd/MM/yyyy • HH:mm") : ''}</span>
-                  ${ev.painLevel !== undefined ? `
+                  <span class="entry-date">${ev.date ? format(new Date(ev.date), "dd/MM/yyyy • HH:mm") : ""}</span>
+                  ${
+                    ev.painLevel !== undefined
+                      ? `
                     <span class="pain-indicator ${painClass}">DOR: ${ev.painLevel}/10</span>
-                  ` : ''}
+                  `
+                      : ""
+                  }
                 </div>
-                
+
                 <div class="soap-grid">
-                  ${ev.subjective ? `
+                  ${
+                    ev.subjective
+                      ? `
                     <div class="soap-box">
                       <span class="soap-tag">S</span><span class="soap-title">Subjetivo</span>
                       <p class="soap-text">${ev.subjective}</p>
                     </div>
-                  ` : ''}
-                  
-                  ${ev.objective ? `
+                  `
+                      : ""
+                  }
+
+                  ${
+                    ev.objective
+                      ? `
                     <div class="soap-box">
                       <span class="soap-tag">O</span><span class="soap-title">Objetivo</span>
                       <p class="soap-text">${ev.objective}</p>
                     </div>
-                  ` : ''}
-                  
-                  ${ev.assessment ? `
+                  `
+                      : ""
+                  }
+
+                  ${
+                    ev.assessment
+                      ? `
                     <div class="soap-box">
                       <span class="soap-tag">A</span><span class="soap-title">Avaliação</span>
                       <p class="soap-text">${ev.assessment}</p>
                     </div>
-                  ` : ''}
-                  
-                  ${ev.plan ? `
+                  `
+                      : ""
+                  }
+
+                  ${
+                    ev.plan
+                      ? `
                     <div class="soap-box">
                       <span class="soap-tag">P</span><span class="soap-title">Plano</span>
                       <p class="soap-text">${ev.plan}</p>
                     </div>
-                  ` : ''}
+                  `
+                      : ""
+                  }
                 </div>
               </div>
             `;
-          }).join('')}
+            })
+            .join("")}
         </div>
 
         <div class="report-footer">
@@ -258,13 +283,13 @@ export async function generateEvolutionPDF(patient: Patient, evolutions: Evoluti
 
   try {
     const { uri } = await Print.printToFileAsync({ html, base64: false });
-    await Sharing.shareAsync(uri, { 
-      UTI: '.pdf', 
-      mimeType: 'application/pdf',
-      dialogTitle: `Relatório_${patient.name.replace(/\s/g, '_')}`
+    await Sharing.shareAsync(uri, {
+      UTI: ".pdf",
+      mimeType: "application/pdf",
+      dialogTitle: `Relatório_${patient.name.replace(/\s/g, "_")}`,
     });
   } catch (error) {
-    console.error('PDF Generation Error:', error);
-    throw new Error('Não foi possível gerar o PDF. Verifique os dados do paciente.');
+    console.error("PDF Generation Error:", error);
+    throw new Error("Não foi possível gerar o PDF. Verifique os dados do paciente.");
   }
 }

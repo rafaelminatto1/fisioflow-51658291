@@ -1,23 +1,24 @@
-import React from 'react';
-import { View, Text, TouchableOpacity, Alert, StyleSheet } from 'react-native';
-import { router } from 'expo-router';
-import { TarefaPriorityBadge } from './TarefaPriorityBadge';
-import { formatDateShort, isOverdue } from '@/lib/tarefas';
-import type { ApiTarefa, TarefaStatus } from '@/lib/api';
-import { Ionicons } from '@expo/vector-icons';
-import { useColors } from '@/hooks/useColorScheme';
+import React from "react";
+import { View, Text, TouchableOpacity, Alert, StyleSheet } from "react-native";
+import { router } from "expo-router";
+import { TarefaPriorityBadge } from "./TarefaPriorityBadge";
+import { formatDateShort, isOverdue } from "@/lib/tarefas";
+import type { ApiTarefa, TarefaStatus } from "@/lib/api";
+import { Ionicons } from "@expo/vector-icons";
+import { useColors } from "@/hooks/useColorScheme";
 
 const COLUMN_MOVE_OPTIONS: { label: string; status: TarefaStatus }[] = [
-  { label: 'Backlog',      status: 'BACKLOG' },
-  { label: 'A Fazer',      status: 'A_FAZER' },
-  { label: 'Em Progresso', status: 'EM_PROGRESSO' },
-  { label: 'Revisão',      status: 'REVISAO' },
-  { label: 'Concluído',    status: 'CONCLUIDO' },
+  { label: "Backlog", status: "BACKLOG" },
+  { label: "A Fazer", status: "A_FAZER" },
+  { label: "Em Progresso", status: "EM_PROGRESSO" },
+  { label: "Revisão", status: "REVISAO" },
+  { label: "Concluído", status: "CONCLUIDO" },
 ];
 
 function checklistSummary(tarefa: ApiTarefa): { total: number; done: number } {
   if (!tarefa.checklists?.length) return { total: 0, done: 0 };
-  let total = 0, done = 0;
+  let total = 0,
+    done = 0;
   for (const cl of tarefa.checklists) {
     for (const item of cl.items) {
       total++;
@@ -45,15 +46,15 @@ export function TarefaCard({ tarefa, onMoveCard }: Props) {
     if (!onMoveCard) return;
     const options = COLUMN_MOVE_OPTIONS.filter((o) => o.status !== tarefa.status);
     Alert.alert(
-      'Mover para coluna',
-      `"${tarefa.titulo.slice(0, 40)}${tarefa.titulo.length > 40 ? '…' : ''}"`,
+      "Mover para coluna",
+      `"${tarefa.titulo.slice(0, 40)}${tarefa.titulo.length > 40 ? "…" : ""}"`,
       [
         ...options.map((opt) => ({
           text: opt.label,
           onPress: () => onMoveCard(tarefa.id, opt.status),
         })),
-        { text: 'Cancelar', style: 'cancel' },
-      ]
+        { text: "Cancelar", style: "cancel" },
+      ],
     );
   }
 
@@ -75,25 +76,30 @@ export function TarefaCard({ tarefa, onMoveCard }: Props) {
       <View style={styles.meta}>
         {tarefa.data_vencimento ? (
           <View style={styles.dateContainer}>
-            <Ionicons 
-              name="calendar-outline" 
-              size={12} 
-              color={overdue ? colors.error : colors.textSecondary} 
+            <Ionicons
+              name="calendar-outline"
+              size={12}
+              color={overdue ? colors.error : colors.textSecondary}
             />
-            <Text style={[styles.date, overdue && { color: colors.error, fontWeight: '700' }]}>
+            <Text style={[styles.date, overdue && { color: colors.error, fontWeight: "700" }]}>
               {formatDateShort(tarefa.data_vencimento ?? undefined)}
             </Text>
           </View>
         ) : null}
-        
+
         {total > 0 && (
           <View style={styles.checklistContainer}>
-            <Ionicons 
-              name="checkbox-outline" 
-              size={12} 
-              color={done === total ? colors.success : colors.textSecondary} 
+            <Ionicons
+              name="checkbox-outline"
+              size={12}
+              color={done === total ? colors.success : colors.textSecondary}
             />
-            <Text style={[styles.checklist, done === total && { color: colors.success, fontWeight: '700' }]}>
+            <Text
+              style={[
+                styles.checklist,
+                done === total && { color: colors.success, fontWeight: "700" },
+              ]}
+            >
               {done}/{total}
             </Text>
           </View>
@@ -101,15 +107,15 @@ export function TarefaCard({ tarefa, onMoveCard }: Props) {
       </View>
 
       {progress > 0 && (
-        <View style={[styles.progressBg, { backgroundColor: colors.border + '50' }]}>
-          <View 
+        <View style={[styles.progressBg, { backgroundColor: colors.border + "50" }]}>
+          <View
             style={[
-              styles.progressFill, 
-              { 
+              styles.progressFill,
+              {
                 width: `${Math.min(progress, 100)}%` as any,
-                backgroundColor: colors.primary 
-              }
-            ]} 
+                backgroundColor: colors.primary,
+              },
+            ]}
           />
         </View>
       )}
@@ -118,13 +124,15 @@ export function TarefaCard({ tarefa, onMoveCard }: Props) {
         <View style={styles.footer}>
           <View style={styles.tags}>
             {visibleTags.map((tag: string) => (
-              <View key={tag} style={[styles.tag, { backgroundColor: colors.primary + '10' }]}>
+              <View key={tag} style={[styles.tag, { backgroundColor: colors.primary + "10" }]}>
                 <Text style={[styles.tagText, { color: colors.primary }]}>{tag}</Text>
               </View>
             ))}
             {hiddenTagsCount > 0 && (
-              <View style={[styles.tagMore, { backgroundColor: colors.border + '50' }]}>
-                <Text style={[styles.tagMoreText, { color: colors.textSecondary }]}>+{hiddenTagsCount}</Text>
+              <View style={[styles.tagMore, { backgroundColor: colors.border + "50" }]}>
+                <Text style={[styles.tagMoreText, { color: colors.textSecondary }]}>
+                  +{hiddenTagsCount}
+                </Text>
               </View>
             )}
           </View>
@@ -136,74 +144,74 @@ export function TarefaCard({ tarefa, onMoveCard }: Props) {
 
 const styles = StyleSheet.create({
   card: {
-    backgroundColor: '#fff',
+    backgroundColor: "#fff",
     borderRadius: 16,
     padding: 16,
     marginBottom: 12,
     borderWidth: 1,
-    shadowColor: '#000',
+    shadowColor: "#000",
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.04,
     shadowRadius: 8,
     elevation: 2,
   },
   header: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'flex-start',
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "flex-start",
     gap: 12,
     marginBottom: 10,
   },
   titulo: {
     fontSize: 15,
-    fontWeight: '700',
+    fontWeight: "700",
     flex: 1,
     lineHeight: 20,
   },
   meta: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     gap: 16,
     marginBottom: 12,
   },
   dateContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     gap: 4,
   },
   date: {
     fontSize: 12,
-    color: '#64748b',
+    color: "#64748b",
   },
   checklistContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     gap: 4,
   },
   checklist: {
     fontSize: 12,
-    color: '#64748b',
+    color: "#64748b",
   },
   progressBg: {
     height: 4,
     borderRadius: 2,
     marginBottom: 12,
-    overflow: 'hidden',
+    overflow: "hidden",
   },
   progressFill: {
-    height: '100%',
+    height: "100%",
     borderRadius: 2,
   },
   footer: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     marginTop: 2,
   },
   tags: {
-    flexDirection: 'row',
+    flexDirection: "row",
     gap: 6,
     flex: 1,
-    flexWrap: 'wrap',
+    flexWrap: "wrap",
   },
   tag: {
     borderRadius: 6,
@@ -212,7 +220,7 @@ const styles = StyleSheet.create({
   },
   tagText: {
     fontSize: 11,
-    fontWeight: '600',
+    fontWeight: "600",
   },
   tagMore: {
     borderRadius: 6,
@@ -221,6 +229,6 @@ const styles = StyleSheet.create({
   },
   tagMoreText: {
     fontSize: 11,
-    fontWeight: '600',
+    fontWeight: "600",
   },
 });

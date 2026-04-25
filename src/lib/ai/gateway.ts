@@ -20,59 +20,56 @@ import { createGoogleGenerativeAI } from "@ai-sdk/google";
 import { generateText, streamText, generateObject } from "ai";
 import { z } from "zod";
 import { fisioLogger as logger } from "@/lib/errors/logger";
-import {
-	createServerOnlyFeatureError,
-	getServerOnlyEnv,
-} from "@/lib/config/server-only";
+import { createServerOnlyFeatureError, getServerOnlyEnv } from "@/lib/config/server-only";
 
 export type AIProvider = "openai" | "google" | "grok" | "anthropic";
 
 export type AIModel =
-	// OpenAI Models
-	| "gpt-4o"
-	| "gpt-4o-mini"
-	| "gpt-4-turbo"
-	| "gpt-3.5-turbo"
-	// Google Models
-	| "gemini-2.0-flash-exp"
-	| "gemini-1.5-pro"
-	| "gemini-1.5-flash"
-	// Grok Models (via Cloudflare AI Gateway)
-	| "grok-2-1212"
-	| "grok-2-vision-1212"
-	| "grok-1"
-	// Anthropic Models
-	| "claude-3-5-sonnet"
-	| "claude-3-5-haiku";
+  // OpenAI Models
+  | "gpt-4o"
+  | "gpt-4o-mini"
+  | "gpt-4-turbo"
+  | "gpt-3.5-turbo"
+  // Google Models
+  | "gemini-2.0-flash-exp"
+  | "gemini-1.5-pro"
+  | "gemini-1.5-flash"
+  // Grok Models (via Cloudflare AI Gateway)
+  | "grok-2-1212"
+  | "grok-2-vision-1212"
+  | "grok-1"
+  // Anthropic Models
+  | "claude-3-5-sonnet"
+  | "claude-3-5-haiku";
 
 export interface AIRequestOptions {
-	provider?: AIProvider;
-	model?: AIModel;
-	temperature?: number;
-	maxTokens?: number;
-	topP?: number;
-	systemPrompt?: string;
-	fallbackProvider?: AIProvider;
+  provider?: AIProvider;
+  model?: AIModel;
+  temperature?: number;
+  maxTokens?: number;
+  topP?: number;
+  systemPrompt?: string;
+  fallbackProvider?: AIProvider;
 }
 
 export interface AIResponse<T = string> {
-	success: boolean;
-	data?: T;
-	error?: string;
-	provider?: AIProvider;
-	model?: string;
-	cached?: boolean;
-	usage?: {
-		promptTokens: number;
-		completionTokens: number;
-		totalTokens: number;
-	};
+  success: boolean;
+  data?: T;
+  error?: string;
+  provider?: AIProvider;
+  model?: string;
+  cached?: boolean;
+  usage?: {
+    promptTokens: number;
+    completionTokens: number;
+    totalTokens: number;
+  };
 }
 
 export interface AIStreamOptions extends AIRequestOptions {
-	onUpdate?: (text: string) => void;
-	onFinish?: (text: string) => void;
-	onError?: (error: Error) => void;
+  onUpdate?: (text: string) => void;
+  onFinish?: (text: string) => void;
+  onError?: (error: Error) => void;
 }
 
 // ============================================================================
@@ -88,64 +85,60 @@ export interface AIStreamOptions extends AIRequestOptions {
  * Uses direct provider connections instead of Cloudflare AI Gateway
  */
 const PROVIDER_CONFIG = {
-	openai: {
-		baseURL: "https://api.openai.com/v1",
-		defaultModel: "gpt-4o-mini",
-		apiKey: getServerOnlyEnv("OPENAI_API_KEY"),
-	},
-	google: {
-		baseURL: undefined, // Google SDK handles this automatically
-		defaultModel: "gemini-2.0-flash-exp",
-		apiKey:
-			getServerOnlyEnv("GOOGLE_GENERATIVE_AI_API_KEY") ||
-			getServerOnlyEnv("GOOGLE_AI_API_KEY"),
-	},
-	grok: {
-		baseURL: "https://api.x.ai/v1",
-		defaultModel: "grok-2-1212",
-		apiKey: getServerOnlyEnv("XAI_API_KEY"),
-	},
-	anthropic: {
-		baseURL: "https://api.anthropic.com/v1",
-		defaultModel: "claude-3-5-sonnet",
-		apiKey: getServerOnlyEnv("ANTHROPIC_API_KEY"),
-	},
+  openai: {
+    baseURL: "https://api.openai.com/v1",
+    defaultModel: "gpt-4o-mini",
+    apiKey: getServerOnlyEnv("OPENAI_API_KEY"),
+  },
+  google: {
+    baseURL: undefined, // Google SDK handles this automatically
+    defaultModel: "gemini-2.0-flash-exp",
+    apiKey:
+      getServerOnlyEnv("GOOGLE_GENERATIVE_AI_API_KEY") || getServerOnlyEnv("GOOGLE_AI_API_KEY"),
+  },
+  grok: {
+    baseURL: "https://api.x.ai/v1",
+    defaultModel: "grok-2-1212",
+    apiKey: getServerOnlyEnv("XAI_API_KEY"),
+  },
+  anthropic: {
+    baseURL: "https://api.anthropic.com/v1",
+    defaultModel: "claude-3-5-sonnet",
+    apiKey: getServerOnlyEnv("ANTHROPIC_API_KEY"),
+  },
 } as const;
 
 /**
  * Model to provider mapping
  */
 const MODEL_PROVIDER: Record<AIModel, AIProvider> = {
-	// OpenAI
-	"gpt-4o": "openai",
-	"gpt-4o-mini": "openai",
-	"gpt-4-turbo": "openai",
-	"gpt-3.5-turbo": "openai",
-	// Google
-	"gemini-2.0-flash-exp": "google",
-	"gemini-1.5-pro": "google",
-	"gemini-1.5-flash": "google",
-	// Grok
-	"grok-2-1212": "grok",
-	"grok-2-vision-1212": "grok",
-	"grok-1": "grok",
-	// Anthropic
-	"claude-3-5-sonnet": "anthropic",
-	"claude-3-5-haiku": "anthropic",
+  // OpenAI
+  "gpt-4o": "openai",
+  "gpt-4o-mini": "openai",
+  "gpt-4-turbo": "openai",
+  "gpt-3.5-turbo": "openai",
+  // Google
+  "gemini-2.0-flash-exp": "google",
+  "gemini-1.5-pro": "google",
+  "gemini-1.5-flash": "google",
+  // Grok
+  "grok-2-1212": "grok",
+  "grok-2-vision-1212": "grok",
+  "grok-1": "grok",
+  // Anthropic
+  "claude-3-5-sonnet": "anthropic",
+  "claude-3-5-haiku": "anthropic",
 };
 
 /**
  * Cost per 1M tokens (approximate, for cost optimization)
  * Google Gemini 2.0 Flash has generous free tier
  */
-const COST_PER_1M_TOKENS: Record<
-	AIProvider,
-	{ input: number; output: number }
-> = {
-	openai: { input: 2.5, output: 10 }, // gpt-4o-mini
-	google: { input: 0.075, output: 0.3 }, // gemini-2.0-flash (FREE tier)
-	grok: { input: 0, output: 0 }, // Grok pricing varies
-	anthropic: { input: 3, output: 15 }, // claude-3-5-sonnet
+const COST_PER_1M_TOKENS: Record<AIProvider, { input: number; output: number }> = {
+  openai: { input: 2.5, output: 10 }, // gpt-4o-mini
+  google: { input: 0.075, output: 0.3 }, // gemini-2.0-flash (FREE tier)
+  grok: { input: 0, output: 0 }, // Grok pricing varies
+  anthropic: { input: 3, output: 15 }, // claude-3-5-sonnet
 };
 
 // ============================================================================
@@ -153,15 +146,13 @@ const COST_PER_1M_TOKENS: Record<
 // ============================================================================
 
 const clients: Record<
-	AIProvider,
-	| ReturnType<typeof createOpenAI>
-	| ReturnType<typeof createGoogleGenerativeAI>
-	| null
+  AIProvider,
+  ReturnType<typeof createOpenAI> | ReturnType<typeof createGoogleGenerativeAI> | null
 > = {
-	openai: null,
-	google: null,
-	grok: null,
-	anthropic: null,
+  openai: null,
+  google: null,
+  grok: null,
+  anthropic: null,
 };
 
 /**
@@ -169,36 +160,34 @@ const clients: Record<
  * Uses direct provider connections (not through Cloudflare AI Gateway)
  */
 function getClient(provider: AIProvider) {
-	if (!clients[provider]) {
-		const config = PROVIDER_CONFIG[provider];
-		if (!config.apiKey) {
-			throw createServerOnlyFeatureError(
-				`Direct ${provider} AI access`,
-			);
-		}
+  if (!clients[provider]) {
+    const config = PROVIDER_CONFIG[provider];
+    if (!config.apiKey) {
+      throw createServerOnlyFeatureError(`Direct ${provider} AI access`);
+    }
 
-		switch (provider) {
-			case "google":
-				// Google Generative AI SDK handles its own base URL
-				clients[provider] = createGoogleGenerativeAI({
-					apiKey: config.apiKey,
-				}) as ReturnType<typeof createGoogleGenerativeAI>;
-				break;
+    switch (provider) {
+      case "google":
+        // Google Generative AI SDK handles its own base URL
+        clients[provider] = createGoogleGenerativeAI({
+          apiKey: config.apiKey,
+        }) as ReturnType<typeof createGoogleGenerativeAI>;
+        break;
 
-			case "openai":
-			case "grok":
-			case "anthropic":
-			default:
-				// OpenAI-compatible clients (OpenAI, xAI/Grok, Anthropic via compatibility layer)
-				clients[provider] = createOpenAI({
-					baseURL: config.baseURL,
-					apiKey: config.apiKey,
-				});
-				break;
-		}
-	}
+      case "openai":
+      case "grok":
+      case "anthropic":
+      default:
+        // OpenAI-compatible clients (OpenAI, xAI/Grok, Anthropic via compatibility layer)
+        clients[provider] = createOpenAI({
+          baseURL: config.baseURL,
+          apiKey: config.apiKey,
+        });
+        break;
+    }
+  }
 
-	return clients[provider];
+  return clients[provider];
 }
 
 // ============================================================================
@@ -209,197 +198,178 @@ function getClient(provider: AIProvider) {
  * Generate text with automatic fallback
  */
 export async function generateAIResponse(
-	prompt: string,
-	options: AIRequestOptions = {},
+  prompt: string,
+  options: AIRequestOptions = {},
 ): Promise<AIResponse<string>> {
-	const {
-		provider: preferredProvider,
-		model,
-		temperature = 0.7,
-		maxTokens = 1000,
-		systemPrompt,
-		fallbackProvider = "google", // Gemini Flash is free and fast
-	} = options;
+  const {
+    provider: preferredProvider,
+    model,
+    temperature = 0.7,
+    maxTokens = 1000,
+    systemPrompt,
+    fallbackProvider = "google", // Gemini Flash is free and fast
+  } = options;
 
-	// Determine provider from model or use preferred
-	const primaryProvider: AIProvider = model
-		? MODEL_PROVIDER[model]
-		: preferredProvider || "openai";
+  // Determine provider from model or use preferred
+  const primaryProvider: AIProvider = model ? MODEL_PROVIDER[model] : preferredProvider || "openai";
 
-	const modelName = model || PROVIDER_CONFIG[primaryProvider].defaultModel;
+  const modelName = model || PROVIDER_CONFIG[primaryProvider].defaultModel;
 
-	try {
-		const client = getClient(primaryProvider);
-		if (!client) {
-			throw new Error(`Failed to initialize ${primaryProvider} client`);
-		}
+  try {
+    const client = getClient(primaryProvider);
+    if (!client) {
+      throw new Error(`Failed to initialize ${primaryProvider} client`);
+    }
 
-		const _startTime = Date.now();
+    const _startTime = Date.now();
 
-		const result = await generateText({
-			model: client(modelName),
-			prompt,
-			temperature,
-			maxTokens,
-			system: systemPrompt,
-		});
+    const result = await generateText({
+      model: client(modelName),
+      prompt,
+      temperature,
+      maxTokens,
+      system: systemPrompt,
+    });
 
-		return {
-			success: true,
-			data: result.text,
-			provider: primaryProvider,
-			model: modelName,
-			cached: result.usage.promptTokens === 0,
-			usage: {
-				promptTokens: result.usage.promptTokens,
-				completionTokens: result.usage.completionTokens,
-				totalTokens: result.usage.totalTokens,
-			},
-		};
-	} catch (error) {
-		logger.warn(
-			`Primary provider ${primaryProvider} failed`,
-			error,
-			"AIGateway",
-		);
+    return {
+      success: true,
+      data: result.text,
+      provider: primaryProvider,
+      model: modelName,
+      cached: result.usage.promptTokens === 0,
+      usage: {
+        promptTokens: result.usage.promptTokens,
+        completionTokens: result.usage.completionTokens,
+        totalTokens: result.usage.totalTokens,
+      },
+    };
+  } catch (error) {
+    logger.warn(`Primary provider ${primaryProvider} failed`, error, "AIGateway");
 
-		// Try fallback provider
-		if (fallbackProvider && fallbackProvider !== primaryProvider) {
-			logger.info(
-				`Attempting fallback to ${fallbackProvider}`,
-				undefined,
-				"AIGateway",
-			);
+    // Try fallback provider
+    if (fallbackProvider && fallbackProvider !== primaryProvider) {
+      logger.info(`Attempting fallback to ${fallbackProvider}`, undefined, "AIGateway");
 
-			try {
-				const fallbackClient = getClient(fallbackProvider);
-				const fallbackModel = PROVIDER_CONFIG[fallbackProvider].defaultModel;
+      try {
+        const fallbackClient = getClient(fallbackProvider);
+        const fallbackModel = PROVIDER_CONFIG[fallbackProvider].defaultModel;
 
-				const result = await generateText({
-					model: fallbackClient(fallbackModel),
-					prompt,
-					temperature,
-					maxTokens,
-					system: systemPrompt,
-				});
+        const result = await generateText({
+          model: fallbackClient(fallbackModel),
+          prompt,
+          temperature,
+          maxTokens,
+          system: systemPrompt,
+        });
 
-				return {
-					success: true,
-					data: result.text,
-					provider: fallbackProvider,
-					model: fallbackModel,
-					cached: false,
-					usage: {
-						promptTokens: result.usage.promptTokens,
-						completionTokens: result.usage.completionTokens,
-						totalTokens: result.usage.totalTokens,
-					},
-				};
-			} catch (fallbackError) {
-				logger.error(
-					`Fallback provider ${fallbackProvider} also failed`,
-					fallbackError,
-					"AIGateway",
-				);
-			}
-		}
+        return {
+          success: true,
+          data: result.text,
+          provider: fallbackProvider,
+          model: fallbackModel,
+          cached: false,
+          usage: {
+            promptTokens: result.usage.promptTokens,
+            completionTokens: result.usage.completionTokens,
+            totalTokens: result.usage.totalTokens,
+          },
+        };
+      } catch (fallbackError) {
+        logger.error(
+          `Fallback provider ${fallbackProvider} also failed`,
+          fallbackError,
+          "AIGateway",
+        );
+      }
+    }
 
-		return {
-			success: false,
-			error: error instanceof Error ? error.message : "Unknown AI error",
-		};
-	}
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : "Unknown AI error",
+    };
+  }
 }
 
 /**
  * Stream AI response (for chat-like interfaces)
  */
 export async function streamAIResponse(
-	prompt: string,
-	options: AIStreamOptions = {},
+  prompt: string,
+  options: AIStreamOptions = {},
 ): Promise<AsyncIterable<string>> {
-	const {
-		provider: preferredProvider,
-		model,
-		temperature = 0.7,
-		maxTokens = 1000,
-		systemPrompt,
-	} = options;
+  const {
+    provider: preferredProvider,
+    model,
+    temperature = 0.7,
+    maxTokens = 1000,
+    systemPrompt,
+  } = options;
 
-	const primaryProvider: AIProvider = model
-		? MODEL_PROVIDER[model]
-		: preferredProvider || "openai";
+  const primaryProvider: AIProvider = model ? MODEL_PROVIDER[model] : preferredProvider || "openai";
 
-	const modelName = model || PROVIDER_CONFIG[primaryProvider].defaultModel;
+  const modelName = model || PROVIDER_CONFIG[primaryProvider].defaultModel;
 
-	const client = getClient(primaryProvider);
-	if (!client) {
-		throw new Error(`Failed to initialize ${primaryProvider} client`);
-	}
+  const client = getClient(primaryProvider);
+  if (!client) {
+    throw new Error(`Failed to initialize ${primaryProvider} client`);
+  }
 
-	const result = await streamText({
-		model: client(modelName),
-		prompt,
-		temperature,
-		maxTokens,
-		system: systemPrompt,
-	});
+  const result = await streamText({
+    model: client(modelName),
+    prompt,
+    temperature,
+    maxTokens,
+    system: systemPrompt,
+  });
 
-	return result.textStream;
+  return result.textStream;
 }
 
 /**
  * Generate structured object output
  */
 export async function generateAIObject<T>(
-	prompt: string,
-	schema: z.ZodType<T>,
-	options: AIRequestOptions = {},
+  prompt: string,
+  schema: z.ZodType<T>,
+  options: AIRequestOptions = {},
 ): Promise<AIResponse<T>> {
-	const {
-		provider: preferredProvider,
-		model,
-		temperature = 0.7,
-		systemPrompt,
-	} = options;
+  const { provider: preferredProvider, model, temperature = 0.7, systemPrompt } = options;
 
-	const primaryProvider: AIProvider = model
-		? MODEL_PROVIDER[model]
-		: preferredProvider || "openai";
+  const primaryProvider: AIProvider = model ? MODEL_PROVIDER[model] : preferredProvider || "openai";
 
-	const modelName = model || PROVIDER_CONFIG[primaryProvider].defaultModel;
+  const modelName = model || PROVIDER_CONFIG[primaryProvider].defaultModel;
 
-	try {
-		const client = getClient(primaryProvider);
-		if (!client) {
-			throw new Error(`Failed to initialize ${primaryProvider} client`);
-		}
+  try {
+    const client = getClient(primaryProvider);
+    if (!client) {
+      throw new Error(`Failed to initialize ${primaryProvider} client`);
+    }
 
-		const result = await generateObject({
-			model: client(modelName),
-			prompt,
-			temperature,
-			system: systemPrompt,
-			schema,
-		});
+    const result = await generateObject({
+      model: client(modelName),
+      prompt,
+      temperature,
+      system: systemPrompt,
+      schema,
+    });
 
-		return {
-			success: true,
-			data: result.object,
-			provider: primaryProvider,
-			model: modelName,
-			usage: {
-				promptTokens: result.usage.promptTokens,
-				completionTokens: result.usage.completionTokens,
-				totalTokens: result.usage.totalTokens,
-			},
-		};
-	} catch (error) {
-		return {
-			success: false,
-			error: error instanceof Error ? error.message : "Unknown AI error",
-		};
-	}
+    return {
+      success: true,
+      data: result.object,
+      provider: primaryProvider,
+      model: modelName,
+      usage: {
+        promptTokens: result.usage.promptTokens,
+        completionTokens: result.usage.completionTokens,
+        totalTokens: result.usage.totalTokens,
+      },
+    };
+  } catch (error) {
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : "Unknown AI error",
+    };
+  }
 }
 
 // ============================================================================
@@ -411,10 +381,10 @@ export async function generateAIObject<T>(
  * Uses Google Gemini Flash (free) with fallback to GPT-4o-mini
  */
 export async function generateClinicalAnalysis(
-	patientData: Record<string, unknown>,
-	history?: Record<string, unknown>,
+  patientData: Record<string, unknown>,
+  history?: Record<string, unknown>,
 ): Promise<AIResponse> {
-	const prompt = `Analyze the following patient data and provide clinical insights:
+  const prompt = `Analyze the following patient data and provide clinical insights:
 
 Patient Data:
 ${JSON.stringify(patientData, null, 2)}
@@ -432,31 +402,31 @@ Please provide:
 
 Format the response as a structured JSON object.`;
 
-	return generateAIResponse(prompt, {
-		provider: "google", // Use free Gemini Flash
-		model: "gemini-2.0-flash-exp",
-		temperature: 0.3, // Lower temperature for clinical accuracy
-		fallbackProvider: "openai",
-	});
+  return generateAIResponse(prompt, {
+    provider: "google", // Use free Gemini Flash
+    model: "gemini-2.0-flash-exp",
+    temperature: 0.3, // Lower temperature for clinical accuracy
+    fallbackProvider: "openai",
+  });
 }
 
 /**
  * Generate form suggestions based on input
  */
 export async function generateFormSuggestions(
-	formData: Record<string, unknown>,
-	formFields: Array<{ id: string; label: string }>,
+  formData: Record<string, unknown>,
+  formFields: Array<{ id: string; label: string }>,
 ): Promise<AIResponse<string>> {
-	const context = formFields
-		.map((field) => {
-			const value = formData[field.id];
-			if (!value) return null;
-			return `${field.label}: ${value}`;
-		})
-		.filter(Boolean)
-		.join("\n");
+  const context = formFields
+    .map((field) => {
+      const value = formData[field.id];
+      if (!value) return null;
+      return `${field.label}: ${value}`;
+    })
+    .filter(Boolean)
+    .join("\n");
 
-	const prompt = `Based on the following patient assessment data, provide clinical suggestions:
+  const prompt = `Based on the following patient assessment data, provide clinical suggestions:
 
 ${context}
 
@@ -466,22 +436,22 @@ Provide suggestions in markdown format with:
 3. Exercise suggestions with parameters
 4. Precautions or contraindications`;
 
-	return generateAIResponse(prompt, {
-		provider: "google", // Use free Gemini Flash
-		model: "gemini-2.0-flash-exp",
-		temperature: 0.5,
-	});
+  return generateAIResponse(prompt, {
+    provider: "google", // Use free Gemini Flash
+    model: "gemini-2.0-flash-exp",
+    temperature: 0.5,
+  });
 }
 
 /**
  * Generate exercise suggestion
  */
 export async function generateExerciseSuggestion(
-	patientCondition: string,
-	limitations: string[],
-	goals: string[],
+  patientCondition: string,
+  limitations: string[],
+  goals: string[],
 ): Promise<AIResponse<string>> {
-	const prompt = `Suggest appropriate physical therapy exercises for:
+  const prompt = `Suggest appropriate physical therapy exercises for:
 
 Condition: ${patientCondition}
 Limitations: ${limitations.join(", ")}
@@ -494,38 +464,36 @@ Provide 3-5 specific exercises with:
 - Progression criteria
 - Regression options`;
 
-	return generateAIResponse(prompt, {
-		provider: "google", // Use free Gemini Flash
-		model: "gemini-2.0-flash-exp",
-		temperature: 0.6,
-	});
+  return generateAIResponse(prompt, {
+    provider: "google", // Use free Gemini Flash
+    model: "gemini-2.0-flash-exp",
+    temperature: 0.6,
+  });
 }
 
 /**
  * Chat with AI assistant
  */
 export async function chatWithAI(
-	message: string,
-	conversationHistory: Array<{
-		role: "user" | "assistant";
-		content: string;
-	}> = [],
+  message: string,
+  conversationHistory: Array<{
+    role: "user" | "assistant";
+    content: string;
+  }> = [],
 ): Promise<AIResponse<string>> {
-	const historyPrompt = conversationHistory
-		.map((msg) => `${msg.role}: ${msg.content}`)
-		.join("\n");
+  const historyPrompt = conversationHistory.map((msg) => `${msg.role}: ${msg.content}`).join("\n");
 
-	const prompt = `You are FisioFlow AI, a helpful assistant for physical therapy clinics.
+  const prompt = `You are FisioFlow AI, a helpful assistant for physical therapy clinics.
 
 ${historyPrompt ? `Previous conversation:\n${historyPrompt}\n\n` : ""}User: ${message}
 
 Provide a helpful, accurate response. If unsure, recommend consulting with a physical therapist.`;
 
-	return generateAIResponse(prompt, {
-		provider: "google", // Use free Gemini Flash for chat
-		model: "gemini-2.0-flash-exp",
-		temperature: 0.7,
-	});
+  return generateAIResponse(prompt, {
+    provider: "google", // Use free Gemini Flash for chat
+    model: "gemini-2.0-flash-exp",
+    temperature: 0.7,
+  });
 }
 
 // ============================================================================
@@ -536,14 +504,14 @@ Provide a helpful, accurate response. If unsure, recommend consulting with a phy
  * Calculate estimated cost in USD
  */
 function _calculateCost(
-	provider: AIProvider,
-	promptTokens: number,
-	completionTokens: number,
+  provider: AIProvider,
+  promptTokens: number,
+  completionTokens: number,
 ): number {
-	const costs = COST_PER_1M_TOKENS[provider];
-	const inputCost = (promptTokens / 1_000_000) * costs.input;
-	const outputCost = (completionTokens / 1_000_000) * costs.output;
-	return inputCost + outputCost;
+  const costs = COST_PER_1M_TOKENS[provider];
+  const inputCost = (promptTokens / 1_000_000) * costs.input;
+  const outputCost = (completionTokens / 1_000_000) * costs.output;
+  return inputCost + outputCost;
 }
 
 /**
@@ -551,38 +519,38 @@ function _calculateCost(
  * Google Gemini 2.0 Flash is the most cost-effective option
  */
 export function getCheapestProvider(): AIProvider {
-	// Order by cost (cheapest first)
-	return "google"; // Google Gemini Flash is free with generous quota
+  // Order by cost (cheapest first)
+  return "google"; // Google Gemini Flash is free with generous quota
 }
 
 /**
  * Health check for AI services
  */
 export async function checkAIHealth(): Promise<Record<AIProvider, boolean>> {
-	const results: Record<AIProvider, boolean> = {
-		openai: false,
-		google: false,
-		grok: false,
-		anthropic: false,
-	};
+  const results: Record<AIProvider, boolean> = {
+    openai: false,
+    google: false,
+    grok: false,
+    anthropic: false,
+  };
 
-	// Quick check using minimal tokens
-	const testProviders: AIProvider[] = ["google", "openai", "grok"];
+  // Quick check using minimal tokens
+  const testProviders: AIProvider[] = ["google", "openai", "grok"];
 
-	for (const provider of testProviders) {
-		try {
-			const response = await generateAIResponse("OK", {
-				provider,
-				model: PROVIDER_CONFIG[provider].defaultModel,
-				maxTokens: 1,
-			});
-			results[provider] = response.success;
-		} catch {
-			results[provider] = false;
-		}
-	}
+  for (const provider of testProviders) {
+    try {
+      const response = await generateAIResponse("OK", {
+        provider,
+        model: PROVIDER_CONFIG[provider].defaultModel,
+        maxTokens: 1,
+      });
+      results[provider] = response.success;
+    } catch {
+      results[provider] = false;
+    }
+  }
 
-	return results;
+  return results;
 }
 
 // ============================================================================
@@ -590,17 +558,17 @@ export async function checkAIHealth(): Promise<Record<AIProvider, boolean>> {
 // ============================================================================
 
 export const AIGateway = {
-	generate: generateAIResponse,
-	stream: streamAIResponse,
-	generateObject: generateAIObject,
-	clinical: {
-		generateAnalysis: generateClinicalAnalysis,
-		generateSuggestions: generateFormSuggestions,
-		generateExercise: generateExerciseSuggestion,
-	},
-	chat: chatWithAI,
-	health: checkAIHealth,
-	getCheapestProvider,
+  generate: generateAIResponse,
+  stream: streamAIResponse,
+  generateObject: generateAIObject,
+  clinical: {
+    generateAnalysis: generateClinicalAnalysis,
+    generateSuggestions: generateFormSuggestions,
+    generateExercise: generateExerciseSuggestion,
+  },
+  chat: chatWithAI,
+  health: checkAIHealth,
+  getCheapestProvider,
 };
 
 // Re-export types

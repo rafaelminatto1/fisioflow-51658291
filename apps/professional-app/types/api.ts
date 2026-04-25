@@ -146,22 +146,16 @@ export interface ApiMessage {
 }
 
 export type TarefaStatus =
-  | 'BACKLOG'
-  | 'A_FAZER'
-  | 'EM_PROGRESSO'
-  | 'REVISAO'
-  | 'CONCLUIDO'
-  | 'ARQUIVADO';
+  | "BACKLOG"
+  | "A_FAZER"
+  | "EM_PROGRESSO"
+  | "REVISAO"
+  | "CONCLUIDO"
+  | "ARQUIVADO";
 
-export type TarefaPrioridade = 'BAIXA' | 'MEDIA' | 'ALTA' | 'URGENTE';
+export type TarefaPrioridade = "BAIXA" | "MEDIA" | "ALTA" | "URGENTE";
 
-export type TarefaTipo =
-  | 'TAREFA'
-  | 'REUNIAO'
-  | 'MELHORIA'
-  | 'DOCUMENTACAO'
-  | 'FEATURE'
-  | 'BUG';
+export type TarefaTipo = "TAREFA" | "REUNIAO" | "MELHORIA" | "DOCUMENTACAO" | "FEATURE" | "BUG";
 
 export interface ApiTarefaChecklistItem {
   id: string;
@@ -207,7 +201,7 @@ export interface ApiPartnership {
   name: string;
   description?: string | null;
   active?: boolean;
-  discount_type?: 'percentage' | 'fixed';
+  discount_type?: "percentage" | "fixed";
   discount_value?: number;
   created_at?: string;
   updated_at?: string;
@@ -226,7 +220,7 @@ export interface ApiLead {
   telefone?: string | null;
   email?: string | null;
   origem?: string | null;
-  estagio: 'aguardando' | 'contatado' | 'interessado' | 'agendado' | 'convertido' | 'perdido';
+  estagio: "aguardando" | "contatado" | "interessado" | "agendado" | "convertido" | "perdido";
   responsavel_id: string;
   data_primeiro_contato?: string | null;
   data_ultimo_contato?: string | null;
@@ -254,7 +248,7 @@ export interface ApiTelemedicineRoom {
   therapist_id?: string | null;
   appointment_id?: string | null;
   room_code: string;
-  status: 'aguardando' | 'ativo' | 'encerrado';
+  status: "aguardando" | "ativo" | "encerrado";
   meeting_url?: string | null;
   scheduled_at?: string | null;
   started_at?: string | null;

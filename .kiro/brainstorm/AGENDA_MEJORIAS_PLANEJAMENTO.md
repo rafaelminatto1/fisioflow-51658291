@@ -11,22 +11,24 @@ O sistema de agenda do FisioFlow é uma implementação madura e funcional, mas 
 
 ### Principais Conclusões da Análise
 
-| Aspecto | Estado Atual | Oportunidade |
-|----------|---------------|--------------|
-| **Funcionalidades** | Sólido com drag-and-drop, múltiplas views | Faltam recursos de AI, automação avançada |
-| **Performance** | Virtualização parcial, cache otimizado | Gargalos em mobile, falta de memoização |
-| **UX/UI** | shadcn/ui + design system | Falta micro-interações, animações, feedback visual |
-| **Integração AI** | Firebase AI Logic + Genkit configurados | **Nenhum** uso de AI no agendamento atualmente |
-| **Mobile vs Web** | Web muito mais avançado | Grande disparidade entre plataformas |
+| Aspecto             | Estado Atual                              | Oportunidade                                       |
+| ------------------- | ----------------------------------------- | -------------------------------------------------- |
+| **Funcionalidades** | Sólido com drag-and-drop, múltiplas views | Faltam recursos de AI, automação avançada          |
+| **Performance**     | Virtualização parcial, cache otimizado    | Gargalos em mobile, falta de memoização            |
+| **UX/UI**           | shadcn/ui + design system                 | Falta micro-interações, animações, feedback visual |
+| **Integração AI**   | Firebase AI Logic + Genkit configurados   | **Nenhum** uso de AI no agendamento atualmente     |
+| **Mobile vs Web**   | Web muito mais avançado                   | Grande disparidade entre plataformas               |
 
 ---
 
 ## 1. Funcionalidades AI-Powered (Firebase AI Logic + Genkit)
 
 ### 1.1 Smart Slot Recommendations
+
 **Prioridade:** Alta | **Complexidade:** Média | **Impacto:** Muito Alto
 
 #### Ideias:
+
 - **`aiSuggestOptimalSlot`**: Sugerir horários ótimos baseado em:
   - Histórico de comparecimento do paciente
   - Padrões de preferência de horário
@@ -44,6 +46,7 @@ O sistema de agenda do FisioFlow é uma implementação madura e funcional, mas 
   - Considerar sazonalidade e tendências
 
 #### Implementação:
+
 ```typescript
 // Adicionar ao unified-ai-service.ts
 case 'suggestOptimalSlot':
@@ -57,9 +60,11 @@ case 'suggestOptimalSlot':
 ```
 
 ### 1.2 Intelligent Waitlist Matching
+
 **Prioridade:** Alta | **Complexidade:** Média | **Impacto:** Alto
 
 #### Ideias:
+
 - **ML-Based Priority Scoring**: Substituir pesos fixos por modelo aprendido
   - Analisar fatores: urgência clínica, tempo de espera, especialidade
   - Considerar dados de previsão de recuperação
@@ -75,17 +80,21 @@ case 'suggestOptimalSlot':
   - Otimizar fluxo de pacientes
 
 ### 1.3 Natural Language Scheduling
+
 **Prioridade:** Média | **Complexidade:** Alta | **Impacto:** Muito Alto
 
 #### Ideias:
+
 - **NLP Parser**: "Agendar retorno para João em 2 semanas, preferencialmente manhã"
 - **Voice Commands**: Agendamento por voz usando Web Speech API
 - **Quick Actions**: Frases pré-definidas acelerando criação
 
 ### 1.4 Proactive Assistant Enhancement
+
 **Prioridade:** Alta | **Complexidade:** Média | **Impacto:** Alto
 
 #### Ideias:
+
 - **Predictive Reschedule**: Sugerir reagendamentos proativos
   - Detectar padrões de cancelamento
   - Oferecer alternativas antes da data limite
@@ -103,9 +112,11 @@ case 'suggestOptimalSlot':
 ## 2. Melhorias de UX/UI
 
 ### 2.1 Micro-interações
+
 **Prioridade:** Média | **Complexidade:** Baixa | **Impacto:** Médio
 
 #### Ideias:
+
 - **Touch Feedback**: Feedback tátil em todas as ações (Haptics API)
 - **Loading Animations**: Animações de loading temáticas (fisioterapia)
 - **Success Celebrations**: Confete ou animação ao completar agendamento
@@ -113,9 +124,11 @@ case 'suggestOptimalSlot':
 - **Skeleton Screens**: Skeletons animados durante carregamento
 
 ### 2.2 Visual Enhancements
+
 **Prioridade:** Alta | **Complexidade:** Média | **Impacto:** Alto
 
 #### Ideias:
+
 - **Calendar Heat Map**: Mapa de calor mostrando ocupação
   - Verde: disponível
   - Amarelo: médio
@@ -133,9 +146,11 @@ case 'suggestOptimalSlot':
   - Contraste acessível
 
 ### 2.3 Navigation Patterns
+
 **Prioridade:** Alta | **Complexidade:** Baixa | **Impacto:** Alto
 
 #### Ideias:
+
 - **Pull-to-Refresh**: Puxar para atualizar agenda (mobile)
 - **Swipe Navigation**: Swipes para navegar entre dias/semanas
 - **Keyboard Shortcuts**: Atalhos de teclado (web/desktop)
@@ -151,9 +166,11 @@ case 'suggestOptimalSlot':
   - "Meus pacientes"
 
 ### 2.4 Dark Mode & Accessibility
+
 **Prioridade:** Alta | **Complexidade:** Média | **Impacto:** Alto
 
 #### Ideias:
+
 - **System Dark Mode**: Respeitar preferência do sistema
 - **High Contrast Mode**: Modo de alto contraste para acessibilidade
 - **Reduced Motion**: Opção para reduzir animações
@@ -166,9 +183,11 @@ case 'suggestOptimalSlot':
 ## 3. Melhorias de Performance
 
 ### 3.1 Virtualization
+
 **Prioridade:** Alta | **Complexidade:** Média | **Impacto:** Muito Alto
 
 #### Ideias:
+
 - **Time Slot Virtualization**: Renderizar apenas slots visíveis
   - Usar react-window / react-virtualized
   - Overscan de 3-5 slots
@@ -180,9 +199,11 @@ case 'suggestOptimalSlot':
   - Placeholder skeletons
 
 ### 3.2 Memoization
+
 **Prioridade:** Alta | **Complexidade:** Baixa | **Impacto:** Alto
 
 #### Ideias:
+
 - **Component Memoization**: `React.memo` em todos os cards
   - `AppointmentCard` memoizado
   - `TimeSlotCell` memoizado
@@ -194,9 +215,11 @@ case 'suggestOptimalSlot':
   - Ordenação otimizada
 
 ### 3.3 Cache Strategy
+
 **Prioridade:** Alta | **Complexidade:** Média | **Impacto:** Muito Alto
 
 #### Ideias:
+
 - **IndexedDB Cache**: Cache persistente no navegador
   - Multi-layer: memory → IndexedDB → network
   - Stale-while-revalidate pattern
@@ -213,9 +236,11 @@ case 'suggestOptimalSlot':
   - Por eventos de realtime
 
 ### 3.4 Firebase Optimization
+
 **Prioridade:** Alta | **Complexidade:** Média | **Impacto:** Muito Alto
 
 #### Ideias:
+
 - **Firestore Indexing**: Índices otimizados para queries comuns
   - Composite indexes por data + terapeuta
   - Indexes por status
@@ -236,9 +261,11 @@ case 'suggestOptimalSlot':
 ## 4. Funcionalidades de Agenda
 
 ### 4.1 Drag & Drop Enhanced
+
 **Prioridade:** Média | **Complexidade:** Alta | **Impacto:** Alto
 
 #### Ideias:
+
 - **Mobile Drag & Drop**: Implementar em React Native
   - Usar react-native-gesture-handler
   - Visual feedback durante drag
@@ -256,9 +283,11 @@ case 'suggestOptimalSlot':
   - Confirmation dialog
 
 ### 4.2 Advanced Filtering
+
 **Prioridade:** Alta | **Complexidade:** Média | **Impacto:** Alto
 
 #### Ideias:
+
 - **Quick Filters**: Filtros rápidos acionáveis
   - Botões: "Apenas hoje", "Faltas", "Pagamentos pendentes"
   - Combinação de filtros
@@ -277,9 +306,11 @@ case 'suggestOptimalSlot':
   - Por equipamento/sala
 
 ### 4.3 Recurring Appointments
+
 **Prioridade:** Média | **Complexidade:** Alta | **Impacto:** Muito Alto
 
 #### Ideias:
+
 - **Flexible Recurrence**: Recorrência flexível
   - Diário, semanal, quinzenal, mensal
   - Dias específicos da semana (ex: terça e quinta)
@@ -297,9 +328,11 @@ case 'suggestOptimalSlot':
   - One-click renewal
 
 ### 4.4 Appointment Templates
+
 **Prioridade:** Média | **Complexidade:** Baixa | **Impacto:** Médio
 
 #### Ideias:
+
 - **Template System**: Sistema de templates
   - Criar templates de agendamento
   - "Sessão inicial", "Follow-up", "Avaliação"
@@ -315,9 +348,11 @@ case 'suggestOptimalSlot':
 ## 5. Funcionalidades de Waitlist
 
 ### 5.1 Enhanced Waitlist UI
+
 **Prioridade:** Alta | **Complexidade:** Média | **Impacto:** Alto
 
 #### Ideias:
+
 - **Visual Timeline**: Timeline visual da lista de espera
   - Indicador de posição
   - Tempo estimado de espera
@@ -334,9 +369,11 @@ case 'suggestOptimalSlot':
   - Alterar prioridade em lote
 
 ### 5.2 Waitlist Automation
+
 **Prioridade:** Alta | **Complexidade:** Alta | **Impacto:** Muito Alto
 
 #### Ideias:
+
 - **Auto-Offer Slots**: Oferta automática de slots
   - Quando slot se abre
   - Match por prioridade
@@ -357,9 +394,11 @@ case 'suggestOptimalSlot':
 ## 6. Integrações e Ecosistema
 
 ### 6.1 Third-party Calendars
+
 **Prioridade:** Média | **Complexidade:** Alta | **Impacto:** Médio
 
 #### Ideias:
+
 - **Google Calendar Sync**: Sincronização bidirecional
   - Read/write events
   - Conflict detection
@@ -376,9 +415,11 @@ case 'suggestOptimalSlot':
   - Auto-sync
 
 ### 6.2 Communication Channels
+
 **Prioridade:** Alta | **Complexidade:** Média | **Impacto:** Muito Alto
 
 #### Ideias:
+
 - **WhatsApp Business**: API oficial do WhatsApp
   - Envio de confirmações
   - Lembretes automáticos
@@ -395,9 +436,11 @@ case 'suggestOptimalSlot':
   - Tracking de abertura
 
 ### 6.3 Payment Integration
+
 **Prioridade:** Alta | **Complexidade:** Média | **Impacto:** Alto
 
 #### Ideias:
+
 - **Online Booking Payments**: Pagamento no agendamento
   - Cartão de crédito
   - PIX
@@ -413,9 +456,11 @@ case 'suggestOptimalSlot':
 ## 7. Dashboard & Analytics
 
 ### 7.1 Smart Dashboard
+
 **Prioridade:** Alta | **Complexidade:** Média | **Impacto:** Muito Alto
 
 #### Ideias:
+
 - **Daily Overview**: Visão diária
   - Agendamentos de hoje
   - Slots disponíveis
@@ -434,9 +479,11 @@ case 'suggestOptimalSlot':
   - NPS score
 
 ### 7.2 Predictive Analytics
+
 **Prioridade:** Média | **Complexidade:** Alta | **Impacto:** Muito Alto
 
 #### Ideias:
+
 - **Demand Forecast**: Previsão de demanda
   - Prever lotação futura
   - Identificar dias de pico
@@ -457,9 +504,11 @@ case 'suggestOptimalSlot':
 ## 8. Funcionalidades Mobile-Specific
 
 ### 8.1 Gesture Control
+
 **Prioridade:** Alta | **Complexidade:** Média | **Impacto:** Alto
 
 #### Ideias:
+
 - **Swipe Actions**: Swipes para ações rápidas
   - Swipe left: agendar
   - Swipe right: detalhes
@@ -477,9 +526,11 @@ case 'suggestOptimalSlot':
   - Preview de detalhes
 
 ### 8.2 Offline Support
+
 **Prioridade:** Média | **Complexidade:** Alta | **Impacto:** Muito Alto
 
 #### Ideias:
+
 - **Offline Mode**: Modo offline completo
   - Cache de agendamentos locais
   - Criar agendamentos offline
@@ -491,9 +542,11 @@ case 'suggestOptimalSlot':
   - Merge inteligente
 
 ### 8.3 Push Notifications
+
 **Prioridade:** Alta | **Complexidade:** Baixa | **Impacto:** Alto
 
 #### Ideias:
+
 - **Smart Notifications**: Notificações inteligentes
   - Agrupar notificações similares
   - Actionable buttons
@@ -509,9 +562,11 @@ case 'suggestOptimalSlot':
 ## 9. Funcionalidades Terapeuta-Centric
 
 ### 9.1 Therapist Dashboard
+
 **Prioridade:** Alta | **Complexidade:** Média | **Impacto:** Muito Alto
 
 #### Ideias:
+
 - **Personal Calendar**: Calendário personalizado
   - Bloqueio de horários
   - Pausas e almoços configuráveis
@@ -528,9 +583,11 @@ case 'suggestOptimalSlot':
   - Links rápidos para evoluções
 
 ### 9.2 Scheduling Preferences
+
 **Prioridade:** Média | **Complexidade:** Baixa | **Impacto:** Médio
 
 #### Ideias:
+
 - **Smart Scheduling**: Agendamento inteligente
   - Auto-sugerir horários favoritos
   - Evitar horários não preferidos
@@ -546,9 +603,11 @@ case 'suggestOptimalSlot':
 ## 10. Funcionalidades Paciente-Centric
 
 ### 10.1 Patient Portal
+
 **Prioridade:** Alta | **Complexidade:** Alta | **Impacto:** Muito Alto
 
 #### Ideias:
+
 - **Self-Scheduling**: Auto-agendamento
   - Portal web para pacientes
   - App mobile para pacientes
@@ -565,9 +624,11 @@ case 'suggestOptimalSlot':
   - Auto-aceitação
 
 ### 10.2 Reminders
+
 **Prioridade:** Alta | **Complexidade:** Baixa | **Impacto:** Muito Alto
 
 #### Ideias:
+
 - **Multi-channel Reminders**: Lembretes multi-canal
   - WhatsApp 48h antes
   - SMS 24h antes
@@ -584,9 +645,11 @@ case 'suggestOptimalSlot':
 ## 11. Design System & Visual
 
 ### 11.1 Component Library
+
 **Prioridade:** Alta | **Complexidade:** Média | **Impacto:** Alto
 
 #### Ideias:
+
 - **Unified Components**: Componentes unificados
   - Same components web/mobile
   - Design tokens compartilhados
@@ -598,9 +661,11 @@ case 'suggestOptimalSlot':
   - Micro-interactions catalogadas
 
 ### 11.2 Themes & Customization
+
 **Prioridade:** Média | **Complexidade:** Baixa | **Impacto:** Médio
 
 #### Ideias:
+
 - **Custom Themes**: Temas personalizáveis
   - Brand colors
   - Logo customizado
@@ -616,9 +681,11 @@ case 'suggestOptimalSlot':
 ## 12. Segurança & Compliance
 
 ### 12.1 Data Protection
+
 **Prioridade:** Alta | **Complexidade:** Média | **Impacto:** Muito Alto
 
 #### Ideias:
+
 - **Encryption**: Criptografia de dados sensíveis
   - Dados de pacientes criptografados
   - End-to-end encryption para comunicações
@@ -630,9 +697,11 @@ case 'suggestOptimalSlot':
   - Export de logs
 
 ### 12.2 Compliance
+
 **Prioridade:** Alta | **Complexidade:** Alta | **Impacto:** Muito Alto
 
 #### Ideias:
+
 - **LGPD Compliance**: Compliance com LGPD
   - Consentimento explícito
   - Right to be forgotten
@@ -648,9 +717,11 @@ case 'suggestOptimalSlot':
 ## 13. Inovações Emergentes
 
 ### 13.1 AI-First Features
+
 **Prioridade:** Média | **Complexidade:** Muito Alta | **Impacto:** Transformador
 
 #### Ideias:
+
 - **AI Scheduling Assistant**: Assistente de agendamento por AI
   - Chat interface
   - Natural language understanding
@@ -667,9 +738,11 @@ case 'suggestOptimalSlot':
   - Outcome predictions
 
 ### 13.2 Advanced Integrations
+
 **Prioridade:** Baixa | **Complexidade:** Muito Alta | **Impacto:** Alto
 
 #### Ideias:
+
 - **Telehealth Integration**: Integração com telemedicina
   - Video calls no agendamento
   - Link automático
@@ -685,6 +758,7 @@ case 'suggestOptimalSlot':
 ## Roadmap de Implementação
 
 ### Fase 1: Quick Wins (1-2 semanas)
+
 **Prioridade:** Alta | **Impacto Imediato**
 
 1. ✅ Pull-to-refresh no mobile
@@ -699,6 +773,7 @@ case 'suggestOptimalSlot':
 10. ✅ Search improvements
 
 ### Fase 2: Performance Core (3-4 semanas)
+
 **Prioridade:** Alta | **Impacto Alto**
 
 1. ✅ Virtualização de calendário (web + mobile)
@@ -711,6 +786,7 @@ case 'suggestOptimalSlot':
 8. ✅ Performance monitoring (Firebase Performance)
 
 ### Fase 3: AI Scheduling (4-6 semanas)
+
 **Prioridade:** Alta | **Impacto Transformador**
 
 1. ✅ AI slot suggestions (Gemini 2.5 Flash)
@@ -722,6 +798,7 @@ case 'suggestOptimalSlot':
 7. ✅ Capacity AI optimization
 
 ### Fase 4: UX/UI Enhancements (3-4 semanas)
+
 **Prioridade:** Média | **Impacto Alto**
 
 1. ✅ Calendar heat map
@@ -734,6 +811,7 @@ case 'suggestOptimalSlot':
 8. ✅ Quick actions context menu
 
 ### Fase 5: Advanced Features (6-8 semanas)
+
 **Prioridade:** Média | **Impacto Muito Alto**
 
 1. ✅ Recurring appointments avançado
@@ -746,6 +824,7 @@ case 'suggestOptimalSlot':
 8. ✅ Therapist preferences
 
 ### Fase 6: Ecosystem & Integrations (4-6 semanas)
+
 **Prioridade:** Baixa | **Impacto Alto**
 
 1. ✅ Google Calendar sync
@@ -756,6 +835,7 @@ case 'suggestOptimalSlot':
 6. ✅ EMR/FHIR integration
 
 ### Fase 7: Innovation Lab (Ongoing)
+
 **Prioridade:** Experimental | **Impacto Transformador**
 
 1. ✅ AI scheduling assistant chatbot
@@ -769,20 +849,21 @@ case 'suggestOptimalSlot':
 
 ## Métricas de Sucesso
 
-| KPI | Meta Atual | Meta Futura | Como Medir |
-|-----|------------|--------------|------------|
-| Time-to-schedule | 5 cliques | 2 cliques | Analytics |
-| No-show rate | 15% | < 8% | Dashboards |
-| Calendar load time | 2s | < 500ms | Performance Monitoring |
-| User satisfaction | N/A | NPS > 8 | Survey |
-| Therapist efficiency | N/A | +30% | Productivity metrics |
-| Patient self-service | 0% | 60% | Analytics |
+| KPI                  | Meta Atual | Meta Futura | Como Medir             |
+| -------------------- | ---------- | ----------- | ---------------------- |
+| Time-to-schedule     | 5 cliques  | 2 cliques   | Analytics              |
+| No-show rate         | 15%        | < 8%        | Dashboards             |
+| Calendar load time   | 2s         | < 500ms     | Performance Monitoring |
+| User satisfaction    | N/A        | NPS > 8     | Survey                 |
+| Therapist efficiency | N/A        | +30%        | Productivity metrics   |
+| Patient self-service | 0%         | 60%         | Analytics              |
 
 ---
 
 ## Decisões de Arquitetura
 
 ### Firebase AI Logic Integration
+
 ```
 ┌─────────────────────────────────────────────────────────────┐
 │                  Client Apps                            │
@@ -817,6 +898,7 @@ case 'suggestOptimalSlot':
 ```
 
 ### Performance Stack
+
 ```
 ┌─────────────────────────────────────────────────────────────┐
 │                   UI Layer                               │
@@ -868,13 +950,13 @@ case 'suggestOptimalSlot':
 
 ### Riscos e Mitigações
 
-| Risco | Impacto | Probabilidade | Mitigação |
-|--------|-----------|---------------|-------------|
-| AI predictions inaccurate | Alto | Médio | A/B testing + fallback para regras |
-| Performance degradation | Alto | Baixa | Feature flags + rollback rápido |
-| Mobile fragmentation | Médio | Alta | Test em múltiplos dispositivos |
-| User adoption | Alto | Médio | Onboarding progressivo + tooltips |
-| Cost overruns (Gemini API) | Médio | Baixa | Cache + rate limiting |
+| Risco                      | Impacto | Probabilidade | Mitigação                          |
+| -------------------------- | ------- | ------------- | ---------------------------------- |
+| AI predictions inaccurate  | Alto    | Médio         | A/B testing + fallback para regras |
+| Performance degradation    | Alto    | Baixa         | Feature flags + rollback rápido    |
+| Mobile fragmentation       | Médio   | Alta          | Test em múltiplos dispositivos     |
+| User adoption              | Alto    | Médio         | Onboarding progressivo + tooltips  |
+| Cost overruns (Gemini API) | Médio   | Baixa         | Cache + rate limiting              |
 
 ---
 
@@ -893,4 +975,4 @@ Este planejamento apresenta um caminho claro para transformar a agenda do FisioF
 
 ---
 
-*Documento gerado com base em análise do código existente, pesquisa de tendências de mercado, e benchmarking com soluções líderes (Google Calendar, Notion Calendar, calendários médicos).*
+_Documento gerado com base em análise do código existente, pesquisa de tendências de mercado, e benchmarking com soluções líderes (Google Calendar, Notion Calendar, calendários médicos)._

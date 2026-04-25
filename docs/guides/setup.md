@@ -6,13 +6,13 @@ O FisioFlow utiliza **Neon** (Banco de Dados e Autenticação) e **Cloudflare** 
 
 ### Stack de Serviços
 
-| Serviço | Uso | Tecnologia |
-|---------|-----|------------|
-| Neon Auth | Autenticação de usuários | Better Auth + Neon |
-| Neon PostgreSQL | Banco de dados principal | PostgreSQL Serverless |
-| Cloudflare R2 | Armazenamento de mídia | S3-Compatible Storage |
-| Cloudflare Workers | API Backend (Hono) | Edge Computing |
-| Cloudflare Pages | Hospedagem Frontend | Static Hosting |
+| Serviço            | Uso                      | Tecnologia            |
+| ------------------ | ------------------------ | --------------------- |
+| Neon Auth          | Autenticação de usuários | Better Auth + Neon    |
+| Neon PostgreSQL    | Banco de dados principal | PostgreSQL Serverless |
+| Cloudflare R2      | Armazenamento de mídia   | S3-Compatible Storage |
+| Cloudflare Workers | API Backend (Hono)       | Edge Computing        |
+| Cloudflare Pages   | Hospedagem Frontend      | Static Hosting        |
 
 ---
 
@@ -31,6 +31,7 @@ O FisioFlow utiliza **Neon** (Banco de Dados e Autenticação) e **Cloudflare** 
 ## 1. Configuração do Ambiente Local
 
 ### 1.1 Clonando e Instalando
+
 ```bash
 git clone <repo-url>
 cd fisioflow
@@ -38,9 +39,11 @@ pnpm install
 ```
 
 ### 1.2 Variáveis de Ambiente
+
 Renomeie `.env.example` para `.env` no root e em `apps/api` e `apps/web`.
 
 **Principais variáveis (Apps/API):**
+
 - `DATABASE_URL`: Connection string do Neon PostgreSQL.
 - `NEON_AUTH_URL`: Endpoint do seu projeto de autenticação Neon.
 - `HYPERDRIVE_ID`: ID da configuração de pooling na Cloudflare.
@@ -67,18 +70,22 @@ pnpm db:migrate
 ## 3. Desenvolvimento e Deploy
 
 ### 3.1 Desenvolvimento Local
+
 Rodar o monorepo com Turbo v2.8+:
+
 ```bash
 pnpm dev
 ```
 
 ### 3.2 Deploy Backend (Workers)
+
 ```bash
 cd apps/api
 pnpm run deploy
 ```
 
 ### 3.3 Deploy Frontend (Pages)
+
 ```bash
 cd apps/web
 pnpm run build
@@ -96,4 +103,3 @@ wrangler pages deploy dist
 
 **Última atualização**: Abril 2026  
 **Status**: ✅ Baseline v4.0.0 (Production Ready)
-

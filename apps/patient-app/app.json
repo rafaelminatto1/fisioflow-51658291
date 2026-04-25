@@ -8,11 +8,7 @@
     "scheme": "fisioflow",
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
-    "platforms": [
-      "ios",
-      "android",
-      "web"
-    ],
+    "platforms": ["ios", "android", "web"],
     "splash": {
       "image": "./assets/splash.png",
       "resizeMode": "contain",
@@ -40,10 +36,7 @@
       },
       "package": "com.fisioflow.patient",
       "edgeToEdgeEnabled": true,
-      "permissions": [
-        "android.permission.READ_CALENDAR",
-        "android.permission.WRITE_CALENDAR"
-      ]
+      "permissions": ["android.permission.READ_CALENDAR", "android.permission.WRITE_CALENDAR"]
     },
     "plugins": [
       "./plugins/withSwiftConcurrency",

@@ -1,6 +1,6 @@
 /**
  * Geolocation Utilities
- * 
+ *
  * OTIMIZAÇÃO: Usa lazy loading para não incluir expo-location no bundle inicial.
  * O módulo de localização só é carregado quando necessário.
  */
@@ -14,14 +14,14 @@ export interface LocationData {
 }
 
 // Cache do módulo de localização
-let locationModule: typeof import('expo-location') | null = null;
+let locationModule: typeof import("expo-location") | null = null;
 
 /**
  * Carrega o módulo de localização sob demanda
  */
-async function getLocationModule(): Promise<typeof import('expo-location')> {
+async function getLocationModule(): Promise<typeof import("expo-location")> {
   if (!locationModule) {
-    locationModule = await import('expo-location');
+    locationModule = await import("expo-location");
   }
   return locationModule;
 }
@@ -33,9 +33,9 @@ export async function requestLocationPermission(): Promise<boolean> {
   try {
     const Location = await getLocationModule();
     const { status } = await Location.requestForegroundPermissionsAsync();
-    return status === 'granted';
+    return status === "granted";
   } catch (error) {
-    console.error('Error requesting location permission:', error);
+    console.error("Error requesting location permission:", error);
     return false;
   }
 }
@@ -44,19 +44,17 @@ export async function requestLocationPermission(): Promise<boolean> {
  * Obtém a localização atual do dispositivo
  * @param accuracy Nível de precisão desejado
  */
-export async function getCurrentLocation(
-  accuracy?: number
-): Promise<LocationData | null> {
+export async function getCurrentLocation(accuracy?: number): Promise<LocationData | null> {
   const Location = await getLocationModule();
   const hasPermission = await requestLocationPermission();
 
   if (!hasPermission) {
-    throw new Error('Permissão de localização não concedida');
+    throw new Error("Permissão de localização não concedida");
   }
 
   try {
-    const location = await Location.getCurrentPositionAsync({ 
-      accuracy: accuracy ?? Location.LocationAccuracy.BestForNavigation 
+    const location = await Location.getCurrentPositionAsync({
+      accuracy: accuracy ?? Location.LocationAccuracy.BestForNavigation,
     });
 
     return {
@@ -67,8 +65,8 @@ export async function getCurrentLocation(
       timestamp: location.timestamp,
     };
   } catch (error) {
-    console.error('Error getting current location:', error);
-    throw new Error('Não foi possível obter a localização');
+    console.error("Error getting current location:", error);
+    throw new Error("Não foi possível obter a localização");
   }
 }
 
@@ -76,12 +74,7 @@ export async function getCurrentLocation(
  * Calcula a distância entre duas coordenadas em metros
  * Usa a fórmula de Haversine para cálculo preciso
  */
-export function calculateDistance(
-  lat1: number,
-  lon1: number,
-  lat2: number,
-  lon2: number
-): number {
+export function calculateDistance(lat1: number, lon1: number, lat2: number, lon2: number): number {
   const R = 6371e3; // Raio da Terra em metros
   const φ1 = (lat1 * Math.PI) / 180;
   const φ2 = (lat2 * Math.PI) / 180;
@@ -106,13 +99,13 @@ export function calculateDistance(
 export function isWithinRadius(
   userLocation: LocationData,
   targetLocation: { latitude: number; longitude: number },
-  radiusInMeters: number = 100
+  radiusInMeters: number = 100,
 ): boolean {
   const distance = calculateDistance(
     userLocation.latitude,
     userLocation.longitude,
     targetLocation.latitude,
-    targetLocation.longitude
+    targetLocation.longitude,
   );
 
   return distance <= radiusInMeters;
@@ -129,10 +122,7 @@ export function formatCoordinates(location: LocationData): string {
  * Obtém o endereço reverso (requer API de geocoding)
  * @deprecated Use um serviço de geocoding como Google Maps API
  */
-export async function reverseGeocode(
-  latitude: number,
-  longitude: number
-): Promise<string | null> {
+export async function reverseGeocode(latitude: number, longitude: number): Promise<string | null> {
   // Em produção, integrar com Google Maps Geocoding API
   // Por enquanto, retorna as coordenadas formatadas
   return `${latitude.toFixed(6)}, ${longitude.toFixed(6)}`;

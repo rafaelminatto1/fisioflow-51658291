@@ -48,13 +48,13 @@ export { useAvailableTimeSlots } from "../useAvailableTimeSlots";
 
 // Hooks de calendário (do subdiretório calendar/)
 export {
-	useAppointmentGroups,
-	useDayAppointments,
-	useAppointmentOverlap,
+  useAppointmentGroups,
+  useDayAppointments,
+  useAppointmentOverlap,
 } from "../calendar/useAppointmentGroups";
 export {
-	useAppointmentPositioning,
-	useAppointmentPositions,
+  useAppointmentPositioning,
+  useAppointmentPositions,
 } from "../calendar/useAppointmentPositioning";
 
 // ============================================================================
@@ -62,14 +62,14 @@ export {
 // ============================================================================
 
 export {
-	useRecurringSeries,
-	useRecurringSeriesById,
-	useSeriesOccurrences,
-	useCreateRecurringSeries,
-	useUpdateRecurringSeries,
-	useCancelRecurringSeries,
-	useCancelOccurrence,
-	useModifyOccurrence,
+  useRecurringSeries,
+  useRecurringSeriesById,
+  useSeriesOccurrences,
+  useCreateRecurringSeries,
+  useUpdateRecurringSeries,
+  useCancelRecurringSeries,
+  useCancelOccurrence,
+  useModifyOccurrence,
 } from "../useRecurringAppointments";
 
 // ============================================================================
@@ -89,15 +89,15 @@ export { useAppointmentOptimistic } from "../appointmentOptimistic";
 // ============================================================================
 
 export {
-	useWaitlist,
-	useWaitlistCounts,
-	useAddToWaitlist,
-	useRemoveFromWaitlist,
-	useOfferSlot,
-	useAcceptOffer,
-	useRejectOffer,
-	useUpdatePriority,
-	useWaitlistOffers,
+  useWaitlist,
+  useWaitlistCounts,
+  useAddToWaitlist,
+  useRemoveFromWaitlist,
+  useOfferSlot,
+  useAcceptOffer,
+  useRejectOffer,
+  useUpdatePriority,
+  useWaitlistOffers,
 } from "../useWaitlist";
 
 // ============================================================================
@@ -105,8 +105,4 @@ export {
 // ============================================================================
 
 // Re-exportar tipos relevantes se necessário
-export type {
-	Appointment,
-	AppointmentStatus,
-	AppointmentUnified,
-} from "@/types";
+export type { Appointment, AppointmentStatus, AppointmentUnified } from "@/types";

@@ -169,7 +169,22 @@ function addHeader(slide, title, subtitle) {
   addLogo(slide);
 }
 
-function addCard(slide, { x, y, w, h, title, body, fill = COLORS.white, titleColor = COLORS.navy, bodyColor = COLORS.slate, line = COLORS.border, hyperlink }) {
+function addCard(
+  slide,
+  {
+    x,
+    y,
+    w,
+    h,
+    title,
+    body,
+    fill = COLORS.white,
+    titleColor = COLORS.navy,
+    bodyColor = COLORS.slate,
+    line = COLORS.border,
+    hyperlink,
+  },
+) {
   slide.addText("", {
     x,
     y,
@@ -270,7 +285,10 @@ function addVideoSlide(slide, { kicker, title, source, date, why, embed, url }) 
     text: "Abrir video",
     url,
   });
-  addFooter(slide, "Videos online funcionam melhor no PowerPoint conectado a internet. Se o embed nao abrir no seu visualizador, use o botao.");
+  addFooter(
+    slide,
+    "Videos online funcionam melhor no PowerPoint conectado a internet. Se o embed nao abrir no seu visualizador, use o botao.",
+  );
 }
 
 function buildSlides(pptx) {
@@ -299,17 +317,20 @@ function buildSlides(pptx) {
     margin: 0,
     fit: "shrink",
   });
-  slide.addText("Tese central: engajamento do paciente no app pode gerar mais adesao, menos evasao, mais reativacao e mais receita por paciente para a clinica.", {
-    x: 0.72,
-    y: 3.55,
-    w: 5.15,
-    h: 1.0,
-    fontFace: "Aptos",
-    fontSize: 14,
-    color: "E2E8F0",
-    margin: 0,
-    fit: "shrink",
-  });
+  slide.addText(
+    "Tese central: engajamento do paciente no app pode gerar mais adesao, menos evasao, mais reativacao e mais receita por paciente para a clinica.",
+    {
+      x: 0.72,
+      y: 3.55,
+      w: 5.15,
+      h: 1.0,
+      fontFace: "Aptos",
+      fontSize: 14,
+      color: "E2E8F0",
+      margin: 0,
+      fit: "shrink",
+    },
+  );
   addCard(slide, {
     x: 7.1,
     y: 1.18,
@@ -339,7 +360,10 @@ function buildSlides(pptx) {
     margin: 0,
   });
   addLogo(slide, { x: 11.0, y: 0.45, w: 1.75, h: 0.62 });
-  addFooter(slide, "Apresentacao executiva para diretoria clinica | foco em valor economico e continuidade de cuidado");
+  addFooter(
+    slide,
+    "Apresentacao executiva para diretoria clinica | foco em valor economico e continuidade de cuidado",
+  );
 
   slide = pptx.addSlide();
   addBg(slide);
@@ -387,7 +411,10 @@ function buildSlides(pptx) {
     fill: COLORS.softCyan,
     line: "A5F3FC",
   });
-  addFooter(slide, "Tese: o pos-alta e o ponto onde a clinica mais perde valor e onde o FisioFlow mais pode gerar retorno.");
+  addFooter(
+    slide,
+    "Tese: o pos-alta e o ponto onde a clinica mais perde valor e onde o FisioFlow mais pode gerar retorno.",
+  );
 
   slide = pptx.addSlide();
   addBg(slide);
@@ -430,7 +457,10 @@ function buildSlides(pptx) {
     fill: COLORS.softBlue,
     line: "BFDBFE",
   });
-  addFooter(slide, "Leitura executiva: a estrutura principal ja existe; falta transformar uso em modelo claro de continuidade e monetizacao.");
+  addFooter(
+    slide,
+    "Leitura executiva: a estrutura principal ja existe; falta transformar uso em modelo claro de continuidade e monetizacao.",
+  );
 
   slide = pptx.addSlide();
   addBg(slide);
@@ -457,19 +487,25 @@ function buildSlides(pptx) {
       line: index === 5 ? "86EFAC" : COLORS.border,
     });
   });
-  slide.addText("Formula simples para apresentar: Engajamento digital -> mais adesao -> melhor resultado percebido -> mais retencao -> mais reativacao -> mais receita por paciente", {
-    x: 0.8,
-    y: 6.55,
-    w: 11.8,
-    h: 0.35,
-    fontFace: "Aptos",
-    fontSize: 11,
-    bold: true,
-    color: COLORS.blue,
-    margin: 0,
-    fit: "shrink",
-  });
-  addFooter(slide, "O app nao deve ser medido apenas por uso. Deve ser medido pelo impacto em adesao, retencao e conversao.");
+  slide.addText(
+    "Formula simples para apresentar: Engajamento digital -> mais adesao -> melhor resultado percebido -> mais retencao -> mais reativacao -> mais receita por paciente",
+    {
+      x: 0.8,
+      y: 6.55,
+      w: 11.8,
+      h: 0.35,
+      fontFace: "Aptos",
+      fontSize: 11,
+      bold: true,
+      color: COLORS.blue,
+      margin: 0,
+      fit: "shrink",
+    },
+  );
+  addFooter(
+    slide,
+    "O app nao deve ser medido apenas por uso. Deve ser medido pelo impacto em adesao, retencao e conversao.",
+  );
 
   slide = pptx.addSlide();
   addBg(slide);
@@ -521,18 +557,24 @@ function buildSlides(pptx) {
     fill: COLORS.softCyan,
     line: "A5F3FC",
   });
-  slide.addText("Complementos de receita: pilates clinico, reavaliacao trimestral, programas preventivos de coluna/joelho/ombro, grupos de educacao em dor e servicos corporativos.", {
-    x: 0.75,
-    y: 6.52,
-    w: 12.0,
-    h: 0.35,
-    fontFace: "Aptos",
-    fontSize: 10.5,
-    color: COLORS.slate,
-    margin: 0,
-    fit: "shrink",
-  });
-  addFooter(slide, "O principal erro seria oferecer apenas o app. O correto e oferecer programas pos-alta com nome, preco e entrega.");
+  slide.addText(
+    "Complementos de receita: pilates clinico, reavaliacao trimestral, programas preventivos de coluna/joelho/ombro, grupos de educacao em dor e servicos corporativos.",
+    {
+      x: 0.75,
+      y: 6.52,
+      w: 12.0,
+      h: 0.35,
+      fontFace: "Aptos",
+      fontSize: 10.5,
+      color: COLORS.slate,
+      margin: 0,
+      fit: "shrink",
+    },
+  );
+  addFooter(
+    slide,
+    "O principal erro seria oferecer apenas o app. O correto e oferecer programas pos-alta com nome, preco e entrega.",
+  );
 
   slide = pptx.addSlide();
   addBg(slide);
@@ -569,7 +611,10 @@ function buildSlides(pptx) {
     fill: COLORS.softGreen,
     line: "86EFAC",
   });
-  addFooter(slide, "A recomendacao e testar pequeno, provar retorno e so depois escalar para toda a clinica.");
+  addFooter(
+    slide,
+    "A recomendacao e testar pequeno, provar retorno e so depois escalar para toda a clinica.",
+  );
 
   slide = pptx.addSlide();
   addVideoSlide(slide, {
@@ -636,7 +681,10 @@ function buildSlides(pptx) {
     text: "Abrir MedBridge",
     url: VIDEO_RESOURCES.medbridge.url,
   });
-  addFooter(slide, "Estes videos nao sao do FisioFlow. Eles servem como referencia visual de categoria para a diretoria.");
+  addFooter(
+    slide,
+    "Estes videos nao sao do FisioFlow. Eles servem como referencia visual de categoria para a diretoria.",
+  );
 
   slide = pptx.addSlide();
   addBg(slide);
@@ -687,19 +735,25 @@ function buildSlides(pptx) {
     text: "Abrir ATA",
     url: WEBINAR_LINKS[1].url,
   });
-  slide.addText("Mensagem final: o valor economico do FisioFlow cresce quando o app se torna ponte entre adesao, continuidade de cuidado, reativacao e venda de outros servicos da clinica.", {
-    x: 0.92,
-    y: 6.35,
-    w: 11.45,
-    h: 0.38,
-    fontFace: "Aptos",
-    fontSize: 11.5,
-    bold: true,
-    color: COLORS.blue,
-    margin: 0,
-    fit: "shrink",
-  });
-  addFooter(slide, "Deck gerado automaticamente a partir da analise do app profissional, app do paciente e referencias pesquisadas com Exa.");
+  slide.addText(
+    "Mensagem final: o valor economico do FisioFlow cresce quando o app se torna ponte entre adesao, continuidade de cuidado, reativacao e venda de outros servicos da clinica.",
+    {
+      x: 0.92,
+      y: 6.35,
+      w: 11.45,
+      h: 0.38,
+      fontFace: "Aptos",
+      fontSize: 11.5,
+      bold: true,
+      color: COLORS.blue,
+      margin: 0,
+      fit: "shrink",
+    },
+  );
+  addFooter(
+    slide,
+    "Deck gerado automaticamente a partir da analise do app profissional, app do paciente e referencias pesquisadas com Exa.",
+  );
 }
 
 async function main() {

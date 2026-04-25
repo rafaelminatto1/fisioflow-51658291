@@ -9,9 +9,7 @@
     },
     "shadcn": {
       "command": "node_modules/.bin/shadcn",
-      "args": [
-        "mcp"
-      ]
+      "args": ["mcp"]
     },
     "stripe": {
       "httpUrl": "https://mcp.stripe.com/mcp"
@@ -31,10 +29,7 @@
     },
     "playwright": {
       "command": "npx",
-      "args": [
-        "-y",
-        "@playwright/mcp@latest"
-      ],
+      "args": ["-y", "@playwright/mcp@latest"],
       "description": "Playwright MCP for browser automation and E2E testing"
     },
     "expo-mcp": {
@@ -48,9 +43,7 @@
     },
     "chrome-devtools": {
       "command": "npx",
-      "args": [
-        "chrome-devtools-mcp@latest"
-      ]
+      "args": ["chrome-devtools-mcp@latest"]
     },
     "pubmed": {
       "url": "https://server.smithery.ai/pubmed/mcp",

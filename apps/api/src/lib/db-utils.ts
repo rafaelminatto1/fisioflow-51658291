@@ -28,10 +28,10 @@ export function withTenant<T extends { organizationId?: any; deletedAt?: any }>(
   ...extraConditions: (SQL | undefined)[]
 ): SQL {
   const conditions: SQL[] = [];
-  if ('organizationId' in table) {
+  if ("organizationId" in table) {
     conditions.push(eq(table.organizationId, orgId));
   }
-  if ('deletedAt' in table) {
+  if ("deletedAt" in table) {
     conditions.push(isNull(table.deletedAt));
   }
   const validExtraConditions = extraConditions.filter((c): c is SQL => c !== undefined);

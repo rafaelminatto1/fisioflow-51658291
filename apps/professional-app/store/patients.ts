@@ -1,5 +1,5 @@
-import { create } from 'zustand';
-import type { Patient } from '@/types';
+import { create } from "zustand";
+import type { Patient } from "@/types";
 
 interface PatientsState {
   patients: Patient[];
@@ -24,13 +24,12 @@ export const usePatientsStore = create<PatientsState>((set, get) => ({
   setError: (error) => set({ error }),
   clearError: () => set({ error: null }),
 
-  addPatient: (patient) =>
-    set((state) => ({ patients: [...state.patients, patient] })),
+  addPatient: (patient) => set((state) => ({ patients: [...state.patients, patient] })),
 
   updatePatient: (id, data) =>
     set((state) => ({
       patients: state.patients.map((patient) =>
-        patient.id === id ? { ...patient, ...data } : patient
+        patient.id === id ? { ...patient, ...data } : patient,
       ),
     })),
 

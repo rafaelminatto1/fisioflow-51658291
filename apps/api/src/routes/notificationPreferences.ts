@@ -4,10 +4,10 @@
  * GET    /api/notification-preferences
  * PUT    /api/notification-preferences
  */
-import { Hono } from 'hono';
-import { createPool } from '../lib/db';
-import { requireAuth, type AuthVariables } from '../lib/auth';
-import type { Env } from '../types/env';
+import { Hono } from "hono";
+import { createPool } from "../lib/db";
+import { requireAuth, type AuthVariables } from "../lib/auth";
+import type { Env } from "../types/env";
 
 const app = new Hono<{ Bindings: Env; Variables: AuthVariables }>();
 type Pool = ReturnType<typeof createPool>;
@@ -69,21 +69,20 @@ const DEFAULT_PREFS = {
   system_alerts: true,
   therapist_messages: true,
   payment_reminders: true,
-  quiet_hours_start: '22:00',
-  quiet_hours_end: '08:00',
+  quiet_hours_start: "22:00",
+  quiet_hours_end: "08:00",
   weekend_notifications: false,
 };
 
-app.get('/', requireAuth, async (c) => {
-  const user = c.get('user');
+app.get("/", requireAuth, async (c) => {
+  const user = c.get("user");
   const pool = await createPool(c.env);
   try {
     await ensureNotificationPreferencesSchema(pool);
 
-    const result = await pool.query(
-      'SELECT * FROM notification_preferences WHERE user_id = $1',
-      [user.uid],
-    );
+    const result = await pool.query("SELECT * FROM notification_preferences WHERE user_id = $1", [
+      user.uid,
+    ]);
 
     if (!result.rows.length) {
       const fallback = {
@@ -98,13 +97,13 @@ app.get('/', requireAuth, async (c) => {
 
     return c.json({ data: result.rows[0] });
   } catch (error) {
-    console.error('[NotificationPreferences/Get] Error:', error);
-    return c.json({ error: 'Erro ao carregar preferências de notificação' }, 500);
+    console.error("[NotificationPreferences/Get] Error:", error);
+    return c.json({ error: "Erro ao carregar preferências de notificação" }, 500);
   }
 });
 
-app.put('/', requireAuth, async (c) => {
-  const user = c.get('user');
+app.put("/", requireAuth, async (c) => {
+  const user = c.get("user");
   const pool = await createPool(c.env);
   try {
     await ensureNotificationPreferencesSchema(pool);
@@ -112,33 +111,31 @@ app.put('/', requireAuth, async (c) => {
 
     const prefs = {
       appointment_reminders:
-        typeof body.appointment_reminders === 'boolean'
+        typeof body.appointment_reminders === "boolean"
           ? body.appointment_reminders
           : DEFAULT_PREFS.appointment_reminders,
       exercise_reminders:
-        typeof body.exercise_reminders === 'boolean'
+        typeof body.exercise_reminders === "boolean"
           ? body.exercise_reminders
           : DEFAULT_PREFS.exercise_reminders,
       progress_updates:
-        typeof body.progress_updates === 'boolean'
+        typeof body.progress_updates === "boolean"
           ? body.progress_updates
           : DEFAULT_PREFS.progress_updates,
       system_alerts:
-        typeof body.system_alerts === 'boolean'
-          ? body.system_alerts
-          : DEFAULT_PREFS.system_alerts,
+        typeof body.system_alerts === "boolean" ? body.system_alerts : DEFAULT_PREFS.system_alerts,
       therapist_messages:
-        typeof body.therapist_messages === 'boolean'
+        typeof body.therapist_messages === "boolean"
           ? body.therapist_messages
           : DEFAULT_PREFS.therapist_messages,
       payment_reminders:
-        typeof body.payment_reminders === 'boolean'
+        typeof body.payment_reminders === "boolean"
           ? body.payment_reminders
           : DEFAULT_PREFS.payment_reminders,
       quiet_hours_start: String(body.quiet_hours_start ?? DEFAULT_PREFS.quiet_hours_start),
       quiet_hours_end: String(body.quiet_hours_end ?? DEFAULT_PREFS.quiet_hours_end),
       weekend_notifications:
-        typeof body.weekend_notifications === 'boolean'
+        typeof body.weekend_notifications === "boolean"
           ? body.weekend_notifications
           : DEFAULT_PREFS.weekend_notifications,
     };
@@ -188,8 +185,8 @@ app.put('/', requireAuth, async (c) => {
 
     return c.json({ data: result.rows[0] });
   } catch (error) {
-    console.error('[NotificationPreferences/Put] Error:', error);
-    return c.json({ error: 'Erro ao salvar preferências de notificação' }, 500);
+    console.error("[NotificationPreferences/Put] Error:", error);
+    return c.json({ error: "Erro ao salvar preferências de notificação" }, 500);
   }
 });
 

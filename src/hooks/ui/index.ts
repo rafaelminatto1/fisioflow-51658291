@@ -70,31 +70,23 @@ export { useToast, toast } from "../use-toast";
 // ============================================================================
 
 export { useMainContentProps } from "../accessibility/useMainContentProps";
-export {
-	useFocusVisibleHandler,
-	useFocusClassName,
-} from "../accessibility/useFocusVisibleHandler";
+export { useFocusVisibleHandler, useFocusClassName } from "../accessibility/useFocusVisibleHandler";
 
 // ============================================================================
 // Performance Hooks (from root hooks)
 // ============================================================================
 
 // Hook de throttle
-export {
-	useThrottle,
-	useThrottleFn,
-	useThrottleCallback,
-	useRAFThrottle,
-} from "../useThrottle";
+export { useThrottle, useThrottleFn, useThrottleCallback, useRAFThrottle } from "../useThrottle";
 
 // Hook de intersection observer
 export {
-	useIntersectionObserver,
-	useIntersectionObserverCallback,
-	useMultipleIntersectionObserver,
-	useVisibilityRatio,
-	useInfiniteScroll,
-	useOnScreenExit,
+  useIntersectionObserver,
+  useIntersectionObserverCallback,
+  useMultipleIntersectionObserver,
+  useVisibilityRatio,
+  useInfiniteScroll,
+  useOnScreenExit,
 } from "../useIntersectionObserver";
 
 // Hook de interval e timeout

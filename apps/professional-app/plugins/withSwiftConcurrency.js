@@ -5,26 +5,23 @@
  *
  * Appenda um segundo post_install block — CocoaPods executa todos em sequência.
  */
-const { withDangerousMod } = require('@expo/config-plugins');
-const fs = require('fs');
-const path = require('path');
+const { withDangerousMod } = require("@expo/config-plugins");
+const fs = require("fs");
+const path = require("path");
 
 module.exports = function withSwiftConcurrency(config) {
   return withDangerousMod(config, [
-    'ios',
+    "ios",
     (config) => {
-      const podfilePath = path.join(
-        config.modRequest.platformProjectRoot,
-        'Podfile'
-      );
+      const podfilePath = path.join(config.modRequest.platformProjectRoot, "Podfile");
 
       if (!fs.existsSync(podfilePath)) {
         return config;
       }
 
-      let podfile = fs.readFileSync(podfilePath, 'utf8');
+      let podfile = fs.readFileSync(podfilePath, "utf8");
 
-      if (podfile.includes('SWIFT_STRICT_CONCURRENCY')) {
+      if (podfile.includes("SWIFT_STRICT_CONCURRENCY")) {
         // Já aplicado — nada a fazer
         return config;
       }

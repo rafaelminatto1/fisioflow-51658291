@@ -1,23 +1,23 @@
-import React from 'react';
-import { View, StyleSheet, type StyleProp, type ViewStyle } from 'react-native';
-import { useColors } from '@/hooks/useColorScheme';
+import React from "react";
+import { View, StyleSheet, type StyleProp, type ViewStyle } from "react-native";
+import { useColors } from "@/hooks/useColorScheme";
 
 interface CardProps {
   children: React.ReactNode;
   style?: StyleProp<ViewStyle>;
-  padding?: 'none' | 'sm' | 'md' | 'lg';
+  padding?: "none" | "sm" | "md" | "lg";
 }
 
-export function Card({ children, style, padding = 'md' }: CardProps) {
+export function Card({ children, style, padding = "md" }: CardProps) {
   const colors = useColors();
 
   const getPadding = () => {
     switch (padding) {
-      case 'none':
+      case "none":
         return 0;
-      case 'sm':
+      case "sm":
         return 12;
-      case 'lg':
+      case "lg":
         return 24;
       default:
         return 16;
@@ -45,7 +45,7 @@ const styles = StyleSheet.create({
   card: {
     borderRadius: 16,
     borderWidth: 1,
-    shadowColor: '#000',
+    shadowColor: "#000",
     shadowOffset: { width: 0, height: 8 },
     shadowOpacity: 0.05,
     shadowRadius: 16,

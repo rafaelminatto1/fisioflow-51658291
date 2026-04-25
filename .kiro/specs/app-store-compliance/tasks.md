@@ -7,6 +7,7 @@ This implementation plan breaks down the app-store-compliance feature into actio
 **Technology Stack**: React Native + Expo + Firebase/Firestore (NOT React/Vite/Supabase)
 
 The implementation follows a phased approach:
+
 - Phase 1: Legal Foundation (privacy policy, terms, disclaimers, permissions)
 - Phase 2: Security & Data Protection (encryption, biometric auth, HealthKit cleanup)
 - Phase 3: User Control & Transparency (consent, export, deletion, notifications)
@@ -279,4 +280,5 @@ All tasks reference specific requirements from requirements.md and implement cor
 - [x] 55. Checkpoint - Verify Phase 5 completion
 
 ### Final Submission
+
 - [ ] 56. Build and submit to App Store

@@ -1,12 +1,12 @@
-import * as LocalAuthentication from 'expo-local-authentication';
-import * as SecureStore from 'expo-secure-store';
-import { Platform } from 'react-native';
-import { auditLogger } from './auditLogger';
-import { fetchApi } from '@/lib/api';
+import * as LocalAuthentication from "expo-local-authentication";
+import * as SecureStore from "expo-secure-store";
+import { Platform } from "react-native";
+import { auditLogger } from "./auditLogger";
+import { fetchApi } from "@/lib/api";
 
-const BIOMETRIC_KEY = 'fisioflow_biometric_enabled';
-const PIN_KEY = 'fisioflow_fallback_pin';
-const DEVICE_ID_KEY = 'fisioflow_device_id';
+const BIOMETRIC_KEY = "fisioflow_biometric_enabled";
+const PIN_KEY = "fisioflow_fallback_pin";
+const DEVICE_ID_KEY = "fisioflow_device_id";
 
 export interface BiometricConfig {
   isEnabled: boolean;
@@ -16,7 +16,7 @@ export interface BiometricConfig {
 
 class BiometricAuthService {
   private static instance: BiometricAuthService;
-  
+
   private constructor() {}
 
   static getInstance(): BiometricAuthService {
@@ -40,21 +40,21 @@ class BiometricAuthService {
    */
   async getConfig(userId: string): Promise<BiometricConfig> {
     try {
-      const isEnabled = await SecureStore.getItemAsync(`${BIOMETRIC_KEY}_${userId}`) === 'true';
+      const isEnabled = (await SecureStore.getItemAsync(`${BIOMETRIC_KEY}_${userId}`)) === "true";
       const hasPin = !!(await SecureStore.getItemAsync(`${PIN_KEY}_${userId}`));
       const types = await LocalAuthentication.supportedAuthenticationTypesAsync();
 
       return {
         isEnabled,
         type: types,
-        hasFallbackPin: hasPin
+        hasFallbackPin: hasPin,
       };
     } catch (error) {
-      console.error('Error getting biometric config:', error);
+      console.error("Error getting biometric config:", error);
       return {
         isEnabled: false,
         type: [],
-        hasFallbackPin: false
+        hasFallbackPin: false,
       };
     }
   }
@@ -66,13 +66,13 @@ class BiometricAuthService {
     try {
       const isSupported = await this.checkHardwareSupport();
       if (!isSupported) {
-        throw new Error('Biometrics not supported or not configured on device');
+        throw new Error("Biometrics not supported or not configured on device");
       }
 
       // Authenticate to verify user
       const result = await LocalAuthentication.authenticateAsync({
-        promptMessage: 'Confirme sua identidade para habilitar a biometria',
-        cancelLabel: 'Cancelar',
+        promptMessage: "Confirme sua identidade para habilitar a biometria",
+        cancelLabel: "Cancelar",
         disableDeviceFallback: true,
       });
 
@@ -81,7 +81,7 @@ class BiometricAuthService {
       }
 
       // Save to secure store
-      await SecureStore.setItemAsync(`${BIOMETRIC_KEY}_${userId}`, 'true');
+      await SecureStore.setItemAsync(`${BIOMETRIC_KEY}_${userId}`, "true");
       if (pin) {
         await SecureStore.setItemAsync(`${PIN_KEY}_${userId}`, pin);
       }
@@ -94,30 +94,30 @@ class BiometricAuthService {
       }
 
       // Save to API
-      await fetchApi('/api/settings/security', {
-          method: 'POST',
-          data: {
-            userId,
-            device: {
-              id: deviceId,
-              platform: Platform.OS,
-              addedAt: new Date().toISOString()
-            },
-            biometricsEnabled: true
-          }
-      }).catch(err => console.log('Failed to save biometric settings to server', err));
+      await fetchApi("/api/settings/security", {
+        method: "POST",
+        data: {
+          userId,
+          device: {
+            id: deviceId,
+            platform: Platform.OS,
+            addedAt: new Date().toISOString(),
+          },
+          biometricsEnabled: true,
+        },
+      }).catch((err) => console.log("Failed to save biometric settings to server", err));
 
       // Audit log
       await auditLogger.logEvent({
         userId,
-        action: 'update',
-        resourceType: 'biometrics',
-        details: { action: 'enabled' }
+        action: "update",
+        resourceType: "biometrics",
+        details: { action: "enabled" },
       });
 
       return true;
     } catch (error) {
-      console.error('Error enabling biometrics:', error);
+      console.error("Error enabling biometrics:", error);
       return false;
     }
   }
@@ -134,21 +134,21 @@ class BiometricAuthService {
 
       // Remove from API
       if (deviceId) {
-          await fetchApi(`/api/settings/security/device/${deviceId}`, {
-              method: 'DELETE',
-              data: { userId }
-          }).catch(err => console.log('Failed to remove biometric device from server', err));
+        await fetchApi(`/api/settings/security/device/${deviceId}`, {
+          method: "DELETE",
+          data: { userId },
+        }).catch((err) => console.log("Failed to remove biometric device from server", err));
       }
 
       // Audit log
       await auditLogger.logEvent({
         userId,
-        action: 'update',
-        resourceType: 'biometrics',
-        details: { action: 'disabled' }
+        action: "update",
+        resourceType: "biometrics",
+        details: { action: "disabled" },
       });
     } catch (error) {
-      console.error('Error disabling biometrics:', error);
+      console.error("Error disabling biometrics:", error);
       throw error;
     }
   }
@@ -156,29 +156,32 @@ class BiometricAuthService {
   /**
    * Authenticate using biometrics
    */
-  async authenticate(userId: string, reason: string = 'Confirmar acesso'): Promise<boolean> {
+  async authenticate(userId: string, reason: string = "Confirmar acesso"): Promise<boolean> {
     try {
-      const isEnabled = await SecureStore.getItemAsync(`${BIOMETRIC_KEY}_${userId}`) === 'true';
+      const isEnabled = (await SecureStore.getItemAsync(`${BIOMETRIC_KEY}_${userId}`)) === "true";
       if (!isEnabled) {
         return false;
       }
 
       const result = await LocalAuthentication.authenticateAsync({
         promptMessage: reason,
-        cancelLabel: 'Usar PIN',
-        fallbackLabel: 'Usar PIN',
+        cancelLabel: "Usar PIN",
+        fallbackLabel: "Usar PIN",
       });
 
       if (result.success) {
         // Log access if reason implies PHI
-        if (reason.toLowerCase().includes('prontuário') || reason.toLowerCase().includes('paciente')) {
-           // We might need to pass resourceId to logPHIAccess appropriately
+        if (
+          reason.toLowerCase().includes("prontuário") ||
+          reason.toLowerCase().includes("paciente")
+        ) {
+          // We might need to pass resourceId to logPHIAccess appropriately
         }
       }
 
       return result.success;
     } catch (error) {
-      console.error('Error authenticating:', error);
+      console.error("Error authenticating:", error);
       return false;
     }
   }
@@ -191,7 +194,7 @@ class BiometricAuthService {
       const savedPin = await SecureStore.getItemAsync(`${PIN_KEY}_${userId}`);
       return savedPin === pin;
     } catch (error) {
-      console.error('Error verifying PIN:', error);
+      console.error("Error verifying PIN:", error);
       return false;
     }
   }

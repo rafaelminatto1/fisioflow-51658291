@@ -1,6 +1,6 @@
 /**
  * Analysis Engine - Motor de Análise Biomecânica (Mobile)
- * 
+ *
  * Portado e adaptado do Web App.
  * Calcula ângulos, detecta problemas posturais e gera métricas.
  */
@@ -16,8 +16,8 @@ import {
   ExerciseType,
   ExerciseTemplate,
   getExerciseTemplate,
-} from '../../types/pose';
-import { calculateAngle } from './geometry';
+} from "../../types/pose";
+import { calculateAngle } from "./geometry";
 
 const DEFAULT_CONFIG = {
   visibilityThreshold: 0.5,
@@ -81,7 +81,6 @@ export class AnalysisEngine {
     const formScore = this.calculateFormScore(jointAnglesMap, postureIssues);
 
     // Detectar orientação
-    
 
     // Calcular estabilidade
     const stabilityScore = this.calculateStability(jointAnglesMap);
@@ -125,10 +124,13 @@ export class AnalysisEngine {
       return {
         x: lm.x * (1 - DEFAULT_CONFIG.smoothingFactor) + prev.x * DEFAULT_CONFIG.smoothingFactor,
         y: lm.y * (1 - DEFAULT_CONFIG.smoothingFactor) + prev.y * DEFAULT_CONFIG.smoothingFactor,
-        z: lm.z !== undefined && prev.z !== undefined 
-           ? lm.z * (1 - DEFAULT_CONFIG.smoothingFactor) + prev.z * DEFAULT_CONFIG.smoothingFactor 
-           : lm.z,
-        visibility: lm.visibility * (1 - DEFAULT_CONFIG.smoothingFactor) + prev.visibility * DEFAULT_CONFIG.smoothingFactor,
+        z:
+          lm.z !== undefined && prev.z !== undefined
+            ? lm.z * (1 - DEFAULT_CONFIG.smoothingFactor) + prev.z * DEFAULT_CONFIG.smoothingFactor
+            : lm.z,
+        visibility:
+          lm.visibility * (1 - DEFAULT_CONFIG.smoothingFactor) +
+          prev.visibility * DEFAULT_CONFIG.smoothingFactor,
       };
     });
   }
@@ -141,11 +143,14 @@ export class AnalysisEngine {
       const a = landmarks[triad.a];
       const b = landmarks[triad.b];
 
-      if (pivot && a && b &&
-          pivot.visibility > DEFAULT_CONFIG.visibilityThreshold &&
-          a.visibility > DEFAULT_CONFIG.visibilityThreshold &&
-          b.visibility > DEFAULT_CONFIG.visibilityThreshold) {
-
+      if (
+        pivot &&
+        a &&
+        b &&
+        pivot.visibility > DEFAULT_CONFIG.visibilityThreshold &&
+        a.visibility > DEFAULT_CONFIG.visibilityThreshold &&
+        b.visibility > DEFAULT_CONFIG.visibilityThreshold
+      ) {
         const angle = calculateAngle(a, pivot, b);
         const jointName = this.getJointNameByPivot(triad.pivot);
 
@@ -164,9 +169,12 @@ export class AnalysisEngine {
     return angles;
   }
 
-  private detectPostureIssues(landmarks: PoseLandmark[], _angles: Map<MainJoint, any>): PostureIssue[] {
+  private detectPostureIssues(
+    landmarks: PoseLandmark[],
+    _angles: Map<MainJoint, any>,
+  ): PostureIssue[] {
     const issues: PostureIssue[] = [];
-    
+
     // Alinhamento cabeça-ombros
     const nose = landmarks[0];
     const leftShoulder = landmarks[11];
@@ -179,9 +187,9 @@ export class AnalysisEngine {
         issues.push({
           type: PostureIssueType.HEAD_FORWARD,
           severity: SeverityLevel.MODERATE,
-          description: 'Cabeça desalinhada',
-          suggestion: 'Mantenha o olhar para frente',
-          scoreImpact: 15
+          description: "Cabeça desalinhada",
+          suggestion: "Mantenha o olhar para frente",
+          scoreImpact: 15,
         });
       }
     }
@@ -192,9 +200,9 @@ export class AnalysisEngine {
         issues.push({
           type: PostureIssueType.SHOULDERS_ASYMMETRICAL,
           severity: SeverityLevel.MILD,
-          description: 'Ombros desalinhados',
-          suggestion: 'Tente nivelar os ombros',
-          scoreImpact: 5
+          description: "Ombros desalinhados",
+          suggestion: "Tente nivelar os ombros",
+          scoreImpact: 5,
         });
       }
     }
@@ -223,33 +231,41 @@ export class AnalysisEngine {
     // Atualizar histórico...
   }
 
-  private detectOrientation(landmarks: PoseLandmark[]): 'FRONT' | 'SIDE_LEFT' | 'SIDE_RIGHT' | 'BACK' {
+  private detectOrientation(
+    landmarks: PoseLandmark[],
+  ): "FRONT" | "SIDE_LEFT" | "SIDE_RIGHT" | "BACK" {
     const leftShoulder = landmarks[11];
     const rightShoulder = landmarks[12];
     const leftHip = landmarks[23];
     const rightHip = landmarks[24];
     const nose = landmarks[0];
 
-    if (!leftShoulder || !rightShoulder || !leftHip || !rightHip) return 'FRONT';
+    if (!leftShoulder || !rightShoulder || !leftHip || !rightHip) return "FRONT";
 
     const shoulderWidth = Math.abs(leftShoulder.x - rightShoulder.x);
-    const trunkHeight = Math.abs((leftShoulder.y + rightShoulder.y) / 2 - (leftHip.y + rightHip.y) / 2);
+    const trunkHeight = Math.abs(
+      (leftShoulder.y + rightShoulder.y) / 2 - (leftHip.y + rightHip.y) / 2,
+    );
     const ratio = shoulderWidth / trunkHeight;
 
     if (ratio < 0.25) {
-      if (nose && nose.x < leftShoulder.x) return 'SIDE_LEFT';
-      return 'SIDE_RIGHT';
+      if (nose && nose.x < leftShoulder.x) return "SIDE_LEFT";
+      return "SIDE_RIGHT";
     }
 
     if (nose && nose.z !== undefined && leftShoulder.z !== undefined) {
-       if (nose.z > leftShoulder.z) return 'BACK';
+      if (nose.z > leftShoulder.z) return "BACK";
     }
 
-    return 'FRONT';
+    return "FRONT";
   }
 
-  private getMinFromHistory(_pivot: number): number { return 180; }
-  private getMaxFromHistory(_pivot: number): number { return 0; }
+  private getMinFromHistory(_pivot: number): number {
+    return 180;
+  }
+  private getMaxFromHistory(_pivot: number): number {
+    return 0;
+  }
 
   private getJointNameByPivot(pivot: number): MainJoint {
     if (pivot === 23) return MainJoint.LEFT_HIP;
@@ -261,12 +277,21 @@ export class AnalysisEngine {
 
   private createEmptyResult(): AnalysisResult {
     return {
-      pose: { landmarks: [], confidence: 0, timestamp: Date.now(), analysisType: 'form' as any },
+      pose: { landmarks: [], confidence: 0, timestamp: Date.now(), analysisType: "form" as any },
       jointAngles: new Map(),
       postureIssues: [],
       repCount: 0,
       repetitions: [],
-      metrics: { formScore: 0, stabilityScore: 0, rangeOfMotion: 0, romPercentage: 0, repetitions: 0, avgAngles: {}, duration: 0, avgFps: 0 },
+      metrics: {
+        formScore: 0,
+        stabilityScore: 0,
+        rangeOfMotion: 0,
+        romPercentage: 0,
+        repetitions: 0,
+        avgAngles: {},
+        duration: 0,
+        avgFps: 0,
+      },
       timestamp: Date.now(),
     };
   }

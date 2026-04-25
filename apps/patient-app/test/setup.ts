@@ -3,23 +3,22 @@
  * Configuration for Jest tests
  */
 
-
 // Polyfill TextEncoder/TextDecoder for jsdom
 
-import { TextEncoder, TextDecoder } from 'util';
+import { TextEncoder, TextDecoder } from "util";
 
 global.TextEncoder = TextEncoder;
 global.TextDecoder = TextDecoder as any;
 
 // Setup globals for jsdom-like environment
-if (typeof window === 'undefined') {
+if (typeof window === "undefined") {
   // Node environment - provide basic globals
   (global as any).window = global;
 }
 
 // Mock window.matchMedia
-if (typeof window !== 'undefined' && !window.matchMedia) {
-  Object.defineProperty(window, 'matchMedia', {
+if (typeof window !== "undefined" && !window.matchMedia) {
+  Object.defineProperty(window, "matchMedia", {
     writable: true,
     value: jest.fn().mockImplementation((query) => ({
       matches: false,
@@ -35,7 +34,7 @@ if (typeof window !== 'undefined' && !window.matchMedia) {
 }
 
 // Mock IntersectionObserver
-if (typeof window !== 'undefined') {
+if (typeof window !== "undefined") {
   (global as any).IntersectionObserver = class IntersectionObserver {
     constructor() {}
     disconnect() {}
@@ -48,7 +47,7 @@ if (typeof window !== 'undefined') {
 }
 
 // Mock requestAnimationFrame
-if (typeof window !== 'undefined') {
+if (typeof window !== "undefined") {
   window.requestAnimationFrame = (callback: FrameRequestCallback) => {
     return setTimeout(callback, 0) as unknown as number;
   };
@@ -59,7 +58,7 @@ if (typeof window !== 'undefined') {
 }
 
 // Suppress ResizeObserver warnings
-if (typeof window !== 'undefined') {
+if (typeof window !== "undefined") {
   (global as any).ResizeObserver = class ResizeObserver {
     constructor() {}
     disconnect() {}

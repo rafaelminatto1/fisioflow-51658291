@@ -6,9 +6,9 @@ test('drag and drop test', async ({ page }) => {
   page.on('pageerror', err => logs.push('ERROR: ' + err.message));
 
   await page.goto('http://localhost:5173/agenda'); // Adjust URL if needed
-  
+
   // Wait for network idle or calendar to load
   await page.waitForTimeout(5000);
-  
+
   console.log(logs.join('\n'));
 });

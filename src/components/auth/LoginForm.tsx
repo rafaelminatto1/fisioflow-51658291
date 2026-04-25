@@ -14,12 +14,12 @@ import { z } from "zod";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import {
-	Form,
-	FormControl,
-	FormField,
-	FormItem,
-	FormLabel,
-	FormMessage,
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { fisioLogger as logger } from "@/lib/errors/logger";
@@ -28,22 +28,22 @@ import { fisioLogger as logger } from "@/lib/errors/logger";
  * Zod schema for login form validation
  */
 const loginSchema = z.object({
-	email: z
-		.string({
-			error: "Email deve ser uma string",
-		})
-		.min(1, "Email é obrigatório")
-		.email("Email inválido")
-		.max(254, "Email muito longo")
-		.trim()
-		.toLowerCase(),
-	password: z
-		.string({
-			error: "Senha deve ser uma string",
-		})
-		.min(1, "Senha é obrigatória")
-		.min(8, "Senha deve ter no mínimo 8 caracteres")
-		.max(128, "Senha muito longa"),
+  email: z
+    .string({
+      error: "Email deve ser uma string",
+    })
+    .min(1, "Email é obrigatório")
+    .email("Email inválido")
+    .max(254, "Email muito longo")
+    .trim()
+    .toLowerCase(),
+  password: z
+    .string({
+      error: "Senha deve ser uma string",
+    })
+    .min(1, "Senha é obrigatória")
+    .min(8, "Senha deve ter no mínimo 8 caracteres")
+    .max(128, "Senha muito longa"),
 });
 
 /**
@@ -55,16 +55,16 @@ export type LoginFormData = z.infer<typeof loginSchema>;
  * Props for the LoginForm component
  */
 interface LoginFormProps {
-	/** Submit handler - receives validated form data */
-	onSubmit: (data: LoginFormData) => void | Promise<void>;
-	/** Loading state */
-	loading?: boolean;
-	/** Error message to display */
-	error?: string | null;
-	/** Active tab for accessibility */
-	activeTab?: "login" | "register";
-	/** Default email value */
-	defaultEmail?: string;
+  /** Submit handler - receives validated form data */
+  onSubmit: (data: LoginFormData) => void | Promise<void>;
+  /** Loading state */
+  loading?: boolean;
+  /** Error message to display */
+  error?: string | null;
+  /** Active tab for accessibility */
+  activeTab?: "login" | "register";
+  /** Default email value */
+  defaultEmail?: string;
 }
 
 /**
@@ -84,152 +84,142 @@ interface LoginFormProps {
  * ```
  */
 export function LoginForm({
-	onSubmit,
-	loading = false,
-	error = null,
-	activeTab = "login",
-	defaultEmail = "",
+  onSubmit,
+  loading = false,
+  error = null,
+  activeTab = "login",
+  defaultEmail = "",
 }: LoginFormProps) {
-	// React Hook Form with Zod validation
-	const form = useForm<LoginFormData>({
-		resolver: zodResolver(loginSchema),
-		defaultValues: {
-			email: defaultEmail,
-			password: "",
-		},
-		mode: "onBlur", // Validate on blur for better UX
-	});
+  // React Hook Form with Zod validation
+  const form = useForm<LoginFormData>({
+    resolver: zodResolver(loginSchema),
+    defaultValues: {
+      email: defaultEmail,
+      password: "",
+    },
+    mode: "onBlur", // Validate on blur for better UX
+  });
 
-	// Form submission handler
-	const handleSubmit = async (data: LoginFormData) => {
-		try {
-			await onSubmit(data);
-		} catch (err) {
-			// Error is handled by parent component and passed via error prop
-			logger.error("Login error", err, "LoginForm");
-		}
-	};
+  // Form submission handler
+  const handleSubmit = async (data: LoginFormData) => {
+    try {
+      await onSubmit(data);
+    } catch (err) {
+      // Error is handled by parent component and passed via error prop
+      logger.error("Login error", err, "LoginForm");
+    }
+  };
 
-	// Check if form has errors after user interaction
-	const hasBeenTouched = form.formState.isDirty;
-	const hasErrors = Object.keys(form.formState.errors).length > 0;
+  // Check if form has errors after user interaction
+  const hasBeenTouched = form.formState.isDirty;
+  const hasErrors = Object.keys(form.formState.errors).length > 0;
 
-	return (
-		<Form {...form}>
-			<form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-5">
-				<div className="space-y-4">
-					{/* Email Field */}
-					<FormField
-						control={form.control}
-						name="email"
-						render={({ field }) => (
-							<FormItem className="space-y-2">
-								<FormLabel
-									htmlFor="login-email"
-									className="text-sm font-medium"
-								>
-									Email
-								</FormLabel>
-								<FormControl>
-									<Input
-										id="login-email"
-										name="email"
-										data-testid="auth-email-input"
-										type="email"
-										placeholder="nome@exemplo.com"
-										autoComplete="email"
-										className="h-12 bg-white/50 dark:bg-slate-900/50 border-slate-200 dark:border-slate-800 focus:ring-primary/20 transition-all duration-200"
-										tabIndex={activeTab === "login" ? 1 : -1}
-										disabled={loading}
-										{...field}
-									/>
-								</FormControl>
-								<FormMessage />
-							</FormItem>
-						)}
-					/>
+  return (
+    <Form {...form}>
+      <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-5">
+        <div className="space-y-4">
+          {/* Email Field */}
+          <FormField
+            control={form.control}
+            name="email"
+            render={({ field }) => (
+              <FormItem className="space-y-2">
+                <FormLabel htmlFor="login-email" className="text-sm font-medium">
+                  Email
+                </FormLabel>
+                <FormControl>
+                  <Input
+                    id="login-email"
+                    name="email"
+                    data-testid="auth-email-input"
+                    type="email"
+                    placeholder="nome@exemplo.com"
+                    autoComplete="email"
+                    className="h-12 bg-white/50 dark:bg-slate-900/50 border-slate-200 dark:border-slate-800 focus:ring-primary/20 transition-all duration-200"
+                    tabIndex={activeTab === "login" ? 1 : -1}
+                    disabled={loading}
+                    {...field}
+                  />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
 
-					{/* Password Field */}
-					<FormField
-						control={form.control}
-						name="password"
-						render={({ field }) => (
-							<FormItem className="space-y-2">
-								<div className="flex justify-between items-center">
-									<FormLabel
-										htmlFor="login-password"
-										className="text-sm font-medium"
-									>
-										Senha
-									</FormLabel>
-									<button
-										type="button"
-										className="text-xs font-semibold text-primary hover:text-primary/80 transition-colors bg-transparent border-0 p-0 cursor-pointer"
-										tabIndex={activeTab === "login" ? 5 : -1}
-										onClick={() => {
-											logger.debug(
-												"Forgot password clicked",
-												null,
-												"LoginForm",
-											);
-										}}
-									>
-										Esqueceu a senha?
-									</button>
-								</div>
-								<FormControl>
-									<Input
-										id="login-password"
-										name="password"
-										data-testid="auth-password-input"
-										type="password"
-										placeholder="•••••••"
-										autoComplete="current-password"
-										className="h-12 bg-white/50 dark:bg-slate-900/50 border-slate-200 dark:border-slate-800 focus:ring-primary/20 transition-all duration-200"
-										tabIndex={activeTab === "login" ? 2 : -1}
-										disabled={loading}
-										{...field}
-									/>
-								</FormControl>
-								<FormMessage />
-							</FormItem>
-						)}
-					/>
-				</div>
+          {/* Password Field */}
+          <FormField
+            control={form.control}
+            name="password"
+            render={({ field }) => (
+              <FormItem className="space-y-2">
+                <div className="flex justify-between items-center">
+                  <FormLabel htmlFor="login-password" className="text-sm font-medium">
+                    Senha
+                  </FormLabel>
+                  <button
+                    type="button"
+                    className="text-xs font-semibold text-primary hover:text-primary/80 transition-colors bg-transparent border-0 p-0 cursor-pointer"
+                    tabIndex={activeTab === "login" ? 5 : -1}
+                    onClick={() => {
+                      logger.debug("Forgot password clicked", null, "LoginForm");
+                    }}
+                  >
+                    Esqueceu a senha?
+                  </button>
+                </div>
+                <FormControl>
+                  <Input
+                    id="login-password"
+                    name="password"
+                    data-testid="auth-password-input"
+                    type="password"
+                    placeholder="•••••••"
+                    autoComplete="current-password"
+                    className="h-12 bg-white/50 dark:bg-slate-900/50 border-slate-200 dark:border-slate-800 focus:ring-primary/20 transition-all duration-200"
+                    tabIndex={activeTab === "login" ? 2 : -1}
+                    disabled={loading}
+                    {...field}
+                  />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+        </div>
 
-				{/* Error Alert */}
-				{(error || (hasBeenTouched && hasErrors)) && (
-					<Alert
-						variant="destructive"
-						className="animate-slide-up-fade border-red-200 bg-red-50 dark:bg-red-950/20 dark:border-red-900/30"
-						data-testid="login-error"
-					>
-						<AlertDescription className="text-sm font-medium">
-							{error || "Por favor, corrija os erros no formulário."}
-						</AlertDescription>
-					</Alert>
-				)}
+        {/* Error Alert */}
+        {(error || (hasBeenTouched && hasErrors)) && (
+          <Alert
+            variant="destructive"
+            className="animate-slide-up-fade border-red-200 bg-red-50 dark:bg-red-950/20 dark:border-red-900/30"
+            data-testid="login-error"
+          >
+            <AlertDescription className="text-sm font-medium">
+              {error || "Por favor, corrija os erros no formulário."}
+            </AlertDescription>
+          </Alert>
+        )}
 
-				{/* Submit Button */}
-				<Button
-					type="submit"
-					data-testid="auth-submit-button"
-					className="w-full h-12 text-sm font-bold bg-gradient-to-r from-primary to-blue-600 hover:from-primary/90 hover:to-blue-700 shadow-lg shadow-primary/25 transition-all duration-200 active:scale-[0.98] rounded-xl"
-					disabled={loading}
-					tabIndex={activeTab === "login" ? 3 : -1}
-				>
-					{loading ? (
-						<>
-							<Loader2 className="h-4 w-4 animate-spin mr-2" />
-							Conectando...
-						</>
-					) : (
-						"Acessar Minha Conta"
-					)}
-				</Button>
-			</form>
-		</Form>
-	);
+        {/* Submit Button */}
+        <Button
+          type="submit"
+          data-testid="auth-submit-button"
+          className="w-full h-12 text-sm font-bold bg-gradient-to-r from-primary to-blue-600 hover:from-primary/90 hover:to-blue-700 shadow-lg shadow-primary/25 transition-all duration-200 active:scale-[0.98] rounded-xl"
+          disabled={loading}
+          tabIndex={activeTab === "login" ? 3 : -1}
+        >
+          {loading ? (
+            <>
+              <Loader2 className="h-4 w-4 animate-spin mr-2" />
+              Conectando...
+            </>
+          ) : (
+            "Acessar Minha Conta"
+          )}
+        </Button>
+      </form>
+    </Form>
+  );
 }
 
 /**

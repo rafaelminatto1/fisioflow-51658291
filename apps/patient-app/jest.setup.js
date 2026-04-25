@@ -10,7 +10,7 @@ global.__DEV__ = true;
 // Note: jest-expo preset handles most of these, but we can override/customize here
 
 // Mock expo modules
-jest.mock('expo-video', () => ({
+jest.mock("expo-video", () => ({
   VideoView: jest.fn(),
   useVideoPlayer: jest.fn(() => ({
     loop: false,
@@ -21,52 +21,52 @@ jest.mock('expo-video', () => ({
   })),
 }));
 
-jest.mock('expo-haptics', () => ({
+jest.mock("expo-haptics", () => ({
   ImpactFeedbackStyle: {
-    Light: 'Light',
-    Medium: 'Medium',
-    Heavy: 'Heavy',
+    Light: "Light",
+    Medium: "Medium",
+    Heavy: "Heavy",
   },
   NotificationFeedbackType: {
-    Success: 'Success',
-    Warning: 'Warning',
-    Error: 'Error',
+    Success: "Success",
+    Warning: "Warning",
+    Error: "Error",
   },
   impactAsync: jest.fn(),
   notificationAsync: jest.fn(),
   selectionAsync: jest.fn(),
 }));
 
-jest.mock('expo-linking', () => ({
+jest.mock("expo-linking", () => ({
   createURL: jest.fn((url) => url),
   openURL: jest.fn(),
   addEventListener: jest.fn(),
   removeEventListener: jest.fn(),
 }));
 
-jest.mock('expo-constants', () => ({
+jest.mock("expo-constants", () => ({
   default: {
     expoConfig: {
-      version: '1.0.0',
-      name: 'FisioFlow',
+      version: "1.0.0",
+      name: "FisioFlow",
     },
   },
 }));
 
-jest.mock('expo-status-bar', () => ({
+jest.mock("expo-status-bar", () => ({
   StatusBar: jest.fn(),
 }));
 
-jest.mock('expo-splash-screen', () => ({
+jest.mock("expo-splash-screen", () => ({
   SplashScreen: {
     preventAutoHideAsync: jest.fn(),
     hideAsync: jest.fn(),
   },
 }));
 
-jest.mock('expo-file-system', () => ({
-  documentDirectory: '/mock/documents/',
-  cacheDirectory: '/mock/cache/',
+jest.mock("expo-file-system", () => ({
+  documentDirectory: "/mock/documents/",
+  cacheDirectory: "/mock/cache/",
   readAsStringAsync: jest.fn(),
   writeAsStringAsync: jest.fn(),
   deleteAsync: jest.fn(),
@@ -74,39 +74,39 @@ jest.mock('expo-file-system', () => ({
   getInfoAsync: jest.fn(),
 }));
 
-jest.mock('expo-sharing', () => ({
+jest.mock("expo-sharing", () => ({
   shareAsync: jest.fn(),
   isAvailableAsync: jest.fn(() => Promise.resolve(true)),
 }));
 
-jest.mock('expo-document-picker', () => ({
+jest.mock("expo-document-picker", () => ({
   getDocumentAsync: jest.fn(),
 }));
 
-jest.mock('expo-image-picker', () => ({
+jest.mock("expo-image-picker", () => ({
   launchImageLibraryAsync: jest.fn(),
   launchCameraAsync: jest.fn(),
   requestCameraPermissionsAsync: jest.fn(),
   requestMediaLibraryPermissionsAsync: jest.fn(),
   MediaTypeOptions: {
-    Images: 'images',
-    Videos: 'videos',
-    All: 'all',
+    Images: "images",
+    Videos: "videos",
+    All: "all",
   },
 }));
 
-jest.mock('expo-clipboard', () => ({
+jest.mock("expo-clipboard", () => ({
   setStringAsync: jest.fn(),
-  getStringAsync: jest.fn(() => Promise.resolve('')),
+  getStringAsync: jest.fn(() => Promise.resolve("")),
 }));
 
-jest.mock('expo-secure-store', () => ({
+jest.mock("expo-secure-store", () => ({
   getItemAsync: jest.fn(),
   setItemAsync: jest.fn(),
   deleteItemAsync: jest.fn(),
 }));
 
-jest.mock('@react-native-async-storage/async-storage', () => ({
+jest.mock("@react-native-async-storage/async-storage", () => ({
   getItem: jest.fn(),
   setItem: jest.fn(),
   removeItem: jest.fn(),
@@ -117,16 +117,16 @@ jest.mock('@react-native-async-storage/async-storage', () => ({
   multiRemove: jest.fn(),
 }));
 
-jest.mock('@react-native-community/netinfo', () => ({
+jest.mock("@react-native-community/netinfo", () => ({
   fetch: jest.fn(() => Promise.resolve({ isConnected: true, isInternetReachable: true })),
   addEventListener: jest.fn(() => jest.fn()),
   removeEventListener: jest.fn(),
 }));
 
-jest.mock('expo-notifications', () => ({
-  requestPermissionsAsync: jest.fn(() => Promise.resolve({ status: 'granted' })),
-  getPermissionsAsync: jest.fn(() => Promise.resolve({ status: 'granted' })),
-  getDevicePushTokenAsync: jest.fn(() => Promise.resolve({ data: 'mock-push-token' })),
+jest.mock("expo-notifications", () => ({
+  requestPermissionsAsync: jest.fn(() => Promise.resolve({ status: "granted" })),
+  getPermissionsAsync: jest.fn(() => Promise.resolve({ status: "granted" })),
+  getDevicePushTokenAsync: jest.fn(() => Promise.resolve({ data: "mock-push-token" })),
   setNotificationChannelAsync: jest.fn(),
   addNotificationReceivedListener: jest.fn(),
   addNotificationResponseReceivedListener: jest.fn(),
@@ -136,23 +136,23 @@ jest.mock('expo-notifications', () => ({
   getAllScheduledNotificationsAsync: jest.fn(() => Promise.resolve([])),
   AndroidNotificationChannel: {
     Importance: {
-      DEFAULT: 'default',
-      HIGH: 'high',
-      MAX: 'max',
+      DEFAULT: "default",
+      HIGH: "high",
+      MAX: "max",
     },
   },
 }));
 
 // Mock react-native-reanimated
-jest.mock('react-native-reanimated', () => {
-  const Reanimated = require('react-native-reanimated/mock');
+jest.mock("react-native-reanimated", () => {
+  const Reanimated = require("react-native-reanimated/mock");
   Reanimated.default.call = () => {};
   return Reanimated;
 });
 
 // Mock react-native-gesture-handler
-jest.mock('react-native-gesture-handler', () => {
-  const GestureHandler = require('react-native-gesture-handler/jestSetup');
+jest.mock("react-native-gesture-handler", () => {
+  const GestureHandler = require("react-native-gesture-handler/jestSetup");
   return {
     ...GestureHandler,
     Gesture: {
@@ -165,13 +165,13 @@ jest.mock('react-native-gesture-handler', () => {
       NativeViewGesture: jest.fn(),
     },
     GestureDetector: jest.fn(({ children }) => children),
-    GestureHandlerRootView: 'GestureHandlerRootView',
+    GestureHandlerRootView: "GestureHandlerRootView",
   };
 });
 
 // Mock @react-navigation/native
-jest.mock('@react-navigation/native', () => ({
-  ...jest.requireActual('@react-navigation/native'),
+jest.mock("@react-navigation/native", () => ({
+  ...jest.requireActual("@react-navigation/native"),
   useNavigation: () => ({
     navigate: jest.fn(),
     goBack: jest.fn(),
@@ -183,8 +183,8 @@ jest.mock('@react-navigation/native', () => ({
   }),
   useRoute: () => ({
     params: {},
-    name: 'TestScreen',
-    path: '/test',
+    name: "TestScreen",
+    path: "/test",
   }),
   useFocusEffect: jest.fn((effect) => effect()),
   NavigationContainer: jest.fn(({ children }) => children),
@@ -192,7 +192,7 @@ jest.mock('@react-navigation/native', () => ({
 }));
 
 // Mock expo-router
-jest.mock('expo-router', () => ({
+jest.mock("expo-router", () => ({
   useRouter: () => ({
     push: jest.fn(),
     replace: jest.fn(),
@@ -204,7 +204,7 @@ jest.mock('expo-router', () => ({
   }),
   useLocalSearchParams: jest.fn(() => ({})),
   useSegments: jest.fn(() => []),
-  usePathname: jest.fn(() => '/'),
+  usePathname: jest.fn(() => "/"),
   useGlobalSearchParams: jest.fn(() => ({})),
   Stack: jest.fn(({ children }) => children),
   Tabs: jest.fn(({ children }) => children),
@@ -231,4 +231,4 @@ global.performance = {
 };
 
 // Set timezone for consistent date tests
-process.env.TZ = 'America/Sao_Paulo';
+process.env.TZ = "America/Sao_Paulo";

@@ -1,18 +1,18 @@
-import NetInfo from '@react-native-community/netinfo';
-import AsyncStorage from '@react-native-async-storage/async-storage';
-import { patientApi } from './api';
-import { log } from '@/lib/logger';
+import NetInfo from "@react-native-community/netinfo";
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import { patientApi } from "./api";
+import { log } from "@/lib/logger";
 
-const OFFLINE_QUEUE_KEY = '@fisioflow_offline_queue';
-const LAST_SYNC_KEY = '@fisioflow_last_sync';
+const OFFLINE_QUEUE_KEY = "@fisioflow_offline_queue";
+const LAST_SYNC_KEY = "@fisioflow_last_sync";
 
 export type OperationType =
-  | 'complete_exercise'
-  | 'update_profile'
-  | 'submit_feedback'
-  | 'book_appointment'
-  | 'cancel_appointment'
-  | 'link_professional';
+  | "complete_exercise"
+  | "update_profile"
+  | "submit_feedback"
+  | "book_appointment"
+  | "cancel_appointment"
+  | "link_professional";
 
 export interface QueuedOperation {
   id: string;
@@ -77,7 +77,7 @@ class OfflineManager {
       const queueJson = await AsyncStorage.getItem(OFFLINE_QUEUE_KEY);
       this.queue = queueJson ? JSON.parse(queueJson) : [];
     } catch (error) {
-      log.error('Error loading offline queue:', error);
+      log.error("Error loading offline queue:", error);
       this.queue = [];
     }
   }
@@ -86,7 +86,7 @@ class OfflineManager {
     try {
       await AsyncStorage.setItem(OFFLINE_QUEUE_KEY, JSON.stringify(this.queue));
     } catch (error) {
-      log.error('Error saving offline queue:', error);
+      log.error("Error saving offline queue:", error);
     }
   }
 
@@ -146,7 +146,7 @@ class OfflineManager {
         await AsyncStorage.setItem(LAST_SYNC_KEY, new Date().toISOString());
       }
     } catch (error) {
-      log.error('Error during sync:', error);
+      log.error("Error during sync:", error);
     } finally {
       this.isSyncing = false;
       this.notifyListeners();
@@ -155,12 +155,12 @@ class OfflineManager {
 
   private async processOperation(operation: QueuedOperation): Promise<void> {
     switch (operation.type) {
-      case 'complete_exercise':
+      case "complete_exercise":
         await patientApi.completeExercise(operation.data.assignmentId, {
           completed: operation.data.completed,
         });
         break;
-      case 'submit_feedback':
+      case "submit_feedback":
         await patientApi.completeExercise(operation.data.assignmentId, {
           completed: true,
           difficulty: operation.data.difficulty,
@@ -169,16 +169,16 @@ class OfflineManager {
           progress: operation.data.progress,
         });
         break;
-      case 'update_profile':
+      case "update_profile":
         await patientApi.updateProfile(operation.data);
         break;
-      case 'book_appointment':
+      case "book_appointment":
         await patientApi.confirmAppointment(operation.data.appointmentId);
         break;
-      case 'cancel_appointment':
+      case "cancel_appointment":
         await patientApi.cancelAppointment(operation.data.appointmentId, operation.data.reason);
         break;
-      case 'link_professional':
+      case "link_professional":
         await patientApi.linkProfessional(operation.data.professionalId);
         break;
       default:
@@ -197,7 +197,7 @@ class OfflineManager {
         lastSync = new Date(lastSyncStr);
       }
     } catch (error) {
-      log.error('Error getting last sync time:', error);
+      log.error("Error getting last sync time:", error);
     }
 
     return {
@@ -237,7 +237,7 @@ class OfflineManager {
         return data as T;
       }
     } catch (error) {
-      log.error('Error getting cached data:', error);
+      log.error("Error getting cached data:", error);
     }
     return null;
   }
@@ -253,17 +253,17 @@ class OfflineManager {
         }),
       );
     } catch (error) {
-      log.error('Error setting cached data:', error);
+      log.error("Error setting cached data:", error);
     }
   }
 
   async clearCache(): Promise<void> {
     try {
       const keys = await AsyncStorage.getAllKeys();
-      const cacheKeys = keys.filter((key) => key.startsWith('@fisioflow_cache_'));
+      const cacheKeys = keys.filter((key) => key.startsWith("@fisioflow_cache_"));
       await AsyncStorage.multiRemove(cacheKeys);
     } catch (error) {
-      log.error('Error clearing cache:', error);
+      log.error("Error clearing cache:", error);
     }
   }
 }
@@ -290,10 +290,10 @@ export async function queueCompleteExercise(
   completed: boolean,
 ): Promise<void> {
   const manager = getOfflineManager();
-  await manager.queueOperation('complete_exercise', { assignmentId, completed }, userId);
+  await manager.queueOperation("complete_exercise", { assignmentId, completed }, userId);
 }
 
 export async function queueUpdateProfile(userId: string, data: any): Promise<void> {
   const manager = getOfflineManager();
-  await manager.queueOperation('update_profile', data, userId);
+  await manager.queueOperation("update_profile", data, userId);
 }

@@ -1,9 +1,8 @@
-
 // Configure notification behavior
 
-import * as Notifications from 'expo-notifications';
-import * as Device from 'expo-device';
-import { Platform } from 'react-native';
+import * as Notifications from "expo-notifications";
+import * as Device from "expo-device";
+import { Platform } from "react-native";
 
 Notifications.setNotificationHandler({
   handleNotification: async () => ({
@@ -23,8 +22,8 @@ export interface PushNotificationData {
   title: string;
   body: string;
   data?: Record<string, any>;
-  sound?: 'default' | 'default_critical' | boolean;
-  priority?: 'high' | 'normal' | 'max';
+  sound?: "default" | "default_critical" | boolean;
+  priority?: "high" | "normal" | "max";
   channelId?: string;
 }
 
@@ -35,36 +34,36 @@ export interface PushNotificationData {
 export async function registerForPushNotificationsAsync(): Promise<string | undefined> {
   let token: string | undefined;
 
-  if (Platform.OS === 'android') {
-    await Notifications.setNotificationChannelAsync('default', {
-      name: 'default',
+  if (Platform.OS === "android") {
+    await Notifications.setNotificationChannelAsync("default", {
+      name: "default",
       importance: Notifications.AndroidImportance.MAX,
       vibrationPattern: [0, 250, 250, 250],
-      lightColor: '#1E40AF',
+      lightColor: "#1E40AF",
     });
 
     // Appointment notifications channel
-    await Notifications.setNotificationChannelAsync('appointments', {
-      name: 'Agendamentos',
+    await Notifications.setNotificationChannelAsync("appointments", {
+      name: "Agendamentos",
       importance: Notifications.AndroidImportance.HIGH,
       vibrationPattern: [0, 250, 250, 250],
-      lightColor: '#1E40AF',
+      lightColor: "#1E40AF",
     });
 
     // Patient messages channel
-    await Notifications.setNotificationChannelAsync('messages', {
-      name: 'Mensagens',
+    await Notifications.setNotificationChannelAsync("messages", {
+      name: "Mensagens",
       importance: Notifications.AndroidImportance.HIGH,
       vibrationPattern: [0, 250, 250, 250],
-      lightColor: '#1E40AF',
+      lightColor: "#1E40AF",
     });
 
     // System alerts channel
-    await Notifications.setNotificationChannelAsync('alerts', {
-      name: 'Alertas',
+    await Notifications.setNotificationChannelAsync("alerts", {
+      name: "Alertas",
       importance: Notifications.AndroidImportance.MAX,
       vibrationPattern: [0, 250, 100, 250, 100, 250],
-      lightColor: '#EF4444',
+      lightColor: "#EF4444",
     });
   }
 
@@ -72,26 +71,26 @@ export async function registerForPushNotificationsAsync(): Promise<string | unde
     const { status: existingStatus } = await Notifications.getPermissionsAsync();
     let finalStatus = existingStatus;
 
-    if (existingStatus !== 'granted') {
+    if (existingStatus !== "granted") {
       const { status } = await Notifications.requestPermissionsAsync();
       finalStatus = status;
     }
 
-    if (finalStatus !== 'granted') {
-      console.error('Failed to get push token for push notification!');
+    if (finalStatus !== "granted") {
+      console.error("Failed to get push token for push notification!");
       return undefined;
     }
 
     try {
       // Get Expo push token - only if valid projectId is configured
       // We try environment variables first, then expoConfig extra (from app.json)
-      const Constants = require('expo-constants').default;
-      const projectId = 
-        process.env.EXPO_PUBLIC_EXPO_PROJECT_ID || 
+      const Constants = require("expo-constants").default;
+      const projectId =
+        process.env.EXPO_PUBLIC_EXPO_PROJECT_ID ||
         process.env.EXPO_PUBLIC_PROJECT_ID ||
         Constants?.expoConfig?.extra?.eas?.projectId;
-      
-      if (projectId && projectId !== 'fisioflow-professional') {
+
+      if (projectId && projectId !== "fisioflow-professional") {
         // Validate UUID format
         const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
         if (uuidRegex.test(projectId)) {
@@ -100,18 +99,25 @@ export async function registerForPushNotificationsAsync(): Promise<string | unde
               projectId,
             })
           ).data;
-          console.log('Expo Push Token:', token);
+          console.log("Expo Push Token:", token);
         } else {
-          console.log('Push notifications: Invalid projectId format. Configure EXPO_PUBLIC_PROJECT_ID in .env');
+          console.log(
+            "Push notifications: Invalid projectId format. Configure EXPO_PUBLIC_PROJECT_ID in .env",
+          );
         }
       } else {
-        console.log('Push notifications: projectId not configured. Set EXPO_PUBLIC_PROJECT_ID in .env for production');
+        console.log(
+          "Push notifications: projectId not configured. Set EXPO_PUBLIC_PROJECT_ID in .env for production",
+        );
       }
     } catch (error) {
-      console.log('Push notifications setup skipped:', error instanceof Error ? error.message : 'Unknown error');
+      console.log(
+        "Push notifications setup skipped:",
+        error instanceof Error ? error.message : "Unknown error",
+      );
     }
   } else {
-    console.error('Must use physical device for Push Notifications');
+    console.error("Must use physical device for Push Notifications");
   }
 
   return token;
@@ -119,12 +125,12 @@ export async function registerForPushNotificationsAsync(): Promise<string | unde
 
 export async function getNotificationPermissionStatus(): Promise<boolean> {
   const { status } = await Notifications.getPermissionsAsync();
-  return status === 'granted';
+  return status === "granted";
 }
 
 export async function requestNotificationPermissions(): Promise<boolean> {
   const { status } = await Notifications.requestPermissionsAsync();
-  return status === 'granted';
+  return status === "granted";
 }
 
 // ============================================
@@ -146,16 +152,18 @@ export async function scheduleLocalNotification(notification: {
         data: notification.data || {},
         sound: true,
       },
-      trigger: notification.trigger ? {
-        ...(notification.trigger as any),
-        channelId: notification.channelId,
-      } : {
-        channelId: notification.channelId,
-      } as any,
+      trigger: notification.trigger
+        ? {
+            ...(notification.trigger as any),
+            channelId: notification.channelId,
+          }
+        : ({
+            channelId: notification.channelId,
+          } as any),
     });
     return id;
   } catch (error) {
-    console.error('Error scheduling notification:', error);
+    console.error("Error scheduling notification:", error);
     throw error;
   }
 }
@@ -163,32 +171,32 @@ export async function scheduleLocalNotification(notification: {
 export async function scheduleAppointmentReminder(
   appointmentId: string,
   patientName: string,
-  appointmentDate: Date
+  appointmentDate: Date,
 ): Promise<string> {
   // Schedule reminder 1 hour before
   const reminderDate = new Date(appointmentDate.getTime() - 60 * 60 * 1000);
 
   return scheduleLocalNotification({
-    title: 'Lembrete de Atendimento',
+    title: "Lembrete de Atendimento",
     body: `Sessão com ${patientName} em 1 hora.`,
-    data: { type: 'appointment', appointmentId },
+    data: { type: "appointment", appointmentId },
     trigger: {
       type: Notifications.SchedulableTriggerInputTypes.DATE,
       date: reminderDate,
-      channelId: 'appointments',
+      channelId: "appointments",
     },
   });
 }
 
 export async function sendNewAppointmentAlert(
   patientName: string,
-  appointmentTime: Date
+  appointmentTime: Date,
 ): Promise<string> {
   return scheduleLocalNotification({
-    title: 'Novo Agendamento',
+    title: "Novo Agendamento",
     body: `${patientName} agendou para ${formatDate(appointmentTime)}`,
-    data: { type: 'new_appointment' },
-    channelId: 'appointments',
+    data: { type: "new_appointment" },
+    channelId: "appointments",
   });
 }
 
@@ -236,13 +244,13 @@ export function removeNotificationListeners() {
 // ============================================
 
 export async function setBadgeCount(count: number): Promise<void> {
-  if (Platform.OS === 'ios') {
+  if (Platform.OS === "ios") {
     await Notifications.setBadgeCountAsync(count);
   }
 }
 
 export async function getBadgeCount(): Promise<number> {
-  if (Platform.OS === 'ios') {
+  if (Platform.OS === "ios") {
     return await Notifications.getBadgeCountAsync();
   }
   return 0;
@@ -253,12 +261,12 @@ export async function getBadgeCount(): Promise<number> {
 // ============================================
 
 export function formatDate(date: Date): string {
-  return date.toLocaleString('pt-BR', {
-    day: '2-digit',
-    month: '2-digit',
-    year: 'numeric',
-    hour: '2-digit',
-    minute: '2-digit',
+  return date.toLocaleString("pt-BR", {
+    day: "2-digit",
+    month: "2-digit",
+    year: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
   });
 }
 
@@ -269,7 +277,7 @@ export function formatNotificationTime(date: Date): string {
   const hours = Math.floor(diff / (1000 * 60 * 60));
   const days = Math.floor(diff / (1000 * 60 * 60 * 24));
 
-  if (minutes < 0) return 'Agora';
+  if (minutes < 0) return "Agora";
   if (minutes < 60) return `Em ${minutes} minutos`;
   if (hours < 24) return `Em ${hours} horas`;
   return `Em ${days} dias`;
@@ -277,13 +285,13 @@ export function formatNotificationTime(date: Date): string {
 
 export async function sendTestNotification(): Promise<void> {
   await scheduleLocalNotification({
-    title: 'FisioFlow Pro',
-    body: 'Teste de notificação funcionando!',
-    data: { type: 'test' },
+    title: "FisioFlow Pro",
+    body: "Teste de notificação funcionando!",
+    data: { type: "test" },
   });
 }
 
-import { fetchApi } from './api';
+import { fetchApi } from "./api";
 
 // ... (existing code)
 
@@ -293,21 +301,21 @@ import { fetchApi } from './api';
 
 export async function sendPushNotification(
   targetToken: string,
-  notification: PushNotificationData
+  notification: PushNotificationData,
 ): Promise<void> {
   // This calls the Cloudflare Worker API to handle the push notification
-  console.log('Sending push notification:', notification);
+  console.log("Sending push notification:", notification);
 
   try {
-    await fetchApi('/api/notifications/send-push', {
-      method: 'POST',
+    await fetchApi("/api/notifications/send-push", {
+      method: "POST",
       data: {
         token: targetToken,
         notification,
       },
     });
   } catch (error) {
-    console.error('Failed to send push notification:', error);
+    console.error("Failed to send push notification:", error);
   }
 }
 
@@ -317,29 +325,29 @@ export async function sendAppointmentNotificationToPatient(
     date: Date;
     type: string;
     professionalName: string;
-  }
+  },
 ): Promise<void> {
   await sendPushNotification(patientPushToken, {
-    title: 'Novo Agendamento',
+    title: "Novo Agendamento",
     body: `Sua sessão de ${appointmentDetails.type} com ${appointmentDetails.professionalName} foi agendada.`,
     data: {
-      type: 'appointment',
+      type: "appointment",
       date: appointmentDetails.date.toISOString(),
     },
     sound: true,
-    priority: 'high',
+    priority: "high",
   });
 }
 
 export async function sendExerciseReminderNotification(
   patientPushToken: string,
-  exerciseName: string
+  exerciseName: string,
 ): Promise<void> {
   await sendPushNotification(patientPushToken, {
-    title: 'Lembrete de Exercício',
+    title: "Lembrete de Exercício",
     body: `Não se esqueça de fazer: ${exerciseName}`,
     data: {
-      type: 'exercise_reminder',
+      type: "exercise_reminder",
       exerciseName,
     },
     sound: true,

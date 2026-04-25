@@ -10,7 +10,7 @@ export interface DeviceInfo {
   model: string;
   osVersion: string;
   appVersion: string;
-  platform: 'ios' | 'android';
+  platform: "ios" | "android";
 }
 
 /**
@@ -43,7 +43,7 @@ export interface TermsOfServiceAcceptance {
 export interface MedicalDisclaimerAcknowledgment {
   id: string;
   userId: string;
-  context: 'first-launch' | 'exercise-prescription' | 'protocol-application';
+  context: "first-launch" | "exercise-prescription" | "protocol-application";
   acknowledgedAt: Date;
   version: string;
 }

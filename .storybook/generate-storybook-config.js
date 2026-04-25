@@ -1,5 +1,5 @@
-const fs = require('fs')
-const path = require('path')
+const fs = require("fs");
+const path = require("path");
 
 const mainTemplate = `import type { StorybookConfig } from '@storybook/react-vite'
 
@@ -24,7 +24,7 @@ const config: StorybookConfig = {
 }
 
 export default config
-`
+`;
 
 const previewTemplate = `import type { Preview } from '@storybook/react'
 import { withThemeByDataAttribute } from '@storybook/addon-themes'
@@ -45,22 +45,16 @@ const preview: Preview = {
 }
 
 export default preview
-`
+`;
 
 // Create .storybook directory
-fs.mkdirSync(path.join(__dirname, '.storybook'), { recursive: true })
+fs.mkdirSync(path.join(__dirname, ".storybook"), { recursive: true });
 
 // Write main.tsx
-fs.writeFileSync(
-  path.join(__dirname, '.storybook', 'main.tsx'),
-  mainTemplate
-)
+fs.writeFileSync(path.join(__dirname, ".storybook", "main.tsx"), mainTemplate);
 
 // Write preview.tsx
-fs.writeFileSync(
-  path.join(__dirname, '.storybook', 'preview.tsx'),
-  previewTemplate
-)
+fs.writeFileSync(path.join(__dirname, ".storybook", "preview.tsx"), previewTemplate);
 
-console.log('✅ Storybook configuration generated successfully!')
-console.log('📁 Files created: .storybook/main.tsx, .storybook/preview.tsx')
+console.log("✅ Storybook configuration generated successfully!");
+console.log("📁 Files created: .storybook/main.tsx, .storybook/preview.tsx");

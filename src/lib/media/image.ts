@@ -2,20 +2,20 @@ import { fisioLogger as logger } from "@/lib/errors/logger";
 import { resolvePublicStorageUrl } from "@/lib/storage/public-url";
 
 type TransformOptions = {
-	width?: number;
-	height?: number;
-	resize?: "cover" | "contain" | "fill";
-	quality?: number; // 20-100
-	format?: "avif" | "webp" | "jpg" | "auto";
+  width?: number;
+  height?: number;
+  resize?: "cover" | "contain" | "fill";
+  quality?: number; // 20-100
+  format?: "avif" | "webp" | "jpg" | "auto";
 };
 
 // Presets maintained for structure, though they won't transform on the fly with basic Storage
 export const IMAGE_PRESETS = {
-	avatar: { width: 64, height: 64, quality: 80, resize: "cover" as const },
-	thumbnail: { width: 320, height: 180, quality: 75, resize: "cover" as const },
-	card: { width: 400, height: 300, quality: 80, resize: "cover" as const },
-	full: { width: 1200, quality: 85, resize: "contain" as const },
-	original: { quality: 85, resize: "contain" as const },
+  avatar: { width: 64, height: 64, quality: 80, resize: "cover" as const },
+  thumbnail: { width: 320, height: 180, quality: 75, resize: "cover" as const },
+  card: { width: 400, height: 300, quality: 80, resize: "cover" as const },
+  full: { width: 1200, quality: 85, resize: "contain" as const },
+  original: { quality: 85, resize: "contain" as const },
 } as const;
 
 export type ImagePreset = keyof typeof IMAGE_PRESETS;
@@ -28,32 +28,32 @@ export type ImagePreset = keyof typeof IMAGE_PRESETS;
  * @param _options - Transformation options (mantidos por compatibilidade)
  */
 export const getOptimizedImageUrl = async (
-	bucket: string,
-	path: string,
-	_options: TransformOptions = IMAGE_PRESETS.card,
+  bucket: string,
+  path: string,
+  _options: TransformOptions = IMAGE_PRESETS.card,
 ): Promise<string> => {
-	if (!path) return "";
+  if (!path) return "";
 
-	// If it's already a full URL, return as is
-	if (path.startsWith("http")) return path;
+  // If it's already a full URL, return as is
+  if (path.startsWith("http")) return path;
 
-	try {
-		return resolvePublicStorageUrl(path, bucket);
-	} catch (error) {
-		logger.error("Error getting image URL", error, "image");
-		return "";
-	}
+  try {
+    return resolvePublicStorageUrl(path, bucket);
+  } catch (error) {
+    logger.error("Error getting image URL", error, "image");
+    return "";
+  }
 };
 
 /**
  * Gera URL otimizada usando um preset pré-definido
  */
 export const getOptimizedImageUrlWithPreset = async (
-	bucket: string,
-	path: string,
-	preset: ImagePreset = "card",
+  bucket: string,
+  path: string,
+  preset: ImagePreset = "card",
 ) => {
-	return getOptimizedImageUrl(bucket, path, IMAGE_PRESETS[preset]);
+  return getOptimizedImageUrl(bucket, path, IMAGE_PRESETS[preset]);
 };
 
 /**
@@ -61,16 +61,16 @@ export const getOptimizedImageUrlWithPreset = async (
  * Returns the same URL for all sizes in basic storage migration
  */
 export const getResponsiveImageUrls = async (
-	bucket: string,
-	path: string,
-	sizes: number[] = [320, 640, 960, 1280, 1920],
+  bucket: string,
+  path: string,
+  sizes: number[] = [320, 640, 960, 1280, 1920],
 ): Promise<Record<number, string>> => {
-	if (!path) return {};
+  if (!path) return {};
 
-	const url = await getOptimizedImageUrl(bucket, path);
-	const urls: Record<number, string> = {};
-	for (const size of sizes) {
-		urls[size] = url;
-	}
-	return urls;
+  const url = await getOptimizedImageUrl(bucket, path);
+  const urls: Record<number, string> = {};
+  for (const size of sizes) {
+    urls[size] = url;
+  }
+  return urls;
 };

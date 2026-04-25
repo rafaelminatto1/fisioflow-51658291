@@ -1,7 +1,7 @@
-import { Hono } from 'hono';
-import { requireAuth, type AuthVariables } from '../lib/auth';
-import type { Env } from '../types/env';
-import { writeEvent } from '../lib/analytics';
+import { Hono } from "hono";
+import { requireAuth, type AuthVariables } from "../lib/auth";
+import type { Env } from "../types/env";
+import { writeEvent } from "../lib/analytics";
 
 const app = new Hono<{ Bindings: Env; Variables: AuthVariables }>();
 
@@ -30,16 +30,16 @@ type BusinessEvent = {
  * Esses eventos são armazenados em R2 como Apache Parquet/Iceberg
  * e podem ser consultados com DuckDB para Business Intelligence.
  */
-app.post('/', requireAuth, async (c) => {
-  const user = c.get('user');
-  const body = await c.req.json() as { events: BusinessEvent[] } | BusinessEvent;
+app.post("/", requireAuth, async (c) => {
+  const user = c.get("user");
+  const body = (await c.req.json()) as { events: BusinessEvent[] } | BusinessEvent;
 
   const events: BusinessEvent[] = Array.isArray((body as any).events)
     ? (body as { events: BusinessEvent[] }).events
     : [body as BusinessEvent];
 
   if (!events.length) {
-    return c.json({ error: 'Nenhum evento fornecido' }, 400);
+    return c.json({ error: "Nenhum evento fornecido" }, 400);
   }
 
   const enriched = events.map((e) => ({
@@ -55,7 +55,7 @@ app.post('/', requireAuth, async (c) => {
     try {
       await c.env.EVENTS_PIPELINE.send(enriched);
     } catch (err) {
-      console.error('[Events] Pipeline send failed:', err);
+      console.error("[Events] Pipeline send failed:", err);
       // Fallback para Analytics Engine
     }
   }
@@ -65,8 +65,8 @@ app.post('/', requireAuth, async (c) => {
     writeEvent(c.env, {
       event: e.type,
       orgId: user.organizationId,
-      route: '/api/events',
-      method: 'POST',
+      route: "/api/events",
+      method: "POST",
       status: 200,
     });
   }
@@ -103,8 +103,8 @@ export async function sendBusinessEvent(
   writeEvent(env, {
     event: event.type,
     orgId: organizationId,
-    route: '/internal/events',
-    method: 'EVENT',
+    route: "/internal/events",
+    method: "EVENT",
     status: 200,
     value: (event.metadata as any)?.value,
   });

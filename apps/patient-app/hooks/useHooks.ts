@@ -3,13 +3,12 @@
  * Collection of helpful custom hooks
  */
 
-
 /**
  * useFirstRender Hook
  * Check if component is in first render
  */
 
-import { useRef, useEffect, useState, useCallback } from 'react';
+import { useRef, useEffect, useState, useCallback } from "react";
 
 export function useFirstRender(): boolean {
   const firstRender = useRef(true);
@@ -45,7 +44,7 @@ export function useIsMounted(): () => boolean {
 export function useInterval(
   callback: () => void,
   delay: number | null,
-  immediate: boolean = false
+  immediate: boolean = false,
 ) {
   const savedCallback = useRef(callback);
 
@@ -73,10 +72,7 @@ export function useInterval(
  * useTimeout Hook
  * Wrapper around setTimeout
  */
-export function useTimeout(
-  callback: () => void,
-  delay: number | null
-): () => void {
+export function useTimeout(callback: () => void, delay: number | null): () => void {
   const savedCallback = useRef(callback);
 
   useEffect(() => {
@@ -103,10 +99,12 @@ export function useTimeout(
  * useToggle Hook
  * Toggle boolean state
  */
-export function useToggle(initialValue: boolean = false): [boolean, () => void, (value: boolean) => void] {
+export function useToggle(
+  initialValue: boolean = false,
+): [boolean, () => void, (value: boolean) => void] {
   const [value, setValue] = useState(initialValue);
 
-  const toggle = useCallback(() => setValue(v => !v), []);
+  const toggle = useCallback(() => setValue((v) => !v), []);
   const setToggle = useCallback((v: boolean) => setValue(v), []);
 
   return [value, toggle, setToggle];
@@ -120,31 +118,31 @@ export function useArray<T>(initialValue: T[] = []) {
   const [array, setArray] = useState<T[]>(initialValue);
 
   const push = useCallback((...items: T[]) => {
-    setArray(prev => [...prev, ...items]);
+    setArray((prev) => [...prev, ...items]);
   }, []);
 
   const unshift = useCallback((...items: T[]) => {
-    setArray(prev => [...items, ...prev]);
+    setArray((prev) => [...items, ...prev]);
   }, []);
 
   const pop = useCallback(() => {
-    setArray(prev => prev.slice(0, -1));
+    setArray((prev) => prev.slice(0, -1));
   }, []);
 
   const shift = useCallback(() => {
-    setArray(prev => prev.slice(1));
+    setArray((prev) => prev.slice(1));
   }, []);
 
   const filter = useCallback((callback: (item: T, index: number) => boolean) => {
-    setArray(prev => prev.filter(callback));
+    setArray((prev) => prev.filter(callback));
   }, []);
 
   const map = useCallback(<U extends T>(callback: (item: T, index: number) => U) => {
-    setArray(prev => prev.map(callback) as U[]);
+    setArray((prev) => prev.map(callback) as U[]);
   }, []);
 
   const removeByIndex = useCallback((index: number) => {
-    setArray(prev => prev.filter((_, i) => i !== index));
+    setArray((prev) => prev.filter((_, i) => i !== index));
   }, []);
 
   const clear = useCallback(() => {
@@ -173,16 +171,19 @@ export function useCounter(initialValue: number = 0) {
   const [count, setCount] = useState(initialValue);
 
   const increment = useCallback((step: number = 1) => {
-    setCount(prev => prev + step);
+    setCount((prev) => prev + step);
   }, []);
 
   const decrement = useCallback((step: number = 1) => {
-    setCount(prev => prev - step);
+    setCount((prev) => prev - step);
   }, []);
 
-  const reset = useCallback((value: number = initialValue) => {
-    setCount(value);
-  }, [initialValue]);
+  const reset = useCallback(
+    (value: number = initialValue) => {
+      setCount(value);
+    },
+    [initialValue],
+  );
 
   const setValue = useCallback((value: number) => {
     setCount(value);

@@ -12,9 +12,11 @@ WhatsApp Business integration for patient communication, appointment reminders, 
 ## Architecture
 
 ### Route File
+
 `apps/api/src/routes/whatsapp.ts` (~1,049 lines)
 
 ### Database Tables (from `src/server/db/schema/whatsapp-inbox.ts`)
+
 - `whatsapp_contacts` — Patient-phone mapping with organizationId
 - `wa_conversations` — Thread state (open/pending/resolved), assigned agent, SLA
 - `wa_messages` — Inbound/outbound messages with status (sent/delivered/read/failed)
@@ -28,6 +30,7 @@ WhatsApp Business integration for patient communication, appointment reminders, 
 - `wa_opt_in_out` — Consent tracking per contact (opt-in/opt-out with timestamp)
 
 ### RLS
+
 All tables use `withOrganizationPolicy` — strict tenant isolation.
 
 ---
@@ -36,14 +39,14 @@ All tables use `withOrganizationPolicy` — strict tenant isolation.
 
 6 default templates shipped in code, loadable from `settings.whatsapp_templates` (organization settings):
 
-| Template Key | Category | Variables | Purpose |
-|---|---|---|---|
-| `confirmacao_agendamento` | appointment | `{{name}}`, `{{therapist}}`, `{{date}}`, `{{time}}` | Appointment confirmation |
-| `lembrete_sessao` | reminder | `{{time}}`, `{{therapist}}` | Session reminder |
-| `cancelamento` | appointment | `{{date}}` | Cancellation notice |
-| `prescricao` | clinical | `{{link}}` | Exercise prescription link |
-| `solicitar_confirmacao` | appointment | `{{name}}`, `{{date}}`, `{{time}}` | Request appointment confirmation |
-| `oferta_vaga` | waitlist | `{{date}}`, `{{time}}`, `{{therapist}}`, `{{expires}}` | Waitlist spot offer |
+| Template Key              | Category    | Variables                                              | Purpose                          |
+| ------------------------- | ----------- | ------------------------------------------------------ | -------------------------------- |
+| `confirmacao_agendamento` | appointment | `{{name}}`, `{{therapist}}`, `{{date}}`, `{{time}}`    | Appointment confirmation         |
+| `lembrete_sessao`         | reminder    | `{{time}}`, `{{therapist}}`                            | Session reminder                 |
+| `cancelamento`            | appointment | `{{date}}`                                             | Cancellation notice              |
+| `prescricao`              | clinical    | `{{link}}`                                             | Exercise prescription link       |
+| `solicitar_confirmacao`   | appointment | `{{name}}`, `{{date}}`, `{{time}}`                     | Request appointment confirmation |
+| `oferta_vaga`             | waitlist    | `{{date}}`, `{{time}}`, `{{therapist}}`, `{{expires}}` | Waitlist spot offer              |
 
 Template categories: `appointment`, `reminder`, `clinical`, `waitlist`.
 
@@ -54,6 +57,7 @@ Variables are extracted with `{{variable}}` placeholder pattern.
 ## Automation Rules Schema
 
 `wa_automation_rules` supports:
+
 - **Triggers:** keyword_match, new_conversation, no_response_after, appointment_status_change, session_finalized
 - **Actions:** auto_reply, auto_assign, add_tag, send_template, trigger_webhook, escalate
 - **Conditions:** time_range, contact_tag, patient_status, conversation_count
@@ -63,6 +67,7 @@ Variables are extracted with `{{variable}}` placeholder pattern.
 ## SLA Configuration
 
 Per-organization SLA policies via `wa_sla_config`:
+
 - `firstResponseMinutes` — Max minutes for first agent response
 - `resolutionMinutes` — Max minutes to resolve conversation
 - `businessHoursOnly` — Only count SLA during configured business hours
@@ -75,7 +80,9 @@ Tracked in `wa_sla_tracking` with `startedAt`, `firstResponseAt`, `resolvedAt`, 
 ## Integration Points
 
 ### Cloudflare Queues
+
 Use `c.executionCtx.waitUntil()` to enqueue WhatsApp messages for reliable delivery:
+
 ```ts
 c.executionCtx.waitUntil(
   c.env.WHATSAPP_QUEUE.send({
@@ -84,17 +91,19 @@ c.executionCtx.waitUntil(
     template: "confirmacao_agendamento",
     variables: { name, therapist, date, time },
     organizationId: user.organizationId,
-  })
-)
+  }),
+);
 ```
 
 ### Appointment Integration
+
 - On `appointment.created` → send confirmation template
 - On `appointment.status_change` to `presenca_confirmada` → send reminder
 - On `appointment.cancelled` → send cancellation template
 - On `waitlist.spot_available` → send `oferta_vaga` template with expiry
 
 ### Session Integration
+
 - On `session.finalized` → send prescription link via `prescricao` template
 - Link points to patient portal exercise view (when implemented)
 
@@ -106,14 +115,12 @@ c.executionCtx.waitUntil(
 app.post("/webhook", async (c) => {
   const body = await c.req.json();
   const entry = body.entry?.[0]?.changes?.[0]?.value;
-  
+
   if (entry?.messages) {
     const message = entry.messages[0];
-    c.executionCtx.waitUntil(
-      processIncomingMessage(c.env, message)
-    );
+    c.executionCtx.waitUntil(processIncomingMessage(c.env, message));
   }
-  
+
   return c.json({ status: "ok" });
 });
 ```

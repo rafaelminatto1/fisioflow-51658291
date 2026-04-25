@@ -1,34 +1,32 @@
-import { request, type BrowserContext, type StorageState } from '@playwright/test';
+import { request, type BrowserContext, type StorageState } from "@playwright/test";
 
 type SharedAuthSession = {
   storageState: StorageState;
   bearer: string;
 };
 
-const DEFAULT_ALLOWED_AUTH_ORIGIN = 'https://www.moocafisio.com.br';
-const neonAuthUrl = process.env.VITE_NEON_AUTH_URL || '';
+const DEFAULT_ALLOWED_AUTH_ORIGIN = "https://www.moocafisio.com.br";
+const neonAuthUrl = process.env.VITE_NEON_AUTH_URL || "";
 const sessionCache = new Map<string, Promise<SharedAuthSession>>();
 
 function normalizeOrigin(value: string): string {
   try {
     return new URL(value).origin;
   } catch {
-    return value.replace(/\/+$/, '');
+    return value.replace(/\/+$/, "");
   }
 }
 
 export function getE2EAuthOrigin(): string {
   return normalizeOrigin(
-    process.env.E2E_NEON_AUTH_ORIGIN ||
-      process.env.E2E_AUTH_ORIGIN ||
-      DEFAULT_ALLOWED_AUTH_ORIGIN,
+    process.env.E2E_NEON_AUTH_ORIGIN || process.env.E2E_AUTH_ORIGIN || DEFAULT_ALLOWED_AUTH_ORIGIN,
   );
 }
 
 export function isCanonicalMoocaOrigin(value: string): boolean {
   try {
     const { hostname } = new URL(normalizeOrigin(value));
-    return hostname === 'moocafisio.com.br' || hostname === 'www.moocafisio.com.br';
+    return hostname === "moocafisio.com.br" || hostname === "www.moocafisio.com.br";
   } catch {
     return false;
   }
@@ -36,7 +34,7 @@ export function isCanonicalMoocaOrigin(value: string): boolean {
 
 async function createSession(email: string, password: string): Promise<SharedAuthSession> {
   if (!neonAuthUrl) {
-    throw new Error('VITE_NEON_AUTH_URL ausente para os testes E2E.');
+    throw new Error("VITE_NEON_AUTH_URL ausente para os testes E2E.");
   }
 
   const requestOrigin = getE2EAuthOrigin();
@@ -51,7 +49,7 @@ async function createSession(email: string, password: string): Promise<SharedAut
     const signIn = await authContext.post(`${neonAuthUrl}/sign-in/email`, {
       data: { email, password },
       headers: {
-        'content-type': 'application/json',
+        "content-type": "application/json",
       },
     });
 
@@ -69,9 +67,9 @@ async function createSession(email: string, password: string): Promise<SharedAut
       throw new Error(`Falha no get-session HTTP: ${session.status()} ${await session.text()}`);
     }
 
-    const bearer = session.headers()['set-auth-jwt'];
-    if (!bearer || bearer.split('.').length !== 3) {
-      throw new Error('Header set-auth-jwt ausente ou inválido no Neon Auth.');
+    const bearer = session.headers()["set-auth-jwt"];
+    if (!bearer || bearer.split(".").length !== 3) {
+      throw new Error("Header set-auth-jwt ausente ou inválido no Neon Auth.");
     }
 
     const storageState = await authContext.storageState();
@@ -84,7 +82,10 @@ async function createSession(email: string, password: string): Promise<SharedAut
   }
 }
 
-export async function getSharedAuthSession(email: string, password: string): Promise<SharedAuthSession> {
+export async function getSharedAuthSession(
+  email: string,
+  password: string,
+): Promise<SharedAuthSession> {
   const cacheKey = `${email}::${password}`;
   const cached = sessionCache.get(cacheKey);
   if (cached) return cached;

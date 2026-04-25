@@ -21,53 +21,53 @@ const prefetchAttempts = new Set<string>();
  * @param key Unique key for caching
  */
 export async function prefetchRoute(
-	componentLoader: () => Promise<{ default: ComponentType<unknown> }>,
-	key: string,
+  componentLoader: () => Promise<{ default: ComponentType<unknown> }>,
+  key: string,
 ): Promise<void> {
-	// Check if already prefetched
-	if (prefetchedCache.has(key)) {
-		return;
-	}
+  // Check if already prefetched
+  if (prefetchedCache.has(key)) {
+    return;
+  }
 
-	// Check if currently prefetching
-	if (prefetchAttempts.has(key)) {
-		return;
-	}
+  // Check if currently prefetching
+  if (prefetchAttempts.has(key)) {
+    return;
+  }
 
-	prefetchAttempts.add(key);
+  prefetchAttempts.add(key);
 
-	try {
-		const module = await componentLoader();
-		prefetchedCache.set(key, module.default);
-	} catch  {
-		// Remove from attempts on failure so we can retry
-		prefetchAttempts.delete(key);
-	}
+  try {
+    const module = await componentLoader();
+    prefetchedCache.set(key, module.default);
+  } catch {
+    // Remove from attempts on failure so we can retry
+    prefetchAttempts.delete(key);
+  }
 }
 
 /**
  * Check if a route has been prefetched
  */
 export function isRoutePrefetched(key: string): boolean {
-	return prefetchedCache.has(key);
+  return prefetchedCache.has(key);
 }
 
 /**
  * Clear prefetch cache (useful for testing or memory management)
  */
 export function clearPrefetchCache(): void {
-	prefetchedCache.clear();
-	prefetchAttempts.clear();
+  prefetchedCache.clear();
+  prefetchAttempts.clear();
 }
 
 /**
  * Get prefetch stats
  */
 export function getPrefetchStats(): { prefetched: number; pending: number } {
-	return {
-		prefetched: prefetchedCache.size,
-		pending: prefetchAttempts.size - prefetchedCache.size,
-	};
+  return {
+    prefetched: prefetchedCache.size,
+    pending: prefetchAttempts.size - prefetchedCache.size,
+  };
 }
 
 // ============================================================================
@@ -78,122 +78,113 @@ export function getPrefetchStats(): { prefetched: number; pending: number } {
  * Route keys for commonly accessed pages
  */
 export const RouteKeys = {
-	// Core pages
-	DASHBOARD: APP_ROUTES.DASHBOARD,
-	PATIENTS: APP_ROUTES.PATIENTS,
-	SCHEDULE: APP_ROUTES.AGENDA,
-	EXERCISES: APP_ROUTES.EXERCISES,
-	FINANCIAL: APP_ROUTES.FINANCIAL,
-	REPORTS: APP_ROUTES.REPORTS,
-	SETTINGS: APP_ROUTES.SETTINGS,
+  // Core pages
+  DASHBOARD: APP_ROUTES.DASHBOARD,
+  PATIENTS: APP_ROUTES.PATIENTS,
+  SCHEDULE: APP_ROUTES.AGENDA,
+  EXERCISES: APP_ROUTES.EXERCISES,
+  FINANCIAL: APP_ROUTES.FINANCIAL,
+  REPORTS: APP_ROUTES.REPORTS,
+  SETTINGS: APP_ROUTES.SETTINGS,
 
-	// Patient-related
-	PATIENT_PROFILE: "patient-profile",
-	PATIENT_EVOLUTION: "patient-evolution",
-	MEDICAL_RECORD: "medical-record",
+  // Patient-related
+  PATIENT_PROFILE: "patient-profile",
+  PATIENT_EVOLUTION: "patient-evolution",
+  MEDICAL_RECORD: "medical-record",
 
-	// Clinical
-	COMMUNICATIONS: "communications",
-	TELEMEDICINE: "telemedicine",
-	SMART_DASHBOARD: APP_ROUTES.SMART_DASHBOARD,
+  // Clinical
+  COMMUNICATIONS: "communications",
+  TELEMEDICINE: "telemedicine",
+  SMART_DASHBOARD: APP_ROUTES.SMART_DASHBOARD,
 
-	// Admin
-	USER_MANAGEMENT: "admin-users",
-	ORGANIZATION_SETTINGS: "admin-organization",
-	SECURITY_SETTINGS: "settings-security",
+  // Admin
+  USER_MANAGEMENT: "admin-users",
+  ORGANIZATION_SETTINGS: "admin-organization",
+  SECURITY_SETTINGS: "settings-security",
 } as const;
 
 /**
  * Prefetch strategy based on user behavior
  */
 export const PrefetchStrategy = {
-	/**
-	 * Prefetch on hover (for navigation links)
-	 */
-	onHover: (
-		routeKey: string,
-		loader: () => Promise<{ default: ComponentType<unknown> }>,
-	) => ({
-		onMouseEnter: () => {
-			// Use requestIdleCallback if available, otherwise setTimeout
-			if ("requestIdleCallback" in window) {
-				(
-					window as Window & {
-						requestIdleCallback?: (callback: () => void) => void;
-					}
-				).requestIdleCallback(() => prefetchRoute(loader, routeKey));
-			} else {
-				setTimeout(() => prefetchRoute(loader, routeKey), 100);
-			}
-		},
-	}),
+  /**
+   * Prefetch on hover (for navigation links)
+   */
+  onHover: (routeKey: string, loader: () => Promise<{ default: ComponentType<unknown> }>) => ({
+    onMouseEnter: () => {
+      // Use requestIdleCallback if available, otherwise setTimeout
+      if ("requestIdleCallback" in window) {
+        (
+          window as Window & {
+            requestIdleCallback?: (callback: () => void) => void;
+          }
+        ).requestIdleCallback(() => prefetchRoute(loader, routeKey));
+      } else {
+        setTimeout(() => prefetchRoute(loader, routeKey), 100);
+      }
+    },
+  }),
 
-	/**
-	 * Prefetch on mount (for likely next routes)
-	 */
-	onMount: (
-		routeKey: string,
-		loader: () => Promise<{ default: ComponentType<unknown> }>,
-	) => {
-		// Delay prefetch to avoid blocking initial render
-		if ("requestIdleCallback" in window) {
-			(
-				window as Window & {
-					requestIdleCallback?: (callback: () => void) => void;
-				}
-			).requestIdleCallback(() => prefetchRoute(loader, routeKey));
-		} else {
-			setTimeout(() => prefetchRoute(loader, routeKey), 2000);
-		}
-	},
+  /**
+   * Prefetch on mount (for likely next routes)
+   */
+  onMount: (routeKey: string, loader: () => Promise<{ default: ComponentType<unknown> }>) => {
+    // Delay prefetch to avoid blocking initial render
+    if ("requestIdleCallback" in window) {
+      (
+        window as Window & {
+          requestIdleCallback?: (callback: () => void) => void;
+        }
+      ).requestIdleCallback(() => prefetchRoute(loader, routeKey));
+    } else {
+      setTimeout(() => prefetchRoute(loader, routeKey), 2000);
+    }
+  },
 
-	/**
-	 * Prefetch immediately (for critical routes)
-	 */
-	immediate: (
-		routeKey: string,
-		loader: () => Promise<{ default: ComponentType<unknown> }>,
-	) => {
-		prefetchRoute(loader, routeKey);
-	},
+  /**
+   * Prefetch immediately (for critical routes)
+   */
+  immediate: (routeKey: string, loader: () => Promise<{ default: ComponentType<unknown> }>) => {
+    prefetchRoute(loader, routeKey);
+  },
 };
 
 /**
  * Intelligent prefetch strategy based on current route
  */
 export function prefetchRelatedRoutes(currentRoute: string): void {
-	// Define related routes for each section
-	const routeMap: Record<string, string[]> = {
-		[APP_ROUTES.PATIENTS]: [APP_ROUTES.AGENDA, APP_ROUTES.EXERCISES, "/medical-record"],
-		[APP_ROUTES.AGENDA]: [APP_ROUTES.PATIENTS, "/waitlist"],
-		[APP_ROUTES.FINANCIAL]: [APP_ROUTES.REPORTS, APP_ROUTES.PATIENTS],
-		[`${APP_ROUTES.PATIENTS}/:id`]: ["/patient-evolution/:appointmentId", "/medical-record"],
-		[APP_ROUTES.SETTINGS]: ["/admin/users", "/security-settings"],
-	};
+  // Define related routes for each section
+  const routeMap: Record<string, string[]> = {
+    [APP_ROUTES.PATIENTS]: [APP_ROUTES.AGENDA, APP_ROUTES.EXERCISES, "/medical-record"],
+    [APP_ROUTES.AGENDA]: [APP_ROUTES.PATIENTS, "/waitlist"],
+    [APP_ROUTES.FINANCIAL]: [APP_ROUTES.REPORTS, APP_ROUTES.PATIENTS],
+    [`${APP_ROUTES.PATIENTS}/:id`]: ["/patient-evolution/:appointmentId", "/medical-record"],
+    [APP_ROUTES.SETTINGS]: ["/admin/users", "/security-settings"],
+  };
 
-	// Find matching routes and prefetch them
-	for (const [route, relatedRoutes] of Object.entries(routeMap)) {
-		if (currentRoute.startsWith(route.replace(/:[^/]+/g, ""))) {
-			relatedRoutes.forEach((_relatedRoute) => {
-				// This would be used with actual route loaders in a real implementation
-				// For now, it's a placeholder for the prefetching strategy
-			});
-		}
-	}
+  // Find matching routes and prefetch them
+  for (const [route, relatedRoutes] of Object.entries(routeMap)) {
+    if (currentRoute.startsWith(route.replace(/:[^/]+/g, ""))) {
+      relatedRoutes.forEach((_relatedRoute) => {
+        // This would be used with actual route loaders in a real implementation
+        // For now, it's a placeholder for the prefetching strategy
+      });
+    }
+  }
 }
 
 /**
  * Hook to prefetch routes on component mount
  */
 export function usePrefetchRoutes(
-	_routes: Array<{
-		key: string;
-		loader: () => Promise<{ default: ComponentType<unknown> }>;
-	}>,
-	_strategy: "immediate" | "idle" | "delayed" = "idle",
+  _routes: Array<{
+    key: string;
+    loader: () => Promise<{ default: ComponentType<unknown> }>;
+  }>,
+  _strategy: "immediate" | "idle" | "delayed" = "idle",
 ) {
-	// This would be used in React components
-	// Implementation depends on whether we're using React.lazy or custom loaders
+  // This would be used in React components
+  // Implementation depends on whether we're using React.lazy or custom loaders
 }
 
 /**
@@ -201,116 +192,116 @@ export function usePrefetchRoutes(
  * These match the webpackChunkName comments in routes.tsx
  */
 export const ChunkNames = {
-	// Auth
-	"auth-welcome": "Welcome page",
-	auth: "Authentication page",
+  // Auth
+  "auth-welcome": "Welcome page",
+  auth: "Authentication page",
 
-	// Core
-	dashboard: "Dashboard",
-	patients: "Patients list",
-	schedule: "Schedule/Calendar",
-	exercises: "Exercises",
-	financial: "Financial",
-	reports: "Reports",
-	settings: "Settings",
-	profile: "User profile",
-	"medical-record": "Medical record",
+  // Core
+  dashboard: "Dashboard",
+  patients: "Patients list",
+  schedule: "Schedule/Calendar",
+  exercises: "Exercises",
+  financial: "Financial",
+  reports: "Reports",
+  settings: "Settings",
+  profile: "User profile",
+  "medical-record": "Medical record",
 
-	// Features
-	"smart-dashboard": "Smart dashboard",
-	"ai-smart": "Smart AI",
-	physiotherapy: "Physiotherapy hub",
-	telemedicine: "Telemedicine",
-	"telemedicine-room": "Telemedicine room",
-	"exercises-library": "Exercise library",
-	"patient-evolution": "Patient evolution",
-	"patient-evolution-report": "Evolution report",
-	"session-evolution": "Session evolution",
-	"pain-maps": "Pain maps",
-	"evaluation-new": "New evaluation",
-	"patient-profile": "Patient profile",
-	communications: "Communications",
+  // Features
+  "smart-dashboard": "Smart dashboard",
+  "ai-smart": "Smart AI",
+  physiotherapy: "Physiotherapy hub",
+  telemedicine: "Telemedicine",
+  "telemedicine-room": "Telemedicine room",
+  "exercises-library": "Exercise library",
+  "patient-evolution": "Patient evolution",
+  "patient-evolution-report": "Evolution report",
+  "session-evolution": "Session evolution",
+  "pain-maps": "Pain maps",
+  "evaluation-new": "New evaluation",
+  "patient-profile": "Patient profile",
+  communications: "Communications",
 
-	// Settings
-	"settings-schedule": "Schedule settings",
-	"settings-calendar": "Calendar settings",
-	"settings-security": "Security settings",
+  // Settings
+  "settings-schedule": "Schedule settings",
+  "settings-calendar": "Calendar settings",
+  "settings-security": "Security settings",
 
-	// Registration (Cadastros)
-	"cadastros-services": "Services registration",
-	"cadastros-suppliers": "Suppliers registration",
-	"cadastros-holidays": "Holidays registration",
-	"cadastros-certificates": "Certificates registration",
-	"cadastros-contracts": "Contracts registration",
-	"cadastros-templates": "Templates registration",
-	"cadastros-forms": "Forms registration",
-	"cadastros-form-builder": "Form builder",
-	"cadastros-objectives": "Objectives registration",
+  // Registration (Cadastros)
+  "cadastros-services": "Services registration",
+  "cadastros-suppliers": "Suppliers registration",
+  "cadastros-holidays": "Holidays registration",
+  "cadastros-certificates": "Certificates registration",
+  "cadastros-contracts": "Contracts registration",
+  "cadastros-templates": "Templates registration",
+  "cadastros-forms": "Forms registration",
+  "cadastros-form-builder": "Form builder",
+  "cadastros-objectives": "Objectives registration",
 
-	// Financial
-	"financial-accounts": "Financial accounts",
-	"financial-cashflow": "Cash flow",
+  // Financial
+  "financial-accounts": "Financial accounts",
+  "financial-cashflow": "Cash flow",
 
-	// Reports
-	"reports-birthdays": "Birthdays report",
-	"reports-attendance": "Attendance report",
-	"reports-team": "Team performance",
+  // Reports
+  "reports-birthdays": "Birthdays report",
+  "reports-attendance": "Attendance report",
+  "reports-team": "Team performance",
 
-	// Advanced
-	"vouchers-partners": "Partners",
-	vouchers: "Vouchers",
-	install: "Install",
-	waitlist: "Waitlist",
-	surveys: "Surveys",
-	tasks: "Tasks",
-	inventory: "Inventory",
-	protocols: "Protocols",
+  // Advanced
+  "vouchers-partners": "Partners",
+  vouchers: "Vouchers",
+  install: "Install",
+  waitlist: "Waitlist",
+  surveys: "Surveys",
+  tasks: "Tasks",
+  inventory: "Inventory",
+  protocols: "Protocols",
 
-	// Events
-	events: "Events",
-	"events-detail": "Event details",
-	"events-analytics": "Events analytics",
+  // Events
+  events: "Events",
+  "events-detail": "Event details",
+  "events-analytics": "Events analytics",
 
-	// Admin
-	"admin-users": "User management",
-	"admin-audit": "Audit logs",
-	"admin-invitations": "Invitations",
-	"admin-security": "Security monitoring",
-	"admin-crud": "Admin CRUD",
-	"admin-organization": "Organization settings",
-	"admin-analytics": "Admin analytics",
-	"analytics-advanced": "Advanced analytics",
-	"analytics-cohorts": "Cohort analysis",
-	"api-docs": "API documentation",
+  // Admin
+  "admin-users": "User management",
+  "admin-audit": "Audit logs",
+  "admin-invitations": "Invitations",
+  "admin-security": "Security monitoring",
+  "admin-crud": "Admin CRUD",
+  "admin-organization": "Organization settings",
+  "admin-analytics": "Admin analytics",
+  "analytics-advanced": "Advanced analytics",
+  "analytics-cohorts": "Cohort analysis",
+  "api-docs": "API documentation",
 
-	// Gamification
-	"gamification-patient": "Patient gamification",
-	"gamification-admin": "Admin gamification",
+  // Gamification
+  "gamification-patient": "Patient gamification",
+  "gamification-admin": "Admin gamification",
 
-	// Goals
-	"goals-list": "Goals list",
-	"goals-editor": "Goals editor",
+  // Goals
+  "goals-list": "Goals list",
+  "goals-editor": "Goals editor",
 
-	// AI
-	"ai-chatbot": "Medical chatbot",
-	"ai-computer-vision": "Computer vision",
-	"ai-intelligent-reports": "Intelligent reports",
-	"ai-ar": "Augmented reality",
+  // AI
+  "ai-chatbot": "Medical chatbot",
+  "ai-computer-vision": "Computer vision",
+  "ai-intelligent-reports": "Intelligent reports",
+  "ai-ar": "Augmented reality",
 
-	// Analysis
-	"analysis-images": "Image analysis",
-	"analysis-dynamic": "Dynamic comparison",
+  // Analysis
+  "analysis-images": "Image analysis",
+  "analysis-dynamic": "Dynamic comparison",
 
-	// CRM
-	"crm-leads": "Leads",
-	"crm-dashboard": "CRM dashboard",
-	"portal-patient": "Patient portal",
+  // CRM
+  "crm-leads": "Leads",
+  "crm-dashboard": "CRM dashboard",
+  "portal-patient": "Patient portal",
 
-	// Misc
-	notifications: "Notifications",
-	occupancy: "Therapist occupancy",
-	"prescription-public": "Public prescription",
-	"test-upload": "Upload test",
-	"clinical-tests": "Clinical tests",
-	"not-found": "Not found",
+  // Misc
+  notifications: "Notifications",
+  occupancy: "Therapist occupancy",
+  "prescription-public": "Public prescription",
+  "test-upload": "Upload test",
+  "clinical-tests": "Clinical tests",
+  "not-found": "Not found",
 } as const;

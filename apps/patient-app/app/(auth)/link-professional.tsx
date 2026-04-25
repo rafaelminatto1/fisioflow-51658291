@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect } from "react";
 
 import {
   View,
@@ -10,15 +10,15 @@ import {
   TouchableOpacity,
   Alert,
   ActivityIndicator,
-} from 'react-native';
-import { router } from 'expo-router';
-import { SafeAreaView } from 'react-native-safe-area-context';
-import { Ionicons } from '@expo/vector-icons';
-import { patientApi } from '@/lib/api';
-import { useAuthStore } from '@/store/auth';
-import { useColors } from '@/hooks/useColorScheme';
-import { Card, Button, Input } from '@/components';
-import { log } from '@/lib/logger';
+} from "react-native";
+import { router } from "expo-router";
+import { SafeAreaView } from "react-native-safe-area-context";
+import { Ionicons } from "@expo/vector-icons";
+import { patientApi } from "@/lib/api";
+import { useAuthStore } from "@/store/auth";
+import { useColors } from "@/hooks/useColorScheme";
+import { Card, Button, Input } from "@/components";
+import { log } from "@/lib/logger";
 
 interface Professional {
   id: string;
@@ -32,7 +32,7 @@ export default function LinkProfessionalScreen() {
   const colors = useColors();
   const { user } = useAuthStore();
 
-  const [inviteCode, setInviteCode] = useState('');
+  const [inviteCode, setInviteCode] = useState("");
   const [loading, setLoading] = useState(false);
   const [searching, setSearching] = useState(false);
   const [foundProfessional, setFoundProfessional] = useState<Professional | null>(null);
@@ -56,7 +56,7 @@ export default function LinkProfessionalScreen() {
         });
       }
     } catch (error) {
-      log.error('Error checking link:', error);
+      log.error("Error checking link:", error);
     }
   };
 
@@ -68,7 +68,7 @@ export default function LinkProfessionalScreen() {
     const cleanCode = formatInviteCode(inviteCode).trim();
 
     if (cleanCode.length < 2) {
-      Alert.alert('Busca inválida', 'Digite pelo menos 2 caracteres para buscar.');
+      Alert.alert("Busca inválida", "Digite pelo menos 2 caracteres para buscar.");
       return;
     }
 
@@ -80,19 +80,19 @@ export default function LinkProfessionalScreen() {
 
       if (!professionals.length) {
         Alert.alert(
-          'Profissional não encontrado',
-          'Nenhum profissional encontrado com esse nome, email ou código.'
+          "Profissional não encontrado",
+          "Nenhum profissional encontrado com esse nome, email ou código.",
         );
       } else {
         setFoundProfessional({
           id: professionals[0].id,
-          name: professionals[0].name || 'Profissional',
+          name: professionals[0].name || "Profissional",
           email: professionals[0].email,
         });
       }
     } catch (error) {
-      log.error('Error searching professional:', error);
-      Alert.alert('Erro', 'Não foi possível buscar o profissional. Tente novamente.');
+      log.error("Error searching professional:", error);
+      Alert.alert("Erro", "Não foi possível buscar o profissional. Tente novamente.");
     } finally {
       setSearching(false);
     }
@@ -107,18 +107,18 @@ export default function LinkProfessionalScreen() {
       await patientApi.linkProfessional(foundProfessional.id);
 
       Alert.alert(
-        'Vinculado com sucesso!',
+        "Vinculado com sucesso!",
         `Você agora está conectado com ${foundProfessional.name}.`,
         [
           {
-            text: 'Continuar',
-            onPress: () => router.replace('/(tabs)'),
+            text: "Continuar",
+            onPress: () => router.replace("/(tabs)"),
           },
-        ]
+        ],
       );
     } catch (error) {
-      log.error('Error linking professional:', error);
-      Alert.alert('Erro', 'Não foi possível vincular ao profissional. Tente novamente.');
+      log.error("Error linking professional:", error);
+      Alert.alert("Erro", "Não foi possível vincular ao profissional. Tente novamente.");
     } finally {
       setLoading(false);
     }
@@ -126,23 +126,26 @@ export default function LinkProfessionalScreen() {
 
   const handleSkip = () => {
     Alert.alert(
-      'Pular vinculação?',
-      'Você pode vincular seu perfil a um profissional mais tarde nas configurações.',
+      "Pular vinculação?",
+      "Você pode vincular seu perfil a um profissional mais tarde nas configurações.",
       [
-        { text: 'Cancelar', style: 'cancel' },
+        { text: "Cancelar", style: "cancel" },
         {
-          text: 'Pular',
-          style: 'destructive',
-          onPress: () => router.replace('/(tabs)'),
+          text: "Pular",
+          style: "destructive",
+          onPress: () => router.replace("/(tabs)"),
         },
-      ]
+      ],
     );
   };
 
   return (
-    <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]} edges={['left', 'right']}>
+    <SafeAreaView
+      style={[styles.container, { backgroundColor: colors.background }]}
+      edges={["left", "right"]}
+    >
       <KeyboardAvoidingView
-        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+        behavior={Platform.OS === "ios" ? "padding" : "height"}
         style={styles.keyboardView}
       >
         <ScrollView
@@ -152,14 +155,14 @@ export default function LinkProfessionalScreen() {
         >
           {/* Header */}
           <View style={styles.header}>
-            <View style={[styles.iconContainer, { backgroundColor: colors.primary + '20' }]}>
+            <View style={[styles.iconContainer, { backgroundColor: colors.primary + "20" }]}>
               <Ionicons name="people" size={32} color={colors.primary} />
             </View>
             <Text style={[styles.title, { color: colors.text }]}>Vincular Profissional</Text>
             <Text style={[styles.subtitle, { color: colors.textSecondary }]}>
               {alreadyLinked
-                ? 'Você já está conectado com um profissional'
-                : 'Busque pelo nome, email ou código do seu fisioterapeuta'}
+                ? "Você já está conectado com um profissional"
+                : "Busque pelo nome, email ou código do seu fisioterapeuta"}
             </Text>
           </View>
 
@@ -167,9 +170,7 @@ export default function LinkProfessionalScreen() {
             <Card style={styles.linkedCard}>
               <View style={styles.linkedHeader}>
                 <Ionicons name="checkmark-circle" size={48} color={colors.success} />
-                <Text style={[styles.linkedTitle, { color: colors.text }]}>
-                  Já Conectado
-                </Text>
+                <Text style={[styles.linkedTitle, { color: colors.text }]}>Já Conectado</Text>
               </View>
               <Text style={[styles.linkedText, { color: colors.textSecondary }]}>
                 Você está conectado com:
@@ -181,7 +182,7 @@ export default function LinkProfessionalScreen() {
               </View>
               <Button
                 title="Continuar para o App"
-                onPress={() => router.replace('/(tabs)')}
+                onPress={() => router.replace("/(tabs)")}
                 style={styles.continueButton}
               />
             </Card>
@@ -215,13 +216,16 @@ export default function LinkProfessionalScreen() {
                   >
                     <Ionicons name="search" size={18} color="#FFFFFF" />
                   </TouchableOpacity>
-                  {searching ? (
-                    <ActivityIndicator size="small" color={colors.primary} />
-                  ) : null}
+                  {searching ? <ActivityIndicator size="small" color={colors.primary} /> : null}
                 </View>
 
                 {foundProfessional && (
-                  <View style={[styles.foundCard, { backgroundColor: colors.surface, borderColor: colors.success }]}>
+                  <View
+                    style={[
+                      styles.foundCard,
+                      { backgroundColor: colors.surface, borderColor: colors.success },
+                    ]}
+                  >
                     <Ionicons name="checkmark-circle" size={24} color={colors.success} />
                     <View style={styles.foundInfo}>
                       <Text style={[styles.foundName, { color: colors.text }]}>
@@ -289,15 +293,7 @@ export default function LinkProfessionalScreen() {
   );
 }
 
-function InstructionStep({
-  number,
-  text,
-  colors,
-}: {
-  number: number;
-  text: string;
-  colors: any;
-}) {
+function InstructionStep({ number, text, colors }: { number: number; text: string; colors: any }) {
   return (
     <View style={styles.instructionItem}>
       <View style={[styles.stepNumber, { backgroundColor: colors.primary }]}>
@@ -320,39 +316,39 @@ const styles = StyleSheet.create({
     paddingBottom: 40,
   },
   header: {
-    alignItems: 'center',
+    alignItems: "center",
     marginBottom: 32,
   },
   iconContainer: {
     width: 64,
     height: 64,
     borderRadius: 32,
-    alignItems: 'center',
-    justifyContent: 'center',
+    alignItems: "center",
+    justifyContent: "center",
     marginBottom: 16,
   },
   title: {
     fontSize: 24,
-    fontWeight: '700',
+    fontWeight: "700",
     marginBottom: 8,
-    textAlign: 'center',
+    textAlign: "center",
   },
   subtitle: {
     fontSize: 14,
-    textAlign: 'center',
+    textAlign: "center",
     paddingHorizontal: 20,
   },
   linkedCard: {
     padding: 24,
-    alignItems: 'center',
+    alignItems: "center",
   },
   linkedHeader: {
-    alignItems: 'center',
+    alignItems: "center",
     marginBottom: 16,
   },
   linkedTitle: {
     fontSize: 20,
-    fontWeight: '700',
+    fontWeight: "700",
     marginTop: 12,
   },
   linkedText: {
@@ -362,16 +358,16 @@ const styles = StyleSheet.create({
   professionalPreview: {
     padding: 16,
     borderRadius: 12,
-    width: '100%',
-    alignItems: 'center',
+    width: "100%",
+    alignItems: "center",
   },
   professionalName: {
     fontSize: 18,
-    fontWeight: '600',
+    fontWeight: "600",
   },
   continueButton: {
     marginTop: 24,
-    width: '100%',
+    width: "100%",
   },
   searchCard: {
     padding: 20,
@@ -379,7 +375,7 @@ const styles = StyleSheet.create({
   },
   sectionTitle: {
     fontSize: 18,
-    fontWeight: '700',
+    fontWeight: "700",
     marginBottom: 8,
   },
   sectionDescription: {
@@ -387,8 +383,8 @@ const styles = StyleSheet.create({
     marginBottom: 16,
   },
   inputRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     gap: 12,
   },
   input: {
@@ -398,13 +394,13 @@ const styles = StyleSheet.create({
     width: 44,
     height: 44,
     borderRadius: 12,
-    alignItems: 'center',
-    justifyContent: 'center',
+    alignItems: "center",
+    justifyContent: "center",
     marginTop: 6,
   },
   foundCard: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     padding: 16,
     borderRadius: 12,
     borderWidth: 1,
@@ -416,7 +412,7 @@ const styles = StyleSheet.create({
   },
   foundName: {
     fontSize: 16,
-    fontWeight: '600',
+    fontWeight: "600",
     marginBottom: 2,
   },
   foundDetail: {
@@ -428,28 +424,28 @@ const styles = StyleSheet.create({
   },
   instructionTitle: {
     fontSize: 16,
-    fontWeight: '600',
+    fontWeight: "600",
     marginBottom: 16,
   },
   instructionList: {
     gap: 16,
   },
   instructionItem: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     gap: 12,
   },
   stepNumber: {
     width: 28,
     height: 28,
     borderRadius: 14,
-    alignItems: 'center',
-    justifyContent: 'center',
+    alignItems: "center",
+    justifyContent: "center",
   },
   stepNumberText: {
-    color: '#FFFFFF',
+    color: "#FFFFFF",
     fontSize: 14,
-    fontWeight: '700',
+    fontWeight: "700",
   },
   instructionText: {
     flex: 1,
@@ -459,7 +455,7 @@ const styles = StyleSheet.create({
     marginTop: 8,
   },
   skipButton: {
-    alignItems: 'center',
+    alignItems: "center",
     paddingVertical: 16,
   },
   skipText: {

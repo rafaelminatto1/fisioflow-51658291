@@ -20,6 +20,7 @@ Este documento contém as instruções atualizadas para o deploy do FisioFlow us
 O projeto utiliza **Environments** do Cloudflare para separar Staging de Production sem duplicar projetos no dashboard.
 
 ### 1. Deploy da API (Backend)
+
 Localizado em `apps/api`.
 
 ```bash
@@ -31,6 +32,7 @@ cd apps/api && npx wrangler deploy --env production
 ```
 
 ### 2. Deploy do Frontend (Web)
+
 Localizado na raiz ou `apps/web`.
 
 ```bash
@@ -45,13 +47,15 @@ npx wrangler deploy
 
 As variáveis de ambiente e segredos são gerenciados via `wrangler.toml` e `wrangler secret`.
 
-| Ambiente | URL API | Dashboard |
-| :--- | :--- | :--- |
-| **Production** | `api-pro.moocafisio.com.br` | Principal |
-| **Staging** | `fisioflow-api-staging.rafalegollas.workers.dev` | Staging |
+| Ambiente       | URL API                                          | Dashboard |
+| :------------- | :----------------------------------------------- | :-------- |
+| **Production** | `api-pro.moocafisio.com.br`                      | Principal |
+| **Staging**    | `fisioflow-api-staging.rafalegollas.workers.dev` | Staging   |
 
 ### Segredos Necessários
+
 Configure os segredos para cada ambiente no worker canonico de `apps/api`:
+
 ```bash
 npx wrangler secret put JWT_SECRET
 npx wrangler secret put NEON_URL

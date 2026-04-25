@@ -1,36 +1,32 @@
-import { Hono } from 'hono';
-import { createPool } from '../lib/db';
-import { requireAuth, type AuthVariables } from '../lib/auth';
-import { isUuid } from '../lib/validators';
-import type { Env } from '../types/env';
+import { Hono } from "hono";
+import { createPool } from "../lib/db";
+import { requireAuth, type AuthVariables } from "../lib/auth";
+import { isUuid } from "../lib/validators";
+import type { Env } from "../types/env";
 
 const app = new Hono<{ Bindings: Env; Variables: AuthVariables }>();
 
-async function hasTable(
-  pool: ReturnType<typeof createPool>,
-  tableName: string,
-): Promise<boolean> {
-  const result = await pool.query(
-    `SELECT to_regclass($1)::text AS table_name`,
-    [`public.${tableName}`],
-  );
+async function hasTable(pool: ReturnType<typeof createPool>, tableName: string): Promise<boolean> {
+  const result = await pool.query(`SELECT to_regclass($1)::text AS table_name`, [
+    `public.${tableName}`,
+  ]);
   return Boolean(result.rows[0]?.table_name);
 }
 
 function normalizeStandardizedTestRow(row: Record<string, unknown>) {
   const scaleName = String(
-    row.scale_name ?? row.test_type ?? row.test_name ?? 'CUSTOM',
+    row.scale_name ?? row.test_type ?? row.test_name ?? "CUSTOM",
   ).toUpperCase();
   const responsesSource = row.responses ?? row.answers ?? {};
   const responses =
-    responsesSource && typeof responsesSource === 'object' && !Array.isArray(responsesSource)
+    responsesSource && typeof responsesSource === "object" && !Array.isArray(responsesSource)
       ? responsesSource
       : {};
 
   return {
     ...row,
     scale_name: scaleName,
-    test_name: String(row.test_name ?? row.scale_name ?? 'Teste padronizado'),
+    test_name: String(row.test_name ?? row.scale_name ?? "Teste padronizado"),
     test_type: String(row.test_type ?? scaleName).toLowerCase(),
     responses,
     answers: responses,
@@ -41,16 +37,16 @@ function normalizeStandardizedTestRow(row: Record<string, unknown>) {
 }
 
 // GET /api/standardized-tests?patientId=xxx&scale=DASH&limit=50
-app.get('/', requireAuth, async (c) => {
-  const user = c.get('user');
+app.get("/", requireAuth, async (c) => {
+  const user = c.get("user");
   const pool = createPool(c.env);
   const { patientId, scale, limit: lim } = c.req.query();
 
-  if (!(await hasTable(pool, 'standardized_test_results'))) {
+  if (!(await hasTable(pool, "standardized_test_results"))) {
     return c.json({ data: [] });
   }
 
-  const conditions = ['organization_id = $1'];
+  const conditions = ["organization_id = $1"];
   const params: unknown[] = [user.organizationId];
 
   if (patientId && isUuid(patientId)) {
@@ -85,24 +81,28 @@ app.get('/', requireAuth, async (c) => {
        created_at,
        updated_at
      FROM standardized_test_results
-     WHERE ${conditions.join(' AND ')}
+     WHERE ${conditions.join(" AND ")}
      ORDER BY created_at DESC
      LIMIT $${params.length}`,
     params,
   );
 
-  return c.json({ data: (result.rows || []).map((row) => normalizeStandardizedTestRow(row as Record<string, unknown>)) });
+  return c.json({
+    data: (result.rows || []).map((row) =>
+      normalizeStandardizedTestRow(row as Record<string, unknown>),
+    ),
+  });
 });
 
 // GET /api/standardized-tests/:id
-app.get('/:id', requireAuth, async (c) => {
-  const user = c.get('user');
+app.get("/:id", requireAuth, async (c) => {
+  const user = c.get("user");
   const { id } = c.req.param();
-  if (!isUuid(id)) return c.json({ error: 'ID inválido' }, 400);
+  if (!isUuid(id)) return c.json({ error: "ID inválido" }, 400);
 
   const pool = createPool(c.env);
-  if (!(await hasTable(pool, 'standardized_test_results'))) {
-    return c.json({ error: 'Registro não encontrado' }, 404);
+  if (!(await hasTable(pool, "standardized_test_results"))) {
+    return c.json({ error: "Registro não encontrado" }, 404);
   }
   const result = await pool.query(
     `SELECT
@@ -129,13 +129,13 @@ app.get('/:id', requireAuth, async (c) => {
     [id, user.organizationId],
   );
 
-  if (!result.rows.length) return c.json({ error: 'Registro não encontrado' }, 404);
+  if (!result.rows.length) return c.json({ error: "Registro não encontrado" }, 404);
   return c.json({ data: normalizeStandardizedTestRow(result.rows[0] as Record<string, unknown>) });
 });
 
 // POST /api/standardized-tests
-app.post('/', requireAuth, async (c) => {
-  const user = c.get('user');
+app.post("/", requireAuth, async (c) => {
+  const user = c.get("user");
   const body = (await c.req.json()) as {
     patient_id: string;
     scale_name: string;
@@ -148,13 +148,14 @@ app.post('/', requireAuth, async (c) => {
     notes?: string;
   };
 
-  if (!body.patient_id || !isUuid(body.patient_id)) return c.json({ error: 'patient_id inválido' }, 400);
-  if (!body.scale_name) return c.json({ error: 'scale_name é obrigatório' }, 400);
-  if (body.score == null) return c.json({ error: 'score é obrigatório' }, 400);
+  if (!body.patient_id || !isUuid(body.patient_id))
+    return c.json({ error: "patient_id inválido" }, 400);
+  if (!body.scale_name) return c.json({ error: "scale_name é obrigatório" }, 400);
+  if (body.score == null) return c.json({ error: "score é obrigatório" }, 400);
 
   const pool = createPool(c.env);
-  if (!(await hasTable(pool, 'standardized_test_results'))) {
-    return c.json({ error: 'Schema de avaliações padronizadas indisponível' }, 501);
+  if (!(await hasTable(pool, "standardized_test_results"))) {
+    return c.json({ error: "Schema de avaliações padronizadas indisponível" }, 501);
   }
 
   const result = await pool.query(
@@ -186,27 +187,29 @@ app.post('/', requireAuth, async (c) => {
   const normalized = normalizeStandardizedTestRow(result.rows[0] as Record<string, unknown>);
 
   // Auto-create task if score crosses clinical alert threshold (non-blocking)
-  checkScoreThresholdAndCreateTask(pool, user.organizationId, user.uid, normalized).catch(() => null);
+  checkScoreThresholdAndCreateTask(pool, user.organizationId, user.uid, normalized).catch(
+    () => null,
+  );
 
   return c.json({ data: normalized }, 201);
 });
 
 // DELETE /api/standardized-tests/:id
-app.delete('/:id', requireAuth, async (c) => {
-  const user = c.get('user');
+app.delete("/:id", requireAuth, async (c) => {
+  const user = c.get("user");
   const { id } = c.req.param();
-  if (!isUuid(id)) return c.json({ error: 'ID inválido' }, 400);
+  if (!isUuid(id)) return c.json({ error: "ID inválido" }, 400);
 
   const pool = createPool(c.env);
-  if (!(await hasTable(pool, 'standardized_test_results'))) {
-    return c.json({ error: 'Registro não encontrado' }, 404);
+  if (!(await hasTable(pool, "standardized_test_results"))) {
+    return c.json({ error: "Registro não encontrado" }, 404);
   }
   const result = await pool.query(
     `DELETE FROM standardized_test_results WHERE id = $1 AND organization_id = $2 RETURNING id`,
     [id, user.organizationId],
   );
 
-  if (!result.rows.length) return c.json({ error: 'Registro não encontrado' }, 404);
+  if (!result.rows.length) return c.json({ error: "Registro não encontrado" }, 404);
   return c.json({ success: true });
 });
 
@@ -215,31 +218,66 @@ app.delete('/:id', requireAuth, async (c) => {
 const SCORE_THRESHOLDS: Array<{
   scale: RegExp;
   threshold: number;
-  operator: 'gte' | 'lte';
+  operator: "gte" | "lte";
   prioridade: string;
   titulo: (scale: string, score: number) => string;
 }> = [
   // VAS pain >= 7 → high pain alert
-  { scale: /^VAS$/i, threshold: 7, operator: 'gte', prioridade: 'ALTA',
-    titulo: (s, sc) => `Dor intensa — ${s} ${sc}/10: Revisar plano` },
+  {
+    scale: /^VAS$/i,
+    threshold: 7,
+    operator: "gte",
+    prioridade: "ALTA",
+    titulo: (s, sc) => `Dor intensa — ${s} ${sc}/10: Revisar plano`,
+  },
   // Oswestry >= 40% → severe disability
-  { scale: /OSWESTRY/i, threshold: 40, operator: 'gte', prioridade: 'ALTA',
-    titulo: (s, sc) => `Incapacidade grave — ${s} ${sc}%: Ajustar tratamento` },
+  {
+    scale: /OSWESTRY/i,
+    threshold: 40,
+    operator: "gte",
+    prioridade: "ALTA",
+    titulo: (s, sc) => `Incapacidade grave — ${s} ${sc}%: Ajustar tratamento`,
+  },
   // NDI >= 35% → severe neck disability
-  { scale: /NDI/i, threshold: 35, operator: 'gte', prioridade: 'ALTA',
-    titulo: (s, sc) => `Incapacidade cervical grave — ${s} ${sc}%: Reavaliar` },
+  {
+    scale: /NDI/i,
+    threshold: 35,
+    operator: "gte",
+    prioridade: "ALTA",
+    titulo: (s, sc) => `Incapacidade cervical grave — ${s} ${sc}%: Reavaliar`,
+  },
   // DASH >= 50 → significant upper limb disability
-  { scale: /DASH/i, threshold: 50, operator: 'gte', prioridade: 'MEDIA',
-    titulo: (s, sc) => `Disfunção de MMSS — ${s} ${sc}: Revisar protocolo` },
+  {
+    scale: /DASH/i,
+    threshold: 50,
+    operator: "gte",
+    prioridade: "MEDIA",
+    titulo: (s, sc) => `Disfunção de MMSS — ${s} ${sc}: Revisar protocolo`,
+  },
   // LEFS <= 30 → severe lower extremity functional limitation
-  { scale: /LEFS/i, threshold: 30, operator: 'lte', prioridade: 'ALTA',
-    titulo: (s, sc) => `Limitação funcional grave MMII — ${s} ${sc}: Reavaliar` },
+  {
+    scale: /LEFS/i,
+    threshold: 30,
+    operator: "lte",
+    prioridade: "ALTA",
+    titulo: (s, sc) => `Limitação funcional grave MMII — ${s} ${sc}: Reavaliar`,
+  },
   // Berg Balance Scale <= 35 → high fall risk
-  { scale: /BERG/i, threshold: 35, operator: 'lte', prioridade: 'URGENTE',
-    titulo: (s, sc) => `Alto risco de queda — ${s} ${sc}/56: Prevenção urgente` },
+  {
+    scale: /BERG/i,
+    threshold: 35,
+    operator: "lte",
+    prioridade: "URGENTE",
+    titulo: (s, sc) => `Alto risco de queda — ${s} ${sc}/56: Prevenção urgente`,
+  },
   // PSFS <= 3 → critical functional limitation
-  { scale: /PSFS/i, threshold: 3, operator: 'lte', prioridade: 'ALTA',
-    titulo: (s, sc) => `Funcionalidade crítica — ${s} ${sc}/10: Revisão necessária` },
+  {
+    scale: /PSFS/i,
+    threshold: 3,
+    operator: "lte",
+    prioridade: "ALTA",
+    titulo: (s, sc) => `Funcionalidade crítica — ${s} ${sc}/10: Revisão necessária`,
+  },
 ];
 
 async function checkScoreThresholdAndCreateTask(
@@ -248,7 +286,7 @@ async function checkScoreThresholdAndCreateTask(
   userId: string,
   test: Record<string, unknown>,
 ): Promise<void> {
-  const scaleName = String(test.scale_name ?? '');
+  const scaleName = String(test.scale_name ?? "");
   const score = Number(test.score);
   const patientId = test.patient_id as string | null;
   const testId = test.id as string | null;
@@ -256,7 +294,7 @@ async function checkScoreThresholdAndCreateTask(
 
   const matched = SCORE_THRESHOLDS.find(({ scale, threshold, operator }) => {
     if (!scale.test(scaleName)) return false;
-    return operator === 'gte' ? score >= threshold : score <= threshold;
+    return operator === "gte" ? score >= threshold : score <= threshold;
   });
   if (!matched) return;
 
@@ -270,7 +308,7 @@ async function checkScoreThresholdAndCreateTask(
       orgId,
       userId,
       matched.titulo(scaleName, score),
-      `Gerado automaticamente pelo sistema de alerta clínico.\n\nEscala: ${scaleName}\nPontuação: ${score}\nID do resultado: ${testId ?? 'N/A'}`,
+      `Gerado automaticamente pelo sistema de alerta clínico.\n\nEscala: ${scaleName}\nPontuação: ${score}\nID do resultado: ${testId ?? "N/A"}`,
       matched.prioridade,
       patientId,
     ],

@@ -11,9 +11,18 @@ interface BioVisionOverlayProps {
 }
 
 export const CONNECTIONS = [
-  [11, 12], [11, 13], [13, 15], [12, 14], [14, 16],
-  [11, 23], [12, 24], [23, 24], [23, 25], [25, 27],
-  [24, 26], [26, 28]
+  [11, 12],
+  [11, 13],
+  [13, 15],
+  [12, 14],
+  [14, 16],
+  [11, 23],
+  [12, 24],
+  [23, 24],
+  [23, 25],
+  [25, 27],
+  [24, 26],
+  [26, 28],
 ];
 
 export const BioVisionOverlay: React.FC<BioVisionOverlayProps> = ({
@@ -22,7 +31,7 @@ export const BioVisionOverlay: React.FC<BioVisionOverlayProps> = ({
   height,
   activeJoint,
   onPeakAngle,
-  showSkeleton = true
+  showSkeleton = true,
 }) => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const peakRef = useRef<number>(0);
@@ -30,7 +39,7 @@ export const BioVisionOverlay: React.FC<BioVisionOverlayProps> = ({
   useEffect(() => {
     const canvas = canvasRef.current;
     if (!canvas) return;
-    
+
     const ctx = canvas.getContext("2d");
     if (!ctx) return;
 
@@ -39,67 +48,81 @@ export const BioVisionOverlay: React.FC<BioVisionOverlayProps> = ({
 
     // 1. Draw Skeleton
     if (showSkeleton) {
-        ctx.strokeStyle = "rgba(139, 92, 246, 0.4)"; // Violet transparent
-        ctx.lineWidth = 2;
-        ctx.lineJoin = "round";
+      ctx.strokeStyle = "rgba(139, 92, 246, 0.4)"; // Violet transparent
+      ctx.lineWidth = 2;
+      ctx.lineJoin = "round";
 
-        CONNECTIONS.forEach(([i1, i2]) => {
-            const p1 = landmarks[i1];
-            const p2 = landmarks[i2];
-            if (p1 && p2 && p1.visibility > 0.5 && p2.visibility > 0.5) {
-                ctx.beginPath();
-                ctx.moveTo(p1.x * width, p1.y * height);
-                ctx.lineTo(p2.x * width, p2.y * height);
-                ctx.stroke();
-            }
-        });
+      CONNECTIONS.forEach(([i1, i2]) => {
+        const p1 = landmarks[i1];
+        const p2 = landmarks[i2];
+        if (p1 && p2 && p1.visibility > 0.5 && p2.visibility > 0.5) {
+          ctx.beginPath();
+          ctx.moveTo(p1.x * width, p1.y * height);
+          ctx.lineTo(p2.x * width, p2.y * height);
+          ctx.stroke();
+        }
+      });
 
-        // 2. Draw Points
-        landmarks.forEach((lm, i) => {
-            if (lm.visibility < 0.5 || i < 11) return;
-            ctx.fillStyle = "#8b5cf6";
-            ctx.beginPath();
-            ctx.arc(lm.x * width, lm.y * height, 3, 0, 2 * Math.PI);
-            ctx.fill();
-        });
+      // 2. Draw Points
+      landmarks.forEach((lm, i) => {
+        if (lm.visibility < 0.5 || i < 11) return;
+        ctx.fillStyle = "#8b5cf6";
+        ctx.beginPath();
+        ctx.arc(lm.x * width, lm.y * height, 3, 0, 2 * Math.PI);
+        ctx.fill();
+      });
     }
 
     // 3. Draw Active Angle with Geometric Precision
     if (activeJoint) {
       let p1Idx, p2Idx, p3Idx, label;
-      
-      switch(activeJoint) {
-        case 'knee_l':
-          p1Idx = POSE_LANDMARKS.LEFT_HIP; p2Idx = POSE_LANDMARKS.LEFT_KNEE; p3Idx = POSE_LANDMARKS.LEFT_ANKLE;
+
+      switch (activeJoint) {
+        case "knee_l":
+          p1Idx = POSE_LANDMARKS.LEFT_HIP;
+          p2Idx = POSE_LANDMARKS.LEFT_KNEE;
+          p3Idx = POSE_LANDMARKS.LEFT_ANKLE;
           label = "Joelho E";
           break;
-        case 'knee_r':
-          p1Idx = POSE_LANDMARKS.RIGHT_HIP; p2Idx = POSE_LANDMARKS.RIGHT_KNEE; p3Idx = POSE_LANDMARKS.RIGHT_ANKLE;
+        case "knee_r":
+          p1Idx = POSE_LANDMARKS.RIGHT_HIP;
+          p2Idx = POSE_LANDMARKS.RIGHT_KNEE;
+          p3Idx = POSE_LANDMARKS.RIGHT_ANKLE;
           label = "Joelho D";
           break;
-        case 'elbow_l':
-          p1Idx = POSE_LANDMARKS.LEFT_SHOULDER; p2Idx = POSE_LANDMARKS.LEFT_ELBOW; p3Idx = POSE_LANDMARKS.LEFT_WRIST;
+        case "elbow_l":
+          p1Idx = POSE_LANDMARKS.LEFT_SHOULDER;
+          p2Idx = POSE_LANDMARKS.LEFT_ELBOW;
+          p3Idx = POSE_LANDMARKS.LEFT_WRIST;
           label = "Cotovelo E";
           break;
-        case 'elbow_r':
-          p1Idx = POSE_LANDMARKS.RIGHT_SHOULDER; p2Idx = POSE_LANDMARKS.RIGHT_ELBOW; p3Idx = POSE_LANDMARKS.RIGHT_WRIST;
+        case "elbow_r":
+          p1Idx = POSE_LANDMARKS.RIGHT_SHOULDER;
+          p2Idx = POSE_LANDMARKS.RIGHT_ELBOW;
+          p3Idx = POSE_LANDMARKS.RIGHT_WRIST;
           label = "Cotovelo D";
           break;
-        case 'shoulder_l':
-          p1Idx = POSE_LANDMARKS.LEFT_HIP; p2Idx = POSE_LANDMARKS.LEFT_SHOULDER; p3Idx = POSE_LANDMARKS.LEFT_ELBOW;
+        case "shoulder_l":
+          p1Idx = POSE_LANDMARKS.LEFT_HIP;
+          p2Idx = POSE_LANDMARKS.LEFT_SHOULDER;
+          p3Idx = POSE_LANDMARKS.LEFT_ELBOW;
           label = "Ombro E";
           break;
-        case 'shoulder_r':
-          p1Idx = POSE_LANDMARKS.RIGHT_HIP; p2Idx = POSE_LANDMARKS.RIGHT_SHOULDER; p3Idx = POSE_LANDMARKS.RIGHT_ELBOW;
+        case "shoulder_r":
+          p1Idx = POSE_LANDMARKS.RIGHT_HIP;
+          p2Idx = POSE_LANDMARKS.RIGHT_SHOULDER;
+          p3Idx = POSE_LANDMARKS.RIGHT_ELBOW;
           label = "Ombro D";
           break;
       }
 
       if (p1Idx !== undefined && p2Idx !== undefined && p3Idx !== undefined) {
-        const a = landmarks[p1Idx], b = landmarks[p2Idx], c = landmarks[p3Idx];
+        const a = landmarks[p1Idx],
+          b = landmarks[p2Idx],
+          c = landmarks[p3Idx];
         if (a && b && c && a.visibility > 0.5 && b.visibility > 0.5 && c.visibility > 0.5) {
           const angle = calculateAngle(a, b, c);
-          
+
           // Peak tracking
           if (angle > peakRef.current) {
             peakRef.current = angle;
@@ -145,7 +168,7 @@ export const BioVisionOverlay: React.FC<BioVisionOverlayProps> = ({
           // Draw Label Dashboard Style
           ctx.save();
           ctx.translate(bx + 50, by - 20);
-          
+
           // Background Label
           ctx.fillStyle = "rgba(0,0,0,0.8)";
           ctx.beginPath();
@@ -161,7 +184,7 @@ export const BioVisionOverlay: React.FC<BioVisionOverlayProps> = ({
           ctx.fillStyle = "#06b6d4";
           ctx.font = "bold 18px Inter";
           ctx.fillText(`${angle.toFixed(1)}°`, 10, 34);
-          
+
           ctx.restore();
         }
       }

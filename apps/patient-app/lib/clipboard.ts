@@ -3,20 +3,19 @@
  * Helper functions for clipboard operations
  */
 
-
 /**
  * Copy text to clipboard
  */
 
-import * as Clipboard from 'expo-clipboard';
-import { log } from './logger';
-import { asyncResult, Result } from './async';
+import * as Clipboard from "expo-clipboard";
+import { log } from "./logger";
+import { asyncResult, Result } from "./async";
 
 export async function copyToClipboard(text: string): Promise<Result<void>> {
   return asyncResult(async () => {
     await Clipboard.setStringAsync(text);
-    log.info('CLIPBOARD', 'Text copied', { length: text.length });
-  }, 'copyToClipboard');
+    log.info("CLIPBOARD", "Text copied", { length: text.length });
+  }, "copyToClipboard");
 }
 
 /**
@@ -25,9 +24,9 @@ export async function copyToClipboard(text: string): Promise<Result<void>> {
 export async function getFromClipboard(): Promise<Result<string>> {
   return asyncResult(async () => {
     const text = await Clipboard.getStringAsync();
-    log.info('CLIPBOARD', 'Text retrieved', { length: text?.length || 0 });
+    log.info("CLIPBOARD", "Text retrieved", { length: text?.length || 0 });
     return text;
-  }, 'getFromClipboard');
+  }, "getFromClipboard");
 }
 
 /**

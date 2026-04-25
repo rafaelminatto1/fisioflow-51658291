@@ -1,24 +1,18 @@
 import React from "react";
-import {
-	Card,
-	CardContent,
-	CardDescription,
-	CardHeader,
-	CardTitle,
-} from "@/components/ui/card";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Switch } from "@/components/ui/switch";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { whatsappApi } from "@/api/v2";
 import {
-	MessageSquare,
-	Settings,
-	RefreshCcw,
-	CheckCircle2,
-	Bell,
-	Calendar,
-	History,
+  MessageSquare,
+  Settings,
+  RefreshCcw,
+  CheckCircle2,
+  Bell,
+  Calendar,
+  History,
 } from "lucide-react";
 import { toast } from "sonner";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -27,304 +21,283 @@ import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 
 type WebhookLogView = {
-	id: string;
-	created_at?: string | null;
-	event_type?: string | null;
-	phone_number?: string | null;
-	payload?: Record<string, unknown> | null;
+  id: string;
+  created_at?: string | null;
+  event_type?: string | null;
+  phone_number?: string | null;
+  payload?: Record<string, unknown> | null;
 };
 
 function formatWebhookTime(value?: string | null) {
-	if (!value) return "--:--";
+  if (!value) return "--:--";
 
-	const date = new Date(value);
-	if (Number.isNaN(date.getTime())) return "--:--";
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return "--:--";
 
-	return format(date, "HH:mm", { locale: ptBR });
+  return format(date, "HH:mm", { locale: ptBR });
 }
 
 function getWebhookEventType(log: WebhookLogView) {
-	const payloadEvent =
-		typeof log.payload?.event_type === "string" ? log.payload.event_type : null;
+  const payloadEvent = typeof log.payload?.event_type === "string" ? log.payload.event_type : null;
 
-	return log.event_type ?? payloadEvent ?? "evento recebido";
+  return log.event_type ?? payloadEvent ?? "evento recebido";
 }
 
 function getWebhookPhoneNumber(log: WebhookLogView) {
-	const payloadPhone =
-		typeof log.payload?.phone_number === "string"
-			? log.payload.phone_number
-			: null;
+  const payloadPhone =
+    typeof log.payload?.phone_number === "string" ? log.payload.phone_number : null;
 
-	return log.phone_number ?? payloadPhone ?? "Sandbox";
+  return log.phone_number ?? payloadPhone ?? "Sandbox";
 }
 
 export function WhatsAppAutomation() {
-	const queryClient = useQueryClient();
+  const queryClient = useQueryClient();
 
-	// Queries
-	const { data: config, isLoading: loadingConfig } = useQuery({
-		queryKey: ["whatsapp-config"],
-		queryFn: async () => {
-			const res = await whatsappApi.getConfig();
-			return res?.data ?? { enabled: false };
-		},
-	});
+  // Queries
+  const { data: config, isLoading: loadingConfig } = useQuery({
+    queryKey: ["whatsapp-config"],
+    queryFn: async () => {
+      const res = await whatsappApi.getConfig();
+      return res?.data ?? { enabled: false };
+    },
+  });
 
-	const { data: templates = [], isLoading: loadingTemplates } = useQuery({
-		queryKey: ["whatsapp-templates"],
-		queryFn: async () => {
-			const res = await whatsappApi.listTemplates();
-			return Array.isArray(res?.data) ? res.data : [];
-		},
-	});
+  const { data: templates = [], isLoading: loadingTemplates } = useQuery({
+    queryKey: ["whatsapp-templates"],
+    queryFn: async () => {
+      const res = await whatsappApi.listTemplates();
+      return Array.isArray(res?.data) ? res.data : [];
+    },
+  });
 
-	const { data: logs = [] } = useQuery({
-		queryKey: ["whatsapp-logs"],
-		queryFn: async () => {
-			const res = await whatsappApi.listWebhookLogs({ limit: 10 });
-			return Array.isArray(res?.data) ? res.data : [];
-		},
-	});
+  const { data: logs = [] } = useQuery({
+    queryKey: ["whatsapp-logs"],
+    queryFn: async () => {
+      const res = await whatsappApi.listWebhookLogs({ limit: 10 });
+      return Array.isArray(res?.data) ? res.data : [];
+    },
+  });
 
-	// Mutation
-	const updateTemplateMutation = useMutation({
-		mutationFn: (vars: { id: string; status: string }) =>
-			whatsappApi.updateTemplate(vars.id, { status: vars.status }),
-		onSuccess: () => {
-			queryClient.invalidateQueries({ queryKey: ["whatsapp-templates"] });
-			toast.success("Status do template atualizado!");
-		},
-		onError: () => toast.error("Falha ao atualizar template."),
-	});
+  // Mutation
+  const updateTemplateMutation = useMutation({
+    mutationFn: (vars: { id: string; status: string }) =>
+      whatsappApi.updateTemplate(vars.id, { status: vars.status }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["whatsapp-templates"] });
+      toast.success("Status do template atualizado!");
+    },
+    onError: () => toast.error("Falha ao atualizar template."),
+  });
 
-	if (loadingConfig || loadingTemplates) {
-		return (
-			<div className="space-y-6">
-				<Skeleton className="h-32 w-full rounded-2xl" />
-				<div className="grid gap-6 md:grid-cols-2">
-					<Skeleton className="h-64 w-full rounded-2xl" />
-					<Skeleton className="h-64 w-full rounded-2xl" />
-				</div>
-			</div>
-		);
-	}
+  if (loadingConfig || loadingTemplates) {
+    return (
+      <div className="space-y-6">
+        <Skeleton className="h-32 w-full rounded-2xl" />
+        <div className="grid gap-6 md:grid-cols-2">
+          <Skeleton className="h-64 w-full rounded-2xl" />
+          <Skeleton className="h-64 w-full rounded-2xl" />
+        </div>
+      </div>
+    );
+  }
 
-	return (
-		<div className="space-y-8 animate-fade-in max-w-6xl mx-auto">
-			{/* Master Switch & Status */}
-			<Card className="border-none shadow-sm ring-1 ring-border/50 bg-background overflow-hidden">
-				<div
-					className={`h-1.5 w-full ${config?.enabled ? "bg-emerald-500" : "bg-slate-300"}`}
-				/>
-				<CardHeader className="flex flex-row items-center justify-between pb-6">
-					<div className="space-y-1">
-						<div className="flex items-center gap-2">
-							<div
-								className={`p-2 rounded-lg ${config?.enabled ? "bg-emerald-500/10" : "bg-slate-100"}`}
-							>
-								<MessageSquare
-									className={`h-5 w-5 ${config?.enabled ? "text-emerald-600" : "text-slate-500"}`}
-								/>
-							</div>
-							<CardTitle className="text-xl font-bold">
-								Automação de WhatsApp
-							</CardTitle>
-						</div>
-						<CardDescription>
-							Envio automático de lembretes, confirmações e notificações via
-							Meta API Oficial
-						</CardDescription>
-					</div>
-					<div className="flex items-center gap-4 bg-muted/30 p-3 rounded-2xl border border-border/50">
-						<div className="flex flex-col items-end mr-2">
-							<span className="text-[10px] font-bold uppercase text-muted-foreground">
-								Status do Serviço
-							</span>
-							<span
-								className={`text-xs font-bold ${config?.enabled ? "text-emerald-600" : "text-slate-500"}`}
-							>
-								{config?.enabled ? "CONECTADO" : "DESATIVADO"}
-							</span>
-						</div>
-						<Switch
-							checked={Boolean(config?.enabled)}
-							onCheckedChange={() =>
-								toast.info("Funcionalidade em transição de sandbox")
-							}
-						/>
-					</div>
-				</CardHeader>
-			</Card>
+  return (
+    <div className="space-y-8 animate-fade-in max-w-6xl mx-auto">
+      {/* Master Switch & Status */}
+      <Card className="border-none shadow-sm ring-1 ring-border/50 bg-background overflow-hidden">
+        <div className={`h-1.5 w-full ${config?.enabled ? "bg-emerald-500" : "bg-slate-300"}`} />
+        <CardHeader className="flex flex-row items-center justify-between pb-6">
+          <div className="space-y-1">
+            <div className="flex items-center gap-2">
+              <div
+                className={`p-2 rounded-lg ${config?.enabled ? "bg-emerald-500/10" : "bg-slate-100"}`}
+              >
+                <MessageSquare
+                  className={`h-5 w-5 ${config?.enabled ? "text-emerald-600" : "text-slate-500"}`}
+                />
+              </div>
+              <CardTitle className="text-xl font-bold">Automação de WhatsApp</CardTitle>
+            </div>
+            <CardDescription>
+              Envio automático de lembretes, confirmações e notificações via Meta API Oficial
+            </CardDescription>
+          </div>
+          <div className="flex items-center gap-4 bg-muted/30 p-3 rounded-2xl border border-border/50">
+            <div className="flex flex-col items-end mr-2">
+              <span className="text-[10px] font-bold uppercase text-muted-foreground">
+                Status do Serviço
+              </span>
+              <span
+                className={`text-xs font-bold ${config?.enabled ? "text-emerald-600" : "text-slate-500"}`}
+              >
+                {config?.enabled ? "CONECTADO" : "DESATIVADO"}
+              </span>
+            </div>
+            <Switch
+              checked={Boolean(config?.enabled)}
+              onCheckedChange={() => toast.info("Funcionalidade em transição de sandbox")}
+            />
+          </div>
+        </CardHeader>
+      </Card>
 
-			<div className="grid gap-8 lg:grid-cols-3">
-				{/* Templates Section */}
-				<div className="lg:col-span-2 space-y-6">
-					<div className="flex items-center justify-between">
-						<h3 className="text-lg font-bold flex items-center gap-2">
-							<Settings className="h-5 w-5 text-primary" />
-							Regras de Disparo (Templates)
-						</h3>
-						<Button
-							variant="outline"
-							size="sm"
-							className="rounded-xl h-8 text-xs font-bold gap-2"
-						>
-							<RefreshCcw className="h-3 w-3" />
-							Sincronizar Meta
-						</Button>
-					</div>
+      <div className="grid gap-8 lg:grid-cols-3">
+        {/* Templates Section */}
+        <div className="lg:col-span-2 space-y-6">
+          <div className="flex items-center justify-between">
+            <h3 className="text-lg font-bold flex items-center gap-2">
+              <Settings className="h-5 w-5 text-primary" />
+              Regras de Disparo (Templates)
+            </h3>
+            <Button variant="outline" size="sm" className="rounded-xl h-8 text-xs font-bold gap-2">
+              <RefreshCcw className="h-3 w-3" />
+              Sincronizar Meta
+            </Button>
+          </div>
 
-					<div className="grid gap-4">
-						{templates.length > 0 ? (
-							templates.map((template) => (
-								<Card
-									key={template.id}
-									className="border-none shadow-sm ring-1 ring-border/50 bg-background hover:ring-primary/20 transition-all"
-								>
-									<CardContent className="p-5">
-										<div className="flex items-start justify-between gap-4">
-											<div className="space-y-3 flex-1">
-												<div className="flex items-center gap-2">
-													<div className="p-1.5 bg-primary/5 rounded-md">
-														<Calendar className="h-3.5 w-3.5 text-primary" />
-													</div>
-													<span className="font-bold text-sm tracking-tight capitalize">
-														{template.name.replace(/_/g, " ")}
-													</span>
-													<Badge
-														variant={
-															template.status === "ativo" ? "secondary" : "outline"
-														}
-														className="text-[9px] h-4 font-black uppercase tracking-tighter"
-													>
-														{template.status}
-													</Badge>
-												</div>
-												<p className="text-xs text-muted-foreground leading-relaxed bg-muted/20 p-3 rounded-xl border border-dashed border-border">
-													{template.content}
-												</p>
-											</div>
-											<div className="flex flex-col items-end gap-4">
-												<Switch
-													checked={template.status === "ativo"}
-													onCheckedChange={(checked) =>
-														updateTemplateMutation.mutate({
-															id: template.id,
-															status: checked ? "ativo" : "inativo",
-														})
-													}
-												/>
-												<span className="text-[10px] text-muted-foreground font-medium">
-													Auto-envio
-												</span>
-											</div>
-										</div>
-									</CardContent>
-								</Card>
-							))
-						) : (
-							<Card className="border-dashed bg-muted/20 shadow-none">
-								<CardContent className="flex flex-col items-center justify-center gap-3 p-10 text-center">
-									<div className="rounded-full bg-primary/10 p-3">
-										<MessageSquare className="h-5 w-5 text-primary" />
-									</div>
-									<div className="space-y-1">
-										<p className="text-sm font-semibold">
-											Nenhum template sincronizado
-										</p>
-										<p className="max-w-md text-xs text-muted-foreground">
-											Quando a Meta API retornar os templates aprovados, eles
-											aparecerão aqui para ativar ou pausar os disparos.
-										</p>
-									</div>
-								</CardContent>
-							</Card>
-						)}
-					</div>
-				</div>
+          <div className="grid gap-4">
+            {templates.length > 0 ? (
+              templates.map((template) => (
+                <Card
+                  key={template.id}
+                  className="border-none shadow-sm ring-1 ring-border/50 bg-background hover:ring-primary/20 transition-all"
+                >
+                  <CardContent className="p-5">
+                    <div className="flex items-start justify-between gap-4">
+                      <div className="space-y-3 flex-1">
+                        <div className="flex items-center gap-2">
+                          <div className="p-1.5 bg-primary/5 rounded-md">
+                            <Calendar className="h-3.5 w-3.5 text-primary" />
+                          </div>
+                          <span className="font-bold text-sm tracking-tight capitalize">
+                            {template.name.replace(/_/g, " ")}
+                          </span>
+                          <Badge
+                            variant={template.status === "ativo" ? "secondary" : "outline"}
+                            className="text-[9px] h-4 font-black uppercase tracking-tighter"
+                          >
+                            {template.status}
+                          </Badge>
+                        </div>
+                        <p className="text-xs text-muted-foreground leading-relaxed bg-muted/20 p-3 rounded-xl border border-dashed border-border">
+                          {template.content}
+                        </p>
+                      </div>
+                      <div className="flex flex-col items-end gap-4">
+                        <Switch
+                          checked={template.status === "ativo"}
+                          onCheckedChange={(checked) =>
+                            updateTemplateMutation.mutate({
+                              id: template.id,
+                              status: checked ? "ativo" : "inativo",
+                            })
+                          }
+                        />
+                        <span className="text-[10px] text-muted-foreground font-medium">
+                          Auto-envio
+                        </span>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              ))
+            ) : (
+              <Card className="border-dashed bg-muted/20 shadow-none">
+                <CardContent className="flex flex-col items-center justify-center gap-3 p-10 text-center">
+                  <div className="rounded-full bg-primary/10 p-3">
+                    <MessageSquare className="h-5 w-5 text-primary" />
+                  </div>
+                  <div className="space-y-1">
+                    <p className="text-sm font-semibold">Nenhum template sincronizado</p>
+                    <p className="max-w-md text-xs text-muted-foreground">
+                      Quando a Meta API retornar os templates aprovados, eles aparecerão aqui para
+                      ativar ou pausar os disparos.
+                    </p>
+                  </div>
+                </CardContent>
+              </Card>
+            )}
+          </div>
+        </div>
 
-				{/* Quick Stats & Activity */}
-				<div className="space-y-6">
-					<h3 className="text-lg font-bold flex items-center gap-2">
-						<History className="h-5 w-5 text-blue-500" />
-						Atividade Recente
-					</h3>
+        {/* Quick Stats & Activity */}
+        <div className="space-y-6">
+          <h3 className="text-lg font-bold flex items-center gap-2">
+            <History className="h-5 w-5 text-blue-500" />
+            Atividade Recente
+          </h3>
 
-					<Card className="border-none shadow-sm ring-1 ring-border/50 bg-background overflow-hidden">
-						<CardHeader className="bg-muted/30 border-b border-border/40 pb-3">
-							<CardTitle className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
-								Últimos Eventos Webhook
-							</CardTitle>
-						</CardHeader>
-						<CardContent className="p-0">
-							<ScrollArea className="h-[400px]">
-								{logs.length > 0 ? (
-									logs.map((log: WebhookLogView, i) => {
-										const eventType = getWebhookEventType(log);
+          <Card className="border-none shadow-sm ring-1 ring-border/50 bg-background overflow-hidden">
+            <CardHeader className="bg-muted/30 border-b border-border/40 pb-3">
+              <CardTitle className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
+                Últimos Eventos Webhook
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="p-0">
+              <ScrollArea className="h-[400px]">
+                {logs.length > 0 ? (
+                  logs.map((log: WebhookLogView, i) => {
+                    const eventType = getWebhookEventType(log);
 
-										return (
-											<div
-												key={log.id}
-												className={`p-4 border-b border-border/40 last:border-0 ${i % 2 === 0 ? "bg-background" : "bg-muted/5"}`}
-											>
-												<div className="flex items-center justify-between mb-1.5">
-													<div className="flex items-center gap-2">
-														{eventType.includes("deliver") ||
-														eventType.includes("sent") ? (
-															<CheckCircle2 className="h-3.5 w-3.5 text-emerald-500" />
-														) : (
-															<Bell className="h-3.5 w-3.5 text-blue-500" />
-														)}
-														<span className="text-xs font-bold tracking-tight">
-															{eventType.replace(/_/g, " ")}
-														</span>
-													</div>
-													<span className="text-[10px] text-muted-foreground font-medium">
-														{formatWebhookTime(log.created_at)}
-													</span>
-												</div>
-												<p className="text-[11px] text-muted-foreground truncate font-medium">
-													Para: {getWebhookPhoneNumber(log)}
-												</p>
-											</div>
-										);
-									})
-								) : (
-									<div className="p-8 text-center text-muted-foreground text-sm font-medium italic">
-										Nenhuma atividade registrada hoje.
-									</div>
-								)}
-							</ScrollArea>
-						</CardContent>
-					</Card>
+                    return (
+                      <div
+                        key={log.id}
+                        className={`p-4 border-b border-border/40 last:border-0 ${i % 2 === 0 ? "bg-background" : "bg-muted/5"}`}
+                      >
+                        <div className="flex items-center justify-between mb-1.5">
+                          <div className="flex items-center gap-2">
+                            {eventType.includes("deliver") || eventType.includes("sent") ? (
+                              <CheckCircle2 className="h-3.5 w-3.5 text-emerald-500" />
+                            ) : (
+                              <Bell className="h-3.5 w-3.5 text-blue-500" />
+                            )}
+                            <span className="text-xs font-bold tracking-tight">
+                              {eventType.replace(/_/g, " ")}
+                            </span>
+                          </div>
+                          <span className="text-[10px] text-muted-foreground font-medium">
+                            {formatWebhookTime(log.created_at)}
+                          </span>
+                        </div>
+                        <p className="text-[11px] text-muted-foreground truncate font-medium">
+                          Para: {getWebhookPhoneNumber(log)}
+                        </p>
+                      </div>
+                    );
+                  })
+                ) : (
+                  <div className="p-8 text-center text-muted-foreground text-sm font-medium italic">
+                    Nenhuma atividade registrada hoje.
+                  </div>
+                )}
+              </ScrollArea>
+            </CardContent>
+          </Card>
 
-					<div className="p-5 rounded-2xl bg-blue-500/5 border border-blue-500/10 space-y-3">
-						<div className="flex items-center gap-2 text-blue-600 font-bold text-xs uppercase tracking-wider">
-							<Settings className="h-3.5 w-3.5" />
-							Configurações do Robô
-						</div>
-						<div className="space-y-2">
-							<div className="flex items-center justify-between">
-								<span className="text-xs font-medium text-muted-foreground">
-									Antecedência
-								</span>
-								<Badge variant="outline" className="text-[10px] font-bold">
-									24 horas
-								</Badge>
-							</div>
-							<div className="flex items-center justify-between">
-								<span className="text-xs font-medium text-muted-foreground">
-									Horário de disparo
-								</span>
-								<Badge variant="outline" className="text-[10px] font-bold">
-									09:00 AM
-								</Badge>
-							</div>
-						</div>
-					</div>
-				</div>
-			</div>
-		</div>
-	);
+          <div className="p-5 rounded-2xl bg-blue-500/5 border border-blue-500/10 space-y-3">
+            <div className="flex items-center gap-2 text-blue-600 font-bold text-xs uppercase tracking-wider">
+              <Settings className="h-3.5 w-3.5" />
+              Configurações do Robô
+            </div>
+            <div className="space-y-2">
+              <div className="flex items-center justify-between">
+                <span className="text-xs font-medium text-muted-foreground">Antecedência</span>
+                <Badge variant="outline" className="text-[10px] font-bold">
+                  24 horas
+                </Badge>
+              </div>
+              <div className="flex items-center justify-between">
+                <span className="text-xs font-medium text-muted-foreground">
+                  Horário de disparo
+                </span>
+                <Badge variant="outline" className="text-[10px] font-bold">
+                  09:00 AM
+                </Badge>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
 }

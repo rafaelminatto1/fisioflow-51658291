@@ -1,7 +1,7 @@
-import type { Hono } from 'hono';
-import type { Env } from '../../types/env';
-import type { AuthVariables } from '../../lib/auth';
-import { createPool } from '../../lib/db';
+import type { Hono } from "hono";
+import type { Env } from "../../types/env";
+import type { AuthVariables } from "../../lib/auth";
+import { createPool } from "../../lib/db";
 
 export type ClinicalRouteApp = Hono<{ Bindings: Env; Variables: AuthVariables }>;
 
@@ -26,16 +26,15 @@ export async function hasTable(
   pool: ReturnType<typeof createPool>,
   tableName: string,
 ): Promise<boolean> {
-  const result = await pool.query(
-    `SELECT to_regclass($1)::text AS table_name`,
-    [`public.${tableName}`],
-  );
+  const result = await pool.query(`SELECT to_regclass($1)::text AS table_name`, [
+    `public.${tableName}`,
+  ]);
   return Boolean(result.rows[0]?.table_name);
 }
 
 export function normalizeJsonArray(value: unknown): unknown[] {
   if (Array.isArray(value)) return value;
-  if (typeof value === 'string') {
+  if (typeof value === "string") {
     try {
       const parsed = JSON.parse(value);
       return Array.isArray(parsed) ? parsed : [];
@@ -50,7 +49,7 @@ export function normalizeTextArray(value: unknown): string[] {
   if (Array.isArray(value)) {
     return value.map((item) => String(item)).filter(Boolean);
   }
-  if (typeof value === 'string') {
+  if (typeof value === "string") {
     try {
       const parsed = JSON.parse(value);
       return Array.isArray(parsed) ? parsed.map((item) => String(item)).filter(Boolean) : [];
@@ -63,13 +62,13 @@ export function normalizeTextArray(value: unknown): string[] {
 
 export function normalizeStandardizedTestRow(row: Record<string, unknown>) {
   const scaleName = String(
-    row.scale_name ?? row.test_type ?? row.test_name ?? 'CUSTOM',
+    row.scale_name ?? row.test_type ?? row.test_name ?? "CUSTOM",
   ).toUpperCase();
-  const testName = String(row.test_name ?? row.scale_name ?? 'Teste padronizado');
+  const testName = String(row.test_name ?? row.scale_name ?? "Teste padronizado");
   const testType = String(row.test_type ?? scaleName).toLowerCase();
   const responsesSource = row.responses ?? row.answers ?? {};
   const responses =
-    responsesSource && typeof responsesSource === 'object' && !Array.isArray(responsesSource)
+    responsesSource && typeof responsesSource === "object" && !Array.isArray(responsesSource)
       ? responsesSource
       : {};
 
@@ -88,9 +87,9 @@ export function normalizeStandardizedTestRow(row: Record<string, unknown>) {
 }
 
 export function normalizeEvolutionTemplateRow(row: Record<string, unknown>) {
-  const nome = String(row.nome ?? row.name ?? '');
+  const nome = String(row.nome ?? row.name ?? "");
   const descricao = row.descricao ?? row.description ?? null;
-  const conteudo = String(row.conteudo ?? row.content ?? '');
+  const conteudo = String(row.conteudo ?? row.content ?? "");
   const camposPadrao = normalizeJsonArray(row.campos_padrao ?? row.blocks);
   const tags = normalizeTextArray(row.tags);
 
@@ -98,7 +97,7 @@ export function normalizeEvolutionTemplateRow(row: Record<string, unknown>) {
     ...row,
     nome,
     name: String(row.name ?? nome),
-    tipo: String(row.tipo ?? 'fisioterapia'),
+    tipo: String(row.tipo ?? "fisioterapia"),
     descricao,
     description: row.description ?? descricao,
     conteudo,

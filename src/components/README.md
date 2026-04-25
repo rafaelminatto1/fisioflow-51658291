@@ -44,15 +44,18 @@ src/components/
 ## Domínios Principais
 
 ### 📅 schedule/
+
 Componentes da agenda - a área mais utilizada do sistema.
 
 **Subdiretórios:**
+
 - `settings/` - Configurações da agenda
 - `shared/` - Utilitários compartilhados
 - `skeletons/` - Loading states
 - `virtualization/` - Componentes virtualizados
 
 **Componentes principais:**
+
 - `CalendarView` - Visualização principal
 - `AppointmentCard` - Card de agendamento
 - `AppointmentModal` - Modal de criação/edição
@@ -61,6 +64,7 @@ Componentes da agenda - a área mais utilizada do sistema.
 [Ver documentação completa →](./schedule/README.md)
 
 ### 👤 patients/
+
 Componentes relacionados a pacientes.
 
 - Ficha de paciente
@@ -69,6 +73,7 @@ Componentes relacionados a pacientes.
 - Mapas de dor
 
 ### 💰 financial/
+
 Componentes financeiros.
 
 - Contas a pagar/receber
@@ -77,6 +82,7 @@ Componentes financeiros.
 - Recibos
 
 ### 📊 reports/
+
 Componentes de relatórios.
 
 - Gerador de relatórios
@@ -84,6 +90,7 @@ Componentes de relatórios.
 - Exportações
 
 ### 🎨 ui/
+
 Componentes base de UI (shadcn/ui).
 
 - Button, Dialog, Form, Table, etc.
@@ -96,14 +103,14 @@ Componentes base de UI (shadcn/ui).
 
 ```typescript
 // ✅ Recomendado: importar de subdiretório
-import { CalendarView, AppointmentCard } from '@/components/schedule';
-import { Button, Dialog } from '@/components/ui';
+import { CalendarView, AppointmentCard } from "@/components/schedule";
+import { Button, Dialog } from "@/components/ui";
 
 // ✅ Aceitável: importar do barrel principal
-import { Button } from '@/components';
+import { Button } from "@/components";
 
 // ❌ Evitar: importar diretamente
-import { CalendarView } from '@/components/schedule/CalendarView';
+import { CalendarView } from "@/components/schedule/CalendarView";
 ```
 
 ### Exemplo de Componente
@@ -111,7 +118,7 @@ import { CalendarView } from '@/components/schedule/CalendarView';
 ```typescript
 /**
  * MyComponent - Descrição breve
- * 
+ *
  * @description Descrição detalhada se necessário
  * @example
  * <MyComponent title="Hello" onAction={handleAction} />
@@ -132,7 +139,7 @@ interface MyComponentProps {
 
 export function MyComponent({ title, onAction, className }: MyComponentProps) {
   const [isOpen, setIsOpen] = useState(false);
-  
+
   return (
     <div className={cn('rounded-lg border p-4', className)}>
       <h2>{title}</h2>
@@ -167,11 +174,11 @@ interface ComponentProps {
   // ✅ Obrigatórios primeiro
   id: string;
   name: string;
-  
+
   // ✅ Opcionais depois
   className?: string;
   disabled?: boolean;
-  
+
   // ✅ Callbacks por último
   onClick?: () => void;
   onChange?: (value: string) => void;

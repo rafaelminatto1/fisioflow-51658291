@@ -15,69 +15,69 @@ import { lazy } from "react";
 
 // Evolution Dashboard - Gráficos de evolução
 export const LazyPatientEvolutionDashboard = lazy(() =>
-	import("@/components/patient/PatientEvolutionDashboard").then((m) => ({
-		default: m.PatientEvolutionDashboard,
-	})),
+  import("@/components/patient/PatientEvolutionDashboard").then((m) => ({
+    default: m.PatientEvolutionDashboard,
+  })),
 );
 
 // Analytics Dashboard - Análises pesadas
 export const LazyPatientAnalyticsDashboard = lazy(() =>
-	import("@/components/patient/analytics").then((m) => ({
-		default: m.PatientAnalyticsDashboard,
-	})),
+  import("@/components/patient/analytics").then((m) => ({
+    default: m.PatientAnalyticsDashboard,
+  })),
 );
 
 // Gamification Components
 export const LazyGamificationHeader = lazy(() =>
-	import("@/components/gamification/GamificationHeader").then((m) => ({
-		default: m.GamificationHeader,
-	})),
+  import("@/components/gamification/GamificationHeader").then((m) => ({
+    default: m.GamificationHeader,
+  })),
 );
 
 export const LazyStreakCalendar = lazy(() =>
-	import("@/components/gamification/StreakCalendar").then((m) => ({
-		default: m.StreakCalendar,
-	})),
+  import("@/components/gamification/StreakCalendar").then((m) => ({
+    default: m.StreakCalendar,
+  })),
 );
 
 // AI Components
 export const LazyPatientAIChat = lazy(() =>
-	import("@/components/ai/PatientAIChat").then((m) => ({
-		default: m.PatientAIChat,
-	})),
+  import("@/components/ai/PatientAIChat").then((m) => ({
+    default: m.PatientAIChat,
+  })),
 );
 
 // Document Scanner - OCR pesado
 export const LazyDocumentScanner = lazy(() =>
-	import("@/components/patient/DocumentScanner").then((m) => ({
-		default: m.DocumentScanner,
-	})),
+  import("@/components/patient/DocumentScanner").then((m) => ({
+    default: m.DocumentScanner,
+  })),
 );
 
 // Session History Panel - Lista histórica
 export const LazySessionHistoryPanel = lazy(() =>
-	import("@/components/session/SessionHistoryPanel").then((m) => ({
-		default: m.SessionHistoryPanel,
-	})),
+  import("@/components/session/SessionHistoryPanel").then((m) => ({
+    default: m.SessionHistoryPanel,
+  })),
 );
 
 // Lifecycle Chart - Gráfico complexo
 export const LazyPatientLifecycleChart = lazy(() =>
-	import("@/components/patient/analytics").then((m) => ({
-		default: m.PatientLifecycleChart,
-	})),
+  import("@/components/patient/analytics").then((m) => ({
+    default: m.PatientLifecycleChart,
+  })),
 );
 
 // Insights Panel - Análise de IA
 export const LazyPatientInsightsPanel = lazy(() =>
-	import("@/components/patient/analytics").then((m) => ({
-		default: m.PatientInsightsPanel,
-	})),
+  import("@/components/patient/analytics").then((m) => ({
+    default: m.PatientInsightsPanel,
+  })),
 );
 
 // Level Journey Map - Visualização complexa
 export const LazyLevelJourneyMap = lazy(() =>
-	import("@/components/gamification/LevelJourneyMap").then((m) => ({
-		default: m.LevelJourneyMap,
-	})),
+  import("@/components/gamification/LevelJourneyMap").then((m) => ({
+    default: m.LevelJourneyMap,
+  })),
 );

@@ -1,8 +1,6 @@
 {
   "name": "ExpoVisionPoseDetector",
   "ios": {
-    "modules": [
-      "ExpoVisionPoseDetectorModule"
-    ]
+    "modules": ["ExpoVisionPoseDetectorModule"]
   }
 }

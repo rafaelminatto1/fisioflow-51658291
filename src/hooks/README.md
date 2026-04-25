@@ -54,40 +54,40 @@ src/hooks/
 
 ```typescript
 // ✅ Recomendado: importar de submódulos
-import { useAppointments, useScheduleHandlers } from '@/hooks/appointments';
-import { usePatients, usePatientCrud } from '@/hooks/patients';
-import { useFinancial, useContasFinanceiras } from '@/hooks/financial';
-import { useToast, useMobile } from '@/hooks/ui';
+import { useAppointments, useScheduleHandlers } from "@/hooks/appointments";
+import { usePatients, usePatientCrud } from "@/hooks/patients";
+import { useFinancial, useContasFinanceiras } from "@/hooks/financial";
+import { useToast, useMobile } from "@/hooks/ui";
 
 // ✅ Aceitável: importar do barrel principal
-import { useAuth, usePatients, useExercises } from '@/hooks';
+import { useAuth, usePatients, useExercises } from "@/hooks";
 
 // ❌ Evitar: importar diretamente do arquivo
-import { useAppointments } from '@/hooks/useAppointments';
+import { useAppointments } from "@/hooks/useAppointments";
 ```
 
 ### Exemplo Completo
 
 ```typescript
-import { useFilteredAppointments, useScheduleState } from '@/hooks/appointments';
-import { usePatientProfileOptimized } from '@/hooks/patients';
-import { useToast } from '@/hooks/ui';
+import { useFilteredAppointments, useScheduleState } from "@/hooks/appointments";
+import { usePatientProfileOptimized } from "@/hooks/patients";
+import { useToast } from "@/hooks/ui";
 
 function MyComponent() {
   const { currentDate, viewType } = useScheduleState();
   const { data: appointments } = useFilteredAppointments({
     viewType,
     date: currentDate,
-    organizationId: 'org-123'
+    organizationId: "org-123",
   });
-  
+
   const { data: patient } = usePatientProfileOptimized({
-    patientId: 'patient-123',
-    activeTab: 'overview'
+    patientId: "patient-123",
+    activeTab: "overview",
   });
-  
+
   const { toast } = useToast();
-  
+
   // ...
 }
 ```
@@ -95,9 +95,11 @@ function MyComponent() {
 ## Módulos
 
 ### 📅 appointments/
+
 Hooks para gerenciamento de agendamentos, calendário e lista de espera.
 
 **Principais hooks:**
+
 - `useAppointments` - Lista de agendamentos
 - `useFilteredAppointments` - Agendamentos com filtros
 - `useScheduleState` - Estado da agenda (sincronizado com URL)
@@ -107,9 +109,11 @@ Hooks para gerenciamento de agendamentos, calendário e lista de espera.
 [Ver documentação completa →](./appointments/README.md)
 
 ### 👤 patients/
+
 Hooks para gerenciamento de pacientes, documentos, evolução e prontuário.
 
 **Principais hooks:**
+
 - `usePatients` - Lista de pacientes
 - `usePatientCrud` - Operações CRUD
 - `usePatientDocuments` - Documentos do paciente
@@ -117,18 +121,22 @@ Hooks para gerenciamento de pacientes, documentos, evolução e prontuário.
 - `usePainMaps` - Mapas de dor
 
 ### 💰 financial/
+
 Hooks para gestão financeira, contas a pagar/receber e relatórios.
 
 **Principais hooks:**
+
 - `useFinancial` - Dados financeiros
 - `useContasFinanceiras` - Contas a pagar/receber
 - `useFluxoCaixa` - Fluxo de caixa
 - `useRecibos` - Geração de recibos
 
 ### 🎨 ui/
+
 Hooks para UI/UX, responsividade, acessibilidade e interações.
 
 **Principais hooks:**
+
 - `useToast` - Notificações toast
 - `useMobile` - Detecção de dispositivo móvel
 - `useDebounce` - Debounce de valores
@@ -147,7 +155,7 @@ Hooks para UI/UX, responsividade, acessibilidade e interações.
 ```typescript
 /**
  * Descrição breve do hook
- * 
+ *
  * @description Descrição detalhada se necessário
  * @param {Type} paramName - Descrição do parâmetro
  * @returns {ReturnType} Descrição do retorno
@@ -155,8 +163,8 @@ Hooks para UI/UX, responsividade, acessibilidade e interações.
  * const { data, isLoading } = useMyHook(param);
  */
 
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { api } from '@/api/v2/base';
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { api } from "@/api/v2/base";
 
 interface UseMyHookOptions {
   param1: string;
@@ -165,9 +173,9 @@ interface UseMyHookOptions {
 
 export function useMyHook(options: UseMyHookOptions) {
   const { param1, enabled = true } = options;
-  
+
   return useQuery({
-    queryKey: ['myKey', param1],
+    queryKey: ["myKey", param1],
     queryFn: () => api.get(`/endpoint/${param1}`),
     enabled,
   });
@@ -181,10 +189,10 @@ Use o arquivo `queryKeys.ts` para centralizar as chaves do React Query:
 ```typescript
 // src/hooks/queryKeys.ts
 export const appointmentKeys = {
-  all: ['appointments'] as const,
-  lists: () => [...appointmentKeys.all, 'list'] as const,
+  all: ["appointments"] as const,
+  lists: () => [...appointmentKeys.all, "list"] as const,
   list: (filters: Record<string, unknown>) => [...appointmentKeys.lists(), filters] as const,
-  details: () => [...appointmentKeys.all, 'detail'] as const,
+  details: () => [...appointmentKeys.all, "detail"] as const,
   detail: (id: string) => [...appointmentKeys.details(), id] as const,
 };
 ```
@@ -218,7 +226,7 @@ Para migrar hooks da raiz para submódulos:
  * @see useNewHook
  */
 export function useOldHook() {
-  console.warn('useOldHook está depreciado. Use useNewHook.');
+  console.warn("useOldHook está depreciado. Use useNewHook.");
   return useNewHook();
 }
 ```

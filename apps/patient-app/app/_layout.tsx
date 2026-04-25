@@ -1,20 +1,19 @@
-
 // Prevent the splash screen from auto-hiding
 
-import { useEffect } from 'react';
-import { Stack } from 'expo-router';
-import { StatusBar } from 'expo-status-bar';
-import { View, ActivityIndicator, StyleSheet, LogBox } from 'react-native';
-import { useAuthStore } from '@/store/auth';
-import { useColors, useColorScheme } from '@/hooks/useColorScheme';
-import { initializeNotifications } from '@/lib/notificationsSystem';
-import * as Sentry from '@sentry/react-native';
-import { ToastContainer, ErrorBoundary } from '@/components';
-import * as SplashScreen from 'expo-splash-screen';
+import { useEffect } from "react";
+import { Stack } from "expo-router";
+import { StatusBar } from "expo-status-bar";
+import { View, ActivityIndicator, StyleSheet, LogBox } from "react-native";
+import { useAuthStore } from "@/store/auth";
+import { useColors, useColorScheme } from "@/hooks/useColorScheme";
+import { initializeNotifications } from "@/lib/notificationsSystem";
+import * as Sentry from "@sentry/react-native";
+import { ToastContainer, ErrorBoundary } from "@/components";
+import * as SplashScreen from "expo-splash-screen";
 
 // Initialize Sentry
 Sentry.init({
-  dsn: process.env.EXPO_PUBLIC_SENTRY_DSN || 'https://placeholder@sentry.io/placeholder',
+  dsn: process.env.EXPO_PUBLIC_SENTRY_DSN || "https://placeholder@sentry.io/placeholder",
   debug: __DEV__,
   enableNative: !__DEV__,
   tracesSampleRate: 1.0,
@@ -22,8 +21,8 @@ Sentry.init({
 
 // Silenciar avisos do Expo Go sobre notificações (esperados em ambiente de dev)
 LogBox.ignoreLogs([
-  'expo-notifications: Android Push notifications',
-  'expo-notifications functionality is not fully supported in Expo Go'
+  "expo-notifications: Android Push notifications",
+  "expo-notifications functionality is not fully supported in Expo Go",
 ]);
 
 SplashScreen.preventAutoHideAsync();
@@ -58,7 +57,7 @@ export default function RootLayout() {
 
   return (
     <ErrorBoundary>
-      <StatusBar style={colorScheme === 'dark' ? 'light' : 'dark'} />
+      <StatusBar style={colorScheme === "dark" ? "light" : "dark"} />
       <Stack
         screenOptions={{
           headerStyle: {
@@ -66,7 +65,7 @@ export default function RootLayout() {
           },
           headerTintColor: colors.text,
           headerTitleStyle: {
-            fontWeight: '600',
+            fontWeight: "600",
           },
           contentStyle: {
             backgroundColor: colors.background,
@@ -85,7 +84,7 @@ export default function RootLayout() {
 const styles = StyleSheet.create({
   loading: {
     flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
+    justifyContent: "center",
+    alignItems: "center",
   },
 });

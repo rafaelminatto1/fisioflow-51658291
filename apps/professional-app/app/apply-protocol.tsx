@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState } from "react";
 import {
   View,
   Text,
@@ -8,15 +8,15 @@ import {
   TextInput,
   Alert,
   ActivityIndicator,
-} from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
-import { useRouter, useLocalSearchParams } from 'expo-router';
-import { Ionicons } from '@expo/vector-icons';
-import { useColors } from '@/hooks/useColorScheme';
-import { useHaptics } from '@/hooks/useHaptics';
-import { usePatients } from '@/hooks/usePatients';
-import { usePatientProtocols } from '@/hooks/usePatientProtocols';
-import { Card } from '@/components';
+} from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
+import { useRouter, useLocalSearchParams } from "expo-router";
+import { Ionicons } from "@expo/vector-icons";
+import { useColors } from "@/hooks/useColorScheme";
+import { useHaptics } from "@/hooks/useHaptics";
+import { usePatients } from "@/hooks/usePatients";
+import { usePatientProtocols } from "@/hooks/usePatientProtocols";
+import { Card } from "@/components";
 
 export default function ApplyProtocolScreen() {
   const colors = useColors();
@@ -27,25 +27,25 @@ export default function ApplyProtocolScreen() {
   const protocolId = params.protocolId as string;
   const preSelectedPatientId = params.patientId as string | undefined;
 
-  const { data: patients, isLoading: isLoadingPatients } = usePatients({ status: 'active' });
+  const { data: patients, isLoading: isLoadingPatients } = usePatients({ status: "active" });
   const { apply, isApplying } = usePatientProtocols(preSelectedPatientId || null);
 
-  const [selectedPatientId, setSelectedPatientId] = useState(preSelectedPatientId || '');
-  const [searchQuery, setSearchQuery] = useState('');
-  const [notes, setNotes] = useState('');
+  const [selectedPatientId, setSelectedPatientId] = useState(preSelectedPatientId || "");
+  const [searchQuery, setSearchQuery] = useState("");
+  const [notes, setNotes] = useState("");
 
-  const filteredPatients = patients?.filter(patient =>
-    patient.name.toLowerCase().includes(searchQuery.toLowerCase())
-  ) || [];
+  const filteredPatients =
+    patients?.filter((patient) => patient.name.toLowerCase().includes(searchQuery.toLowerCase())) ||
+    [];
 
-  const selectedPatient = patients?.find(p => p.id === selectedPatientId);
+  const selectedPatient = patients?.find((p) => p.id === selectedPatientId);
 
   const handleApply = async () => {
     medium();
 
     if (!selectedPatientId) {
       hapticError();
-      Alert.alert('Atenção', 'Selecione um paciente para aplicar o protocolo.');
+      Alert.alert("Atenção", "Selecione um paciente para aplicar o protocolo.");
       return;
     }
 
@@ -53,32 +53,36 @@ export default function ApplyProtocolScreen() {
       await apply({ protocolId, notes });
 
       success();
-      Alert.alert(
-        'Sucesso',
-        `Protocolo aplicado a ${selectedPatient?.name} com sucesso!`,
-        [
-          {
-            text: 'Ver Paciente',
-            onPress: () => {
-              router.replace(`/patient/${selectedPatientId}?tab=exercises` as any);
-            },
+      Alert.alert("Sucesso", `Protocolo aplicado a ${selectedPatient?.name} com sucesso!`, [
+        {
+          text: "Ver Paciente",
+          onPress: () => {
+            router.replace(`/patient/${selectedPatientId}?tab=exercises` as any);
           },
-          {
-            text: 'OK',
-            onPress: () => router.back(),
-          },
-        ]
-      );
+        },
+        {
+          text: "OK",
+          onPress: () => router.back(),
+        },
+      ]);
     } catch (err: any) {
       hapticError();
-      Alert.alert('Erro', err.message || 'Não foi possível aplicar o protocolo.');
+      Alert.alert("Erro", err.message || "Não foi possível aplicar o protocolo.");
     }
   };
 
   return (
-    <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]} edges={['top']}>
+    <SafeAreaView
+      style={[styles.container, { backgroundColor: colors.background }]}
+      edges={["top"]}
+    >
       {/* Header */}
-      <View style={[styles.header, { backgroundColor: colors.surface, borderBottomColor: colors.border }]}>
+      <View
+        style={[
+          styles.header,
+          { backgroundColor: colors.surface, borderBottomColor: colors.border },
+        ]}
+      >
         <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
           <Ionicons name="arrow-back" size={24} color={colors.text} />
         </TouchableOpacity>
@@ -92,7 +96,9 @@ export default function ApplyProtocolScreen() {
           <Card style={styles.selectedCard}>
             <View style={styles.selectedHeader}>
               <Ionicons name="checkmark-circle" size={24} color={colors.success} />
-              <Text style={[styles.selectedTitle, { color: colors.text }]}>Paciente Selecionado</Text>
+              <Text style={[styles.selectedTitle, { color: colors.text }]}>
+                Paciente Selecionado
+              </Text>
             </View>
             <View style={styles.patientInfo}>
               <View style={[styles.patientAvatar, { backgroundColor: colors.primary }]}>
@@ -113,7 +119,7 @@ export default function ApplyProtocolScreen() {
               <TouchableOpacity
                 onPress={() => {
                   medium();
-                  setSelectedPatientId('');
+                  setSelectedPatientId("");
                 }}
               >
                 <Ionicons name="close-circle" size={24} color={colors.textMuted} />
@@ -125,11 +131,14 @@ export default function ApplyProtocolScreen() {
         {/* Search Patients */}
         {!selectedPatientId && (
           <Card style={styles.searchCard}>
-            <Text style={[styles.sectionTitle, { color: colors.text }]}>
-              Selecione o Paciente
-            </Text>
+            <Text style={[styles.sectionTitle, { color: colors.text }]}>Selecione o Paciente</Text>
 
-            <View style={[styles.searchContainer, { backgroundColor: colors.background, borderColor: colors.border }]}>
+            <View
+              style={[
+                styles.searchContainer,
+                { backgroundColor: colors.background, borderColor: colors.border },
+              ]}
+            >
               <Ionicons name="search" size={20} color={colors.textMuted} />
               <TextInput
                 style={[styles.searchInput, { color: colors.text }]}
@@ -139,7 +148,7 @@ export default function ApplyProtocolScreen() {
                 onChangeText={setSearchQuery}
               />
               {searchQuery.length > 0 && (
-                <TouchableOpacity onPress={() => setSearchQuery('')}>
+                <TouchableOpacity onPress={() => setSearchQuery("")}>
                   <Ionicons name="close-circle" size={20} color={colors.textMuted} />
                 </TouchableOpacity>
               )}
@@ -153,7 +162,7 @@ export default function ApplyProtocolScreen() {
               <View style={styles.emptyContainer}>
                 <Ionicons name="people-outline" size={48} color={colors.textMuted} />
                 <Text style={[styles.emptyText, { color: colors.textSecondary }]}>
-                  {searchQuery ? 'Nenhum paciente encontrado' : 'Nenhum paciente ativo'}
+                  {searchQuery ? "Nenhum paciente encontrado" : "Nenhum paciente ativo"}
                 </Text>
               </View>
             ) : (
@@ -165,7 +174,7 @@ export default function ApplyProtocolScreen() {
                     onPress={() => {
                       medium();
                       setSelectedPatientId(patient.id);
-                      setSearchQuery('');
+                      setSearchQuery("");
                     }}
                   >
                     <View style={[styles.patientAvatar, { backgroundColor: colors.primary }]}>
@@ -198,7 +207,14 @@ export default function ApplyProtocolScreen() {
               Observações (Opcional)
             </Text>
             <TextInput
-              style={[styles.notesInput, { backgroundColor: colors.background, borderColor: colors.border, color: colors.text }]}
+              style={[
+                styles.notesInput,
+                {
+                  backgroundColor: colors.background,
+                  borderColor: colors.border,
+                  color: colors.text,
+                },
+              ]}
               placeholder="Adicione observações sobre a aplicação do protocolo..."
               placeholderTextColor={colors.textMuted}
               value={notes}
@@ -236,9 +252,9 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
     paddingHorizontal: 16,
     paddingVertical: 12,
     borderBottomWidth: 1,
@@ -248,9 +264,9 @@ const styles = StyleSheet.create({
   },
   headerTitle: {
     fontSize: 18,
-    fontWeight: '600',
+    fontWeight: "600",
     flex: 1,
-    textAlign: 'center',
+    textAlign: "center",
   },
   placeholder: {
     width: 40,
@@ -267,13 +283,13 @@ const styles = StyleSheet.create({
     gap: 12,
   },
   selectedHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     gap: 8,
   },
   selectedTitle: {
     fontSize: 16,
-    fontWeight: '600',
+    fontWeight: "600",
   },
   searchCard: {
     padding: 16,
@@ -281,11 +297,11 @@ const styles = StyleSheet.create({
   },
   sectionTitle: {
     fontSize: 16,
-    fontWeight: '600',
+    fontWeight: "600",
   },
   searchContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     paddingHorizontal: 12,
     paddingVertical: 10,
     borderRadius: 8,
@@ -298,43 +314,43 @@ const styles = StyleSheet.create({
   },
   loadingContainer: {
     padding: 20,
-    alignItems: 'center',
+    alignItems: "center",
   },
   emptyContainer: {
     padding: 40,
-    alignItems: 'center',
+    alignItems: "center",
     gap: 8,
   },
   emptyText: {
     fontSize: 14,
-    textAlign: 'center',
+    textAlign: "center",
   },
   patientsList: {
     maxHeight: 300,
   },
   patientItem: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     padding: 12,
     borderBottomWidth: 1,
     gap: 12,
   },
   patientInfo: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     gap: 12,
   },
   patientAvatar: {
     width: 48,
     height: 48,
     borderRadius: 24,
-    alignItems: 'center',
-    justifyContent: 'center',
+    alignItems: "center",
+    justifyContent: "center",
   },
   patientAvatarText: {
-    color: '#fff',
+    color: "#fff",
     fontSize: 20,
-    fontWeight: '600',
+    fontWeight: "600",
   },
   patientDetails: {
     flex: 1,
@@ -342,7 +358,7 @@ const styles = StyleSheet.create({
   },
   patientName: {
     fontSize: 16,
-    fontWeight: '600',
+    fontWeight: "600",
   },
   patientCondition: {
     fontSize: 13,
@@ -357,19 +373,19 @@ const styles = StyleSheet.create({
     padding: 12,
     fontSize: 15,
     minHeight: 100,
-    textAlignVertical: 'top',
+    textAlignVertical: "top",
   },
   applyButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
     padding: 16,
     borderRadius: 12,
     gap: 8,
   },
   applyButtonText: {
-    color: '#fff',
+    color: "#fff",
     fontSize: 16,
-    fontWeight: '600',
+    fontWeight: "600",
   },
 });

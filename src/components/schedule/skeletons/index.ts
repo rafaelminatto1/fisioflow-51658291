@@ -5,7 +5,4 @@
 export { CalendarSkeleton } from "./CalendarSkeleton";
 export { AppointmentCardSkeleton } from "./AppointmentCardSkeleton";
 export { AppointmentListSkeleton } from "./AppointmentListSkeleton";
-export {
-	CalendarSkeletonEnhanced,
-	PulseLoader,
-} from "./CalendarSkeletonEnhanced";
+export { CalendarSkeletonEnhanced, PulseLoader } from "./CalendarSkeletonEnhanced";

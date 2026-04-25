@@ -1,15 +1,15 @@
-import * as FileSystem from 'expo-file-system/legacy';
-import * as Sharing from 'expo-sharing';
-import { Alert } from 'react-native';
-import { patientApi } from '@/lib/api';
-import { log } from '@/lib/logger';
+import * as FileSystem from "expo-file-system/legacy";
+import * as Sharing from "expo-sharing";
+import { Alert } from "react-native";
+import { patientApi } from "@/lib/api";
+import { log } from "@/lib/logger";
 
 export interface PatientDataExport {
   metadata: {
     exportedAt: string;
     exportedBy: string;
     version: string;
-    format: 'FisioFlow-Patient-Export-v2';
+    format: "FisioFlow-Patient-Export-v2";
   };
   patient: {
     id: string;
@@ -49,37 +49,35 @@ export class DataExporter {
   }
 
   async exportAll(options: DataExportOptions = {}): Promise<PatientDataExport> {
-    const {
-      includeEvolutions = true,
-      includeMessages = true,
-      includeHealthData = true,
-    } = options;
+    const { includeEvolutions = true, includeMessages = true, includeHealthData = true } = options;
 
     try {
       const [profile, exercises, appointments, progress] = await Promise.all([
         patientApi.getProfile(),
         patientApi.getExercises(),
         patientApi.getAppointments(),
-        includeEvolutions ? patientApi.getProgress() : Promise.resolve({ evolutions: [], reports: [] }),
+        includeEvolutions
+          ? patientApi.getProgress()
+          : Promise.resolve({ evolutions: [], reports: [] }),
       ]);
 
       return {
         metadata: {
           exportedAt: new Date().toISOString(),
           exportedBy: this.userId,
-          version: '2.0.0',
-          format: 'FisioFlow-Patient-Export-v2',
+          version: "2.0.0",
+          format: "FisioFlow-Patient-Export-v2",
         },
         patient: {
           id: profile?.id || this.userId,
-          name: profile?.name || '',
-          email: profile?.email || '',
+          name: profile?.name || "",
+          email: profile?.email || "",
           phone: profile?.phone || undefined,
           cpf: profile?.cpf || undefined,
           birthDate: profile?.birthDate || undefined,
           address: profile?.address || undefined,
           createdAt:
-            typeof profile?.createdAt === 'string'
+            typeof profile?.createdAt === "string"
               ? profile.createdAt
               : profile?.createdAt instanceof Date
                 ? profile.createdAt.toISOString()
@@ -96,8 +94,8 @@ export class DataExporter {
         healthData: includeHealthData ? {} : {},
       };
     } catch (error) {
-      log.error('Error exporting patient data:', error);
-      throw new Error('Falha ao exportar dados: ' + (error as Error).message);
+      log.error("Error exporting patient data:", error);
+      throw new Error("Falha ao exportar dados: " + (error as Error).message);
     }
   }
 
@@ -115,13 +113,13 @@ export class DataExporter {
 
     const isAvailable = await Sharing.isAvailableAsync();
     if (!isAvailable) {
-      Alert.alert('Exportação concluída', `Arquivo salvo em: ${fileUri}`);
+      Alert.alert("Exportação concluída", `Arquivo salvo em: ${fileUri}`);
       return;
     }
 
     await Sharing.shareAsync(fileUri, {
-      mimeType: 'application/json',
-      dialogTitle: 'Exportar dados do paciente',
+      mimeType: "application/json",
+      dialogTitle: "Exportar dados do paciente",
     });
   }
 }

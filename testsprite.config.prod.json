@@ -7,10 +7,7 @@
   "server": {
     "url": "https://moocafisio.com.br"
   },
-  "testPatterns": [
-    "testsprite_tests/**/*.json",
-    "testsprite_tests/**/*.py"
-  ],
+  "testPatterns": ["testsprite_tests/**/*.json", "testsprite_tests/**/*.py"],
   "viewport": {
     "default": { "width": 1920, "height": 1080 },
     "mobile": { "width": 375, "height": 812 }

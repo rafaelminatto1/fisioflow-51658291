@@ -13,89 +13,82 @@
 
 import { useEffect, useRef, useCallback, useState } from "react";
 
-export function focusBySelector(
-	selector: string,
-	fallbackIndex?: number,
-): boolean {
-	const element = document.querySelector(selector) as HTMLElement | null;
+export function focusBySelector(selector: string, fallbackIndex?: number): boolean {
+  const element = document.querySelector(selector) as HTMLElement | null;
 
-	if (element) {
-		element.focus();
-		return true;
-	}
+  if (element) {
+    element.focus();
+    return true;
+  }
 
-	if (fallbackIndex !== undefined) {
-		const focusableElements = getFocusableElements();
-		if (focusableElements[fallbackIndex]) {
-			focusableElements[fallbackIndex].focus();
-			return true;
-		}
-	}
+  if (fallbackIndex !== undefined) {
+    const focusableElements = getFocusableElements();
+    if (focusableElements[fallbackIndex]) {
+      focusableElements[fallbackIndex].focus();
+      return true;
+    }
+  }
 
-	return false;
+  return false;
 }
 
 /**
  * Retorna todos os elementos focáveis dentro de um container
  */
-export function getFocusableElements(
-	container: HTMLElement | Document = document,
-): HTMLElement[] {
-	const focusableSelectors = [
-		"a[href]",
-		"button:not([disabled])",
-		"textarea:not([disabled])",
-		"input:not([disabled])",
-		"select:not([disabled])",
-		'[tabindex]:not([tabindex="-1"])',
-	].join(", ");
+export function getFocusableElements(container: HTMLElement | Document = document): HTMLElement[] {
+  const focusableSelectors = [
+    "a[href]",
+    "button:not([disabled])",
+    "textarea:not([disabled])",
+    "input:not([disabled])",
+    "select:not([disabled])",
+    '[tabindex]:not([tabindex="-1"])',
+  ].join(", ");
 
-	return Array.from(
-		container.querySelectorAll(focusableSelectors),
-	) as HTMLElement[];
+  return Array.from(container.querySelectorAll(focusableSelectors)) as HTMLElement[];
 }
 
 /**
  * Trapa o foco dentro de um elemento (para modais, dialogs, etc)
  */
 export function trapFocus(element: HTMLElement): () => void {
-	const focusableElements = getFocusableElements(element);
-	const firstElement = focusableElements[0];
-	const lastElement = focusableElements[focusableElements.length - 1];
+  const focusableElements = getFocusableElements(element);
+  const firstElement = focusableElements[0];
+  const lastElement = focusableElements[focusableElements.length - 1];
 
-	const handleTabKey = (e: KeyboardEvent) => {
-		if (e.key !== "Tab") return;
+  const handleTabKey = (e: KeyboardEvent) => {
+    if (e.key !== "Tab") return;
 
-		if (e.shiftKey) {
-			if (document.activeElement === firstElement) {
-				e.preventDefault();
-				lastElement?.focus();
-			}
-		} else {
-			if (document.activeElement === lastElement) {
-				e.preventDefault();
-				firstElement?.focus();
-			}
-		}
-	};
+    if (e.shiftKey) {
+      if (document.activeElement === firstElement) {
+        e.preventDefault();
+        lastElement?.focus();
+      }
+    } else {
+      if (document.activeElement === lastElement) {
+        e.preventDefault();
+        firstElement?.focus();
+      }
+    }
+  };
 
-	element.addEventListener("keydown", handleTabKey);
+  element.addEventListener("keydown", handleTabKey);
 
-	// Focus first element
-	firstElement?.focus();
+  // Focus first element
+  firstElement?.focus();
 
-	return () => {
-		element.removeEventListener("keydown", handleTabKey);
-	};
+  return () => {
+    element.removeEventListener("keydown", handleTabKey);
+  };
 }
 
 /**
  * Restaura o foco para um elemento anterior
  */
 export function restoreFocus(element: HTMLElement | null): void {
-	if (element) {
-		element.focus();
-	}
+  if (element) {
+    element.focus();
+  }
 }
 
 // =====================================================================
@@ -108,43 +101,40 @@ let liveRegion: HTMLElement | null = null;
  * Cria ou retorna a região de live para anúncios de screen reader
  */
 function getLiveRegion(): HTMLElement {
-	if (!liveRegion) {
-		liveRegion = document.createElement("div");
-		liveRegion.setAttribute("aria-live", "polite");
-		liveRegion.setAttribute("aria-atomic", "true");
-		liveRegion.setAttribute("role", "status");
-		liveRegion.className = "sr-only";
-		document.body.appendChild(liveRegion);
-	}
-	return liveRegion;
+  if (!liveRegion) {
+    liveRegion = document.createElement("div");
+    liveRegion.setAttribute("aria-live", "polite");
+    liveRegion.setAttribute("aria-atomic", "true");
+    liveRegion.setAttribute("role", "status");
+    liveRegion.className = "sr-only";
+    document.body.appendChild(liveRegion);
+  }
+  return liveRegion;
 }
 
 /**
  * Anuncia uma mensagem para leitores de tela
  */
-export function announce(
-	message: string,
-	priority: "polite" | "assertive" = "polite",
-): void {
-	const region = getLiveRegion();
+export function announce(message: string, priority: "polite" | "assertive" = "polite"): void {
+  const region = getLiveRegion();
 
-	// Update aria-live based on priority
-	region.setAttribute("aria-live", priority);
+  // Update aria-live based on priority
+  region.setAttribute("aria-live", priority);
 
-	// Clear previous message
-	region.textContent = "";
+  // Clear previous message
+  region.textContent = "";
 
-	// Set new message after a small delay to ensure screen readers pick it up
-	setTimeout(() => {
-		region.textContent = message;
-	}, 50);
+  // Set new message after a small delay to ensure screen readers pick it up
+  setTimeout(() => {
+    region.textContent = message;
+  }, 50);
 }
 
 /**
  * Anuncia uma mensagem assertiva (interrupção imediata)
  */
 export function announceAssertive(message: string): void {
-	announce(message, "assertive");
+  announce(message, "assertive");
 }
 
 // =====================================================================
@@ -155,95 +145,92 @@ export function announceAssertive(message: string): void {
  * Hook para trap focus em um elemento (modais, dialogs, etc)
  */
 export function useFocusTrap(enabled: boolean = true) {
-	const containerRef = useRef<HTMLElement | null>(null);
-	const previousActiveElementRef = useRef<HTMLElement | null>(null);
+  const containerRef = useRef<HTMLElement | null>(null);
+  const previousActiveElementRef = useRef<HTMLElement | null>(null);
 
-	useEffect(() => {
-		if (!enabled || !containerRef.current) return;
+  useEffect(() => {
+    if (!enabled || !containerRef.current) return;
 
-		// Store previously focused element
-		previousActiveElementRef.current = document.activeElement as HTMLElement;
+    // Store previously focused element
+    previousActiveElementRef.current = document.activeElement as HTMLElement;
 
-		// Trap focus
-		const cleanup = trapFocus(containerRef.current);
+    // Trap focus
+    const cleanup = trapFocus(containerRef.current);
 
-		return () => {
-			cleanup();
-			// Restore focus
-			previousActiveElementRef.current?.focus();
-		};
-	}, [enabled]);
+    return () => {
+      cleanup();
+      // Restore focus
+      previousActiveElementRef.current?.focus();
+    };
+  }, [enabled]);
 
-	return containerRef;
+  return containerRef;
 }
 
 /**
  * Hook para restaurar foco ao desmontar
  */
 export function useRestoreFocus(enabled: boolean = true) {
-	const previousActiveElementRef = useRef<HTMLElement | null>(null);
+  const previousActiveElementRef = useRef<HTMLElement | null>(null);
 
-	useEffect(() => {
-		if (!enabled) return;
+  useEffect(() => {
+    if (!enabled) return;
 
-		previousActiveElementRef.current = document.activeElement as HTMLElement;
+    previousActiveElementRef.current = document.activeElement as HTMLElement;
 
-		return () => {
-			previousActiveElementRef.current?.focus();
-		};
-	}, [enabled]);
+    return () => {
+      previousActiveElementRef.current?.focus();
+    };
+  }, [enabled]);
 }
 
 /**
  * Hook para anúnciar mudanças para screen readers
  */
 export function useAnnounce() {
-	return useCallback(
-		(message: string, priority: "polite" | "assertive" = "polite") => {
-			announce(message, priority);
-		},
-		[],
-	);
+  return useCallback((message: string, priority: "polite" | "assertive" = "polite") => {
+    announce(message, priority);
+  }, []);
 }
 
 /**
  * Hook para gerenciar focus em modais
  */
 export function useModalFocus() {
-	const modalRef = useRef<HTMLElement | null>(null);
-	const triggerRef = useRef<HTMLElement | null>(null);
-	const isOpenRef = useRef(false);
+  const modalRef = useRef<HTMLElement | null>(null);
+  const triggerRef = useRef<HTMLElement | null>(null);
+  const isOpenRef = useRef(false);
 
-	const open = useCallback(() => {
-		if (!modalRef.current) return;
+  const open = useCallback(() => {
+    if (!modalRef.current) return;
 
-		// Store the trigger element
-		triggerRef.current = document.activeElement as HTMLElement;
-		isOpenRef.current = true;
+    // Store the trigger element
+    triggerRef.current = document.activeElement as HTMLElement;
+    isOpenRef.current = true;
 
-		// Focus first focusable element in modal
-		const focusableElements = getFocusableElements(modalRef.current);
-		if (focusableElements.length > 0) {
-			focusableElements[0].focus();
-		}
+    // Focus first focusable element in modal
+    const focusableElements = getFocusableElements(modalRef.current);
+    if (focusableElements.length > 0) {
+      focusableElements[0].focus();
+    }
 
-		announce("Modal aberto", "polite");
-	}, []);
+    announce("Modal aberto", "polite");
+  }, []);
 
-	const close = useCallback(() => {
-		if (!isOpenRef.current) return;
+  const close = useCallback(() => {
+    if (!isOpenRef.current) return;
 
-		isOpenRef.current = false;
+    isOpenRef.current = false;
 
-		// Restore focus to trigger
-		if (triggerRef.current) {
-			triggerRef.current.focus();
-		}
+    // Restore focus to trigger
+    if (triggerRef.current) {
+      triggerRef.current.focus();
+    }
 
-		announce("Modal fechado", "polite");
-	}, []);
+    announce("Modal fechado", "polite");
+  }, []);
 
-	return { modalRef, open, close };
+  return { modalRef, open, close };
 }
 
 // =====================================================================
@@ -254,115 +241,109 @@ export function useModalFocus() {
  * Hook para navegação por teclado em listas
  */
 export function useKeyboardNavigation(options: {
-	itemCount: number;
-	onSelect: (index: number) => void;
-	onFocus?: (index: number) => void;
-	loop?: boolean;
-	orientation?: "vertical" | "horizontal" | "both";
+  itemCount: number;
+  onSelect: (index: number) => void;
+  onFocus?: (index: number) => void;
+  loop?: boolean;
+  orientation?: "vertical" | "horizontal" | "both";
 }) {
-	const {
-		itemCount,
-		onSelect,
-		onFocus,
-		loop = true,
-		orientation = "vertical",
-	} = options;
-	const selectedIndexRef = useRef(-1);
+  const { itemCount, onSelect, onFocus, loop = true, orientation = "vertical" } = options;
+  const selectedIndexRef = useRef(-1);
 
-	const handleKeyDown = useCallback(
-		(e: React.KeyboardEvent) => {
-			const currentIndex = selectedIndexRef.current;
+  const handleKeyDown = useCallback(
+    (e: React.KeyboardEvent) => {
+      const currentIndex = selectedIndexRef.current;
 
-			let newIndex = currentIndex;
+      let newIndex = currentIndex;
 
-			switch (e.key) {
-				case "ArrowDown":
-					if (orientation === "vertical" || orientation === "both") {
-						e.preventDefault();
-						newIndex = currentIndex + 1;
-						if (loop && newIndex >= itemCount) {
-							newIndex = 0;
-						} else if (newIndex >= itemCount) {
-							newIndex = itemCount - 1;
-						}
-					}
-					break;
+      switch (e.key) {
+        case "ArrowDown":
+          if (orientation === "vertical" || orientation === "both") {
+            e.preventDefault();
+            newIndex = currentIndex + 1;
+            if (loop && newIndex >= itemCount) {
+              newIndex = 0;
+            } else if (newIndex >= itemCount) {
+              newIndex = itemCount - 1;
+            }
+          }
+          break;
 
-				case "ArrowUp":
-					if (orientation === "vertical" || orientation === "both") {
-						e.preventDefault();
-						newIndex = currentIndex - 1;
-						if (loop && newIndex < 0) {
-							newIndex = itemCount - 1;
-						} else if (newIndex < 0) {
-							newIndex = 0;
-						}
-					}
-					break;
+        case "ArrowUp":
+          if (orientation === "vertical" || orientation === "both") {
+            e.preventDefault();
+            newIndex = currentIndex - 1;
+            if (loop && newIndex < 0) {
+              newIndex = itemCount - 1;
+            } else if (newIndex < 0) {
+              newIndex = 0;
+            }
+          }
+          break;
 
-				case "ArrowRight":
-					if (orientation === "horizontal" || orientation === "both") {
-						e.preventDefault();
-						newIndex = currentIndex + 1;
-						if (loop && newIndex >= itemCount) {
-							newIndex = 0;
-						} else if (newIndex >= itemCount) {
-							newIndex = itemCount - 1;
-						}
-					}
-					break;
+        case "ArrowRight":
+          if (orientation === "horizontal" || orientation === "both") {
+            e.preventDefault();
+            newIndex = currentIndex + 1;
+            if (loop && newIndex >= itemCount) {
+              newIndex = 0;
+            } else if (newIndex >= itemCount) {
+              newIndex = itemCount - 1;
+            }
+          }
+          break;
 
-				case "ArrowLeft":
-					if (orientation === "horizontal" || orientation === "both") {
-						e.preventDefault();
-						newIndex = currentIndex - 1;
-						if (loop && newIndex < 0) {
-							newIndex = itemCount - 1;
-						} else if (newIndex < 0) {
-							newIndex = 0;
-						}
-					}
-					break;
+        case "ArrowLeft":
+          if (orientation === "horizontal" || orientation === "both") {
+            e.preventDefault();
+            newIndex = currentIndex - 1;
+            if (loop && newIndex < 0) {
+              newIndex = itemCount - 1;
+            } else if (newIndex < 0) {
+              newIndex = 0;
+            }
+          }
+          break;
 
-				case "Home":
-					e.preventDefault();
-					newIndex = 0;
-					break;
+        case "Home":
+          e.preventDefault();
+          newIndex = 0;
+          break;
 
-				case "End":
-					e.preventDefault();
-					newIndex = itemCount - 1;
-					break;
+        case "End":
+          e.preventDefault();
+          newIndex = itemCount - 1;
+          break;
 
-				case "Enter":
-				case " ":
-					if (currentIndex >= 0) {
-						e.preventDefault();
-						onSelect(currentIndex);
-					}
-					return;
+        case "Enter":
+        case " ":
+          if (currentIndex >= 0) {
+            e.preventDefault();
+            onSelect(currentIndex);
+          }
+          return;
 
-				default:
-					return;
-			}
+        default:
+          return;
+      }
 
-			if (newIndex !== currentIndex) {
-				selectedIndexRef.current = newIndex;
-				onFocus?.(newIndex);
-			}
-		},
-		[itemCount, onSelect, onFocus, loop, orientation],
-	);
+      if (newIndex !== currentIndex) {
+        selectedIndexRef.current = newIndex;
+        onFocus?.(newIndex);
+      }
+    },
+    [itemCount, onSelect, onFocus, loop, orientation],
+  );
 
-	const setSelectedIndex = useCallback((index: number) => {
-		selectedIndexRef.current = index;
-	}, []);
+  const setSelectedIndex = useCallback((index: number) => {
+    selectedIndexRef.current = index;
+  }, []);
 
-	return {
-		handleKeyDown,
-		selectedIndex: selectedIndexRef.current,
-		setSelectedIndex,
-	};
+  return {
+    handleKeyDown,
+    selectedIndex: selectedIndexRef.current,
+    setSelectedIndex,
+  };
 }
 
 // =====================================================================
@@ -374,15 +355,14 @@ export function useKeyboardNavigation(options: {
  */
 let ariaIdCounter = 0;
 export function generateAriaId(prefix: string = "aria"): string {
-	return `${prefix}-${++ariaIdCounter}`;
+  return `${prefix}-${++ariaIdCounter}`;
 }
 
 /**
  * Hook para gerar IDs ARIA conectados
  */
 export function useAriaIds(prefix: string, count: number) {
-	return useRef(Array.from({ length: count }, () => generateAriaId(prefix)))
-		.current;
+  return useRef(Array.from({ length: count }, () => generateAriaId(prefix))).current;
 }
 
 // =====================================================================
@@ -393,32 +373,30 @@ export function useAriaIds(prefix: string, count: number) {
  * Verifica se o usuário prefere movimento reduzido
  */
 export function prefersReducedMotion(): boolean {
-	return window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  return window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 }
 
 /**
  * Hook para detectar preferência de movimento reduzido
  */
 export function useReducedMotion(): boolean {
-	const [prefersReduced, setPrefersReduced] = useState(() =>
-		prefersReducedMotion(),
-	);
+  const [prefersReduced, setPrefersReduced] = useState(() => prefersReducedMotion());
 
-	useEffect(() => {
-		const mediaQuery = window.matchMedia("(prefers-reduced-motion: reduce)");
+  useEffect(() => {
+    const mediaQuery = window.matchMedia("(prefers-reduced-motion: reduce)");
 
-		const handleChange = () => {
-			setPrefersReduced(mediaQuery.matches);
-		};
+    const handleChange = () => {
+      setPrefersReduced(mediaQuery.matches);
+    };
 
-		mediaQuery.addEventListener("change", handleChange);
+    mediaQuery.addEventListener("change", handleChange);
 
-		return () => {
-			mediaQuery.removeEventListener("change", handleChange);
-		};
-	}, []);
+    return () => {
+      mediaQuery.removeEventListener("change", handleChange);
+    };
+  }, []);
 
-	return prefersReduced;
+  return prefersReduced;
 }
 
 // =====================================================================
@@ -429,30 +407,30 @@ export function useReducedMotion(): boolean {
  * Hook para mostrar foco apenas ao navegar por teclado
  */
 export function useKeyboardOnlyFocus() {
-	useEffect(() => {
-		const _isUsingKeyboard = false;
+  useEffect(() => {
+    const _isUsingKeyboard = false;
 
-		const handleKeyDown = (e: KeyboardEvent) => {
-			if (e.key === "Tab") {
-				isUsingKeyboard = true;
-				document.body.classList.add("using-keyboard");
-			}
-		};
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Tab") {
+        isUsingKeyboard = true;
+        document.body.classList.add("using-keyboard");
+      }
+    };
 
-		const handleMouseDown = () => {
-			isUsingKeyboard = false;
-			document.body.classList.remove("using-keyboard");
-		};
+    const handleMouseDown = () => {
+      isUsingKeyboard = false;
+      document.body.classList.remove("using-keyboard");
+    };
 
-		document.addEventListener("keydown", handleKeyDown);
-		document.addEventListener("mousedown", handleMouseDown);
+    document.addEventListener("keydown", handleKeyDown);
+    document.addEventListener("mousedown", handleMouseDown);
 
-		return () => {
-			document.removeEventListener("keydown", handleKeyDown);
-			document.removeEventListener("mousedown", handleMouseDown);
-			document.body.classList.remove("using-keyboard");
-		};
-	}, []);
+    return () => {
+      document.removeEventListener("keydown", handleKeyDown);
+      document.removeEventListener("mousedown", handleMouseDown);
+      document.body.classList.remove("using-keyboard");
+    };
+  }, []);
 }
 
 // =====================================================================
@@ -460,20 +438,20 @@ export function useKeyboardOnlyFocus() {
 // =====================================================================
 
 export default {
-	focusBySelector,
-	getFocusableElements,
-	trapFocus,
-	restoreFocus,
-	announce,
-	announceAssertive,
-	useFocusTrap,
-	useRestoreFocus,
-	useAnnounce,
-	useModalFocus,
-	useKeyboardNavigation,
-	generateAriaId,
-	useAriaIds,
-	prefersReducedMotion,
-	useReducedMotion,
-	useKeyboardOnlyFocus,
+  focusBySelector,
+  getFocusableElements,
+  trapFocus,
+  restoreFocus,
+  announce,
+  announceAssertive,
+  useFocusTrap,
+  useRestoreFocus,
+  useAnnounce,
+  useModalFocus,
+  useKeyboardNavigation,
+  generateAriaId,
+  useAriaIds,
+  prefersReducedMotion,
+  useReducedMotion,
+  useKeyboardOnlyFocus,
 };

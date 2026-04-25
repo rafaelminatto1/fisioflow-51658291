@@ -4,9 +4,9 @@
  * Validates: Requirements 7.2
  */
 
-import { describe, it } from 'vitest';
-import * as fc from 'fast-check';
-import type { ExerciseTemplate, PatientProfileCategory } from '@/types/workers';
+import { describe, it } from "vitest";
+import * as fc from "fast-check";
+import type { ExerciseTemplate, PatientProfileCategory } from "@/types/workers";
 
 // ─── Pure filter function under test ─────────────────────────────────────────
 
@@ -22,8 +22,8 @@ export function filterTemplatesForOrg(
 ): ExerciseTemplate[] {
   return templates.filter((t) => {
     if (!t.isActive) return false;
-    if (t.templateType === 'system') return true;
-    if (t.templateType === 'custom') {
+    if (t.templateType === "system") return true;
+    if (t.templateType === "custom") {
       return t.organizationId === organizationId;
     }
     return false;
@@ -33,11 +33,11 @@ export function filterTemplatesForOrg(
 // ─── Arbitrary generators ─────────────────────────────────────────────────────
 
 const patientProfiles: PatientProfileCategory[] = [
-  'ortopedico',
-  'esportivo',
-  'pos_operatorio',
-  'prevencao',
-  'idosos',
+  "ortopedico",
+  "esportivo",
+  "pos_operatorio",
+  "prevencao",
+  "idosos",
 ];
 
 function arbitraryTemplate(): fc.Arbitrary<ExerciseTemplate> {
@@ -52,7 +52,7 @@ function arbitraryTemplate(): fc.Arbitrary<ExerciseTemplate> {
     contraindications: fc.option(fc.string({ maxLength: 200 }), { nil: null }),
     precautions: fc.option(fc.string({ maxLength: 200 }), { nil: null }),
     progressionNotes: fc.option(fc.string({ maxLength: 200 }), { nil: null }),
-    evidenceLevel: fc.option(fc.constantFrom('A', 'B', 'C', 'D' as const), { nil: null }),
+    evidenceLevel: fc.option(fc.constantFrom("A", "B", "C", "D" as const), { nil: null }),
     bibliographicReferences: fc.array(fc.string({ maxLength: 100 }), { maxLength: 5 }),
     isActive: fc.boolean(),
     isPublic: fc.boolean(),
@@ -60,7 +60,7 @@ function arbitraryTemplate(): fc.Arbitrary<ExerciseTemplate> {
     createdBy: fc.option(fc.uuid(), { nil: null }),
     createdAt: fc.constant(new Date().toISOString()),
     updatedAt: fc.constant(new Date().toISOString()),
-    templateType: fc.constantFrom('system', 'custom' as const),
+    templateType: fc.constantFrom("system", "custom" as const),
     patientProfile: fc.option(fc.constantFrom(...patientProfiles), { nil: null }),
     sourceTemplateId: fc.option(fc.uuid(), { nil: null }),
     isDraft: fc.boolean(),
@@ -72,7 +72,7 @@ function arbitraryTemplate(): fc.Arbitrary<ExerciseTemplate> {
 function arbitraryActiveSystemTemplate(): fc.Arbitrary<ExerciseTemplate> {
   return arbitraryTemplate().map((t) => ({
     ...t,
-    templateType: 'system' as const,
+    templateType: "system" as const,
     organizationId: null,
     isActive: true,
   }));
@@ -82,21 +82,21 @@ function arbitraryActiveSystemTemplate(): fc.Arbitrary<ExerciseTemplate> {
 function arbitraryCustomTemplateForOrg(orgId: string): fc.Arbitrary<ExerciseTemplate> {
   return arbitraryTemplate().map((t) => ({
     ...t,
-    templateType: 'custom' as const,
+    templateType: "custom" as const,
     organizationId: orgId,
   }));
 }
 
 // ─── Tests ────────────────────────────────────────────────────────────────────
 
-describe('filterTemplatesForOrg — Property 11: System_Templates sempre visíveis', () => {
+describe("filterTemplatesForOrg — Property 11: System_Templates sempre visíveis", () => {
   /**
    * Property 11a: All active system templates are always included in the result,
    * regardless of what custom templates exist or which organizationId is used.
    *
    * Validates: Requirements 7.2
    */
-  it('sempre inclui todos os system templates ativos, independentemente de Custom_Templates', () => {
+  it("sempre inclui todos os system templates ativos, independentemente de Custom_Templates", () => {
     fc.assert(
       fc.property(
         fc.array(arbitraryTemplate(), { maxLength: 20 }),
@@ -105,13 +105,11 @@ describe('filterTemplatesForOrg — Property 11: System_Templates sempre visíve
           const result = filterTemplatesForOrg(templates, organizationId);
 
           const activeSystemTemplates = templates.filter(
-            (t) => t.templateType === 'system' && t.isActive,
+            (t) => t.templateType === "system" && t.isActive,
           );
 
           // Every active system template must appear in the result
-          return activeSystemTemplates.every((st) =>
-            result.some((r) => r.id === st.id),
-          );
+          return activeSystemTemplates.every((st) => result.some((r) => r.id === st.id));
         },
       ),
       { numRuns: 100 },
@@ -124,7 +122,7 @@ describe('filterTemplatesForOrg — Property 11: System_Templates sempre visíve
    *
    * Validates: Requirements 7.2
    */
-  it('system templates são visíveis mesmo quando não há Custom_Templates cadastrados', () => {
+  it("system templates são visíveis mesmo quando não há Custom_Templates cadastrados", () => {
     fc.assert(
       fc.property(
         fc.array(arbitraryActiveSystemTemplate(), { minLength: 1, maxLength: 10 }),
@@ -133,9 +131,7 @@ describe('filterTemplatesForOrg — Property 11: System_Templates sempre visíve
           // No custom templates at all
           const result = filterTemplatesForOrg(systemTemplates, organizationId);
 
-          return systemTemplates.every((st) =>
-            result.some((r) => r.id === st.id),
-          );
+          return systemTemplates.every((st) => result.some((r) => r.id === st.id));
         },
       ),
       { numRuns: 100 },
@@ -148,7 +144,7 @@ describe('filterTemplatesForOrg — Property 11: System_Templates sempre visíve
    *
    * Validates: Requirements 7.2 (inverse — org isolation)
    */
-  it('custom templates de outras organizações NÃO aparecem nos resultados', () => {
+  it("custom templates de outras organizações NÃO aparecem nos resultados", () => {
     fc.assert(
       fc.property(
         fc.uuid(),
@@ -156,7 +152,7 @@ describe('filterTemplatesForOrg — Property 11: System_Templates sempre visíve
           fc.uuid().chain((otherId) =>
             arbitraryTemplate().map((t) => ({
               ...t,
-              templateType: 'custom' as const,
+              templateType: "custom" as const,
               organizationId: otherId,
               isActive: true,
             })),
@@ -165,9 +161,7 @@ describe('filterTemplatesForOrg — Property 11: System_Templates sempre visíve
         ),
         (targetOrgId, otherOrgTemplates) => {
           // Filter out any that accidentally got the same org id
-          const trulyOtherOrg = otherOrgTemplates.filter(
-            (t) => t.organizationId !== targetOrgId,
-          );
+          const trulyOtherOrg = otherOrgTemplates.filter((t) => t.organizationId !== targetOrgId);
 
           if (trulyOtherOrg.length === 0) return true; // skip degenerate case
 
@@ -187,15 +181,13 @@ describe('filterTemplatesForOrg — Property 11: System_Templates sempre visíve
    *
    * Validates: Requirements 7.2
    */
-  it('system templates e custom templates da própria org são visíveis simultaneamente', () => {
+  it("system templates e custom templates da própria org são visíveis simultaneamente", () => {
     fc.assert(
       fc.property(
         fc.uuid(),
         fc.array(arbitraryActiveSystemTemplate(), { minLength: 1, maxLength: 5 }),
         fc.array(
-          fc.uuid().chain((orgId) =>
-            arbitraryCustomTemplateForOrg(orgId).map((t) => t),
-          ),
+          fc.uuid().chain((orgId) => arbitraryCustomTemplateForOrg(orgId).map((t) => t)),
           { maxLength: 5 },
         ),
         (organizationId, systemTemplates, customTemplates) => {
@@ -209,9 +201,7 @@ describe('filterTemplatesForOrg — Property 11: System_Templates sempre visíve
           const result = filterTemplatesForOrg(allTemplates, organizationId);
 
           // All active system templates must be present
-          const systemVisible = systemTemplates.every((st) =>
-            result.some((r) => r.id === st.id),
-          );
+          const systemVisible = systemTemplates.every((st) => result.some((r) => r.id === st.id));
 
           // All own active custom templates must be present
           const customVisible = ownCustomTemplates.every((ct) =>
@@ -228,13 +218,13 @@ describe('filterTemplatesForOrg — Property 11: System_Templates sempre visíve
   /**
    * Inverse property: inactive system templates must NOT appear in results.
    */
-  it('system templates inativos NÃO aparecem nos resultados', () => {
+  it("system templates inativos NÃO aparecem nos resultados", () => {
     fc.assert(
       fc.property(
         fc.array(
           arbitraryTemplate().map((t) => ({
             ...t,
-            templateType: 'system' as const,
+            templateType: "system" as const,
             organizationId: null,
             isActive: false,
           })),

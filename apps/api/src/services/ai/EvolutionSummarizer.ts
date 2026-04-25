@@ -12,12 +12,12 @@ export class EvolutionSummarizer {
   async summarize(content: string): Promise<Soap> {
     const prompt = `
       Converta a nota bruta abaixo em uma Evolução Clínica estruturada seguindo o padrão S.O.A.P. (Subjetivo, Objetiva, Avaliação, Plano).
-      
+
       Nota Bruta:
       "${content}"
     `;
 
-    const systemInstruction = 
+    const systemInstruction =
       "Você é um fisioterapeuta experiente da FisioFlow. Escreva em Português do Brasil de forma clara e profissional. " +
       "Cada seção do SOAP deve ser preenchida com base no conteúdo clínico disponível.";
 
@@ -37,7 +37,7 @@ export class EvolutionSummarizer {
         subjective: content,
         objective: "Avaliação objetiva pendente.",
         assessment: "Seguimento clínico.",
-        plan: "Manter conduta."
+        plan: "Manter conduta.",
       };
     }
   }

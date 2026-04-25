@@ -7,60 +7,57 @@
  * - Dados sincronizados entre dispositivos
  */
 import { useQueryClient } from "@tanstack/react-query";
-import {
-	useFavoriteExercise,
-	useMyFavoriteExercises,
-} from "./useWorkersExercises";
+import { useFavoriteExercise, useMyFavoriteExercises } from "./useWorkersExercises";
 
 export const useExerciseFavorites = () => {
-	const queryClient = useQueryClient();
+  const queryClient = useQueryClient();
 
-	// Carregar favoritos do backend
-	const { data: favoriteExercises = [], isLoading } = useMyFavoriteExercises();
+  // Carregar favoritos do backend
+  const { data: favoriteExercises = [], isLoading } = useMyFavoriteExercises();
 
-	// Mutation para favoritar/desfavoritar
-	const favoriteMutation = useFavoriteExercise();
+  // Mutation para favoritar/desfavoritar
+  const favoriteMutation = useFavoriteExercise();
 
-	// Extrair apenas IDs dos exercícios favoritos
-	const favorites = favoriteExercises.map((ex) => ex.id);
+  // Extrair apenas IDs dos exercícios favoritos
+  const favorites = favoriteExercises.map((ex) => ex.id);
 
-	const isFavorite = (exerciseId: string) => favorites.includes(exerciseId);
+  const isFavorite = (exerciseId: string) => favorites.includes(exerciseId);
 
-	const toggleFavorite = (exerciseId: string) => {
-		const currentlyFavorite = isFavorite(exerciseId);
-		favoriteMutation.mutate(
-			{ id: exerciseId, isFavorite: currentlyFavorite },
-			{
-				onSuccess: () => {
-					// Invalidar cache para garantir dados atualizados
-					queryClient.invalidateQueries({
-						queryKey: ["workers", "exercises", "favorites"],
-					});
-				},
-			},
-		);
-	};
+  const toggleFavorite = (exerciseId: string) => {
+    const currentlyFavorite = isFavorite(exerciseId);
+    favoriteMutation.mutate(
+      { id: exerciseId, isFavorite: currentlyFavorite },
+      {
+        onSuccess: () => {
+          // Invalidar cache para garantir dados atualizados
+          queryClient.invalidateQueries({
+            queryKey: ["workers", "exercises", "favorites"],
+          });
+        },
+      },
+    );
+  };
 
-	const addToFavorites = (exerciseId: string) => {
-		if (!isFavorite(exerciseId)) {
-			toggleFavorite(exerciseId);
-		}
-	};
+  const addToFavorites = (exerciseId: string) => {
+    if (!isFavorite(exerciseId)) {
+      toggleFavorite(exerciseId);
+    }
+  };
 
-	const removeFromFavorites = (exerciseId: string) => {
-		if (isFavorite(exerciseId)) {
-			toggleFavorite(exerciseId);
-		}
-	};
+  const removeFromFavorites = (exerciseId: string) => {
+    if (isFavorite(exerciseId)) {
+      toggleFavorite(exerciseId);
+    }
+  };
 
-	return {
-		favorites,
-		loading: isLoading,
-		error: null,
-		addToFavorites,
-		removeFromFavorites,
-		isFavorite,
-		toggleFavorite,
-		isToggling: favoriteMutation.isPending,
-	};
+  return {
+    favorites,
+    loading: isLoading,
+    error: null,
+    addToFavorites,
+    removeFromFavorites,
+    isFavorite,
+    toggleFavorite,
+    isToggling: favoriteMutation.isPending,
+  };
 };

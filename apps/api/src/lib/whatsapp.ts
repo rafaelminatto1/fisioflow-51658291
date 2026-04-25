@@ -1,11 +1,11 @@
-import type { Env } from '../types/env';
+import type { Env } from "../types/env";
 
 /**
  * WhatsApp Business API Service
  * Centraliza o envio de mensagens via Meta Graph API.
  */
 export class WhatsAppService {
-  private baseUrl = 'https://graph.facebook.com/v21.0';
+  private baseUrl = "https://graph.facebook.com/v21.0";
 
   constructor(private env: Env) {}
 
@@ -17,30 +17,30 @@ export class WhatsAppService {
     const token = this.env.WHATSAPP_ACCESS_TOKEN;
 
     if (!phoneId || !token) {
-      console.warn('[WhatsApp] Credenciais não configuradas');
-      return { error: 'Credentials missing' };
+      console.warn("[WhatsApp] Credenciais não configuradas");
+      return { error: "Credentials missing" };
     }
 
     const endpoint = `${this.baseUrl}/${phoneId}/messages`;
 
     const response = await fetch(endpoint, {
-      method: 'POST',
+      method: "POST",
       headers: {
-        'Authorization': `Bearer ${token}`,
-        'Content-Type': 'application/json',
+        Authorization: `Bearer ${token}`,
+        "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        messaging_product: 'whatsapp',
-        recipient_type: 'individual',
-        to: to.replace(/\D/g, ''), // Limpa o número (apenas dígitos)
-        type: 'text',
+        messaging_product: "whatsapp",
+        recipient_type: "individual",
+        to: to.replace(/\D/g, ""), // Limpa o número (apenas dígitos)
+        type: "text",
         text: { body: text },
       }),
     });
 
     const result = await response.json();
     if (!response.ok) {
-      console.error('[WhatsApp Error]', result);
+      console.error("[WhatsApp Error]", result);
     }
     return result;
   }
@@ -51,46 +51,51 @@ export class WhatsAppService {
    * @param templateName - Nome do template aprovado na Meta
    * @param variables - Lista de textos para substituir {{1}}, {{2}}, etc.
    */
-  async sendTemplateMessage(to: string, templateName: string, language: string, components: unknown[]) {
+  async sendTemplateMessage(
+    to: string,
+    templateName: string,
+    language: string,
+    components: unknown[],
+  ) {
     const phoneId = this.env.WHATSAPP_PHONE_NUMBER_ID;
     const token = this.env.WHATSAPP_ACCESS_TOKEN;
 
     if (!phoneId || !token) {
-      console.warn('[WhatsApp] Credenciais não configuradas');
-      return { error: 'Credentials missing' };
+      console.warn("[WhatsApp] Credenciais não configuradas");
+      return { error: "Credentials missing" };
     }
 
     const endpoint = `${this.baseUrl}/${phoneId}/messages`;
 
     const response = await fetch(endpoint, {
-      method: 'POST',
+      method: "POST",
       headers: {
-        'Authorization': `Bearer ${token}`,
-        'Content-Type': 'application/json',
+        Authorization: `Bearer ${token}`,
+        "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        messaging_product: 'whatsapp',
-        recipient_type: 'individual',
-        to: to.replace(/\D/g, ''),
-        type: 'template',
+        messaging_product: "whatsapp",
+        recipient_type: "individual",
+        to: to.replace(/\D/g, ""),
+        type: "template",
         template: { name: templateName, language: { code: language }, components },
       }),
     });
 
     const result = await response.json();
-    if (!response.ok) console.error('[WhatsApp Template Error]', result);
+    if (!response.ok) console.error("[WhatsApp Template Error]", result);
     return result;
   }
 
   async sendSmartTemplate(to: string, templateName: string, variables: string[]) {
     const components = [
       {
-        type: 'body',
-        parameters: variables.map(text => ({ type: 'text', text }))
-      }
+        type: "body",
+        parameters: variables.map((text) => ({ type: "text", text })),
+      },
     ];
 
-    return this.sendTemplateMessage(to, templateName, 'pt_BR', components);
+    return this.sendTemplateMessage(to, templateName, "pt_BR", components);
   }
 
   /**
@@ -102,23 +107,23 @@ export class WhatsAppService {
     const token = this.env.WHATSAPP_ACCESS_TOKEN;
 
     if (!token) {
-      console.warn('[WhatsApp] Token não configurado para exclusão');
-      return { error: 'Credentials missing' };
+      console.warn("[WhatsApp] Token não configurado para exclusão");
+      return { error: "Credentials missing" };
     }
 
     // Endpoint: DELETE /v21.0/<MESSAGE_ID>
     const endpoint = `${this.baseUrl}/${messageId}`;
 
     const response = await fetch(endpoint, {
-      method: 'DELETE',
+      method: "DELETE",
       headers: {
-        'Authorization': `Bearer ${token}`,
+        Authorization: `Bearer ${token}`,
       },
     });
 
     const result = await response.json();
     if (!response.ok) {
-      console.error('[WhatsApp Delete Error]', result);
+      console.error("[WhatsApp Delete Error]", result);
     }
     return result;
   }

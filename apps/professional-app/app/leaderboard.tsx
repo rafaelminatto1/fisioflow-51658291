@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback } from "react";
 import {
   View,
   Text,
@@ -7,17 +7,17 @@ import {
   TouchableOpacity,
   ActivityIndicator,
   RefreshControl,
-} from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
-import { Ionicons } from '@expo/vector-icons';
-import { useColors } from '@/hooks/useColorScheme';
-import { getLeaderboard, ApiLeaderboardEntry } from '@/lib/api';
-import { Card } from '@/components';
-import { router } from 'expo-router';
+} from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
+import { Ionicons } from "@expo/vector-icons";
+import { useColors } from "@/hooks/useColorScheme";
+import { getLeaderboard, ApiLeaderboardEntry } from "@/lib/api";
+import { Card } from "@/components";
+import { router } from "expo-router";
 
 export default function LeaderboardScreen() {
   const colors = useColors();
-  const [period, setPeriod] = useState<'weekly' | 'monthly' | 'all'>('all');
+  const [period, setPeriod] = useState<"weekly" | "monthly" | "all">("all");
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [entries, setEntries] = useState<ApiLeaderboardEntry[]>([]);
@@ -27,7 +27,7 @@ export default function LeaderboardScreen() {
       const data = await getLeaderboard({ period });
       setEntries(data);
     } catch (error) {
-      console.error('[Leaderboard] Error fetching:', error);
+      console.error("[Leaderboard] Error fetching:", error);
     } finally {
       setLoading(false);
       setRefreshing(false);
@@ -44,14 +44,17 @@ export default function LeaderboardScreen() {
   };
 
   const getRankIcon = (index: number) => {
-    if (index === 0) return { name: 'trophy', color: '#FFD700' }; // Gold
-    if (index === 1) return { name: 'trophy', color: '#C0C0C0' }; // Silver
-    if (index === 2) return { name: 'trophy', color: '#CD7F32' }; // Bronze
+    if (index === 0) return { name: "trophy", color: "#FFD700" }; // Gold
+    if (index === 1) return { name: "trophy", color: "#C0C0C0" }; // Silver
+    if (index === 2) return { name: "trophy", color: "#CD7F32" }; // Bronze
     return null;
   };
 
   return (
-    <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]} edges={['top']}>
+    <SafeAreaView
+      style={[styles.container, { backgroundColor: colors.background }]}
+      edges={["top"]}
+    >
       {/* Header */}
       <View style={styles.header}>
         <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
@@ -63,23 +66,22 @@ export default function LeaderboardScreen() {
 
       {/* Period Selector */}
       <View style={styles.periodContainer}>
-        {(['weekly', 'monthly', 'all'] as const).map((p) => (
+        {(["weekly", "monthly", "all"] as const).map((p) => (
           <TouchableOpacity
             key={p}
-            style={[
-              styles.periodTab,
-              period === p && { backgroundColor: colors.primary }
-            ]}
+            style={[styles.periodTab, period === p && { backgroundColor: colors.primary }]}
             onPress={() => {
               setLoading(true);
               setPeriod(p);
             }}
           >
-            <Text style={[
-              styles.periodTabText,
-              { color: period === p ? '#FFF' : colors.textSecondary }
-            ]}>
-              {p === 'weekly' ? 'Semanal' : p === 'monthly' ? 'Mensal' : 'Geral'}
+            <Text
+              style={[
+                styles.periodTabText,
+                { color: period === p ? "#FFF" : colors.textSecondary },
+              ]}
+            >
+              {p === "weekly" ? "Semanal" : p === "monthly" ? "Mensal" : "Geral"}
             </Text>
           </TouchableOpacity>
         ))}
@@ -91,7 +93,13 @@ export default function LeaderboardScreen() {
         </View>
       ) : (
         <ScrollView
-          refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={colors.primary} />}
+          refreshControl={
+            <RefreshControl
+              refreshing={refreshing}
+              onRefresh={onRefresh}
+              tintColor={colors.primary}
+            />
+          }
           contentContainerStyle={styles.scrollContent}
         >
           {entries.length > 0 ? (
@@ -103,10 +111,12 @@ export default function LeaderboardScreen() {
                     {icon ? (
                       <Ionicons name={icon.name as any} size={24} color={icon.color} />
                     ) : (
-                      <Text style={[styles.rankIndex, { color: colors.textMuted }]}>{index + 1}</Text>
+                      <Text style={[styles.rankIndex, { color: colors.textMuted }]}>
+                        {index + 1}
+                      </Text>
                     )}
                   </View>
-                  
+
                   <View style={styles.patientInfo}>
                     <Text style={[styles.patientName, { color: colors.text }]} numberOfLines={1}>
                       {entry.full_name}
@@ -118,7 +128,9 @@ export default function LeaderboardScreen() {
 
                   <View style={styles.statsContainer}>
                     <View style={styles.pointsContainer}>
-                      <Text style={[styles.pointsValue, { color: colors.primary }]}>{entry.total_points}</Text>
+                      <Text style={[styles.pointsValue, { color: colors.primary }]}>
+                        {entry.total_points}
+                      </Text>
                       <Text style={[styles.pointsLabel, { color: colors.textMuted }]}>pts</Text>
                     </View>
                     {entry.current_streak > 0 && (
@@ -134,7 +146,9 @@ export default function LeaderboardScreen() {
           ) : (
             <View style={styles.emptyContainer}>
               <Ionicons name="stats-chart-outline" size={64} color={colors.textMuted} />
-              <Text style={[styles.emptyText, { color: colors.textSecondary }]}>Nenhum dado disponível para este período.</Text>
+              <Text style={[styles.emptyText, { color: colors.textSecondary }]}>
+                Nenhum dado disponível para este período.
+              </Text>
             </View>
           )}
         </ScrollView>
@@ -148,9 +162,9 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
     paddingHorizontal: 16,
     paddingVertical: 12,
   },
@@ -159,13 +173,13 @@ const styles = StyleSheet.create({
   },
   headerTitle: {
     fontSize: 18,
-    fontWeight: 'bold',
+    fontWeight: "bold",
   },
   headerRight: {
     width: 32,
   },
   periodContainer: {
-    flexDirection: 'row',
+    flexDirection: "row",
     paddingHorizontal: 16,
     paddingVertical: 12,
     gap: 8,
@@ -174,35 +188,35 @@ const styles = StyleSheet.create({
     flex: 1,
     paddingVertical: 8,
     borderRadius: 20,
-    alignItems: 'center',
-    backgroundColor: 'rgba(0,0,0,0.05)',
+    alignItems: "center",
+    backgroundColor: "rgba(0,0,0,0.05)",
   },
   periodTabText: {
     fontSize: 14,
-    fontWeight: '600',
+    fontWeight: "600",
   },
   loaderContainer: {
     flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
+    justifyContent: "center",
+    alignItems: "center",
   },
   scrollContent: {
     padding: 16,
   },
   rankCard: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     padding: 16,
     marginBottom: 12,
   },
   rankIndexContainer: {
     width: 40,
-    alignItems: 'center',
-    justifyContent: 'center',
+    alignItems: "center",
+    justifyContent: "center",
   },
   rankIndex: {
     fontSize: 18,
-    fontWeight: 'bold',
+    fontWeight: "bold",
   },
   patientInfo: {
     flex: 1,
@@ -210,31 +224,31 @@ const styles = StyleSheet.create({
   },
   patientName: {
     fontSize: 16,
-    fontWeight: 'bold',
+    fontWeight: "bold",
     marginBottom: 2,
   },
   levelText: {
     fontSize: 13,
   },
   statsContainer: {
-    alignItems: 'flex-end',
+    alignItems: "flex-end",
   },
   pointsContainer: {
-    flexDirection: 'row',
-    alignItems: 'baseline',
+    flexDirection: "row",
+    alignItems: "baseline",
     gap: 2,
   },
   pointsValue: {
     fontSize: 18,
-    fontWeight: 'bold',
+    fontWeight: "bold",
   },
   pointsLabel: {
     fontSize: 12,
   },
   streakBadge: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: '#FF950020',
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: "#FF950020",
     paddingHorizontal: 6,
     paddingVertical: 2,
     borderRadius: 8,
@@ -242,18 +256,18 @@ const styles = StyleSheet.create({
     gap: 2,
   },
   streakText: {
-    color: '#FF9500',
+    color: "#FF9500",
     fontSize: 11,
-    fontWeight: 'bold',
+    fontWeight: "bold",
   },
   emptyContainer: {
-    alignItems: 'center',
-    justifyContent: 'center',
+    alignItems: "center",
+    justifyContent: "center",
     marginTop: 80,
   },
   emptyText: {
     fontSize: 16,
     marginTop: 16,
-    textAlign: 'center',
-  }
+    textAlign: "center",
+  },
 });
