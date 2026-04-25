@@ -40,7 +40,7 @@ import {
 } from "@/lib/services/mandatoryTestAlertService";
 import { ProtocolMilestonesAlert } from "./ProtocolMilestonesAlert";
 import { SessionExercisesPanel, type SessionExercise } from "./SessionExercisesPanel";
-import { PatientHelpers } from "@/types";
+import { PatientHelpers, type Patient, type AppointmentUnified } from "@/types";
 import type { PatientGoal } from "@/types/evolution";
 import { GamificationTriggerService } from "@/lib/services/gamificationTriggers";
 import { GamificationNotificationService } from "@/lib/services/gamificationNotifications";
@@ -66,7 +66,7 @@ import { Settings } from "lucide-react";
 import { BiomechanicsSessionTab } from "./BiomechanicsSessionTab";
 import { ClinicalInsightsPanel } from "./clinical-insights/ClinicalInsightsPanel";
 import { PrescriptionDraft } from "./clinical-insights/PrescriptionDraft";
-import { useActionBridge } from "@/hooks/useActionBridge";
+import { useActionBridge, type ActiveSuggestion } from "@/hooks/useActionBridge";
 import { AnimatePresence } from "framer-motion";
 
 interface SessionEvolutionContainerProps {
@@ -96,9 +96,9 @@ export const SessionEvolutionContainer: React.FC<SessionEvolutionContainerProps>
   const [isSaving, setIsSaving] = useState(false);
   const [loadError, setLoadError] = useState<string | null>(null);
 
-  const [patient, setPatient] = useState<Record<string, unknown> | null>(null);
+  const [patient, setPatient] = useState<Patient | null>(null);
 
-  const [, setAppointment] = useState<Record<string, unknown> | null>(null);
+  const [, setAppointment] = useState<AppointmentUnified | null>(null);
   const [, setAppointmentLoadedFromApi] = useState(false);
   const [activeTab, setActiveTab] = useState("evolution");
   const [viewVersion, setViewVersion] = useState<"classic" | "v5-pro">(() => {
@@ -107,9 +107,8 @@ export const SessionEvolutionContainer: React.FC<SessionEvolutionContainerProps>
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
 
   // Patient data
-  // Using any[] to avoid strict type conflicts with child components that expect specific interfaces
-  const [surgeries, setSurgeries] = useState<Record<string, unknown>[]>([]);
-  const [pathologies, setPathologies] = useState<Record<string, unknown>[]>([]);
+  const [surgeries, setSurgeries] = useState<PatientSurgery[]>([]);
+  const [pathologies, setPathologies] = useState<any[]>([]); // TODO: Definir interface específica para patologias
   const [goals, setGoals] = useState<PatientGoal[]>([]);
 
   // SOAP Form State
@@ -136,12 +135,12 @@ export const SessionEvolutionContainer: React.FC<SessionEvolutionContainerProps>
   const { therapists } = useTherapists();
   
   // Clinical Insights & Prescription State
-  const [acceptedInsights, setAcceptedInsights] = useState<any[]>([]);
+  const [acceptedInsights, setAcceptedInsights] = useState<ActiveSuggestion[]>([]);
   const [dismissedInsightIds, setDismissedInsightIds] = useState<string[]>([]);
   
   // Action Bridge - Conecta os dados do SOAP às sugestões
   // Mapeamos os campos do SOAP para o formato que o bridge entende
-  const soapFieldsAsTemplate = [
+  const soapFieldsAsTemplate: any[] = [
     { id: "subjective", label: "Subjetivo", type: "text" },
     { id: "objective", label: "Objetivo", type: "text" },
     { id: "assessment", label: "Avaliação", type: "text" },
@@ -156,18 +155,18 @@ export const SessionEvolutionContainer: React.FC<SessionEvolutionContainerProps>
     soapData as any
   );
 
-  const handleAcceptInsight = (insight: any) => {
+  const handleAcceptInsight = (insight: ActiveSuggestion) => {
     setAcceptedInsights(prev => {
       // Evita duplicatas no rascunho
-      if (prev.find(i => i.id === insight.id)) return prev;
+      if (prev.find(i => i.ruleId === insight.ruleId)) return prev;
       return [...prev, insight];
     });
     // Remove da lista de sugestões ativas ao aceitar
-    setDismissedInsightIds(prev => [...prev, insight.id]);
+    setDismissedInsightIds(prev => [...prev, insight.ruleId]);
     
     toast({
       title: "Sugestão aceita",
-      description: `${insight.title} foi adicionado ao seu rascunho de prescrição.`,
+      description: `${insight.ruleName} foi adicionado ao seu rascunho de prescrição.`,
     });
   };
 
@@ -1108,13 +1107,13 @@ export const SessionEvolutionContainer: React.FC<SessionEvolutionContainerProps>
                     <>
                       <ProtocolMilestonesAlert
                         patientId={patientId}
-                        surgeries={surgeries as any}
-                        pathologies={pathologies as any}
+                        surgeries={surgeries}
+                        pathologies={pathologies}
                         onApplyMilestone={handleApplyMilestone}
                       />
                       <PatientSummaryPanel
-                        patient={patient as any}
-                        goals={goals as any}
+                        patient={patient as Patient}
+                        goals={goals}
                         totalSessions={sessionNumber}
                       />
                     </>

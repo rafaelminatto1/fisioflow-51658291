@@ -862,7 +862,7 @@ export function PatientRetention() {
 										<YAxis
 											className="text-xs"
 											tick={{ fill: "hsl(var(--muted-foreground))" }}
-											tickFormatter={(value) => `${value}%`}
+											tickFormatter={(value: number | string) => `${value}%`}
 										/>
 										<Tooltip
 											contentStyle={{
@@ -870,8 +870,7 @@ export function PatientRetention() {
 												border: "1px solid hsl(var(--border))",
 												borderRadius: "8px",
 											}}
-											// @ts-expect-error -- recharts v3 formatter type
-											formatter={(value: number) => [
+											formatter={(value: number | string) => [
 												`${value}%`,
 												"Taxa de Churn",
 											]}

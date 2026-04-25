@@ -1,5 +1,5 @@
 import { Hono } from "hono";
-import { eq, and, sql, desc, isNull } from "drizzle-orm";
+import { eq, and, sql, desc } from "drizzle-orm";
 import { patients, sessions } from "@fisioflow/db";
 import type { Env } from "../types/env";
 import { requireAuth, type AuthVariables } from "../lib/auth";
@@ -705,7 +705,6 @@ app.get("/", async (c) => {
 
 	try {
 		let cteSql = "";
-		let finalSelectSql = "";
 
 		if (isMinimal) {
 			cteSql = `

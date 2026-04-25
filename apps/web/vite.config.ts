@@ -17,11 +17,12 @@ function htmlPlugin(appVersion: string, buildTime: string): any {
 		name: "html-transform",
 		apply: "build",
 		transformIndexHtml(html: string) {
-			return html
+		return html
 				.replace(/%APP_VERSION%/g, appVersion)
 				.replace(/%BUILD_TIME%/g, buildTime)
-				.replace(/%CACHE_BUSTER%/g, buildTime);
-		},
+				.replace(/%CACHE_BUSTER%/g, buildTime)
+				.replace(/__CACHE_BUSTER__/g, buildTime);
+	},
 	};
 }
 
@@ -188,9 +189,54 @@ export default defineConfig(({ mode }) => {
 				"@tanstack/react-query",
 			],
 			alias: {
+				"@": path.resolve(repoRoot, "src"),
 				"@fisioflow/ui": path.resolve(repoRoot, "packages/ui/src"),
 				"@fisioflow/core": path.resolve(repoRoot, "packages/core/src"),
 				"@fisioflow/skills": path.resolve(repoRoot, "src/lib/skills"),
+				"@capacitor/camera": path.resolve(
+					repoRoot,
+					"src/lib/stubs/capacitor.ts",
+				),
+				"@capacitor/core": path.resolve(
+					repoRoot,
+					"src/lib/stubs/capacitor.ts",
+				),
+				"@capacitor/device": path.resolve(
+					repoRoot,
+					"src/lib/stubs/capacitor.ts",
+				),
+				"@capacitor/geolocation": path.resolve(
+					repoRoot,
+					"src/lib/stubs/capacitor.ts",
+				),
+				"@capacitor/haptics": path.resolve(
+					repoRoot,
+					"src/lib/stubs/capacitor.ts",
+				),
+				"@capacitor/keyboard": path.resolve(
+					repoRoot,
+					"src/lib/stubs/capacitor.ts",
+				),
+				"@capacitor/local-notifications": path.resolve(
+					repoRoot,
+					"src/lib/stubs/capacitor.ts",
+				),
+				"@capacitor/push-notifications": path.resolve(
+					repoRoot,
+					"src/lib/stubs/capacitor.ts",
+				),
+				"@capacitor/share": path.resolve(
+					repoRoot,
+					"src/lib/stubs/capacitor.ts",
+				),
+				"@capacitor/splash-screen": path.resolve(
+					repoRoot,
+					"src/lib/stubs/capacitor.ts",
+				),
+				"@capacitor/status-bar": path.resolve(
+					repoRoot,
+					"src/lib/stubs/capacitor.ts",
+				),
 				lodash: "lodash-es",
 				exceljs: path.resolve(
 					repoRoot,
