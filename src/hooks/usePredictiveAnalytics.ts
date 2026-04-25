@@ -60,6 +60,9 @@ interface RiskFactorEntry {
 const ensureArray = <T>(value: unknown): T[] =>
 	Array.isArray(value) ? (value as T[]) : [];
 
+type MilestoneRecord = RecoveryPrediction["milestones"][number];
+type RiskFactorRecord = RecoveryPrediction["riskFactors"][number];
+
 const mapPredictionToRecoveryPrediction = (
 	prediction: PatientPrediction &
 		Partial<
@@ -98,14 +101,10 @@ const mapPredictionToRecoveryPrediction = (
 			Number(prediction.predicted_value ?? 0),
 	};
 
-	const rawMilestones = prediction.milestones ?? (prediction as any).milestones;
-	const rawRiskFactors =
-		prediction.risk_factors ?? (prediction as any).risk_factors;
-	const rawTreatment =
-		prediction.treatment_recommendations ??
-		(prediction as any).treatment_recommendations;
-	const rawSimilarCases =
-		prediction.similar_cases ?? (prediction as any).similar_cases;
+	const rawMilestones = (prediction.milestones || (prediction as Record<string, any>).milestones) as unknown;
+	const rawRiskFactors = (prediction.risk_factors || (prediction as Record<string, any>).risk_factors) as unknown;
+	const rawTreatment = (prediction.treatment_recommendations || (prediction as Record<string, any>).treatment_recommendations) as Record<string, any> | undefined;
+	const rawSimilarCases = (prediction.similar_cases || (prediction as Record<string, any>).similar_cases) as Record<string, any> | undefined;
 
 	return {
 		patientId: prediction.patient_id,
@@ -124,49 +123,49 @@ const mapPredictionToRecoveryPrediction = (
 		riskFactors: ensureArray<RiskFactorEntry>(rawRiskFactors),
 		treatmentRecommendations: {
 			optimalFrequency:
-				(rawTreatment as any)?.optimal_frequency ??
-				(rawTreatment as any)?.optimalFrequency ??
+				rawTreatment?.optimal_frequency ??
+				rawTreatment?.optimalFrequency ??
 				"",
 			sessionsPerWeek: Number(
-				(rawTreatment as any)?.sessions_per_week ??
-					(rawTreatment as any)?.sessionsPerWeek ??
+				rawTreatment?.sessions_per_week ??
+					rawTreatment?.sessionsPerWeek ??
 					0,
 			),
 			estimatedTotalSessions: Number(
-				(rawTreatment as any)?.estimated_total_sessions ??
-					(rawTreatment as any)?.estimatedTotalSessions ??
+				rawTreatment?.estimated_total_sessions ??
+					rawTreatment?.estimatedTotalSessions ??
 					0,
 			),
-			intensity: ((rawTreatment as any)?.intensity ??
-				(prediction as any).intensity ??
+			intensity: (rawTreatment?.intensity ??
+				(prediction as Record<string, any>).intensity ??
 				"moderate") as "low" | "moderate" | "high",
 			focusAreas: ensureArray<string>(
-				(rawTreatment as any)?.focus_areas ?? (rawTreatment as any)?.focusAreas,
+				rawTreatment?.focus_areas ?? rawTreatment?.focusAreas,
 			),
 		},
 		similarCases: {
 			totalAnalyzed: Number(
-				(rawSimilarCases as any)?.total_analyzed ??
-					(rawSimilarCases as any)?.totalAnalyzed ??
+				rawSimilarCases?.total_analyzed ??
+					rawSimilarCases?.totalAnalyzed ??
 					0,
 			),
 			matchingCriteria:
-				(rawSimilarCases as any)?.matching_criteria ??
-				(rawSimilarCases as any)?.matchingCriteria ??
+				rawSimilarCases?.matching_criteria ??
+				rawSimilarCases?.matchingCriteria ??
 				[],
 			averageRecoveryTime: Number(
-				(rawSimilarCases as any)?.average_recovery_time ??
-					(rawSimilarCases as any)?.averageRecoveryTime ??
+				rawSimilarCases?.average_recovery_time ??
+					rawSimilarCases?.averageRecoveryTime ??
 					0,
 			),
 			successRate: Number(
-				(rawSimilarCases as any)?.success_rate ??
-					(rawSimilarCases as any)?.successRate ??
+				rawSimilarCases?.success_rate ??
+					rawSimilarCases?.successRate ??
 					0,
 			),
 			keyInsights:
-				(rawSimilarCases as any)?.key_insights ??
-				(rawSimilarCases as any)?.keyInsights ??
+				rawSimilarCases?.key_insights ??
+				rawSimilarCases?.keyInsights ??
 				[],
 		},
 		modelVersion: prediction.model_version ?? "unknown",

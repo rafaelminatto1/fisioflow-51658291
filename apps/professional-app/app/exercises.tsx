@@ -264,7 +264,9 @@ export default function ExercisesScreen() {
 								<Text style={styles.badgeText}>IA</Text>
 							</View>
 						)}
-						{exercise.imageUrl?.includes('fisioflow-media') && (
+						{exercise.tags?.some(
+							(t: string) => t.toLowerCase() === "3d_anatomy" || t.toLowerCase() === "3d",
+						) && (
 							<View style={[styles.badge, { backgroundColor: colors.primary + 'D0' }]}>
 								<Ionicons name="cube-outline" size={10} color="#fff" />
 								<Text style={styles.badgeText}>3D ANATOMIA</Text>
