@@ -639,4 +639,115 @@ app.get('/bi', requireAuth, async (c) => {
   });
 });
 
+// ─── WhatsApp Métricas ───────────────────────────────────────────────────────
+// GET /api/analytics/whatsapp?days=7
+app.get('/whatsapp', requireAuth, async (c) => {
+  const user = c.get('user');
+  const pool = await createPool(c.env);
+  const days = Math.min(Math.max(Number(c.req.query('days') ?? 7) || 7, 1), 90);
+
+  const [overviewRes, statusRes, templatesRes, dailyRes, confirmationsRes] = await Promise.all([
+    pool.query(
+      `SELECT
+         COUNT(*) FILTER (WHERE direction = 'outbound')::int AS sent,
+         COUNT(*) FILTER (WHERE direction = 'inbound')::int AS received,
+         COUNT(*) FILTER (WHERE message_type = 'template')::int AS template_sent
+       FROM wa_messages
+       WHERE organization_id = $1::uuid
+         AND created_at >= NOW() - ($2 || ' days')::interval`,
+      [user.organizationId, days],
+    ),
+    pool.query(
+      `SELECT status, COUNT(*)::int AS count
+       FROM wa_messages
+       WHERE organization_id = $1::uuid
+         AND direction = 'outbound'
+         AND created_at >= NOW() - ($2 || ' days')::interval
+       GROUP BY status`,
+      [user.organizationId, days],
+    ),
+    pool.query(
+      `SELECT
+         COALESCE(template_name, '(sem template)') AS name,
+         COUNT(*)::int AS sent,
+         COUNT(*) FILTER (WHERE status = 'delivered')::int AS delivered,
+         COUNT(*) FILTER (WHERE status = 'read')::int AS read,
+         COUNT(*) FILTER (WHERE status = 'failed')::int AS failed
+       FROM wa_messages
+       WHERE organization_id = $1::uuid
+         AND direction = 'outbound'
+         AND created_at >= NOW() - ($2 || ' days')::interval
+       GROUP BY 1
+       ORDER BY sent DESC
+       LIMIT 15`,
+      [user.organizationId, days],
+    ),
+    pool.query(
+      `SELECT
+         TO_CHAR(date_trunc('day', created_at), 'YYYY-MM-DD') AS day,
+         COUNT(*) FILTER (WHERE direction = 'outbound')::int AS sent,
+         COUNT(*) FILTER (WHERE direction = 'inbound')::int AS received
+       FROM wa_messages
+       WHERE organization_id = $1::uuid
+         AND created_at >= NOW() - ($2 || ' days')::interval
+       GROUP BY 1 ORDER BY 1`,
+      [user.organizationId, days],
+    ),
+    pool.query(
+      `SELECT
+         COUNT(*) FILTER (WHERE status = 'confirmed' AND cancellation_reason IS NULL)::int AS confirmed,
+         COUNT(*) FILTER (WHERE status = 'cancelled' AND cancellation_reason ILIKE 'WhatsApp:%')::int AS cancelled_via_wa,
+         COUNT(*)::int AS total_upcoming
+       FROM appointments
+       WHERE organization_id = $1::uuid
+         AND start_time BETWEEN NOW() - ($2 || ' days')::interval AND NOW() + INTERVAL '30 days'`,
+      [user.organizationId, days],
+    ),
+  ]);
+
+  const ov = (overviewRes.rows[0] ?? {}) as { sent?: number; received?: number; template_sent?: number };
+  const conf = (confirmationsRes.rows[0] ?? {}) as { confirmed?: number; cancelled_via_wa?: number; total_upcoming?: number };
+
+  const statusMap: Record<string, number> = {};
+  for (const row of statusRes.rows as Array<{ status?: string; count?: number }>) {
+    statusMap[String(row.status ?? 'unknown')] = Number(row.count ?? 0);
+  }
+  const sent = ov.sent ?? 0;
+  const delivered = statusMap.delivered ?? 0;
+  const read = statusMap.read ?? 0;
+  const failed = statusMap.failed ?? 0;
+
+  return c.json({
+    data: {
+      period_days: days,
+      overview: {
+        sent,
+        received: ov.received ?? 0,
+        template_sent: ov.template_sent ?? 0,
+        delivery_rate: sent > 0 ? Number(((delivered / sent) * 100).toFixed(1)) : 0,
+        read_rate: sent > 0 ? Number(((read / sent) * 100).toFixed(1)) : 0,
+        failure_rate: sent > 0 ? Number(((failed / sent) * 100).toFixed(1)) : 0,
+      },
+      status_breakdown: Object.entries(statusMap).map(([status, count]) => ({ status, count })),
+      by_template: templatesRes.rows.map((row) => ({
+        name: String((row as any).name ?? ''),
+        sent: Number((row as any).sent ?? 0),
+        delivered: Number((row as any).delivered ?? 0),
+        read: Number((row as any).read ?? 0),
+        failed: Number((row as any).failed ?? 0),
+      })),
+      daily: dailyRes.rows.map((row) => ({
+        day: String((row as any).day ?? ''),
+        sent: Number((row as any).sent ?? 0),
+        received: Number((row as any).received ?? 0),
+      })),
+      appointments: {
+        confirmed: conf.confirmed ?? 0,
+        cancelled_via_whatsapp: conf.cancelled_via_wa ?? 0,
+        total_upcoming: conf.total_upcoming ?? 0,
+      },
+    },
+  });
+});
+
 export { app as analyticsRoutes };
