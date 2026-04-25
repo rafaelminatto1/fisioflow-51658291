@@ -36,8 +36,16 @@ import { GoniometerPanel } from "../panels/GoniometerPanel";
 import { PhastAssessmentPanel } from "../panels/PhastAssessmentPanel";
 import { RealTimeMetricsChart } from "../charts/RealTimeMetricsChart";
 
+interface AnalysisDataPayload {
+  frame: number;
+  pose?: unknown;
+  angles?: Record<string, number>;
+  trajectory?: Array<{ x: number; y: number; t: number }>;
+  metrics?: Record<string, number>;
+}
+
 interface FunctionalAnalysisStudioProps {
-  onDataUpdate?: (data: any) => void;
+  onDataUpdate?: (data: AnalysisDataPayload) => void;
 }
 
 export const FunctionalAnalysisStudio: React.FC<FunctionalAnalysisStudioProps> = ({
@@ -62,7 +70,7 @@ export const FunctionalAnalysisStudio: React.FC<FunctionalAnalysisStudioProps> =
   >([]);
 
   const { aiEnabled, aiLoading, poseKeypoints, startMoveNet, stopMoveNet } = useMoveNet(
-    videoRef as any,
+    videoRef as React.RefObject<HTMLVideoElement>,
   );
 
   const {
@@ -87,14 +95,14 @@ export const FunctionalAnalysisStudio: React.FC<FunctionalAnalysisStudioProps> =
   } = useGoniometer(undefined, poseKeypoints, { width: 800, height: 600 });
 
   const { trackedPoints, addPointToTrack, processFrame, setTrackedPoints } = useOpticalFlow(
-    videoRef as any,
+    videoRef as React.RefObject<HTMLVideoElement>,
   );
 
   const { angles: autoAngles } = useAutoAngles(poseKeypoints || []);
 
   React.useEffect(() => {
     if (aiEnabled && autoAngles.length > 0) {
-      const record: any = { frame: currentFrame };
+      const record: Record<string, number> = { frame: currentFrame };
       autoAngles.forEach((a) => {
         record[a.name] = a.value;
       });
@@ -117,7 +125,7 @@ export const FunctionalAnalysisStudio: React.FC<FunctionalAnalysisStudioProps> =
 
   const captureKeyframe = () => {
     if (stageRef.current) {
-      const dataUrl = (stageRef.current as any).toDataURL();
+      const dataUrl = (stageRef.current as { toDataURL: () => string }).toDataURL();
       setSnapshots((prev) => [...prev, dataUrl]);
     }
   };
@@ -228,8 +236,8 @@ export const FunctionalAnalysisStudio: React.FC<FunctionalAnalysisStudioProps> =
                 <PointTrackerOverlay
                   trackedPoints={trackedPoints}
                   onTogglePoint={(id) => {
-                    setTrackedPoints((prev: any[]) =>
-                      prev.map((p: any) => (p.id === id ? { ...p, active: !p.active } : p)),
+                    setTrackedPoints((prev) =>
+                      prev.map((p) => (p.id === id ? { ...p, active: !p.active } : p)),
                     );
                   }}
                 />
@@ -387,9 +395,9 @@ export const FunctionalAnalysisStudio: React.FC<FunctionalAnalysisStudioProps> =
                     variant={activeTest === test.id ? "secondary" : "ghost"}
                     className={`h-9 text-[10px] font-black rounded-xl border border-white/10 ${activeTest === test.id ? "bg-white text-indigo-600" : "text-white hover:bg-white/10"}`}
                     onClick={() => {
-                      setActiveTest(test.id as any);
+                      setActiveTest(test.id as FunctionalTestType);
                       setAssessment({
-                        type: test.id as any,
+                        type: test.id as FunctionalTestType,
                         status: "in_progress",
                         score: null,
                         asymmetry: null,
