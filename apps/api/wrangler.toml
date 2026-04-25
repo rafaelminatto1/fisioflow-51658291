@@ -415,12 +415,12 @@ dead_letter_queue = "fisioflow-tasks-dlq-staging"
 [[env.staging.d1_databases]]
 binding = "DB"
 database_name = "fisioflow-db-staging"
-database_id = "bf781be2-527d-471d-9cf2-dd18f8e6c2b2"
+database_id = "39b12788-3de4-4421-b5c3-1cc594abe207"
 
 [[env.staging.d1_databases]]
 binding = "EDGE_CACHE"
 database_name = "fisioflow-edge-cache-staging"
-database_id = "9eba3eb7-5486-49d0-9684-c325f8b1ddc2"
+database_id = "adb59c9c-f22b-467d-a04e-e8e54cf987ed"
 
 # Staging Analytics Engine
 [[env.staging.analytics_engine_datasets]]
