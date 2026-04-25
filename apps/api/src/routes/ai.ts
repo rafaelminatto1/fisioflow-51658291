@@ -3,7 +3,6 @@ import { requireAuth, type AuthVariables } from "../lib/auth";
 import type { Env } from "../types/env";
 
 import { callGemini, transcribeAudioWithGemini, streamGeminiChat } from "../lib/ai-gemini";
-import { callGeminiStructured as callGeminiStructuredV2, callGeminiThinking as callGeminiThinkingV2 } from "../lib/ai-gemini-v2";
 import { smartChat, smartStructured, smartTranscribe } from "../lib/ai/smartAI";
 import { unifiedThinking, unifiedStructured } from "../lib/ai/unifiedAI";
 import { callAIVision } from "../lib/ai/callAI";
@@ -43,11 +42,6 @@ function safeText(val: unknown): string {
 	if (typeof val === "string") return val;
 	if (typeof val === "object") return JSON.stringify(val);
 	return String(val);
-}
-
-function firstSentence(text: string, fallback: string): string {
-	const match = text.match(/[^.!?]*[.!?]/);
-	return match ? match[0].trim() : text.trim() || fallback;
 }
 
 function inferRiskLevel(text: string): ClinicalTrend {
@@ -364,7 +358,7 @@ app.post("/fast-processing", async (c) => {
 			temperature: 0.2,
 		});
 		return c.json({ data: { result: parsed.result } });
-	} catch (error) {
+	} catch (_error) {
 		// Basic fallback
 		const result = await callGemini(
 			c.env.GOOGLE_AI_API_KEY,
@@ -679,7 +673,7 @@ app.post("/form-suggestions", async (c) => {
 			temperature: 0.5,
 		});
 		return c.json({ data: { suggestions: parsed.suggestions } });
-	} catch (error) {
+	} catch (_error) {
 		return c.json({
 			data: { suggestions: buildFormSuggestions(context).map(s => ({ label: s, reason: "Sugestão padrão baseada em palavras-chave.", category: "outro" as const })) },
 		});
@@ -1571,7 +1565,7 @@ app.post("/voice/evolution", async (c) => {
 		});
 
 		return c.json({ success: true, transcript, soapData });
-	} catch (error) {
+	} catch (_error) {
 		return c.json({ success: true, transcript, soapData: buildSoapFromText(transcript) });
 	}
 });

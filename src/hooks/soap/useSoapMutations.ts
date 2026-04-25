@@ -6,7 +6,124 @@ import {
 	SoapOperationError,
 	type CreateSoapRecordData,
 	type SoapRecord,
+	type SoapRecordV2,
 } from "./types";
+import { invalidateSoapCache } from "./useSoapCache";
+import { toSoapRecordV2 } from "./mappers";
+import { ErrorHandler } from "@/lib/errors/ErrorHandler";
+
+export const useCreateSoapRecordV2 = () => {
+	const queryClient = useQueryClient();
+	const { toast } = useToast();
+
+	return useMutation({
+		mutationFn: async (data: {
+			patientId: string;
+			subjective: string;
+			objective: string;
+			assessment: string;
+			plan: string;
+			recordDate?: string;
+		}) => {
+			const response = await sessionsApi.create({
+				patient_id: data.patientId,
+				subjective: data.subjective,
+				objective: data.objective,
+				assessment: data.assessment,
+				plan: data.plan,
+				record_date: data.recordDate,
+				status: "draft",
+			});
+			return toSoapRecordV2(
+				response.data as unknown as Record<string, unknown>,
+			);
+		},
+		onSuccess: (data) => {
+			invalidateSoapCache(queryClient, data.patientId, data.id);
+			toast({
+				title: "Evolução salva",
+				description: "Registro salvo com sucesso.",
+			});
+		},
+		onError: (error: Error) => {
+			ErrorHandler.handle(error, "useCreateSoapRecordV2");
+		},
+	});
+};
+
+export const useUpdateSoapRecordV2 = () => {
+	const queryClient = useQueryClient();
+	const { toast } = useToast();
+
+	return useMutation({
+		mutationFn: async (data: {
+			recordId: string;
+			patientId: string;
+			subjective: string;
+			objective: string;
+			assessment: string;
+			plan: string;
+		}) => {
+			const response = await sessionsApi.update(data.recordId, {
+				subjective: data.subjective,
+				objective: data.objective,
+				assessment: data.assessment,
+				plan: data.plan,
+			});
+			return toSoapRecordV2(
+				response.data as unknown as Record<string, unknown>,
+			);
+		},
+		onSuccess: (data) => {
+			invalidateSoapCache(queryClient, data.patientId, data.id);
+			toast({
+				title: "Evolução atualizada",
+				description: "Registro atualizado com sucesso.",
+			});
+		},
+		onError: (error: Error) => {
+			ErrorHandler.handle(error, "useUpdateSoapRecordV2");
+		},
+	});
+};
+
+export const useAutoSaveSoapRecordV2 = () => {
+	const createMutation = useCreateSoapRecordV2();
+	const updateMutation = useUpdateSoapRecordV2();
+
+	return {
+		mutateAsync: async (data: {
+			recordId?: string;
+			patientId: string;
+			subjective: string;
+			objective: string;
+			assessment: string;
+			plan: string;
+			recordDate?: string;
+		}) => {
+			if (data.recordId) {
+				return updateMutation.mutateAsync({
+					recordId: data.recordId,
+					patientId: data.patientId,
+					subjective: data.subjective,
+					objective: data.objective,
+					assessment: data.assessment,
+					plan: data.plan,
+				});
+			}
+
+			return createMutation.mutateAsync({
+				patientId: data.patientId,
+				subjective: data.subjective,
+				objective: data.objective,
+				assessment: data.assessment,
+				plan: data.plan,
+				recordDate: data.recordDate,
+			});
+		},
+		isPending: createMutation.isPending || updateMutation.isPending,
+	};
+};
 
 export const useCreateSoapRecord = () => {
 	const queryClient = useQueryClient();
@@ -42,10 +159,7 @@ export const useCreateSoapRecord = () => {
 			return { previousLists };
 		},
 		onSuccess: (data) => {
-			queryClient.invalidateQueries({
-				queryKey: soapKeys.list(data.patient_id),
-			});
-			queryClient.setQueryData(soapKeys.detail(data.id), data);
+			invalidateSoapCache(queryClient, data.patient_id, data.id);
 			toast({
 				title: "Evolução salva",
 				description: "A evolução do paciente foi registrada com sucesso.",
@@ -98,10 +212,7 @@ export const useUpdateSoapRecord = () => {
 			return { previousRecord, recordId };
 		},
 		onSuccess: (data) => {
-			queryClient.invalidateQueries({
-				queryKey: soapKeys.list(data.patient_id),
-			});
-			queryClient.setQueryData(soapKeys.detail(data.id), data);
+			invalidateSoapCache(queryClient, data.patient_id, data.id);
 			toast({
 				title: "Evolução atualizada",
 				description: "A evolução foi atualizada com sucesso.",
@@ -136,13 +247,7 @@ export const useSignSoapRecord = () => {
 			return res.data as SoapRecord;
 		},
 		onSuccess: (data) => {
-			queryClient.invalidateQueries({
-				queryKey: soapKeys.list(data.patient_id),
-			});
-			queryClient.invalidateQueries({
-				queryKey: soapKeys.drafts(data.patient_id),
-			});
-			queryClient.setQueryData(soapKeys.detail(data.id), data);
+			invalidateSoapCache(queryClient, data.patient_id, data.id);
 			toast({
 				title: "Evolução finalizada",
 				description: "A evolução foi finalizada e assinada com sucesso.",
@@ -177,13 +282,7 @@ export const useDeleteSoapRecord = () => {
 			return { recordId, patientId };
 		},
 		onSuccess: (result) => {
-			queryClient.invalidateQueries({
-				queryKey: soapKeys.list(result.patientId),
-			});
-			queryClient.invalidateQueries({
-				queryKey: soapKeys.drafts(result.patientId),
-			});
-			queryClient.removeQueries({ queryKey: soapKeys.detail(result.recordId) });
+			invalidateSoapCache(queryClient, result.patientId, result.recordId);
 			toast({
 				title: "Evolução excluída",
 				description: "A evolução foi excluída com sucesso.",

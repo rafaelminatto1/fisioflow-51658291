@@ -51,42 +51,14 @@ export default defineConfig({
     exclude: [
       'node_modules/',
       '**/node_modules/**',
-      'packages/**/node_modules/**',
-      'packages/core/node_modules/**',
       'dist/',
       '.idea/',
       '.git/',
       '.cache/',
       'functions/**',
-      // Exclude workspace apps (they have their own test configs)
-      'apps/professional-app/**',
-      'apps/patient-app/**',
-      // Exclude workspace node_modules that have Jest tests
-      '**/node_modules/exponential-backoff/**',
-      '**/node_modules/wonka/**',
-      // Exclude test files with React 18 concurrent rendering issues
-      '**/AIAssistantPanel.test.tsx',
-      '**/PatientAnalytics.test.tsx',
-      '**/PatientEvolution.test.tsx',
-      '**/TreatmentAssistant.test.tsx',
-      '**/PatientCard.test.tsx',
-      // Exclude tests with missing implementations
-      'src/types/__tests__/common.test.ts',
-      'src/components/error-boundaries/__tests__/**',
-      'src/components/ui/__tests__/badge.test.tsx',
-      'src/components/ui/__tests__/input.test.tsx',
-      'src/components/ui/__tests__/select.test.tsx',
-      'src/components/ui/__tests__/responsive-table.test.tsx',
-      'src/components/ui/__tests__/virtual-list.test.tsx',
       'e2e/**',
       'e2e-tests/**',
       'tests/**',
-      'test-*.spec.ts',
-      'accessibility-tests/**',
-      'test-start-attendance.spec.ts',
-      'src/lib/a11y/__tests__/index.test.ts',
-      'apps/professional-app/__tests__/Neon-security-rules.test.ts',
-      'validate-agenda.spec.ts',
     ],
 
     // Test timeouts
@@ -144,6 +116,7 @@ export default defineConfig({
   resolve: {
     tsconfigPaths: true,
     alias: {
+      '@': path.resolve(repoRoot, 'src'),
       '@fisioflow/ui': path.resolve(repoRoot, 'packages/ui/src'),
       '@fisioflow/core': path.resolve(repoRoot, 'packages/core/src'),
       '@fisioflow/config': path.resolve(repoRoot, 'packages/config/src'),

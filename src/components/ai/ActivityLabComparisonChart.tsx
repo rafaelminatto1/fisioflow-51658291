@@ -46,7 +46,12 @@ export const ActivityLabComparisonChart: React.FC<
 
 	// Merge data based on time (approximated)
 	// For a better comparison, we might want to align peaks or just plot them on the same time axis
-	const combinedData: any[] = [];
+	interface ChartDataPoint {
+		time: number;
+		force1?: number;
+		force2?: number;
+	}
+	const combinedData: ChartDataPoint[] = [];
 	const maxLen = Math.max(data1.length, data2.length);
 
 	for (let i = 0; i < maxLen; i++) {
@@ -121,8 +126,9 @@ export const ActivityLabComparisonChart: React.FC<
 									padding: "12px",
 								}}
 								itemStyle={{ fontSize: "12px", fontWeight: "bold" }}
-								// @ts-expect-error -- recharts v3 formatter type
-								formatter={(value: number) => [`${value.toFixed(2)} kg`]}
+								formatter={(value: number | string) => [
+									`${typeof value === "number" ? value.toFixed(2) : value} kg`,
+								]}
 							/>
 							<Legend verticalAlign="top" height={36} />
 							<Line

@@ -1,5 +1,5 @@
 import React from "react";
-import { List } from "react-window";
+import { FixedSizeList as List } from "react-window";
 import AutoSizer from "react-virtualized/dist/es/AutoSizer";
 import { cn } from "@/lib/utils";
 import { Badge } from "@/components/ui/badge";

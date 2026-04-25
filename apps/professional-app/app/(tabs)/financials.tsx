@@ -4,7 +4,6 @@ import {
 	Text,
 	StyleSheet,
 	ScrollView,
-	ActivityIndicator,
 	TouchableOpacity,
 	RefreshControl,
 	Alert,
@@ -46,11 +45,6 @@ const PAYMENT_METHOD_LABELS: Record<string, string> = {
 	bank_transfer: "Transferência",
 	insurance: "Convênio",
 };
-
-function formatPaymentMethod(method?: string | null): string {
-	if (!method) return "Outro";
-	return PAYMENT_METHOD_LABELS[method] ?? method;
-}
 
 export default function FinancialsScreen() {
 	const colors = useColors();
@@ -128,9 +122,6 @@ export default function FinancialsScreen() {
 
 	const pendingCount = filteredRecords.filter(
 		(r) => r.payment_status === "pending",
-	).length;
-	const paidCount = filteredRecords.filter(
-		(r) => r.payment_status === "paid",
 	).length;
 
 	const hasActiveFilters = useMemo(() => {
