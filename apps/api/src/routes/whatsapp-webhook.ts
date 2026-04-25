@@ -12,6 +12,7 @@ import {
 import { isDuplicate, markProcessed } from "../lib/whatsapp-idempotency";
 import type { Env } from "../types/env";
 import { verifyMetaSignature } from "./whatsapp";
+import { WhatsAppService } from "../lib/whatsapp";
 
 const app = new Hono<{ Bindings: Env }>();
 
@@ -288,13 +289,21 @@ async function handleMessage(
 			},
 		});
 
-		// Auto-create task from intent classification (non-blocking)
-		if (messageType === 'text' && content.length > 5 && contact?.id) {
-			maybeCreateTaskFromIntent(pool, orgId, {
+		// Intent handlers — appointment actions come first; fallback to task creation
+		if (messageType === 'text' && content.length > 2 && contact?.id) {
+			const contactCtx = {
 				id: String(contact.id),
 				display_name: contact.display_name as string | null ?? null,
 				patient_id: contact.patient_id as string | null ?? null,
-			}, content).catch(() => null);
+				wa_id: contact.wa_id as string,
+			};
+			maybeHandleAppointmentIntent(pool, env, orgId, contactCtx, content)
+				.then((handled) => {
+					if (!handled) {
+						return maybeCreateTaskFromIntent(pool, orgId, contactCtx, content);
+					}
+				})
+				.catch(() => null);
 		}
 	} catch (err) {
 		console.error("[WhatsApp Webhook] handleMessage error:", err);
@@ -421,6 +430,145 @@ const INTENT_PATTERNS: Array<{
   { pattern: /\b(retorno|acompanhamento|follow[ -]?up)\b/i, titulo: (n) => `Solicitação de retorno — ${n}`, prioridade: 'MEDIA' },
   { pattern: /\b(urgente|emergência|emergencia|socorro|preciso de ajuda)\b/i, titulo: (n) => `Mensagem urgente — ${n}`, prioridade: 'URGENTE' },
 ];
+
+const CONFIRM_PATTERN = /\b(confirm[aoeiu]?|sim,?\s*confirm|ok|t[aá]\s+(ok|bom)|certo|vou|estarei|estou\s+indo)\b/i;
+const CANCEL_PATTERN = /\b(cancel[aoeiu]?r?|desmarcar|n[ãa]o\s+(vou|posso|consigo)|n[ãa]o\s+vai\s+dar|n[aã]o\s+poderei)\b/i;
+const RESCHEDULE_PATTERN = /\b(reagend|remarc|mudar|trocar|outra\s+hora|outro\s+dia|adiar|antecipar)\b/i;
+
+type WebhookContact = {
+  id: string;
+  display_name?: string | null;
+  patient_id?: string | null;
+  wa_id: string;
+};
+
+async function findNextAppointment(pool: any, orgId: string, patientId: string) {
+  const res = await pool.query(
+    `SELECT id, start_time, end_time, status, therapist_id
+     FROM appointments
+     WHERE organization_id = $1::uuid
+       AND patient_id = $2::uuid
+       AND start_time >= NOW()
+       AND status NOT IN ('cancelled', 'completed', 'no_show')
+     ORDER BY start_time ASC
+     LIMIT 1`,
+    [orgId, patientId],
+  );
+  return res.rows[0] ?? null;
+}
+
+async function maybeHandleAppointmentIntent(
+  pool: any,
+  env: Env,
+  orgId: string,
+  contact: WebhookContact,
+  text: string,
+): Promise<boolean> {
+  if (!contact.patient_id) return false;
+
+  const isConfirm = CONFIRM_PATTERN.test(text);
+  const isCancel = CANCEL_PATTERN.test(text);
+  const isReschedule = RESCHEDULE_PATTERN.test(text);
+
+  // Reagendar pode aparecer junto com cancel — priorizar reschedule
+  const intent = isReschedule ? 'reschedule' : isCancel ? 'cancel' : isConfirm ? 'confirm' : null;
+  if (!intent) return false;
+
+  const appt = await findNextAppointment(pool, orgId, contact.patient_id);
+  if (!appt) return false;
+
+  const whatsapp = new WhatsAppService(env);
+  const displayName = contact.display_name ?? 'Paciente';
+  const startLocal = new Date(appt.start_time).toLocaleString('pt-BR', {
+    timeZone: 'America/Sao_Paulo',
+    day: '2-digit',
+    month: '2-digit',
+    hour: '2-digit',
+    minute: '2-digit',
+  });
+
+  if (intent === 'confirm') {
+    await pool.query(
+      `UPDATE appointments SET status = 'confirmed', confirmed_at = NOW(), updated_at = NOW()
+       WHERE id = $1::uuid AND organization_id = $2::uuid`,
+      [appt.id, orgId],
+    );
+    await whatsapp.sendTextMessage(
+      contact.wa_id,
+      `Agendamento confirmado, ${displayName}! Te esperamos em ${startLocal}. ✅`,
+    );
+    await broadcastToOrg(env, orgId, {
+      type: 'appointment_confirmed',
+      appointmentId: appt.id,
+      via: 'whatsapp',
+      patientId: contact.patient_id,
+    });
+    return true;
+  }
+
+  if (intent === 'cancel') {
+    await pool.query(
+      `UPDATE appointments SET status = 'cancelled', cancelled_at = NOW(), cancellation_reason = $3, updated_at = NOW()
+       WHERE id = $1::uuid AND organization_id = $2::uuid`,
+      [appt.id, orgId, `WhatsApp: ${text.slice(0, 200)}`],
+    );
+    await whatsapp.sendTextMessage(
+      contact.wa_id,
+      `Cancelado, ${displayName}. Quando quiser remarcar é só responder nessa mesma conversa.`,
+    );
+    await pool.query(
+      `INSERT INTO tarefas (organization_id, created_by, titulo, descricao, status, prioridade, tipo,
+         order_index, tags, label_ids, checklists, attachments, task_references, dependencies,
+         requires_acknowledgment, acknowledgments, linked_entity_type, linked_entity_id)
+       VALUES ($1, 'whatsapp_bot', $2, $3, 'A_FAZER', 'ALTA', 'TAREFA',
+         0, '{}', '{}', '[]', '[]', '[]', '[]', false, '[]',
+         'appointment', $4)`,
+      [
+        orgId,
+        `Cancelamento via WhatsApp — ${displayName}`,
+        `Paciente cancelou o agendamento de ${startLocal}.\nMensagem: "${text.slice(0, 500)}"`,
+        appt.id,
+      ],
+    );
+    await broadcastToOrg(env, orgId, {
+      type: 'appointment_cancelled',
+      appointmentId: appt.id,
+      via: 'whatsapp',
+      patientId: contact.patient_id,
+    });
+    return true;
+  }
+
+  if (intent === 'reschedule') {
+    await whatsapp.sendTextMessage(
+      contact.wa_id,
+      `Entendi que você quer reagendar, ${displayName}. Nossa equipe vai retornar em breve com opções de horário.`,
+    );
+    await pool.query(
+      `INSERT INTO tarefas (organization_id, created_by, titulo, descricao, status, prioridade, tipo,
+         order_index, tags, label_ids, checklists, attachments, task_references, dependencies,
+         requires_acknowledgment, acknowledgments, linked_entity_type, linked_entity_id)
+       VALUES ($1, 'whatsapp_bot', $2, $3, 'A_FAZER', 'ALTA', 'TAREFA',
+         0, '{}', '{}', '[]', '[]', '[]', '[]', false, '[]',
+         'appointment', $4)`,
+      [
+        orgId,
+        `Reagendamento solicitado via WhatsApp — ${displayName}`,
+        `Paciente pediu para reagendar ${startLocal}.\nMensagem: "${text.slice(0, 500)}"`,
+        appt.id,
+      ],
+    );
+    await broadcastToOrg(env, orgId, {
+      type: 'appointment_reschedule_requested',
+      appointmentId: appt.id,
+      via: 'whatsapp',
+      patientId: contact.patient_id,
+    });
+    return true;
+  }
+
+  return false;
+}
 
 async function maybeCreateTaskFromIntent(
   pool: any,
