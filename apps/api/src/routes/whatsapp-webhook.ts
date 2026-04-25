@@ -13,6 +13,7 @@ import { isDuplicate, markProcessed } from "../lib/whatsapp-idempotency";
 import type { Env } from "../types/env";
 import { verifyMetaSignature } from "./whatsapp";
 import { WhatsAppService } from "../lib/whatsapp";
+import { writeEvent } from "../lib/analytics";
 
 const app = new Hono<{ Bindings: Env }>();
 
@@ -289,6 +290,12 @@ async function handleMessage(
 			},
 		});
 
+		writeEvent(env, {
+			orgId,
+			event: 'whatsapp_received',
+			route: `type:${messageType}`,
+		});
+
 		// Intent handlers — appointment actions come first; fallback to task creation
 		if (messageType === 'text' && content.length > 2 && contact?.id) {
 			const contactCtx = {
@@ -340,6 +347,11 @@ async function handleStatus(
 			`UPDATE wa_messages SET status = $1 WHERE meta_message_id = $2`,
 			[mapped, metaMessageId],
 		);
+
+		writeEvent(env, {
+			orgId,
+			event: `whatsapp_${mapped}`,
+		});
 
 		const recipientId = statusObj.recipient_id;
 		const recipientUserId = statusObj.recipient_user_id;
@@ -503,6 +515,7 @@ async function maybeHandleAppointmentIntent(
       via: 'whatsapp',
       patientId: contact.patient_id,
     });
+    writeEvent(env, { orgId, event: 'whatsapp_intent_confirm' });
     return true;
   }
 
@@ -536,6 +549,7 @@ async function maybeHandleAppointmentIntent(
       via: 'whatsapp',
       patientId: contact.patient_id,
     });
+    writeEvent(env, { orgId, event: 'whatsapp_intent_cancel' });
     return true;
   }
 
@@ -564,6 +578,7 @@ async function maybeHandleAppointmentIntent(
       via: 'whatsapp',
       patientId: contact.patient_id,
     });
+    writeEvent(env, { orgId, event: 'whatsapp_intent_reschedule' });
     return true;
   }
 
