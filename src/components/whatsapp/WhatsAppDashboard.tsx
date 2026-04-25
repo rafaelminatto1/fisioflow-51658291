@@ -13,6 +13,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Skeleton } from "@/components/ui/skeleton";
+import { WhatsAppMetricsDashboard } from "./WhatsAppMetricsDashboard";
 import {
 	Dialog,
 	DialogContent,
@@ -391,8 +392,12 @@ export function WhatsAppDashboard() {
 			</div>
 
 			{/* Tabs */}
-			<Tabs defaultValue="chart" className="space-y-4">
+			<Tabs defaultValue="analytics" className="space-y-4">
 				<TabsList>
+					<TabsTrigger value="analytics" className="gap-2">
+						<TrendingUp className="h-4 w-4" />
+						Analytics
+					</TabsTrigger>
 					<TabsTrigger value="chart" className="gap-2">
 						<TrendingUp className="h-4 w-4" />
 						Gráficos
@@ -410,6 +415,10 @@ export function WhatsAppDashboard() {
 						Webhook Logs
 					</TabsTrigger>
 				</TabsList>
+
+				<TabsContent value="analytics">
+					<WhatsAppMetricsDashboard />
+				</TabsContent>
 
 				{/* Charts Tab */}
 				<TabsContent value="chart">
