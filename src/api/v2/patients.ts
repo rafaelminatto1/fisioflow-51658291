@@ -9,6 +9,38 @@ import type {
   PatientSurgery,
 } from "@/types/workers";
 
+export interface PatientPathology {
+  id: string;
+  name: string;
+  status: string;
+  severity?: string;
+  notes?: string;
+  diagnosed_at?: string;
+}
+
+export interface PatientPathologyInput {
+  name: string;
+  status?: string;
+  severity?: string;
+  notes?: string;
+  diagnosed_at?: string;
+}
+
+export interface MedicalReturn {
+  id: string;
+  patient_id: string;
+  return_date: string;
+  reason?: string;
+  notes?: string;
+  created_at?: string;
+}
+
+export interface MedicalReturnInput {
+  return_date: string;
+  reason?: string;
+  notes?: string;
+}
+
 export interface PatientsListParams {
   status?: string;
   search?: string;
@@ -274,13 +306,20 @@ export const patientsApi = {
         severity?: string;
       }>;
     }>(`/api/patients/${encodeURIComponent(patientId)}/pathologies`),
-  createPathology: (patientId: string, data: any) =>
-    request<{ data: any }>(`/api/patients/${encodeURIComponent(patientId)}/pathologies`, {
-      method: "POST",
-      body: JSON.stringify(data),
-    }),
-  updatePathology: (patientId: string, pathologyId: string, data: any) =>
-    request<{ data: any }>(
+  createPathology: (patientId: string, data: PatientPathologyInput) =>
+    request<{ data: PatientPathology }>(
+      `/api/patients/${encodeURIComponent(patientId)}/pathologies`,
+      {
+        method: "POST",
+        body: JSON.stringify(data),
+      },
+    ),
+  updatePathology: (
+    patientId: string,
+    pathologyId: string,
+    data: Partial<PatientPathologyInput>,
+  ) =>
+    request<{ data: PatientPathology }>(
       `/api/patients/${encodeURIComponent(patientId)}/pathologies/${encodeURIComponent(pathologyId)}`,
       {
         method: "PUT",
@@ -295,14 +334,23 @@ export const patientsApi = {
       },
     ),
   medicalReturns: (patientId: string) =>
-    request<{ data: any[] }>(`/api/patients/${encodeURIComponent(patientId)}/medical-returns`),
-  createMedicalReturn: (patientId: string, data: any) =>
-    request<{ data: any }>(`/api/patients/${encodeURIComponent(patientId)}/medical-returns`, {
-      method: "POST",
-      body: JSON.stringify(data),
-    }),
-  updateMedicalReturn: (patientId: string, returnId: string, data: any) =>
-    request<{ data: any }>(
+    request<{ data: MedicalReturn[] }>(
+      `/api/patients/${encodeURIComponent(patientId)}/medical-returns`,
+    ),
+  createMedicalReturn: (patientId: string, data: MedicalReturnInput) =>
+    request<{ data: MedicalReturn }>(
+      `/api/patients/${encodeURIComponent(patientId)}/medical-returns`,
+      {
+        method: "POST",
+        body: JSON.stringify(data),
+      },
+    ),
+  updateMedicalReturn: (
+    patientId: string,
+    returnId: string,
+    data: Partial<MedicalReturnInput>,
+  ) =>
+    request<{ data: MedicalReturn }>(
       `/api/patients/${encodeURIComponent(patientId)}/medical-returns/${encodeURIComponent(returnId)}`,
       {
         method: "PUT",

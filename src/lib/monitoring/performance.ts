@@ -76,8 +76,8 @@ export class PerformanceMonitor {
     }
 
     // Send to analytics
-    if (typeof window !== "undefined" && (window as any).gtag) {
-      (window as any).gtag("event", "page_load", {
+    if (typeof window !== "undefined" && window.gtag) {
+      window.gtag("event", "page_load", {
         page_name: pageName,
         load_time: metrics.loadTime,
         dom_content_loaded: metrics.domContentLoaded,
@@ -119,8 +119,11 @@ export class PerformanceMonitor {
       if ("PerformanceObserver" in window) {
         const lcpObserver = new PerformanceObserver((list) => {
           const entries = list.getEntries();
-          const lastEntry = entries[entries.length - 1] as any;
-          metrics.largestContentfulPaint = lastEntry.renderTime || lastEntry.loadTime;
+          const lastEntry = entries[entries.length - 1] as PerformanceEntry & {
+            renderTime?: number;
+            loadTime?: number;
+          };
+          metrics.largestContentfulPaint = lastEntry.renderTime ?? lastEntry.loadTime ?? 0;
 
           // Good: < 2.5s, Needs Improvement: 2.5s - 4s, Poor: > 4s
           if (metrics.largestContentfulPaint > 4000) {
@@ -135,8 +138,9 @@ export class PerformanceMonitor {
       if ("PerformanceObserver" in window) {
         const fidObserver = new PerformanceObserver((list) => {
           const entries = list.getEntries();
-          entries.forEach((entry: any) => {
-            metrics.firstInputDelay = entry.processingStart - entry.startTime;
+          entries.forEach((entry) => {
+            const fid = entry as PerformanceEntry & { processingStart: number };
+            metrics.firstInputDelay = fid.processingStart - entry.startTime;
 
             // Good: < 100ms, Needs Improvement: 100ms - 300ms, Poor: > 300ms
             if (metrics.firstInputDelay > 300) {
@@ -152,9 +156,11 @@ export class PerformanceMonitor {
       if ("PerformanceObserver" in window) {
         let clsValue = 0;
         const clsObserver = new PerformanceObserver((list) => {
-          for (const entry of list.getEntries() as any[]) {
+          for (const entry of list.getEntries() as Array<
+            PerformanceEntry & { hadRecentInput?: boolean; value?: number }
+          >) {
             if (!entry.hadRecentInput) {
-              clsValue += entry.value;
+              clsValue += entry.value ?? 0;
             }
           }
           metrics.cumulativeLayoutShift = clsValue;
@@ -221,8 +227,8 @@ export class PerformanceMonitor {
     }
 
     // Send to analytics
-    if (typeof window !== "undefined" && (window as any).gtag) {
-      (window as any).gtag("event", "api_call", {
+    if (typeof window !== "undefined" && window.gtag) {
+      window.gtag("event", "api_call", {
         endpoint,
         method,
         duration,
@@ -287,7 +293,7 @@ export class PerformanceMonitor {
     navigation: PerformanceNavigation;
   } {
     return {
-      memory: (performance as any).memory,
+      memory: performance.memory,
       timing: performance.timing,
       navigation: performance.navigation,
     };
