@@ -33,7 +33,7 @@ import {
 	SelectValue,
 } from "@/components/ui/select";
 import { Skeleton } from "@/components/ui/skeleton";
-import { useWhatsAppMetrics } from "@/hooks/useWhatsAppMetrics";
+import { useWhatsAppAnalytics } from "@/hooks/useWhatsAppMetrics";
 
 const PERIODS = [
 	{ value: 7, label: "7 dias" },
@@ -44,7 +44,7 @@ const PERIODS = [
 
 export function WhatsAppMetricsDashboard() {
 	const [days, setDays] = useState<number>(7);
-	const { data, isLoading, error } = useWhatsAppMetrics(days);
+	const { data, isLoading, error } = useWhatsAppAnalytics(days);
 
 	return (
 		<div className="space-y-4 p-4">
