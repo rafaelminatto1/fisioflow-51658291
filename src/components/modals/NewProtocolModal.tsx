@@ -70,7 +70,7 @@ interface ProtocolFormData {
 interface NewProtocolModalProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  onSubmit: (protocol: any) => void;
+  onSubmit: (protocol: ProtocolFormData) => void;
   protocol?: ExerciseProtocol;
   isLoading?: boolean;
 }
@@ -111,17 +111,25 @@ export const NewProtocolModal: React.FC<NewProtocolModalProps> = ({
   // Sync with protocol prop when editing
   useEffect(() => {
     if (protocol && open) {
+      const extProtocol = protocol as ExerciseProtocol & {
+        reference_articles?: ReferenceArticle[];
+      };
       setFormData({
         name: protocol.name || "",
-        protocol_type: (protocol.protocol_type as any) || "pos_operatorio",
+        protocol_type:
+          (protocol.protocol_type as ProtocolFormData["protocol_type"]) || "pos_operatorio",
         condition_name: protocol.condition_name || "",
         weeks_total: protocol.weeks_total || 12,
-        milestones: Array.isArray(protocol.milestones) ? (protocol.milestones as any) : [],
-        restrictions: Array.isArray(protocol.restrictions) ? (protocol.restrictions as any) : [],
+        milestones: Array.isArray(protocol.milestones)
+          ? (protocol.milestones as Milestone[])
+          : [],
+        restrictions: Array.isArray(protocol.restrictions)
+          ? (protocol.restrictions as Restriction[])
+          : [],
         evidence_level: protocol.evidence_level || "B",
         wiki_page_id: protocol.wiki_page_id || "",
-        reference_articles: Array.isArray((protocol as any).reference_articles)
-          ? (protocol as any).reference_articles
+        reference_articles: Array.isArray(extProtocol.reference_articles)
+          ? extProtocol.reference_articles
           : [],
       });
       setWikiSearch("");
@@ -177,7 +185,7 @@ export const NewProtocolModal: React.FC<NewProtocolModalProps> = ({
     }));
   };
 
-  const updateMilestone = (index: number, field: keyof Milestone, value: any) => {
+  const updateMilestone = (index: number, field: keyof Milestone, value: Milestone[keyof Milestone]) => {
     const newMilestones = [...formData.milestones];
     newMilestones[index] = { ...newMilestones[index], [field]: value };
     setFormData((prev) => ({ ...prev, milestones: newMilestones }));
@@ -197,7 +205,7 @@ export const NewProtocolModal: React.FC<NewProtocolModalProps> = ({
     }));
   };
 
-  const updateRestriction = (index: number, field: keyof Restriction, value: any) => {
+  const updateRestriction = (index: number, field: keyof Restriction, value: Restriction[keyof Restriction]) => {
     const newRestrictions = [...formData.restrictions];
     newRestrictions[index] = { ...newRestrictions[index], [field]: value };
     setFormData((prev) => ({ ...prev, restrictions: newRestrictions }));
@@ -375,7 +383,7 @@ export const NewProtocolModal: React.FC<NewProtocolModalProps> = ({
                           onValueChange={(v) =>
                             setFormData((prev) => ({
                               ...prev,
-                              protocol_type: v as any,
+                              protocol_type: v as ProtocolFormData["protocol_type"],
                             }))
                           }
                         >
