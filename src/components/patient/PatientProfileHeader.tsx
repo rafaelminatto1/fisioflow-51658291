@@ -47,7 +47,7 @@ export function PatientProfileHeader({
   onEvaluate,
   onSchedule,
 }: PatientProfileHeaderProps) {
-  const status = (patient as any).status;
+  const status = patient.status;
   const isActiveStatus = status === "active" || status === "Em Tratamento";
 
   return (
@@ -71,7 +71,7 @@ export function PatientProfileHeader({
           <div className="flex items-center gap-5">
             <div className="relative">
               <Avatar className="h-20 w-20 border-2 border-blue-50 shadow-sm">
-                <AvatarImage src={(patient as any).photo_url} className="object-cover" />
+                <AvatarImage src={patient.photo_url} className="object-cover" />
                 <AvatarFallback className="text-xl bg-blue-50 text-blue-600 font-bold">
                   {initials}
                 </AvatarFallback>
@@ -98,12 +98,12 @@ export function PatientProfileHeader({
                 >
                   {status || "Status desconhecido"}
                 </Badge>
-                {(patient as any).birth_date && (
+                {patient.birth_date && (
                   <span className="text-xs text-slate-500 flex items-center gap-1.5 bg-slate-50 px-2 py-0.5 rounded-md border border-slate-100">
                     <CalendarIcon className="h-3 w-3 text-blue-500" />
-                    {format(new Date((patient as any).birth_date), "dd/MM/yyyy")}
+                    {format(new Date(patient.birth_date), "dd/MM/yyyy")}
                     <span className="text-slate-300">|</span>
-                    {getPatientAge((patient as any).birth_date)} anos
+                    {getPatientAge(patient.birth_date)} anos
                   </span>
                 )}
               </div>
@@ -178,7 +178,7 @@ export function PatientProfileHeader({
                 Telefone
               </p>
               <p className="font-semibold text-slate-700 truncate">
-                {(patient as any).phone || "Não informado"}
+                {patient.phone || "Não informado"}
               </p>
             </div>
           </div>
@@ -191,8 +191,8 @@ export function PatientProfileHeader({
               <p className="text-slate-400 text-[10px] font-bold uppercase tracking-wider mb-0.5">
                 Email
               </p>
-              <p className="font-semibold text-slate-700 truncate" title={(patient as any).email}>
-                {(patient as any).email || "Não informado"}
+              <p className="font-semibold text-slate-700 truncate" title={patient.email}>
+                {patient.email || "Não informado"}
               </p>
             </div>
           </div>
@@ -206,8 +206,8 @@ export function PatientProfileHeader({
                 Localização
               </p>
               <p className="font-semibold text-slate-700 truncate">
-                {(patient as any).city
-                  ? `${(patient as any).city}/${(patient as any).state || ""}`
+                {patient.city
+                  ? `${patient.city}/${patient.state || ""}`
                   : "Não informado"}
               </p>
             </div>

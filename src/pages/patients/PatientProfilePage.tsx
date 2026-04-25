@@ -104,7 +104,7 @@ const OverviewTab = ({
   invalidateTab,
 }: {
   patient: Patient;
-  upcomingAppointments: any[];
+  upcomingAppointments: Array<{ id: string; date?: string; start_time?: string; status?: string }>;
   invalidateTab: (tab: ProfileTab) => void;
 }) => {
   const navigate = useNavigate();
@@ -291,8 +291,8 @@ const PatientProfileContent = () => {
             },
             paciente: {
               nome: patientNameStr,
-              cpf: (patient as any).cpf || "---",
-              data_nascimento: (patient as any).birth_date,
+              cpf: patient.cpf || "---",
+              data_nascimento: patient.birth_date,
             },
             profissional: {
               nome: "Rafael Minatto",
@@ -335,7 +335,7 @@ const PatientProfileContent = () => {
   };
 
   useEffect(() => {
-    if (patient && (patient as any).incomplete_registration) {
+    if (patient && (patient as { incomplete_registration?: boolean }).incomplete_registration) {
       setEditingPatient(true);
     }
   }, [patient]);
@@ -531,7 +531,7 @@ const PatientProfileContent = () => {
               <PatientAnalyticsTab
                 patientId={id || ""}
                 patientName={patientName}
-                birthDate={(patient as any).birth_date}
+                birthDate={patient.birth_date}
                 condition={(patient as any).main_condition || "Não informada"}
               />
             </TabsContent>

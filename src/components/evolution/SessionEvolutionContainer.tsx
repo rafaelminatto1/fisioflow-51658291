@@ -138,21 +138,18 @@ export const SessionEvolutionContainer: React.FC<SessionEvolutionContainerProps>
   const [acceptedInsights, setAcceptedInsights] = useState<ActiveSuggestion[]>([]);
   const [dismissedInsightIds, setDismissedInsightIds] = useState<string[]>([]);
 
-  // Action Bridge - Conecta os dados do SOAP às sugestões
-  // Mapeamos os campos do SOAP para o formato que o bridge entende
-  const soapFieldsAsTemplate: any[] = [
+  const soapFieldsAsTemplate: Array<{ id: string; label: string; type: string }> = [
     { id: "subjective", label: "Subjetivo", type: "text" },
     { id: "objective", label: "Objetivo", type: "text" },
     { id: "assessment", label: "Avaliação", type: "text" },
     { id: "plan", label: "Plano", type: "text" },
-    // Adicionamos labels comuns que as regras buscam
     { id: "subjective", label: "Sinais de Alerta", type: "text" },
     { id: "objective", label: "Testes Clínicos", type: "text" },
   ];
 
   const { suggestions, hasRedFlag: hasRedFlags } = useActionBridge(
-    soapFieldsAsTemplate as any,
-    soapData as any,
+    soapFieldsAsTemplate as never,
+    soapData as never,
   );
 
   const handleAcceptInsight = (insight: ActiveSuggestion) => {
@@ -174,7 +171,17 @@ export const SessionEvolutionContainer: React.FC<SessionEvolutionContainerProps>
     setDismissedInsightIds((prev) => [...prev, id]);
   };
 
-  const handleFinalizePrescription = (items: any[]) => {
+  const handleFinalizePrescription = (items: Array<{
+    id?: string;
+    type: string;
+    title: string;
+    description?: string;
+    name?: string;
+    duration?: string;
+    intensity?: string;
+    sets?: number;
+    reps?: number;
+  }>) => {
     if (items.length === 0) return;
 
     // 1. O que vai para o texto do Plano (Protocolos, Orientações, Precauções)
