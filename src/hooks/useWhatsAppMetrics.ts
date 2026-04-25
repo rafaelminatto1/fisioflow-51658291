@@ -7,6 +7,57 @@ import {
 	type WhatsAppTemplateRecord,
 	type WhatsAppWebhookLog,
 } from "@/api/v2";
+import { request } from "@/api/v2/base";
+
+export interface WhatsAppAnalyticsOverview {
+	sent: number;
+	received: number;
+	template_sent: number;
+	delivery_rate: number;
+	read_rate: number;
+	failure_rate: number;
+}
+
+export interface WhatsAppAnalyticsTemplateRow {
+	name: string;
+	sent: number;
+	delivered: number;
+	read: number;
+	failed: number;
+}
+
+export interface WhatsAppAnalyticsDailyRow {
+	day: string;
+	sent: number;
+	received: number;
+}
+
+export interface WhatsAppAnalyticsPayload {
+	period_days: number;
+	overview: WhatsAppAnalyticsOverview;
+	status_breakdown: Array<{ status: string; count: number }>;
+	by_template: WhatsAppAnalyticsTemplateRow[];
+	daily: WhatsAppAnalyticsDailyRow[];
+	appointments: {
+		confirmed: number;
+		cancelled_via_whatsapp: number;
+		total_upcoming: number;
+	};
+}
+
+export function useWhatsAppAnalytics(days = 7) {
+	return useQuery({
+		queryKey: ["whatsapp-analytics", days],
+		queryFn: async () => {
+			const res = await request<{ data: WhatsAppAnalyticsPayload }>(
+				`/analytics/whatsapp?days=${days}`,
+			);
+			return res.data;
+		},
+		staleTime: 1000 * 60 * 2,
+		gcTime: 1000 * 60 * 10,
+	});
+}
 
 export type WhatsAppMetric = WhatsAppMessage & {
 	phone_number?: string | null;
