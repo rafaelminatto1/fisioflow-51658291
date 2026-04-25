@@ -654,7 +654,7 @@ app.get('/whatsapp', requireAuth, async (c) => {
          COUNT(*) FILTER (WHERE message_type = 'template')::int AS template_sent
        FROM wa_messages
        WHERE organization_id = $1::uuid
-         AND created_at >= NOW() - ($2 || ' days')::interval`,
+         AND created_at >= NOW() - $2::integer * INTERVAL '1 day'`,
       [user.organizationId, days],
     ),
     pool.query(
@@ -662,7 +662,7 @@ app.get('/whatsapp', requireAuth, async (c) => {
        FROM wa_messages
        WHERE organization_id = $1::uuid
          AND direction = 'outbound'
-         AND created_at >= NOW() - ($2 || ' days')::interval
+         AND created_at >= NOW() - $2::integer * INTERVAL '1 day'
        GROUP BY status`,
       [user.organizationId, days],
     ),
@@ -676,7 +676,7 @@ app.get('/whatsapp', requireAuth, async (c) => {
        FROM wa_messages
        WHERE organization_id = $1::uuid
          AND direction = 'outbound'
-         AND created_at >= NOW() - ($2 || ' days')::interval
+         AND created_at >= NOW() - $2::integer * INTERVAL '1 day'
        GROUP BY 1
        ORDER BY sent DESC
        LIMIT 15`,
@@ -689,7 +689,7 @@ app.get('/whatsapp', requireAuth, async (c) => {
          COUNT(*) FILTER (WHERE direction = 'inbound')::int AS received
        FROM wa_messages
        WHERE organization_id = $1::uuid
-         AND created_at >= NOW() - ($2 || ' days')::interval
+         AND created_at >= NOW() - $2::integer * INTERVAL '1 day'
        GROUP BY 1 ORDER BY 1`,
       [user.organizationId, days],
     ),
@@ -700,7 +700,7 @@ app.get('/whatsapp', requireAuth, async (c) => {
          COUNT(*)::int AS total_upcoming
        FROM appointments
        WHERE organization_id = $1::uuid
-         AND start_time BETWEEN NOW() - ($2 || ' days')::interval AND NOW() + INTERVAL '30 days'`,
+         AND date BETWEEN (CURRENT_DATE - $2::integer) AND (CURRENT_DATE + 30)`,
       [user.organizationId, days],
     ),
   ]);
