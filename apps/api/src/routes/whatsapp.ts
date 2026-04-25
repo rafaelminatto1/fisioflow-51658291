@@ -3,6 +3,7 @@ import { sql } from "drizzle-orm";
 import { createDb, createPool } from "../lib/db";
 import { requireAuth, type AuthUser } from "../lib/auth";
 import type { Env } from "../types/env";
+import { writeEvent } from "../lib/analytics";
 
 const app = new Hono<{ Bindings: Env; Variables: { user: AuthUser } }>();
 
@@ -613,6 +614,12 @@ app.post("/send-template", requireAuth, async (c) => {
 			JSON.stringify({ appointment_id, template_key, variables }),
 		],
 	);
+
+	writeEvent(c.env, {
+		orgId: user.organizationId,
+		event: status === "sent" ? "whatsapp_sent" : "whatsapp_send_failed",
+		route: `template:${template_key}`,
+	});
 
 	return c.json({ success: status === "sent", content, messageId });
 });
